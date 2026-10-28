@@ -27,6 +27,7 @@ import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
 import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
 import { BRAIN_MODEL_ID } from '@/lib/tutor/voice/claude-brain';
+import { openerPrefetchCache, isValidPrefetchKey } from '@/lib/tutor/voice/opener-prefetch';
 import { WHITEBOARD_TOOLS, SET_CURRENT_PROBLEM_TOOL, RESUME_LESSON_TOOL } from '@/app/tutor/hooks/toolDefinitions';
 import { LESSON_NOW_MAX_CHARS } from '@/lib/tutor/portal/host-lesson-timeline';
 import {
@@ -96,6 +97,12 @@ interface BrainStreamRequestBody {
   toolScope?: 'subject' | 'full';
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
   studentTranscript: string;
+  /** Opener prefetch (2026-10-18, lib/tutor/voice/opener-prefetch.ts): the
+   *  client's session id, sent on the opener turn only. With `prefetch: true`
+   *  the route runs the turn and caches its stream under this key instead of
+   *  streaming it; without, a cached stream for this key is replayed. */
+  prefetchKey?: string;
+  prefetch?: boolean;
   whiteboardSnapshot: BrainTurnInput['whiteboardSnapshot'];
   /** Full-board page list for the Board Map (project_tutor_board_map_design).
    *  Presence drives page-grouped rendering of the whiteboard summary. */
@@ -533,6 +540,34 @@ export async function POST(req: NextRequest) {
     body.pacingState = { ...body.pacingState, thresholds: undefined };
   }
 
+  // Opener prefetch (2026-10-18): see lib/tutor/voice/opener-prefetch.ts. The
+  // embed sends the opener's body pre-start with `prefetch: true`; the Start
+  // call sends the same key without it and gets the cached stream back.
+  const prefetchKey = isValidPrefetchKey(body.prefetchKey) ? body.prefetchKey : null;
+  const prefetchMode = body.prefetch === true;
+  if (prefetchMode && !prefetchKey) return badRequest('prefetch needs a prefetchKey');
+  if (!prefetchMode && prefetchKey) {
+    const pending = openerPrefetchCache().take(prefetchKey);
+    if (pending) {
+      const waitedFrom = Date.now();
+      const chunks = await pending;
+      if (chunks && chunks.length > 0) {
+        console.log(
+          `[brain.stream] opener replayed from prefetch key=${prefetchKey} chunks=${chunks.length} waited=${Date.now() - waitedFrom}ms ` +
+          `student="${body.studentTranscript.slice(0, 40)}"`,
+        );
+        const replay = new ReadableStream<Uint8Array>({
+          start(controller) {
+            for (const chunk of chunks) controller.enqueue(chunk);
+            controller.close();
+          },
+        });
+        return new Response(replay, { headers: SSE_HEADERS });
+      }
+      console.warn(`[brain.stream] opener prefetch key=${prefetchKey} unusable — running the turn live`);
+    }
+  }
+
   const encoder = new TextEncoder();
   const studentSnippet = body.studentTranscript.slice(0, 80);
   const startedAt = Date.now();
@@ -577,8 +612,13 @@ export async function POST(req: NextRequest) {
     }
   };
 
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
+  // The turn body writes to `controller` through enqueue/close only, so the
+  // same code streams to the client (ReadableStream controller) or records
+  // into the prefetch cache (its sink). `turnOutcome` lets the prefetch path
+  // refuse to cache a turn that produced nothing usable.
+  const turnOutcome = { stopReason: 'unknown', sentences: 0 };
+  const runTurn = async (controller: { enqueue(chunk: Uint8Array): void; close(): void }) => {
+    {
       // Counters for the post-stream telemetry log line. We mirror the
       // shape of the JSON route's `[brain] student=... → tools=...`
       // line so server-log diagnostics work the same way regardless of
@@ -1252,6 +1292,8 @@ export async function POST(req: NextRequest) {
         }
       } finally {
         const totalMs = Date.now() - startedAt;
+        turnOutcome.stopReason = stopReason;
+        turnOutcome.sentences = sentenceCount;
         const textSnippet = fullText.slice(0, 120).replace(/\n/g, ' ');
         const promisedVisual = RULE8_PROMISE_REGEX.test(fullText);
         const violatedRule8 = promisedVisual && toolNames.length === 0;
@@ -1262,14 +1304,43 @@ export async function POST(req: NextRequest) {
           `· text="${textSnippet}${fullText.length > 120 ? '…' : ''}" ` +
           `· stop=${stopReason} · thinking=${turnInput.textThinking || (turnInput as { voiceThinking?: boolean }).voiceThinking ? 'on' : 'off'} · retries=${turnRetries}${gaveUp ? ' FAILED' : ''} · in=${usage.inputTokens} out=${usage.outputTokens} cache_read=${usage.cacheReadTokens} cache_creation=${usage.cacheCreationTokens}` +
           (violatedRule8 ? ' ⚠ RULE8_VIOLATION' : '') +
-          (clientGone ? ' (client_gone)' : '')
+          (clientGone ? ' (client_gone)' : '') +
+          (prefetchMode ? ' (prefetch)' : '')
         );
         // Defensive close — already-closed throws here too.
         if (!clientGone) {
           try { controller.close(); } catch { /* already closed */ }
         }
       }
-    },
+    }
+  };
+
+  if (prefetchMode && prefetchKey) {
+    const sink = openerPrefetchCache().begin(prefetchKey);
+    if (!sink) {
+      console.log(`[brain.stream] opener prefetch key=${prefetchKey} already cached — ignored`);
+      return Response.json({ prefetched: false, reason: 'exists' });
+    }
+    const t0 = Date.now();
+    try {
+      await runTurn(sink);
+    } catch (err) {
+      sink.fail();
+      console.warn(`[brain.stream] opener prefetch key=${prefetchKey} threw — dropped:`, err);
+      return Response.json({ prefetched: false, reason: 'error' }, { status: 500 });
+    }
+    if (turnOutcome.sentences === 0 || turnOutcome.stopReason === 'error') {
+      sink.fail();
+      console.warn(`[brain.stream] opener prefetch key=${prefetchKey} produced no usable opener (stop=${turnOutcome.stopReason} sentences=${turnOutcome.sentences}) — dropped`);
+      return Response.json({ prefetched: false, reason: 'empty' });
+    }
+    sink.close();
+    console.log(`[brain.stream] opener prefetched key=${prefetchKey} in ${Date.now() - t0}ms (${turnOutcome.sentences} sentences)`);
+    return Response.json({ prefetched: true, ms: Date.now() - t0 });
+  }
+
+  const stream = new ReadableStream<Uint8Array>({
+    start: (controller) => runTurn(controller),
     cancel() {
       // Client closed the connection. The next enqueue inside the
       // generator loop will throw, set clientGone=true, and the loop
@@ -1278,12 +1349,12 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no',  // disable nginx buffering if proxied
-    },
-  });
+  return new Response(stream, { headers: SSE_HEADERS });
 }
+
+const SSE_HEADERS = {
+  'Content-Type': 'text/event-stream',
+  'Cache-Control': 'no-cache, no-transform',
+  'Connection': 'keep-alive',
+  'X-Accel-Buffering': 'no',  // disable nginx buffering if proxied
+};

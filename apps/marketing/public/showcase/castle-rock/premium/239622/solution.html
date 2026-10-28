@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Solution (Premium): Item 239622</title>
+<style>
+.ai-solution { font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; color: #14213a; max-width: 640px; margin: 0 auto; padding: 12px; }
+.ai-solution h2 { font-size: 18px; margin: 0 0 8px 0; }
+.ai-solution h3 { font-size: 16px; margin: 0; }
+.ai-solution p { margin: 0 0 8px 0; }
+.ai-solution var { font-style: italic; font-family: "Times New Roman", Times, serif; font-size: 1.08em; }
+.ai-solution .answer { border: 1px solid #177a50; background-color: #eef8f3; padding: 8px 10px; margin: 0 0 10px 0; transition: box-shadow .4s; }
+.ai-solution .answer.flash { box-shadow: 0 0 0 3px rgba(23,122,80,.35); }
+.ai-solution .tag { display: inline-block; font-size: 11px; font-weight: bold; letter-spacing: .04em; text-transform: uppercase; color: #7a2a8e; border: 1px solid #7a2a8e; border-radius: 10px; padding: 0 7px; vertical-align: middle; margin-left: 6px; }
+.ai-solution .small { font-size: 12px; color: #586580; }
+.ai-solution .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0 12px 0; }
+.ai-solution button { font: inherit; font-size: 14px; font-weight: bold; color: #fff; background: #7a2a8e; border: 0; border-radius: 8px; padding: 7px 14px; cursor: pointer; }
+.ai-solution button.ghost { background: #fff; color: #7a2a8e; border: 1px solid #7a2a8e; }
+.ai-solution #pause { min-width: 96px; }
+.ai-solution button:disabled { opacity: .45; cursor: default; }
+
+.ai-solution .board { width: 240px; max-width: 100%; border: 1px solid #e6ebf2; border-radius: 8px; background: #fff; overflow: hidden; margin: 8px 0 4px 0; }
+.ai-solution .board svg { width: 100%; height: auto; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+.ai-solution .ink { border-top: 1px dashed #e6ebf2; min-height: 58px; padding: 6px 8px; font-size: 12.5px; line-height: 1.45; }
+.ai-solution .ink .line { opacity: 0; transition: opacity .5s; }
+.ai-solution .ink .line.on { opacity: 1; }
+.ai-solution .ink .line.wither { opacity: 0; transition: opacity 1.4s; }
+.ai-solution .ink .line.hi { color: #7a2a8e; }
+.ai-solution .ink .line.result { font-weight: bold; color: #cf2f68; }
+.ai-solution .readout { font-size: 13px; color: #586580; margin: 0 0 10px 0; min-height: 1.3em; }
+.ai-solution .boardbar { display: flex; gap: 6px; margin: 0 0 4px 0; }
+.ai-solution .boardbar button { font-size: 11.5px; padding: 4px 8px; white-space: nowrap; }
+.ai-solution .live { width: 240px; max-width: 100%; box-sizing: border-box; font-size: 13.5px; line-height: 1.4; color: #14213a; min-height: 4.4em; margin: 0 0 6px 0; padding: 4px 2px; }
+.ai-solution .live .head { display: block; font-size: 11px; font-weight: bold; color: #7a2a8e; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+.ai-solution .live .head:empty { display: none; }
+@media (min-width: 600px) {
+  .ai-solution .main { display: flex; gap: 18px; align-items: flex-start; }
+  .ai-solution .player { flex: none; width: 240px; position: sticky; top: 8px; }
+  .ai-solution .content { flex: 1; min-width: 0; }
+}
+
+.ai-solution svg text { font-family: Arial, Helvetica, sans-serif; font-weight: bold; }
+.ai-solution svg .v { font-style: italic; font-family: "Times New Roman", Times, serif; font-weight: normal; font-size: 1.15em; }
+.ai-solution .layer { transition: opacity .5s; }
+.ai-solution .layer.off { opacity: 0; pointer-events: none; }
+.ai-solution .draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.ai-solution .draw.go { animation: draw 1.1s ease-out both; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.ai-solution .pulse { animation: pulse 1.2s ease-in-out 2; }
+@keyframes pulse { 50% { opacity: .25; } }
+.ai-solution .glabel { font-size: 8px; font-weight: normal; fill: #586580; }
+.ai-solution .sketch path { stroke: #7a2a8e; stroke-width: 1.6; stroke-linecap: round; fill: none; }
+.ai-solution .sketch text { fill: #7a2a8e; font-weight: normal; font-style: italic; font-size: 8px; }
+.ai-solution .sketch { transition: opacity 2.5s; }
+.ai-solution .sketch.fade { opacity: 0; }
+.ai-solution .chip { cursor: grab; }
+.ai-solution .chip.held { cursor: grabbing; }
+.ai-solution .chip rect { fill: #fff; stroke: #7a2a8e; stroke-width: 1.2; }
+.ai-solution .chip.placed rect { fill: #eef8f3; stroke: #177a50; }
+.ai-solution .chip text { fill: #14213a; font-size: 9.5px; }
+.ai-solution .lslot { fill: #faf5fc; stroke: #c9cfdb; stroke-dasharray: 3 2; }
+.ai-solution .lslot.good { stroke: #177a50; stroke-dasharray: none; }
+
+.ai-solution ol.steps { list-style: none; margin: 0; padding: 0; }
+.ai-solution ol.steps > li { border-left: 3px solid #e6ebf2; padding: 6px 0 6px 12px; margin: 0 0 10px 0; transition: background .3s, border-color .3s; }
+.ai-solution ol.steps > li.now { border-left-color: #7a2a8e; background: #faf5fc; }
+.ai-solution ol.steps > li.ahead { opacity: .35; }
+.ai-solution .stephead { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.ai-solution .stephead .chev { flex: none; width: 12px; font-size: 11px; color: #586580; transition: transform .3s; }
+.ai-solution ol.steps > li.closed .chev { transform: rotate(-90deg); }
+.ai-solution .stephead h3 { flex: 1; }
+.ai-solution .stephead button.listen { flex: none; font-size: 11.5px; font-weight: bold; padding: 3px 10px; background: #fff; color: #7a2a8e; border: 1px solid #7a2a8e; border-radius: 12px; white-space: nowrap; }
+.ai-solution .body { overflow: hidden; }
+.ai-solution ol.steps > li.closed .body { height: 0; opacity: 0; }
+.ai-solution .caption { font-size: 13.5px; color: #586580; margin: 2px 0 6px 0; }
+.ai-solution .caption .said { color: #14213a; background: #f1e6f6; border-radius: 3px; }
+.ai-solution details { margin: 4px 0 8px 0; }
+.ai-solution details summary { cursor: pointer; color: #7a2a8e; font-weight: bold; font-size: 14px; }
+.ai-solution details p { margin-top: 6px; }
+.ai-solution .term { border-bottom: 1px dotted #7a2a8e; cursor: pointer; color: #14213a; }
+.ai-solution .term .def { display: none; font-size: 13px; color: #7a2a8e; }
+.ai-solution .term.open .def { display: inline; }
+.ai-solution .eqs { margin: 4px 0 8px 0; }
+.ai-solution .eq { cursor: pointer; padding: 3px 8px; border-radius: 4px; }
+.ai-solution .eq:hover { background: #faf5fc; }
+.ai-solution .eq .how { display: none; font-size: 12.5px; color: #7a2a8e; margin-top: 2px; }
+.ai-solution .eq.open .how { display: block; }
+.ai-solution .box { border: 1px solid #e6ebf2; border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+.ai-solution .box h3 { margin-bottom: 6px; }
+.ai-solution .choices { display: flex; gap: 6px; flex-wrap: wrap; }
+.ai-solution .choices button { background: #fff; color: #14213a; border: 1px solid #c9cfdb; font-weight: normal; }
+.ai-solution .choices button.right { border-color: #177a50; background: #eef8f3; }
+.ai-solution .choices button.wrong { border-color: #cf2f68; background: #fdf1f5; }
+.ai-solution .fb { font-size: 14px; margin-top: 6px; min-height: 1.2em; }
+.ai-solution .slip { border-left: 3px solid #cf2f68; padding-left: 10px; }
+.ai-solution .idea { background: #faf5fc; border-radius: 8px; padding: 10px 12px; }
+.ai-solution input[type=range] { width: 200px; vertical-align: middle; }
+.ai-solution .fig svg { width: 240px; max-width: 100%; height: auto; display: block; border: 1px solid #e6ebf2; border-radius: 6px; background: #fff; }
+.ai-solution .fig .readout { margin-top: 4px; }
+.ai-solution .transcript { display: none; font-size: 13px; color: #586580; border: 1px solid #e6ebf2; border-radius: 8px; padding: 8px 12px; margin: 0 0 8px 0; }
+.ai-solution .transcript.show { display: block; }
+.ai-solution footer { font-size: 12px; color: #586580; margin-top: 18px; border-top: 1px solid #e6ebf2; padding-top: 8px; }
+@media (prefers-reduced-motion: reduce) { .ai-solution * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="ai-solution" id="sol">
+
+<h2>AI Solution <span class="tag">Interactive</span></h2>
+<p class="small">Chemistry 30 · Item 239622 · Numerical response · Energy diagrams</p>
+
+<p class="answer" id="answerBar"><strong>Answer: 1, 3, 5, 8</strong> — Δ<var>H</var> is positive, the reaction is endothermic, <var>E</var><sub>a</sub> is greater than Δ<var>H</var>, and the products have more potential energy than the reactants. Recorded as <strong>1358</strong>.</p>
+
+<div class="bar">
+  <button id="playAll" type="button">▶ Play the explanation</button>
+  <button id="pause" type="button" class="ghost" disabled>Pause</button>
+  <button id="transcriptBtn" type="button" class="ghost">Transcript</button>
+</div>
+
+<div class="transcript" id="transcript"></div>
+
+<div class="main">
+<div class="player">
+<div class="board" id="board">
+  <svg id="graph" viewBox="0 0 240 170" role="img" aria-label="Energy diagram: potential energy against reaction progress. The reactants' level is low, the curve rises over a hill and settles at a higher products' level. Arrows mark the activation energy from the reactants to the peak and the enthalpy change from the reactants to the products.">
+    <defs>
+      <marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#586580"/></marker>
+      <marker id="amH" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#cf2f68"/></marker>
+      <marker id="amA" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1d5bd0"/></marker>
+    </defs>
+    <!-- axes, as given -->
+    <line x1="30" y1="150" x2="232" y2="150" stroke="#586580" stroke-width="1.2" marker-end="url(#am)"/>
+    <line x1="30" y1="150" x2="30" y2="10" stroke="#586580" stroke-width="1.2" marker-end="url(#am)"/>
+    <g id="axlab">
+      <text x="226" y="163" font-size="8.5" fill="#586580" text-anchor="end">reaction progress</text>
+      <text x="14" y="84" font-size="8.5" fill="#586580" transform="rotate(-90 14 84)" text-anchor="middle"><tspan class="v">E</tspan><tspan font-size="6" dy="2">p</tspan><tspan dy="-2"> (kJ)</tspan></text>
+    </g>
+    <!-- the energy curve as given: reactants' level, the hill, the products' level -->
+    <path id="curve" d="M38 118 L108 118 C108 70 112 40 128 40 L140 40 C156 40 160 70 160 85 L222 85" fill="none" stroke="#586580" stroke-width="2"/>
+    <text x="44" y="112" font-size="8" fill="#586580">Reactants</text>
+    <text x="170" y="79" font-size="8" fill="#586580">Products</text>
+    <!-- the reaction marker that travels along the curve -->
+    <circle id="dot" class="layer off" cx="38" cy="118" r="3.4" fill="#7a2a8e"/>
+    <!-- dashed level lines -->
+    <g id="lvl" class="layer off">
+      <line x1="108" y1="118" x2="222" y2="118" stroke="#586580" stroke-width=".8" stroke-dasharray="3 2"/>
+      <line x1="38" y1="85" x2="160" y2="85" stroke="#586580" stroke-width=".8" stroke-dasharray="3 2"/>
+    </g>
+    <g id="peak" class="layer off"><line x1="60" y1="40" x2="128" y2="40" stroke="#586580" stroke-width=".8" stroke-dasharray="3 2"/></g>
+    <!-- enthalpy change: reactants' level up to products' level -->
+    <g id="dH" class="layer off">
+      <line class="draw" pathLength="1" x1="196" y1="118" x2="196" y2="88" stroke="#cf2f68" stroke-width="1.6" marker-end="url(#amH)"/>
+      <text id="dHlab" x="201" y="106" font-size="8.5" fill="#cf2f68">Δ<tspan class="v">H</tspan></text>
+    </g>
+    <!-- activation energy: reactants' level up to the peak -->
+    <g id="Ea" class="layer off">
+      <line class="draw" pathLength="1" x1="72" y1="118" x2="72" y2="43" stroke="#1d5bd0" stroke-width="1.6" marker-end="url(#amA)"/>
+      <text id="Ealab" x="55" y="84" font-size="8.5" fill="#1d5bd0"><tspan class="v">E</tspan><tspan font-size="6" dy="2">a</tspan></text>
+    </g>
+    <!-- rough comparison mark while the two arrows are compared; fades by itself -->
+    <g id="mkCmp" class="layer off sketch">
+      <path class="draw" pathLength="1" d="M80 46 C 110 30, 150 60, 190 88"/>
+      <text x="128" y="36" text-anchor="middle">taller</text>
+    </g>
+    <text id="ans" class="layer off" x="228" y="20" font-size="10" fill="#cf2f68" text-anchor="end">1, 3, 5, 8</text>
+    <!-- practice: unlabelled arrows get their labels by drag (shown after the explanation) -->
+    <g id="pslots" class="layer off">
+      <rect class="lslot" data-k="Ea" x="46" y="72" width="24" height="16" rx="3"/>
+      <rect class="lslot" data-k="dH" x="200" y="96" width="24" height="16" rx="3"/>
+    </g>
+    <g id="chips" class="layer off">
+      <g class="chip" data-k="dH" transform="translate(70,180)"><rect width="30" height="16" rx="3"/><text x="15" y="11.5" text-anchor="middle">Δ<tspan class="v">H</tspan></text></g>
+      <g class="chip" data-k="Ea" transform="translate(140,180)"><rect width="30" height="16" rx="3"/><text x="15" y="11.5" text-anchor="middle"><tspan class="v">E</tspan><tspan font-size="6" dy="2">a</tspan></text></g>
+    </g>
+  </svg>
+  <div class="ink" id="ink"></div>
+</div>
+<div class="live" id="live"><span class="head" id="liveHead"></span><span id="liveText"></span></div>
+<div class="boardbar"><button type="button" class="ghost" id="resetBoard">Reset board</button></div>
+<p class="readout" id="readout">Press play. The diagram is read as the tutor speaks.</p>
+</div>
+<div class="content">
+
+<ol class="steps" id="steps">
+
+<li data-step="0">
+  <div class="stephead"><span class="chev">▼</span><h3>1. Read the diagram</h3><button class="listen" type="button" aria-label="Listen to step 1">▶ Listen</button></div>
+<div class="body">
+  <p class="caption"></p>
+  <p>The vertical axis is <span class="term" tabindex="0">potential energy<span class="def"> (the chemical energy stored in the bonds of the substances, <var>E</var><sub>p</sub>, in kilojoules)</span></span>; the horizontal axis is reaction progress. The curve starts at the reactants' level, rises over a hill and settles at the products' level.</p>
+  <p>The nine descriptions come in groups that exclude one another: 1 or 2 (sign of Δ<var>H</var>), 3 or 4 (type of reaction), 5, 6 or 7 (<var>E</var><sub>a</sub> against Δ<var>H</var>), 8 or 9 (which level is higher). One from each group fits the diagram.</p>
+</div>
+</li>
+
+<li data-step="1">
+  <div class="stephead"><span class="chev">▼</span><h3>2. Compare the two levels (description 8)</h3><button class="listen" type="button" aria-label="Listen to step 2">▶ Listen</button></div>
+<div class="body">
+  <p class="caption"></p>
+  <p>Extend each flat level across the diagram. The products' level is above the reactants' level, so <var>E</var><sub>p</sub> of the products is greater than <var>E</var><sub>p</sub> of the reactants. <strong>Description 8.</strong></p>
+</div>
+</li>
+
+<li data-step="2">
+  <div class="stephead"><span class="chev">▼</span><h3>3. The enthalpy change (descriptions 1 and 3)</h3><button class="listen" type="button" aria-label="Listen to step 3">▶ Listen</button></div>
+<div class="body">
+  <p class="caption"></p>
+  <div class="eqs">
+    <div class="eq">Δ<var>H</var> = <var>E</var><sub>p</sub>(products) − <var>E</var><sub>p</sub>(reactants)<div class="how">Products minus reactants, always in that order. The arrow is drawn from the reactants' level to the products' level.</div></div>
+    <div class="eq">Δ<var>H</var> &gt; 0<div class="how">The products' level is higher, so the subtraction gives a positive number: the arrow points up.</div></div>
+  </div>
+  <p class="small">Tap an equation line to see the operation behind it.</p>
+  <p>A positive <span class="term" tabindex="0">enthalpy change<span class="def"> (Δ<var>H</var>, the energy absorbed or released by the reaction at constant pressure)</span></span> means the system absorbed energy from its surroundings. That is an <span class="term" tabindex="0">endothermic<span class="def"> (energy flows in; the products store more energy than the reactants did)</span></span> reaction. <strong>Descriptions 1 and 3.</strong></p>
+  <details><summary>Why is the sign read from the direction of the arrow?</summary>
+    <p>Because Δ<var>H</var> is a difference, products minus reactants. An arrow drawn from the reactants' level to the products' level points in the direction of that difference: up for positive, down for negative. Reading the sign from the picture is the same as doing the subtraction.</p>
+  </details>
+</div>
+</li>
+
+<li data-step="3">
+  <div class="stephead"><span class="chev">▼</span><h3>4. The activation energy (description 5)</h3><button class="listen" type="button" aria-label="Listen to step 4">▶ Listen</button></div>
+<div class="body">
+  <p class="caption"></p>
+  <p>The <span class="term" tabindex="0">activation energy<span class="def"> (<var>E</var><sub>a</sub>, the least energy the reactants need to reach the activated complex at the top of the hill)</span></span> is measured from the reactants' level to the peak. On this diagram that climb is taller than the rise to the products, so <var>E</var><sub>a</sub> &gt; Δ<var>H</var>. <strong>Description 5.</strong></p>
+  <details><summary>Could <var>E</var><sub>a</sub> ever be smaller than Δ<var>H</var> here?</summary>
+    <p>Not for an endothermic reaction. The path has to pass through the peak before it can reach the products' level, so the peak is at least as high as the products. <var>E</var><sub>a</sub> is therefore at least Δ<var>H</var>; it equals Δ<var>H</var> only if there is no hump above the products at all.</p>
+  </details>
+  <div class="box">
+    <h3>Check yourself first</h3>
+    <p>If the products' level were drawn below the reactants' level instead, which description would replace 1?</p>
+    <div class="choices" data-answer="2 — ΔH is negative">
+      <button type="button">2 — ΔH is negative</button><button type="button">7 — Ea equals ΔH</button><button type="button">8 — products higher</button>
+    </div>
+    <p class="fb"></p>
+  </div>
+</div>
+</li>
+
+<li data-step="4">
+  <div class="stephead"><span class="chev">▼</span><h3>5. Record the answer</h3><button class="listen" type="button" aria-label="Listen to step 5">▶ Listen</button></div>
+<div class="body">
+  <p class="caption"></p>
+  <p>The descriptions that fit are 1, 3, 5 and 8. In increasing numerical order: <strong>1358</strong>.</p>
+  <p>When the explanation ends, press "Reset board" and label the two arrows yourself.</p>
+</div>
+</li>
+
+</ol>
+
+<div class="box">
+  <h3>Sanity check</h3>
+  <p>Energy on the vertical axis goes up the page. Products above reactants means energy went in, and only an endothermic reaction can do that, so 1 and 3 must go together and 8 agrees with them. The peak is well above the products, so 5 is consistent with the picture too.</p>
+</div>
+
+<div class="box slip">
+  <h3>One common slip</h3>
+  <p>Measuring the activation energy from the products instead of the reactants. <var>E</var><sub>a</sub> is always the climb from the <em>reactants'</em> level to the peak. The drop from the peak to the products is the activation energy of the reverse reaction, a different quantity.</p>
+</div>
+
+<div class="box" id="explore">
+  <h3>Explore: move the products' level</h3>
+  <p>Before you move the slider: if the products' level drops below the reactants', does the activation energy change?</p>
+  <div class="choices" data-answer="No">
+    <button type="button">No</button><button type="button">Yes, it gets smaller</button><button type="button">Yes, it gets larger</button>
+  </div>
+  <p class="fb"></p>
+  <p>Products' level: <input type="range" id="pSlider" min="-30" max="30" step="5" value="30" aria-label="Products' level relative to the reactants"> <strong id="pRead"></strong></p>
+  <div class="fig">
+    <svg viewBox="0 0 240 170" role="img" aria-label="Energy diagram whose products' level moves with the slider.">
+      <line x1="30" y1="150" x2="232" y2="150" stroke="#586580" stroke-width="1.2" marker-end="url(#am)"/>
+      <line x1="30" y1="150" x2="30" y2="10" stroke="#586580" stroke-width="1.2" marker-end="url(#am)"/>
+      <path id="xcurve" d="" fill="none" stroke="#586580" stroke-width="2"/>
+      <line x1="72" y1="118" x2="72" y2="43" stroke="#1d5bd0" stroke-width="1.6" marker-end="url(#amA)"/>
+      <text x="55" y="84" font-size="8.5" fill="#1d5bd0"><tspan class="v">E</tspan><tspan font-size="6" dy="2">a</tspan></text>
+      <line id="xdH" x1="196" y1="118" x2="196" y2="88" stroke="#cf2f68" stroke-width="1.6" marker-end="url(#amH)"/>
+      <text id="xdHlab" x="201" y="106" font-size="8.5" fill="#cf2f68">Δ<tspan class="v">H</tspan></text>
+      <text x="44" y="112" font-size="8" fill="#586580">Reactants</text>
+      <text id="xplab" x="170" y="79" font-size="8" fill="#586580">Products</text>
+    </svg>
+    <div class="readout" id="pText"></div>
+  </div>
+</div>
+
+<div class="box">
+  <h3>Try one more</h3>
+  <p>An energy diagram shows the reactants at 50 kJ, the peak at 120 kJ and the products at 20 kJ. Give Δ<var>H</var> and <var>E</var><sub>a</sub>, and name the type of reaction.</p>
+  <details><summary>Show the worked answer</summary>
+    <p>Δ<var>H</var> = 20 − 50 = −30 kJ, so the reaction is exothermic. <var>E</var><sub>a</sub> = 120 − 50 = 70 kJ, measured from the reactants' level to the peak. <var>E</var><sub>a</sub> (70 kJ) is greater than Δ<var>H</var> (−30 kJ), as it always is when Δ<var>H</var> is negative. Whether <var>E</var><sub>a</sub> is also larger than the size of Δ<var>H</var> depends on the diagram; here it is.</p>
+  </details>
+</div>
+
+<div class="idea">
+  <h3>The idea to remember</h3>
+  <p>Read an energy diagram from the reactants' level: up to the peak is <var>E</var><sub>a</sub>; up or down to the products' level is Δ<var>H</var>, and its direction gives the sign and the type of reaction.</p>
+  <p class="small">Diploma note: a "select the descriptions" numerical-response item is a set of exclusive groups. Decide each group from the diagram (sign, type, <var>E</var><sub>a</sub> against Δ<var>H</var>, which level is higher), then record the chosen digits in increasing order.</p>
+</div>
+
+</div>
+</div>
+<footer>© 2026 Evelyn Learning</footer>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var root = $('sol'), steps = Array.prototype.slice.call(root.querySelectorAll('ol.steps > li'));
+  var ink = $('ink'), readout = $('readout'), graph = $('graph'), axlab = $('axlab'), curve = $('curve'), dot = $('dot'), lvl = $('lvl'), peak = $('peak'), dH = $('dH'), Ea = $('Ea'), mkCmp = $('mkCmp'), ans = $('ans'), pslots = $('pslots'), chipsG = $('chips'), dHlab = $('dHlab'), Ealab = $('Ealab');
+  var liveHead = $('liveHead'), liveText = $('liveText'), played = false;
+  var audio = new Audio(), current = -1, paused = false, timer = null, capTimers = [], fired = {};
+  var fast = false; // true while the board is being brought up to date silently (no animation, no ink fades)
+
+  /* ---------- board primitives ---------- */
+  function show(el, on) { el.classList.toggle('off', !on); }
+  function setLive(head, text) { liveHead.textContent = head; liveText.textContent = text; }
+  function redraw(g) { var l = g.querySelector('.draw'); if (!l) return; l.classList.remove('go'); if (fast) return; void l.getBoundingClientRect(); l.classList.add('go'); }
+  function flash(el) { el.classList.remove('pulse'); if (fast) return; void el.getBoundingClientRect(); el.classList.add('pulse'); }
+  function sketch(g) {
+    if (fast) return;
+    g.classList.remove('fade'); show(g, true);
+    g.querySelectorAll('.draw').forEach(function (l, i) { l.classList.remove('go'); void l.getBoundingClientRect(); l.style.animationDelay = (i * 180) + 'ms'; l.classList.add('go'); });
+    setTimeout(function () { g.classList.add('fade'); }, 3600);
+    setTimeout(function () { show(g, false); g.classList.remove('fade'); }, 6200);
+  }
+  function write(html, cls) {
+    var d = document.createElement('div'); d.className = 'line' + (cls ? ' ' + cls : ''); d.innerHTML = html; ink.appendChild(d);
+    if (fast) d.classList.add('on'); else requestAnimationFrame(function () { d.classList.add('on'); });
+  }
+  function wither() {
+    var old = Array.prototype.slice.call(ink.children);
+    if (fast) { old.forEach(function (d) { ink.removeChild(d); }); return; }
+    old.forEach(function (d) { d.classList.add('wither'); });
+    setTimeout(function () { old.forEach(function (d) { if (d.parentNode === ink) ink.removeChild(d); }); }, 1500);
+  }
+  function catchUp(k) { // put the board where it would be at the start of step k: every earlier cue, applied at once
+    fast = true;
+    for (var i = 0; i < k; i++) SCRIPT[i].forEach(function (l) { if (l.cue) l.cue(); });
+    fast = false;
+  }
+  // the reaction marker runs along the curve from the reactants to the products
+  var run_ = null, LEN = curve.getTotalLength();
+  function travel() {
+    show(dot, true);
+    if (fast) { var e = curve.getPointAtLength(LEN); dot.setAttribute('cx', e.x); dot.setAttribute('cy', e.y); return; }
+    var t0 = null, ms = 3200, a = { on: true }; run_ = a;
+    function frame(now) {
+      if (!a.on) return; if (!t0) t0 = now;
+      var u = Math.min(1, (now - t0) / ms), p = curve.getPointAtLength(LEN * u);
+      dot.setAttribute('cx', p.x); dot.setAttribute('cy', p.y);
+      if (u < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  function stopTravel() { if (run_) run_.on = false; run_ = null; }
+  function boardFresh() {
+    stopTravel(); show(dot, false); dot.setAttribute('cx', 38); dot.setAttribute('cy', 118);
+    [lvl, peak, dH, Ea, ans, pslots, chipsG].forEach(function (g) { show(g, false); });
+    show(mkCmp, false); mkCmp.classList.remove('fade');
+    dHlab.style.opacity = ''; Ealab.style.opacity = '';
+  }
+  function boardRest() { // the resting board. Before the explanation: the diagram as given. After it: the two arrows, unlabelled, and the labels to place.
+    boardFresh(); wither(); setLive('', ''); resetChips();
+    if (played) {
+      show(lvl, true); show(peak, true); show(dH, true); show(Ea, true); dHlab.style.opacity = '0'; Ealab.style.opacity = '0';
+      show(pslots, true); show(chipsG, true);
+      graph.setAttribute('viewBox', '0 0 240 204');
+      readout.textContent = 'Now you: drag each label onto the arrow it belongs to.';
+    } else {
+      graph.setAttribute('viewBox', '0 0 240 170');
+      readout.textContent = 'Press play. The diagram is read as the tutor speaks.';
+    }
+  }
+
+  /* ---------- the storyboard: what the voice says, and what the board does at each sentence ---------- */
+  var SCRIPT = [
+    [ { say: 'The answer is 1, 3, 5, 8. Here’s why.', cue: function () { wither(); boardFresh(); graph.setAttribute('viewBox', '0 0 240 170'); } },
+      { say: 'The vertical axis is potential energy, in kilojoules, and the horizontal axis is reaction progress: how far the reaction has gone.', cue: function () { flash(axlab); write('<var>E</var><sub>p</sub> against reaction progress'); } },
+      { say: 'Follow the reaction along the curve: it starts at the reactants’ energy level, climbs to the top of the hill, and settles at the products’ level.', cue: function () { travel(); write('reactants → top of the hill → products', 'hi'); } },
+      { say: 'Every description in the list is a reading of this one picture, and they come in pairs that rule each other out.', cue: function () { write('1 or 2 · 3 or 4 · 5, 6 or 7 · 8 or 9'); } } ],
+    [ { say: 'First compare the two flat levels.', cue: function () { wither(); show(lvl, true); flash(lvl); } },
+      { say: 'The products sit higher on the energy axis than the reactants, so the potential energy of the products is greater than the potential energy of the reactants.', cue: function () { write('<var>E</var><sub>p</sub> products &gt; <var>E</var><sub>p</sub> reactants', 'hi'); } },
+      { say: 'That is description 8.', cue: function () { write('8 ✓ products higher', 'result'); } } ],
+    [ { say: 'The enthalpy change, delta H, is the energy of the products minus the energy of the reactants: the arrow from the reactants’ level up to the products’ level.', cue: function () { show(dH, true); redraw(dH); write('Δ<var>H</var> = <var>E</var><sub>p</sub> products − <var>E</var><sub>p</sub> reactants'); } },
+      { say: 'The arrow points up, so delta H is positive: description 1.', cue: function () { flash(dH); write('arrow up → Δ<var>H</var> &gt; 0', 'hi'); write('1 ✓ Δ<var>H</var> positive', 'result'); } },
+      { say: 'A positive delta H means the reaction absorbed energy from its surroundings, so it is endothermic: description 3.', cue: function () { write('energy absorbed → endothermic', 'hi'); write('3 ✓ endothermic', 'result'); } } ],
+    [ { say: 'The activation energy, E a, is the climb from the reactants’ level to the top of the hill: the least energy the reactants need before they can become products.', cue: function () { wither(); show(peak, true); show(Ea, true); redraw(Ea); write('<var>E</var><sub>a</sub> = peak − <var>E</var><sub>p</sub> reactants'); } },
+      { say: 'Compare the two arrows: the climb to the peak is taller than the rise to the products, so E a is greater than delta H.', cue: function () { flash(Ea); flash(dH); sketch(mkCmp); write('<var>E</var><sub>a</sub> &gt; Δ<var>H</var>', 'hi'); } },
+      { say: 'That is description 5.', cue: function () { write('5 ✓ <var>E</var><sub>a</sub> &gt; Δ<var>H</var>', 'result'); } } ],
+    [ { say: 'The descriptions that fit the diagram are 1, 3, 5 and 8.', cue: function () { wither(); write('1 · 3 · 5 · 8'); show(ans, true); flash(ans); } },
+      { say: 'In increasing order, record 1, 3, 5, 8.', cue: function () { write('Record: 1358', 'result'); $('answerBar').classList.add('flash'); setTimeout(function () { $('answerBar').classList.remove('flash'); }, 2500); } } ]
+  ];
+
+  /* ---------- playback ---------- */
+  var playAll = $('playAll'), pauseBtn = $('pause');
+  function clearCaption() { capTimers.forEach(clearTimeout); capTimers = []; }
+  function runCaption(k, ms, from) {
+    var cap = steps[k].querySelector('.caption'), lines = SCRIPT[k], total = lines.reduce(function (n, l) { return n + l.say.length; }, 0);
+    cap.innerHTML = lines.map(function (l) { return '<span>' + l.say + '</span> '; }).join('');
+    var spans = cap.querySelectorAll('span'), t = 0, skip = lines.slice(0, from).reduce(function (n, l) { return n + l.say.length; }, 0) / total * ms;
+    clearCaption();
+    lines.forEach(function (l, i) {
+      var at = t - skip; t += ms * (l.say.length / total);
+      if (i < from) return;
+      capTimers.push(setTimeout(function () {
+        for (var j = 0; j < spans.length; j++) spans[j].classList.toggle('said', j === i);
+        liveText.textContent = l.say;
+        if (l.cue && !fired[i]) { fired[i] = true; l.cue(); }
+      }, Math.max(0, at)));
+    });
+    capTimers.push(setTimeout(function () { for (var j = 0; j < spans.length; j++) spans[j].classList.remove('said'); }, ms - skip + 300));
+  }
+  function markStep(k) { steps.forEach(function (li, i) { li.classList.toggle('now', i === k); li.classList.toggle('ahead', k >= 0 && i > k); }); }
+
+  /* ---------- collapsing steps ---------- */
+  var folding = null;
+  function bodyOf(li) { return li.querySelector('.body'); }
+  function collapse(li, ms) {
+    if (li.classList.contains('closed')) return;
+    var b = bodyOf(li), h = b.scrollHeight;
+    b.style.transition = 'none'; b.style.height = h + 'px'; b.style.opacity = '1'; void b.offsetHeight;
+    b.style.transition = 'height ' + ms + 'ms linear, opacity ' + ms + 'ms linear'; b.style.height = '0px'; b.style.opacity = '0';
+    li.classList.add('closed');
+    folding = ms > 1000 ? { li: li, endAt: Date.now() + ms } : null;
+  }
+  function expand(li, ms) {
+    if (!li.classList.contains('closed')) return;
+    var b = bodyOf(li);
+    b.style.transition = 'none'; b.style.height = 'auto'; var h = b.scrollHeight; b.style.height = '0px'; void b.offsetHeight;
+    b.style.transition = 'height ' + ms + 'ms ease, opacity ' + ms + 'ms ease'; b.style.height = h + 'px'; b.style.opacity = '1';
+    li.classList.remove('closed');
+    if (folding && folding.li === li) folding = null;
+    setTimeout(function () { if (!li.classList.contains('closed')) b.style.height = 'auto'; }, ms + 30);
+  }
+  function freezeFold() {
+    if (!folding) return; var b = bodyOf(folding.li), cs = getComputedStyle(b), h = cs.height, o = cs.opacity;
+    b.style.transition = 'none'; b.style.height = h; b.style.opacity = o; folding.left = folding.endAt - Date.now();
+  }
+  function resumeFold(ms) {
+    if (!folding) return; var b = bodyOf(folding.li); void b.offsetHeight;
+    b.style.transition = 'height ' + ms + 'ms linear, opacity ' + ms + 'ms linear'; b.style.height = '0px'; b.style.opacity = '0'; folding.endAt = Date.now() + ms;
+  }
+  steps.forEach(function (li) {
+    li.querySelector('.stephead').addEventListener('click', function (e) {
+      if (e.target.closest('button')) return;
+      if (li.classList.contains('closed')) expand(li, 300); else collapse(li, 300);
+    });
+  });
+  function stop(keepBoard) {
+    audio.pause(); clearTimeout(timer); clearCaption();
+    current = -1; paused = false; markStep(-1);
+    playAll.disabled = false; pauseBtn.disabled = true; pauseBtn.textContent = 'Pause';
+    if (!keepBoard) boardRest(); else { setLive('', ''); readout.textContent = 'Press "Reset board" to label the arrows yourself.'; }
+  }
+  function run(k, chain) {
+    clearTimeout(timer); clearCaption();
+    current = k; paused = false; markStep(k); fired = {}; played = true;
+    if (folding && folding.li !== steps[k]) { resumeFold(300); folding = null; }
+    expand(steps[k], 300);
+    steps.forEach(function (li, i) { if (i < k - 1) collapse(li, 300); });
+    boardFresh(); wither(); resetChips();
+    catchUp(k);
+    graph.setAttribute('viewBox', '0 0 240 170');
+    setLive('Step ' + (k + 1) + ' · ' + steps[k].querySelector('h3').textContent.replace(/^\d+\.\s*/, ''), '');
+    playAll.disabled = true; pauseBtn.disabled = false; pauseBtn.textContent = 'Pause';
+    readout.textContent = '';
+    var text = SCRIPT[k].map(function (l) { return l.say; }).join(' ');
+    var next = function () { if (chain && k + 1 < steps.length) run(k + 1, true); else stop(true); };
+    audio.onloadedmetadata = function () {
+      var ms = isFinite(audio.duration) ? audio.duration * 1000 : text.length * 60;
+      runCaption(k, ms, 0);
+      if (k > 0) collapse(steps[k - 1], ms);
+    };
+    audio.onended = function () { if (current === k) timer = setTimeout(next, 600); };
+    audio.onerror = function () { var ms = text.length * 60; runCaption(k, ms, 0); if (k > 0) collapse(steps[k - 1], ms); timer = setTimeout(next, ms + 600); };
+    audio.src = 'audio/step-' + (k + 1) + '.mp3';
+    audio.play().catch(function () {});
+  }
+  playAll.addEventListener('click', function () { run(0, true); });
+  pauseBtn.addEventListener('click', function () {
+    if (current < 0) return;
+    if (!paused) { audio.pause(); paused = true; pauseBtn.textContent = 'Resume'; clearCaption(); clearTimeout(timer); freezeFold(); }
+    else {
+      paused = false; pauseBtn.textContent = 'Pause'; audio.play().catch(function () {});
+      resumeFold(Math.max(300, ((audio.duration || 0) - (audio.currentTime || 0)) * 1000));
+      var k = current, lines = SCRIPT[k], total = lines.reduce(function (n, l) { return n + l.say.length; }, 0), done = audio.duration ? audio.currentTime / audio.duration : 0, acc = 0, from = lines.length;
+      for (var i = 0; i < lines.length; i++) { if (acc + lines[i].say.length / total > done) { from = i; break; } acc += lines[i].say.length / total; }
+      runCaption(k, (audio.duration || 1) * 1000, from);
+    }
+  });
+  steps.forEach(function (li, i) { li.querySelector('button.listen').addEventListener('click', function () { run(i, true); }); });
+  $('resetBoard').addEventListener('click', function () { if (current >= 0) stop(false); else boardRest(); });
+
+  var tr = $('transcript');
+  tr.innerHTML = SCRIPT.map(function (lines, i) { return '<p><strong>Step ' + (i + 1) + '.</strong> ' + lines.map(function (l) { return l.say; }).join(' ') + '</p>'; }).join('');
+  $('transcriptBtn').addEventListener('click', function () { tr.classList.toggle('show'); });
+
+  /* ---------- taps ---------- */
+  root.querySelectorAll('.term').forEach(function (el) {
+    var toggle = function (e) { e.stopPropagation(); e.preventDefault(); el.classList.toggle('open'); };
+    el.addEventListener('click', toggle);
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') toggle(e); });
+  });
+  root.querySelectorAll('.eq').forEach(function (el) { el.addEventListener('click', function () { el.classList.toggle('open'); }); });
+  root.querySelectorAll('.choices').forEach(function (box) {
+    var want = box.getAttribute('data-answer'), fb = box.parentNode.querySelector('.fb');
+    box.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var ok = b.textContent.trim() === want;
+        box.querySelectorAll('button').forEach(function (x) { x.classList.remove('right', 'wrong'); });
+        b.classList.add(ok ? 'right' : 'wrong'); fb.textContent = ok ? 'Yes.' : 'Not quite. Try again, or read on.';
+      });
+    });
+  });
+
+  /* ---------- practice: drag the labels onto the arrows (after the explanation) ---------- */
+  var svg = graph, lslots = Array.prototype.slice.call(root.querySelectorAll('.lslot'));
+  var chips = Array.prototype.slice.call(root.querySelectorAll('.chip')), held = null, placed = {}, chome = {};
+  chips.forEach(function (c) { var m = /translate\(([\d.]+),([\d.]+)\)/.exec(c.getAttribute('transform')); chome[c.getAttribute('data-k')] = { x: +m[1], y: +m[2] }; });
+  function pt(e) { var p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+  function moveChip(c, x, y) { c.setAttribute('transform', 'translate(' + x + ',' + y + ')'); }
+  function resetChips() { placed = {}; chips.forEach(function (c) { var k = c.getAttribute('data-k'); moveChip(c, chome[k].x, chome[k].y); c.classList.remove('placed'); }); lslots.forEach(function (s) { s.classList.remove('good'); }); }
+  var WHY = {
+    Ea: 'That arrow runs from the reactants’ level up to the products’ level: it is the enthalpy change. The activation energy goes all the way to the peak.',
+    dH: 'That arrow runs from the reactants’ level up to the peak: it is the activation energy. The enthalpy change stops at the products’ level.'
+  };
+  chips.forEach(function (c) {
+    c.addEventListener('pointerdown', function (e) {
+      if (current >= 0 || chipsG.classList.contains('off')) return;
+      var p = pt(e), m = /translate\(([\d.-]+),([\d.-]+)\)/.exec(c.getAttribute('transform'));
+      held = { c: c, dx: p.x - m[1], dy: p.y - m[2] }; c.classList.add('held'); c.classList.remove('placed');
+      var k = c.getAttribute('data-k'); if (placed[k]) { placed[k].classList.remove('good'); delete placed[k]; }
+      c.parentNode.appendChild(c); c.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    c.addEventListener('pointermove', function (e) { if (!held || held.c !== c) return; var p = pt(e); moveChip(c, p.x - held.dx, p.y - held.dy); });
+    function release() {
+      if (!held || held.c !== c) return; held = null; c.classList.remove('held');
+      var m = /translate\(([\d.-]+),([\d.-]+)\)/.exec(c.getAttribute('transform')), cx = +m[1] + 15, cy = +m[2] + 8, k = c.getAttribute('data-k');
+      var hit = null;
+      lslots.forEach(function (s) { var sx = +s.getAttribute('x'), sy = +s.getAttribute('y'); if (cx > sx - 10 && cx < sx + 34 && cy > sy - 12 && cy < sy + 28) hit = s; });
+      if (hit && hit.getAttribute('data-k') === k) {
+        moveChip(c, +hit.getAttribute('x') - 3, +hit.getAttribute('y')); c.classList.add('placed'); hit.classList.add('good'); placed[k] = hit;
+        if (placed.Ea && placed.dH) { readout.textContent = 'Both right. Ea reaches the peak; ΔH stops at the products’ level and points up, so it is positive and the reaction is endothermic.'; wither(); write('<var>E</var><sub>a</sub> to the peak · Δ<var>H</var> to the products, up: positive', 'result'); }
+        else readout.textContent = 'Right. One more.';
+      } else {
+        moveChip(c, chome[k].x, chome[k].y);
+        if (hit) readout.textContent = WHY[k];
+      }
+    }
+    c.addEventListener('pointerup', release); c.addEventListener('pointercancel', release);
+  });
+
+  /* ---------- explore: products' level slider ---------- */
+  var pSlider = $('pSlider'), pRead = $('pRead'), xcurve = $('xcurve'), xdH = $('xdH'), xdHlab = $('xdHlab'), xplab = $('xplab'), pText = $('pText');
+  function drawX() {
+    var d = +pSlider.value, yP = 118 - d; // products' level relative to the reactants' level (118); peak fixed at 40
+    xcurve.setAttribute('d', 'M38 118 L108 118 C108 70 112 40 128 40 L140 40 C156 40 160 ' + (yP - 15) + ' 160 ' + yP + ' L222 ' + yP);
+    xdH.setAttribute('y2', d > 0 ? yP + 3 : d < 0 ? yP - 3 : 118); xdH.style.opacity = d === 0 ? '0' : '1';
+    xdHlab.setAttribute('y', (118 + yP) / 2 + 3); xplab.setAttribute('y', yP - 6);
+    var sign = d > 0 ? 'positive' : d < 0 ? 'negative' : 'zero', type = d > 0 ? 'endothermic' : d < 0 ? 'exothermic' : 'neither';
+    pRead.textContent = d > 0 ? 'above the reactants' : d < 0 ? 'below the reactants' : 'level with the reactants';
+    pText.innerHTML = 'Δ<var>H</var> is ' + sign + ' (' + (d > 0 ? '1' : d < 0 ? '2' : '—') + '), the reaction is ' + type + ' (' + (d > 0 ? '3' : d < 0 ? '4' : '—') + '), the products are ' + (d > 0 ? 'higher (8)' : d < 0 ? 'lower (9)' : 'level') + '. <var>E</var><sub>a</sub> does not move: it is fixed by the peak, so 5 stays true.';
+  }
+  pSlider.addEventListener('input', drawX); drawX();
+
+  // On load: the diagram as the question gives it. Nothing is marked until the tutor marks it.
+  boardRest();
+})();
+</script>
+</body>
+</html>

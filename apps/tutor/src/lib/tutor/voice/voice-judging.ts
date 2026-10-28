@@ -240,8 +240,23 @@ const TRAILING_PRAISE_RE =
  * the kind of sentence a check can contradict.
  */
 export function sentenceVerdictStance(sentence: string, studentText?: string): VerdictStance | null {
-  const s = (sentence ?? '').replace(/[*_~`]/g, '').trim();
+  let s = (sentence ?? '').replace(/[*_~`]/g, '').trim();
   if (!s) return null;
+  // A sentence that opens by quoting the student's own words back is not a
+  // verdict, even when those words start with "No" (embed-1792182263126: the
+  // learner said "No, I haven't. Have you?" in an English lesson; the reply
+  // "No, Ihaven'thaveyou — No, I haven't. …" was cut as denying a correct
+  // answer, and the retry took 12.6 s). Quoted WITH quote marks and followed
+  // by more (「"I went to Gifu." 完璧です。」), the verdict is what follows the
+  // quote: that part is read. A quote the sentence splitter cut open
+  // (embed-1792261973710: 「"No, I haven't.」 alone, read as a denial of a
+  // correct answer — the retry made a 16-sentence, 7.5 s turn) is a fragment
+  // of the student's words and carries no verdict.
+  const quoted = studentQuoteLead(s, studentText);
+  if (quoted.quoted) {
+    if (!quoted.rest) return null;
+    s = quoted.rest;
+  }
   // The opening word or phrase — read even when the sentence ends in a
   // question ("Not quite — what does the left side come to?").
   if (opensWithDenial(s)) return 'deny';
@@ -257,6 +272,27 @@ export function sentenceVerdictStance(sentence: string, studentText?: string): V
   const affirm = !deny && (INLINE_AFFIRM_RE.test(s) || COMMA_AFFIRM_RE.test(s) || PRAISE_THEN_AGREES_RE.test(s) || PRAISE_FOR_EYE_RE.test(s) || TRAILING_PRAISE_RE.test(s) || SPOKEN_MATCHES_RE.test(s));
   if (deny && /\b(?:actually|after\s+all)\b/i.test(s)) return null; // a reversal inside one sentence: other guards own it
   return deny ? 'deny' : affirm ? 'affirm' : null;
+}
+
+/** Does the sentence open with the student's own words? `rest` is what follows
+ *  a closed quotation of them ('' when there is no closing mark or nothing
+ *  after it). */
+function studentQuoteLead(sentence: string, studentText?: string): { quoted: boolean; rest: string } {
+  // Letters only: STT spaces apostrophes apart ("Ihaven ' thaveyou").
+  const letters = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const st = letters(studentText ?? '');
+  if (st.length < 5) return { quoted: false, rest: '' };
+  const lead = st.slice(0, 12);
+  const sent = letters(sentence);
+  // Opens with their words, or IS a fragment of them (a quote cut open).
+  const echoes = sent.startsWith(lead) || (sent.length >= 5 && st.startsWith(sent));
+  if (!echoes) return { quoted: false, rest: '' };
+  const open = /^[\s(]*([「"“'])/.exec(sentence);
+  if (!open) return { quoted: true, rest: '' };
+  const close = open[1] === '「' ? '」' : open[1] === '“' ? '”' : open[1];
+  const closeAt = sentence.indexOf(close, open.index + open[0].length);
+  if (closeAt < 0) return { quoted: true, rest: '' };
+  return { quoted: true, rest: sentence.slice(closeAt + 1).replace(/^[\s、,。.:;—–-]+/, '') };
 }
 
 /** Does a verdict sentence of this stance contradict a deciding check? */

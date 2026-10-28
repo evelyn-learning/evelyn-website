@@ -141,7 +141,7 @@ export function decideJudgeNotePlant(input: {
 
 /** The clause every mode ends on (R58): the check itself is never narrated. */
 const NEVER_NARRATE =
-  `Either way, NEVER narrate the act of checking — no "re-checking my last correction", "that check was correct", "nothing to walk back", "no correction needed", and never refer to the student in the third person. The student must never learn a check happened; they only ever hear normal tutoring.`;
+  `Either way, NEVER narrate the act of checking — no "re-checking my last correction", "that check was correct", "nothing to walk back", "no correction needed", and never refer to the student in the third person. The student must never learn a check happened; they only ever hear normal tutoring. If the student's words in the transcript were not readable English (a garbled run of letters), never quote that text back to them: ask them to say it once more.`;
 
 /** 2026-10-04 (live, student gac-test-001): a note consumed on a turn where
  *  the student had said nothing of the kind produced "let me fix that label…

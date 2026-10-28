@@ -38,7 +38,9 @@ import {
   momentBanner,
   LESSON_START_WINDOW_S,
   MOMENT_OPTIONS_MAX,
+  inferExitTicket,
 } from '../src/lib/tutor/portal/host-lesson';
+import type { TimelineEntry } from '../src/lib/tutor/portal/host-lesson-timeline';
 
 let passed = 0;
 let failed = 0;
@@ -239,6 +241,34 @@ test('moment directive: question with and without the student answer', () => {
   assert.match(bare, /^\[The lesson video just paused for a teaching moment\. Step in now: /);
 });
 
+test('parseMoment: the question type is read; a typed kind becomes a question; a free response drops the host\'s placeholder answer', () => {
+  const fr = parseMoment({ type: 'evelyn:moment', kind: 'question', question_type: 'freeresponse', question: 'Why did it keep rolling?', student_answer: 'Nothing stopped it', correct_answer: 'Nothing stopped it' });
+  assert.deepEqual(fr, { kind: 'question', positionSeconds: null, questionType: 'freeresponse', question: 'Why did it keep rolling?', studentAnswer: 'Nothing stopped it' });
+  const tf = parseMoment({ type: 'evelyn:moment', kind: 'truefalse', question: 'Mass is weight.', student_answer: 'True', correct_answer: 'False' });
+  assert.equal(tf?.kind, 'question');
+  assert.equal(tf?.questionType, 'truefalse');
+  assert.equal(tf?.correctAnswer, 'False');
+  assert.equal(parseMoment({ type: 'evelyn:moment', kind: 'quiz', questionType: 'MCQ' })?.questionType, 'mcq');
+  assert.equal(parseMoment({ type: 'evelyn:moment', kind: 'quiz', format: 'Short Answer' })?.questionType, 'shortanswer');
+  assert.equal(parseMoment({ type: 'evelyn:moment', kind: 'question', question_type: 'riddle' })?.questionType, undefined);
+  assert.equal(parseMoment({ type: 'evelyn:moment', kind: 'free_response', question: 'q' })?.kind, 'question');
+});
+
+test('moment directive: a free response is discussed, never marked; true/false names its two options', () => {
+  const fr = renderMomentDirective({ kind: 'question', positionSeconds: 30, questionType: 'freeresponse', question: 'Why did it keep rolling?', studentAnswer: 'Nothing stopped it' });
+  assert.match(fr, /open-ended/i);
+  assert.match(fr, /The student answered: Nothing stopped it/);
+  assert.ok(!/Correct answer/.test(fr));
+  assert.match(fr, /what the student wrote/);
+  const frBlank = renderMomentDirective({ kind: 'question', positionSeconds: 30, questionType: 'freeresponse', question: 'Why?' });
+  assert.match(frBlank, /open-ended/i);
+  assert.match(frBlank, /what they think/);
+  const tf = renderMomentDirective({ kind: 'question', positionSeconds: 30, questionType: 'truefalse', question: 'Mass is weight.', studentAnswer: 'True', correctAnswer: 'False' });
+  assert.match(tf, /true-or-false question/);
+  assert.match(tf, /Correct answer \(never state it outright; guide the student to it\): False/);
+  assert.ok(!/gameclass/i.test(fr + tf));
+});
+
 test('inactive clock: accumulates closed stretches plus the open one', () => {
   let c = INITIAL_INACTIVE_CLOCK;
   assert.equal(inactiveMsAt(c, T), 0);
@@ -416,7 +446,7 @@ const embed = read('src/app/tutor-portal/embed/page.tsx');
 test('embed: v1.2 host messages are parent-only, origin-checked and flag-gated', () => {
   const i = embed.indexOf('parseVideoState(event.data)');
   assert.ok(i > 0, 'parseVideoState wired');
-  const block = embed.slice(Math.max(0, i - 900), i + 200);
+  const block = embed.slice(Math.max(0, i - 2200), i + 200);
   assert.match(block, /if \(!TUTOR_HOST_LESSON\) return;/);
   assert.match(block, /event\.source !== window\.parent/);
   assert.match(block, /isAllowedHostOrigin\(event\.origin, expectedOrigin\)/);
@@ -439,11 +469,12 @@ test('embed: video commands carry who asked', () => {
   assert.match(embed, /'video_resume_unconfirmed'/);
 });
 
-test('embed: 30 minutes of standby ends the session as idle, silently', () => {
+test('embed: 30 minutes of standby ends the session as idle, silently (a pooled partner\'s own idle_end_sec replaces the 30)', () => {
   const i = embed.indexOf("addDebugEvent('standby_idle_end'");
   assert.ok(i > 0, 'idle timer');
-  const block = embed.slice(Math.max(0, i - 700), i + 300);
-  assert.match(block, /Date\.now\(\) - Math\.max\(standbyFrom, engagedAt\) < STANDBY_IDLE_END_MS/);
+  const block = embed.slice(Math.max(0, i - 900), i + 300);
+  assert.match(block, /const idleEndMs = \(poolIdleEndSecRef\.current \?\? STANDBY_IDLE_END_MS \/ 1000\) \* 1000;/);
+  assert.match(block, /Date\.now\(\) - Math\.max\(standbyFrom, engagedAt\) < idleEndMs/);
   assert.match(block, /hostEndReasonRef\.current = 'idle'/);
   assert.match(block, /h\.endSession\(\)/);
 });
@@ -454,6 +485,22 @@ test('embed: duration excludes standby and prewarm waiting, in the save and in s
   const latches = embed.split('sessionEngagedAtRef.current = Date.now();').length - 1;
   const synced = embed.split(/sessionEngagedAtRef\.current = Date\.now\(\);\s*syncInactiveRef\.current\(\);/).length - 1;
   assert.ok(latches >= 3 && synced === latches, `every engagement latch closes the prewarm wait (${synced}/${latches})`);
+});
+
+test('embed: telemetry records the reported duration and each timeline kind\'s shape, so a host\'s real payload can be read from prod', () => {
+  assert.match(embed, /addDebugEvent\('video_state', `state=\$\{video\.state\} pos=\$\{video\.positionSeconds \?\? ''\}\$\{video\.durationSeconds !== null \? ` dur=\$\{video\.durationSeconds\}` : ''\}`\)/);
+  assert.match(embed, /addDebugEvent\('lesson_timeline_shapes'/);
+  assert.match(embed, /lesson\.shapes/);
+  assert.match(embed, /lesson\.questionTypes/);
+});
+
+test('embed: the lesson timeline survives the warm frame\'s 30-minute self-reload (host sends it once, on the first ready)', () => {
+  // Live 10-19: GameClass posted evelyn:lesson once; after our idle reload the frame had no timeline.
+  assert.match(embed, /sessionStorage\.setItem\(cacheKey, JSON\.stringify\(event\.data\)\)/);
+  assert.match(embed, /sessionStorage\.getItem\(cacheKey\)/);
+  assert.match(embed, /'lesson_timeline_restored' : 'lesson_timeline'/);
+  assert.match(embed, /lessonCacheKey\(embedToken\)/);
+  assert.match(embed, /LESSON_CACHE_MAX_CHARS/);
 });
 
 test('embed: moments become a synthetic turn; the timeline feeds the per-turn window', () => {
@@ -488,6 +535,14 @@ test('evelyn:clock: whole active seconds, running flag, limit only when set', ()
   assert.ok(!('max_seconds' in clockMessage({ activeSeconds: 1, running: true, maxSeconds: 0 })));
 });
 
+test('evelyn:clock: pool_remaining_seconds only for a pooled partner (finite, ≥ 0)', () => {
+  assert.equal(clockMessage({ activeSeconds: 10, running: true, poolRemainingSeconds: 123 }).pool_remaining_seconds, 123);
+  assert.ok(!('pool_remaining_seconds' in clockMessage({ activeSeconds: 10, running: true })));
+  assert.ok(!('pool_remaining_seconds' in clockMessage({ activeSeconds: 10, running: true, poolRemainingSeconds: -5 })));
+  assert.equal(clockMessage({ activeSeconds: 10, running: true, poolRemainingSeconds: 0 }).pool_remaining_seconds, 0);
+  assert.equal(clockMessage({ activeSeconds: 10, running: true, poolRemainingSeconds: 59.9 }).pool_remaining_seconds, 59);
+});
+
 test('host header options: clock message posted on start, standby change, end and on a timer; timer / End / tools options wired', () => {
   assert.match(embed, /window\.parent\.postMessage\(clockMessage\(\{/);
   assert.match(embed, /running: !ended && !isStandingBy\(lessonHostRef\.current\)/);
@@ -513,12 +568,13 @@ test('moment position sent in milliseconds is read as seconds when it matches th
   assert.equal(reconcileMomentPosition(50_000, 49), 50_000 / 1000);
 });
 
-test('a moment for a tutor that is not open is dropped after a short hold; resume cancellations say why', () => {
+test('a moment for a tutor that is not open waits while the video is paused on it; it is dropped once the video plays on; resume cancellations say why', () => {
   assert.equal(MOMENT_PRESTART_HOLD_MS, 5000);
-  assert.match(vtr, /if \(!hasStartedRef\.current && now - moment\.atMs > MOMENT_PRESTART_HOLD_MS\) \{[^}]*'why=not_started'/);
+  // embed-1792453041712: the host paused at the moment, the start tap came 8 s later — a bare 5 s hold dropped it.
+  assert.match(vtr, /if \(!hasStartedRef\.current && standbyRef\.current && now - moment\.atMs > MOMENT_PRESTART_HOLD_MS\) \{[^}]*'why=not_started'/);
   for (const why of ['student_turn', 'standby', 'moment', 'student_typed', 'turn_killed']) assert.ok(vtr.includes(`cancelResumeLesson('${why}')`), why);
   assert.match(embed, /reconcileMomentPosition\(sentPos, currentPositionSeconds\(lessonHostRef\.current, Date\.now\(\)\)\)/);
-  assert.match(embed, /speech=\$\{st\.speech\} visual=\$\{st\.visual\} chars=\$\{st\.chars\}/);
+  assert.match(embed, /speech=\$\{st\.speech\} visual=\$\{st\.visual\} slide=\$\{st\.slide\} quiz=\$\{st\.quiz\} question=\$\{st\.question\} chars=\$\{st\.chars\}/);
 });
 
 test('moment: answer options are kept (strings or objects), capped and clamped, and reach the directive', () => {
@@ -617,6 +673,38 @@ test('wiring: a moment supersedes the question pinned before it (live 10-15)', (
   assert.equal((ts.match(/if \(momentBannerSeqRef\.current !== momentSeqAtFetch\)/g) ?? []).length, 2, 'both the gist and the fallback path');
   // The ref is declared before the pin-fetch effect reads it.
   assert.ok(ts.indexOf('const momentBannerSeqRef = useRef(0);') < ts.indexOf('const momentSeqAtFetch'));
+});
+
+test('exit ticket: an untagged last visual near the end is inferred (duration or timeline end)', () => {
+  const tm = (pos: number) => parseMoment({ type: 'evelyn:moment', kind: 'teaching_moment', title: '07 Exit', position_seconds: pos })!;
+  const tl: TimelineEntry[] = [
+    { start: 36, kind: 'visual', text: 'Rights' },
+    { start: 150, kind: 'quiz', text: 'Quiz' },
+    { start: 210, end: 216, kind: 'speech', text: 'last line' },
+    { start: 219.7, kind: 'visual', text: 'Exit' },
+  ];
+  assert.equal(inferExitTicket(tm(219.7), { timeline: tl, durationSeconds: 222 }), 'duration');
+  assert.equal(inferExitTicket(tm(219.7), { timeline: tl, durationSeconds: null }), 'timeline_end');
+  assert.equal(inferExitTicket(tm(210), { timeline: tl, durationSeconds: 222 }), null, 'more than 5 s from the end');
+  assert.equal(inferExitTicket(tm(36), { timeline: tl, durationSeconds: 40 }), null, 'a quiz still comes after it');
+  assert.equal(inferExitTicket(tm(219.7), { timeline: [...tl, { start: 221, kind: 'question', text: 'Q' }], durationSeconds: 222 }), null, 'a question after it');
+  assert.equal(inferExitTicket(tm(219.7), { timeline: [...tl, { start: 221, kind: 'speech', text: 'bye' }], durationSeconds: 222 }), 'duration', 'speech after it does not count');
+  assert.equal(inferExitTicket(tm(100), { timeline: [{ start: 100, kind: 'visual', text: 'X', exitTicket: true }, { start: 200, kind: 'speech', text: 's' }], durationSeconds: 300 }), 'tagged_in_timeline');
+  const quiz = parseMoment({ type: 'evelyn:moment', kind: 'quiz', position_seconds: 219.7 })!;
+  assert.equal(inferExitTicket(quiz, { timeline: tl, durationSeconds: 222 }), null, 'only teaching moments');
+  assert.equal(inferExitTicket(tm(219.7), { timeline: null, durationSeconds: null }), null, 'nothing to measure the end against');
+  const noPos = parseMoment({ type: 'evelyn:moment', kind: 'teaching_moment' })!;
+  assert.equal(inferExitTicket(noPos, { timeline: tl, durationSeconds: 222 }), null);
+});
+
+test('embed: an inferred exit ticket is logged and becomes the recap', () => {
+  const embed = readFileSync(join(__dirname, '../src/app/tutor-portal/embed/page.tsx'), 'utf8');
+  const i = embed.indexOf('inferExitTicket(moment,');
+  assert.ok(i > 0);
+  assert.ok(i < embed.indexOf("if (moment.kind === 'exit_ticket') recapRef.current = true;"), 'inferred before the recap switch');
+  assert.ok(i > embed.indexOf('reconcileMomentPosition(sentPos'), 'after the position is corrected');
+  assert.match(embed, /\(inferred: \$\{inferred\}\)/);
+  assert.match(embed, /kinds=\$\{Object\.entries\(lesson\.rawKinds\)/);
 });
 
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)

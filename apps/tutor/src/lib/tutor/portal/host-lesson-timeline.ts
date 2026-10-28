@@ -21,17 +21,210 @@ import type { VideoState } from './host-lesson';
  *  larger cap than the 500 of the spec's speech entries. */
 export const LESSON_TIMELINE_LIMITS = { entries: 5000, entryChars: 500, visualEntryChars: 1500, totalChars: 150_000 } as const;
 
+/** `visual` / `slide` = what is on screen (the transcript only carries what
+ *  is said); `quiz` / `question` = an assessment item in the lesson. */
+export type TimelineKind = 'speech' | 'visual' | 'slide' | 'quiz' | 'question';
+
 export interface TimelineEntry {
   start: number;
   end?: number;
   text: string;
-  /** `visual` = what is on screen (the transcript only carries what is said). */
-  kind: 'speech' | 'visual';
+  kind: TimelineKind;
+  /** The host tagged this entry as the lesson's exit ticket. */
+  exitTicket?: true;
+}
+
+/** What the lesson teaches is set by its title and description, then what is
+ *  on screen, then its quizzes and questions; the video's speech comes last.
+ *  A clip is often borrowed to teach something else (a sports clip for a
+ *  physics law), so its narration must not set the topic. */
+export function isOnScreen(kind: TimelineKind): boolean {
+  return kind === 'visual' || kind === 'slide';
+}
+export function isAssessment(kind: TimelineKind): boolean {
+  return kind === 'quiz' || kind === 'question';
+}
+
+/** Host `kind` values read as speech; anything else that is not a known kind
+ *  is on-screen content (a host's new item type must not be read as narration). */
+const SPEECH_KINDS = new Set(['', 'speech', 'transcript', 'caption', 'captions', 'subtitle', 'narration', 'audio']);
+
+/** How a question is answered. The host's type decides what the tutor is
+ *  told about the answer: a free response has no key (the host marks it
+ *  complete on submission), a true/false question has its two options
+ *  implied. Unknown types are ignored (undefined), never guessed. */
+export type QuestionType = 'mcq' | 'truefalse' | 'shortanswer' | 'freeresponse';
+
+const QUESTION_TYPES: Record<string, QuestionType> = {
+  mcq: 'mcq', multiple_choice: 'mcq', multiplechoice: 'mcq', choice: 'mcq', single_choice: 'mcq', multi_choice: 'mcq',
+  truefalse: 'truefalse', true_false: 'truefalse', tf: 'truefalse', boolean: 'truefalse', true_or_false: 'truefalse',
+  shortanswer: 'shortanswer', short_answer: 'shortanswer', short: 'shortanswer', fill_in: 'shortanswer', fill_in_the_blank: 'shortanswer', fill_blank: 'shortanswer', fillblank: 'shortanswer',
+  freeresponse: 'freeresponse', free_response: 'freeresponse', open: 'freeresponse', open_ended: 'freeresponse', openended: 'freeresponse',
+  essay: 'freeresponse', long_answer: 'freeresponse', longanswer: 'freeresponse', free_text: 'freeresponse', freetext: 'freeresponse',
+};
+
+function norm(raw: unknown): string {
+  return typeof raw === 'string' ? raw.trim().toLowerCase().replace(/[\s-]+/g, '_') : '';
+}
+
+export function normalizeQuestionType(raw: unknown): QuestionType | undefined {
+  return QUESTION_TYPES[norm(raw)];
+}
+
+/** The question type of an entry or a question item: `type` (when it is a
+ *  question type, not an element type), else the other names hosts use. */
+export function questionTypeOf(r: Record<string, unknown>): QuestionType | undefined {
+  for (const k of ['question_type', 'questionType', 'type', 'format', 'answer_type', 'answerType']) {
+    const t = normalizeQuestionType(r[k]);
+    if (t) return t;
+  }
+  return undefined;
+}
+
+function kindOf(raw: unknown): { kind: TimelineKind; exitTicket: boolean; questionType?: QuestionType } {
+  const k = norm(raw);
+  if (SPEECH_KINDS.has(k)) return { kind: 'speech', exitTicket: false };
+  if (k === 'slide' || k === 'slides') return { kind: 'slide', exitTicket: false };
+  if (k === 'quiz' || k === 'quizzes' || k === 'quiz_question' || k === 'quizquestion') return { kind: 'quiz', exitTicket: false };
+  if (k === 'question' || k === 'questions') return { kind: 'question', exitTicket: false };
+  // A host that names the entry after the question's own type.
+  const qt = normalizeQuestionType(k);
+  if (qt) return { kind: 'question', exitTicket: false, questionType: qt };
+  return { kind: 'visual', exitTicket: k === 'exit_ticket' || k === 'exit' };
+}
+
+function field(r: Record<string, unknown>, ...keys: string[]): string | undefined {
+  for (const k of keys) {
+    const v = r[k];
+    if (typeof v === 'string' && v.trim()) return v.trim();
+    if (typeof v === 'number' && Number.isFinite(v)) return String(v);
+  }
+  return undefined;
+}
+
+function optionTexts(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.slice(0, 8).map((o) => (o && typeof o === 'object' ? field(o as Record<string, unknown>, 'text', 'label', 'value') : typeof o === 'string' ? o.trim() : undefined))
+    .filter((t): t is string => !!t);
+}
+
+/** One question as a line: the question, its options, and its answer marked
+ *  as the tutor's alone (it guides; it never reads the answer out). A free
+ *  response carries no answer: the host's field there is a placeholder (the
+ *  platform marks every submission correct), and a tutor shown it would
+ *  measure the student against it. */
+function questionLine(q: Record<string, unknown>, inherited?: QuestionType, onType?: (t: QuestionType) => void): string | undefined {
+  const text = field(q, 'question', 'text', 'prompt', 'title');
+  if (!text) return undefined;
+  const type = questionTypeOf(q) ?? inherited;
+  if (type) onType?.(type);
+  if (type === 'freeresponse') return `${text} (Open-ended: no set answer.)`;
+  let opts = optionTexts(q.options ?? q.choices ?? q.answers);
+  if (type === 'truefalse' && !opts.length) opts = ['True', 'False'];
+  const answer = field(q, 'correct_answer', 'correctAnswer', 'answer');
+  return text + (opts.length ? ` Options: ${opts.join(' | ')}.` : '') + (answer ? ` (Answer, for you only: ${answer}.)` : '');
+}
+
+/** Keys that describe the entry's place, look or media, not what it teaches;
+ *  and the ones `entryText` already renders. */
+const NON_CONTENT_KEYS = new Set([
+  'kind', 'type', 'start', 'end', 'position_seconds', 'positionseconds', 'time', 'timestamp', 'duration', 'duration_seconds',
+  'id', '_id', 'uuid', 'key', 'index', 'order', 'position', 'sequence', 'seq', 'url', 'src', 'href', 'link', 'image', 'image_url', 'imageurl', 'thumbnail', 'media', 'video', 'audio', 'file',
+  'x', 'y', 'w', 'h', 'width', 'height', 'top', 'left', 'size', 'scale', 'rotation', 'color', 'colour', 'background', 'font', 'style', 'css', 'class', 'classname', 'layout', 'template', 'theme', 'visible', 'hidden', 'enabled',
+  'text', 'title', 'label', 'name', 'summary', 'description', 'content', 'questions', 'question', 'options', 'choices', 'answers', 'correct_answer', 'correctanswer', 'answer', 'student_answer',
+]);
+const EXTRA_FIELDS_MAX = 12;
+const EXTRA_VALUE_CHARS = 300;
+
+function isUrl(v: string): boolean {
+  return /^(https?:|data:|blob:|\/\/)/i.test(v);
+}
+
+/** A scalar or a list of scalars as text; undefined for anything else
+ *  (a URL, an empty string, a nested object handled by the caller). */
+function scalarText(v: unknown): string | undefined {
+  if (typeof v === 'string') { const t = v.trim(); return t && !isUrl(t) ? t : undefined; }
+  if (typeof v === 'number' && Number.isFinite(v)) return String(v);
+  if (Array.isArray(v)) {
+    const parts = v.slice(0, 20).map((x) => (typeof x === 'string' || typeof x === 'number' ? scalarText(x) : x && typeof x === 'object' ? field(x as Record<string, unknown>, 'text', 'label', 'value', 'title') : undefined)).filter((x): x is string => !!x);
+    return parts.length ? parts.join(', ') : undefined;
+  }
+  return undefined;
+}
+
+function humanKey(k: string): string {
+  return k.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_\-]+/g, ' ').trim().toLowerCase();
+}
+
+/** A slide's own fields (a host sends them as key-value pairs whose keys
+ *  vary by slide type) as `key: value`, in the host's order. Nested objects
+ *  go one level down. What is not content (ids, geometry, media, style) is
+ *  left out, so the tutor sees what the slide says, not how it is drawn. */
+function extraFields(r: Record<string, unknown>): string[] {
+  const out: string[] = [];
+  const push = (k: string, v: unknown) => {
+    if (out.length >= EXTRA_FIELDS_MAX) return;
+    const t = scalarText(v);
+    if (t) out.push(`${humanKey(k)}: ${clamp(t, EXTRA_VALUE_CHARS)}`);
+  };
+  for (const [k, v] of Object.entries(r)) {
+    if (NON_CONTENT_KEYS.has(k.toLowerCase())) continue;
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      for (const [sk, sv] of Object.entries(v as Record<string, unknown>)) {
+        if (NON_CONTENT_KEYS.has(sk.toLowerCase())) continue;
+        push(`${k} ${sk}`, sv);
+      }
+    } else push(k, v);
+  }
+  return out;
+}
+
+/** An entry's text: `text` as sent, else built from the fields a quiz,
+ *  question or slide carries (title, summary, question(s), options). */
+function entryText(r: Record<string, unknown>, kind: TimelineKind, questionType?: QuestionType, onType?: (t: QuestionType) => void): string | undefined {
+  const parts: string[] = [];
+  const text = typeof r.text === 'string' && r.text.trim() ? r.text.trim() : undefined;
+  const title = field(r, 'title', 'label', 'name');
+  if (text) parts.push(text);
+  else if (title) parts.push(title);
+  if (kind === 'speech') return parts[0];
+  const summary = field(r, 'summary', 'description', 'content');
+  if (summary && summary !== text) parts.push(summary);
+  if (text && title && !text.includes(title)) parts.unshift(`"${title}":`);
+  // A question entry with no `question(s)` field IS the question: its `text`
+  // is the prompt and `type`, `options`, `correct_answer` sit beside it.
+  const self = isAssessment(kind) && !Array.isArray(r.questions) && r.question === undefined;
+  const qs = Array.isArray(r.questions) ? r.questions : (r.question !== undefined || self ? [r] : []);
+  // An entry-level type applies to every question of a quiz that has none of its own.
+  const entryType = questionType ?? (Array.isArray(r.questions) ? questionTypeOf(r) : undefined);
+  qs.forEach((q, i) => {
+    const line = q && typeof q === 'object' ? questionLine(q as Record<string, unknown>, entryType, onType) : typeof q === 'string' && q.trim() ? q.trim() : undefined;
+    if (!line || line === text) return;
+    if (self) {
+      // The prompt is already in parts (as text or title): the full line takes its place.
+      const at = parts.indexOf(text ?? title ?? '');
+      if (at >= 0) parts[at] = line; else parts.push(line);
+      return;
+    }
+    parts.push(qs.length > 1 ? `Q${i + 1}: ${line}` : line);
+  });
+  if (isOnScreen(kind)) {
+    const extras = extraFields(r);
+    if (extras.length) return (parts.length ? parts.join(' ') + '; ' : '') + extras.join('; ');
+  }
+  return parts.length ? parts.join(' ') : undefined;
 }
 
 export interface ParsedTimeline {
   /** Sorted by `start`. */
   entries: TimelineEntry[];
+  /** The host's own `kind` values and how many of each (telemetry). */
+  rawKinds: Record<string, number>;
+  /** Per raw kind, the keys of the first entry of that kind, in the host's
+   *  order (telemetry: how a host shapes its entries, with no content). */
+  shapes: Record<string, string>;
+  /** How many questions of each type were read (telemetry). */
+  questionTypes: Partial<Record<QuestionType, number>>;
   /** How many items the host sent. */
   received: number;
   /** True when any limit cut something. */
@@ -58,17 +251,24 @@ export function parseLessonTimeline(data: unknown): ParsedTimeline | null {
   const L = LESSON_TIMELINE_LIMITS;
   const entries: TimelineEntry[] = [];
   let total = 0;
+  const rawKinds: Record<string, number> = {};
+  const shapes: Record<string, string> = {};
+  const questionTypes: Partial<Record<QuestionType, number>> = {};
+  const onType = (t: QuestionType) => { questionTypes[t] = (questionTypes[t] ?? 0) + 1; };
   let cut = false;
   for (const raw of d.timeline) {
     if (entries.length >= L.entries || total >= L.totalChars) { cut = true; break; }
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
     const r = raw as Record<string, unknown>;
-    const start = secs(r.start);
-    if (start === null || typeof r.text !== 'string') continue;
-    const trimmed = r.text.trim();
+    const rk = typeof r.kind === 'string' ? r.kind.slice(0, 24) : '-';
+    rawKinds[rk] = (rawKinds[rk] ?? 0) + 1;
+    if (!(rk in shapes)) shapes[rk] = Object.keys(r).slice(0, 16).map((k) => k.slice(0, 24)).join(',');
+    const start = secs(r.start ?? r.position_seconds ?? r.time);
+    if (start === null) continue;
+    const { kind, exitTicket, questionType } = kindOf(r.kind);
+    const trimmed = entryText(r, kind, questionType, onType);
     if (!trimmed) continue;
-    const kind = r.kind === 'visual' ? 'visual' : 'speech';
-    let text = clamp(trimmed, kind === 'visual' ? L.visualEntryChars : L.entryChars);
+    let text = clamp(trimmed, kind === 'speech' ? L.entryChars : L.visualEntryChars);
     if (text.length < trimmed.length) cut = true;
     if (total + text.length > L.totalChars) { text = clamp(text, L.totalChars - total); cut = true; }
     total += text.length;
@@ -78,11 +278,29 @@ export function parseLessonTimeline(data: unknown): ParsedTimeline | null {
       ...(end !== null && end >= start ? { end } : {}),
       text,
       kind,
+      ...(exitTicket ? { exitTicket: true as const } : {}),
     });
   }
   // Stable: entries with the same start keep the host's order.
   entries.sort((a, b) => a.start - b.start);
-  return { entries, received: d.timeline.length, cut };
+  return { entries, received: d.timeline.length, cut, rawKinds, shapes, questionTypes };
+}
+
+/** The host posts the lesson ONCE, on the frame's first `evelyn:ready`
+ *  (seen live 10-19). A warm frame reloads itself after 30 idle minutes, so
+ *  the raw lesson message is kept in sessionStorage under a key derived from
+ *  the token — per lesson, never the token itself — and restored on mount.
+ *  sessionStorage is shared by every frame of this origin in the tab, so the
+ *  key must tell one lesson's frame from another's. */
+export const LESSON_CACHE_MAX_CHARS = 1_500_000;
+
+export function lessonCacheKey(token: string | null | undefined): string | null {
+  if (!token) return null;
+  // djb2 over the token: a stable, short fingerprint (not a secret: the
+  // token is a signed JWT; a fingerprint of it reveals nothing).
+  let h = 5381;
+  for (let i = 0; i < token.length; i++) h = ((h * 33) ^ token.charCodeAt(i)) >>> 0;
+  return `evelyn:lesson:${h.toString(36)}${token.length.toString(36)}`;
 }
 
 export const LESSON_NOW_LIMITS = {
@@ -92,6 +310,8 @@ export const LESSON_NOW_LIMITS = {
   afterSeconds: 20,
   speechChars: 4000,
   visualChars: 5000,
+  /** Quizzes and questions so far. */
+  assessmentChars: 3000,
   /** Short caption segments are joined; a new time stamp starts this often. */
   stampEverySeconds: 15,
   /** Recap (exit ticket): speech from the start of the lesson up to now. */
@@ -102,14 +322,22 @@ export const LESSON_NOW_LIMITS = {
 export const LESSON_NEAR_END_S = 60;
 
 /** What a timeline holds, for telemetry (how much of it is on-screen content). */
-export function timelineStats(entries: TimelineEntry[]): { speech: number; visual: number; chars: number } {
-  let speech = 0; let visual = 0; let chars = 0;
-  for (const e of entries) { if (e.kind === 'visual') visual++; else speech++; chars += e.text.length; }
-  return { speech, visual, chars };
+export function timelineStats(entries: TimelineEntry[]): { speech: number; visual: number; slide: number; quiz: number; question: number; chars: number } {
+  const n = { speech: 0, visual: 0, slide: 0, quiz: 0, question: 0, chars: 0 };
+  for (const e of entries) { n[e.kind]++; n.chars += e.text.length; }
+  return n;
+}
+
+/** Where the lesson ends: the reported duration, else the last timeline
+ *  entry's end (a host that never reports the duration). */
+export function lessonEndSeconds(entries: TimelineEntry[] | null, durationSeconds: number | null): number | null {
+  if (durationSeconds !== null) return durationSeconds;
+  if (!entries?.length) return null;
+  return entries.reduce((m, e) => Math.max(m, e.end ?? e.start), 0);
 }
 
 /** Upper bound of the rendered block; the brain route refuses anything longer. */
-export const LESSON_NOW_MAX_CHARS = 14_000;
+export const LESSON_NOW_MAX_CHARS = 18_000;
 
 function mmss(total: number): string {
   const t = Math.floor(total);
@@ -150,17 +378,25 @@ export function renderLessonNow(input: {
     out.push('The lesson is nearly over.');
   }
 
-  // Every visual that has appeared so far; when over budget the oldest go first.
-  const visuals = timeline.filter((e) => e.kind === 'visual' && (pos === null || e.start <= pos + 1));
-  const visualLines: string[] = [];
-  let used = 0;
-  for (let i = visuals.length - 1; i >= 0; i--) {
-    const line = `[${mmss(visuals[i].start)}] ${visuals[i].text}`;
-    if (used + line.length > L.visualChars) break;
-    used += line.length + 1;
-    visualLines.unshift(line);
-  }
+  // Every visual / slide, then every quiz / question, that has appeared so
+  // far; when over budget the oldest go first.
+  const sofar = (keep: (k: TimelineKind) => boolean, budget: number, label: boolean): string[] => {
+    const items = timeline.filter((e) => keep(e.kind) && (pos === null || e.start <= pos + 1));
+    const lines: string[] = [];
+    let used = 0;
+    for (let i = items.length - 1; i >= 0; i--) {
+      const tag = label ? `${items[i].kind === 'quiz' ? 'Quiz' : items[i].kind === 'slide' ? 'Slide' : items[i].kind === 'question' ? 'Question' : ''}${items[i].kind !== 'visual' ? ': ' : ''}` : '';
+      const line = `[${mmss(items[i].start)}] ${tag}${items[i].text}`;
+      if (used + line.length > budget) break;
+      used += line.length + 1;
+      lines.unshift(line);
+    }
+    return lines;
+  };
+  const visualLines = sofar(isOnScreen, L.visualChars, true);
   if (visualLines.length) out.push('On screen so far (latest last):', ...visualLines);
+  const assessmentLines = sofar(isAssessment, L.assessmentChars, true);
+  if (assessmentLines.length) out.push('Quizzes and questions so far (latest last; never read an answer out):', ...assessmentLines);
 
   if (input.recap) {
     // The whole lesson so far, for a summary. Over budget: keep evenly
@@ -206,6 +442,13 @@ export function renderLessonNow(input: {
     if (speechLines.length) out.push(`What is said around this point (the video is at ${mmss(pos)}):`, ...speechLines);
   }
 
+  if (visualLines.length || assessmentLines.length) {
+    out.push(
+      'What the lesson teaches comes, in order, from its title and description, then what is on screen, then its quizzes and questions; ' +
+      'what the video says matters least. The clip may be about something else than the concept being taught (a sports clip used to teach a law of physics): ' +
+      'teach the lesson\'s concept and use the clip as the example.',
+    );
+  }
   out.push(
     'Treat these lines as the facts of the lesson at this point. Do not add names, numbers or events that are not in them or in the lesson context; ' +
     'if a detail is missing, say you do not have it. Answer about this point in the video unless the student asks about another part.',

@@ -7,8 +7,11 @@ import { TutorSession } from "@/models";
 import { getLessonTitles, findLessonPlanIdsByTitle } from "@/lib/tutor/lesson-plan/store";
 import { ArrowLeft, Play, Clock, MessageSquare, Layers, Search, X } from "lucide-react";
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
-import { buildSessionFilter, parseApproxDate, type SessionFilterParams } from "@/lib/tutor/recordings/filters";
+import { buildSessionFilter, buildGradeUsageFilter, parseApproxDate, type SessionFilterParams } from "@/lib/tutor/recordings/filters";
+import { gradeUsageReport } from "@/lib/tutor/portal/grade-usage-report";
+import { PracticeGradingView, formatUsd } from "./PracticeGradingView";
 import { sessionActiveSeconds } from "@/lib/tutor/recordings/active-seconds";
+import { readPoolSnapshot } from "@/lib/tutor/portal/partner-pool-store";
 
 const PAGE_SIZE = 50;
 
@@ -51,7 +54,7 @@ async function getSessions(filters: SessionFilterParams, page: number) {
   const q = filters.q?.trim();
   const searchPlanIds = q && !parseApproxDate(q) ? await findLessonPlanIdsByTitle(q) : [];
   const query = buildSessionFilter(filters, new Date(), searchPlanIds);
-  const [sessions, total, partners, hosts] = await Promise.all([
+  const [sessions, total, partners, hosts, costAgg] = await Promise.all([
     TutorSession.find(query)
       .select('-transcript -whiteboardCommands -debugEvents -tokenUsage')
       .sort({ startedAt: -1 })
@@ -61,6 +64,8 @@ async function getSessions(filters: SessionFilterParams, page: number) {
     TutorSession.countDocuments(query),
     TutorSession.distinct('sourcePartnerId', { sourcePartnerId: { $nin: [null, ''] } }),
     TutorSession.distinct('sourceHost', { sourceHost: { $nin: [null, ''] } }),
+    // The cost line: model cost of every session these filters match.
+    TutorSession.aggregate<{ cost: number }>([{ $match: query }, { $group: { _id: null, cost: { $sum: '$estimatedCost' } } }]),
   ]);
   // A2 name fallback: a session whose own studentName never arrived (token
   // minted without student_name on a double-start) resolves its display name
@@ -96,6 +101,7 @@ async function getSessions(filters: SessionFilterParams, page: number) {
   return {
     sessions: JSON.parse(JSON.stringify(sessions)),
     total,
+    tutorCost: costAgg[0]?.cost ?? 0,
     partners: partners.sort(),
     hosts: hosts.sort(),
     lessonTitles,
@@ -138,7 +144,7 @@ const RANGE_CHIPS: { value: string | undefined; label: string }[] = [
 
 /** Build an href preserving current filters, overriding the given keys.
  *  Setting a key to undefined removes it. Page resets unless explicitly set. */
-function filterHref(current: SessionFilterParams & { page?: string }, overrides: Record<string, string | undefined>): string {
+function filterHref(current: SessionFilterParams & { page?: string; view?: string }, overrides: Record<string, string | undefined>): string {
   const merged: Record<string, string | undefined> = { ...current, page: undefined, ...overrides };
   const qs = Object.entries(merged)
     .filter(([, v]) => v !== undefined && v !== '')
@@ -162,7 +168,18 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
     q: param(sp, 'q'),
   };
   const page = Math.max(1, parseInt(param(sp, 'page') || '1', 10) || 1);
-  const { sessions, total, partners, hosts, lessonTitles } = await getSessions(filters, page);
+  // view=grading: the Practice grading view (free-response grading cost in
+  // partner Self Study). Grades are not sessions, so only the Partner and
+  // date chips apply there; the session-only controls are hidden.
+  const grading = param(sp, 'view') === 'grading';
+  const nav = { ...filters, view: grading ? 'grading' : undefined };
+  const [{ sessions, total, tutorCost, partners: sessionPartners, hosts, lessonTitles }, report, pool] = await Promise.all([
+    getSessions(filters, page),
+    gradeUsageReport(buildGradeUsageFilter(filters)),
+    // Partner minute pool (2026-10-21): only the Partner chip names one.
+    filters.partner ? readPoolSnapshot(filters.partner) : Promise.resolve({ pooled: false as const }),
+  ]);
+  const partners = [...new Set([...sessionPartners, ...report.partners])].sort();
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const now = new Date();
   const hasActiveFilters = Boolean(filters.src || filters.partner || filters.host || filters.audio || filters.range || filters.mode || filters.q);
@@ -177,13 +194,48 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Tutor Sessions</h1>
             <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
-              {total} sessions
+              {grading ? `${report.total.grades} grades` : `${total} sessions`}
             </span>
+            <nav className="ml-auto flex rounded-lg border border-gray-300 bg-white p-0.5 text-sm">
+              {[
+                { label: 'Sessions', view: undefined },
+                { label: 'Practice grading', view: 'grading' },
+              ].map((v) => (
+                <Link
+                  key={v.label}
+                  href={filterHref(nav, { view: v.view })}
+                  className={`rounded-md px-3 py-1 font-medium transition-colors ${
+                    (v.view === 'grading') === grading ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {v.label}
+                </Link>
+              ))}
+            </nav>
           </div>
+          {/* Model cost for the current filters: the sessions these filters
+              match, plus Self Study free-response grading for the same
+              partner and dates (the only filters that apply to grading). */}
+          <p className="mt-2 text-sm text-gray-500" data-testid="cost-line">
+            Model cost: tutor sessions <span className="font-mono font-medium text-gray-800">{formatUsd(tutorCost)}</span>
+            {' · '}
+            practice grading <span className="font-mono font-medium text-gray-800">{formatUsd(report.total.costUsd)}</span>
+            <span className="text-gray-400" title="Grading follows only the Partner and date chips.">
+              {' '}({report.total.grades} grades{filters.partner ? `, ${filters.partner}` : ''})
+            </span>
+            {pool.pooled && (
+              <span data-testid="pool-line" title="Wall-clock minutes charged to this partner's pool (all sessions, all time). Top up: scripts/ops/partner-pool.sh">
+                {' · '}
+                Pool: <span className="font-mono font-medium text-gray-800">{(Math.round(pool.usedSec / 6) / 10).toFixed(1)} / {Math.round(pool.capSec / 60)} min</span>
+                {pool.exhausted ? <span className="ml-1 rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700">used up</span> : null}
+              </span>
+            )}
+          </p>
         </div>
       </header>
 
       <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-2">
+        {!grading && (
         <form method="get" action="/admin/tutor-sessions" className="flex items-center gap-2">
           {Object.entries(filters)
             .filter(([k, v]) => k !== 'q' && k !== 'mode' && v)
@@ -213,7 +265,7 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
           </select>
           {filters.q && (
             <Link
-              href={filterHref(filters, { q: undefined })}
+              href={filterHref(nav, { q: undefined })}
               className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
             >
               <X className="h-3.5 w-3.5" />
@@ -221,11 +273,12 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
             </Link>
           )}
         </form>
+        )}
         <div className="flex flex-wrap items-center gap-2">
-          {SOURCE_CHIPS.map((c) => (
+          {!grading && SOURCE_CHIPS.map((c) => (
             <Link
               key={c.label}
-              href={filterHref(filters, { src: c.value })}
+              href={filterHref(nav, { src: c.value })}
               className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
                 filters.src === c.value || (!filters.src && !c.value)
                   ? 'bg-blue-600 text-white border-blue-600'
@@ -235,11 +288,11 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
               {c.label}
             </Link>
           ))}
-          <span className="mx-1 h-4 w-px bg-gray-300" />
+          {!grading && <span className="mx-1 h-4 w-px bg-gray-300" />}
           {RANGE_CHIPS.map((c) => (
             <Link
               key={c.label}
-              href={filterHref(filters, { range: c.value })}
+              href={filterHref(nav, { range: c.value })}
               className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
                 filters.range === c.value || (!filters.range && !c.value)
                   ? 'bg-gray-800 text-white border-gray-800'
@@ -249,9 +302,9 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
               {c.label}
             </Link>
           ))}
-          <span className="mx-1 h-4 w-px bg-gray-300" />
-          <Link
-            href={filterHref(filters, { audio: filters.audio === '1' ? undefined : '1' })}
+          {!grading && <span className="mx-1 h-4 w-px bg-gray-300" />}
+          {!grading && <Link
+            href={filterHref(nav, { audio: filters.audio === '1' ? undefined : '1' })}
             className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
               filters.audio === '1'
                 ? 'bg-green-600 text-white border-green-600'
@@ -259,7 +312,7 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
             }`}
           >
             Has audio
-          </Link>
+          </Link>}
         </div>
         {(partners.length > 0 || hosts.length > 0) && (
           <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -267,18 +320,18 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
               <span className="flex flex-wrap items-center gap-1 text-gray-400">
                 Partner:
                 {partners.map((p: string) => (
-                  <Link key={p} href={filterHref(filters, { partner: filters.partner === p ? undefined : p })}
+                  <Link key={p} href={filterHref(nav, { partner: filters.partner === p ? undefined : p })}
                     className={`rounded px-2 py-0.5 border ${filters.partner === p ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>
                     {p}
                   </Link>
                 ))}
               </span>
             )}
-            {hosts.length > 0 && (
+            {!grading && hosts.length > 0 && (
               <span className="flex flex-wrap items-center gap-1 text-gray-400">
                 Host:
                 {hosts.map((h: string) => (
-                  <Link key={h} href={filterHref(filters, { host: filters.host === h ? undefined : h })}
+                  <Link key={h} href={filterHref(nav, { host: filters.host === h ? undefined : h })}
                     className={`rounded px-2 py-0.5 border ${filters.host === h ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>
                     {h.replace(/^https?:\/\//, '')}
                   </Link>
@@ -290,7 +343,9 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
       </div>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {sessions.length === 0 ? (
+        {grading ? (
+          <PracticeGradingView report={report} />
+        ) : sessions.length === 0 ? (
           <div className="rounded-xl bg-white p-12 text-center shadow">
             <p className="text-gray-500">
               {hasActiveFilters
@@ -417,15 +472,15 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
             </div>
           </div>
         )}
-        {totalPages > 1 && (
+        {!grading && totalPages > 1 && (
           <div className="flex items-center justify-between px-1 py-4 text-sm text-gray-500">
             <span>Page {page} of {totalPages} · {total} sessions</span>
             <div className="flex gap-2">
               {page > 1 && (
-                <Link href={filterHref(filters, { page: String(page - 1) })} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50">← Newer</Link>
+                <Link href={filterHref(nav, { page: String(page - 1) })} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50">← Newer</Link>
               )}
               {page < totalPages && (
-                <Link href={filterHref(filters, { page: String(page + 1) })} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50">Older →</Link>
+                <Link href={filterHref(nav, { page: String(page + 1) })} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50">Older →</Link>
               )}
             </div>
           </div>

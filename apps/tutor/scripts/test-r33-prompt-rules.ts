@@ -217,5 +217,14 @@ test('answer-reveal rule ON: cites the live evidence so the rule is not folklore
   assert.match(added, /3\.75|tug of war/i);
 });
 
+test('Rule 15a: the turn opens with a sentence, never a tool call (2026-10-18 GDI: tool-first turns cost 1.2–2 s of silence)', () => {
+  assert.match(prompt, /Rule 15a — Open every turn with a spoken sentence, never with a tool call \(HARD RULE\)/);
+  assert.match(prompt, /Speak first; the board, the segment bookkeeping and the advance all come after your opening sentence\./);
+});
+
+test('Absorption hand-off is said in the language being spoken (2026-10-18 GDI: "Take a moment to look this over." inside a Japanese explanation)', () => {
+  assert.match(prompt, /say the hand-off in the language you are speaking to the student at that moment/);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

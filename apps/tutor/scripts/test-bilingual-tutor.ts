@@ -19,8 +19,27 @@ import { isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
 import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import { latexAsProse } from '../src/lib/tutor/whiteboard/prose-latex';
 import { classifyTranscript, sessionAllowsNonLatin } from '../src/lib/tutor/voice/transcript-filters';
+import { inkTurnEndTimeoutMs } from '../src/lib/tutor/voice/ink-turn-end';
 import { buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
-import { isPleasantryOnly } from '../src/lib/tutor/voice/lesson-close';
+import { isPleasantryOnly, isTutorFarewell, isSessionEndSignalJa } from '../src/lib/tutor/voice/lesson-close';
+import { splitRunTogetherEnglish } from '../src/lib/tutor/voice/run-together-english';
+import { hasKatakanaEnglish } from '../src/lib/tutor/voice/katakana-english';
+import { saysCannotSeeScreen, VOICE_ONLY_NOTE_FIRST } from '../src/lib/tutor/voice/voice-only';
+import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE } from '../src/lib/tutor/voice/english-reply';
+import { isRetryAsk, retryCapNote, RETRY_CAP_NOTE } from '../src/lib/tutor/voice/retry-cap';
+import { readPacingVerdict } from '../src/lib/tutor/voice/pacing-verdict';
+import { shouldClearQpinOnAnswer } from '../src/lib/tutor/qpin-behavior';
+import { sentenceVerdictStance } from '../src/lib/tutor/voice/voice-judging';
+import { opensWithDenial } from '../src/lib/tutor/voice/verdict-precheck-shared';
+import { opensWithAffirmingVerdict } from '../src/lib/tutor/voice/nonanswer-praise';
+import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '../src/lib/tutor/voice/learner-address';
+import { overusesSuperlative, hasSuperlativePraise, PRAISE_VARIETY_NOTE, PRAISE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/praise-variety';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS } from '../src/lib/tutor/voice/lesson-close';
+import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_LANGUAGE_TURN_MAX_TOKENS } from '../src/lib/tutor/orchestrator/flags';
+import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
+import { claimsPronunciation } from '../src/lib/tutor/voice/pronunciation-claim';
+import { detectHoldRequest, WAIT_REQUEST_NOTE } from '../src/lib/tutor/voice/student-hold';
 import { pickLivenessReply } from '../src/lib/tutor/voice/cover-layer';
 import { renderVoiceCadenceBlock } from '../src/lib/tutor/pedagogy/voice-cadence';
 import { isMetaNarration, stripLeakedLabels, stripEchoedTags } from '../src/lib/tutor/voice/meta-narration';
@@ -28,6 +47,29 @@ import { parseThinkingCue, initialThinkingCue, cueTurnAccepted, cueTick, thinkin
 import { parseSpeechRate } from '../src/lib/tutor/voice/speech-rate';
 import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src/lib/tutor/voice/bilingual-canned';
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
+import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/turn-cap';
+import { opensWithStockPraise, overusesStockPraiseOpener, PRAISE_OPENER_NOTE } from '../src/lib/tutor/voice/praise-variety';
+import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '../src/lib/tutor/voice/unreadable-word';
+import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
+import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
+import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { ToolMarkupFilter, stripToolMarkup, hasToolMarkup } from '../src/lib/tutor/voice/tool-markup';
+import { languageTurnMaxTokens, outputBudgetNote, settleHeldTail, endsSentence, LANGUAGE_TURN_MAX_TOKENS_DEFAULT } from '../src/lib/tutor/voice/output-budget';
+import { decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE } from '../src/lib/tutor/voice/lesson-close';
+import { praiseNoteIsSticky, PRAISE_SESSION_SUPERLATIVE_STICKY } from '../src/lib/tutor/voice/praise-variety';
+import { hasKatakanaEnglishFromStt, KATAKANA_ECHO_NOTE } from '../src/lib/tutor/voice/katakana-english';
+import { hasDottedKatakanaReading, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/katakana-english';
+import { isStockPraiseOpenerOnly } from '../src/lib/tutor/voice/praise-variety';
+import { isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '../src/lib/tutor/voice/english-reply';
+import { isMetaNarration as isMetaNarration2 } from '../src/lib/tutor/voice/meta-narration';
+import { settleCutToolUse, toolContinuationMessages, toolContinuationNote } from '../src/lib/tutor/voice/output-budget';
+import { isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE } from '../src/lib/tutor/voice/lesson-close';
+import { stripMarkdownEmphasis } from '../src/lib/tutor/voice/sentence-spacing';
+import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
+import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
+import { expectsEnglishReply } from '../src/lib/tutor/voice/english-reply';
 
 let passed = 0;
 let failed = 0;
@@ -125,6 +167,13 @@ test('bilingual ⇒ core unchanged (shared cache), clause in session only', () =
 test('clause is generic: no client or product names', () => {
   const c = buildBilingualClause(['en', 'ja'])!;
   for (const banned of ['GDI', 'Gambit', 'Toyota', 'Denso', 'Nagoya']) assert.ok(!c.includes(banned), banned);
+});
+
+test('clause: stop hinting after two tries and explain in Japanese (GDI demo 10-27)', () => {
+  const c = buildBilingualClause(['en', 'ja'])!;
+  assert.ok(c.includes('stop hinting after two tries'));
+  assert.ok(c.includes('explain it in two or three short sentences — in Japanese for a beginner'));
+  assert.ok(c.includes('Never give a third hint on the same question'));
 });
 
 console.log('TTS text rewrite');
@@ -287,11 +336,13 @@ test('thinking cue wiring: claim → TutorSession → runtime + stage; head cove
 console.log('live-session fixes (GDI starter session 3, 2026-10-15)');
 test('after the close: goodbyes/thanks are pleasantries; content and questions are not', () => {
   for (const t of ['はい、ありがとうございます。また次回。はい、失礼します。', 'はい、またお願いします。ありがとうございました。', 'はい、お疲れ様でした', 'はい。', 'Thank you, see you next time!']) assert.equal(isPleasantryOnly(t), true, t);
+  for (const t of ['うん、こちらこそです。ありがとうございました。今日は色々練習できました。まだ難しいけど、また次回もお願いします。', 'Today was hard but fun. Thank you, see you next time.']) assert.equal(isPleasantryOnly(t), true, t);
+  for (const t of ['今日は色々練習できました。もう一つ質問してもいいですか。ありがとうございました。', '難しかったです。発音を教えてください。お願いします。']) assert.equal(isPleasantryOnly(t), false, t);
   for (const t of ['はい、ありがとうございます。ちょっと自信つきました。', "No, I haven't。カヤックはまだです。", 'また質問してもいいですか？', 'Have you?']) assert.equal(isPleasantryOnly(t), false, t);
 });
 test('lesson-closed state: set by closeSessionNotes, silences pleasantries, stands the idle nudge down', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.ok(vtr.includes("if (!opts?.silent && lessonClosedRef.current && isPleasantryOnly(transcript))"));
+  assert.ok(vtr.includes("if (!opts?.silent && lessonClosedRef.current && decidePostCloseUtterance(transcript) === 'silence')"));
   assert.ok(/cmd\.action === 'closeSessionNotes'\) \{[\s\S]{0,200}lessonClosedRef\.current = true/.test(vtr));
   assert.ok(vtr.includes('if (lessonClosedRef.current) return;'));
 });
@@ -310,10 +361,34 @@ test('persona directives are meta; leaked stage labels are stripped', () => {
 test('meta-narration (embed-1792125283926): verdict reasoning and bare fillers dropped, echoed tags stripped', () => {
   for (const s of ["Let's see this together.", "Okay, let's see.", "This matches what's on the board — \"Yes, I have.\" for Pattern 2.", "That's an attempt at this turn's open question — where you went.", "That matches Pattern 2's expected answer for the question."]) assert.equal(isMetaNarration(s), true, s);
   for (const s of ["Let's see what happens if we add two.", "Okay, let's see the next one together, shall we?", "That's a complete, correct answer to my question.", "3<n and n>10 holds."]) assert.equal(isMetaNarration(s), false, s);
+  // embed-1792174263669: reworded fillers, English and Japanese.
+  for (const s of ["Let's see what you've got.", "Okay, let’s hear what you've got.", "Okay, let's see where this is.", "Okay, let's see what's going on.", "Let's see this.", "はい、少し見てみましょう。", "いいですね、見てみましょう。", "はい、見てみましょう。"]) assert.equal(isMetaNarration(s), true, s);
+  for (const s of ["ちょっと見てみてください。", "表を見てみましょう、一つ目はパターン1です。", "Let's see what you did last weekend.", "Let's look at the table together: Pattern 1 is for a specific time."]) assert.equal(isMetaNarration(s), false, s);
+  // embed-1792185403054: tool names, plan read aloud, more fillers.
+  for (const s of ['show_passage を使って、完成した文を見せます。', 'show_equationを見てください。', 'Let me give the correct form directly, kindly, then close this out and move on.', "Let's see here.", "Let's check that.", 'That matches what you said, well done on part two.']) assert.equal(isMetaNarration(s), true, s);
+  for (const s of ['Show me your answer.', 'Let me give you a hint: the verb is went.', "Let's check the next sentence together."]) assert.equal(isMetaNarration(s), false, s);
+  // embed-1792196208833: "let me think" opener filler.
+  for (const s of ['Okay. let me think about that for a second.', 'Let me think.', 'Hmm, let me just think about this for a moment.']) assert.equal(isMetaNarration(s), true, s);
+  for (const s of ['Let me think about that for a second, then we can try the next one.', 'Let me think of an example: I went to Kyoto.']) assert.equal(isMetaNarration(s), false, s);
+  // embed-1792199116313: tool-use plan read aloud.
+  for (const s of ['Let me verify the card is there before scribbling.', 'Let me check the card first.']) assert.equal(isMetaNarration(s), true, s);
+  for (const s of ['Let me check your sentence: I ate sushi yesterday.', 'Let me make sure you know this word: went.']) assert.equal(isMetaNarration(s), false, s);
+  // embed-1792201826241: English spelled out in katakana.
+  assert.equal(hasKatakanaEnglish('なので「アイ・エイト・スシ・イエスタデイ」ですね。'), true);
+  assert.equal(hasKatakanaEnglish('「ハブ・ユー・エバー…」から始めます。'), true);
+  assert.equal(hasKatakanaEnglish('コカ・コーラを飲みました。I ate sushi yesterday.'), false);
+  assert.equal(hasKatakanaEnglish('カヤックをしたことがありますか。'), false);
   assert.equal(stripEchoedTags("<students_said>\nHi, today\n</students_said>\n\nLet's see this together."), "Let's see this together.");
   assert.equal(stripEchoedTags('x<y and y>z'), 'x<y and y>z');
+  // embed-1792199116313: a retro 'speaking' cut whose sound never transcribed
+  // left the tutor silent 75s — the retro path must arm the no-verdict recovery.
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  const retroAt = vtr.indexOf('const executeRetroCancel = () => {');
+  const retro = vtr.slice(retroAt, vtr.indexOf('realtime.markInterrupted();', retroAt));
+  assert.ok(retro.includes('armNoVerdictRecoveryRef.current?.();'), 'retro-cancel arms no-verdict recovery');
+  assert.ok(vtr.includes('armNoVerdictRecoveryRef.current = armNoVerdictRecovery;'));
   const src = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');
-  assert.ok(src.includes('const text = stripEchoedTags(raw);'));
+  assert.ok(src.includes('const text = stripEchoedTags(markup.text);'), 'echoed tags stripped after the tool-markup filter');
 });
 test('clause: exercise state kept, grounded corrections, no narrated judging, one goodbye', () => {
   const c = buildBilingualClause(['en', 'ja'])!;
@@ -382,6 +457,730 @@ test('speech rate reaches every Cartesia request path as generation_config.speed
 test('every canned spoken line in the runtime goes through localizeCanned', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.equal((vtr.match(/localizeCanned\(/g) ?? []).length, 4);
+});
+
+test('run-together English from the STT is split into words (embed-1792185403054)', () => {
+  assert.equal(splitRunTogetherEnglish('Haveyouevergotokaraoke ?'), 'Have you ever go to karaoke ?');
+  assert.equal(splitRunTogetherEnglish('Iwenttoplaygolfyesterday .'), 'I went to play golf yesterday .');
+  assert.equal(splitRunTogetherEnglish('Haveyoueverbeentocanada ?'), 'Have you ever been to canada ?');
+  assert.equal(splitRunTogetherEnglish("No , Ihaven ' thaveyou ."), "No , I haven't have you .");
+  // unknown pieces are kept, never "corrected" into a real word
+  assert.equal(splitRunTogetherEnglish('Yes , Ihaveited sushi lastweek .'), 'Yes , I have ited sushi last week .');
+  // names and ordinary text are left alone
+  for (const t of ['I have been to Hokkaido last year.', 'photosynthesis', 'はい、ありがとうございます。', 'Yesterday I go Golf']) assert.equal(splitRunTogetherEnglish(t), t, t);
+});
+
+test('two repeat-asks in a row trigger the move-on note (embed-1792185403054)', () => {
+  for (const t of ['もう一度言ってみましょう。', 'もう一度、ゆっくり言ってみましょうか。', 'Try saying it once more: Have you ever gone to karaoke?', 'Say it once more for me?']) assert.equal(isRetryAsk(t), true, t);
+  for (const t of ['では、次に進みましょう。', 'Have you ever been to Canada?', 'もう一度読みますね。']) assert.equal(isRetryAsk(t), false, t);
+  // embed-1792251169634: 'だけ' and '一緒に' between もう一度 and the verb.
+  for (const t of ['もう一度だけ、ゆっくり一緒に言ってみましょうか、No, I haven\'t.', 'もう一度だけ、ゆっくり言ってみましょうか。']) assert.equal(isRetryAsk(t), true, t);
+  // embed-1792251169634: 'can't see the screen' sets voice-only mode.
+  for (const t of ['ゆっくりでお願いします。画面が見えないです', 'すみません、画面は見えないです。声だけでお願いします', 'ボードが見えません', "Sorry, I can't see the screen."]) assert.equal(saysCannotSeeScreen(t), true, t);
+  for (const t of ['はい、なんとなくわかります。', '富士山が見えないです', 'I can see the board now.']) assert.equal(saysCannotSeeScreen(t), false, t);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('retryAskStreakRef.current >= RETRY_CAP_TURNS'));
+  assert.ok(vtr.includes('splitRunTogetherEnglish(transcript)'));
+});
+
+
+// ── embed-1792254012923 (2026-10-17) ─────────────────────────────────────────
+test('retry cap: every repeat-ask form from embed-1792254012923 is counted', () => {
+  const missed = [
+    'いいですね、意味はよく伝わります。 一つだけ、発音の区切りを直しましょう。 coworkerはひとつの単語で、コーワーカーと読みます。 もう一度、I went with my coworker、と言ってみてください。',
+    'はい、カラオケ好きで、よく行くんですよね。  Have you ever sung karaoke? の答えは、Yes, I have. です。  もう一度、声に出して言ってみてください。 Yes, I have.',
+    'カラオケ、好きでよく行くんですね。もう一度聞きますね。Have you ever sung karaoke? 声に出して言ってみてください。',
+    'ですので、正しい文は I sang karaoke last week です。 もう一度、声に出して言ってみてください。',
+    'いいですね、音がsangに近づいてきましたよ。 Sing の過去形はsangです。 もう一度、I sang karaoke last week、と言ってみてください。',
+    'いいですね、だいぶ近づきました。 sang の音は「サング」です。 もう一度、I sang karaoke last week、と言ってみてください。',
+    'Have you ever sung karaoke? もう一度、ゆっくり言ってみましょう。「サング」です。',
+    'もう一回、繰り返してください。', 'もう一度お願いします。', 'Repeat after me: I went to Kyoto.', 'Once more, please: I have been to Osaka.',
+  ];
+  for (const t of missed) assert.equal(isRetryAsk(t), true, t);
+  // The tutor doing something again is not a repeat-ask; a sentence boundary ends the search.
+  for (const t of ['もう一度読みますね。', 'もう一度説明しますね。', 'もう一度、ゆっくり説明します。では言ってみましょう、ではなくて質問に答えてください。', 'では、次に進みましょう。']) assert.equal(isRetryAsk(t), false, t);
+  assert.ok(retryCapNote(2).includes('twice'));
+  assert.ok(retryCapNote(5).includes('5 times'));
+  assert.equal(RETRY_CAP_NOTE, retryCapNote(2));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('pendingRetryCapNoteRef.current = retryCapNote(retryAskStreakRef.current);'));
+  assert.ok(!vtr.includes('retryAskStreakRef.current = 0;\n            onDebugEvent'), 'the streak must not be zeroed on plant');
+});
+
+test('katakana note: a katakana READING of an English word fires it; a loanword used as Japanese does not', () => {
+  for (const t of [
+    'coworkerはひとつの単語で、コーワーカーと読みます。',
+    'カラオケは英語でもkaraoke、同じスペルで大丈夫ですよ。 発音だけ少し違って、カラオケよりキャリオゥキーみたいに言います。',
+    'いいですね、だいぶ近づきました。 sang の音は「サング」です。',
+    'Have you ever sung karaoke? もう一度、ゆっくり言ってみましょう。「サング・カラオケ」です。',
+    'もう一度、ゆっくり言ってみましょう。「サング」です。',
+    'なので「アイ・エイト・スシ・イエスタデイ」ですね。',
+  ]) assert.equal(hasKatakanaEnglish(t), true, t);
+  for (const t of [
+    'カラオケをしたことがありますか。', 'ゴルフは好きですか。', 'コカ・コーラを飲みました。I ate sushi yesterday.',
+    'ハワイに行ったことがあるんですね。', '「カラオケ」は日本語でもよく使います。', 'ビデオを見ました、いいですね。',
+  ]) assert.equal(hasKatakanaEnglish(t), false, t);
+});
+
+test('voice-only: the first turn acknowledges aloud, later turns stay silent', () => {
+  assert.ok(VOICE_ONLY_NOTE_FIRST.includes('one short sentence'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('voiceOnlyNote = VOICE_ONLY_NOTE_FIRST;'));
+  assert.ok(vtr.includes('voiceOnlyNote = VOICE_ONLY_NOTE;'));
+});
+
+test('mutual farewell closes the lesson: tutor farewell + Japanese session-end signals', () => {
+  for (const t of ['今日はゴルフにカラオケ、ハワイのお話まで、たくさん練習できましたね。 また次回、続きを一緒にやりましょう。 さようなら、Mikeさん。', 'さようなら、Mikeさん。 また次回、お待ちしていますね。', 'Great work today. See you next time!', 'Bye for now, take care.']) assert.equal(isTutorFarewell(t), true, t);
+  for (const t of ['さようならは英語で goodbye です。言ってみましょう。', 'See you is a common goodbye. Can you say it?', '短く区切りますね。 もう一つ練習しましょう。 ハワイに、いつ行きましたか。', 'いいですね。 Yes, I have. バッチリです。', '']) assert.equal(isTutorFarewell(t), false, t);
+  for (const t of ['今日はここまでにします。ありがとうございました。また次回もお願いします。さようなら。', 'はい、失礼します。両田先生、また次回もよろしくお願いします。さようなら。', '今日はここまでで大丈夫です', 'もう終わりにします']) assert.equal(isSessionEndSignalJa(t), true, t);
+  for (const t of ['はい、Iwentwithmycoworkerこれでいいですか', 'ゆっくりでいいですか?', 'えーっと、一人で見ました。']) assert.equal(isSessionEndSignalJa(t), false, t);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('sessionEndSignalRegex.test(lower) || isSessionEndSignalJa(t)'));
+  assert.ok(vtr.includes("lastStudentVerificationRef.current?.isSessionEndSignal && isTutorFarewell(fullText)"));
+  assert.ok(vtr.includes("onDebugEvent?.('lesson_closed', 'mutual farewell"));
+});
+
+test('english-reply: an English ask answered with no Latin letters gets the note (embed-1792254012923 seq 32)', () => {
+  for (const t of ['では、二つの形をまとめますね。「海外に行ったことがありますか」を英語で言ってみましょう。', 'In English, please: have you ever been abroad?', 'もう一度、I sang karaoke last week、と言ってみてください。', 'Say it once more for me.']) assert.equal(asksForEnglish(t), true, t);
+  for (const t of ['いいですね。 Yes, I have. I went to Hawaii six years ago. バッチリです。', 'いつ行きましたか。', 'What did you do yesterday?']) assert.equal(asksForEnglish(t), false, t);
+  assert.equal(hasNoLatinLetters('えっと、海外に行ったことがありますか?英語にするんでしたよね。でも、はい、ハワイに行きましたと答えたくなります。'), true);
+  assert.equal(hasNoLatinLetters('はい、アイサンカロケラストウィーク。これでどうでしょう'), true);
+  assert.equal(hasNoLatinLetters('はい。はい。Yes , I have I went to Hawaii 6 years ago .これで大丈夫でしょうか。'), false);
+  assert.ok(NO_ENGLISH_REPLY_NOTE.includes('katakana'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('askedForEnglishRef.current = expectsEnglishReply(fullText);'), '2026-10-19: an English question also arms the note');
+  assert.ok(vtr.includes("onDebugEvent?.('no_english_reply_note'"));
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  assert.ok(embed.includes("'no_english_reply'"));
+});
+
+// ── embed-1792261973710 (2026-10-17) ─────────────────────────────────────────
+
+test('Ink turn-end timeout: 3000 ms for a bilingual session (decided 2026-10-17), 5600 ms otherwise (merge 2026-10-27)', () => {
+  // The hook no longer carries a hardcoded value: the wiring layer passes
+  // inkTurnEndTimeoutMs(tutorLanguages) and the hook's default is the
+  // English-only value. test:partner-session-options pins the numbers.
+  const hook = readFileSync('src/app/tutor/hooks/useCartesiaInkWS.ts', 'utf8');
+  assert.ok(!hook.includes('NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS, 3000)'));
+  assert.ok(!hook.includes('NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS, 5600)'));
+  assert.ok(hook.includes('const ENV_TURN_END_TIMEOUT_MS = inkTurnEndTimeoutMs(undefined);'));
+  assert.equal(inkTurnEndTimeoutMs(['en', 'ja'], undefined), 3000);
+  assert.equal(inkTurnEndTimeoutMs(undefined, undefined), 5600);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('turnEndTimeoutMs: inkTurnEndTimeoutMs(tutorLanguages),'));
+});
+
+test('Japanese affirmations read as affirmations: the question pin clears (seq 3, 01:12)', () => {
+  const praise = 'なるほど。 "I played golf with my friend." ちゃんと答えられていますね。 前置詞の"with"を使って、一緒にいた人を言えましたね。';
+  const read = readPacingVerdict(praise, { studentText: 'えっとはい。えー、with my friend' });
+  assert.equal(read.isAffirm, true);
+  assert.equal(read.isCorrection, false);
+  const transcript = [
+    { id: 'q', role: 'tutor', text: 'では、もう一つ聞きますね。 英語で。 "Who did you play golf with?"' },
+    { id: 's', role: 'student', text: 'えっとはい。えー、with my friend' },
+    { id: 'a', role: 'tutor', text: praise },
+  ];
+  assert.deepEqual(shouldClearQpinOnAnswer(transcript, 'q'), { clear: true, reason: 'answered' });
+  // The Nagoya turn: praise first, the rejection two sentences later.
+  const nagoya = 'I went to Nagoya last week. とてもいい文ですね。 "went" を正しく使えていますね。 でも、今回の問題は「岐阜」でした。 もう一度、"Gifu" を使って言ってみてください。';
+  assert.equal(readPacingVerdict(nagoya).isAffirm, true);
+  for (const t of ['"I went to Gifu last week." 完璧です。', '正解です。', 'はい、その通りです。', 'ばっちり使えましたね。', '合っていますよ。']) assert.equal(readPacingVerdict(t).isAffirm, true, t);
+  // An acknowledgement of the move, an interjection, a correction: not affirmations.
+  const ack = readPacingVerdict('いい質問ですね。 "went" は "go" の過去形です。');
+  assert.equal(ack.isAffirm, false); assert.equal(ack.ackOpener, true);
+  assert.equal(readPacingVerdict('なるほど。 では、次に進みましょう。').isAffirm, false);
+  const miss = readPacingVerdict('惜しい！ "go" ではなく "went" です。');
+  assert.equal(miss.isAffirm, false); assert.equal(miss.isCorrection, true);
+});
+
+test('Japanese verdict openers for the before-display check (deny / affirm)', () => {
+  for (const t of ['惜しい！ もう一度。', 'ちょっと違いますね。', 'うーん、そうではなくて、', '正しくは "went" です。', '近いですが、少し違います。']) assert.equal(opensWithDenial(t), true, t);
+  for (const t of ['"I went to Gifu last week." 完璧です。', '正解です！', 'ちゃんと言えましたね。', 'はい、合っています。']) assert.equal(opensWithAffirmingVerdict(t), true, t);
+  for (const t of ['では、次の文です。', 'いい質問ですね。', '"I go to Tokyo two years ago" ですね。', 'でも、今回の問題は「岐阜」でした。']) {
+    assert.equal(opensWithDenial(t), false, t);
+    assert.equal(opensWithAffirmingVerdict(t), false, t);
+  }
+});
+
+test("a quote the splitter cut open is not a denial; a closed quote's tail is the verdict (seq 17, 10:57 false kill)", () => {
+  const said = "No, I haven't. But I want to go.";
+  assert.equal(sentenceVerdictStance('"No, I haven\'t.', said), null);
+  assert.equal(sentenceVerdictStance('"No, I haven\'t. But I want to go." 完璧な返事です。', said), 'affirm');
+  assert.equal(sentenceVerdictStance('「No, I haven\'t. But I want to go.」 正解です。', said), 'affirm');
+  assert.equal(sentenceVerdictStance('"I go to Tokyo two years ago" ですね。', 'I go to Tokyo 2 years ago'), null);
+  assert.equal(sentenceVerdictStance("No, Ihaven'thaveyou — No, I haven't.", "No , Ihaven ' thaveyou ."), null);
+  assert.equal(sentenceVerdictStance('Not quite — try the past tense.', 'I go to Tokyo'), 'deny');
+});
+
+test('learner-address: 学生 / "the student" said to the student gets the note; compounds do not', () => {
+  for (const t of ['学生が言った内容を確認しますね。', 'ゴルフでもカラオケでも何でもいいので、学生自身の質問を一つ作ってみてください。', '今度は学生の番です。', 'Now the student will try one.']) assert.equal(refersToLearnerInThirdPerson(t), true, t);
+  for (const t of ['留学生の友達はいますか。', '大学生のとき、京都に行きました。', '学生時代は何をしていましたか。', '学生証を見せてください。', 'あなたの番です。', 'Students often mix these up.']) assert.equal(refersToLearnerInThirdPerson(t), false, t);
+  assert.ok(LEARNER_ADDRESS_NOTE.includes('あなた'));
+  const clause = buildBilingualClause(['en', 'ja']) ?? '';
+  assert.ok(clause.includes('Speak TO the student, never about them'));
+});
+
+test('praise-variety: 完璧 in 3 of the last 4 turns (latest included) plants the note', () => {
+  const perfect = '"Have you ever been to Canada?" 完璧です。 三つとも全部正解できましたね。';
+  const plain = '"When did you go?" これは「いつ行きましたか」という意味です。';
+  assert.equal(overusesSuperlative([perfect, plain, perfect, perfect]), true);
+  assert.equal(overusesSuperlative([plain, perfect, perfect, perfect]), true);
+  assert.equal(overusesSuperlative([perfect, perfect, plain, plain]), false);
+  assert.equal(overusesSuperlative([perfect, perfect, perfect, plain]), false, 'latest turn has none');
+  assert.equal(overusesSuperlative([perfect, perfect]), false, 'too few turns');
+  assert.equal(hasSuperlativePraise('Perfect! That is exactly it.'), true);
+  assert.equal(hasSuperlativePraise('いいですね。 "went" が使えました。'), false);
+  assert.ok(PRAISE_VARIETY_NOTE.includes('完璧'));
+});
+
+test('correct-retry: a checked-correct answer asked for again plants the note (seq 14, Nagoya → Gifu)', () => {
+  const pc = { answers: 'open_question', target: 'the sentence about last week', proposed: 'I went to Nagoya last week.', verdict: 'correct', confidence: 'high' } as const;
+  const reply = 'I went to Nagoya last week. とてもいい文ですね。 でも、今回の問題は「岐阜」でした。 もう一度、"Gifu" を使って言ってみてください。';
+  assert.equal(reAskedCheckedCorrect(pc, reply), true);
+  assert.equal(reAskedCheckedCorrect({ ...pc, answers: 'overall_problem' }, reply), true);
+  assert.equal(reAskedCheckedCorrect({ ...pc, answers: 'other_part' }, reply), false);
+  assert.equal(reAskedCheckedCorrect({ ...pc, answers: 'neither', verdict: 'cannot_determine' }, reply), false);
+  assert.equal(reAskedCheckedCorrect({ ...pc, verdict: 'incorrect' }, reply), false, 'a wrong answer may be re-asked');
+  assert.equal(reAskedCheckedCorrect(pc, 'I went to Nagoya last week. 完璧です。 では、三番目の文です。'), false, 'no retry ask');
+  assert.equal(reAskedCheckedCorrect(null, reply), false);
+  assert.ok(CORRECT_RETRY_NOTE.includes('do not ask for it again'));
+});
+
+test('lesson close → quiet auto-end: 45 s, deferred while busy, re-armed by a post-close turn', () => {
+  assert.equal(LESSON_CLOSE_AUTO_END_MS, 45_000);
+  assert.equal(decideLessonCloseAutoEnd({ busy: true, elapsedMs: 120_000 }), 'recheck');
+  assert.equal(decideLessonCloseAutoEnd({ busy: false, elapsedMs: 44_000 }), 'recheck');
+  assert.equal(decideLessonCloseAutoEnd({ busy: false, elapsedMs: 45_000 }), 'end');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.equal(vtr.split('armLessonCloseAutoEndRef.current();').length - 1, 3, 'armed at both close sites and on a post-close student turn');
+  assert.ok(vtr.includes("onDebugEvent?.('lesson_closed_auto_end'"));
+  // Per partner since the 2026-10-27 merge (partner-session-options.ts,
+  // default on): the prop sits beside the build-time kill switch.
+  assert.ok(vtr.includes("if (!TUTOR_LESSON_CLOSE_AUTO_END || !lessonCloseAutoEnd || sessionMode === 'text') return;"));
+  assert.ok(vtr.includes('void endSessionNowRef.current();\n    };\n    lessonCloseAutoEndTimerRef.current = setTimeout(check, LESSON_CLOSE_AUTO_END_MS);'));
+  assert.equal(TUTOR_LESSON_CLOSE_AUTO_END, true, 'default ON');
+});
+
+test('the three new notes are planted after the turn, consumed with the next, and persisted', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  for (const ev of ['learner_address_note_planted', 'praise_variety_note_planted', 'correct_retry_note_planted', 'learner_address_note_consumed', 'praise_variety_note_consumed', 'correct_retry_note_consumed']) assert.ok(vtr.includes(`'${ev}'`), ev);
+  assert.ok(vtr.includes('reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)'));
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  for (const p of ["'learner_address'", "'praise_variety'", "'correct_retry'", "'lesson_closed'"]) assert.ok(embed.includes(p), p);
+});
+
+test('embed-1792266148587: repeat requests get no English-reply note; transitions stay in the session language; praise note goes sticky', () => {
+  for (const t of ['すいません。もう一度お願いします', 'はい、もう一度言います', 'Can you say that again?', 'One more time please']) assert.equal(isStudentRepeatRequest(t), true, t);
+  for (const t of ['えっと、海外に行ったことがありますか?', 'はい、ハワイに行きました。じゃなくて、英語で']) assert.equal(isStudentRepeatRequest(t), false, t);
+  assert.ok(NO_ENGLISH_REPLY_NOTE.includes('do not say the item or the exercise is finished'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('transcript.trim().length >= 2 && !isStudentRepeatRequest(transcript)'), 'a bare はい after an English ask gets the note (embed-1792276942766 15:04)');
+  assert.ok(vtr.includes('Say any transition sentence in the language you are using with this student'));
+  assert.equal(PRAISE_STICKY_AFTER_PLANTS, 2);
+  assert.ok(vtr.includes('praiseNoteIsSticky(praiseStickyArgs)'));
+  const clause = buildBilingualClause(['en', 'ja']) ?? '';
+  assert.ok(clause.includes('「ここまでのポイント」'));
+});
+
+test('embed-1792276942766: readiness checks, pronunciation claims and wait requests get their notes', () => {
+  for (const t of ['では次に、今日の二つ目の形を練習しましょうね。 準備はいいですか。', 'Shall we start?', 'Are you ready?']) assert.equal(asksReadiness(t), true, t);
+  for (const t of ['では聞きますね。 Have you ever been to Okinawa?', '準備ができたら教えてくださいと言われました。']) assert.equal(asksReadiness(t), false, t);
+  const student = 'I went the rest week';
+  for (const t of ['「last week」と言いたかったんだと思いますが、「last」の音が少し変わってしまいましたね。', '「ear」ではなく「ever」の音でしたが、ちゃんと形になっていました。', 'It sounded like "rest" — try "last".']) assert.equal(claimsPronunciation(t, student), true, t);
+  assert.equal(claimsPronunciation('カラオケは英語でも "karaoke" と言いますよ、発音は少し違いますが、そのまま通じます。', 'すみません、カラオケはカタカナで書きますよね。英語ではどう言いますか?'), false, 'the student asked');
+  assert.equal(claimsPronunciation('I went last week、今度はしっかり言えましたね。', student), false);
+  assert.deepEqual(detectHoldRequest('はい、どう、ちょっと待ってください。'), { hold: true, soft: true });
+  assert.deepEqual(detectHoldRequest('Okay, can you just wait for a second?'), { hold: true, soft: true });
+  assert.equal(detectHoldRequest('待ってました、この問題。').hold, false);
+  assert.ok(WAIT_REQUEST_NOTE.includes('ONE short sentence'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  for (const ev of ['readiness_ask_note_planted', 'pronunciation_claim_note_planted', 'wait_request_note_consumed']) assert.ok(vtr.includes(`'${ev}'`), ev);
+  assert.ok(vtr.includes('if (holdReq.soft) pendingWaitNoteRef.current = WAIT_REQUEST_NOTE;'));
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  for (const p of ["'readiness_ask'", "'pronunciation_claim'", "'wait_request'"]) assert.ok(embed.includes(p), p);
+});
+
+// ── 2026-10-18 round (GDI embed-1792338502233): turn length, praise openers,
+// own-sentence re-ask, unreadable words, recap cap ───────────────────────────
+
+test('turn cap: language lessons cap at 5 sentences / 70 words; voice-only drops the tool exemption', () => {
+  const defaults = { hardSentences: 8, words: 110, softSentences: 4 };
+  const maths = turnCapPolicy({ languageLesson: false, voiceOnly: false, defaults });
+  assert.deepEqual(maths, { hardSentences: 8, words: 110, softSentences: 4, toolTurnsExempt: true });
+  const lang = turnCapPolicy({ languageLesson: true, voiceOnly: false, defaults });
+  assert.equal(lang.hardSentences, 5); assert.equal(lang.softSentences, 3); assert.equal(lang.toolTurnsExempt, true);
+  const langVoice = turnCapPolicy({ languageLesson: true, voiceOnly: true, defaults });
+  assert.equal(langVoice.toolTurnsExempt, false);
+  // the live turns: 9 sentences, no tools → hit under both; 10 sentences + show_problem in voice-only → hit only there
+  assert.equal(turnCapHit({ sentences: 9, words: 90, toolCalls: 0 }, maths), 'sentences');
+  assert.equal(turnCapHit({ sentences: 10, words: 95, toolCalls: 1 }, lang), null);
+  assert.equal(turnCapHit({ sentences: 10, words: 95, toolCalls: 1 }, langVoice), 'sentences');
+  assert.equal(turnCapHit({ sentences: 3, words: 40, toolCalls: 0 }, lang), null);
+  assert.equal(turnCapHit({ sentences: 4, words: 80, toolCalls: 0 }, lang), 'words');
+  assert.equal(CADENCE_STICKY_AFTER_PLANTS, 2);
+});
+
+test('cadence note: names the overrun, the soft cap, voice-only hand-back; the sticky re-plant is a standing rule', () => {
+  const lang = turnCapPolicy({ languageLesson: true, voiceOnly: true, defaults: { hardSentences: 8, words: 110, softSentences: 4 } });
+  const n = cadenceNote('sentences', { sentences: 9, words: 90 }, lang, { voiceOnly: true, sticky: false });
+  assert.match(n, /^\[cadence note — not from the student\]/);
+  assert.match(n, /ran 9 spoken sentences/); assert.match(n, /at most 3 sentences/); assert.match(n, /cannot see the board/);
+  assert.doesNotMatch(n, /anchor what you are saying on the board/);
+  const standing = cadenceNote(null, { sentences: 2, words: 20 }, lang, { voiceOnly: false, sticky: true });
+  assert.match(standing, /Standing rule/); assert.doesNotMatch(standing, /ran 2/);
+  assert.match(cadenceNote('words', { sentences: 4, words: 80 }, lang, { voiceOnly: false, sticky: true }), /applies to every turn from now on/);
+});
+
+test('praise opener: Nice / いいですね / 正解です openers count, mid-sentence praise does not', () => {
+  assert.equal(opensWithStockPraise('Nice. 言ってみましょう。'), true);
+  assert.equal(opensWithStockPraise('いいですね、ちゃんと言えましたね。'), true);
+  assert.equal(opensWithStockPraise('正解です。「play」が「played」に変わるところ、きちんとできていますね。'), true);
+  assert.equal(opensWithStockPraise('I went to Gifu last week. — 完璧ですね。'), false);
+  assert.equal(opensWithStockPraise('先週は名古屋城に行ったんですね。'), false);
+  assert.equal(opensWithStockPraise('はい、お待ちしますね。'), false);
+  const nice = 'Nice. 言ってみましょう。'; const plain = 'I see. 「I went alone」—それが答えですね。';
+  assert.equal(overusesStockPraiseOpener([nice, plain, nice, nice]), true);
+  assert.equal(overusesStockPraiseOpener([nice, nice, nice, plain]), false, 'latest turn must be one');
+  assert.equal(overusesStockPraiseOpener([plain, plain, nice, nice]), false);
+  assert.match(PRAISE_OPENER_NOTE, /do not open with a praise word/);
+});
+
+test('own-sentence re-ask: a repeat-ask quoting the sentence the student just said', () => {
+  const student = 'I went to the office yesterday .';
+  assert.equal(reAskedOwnSentence(student, 'Nice. 言ってみましょう。 I went to the office yesterday. — 完璧です。'), true);
+  assert.equal(reAskedOwnSentence(student, 'I went to the office yesterday. — 完璧です。 では次です。'), false, 'no repeat-ask');
+  assert.equal(reAskedOwnSentence(student, '言ってみましょう。 I went to the office last week.'), false, 'different sentence');
+  assert.equal(reAskedOwnSentence('Yes', '言ってみましょう。Yes, I have.'), false, 'too short to count');
+  assert.match(OWN_SENTENCE_RETRY_NOTE, /JUST said/);
+});
+
+test('unreadable word: "thef" is named; sound-alikes, plan names and dictionary words are not', () => {
+  const plan = latinWords('I went to Gifu last week. Have you ever been to Nagoya Castle? karaoke');
+  const tutor = latinWords('「先週岐阜に行きました。」 を英語で言ってみてください。');
+  assert.deepEqual(findUnreadableWords('I went thef last week .', [...plan, ...tutor]), ['thef']);
+  assert.deepEqual(findUnreadableWords('I went to Nagoya , castle reast week .', plan), [], 'reast ~ last, names from the plan');
+  assert.deepEqual(findUnreadableWords('Have you ever been to canada ?', latinWords('Have you ever been to Canada?')), []);
+  assert.deepEqual(findUnreadableWords('I played golf yesterday .', []), []);
+  assert.deepEqual(findUnreadableWords('I want to go to tokioto .', latinWords('Kyoto')), ['tokioto']);
+  assert.deepEqual(findUnreadableWords('のI haven \'t', []), [], 'clipped ending is a word');
+  assert.deepEqual(findUnreadableWords('はい、ハワイに行きました。', []), [], 'no Latin');
+  const note = unreadableWordNote(['thef']);
+  assert.match(note, /"thef"/); assert.match(note, /ask the student to say just that word once more/); assert.match(note, /do not turn it into a place/);
+});
+
+test('language clause: one mid-lesson recap at most, at a segment end', () => {
+  const c = buildBilingualClause(['en', 'ja'])!;
+  assert.match(c, /a mid-lesson recap happens at most once per lesson, when a segment ends, in two sentences at most/);
+});
+
+test('embed persists the new debug families (opener_prefetch, unreadable_word; ink_ covers the stale final)', () => {
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  for (const p of ["'opener_prefetch'", "'unreadable_word'", "'ink_'"]) assert.ok(embed.includes(p), p);
+});
+
+// ── 2026-10-18 round 2 (GDI embed-1792346446334): language drift, re-asked
+// questions, run-together proper nouns, late tails ─────────────────────────
+
+test('english instruction sentences: Now let\'s… / ask me back / That\'s exactly… are caught; target phrases and questions are not', () => {
+  assert.deepEqual(englishInstructionSentences('"No, I haven\'t." That\'s exactly right for Canada, and nice detail adding Hawaii. Now let\'s move to today\'s main practice. 一番目、「昨日ゴルフをしました」を英語で言ってみてください。'),
+    ["That's exactly right for Canada, and nice detail adding Hawaii.", "Now let's move to today's main practice."]);
+  assert.deepEqual(englishInstructionSentences('No, I haven\'t. カヤックはまだなんですね。 Have you — ask me back, with "ever" in there.'), ['Have you — ask me back, with "ever" in there.']);
+  assert.deepEqual(englishInstructionSentences('では一つ聞いてみますね。 Have you ever eaten sushi? 答えてみてください。'), [], 'a question for the student is a target');
+  assert.deepEqual(englishInstructionSentences('「I went to karaoke last weekend.」と言ってみてください。'), [], 'quoted model sentence');
+  assert.deepEqual(englishInstructionSentences('Yes, I have. I ate sushi last weekend.'), [], 'the tutor answering in English is modelling');
+  assert.match(ENGLISH_INSTRUCTION_NOTE, /English is only for the target phrases/);
+});
+
+test('romaji: "Last week ni Kyoto ni itta koto arimasu ka?" is caught; English with "no"/"to" is not', () => {
+  assert.deepEqual(romajiSentences('That sushi question\'s answered twice now — let\'s move forward. Last week ni Kyoto ni itta koto arimasu ka? Have you ever been to Kyoto?'),
+    ['Last week ni Kyoto ni itta koto arimasu ka?']);
+  assert.deepEqual(romajiSentences('I went to Nagoya Castle last week. No, I haven\'t.'), []);
+  assert.deepEqual(romajiSentences('京都に行ったことがありますか。'), []);
+  assert.deepEqual(romajiSentences('Ii desu ne. Sugoi desu.'), ['Ii desu ne.', 'Sugoi desu.']);
+  assert.match(ROMAJI_NOTE, /romaji/); assert.match(LANGUAGE_KEEP_NOTE, /never change the language you speak/);
+});
+
+test('re-asked answered question: the sushi loop, with and without ", too"; a new question is fine', () => {
+  const prev = 'では一つ聞いてみますね。 Have you ever eaten sushi? 答えてみてください。';
+  assert.equal(reAskedAnsweredQuestion(prev, 'もちろんあります。Yes , Ihave 。', '"Yes, I have." が答えられていますね。 では、Have you ever eaten sushi?'), 'have you ever eaten sushi');
+  assert.equal(reAskedAnsweredQuestion('Yes, I have. I ate sushi last weekend. Have you ever eaten sushi?', 'Yes , Ihave . Have you ever ten sushi 2?', '"I ate sushi last weekend" — solid. Have you ever eaten sushi, too?'), 'have you ever eaten sushi');
+  assert.equal(reAskedAnsweredQuestion(prev, 'Yes, I have.', 'いいですね。 Have you ever been to Okinawa?'), null, 'different question');
+  assert.equal(reAskedAnsweredQuestion(prev, 'えっと', 'Have you ever eaten sushi?'), null, 'no answer between');
+  assert.deepEqual(englishQuestions('Have you ever eaten sushi, too? 答えてみてください。 Who did you play golf with?'), ['have you ever eaten sushi', 'who did you play golf with']);
+  assert.match(REASKED_QUESTION_NOTE, /also when the student asks it back/);
+});
+
+test('own-sentence re-ask now counts a three-word answer', () => {
+  assert.equal(reAskedOwnSentence('Yes , I have .', 'いいですね。もう一度言ってみてください。 Yes, I have.'), true);
+});
+
+test('unreadable word: a run-together with a plan name ("toNagoya") is readable; "thef" still is not', () => {
+  const plan = latinWords('I went to Gifu last week. Have you ever been to Nagoya Castle?');
+  assert.deepEqual(findUnreadableWords('でも先週は名古屋城に行ったんです。I went toNagoya Castle last week .', plan), []);
+  assert.deepEqual(findUnreadableWords('I went thef last week .', plan), ['thef']);
+  assert.deepEqual(findUnreadableWords('I went to karaoke no strid end', latinWords('I went to karaoke last weekend.')), ['strid'], 'a lost word stays flagged');
+});
+
+test('late tail: a short continuation seconds into the tutor\'s turn is held; a question or a real new turn is not', () => {
+  assert.equal(isLateTail({ verdict: 'continuation', prodState: 'speaking', tutorTurnMs: 1900, text: 'ハネムーンで行きました。' }), true);
+  assert.equal(isLateTail({ verdict: 'continuation', prodState: 'speaking', tutorTurnMs: 1900, text: 'Have you ever been to Hawaii?' }), false, 'a question is a turn');
+  assert.equal(isLateTail({ verdict: 'new_turn', prodState: 'speaking', tutorTurnMs: 1900, text: 'ハネムーンで行きました。' }), false);
+  assert.equal(isLateTail({ verdict: 'continuation', prodState: 'speaking', tutorTurnMs: LATE_TAIL_MAX_TUTOR_TURN_MS + 1, text: 'ハネムーンで行きました。' }), false, 'too late to be a tail');
+  assert.equal(isLateTail({ verdict: 'continuation', prodState: 'listening', tutorTurnMs: 0, text: 'ハネムーンで行きました。' }), false);
+  assert.equal(isLateTail({ verdict: 'continuation', prodState: 'speaking', tutorTurnMs: 1000, text: 'I played golf yesterday and then I went to Nagoya Castle with my friend and we ate sushi there' }), false, 'too long');
+  assert.match(lateTailNote('ハネムーンで行きました。'), /do not repeat your previous instruction/);
+});
+
+
+// ── 2026-10-18 round after embed-1792350642171 (Kenji v4) ─────────────────
+
+test('tool markup: a tool call written as text is removed across sentences; prose before and after survives', () => {
+  const f = new ToolMarkupFilter();
+  let r = f.filter('はい、わかりました。<function_calls><function_invoke name="close_session_notes">');
+  assert.equal(r.text, 'はい、わかりました。'); assert.equal(r.stripped, true); assert.equal(f.open, true);
+  r = f.filter('<parameter name="reason">student said goodbye</parameter>');
+  assert.equal(r.text, ''); assert.equal(r.stripped, true); assert.equal(f.open, true);
+  r = f.filter('</function_invoke></function_calls>またね。');
+  assert.equal(r.text, 'またね。'); assert.equal(r.stripped, true); assert.equal(f.open, false);
+  r = f.filter('今日はここまでです。');
+  assert.equal(r.text, '今日はここまでです。'); assert.equal(r.stripped, false);
+});
+
+test('tool markup: prefixed and bare invoke/parameter forms; a stray closing tag alone', () => {
+  const pfx = 'antml:';
+  assert.equal(stripToolMarkup(`OK. <function_calls><invoke name="mark_segment_complete"><parameter name="segmentId">hook</${pfx}parameter></${pfx}invoke></${pfx}function_calls> Next.`).text, 'OK. Next.');
+  assert.equal(stripToolMarkup(`<${pfx}function_calls><${pfx}invoke name="x"><${pfx}parameter name="y">1</${pfx}parameter></${pfx}invoke></${pfx}function_calls>`).text, '');
+  const r = stripToolMarkup('Sure. </parameter></invoke>');
+  assert.equal(r.text, 'Sure.'); assert.equal(r.stripped, true);
+  assert.equal(hasToolMarkup('<parameter name="x">1</parameter>'), true);
+});
+
+test('tool markup: inequalities, LaTeX and other tags are untouched', () => {
+  for (const s of ['3<n and n>10', 'a<b and c>d', '$x < 5$ and $y > 2$', '<result>42</result>', 'Type <b>bold</b> here', 'いいですね。']) {
+    const r = stripToolMarkup(s);
+    assert.equal(r.text, s, s); assert.equal(r.stripped, false, s);
+  }
+  assert.equal(hasToolMarkup('3<n and n>10'), false);
+});
+
+test('output budget: a plain language voice turn is capped; the opener, a directive, a close, a recap turn and text sessions are not', () => {
+  const base = { languageLesson: true, voice: true, needsHeadroom: false, cap: LANGUAGE_TURN_MAX_TOKENS_DEFAULT };
+  // 2026-10-18 (embed-1792363895174): 9-sentence turns passed at out=216 — short
+  // Japanese sentences are cheap, so 320 bounded words, not sentences. 220 now
+  // that a cut tool call is finished by a continuation call (settleCutToolUse).
+  assert.equal(LANGUAGE_TURN_MAX_TOKENS_DEFAULT, 220);
+  assert.equal(TUTOR_LANGUAGE_TURN_MAX_TOKENS, 220, 'flags.ts default follows (env unset in this run)');
+  assert.equal(languageTurnMaxTokens(base), 220);
+  assert.equal(languageTurnMaxTokens({ ...base, cap: 260 }), 260);
+  assert.equal(languageTurnMaxTokens({ ...base, needsHeadroom: true }), undefined, 'tool-carrying turn keeps the normal cap');
+  assert.equal(languageTurnMaxTokens({ ...base, voice: false }), undefined, 'text session');
+  assert.equal(languageTurnMaxTokens({ ...base, languageLesson: false }), undefined, 'maths lesson');
+  assert.equal(languageTurnMaxTokens({ ...base, cap: null }), undefined, 'flag off');
+  assert.match(outputBudgetNote(220), /220 tokens/);
+  assert.match(outputBudgetNote(220), /roughly four short sentences/);
+  assert.match(outputBudgetNote(220), /at most three sentences/);
+  assert.match(outputBudgetNote(220), /never mention this note/);
+});
+
+test('output budget: on max_tokens the cut-off fragment is dropped, a complete last sentence is kept, and end_turn keeps everything', () => {
+  assert.equal(settleHeldTail('そして次は、先週の', 'max_tokens'), 'drop');
+  assert.equal(settleHeldTail('そして次は先週の話です。', 'max_tokens'), 'speak');
+  assert.equal(settleHeldTail('「Have you ever been to Kyoto?」', 'max_tokens'), 'speak');
+  assert.equal(settleHeldTail('そして次は、先週の', 'end_turn'), 'speak', 'a sentence without a full stop is still a sentence on a normal stop');
+  assert.equal(settleHeldTail('', 'end_turn'), 'drop');
+  assert.equal(endsSentence('Nice work!'), true);
+  assert.equal(endsSentence('いいですね。」'), true);
+  assert.equal(endsSentence('and then we'), false);
+  // The streamed shape: three sentences, the model cut mid-fourth.
+  const b = new SentenceBuffer();
+  const spoken = [...b.push('いいですね。先週は名古屋城に行ったんですね。では次の質問です。Have you ever')];
+  const fragment = b.flush();
+  assert.equal(spoken.length, 3);
+  assert.ok(fragment && !endsSentence(fragment));
+  assert.equal(settleHeldTail(fragment!, 'max_tokens'), 'drop');
+  assert.equal(settleHeldTail(fragment!, 'tool_use'), 'speak');
+});
+
+test('post-close gate: chatter and pleasantries are silenced; an explicit continue / question shape gets a turn', () => {
+  for (const s of ['ありがとうございました', 'はい、さようなら', "I'm sorry, I couldn't pull the report.", 'Sorry, I could not find the report.', 'What do you prefer?', 'Thank you so much.', 'Okay I will do that.', 'えーと、今日は楽しかったです。', 'また次回もお願いします']) {
+    assert.equal(decidePostCloseUtterance(s), 'silence', s);
+  }
+  for (const s of ['すみません、もう一つ質問があります', 'ちょっと待ってください', '続けてもいいですか', 'kayaking は英語で何と言いますか', 'Can I ask one more question?', 'wait', 'Do you have homework for me?', 'What does kayaking mean?', '宿題はありますか']) {
+    assert.equal(decidePostCloseUtterance(s), 'answer', s);
+  }
+  assert.equal(postCloseSilenceKind('ありがとうございました'), 'pleasantry');
+  assert.equal(postCloseSilenceKind('Okay I will do that.'), 'chatter');
+  assert.match(POST_CLOSE_NOTE, /close_session_notes/);
+  assert.match(POST_CLOSE_NOTE, /one or two sentences/);
+});
+
+test('unreadable word: a run-together with a NAME ("toNagoya", "inNagoya") and a mid-sentence capitalised name are never flagged; one note per word', () => {
+  const ctx = latinWords('I went to Gifu last week.');
+  assert.deepEqual(findUnreadableWords('先週 I went toNagoya Castle last week .', ctx), []);
+  assert.deepEqual(findUnreadableWords('I stayed inNagoya .', ctx), []);
+  assert.deepEqual(findUnreadableWords('I went to Nagoya with Mike .', ctx), [], 'names mid-sentence');
+  assert.deepEqual(findUnreadableWords('I went thef last week .', ctx), ['thef'], 'a lost lower-case word is still flagged');
+  assert.deepEqual(findUnreadableWords('Thef is my friend .', ctx), ['Thef'], 'a sentence-initial capital is checked as a word');
+  assert.deepEqual(findUnreadableWords('I went thef last week .', ctx, { skip: ['thef'] }), [], 'already asked for once');
+  assert.deepEqual(findUnreadableWords('I went thef and strid .', ctx, { skip: ['thef'] }), ['strid']);
+});
+
+test('own-sentence re-ask: quoting the student\'s correct sentence and then asking for the NEXT item is not a re-ask', () => {
+  const said = 'I went to Nagoya Castle last week.';
+  assert.equal(reAskedOwnSentence(said, '"I went to Nagoya Castle last week." いいですね。次は "Have you ever eaten sushi?" 言ってみてください。'), false);
+  assert.equal(reAskedOwnSentence(said, 'いいですね。もう一度 "I went to Nagoya Castle last week." と言ってみてください。'), true, 'the same sentence asked for again');
+  assert.equal(reAskedOwnSentence('I went to the office yesterday', 'Nice. 言ってみましょう。I went to the office yesterday. — 完璧です'), true, 'the original live shape still flags');
+});
+
+test('answered-question window: a question answered earlier in the lesson and asked again plants the note; the consecutive case is left to the older rule', () => {
+  const answered = new Set<string>();
+  recordAnsweredQuestions(answered, 'では、What did you do last weekend?', 'I played golf.');
+  assert.ok(answered.has('what did you do last weekend'));
+  recordAnsweredQuestions(answered, 'Have you ever eaten sushi?', 'えーと…');
+  assert.equal(answered.has('have you ever eaten sushi'), false, 'a filler is not an answer');
+  assert.equal(reAskedEarlierQuestion(answered, 'Have you ever been to Kyoto?', 'いいですね。What did you do last weekend?'), 'what did you do last weekend');
+  assert.equal(reAskedEarlierQuestion(answered, 'What did you do last weekend?', 'もう一度。What did you do last weekend?'), null, 'consecutive re-ask belongs to reAskedAnsweredQuestion');
+  assert.equal(reAskedEarlierQuestion(new Set(), 'x', 'What did you do last weekend?'), null);
+  assert.match(REASKED_EARLIER_QUESTION_NOTE, /already answered earlier/);
+});
+
+test('already-answered complaint: 「それはもう答えましたよ」 / "I already said that" are read as a complaint, not an answer', () => {
+  for (const s of ['それはもう答えましたよ', 'さっきも言いましたよ', 'さっき答えました', 'I already said that.', 'You asked me that already', '二回目ですね']) assert.equal(saysAlreadyAnswered(s), true, s);
+  for (const s of ['はい、ゴルフをしました', 'もう一度お願いします', 'I went to Kyoto', 'もう終わりにします']) assert.equal(saysAlreadyAnswered(s), false, s);
+  assert.match(ALREADY_ANSWERED_NOTE, /do not grade these words as a new answer/);
+});
+
+test('praise note: sticky after ONE plant in a language lesson, or after four superlative turns in any lesson', () => {
+  assert.equal(praiseNoteIsSticky({ plants: 1, superlativeTurns: 0, languageLesson: true }), true);
+  assert.equal(praiseNoteIsSticky({ plants: 1, superlativeTurns: 0, languageLesson: false }), false);
+  assert.equal(praiseNoteIsSticky({ plants: 2, superlativeTurns: 0, languageLesson: false }), true);
+  assert.equal(praiseNoteIsSticky({ plants: 0, superlativeTurns: PRAISE_SESSION_SUPERLATIVE_STICKY, languageLesson: false }), true);
+  assert.equal(praiseNoteIsSticky({ plants: 0, superlativeTurns: 3, languageLesson: true }), false);
+});
+
+test('katakana from STT: a long katakana run in the STUDENT\'s transcript is English to be written in Latin letters; a loanword is not', () => {
+  assert.equal(hasKatakanaEnglishFromStt('アイサンカロケラストウィーク'), true);
+  assert.equal(hasKatakanaEnglishFromStt('アイ・ウェント・トゥ・キョウト'), true);
+  assert.equal(hasKatakanaEnglishFromStt('カラオケをしたことがあります'), false);
+  assert.equal(hasKatakanaEnglishFromStt('ハネムーンで行きました'), false);
+  assert.match(KATAKANA_ECHO_NOTE, /Latin letters only/);
+});
+
+
+// ── 2026-10-18 round after embed-1792356364051 (Kenji v5, first full run) ──
+
+test('katakana reading sentence (「アイ・プレイド・ゴルフ・イエスタデイ」) is dropped from speech; a loanword sentence is not; note sticky after 2 plants', () => {
+  assert.equal(hasDottedKatakanaReading('一緒に言ってみましょう — 「アイ・プレイド・ゴルフ・イエスタデイ」。'), true);
+  assert.equal(hasDottedKatakanaReading('英語では「I played golf yesterday.」と言いますよ。'), false);
+  assert.equal(hasDottedKatakanaReading('カラオケに行きましたか?'), false);
+  assert.equal(hasDottedKatakanaReading('コカ・コーラを飲みました。'), false, 'a one-dot loanword');
+  assert.equal(KATAKANA_STICKY_AFTER_PLANTS, 2);
+  assert.match(KATAKANA_ENGLISH_NOTE_STANDING, /Standing rule/);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('katakana_reading_dropped'"));
+  assert.ok(vtr.includes('pendingKatakanaNoteRef.current = KATAKANA_ENGLISH_NOTE_STANDING;'));
+});
+
+test('a bare stock praise opener is recognised; feedback sentences and questions are not', () => {
+  for (const s of ['いいですね!', 'いいですね、', 'Nice.', 'Great!', '正解です。', 'いいですね']) assert.equal(isStockPraiseOpenerOnly(s), true, s);
+  for (const s of ['いいですね、同僚と!', 'Nice work on the past tense.', 'いいですか?', 'ゴルフをしましたね。', 'Nagoya が言えましたね。']) assert.equal(isStockPraiseOpenerOnly(s), false, s);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('stock_opener_dropped'"));
+});
+
+test('identical transcript after a correction (embed-1792356364051: "on Honey Moon" ×3) gets the identical-retry note', () => {
+  assert.equal(isIdenticalTranscript('Yes , Ihave . I went there on Honey Moon .', 'Yes, I have. I went there on Honey Moon.'), true);
+  assert.equal(isIdenticalTranscript('Yes, I have. I went there on my honeymoon.', 'Yes, I have. I went there on Honey Moon.'), false);
+  assert.equal(isIdenticalTranscript('はい', 'はい'), false, 'too short to mean anything');
+  assert.match(IDENTICAL_RETRY_NOTE, /Do not correct it again/);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('identical_retry_note'"));
+});
+
+test('Japanese verdict narration (「これは質問ですね — 答えではなく…」) is meta; ordinary Japanese is not', () => {
+  assert.equal(isMetaNarration2('これは質問ですね — 答えではなく、もう一度同じ形を繰り返していますよ。'), true);
+  assert.equal(isMetaNarration2('もう一度同じ形を繰り返していますよ。'), true);
+  for (const s of ['これは過去分詞ですね。', 'それは質問の形です。使ってみましょう。', '質問ですね、いいですよ。', 'もう一度言ってみましょう。']) assert.equal(isMetaNarration2(s), false, s);
+});
+
+test('hold check-in line follows the session language; correction note never quotes garbled transcript', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("(tutorLanguages ?? []).includes('ja')\n              ? 'まだここにいますよ。準備ができたら、声をかけてくださいね。'"));
+  const jn = readFileSync('src/lib/tutor/voice/judge-correction-note.ts', 'utf8');
+  assert.ok(jn.includes('never quote that text back to them'));
+});
+
+
+test('unknown name (embed-1792361732296: "Terimachi" → 寺町): a capitalised name nobody has used gets the keep-as-spelled note; known places and names do not', () => {
+  const ctx = latinWords('I went to Nagoya Castle last week. Have you ever been to Hawaii? Mike');
+  assert.deepEqual(findUnknownNames('IwenttoTerimachi lastmonth .', ctx), ['Terimachi']);
+  assert.deepEqual(findUnknownNames('I went to Torimachi last month.', ctx), ['Torimachi']);
+  assert.deepEqual(findUnknownNames('I went to Nagoya with Mike.', ctx), [], 'both in context');
+  assert.deepEqual(findUnknownNames('I went to Nagoy castle.', ctx), [], 'one edit from a context name');
+  assert.deepEqual(findUnknownNames('Yesterday I played golf.', ctx), [], 'sentence-initial capital is a word');
+  assert.deepEqual(findUnknownNames('I went to Torimachi.', ctx, { skip: ['torimachi'] }), [], 'one note per name');
+  assert.match(unknownNameNote(['Terimachi']), /EXACTLY as spelled/);
+  assert.match(unknownNameNote(['Terimachi']), /「Terimachi ですか？」/);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('unknown_name_note_planted'"));
+});
+
+test('English tails from embed-1792361732296: "Try saying it now." is an instruction; "That answers …" is verdict narration', () => {
+  assert.deepEqual(englishInstructionSentences('もう一度言ってみましょう。 I tried some local fish, and it was delicious. Try saying it now.'), ['Try saying it now.']);
+  assert.deepEqual(englishInstructionSentences('さようなら。Thanks for today — see you next time!'), ['Thanks for today — see you next time!']);
+  assert.equal(isMetaNarration2('That answers "have you been there" — yes, they\'ve been.'), true);
+  assert.equal(isMetaNarration2('That answers the question nicely: yes, you have.'), true);
+});
+
+test('cut tool call (embed-1792363895174 07:31: stop=max_tokens with blocks=[text,tool_use]): ONE continuation call finishes the tool; a malformed call on a normal stop is rejected', () => {
+  const cut = { id: 'toolu_1', name: 'close_session_notes' };
+  assert.equal(settleCutToolUse({ cut, stopReason: 'max_tokens', alreadyContinued: false }), 'continue');
+  assert.equal(settleCutToolUse({ cut, stopReason: 'max_tokens', alreadyContinued: true }), 'reject', 'one continuation per turn');
+  assert.equal(settleCutToolUse({ cut, stopReason: 'tool_use', alreadyContinued: false }), 'reject', 'malformed JSON on a normal stop');
+  assert.equal(settleCutToolUse({ cut, stopReason: 'end_turn', alreadyContinued: false }), 'reject');
+  assert.equal(settleCutToolUse({ cut: null, stopReason: 'max_tokens', alreadyContinued: false }), 'none', 'a text-only cap is the tail-drop case, not this one');
+  // The continuation: the spoken text as the assistant turn, then one instruction.
+  const msgs = toolContinuationMessages('今日はここまでにしましょう、お疲れ様でした。', 'close_session_notes');
+  assert.equal(msgs.length, 2);
+  assert.equal(msgs[0]!.role, 'assistant');
+  assert.equal(msgs[0]!.content, '今日はここまでにしましょう、お疲れ様でした。');
+  assert.equal(msgs[1]!.role, 'user');
+  assert.equal(msgs[1]!.content, toolContinuationNote('close_session_notes'));
+  assert.match(toolContinuationNote('close_session_notes'), /close_session_notes/);
+  assert.match(toolContinuationNote('advance_lesson'), /not from the student/);
+  assert.match(toolContinuationNote('advance_lesson'), /tool calls? only|no (?:further|new) speech/i);
+  // Tool calls that already ran in the cut iteration are named, so the continuation does not repeat them.
+  const withDone = toolContinuationNote('advance_lesson', ['mark_segment_complete']);
+  assert.match(withDone, /mark_segment_complete/);
+  assert.match(withDone, /already (?:executed|ran|been executed)|do not (?:call|repeat)/i);
+  assert.equal(toolContinuationMessages('text', 'advance_lesson', ['mark_segment_complete'])[1]!.content, withDone);
+  assert.equal(toolContinuationMessages('', 'advance_lesson').length, 1, 'no spoken text ⇒ no empty assistant turn');
+  assert.equal(toolContinuationMessages('   ', 'advance_lesson')[0]!.role, 'user');
+  // Wired: the brain stream re-issues once at the normal cap and mutes any new speech; the client records the event.
+  const brain = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');
+  assert.ok(brain.includes('settleCutToolUse('));
+  assert.ok(brain.includes('toolContinuationMessages('));
+  assert.ok(brain.includes("yield { type: 'tool-call-continued'"));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('tool_call_continued'"));
+});
+
+test('premature close line (embed-1792363895174 03:26: 「今日の練習はここまでにしましょう」 at a segment transition, 4 more minutes of teaching): dropped mid-lesson, kept in the closing stretch, after the student\'s end signal, or once the lesson is closed', () => {
+  const open = { lessonClosed: false, studentEndSignal: false, closingStretch: false };
+  assert.equal(isPrematureCloseLine('今日の練習はここまでにしましょう。', open), true);
+  assert.equal(isPrematureCloseLine('今日はここまでにしましょう、お疲れ様でした。', open), true);
+  assert.equal(isPrematureCloseLine('今日のレッスンはここまでです。', open), true);
+  assert.equal(isPrematureCloseLine('今日はこれで終わりにしましょう。', open), true);
+  assert.equal(isPrematureCloseLine('ここまでのポイントを確認しましょう。', open), false, 'a mid-lesson recap is allowed');
+  assert.equal(isPrematureCloseLine('次は、過去の経験について話しましょう。', open), false, 'a transition is 次は…');
+  assert.equal(isPrematureCloseLine('この練習はここまでにして、次に進みましょう。', open), false, 'closing an EXERCISE is not closing the day');
+  assert.equal(isPrematureCloseLine('今日はここまでにしましょう。', { ...open, closingStretch: true }), false, 'the last segment / recap may close');
+  assert.equal(isPrematureCloseLine('今日はここまでにしましょう。', { ...open, studentEndSignal: true }), false, 'the student asked to stop');
+  assert.equal(isPrematureCloseLine('今日はここまでにしましょう。', { ...open, lessonClosed: true }), false);
+  // Where in the plan: recap, the last segment, or one segment before it (extensions do not count).
+  const plan = { segments: [
+    { id: 'hook', kind: 'hook' }, { id: 'p1', kind: 'practice' }, { id: 'p2', kind: 'practice' }, { id: 'p3', kind: 'practice' },
+    { id: 'recap', kind: 'recap' }, { id: 'ext', kind: 'extension' },
+  ] };
+  assert.equal(inClosingStretch(plan, 'hook'), false);
+  assert.equal(inClosingStretch(plan, 'p1'), false);
+  assert.equal(inClosingStretch(plan, 'p2'), false, 'two real segments left');
+  assert.equal(inClosingStretch(plan, 'p3'), true, 'only the recap left');
+  assert.equal(inClosingStretch(plan, 'recap'), true);
+  assert.equal(inClosingStretch(plan, 'ext'), true);
+  assert.equal(inClosingStretch(plan, 'nope'), true, 'unknown segment ⇒ never drop');
+  assert.equal(inClosingStretch(null, 'p1'), true, 'no plan (freestyle) ⇒ never drop');
+  assert.match(PREMATURE_CLOSE_NOTE, /not from the student/);
+  assert.match(PREMATURE_CLOSE_NOTE, /次は/);
+  assert.match(PREMATURE_CLOSE_NOTE, /close_session_notes/);
+  // Wired in the bilingual sentence path, and the clause names the transition shape.
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('premature_close_line_dropped'"));
+  assert.ok(vtr.includes("'premature_close_note_consumed'"));
+  const clause = buildBilingualClause(['en', 'ja']) ?? '';
+  assert.ok(/「次は/.test(clause) && /今日はここまで/.test(clause), 'clause: a segment transition is 「次は…」, never 「今日はここまで」');
+});
+
+test('markdown emphasis (embed-1792363895174: *「Have you ever…」* in the opener and the transcript drawer): asterisks stripped, text kept; multiplication and a leaked *opener* label untouched by this rule', () => {
+  assert.equal(stripMarkdownEmphasis('今日は *「Have you ever been to Kyoto?」* を練習しましょう。'), '今日は 「Have you ever been to Kyoto?」 を練習しましょう。');
+  assert.equal(stripMarkdownEmphasis('The target is **ever** here.'), 'The target is ever here.');
+  assert.equal(stripMarkdownEmphasis('*I went to Nagoya.*'), 'I went to Nagoya.');
+  assert.equal(stripMarkdownEmphasis('「*been*」と言います。'), '「been」と言います。');
+  assert.equal(stripMarkdownEmphasis('2*3*4 = 24'), '2*3*4 = 24', 'multiplication');
+  assert.equal(stripMarkdownEmphasis('3 * 4 * 5'), '3 * 4 * 5', 'spaced multiplication');
+  assert.equal(stripMarkdownEmphasis('plain sentence.'), 'plain sentence.');
+  // Through the sentence buffer (what TTS and the transcript receive): no asterisk survives,
+  // and a leaked stage label still comes off first.
+  const b = new SentenceBuffer();
+  const out = [...b.push('*opener* いいですね。次は *「Have you ever eaten sushi?」* です。 Say it: *I have eaten sushi.* ')];
+  const tail = b.flush();
+  const all = [...out, ...(tail ? [tail] : [])];
+  assert.ok(all.length >= 3, `got ${JSON.stringify(all)}`);
+  assert.ok(all.every((x) => !x.includes('*')), `asterisk survived: ${JSON.stringify(all)}`);
+  assert.equal(all[0], 'いいですね。');
+  assert.ok(all.some((x) => x.includes('「Have you ever eaten sushi?」')));
+  assert.ok(all.some((x) => x.includes('I have eaten sushi.')));
+});
+
+test('pronunciation claim SENTENCE (embed-1792363895174: 「発音は少し違って…「カリオキ」のように」 stayed after the katakana sentence was dropped): the claim sentence is dropped; a hearing check, a pronunciation exercise and an answer to the student\'s own question are kept', () => {
+  assert.equal(isPronunciationClaimSentence('発音は少し違っていましたね。', 'I went to karaoke.'), true);
+  assert.equal(isPronunciationClaimSentence('「last」の音が少し変わってしまいましたね。', 'the rest week'), true);
+  assert.equal(isPronunciationClaimSentence('「ear」ではなく「ever」の音でしたが、意味は伝わりました。', 'ear eaten'), true);
+  assert.equal(isPronunciationClaimSentence('It sounded like "bent" there.', 'I went'), true);
+  assert.equal(isPronunciationClaimSentence('聞こえますか？', 'はい'), false, 'a hearing check is not a claim');
+  assert.equal(isPronunciationClaimSentence('発音の練習ですね。', 'はい'), false, 'an exercise, not a claim');
+  assert.equal(isPronunciationClaimSentence('発音を練習しましょう。', 'はい'), false);
+  assert.equal(isPronunciationClaimSentence('発音は少し違っていましたね。', '発音はどうでしたか？'), false, 'the student asked');
+  assert.equal(isPronunciationClaimSentence('いいですね。次は "Have you ever been to Kyoto?" です。', 'Yes, I have.'), false);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('pronunciation_claim_dropped'"));
+});
+
+test('prompted repeat praised as the student\'s own (embed-1792363895174 turn 1: 「完璧な英語の文です」 after a repeat of the modelled sentence): note planted; praise for a sentence the student built is left alone', () => {
+  const prev = '今日は "Have you ever been to Kyoto?" を練習します。言ってみてください。 Have you ever been to Kyoto?';
+  assert.equal(praisedPromptedRepeat('Have you ever been to Kyoto?', prev, '完璧な英語の文です！とてもいいですね。'), true);
+  assert.equal(praisedPromptedRepeat('have you ever been to kyoto', prev, 'Perfect sentence! 次は…'), true);
+  assert.equal(praisedPromptedRepeat('Have you ever been to Kyoto?', prev, 'そうです。では、あなたの経験を話してみましょう。'), false, 'a plain confirmation is right');
+  assert.equal(praisedPromptedRepeat('Yes, I have. I went to Kyoto last year.', prev, '完璧です！'), false, 'the student built their own sentence');
+  assert.equal(praisedPromptedRepeat('Have you ever been to Kyoto?', '次は自分の経験を話してみましょう。', '完璧な英語の文です！'), false, 'not modelled in the previous turn');
+  assert.equal(praisedPromptedRepeat('Yes.', prev, '完璧です！'), false, 'too short to be a repeat of a sentence');
+  assert.match(PROMPTED_REPEAT_NOTE, /not from the student/);
+  assert.match(PROMPTED_REPEAT_NOTE, /repeat/i);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('prompted_repeat_note_planted'"));
+  assert.ok(vtr.includes("'prompted_repeat_note_consumed'"));
+});
+
+test('embed-1792367246990 regressions: the live asterisk shapes (!*…*( and 。 *…*() are stripped; the recap\'s "continue or stop?" question is NOT a premature close', () => {
+  assert.equal(stripMarkdownEmphasis('いいですね!*I played golf yesterday.*(昨日ゴルフをしました)— 完璧な文です。'), 'いいですね!I played golf yesterday.(昨日ゴルフをしました)— 完璧な文です。');
+  assert.equal(stripMarkdownEmphasis('まず一つ聞きますね。 *What did you do yesterday?*(昨日何をしましたか?)'), 'まず一つ聞きますね。 What did you do yesterday?(昨日何をしましたか?)');
+  assert.equal(stripMarkdownEmphasis('いいですね、*Yes, I have.*で答えられました。'), 'いいですね、Yes, I have.で答えられました。');
+  assert.equal(stripMarkdownEmphasis('*I played golf yesterday.*(昨日)と *I went to Nagoya Castle last week.*(先週)— 両方とも正しい文ですよ'), 'I played golf yesterday.(昨日)と I went to Nagoya Castle last week.(先週)— 両方とも正しい文ですよ');
+  assert.equal(stripMarkdownEmphasis('2*3*4 = 24'), '2*3*4 = 24');
+  const open = { lessonClosed: false, studentEndSignal: false, closingStretch: false };
+  assert.equal(isPrematureCloseLine('続けて大丈夫ですか、それとも今日はここまでにしましょうか?', open), false, 'the recap ends by asking whether to continue or stop');
+  assert.equal(isPrematureCloseLine('今日はここまでにしますか？', open), false);
+  assert.equal(isPrematureCloseLine('今日はここまでにしましょう。', open), true, 'the statement is still dropped');
+});
+
+test('false credit after an ENGLISH QUESTION (embed-1792367246990: 「はい、ハワイに行きました」 → "Yes, I have. I went to Hawaii… 完璧"; curry): any English question from the tutor expects an English reply, so the no-English note fires on a Japanese-only answer', () => {
+  assert.equal(expectsEnglishReply('I ate dinner with my family at seven. 過去形は ate ですね。 Have you ever been abroad? (海外に行ったことがありますか?)'), true);
+  assert.equal(expectsEnglishReply('次に行きましょう。*Have you ever cooked curry?*(カレーを作ったことがありますか?)'), true);
+  assert.equal(expectsEnglishReply('家族とご飯を食べたことを英語で言ってみましょう。'), true, 'the explicit ask still counts');
+  assert.equal(expectsEnglishReply('はい、お待ちしています。'), false);
+  assert.equal(expectsEnglishReply('続けて大丈夫ですか、それとも今日はここまでにしましょうか?'), false, 'a Japanese question is not an English ask');
+  assert.match(NO_ENGLISH_REPLY_NOTE, /asked (?:for English|a question in English)/);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('askedForEnglishRef.current = expectsEnglishReply(fullText)'));
+  // The new events of this round are persisted for embed sessions (page.tsx prefix list).
+  const page = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  for (const p of ["'premature_close'", "'tool_call_continued'", "'prompted_repeat'"]) assert.ok(page.includes(p), `prefix ${p} missing`);
+});
+
+test('embed-1792378728971: the bridge line is wired with the session languages, and the no-name directive is used when the bridge said no name', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.match(vtr, /bridgeLineFor\(\{[^}]*tutorLanguages/s, 'bridgeLineFor must receive tutorLanguages');
+  assert.ok(vtr.includes('BRIDGE_SPOKEN_NO_NAME_DIRECTIVE'), 'the opening directive must use the no-name variant after a nameless bridge');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

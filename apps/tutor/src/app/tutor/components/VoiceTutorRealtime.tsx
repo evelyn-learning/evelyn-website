@@ -15,6 +15,7 @@ import { usePerceptionWS, type PerceptionState, type PerceptionTranscript, type 
 import { useCartesiaInkWS } from '../hooks/useCartesiaInkWS';
 import {
   classifyHeuristic,
+  lengthWordCount,
   type RecentTtsScript,
   type ProductionStateForClassifier,
   type PerceptionVerdict,
@@ -53,7 +54,7 @@ const KEEPALIVE_MAX_BYTES = 60_000;
 const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import type { LessonContext } from '@/lib/tutor/embed/lesson-context';
-import { bridgeLineFor, BRIDGE_SPOKEN_DIRECTIVE } from '@/lib/tutor/voice/bridge-line';
+import { bridgeLineFor, bridgeSpokeName, BRIDGE_SPOKEN_DIRECTIVE, BRIDGE_SPOKEN_NO_NAME_DIRECTIVE } from '@/lib/tutor/voice/bridge-line';
 import { usableStudentName } from '@/lib/tutor/student-name';
 import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, buildInFlowOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { splitPromptForWire, nextToolScope, type ToolScope } from '@/lib/tutor/ai/prompt-cache';
@@ -206,7 +207,21 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } from '@/lib/tutor/voice/meta-narration';
-import { isPleasantryOnly } from '@/lib/tutor/voice/lesson-close';
+import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE } from '@/lib/tutor/voice/lesson-close';
+import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
+import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
+import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
+import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
+import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
+import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
+import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '@/lib/tutor/voice/correct-retry';
+import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
+import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
+import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
+import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '@/lib/tutor/voice/tutor-language-drift';
+import { isLateTail, lateTailNote } from '@/lib/tutor/voice/late-tail';
+import { decideBargeInPause, scorePartialSelfVoice, shouldPauseForOnset, BARGEIN_PAUSE_MAX_MS, type BargeInPauseState } from '@/lib/tutor/voice/bargein-pause';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -219,7 +234,9 @@ import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradictio
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-check';
 import { hasVerdictOpener, VERDICT_REPLANT_CLAUSE } from '@/lib/tutor/voice/verdict-preservation';
-import { detectHoldRequest, checkResume } from '@/lib/tutor/voice/student-hold';
+import { detectHoldRequest, checkResume, SOFT_HOLD_CHECKIN_MS, WAIT_REQUEST_NOTE } from '@/lib/tutor/voice/student-hold';
+import { asksReadiness, READINESS_ASK_NOTE } from '@/lib/tutor/voice/readiness-ask';
+import { claimsPronunciation, isPronunciationClaimSentence, PRONUNCIATION_CLAIM_NOTE } from '@/lib/tutor/voice/pronunciation-claim';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { checkFalsePraiseOpener, studentDisagreesWithVerified } from '@/lib/tutor/voice/false-praise-opener';
 import { verifiedKeyForJudgeGate } from '@/lib/tutor/voice/judge-gate-key';
@@ -339,6 +356,8 @@ import {
   TUTOR_STUDENT_PROBLEM_GROUNDING,
   TUTOR_NOISE_NAG,
   TUTOR_IDLE_NUDGE,
+  TUTOR_LESSON_CLOSE_AUTO_END,
+  TUTOR_BARGEIN_PAUSE_FIRST,
   TUTOR_HOST_LESSON,
   TUTOR_EVOLVE_SWAP,
   TUTOR_CONTENT_VARIETY,
@@ -352,6 +371,7 @@ import {
   VALIDATE_BEFORE_SPEAK_CAP_MS,
   VERDICT_HOLD_CAP_MS,
   TUTOR_TURN_CAP,
+  TUTOR_LANGUAGE_TURN_MAX_TOKENS,
   TURN_CAP_SOFT_SENTENCES,
   TURN_CAP_HARD_SENTENCES,
   TURN_CAP_WORDS,
@@ -384,6 +404,8 @@ import {
   TUTOR_FALSE_PRAISE_OPENER,
   TUTOR_CLOSE_NOTES,
   TUTOR_RECAP_OFFER,
+  TUTOR_OPENER_PREFETCH,
+  OPENER_PREFETCH_DELAY_MS,
 } from '@/lib/tutor/orchestrator/flags';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -516,6 +538,7 @@ async function dispatchTopicNotesOverlay(
 
 // Words that Whisper commonly misrecognizes as inappropriate
 import { filterTranscriptText, classifyTranscript, wrapUncertainTranscript, isContextLossGreeting, sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
+import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import { checkTopicShift, createTopicShiftState, type TopicShiftDetectorState } from '@/lib/tutor/voice/topic-shift-detector';
 import { detectStudentIntent, isContinuationRequest } from '@/lib/tutor/voice/student-intent';
 import { detectTutorSameContext, decidePageStrip } from '@/lib/tutor/voice/tutor-context-detector';
@@ -911,6 +934,14 @@ interface VoiceTutorRealtimeProps {
    *  normalised by parseTutorLanguages). Absent ⇒ English-only: the prompt
    *  and every TTS request are byte-identical to before. */
   tutorLanguages?: string[];
+  /** Per-partner (lib/tutor/portal/partner-session-options.ts): run the
+   *  opener's brain call pre-start and replay it on Start. Costs a brain call
+   *  per page load, so it is OFF unless the surface resolves it on. */
+  openerPrefetch?: boolean;
+  /** Per-partner (same module): after the lesson is closed, a quiet 45 s ends
+   *  the voice session (lesson-close.ts). Default on; a partner row turns it
+   *  off. The build-time TUTOR_LESSON_CLOSE_AUTO_END flag stays a kill switch. */
+  lessonCloseAutoEnd?: boolean;
   /** Tutor speaking rate → Cartesia generation_config.speed (tenant claim
    *  `speech_rate`). Absent ⇒ every TTS request unchanged. */
   speechRate?: number;
@@ -1296,6 +1327,8 @@ export function VoiceTutorRealtime({
   cartesiaVoiceId,
   cartesiaVoiceSpeed,
   tutorLanguages,
+  openerPrefetch = false,
+  lessonCloseAutoEnd = true,
   speechRate,
   thinkingCue = false,
   onLessonPlanProgress,
@@ -1405,6 +1438,8 @@ export function VoiceTutorRealtime({
   const firstSessionTipPendingRef = useRef(false);
   // Bridge line (fixed first words at the start tap): once per mount.
   const bridgeSpokenRef = useRef(false);
+  /** Whether the bridge line said the student's name (picks the opening directive variant). */
+  const bridgeSpokeNameRef = useRef(false);
   // Set when the bridge line is handed to TTS; its FIRST sentence-start is the
   // bridge's own audio and must not count as the brain turn's first sentence
   // (render-sync counter, turn_latency.firstAudio). Cleared on that event or
@@ -1829,6 +1864,9 @@ export function VoiceTutorRealtime({
   // perceptionOnTranscript's stage2-lazy resolver — declared earlier —
   // reaches it through this ref instead of a direct closure reference.
   const runPerceptionKillRef = useRef<((cancelStage: 'processing' | 'speaking') => void) | null>(null);
+  // armNoVerdictRecovery (declared later, next to runPerceptionKill) — the
+  // retro-cancel effect reaches it through this ref.
+  const armNoVerdictRecoveryRef = useRef<(() => void) | null>(null);
   // Review-round-1 (finding 2): shared clear for stage2LazyPendingRef, used
   // at every site that can otherwise leak an armed-but-never-consumed lazy
   // pending — see stage2LazyPendingRef's declaration comment for the full
@@ -2052,8 +2090,11 @@ export function VoiceTutorRealtime({
   // dispatch, no transcript append (the aside is private), no covers, no
   // idle nudges. One gentle check-in after 5 quiet minutes, then silence
   // again until the student resumes. Session-scoped — VTR remounts.
-  const pendingStudentHoldRef = useRef<{ resumeCue?: string } | null>(null);
-  const studentHoldRef = useRef<{ resumeCue?: string; sinceMs: number; checkInDone: boolean } | null>(null);
+  // `soft` (2026-10-17, embed-1792274192055): a cue-less hold the student did
+  // not declare as stepping away ("wait a second") — any next utterance
+  // resumes it, and it checks in and ends after SOFT_HOLD_CHECKIN_MS.
+  const pendingStudentHoldRef = useRef<{ resumeCue?: string; soft?: boolean } | null>(null);
+  const studentHoldRef = useRef<{ resumeCue?: string; soft?: boolean; sinceMs: number; checkInDone: boolean } | null>(null);
   const studentHoldCheckInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const renderBufferRef = useRef<Array<{
@@ -3703,6 +3744,9 @@ export function VoiceTutorRealtime({
   // Runtime pedagogy note for the next brain turn (same prepend convention as
   // the cadence / board-anchor / judge notes; own ref, own concern).
   const pendingRuntimeNoteRef = useRef<string | null>(null);
+  /** Segment the pending overlong note was planted for — a note about a
+   *  segment the lesson has already left is stale and dropped. */
+  const pendingRuntimeNoteSegRef = useRef<string | null>(null);
   // Live check 7: the note must not land while the student is answering an
   // open question (portal-8ed0fb65 10:53:48Z — delivered with "12", the brain
   // advanced mid-problem and rendered the next card under the wrong problem).
@@ -4574,6 +4618,70 @@ export function VoiceTutorRealtime({
   // pendingCadenceNoteRef but a SEPARATE ref/concern (a turn can lapse on
   // cadence and anchoring independently).
   const pendingBoardAnchorNoteRef = useRef<string | null>(null);
+  // Retry cap (retry-cap.ts): consecutive tutor turns asking for a repeat,
+  // and the move-on note planted once that streak reaches the cap.
+  const retryAskStreakRef = useRef(0);
+  const pendingRetryCapNoteRef = useRef<string | null>(null);
+  // Katakana-English corrective (katakana-english.ts): planted after a turn
+  // that spelled English out in katakana, delivered with the next turn.
+  const pendingKatakanaNoteRef = useRef<string | null>(null);
+  /** 2026-10-18: katakana-note plants this session; sticky after KATAKANA_STICKY_AFTER_PLANTS. */
+  const katakanaPlantsRef = useRef(0);
+  /** 2026-10-18: the previous real student transcript (identical-retry note, english-reply.ts). */
+  const prevStudentTranscriptRef = useRef<string | null>(null);
+  // Voice-only mode (voice-only.ts): set once the student says they cannot
+  // see the screen; never cleared for the rest of the session.
+  const voiceOnlyRef = useRef(false);
+  // English-reply check (english-reply.ts): did the last tutor turn ask the
+  // student to produce English? Read when the next student turn arrives.
+  const askedForEnglishRef = useRef(false);
+  // learner-address.ts / praise-variety.ts / correct-retry.ts (embed-1792261973710):
+  // per-turn notes planted after a delivered turn, consumed with the next.
+  const pendingLearnerAddressNoteRef = useRef<string | null>(null);
+  const pendingPraiseVarietyNoteRef = useRef<string | null>(null);
+  const pendingCorrectRetryNoteRef = useRef<string | null>(null);
+  const recentTutorTurnsRef = useRef<string[]>([]);
+  const praiseVarietyPlantsRef = useRef(0);
+  /** 2026-10-18: which praise note was planted last — the sticky re-plant repeats it. */
+  const praiseLastNoteRef = useRef<string | null>(null);
+  /** 2026-10-18: cadence-note plants this session; sticky after CADENCE_STICKY_AFTER_PLANTS (turn-cap.ts). */
+  const cadencePlantsRef = useRef(0);
+  /** 2026-10-18: the lesson plan's Latin words, computed once, for the unreadable-word check. */
+  const planWordsRef = useRef<string[] | null>(null);
+  /** 2026-10-18: words the unreadable-word note has already asked for — one note per word per session. */
+  const unreadableNotedRef = useRef<Set<string>>(new Set());
+  /** 2026-10-18: unknown names already noted this session (unreadable-word.ts findUnknownNames). */
+  const unknownNamesNotedRef = useRef<Set<string>>(new Set());
+  /** 2026-10-18: English questions the student has answered this session (correct-retry.ts window). */
+  const answeredQuestionsRef = useRef<Set<string>>(new Set());
+  /** 2026-10-18: tutor turns with a superlative this session — four make the praise note sticky. */
+  const superlativeTurnsRef = useRef(0);
+  /** 2026-10-18: the route confirmed it cached this session's opener — Start skips the bridge line. */
+  const openerPrefetchReadyRef = useRef(false);
+  /** 2026-10-18: a late tail of the student's previous answer, held instead of dispatched (late-tail.ts). */
+  const pendingLateTailRef = useRef<string | null>(null);
+  /** 2026-10-18: language-drift note (English instructions / romaji) for the next turn. */
+  const pendingLanguageDriftNoteRef = useRef<string | null>(null);
+  const pendingReadinessNoteRef = useRef<string | null>(null);
+  const pendingPronunciationNoteRef = useRef<string | null>(null);
+  // lesson-close.ts: a 「今日はここまで」 said mid-lesson was dropped; one note follows.
+  const pendingPrematureCloseNoteRef = useRef<string | null>(null);
+  // praise-variety.ts: a prompted repeat was praised as the student's own sentence.
+  const pendingPromptedRepeatNoteRef = useRef<string | null>(null);
+  // student-hold.ts WAIT_REQUEST_NOTE: set for THIS turn by the heuristic hold
+  // (a soft, cue-less hold), consumed where the other notes are.
+  const pendingWaitNoteRef = useRef<string | null>(null);
+  // lesson-close.ts auto-end: the quiet-after-close timer and its arm (the
+  // callback is defined with the idle nudge; the close sites run earlier).
+  const lessonCloseAutoEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const armLessonCloseAutoEndRef = useRef<() => void>(() => {});
+  // Pause-first barge-in (bargein-pause.ts): the utterance the playback is
+  // paused for, and the evaluator (defined with the kill body) by ref so the
+  // Ink hook's callbacks below can reach it.
+  const bargeInPauseRef = useRef<BargeInPauseState | null>(null);
+  /** 2026-10-18: pauses that resumed on "no evidence" during the current tutor turn (echo-shaped onsets). Reset per brain turn. */
+  const bargeInNoEvidenceResumesRef = useRef(0);
+  const evaluateBargeInPauseRef = useRef<(energyGatePassed?: boolean) => void>(() => {});
   // GreenApple round 6 (shaded-region net): board-REDRAW note — delivered on
   // the very next brain turn, UN-held (unlike pendingRuntimeNoteRef, which
   // waits out an open tutor question): the wrong figure is on the board now.
@@ -8099,6 +8207,7 @@ export function VoiceTutorRealtime({
       if (cmd.action === 'closeSessionNotes') {
         if (!lessonClosedRef.current) onDebugEvent?.('lesson_closed', 'closeSessionNotes');
         lessonClosedRef.current = true;
+        armLessonCloseAutoEndRef.current();
         if (!TUTOR_CLOSE_NOTES) continue;
         const c = cmd as { assignLoIds: string[]; reason?: string; nextTimeIntent?: string };
         // Latest-wins: a second wrap-up call refreshes the intent even
@@ -11085,6 +11194,10 @@ export function VoiceTutorRealtime({
         clearTimeout(idleNudgeTimerRef.current);
         idleNudgeTimerRef.current = null;
       }
+      if (lessonCloseAutoEndTimerRef.current) {
+        clearTimeout(lessonCloseAutoEndTimerRef.current);
+        lessonCloseAutoEndTimerRef.current = null;
+      }
       // R58: the student-hold check-in timer gets the same treatment.
       if (studentHoldCheckInTimerRef.current) {
         clearTimeout(studentHoldCheckInTimerRef.current);
@@ -11117,8 +11230,14 @@ export function VoiceTutorRealtime({
       // vanish from history on the next turn (the interrupted partial was
       // never a committed tutor turn).
       injectedHistoryTail?: Array<{ role: 'user' | 'assistant'; content: string }>;
+      /** Opener prefetch (2026-10-18): build the opener's request body through
+       *  this same code and POST it with `prefetch: true` for the route to
+       *  cache, then return before anything is streamed, spoken or shown.
+       *  Pre-start only — see the prefetch effect near the JSX return. */
+      prefetchOnly?: boolean;
     },
   ) => {
+    const prefetchSavedPageTurn = pageTurnRef.current;
     // Brain-turn start timestamp. Declared OUTSIDE the try so the catch
     // block can reference it for streaming-entry cleanup (Fix 9).
     // Re-assigned inside the try once we know the turn actually starts.
@@ -11644,7 +11763,7 @@ export function VoiceTutorRealtime({
         }
         // Session-end signal (Task Y4 farewell-exemption fix) — see
         // sessionEndSignalRegex definition above for scope/rationale.
-        const isSessionEndSignal = sessionEndSignalRegex.test(lower);
+        const isSessionEndSignal = sessionEndSignalRegex.test(lower) || isSessionEndSignalJa(t);
         ledgerStudentTextRef.current = t;
         ledgerPriorTutorTextRef.current = String([...priorWithoutCurrent].reverse().find((m) => m.role === 'assistant')?.content ?? '');
         lastStudentVerificationRef.current = {
@@ -11884,6 +12003,114 @@ export function VoiceTutorRealtime({
       // the whole attempt loop (not per-sentence, not per-retry).
       const anchorSuspectThisTurn = pendingBoardAnchorNoteRef.current != null;
       // R2 E2: board-anchor corrective — same convention, own concern.
+      if (pendingRetryCapNoteRef.current) {
+        runTranscript = `${pendingRetryCapNoteRef.current}\n\n${runTranscript}`;
+        pendingRetryCapNoteRef.current = null;
+        onDebugEvent?.('retry_cap_note_consumed', 'delivered with this turn');
+      }
+      if (pendingKatakanaNoteRef.current) {
+        runTranscript = `${pendingKatakanaNoteRef.current}\n\n${runTranscript}`;
+        pendingKatakanaNoteRef.current = null;
+        onDebugEvent?.('katakana_english_note_consumed', 'delivered with this turn');
+      }
+      for (const [ref, consumed] of [
+        [pendingLearnerAddressNoteRef, 'learner_address_note_consumed'],
+        [pendingPraiseVarietyNoteRef, 'praise_variety_note_consumed'],
+        [pendingCorrectRetryNoteRef, 'correct_retry_note_consumed'],
+        [pendingReadinessNoteRef, 'readiness_ask_note_consumed'],
+        [pendingPronunciationNoteRef, 'pronunciation_claim_note_consumed'],
+        [pendingPrematureCloseNoteRef, 'premature_close_note_consumed'],
+        [pendingPromptedRepeatNoteRef, 'prompted_repeat_note_consumed'],
+        [pendingWaitNoteRef, 'wait_request_note_consumed'],
+        [pendingLanguageDriftNoteRef, 'language_drift_note_consumed'],
+        [pendingLateTailRef, 'late_tail_note_consumed'],
+      ] as const) {
+        if (ref.current) {
+          runTranscript = `${ref.current}\n\n${runTranscript}`;
+          ref.current = null;
+          onDebugEvent?.(consumed, 'delivered with this turn');
+        }
+      }
+      // Voice-only (voice-only.ts): sticky from the turn the student says they
+      // cannot see the screen; re-stated with every later turn.
+      if (sessionAllowsNonLatin(tutorLanguages)) {
+        let voiceOnlyNote: string | null = null;
+        if (!voiceOnlyRef.current && saysCannotSeeScreen(transcript)) {
+          voiceOnlyRef.current = true;
+          voiceOnlyNote = VOICE_ONLY_NOTE_FIRST; // acknowledged once, this turn
+          onDebugEvent?.('voice_only_set', transcript.slice(0, 80));
+        } else if (voiceOnlyRef.current) {
+          voiceOnlyNote = VOICE_ONLY_NOTE;
+        }
+        if (voiceOnlyNote) runTranscript = `${voiceOnlyNote}\n\n${runTranscript}`;
+        // 2026-10-18 (embed-1792350642171): after the close the model re-ran
+        // its bookkeeping and wrote the tool calls out as text. A turn that
+        // still gets through the post-close gate is a short answer, nothing more.
+        if (lessonClosedRef.current && !/^\s*\[/.test(transcript)) {
+          runTranscript = `${POST_CLOSE_NOTE}\n\n${runTranscript}`;
+          onDebugEvent?.('post_close_note', transcript.slice(0, 60));
+        }
+        // correct-retry.ts: 「それはもう答えましたよ」 — a complaint, not an answer.
+        if (saysAlreadyAnswered(transcript)) {
+          runTranscript = `${ALREADY_ANSWERED_NOTE}\n\n${runTranscript}`;
+          onDebugEvent?.('already_answered_complaint', transcript.slice(0, 80));
+        }
+        // english-reply.ts: the same transcript twice running after a
+        // correction — the recogniser's difference, not the student's.
+        if (!/^\s*\[/.test(transcript)) {
+          const prevTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
+          if (
+            prevStudentTranscriptRef.current &&
+            isIdenticalTranscript(transcript, prevStudentTranscriptRef.current) &&
+            (isRetryAsk(prevTutor) || asksForEnglish(prevTutor))
+          ) {
+            runTranscript = `${IDENTICAL_RETRY_NOTE}\n\n${runTranscript}`;
+            onDebugEvent?.('identical_retry_note', transcript.slice(0, 80));
+          }
+          prevStudentTranscriptRef.current = transcript;
+        }
+        // katakana-english.ts: the recogniser wrote the student's English in
+        // katakana — told before the turn, so the spelling is not echoed.
+        if (hasKatakanaEnglishFromStt(transcript)) {
+          runTranscript = `${KATAKANA_ECHO_NOTE}\n\n${runTranscript}`;
+          onDebugEvent?.('katakana_echo_note', transcript.slice(0, 80));
+        }
+        // english-reply.ts: the last tutor turn asked for English and this
+        // transcript has no Latin letters — Japanese reply, or katakana-
+        // rendered English. The brain must not credit a sentence not there.
+        if (askedForEnglishRef.current && hasNoLatinLetters(transcript) && transcript.trim().length >= 2 && !isStudentRepeatRequest(transcript)) {
+          runTranscript = `${NO_ENGLISH_REPLY_NOTE}\n\n${runTranscript}`;
+          onDebugEvent?.('no_english_reply_note', transcript.slice(0, 80));
+        }
+        // 2026-10-18: a word the recogniser lost ("thef" → credited as Gifu).
+        // Name it so the tutor asks for that word instead of guessing.
+        if (!/^\s*\[/.test(transcript) && /[A-Za-z]{3,}/.test(transcript)) {
+          if (!planWordsRef.current && lessonPlanRef.current) planWordsRef.current = latinWords(JSON.stringify(lessonPlanRef.current));
+          // Context = every word said this session (student and tutor) plus
+          // the plan; one note per word per session (2026-10-18).
+          const unreadable = findUnreadableWords(transcript, [
+            ...(planWordsRef.current ?? []),
+            ...transcriptRef.current.flatMap((e) => (e.role === 'system' ? [] : latinWords(e.text))),
+            ...recentTutorTurnsRef.current.flatMap((t) => latinWords(t)),
+          ], { skip: unreadableNotedRef.current });
+          if (unreadable.length > 0) {
+            for (const w of unreadable) unreadableNotedRef.current.add(w.toLowerCase());
+            runTranscript = `${unreadableWordNote(unreadable)}\n\n${runTranscript}`;
+            onDebugEvent?.('unreadable_word_note_planted', unreadable.slice(0, 3).join(', '));
+          }
+          // A capitalised name nobody has used: keep it as spelled, never
+          // swap it for a known place (embed-1792361732296: Terimachi → 寺町).
+          const unknownNames = findUnknownNames(transcript, [
+            ...(planWordsRef.current ?? []),
+            ...transcriptRef.current.flatMap((e) => (e.role === 'system' ? [] : latinWords(e.text))),
+          ], { skip: unknownNamesNotedRef.current });
+          if (unknownNames.length > 0) {
+            for (const n of unknownNames) unknownNamesNotedRef.current.add(n.toLowerCase());
+            runTranscript = `${unknownNameNote(unknownNames)}\n\n${runTranscript}`;
+            onDebugEvent?.('unknown_name_note_planted', unknownNames.slice(0, 3).join(', '));
+          }
+        }
+      }
       if (pendingBoardAnchorNoteRef.current) {
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
         pendingBoardAnchorNoteRef.current = null;
@@ -11901,6 +12128,17 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('molecule_edit_note_consumed', 'delivered with this turn');
       }
       // Live check 6: runtime pedagogy note (segment overlong) — same convention, own concern.
+      // embed-1792174263669: the "6 turns in hook" note, held while the student
+      // answered, was delivered after the lesson had already advanced — the
+      // brain then produced nothing speakable for 49 s. A note about a segment
+      // we have left is stale; drop it.
+      if (pendingRuntimeNoteRef.current && pendingRuntimeNoteSegRef.current
+          && pendingRuntimeNoteSegRef.current !== currentSegmentIdRef.current) {
+        onDebugEvent?.('segment_overlong_note_stale', `planted for ${pendingRuntimeNoteSegRef.current}, now ${currentSegmentIdRef.current ?? 'none'} — dropped`);
+        pendingRuntimeNoteRef.current = null;
+        pendingRuntimeNoteSegRef.current = null;
+        runtimeNoteHeldTurnsRef.current = 0;
+      }
       if (pendingRuntimeNoteRef.current) {
         // Live check 7: deliver only on a turn where the student is NOT mid-answer —
         // no tutor question was open, or the utterance is a bare ack / move-on.
@@ -11910,7 +12148,11 @@ export function VoiceTutorRealtime({
         // 2026-10-26: a request to move on ("no move to the next section") is
         // not an answer to the open question — deliver, without "finish first".
         const askedToMoveOn = TUTOR_TYPED_ADVANCE && (!!advanceRequest || studentCueRef.current?.turn === pacingTurnCounterRef.current);
-        const deliver = !openQuestionAtTurnStartRef.current || ackOrMoveOn || askedToMoveOn || runtimeNoteHeldTurnsRef.current >= 3;
+        // 2026-10-18 (bilingual only): held at most ONE turn. In a language
+        // lesson every turn ends with an ask, so a 3-turn hold always ran to
+        // its cap (three times in embed-1792338502233).
+        const noteHoldCap = sessionAllowsNonLatin(tutorLanguages) ? 1 : 3;
+        const deliver = !openQuestionAtTurnStartRef.current || ackOrMoveOn || askedToMoveOn || runtimeNoteHeldTurnsRef.current >= noteHoldCap;
         if (deliver) {
           runTranscript = `${overlongNoteForTurn(pendingRuntimeNoteRef.current, askedToMoveOn)}\n\n${runTranscript}`;
           pendingRuntimeNoteRef.current = null;
@@ -11918,7 +12160,7 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('segment_overlong_note_consumed', 'delivered with this turn');
         } else {
           runtimeNoteHeldTurnsRef.current += 1;
-          onDebugEvent?.('segment_overlong_note_held', `student is answering an open question (${runtimeNoteHeldTurnsRef.current}/3)`);
+          onDebugEvent?.('segment_overlong_note_held', `student is answering an open question (${runtimeNoteHeldTurnsRef.current}/1)`);
         }
       }
       // Judge correction note (2026-08-07) — same convention, own concern.
@@ -12294,6 +12536,31 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('session_struggles_attached', `reason=${wrapReason} los=[${ledgerFlagsForTurn.map((f) => `${f.loId}:${f.detections}`).join(',')}]`);
       }
 
+      // 2026-10-18 (embed-1792346446334): the runtime notes are English and
+      // they pulled the tutor's own instructions into English. In a bilingual
+      // session a language note heads every note-carrying turn.
+      // Output budget (output-budget.ts, 2026-10-18 ruling): a plain language
+      // voice turn is capped at the brain, and told so. Turns that must carry
+      // tools keep the normal cap: the opener and any bracketed directive, a
+      // turn carrying the segment-advance note, the closing turn after the
+      // student's end signal, a recap go/wrap turn.
+      const turnMaxTokens = languageTurnMaxTokens({
+        languageLesson: sessionAllowsNonLatin(tutorLanguages),
+        voice: sessionMode !== 'text',
+        needsHeadroom:
+          /^\s*\[/.test(transcript) ||
+          /call advance_lesson\(/.test(runTranscript) ||
+          !!lastStudentVerificationRef.current?.isSessionEndSignal ||
+          !!recapGoForTurn || !!recapWrapForTurn,
+        cap: TUTOR_LANGUAGE_TURN_MAX_TOKENS,
+      });
+      if (turnMaxTokens !== undefined) {
+        runTranscript = `${outputBudgetNote(turnMaxTokens)}\n\n${runTranscript}`;
+        onDebugEvent?.('output_budget_capped', `max_tokens=${turnMaxTokens}`);
+      }
+      if (sessionAllowsNonLatin(tutorLanguages) && runTranscript !== transcript && /^\s*\[/.test(runTranscript)) {
+        runTranscript = `${LANGUAGE_KEEP_NOTE}\n\n${runTranscript}`;
+      }
       for (let attempt = 0; attempt <= attemptCap; attempt++) {
         // This attempt continues a turn that stopped early (turn-shape.ts): it
         // is NEW content, not a correction of a killed/rejected attempt.
@@ -12457,7 +12724,7 @@ export function VoiceTutorRealtime({
             // The client already spoke the greeting (bridge line): the brain
             // must not greet again on its first opening turn.
             if (bridgeSpokenRef.current && openingDirectiveBrainTurnsRef.current === 1) {
-              openingDirective += BRIDGE_SPOKEN_DIRECTIVE;
+              openingDirective += bridgeSpokeNameRef.current ? BRIDGE_SPOKEN_DIRECTIVE : BRIDGE_SPOKEN_NO_NAME_DIRECTIVE;
             }
             // R58 first-session tip: rides the first opening turn only,
             // like the teacher intro above. Keyed per-browser via
@@ -12575,6 +12842,13 @@ export function VoiceTutorRealtime({
             ...splitPromptForWire(claudeSystemPromptRef.current, claudeSystemPromptCoreRef.current),
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
+            ...(turnMaxTokens !== undefined ? { maxTokens: turnMaxTokens } : {}),
+            // Opener prefetch (2026-10-18): the session id keys the route's
+            // opener cache. Sent on the opener's first attempt only — a retry
+            // runs live; `prefetch: true` marks the pre-start recording call.
+            ...(TUTOR_OPENER_PREFETCH && transcript === '[start lesson]' && attempt === 0
+              ? { prefetchKey: sessionIdRef.current, ...(opts?.prefetchOnly ? { prefetch: true as const } : {}) }
+              : {}),
             // Text-mode thinking (2026-10-06): tell the server this is a text
             // session so it can let the model reason before it replies
             // (server flag TUTOR_TEXT_THINKING; lib/tutor/voice/text-thinking.ts).
@@ -12820,6 +13094,25 @@ export function VoiceTutorRealtime({
           signal: brainAbort.signal,
           body: JSON.stringify(input),
         };
+        if (opts?.prefetchOnly) {
+          // Opener prefetch (2026-10-18): the body above is exactly what the
+          // Start tap would send. Hand it to the route to run and cache; the
+          // tap's call replays it. Undo the one per-turn counter this dry run
+          // advanced, then leave — the `finally` below releases the turn.
+          pageTurnRef.current = prefetchSavedPageTurn;
+          catalogRef.current.setCurrentTurn(prefetchSavedPageTurn);
+          const bodyBytes = typeof brainFetchInit.body === 'string' ? brainFetchInit.body.length : 0;
+          onDebugEvent?.('opener_prefetch_sent', `key=${sessionIdRef.current} bytes=${bodyBytes}`);
+          const sentAt = Date.now();
+          void fetch('/api/tutor/brain/stream', { ...brainFetchInit, signal: undefined })
+            .then(async (r) => {
+              const text = await r.text().catch(() => '');
+              onDebugEvent?.(r.ok ? 'opener_prefetch_done' : 'opener_prefetch_failed', `status=${r.status} after=${Date.now() - sentAt}ms ${text.slice(0, 120)}`);
+              if (r.ok && /"prefetched":true/.test(text)) openerPrefetchReadyRef.current = true;
+            })
+            .catch((err) => onDebugEvent?.('opener_prefetch_failed', `after=${Date.now() - sentAt}ms ${String(err).slice(0, 120)}`));
+          return;
+        }
         let res = await fetch('/api/tutor/brain/stream', brainFetchInit);
         pacingTelemetryRef.current = [];
         // Whiteboard markup Phase 1: drain the unrealized-marks +
@@ -14847,6 +15140,46 @@ export function VoiceTutorRealtime({
                   // classifying one yourself?", "your check was
                   // right"); only the meta COLLOCATIONS are dropped.
                   // (`correctionWorking` was decided above, before the guards.)
+                  // Bilingual sentence drops (2026-10-18, embed-1792356364051):
+                  // a katakana "reading" of English the Japanese voice would
+                  // mangle, and a bare stock praise opener once the praise note
+                  // is sticky. Neither carries content the student needs.
+                  if (sessionAllowsNonLatin(tutorLanguages)) {
+                    if (hasDottedKatakanaReading(updatedSentence)) {
+                      console.warn('[brain-orchestrator] dropped katakana reading sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
+                      onDebugEvent?.('katakana_reading_dropped', updatedSentence.slice(0, 80));
+                      continue;
+                    }
+                    // lesson-close.ts (embed-1792363895174 03:26): 「今日はここまで」
+                    // mid-lesson. Kept once the plan is in its closing stretch, when
+                    // the session clock says wrap, after the student's end signal, or
+                    // once the lesson is closed.
+                    if (isPrematureCloseLine(updatedSentence, {
+                      lessonClosed: lessonClosedRef.current,
+                      studentEndSignal: !!lastStudentVerificationRef.current?.isSessionEndSignal,
+                      closingStretch: wrapByTime || inClosingStretch(lessonPlanRef.current, currentSegmentIdRef.current),
+                    })) {
+                      console.warn('[brain-orchestrator] dropped premature close line:', JSON.stringify(updatedSentence.slice(0, 100)));
+                      onDebugEvent?.('premature_close_line_dropped', updatedSentence.slice(0, 80));
+                      pendingPrematureCloseNoteRef.current = PREMATURE_CLOSE_NOTE;
+                      continue;
+                    }
+                    // pronunciation-claim.ts (embed-1792363895174): 「発音は少し違って…」
+                    // from a transcript. The sentence is dropped and the note follows.
+                    if (isPronunciationClaimSentence(updatedSentence, transcript)) {
+                      console.warn('[brain-orchestrator] dropped pronunciation claim sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
+                      onDebugEvent?.('pronunciation_claim_dropped', updatedSentence.slice(0, 80));
+                      pendingPronunciationNoteRef.current = PRONUNCIATION_CLAIM_NOTE;
+                      continue;
+                    }
+                    if (
+                      isStockPraiseOpenerOnly(updatedSentence) &&
+                      praiseNoteIsSticky({ plants: praiseVarietyPlantsRef.current, superlativeTurns: superlativeTurnsRef.current, languageLesson: true })
+                    ) {
+                      onDebugEvent?.('stock_opener_dropped', updatedSentence.slice(0, 40));
+                      continue;
+                    }
+                  }
                   const metaNarrationRe = isMetaNarration(updatedSentence, {
                     structural: TUTOR_META_NARRATION_STRUCTURAL,
                   });
@@ -15722,8 +16055,9 @@ export function VoiceTutorRealtime({
                       const cueRaw = typeof (args as Record<string, unknown>)?.resumeCue === 'string'
                         ? String((args as Record<string, unknown>).resumeCue) : '';
                       const cue = cueRaw.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-                      pendingStudentHoldRef.current = { resumeCue: cue || undefined };
-                      onDebugEvent?.('student_hold_armed', cue ? `cue="${cue.slice(0, 30)}"` : 'no cue');
+                      const soft = !cue && !detectHoldRequest(transcript).hold;
+                      pendingStudentHoldRef.current = { resumeCue: cue || undefined, soft };
+                      onDebugEvent?.('student_hold_armed', cue ? `cue="${cue.slice(0, 30)}"` : soft ? 'no cue — soft (any speech resumes)' : 'no cue');
                     }
                     onDebugEvent?.('server_only_tool', name);
                     continue;
@@ -17018,6 +17352,15 @@ export function VoiceTutorRealtime({
                     homeworkProblemDoneRecordedRef.current = true;
                     onDebugEvent?.('homework_problem_done', 'all key parts confirmed');
                   }
+                } else if (ev.type === 'thin-turn-rescue') {
+                  onDebugEvent?.('thin_turn_rescue', String(ev.reason ?? ''));
+                } else if (ev.type === 'tool-markup-stripped') {
+                  onDebugEvent?.('tool_markup_stripped', String(ev.text ?? '').slice(0, 80));
+                } else if (ev.type === 'max-tokens-tail-dropped') {
+                  onDebugEvent?.('max_tokens_tail_dropped', String(ev.text ?? '').slice(0, 80));
+                } else if (ev.type === 'tool-call-continued') {
+                  // output-budget.ts: the cap cut a tool call; the brain finished it in one more call.
+                  onDebugEvent?.('tool_call_continued', String((ev as { name?: string }).name ?? ''));
                 } else if (ev.type === 'done') {
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   // `||` not `??`: a give-up done frame (stop=error) can carry
@@ -18622,31 +18965,27 @@ export function VoiceTutorRealtime({
       // is grounds for a next-turn note, but the pendingCadenceNoteRef slot
       // holds a single note, so the sentence trigger takes priority when
       // both fire (else-if) rather than planting/overwriting twice.
-      if (TUTOR_TURN_CAP && totalSentenceCount > TURN_CAP_HARD_SENTENCES && totalToolNamesSeen.length === 0) {
-        pendingCadenceNoteRef.current =
-          `[cadence note — not from the student] Your previous turn ran ${totalSentenceCount} spoken sentences ` +
-          `with no whiteboard action — too long to follow by ear. From this turn on: at most ` +
-          `${TURN_CAP_SOFT_SENTENCES} sentences in a row before you either anchor what you're saying on the ` +
-          `board or hand the turn back to the student. Apply this silently — never mention or reason ` +
-          `aloud about this note; your reply speaks only to the student.`;
-        console.warn(`[brain-orchestrator] turn cap: ${totalSentenceCount} sentences, 0 tools — cadence note planted`);
-        onDebugEvent?.('turn_cap_flagged', `${totalSentenceCount} sentences · 0 tool calls — cadence note planted for next turn`);
-      } else if (TUTOR_TURN_CAP && totalWordCount > TURN_CAP_WORDS && totalToolNamesSeen.length === 0) {
-        pendingCadenceNoteRef.current =
-          `[cadence note — not from the student] Your previous turn ran ${totalWordCount} words with no ` +
-          `whiteboard action — too wordy to follow by ear. Condense: one idea per sentence, cut restatement ` +
-          `(don't explain, then analogize, then recap the same point) — anchor what you're saying on the ` +
-          `board or hand the turn back to the student instead.`;
-        console.warn(`[brain-orchestrator] word cap: ${totalWordCount} words, 0 tools — cadence note planted`);
-        onDebugEvent?.('turn_cap_flagged', `${totalWordCount} words · 0 tool calls — cadence note planted for next turn`);
+      // 2026-10-18 (GDI embed-1792338502233): policy moved to turn-cap.ts —
+      // lower caps for language lessons, no tool exemption once the student
+      // cannot see the board, sticky after two plants.
+      if (TUTOR_TURN_CAP) {
+        const capPolicy = turnCapPolicy({
+          languageLesson: sessionAllowsNonLatin(tutorLanguages),
+          voiceOnly: voiceOnlyRef.current,
+          defaults: { hardSentences: TURN_CAP_HARD_SENTENCES, words: TURN_CAP_WORDS, softSentences: TURN_CAP_SOFT_SENTENCES },
+        });
+        const capTurn = { sentences: totalSentenceCount, words: totalWordCount, toolCalls: totalToolNamesSeen.length };
+        const capHit = turnCapHit(capTurn, capPolicy);
+        if (capHit) {
+          cadencePlantsRef.current += 1;
+          const sticky = cadencePlantsRef.current >= CADENCE_STICKY_AFTER_PLANTS;
+          pendingCadenceNoteRef.current = cadenceNote(capHit, capTurn, capPolicy, { voiceOnly: voiceOnlyRef.current, sticky });
+          console.warn(`[brain-orchestrator] turn cap (${capHit}): ${totalSentenceCount} sentences / ${totalWordCount} words, ${totalToolNamesSeen.length} tools — cadence note planted`);
+          onDebugEvent?.('turn_cap_flagged', `${totalSentenceCount} sentences · ${totalWordCount} words · ${totalToolNamesSeen.length} tool calls — cadence note planted for next turn${sticky ? ' (sticky)' : ''}`);
+        } else if (cadencePlantsRef.current >= CADENCE_STICKY_AFTER_PLANTS && !pendingCadenceNoteRef.current) {
+          pendingCadenceNoteRef.current = cadenceNote(null, capTurn, capPolicy, { voiceOnly: voiceOnlyRef.current, sticky: true });
+        }
       }
-      // R2 E2: substantive final question + zero content board writes →
-      // plant a board-anchor note for the next turn. Independent of the
-      // cadence triggers (own ref) — both can fire on the same turn.
-      // Live check 6: does this turn leave a question open for the student?
-      // (Read by the correction-note deadline; cleared by the next real
-      // student turn.) A pure nudge/cover turn ends in a question too — the
-      // hold is still right: the student is expected to speak next.
       openTutorQuestionRef.current = /\?\s*$/.test(fullText.trim()) || !!lastQuestionSentence(fullText) ? Date.now() : null;
       // Live check 6 (§1): the brain sat in `hook` for 12 minutes and six
       // substantive turns, improvised three worked examples in speech, then
@@ -18673,7 +19012,7 @@ export function VoiceTutorRealtime({
           cur.noted = true;
           onDebugEvent?.('segment_overlong_note_skipped_homework', `${segIdNow} after ${cur.turns} turns — homework session paces by problem`);
         }
-        if (!homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept')) {
+        if (!homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept' || (sessionAllowsNonLatin(tutorLanguages) && kindNow !== 'recap'))) {
           cur.noted = true;
           const plan = lessonPlanRef.current;
           const idx = plan ? plan.segments.findIndex((sg) => sg.id === segIdNow) : -1;
@@ -18681,13 +19020,125 @@ export function VoiceTutorRealtime({
           const nextHint = nextSeg
             ? `The next segment is "${nextSeg.id}" (${nextSeg.kind}); call advance_lesson({to: "next"}) and show_segment_card({segmentId: "${nextSeg.id}"}) in the same turn.`
             : `Call advance_lesson({to: "next"}) and render the new segment's card with show_segment_card in the same turn.`;
+          pendingRuntimeNoteSegRef.current = segIdNow;
           pendingRuntimeNoteRef.current =
             `[runtime note — not from the student] You have spent ${cur.turns} turns in the "${segIdNow}" (${kindNow}) segment without advancing. ` +
             `${OVERLONG_FINISH_FIRST}${nextHint} ` +
-            `Do not pose another problem in speech — every problem you pose must be on the board via show_segment_card or show_problem carrying its exact numbers. ` +
+            (voiceOnlyRef.current ? `The student cannot see the board: say the new segment's first item aloud in full. ` : `Do not pose another problem in speech — every problem you pose must be on the board via show_segment_card or show_problem carrying its exact numbers. `) +
+            (sessionAllowsNonLatin(tutorLanguages) ? `Say any transition sentence in the language you are using with this student, in your own words. ` : '') +
             `Apply this silently; never mention this note.`;
           onDebugEvent?.('segment_overlong_note_planted', `${segIdNow} (${kindNow}) after ${cur.turns} turns → ${nextSeg?.id ?? 'next'}`);
         }
+      }
+      if (sessionAllowsNonLatin(tutorLanguages) && totalSentenceCount > 0) {
+        if (isRetryAsk(fullText)) {
+          // The streak is NOT zeroed on plant (embed-1792254012923): every
+          // further ask re-plants the note with the running count.
+          retryAskStreakRef.current += 1;
+          if (retryAskStreakRef.current >= RETRY_CAP_TURNS) {
+            pendingRetryCapNoteRef.current = retryCapNote(retryAskStreakRef.current);
+            onDebugEvent?.('retry_cap_note_planted', `${retryAskStreakRef.current} repeat-asks in a row`);
+          }
+        } else {
+          retryAskStreakRef.current = 0;
+        }
+        if (hasKatakanaEnglish(fullText)) {
+          katakanaPlantsRef.current += 1;
+          pendingKatakanaNoteRef.current = KATAKANA_ENGLISH_NOTE;
+          onDebugEvent?.('katakana_english_note_planted', `${fullText.slice(0, 80)}${katakanaPlantsRef.current >= KATAKANA_STICKY_AFTER_PLANTS ? ' (sticky)' : ''}`);
+        } else if (katakanaPlantsRef.current >= KATAKANA_STICKY_AFTER_PLANTS) {
+          pendingKatakanaNoteRef.current = KATAKANA_ENGLISH_NOTE_STANDING;
+        }
+        // english-reply.ts: an explicit ask, or an English question (embed-1792367246990).
+        askedForEnglishRef.current = expectsEnglishReply(fullText);
+        // learner-address.ts: 「学生の番です」 said to the student.
+        if (refersToLearnerInThirdPerson(fullText)) {
+          pendingLearnerAddressNoteRef.current = LEARNER_ADDRESS_NOTE;
+          onDebugEvent?.('learner_address_note_planted', fullText.slice(0, 80));
+        }
+        // praise-variety.ts: 完璧 in most of the recent turns.
+        recentTutorTurnsRef.current = [...recentTutorTurnsRef.current.slice(-(PRAISE_WINDOW_TURNS - 1)), fullText];
+        const praiseNote = overusesSuperlative(recentTutorTurnsRef.current)
+          ? PRAISE_VARIETY_NOTE
+          : overusesStockPraiseOpener(recentTutorTurnsRef.current) ? PRAISE_OPENER_NOTE : null;
+        if (hasSuperlativePraise(fullText)) superlativeTurnsRef.current += 1;
+        const praiseStickyArgs = { plants: praiseVarietyPlantsRef.current, superlativeTurns: superlativeTurnsRef.current, languageLesson: true };
+        const praiseWasSticky = praiseNoteIsSticky(praiseStickyArgs);
+        if (praiseNote) {
+          pendingPraiseVarietyNoteRef.current = praiseNote;
+          praiseLastNoteRef.current = praiseNote;
+          praiseVarietyPlantsRef.current += 1;
+          const stickyNow = praiseNoteIsSticky({ ...praiseStickyArgs, plants: praiseVarietyPlantsRef.current });
+          onDebugEvent?.('praise_variety_note_planted', `${PRAISE_MIN_HITS}+ ${praiseNote === PRAISE_VARIETY_NOTE ? 'superlatives' : 'stock praise openers'} in the last ${PRAISE_WINDOW_TURNS} turns${stickyNow && !praiseWasSticky ? ' — sticky from now on' : stickyNow ? ' (sticky)' : ''}`);
+        } else if (praiseWasSticky) {
+          pendingPraiseVarietyNoteRef.current = praiseLastNoteRef.current ?? PRAISE_VARIETY_NOTE;
+        } else if (praiseNoteIsSticky(praiseStickyArgs)) {
+          // Four superlative turns this session with no window trip: sticky from here.
+          pendingPraiseVarietyNoteRef.current = PRAISE_VARIETY_NOTE;
+          praiseLastNoteRef.current = PRAISE_VARIETY_NOTE;
+          praiseVarietyPlantsRef.current += 1;
+          onDebugEvent?.('praise_variety_note_planted', `${superlativeTurnsRef.current} superlative turns this session — sticky from now on`);
+        }
+        if (asksReadiness(fullText)) {
+          pendingReadinessNoteRef.current = READINESS_ASK_NOTE;
+          onDebugEvent?.('readiness_ask_note_planted', fullText.slice(-60));
+        }
+        // pronunciation-claim.ts: "the sound of last was off" from a transcript.
+        if (claimsPronunciation(fullText, transcript)) {
+          pendingPronunciationNoteRef.current = PRONUNCIATION_CLAIM_NOTE;
+          onDebugEvent?.('pronunciation_claim_note_planted', fullText.slice(0, 80));
+        }
+        // correct-retry.ts: the check said correct; this turn asked for it again.
+        if (reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)) {
+          pendingCorrectRetryNoteRef.current = CORRECT_RETRY_NOTE;
+          onDebugEvent?.('correct_retry_note_planted', `checked correct: "${verdictPrecheckRef.current?.proposed.slice(0, 60) ?? ''}"`);
+        } else if (reAskedOwnSentence(transcript, fullText)) {
+          pendingCorrectRetryNoteRef.current = OWN_SENTENCE_RETRY_NOTE;
+          onDebugEvent?.('correct_retry_note_planted', `own sentence re-asked: "${transcript.slice(0, 60)}"`);
+        }
+        {
+          const prevTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 2] ?? '';
+          const reasked = reAskedAnsweredQuestion(prevTutor, transcript, fullText);
+          if (reasked && !pendingCorrectRetryNoteRef.current) {
+            pendingCorrectRetryNoteRef.current = REASKED_QUESTION_NOTE;
+            onDebugEvent?.('correct_retry_note_planted', `answered question re-asked: "${reasked.slice(0, 60)}"`);
+          }
+          // 2026-10-18: the whole session's answered questions, not just the
+          // previous turn's (embed-1792350642171: re-asked eight turns later).
+          recordAnsweredQuestions(answeredQuestionsRef.current, prevTutor, transcript);
+          const reaskedEarlier = reAskedEarlierQuestion(answeredQuestionsRef.current, prevTutor, fullText);
+          if (reaskedEarlier && !pendingCorrectRetryNoteRef.current) {
+            pendingCorrectRetryNoteRef.current = REASKED_EARLIER_QUESTION_NOTE;
+            onDebugEvent?.('correct_retry_note_planted', `earlier answered question re-asked: "${reaskedEarlier.slice(0, 60)}"`);
+          }
+          // praise-variety.ts (embed-1792363895174 turn 1): a repeat of the
+          // modelled sentence met with 「完璧な英語の文です」.
+          if (sessionAllowsNonLatin(tutorLanguages) && praisedPromptedRepeat(transcript, prevTutor, fullText)) {
+            pendingPromptedRepeatNoteRef.current = PROMPTED_REPEAT_NOTE;
+            onDebugEvent?.('prompted_repeat_note_planted', transcript.slice(0, 60));
+          }
+        }
+        {
+          const romaji = romajiSentences(fullText);
+          const english = romaji.length ? [] : englishInstructionSentences(fullText);
+          if (romaji.length) {
+            pendingLanguageDriftNoteRef.current = ROMAJI_NOTE;
+            onDebugEvent?.('romaji_note_planted', romaji[0].slice(0, 80));
+          } else if (english.length && /[\u3040-\u30FF\u4E00-\u9FFF]/.test(transcript)) {
+            pendingLanguageDriftNoteRef.current = ENGLISH_INSTRUCTION_NOTE;
+            onDebugEvent?.('english_instruction_note_planted', english.map((x) => x.slice(0, 50)).join(' | ').slice(0, 160));
+          }
+        }
+      }
+      // Mutual farewell (lesson-close.ts): the student signalled the end and
+      // this turn said goodbye without calling close_session_notes — the
+      // lesson is closed all the same, so no idle nudge and no second
+      // farewell (embed-1792254012923: a nudge after the goodbye restarted
+      // the exercise). The commit route's fallback still assigns practice.
+      if (!lessonClosedRef.current && totalSentenceCount > 0 && lastStudentVerificationRef.current?.isSessionEndSignal && isTutorFarewell(fullText)) {
+        lessonClosedRef.current = true;
+        onDebugEvent?.('lesson_closed', 'mutual farewell — student signalled the end, tutor said goodbye');
+        armLessonCloseAutoEndRef.current();
       }
       // 2026-10-20: not in a one-problem homework session — the problem and
       // its figure are already on screen in the ProblemPanel.
@@ -19810,7 +20261,12 @@ export function VoiceTutorRealtime({
       // 2026-10-08: not for an opening turn the student's typed message took
       // the place of — the pending flag stays armed, so THAT turn is the
       // opener turn (as when the student starts first).
-      if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current && !supersededByStudent) {
+      // 2026-10-18: the opener PREFETCH dry run (prefetchOnly) ends here with
+      // zero renders by design — it never streamed. It must neither consume
+      // the pending flag (the real opener turn is still to come) nor paint
+      // the fallback line pre-start (seen live: "Curious about … ?" on the
+      // board before Start).
+      if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current && !supersededByStudent && !opts?.prefetchOnly) {
         openingTurnPendingRef.current = false;
         if (shouldEmitOpenerFallback({
           openingPhase: true,
@@ -20133,10 +20589,22 @@ export function VoiceTutorRealtime({
       image?: { dataUrl: string; name?: string };
     },
   ) => {
+    // Bilingual session: the STT runs the learner's English together
+    // ("Haveyouevergotokaraoke") — split it before the brain, the answer
+    // check or the judge reads it (run-together-english.ts).
+    if (!opts?.silent && sessionAllowsNonLatin(tutorLanguages)) {
+      const split = splitRunTogetherEnglish(transcript);
+      if (split !== transcript) {
+        onDebugEvent?.('run_together_split', split.slice(0, 80));
+        transcript = split;
+      }
+    }
     // Lesson closed (see lesson-close.ts): a goodbye/thanks after the close
     // is not a new turn — no second farewell, no restarted exercise.
-    if (!opts?.silent && lessonClosedRef.current && isPleasantryOnly(transcript)) {
-      onDebugEvent?.('post_close_pleasantry_silenced', transcript.slice(0, 60));
+    // 2026-10-18: after the close EVERYTHING is silenced except an explicit
+    // continue / question shape (decidePostCloseUtterance).
+    if (!opts?.silent && lessonClosedRef.current && decidePostCloseUtterance(transcript) === 'silence') {
+      onDebugEvent?.('post_close_silenced', `${postCloseSilenceKind(transcript)}: ${transcript.slice(0, 60)}`);
       return;
     }
     // Host-end goodbye under way (endSessionNowRef farewell branch): no new
@@ -20194,6 +20662,8 @@ export function VoiceTutorRealtime({
       // video: answer them instead of playing over them.
       cancelResumeLesson('student_turn');
       recordStudentEngagement(idleNudgeStateRef.current);
+      // A real turn after the close restarts the quiet-after-close clock.
+      if (lessonClosedRef.current) armLessonCloseAutoEndRef.current();
       // GreenApple spec 2026-10-02 §1: real student input (text or voice —
       // both land here). A window-event bridge (like evelyn:session-started)
       // so the embed page — the only place that posts to the host — relays
@@ -20205,6 +20675,7 @@ export function VoiceTutorRealtime({
       }
     }
     console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120), `· humor=${humorCeilingRef.current ?? 'default'}`);
+    bargeInNoEvidenceResumesRef.current = 0;
     // "Mute me" / "stop listening" voice command — mute the mic instead of
     // sending it to the brain (which would otherwise try to "answer" it). Only
     // for real student speech, never synthetic kickoffs (those are silent).
@@ -20220,7 +20691,7 @@ export function VoiceTutorRealtime({
     // Synthetic bracketed dispatches pass through untouched (idle nudges
     // are separately suppressed via decideIdleNudge's hold arg).
     if (TUTOR_STUDENT_HOLD && studentHoldRef.current && !opts?.silent && !/^\s*\[/.test(transcript)) {
-      const resume = checkResume(transcript, studentHoldRef.current.resumeCue);
+      const resume = checkResume(transcript, studentHoldRef.current.resumeCue, { soft: studentHoldRef.current.soft });
       if (!resume.resume) {
         onDebugEvent?.('student_hold_swallowed', transcript.slice(0, 60));
         return;
@@ -20643,8 +21114,10 @@ export function VoiceTutorRealtime({
           && !studentHoldRef.current && !pendingStudentHoldRef.current) {
         const holdReq = detectHoldRequest(transcript);
         if (holdReq.hold) {
-          pendingStudentHoldRef.current = { resumeCue: holdReq.resumeCue };
-          onDebugEvent?.('student_hold_armed', `heuristic${holdReq.resumeCue ? ` cue="${holdReq.resumeCue.slice(0, 30)}"` : ''}`);
+          pendingStudentHoldRef.current = { resumeCue: holdReq.resumeCue, soft: holdReq.soft };
+          // A wait request: this turn's reply is one short sentence, then silence.
+          if (holdReq.soft) pendingWaitNoteRef.current = WAIT_REQUEST_NOTE;
+          onDebugEvent?.('student_hold_armed', `heuristic${holdReq.soft ? ' — soft wait request' : ''}${holdReq.resumeCue ? ` cue="${holdReq.resumeCue.slice(0, 30)}"` : ''}`);
         }
       }
       // R32 Task 6: cover-arm (Task 3) + escalation-poller (Task 4) extracted
@@ -20659,19 +21132,28 @@ export function VoiceTutorRealtime({
       if (TUTOR_STUDENT_HOLD && pendingStudentHoldRef.current) {
         studentHoldRef.current = { ...pendingStudentHoldRef.current, sinceMs: Date.now(), checkInDone: false };
         pendingStudentHoldRef.current = null;
-        onDebugEvent?.('student_hold_active', studentHoldRef.current.resumeCue ? `cue="${studentHoldRef.current.resumeCue}"` : 'no cue');
+        onDebugEvent?.('student_hold_active', studentHoldRef.current.resumeCue ? `cue="${studentHoldRef.current.resumeCue}"` : studentHoldRef.current.soft ? 'soft' : 'no cue');
         if (studentHoldCheckInTimerRef.current) clearTimeout(studentHoldCheckInTimerRef.current);
         studentHoldCheckInTimerRef.current = setTimeout(() => {
           const hold = studentHoldRef.current;
           if (!hold || hold.checkInDone) return;
           hold.checkInDone = true;
           if (Date.now() >= speakTextBlockedUntilRef.current) {
-            const line = 'Still here — whenever you’re ready, just say so and we’ll pick right back up.';
+            // 2026-10-18 (embed-1792356364051): the check-in was the one English
+            // line of a Japanese-guided lesson. Session language first.
+            const line = (tutorLanguages ?? []).includes('ja')
+              ? 'まだここにいますよ。準備ができたら、声をかけてくださいね。'
+              : 'Still here — whenever you’re ready, just say so and we’ll pick right back up.';
             const sid = pushTtsScriptForPerception(line);
             speakTextRef.current?.(line, sid);
             onDebugEvent?.('student_hold_check_in', `${Math.round((Date.now() - hold.sinceMs) / 1000)}s held`);
           }
-        }, 5 * 60_000);
+          // A soft hold ends with its check-in: back to normal listening.
+          if (hold.soft && studentHoldRef.current === hold) {
+            studentHoldRef.current = null;
+            onDebugEvent?.('student_hold_expired', 'soft hold — listening normally again');
+          }
+        }, studentHoldRef.current.soft ? SOFT_HOLD_CHECKIN_MS : 5 * 60_000);
       }
       // Drain the queue. If multiple utterances arrived while we were
       // processing, combine them into one transcript so Claude sees a
@@ -21666,6 +22148,34 @@ export function VoiceTutorRealtime({
   // 7.7min of mutual silence that nothing owned). The nudge's own spoken
   // reply re-arms the timer at the longer repeat gap via the same delivery
   // effect; caps and busy/hidden backoff live in idle-nudge.ts.
+  // lesson-close.ts: after the close, a quiet LESSON_CLOSE_AUTO_END_MS ends the
+  // session the way the End button does (embed-1792261973710: the mic and the
+  // recogniser ran 8.5 min past the goodbye). Voice sessions only — a text
+  // student may still be typing. A dispatched post-close turn re-arms it; the
+  // tutor still talking, or a turn in flight, defers it.
+  const armLessonCloseAutoEnd = useCallback(() => {
+    if (!TUTOR_LESSON_CLOSE_AUTO_END || !lessonCloseAutoEnd || sessionMode === 'text') return;
+    if (lessonCloseAutoEndTimerRef.current) clearTimeout(lessonCloseAutoEndTimerRef.current);
+    const closedAt = Date.now();
+    const check = () => {
+      lessonCloseAutoEndTimerRef.current = null;
+      if (endingRef.current) return;
+      const busy =
+        productionStateRef.current === 'speaking' ||
+        brainBusyRef.current ||
+        perceptionMidUtteranceRef.current ||
+        awaitingDispatchTimerRef.current != null;
+      if (decideLessonCloseAutoEnd({ busy, elapsedMs: Date.now() - closedAt }) === 'recheck') {
+        lessonCloseAutoEndTimerRef.current = setTimeout(check, LESSON_CLOSE_AUTO_END_RECHECK_MS);
+        return;
+      }
+      onDebugEvent?.('lesson_closed_auto_end', `quiet ${Math.round((Date.now() - closedAt) / 1000)} s after the close — ending the session`);
+      void endSessionNowRef.current();
+    };
+    lessonCloseAutoEndTimerRef.current = setTimeout(check, LESSON_CLOSE_AUTO_END_MS);
+  }, [sessionMode, lessonCloseAutoEnd, onDebugEvent]);
+  armLessonCloseAutoEndRef.current = armLessonCloseAutoEnd;
+
   const armIdleNudge = useCallback(() => {
     if (!TUTOR_IDLE_NUDGE) return;
     if (idleNudgeTimerRef.current) clearTimeout(idleNudgeTimerRef.current);
@@ -21749,7 +22259,7 @@ export function VoiceTutorRealtime({
       );
       void handleStudentTranscriptForBrain(idleNudgeDirective({ v2: TUTOR_IDLE_NUDGE_V2 }), { silent: true, bypassPerceptionDedupe: true });
     };
-    const idleNudgeArmDelay = idleNudgeArmDelayMs(idleNudgeStateRef.current);
+    const idleNudgeArmDelay = idleNudgeArmDelayMs(idleNudgeStateRef.current, { languageLesson: sessionAllowsNonLatin(tutorLanguages) });
     idleNudgeDueAtRef.current = Date.now() + idleNudgeArmDelay;
     idleNudgePostponeRef.current = { lastReason: null, loggedReason: null, loggedAtMs: 0 };
     idleNudgeTimerRef.current = setTimeout(fireOrRecheck, idleNudgeArmDelay);
@@ -21842,8 +22352,10 @@ export function VoiceTutorRealtime({
         now - lastVadActivityAtRef.current < 4000;
       const moment = pendingMomentRef.current;
       if (moment) {
-        if (!hasStartedRef.current && now - moment.atMs > MOMENT_PRESTART_HOLD_MS) {
-          // The tutor was not open for this moment and no start followed it.
+        if (!hasStartedRef.current && standbyRef.current && now - moment.atMs > MOMENT_PRESTART_HOLD_MS) {
+          // The tutor was not open for this moment and the video has played
+          // on without a start. (Paused on the moment, it waits for the tap —
+          // the host pauses first, the student taps start seconds later.)
           pendingMomentRef.current = null;
           onDebugEventRef.current?.('moment_dropped', 'why=not_started');
         } else if (now - moment.atMs > MOMENT_STALE_MS) {
@@ -21915,10 +22427,14 @@ export function VoiceTutorRealtime({
    *  text together, which fails toward suppression — the safe direction. */
   const openerBargeEscape = useCallback((text: string): boolean => {
     if (!TUTOR_OPENING_BARGEIN_ESCAPE) return false;
-    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    // Japanese script is kept (it used to normalize to '' — a Japanese
+    // interruption could never escape the opener, embed-1792174263669) and
+    // measured with the classifier's CJK-aware length.
+    const normalize = (s: string) =>
+      s.toLowerCase().replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]+/g, ' ').trim();
     const normalizedText = normalize(text);
     const words = normalizedText.split(/\s+/).filter(Boolean);
-    if (words.length < 3) return false;
+    if (lengthWordCount(words) < 3) return false;
     const openerText = normalize(openingTurnTextRef.current ?? '');
     return !openerText.includes(normalizedText);
   }, []);
@@ -22114,6 +22630,7 @@ export function VoiceTutorRealtime({
       // drain so the cancel doesn't flush buffered renders — the verdict
       // decides drop (abort/re-fire) vs flush-all (resume/deliver).
       renderBufferPausedRef.current = true;
+      armNoVerdictRecoveryRef.current?.();
       try { inFlightBrainAbortRef.current?.abort(); } catch {}
       try { void clearSpeechQueueRef.current?.(); } catch {}
       productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
@@ -22735,6 +23252,17 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('perception_bargein_classifier_kill', `verdict=${v} · "${text.slice(0, 60)}"`);
         runPerceptionKillRef.current?.('speaking');
       };
+      // 2026-10-18 (embed-1792346446334): a short continuation that lands a
+      // couple of seconds into the tutor's reply is the tail of the student's
+      // own previous answer, not a turn. Held as context for the next brain
+      // call; the reply keeps playing (late-tail.ts).
+      const holdLateTail = (v: string, text: string, prod: string): boolean => {
+        const turnMs = Date.now() - (brainTurnStartedAtRef.current ?? 0);
+        if (!isLateTail({ verdict: v, prodState: prod, tutorTurnMs: turnMs, text })) return false;
+        pendingLateTailRef.current = lateTailNote(text);
+        onDebugEvent?.('late_tail_held', `"${text.slice(0, 80)}" · turnMs=${turnMs}`);
+        return true;
+      };
 
       // ── Stage 1: heuristic classifier + Haiku escalation (logged, not enforced)
       // Per design Q2 + Q6, every perception transcript runs through the
@@ -22855,6 +23383,7 @@ export function VoiceTutorRealtime({
           (prodState === 'speaking' || prodState === 'processing') &&
           (heur.verdict === 'barge_in' || heur.verdict === 'new_turn' || heur.verdict === 'continuation')
         ) {
+          if (holdLateTail(heur.verdict, t.text, prodState)) return;
           console.warn(`[PERCEPTION] STAGE-3 late-fallback (no checkpoint, prod=${prodState}): firing as FRESH new turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
           onDebugEvent?.('perception_stage3_late_fallback', `${heur.verdict} at prod=${prodState}`);
           // Stage 3 fix #12 (2026-05-29) + fix #13 (2026-06-15): arm
@@ -23033,6 +23562,7 @@ export function VoiceTutorRealtime({
                 // substantive interruptions during prod 'speaking'/'processing'
                 // without a checkpoint also fire as FRESH new turn so
                 // the student's content reaches the brain.
+                if (holdLateTail(verdict, t.text, prodState)) return;
                 console.warn(`[PERCEPTION] STAGE-3 late-fallback (haiku, no checkpoint, prod=${prodState}): firing as FRESH new turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
                 onDebugEvent?.('perception_stage3_late_fallback', `haiku:${verdict} at prod=${prodState}`);
                 // Stage 3 fix #12 + fix #13: same suppress arming as
@@ -23083,6 +23613,82 @@ export function VoiceTutorRealtime({
   // re-enter a stale closure — same forward-ref-via-ref pattern as
   // applyPerceptionVerdictRef.current assignment elsewhere in this file.
   perceptionOnTranscriptRef.current = perceptionOnTranscript;
+  // No-verdict recovery for an open cancel checkpoint (Round-28 / R32 H3):
+  // if the interrupting sound never resolves to a transcript, no verdict
+  // ever consumes the checkpoint — resume the unplayed TTS ('speaking') or
+  // re-fire the aborted turn ('processing') after the window instead of
+  // stalling until the student re-prompts. Shared by runPerceptionKill and
+  // the retro-cancel effect (embed-1792199116313: a retro 'speaking' cut on
+  // a 5.5s noise burst that never transcribed left the tutor silent 75s —
+  // the retro path armed no recovery at all).
+  const armNoVerdictRecovery = useCallback(() => {
+    const armedCheckpoint = perceptionInterruptCheckpointRef.current;
+    if (!armedCheckpoint) return;
+    if (stage2TimeoutRestoreTimerRef.current) clearTimeout(stage2TimeoutRestoreTimerRef.current);
+    const checkTimeoutRestore = () => {
+      stage2TimeoutRestoreTimerRef.current = null;
+      const cp = perceptionInterruptCheckpointRef.current;
+      const verdict = decideStage2TimeoutRestore({
+        checkpointActive: cp !== null && cp === armedCheckpoint,
+        cancelledDuringState: armedCheckpoint!.cancelledDuringState,
+        brainWasInFlight: armedCheckpoint!.brainWasInFlight,
+        brainTurnAborted: brainTurnAbortedRef.current,
+        midUtterance: perceptionMidUtteranceRef.current,
+        // R42: recent-activity window for the 'speaking' branch — see
+        // lastVadActivityAtRef doc comment. 0 (never stamped) yields a
+        // huge ms value, which is always outside the window, so an
+        // untouched ref behaves exactly like "no signal".
+        msSinceLastVadActivity: lastVadActivityAtRef.current ? Date.now() - lastVadActivityAtRef.current : undefined,
+        newBrainCallInFlight: inFlightBrainAbortRef.current !== null,
+        ageMs: Date.now() - armedCheckpoint!.cancelledAt,
+        hasUnplayedSnapshot: (armedCheckpoint!.unplayedSentencesSnapshot?.length ?? 0) > 0,
+      });
+      if (verdict === 'defer') {
+        stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, 2_000);
+        return;
+      }
+      if (verdict === 'resume-tts') {
+        // R32 (H3): re-queue the unplayed tail through the same
+        // resume-from-cut path the 'speaking' verdict branch uses
+        // (applyPerceptionVerdict, noise/filler/drop_self_voice ×
+        // 'speaking'), including the clauseTailFromFraction
+        // snapshot[0] handling so we don't re-speak already-heard
+        // content.
+        const n = armedCheckpoint!.unplayedSentencesSnapshot.length;
+        // R32 review round 1, Finding 2: shares applyClauseTailSnapshot
+        // with the 'speaking' verdict branch above (including its
+        // [RESUME-CUT] console.warn + 'resume_from_clause' debug
+        // event on truncation) instead of a second inline copy.
+        const resumeQueue = applyClauseTailSnapshot(armedCheckpoint!.unplayedSentencesSnapshot, armedCheckpoint!.cutFraction);
+        console.warn(
+          `[PERCEPTION] STAGE-3 timeout-resume (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-queuing ${n} unplayed sentence(s)`,
+        );
+        onDebugEvent?.('stage3_timeout_resume', `no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms · ${n} sentences`);
+        perceptionInterruptCheckpointRef.current = null;
+        resumeSpeakTextRef.current?.(resumeQueue);
+        flushAllRenderBuffer();
+        return;
+      }
+      if (verdict !== 'restore') return;
+      console.warn(
+        `[PERCEPTION] STAGE-2 timeout-RESTORE (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-firing original transcript=${JSON.stringify(armedCheckpoint!.originalTranscript).slice(0, 80)}`,
+      );
+      onDebugEvent?.('perception_stage2_timeout_restore', `no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms`);
+      perceptionInterruptCheckpointRef.current = null;
+      // Same re-fire discipline as the verdict-driven STAGE-2
+      // RESTORE: re-arm the speakText gate, drop buffered renders
+      // (refire redraws from scratch), bypass the perception dedupe
+      // armed at cancel time.
+      speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+      dropRenderBuffer();
+      void handleStudentTranscriptForBrain(armedCheckpoint!.originalTranscript, {
+        ...(armedCheckpoint!.originalOpts || {}),
+        bypassPerceptionDedupe: true,
+      });
+    };
+    stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS);
+  }, [onDebugEvent, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot]);
+  armNoVerdictRecoveryRef.current = armNoVerdictRecovery;
   // ── The stage-2/3 kill body ──────────────────────────────────────────
   // Extracted (E1) from perceptionOnSpeechStart's closure into its own
   // top-level useCallback so BOTH perceptionOnSpeechStart (the eager
@@ -23099,6 +23705,14 @@ export function VoiceTutorRealtime({
   // cancel (and creates no checkpoint — callers must handle that).
   const runPerceptionKill = useCallback((cancelStage: 'processing' | 'speaking') => {
         if (perceptionInterruptCheckpointRef.current) return;
+        // Pause-first barge-in: whichever path kills, the pause ends here —
+        // clearSpeechQueue resumes the clock itself; the refusals below must
+        // resume it too, or the tutor would stay frozen mid-sentence.
+        const pausedForBargeIn = bargeInPauseRef.current;
+        if (pausedForBargeIn) {
+          if (pausedForBargeIn.timer) clearTimeout(pausedForBargeIn.timer);
+          bargeInPauseRef.current = null;
+        }
         // Round-6d: a verdict just CONFIRMED the previous kill was self-echo
         // — don't let the resumed audio's echo re-kill (portal-37c0e0bf's
         // kill→replay loop). Checked at fire time so a gate armed before
@@ -23106,6 +23720,7 @@ export function VoiceTutorRealtime({
         if (Date.now() < selfEchoCancelImmunityUntilRef.current) {
           console.warn(`[PERCEPTION] cancel suppressed — self-echo immunity window (stage=${cancelStage})`);
           onDebugEvent?.('perception_cancel_suppressed_self_echo', `prod=${productionStateRef.current} stage=${cancelStage}`);
+          if (pausedForBargeIn) { try { realtime.resumeSpeech(); } catch {} }
           return;
         }
         const ctx = lastBrainCallContextRef.current;
@@ -23115,6 +23730,7 @@ export function VoiceTutorRealtime({
         // have an anchor. brain abort below is a no-op if not in flight.
         if (!ctx) {
           console.warn(`[PERCEPTION] cancel skipped: no lastBrainCallContext (stage=${cancelStage})`);
+          if (pausedForBargeIn) { try { realtime.resumeSpeech(); } catch {} }
           return;
         }
         // Cancel-storm breaker: see retro-cancel site. Without this, a
@@ -23123,6 +23739,7 @@ export function VoiceTutorRealtime({
         if (!cancelStormRef.current.allowCancel(Date.now(), { stopImperative: STOP_IMPERATIVE_RE.test(lastPerceptionTextRef.current) })) {
           console.warn(`[PERCEPTION] cancel suppressed — cancel storm (letting reply play out, stage=${cancelStage})`);
           onDebugEvent?.('perception_cancel_storm_suppressed', `prev=${productionStateRef.current} stage=${cancelStage}`);
+          if (pausedForBargeIn) { try { realtime.resumeSpeech(); } catch {} }
           return;
         }
         const stageLabel = cancelStage === 'speaking' ? 'STAGE-3' : 'STAGE-2';
@@ -23200,72 +23817,7 @@ export function VoiceTutorRealtime({
         // effect (armed-then-immediately-cleared, harmless in that path),
         // different mechanism — don't assume applyPerceptionVerdict runs
         // here.
-        {
-          const armedCheckpoint = perceptionInterruptCheckpointRef.current;
-          if (stage2TimeoutRestoreTimerRef.current) clearTimeout(stage2TimeoutRestoreTimerRef.current);
-          const checkTimeoutRestore = () => {
-            stage2TimeoutRestoreTimerRef.current = null;
-            const cp = perceptionInterruptCheckpointRef.current;
-            const verdict = decideStage2TimeoutRestore({
-              checkpointActive: cp !== null && cp === armedCheckpoint,
-              cancelledDuringState: armedCheckpoint!.cancelledDuringState,
-              brainWasInFlight: armedCheckpoint!.brainWasInFlight,
-              brainTurnAborted: brainTurnAbortedRef.current,
-              midUtterance: perceptionMidUtteranceRef.current,
-              // R42: recent-activity window for the 'speaking' branch — see
-              // lastVadActivityAtRef doc comment. 0 (never stamped) yields a
-              // huge ms value, which is always outside the window, so an
-              // untouched ref behaves exactly like "no signal".
-              msSinceLastVadActivity: lastVadActivityAtRef.current ? Date.now() - lastVadActivityAtRef.current : undefined,
-              newBrainCallInFlight: inFlightBrainAbortRef.current !== null,
-              ageMs: Date.now() - armedCheckpoint!.cancelledAt,
-              hasUnplayedSnapshot: (armedCheckpoint!.unplayedSentencesSnapshot?.length ?? 0) > 0,
-            });
-            if (verdict === 'defer') {
-              stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, 2_000);
-              return;
-            }
-            if (verdict === 'resume-tts') {
-              // R32 (H3): re-queue the unplayed tail through the same
-              // resume-from-cut path the 'speaking' verdict branch uses
-              // (applyPerceptionVerdict, noise/filler/drop_self_voice ×
-              // 'speaking'), including the clauseTailFromFraction
-              // snapshot[0] handling so we don't re-speak already-heard
-              // content.
-              const n = armedCheckpoint!.unplayedSentencesSnapshot.length;
-              // R32 review round 1, Finding 2: shares applyClauseTailSnapshot
-              // with the 'speaking' verdict branch above (including its
-              // [RESUME-CUT] console.warn + 'resume_from_clause' debug
-              // event on truncation) instead of a second inline copy.
-              const resumeQueue = applyClauseTailSnapshot(armedCheckpoint!.unplayedSentencesSnapshot, armedCheckpoint!.cutFraction);
-              console.warn(
-                `[PERCEPTION] STAGE-3 timeout-resume (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-queuing ${n} unplayed sentence(s)`,
-              );
-              onDebugEvent?.('stage3_timeout_resume', `no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms · ${n} sentences`);
-              perceptionInterruptCheckpointRef.current = null;
-              resumeSpeakTextRef.current?.(resumeQueue);
-              flushAllRenderBuffer();
-              return;
-            }
-            if (verdict !== 'restore') return;
-            console.warn(
-              `[PERCEPTION] STAGE-2 timeout-RESTORE (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-firing original transcript=${JSON.stringify(armedCheckpoint!.originalTranscript).slice(0, 80)}`,
-            );
-            onDebugEvent?.('perception_stage2_timeout_restore', `no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms`);
-            perceptionInterruptCheckpointRef.current = null;
-            // Same re-fire discipline as the verdict-driven STAGE-2
-            // RESTORE: re-arm the speakText gate, drop buffered renders
-            // (refire redraws from scratch), bypass the perception dedupe
-            // armed at cancel time.
-            speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
-            dropRenderBuffer();
-            void handleStudentTranscriptForBrain(armedCheckpoint!.originalTranscript, {
-              ...(armedCheckpoint!.originalOpts || {}),
-              bypassPerceptionDedupe: true,
-            });
-          };
-          stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS);
-        }
+        armNoVerdictRecovery();
         // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
         // sentence drained from the in-flight orchestrator's SSE buffer
         // between this point and AbortError propagation drops silently.
@@ -23291,8 +23843,74 @@ export function VoiceTutorRealtime({
         productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
         // Q9 (2026-06-16): visible "I heard you" signal. See retro-cancel.
         realtime.markInterrupted();
-  }, [onDebugEvent, realtime, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, clearStage2LazyPending, claimSupersededStreakForCheckpoint]);
+  }, [onDebugEvent, realtime, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, clearStage2LazyPending, claimSupersededStreakForCheckpoint, armNoVerdictRecovery]);
   runPerceptionKillRef.current = runPerceptionKill;
+  // Pause-first barge-in (bargein-pause.ts, 2026-10-17). beginBargeInPause
+  // runs at a 'speaking' onset: suspend playback now, decide on the first
+  // evidence — energy gate pass, Ink partial (content vs the tutor's own TTS
+  // script), speech stopped before any words, or the max wait.
+  const endBargeInPause = useCallback((outcome: 'kill' | 'resume', reason: string) => {
+    const p = bargeInPauseRef.current;
+    if (!p) return;
+    if (p.timer) clearTimeout(p.timer);
+    const sinceOnset = Date.now() - p.onsetAt;
+    if (outcome === 'kill') {
+      onDebugEvent?.('perception_bargein_pause_kill', `${reason} · latencyMs=${sinceOnset}`);
+      // runPerceptionKill clears bargeInPauseRef and resumes the clock through
+      // clearSpeechQueue (or through its own refusal branches).
+      runPerceptionKill('speaking');
+      if (bargeInPauseRef.current === p) bargeInPauseRef.current = null;
+      try { realtime.resumeSpeech(); } catch {}
+      return;
+    }
+    bargeInPauseRef.current = null;
+    if (reason === 'no evidence in time') bargeInNoEvidenceResumesRef.current += 1;
+    onDebugEvent?.('perception_bargein_pause_resume', `${reason} · pausedMs=${sinceOnset}`);
+    try { realtime.resumeSpeech(); } catch {}
+  }, [onDebugEvent, realtime, runPerceptionKill]);
+  const evaluateBargeInPause = useCallback((energyGatePassed = false) => {
+    const p = bargeInPauseRef.current;
+    if (!p) return;
+    const now = Date.now();
+    const selfVoiceScore = p.partial ? scorePartialSelfVoice(p.partial, ttsScriptBufferRef.current, p.onsetAt, now) : null;
+    const decision = decideBargeInPause({
+      state: productionStateRef.current,
+      elapsedMs: now - p.onsetAt,
+      speechStopped: p.speechStopped,
+      partial: p.partial,
+      selfVoiceScore,
+      energyGatePassed,
+    });
+    if (decision === 'wait') return;
+    const reason = decision === 'kill'
+      ? (energyGatePassed ? 'energy gate' : `partial="${(p.partial ?? '').slice(0, 40)}" sv=${selfVoiceScore?.toFixed(2) ?? '-'}`)
+      : (selfVoiceScore != null && p.partial ? `self_voice sv=${selfVoiceScore.toFixed(2)} partial="${p.partial.slice(0, 40)}"` : p.speechStopped ? 'stopped before any words' : productionStateRef.current !== 'speaking' ? `prod=${productionStateRef.current}` : 'no evidence in time');
+    endBargeInPause(decision, reason);
+  }, [endBargeInPause]);
+  evaluateBargeInPauseRef.current = evaluateBargeInPause;
+  const beginBargeInPause = useCallback(() => {
+    if (!TUTOR_BARGEIN_PAUSE_FIRST) return;
+    if (bargeInPauseRef.current) return; // this utterance already paused us
+    if (!shouldPauseForOnset({ noEvidenceResumesThisTurn: bargeInNoEvidenceResumesRef.current })) {
+      // Echo-shaped room for this turn (bargein-pause.ts): no pause; the
+      // final-transcript kill path still answers a real interruption.
+      onDebugEvent?.('perception_bargein_pause_skipped', `echo-shaped: ${bargeInNoEvidenceResumesRef.current} no-evidence pause(s) this turn`);
+      return;
+    }
+    let paused = false;
+    try { paused = realtime.pauseSpeech(); } catch {}
+    if (!paused) return;
+    const p: BargeInPauseState = { onsetAt: Date.now(), speechStopped: false, partial: null, timer: null };
+    bargeInPauseRef.current = p;
+    onDebugEvent?.('perception_bargein_paused', 'playback suspended at the onset — deciding on the first evidence');
+    p.timer = setTimeout(() => evaluateBargeInPauseRef.current(false), BARGEIN_PAUSE_MAX_MS);
+  }, [onDebugEvent, realtime]);
+  const perceptionOnPartialTranscript = useCallback((partial: { text: string }) => {
+    const p = bargeInPauseRef.current;
+    if (!p) return;
+    p.partial = partial.text;
+    evaluateBargeInPauseRef.current(false);
+  }, []);
   const perceptionOnSpeechStart = useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
@@ -23393,6 +24011,9 @@ export function VoiceTutorRealtime({
         clearTimeout(bargeInDeferredKillRef.current);
         bargeInDeferredKillRef.current = null;
       }
+      // Pause-first barge-in: the tutor stops NOW; the gates and the partial
+      // transcript below decide whether that stop becomes a kill or a resume.
+      if (canStage3) beginBargeInPause();
       // Opening-turn guard (rewritten 2026-07-22). History: blanket
       // suppression until the FULL opener delivered (2026-07-04, self-echo
       // phantoms aborting the kickoff) made real first-turn barge-ins
@@ -23677,13 +24298,19 @@ export function VoiceTutorRealtime({
         }, BARGEIN_GATE_POLL_MS);
         return;
       }
-  }, [onDebugEvent, perceptionStage, realtime, runPerceptionKill, clearStage2LazyPending]);
+  }, [onDebugEvent, perceptionStage, realtime, runPerceptionKill, clearStage2LazyPending, beginBargeInPause]);
   const perceptionOnSpeechStop = useCallback((e: PerceptionSpeechEvent) => {
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
       // turn_latency: provisional endpoint (Ink-2 fires this on turn.eager_end).
       // First-wins keeps the ORIGINAL endpoint across turn.resume re-fires.
       turnLatencyRef.current ??= createTurnLatencyLedger();
       turnLatencyRef.current.mark('eagerEnd', Date.now());
+      // Pause-first barge-in: the utterance ended — a blip resumes now; words
+      // already heard decide as they would have.
+      if (bargeInPauseRef.current) {
+        bargeInPauseRef.current.speechStopped = true;
+        evaluateBargeInPauseRef.current(false);
+      }
       // Task V1: the utterance ended — if a sustained-energy barge-in gate is
       // still pending, the onset never sustained (echo blip / brief noise), so
       // cancel it. The gate's own energy check would reach the same verdict; this
@@ -23775,8 +24402,11 @@ export function VoiceTutorRealtime({
   // perceptionWS above, so exactly one hook ever owns the mic + WS.
   const perceptionInk2 = useCartesiaInkWS({
     enabled: perceptionEnabled && TUTOR_STT_ENGINE_INK2,
+    // 5600 ms, or 3000 ms for a bilingual session (ink-turn-end.ts).
+    turnEndTimeoutMs: inkTurnEndTimeoutMs(tutorLanguages),
     onSpeechStart: perceptionOnSpeechStart,
     onSpeechStop: perceptionOnSpeechStop,
+    onPartialTranscript: perceptionOnPartialTranscript,
     onMicLevel,
     onTranscript: perceptionOnTranscript,
     onTranscriptionFailed: perceptionOnTranscriptionFailed,
@@ -24775,6 +25405,46 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // never completes still surfaces as warmupFailed instead of hanging.
   const pendingGestureStartRef = useRef(false);
 
+  // Opener directive at Start — shared by the orb tap and the pre-start
+  // opener prefetch (2026-10-18), so the prefetched body carries the same
+  // agenda-preview clause the tap would send. `emit` controls the
+  // agenda_rail_active debug event (the prefetch runs it silently; the tap
+  // still reports once).
+  const prepareOpenerDirectiveForStart = useCallback((emit: boolean): void => {
+    const planForAgenda = lessonPlanRef.current;
+    const isFreshStart = completedSegmentIdsRef.current.size === 0 && !resumeState;
+    const agendaItemCount = (TUTOR_AGENDA_RAIL && planForAgenda && isFreshStart && targetKind !== 'diagnostic')
+      ? buildAgendaItems(planForAgenda).length
+      : 0;
+    pendingAgendaItemCountRef.current = agendaItemCount;
+    if (agendaItemCount > 0) {
+      if (emit) onDebugEvent?.('agenda_rail_active', `${agendaItemCount} item${agendaItemCount === 1 ? '' : 's'}`, { itemCount: agendaItemCount });
+      // Rebuild the opening directive WITH the agenda-preview clause —
+      // the mount-time seed ran before this tap, so the seeded
+      // directive lacks it (see openerClauseCtxRef doc).
+      // Homework-help: the seeded homework opener has no agenda
+      // preview to add — never overwrite it with the ordinary opener.
+      if (openingDirectiveRef.current && openerClauseCtxRef.current && sessionGoal !== 'homework-help' && !isInFlow) {
+        const rebuilt = buildOpenerClause({
+          ...openerClauseCtxRef.current,
+          agendaItemCount,
+        });
+        if (rebuilt) {
+          // Task 20: re-prepend the SAME continuity clause the seed
+          // chose (stashed in continuityClauseRef) — the rebuild would
+          // otherwise silently drop it. Mutually exclusive with the
+          // stale-reorient branch: resume-stale is excluded from the
+          // continuity journeys, so the ref is null on that path.
+          openingDirectiveRef.current = openerStaleReorientRef.current
+            ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${rebuilt}`
+            : continuityClauseRef.current
+              ? `${continuityClauseRef.current} ${rebuilt}`
+              : rebuilt;
+        }
+      }
+    }
+  }, [resumeState, targetKind, sessionGoal, isInFlow, onDebugEvent]);
+
   const handleMicClick = useCallback(() => {
     // Task 5: text mode has no mic-start path at all. The pre-start center
     // orb (SessionStage) isn't sessionMode-aware and calls straight into
@@ -24938,14 +25608,24 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         realtime.unlockAudio(); audioUnlockedRef.current = true;
         // Bridge line: fixed first words before the brain's first sentence
         // (no model). Once per mount; never on resume or in text mode.
-        if (TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current) {
+        // 2026-10-18: the bridge line covered the opener's brain latency. With
+        // the opener already cached by the prefetch it only delays the real
+        // first sentence (~2 s live) and says a placeholder name — skip it.
+        if (openerPrefetchReadyRef.current && TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current) {
+          onDebugEvent?.('bridge_skipped', 'opener prefetched — the cached opener is the first thing heard');
+        }
+        if (TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current && !openerPrefetchReadyRef.current) {
           const line = bridgeLineFor({
             studentName, title: lessonContext?.title, inFlow: isInFlow,
             // Text mode returned above (typed start, no dead air to cover).
             inputMode: 'voice', resume: Boolean(resumeState),
+            // Japanese sessions get a Japanese, nameless line (bridge-line.ts);
+            // a non-beginner in one gets a nameless English line.
+            tutorLanguages, level,
           });
           if (line) {
             bridgeSpokenRef.current = true;
+            bridgeSpokeNameRef.current = bridgeSpokeName(line);
             bridgeAudioPendingAtRef.current = Date.now();
             bridgeTapAtRef.current = Date.now();
             try { realtime.speakText(line, pushTtsScriptForPerception(line)); } catch { bridgeAudioPendingAtRef.current = null; /* skip; brain follows */ }
@@ -24991,38 +25671,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           // non-fresh/diagnostic/flag-off starts) covers both this tap-time
           // rebuild AND the mount-time seed's buildOpenerClause call above,
           // whichever runs second — see pendingAgendaItemCountRef's doc.
-          const planForAgenda = lessonPlanRef.current;
-          const isFreshStart = completedSegmentIdsRef.current.size === 0 && !resumeState;
-          const agendaItemCount = (TUTOR_AGENDA_RAIL && planForAgenda && isFreshStart && targetKind !== 'diagnostic')
-            ? buildAgendaItems(planForAgenda).length
-            : 0;
-          pendingAgendaItemCountRef.current = agendaItemCount;
-          if (agendaItemCount > 0) {
-            onDebugEvent?.('agenda_rail_active', `${agendaItemCount} item${agendaItemCount === 1 ? '' : 's'}`, { itemCount: agendaItemCount });
-            // Rebuild the opening directive WITH the agenda-preview clause —
-            // the mount-time seed ran before this tap, so the seeded
-            // directive lacks it (see openerClauseCtxRef doc).
-            // Homework-help: the seeded homework opener has no agenda
-            // preview to add — never overwrite it with the ordinary opener.
-            if (openingDirectiveRef.current && openerClauseCtxRef.current && sessionGoal !== 'homework-help' && !isInFlow) {
-              const rebuilt = buildOpenerClause({
-                ...openerClauseCtxRef.current,
-                agendaItemCount,
-              });
-              if (rebuilt) {
-                // Task 20: re-prepend the SAME continuity clause the seed
-                // chose (stashed in continuityClauseRef) — the rebuild would
-                // otherwise silently drop it. Mutually exclusive with the
-                // stale-reorient branch: resume-stale is excluded from the
-                // continuity journeys, so the ref is null on that path.
-                openingDirectiveRef.current = openerStaleReorientRef.current
-                  ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${rebuilt}`
-                  : continuityClauseRef.current
-                    ? `${continuityClauseRef.current} ${rebuilt}`
-                    : rebuilt;
-              }
-            }
-          }
+          prepareOpenerDirectiveForStart(true);
           warmupKickoffRef.current = '[start lesson]';
           handleStudentTranscriptForBrain('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
         } else {
@@ -25808,6 +26457,40 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   }, [realtime.state, isWarmingUp, isBrainResponding, hasStarted, isMicMuted, perceptionHearing, perceptionAwaitingDispatch, manualMic, manualBufferCount, onVoiceStateChange]);
 
   const isIsland = dockVariant === 'island';
+
+  // Opener prefetch (2026-10-18, GDI embed-1792338502233): after Start the
+  // learner waited 4.6 s for the tutor's first sentence — the opener brain call
+  // ran cold (prompt-cache write + a hidden-thinking first attempt), after 6.5
+  // minutes on the pre-start screen. The opener depends only on plan, persona
+  // and student, so it is built pre-start through the real body builder
+  // (callBrainOnce prefetchOnly) and sent with `prefetch: true`; the route
+  // caches the stream under the session id and the tap's '[start lesson]'
+  // call replays it (lib/tutor/voice/opener-prefetch.ts). Same conditions as
+  // the tap's lesson branch: claude-brain, a lesson plan, not a checkpoint
+  // resume, voice session. Once per mount; a tap before it fires wins.
+  // Per partner (2026-10-27 merge decision): the surface resolves
+  // `openerPrefetch` from lib/tutor/portal/partner-session-options.ts — on
+  // for bilingual sessions, off for English-only partners until asked.
+  const openerPrefetchFiredRef = useRef(false);
+  useEffect(() => {
+    if (!TUTOR_OPENER_PREFETCH || !openerPrefetch || !claudeBrainMode || !isInitialized || sessionMode === 'text') return;
+    if (resumeState || hasStartedRef.current || openerPrefetchFiredRef.current) return;
+    let tries = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      if (openerPrefetchFiredRef.current || hasStartedRef.current) return;
+      if (!lessonPlanRef.current) {
+        if (++tries < 8) { timer = setTimeout(tick, OPENER_PREFETCH_DELAY_MS); return; }
+        onDebugEvent?.('opener_prefetch_skipped', `no lesson plan after ${tries} checks`);
+        return;
+      }
+      openerPrefetchFiredRef.current = true;
+      prepareOpenerDirectiveForStart(false);
+      void callBrainOnce('[start lesson]', { silent: true, prefetchOnly: true });
+    };
+    timer = setTimeout(tick, OPENER_PREFETCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [openerPrefetch, claudeBrainMode, isInitialized, sessionMode, resumeState, callBrainOnce, prepareOpenerDirectiveForStart, onDebugEvent]);
 
   return (
     <div className={`voice-tutor-realtime flex items-center flex-wrap ${isIsland ? 'py-1 px-1 gap-2 sm:gap-2.5' : 'py-2 px-2 gap-2 sm:gap-3'}`}>

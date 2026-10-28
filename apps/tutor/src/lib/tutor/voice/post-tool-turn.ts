@@ -30,9 +30,34 @@
 const CLOSING_TOOLS = new Set(['close_session_notes', 'hold_for_student']);
 
 export type ThinTurnRescueReason =
-  | 'thin-tool-turn'
+  | 'thin-tool-turn' | 'announced-next-step'
   | 'flag-off' | 'muted' | 'no-text' | 'no-tool-in-last-response' | 'tool-round-trip'
   | 'has-question' | 'turn-closed' | 'closing-tool' | 'recap';
+
+/** Japanese quotation brackets and what they quote. A question inside them
+ *  (「〜したことがありますか？」) names a phrase; it asks the student nothing. */
+const JA_QUOTE_RE = /「[^「」]*」|『[^『』]*』/g;
+
+/** True when the text asks the student something: a "?" / "？" outside
+ *  Japanese quotation brackets. English text is tested exactly as before. */
+function asksStudent(text: string): boolean {
+  return /[?？]/.test(text.replace(JA_QUOTE_RE, '「」'));
+}
+
+/** 2026-10-27 (GDI demo embed-1793146527837): the last sentence announces the
+ *  next step in Japanese and stops — 「次は、もう一つの大事な言い方「〜したことが
+ *  ありますか？」を練習しましょう。」 — with no question and no advance. The
+ *  student waited for a question, the tutor waited for the student, and the
+ *  lesson stalled. "Let's try saying it" (〜てみましょう) hands the turn over and
+ *  is not an announcement. Japanese only: English turns are never matched. */
+const JA_ANNOUNCE_RE = /^(?:では|それでは|じゃあ|さて)?[、,]?\s*(?:次は|次に|続いて|今度は)[^。！？!?]*(?:ましょう|します|いきます|進みます)[。！!]?$/;
+
+export function announcesNextStep(text: string): boolean {
+  const parts = (text ?? '').replace(JA_QUOTE_RE, '「」').trim().split(/(?<=[。！？!?])\s*/).filter((p) => p.trim());
+  const last = (parts[parts.length - 1] ?? '').trim();
+  if (!last || /てみましょう[。！!]?$/.test(last)) return false;
+  return JA_ANNOUNCE_RE.test(last);
+}
 
 /** A recap move: advance to the recap segment, or its card. */
 function isRecapCall(call: { name: string; args?: Record<string, unknown> }): boolean {
@@ -61,10 +86,15 @@ export function decideThinToolTurnRescue(input: {
   const text = (input.text ?? '').trim();
   // Zero text is the older Option-A rescue's case.
   if (!text) return no('no-text');
-  if (!(input.lastResponseToolUses > 0)) return no('no-tool-in-last-response');
   // A tool_use stop means the loop ran (or capped) the round trip itself.
   if (input.lastStopReason === 'tool_use') return no('tool-round-trip');
-  if (/[?？]/.test(text)) return no('has-question');
+  if (asksStudent(text)) return no('has-question');
+  if (!(input.lastResponseToolUses > 0)) {
+    if (announcesNextStep(text) && !input.toolCalls.some((c) => CLOSING_TOOLS.has(c.name)) && !input.toolCalls.some(isRecapCall)) {
+      return { rescue: true, reason: 'announced-next-step' };
+    }
+    return no('no-tool-in-last-response');
+  }
   if (endsTurn(text)) return no('turn-closed');
   if (input.toolCalls.some((c) => CLOSING_TOOLS.has(c.name))) return no('closing-tool');
   if (input.toolCalls.some(isRecapCall)) return no('recap');
@@ -76,6 +106,12 @@ export const THIN_TURN_RESCUE_INSTRUCTION =
   'Your words so far this turn have already reached the student, and what you put on the board is showing. ' +
   'Do not repeat or rephrase any of it. Finish the turn: ask the student the one question they should answer next ' +
   'about what is now on the board, in one or two short sentences. Text only — no tools.';
+
+/** The follow-up for a Japanese next-step announcement with no question. */
+export const ANNOUNCED_STEP_RESCUE_INSTRUCTION =
+  'Your words so far this turn have already reached the student. Do not repeat or rephrase them. ' +
+  'Start the step you just announced: give the student its first item to answer, in one or two short sentences, ' +
+  'in the language you are using with this student, ending with a question. Text only — no tools.';
 
 const DELIVERED_CLIP = 600;
 

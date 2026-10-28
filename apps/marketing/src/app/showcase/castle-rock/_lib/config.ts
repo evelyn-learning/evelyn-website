@@ -13,6 +13,8 @@ export const SHOWCASE = {
 export type NavItem = { label: string; href: string };
 
 export const NAV: NavItem[] = [
-  { label: "Sample AI Solutions", href: `${SHOWCASE.basePath}/solutions` },
+  { label: "Overview", href: SHOWCASE.basePath },
+  { label: "Standard AI Solutions", href: `${SHOWCASE.basePath}/solutions` },
+  { label: "Premium AI Solutions", href: `${SHOWCASE.basePath}/premium` },
   { label: "Packet for SOLARO", href: `${SHOWCASE.basePath}/packet` },
 ];

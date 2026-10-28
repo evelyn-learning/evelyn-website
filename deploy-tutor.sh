@@ -595,8 +595,19 @@ fi
 # failing `next build`'s type-check with "File not found" even though the
 # code is clean (2026-05-18 build failure — Next 16 only emits
 # cache-life.d.ts when cacheComponents is on, which it isn't here).
+#
+# `.next/cache` is KEPT (2026-10-16): it holds Turbopack's build cache
+# (~600 MB) and wiping it made every deploy a cold ~17 min build. Everything
+# else in .next/ still goes, so the static/server-chunk manifests below only
+# ever list this build's files, and the zip already excludes .next/cache/*.
+# DEPLOY_CLEAN_CACHE=1 wipes the cache too (a fully cold build).
 log_message "INFO" "Cleaning up previous build artifacts..."
-rm -rf "$APP_DIR/.next/" 2>/dev/null || true
+if [ "${DEPLOY_CLEAN_CACHE:-}" = "1" ]; then
+  log_message "INFO" "DEPLOY_CLEAN_CACHE=1 — wiping the build cache too"
+  rm -rf "$APP_DIR/.next/" 2>/dev/null || true
+elif [ -d "$APP_DIR/.next" ]; then
+  find "$APP_DIR/.next" -mindepth 1 -maxdepth 1 ! -name cache -exec rm -rf {} + 2>/dev/null || true
+fi
 rm -f "$APP_DIR/tsconfig.tsbuildinfo" 2>/dev/null || true
 
 npm run --workspace "$APP_WORKSPACE" build || {

@@ -126,3 +126,20 @@ export function buildSessionFilter(
   }
   return filter;
 }
+
+/**
+ * The Practice grading view (and the cost line) on the same page: grades are
+ * not sessions, so only the Partner and date chips apply — source, host,
+ * mode, audio and search describe sessions and are ignored.
+ */
+export function buildGradeUsageFilter(
+  params: Pick<SessionFilterParams, 'partner' | 'range'>,
+  now: Date = new Date(),
+): Record<string, unknown> {
+  const filter: Record<string, unknown> = {};
+  if (params.partner) filter.partnerId = params.partner;
+  if (params.range && RANGE_MS[params.range]) {
+    filter.createdAt = { $gte: new Date(now.getTime() - RANGE_MS[params.range]) };
+  }
+  return filter;
+}

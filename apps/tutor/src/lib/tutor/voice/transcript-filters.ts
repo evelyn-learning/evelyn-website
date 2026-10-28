@@ -393,7 +393,15 @@ export function isNoiseTranscript(text: string, opts?: NoiseFilterOpts): boolean
   if (NOISE_REGEXES.some((re) => re.test(text))) return true;
   // Repeated words like "bye bye" or "hello hello hello" (2-3 identical words)
   const words = normalized.split(/\s+/);
-  if (words.length >= 2 && words.length <= 3 && new Set(words).size === 1) return true;
+  // 2026-10-18 (GDI embed-1792354826479): "Yesterday, yesterday." — a
+  // beginner's answer to "what is 私は in English?" — dropped here, and the
+  // lesson stalled on the silence. A repeated CONTENT word is a student
+  // repeating their answer; only a repeated noise / greeting word or a
+  // repeated 1–2 letter filler is the hallucination this rule is for.
+  if (
+    words.length >= 2 && words.length <= 3 && new Set(words).size === 1
+    && (NOISE_PATTERNS.has(words[0]) || GREETING_WORDS.has(words[0]) || words[0].length <= 2)
+  ) return true;
   // Single word ≤ 2 characters, EXCEPT single-letter math variables and
   // the short answers below.
   // Originally "< 4 chars" but that dropped legitimate single-word math

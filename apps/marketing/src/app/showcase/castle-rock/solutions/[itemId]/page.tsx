@@ -12,9 +12,9 @@ export default function SolutionPage() {
   if (!solution) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <h1 className="font-heading text-2xl font-semibold text-slate-900">No sample for item {itemId}</h1>
+        <h1 className="font-heading text-2xl font-semibold text-slate-900">No standard solution for item {itemId}</h1>
         <p className="mt-3 text-slate-700">
-          <Link href={`${SHOWCASE.basePath}/solutions`} className="font-medium text-primary-600 hover:text-primary-800">See the available sample solutions</Link>
+          <Link href={`${SHOWCASE.basePath}/solutions`} className="font-medium text-primary-600 hover:text-primary-800">See the standard solutions</Link>
         </p>
       </div>
     );

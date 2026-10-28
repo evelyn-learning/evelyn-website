@@ -36,6 +36,26 @@ export const ACK_OPENER_RE = new RegExp(
   'i',
 );
 
+/**
+ * Japanese (GDI bilingual sessions, embed-1792261973710, 2026-10-17). The
+ * tutor's affirmations were invisible to every reader here — 「ちゃんと答えられて
+ * いますね」 after a correct answer left the question pin standing, and the idle
+ * nudge re-asked a question the student had answered. The Japanese shapes:
+ * the verdict word itself (完璧 / 正解 / その通り / 合っています / ばっちり), a
+ * "could do it" verb (ちゃんと言えましたね, 正しく使えています, できましたね),
+ * or praise of the sentence (いい文ですね) — any of them may follow the
+ * student's sentence quoted back (「"I went to Gifu." 完璧です。」).
+ */
+const JA_LEAD = '[\\s「"\'“(]*(?:[「"“][^」"”]{0,120}[」"”][\\s、,。.]*)?(?:(?:はい|ええ|そうです(?:ね)?|そうそう)[、,\\s]*)?';
+const JA_AFFIRM_WORDS =
+  '完璧|大正解|正解|その通り|そのとおり|合って(?:い)?ます|合っていますよ|ばっちり|バッチリ|正しいです|' +
+  '(?:正しく|ちゃんと|きちんと|しっかり|上手に|うまく)(?:言え|答え|使え|直せ|でき|作れ)|' +
+  '(?:言え|答え|使え|直せ|作れ|でき)(?:ました|ています|てます)ね|よくできました|よく言えました|' +
+  '素晴らしい|すばらしい|お見事|(?:とても|すごく|すばらしく)?(?:いい|良い)(?:文|答え|返事|言い方|質問の形)';
+export const AFFIRM_OPENER_JA_RE = new RegExp(`^${JA_LEAD}(?:${JA_AFFIRM_WORDS})`);
+/** 「いい質問ですね」 / 「いい指摘です」: the move is praised, not an answer. */
+export const ACK_OPENER_JA_RE = /^[\s「"'“(]*(?:(?:とても|すごく)?(?:いい|良い|面白い|鋭い|大切な)(?:質問|指摘|ポイント|考え|気づき)|教えてくれてありがとう)/;
+
 export type OpenerRead = 'affirm' | 'ack' | 'none';
 
 /**
@@ -102,8 +122,9 @@ export function readOpener(sentence: string, ackExclusion = true, ctx?: OpenerCo
       // The rest of the sentence, after the comma / dash / exclamation mark.
       return affirmsAfterAck(s.slice(ack[0].length), ctx?.studentValue) ? 'affirm' : 'ack';
     }
+    if (ACK_OPENER_JA_RE.test(s)) return 'ack';
   }
-  if (AFFIRM_OPENER_RE.test(s)) return 'affirm';
+  if (AFFIRM_OPENER_RE.test(s) || AFFIRM_OPENER_JA_RE.test(s)) return 'affirm';
   if (ackExclusion && ctx?.afterAck && affirmsAfterAck(s, ctx.studentValue)) return 'affirm';
   return 'none';
 }

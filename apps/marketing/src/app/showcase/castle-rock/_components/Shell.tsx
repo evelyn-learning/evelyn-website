@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { AlertCircle, ArrowRight, Loader2, Lock } from "lucide-react";
 import { DemoTrackingProvider } from "@/components/demos/DemoTrackingContext";
 import { useDemoTracking } from "@/hooks/useDemoTracking";
-import { NAV, SHOWCASE } from "../_lib/config";
+import { NAV, SHOWCASE, type NavItem } from "../_lib/config";
 import "../castle-rock.css";
 
 function Copyright({ dark = false }: { dark?: boolean }) {
@@ -82,6 +82,22 @@ function Gate({ onUnlock }: { onUnlock: () => void }) {
   );
 }
 
+function NavLink({ item, pathname }: { item: NavItem; pathname: string | null }) {
+  const active = item.href === SHOWCASE.basePath ? pathname === item.href : !!pathname?.startsWith(item.href);
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={[
+        "shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+        active ? "bg-primary-50 text-primary-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+      ].join(" ")}
+    >
+      {item.label}
+    </Link>
+  );
+}
+
 /**
  * Gate, header, menu and footer shared by every page in the showcase.
  * Tracking mirrors the deck showcases: Views = link opened, Interactions =
@@ -119,29 +135,24 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <DemoTrackingProvider trackInteraction={trackInteraction}>
-      <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+      <div className="flex min-h-screen flex-col overflow-x-clip bg-slate-50 text-slate-900">
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
-          <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-            <Link href={SHOWCASE.basePath} className="min-w-0 truncate font-heading text-[15px] font-semibold text-slate-900">
-              Evelyn Learning <span className="font-normal text-slate-400">&times;</span> Castle Rock Research
-            </Link>
-            <nav aria-label="Showcase sections" className="flex shrink-0 items-center gap-1">
-              {NAV.map((item) => {
-                const active = pathname?.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-current={active ? "page" : undefined}
-                    className={[
-                      "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                      active ? "bg-primary-50 text-primary-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-                    ].join(" ")}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
+          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+            <div className="flex h-14 items-center justify-between gap-4">
+              <Link href={SHOWCASE.basePath} className="min-w-0 truncate font-heading text-[15px] font-semibold text-slate-900">
+                Evelyn Learning <span className="font-normal text-slate-400">&times;</span> Castle Rock Research
+              </Link>
+              <nav aria-label="Showcase sections" className="hidden shrink-0 items-center gap-1 md:flex">
+                {NAV.map((item) => (
+                  <NavLink key={item.href} item={item} pathname={pathname} />
+                ))}
+              </nav>
+            </div>
+            {/* Phones: the menu scrolls sideways inside the header; the page itself never widens. */}
+            <nav aria-label="Showcase sections" className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
+              {NAV.map((item) => (
+                <NavLink key={item.href} item={item} pathname={pathname} />
+              ))}
             </nav>
           </div>
         </header>

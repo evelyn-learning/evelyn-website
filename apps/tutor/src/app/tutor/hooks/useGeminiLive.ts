@@ -771,5 +771,9 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     dropQueuedSpeech: () => 0,
     releaseInput: () => {},
     isSpeechPending: () => false,
+    // Pause-first barge-in is a claude-brain/Ink path concern; Gemini Live has
+    // no client-side playback queue to pause.
+    pauseSpeech: () => false,
+    resumeSpeech: () => {},
   };
 }
