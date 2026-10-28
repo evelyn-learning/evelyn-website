@@ -129,12 +129,12 @@ function main() {
   test('bridge line: never interpolates an id; real first name unchanged', () => {
     const v = { inFlow: false, inputMode: 'voice' as const, resume: false };
     for (const id of IDS) {
-      assert.equal(bridgeLineFor({ ...v, studentName: id }), 'Hey. Let’s get started.');
+      assert.equal(bridgeLineFor({ ...v, studentName: id }), 'Hey.');
       assert.equal(bridgeLineFor({ ...v, inFlow: true, title: 'Slope', studentName: id }), 'Hey. Slope — let’s look at it.');
     }
-    assert.equal(bridgeLineFor({ ...v, studentName: 'Maya Chen' }), 'Hey Maya. Let’s get started.');
-    assert.equal(bridgeLineFor({ ...v, studentName: 'Anne-Marie' }), 'Hey Anne-Marie. Let’s get started.');
-    assert.equal(bridgeLineFor({ ...v, studentName: "O'Neil" }), "Hey O'Neil. Let’s get started.");
+    assert.equal(bridgeLineFor({ ...v, studentName: 'Maya Chen' }), 'Hey Maya.');
+    assert.equal(bridgeLineFor({ ...v, studentName: 'Anne-Marie' }), 'Hey Anne-Marie.');
+    assert.equal(bridgeLineFor({ ...v, studentName: "O'Neil" }), "Hey O'Neil.");
   });
 
   test('TTS rewrite: an id-shaped name is treated as no name; a real name keeps its vocative rule', () => {
