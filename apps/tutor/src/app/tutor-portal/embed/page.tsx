@@ -934,7 +934,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // host actually minted. Presence only — never the values.
   useEffect(() => {
     if (!config) return;
-    addDebugEvent('embed_config', `practice_locator=${config.practice_locator ? 'yes' : 'no'} goal_note=${config.goal_note ? 'yes' : 'no'} readiness_note=${config.readiness_note ? 'yes' : 'no'}`);
+    addDebugEvent('embed_config', `practice_locator=${config.practice_locator ? 'yes' : 'no'} goal_note=${config.goal_note ? 'yes' : 'no'} readiness_note=${config.readiness_note ? 'yes' : 'no'} is_trial=${config.is_trial === true ? 'yes' : 'no'} open_scope=${openScope ? 'yes' : 'no'}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.practice_locator, config?.goal_note]);
   useEffect(() => {

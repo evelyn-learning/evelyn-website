@@ -8,6 +8,7 @@
  */
 
 import { DEMO_TOPIC_CONFIRM_CLAUSE, DEMO_TOPIC_SWITCH_RULE } from '@/lib/tutor/portal/demo-topic-choice';
+import { DEMO_TOPIC_ASKED_LEAD } from '@/lib/tutor/voice/demo-topic-choice-opener';
 import { TUTOR_DEMO_TOPIC_CHOICE } from '@/lib/tutor/orchestrator/flags';
 import type { KnowledgeModule } from '@core/knowledge/types';
 import type { SessionState, SessionGoal } from '../types';
@@ -159,6 +160,10 @@ export interface SystemPromptContext {
    *  'demo' = unauthenticated/trial session; 'subscribed' = signed-in
    *  student with an account. Undefined is treated like 'demo'. */
   sessionMode?: 'demo' | 'subscribed';
+  /** Demo topic choice (2026-10-28): the client already asked "want this or
+   *  something else?" aloud; the first brain turn answers it. The opener
+   *  clause then leads with DEMO_TOPIC_ASKED_LEAD instead of the spoken-confirm rule. */
+  demoTopicAsked?: boolean;
   /** True on the turn that opens the session — gates buildOpenerClause. */
   openingPhase?: boolean;
   /** R49 first-turn v2 (2026-08-20), gated by NEXT_PUBLIC_TUTOR_FIRST_TURN_V2.
@@ -1614,7 +1619,9 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
   // — treated as the full opener per the brief.
   // Demo topic choice (2026-10-28): the confirm leads the clause — appended
   // at the end it was present (2324-char directive, local test) and ignored.
-  const demoConfirmLead = TUTOR_DEMO_TOPIC_CHOICE && ctx.sessionMode === 'demo' ? DEMO_TOPIC_CONFIRM_CLAUSE : '';
+  const demoConfirmLead = TUTOR_DEMO_TOPIC_CHOICE && ctx.sessionMode === 'demo'
+    ? (ctx.demoTopicAsked ? DEMO_TOPIC_ASKED_LEAD : DEMO_TOPIC_CONFIRM_CLAUSE)
+    : '';
   return (
     demoConfirmLead +
     agendaClause +

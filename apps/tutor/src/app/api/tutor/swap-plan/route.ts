@@ -22,6 +22,7 @@
  * proposing a swap to something outside.
  */
 
+import { gradeDistance } from '@/lib/tutor/lesson-plan/grade-ordinal';
 import { verifyPlanKeys, finishKeyVerifyInBackground, KEY_VERIFY_JIT_INLINE_BUDGET_MS } from '@/lib/tutor/lesson-plan/plan-key-verify';
 import { NextRequest, NextResponse } from 'next/server';
 import { listLessonPlans } from '@/lib/tutor/lesson-plan/store';
@@ -129,9 +130,14 @@ export async function POST(request: NextRequest) {
   let bestCurated: { plan: LessonPlan; score: number } | null = null;
   for (const plan of candidates) {
     const score = scorePlanForSubTopic(plan, targetSubTopic);
-    if (score > 0 && (!bestCurated || score > bestCurated.score)) {
-      bestCurated = { plan, score };
-    }
+    if (score <= 0) continue;
+    // 2026-10-28 (demo topic choice): open-scope swaps search the whole
+    // catalog, so a tie is broken by grade proximity — a grade-7 trial asking
+    // for quadratic equations gets the grade-8 lesson, not the grade-9 one.
+    const better = !bestCurated
+      || score > bestCurated.score
+      || (openScope && score === bestCurated.score && gradeDistance(plan.grade, body.grade) < gradeDistance(bestCurated.plan.grade, body.grade));
+    if (better) bestCurated = { plan, score };
   }
 
   // Threshold: require a minimum signal before slotting in a curated

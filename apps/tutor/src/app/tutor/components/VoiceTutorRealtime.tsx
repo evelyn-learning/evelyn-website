@@ -9,6 +9,8 @@
  */
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
+import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
+import { TUTOR_DEMO_TOPIC_CHOICE } from '@/lib/tutor/orchestrator/flags';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
@@ -2165,6 +2167,9 @@ export function VoiceTutorRealtime({
   // fallback arm (a mid-session studentPreferences rebuild must not
   // resurrect a retired directive). Fresh per session via key={sessionId}.
   const openingDirectiveRef = useRef<string | null>(null);
+  // Demo topic choice (2026-10-28): the spoken question the client asked at
+  // start; attached as <demo_topic_choice> to the first brain turn, then cleared.
+  const demoTopicChoicePendingRef = useRef<string | null>(null);
   const openingDirectiveBrainTurnsRef = useRef(0);
   // Agenda rail (2026-08-10): the exact ctx buildInstructions used to seed
   // the opening directive, plus whether the stale-checkpoint re-orient
@@ -4682,6 +4687,11 @@ export function VoiceTutorRealtime({
   // paused for, and the evaluator (defined with the kill body) by ref so the
   // Ink hook's callbacks below can reach it.
   const bargeInPauseRef = useRef<BargeInPauseState | null>(null);
+  // 2026-10-28 (embed-1793229891015): when the cancel-storm breaker refuses a
+  // cancel it used to RESUME playback at once — the tutor talked over a
+  // 20-second complaint. Now the pause holds until speech_stopped (or this
+  // safety timer), and only the abort is refused.
+  const resumeAfterStudentStopsRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** 2026-10-18: pauses that resumed on "no evidence" during the current tutor turn (echo-shaped onsets). Reset per brain turn. */
   const bargeInNoEvidenceResumesRef = useRef(0);
   const evaluateBargeInPauseRef = useRef<(energyGatePassed?: boolean) => void>(() => {});
@@ -8074,6 +8084,9 @@ export function VoiceTutorRealtime({
         // parent handler resolves the swap async. By the time the
         // brain's NEXT turn runs, the new plan is loaded via the
         // existing useEffect and lessonPlanContext reflects it.
+        // 2026-10-28: an open-scope swap starts the new topic on a NEW page
+        // (the old topic's board stays behind otherwise).
+        if (openScope) topicShiftPendingRef.current = { fromDistance: 1 };
         void (async () => {
           try {
             await onProposePlanSwap({ targetSubTopic, targetSubject, reason });
@@ -12722,6 +12735,11 @@ export function VoiceTutorRealtime({
               : openingDirectiveRef.current;
             teacherIntroDirectiveRef.current = null;
             openingDirectiveBrainTurnsRef.current += 1;
+            if (demoTopicChoicePendingRef.current) {
+              openingDirective += ` ${demoTopicChoiceDirective(demoTopicChoicePendingRef.current)}`;
+              demoTopicChoicePendingRef.current = null;
+              onDebugEvent?.('demo_topic_choice_directive', 'attached to the first brain turn');
+            }
             // Host video at its beginning: a lesson-start hook rides every
             // full opening attempt (read once, so a retry carries the same one).
             if (TUTOR_HOST_LESSON) {
@@ -23767,7 +23785,17 @@ export function VoiceTutorRealtime({
         if (!cancelStormRef.current.allowCancel(Date.now(), { stopImperative: STOP_IMPERATIVE_RE.test(lastPerceptionTextRef.current) })) {
           console.warn(`[PERCEPTION] cancel suppressed — cancel storm (letting reply play out, stage=${cancelStage})`);
           onDebugEvent?.('perception_cancel_storm_suppressed', `prev=${productionStateRef.current} stage=${cancelStage}`);
-          if (pausedForBargeIn) { try { realtime.resumeSpeech(); } catch {} }
+          if (pausedForBargeIn) {
+            // Refuse the abort, keep the pause: resume when the student stops
+            // (speech_stopped) or after 15 s, whichever comes first.
+            if (resumeAfterStudentStopsRef.current) clearTimeout(resumeAfterStudentStopsRef.current);
+            resumeAfterStudentStopsRef.current = setTimeout(() => {
+              resumeAfterStudentStopsRef.current = null;
+              onDebugEvent?.('bargein_pause_resumed', 'safety timer (15 s) — no speech_stopped');
+              try { realtime.resumeSpeech(); } catch {}
+            }, 15_000);
+            onDebugEvent?.('bargein_pause_held', 'storm breaker refused the abort; playback stays paused until the student stops');
+          }
           return;
         }
         const stageLabel = cancelStage === 'speaking' ? 'STAGE-3' : 'STAGE-2';
@@ -24356,6 +24384,12 @@ export function VoiceTutorRealtime({
       }
       // Stage 3 fix #4: clear mid-utterance flag.
       perceptionMidUtteranceRef.current = false;
+      if (resumeAfterStudentStopsRef.current) {
+        clearTimeout(resumeAfterStudentStopsRef.current);
+        resumeAfterStudentStopsRef.current = null;
+        onDebugEvent?.('bargein_pause_resumed', 'student stopped');
+        try { realtime.resumeSpeech(); } catch {}
+      }
       // R42: speech_stopped is a VAD edge too — an inter-clause pause fires
       // this exact event without the student being genuinely done talking.
       // Stamping here (not just on speech_started) is what lets a
@@ -24967,6 +25001,7 @@ export function VoiceTutorRealtime({
           // <demo_stop> wrap directive vanishes on resume and the hard stop lands
           // with no pedagogical wind-down.
           openerFields.sessionMode = isTrial || beh.journey.startsWith('demo-') ? 'demo' : 'subscribed';
+          if (TUTOR_DEMO_TOPIC_CHOICE && isTrial) openerFields.demoTopicAsked = true;
           // NOTE: openingPhase is deliberately NOT set here anymore (flag-ON
           // follow-up #1): the static system prompt is a byte-stable cached
           // prefix reused every turn, so an opener clause baked into it
@@ -25666,9 +25701,30 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             onDebugEvent?.('bridge_spoken', line);
           }
         }
+        // Demo topic choice (2026-10-28): after the greeting the CLIENT asks
+        // "want this or something else?" and puts the topic on the board, then
+        // waits for the student instead of kicking the brain off. The first
+        // brain turn (their answer) carries <demo_topic_choice>. See
+        // voice/demo-topic-choice-opener.ts for why the brain is not asked to say it.
+        const demoTopicChoice = TUTOR_DEMO_TOPIC_CHOICE && isTrial && claudeBrainMode && !resumeState && !isInFlow && !demoTopicChoicePendingRef.current;
+        if (demoTopicChoice) {
+          const line = demoTopicChoiceLine({ studentName, topic, subject, level });
+          demoTopicChoicePendingRef.current = line;
+          try { realtime.speakText(line, pushTtsScriptForPerception(line)); } catch { /* the directive still carries the question */ }
+          transcriptRef.current = [
+            ...transcriptRef.current,
+            { id: `tutor-${Date.now()}-topic-choice`, timestamp: new Date(), role: 'tutor', text: line } as TranscriptEntry,
+          ];
+          onTranscriptUpdate([...transcriptRef.current]);
+          onTrackInteraction?.('message', line, undefined, 'tutor');
+          try { onWhiteboardCommand([demoTopicCardCommand({ topic, subject, level }) as WhiteboardCommand]); } catch { /* board optional */ }
+          onDebugEvent?.('demo_topic_choice_asked', line);
+        }
         if (!claudeBrainMode) {
           const greetingMessage = getInitialGreetingPrompt(sessionGoal, topic);
           realtime.sendTextMessage(greetingMessage);
+        } else if (demoTopicChoice) {
+          console.log('[STARTUP] demo topic choice: waiting for the student\'s answer (no synthetic kickoff).');
         } else if (lessonPlanRef.current) {
           // Lesson-plan-driven session: the brain owns the opening (Hook
           // segment). Kick it with a synthetic student-side trigger so it

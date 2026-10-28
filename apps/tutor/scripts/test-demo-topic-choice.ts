@@ -31,6 +31,8 @@ import { stripFirstTurnRunway } from '../src/lib/tutor/voice/first-turn-runway';
 import { bridgeLineFor } from '../src/lib/tutor/voice/bridge-line';
 import { computeGreetingGuard } from '../src/lib/tutor/validation/continuity';
 import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
+import { humanizeTopicLabel, demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective, DEMO_TOPIC_ASKED_LEAD } from '../src/lib/tutor/voice/demo-topic-choice-opener';
+import { gradeOrdinal, gradeDistance } from '../src/lib/tutor/lesson-plan/grade-ordinal';
 
 let passed = 0;
 let failed = 0;
@@ -124,6 +126,38 @@ function main() {
     assert.match(rewriteForTTS('The curve crosses the y-axis at −2.'), /at negative 2/);
     assert.match(rewriteForTTS('y = (0 − 1)² − 2 = 1 − 2 = −1'), /\(0 minus 1\) squared minus 2 equals 1 minus 2 equals negative 1/);
     assert.equal(rewriteForTTS('a well-known two-step method'), rewriteForTTS('a well-known two-step method'), 'ASCII hyphens untouched by these rules');
+  });
+
+  // ── 2e. deterministic demo opener (client asks; first brain turn answers) ──
+  test('topic label: ids humanise, fallback is level + subject', () => {
+    assert.equal(humanizeTopicLabel({ topic: 'grade-7-life-science' }), 'Grade 7 Life Science');
+    assert.equal(humanizeTopicLabel({ topic: 'ap-us-government' }), 'Ap Us Government');
+    assert.equal(humanizeTopicLabel({ subject: 'physics', level: 'High school' }), 'High school Physics');
+  });
+  test('spoken line and board card name the chosen topic and offer another', () => {
+    const line = demoTopicChoiceLine({ studentName: 'Praveen', topic: 'grade-7-life-science' });
+    assert.equal(line, 'I see you picked Grade 7 Life Science. Want me to teach that, or something else?');
+    assert.deepEqual(demoTopicCardCommand({ topic: 'grade-7-life-science' }), { action: 'handwrite', text: 'Today: Grade 7 Life Science — or something else?' });
+  });
+  test('first-turn directive: swap + new page on a different topic, open on the configured one otherwise, never out of scope', () => {
+    const d = demoTopicChoiceDirective('Q?');
+    assert.match(d, /^<demo_topic_choice>/);
+    assert.match(d, /call propose_plan_swap .*call new_page/);
+    assert.match(d, /Never say a topic is outside this session/);
+    assert.match(d, /open on the configured topic now/);
+    assert.doesNotMatch(d, /crimsora|life science|quadratic/i);
+  });
+  test('opener clause: when the client asked, the lead says so instead of the spoken-confirm rule', () => {
+    const asked = buildOpenerClause({ ...baseCtx, openingPhase: true, sessionMode: 'demo', demoTopicAsked: true }) || '';
+    assert.ok(asked.startsWith(DEMO_TOPIC_ASKED_LEAD));
+    assert.doesNotMatch(asked, /LAST sentence you speak this turn/);
+  });
+  test('grade ordinal + nearest-grade distance', () => {
+    assert.equal(gradeOrdinal('Grade 7'), 7); assert.equal(gradeOrdinal('6-8'), 7); assert.equal(gradeOrdinal('g4-math'), 4);
+    assert.equal(gradeOrdinal('High school'), 10); assert.equal(gradeOrdinal('AP'), 12); assert.equal(gradeOrdinal('K'), 0); assert.equal(gradeOrdinal('nonsense'), null);
+    assert.ok(gradeDistance('Grade 8', '6-8') < gradeDistance('Grade 9', '6-8'), 'grade 8 is nearer to a 6-8 trial than grade 9');
+    assert.ok(gradeDistance('Grade 6', '6-8') < gradeDistance('Grade 5', '6-8'));
+    assert.equal(gradeDistance('?', '6-8'), Number.POSITIVE_INFINITY);
   });
 
   // ── 3. system prompt open-scope block ────────────────────────────────────
