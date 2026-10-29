@@ -645,7 +645,9 @@ export interface LessonPlanContext {
    *  `offTopic: true` segments are bait / test-only and must be skipped
    *  during advance_lesson; the orchestrator + server-side feasibility
    *  check both honor this flag. */
-  segmentIndex: Array<{ id: string; kind: string; offTopic?: boolean }>;
+  segmentIndex: Array<{ id: string; kind: string; offTopic?: boolean;
+    /** Fixed-script plan + known level: skip on "next" (fixed-script.ts). */
+    skipForKnownLevel?: boolean }>;
   /** Segment ids the brain has already marked complete this session.
    *  Surfaced in the rendered lesson_plan block so the brain knows
    *  which segments to NEVER re-render via show_segment_card. The

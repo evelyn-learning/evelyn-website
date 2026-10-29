@@ -34,6 +34,7 @@ import { assignPractice } from '@/lib/tutor/practice-assign/assign';
 import { findAssignmentBySession, acknowledgeAssignments, finalizeDraft, summarizeAssignmentLos } from '@/lib/tutor/practice-assign/store';
 import { emitOwnsPractice } from '@/lib/tutor/practice-assign/emit-draft';
 import { applyWorkingLevel, parseWorkingLevel } from '@/lib/tutor/level/working-level';
+import { isFixedScriptPlan, shouldRotatePlanContent } from '@/lib/tutor/lesson-plan/fixed-script';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -65,8 +66,14 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   // partnerIdForInternalRoute's doc comment. Every student-keyed read below
   // (the profile, and getLearnerContextBlock's own LearnerStateProjection
   // read) uses this SAME `profileId`, never the raw `id` a second time.
+  // Fixed-script plans (GDI trial): the learner repeats the SAME lesson, so
+  // nothing from earlier sessions is recalled. The plan read runs alongside
+  // the profile read; a failed read (null) ⇒ the ordinary path.
+  const lessonPlanId = new URL(req.url).searchParams.get('lessonPlanId');
+  const fixedScriptRead = lessonPlanId ? getLessonPlan(lessonPlanId).then(isFixedScriptPlan, () => false) : Promise.resolve(false);
   const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: id });
   const profile = await getOrCreateStudentProfile(profileId);
+  const fixedScript = await fixedScriptRead;
   const responseBody: Record<string, unknown> = {
     profile,
     // Task D1: interests ride the preferences line only behind the pedagogy
@@ -77,6 +84,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     block: renderStudentProfileBlock(profile, {
       includeInterests: isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER),
       suppressContinuityOpener: req.nextUrl.searchParams.get('goal') === 'homework-help',
+      omitPriorSessions: fixedScript,
     }),
     // Content variety (phase 1): per-plan seen-memory, read client-side at
     // mount to inject the <content_variety> directive for the current plan.
@@ -87,8 +95,10 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   // code). Flag off OR no `lessonPlanId` param ⇒ the `learnerContext` key
   // is OMITTED entirely (not even `null`) so the response stays
   // byte-identical to the pre-Task-17 shape for every existing caller.
-  const lessonPlanId = new URL(req.url).searchParams.get('lessonPlanId');
-  if (process.env.TUTOR_LEARNER_CONTEXT === 'on' && lessonPlanId) {
+  // The client reads this before the opener seed (the plan itself may load
+  // later): first-meeting journey, no transient context. Absent otherwise.
+  if (fixedScript) responseBody.fixedScript = true;
+  if (process.env.TUTOR_LEARNER_CONTEXT === 'on' && lessonPlanId && !fixedScript) {
     // Task 15 — `goals` carries the client's `Goal:`-prefixed social-thread
     // notes (pipe-separated, at most 2) and `subject` scopes the ability-band
     // hint read. Both are optional; absent ⇒ those lines simply don't render.
@@ -490,7 +500,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         losTouched: body.losTouched,
       };
       const recap = await generateSessionRecap(summaryInput, {
-        extractFillings: body.captureContentFillings === true && !!body.lessonPlanId,
+        extractFillings: body.captureContentFillings === true && !!body.lessonPlanId && shouldRotatePlanContent(lessonPlan),
       });
       summary = recap.summary;
       // Content variety (phase 1): merge the fillings used this session into

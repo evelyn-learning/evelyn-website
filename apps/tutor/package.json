@@ -412,6 +412,7 @@
     "test:embed-ui-options": "npx tsx scripts/test-embed-ui-options.tsx",
     "test:partner-session-options": "npx tsx scripts/test-partner-session-options.ts",
     "test:working-level": "npx tsx scripts/test-working-level.ts",
+    "test:fixed-script": "npx tsx scripts/test-fixed-script.ts",
     "test:essay-practice": "npx tsx scripts/test-essay-practice.ts",
     "test:local-time": "npx tsx scripts/test-local-time.tsx",
     "test:practice-gen-partner-switch": "npx tsx scripts/test-practice-gen-partner-switch.ts",

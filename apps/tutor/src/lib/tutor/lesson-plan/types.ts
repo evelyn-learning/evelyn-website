@@ -105,6 +105,10 @@ interface SegmentBase {
    *  Keep phrases short and concrete; long phrases or sentence fragments
    *  false-positive easily. */
   requiredPhrases?: string[];
+  /** Free-form per-segment metadata (additive, like the plan-level field).
+   *  Known key: `skipWhenLevelKnown` (fixed-script plans skip the segment
+   *  once the learner's working level is known — see fixed-script.ts). */
+  metadata?: Record<string, unknown>;
 }
 
 /** Opening hook — pique curiosity, connect to prior knowledge, real-world

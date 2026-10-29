@@ -414,6 +414,7 @@ import {
   TUTOR_WORKING_LEVEL,
 } from '@/lib/tutor/orchestrator/flags';
 import { decideSetWorkingLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments } from '@/lib/tutor/lesson-plan/fixed-script';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -1408,6 +1409,31 @@ export function VoiceTutorRealtime({
   // rule reads; the state rebuilds the system prompt with the clause.
   const workingLevelRef = useRef<{ level: WorkingLevel; known: boolean } | null>(null);
   const [workingLevelForPrompt, setWorkingLevelForPrompt] = useState<{ level: WorkingLevel; known: boolean } | null>(null);
+  // Fixed-script plans (lib/tutor/lesson-plan/fixed-script.ts): the learner
+  // repeats the SAME lesson — no recall, no rotation, no second level check.
+  // The profile GET says so (`fixedScript`) because the opener seed waits on
+  // the profile, not on the plan; after the plan loads, the plan says so too.
+  const fixedScriptRef = useRef(false);
+  const fixedScriptActive = () => fixedScriptRef.current || isFixedScriptPlan(lessonPlanRef.current);
+  // What the last system-prompt build saw: whether the profile had settled
+  // and which working level its clause carries. The opener prefetch of a
+  // fixed-script plan waits until both match (see fixedScriptPromptReady).
+  const promptSawProfileRef = useRef(false);
+  const promptWorkingLevelRef = useRef<WorkingLevel | null>(null);
+  const fixedScriptPromptReady = () =>
+    profileSettledRef.current && promptSawProfileRef.current
+    && promptWorkingLevelRef.current === (workingLevelRef.current?.level ?? null);
+  // A known level that lands AFTER the plan loaded: move a not-yet-started
+  // session off a leading skip-when-level-known segment.
+  const reseatInitialSegmentForKnownLevel = () => {
+    const p = lessonPlanRef.current;
+    if (!p || hasStartedRef.current || resumeState || currentSegmentIdRef.current !== p.segments[0]?.id) return;
+    const startSegId = initialSegmentId(p, !!workingLevelRef.current);
+    if (startSegId === currentSegmentIdRef.current) return;
+    currentSegmentIdRef.current = startSegId;
+    setActiveSegmentId(startSegId);
+    onDebugEvent?.('fixed_script_start_segment', startSegId);
+  };
   // Set this session ⇒ every later profile commit carries it (idempotent on
   // the server); `sent` lets the first commit post even with nothing else.
   const workingLevelSaveRef = useRef<{ level: WorkingLevel; planId: string; sent: boolean } | null>(null);
@@ -2554,7 +2580,8 @@ export function VoiceTutorRealtime({
       // Content variety (phase 1): only the FINAL commit carries the transcript
       // the extraction reads, so only it requests filling-capture. Flag-gated
       // + plan-only ⇒ flag-off / demo / free-convo omit the field entirely.
-      ...(isFinal && TUTOR_CONTENT_VARIETY && lessonPlanId ? { captureContentFillings: true } : {}),
+      // Fixed-script plans never rotate content ⇒ nothing to capture.
+      ...(isFinal && TUTOR_CONTENT_VARIETY && lessonPlanId && shouldRotatePlanContent(lessonPlanRef.current) ? { captureContentFillings: true } : {}),
       // Only stamp when at least one overlay tool fired — keeps SessionMemory
       // entries lean on sessions that didn't touch topic-notes.
       notesOverlaysAddedThisSession: totalNotesOverlays > 0 ? notesCount : undefined,
@@ -7664,10 +7691,14 @@ export function VoiceTutorRealtime({
           // before this fix. Falls back to plan-start resume inside
           // resolveAdvanceTarget when there is no stashed segment.
           const fromSegId = currentSegmentIdRef.current || segmentBeforeFreeRef.current;
-          const next = resolveAdvanceTarget(plan, fromSegId, to, {
-            consumedHashes,
-            completedSegmentIds: completedSegmentIdsRef.current,
-          });
+          // Fixed-script plans: "next" is the script's order, past the level
+          // check once the level is known (fixed-script.ts).
+          const next = to === 'next' && isFixedScriptPlan(plan)
+            ? nextSegmentId(plan, fromSegId, !!workingLevelRef.current)
+            : resolveAdvanceTarget(plan, fromSegId, to, {
+              consumedHashes,
+              completedSegmentIds: completedSegmentIdsRef.current,
+            });
           // 2026-10-06 (portal-897212b5 @9:15): in a homework-help plan the
           // `homework` segment holds ALL the student's problems, and moving
           // past it auto-marks it completed. Returning from a recap detour
@@ -10695,8 +10726,10 @@ export function VoiceTutorRealtime({
             workingLevelRef.current = { level: stored, known: true };
             setWorkingLevelForPrompt({ level: stored, known: true });
             onDebugEvent?.('working_level_known', stored);
+            reseatInitialSegmentForKnownLevel();
           }
         }
+        fixedScriptRef.current = data?.fixedScript === true;
         if (TUTOR_PEDAGOGY_OPENER) {
           studentHasPriorSessionsRef.current = Array.isArray(data?.profile?.recentSessions)
             && data.profile.recentSessions.length > 0;
@@ -10922,10 +10955,13 @@ export function VoiceTutorRealtime({
         const plan = data.plan as import('@/lib/tutor/lesson-plan/types').LessonPlan | undefined;
         if (!plan || !plan.segments?.length) return;
         lessonPlanRef.current = plan;
-        currentSegmentIdRef.current = plan.segments[0].id;
+        // Fixed-script plans skip a leading level-check segment when the
+        // level is already known; every other plan starts at segments[0].
+        const startSegId = initialSegmentId(plan, !!workingLevelRef.current);
+        currentSegmentIdRef.current = startSegId;
         setActivePlan(plan);
-        setActiveSegmentId(plan.segments[0].id);
-        console.log(`[VoiceTutorRealtime] lesson plan loaded: "${plan.title}" — starting at segment "${plan.segments[0].id}"`);
+        setActiveSegmentId(startSegId);
+        console.log(`[VoiceTutorRealtime] lesson plan loaded: "${plan.title}" — starting at segment "${startSegId}"`);
         // RESUME (E3): override the fresh-start position with the prior
         // session's checkpoint, once. Only honor ids that exist in THIS plan
         // (guards against a stale checkpoint from a since-edited plan). The
@@ -11549,7 +11585,9 @@ export function VoiceTutorRealtime({
         const skipFromSegId = currentSegmentIdRef.current;
         if (skipPlan && skipFromSegId) {
           const consumedHashes = new Set(shownProblemHashesRef.current);
-          const skipNext = resolveAdvanceTarget(skipPlan, skipFromSegId, 'next', { consumedHashes });
+          const skipNext = isFixedScriptPlan(skipPlan)
+            ? nextSegmentId(skipPlan, skipFromSegId, !!workingLevelRef.current)
+            : resolveAdvanceTarget(skipPlan, skipFromSegId, 'next', { consumedHashes });
           if (skipNext) {
             const skipNextSeg = skipPlan.segments.find((s) => s.id === skipNext);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -12694,7 +12732,11 @@ export function VoiceTutorRealtime({
               // Content variety (phase 1): inject seen-memory only when armed
               // (repeat session on this plan + flag on). Absent ⇒ no
               // <content_variety> block ⇒ byte-identical request.
-              ...(TUTOR_CONTENT_VARIETY && planContentSeenRef.current ? { contentVariety: planContentSeenRef.current } : {}),
+              // Fixed-script plans: never (shouldRotatePlanContent).
+              ...(TUTOR_CONTENT_VARIETY && planContentSeenRef.current && shouldRotatePlanContent(plan) ? { contentVariety: planContentSeenRef.current } : {}),
+              // Fixed-script + known level: the route resolves "next" from
+              // this index, so mark the segments to skip. Same array otherwise.
+              segmentIndex: markSkippedSegments(baseLessonPlanContext.segmentIndex, plan, !!workingLevelRef.current),
             }
           : baseLessonPlanContext;
 
@@ -12986,7 +13028,8 @@ export function VoiceTutorRealtime({
             // three-way join is byte-identical to the old two-way join
             // whenever learner-context isn't in play.
             studentProfileBlock:
-              [studentProfileBlockRef.current, learnerContextBlockRef.current, transientContextBlockRef.current]
+              // Fixed-script plans recall nothing: no transient context.
+              [studentProfileBlockRef.current, learnerContextBlockRef.current, fixedScriptActive() ? null : transientContextBlockRef.current]
                 .filter(Boolean)
                 .join('\n\n') || undefined,
             // Pedagogy opener: opening-phase directive (undefined once
@@ -25044,7 +25087,9 @@ export function VoiceTutorRealtime({
             // prop doc comment above) — the existing, already-documented
             // proxy for "no StudentContext".
             hasPortalContext: !!studentId,
-            hasPriorSessions: studentHasPriorSessionsRef.current,
+            // Fixed-script plans: every run is a first meeting (no warm
+            // resume, no continuity clause, isReturning false).
+            hasPriorSessions: fixedScriptRef.current ? false : studentHasPriorSessionsRef.current,
             // resumeState is only ever populated with a FRESH checkpoint
             // (portal/resume.ts filters staleness before it reaches this
             // prop); a checkpoint that EXISTED but was too old arrives as
@@ -25284,6 +25329,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         console.log(`[VoiceTutorRealtime] system prompt (re)built — humorCeiling=${studentPreferences?.humorCeiling ?? '(default)'}`);
         claudeSystemPromptRef.current = openAIInstructions;
         claudeSystemPromptCoreRef.current = promptParts.core;
+        promptSawProfileRef.current = !studentId || (TUTOR_PEDAGOGY_OPENER ? profileFetchSettled : profileSettledRef.current);
+        promptWorkingLevelRef.current = levelCheckActive ? workingLevelForPrompt?.level ?? null : null;
         setInstructions(openAIInstructions);
         setIsInitialized(true);
       } catch (err) {
@@ -26630,6 +26677,14 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       if (!lessonPlanRef.current) {
         if (++tries < 8) { timer = setTimeout(tick, OPENER_PREFETCH_DELAY_MS); return; }
         onDebugEvent?.('opener_prefetch_skipped', `no lesson plan after ${tries} checks`);
+        return;
+      }
+      // Fixed-script plans: the opener must see the stored working level
+      // (known-level clause, start segment, the route's once-only answer), so
+      // wait until the profile has settled AND the prompt was rebuilt with it.
+      if (isFixedScriptPlan(lessonPlanRef.current) && !fixedScriptPromptReady()) {
+        if (++tries < 8) { timer = setTimeout(tick, OPENER_PREFETCH_DELAY_MS); return; }
+        onDebugEvent?.('opener_prefetch_skipped', `fixed script: profile/prompt not ready after ${tries} checks`);
         return;
       }
       openerPrefetchFiredRef.current = true;

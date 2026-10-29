@@ -46,6 +46,7 @@ import {
 } from '@/lib/tutor/voice/problem-generator';
 import { TUTOR_CONTENT_VARIETY, TUTOR_WORKING_LEVEL } from '@/lib/tutor/orchestrator/flags';
 import { withWorkingLevelResult, parseWorkingLevel } from '@/lib/tutor/level/working-level';
+import { isSkippedForKnownLevel } from '@/lib/tutor/lesson-plan/fixed-script';
 import { searchImage } from '@/lib/tutor/image-search';
 import { classifyBrainError, decideBrainRetry, withInactivityTimeout } from '@/lib/tutor/voice/brain-retry';
 import { textThinkingEnabled } from '@/lib/tutor/voice/text-thinking';
@@ -317,9 +318,12 @@ export function makeToolResultProvider(
         // Skip off-topic segments. Mirrors resolveAdvanceTarget client-
         // side. If no on-topic segment remains after the current one,
         // treat as end-of-plan (resolvedSegmentId stays null).
+        // Fixed-script plans: the client marks the level-check entries to
+        // skip once the level is known (markSkippedSegments); unmarked
+        // everywhere else.
         if (curIdx >= 0) {
           for (let j = curIdx + 1; j < segIdx.length; j++) {
-            if (!isOffTopic(segIdx[j])) { resolvedSegmentId = segIdx[j].id; break; }
+            if (!isOffTopic(segIdx[j]) && !isSkippedForKnownLevel(segIdx[j])) { resolvedSegmentId = segIdx[j].id; break; }
           }
         }
       } else if (to === 'previous') {

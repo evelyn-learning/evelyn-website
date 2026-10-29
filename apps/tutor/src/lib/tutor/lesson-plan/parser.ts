@@ -105,7 +105,12 @@ function parseSegment(raw: unknown, i: number): Segment {
       return s;
     });
   }
-  const base = { id, teacherNote, estimatedMinutes, prescribedRender, requiredPhrases };
+  // Segment metadata (fixed-script plans): kept only when authored, so every
+  // other plan parses to the same object shape as before.
+  const metadata = r.metadata && typeof r.metadata === 'object' && !Array.isArray(r.metadata)
+    ? (r.metadata as Record<string, unknown>)
+    : undefined;
+  const base = { id, teacherNote, estimatedMinutes, prescribedRender, requiredPhrases, ...(metadata ? { metadata } : {}) };
 
   switch (kind) {
     case 'hook':

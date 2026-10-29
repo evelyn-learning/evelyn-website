@@ -32,6 +32,12 @@ export interface RenderStudentProfileOptions {
    *  output is byte-identical to the pre-Task-6 rendering. Pure — the
    *  CALLER decides (the GET route sets this from `?goal=homework-help`). */
   suppressContinuityOpener?: boolean;
+  /** Fixed-script plans (GDI trial): the learner repeats the SAME lesson, so
+   *  nothing from earlier sessions is recalled — the prior-sessions list is
+   *  left out and the opener gets the suppression sentence. Default/absent ⇒
+   *  byte-identical output. Pure — the CALLER decides (the GET route, from
+   *  the plan's `metadata.fixedScript`). */
+  omitPriorSessions?: boolean;
 }
 
 export function renderStudentProfileBlock(
@@ -119,7 +125,7 @@ export function renderStudentProfileBlock(
   // below override that ground truth.
   // Thin sessions (thin-session.ts) are accounting rows, not history: a
   // "last time" built on one misleads the opener (live 2026-09-05).
-  const recent = profile.recentSessions
+  const recent = opts?.omitPriorSessions ? [] : profile.recentSessions
     .filter((s) => !s.thin)
     .slice(-RECENT_SESSIONS_SHOWN)
     .reverse();
@@ -150,7 +156,7 @@ export function renderStudentProfileBlock(
   // it; the opener belongs to the present session.
   lines.push(
     ``,
-    opts?.suppressContinuityOpener
+    opts?.suppressContinuityOpener || opts?.omitPriorSessions
       ? `Do not open with a recap of prior sessions.`
       : `Your opener gets ONE short concrete continuity sentence drawn from the prior-sessions list above ("last time we did X"), and nothing more from this block — the rest of the opening belongs to THIS session's content. When the material at hand touches an open gap above, fold the callback in AT THAT MOMENT. If the gap entry includes a "student previously said:" line, weave that EXACT phrase in when you address it ("last time you said 'X' — let's revisit why that's not quite right"). Quoting the student's own words verbatim is the most effective re-grounding move; paraphrasing the concept ("different denominators tripped you up") is weaker. Pick the single most relevant gap; do not list multiple.`,
   );
