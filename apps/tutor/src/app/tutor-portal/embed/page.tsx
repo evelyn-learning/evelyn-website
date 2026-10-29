@@ -2317,6 +2317,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         sessionTimer={uiOptions.sessionTimer}
         endControlVisible={uiOptions.endControl}
         toolsLow={uiOptions.toolsLow}
+        toolCluster={uiOptions.toolCluster}
         onMilestone={handleMilestone}
         onTranscriptUpdate={setTranscript}
         onWhiteboardCommand={(cmds, meta) => {

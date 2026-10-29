@@ -18,6 +18,7 @@
 'use client';
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { TUTOR_HEADER_FULLSCREEN } from '@/lib/tutor/orchestrator/flags';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2, Minimize2,
   MessageSquareText, X, Target, Upload, ArrowDown, Wrench, ListChecks, Loader2,
@@ -86,6 +87,11 @@ export interface SessionStageProps {
   headerClock?: ReactNode;
   /** Embed option `toolsLow`: anchor the tool cluster above the dock, not at the top of the board. */
   toolsLow?: boolean;
+  /** Embed option `toolCluster` (demo-polish 2026-10-29): render the board
+   *  tool cluster at all. Default false — the header's Full screen control
+   *  replaces it; GAC / GameClass partner rows keep it. Ignored (cluster
+   *  always shown) when NEXT_PUBLIC_TUTOR_HEADER_FULLSCREEN=off. */
+  toolCluster?: boolean;
   /** R1 (2026-07-14): End/Pause moved OUT of the dock into the header's
    *  right cluster — session-level control, conventional spot, and far from
    *  the textbox where accidental taps happen. Composed by TutorSession
@@ -266,7 +272,7 @@ const TITLE_REVEAL_MS = 4000;
 export default function SessionStage(props: SessionStageProps) {
   const {
     sessionMode = 'voice',
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, toolsLow = false, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, toolsLow = false, toolCluster = false, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
     voiceState, thinkingCueText = null, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
@@ -471,6 +477,9 @@ export default function SessionStage(props: SessionStageProps) {
   // rule (`!== 'off'`), so a revert is an env change rather than a redeploy.
   // With it OFF every dismisser below behaves exactly as it did before.
   const toolsAlwaysOpen = process.env.NEXT_PUBLIC_TUTOR_TOOLS_ALWAYS_OPEN !== 'off';
+  // Demo-polish (2026-10-29): the cluster is a partner option; the header
+  // carries Full screen for everyone else (flag off ⇒ cluster for all).
+  const showToolCluster = !TUTOR_HEADER_FULLSCREEN || toolCluster;
   // R40b (embed-1785813017376): the Start tap is itself an "outside tap", so
   // the R35 dismiss collapsed the default-open cluster at the exact moment the
   // session began — open pre-start, gone once it mattered. Re-open when the
@@ -1702,6 +1711,7 @@ export default function SessionStage(props: SessionStageProps) {
           is right-anchored, so the FAB stays at the right edge (under the
           anchor) and expanding only grows the row leftward — it never jumps
           out from under the pointer, and tab order matches what is seen. */}
+      {showToolCluster && (
       <div
         style={toolsLow ? { bottom: `calc(${toolsDockPx || 96}px + 1.25rem + env(safe-area-inset-bottom))` } : undefined}
         className={`absolute ${toolsLow ? '' : railEl && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2 z-20${toolsLow ? '' : textToolRail ? ' md:top-[var(--ss-tools-top)] md:right-5 md:z-[55]' : sessionMode === 'text' ? ' md:top-[var(--ss-tools-top)] md:right-3' : ''}`}
@@ -1775,6 +1785,7 @@ export default function SessionStage(props: SessionStageProps) {
           </div>
         </div>
       </div>
+      )}
       {/* Text-mode rail, md+: the Q button sits in the panel header, left of
           the wrench (wrench right edge 20px + 30px box + 4px gap = 54px). */}
       {textToolRail && showQBtn && (

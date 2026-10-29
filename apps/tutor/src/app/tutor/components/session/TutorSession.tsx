@@ -252,6 +252,8 @@ export interface TutorSessionProps {
   endControlVisible?: boolean;
   /** Embed UI option: tool cluster above the dock instead of at the top of the board. */
   toolsLow?: boolean;
+  /** Embed UI option (demo-polish 2026-10-29): render the board tool cluster at all. */
+  toolCluster?: boolean;
 
   /** Share the parent's RealtimeHandle ref instead of an internal one. The
    *  standalone /tutor page needs this: its auto-start injection, end-session
@@ -315,7 +317,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onPracticeStatsChange,
     humorControl = true, voiceMuteControl = false, paceChip = true, mobileFinish,
     standby = false, videoHost, getLessonNow, onStudentWake, onResumeLesson, getOpeningNote, videoControl,
-    sessionTimer = true, endControlVisible = true, toolsLow = false,
+    sessionTimer = true, endControlVisible = true, toolsLow = false, toolCluster = false,
   } = props;
   // Embed-only (see the prop docs): the retail page can never get it.
   const mobileFinishOn = !!embedded && mobileFinish === true;
@@ -2131,6 +2133,7 @@ export default function TutorSession(props: TutorSessionProps) {
         agendaRailVertical={agendaRailVerticalEl}
         controls={controlsEl}
         toolsLow={toolsLow}
+        toolCluster={toolCluster}
         headerClock={!sessionTimer ? undefined : (
           <HeaderClock
             startedAtMs={voiceStartedAtMs}
