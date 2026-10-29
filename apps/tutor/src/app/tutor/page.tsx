@@ -7,6 +7,7 @@
  * Supports both text and voice modes.
  */
 
+import { TUTOR_THINKING_CUE } from '@/lib/tutor/orchestrator/flags';
 import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
 import { computeUsageTotals, usageSaveWindow } from '@/lib/tutor/ai/usage-totals';
 import { useSearchParams } from 'next/navigation';
@@ -2395,6 +2396,7 @@ function TutorPage() {
         // Dev-hook override, default 30 — identical to the literal the page
         // always passed (production markup unchanged).
         sessionMaxMinutes={testSessionMaxMinutes}
+        thinkingCue={TUTOR_THINKING_CUE}
         resumeState={resumeState}
         // Task H2 (dev-only source): transient context injected via the
         // __tutorTestStart hook. Flag-gated so flag-off sessions pass

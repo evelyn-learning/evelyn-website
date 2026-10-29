@@ -35,8 +35,8 @@ import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
 import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
 import SessionStage, { CaptionTicker, MicMeter, type VoiceState } from './SessionStage';
-import { thinkingCueVisible, thinkingCueLabel } from '@/lib/tutor/voice/thinking-cue';
-import { cannedLanguage, lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
+import { thinkingCueVisible, thinkingCueLabel, thinkingCueLanguage } from '@/lib/tutor/voice/thinking-cue';
+import { lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
 import { AgendaRail } from './AgendaRail';
 import { resolveStartWatchdog, START_WATCHDOG_MS } from './start-tap';
 import { buildRailModel, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
@@ -1003,7 +1003,7 @@ export default function TutorSession(props: TutorSessionProps) {
   // Thinking cue (GDI sessions 2026-10-15): large on-stage state while the
   // tutor prepares a reply, in the language the tutor is speaking.
   const thinkingCueText = thinkingCueVisible(thinkingCue, started, voiceState)
-    ? thinkingCueLabel(cannedLanguage(tutorLanguages, lastTutorText(transcript)))
+    ? thinkingCueLabel(thinkingCueLanguage(tutorLanguages, lastTutorText(transcript)))
     : null;
 
   // Agenda round 5: auto-open the Agenda drawer ONCE when its rows first arrive,
