@@ -154,10 +154,32 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 2000);
+  const block = VTR.slice(auto, auto + 3000);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
   pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{autoReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
+});
+// ── fix round 10-11 ──────────────────────────────────────────────────────
+test('A: auto-advance held while a pronunciation clip is armed', () => {
+  const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
+  const block = VTR.slice(auto, auto + 3000);
+  pin(block, /if \(autoNext && clipCaptureRef\.current\?\.isArmed\(\)\) \{[\s\S]*?'fixed_script_auto_advance_held_pron', `"\$\{segIdNow\}"`[\s\S]*?\} else if \(autoNext\) \{/);
+  assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
+});
+test('B: FACT notes are urgent (never held) and delivery is logged', () => {
+  const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
+  pin(VTR.slice(auto, auto + 3000), /pendingRuntimeNoteUrgentRef\.current = true;/);
+  const lv = VTR.indexOf("'working_level_set'");
+  pin(VTR.slice(lv, lv + 2500), /pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR, /const deliver = urgentNote \|\| !openQuestionAtTurnStartRef\.current/);
+  pin(VTR, /if \(urgentNote\) onDebugEvent\?\.\('fixed_script_note_delivered'/);
+  // the overlong note itself stays holdable
+  const ov = VTR.indexOf("'segment_overlong_note_planted'");
+  pin(VTR.slice(ov - 2500, ov), /pendingRuntimeNoteUrgentRef\.current = false;/);
+});
+test('D: the turn counter + auto-advance run under the auto-advance flag alone', () => {
+  pin(VTR, /if \(\(TUTOR_SEGMENT_OVERLONG_NOTE \|\| TUTOR_FIXED_SCRIPT_AUTO_ADVANCE\) && totalSentenceCount > 0\) \{/);
+  pin(VTR, /if \(TUTOR_SEGMENT_OVERLONG_NOTE && !homeworkSession && !cur\.noted && cur\.turns >= overlongTurns/);
 });
 test('level-set advance wired in the setWorkingLevel handler with the double-advance guard', () => {
   const at = VTR.indexOf("'working_level_set'");

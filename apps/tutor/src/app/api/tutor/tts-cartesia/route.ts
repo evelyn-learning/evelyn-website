@@ -46,8 +46,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { text, voiceId, speed, rate, studentName, language } = body as {
+    const { text, voiceId, speed, rate, studentName, language, prerewritten } = body as {
       text?: string; voiceId?: string; speed?: string | number; rate?: number; studentName?: string; language?: string;
+      /** The client already ran rewriteForTTS and then stressed words in caps
+       *  (sentence board) — a second rewrite would lowercase the stress. */
+      prerewritten?: boolean;
     };
     // Bilingual sessions name the sentence's language; only a supported tutor
     // language passes, anything else (or nothing) stays 'en' as before.
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     const ttsBody = {
       model_id: CARTESIA_TTS_MODEL,
-      transcript: rewriteForTTS(text, { studentName }),
+      transcript: prerewritten === true ? text : rewriteForTTS(text, { studentName }),
       voice,
       // Tenant speaking rate (sonic-3 control). Re-validated here; absent ⇒ no field.
       ...(parseSpeechRate(rate) !== undefined ? { generation_config: { speed: parseSpeechRate(rate) } } : {}),

@@ -138,7 +138,14 @@ export function applySpokenEmphasis(sentence: string, emphasis: string[]): strin
  * correction; stressing every alternative phrasing sounds like shouting.
  */
 export function emphasiseSpokenCorrections(spokenSentence: string, studentLast: string | null | undefined): string {
-  if (!spokenSentence || !studentLast || !studentLast.trim()) return spokenSentence;
+  const span = correctionSpan(spokenSentence, studentLast);
+  if (!span) return spokenSentence;
+  return spokenSentence.slice(0, span.start) + applySpokenEmphasis(span.inner, span.emphasis) + spokenSentence.slice(span.end);
+}
+
+/** The quoted correction a spoken sentence stresses (the longest), or null. */
+function correctionSpan(spokenSentence: string, studentLast: string | null | undefined): { start: number; end: number; inner: string; emphasis: string[] } | null {
+  if (!spokenSentence || !studentLast || !studentLast.trim()) return null;
   let best: { start: number; end: number; inner: string; emphasis: string[]; len: number } | null = null;
   for (const m of spokenSentence.matchAll(QUOTE_RE)) {
     const inner = m[1] ?? m[2] ?? '';
@@ -151,19 +158,45 @@ export function emphasiseSpokenCorrections(spokenSentence: string, studentLast: 
       best = { start, end: start + inner.length, inner, emphasis: q.emphasis, len };
     }
   }
-  if (!best) {
-    // A sentence splitter that cut at the period inside the quotes leaves an
-    // unclosed trailing quote ('… say: "I haven't taken leave from work.').
-    const quoteChars = (spokenSentence.match(/"/g) ?? []).length;
-    const open = quoteChars % 2 === 1 ? spokenSentence.lastIndexOf('"') : spokenSentence.lastIndexOf('“') > spokenSentence.lastIndexOf('”') ? spokenSentence.lastIndexOf('“') : -1;
-    if (open < 0) return spokenSentence;
-    const inner = spokenSentence.slice(open + 1);
-    if (!qualifyingSpan(inner)) return spokenSentence;
-    const q = classifyQuotedSentence(inner.trim(), studentLast);
-    if (q.kind !== 'correction' || q.emphasis.length === 0) return spokenSentence;
-    return spokenSentence.slice(0, open + 1) + applySpokenEmphasis(inner, q.emphasis);
+  if (best) return best;
+  // A sentence splitter that cut at the period inside the quotes leaves an
+  // unclosed trailing quote ('… say: "I haven't taken leave from work.').
+  const quoteChars = (spokenSentence.match(/"/g) ?? []).length;
+  const open = quoteChars % 2 === 1 ? spokenSentence.lastIndexOf('"') : spokenSentence.lastIndexOf('“') > spokenSentence.lastIndexOf('”') ? spokenSentence.lastIndexOf('“') : -1;
+  if (open < 0) return null;
+  const inner = spokenSentence.slice(open + 1);
+  if (!qualifyingSpan(inner)) return null;
+  const q = classifyQuotedSentence(inner.trim(), studentLast);
+  if (q.kind !== 'correction' || q.emphasis.length === 0) return null;
+  return { start: open + 1, end: spokenSentence.length, inner, emphasis: q.emphasis };
+}
+
+/**
+ * The Cartesia transcript for a display sentence: `rewrite` (rewriteForTTS)
+ * FIRST, then the stress. The order matters: rewriteForTTS lowercases
+ * all-caps words (a sonic-2-era rule) and strips the double quotes, so the
+ * stress is decided on the DISPLAY text (quotes intact) and re-applied to the
+ * rewritten text — inside the rewritten quote span when it can be found,
+ * else across the sentence. `cards` = the turn's brain show_sentence cards:
+ * a sentence that contains a card's sentence gets that card's emphasis.
+ */
+export function composeSpokenText(
+  raw: string,
+  studentLast: string | null | undefined,
+  rewrite: (s: string) => string,
+  cards: ReadonlyArray<{ sentence: string; emphasis: string[] }> = [],
+): string {
+  let out = rewrite(raw);
+  const span = correctionSpan(raw, studentLast);
+  if (span) {
+    const needle = span.inner.trim().replace(/[.?!…]+$/, '').toLowerCase();
+    const at = needle ? out.toLowerCase().indexOf(needle) : -1;
+    out = at >= 0
+      ? out.slice(0, at) + applySpokenEmphasis(out.slice(at, at + needle.length), span.emphasis) + out.slice(at + needle.length)
+      : applySpokenEmphasis(out, span.emphasis);
   }
-  return spokenSentence.slice(0, best.start) + applySpokenEmphasis(best.inner, best.emphasis) + spokenSentence.slice(best.end);
+  for (const c of cards) if (c.emphasis?.length && sentenceContains(raw, c.sentence)) out = applySpokenEmphasis(out, c.emphasis);
+  return out;
 }
 
 /** True when `text` contains `sentence` word for word (case, punctuation and

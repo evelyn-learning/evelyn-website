@@ -202,7 +202,7 @@ test('overlongTurnThreshold: fixed segment without minutes, or an unknown id, ke
 });
 test('VTR: the overlong note plants at the plan-derived threshold', () => {
   pin(vtr, /const overlongTurns = overlongTurnThreshold\(lessonPlanRef\.current, segIdNow, SEGMENT_OVERLONG_NOTE_TURNS\)/);
-  pin(vtr, /if \(!homeworkSession && !cur\.noted && cur\.turns >= overlongTurns/);
+  pin(vtr, /if \(TUTOR_SEGMENT_OVERLONG_NOTE && !homeworkSession && !cur\.noted && cur\.turns >= overlongTurns/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

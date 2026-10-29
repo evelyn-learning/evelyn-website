@@ -11,7 +11,7 @@
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
 import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD } from '@/lib/tutor/orchestrator/flags';
-import { planSentenceBoard, emphasiseSpokenCorrections, applySpokenEmphasis, sentenceContains, sentenceOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
+import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
@@ -3994,6 +3994,9 @@ export function VoiceTutorRealtime({
   /** Segment the pending overlong note was planted for — a note about a
    *  segment the lesson has already left is stale and dropped. */
   const pendingRuntimeNoteSegRef = useRef<string | null>(null);
+  /** The pending note is a fixed-script FACT note (the client already moved
+   *  the cursor): delivered on the very next brain turn, never held. */
+  const pendingRuntimeNoteUrgentRef = useRef(false);
   // Live check 7: the note must not land while the student is answering an
   // open question (portal-8ed0fb65 10:53:48Z — delivered with "12", the brain
   // advanced mid-problem and rendered the next card under the wrong problem).
@@ -4791,14 +4794,13 @@ export function VoiceTutorRealtime({
   const languageSessionRef = useRef(false);
   languageSessionRef.current = sessionAllowsNonLatin(tutorLanguages) || subject === 'languages';
   const sentenceStressRef = useRef<{ studentLast: string | null; cards: Array<{ sentence: string; emphasis: string[] }> }>({ studentLast: null, cards: [] });
-  /** The string sent to TTS only — chat, transcript and board keep the display text. */
-  const ttsTextTransform = useCallback((spoken: string): string => {
-    if (!TUTOR_SENTENCE_BOARD || !languageSessionRef.current) return spoken;
+  /** The Cartesia transcript only (rewriteForTTS first, stress after —
+   *  composeSpokenText); chat, transcript and board keep the display text. */
+  const ttsTextTransform = useCallback((display: string, rewrite: (s: string) => string): string => {
     const st = sentenceStressRef.current;
-    let out = emphasiseSpokenCorrections(spoken, st.studentLast);
-    for (const c of st.cards) if (sentenceContains(out, c.sentence)) out = applySpokenEmphasis(out, c.emphasis);
-    return out;
+    return composeSpokenText(display, st.studentLast, rewrite, st.cards);
   }, []);
+  const sentenceStressActive = TUTOR_SENTENCE_BOARD && (sessionAllowsNonLatin(tutorLanguages) || subject === 'languages');
   rearmOpenerFallbackOnlyRef.current = (why: string) => {
     if (openerFallbackOnlyRef.current) return;
     const fallbackOnly = boardFallbackOnlyAfterRollback({
@@ -7809,6 +7811,7 @@ export function VoiceTutorRealtime({
             );
             pendingRuntimeNoteRef.current = merged.note;
             pendingRuntimeNoteSegRef.current = merged.segId;
+            pendingRuntimeNoteUrgentRef.current = true;
             runtimeNoteHeldTurnsRef.current = 0;
             onDebugEvent?.('fixed_script_level_advance', `"${lvFrom}" → "${lvNext}"`);
           }
@@ -11912,6 +11915,7 @@ export function VoiceTutorRealtime({
             typedAdvanceFact = describeTypedAdvance({ target: advTarget, kind: advSeg?.kind, objective: advLo?.description, declinedOffer: advanceRequest.leadingNo });
             // The overlong note was about the segment just left.
             pendingRuntimeNoteRef.current = null;
+            pendingRuntimeNoteUrgentRef.current = false;
             runtimeNoteHeldTurnsRef.current = 0;
             console.warn(`[brain-orchestrator] typed advance: "${advanceRequest.matched}" → "${advFrom}" → "${advTarget}" (brain told as fact).`);
             onDebugEvent?.('typed_advance_app', `"${advFrom}" → "${advTarget}"${advanceRequest.named ? ` named="${advanceRequest.named}"` : ''} · "${advanceRequest.matched.slice(0, 60)}"`);
@@ -12527,6 +12531,7 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('segment_overlong_note_stale', `planted for ${pendingRuntimeNoteSegRef.current}, now ${currentSegmentIdRef.current ?? 'none'} — dropped`);
         pendingRuntimeNoteRef.current = null;
         pendingRuntimeNoteSegRef.current = null;
+        pendingRuntimeNoteUrgentRef.current = false;
         runtimeNoteHeldTurnsRef.current = 0;
       }
       if (pendingRuntimeNoteRef.current) {
@@ -12542,11 +12547,16 @@ export function VoiceTutorRealtime({
         // lesson every turn ends with an ask, so a 3-turn hold always ran to
         // its cap (three times in embed-1792338502233).
         const noteHoldCap = sessionAllowsNonLatin(tutorLanguages) ? 1 : 3;
-        const deliver = !openQuestionAtTurnStartRef.current || ackOrMoveOn || askedToMoveOn || runtimeNoteHeldTurnsRef.current >= noteHoldCap;
+        // A fixed-script FACT note is never held: the cursor already moved,
+        // so the brain must hear why on this very turn.
+        const urgentNote = pendingRuntimeNoteUrgentRef.current;
+        const deliver = urgentNote || !openQuestionAtTurnStartRef.current || ackOrMoveOn || askedToMoveOn || runtimeNoteHeldTurnsRef.current >= noteHoldCap;
         if (deliver) {
           runTranscript = `${overlongNoteForTurn(pendingRuntimeNoteRef.current, askedToMoveOn)}\n\n${runTranscript}`;
           pendingRuntimeNoteRef.current = null;
+          pendingRuntimeNoteUrgentRef.current = false;
           runtimeNoteHeldTurnsRef.current = 0;
+          if (urgentNote) onDebugEvent?.('fixed_script_note_delivered', `segment "${currentSegmentIdRef.current ?? ''}"`);
           onDebugEvent?.('segment_overlong_note_consumed', 'delivered with this turn');
         } else {
           runtimeNoteHeldTurnsRef.current += 1;
@@ -19443,7 +19453,9 @@ export function VoiceTutorRealtime({
       // jumped over both authored worked_example segments. The parent's
       // `segment_overlong` telemetry saw it and could do nothing. Plant one
       // runtime note per hook/concept segment at the same threshold.
-      if (TUTOR_SEGMENT_OVERLONG_NOTE && totalSentenceCount > 0) {
+      // The turn counter feeds both the overlong note and the fixed-script
+      // auto-advance, so it runs when either flag is on; each acts under its own flag.
+      if ((TUTOR_SEGMENT_OVERLONG_NOTE || TUTOR_FIXED_SCRIPT_AUTO_ADVANCE) && totalSentenceCount > 0) {
         const segIdNow = currentSegmentIdRef.current;
         const st = turnsInSegmentRef.current;
         if (st.segId !== segIdNow) turnsInSegmentRef.current = { segId: segIdNow, turns: 0, noted: false, startedAt: Date.now() };
@@ -19462,11 +19474,11 @@ export function VoiceTutorRealtime({
         // Fixed-script plans pace by each segment's estimatedMinutes (a 5-minute
         // conversation must not be nudged on at turn 6); every other plan keeps 6.
         const overlongTurns = overlongTurnThreshold(lessonPlanRef.current, segIdNow, SEGMENT_OVERLONG_NOTE_TURNS);
-        if (homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS) {
+        if (TUTOR_SEGMENT_OVERLONG_NOTE && homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS) {
           cur.noted = true;
           onDebugEvent?.('segment_overlong_note_skipped_homework', `${segIdNow} after ${cur.turns} turns — homework session paces by problem`);
         }
-        if (!homeworkSession && !cur.noted && cur.turns >= overlongTurns && (kindNow === 'hook' || kindNow === 'concept' || (sessionAllowsNonLatin(tutorLanguages) && kindNow !== 'recap'))) {
+        if (TUTOR_SEGMENT_OVERLONG_NOTE && !homeworkSession && !cur.noted && cur.turns >= overlongTurns && (kindNow === 'hook' || kindNow === 'concept' || (sessionAllowsNonLatin(tutorLanguages) && kindNow !== 'recap'))) {
           cur.noted = true;
           const plan = lessonPlanRef.current;
           const idx = plan ? plan.segments.findIndex((sg) => sg.id === segIdNow) : -1;
@@ -19475,6 +19487,7 @@ export function VoiceTutorRealtime({
             ? `The next segment is "${nextSeg.id}" (${nextSeg.kind}); call advance_lesson({to: "next"}) and show_segment_card({segmentId: "${nextSeg.id}"}) in the same turn.`
             : `Call advance_lesson({to: "next"}) and render the new segment's card with show_segment_card in the same turn.`;
           pendingRuntimeNoteSegRef.current = segIdNow;
+          pendingRuntimeNoteUrgentRef.current = false;
           pendingRuntimeNoteRef.current =
             `[runtime note — not from the student] You have spent ${cur.turns} turns in the "${segIdNow}" (${kindNow}) segment without advancing. ` +
             `${OVERLONG_FINISH_FIRST}${nextHint} ` +
@@ -19503,7 +19516,13 @@ export function VoiceTutorRealtime({
           : null;
         if (autoPlan && autoReason) {
           const autoNext = nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current);
-          if (autoNext) {
+          if (autoNext && clipCaptureRef.current?.isArmed()) {
+            // The brain asked for a pronunciation repeat this turn: advancing
+            // would disarm it (disarmPronunciationOnSegmentAdvance) and the
+            // learner's repeat would never be measured. Hold; the counters
+            // keep growing, so the advance fires the first turn the arm is gone.
+            onDebugEvent?.('fixed_script_auto_advance_held_pron', `"${segIdNow}"`);
+          } else if (autoNext) {
             const autoTurns = cur.turns;
             const autoElapsedS = Math.round((Date.now() - cur.startedAt) / 1000);
             // Resets turnsInSegmentRef for the new segment and disarms a
@@ -19517,6 +19536,7 @@ export function VoiceTutorRealtime({
             );
             pendingRuntimeNoteRef.current = merged.note;
             pendingRuntimeNoteSegRef.current = merged.segId;
+            pendingRuntimeNoteUrgentRef.current = true;
             runtimeNoteHeldTurnsRef.current = 0;
             onDebugEvent?.('fixed_script_auto_advance', `"${segIdNow}" → "${autoNext}" reason=${autoReason} turns=${autoTurns} elapsed=${autoElapsedS}s`);
           }
@@ -22336,7 +22356,7 @@ export function VoiceTutorRealtime({
           ...(speechRate !== undefined ? { speechRate } : {}),
           speakingRate,
           studentName,
-          ttsTextTransform,
+          ...(sentenceStressActive ? { ttsTextTransform } : {}),
         }
       : undefined,
     onTranscriptUpdate: handleTranscriptUpdate,

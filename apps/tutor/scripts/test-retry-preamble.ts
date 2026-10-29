@@ -21,7 +21,7 @@ function test(name: string, fn: () => void) {
 const count = (s: string, sub: string) => s.split(sub).length - 1;
 
 test('preamble text verbatim', () => {
-  assert.equal(RETRY_PREAMBLE, 'The student never heard your previous attempt. Speak as if for the first time: never say "this time", "again", "let me try that again", "let me get this right" or anything else that refers to a redo.');
+  assert.equal(RETRY_PREAMBLE, 'Deliver this as a fresh turn: never say "this time", "again", "let me try that again", "let me get this right" or anything else that refers to a redo.');
 });
 test('plain instruction: prefixed once, original preserved', () => {
   const out = withRetryPreamble('Re-emit the tool call.');

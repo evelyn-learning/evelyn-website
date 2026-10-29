@@ -6,10 +6,13 @@
  * Run: npx tsx scripts/test-sentence-board.ts
  */
 import { strict as assert } from 'node:assert';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import {
   extractQuotedSentences, classifyQuotedSentence, planSentenceBoard,
   applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
-  sentenceContains, sentenceOnCurrentPage,
+  sentenceContains, sentenceOnCurrentPage, composeSpokenText,
 } from '../src/lib/tutor/voice/sentence-board';
 
 let failed = 0;
@@ -117,6 +120,39 @@ test('sentenceOnCurrentPage: only after the last newPage/clear; showSentence + h
   assert.equal(sentenceOnCurrentPage(cmds, "i haven't taken leave from work."), true);
   assert.equal(sentenceOnCurrentPage(cmds, 'I work in sales.'), false);
   assert.equal(sentenceOnCurrentPage([{ action: 'showSentence', sentence: 'I work in sales.' }], 'I WORK in sales'), true);
+});
+
+// ── order: rewriteForTTS first, stress after (fix round 10-11, item E) ───
+const RW = (s: string) => rewriteForTTS(s);
+test('rewriteForTTS alone undoes the stress (why the order matters)', () => {
+  assert.ok(!/TAKEN/.test(rewriteForTTS(emphasiseSpokenCorrections(LEAVE_TUTOR, LEAVE_STUDENT))));
+});
+test('composeSpokenText: rewrite then stress keeps TAKEN', () => {
+  const out = composeSpokenText(LEAVE_TUTOR, LEAVE_STUDENT, RW);
+  assert.ok(/I haven't TAKEN leave from work/.test(out), out);
+  assert.ok(!/"/.test(out), 'rewriteForTTS still stripped the quotes');
+});
+test('composeSpokenText: golf → MY inside the quoted span only', () => {
+  const golf1 = `"I haven't played golf with my manager since I started work" — close.`;
+  const out = composeSpokenText(golf1, GOLF_STUDENT, RW);
+  assert.equal(out, RW(golf1).replace('with my manager', 'with MY manager'));
+});
+test('composeSpokenText: no correction / no student line = plain rewrite', () => {
+  assert.equal(composeSpokenText(YEARS_TUTOR, YEARS_STUDENT, RW), RW(YEARS_TUTOR));
+  assert.equal(composeSpokenText(LEAVE_TUTOR, null, RW), RW(LEAVE_TUTOR));
+});
+test('composeSpokenText: a brain card stresses the sentence that says it', () => {
+  const out = composeSpokenText('Say it like this: I have been a sales manager for four years.', null, RW,
+    [{ sentence: 'I have been a sales manager for four years.', emphasis: ['been'] }]);
+  assert.ok(/have BEEN a sales/.test(out), out);
+});
+test('hook pin: both Cartesia paths compose AFTER rewriteForTTS; the HTTP route skips its rewrite only for prerewritten text', () => {
+  const hook = readFileSync(join(__dirname, '..', 'src/app/tutor/hooks/useOpenAIRealtime.ts'), 'utf8');
+  assert.ok(/f\(trimmed, \(s\) => rewriteForTTS\(s, \{ studentName: studentNameRef\.current \}\)\)/.test(hook), 'cartesiaText composes with rewriteForTTS');
+  assert.ok(/const spoken = cartesiaText\(trimmed\) \?\? rewriteForTTS\(trimmed/.test(hook), 'WS path');
+  assert.equal((hook.match(/\{ prerewritten: true \}/g) ?? []).length, 2, 'HTTP whole-buffer + streamed head');
+  const route = readFileSync(join(__dirname, '..', 'src/app/api/tutor/tts-cartesia/route.ts'), 'utf8');
+  assert.ok(/transcript: prerewritten === true \? text : rewriteForTTS\(text, \{ studentName \}\)/.test(route));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

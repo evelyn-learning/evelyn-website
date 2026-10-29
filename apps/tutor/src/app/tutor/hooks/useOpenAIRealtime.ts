@@ -357,10 +357,13 @@ export interface RealtimeConfig {
      *  Present ⇒ each sentence is synthesized in the language of its script
      *  (src/lib/tutor/voice/tts-language.ts). */
     tutorLanguages?: string[];
-    /** Sentence board (2026-10-29): rewrites a sentence for Cartesia TTS ONLY
-     *  (corrected words uppercased = stressed). Captions, chat and the board
-     *  keep the display text. Absent ⇒ every TTS request unchanged. */
-    ttsTextTransform?: (sentence: string) => string;
+    /** Sentence board (2026-10-29): builds the Cartesia transcript for a
+     *  display sentence — it must call `rewrite` (rewriteForTTS) FIRST and
+     *  stress after (corrected words uppercased; rewriteForTTS would lowercase
+     *  them). The request then carries `prerewritten: true` so the route does
+     *  not rewrite again. Captions, chat and the board keep the display text.
+     *  Absent ⇒ every TTS request unchanged. */
+    ttsTextTransform?: (sentence: string, rewrite: (s: string) => string) => string;
     /** Tutor speaking rate → Cartesia generation_config.speed. Absent ⇒ unchanged. */
     speechRate?: number;
     /** Task W4: per-session "Speak slower" toggle, independent of the
@@ -1070,7 +1073,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     };
     // Same rewrite the HTTP route applies server-side (rounds 12–24
     // pronunciation rules) — the WS transport sends transcripts verbatim.
-    const spoken = rewriteForTTS(cartesiaText(trimmed), { studentName: studentNameRef.current });
+    const spoken = cartesiaText(trimmed) ?? rewriteForTTS(trimmed, { studentName: studentNameRef.current });
     void sonicWS
       .synthesize(spoken, {
         contextId,
@@ -1172,13 +1175,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   }, [relayMode?.speechRate]);
   const tutorLanguagesRef = useRef<string[] | undefined>(relayMode?.tutorLanguages);
   // Read at synthesis time; the caller's callback is stable, the ref keeps it current anyway.
-  const ttsTextTransformRef = useRef<((sentence: string) => string) | undefined>(relayMode?.ttsTextTransform);
+  const ttsTextTransformRef = useRef<((sentence: string, rewrite: (s: string) => string) => string) | undefined>(relayMode?.ttsTextTransform);
   ttsTextTransformRef.current = relayMode?.ttsTextTransform;
-  /** The Cartesia request text for a display sentence (see ttsTextTransform). */
-  const cartesiaText = (trimmed: string): string => {
+  /** The finished (already rewritten + stressed) Cartesia transcript for a
+   *  display sentence, or null when no transform is set (then the route /
+   *  WS path rewrites the display text as before). */
+  const cartesiaText = (trimmed: string): string | null => {
     const f = ttsTextTransformRef.current;
-    if (!f) return trimmed;
-    try { return f(trimmed) || trimmed; } catch { return trimmed; }
+    if (!f) return null;
+    try { return f(trimmed, (s) => rewriteForTTS(s, { studentName: studentNameRef.current })) || null; } catch { return null; }
   };
   useEffect(() => {
     tutorLanguagesRef.current = relayMode?.tutorLanguages;
@@ -3199,7 +3204,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // the key, so they can never drift apart.
   // The Cartesia text (sentence-board stress) is part of the key: the same
   // display sentence stressed differently on another turn is another audio.
-  const ttsCacheKey = useCallback((text: string) => `${speakingRateRef.current}::${ttsProviderRef.current === 'cartesia' ? cartesiaText(text) : text}`, []);
+  const ttsCacheKey = useCallback((text: string) => {
+    const composed = ttsProviderRef.current === 'cartesia' ? cartesiaText(text) : null;
+    return `${speakingRateRef.current}::${composed !== null ? `rw::${composed}` : text}`;
+  }, []);
   const fetchTTSPromise = useCallback((trimmed: string): Promise<Float32Array | null> => {
     const cache = ttsPrefetchCacheRef.current;
     const cacheKey = ttsCacheKey(trimmed);
@@ -3246,8 +3254,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       const speed = speakingRateRef.current === 'slow' ? (useCartesia ? 'slow' : 0.85)
                   : (useCartesia ? voiceSpeed : undefined);
       const language = useCartesia ? ttsLanguageFor(trimmed, tutorLanguagesRef.current) : undefined;
+      const composed = useCartesia ? cartesiaText(trimmed) : null;
       const body = useCartesia
-        ? { text: cartesiaText(trimmed), voiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}), ...(speechRateRef.current !== undefined ? { rate: speechRateRef.current } : {}), ...(language ? { language } : {}) }
+        ? { text: composed ?? trimmed, ...(composed !== null ? { prerewritten: true } : {}), voiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}), ...(speechRateRef.current !== undefined ? { rate: speechRateRef.current } : {}), ...(language ? { language } : {}) }
         : { text: trimmed, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}) };
       // Bounded retry (2026-07-15 incident): a single mid-session transient
       // (ERR_HTTP2_PROTOCOL_ERROR → "Failed to fetch") killed a sentence
@@ -3342,12 +3351,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // R38 Task 6: mirrors the merge in fetchTTSPromise above — this path is
     // Cartesia-only, so 'slow' wins, else the per-voice speed rides along.
     const speed = speakingRateRef.current === 'slow' ? 'slow' : cartesiaVoiceSpeedRef.current;
+    const composed = cartesiaText(trimmed);
     try {
       const res = await fetch('/api/tutor/tts-cartesia', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: cartesiaText(trimmed),
+          text: composed ?? trimmed,
+          ...(composed !== null ? { prerewritten: true } : {}),
           voiceId: cartesiaVoiceIdRef.current,
           studentName: studentNameRef.current,
           ...(speed !== undefined ? { speed } : {}),

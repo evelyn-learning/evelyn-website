@@ -11,7 +11,7 @@
  */
 import { VALIDATOR_FEEDBACK_PREFIX } from '../orchestrator/validator-feedback';
 
-export const RETRY_PREAMBLE = 'The student never heard your previous attempt. Speak as if for the first time: never say "this time", "again", "let me try that again", "let me get this right" or anything else that refers to a redo.';
+export const RETRY_PREAMBLE = 'Deliver this as a fresh turn: never say "this time", "again", "let me try that again", "let me get this right" or anything else that refers to a redo.';
 
 /** Prefix every retry instruction with RETRY_PREAMBLE (idempotent). */
 export function withRetryPreamble(instruction: string): string {

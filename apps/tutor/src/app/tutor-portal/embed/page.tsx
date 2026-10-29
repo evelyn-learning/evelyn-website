@@ -260,6 +260,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'try_yourself', 'turn_cap_flagged', 'required_phrase_missing',
   //   language lessons: the client put a quoted sentence on the board itself:
   'sentence_board_auto',
+  //   fixed-script lessons: the client moved / held the segment cursor, FACT note delivered:
+  'fixed_script_',
   //   the dedup family (R49b's retry-context bug lived here):
   'dedup_',
   //   learner-model writes:
