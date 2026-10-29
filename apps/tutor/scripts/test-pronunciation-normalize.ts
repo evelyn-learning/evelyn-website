@@ -12,6 +12,8 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { normalizeAzure, normalizeSpeechace, azureProsodyFlags } from '../src/lib/tutor/pronunciation/normalize';
+import { buildAzureRequest } from '../src/lib/tutor/pronunciation/azure';
+import { wavToPcm16Mono } from './tutor/voice-harness/audio-util';
 
 let passed = 0, failed = 0;
 function test(name: string, fn: () => void) {
@@ -21,6 +23,7 @@ function test(name: string, fn: () => void) {
 
 const FIX = path.join(__dirname, '..', 'src', 'lib', 'tutor', 'pronunciation', 'fixtures');
 const azureJson = JSON.parse(fs.readFileSync(path.join(FIX, 'azure-sample.json'), 'utf8'));
+const azureRestJson = JSON.parse(fs.readFileSync(path.join(FIX, 'azure-rest-sample.json'), 'utf8'));
 const speechaceJson = JSON.parse(fs.readFileSync(path.join(FIX, 'speechace-sample.json'), 'utf8'));
 
 console.log('\nnormalizeAzure:\n');
@@ -76,6 +79,27 @@ test('a NoMatch / empty response throws a readable error', () => {
   assert.throws(() => normalizeAzure(null), /azure/i);
 });
 
+console.log('\nnormalizeAzure — REST short-audio shape (flat scores):\n');
+const azr = normalizeAzure(azureRestJson);
+test('REST: same result as the SDK-shape fixture', () => assert.deepEqual(azr, az));
+test('REST: countryside score 30, mispronunciation, k = 0', () => {
+  const w = azr.words.find((x) => x.word === 'countryside')!;
+  assert.equal(w.score, 30);
+  assert.equal(w.errorType, 'mispronunciation');
+  assert.deepEqual(w.phonemes[0], { ipa: 'k', score: 0 });
+});
+test('REST: overall / prosody / fluency read from NBest[0] directly', () => {
+  assert.equal(azr.overall, 70.6);
+  assert.equal(azr.prosody, 64.5);
+  assert.equal(azr.fluency, 88);
+});
+test('REST: prosody flags', () => {
+  assert.deepEqual(azureProsodyFlags(azureRestJson), ['the: UnexpectedBreak', 'countryside: Monotone']);
+});
+test('REST: omission keeps errorType omission', () => {
+  assert.equal(azr.words.find((x) => x.word === 'to')!.errorType, 'omission');
+});
+
 console.log('\nnormalizeSpeechace:\n');
 const sa = normalizeSpeechace(speechaceJson);
 test('vendor + overall = speechace_score.pronunciation', () => {
@@ -117,6 +141,30 @@ test('multi-syllable word with correct stress → stress ok', () => {
 test('status error throws with the vendor short_message', () => {
   assert.throws(() => normalizeSpeechace({ status: 'error', short_message: 'error_invalid_parameters', detail_message: 'key' }), /error_invalid_parameters/);
   assert.throws(() => normalizeSpeechace(undefined), /speechace/i);
+});
+
+console.log('\nbuildAzureRequest (REST short audio, no network):\n');
+const pcm = Buffer.from([1, 0, 2, 0, 3, 0, 4, 0]);
+const req = buildAzureRequest(pcm, "I have worked with international customers.", { key: 'k123', region: 'eastus' });
+test('URL: regional short-audio endpoint, en-US, detailed', () => {
+  assert.equal(req.url, 'https://eastus.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed');
+});
+test('headers: key, 16 kHz WAV content type, JSON accept', () => {
+  assert.equal(req.headers['Ocp-Apim-Subscription-Key'], 'k123');
+  assert.equal(req.headers['Content-Type'], 'audio/wav; codecs=audio/pcm; samplerate=16000');
+  assert.equal(req.headers.Accept, 'application/json');
+});
+test('Pronunciation-Assessment header = base64 JSON: scripted, Phoneme, IPA, miscue, prosody, Comprehensive', () => {
+  assert.deepEqual(JSON.parse(Buffer.from(req.headers['Pronunciation-Assessment'], 'base64').toString('utf8')), {
+    ReferenceText: 'I have worked with international customers.',
+    GradingSystem: 'HundredMark', Granularity: 'Phoneme', PhonemeAlphabet: 'IPA',
+    EnableMiscue: true, EnableProsodyAssessment: true, Dimension: 'Comprehensive',
+  });
+});
+test('body is a 16 kHz mono PCM16 WAV wrapping the samples unchanged', () => {
+  const { sampleRate, pcm: back } = wavToPcm16Mono(req.body);
+  assert.equal(sampleRate, 16000);
+  assert.deepEqual([...back], [...pcm]);
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

@@ -1,0 +1,287 @@
+{
+  "_comment": "Hand-written in the REST short-audio shape (learn.microsoft.com rest-speech-to-text-short, 'typical response for recognition with pronunciation assessment'): scores sit directly on NBest[0] / Words[] / Phonemes[] (no PronunciationAssessment wrapper). Same content as azure-sample.json (SDK shape): countryside AccuracyScore 30, Mispronunciation, phoneme k 0; 'to' omitted.",
+  "RecognitionStatus": "Success",
+  "Offset": 500000,
+  "Duration": 17600000,
+  "DisplayText": "We went the countryside.",
+  "SNR": 38.2,
+  "NBest": [
+    {
+      "Confidence": 0.81,
+      "Lexical": "we went the countryside",
+      "ITN": "we went the countryside",
+      "MaskedITN": "we went the countryside",
+      "Display": "We went the countryside.",
+      "AccuracyScore": 71,
+      "FluencyScore": 88,
+      "ProsodyScore": 64.5,
+      "CompletenessScore": 80,
+      "PronScore": 70.6,
+      "Words": [
+        {
+          "Word": "we",
+          "Offset": 500000,
+          "Duration": 2100000,
+          "Confidence": 0.0,
+          "AccuracyScore": 100,
+          "ErrorType": "None",
+          "Feedback": {
+            "Prosody": {
+              "Break": {
+                "ErrorTypes": [
+                  "None"
+                ],
+                "BreakLength": 0
+              },
+              "Intonation": {
+                "ErrorTypes": [],
+                "Monotone": {
+                  "SyllablePitchDeltaConfidence": 0.9
+                }
+              }
+            }
+          },
+          "Syllables": [
+            {
+              "Syllable": "wi",
+              "AccuracyScore": 100,
+              "Offset": 500000,
+              "Duration": 2100000
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "w",
+              "AccuracyScore": 100,
+              "Offset": 500000,
+              "Duration": 900000
+            },
+            {
+              "Phoneme": "i",
+              "AccuracyScore": 100,
+              "Offset": 1400000,
+              "Duration": 1200000
+            }
+          ]
+        },
+        {
+          "Word": "went",
+          "Offset": 2700000,
+          "Duration": 2900000,
+          "Confidence": 0.0,
+          "AccuracyScore": 96,
+          "ErrorType": "None",
+          "Feedback": {
+            "Prosody": {
+              "Break": {
+                "ErrorTypes": [
+                  "None"
+                ],
+                "BreakLength": 0
+              },
+              "Intonation": {
+                "ErrorTypes": [],
+                "Monotone": {
+                  "SyllablePitchDeltaConfidence": 0.88
+                }
+              }
+            }
+          },
+          "Syllables": [
+            {
+              "Syllable": "wɛnt",
+              "AccuracyScore": 96,
+              "Offset": 2700000,
+              "Duration": 2900000
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "w",
+              "AccuracyScore": 100,
+              "Offset": 2700000,
+              "Duration": 600000
+            },
+            {
+              "Phoneme": "ɛ",
+              "AccuracyScore": 94,
+              "Offset": 3300000,
+              "Duration": 900000
+            },
+            {
+              "Phoneme": "n",
+              "AccuracyScore": 98,
+              "Offset": 4200000,
+              "Duration": 700000
+            },
+            {
+              "Phoneme": "t",
+              "AccuracyScore": 92,
+              "Offset": 4900000,
+              "Duration": 700000
+            }
+          ]
+        },
+        {
+          "Word": "to",
+          "Offset": 0,
+          "Duration": 0,
+          "Confidence": 0.0,
+          "AccuracyScore": 0,
+          "ErrorType": "Omission"
+        },
+        {
+          "Word": "the",
+          "Offset": 5700000,
+          "Duration": 1300000,
+          "Confidence": 0.0,
+          "AccuracyScore": 88,
+          "ErrorType": "None",
+          "Feedback": {
+            "Prosody": {
+              "Break": {
+                "ErrorTypes": [
+                  "UnexpectedBreak"
+                ],
+                "UnexpectedBreak": {
+                  "Confidence": 0.93
+                },
+                "BreakLength": 4200000
+              },
+              "Intonation": {
+                "ErrorTypes": [],
+                "Monotone": {
+                  "SyllablePitchDeltaConfidence": 0.8
+                }
+              }
+            }
+          },
+          "Syllables": [
+            {
+              "Syllable": "ðə",
+              "AccuracyScore": 88,
+              "Offset": 5700000,
+              "Duration": 1300000
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "ð",
+              "AccuracyScore": 80,
+              "Offset": 5700000,
+              "Duration": 600000
+            },
+            {
+              "Phoneme": "ə",
+              "AccuracyScore": 96,
+              "Offset": 6300000,
+              "Duration": 700000
+            }
+          ]
+        },
+        {
+          "Word": "countryside",
+          "Offset": 7100000,
+          "Duration": 11000000,
+          "Confidence": 0.0,
+          "AccuracyScore": 30,
+          "ErrorType": "Mispronunciation",
+          "Feedback": {
+            "Prosody": {
+              "Break": {
+                "ErrorTypes": [
+                  "None"
+                ],
+                "BreakLength": 0
+              },
+              "Intonation": {
+                "ErrorTypes": [
+                  "Monotone"
+                ],
+                "Monotone": {
+                  "SyllablePitchDeltaConfidence": 0.12
+                }
+              }
+            }
+          },
+          "Syllables": [
+            {
+              "Syllable": "kʌn",
+              "AccuracyScore": 3,
+              "Offset": 7100000,
+              "Duration": 3000000
+            },
+            {
+              "Syllable": "tri",
+              "AccuracyScore": 40,
+              "Offset": 10100000,
+              "Duration": 3000000
+            },
+            {
+              "Syllable": "saɪd",
+              "AccuracyScore": 51,
+              "Offset": 13100000,
+              "Duration": 5000000
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "k",
+              "AccuracyScore": 0,
+              "Offset": 7100000,
+              "Duration": 700000
+            },
+            {
+              "Phoneme": "ʌ",
+              "AccuracyScore": 4,
+              "Offset": 7800000,
+              "Duration": 1300000
+            },
+            {
+              "Phoneme": "n",
+              "AccuracyScore": 5,
+              "Offset": 9100000,
+              "Duration": 1000000
+            },
+            {
+              "Phoneme": "t",
+              "AccuracyScore": 34,
+              "Offset": 10100000,
+              "Duration": 900000
+            },
+            {
+              "Phoneme": "ɹ",
+              "AccuracyScore": 27,
+              "Offset": 11000000,
+              "Duration": 1000000
+            },
+            {
+              "Phoneme": "i",
+              "AccuracyScore": 59,
+              "Offset": 12000000,
+              "Duration": 1100000
+            },
+            {
+              "Phoneme": "s",
+              "AccuracyScore": 73,
+              "Offset": 13100000,
+              "Duration": 1400000
+            },
+            {
+              "Phoneme": "aɪ",
+              "AccuracyScore": 50,
+              "Offset": 14500000,
+              "Duration": 2200000
+            },
+            {
+              "Phoneme": "d",
+              "AccuracyScore": 30,
+              "Offset": 16700000,
+              "Duration": 1400000
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

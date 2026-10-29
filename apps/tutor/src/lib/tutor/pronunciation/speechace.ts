@@ -5,23 +5,13 @@
 // Docs: https://api-docs.speechace.com/api-reference/score-text.md
 import { normalizeSpeechace } from './normalize';
 import type { PronunciationResult } from './types';
+import { pcm16ToWav16k } from './wav';
 
 export { normalizeSpeechace } from './normalize';
 
 /** US West; subscriptions in other regions use their own host (pass env.host). */
 export const SPEECHACE_DEFAULT_HOST = 'https://api.speechace.co';
 export const SPEECHACE_DIALECT = 'en-us';
-
-/** 16 kHz PCM16 mono → WAV (local copy: src/ must not import from scripts/). */
-function pcm16ToWav16k(pcm: Buffer): Buffer {
-  const sampleRate = 16000;
-  const h = Buffer.alloc(44);
-  h.write('RIFF', 0); h.writeUInt32LE(36 + pcm.length, 4); h.write('WAVE', 8);
-  h.write('fmt ', 12); h.writeUInt32LE(16, 16); h.writeUInt16LE(1, 20); h.writeUInt16LE(1, 22);
-  h.writeUInt32LE(sampleRate, 24); h.writeUInt32LE(sampleRate * 2, 28); h.writeUInt16LE(2, 32); h.writeUInt16LE(16, 34);
-  h.write('data', 36); h.writeUInt32LE(pcm.length, 40);
-  return Buffer.concat([h, pcm]);
-}
 
 export interface SpeechaceRawResult { json: unknown; latencyMs: number }
 

@@ -1,7 +1,6 @@
 // src/lib/tutor/pronunciation/normalize.ts
-// Pure mappers from each vendor's raw JSON to PronunciationResult. No SDK and
-// no network here, so tests and the bake-off's compare step can import them
-// without loading the Azure Speech SDK.
+// Pure mappers from each vendor's raw JSON to PronunciationResult. No network
+// here, so tests and the bake-off can import them freely.
 import type { PronunciationErrorType, PronunciationResult } from './types';
 
 type Obj = Record<string, unknown>;
@@ -10,12 +9,18 @@ const num = (v: unknown): number | undefined => (typeof v === 'number' && Number
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 
 // ─── Azure ──────────────────────────────────────────────────────────────────
-// Shape: { RecognitionStatus, NBest: [{ PronunciationAssessment: {AccuracyScore,
-// FluencyScore, ProsodyScore, CompletenessScore, PronScore}, Words: [{ Word,
-// PronunciationAssessment: { AccuracyScore, ErrorType, Feedback.Prosody },
-// Phonemes: [{ Phoneme, PronunciationAssessment: { AccuracyScore } }] }] }] }
+// Two documented shapes, both accepted:
+//  - REST short audio (what azure.ts calls): scores sit directly on the node —
+//    NBest[0].{AccuracyScore, FluencyScore, ProsodyScore, CompletenessScore,
+//    PronScore}, Words[].{Word, AccuracyScore, ErrorType, Feedback.Prosody},
+//    Words[].Phonemes[].{Phoneme, AccuracyScore}.
+//  - Speech SDK JSON: the same fields wrapped in a `PronunciationAssessment`
+//    object on NBest[0], each word and each phoneme.
 // With prosody on, ErrorType can also be UnexpectedBreak / MissingBreak /
 // Monotone — those are prosody flags (see azureProsodyFlags), not word errors.
+
+/** The node's score fields: its `PronunciationAssessment` wrapper (SDK) or the node itself (REST). */
+const azScores = (node: Obj): Obj => (isObj(node.PronunciationAssessment) ? node.PronunciationAssessment : node);
 
 function azureNBest(json: unknown): Obj {
   if (!isObj(json)) throw new Error('azure: response is not a JSON object');
@@ -37,16 +42,16 @@ function azureErrorType(v: unknown): PronunciationErrorType {
 
 export function normalizeAzure(json: unknown): PronunciationResult {
   const best = azureNBest(json);
-  const pa = isObj(best.PronunciationAssessment) ? best.PronunciationAssessment : {};
+  const pa = azScores(best);
   const words = arr(best.Words).filter(isObj).map((w) => {
-    const wpa = isObj(w.PronunciationAssessment) ? w.PronunciationAssessment : {};
+    const wpa = azScores(w);
     return {
       word: String(w.Word ?? ''),
       score: num(wpa.AccuracyScore) ?? 0,
       errorType: azureErrorType(wpa.ErrorType),
       phonemes: arr(w.Phonemes).filter(isObj).map((p) => ({
         ipa: String(p.Phoneme ?? ''),
-        score: num(isObj(p.PronunciationAssessment) ? p.PronunciationAssessment.AccuracyScore : undefined) ?? 0,
+        score: num(azScores(p).AccuracyScore) ?? 0,
       })),
     };
   });
@@ -64,7 +69,7 @@ export function normalizeAzure(json: unknown): PronunciationResult {
 export function azureProsodyFlags(json: unknown): string[] {
   const out: string[] = [];
   for (const w of arr(azureNBest(json).Words).filter(isObj)) {
-    const wpa = isObj(w.PronunciationAssessment) ? w.PronunciationAssessment : {};
+    const wpa = azScores(w);
     const prosody = isObj(wpa.Feedback) && isObj(wpa.Feedback.Prosody) ? wpa.Feedback.Prosody : {};
     const types = new Set<string>();
     for (const part of [prosody.Break, prosody.Intonation]) {

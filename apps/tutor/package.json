@@ -415,6 +415,7 @@
     "test:partner-session-options": "npx tsx scripts/test-partner-session-options.ts",
     "test:working-level": "npx tsx scripts/test-working-level.ts",
     "test:fixed-script": "npx tsx scripts/test-fixed-script.ts",
+    "test:gdi-trial-mint": "node ../../docs/whitelabel/gdi/demo/mint.test.mjs",
     "test:gdi-work-projects": "npx tsx scripts/test-gdi-work-projects.ts",
     "test:essay-practice": "npx tsx scripts/test-essay-practice.ts",
     "test:local-time": "npx tsx scripts/test-local-time.tsx",
@@ -457,8 +458,5 @@
     "practice-figure-gallery": "npx tsx scripts/practice-figure-gallery.ts",
     "live:gameclass-replay": "node scripts/gameclass-replay.mjs",
     "test:no-raw-solver-errors": "npx tsx scripts/test-no-raw-solver-errors.ts"
-  },
-  "dependencies": {
-    "microsoft-cognitiveservices-speech-sdk": "1.52.0"
   }
 }
