@@ -185,9 +185,13 @@ function main() {
     assert.match(b, /asks to learn something else/);
   });
   test('wrap-phase demo_stop carries the switch exception', () => {
-    const b = formatDemoStopBlock({ mode: 'time', budgetMinutes: 10, minutesElapsed: 9, wrapAtMinutes: 8 });
+    const b = formatDemoStopBlock({ mode: 'time', budgetMinutes: 10, minutesElapsed: 8, wrapAtMinutes: 8 });
     assert.match(b, /Wrap up NOW/);
     assert.match(b, /do not refuse because time is short/);
+    // Round 2 (2026-10-29): in the LAST minute the request is parked for next time.
+    const last = formatDemoStopBlock({ mode: 'time', budgetMinutes: 10, minutesElapsed: 9, wrapAtMinutes: 8 });
+    assert.match(last, /good one for next time/);
+    assert.doesNotMatch(last, /do not refuse because time is short/);
   });
   test('pacing demo_stop (before wrap) is unchanged', () => {
     const b = formatDemoStopBlock({ mode: 'time', budgetMinutes: 10, minutesElapsed: 2, wrapAtMinutes: 8 });
