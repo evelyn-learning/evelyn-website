@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { assessPronunciation, formatPronunciationNote, PRONUNCIATION_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
 import { resamplePcm16 } from '../src/lib/tutor/pronunciation/resample';
-import { parseAssessBody, pronunciationRouteEnabled, MAX_AUDIO_BYTES } from '../src/lib/tutor/pronunciation/assess-request';
+import { parseAssessBody, pronunciationRouteEnabled, MAX_AUDIO_BYTES, MAX_REQUEST_BYTES, sessionAllowsAssess, CallBudget, MAX_ASSESS_CALLS_PER_SESSION } from '../src/lib/tutor/pronunciation/assess-request';
 import { normalizeAzure } from '../src/lib/tutor/pronunciation/normalize';
 import { isPronunciationClaimSentence, claimsPronunciation } from '../src/lib/tutor/voice/pronunciation-claim';
 import type { PronunciationResult } from '../src/lib/tutor/pronunciation/types';
@@ -169,6 +169,39 @@ const REF = 'We went to the countryside.';
     assert.equal(pronunciationRouteEnabled(true, 'gdi-demo'), true);
     assert.equal(pronunciationRouteEnabled(false, 'gdi-demo'), false);
     for (const p of ['crimsora', 'greenapple', '', null, undefined, 'unknown']) assert.equal(pronunciationRouteEnabled(true, p), false, String(p));
+  });
+
+  await test('only a live session may assess (active, no endedAt)', () => {
+    assert.equal(sessionAllowsAssess({ status: 'active' }), true);
+    assert.equal(sessionAllowsAssess({ status: 'active', endedAt: null }), true);
+    assert.equal(sessionAllowsAssess({ status: 'active', endedAt: new Date() }), false);
+    assert.equal(sessionAllowsAssess({ status: 'completed', endedAt: new Date() }), false);
+    assert.equal(sessionAllowsAssess({ status: 'abandoned' }), false);
+    assert.equal(sessionAllowsAssess({}), false);
+    assert.equal(sessionAllowsAssess(null), false);
+  });
+  await test('call budget: 40 ok, the 41st rejected, other sessions unaffected', () => {
+    assert.equal(MAX_ASSESS_CALLS_PER_SESSION, 40);
+    const b = new CallBudget();
+    for (let i = 0; i < 40; i++) assert.equal(b.take('s1'), true, `call ${i + 1}`);
+    assert.equal(b.take('s1'), false);
+    assert.equal(b.take('s1'), false);
+    assert.equal(b.take('s2'), true);
+  });
+  await test('call budget: entries older than the TTL are evicted on insert', () => {
+    let t = 0;
+    const b = new CallBudget(2, 1000, () => t);
+    b.take('old'); b.take('old');
+    assert.equal(b.take('old'), false);
+    t = 500; b.take('mid');
+    assert.equal(b.size, 2);
+    t = 1200; b.take('new');            // sweep: 'old' (1200 ms) gone, 'mid' (700 ms) kept
+    assert.equal(b.size, 2);
+    assert.equal(b.take('old'), true, 'an expired key starts a fresh budget');
+  });
+  await test('request byte cap ≈ 2.1 MB covers the largest valid body', () => {
+    assert.ok(MAX_REQUEST_BYTES > Buffer.alloc(MAX_AUDIO_BYTES).toString('base64').length + 600);
+    assert.ok(MAX_REQUEST_BYTES < 2.2 * 1024 * 1024);
   });
 
   console.log('\npronunciation claim guard — measured bypass:\n');

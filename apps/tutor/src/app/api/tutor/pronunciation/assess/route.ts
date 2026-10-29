@@ -7,8 +7,12 @@
 //             | { status: 'unavailable', reason, note }
 // `note` is formatPronunciationNote(...) — what the brain reads.
 //
+// 429 { status:'unavailable', reason:'vendor_error', note } past the
+// per-session call cap (40 per process, ~2 h window).
+//
 // Auth: the same as POST /api/tutor/session-audio — the session id is the
-// capability. Here it must also name a TutorSession row, whose
+// capability. Here it must also name a LIVE TutorSession row (status 'active',
+// no endedAt), whose
 // `sourcePartnerId` (embed token partner_id) decides the tenant gate.
 // Gate: TUTOR_PRONUNCIATION_ASSESS flag AND the partner's `pronunciation`
 // option (partner-session-options.ts; only gdi-demo today). Anything else —
@@ -17,10 +21,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@core/db';
 import { TutorSession } from '@/models';
 import { TUTOR_PRONUNCIATION_ASSESS } from '@/lib/tutor/orchestrator/flags';
-import { parseAssessBody, pronunciationRouteEnabled } from '@/lib/tutor/pronunciation/assess-request';
-import { assessPronunciation, formatPronunciationNote } from '@/lib/tutor/pronunciation/assessor';
+import {
+  CallBudget,
+  MAX_REQUEST_BYTES,
+  parseAssessBody,
+  pronunciationRouteEnabled,
+  sessionAllowsAssess,
+} from '@/lib/tutor/pronunciation/assess-request';
+import { assessPronunciation, formatPronunciationNote, PRONUNCIATION_UNAVAILABLE_NOTE } from '@/lib/tutor/pronunciation/assessor';
 
 export const runtime = 'nodejs';
+
+// Spend control: at most MAX_ASSESS_CALLS_PER_SESSION vendor calls per
+// session per process (entries expire after ~2 h).
+const budget = new CallBudget();
 
 const notFound = () => NextResponse.json({ error: 'not found' }, { status: 404 });
 
@@ -30,6 +44,8 @@ export async function POST(request: NextRequest) {
 
   // Everything before the tenant gate answers 404, so a caller outside the
   // gate cannot tell the route exists (not even from a 400).
+  // Never parse a body larger than the biggest valid one.
+  if (Number(request.headers.get('content-length') ?? 0) > MAX_REQUEST_BYTES) return notFound();
   let body: unknown;
   try {
     body = await request.json();
@@ -41,12 +57,20 @@ export async function POST(request: NextRequest) {
 
   await connectDB();
   const session = await TutorSession.findOne({ sessionId: sessionId.trim() })
-    .select('sourcePartnerId')
-    .lean<{ sourcePartnerId?: string } | null>();
-  if (!session || !pronunciationRouteEnabled(TUTOR_PRONUNCIATION_ASSESS, session.sourcePartnerId)) return notFound();
+    .select('sourcePartnerId status endedAt')
+    .lean<{ sourcePartnerId?: string; status?: string; endedAt?: Date } | null>();
+  // Ended sessions are closed too: an old sessionId must not stay a key.
+  if (!session || !sessionAllowsAssess(session) || !pronunciationRouteEnabled(TUTOR_PRONUNCIATION_ASSESS, session.sourcePartnerId)) {
+    return notFound();
+  }
 
   const parsed = parseAssessBody(body);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
+
+  if (!budget.take(parsed.sessionId)) {
+    // Same shape as any unavailable result, so the client path stays uniform.
+    return NextResponse.json({ status: 'unavailable', reason: 'vendor_error', note: PRONUNCIATION_UNAVAILABLE_NOTE }, { status: 429 });
+  }
 
   const out = await assessPronunciation({ pcm16: parsed.pcm16, sampleRate: 24000, referenceText: parsed.referenceText });
   return NextResponse.json({ ...out, note: formatPronunciationNote(out, parsed.referenceText) });

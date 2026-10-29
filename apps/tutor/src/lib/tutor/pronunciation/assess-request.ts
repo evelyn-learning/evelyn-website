@@ -31,3 +31,44 @@ export function parseAssessBody(body: unknown): AssessBody {
 export function pronunciationRouteEnabled(flagOn: boolean, partnerId: string | null | undefined): boolean {
   return flagOn && resolvePartnerSessionOptions({ partnerId }).pronunciation;
 }
+
+/** Content-Length above which the route refuses to parse (base64 cap + JSON slack). */
+export const MAX_REQUEST_BYTES = MAX_AUDIO_B64_CHARS + 32 * 1024;
+
+/** A live session only: TutorSession.status 'active' and no endedAt (the
+ *  resume path in session-usage re-sets 'active' and unsets endedAt). An ended
+ *  sessionId must not stay a working key for vendor calls. */
+export function sessionAllowsAssess(s: { status?: string | null; endedAt?: Date | string | null } | null | undefined): boolean {
+  return !!s && s.status === 'active' && (s.endedAt === undefined || s.endedAt === null);
+}
+
+/** Per-session vendor-call cap, per process (the tutor runs as one pm2 process). */
+export const MAX_ASSESS_CALLS_PER_SESSION = 40;
+export const CALL_BUDGET_TTL_MS = 2 * 60 * 60 * 1000;
+
+/** In-memory per-key call counter. Entries older than `ttlMs` (from their
+ *  first call) are swept on every insert, so the map cannot grow forever. */
+export class CallBudget {
+  private readonly entries = new Map<string, { count: number; firstAt: number }>();
+  constructor(
+    private readonly max = MAX_ASSESS_CALLS_PER_SESSION,
+    private readonly ttlMs = CALL_BUDGET_TTL_MS,
+    private readonly now: () => number = Date.now,
+  ) {}
+
+  /** Count one call for `key`; false (and not counted) once the cap is reached. */
+  take(key: string): boolean {
+    const t = this.now();
+    const e = this.entries.get(key);
+    if (e && t - e.firstAt <= this.ttlMs) {
+      if (e.count >= this.max) return false;
+      e.count++;
+      return true;
+    }
+    for (const [k, v] of this.entries) if (t - v.firstAt > this.ttlMs) this.entries.delete(k);
+    this.entries.set(key, { count: 1, firstAt: t });
+    return true;
+  }
+
+  get size(): number { return this.entries.size; }
+}
