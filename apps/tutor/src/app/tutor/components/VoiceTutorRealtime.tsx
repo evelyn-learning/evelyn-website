@@ -712,6 +712,10 @@ interface VoiceTutorRealtimeProps {
   topic: string;
   level: string;
   studentName?: string;
+  /** Demo-polish (2026-10-29): whether the host currently holds an answerable
+   *  question pin for the last tutor turn. Feeds the idle nudge: with no pin
+   *  it re-offers the choice instead of a hint. Absent ⇒ treated as pinned. */
+  hasOpenQuestion?: boolean;
   sessionId?: string;
   // Wallclock ms for session.startedAt — passed through to the audio recorder
   // so both .pcm16 tracks align with the chat timeline in the replay UI.
@@ -1291,6 +1295,7 @@ export function VoiceTutorRealtime({
   topic,
   level,
   studentName: rawStudentName,
+  hasOpenQuestion,
   sessionId,
   sessionStartedAtMs,
   sessionGoal,
@@ -2299,6 +2304,9 @@ export function VoiceTutorRealtime({
   // current student turn — the brain's first sentence then drops its own
   // leading filler (opener-filler.ts). Reset when the next turn arms its ack.
   const ackSpokenThisTurnRef = useRef(false);
+  // Demo-polish: mirrored prop, read by the idle-nudge closure.
+  const hasOpenQuestionRef = useRef<boolean | undefined>(hasOpenQuestion);
+  hasOpenQuestionRef.current = hasOpenQuestion;
   // R32: per-category last-index rotation state for classifier-driven cover
   // phrases (TUTOR_COVER_V2). Keyed by CoverCategory; unused when the flag
   // is off (legacy pickAck path keeps using lastAckIndexRef above).
@@ -22321,7 +22329,7 @@ export function VoiceTutorRealtime({
         'idle_nudge_sent',
         `stretch=${idleNudgeStateRef.current.stretchCount} session=${idleNudgeStateRef.current.sessionCount}${nudgePlan?.ceilingHit ? ' ceiling=1' : ''}`,
       );
-      void handleStudentTranscriptForBrain(idleNudgeDirective({ v2: TUTOR_IDLE_NUDGE_V2 }), { silent: true, bypassPerceptionDedupe: true });
+      void handleStudentTranscriptForBrain(idleNudgeDirective({ v2: TUTOR_IDLE_NUDGE_V2, hasOpenQuestion: hasOpenQuestionRef.current }), { silent: true, bypassPerceptionDedupe: true });
     };
     const idleNudgeArmDelay = idleNudgeArmDelayMs(idleNudgeStateRef.current, { languageLesson: sessionAllowsNonLatin(tutorLanguages) });
     idleNudgeDueAtRef.current = Date.now() + idleNudgeArmDelay;

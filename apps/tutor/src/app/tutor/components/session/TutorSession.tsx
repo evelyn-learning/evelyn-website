@@ -1638,6 +1638,7 @@ export default function TutorSession(props: TutorSessionProps) {
         topic={topic}
         level={level}
         studentName={studentName || undefined}
+        hasOpenQuestion={questionPin != null}
         studentId={studentId}
         embedToken={embedToken}
         socialMemory={socialMemory}

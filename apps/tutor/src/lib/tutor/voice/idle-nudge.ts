@@ -167,6 +167,11 @@ export const IDLE_NUDGE_DIRECTIVE =
 export interface IdleNudgeDirectiveOpts {
   /** TUTOR_IDLE_NUDGE_V2. Absent/false ⇒ IDLE_NUDGE_DIRECTIVE verbatim. */
   v2?: boolean;
+  /** Demo-polish (2026-10-29): false when the last tutor turn pinned no
+   *  answerable question (a conversational "?" or none at all) — the v2
+   *  text then re-offers the choice instead of a hint there is nothing to
+   *  hint at. Absent/true ⇒ the hint offer as before. v1 ignores it. */
+  hasOpenQuestion?: boolean;
 }
 
 export function idleNudgeDirective(opts: IdleNudgeDirectiveOpts): string {
@@ -176,9 +181,13 @@ export function idleNudgeDirective(opts: IdleNudgeDirectiveOpts): string {
     'Re-engage gently in ONE short sentence. The question you last asked is ' +
     'STILL OUTSTANDING and still theirs to answer — DO NOT ANSWER IT, and do not ' +
     'say the word, value, or term you asked them for. Silence means they are ' +
-    'thinking, not that they have given up. Offer a choice: more time, or a hint. ' +
-    'A hint must NARROW the search — point at what to look at, or rule something ' +
-    'out — and must not give the answer inside it. Do not ask a NEW question and ' +
+    'thinking, not that they have given up. ' +
+    (opts.hasOpenQuestion === false
+      ? 'There is no problem on the table to hint at. Re-offer the choice or next step you last asked about, in different words, in one short sentence. '
+      : 'Offer a choice: more time, or a hint. ' +
+        'A hint must NARROW the search — point at what to look at, or rule something ' +
+        'out — and must not give the answer inside it. ') +
+    'Do not ask a NEW question and ' +
     'do not move on to the next step; this turn exists only to hand the same ' +
     'question back warmly. If your last turn handed them something to read or ' +
     "work through, ask how it's going. If it ended without a question, offer the " +
