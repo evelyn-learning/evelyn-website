@@ -1432,7 +1432,7 @@ export function VoiceTutorRealtime({
     if (startSegId === currentSegmentIdRef.current) return;
     currentSegmentIdRef.current = startSegId;
     setActiveSegmentId(startSegId);
-    onDebugEvent?.('fixed_script_start_segment', startSegId);
+    onDebugEvent?.('working_level_start_segment', startSegId);
   };
   // Set this session ⇒ every later profile commit carries it (idempotent on
   // the server); `sent` lets the first commit post even with nothing else.
