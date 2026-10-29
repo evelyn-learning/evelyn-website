@@ -168,3 +168,20 @@ export const FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS = 3;
 export function holdAutoAdvanceForPronunciation(armed: boolean, heldTurns: number): boolean {
   return armed && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS;
 }
+
+/** GDI trial run 2 (2026-10-29): the opening turn called
+ *  advance_lesson({to:"next"}) before the scripted overview was ever said, so
+ *  the overview segment was skipped. The phrases of `seg.requiredPhrases` that
+ *  appear in none of `narration` (case-insensitive substring — the same rule
+ *  as the end-of-turn required-phrase check). No required phrases ⇒ []. */
+export function missingRequiredPhrases(seg: { requiredPhrases?: string[] } | undefined, narration: readonly string[]): string[] {
+  const required = Array.isArray(seg?.requiredPhrases) ? seg.requiredPhrases.filter((p) => typeof p === 'string' && p.trim()) : [];
+  if (!required.length) return [];
+  const haystack = narration.join(' ').toLowerCase();
+  return required.filter((p) => !haystack.includes(p.toLowerCase()));
+}
+
+/** The refusal the brain gets for an advance off a script it has not said. */
+export function scriptMissingAdvanceReason(missing: readonly string[]): string {
+  return `This part's script has not been said yet — it must include: ${missing.map((p) => `"${p}"`).join(', ')}. Say it in this turn; the lesson can move on in a later turn.`;
+}

@@ -917,3 +917,10 @@ export const TUTOR_RETRY_PREAMBLE = process.env.NEXT_PUBLIC_TUTOR_RETRY_PREAMBLE
  *  gets the sentence card from the client (voice/sentence-board.ts), and the
  *  corrected words are uppercased in the TTS string only (Cartesia stress). */
 export const TUTOR_SENTENCE_BOARD = process.env.NEXT_PUBLIC_TUTOR_SENTENCE_BOARD !== 'off';
+
+/** Fixed-script plans (GDI trial run 2, 2026-10-29): a brain
+ *  advance_lesson / mark_segment_complete off a segment whose requiredPhrases
+ *  have not been said yet is refused (the opening turn skipped the scripted
+ *  overview). Skip button, {to:"free"} and the client's own advances are never
+ *  refused. Default ON; NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ADVANCE_GUARD=off. */
+export const TUTOR_FIXED_SCRIPT_ADVANCE_GUARD = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ADVANCE_GUARD !== 'off';

@@ -21,6 +21,7 @@ import {
   fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote,
   FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_TIME_FACTOR, FIXED_SCRIPT_AUTO_ADVANCE_MIN_MS,
   FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPronunciation,
+  missingRequiredPhrases, scriptMissingAdvanceReason,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
@@ -203,6 +204,55 @@ test('level-set advance wired in the setWorkingLevel handler with the double-adv
 test('applyResolvedAdvance disarms a pending pronunciation arm', () => {
   const at = VTR.indexOf('const applyResolvedAdvance = useCallback(');
   pin(VTR.slice(at, at + 8000), /disarmPronunciationOnSegmentAdvanceRef\.current\(currentSegmentIdRef\.current, next\)/);
+});
+
+// ── run 2 (10-29): a fixed-script segment is not left before its script was said ──
+const OVERVIEW = { requiredPhrases: ['present perfect', 'past simple'] };
+test('missingRequiredPhrases: both present → []', () => {
+  assert.deepEqual(missingRequiredPhrases(OVERVIEW, ['Today we compare the present perfect', 'with the past simple.']), []);
+});
+test('missingRequiredPhrases: one missing → [that one]', () => {
+  assert.deepEqual(missingRequiredPhrases(OVERVIEW, ['Today we look at the present perfect.']), ['past simple']);
+});
+test('missingRequiredPhrases: case-insensitive', () => {
+  assert.deepEqual(missingRequiredPhrases(OVERVIEW, ['PRESENT PERFECT and Past Simple.']), []);
+});
+test('missingRequiredPhrases: empty narration → all', () => {
+  assert.deepEqual(missingRequiredPhrases(OVERVIEW, []), ['present perfect', 'past simple']);
+});
+test('missingRequiredPhrases: no requiredPhrases → []', () => {
+  assert.deepEqual(missingRequiredPhrases({}, []), []);
+  assert.deepEqual(missingRequiredPhrases(undefined, []), []);
+  assert.deepEqual(missingRequiredPhrases({ requiredPhrases: [] }, ['x']), []);
+});
+test('scriptMissingAdvanceReason names every missing phrase and says "this turn"', () => {
+  const r = scriptMissingAdvanceReason(['present perfect', 'past simple']);
+  assert.ok(r.includes('"present perfect", "past simple"') && /Say it in this turn/.test(r), r);
+});
+test('VTR: advance_lesson guard refuses before the homework guard, without moving the cursor', () => {
+  const at = VTR.indexOf("'fixed_script_advance_refused_script_missing'");
+  assert.ok(at > 0, 'event');
+  const block = VTR.slice(at - 1800, at + 400);
+  pin(block, /TUTOR_FIXED_SCRIPT_ADVANCE_GUARD && next && isFixedScriptPlan\(plan\)/);
+  pin(block, /missingRequiredPhrases\(/);
+  pin(block, /\.\.\.turnNarrationRef\.current/);
+  pin(block, /rejected\.push\(\{ action: 'advance_lesson', reason: scriptMissingAdvanceReason\(missing\) \}\);\s*continue;/);
+  pin(block, /scriptAdvanceRefusedSegRef\.current = curSegId/);
+  assert.ok(at < VTR.indexOf('const hwAdvance = next && TUTOR_HOMEWORK_ADVANCE_GUARD'), 'before the homework guard / any applyResolvedAdvance');
+});
+test('VTR: mark_segment_complete of the current fixed-script segment is skipped while its script is missing', () => {
+  const at = VTR.indexOf("'fixed_script_mark_refused_script_missing'");
+  assert.ok(at > 0, 'event');
+  const block = VTR.slice(at - 1400, at + 200);
+  pin(block, /c\.segmentId === currentSegmentIdRef\.current/);
+  pin(VTR.slice(at, at + 200), /continue;/);
+});
+test('VTR: a refused advance does not defer the required-phrase check', () => {
+  const at = VTR.indexOf('const advancedIntoSegmentThisTurn =');
+  const block = VTR.slice(at - 600, at + 200);
+  pin(block, /scriptAdvanceRefusedSegRef\.current === segIdForPhrases/);
+  pin(block, /advancedIntoSegmentThisTurn = !advanceRefusedHere &&/);
+  pin(VTR, /turnNarrationRef\.current = \[\];\n\s*scriptAdvanceRefusedSegRef\.current = '';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

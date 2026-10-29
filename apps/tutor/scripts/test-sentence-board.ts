@@ -12,7 +12,7 @@ import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import {
   extractQuotedSentences, classifyQuotedSentence, planSentenceBoard,
   applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
-  sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex,
+  sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex, autoSentenceCardsToReplace,
 } from '../src/lib/tutor/voice/sentence-board';
 
 let failed = 0;
@@ -122,6 +122,28 @@ test('sentenceOnCurrentPage: only after the last newPage/clear; showSentence + h
   assert.equal(sentenceOnCurrentPage([{ action: 'showSentence', sentence: 'I work in sales.' }], 'I WORK in sales'), true);
 });
 
+test('sentenceOnCurrentPage: a showSentence matches with a trailing period / different case / either containing the other', () => {
+  const page = [{ action: 'showSentence', sentence: 'I am a sales manager at my company.' }];
+  assert.equal(sentenceOnCurrentPage(page, 'I am a sales manager at my company'), true);
+  assert.equal(sentenceOnCurrentPage(page, 'i am a SALES manager at my company!'), true);
+  assert.equal(sentenceOnCurrentPage([{ action: 'showSentence', sentence: 'I am a sales manager' }], 'I am a sales manager at my company.'), true);
+  assert.equal(sentenceOnCurrentPage(page, 'I am a teacher at my school.'), false);
+});
+test('autoSentenceCardsToReplace: auto cards on the current page that say the brain card\'s sentence', () => {
+  const cmds = [
+    { action: 'showSentence', id: 'showSentence-1', sentence: 'I am a sales manager at my company' },
+    { action: 'newPage', title: 'Next' },
+    { action: 'showSentence', id: 'showSentence-3', sentence: 'I am a sales manager at my company' },
+    { action: 'showSentence', id: 'showSentence-5', sentence: 'I have worked here for two years' },
+    { action: 'showSentence', id: 'showSentence-6', sentence: 'I am a sales manager at my company' },
+  ];
+  const auto = new Set(['showSentence-1', 'showSentence-3', 'showSentence-5']);
+  assert.deepEqual(autoSentenceCardsToReplace(cmds, auto, 'I am a sales manager at my company.'), ['showSentence-3']);
+  assert.deepEqual(autoSentenceCardsToReplace(cmds, auto, 'I am a teacher.'), []);
+  assert.deepEqual(autoSentenceCardsToReplace(cmds, new Set(), 'I am a sales manager at my company.'), []);
+  assert.deepEqual(autoSentenceCardsToReplace([...cmds, { action: 'newPage', title: 'x' }], auto, 'I am a sales manager at my company.'), []);
+});
+
 // ── order: rewriteForTTS first, stress after (fix round 10-11, item E) ───
 const RW = (s: string) => rewriteForTTS(s);
 test('rewriteForTTS alone undoes the stress (why the order matters)', () => {
@@ -167,9 +189,21 @@ test('A: the auto card goes through handleWhiteboardCommand with its anchor, nev
   const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   const at = vtr.indexOf("'sentence_board_auto'");
   const block = vtr.slice(at - 2500, at + 200);
-  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor \} : undefined\)/.test(block), 'normal board path');
+  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor, sentenceBoardAuto: true \} : \{ sentenceBoardAuto: true \}\)/.test(block), 'normal board path, marked as the auto card');
+  assert.ok(/autoSentenceCardIdsRef\.current\.add\(id\)/.test(vtr.slice(at - 2500, at + 600)), 'auto card ids remembered');
   assert.ok(/sentenceAnchorIndex\(turnNarrationRef\.current, card\.sentence\)/.test(block), 'anchored to its spoken sentence');
   assert.ok(!/onWhiteboardCommand\(\[cmd\]\)/.test(block), 'no raw opener-fallback paint');
+});
+test('C: a brain show_sentence replaces the auto card of the same sentence before it paints', () => {
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  const at = vtr.indexOf("'sentence_board_auto_replaced'");
+  assert.ok(at > 0, 'replace event');
+  const block = vtr.slice(at - 2000, at + 300);
+  assert.ok(/!opts\?\.sentenceBoardAuto/.test(block), 'never for the auto card itself');
+  assert.ok(/autoSentenceCardsToReplace\(/.test(block), 'pure helper decides');
+  assert.ok(/action: 'removeItems', ids: replaced/.test(block), 'removed from the board');
+  assert.ok(/catalogRef\.current\.removeByIds\(replaced\)/.test(block), 'and from the catalog');
+  assert.ok(at < vtr.indexOf('dispatchVisualRef.current(processed, opts?.anchorSentence)'), 'before the brain card dispatches');
 });
 test('hook pin: both Cartesia paths compose AFTER rewriteForTTS; the HTTP route skips its rewrite only for prerewritten text', () => {
   const hook = readFileSync(join(__dirname, '..', 'src/app/tutor/hooks/useOpenAIRealtime.ts'), 'utf8');

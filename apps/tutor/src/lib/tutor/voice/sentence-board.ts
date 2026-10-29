@@ -247,8 +247,38 @@ export function sentenceOnCurrentPage(commands: ReadonlyArray<{ action: string }
   for (let i = commands.length - 1; i >= 0; i--) {
     const c = commands[i];
     if (c.action === 'newPage' || c.action === 'clear') return false;
-    const text = c.action === 'showSentence' ? c.sentence : c.action === 'handwrite' ? c.text : null;
-    if (typeof text === 'string' && norm(text) === target) return true;
+    if (c.action === 'showSentence') {
+      if (typeof c.sentence === 'string' && sameSentence(c.sentence, sentence)) return true;
+      continue;
+    }
+    if (c.action === 'handwrite' && typeof c.text === 'string' && norm(c.text) === target) return true;
   }
   return false;
+}
+
+/** Two sentence cards say the same sentence: one contains the other word for
+ *  word (case, punctuation and spacing ignored) — "I am a sales manager at my
+ *  company" and "I am a sales manager at my company." are one card. */
+export function sameSentence(a: string, b: string): boolean {
+  return sentenceContains(a, b) || sentenceContains(b, a);
+}
+
+/** GDI trial run 2 (2026-10-29): an auto card and the brain's own
+ *  show_sentence of the same sentence both stayed on the board. Ids of the
+ *  AUTO cards (`autoIds`) on the current page (after the last newPage / clear
+ *  in `commands`) that say `sentence` — the brain's card replaces them. */
+export function autoSentenceCardsToReplace(
+  commands: ReadonlyArray<{ action: string } & Record<string, unknown>>,
+  autoIds: ReadonlySet<string>,
+  sentence: string,
+): string[] {
+  const out: string[] = [];
+  if (!autoIds.size || !norm(sentence ?? '')) return out;
+  for (let i = commands.length - 1; i >= 0; i--) {
+    const c = commands[i];
+    if (c.action === 'newPage' || c.action === 'clear') break;
+    if (c.action !== 'showSentence' || typeof c.id !== 'string' || !autoIds.has(c.id)) continue;
+    if (typeof c.sentence === 'string' && sameSentence(c.sentence, sentence)) out.push(c.id);
+  }
+  return out;
 }

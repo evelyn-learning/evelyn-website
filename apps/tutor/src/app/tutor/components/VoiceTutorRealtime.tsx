@@ -10,8 +10,8 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD } from '@/lib/tutor/orchestrator/flags';
-import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex } from '@/lib/tutor/voice/sentence-board';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD } from '@/lib/tutor/orchestrator/flags';
+import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
@@ -426,7 +426,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason } from '@/lib/tutor/lesson-plan/fixed-script';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -2355,6 +2355,20 @@ export function VoiceTutorRealtime({
   // transformation-arrow fallback) + whether ANY board render fired this turn
   // (so the fallback only fires when the brain drew nothing). Reset at turn start.
   const turnNarrationRef = useRef<string[]>([]);
+  // Ids of the sentence cards the CLIENT put up (sentence_board_auto). A brain
+  // show_sentence of the same sentence on the same page replaces its auto card
+  // (GDI trial run 2: both stayed on the board).
+  const autoSentenceCardIdsRef = useRef<Set<string>>(new Set());
+  // Fixed-script advance guard (GDI trial run 2: the opening turn advanced past
+  // the scripted overview before saying it). What counts as "said" for a
+  // segment: every sentence spoken while the cursor was on it (any turn), plus
+  // this attempt's streamed sentences that are still held before the speaker.
+  const segmentNarrationRef = useRef<Map<string, string[]>>(new Map());
+  const attemptStreamedSentencesRef = useRef<string[]>([]);
+  // The segment a brain advance was refused on THIS turn ('' = none) — the
+  // end-of-turn required-phrase check must not treat that turn as a
+  // transition turn (the cursor never moved).
+  const scriptAdvanceRefusedSegRef = useRef('');
   // Task B3 (flag-gated): whether the NEXT callBrainOnce call to complete is
   // the proactive-opener turn, and how many valid (post-validation) board
   // renders it dispatches. Only ever written/read when TUTOR_PEDAGOGY_OPENER
@@ -6198,7 +6212,7 @@ export function VoiceTutorRealtime({
   // arrives AFTER the turn's `done`, so the live TTS dispatch count no
   // longer describes its introducing sentence — the server tells us which
   // 1-based sentence spoke the content and the render buffers against THAT.
-  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number }): Promise<WhiteboardCommandResult> => {
+  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean }): Promise<WhiteboardCommandResult> => {
     turnHadToolCallRef.current = true;
     // Structured entry log — gives us the shape of every batch arriving
     // at the handler (from Realtime function_call, from text-parse, or
@@ -7944,6 +7958,29 @@ export function VoiceTutorRealtime({
               consumedHashes,
               completedSegmentIds: completedSegmentIdsRef.current,
             });
+          // GDI trial run 2 (2026-10-29): a fixed-script segment is not left
+          // before its script was said. The opening turn called
+          // advance_lesson({to:"next"}) and the scripted overview (a segment
+          // with requiredPhrases) was never spoken. Refused: the cursor stays,
+          // the brain is told what is missing (kill + retry says it). Never
+          // applied to the Skip button, {to:"free"} or the client's own
+          // auto / level-set advances (those do not come through here).
+          if (TUTOR_FIXED_SCRIPT_ADVANCE_GUARD && next && isFixedScriptPlan(plan)
+              && currentSegmentIdRef.current && next !== currentSegmentIdRef.current
+              && !(lastBrainCallContextRef.current?.transcript ?? '').includes('[Skip-button-clicked')) {
+            const curSegId = currentSegmentIdRef.current;
+            const missing = missingRequiredPhrases(
+              getSegment(plan, curSegId) as { requiredPhrases?: string[] } | undefined,
+              [...(segmentNarrationRef.current.get(curSegId) ?? []), ...turnNarrationRef.current, ...attemptStreamedSentencesRef.current],
+            );
+            if (missing.length > 0) {
+              console.warn(`[VoiceTutorRealtime] advance_lesson({to:"${to}"}) off fixed-script segment "${curSegId}" refused — script not said yet: missing=[${missing.join(', ')}]`);
+              onDebugEvent?.('fixed_script_advance_refused_script_missing', `"${curSegId}" missing=[${missing.join(', ')}]`);
+              scriptAdvanceRefusedSegRef.current = curSegId;
+              rejected.push({ action: 'advance_lesson', reason: scriptMissingAdvanceReason(missing) });
+              continue;
+            }
+          }
           // 2026-10-06 (portal-897212b5 @9:15): in a homework-help plan the
           // `homework` segment holds ALL the student's problems, and moving
           // past it auto-marks it completed. Returning from a recap detour
@@ -8137,6 +8174,23 @@ export function VoiceTutorRealtime({
         const c = cmd as any;
         console.log(`[VoiceTutorRealtime] segment complete: "${c.segmentId}"${typeof c.masteryDelta === 'number' ? ` Δ=${c.masteryDelta}` : ''}${c.notes ? ` — ${c.notes}` : ''}`);
         const planNow = lessonPlanRef.current;
+        // Fixed-script advance guard, completion side: the current segment is
+        // not marked complete before its script was said (the advance that
+        // usually rides with it is refused above). No rejection of its own —
+        // the refused advance, or the end-of-turn required-phrase check,
+        // already sends the brain back to say it.
+        if (TUTOR_FIXED_SCRIPT_ADVANCE_GUARD && planNow && isFixedScriptPlan(planNow)
+            && typeof c.segmentId === 'string' && c.segmentId && c.segmentId === currentSegmentIdRef.current) {
+          const missing = missingRequiredPhrases(
+            getSegment(planNow, c.segmentId) as { requiredPhrases?: string[] } | undefined,
+            [...(segmentNarrationRef.current.get(c.segmentId) ?? []), ...turnNarrationRef.current, ...attemptStreamedSentencesRef.current],
+          );
+          if (missing.length > 0) {
+            console.warn(`[VoiceTutorRealtime] mark_segment_complete("${c.segmentId}") skipped — fixed-script segment, script not said yet: missing=[${missing.join(', ')}]`);
+            onDebugEvent?.('fixed_script_mark_refused_script_missing', `"${c.segmentId}" missing=[${missing.join(', ')}]`);
+            continue;
+          }
+        }
         // E6: on a generated plan, mark_segment_complete naming a
         // segment OUTSIDE the CURRENT segment's LO group is the same
         // failure mode as the advance-side cross-LO jump (a real prod
@@ -10120,6 +10174,37 @@ export function VoiceTutorRealtime({
     // catalog mirror, transcript attach, the synchronously-returned
     // assignedIds/boardSnapshot/rejected — runs NOW regardless, so brain
     // retry-feedback + dedup ordering are unaffected (catalog leads pixels).
+    // One sentence card per sentence (GDI trial run 2): a brain show_sentence
+    // that says the same sentence as an AUTO card on the current page
+    // replaces it — the auto card leaves before the brain's card paints.
+    if (TUTOR_SENTENCE_BOARD && !opts?.sentenceBoardAuto && autoSentenceCardIdsRef.current.size > 0) {
+      const replaced: string[] = [];
+      processed.forEach((c, i) => {
+        if (c.action !== 'showSentence' || typeof c.sentence !== 'string') return;
+        const ids = autoSentenceCardsToReplace(
+          [...whiteboardCommandsRef.current, ...processed.slice(0, i)] as unknown as Array<{ action: string } & Record<string, unknown>>,
+          autoSentenceCardIdsRef.current,
+          c.sentence,
+        );
+        for (const id of ids) if (!replaced.includes(id)) replaced.push(id);
+      });
+      if (replaced.length > 0) {
+        const idSet = new Set(replaced);
+        onWhiteboardCommandProp([{ action: 'removeItems', ids: replaced }]);
+        const beforeMirror = whiteboardCommandsRef.current.length;
+        whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (c) => !idSet.has((c as any).id),
+        );
+        whiteboardCommandCountRef.current = Math.max(0, whiteboardCommandCountRef.current - (beforeMirror - whiteboardCommandsRef.current.length));
+        for (const id of replaced) {
+          commandByIdRef.current.delete(id);
+          autoSentenceCardIdsRef.current.delete(id);
+        }
+        catalogRef.current.removeByIds(replaced);
+        onDebugEvent?.('sentence_board_auto_replaced', `${replaced.join(',')} → brain show_sentence`);
+      }
+    }
     dispatchVisualRef.current(processed, opts?.anchorSentence);
     // Mirror into our local running log so targetId lookups across future
     // batches can walk the full session history without round-tripping
@@ -11736,6 +11821,7 @@ export function VoiceTutorRealtime({
     renderSyncActiveRef.current = true;
     // Board-anchor re-anchoring: fresh per-turn narration.
     turnNarrationRef.current = [];
+    scriptAdvanceRefusedSegRef.current = '';
     rendersDispatchedThisTurnRef.current = 0;
     boardRendersThisTurnRef.current = 0;
     turnRenderPayloadTextRef.current = '';
@@ -13639,6 +13725,7 @@ export function VoiceTutorRealtime({
         // authored problem on the board under speech about one of these.
         const ownProblemsPaintedThisAttempt: string[] = [];
         const attemptStartMs = Date.now();
+        attemptStreamedSentencesRef.current = [];
         let syntheticTailDrained = false;
         // Stamped ids of every render this attempt actually dispatched.
         // If the attempt is killed, these are rolled back so no orphaned
@@ -13811,6 +13898,13 @@ export function VoiceTutorRealtime({
           // the anchor assists read only the last element, and rule-8 v2's
           // client repair needs the full spoken-sentence list at turn end.
           turnNarrationRef.current.push(s);
+          {
+            const segNow = currentSegmentIdRef.current;
+            if (segNow) {
+              const said = segmentNarrationRef.current.get(segNow);
+              if (said) said.push(s); else segmentNarrationRef.current.set(segNow, [s]);
+            }
+          }
           if (TUTOR_BOARD_ANCHOR_ASSIST) {
             // Re-anchor: if a held turn-opening anchor is NAMED by this sentence,
             // bind it here so it flushes as this sentence plays. anchorM =
@@ -15861,6 +15955,7 @@ export function VoiceTutorRealtime({
                     voiceGate.onSentence(trimmedSentence, sentenceForSpeech, { textLen: attemptText.length, revealLen: chatRevealText.length, sentenceIndex: attemptSentences.length });
                   }
                   attemptText += (attemptText ? ' ' : '') + trimmedSentence;
+                  attemptStreamedSentencesRef.current.push(trimmedSentence);
                   // Fix B: raw per-sentence text (pre-TTS-normalization, so
                   // inline $...$ math survives) — see attemptSentences decl.
                   attemptSentences.push(trimmedSentence);
@@ -18285,7 +18380,14 @@ export function VoiceTutorRealtime({
           // the next turn that actually teaches the segment (don't kill,
           // don't mark checked) so it still fires on the real teaching
           // turn and still catches sustained value-substitution.
-          const advancedIntoSegmentThisTurn = totalToolNamesSeen.some(
+          // GDI trial run 2: an advance_lesson the fixed-script guard REFUSED
+          // was called but never moved the cursor — the turn is not a
+          // transition turn, so the check runs (and kills + retries a turn
+          // that skipped the script) instead of deferring.
+          const advanceRefusedHere = !!scriptAdvanceRefusedSegRef.current
+            && scriptAdvanceRefusedSegRef.current === segIdForPhrases
+            && !totalToolNamesSeen.includes('generate_problem');
+          const advancedIntoSegmentThisTurn = !advanceRefusedHere && totalToolNamesSeen.some(
             (n) => n === 'advance_lesson' || n === 'generate_problem',
           );
           if (
@@ -19748,8 +19850,9 @@ export function VoiceTutorRealtime({
               ...(card.emphasis.length ? { emphasis: card.emphasis } : {}),
             } as WhiteboardCommand;
             const anchor = sentenceAnchorIndex(turnNarrationRef.current, card.sentence);
-            const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor } : undefined);
+            const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true } : { sentenceBoardAuto: true });
             const placedId = res?.assignedIds?.[0];
+            for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
             // Runtime-origin marker: this event (the card is not a brain tool call).
             onDebugEvent?.('sentence_board_auto', `kind=${card.kind} emphasis=[${card.emphasis.join(', ')}] "${card.sentence}" anchor=${anchor ?? 'live'} ${placedId ? `id=${placedId}` : `not placed${res?.rejected?.length ? ` (${res.rejected.map((r) => r.reason).join('; ').slice(0, 80)})` : ''}`}`);
           }
