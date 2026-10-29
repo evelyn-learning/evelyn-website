@@ -39,8 +39,8 @@ function buildDemoConfig(studentName: string, mode: 'voice' | 'text' = 'voice') 
     student_name: studentName,
     session_goal: 'practice',
     input_mode: mode,
-    max_duration_minutes: 10,
-    wrap_at_minutes: 8,
+    max_duration_minutes: 20,
+    wrap_at_minutes: 18,
     // Showcase, not an enrolled lesson — let the visitor steer it anywhere.
     open_scope: true,
     features: { voice_mode: true, text_mode: true, homework_upload: false },
@@ -206,7 +206,7 @@ export function EngineSelector({ mode = 'voice' }: { mode?: 'voice' | 'text' }) 
                 'Type to the tutor and it writes on the board as it explains. No microphone needed.'
               ) : (
                 <>
-                  AP Computer Science Principles · Algorithms &amp; abstraction · 10-minute demo.
+                  AP Computer Science Principles · Algorithms &amp; abstraction · 20-minute demo.
                   Ask the tutor to switch topics any time.
                 </>
               )}
