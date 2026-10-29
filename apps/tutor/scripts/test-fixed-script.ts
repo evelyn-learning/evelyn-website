@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId,
-  markSkippedSegments, isSkippedForKnownLevel,
+  markSkippedSegments, isSkippedForKnownLevel, overlongTurnThreshold,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { renderStudentProfileBlock } from '../src/lib/tutor/student-profile/render';
@@ -158,6 +158,32 @@ test('profile commit: no content fillings recorded for a fixed-script plan', () 
 });
 test('VTR: the opener prefetch waits for the profile on fixed-script plans', () => {
   pin(vtr, /isFixedScriptPlan\(lessonPlanRef\.current\) && !fixedScriptPromptReady\(\)/);
+});
+
+// ── overlong-note pacing ─────────────────────────────────────────────────
+const timed = (p: LessonPlan, mins: Record<string, number>): LessonPlan => ({
+  ...p, segments: p.segments.map((sg) => (sg.id in mins ? { ...sg, estimatedMinutes: mins[sg.id] } : sg)),
+});
+test('overlongTurnThreshold: a non-fixed plan keeps the default even with minutes', () => {
+  const p = timed(ordinary, { 'topic-intro': 5 });
+  assert.equal(overlongTurnThreshold(p, 'topic-intro', 6), 6);
+  assert.equal(overlongTurnThreshold(null, 'topic-intro', 6), 6);
+});
+test('overlongTurnThreshold: fixed plan derives turns from estimatedMinutes (×2.4, never below default)', () => {
+  const p = timed(fixed, { overview: 2, 'level-check': 3, 'topic-intro': 5, recap: 3.5 });
+  assert.equal(overlongTurnThreshold(p, 'topic-intro', 6), 12);
+  assert.equal(overlongTurnThreshold(p, 'recap', 6), 8);
+  assert.equal(overlongTurnThreshold(p, 'level-check', 6), 7);
+  assert.equal(overlongTurnThreshold(p, 'overview', 6), 6);
+});
+test('overlongTurnThreshold: fixed segment without minutes, or an unknown id, keeps the default', () => {
+  assert.equal(overlongTurnThreshold(fixed, 'topic-intro', 6), 6);
+  assert.equal(overlongTurnThreshold(fixed, 'nope', 6), 6);
+  assert.equal(overlongTurnThreshold(fixed, null, 6), 6);
+});
+test('VTR: the overlong note plants at the plan-derived threshold', () => {
+  pin(vtr, /const overlongTurns = overlongTurnThreshold\(lessonPlanRef\.current, segIdNow, SEGMENT_OVERLONG_NOTE_TURNS\)/);
+  pin(vtr, /if \(!homeworkSession && !cur\.noted && cur\.turns >= overlongTurns/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

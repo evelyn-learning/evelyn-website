@@ -76,6 +76,7 @@ test('overview names both grammar points (requiredPhrases)', () => {
   const n = seg('overview').teacherNote ?? '';
   assert.match(n, /If the learner's level is not yet known, end the overview by saying the short one-time level check comes next/);
   assert.match(n, /if it is already known, say instead that you'll continue at that level and move on/);
+  assert.match(n, /if the level is already known and it is beginner, give the overview in short Japanese, keeping the grammar names in English/i);
 });
 
 test('level check: Q1 is the problem truth, skip flag, once-only set_working_level', () => {
@@ -105,6 +106,11 @@ test('topic intro: three variants, every keyIdea labelled, teach only one', () =
   }
   for (const k of ki) assert.match(k, /^\[(beginner|intermediate|advanced)\] /, `unlabelled keyIdea: ${k}`);
   assert.match(lower(seg('topic-intro').teacherNote), /only/);
+  const tn = seg('topic-intro').teacherNote ?? '';
+  // The board card is filtered by level now (and auto-rendered on advance):
+  // the note must not forbid it.
+  assert.doesNotMatch(tn, /not call show_segment_card/i);
+  assert.match(tn, /If no working level was set, use the \[intermediate\] version\./);
 });
 
 test('grammar conversations: free response, open problem, A→C→E→P→C rubric', () => {
@@ -134,6 +140,7 @@ test('pronunciation: targets in metadata, four options, measured-only feedback',
   assert.match(n, /request_pronunciation_check/);
   assert.match(lower(n), /skip/);
   assert.match(lower(n), /only check the words/);
+  assert.match(n, /if that tool is available in this session/);
   for (const w of ['responsibilities', 'international', 'communicate', 'customers', 'developed']) assert.ok(n.includes(w), w);
 });
 

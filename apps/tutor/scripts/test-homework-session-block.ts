@@ -120,7 +120,7 @@ if (noAns.includes(ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX)) fail('no expectedAnsw
   const window = at >= 0 ? src.slice(at, at + 1400) : '';
   if (at < 0) fail('overlong note: homeworkSession guard missing from VoiceTutorRealtime');
   if (!window.includes("segment_overlong_note_skipped_homework")) fail('overlong note: homework skip must be observable (debug event)');
-  if (!window.includes("if (!homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS")) fail('overlong note: planting must be gated on !homeworkSession');
+  if (!window.includes("if (!homeworkSession && !cur.noted && cur.turns >= overlongTurns")) fail('overlong note: planting must be gated on !homeworkSession');
 }
 
 if (failed) {

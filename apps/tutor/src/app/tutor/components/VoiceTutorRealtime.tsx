@@ -414,7 +414,7 @@ import {
   TUTOR_WORKING_LEVEL,
 } from '@/lib/tutor/orchestrator/flags';
 import { decideSetWorkingLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold } from '@/lib/tutor/lesson-plan/fixed-script';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -19158,11 +19158,14 @@ export function VoiceTutorRealtime({
         // the segment-advance note never applies.
         // 2026-10-20: a one-problem homework plan paces by its one problem too.
         const homeworkSession = (homeworkProblemsRef.current?.length ?? 0) > 0 || homeworkProblemRef.current != null;
+        // Fixed-script plans pace by each segment's estimatedMinutes (a 5-minute
+        // conversation must not be nudged on at turn 6); every other plan keeps 6.
+        const overlongTurns = overlongTurnThreshold(lessonPlanRef.current, segIdNow, SEGMENT_OVERLONG_NOTE_TURNS);
         if (homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS) {
           cur.noted = true;
           onDebugEvent?.('segment_overlong_note_skipped_homework', `${segIdNow} after ${cur.turns} turns — homework session paces by problem`);
         }
-        if (!homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept' || (sessionAllowsNonLatin(tutorLanguages) && kindNow !== 'recap'))) {
+        if (!homeworkSession && !cur.noted && cur.turns >= overlongTurns && (kindNow === 'hook' || kindNow === 'concept' || (sessionAllowsNonLatin(tutorLanguages) && kindNow !== 'recap'))) {
           cur.noted = true;
           const plan = lessonPlanRef.current;
           const idx = plan ? plan.segments.findIndex((sg) => sg.id === segIdNow) : -1;

@@ -65,3 +65,20 @@ export function markSkippedSegments<T extends { id: string }>(
 export function isSkippedForKnownLevel(entry: { skipForKnownLevel?: boolean }): boolean {
   return entry.skipForKnownLevel === true;
 }
+
+/** Turns a tutor may spend in one segment before the client's "segment
+ *  overlong" note nudges it to advance. A fixed script times its segments in
+ *  minutes (a 5-minute conversation is ~12 tutor turns, not 6), so its
+ *  threshold comes from the segment's `estimatedMinutes` (~2.4 turns a
+ *  minute), never below `defaultTurns`. Any other plan, or a segment without
+ *  minutes, keeps `defaultTurns` unchanged. */
+export function overlongTurnThreshold(
+  plan: LessonPlan | null | undefined,
+  segmentId: string | null | undefined,
+  defaultTurns: number,
+): number {
+  if (!plan || !isFixedScriptPlan(plan) || !segmentId) return defaultTurns;
+  const mins = plan.segments.find((s) => s.id === segmentId)?.estimatedMinutes;
+  if (typeof mins !== 'number' || !Number.isFinite(mins) || mins <= 0) return defaultTurns;
+  return Math.max(defaultTurns, Math.round(mins * 2.4));
+}
