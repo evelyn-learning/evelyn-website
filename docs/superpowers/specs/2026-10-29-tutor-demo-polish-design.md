@@ -108,10 +108,9 @@ split-pane layout in `apps/tutor/src/app/tutor/page.tsx` (~line 2523) is
 reached only when `NEXT_PUBLIC_TUTOR_NEW_SESSION_UI` is off; it is `on` in
 prod and has no SessionStage to fullscreen. It is left as it is.
 
-Partner rows: `greenapple: { toolCluster: true }`. GameClass currently has
-`toolsLow: true` from Skyler's 2026-10-09 review, which asked for the
-cluster placed low; whether GameClass keeps the cluster is Praveen's call
-(GameClass changes are ask-first) — see the open question at the end.
+Partner rows: `greenapple: { toolCluster: true }` and `gameclass: {
+toolCluster: true }` (Praveen, 10-29: GameClass keeps the cluster; Skyler's
+2026-10-09 review asked for it placed low, and `toolsLow` stays).
 
 Kill switch: `NEXT_PUBLIC_TUTOR_HEADER_FULLSCREEN` (`off` restores the
 cluster everywhere and removes the header button).
@@ -154,8 +153,20 @@ character directly left of `<` (`<br>` is preceded by a space or nothing),
 and `claude-brain.ts` strips break tags from raw brain output first, so
 tags are unaffected; the test pins `<br>` and `<span>` untouched.
 
+Two more prose rewrites from the Otter recording of the session (my call,
+same file, same pass):
+- A coordinate pair right after the word "point" is heard as a decimal:
+  "the point (2, 0)" was spoken "the point two comma zero" and transcribed
+  "the 0.2 comma 0". Rule: `point\s*\(` → `point, (` so the pair is spoken
+  after a beat ("the point, two comma zero"). Same for "points (".
+- "too" right after a number doubles it: "(0, 2) too" → "zero comma two two".
+  Rule: a `)` or digit, optional space, then `too` at a word boundary →
+  `as well`.
+
 Tests (in the existing TTS test file): `2 < 0 + 1`, `y < x + 1`, `x > 5`,
-`a <= b`, `x >= −3`, `(0, 2) gives 2 < 1`, and the two tag controls.
+`a <= b`, `x >= −3`, `(0, 2) gives 2 < 1`, the two tag controls,
+`the point (2, 0)` → contains "point, ", `check (0, 2) too` → "as well",
+and `too` after a word (`you too`) untouched.
 
 ### 4. Openers and the idle nudge
 
@@ -257,12 +268,6 @@ b. Goodbye at the hard stop. The hard-stop interval (VoiceTutorRealtime.tsx
   `requestAnimationFrame` width tween (CSS preferred).
 - Test placement: every new pure function gets a `test:*` script entry the
   gate can find (`test:changed` maps source files to scripts).
-
-## Open question for Praveen
-
-- GameClass: keep the tool cluster (add `gameclass: { toolCluster: true }`
-  beside its `toolsLow`), or hide it there too? Skyler's review asked for the
-  cluster placed low, so hiding it is a visible change for a live partner.
 
 ## Verification
 
