@@ -15,11 +15,16 @@ export const SPEECHACE_DIALECT = 'en-us';
 
 export interface SpeechaceRawResult { json: unknown; latencyMs: number }
 
+export const SPEECHACE_TIMEOUT_MS = 30_000;
+
+/** `opts.timeoutMs` exists for tests; callers use the 30 s default (same as Azure). */
 export async function assessSpeechaceRaw(
   pcm16: Buffer,
   referenceText: string,
   env: { key: string; host?: string; userId?: string },
+  opts: { timeoutMs?: number } = {},
 ): Promise<SpeechaceRawResult> {
+  const timeoutMs = opts.timeoutMs ?? SPEECHACE_TIMEOUT_MS;
   const url = new URL('/api/scoring/text/v9/json', env.host || SPEECHACE_DEFAULT_HOST);
   url.searchParams.set('key', env.key);
   url.searchParams.set('dialect', SPEECHACE_DIALECT);
@@ -29,10 +34,22 @@ export async function assessSpeechaceRaw(
   form.set('no_mc', '1');
   form.set('user_audio_file', new Blob([new Uint8Array(pcm16ToWav16k(pcm16))], { type: 'audio/wav' }), 'clip.wav');
 
+  // Timer covers the body read too; latency stops after the body (same as Azure).
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   const t0 = Date.now();
-  const res = await fetch(url, { method: 'POST', body: form });
+  let res: Response;
+  let body: string;
+  try {
+    res = await fetch(url, { method: 'POST', body: form, signal: ctrl.signal });
+    body = await res.text();
+  } catch (e) {
+    if (ctrl.signal.aborted) throw new Error(`speechace: no result after ${timeoutMs} ms`);
+    throw new Error(`speechace: request failed — ${String(e)}`);
+  } finally {
+    clearTimeout(timer);
+  }
   const latencyMs = Date.now() - t0;
-  const body = await res.text();
   if (!res.ok) throw new Error(`speechace: HTTP ${res.status} ${body.slice(0, 200)}`);
   let json: unknown;
   try { json = JSON.parse(body); } catch { throw new Error(`speechace: non-JSON response ${body.slice(0, 200)}`); }

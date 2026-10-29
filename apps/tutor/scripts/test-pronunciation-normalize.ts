@@ -9,10 +9,13 @@
  * Usage: npx tsx scripts/test-pronunciation-normalize.ts   (npm run test:pronunciation-normalize)
  */
 import assert from 'node:assert';
+import http from 'node:http';
+import type { AddressInfo } from 'node:net';
 import fs from 'node:fs';
 import path from 'node:path';
 import { normalizeAzure, normalizeSpeechace, azureProsodyFlags } from '../src/lib/tutor/pronunciation/normalize';
 import { buildAzureRequest } from '../src/lib/tutor/pronunciation/azure';
+import { assessSpeechaceRaw } from '../src/lib/tutor/pronunciation/speechace';
 import { wavToPcm16Mono } from './tutor/voice-harness/audio-util';
 
 let passed = 0, failed = 0;
@@ -100,6 +103,33 @@ test('REST: omission keeps errorType omission', () => {
   assert.equal(azr.words.find((x) => x.word === 'to')!.errorType, 'omission');
 });
 
+console.log('\nnormalizeAzure — missing scores are an error, not 0:\n');
+test('Success response without pronunciation scores throws (REST shape)', () => {
+  const j = structuredClone(azureRestJson);
+  for (const k of ['AccuracyScore', 'FluencyScore', 'ProsodyScore', 'CompletenessScore', 'PronScore']) delete j.NBest[0][k];
+  assert.throws(() => normalizeAzure(j), /azure: no pronunciation scores in response/);
+});
+test('Success response without pronunciation scores throws (SDK shape)', () => {
+  const j = structuredClone(azureJson);
+  delete j.NBest[0].PronunciationAssessment;
+  assert.throws(() => normalizeAzure(j), /azure: no pronunciation scores in response/);
+});
+test('plain recognition result (header ignored: no scores anywhere) throws', () => {
+  assert.throws(() => normalizeAzure({ RecognitionStatus: 'Success', NBest: [{ Lexical: 'we went', Words: [{ Word: 'we' }, { Word: 'went' }] }] }), /no pronunciation scores/);
+});
+test('a scored word missing AccuracyScore throws; an omission without one scores 0', () => {
+  const j = structuredClone(azureRestJson);
+  delete j.NBest[0].Words[2].AccuracyScore; // 'to', Omission
+  assert.equal(normalizeAzure(j).words[2].score, 0);
+  delete j.NBest[0].Words[0].AccuracyScore; // 'we', None
+  assert.throws(() => normalizeAzure(j), /azure: no score for word "we"/);
+});
+test('a phoneme missing AccuracyScore throws', () => {
+  const j = structuredClone(azureRestJson);
+  delete j.NBest[0].Words[4].Phonemes[0].AccuracyScore;
+  assert.throws(() => normalizeAzure(j), /azure: no score for phoneme "k" in "countryside"/);
+});
+
 console.log('\nnormalizeSpeechace:\n');
 const sa = normalizeSpeechace(speechaceJson);
 test('vendor + overall = speechace_score.pronunciation', () => {
@@ -138,6 +168,16 @@ test('multi-syllable word with correct stress → stress ok', () => {
   for (const s of j.text_score.word_score_list[1].syllable_score_list) { s.stress_score = 95; s.predicted_stress_level = s.stress_level; }
   assert.equal(normalizeSpeechace(j).words[1].stress, 'ok');
 });
+test('success response without speechace_score.pronunciation throws', () => {
+  const j = structuredClone(speechaceJson);
+  delete j.text_score.speechace_score;
+  assert.throws(() => normalizeSpeechace(j), /speechace: no pronunciation scores in response/);
+});
+test('a word missing quality_score throws', () => {
+  const j = structuredClone(speechaceJson);
+  delete j.text_score.word_score_list[1].quality_score;
+  assert.throws(() => normalizeSpeechace(j), /speechace: no score for word "developed"/);
+});
 test('status error throws with the vendor short_message', () => {
   assert.throws(() => normalizeSpeechace({ status: 'error', short_message: 'error_invalid_parameters', detail_message: 'key' }), /error_invalid_parameters/);
   assert.throws(() => normalizeSpeechace(undefined), /speechace/i);
@@ -167,5 +207,34 @@ test('body is a 16 kHz mono PCM16 WAV wrapping the samples unchanged', () => {
   assert.deepEqual([...back], [...pcm]);
 });
 
-console.log(`\n${passed} passed, ${failed} failed\n`);
-if (failed > 0) process.exit(1);
+async function testAsync(name: string, fn: () => Promise<void>) {
+  try { await fn(); passed++; console.log(`  ✓ ${name}`); }
+  catch (err) { failed++; console.log(`  ✗ ${name} — ${(err as Error).message}`); }
+}
+
+(async () => {
+  console.log('\nassessSpeechaceRaw timeout (local stalled server, no vendor call):\n');
+  // mode 'headers': send 200 + headers, then never finish the body (covers res.text()).
+  // mode 'silent': read the upload, never answer.
+  const sockets = new Set<import('node:net').Socket>();
+  const server = http.createServer((req, res) => {
+    req.resume();
+    if (req.url?.includes('user_id=headers')) { res.writeHead(200, { 'content-type': 'application/json' }); res.write('{"status":'); }
+  });
+  server.on('connection', (s) => { sockets.add(s); s.on('close', () => sockets.delete(s)); });
+  await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+  const host = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const pcm16 = Buffer.alloc(3200);
+  for (const mode of ['silent', 'headers']) {
+    await testAsync(`times out (${mode}) with a readable error`, async () => {
+      const t0 = Date.now();
+      await assert.rejects(assessSpeechaceRaw(pcm16, 'developed', { key: 'k', host, userId: mode }, { timeoutMs: 300 }), /speechace: no result after 300 ms/);
+      assert.ok(Date.now() - t0 < 3000, 'gave up promptly');
+    });
+  }
+  for (const s of sockets) s.destroy();
+  server.close();
+
+  console.log(`\n${passed} passed, ${failed} failed\n`);
+  if (failed > 0) process.exit(1);
+})();

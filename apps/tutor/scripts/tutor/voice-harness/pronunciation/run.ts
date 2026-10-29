@@ -5,7 +5,7 @@
 // Usage: npm run voice:pron [-- --vendor azure|speechace] [--clip <id>]
 // Keys (apps/tutor/.env.local): AZURE_SPEECH_KEY + AZURE_SPEECH_REGION, SPEECHACE_KEY
 // (optional SPEECHACE_HOST for a non-US-West subscription).
-// PAID (free-tier quota): one request per clip per vendor — 14 clips × 2 = 28 max.
+// PAID (free-tier quota): one request per clip per vendor — 14 clips × 2 vendors = 28 requests max.
 // Writes artifacts/voice-harness/pron/<runId>/results.json + compare.md.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -14,7 +14,7 @@ import '../env'; // loads .env.local
 import { wavToPcm16Mono } from '../audio-util';
 import { assessAzureRaw } from '../../../../src/lib/tutor/pronunciation/azure';
 import { assessSpeechaceRaw } from '../../../../src/lib/tutor/pronunciation/speechace';
-import { normalizeAzure, normalizeSpeechace, azureProsodyFlags } from '../../../../src/lib/tutor/pronunciation/normalize';
+import { normalizeAzure, normalizeSpeechace, azureProsodyFlags, WORD_FLAG_SCORE } from '../../../../src/lib/tutor/pronunciation/normalize';
 import type { PronunciationResult, PronunciationVendor } from '../../../../src/lib/tutor/pronunciation/types';
 
 const CORPUS_DIR = path.join(process.cwd(), 'scripts', 'tutor', 'voice-harness', 'corpus', 'pron-ja');
@@ -23,8 +23,9 @@ const KEYS: Record<PronunciationVendor, string[]> = {
   azure: ['AZURE_SPEECH_KEY', 'AZURE_SPEECH_REGION'],
   speechace: ['SPEECHACE_KEY'],
 };
-/** A word is "flagged" when its score is below this, or the vendor marked an error / wrong stress. */
-const FLAG_SCORE = 70;
+/** A word is "flagged" when its score is below this, or the vendor marked an error / wrong stress.
+ *  Same constant the Speechace normaliser uses for words without a quality_class. */
+const FLAG_SCORE = WORD_FLAG_SCORE;
 
 type Planted = 'th' | 'bv' | 'katakana' | 'none';
 interface PronClip { id: string; file: string; referenceText: string; planted: Planted[] }

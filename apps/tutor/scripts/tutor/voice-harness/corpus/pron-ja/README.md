@@ -43,7 +43,7 @@ subscription is not US West). Then, from `apps/tutor`:
 
 ```bash
 npm run voice:pron -- --vendor azure --clip w-developed-katakana   # one-request smoke test
-npm run voice:pron                                                  # full run, ≤ 28 requests
+npm run voice:pron                                                  # full run: 14 clips × 2 vendors = 28 requests (free tier)
 ```
 
 Read `artifacts/voice-harness/pron/<runId>/compare.md`. Missing files are

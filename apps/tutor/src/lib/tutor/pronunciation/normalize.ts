@@ -43,21 +43,33 @@ function azureErrorType(v: unknown): PronunciationErrorType {
 export function normalizeAzure(json: unknown): PronunciationResult {
   const best = azureNBest(json);
   const pa = azScores(best);
+  // A Success response with no scores (header ignored, unexpected shape) must
+  // not read as "overall 0, every word wrong" — that would look like Azure
+  // caught every planted error.
+  const overall = num(pa.PronScore) ?? num(pa.AccuracyScore);
+  if (overall === undefined) throw new Error('azure: no pronunciation scores in response');
   const words = arr(best.Words).filter(isObj).map((w) => {
     const wpa = azScores(w);
+    const word = String(w.Word ?? '');
+    const errorType = azureErrorType(wpa.ErrorType);
+    const score = num(wpa.AccuracyScore) ??
+      (errorType === 'omission' || errorType === 'insertion' ? 0 : undefined);
+    if (score === undefined) throw new Error(`azure: no score for word "${word}"`);
     return {
-      word: String(w.Word ?? ''),
-      score: num(wpa.AccuracyScore) ?? 0,
-      errorType: azureErrorType(wpa.ErrorType),
-      phonemes: arr(w.Phonemes).filter(isObj).map((p) => ({
-        ipa: String(p.Phoneme ?? ''),
-        score: num(azScores(p).AccuracyScore) ?? 0,
-      })),
+      word,
+      score,
+      errorType,
+      phonemes: arr(w.Phonemes).filter(isObj).map((p) => {
+        const ipa = String(p.Phoneme ?? '');
+        const ps = num(azScores(p).AccuracyScore);
+        if (ps === undefined) throw new Error(`azure: no score for phoneme "${ipa}" in "${word}"`);
+        return { ipa, score: ps };
+      }),
     };
   });
   return {
     vendor: 'azure',
-    overall: num(pa.PronScore) ?? num(pa.AccuracyScore) ?? 0,
+    overall,
     words,
     prosody: num(pa.ProsodyScore),
     fluency: num(pa.FluencyScore),
@@ -88,8 +100,11 @@ export function azureProsodyFlags(json: unknown): string[] {
 // stress_level (expected), predicted_stress_level, stress_score }] }],
 // speechace_score: { pronunciation, fluency? } } }
 
-/** Word score below which a word with no quality_class counts as mispronounced. */
-const SPEECHACE_WORD_FAIL = 70;
+/** Word score (0–100) below which a word counts as weak. Shared by the
+ *  Speechace normaliser (words with no quality_class) and the bake-off's
+ *  "flagged word" rule, so both vendors are judged on the same line. */
+export const WORD_FLAG_SCORE = 70;
+const SPEECHACE_WORD_FAIL = WORD_FLAG_SCORE;
 /** Syllable stress_score below which the word's lexical stress counts as wrong. */
 const SPEECHACE_STRESS_FAIL = 60;
 
@@ -118,8 +133,11 @@ export function normalizeSpeechace(json: unknown): PronunciationResult {
   }
   const ts = isObj(json.text_score) ? json.text_score : {};
   const sc = isObj(ts.speechace_score) ? ts.speechace_score : {};
+  const overall = num(sc.pronunciation);
+  if (overall === undefined) throw new Error('speechace: no pronunciation scores in response');
   const words = arr(ts.word_score_list).filter(isObj).map((w) => {
-    const score = num(w.quality_score) ?? 0;
+    const score = num(w.quality_score);
+    if (score === undefined) throw new Error(`speechace: no score for word "${String(w.word ?? '')}"`);
     const cls = w.quality_class;
     const failed = typeof cls === 'string' ? cls !== 'pass' : score < SPEECHACE_WORD_FAIL;
     const syllables = arr(w.syllable_score_list).filter(isObj);
@@ -143,7 +161,7 @@ export function normalizeSpeechace(json: unknown): PronunciationResult {
   });
   return {
     vendor: 'speechace',
-    overall: num(sc.pronunciation) ?? 0,
+    overall,
     words,
     fluency: num(sc.fluency),
     latencyMs: 0,
