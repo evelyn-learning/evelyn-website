@@ -25706,7 +25706,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // waits for the student instead of kicking the brain off. The first
         // brain turn (their answer) carries <demo_topic_choice>. See
         // voice/demo-topic-choice-opener.ts for why the brain is not asked to say it.
-        const demoTopicChoice = TUTOR_DEMO_TOPIC_CHOICE && isTrial && claudeBrainMode && !resumeState && !isInFlow && !demoTopicChoicePendingRef.current;
+        // English-led sessions only: a bilingual demo (GDI, tutorLanguages with a
+        // non-Latin script) keeps the prompt-side confirm — this line has no
+        // Japanese variant yet and the opener prefetch owns its first turn.
+        const demoTopicChoice = TUTOR_DEMO_TOPIC_CHOICE && isTrial && claudeBrainMode && !resumeState && !isInFlow && !sessionAllowsNonLatin(tutorLanguages) && !demoTopicChoicePendingRef.current;
         if (demoTopicChoice) {
           const line = demoTopicChoiceLine({ studentName, topic, subject, level });
           demoTopicChoicePendingRef.current = line;
