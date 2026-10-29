@@ -74,14 +74,23 @@ test('overview names both grammar points (requiredPhrases)', () => {
   // skipped: it must not presume the check; the conditional lives in the note.
   assert.doesNotMatch(lower(field(seg('overview'), 'script')), /level|check|assess/);
   const n = seg('overview').teacherNote ?? '';
-  assert.match(n, /If the learner's level is not yet known, end the overview by saying the short one-time level check comes next/);
+  assert.match(n, /If the learner's level is not yet known, say just before the closing question that the short one-time level check comes next/);
+  // Task 13 (run 3): the overview closes with "Are you ready?" and never asks about the job
+  assert.match(n, /Close the overview with exactly "Are you ready\?" and nothing after it\./);
+  assert.match(n, /NEVER ask about the learner's job or work in the overview/);
+  assert.ok(n.trim().endsWith('When they say they are ready, advance to the next segment.'));
   assert.match(n, /if it is already known, say instead that you'll continue at that level and move on/);
   assert.match(n, /if the level is already known and it is beginner, give the overview in short Japanese, keeping the grammar names in English/i);
 });
 
-test('level check: Q1 is the problem truth, skip flag, once-only set_working_level', () => {
+test('level check: all three questions on the card, Q1 first, skip flag, once-only set_working_level', () => {
   const s = seg('level-check');
-  assert.equal(field(s, 'question'), 'Can you tell me a little about your job? What do you do?');
+  const q = field(s, 'question').split('\n');
+  assert.equal(q.length, 3);
+  assert.equal(q[0], '1. Can you tell me a little about your job? What do you do?');
+  assert.match(q[1], /^2\. Have you ever worked with an international customer\?/);
+  assert.match(q[2], /^3\. What is one skill you'd like to improve in your English/);
+  assert.match(s.teacherNote ?? '', /Ask these three questions in this order, one per turn; after the third answer, call set_working_level\(\{level\}\) in the same turn as your soft level line, then advance_lesson\(\{to:"next"\}\)\./);
   assert.equal(s.metadata?.skipWhenLevelKnown, true);
   const n = s.teacherNote ?? '';
   assert.match(n, /set_working_level/);
@@ -163,6 +172,25 @@ test('summary: "one thing you did well", check question, no stored-summary tool'
 
 test('no segment mentions close_session_notes', () => {
   assert.doesNotMatch(readFileSync(PLAN_PATH, 'utf8'), /close_session_notes/);
+});
+
+test('Task 13: every segment carries label / labelLocalized.ja / maxTurns; pronunciation optional', () => {
+  const want: Record<string, [string, string, number]> = {
+    overview: ['Overview', '概要', 2], 'level-check': ['Level check', 'レベルチェック', 5],
+    'topic-intro': ['Your job', '仕事について', 4], 'present-perfect': ['Present perfect', '現在完了', 8],
+    'past-simple': ['Past simple', '過去形', 8], 'open-conversation': ['Conversation', '会話', 12],
+    pronunciation: ['Pronunciation', '発音', 8], summary: ['Summary', 'まとめ', 3],
+  };
+  assert.deepEqual(plan.segments.map((x) => x.id), Object.keys(want));
+  for (const [id, [label, ja, maxTurns]] of Object.entries(want)) {
+    const m = seg(id).metadata ?? {};
+    assert.equal(m.label, label, `${id} label`);
+    assert.deepEqual(m.labelLocalized, { ja }, `${id} labelLocalized`);
+    assert.equal(m.maxTurns, maxTurns, `${id} maxTurns`);
+    assert.equal(m.optional === true, id === 'pronunciation', `${id} optional`);
+  }
+  assert.equal(seg('level-check').metadata?.skipWhenLevelKnown, true);
+  assert.ok((seg('pronunciation').metadata as { pronunciation?: unknown }).pronunciation, 'pronunciation targets kept');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
