@@ -318,7 +318,8 @@ function runCurated(): void {
   tts('Convert $\\frac{\\pi}{6}$ radians to 30°.', 'Convert pie over 6 radians to 30 degrees.', 'radians-degrees');
 
   // ── 9. Coordinates & intervals ───────────────────────────────────
-  tts('Plot the point $(3, -4)$ first.', 'Plot the point (3, minus 4) first.', 'coordinate-pair');
+  // Demo-polish (2026-10-29): a beat after "point" so the pair is never heard as a decimal ("the 0.2 comma 0").
+  tts('Plot the point $(3, -4)$ first.', 'Plot the point, (3, minus 4) first.', 'coordinate-pair');
   tts('Velocity over $[2, b]$ as $b$ approaches 2.', 'Velocity over the interval from 2 to bee as bee approaches 2.', 'interval-speech');
   disp('(3, -4)', 'coordinate-display');
   disp('[2, b]', 'interval-display');
