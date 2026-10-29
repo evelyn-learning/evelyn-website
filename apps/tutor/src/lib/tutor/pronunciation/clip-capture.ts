@@ -15,6 +15,9 @@
  *   capturing ──push reaches maxMs──▶ clip (returned by push), idle
  *   capturing ──onSpeechStop (0 samples)──▶ armed (wait for the real turn)
  *   any ──disarm──▶ idle
+ * With `preRollMs`, the last `preRollMs` of audio pushed while armed (not yet
+ * capturing) is kept and becomes the start of the clip at the speech start;
+ * it counts toward `maxMs`.
  * One clip per arm: after the clip the capture is idle, so a `turn.resume`
  * (re-fires onSpeechStart) does not re-open it. A second `arm` before the
  * clip replaces the reference text and keeps any audio already buffered.
@@ -29,6 +32,10 @@ export const CLIP_SAMPLE_RATE = 24000;
 /** Armed with nothing buffered this long ⇒ the runtime disarms and plants
  *  the unavailable note, so the tutor never waits on a clip that never came. */
 export const CLIP_NO_SPEECH_TIMEOUT_MS = 20000;
+/** Audio kept from just BEFORE the speech start: Ink's turn.start reaches the
+ *  browser a few hundred ms after the learner's first sound, and the first
+ *  consonant ("th" in "think") is exactly what the check is for. */
+export const CLIP_PRE_ROLL_MS = 600;
 /** How long a brain turn waits for an assessment already in flight before
  *  it goes without the note (the note then rides the turn after). */
 export const PRONUNCIATION_NOTE_WAIT_MS = 4000;
@@ -82,12 +89,16 @@ export class ClipCapture {
   private readonly sampleRate: number;
   private referenceText: string | null = null;
   private capturing = false;
+  private readonly preRollSamples: number;
   private chunks: Int16Array[] = [];
   private samples = 0;
+  private preRoll: Int16Array[] = [];
+  private preRollCount = 0;
 
-  constructor(opts: { maxMs: number; sampleRate: number }) {
+  constructor(opts: { maxMs: number; sampleRate: number; preRollMs?: number }) {
     this.sampleRate = opts.sampleRate;
     this.maxSamples = Math.floor((opts.maxMs / 1000) * opts.sampleRate);
+    this.preRollSamples = Math.max(0, Math.floor(((opts.preRollMs ?? 0) / 1000) * opts.sampleRate));
   }
 
   /** Arm for the next learner turn. Re-arming before the clip replaces the text. */
@@ -101,6 +112,8 @@ export class ClipCapture {
     this.capturing = false;
     this.chunks = [];
     this.samples = 0;
+    this.preRoll = [];
+    this.preRollCount = 0;
   }
 
   isArmed(): boolean {
@@ -111,16 +124,33 @@ export class ClipCapture {
     return this.capturing;
   }
 
-  /** Speech start (Ink turn.start / turn.resume). Opens the clip only when armed. */
+  /** Milliseconds of audio in the clip so far (0 before the speech start). */
+  bufferedMs(): number {
+    return Math.round((this.samples / this.sampleRate) * 1000);
+  }
+
+  /** Speech start (Ink turn.start / turn.resume). Opens the clip only when
+   *  armed; the pre-roll becomes the start of the clip. */
   onSpeechStart(): void {
-    if (this.referenceText !== null) this.capturing = true;
+    if (this.referenceText === null || this.capturing) return;
+    this.capturing = true;
+    for (const c of this.preRoll) {
+      const take = c.length > this.maxSamples - this.samples ? c.subarray(0, this.maxSamples - this.samples) : c;
+      if (take.length) { this.chunks.push(take); this.samples += take.length; }
+    }
+    this.preRoll = [];
+    this.preRollCount = 0;
   }
 
   /** A mic-tap chunk (float32, `sampleRate`). Ignored unless capturing.
    *  Returns the clip when this chunk reaches `maxMs` (the capture is then
    *  idle); otherwise null. */
   push(float32: Float32Array): PronunciationClip | null {
-    if (!this.capturing || this.referenceText === null) return null;
+    if (this.referenceText === null) return null;
+    if (!this.capturing) {
+      if (this.preRollSamples > 0) this.keepPreRoll(float32);
+      return null;
+    }
     const room = this.maxSamples - this.samples;
     const take = float32.length > room ? float32.subarray(0, room) : float32;
     if (take.length > 0) {
@@ -140,6 +170,20 @@ export class ClipCapture {
     return this.finish();
   }
 
+  private keepPreRoll(float32: Float32Array): void {
+    const pcm = float32ToPcm16(
+      float32.length > this.preRollSamples ? float32.subarray(float32.length - this.preRollSamples) : float32,
+    );
+    this.preRoll.push(pcm);
+    this.preRollCount += pcm.length;
+    while (this.preRollCount > this.preRollSamples && this.preRoll.length) {
+      const over = this.preRollCount - this.preRollSamples;
+      const head = this.preRoll[0];
+      if (head.length <= over) { this.preRoll.shift(); this.preRollCount -= head.length; }
+      else { this.preRoll[0] = head.subarray(over); this.preRollCount -= over; }
+    }
+  }
+
   private finish(): PronunciationClip {
     const pcm16 = new Int16Array(this.samples);
     let o = 0;
@@ -152,4 +196,19 @@ export class ClipCapture {
     this.disarm();
     return clip;
   }
+}
+
+type ToolResultProvider = (name: string, args: Record<string, unknown>) => Promise<string>;
+
+/** Brain-stream route: the tool result `request_pronunciation_check` gets on
+ *  the claude-brain path (the route resolves tool results server-side).
+ *  Every other tool goes to `inner`, or the brain's default ack. */
+export function withPronunciationCheckResult(inner: ToolResultProvider | undefined): ToolResultProvider {
+  return async (name, args) => {
+    if (name === 'request_pronunciation_check') {
+      const referenceText = typeof args.referenceText === 'string' ? args.referenceText.trim().slice(0, 500) : '';
+      return JSON.stringify({ ok: true, armed: true, referenceText });
+    }
+    return inner ? inner(name, args) : `${name} executed successfully.`;
+  };
 }

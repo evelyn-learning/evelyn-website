@@ -243,7 +243,7 @@ test('runtime: levelCheck gated by the kill switch; body, prompt and RT-2 tools 
   pin(vtr, /const levelCheckActive = TUTOR_WORKING_LEVEL && levelCheck;/);
   pin(vtr, /levelCheck: levelCheckActive \? true : undefined/);
   pin(vtr, /levelCheckActive && workingLevelForPrompt \? \{ workingLevel: workingLevelForPrompt \}/);
-  pin(vtr, /levelCheckActive \? \[\.\.\.rt2Filtered, SET_WORKING_LEVEL_TOOL\]/);
+  pin(vtr, /\.\.\.\(levelCheckActive \? \[SET_WORKING_LEVEL_TOOL\] : \[\]\)/);
 });
 test('runtime: handler uses decideSetWorkingLevel and the stored level starts known', () => {
   pin(vtr, /decideSetWorkingLevel\(workingLevelRef\.current\?\.level \?\? null/);

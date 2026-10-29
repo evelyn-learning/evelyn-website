@@ -140,6 +140,7 @@ export interface TutorSessionProps {
   openerPrefetch?: VTRProps['openerPrefetch'];
   lessonCloseAutoEnd?: VTRProps['lessonCloseAutoEnd'];
   levelCheck?: VTRProps['levelCheck'];
+  pronunciation?: VTRProps['pronunciation'];
   /** Tutor speaking rate (tenant claim). Forwarded to the runtime. */
   speechRate?: VTRProps['speechRate'];
   /** Thinking cue (embed claim `thinking_cue`): forwarded to the runtime for
@@ -305,7 +306,7 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, embedToken, sessionId, sessionStartedAtMs,
-    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', cartesiaVoiceId, cartesiaVoiceSpeed, tutorLanguages, openerPrefetch, lessonCloseAutoEnd, levelCheck, speechRate, thinkingCue = false, sessionMaxMinutes,
+    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', cartesiaVoiceId, cartesiaVoiceSpeed, tutorLanguages, openerPrefetch, lessonCloseAutoEnd, levelCheck, pronunciation, speechRate, thinkingCue = false, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onBrainBusyChange, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
@@ -1704,6 +1705,7 @@ export default function TutorSession(props: TutorSessionProps) {
         openerPrefetch={openerPrefetch}
         lessonCloseAutoEnd={lessonCloseAutoEnd}
         levelCheck={levelCheck}
+        pronunciation={pronunciation}
         speechRate={speechRate}
         thinkingCue={thinkingCue}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}

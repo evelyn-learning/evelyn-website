@@ -32,7 +32,7 @@ import { playTurnChime, playThinkingPulse, primeThinkingCueAudio } from '@/lib/t
 import type { SessionMode as TutorSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { decideStage2TimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS } from '@/lib/tutor/voice/stage2-restore';
 import { decideStage2CancelAction, isDuplicateTranscript, type Stage2Verdict } from '@/lib/tutor/voice/stage2-cancel-policy';
-import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, SET_WORKING_LEVEL_TOOL, inkNotesEnabled } from '../hooks/toolDefinitions';
+import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, SET_WORKING_LEVEL_TOOL, REQUEST_PRONUNCIATION_CHECK_TOOL, inkNotesEnabled } from '../hooks/toolDefinitions';
 import { stripWbEmphasisText } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
 import { shouldClientRequestRepair, countBoardRenderTools } from '@/lib/tutor/voice/rule8-client';
 // Holistic-pedagogy round (spec §B.4): deterministic accept/decline/unclear
@@ -412,7 +412,13 @@ import {
   TUTOR_OPENER_PREFETCH,
   OPENER_PREFETCH_DELAY_MS,
   TUTOR_WORKING_LEVEL,
+  TUTOR_PRONUNCIATION_ASSESS,
 } from '@/lib/tutor/orchestrator/flags';
+import {
+  ClipCapture, CLIP_MAX_MS, CLIP_SAMPLE_RATE, CLIP_PRE_ROLL_MS, CLIP_NO_SPEECH_TIMEOUT_MS,
+  PRONUNCIATION_NOTE_WAIT_MS, PRONUNCIATION_UNAVAILABLE_NOTE, pronunciationNoteForBrain, pcm16ToBase64,
+  type PronunciationClip,
+} from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold } from '@/lib/tutor/lesson-plan/fixed-script';
 
@@ -954,6 +960,11 @@ interface VoiceTutorRealtimeProps {
    *  (lib/tutor/level/working-level.ts). Off unless the surface resolves it
    *  on; the TUTOR_WORKING_LEVEL flag is the kill switch on top. */
   levelCheck?: boolean;
+  /** Per-partner (same module): the pronunciation check — the tutor models a
+   *  line, the learner's next turn is scored server-side
+   *  (lib/tutor/pronunciation/clip-capture.ts). Off unless the surface
+   *  resolves it on; TUTOR_PRONUNCIATION_ASSESS is the kill switch on top. */
+  pronunciation?: boolean;
   /** Tutor speaking rate → Cartesia generation_config.speed (tenant claim
    *  `speech_rate`). Absent ⇒ every TTS request unchanged. */
   speechRate?: number;
@@ -1342,6 +1353,7 @@ export function VoiceTutorRealtime({
   openerPrefetch = false,
   lessonCloseAutoEnd = true,
   levelCheck = false,
+  pronunciation = false,
   speechRate,
   thinkingCue = false,
   onLessonPlanProgress,
@@ -1409,6 +1421,99 @@ export function VoiceTutorRealtime({
   // rule reads; the state rebuilds the system prompt with the clause.
   const workingLevelRef = useRef<{ level: WorkingLevel; known: boolean } | null>(null);
   const [workingLevelForPrompt, setWorkingLevelForPrompt] = useState<{ level: WorkingLevel; known: boolean } | null>(null);
+  // Pronunciation check (GDI trial, lib/tutor/pronunciation/clip-capture.ts).
+  // Voice only (it needs the mic) and only with a session row for the route.
+  // Off ⇒ no tool offered, no capture object, the mic tap unchanged.
+  const pronunciationActive = TUTOR_PRONUNCIATION_ASSESS && pronunciation && sessionMode !== 'text' && !!sessionId;
+  const clipCaptureRef = useRef<ClipCapture | null>(null);
+  if (pronunciationActive && !clipCaptureRef.current) {
+    clipCaptureRef.current = new ClipCapture({ maxMs: CLIP_MAX_MS, sampleRate: CLIP_SAMPLE_RATE, preRollMs: CLIP_PRE_ROLL_MS });
+  }
+  // The route's note for the NEXT brain turn, and whether it is a measured
+  // result (⇒ that one turn's pronunciation-claim guard lets claims through).
+  // Consumed together where the other per-turn notes are.
+  const pronunciationResultNoteRef = useRef<string | null>(null);
+  const pronunciationMeasuredRef = useRef(false);
+  // The assessment in flight; a brain turn waits for it (bounded) so the
+  // result rides the turn that answers the learner's repeat.
+  const pronunciationPendingRef = useRef<Promise<void> | null>(null);
+  const pronunciationNoSpeechTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const plantPronunciationNote = (note: string, measured: boolean) => {
+    pronunciationResultNoteRef.current = pronunciationNoteForBrain(note);
+    pronunciationMeasuredRef.current = measured;
+    onDebugEvent?.('pronunciation_note_planted', `${measured ? 'measured' : 'unavailable'} · ${note.slice(0, 160)}`);
+  };
+  const plantPronunciationUnavailable = (reason: string) => {
+    onDebugEvent?.('pronunciation_unavailable', reason);
+    plantPronunciationNote(PRONUNCIATION_UNAVAILABLE_NOTE, false);
+  };
+  const clearPronunciationNoSpeechTimer = () => {
+    if (pronunciationNoSpeechTimerRef.current) {
+      clearTimeout(pronunciationNoSpeechTimerRef.current);
+      pronunciationNoSpeechTimerRef.current = null;
+    }
+  };
+  const sendPronunciationClip = (clip: PronunciationClip) => {
+    clearPronunciationNoSpeechTimer();
+    onDebugEvent?.('pronunciation_clip_sent', `${clip.durationMs}ms "${clip.referenceText.slice(0, 80)}"`);
+    const run = (async () => {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15000);
+      try {
+        const res = await fetch('/api/tutor/pronunciation/assess', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, referenceText: clip.referenceText, audio: pcm16ToBase64(clip.pcm16) }),
+          signal: ctrl.signal,
+        });
+        if (!res.ok) { plantPronunciationUnavailable(`http_${res.status}`); return; }
+        const data = (await res.json()) as { status?: string; reason?: string; note?: unknown };
+        if (data.status === 'ok' && typeof data.note === 'string' && data.note.trim()) {
+          plantPronunciationNote(data.note, true);
+        } else {
+          plantPronunciationUnavailable(typeof data.reason === 'string' ? data.reason : 'bad_response');
+        }
+      } catch (e) {
+        plantPronunciationUnavailable(`fetch_failed: ${String((e as Error)?.message ?? e).slice(0, 60)}`);
+      } finally {
+        clearTimeout(timer);
+      }
+    })();
+    const settled = run.finally(() => {
+      if (pronunciationPendingRef.current === settled) pronunciationPendingRef.current = null;
+    });
+    pronunciationPendingRef.current = settled;
+  };
+  // Read by the mic tap and the speech-stop callback (both memoised elsewhere).
+  const sendPronunciationClipRef = useRef(sendPronunciationClip);
+  sendPronunciationClipRef.current = sendPronunciationClip;
+  const armPronunciationCheck = (referenceText: string, kind: string) => {
+    const capture = clipCaptureRef.current;
+    if (!capture) return;
+    if (!referenceText) { plantPronunciationUnavailable('no_reference_text'); return; }
+    capture.arm(referenceText);
+    onDebugEvent?.('pronunciation_armed', `${kind} "${referenceText.slice(0, 80)}"`);
+    clearPronunciationNoSpeechTimer();
+    // Nothing heard within 20 s ⇒ stop waiting; the tutor coaches from the model.
+    pronunciationNoSpeechTimerRef.current = setTimeout(() => {
+      pronunciationNoSpeechTimerRef.current = null;
+      if (capture.isArmed() && capture.bufferedMs() === 0) {
+        capture.disarm();
+        plantPronunciationUnavailable('no_speech_20s');
+      }
+    }, CLIP_NO_SPEECH_TIMEOUT_MS);
+  };
+  const armPronunciationCheckRef = useRef(armPronunciationCheck);
+  armPronunciationCheckRef.current = armPronunciationCheck;
+  // Mic tap (24 kHz float32): the session recorder as before, plus the clip.
+  const pushStudentAudioForPronunciation = (float32: Float32Array) => {
+    const clip = clipCaptureRef.current?.push(float32);
+    if (clip) sendPronunciationClipRef.current(clip);
+  };
+  useEffect(() => () => {
+    if (pronunciationNoSpeechTimerRef.current) clearTimeout(pronunciationNoSpeechTimerRef.current);
+    clipCaptureRef.current?.disarm();
+  }, []);
   // Fixed-script plans (lib/tutor/lesson-plan/fixed-script.ts): the learner
   // repeats the SAME lesson — no recall, no rotation, no second level check.
   // The profile GET says so (`fixedScript`) because the opener seed waits on
@@ -7589,6 +7694,15 @@ export function VoiceTutorRealtime({
         closeNotesResultNoteRef.current ??= `set_working_level: ${decision.note}`;
         continue;
       }
+      // Pronunciation check (GDI trial): arm a clip of the learner's next
+      // turn. The brain already has its tool result from the route
+      // ({ok, armed, referenceText}); the measured note rides a later turn.
+      if ((cmd.action as string) === 'requestPronunciationCheck') {
+        if (!pronunciationActive) continue;
+        const pc = cmd as unknown as { referenceText?: string; kind?: string };
+        armPronunciationCheckRef.current(typeof pc.referenceText === 'string' ? pc.referenceText : '', pc.kind ?? 'sentence');
+        continue;
+      }
       // Host video (partner spec v1.2 §3.4): the tutor asks to resume the
       // lesson. Bookkeeping only — the video command is posted once this
       // turn has been spoken (host-lesson pump), unless the student speaks
@@ -8960,7 +9074,7 @@ export function VoiceTutorRealtime({
       'proposePlanSwap', 'confirmPlanLos',
       'recordGap', 'flagPrerequisiteGap',
       'expandTopicNotesTheory', 'addTopicNotesMethod', 'addTopicNotesPointer',
-      'closeSessionNotes', 'resumeLesson', 'setWorkingLevel',
+      'closeSessionNotes', 'resumeLesson', 'setWorkingLevel', 'requestPronunciationCheck',
     ]);
     // Running page title used to stamp catalog entries with the page
     // they were rendered on. Updated whenever we see a newPage in the
@@ -9864,7 +9978,8 @@ export function VoiceTutorRealtime({
         // the canvas either way.
         c.action !== 'closeSessionNotes' &&
         (c.action as string) !== 'resumeLesson' &&
-        (c.action as string) !== 'setWorkingLevel',
+        (c.action as string) !== 'setWorkingLevel' &&
+        (c.action as string) !== 'requestPronunciationCheck',
     );
 
     // Render↔speech sync: on the brain-stream path this BUFFERS the visual
@@ -11498,6 +11613,9 @@ export function VoiceTutorRealtime({
     // correctly stays fixed across retries.
     // Set when this turn carries a judge correction note (arithmetic-recheck drop below).
     let correctionNoteThisTurn = false;
+    // Pronunciation check: this turn carries a MEASURED result ⇒ the
+    // pronunciation-claim guard lets its claims through (this turn only).
+    let pronunciationMeasuredThisTurn = false;
     const turnStartSegmentId = currentSegmentIdRef.current;
     const turnStartCompletedSegmentIds = new Set(completedSegmentIdsRef.current);
     // Number of sentences actually dispatched to TTS this turn. Tracks
@@ -12091,8 +12209,26 @@ export function VoiceTutorRealtime({
       let runHistory = opts?.injectedHistoryTail?.length
         ? [...priorHistory, ...opts.injectedHistoryTail]
         : priorHistory;
+      // Pronunciation check: the learner's repeat was sent for scoring at the
+      // speech stop; wait (bounded) so the result rides THIS turn — the one
+      // that answers the repeat. Only while an assessment is in flight.
+      if (pronunciationPendingRef.current && !opts?.prefetchOnly) {
+        const pending = pronunciationPendingRef.current;
+        let waitTimer: ReturnType<typeof setTimeout> | undefined;
+        await Promise.race([pending, new Promise<void>((r) => { waitTimer = setTimeout(r, PRONUNCIATION_NOTE_WAIT_MS); })]);
+        if (waitTimer) clearTimeout(waitTimer);
+      }
       let runTranscript = transcript;
       if (typedAdvanceFact) runTranscript = `${typedAdvanceFact}\n\n${runTranscript}`;
+      // Pronunciation check: the route's note (measured, or "No measured
+      // result…") for this one turn; a measured note opens the claim guard
+      // for this turn only.
+      if (pronunciationResultNoteRef.current && !opts?.prefetchOnly) {
+        runTranscript = `${pronunciationResultNoteRef.current}\n\n${runTranscript}`;
+        pronunciationMeasuredThisTurn = pronunciationMeasuredRef.current;
+        pronunciationResultNoteRef.current = null;
+        pronunciationMeasuredRef.current = false;
+      }
       // Turn-length cap: deliver the pending cadence corrective with this
       // turn's input (same "[… — not from the student]" convention as the
       // validator feedback below), then clear it — one corrective per lapse.
@@ -13055,6 +13191,9 @@ export function VoiceTutorRealtime({
             // …and the level already held, so the route's tool result can
             // refuse a second set (the brain reads the route's result).
             workingLevel: levelCheckActive ? workingLevelRef.current?.level : undefined,
+            // Pronunciation check (GDI trial): offer `request_pronunciation_check`.
+            // Session-stable; undefined (dropped from the JSON) for every other session.
+            pronunciationCheck: pronunciationActive ? true : undefined,
             // Task X2: durable practice-mode contract. sessionGoal rides the
             // embed token on EVERY mint (initial + resume), so deriving the
             // flag from the stable prop each turn makes the mode durable across
@@ -15296,7 +15435,7 @@ export function VoiceTutorRealtime({
                     }
                     // pronunciation-claim.ts (embed-1792363895174): 「発音は少し違って…」
                     // from a transcript. The sentence is dropped and the note follows.
-                    if (isPronunciationClaimSentence(updatedSentence, transcript)) {
+                    if (isPronunciationClaimSentence(updatedSentence, transcript, pronunciationMeasuredThisTurn ? { measured: true } : undefined)) {
                       console.warn('[brain-orchestrator] dropped pronunciation claim sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
                       onDebugEvent?.('pronunciation_claim_dropped', updatedSentence.slice(0, 80));
                       pendingPronunciationNoteRef.current = PRONUNCIATION_CLAIM_NOTE;
@@ -19237,7 +19376,7 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('readiness_ask_note_planted', fullText.slice(-60));
         }
         // pronunciation-claim.ts: "the sound of last was off" from a transcript.
-        if (claimsPronunciation(fullText, transcript)) {
+        if (claimsPronunciation(fullText, transcript, pronunciationMeasuredThisTurn ? { measured: true } : undefined)) {
           pendingPronunciationNoteRef.current = PRONUNCIATION_CLAIM_NOTE;
           onDebugEvent?.('pronunciation_claim_note_planted', fullText.slice(0, 80));
         }
@@ -21903,7 +22042,15 @@ export function VoiceTutorRealtime({
     ? filterToolsForSubject(WHITEBOARD_TOOLS, resolveToolSubjects(subject)).tools
     : undefined;
   // Working level (GDI trial): offered only with the partner's levelCheck.
-  const realtimeV2Tools = rt2Filtered && (levelCheckActive ? [...rt2Filtered, SET_WORKING_LEVEL_TOOL] : rt2Filtered);
+  // Pronunciation check (GDI trial): offered only with the partner's pronunciation.
+  // Neither on ⇒ the same filtered array as before (identity kept).
+  const realtimeV2Tools = rt2Filtered && (levelCheckActive || pronunciationActive
+    ? [
+        ...rt2Filtered,
+        ...(levelCheckActive ? [SET_WORKING_LEVEL_TOOL] : []),
+        ...(pronunciationActive ? [REQUEST_PRONUNCIATION_CHECK_TOOL] : []),
+      ]
+    : rt2Filtered);
 
   // Initialize the realtime connection
   // ── Perception stage resolution. Was originally needed pre-Stage-4
@@ -21986,7 +22133,14 @@ export function VoiceTutorRealtime({
     onError: handleError,
     onTranscriptionStatus,
     onStateChange,
-    onStudentAudioChunk: audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,
+    // Pronunciation check: the clip is taken from this same mic tap (the
+    // learner's audio only, never the recorder's mixed stream).
+    onStudentAudioChunk: pronunciationActive
+      ? (float32: Float32Array) => {
+          if (audioRecordEnabled) audioRecorder.pushStudentChunk(float32);
+          pushStudentAudioForPronunciation(float32);
+        }
+      : audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,
     onTutorAudioChunk: tutorAudioCapture.capture ? audioRecorder.pushTutorChunk : undefined,
     // Audio-hiccup visibility (2026-07-15): a mid-turn TTS retry/skip used to
     // read as the tutor silently freezing. Transient dock notice, auto-clears.
@@ -24077,6 +24231,9 @@ export function VoiceTutorRealtime({
     evaluateBargeInPauseRef.current(false);
   }, []);
   const perceptionOnSpeechStart = useCallback((e: PerceptionSpeechEvent) => {
+      // Pronunciation check: an armed capture opens its clip (null unless active;
+      // a no-op after the clip, so turn.resume never re-opens it).
+      clipCaptureRef.current?.onSpeechStart();
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
       // Review-round-1 (finding 2): a genuinely NEW onset firing while prod
@@ -24465,6 +24622,9 @@ export function VoiceTutorRealtime({
       }
   }, [onDebugEvent, perceptionStage, realtime, runPerceptionKill, clearStage2LazyPending, beginBargeInPause]);
   const perceptionOnSpeechStop = useCallback((e: PerceptionSpeechEvent) => {
+      // Pronunciation check: turn.eager_end closes the clip and sends it.
+      const pronunciationClip = clipCaptureRef.current?.onSpeechStop();
+      if (pronunciationClip) sendPronunciationClipRef.current(pronunciationClip);
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
       // turn_latency: provisional endpoint (Ink-2 fires this on turn.eager_end).
       // First-wins keeps the ORIGINAL endpoint across turn.resume re-fires.

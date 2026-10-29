@@ -38,6 +38,8 @@ export const NON_RENDER_TOOL_NAMES: ReadonlySet<string> = new Set([
   'resume_lesson',
   // Working level (GDI trial): records the level — never paints.
   'set_working_level',
+  // Pronunciation check (GDI trial): arms a clip of the next turn — never paints.
+  'request_pronunciation_check',
 ]);
 
 export function countBoardRenderTools(names: string[]): number {

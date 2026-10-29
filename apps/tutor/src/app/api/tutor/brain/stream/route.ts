@@ -29,7 +29,7 @@ import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
 import { BRAIN_MODEL_ID } from '@/lib/tutor/voice/claude-brain';
 import { openerPrefetchCache, isValidPrefetchKey } from '@/lib/tutor/voice/opener-prefetch';
-import { WHITEBOARD_TOOLS, SET_CURRENT_PROBLEM_TOOL, RESUME_LESSON_TOOL, SET_WORKING_LEVEL_TOOL } from '@/app/tutor/hooks/toolDefinitions';
+import { WHITEBOARD_TOOLS, SET_CURRENT_PROBLEM_TOOL, RESUME_LESSON_TOOL, SET_WORKING_LEVEL_TOOL, REQUEST_PRONUNCIATION_CHECK_TOOL } from '@/app/tutor/hooks/toolDefinitions';
 import { LESSON_NOW_MAX_CHARS } from '@/lib/tutor/portal/host-lesson-timeline';
 import {
   filterToolsForSubject,
@@ -44,8 +44,9 @@ import {
   generateProblem,
   type Difficulty,
 } from '@/lib/tutor/voice/problem-generator';
-import { TUTOR_CONTENT_VARIETY, TUTOR_WORKING_LEVEL } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_CONTENT_VARIETY, TUTOR_WORKING_LEVEL, TUTOR_PRONUNCIATION_ASSESS } from '@/lib/tutor/orchestrator/flags';
 import { withWorkingLevelResult, parseWorkingLevel } from '@/lib/tutor/level/working-level';
+import { withPronunciationCheckResult } from '@/lib/tutor/pronunciation/clip-capture';
 import { isSkippedForKnownLevel } from '@/lib/tutor/lesson-plan/fixed-script';
 import { searchImage } from '@/lib/tutor/image-search';
 import { classifyBrainError, decideBrainRetry, withInactivityTimeout } from '@/lib/tutor/voice/brain-retry';
@@ -142,6 +143,9 @@ interface BrainStreamRequestBody {
   /** The level this session already holds (set earlier, or known from the
    *  learner's previous lesson); absent ⇒ none yet. Read with `levelCheck`. */
   workingLevel?: string;
+  /** GDI trial: this voice session's partner has `pronunciation` ⇒ offer
+   *  `request_pronunciation_check`. Absent for every other session. */
+  pronunciationCheck?: boolean;
   /** Practice-mode contract (Task X2). Client sends true when the session's
    *  embed token carried session_goal === 'practice'. Surfaces as the durable
    *  `<practice_session>` block. See BrainTurnInput.practiceMode. */
@@ -812,6 +816,12 @@ export async function POST(req: NextRequest) {
         // `levelCheck` sends the byte-identical tools array.
         toolFilter = { ...toolFilter, tools: [...toolFilter.tools, SET_WORKING_LEVEL_TOOL] };
       }
+      if (body.pronunciationCheck === true && TUTOR_PRONUNCIATION_ASSESS) {
+        // Pronunciation check (GDI trial): session-stable (partner row),
+        // appended AFTER the Lever A filter like the level tool, so a session
+        // without `pronunciation` sends the byte-identical tools array.
+        toolFilter = { ...toolFilter, tools: [...toolFilter.tools, REQUEST_PRONUNCIATION_CHECK_TOOL] };
+      }
       if (lessonNow || body.videoHost === true) {
         console.log(`[lesson-video] block=${lessonNow ? lessonNow.length : 0} chars resume_tool=${body.videoHost === true}`);
       }
@@ -1067,9 +1077,14 @@ export async function POST(req: NextRequest) {
             // Working level (GDI trial): the once-only rule's answer reaches
             // the brain here, not via the client's tool-result note. Only
             // when the tool was offered ⇒ every other session unchanged.
-            return body.levelCheck === true && TUTOR_WORKING_LEVEL
+            const withLevel = body.levelCheck === true && TUTOR_WORKING_LEVEL
               ? withWorkingLevelResult(provider, parseWorkingLevel(body.workingLevel))
               : provider;
+            // Pronunciation check: a real result (armed + the text) instead of
+            // the bare ack. Only when the tool was offered.
+            return body.pronunciationCheck === true && TUTOR_PRONUNCIATION_ASSESS
+              ? withPronunciationCheckResult(withLevel)
+              : withLevel;
           })(),
       };
 

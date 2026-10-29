@@ -2238,6 +2238,24 @@ export const SET_WORKING_LEVEL_TOOL: ToolDefinition = {
   },
 };
 
+/** Pronunciation check (GDI trial, 2026-10-28; lib/tutor/pronunciation/clip-capture.ts).
+ *  Offered only to voice sessions whose partner has `pronunciation`, under the
+ *  TUTOR_PRONUNCIATION_ASSESS kill switch — appended by the brain route after
+ *  the subject filter, so every other session's tools array (and cached
+ *  prefix) is unchanged. Arms a one-turn clip of the learner's next turn. */
+export const REQUEST_PRONUNCIATION_CHECK_TOOL: ToolDefinition = {
+  name: 'request_pronunciation_check',
+  description: 'Call right AFTER you have modelled the exact text and asked the student to repeat it; the next student turn is measured.',
+  parameters: {
+    type: 'object',
+    properties: {
+      referenceText: { type: 'string', description: 'The exact English text you modelled and the student will repeat.' },
+      kind: { type: 'string', enum: ['word', 'sentence', 'natural'], description: 'A single word, a full sentence, or natural connected speech.' },
+    },
+    required: ['referenceText', 'kind'],
+  },
+};
+
 /**
  * Map a function call name + arguments to a WhiteboardCommand.
  *
@@ -3092,6 +3110,16 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       action: 'setWorkingLevel',
       level: funcArgs.level,
       evidence: typeof funcArgs.evidence === 'string' ? funcArgs.evidence.slice(0, 300) : '',
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'request_pronunciation_check') {
+    // Bookkeeping only (no visual), tutor-app only — cast like resume_lesson.
+    // The reference text is what the vendor scores against: kept as written
+    // (after the shared emphasis strip above), capped at the route's 500 chars.
+    return {
+      action: 'requestPronunciationCheck',
+      referenceText: typeof funcArgs.referenceText === 'string' ? funcArgs.referenceText.trim().slice(0, 500) : '',
+      kind: funcArgs.kind === 'word' || funcArgs.kind === 'natural' ? funcArgs.kind : 'sentence',
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'close_session_notes') {

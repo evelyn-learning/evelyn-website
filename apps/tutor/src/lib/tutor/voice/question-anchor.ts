@@ -41,6 +41,8 @@ const NON_CONTENT_TOOLS = new Set([
   'resume_lesson',
   // Working level (GDI trial): records the level, never the board.
   'set_working_level',
+  // Pronunciation check (GDI trial): arms a clip of the next turn, never the board.
+  'request_pronunciation_check',
 ]);
 
 export function isBoardContentTool(name: string): boolean {

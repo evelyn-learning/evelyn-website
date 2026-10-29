@@ -58,7 +58,10 @@ const route = readFileSync(join(root, 'app/api/tutor/session-audio/route.ts'), '
 test('wiring: the tap is attached only when the decision says so; the student tap is untouched', () => {
   assert.ok(vtr.includes('const tutorAudioCapture = decideTutorAudioCapture({ recordEnabled: !!audioRecordEnabled, sessionMode, ttsProvider });'));
   assert.ok(vtr.includes('onTutorAudioChunk: tutorAudioCapture.capture ? audioRecorder.pushTutorChunk : undefined,'));
-  assert.ok(vtr.includes('onStudentAudioChunk: audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,'));
+  // The student tap is untouched by this fix; the pronunciation check (GDI
+  // trial) wraps it only for its own sessions, else the same expression.
+  assert.ok(vtr.includes(': audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,'));
+  assert.match(vtr, /onStudentAudioChunk: pronunciationActive\s*\?/);
   assert.equal(vtr.split('audioRecorder.pushTutorChunk').length - 1, 1, 'one tap site');
 });
 test('wiring: the hook has ONE tutor tap, at playback dequeue, and it is optional', () => {

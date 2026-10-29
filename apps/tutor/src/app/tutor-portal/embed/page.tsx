@@ -101,6 +101,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'standby', 'video_', 'moment_', 'lesson_timeline', 'lesson_start', 'host_pause', 'host_resume', 'student_wake', 'resume_lesson',
   // GDI trial: working_level_set / _refused / _known (lib/tutor/level/working-level.ts).
   'working_level',
+  // GDI trial: pronunciation_armed / _clip_sent / _note_planted / _unavailable
+  // (lib/tutor/pronunciation/clip-capture.ts). Exact names, so the existing
+  // 'pronunciation_claim' prefix keeps its own meaning.
+  'pronunciation_armed', 'pronunciation_clip_sent', 'pronunciation_note_planted', 'pronunciation_unavailable',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued
@@ -2278,6 +2282,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         openerPrefetch={sessionOptions.openerPrefetch}
         lessonCloseAutoEnd={sessionOptions.lessonCloseAutoEnd}
         levelCheck={sessionOptions.levelCheck}
+        pronunciation={sessionOptions.pronunciation}
         speechRate={speechRate}
         thinkingCue={thinkingCue}
         sessionMaxMinutes={maxDuration}

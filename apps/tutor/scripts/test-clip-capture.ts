@@ -10,11 +10,17 @@
  */
 import { strict as assert } from 'node:assert';
 import {
-  ClipCapture, CLIP_MAX_MS, CLIP_SAMPLE_RATE, CLIP_NO_SPEECH_TIMEOUT_MS,
+  ClipCapture, CLIP_MAX_MS, CLIP_PRE_ROLL_MS, CLIP_SAMPLE_RATE, CLIP_NO_SPEECH_TIMEOUT_MS,
   float32ToPcm16, pcm16ToBase64, PRONUNCIATION_UNAVAILABLE_NOTE, pronunciationNoteForBrain,
 } from '../src/lib/tutor/pronunciation/clip-capture';
 import { PRONUNCIATION_UNAVAILABLE_NOTE as SERVER_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
 import { ttsLanguageFor } from '../src/lib/tutor/voice/tts-language';
+import { withPronunciationCheckResult } from '../src/lib/tutor/pronunciation/clip-capture';
+import { WHITEBOARD_TOOLS, REQUEST_PRONUNCIATION_CHECK_TOOL, mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
+import { NON_RENDER_TOOL_NAMES } from '../src/lib/tutor/voice/rule8-client';
+import { isBoardContentTool } from '../src/lib/tutor/voice/question-anchor';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -139,6 +145,40 @@ test('a second arm before the stop replaces the reference text', () => {
   assert.equal(clip.pcm16.length, SR);
 });
 
+test('pre-roll: the last preRollMs before the speech start opens the clip; older audio dropped', () => {
+  const c = new ClipCapture({ maxMs: 10000, sampleRate: 24000, preRollMs: 500 });
+  c.arm('Think.');
+  c.push(chunk(SR, 0.1));          // 1 s of older audio
+  c.push(chunk(SR / 4, 0.2));      // 250 ms
+  c.push(chunk(SR / 4, 0.3));      // 250 ms — pre-roll = these two
+  c.onSpeechStart();
+  c.push(chunk(SR / 2, 0.4));
+  const clip = c.onSpeechStop();
+  assert.ok(clip);
+  assert.equal(clip.durationMs, 1000);
+  assert.equal(clip.pcm16[0], Math.round(0.2 * 32767));
+  assert.equal(clip.pcm16[SR / 4], Math.round(0.3 * 32767));
+  assert.equal(clip.pcm16[SR / 2], Math.round(0.4 * 32767));
+});
+
+test('pre-roll: a single chunk longer than the window keeps only its tail; nothing kept when not armed', () => {
+  const c = new ClipCapture({ maxMs: 10000, sampleRate: 24000, preRollMs: 500 });
+  c.push(chunk(SR, 0.9)); // not armed
+  c.arm('x');
+  const big = new Float32Array(SR); big.fill(0.1); big.fill(0.2, SR - SR / 2);
+  c.push(big);
+  c.onSpeechStart();
+  assert.equal(c.bufferedMs(), 500);
+  const clip = c.onSpeechStop();
+  assert.ok(clip);
+  assert.equal(clip.pcm16.length, SR / 2);
+  assert.ok(clip.pcm16.every((v) => v === Math.round(0.2 * 32767)));
+});
+
+test('constant: production pre-roll 600 ms', () => {
+  assert.equal(CLIP_PRE_ROLL_MS, 600);
+});
+
 test('disarm drops everything', () => {
   const c = make();
   c.arm('x');
@@ -188,5 +228,75 @@ test('TTS: an all-Latin model sentence in a bilingual (en+ja) session is voiced 
   assert.equal(ttsLanguageFor('もう一度言ってください。', ['en', 'ja']), 'ja');
 });
 
+// ── Wiring ────────────────────────────────────────────────────────────
+const pending: Promise<void>[] = [];
+function atest(name: string, fn: () => Promise<void>) {
+  pending.push(fn().then(() => console.log(`  ok  ${name}`), (e) => { failed++; console.log(`  FAIL ${name}\n       ${(e as Error).message}`); }));
+}
+const src = (rel: string) => readFileSync(join(__dirname, '..', rel), 'utf8');
+
+test('tool: exact description, args, and NOT in the shared catalogue (other tenants\' cached prefix unchanged)', () => {
+  assert.equal(REQUEST_PRONUNCIATION_CHECK_TOOL.name, 'request_pronunciation_check');
+  assert.equal(REQUEST_PRONUNCIATION_CHECK_TOOL.description, 'Call right AFTER you have modelled the exact text and asked the student to repeat it; the next student turn is measured.');
+  const params = REQUEST_PRONUNCIATION_CHECK_TOOL.parameters as { properties: Record<string, { enum?: string[] }>; required: string[] };
+  assert.deepEqual(params.required, ['referenceText', 'kind']);
+  assert.deepEqual(params.properties.kind.enum, ['word', 'sentence', 'natural']);
+  assert.ok(!WHITEBOARD_TOOLS.some((t) => t.name === 'request_pronunciation_check'));
+});
+
+test('tool: maps to a bookkeeping command; never paints, never board content', () => {
+  const cmd = mapFunctionCallToCommand('request_pronunciation_check', { referenceText: '  I think so. ', kind: 'sentence' }) as unknown as Record<string, unknown>;
+  assert.deepEqual(cmd, { action: 'requestPronunciationCheck', referenceText: 'I think so.', kind: 'sentence' });
+  const bad = mapFunctionCallToCommand('request_pronunciation_check', { kind: 'nonsense' }) as unknown as Record<string, unknown>;
+  assert.deepEqual(bad, { action: 'requestPronunciationCheck', referenceText: '', kind: 'sentence' });
+  assert.ok(NON_RENDER_TOOL_NAMES.has('request_pronunciation_check'));
+  assert.equal(isBoardContentTool('request_pronunciation_check'), false);
+});
+
+atest('route result: {ok, armed, referenceText}; other tools pass through or get the default ack', async () => {
+  const p = withPronunciationCheckResult(async (n) => `inner:${n}`);
+  assert.deepEqual(JSON.parse(await p('request_pronunciation_check', { referenceText: ' Thank you. ', kind: 'sentence' })), { ok: true, armed: true, referenceText: 'Thank you.' });
+  assert.equal(await p('show_text', {}), 'inner:show_text');
+  assert.equal(await withPronunciationCheckResult(undefined)('show_text', {}), 'show_text executed successfully.');
+});
+
+test('route: tool appended and result wrapped only under pronunciationCheck && TUTOR_PRONUNCIATION_ASSESS', () => {
+  const r = src('src/app/api/tutor/brain/stream/route.ts');
+  assert.match(r, /if \(body\.pronunciationCheck === true && TUTOR_PRONUNCIATION_ASSESS\) \{[\s\S]{0,300}REQUEST_PRONUNCIATION_CHECK_TOOL\]/);
+  assert.match(r, /body\.pronunciationCheck === true && TUTOR_PRONUNCIATION_ASSESS\s*\?\s*withPronunciationCheckResult\(withLevel\)\s*:\s*withLevel/);
+});
+
+test('runtime: gate, request field only when active, RT-2 site, learner mic tap, speech hooks', () => {
+  const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.match(v, /const pronunciationActive = TUTOR_PRONUNCIATION_ASSESS && pronunciation && sessionMode !== 'text' && !!sessionId;/);
+  assert.match(v, /pronunciationCheck: pronunciationActive \? true : undefined,/);
+  assert.match(v, /pronunciationActive \? \[REQUEST_PRONUNCIATION_CHECK_TOOL\] : \[\]/);
+  assert.match(v, /onStudentAudioChunk: pronunciationActive\s*\? [\s\S]{0,250}pushStudentAudioForPronunciation\(float32\);[\s\S]{0,40}: audioRecordEnabled \? audioRecorder\.pushStudentChunk : undefined,/);
+  assert.match(v, /const perceptionOnSpeechStart = useCallback\(\(e: PerceptionSpeechEvent\) => \{[\s\S]{0,250}clipCaptureRef\.current\?\.onSpeechStart\(\);/);
+  assert.match(v, /const perceptionOnSpeechStop = useCallback\(\(e: PerceptionSpeechEvent\) => \{[\s\S]{0,200}clipCaptureRef\.current\?\.onSpeechStop\(\);/);
+  assert.ok(v.includes("'/api/tutor/pronunciation/assess'"));
+});
+
+test('runtime: note planted for the next turn; measured opens BOTH claim-guard sites for that turn only', () => {
+  const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.match(v, /pronunciationMeasuredThisTurn = pronunciationMeasuredRef\.current;\s*pronunciationResultNoteRef\.current = null;\s*pronunciationMeasuredRef\.current = false;/);
+  assert.match(v, /isPronunciationClaimSentence\(updatedSentence, transcript, pronunciationMeasuredThisTurn \? \{ measured: true \} : undefined\)/);
+  assert.match(v, /claimsPronunciation\(fullText, transcript, pronunciationMeasuredThisTurn \? \{ measured: true \} : undefined\)/);
+  assert.match(v, /data\.status === 'ok' && typeof data\.note === 'string'[\s\S]{0,80}plantPronunciationNote\(data\.note, true\)/);
+  assert.match(v, /PRONUNCIATION_NOTE_WAIT_MS/);
+});
+
+test('debug events: the four exact names are emitted and persisted by the embed', () => {
+  const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  const e = src('src/app/tutor-portal/embed/page.tsx');
+  for (const name of ['pronunciation_armed', 'pronunciation_clip_sent', 'pronunciation_note_planted', 'pronunciation_unavailable']) {
+    assert.ok(v.includes(`onDebugEvent?.('${name}'`), `emits ${name}`);
+    assert.ok(e.includes(`'${name}'`), `embed persists ${name}`);
+  }
+  assert.match(e, /pronunciation=\{sessionOptions\.pronunciation\}/);
+});
+
+void Promise.all(pending).then(() => {
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
+});
