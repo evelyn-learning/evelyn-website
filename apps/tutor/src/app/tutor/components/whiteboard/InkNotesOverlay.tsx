@@ -23,7 +23,8 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import { placeNote, applyUserPos, clampIntoPage, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
-import { resolveNoteFontFamilies } from '@/lib/tutor/whiteboard/note-font';
+import { resolveNoteFontFamilies, noteFontFamilyVars, noteRevealMs, NOTE_FONT_PX, NOTE_LINE_PX } from '@/lib/tutor/whiteboard/note-font';
+import { TUTOR_NOTE_PRINT_HAND } from '@/lib/tutor/orchestrator/flags';
 import { arrowSpine, arrowHeads, strokeOutline, type Pt } from '@/lib/tutor/whiteboard/hand-stroke';
 import { exceedsDragThreshold } from '@/lib/tutor/qpin-behavior';
 
@@ -32,7 +33,8 @@ type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
 type LinkCmd = Extract<WhiteboardCommand, { action: 'link' }>;
 
 const NOTE_MAX_W = 240;
-const NOTE_LINE_H = 26;
+// Demo-polish (2026-10-29): sizes live in note-font.ts (24/29 print hand, 22/26 legacy).
+const NOTE_LINE_H = NOTE_LINE_PX;
 const AMBER = '#a16207';
 
 /** Round 29 follow-up: host-width delta (px) below which the placement
@@ -66,7 +68,7 @@ const NARROW_HOST_NOTE_SKIP_W = 560;
 let resolvedNoteFont: string | null = null;
 function noteFont(): string {
   if (resolvedNoteFont) return resolvedNoteFont;
-  resolvedNoteFont = `22px ${resolveNoteFontFamilies()}`;
+  resolvedNoteFont = `${NOTE_FONT_PX}px ${resolveNoteFontFamilies()}`;
   return resolvedNoteFont;
 }
 
@@ -900,12 +902,25 @@ export function InkNotesOverlay({
   };
 
   // Per-word wipe-on, once per note key (WAAPI on the note div).
+  // Demo-polish (2026-10-29): with the print hand on, the wipe is a linear
+  // left-to-right WRITING reveal (70 ms/char, ≤2.5 s) so an upright font
+  // still reads as the teacher writing; skipped under reduced motion.
+  // Flag off ⇒ the original 250 + 12 ms/char ease-out wipe.
   const animateIn = (el: HTMLDivElement | null, key: string) => {
     if (!el || animatedRef.current.has(key)) return;
     animatedRef.current.add(key);
+    const text = el.textContent ?? '';
+    if (TUTOR_NOTE_PRINT_HAND) {
+      try { if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return; } catch {}
+      el.animate(
+        [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)' }],
+        { duration: noteRevealMs(text), easing: 'linear', fill: 'backwards' },
+      );
+      return;
+    }
     el.animate(
       [{ opacity: 0, clipPath: 'inset(0 100% 0 0)' }, { opacity: 1, clipPath: 'inset(0 0% 0 0)' }],
-      { duration: Math.min(900, 250 + el.textContent!.length * 12), easing: 'ease-out', fill: 'backwards' },
+      { duration: Math.min(900, 250 + text.length * 12), easing: 'ease-out', fill: 'backwards' },
     );
   };
 
@@ -1033,8 +1048,8 @@ export function InkNotesOverlay({
               // on top of it (GameClass sandbox opener, 2026-09-25). The cap
               // must be the text width PLUS the padding.
               maxWidth: NOTE_MAX_W + 8,
-              fontFamily: 'var(--font-caveat), var(--font-kalam), cursive',
-              fontSize: 22,
+              fontFamily: noteFontFamilyVars(),
+              fontSize: NOTE_FONT_PX,
               lineHeight: `${NOTE_LINE_H}px`,
               color: e.color,
               // 2026-07-11 round 2: notes crossing axis/grid lines. The
