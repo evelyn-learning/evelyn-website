@@ -129,6 +129,19 @@ export const TUTOR_TYPED_SUPERSEDE =
 // 'off' restores the pre-merge bubble rendering for every tenant.
 export const TUTOR_BUBBLE_MATH =
   process.env.NEXT_PUBLIC_TUTOR_BUBBLE_MATH !== 'off';
+// 2026-10-28 (GDI Communications trial lesson): the working-level check, where
+// the tutor probes the learner's English level up front and adapts the lesson
+// to it. Per partner it is `levelCheck` in
+// lib/tutor/portal/partner-session-options.ts (only gdi-demo today). 'off'
+// disables it for every tenant; sessions then run exactly as before.
+export const TUTOR_WORKING_LEVEL =
+  process.env.NEXT_PUBLIC_TUTOR_WORKING_LEVEL !== 'off';
+// 2026-10-28 (GDI Communications trial lesson): pronunciation assessment on
+// the learner's speech. Per partner it is `pronunciation` in
+// lib/tutor/portal/partner-session-options.ts (only gdi-demo today). 'off'
+// disables it for every tenant; sessions then run exactly as before.
+export const TUTOR_PRONUNCIATION_ASSESS =
+  process.env.NEXT_PUBLIC_TUTOR_PRONUNCIATION_ASSESS !== 'off';
 // 2026-10-28 (Crimsora trial portal-ba5a6b3c, Praveen): in a FREE demo
 // session (marketing demo, academy trial `is_trial`, partner showcase) the
 // student may change the topic at any point and the first turn briefly

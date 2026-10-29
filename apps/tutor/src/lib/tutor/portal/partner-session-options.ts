@@ -33,6 +33,14 @@ export interface PartnerSessionOptions {
    *  student turn restarts it; text sessions are exempt in the runtime.
    *  Default: on (decision 2026-10-27), per partner reversible here. */
   lessonCloseAutoEnd: boolean;
+  /** Working-level check: the tutor probes the learner's English level at the
+   *  start and adapts the lesson to it (GDI trial, 2026-10-28). Default off
+   *  for every partner; the TUTOR_WORKING_LEVEL flag is the global kill switch. */
+  levelCheck: boolean;
+  /** Pronunciation assessment on the learner's speech (GDI trial,
+   *  2026-10-28). Default off for every partner; the
+   *  TUTOR_PRONUNCIATION_ASSESS flag is the global kill switch. */
+  pronunciation: boolean;
 }
 
 /** Partner rows — applied when present. A partner absent from this table
@@ -41,7 +49,7 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   // GDI Communications demo (showcase mint, tutor_languages ["en","ja"]):
   // the prefetch was built on its sessions (embed-1792338502233). Explicit so
   // the row survives a token minted without the languages claim.
-  'gdi-demo': { openerPrefetch: true },
+  'gdi-demo': { openerPrefetch: true, levelCheck: true, pronunciation: true },
   // Praveen 2026-10-28: prefetch ON only for GDI; OFF for every other
   // existing partner (it is a brain call per page load). Rows for each
   // `partners` _id in production as of 2026-10-28 (registry is DB-backed), so
@@ -67,6 +75,8 @@ export function defaultPartnerSessionOptions(tutorLanguages: string[] | undefine
   return {
     openerPrefetch: sessionAllowsNonLatin(tutorLanguages),
     lessonCloseAutoEnd: true,
+    levelCheck: false,
+    pronunciation: false,
   };
 }
 
@@ -77,5 +87,7 @@ export function resolvePartnerSessionOptions(session: PartnerSessionLike | null 
   return {
     openerPrefetch: row?.openerPrefetch ?? base.openerPrefetch,
     lessonCloseAutoEnd: row?.lessonCloseAutoEnd ?? base.lessonCloseAutoEnd,
+    levelCheck: row?.levelCheck ?? base.levelCheck,
+    pronunciation: row?.pronunciation ?? base.pronunciation,
   };
 }

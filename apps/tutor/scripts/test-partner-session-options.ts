@@ -67,22 +67,22 @@ test('NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS overrides both; junk is ignored'
 });
 
 test('engine defaults: no prefetch and auto-end on for an English-only session', () => {
-  assert.deepEqual(defaultPartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true });
-  assert.deepEqual(defaultPartnerSessionOptions(['en']), { openerPrefetch: false, lessonCloseAutoEnd: true });
-  assert.deepEqual(defaultPartnerSessionOptions(['en', 'ja']), { openerPrefetch: true, lessonCloseAutoEnd: true });
+  assert.deepEqual(defaultPartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false });
+  assert.deepEqual(defaultPartnerSessionOptions(['en']), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false });
+  assert.deepEqual(defaultPartnerSessionOptions(['en', 'ja']), { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false });
 });
 
 test('no partner id (retail, showcase without a token) resolves to the engine defaults', () => {
-  assert.deepEqual(resolvePartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true });
-  assert.deepEqual(resolvePartnerSessionOptions(null), { openerPrefetch: false, lessonCloseAutoEnd: true });
-  assert.deepEqual(resolvePartnerSessionOptions({}), { openerPrefetch: false, lessonCloseAutoEnd: true });
+  assert.deepEqual(resolvePartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false });
+  assert.deepEqual(resolvePartnerSessionOptions(null), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false });
+  assert.deepEqual(resolvePartnerSessionOptions({}), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false });
   assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '', tutorLanguages: ['en', 'ja'] }),
-    { openerPrefetch: true, lessonCloseAutoEnd: true }, 'a bilingual session with no partner row prefetches');
+    { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false }, 'a bilingual session with no partner row prefetches');
 });
 
 test('an unlisted English-only partner (test tenants, a future partner) gets no prefetch and auto-end on', () => {
   for (const partnerId of ['trial', 'portalA', 'lmtest', 'revtest', 'some-future-partner']) {
-    assert.deepEqual(resolvePartnerSessionOptions({ partnerId }), { openerPrefetch: false, lessonCloseAutoEnd: true }, partnerId);
+    assert.deepEqual(resolvePartnerSessionOptions({ partnerId }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false }, partnerId);
   }
 });
 
@@ -95,6 +95,19 @@ test('Praveen 2026-10-28: every production partner has a row — prefetch ON onl
     assert.equal(resolvePartnerSessionOptions({ partnerId }).openerPrefetch, want, `${partnerId} plain`);
     assert.equal(resolvePartnerSessionOptions({ partnerId, tutorLanguages: ['en', 'ja'] }).openerPrefetch, want, `${partnerId} with a languages claim`);
   }
+});
+
+test('GDI trial: levelCheck + pronunciation are ON for gdi-demo only; false for every other partner and the defaults', () => {
+  assert.equal(resolvePartnerSessionOptions({ partnerId: 'gdi-demo' }).levelCheck, true);
+  assert.equal(resolvePartnerSessionOptions({ partnerId: 'gdi-demo' }).pronunciation, true);
+  assert.equal(resolvePartnerSessionOptions({ partnerId: 'gdi-demo' }).openerPrefetch, true, 'prefetch unchanged');
+  for (const partnerId of [...Object.keys(PARTNER_SESSION_DEFAULTS).filter((p) => p !== 'gdi-demo'), 'some-future-partner']) {
+    const o = resolvePartnerSessionOptions({ partnerId, tutorLanguages: ['en', 'ja'] });
+    assert.equal(o.levelCheck, false, `${partnerId} levelCheck`);
+    assert.equal(o.pronunciation, false, `${partnerId} pronunciation`);
+  }
+  assert.equal(resolvePartnerSessionOptions(undefined).levelCheck, false);
+  assert.equal(defaultPartnerSessionOptions(['en', 'ja']).pronunciation, false);
 });
 
 test('an unlisted FUTURE bilingual partner prefetches by default (decision 2026-10-27)', () => {
@@ -118,8 +131,8 @@ test('a partner row can turn the post-close auto-end off; nothing else does', ()
 });
 
 test('prototype keys are not partner rows', () => {
-  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: 'constructor' }), { openerPrefetch: false, lessonCloseAutoEnd: true });
-  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '__proto__' }), { openerPrefetch: false, lessonCloseAutoEnd: true });
+  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: 'constructor' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false });
+  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '__proto__' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false });
 });
 
 console.log('\nWiring pins (source)');
