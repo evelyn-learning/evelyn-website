@@ -212,6 +212,7 @@ export const RENDER_TOOLS: ReadonlySet<string> = new Set([
   'show_pendulum', 'show_spring_mass', 'show_ray_diagram', 'show_wave',
   'show_vector', 'show_orbital_diagram', 'show_pedigree', 'show_punnett',
   'show_cell_diagram', 'show_dna', 'show_food_web',
+  'show_sentence',
 ]);
 
 export function isRenderTool(name: string): boolean {

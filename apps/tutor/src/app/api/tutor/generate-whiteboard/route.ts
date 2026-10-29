@@ -282,7 +282,7 @@ export async function POST(request: NextRequest) {
     //      2026-04-24 "Equation: Points" / "Equation: Area formula for
     //      triangle" items that had blank content.
     const NON_VISUAL_ACTIONS = new Set([
-      'showEquation', 'showCode', 'showTable', 'showSvgDiagram',
+      'showEquation', 'showCode', 'showTable', 'showSvgDiagram', 'showSentence',
     ]);
     const isVisualAction = (action: string): boolean =>
       action.startsWith('show') && !NON_VISUAL_ACTIONS.has(action);

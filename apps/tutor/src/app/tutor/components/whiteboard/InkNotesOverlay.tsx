@@ -35,7 +35,7 @@ type LinkCmd = Extract<WhiteboardCommand, { action: 'link' }>;
 const NOTE_MAX_W = 240;
 // Demo-polish (2026-10-29): sizes live in note-font.ts (24/29 print hand, 22/26 legacy).
 const NOTE_LINE_H = NOTE_LINE_PX;
-const AMBER = '#a16207';
+export const AMBER = '#a16207';
 
 /** Round 29 follow-up: host-width delta (px) below which the placement
  *  cache SURVIVES. A scrollbar materializing (content growth via the

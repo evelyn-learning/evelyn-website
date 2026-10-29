@@ -810,6 +810,11 @@ export type WhiteboardCommand =
   | { action: 'showDiagram'; type: string; params: Record<string, unknown> }
   | { action: 'drawVector'; from: Point; to: Point; label?: string; color?: string }
   | { action: 'annotate'; text: string; position: Point; style?: 'normal' | 'highlight' | 'warning' }
+  // Sentence card (language lessons, 2026-10-29): a model / corrected
+  // sentence; `emphasis` words are highlighted (amber + underline), `gloss`
+  // is a short note in the student's language under it. Emitted by the
+  // brain's show_sentence tool or by the client's sentence-board auto-card.
+  | { action: 'showSentence'; sentence: string; emphasis?: string[]; label?: string; gloss?: string; id?: string }
   | { action: 'highlight'; elementId: string; color?: string }
   | { action: 'showProblem'; problem: Partial<Problem> }
   | { action: 'showSolution'; steps: SolutionStep[] }

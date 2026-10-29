@@ -6202,6 +6202,8 @@ export function VoiceTutorRealtime({
     // nothing on the board to navigate to.
     const NON_VISUAL_ACTIONS = new Set([
       'showEquation', 'showCode', 'showTable', 'showSvgDiagram',
+      // Sentence cards: several per turn are legitimate (a correction + a model).
+      'showSentence',
     ]);
     const DEDUP_META_ACTIONS = new Set([
       'newPage', 'clear', 'goToPage', 'scribble', 'link', 'scrollTo',

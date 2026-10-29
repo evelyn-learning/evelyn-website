@@ -664,6 +664,20 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_sentence',
+    description: 'Put ONE sentence on the board as a sentence card: a model sentence the student should repeat, or the corrected version of what they said. emphasis = the words you changed or want stressed (they are highlighted on the card and stressed in your voice). gloss = an optional short note in the student\'s own language. Use this — never show_equation — for sentences.',
+    parameters: {
+      type: 'object',
+      properties: {
+        sentence: { type: 'string', description: 'The full sentence, exactly as the student should say it.' },
+        emphasis: { type: 'array', items: { type: 'string' }, description: 'The words you changed or want stressed (whole words from the sentence).' },
+        gloss: { type: 'string', description: 'Optional short note in the student\'s own language.' },
+        label: { type: 'string', description: 'Optional small heading above the sentence.' },
+      },
+      required: ['sentence'],
+    },
+  },
+  {
     name: 'draw_vector',
     description: 'Single labeled vector arrow from one coordinate to another. For multiple vectors or full physics diagrams, use show_vector or show_free_body_diagram instead.',
     parameters: {
@@ -2653,6 +2667,18 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       text: funcArgs.text,
       style: funcArgs.style || 'default',
     } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_sentence') {
+    const emphasis = Array.isArray(funcArgs.emphasis)
+      ? (funcArgs.emphasis as unknown[]).filter((w): w is string => typeof w === 'string' && w.trim().length > 0)
+      : undefined;
+    return {
+      action: 'showSentence',
+      sentence: String(funcArgs.sentence ?? ''),
+      ...(emphasis && emphasis.length ? { emphasis } : {}),
+      ...(typeof funcArgs.gloss === 'string' && funcArgs.gloss.trim() ? { gloss: funcArgs.gloss } : {}),
+      ...(typeof funcArgs.label === 'string' && funcArgs.label.trim() ? { label: funcArgs.label } : {}),
+    } as WhiteboardCommand;
   }
   if (funcName === 'draw_vector') {
     return {

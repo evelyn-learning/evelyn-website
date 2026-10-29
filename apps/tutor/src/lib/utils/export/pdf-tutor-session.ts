@@ -1561,6 +1561,8 @@ function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
       return `Vector: ${cmd.label || 'unlabeled'}`;
     case 'annotate':
       return `Note: ${cmd.text || ''}`;
+    case 'showSentence':
+      return `Sentence: ${cmd.sentence || ''}${cmd.gloss ? ` (${cmd.gloss})` : ''}`;
     case 'handwrite':
       return `Handwrite: ${cmd.text || ''}`;
     case 'link':

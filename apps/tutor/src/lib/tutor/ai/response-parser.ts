@@ -117,6 +117,7 @@ function isValidWhiteboardCommand(obj: unknown): obj is WhiteboardCommand {
     'showDiagram',
     'drawVector',
     'annotate',
+    'showSentence',
     'highlight',
     'showProblem',
     'showSolution',

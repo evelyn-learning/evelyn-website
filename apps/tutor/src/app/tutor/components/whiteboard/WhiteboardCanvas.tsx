@@ -102,7 +102,7 @@ import dynamic from 'next/dynamic';
 import type { StudentMarkEvent, CapturedRect } from '@/lib/tutor/whiteboard/student-marks';
 import { useDrawOn, drawOnEnabled } from './useDrawOn';
 import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
-import { InkNotesOverlay } from './InkNotesOverlay';
+import { InkNotesOverlay, AMBER } from './InkNotesOverlay';
 import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
 import { shouldFollowNewRender, trailingNavSuppressesFollow } from '@/lib/tutor/whiteboard/view-follow';
 import { INK_NOTE_DRAG } from '@/lib/tutor/orchestrator/flags';
@@ -2817,6 +2817,29 @@ function DiagramPending() {
   );
 }
 
+/**
+ * Sentence card (language lessons, 2026-10-29): a model / corrected sentence
+ * in an upright sans at the size of a showEquation text line; each `emphasis`
+ * word (whole word, case-insensitive) in the board's amber ink and underlined;
+ * optional small grey `label` above and `gloss` below. Wraps on a phone.
+ */
+function SentenceCard({ sentence, emphasis, label, gloss }: { sentence: string; emphasis?: string[]; label?: string; gloss?: string }) {
+  const norm = (w: string) => w.toLowerCase().replace(/\u2019/g, "'");
+  const marked = new Set((emphasis ?? []).map((w) => norm(w.trim())).filter(Boolean));
+  const parts = (sentence ?? '').split(/([\p{L}\p{N}]+(?:['\u2019][\p{L}\p{N}]+)*)/u);
+  return (
+    <div className="px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 font-sans">
+      {label ? <p className="text-xs text-gray-500 mb-1">{label}</p> : null}
+      <p className="text-xl leading-snug text-gray-900 break-words">
+        {parts.map((part, i) => (i % 2 === 1 && marked.has(norm(part))
+          ? <span key={i} style={{ color: AMBER, textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationThickness: '2px' }} className="font-semibold">{part}</span>
+          : <span key={i}>{part}</span>))}
+      </p>
+      {gloss ? <p className="text-sm text-gray-500 mt-1 break-words">{gloss}</p> : null}
+    </div>
+  );
+}
+
 function CommandRendererInner({ command }: CommandRendererProps) {
   switch (command.action) {
     case 'showEquation':
@@ -2926,6 +2949,9 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           <HScrollFade as="p" className="text-lg overflow-x-auto"><InlineMathText text={command.text} /></HScrollFade>
         </div>
       );
+
+    case 'showSentence':
+      return <SentenceCard sentence={command.sentence} emphasis={command.emphasis} label={command.label} gloss={command.gloss} />;
 
     case 'showTryYourself':
       return (
@@ -3845,6 +3871,8 @@ export function getCommandTypeLabel(action: string): string {
       return 'Vector';
     case 'annotate':
       return 'Annotation';
+    case 'showSentence':
+      return 'Sentence';
     case 'showProblem':
       return 'Problem';
     case 'showSolution':
