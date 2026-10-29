@@ -39,7 +39,7 @@ for (const c of claims) {
   assert.equal(c.input_mode, 'voice');
   assert.deepEqual(c.teacher, teachers.find((t) => t.id === 'ryota'));
   assert.deepEqual(c.tutor_languages, ['en', 'ja']);
-  assert.equal(c.speech_rate, 0.8);
+  assert.equal(c.speech_rate, 0.7);
   assert.equal(c.max_duration_minutes, 30);
   assert.ok(!('is_trial' in c), 'no is_trial');
   assert.ok(!('wrap_at_minutes' in c), 'no wrap_at_minutes');

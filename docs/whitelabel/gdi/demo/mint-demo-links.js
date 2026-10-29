@@ -49,7 +49,7 @@ if (isTrial) {
     partner_id: 'gdi-demo', student_id: studentId, ...(name ? { student_name: name } : {}),
     subject: 'languages', level: 'Adult working professional', topic: 'Work projects',
     curriculum_module: 'gdi.trial.english.work-projects.v1', target_kind: 'lessonNode', input_mode: 'voice',
-    teacher: ryota, tutor_languages: ['en', 'ja'], speech_rate: 0.8, thinking_cue: true,
+    teacher: ryota, tutor_languages: ['en', 'ja'], speech_rate: 0.7, thinking_cue: true,
     max_duration_minutes: 30, iat: now, exp: now + Math.round(ttlHours * 3600),
   });
   const fresh = now.toString(36);
