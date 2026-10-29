@@ -2220,6 +2220,24 @@ export const RESUME_LESSON_TOOL: ToolDefinition = {
   parameters: { type: 'object', properties: {}, required: [] },
 };
 
+/** Working level (GDI trial, 2026-10-28; lib/tutor/level/working-level.ts).
+ *  Offered only to sessions whose partner has `levelCheck`, under the
+ *  TUTOR_WORKING_LEVEL kill switch — appended by the brain route after the
+ *  subject filter, so every other session's tools array (and cached prefix)
+ *  is unchanged. Once per session; the runtime refuses a second call. */
+export const SET_WORKING_LEVEL_TOOL: ToolDefinition = {
+  name: 'set_working_level',
+  description: 'Silent — the learner does not hear or see this. Records the working level for this lesson after the short level check: beginner, intermediate or advanced. Call it ONCE, as soon as the learner has answered the level-check questions, whatever language they answered in; judge from what they actually said (how much English they used, how complete and accurate their sentences were). In the same turn, say one soft line suggesting the level ("I\'d suggest we work at the intermediate level today") — no score, no CEFR label — and move on. Never call it a second time and never check the level again; when your context says the level is already known, do not call it at all.',
+  parameters: {
+    type: 'object',
+    properties: {
+      level: { type: 'string', enum: ['beginner', 'intermediate', 'advanced'], description: 'The level to pitch the rest of the lesson at.' },
+      evidence: { type: 'string', description: 'One short sentence on what in the learner\'s answers led to this level. May quote them in any language. Not shown to the learner.' },
+    },
+    required: ['level', 'evidence'],
+  },
+};
+
 /**
  * Map a function call name + arguments to a WhiteboardCommand.
  *
@@ -3066,6 +3084,15 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     // Bookkeeping only (no visual) and tutor-app only: cast instead of
     // widening the shared WhiteboardCommand union in packages/core.
     return { action: 'resumeLesson' } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'set_working_level') {
+    // Bookkeeping only (no visual), tutor-app only — cast like resume_lesson.
+    // `level` stays raw: the runtime's decideSetWorkingLevel validates it.
+    return {
+      action: 'setWorkingLevel',
+      level: funcArgs.level,
+      evidence: typeof funcArgs.evidence === 'string' ? funcArgs.evidence.slice(0, 300) : '',
+    } as unknown as WhiteboardCommand;
   }
   if (funcName === 'close_session_notes') {
     return {

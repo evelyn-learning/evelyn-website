@@ -10,6 +10,8 @@
  * partner's external student id, optionally namespaced by partner id.
  */
 
+import type { WorkingLevel } from '@/lib/tutor/level/working-level';
+
 export type ConfidenceBand = 'low' | 'medium' | 'high';
 
 /** Per-LO mastery snapshot. */
@@ -267,6 +269,11 @@ export interface StudentProfile {
   /** Spec §C.3 — the tutor's own "next time we'll…" note from the last
    *  session's close_session_notes call. Rendered next boot, ≤ 14 days. */
   nextSessionIntent?: { text: string; sessionId: string; at: string };
+  /** Working level (GDI trial, 2026-10-28; lib/tutor/level/working-level.ts):
+   *  set once by the tutor's level check, carried into the learner's next
+   *  lesson so it continues at this level instead of testing again. Absent
+   *  for every learner whose partner has no `levelCheck`. */
+  workingLevel?: { level: WorkingLevel; planId: string; setAt: number };
 }
 
 /** Bounded record of the specific FILLINGS a student has already been shown

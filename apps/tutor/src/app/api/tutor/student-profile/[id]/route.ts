@@ -33,6 +33,7 @@ import { getLearnerContext } from '@/lib/tutor/learner-model/context-block';
 import { assignPractice } from '@/lib/tutor/practice-assign/assign';
 import { findAssignmentBySession, acknowledgeAssignments, finalizeDraft, summarizeAssignmentLos } from '@/lib/tutor/practice-assign/store';
 import { emitOwnsPractice } from '@/lib/tutor/practice-assign/emit-draft';
+import { applyWorkingLevel, parseWorkingLevel } from '@/lib/tutor/level/working-level';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -190,6 +191,10 @@ interface CommitBody {
    *  When present, this commit finalizes the session's draft homework
    *  (if any) BEFORE the Spec §C.3 fallback runs. */
   finalizeHomework?: { source: 'end' | 'pagehide' | 'time_cap' };
+  /** GDI trial (lib/tutor/level/working-level.ts): the level the tutor set
+   *  this session. Every commit after the set carries it; the apply is
+   *  idempotent. Validated below — a bad value is ignored. */
+  workingLevel?: { level?: unknown; planId?: unknown };
 }
 
 /** Task 11 — client-supplied cap so a runaway/misbehaving client can't
@@ -368,6 +373,13 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       ...profile,
       nextSessionIntent: { text: body.nextSessionIntent.trim().slice(0, 200), sessionId: body.sessionId, at: new Date().toISOString() },
     };
+  }
+
+  // Working level (GDI trial): remembered for the learner's next lesson.
+  const workingLevel = parseWorkingLevel(body.workingLevel?.level);
+  if (workingLevel) {
+    const planId = typeof body.workingLevel?.planId === 'string' ? body.workingLevel.planId.slice(0, 200) : '';
+    profile = applyWorkingLevel(profile, { level: workingLevel, planId });
   }
 
   // Task 11 — final-commit draft finalize. Runs BEFORE the Spec §C.3

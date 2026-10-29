@@ -29,6 +29,7 @@ import { usableStudentName } from '../student-name';
 import { applyNoProblemSelfPoseRule } from './no-problem-rule';
 import { TUTOR_NO_TIME_TALK } from '../orchestrator/turn-round-flags';
 import { EXPLAIN_WHEN_ASKED_RULE } from '@/lib/tutor/pedagogy/explain-when-asked';
+import { buildWorkingLevelClause, type WorkingLevel } from '@/lib/tutor/level/working-level';
 
 /** Map a level/grade string ("3", "K", "high-school", "6-8") to the
  *  numeric grade used by the catalog filter. Defaults to mid-K-12 when
@@ -213,6 +214,11 @@ export interface SystemPromptContext {
    *  SESSION block, never the shared core, so the cross-session cache entry
    *  is the same for every tenant. */
   tutorLanguages?: string[];
+  /** Working level (GDI trial, lib/tutor/level/working-level.ts): set by the
+   *  level check this session (`known: false`) or remembered from the
+   *  learner's previous lesson (`known: true`). SESSION block, right after
+   *  the bilingual clause. Absent ⇒ prompt byte-identical. */
+  workingLevel?: { level: WorkingLevel; known: boolean };
   /** Host-supplied lesson context (in-flow embeds, partner spec v1.1). Rendered in the
    *  SESSION block; absent ⇒ nothing appended. */
   lessonContext?: LessonContext;
@@ -2088,6 +2094,13 @@ export function buildSystemPromptParts(context: SystemPromptContext): { core: st
   if (bilingualClause) {
     prompt += bilingualClause;
   }
+  if (context.workingLevel) {
+    const second = secondLanguageCode(context.tutorLanguages);
+    prompt += buildWorkingLevelClause(context.workingLevel.level, {
+      known: context.workingLevel.known,
+      ...(second ? { secondLanguage: LANGUAGE_NAMES[second] } : {}),
+    });
+  }
 
   // R38: Removed obsolete Multilingual Support section — contradicts Rule 5 one-language-per-session policy; STT (Ink-2 English-only) + TTS (Cartesia language:'en') cannot deliver mid-session language switching
 
@@ -2205,11 +2218,16 @@ const LANGUAGE_NAMES: Record<string, string> = { en: 'English', ja: 'Japanese' }
 
 /** Session-block override of Rule 5 for a bilingual tenant. Null for an
  *  English-only session (absent, ['en'], or no recognised second language). */
+/** The session's second (non-English, recognised) language code, or null. */
+function secondLanguageCode(languages: string[] | undefined): string | null {
+  return (languages ?? []).find((l) => l !== 'en' && LANGUAGE_NAMES[l]) ?? null;
+}
+
 export function buildBilingualClause(languages: string[] | undefined): string | null {
-  const others = (languages ?? []).filter((l) => l !== 'en' && LANGUAGE_NAMES[l]);
-  if (others.length === 0) return null;
-  const second = LANGUAGE_NAMES[others[0]!]!;
-  const japanese = others[0] === 'ja'
+  const code = secondLanguageCode(languages);
+  if (!code) return null;
+  const second = LANGUAGE_NAMES[code]!;
+  const japanese = code === 'ja'
     ? `\n- Japanese: natural, polite です/ます style, the way a kind Japanese teacher speaks to an adult — not word-for-word translation. Write Japanese in Japanese script, never romaji — this includes your short opener and one-word affirmations (いいですね。/ なるほど。/ 大丈夫ですよ。). Romaji is Latin script, so it is read aloud by the English voice and sounds wrong.\n- Speak TO the student, never about them: あなた or their name (「あなたの番です」, never 「学生の番です」). The word 学生 — or "the student" — does not belong in what you say unless the lesson is about students.`
     : '';
   return `\n\n## Session languages: English and ${second} (overrides Rule 5)

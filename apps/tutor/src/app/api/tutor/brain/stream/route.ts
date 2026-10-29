@@ -29,7 +29,7 @@ import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
 import { BRAIN_MODEL_ID } from '@/lib/tutor/voice/claude-brain';
 import { openerPrefetchCache, isValidPrefetchKey } from '@/lib/tutor/voice/opener-prefetch';
-import { WHITEBOARD_TOOLS, SET_CURRENT_PROBLEM_TOOL, RESUME_LESSON_TOOL } from '@/app/tutor/hooks/toolDefinitions';
+import { WHITEBOARD_TOOLS, SET_CURRENT_PROBLEM_TOOL, RESUME_LESSON_TOOL, SET_WORKING_LEVEL_TOOL } from '@/app/tutor/hooks/toolDefinitions';
 import { LESSON_NOW_MAX_CHARS } from '@/lib/tutor/portal/host-lesson-timeline';
 import {
   filterToolsForSubject,
@@ -44,7 +44,7 @@ import {
   generateProblem,
   type Difficulty,
 } from '@/lib/tutor/voice/problem-generator';
-import { TUTOR_CONTENT_VARIETY } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_CONTENT_VARIETY, TUTOR_WORKING_LEVEL } from '@/lib/tutor/orchestrator/flags';
 import { searchImage } from '@/lib/tutor/image-search';
 import { classifyBrainError, decideBrainRetry, withInactivityTimeout } from '@/lib/tutor/voice/brain-retry';
 import { textThinkingEnabled } from '@/lib/tutor/voice/text-thinking';
@@ -135,6 +135,8 @@ interface BrainStreamRequestBody {
   lessonNow?: string;
   /** Partner spec v1.2 §3.4: this session's host has a lesson video ⇒ offer `resume_lesson`. */
   videoHost?: boolean;
+  /** GDI trial: this session's partner has `levelCheck` ⇒ offer `set_working_level`. */
+  levelCheck?: boolean;
   /** Practice-mode contract (Task X2). Client sends true when the session's
    *  embed token carried session_goal === 'practice'. Surfaces as the durable
    *  `<practice_session>` block. See BrainTurnInput.practiceMode. */
@@ -795,6 +797,12 @@ export async function POST(req: NextRequest) {
         // session's tools array is the same on every turn and shared by all
         // such sessions. Appended AFTER the Lever A filter, like homework.
         toolFilter = { ...toolFilter, tools: [...toolFilter.tools, RESUME_LESSON_TOOL] };
+      }
+      if (body.levelCheck === true && TUTOR_WORKING_LEVEL) {
+        // Working level (GDI trial): session-stable (partner row), appended
+        // AFTER the Lever A filter like the video tool, so a session without
+        // `levelCheck` sends the byte-identical tools array.
+        toolFilter = { ...toolFilter, tools: [...toolFilter.tools, SET_WORKING_LEVEL_TOOL] };
       }
       if (lessonNow || body.videoHost === true) {
         console.log(`[lesson-video] block=${lessonNow ? lessonNow.length : 0} chars resume_tool=${body.videoHost === true}`);

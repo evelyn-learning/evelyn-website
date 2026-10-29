@@ -43,6 +43,7 @@ export interface IStudentProfile {
   metadata?: Record<string, unknown>;
   planContentSeen?: Record<string, PlanContentSeen>;
   nextSessionIntent?: { text: string; sessionId: string; at: string };
+  workingLevel?: StudentProfile['workingLevel'];
 }
 
 export type IStudentProfileDoc = mongoose.Document<string, object, IStudentProfile> & IStudentProfile;
@@ -78,6 +79,8 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
     planContentSeen: { type: Schema.Types.Mixed as any, default: undefined },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     nextSessionIntent: { type: Schema.Types.Mixed as any, default: undefined },
+    // GDI trial 2026-10-28 (lib/tutor/level/working-level.ts). Additive.
+    workingLevel: { type: Schema.Types.Mixed as any, default: undefined },
   },
   {
     _id: false,
@@ -118,5 +121,6 @@ export function toStudentProfile(doc: IStudentProfileDoc): StudentProfile {
     metadata: obj.metadata,
     planContentSeen: obj.planContentSeen,
     nextSessionIntent: obj.nextSessionIntent,
+    workingLevel: obj.workingLevel,
   };
 }

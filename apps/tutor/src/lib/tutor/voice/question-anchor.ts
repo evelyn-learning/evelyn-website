@@ -39,6 +39,8 @@ const NON_CONTENT_TOOLS = new Set([
   'set_current_problem',
   // Host video: asks the host to play its video, never the board.
   'resume_lesson',
+  // Working level (GDI trial): records the level, never the board.
+  'set_working_level',
 ]);
 
 export function isBoardContentTool(name: string): boolean {

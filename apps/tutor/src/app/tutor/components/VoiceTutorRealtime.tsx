@@ -32,7 +32,7 @@ import { playTurnChime, playThinkingPulse, primeThinkingCueAudio } from '@/lib/t
 import type { SessionMode as TutorSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { decideStage2TimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS } from '@/lib/tutor/voice/stage2-restore';
 import { decideStage2CancelAction, isDuplicateTranscript, type Stage2Verdict } from '@/lib/tutor/voice/stage2-cancel-policy';
-import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, inkNotesEnabled } from '../hooks/toolDefinitions';
+import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, SET_WORKING_LEVEL_TOOL, inkNotesEnabled } from '../hooks/toolDefinitions';
 import { stripWbEmphasisText } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
 import { shouldClientRequestRepair, countBoardRenderTools } from '@/lib/tutor/voice/rule8-client';
 // Holistic-pedagogy round (spec §B.4): deterministic accept/decline/unclear
@@ -411,7 +411,9 @@ import {
   TUTOR_RECAP_OFFER,
   TUTOR_OPENER_PREFETCH,
   OPENER_PREFETCH_DELAY_MS,
+  TUTOR_WORKING_LEVEL,
 } from '@/lib/tutor/orchestrator/flags';
+import { decideSetWorkingLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -947,6 +949,10 @@ interface VoiceTutorRealtimeProps {
    *  the voice session (lesson-close.ts). Default on; a partner row turns it
    *  off. The build-time TUTOR_LESSON_CLOSE_AUTO_END flag stays a kill switch. */
   lessonCloseAutoEnd?: boolean;
+  /** Per-partner (same module): the once-only working-level check
+   *  (lib/tutor/level/working-level.ts). Off unless the surface resolves it
+   *  on; the TUTOR_WORKING_LEVEL flag is the kill switch on top. */
+  levelCheck?: boolean;
   /** Tutor speaking rate → Cartesia generation_config.speed (tenant claim
    *  `speech_rate`). Absent ⇒ every TTS request unchanged. */
   speechRate?: number;
@@ -1334,6 +1340,7 @@ export function VoiceTutorRealtime({
   tutorLanguages,
   openerPrefetch = false,
   lessonCloseAutoEnd = true,
+  levelCheck = false,
   speechRate,
   thinkingCue = false,
   onLessonPlanProgress,
@@ -1393,6 +1400,17 @@ export function VoiceTutorRealtime({
   // In-flow entry (partner spec v1.1): flag-gated so the standard behaviour
   // can be restored for such tokens without a partner change.
   const isInFlow = TUTOR_INFLOW_ENTRY && inFlow;
+  // Working level (GDI trial, lib/tutor/level/working-level.ts). Off ⇒ no
+  // tool offered, no clause, nothing read from or written to the profile.
+  const levelCheckActive = TUTOR_WORKING_LEVEL && levelCheck;
+  // The session's level: stored on the profile (known: true) or set by the
+  // tutor's check this session (known: false). The ref is what the once-only
+  // rule reads; the state rebuilds the system prompt with the clause.
+  const workingLevelRef = useRef<{ level: WorkingLevel; known: boolean } | null>(null);
+  const [workingLevelForPrompt, setWorkingLevelForPrompt] = useState<{ level: WorkingLevel; known: boolean } | null>(null);
+  // Set this session ⇒ every later profile commit carries it (idempotent on
+  // the server); `sent` lets the first commit post even with nothing else.
+  const workingLevelSaveRef = useRef<{ level: WorkingLevel; planId: string; sent: boolean } | null>(null);
   // Evolve-in-place swap (deferred-removals.ts): the removal of a superseded
   // figure is parked under its replacement's id and released by the paint
   // that carries the replacement — both land in one tick, so the board never
@@ -2489,7 +2507,8 @@ export function VoiceTutorRealtime({
       // FINAL commit sends nextSessionIntent, so scoping to isFinal keeps an
       // intermediate flush from posting a body with nothing new in it. Only
       // ever set under TUTOR_CLOSE_NOTES ⇒ flag-off this term is always false.
-      && !(opts?.final === true && accum.nextTimeIntent);
+      && !(opts?.final === true && accum.nextTimeIntent)
+      && !(workingLevelSaveRef.current && !workingLevelSaveRef.current.sent);
     // Content variety (phase 1): a FINAL commit must still post to CAPTURE the
     // fillings shown, even on a session that accumulated nothing gradeable
     // (e.g. a hook-only session the student didn't finish) — otherwise the
@@ -2563,7 +2582,11 @@ export function VoiceTutorRealtime({
         ? { finalizeHomework: { source: isFinal ? 'end' as const : 'pagehide' as const } }
         : {}),
       ...(isFinal && homeworkAckIdsRef.current.length ? { homeworkAcknowledged: homeworkAckIdsRef.current } : {}),
+      ...(workingLevelSaveRef.current
+        ? { workingLevel: { level: workingLevelSaveRef.current.level, planId: workingLevelSaveRef.current.planId } }
+        : {}),
     };
+    if (workingLevelSaveRef.current) workingLevelSaveRef.current.sent = true;
     sessionAccumRef.current = {
       losTouched: new Set(),
       masteryDeltas: [],
@@ -7521,6 +7544,24 @@ export function VoiceTutorRealtime({
       // Homework mode: the brain's set_current_problem moves the student's
       // position in a homework-help plan. Bookkeeping only — no visual.
       // Ignored (but still consumed) when the active plan isn't homework.
+      // Working level (GDI trial): once per session — a second call, or one
+      // after a level known from the previous lesson, is refused with a note.
+      if ((cmd.action as string) === 'setWorkingLevel') {
+        if (!levelCheckActive) continue;
+        const wl = cmd as unknown as { level?: unknown; evidence?: string };
+        const decision = decideSetWorkingLevel(workingLevelRef.current?.level ?? null, wl.level);
+        if (decision.ok && decision.level) {
+          workingLevelRef.current = { level: decision.level, known: false };
+          setWorkingLevelForPrompt({ level: decision.level, known: false });
+          workingLevelSaveRef.current = { level: decision.level, planId: lessonPlanId ?? '', sent: false };
+          scheduleProfileFlush();
+          onDebugEvent?.('working_level_set', `${decision.level} evidence=${(wl.evidence ?? '').slice(0, 100)}`);
+        } else {
+          onDebugEvent?.('working_level_refused', `requested=${String(wl.level).slice(0, 20)} current=${workingLevelRef.current?.level ?? 'none'}`);
+        }
+        closeNotesResultNoteRef.current ??= `set_working_level: ${decision.note}`;
+        continue;
+      }
       // Host video (partner spec v1.2 §3.4): the tutor asks to resume the
       // lesson. Bookkeeping only — the video command is posted once this
       // turn has been spoken (host-lesson pump), unless the student speaks
@@ -8888,7 +8929,7 @@ export function VoiceTutorRealtime({
       'proposePlanSwap', 'confirmPlanLos',
       'recordGap', 'flagPrerequisiteGap',
       'expandTopicNotesTheory', 'addTopicNotesMethod', 'addTopicNotesPointer',
-      'closeSessionNotes', 'resumeLesson',
+      'closeSessionNotes', 'resumeLesson', 'setWorkingLevel',
     ]);
     // Running page title used to stamp catalog entries with the page
     // they were rendered on. Updated whenever we see a newPage in the
@@ -9791,7 +9832,8 @@ export function VoiceTutorRealtime({
         // flag-off drops the action in the handler, so it must never reach
         // the canvas either way.
         c.action !== 'closeSessionNotes' &&
-        (c.action as string) !== 'resumeLesson',
+        (c.action as string) !== 'resumeLesson' &&
+        (c.action as string) !== 'setWorkingLevel',
     );
 
     // Render↔speech sync: on the brain-stream path this BUFFERS the visual
@@ -10644,6 +10686,16 @@ export function VoiceTutorRealtime({
             TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || lastOpener || readinessNote || locatorForPrompt || goalNote)
               ? renderTransientContextBlock({ socialMemory, lastOpener, readinessNote, practiceLocator: locatorForPrompt, goalNote })
               : null;
+        }
+        // Working level known from a previous lesson: the session starts from
+        // it, so the tool's once-only rule already counts it as set.
+        if (levelCheckActive && !workingLevelRef.current) {
+          const stored = parseWorkingLevel(data?.profile?.workingLevel?.level);
+          if (stored) {
+            workingLevelRef.current = { level: stored, known: true };
+            setWorkingLevelForPrompt({ level: stored, known: true });
+            onDebugEvent?.('working_level_known', stored);
+          }
         }
         if (TUTOR_PEDAGOGY_OPENER) {
           studentHasPriorSessionsRef.current = Array.isArray(data?.profile?.recentSessions)
@@ -12955,6 +13007,8 @@ export function VoiceTutorRealtime({
             // undefined for a host without a video ⇒ body unchanged.
             lessonNow: TUTOR_HOST_LESSON ? getLessonNowRef.current?.() : undefined,
             videoHost: TUTOR_HOST_LESSON && videoHost ? true : undefined,
+            // Working level (GDI trial): offer `set_working_level`. Session-stable.
+            levelCheck: levelCheckActive ? true : undefined,
             // Task X2: durable practice-mode contract. sessionGoal rides the
             // embed token on EVERY mint (initial + resume), so deriving the
             // flag from the stable prop each turn makes the mode durable across
@@ -21792,9 +21846,11 @@ export function VoiceTutorRealtime({
   // / ELA tools. Fail-open — resolveToolSubjects returns null for subjects
   // it can't map and filterToolsForSubject then returns the full set. Other
   // engines leave this undefined; the hook registers the full WHITEBOARD_TOOLS.
-  const realtimeV2Tools = useRealtimeV2
+  const rt2Filtered = useRealtimeV2
     ? filterToolsForSubject(WHITEBOARD_TOOLS, resolveToolSubjects(subject)).tools
     : undefined;
+  // Working level (GDI trial): offered only with the partner's levelCheck.
+  const realtimeV2Tools = rt2Filtered && (levelCheckActive ? [...rt2Filtered, SET_WORKING_LEVEL_TOOL] : rt2Filtered);
 
   // Initialize the realtime connection
   // ── Perception stage resolution. Was originally needed pre-Stage-4
@@ -25184,6 +25240,8 @@ export function VoiceTutorRealtime({
           ...(TUTOR_ANSWER_REVEAL_GUARD ? { answerRevealGuard: true } : {}),
           // Bilingual tenant: session-block override of Rule 5. Absent ⇒ unchanged.
           ...(tutorLanguages ? { tutorLanguages } : {}),
+          // Working level: right after the bilingual clause. Absent ⇒ unchanged.
+          ...(levelCheckActive && workingLevelForPrompt ? { workingLevel: workingLevelForPrompt } : {}),
           ...openerFields,
         });
         const systemPrompt = promptParts.core + promptParts.session;
@@ -25242,7 +25300,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // is on AND studentId is set, so flag-off / anonymous timing is
     // unchanged. All opening refs are latched one-shot, so the re-run is
     // safe (see openerSignalsReady above).
-  }, [subject, topic, level, studentName, sessionGoal, studentPreferences, profileFetchSettled]);
+  }, [subject, topic, level, studentName, sessionGoal, studentPreferences, profileFetchSettled, workingLevelForPrompt]);
 
   // Kick the ephemeral-token fetch immediately on mount so it runs in parallel
   // with buildInstructions — that alone saves ~500–1500 ms, and it is safe to
