@@ -17,7 +17,11 @@
  *   any ──disarm──▶ idle
  * With `preRollMs`, the last `preRollMs` of audio pushed while armed (not yet
  * capturing) is kept and becomes the start of the clip at the speech start;
- * it counts toward `maxMs`.
+ * it counts toward `maxMs` but never toward `minMs` or `durationMs`.
+ * With `minMs`, a stop with less than `minMs` of post-start audio is a blip:
+ * the clip is dropped and the capture stays armed for the next speech start.
+ * Only one blip per arm — a second short stop returns the clip anyway, so
+ * the learner is never stuck (the server then answers clip_too_short).
  * One clip per arm: after the clip the capture is idle, so a `turn.resume`
  * (re-fires onSpeechStart) does not re-open it. A second `arm` before the
  * clip replaces the reference text and keeps any audio already buffered.
@@ -36,6 +40,10 @@ export const CLIP_NO_SPEECH_TIMEOUT_MS = 20000;
  *  browser a few hundred ms after the learner's first sound, and the first
  *  consonant ("th" in "think") is exactly what the check is for. */
 export const CLIP_PRE_ROLL_MS = 600;
+/** The server's clip_too_short floor, measured on the learner's audio AFTER
+ *  the speech start (the pre-roll never counts): a shorter stop is treated
+ *  as an echo or noise blip and the capture stays armed — once. */
+export const CLIP_MIN_MS = 400;
 /** How long a brain turn waits for an assessment already in flight before
  *  it goes without the note (the note then rides the turn after). */
 export const PRONUNCIATION_NOTE_WAIT_MS = 4000;
@@ -55,7 +63,10 @@ export function pronunciationNoteForBrain(note: string): string {
 export interface PronunciationClip {
   referenceText: string;
   pcm16: Int16Array;
+  /** Learner audio after the speech start (pre-roll excluded). */
   durationMs: number;
+  /** Pre-roll at the head of `pcm16`. */
+  preRollMs: number;
 }
 
 /** Float32 [-1, 1] → Int16, clamped; NaN ⇒ 0. Always a copy. */
@@ -94,16 +105,29 @@ export class ClipCapture {
   private samples = 0;
   private preRoll: Int16Array[] = [];
   private preRollCount = 0;
+  private readonly minSamples: number;
+  /** Samples of the current clip that came from the pre-roll. */
+  private preRollInClip = 0;
+  private shortStops = 0;
 
-  constructor(opts: { maxMs: number; sampleRate: number; preRollMs?: number }) {
+  constructor(opts: { maxMs: number; sampleRate: number; preRollMs?: number; minMs?: number }) {
     this.sampleRate = opts.sampleRate;
     this.maxSamples = Math.floor((opts.maxMs / 1000) * opts.sampleRate);
     this.preRollSamples = Math.max(0, Math.floor(((opts.preRollMs ?? 0) / 1000) * opts.sampleRate));
+    this.minSamples = Math.max(0, Math.floor(((opts.minMs ?? 0) / 1000) * opts.sampleRate));
   }
 
   /** Arm for the next learner turn. Re-arming before the clip replaces the text. */
   arm(referenceText: string): void {
     this.referenceText = referenceText;
+  }
+
+  /** Drop the clip in progress but stay armed (a blip, or no audio). */
+  private reopen(): void {
+    this.capturing = false;
+    this.chunks = [];
+    this.samples = 0;
+    this.preRollInClip = 0;
   }
 
   /** Drop everything (session end, no-speech timeout). */
@@ -114,6 +138,8 @@ export class ClipCapture {
     this.samples = 0;
     this.preRoll = [];
     this.preRollCount = 0;
+    this.preRollInClip = 0;
+    this.shortStops = 0;
   }
 
   isArmed(): boolean {
@@ -124,9 +150,10 @@ export class ClipCapture {
     return this.capturing;
   }
 
-  /** Milliseconds of audio in the clip so far (0 before the speech start). */
+  /** Milliseconds of the LEARNER's audio in the clip so far — after the
+   *  speech start, pre-roll excluded (0 before the speech start). */
   bufferedMs(): number {
-    return Math.round((this.samples / this.sampleRate) * 1000);
+    return Math.round(((this.samples - this.preRollInClip) / this.sampleRate) * 1000);
   }
 
   /** Speech start (Ink turn.start / turn.resume). Opens the clip only when
@@ -136,7 +163,7 @@ export class ClipCapture {
     this.capturing = true;
     for (const c of this.preRoll) {
       const take = c.length > this.maxSamples - this.samples ? c.subarray(0, this.maxSamples - this.samples) : c;
-      if (take.length) { this.chunks.push(take); this.samples += take.length; }
+      if (take.length) { this.chunks.push(take); this.samples += take.length; this.preRollInClip += take.length; }
     }
     this.preRoll = [];
     this.preRollCount = 0;
@@ -164,7 +191,12 @@ export class ClipCapture {
   onSpeechStop(): PronunciationClip | null {
     if (!this.capturing || this.referenceText === null) return null;
     if (this.samples === 0) {
-      this.capturing = false; // stay armed: the learner's real turn is still to come
+      this.reopen(); // stay armed: the learner's real turn is still to come
+      return null;
+    }
+    if (this.samples - this.preRollInClip < this.minSamples && this.shortStops === 0) {
+      this.shortStops += 1; // an echo / noise blip: stay armed, once
+      this.reopen();
       return null;
     }
     return this.finish();
@@ -191,7 +223,9 @@ export class ClipCapture {
     const clip: PronunciationClip = {
       referenceText: this.referenceText ?? '',
       pcm16,
-      durationMs: Math.round((this.samples / this.sampleRate) * 1000),
+      // The learner's audio only; the pre-roll is in pcm16 but not counted.
+      durationMs: Math.round(((this.samples - this.preRollInClip) / this.sampleRate) * 1000),
+      preRollMs: Math.round((this.preRollInClip / this.sampleRate) * 1000),
     };
     this.disarm();
     return clip;

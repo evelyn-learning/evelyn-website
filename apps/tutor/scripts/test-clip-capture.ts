@@ -10,7 +10,7 @@
  */
 import { strict as assert } from 'node:assert';
 import {
-  ClipCapture, CLIP_MAX_MS, CLIP_PRE_ROLL_MS, CLIP_SAMPLE_RATE, CLIP_NO_SPEECH_TIMEOUT_MS,
+  ClipCapture, CLIP_MAX_MS, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_SAMPLE_RATE, CLIP_NO_SPEECH_TIMEOUT_MS,
   float32ToPcm16, pcm16ToBase64, PRONUNCIATION_UNAVAILABLE_NOTE, pronunciationNoteForBrain,
 } from '../src/lib/tutor/pronunciation/clip-capture';
 import { PRONUNCIATION_UNAVAILABLE_NOTE as SERVER_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
@@ -155,7 +155,9 @@ test('pre-roll: the last preRollMs before the speech start opens the clip; older
   c.push(chunk(SR / 2, 0.4));
   const clip = c.onSpeechStop();
   assert.ok(clip);
-  assert.equal(clip.durationMs, 1000);
+  assert.equal(clip.pcm16.length, SR);   // pre-roll + learner audio are uploaded
+  assert.equal(clip.durationMs, 500);    // …but only the learner's audio counts
+  assert.equal(clip.preRollMs, 500);
   assert.equal(clip.pcm16[0], Math.round(0.2 * 32767));
   assert.equal(clip.pcm16[SR / 4], Math.round(0.3 * 32767));
   assert.equal(clip.pcm16[SR / 2], Math.round(0.4 * 32767));
@@ -168,15 +170,66 @@ test('pre-roll: a single chunk longer than the window keeps only its tail; nothi
   const big = new Float32Array(SR); big.fill(0.1); big.fill(0.2, SR - SR / 2);
   c.push(big);
   c.onSpeechStart();
-  assert.equal(c.bufferedMs(), 500);
+  assert.equal(c.bufferedMs(), 0, 'pre-roll is not learner audio');
   const clip = c.onSpeechStop();
   assert.ok(clip);
   assert.equal(clip.pcm16.length, SR / 2);
   assert.ok(clip.pcm16.every((v) => v === Math.round(0.2 * 32767)));
 });
 
-test('constant: production pre-roll 600 ms', () => {
+test('constant: production pre-roll 600 ms, minimum 400 ms', () => {
   assert.equal(CLIP_PRE_ROLL_MS, 600);
+  assert.equal(CLIP_MIN_MS, 400);
+});
+
+const prod = () => new ClipCapture({ maxMs: 10000, sampleRate: 24000, preRollMs: 600, minMs: 400 });
+
+test('minMs: a stop with only pre-roll (echo/noise blip) keeps the arm; the next real turn is the clip', () => {
+  const c = prod();
+  c.arm('I think so.');
+  c.push(chunk(SR, 0.1));           // fills the 600 ms pre-roll
+  c.onSpeechStart();                // blip
+  c.push(chunk(SR / 10, 0.2));      // 100 ms after the start
+  assert.equal(c.onSpeechStop(), null, 'blip dropped');
+  assert.equal(c.isArmed(), true);
+  assert.equal(c.isCapturing(), false);
+  c.push(chunk(SR, 0.3));           // new pre-roll
+  c.onSpeechStart();
+  c.push(chunk(SR, 0.4));           // 1 s of the learner
+  const clip = c.onSpeechStop();
+  assert.ok(clip);
+  assert.equal(clip.durationMs, 1000);
+  assert.equal(clip.preRollMs, 600);
+  assert.equal(clip.referenceText, 'I think so.');
+  assert.equal(clip.pcm16[0], Math.round(0.3 * 32767), 'the old blip audio is gone');
+});
+
+test('minMs: the SECOND short stop sends anyway (the learner is never stuck)', () => {
+  const c = prod();
+  c.arm('Thanks.');
+  c.onSpeechStart();
+  c.push(chunk(SR / 10, 0.2));
+  assert.equal(c.onSpeechStop(), null);
+  c.onSpeechStart();
+  c.push(chunk(SR / 5, 0.2));       // 200 ms
+  const clip = c.onSpeechStop();
+  assert.ok(clip);
+  assert.equal(clip.durationMs, 200);
+  assert.equal(c.isArmed(), false);
+});
+
+test('minMs: a stop at ≥ minMs of learner audio is sent first time; pre-roll never makes up the difference', () => {
+  const c = prod();
+  c.arm('x');
+  c.push(chunk(SR, 0.1));
+  c.onSpeechStart();
+  c.push(chunk(SR * 0.3, 0.2));     // 300 ms learner + 600 ms pre-roll = 900 ms total
+  assert.equal(c.onSpeechStop(), null, '300 ms of learner audio is a blip despite the pre-roll');
+  const d = prod();
+  d.arm('x');
+  d.onSpeechStart();
+  d.push(chunk(SR * 0.4, 0.2));
+  assert.ok(d.onSpeechStop());
 });
 
 test('disarm drops everything', () => {
@@ -272,7 +325,8 @@ test('runtime: gate, request field only when active, RT-2 site, learner mic tap,
   assert.match(v, /pronunciationCheck: pronunciationActive \? true : undefined,/);
   assert.match(v, /pronunciationActive \? \[REQUEST_PRONUNCIATION_CHECK_TOOL\] : \[\]/);
   assert.match(v, /onStudentAudioChunk: pronunciationActive\s*\? [\s\S]{0,250}pushStudentAudioForPronunciation\(float32\);[\s\S]{0,40}: audioRecordEnabled \? audioRecorder\.pushStudentChunk : undefined,/);
-  assert.match(v, /const perceptionOnSpeechStart = useCallback\(\(e: PerceptionSpeechEvent\) => \{[\s\S]{0,250}clipCaptureRef\.current\?\.onSpeechStart\(\);/);
+  assert.match(v, /const perceptionOnSpeechStart = useCallback\(\(e: PerceptionSpeechEvent\) => \{[\s\S]{0,700}if \(productionStateRef\.current === 'speaking' \|\| wasTutorSpeakingAt\(Date\.now\(\)\)\) \{\s*onDebugEvent\?\.\('pronunciation_start_ignored_tutor_speaking'[\s\S]{0,120}\} else \{\s*pronunciationCapture\.onSpeechStart\(\);/);
+  assert.match(v, /new ClipCapture\(\{ maxMs: CLIP_MAX_MS, sampleRate: CLIP_SAMPLE_RATE, preRollMs: CLIP_PRE_ROLL_MS, minMs: CLIP_MIN_MS \}\)/);
   assert.match(v, /const perceptionOnSpeechStop = useCallback\(\(e: PerceptionSpeechEvent\) => \{[\s\S]{0,200}clipCaptureRef\.current\?\.onSpeechStop\(\);/);
   assert.ok(v.includes("'/api/tutor/pronunciation/assess'"));
 });
@@ -286,10 +340,17 @@ test('runtime: note planted for the next turn; measured opens BOTH claim-guard s
   assert.match(v, /PRONUNCIATION_NOTE_WAIT_MS/);
 });
 
+test('runtime (review r1): 20 s window starts at playback idle; the hold skips the call once the session is ending', () => {
+  const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.match(v, /if \(productionStateRef\.current === 'speaking'\) \{\s*pronunciationTimerAwaitsIdleRef\.current = true;\s*return;\s*\}/);
+  assert.match(v, /if \(realtime\.state !== 'speaking' && pronunciationTimerAwaitsIdleRef\.current\) \{\s*startPronunciationNoSpeechTimerRef\.current\(\);/);
+  assert.match(v, /PRONUNCIATION_NOTE_WAIT_MS\); \}\)\]\);[\s\S]{0,200}if \(endingRef\.current \|\| farewellSealedRef\.current\) \{\s*onDebugEvent\?\.\('pronunciation_hold_skipped'[\s\S]{0,120}return;/);
+});
+
 test('debug events: the four exact names are emitted and persisted by the embed', () => {
   const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
   const e = src('src/app/tutor-portal/embed/page.tsx');
-  for (const name of ['pronunciation_armed', 'pronunciation_clip_sent', 'pronunciation_note_planted', 'pronunciation_unavailable']) {
+  for (const name of ['pronunciation_armed', 'pronunciation_clip_sent', 'pronunciation_note_planted', 'pronunciation_unavailable', 'pronunciation_start_ignored_tutor_speaking', 'pronunciation_hold_skipped']) {
     assert.ok(v.includes(`onDebugEvent?.('${name}'`), `emits ${name}`);
     assert.ok(e.includes(`'${name}'`), `embed persists ${name}`);
   }

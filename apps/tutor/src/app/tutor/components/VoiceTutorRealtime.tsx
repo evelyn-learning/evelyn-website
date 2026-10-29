@@ -415,7 +415,7 @@ import {
   TUTOR_PRONUNCIATION_ASSESS,
 } from '@/lib/tutor/orchestrator/flags';
 import {
-  ClipCapture, CLIP_MAX_MS, CLIP_SAMPLE_RATE, CLIP_PRE_ROLL_MS, CLIP_NO_SPEECH_TIMEOUT_MS,
+  ClipCapture, CLIP_MAX_MS, CLIP_SAMPLE_RATE, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_NO_SPEECH_TIMEOUT_MS,
   PRONUNCIATION_NOTE_WAIT_MS, PRONUNCIATION_UNAVAILABLE_NOTE, pronunciationNoteForBrain, pcm16ToBase64,
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
@@ -1427,7 +1427,7 @@ export function VoiceTutorRealtime({
   const pronunciationActive = TUTOR_PRONUNCIATION_ASSESS && pronunciation && sessionMode !== 'text' && !!sessionId;
   const clipCaptureRef = useRef<ClipCapture | null>(null);
   if (pronunciationActive && !clipCaptureRef.current) {
-    clipCaptureRef.current = new ClipCapture({ maxMs: CLIP_MAX_MS, sampleRate: CLIP_SAMPLE_RATE, preRollMs: CLIP_PRE_ROLL_MS });
+    clipCaptureRef.current = new ClipCapture({ maxMs: CLIP_MAX_MS, sampleRate: CLIP_SAMPLE_RATE, preRollMs: CLIP_PRE_ROLL_MS, minMs: CLIP_MIN_MS });
   }
   // The route's note for the NEXT brain turn, and whether it is a measured
   // result (⇒ that one turn's pronunciation-claim guard lets claims through).
@@ -1438,6 +1438,9 @@ export function VoiceTutorRealtime({
   // result rides the turn that answers the learner's repeat.
   const pronunciationPendingRef = useRef<Promise<void> | null>(null);
   const pronunciationNoSpeechTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Armed while the tutor was still speaking: the 20 s window starts when
+  // playback goes idle (effect next to speakingWindowsRef), not at the arm.
+  const pronunciationTimerAwaitsIdleRef = useRef(false);
   const plantPronunciationNote = (note: string, measured: boolean) => {
     pronunciationResultNoteRef.current = pronunciationNoteForBrain(note);
     pronunciationMeasuredRef.current = measured;
@@ -1494,7 +1497,20 @@ export function VoiceTutorRealtime({
     capture.arm(referenceText);
     onDebugEvent?.('pronunciation_armed', `${kind} "${referenceText.slice(0, 80)}"`);
     clearPronunciationNoSpeechTimer();
-    // Nothing heard within 20 s ⇒ stop waiting; the tutor coaches from the model.
+    // The model line is usually still playing: start the learner's 20 s
+    // window when playback goes idle, so a long line does not eat it.
+    if (productionStateRef.current === 'speaking') {
+      pronunciationTimerAwaitsIdleRef.current = true;
+      return;
+    }
+    startPronunciationNoSpeechTimerRef.current();
+  };
+  // Nothing heard within 20 s ⇒ stop waiting; the tutor coaches from the model.
+  const startPronunciationNoSpeechTimer = () => {
+    const capture = clipCaptureRef.current;
+    pronunciationTimerAwaitsIdleRef.current = false;
+    if (!capture?.isArmed()) return;
+    clearPronunciationNoSpeechTimer();
     pronunciationNoSpeechTimerRef.current = setTimeout(() => {
       pronunciationNoSpeechTimerRef.current = null;
       if (capture.isArmed() && capture.bufferedMs() === 0) {
@@ -1503,6 +1519,8 @@ export function VoiceTutorRealtime({
       }
     }, CLIP_NO_SPEECH_TIMEOUT_MS);
   };
+  const startPronunciationNoSpeechTimerRef = useRef(startPronunciationNoSpeechTimer);
+  startPronunciationNoSpeechTimerRef.current = startPronunciationNoSpeechTimer;
   const armPronunciationCheckRef = useRef(armPronunciationCheck);
   armPronunciationCheckRef.current = armPronunciationCheck;
   // Mic tap (24 kHz float32): the session recorder as before, plus the clip.
@@ -12217,6 +12235,11 @@ export function VoiceTutorRealtime({
         let waitTimer: ReturnType<typeof setTimeout> | undefined;
         await Promise.race([pending, new Promise<void>((r) => { waitTimer = setTimeout(r, PRONUNCIATION_NOTE_WAIT_MS); })]);
         if (waitTimer) clearTimeout(waitTimer);
+        // The session ended / was sealed during the hold: no brain call.
+        if (endingRef.current || farewellSealedRef.current) {
+          onDebugEvent?.('pronunciation_hold_skipped', endingRef.current ? 'ending' : 'farewell_sealed');
+          return;
+        }
       }
       let runTranscript = transcript;
       if (typedAdvanceFact) runTranscript = `${typedAdvanceFact}\n\n${runTranscript}`;
@@ -22338,6 +22361,11 @@ export function VoiceTutorRealtime({
     }
     // Prune windows older than the classifier's 30s lookback (plus slack).
     while (wins.length && (wins[0].end ?? now) < now - 60_000) wins.shift();
+    // Pronunciation check: the model line has finished playing — the
+    // learner's 20 s no-speech window starts now.
+    if (realtime.state !== 'speaking' && pronunciationTimerAwaitsIdleRef.current) {
+      startPronunciationNoSpeechTimerRef.current();
+    }
   }, [realtime.state]);
   const wasTutorSpeakingAt = useCallback((tMs: number): boolean => {
     const EPS = 300; // VAD-onset slop + effect-flush lag
@@ -24232,8 +24260,17 @@ export function VoiceTutorRealtime({
   }, []);
   const perceptionOnSpeechStart = useCallback((e: PerceptionSpeechEvent) => {
       // Pronunciation check: an armed capture opens its clip (null unless active;
-      // a no-op after the clip, so turn.resume never re-opens it).
-      clipCaptureRef.current?.onSpeechStart();
+      // a no-op after the clip, so turn.resume never re-opens it). An onset
+      // while the tutor is (or just was) speaking is the model line's echo,
+      // not the repeat: ignored, and the capture stays armed for the next one.
+      const pronunciationCapture = clipCaptureRef.current;
+      if (pronunciationCapture?.isArmed() && !pronunciationCapture.isCapturing()) {
+        if (productionStateRef.current === 'speaking' || wasTutorSpeakingAt(Date.now())) {
+          onDebugEvent?.('pronunciation_start_ignored_tutor_speaking', `prod=${productionStateRef.current}`);
+        } else {
+          pronunciationCapture.onSpeechStart();
+        }
+      }
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
       // Review-round-1 (finding 2): a genuinely NEW onset firing while prod
@@ -24620,7 +24657,7 @@ export function VoiceTutorRealtime({
         }, BARGEIN_GATE_POLL_MS);
         return;
       }
-  }, [onDebugEvent, perceptionStage, realtime, runPerceptionKill, clearStage2LazyPending, beginBargeInPause]);
+  }, [onDebugEvent, perceptionStage, realtime, runPerceptionKill, clearStage2LazyPending, beginBargeInPause, wasTutorSpeakingAt]);
   const perceptionOnSpeechStop = useCallback((e: PerceptionSpeechEvent) => {
       // Pronunciation check: turn.eager_end closes the clip and sends it.
       const pronunciationClip = clipCaptureRef.current?.onSpeechStop();

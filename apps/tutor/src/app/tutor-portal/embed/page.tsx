@@ -105,6 +105,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // (lib/tutor/pronunciation/clip-capture.ts). Exact names, so the existing
   // 'pronunciation_claim' prefix keeps its own meaning.
   'pronunciation_armed', 'pronunciation_clip_sent', 'pronunciation_note_planted', 'pronunciation_unavailable',
+  'pronunciation_start_ignored_tutor_speaking', 'pronunciation_hold_skipped',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued
