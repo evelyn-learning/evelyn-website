@@ -137,10 +137,12 @@ const PLAN_ALOUD_RE =
 // progress ("the <name> segment still needs / is done / comes next …" — never
 // "the line segment"), the runtime's own nouns (sentence card, segment card,
 // runtime note, lesson pointer), and an announced card ("I'll show the
-// corrected sentence", "Let me show you a card"). A sentence carrying a real
+// corrected sentence", "Let me show you one sentence card"). Review 2026-10-29:
+// no bare "should"/"must"/"card" — "The red segment must be longer", "I'll show
+// you a card from the deck" are teaching sentences. A sentence carrying a real
 // correction is dropped with it: the card and the next sentence re-deliver it.
 const RUNTIME_NOTE_NARRATION_RE =
-  /\b(?:the|this) (?!line\b)[\w-]+ segment (?:still needs|has run|needs (?:a few|more)|is (?:over|complete|done|finished)|should|must|comes next)\b|\b(?:sentence card|segment card|runtime note|lesson pointer)\b|^\s*(?:I['’]?ll|Let me) show (?:you )?(?:the |one |a )?(?:corrected sentence|sentence card|segment card|card)\b/i;
+  /\b(?:the|this) (?!line\b)[\w-]+ segment (?:still needs|has run|needs (?:a few|more) (?:answers|turns|questions)|is (?:over|complete|done|finished)|comes next)\b|\b(?:sentence card|segment card|runtime note|lesson pointer)\b|^\s*(?:I[’']?ll|Let me) show (?:you )?(?:the |one |a )?(?:corrected sentence|sentence card|segment card)\b/i;
 const BARE_FILLER_JA_RE =
   /^\s*(?:(?:はい|いいですね|では|じゃあ|さて)[、,]?\s*)?(?:少し|ちょっと)?見てみましょう(?:ね|か)?[。！!]?\s*$/;
 

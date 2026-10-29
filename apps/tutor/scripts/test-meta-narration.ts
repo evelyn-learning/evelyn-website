@@ -617,6 +617,12 @@ check('kept: "Read the question again: what does it already ask for?"', !isMetaN
 check('dropped: "The level-check segment still needs a few more answers, …"', isMetaNarration('The level-check segment still needs a few more answers, and "I am sales manager" is missing the article "a".'));
 check('dropped: "I\'ll show the corrected sentence and then ask the next question."', isMetaNarration("I'll show the corrected sentence and then ask the next question."));
 check('dropped: "Let me show you one sentence card for the next step."', isMetaNarration('Let me show you one sentence card for the next step.'));
+check('kept: "The red segment must be longer than the blue one."', !isMetaNarration('The red segment must be longer than the blue one.'));
+check('kept: "The shaded segment should be 3 units long."', !isMetaNarration('The shaded segment should be 3 units long.'));
+check('kept: "The second segment should equal the first."', !isMetaNarration('The second segment should equal the first.'));
+check('kept: "Let me show you a card trick with probability."', !isMetaNarration('Let me show you a card trick with probability.'));
+check('kept: "I\'ll show you a card from the deck."', !isMetaNarration("I'll show you a card from the deck."));
+check('dropped: "I\'ll show the corrected sentence and then ask the next question."', isMetaNarration("I'll show the corrected sentence and then ask the next question."));
 check('dropped: "This warm-up segment is done."', isMetaNarration('This warm-up segment is done.'));
 check('dropped: "Per the lesson pointer, we move on."', isMetaNarration('Per the lesson pointer, we move on.'));
 check('kept: "Let me show you the sentence on the board."', !isMetaNarration('Let me show you the sentence on the board.'));
