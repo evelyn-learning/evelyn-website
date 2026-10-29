@@ -1664,6 +1664,9 @@ export function extractCommandTitle(cmd: any): string | undefined {
     cmd.label,
     cmd.equation?.label,
     cmd.heading,
+    // showSentence (language lessons): the sentence itself is what the brain
+    // must see in <whiteboard_state> to know which sentence is already up.
+    cmd.action === 'showSentence' ? cmd.sentence : undefined,
   ];
   for (const c of candidates) {
     if (typeof c === 'string' && c.trim()) return c.trim();

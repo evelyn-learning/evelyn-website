@@ -158,3 +158,13 @@ export function levelSetAdvanceTarget(plan: LessonPlan | null | undefined, segme
   if (seg?.metadata?.skipWhenLevelKnown !== true) return null;
   return nextSegmentId(plan, segmentId, true);
 }
+
+/** A due auto-advance waits while a pronunciation clip is armed (advancing
+ *  would disarm it and the learner's repeat would never be measured), but at
+ *  most this many consecutive turns — a brain that re-arms every turn (a
+ *  drill) must not pin the segment forever. */
+export const FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS = 3;
+/** True ⇒ hold this turn. `heldTurns` = consecutive turns already held. */
+export function holdAutoAdvanceForPronunciation(armed: boolean, heldTurns: number): boolean {
+  return armed && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS;
+}

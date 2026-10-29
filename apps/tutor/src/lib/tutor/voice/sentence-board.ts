@@ -189,14 +189,43 @@ export function composeSpokenText(
   let out = rewrite(raw);
   const span = correctionSpan(raw, studentLast);
   if (span) {
-    const needle = span.inner.trim().replace(/[.?!…]+$/, '').toLowerCase();
-    const at = needle ? out.toLowerCase().indexOf(needle) : -1;
-    out = at >= 0
-      ? out.slice(0, at) + applySpokenEmphasis(out.slice(at, at + needle.length), span.emphasis) + out.slice(at + needle.length)
+    const at = locateWords(out, span.inner);
+    out = at
+      ? out.slice(0, at[0]) + applySpokenEmphasis(out.slice(at[0], at[1]), span.emphasis) + out.slice(at[1])
       : applySpokenEmphasis(out, span.emphasis);
   }
-  for (const c of cards) if (c.emphasis?.length && sentenceContains(raw, c.sentence)) out = applySpokenEmphasis(out, c.emphasis);
+  // A brain show_sentence card: at most MAX_EMPHASIS words of ≥ 2 letters,
+  // stressed only inside the card's own sentence where the speech says it.
+  for (const c of cards) {
+    const words = (c.emphasis ?? []).filter((w) => typeof w === 'string' && (w.match(/\p{L}/gu) ?? []).length >= 2).slice(0, MAX_EMPHASIS);
+    if (!words.length || !sentenceContains(raw, c.sentence)) continue;
+    const at = locateWords(out, c.sentence);
+    if (at) out = out.slice(0, at[0]) + applySpokenEmphasis(out.slice(at[0], at[1]), words) + out.slice(at[1]);
+  }
   return out;
+}
+
+/** [start, end) of `words`' token run inside `text` (case-insensitive, any
+ *  punctuation / spacing between words), or null. */
+function locateWords(text: string, words: string): [number, number] | null {
+  const toks = (words.match(TOKEN_RE) ?? []).map((t) => escapeRe(t).replace(/['’]/g, "['’]"));
+  if (!toks.length) return null;
+  const re = new RegExp(`(?<![\\p{L}\\p{N}])${toks.join("[^\\p{L}\\p{N}'’]+")}(?![\\p{L}\\p{N}])`, 'iu');
+  const m = re.exec(text);
+  return m ? [m.index, m.index + m[0].length] : null;
+}
+
+/** 1-based index of the spoken sentence (the turn's narration) that says
+ *  `sentence` — the render-sync anchor for an auto card; undefined when none
+ *  does (the card then anchors to the live sentence count). Falls back to the
+ *  sentence holding its first three words (a splitter that cut the quote). */
+export function sentenceAnchorIndex(narration: readonly string[], sentence: string): number | undefined {
+  let i = narration.findIndex((n) => sentenceContains(n, sentence));
+  if (i < 0) {
+    const head = tokens(sentence).slice(0, 3).join(' ');
+    if (head) i = narration.findIndex((n) => ` ${norm(n)} `.includes(` ${head} `));
+  }
+  return i >= 0 ? i + 1 : undefined;
 }
 
 /** True when `text` contains `sentence` word for word (case, punctuation and

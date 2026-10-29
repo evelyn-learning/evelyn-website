@@ -12,7 +12,7 @@ import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import {
   extractQuotedSentences, classifyQuotedSentence, planSentenceBoard,
   applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
-  sentenceContains, sentenceOnCurrentPage, composeSpokenText,
+  sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex,
 } from '../src/lib/tutor/voice/sentence-board';
 
 let failed = 0;
@@ -145,6 +145,31 @@ test('composeSpokenText: a brain card stresses the sentence that says it', () =>
   const out = composeSpokenText('Say it like this: I have been a sales manager for four years.', null, RW,
     [{ sentence: 'I have been a sales manager for four years.', emphasis: ['been'] }]);
   assert.ok(/have BEEN a sales/.test(out), out);
+});
+// ── fix round 11-2 ───────────────────────────────────────────────────────
+test('B: a brain card stresses at most 4 words, only inside its own sentence span', () => {
+  const card = { sentence: 'She has worked in sales for many years', emphasis: ['has', 'worked', 'sales', 'for', 'many', 'years'] };
+  const out = composeSpokenText('She has worked in sales for many years, and she has a team.', null, RW, [card]);
+  assert.ok(/She HAS WORKED in SALES FOR many years/.test(out), out);
+  assert.ok(/and she has a team/.test(out), `outside the span untouched: ${out}`);
+});
+test('B: 1-letter card words never count toward the cap', () => {
+  const out = composeSpokenText('I have a car.', null, RW, [{ sentence: 'I have a car.', emphasis: ['a', 'car'] }]);
+  assert.ok(/I have a CAR/.test(out), out);
+});
+test('A: anchor = the spoken sentence that says the card (1-based), head fallback, else undefined', () => {
+  const narration = ['Close.', 'Can you say the whole sentence once more: "I haven\'t taken leave from work"?'];
+  assert.equal(sentenceAnchorIndex(narration, "I haven't taken leave from work"), 2);
+  assert.equal(sentenceAnchorIndex(['Try: "I have been a sales', 'manager for four years."'], 'I have been a sales manager for four years.'), 1);
+  assert.equal(sentenceAnchorIndex(['Hello there.'], 'I work in sales.'), undefined);
+});
+test('A: the auto card goes through handleWhiteboardCommand with its anchor, never a raw paint', () => {
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  const at = vtr.indexOf("'sentence_board_auto'");
+  const block = vtr.slice(at - 2500, at + 200);
+  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor \} : undefined\)/.test(block), 'normal board path');
+  assert.ok(/sentenceAnchorIndex\(turnNarrationRef\.current, card\.sentence\)/.test(block), 'anchored to its spoken sentence');
+  assert.ok(!/onWhiteboardCommand\(\[cmd\]\)/.test(block), 'no raw opener-fallback paint');
 });
 test('hook pin: both Cartesia paths compose AFTER rewriteForTTS; the HTTP route skips its rewrite only for prerewritten text', () => {
   const hook = readFileSync(join(__dirname, '..', 'src/app/tutor/hooks/useOpenAIRealtime.ts'), 'utf8');

@@ -20,6 +20,7 @@ import {
   fixedScriptAutoAdvanceReason, overlongTurnThreshold, levelSetAdvanceTarget,
   fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote,
   FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_TIME_FACTOR, FIXED_SCRIPT_AUTO_ADVANCE_MIN_MS,
+  FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPronunciation,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
@@ -163,8 +164,18 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
   const block = VTR.slice(auto, auto + 3000);
-  pin(block, /if \(autoNext && clipCaptureRef\.current\?\.isArmed\(\)\) \{[\s\S]*?'fixed_script_auto_advance_held_pron', `"\$\{segIdNow\}"`[\s\S]*?\} else if \(autoNext\) \{/);
+  pin(block, /if \(autoNext && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
+  pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
+});
+test('C: the pronunciation hold is capped at 3 consecutive turns; the 4th advances', () => {
+  assert.equal(FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, 3);
+  assert.equal(holdAutoAdvanceForPronunciation(true, 0), true);
+  assert.equal(holdAutoAdvanceForPronunciation(true, 2), true);
+  assert.equal(holdAutoAdvanceForPronunciation(true, 3), false);
+  assert.equal(holdAutoAdvanceForPronunciation(false, 0), false);
+  // the held count resets when nothing is due (a new segment) and on the advance
+  pin(VTR, /if \(!autoReason\) autoAdvancePronHeldRef\.current = 0;/);
 });
 test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');

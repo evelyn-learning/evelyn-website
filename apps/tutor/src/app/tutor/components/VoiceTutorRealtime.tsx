@@ -11,7 +11,7 @@
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
 import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD } from '@/lib/tutor/orchestrator/flags';
-import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
+import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
@@ -426,7 +426,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS } from '@/lib/tutor/lesson-plan/fixed-script';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -3997,6 +3997,9 @@ export function VoiceTutorRealtime({
   /** The pending note is a fixed-script FACT note (the client already moved
    *  the cursor): delivered on the very next brain turn, never held. */
   const pendingRuntimeNoteUrgentRef = useRef(false);
+  /** Consecutive turns a due fixed-script auto-advance was held for an armed
+   *  pronunciation clip (capped: FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS). */
+  const autoAdvancePronHeldRef = useRef(0);
   // Live check 7: the note must not land while the student is answering an
   // open question (portal-8ed0fb65 10:53:48Z — delivered with "12", the brain
   // advanced mid-problem and rendered the next card under the wrong problem).
@@ -19514,15 +19517,21 @@ export function VoiceTutorRealtime({
             levelKnown: !!workingLevelRef.current,
           })
           : null;
+        if (!autoReason) autoAdvancePronHeldRef.current = 0;
         if (autoPlan && autoReason) {
           const autoNext = nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current);
-          if (autoNext && clipCaptureRef.current?.isArmed()) {
+          const pronArmed = !!clipCaptureRef.current?.isArmed();
+          if (autoNext && holdAutoAdvanceForPronunciation(pronArmed, autoAdvancePronHeldRef.current)) {
             // The brain asked for a pronunciation repeat this turn: advancing
             // would disarm it (disarmPronunciationOnSegmentAdvance) and the
             // learner's repeat would never be measured. Hold; the counters
-            // keep growing, so the advance fires the first turn the arm is gone.
-            onDebugEvent?.('fixed_script_auto_advance_held_pron', `"${segIdNow}"`);
+            // keep growing, so the advance fires the first turn the arm is
+            // gone — or after FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS held
+            // turns in a row (a drill re-arming every turn), disarm and all.
+            autoAdvancePronHeldRef.current += 1;
+            onDebugEvent?.('fixed_script_auto_advance_held_pron', `"${segIdNow}" ${autoAdvancePronHeldRef.current}/${FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS}`);
           } else if (autoNext) {
+            autoAdvancePronHeldRef.current = 0;
             const autoTurns = cur.turns;
             const autoElapsedS = Math.round((Date.now() - cur.startedAt) / 1000);
             // Resets turnsInSegmentRef for the new segment and disarms a
@@ -19716,28 +19725,34 @@ export function VoiceTutorRealtime({
         // Sentence board (2026-10-29, GDI trial run 1: the brain boarded 3
         // model/corrected sentences in 29 turns although the prompt orders it
         // every time). Language session + a turn that rendered nothing + a
-        // quoted sentence ⇒ the client puts the card up itself, through the
-        // same paint path as the opener fallback line. Never on the opening
-        // turn; never twice on one page.
+        // quoted sentence ⇒ the client puts the card up itself. Fix round
+        // 11-2: through the SAME path a brain show_sentence takes
+        // (handleWhiteboardCommand) — so a deferred segment page opens first,
+        // render-sync anchors the card to the sentence that says it, and the
+        // catalog lists it in <whiteboard_state> (the brain sees it and does
+        // not duplicate it). Never on the opening turn; never twice on one page.
         if (TUTOR_SENTENCE_BOARD && languageSessionRef.current && !openingTurnPendingRef.current) {
           const cards = planSentenceBoard({
             tutorText: fullText,
             studentLast: sentenceStressRef.current.studentLast,
             renderedThisTurn: totalToolNamesSeen.some((n) => RENDER_TOOLS.has(n)),
           });
-          const stamp = Date.now();
-          cards.forEach((card, i) => {
-            if (sentenceOnCurrentPage(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, card.sentence)) return;
+          for (const card of cards) {
+            // A pending segment page opens with this card, so the page the
+            // log shows as current is the one being left — nothing to dedupe.
+            if (!pendingAdvanceNewPageRef.current
+              && sentenceOnCurrentPage(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, card.sentence)) continue;
             const cmd = {
               action: 'showSentence',
               sentence: card.sentence,
               ...(card.emphasis.length ? { emphasis: card.emphasis } : {}),
-              id: `sentence-auto-${stamp}-${i}`,
             } as WhiteboardCommand;
-            onWhiteboardCommand([cmd]);
-            whiteboardCommandsRef.current = [...whiteboardCommandsRef.current, cmd];
-            onDebugEvent?.('sentence_board_auto', `kind=${card.kind} emphasis=[${card.emphasis.join(', ')}] "${card.sentence}"`);
-          });
+            const anchor = sentenceAnchorIndex(turnNarrationRef.current, card.sentence);
+            const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor } : undefined);
+            const placedId = res?.assignedIds?.[0];
+            // Runtime-origin marker: this event (the card is not a brain tool call).
+            onDebugEvent?.('sentence_board_auto', `kind=${card.kind} emphasis=[${card.emphasis.join(', ')}] "${card.sentence}" anchor=${anchor ?? 'live'} ${placedId ? `id=${placedId}` : `not placed${res?.rejected?.length ? ` (${res.rejected.map((r) => r.reason).join('; ').slice(0, 80)})` : ''}`}`);
+          }
         }
         // R49b: the CONTENT companion to the presence check above. A render
         // tool firing is not the same as the problem reaching the board —
