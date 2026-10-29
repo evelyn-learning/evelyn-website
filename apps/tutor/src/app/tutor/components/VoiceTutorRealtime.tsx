@@ -10,7 +10,8 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL } from '@/lib/tutor/orchestrator/flags';
+import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
@@ -4613,7 +4614,7 @@ export function VoiceTutorRealtime({
   const continueRotationRef = useRef<(() => Promise<void>) | null>(null);
   // End/Pause teardown — assigned every render below (see the assignment near
   // handleContinueRotation) and read by both the dock button and handleRef.
-  const endSessionNowRef = useRef<(opts?: { farewell?: string }) => Promise<void>>(async () => {});
+  const endSessionNowRef = useRef<(opts?: { farewell?: string; reason?: 'time_limit' }) => Promise<void>>(async () => {});
   // End at most once per mount (host-end fix round 1): the student's End,
   // a host_end and a double tap all run endSessionNowRef — only the first
   // does anything. Exposed on the handle as isEnding() so the embed's
@@ -25476,11 +25477,64 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         console.log(
           `[demo-time-box] hard stop reached ${sessionMaxMinutes}min cap — ending session (reason=time_limit)`,
         );
-        onEndSession('time_limit');
+        // Demo-polish (2026-10-29): a spoken goodbye first (live
+        // embed-1793240679836 was cut mid-explanation with no close). Same
+        // farewell path as a host end: seals the brain, speaks the fixed line,
+        // bounded wait, then the graceful end tagged time_limit.
+        if (TUTOR_TIMEBOX_FAREWELL) {
+          const line = goodbyeLine(studentName);
+          onDebugEvent?.('timebox_farewell_spoken', line);
+          void endSessionNowRef.current({ farewell: line, reason: 'time_limit' });
+        } else {
+          onEndSession('time_limit');
+        }
       }
     }, 5000);
     return () => clearInterval(intervalId);
   }, [isTrial, maxDurationExplicit, targetKind, sessionMaxMinutes, onEndSession]);
+
+  // Demo-polish (2026-10-29): the client's own wrap line. The <demo_stop>
+  // "Wrap up NOW" directive is prompt text the brain ignored twice in the
+  // live session; this fixed line is spoken once, the first time the floor
+  // is free after the wrap minute (same wrapPhase predicate as the idle
+  // nudge, same busy test), through the client-spoken-line path the demo
+  // opener uses. Text mode posts it as a tutor message instead.
+  const wrapLineSpokenRef = useRef(false);
+  useEffect(() => {
+    if (!TUTOR_TIMEBOX_FAREWELL) return;
+    if (sessionWrapMinutes == null) return;
+    if (targetKind === 'diagnostic') return;
+    const intervalId = setInterval(() => {
+      if (wrapLineSpokenRef.current || hardStopFiredRef.current || endingRef.current || standbyRef.current) return;
+      const startedAtMs = voiceSessionStartedAtMsRef.current;
+      if (startedAtMs === null) return;
+      const wrapPhase =
+        (sessionModeRef.current === 'demo' || (sessionModeRef.current != null && maxDurationExplicit)) &&
+        Math.floor((Date.now() - startedAtMs) / 60000) >= sessionWrapMinutes;
+      const busy =
+        productionStateRef.current === 'speaking' ||
+        brainBusyRef.current ||
+        awaitingDispatchTimerRef.current != null ||
+        studentTypingRef.current;
+      const decision = decideWrapLine({ wrapPhase, spoken: wrapLineSpokenRef.current, busy, midUtterance: perceptionMidUtteranceRef.current });
+      if (decision !== 'speak') return;
+      wrapLineSpokenRef.current = true;
+      clearInterval(intervalId);
+      const line = WRAP_LINE;
+      if (sessionMode !== 'text') {
+        try { realtime.speakText(line, pushTtsScriptForPerception(line)); } catch {}
+      }
+      transcriptRef.current = [
+        ...transcriptRef.current,
+        { id: `tutor-${Date.now()}-wrap`, timestamp: new Date(), role: 'tutor', text: line } as TranscriptEntry,
+      ];
+      onTranscriptUpdate([...transcriptRef.current]);
+      onTrackInteraction?.('message', line, undefined, 'tutor');
+      onDebugEvent?.('wrap_line_spoken', line);
+    }, 5000);
+    return () => clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionWrapMinutes, maxDurationExplicit, targetKind, sessionMode]);
 
   // Toggle listening
   // R40 (session embed-1785808658013): a Start tap that lands while the relay
@@ -26198,7 +26252,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       new Promise<void>((resolve) => setTimeout(resolve, FINAL_COMMIT_MAX_WAIT_MS)),
     ]);
     if (farewell) await waitForFarewell(farewellAt);
-    onEndSession?.();
+    // Demo-polish (2026-10-29): the hard stop ends through this path too, so
+    // its reason ('time_limit') must survive to the host's session_ended.
+    onEndSession?.(opts?.reason);
   };
   // Bounded wait for the host-end goodbye (above). The host gives the embed
   // ~6 s to post session_ended before it unmounts the iframe, and the final

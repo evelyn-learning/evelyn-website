@@ -235,6 +235,7 @@
     "test:round7-locale-interests": "npx tsx scripts/test-round7-locale-interests.ts",
     "test:equation-split": "npx tsx scripts/test-equation-split.ts",
     "test:idle-nudge": "npx tsx scripts/test-idle-nudge.ts",
+    "test:timebox-lines": "npx tsx scripts/test-timebox-lines.ts",
     "test:another-problem": "npx tsx scripts/test-another-problem.ts",
     "test:perception-classifier": "npx tsx scripts/test-perception-classifier.ts",
     "test:sentence-buffer": "npx tsx scripts/test-sentence-buffer.ts",
