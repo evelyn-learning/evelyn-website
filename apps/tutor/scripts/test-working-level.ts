@@ -18,6 +18,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   WORKING_LEVELS, parseWorkingLevel, buildWorkingLevelClause, applyWorkingLevel, decideSetWorkingLevel,
+  withWorkingLevelResult,
 } from '../src/lib/tutor/level/working-level';
 import { emptyProfile } from '../src/lib/tutor/student-profile/store';
 import { WHITEBOARD_TOOLS, SET_WORKING_LEVEL_TOOL, mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
@@ -26,8 +27,16 @@ import { NON_RENDER_TOOL_NAMES } from '../src/lib/tutor/voice/rule8-client';
 import { isBoardContentTool } from '../src/lib/tutor/voice/question-anchor';
 
 let failed = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); console.log(`  ok  ${name}`); } catch (e) { failed++; console.log(`  FAIL ${name}\n       ${(e as Error).message}`); }
+const pending: Promise<void>[] = [];
+function test(name: string, fn: () => void | Promise<void>) {
+  const report = (e?: unknown) => {
+    if (e) { failed++; console.log(`  FAIL ${name}\n       ${(e as Error).message}`); } else console.log(`  ok  ${name}`);
+  };
+  try {
+    const r = fn();
+    if (r instanceof Promise) pending.push(r.then(() => report(), report));
+    else report();
+  } catch (e) { report(e); }
 }
 const read = (p: string) => readFileSync(join(__dirname, '..', p), 'utf8');
 /** Source pin without dumping the whole file on a miss. */
@@ -74,6 +83,30 @@ test('a bad value is refused with a note naming the three levels', () => {
   assert.equal(d.ok, false);
   assert.equal(d.level, undefined);
   assert.match(d.note ?? '', /beginner.*intermediate.*advanced/);
+});
+
+// ── server tool result (claude-brain path) ─────────────────────────────
+test('route result: first valid call answers {ok:true, level}', async () => {
+  const p = withWorkingLevelResult(undefined, null);
+  assert.deepEqual(JSON.parse(await p('set_working_level', { level: 'Beginner', evidence: '日本語で答えた' })), { ok: true, level: 'beginner' });
+});
+test('route result: a second call in the same turn gets the exact refusal note', async () => {
+  const p = withWorkingLevelResult(undefined, null);
+  await p('set_working_level', { level: 'beginner', evidence: 'x' });
+  assert.deepEqual(JSON.parse(await p('set_working_level', { level: 'advanced', evidence: 'x' })), { ok: false, note: 'Level already set this session; do not re-test.' });
+});
+test('route result: a level the client already holds (earlier turn / previous lesson) is refused', async () => {
+  const p = withWorkingLevelResult(undefined, 'intermediate');
+  assert.deepEqual(JSON.parse(await p('set_working_level', { level: 'intermediate', evidence: 'x' })), { ok: false, note: 'Level already set this session; do not re-test.' });
+});
+test('route result: an invalid level gets decideSetWorkingLevel\'s note', async () => {
+  const p = withWorkingLevelResult(undefined, null);
+  assert.deepEqual(JSON.parse(await p('set_working_level', { level: 'B1', evidence: 'x' })), { ok: false, note: decideSetWorkingLevel(null, 'B1').note });
+});
+test('route result: other tools pass through to the inner provider, or the default ack', async () => {
+  const inner = async (name: string) => `inner:${name}`;
+  assert.equal(await withWorkingLevelResult(inner, null)('advance_lesson', {}), 'inner:advance_lesson');
+  assert.equal(await withWorkingLevelResult(undefined, null)('show_table', {}), 'show_table executed successfully.');
 });
 
 // ── buildWorkingLevelClause ──────────────────────────────────────────────
@@ -202,6 +235,8 @@ const model = read('src/models/StudentProfile.ts');
 test('route: tool appended only for body.levelCheck under TUTOR_WORKING_LEVEL, after Lever A', () => {
   pin(route, /body\.levelCheck === true && TUTOR_WORKING_LEVEL/);
   pin(route, /SET_WORKING_LEVEL_TOOL\]/);
+  pin(route, /\? withWorkingLevelResult\(provider, parseWorkingLevel\(body\.workingLevel\)\)/);
+  pin(vtr, /workingLevel: levelCheckActive \? workingLevelRef\.current\?\.level : undefined/);
   assert.ok(route.indexOf('SET_WORKING_LEVEL_TOOL]') > route.indexOf('filterToolsForSubject('));
 });
 test('runtime: levelCheck gated by the kill switch; body, prompt and RT-2 tools use the gate', () => {
@@ -227,5 +262,7 @@ test('persistence: profile route applies the level; model keeps the field', () =
   pin(model, /workingLevel: obj\.workingLevel/);
 });
 
-if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
-console.log('\nall passed');
+void Promise.all(pending).then(() => {
+  if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
+  console.log('\nall passed');
+});

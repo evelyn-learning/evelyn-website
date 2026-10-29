@@ -45,6 +45,7 @@ import {
   type Difficulty,
 } from '@/lib/tutor/voice/problem-generator';
 import { TUTOR_CONTENT_VARIETY, TUTOR_WORKING_LEVEL } from '@/lib/tutor/orchestrator/flags';
+import { withWorkingLevelResult, parseWorkingLevel } from '@/lib/tutor/level/working-level';
 import { searchImage } from '@/lib/tutor/image-search';
 import { classifyBrainError, decideBrainRetry, withInactivityTimeout } from '@/lib/tutor/voice/brain-retry';
 import { textThinkingEnabled } from '@/lib/tutor/voice/text-thinking';
@@ -137,6 +138,9 @@ interface BrainStreamRequestBody {
   videoHost?: boolean;
   /** GDI trial: this session's partner has `levelCheck` ⇒ offer `set_working_level`. */
   levelCheck?: boolean;
+  /** The level this session already holds (set earlier, or known from the
+   *  learner's previous lesson); absent ⇒ none yet. Read with `levelCheck`. */
+  workingLevel?: string;
   /** Practice-mode contract (Task X2). Client sends true when the session's
    *  embed token carried session_goal === 'practice'. Surfaces as the durable
    *  `<practice_session>` block. See BrainTurnInput.practiceMode. */
@@ -1047,14 +1051,22 @@ export async function POST(req: NextRequest) {
           ...(typeof body.verdictPrecheckSeal === 'string' && body.verdictPrecheckSeal.length <= 4000
             ? { verdictPrecheckSeal: body.verdictPrecheckSeal }
             : {}),
-          toolResultProvider: makeToolResultProvider(
-            body.lessonPlanContext,
-            body.shownProblemIds ?? [],
-            body.shownProblemHashes ?? [],
-            (p) => send({ type: 'generated-problem', ...p }),
-            typeof body.pacingState?.difficultyBias === 'number' ? body.pacingState.difficultyBias : undefined,
-            embedTokenPartnerClaim(req.headers.get('x-embed-token'))
-          ),
+          toolResultProvider: (() => {
+            const provider = makeToolResultProvider(
+              body.lessonPlanContext,
+              body.shownProblemIds ?? [],
+              body.shownProblemHashes ?? [],
+              (p) => send({ type: 'generated-problem', ...p }),
+              typeof body.pacingState?.difficultyBias === 'number' ? body.pacingState.difficultyBias : undefined,
+              embedTokenPartnerClaim(req.headers.get('x-embed-token'))
+            );
+            // Working level (GDI trial): the once-only rule's answer reaches
+            // the brain here, not via the client's tool-result note. Only
+            // when the tool was offered ⇒ every other session unchanged.
+            return body.levelCheck === true && TUTOR_WORKING_LEVEL
+              ? withWorkingLevelResult(provider, parseWorkingLevel(body.workingLevel))
+              : provider;
+          })(),
       };
 
       // Task X10 — bounded whole-turn retry. Wraps the generator so a turn

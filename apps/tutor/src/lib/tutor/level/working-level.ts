@@ -104,3 +104,31 @@ export function applyWorkingLevel(
     workingLevel: { level: input.level, planId: input.planId, setAt: input.at ?? Date.now() },
   };
 }
+
+type ToolResultProvider = (name: string, args: Record<string, unknown>) => Promise<string>;
+
+/** Server side of the once-only rule (claude-brain path, where the brain
+ *  reads the ROUTE's tool_result, not the client's). Wraps the route's
+ *  provider: `set_working_level` answers `{ok:true, level}` on the first
+ *  valid call and the exact refusal note otherwise; every other tool goes to
+ *  `inner`, or gets the brain's default ack when there is none. `current` is
+ *  the level the client says the session already holds (set earlier or
+ *  known from the previous lesson); a set within this turn updates it, so a
+ *  second call in the same turn is refused too. */
+export function withWorkingLevelResult(
+  inner: ToolResultProvider | undefined,
+  current: WorkingLevel | null,
+): ToolResultProvider {
+  let held = current;
+  return async (name, args) => {
+    if (name === 'set_working_level') {
+      const d = decideSetWorkingLevel(held, args.level);
+      if (d.ok && d.level) {
+        held = d.level;
+        return JSON.stringify({ ok: true, level: d.level });
+      }
+      return JSON.stringify({ ok: false, note: d.note });
+    }
+    return inner ? inner(name, args) : `${name} executed successfully.`;
+  };
+}

@@ -13009,6 +13009,9 @@ export function VoiceTutorRealtime({
             videoHost: TUTOR_HOST_LESSON && videoHost ? true : undefined,
             // Working level (GDI trial): offer `set_working_level`. Session-stable.
             levelCheck: levelCheckActive ? true : undefined,
+            // …and the level already held, so the route's tool result can
+            // refuse a second set (the brain reads the route's result).
+            workingLevel: levelCheckActive ? workingLevelRef.current?.level : undefined,
             // Task X2: durable practice-mode contract. sessionGoal rides the
             // embed token on EVERY mint (initial + resume), so deriving the
             // flag from the stable prop each turn makes the mode durable across
