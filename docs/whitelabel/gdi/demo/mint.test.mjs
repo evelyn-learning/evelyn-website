@@ -28,6 +28,10 @@ const ids = claims.map((c) => c.student_id);
 assert.deepEqual(ids.slice(0, 4), ['gdi-trial-1', 'gdi-trial-2', 'gdi-trial-3', 'gdi-trial-4']);
 assert.match(ids[4], /^gdi-trial-josh-.+/);
 assert.match(ids[5], /^gdi-trial-praveen-.+/);
+// Testers are unnamed (no placeholder spoken as a name); the two named links are named.
+for (const c of claims.slice(0, 4)) assert.ok(!('student_name' in c), `no student_name for ${c.student_id}`);
+assert.equal(claims[4].student_name, 'Josh');
+assert.equal(claims[5].student_name, 'Praveen');
 for (const c of claims) {
   assert.equal(c.partner_id, 'gdi-demo');
   assert.equal(c.curriculum_module, 'gdi.trial.english.work-projects.v1');

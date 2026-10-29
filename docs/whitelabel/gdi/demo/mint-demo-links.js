@@ -6,6 +6,7 @@
 //   PARTNER_SECRET="$(cat ~/.evelyn/partners/gdi-demo.secret)" node mint-demo-links.js trial [--testers 4] [--local]
 //   - gdi-trial-1..N use FIXED student ids (a tester's 2nd lesson skips the level check);
 //     Josh + Praveen get FRESH ids each mint (level check can be re-seen on request).
+//   - tester links carry no student_name (the tutor would say a placeholder as a name).
 //   - ttl defaults to 720 h for `trial`; no is_trial / wrap_at_minutes claims.
 //
 // Minute pool (PROD WRITES — Praveen runs these, NOT this script), before the trial starts:
@@ -42,8 +43,10 @@ const keepStudent = process.argv.includes('--keep_student');
 const studentSuffix = keepStudent ? '' : `-${now.toString(36)}`;
 if (isTrial) {
   const ryota = teachers.find((t) => t.id === 'ryota');
+  // Testers carry NO student_name: a placeholder ("Trial Tester") is spoken
+  // as the learner's name. Only Josh and Praveen are named.
   const trialClaims = (studentId, name) => ({
-    partner_id: 'gdi-demo', student_id: studentId, student_name: name,
+    partner_id: 'gdi-demo', student_id: studentId, ...(name ? { student_name: name } : {}),
     subject: 'languages', level: 'Adult working professional', topic: 'Work projects',
     curriculum_module: 'gdi.trial.english.work-projects.v1', target_kind: 'lessonNode', input_mode: 'voice',
     teacher: ryota, tutor_languages: ['en', 'ja'], speech_rate: 0.8, thinking_cue: true,
@@ -51,7 +54,7 @@ if (isTrial) {
   });
   const fresh = now.toString(36);
   const rows = [];
-  for (let n = 1; n <= testers; n++) rows.push([`tester-${n}`, trialClaims(`gdi-trial-${n}`, 'Trial Tester')]);
+  for (let n = 1; n <= testers; n++) rows.push([`tester-${n}`, trialClaims(`gdi-trial-${n}`)]);
   rows.push(['josh', trialClaims(`gdi-trial-josh-${fresh}`, 'Josh')]);
   rows.push(['praveen', trialClaims(`gdi-trial-praveen-${fresh}`, 'Praveen')]);
   for (const [label, payload] of rows) console.log(`${label}\t${EMBED}?token=${signEmbedToken(payload, secret)}`);

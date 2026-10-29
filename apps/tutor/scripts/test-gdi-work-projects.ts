@@ -130,6 +130,11 @@ test('open conversation: proud-project question is the problem truth', () => {
   assert.match(lower(s.teacherNote), /ask me/);
 });
 
+test('open conversation (final review #5): a mid-conversation "how do I say…" gets a model, a check, ONE point, then back', () => {
+  const n = seg('open-conversation').teacherNote ?? '';
+  assert.ok(n.includes('If the learner asks how to say a word or sentence, model it (its own English-only sentence), call request_pronunciation_check if that tool is available, give ONE point, then return to the conversation exactly where you left it.'), n);
+});
+
 test('pronunciation: targets in metadata, four options, measured-only feedback', () => {
   const s = seg('pronunciation');
   assert.deepEqual(s.metadata?.pronunciation, {
@@ -141,6 +146,9 @@ test('pronunciation: targets in metadata, four options, measured-only feedback',
   assert.match(lower(n), /skip/);
   assert.match(lower(n), /only check the words/);
   assert.match(n, /if that tool is available in this session/);
+  // Final review #3: the TTS voice is picked per sentence — a model line with
+  // any Japanese in it would be voiced by the Japanese voice.
+  assert.ok(n.includes('Say the model text as its own sentence, English only — no Japanese in that sentence (the voice switches per sentence).'), n);
   for (const w of ['responsibilities', 'international', 'communicate', 'customers', 'developed']) assert.ok(n.includes(w), w);
 });
 
