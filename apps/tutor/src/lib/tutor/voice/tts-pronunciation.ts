@@ -285,6 +285,12 @@ const MATH_OPERATOR_REPLACEMENTS: Replacement[] = [
   // binary ("x − 1", "1−2").
   { pattern: /(?<=^|[\s(=,\[])−(?=[\p{L}\p{N}(])/gu, replacement: 'negative ' },
   { pattern: /\s*−\s*/g, replacement: ' minus ' },
+  // "the point (2, 0)" was heard as "the 0.2 comma 0" (Otter transcript of the
+  // same session): a beat between "point" and the pair keeps "point" a noun.
+  { pattern: /\b(points?)\s*\(/gi, replacement: '$1, (' },
+  // "(0, 2) too" spoke "zero comma two two": "too" right after a number or a
+  // closing bracket becomes "as well".
+  { pattern: /(?<=[\p{N})])\s+too\b/gu, replacement: ' as well' },
 ];
 
 /** Slash-pair whitelist — curated option/direction pairs where "/" is
@@ -2242,6 +2248,25 @@ export interface RewriteForTTSOptions {
   studentName?: string;
 }
 
+/** 2026-10-29 (demo-polish, live embed-1793240679836): the ASCII relational
+ *  signs in PROSE reached the voice raw and were dropped — "2 < 1" spoke as
+ *  "2 1", six times in one session (the in-span wordifier only runs on
+ *  isolated math fragments). Voiced only BETWEEN operands (letter / digit /
+ *  closing bracket on the left, letter / digit / opening bracket / minus on
+ *  the right); a markup tag (`<br>`, `<b>`, `</span>`) is never an
+ *  inequality — the lookahead/lookbehind exclude a tag body next to the
+ *  sign. Must run BEFORE the bare-"=" rule so "<=" / ">=" are still whole. */
+const PROSE_RELATIONAL_RULES: Replacement[] = [
+  { pattern: /(?<=[\p{L}\p{N})\]])\s*<=(?!\/?[a-z][a-z0-9-]*\s*\/?>)\s*(?=[\p{L}\p{N}(\[−-])/gu, replacement: ' less than or equal to ' },
+  { pattern: /(?<=[\p{L}\p{N})\]])(?<!<\/?[a-z][a-z0-9-]*\s*\/?)\s*>=\s*(?=[\p{L}\p{N}(\[−-])/gu, replacement: ' greater than or equal to ' },
+  { pattern: /(?<=[\p{L}\p{N})\]])\s*<(?!\/?[a-z][a-z0-9-]*\s*\/?>)\s*(?=[\p{L}\p{N}(\[−-])/gu, replacement: ' less than ' },
+  { pattern: /(?<=[\p{L}\p{N})\]])(?<!<\/?[a-z][a-z0-9-]*\s*\/?)\s*>\s*(?=[\p{L}\p{N}(\[−-])/gu, replacement: ' greater than ' },
+];
+export function speakProseRelationalSigns(t: string): string {
+  for (const { pattern, replacement } of PROSE_RELATIONAL_RULES) t = t.replace(pattern, replacement);
+  return t;
+}
+
 export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string {
   let t = raw;
   // Known-name vocative comma (2026-07-19, closes the residual from the
@@ -2356,6 +2381,7 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // Bare equals signs: Cartesia voices "=" as "equal sign" ("n=12" →
   // "n equal sign 12", live 2026-07-10). Not touched: ≠/≤/≥ (distinct
   // glyphs) and "==" (never appears in tutor speech).
+  t = speakProseRelationalSigns(t);
   t = t.replace(/\s*=\s*/g, ' equals ');
   // Bare minus between math operands (Task Y3, live bug: "2 - 2" spoken with
   // the minus SKIPPED). See rewriteBareMinusForSpeech's doc comment above

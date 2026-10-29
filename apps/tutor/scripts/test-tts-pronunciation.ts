@@ -1438,3 +1438,23 @@ console.log('OK — tts-pronunciation rewrites validated');
   if (failures.length) { console.error(failures.join('\n')); console.error(`${failures.length} trig-context failures`); process.exit(1); }
   console.log('OK — trig/log abbreviations expand only in a maths context (sec/sin/cos/tan/cot)');
 }
+
+// 2026-10-29 (demo-polish, live embed-1793240679836 + Otter recording): a bare
+// `<` / `>` in PROSE reached Cartesia raw and was dropped ("2 < 1" → "2 1";
+// six times in one session); "the point (2, 0)" was heard as "the 0.2 comma
+// 0"; "(0, 2) too" as "zero comma two two".
+{
+  assert.match(rewriteForTTS('That gives 2 < 0 + 1, which is 2 < 1.'), /2 less than 0 \+ 1, which is 2 less than 1/, 'prose <');
+  assert.match(rewriteForTTS('Here is y < x + 1.'), /y less than x \+ 1/, 'prose < with variables');
+  assert.match(rewriteForTTS('so x > 5 works'), /x greater than 5/, 'prose >');
+  assert.match(rewriteForTTS('a <= b and x >= −3'), /a less than or equal to bee and x greater than or equal to negative 3/, 'prose <= >=');
+  assert.match(rewriteForTTS('The point (0, 2) gives 2 < 1.'), /2 less than 1/, 'prose < after a pair');
+  assert.match(rewriteForTTS('x<y'), /x less than why/, 'glued < (y respelled)');
+  assert.doesNotMatch(rewriteForTTS('one<br>two'), /less than|greater than/, '<br> is a tag');
+  assert.doesNotMatch(rewriteForTTS('<span>hi</span>'), /less than|greater than/, '<span> is a tag');
+  assert.doesNotMatch(rewriteForTTS('x<b>y</b>'), /less than|greater than/, '<b> is a tag');
+  assert.match(rewriteForTTS('Look at the point (2, 0) on the board.'), /point, \(?2/, 'point, (pair)');
+  assert.match(rewriteForTTS('Check (0, 2) too.'), /as well/, 'N too → as well');
+  assert.doesNotMatch(rewriteForTTS('You too, Praveen.'), /as well/, 'word too untouched');
+  console.log('OK — prose relational signs, "point (", "N too"');
+}
