@@ -22,6 +22,7 @@ import {
   FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_TIME_FACTOR, FIXED_SCRIPT_AUTO_ADVANCE_MIN_MS,
   FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPronunciation,
   missingRequiredPhrases, scriptMissingAdvanceReason,
+  segmentMaxTurns, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
@@ -253,6 +254,58 @@ test('VTR: a refused advance does not defer the required-phrase check', () => {
   pin(block, /scriptAdvanceRefusedSegRef\.current === segIdForPhrases/);
   pin(block, /advancedIntoSegmentThisTurn = !advanceRefusedHere &&/);
   pin(VTR, /turnNarrationRef\.current = \[\];\n\s*scriptAdvanceRefusedSegRef\.current = '';/);
+});
+
+// ── Task 13 §A: authored pacing (metadata.maxTurns) ──
+const MT_RAW = {
+  ...RAW,
+  id: 'test.fixed-script-maxturns',
+  segments: [
+    { id: 'overview', kind: 'hook', goal: 'Welcome', estimatedMinutes: 2, metadata: { maxTurns: 2 } },
+    { id: 'level-check', kind: 'misconception_check', question: 'Tell me about your work.', misconception: 'n/a', metadata: { skipWhenLevelKnown: true, maxTurns: 5 } },
+    { id: 'topic-intro', kind: 'concept', goal: 'Teach', keyIdeas: ['a'], estimatedMinutes: 1 },
+    { id: 'bad', kind: 'concept', goal: 'Teach', keyIdeas: ['b'], estimatedMinutes: 1, metadata: { maxTurns: 2.5 } },
+    { id: 'recap', kind: 'recap', mustRemember: ['a'], estimatedMinutes: 2 },
+  ],
+};
+const mt: LessonPlan = parseLessonPlan(MT_RAW);
+test('A: segmentMaxTurns reads a positive integer on a fixed script only', () => {
+  assert.equal(segmentMaxTurns(mt, 'overview'), 2);
+  assert.equal(segmentMaxTurns(mt, 'topic-intro'), undefined);
+  assert.equal(segmentMaxTurns(mt, 'bad'), undefined);
+  assert.equal(segmentMaxTurns({ ...mt, metadata: {} }, 'overview'), undefined);
+  assert.equal(segmentMaxTurns(mt, 'nope'), undefined);
+});
+test('A: maxTurns 2 → null at 1, turns at 2', () => {
+  const b = { plan: mt, segmentId: 'overview', overlongTurns: 1, elapsedMs: 0, levelKnown: false };
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 1 }), null);
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 2 }), 'turns');
+});
+test('A: a segment with maxTurns ignores the 1.5× time rule', () => {
+  assert.equal(fixedScriptAutoAdvanceReason({ plan: mt, segmentId: 'overview', turns: 1, overlongTurns: 1, elapsedMs: 10 * 60_000, levelKnown: false }), null);
+});
+test('A: a segment without maxTurns keeps the old rules', () => {
+  const b = { plan: mt, segmentId: 'topic-intro', overlongTurns: 6, levelKnown: false };
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 7, elapsedMs: 0 }), null);
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 8, elapsedMs: 0 }), 'turns');
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 1, elapsedMs: 120_000 }), 'time');
+});
+test('A: overlong threshold = maxTurns − 1 (min 1); otherwise unchanged', () => {
+  assert.equal(overlongTurnThreshold(mt, 'overview', 6), 1);
+  assert.equal(overlongTurnThreshold(mt, 'level-check', 6), 4);
+  assert.equal(overlongTurnThreshold(mt, 'topic-intro', 6), 6);
+  const one = parseLessonPlan({ ...MT_RAW, segments: [{ ...MT_RAW.segments[0], metadata: { maxTurns: 1 } }, MT_RAW.segments[4]] });
+  assert.equal(overlongTurnThreshold(one, 'overview', 6), 1);
+});
+test('A: level-capture lead only when leaving a level check with no level', () => {
+  assert.equal(needsLevelCaptureLead(mt, 'level-check', false), true);
+  assert.equal(needsLevelCaptureLead(mt, 'level-check', true), false);
+  assert.equal(needsLevelCaptureLead(mt, 'overview', false), false);
+  assert.equal(needsLevelCaptureLead({ ...mt, metadata: {} }, 'level-check', false), false);
+  assert.equal(LEVEL_CAPTURE_LEAD, 'Before anything else this turn, call set_working_level with the level you heard in the level check. ');
+});
+test('VTR: auto-advance note prepends the level-capture lead', () => {
+  pin(VTR, /needsLevelCaptureLead\(autoPlan, segIdNow, !!workingLevelRef\.current\) \? LEVEL_CAPTURE_LEAD : ''\) \+\s*fixedScriptAutoAdvanceLead\(/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

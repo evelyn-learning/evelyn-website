@@ -72,12 +72,25 @@ export function isSkippedForKnownLevel(entry: { skipForKnownLevel?: boolean }): 
  *  threshold comes from the segment's `estimatedMinutes` (~2.4 turns a
  *  minute), never below `defaultTurns`. Any other plan, or a segment without
  *  minutes, keeps `defaultTurns` unchanged. */
+/** GDI run 3 (2026-10-29): the brain improvised inside parts, so a
+ *  fixed-script segment may carry its author's turn budget,
+ *  `metadata.maxTurns` (a positive integer). undefined for any other plan, a
+ *  missing segment, or a segment without one. */
+export function segmentMaxTurns(plan: LessonPlan | null | undefined, segmentId: string | null | undefined): number | undefined {
+  if (!plan || !segmentId || !isFixedScriptPlan(plan)) return undefined;
+  const v = plan.segments.find((s) => s.id === segmentId)?.metadata?.maxTurns;
+  return typeof v === 'number' && Number.isInteger(v) && v > 0 ? v : undefined;
+}
+
 export function overlongTurnThreshold(
   plan: LessonPlan | null | undefined,
   segmentId: string | null | undefined,
   defaultTurns: number,
 ): number {
   if (!plan || !isFixedScriptPlan(plan) || !segmentId) return defaultTurns;
+  // An authored turn budget: the note lands one turn before the advance.
+  const maxTurns = segmentMaxTurns(plan, segmentId);
+  if (maxTurns !== undefined) return Math.max(1, maxTurns - 1);
   const mins = plan.segments.find((s) => s.id === segmentId)?.estimatedMinutes;
   if (typeof mins !== 'number' || !Number.isFinite(mins) || mins <= 0) return defaultTurns;
   return Math.max(defaultTurns, Math.round(mins * 2.4));
@@ -114,6 +127,9 @@ export function fixedScriptAutoAdvanceReason(input: AutoAdvanceInput): 'turns' |
   const seg = plan.segments.find((s) => s.id === segmentId);
   if (!seg) return null;
   if (nextSegmentId(plan, segmentId, levelKnown) === null) return null;
+  // An authored turn budget replaces both the +2 margin and the time rule.
+  const maxTurns = segmentMaxTurns(plan, segmentId);
+  if (maxTurns !== undefined) return turns >= maxTurns ? 'turns' : null;
   if (turns >= overlongTurns + FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS) return 'turns';
   const mins = seg.estimatedMinutes;
   if (typeof mins !== 'number' || !Number.isFinite(mins) || mins <= 0) return null;
@@ -129,6 +145,15 @@ export function fixedScriptAdvancedNote(lead: string, next: string): string {
 }
 export function fixedScriptAutoAdvanceLead(from: string, next: string, kind: string): string {
   return `The "${from}" part of the lesson is over and the lesson pointer has ALREADY moved to segment "${next}" (${kind}).`;
+}
+/** GDI run 3: the client moved off the level check before the brain stored a
+ *  level, so no level was ever kept. Leaving a `skipWhenLevelKnown` segment
+ *  with no working level ⇒ the note asks for set_working_level first. */
+export const LEVEL_CAPTURE_LEAD =
+  'Before anything else this turn, call set_working_level with the level you heard in the level check. ';
+export function needsLevelCaptureLead(plan: LessonPlan | null | undefined, fromId: string | null | undefined, levelKnown: boolean): boolean {
+  if (levelKnown || !plan || !fromId || !isFixedScriptPlan(plan)) return false;
+  return plan.segments.find((s) => s.id === fromId)?.metadata?.skipWhenLevelKnown === true;
 }
 export function fixedScriptLevelAdvanceLead(next: string, kind: string): string {
   return `The level check is complete and the lesson pointer has ALREADY moved to segment "${next}" (${kind}).`;

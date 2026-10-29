@@ -107,7 +107,16 @@ interface SegmentBase {
   requiredPhrases?: string[];
   /** Free-form per-segment metadata (additive, like the plan-level field).
    *  Known key: `skipWhenLevelKnown` (fixed-script plans skip the segment
-   *  once the learner's working level is known — see fixed-script.ts). */
+   *  once the learner's working level is known — see fixed-script.ts).
+   *  Fixed-script keys (GDI run 3, 2026-10-29):
+   *  - `maxTurns?: number` — authored turn budget; the client advances at it
+   *    (fixed-script.ts segmentMaxTurns);
+   *  - `label?: string` — authored part name for the rail chip, the page
+   *    title on advance and the outline card (rail-labels.ts);
+   *  - `labelLocalized?: Record<string, string>` — that name per language
+   *    code (e.g. `{ ja: "概要" }`), shown after the label when the session's
+   *    second tutor language matches;
+   *  - `optional?: boolean` — marked "(optional)" on the outline card. */
   metadata?: Record<string, unknown>;
 }
 
