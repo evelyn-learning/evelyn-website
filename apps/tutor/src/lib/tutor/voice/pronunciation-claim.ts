@@ -17,8 +17,15 @@ const PRONUNCIATION_CLAIM_RE =
 const STUDENT_ASKS_PRONUNCIATION_RE =
   /発音|どう(?:言|読|発音)|音は|\bpronounce|\bpronunciation|\bhow do (?:you|i) say\b|\bsay (?:it|this|that) in english\b/i;
 
+/** `measured`: the turn carries a vendor pronunciation result
+ *  (/api/tutor/pronunciation/assess, GDI trial 2026-10-28) — the tutor is then
+ *  describing a measurement, not guessing from a transcript, so nothing is
+ *  flagged. Default (absent/false) behaviour is unchanged. */
+export interface PronunciationClaimOptions { measured?: boolean }
+
 /** Did the tutor describe the sound of the student's speech, unasked? */
-export function claimsPronunciation(tutorText: string, studentText: string): boolean {
+export function claimsPronunciation(tutorText: string, studentText: string, opts?: PronunciationClaimOptions): boolean {
+  if (opts?.measured) return false;
   if (STUDENT_ASKS_PRONUNCIATION_RE.test(studentText ?? '')) return false;
   return PRONUNCIATION_CLAIM_RE.test(tutorText ?? '');
 }
@@ -36,7 +43,8 @@ export function claimsPronunciation(tutorText: string, studentText: string): boo
 const PRONUNCIATION_CLAIM_SENTENCE_RE =
   /(?:音|発音)(?:が|は|を|に|で|も)?[^。！？!?]{0,24}?(?:変わ|違っ|違い|違う|ずれ|弱|強|聞こえ|出てい)|の音(?:でした|だった|ですね|になって|に近)|(?:と|に)聞こえ(?:ました|ます|て|た)|\bsound(?:ed|s)?\s+(?:like|a bit|a little|more like)\b|\byou said it like\b|\bpronounced it\b/i;
 
-export function isPronunciationClaimSentence(sentence: string, studentText: string): boolean {
+export function isPronunciationClaimSentence(sentence: string, studentText: string, opts?: PronunciationClaimOptions): boolean {
+  if (opts?.measured) return false;
   if (STUDENT_ASKS_PRONUNCIATION_RE.test(studentText ?? '')) return false;
   return PRONUNCIATION_CLAIM_SENTENCE_RE.test(sentence ?? '');
 }

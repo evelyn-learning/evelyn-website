@@ -344,6 +344,7 @@
     "voice:stt": "npx tsx scripts/tutor/voice-harness/stt-run.ts",
     "voice:pron": "npx tsx scripts/tutor/voice-harness/pronunciation/run.ts",
     "test:pronunciation-normalize": "npx tsx scripts/test-pronunciation-normalize.ts",
+    "test:pronunciation-assessor": "npx tsx scripts/test-pronunciation-assessor.ts",
     "test:voice-harness": "npx tsx scripts/tutor/voice-harness/utterances.test.ts && npx tsx scripts/tutor/voice-harness/wer.test.ts && npx tsx scripts/tutor/voice-harness/audio-util.test.ts",
     "test:r33-prompt-rules": "npx tsx scripts/test-r33-prompt-rules.ts",
     "test:learner-model": "npx tsx scripts/test-learner-model.ts",
