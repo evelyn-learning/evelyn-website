@@ -50,8 +50,49 @@ export function stripMarkdownEmphasis(s: string): string {
 export function lastQuestionSentence(text: string): string | null {
   const questions = stripMarkdownEmphasis(text).match(/[^.!?\n]{4,}\?/g);
   const last = questions?.[questions.length - 1]?.trim();
-  if (!last || last.length > 220) return null;
+  if (!last || last.length > QPIN_MAX_CHARS) return null;
   return last;
+}
+
+/** Longest text a pin shows whole (lastQuestionSentence's cap). */
+export const QPIN_MAX_CHARS = 220;
+
+/** Sentences of a tutor turn. A boundary is terminal punctuation (with an
+ *  optional closing quote/bracket) followed by whitespace and a capital or
+ *  an opening quote, or a newline — so `starting with "I have..."` stays
+ *  one sentence. */
+function splitSentences(text: string): string[] {
+  return text
+    .split(/\n+|(?<=[.!?…。！？]["”’)]?)\s+(?=[A-Z"“'‘(])/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+const ASK_LEAD_RE =
+  /^(?:(?:now|next|then|so),\s*)?(?:tell me|please (?:say|tell|try|give)|try|say|could you|can you|give me|describe|finish|complete)\b/i;
+
+/** GDI run 3 (2026-10-29): language lessons ask in the imperative — `Next,
+ *  tell me one thing you have been doing at your company for a long time,
+ *  starting with "I have..."` — and the gist model judged the turn's only
+ *  "?" conversational, so no pin. The turn's LAST ask sentence (optionally
+ *  led by "Now,/Next,/Then,/So,"), verbatim, when no question sentence
+ *  follows it; capped at QPIN_MAX_CHARS. null ⇒ none (or a later question
+ *  wins). */
+export function lastAskSentence(text: string): string | null {
+  const sentences = splitSentences(stripMarkdownEmphasis(text ?? ''));
+  let askIdx = -1;
+  for (let i = sentences.length - 1; i >= 0; i--) {
+    if (ASK_LEAD_RE.test(sentences[i])) { askIdx = i; break; }
+  }
+  if (askIdx < 0) return null;
+  for (let j = askIdx + 1; j < sentences.length; j++) {
+    if (/[?？]["”’)]?\s*$/.test(sentences[j])) return null;
+  }
+  const ask = sentences[askIdx];
+  if (ask.length <= QPIN_MAX_CHARS) return ask;
+  const cut = ask.slice(0, QPIN_MAX_CHARS - 1);
+  const sp = cut.lastIndexOf(' ');
+  return `${(sp > QPIN_MAX_CHARS / 2 ? cut.slice(0, sp) : cut).trim()}…`;
 }
 
 /** Task Y2: pure seam for the Haiku reply → gist decision, extracted out

@@ -57,7 +57,8 @@ import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { type SessionMode, textModeSecondsPerWord } from '@/lib/tutor/voice/resolve-session-mode';
 import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL } from '@/lib/tutor/orchestrator/flags';
-import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
+import { lastQuestionSentence, lastAskSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
+import { sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
 import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
 import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/lib/tutor/qpin-behavior';
 import { preStartDockCaption } from './prestart-affordances';
@@ -1361,7 +1362,25 @@ export default function TutorSession(props: TutorSessionProps) {
   useEffect(() => {
     if (!TUTOR_QUESTION_PIN) return;
     const entry = lastTutorFinal;
-    if (!entry || !entry.text || !entry.text.includes('?')) return;
+    if (!entry || !entry.text) return;
+    // GDI run 3 (2026-10-29): a language lesson asks in the imperative
+    // ("Next, tell me one thing… starting with "I have…""). The same
+    // predicate as the sentence board; the ask sentence is pinned verbatim
+    // when the turn has no question or the gist model returns nothing.
+    const languageSession = sessionAllowsNonLatin(tutorLanguages) || subject === 'languages';
+    const askFallback = (why: string): boolean => {
+      if (!languageSession) return false;
+      const ask = lastAskSentence(entry.text);
+      if (!ask) return false;
+      setQuestionPin({ turnId: entry.id, gist: ask });
+      onDebugEvent?.('qpin_set_ask', `${why}: "${ask.slice(0, 60)}"`);
+      return true;
+    };
+    if (!entry.text.includes('?')) {
+      if (!languageSession || pinFetchedTurnRef.current === entry.id) return;
+      if (askFallback('no question')) pinFetchedTurnRef.current = entry.id;
+      return;
+    }
     if (pinFetchedTurnRef.current === entry.id) return;
     pinFetchedTurnRef.current = entry.id;
     // R47 Task 3c (review fix): capture the segment this turn belongs to
@@ -1410,7 +1429,7 @@ export default function TutorSession(props: TutorSessionProps) {
         if (gist) {
           setQuestionPin({ turnId: entry.id, gist });
           onDebugEvent?.('qpin_set', `"${gist.slice(0, 60)}"`);
-        } else {
+        } else if (!askFallback('gist empty')) {
           onDebugEvent?.('qpin_drop', 'gist empty (model judged the "?" conversational)');
         }
       })
@@ -1427,7 +1446,7 @@ export default function TutorSession(props: TutorSessionProps) {
         if (fallback) {
           setQuestionPin({ turnId: entry.id, gist: fallback });
           onDebugEvent?.('qpin_set', `fallback: "${fallback.slice(0, 60)}"`);
-        } else {
+        } else if (!askFallback('gist failed')) {
           onDebugEvent?.('qpin_drop', 'gist request failed and no fallback sentence');
         }
       });
@@ -1453,7 +1472,11 @@ export default function TutorSession(props: TutorSessionProps) {
     // shown by the branch above and never reaches this guard; it only fires
     // while the (now different) latest turn is mid-speech.
     if (questionPin.turnId !== lastTutorFinal?.id) return;
-    const q = lastQuestionSentence(lastTutorFinal.text) ?? questionPin.gist;
+    // An imperative-ask pin (qpin_set_ask) probes its own sentence, not an
+    // earlier conversational "?" of the same turn.
+    const q = lastAskSentence(lastTutorFinal.text) === questionPin.gist
+      ? questionPin.gist
+      : (lastQuestionSentence(lastTutorFinal.text) ?? questionPin.gist);
     const probe = normalizeSpoken(q).slice(0, 16);
     if (!probe) return;
     const id = setInterval(() => {

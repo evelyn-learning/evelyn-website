@@ -15,13 +15,18 @@
  * Pure: no React, no I/O.
  */
 
-export interface QuotedSentence { sentence: string; kind: 'correction' | 'model'; emphasis: string[] }
+/** 'echo' (GDI run 3): the tutor quoting the student's own words back (often
+ *  the wrong ones) — never a card. */
+export interface QuotedSentence { sentence: string; kind: 'correction' | 'model' | 'echo'; emphasis: string[] }
 
 export const SENTENCE_BOARD_MAX_PER_TURN = 2;
 
 const MIN_WORDS = 3;
 const MAX_EMPHASIS = 4;
 const CORRECTION_OVERLAP = 0.5;
+/** A quote whose tokens are all the student's, covering ≥ 90 % of what the
+ *  student said, is an echo of the student. */
+const ECHO_OVERLAP = 0.9;
 
 /** Straight or curly double quotes; one line at most. */
 const QUOTE_RE = /"([^"\n]+)"|“([^”\n]+)”/g;
@@ -73,6 +78,7 @@ export function classifyQuotedSentence(sentence: string, studentLast: string | n
   let shared = 0;
   for (const t of quoteSet) if (student.has(t)) shared++;
   const novel = quoteSet.size - shared;
+  if (novel === 0 && shared / student.size >= ECHO_OVERLAP) return { sentence, kind: 'echo', emphasis: [] };
   if (shared / quoteSet.size < CORRECTION_OVERLAP || novel === 0) return model;
   const emphasis: string[] = [];
   const seen = new Set<string>();
@@ -95,9 +101,18 @@ const norm = (s: string) => tokens(s).join(' ');
  * order spoken; capped at SENTENCE_BOARD_MAX_PER_TURN. [] when the turn
  * already rendered something.
  */
+/** GDI run 3 (2026-10-29): a quoted ASK ("…?") belongs to the question pin,
+ *  and a span starting lowercase is a fragment ("for your current company,") —
+ *  neither is ever a card. */
+export function isCardCandidate(span: string): boolean {
+  const s = span.trim();
+  if (/\?["”’)]?$/.test(s)) return false;
+  return !/^\p{Ll}/u.test(s);
+}
+
 export function planSentenceBoard(input: { tutorText: string; studentLast: string | null | undefined; renderedThisTurn: boolean }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
-  const spans = extractQuotedSentences(input.tutorText);
+  const spans = extractQuotedSentences(input.tutorText).filter(isCardCandidate);
   const distinct: { s: string; n: string }[] = [];
   for (const s of spans) {
     const n = norm(s);
@@ -105,7 +120,9 @@ export function planSentenceBoard(input: { tutorText: string; studentLast: strin
     distinct.push({ s, n });
   }
   const kept = distinct.filter((d) => !distinct.some((o) => o !== d && o.n.length > d.n.length && ` ${o.n} `.includes(` ${d.n} `)));
-  const classified = kept.map((d, i) => ({ q: classifyQuotedSentence(d.s, input.studentLast), len: d.n.length, i }));
+  const classified = kept
+    .map((d, i) => ({ q: classifyQuotedSentence(d.s, input.studentLast), len: d.n.length, i }))
+    .filter((c) => c.q.kind !== 'echo');
   classified.sort((a, b) => {
     const ka = a.q.kind === 'correction' ? 0 : 1;
     const kb = b.q.kind === 'correction' ? 0 : 1;

@@ -138,6 +138,26 @@ export function isTeachingRender(action: string): boolean {
   return /^show[A-Z]/.test(action) && action !== 'showSegmentCard';
 }
 
+/** GDI run 3 (2026-10-29): a sentence card (showSentence — auto or brain)
+ *  opened untitled pages: a pending topic shift was consumed by the first
+ *  batch, which was a sentence. A batch made ONLY of showSentence commands
+ *  belongs on the current page: it neither consumes a topic-shift mark nor
+ *  opens a page of its own. (A pending SEGMENT page still opens with it —
+ *  that flush is separate and titled for the segment.) */
+export function isSentenceOnlyBatch(batch: readonly { action: string }[]): boolean {
+  return batch.length > 0 && batch.every((c) => c.action === 'showSentence');
+}
+
+/** A sentence-only batch never opens a page: a newPage/continuation decision
+ *  becomes 'none' (a kill-recovery 'pin' stays — it keeps the current page). */
+export function keepSentenceBatchOnPage(decision: PageDecision, sentenceOnly: boolean): PageDecision {
+  if (!sentenceOnly) return decision;
+  if (decision.action === 'newPage' || decision.action === 'continuation') {
+    return { action: 'none', reason: `sentence-only batch stays on the current page (was ${decision.action}: ${decision.reason})` };
+  }
+  return decision;
+}
+
 /** Overflow weight of a single teaching command. */
 export function weightOfAction(action: string): number {
   return isPrimaryFigure(action) ? PRIMARY_WEIGHT : SUPPORTING_WEIGHT;

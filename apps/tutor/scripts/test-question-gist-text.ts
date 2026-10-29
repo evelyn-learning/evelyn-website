@@ -11,7 +11,9 @@
  *
  * Run: npx tsx scripts/test-question-gist-text.ts
  */
-import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply } from '../src/lib/tutor/question-gist-text';
+import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply, lastAskSentence } from '../src/lib/tutor/question-gist-text';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 let pass = 0;
 let fail = 0;
@@ -164,6 +166,26 @@ check(
   parseGistReply('Is $f(x)$ continuous on $[0, 2]$?'),
   'Is $f(x)$ continuous on $[0, 2]$?',
 );
+
+// --- lastAskSentence (GDI run 3, 2026-10-29) ----------------------------
+const LIVE_ASK = 'Great, that is right! Next, tell me one thing you have been doing at your company for a long time, starting with "I have..."';
+check('live imperative ask → pinned text starts with "Tell me one thing"',
+  /^Next, tell me one thing/.test(lastAskSentence(LIVE_ASK) ?? '') && (lastAskSentence(LIVE_ASK) ?? '').endsWith('"I have..."'), true);
+check('the pin keeps the ask verbatim',
+  lastAskSentence(LIVE_ASK), 'Next, tell me one thing you have been doing at your company for a long time, starting with "I have..."');
+check('bare "Tell me one thing…" also starts the pin', /^Tell me one thing/.test(lastAskSentence('Good. Tell me one thing you did today.') ?? ''), true);
+check('"Look at the board." → null', lastAskSentence('Look at the board.'), null);
+check('a trailing question still wins (ask → null)', lastAskSentence('Tell me about your job. What do you do every day?'), null);
+check('…and lastQuestionSentence names it', lastQuestionSentence('Tell me about your job. What do you do every day?'), 'What do you do every day?');
+check('an ask after a conversational "?" is pinned', lastAskSentence('Nice, right? Now, say the whole sentence again.'), 'Now, say the whole sentence again.');
+check('over-long ask capped at 220', (lastAskSentence(`Tell me ${'about your work and '.repeat(20)}more.`) ?? '').length <= 220, true);
+{
+  const ts = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
+  check('TutorSession: ask pin gated on the language-session predicate',
+    /const languageSession = sessionAllowsNonLatin\(tutorLanguages\) \|\| subject === 'languages';/.test(ts), true);
+  check('TutorSession: gist-empty path falls back to the ask', /else if \(!askFallback\('gist empty'\)\)/.test(ts), true);
+  check('TutorSession: qpin_set_ask event', /'qpin_set_ask'/.test(ts), true);
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

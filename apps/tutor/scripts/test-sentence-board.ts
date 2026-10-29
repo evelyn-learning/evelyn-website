@@ -13,7 +13,9 @@ import {
   extractQuotedSentences, classifyQuotedSentence, planSentenceBoard,
   applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
   sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex, autoSentenceCardsToReplace,
+  isCardCandidate,
 } from '../src/lib/tutor/voice/sentence-board';
+import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -212,6 +214,57 @@ test('hook pin: both Cartesia paths compose AFTER rewriteForTTS; the HTTP route 
   assert.equal((hook.match(/\{ prerewritten: true \}/g) ?? []).length, 2, 'HTTP whole-buffer + streamed head');
   const route = readFileSync(join(__dirname, '..', 'src/app/api/tutor/tts-cartesia/route.ts'), 'utf8');
   assert.ok(/transcript: prerewritten === true \? text : rewriteForTTS\(text, \{ studentName \}\)/.test(route));
+});
+
+// ── Task 13 §F: sentence-board filters (live run-3 lines) ──
+test('F: the brain quoting the student\'s own wrong words is an echo → no card', () => {
+  const student = 'Yes, I have worked current company for a long time.';
+  const tutor = 'Ah, you said "I have worked current company for a long time." Nearly there. Add "for" before "your current company".';
+  assert.equal(classifyQuotedSentence('I have worked current company for a long time.', student).kind, 'echo');
+  assert.deepEqual(planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: false }), []);
+});
+test('F: a lowercase fragment is never a card', () => {
+  const tutor = 'Use "for your current company," with "for" before it.';
+  assert.equal(isCardCandidate('for your current company,'), false);
+  assert.deepEqual(planSentenceBoard({ tutorText: tutor, studentLast: 'I have worked current company.', renderedThisTurn: false }), []);
+});
+test('F: a quoted question is never a card (asks belong to the pin)', () => {
+  const tutor = 'Did you want to try the question I asked, "What have you been doing at your company for a long time?"';
+  assert.equal(isCardCandidate('What have you been doing at your company for a long time?'), false);
+  assert.deepEqual(planSentenceBoard({ tutorText: tutor, studentLast: 'Sorry, what?', renderedThisTurn: false }), []);
+});
+test('F: the golf correction still → card', () => {
+  const cards = planSentenceBoard({ tutorText: GOLF_TUTOR, studentLast: GOLF_STUDENT, renderedThisTurn: false });
+  assert.equal(cards[0]?.sentence, GOLF_SENTENCE);
+  assert.equal(cards[0]?.kind, 'correction');
+});
+test('F: a sentence starting with a digit is not a fragment', () => {
+  assert.equal(isCardCandidate('25 machines were sold last month.'), true);
+});
+
+// ── Task 13 §C: sentence cards never open a page ──
+test('C: a showSentence-only batch is sentence-only; a mixed or empty batch is not', () => {
+  assert.equal(isSentenceOnlyBatch([{ action: 'showSentence' }, { action: 'showSentence' }]), true);
+  assert.equal(isSentenceOnlyBatch([{ action: 'showSentence' }, { action: 'showTable' }]), false);
+  assert.equal(isSentenceOnlyBatch([{ action: 'newPage' }, { action: 'showSentence' }]), false);
+  assert.equal(isSentenceOnlyBatch([]), false);
+});
+test('C: a sentence-only batch turns newPage/continuation into none; pin and others untouched', () => {
+  const np = { action: 'newPage' as const, title: 'Next', reason: 'topic shift', event: 'page_grouping_topic_shift', anchorKey: null };
+  assert.equal(keepSentenceBatchOnPage(np, true).action, 'none');
+  assert.equal(keepSentenceBatchOnPage({ ...np, action: 'continuation' as const }, true).action, 'none');
+  assert.equal(keepSentenceBatchOnPage(np, false), np);
+  const pin = { action: 'pin' as const, pageId: 'p1', reason: 'kill' };
+  assert.equal(keepSentenceBatchOnPage(pin, true), pin);
+});
+test('C: VTR — a sentence-only batch neither sees nor consumes the topic-shift mark', () => {
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(/const topicShiftPending = sentenceOnlyBatch \? null : topicShiftPendingRef\.current;/.test(VTR));
+  assert.ok(/const pageDecision = keepSentenceBatchOnPage\(decidePageForBatch\(\{/.test(VTR));
+  assert.ok(/if \(!sentenceOnlyBatch\) topicShiftPendingRef\.current = null;/.test(VTR));
+  // the deferred segment page flush runs AFTER the decision (so a sentence
+  // batch with no page of its own opens the pending segment page first)
+  assert.ok(VTR.indexOf('if (!sentenceOnlyBatch) topicShiftPendingRef.current = null;') < VTR.indexOf('const deferredFlush = decideDeferredPageFlush({'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -315,7 +315,7 @@ import {
   type IdleNudgePostponeReason,
 } from '@/lib/tutor/voice/idle-nudge';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
-import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, newPageTitle, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
+import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, newPageTitle, weightOfAction, STALE_TURNS, isSentenceOnlyBatch, keepSentenceBatchOnPage } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
 import { flushableCount, shouldBypassRenderSync } from '@/lib/tutor/whiteboard/render-sync';
 import { shouldAbortStalledBrain, decideStallRecovery, shouldRetryStalledOpener, BRAIN_STALL_APOLOGY } from '@/lib/tutor/voice/brain-stall';
@@ -9011,7 +9011,11 @@ export function VoiceTutorRealtime({
     const redrawRequested = redrawIntentRegex.test(lastStudentText);
 
     // Tier-3 heuristic signal: topic-shift (embedding distance). One-shot.
-    const topicShiftPending = topicShiftPendingRef.current;
+    // GDI run 3: a sentence-only batch (showSentence cards) neither sees nor
+    // consumes the mark — it stays on the current page and the mark waits
+    // for the next non-sentence batch.
+    const sentenceOnlyBatch = isSentenceOnlyBatch(processed as unknown as ReadonlyArray<{ action: string }>);
+    const topicShiftPending = sentenceOnlyBatch ? null : topicShiftPendingRef.current;
     // Tier-2 suppressor: tutor narration indicates same-context continuation.
     // Only relevant to the topic-shift heuristic (Tier-1 structural breaks
     // beat continuation anyway), so compute it only when a shift is pending.
@@ -9082,7 +9086,7 @@ export function VoiceTutorRealtime({
         }
       : null;
 
-    const pageDecision = decidePageForBatch({
+    const pageDecision = keepSentenceBatchOnPage(decidePageForBatch({
       batch: processed,
       studentText: lastStudentText,
       activePage: activePageView,
@@ -9102,9 +9106,13 @@ export function VoiceTutorRealtime({
         killRecoveryPinPageId,
         firstTeachingWillDedup,
       },
-    });
-    // Topic-shift is one-shot — clear it now that the decision consumed it.
-    topicShiftPendingRef.current = null;
+    }), sentenceOnlyBatch);
+    if (sentenceOnlyBatch && topicShiftPendingRef.current) {
+      onDebugEvent?.('topic_shift_held_for_sentence', 'sentence-only batch stays on the current page; the newPage mark waits for the next batch');
+    }
+    // Topic-shift is one-shot — clear it now that the decision consumed it
+    // (a sentence-only batch did not consume it).
+    if (!sentenceOnlyBatch) topicShiftPendingRef.current = null;
 
     if (pageDecision.action === 'newPage' || pageDecision.action === 'continuation') {
       // Prefer the brain's stripped new_page title (often the most descriptive,
