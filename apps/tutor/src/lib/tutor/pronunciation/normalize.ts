@@ -73,6 +73,7 @@ export function normalizeAzure(json: unknown): PronunciationResult {
     words,
     prosody: num(pa.ProsodyScore),
     fluency: num(pa.FluencyScore),
+    completeness: num(pa.CompletenessScore),
     latencyMs: 0,
   };
 }

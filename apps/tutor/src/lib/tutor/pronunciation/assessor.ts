@@ -63,6 +63,30 @@ export async function assessPronunciation(
 export const PRONUNCIATION_UNAVAILABLE_NOTE =
   'No measured result: coach stress and linking from your model; do not describe sounds.';
 
+/** An 'ok' vendor result for a turn in which the learner did not say the
+ *  target (silence, a question, another sentence): most reference words come
+ *  back as omissions. Nothing was measured, so the claim guard stays shut. */
+export const PRONUNCIATION_NOT_ATTEMPTED_NOTE =
+  'The learner did not say the target text; nothing was measured. Ask them to repeat it, or coach from your model.';
+
+/** Below this Azure CompletenessScore the turn was not an attempt. */
+export const MIN_COMPLETENESS = 50;
+
+/**
+ * Whether the assessment measured an ATTEMPT at the reference text: status ok
+ * AND fewer than half the reference words omitted AND (when the vendor gave
+ * one) completeness ≥ MIN_COMPLETENESS. Insertions are not reference words.
+ */
+export function isMeasuredResult(r: PronunciationAssessment): boolean {
+  if (r.status !== 'ok') return false;
+  const res = r.result;
+  if (typeof res.completeness === 'number' && res.completeness < MIN_COMPLETENESS) return false;
+  const refWords = res.words.filter((w) => w.errorType !== 'insertion');
+  if (refWords.length === 0) return false;
+  const omitted = refWords.filter((w) => w.errorType === 'omission').length;
+  return omitted * 2 < refWords.length;
+}
+
 const MAX_REF_WORDS = 12;
 const round = (n: number) => Math.round(n);
 
@@ -70,9 +94,11 @@ const round = (n: number) => Math.round(n);
  * ≤ 80 words of plain prose for the brain: overall score, up to two weakest
  * words (score < WORD_FLAG_SCORE) with their worst phoneme and stress flag,
  * prosody when measured. Generic on purpose — the brain decides what to say.
+ * A non-attempt (see isMeasuredResult) gets PRONUNCIATION_NOT_ATTEMPTED_NOTE.
  */
 export function formatPronunciationNote(r: PronunciationAssessment, referenceText: string): string {
   if (r.status !== 'ok') return PRONUNCIATION_UNAVAILABLE_NOTE;
+  if (!isMeasuredResult(r)) return PRONUNCIATION_NOT_ATTEMPTED_NOTE;
   const res = r.result;
   const refWords = referenceText.trim().split(/\s+/).filter(Boolean);
   const ref = refWords.length > MAX_REF_WORDS ? `${refWords.slice(0, MAX_REF_WORDS).join(' ')}…` : refWords.join(' ');

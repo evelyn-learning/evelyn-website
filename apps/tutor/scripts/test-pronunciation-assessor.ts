@@ -9,9 +9,9 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
-import { assessPronunciation, formatPronunciationNote, PRONUNCIATION_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
+import { assessPronunciation, formatPronunciationNote, isMeasuredResult, PRONUNCIATION_NOT_ATTEMPTED_NOTE, PRONUNCIATION_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
 import { resamplePcm16 } from '../src/lib/tutor/pronunciation/resample';
-import { parseAssessBody, pronunciationRouteEnabled, MAX_AUDIO_BYTES, MAX_REQUEST_BYTES, sessionAllowsAssess, CallBudget, MAX_ASSESS_CALLS_PER_SESSION } from '../src/lib/tutor/pronunciation/assess-request';
+import { parseAssessBody, pronunciationRouteEnabled, MAX_AUDIO_BYTES, MAX_REQUEST_BYTES, sessionAllowsAssess, CallBudget, MAX_ASSESS_CALLS_PER_SESSION, readBodyCapped } from '../src/lib/tutor/pronunciation/assess-request';
 import { normalizeAzure } from '../src/lib/tutor/pronunciation/normalize';
 import { isPronunciationClaimSentence, claimsPronunciation } from '../src/lib/tutor/voice/pronunciation-claim';
 import type { PronunciationResult } from '../src/lib/tutor/pronunciation/types';
@@ -126,6 +126,38 @@ const REF = 'We went to the countryside.';
     }
   });
 
+  console.log('\nnon-attempt (final review #1c):\n');
+  const mk = (types: Array<'none' | 'omission' | 'mispronunciation' | 'insertion'>, completeness?: number): PronunciationResult => ({
+    vendor: 'azure', overall: 30, latencyMs: 1,
+    ...(completeness === undefined ? {} : { completeness }),
+    words: types.map((errorType, i) => ({ word: `w${i}`, score: errorType === 'omission' ? 0 : 80, errorType, phonemes: [] })),
+  });
+  await test('half the reference words omitted ⇒ not measured, the not-attempted note', () => {
+    const r = { status: 'ok' as const, result: mk(['omission', 'omission', 'none', 'none']) };
+    assert.equal(isMeasuredResult(r), false);
+    assert.equal(formatPronunciationNote(r, 'a b c d'), PRONUNCIATION_NOT_ATTEMPTED_NOTE);
+    assert.equal(PRONUNCIATION_NOT_ATTEMPTED_NOTE, 'The learner did not say the target text; nothing was measured. Ask them to repeat it, or coach from your model.');
+  });
+  await test('every word omitted ⇒ not measured', () => {
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['omission', 'omission', 'omission']) }), false);
+  });
+  await test('fewer than half omitted ⇒ measured (insertions are not reference words)', () => {
+    const r = { status: 'ok' as const, result: mk(['omission', 'none', 'none', 'insertion', 'insertion']) };
+    assert.equal(isMeasuredResult(r), true);
+    assert.notEqual(formatPronunciationNote(r, 'a b c'), PRONUNCIATION_NOT_ATTEMPTED_NOTE);
+  });
+  await test('Azure completeness < 50 ⇒ not measured even with few omissions', () => {
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none'], 40) }), false);
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none'], 50) }), true);
+  });
+  await test('no words at all ⇒ not measured; unavailable ⇒ not measured', () => {
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk([]) }), false);
+    assert.equal(isMeasuredResult({ status: 'unavailable', reason: 'vendor_error' }), false);
+  });
+  await test('the fixture result is measured', () => {
+    assert.ok(okOut && isMeasuredResult(okOut));
+  });
+
   console.log('\nresamplePcm16:\n');
   await test('24 → 16 kHz length ratio 2/3', () => {
     const out = resamplePcm16(Buffer.alloc(24000 * 2), 24000, 16000);
@@ -202,6 +234,37 @@ const REF = 'We went to the countryside.';
   await test('request byte cap ≈ 2.1 MB covers the largest valid body', () => {
     assert.ok(MAX_REQUEST_BYTES > Buffer.alloc(MAX_AUDIO_BYTES).toString('base64').length + 600);
     assert.ok(MAX_REQUEST_BYTES < 2.2 * 1024 * 1024);
+  });
+
+  console.log('\nchunked body cap (final review #6):\n');
+  const streamOf = (parts: string[]) => new ReadableStream<Uint8Array>({
+    start(c) { for (const p of parts) c.enqueue(new TextEncoder().encode(p)); c.close(); },
+  });
+  await test('readBodyCapped: fits ⇒ the text; over ⇒ null; absent ⇒ empty', async () => {
+    assert.equal(await readBodyCapped(streamOf(['{"a":', '1}']), 100), '{"a":1}');
+    assert.equal(await readBodyCapped(streamOf(['12345', '67890']), 10), '1234567890');
+    assert.equal(await readBodyCapped(streamOf(['12345', '678901']), 10), null);
+    assert.equal(await readBodyCapped(null, 10), '');
+  });
+  await test('readBodyCapped: stops reading at the cap (stream cancelled)', async () => {
+    let pulls = 0, cancelled = false;
+    const big = new ReadableStream<Uint8Array>({
+      pull(c) { pulls++; c.enqueue(new Uint8Array(1024)); },
+      cancel() { cancelled = true; },
+    });
+    assert.equal(await readBodyCapped(big, 4096), null);
+    assert.ok(cancelled, 'cancelled');
+    assert.ok(pulls <= 6, `pulls=${pulls}`);
+  });
+  await test('route: no Content-Length ⇒ capped stream read before JSON parse; response carries measured', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'app', 'api', 'tutor', 'pronunciation', 'assess', 'route.ts'), 'utf8');
+    const capIdx = src.indexOf('readBodyCapped(request.body, MAX_REQUEST_BYTES)');
+    assert.ok(capIdx > 0, 'capped read');
+    assert.ok(capIdx < src.indexOf('JSON.parse(text)'), 'cap before parse');
+    assert.ok(capIdx < src.indexOf('TutorSession.findOne'), 'cap before the tenant gate');
+    assert.match(src, /if \(text === null\) return notFound\(\);/);
+    assert.match(src, /contentLength !== null && Number\(contentLength\) > MAX_REQUEST_BYTES\) return notFound\(\)/);
+    assert.match(src, /measured: isMeasuredResult\(out\)/);
   });
 
   console.log('\npronunciation claim guard — measured bypass:\n');

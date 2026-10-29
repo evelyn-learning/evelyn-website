@@ -38,6 +38,34 @@ export const MAX_REQUEST_BYTES = MAX_AUDIO_B64_CHARS + 32 * 1024;
 /** A live session only: TutorSession.status 'active' and no endedAt (the
  *  resume path in session-usage re-sets 'active' and unsets endedAt). An ended
  *  sessionId must not stay a working key for vendor calls. */
+/**
+ * Read a request body of unknown length (chunked, no Content-Length) with a
+ * byte cap: the text when it fits in `maxBytes`, null as soon as it would
+ * not (the stream is cancelled, so an oversized body is never buffered).
+ * A null/absent body reads as ''.
+ */
+export async function readBodyCapped(body: ReadableStream<Uint8Array> | null | undefined, maxBytes: number): Promise<string | null> {
+  if (!body) return '';
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => {});
+      return null;
+    }
+    chunks.push(value);
+  }
+  const all = new Uint8Array(total);
+  let o = 0;
+  for (const c of chunks) { all.set(c, o); o += c.byteLength; }
+  return new TextDecoder().decode(all);
+}
+
 export function sessionAllowsAssess(s: { status?: string | null; endedAt?: Date | string | null } | null | undefined): boolean {
   return !!s && s.status === 'active' && (s.endedAt === undefined || s.endedAt === null);
 }

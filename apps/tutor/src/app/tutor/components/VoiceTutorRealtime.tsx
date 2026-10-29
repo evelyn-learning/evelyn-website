@@ -416,10 +416,10 @@ import {
 } from '@/lib/tutor/orchestrator/flags';
 import {
   ClipCapture, CLIP_MAX_MS, CLIP_SAMPLE_RATE, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_NO_SPEECH_TIMEOUT_MS,
-  PRONUNCIATION_NOTE_WAIT_MS, PRONUNCIATION_UNAVAILABLE_NOTE, pronunciationNoteForBrain, pcm16ToBase64,
+  PRONUNCIATION_NOTE_WAIT_MS, PRONUNCIATION_UNAVAILABLE_NOTE, PRONUNCIATION_ARM_MAX_MS, pronunciationNoteForBrain, pcm16ToBase64,
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
-import { decideSetWorkingLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
+import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold } from '@/lib/tutor/lesson-plan/fixed-script';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -1441,6 +1441,15 @@ export function VoiceTutorRealtime({
   // Armed while the tutor was still speaking: the 20 s window starts when
   // playback goes idle (effect next to speakingWindowsRef), not at the arm.
   const pronunciationTimerAwaitsIdleRef = useRef(false);
+  // Absolute arm lifetime (PRONUNCIATION_ARM_MAX_MS from the arm, playback
+  // state irrelevant): a stale arm never scores a later, unrelated turn.
+  const pronunciationArmMaxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearPronunciationArmMaxTimer = () => {
+    if (pronunciationArmMaxTimerRef.current) {
+      clearTimeout(pronunciationArmMaxTimerRef.current);
+      pronunciationArmMaxTimerRef.current = null;
+    }
+  };
   const plantPronunciationNote = (note: string, measured: boolean) => {
     pronunciationResultNoteRef.current = pronunciationNoteForBrain(note);
     pronunciationMeasuredRef.current = measured;
@@ -1458,6 +1467,7 @@ export function VoiceTutorRealtime({
   };
   const sendPronunciationClip = (clip: PronunciationClip) => {
     clearPronunciationNoSpeechTimer();
+    clearPronunciationArmMaxTimer();
     onDebugEvent?.('pronunciation_clip_sent', `${clip.durationMs}ms "${clip.referenceText.slice(0, 80)}"`);
     const run = (async () => {
       const ctrl = new AbortController();
@@ -1470,9 +1480,13 @@ export function VoiceTutorRealtime({
           signal: ctrl.signal,
         });
         if (!res.ok) { plantPronunciationUnavailable(`http_${res.status}`); return; }
-        const data = (await res.json()) as { status?: string; reason?: string; note?: unknown };
+        const data = (await res.json()) as { status?: string; reason?: string; note?: unknown; measured?: unknown };
         if (data.status === 'ok' && typeof data.note === 'string' && data.note.trim()) {
-          plantPronunciationNote(data.note, true);
+          // measured:false ⇒ the learner did not say the target (the route's
+          // not-attempted note): plant it, but the claim guard stays shut.
+          const measured = data.measured === true;
+          if (!measured) onDebugEvent?.('pronunciation_unavailable', 'not_attempted');
+          plantPronunciationNote(data.note, measured);
         } else {
           plantPronunciationUnavailable(typeof data.reason === 'string' ? data.reason : 'bad_response');
         }
@@ -1497,6 +1511,15 @@ export function VoiceTutorRealtime({
     capture.arm(referenceText);
     onDebugEvent?.('pronunciation_armed', `${kind} "${referenceText.slice(0, 80)}"`);
     clearPronunciationNoSpeechTimer();
+    clearPronunciationArmMaxTimer();
+    pronunciationArmMaxTimerRef.current = setTimeout(() => {
+      pronunciationArmMaxTimerRef.current = null;
+      if (!capture.isArmed()) return;
+      capture.disarm();
+      clearPronunciationNoSpeechTimer();
+      pronunciationTimerAwaitsIdleRef.current = false;
+      plantPronunciationUnavailable('arm_expired_45s');
+    }, PRONUNCIATION_ARM_MAX_MS);
     // The model line is usually still playing: start the learner's 20 s
     // window when playback goes idle, so a long line does not eat it.
     if (productionStateRef.current === 'speaking') {
@@ -1515,6 +1538,7 @@ export function VoiceTutorRealtime({
       pronunciationNoSpeechTimerRef.current = null;
       if (capture.isArmed() && capture.bufferedMs() === 0) {
         capture.disarm();
+        clearPronunciationArmMaxTimer();
         plantPronunciationUnavailable('no_speech_20s');
       }
     }, CLIP_NO_SPEECH_TIMEOUT_MS);
@@ -1523,6 +1547,21 @@ export function VoiceTutorRealtime({
   startPronunciationNoSpeechTimerRef.current = startPronunciationNoSpeechTimer;
   const armPronunciationCheckRef = useRef(armPronunciationCheck);
   armPronunciationCheckRef.current = armPronunciationCheck;
+  // The lesson segment moved on (advance_lesson, Skip, free release, homework
+  // resume): the learner's next turn belongs to the new segment, not to the
+  // model line — drop the arm. Called synchronously at each cursor change, so
+  // a request_pronunciation_check AFTER the advance in the same batch stands.
+  const disarmPronunciationOnSegmentAdvance = (from: string, to: string) => {
+    const capture = clipCaptureRef.current;
+    if (!capture?.isArmed() || from === to) return;
+    capture.disarm();
+    clearPronunciationNoSpeechTimer();
+    clearPronunciationArmMaxTimer();
+    pronunciationTimerAwaitsIdleRef.current = false;
+    onDebugEvent?.('pronunciation_disarmed_segment_advance', `"${from}" → "${to}"`);
+  };
+  const disarmPronunciationOnSegmentAdvanceRef = useRef(disarmPronunciationOnSegmentAdvance);
+  disarmPronunciationOnSegmentAdvanceRef.current = disarmPronunciationOnSegmentAdvance;
   // Mic tap (24 kHz float32): the session recorder as before, plus the clip.
   const pushStudentAudioForPronunciation = (float32: Float32Array) => {
     const clip = clipCaptureRef.current?.push(float32);
@@ -1530,6 +1569,7 @@ export function VoiceTutorRealtime({
   };
   useEffect(() => () => {
     if (pronunciationNoSpeechTimerRef.current) clearTimeout(pronunciationNoSpeechTimerRef.current);
+    if (pronunciationArmMaxTimerRef.current) clearTimeout(pronunciationArmMaxTimerRef.current);
     clipCaptureRef.current?.disarm();
   }, []);
   // Fixed-script plans (lib/tutor/lesson-plan/fixed-script.ts): the learner
@@ -5538,6 +5578,7 @@ export function VoiceTutorRealtime({
         onCompletedSegmentsChange?.([...completedSegmentIdsRef.current]);
       }
     }
+    disarmPronunciationOnSegmentAdvanceRef.current(currentSegmentIdRef.current, next);
     currentSegmentIdRef.current = next;
     setActiveSegmentId(next);
     // Pedagogy opener: the brain advancing the lesson IS the "opening phase
@@ -7778,6 +7819,7 @@ export function VoiceTutorRealtime({
               segmentBeforeFreeRef.current = currentSegmentIdRef.current;
               console.log(`[VoiceTutorRealtime] advance_lesson({to:"free"}) — releasing cursor from "${currentSegmentIdRef.current}" → free-conversation`);
               onDebugEvent?.('advance_free_cursor_released', `was="${currentSegmentIdRef.current}"`);
+              disarmPronunciationOnSegmentAdvanceRef.current(currentSegmentIdRef.current, '');
               currentSegmentIdRef.current = '';
               setActiveSegmentId('');
               currentProblemRef.current = null;
@@ -7930,6 +7972,7 @@ export function VoiceTutorRealtime({
               const hwSeg = hwAdvance.homeworkSegId;
               console.log(`[VoiceTutorRealtime] advance_lesson({to:"${to}"}) from free mode → resuming homework segment "${hwSeg}" (not completed)`);
               onDebugEvent?.('advance_homework_guard', `resume "${hwSeg}" (to="${to}" would have landed on "${next}")`);
+              disarmPronunciationOnSegmentAdvanceRef.current(currentSegmentIdRef.current, hwSeg);
               currentSegmentIdRef.current = hwSeg;
               setActiveSegmentId(hwSeg);
               segmentBeforeFreeRef.current = '';
@@ -16922,8 +16965,9 @@ export function VoiceTutorRealtime({
                         } else if (seg.kind === 'concept' && Array.isArray(s.keyIdeas) && s.keyIdeas.length > 0) {
                           // Level-marked versions ([beginner]/[intermediate]/[advanced]):
                           // with a working level held, only that level's lines reach
-                          // the board. No level ⇒ the same array (unchanged render).
-                          const ideas = filterKeyIdeasForLevel(s.keyIdeas as string[], workingLevelRef.current?.level ?? null);
+                          // the board. No level ⇒ the same array (unchanged render),
+                          // except on a fixed-script plan: 'intermediate' until set.
+                          const ideas = filterKeyIdeasForLevel(s.keyIdeas as string[], effectiveBoardLevel(workingLevelRef.current?.level, plan));
                           title = 'Key ideas';
                           body = ideas.map((k: string, i: number) => `${i + 1}. ${k}`).join('\n');
                         } else if (seg.kind === 'recap' && Array.isArray(s.mustRemember) && s.mustRemember.length > 0) {

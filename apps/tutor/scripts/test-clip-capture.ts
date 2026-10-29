@@ -10,7 +10,7 @@
  */
 import { strict as assert } from 'node:assert';
 import {
-  ClipCapture, CLIP_MAX_MS, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_SAMPLE_RATE, CLIP_NO_SPEECH_TIMEOUT_MS,
+  ClipCapture, CLIP_MAX_MS, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_SAMPLE_RATE, CLIP_NO_SPEECH_TIMEOUT_MS, PRONUNCIATION_ARM_MAX_MS,
   float32ToPcm16, pcm16ToBase64, PRONUNCIATION_UNAVAILABLE_NOTE, pronunciationNoteForBrain,
 } from '../src/lib/tutor/pronunciation/clip-capture';
 import { PRONUNCIATION_UNAVAILABLE_NOTE as SERVER_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
@@ -336,7 +336,7 @@ test('runtime: note planted for the next turn; measured opens BOTH claim-guard s
   assert.match(v, /pronunciationMeasuredThisTurn = pronunciationMeasuredRef\.current;\s*pronunciationResultNoteRef\.current = null;\s*pronunciationMeasuredRef\.current = false;/);
   assert.match(v, /isPronunciationClaimSentence\(updatedSentence, transcript, pronunciationMeasuredThisTurn \? \{ measured: true \} : undefined\)/);
   assert.match(v, /claimsPronunciation\(fullText, transcript, pronunciationMeasuredThisTurn \? \{ measured: true \} : undefined\)/);
-  assert.match(v, /data\.status === 'ok' && typeof data\.note === 'string'[\s\S]{0,80}plantPronunciationNote\(data\.note, true\)/);
+  assert.match(v, /data\.status === 'ok' && typeof data\.note === 'string'[\s\S]{0,400}plantPronunciationNote\(data\.note, measured\)/);
   assert.match(v, /PRONUNCIATION_NOTE_WAIT_MS/);
 });
 
@@ -347,10 +347,40 @@ test('runtime (review r1): 20 s window starts at playback idle; the hold skips t
   assert.match(v, /PRONUNCIATION_NOTE_WAIT_MS\); \}\)\]\);[\s\S]{0,200}if \(endingRef\.current \|\| farewellSealedRef\.current\) \{\s*onDebugEvent\?\.\('pronunciation_hold_skipped'[\s\S]{0,120}return;/);
 });
 
+test('runtime (final review #1a): the arm has an absolute 45 s lifetime, then disarms + plants unavailable', () => {
+  const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.equal(PRONUNCIATION_ARM_MAX_MS, 45000);
+  // Started at the arm itself, BEFORE the playback-state branch (so a tutor
+  // still speaking does not defer it).
+  const armIdx = v.indexOf('const armPronunciationCheck = ');
+  const timerIdx = v.indexOf('}, PRONUNCIATION_ARM_MAX_MS);', armIdx);
+  const speakingIdx = v.indexOf("if (productionStateRef.current === 'speaking')", armIdx);
+  assert.ok(armIdx > 0 && timerIdx > armIdx && timerIdx < speakingIdx, 'timer set at the arm, before the speaking branch');
+  const body = v.slice(armIdx, timerIdx);
+  assert.match(body, /if \(!capture\.isArmed\(\)\) return;\s*capture\.disarm\(\);[\s\S]{0,200}plantPronunciationUnavailable\('arm_expired_45s'\);/);
+  // A sent clip ends the arm's lifetime timer.
+  assert.match(v, /const sendPronunciationClip = \(clip: PronunciationClip\) => \{\s*clearPronunciationNoSpeechTimer\(\);\s*clearPronunciationArmMaxTimer\(\);/);
+});
+
+test('runtime (final review #1b): a segment change disarms the capture', () => {
+  const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.match(v, /const disarmPronunciationOnSegmentAdvance = \(from: string, to: string\) => \{\s*const capture = clipCaptureRef\.current;\s*if \(!capture\?\.isArmed\(\) \|\| from === to\) return;\s*capture\.disarm\(\);[\s\S]{0,300}onDebugEvent\?\.\('pronunciation_disarmed_segment_advance'/);
+  // applyResolvedAdvance (next / previous / id / Skip), free release, homework resume.
+  assert.match(v, /disarmPronunciationOnSegmentAdvanceRef\.current\(currentSegmentIdRef\.current, next\);\s*currentSegmentIdRef\.current = next;/);
+  assert.match(v, /disarmPronunciationOnSegmentAdvanceRef\.current\(currentSegmentIdRef\.current, ''\);\s*currentSegmentIdRef\.current = '';/);
+  assert.match(v, /disarmPronunciationOnSegmentAdvanceRef\.current\(currentSegmentIdRef\.current, hwSeg\);\s*currentSegmentIdRef\.current = hwSeg;/);
+});
+
+test('runtime (final review #1c): an ok-but-not-measured route answer keeps the claim guard shut', () => {
+  const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.match(v, /const measured = data\.measured === true;[\s\S]{0,200}plantPronunciationNote\(data\.note, measured\);/);
+  assert.ok(!v.includes('plantPronunciationNote(data.note, true)'), 'no unconditional measured plant');
+});
+
 test('debug events: the four exact names are emitted and persisted by the embed', () => {
   const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
   const e = src('src/app/tutor-portal/embed/page.tsx');
-  for (const name of ['pronunciation_armed', 'pronunciation_clip_sent', 'pronunciation_note_planted', 'pronunciation_unavailable', 'pronunciation_start_ignored_tutor_speaking', 'pronunciation_hold_skipped']) {
+  for (const name of ['pronunciation_armed', 'pronunciation_clip_sent', 'pronunciation_note_planted', 'pronunciation_unavailable', 'pronunciation_start_ignored_tutor_speaking', 'pronunciation_hold_skipped', 'pronunciation_disarmed_segment_advance']) {
     assert.ok(v.includes(`onDebugEvent?.('${name}'`), `emits ${name}`);
     assert.ok(e.includes(`'${name}'`), `embed persists ${name}`);
   }

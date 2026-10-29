@@ -25,6 +25,8 @@ export interface PronunciationResult {
   prosody?: number;
   /** 0–100 fluency score, when the vendor returned one. */
   fluency?: number;
+  /** 0–100 share of the reference text actually spoken (Azure CompletenessScore), when returned. */
+  completeness?: number;
   /** Wall-clock ms for the vendor call (0 when the result came from a stored JSON). */
   latencyMs: number;
 }

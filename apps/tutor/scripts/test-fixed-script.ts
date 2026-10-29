@@ -124,6 +124,25 @@ test('renderStudentProfileBlock omitPriorSessions drops the history and the cont
   assert.equal(renderStudentProfileBlock(profile, { omitPriorSessions: false }), normal, 'false ⇒ byte-identical');
 });
 
+test('renderStudentProfileBlock omitPriorSessions drops the gaps block (quotes + weave-in instruction)', () => {
+  const now = new Date().toISOString();
+  const profile = {
+    ...emptyProfile('s1'),
+    gaps: [{
+      id: 'g1', kind: 'lo', loId: 'lo-1', status: 'confirmed', confidence: 0.5,
+      firstSeenAt: now, lastSeenAt: now, sessionIds: ['a'],
+      evidence: { observation: 'Dropped the past tense', studentQuotes: ['I go there yesterday'], signals: [] },
+    }],
+  } as unknown as ReturnType<typeof emptyProfile>;
+  const normal = renderStudentProfileBlock(profile);
+  const fixedBlock = renderStudentProfileBlock(profile, { omitPriorSessions: true });
+  assert.match(normal, /student previously said: "I go there yesterday"/);
+  assert.match(normal, /open learning gaps/);
+  assert.match(normal, /Keep weaving gaps in AS you teach/);
+  assert.doesNotMatch(fixedBlock, /I go there yesterday|student previously said|open learning gaps|Keep weaving gaps|previously said/);
+  assert.equal(renderStudentProfileBlock(profile, { omitPriorSessions: false }), normal, 'false ⇒ byte-identical');
+});
+
 // ── wiring pins ──────────────────────────────────────────────────────────
 const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
 const route = read('src/app/api/tutor/brain/stream/route.ts');

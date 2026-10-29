@@ -92,8 +92,11 @@ export function renderStudentProfileBlock(
   // referencing weakness the student has likely outgrown without us
   // having to mutate the underlying data.
   // Most-recently-seen first.
+  // Fixed-script plans (omitPriorSessions): the whole block is skipped — its
+  // "student previously said" quotes and the weave-in instruction below are
+  // recall of an earlier run of the same lesson.
   const now = Date.now();
-  const activeGaps: GapEntry[] = profile.gaps
+  const activeGaps: GapEntry[] = opts?.omitPriorSessions ? [] : profile.gaps
     .filter((g) =>
       (g.status === 'candidate' || g.status === 'confirmed' || g.status === 'open')
       && !isGapStale(g, now),

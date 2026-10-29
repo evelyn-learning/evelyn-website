@@ -36,6 +36,10 @@ export const CLIP_SAMPLE_RATE = 24000;
 /** Armed with nothing buffered this long ⇒ the runtime disarms and plants
  *  the unavailable note, so the tutor never waits on a clip that never came. */
 export const CLIP_NO_SPEECH_TIMEOUT_MS = 20000;
+/** Absolute lifetime of one arm, from the arm, whatever the playback state:
+ *  past it the runtime disarms and plants the unavailable note, so a stale
+ *  arm can never score some later, unrelated turn. */
+export const PRONUNCIATION_ARM_MAX_MS = 45000;
 /** Audio kept from just BEFORE the speech start: Ink's turn.start reaches the
  *  browser a few hundred ms after the learner's first sound, and the first
  *  consonant ("th" in "think") is exactly what the check is for. */

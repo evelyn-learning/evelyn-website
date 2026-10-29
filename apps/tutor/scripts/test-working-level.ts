@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   WORKING_LEVELS, parseWorkingLevel, buildWorkingLevelClause, applyWorkingLevel, decideSetWorkingLevel,
-  withWorkingLevelResult, filterKeyIdeasForLevel,
+  withWorkingLevelResult, filterKeyIdeasForLevel, effectiveBoardLevel,
 } from '../src/lib/tutor/level/working-level';
 import { emptyProfile } from '../src/lib/tutor/student-profile/store';
 import { WHITEBOARD_TOOLS, SET_WORKING_LEVEL_TOOL, mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
@@ -257,6 +257,23 @@ test('filterKeyIdeasForLevel: no level ⇒ the same array (byte-identical for ev
   const unmarked = ['a', 'b'];
   assert.equal(filterKeyIdeasForLevel(unmarked, null), unmarked);
 });
+test('effectiveBoardLevel (final review #7): held level wins; fixed-script plan ⇒ intermediate; else null', () => {
+  const fixedPlan = { metadata: { fixedScript: true } } as unknown as Parameters<typeof effectiveBoardLevel>[1];
+  const ordinaryPlan = { metadata: {} } as unknown as Parameters<typeof effectiveBoardLevel>[1];
+  assert.equal(effectiveBoardLevel('beginner', fixedPlan), 'beginner');
+  assert.equal(effectiveBoardLevel(null, fixedPlan), 'intermediate');
+  assert.equal(effectiveBoardLevel(undefined, fixedPlan), 'intermediate');
+  assert.equal(effectiveBoardLevel(null, ordinaryPlan), null);
+  assert.equal(effectiveBoardLevel(undefined, null), null);
+  assert.equal(effectiveBoardLevel('advanced', ordinaryPlan), 'advanced');
+  const ideas = ['[beginner] B', '[intermediate] I', '[advanced] A', 'shared'];
+  assert.deepEqual(filterKeyIdeasForLevel(ideas, effectiveBoardLevel(null, fixedPlan)), ['I', 'shared']);
+  assert.equal(filterKeyIdeasForLevel(ideas, effectiveBoardLevel(null, ordinaryPlan)), ideas);
+});
+test('effectiveBoardLevel is the board call site', () => {
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(v.includes('filterKeyIdeasForLevel(s.keyIdeas as string[], effectiveBoardLevel(workingLevelRef.current?.level, plan))'));
+});
 test('filterKeyIdeasForLevel: keeps own-level lines (marker stripped) + unmarked lines, drops other levels, keeps order', () => {
   const ideas = ['shared intro', '[beginner] B one', '[intermediate] I one', '[advanced] A one', '[beginner] B two', 'shared outro'];
   assert.deepEqual(filterKeyIdeasForLevel(ideas, 'beginner'), ['shared intro', 'B one', 'B two', 'shared outro']);
@@ -268,7 +285,7 @@ test('filterKeyIdeasForLevel: a plan without markers is unchanged at any level',
   for (const l of WORKING_LEVELS) assert.deepEqual(filterKeyIdeasForLevel(ideas, l), ideas);
 });
 test('board: show_segment_card concept card filters keyIdeas by the held working level', () => {
-  pin(vtr, /filterKeyIdeasForLevel\(s\.keyIdeas as string\[\], workingLevelRef\.current\?\.level \?\? null\)/);
+  pin(vtr, /filterKeyIdeasForLevel\(s\.keyIdeas as string\[\], effectiveBoardLevel\(workingLevelRef\.current\?\.level, plan\)\)/);
 });
 test('surfaces: embed resolves levelCheck from the partner row and TutorSession forwards it', () => {
   pin(embed, /levelCheck=\{sessionOptions\.levelCheck\}/);

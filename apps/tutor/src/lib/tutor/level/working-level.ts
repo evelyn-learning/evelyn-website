@@ -16,6 +16,8 @@
  * Pure. No env, no I/O, client-safe.
  */
 import type { StudentProfile } from '@/lib/tutor/student-profile/types';
+import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import { isFixedScriptPlan } from '@/lib/tutor/lesson-plan/fixed-script';
 
 export type WorkingLevel = 'beginner' | 'intermediate' | 'advanced';
 export const WORKING_LEVELS: readonly WorkingLevel[] = ['beginner', 'intermediate', 'advanced'];
@@ -108,6 +110,14 @@ export function filterKeyIdeasForLevel(keyIdeas: string[], level: WorkingLevel |
     else if (m[1] === level) out.push(line.slice(m[0].length));
   }
   return out;
+}
+
+/** The level the board filters key ideas by: the held level, else — on a
+ *  fixed-script plan, whose concept cards carry all three level versions —
+ *  'intermediate', so the board never shows all three at once. Any other
+ *  plan with no level ⇒ null (filterKeyIdeasForLevel returns the same array). */
+export function effectiveBoardLevel(level: WorkingLevel | null | undefined, plan: LessonPlan | null | undefined): WorkingLevel | null {
+  return level ?? (isFixedScriptPlan(plan) ? 'intermediate' : null);
 }
 
 /** Record the level on the learner's profile (pure; the caller saves).

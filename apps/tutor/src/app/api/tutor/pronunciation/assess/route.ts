@@ -3,8 +3,9 @@
 //
 // Body (JSON): { sessionId, referenceText, audio }   audio = base64 PCM16 LE,
 // 24 kHz mono (the engine's mic tap), ≤ 1.5 MB decoded.
-// Response 200: { status: 'ok', result: PronunciationResult, note }
-//             | { status: 'unavailable', reason, note }
+// Response 200: { status: 'ok', result: PronunciationResult, note, measured }
+//             | { status: 'unavailable', reason, note, measured: false }
+// `measured` false on an 'ok' result ⇒ the learner did not say the target.
 // `note` is formatPronunciationNote(...) — what the brain reads.
 //
 // 429 { status:'unavailable', reason:'vendor_error', note } past the
@@ -25,10 +26,11 @@ import {
   CallBudget,
   MAX_REQUEST_BYTES,
   parseAssessBody,
+  readBodyCapped,
   pronunciationRouteEnabled,
   sessionAllowsAssess,
 } from '@/lib/tutor/pronunciation/assess-request';
-import { assessPronunciation, formatPronunciationNote, PRONUNCIATION_UNAVAILABLE_NOTE } from '@/lib/tutor/pronunciation/assessor';
+import { assessPronunciation, formatPronunciationNote, isMeasuredResult, PRONUNCIATION_UNAVAILABLE_NOTE } from '@/lib/tutor/pronunciation/assessor';
 
 export const runtime = 'nodejs';
 
@@ -44,11 +46,20 @@ export async function POST(request: NextRequest) {
 
   // Everything before the tenant gate answers 404, so a caller outside the
   // gate cannot tell the route exists (not even from a 400).
-  // Never parse a body larger than the biggest valid one.
-  if (Number(request.headers.get('content-length') ?? 0) > MAX_REQUEST_BYTES) return notFound();
+  // Never parse a body larger than the biggest valid one. With a
+  // Content-Length the header decides; without one (chunked) the stream is
+  // read with the same byte cap BEFORE any JSON parsing.
+  const contentLength = request.headers.get('content-length');
+  if (contentLength !== null && Number(contentLength) > MAX_REQUEST_BYTES) return notFound();
   let body: unknown;
   try {
-    body = await request.json();
+    if (contentLength !== null) {
+      body = await request.json();
+    } else {
+      const text = await readBodyCapped(request.body, MAX_REQUEST_BYTES);
+      if (text === null) return notFound();
+      body = JSON.parse(text);
+    }
   } catch {
     return notFound();
   }
@@ -69,9 +80,11 @@ export async function POST(request: NextRequest) {
 
   if (!budget.take(parsed.sessionId)) {
     // Same shape as any unavailable result, so the client path stays uniform.
-    return NextResponse.json({ status: 'unavailable', reason: 'vendor_error', note: PRONUNCIATION_UNAVAILABLE_NOTE }, { status: 429 });
+    return NextResponse.json({ status: 'unavailable', reason: 'vendor_error', note: PRONUNCIATION_UNAVAILABLE_NOTE, measured: false }, { status: 429 });
   }
 
   const out = await assessPronunciation({ pcm16: parsed.pcm16, sampleRate: 24000, referenceText: parsed.referenceText });
-  return NextResponse.json({ ...out, note: formatPronunciationNote(out, parsed.referenceText) });
+  // `measured` is false for an 'ok' result that was not an attempt at the
+  // reference text (isMeasuredResult) — the client keeps the claim guard shut.
+  return NextResponse.json({ ...out, note: formatPronunciationNote(out, parsed.referenceText), measured: isMeasuredResult(out) });
 }
