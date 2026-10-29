@@ -924,3 +924,9 @@ export const TUTOR_SENTENCE_BOARD = process.env.NEXT_PUBLIC_TUTOR_SENTENCE_BOARD
  *  overview). Skip button, {to:"free"} and the client's own advances are never
  *  refused. Default ON; NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ADVANCE_GUARD=off. */
 export const TUTOR_FIXED_SCRIPT_ADVANCE_GUARD = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ADVANCE_GUARD !== 'off';
+
+/** Fixed-script plans (GDI run 3, 2026-10-29): the opening turn puts the
+ *  lesson outline on the board — one show_table titled with the plan title,
+ *  a row per part (authored label, minutes). Default ON;
+ *  NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_OUTLINE=off. */
+export const TUTOR_FIXED_SCRIPT_OUTLINE = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_OUTLINE !== 'off';

@@ -24,6 +24,8 @@ import {
   missingRequiredPhrases, scriptMissingAdvanceReason,
   segmentMaxTurns, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel } from '../src/lib/tutor/lesson-plan/rail-labels';
+import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -306,6 +308,67 @@ test('A: level-capture lead only when leaving a level check with no level', () =
 });
 test('VTR: auto-advance note prepends the level-capture lead', () => {
   pin(VTR, /needsLevelCaptureLead\(autoPlan, segIdNow, !!workingLevelRef\.current\) \? LEVEL_CAPTURE_LEAD : ''\) \+\s*fixedScriptAutoAdvanceLead\(/);
+});
+
+// ── Task 13 §B: authored labels → rail, page titles, outline ──
+const LB_RAW = {
+  ...RAW,
+  id: 'test.fixed-script-labels',
+  segments: [
+    { id: 'overview', kind: 'hook', goal: 'Welcome', estimatedMinutes: 2, metadata: { label: 'Overview', labelLocalized: { ja: '概要' } } },
+    { id: 'topic-intro', kind: 'concept', goal: 'Teach', keyIdeas: ['a'], estimatedMinutes: 4, metadata: { label: 'Your job' } },
+    { id: 'pron', kind: 'concept', goal: 'Sounds', keyIdeas: ['b'], estimatedMinutes: 3, metadata: { label: 'Pronunciation', labelLocalized: { ja: '発音' }, optional: true } },
+    { id: 'recap', kind: 'recap', mustRemember: ['a'], estimatedMinutes: 2 },
+  ],
+};
+const lb: LessonPlan = parseLessonPlan(LB_RAW);
+test('B: secondTutorLanguage = first non-English code', () => {
+  assert.equal(secondTutorLanguage(['en', 'ja']), 'ja');
+  assert.equal(secondTutorLanguage(['en']), undefined);
+  assert.equal(secondTutorLanguage(undefined), undefined);
+});
+test('B: rail uses the authored label (before Hook/Recap words), localized when a second language matches', () => {
+  const en = buildRailModel(lb, 'overview', new Set(), { 'topic-intro': 'Generated thing' })!;
+  assert.deepEqual(en.items.map((i) => i.label), ['Overview', 'Your job', 'Pronunciation', 'Recap']);
+  const ja = buildRailModel(lb, 'overview', new Set(), null, 'ja')!;
+  assert.deepEqual(ja.items.map((i) => i.label), ['Overview · 概要', 'Your job', 'Pronunciation · 発音', 'Recap']);
+});
+test('B: plans without labels keep their rail', () => {
+  const m = buildRailModel(fixed, 'overview', new Set(), null, 'ja')!;
+  assert.equal(m.items[0].label, 'Hook');
+  assert.equal(authoredSegmentLabel(fixed.segments[0], 'ja'), null);
+});
+test('B: advance page title "Part <n> · <label>[ · <localized>]" on a fixed script only', () => {
+  assert.equal(fixedScriptPartTitle(lb, 'topic-intro'), 'Part 2 · Your job');
+  assert.equal(fixedScriptPartTitle(lb, 'pron', 'ja'), 'Part 3 · Pronunciation · 発音');
+  assert.equal(fixedScriptPartTitle(lb, 'recap'), null);
+  assert.equal(fixedScriptPartTitle({ ...lb, metadata: {} }, 'topic-intro'), null);
+});
+test('B: outline table — plan title, #/Part/Minutes, (optional), localized column', () => {
+  const t = fixedScriptOutlineTable(lb)!;
+  assert.equal(t.title, 'Fixed script');
+  assert.deepEqual(t.headers, ['#', 'Part', 'Minutes']);
+  assert.deepEqual(t.rows[2], ['3', 'Pronunciation (optional)', '3']);
+  assert.deepEqual(t.rows[3], ['4', 'Recap', '2']);
+  const tj = fixedScriptOutlineTable(lb, 'ja')!;
+  assert.deepEqual(tj.headers, ['#', 'Part', 'Part (ja)', 'Minutes']);
+  assert.deepEqual(tj.rows[0], ['1', 'Overview', '概要', '2']);
+  assert.equal(fixedScriptOutlineTable({ ...lb, metadata: {} }), null);
+});
+test('B: a sentence never titles a page; the catalog item still names it', () => {
+  const cmd = { action: 'showSentence', sentence: 'I have worked here for ten years.' };
+  assert.equal(extractCommandTitle(cmd), undefined);
+  assert.equal(catalogItemTitle(cmd), 'I have worked here for ten years.');
+  assert.equal(catalogItemTitle({ action: 'showTable', title: 'Outline', headers: [], rows: [] }), 'Outline');
+});
+test('VTR: advance page title, outline card wiring, rail language', () => {
+  pin(VTR, /const newPageTitle = fixedScriptPartTitle\(plan, next, secondTutorLanguageRef\.current\)/);
+  pin(VTR, /TUTOR_FIXED_SCRIPT_OUTLINE && openingTurnPendingRef\.current && !opts\?\.prefetchOnly && !fixedScriptOutlineShownRef\.current/);
+  pin(VTR, /handleWhiteboardCommand\(\[cmd\], \{ anchorSentence: 0 \}\)/);
+  pin(VTR, /'fixed_script_outline_card', `rows=\$\{outline\.rows\.length\}/);
+  assert.ok(!/extractCommandTitle/.test(VTR), 'catalog appends use catalogItemTitle');
+  pin(read('src/app/tutor/components/session/TutorSession.tsx'), /segmentLabels, secondTutorLanguage\(tutorLanguages\)\)/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /TUTOR_FIXED_SCRIPT_OUTLINE = process\.env\.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_OUTLINE !== 'off'/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

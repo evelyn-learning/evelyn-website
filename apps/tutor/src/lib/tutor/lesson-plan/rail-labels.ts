@@ -1,5 +1,6 @@
 import type { LessonPlan, Segment } from './types';
 import { isGeneratedPlan, loGroupOf } from './context';
+import { isFixedScriptPlan } from './fixed-script';
 
 export const RAIL_LABELS_VERSION = 'rail-v1';
 const MAX_LABEL_WORDS = 3;
@@ -87,7 +88,96 @@ export function railLoTitle(plan: LessonPlan, loId: string): string {
 
 export interface RailModel { items: RailItem[]; offPlan: boolean }
 
+/* GDI run 3 (2026-10-29): brain-generated rail labels named the parts of a
+ * scripted lesson differently from its author. A segment may carry its own
+ * `metadata.label` (+ `metadata.labelLocalized[code]`); it wins over every
+ * generated or stage-word label. Generic: any plan can carry them. */
+
+/** The session's second tutor language (the first code that is not English),
+ *  or undefined for an English-only session. */
+export function secondTutorLanguage(tutorLanguages: readonly string[] | null | undefined): string | undefined {
+  return (tutorLanguages ?? []).find((l) => typeof l === 'string' && l && l !== 'en');
+}
+
+/** A segment's authored label, with `" · <localized>"` when `secondLanguage`
+ *  has a localized form. null ⇒ no authored label. */
+export function authoredSegmentLabel(seg: { metadata?: Record<string, unknown> } | undefined, secondLanguage?: string): string | null {
+  const raw = seg?.metadata?.label;
+  if (typeof raw !== 'string' || !raw.trim()) return null;
+  const loc = authoredLocalizedLabel(seg, secondLanguage);
+  return loc ? `${raw.trim()} · ${loc}` : raw.trim();
+}
+
+/** The localized authored label alone (null when absent / no second language). */
+export function authoredLocalizedLabel(seg: { metadata?: Record<string, unknown> } | undefined, secondLanguage?: string): string | null {
+  if (!secondLanguage) return null;
+  const map = seg?.metadata?.labelLocalized;
+  if (!map || typeof map !== 'object') return null;
+  const v = (map as Record<string, unknown>)[secondLanguage];
+  return typeof v === 'string' && v.trim() ? v.trim() : null;
+}
+
+/** The title of the page opened on a fixed-script segment advance:
+ *  `"Part <n> · <label>[ · <localized>]"` (n = 1-based index among the plan's
+ *  segments). null ⇒ not a fixed script, unknown segment, or no label (the
+ *  caller keeps its own title). */
+export function fixedScriptPartTitle(plan: LessonPlan | null | undefined, segmentId: string, secondLanguage?: string): string | null {
+  if (!plan || !isFixedScriptPlan(plan)) return null;
+  const idx = plan.segments.findIndex((s) => s.id === segmentId);
+  if (idx < 0) return null;
+  const label = authoredSegmentLabel(plan.segments[idx], secondLanguage);
+  return label ? `Part ${idx + 1} · ${label}` : null;
+}
+
+/** The lesson outline a fixed-script plan puts on the board on its opening
+ *  turn (GDI run 3): `#`, `Part` (authored label, else the stage word), a
+ *  localized column when the session's second language has any localized
+ *  label, `Minutes` (estimatedMinutes; blank when absent). A part with
+ *  `metadata.optional === true` reads "<label> (optional)". null ⇒ not a
+ *  fixed script or no segments. */
+export function fixedScriptOutlineTable(
+  plan: LessonPlan | null | undefined,
+  secondLanguage?: string,
+): { title: string; headers: string[]; rows: string[][] } | null {
+  if (!plan || !isFixedScriptPlan(plan) || !plan.segments.length) return null;
+  const withLoc = plan.segments.some((s) => authoredLocalizedLabel(s, secondLanguage));
+  const headers = ['#', 'Part', ...(withLoc ? [`Part (${secondLanguage})`] : []), 'Minutes'];
+  const rows = plan.segments.map((seg, i) => {
+    const base = authoredSegmentLabel(seg) ?? railStageLabel(plan.segments, seg.id);
+    const optional = seg.metadata?.optional === true;
+    const label = optional ? `${base} (optional)` : base;
+    const loc = authoredLocalizedLabel(seg, secondLanguage) ?? '';
+    const mins = typeof seg.estimatedMinutes === 'number' && Number.isFinite(seg.estimatedMinutes) && seg.estimatedMinutes > 0
+      ? String(seg.estimatedMinutes) : '';
+    return [String(i + 1), label, ...(withLoc ? [loc] : []), mins];
+  });
+  return { title: plan.title, headers, rows };
+}
+
+/** Authored labels override whatever a branch below chose, on items that
+ *  stand for exactly one segment. */
+function applyAuthoredLabels(plan: LessonPlan, model: RailModel, secondLanguage?: string): RailModel {
+  for (const it of model.items) {
+    if (it.segIds.length !== 1) continue;
+    const authored = authoredSegmentLabel(plan.segments.find((s) => s.id === it.segIds[0]), secondLanguage);
+    if (authored) it.label = authored;
+  }
+  return model;
+}
+
 export function buildRailModel(
+  plan: LessonPlan,
+  currentSegmentId: string,
+  completedSegmentIds: ReadonlySet<string>,
+  labels: SegmentLabels | null,
+  /** the session's second tutor language (secondTutorLanguage); absent ⇒ English labels only */
+  secondLanguage?: string,
+): RailModel | null {
+  const model = buildRailModelInner(plan, currentSegmentId, completedSegmentIds, labels);
+  return model ? applyAuthoredLabels(plan, model, secondLanguage) : null;
+}
+
+function buildRailModelInner(
   plan: LessonPlan,
   currentSegmentId: string,
   completedSegmentIds: ReadonlySet<string>,

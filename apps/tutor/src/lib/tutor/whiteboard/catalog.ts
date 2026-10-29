@@ -1664,12 +1664,22 @@ export function extractCommandTitle(cmd: any): string | undefined {
     cmd.label,
     cmd.equation?.label,
     cmd.heading,
-    // showSentence (language lessons): the sentence itself is what the brain
-    // must see in <whiteboard_state> to know which sentence is already up.
-    cmd.action === 'showSentence' ? cmd.sentence : undefined,
   ];
   for (const c of candidates) {
     if (typeof c === 'string' && c.trim()) return c.trim();
   }
+  return undefined;
+}
+
+/** The catalog ITEM title (what <whiteboard_state> shows the brain):
+ *  extractCommandTitle, plus a showSentence card's sentence — the brain must
+ *  see which sentence is already up. GDI run 3 (2026-10-29): the sentence
+ *  must never title a PAGE (page-grouping's pickTitle reads
+ *  extractCommandTitle, which therefore leaves it out). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function catalogItemTitle(cmd: any): string | undefined {
+  const t = extractCommandTitle(cmd);
+  if (t) return t;
+  if (cmd && cmd.action === 'showSentence' && typeof cmd.sentence === 'string' && cmd.sentence.trim()) return cmd.sentence.trim();
   return undefined;
 }

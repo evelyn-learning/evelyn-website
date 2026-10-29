@@ -170,7 +170,7 @@ import { inferWrongEvent, isBareShortAnswer, hedgedDenialCounts } from '@/lib/tu
 import { decideDimensionalCheck } from '@/lib/tutor/validation/dimensional-gate';
 import { normalizeGraphicOrganizerSpec } from '@/lib/tutor/validation/graphic-organizer-guard';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
-import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
+import { railJumpCandidates, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
 import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import { LessonPlanProgress } from './LessonPlanProgress';
@@ -294,7 +294,7 @@ import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
-import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
+import { WhiteboardCatalog, buildShowSignature, catalogItemTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
 import { normalizeEquationLabel, decideLabelDuplicate, type SeenEquationLabel } from '@/lib/tutor/whiteboard/equation-label-dedup';
 import { shouldScrollToDedupedItem } from '@/lib/tutor/whiteboard/dedup-scroll';
 import { homeworkFigureFor } from '@/lib/tutor/whiteboard/homework-figure';
@@ -418,6 +418,7 @@ import {
   TUTOR_PRONUNCIATION_ASSESS,
   TUTOR_FIXED_SCRIPT_AUTO_ADVANCE,
   TUTOR_RETRY_PREAMBLE,
+  TUTOR_FIXED_SCRIPT_OUTLINE,
 } from '@/lib/tutor/orchestrator/flags';
 import { withRetryPreamble } from '@/lib/tutor/voice/retry-preamble';
 import {
@@ -4810,6 +4811,11 @@ export function VoiceTutorRealtime({
   // cards with emphasis, so the sentence that says them is stressed too.
   const languageSessionRef = useRef(false);
   languageSessionRef.current = sessionAllowsNonLatin(tutorLanguages) || subject === 'languages';
+  // Authored part labels (rail-labels.ts): the session's second tutor
+  // language, read by the advance page title and the outline card.
+  const secondTutorLanguageRef = useRef<string | undefined>(undefined);
+  const fixedScriptOutlineShownRef = useRef(false);
+  secondTutorLanguageRef.current = secondTutorLanguage(tutorLanguages);
   const sentenceStressRef = useRef<{ studentLast: string | null; cards: Array<{ sentence: string; emphasis: string[] }> }>({ studentLast: null, cards: [] });
   /** The Cartesia transcript only (rewriteForTTS first, stress after —
    *  composeSpokenText); chat, transcript and board keep the display text. */
@@ -5728,7 +5734,10 @@ export function VoiceTutorRealtime({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const descRaw = loDesc || (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || '';
     const desc = (typeof descRaw === 'string' ? descRaw : '').trim();
-    const newPageTitle = stage && desc ? `${stage}: ${desc}` : stage || desc || nextSeg?.id || '';
+    // GDI run 3: a fixed-script part with an authored label titles its page
+    // "Part <n> · <label>" (rail-labels.ts fixedScriptPartTitle).
+    const newPageTitle = fixedScriptPartTitle(plan, next, secondTutorLanguageRef.current)
+      ?? (stage && desc ? `${stage}: ${desc}` : stage || desc || nextSeg?.id || '');
     // Boundary-safe: the fixed slice cut "…= 4x − 11" to "…= 4x −"
     // mid-expression (portal-704e3e01 @1122.5s).
     const pageTitleStr = truncatePageTitle(String(newPageTitle));
@@ -9511,7 +9520,7 @@ export function VoiceTutorRealtime({
         // render's page so it replaces in place, beating any boundary signal.
         // Otherwise undefined → the catalog stamps the active page.
         pageId: killRecoveryPinPageId ?? undefined,
-        title: extractCommandTitle(cmd),
+        title: catalogItemTitle(cmd),
         signature,
         // Subject key for PRIMARY figures only (undefined for supporting
         // renders) — drives generic evolve-in-place on future re-emits.
@@ -11181,7 +11190,7 @@ export function VoiceTutorRealtime({
           catalogRef.current.append({
             itemId: (cmd as { id?: string }).id || `resume-${action}-${i}`,
             action,
-            title: extractCommandTitle(cmd),
+            title: catalogItemTitle(cmd),
             signature: buildShowSignature(action, cmd),
             features: [],
           });
@@ -19828,6 +19837,20 @@ export function VoiceTutorRealtime({
               'exercise_no_board',
               `shape=${exerciseCheck.shape} · "${fullText.slice(0, 120)}"`,
             );
+          }
+        }
+        // Lesson outline (GDI run 3, 2026-10-29): a fixed-script plan's
+        // opening turn ends with ONE show_table of its parts, through the
+        // normal board pipeline (paged, catalogued). anchorSentence 0 ⇒ the
+        // render-sync buffer flushes it at once, after the opener's own
+        // renders (FIFO). Once per session.
+        if (TUTOR_FIXED_SCRIPT_OUTLINE && openingTurnPendingRef.current && !opts?.prefetchOnly && !fixedScriptOutlineShownRef.current) {
+          const outline = fixedScriptOutlineTable(lessonPlanRef.current, secondTutorLanguageRef.current);
+          if (outline) {
+            fixedScriptOutlineShownRef.current = true;
+            const cmd = { action: 'showTable', title: outline.title, headers: outline.headers, rows: outline.rows } as WhiteboardCommand;
+            const res = await handleWhiteboardCommand([cmd], { anchorSentence: 0 });
+            onDebugEvent?.('fixed_script_outline_card', `rows=${outline.rows.length}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'}`);
           }
         }
         // Sentence board (2026-10-29, GDI trial run 1: the brain boarded 3

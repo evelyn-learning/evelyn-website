@@ -3105,6 +3105,9 @@ function CommandRendererInner({ command }: CommandRendererProps) {
       return (
         <HScrollFade hint className="overflow-x-auto" data-feature="table" style={{ position: 'relative' }}>
           <table className="min-w-full border-collapse border border-gray-300">
+            {command.title ? (
+              <caption className="caption-top text-left font-semibold px-1 pb-2" data-feature="table-title">{command.title}</caption>
+            ) : null}
             <thead>
               <tr className="bg-gray-100" data-feature="header-row">
                 {command.headers.map((header, i) => (

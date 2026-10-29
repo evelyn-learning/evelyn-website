@@ -39,7 +39,7 @@ import { thinkingCueVisible, thinkingCueLabel, thinkingCueLanguage } from '@/lib
 import { lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
 import { AgendaRail } from './AgendaRail';
 import { resolveStartWatchdog, START_WATCHDOG_MS } from './start-tap';
-import { buildRailModel, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
+import { buildRailModel, secondTutorLanguage, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { homeworkPinText } from '@/lib/tutor/action-pin-text';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
@@ -1799,7 +1799,7 @@ export default function TutorSession(props: TutorSessionProps) {
 
   const railModel = TUTOR_AGENDA_RAIL && lessonProgress.plan
     ? buildRailModel(lessonProgress.plan, lessonProgress.currentSegmentId ?? '',
-        new Set(completedSegmentIds), segmentLabels)
+        new Set(completedSegmentIds), segmentLabels, secondTutorLanguage(tutorLanguages))
     : null;
   const railItems = railModel?.items ?? null;
   const agendaRailEl = railItems && railItems.length > 0

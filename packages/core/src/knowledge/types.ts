@@ -819,7 +819,7 @@ export type WhiteboardCommand =
   | { action: 'showProblem'; problem: Partial<Problem> }
   | { action: 'showSolution'; steps: SolutionStep[] }
   | { action: 'showWorkedExample'; example: Partial<WorkedExample> }
-  | { action: 'showTable'; headers: string[]; rows: string[][] }
+  | { action: 'showTable'; headers: string[]; rows: string[][]; /** caption above the table (client-built tables, e.g. a lesson outline) */ title?: string }
   | { action: 'showImage'; url: string; alt: string }
   | { action: 'showSvgDiagram'; svg: string; title?: string; description?: string }
   | { action: 'showCode'; code: string; language?: string; label?: string }
