@@ -109,12 +109,18 @@ let baseline = 0;
 const results = [];
 for (const name of selected.keys()) {
   const t0 = Date.now();
-  const r = spawnSync('npm', ['run', '--silent', name], { cwd: APP, stdio: 'inherit', env: { ...process.env, FORCE_COLOR: '1' } });
-  const ok = r.status === 0;
+  const run = () => spawnSync('npm', ['run', '--silent', name], { cwd: APP, stdio: 'inherit', env: { ...process.env, FORCE_COLOR: '1' } }).status === 0;
+  let ok = run();
+  let flaky = false;
   const known = !ok && KNOWN_BASELINE_FAILURES.has(name);
+  // One retry, alone, before a failure counts: test:brain-route-cache-blocks
+  // failed three times in full-suite runs on 10-28/29 and passed alone every
+  // time (its fake endpoint captures the LAST request; under load an extra
+  // request lands). A pass on retry is reported as flaky, never hidden.
+  if (!ok && !known) { console.log(`\n${name}: FAILED — retrying once alone…`); ok = run(); flaky = ok; }
   if (!ok && !known) failed++;
   if (known) baseline++;
-  results.push(`${ok ? 'PASS' : known ? 'FAIL (known baseline — not blocking)' : 'FAIL'}  ${name}  (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
+  results.push(`${ok ? (flaky ? 'PASS (on retry — FLAKY)' : 'PASS') : known ? 'FAIL (known baseline — not blocking)' : 'FAIL'}  ${name}  (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
 }
 console.log(`\n${results.join('\n')}\n${selected.size - failed - baseline}/${selected.size} passed${baseline ? ` · ${baseline} known baseline failure(s) tolerated` : ''}`);
 process.exit(failed ? 1 : 0);
