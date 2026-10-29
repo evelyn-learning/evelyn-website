@@ -234,7 +234,7 @@ for (const s of [ADVANCE_CUE_HINT, OVERLONG_ADVANCE_NOW, describeTypedAdvance({ 
   check('wiring: a leading "no" reaches the fact', /declinedOffer: advanceRequest\.leadingNo/.test(src));
   check('wiring: an advanced turn carries no pace hint', /const cueMatch = !hasButtonMarker && !typedAdvanceFact/.test(src));
   check('wiring: a move-on turn delivers the overlong note without "finish first"', /askedToMoveOn \|\| runtimeNoteHeldTurnsRef/.test(src) && /overlongNoteForTurn\(pendingRuntimeNoteRef\.current, askedToMoveOn\)/.test(src));
-  check('wiring: the planted note uses the shared "finish first" text', src.includes('`${OVERLONG_FINISH_FIRST}${nextHint} `'));
+  check('wiring: the planted note uses the shared "finish first" text', src.includes('`${OVERLONG_FINISH_FIRST}${levelLead}${nextHint} `'));
   const brain = readFileSync(join(__dirname, '../src/lib/tutor/voice/claude-brain.ts'), 'utf8');
   check('wiring: the pace hint is split by cue kind', /pacingHintForCue\(state\.cue\)/.test(brain));
 }

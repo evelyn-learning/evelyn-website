@@ -78,9 +78,10 @@ function latinWordCount(text: string): number {
   return (text.match(/[A-Za-z][A-Za-z']*/g) ?? []).length;
 }
 
-/** Lower-cased tokens (letters/digits, apostrophes kept). */
+/** Lower-cased tokens (letters/digits); apostrophes and punctuation ignored
+ *  ("haven't" → "havent"). */
 function wordTokens(text: string): string[] {
-  return ((text ?? '').match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu) ?? []).map((w) => w.toLowerCase().replace(/’/g, "'"));
+  return ((text ?? '').match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu) ?? []).map((w) => w.toLowerCase().replace(/['’]/g, ''));
 }
 
 /** Model sentences of a tutor turn: double-quoted spans and plain sentences
@@ -92,26 +93,46 @@ function modelCandidates(tutorText: string): string[] {
   return [...quoted, ...plain].filter((x) => wordTokens(x).length >= 3);
 }
 
-/** The student said the model sentence: ≥ 90 % of the model's tokens are in
- *  the student's utterance (a short sentence of < 10 tokens therefore needs
- *  every token — one dropped word is a different sentence), and the student
- *  added at most max(2, 10 % of the model) tokens of their own (a "Yes," or
- *  "um" may ride along; a longer, different sentence does not match). */
-export const MODEL_MATCH_SHARE = 0.9;
+/** The student said the model sentence: EVERY token of the model is in the
+ *  student's utterance, counted with multiplicity ("for … for" needs two) —
+ *  fix round 1: a missing "have" in "I (have) worked for…" is the very error
+ *  being corrected — and the student added at most max(2, 10 % of the model)
+ *  tokens of their own (a "Yes," or "um" may ride along). */
 export function saidModelSentence(model: string, studentText: string): boolean {
   const m = wordTokens(model);
   const st = wordTokens(studentText);
   if (m.length < 3 || st.length === 0) return false;
-  const have = new Set(st);
-  const present = m.filter((w) => have.has(w)).length;
-  if (present / m.length < MODEL_MATCH_SHARE) return false;
-  const modelSet = new Set(m);
-  const extra = st.filter((w) => !modelSet.has(w)).length;
+  const left = new Map<string, number>();
+  for (const w of st) left.set(w, (left.get(w) ?? 0) + 1);
+  for (const w of m) {
+    const n = left.get(w) ?? 0;
+    if (n === 0) return false;
+    left.set(w, n - 1);
+  }
+  let extra = 0;
+  for (const n of left.values()) extra += n;
   return extra <= Math.max(2, Math.ceil(m.length * 0.1));
 }
 
-/** A sentence asking for something "once more"/"again". */
-const ASK_AGAIN_RE = /\b(?:say|repeat|try|read)\b[^.!?。！？]*\b(?:once more|again|one more time)\b|\b(?:once more|again|one more time)\b[^.!?。！？]*\b(?:say|repeat|try)\b|もう一度/i;
+/** A re-ask cue. */
+const REASK_CUE_RE = /\b(?:once more|again|one more time)\b|もう一度/i;
+/** The attempt refers to the sentence already given, without quoting it. */
+const SAME_SENTENCE_REF_RE = /\b(?:that|the)\s+(?:(?:whole|full|same)\s+)?sentence\b|それ|その文/i;
+
+function quotedSpans(text: string): string[] {
+  return [...(text ?? '').matchAll(/"([^"\n]+)"|“([^”\n]+)”|(?<!\p{L})'([^'\n]{6,}?)'(?!\p{L})|‘([^’\n]+)’/gu)]
+    .map((m) => (m[1] ?? m[2] ?? m[3] ?? m[4] ?? '').trim());
+}
+
+/** `span`'s tokens appear, contiguous and in order, in `model`'s tokens. */
+function containsRun(model: string[], span: string[]): boolean {
+  if (span.length === 0 || span.length > model.length) return false;
+  outer: for (let i = 0; i + span.length <= model.length; i++) {
+    for (let j = 0; j < span.length; j++) if (model[i + j] !== span[j]) continue outer;
+    return true;
+  }
+  return false;
+}
 
 /**
  * GDI run 3 (2026-10-29): the tutor modelled `Last month, I sold 25 machines
@@ -119,12 +140,25 @@ const ASK_AGAIN_RE = /\b(?:say|repeat|try|read)\b[^.!?。！？]*\b(?:once more|
  * and the reply asked `Could you say the whole sentence once more, starting
  * with "Last month"?` — reAskedOwnSentence needs the student's sentence in
  * the ask and could not see it. The model sentence (from the PREVIOUS tutor
- * turn) the student just said, when the new attempt asks for a repeat.
+ * turn) the student just said, when the attempt asks for THAT sentence again:
+ *   (a) a re-ask cue (once more | again | one more time | もう一度), and
+ *   (b) it quotes ≥ 3 words of the model sentence, or refers to "that/the
+ *       (whole|full|same) sentence" / それ / その文, and
+ *   (c) it quotes no other span of ≥ 3 words that is not part of the model
+ *       ("try again with a new one: 'Last week I visited Osaka.'" is a new item).
  * null ⇒ not a re-ask.
  */
 export function reAskedModelSentence(prevTutorText: string, studentText: string, attemptText: string): string | null {
-  if (!ASK_AGAIN_RE.test(attemptText ?? '')) return null;
-  for (const c of modelCandidates(prevTutorText)) if (saidModelSentence(c, studentText)) return c;
+  const attempt = attemptText ?? '';
+  if (!REASK_CUE_RE.test(attempt)) return null;
+  const spans = quotedSpans(attempt).map(wordTokens).filter((t) => t.length >= 3);
+  for (const c of modelCandidates(prevTutorText)) {
+    if (!saidModelSentence(c, studentText)) continue;
+    const m = wordTokens(c);
+    if (spans.some((sp) => !containsRun(m, sp))) continue;
+    const quotesModel = spans.some((sp) => containsRun(m, sp));
+    if (quotesModel || SAME_SENTENCE_REF_RE.test(attempt)) return c;
+  }
   return null;
 }
 

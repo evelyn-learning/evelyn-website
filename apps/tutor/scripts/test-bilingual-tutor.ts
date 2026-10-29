@@ -761,6 +761,20 @@ test('GDI run 3: a re-ask of the model sentence the student just said correctly'
   // a filler riding along still matches; a much longer different sentence does not
   assert.equal(saidModelSentence('Last month, I sold 25 machines to Toyota.', 'Yes, last month I sold 25 machines to Toyota.'), true);
   assert.equal(saidModelSentence('I sold machines', 'Last month I sold 25 machines to Toyota and Honda.'), false);
+  // fix round 1 (I-2): strict on the model's tokens — the missing "have" is the error being corrected
+  assert.equal(saidModelSentence('I have worked for my current company for five years.', 'I worked for my current company for five years.'), false);
+  assert.equal(saidModelSentence('I have worked for my current company for five years.', 'I have worked for my current company for five years.'), true);
+  // multiplicity: "for … for" needs two
+  assert.equal(saidModelSentence('I have worked for my company for five years.', 'I have worked at my company for five years.'), false);
+  // apostrophes ignored
+  assert.equal(saidModelSentence("I haven't taken leave from work.", 'I havent taken leave from work'), true);
+  // fix round 1 (I-3): a re-ask must be for the SAME sentence
+  assert.equal(reAskedModelSentence(prev, student, "Good. Now try again with a new one: 'Last week I visited Osaka.'"), null);
+  assert.equal(reAskedModelSentence(prev, student, 'Perfect! Let\'s try again with a new one: "Last week, I met a customer." Please say it.'), null);
+  assert.equal(reAskedModelSentence(prev, student, '完璧です。では、もう一度新しい文で練習しましょう。'), null, 'no reference to the same sentence');
+  assert.equal(reAskedModelSentence(prev, student, 'Nice. Say "I sold 25 machines" once more for me.'), 'Last month, I sold 25 machines to Toyota.', 'quotes ≥ 3 words of the model');
+  assert.equal(reAskedModelSentence(prev, student, 'Good. もう一度、その文を言ってください。'), 'Last month, I sold 25 machines to Toyota.', 'その文');
+  assert.equal(reAskedModelSentence(prev, student, 'Can you say that sentence again, then "Next week I will visit Honda"?'), null, 'another quoted sentence ⇒ new item');
   assert.match(REPEAT_AFTER_CORRECT_REASON, /^The student just said that sentence correctly\. Confirm it in one short sentence and move to the next item; do not ask for it again\.$/);
 });
 

@@ -22,7 +22,7 @@ import {
   FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_TIME_FACTOR, FIXED_SCRIPT_AUTO_ADVANCE_MIN_MS,
   FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPronunciation,
   missingRequiredPhrases, scriptMissingAdvanceReason,
-  segmentMaxTurns, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD,
+  segmentMaxTurns, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
@@ -362,13 +362,28 @@ test('B: a sentence never titles a page; the catalog item still names it', () =>
   assert.equal(catalogItemTitle({ action: 'showTable', title: 'Outline', headers: [], rows: [] }), 'Outline');
 });
 test('VTR: advance page title, outline card wiring, rail language', () => {
-  pin(VTR, /const newPageTitle = fixedScriptPartTitle\(plan, next, secondTutorLanguageRef\.current\)/);
+  pin(VTR, /const authoredPartTitle = fixedScriptPartTitle\(plan, next, secondTutorLanguageRef\.current\);\s*const newPageTitle = authoredPartTitle/);
   pin(VTR, /TUTOR_FIXED_SCRIPT_OUTLINE && openingTurnPendingRef\.current && !opts\?\.prefetchOnly && !fixedScriptOutlineShownRef\.current/);
   pin(VTR, /handleWhiteboardCommand\(\[cmd\], \{ anchorSentence: 0 \}\)/);
   pin(VTR, /'fixed_script_outline_card', `rows=\$\{outline\.rows\.length\}/);
   assert.ok(!/extractCommandTitle/.test(VTR), 'catalog appends use catalogItemTitle');
   pin(read('src/app/tutor/components/session/TutorSession.tsx'), /segmentLabels, secondTutorLanguage\(tutorLanguages\)\)/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /TUTOR_FIXED_SCRIPT_OUTLINE = process\.env\.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_OUTLINE !== 'off'/);
+});
+
+// ── Task 13 fix round 1 (I-4): leaving the level check without a level ──
+test('I-4: the overlong note carries the level-capture lead before the advance hint', () => {
+  pin(VTR, /const levelLead = needsLevelCaptureLead\(plan, segIdNow, !!workingLevelRef\.current\) \? LEVEL_CAPTURE_LEAD : '';/);
+  pin(VTR, /`\$\{OVERLONG_FINISH_FIRST\}\$\{levelLead\}\$\{nextHint\} `/);
+});
+test('I-4: a brain advance off the level check with no level (and no set_working_level in the batch) is refused', () => {
+  assert.equal(FIXED_SCRIPT_LEVEL_MISSING_REASON, 'Set the working level first: call set_working_level({level}) with the level you heard in this check, then advance.');
+  const at = VTR.indexOf("'fixed_script_advance_refused_level_missing'");
+  assert.ok(at > 0, 'event');
+  const block = VTR.slice(at - 700, at + 300);
+  pin(block, /levelCheckActive\s*&& needsLevelCaptureLead\(plan, curSegId, !!workingLevelRef\.current\)\s*&& !processed\.some\(\(c\) => \(c\.action as string\) === 'setWorkingLevel'\)/);
+  pin(block, /rejected\.push\(\{ action: 'advance_lesson', reason: FIXED_SCRIPT_LEVEL_MISSING_REASON \}\);\s*continue;/);
+  assert.ok(at < VTR.indexOf('const hwAdvance = next && TUTOR_HOMEWORK_ADVANCE_GUARD'), 'before any applyResolvedAdvance');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -151,6 +151,9 @@ export function fixedScriptAutoAdvanceLead(from: string, next: string, kind: str
  *  with no working level ⇒ the note asks for set_working_level first. */
 export const LEVEL_CAPTURE_LEAD =
   'Before anything else this turn, call set_working_level with the level you heard in the level check. ';
+/** The refusal a brain advance_lesson gets off a level check with no level. */
+export const FIXED_SCRIPT_LEVEL_MISSING_REASON =
+  'Set the working level first: call set_working_level({level}) with the level you heard in this check, then advance.';
 export function needsLevelCaptureLead(plan: LessonPlan | null | undefined, fromId: string | null | undefined, levelKnown: boolean): boolean {
   if (levelKnown || !plan || !fromId || !isFixedScriptPlan(plan)) return false;
   return plan.segments.find((s) => s.id === fromId)?.metadata?.skipWhenLevelKnown === true;

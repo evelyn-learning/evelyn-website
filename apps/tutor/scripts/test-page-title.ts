@@ -86,5 +86,19 @@ const LIVE = 'Try: Solve for x and type your answer as a number: 2(x + 5) − 3 
     r.retitled === true, JSON.stringify(r));
 }
 
+// ─── GDI run 3: an authored fixed-script part title survives the flush ───
+{
+  const part = 'Part 4 · Present perfect · 現在完了';
+  const q = 'Have you worked for your current company for a long time?';
+  const r = retitleFromBatch({ deferredTitle: part, renderedStatement: q, authored: true });
+  check('authored "Part n · label" title kept over the card statement', r.title === part && r.retitled === false, JSON.stringify(r));
+  const r2 = retitleFromBatch({ deferredTitle: part, renderedStatement: q });
+  check('control: without authored the statement retitles (old behaviour)', r2.retitled === true, JSON.stringify(r2));
+  const vtr = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8') as string;
+  check('VTR: deferred page carries authored and the flush passes it',
+    /segmentId: next, \.\.\.\(authoredPartTitle \? \{ authored: true \} : \{\}\)/.test(vtr)
+    && /retitleFromBatch\(\{ deferredTitle: deferred\.title, renderedStatement, authored: deferred\.authored === true \}\)/.test(vtr));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

@@ -51,10 +51,14 @@ export function retitleFromBatch(args: {
   deferredTitle: string;
   /** Statement of the showProblem actually in the flushing batch, if any. */
   renderedStatement?: string;
+  /** The deferred title is an AUTHORED part title (fixed-script
+   *  "Part n · label", GDI run 3) — it names the part, not the card, so the
+   *  card statement never replaces it. */
+  authored?: boolean;
 }): { title: string; retitled: boolean } {
   const deferred = (args.deferredTitle ?? '').trim();
   const rendered = (args.renderedStatement ?? '').trim();
-  if (!rendered) return { title: deferred, retitled: false };
+  if (!rendered || args.authored === true) return { title: deferred, retitled: false };
   // The authored card IS what rendered — leave the title alone. The deferred
   // title carries the authored text after its stage prefix, so compare that.
   const deferredBody = deferred.slice(stagePrefix(deferred).length);

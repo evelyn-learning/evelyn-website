@@ -427,7 +427,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON } from '@/lib/tutor/lesson-plan/fixed-script';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -4221,7 +4221,7 @@ export function VoiceTutorRealtime({
   // (not dedup). If every teaching command dedups, the page stays
   // deferred — preventing the empty-page-after-advance bug observed
   // 2026-05-13 (10) session.
-  const pendingAdvanceNewPageRef = useRef<{ title: string; segmentId: string } | null>(null);
+  const pendingAdvanceNewPageRef = useRef<{ title: string; segmentId: string; /** fixed-script "Part n · label" title — never retitled from the card */ authored?: boolean } | null>(null);
 
   // Engagement / fatigue tracking. We track the last N student reply lengths
   // and fire a diagnostic prompt when replies collapse to short monosyllables
@@ -5736,7 +5736,8 @@ export function VoiceTutorRealtime({
     const desc = (typeof descRaw === 'string' ? descRaw : '').trim();
     // GDI run 3: a fixed-script part with an authored label titles its page
     // "Part <n> · <label>" (rail-labels.ts fixedScriptPartTitle).
-    const newPageTitle = fixedScriptPartTitle(plan, next, secondTutorLanguageRef.current)
+    const authoredPartTitle = fixedScriptPartTitle(plan, next, secondTutorLanguageRef.current);
+    const newPageTitle = authoredPartTitle
       ?? (stage && desc ? `${stage}: ${desc}` : stage || desc || nextSeg?.id || '');
     // Boundary-safe: the fixed slice cut "…= 4x − 11" to "…= 4x −"
     // mid-expression (portal-704e3e01 @1122.5s).
@@ -5752,7 +5753,7 @@ export function VoiceTutorRealtime({
     // (advance + what follows it, both this turn) across a page boundary
     // that lands a full turn downstream.
     if (!opts?.seamMode) {
-      pendingAdvanceNewPageRef.current = { title: pageTitleStr, segmentId: next };
+      pendingAdvanceNewPageRef.current = { title: pageTitleStr, segmentId: next, ...(authoredPartTitle ? { authored: true } : {}) };
       console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DEFERRED → "${next}" ("${pageTitleStr}")`);
       onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
     }
@@ -7989,6 +7990,18 @@ export function VoiceTutorRealtime({
               rejected.push({ action: 'advance_lesson', reason: scriptMissingAdvanceReason(missing) });
               continue;
             }
+            // Task 13 fix round 1 (I-4): a brain advance off the level check
+            // with no level stored — and no set_working_level in this batch —
+            // left the level unset (run 3). Refused like the script guard;
+            // the client's own auto-advance still moves (with the lead note).
+            if (levelCheckActive
+                && needsLevelCaptureLead(plan, curSegId, !!workingLevelRef.current)
+                && !processed.some((c) => (c.action as string) === 'setWorkingLevel')) {
+              console.warn(`[VoiceTutorRealtime] advance_lesson({to:"${to}"}) off level-check segment "${curSegId}" refused — no working level set`);
+              onDebugEvent?.('fixed_script_advance_refused_level_missing', `"${curSegId}"`);
+              rejected.push({ action: 'advance_lesson', reason: FIXED_SCRIPT_LEVEL_MISSING_REASON });
+              continue;
+            }
           }
           // 2026-10-06 (portal-897212b5 @9:15): in a homework-help plan the
           // `homework` segment holds ALL the student's problems, and moving
@@ -9225,7 +9238,7 @@ export function VoiceTutorRealtime({
           ? renderedProblem.problem.statement
           : undefined;
         const titleDecision = TUTOR_PAGE_TITLE_FROM_RENDER
-          ? retitleFromBatch({ deferredTitle: deferred.title, renderedStatement })
+          ? retitleFromBatch({ deferredTitle: deferred.title, renderedStatement, authored: deferred.authored === true })
           : { title: deferred.title, retitled: false };
         const pageTitle = titleDecision.title;
         processed = [{ action: 'newPage', title: pageTitle } as WhiteboardCommand, ...processed];
@@ -19629,11 +19642,14 @@ export function VoiceTutorRealtime({
           const nextHint = nextSeg
             ? `The next segment is "${nextSeg.id}" (${nextSeg.kind}); call advance_lesson({to: "next"}) and show_segment_card({segmentId: "${nextSeg.id}"}) in the same turn.`
             : `Call advance_lesson({to: "next"}) and render the new segment's card with show_segment_card in the same turn.`;
+          // Task 13 fix round 1 (I-4): leaving a level check with no level
+          // stored — the level first, then the advance.
+          const levelLead = needsLevelCaptureLead(plan, segIdNow, !!workingLevelRef.current) ? LEVEL_CAPTURE_LEAD : '';
           pendingRuntimeNoteSegRef.current = segIdNow;
           pendingRuntimeNoteUrgentRef.current = false;
           pendingRuntimeNoteRef.current =
             `[runtime note — not from the student] You have spent ${cur.turns} turns in the "${segIdNow}" (${kindNow}) segment without advancing. ` +
-            `${OVERLONG_FINISH_FIRST}${nextHint} ` +
+            `${OVERLONG_FINISH_FIRST}${levelLead}${nextHint} ` +
             (voiceOnlyRef.current ? `The student cannot see the board: say the new segment's first item aloud in full. ` : `Do not pose another problem in speech — every problem you pose must be on the board via show_segment_card or show_problem carrying its exact numbers. `) +
             (sessionAllowsNonLatin(tutorLanguages) ? `Say any transition sentence in the language you are using with this student, in your own words. ` : '') +
             `Apply this silently; never mention this note.`;
