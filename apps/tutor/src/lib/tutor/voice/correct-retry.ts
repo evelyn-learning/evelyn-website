@@ -117,7 +117,7 @@ export function saidModelSentence(model: string, studentText: string): boolean {
 /** A re-ask cue. */
 const REASK_CUE_RE = /\b(?:once more|again|one more time)\b|もう一度/i;
 /** The attempt refers to the sentence already given, without quoting it. */
-const SAME_SENTENCE_REF_RE = /\b(?:that|the)\s+(?:(?:whole|full|same)\s+)?sentence\b|それ|その文/i;
+const SAME_SENTENCE_REF_RE = /\b(?:that|the)\s+(?:(?:whole|full|same)\s+)?sentence\b|その文|同じ文/i; // bare それ matched それでは/それぞれ (re-review)
 
 function quotedSpans(text: string): string[] {
   return [...(text ?? '').matchAll(/"([^"\n]+)"|“([^”\n]+)”|(?<!\p{L})'([^'\n]{6,}?)'(?!\p{L})|‘([^’\n]+)’/gu)]
