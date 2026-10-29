@@ -78,6 +78,60 @@ function latinWordCount(text: string): number {
   return (text.match(/[A-Za-z][A-Za-z']*/g) ?? []).length;
 }
 
+/** Lower-cased tokens (letters/digits, apostrophes kept). */
+function wordTokens(text: string): string[] {
+  return ((text ?? '').match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu) ?? []).map((w) => w.toLowerCase().replace(/’/g, "'"));
+}
+
+/** Model sentences of a tutor turn: double-quoted spans and plain sentences
+ *  with three or more words. */
+function modelCandidates(tutorText: string): string[] {
+  const t = tutorText ?? '';
+  const quoted = [...t.matchAll(/"([^"\n]+)"|“([^”\n]+)”/g)].map((m) => (m[1] ?? m[2] ?? '').trim());
+  const plain = t.split(/(?<=[.!?。！？])\s+|\n+/).map((x) => x.trim());
+  return [...quoted, ...plain].filter((x) => wordTokens(x).length >= 3);
+}
+
+/** The student said the model sentence: ≥ 90 % of the model's tokens are in
+ *  the student's utterance (a short sentence of < 10 tokens therefore needs
+ *  every token — one dropped word is a different sentence), and the student
+ *  added at most max(2, 10 % of the model) tokens of their own (a "Yes," or
+ *  "um" may ride along; a longer, different sentence does not match). */
+export const MODEL_MATCH_SHARE = 0.9;
+export function saidModelSentence(model: string, studentText: string): boolean {
+  const m = wordTokens(model);
+  const st = wordTokens(studentText);
+  if (m.length < 3 || st.length === 0) return false;
+  const have = new Set(st);
+  const present = m.filter((w) => have.has(w)).length;
+  if (present / m.length < MODEL_MATCH_SHARE) return false;
+  const modelSet = new Set(m);
+  const extra = st.filter((w) => !modelSet.has(w)).length;
+  return extra <= Math.max(2, Math.ceil(m.length * 0.1));
+}
+
+/** A sentence asking for something "once more"/"again". */
+const ASK_AGAIN_RE = /\b(?:say|repeat|try|read)\b[^.!?。！？]*\b(?:once more|again|one more time)\b|\b(?:once more|again|one more time)\b[^.!?。！？]*\b(?:say|repeat|try)\b|もう一度/i;
+
+/**
+ * GDI run 3 (2026-10-29): the tutor modelled `Last month, I sold 25 machines
+ * to Toyota.`, the student said `Last month I sold 25 machines to Toyota.`,
+ * and the reply asked `Could you say the whole sentence once more, starting
+ * with "Last month"?` — reAskedOwnSentence needs the student's sentence in
+ * the ask and could not see it. The model sentence (from the PREVIOUS tutor
+ * turn) the student just said, when the new attempt asks for a repeat.
+ * null ⇒ not a re-ask.
+ */
+export function reAskedModelSentence(prevTutorText: string, studentText: string, attemptText: string): string | null {
+  if (!ASK_AGAIN_RE.test(attemptText ?? '')) return null;
+  for (const c of modelCandidates(prevTutorText)) if (saidModelSentence(c, studentText)) return c;
+  return null;
+}
+
+/** Language sessions: the validator rejection (kill + retry) for such a re-ask. */
+export const REPEAT_AFTER_CORRECT_REASON =
+  'The student just said that sentence correctly. Confirm it in one short sentence and move to the next item; do not ask for it again.';
+
 export const OWN_SENTENCE_RETRY_NOTE =
   '[runtime note — not from the student] Your last turn asked the student to say a sentence they had JUST said, in those words. ' +
   'A sentence they already produced is done: confirm it in one short clause and move to the next item. ' +

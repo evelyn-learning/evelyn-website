@@ -221,7 +221,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '@/lib/tutor/voice/correct-retry';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -12414,6 +12414,8 @@ export function VoiceTutorRealtime({
       // and the student is waiting on each round-trip.
       const MAX_JUDGE_RETRIES = 1;
       let judgeRetriesUsed = 0;
+      // correct-retry.ts (GDI run 3): one repeat_after_correct kill per turn.
+      let repeatAfterCorrectRejected = false;
       // Text mode "work it, then match": the opener backstop's kill fires at
       // most once per turn, and the student's turn shape is read once (on a
       // retry the last assistant turn in history is the killed attempt).
@@ -18444,6 +18446,25 @@ export function VoiceTutorRealtime({
               }
               segmentRequiredPhrasesCheckedRef.current.add(segIdForPhrases);
             }
+          }
+        }
+
+        // correct-retry.ts (GDI run 3, 2026-10-29): in a language session the
+        // student said the model sentence correctly and this attempt asks for
+        // it again ("Could you say the whole sentence once more…?"). The
+        // note-for-next-turn path came a turn too late — the learner had
+        // already heard the re-ask. Kill + retry, the same path as
+        // required_phrase_missing; once per turn. Other sessions keep the note.
+        if (!attemptKilled && !repeatAfterCorrectRejected && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
+          const prevTutorForRepeat = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
+          const repeated = reAskedOwnSentence(transcript, attemptText)
+            ? transcript
+            : reAskedModelSentence(prevTutorForRepeat, transcript, attemptText);
+          if (repeated) {
+            repeatAfterCorrectRejected = true;
+            rejectionsThisAttempt.push({ action: 'repeat_after_correct', reason: REPEAT_AFTER_CORRECT_REASON });
+            await performKill();
+            onDebugEvent?.('repeat_after_correct', `"${repeated.slice(0, 60)}"`);
           }
         }
 

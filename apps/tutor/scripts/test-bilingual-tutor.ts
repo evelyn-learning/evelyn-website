@@ -49,7 +49,7 @@ import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/turn-cap';
 import { opensWithStockPraise, overusesStockPraiseOpener, PRAISE_OPENER_NOTE } from '../src/lib/tutor/voice/praise-variety';
-import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '../src/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
@@ -744,6 +744,32 @@ test('praise opener: Nice / いいですね / 正解です openers count, mid-se
   assert.equal(overusesStockPraiseOpener([nice, nice, nice, plain]), false, 'latest turn must be one');
   assert.equal(overusesStockPraiseOpener([plain, plain, nice, nice]), false);
   assert.match(PRAISE_OPENER_NOTE, /do not open with a praise word/);
+});
+
+test('GDI run 3: a re-ask of the model sentence the student just said correctly', () => {
+  const prev = 'Good. Now the past simple: "Last month, I sold 25 machines to Toyota." Please say that sentence.';
+  const student = 'Last month I sold 25 machines to Toyota.';
+  const attempt = 'Good effort. Could you say the whole sentence once more, starting with "Last month"?';
+  assert.equal(reAskedModelSentence(prev, student, attempt), 'Last month, I sold 25 machines to Toyota.');
+  // unquoted model sentence works too
+  assert.equal(reAskedModelSentence('Try this one. Last month, I sold 25 machines to Toyota.', student, attempt), 'Last month, I sold 25 machines to Toyota.');
+  // a student sentence missing a token is not a match
+  assert.equal(saidModelSentence('Last month, I sold 25 machines to Toyota.', 'Last month I sold machines to Toyota.'), false);
+  assert.equal(reAskedModelSentence(prev, 'Last month I sold machines to Toyota.', attempt), null);
+  // no "once more"/"again" ask ⇒ not a re-ask
+  assert.equal(reAskedModelSentence(prev, student, 'Perfect. Next, tell me about last week.'), null);
+  // a filler riding along still matches; a much longer different sentence does not
+  assert.equal(saidModelSentence('Last month, I sold 25 machines to Toyota.', 'Yes, last month I sold 25 machines to Toyota.'), true);
+  assert.equal(saidModelSentence('I sold machines', 'Last month I sold 25 machines to Toyota and Honda.'), false);
+  assert.match(REPEAT_AFTER_CORRECT_REASON, /^The student just said that sentence correctly\. Confirm it in one short sentence and move to the next item; do not ask for it again\.$/);
+});
+
+test('GDI run 3: VTR kills + retries a repeat_after_correct in a language session only', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.match(vtr, /!repeatAfterCorrectRejected && attemptText && languageSessionRef\.current/);
+  assert.match(vtr, /rejectionsThisAttempt\.push\(\{ action: 'repeat_after_correct', reason: REPEAT_AFTER_CORRECT_REASON \}\);\s*await performKill\(\);/);
+  // the note path stays for every session
+  assert.match(vtr, /else if \(reAskedOwnSentence\(transcript, fullText\)\) \{\s*pendingCorrectRetryNoteRef\.current = OWN_SENTENCE_RETRY_NOTE;/);
 });
 
 test('own-sentence re-ask: a repeat-ask quoting the sentence the student just said', () => {
