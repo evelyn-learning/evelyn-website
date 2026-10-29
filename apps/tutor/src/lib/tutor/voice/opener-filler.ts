@@ -16,7 +16,8 @@
 
 // The filler must not be the start of a real clause: "Now that…", "Now is…",
 // "So far…" keep their first word (review 2026-10-29).
-const FILLER_OPENER_RE = /^\s*(okay|ok|alright|all right|so|right|now)\s*[,.—–-]?\s+(?!(?:that|is|are|was|far|when|if|here|there)\b)(?=\S)/i;
+// "right" dropped 2026-10-29 round 2: "Right, to the left." is a verdict, not a filler.
+const FILLER_OPENER_RE = /^\s*(okay|ok|alright|all right|so|now)\s*[,.—–-]?\s+(?!(?:that|is|are|was|far|when|if|here|there)\b)(?=\S)/i;
 
 /** Words that must remain for the sentence to still be a sentence. */
 const MIN_REMAINING_WORDS = 3;

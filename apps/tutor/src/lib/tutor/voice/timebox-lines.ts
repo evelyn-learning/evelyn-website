@@ -23,11 +23,30 @@ export function goodbyeLine(studentName?: string | null): string {
 
 export type WrapLineDecision = 'speak' | 'wait' | 'none';
 
+/** Under this much time left the line is pointless — the goodbye is next. */
+export const WRAP_LINE_MIN_REMAINING_MS = 30_000;
+/** The fallback path (no student turn) speaks only after the floor has been
+ *  free this long, so the line never glues itself to the end of the tutor's
+ *  own sentence (live embed-1793249649483). */
+export const WRAP_LINE_FLOOR_FREE_MS = 3_000;
+
 /** Speak the wrap line once, the first moment the floor is free after the
  *  wrap minute: never over the tutor's own speech, a brain turn in flight,
  *  or a student mid-sentence. */
-export function decideWrapLine(s: { wrapPhase: boolean; spoken: boolean; busy: boolean; midUtterance: boolean }): WrapLineDecision {
+export function decideWrapLine(s: {
+  wrapPhase: boolean;
+  spoken: boolean;
+  busy: boolean;
+  midUtterance: boolean;
+  /** ms left to the hard cap; absent ⇒ not checked. */
+  remainingMs?: number;
+  /** ms the floor has been continuously free (fallback path); absent ⇒ the
+   *  student-turn path, which is a natural gap already. */
+  floorFreeMs?: number;
+}): WrapLineDecision {
   if (!s.wrapPhase || s.spoken) return 'none';
+  if (typeof s.remainingMs === 'number' && s.remainingMs < WRAP_LINE_MIN_REMAINING_MS) return 'none';
   if (s.busy || s.midUtterance) return 'wait';
+  if (typeof s.floorFreeMs === 'number' && s.floorFreeMs < WRAP_LINE_FLOOR_FREE_MS) return 'wait';
   return 'speak';
 }

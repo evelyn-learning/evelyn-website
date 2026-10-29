@@ -29,7 +29,7 @@ import { lastQuestionSentence } from '../question-gist-text';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, stripMarkdownEmphasis, ABBREV_TAIL_RE } from './sentence-spacing';
 import { TUTOR_META_NARRATION_STRIP, TUTOR_DEMO_TOPIC_CHOICE } from '@/lib/tutor/orchestrator/flags';
-import { DEMO_PLAN_SUBORDINATE_RULE, DEMO_STOP_SWITCH_EXCEPTION, DEMO_WRAP_SWITCH_EXCEPTION } from '@/lib/tutor/portal/demo-topic-choice';
+import { DEMO_PLAN_SUBORDINATE_RULE, DEMO_STOP_SWITCH_EXCEPTION, DEMO_WRAP_SWITCH_EXCEPTION, DEMO_WRAP_LAST_MINUTE_RULE, DEMO_WRAP_ALREADY_TOLD } from '@/lib/tutor/portal/demo-topic-choice';
 import {
   TUTOR_HOMEWORK_OWN_MATERIAL,
   TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS,
@@ -1829,9 +1829,15 @@ export function formatDemoStopBlock(input: BrainTurnInput['demoStop']): string {
     // pre-existing pacing text byte-for-byte.
     const inWrap =
       typeof input.wrapAtMinutes === 'number' && input.minutesElapsed >= input.wrapAtMinutes;
+    // Round 2 (2026-10-29, live embed-1793249649483): in the LAST minute a
+    // switch request parks the topic for next time instead of opening it;
+    // once the client has spoken its own "two minutes left" line the brain
+    // must not say it again.
+    const lastMinute = input.budgetMinutes - input.minutesElapsed <= 1;
     body = inWrap
       ? `Wrap up NOW: land the "I get it" moment if it hasn't landed yet, then summarize what they learned in 1-2 turns and end on an encouraging note. Do not start new material or open a new example — time is almost up.`
-        + (TUTOR_DEMO_TOPIC_CHOICE ? DEMO_WRAP_SWITCH_EXCEPTION : '')
+        + (TUTOR_DEMO_TOPIC_CHOICE ? (lastMinute ? DEMO_WRAP_LAST_MINUTE_RULE : DEMO_WRAP_SWITCH_EXCEPTION) : '')
+        + (input.wrapLineSpoken ? DEMO_WRAP_ALREADY_TOLD : '')
       : `You have about ${Math.max(0, input.budgetMinutes - input.minutesElapsed)} of ${input.budgetMinutes} minutes left with this student. Pace so they reach one genuine "I get it now" moment AND a clean stopping point before time runs out — never end mid-concept or mid-example. Show what great teaching feels like through the RIGHT visual and by adapting when they're confused, not by drawing extra pictures.`
         + (TUTOR_NO_TIME_TALK ? NO_TIME_TALK_RULE : '');
   } else {

@@ -842,10 +842,11 @@ export async function POST(req: NextRequest) {
         if (!ds || typeof ds !== 'object') return undefined;
         if (ds.mode === 'milestone') return { mode: 'milestone' as const };
         if (ds.mode === 'time') {
-          const { budgetMinutes, minutesElapsed, wrapAtMinutes } = ds as {
+          const { budgetMinutes, minutesElapsed, wrapAtMinutes, wrapLineSpoken } = ds as {
             budgetMinutes?: unknown;
             minutesElapsed?: unknown;
             wrapAtMinutes?: unknown;
+            wrapLineSpoken?: unknown;
           };
           if (
             typeof budgetMinutes === 'number' && Number.isFinite(budgetMinutes) && budgetMinutes >= 0 &&
@@ -860,6 +861,7 @@ export async function POST(req: NextRequest) {
               ...(typeof wrapAtMinutes === 'number' && Number.isFinite(wrapAtMinutes) && wrapAtMinutes >= 0
                 ? { wrapAtMinutes }
                 : {}),
+              ...(wrapLineSpoken === true ? { wrapLineSpoken: true } : {}),
             };
           }
         }

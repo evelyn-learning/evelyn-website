@@ -18,7 +18,7 @@ check('keeps short remainder', stripOpenerFiller('Okay, go on.').removed === nul
 check('keeps verdict openers', stripOpenerFiller('Exactly, that is the boundary line.').removed === null);
 check('keeps "Not quite"', stripOpenerFiller('Not quite, check the sign again.').removed === null);
 check('keeps words that start with ok', stripOpenerFiller('Oklahoma is a state with a long name.').removed === null);
-check('keeps "Right" as a verdict? no — spec lists it as filler', stripOpenerFiller('Right, so the sign flips here.').removed === 'Right');
+check('keeps "Right" — a verdict opener (review minor, 2026-10-29)', stripOpenerFiller('Right, to the left of x = 4.').removed === null);
 check('untouched text returns the input', stripOpenerFiller('The line is dashed.').text === 'The line is dashed.');
 check('keeps a variable lowercase', stripOpenerFiller('So x = 2 gives y = 3.').text === 'x = 2 gives y = 3.');
 check('keeps f(x) lowercase', stripOpenerFiller('Okay, f(x) = 2x + 1.').text === 'f(x) = 2x + 1.');

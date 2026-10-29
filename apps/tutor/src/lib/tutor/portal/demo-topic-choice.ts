@@ -71,3 +71,13 @@ export const DEMO_STOP_SWITCH_EXCEPTION =
 
 export const DEMO_WRAP_SWITCH_EXCEPTION =
   ' The one exception: if the student asks to learn something else now, do not refuse because time is short — give them a short, concrete taste of it, then close.';
+
+/** Last minute of a time-boxed session (live embed-1793249649483: a switch
+ *  asked 10 s before the cap opened a new equation the goodbye then cut): no
+ *  new topic can land, so the request is parked for next time. */
+export const DEMO_WRAP_LAST_MINUTE_RULE =
+  ' If the student asks to learn something else now, there is no time left to start it: say in one sentence that it is a good one for next time, put nothing new on the board, and close.';
+
+/** The client has already spoken the fixed "two minutes left" line. */
+export const DEMO_WRAP_ALREADY_TOLD =
+  ' The student has already been told time is short — do not say so again; land the point and close.';
