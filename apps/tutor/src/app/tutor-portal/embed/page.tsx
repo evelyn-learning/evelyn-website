@@ -89,6 +89,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'playback_route', 'shared_mic', 'stage3_', 'voice_mute', 'noise_nag',
   // 2026-10-02 in-flow: fixed first words spoken before the brain's first sentence.
   'bridge_spoken', 'bridge_audio',
+  // Demo-polish (2026-10-29): ack/brain opener de-dup, wrap line, goodbye.
+  'opener_filler_', 'wrap_line_', 'timebox_farewell_',
   // Drop 2 (spec v1.1 §3): prewarm_ready / prewarm_expired, host_start /
   // host_start_ignored (start_blocked rides the 'start_' prefix below).
   'prewarm_', 'host_start',

@@ -873,3 +873,18 @@ export const TUTOR_LANGUAGE_TURN_MAX_TOKENS: number | null = (() => {
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? n : LANGUAGE_TURN_MAX_TOKENS_DEFAULT;
 })();
+
+// Demo-polish round (2026-10-29, live embed-1793240679836 + Otter recording).
+// Four default-ON switches, `off` ⇒ previous behaviour byte-for-byte.
+/** Board tool cluster hidden unless the partner row / token asks for it; a
+ *  labelled Full screen control in the session header instead. */
+export const TUTOR_HEADER_FULLSCREEN = process.env.NEXT_PUBLIC_TUTOR_HEADER_FULLSCREEN !== 'off';
+/** Tutor board notes in an upright hand (Kalam first, 24px) with a
+ *  left-to-right writing reveal. */
+export const TUTOR_NOTE_PRINT_HAND = process.env.NEXT_PUBLIC_TUTOR_NOTE_PRINT_HAND !== 'off';
+/** When the ack layer spoke this turn, the brain's first sentence drops its
+ *  own leading filler ("Okay, let's see." + "Okay, let's look…"). */
+export const TUTOR_ACK_OPENER_STRIP = process.env.NEXT_PUBLIC_TUTOR_ACK_OPENER_STRIP !== 'off';
+/** Time-boxed sessions: a client-spoken "two minutes left" line at the wrap
+ *  minute and a spoken goodbye before the hard stop ends the session. */
+export const TUTOR_TIMEBOX_FAREWELL = process.env.NEXT_PUBLIC_TUTOR_TIMEBOX_FAREWELL !== 'off';

@@ -2256,7 +2256,7 @@ export interface RewriteForTTSOptions {
  *  the right); a markup tag (`<br>`, `<b>`, `</span>`) is never an
  *  inequality — the lookahead/lookbehind exclude a tag body next to the
  *  sign. Must run BEFORE the bare-"=" rule so "<=" / ">=" are still whole. */
-const PROSE_RELATIONAL_RULES: Replacement[] = [
+const PROSE_RELATIONAL_RULES: Array<{ pattern: RegExp; replacement: string }> = [
   { pattern: /(?<=[\p{L}\p{N})\]])\s*<=(?!\/?[a-z][a-z0-9-]*\s*\/?>)\s*(?=[\p{L}\p{N}(\[−-])/gu, replacement: ' less than or equal to ' },
   { pattern: /(?<=[\p{L}\p{N})\]])(?<!<\/?[a-z][a-z0-9-]*\s*\/?)\s*>=\s*(?=[\p{L}\p{N}(\[−-])/gu, replacement: ' greater than or equal to ' },
   { pattern: /(?<=[\p{L}\p{N})\]])\s*<(?!\/?[a-z][a-z0-9-]*\s*\/?>)\s*(?=[\p{L}\p{N}(\[−-])/gu, replacement: ' less than ' },

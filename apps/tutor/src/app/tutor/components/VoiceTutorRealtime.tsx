@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP } from '@/lib/tutor/orchestrator/flags';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
@@ -253,6 +253,7 @@ import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mi
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
+import { stripOpenerFiller } from '@/lib/tutor/voice/opener-filler';
 import { cannedLanguage, localizeCanned, lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createNoiseFloorState, recordFloorSample, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState , extractAnswerTokenDetailed } from '@/lib/tutor/voice/cover-layer';
 import { endsMidThought, mergeHeldTranscript, HOLD_MS as INCOMPLETE_HOLD_MS } from '@/lib/tutor/voice/utterance-hold';
@@ -2294,6 +2295,10 @@ export function VoiceTutorRealtime({
   const ackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ackTurnCounterRef = useRef(0);
   const lastAckIndexRef = useRef<number | null>(null);
+  // Demo-polish (2026-10-29): true once an ack/cover line spoke for the
+  // current student turn — the brain's first sentence then drops its own
+  // leading filler (opener-filler.ts). Reset when the next turn arms its ack.
+  const ackSpokenThisTurnRef = useRef(false);
   // R32: per-category last-index rotation state for classifier-driven cover
   // phrases (TUTOR_COVER_V2). Keyed by CoverCategory; unused when the flag
   // is off (legacy pickAck path keeps using lastAckIndexRef above).
@@ -14059,7 +14064,7 @@ export function VoiceTutorRealtime({
                   continue;
                 }
                 if (ev.type === 'sentence') {
-                  const sentence = (ev.text as string) || '';
+                  let sentence = (ev.text as string) || '';
                   if (!sentence.trim()) continue;
                   // Voice answer judging: the turn was cut at a withheld
                   // verdict sentence — nothing after it is shown or spoken.
@@ -14087,6 +14092,17 @@ export function VoiceTutorRealtime({
                   // greeting-only sentence got voiced. The student then
                   // replied "hello" thinking the session had restarted.
                   const isFirstSentenceOfTurn = totalSentenceCount === 0;
+                  // Demo-polish (2026-10-29): the ack already said "Hmm, let me
+                  // see." — the brain's own "Okay, …" on top of it reads as a
+                  // stutter. First sentence only, fillers only (opener-filler.ts).
+                  if (TUTOR_ACK_OPENER_STRIP && isFirstSentenceOfTurn && ackSpokenThisTurnRef.current) {
+                    const r = stripOpenerFiller(sentence);
+                    if (r.removed) {
+                      sentence = r.text;
+                      (ev as { text?: string }).text = r.text;
+                      onDebugEvent?.('opener_filler_stripped', r.removed);
+                    }
+                  }
                   // Correction-note re-check spoken as bare arithmetic (live
                   // 2026-09-05: "20% of 120 is 24; 20% of 15 is 3." opened the
                   // turn). Only on a note-carrying turn's FIRST sentence, so
@@ -20417,6 +20433,7 @@ export function VoiceTutorRealtime({
     if (TUTOR_ACK_LAYER) {
       if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
       const ackTurnIndex = ++ackTurnCounterRef.current;
+      ackSpokenThisTurnRef.current = false;
       const ackArmedAt = Date.now();
       const ackTranscript = transcript;
       // R32: classify up front so liveness checks can answer instantly and
@@ -20506,6 +20523,7 @@ export function VoiceTutorRealtime({
           // the ack — mark its fetch too so tts→audio stays coherent and
           // TOTAL reads as perceived-first-sound (the Phase-2 metric).
           turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
+          ackSpokenThisTurnRef.current = true;
           onDebugEvent?.('ack_spoken', `"${text}" turn=${ackTurnIndex}${TUTOR_COVER_V2 && verdict.kind === 'cover' ? ` cat=${verdict.category}` : ''}`);
           // R52: make the numeric-echo guard's REFUSALS observable.
           //
