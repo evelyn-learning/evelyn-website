@@ -1,0 +1,60 @@
+{
+  "_comment": "Hand-written from Speechace's documented Score Text v9 response (api-docs.speechace.com/api-reference/score-text.md, example A). 'developed' carries a planted syllable-stress error (primary stress expected on 'vel', detected on 'de') and a b/v substitution (v scored 22, sound_most_like b).",
+  "status": "success",
+  "quota_remaining": -1,
+  "text_score": {
+    "text": "We developed it.",
+    "word_score_list": [
+      {
+        "word": "We",
+        "quality_score": 98,
+        "quality_class": "pass",
+        "phone_score_list": [
+          { "phone": "w", "stress_level": null, "extent": [10, 19], "quality_score": 99, "word_extent": [0, 1], "sound_most_like": "w" },
+          { "phone": "iy", "stress_level": 1, "extent": [19, 30], "quality_score": 97, "stress_score": 100, "predicted_stress_level": 1, "word_extent": [1, 2], "sound_most_like": "iy" }
+        ],
+        "syllable_score_list": [
+          { "phone_count": 2, "stress_level": 1, "letters": "we", "quality_score": 98, "stress_score": 100, "predicted_stress_level": 1, "extent": [10, 30] }
+        ]
+      },
+      {
+        "word": "developed",
+        "quality_score": 54,
+        "quality_class": "fail",
+        "phone_score_list": [
+          { "phone": "d", "stress_level": null, "extent": [30, 36], "quality_score": 90, "word_extent": [0, 1], "sound_most_like": "d" },
+          { "phone": "ih", "stress_level": 0, "extent": [36, 48], "quality_score": 70, "stress_score": 20, "predicted_stress_level": 1, "word_extent": [1, 2], "sound_most_like": "eh" },
+          { "phone": "v", "stress_level": null, "extent": [48, 55], "quality_score": 22, "word_extent": [2, 3], "sound_most_like": "b" },
+          { "phone": "eh", "stress_level": 1, "extent": [55, 63], "quality_score": 61, "stress_score": 30, "predicted_stress_level": 0, "word_extent": [3, 4], "sound_most_like": "eh" },
+          { "phone": "l", "stress_level": null, "extent": [63, 69], "quality_score": 55, "word_extent": [4, 5], "sound_most_like": "r" },
+          { "phone": "ah", "stress_level": 0, "extent": [69, 75], "quality_score": 48, "stress_score": 90, "predicted_stress_level": 0, "word_extent": [5, 6], "sound_most_like": "ow" },
+          { "phone": "p", "stress_level": null, "extent": [75, 81], "quality_score": 80, "word_extent": [6, 7], "sound_most_like": "p" },
+          { "phone": "t", "stress_level": null, "extent": [81, 88], "quality_score": 40, "word_extent": [8, 9], "sound_most_like": "t" }
+        ],
+        "syllable_score_list": [
+          { "phone_count": 2, "stress_level": 0, "letters": "de", "quality_score": 80, "stress_score": 20, "predicted_stress_level": 1, "extent": [30, 48] },
+          { "phone_count": 3, "stress_level": 1, "letters": "vel", "quality_score": 46, "stress_score": 30, "predicted_stress_level": 0, "extent": [48, 69] },
+          { "phone_count": 3, "stress_level": 0, "letters": "oped", "quality_score": 56, "stress_score": 90, "predicted_stress_level": 0, "extent": [69, 88] }
+        ]
+      },
+      {
+        "word": "it",
+        "quality_score": 95,
+        "quality_class": "pass",
+        "phone_score_list": [
+          { "phone": "ih", "stress_level": 1, "extent": [90, 97], "quality_score": 96, "stress_score": 100, "predicted_stress_level": 0, "word_extent": [0, 1], "sound_most_like": "ih" },
+          { "phone": "t", "stress_level": null, "extent": [97, 104], "quality_score": 94, "word_extent": [1, 2], "sound_most_like": "t" }
+        ],
+        "syllable_score_list": [
+          { "phone_count": 2, "stress_level": 1, "letters": "it", "quality_score": 95, "stress_score": 100, "predicted_stress_level": 0, "extent": [90, 104] }
+        ]
+      }
+    ],
+    "ielts_score": { "pronunciation": 6.5 },
+    "pte_score": { "pronunciation": 58 },
+    "speechace_score": { "pronunciation": 72 },
+    "toeic_score": { "pronunciation": 150 },
+    "cefr_score": { "pronunciation": "B1" }
+  },
+  "version": "9.17"
+}

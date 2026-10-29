@@ -1,0 +1,122 @@
+{
+  "clips": [
+    {
+      "id": "w-responsibilities-katakana",
+      "file": "w-responsibilities-katakana.wav",
+      "referenceText": "responsibilities",
+      "planted": [
+        "katakana",
+        "bv"
+      ]
+    },
+    {
+      "id": "w-responsibilities-clear",
+      "file": "w-responsibilities-clear.wav",
+      "referenceText": "responsibilities",
+      "planted": [
+        "none"
+      ]
+    },
+    {
+      "id": "w-international-katakana",
+      "file": "w-international-katakana.wav",
+      "referenceText": "international",
+      "planted": [
+        "katakana"
+      ]
+    },
+    {
+      "id": "w-international-clear",
+      "file": "w-international-clear.wav",
+      "referenceText": "international",
+      "planted": [
+        "none"
+      ]
+    },
+    {
+      "id": "w-communicate-katakana",
+      "file": "w-communicate-katakana.wav",
+      "referenceText": "communicate",
+      "planted": [
+        "katakana"
+      ]
+    },
+    {
+      "id": "w-communicate-clear",
+      "file": "w-communicate-clear.wav",
+      "referenceText": "communicate",
+      "planted": [
+        "none"
+      ]
+    },
+    {
+      "id": "w-customers-katakana",
+      "file": "w-customers-katakana.wav",
+      "referenceText": "customers",
+      "planted": [
+        "katakana"
+      ]
+    },
+    {
+      "id": "w-customers-clear",
+      "file": "w-customers-clear.wav",
+      "referenceText": "customers",
+      "planted": [
+        "none"
+      ]
+    },
+    {
+      "id": "w-developed-katakana",
+      "file": "w-developed-katakana.wav",
+      "referenceText": "developed",
+      "planted": [
+        "katakana",
+        "bv"
+      ]
+    },
+    {
+      "id": "w-developed-clear",
+      "file": "w-developed-clear.wav",
+      "referenceText": "developed",
+      "planted": [
+        "none"
+      ]
+    },
+    {
+      "id": "s1-worked-with-katakana",
+      "file": "s1-worked-with-katakana.wav",
+      "referenceText": "I have worked with international customers for several years.",
+      "planted": [
+        "th",
+        "bv",
+        "katakana"
+      ]
+    },
+    {
+      "id": "s1-worked-with-clear",
+      "file": "s1-worked-with-clear.wav",
+      "referenceText": "I have worked with international customers for several years.",
+      "planted": [
+        "none"
+      ]
+    },
+    {
+      "id": "s2-responsible-for-katakana",
+      "file": "s2-responsible-for-katakana.wav",
+      "referenceText": "I was responsible for communicating with our customers.",
+      "planted": [
+        "th",
+        "bv",
+        "katakana"
+      ]
+    },
+    {
+      "id": "s2-responsible-for-clear",
+      "file": "s2-responsible-for-clear.wav",
+      "referenceText": "I was responsible for communicating with our customers.",
+      "planted": [
+        "none"
+      ]
+    }
+  ]
+}
