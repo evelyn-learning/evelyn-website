@@ -1,0 +1,99 @@
+/**
+ * Sentence cards for language lessons (2026-10-29): the client puts quoted
+ * model / corrected sentences on the board itself and stresses the corrected
+ * words in the voice. Fixtures are live run-1 lines, verbatim.
+ *
+ * Run: npx tsx scripts/test-sentence-board.ts
+ */
+import { strict as assert } from 'node:assert';
+import {
+  extractQuotedSentences, classifyQuotedSentence, planSentenceBoard,
+  applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
+} from '../src/lib/tutor/voice/sentence-board';
+
+let failed = 0;
+function test(name: string, fn: () => void) {
+  try { fn(); console.log(`  ok  ${name}`); } catch (e) { failed++; console.log(`  FAIL ${name}\n       ${(e as Error).message}`); }
+}
+
+const GOLF_STUDENT = `Um, I haven't played, I haven't play golf with manager since I started work.`;
+const GOLF_TUTOR = `"I haven't played golf with my manager since I started work" — close. The sentence needs "my" before "manager", and the verb is "played" after "haven't", so use the past participle, "played", but the full phrase should read "since I started working here" or "since I started work". Could you say the whole sentence once more, correctly?`;
+const GOLF_SENTENCE = `I haven't played golf with my manager since I started work`;
+
+const LEAVE_STUDENT = `I haven't take leave from work.`;
+const LEAVE_TUTOR = `"I haven't taken leave" is the right structure, so you're close. The verb needs its past participle here, "taken", after "haven't". Can you say the whole sentence once more: "I haven't taken leave from work"?`;
+
+const YEARS_STUDENT = `I have 4 year been working`;
+const YEARS_TUTOR = `Good, you've been working for four years. Now let's say that in English: "I have been a sales manager for four years." Could you say that sentence yourself, starting with "I have been"?`;
+
+const JA_TUTOR = `「次は、仕事の話です。」 Let's try: "I work in sales."`;
+
+// ── extractQuotedSentences ───────────────────────────────────────────────
+test('extract: 1–2-word quotes ignored, ≥ 3-word quotes kept in order', () => {
+  assert.deepEqual(extractQuotedSentences(GOLF_TUTOR), [GOLF_SENTENCE, 'since I started working here', 'since I started work']);
+});
+test('extract: curly quotes, trailing punctuation kept, "…"/"..." and CJK spans ignored', () => {
+  assert.deepEqual(extractQuotedSentences('Say “Where is the station?” please.'), ['Where is the station?']);
+  assert.deepEqual(extractQuotedSentences('Try "I have been..." and "I have been…" first.'), []);
+  assert.deepEqual(extractQuotedSentences('"仕事 is very good" ok'), []);
+  assert.deepEqual(extractQuotedSentences(''), []);
+});
+
+// ── planSentenceBoard ────────────────────────────────────────────────────
+test('golf: the long correction first, emphasis ["my"], at most 2 cards', () => {
+  const cards = planSentenceBoard({ tutorText: GOLF_TUTOR, studentLast: GOLF_STUDENT, renderedThisTurn: false });
+  assert.ok(cards.length >= 1 && cards.length <= SENTENCE_BOARD_MAX_PER_TURN, `got ${cards.length}`);
+  assert.deepEqual(cards[0], { sentence: GOLF_SENTENCE, kind: 'correction', emphasis: ['my'] });
+  // "since I started work" is contained in the long correction → never a card.
+  assert.ok(!cards.some((c) => c.sentence === 'since I started work'));
+});
+test('leave: one card, the longest correction (prefix deduped), emphasis ["taken"]', () => {
+  const cards = planSentenceBoard({ tutorText: LEAVE_TUTOR, studentLast: LEAVE_STUDENT, renderedThisTurn: false });
+  assert.deepEqual(cards, [{ sentence: `I haven't taken leave from work`, kind: 'correction', emphasis: ['taken'] }]);
+});
+test('years: one model card, no emphasis', () => {
+  const cards = planSentenceBoard({ tutorText: YEARS_TUTOR, studentLast: YEARS_STUDENT, renderedThisTurn: false });
+  assert.deepEqual(cards, [{ sentence: 'I have been a sales manager for four years.', kind: 'model', emphasis: [] }]);
+});
+test('renderedThisTurn → []', () => {
+  assert.deepEqual(planSentenceBoard({ tutorText: GOLF_TUTOR, studentLast: GOLF_STUDENT, renderedThisTurn: true }), []);
+});
+test('Japanese line: one model card from the English quote', () => {
+  assert.deepEqual(planSentenceBoard({ tutorText: JA_TUTOR, studentLast: null, renderedThisTurn: false }),
+    [{ sentence: 'I work in sales.', kind: 'model', emphasis: [] }]);
+});
+test('distinct is case-insensitive', () => {
+  const cards = planSentenceBoard({ tutorText: 'Say "I work in sales." Again: "i work in sales."', studentLast: undefined, renderedThisTurn: false });
+  assert.equal(cards.length, 1);
+});
+
+// ── classifyQuotedSentence ───────────────────────────────────────────────
+test('classify: no student line → model', () => {
+  assert.equal(classifyQuotedSentence(GOLF_SENTENCE, null).kind, 'model');
+  assert.equal(classifyQuotedSentence(GOLF_SENTENCE, '  ').kind, 'model');
+});
+test('classify: identical to the student → model (nothing changed)', () => {
+  assert.equal(classifyQuotedSentence('since I started work', GOLF_STUDENT).kind, 'model');
+});
+
+// ── spoken emphasis ──────────────────────────────────────────────────────
+test('applySpokenEmphasis: whole word uppercased', () => {
+  assert.equal(applySpokenEmphasis(GOLF_SENTENCE, ['my']), `I haven't played golf with MY manager since I started work`);
+});
+test('applySpokenEmphasis: 1-letter word ignored; no match inside another word', () => {
+  assert.equal(applySpokenEmphasis(GOLF_SENTENCE, ['a']), GOLF_SENTENCE);
+  assert.equal(applySpokenEmphasis(GOLF_SENTENCE, ['play']), GOLF_SENTENCE);
+  assert.equal(applySpokenEmphasis(`I haven't taken leave`, ["haven't"]), `I HAVEN'T taken leave`);
+});
+test('emphasiseSpokenCorrections: only the long quoted span changes (MY), rest byte-identical', () => {
+  const out = emphasiseSpokenCorrections(GOLF_TUTOR, GOLF_STUDENT);
+  assert.equal(out, GOLF_TUTOR.replace('with my manager', 'with MY manager'));
+  assert.equal(out.length, GOLF_TUTOR.length);
+});
+test('emphasiseSpokenCorrections: model lines and missing student line untouched', () => {
+  assert.equal(emphasiseSpokenCorrections(YEARS_TUTOR, YEARS_STUDENT), YEARS_TUTOR);
+  assert.equal(emphasiseSpokenCorrections(GOLF_TUTOR, null), GOLF_TUTOR);
+});
+
+if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
+console.log('\nall passed');
