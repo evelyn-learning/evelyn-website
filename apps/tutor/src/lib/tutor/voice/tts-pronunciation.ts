@@ -289,8 +289,9 @@ const MATH_OPERATOR_REPLACEMENTS: Replacement[] = [
   // same session): a beat between "point" and the pair keeps "point" a noun.
   { pattern: /\b(points?)\s*\(/gi, replacement: '$1, (' },
   // "(0, 2) too" spoke "zero comma two two": "too" right after a number or a
-  // closing bracket becomes "as well".
-  { pattern: /(?<=[\p{N})])\s+too\b/gu, replacement: ' as well' },
+  // closing bracket becomes "as well" — only when it closes the clause
+  // (review: "2 too many" / "3 too few" must stay).
+  { pattern: /(?<=[\p{N})])\s+too(?=\s*(?:[.,;:!?]|$))/gu, replacement: ' as well' },
 ];
 
 /** Slash-pair whitelist — curated option/direction pairs where "/" is

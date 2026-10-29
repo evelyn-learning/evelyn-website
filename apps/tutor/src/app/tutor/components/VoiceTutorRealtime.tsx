@@ -25521,8 +25521,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       wrapLineSpokenRef.current = true;
       clearInterval(intervalId);
       const line = WRAP_LINE;
+      // Review 2026-10-29: this closure is created once at mount — read the
+      // live speakText / onDebugEvent through their refs (as the ack site does).
       if (sessionMode !== 'text') {
-        try { realtime.speakText(line, pushTtsScriptForPerception(line)); } catch {}
+        try { speakTextRef.current?.(line, pushTtsScriptForPerception(line)); } catch {}
       }
       transcriptRef.current = [
         ...transcriptRef.current,
@@ -25530,11 +25532,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       ];
       onTranscriptUpdate([...transcriptRef.current]);
       onTrackInteraction?.('message', line, undefined, 'tutor');
-      onDebugEvent?.('wrap_line_spoken', line);
+      onDebugEventRef.current?.('wrap_line_spoken', line);
     }, 5000);
     return () => clearInterval(intervalId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionWrapMinutes, maxDurationExplicit, targetKind, sessionMode]);
+  }, [sessionWrapMinutes, maxDurationExplicit, targetKind, sessionMode, onTranscriptUpdate, onTrackInteraction]);
 
   // Toggle listening
   // R40 (session embed-1785808658013): a Start tap that lands while the relay

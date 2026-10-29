@@ -14,7 +14,9 @@
  * whose ack spoke) — this only decides WHAT.
  */
 
-const FILLER_OPENER_RE = /^\s*(okay|ok|alright|all right|so|right|now)\s*[,.—–-]?\s+(?=\S)/i;
+// The filler must not be the start of a real clause: "Now that…", "Now is…",
+// "So far…" keep their first word (review 2026-10-29).
+const FILLER_OPENER_RE = /^\s*(okay|ok|alright|all right|so|right|now)\s*[,.—–-]?\s+(?!(?:that|is|are|was|far|when|if|here|there)\b)(?=\S)/i;
 
 /** Words that must remain for the sentence to still be a sentence. */
 const MIN_REMAINING_WORDS = 3;
@@ -24,6 +26,8 @@ export function stripOpenerFiller(sentence: string): { text: string; removed: st
   if (!m) return { text: sentence, removed: null };
   const rest = sentence.slice(m[0].length).trim();
   if (rest.split(/\s+/).filter(Boolean).length < MIN_REMAINING_WORDS) return { text: sentence, removed: null };
-  const text = rest.charAt(0).toUpperCase() + rest.slice(1);
+  // Capitalise only a real word: a lone lowercase letter is a maths
+  // variable ("x = 2") and the caption/transcript must keep its case.
+  const text = /^[a-z](?=[a-z])/.test(rest) ? rest.charAt(0).toUpperCase() + rest.slice(1) : rest;
   return { text, removed: m[1] };
 }

@@ -1456,5 +1456,8 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.match(rewriteForTTS('Look at the point (2, 0) on the board.'), /point, \(?2/, 'point, (pair)');
   assert.match(rewriteForTTS('Check (0, 2) too.'), /as well/, 'N too → as well');
   assert.doesNotMatch(rewriteForTTS('You too, Praveen.'), /as well/, 'word too untouched');
+  assert.doesNotMatch(rewriteForTTS("That's 2 too many."), /as well/, '2 too many untouched');
+  assert.doesNotMatch(rewriteForTTS('You added 3 too few.'), /as well/, '3 too few untouched');
+  assert.match(rewriteForTTS('Try (1, 3) too, then stop.'), /as well,/, 'too before a comma');
   console.log('OK — prose relational signs, "point (", "N too"');
 }

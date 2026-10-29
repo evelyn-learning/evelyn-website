@@ -20,6 +20,11 @@ check('keeps "Not quite"', stripOpenerFiller('Not quite, check the sign again.')
 check('keeps words that start with ok', stripOpenerFiller('Oklahoma is a state with a long name.').removed === null);
 check('keeps "Right" as a verdict? no — spec lists it as filler', stripOpenerFiller('Right, so the sign flips here.').removed === 'Right');
 check('untouched text returns the input', stripOpenerFiller('The line is dashed.').text === 'The line is dashed.');
+check('keeps a variable lowercase', stripOpenerFiller('So x = 2 gives y = 3.').text === 'x = 2 gives y = 3.');
+check('keeps f(x) lowercase', stripOpenerFiller('Okay, f(x) = 2x + 1.').text === 'f(x) = 2x + 1.');
+check('keeps "Now that"', stripOpenerFiller('Now that you have x, plug it in.').removed === null);
+check('keeps "Now is"', stripOpenerFiller('Now is the time to check.').removed === null);
+check('keeps "So far"', stripOpenerFiller('So far, so good, keep going.').removed === null);
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all opener-filler checks passed');
