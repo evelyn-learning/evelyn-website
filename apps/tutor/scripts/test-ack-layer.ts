@@ -37,7 +37,7 @@ check('opening-turn', shouldSpeakAck({ ...happy, openingTurn: true }) === false)
 check('opening-turn-absent-defaults-open', shouldSpeakAck({ ...happy, openingTurn: false }) === true);
 
 // pickAck: deterministic, only pool phrases, never repeats lastAckIndex
-check('pool-size', ACK_PHRASES.length === 8);
+check('pool-size', ACK_PHRASES.length === 7);
 const p1 = pickAck(1, null);
 check('pick-in-pool', ACK_PHRASES.includes(p1.text) && p1.index === ACK_PHRASES.indexOf(p1.text));
 check('pick-deterministic', pickAck(7, null).text === pickAck(7, null).text);
@@ -57,5 +57,12 @@ check('rotates', seen.size >= 3);
 const banned = /good|great|right|correct|exactly|nice|yes|no\b|perfect|well done/i;
 check('neutral-pool', ACK_PHRASES.every((p) => !banned.test(p)));
 
+// 2026-10-29 (demo-polish, live embed-1793240679836): "Okay, let's see." then
+// the brain's own "Okay, let's look at…" — a stacked filler opener. No ack
+// phrase may open with a word the brain habitually opens with.
+const FILLER_OPENER = /^(okay|ok|alright|all right|so|right|now)\b/i;
+check('no ack phrase opens with a filler the brain also uses', ACK_PHRASES.every((p) => !FILLER_OPENER.test(p)));
+
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('test:ack-layer PASS');
+

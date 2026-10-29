@@ -1,0 +1,294 @@
+<title>GAC Test Checklist</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<style>
+/* Layout: one reading column; sticky progress bar; each check is a row with pass / fail / skip chips and a note. */
+:root {
+  --bg: #f6f8f4; --surface: #ffffff; --fg: #1d2a1f; --muted: #5d6b5f; --line: #dbe3d8;
+  --accent: #3d7a2e; --accent-soft: #e5f0df;
+  --pass: #2f7d3a; --pass-soft: #def0df; --fail: #b4372b; --fail-soft: #f8e1dd; --skip: #7a6a2c; --skip-soft: #f3ecd2;
+  --code-bg: #eef2ea;
+  --display: "Fraunces", Georgia, serif;
+  --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #131a14; --surface: #1b241c; --fg: #e3eadf; --muted: #9aa897; --line: #2e3a2f;
+  --accent: #8cc773; --accent-soft: #24331f;
+  --pass: #7fcf86; --pass-soft: #1f3a22; --fail: #f08a7c; --fail-soft: #43201c; --skip: #d9c27a; --skip-soft: #3a3220;
+  --code-bg: #222c22; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #131a14; --surface: #1b241c; --fg: #e3eadf; --muted: #9aa897; --line: #2e3a2f;
+  --accent: #8cc773; --accent-soft: #24331f;
+  --pass: #7fcf86; --pass-soft: #1f3a22; --fail: #f08a7c; --fail-soft: #43201c; --skip: #d9c27a; --skip-soft: #3a3220;
+  --code-bg: #222c22; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 920px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 64px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: 1.9rem; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.3rem; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); max-width: 65ch; margin: 6px 0 0; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.bar .in { max-width: 920px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.meter { flex: 1 1 200px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; display: flex; }
+.meter i { display: block; height: 100%; }
+.counts { font-variant-numeric: tabular-nums; font-size: .9rem; display: flex; gap: 12px; flex-wrap: wrap; }
+.counts b { font-weight: 700; }
+.save { font-size: .8rem; color: var(--muted); }
+.filter { display: flex; gap: 6px; }
+button { font: inherit; cursor: pointer; }
+.fbtn { border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 999px; padding: 2px 10px; font-size: .85rem; }
+.fbtn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+section { margin-top: 36px; display: grid; gap: 12px; }
+.shead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+.shead .tag { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.shead .sc { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.intro { color: var(--muted); max-width: 70ch; margin: 0; }
+.intro li { margin: 2px 0; }
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 8px; border-left-width: 4px; }
+.item[data-s="pass"] { border-left-color: var(--pass); }
+.item[data-s="fail"] { border-left-color: var(--fail); }
+.item[data-s="skip"] { border-left-color: var(--skip); }
+.top { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.lbl { min-width: 0; flex: 1 1 320px; }
+.lbl .id { font-family: var(--mono); font-size: .78rem; color: var(--muted); margin-right: 6px; }
+.lbl .what { font-weight: 700; }
+.expect { color: var(--muted); font-size: .92rem; margin: 2px 0 0; }
+.chips { display: flex; gap: 4px; flex-shrink: 0; }
+.chip { border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 6px; padding: 3px 10px; font-size: .85rem; }
+.chip:focus-visible, .fbtn:focus-visible, .copy:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip.on[data-v="pass"] { background: var(--pass-soft); border-color: var(--pass); color: var(--pass); font-weight: 700; }
+.chip.on[data-v="fail"] { background: var(--fail-soft); border-color: var(--fail); color: var(--fail); font-weight: 700; }
+.chip.on[data-v="skip"] { background: var(--skip-soft); border-color: var(--skip); color: var(--skip); font-weight: 700; }
+.type { display: flex; gap: 8px; align-items: flex-start; background: var(--code-bg); border-radius: 6px; padding: 8px 10px; min-width: 0; }
+.type code { font-family: var(--mono); font-size: .85rem; white-space: pre-wrap; word-break: break-word; flex: 1; min-width: 0; }
+.copy { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 4px; font-size: .75rem; padding: 2px 8px; flex-shrink: 0; }
+textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: .9rem; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-height: 2.2em; resize: vertical; }
+.steps { margin: 0; padding-left: 20px; }
+.hidden-by-filter { display: none; }
+@media (prefers-reduced-motion: no-preference) { .meter i { transition: width .3s; } }
+</style>
+
+<div class="bar"><div class="in">
+  <div class="counts" id="counts"></div>
+  <div class="meter" id="meter" aria-hidden="true"></div>
+  <div class="filter" role="group" aria-label="Show">
+    <button class="fbtn" id="f-all" aria-pressed="true">All</button>
+    <button class="fbtn" id="f-open" aria-pressed="false">Not done</button>
+    <button class="fbtn" id="f-fail" aria-pressed="false">Failures</button>
+  </div>
+  <span class="save" id="save">Loading…</span>
+</div></div>
+
+<div class="wrap">
+  <h1>GAC test checklist</h1>
+  <p class="lede">Session-2 work, 23 Oct 2026. Text sessions only. Sign in as a GAC test student. Use the local stack at http://localhost:3016 (restart it first; it writes the live databases), or the GAC sandbox once it is deployed. Mark each check Pass, Fail or Skip. When a check fails, note the problem text, the time and what you saw. Your marks save as you go, and Claude can read them back.</p>
+  <div id="sections"></div>
+</div>
+
+<script>
+const S = [
+  { id: 'a1', tag: 'A1', title: 'Typed problems become a homework set',
+    intro: ['Home → <b>Ask a question</b> → paste the text → submit.',
+      'Unless a row says otherwise, expect three things. You land on the problem’s preview page (<b>Problem 1</b> with <b>Start tutoring</b>), not a live session. The set appears under <b>Your homework</b>. Admin → Usage goes up 1 minute per problem.',
+      'A figure shows only the numbers the problem states. It never shows the answer.'],
+    items: [
+      ['T1', 'Right triangle', 'Triangle ABC has a right angle at C. AC = 6 cm and BC = 8 cm. Find the length of AB.', 'A right triangle with 6 and 8 marked. AB has no length on it.'],
+      ['T2', 'Function graph', 'The graph of f(x) = x^2 - 4x + 3 is shown. Find the x-intercepts of the graph.', 'A parabola. The intercepts are not labelled.'],
+      ['T3', 'Box plot', 'A box plot of test scores has minimum 52, first quartile 64, median 71, third quartile 80 and maximum 95. What is the interquartile range?', 'A box plot with those five values. No IQR shown.'],
+      ['T4', 'Coordinate plane', 'Points A(1, 2), B(5, 2) and C(5, 6) are the vertices of a triangle on a coordinate plane. Find the area of triangle ABC.', 'Three points plotted and joined. No area shown.'],
+      ['T5', '3D solid', 'A cylinder has a radius of 3 cm and a height of 10 cm. Find its volume. Leave your answer in terms of pi.', 'A cylinder labelled r = 3 and h = 10.'],
+      ['T6', 'Table', 'The table shows x = 1, 2, 3, 4 and y = 5, 8, 11, 14. Write an equation for y in terms of x.', 'A two-column table with those values.'],
+      ['T7', 'Venn diagram', 'In a Venn diagram of 30 students, 5 students are in both the Soccer and Basketball circles, 13 are in Soccer only and 7 are in Basketball only. How many students are in neither club?', 'Two circles with 13, 5 and 7. The “neither” region is empty.'],
+      ['T8', 'Circle angles', 'A circle has center O. Points A and B are on the circle and angle AOB = 70 degrees. Find the measure of the inscribed angle ACB, where C is another point on the circle.', 'A circle with O, A, B and C, and 70° marked. Angle ACB has no value.'],
+      ['T9', 'Figure must hold back: inequality', 'Solve 3x - 5 > 7 and graph the solution on a number line.', 'No figure, or an empty number line. The solution x > 4 is never drawn.'],
+      ['T10', 'Figure must hold back: tape diagram', 'Maria has 3 times as many stickers as Leo. Together they have 48 stickers. How many stickers does Leo have?', 'No tape diagram that shows Leo’s 12. The lengths are not stated, so none is drawn.'],
+      ['T11', 'Plain problem', 'Solve 2x + 3 = 11.', 'A one-problem set with no figure, on the preview page.'],
+      ['T12', 'Two problems', '1. Solve 2x + 3 = 11.  2. Solve 5x - 4 = 16.', 'A set of TWO problems. The set list opens, not a preview.'],
+      ['T13', 'Numbered problem', '7. Solve 4x + 1 = 21.', 'A one-problem set. The preview opens, with no “not found”.'],
+      ['T14', 'Topic, not a problem', 'quadratic equations', 'NOT a set. A normal lesson starts.'],
+      ['T15', 'Long paste (over 300 characters)', 'Triangle ABC has a right angle at C. AC = 6 cm and BC = 8 cm. Find the length of AB. Points A(1, 2), B(5, 2) and C(5, 6) are the vertices of a triangle on a coordinate plane. Find the area of triangle ABC. A cylinder has a radius of 3 cm and a height of 10 cm. Find its volume. Leave your answer in terms of pi.', 'A set of three problems. The set list opens.'],
+      ['T1-B6', 'T1 tutoring: opener draws its figure', null, 'Open T1 → Start tutoring. The first message puts the figure on the board in the same turn it talks about it. It never asks you to picture a figure that isn’t there.'],
+      ['T1-ans', 'T1 tutoring: right answer accepted', '10 cm', 'The tutor accepts it.'],
+    ] },
+  { id: 'a2', tag: 'A2', title: 'Confirmed parts carry over a pause',
+    intro: ['Ask a question with the problem below, then work through the steps in order. Wait for each card to settle on <b>In progress</b> before you reopen it.'],
+    items: [
+      ['A2-0', 'Type the problem', 'A rectangle has a length of (x + 5) cm and a width of 4 cm. (a) Write an expression for the perimeter of the rectangle. (b) The perimeter is 34 cm. Find x. (c) Find the area of the rectangle.', 'A one-problem set opens on its preview.'],
+      ['A2-1', 'Answer (a)', '2x + 18', 'Start tutoring and answer (a). The tutor confirms it.'],
+      ['A2-2', 'Pause', null, 'Click <b>← Back to list</b>. The card shows “Checking your work…”, then <b>In progress</b>.'],
+      ['A2-3', 'Reopen: (a) is skipped', null, 'Open the problem → Start tutoring. The tutor does not ask for (a) again. It moves to (b) or says (a) is done.'],
+      ['A2-4', 'Answer (b), pause, reopen', 'x = 4', 'Answer (b), go back to the list and reopen. The tutor goes straight to (c).'],
+      ['A2-5', 'Finish', '36 cm²', 'Answer (c), then click <b>I’ve finished this problem</b>. The card ends on <b>Done</b>.'],
+      ['A2-6', 'Control: nothing carries between sets', null, 'Type the same problem again (a new set). Pause before answering anything, then reopen. The tutor starts at (a).'],
+    ] },
+  { id: 'les', tag: 'B6 · B7 · B8', title: 'Typed topics start a lesson',
+    intro: ['Ask a question with each topic. Each one should start a normal lesson, not a set.'],
+    items: [
+      ['L1', 'Section intros', 'quadratic equations', 'When the lesson moves to its next section, the message introduces that section. It is never just “Here we go.”'],
+      ['L2', 'Section intros', 'slope of a line', 'Same as L1.'],
+      ['L3', 'Section intros', 'photosynthesis', 'Same as L1.'],
+      ['L4', 'Answer in words is accepted', 'graphing linear inequalities', 'When asked where the solutions lie, answer in words, for example “they stay above the line”. A correct answer in words is accepted.'],
+      ['L5', 'Opener draws what it describes', 'Pythagorean theorem', 'If the opener talks about a picture, the picture is on the board in that same turn.'],
+    ] },
+  { id: 'up', tag: 'Uploads + figures', title: 'Upload sheets',
+    intro: ['Make each sheet in Claude Web as a one-page worksheet image (PNG) or PDF: printed look, black on white, numbered problems, labelled figures. Copy the description as written.',
+      'For each sheet, check four things. Every card becomes ready and each figure problem has a thumbnail. Each figure matches the sheet: values, labels, and which side angles and shading are on. No figure shows an answer. Admin → Usage goes up 1 minute per problem. Also open one problem → Start tutoring, and give one right answer and one wrong answer.'],
+    items: [
+      ['U1', 'Statistics charts', 'Make a printable 5-problem statistics worksheet with one chart per problem. (1) A box plot of quiz scores with minimum 40, Q1 55, median 62, Q3 75, maximum 90, each value labelled on the axis; ask for the range and the IQR. (2) A histogram of heights with bins 150–155: 3, 155–160: 7, 160–165: 10, 165–170: 6, 170–175: 2, counts printed on the bars; ask how many students are 160 cm or taller. (3) A dot plot of the number of pets per student for 12 students: 0,1,1,1,2,2,2,2,3,3,4,5; ask for the median. (4) A bar chart of favourite fruit: Apple 8, Banana 5, Orange 6, Grape 3, values printed above bars; ask what fraction chose Apple. (5) A pie chart with sectors labelled Rent 40%, Food 25%, Transport 15%, Savings 20%; ask how much goes to Food from a $2,000 budget.', 'Box plot, histogram, dot plot, bar and pie all match the sheet. The box plot shows no IQR.'],
+      ['U2', 'Tables, scatter plot, number line', 'Make a printable 4-problem worksheet. (1) An input–output table x: 0, 1, 2, 3 and y: 2, 5, 8, 11; ask for the rule. (2) A two-way frequency table of 50 students by grade (9th, 10th) and club (Yes, No) with all four cells and totals printed; ask for the probability a random 10th grader is in a club. (3) A scatter plot of hours studied vs test score with 8 labelled points (1,55), (2,60), (3,62), (4,70), (5,74), (6,78), (7,85), (8,88), no trend line; ask whether the correlation is positive or negative. (4) A number line from −5 to 5 with a closed dot at −2 and an open dot at 3 and the segment between them shaded; ask the student to write the inequality shown.', 'Both tables match, the scatter plot has no trend line, and the number line has closed −2 and open 3.'],
+      ['U3', '3D solids', 'Make a printable 4-problem geometry worksheet, one labelled 3D solid per problem: (1) rectangular prism 5 cm × 3 cm × 4 cm, find the volume; (2) cone with radius 4 in and height 9 in, find the volume in terms of π; (3) square pyramid with base side 6 m and height 4 m, find the volume; (4) sphere with radius 2.5 cm, find the surface area. Label each dimension on the drawing.', 'Each solid is drawn with its dimensions as printed (2.5 stays 2.5).'],
+      ['U4', 'Venn and tree diagrams', 'Make a printable 3-problem probability worksheet. (1) A two-circle Venn diagram for 40 students: Music only 12, Art only 9, both 6, neither 13, each number printed in its region; ask P(Music or Art). (2) A three-circle Venn diagram (A, B, C) with every region’s count printed; ask how many are in exactly two sets. (3) A probability tree for flipping a coin twice, with 1/2 printed on every branch and outcomes HH, HT, TH, TT at the leaves (no leaf probabilities printed); ask for P(at least one head).', 'Venn regions match. The tree shows 1/2 on the branches and no leaf probabilities.'],
+      ['U5', 'Fraction bars, tape diagram, area model', 'Make a printable 3-problem worksheet. (1) Two fraction bars, one with 3 of 4 parts shaded and one with 5 of 8 parts shaded; ask which fraction is larger. (2) A tape diagram with three equal parts labelled 12 each and one part labelled "?" to show the total; ask for the total. (3) An area model for 23 × 14 split into 20 + 3 by 10 + 4, with partial products left blank; ask the student to fill them in and find the product.', 'Shading is 3/4 and 5/8. The tape total is “?”. The partial products stay blank.'],
+      ['U6', 'Coordinate geometry and inequalities', 'Make a printable 3-problem worksheet. (1) A coordinate plane from −6 to 6 with quadrilateral PQRS at P(−3, 1), Q(2, 1), R(2, −3), S(−3, −3), each vertex labelled with its coordinates; ask for the perimeter. (2) A number line showing the inequality x ≤ −1 (closed dot at −1, arrow to the left), with the inequality "x ≤ −1" printed beside it; ask for two numbers that satisfy it. (3) A blank coordinate grid from −5 to 5; ask the student to plot (2, 3) and (−1, −4) and find the distance between them.', 'PQRS is at the right points. (2) is drawn because the inequality is printed. (3) is a blank grid with no points plotted.'],
+      ['U7', 'Mixed geometry (hard case)', 'Make a printable 4-problem geometry worksheet. (1) Two parallel lines cut by a transversal with one angle labelled 65°; ask for the alternate interior angle. (2) A square of side 10 cm with two quarter circles drawn from its two bottom corners, the region between them shaded; ask for the shaded area. (3) A circle with a central angle of 110° and an inscribed angle on the same arc; ask for the inscribed angle. (4) A right triangle with legs 9 and 12 and the hypotenuse unlabelled; ask for the hypotenuse.', 'In (2) the quarter circles start from the BOTTOM corners (the arc fix). The 65° is on the correct side.'],
+    ] },
+  { id: 'ss', tag: 'Self Study', title: 'Self Study practice',
+    intro: ['Self Study is not charged, so no minutes should move.',
+      'Home → <b>Self Study</b> → subject pill (the course) → under <b>Unit 1</b> click a skill card (the lesson). A 3-question drill starts. The student must have finished or skipped the placement check first.',
+      'In each course, answer one question right and one wrong. Both should be graded, and a figure item should show its figure.'],
+    items: [
+      ['SS-alg1', 'Algebra 1', null, 'Real Numbers & Operations · Order of Operations & Evaluating Expressions · Simplifying Expressions: Distributive Property & Like Terms'],
+      ['SS-geo', 'Geometry', null, 'Points, Lines & Planes · Segment Measure, Distance & Midpoint · Angles & Angle Measure'],
+      ['SS-bio', 'Biology', null, 'Characteristics of Life & Levels of Organization · Scientific Inquiry & Experimental Design in Biology · Water, pH & the Four Macromolecules'],
+      ['SS-chem', 'Chemistry', null, 'Classifying Matter: Elements, Compounds & Mixtures · Physical & Chemical Properties and Changes · Measurement, SI Units & Significant Figures'],
+      ['SS-apstat', 'AP Statistics', null, 'U1.1 Variables and Categorical Data · U1.5 Quantitative Graphs (Dotplot, Stemplot, Histogram) · U1.6 Describing a Distribution (SOCS)'],
+      ['SS-bc', 'AP Calculus BC', null, 'U1.1 Introducing Calculus: Can Change Occur at an Instant? · U1.2 Defining Limits and Using Limit Notation · U1.3 Estimating Limits from Graphs and Tables'],
+      ['SS-apes', 'AP Environmental Science', null, 'U1.1 Ecosystems and Biomes · U1.2 Carbon and Water Cycles · U1.3 Nitrogen and Phosphorus Cycles'],
+      ['SS-psych', 'AP Psychology', null, 'Scientific Foundations: Research Methods and Statistics (Unit 0) · U1.1 Nervous System Overview, Endocrine, and Heredity · U1.3 The Neuron and Neural Firing'],
+      ['SS-macro', 'AP Macroeconomics', null, 'U1.1 Scarcity, Choice, and Trade-offs · U1.2 Resource Allocation and Economic Systems · U1.3 Production Possibilities Curve'],
+      ['SS-gov', 'AP US Government & Politics', null, 'U1.1 Ideals of Democracy & Types of Democracy · U1.4-1.5 The Articles of Confederation, the Convention & Ratification · U1.6 Separation of Powers & Checks and Balances (stay in Unit 1)'],
+      ['SS-apush', 'AP United States History', null, 'U1.2 Native American Societies Before European Contact · U1.4 The Columbian Exchange · U1.6 Spanish Colonization and Labor Systems (stay in Unit 1)'],
+      ['SS-world', 'AP World History: Modern', null, 'U1.1 Developments in East Asia · U1.2 Developments in Dar al-Islam · U1.3 Developments in South and Southeast Asia (stay in Unit 1)'],
+      ['SS-lang', 'AP English Language & Composition', null, 'U1.1 The Rhetorical Situation · U1.2 Reading for the Writer’s Claim · U1.3 Writing a Defensible Thesis'],
+      ['SS-eng', 'HS English', null, 'Parts of Speech in Action · Subject-Verb Agreement · Pronouns: Agreement, Case & Clarity'],
+      ['SS-wh', 'World History', null, 'From Foragers to Farmers: The Neolithic Revolution · What Makes a Civilization? · Mesopotamia & Egypt: River Valley Civilizations'],
+      ['SS-phys', 'Physics (generated: may have no practice)', null, 'Distance, Displacement, Speed, and Velocity · Position-Time and Velocity-Time Graphs'],
+      ['SS-precalc', 'Precalculus (generated)', null, 'Determine domain and range of functions · Analyze function behavior from a graph'],
+      ['SS-alg2', 'Algebra 2 (generated)', null, 'Solve Two-Variable Linear Systems · Solve Three-Variable Linear Systems'],
+      ['SS-ab', 'AP Calculus AB (generated)', null, 'Estimate limits from graphs and tables · Evaluate limits using algebraic properties'],
+      ['SS-apbio', 'AP Biology (generated)', null, 'Water’s Properties and Hydrogen Bonding · Elements in Macromolecules'],
+      ['SS-apchem', 'AP Chemistry (generated)', null, 'Convert between mass, moles, and particles · Calculate average atomic mass from isotopes'],
+    ] },
+  { id: 'bill', tag: 'Billing', title: 'Billing',
+    intro: ['Read these in Admin → Usage after the sections above.'],
+    items: [
+      ['B-typed', 'Typed set: 1 minute per problem', null, 'Each typed set from A1 added 1 minute per problem.'],
+      ['B-upload', 'Upload: 1 minute per problem', null, 'Each sheet added 1 minute per problem.'],
+      ['B-min5', '5-minute minimum', null, 'Start a tutoring session, send one message and end it within a minute. Usage shows 5 minutes for it. Run this only once the A3 change is deployed.'],
+      ['B-warn', '80% warning email', null, 'An automated test covers this. A manual check needs a student set near their allowance, so skip it unless one is set up.'],
+    ] },
+  { id: 'adm', tag: 'Teacher / admin', title: 'Teacher and admin glance',
+    intro: [],
+    items: [
+      ['ADM-1', 'Teacher view', null, 'The teacher view lists the student’s typed and uploaded sets.'],
+      ['ADM-2', 'Rosters agree', null, 'The Usage roster, Students roster and daily report show the same minutes for the test student.'],
+    ] },
+];
+
+const state = {};      // id -> {status, note}
+let filter = 'all';
+let db = null;
+const LS = 'gac-checklist-v1';
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function loadLocal() { try { const j = JSON.parse(localStorage.getItem(LS) || '{}'); Object.assign(state, j); } catch (e) {} }
+function saveLocal() { try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} }
+
+function build() {
+  const root = document.getElementById('sections');
+  root.innerHTML = S.map((sec) => `
+    <section id="${sec.id}">
+      <div class="shead"><div><span class="tag">${sec.tag}</span><h2>${sec.title}</h2></div><span class="sc" data-sc="${sec.id}"></span></div>
+      ${sec.intro.length ? `<ul class="intro">${sec.intro.map((t) => `<li>${t}</li>`).join('')}</ul>` : ''}
+      ${sec.items.map(([id, what, text, expect]) => `
+        <div class="item" data-id="${id}">
+          <div class="top">
+            <div class="lbl"><span class="id">${id}</span><span class="what">${what}</span><p class="expect">${expect}</p></div>
+            <div class="chips" role="group" aria-label="Result for ${id}">
+              <button class="chip" data-v="pass">Pass</button><button class="chip" data-v="fail">Fail</button><button class="chip" data-v="skip">Skip</button>
+            </div>
+          </div>
+          ${text ? `<div class="type"><code>${esc(text)}</code><button class="copy" data-copy="${id}">Copy</button></div>` : ''}
+          <textarea id="note-${id}" rows="1" placeholder="Notes: what you saw, the time, a session link"></textarea>
+        </div>`).join('')}
+    </section>`).join('');
+  const texts = {}; S.forEach((s) => s.items.forEach(([id, , t]) => { if (t) texts[id] = t; }));
+  root.addEventListener('click', async (e) => {
+    const chip = e.target.closest('.chip');
+    if (chip) {
+      const id = chip.closest('.item').dataset.id;
+      const cur = state[id] || { status: '', note: '' };
+      const v = chip.dataset.v;
+      setItem(id, { ...cur, status: cur.status === v ? '' : v });
+      return;
+    }
+    const cp = e.target.closest('.copy');
+    if (cp) {
+      const t = texts[cp.dataset.copy];
+      try { await navigator.clipboard.writeText(t); cp.textContent = 'Copied'; setTimeout(() => (cp.textContent = 'Copy'), 1200); }
+      catch (err) { const r = document.createRange(); r.selectNodeContents(cp.previousElementSibling); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+    }
+  });
+  root.addEventListener('change', (e) => {
+    if (e.target.tagName !== 'TEXTAREA') return;
+    const id = e.target.id.slice(5);
+    const cur = state[id] || { status: '', note: '' };
+    if (cur.note !== e.target.value) setItem(id, { ...cur, note: e.target.value });
+  });
+}
+
+async function setItem(id, val) {
+  state[id] = { status: val.status, note: val.note };
+  render(); saveLocal();
+  if (!db) return;
+  const el = document.getElementById('save');
+  el.textContent = 'Saving…';
+  try { await db.doc('results/' + id).set({ status: val.status, note: val.note, at: new Date().toISOString() }); el.textContent = 'Saved'; }
+  catch (err) { el.textContent = 'Not saved to the shared record (' + (err && err.code || 'error') + '). Kept in this browser.'; }
+}
+
+function render() {
+  let p = 0, f = 0, s = 0, total = 0;
+  S.forEach((sec) => {
+    let sp = 0, sf = 0, n = 0;
+    sec.items.forEach(([id]) => {
+      n++; total++;
+      const st = (state[id] && state[id].status) || '';
+      if (st === 'pass') { p++; sp++; } else if (st === 'fail') { f++; sf++; } else if (st === 'skip') s++;
+      const el = document.querySelector(`.item[data-id="${id}"]`);
+      el.dataset.s = st;
+      el.querySelectorAll('.chip').forEach((c) => { const on = c.dataset.v === st; c.classList.toggle('on', on); c.setAttribute('aria-pressed', on); });
+      const ta = el.querySelector('textarea');
+      if (document.activeElement !== ta) ta.value = (state[id] && state[id].note) || '';
+      el.classList.toggle('hidden-by-filter', (filter === 'open' && st !== '') || (filter === 'fail' && st !== 'fail'));
+    });
+    document.querySelector(`[data-sc="${sec.id}"]`).textContent = `${sp} pass · ${sf} fail · ${n} checks`;
+  });
+  const left = total - p - f - s;
+  document.getElementById('counts').innerHTML = `<span><b>${p}</b> pass</span><span><b>${f}</b> fail</span><span><b>${s}</b> skip</span><span><b>${left}</b> to do</span>`;
+  const pct = (n) => (100 * n / total).toFixed(2) + '%';
+  document.getElementById('meter').innerHTML = `<i style="width:${pct(p)};background:var(--pass)"></i><i style="width:${pct(f)};background:var(--fail)"></i><i style="width:${pct(s)};background:var(--skip)"></i>`;
+}
+
+['all', 'open', 'fail'].forEach((k) => document.getElementById('f-' + k).addEventListener('click', () => {
+  filter = k;
+  ['all', 'open', 'fail'].forEach((j) => document.getElementById('f-' + j).setAttribute('aria-pressed', j === k));
+  render();
+}));
+
+build(); loadLocal(); render();
+document.getElementById('save').textContent = 'Saved in this browser';
+
+(async () => {
+  try {
+    db = window.claude ? await window.claude.use('db') : null;
+    if (!db) return;
+    db.collection('results').onSnapshot((snap) => {
+      snap.docs.forEach((d) => { const v = d.data(); if (v) state[d.id] = { status: v.status || '', note: v.note || '' }; });
+      saveLocal(); render();
+      document.getElementById('save').textContent = 'Saved to the shared record';
+    }, () => { document.getElementById('save').textContent = 'Shared record unavailable. Saving in this browser.'; });
+  } catch (e) { db = null; }
+})();
+</script>

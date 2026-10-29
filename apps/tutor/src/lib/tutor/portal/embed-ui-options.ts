@@ -51,23 +51,30 @@ export interface EmbedUiOptions {
    *  in a narrow side panel.
    *  Token field: `features.tools_low` (boolean). Default false. */
   toolsLow: boolean;
+  /** Show the board's tool cluster (Draw / board pen / Text note / Camera /
+   *  wrench) at all. Demo-polish (2026-10-29): hidden by default — a
+   *  labelled Full screen control in the header replaces the one thing
+   *  students looked for in it. GAC (drawn homework answers) and GameClass
+   *  (Skyler's tools-low review) keep it.
+   *  Token field: `features.tool_cluster` (boolean). Default false. */
+  toolCluster: boolean;
 }
 
-export const DEFAULT_EMBED_UI_OPTIONS: EmbedUiOptions = { humorControl: true, mobileFinish: false, voiceMute: false, paceChip: true, videoControl: false, sessionTimer: true, endControl: true, toolsLow: false };
+export const DEFAULT_EMBED_UI_OPTIONS: EmbedUiOptions = { humorControl: true, mobileFinish: false, voiceMute: false, paceChip: true, videoControl: false, sessionTimer: true, endControl: true, toolsLow: false, toolCluster: false };
 
 /** Partner defaults — applied when the token does not say. A partner absent
  *  from this table gets `DEFAULT_EMBED_UI_OPTIONS`. */
 const PARTNER_UI_DEFAULTS: Readonly<Record<string, Partial<EmbedUiOptions>>> = {
   // Homework-help product: no humour selector; on a phone the host's own
   // finish strip is hidden, so the frame carries the labelled Finish control.
-  greenapple: { humorControl: false, mobileFinish: true },
+  greenapple: { humorControl: false, mobileFinish: true, toolCluster: true },
   // Side panel beside a lesson video (Skyler's review 2026-10-07): a clear
   // way to silence the tutor and read instead; one pace control, not two.
   // The panel stays open for the whole lesson (spec v1.2): video control on.
   // Tools low (Skyler's review 2026-10-09). The timer and End control stay
   // ON by default: they move to the host's header only once the host page
   // draws them, which it signals per token (session_timer / end_control).
-  gameclass: { voiceMute: true, paceChip: false, videoControl: true, toolsLow: true },
+  gameclass: { voiceMute: true, paceChip: false, videoControl: true, toolsLow: true, toolCluster: true },
 };
 
 interface EmbedUiConfigLike {
@@ -92,5 +99,6 @@ export function resolveEmbedUiOptions(config: EmbedUiConfigLike | null | undefin
     sessionTimer: pick(features.session_timer, 'sessionTimer'),
     endControl: pick(features.end_control, 'endControl'),
     toolsLow: pick(features.tools_low, 'toolsLow'),
+    toolCluster: pick(features.tool_cluster, 'toolCluster'),
   };
 }

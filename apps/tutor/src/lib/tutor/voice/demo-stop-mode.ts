@@ -21,6 +21,9 @@ export type DemoStopPayload =
        *  formatDemoStopBlock switches to the graceful-wrap directive. Absent ⇒
        *  no wrap phase (pre-existing untimed-demo behavior). */
       wrapAtMinutes?: number;
+      /** Round 2 (2026-10-29): the client has spoken its fixed wrap line this
+       *  session — the wrap directive then tells the brain not to repeat it. */
+      wrapLineSpoken?: boolean;
     }
   | { mode: 'milestone' };
 
@@ -41,6 +44,7 @@ export function selectDemoStopPayload(args: {
   budgetMinutes: number;
   minutesElapsed: number;
   wrapAtMinutes?: number;
+  wrapLineSpoken?: boolean;
 }): DemoStopPayload {
   if (args.isTrial && !args.maxDurationExplicit) {
     return { mode: 'milestone' };
@@ -50,5 +54,6 @@ export function selectDemoStopPayload(args: {
     budgetMinutes: args.budgetMinutes,
     minutesElapsed: args.minutesElapsed,
     ...(args.wrapAtMinutes != null ? { wrapAtMinutes: args.wrapAtMinutes } : {}),
+    ...(args.wrapLineSpoken ? { wrapLineSpoken: true } : {}),
   };
 }

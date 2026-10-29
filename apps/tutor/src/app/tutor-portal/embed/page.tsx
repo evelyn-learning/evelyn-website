@@ -41,7 +41,7 @@ import { isVoiceCode } from '@core/voice/voice-codes';
 import { resolveEmbedPersona } from '@/lib/tutor/portal/embed-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
 import { parseSpeechRate } from '@/lib/tutor/voice/speech-rate';
-import { parseThinkingCue } from '@/lib/tutor/voice/thinking-cue';
+import { resolveThinkingCueClaim } from '@/lib/tutor/voice/thinking-cue';
 import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shouldAcceptHostEnd, type HostEndReason } from '@/lib/tutor/portal/host-end';
@@ -89,6 +89,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'playback_route', 'shared_mic', 'stage3_', 'voice_mute', 'noise_nag',
   // 2026-10-02 in-flow: fixed first words spoken before the brain's first sentence.
   'bridge_spoken', 'bridge_audio',
+  // Demo-polish (2026-10-29): ack/brain opener de-dup, wrap line, goodbye.
+  'opener_filler_', 'wrap_line_', 'timebox_farewell_',
   // Drop 2 (spec v1.1 §3): prewarm_ready / prewarm_expired, host_start /
   // host_start_ignored (start_blocked rides the 'start_' prefix below).
   'prewarm_', 'host_start',
@@ -718,7 +720,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // says otherwise. See lib/tutor/portal/partner-session-options.ts.
   const sessionOptions = resolvePartnerSessionOptions({ partnerId: config.partner_id, tutorLanguages });
   const speechRate = parseSpeechRate(config.speech_rate);
-  const thinkingCue = TUTOR_THINKING_CUE && parseThinkingCue(config.thinking_cue);
+  // 2026-10-29: on for every tenant unless the token says otherwise.
+  const thinkingCue = TUTOR_THINKING_CUE && resolveThinkingCueClaim(config.thinking_cue);
   // Clamp partner-supplied session length to [1, 120] min. The hard
   // ceiling matches the bound in lib/tutor/lesson-plan/session-budget
   // (MAX_SESSION_MINUTES) and exists to prevent runaway voice-API
@@ -2324,6 +2327,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         sessionTimer={uiOptions.sessionTimer}
         endControlVisible={uiOptions.endControl}
         toolsLow={uiOptions.toolsLow}
+        toolCluster={uiOptions.toolCluster}
         onMilestone={handleMilestone}
         onTranscriptUpdate={setTranscript}
         onWhiteboardCommand={(cmds, meta) => {

@@ -31,7 +31,8 @@
 // never delivers.
 export const ACK_PHRASES = [
   'Hmm, let me think.',
-  "Okay, let's see.",
+  // "Okay, let's see." removed 2026-10-29 (live embed-1793240679836): it
+  // stacked on the brain's own "Okay, …" opener as "Okay, let's see. Okay, let's look at…".
   'Let me see.',
   'Mm, one moment.',
   "Let's look at that.",

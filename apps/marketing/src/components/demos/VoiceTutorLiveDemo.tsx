@@ -155,8 +155,8 @@ async function startGatedDemo(
     subject: lesson.subjectLabel.toLowerCase(),
     level: lesson.levelLabel,
     curriculum_module: lesson.planId,
-    max_duration_minutes: 10,
-    wrap_at_minutes: 8,
+    max_duration_minutes: 20,
+    wrap_at_minutes: 18,
     input_mode: 'voice',
     target_kind: 'lessonNode',
     // 2026-09-10: the demo is a showcase, not an enrolled lesson — let the
@@ -382,7 +382,7 @@ export default function VoiceTutorLiveDemo({
         )}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <p className="text-sm text-slate-600">
-            <span className="font-semibold text-slate-900">{lesson.title}</span> with {teacher.name} — 10-minute demo
+            <span className="font-semibold text-slate-900">{lesson.title}</span> with {teacher.name} — 20-minute demo
           </p>
           {sessionEnded && !demoExhausted && (
             <button
@@ -520,7 +520,7 @@ export default function VoiceTutorLiveDemo({
               </p>
             )}
             <p className="text-xs text-slate-400">
-              Uses your microphone · voice + whiteboard · free 10-minute demo
+              Uses your microphone · voice + whiteboard · free 20-minute demo
             </p>
           </div>
 

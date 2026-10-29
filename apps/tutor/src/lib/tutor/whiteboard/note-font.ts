@@ -21,6 +21,26 @@
  * Resolution reads the vars off :root once and caches — both call sites
  * run in-browser after the app shell mounted, so the vars are present.
  */
+import { TUTOR_NOTE_PRINT_HAND } from '@/lib/tutor/orchestrator/flags';
+
+/** Demo-polish (2026-10-29): a teacher's feedback — many students cannot
+ *  read cursive. Kalam (upright, unjoined letters) leads; Caveat stays as
+ *  the fallback. 24px with a 29px line. Flag off ⇒ Caveat-first 22/26. */
+const NOTE_FONT_VARS = TUTOR_NOTE_PRINT_HAND ? ['--font-kalam', '--font-caveat'] : ['--font-caveat', '--font-kalam'];
+export const NOTE_FONT_PX = TUTOR_NOTE_PRINT_HAND ? 24 : 22;
+export const NOTE_LINE_PX = TUTOR_NOTE_PRINT_HAND ? 29 : 26;
+
+/** The CSS font-family value for surfaces that CAN use var(). */
+export function noteFontFamilyVars(): string {
+  return [...NOTE_FONT_VARS.map((v) => `var(${v})`), 'cursive'].join(', ');
+}
+
+/** Writing-reveal length for a note: 70 ms per character, capped at 2.5 s
+ *  (the wipe-on reads as the teacher writing, not a fade). */
+export function noteRevealMs(text: string): number {
+  return Math.min(2500, 70 * text.length);
+}
+
 let resolvedFamilies: string | null = null;
 
 /** Returns the resolved handwriting font-family list (hashed next/font
@@ -29,7 +49,7 @@ export function resolveNoteFontFamilies(): string {
   if (resolvedFamilies) return resolvedFamilies;
   try {
     const cs = getComputedStyle(document.documentElement);
-    const fams = ['--font-caveat', '--font-kalam']
+    const fams = NOTE_FONT_VARS
       .map((v) => cs.getPropertyValue(v).trim())
       .filter(Boolean);
     resolvedFamilies = [...fams, 'cursive'].join(', ');

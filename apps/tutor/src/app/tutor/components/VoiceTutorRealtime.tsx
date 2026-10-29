@@ -10,7 +10,8 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL } from '@/lib/tutor/orchestrator/flags';
+import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
@@ -253,6 +254,7 @@ import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mi
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
+import { stripOpenerFiller } from '@/lib/tutor/voice/opener-filler';
 import { cannedLanguage, localizeCanned, lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createNoiseFloorState, recordFloorSample, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState , extractAnswerTokenDetailed } from '@/lib/tutor/voice/cover-layer';
 import { endsMidThought, mergeHeldTranscript, HOLD_MS as INCOMPLETE_HOLD_MS } from '@/lib/tutor/voice/utterance-hold';
@@ -720,6 +722,10 @@ interface VoiceTutorRealtimeProps {
   topic: string;
   level: string;
   studentName?: string;
+  /** Demo-polish (2026-10-29): whether the host currently holds an answerable
+   *  question pin for the last tutor turn. Feeds the idle nudge: with no pin
+   *  it re-offers the choice instead of a hint. Absent ⇒ treated as pinned. */
+  hasOpenQuestion?: boolean;
   sessionId?: string;
   // Wallclock ms for session.startedAt — passed through to the audio recorder
   // so both .pcm16 tracks align with the chat timeline in the replay UI.
@@ -1308,6 +1314,7 @@ export function VoiceTutorRealtime({
   topic,
   level,
   studentName: rawStudentName,
+  hasOpenQuestion,
   sessionId,
   sessionStartedAtMs,
   sessionGoal,
@@ -2501,6 +2508,20 @@ export function VoiceTutorRealtime({
   const ackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ackTurnCounterRef = useRef(0);
   const lastAckIndexRef = useRef<number | null>(null);
+  // Demo-polish (2026-10-29): true once an ack/cover line spoke for the
+  // current student turn — the brain's first sentence then drops its own
+  // leading filler (opener-filler.ts). Reset when the next turn arms its ack.
+  const ackSpokenThisTurnRef = useRef(false);
+  // Round 2 (2026-10-29): the client's wrap line. Spoken once per session,
+  // preferably in the gap after a student turn (the ack slot); the ack for
+  // that turn stands down. `speakWrapLineRef` is assigned every render so
+  // both call sites see live props.
+  const wrapLineSpokenRef = useRef(false);
+  const wrapLineThisTurnRef = useRef(false);
+  const speakWrapLineRef = useRef<(opts: { path: 'student-turn' | 'fallback'; floorFreeMs?: number }) => boolean>(() => false);
+  // Demo-polish: mirrored prop, read by the idle-nudge closure.
+  const hasOpenQuestionRef = useRef<boolean | undefined>(hasOpenQuestion);
+  hasOpenQuestionRef.current = hasOpenQuestion;
   // R32: per-category last-index rotation state for classifier-driven cover
   // phrases (TUTOR_COVER_V2). Keyed by CoverCategory; unused when the flag
   // is off (legacy pickAck path keeps using lastAckIndexRef above).
@@ -4813,7 +4834,7 @@ export function VoiceTutorRealtime({
   const continueRotationRef = useRef<(() => Promise<void>) | null>(null);
   // End/Pause teardown — assigned every render below (see the assignment near
   // handleContinueRotation) and read by both the dock button and handleRef.
-  const endSessionNowRef = useRef<(opts?: { farewell?: string }) => Promise<void>>(async () => {});
+  const endSessionNowRef = useRef<(opts?: { farewell?: string; reason?: 'time_limit' }) => Promise<void>>(async () => {});
   // End at most once per mount (host-end fix round 1): the student's End,
   // a host_end and a double tap all run endSessionNowRef — only the first
   // does anything. Exposed on the handle as isEnding() so the embed's
@@ -13120,6 +13141,7 @@ export function VoiceTutorRealtime({
             budgetMinutes: sessionMaxMinutes,
             minutesElapsed: Math.max(0, Math.floor((Date.now() - startedAtMs) / 60000)),
             wrapAtMinutes: sessionWrapMinutes,
+            wrapLineSpoken: wrapLineSpokenRef.current,
           });
         }
 
@@ -14364,7 +14386,7 @@ export function VoiceTutorRealtime({
                   continue;
                 }
                 if (ev.type === 'sentence') {
-                  const sentence = (ev.text as string) || '';
+                  let sentence = (ev.text as string) || '';
                   if (!sentence.trim()) continue;
                   // Voice answer judging: the turn was cut at a withheld
                   // verdict sentence — nothing after it is shown or spoken.
@@ -14392,6 +14414,17 @@ export function VoiceTutorRealtime({
                   // greeting-only sentence got voiced. The student then
                   // replied "hello" thinking the session had restarted.
                   const isFirstSentenceOfTurn = totalSentenceCount === 0;
+                  // Demo-polish (2026-10-29): the ack already said "Hmm, let me
+                  // see." — the brain's own "Okay, …" on top of it reads as a
+                  // stutter. First sentence only, fillers only (opener-filler.ts).
+                  if (TUTOR_ACK_OPENER_STRIP && isFirstSentenceOfTurn && ackSpokenThisTurnRef.current) {
+                    const r = stripOpenerFiller(sentence);
+                    if (r.removed) {
+                      sentence = r.text;
+                      (ev as { text?: string }).text = r.text;
+                      onDebugEvent?.('opener_filler_stripped', r.removed);
+                    }
+                  }
                   // Correction-note re-check spoken as bare arithmetic (live
                   // 2026-09-05: "20% of 120 is 24; 20% of 15 is 3." opened the
                   // turn). Only on a note-carrying turn's FIRST sentence, so
@@ -20730,6 +20763,12 @@ export function VoiceTutorRealtime({
     if (TUTOR_ACK_LAYER) {
       if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
       const ackTurnIndex = ++ackTurnCounterRef.current;
+      ackSpokenThisTurnRef.current = false;
+      // Round 2: the natural gap for the wrap line is right here — the student
+      // just finished, the brain has not spoken yet. It replaces the ack.
+      wrapLineThisTurnRef.current = speakWrapLineRef.current({ path: 'student-turn' });
+      // The wrap line is this turn's ack: the brain's first sentence drops its filler too.
+      if (wrapLineThisTurnRef.current) ackSpokenThisTurnRef.current = true;
       const ackArmedAt = Date.now();
       const ackTranscript = transcript;
       // R32: classify up front so liveness checks can answer instantly and
@@ -20770,7 +20809,7 @@ export function VoiceTutorRealtime({
             // marker OR the armed opening ref — belt and suspenders.
             openingTurn: openingTurnPendingRef.current
               || /^\[(?:start (?:lesson|session)|session-resumed)/i.test(ackTranscript.trim()),
-            fastOpenerSpoken: turnLatencyRef.current?.has('firstTtsFetch') ?? false,
+            fastOpenerSpoken: (turnLatencyRef.current?.has('firstTtsFetch') ?? false) || wrapLineThisTurnRef.current,
             brainSentence0Dispatched: turnLatencyRef.current?.has('firstSentence') ?? false,
             msSinceTurnEnd: Date.now() - ackArmedAt,
             turnIndex: ackTurnIndex,
@@ -20819,6 +20858,7 @@ export function VoiceTutorRealtime({
           // the ack — mark its fetch too so tts→audio stays coherent and
           // TOTAL reads as perceived-first-sound (the Phase-2 metric).
           turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
+          ackSpokenThisTurnRef.current = true;
           onDebugEvent?.('ack_spoken', `"${text}" turn=${ackTurnIndex}${TUTOR_COVER_V2 && verdict.kind === 'cover' ? ` cat=${verdict.category}` : ''}`);
           // R52: make the numeric-echo guard's REFUSALS observable.
           //
@@ -22638,7 +22678,7 @@ export function VoiceTutorRealtime({
         'idle_nudge_sent',
         `stretch=${idleNudgeStateRef.current.stretchCount} session=${idleNudgeStateRef.current.sessionCount}${nudgePlan?.ceilingHit ? ' ceiling=1' : ''}`,
       );
-      void handleStudentTranscriptForBrain(idleNudgeDirective({ v2: TUTOR_IDLE_NUDGE_V2 }), { silent: true, bypassPerceptionDedupe: true });
+      void handleStudentTranscriptForBrain(idleNudgeDirective({ v2: TUTOR_IDLE_NUDGE_V2, hasOpenQuestion: hasOpenQuestionRef.current }), { silent: true, bypassPerceptionDedupe: true });
     };
     const idleNudgeArmDelay = idleNudgeArmDelayMs(idleNudgeStateRef.current, { languageLesson: sessionAllowsNonLatin(tutorLanguages) });
     idleNudgeDueAtRef.current = Date.now() + idleNudgeArmDelay;
@@ -25806,11 +25846,91 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         console.log(
           `[demo-time-box] hard stop reached ${sessionMaxMinutes}min cap — ending session (reason=time_limit)`,
         );
-        onEndSession('time_limit');
+        // Demo-polish (2026-10-29): a spoken goodbye first (live
+        // embed-1793240679836 was cut mid-explanation with no close). Same
+        // farewell path as a host end: seals the brain, speaks the fixed line,
+        // bounded wait, then the graceful end tagged time_limit.
+        if (TUTOR_TIMEBOX_FAREWELL) {
+          const line = goodbyeLine(studentName);
+          onDebugEvent?.('timebox_farewell_spoken', line);
+          void endSessionNowRef.current({ farewell: line, reason: 'time_limit' });
+        } else {
+          onEndSession('time_limit');
+        }
       }
     }, 5000);
     return () => clearInterval(intervalId);
   }, [isTrial, maxDurationExplicit, targetKind, sessionMaxMinutes, onEndSession]);
+
+  // Demo-polish (2026-10-29): the client's own wrap line. The <demo_stop>
+  // "Wrap up NOW" directive is prompt text the brain ignored twice in the
+  // live session; this fixed line is spoken once, the first time the floor
+  // is free after the wrap minute (same wrapPhase predicate as the idle
+  // nudge, same busy test), through the client-spoken-line path the demo
+  // opener uses. Text mode posts it as a tutor message instead.
+  speakWrapLineRef.current = (opts) => {
+    if (!TUTOR_TIMEBOX_FAREWELL || sessionWrapMinutes == null || targetKind === 'diagnostic') return false;
+    if (wrapLineSpokenRef.current || hardStopFiredRef.current || endingRef.current || standbyRef.current) return false;
+    const startedAtMs = voiceSessionStartedAtMsRef.current;
+    if (startedAtMs === null) return false;
+    const elapsedMs = Date.now() - startedAtMs;
+    const wrapPhase =
+      (sessionModeRef.current === 'demo' || (sessionModeRef.current != null && maxDurationExplicit)) &&
+      Math.floor(elapsedMs / 60000) >= sessionWrapMinutes;
+    // Student-turn path: the brain is about to be called (busy by definition)
+    // but nothing is being spoken — only live speech blocks the line.
+    const busy = opts.path === 'student-turn'
+      ? productionStateRef.current === 'speaking'
+      : productionStateRef.current === 'speaking' ||
+        brainBusyRef.current ||
+        awaitingDispatchTimerRef.current != null ||
+        studentTypingRef.current;
+    const decision = decideWrapLine({
+      wrapPhase,
+      spoken: wrapLineSpokenRef.current,
+      busy,
+      midUtterance: opts.path === 'student-turn' ? false : perceptionMidUtteranceRef.current,
+      remainingMs: maxDurationExplicit ? sessionMaxMinutes * 60000 - elapsedMs : undefined,
+      floorFreeMs: opts.floorFreeMs,
+    });
+    if (decision !== 'speak') return false;
+    wrapLineSpokenRef.current = true;
+    const line = WRAP_LINE;
+    if (sessionMode !== 'text') {
+      try { speakTextRef.current?.(line, pushTtsScriptForPerception(line)); } catch {}
+    }
+    transcriptRef.current = [
+      ...transcriptRef.current,
+      { id: `tutor-${Date.now()}-wrap`, timestamp: new Date(), role: 'tutor', text: line } as TranscriptEntry,
+    ];
+    onTranscriptUpdate([...transcriptRef.current]);
+    onTrackInteraction?.('message', line, undefined, 'tutor');
+    onDebugEventRef.current?.('wrap_line_spoken', `${opts.path} · ${line}`);
+    return true;
+  };
+  // Fallback: no student turn arrives after the wrap minute (a long tutor
+  // explanation, a silent student). Speaks only once the floor has been free
+  // for WRAP_LINE_FLOOR_FREE_MS, so it never glues itself to the end of the
+  // tutor's own sentence (live embed-1793249649483).
+  useEffect(() => {
+    if (!TUTOR_TIMEBOX_FAREWELL) return;
+    if (sessionWrapMinutes == null) return;
+    if (targetKind === 'diagnostic') return;
+    let lastBusyAt = Date.now();
+    const intervalId = setInterval(() => {
+      if (wrapLineSpokenRef.current || hardStopFiredRef.current || endingRef.current) { clearInterval(intervalId); return; }
+      const busy =
+        productionStateRef.current === 'speaking' ||
+        brainBusyRef.current ||
+        awaitingDispatchTimerRef.current != null ||
+        studentTypingRef.current ||
+        perceptionMidUtteranceRef.current ||
+        standbyRef.current;
+      if (busy) { lastBusyAt = Date.now(); return; }
+      if (speakWrapLineRef.current({ path: 'fallback', floorFreeMs: Date.now() - lastBusyAt })) clearInterval(intervalId);
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [sessionWrapMinutes, targetKind]);
 
   // Toggle listening
   // R40 (session embed-1785808658013): a Start tap that lands while the relay
@@ -26528,7 +26648,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       new Promise<void>((resolve) => setTimeout(resolve, FINAL_COMMIT_MAX_WAIT_MS)),
     ]);
     if (farewell) await waitForFarewell(farewellAt);
-    onEndSession?.();
+    // Demo-polish (2026-10-29): the hard stop ends through this path too, so
+    // its reason ('time_limit') must survive to the host's session_ended.
+    onEndSession?.(opts?.reason);
   };
   // Bounded wait for the host-end goodbye (above). The host gives the embed
   // ~6 s to post session_ended before it unmounts the iframe, and the final

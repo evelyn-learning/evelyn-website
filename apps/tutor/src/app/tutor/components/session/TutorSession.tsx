@@ -18,6 +18,7 @@
  * (onTranscriptUpdate / onWhiteboardCommand / onMilestone / onEndSession).
  */
 
+import type { FullscreenApi } from './HeaderFullscreenButton';
 import { useState, useCallback, useEffect, useMemo, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Script from 'next/script';
@@ -34,8 +35,8 @@ import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
 import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
 import SessionStage, { CaptionTicker, MicMeter, type VoiceState } from './SessionStage';
-import { thinkingCueVisible, thinkingCueLabel } from '@/lib/tutor/voice/thinking-cue';
-import { cannedLanguage, lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
+import { thinkingCueVisible, thinkingCueLabel, thinkingCueLanguage } from '@/lib/tutor/voice/thinking-cue';
+import { lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
 import { AgendaRail } from './AgendaRail';
 import { resolveStartWatchdog, START_WATCHDOG_MS } from './start-tap';
 import { buildRailModel, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
@@ -254,6 +255,8 @@ export interface TutorSessionProps {
   endControlVisible?: boolean;
   /** Embed UI option: tool cluster above the dock instead of at the top of the board. */
   toolsLow?: boolean;
+  /** Embed UI option (demo-polish 2026-10-29): render the board tool cluster at all. */
+  toolCluster?: boolean;
 
   /** Share the parent's RealtimeHandle ref instead of an internal one. The
    *  standalone /tutor page needs this: its auto-start injection, end-session
@@ -317,7 +320,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onPracticeStatsChange,
     humorControl = true, voiceMuteControl = false, paceChip = true, mobileFinish,
     standby = false, videoHost, getLessonNow, onStudentWake, onResumeLesson, getOpeningNote, videoControl,
-    sessionTimer = true, endControlVisible = true, toolsLow = false,
+    sessionTimer = true, endControlVisible = true, toolsLow = false, toolCluster = false,
   } = props;
   // Embed-only (see the prop docs): the retail page can never get it.
   const mobileFinishOn = !!embedded && mobileFinish === true;
@@ -1002,7 +1005,7 @@ export default function TutorSession(props: TutorSessionProps) {
   // Thinking cue (GDI sessions 2026-10-15): large on-stage state while the
   // tutor prepares a reply, in the language the tutor is speaking.
   const thinkingCueText = thinkingCueVisible(thinkingCue, started, voiceState)
-    ? thinkingCueLabel(cannedLanguage(tutorLanguages, lastTutorText(transcript)))
+    ? thinkingCueLabel(thinkingCueLanguage(tutorLanguages, lastTutorText(transcript)))
     : null;
 
   // Agenda round 5: auto-open the Agenda drawer ONCE when its rows first arrive,
@@ -1640,6 +1643,7 @@ export default function TutorSession(props: TutorSessionProps) {
         topic={topic}
         level={level}
         studentName={studentName || undefined}
+        hasOpenQuestion={questionPin != null}
         studentId={studentId}
         embedToken={embedToken}
         socialMemory={socialMemory}
@@ -1803,8 +1807,11 @@ export default function TutorSession(props: TutorSessionProps) {
   const agendaRailVerticalEl = railItems && railItems.length > 0
     ? <AgendaRail items={railItems} orientation="vertical" offPlan={railModel?.offPlan} /> : undefined;
 
+  // Demo-polish (2026-10-29): the stage's fullscreen machinery, for the header button.
+  const [fullscreenApi, setFullscreenApi] = useState<FullscreenApi | null>(null);
   const controlsEl = (
     <SessionControls
+      fullscreen={fullscreenApi}
       sessionId={sessionId}
       startedAtMs={voiceStartedAtMs}
       frozenAtMs={standbySinceMs}
@@ -2111,6 +2118,7 @@ export default function TutorSession(props: TutorSessionProps) {
         <Script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a" strategy="lazyOnload" />
       )}
       <SessionStage
+        onFullscreenApi={setFullscreenApi}
         sessionMode={sessionMode}
         sessionGoal={sessionGoal}
         homeworkProgress={homeworkProgress}
@@ -2134,6 +2142,7 @@ export default function TutorSession(props: TutorSessionProps) {
         agendaRailVertical={agendaRailVerticalEl}
         controls={controlsEl}
         toolsLow={toolsLow}
+        toolCluster={toolCluster}
         headerClock={!sessionTimer ? undefined : (
           <HeaderClock
             startedAtMs={voiceStartedAtMs}

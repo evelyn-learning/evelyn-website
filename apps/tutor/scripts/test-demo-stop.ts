@@ -107,6 +107,22 @@ function main() {
     }
   });
 
+  // -- Demo-polish round 2 (live embed-1793249649483) --------------------------
+  test('wrap: once the client has spoken the wrap line, the brain is told not to repeat it', () => {
+    const out = formatDemoStopBlock({ mode: 'time', budgetMinutes: 20, minutesElapsed: 18, wrapAtMinutes: 18, wrapLineSpoken: true });
+    assert.ok(out.includes('already been told time is short'), out);
+    const before = formatDemoStopBlock({ mode: 'time', budgetMinutes: 20, minutesElapsed: 18, wrapAtMinutes: 18 });
+    assert.ok(!before.includes('already been told'), before);
+  });
+
+  test('wrap: in the last minute a switch request gets "next time", not a new topic', () => {
+    const last = formatDemoStopBlock({ mode: 'time', budgetMinutes: 20, minutesElapsed: 19, wrapAtMinutes: 18 });
+    assert.ok(last.includes('good one for next time'), last);
+    assert.ok(!last.includes('short, concrete taste'), last);
+    const earlier = formatDemoStopBlock({ mode: 'time', budgetMinutes: 20, minutesElapsed: 18, wrapAtMinutes: 18 });
+    assert.ok(earlier.includes('short, concrete taste'), earlier);
+  });
+
   test('time mode: no wrapAtMinutes ⇒ never wraps (untimed-demo behavior unchanged)', () => {
     const out = formatDemoStopBlock({ mode: 'time', budgetMinutes: 30, minutesElapsed: 29 });
     assert.ok(out.includes('You have about 1 of 30 minutes left'), out);

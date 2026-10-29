@@ -69,8 +69,43 @@ export function thinkingCueVisible(enabled: boolean, started: boolean, voiceStat
   return enabled && started && WAITING_STATES.has(voiceState);
 }
 
-export function thinkingCueLabel(lang: 'ja' | undefined): string {
-  return lang === 'ja' ? '考えています…' : 'Thinking…';
+/** On-stage label by teaching language (2026-10-29: the cue goes to every
+ *  tenant). Unknown codes fall back to English. */
+const THINKING_LABELS: Readonly<Record<string, string>> = {
+  en: 'Thinking…',
+  ja: '考えています…',
+  es: 'Pensando…',
+  pt: 'Pensando…',
+  fr: 'Je réfléchis…',
+  de: 'Ich überlege…',
+  it: 'Sto pensando…',
+  zh: '思考中…',
+  ko: '생각 중…',
+  hi: 'सोच रहा हूँ…',
+};
+export function thinkingCueLabel(lang: string | undefined): string {
+  return (lang && THINKING_LABELS[lang.toLowerCase()]) || THINKING_LABELS.en;
+}
+
+const JAPANESE_SCRIPT_RE = /[\u3040-\u30ff\u4e00-\u9fff]/;
+
+/** Which label language to show: a session taught in one non-English
+ *  language uses it; a bilingual Japanese session follows the tutor's last
+ *  line (English or Japanese, as GDI had it); otherwise English. */
+export function thinkingCueLanguage(languages: readonly string[] | null | undefined, lastTutorText: string | undefined): string | undefined {
+  if (!languages || languages.length === 0) return undefined;
+  const codes = languages.map((l) => l.toLowerCase().split('-')[0]);
+  if (codes.includes('ja') && lastTutorText && JAPANESE_SCRIPT_RE.test(lastTutorText)) return 'ja';
+  const nonEnglish = codes.filter((c) => c !== 'en');
+  if (!codes.includes('en') && nonEnglish.length === 1) return nonEnglish[0];
+  return undefined;
+}
+
+/** The `thinking_cue` claim with the 2026-10-29 default: absent ⇒ ON; an
+ *  explicit false / "off" / 0 ⇒ off (a host that draws its own wait state). */
+export function resolveThinkingCueClaim(raw: unknown): boolean {
+  if (raw === undefined || raw === null) return true;
+  return parseThinkingCue(raw);
 }
 
 /** `thinking_cue` embed claim: true / "true" / 1 / "1" / "on" ⇒ on; anything else off. */

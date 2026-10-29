@@ -472,5 +472,18 @@ const CEILING_MS = IDLE_NUDGE_FIRST_MS + IDLE_NUDGE_ONSET_MAX_DEFER_MS;
   check('an hour in a hidden tab logs 60 rows', rows === 60, rows);
 }
 
+// Demo-polish (2026-10-29, live embed-1793240679836): two nudges offered "a
+// hint" while the only open question was "physics, or something else?" — no
+// problem on the table to hint at. With no question pinned the v2 directive
+// re-offers the choice instead; v1 is frozen.
+{
+  const NO_PIN = idleNudgeDirective({ v2: true, hasOpenQuestion: false });
+  check('v2 default keeps the hint offer', idleNudgeDirective({ v2: true }).includes('more time, or a hint'));
+  check('v2 with a pin keeps the hint offer', idleNudgeDirective({ v2: true, hasOpenQuestion: true }).includes('more time, or a hint'));
+  check('v2 without a pin re-offers the choice', NO_PIN.includes('There is no problem on the table to hint at. Re-offer the choice or next step you last asked about, in different words, in one short sentence.'));
+  check('v2 without a pin has no hint offer', !NO_PIN.includes('more time, or a hint') && !NO_PIN.includes('A hint must NARROW'));
+  check('v1 ignores the flag', idleNudgeDirective({ v2: false, hasOpenQuestion: false }) === idleNudgeDirective({ v2: false }));
+}
+
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('test:idle-nudge PASS');
