@@ -215,17 +215,19 @@ function locateWords(text: string, words: string): [number, number] | null {
   return m ? [m.index, m.index + m[0].length] : null;
 }
 
-/** 1-based index of the spoken sentence (the turn's narration) that says
- *  `sentence` — the render-sync anchor for an auto card; undefined when none
- *  does (the card then anchors to the live sentence count). Falls back to the
- *  sentence holding its first three words (a splitter that cut the quote). */
+/** Render-sync anchor for an auto card: the number of spoken sentences that
+ *  PRECEDE the one saying `sentence` (render-sync paints a command once that
+ *  many sentences have played, i.e. as the card's own sentence starts — "the
+ *  tutor writes as it speaks"). undefined when no sentence says it (the card
+ *  then anchors to the live sentence count). Falls back to the sentence
+ *  holding its first three words (a splitter that cut the quote). */
 export function sentenceAnchorIndex(narration: readonly string[], sentence: string): number | undefined {
   let i = narration.findIndex((n) => sentenceContains(n, sentence));
   if (i < 0) {
     const head = tokens(sentence).slice(0, 3).join(' ');
     if (head) i = narration.findIndex((n) => ` ${norm(n)} `.includes(` ${head} `));
   }
-  return i >= 0 ? i + 1 : undefined;
+  return i >= 0 ? i : undefined;
 }
 
 /** True when `text` contains `sentence` word for word (case, punctuation and

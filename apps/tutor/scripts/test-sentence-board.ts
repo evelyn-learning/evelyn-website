@@ -159,8 +159,8 @@ test('B: 1-letter card words never count toward the cap', () => {
 });
 test('A: anchor = the spoken sentence that says the card (1-based), head fallback, else undefined', () => {
   const narration = ['Close.', 'Can you say the whole sentence once more: "I haven\'t taken leave from work"?'];
-  assert.equal(sentenceAnchorIndex(narration, "I haven't taken leave from work"), 2);
-  assert.equal(sentenceAnchorIndex(['Try: "I have been a sales', 'manager for four years."'], 'I have been a sales manager for four years.'), 1);
+  assert.equal(sentenceAnchorIndex(narration, "I haven't taken leave from work"), 1, 'one sentence precedes the one that says it');
+  assert.equal(sentenceAnchorIndex(['Try: "I have been a sales', 'manager for four years."'], 'I have been a sales manager for four years.'), 0, 'said in the first sentence: paints at once');
   assert.equal(sentenceAnchorIndex(['Hello there.'], 'I work in sales.'), undefined);
 });
 test('A: the auto card goes through handleWhiteboardCommand with its anchor, never a raw paint', () => {
