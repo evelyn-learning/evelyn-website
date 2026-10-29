@@ -14,6 +14,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock, LogOut, Camera, Upload, X, Download, GripVertical } from 'lucide-react';
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
+import { HeaderFullscreenButton, type FullscreenApi } from '@/app/tutor/components/session/HeaderFullscreenButton';
+import { TUTOR_HEADER_FULLSCREEN } from '@/lib/tutor/orchestrator/flags';
 
 interface WhiteboardCommandData {
   action: string;
@@ -40,6 +42,9 @@ interface SessionControlsProps {
   /** The host draws the clock itself (embed option `sessionTimer` off). */
   hideTimer?: boolean;
   maxDuration: number; // minutes
+  /** Demo-polish (2026-10-29): the stage's fullscreen machinery, rendered
+   *  here as a labelled Full screen button. null/undefined ⇒ no button. */
+  fullscreen?: FullscreenApi | null;
   onEndSession: () => void;
   onUploadHomework: (imageData: string, mimeType: string) => void;
   transcript?: TranscriptEntry[];
@@ -151,6 +156,7 @@ export function SessionControls({
   frozenAtMs,
   hideTimer,
   maxDuration,
+  fullscreen,
   onEndSession,
   onUploadHomework,
   transcript = [],
@@ -329,6 +335,8 @@ export function SessionControls({
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {/* Full screen (demo-polish 2026-10-29) — replaces the board tool cluster's hidden button. */}
+          {TUTOR_HEADER_FULLSCREEN && <HeaderFullscreenButton api={fullscreen} />}
           {/* Export PDF button */}
           {transcript.length > 0 && (
             <button

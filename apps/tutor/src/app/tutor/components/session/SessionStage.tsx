@@ -19,6 +19,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { TUTOR_HEADER_FULLSCREEN } from '@/lib/tutor/orchestrator/flags';
+import { HeaderFullscreenButton, type FullscreenApi } from './HeaderFullscreenButton';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2, Minimize2,
   MessageSquareText, X, Target, Upload, ArrowDown, Wrench, ListChecks, Loader2,
@@ -92,6 +93,10 @@ export interface SessionStageProps {
    *  replaces it; GAC / GameClass partner rows keep it. Ignored (cluster
    *  always shown) when NEXT_PUBLIC_TUTOR_HEADER_FULLSCREEN=off. */
   toolCluster?: boolean;
+  /** Demo-polish (2026-10-29): receives the stage's fullscreen machinery
+   *  (native API or iframe expand) so the header can draw a Full screen
+   *  button; called again whenever availability / active state changes. */
+  onFullscreenApi?: (api: FullscreenApi | null) => void;
   /** R1 (2026-07-14): End/Pause moved OUT of the dock into the header's
    *  right cluster — session-level control, conventional spot, and far from
    *  the textbox where accidental taps happen. Composed by TutorSession
@@ -272,7 +277,7 @@ const TITLE_REVEAL_MS = 4000;
 export default function SessionStage(props: SessionStageProps) {
   const {
     sessionMode = 'voice',
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, toolsLow = false, toolCluster = false, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, toolsLow = false, toolCluster = false, onFullscreenApi, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
     voiceState, thinkingCueText = null, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
@@ -1029,6 +1034,20 @@ export default function SessionStage(props: SessionStageProps) {
       }
     } catch { /* unsupported — button is hidden on those devices anyway */ }
   };
+  // Demo-polish (2026-10-29): one view over the two fullscreen paths for the
+  // header button (SessionControls at sm+, the compact phone slot here).
+  const headerFsApi: FullscreenApi = {
+    available: canFullscreen || canExpand,
+    active: isFullscreen || expanded,
+    toggle: canFullscreen ? toggleFullscreen : (expanded ? requestCollapse : requestExpand),
+  };
+  const onFullscreenApiRef = useRef(onFullscreenApi);
+  onFullscreenApiRef.current = onFullscreenApi;
+  useEffect(() => {
+    onFullscreenApiRef.current?.({ available: canFullscreen || canExpand, active: isFullscreen || expanded, toggle: canFullscreen ? toggleFullscreen : (expanded ? requestCollapse : requestExpand) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canFullscreen, canExpand, isFullscreen, expanded]);
+  useEffect(() => () => { onFullscreenApiRef.current?.(null); }, []);
 
 
   // Board page switcher. `inline` (GreenApple round 6, text md+): slimmed
@@ -1654,6 +1673,9 @@ export default function SessionStage(props: SessionStageProps) {
               {/* Round-5: mobile-only clock. Desktop keeps the richer
                   `controls` timer above; showing both would double it. */}
               {headerClock && <span className="sm:hidden">{headerClock}</span>}
+              {/* Demo-polish: the sm+ `controls` row carries the labelled Full screen
+                  button; phones get the compact one here, beside the clock. */}
+              {TUTOR_HEADER_FULLSCREEN && <span className="sm:hidden"><HeaderFullscreenButton api={headerFsApi} compact /></span>}
               {adaptiveMenu}
               {/* hidden below md (owner mobile test, re-review 2026-09-19):
                   the phone header is already tight with the transcript

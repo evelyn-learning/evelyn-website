@@ -18,6 +18,7 @@
  * (onTranscriptUpdate / onWhiteboardCommand / onMilestone / onEndSession).
  */
 
+import type { FullscreenApi } from './HeaderFullscreenButton';
 import { useState, useCallback, useEffect, useMemo, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Script from 'next/script';
@@ -1802,8 +1803,11 @@ export default function TutorSession(props: TutorSessionProps) {
   const agendaRailVerticalEl = railItems && railItems.length > 0
     ? <AgendaRail items={railItems} orientation="vertical" offPlan={railModel?.offPlan} /> : undefined;
 
+  // Demo-polish (2026-10-29): the stage's fullscreen machinery, for the header button.
+  const [fullscreenApi, setFullscreenApi] = useState<FullscreenApi | null>(null);
   const controlsEl = (
     <SessionControls
+      fullscreen={fullscreenApi}
       sessionId={sessionId}
       startedAtMs={voiceStartedAtMs}
       frozenAtMs={standbySinceMs}
@@ -2110,6 +2114,7 @@ export default function TutorSession(props: TutorSessionProps) {
         <Script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a" strategy="lazyOnload" />
       )}
       <SessionStage
+        onFullscreenApi={setFullscreenApi}
         sessionMode={sessionMode}
         sessionGoal={sessionGoal}
         homeworkProgress={homeworkProgress}
