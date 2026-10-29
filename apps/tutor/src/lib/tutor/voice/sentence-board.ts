@@ -151,6 +151,40 @@ export function emphasiseSpokenCorrections(spokenSentence: string, studentLast: 
       best = { start, end: start + inner.length, inner, emphasis: q.emphasis, len };
     }
   }
-  if (!best) return spokenSentence;
+  if (!best) {
+    // A sentence splitter that cut at the period inside the quotes leaves an
+    // unclosed trailing quote ('… say: "I haven't taken leave from work.').
+    const quoteChars = (spokenSentence.match(/"/g) ?? []).length;
+    const open = quoteChars % 2 === 1 ? spokenSentence.lastIndexOf('"') : spokenSentence.lastIndexOf('“') > spokenSentence.lastIndexOf('”') ? spokenSentence.lastIndexOf('“') : -1;
+    if (open < 0) return spokenSentence;
+    const inner = spokenSentence.slice(open + 1);
+    if (!qualifyingSpan(inner)) return spokenSentence;
+    const q = classifyQuotedSentence(inner.trim(), studentLast);
+    if (q.kind !== 'correction' || q.emphasis.length === 0) return spokenSentence;
+    return spokenSentence.slice(0, open + 1) + applySpokenEmphasis(inner, q.emphasis);
+  }
   return spokenSentence.slice(0, best.start) + applySpokenEmphasis(best.inner, best.emphasis) + spokenSentence.slice(best.end);
+}
+
+/** True when `text` contains `sentence` word for word (case, punctuation and
+ *  spacing ignored) — matches a brain show_sentence card to the spoken
+ *  sentence that says it. */
+export function sentenceContains(text: string, sentence: string): boolean {
+  const s = norm(sentence ?? '');
+  return !!s && ` ${norm(text ?? '')} `.includes(` ${s} `);
+}
+
+/** True when the current page (everything after the last newPage / clear)
+ *  already shows `sentence` as a showSentence card or a handwrite line
+ *  (case and punctuation ignored). */
+export function sentenceOnCurrentPage(commands: ReadonlyArray<{ action: string } & Record<string, unknown>>, sentence: string): boolean {
+  const target = norm(sentence ?? '');
+  if (!target) return false;
+  for (let i = commands.length - 1; i >= 0; i--) {
+    const c = commands[i];
+    if (c.action === 'newPage' || c.action === 'clear') return false;
+    const text = c.action === 'showSentence' ? c.sentence : c.action === 'handwrite' ? c.text : null;
+    if (typeof text === 'string' && norm(text) === target) return true;
+  }
+  return false;
 }

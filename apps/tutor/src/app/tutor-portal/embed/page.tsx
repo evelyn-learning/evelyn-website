@@ -258,6 +258,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'bare_praise_ending_advisory', 'affirmative_no_advance_advisory',
   'disclaimer_verbatim_reuse_advisory', 'socratic_bulldozing',
   'try_yourself', 'turn_cap_flagged', 'required_phrase_missing',
+  //   language lessons: the client put a quoted sentence on the board itself:
+  'sentence_board_auto',
   //   the dedup family (R49b's retry-context bug lived here):
   'dedup_',
   //   learner-model writes:

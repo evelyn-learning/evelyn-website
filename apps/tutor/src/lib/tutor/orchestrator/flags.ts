@@ -912,3 +912,8 @@ export const TUTOR_FIXED_SCRIPT_AUTO_ADVANCE = process.env.NEXT_PUBLIC_TUTOR_FIX
 /** Every validator retry that redoes killed speech carries RETRY_PREAMBLE
  *  (voice/retry-preamble.ts) so the redo never says "this time"/"again". */
 export const TUTOR_RETRY_PREAMBLE = process.env.NEXT_PUBLIC_TUTOR_RETRY_PREAMBLE !== 'off';
+/** Language lessons (GDI trial run 1, 2026-10-29: 3 board sentences in 29
+ *  turns): a turn that quoted a model / corrected sentence and rendered nothing
+ *  gets the sentence card from the client (voice/sentence-board.ts), and the
+ *  corrected words are uppercased in the TTS string only (Cartesia stress). */
+export const TUTOR_SENTENCE_BOARD = process.env.NEXT_PUBLIC_TUTOR_SENTENCE_BOARD !== 'off';

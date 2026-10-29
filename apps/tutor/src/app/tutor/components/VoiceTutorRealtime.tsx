@@ -10,7 +10,8 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD } from '@/lib/tutor/orchestrator/flags';
+import { planSentenceBoard, emphasiseSpokenCorrections, applySpokenEmphasis, sentenceContains, sentenceOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
@@ -4782,6 +4783,22 @@ export function VoiceTutorRealtime({
   // page a referenced command sits on. Kept in the component (rather than
   // borrowed from the parent) so lookup is synchronous.
   const whiteboardCommandsRef = useRef<WhiteboardCommand[]>([]);
+  // Sentence cards + spoken stress (sentence-board.ts, TUTOR_SENTENCE_BOARD):
+  // a language-teaching session = the bilingual prompt clause's predicate or
+  // the languages subject. `studentLast` = the latest real student line (the
+  // one the current turn answers); `cards` = this turn's brain show_sentence
+  // cards with emphasis, so the sentence that says them is stressed too.
+  const languageSessionRef = useRef(false);
+  languageSessionRef.current = sessionAllowsNonLatin(tutorLanguages) || subject === 'languages';
+  const sentenceStressRef = useRef<{ studentLast: string | null; cards: Array<{ sentence: string; emphasis: string[] }> }>({ studentLast: null, cards: [] });
+  /** The string sent to TTS only — chat, transcript and board keep the display text. */
+  const ttsTextTransform = useCallback((spoken: string): string => {
+    if (!TUTOR_SENTENCE_BOARD || !languageSessionRef.current) return spoken;
+    const st = sentenceStressRef.current;
+    let out = emphasiseSpokenCorrections(spoken, st.studentLast);
+    for (const c of st.cards) if (sentenceContains(out, c.sentence)) out = applySpokenEmphasis(out, c.emphasis);
+    return out;
+  }, []);
   rearmOpenerFallbackOnlyRef.current = (why: string) => {
     if (openerFallbackOnlyRef.current) return;
     const fallbackOnly = boardFallbackOnlyAfterRollback({
@@ -10103,6 +10120,11 @@ export function VoiceTutorRealtime({
     // through the parent's state.
     whiteboardCommandsRef.current = [...whiteboardCommandsRef.current, ...processed];
     whiteboardCommandCountRef.current += processed.length;
+    for (const c of processed) {
+      if (c.action === 'showSentence' && Array.isArray(c.emphasis) && c.emphasis.length) {
+        sentenceStressRef.current.cards.push({ sentence: c.sentence, emphasis: c.emphasis });
+      }
+    }
     console.log('[VoiceTutorRealtime] Whiteboard command count now:', whiteboardCommandCountRef.current);
 
     // Attach validated commands to the most recent tutor transcript entry
@@ -11627,6 +11649,14 @@ export function VoiceTutorRealtime({
     }
     newPageThisTurnRef.current = false;
     brainEmittedNewPageThisTurnRef.current = false;
+    // Sentence board: this turn answers `transcript` (a bracketed synthetic
+    // turn — kickoff, nudge, system note — keeps the last real student line).
+    if (!opts?.prefetchOnly) {
+      sentenceStressRef.current = {
+        studentLast: /^\s*\[/.test(transcript) ? sentenceStressRef.current.studentLast : transcript,
+        cards: [],
+      };
+    }
     // R47 Task 1: fresh per-turn objective-credit slot. A kill site below
     // may set this DURING this turn's retry loop; must not carry a signal
     // stashed by a PRIOR turn (or a prior turn's attempt) into this one.
@@ -19663,6 +19693,32 @@ export function VoiceTutorRealtime({
             );
           }
         }
+        // Sentence board (2026-10-29, GDI trial run 1: the brain boarded 3
+        // model/corrected sentences in 29 turns although the prompt orders it
+        // every time). Language session + a turn that rendered nothing + a
+        // quoted sentence ⇒ the client puts the card up itself, through the
+        // same paint path as the opener fallback line. Never on the opening
+        // turn; never twice on one page.
+        if (TUTOR_SENTENCE_BOARD && languageSessionRef.current && !openingTurnPendingRef.current) {
+          const cards = planSentenceBoard({
+            tutorText: fullText,
+            studentLast: sentenceStressRef.current.studentLast,
+            renderedThisTurn: totalToolNamesSeen.some((n) => RENDER_TOOLS.has(n)),
+          });
+          const stamp = Date.now();
+          cards.forEach((card, i) => {
+            if (sentenceOnCurrentPage(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, card.sentence)) return;
+            const cmd = {
+              action: 'showSentence',
+              sentence: card.sentence,
+              ...(card.emphasis.length ? { emphasis: card.emphasis } : {}),
+              id: `sentence-auto-${stamp}-${i}`,
+            } as WhiteboardCommand;
+            onWhiteboardCommand([cmd]);
+            whiteboardCommandsRef.current = [...whiteboardCommandsRef.current, cmd];
+            onDebugEvent?.('sentence_board_auto', `kind=${card.kind} emphasis=[${card.emphasis.join(', ')}] "${card.sentence}"`);
+          });
+        }
         // R49b: the CONTENT companion to the presence check above. A render
         // tool firing is not the same as the problem reaching the board —
         // portal-2d53e403's opener called show_number_line with a single
@@ -22280,6 +22336,7 @@ export function VoiceTutorRealtime({
           ...(speechRate !== undefined ? { speechRate } : {}),
           speakingRate,
           studentName,
+          ttsTextTransform,
         }
       : undefined,
     onTranscriptUpdate: handleTranscriptUpdate,

@@ -9,6 +9,7 @@ import { strict as assert } from 'node:assert';
 import {
   extractQuotedSentences, classifyQuotedSentence, planSentenceBoard,
   applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
+  sentenceContains, sentenceOnCurrentPage,
 } from '../src/lib/tutor/voice/sentence-board';
 
 let failed = 0;
@@ -90,9 +91,32 @@ test('emphasiseSpokenCorrections: only the long quoted span changes (MY), rest b
   assert.equal(out, GOLF_TUTOR.replace('with my manager', 'with MY manager'));
   assert.equal(out.length, GOLF_TUTOR.length);
 });
+test('emphasiseSpokenCorrections: a quote left unclosed by the sentence splitter still gets stress', () => {
+  assert.equal(emphasiseSpokenCorrections(`Can you say the whole sentence once more: "I haven't taken leave from work.`, LEAVE_STUDENT),
+    `Can you say the whole sentence once more: "I haven't TAKEN leave from work.`);
+  assert.equal(emphasiseSpokenCorrections(`" Now you try it.`, LEAVE_STUDENT), `" Now you try it.`);
+});
 test('emphasiseSpokenCorrections: model lines and missing student line untouched', () => {
   assert.equal(emphasiseSpokenCorrections(YEARS_TUTOR, YEARS_STUDENT), YEARS_TUTOR);
   assert.equal(emphasiseSpokenCorrections(GOLF_TUTOR, null), GOLF_TUTOR);
+});
+
+// ── helpers for the VoiceTutorRealtime wiring ─────────────────────────────
+test('sentenceContains: word-for-word, case/punctuation ignored, not mid-word', () => {
+  assert.equal(sentenceContains('Say it: "I work in sales." Go on.', 'i work in sales'), true);
+  assert.equal(sentenceContains('I work in salesmanship', 'I work in sales'), false);
+  assert.equal(sentenceContains('anything', ''), false);
+});
+test('sentenceOnCurrentPage: only after the last newPage/clear; showSentence + handwrite', () => {
+  const cmds = [
+    { action: 'showSentence', sentence: 'I work in sales.' },
+    { action: 'newPage', title: 'Next' },
+    { action: 'handwrite', text: "I haven't taken leave from work" },
+    { action: 'showEquation', latex: 'x' },
+  ];
+  assert.equal(sentenceOnCurrentPage(cmds, "i haven't taken leave from work."), true);
+  assert.equal(sentenceOnCurrentPage(cmds, 'I work in sales.'), false);
+  assert.equal(sentenceOnCurrentPage([{ action: 'showSentence', sentence: 'I work in sales.' }], 'I WORK in sales'), true);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

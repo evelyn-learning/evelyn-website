@@ -357,6 +357,10 @@ export interface RealtimeConfig {
      *  Present ⇒ each sentence is synthesized in the language of its script
      *  (src/lib/tutor/voice/tts-language.ts). */
     tutorLanguages?: string[];
+    /** Sentence board (2026-10-29): rewrites a sentence for Cartesia TTS ONLY
+     *  (corrected words uppercased = stressed). Captions, chat and the board
+     *  keep the display text. Absent ⇒ every TTS request unchanged. */
+    ttsTextTransform?: (sentence: string) => string;
     /** Tutor speaking rate → Cartesia generation_config.speed. Absent ⇒ unchanged. */
     speechRate?: number;
     /** Task W4: per-session "Speak slower" toggle, independent of the
@@ -1066,7 +1070,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     };
     // Same rewrite the HTTP route applies server-side (rounds 12–24
     // pronunciation rules) — the WS transport sends transcripts verbatim.
-    const spoken = rewriteForTTS(trimmed, { studentName: studentNameRef.current });
+    const spoken = rewriteForTTS(cartesiaText(trimmed), { studentName: studentNameRef.current });
     void sonicWS
       .synthesize(spoken, {
         contextId,
@@ -1167,6 +1171,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     speechRateRef.current = relayMode?.speechRate;
   }, [relayMode?.speechRate]);
   const tutorLanguagesRef = useRef<string[] | undefined>(relayMode?.tutorLanguages);
+  // Read at synthesis time; the caller's callback is stable, the ref keeps it current anyway.
+  const ttsTextTransformRef = useRef<((sentence: string) => string) | undefined>(relayMode?.ttsTextTransform);
+  ttsTextTransformRef.current = relayMode?.ttsTextTransform;
+  /** The Cartesia request text for a display sentence (see ttsTextTransform). */
+  const cartesiaText = (trimmed: string): string => {
+    const f = ttsTextTransformRef.current;
+    if (!f) return trimmed;
+    try { return f(trimmed) || trimmed; } catch { return trimmed; }
+  };
   useEffect(() => {
     tutorLanguagesRef.current = relayMode?.tutorLanguages;
   }, [relayMode?.tutorLanguages]);
@@ -3184,7 +3197,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // synthesized at the OLD rate from cache. ttsCacheKey below is the single
   // place both fetchTTSPromise and its external consumer (below) compute
   // the key, so they can never drift apart.
-  const ttsCacheKey = useCallback((text: string) => `${speakingRateRef.current}::${text}`, []);
+  // The Cartesia text (sentence-board stress) is part of the key: the same
+  // display sentence stressed differently on another turn is another audio.
+  const ttsCacheKey = useCallback((text: string) => `${speakingRateRef.current}::${ttsProviderRef.current === 'cartesia' ? cartesiaText(text) : text}`, []);
   const fetchTTSPromise = useCallback((trimmed: string): Promise<Float32Array | null> => {
     const cache = ttsPrefetchCacheRef.current;
     const cacheKey = ttsCacheKey(trimmed);
@@ -3232,7 +3247,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                   : (useCartesia ? voiceSpeed : undefined);
       const language = useCartesia ? ttsLanguageFor(trimmed, tutorLanguagesRef.current) : undefined;
       const body = useCartesia
-        ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}), ...(speechRateRef.current !== undefined ? { rate: speechRateRef.current } : {}), ...(language ? { language } : {}) }
+        ? { text: cartesiaText(trimmed), voiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}), ...(speechRateRef.current !== undefined ? { rate: speechRateRef.current } : {}), ...(language ? { language } : {}) }
         : { text: trimmed, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}) };
       // Bounded retry (2026-07-15 incident): a single mid-session transient
       // (ERR_HTTP2_PROTOCOL_ERROR → "Failed to fetch") killed a sentence
@@ -3332,7 +3347,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: trimmed,
+          text: cartesiaText(trimmed),
           voiceId: cartesiaVoiceIdRef.current,
           studentName: studentNameRef.current,
           ...(speed !== undefined ? { speed } : {}),
