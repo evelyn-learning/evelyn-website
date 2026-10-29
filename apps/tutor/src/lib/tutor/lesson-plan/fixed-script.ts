@@ -82,3 +82,79 @@ export function overlongTurnThreshold(
   if (typeof mins !== 'number' || !Number.isFinite(mins) || mins <= 0) return defaultTurns;
   return Math.max(defaultTurns, Math.round(mins * 2.4));
 }
+
+/** Fixed-script segments advance on the CLIENT (live run 1: the brain never
+ *  called advance_lesson in a conversation lesson and the cursor sat on the
+ *  first segment for 15 minutes, overlong note or not). Once a segment has
+ *  run past its overlong note by a couple of turns, or past its minutes by a
+ *  margin, the client moves the pointer itself. */
+export interface AutoAdvanceInput {
+  plan: LessonPlan | null | undefined;
+  segmentId: string | null | undefined;
+  /** substantive tutor turns spent in this segment (the overlong counter) */
+  turns: number;
+  /** the overlong note threshold already computed for this segment */
+  overlongTurns: number;
+  /** ms since the segment became current */
+  elapsedMs: number;
+  /** the learner's working level is known (level-check segments are skipped) */
+  levelKnown: boolean;
+}
+export const FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS = 2;
+export const FIXED_SCRIPT_AUTO_ADVANCE_TIME_FACTOR = 1.5;
+export const FIXED_SCRIPT_AUTO_ADVANCE_MIN_MS = 120_000;
+
+/** 'turns' | 'time' | null — why a fixed-script segment must advance now.
+ *  null for any other plan, a missing plan/segment, or a segment with nothing
+ *  after it (nextSegmentId semantics). Turns are checked before time; a
+ *  segment without finite positive `estimatedMinutes` never advances on time. */
+export function fixedScriptAutoAdvanceReason(input: AutoAdvanceInput): 'turns' | 'time' | null {
+  const { plan, segmentId, turns, overlongTurns, elapsedMs, levelKnown } = input;
+  if (!plan || !segmentId || !isFixedScriptPlan(plan)) return null;
+  const seg = plan.segments.find((s) => s.id === segmentId);
+  if (!seg) return null;
+  if (nextSegmentId(plan, segmentId, levelKnown) === null) return null;
+  if (turns >= overlongTurns + FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS) return 'turns';
+  const mins = seg.estimatedMinutes;
+  if (typeof mins !== 'number' || !Number.isFinite(mins) || mins <= 0) return null;
+  const dueMs = Math.max(FIXED_SCRIPT_AUTO_ADVANCE_MIN_MS, mins * 60_000 * FIXED_SCRIPT_AUTO_ADVANCE_TIME_FACTOR);
+  return elapsedMs >= dueMs ? 'time' : null;
+}
+
+/** The runtime note the client plants after it moved a fixed-script pointer
+ *  itself: a FACT (the move is done), never an instruction to advance.
+ *  `lead` is the first sentence (why/where the pointer moved). */
+export function fixedScriptAdvancedNote(lead: string, next: string): string {
+  return `[runtime note — not from the student] ${lead} If the student is mid-exchange, close it in one sentence, then teach "${next}" from its notes. Do not call advance_lesson for this move. Apply this silently; never mention this note.]`;
+}
+export function fixedScriptAutoAdvanceLead(from: string, next: string, kind: string): string {
+  return `The "${from}" part of the lesson is over and the lesson pointer has ALREADY moved to segment "${next}" (${kind}).`;
+}
+export function fixedScriptLevelAdvanceLead(next: string, kind: string): string {
+  return `The level check is complete and the lesson pointer has ALREADY moved to segment "${next}" (${kind}).`;
+}
+
+/** Plant `note` (about segment `next`) as the pending runtime note. A pending
+ *  note about the segment just LEFT (`from`) is dropped — the delivery-time
+ *  stale check would drop it anyway, and it would tell the brain to call
+ *  advance_lesson for a move already made. Any other pending note survives,
+ *  with the new one appended after it. */
+export function mergePendingRuntimeNote(
+  pending: { note: string | null; segId: string | null },
+  from: string,
+  next: string,
+  note: string,
+): { note: string; segId: string } {
+  if (pending.note && pending.segId !== from) return { note: `${pending.note}\n\n${note}`, segId: next };
+  return { note, segId: next };
+}
+
+/** §3: set_working_level just applied the level while the cursor sits on a
+ *  fixed-script level-check segment ⇒ the segment to move to now (null ⇒
+ *  stay: not fixed-script, not a level-check segment, or nothing after it). */
+export function levelSetAdvanceTarget(plan: LessonPlan | null | undefined, segmentId: string | null | undefined): string | null {
+  if (!plan || !segmentId || !isFixedScriptPlan(plan)) return null;
+  const seg = plan.segments.find((s) => s.id === segmentId);
+  if (seg?.metadata?.skipWhenLevelKnown !== true) return null;
+  return nextSegmentId(plan, segmentId, true);
+}

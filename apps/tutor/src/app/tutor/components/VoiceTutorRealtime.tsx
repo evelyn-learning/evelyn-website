@@ -415,14 +415,17 @@ import {
   OPENER_PREFETCH_DELAY_MS,
   TUTOR_WORKING_LEVEL,
   TUTOR_PRONUNCIATION_ASSESS,
+  TUTOR_FIXED_SCRIPT_AUTO_ADVANCE,
+  TUTOR_RETRY_PREAMBLE,
 } from '@/lib/tutor/orchestrator/flags';
+import { withRetryPreamble } from '@/lib/tutor/voice/retry-preamble';
 import {
   ClipCapture, CLIP_MAX_MS, CLIP_SAMPLE_RATE, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_NO_SPEECH_TIMEOUT_MS,
   PRONUNCIATION_NOTE_WAIT_MS, PRONUNCIATION_UNAVAILABLE_NOTE, PRONUNCIATION_ARM_MAX_MS, pronunciationNoteForBrain, pcm16ToBase64,
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget } from '@/lib/tutor/lesson-plan/fixed-script';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -3982,7 +3985,8 @@ export function VoiceTutorRealtime({
   // tutor's own misconception question in portal-63ee9f2c).
   const openTutorQuestionRef = useRef<number | null>(null);
   // Substantive tutor turns since the segment cursor last moved.
-  const turnsInSegmentRef = useRef<{ segId: string; turns: number; noted: boolean }>({ segId: '', turns: 0, noted: false });
+  // `startedAt`: when the segment became current (fixed-script auto-advance on time).
+  const turnsInSegmentRef = useRef<{ segId: string; turns: number; noted: boolean; startedAt: number }>({ segId: '', turns: 0, noted: false, startedAt: Date.now() });
   // Runtime pedagogy note for the next brain turn (same prepend convention as
   // the cadence / board-anchor / judge notes; own ref, own concern).
   const pendingRuntimeNoteRef = useRef<string | null>(null);
@@ -5536,7 +5540,7 @@ export function VoiceTutorRealtime({
     // Live check 6 nets: remember the advance for the stream-end auto-card
     // and restart the per-segment turn counter.
     lastAdvanceRef.current = { segId: next, atMs: Date.now() };
-    turnsInSegmentRef.current = { segId: next, turns: 0, noted: false };
+    turnsInSegmentRef.current = { segId: next, turns: 0, noted: false, startedAt: Date.now() };
     // Auto-mark "visited" segments: every segment from the outgoing
     // index (inclusive) up to the target index (exclusive) is added to
     // completedSegmentIdsRef. Keeps the progress strip advancing even
@@ -7768,6 +7772,27 @@ export function VoiceTutorRealtime({
           workingLevelSaveRef.current = { level: decision.level, planId: lessonPlanId ?? '', sent: false };
           scheduleProfileFlush();
           onDebugEvent?.('working_level_set', `${decision.level} evidence=${(wl.evidence ?? '').slice(0, 100)}`);
+          // GDI trial live run 1: the level is set ⇒ the level-check segment
+          // is done. Move the pointer now (the brain did not advance on its
+          // own) and tell the brain as a fact. A {to:"next"} later in this
+          // same batch is then satisfied by this move (inferred-advance guard).
+          const lvPlan = lessonPlanRef.current;
+          const lvFrom = currentSegmentIdRef.current;
+          const lvNext = TUTOR_FIXED_SCRIPT_AUTO_ADVANCE ? levelSetAdvanceTarget(lvPlan, lvFrom) : null;
+          if (lvPlan && lvFrom && lvNext) {
+            applyResolvedAdvance(lvPlan, lvFrom, lvNext);
+            inferredAdvanceThisTurnRef.current = lvNext;
+            const lvKind = lvPlan.segments.find((sg) => sg.id === lvNext)?.kind ?? 'segment';
+            const merged = mergePendingRuntimeNote(
+              { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
+              lvFrom, lvNext,
+              fixedScriptAdvancedNote(fixedScriptLevelAdvanceLead(lvNext, lvKind), lvNext),
+            );
+            pendingRuntimeNoteRef.current = merged.note;
+            pendingRuntimeNoteSegRef.current = merged.segId;
+            runtimeNoteHeldTurnsRef.current = 0;
+            onDebugEvent?.('fixed_script_level_advance', `"${lvFrom}" → "${lvNext}"`);
+          }
         } else {
           onDebugEvent?.('working_level_refused', `requested=${String(wl.level).slice(0, 20)} current=${workingLevelRef.current?.level ?? 'none'}`);
         }
@@ -7998,7 +8023,7 @@ export function VoiceTutorRealtime({
               setActiveSegmentId(hwSeg);
               segmentBeforeFreeRef.current = '';
               catalogRef.current.setCurrentSegment(hwSeg);
-              turnsInSegmentRef.current = { segId: hwSeg, turns: 0, noted: false };
+              turnsInSegmentRef.current = { segId: hwSeg, turns: 0, noted: false, startedAt: Date.now() };
             } else {
               if (hwAdvance?.action === 'allow_skipped') {
                 onDebugEvent?.('advance_homework_guard', `skipped by student request — "${hwAdvance.homeworkSegId}" left incomplete, cursor → "${next}"`);
@@ -19113,6 +19138,11 @@ export function VoiceTutorRealtime({
           originalTranscript: transcript,
           includeStudentContext: TUTOR_RETRY_STUDENT_CONTEXT,
         });
+        // GDI trial live run 1: a redo of killed speech leaked into speech
+        // ("Let's get the overview right this time"). Every rejection kind,
+        // when the attempt's speech was cut — a delivered-in-full attempt is
+        // told so by the feedback itself and must not be re-narrated.
+        if (TUTOR_RETRY_PREAMBLE && attemptKilled) runTranscript = withRetryPreamble(runTranscript);
         if (TUTOR_RETRY_STUDENT_CONTEXT) {
           onDebugEvent?.(
             'brain_validator_retry_context',
@@ -19384,7 +19414,7 @@ export function VoiceTutorRealtime({
       if (TUTOR_SEGMENT_OVERLONG_NOTE && totalSentenceCount > 0) {
         const segIdNow = currentSegmentIdRef.current;
         const st = turnsInSegmentRef.current;
-        if (st.segId !== segIdNow) turnsInSegmentRef.current = { segId: segIdNow, turns: 0, noted: false };
+        if (st.segId !== segIdNow) turnsInSegmentRef.current = { segId: segIdNow, turns: 0, noted: false, startedAt: Date.now() };
         const cur = turnsInSegmentRef.current;
         cur.turns += 1;
         const segNow = lessonPlanRef.current?.segments.find((sg) => sg.id === segIdNow);
@@ -19420,6 +19450,44 @@ export function VoiceTutorRealtime({
             (sessionAllowsNonLatin(tutorLanguages) ? `Say any transition sentence in the language you are using with this student, in your own words. ` : '') +
             `Apply this silently; never mention this note.`;
           onDebugEvent?.('segment_overlong_note_planted', `${segIdNow} (${kindNow}) after ${cur.turns} turns → ${nextSeg?.id ?? 'next'}`);
+        }
+        // GDI trial live run 1 (2026-10-29): the brain never called
+        // advance_lesson in a fixed-script conversation lesson — the cursor
+        // sat on the first segment for 15 minutes, overlong note or not. A
+        // fixed script is timed by its author, so the CLIENT moves the pointer
+        // (as the Skip button does) once the segment has run past its note by
+        // two turns or past its minutes by half again, and tells the brain the
+        // move as a fact.
+        const autoPlan = lessonPlanRef.current;
+        const autoReason = TUTOR_FIXED_SCRIPT_AUTO_ADVANCE && !homeworkSession && autoPlan
+          ? fixedScriptAutoAdvanceReason({
+            plan: autoPlan,
+            segmentId: segIdNow,
+            turns: cur.turns,
+            overlongTurns,
+            elapsedMs: Date.now() - cur.startedAt,
+            levelKnown: !!workingLevelRef.current,
+          })
+          : null;
+        if (autoPlan && autoReason) {
+          const autoNext = nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current);
+          if (autoNext) {
+            const autoTurns = cur.turns;
+            const autoElapsedS = Math.round((Date.now() - cur.startedAt) / 1000);
+            // Resets turnsInSegmentRef for the new segment and disarms a
+            // pending pronunciation arm (disarmPronunciationOnSegmentAdvance).
+            applyResolvedAdvance(autoPlan, segIdNow, autoNext);
+            const autoKind = autoPlan.segments.find((sg) => sg.id === autoNext)?.kind ?? 'segment';
+            const merged = mergePendingRuntimeNote(
+              { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
+              segIdNow, autoNext,
+              fixedScriptAdvancedNote(fixedScriptAutoAdvanceLead(segIdNow, autoNext, autoKind), autoNext),
+            );
+            pendingRuntimeNoteRef.current = merged.note;
+            pendingRuntimeNoteSegRef.current = merged.segId;
+            runtimeNoteHeldTurnsRef.current = 0;
+            onDebugEvent?.('fixed_script_auto_advance', `"${segIdNow}" → "${autoNext}" reason=${autoReason} turns=${autoTurns} elapsed=${autoElapsedS}s`);
+          }
         }
       }
       if (sessionAllowsNonLatin(tutorLanguages) && totalSentenceCount > 0) {

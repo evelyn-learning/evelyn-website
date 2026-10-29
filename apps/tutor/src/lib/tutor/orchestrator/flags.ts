@@ -901,3 +901,14 @@ export const TUTOR_ACK_OPENER_STRIP = process.env.NEXT_PUBLIC_TUTOR_ACK_OPENER_S
 /** Time-boxed sessions: a client-spoken "two minutes left" line at the wrap
  *  minute and a spoken goodbye before the hard stop ends the session. */
 export const TUTOR_TIMEBOX_FAREWELL = process.env.NEXT_PUBLIC_TUTOR_TIMEBOX_FAREWELL !== 'off';
+
+// GDI trial live run 1 (2026-10-29): the brain never advanced a fixed-script
+// conversation lesson. Default-ON switches, `off` ⇒ previous behaviour.
+/** Fixed-script plans: the client moves the segment pointer itself once a
+ *  segment runs past its overlong note or its minutes (fixed-script.ts
+ *  fixedScriptAutoAdvanceReason), and leaves a level-check segment as soon as
+ *  set_working_level lands. The brain is told the move as a fact. */
+export const TUTOR_FIXED_SCRIPT_AUTO_ADVANCE = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_AUTO_ADVANCE !== 'off';
+/** Every validator retry that redoes killed speech carries RETRY_PREAMBLE
+ *  (voice/retry-preamble.ts) so the redo never says "this time"/"again". */
+export const TUTOR_RETRY_PREAMBLE = process.env.NEXT_PUBLIC_TUTOR_RETRY_PREAMBLE !== 'off';
