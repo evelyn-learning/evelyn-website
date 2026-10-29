@@ -413,7 +413,7 @@ import {
   OPENER_PREFETCH_DELAY_MS,
   TUTOR_WORKING_LEVEL,
 } from '@/lib/tutor/orchestrator/flags';
-import { decideSetWorkingLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
+import { decideSetWorkingLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments } from '@/lib/tutor/lesson-plan/fixed-script';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -16758,8 +16758,12 @@ export function VoiceTutorRealtime({
                           title = 'Hook';
                           body = s.script;
                         } else if (seg.kind === 'concept' && Array.isArray(s.keyIdeas) && s.keyIdeas.length > 0) {
+                          // Level-marked versions ([beginner]/[intermediate]/[advanced]):
+                          // with a working level held, only that level's lines reach
+                          // the board. No level ⇒ the same array (unchanged render).
+                          const ideas = filterKeyIdeasForLevel(s.keyIdeas as string[], workingLevelRef.current?.level ?? null);
                           title = 'Key ideas';
-                          body = s.keyIdeas.map((k: string, i: number) => `${i + 1}. ${k}`).join('\n');
+                          body = ideas.map((k: string, i: number) => `${i + 1}. ${k}`).join('\n');
                         } else if (seg.kind === 'recap' && Array.isArray(s.mustRemember) && s.mustRemember.length > 0) {
                           // recap-wrapup-fix (CRITICAL review fix): on a
                           // generated plan, buildRecapSegment's mustRemember

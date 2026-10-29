@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   WORKING_LEVELS, parseWorkingLevel, buildWorkingLevelClause, applyWorkingLevel, decideSetWorkingLevel,
-  withWorkingLevelResult,
+  withWorkingLevelResult, filterKeyIdeasForLevel,
 } from '../src/lib/tutor/level/working-level';
 import { emptyProfile } from '../src/lib/tutor/student-profile/store';
 import { WHITEBOARD_TOOLS, SET_WORKING_LEVEL_TOOL, mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
@@ -250,6 +250,25 @@ test('runtime: handler uses decideSetWorkingLevel and the stored level starts kn
   pin(vtr, /parseWorkingLevel\(data\?\.profile\?\.workingLevel\?\.level\)/);
   pin(vtr, /known: true/);
   assert.ok(vtr.includes("'setWorkingLevel'"), 'consumed as a meta action');
+});
+test('filterKeyIdeasForLevel: no level ⇒ the same array (byte-identical for every other session)', () => {
+  const ideas = ['[beginner] B one', '[intermediate] I one', 'plain line'];
+  assert.equal(filterKeyIdeasForLevel(ideas, null), ideas);
+  const unmarked = ['a', 'b'];
+  assert.equal(filterKeyIdeasForLevel(unmarked, null), unmarked);
+});
+test('filterKeyIdeasForLevel: keeps own-level lines (marker stripped) + unmarked lines, drops other levels, keeps order', () => {
+  const ideas = ['shared intro', '[beginner] B one', '[intermediate] I one', '[advanced] A one', '[beginner] B two', 'shared outro'];
+  assert.deepEqual(filterKeyIdeasForLevel(ideas, 'beginner'), ['shared intro', 'B one', 'B two', 'shared outro']);
+  assert.deepEqual(filterKeyIdeasForLevel(ideas, 'intermediate'), ['shared intro', 'I one', 'shared outro']);
+  assert.deepEqual(filterKeyIdeasForLevel(ideas, 'advanced'), ['shared intro', 'A one', 'shared outro']);
+});
+test('filterKeyIdeasForLevel: a plan without markers is unchanged at any level', () => {
+  const ideas = ['x', 'y [beginner] mid-line is not a marker'];
+  for (const l of WORKING_LEVELS) assert.deepEqual(filterKeyIdeasForLevel(ideas, l), ideas);
+});
+test('board: show_segment_card concept card filters keyIdeas by the held working level', () => {
+  pin(vtr, /filterKeyIdeasForLevel\(s\.keyIdeas as string\[\], workingLevelRef\.current\?\.level \?\? null\)/);
 });
 test('surfaces: embed resolves levelCheck from the partner row and TutorSession forwards it', () => {
   pin(embed, /levelCheck=\{sessionOptions\.levelCheck\}/);

@@ -70,7 +70,12 @@ test('overview names both grammar points (requiredPhrases)', () => {
   assert.ok(rp.includes('past simple'), 'past simple');
   assert.match(lower(field(seg('overview'), 'script')), /present perfect/);
   assert.match(lower(field(seg('overview'), 'script')), /past simple/);
-  assert.match(lower(field(seg('overview'), 'script')), /one-time/);
+  // The script is spoken to returning learners too, whose level check is
+  // skipped: it must not presume the check; the conditional lives in the note.
+  assert.doesNotMatch(lower(field(seg('overview'), 'script')), /level|check|assess/);
+  const n = seg('overview').teacherNote ?? '';
+  assert.match(n, /If the learner's level is not yet known, end the overview by saying the short one-time level check comes next/);
+  assert.match(n, /if it is already known, say instead that you'll continue at that level and move on/);
 });
 
 test('level check: Q1 is the problem truth, skip flag, once-only set_working_level', () => {

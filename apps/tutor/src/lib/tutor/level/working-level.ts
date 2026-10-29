@@ -91,6 +91,25 @@ export function buildWorkingLevelClause(
   return `${lines.join('\n')}\n`;
 }
 
+const LEVEL_MARKER = /^\[(beginner|intermediate|advanced)\]\s+/;
+
+/** Lesson material can carry one version per level, each line prefixed
+ *  `[beginner] `, `[intermediate] ` or `[advanced] `. With a level held, keep
+ *  that level's lines (marker stripped) and every unmarked line, in order;
+ *  drop the other levels' lines so the board never shows them. `null` (no
+ *  level yet, or a session without the level check) returns the SAME array,
+ *  so every other plan and session renders byte-identically. */
+export function filterKeyIdeasForLevel(keyIdeas: string[], level: WorkingLevel | null): string[] {
+  if (!level) return keyIdeas;
+  const out: string[] = [];
+  for (const line of keyIdeas) {
+    const m = LEVEL_MARKER.exec(line);
+    if (!m) out.push(line);
+    else if (m[1] === level) out.push(line.slice(m[0].length));
+  }
+  return out;
+}
+
 /** Record the level on the learner's profile (pure; the caller saves).
  *  Idempotent: the same level again returns the profile unchanged, so every
  *  session commit may carry it. */
