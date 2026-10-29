@@ -613,5 +613,16 @@ check('kept: "The problem card is up on the board — what\'s the first step?"',
 check('kept: "Put those words in your own sentence."', !isMetaNarration('Put those words in your own sentence.'));
 check('kept: "Read the question again: what does it already ask for?"', !isMetaNarration('Read the question again: what does it already ask for?'));
 
+// ─── GDI trial run 2 (10-29): runtime notes read aloud ───
+check('dropped: "The level-check segment still needs a few more answers, …"', isMetaNarration('The level-check segment still needs a few more answers, and "I am sales manager" is missing the article "a".'));
+check('dropped: "I\'ll show the corrected sentence and then ask the next question."', isMetaNarration("I'll show the corrected sentence and then ask the next question."));
+check('dropped: "Let me show you one sentence card for the next step."', isMetaNarration('Let me show you one sentence card for the next step.'));
+check('dropped: "This warm-up segment is done."', isMetaNarration('This warm-up segment is done.'));
+check('dropped: "Per the lesson pointer, we move on."', isMetaNarration('Per the lesson pointer, we move on.'));
+check('kept: "Let me show you the sentence on the board."', !isMetaNarration('Let me show you the sentence on the board.'));
+check('kept: "The line segment AB is 5 cm."', !isMetaNarration('The line segment AB is 5 cm.'));
+check('kept: "Each segment of the circle has the same area."', !isMetaNarration('Each segment of the circle has the same area.'));
+check('kept: "This sentence needs a verb."', !isMetaNarration('This sentence needs a verb.'));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
