@@ -90,7 +90,7 @@ import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heu
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
 import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
-import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, type LastPronunciationTarget } from '@/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
 import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
 import {
@@ -1486,9 +1486,16 @@ export function VoiceTutorRealtime({
   };
   const lastPronunciationClipRef = useRef<{ text: string; at: number } | null>(null);
   const lastPronunciationTargetRef = useRef<LastPronunciationTarget | null>(null);
+  // Task 20 §F2 (GDI run 8, 1416 s): the segment's last MEASURED result, kept
+  // so "where was I wrong?" (or a not-attempted clip) gets it again; and
+  // whether the latest planted note was a not-attempted one.
+  const lastMeasuredPronunciationRef = useRef<LastMeasuredPronunciation | null>(null);
+  const pronunciationNotAttemptedRef = useRef(false);
   const plantPronunciationNote = (note: string, measured: boolean) => {
     pronunciationResultNoteRef.current = pronunciationNoteForBrain(note);
     pronunciationMeasuredRef.current = measured;
+    pronunciationNotAttemptedRef.current = false;
+    if (measured) lastMeasuredPronunciationRef.current = { note, at: Date.now(), segmentId: currentSegmentIdRef.current ?? '' };
     onDebugEvent?.('pronunciation_note_planted', `${measured ? 'measured' : 'unavailable'} · ${note.slice(0, 160)}`);
   };
   const plantPronunciationUnavailable = (reason: string) => {
@@ -1529,6 +1536,7 @@ export function VoiceTutorRealtime({
           const measured = data.measured === true;
           if (!measured) onDebugEvent?.('pronunciation_unavailable', `not_attempted ${notAttemptedDetail(data.result)}`);
           plantPronunciationNote(data.note, measured);
+          if (!measured) pronunciationNotAttemptedRef.current = true;
         } else {
           plantPronunciationUnavailable(typeof data.reason === 'string' ? data.reason : 'bad_response');
         }
@@ -12688,6 +12696,29 @@ export function VoiceTutorRealtime({
         pronunciationResultNoteRef.current = null;
         pronunciationMeasuredRef.current = false;
       }
+      // Task 20 §F2 (GDI run 8, 1416 s: "can you repeat where I was wrong?"
+      // after a not-attempted clip got "Your sentence was right too"): in the
+      // pronunciation part, a student question or a not-attempted clip gets
+      // the segment's last measurement again. Cleared on segment change.
+      if (lastMeasuredPronunciationRef.current && lastMeasuredPronunciationRef.current.segmentId !== currentSegmentIdRef.current) {
+        lastMeasuredPronunciationRef.current = null;
+      }
+      if (!opts?.prefetchOnly) {
+        const pronSegNow = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
+        const redelivery = measuredPronunciationRedelivery({
+          last: lastMeasuredPronunciationRef.current,
+          segmentId: currentSegmentIdRef.current,
+          inPronunciationSegment: pronunciationActive && pronunciationTargetsOf(pronSegNow?.metadata) != null,
+          studentText: transcript,
+          notAttempted: pronunciationNotAttemptedRef.current,
+          measuredThisTurn: pronunciationMeasuredThisTurn,
+        });
+        pronunciationNotAttemptedRef.current = false;
+        if (redelivery) {
+          runTranscript = `${redelivery}\n\n${runTranscript}`;
+          onDebugEvent?.('pronunciation_note_redelivered', `${Math.round((Date.now() - lastMeasuredPronunciationRef.current!.at) / 1000)} s old: ${lastMeasuredPronunciationRef.current!.note.slice(0, 80)}`);
+        }
+      }
       // Turn-length cap: deliver the pending cadence corrective with this
       // turn's input (same "[… — not from the student]" convention as the
       // validator feedback below), then clear it — one corrective per lapse.
@@ -20241,7 +20272,12 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('pronunciation_claim_note_planted', fullText.slice(0, 80));
         }
         // correct-retry.ts: the check said correct; this turn asked for it again.
-        if (reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)) {
+        // Task 20 §F1 (GDI run 8, 1395 s): never on a turn carrying a MEASURED
+        // pronunciation result — the re-ask is the coaching drill, and the
+        // note later told the brain "there's no error to fix".
+        if (pronunciationMeasuredThisTurn) {
+          // the measured drill re-ask: no correct-retry note
+        } else if (reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)) {
           pendingCorrectRetryNoteRef.current = CORRECT_RETRY_NOTE;
           onDebugEvent?.('correct_retry_note_planted', `checked correct: "${verdictPrecheckRef.current?.proposed.slice(0, 60) ?? ''}"`);
         } else if (reAskedOwnSentence(transcript, fullText)) {

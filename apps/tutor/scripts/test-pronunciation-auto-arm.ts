@@ -5,7 +5,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail } from '../src/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion } from '../src/lib/tutor/pronunciation/auto-arm';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { isStrictRepeatAsk } from '../src/lib/tutor/voice/correct-retry';
 
@@ -91,6 +91,40 @@ test('VTR wiring (§C): last target kept at every arm, re-arm branch, not_attemp
   assert.equal(isStrictRepeatAsk('You can say it naturally now.'), false);
   assert.ok(VTR.includes("onDebugEvent?.('pronunciation_rearmed',"), 'event');
   assert.ok(VTR.includes("onDebugEvent?.('pronunciation_unavailable', `not_attempted ${notAttemptedDetail(data.result)}`)"), 'detail');
+});
+
+// ── Task 20 §F (GDI run 8, 1395–1418 s) ──────────────────────────────────
+const LAST = { note: 'Measured pronunciation of "I have worked with international customers for several years.": overall 80/100. Weakest: "for" 45.', at: 1, segmentId: 'pronunciation' };
+const base = { last: LAST, segmentId: 'pronunciation', inPronunciationSegment: true, studentText: 'Um, can you repeat where I was wrong?', notAttempted: true, measuredThisTurn: false };
+test('20F2: "can you repeat where I was wrong?" after a not-attempted clip gets the last measurement', () => {
+  const out = measuredPronunciationRedelivery(base);
+  assert.equal(out, `[pronunciation check result — not from the student] Last measurement (still current): ${LAST.note}`);
+});
+test('20F2: a question alone (clip measured nothing new, not not_attempted) re-delivers', () => {
+  assert.ok(measuredPronunciationRedelivery({ ...base, notAttempted: false }));
+  assert.ok(measuredPronunciationRedelivery({ ...base, notAttempted: false, studentText: 'Which word was wrong' }));
+});
+test('20F2: no trigger / other segment / a fresh measurement / outside the part ⇒ null', () => {
+  assert.equal(measuredPronunciationRedelivery({ ...base, notAttempted: false, studentText: 'I have worked with international customers.' }), null);
+  assert.equal(measuredPronunciationRedelivery({ ...base, segmentId: 'summary' }), null);
+  assert.equal(measuredPronunciationRedelivery({ ...base, measuredThisTurn: true }), null);
+  assert.equal(measuredPronunciationRedelivery({ ...base, inPronunciationSegment: false }), null);
+  assert.equal(measuredPronunciationRedelivery({ ...base, last: null }), null);
+  assert.equal(measuredPronunciationRedelivery({ ...base, studentText: '[runtime note — not from the student] …' }), null);
+});
+test('20F2: question shapes', () => {
+  assert.equal(isStudentQuestion('Um, can you repeat where I was wrong?'), true);
+  assert.equal(isStudentQuestion('uh what was wrong'), true);
+  assert.equal(isStudentQuestion('I was responsible for communicating with our customers.'), false);
+});
+test('20F: VTR wiring — no correct-retry note on a measured turn; redelivery event', () => {
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  const at = VTR.indexOf('// correct-retry.ts: the check said correct; this turn asked for it again.');
+  const gate = VTR.indexOf('if (pronunciationMeasuredThisTurn) {', at);
+  const plant = VTR.indexOf('reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)', at);
+  assert.ok(at > 0 && gate > at && gate < plant, 'the measured gate precedes both correct-retry plants');
+  assert.ok(VTR.includes("onDebugEvent?.('pronunciation_note_redelivered'"));
+  assert.ok(VTR.includes('if (measured) lastMeasuredPronunciationRef.current = {'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -132,3 +132,35 @@ export function notAttemptedDetail(result: { words?: Array<{ word?: unknown; err
   const omitted = ref.filter((w) => w?.errorType === 'omission').length;
   return `recognized="${heard.join(' ')}" omitted=${omitted}/${ref.length}`;
 }
+
+/**
+ * Task 20 §F2 (GDI run 8, 1416 s): after a measured re-ask the student asked
+ * "Um, can you repeat where I was wrong?" — the clip came back not_attempted,
+ * the brain had no measurement in hand and said "Your sentence was right too,
+ * so there's no error to fix". The segment's last measured result is
+ * re-delivered on a turn in the pronunciation part when the student's
+ * utterance is a question (terminal ? or an auxiliary / wh opener) or its clip
+ * was not attempted. null ⇒ nothing to re-deliver (no measurement for this
+ * segment, a fresh measurement rides this turn, or neither trigger).
+ */
+export interface LastMeasuredPronunciation { note: string; at: number; segmentId: string }
+const STUDENT_QUESTION_OPENER_RE =
+  /^\s*(?:(?:um+|uh+|er+|so|well|sorry|ok(?:ay)?|and|but)[,.]?\s+)*(?:can|could|would|will|do|does|did|is|are|was|were|should|may|how|what|why|where|when|which|who)\b/i;
+export function isStudentQuestion(text: string): boolean {
+  const t = (text ?? '').trim();
+  return /[?？]\s*$/.test(t) || STUDENT_QUESTION_OPENER_RE.test(t);
+}
+export function measuredPronunciationRedelivery(input: {
+  last: LastMeasuredPronunciation | null | undefined;
+  segmentId: string | null | undefined;
+  inPronunciationSegment: boolean;
+  studentText: string;
+  notAttempted: boolean;
+  measuredThisTurn: boolean;
+}): string | null {
+  const { last, segmentId, inPronunciationSegment, studentText, notAttempted, measuredThisTurn } = input;
+  if (!last || !inPronunciationSegment || measuredThisTurn || !segmentId || last.segmentId !== segmentId) return null;
+  if (/^\s*\[/.test(studentText ?? '')) return null; // runtime directives are not the student
+  if (!notAttempted && !isStudentQuestion(studentText)) return null;
+  return `[pronunciation check result — not from the student] Last measurement (still current): ${last.note}`;
+}
