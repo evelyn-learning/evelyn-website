@@ -1492,5 +1492,11 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(speakPhonemeSlashes('the /l/ sound'), 'the l sound');
   assert.equal(speakPhonemeSlashes('the /ð/ at the start'), 'the voiced th at the start');
   assert.equal(speakPhonemeSlashes('/ɔːr/ and /oʊ/'), 'or and oh');
+  // fix round 1: up to 10 letters between the slashes; never digits
+  assert.equal(speakPhonemeSlashes('say /ˈwɔːtər/ slowly'), 'say wɔːtər slowly');
+  assert.equal(speakPhonemeSlashes('the /tʃ/ in "chair"'), 'the ch in "chair"');
+  for (const keep of ['and/or', 'km/h', '24/7', 'https://example.com/a/b', '/usr/bin', '1/2', 'add 1/2 and 3/4', 'a/b/c', 'm/s/s', 'open 24/7/365 now', 'the /x2/ code']) {
+    assert.equal(speakPhonemeSlashes(keep), keep, keep);
+  }
   console.log('OK — phoneme slashes spoken as sounds');
 }

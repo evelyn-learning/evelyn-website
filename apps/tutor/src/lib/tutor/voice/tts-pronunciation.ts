@@ -2275,12 +2275,12 @@ const IPA_SPOKEN: Record<string, string> = {
   'ɔː': 'or', 'ɔːr': 'or', 'ɔr': 'or', 'ɑː': 'ah', 'ə': 'uh', 'iː': 'ee', 'eɪ': 'ay', 'aɪ': 'eye', 'oʊ': 'oh', 'əʊ': 'oh',
   'tʃ': 'ch', 'dʒ': 'j',
 };
-/** "/l/" → "l", "/ð/" → "voiced th": both slashes, 1–6 letters (IPA length
+/** "/l/" → "l", "/ð/" → "voiced th": both slashes, 1–10 letters (fix round 1: "/ˈwɔːtər/"; never a digit) (IPA length
  *  marks / stress ticks allowed) between them, the first slash at the start
  *  or after a space / bracket and the second before a space / punctuation —
  *  so "and/or", fractions and URLs ("https://a.b/c") never match. */
 export function speakPhonemeSlashes(text: string): string {
-  return (text ?? '').replace(/(^|[\s(\[“‘'])\/([\p{L}\p{M}ːˈˌ]{1,6})\/(?=$|[\s.,!?;:)\]”’'])/gu, (_m, pre: string, inner: string) => {
+  return (text ?? '').replace(/(^|[\s(\[“‘'])\/([\p{L}\p{M}ːˈˌ]{1,10})\/(?=$|[\s.,!?;:)\]”’'])/gu, (_m, pre: string, inner: string) => {
     const spoken = IPA_SPOKEN[inner] ?? (/^[A-Za-z]+$/.test(inner) ? inner : inner.replace(/[ˈˌ]/g, ''));
     return `${pre}${spoken}`;
   });
