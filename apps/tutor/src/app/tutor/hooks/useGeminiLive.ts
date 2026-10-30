@@ -733,8 +733,9 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     speakText: (text: string) => {
       console.warn('[Gemini] speakText called but relay mode is not supported on Gemini Live.', { len: text.length });
     },
-    clearSpeechQueue: (): Promise<void> => {
-      // No-op. Gemini Live doesn't run in relay mode and has no speech queue.
+    clearSpeechQueue: (_opts?: { afterCurrentSentence?: boolean }): Promise<void> => {
+      // No-op. Gemini Live doesn't run in relay mode and has no speech queue
+      // (Task 17's afterCurrentSentence option is accepted and ignored).
       return Promise.resolve();
     },
     // Stage 3.1 stubs for shared RealtimeResult shape. Gemini Live

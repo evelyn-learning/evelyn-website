@@ -35,6 +35,7 @@ import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_FOLLOW_SAMPL
 import { wordIndexAt } from '@/lib/tutor/voice/sonic-ws';
 import { preciseSentenceFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { ttsLanguageFor } from '@/lib/tutor/voice/tts-language';
+import { partitionQueueAtSentenceBoundary, SENTENCE_BOUNDARY_CAP_MS } from '@/lib/tutor/voice/speech-queue-boundary';
 import { useCartesiaSonicWS } from './useCartesiaSonicWS';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 
@@ -391,6 +392,22 @@ export type RealtimeState =
   | 'speaking'
   | 'error';
 
+/** Task 17: `afterCurrentSentence` lets the sentence playing now finish
+ *  (its remaining chunks, including a still-arriving streamed tail) and drops
+ *  everything else; capped at SENTENCE_BOUNDARY_CAP_MS, then hard-drained. */
+export interface ClearSpeechQueueOptions {
+  afterCurrentSentence?: boolean;
+}
+/** Resolved only when `afterCurrentSentence` engaged (a sentence was in
+ *  flight on an HTTP-TTS path and playback was not paused). */
+export interface ClearSpeechQueueResult {
+  /** The sentence that was allowed to play on. */
+  keptSentence: string;
+  /** true = it ended naturally; false = cap or a hard clear cut it. */
+  finished: boolean;
+  waitedMs: number;
+}
+
 export interface RealtimeResult {
   state: RealtimeState;
   isConnected: boolean;
@@ -447,7 +464,7 @@ export interface RealtimeResult {
    * is still audible. Callers that don't care (barge-in / user-typed
    * input) may fire-and-forget the promise.
    */
-  clearSpeechQueue: () => Promise<void>;
+  clearSpeechQueue: (opts?: ClearSpeechQueueOptions) => Promise<ClearSpeechQueueResult | void>;
   /**
    * Drop the sentences that have NOT started playing, and let the one being
    * spoken finish. For standby (the host's video resumed): the tutor ends
@@ -1006,6 +1023,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // a live pending tail as an intra-sentence gap: no end stamp, no drain,
   // no next-sentence advance.
   const pendingTailRef = useRef<{ epoch: number } | null>(null);
+  // Task 17: non-null while clearSpeechQueue({ afterCurrentSentence }) waits
+  // for the sentence in flight to end. playNextAudio's empty-queue branch
+  // (after the pending-tail hold) calls `ended()`; a hard clear calls
+  // `preempted()`.
+  const boundaryDrainRef = useRef<{ ended: () => void; preempted: () => void } | null>(null);
   // Task X3: timestamp when the stuck-SPEAKING condition first became true, so
   // the watchdog fires only after the strand PERSISTS past the window (a normal
   // inter-sentence gap clears it long before). null = not currently stranded.
@@ -1316,6 +1338,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       currentSentencePlayedSecRef.current = 0;
       playedBeforeChunkSecRef.current = 0;
       currentChunkDurSecRef.current = 0;
+      // Task 17: the sentence a boundary kill let finish has ended — finish
+      // the kill (epoch bump, drop anything queued since) before the advance
+      // below, which then finds nothing to dispatch.
+      if (boundaryDrainRef.current) {
+        const boundary = boundaryDrainRef.current;
+        boundaryDrainRef.current = null;
+        boundary.ended();
+      }
       // HTTP-based TTS (openai-mini, cartesia) has no response.done event to
       // drive the queue, so drain the next sentence here when the audio
       // finishes. The realtime path leaves this branch alone — its drain
@@ -3781,7 +3811,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     void getAudioContext().resume().catch(() => {});
   }, []);
 
-  const clearSpeechQueue = useCallback((): Promise<void> => {
+  const clearSpeechQueueHard = useCallback((): Promise<void> => {
+    // Task 17: a hard clear during a boundary wait settles that wait (the
+    // sentence it was letting finish is cut here).
+    if (boundaryDrainRef.current) {
+      const boundary = boundaryDrainRef.current;
+      boundaryDrainRef.current = null;
+      boundary.preempted();
+    }
     // A kill while paused for a barge-in: the clock must run again so the
     // drain below completes and the reply to the interruption can play.
     if (playbackPausedRef.current) {
@@ -3933,6 +3970,105 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       setTimeout(done, 60);
     });
   }, [isHttpTtsProvider, emitPlaybackStamp, cancelAllWsSynth]);
+
+  // Task 17: clearSpeechQueue({ afterCurrentSentence: true }) — a validator
+  // kill whose offending sentence is a later one lets the sentence in flight
+  // finish instead of cutting it mid-word. Engages only on the HTTP-TTS
+  // relay path (dispatch there is serial: while a sentence plays, no other
+  // sentence's fetch is in flight, so the queue's head run IS the whole
+  // current sentence plus its streamed tail), with a sentence in flight and
+  // playback not paused (a paused barge-in must not talk over the student).
+  // Otherwise — and without the option — it is the hard clear, unchanged.
+  // The epoch bump is deferred to the sentence's end so its own tail keeps
+  // pumping; other sentences have nothing in flight to invalidate (queued
+  // text, prefetches and WS jobs are dropped here).
+  const clearSpeechQueue = useCallback((opts?: ClearSpeechQueueOptions): Promise<ClearSpeechQueueResult | void> => {
+    const current = currentSpeakTextRef.current;
+    const tailLive = !!pendingTailRef.current && pendingTailRef.current.epoch === speakEpochRef.current;
+    if (
+      !opts?.afterCurrentSentence ||
+      !current ||
+      !(isPlayingRef.current || tailLive) ||
+      playbackPausedRef.current ||
+      boundaryDrainRef.current ||
+      !isRelayRef.current ||
+      !isHttpTtsProvider(ttsProviderRef.current)
+    ) {
+      return clearSpeechQueueHard();
+    }
+    const startedAt = Date.now();
+    const currentId = currentScriptIdRef.current;
+    // Keep the current sentence's head run of chunks; drop the rest.
+    const { keepCount, droppedScriptIds } = partitionQueueAtSentenceBoundary(
+      { sentences: audioQueueSentenceRef.current, scriptIds: audioQueueScriptIdRef.current },
+      { sentence: current, scriptId: currentId },
+    );
+    const skipped = new Set<number>(droppedScriptIds);
+    const collectSkip = (id: number | undefined) => {
+      if (id != null && id !== currentId) skipped.add(id);
+    };
+    for (const id of speakTextScriptIdQueueRef.current) collectSkip(id);
+    collectSkip(pendingDispatchScriptIdRef.current);
+    for (const id of skipped) emitPlaybackStamp(id, 'skip');
+    audioQueueRef.current = audioQueueRef.current.slice(0, keepCount);
+    audioQueueSentenceRef.current = audioQueueSentenceRef.current.slice(0, keepCount);
+    audioQueueScriptIdRef.current = audioQueueScriptIdRef.current.slice(0, keepCount);
+    const droppedCount = speakTextQueueRef.current.length;
+    speakTextQueueRef.current = [];
+    speakTextScriptIdQueueRef.current = [];
+    ttsPrefetchCacheRef.current.clear();
+    // Prefetched WS syntheses for later sentences. The current sentence's
+    // job left the map at its dispatch (its sink stays attached), and its
+    // word timestamps stay for the caption clock.
+    for (const job of wsSynthJobsRef.current.values()) {
+      job.sink = null;
+      job.onTerminal = null;
+      sonicWS.cancel(job.contextId);
+    }
+    wsSynthJobsRef.current.clear();
+    for (const key of [...sentenceWordsRef.current.keys()]) {
+      if (key !== current) sentenceWordsRef.current.delete(key);
+    }
+    if (droppedCount > 0) {
+      console.log(`[Realtime] clearSpeechQueue: dropped ${droppedCount} queued sentence(s); finishing the sentence in flight`);
+    }
+    return new Promise<ClearSpeechQueueResult>((resolve) => {
+      let settled = false;
+      const settle = (finished: boolean) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(cap);
+        resolve({ keptSentence: current, finished, waitedMs: Date.now() - startedAt });
+      };
+      const token = {
+        // The sentence ended (playNextAudio's empty-queue branch, which has
+        // already stamped its 'end'). Finish the kill: anything the killed
+        // attempt queued meanwhile is dropped, and the epoch moves on.
+        ended: () => {
+          speakEpochRef.current++;
+          for (const id of speakTextScriptIdQueueRef.current) {
+            if (id != null) emitPlaybackStamp(id, 'skip');
+          }
+          speakTextQueueRef.current = [];
+          speakTextScriptIdQueueRef.current = [];
+          pendingTailRef.current = null;
+          pendingDispatchSentenceRef.current = null;
+          pendingDispatchScriptIdRef.current = undefined;
+          speakTextInFlightRef.current = false;
+          settle(true);
+        },
+        // A hard clear cut the sentence before it ended.
+        preempted: () => settle(false),
+      };
+      const cap = setTimeout(() => {
+        if (boundaryDrainRef.current !== token) return;
+        boundaryDrainRef.current = null;
+        console.warn(`[Realtime] clearSpeechQueue: in-flight sentence still playing after ${SENTENCE_BOUNDARY_CAP_MS}ms — hard drain`);
+        void clearSpeechQueueHard().then(() => settle(false));
+      }, SENTENCE_BOUNDARY_CAP_MS);
+      boundaryDrainRef.current = token;
+    });
+  }, [clearSpeechQueueHard, isHttpTtsProvider, emitPlaybackStamp, sonicWS]);
 
   // Task X3 (2026-07-16) defensive stuck-SPEAKING watchdog. The confirmed root
   // cause (a barge-in's clearSpeechQueue firing during an inter-sentence gap,
