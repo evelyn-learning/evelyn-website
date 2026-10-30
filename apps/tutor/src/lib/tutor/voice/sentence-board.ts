@@ -28,12 +28,22 @@ const CORRECTION_OVERLAP = 0.5;
  *  student said, is an echo of the student. */
 const ECHO_OVERLAP = 0.9;
 
-/** Straight or curly double quotes; one line at most. */
-const QUOTE_RE = /"([^"\n]+)"|“([^”\n]+)”/g;
+/** Straight or curly double quotes, Japanese corner brackets 「…」 / 『…』
+ *  (GDI run 4: the bilingual tutor quotes corrections that way) and curly
+ *  single quotes ‘…’ (an apostrophe ’ followed by a letter — haven’t — does
+ *  not close the span); one line at most. */
+const QUOTE_RE = /"([^"\n]+)"|“([^”\n]+)”|「([^」\n]+)」|『([^』\n]+)』|‘((?:[^’\n]|’(?=\p{L}))+)’/gu;
+/** The inner text of a QUOTE_RE match, whichever quote style matched. */
+const quoteInner = (m: RegExpMatchArray): string => m.slice(1).find((g) => g !== undefined) ?? '';
 /** Hiragana/katakana, CJK ideographs, Hangul, fullwidth forms. */
 const CJK_RE = /[　-ヿ㐀-䶿一-鿿豈-﫿가-힯＀-￯]/;
 const LATIN_WORD_RE = /[A-Za-zÀ-ɏ]/;
 const TOKEN_RE = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
+/** Like TOKEN_RE but a hyphenated compound (front-load) is one word — used
+ *  only to pick emphasis words, so "front load" → "front-load" stresses the
+ *  compound as a whole. */
+const COMPOUND_RE = /[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu;
+const lowerTok = (w: string) => w.toLowerCase().replace(/’/g, "'");
 
 /** Lowercase words, punctuation stripped, apostrophes kept (haven't). */
 function tokens(text: string): string[] {
@@ -50,12 +60,12 @@ function qualifyingSpan(raw: string): string | null {
   return words.length >= MIN_WORDS ? s : null;
 }
 
-/** Double-quoted spans ("…" or “…”) of ≥ 3 words made of Latin letters; a span ending in "…"/"..." or containing CJK is ignored; trailing ?/!/. inside the quotes kept. */
+/** Quoted spans ("…", “…”, 「…」, 『…』, ‘…’) of ≥ 3 words made of Latin letters; a span ending in "…"/"..." or containing CJK is ignored; trailing ?/!/. inside the quotes kept. */
 export function extractQuotedSentences(text: string): string[] {
   if (!text) return [];
   const out: string[] = [];
   for (const m of text.matchAll(QUOTE_RE)) {
-    const span = qualifyingSpan(m[1] ?? m[2] ?? '');
+    const span = qualifyingSpan(quoteInner(m));
     if (span) out.push(span);
   }
   return out;
@@ -82,9 +92,11 @@ export function classifyQuotedSentence(sentence: string, studentLast: string | n
   if (shared / quoteSet.size < CORRECTION_OVERLAP || novel === 0) return model;
   const emphasis: string[] = [];
   const seen = new Set<string>();
-  for (const w of quoteWords) {
-    const t = w.toLowerCase().replace(/’/g, "'");
-    if (student.has(t) || seen.has(t)) continue;
+  const studentCompounds = new Set((studentLast.match(COMPOUND_RE) ?? []).map(lowerTok));
+  for (const w of sentence.match(COMPOUND_RE) ?? []) {
+    const t = lowerTok(w);
+    if (seen.has(t)) continue;
+    if (w.includes('-') ? studentCompounds.has(t) : student.has(t)) continue;
     seen.add(t);
     emphasis.push(w);
     if (emphasis.length >= MAX_EMPHASIS) break;
@@ -165,7 +177,7 @@ function correctionSpan(spokenSentence: string, studentLast: string | null | und
   if (!spokenSentence || !studentLast || !studentLast.trim()) return null;
   let best: { start: number; end: number; inner: string; emphasis: string[]; len: number } | null = null;
   for (const m of spokenSentence.matchAll(QUOTE_RE)) {
-    const inner = m[1] ?? m[2] ?? '';
+    const inner = quoteInner(m);
     if (!qualifyingSpan(inner)) continue;
     const q = classifyQuotedSentence(inner.trim(), studentLast);
     if (q.kind !== 'correction' || q.emphasis.length === 0) continue;
@@ -179,7 +191,8 @@ function correctionSpan(spokenSentence: string, studentLast: string | null | und
   // A sentence splitter that cut at the period inside the quotes leaves an
   // unclosed trailing quote ('… say: "I haven't taken leave from work.').
   const quoteChars = (spokenSentence.match(/"/g) ?? []).length;
-  const open = quoteChars % 2 === 1 ? spokenSentence.lastIndexOf('"') : spokenSentence.lastIndexOf('“') > spokenSentence.lastIndexOf('”') ? spokenSentence.lastIndexOf('“') : -1;
+  const unclosed = (o: string, c: string) => (spokenSentence.lastIndexOf(o) > spokenSentence.lastIndexOf(c) ? spokenSentence.lastIndexOf(o) : -1);
+  const open = quoteChars % 2 === 1 ? spokenSentence.lastIndexOf('"') : Math.max(unclosed('“', '”'), unclosed('「', '」'), unclosed('『', '』'));
   if (open < 0) return null;
   const inner = spokenSentence.slice(open + 1);
   if (!qualifyingSpan(inner)) return null;

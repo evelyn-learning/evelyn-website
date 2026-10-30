@@ -267,5 +267,38 @@ test('C: VTR — a sentence-only batch neither sees nor consumes the topic-shift
   assert.ok(VTR.indexOf('if (!sentenceOnlyBatch) topicShiftPendingRef.current = null;') < VTR.indexOf('const deferredFlush = decideDeferredPageFlush({'));
 });
 
+// ── Task 14 §B: corner-bracket / single curly quotes ──
+test('B: 「…」 correction → card, emphasis [sells, machines]', () => {
+  const t = 'Let\'s fix one small thing: 「My department sells washing machines.」 The verb needs an "s" after department.';
+  const cards = planSentenceBoard({ tutorText: t, studentLast: 'My department sell washing machine.', renderedThisTurn: false });
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].sentence, 'My department sells washing machines.');
+  assert.equal(cards[0].kind, 'correction');
+  assert.deepEqual(cards[0].emphasis, ['sells', 'machines']);
+});
+test('B: 「…」ですね correction → emphasis [sold, a, front-load]', () => {
+  const t = '「I sold a front-load washing machine to Mr. Kenji last week.」ですね';
+  const cards = planSentenceBoard({ tutorText: t, studentLast: 'I sell front load washing machine to Mr. Kenji last week.', renderedThisTurn: false });
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].kind, 'correction');
+  assert.deepEqual(cards[0].emphasis, ['sold', 'a', 'front-load']);
+  assert.equal(applySpokenEmphasis(cards[0].sentence, cards[0].emphasis), 'I SOLD a FRONT-LOAD washing machine to Mr. Kenji last week.'); // 1-letter words are never stressed
+});
+test('B: 『…』 and ‘…’ spans extracted; an apostrophe inside ‘…’ does not close it', () => {
+  assert.deepEqual(extractQuotedSentences('『I have been to Osaka.』'), ['I have been to Osaka.']);
+  assert.deepEqual(extractQuotedSentences('Say ‘I haven’t taken leave yet.’ please'), ['I haven’t taken leave yet.']);
+});
+test('B: filters still apply to 「」 spans (question, lowercase, echo, CJK)', () => {
+  assert.deepEqual(planSentenceBoard({ tutorText: '「What did you sell last week?」', studentLast: null, renderedThisTurn: false }), []);
+  assert.deepEqual(planSentenceBoard({ tutorText: '「for your current company,」', studentLast: null, renderedThisTurn: false }), []);
+  assert.deepEqual(planSentenceBoard({ tutorText: '「I sell washing machines.」ですね', studentLast: 'I sell washing machines', renderedThisTurn: false }), []);
+  assert.deepEqual(extractQuotedSentences('「洗濯機を売りました」'), []);
+});
+test('B: spoken stress inside a 「」 span (and an unclosed 「 cut by the splitter)', () => {
+  const st = 'My department sell washing machine.';
+  assert.equal(emphasiseSpokenCorrections('Let\'s fix it: 「My department sells washing machines.」 Good.', st), 'Let\'s fix it: 「My department SELLS washing MACHINES.」 Good.');
+  assert.equal(emphasiseSpokenCorrections('Let\'s fix it: 「My department sells washing machines.', st), 'Let\'s fix it: 「My department SELLS washing MACHINES.');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
