@@ -252,6 +252,8 @@ const LEADING_DISCOURSE_RE = /^\s*(?:okay|ok|well|so)[,.]\s*/i;
 const INNER_HESITATION_RE = /(?<=\s)(?:uh|um|erm|er|hmm)\b[,.]?\s+/gi;
 /** A checked card needs at least this many Latin words. */
 const CHECKED_CARD_MIN_WORDS = 4;
+/** Fix round 3 (m5): a question-word / auxiliary opening. */
+const QUESTION_OPENING_RE = /^(?:can|could|would|will|shall|do|does|did|is|are|was|were|have|has|what|why|how|when|where|who|which)\b/i;
 /** Fix round 2 (I4): the precheck's `proposed` is cut at 200 chars — one this
  *  long may end mid-clause. */
 const CHECKED_MAX_CHARS = 195;
@@ -277,6 +279,9 @@ export function cardableStudentSentence(raw: string | null | undefined): string 
   if (/[.!?]["”’)]?\s+\p{L}/u.test(s)) return null;
   if (stripped || /^i\b/.test(s)) s = s[0]!.toUpperCase() + s.slice(1);
   if (!isCardCandidate(s)) return null;
+  // Fix round 3 (m5): a question that lost its "?" ("Can you repeat the
+  // question please") is not a model sentence.
+  if (QUESTION_OPENING_RE.test(s) && !/[?？]["”’)]?$/.test(s)) return null;
   if (!/[.!?]["”’)]?$/.test(s)) s = s.replace(/[,;:]+$/, '') + '.';
   const span = qualifyingSpan(s);
   if (!span || !isCardCandidate(span)) return null;
@@ -292,29 +297,67 @@ export function hasCorrectionCue(tutorText: string): boolean {
   return CORRECTION_CUE_RE.test(tutorText ?? '');
 }
 
-/** Two word forms of one stem ("machine" / "machines", "work" / "worked"). */
-function nearForm(a: string, b: string): boolean {
-  if (a === b || a.length < 3 || b.length < 3) return false;
-  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
-  return long.startsWith(short) && long.length - short.length <= 3;
+/** Fix round 3 (I2): a pronoun flip is not an edit ("I worked …" → "You
+ *  worked …" is an echo). */
+const PRONOUN_CLASS: Record<string, string> = { i: '<pro>', you: '<pro>', me: '<pro>', my: '<poss>', your: '<poss>' };
+function recastTokens(text: string): string[] {
+  return dropFillersAndRepeats(tokens(text)).map((t) => PRONOUN_CLASS[t] ?? t);
+}
+/** Length of the run where s (from i) and t (from j) agree. */
+function agree(s: string[], i: number, t: string[], j: number): number {
+  let n = 0;
+  while (i + n < s.length && j + n < t.length && s[i + n] === t[j + n]) n++;
+  return n;
+}
+/** Matched words after an edit (fix round 3: "car parts" for "parts for cars"
+ *  is a rephrase, not a fix — the run must carry on for two words). */
+const RECAST_TAIL_MIN = 2;
+/** Student tokens a recast run spans, the edited one included. */
+const RECAST_RUN_MIN = 4;
+/** Words before a fix of the student's LAST word ("sell washing machine." →
+ *  "sell washing machines"). */
+const RECAST_FINAL_HEAD_MIN = 2;
+
+/** True when `t` reproduces a run of the student's tokens `s` with exactly one
+ *  edit inside it (one token substituted, inserted or deleted, any stem).
+ *  Inside: ≥ 1 matched token before the edit and ≥ 2 after, ≥ 4 student tokens
+ *  in all — or a substitution of the student's final token after ≥ 2 matched. */
+function oneEditRun(s: string[], t: string[]): boolean {
+  for (let i = 0; i < s.length; i++) {
+    for (let j = 0; j < t.length; j++) {
+      if (s[i] !== t[j] || (i > 0 && j > 0 && s[i - 1] === t[j - 1])) continue;
+      const p = agree(s, i, t, j);
+      const si = i + p;
+      const tj = j + p;
+      if (si < s.length && tj < t.length) {
+        const q = agree(s, si + 1, t, tj + 1); // substitution
+        if (q >= RECAST_TAIL_MIN && p + 1 + q >= RECAST_RUN_MIN) return true;
+        if (si === s.length - 1 && p >= RECAST_FINAL_HEAD_MIN) return true;
+      }
+      if (tj < t.length) {
+        const q = agree(s, si, t, tj + 1); // insertion
+        if (q >= RECAST_TAIL_MIN && p + q >= RECAST_RUN_MIN) return true;
+      }
+      if (si < s.length) {
+        const q = agree(s, si + 1, t, tj); // deletion
+        if (q >= RECAST_TAIL_MIN && p + 1 + q >= RECAST_RUN_MIN) return true;
+      }
+    }
+  }
+  return false;
 }
 
-/** Fix round 2 (I2, review probe): an UNQUOTED recast — a tutor sentence made
- *  mostly of the student's words that swaps one of them for another form of
- *  it ("Nice, you sell washing machines in the sales department." after "…and
- *  sell washing machine.") — corrects the sentence without saying so. */
+/** Fix round 2 (I2) / fix round 3: an UNQUOTED recast — a tutor sentence that
+ *  repeats a run of the student's words with one word fixed ("Oh, you went to
+ *  Osaka yesterday" after "I go to Osaka yesterday"; "you sell washing
+ *  machines" after "…sell washing machine.") — corrects the sentence without
+ *  saying so. A follow-up that only reuses words ("Launching a new product
+ *  sounds exciting.") is not one. */
 export function recastsStudentSentence(tutorText: string, student: string): boolean {
-  const said = new Set(tokens(student));
-  if (said.size === 0) return false;
+  const said = recastTokens(student);
+  if (said.length === 0) return false;
   for (const sentence of (tutorText ?? '').split(/(?<=[.!?。！？])\s+/)) {
-    const tset = new Set(tokens(sentence));
-    if (tset.size === 0 || sameSentence(sentence, student)) continue;
-    let shared = 0;
-    for (const t of tset) if (said.has(t)) shared++;
-    if (shared / tset.size < CORRECTION_OVERLAP) continue;
-    const novel = [...tset].filter((t) => !said.has(t));
-    const missing = [...said].filter((t) => !tset.has(t));
-    if (novel.some((n) => missing.some((m) => nearForm(n, m)))) return true;
+    if (oneEditRun(said, recastTokens(sentence))) return true;
   }
   return false;
 }

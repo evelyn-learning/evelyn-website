@@ -549,5 +549,37 @@ test('§D19 R2 m5: a lowercase fragment is not capitalised into a card', () => {
   assert.deepEqual(planSentenceBoard({ tutorText: 'Nice.', studentLast: 'x', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'in the sales department, selling washing machines' }), []);
 });
 
+// ── Task 19 fix round 3 (§D) ──
+test('§D19 R3 I2: one-edit recasts block, any stem', () => {
+  const blocks: Array<[string, string]> = [
+    ['I go to Osaka yesterday for a meeting.', 'Oh, you went to Osaka yesterday for a meeting.'],
+    ['I buyed a new laptop for work last week.', 'You bought a new laptop last week.'],
+    ['He go to the office every day by train.', 'He goes to the office every day by train.'],
+    ['I work in the sales department and sell washing machine.', 'Nice, you sell washing machines in the sales department.'],
+    ['I work as sales manager at Nagoya Corporation.', 'So you work as a sales manager at Nagoya Corporation.'],
+  ];
+  for (const [said, tutor] of blocks) {
+    assert.equal(recastsStudentSentence(tutor, said), true, tutor);
+    assert.deepEqual(planSentenceBoard({ tutorText: `${tutor} What else?`, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said }), [], tutor);
+  }
+});
+test('§D19 R3 I2: follow-ups and pronoun flips keep the card', () => {
+  const keeps: Array<[string, string]> = [
+    ['I worked on a project to launch a new product.', 'Launching a new product sounds exciting.'],
+    ['I attended a training course last year in Tokyo.', 'Training courses in Tokyo are popular.'],
+    ['My company makes parts for cars in Nagoya.', 'Your company makes car parts.'],
+    ['I worked on a project to increase sales.', 'You worked on a project to increase sales.'],
+  ];
+  for (const [said, tutor] of keeps) {
+    assert.equal(recastsStudentSentence(tutor, said), false, tutor);
+    const cards = planSentenceBoard({ tutorText: `${tutor} What happened next?`, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said });
+    assert.deepEqual(cards.map((c) => c.sentence), [said], tutor);
+  }
+});
+test('§D19 R3 m5: a question without "?" is no card', () => {
+  assert.equal(cardableStudentSentence('Can you repeat the question please'), null);
+  assert.equal(cardableStudentSentence('Yes, I attended a training course at Nagoya Corporation.'), 'Yes, I attended a training course at Nagoya Corporation.');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

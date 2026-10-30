@@ -1758,6 +1758,15 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('§A19 R2 m6: a once-more ask after a negated say still skips the wrong form', expectedRepeatFor('Don\'t say "I am agree with you". Say it once more: "I agree with you."', null)?.text === 'I agree with you.');
 }
 
+// ── Task 19 fix round 3 (§A m6): a descriptive say is no ask ──
+{
+  check('§A19 R3 m6: "we often just say "…"" ⇒ null', expectedRepeatFor('In English we often just say "I went golfing."', null) === null && !isStrictRepeatAsk('In English we often just say "I went golfing."'));
+  check('§A19 R3 m6: "people normally say "…"" ⇒ null', expectedRepeatFor('Here people normally say "I went golfing."', null) === null);
+  check('§A19 R3 m6: "Say "…"" ⇒ target', expectedRepeatFor('Say "I went golfing."', null)?.text === 'I went golfing.');
+  check('§A19 R3 m6: "Could you say "…"?" / "Now you say "…"" stay asks', expectedRepeatFor('Could you say "I went golfing"?', null)?.text === 'I went golfing' && expectedRepeatFor('Now you say "I went golfing."', null)?.text === 'I went golfing.');
+  check('§A19 R3 m6: a descriptive say then an ask ⇒ the ask counts', expectedRepeatFor('We often just say "I go golf". Say "I went golfing last week."', null)?.text === 'I went golfing last week.');
+}
+
 // ── Task 19 §A: VTR wiring ──
 {
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');

@@ -80,7 +80,22 @@ const JA_SAY_IT_ASK_RE = /言(?:って|い)(?:み(?:ましょう|てください
  *  "…"") is not: the verb must not follow a modal or a "we / people" subject. */
 // Fix round 2 (m6): never / don't / do not / not / shouldn't before the verb
 // is a negated say ("Never say "I have went there".") — no ask.
-const SAY_QUOTE_ASK_RE = /(?:(?<!\b(?:can|could|might|would|also|often|usually|we|they|people|never|don['’]t|do not|not|shouldn['’]t)\s+)\b(?:say|repeat|try saying)\b|言って)[^"“「.!?。！？]{0,40}["“「]/iu;
+const SAY_QUOTE_ASK_RE = /(?:(?<!\b(?:can|could|might|would|also|often|usually|we|they|people|never|don['’]t|do not|not|shouldn['’]t)\s+)\b(?:say|repeat|try saying)\b|言って)[^"“「.!?。！？]{0,40}["“「]/giu;
+/** Fix round 3 (m6): a descriptive say with words between subject and verb —
+ *  "In English we often just say "…"", "people normally say "…"", "you
+ *  sometimes say "…"" — is no ask. A bare "you" stays an ask ("Now you say
+ *  "…"", "Could you say "…"?"): it needs an adverb, and never after can /
+ *  could / would / will / do / did. */
+const DESCRIPTIVE_SAY_LEAD_RE = /(?:\b(?:we|they|people)\s+(?:\w+\s+){0,2}|(?<!\b(?:can|could|would|will|do|did)\s+)\byou\s+(?:\w+\s+){0,1}(?:often|usually|just|normally|also|sometimes)\s+)$/i;
+
+/** A say-verb leading into a quote that is not descriptive (fix round 3, m6). */
+function hasSayQuoteAsk(t: string): boolean {
+  for (const m of t.matchAll(SAY_QUOTE_ASK_RE)) {
+    const before = t.slice(Math.max(0, (m.index ?? 0) - 60), m.index ?? 0);
+    if (!DESCRIPTIVE_SAY_LEAD_RE.test(before)) return true;
+  }
+  return false;
+}
 /** Fix round 2 (m6): a negated say and the quote it introduces — the wrong
  *  form (`Don't say "I am agree", say "I agree"`), never a target. */
 const NEGATED_SAY_QUOTE_RE = /\b(?:never|don['’]t|do not|not|shouldn['’]t)\s+(?:say|use)\b[^"“「.!?。！？]{0,40}["“「][^"”」]*["”」]?/gi;
@@ -99,7 +114,7 @@ function lastTargetQuote(text: string): string | null {
  *  naturally now", "we can say that …"). */
 export function isStrictRepeatAsk(text: string): boolean {
   const t = text ?? '';
-  return isRetryAsk(t) || SAY_AGAIN_RE.test(t) || /\brepeat (?:it |that |this )?after me\b/i.test(t) || JA_SAY_IT_ASK_RE.test(t) || SAY_QUOTE_ASK_RE.test(t);
+  return isRetryAsk(t) || SAY_AGAIN_RE.test(t) || /\brepeat (?:it |that |this )?after me\b/i.test(t) || JA_SAY_IT_ASK_RE.test(t) || hasSayQuoteAsk(t);
 }
 
 /** Task 19 §A5: "starting with / begin with "…"" — the verb phrase leads into
