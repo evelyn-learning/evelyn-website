@@ -90,10 +90,15 @@ export function isStrictRepeatAsk(text: string): boolean {
   return isRetryAsk(t) || SAY_AGAIN_RE.test(t) || /\brepeat (?:it |that |this )?after me\b/i.test(t) || JA_SAY_IT_ASK_RE.test(t) || SAY_QUOTE_ASK_RE.test(t);
 }
 
+/** Task 19 §A5: "starting with / begin with "…"" — the verb phrase leads into
+ *  an opening quote within 20 chars, no sentence break between. */
+const STARTER_ASK_RE = /\b(?:start(?:ing)?|begin(?:ning)?)\s+with\b[^"“「.!?。！？]{0,20}["“「]/i;
+
 /** Task 18 §A (GDI run 6): the line the student was asked to say, for the
  *  perception classifier's expected-repeat exemption. Fix round 2 (m2) order:
  *  an armed pronunciation target, else the last quoted sentence of the last
- *  delivered tutor turn when that turn is a strict repeat ask, else a
+ *  delivered tutor turn when that turn is a strict repeat ask (then, Task 19
+ *  §A5, when it is a starter ask), else a
  *  pronunciation clip sent moments ago (`recentClip` — the capture disarms
  *  when the clip closes, before the transcript lands). null otherwise. */
 export function expectedRepeatFor(
@@ -104,6 +109,15 @@ export function expectedRepeatFor(
   if (armedReference && armedReference.trim()) return { text: armedReference.trim() };
   const t = lastTutorTurn ?? '';
   if (t && isStrictRepeatAsk(t)) {
+    const quotes = extractQuotedSentences(t);
+    if (quotes.length > 0) return { text: quotes[quotes.length - 1]! };
+  }
+  // Task 19 fix round 1 (§A5, GDI run 7, 197 s): `Could you say that in one
+  // English sentence, starting with "I work in the sales department"?` — the
+  // student said the starter alone, word for word, and it dropped as
+  // self-voice. A starter ask names a line the student is expected to say.
+  // (extractQuotedSentences needs ≥ 3 words, so an "I am" starter is no target.)
+  if (t && STARTER_ASK_RE.test(t)) {
     const quotes = extractQuotedSentences(t);
     if (quotes.length > 0) return { text: quotes[quotes.length - 1]! };
   }

@@ -23,6 +23,7 @@ import {
   ECHO_ANCHOR_EPSILON_MS,
   TTS_PADDING_TRAIL_MS,
   expectedAnswerSpokenInScripts,
+  quoteOffsetMs,
   type HeuristicInput,
   type ProductionStateForClassifier,
   type RecentTtsScript,
@@ -1651,8 +1652,8 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   // (run 7 logged only the score, not the dropped text; this assembled
   // answer scores 0.57 against the line — over the 0.55 bar)
   const said2 = 'I work in the sales department, selling washing machines.';
-  const in2 = { transcript: said2, recentTtsScripts: s2, now, productionState: L, expectedRepeat: expectedRepeatFor(s2[0]!.text, null) };
-  check('§A19 run-7 197 s: "say that … starting with" is no repeat target', in2.expectedRepeat === null);
+  // A2 is tested on its own here (no target); §A5 below covers the starter.
+  const in2 = { transcript: said2, recentTtsScripts: s2, now, productionState: L, expectedRepeat: null };
   const off2 = classifyHeuristic({ ...in2, speechStartedAt: end - 200, answerEndExemption: false });
   check('§A19 run-7 197 s: flag off ⇒ drop (the run-7 behaviour)', off2.verdict === 'drop_self_voice', `${off2.verdict} (${off2.reason})`);
   const r2 = classifyHeuristic({ ...in2, speechStartedAt: end - 200 });
@@ -1700,6 +1701,29 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('§A19 A1: say … quote more than 40 chars away ⇒ not an ask', !isStrictRepeatAsk('Could you say that in one English sentence, starting with "I work in the sales department"?'));
   check('§A19 A1: sentence break between verb and quote ⇒ not an ask', !isStrictRepeatAsk('Say it. "Hello there."'));
 }
+// ── Task 19 fix round 1 (§A5): a starter ask names the line the student is expected to say ──
+// Run 7, 197 s (Otter): the student said the quoted starter alone, verbatim.
+{
+  const now = 6_000_000;
+  const end = now - 3000;
+  const ask = 'Could you say that in one English sentence, starting with "I work in the sales department"?';
+  const scripts: RecentTtsScript[] = [{ text: ask, spokenStartedAt: end - 5000, spokenEndedAt: end }];
+  const target = expectedRepeatFor(ask, null);
+  check('§A5 (a): starter ask ⇒ the quoted starter is the target', target?.text === 'I work in the sales department', JSON.stringify(target));
+  const qStart = end - 5000 + quoteOffsetMs(scripts[0]!, target!.text);
+  check('§A5 (a): the quote starts ≥ 1 s before end − 200 ms', qStart + 1000 <= end - 200, `${qStart} vs ${end}`);
+  const base = { transcript: 'I work in the sales department', recentTtsScripts: scripts, now, productionState: 'listening' as ProductionStateForClassifier, expectedRepeat: target };
+  const ra = classifyHeuristic({ ...base, speechStartedAt: end - 200 });
+  check('§A5 (a): the bare starter at end − 200 ms ⇒ expected_repeat', ra.verdict === 'new_turn' && ra.exemption === 'expected_repeat', `${ra.verdict} (${ra.reason})`);
+  const rb = classifyHeuristic({ ...base, speechStartedAt: qStart + 450 });
+  check('§A5 (b): the starter echoed at quote start + 450 ms ⇒ drop', rb.verdict === 'drop_self_voice', `${rb.verdict} (${rb.reason})`);
+  check('§A5 (c): a 2-word starter ⇒ null', expectedRepeatFor('Start with "I am" if that helps.', null) === null);
+  check('§A5 (d): "starting with" and no quote ⇒ null', expectedRepeatFor('Could you answer in one sentence, starting with your job title?', null) === null);
+  check('§A5: "begin with" form', expectedRepeatFor('Please begin with "Last year, I went" and finish it.', null)?.text === 'Last year, I went');
+  check('§A5: quote more than 20 chars after the verb phrase ⇒ null', expectedRepeatFor('Start with a short sentence about your job, like "I work in sales here."', null) === null);
+  check('§A5: a strict repeat ask still wins (its last quote)', expectedRepeatFor('Not "I go golf". Say it once more, starting with "I went golfing last week."', null)?.text === 'I went golfing last week.');
+}
+
 // ── Task 19 §A: VTR wiring ──
 {
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
