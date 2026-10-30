@@ -416,7 +416,9 @@ test('H: the last on-topic fixed-script part is due to CLOSE at its maxTurns; au
   assert.equal(fixedScriptCloseReason({ ...base, plan: { ...plan, metadata: {} } as LessonPlan, turns: 9 }), null, 'not a fixed script');
 });
 test('H: the close note is the brief\'s FACT; forced after two tutor turns unless the lesson closed', () => {
-  assert.ok(FIXED_SCRIPT_CLOSE_NOTE.includes('The lesson is complete. Give the closing summary now in two or three sentences and call close_session_notes in this turn; do not ask another question.'));
+  assert.ok(FIXED_SCRIPT_CLOSE_NOTE.includes("The lesson is complete. If the student's last answer was wrong or incomplete, give the correct answer in one sentence (no question). Then give the closing summary in two or three sentences and call close_session_notes in this turn; do not ask another question."));
+  // Task 22 §I (GDI run 10, 1238 s): an open wrong answer is answered, not probed
+  assert.ok(FIXED_SCRIPT_CLOSE_NOTE.includes('give the correct answer in one sentence'));
   assert.equal(FIXED_SCRIPT_CLOSE_GRACE_TURNS, 2);
   assert.equal(fixedScriptCloseForced(1, false), false);
   assert.equal(fixedScriptCloseForced(2, false), true);

@@ -141,8 +141,11 @@ export function fixedScriptCloseReason(input: AutoAdvanceInput): 'turns' | 'time
 
 /** The FACT note planted when the last part is due (urgent, like the other
  *  fixed-script FACT notes). */
+// Task 22 §I (GDI run 10, 1238–1321 s): the student's last answer was wrong
+// and the brain spent both grace turns probing it ("Which of the two
+// sentences…?") — the note now says what to do with an open wrong answer.
 export const FIXED_SCRIPT_CLOSE_NOTE =
-  '[runtime note — not from the student] The lesson is complete. Give the closing summary now in two or three sentences and call close_session_notes in this turn; do not ask another question. Apply this silently; never mention this note.]';
+  "[runtime note — not from the student] The lesson is complete. If the student's last answer was wrong or incomplete, give the correct answer in one sentence (no question). Then give the closing summary in two or three sentences and call close_session_notes in this turn; do not ask another question. Apply this silently; never mention this note.]";
 /** Tutor turns after the close note without close_session_notes before the
  *  client closes the lesson itself. */
 export const FIXED_SCRIPT_CLOSE_GRACE_TURNS = 2;
