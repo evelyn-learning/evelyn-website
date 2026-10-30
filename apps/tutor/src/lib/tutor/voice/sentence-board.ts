@@ -24,8 +24,10 @@ export interface QuotedSentence {
   sentence: string; kind: 'correction' | 'model' | 'echo'; emphasis: string[];
   /** Task 15 §A — why a model card exists when the student's sentence was
    *  checked correct: 'echo' = a quote of the student's own (correct) words,
-   *  'checked' = the check's sentence, said unquoted by the tutor. */
-  source?: 'echo' | 'checked';
+   *  'checked' = the check's sentence, said unquoted by the tutor;
+   *  'affirmed' = (Task 20 §G1) a quote of the student's words the tutor
+   *  itself called correct while the check was silent / undecided. */
+  source?: 'echo' | 'checked' | 'affirmed';
 }
 
 export const SENTENCE_BOARD_MAX_PER_TURN = 2;
@@ -113,16 +115,46 @@ const DANGLING_END_RE = /,\s*(?:I|you|we|they|he|she|it|the|a|an)[.!?]?$/i;
 
 /** Qualifying quoted spans with the text just before (INTRO_WINDOW + 20 chars
  *  of lookbehind context; introWithin) and after each. */
-function quotedSpansWithContext(text: string): Array<{ span: string; before: string; after: string }> {
-  const out: Array<{ span: string; before: string; after: string }> = [];
+function quotedSpansWithContext(text: string): Array<{ span: string; before: string; after: string; at: number; end: number }> {
+  const out: Array<{ span: string; before: string; after: string; at: number; end: number }> = [];
   if (!text) return out;
   for (const m of text.matchAll(QUOTE_RE)) {
     const span = qualifyingSpan(quoteInner(m));
     if (!span) continue;
     const at = m.index ?? 0;
-    out.push({ span, before: text.slice(Math.max(0, at - INTRO_WINDOW - 20), at), after: text.slice(at + m[0].length, at + m[0].length + INTRO_WINDOW) });
+    out.push({ span, before: text.slice(Math.max(0, at - INTRO_WINDOW - 20), at), after: text.slice(at + m[0].length, at + m[0].length + INTRO_WINDOW), at, end: at + m[0].length });
   }
   return out;
+}
+
+/** Task 20 §G1 (GDI run 8, 558 s): the tutor's own word that a quoted
+ *  sentence is right — "… is a natural sentence", "That's a correct
+ *  sentence", "complete and clear", 「自然」「伝わります」. */
+const AFFIRM_EN_RE = /\b(?:is|that['’]s|what a) (?:a )?(?:correct|right|natural|clear|complete|good|great|perfect|nice)(?: (?:sentence|statement|answer))?\b|\bcomplete and clear\b|\bis correct\b|\bsounds (?:natural|right)\b/i;
+const AFFIRM_JA_RE = /正しい|自然|きちんと言え|伝わります/;
+/** The text a quote's affirmation may sit in: its own sentence (the quote
+ *  text itself left out) and the sentence after it. */
+export function quoteAffirmed(text: string, at: number, end: number): boolean {
+  const t = text ?? '';
+  const lead = t.slice(0, at);
+  const leadStart = Math.max(lead.search(/[^.!?。！？]*$/), 0);
+  const rest = t.slice(end);
+  const sentenceRe = /^[^.!?。！？]*[.!?。！？]?/;
+  // The words before the quote in its sentence, then: a quote that ends its
+  // own sentence ("…last year.") is followed by the next sentence only;
+  // otherwise the rest of the quote's sentence plus the next one.
+  const quoteClosesSentence = /[.!?。！？]\s*["”’」』]?\s*$/.test(t.slice(at, end));
+  const first = sentenceRe.exec(rest)?.[0] ?? '';
+  const second = quoteClosesSentence ? '' : (sentenceRe.exec(rest.slice(first.length).trimStart())?.[0] ?? '');
+  const window = `${lead.slice(leadStart)} ${first} ${second}`;
+  return AFFIRM_EN_RE.test(window) || AFFIRM_JA_RE.test(window);
+}
+
+/** Task 20 §G3 (GDI run 8, 864 s): the student's reply to a hint / more-time
+ *  offer ("Yes, I would like hint.") is not a sentence to board. */
+const META_OFFER_RE = /\b(?:hint|wait a little|more time|take your time|shall I wait|need a moment)\b|ヒント|待ち/i;
+export function isMetaOfferTurn(prevTutorText: string | null | undefined): boolean {
+  return META_OFFER_RE.test(prevTutorText ?? '');
 }
 
 /** True when `re` matches `before` with the match starting inside its last
@@ -392,43 +424,57 @@ export function planSentenceBoard(input: {
   studentCorrect?: boolean;
   /** the check's `proposed` sentence (what the student's message proposes), when studentCorrect */
   checkedSentence?: string | null;
+  /** Task 20 §G1: the check is silent (none) or undecided — the tutor's own
+   *  affirmation of a quote ("… is a natural sentence") then promotes it. */
+  affirmFallback?: boolean;
+  /** Task 20 §G3: the previous tutor turn (a hint / more-time offer ⇒ the
+   *  student's reply gets no checked card). */
+  prevTutorText?: string | null;
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   const studentCorrect = input.studentCorrect === true;
+  const affirmFallback = !studentCorrect && input.affirmFallback === true && !hasCorrectionCue(input.tutorText);
   const spans = quotedSpansWithContext(input.tutorText)
     .filter((q) => isCardCandidate(q.span) && !isSentenceStarter(q.span, q.before, q.after));
-  const distinct: { s: string; n: string; said: boolean }[] = [];
+  const distinct: { s: string; n: string; said: boolean; affirmed: boolean }[] = [];
   for (const q of spans) {
     const n = norm(q.span);
     const said = isSaidQuote(q.before, q.after);
+    const affirmed = affirmFallback && quoteAffirmed(input.tutorText, q.at, q.end);
     const dup = distinct.find((d) => d.n === n);
-    if (dup) { dup.said = dup.said || said; continue; }
+    if (dup) { dup.said = dup.said || said; dup.affirmed = dup.affirmed || affirmed; continue; }
     if (!n) continue;
-    distinct.push({ s: q.span, n, said });
+    distinct.push({ s: q.span, n, said, affirmed });
   }
   const kept = distinct.filter((d) => !distinct.some((o) => o !== d && o.n.length > d.n.length && ` ${o.n} `.includes(` ${d.n} `)));
   // Task 18 §D: a quote introduced as the student's words ("you said …") is
   // an echo whatever its overlap, and is never promoted.
   const raw = kept.map((d, i) => ({
     q: d.said ? { sentence: d.s, kind: 'echo' as const, emphasis: [] } : classifyQuotedSentence(d.s, input.studentLast),
-    len: d.n.length, i, said: d.said,
+    len: d.n.length, i, said: d.said, affirmed: d.affirmed,
   }));
   // Fix round 1 (I2): a turn that corrects the student's sentence says it was
   // NOT right as it stood (it passed the check "for the task as stated") —
   // no echo promotion, no checked-sentence card; the correction is the card.
-  const promote = studentCorrect && !raw.some((c) => c.q.kind === 'correction');
+  const noCorrection = !raw.some((c) => c.q.kind === 'correction');
+  const promote = studentCorrect && noCorrection;
+  // Task 20 §G1 (GDI run 8, 558 s: the check was silent, the tutor said
+  // "That's a correct sentence" — the echo was filtered): with the check
+  // silent / undecided, an echo the tutor itself affirms is a model card.
+  const promoteAffirmed = affirmFallback && noCorrection;
   const classified = raw
     .map((c) => (c.q.kind === 'echo' && promote && !c.said ? { ...c, q: { sentence: c.q.sentence, kind: 'model' as const, emphasis: [], source: 'echo' as const } } : c))
+    .map((c) => (c.q.kind === 'echo' && promoteAffirmed && c.affirmed && !c.said ? { ...c, q: { sentence: c.q.sentence, kind: 'model' as const, emphasis: [], source: 'affirmed' as const } } : c))
     .filter((c) => c.q.kind !== 'echo');
   // Task 19 §D (GDI run 7): the tutor paraphrased correct sentences ("Creating
   // the slogan was the challenge…") and nothing was carded for six minutes.
   // A correct student sentence goes on the board whether or not the tutor
   // repeats it — no sentenceContains requirement.
-  if (promote && input.checkedSentence && !hasCorrectionCue(input.tutorText)) {
+  if (promote && input.checkedSentence && !hasCorrectionCue(input.tutorText) && !isMetaOfferTurn(input.prevTutorText)) {
     const checked = cardableStudentSentence(input.checkedSentence);
     if (checked && !recastsStudentSentence(input.tutorText, checked)
       && !classified.some((c) => sameSentence(c.q.sentence, checked))) {
-      classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length, said: false });
+      classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length, said: false, affirmed: false });
     }
   }
   classified.sort((a, b) => {

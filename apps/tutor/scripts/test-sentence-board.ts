@@ -15,6 +15,7 @@ import {
   sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex, autoSentenceCardsToReplace,
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
+  quoteAffirmed, isMetaOfferTurn,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -385,9 +386,10 @@ test('A fix round 1 (I2): a turn that corrects the student plans no echo / check
 });
 test('A: VTR passes the check to planSentenceBoard and tags the event source', () => {
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  const at = VTR.indexOf('const cards = planSentenceBoard({');
-  const block = VTR.slice(at, at + 800);
-  assert.ok(/studentCorrect: precheckDecides\(boardPc\) && boardPc\.verdict === 'correct' && boardPc\.answers !== 'other_part' && boardPc\.answers !== 'neither'/.test(block));
+  const at = VTR.indexOf('const boardStudentCorrect = ');
+  const block = VTR.slice(at, at + 1200);
+  assert.ok(/const boardStudentCorrect = precheckDecides\(boardPc\) && boardPc\.verdict === 'correct' && boardPc\.answers !== 'other_part' && boardPc\.answers !== 'neither'/.test(block));
+  assert.ok(block.includes('studentCorrect: boardStudentCorrect,'));
   assert.ok(block.includes('checkedSentence: boardPc?.proposed ?? null'));
   assert.ok(VTR.includes('const boardPc = verdictPrecheckRef.current;'));
   assert.ok(VTR.includes("`kind=${card.kind}${card.source ? ` source=${card.source}` : ''}"));
@@ -630,6 +632,61 @@ test('20A: TUTOR_SPOKEN_EMPHASIS_CAPS is opt-in (=== on) and VTR passes it', () 
   assert.ok(/TUTOR_SPOKEN_EMPHASIS_CAPS = process\.env\.NEXT_PUBLIC_TUTOR_SPOKEN_EMPHASIS_CAPS === 'on'/.test(flags));
   const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(vtr.includes('{ emphasisCaps: TUTOR_SPOKEN_EMPHASIS_CAPS }'));
+});
+
+// ── Task 20 §G (GDI run 8) ───────────────────────────────────────────────
+const G558 = `"I attended a business event in Tokyo last year." That's a correct sentence, and the past simple fits because "last year" is a finished time. Let's keep going, since you've just used the past simple: what was the event about?`;
+test('20G1: precheck silent + the tutor affirms the echo ⇒ model card source=affirmed', () => {
+  const cards = planSentenceBoard({ tutorText: G558, studentLast: 'I attended a business event in Tokyo last year.', renderedThisTurn: false, affirmFallback: true });
+  assert.deepEqual(cards, [{ sentence: 'I attended a business event in Tokyo last year.', kind: 'model', emphasis: [], source: 'affirmed' }]);
+});
+test('20G1: without the fallback the echo stays filtered (pre-fix)', () => {
+  assert.deepEqual(planSentenceBoard({ tutorText: G558, studentLast: 'I attended a business event in Tokyo last year.', renderedThisTurn: false }), []);
+});
+test('20G1: a correction cue wins — no promotion', () => {
+  const t = `"I attended a business event in Tokyo last year." That's a correct sentence, but we say "an event" here.`;
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: 'I attended a business event in Tokyo last year.', renderedThisTurn: false, affirmFallback: true }).filter((c) => c.source === 'affirmed'), []);
+});
+test('20G1: an echo with no affirmation nearby is not promoted', () => {
+  const t = `"I attended a business event in Tokyo last year." Tell me more about it. What did you see?`;
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: 'I attended a business event in Tokyo last year.', renderedThisTurn: false, affirmFallback: true }), []);
+});
+test('20G1: affirmation window = the quote\'s sentence or the next one (JA too)', () => {
+  const t = 'Good. "I work in sales." Then tell me more. That is a natural sentence.';
+  const at = t.indexOf('"I work');
+  assert.equal(quoteAffirmed(t, at, t.indexOf('." Then') + 2), false, 'two sentences on is too far');
+  const ja = '「I sell washing machines.」と、きちんと言えましたね。';
+  assert.equal(quoteAffirmed(ja, 0, ja.indexOf('」') + 1), true);
+});
+const G913 = { tutorText: `"Robots can walk and talk" is a clear statement, and you used "learned" correctly. Now let's check your English: "I learned that robots can walk and talk" is a natural sentence. Could you tell me one more thing you learned at the event, starting with "I learned that…"?`, studentLast: 'I learned uh that robots can walk and talk.' };
+const G1302 = { tutorText: `"The seminar was very good because it was motivational, and the result was positive." That sentence is complete and clear. Now, you asked earlier about one project you're proud of, so please tell me one thing you would do differently next time.`, studentLast: 'The seminar was very good because it was motivational and the result was positive.' };
+test('20G2: 913 s — verdict correct at MEDIUM confidence (precheckDecides false): ONE model card via the affirmation', () => {
+  const cards = planSentenceBoard({ ...G913, renderedThisTurn: false, studentCorrect: false, affirmFallback: true, checkedSentence: 'I learned that robots can walk and talk.' });
+  assert.deepEqual(cards.map((c) => c.sentence), ['I learned that robots can walk and talk']);
+  assert.equal(cards[0]!.kind, 'model');
+});
+test('20G2: 1302 s — one model card', () => {
+  const cards = planSentenceBoard({ ...G1302, renderedThisTurn: false, studentCorrect: false, affirmFallback: true, checkedSentence: G1302.studentLast });
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0]!.sentence, 'The seminar was very good because it was motivational, and the result was positive.');
+});
+test('20G2: with a deciding check the same inputs still give one card each', () => {
+  assert.equal(planSentenceBoard({ ...G913, renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I learned that robots can walk and talk.' }).length, 1);
+  assert.equal(planSentenceBoard({ ...G1302, renderedThisTurn: false, studentCorrect: true, checkedSentence: G1302.studentLast }).length, 1);
+});
+test('20G2: VTR — affirmFallback when the check is silent or correct-but-undecided', () => {
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes("affirmFallback: !boardStudentCorrect && (!boardPc || (boardPc.verdict === 'correct' && !precheckDecides(boardPc)))"));
+  assert.ok(vtr.includes('prevTutorText: prevBoardTutorTextRef.current'));
+});
+test('20G3: a reply to a hint / more-time offer gets no checked card', () => {
+  const prev = 'Take your time. Would you like a hint, or a little more time to think about the question?';
+  const tutor = 'Of course. Here\'s a hint: use the past simple when there\'s a specific time word like "last year." So the verb changes form. Try starting with "I attended…" and tell me one event you went to last year.';
+  const args = { tutorText: tutor, studentLast: 'Yes, I would like hint.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'Yes, I would like hint.' };
+  assert.ok(planSentenceBoard(args).some((c) => c.source === 'checked'), 'pre-fix: carded');
+  assert.equal(planSentenceBoard({ ...args, prevTutorText: prev }).some((c) => c.source === 'checked'), false);
+  assert.equal(isMetaOfferTurn('ヒントが必要ですか？'), true);
+  assert.equal(isMetaOfferTurn('What did you do last weekend?'), false);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

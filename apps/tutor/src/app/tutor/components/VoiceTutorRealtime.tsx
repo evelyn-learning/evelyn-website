@@ -4923,6 +4923,8 @@ export function VoiceTutorRealtime({
   const fixedScriptOutlineShownRef = useRef(false);
   secondTutorLanguageRef.current = secondTutorLanguage(tutorLanguages);
   const sentenceStressRef = useRef<{ studentLast: string | null; cards: Array<{ sentence: string; emphasis: string[] }> }>({ studentLast: null, cards: [] });
+  // Task 20 §G3: the previous tutor turn the sentence board saw.
+  const prevBoardTutorTextRef = useRef<string | null>(null);
   /** The Cartesia transcript only (rewriteForTTS first, stress after —
    *  composeSpokenText); chat, transcript and board keep the display text. */
   const ttsTextTransform = useCallback((display: string, rewrite: (s: string) => string): string => {
@@ -20462,13 +20464,22 @@ export function VoiceTutorRealtime({
           // student's sentence correct ⇒ the tutor quoting it back (or saying
           // the checked sentence unquoted) is a model sentence and gets a card.
           const boardPc = verdictPrecheckRef.current;
+          const boardStudentCorrect = precheckDecides(boardPc) && boardPc.verdict === 'correct' && boardPc.answers !== 'other_part' && boardPc.answers !== 'neither';
           const cards = planSentenceBoard({
             tutorText: fullText,
             studentLast: sentenceStressRef.current.studentLast,
             renderedThisTurn: totalToolNamesSeen.some((n) => RENDER_TOOLS.has(n)),
-            studentCorrect: precheckDecides(boardPc) && boardPc.verdict === 'correct' && boardPc.answers !== 'other_part' && boardPc.answers !== 'neither',
+            studentCorrect: boardStudentCorrect,
             checkedSentence: boardPc?.proposed ?? null,
+            // Task 20 §G1 (GDI run 8: 558 s precheck none, 913 s / 1302 s
+            // verdict correct at medium confidence — no card): a check that
+            // is silent or undecided (not a wrong verdict) lets the tutor's
+            // own affirmation of the quote promote it.
+            affirmFallback: !boardStudentCorrect && (!boardPc || (boardPc.verdict === 'correct' && !precheckDecides(boardPc))),
+            // Task 20 §G3 (864 s "Yes, I would like hint." boarded): the turn before.
+            prevTutorText: prevBoardTutorTextRef.current,
           });
+          prevBoardTutorTextRef.current = fullText;
           for (const card of cards) {
             // A pending segment page opens with this card, so the page the
             // log shows as current is the one being left — nothing to dedupe.
