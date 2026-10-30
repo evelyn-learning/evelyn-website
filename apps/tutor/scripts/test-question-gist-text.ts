@@ -11,7 +11,7 @@
  *
  * Run: npx tsx scripts/test-question-gist-text.ts
  */
-import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply, lastAskSentence } from '../src/lib/tutor/question-gist-text';
+import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply, lastAskSentence, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn, capPinText } from '../src/lib/tutor/question-gist-text';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -183,8 +183,28 @@ check('over-long ask capped at 220', (lastAskSentence(`Tell me ${'about your wor
   const ts = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
   check('TutorSession: ask pin gated on the language-session predicate',
     /const languageSession = sessionAllowsNonLatin\(tutorLanguages\) \|\| subject === 'languages';/.test(ts), true);
-  check('TutorSession: gist-empty path falls back to the ask', /else if \(!askFallback\('gist empty'\)\)/.test(ts), true);
+  check('TutorSession: gist-empty path falls back to the ask', /else if \(!askFallback\('gist empty'\)/.test(ts), true);
   check('TutorSession: qpin_set_ask event', /'qpin_set_ask'/.test(ts), true);
+}
+
+// --- Task 14 §C (GDI run 4): verbatim question pin + replace ------------
+check('live miss 1 → verbatim question', verbatimQuestionPin('Nice, you sold 25 machines. Now, can you tell me one more thing you sold, or a customer you helped?'), 'Now, can you tell me one more thing you sold, or a customer you helped?');
+check('live miss 2 → verbatim question', verbatimQuestionPin('Good. Now, can you tell me one thing you did with a customer last month?'), 'Now, can you tell me one thing you did with a customer last month?');
+check('no question → null', verbatimQuestionPin('Look at the board.'), null);
+check('long question capped at 220 with …', (() => { const v = verbatimQuestionPin(`Can you ${'tell me about your work and '.repeat(12)}more?`) ?? ''; return v.length <= 220 && v.endsWith('…'); })(), true);
+check('capPinText leaves short text alone', capPinText('Tell me more.'), 'Tell me more.');
+check('candidate: an ask after a conversational "?" wins', languagePinCandidate('Nice, right? Now, say the whole sentence again.'), 'Now, say the whole sentence again.');
+check('candidate: a trailing question', languagePinCandidate('Tell me about your job. What do you do every day?'), 'What do you do every day?');
+check('candidate: none', languagePinCandidate('Great job.'), null);
+check('replace: an older pin + a new candidate → replaced', pinReplacedByTurn('t1', 't2', 'What do you do?'), true);
+check('replace: same turn → kept', pinReplacedByTurn('t2', 't2', 'What do you do?'), false);
+check('replace: no candidate → kept (stale sweep / answer clear own it)', pinReplacedByTurn('t1', 't2', null), false);
+check('replace: no pin → nothing to replace', pinReplacedByTurn(null, 't2', 'What?'), false);
+{
+  const ts = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
+  check('TutorSession: replace path gated on the language session', /if \(languageSession && pinReplacedByTurn\(questionPin\?\.turnId, entry\.id, languagePinCandidate\(entry\.text\)\)\)/.test(ts), true);
+  check('TutorSession: gist-empty → ask, then verbatim question', /else if \(!askFallback\('gist empty'\) && !verbatimFallback\(\)\)/.test(ts), true);
+  check('TutorSession: qpin_set_verbatim event', /'qpin_set_verbatim'/.test(ts), true);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

@@ -88,11 +88,37 @@ export function lastAskSentence(text: string): string | null {
   for (let j = askIdx + 1; j < sentences.length; j++) {
     if (/[?？]["”’)]?\s*$/.test(sentences[j])) return null;
   }
-  const ask = sentences[askIdx];
-  if (ask.length <= QPIN_MAX_CHARS) return ask;
-  const cut = ask.slice(0, QPIN_MAX_CHARS - 1);
+  return capPinText(sentences[askIdx]);
+}
+
+/** A pin text capped at QPIN_MAX_CHARS, cut at a word boundary with "…". */
+export function capPinText(text: string): string {
+  if (text.length <= QPIN_MAX_CHARS) return text;
+  const cut = text.slice(0, QPIN_MAX_CHARS - 1);
   const sp = cut.lastIndexOf(' ');
   return `${(sp > QPIN_MAX_CHARS / 2 ? cut.slice(0, sp) : cut).trim()}…`;
+}
+
+/** GDI run 4 (2026-10-29): the gist model returned nothing for `Now, can you
+ *  tell me one more thing you sold, or a customer you helped?` — in a
+ *  language session the turn's last question sentence is pinned verbatim
+ *  instead (capped like an ask pin). null ⇒ no question sentence. */
+export function verbatimQuestionPin(text: string): string | null {
+  const questions = stripMarkdownEmphasis(text ?? '').match(/[^.!?\n]{4,}\?/g);
+  const last = questions?.[questions.length - 1]?.trim();
+  return last ? capPinText(last) : null;
+}
+
+/** Language sessions: the pin a tutor turn would carry, before any gist —
+ *  its trailing ask, else its last question. null ⇒ the turn asks nothing. */
+export function languagePinCandidate(text: string): string | null {
+  return lastAskSentence(text) ?? verbatimQuestionPin(text);
+}
+
+/** GDI run 4: a NEW tutor turn that asks something replaces the previous
+ *  turn's pin at once — the old pin must not linger until the stale sweep. */
+export function pinReplacedByTurn(pinTurnId: string | null | undefined, turnId: string, candidate: string | null): boolean {
+  return !!pinTurnId && pinTurnId !== turnId && !!candidate;
 }
 
 /** Task Y2: pure seam for the Haiku reply → gist decision, extracted out

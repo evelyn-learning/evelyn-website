@@ -57,7 +57,7 @@ import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { type SessionMode, textModeSecondsPerWord } from '@/lib/tutor/voice/resolve-session-mode';
 import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL } from '@/lib/tutor/orchestrator/flags';
-import { lastQuestionSentence, lastAskSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
+import { lastQuestionSentence, lastAskSentence, stripMarkdownEmphasis, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn } from '@/lib/tutor/question-gist-text';
 import { sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
 import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
 import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/lib/tutor/qpin-behavior';
@@ -1383,6 +1383,24 @@ export default function TutorSession(props: TutorSessionProps) {
     }
     if (pinFetchedTurnRef.current === entry.id) return;
     pinFetchedTurnRef.current = entry.id;
+    // GDI run 4 (2026-10-29): a new turn that asks something replaces the
+    // previous pin NOW (language sessions) — the gist below lands ~200 ms
+    // later, and when it dropped, the old pin lingered until the stale sweep.
+    if (languageSession && pinReplacedByTurn(questionPin?.turnId, entry.id, languagePinCandidate(entry.text))) {
+      onDebugEvent?.('qpin_replaced', `new ask in turn ${entry.id} — "${(questionPin?.gist ?? '').slice(0, 60)}"`);
+      setQuestionPin((prev) => (prev && prev.turnId !== entry.id ? null : prev));
+    }
+    // Language sessions: the gist came back empty but the turn ends with a
+    // question — pin that question verbatim (live: "Now, can you tell me one
+    // more thing you sold, or a customer you helped?" was dropped).
+    const verbatimFallback = (): boolean => {
+      if (!languageSession) return false;
+      const q = verbatimQuestionPin(entry.text);
+      if (!q) return false;
+      setQuestionPin({ turnId: entry.id, gist: q });
+      onDebugEvent?.('qpin_set_verbatim', `"${q.slice(0, 60)}"`);
+      return true;
+    };
     // R47 Task 3c (review fix): capture the segment this turn belongs to
     // BEFORE the async call. If the lesson cursor has moved on by the time
     // the fetch resolves, the turn's question is no longer scoped to the
@@ -1429,7 +1447,7 @@ export default function TutorSession(props: TutorSessionProps) {
         if (gist) {
           setQuestionPin({ turnId: entry.id, gist });
           onDebugEvent?.('qpin_set', `"${gist.slice(0, 60)}"`);
-        } else if (!askFallback('gist empty')) {
+        } else if (!askFallback('gist empty') && !verbatimFallback()) {
           onDebugEvent?.('qpin_drop', 'gist empty (model judged the "?" conversational)');
         }
       })
