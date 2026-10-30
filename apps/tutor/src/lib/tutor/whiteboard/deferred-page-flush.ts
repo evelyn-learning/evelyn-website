@@ -95,3 +95,22 @@ export function emptyPageIndexes(batch: ReadonlyArray<{ action: string }>): numb
   });
   return empty;
 }
+
+/**
+ * Task 20 §D2 (GDI run 8, 144 s): the client advanced a fixed-script part at
+ * the end of a turn, the turn's auto card was (rightly) held on the page being
+ * left — and the new part's page then waited for the NEXT render: the rail
+ * chip read "Present perfect" while the board stayed on the old page for 49 s.
+ * An authored part page still pending when the advancing turn is over (brain
+ * idle, audio drained, every buffered render painted) opens at once. Other
+ * deferred pages keep waiting for content (the empty-page guard they exist for).
+ */
+export function flushDeferredPageAtTurnEnd(input: {
+  pending: { authored?: boolean } | null | undefined;
+  brainBusy: boolean;
+  speaking: boolean;
+  bufferedRenders: number;
+}): boolean {
+  const { pending, brainBusy, speaking, bufferedRenders } = input;
+  return !!pending && pending.authored === true && !brainBusy && !speaking && bufferedRenders === 0;
+}

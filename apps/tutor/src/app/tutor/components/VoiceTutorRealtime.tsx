@@ -88,7 +88,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, type LastPronunciationTarget } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
@@ -5908,6 +5908,33 @@ export function VoiceTutorRealtime({
       renderStallTimerRef.current = null;
     }
   }, [onWhiteboardCommand, onDebugEvent]);
+
+  // Task 20 §D2 (GDI run 8, 144 s: the chip moved to the new part while the
+  // board stayed on the old page for 49 s): an authored part page still
+  // deferred when the advancing turn is over opens now — after the turn's
+  // renders (the held auto card included) have painted. Called on the turn
+  // audio drain and when the brain goes idle; whichever comes last opens it.
+  const flushDeferredPageAtTurnEndNow = useCallback((why: string) => {
+    const deferred = pendingAdvanceNewPageRef.current;
+    if (!flushDeferredPageAtTurnEnd({
+      pending: deferred,
+      brainBusy: brainBusyRef.current,
+      speaking: productionStateRef.current === 'speaking',
+      bufferedRenders: renderBufferRef.current.length,
+    }) || !deferred) return;
+    pendingAdvanceNewPageRef.current = null;
+    catalogRef.current.openPage({ title: deferred.title, segmentId: deferred.segmentId });
+    catalogRef.current.setCurrentPage(deferred.title);
+    onWhiteboardCommand([{ action: 'newPage', title: deferred.title } as WhiteboardCommand]);
+    console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED at turn end (${why}) → "${deferred.segmentId}" ("${deferred.title}")`);
+    onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title} at turn end`);
+    if (topicShiftPendingRef.current) {
+      topicShiftPendingRef.current = null;
+      onDebugEvent?.('topic_shift_cleared_by_segment_page', `${deferred.segmentId}: ${deferred.title}`);
+    }
+  }, [onWhiteboardCommand, onDebugEvent]);
+  const flushDeferredPageAtTurnEndRef = useRef(flushDeferredPageAtTurnEndNow);
+  flushDeferredPageAtTurnEndRef.current = flushDeferredPageAtTurnEndNow;
 
   // (Re)arm the shared stall timer. Called on each buffer-add and each
   // playback-progress event; only fires after RENDER_SYNC_STALL_MS of NO
@@ -22534,6 +22561,7 @@ export function VoiceTutorRealtime({
       clearTimeout(watchdog);
       setBrainBusy(false);
       inFlightTurnRef.current = null;
+      flushDeferredPageAtTurnEndRef.current('brain idle');
       // Clear the thinking indicator. No-op if TTS already promoted the
       // state to 'speaking' (signalBrainThinking only resets when still
       // 'processing'), so a turn that produced audio is unaffected; this
@@ -23218,6 +23246,7 @@ export function VoiceTutorRealtime({
         // which MUST NOT drainAll; Task 3.2 will consume them for
         // word-anchored flushes.)
         flushReadyRenders({ drainAll: true });
+        flushDeferredPageAtTurnEndRef.current('audio drained');
       }
     },
     // Task 3.1: the Cartesia TTS WebSocket degraded for this session
@@ -23776,6 +23805,8 @@ export function VoiceTutorRealtime({
       // speaking→processing flaps just restart the timer, harmless.
       armIdleNudgeRef.current();
     }
+    // Task 20 §D2: the turn's audio is over — a deferred part page opens now.
+    if (wasSpeakingRef.current && !speaking) flushDeferredPageAtTurnEndRef.current('speech ended');
     wasSpeakingRef.current = speaking;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [realtime.state]);

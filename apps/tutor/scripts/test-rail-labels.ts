@@ -8,6 +8,8 @@
  *
  * Usage: npx tsx scripts/test-rail-labels.ts
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   buildRailModel,
   buildLabelPrompt,
@@ -16,6 +18,7 @@ import {
   loBoundaryBeat,
   buildAdvanceBeatNote,
   railJumpCandidates,
+  compressedChipLabel,
 } from '../src/lib/tutor/lesson-plan/rail-labels';
 import type { LessonPlan, LearningObjective, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
 import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
@@ -616,6 +619,15 @@ async function runStoreCases() {
   r = await run('p-ok', { text: '{"labels":[{"id":"concept-a","label":"Alpha idea"},{"id":"worked-b","label":"Beta example"}]}', stopReason: 'end_turn' });
   assert(r.out?.['concept-a'] === 'Alpha idea' && r.row?.atomic === false, 'store: labels on end_turn → persisted under the model-aware id');
   assert(id({ id: 'p-ok' }) === buildRailLabelsId('p-ok', 'rail-v1|claude-haiku-5-5'), 'store: default (Haiku 5.5) row id carries the model');
+}
+
+// Task 20 §D1 (GDI run 8): a done chip shows the English label, not its first word.
+assert(compressedChipLabel('Your job · 仕事について') === 'Your job', 'D1: "Your job · 仕事について" → "Your job"');
+assert(compressedChipLabel('Level check · レベルチェック') === 'Level check', 'D1: "Level check · …" → "Level check"');
+assert(compressedChipLabel('Present perfect') === 'Present perfect', 'D1: no " · " ⇒ the whole label');
+{
+  const rail = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/AgendaRail.tsx'), 'utf8');
+  assert(rail.includes('`✓ ${compressedChipLabel(it.label)}`'), 'D1: AgendaRail compresses through compressedChipLabel');
 }
 
 runStoreCases()

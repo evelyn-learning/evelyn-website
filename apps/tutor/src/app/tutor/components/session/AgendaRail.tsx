@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { RailItem } from '@/lib/tutor/lesson-plan/rail-labels';
+import { compressedChipLabel, type RailItem } from '@/lib/tutor/lesson-plan/rail-labels';
 
 interface AgendaRailProps {
   items: RailItem[];
@@ -60,7 +60,7 @@ export function AgendaRail({ items, orientation, offPlan = false }: AgendaRailPr
 
   const tab = (it: RailItem) => {
     const compress = it.done && !it.current && orientation === 'horizontal';
-    const text = compress ? `✓ ${it.label.split(' ')[0]}` : it.label;
+    const text = compress ? `✓ ${compressedChipLabel(it.label)}` : it.label;
     return (
       <div
         key={it.key}

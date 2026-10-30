@@ -8,6 +8,15 @@ const MAX_LABEL_WORDS = 3;
 export type SegmentLabels = Record<string, string>;
 export interface RailItem { key: string; label: string; segIds: string[]; done: boolean; current: boolean }
 
+/** A completed chip on the horizontal rail shows its English label — the part
+ *  before " · " (the localized form) — not just its first word: GDI run 8
+ *  showed "✓ Your" / "✓ Level" for "Your job · 仕事について". No " · " ⇒ the
+ *  whole label. */
+export function compressedChipLabel(label: string): string {
+  const head = (label ?? '').split(' · ')[0]!.trim();
+  return head || (label ?? '');
+}
+
 /** Kinds that get content labels; hook/recap keep fixed labels (grill-me 2026-08-10). */
 const LABELABLE_KINDS = new Set(['concept', 'worked_example', 'try_yourself', 'misconception_check', 'extension']);
 

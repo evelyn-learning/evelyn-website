@@ -11,6 +11,7 @@ import {
   decideDeferredPageFlush,
   emptyPageIndexes,
   isPageContentAction,
+  flushDeferredPageAtTurnEnd,
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 
 let n = 0;
@@ -92,6 +93,23 @@ ok('emptyPageIndexes: pointer-only page is empty',
     && /if \(pendingAdvanceNewPageRef\.current\?\.afterTurn\) pendingAdvanceNewPageRef\.current\.afterTurn = false;/.test(VTR.slice(turnStart, turnStart + 800)));
   ok('VTR: afterTurn is set only right after the client advances (auto-advance, spoken opener)', (VTR.match(/\.afterTurn = true;/g) ?? []).length === 2);
   ok('VTR: the flushed part page clears a held topic-shift mark', VTR.includes("onDebugEvent?.('topic_shift_cleared_by_segment_page'"));
+}
+
+// ── Task 20 §D2 (GDI run 8, 144 s): the part page opens at the advancing turn's end ──
+{
+  const base = { pending: { authored: true }, brainBusy: false, speaking: false, bufferedRenders: 0 };
+  ok('D2: authored part page, turn over, renders painted ⇒ flush now', flushDeferredPageAtTurnEnd(base));
+  ok('D2: brain still composing ⇒ wait', !flushDeferredPageAtTurnEnd({ ...base, brainBusy: true }));
+  ok('D2: audio still playing ⇒ wait', !flushDeferredPageAtTurnEnd({ ...base, speaking: true }));
+  ok('D2: a held auto card still buffered ⇒ wait (it paints on the page being left)', !flushDeferredPageAtTurnEnd({ ...base, bufferedRenders: 1 }));
+  ok('D2: a non-authored deferred page keeps waiting for content', !flushDeferredPageAtTurnEnd({ ...base, pending: {} }));
+  ok('D2: nothing pending ⇒ nothing', !flushDeferredPageAtTurnEnd({ ...base, pending: null }));
+  const VTR2 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('D2: VTR flushes on the audio drain, the speech end and the brain going idle',
+    VTR2.includes("flushDeferredPageAtTurnEndRef.current('audio drained')")
+    && VTR2.includes("flushDeferredPageAtTurnEndRef.current('speech ended')")
+    && VTR2.includes("flushDeferredPageAtTurnEndRef.current('brain idle')"));
+  ok('D2: same event name, "at turn end"', VTR2.includes("onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title} at turn end`)"));
 }
 
 console.log(`deferred-page-flush: ${n} cases passed`);
