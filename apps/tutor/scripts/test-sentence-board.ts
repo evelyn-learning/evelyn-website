@@ -151,17 +151,19 @@ test('autoSentenceCardsToReplace: auto cards on the current page that say the br
 
 // ── order: rewriteForTTS first, stress after (fix round 10-11, item E) ───
 const RW = (s: string) => rewriteForTTS(s);
+// The caps stress is opt-in since GDI run 8 (TUTOR_SPOKEN_EMPHASIS_CAPS).
+const CAPS = { emphasisCaps: true };
 test('rewriteForTTS alone undoes the stress (why the order matters)', () => {
   assert.ok(!/TAKEN/.test(rewriteForTTS(emphasiseSpokenCorrections(LEAVE_TUTOR, LEAVE_STUDENT))));
 });
 test('composeSpokenText: rewrite then stress keeps TAKEN', () => {
-  const out = composeSpokenText(LEAVE_TUTOR, LEAVE_STUDENT, RW);
+  const out = composeSpokenText(LEAVE_TUTOR, LEAVE_STUDENT, RW, [], CAPS);
   assert.ok(/I haven't TAKEN leave from work/.test(out), out);
   assert.ok(!/"/.test(out), 'rewriteForTTS still stripped the quotes');
 });
 test('composeSpokenText: golf → MY inside the quoted span only', () => {
   const golf1 = `"I haven't played golf with my manager since I started work" — close.`;
-  const out = composeSpokenText(golf1, GOLF_STUDENT, RW);
+  const out = composeSpokenText(golf1, GOLF_STUDENT, RW, [], CAPS);
   assert.equal(out, RW(golf1).replace('with my manager', 'with MY manager'));
 });
 test('composeSpokenText: no correction / no student line = plain rewrite', () => {
@@ -170,18 +172,18 @@ test('composeSpokenText: no correction / no student line = plain rewrite', () =>
 });
 test('composeSpokenText: a brain card stresses the sentence that says it', () => {
   const out = composeSpokenText('Say it like this: I have been a sales manager for four years.', null, RW,
-    [{ sentence: 'I have been a sales manager for four years.', emphasis: ['been'] }]);
+    [{ sentence: 'I have been a sales manager for four years.', emphasis: ['been'] }], CAPS);
   assert.ok(/have BEEN a sales/.test(out), out);
 });
 // ── fix round 11-2 ───────────────────────────────────────────────────────
 test('B: a brain card stresses at most 4 words, only inside its own sentence span', () => {
   const card = { sentence: 'She has worked in sales for many years', emphasis: ['has', 'worked', 'sales', 'for', 'many', 'years'] };
-  const out = composeSpokenText('She has worked in sales for many years, and she has a team.', null, RW, [card]);
+  const out = composeSpokenText('She has worked in sales for many years, and she has a team.', null, RW, [card], CAPS);
   assert.ok(/She HAS WORKED in SALES FOR many years/.test(out), out);
   assert.ok(/and she has a team/.test(out), `outside the span untouched: ${out}`);
 });
 test('B: 1-letter card words never count toward the cap', () => {
-  const out = composeSpokenText('I have a car.', null, RW, [{ sentence: 'I have a car.', emphasis: ['a', 'car'] }]);
+  const out = composeSpokenText('I have a car.', null, RW, [{ sentence: 'I have a car.', emphasis: ['a', 'car'] }], CAPS);
   assert.ok(/I have a CAR/.test(out), out);
 });
 test('A: anchor = the spoken sentence that says the card (1-based), head fallback, else undefined', () => {
@@ -610,6 +612,24 @@ test('§D19 R4 m5: only a real question opening drops the card', () => {
   for (const keep of ['When I was a student, I studied English in Tokyo.', 'What I like about my job is the people.', 'Where I work, we use English every day.']) {
     assert.equal(cardableStudentSentence(keep), keep, keep);
   }
+});
+
+// ── Task 20 §A (GDI run 8): no caps in the spoken text by default ────────
+test('20A: the run-8 line is spoken lower-case = the rewritten display text', () => {
+  const tutor = `「after attending a sales seminar」と、意味がはっきり伝わります。 The "after" works well here, and "attending" is the right form.`;
+  const student = 'I have learned how to talk to customers politely after attend ing a sales seminar.';
+  const out = composeSpokenText(tutor, student, RW, [{ sentence: 'after attending a sales seminar', emphasis: ['attending'] }]);
+  assert.equal(out, RW(tutor));
+  assert.ok(/attending/.test(out) && !/ATTENDING/.test(out), out);
+});
+test('20A: a correction span is not uppercased without the opt-in', () => {
+  assert.equal(composeSpokenText(LEAVE_TUTOR, LEAVE_STUDENT, RW), RW(LEAVE_TUTOR));
+});
+test('20A: TUTOR_SPOKEN_EMPHASIS_CAPS is opt-in (=== on) and VTR passes it', () => {
+  const flags = readFileSync(join(__dirname, '..', 'src/lib/tutor/orchestrator/flags.ts'), 'utf8');
+  assert.ok(/TUTOR_SPOKEN_EMPHASIS_CAPS = process\.env\.NEXT_PUBLIC_TUTOR_SPOKEN_EMPHASIS_CAPS === 'on'/.test(flags));
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes('{ emphasisCaps: TUTOR_SPOKEN_EMPHASIS_CAPS }'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -509,14 +509,22 @@ function correctionSpan(spokenSentence: string, studentLast: string | null | und
  * rewritten text — inside the rewritten quote span when it can be found,
  * else across the sentence. `cards` = the turn's brain show_sentence cards:
  * a sentence that contains a card's sentence gets that card's emphasis.
+ * The stress only runs with `opts.emphasisCaps` (TUTOR_SPOKEN_EMPHASIS_CAPS,
+ * opt-in); by default the result is `rewrite(raw)`.
  */
 export function composeSpokenText(
   raw: string,
   studentLast: string | null | undefined,
   rewrite: (s: string) => string,
   cards: ReadonlyArray<{ sentence: string; emphasis: string[] }> = [],
+  opts: { emphasisCaps?: boolean } = {},
 ): string {
   let out = rewrite(raw);
+  // GDI run 8 (2026-10-30): Cartesia spelt the uppercased stress words out
+  // letter by letter ("ATTENDING" → "a t t …", "THE" → "day") and the caps
+  // added no audible stress — the spoken text is the plain rewrite unless the
+  // opt-in TUTOR_SPOKEN_EMPHASIS_CAPS asks for the caps.
+  if (!opts.emphasisCaps) return out;
   const span = correctionSpan(raw, studentLast);
   if (span) {
     const at = locateWords(out, span.inner);
