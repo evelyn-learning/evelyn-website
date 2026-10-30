@@ -95,33 +95,76 @@ const FAREWELL_TAIL_ASK_RE = /言って|言い|読んで|答え|聞|質問|\b(?:
  * Task 20 §B (GDI run 8, 1543 s): the farewell part of an attempt that closes
  * the lesson too early. Fix round 1 (I2): farewell words are lesson content
  * too ("Repeat after me: "Have a nice day."", 「今日はここまでです」 as a
- * phrase to learn) — so quoted spans are removed first, and a sentence counts
- * only when, unquoted, it is a goodbye (FAREWELL_RE / PREMATURE_CLOSE_LINE_RE,
- * not a question, no instruction in it) AND it is the turn's last sentence or
- * is followed only by other goodbye / thanks sentences. Returns that sentence
- * (for the debug event), else null.
+ * phrase to learn) — a sentence counts only when it is a goodbye
+ * (FAREWELL_RE / PREMATURE_CLOSE_LINE_RE, not a question, no instruction in
+ * it) AND it is the turn's last sentence or is followed only by goodbye /
+ * thanks sentences. Fix round 2 (I2): (a) a quoted span is removed only when
+ * it is content — introduced by say / repeat / a phrase / a colon, or followed
+ * by "means" / "is a …" — or is no close at all; the brain's own goodbye in
+ * 「…」 (run 8 wrote it that way) counts; (b) up to two pleasantry /
+ * encouragement lines after the goodbye ("Keep up the good work.") still close.
+ * Returns that sentence (for the debug event), else null.
  */
-const QUOTED_SPAN_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
+const QUOTED_SPAN_RE = /"([^"\n]*)"|“([^”\n]*)”|「([^」\n]*)」|『([^』\n]*)』/g;
 const FAREWELL_INSTRUCTION_RE = /言って|読んで|答え|練習|\b(?:say|repeat|try|answer|question|practi[cs]e|read|tell me|review|homework)\b/i;
 const THANKS_RE = /\b(?:thank you|thanks)\b|ありがとう|お疲れ(?:様|さま)/i;
+const ENCOURAGEMENT_RE = /\b(?:keep up|well done|good work|great work|great job|take care|keep practi[sc]ing)\b/i;
+/** Before a quote: it is introduced as something to say / learn. */
+const CONTENT_QUOTE_BEFORE_RE = /(?:\b(?:say|says|said|repeat|after me|practi[cs]e|phrase|word|expression|sentence|with|like|as|reads?|write)\b|[:：])\s*$/i;
+/** After a quote: it is explained or judged as language. */
+const CONTENT_QUOTE_AFTER_RE = /^\s*(?:means?\b|is (?:a|an|the|natural|correct|polite|common)\b|と(?:言|いう|いい)|って|は英語|in English)/i;
+function splitFarewellSentences(text: string): string[] {
+  return text
+    .split(/(?<=[。！!.?？])\s+|(?<=[。！？])|\n+/)
+    .map((x) => x.replace(/\s+/g, ' ').trim())
+    .filter((x) => /[\p{L}\p{N}]/u.test(x));
+}
 function isFarewellSentence(s: string): boolean {
   if (/[?？]\s*$/.test(s) || /(?:ましょうか|ますか|ですか|でしょうか)\s*$/.test(s)) return false;
   if (FAREWELL_INSTRUCTION_RE.test(s)) return false;
   return FAREWELL_RE.test(s) || PREMATURE_CLOSE_LINE_RE.test(s);
 }
+function isClosingTailSentence(s: string): boolean {
+  if (/[?？]\s*$/.test(s)) return false;
+  return isPleasantryOnly(s) || ENCOURAGEMENT_RE.test(s) || (THANKS_RE.test(s) && !FAREWELL_INSTRUCTION_RE.test(s));
+}
 export function prematureFarewellLine(tutorText: string): string | null {
   if (typeof tutorText !== 'string' || !tutorText.trim()) return null;
-  const unquoted = tutorText.replace(QUOTED_SPAN_RE, ' ');
-  const sentences = unquoted
-    .split(/(?<=[。！!.?？])\s+|(?<=[。！？])|\n+/)
-    .map((s) => s.replace(/\s+/g, ' ').trim())
-    .filter((s) => /[\p{L}\p{N}]/u.test(s));
+  const unquoted = tutorText.replace(QUOTED_SPAN_RE, (m, ...groups: unknown[]) => {
+    const inner = String(groups.slice(0, 4).find((g) => g !== undefined) ?? '');
+    const at = groups[4] as number;
+    const before = tutorText.slice(Math.max(0, at - 40), at);
+    const after = tutorText.slice(at + m.length, at + m.length + 30);
+    const isClose = splitFarewellSentences(inner).some(isFarewellSentence);
+    const isContent = CONTENT_QUOTE_BEFORE_RE.test(before) || CONTENT_QUOTE_AFTER_RE.test(after);
+    // the tutor's own goodbye, written in quotes: keep its sentences
+    return isClose && !isContent ? ` ${inner} ` : ' ';
+  });
+  const sentences = splitFarewellSentences(unquoted);
   for (let i = 0; i < sentences.length; i++) {
     if (!isFarewellSentence(sentences[i]!)) continue;
     const tail = sentences.slice(i + 1);
-    if (tail.every((t) => isFarewellSentence(t) || (THANKS_RE.test(t) && !FAREWELL_INSTRUCTION_RE.test(t) && !/[?？]\s*$/.test(t)))) return sentences[i]!;
+    const extra = tail.filter((t) => !isFarewellSentence(t));
+    if (extra.length <= 2 && extra.every(isClosingTailSentence)) return sentences[i]!;
   }
   return null;
+}
+
+/**
+ * Task 20 fix round 2 (NEW-I1): the student's end request as a WHOLE
+ * utterance — "Okay, let's stop here.", "Bye!", 「今日はここまでにしましょう」.
+ * A stop word inside a sentence ("I usually stop working at six.", "I said
+ * goodbye to the clients.") is lesson talk and never latches the end signal.
+ */
+const STANDALONE_STOP_RE =
+  /^(?:(?:let['’]?s |I (?:want|would like|'d like) to )?(?:stop|finish|end|quit|exit)(?: (?:here|now|the lesson|for today))?|(?:good)?bye|see you(?: (?:next time|later|tomorrow))?|that['’]?s (?:all|enough)(?: for today)?)[.!]?$/i;
+const STOP_PAD_RE = /^(?:(?:um+|uh+|er+|ok(?:ay)?|yes|yeah|well|so|alright|all right|thanks?(?: you)?(?: (?:so|very) much)?)[,.!]?\s+)+|(?:[,.!]?\s+(?:thanks?(?: you)?(?: (?:so|very) much)?|okay|ok))+[.!]?$/gi;
+export function isStandaloneStopUtterance(studentText: string): boolean {
+  const t = (studentText ?? '').trim();
+  if (!t) return false;
+  if (isSessionEndSignalJa(t)) return true;
+  const core = t.replace(STOP_PAD_RE, '').trim();
+  return STANDALONE_STOP_RE.test(core);
 }
 
 /**
@@ -222,11 +265,15 @@ export function postCloseSilenceKind(studentText: string): 'pleasantry' | 'chatt
  * ありますか」) and a goodbye never do.
  */
 const POST_CLOSE_COURTESY_RE =
-  /\b(?:anything else|any (?:other |more )?questions?|is that (?:ok|okay|all right)|shall we (?:stop|finish)|ready to (?:finish|stop))\b|他に|よろしいですか|終わりにしましょうか/i;
+  /\b(?:anything else|any (?:other |more )?questions?|is that (?:ok|okay|all right)|shall we (?:stop|finish)|ready to (?:finish|stop))\b|\b(?:tell|let) me (?:know )?if you (?:have|need) any(?: other| more)? (?:questions?|help)\b|他に|よろしいですか|終わりにしましょうか/i;
 export function reopensAfterClose(tutorText: string, armed: boolean): boolean {
   const t = tutorText ?? '';
   if (isTutorFarewell(t)) return false;
-  if (armed || lastAskSentence(t) != null) return true;
+  if (armed) return true;
+  // Fix round 2 (I3): the courtesy check runs BEFORE the ask check — "Please
+  // tell me if you have any other questions." is an ask in form only.
+  const ask = lastAskSentence(t);
+  if (ask != null && !POST_CLOSE_COURTESY_RE.test(ask)) return true;
   const q = lastQuestionSentence(t);
   return q != null && !POST_CLOSE_COURTESY_RE.test(q);
 }

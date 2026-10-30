@@ -217,7 +217,7 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } from '@/lib/tutor/voice/meta-narration';
-import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose } from '@/lib/tutor/voice/lesson-close';
+import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
@@ -4475,7 +4475,7 @@ export function VoiceTutorRealtime({
   const studentEndSignalRef = useRef(false);
   const fixedScriptCloseOk = (): boolean =>
     !TUTOR_FIXED_SCRIPT_CLOSE_GUARD ||
-    fixedScriptCloseAllowed(lessonPlanRef.current, currentSegmentIdRef.current, { studentEndSignal: studentEndSignalRef.current || !!lastStudentVerificationRef.current?.isSessionEndSignal });
+    fixedScriptCloseAllowed(lessonPlanRef.current, currentSegmentIdRef.current, { studentEndSignal: studentEndSignalRef.current });
   // R47 Task 1 (live incident portal-d859df30): stash from a deterministic
   // false-denial kill (arith/simplification/inverse-verdict) this turn — the
   // checker already proved the student's answer right, so the post-stream
@@ -12469,7 +12469,10 @@ export function VoiceTutorRealtime({
         // Session-end signal (Task Y4 farewell-exemption fix) — see
         // sessionEndSignalRegex definition above for scope/rationale.
         const isSessionEndSignal = sessionEndSignalRegex.test(lower) || isSessionEndSignalJa(t);
-        if (isSessionEndSignal) studentEndSignalRef.current = true; // Task 20 fix round 1 (I1): sticky
+        // Task 20 fix round 1 (I1): sticky for the session. Fix round 2
+        // (NEW-I1): only a WHOLE-utterance end request latches it — "I usually
+        // stop working at six." is lesson talk, not a stop.
+        if (isStandaloneStopUtterance(t)) studentEndSignalRef.current = true;
         ledgerStudentTextRef.current = t;
         ledgerPriorTutorTextRef.current = String([...priorWithoutCurrent].reverse().find((m) => m.role === 'assistant')?.content ?? '');
         lastStudentVerificationRef.current = {

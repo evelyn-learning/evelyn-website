@@ -65,7 +65,7 @@ import { isStockPraiseOpenerOnly } from '../src/lib/tutor/voice/praise-variety';
 import { isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '../src/lib/tutor/voice/english-reply';
 import { isMetaNarration as isMetaNarration2 } from '../src/lib/tutor/voice/meta-narration';
 import { settleCutToolUse, toolContinuationMessages, toolContinuationNote } from '../src/lib/tutor/voice/output-budget';
-import { isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose } from '../src/lib/tutor/voice/lesson-close';
+import { isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '../src/lib/tutor/voice/lesson-close';
 import { stripMarkdownEmphasis } from '../src/lib/tutor/voice/sentence-spacing';
 import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
 import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
@@ -1273,7 +1273,7 @@ test('embed-1792378728971: the bridge line is wired with the session languages, 
 // ── Task 20 §B (GDI run 8) ───────────────────────────────────────────────
 test('20B1: the 1543 s farewell is caught; a mid-lesson transition is not', () => {
   const line = 'Your sentence is complete and clear, so let\'s close the pronunciation practice here. 「どうもありがとうございました。 今日はここまでです。」 Thank you for the lesson today, Praveen. Goodbye!';
-  assert.equal(prematureFarewellLine(line), 'Goodbye!', 'caught, and the event names the sentence');
+  assert.equal(prematureFarewellLine(line), '今日はここまでです。', 'caught (the 「」 goodbye is the tutor\'s own), and the event names the sentence');
   assert.ok(prematureFarewellLine('Thank you for the lesson today, Praveen. Goodbye!'));
   assert.ok(prematureFarewellLine('お疲れ様でした。今日はここまでです。さようなら。'));
   assert.equal(prematureFarewellLine('Good. Let\'s move on to the pronunciation part now.'), null);
@@ -1294,8 +1294,8 @@ test('20B1 fix round 1 (I2): farewell words as lesson content are not a close', 
 });
 test('20B1 fix round 1 (I1): the student end signal is sticky and feeds the close guard', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.ok(vtr.includes('if (isSessionEndSignal) studentEndSignalRef.current = true;'));
-  assert.ok(vtr.includes('studentEndSignal: studentEndSignalRef.current ||'));
+  assert.ok(vtr.includes('if (isStandaloneStopUtterance(t)) studentEndSignalRef.current = true;'));
+  assert.ok(vtr.includes('{ studentEndSignal: studentEndSignalRef.current }'));
   assert.ok(!/studentEndSignalRef\.current = false/.test(vtr), 'never cleared');
 });
 test('20B1: VTR refuses the premature close and kills the farewell', () => {
@@ -1308,6 +1308,16 @@ test('20B1: VTR refuses the premature close and kills the farewell', () => {
   const closed = vtr.indexOf('lessonClosedRef.current = true;', at);
   assert.ok(at > 0 && refuse > at && refuse < closed, 'the refusal runs before lessonClosedRef is set');
 });
+test('20B fix round 2 (NEW-I1): only a standalone stop utterance latches the end signal', () => {
+  for (const t of ['I usually stop working at six.', 'I said goodbye to the clients.', 'See you at the meeting.']) assert.equal(isStandaloneStopUtterance(t), false, t);
+  for (const t of ["Okay, let's stop here.", 'Bye!', '今日はここまでにしましょう', 'Thank you, bye.', "Yes, that's all for today."]) assert.equal(isStandaloneStopUtterance(t), true, t);
+});
+test('20B fix round 2 (I2): the tutor\'s own 「」 goodbye counts; a goodbye with an encouragement tail closes', () => {
+  assert.ok(prematureFarewellLine('「どうもありがとうございました。今日はここまでです。さようなら。」'));
+  assert.equal(prematureFarewellLine('Thank you for the lesson today. Goodbye! Keep up the good work.'), 'Goodbye!');
+  assert.ok(prematureFarewellLine('Great work today, Praveen. See you next time! Keep practising the present perfect.'));
+  assert.equal(prematureFarewellLine('Goodbye! Now, what did you do yesterday at work, and who did you meet there?'), null);
+});
 test('20B2: a post-close turn that re-engages re-opens the lesson; a goodbye / courtesy does not', () => {
   assert.equal(reopensAfterClose('Of course, let\'s practice a little more. Here is the sentence again: "I was responsible for communicating with our customers." Please listen, then say it after me.', true), true);
   assert.equal(reopensAfterClose('Of course. Which sentence would you like to practise?', false), true, 'a real question re-opens');
@@ -1317,6 +1327,7 @@ test('20B2: a post-close turn that re-engages re-opens the lesson; a goodbye / c
   assert.equal(reopensAfterClose("You're welcome! Is there anything else you'd like to ask?", false), false, 'courtesy (I3)');
   assert.equal(reopensAfterClose('Of course. "Responsible for" means 担当. Any other questions?', false), false, 'courtesy (I3)');
   assert.equal(reopensAfterClose('どういたしまして。他に質問はありますか？', false), false, 'courtesy JA (I3)');
+  assert.equal(reopensAfterClose("You're welcome. Please tell me if you have any other questions.", false), false, 'courtesy as an ask (fix round 2, I3)');
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("onDebugEvent?.('lesson_reopened'"));
   const at = vtr.indexOf("onDebugEvent?.('lesson_reopened'");
