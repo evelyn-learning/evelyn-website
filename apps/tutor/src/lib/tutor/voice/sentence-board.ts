@@ -497,7 +497,7 @@ const MEDIUM_CUE_RE = /\bremember to\b|\bdon['’]t forget\b|\badd ["“]|\bthe 
  *  article there.", "Keep in mind …", "I understand what you mean." */
 // Fix round 3: "remember" / "article" only in a correcting frame — "What do
 // you remember most about …?" and "Did you write an article about it?" keep the card.
-const MEDIUM_CUE_EXTRA_RE = /\b(?:just |please )?remember (?:to|the|that we|,? (?:an?|the) )\b|\bkeep in mind\b|\b(?:an?|the) article (?:before|after|there|here|is missing)\b|\bwe (?:usually|normally|often) (?:say|put|use)\b|\bwhat you mean\b|\bnext time,? (?:say|use|try|add)\b/i;
+const MEDIUM_CUE_EXTRA_RE = /\b(?:just |please )?remember,? (?:to|the|that we|(?:an?|the) )\b|\bkeep in mind\b|\b(?:an?|the) article (?:before|after|there|here|is missing)\b|\bwe (?:usually|normally|often) (?:say|put|use)\b|\bwhat you mean\b|\bnext time,? (?:say|use|try|add)\b/i;
 /** Any quoted span (any length) that is not a sentence starter. */
 function hasNonStarterQuote(text: string): boolean {
   for (const m of text.matchAll(QUOTE_RE)) {

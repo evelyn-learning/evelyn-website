@@ -872,6 +872,7 @@ test('21B r2 I2: implicit corrections block the medium-confidence card; silent a
     'Good. Remember the article before project next time. What was the result?',
     'Good idea. In English we usually put an article there. What was the result?',
     'Okay. Keep in mind we need an article there. What was the result?',
+    'Good. Remember, an article goes before project. What was the result?',
   ]) assert.deepEqual(m(t), [], t);
   assert.deepEqual(m('I understand what you mean. What happened next?', 'I working in sales department every day.'), [], 'what you mean');
   // accepted residual: cue-free silent acceptance

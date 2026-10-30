@@ -241,5 +241,11 @@ test('21D r3 I5: only an ASK for the whole sentence blocks a word target — pra
   assert.equal(detectPronunciationTarget('Good. Say the full sentence again, and try "with" carefully.', T), null);
 });
 
+test('21D r4 I6: "say it again" after a single introduced word is a WORD ask, not the whole sentence', () => {
+  assert.deepEqual(detectPronunciationTarget('Listen: "schedule." Now say it again.', T), { referenceText: 'schedule', kind: 'word' });
+  assert.deepEqual(detectPronunciationTarget('The word is "schedule". Say it again, slowly.', T), { referenceText: 'schedule', kind: 'word' });
+  assert.equal(detectPronunciationTarget('We say "with", not "wiz". Say the sentence again.', T), null);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

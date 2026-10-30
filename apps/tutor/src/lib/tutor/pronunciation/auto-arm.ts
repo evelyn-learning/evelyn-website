@@ -67,15 +67,20 @@ const SHORT_TARGET_TAIL_RE = /^\s*(?:,?\s*(?:once more|again|slowly|carefully|fo
 // Fix round 3 (I5): only an ASK clause — a say / repeat / try / read verb
 // governing the sentence in one of the turn's last two sentences; "Your
 // sentence was clear." is praise, not an ask.
-const WHOLE_SENTENCE_ASK_RE = /\b(?:say|repeat|try|read)\b[^.!?。！？]*?\b(?:the (?:whole|full|complete) sentence|your sentence|the sentence again|it again)\b/i;
+const WHOLE_SENTENCE_ASK_RE = /\b(?:say|repeat|try|read)\b[^.!?。！？]*?\b(?:the (?:whole|full|complete) sentence|your sentence|the sentence again)\b/i;
 const asksWholeSentence = (turnText: string) =>
   (turnText ?? '').split(/(?<=[.!?。！？])\s+/).map((x) => x.trim()).filter(Boolean).slice(-2).some((x) => WHOLE_SENTENCE_ASK_RE.test(x));
 /** Fix round 2 (I4 b): the wrong form of an "X, not Y" pair. */
 const NEGATED_QUOTE_RE = /\b(?:not|instead of|rather than|never say)\s*$/i;
 const WE_SAY_NOT_RE = /\bwe say\b[^.!?。！？]*\bnot\s*$/i;
+// Task 21 fix round 4 (I6): a word INTRODUCED as the target ("The word is
+// \"schedule\". Say it again, slowly.") is a word ask when the turn asks to say
+// it — "it" is that word, not the sentence.
+const SHORT_TARGET_INTRO_RE = /\b(?:the|this|that|our|your|next|first|new) (?:word|target|sound)(?: (?:is|was|will be))?\s*[:,]?\s*$/i;
 const isShortTargetAsked = (q: { before: string; after: string; text: string }, turnText: string) => {
   if (asksWholeSentence(turnText) || NEGATED_QUOTE_RE.test(q.before) || WE_SAY_NOT_RE.test(q.before)) return false;
   return SHORT_TARGET_LEAD_RE.test(q.before) || SHORT_TARGET_DIRECT_RE.test(q.before)
+    || (SHORT_TARGET_INTRO_RE.test(q.before) && SAY_ASK_RE.test(turnText))
     || (SHORT_TARGET_NEAR_RE.test(q.before) && SHORT_TARGET_TAIL_RE.test(q.after));
 };
 const SHORT_TARGET_MAX_WORDS = 2;
