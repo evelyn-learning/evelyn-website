@@ -238,6 +238,24 @@ function isPersonaSelfAnnounce(s: string, personaName: string | readonly string[
   const names = (Array.isArray(personaName) ? personaName : [personaName]).map((n) => (n ?? '').trim()).filter((n) => n.length >= 2 && n.length <= 60);
   return names.some((n) => new RegExp(`^\\s*${escapeName(n)} here[.!]?\\s*$`, 'i').test(s));
 }
+// Task 22 §C (GDI run 10, 299 s SPOKEN): `Ryota explains: "I have worked at
+// Nagoya Corporation for three years" is the natural form when speaking.` — the
+// persona narrating itself in the third person. A sentence that OPENS with
+// "<persona name> explains / says / notes / … [:,]" loses that lead and keeps
+// the rest; a sentence that is only the lead goes. Persona names only
+// (opts.personaName; off without one) — "Ken says hello." is never touched.
+const PERSONA_LEAD_VERBS = '(?:explains|says|notes|adds|replies|responds|continues|answers|asks|suggests)';
+function stripPersonaLead(s: string, personaName: string | readonly string[] | null | undefined): string {
+  const names = (Array.isArray(personaName) ? personaName : [personaName])
+    .map((n) => (n ?? '').trim()).filter((n) => n.length >= 2 && n.length <= 60)
+    .sort((a, b) => b.length - a.length);
+  for (const n of names) {
+    if (new RegExp(`^\\s*${escapeName(n)}\\s+${PERSONA_LEAD_VERBS}\\s*[:,.!]?\\s*$`, 'i').test(s)) return '';
+    const m = new RegExp(`^\\s*${escapeName(n)}\\s+${PERSONA_LEAD_VERBS}[:,]?\\s+`, 'i').exec(s);
+    if (m) return capitaliseFirst(s.slice(m[0].length));
+  }
+  return s;
+}
 export interface NoteCitationOpts { /** the session persona's name(s) — full name and first name */ personaName?: string | readonly string[] | null }
 /**
  * A sentence that cites a runtime note with the citation removed: unchanged
@@ -245,8 +263,10 @@ export interface NoteCitationOpts { /** the session persona's name(s) — full n
  * after a colon when there is some, '' when the whole sentence is citation.
  */
 export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpts): string {
-  const s = sentence ?? '';
-  if (isPersonaSelfAnnounce(s, opts?.personaName)) return '';
+  const raw = sentence ?? '';
+  if (isPersonaSelfAnnounce(raw, opts?.personaName)) return '';
+  const s = stripPersonaLead(raw, opts?.personaName);
+  if (s !== raw && !s.trim()) return '';
   const m = NOTE_CITING_OPENER_RE.exec(s) ?? STAY_ON_ONE_IDEA_RE.exec(s);
   if (!m) return s;
   NOTE_CITATION_CONTINUATION_RE.lastIndex = m.index + m[0].length;

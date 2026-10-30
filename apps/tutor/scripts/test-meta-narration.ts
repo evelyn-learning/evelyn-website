@@ -747,5 +747,17 @@ check('§A a short colon tail is still citation', stripNoteCitationClause('The p
     && vtr.includes('[teacherPersona.name, teacherFirstName(teacherPersona.name)]'));
 }
 
+// ─── Task 22 §C (GDI run 10, 299 s SPOKEN): persona-name narration lead ───
+check('§C 22 the 299 s line loses its "Ryota explains:" lead',
+  stripNoteCitationClause('Ryota explains: "I have worked at Nagoya Corporation for three years" is the natural form when speaking.', RYOTA)
+    === '"I have worked at Nagoya Corporation for three years" is the natural form when speaking.');
+check('§C 22 "Ryota says: let\'s try it." → "Let\'s try it."', stripNoteCitationClause("Ryota says: let's try it.", RYOTA) === "Let's try it.");
+check('§C 22 full name lead', stripNoteCitationClause('Ryota Tanaka notes, the past simple fits here.', RYOTA) === 'The past simple fits here.');
+check('§C 22 a lead-only sentence → \'\' (and meta)', stripNoteCitationClause('Ryota explains:', RYOTA) === '' && isMetaNarration('Ryota explains:', RYOTA));
+check('§C 22 a non-persona name untouched', stripNoteCitationClause('Ken says hello.', RYOTA) === 'Ken says hello.' && !isMetaNarration('Ken says hello.', RYOTA));
+check('§C 22 no personaName → untouched', stripNoteCitationClause("Ryota says: let's try it.") === "Ryota says: let's try it.");
+check('§C 22 "Ryota here." rule unchanged', stripNoteCitationClause('Ryota here.', RYOTA) === '');
+check('§C 22 a name not at the start untouched', stripNoteCitationClause('Well, Ryota says the meeting is at three.', RYOTA) === 'Well, Ryota says the meeting is at three.');
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
