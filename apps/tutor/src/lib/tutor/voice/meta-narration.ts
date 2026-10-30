@@ -158,23 +158,64 @@ const BOARD_STAGING_NARRATION_RE =
 // present-perfect question about their work.", "So I'll acknowledge briefly
 // and hand the question back.", "Thanks, I heard you.", "Here is a new
 // question, and I'll put it on the board. Here is the question on the board."
-// Fix round 1 (I4): these shapes are also teaching sentences in a student
-// turn ("I'll mark the point (2, 3).", "Here is the question on the board:
-// what is 7 × 8?"), so they apply ONLY to runtime-triggered turns (isMetaNarration
-// opts.runtimeTriggered — a nudge / runtime directive, never the student), the
-// openers are only acknowledge / hand … back / re-ask / ask the next / keep
-// going with, the board staging only as a whole clause with nothing after it,
-// and the third-person reasoning only about the learner ("the student …" or
-// "… about their …").
-const NUDGE_PLAN_NARRATION_RE = new RegExp([
-  String.raw`^\s*(?:(?:so|ok(?:ay)?|right|alright),?\s*)?I['’]ll (?:acknowledge|hand\b[^.!?]*\bback|re-?ask|ask the next|keep going with)\b`,
-  String.raw`^\s*The (?:student|learner) (?:was|is|asked|said|wants|needs)\b[^.!?]*\b(?:so|therefore) I['’]ll\b`,
-  String.raw`^\s*The (?:question|student|learner|answer|last question) (?:was|is|asked|said|wants|needs)\b[^.!?]*\b(?:so|therefore) I['’]ll\b[^.!?]*\babout their\b`,
-  String.raw`\bI may have missed your answer\b`,
-  String.raw`^\s*Thanks, I heard (?:you|your answer|that)\b[.!]?\s*$`,
-  String.raw`\bI['’]ll put (?:it|this|that|the question) on the board\s*[.!]?\s*$`,
-  String.raw`^\s*Here is the question on the board\s*[.!]?\s*$`,
-].join('|'), 'i');
+// Fix round 1 (I4): only on runtime-triggered turns (isMetaNarration
+// opts.runtimeTriggered — a nudge / runtime directive, never the student).
+// Fix round 2 (I4): runtime turns also TEACH (the fixed-script continue
+// directive) — the plan CLAUSE goes, the content stays: "So I'll keep going
+// with fractions: what is 1/2 + 1/4?" → "What is 1/2 + 1/4?"; "Here is the
+// next equation, 3x - 5 = 10, and I'll put it on the board." → "Here is the
+// next equation, 3x - 5 = 10." A sentence is dropped whole only when nothing
+// substantive follows the plan clause (stripNudgePlanClause → '').
+const NUDGE_PLAN_OPENER_RES: RegExp[] = [
+  /^\s*(?:(?:so|ok(?:ay)?|right|alright),?\s*)?I['’]ll (?:acknowledge|hand\b[^.!?:]*?\bback|re-?ask|ask the next|keep going with)\b/i,
+  /^\s*The (?:student|learner) (?:was|is|asked|said|wants|needs)\b[^.!?:]*?\b(?:so|therefore) I['’]ll\b/i,
+  /^\s*The (?:question|student|learner|answer|last question) (?:was|is|asked|said|wants|needs)\b[^.!?:]*?\b(?:so|therefore) I['’]ll\b[^.!?:]*?\babout their\b/i,
+  /^[^.!?:]*?\bI may have missed your answer\b/i,
+  /^\s*Thanks, I heard (?:you|your answer|that)[.!]?\s*$/i,
+  /^\s*(?:I['’]ll put (?:it|this|that|the question) on the board|Here is the question on the board)\b/i,
+];
+const PLAN_CLAUSE_SEPARATOR_RE = /:\s+|,\s+|\s[—–]\s+/g;
+/** Text after a plan clause is worth keeping: a question, a sum / number, a
+ *  quote, or at least four more words. */
+function substantiveRest(rest: string): boolean {
+  const r = rest.trim();
+  if (!r) return false;
+  if (/[?？]/.test(r) || /\d/.test(r) || /[=+×÷]/.test(r) || /["“「‘]/.test(r)) return true;
+  return (r.match(/[\p{L}\p{N}]+(?:['’][\p{L}]+)*/gu) ?? []).length >= 4;
+}
+const TRAILING_BOARD_CLAUSE_RE = /,?\s*and I['’]ll put (?:it|this|that|the question) on the board\s*[.!]?\s*$/i;
+/** The head left after a trailing "…, and I'll put it on the board." clause is
+ *  kept only when it carries content (a number, a sum, a quote, a question). */
+function substantiveHead(head: string): boolean {
+  const h = head.trim();
+  return /[?？]/.test(h) || /\d/.test(h) || /[=+×÷]/.test(h) || /["“「‘]/.test(h) || (h.match(/[\p{L}\p{N}]+/gu) ?? []).length >= 6;
+}
+const capitaliseFirst = (x: string) => x.replace(/^(\s*["“「‘(]?)(\p{Ll})/u, (_m, a: string, b: string) => a + b.toUpperCase());
+/**
+ * A runtime turn's sentence with its spoken plan clause removed: unchanged when
+ * there is none, the content after the clause when there is some, '' when the
+ * whole sentence is plan.
+ */
+export function stripNudgePlanClause(sentence: string): string {
+  const s = sentence ?? '';
+  const trailing = TRAILING_BOARD_CLAUSE_RE.exec(s);
+  if (trailing && trailing.index > 0) {
+    const head = s.slice(0, trailing.index).replace(/[,\s]+$/, '');
+    if (!NUDGE_PLAN_OPENER_RES.some((re) => re.test(head))) return substantiveHead(head) ? `${head}.` : '';
+  }
+  for (const re of NUDGE_PLAN_OPENER_RES) {
+    const m = re.exec(s);
+    if (!m) continue;
+    const from = m.index + m[0].length;
+    PLAN_CLAUSE_SEPARATOR_RE.lastIndex = from;
+    for (let sep = PLAN_CLAUSE_SEPARATOR_RE.exec(s); sep; sep = PLAN_CLAUSE_SEPARATOR_RE.exec(s)) {
+      const rest = s.slice(sep.index + sep[0].length);
+      if (substantiveRest(rest)) return capitaliseFirst(rest.trim());
+    }
+    return '';
+  }
+  return s;
+}
 const BARE_FILLER_JA_RE =
   /^\s*(?:(?:はい|いいですね|では|じゃあ|さて)[、,]?\s*)?(?:少し|ちょっと)?見てみましょう(?:ね|か)?[。！!]?\s*$/;
 
@@ -467,7 +508,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || (opts?.runtimeTriggered === true && NUDGE_PLAN_NARRATION_RE.test(s))) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

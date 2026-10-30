@@ -7,7 +7,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -643,7 +643,6 @@ check('kept: "Put the hook of the letter j below the line."', !isMetaNarration('
 // ─── Task 20 §C (GDI run 8): the plan spoken on idle-nudge turns ───
 const RT = { runtimeTriggered: true };
 for (const t of [
-  'Ah, I may have missed your answer just now, so please go ahead and tell me one thing you did at work last week.',
   "The question was about the present perfect, so I'll ask the next present-perfect question about their work.",
   'Thanks, I heard your answer.',
   "Here is a new question, and I'll put it on the board.",
@@ -651,7 +650,7 @@ for (const t of [
   "So I'll acknowledge briefly and hand the question back.",
   'Thanks, I heard you.',
   'The student said they work in sales, so I’ll ask about customers.',
-]) check(`dropped on a runtime-triggered turn (run 8): "${t}"`, isMetaNarration(t, RT));
+]) check(`dropped whole on a runtime-triggered turn (run 8): "${t}"`, isMetaNarration(t, RT) && stripNudgePlanClause(t) === '');
 for (const t of [
   "I'll ask you one more question.",
   'The question was about your weekend.',
@@ -659,7 +658,23 @@ for (const t of [
   'Take a moment to read it, then tell me your answer.',
   "Let's keep going with the present perfect.",
   'Look at the question on the board.',
-]) check(`kept: "${t}"`, !isMetaNarration(t, RT));
+]) check(`kept: "${t}"`, !isMetaNarration(t, RT) && stripNudgePlanClause(t) === t);
+// Fix round 2 (I4): the plan clause goes, the content stays.
+for (const [t, want] of [
+  ["So I'll keep going with fractions: what is 1/2 + 1/4?", 'What is 1/2 + 1/4?'],
+  ["I'll ask the next question about area: what is 3 times 4?", 'What is 3 times 4?'],
+  ["Here is the next equation, 3x - 5 = 10, and I'll put it on the board.", 'Here is the next equation, 3x - 5 = 10.'],
+  ["I'll keep going with the present perfect: tell me one thing you have done this year.", 'Tell me one thing you have done this year.'],
+  ['Here is the question on the board: what is 7 times 8?', 'What is 7 times 8?'],
+  ['Ah, I may have missed your answer just now, so please go ahead and tell me one thing you did at work last week.', 'So please go ahead and tell me one thing you did at work last week.'],
+] as const) {
+  check(`I4 r2 clause stripped: "${t}" → "${want}"`, stripNudgePlanClause(t) === want);
+  check(`I4 r2 not dropped whole: "${t}"`, !isMetaNarration(t, RT));
+}
+{
+  const vtr = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('I4 r2: VTR strips the clause on runtime-triggered turns only', /if \(typeof ev\.text === 'string' && \/\^\\s\*\\\[\/\.test\(transcript\)\) \{\s*const planStripped = stripNudgePlanClause\(ev\.text\);/.test(vtr));
+}
 // Fix round 1 (I4): teaching sentences — kept on a runtime turn too, and the
 // nudge shapes never apply to a student-triggered turn.
 for (const t of [
@@ -670,7 +685,6 @@ for (const t of [
   "I'll move on to the second step: subtract 3 from both sides.",
   "The answer is 12, so I'll write it next to the box.",
   "The question is about speed, so I'll draw a distance-time graph.",
-  "Here is the next equation, 3x - 5 = 10, and I'll put it on the board in a second.",
   'Here is the question on the board: what is 7 times 8?',
   'Here is the question on the board: how long have you worked there?',
 ]) check(`I4 kept (runtime turn): "${t}"`, !isMetaNarration(t, RT));
