@@ -495,7 +495,9 @@ const MEDIUM_CUE_RE = /\bremember to\b|\bdon['’]t forget\b|\badd ["“]|\bthe 
 /** Fix round 2 (I2 residual): implicit corrections without the exact cue —
  *  "Just remember the article before project.", "In English we usually put an
  *  article there.", "Keep in mind …", "I understand what you mean." */
-const MEDIUM_CUE_EXTRA_RE = /\bremember\b|\bkeep in mind\b|\b(?:an? |the )?article\b|\bwe (?:usually|normally|often) (?:say|put|use)\b|\bwhat you mean\b|\bnext time,? (?:say|use|try|add)\b/i;
+// Fix round 3: "remember" / "article" only in a correcting frame — "What do
+// you remember most about …?" and "Did you write an article about it?" keep the card.
+const MEDIUM_CUE_EXTRA_RE = /\b(?:just |please )?remember (?:to|the|that we|,? (?:an?|the) )\b|\bkeep in mind\b|\b(?:an?|the) article (?:before|after|there|here|is missing)\b|\bwe (?:usually|normally|often) (?:say|put|use)\b|\bwhat you mean\b|\bnext time,? (?:say|use|try|add)\b/i;
 /** Any quoted span (any length) that is not a sentence starter. */
 function hasNonStarterQuote(text: string): boolean {
   for (const m of text.matchAll(QUOTE_RE)) {

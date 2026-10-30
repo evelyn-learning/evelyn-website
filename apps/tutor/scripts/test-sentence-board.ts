@@ -883,5 +883,12 @@ test('21B r2 I2: implicit corrections block the medium-confidence card; silent a
   assert.equal(planSentenceBoard({ tutorText: 'Good. Remember the article before project next time.', studentLast: 'I worked on the project to increase sales.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I worked on the project to increase sales.' }).length, 1);
 });
 
+test('21B r3: "remember" / "article" are cues only in a correcting frame', () => {
+  const st = 'I attended the robotics exhibition in Tokyo last year.';
+  const m = (t: string) => planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, affirmFallback: true, checkedMedium: true, checkedSentence: st });
+  assert.equal(m('What do you remember most about the exhibition?').length, 1);
+  assert.equal(m('Did you write an article about it?').length, 1);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
