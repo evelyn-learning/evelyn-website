@@ -176,5 +176,12 @@ test('Task 19 §B: an offer is never an announcement (GDI run 7, 1135 s)', () =>
   assert.equal(at("Now let's move on to the summary.", 'pronunciation'), 'summary');
 });
 
+test('Task 19 fix round 2 (m7): a tag question does not make an offer', () => {
+  assert.equal(at("Let's move on to the summary, shall we?", 'pronunciation'), 'summary');
+  assert.equal(at("Now let's move on to the summary, okay?", 'pronunciation'), 'summary');
+  assert.equal(at('Would you like to move on to the summary?', 'pronunciation'), null);
+  assert.equal(at('Shall we move on to the summary, okay?', 'pronunciation'), null);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall announced-move tests passed');

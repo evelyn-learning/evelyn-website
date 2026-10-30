@@ -82,6 +82,8 @@ function jaNextIsMove(sentence: string, nextKeys: string[]): boolean {
 
 /** An offer's opening, for one that lost its question mark (Task 19 §B). */
 const OFFER_LEAD_RE = /^(?:would you like|do you want|shall we|want to)\b/i;
+/** A tag question at the end of a sentence (fix round 2, m7). */
+const TAG_QUESTION_RE = /(?:,\s*(?:shall we|okay|ok|right|alright|yes)\s*[?？]|ね[?？])$/i;
 
 /** The id of the NEXT segment when `tutorText` announces a move into it, else null. */
 export function announcedMoveTarget(input: {
@@ -108,7 +110,10 @@ export function announcedMoveTarget(input: {
     // words next, or move on to the summary?` advanced into the summary; the
     // student chose more practice and the lesson was force-closed mid-hint.
     // An offer is never an announcement.
-    if (/[?？]/.test(sentence) || OFFER_LEAD_RE.test(sentence)) continue;
+    // Fix round 2 (m7): a trailing tag question ("…, shall we?", "…, okay?",
+    // 「…ね？」) does not make an announcement an offer.
+    const core = sentence.replace(TAG_QUESTION_RE, '');
+    if (/[?？]/.test(core) || OFFER_LEAD_RE.test(core)) continue;
     if (!MOVE_PHRASE_RE.test(sentence) && !jaNextIsMove(sentence, nextKeys)) continue;
     if (!nextKeys.some((k) => sentenceHas(sentence, k))) continue;
     if ([...otherOnly].some((k) => sentenceHas(sentence, k))) continue;
