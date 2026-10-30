@@ -23,9 +23,12 @@ export const MOVE_PHRASE_RE = new RegExp(
     String.raw`\b(?:let['’]?s|we['’]?ll|we will|now|time to)\s+(?:move|go)\s+(?:on\s+)?to\b`,
     String.raw`\bmove\s+on\s+to\b`,
     String.raw`\bmoving\s+on\s+to\b`,
-    String.raw`\blet['’]?s\s+(?:start|begin|turn\s+to|do)\s+(?:the|our|your)\b`,
+    // Review I-3: no `let's do the …` — mostly an exercise instruction.
+    String.raw`\blet['’]?s\s+(?:start|begin|turn\s+to)\s+(?:the|our|your)\b`,
     String.raw`\bnext\s+(?:is|comes|up\s+is)\b`,
-    '次に進みましょう', 'に進みましょう', 'に移りましょう', 'に移ります', '次は', 'を始めましょう',
+    // A bare 次は is not here (「次は過去形で言ってみましょう」 is a drill):
+    // it counts only as 次は<next keyword><move/copula> (announcedMoveTarget).
+    '次に進みましょう', 'に進みましょう', 'に移りましょう', 'に移ります', 'を始めましょう',
   ].join('|'),
   'i',
 );
@@ -70,6 +73,13 @@ function sentenceHas(sentence: string, keyword: string): boolean {
   return new RegExp(`\\b${keyword}\\b`, 'i').test(sentence);
 }
 
+/** 次は + one of the next part's Japanese keywords + a move or copula
+ *  (に進 / に移 / を始め / です / へ) — 「次は会話です。」 announces; 「次は過去形で
+ *  言ってみましょう。」 does not. */
+function jaNextIsMove(sentence: string, nextKeys: string[]): boolean {
+  return nextKeys.some((k) => isCjk(k) && new RegExp(`次は${k}(?:に進|に移|を始め|です|へ)`).test(sentence));
+}
+
 /** The id of the NEXT segment when `tutorText` announces a move into it, else null. */
 export function announcedMoveTarget(input: {
   tutorText: string; plan: LessonPlan; currentSegmentId: string; levelKnown: boolean;
@@ -91,7 +101,7 @@ export function announcedMoveTarget(input: {
   }
   const sentences = tutorText.split(/(?<=[。！？.!?])\s*|\n+/).map((x) => x.trim()).filter(Boolean);
   for (const sentence of sentences) {
-    if (!MOVE_PHRASE_RE.test(sentence)) continue;
+    if (!MOVE_PHRASE_RE.test(sentence) && !jaNextIsMove(sentence, nextKeys)) continue;
     if (!nextKeys.some((k) => sentenceHas(sentence, k))) continue;
     if ([...otherOnly].some((k) => sentenceHas(sentence, k))) continue;
     return nextId;
@@ -124,15 +134,26 @@ export const ANNOUNCED_CONTINUE_MIN_MS = 1500;
 /** Give up when the tutor is still busy this long after the advance. */
 export const ANNOUNCED_CONTINUE_MAX_MS = 30_000;
 
-/** One poll of the scheduled continuation. 'wait' while the tutor speaks,
- *  the brain is busy or the student is mid-utterance (their transcript will
- *  cancel it), and — when speech was never observed — for the first
- *  ANNOUNCED_CONTINUE_MIN_MS; 'drop' past ANNOUNCED_CONTINUE_MAX_MS. */
+/** One poll of the scheduled continuation — the idle nudge's guard set.
+ *  'drop' when the moment has passed: another brain turn ran since it was
+ *  scheduled (`turnSeqChanged` — e.g. a queued student reply drained
+ *  straight into callBrainOnce and opened the new part itself), the host
+ *  put the tutor on standby, the session is ending, or the tutor stayed busy
+ *  past ANNOUNCED_CONTINUE_MAX_MS. 'wait' while the tutor speaks (relay
+ *  state or speech still pending), the brain is busy, the student is
+ *  mid-utterance / their answer awaits dispatch / they are typing, a
+ *  student hold or pause is on, or the tab is hidden; and — when speech was
+ *  never observed — for the first ANNOUNCED_CONTINUE_MIN_MS. */
 export function announcedContinueDecision(input: {
   elapsedMs: number; sawSpeaking: boolean; speaking: boolean; brainBusy: boolean; studentMidUtterance: boolean;
+  speechPending?: boolean; awaitingDispatch?: boolean; studentTyping?: boolean; hold?: boolean; paused?: boolean; hidden?: boolean;
+  standby?: boolean; ending?: boolean; turnSeqChanged?: boolean;
 }): 'fire' | 'wait' | 'drop' {
-  const { elapsedMs, sawSpeaking, speaking, brainBusy, studentMidUtterance } = input;
-  if (speaking || brainBusy || studentMidUtterance) return elapsedMs >= ANNOUNCED_CONTINUE_MAX_MS ? 'drop' : 'wait';
+  const { elapsedMs, sawSpeaking } = input;
+  if (input.turnSeqChanged || input.standby || input.ending) return 'drop';
+  const busy = input.speaking || input.speechPending || input.brainBusy || input.studentMidUtterance
+    || input.awaitingDispatch || input.studentTyping || input.hold || input.paused || input.hidden;
+  if (busy) return elapsedMs >= ANNOUNCED_CONTINUE_MAX_MS ? 'drop' : 'wait';
   if (!sawSpeaking && elapsedMs < ANNOUNCED_CONTINUE_MIN_MS) return 'wait';
   return 'fire';
 }

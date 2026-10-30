@@ -130,7 +130,23 @@ test('C: decision — waits while speaking/busy/mid-utterance, min wait unseen, 
   assert.equal(d({ elapsedMs: ANNOUNCED_CONTINUE_MIN_MS - 1 }), 'wait');
   assert.equal(d({ elapsedMs: ANNOUNCED_CONTINUE_MIN_MS }), 'fire');
   assert.equal(d({ sawSpeaking: true, elapsedMs: 300 }), 'fire');
-  assert.equal(d({ speaking: true, elapsedMs: ANNOUNCED_CONTINUE_MAX_MS }), 'drop');
+  assert.equal(d({ speaking: true, elapsedMs: ANNOUNCED_CONTINUE_MAX_MS }), 'drop');  // review I-1: the idle nudge's guard set
+  for (const k of ['speechPending', 'awaitingDispatch', 'studentTyping', 'hold', 'paused', 'hidden'] as const) {
+    assert.equal(d({ [k]: true, sawSpeaking: true, elapsedMs: 5000 }), 'wait', k);
+    assert.equal(d({ [k]: true, elapsedMs: ANNOUNCED_CONTINUE_MAX_MS }), 'drop', k);
+  }
+  for (const k of ['standby', 'ending'] as const) assert.equal(d({ [k]: true, sawSpeaking: true, elapsedMs: 5000 }), 'drop', k);
+  // review I-2: another brain turn ran since scheduling ⇒ never fires
+  assert.equal(d({ turnSeqChanged: true, sawSpeaking: true, elapsedMs: 5000 }), 'drop');
+  assert.equal(d({ turnSeqChanged: true, elapsedMs: 0 }), 'drop');
+});
+test('review I-3: drills are not announcements; 次は + keyword + copula is', () => {
+  assert.equal(at("Let's do the same with the present perfect.", 'topic-intro'), null);
+  assert.equal(at('次は過去形で言ってみましょう。', 'present-perfect'), null);
+  assert.equal(at("Let's do your summary sentence again.", 'pronunciation'), null);
+  assert.equal(at('次は会話です。', 'past-simple'), 'open-conversation');
+  assert.equal(at(LIVE, 'past-simple'), 'open-conversation');
+  assert.ok(!MOVE_PHRASE_RE.test("Let's do the next one"));
 });
 test('C: the directive is the brief text', () => {
   assert.equal(FIXED_SCRIPT_CONTINUE_DIRECTIVE, '[System note: you announced the next part and then stopped without a question. The lesson pointer has moved; begin that part now from its notes — its first question or card — in one or two sentences. Do not repeat the announcement, do not recap.]');
@@ -142,6 +158,11 @@ test('C: VTR — scheduled once per segment on an announced advance, dispatched 
   pin(VTR, /if \(announcedContinueTimerRef\.current && transcript !== FIXED_SCRIPT_CONTINUE_DIRECTIVE\) \{\s*clearTimeout\(announcedContinueTimerRef\.current\);/);
   const unmount = VTR.indexOf('// Student marks + tutor reactions: clear armed idle-send timers on unmount.');
   pin(VTR.slice(unmount, unmount + 2000), /clearTimeout\(announcedContinueTimerRef\.current\)/);
+  // review I-1/I-2: guard set + turn sequence + drain-loop clear
+  pin(VTR, /const contTurnSeq = brainCallSeqRef\.current;/);
+  pin(VTR, /turnSeqChanged: brainCallSeqRef\.current !== contTurnSeq,/);
+  for (const g of [/awaitingDispatch: awaitingDispatchTimerRef\.current != null,/, /studentTyping: studentTypingRef\.current,/, /hold: TUTOR_STUDENT_HOLD && !!studentHoldRef\.current,/, /standby: standbyRef\.current,/, /ending: endingRef\.current,/, /paused: isPausedRef\.current,/]) pin(VTR, g);
+  pin(VTR, /while \(queuedTranscriptsRef\.current\.length > 0\) \{[\s\S]{0,300}clearTimeout\(announcedContinueTimerRef\.current\);/);
   pin(VTR, /productionStateRef\.current === 'disconnected' \|\| lessonClosedRef\.current \|\| farewellSealedRef\.current \|\| currentSegmentIdRef\.current !== contTarget/);
 });
 

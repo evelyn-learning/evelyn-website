@@ -942,7 +942,9 @@ export const TUTOR_FIXED_SCRIPT_SPOKEN_OPENER = process.env.NEXT_PUBLIC_TUTOR_FI
  *  conversation.") with no advance_lesson moves the pointer as the turn
  *  budget does (lesson-plan/announced-move.ts); when that turn ended with no
  *  question, one continuation directive starts the new part once the audio
- *  has finished. Default ON; NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE=off.
+ *  has finished. Independent of TUTOR_FIXED_SCRIPT_AUTO_ADVANCE (turning that
+ *  off does not stop this path). Default ON;
+ *  NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE=off.
  */
 export const TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE !== 'off';
 

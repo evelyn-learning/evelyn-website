@@ -4076,6 +4076,11 @@ export function VoiceTutorRealtime({
    *  the segments already continued into (at most once per segment). */
   const announcedContinueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const announcedContinuedSegsRef = useRef<Set<string>>(new Set());
+  // Review I-1 / m-1: the pause state and the hook's speech-pending probe,
+  // read by the continuation's poller (both live later in the body).
+  const isPausedRef = useRef(false);
+  isPausedRef.current = isPaused;
+  const speechPendingProbeRef = useRef<(() => boolean) | null>(null);
   // Task 14 §H: the close note was planted on the last fixed-script part —
   // tutor turns delivered since (null = not requested).
   const fixedScriptCloseRef = useRef<{ segId: string; turnsSince: number } | null>(null);
@@ -19898,6 +19903,10 @@ export function VoiceTutorRealtime({
               if (announcedContinueTimerRef.current) clearTimeout(announcedContinueTimerRef.current);
               const contTarget = autoNext;
               const contStartedAt = Date.now();
+              // Review I-2: any brain call after this one (a queued student
+              // reply drains straight into callBrainOnce, skipping the cancel
+              // in handleStudentTranscriptForBrain) opened the part already.
+              const contTurnSeq = brainCallSeqRef.current;
               let contSawSpeaking = false;
               const contTick = () => {
                 announcedContinueTimerRef.current = null;
@@ -19908,19 +19917,31 @@ export function VoiceTutorRealtime({
                   onDebugEvent?.('fixed_script_announced_continue_dropped', `"${contTarget}" after ${waitedMs}ms — session ended or pointer moved`);
                   return;
                 }
+                let speechPending = false;
+                try { speechPending = !!speechPendingProbeRef.current?.(); } catch { /* relay gone */ }
+                // Review I-1: the idle nudge's guard set.
                 const decision = announcedContinueDecision({
                   elapsedMs: waitedMs,
                   sawSpeaking: contSawSpeaking,
                   speaking,
+                  speechPending,
                   brainBusy: brainBusyRef.current,
                   studentMidUtterance: perceptionMidUtteranceRef.current,
+                  awaitingDispatch: awaitingDispatchTimerRef.current != null,
+                  studentTyping: studentTypingRef.current,
+                  hold: TUTOR_STUDENT_HOLD && !!studentHoldRef.current,
+                  paused: isPausedRef.current,
+                  hidden: typeof document !== 'undefined' && document.visibilityState === 'hidden',
+                  standby: standbyRef.current,
+                  ending: endingRef.current,
+                  turnSeqChanged: brainCallSeqRef.current !== contTurnSeq,
                 });
                 if (decision === 'wait') {
                   announcedContinueTimerRef.current = setTimeout(contTick, ANNOUNCED_CONTINUE_POLL_MS);
                   return;
                 }
                 if (decision === 'drop') {
-                  onDebugEvent?.('fixed_script_announced_continue_dropped', `"${contTarget}" after ${waitedMs}ms — tutor still busy`);
+                  onDebugEvent?.('fixed_script_announced_continue_dropped', `"${contTarget}" after ${waitedMs}ms — ${brainCallSeqRef.current !== contTurnSeq ? 'another turn ran' : standbyRef.current || endingRef.current ? 'standby/ending' : 'tutor still busy'}`);
                   return;
                 }
                 onDebugEvent?.('fixed_script_announced_continue', `"${contTarget}" waited=${waitedMs}ms`);
@@ -22173,6 +22194,13 @@ export function VoiceTutorRealtime({
       // processing, combine them into one transcript so Claude sees a
       // single follow-up question rather than a stale chain.
       while (queuedTranscriptsRef.current.length > 0) {
+        // Review I-2 (belt and braces with the turn-sequence drop): a drained
+        // student reply is a new turn — the announced-move continuation stands down.
+        if (announcedContinueTimerRef.current) {
+          clearTimeout(announcedContinueTimerRef.current);
+          announcedContinueTimerRef.current = null;
+          onDebugEvent?.('fixed_script_announced_continue_cancelled', 'queued student turn drained first');
+        }
         // Stage 3 fix #12 (2026-05-29): dedup identical queued transcripts
         // before combining. When both perception WS and production WS
         // transcribe the same student utterance during a no-cancel
@@ -23038,6 +23066,7 @@ export function VoiceTutorRealtime({
   // self-voice contamination (perception logs during state='speaking').
   const productionStateRef = useRef<RealtimeState>(realtime.state);
   productionStateRef.current = realtime.state;
+  speechPendingProbeRef.current = () => realtime.isSpeechPending();
 
   // Round-6 live-test fix (portal-cca76850): recorded 'speaking' windows —
   // [start, end] wall-clock spans during which the tutor was audibly
