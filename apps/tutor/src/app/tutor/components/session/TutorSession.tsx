@@ -50,6 +50,7 @@ import type { MockReviewContext, MockReviewAgendaItem, MockReviewDrawerRow } fro
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { OpenAIVoice } from '../../hooks/useOpenAIRealtime';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
+import { isFixedScriptPlan } from '@/lib/tutor/lesson-plan/fixed-script';
 import type { HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
@@ -922,7 +923,9 @@ export default function TutorSession(props: TutorSessionProps) {
         chrome="minimal"
         // GDI run 4: the embed shows the current page's title ("Part 3 ·
         // Level check · レベルチェック") as a slim header line.
-        pageTitleHeader={TUTOR_PAGE_TITLE_HEADER && !!embedded}
+        // Fix round 1 (review m-1): fixed-script plans only, so no other
+        // embed partner (GAC, GameClass) sees a layout change.
+        pageTitleHeader={TUTOR_PAGE_TITLE_HEADER && !!embedded && isFixedScriptPlan(lessonProgress.plan)}
         allowHorizontalScroll={sessionMode === 'text'}
         onNavChange={setBoardNav}
         openOnLastPage={!!resumeState}

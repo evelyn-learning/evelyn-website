@@ -397,7 +397,7 @@ test('J: the embed board shows the current page title as a one-line header', () 
   pin(WB, /\{headerTitle && \(\s*\/\/[^\n]*\n\s*<div className="shrink-0 [^"]*truncate" data-wb-page-title="1"/);
   pin(WB, /pageTitleHeader = false,/);
   const TS = read('src/app/tutor/components/session/TutorSession.tsx');
-  pin(TS, /pageTitleHeader=\{TUTOR_PAGE_TITLE_HEADER && !!embedded\}/);
+  pin(TS, /pageTitleHeader=\{TUTOR_PAGE_TITLE_HEADER && !!embedded && isFixedScriptPlan\(lessonProgress\.plan\)\}/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_PAGE_TITLE_HEADER = process\.env\.NEXT_PUBLIC_TUTOR_PAGE_TITLE_HEADER !== 'off';/);
 });
 
@@ -421,7 +421,9 @@ test('H: the close note is the brief\'s FACT; forced after two tutor turns unles
 test('H: VTR plants the close note (urgent) and force-closes through the normal close path', () => {
   pin(VTR, /pendingRuntimeNoteRef\.current = FIXED_SCRIPT_CLOSE_NOTE;\s*pendingRuntimeNoteSegRef\.current = segIdNow;\s*pendingRuntimeNoteUrgentRef\.current = true;/);
   pin(VTR, /onDebugEvent\?\.\('fixed_script_close_requested'/);
-  pin(VTR, /if \(fixedScriptCloseForced\(fc\.turnsSince, lessonClosedRef\.current\)\) \{\s*lessonClosedRef\.current = true;\s*onDebugEvent\?\.\('fixed_script_close_forced'[^\n]*\n\s*onDebugEvent\?\.\('lesson_closed', 'fixed-script close forced'\);\s*armLessonCloseAutoEndRef\.current\(\);/);
+  pin(VTR, /if \(fixedScriptCloseForced\(fc\.turnsSince, lessonClosedRef\.current\)\) \{\s*lessonClosedRef\.current = true;\s*onDebugEvent\?\.\('fixed_script_close_forced'[^\n]*\n\s*onDebugEvent\?\.\('lesson_closed', 'fixed-script close forced'\);[\s\S]{0,600}?void endSessionNowRef\.current\(\{ farewell: goodbyeLine\(studentName\) \}\);/);
+  // the same farewell + end call the time-box hard stop makes
+  pin(VTR, /void endSessionNowRef\.current\(\{ farewell: line, reason: 'time_limit' \}\);/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

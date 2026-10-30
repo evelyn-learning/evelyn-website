@@ -11946,6 +11946,11 @@ export function VoiceTutorRealtime({
     // Board-anchor re-anchoring: fresh per-turn narration.
     turnNarrationRef.current = [];
     scriptAdvanceRefusedSegRef.current = '';
+    // Task 14 §K fix round 1: `afterTurn` belongs to the turn that advanced
+    // (its auto cards stay on the part being left). From the next brain turn
+    // on, the new part's own auto cards (corrections, pronunciation target)
+    // open the pending part page as any fresh render does.
+    if (pendingAdvanceNewPageRef.current?.afterTurn) pendingAdvanceNewPageRef.current.afterTurn = false;
     rendersDispatchedThisTurnRef.current = 0;
     boardRendersThisTurnRef.current = 0;
     turnRenderPayloadTextRef.current = '';
@@ -19848,7 +19853,12 @@ export function VoiceTutorRealtime({
             lessonClosedRef.current = true;
             onDebugEvent?.('fixed_script_close_forced', `"${fc.segId}" — ${fc.turnsSince} tutor turns after the close note, no close_session_notes`);
             onDebugEvent?.('lesson_closed', 'fixed-script close forced');
-            armLessonCloseAutoEndRef.current();
+            // Fix round 1 (review I-2): the same farewell + end path as the
+            // time-box hard stop — seals the brain, speaks the fixed goodbye,
+            // bounded wait, then the graceful end (mic and TTS stopped). The
+            // brain ignored the close note, so its last line was most likely
+            // another question; silence + a 45 s auto-end left it unanswered.
+            void endSessionNowRef.current({ farewell: goodbyeLine(studentName) });
           }
         } else if (!fixedScriptCloseRef.current && !lessonClosedRef.current && TUTOR_FIXED_SCRIPT_AUTO_ADVANCE && !homeworkSession && autoPlan && !autoReason) {
           const closeReason = fixedScriptCloseReason({

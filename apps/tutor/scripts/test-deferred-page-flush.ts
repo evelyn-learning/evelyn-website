@@ -84,6 +84,13 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('VTR: a post-turn auto card never flushes the part page', /const autoCardOfLeftPart = opts\?\.sentenceBoardAuto === true && pendingAdvanceNewPageRef\.current\.afterTurn === true;/.test(VTR)
     && /const hasFreshTeaching = !autoCardOfLeftPart && /.test(VTR));
   ok('VTR: the auto-advance marks its pending page afterTurn', /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\);\s*if \(pendingAdvanceNewPageRef\.current\?\.segmentId === autoNext\) pendingAdvanceNewPageRef\.current\.afterTurn = true;/.test(VTR));
+  // Fix round 1 (review I-1): afterTurn is scoped to the advancing turn —
+  // cleared at the next brain turn's start, so the new part's own auto
+  // cards open the part page.
+  const turnStart = VTR.indexOf('turnNarrationRef.current = [];');
+  ok('VTR: afterTurn cleared at the next brain turn start', turnStart > 0
+    && /if \(pendingAdvanceNewPageRef\.current\?\.afterTurn\) pendingAdvanceNewPageRef\.current\.afterTurn = false;/.test(VTR.slice(turnStart, turnStart + 800)));
+  ok('VTR: afterTurn is set only right after the client advances (auto-advance, spoken opener)', (VTR.match(/\.afterTurn = true;/g) ?? []).length === 2);
   ok('VTR: the flushed part page clears a held topic-shift mark', VTR.includes("onDebugEvent?.('topic_shift_cleared_by_segment_page'"));
 }
 
