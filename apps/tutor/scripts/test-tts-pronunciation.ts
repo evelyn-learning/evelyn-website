@@ -1461,3 +1461,11 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.match(rewriteForTTS('Try (1, 3) too, then stop.'), /as well,/, 'too before a comma');
   console.log('OK — prose relational signs, "point (", "N too"');
 }
+
+// Task 19 §E (GDI run 7): "practise" spoke as "prac-tize".
+{
+  assert.equal(rewriteForTTS("Today we'll practise talking about your work."), "Today we'll practice talking about your work.");
+  assert.equal(rewriteForTTS('Practise the sentence. You practised it, she practises it, practising helps.'), 'Practice the sentence. You practiced it, she practices it, practicing helps.');
+  assert.match(rewriteForTTS('Good practice and a practitioner.'), /Good practice and a practitioner\./, 'other words untouched');
+  console.log('OK — practise → practice');
+}
