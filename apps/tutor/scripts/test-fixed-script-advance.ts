@@ -24,6 +24,7 @@ import {
   missingRequiredPhrases, scriptMissingAdvanceReason,
   segmentMaxTurns, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON,
   fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_GRACE_TURNS,
+  segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
@@ -441,6 +442,44 @@ test('D: fixedScriptNoteDeliveredThisTurnRef — set at the FACT-note emit, rese
   assert.ok(!deferBlock.includes('segmentRequiredPhrasesCheckedRef.current.add'), 'deferral must not mark the segment checked');
   // reset happens before the note can be delivered in the same turn
   assert.ok(VTR.indexOf('fixedScriptNoteDeliveredThisTurnRef.current = false;') < VTR.indexOf('fixedScriptNoteDeliveredThisTurnRef.current = true;'));
+});
+
+// ── Task 18 §B: the authored card opens a part when the brain's first turn did not put it up ──
+test('B: segmentNeedsAutoCard — the live level-check case and every refusal', () => {
+  const live = { fixedScript: true, openingTurn: false, counterForSegment: true, turnsInSegment: 1, hasAuthoredCard: true, renderedProblemThisTurn: false, alreadyOnBoard: false, completed: false };
+  assert.equal(segmentNeedsAutoCard(live), true);
+  assert.equal(segmentNeedsAutoCard({ ...live, fixedScript: false }), false, 'not a fixed script');
+  assert.equal(segmentNeedsAutoCard({ ...live, openingTurn: true }), false, 'opening turn');
+  assert.equal(segmentNeedsAutoCard({ ...live, turnsInSegment: 2 }), false, 'second turn');
+  assert.equal(segmentNeedsAutoCard({ ...live, turnsInSegment: 0 }), false, 'advanced away this turn');
+  assert.equal(segmentNeedsAutoCard({ ...live, counterForSegment: false }), false, 'counter of another segment');
+  assert.equal(segmentNeedsAutoCard({ ...live, hasAuthoredCard: false }), false, 'overview / concept / summary');
+  assert.equal(segmentNeedsAutoCard({ ...live, renderedProblemThisTurn: true }), false, 'brain put a card up');
+  assert.equal(segmentNeedsAutoCard({ ...live, alreadyOnBoard: true }), false, 'already on the board');
+  assert.equal(segmentNeedsAutoCard({ ...live, completed: true }), false, 'completed');
+  assert.ok(PROBLEM_CARD_TOOLS.has('show_segment_card') && PROBLEM_CARD_TOOLS.has('show_problem') && !PROBLEM_CARD_TOOLS.has('show_sentence'));
+});
+
+test('B: problemStatementOnBoard — case/punctuation-blind, a clear wipes its page, earlier pages count', () => {
+  const q = '1. Can you tell me a little about your job? What do you do?';
+  const card = { action: 'showProblem', problem: { statement: q } };
+  assert.equal(problemStatementOnBoard([card], '1. can you tell me a little about your job what do you do'), true);
+  assert.equal(problemStatementOnBoard([card, { action: 'clear' }], q), false);
+  assert.equal(problemStatementOnBoard([card, { action: 'newPage' }, { action: 'showSentence', sentence: 'x y z' }], q), true);
+  assert.equal(problemStatementOnBoard([{ action: 'showProblem', problem: { statement: 'Question 2' } }], q), false);
+  assert.equal(problemStatementOnBoard([], ''), false);
+});
+
+test('B: VoiceTutorRealtime wires segment_card_auto (pin)', () => {
+  pin(VTR, /if \(TUTOR_SEGMENT_CARD_AUTO && !opts\?\.prefetchOnly && totalSentenceCount > 0\)/);
+  pin(VTR, /segmentNeedsAutoCard\(\{\n\s*fixedScript: isFixedScriptPlan\(acPlan\),\n\s*openingTurn: openingTurnPendingRef\.current,/);
+  pin(VTR, /renderedProblemThisTurn: totalToolNamesSeen\.some\(\(n\) => PROBLEM_CARD_TOOLS\.has\(n\)\)/);
+  pin(VTR, /alreadyOnBoard: problemStatementOnBoard\(whiteboardCommandsRef\.current/);
+  pin(VTR, /catalogRef\.current\.setCurrentSegment\(acSegId\);/);
+  pin(VTR, /await handleWhiteboardCommand\(\[cmd\], \{ anchorSentence: 0 \}\);\n\s*onDebugEvent\?\.\('segment_card_auto'/);
+  // before the sentence board, so the part's card leads its page
+  assert.ok(VTR.indexOf("onDebugEvent?.('segment_card_auto'") < VTR.indexOf("onDebugEvent?.('sentence_board_auto'"));
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_SEGMENT_CARD_AUTO = process\.env\.NEXT_PUBLIC_TUTOR_SEGMENT_CARD_AUTO !== 'off';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -252,3 +252,60 @@ export function missingRequiredPhrases(seg: { requiredPhrases?: string[] } | und
 export function scriptMissingAdvanceReason(missing: readonly string[]): string {
   return `This part's script has not been said yet — it must include: ${missing.map((p) => `"${p}"`).join(', ')}. Say it in this turn; the lesson can move on in a later turn.`;
 }
+
+/** Task 18 §B (GDI run 6): the level check's first brain turn said
+ *  "Question 1: Can you tell me a little about your job?" with no tool call —
+ *  the authored card never went up. On a fixed-script plan the CLIENT puts the
+ *  part's authored card up after the FIRST substantive turn in the part when
+ *  nothing put it there. True only when all hold: fixed-script plan; not the
+ *  opening turn; the turn counter belongs to this segment and reads 1; the
+ *  segment has an authored card (`hasAuthoredCard` — a question / problem;
+ *  overview, concept, conversation-with-no-question and summary parts have
+ *  none); no problem card rendered this turn; the card is not on the board
+ *  already; the segment is not completed. */
+export function segmentNeedsAutoCard(input: {
+  fixedScript: boolean;
+  openingTurn: boolean;
+  /** turnsInSegment's segId === the current segment */
+  counterForSegment: boolean;
+  turnsInSegment: number;
+  hasAuthoredCard: boolean;
+  renderedProblemThisTurn: boolean;
+  alreadyOnBoard: boolean;
+  completed?: boolean;
+}): boolean {
+  return input.fixedScript
+    && !input.openingTurn
+    && input.counterForSegment
+    && input.turnsInSegment === 1
+    && input.hasAuthoredCard
+    && !input.renderedProblemThisTurn
+    && !input.alreadyOnBoard
+    && !input.completed;
+}
+
+/** Tool calls that put a problem / question card up. */
+export const PROBLEM_CARD_TOOLS: ReadonlySet<string> = new Set(['show_problem', 'show_segment_card', 'show_try_yourself']);
+
+const normStatement = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+
+/** True when a showProblem card with this statement (case, punctuation and
+ *  spacing ignored) is anywhere in the session's command log and not wiped by
+ *  a later clear of its page. */
+export function problemStatementOnBoard(
+  commands: ReadonlyArray<{ action: string } & Record<string, unknown>>,
+  statement: string,
+): boolean {
+  const target = normStatement(statement ?? '');
+  if (!target) return false;
+  let onPage = false;
+  let earlier = false;
+  for (const c of commands) {
+    if (c.action === 'newPage') { earlier = earlier || onPage; onPage = false; continue; }
+    if (c.action === 'clear') { onPage = false; continue; }
+    if (c.action !== 'showProblem') continue;
+    const p = c.problem as { statement?: unknown } | undefined;
+    if (p && typeof p.statement === 'string' && normStatement(p.statement) === target) onPage = true;
+  }
+  return earlier || onPage;
+}

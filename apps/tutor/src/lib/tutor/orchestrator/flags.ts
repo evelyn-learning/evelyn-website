@@ -965,3 +965,9 @@ export const TUTOR_PAGE_TITLE_HEADER = process.env.NEXT_PUBLIC_TUTOR_PAGE_TITLE_
  *  one (voice/speech-queue-boundary.ts). Default ON;
  *  NEXT_PUBLIC_TUTOR_KILL_SENTENCE_BOUNDARY=off. */
 export const TUTOR_KILL_SENTENCE_BOUNDARY = process.env.NEXT_PUBLIC_TUTOR_KILL_SENTENCE_BOUNDARY !== 'off';
+
+/** Task 18 §B (GDI run 6): on a fixed-script plan, the client puts a part's
+ *  authored card up after the part's first substantive turn when the brain
+ *  did not (lesson-plan/fixed-script.ts segmentNeedsAutoCard). Default ON;
+ *  NEXT_PUBLIC_TUTOR_SEGMENT_CARD_AUTO=off. */
+export const TUTOR_SEGMENT_CARD_AUTO = process.env.NEXT_PUBLIC_TUTOR_SEGMENT_CARD_AUTO !== 'off';

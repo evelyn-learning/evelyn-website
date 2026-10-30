@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
@@ -431,7 +431,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -20258,6 +20258,51 @@ export function VoiceTutorRealtime({
             const cmd = { action: 'showTable', title: outline.title, headers: outline.headers, rows: outline.rows } as WhiteboardCommand;
             const res = await handleWhiteboardCommand([cmd], { anchorSentence: 0 });
             onDebugEvent?.('fixed_script_outline_card', `rows=${outline.rows.length}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'}`);
+          }
+        }
+        // Task 18 §B (GDI run 6): the level check's first brain turn asked
+        // "Question 1: …" with no tool call — the part's authored card never
+        // went up. On a fixed-script plan, after the FIRST substantive turn in
+        // a part, the client renders the part's authored card itself through
+        // the same path and command shape as show_segment_card's resolution
+        // (catalog stamped with the segment; a deferred segment page opens
+        // with it — it is fresh teaching content). Runs before the sentence
+        // board so the part's card is the first thing on its page.
+        if (TUTOR_SEGMENT_CARD_AUTO && !opts?.prefetchOnly && totalSentenceCount > 0) {
+          const acPlan = lessonPlanRef.current;
+          const acSegId = currentSegmentIdRef.current ?? '';
+          const acSeg = acPlan?.segments.find((sg) => sg.id === acSegId);
+          const acTruth = acSeg && acPlan ? getSegmentTruth(acSeg, acPlan.id) : null;
+          const acStatement = acTruth?.problemText ? stripWbEmphasisText(acTruth.problemText) : '';
+          const acCounter = turnsInSegmentRef.current;
+          if (acPlan && acSeg && segmentNeedsAutoCard({
+            fixedScript: isFixedScriptPlan(acPlan),
+            openingTurn: openingTurnPendingRef.current,
+            counterForSegment: acCounter.segId === acSegId,
+            turnsInSegment: acCounter.turns,
+            hasAuthoredCard: !!acStatement,
+            renderedProblemThisTurn: totalToolNamesSeen.some((n) => PROBLEM_CARD_TOOLS.has(n)),
+            alreadyOnBoard: problemStatementOnBoard(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, acStatement),
+            completed: completedSegmentIdsRef.current.has(acSegId),
+          })) {
+            catalogRef.current.setCurrentSegment(acSegId);
+            const acKind = acTruth?.kind;
+            const cmd = {
+              action: 'showProblem',
+              problem: {
+                statement: acStatement,
+                format: 'free-response',
+                title: acKind === 'try_yourself' ? 'Try Yourself'
+                  : acKind === 'worked_example' ? 'Worked Example'
+                  : acKind === 'misconception_check' ? 'Check'
+                  : acKind === 'extension' ? 'Extension'
+                  : undefined,
+              },
+            } as unknown as WhiteboardCommand;
+            try {
+              const res = await handleWhiteboardCommand([cmd], { anchorSentence: 0 });
+              onDebugEvent?.('segment_card_auto', `${acSegId}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'} "${acStatement.slice(0, 50)}"`);
+            } catch { /* the turn stands without the card */ }
           }
         }
         // Sentence board (2026-10-29, GDI trial run 1: the brain boarded 3
