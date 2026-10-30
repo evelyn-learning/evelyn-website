@@ -17,7 +17,13 @@
 
 /** 'echo' (GDI run 3): the tutor quoting the student's own words back (often
  *  the wrong ones) — never a card. */
-export interface QuotedSentence { sentence: string; kind: 'correction' | 'model' | 'echo'; emphasis: string[] }
+export interface QuotedSentence {
+  sentence: string; kind: 'correction' | 'model' | 'echo'; emphasis: string[];
+  /** Task 15 §A — why a model card exists when the student's sentence was
+   *  checked correct: 'echo' = a quote of the student's own (correct) words,
+   *  'checked' = the check's sentence, said unquoted by the tutor. */
+  source?: 'echo' | 'checked';
+}
 
 export const SENTENCE_BOARD_MAX_PER_TURN = 2;
 
@@ -122,8 +128,23 @@ export function isCardCandidate(span: string): boolean {
   return !/^\p{Ll}/u.test(s);
 }
 
-export function planSentenceBoard(input: { tutorText: string; studentLast: string | null | undefined; renderedThisTurn: boolean }): QuotedSentence[] {
+/**
+ * Task 15 §A (GDI run 5): a quote that echoes a sentence the independent check
+ * found CORRECT is a model sentence, not the run-3 wrong-words echo — so with
+ * `studentCorrect` an 'echo' is kept as a model card (source 'echo'), and the
+ * check's own sentence (`checkedSentence`), when the tutor says it word for
+ * word without quotes, is added as a model card (source 'checked'). With
+ * `studentCorrect` falsy nothing changes.
+ */
+export function planSentenceBoard(input: {
+  tutorText: string; studentLast: string | null | undefined; renderedThisTurn: boolean;
+  /** the independent check found the student's last sentence correct (verdict 'correct', precheckDecides) */
+  studentCorrect?: boolean;
+  /** the check's `proposed` sentence (what the student's message proposes), when studentCorrect */
+  checkedSentence?: string | null;
+}): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
+  const studentCorrect = input.studentCorrect === true;
   const spans = extractQuotedSentences(input.tutorText).filter(isCardCandidate);
   const distinct: { s: string; n: string }[] = [];
   for (const s of spans) {
@@ -133,8 +154,18 @@ export function planSentenceBoard(input: { tutorText: string; studentLast: strin
   }
   const kept = distinct.filter((d) => !distinct.some((o) => o !== d && o.n.length > d.n.length && ` ${o.n} `.includes(` ${d.n} `)));
   const classified = kept
-    .map((d, i) => ({ q: classifyQuotedSentence(d.s, input.studentLast), len: d.n.length, i }))
+    .map((d, i) => {
+      const q = classifyQuotedSentence(d.s, input.studentLast);
+      return { q: q.kind === 'echo' && studentCorrect ? { sentence: q.sentence, kind: 'model' as const, emphasis: [], source: 'echo' as const } : q, len: d.n.length, i };
+    })
     .filter((c) => c.q.kind !== 'echo');
+  if (studentCorrect && input.checkedSentence) {
+    const checked = qualifyingSpan(input.checkedSentence);
+    if (checked && isCardCandidate(checked) && sentenceContains(input.tutorText, checked)
+      && !classified.some((c) => sameSentence(c.q.sentence, checked))) {
+      classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length });
+    }
+  }
   classified.sort((a, b) => {
     const ka = a.q.kind === 'correction' ? 0 : 1;
     const kb = b.q.kind === 'correction' ? 0 : 1;

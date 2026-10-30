@@ -331,5 +331,54 @@ test('I: VTR — duplicate show_sentence is a soft skip (note, not a rejection) 
   assert.ok(!/rejected\.push\(\{ action: 'show_sentence'/.test(VTR));
 });
 
+// ── Task 15 §A: a CORRECT student sentence gets a card (live run-5 lines) ──
+const RUN5_ECHO: Array<{ student: string; tutor: string; sentence: string }> = [
+  { student: 'The robots could walk and dance.', tutor: '"The robots could walk and dance" is clear and natural.', sentence: 'The robots could walk and dance' },
+  { student: 'We purchased 30 robots from that conference.', tutor: '"We purchased 30 robots from that conference" is a clear result.', sentence: 'We purchased 30 robots from that conference' },
+  { student: 'The project succeeded because we purchased the robots that we wanted.', tutor: '"The project succeeded because we purchased the robots that we wanted" is a clear reason.', sentence: 'The project succeeded because we purchased the robots that we wanted' },
+];
+test('A: echo of a checked-correct sentence ⇒ one model card (source echo)', () => {
+  for (const r of RUN5_ECHO) {
+    assert.equal(classifyQuotedSentence(r.sentence, r.student).kind, 'echo');
+    const cards = planSentenceBoard({ tutorText: r.tutor, studentLast: r.student, renderedThisTurn: false, studentCorrect: true, checkedSentence: r.student });
+    assert.equal(cards.length, 1, r.tutor);
+    assert.equal(cards[0].kind, 'model');
+    assert.equal(cards[0].sentence, r.sentence);
+    assert.deepEqual(cards[0].emphasis, []);
+    assert.equal(cards[0].source, 'echo', 'the checked sentence is the same card — not added twice');
+  }
+});
+test('A: same turns, not checked correct ⇒ [] (run-3 echo filter stands)', () => {
+  for (const r of RUN5_ECHO) {
+    assert.deepEqual(planSentenceBoard({ tutorText: r.tutor, studentLast: r.student, renderedThisTurn: false, studentCorrect: false, checkedSentence: r.student }), []);
+    assert.deepEqual(planSentenceBoard({ tutorText: r.tutor, studentLast: r.student, renderedThisTurn: false }), []);
+  }
+});
+test('A: unquoted restatement of the checked sentence ⇒ one model card (source checked)', () => {
+  const student = 'Our IT manager helped us identify the right robot.';
+  const tutor = 'Our IT manager helped us identify the right robot. That\'s a complete sentence, and "helped us identify" is natural.';
+  const cards = planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: false, studentCorrect: true, checkedSentence: 'Our IT manager helped us identify the right robot.' });
+  assert.deepEqual(cards, [{ sentence: 'Our IT manager helped us identify the right robot.', kind: 'model', emphasis: [], source: 'checked' }]);
+  assert.deepEqual(planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: false, studentCorrect: false, checkedSentence: 'Our IT manager helped us identify the right robot.' }), []);
+  assert.deepEqual(planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: true, studentCorrect: true, checkedSentence: student }), []);
+});
+test('A: a correction turn with a wrong (studentCorrect:false) checked sentence ⇒ correction only', () => {
+  const student = 'I haven\'t take leave from work.';
+  const tutor = 'You said I haven\'t take leave from work. The verb needs "taken": "I haven\'t taken leave from work."';
+  const cards = planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: false, studentCorrect: false, checkedSentence: student });
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].kind, 'correction');
+  assert.equal(cards[0].sentence, 'I haven\'t taken leave from work.');
+});
+test('A: VTR passes the check to planSentenceBoard and tags the event source', () => {
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  const at = VTR.indexOf('const cards = planSentenceBoard({');
+  const block = VTR.slice(at, at + 800);
+  assert.ok(/studentCorrect: precheckDecides\(boardPc\) && boardPc\.verdict === 'correct' && boardPc\.answers !== 'other_part' && boardPc\.answers !== 'neither'/.test(block));
+  assert.ok(block.includes('checkedSentence: boardPc?.proposed ?? null'));
+  assert.ok(VTR.includes('const boardPc = verdictPrecheckRef.current;'));
+  assert.ok(VTR.includes("`kind=${card.kind}${card.source ? ` source=${card.source}` : ''}"));
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

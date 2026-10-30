@@ -477,6 +477,7 @@ import {
   precheckContradictionFeedback,
   precheckCreditOverride,
   wrongWholeAnswerChecked,
+  precheckDecides,
   type PublicVerdictPrecheck,
 } from '@/lib/tutor/voice/verdict-precheck-shared';
 import { TUTOR_PRECHECK_VERDICT_KILL, TUTOR_PRECHECK_CREDIT, TUTOR_TEXT_OPENER_BACKSTOP, TUTOR_TEXT_MATCH_COUNTING, TUTOR_VOICE_VERDICT_HOLD } from '@/lib/tutor/orchestrator/turn-round-flags';
@@ -20074,10 +20075,16 @@ export function VoiceTutorRealtime({
         // catalog lists it in <whiteboard_state> (the brain sees it and does
         // not duplicate it). Never on the opening turn; never twice on one page.
         if (TUTOR_SENTENCE_BOARD && languageSessionRef.current && !openingTurnPendingRef.current) {
+          // Task 15 §A (GDI run 5): this turn's independent check found the
+          // student's sentence correct ⇒ the tutor quoting it back (or saying
+          // the checked sentence unquoted) is a model sentence and gets a card.
+          const boardPc = verdictPrecheckRef.current;
           const cards = planSentenceBoard({
             tutorText: fullText,
             studentLast: sentenceStressRef.current.studentLast,
             renderedThisTurn: totalToolNamesSeen.some((n) => RENDER_TOOLS.has(n)),
+            studentCorrect: precheckDecides(boardPc) && boardPc.verdict === 'correct' && boardPc.answers !== 'other_part' && boardPc.answers !== 'neither',
+            checkedSentence: boardPc?.proposed ?? null,
           });
           for (const card of cards) {
             // A pending segment page opens with this card, so the page the
@@ -20096,7 +20103,7 @@ export function VoiceTutorRealtime({
             const placedId = res?.assignedIds?.[0];
             for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
             // Runtime-origin marker: this event (the card is not a brain tool call).
-            onDebugEvent?.('sentence_board_auto', `kind=${card.kind} emphasis=[${card.emphasis.join(', ')}] "${card.sentence}" anchor=${anchor ?? 'live'} ${placedId ? `id=${placedId}` : `not placed${res?.rejected?.length ? ` (${res.rejected.map((r) => r.reason).join('; ').slice(0, 80)})` : ''}`}`);
+            onDebugEvent?.('sentence_board_auto', `kind=${card.kind}${card.source ? ` source=${card.source}` : ''} emphasis=[${card.emphasis.join(', ')}] "${card.sentence}" anchor=${anchor ?? 'live'} ${placedId ? `id=${placedId}` : `not placed${res?.rejected?.length ? ` (${res.rejected.map((r) => r.reason).join('; ').slice(0, 80)})` : ''}`}`);
           }
         }
         // R49b: the CONTENT companion to the presence check above. A render
