@@ -153,6 +153,24 @@ const RUNTIME_NOTE_NARRATION_RE =
 // shows the error." is a real sentence) — only the plural or those/these.
 const BOARD_STAGING_NARRATION_RE =
   /\bruntime notes?\b|\b(?:those|these) system notes?\b|\bsystem notes\b|\bput (?:a|the|one) (?:quick )?(?:hook|card|sentence) on the board\b|^\s*(?:those|these|the) (?:runtime |system )?notes (?:are|were) (?:a mix|mixed|conflicting|unclear|confusing|contradictory)\b/i;
+// Task 20 §C (GDI run 8, 2026-10-30): idle-nudge turns spoke the plan —
+// "The question was about the present perfect, so I'll ask the next
+// present-perfect question about their work.", "So I'll acknowledge briefly
+// and hand the question back.", "Thanks, I heard you.", "Here is a new
+// question, and I'll put it on the board. Here is the question on the board."
+// Whole-sentence shapes only: a first-person plan opener, third-person
+// reasoning about the learner ending in "so I'll", the nudge's stock lines and
+// the board staging. "I'll ask you one more question." and "The question was
+// about your weekend." are teaching sentences and stay.
+const NUDGE_PLAN_NARRATION_RE = new RegExp([
+  String.raw`^\s*(?:(?:so|ok(?:ay)?|right|alright),?\s*)?I['’]ll (?:acknowledge|hand|re-?ask|keep going with|move (?:on|to)|ask the next|put it on the board|note|mark|treat|take that as)\b`,
+  String.raw`^\s*The (?:question|student|learner|answer|last question) (?:was|is|asked|said|wants|needs)\b[^.!?]*\b(?:so|therefore) I['’]ll\b`,
+  String.raw`^\s*The (?:question|student|learner|answer|last question) (?:was|is|asked|said|wants|needs)\b[^.!?]*\babout their work\b`,
+  String.raw`\bI may have missed your answer\b`,
+  String.raw`^\s*Thanks, I heard (?:you|your answer|that)\b[.!]?\s*$`,
+  String.raw`\bI['’]ll put (?:it|this|that|the question) on the board\b`,
+  String.raw`^\s*Here is the question on the board\b`,
+].join('|'), 'i');
 const BARE_FILLER_JA_RE =
   /^\s*(?:(?:はい|いいですね|では|じゃあ|さて)[、,]?\s*)?(?:少し|ちょっと)?見てみましょう(?:ね|か)?[。！!]?\s*$/;
 
@@ -445,7 +463,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s)) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || NUDGE_PLAN_NARRATION_RE.test(s)) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

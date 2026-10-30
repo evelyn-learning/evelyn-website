@@ -640,5 +640,26 @@ check('kept: "Look at the sentence on the board."', !isMetaNarration('Look at th
 check('kept: "These notes are your summary for next week."', !isMetaNarration('These notes are your summary for next week.'));
 check('kept: "Put the hook of the letter j below the line."', !isMetaNarration('Put the hook of the letter j below the line.'));
 
+// ─── Task 20 §C (GDI run 8): the plan spoken on idle-nudge turns ───
+for (const t of [
+  'Ah, I may have missed your answer just now, so please go ahead and tell me one thing you did at work last week.',
+  "The question was about the present perfect, so I'll ask the next present-perfect question about their work.",
+  'Thanks, I heard your answer.',
+  "Here is a new question, and I'll put it on the board.",
+  'Here is the question on the board.',
+  "So I'll acknowledge briefly and hand the question back.",
+  'Thanks, I heard you.',
+  "Okay, I'll move on to the next part.",
+  'The student said they work in sales, so I’ll ask about customers.',
+]) check(`dropped (run 8): "${t}"`, isMetaNarration(t));
+for (const t of [
+  "I'll ask you one more question.",
+  'The question was about your weekend.',
+  'Thanks, I heard you say "I have learned", and that is right.',
+  'Take a moment to read it, then tell me your answer.',
+  "Let's keep going with the present perfect.",
+  'Look at the question on the board.',
+]) check(`kept: "${t}"`, !isMetaNarration(t));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
