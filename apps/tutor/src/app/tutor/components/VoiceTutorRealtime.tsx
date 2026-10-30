@@ -65,7 +65,7 @@ import { bridgeLineFor, bridgeSpokeName, BRIDGE_SPOKEN_DIRECTIVE, BRIDGE_SPOKEN_
 import { usableStudentName } from '@/lib/tutor/student-name';
 import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, buildInFlowOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { splitPromptForWire, nextToolScope, type ToolScope } from '@/lib/tutor/ai/prompt-cache';
-import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
+import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, teacherFirstName, isRoleStyleTeacherName, type TeacherPersonaWire } from '@core/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,
@@ -4930,6 +4930,12 @@ export function VoiceTutorRealtime({
   const fixedScriptOutlineShownRef = useRef(false);
   secondTutorLanguageRef.current = secondTutorLanguage(tutorLanguages);
   const sentenceStressRef = useRef<{ studentLast: string | null; cards: Array<{ sentence: string; emphasis: string[] }> }>({ studentLast: null, cards: [] });
+  /** Task 21 §A fix round 1: the persona's own name(s) — the only names a
+   *  "<Name> here." self-announcement is dropped for. */
+  const personaNamesRef = useRef<string[] | null>(null);
+  personaNamesRef.current = teacherPersona?.name
+    ? (isRoleStyleTeacherName(teacherPersona) ? [teacherPersona.name] : [teacherPersona.name, teacherFirstName(teacherPersona.name)])
+    : null;
   /** Task 21 §D1: the sentence this turn's brain show_sentence put up (reset per turn). */
   const turnShownSentenceRef = useRef<string | null>(null);
   // Task 20 §G3: the previous tutor turn the sentence board saw.
@@ -15030,7 +15036,7 @@ export function VoiceTutorRealtime({
                   // keeps its content; an all-citation sentence is left whole
                   // here and dropped by isMetaNarration below.
                   if (typeof ev.text === 'string') {
-                    const noteStripped = stripNoteCitationClause(ev.text);
+                    const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current });
                     if (noteStripped && noteStripped !== ev.text) {
                       onDebugEvent?.('meta_narration_dropped_note_citation_clause', `"${ev.text.slice(0, 60)}" → "${noteStripped.slice(0, 60)}"`);
                       (ev as { text?: string }).text = noteStripped;
@@ -16127,6 +16133,8 @@ export function VoiceTutorRealtime({
                     // Task 20 fix round 1 (I4): the nudge plan shapes only on a
                     // runtime-triggered turn (idle nudge / directive), never a student's.
                     runtimeTriggered: /^\s*\[/.test(transcript),
+                    // Task 21 §A fix round 1: "<Name> here." only for the persona's name.
+                    personaName: personaNamesRef.current,
                   });
                   if (metaNarrationRe) {
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));

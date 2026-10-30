@@ -705,36 +705,46 @@ for (const t of [
 ]) check(`I4 kept on a STUDENT turn: "${t}"`, !isMetaNarration(t));
 
 // ─── Task 21 §A (GDI run 9, 88 s): runtime notes cited on a STUDENT turn ───
+const RYOTA = { personaName: ['Ryota Tanaka', 'Ryota'] };
 for (const t of [
   "The pace preference says to slow down, so I'll stay on this one idea and check their understanding before moving on.",
-  'Ryota here.',
   "I'll stay on this one idea for a moment.",
   'The level note says the student is intermediate.',
   'The lesson pointers want a follow-up question next.',
   'The runtime directive tells me to move on.',
 ]) check(`§A dropped on a student turn: "${t}"`, isMetaNarration(t) && stripNoteCitationClause(t) === '');
+// fix round 1: "<Name> here." only for the persona's own name
+check('§A r1 "Ryota here." dropped with personaName Ryota', isMetaNarration('Ryota here.', RYOTA) && stripNoteCitationClause('Ryota here.', RYOTA) === '');
+check('§A r1 "Ryota here." kept without a persona name (rule off)', !isMetaNarration('Ryota here.') && stripNoteCitationClause('Ryota here.') === 'Ryota here.');
+for (const t of ['Careful here!', 'Same here.', 'Five here.', 'Look here.', 'Exactly here.']) {
+  check(`§A r1 kept with personaName Ryota: "${t}"`, !isMetaNarration(t, RYOTA) && stripNoteCitationClause(t, RYOTA) === t);
+}
 for (const t of [
   'The pace of the story speeds up in chapter two.',
   'Here is the plan for today.',
-  'Look here.',
-  'Start here!',
-  'Come here.',
   'The lesson today is about the past simple.',
   'The teacher says hello to the class every morning.',
   'Ryota here is a great salesperson.',
   "「洗濯機を売っています」と、会社での仕事を一文で言えましたね。",
   'Next I\'d like to hear your main responsibilities.',
-]) check(`§A kept: "${t}"`, !isMetaNarration(t) && stripNoteCitationClause(t) === t);
+]) check(`§A kept: "${t}"`, !isMetaNarration(t, RYOTA) && stripNoteCitationClause(t, RYOTA) === t);
 check('§A colon continuation keeps its content',
   stripNoteCitationClause('The lesson note says: what do you do every day at work?') === 'What do you do every day at work?');
-check('§A quote continuation keeps its content',
-  stripNoteCitationClause('The plan note says "Tell me about your last project at work."') === '"Tell me about your last project at work."');
+check('§A r1 "I\'ll stay on this one idea: what is 3 + 4?" keeps the question',
+  stripNoteCitationClause("So I'll stay on this one idea: what is 3 + 4?") === 'What is 3 + 4?' && !isMetaNarration("So I'll stay on this one idea: what is 3 + 4?"));
+for (const t of [
+  'The lesson note says the word "because" is useful here.',
+  'The plan note says "Tell me about your last project at work."',
+  'The lesson note says: "Tell me about your last project at work."',
+]) check(`§A r1 a continuation opening with a quote leaves the sentence unchanged: "${t}"`, stripNoteCitationClause(t) === t && !isMetaNarration(t));
 check('§A a short colon tail is still citation', stripNoteCitationClause('The pace note says: slow down.') === '');
 {
   const vtr = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('§A VTR strips the note citation on every turn, before the nudge clause',
-    /if \(typeof ev\.text === 'string'\) \{\s*const noteStripped = stripNoteCitationClause\(ev\.text\);/.test(vtr)
-    && vtr.indexOf('stripNoteCitationClause(ev.text)') < vtr.indexOf('stripNudgePlanClause(ev.text)'));
+    /if \(typeof ev\.text === 'string'\) \{\s*const noteStripped = stripNoteCitationClause\(ev\.text, \{ personaName: personaNamesRef\.current \}\);/.test(vtr)
+    && vtr.indexOf('stripNoteCitationClause(ev.text') < vtr.indexOf('stripNudgePlanClause(ev.text)'));
+  check('§A r1 VTR passes the persona name(s) to isMetaNarration', vtr.includes('personaName: personaNamesRef.current,')
+    && vtr.includes('[teacherPersona.name, teacherFirstName(teacherPersona.name)]'));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -223,28 +223,37 @@ export function stripNudgePlanClause(sentence: string): string {
 // themselves and never carry teaching, so they apply on EVERY turn. Only a
 // colon / quote continuation keeps its content ("The lesson note says: what
 // is your job?" → "What is your job?") — a ", so I'll …" tail is more plan.
-// A bare "<Name> here." self-announcement goes too, but never an imperative
-// ("Look here.", "Start here.").
+// A bare "<Name> here." self-announcement goes too — fix round 1: ONLY the
+// session persona's own name (opts.personaName; without one the rule is off),
+// so "Careful here!", "Same here.", "Five here." are never touched.
+// Fix round 1 (m): "I'll stay on this one idea: what is 3 + 4?" keeps the
+// question, like the note opener; a continuation that would START with a
+// quote ('… says the word "because" is useful') leaves the sentence as it is.
 const NOTE_CITING_OPENER_RE =
   /^\s*The (?:pace|level|lesson|plan|persona|runtime|system|teacher) (?:preference|note|pointer|setting|directive|guidance)s? (?:says?|tells?|asks?|wants?)\b/i;
 const STAY_ON_ONE_IDEA_RE = /\bI['’]ll stay on this one idea\b/i;
-const NAME_SELF_ANNOUNCE_RE =
-  /^\s*(?!(?:Look|Come|Start|Click|Tap|Press|Stop|Sit|Stand|Write|Begin|Over|Right|Out|Up|Down|Put|Read|Point|Go|Stay|Wait|Listen|Hold|Move|Draw|Check|Focus|Circle|Underline|Answer|Type|Add|Pause|Rest|Sign|Fill|Enter|Get|Is|Was|Not|Nobody|Everyone|Somebody|Someone|Anyone|Nothing|Everything)\s)\p{Lu}\p{Ll}+ here[.!]?\s*$/u;
 const NOTE_CITATION_CONTINUATION_RE = /:\s+|\s(?=["“「])/g;
+const escapeName = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function isPersonaSelfAnnounce(s: string, personaName: string | readonly string[] | null | undefined): boolean {
+  const names = (Array.isArray(personaName) ? personaName : [personaName]).map((n) => (n ?? '').trim()).filter((n) => n.length >= 2 && n.length <= 60);
+  return names.some((n) => new RegExp(`^\\s*${escapeName(n)} here[.!]?\\s*$`, 'i').test(s));
+}
+export interface NoteCitationOpts { /** the session persona's name(s) — full name and first name */ personaName?: string | readonly string[] | null }
 /**
  * A sentence that cites a runtime note with the citation removed: unchanged
- * when there is none, the content after a colon / quote when there is some,
- * '' when the whole sentence is note citation.
+ * when there is none (or the continuation opens with a quote), the content
+ * after a colon when there is some, '' when the whole sentence is citation.
  */
-export function stripNoteCitationClause(sentence: string): string {
+export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpts): string {
   const s = sentence ?? '';
-  if (STAY_ON_ONE_IDEA_RE.test(s) || NAME_SELF_ANNOUNCE_RE.test(s)) return '';
-  const m = NOTE_CITING_OPENER_RE.exec(s);
+  if (isPersonaSelfAnnounce(s, opts?.personaName)) return '';
+  const m = NOTE_CITING_OPENER_RE.exec(s) ?? STAY_ON_ONE_IDEA_RE.exec(s);
   if (!m) return s;
   NOTE_CITATION_CONTINUATION_RE.lastIndex = m.index + m[0].length;
   const sep = NOTE_CITATION_CONTINUATION_RE.exec(s);
   if (sep) {
     const rest = s.slice(sep.index + sep[0].length);
+    if (/^\s*["“「]/.test(rest) || !sep[0].startsWith(':')) return s;
     if (substantiveRest(rest)) return capitaliseFirst(rest.trim());
   }
   return '';
@@ -537,11 +546,11 @@ function isLeakShape(s: string): boolean {
 
 export function isMetaNarration(
   sentence: string,
-  opts?: { structural?: boolean; /** Task 20 fix round 1: the turn answers a runtime directive / nudge (transcript starts with "["), not the student */ runtimeTriggered?: boolean },
+  opts?: { structural?: boolean; /** Task 20 fix round 1: the turn answers a runtime directive / nudge (transcript starts with "["), not the student */ runtimeTriggered?: boolean; /** Task 21 fix round 1: the persona's name(s) for the "<Name> here." rule */ personaName?: string | readonly string[] | null },
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
