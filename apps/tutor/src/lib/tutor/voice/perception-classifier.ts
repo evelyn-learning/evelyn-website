@@ -871,6 +871,10 @@ export const EXPECTED_REPEAT_TARGET_MATCH = 0.6;
  *  An acoustic echo of a whole line starts at the line's START, so a full-line
  *  echo stays far earlier than this and still drops. */
 export const EXPECTED_REPEAT_END_LEAD_MS = 500;
+/** Fix round 2 (I3): the onset must also be at least this long after the
+ *  matched line STARTED playing (an echo of a line starts within ~450 ms of
+ *  its start). */
+export const EXPECTED_REPEAT_MIN_FROM_START_MS = 1000;
 
 /**
  * Expected-repeat exemption (Task 18, GDI run 6): the tutor said `Please say
@@ -931,6 +935,11 @@ export function isExpectedRepeat(
   }
   // No end stamp ⇒ the line is still playing ⇒ a match is echo.
   if (!best || best.spokenEndedAt == null) return false;
+  // Fix round 2 (I3): brain TTS is stamped per sentence, so a short quoted
+  // line can be its own ~0.9 s script — its echo (speaker / Bluetooth delay +
+  // onset lag ≈ start + 450 ms) would also sit inside the end lead. An echo
+  // starts near the line's START; a repeat starts at its end.
+  if (speechStartedAt < best.spokenStartedAt + EXPECTED_REPEAT_MIN_FROM_START_MS) return false;
   return speechStartedAt >= best.spokenEndedAt - EXPECTED_REPEAT_END_LEAD_MS;
 }
 

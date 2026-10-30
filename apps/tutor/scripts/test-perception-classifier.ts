@@ -1570,6 +1570,25 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('§A run-5 exact: "Please say it once more: X", X 400 ms after the end ⇒ not dropped', r5.verdict === 'new_turn', `${r5.verdict} (${r5.reason})`);
 }
 
+// ── Task 18 fix round 2 (I3): a short line stamped as its own script ──
+{
+  const now = 3_000_000;
+  const x = 'I sold nine machines.';
+  const start = now - 4000;
+  const short: RecentTtsScript[] = [{ text: `"${x}"`, spokenStartedAt: start, spokenEndedAt: start + 900 }];
+  const base = { transcript: x, recentTtsScripts: short, now, productionState: 'listening' as ProductionStateForClassifier, expectedRepeat: { text: x } };
+  const echoStart = classifyHeuristic({ ...base, speechStartedAt: start + 450 });
+  check('§A R2: echo of a 0.9 s line at start + 450 ms ⇒ drop', echoStart.verdict === 'drop_self_voice', `${echoStart.verdict} (${echoStart.reason})`);
+  const echoTail = classifyHeuristic({ ...base, speechStartedAt: start + 900 - 450 });
+  check('§A R2: tail-only echo at end − 450 ms ⇒ drop', echoTail.verdict === 'drop_self_voice', `${echoTail.verdict} (${echoTail.reason})`);
+  const repeat = classifyHeuristic({ ...base, speechStartedAt: start + 900 + 100 });
+  check('§A R2: 0.9 s line, onset at its end + 100 ms (≥ start + 1000) ⇒ not dropped', repeat.verdict === 'new_turn', `${repeat.verdict} (${repeat.reason})`);
+  const said = 'Last week, I went golfing with my manager.';
+  const longLine: RecentTtsScript[] = [{ text: `Please say the full sentence once more: "${said}"`, spokenStartedAt: now - 19000, spokenEndedAt: now - 3000 }];
+  const live = classifyHeuristic({ transcript: said, recentTtsScripts: longLine, now, productionState: 'listening', speechStartedAt: now - 3000 - 300, expectedRepeat: { text: said } });
+  check('§A R2: live repeat shape (long line, onset at end − 300 ms) ⇒ not dropped', live.verdict === 'new_turn', `${live.verdict} (${live.reason})`);
+}
+
 // ── Task 18 §A: expectedRepeatFor (the caller's input) ──
 {
   const ask = 'Please say it once more: "Last week, I went golfing with my manager."';
