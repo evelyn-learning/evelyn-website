@@ -190,7 +190,7 @@ test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   assert.ok(lv > 0);
   pin(VTR.slice(lv, lv + 2500), /pendingRuntimeNoteUrgentRef\.current = true;/);
   pin(VTR, /const deliver = urgentNote \|\| !openQuestionAtTurnStartRef\.current/);
-  pin(VTR, /if \(urgentNote\) onDebugEvent\?\.\('fixed_script_note_delivered'/);
+  pin(VTR, /if \(urgentNote\) \{\n\s*fixedScriptNoteDeliveredThisTurnRef\.current = true;\n\s*onDebugEvent\?\.\('fixed_script_note_delivered'/);
   // the overlong note itself stays holdable
   const ov = VTR.indexOf("'segment_overlong_note_planted'");
   pin(VTR.slice(ov - 2500, ov), /pendingRuntimeNoteUrgentRef\.current = false;/);
@@ -424,6 +424,23 @@ test('H: VTR plants the close note (urgent) and force-closes through the normal 
   pin(VTR, /if \(fixedScriptCloseForced\(fc\.turnsSince, lessonClosedRef\.current\)\) \{\s*lessonClosedRef\.current = true;\s*onDebugEvent\?\.\('fixed_script_close_forced'[^\n]*\n\s*onDebugEvent\?\.\('lesson_closed', 'fixed-script close forced'\);[\s\S]{0,600}?void endSessionNowRef\.current\(\{ farewell: goodbyeLine\(studentName\) \}\);/);
   // the same farewell + end call the time-box hard stop makes
   pin(VTR, /void endSessionNowRef\.current\(\{ farewell: line, reason: 'time_limit' \}\);/);
+});
+
+// ── Task 15 §D: the required-phrase kill defers on a CLIENT auto-advance transition turn ──
+test('D: fixedScriptNoteDeliveredThisTurnRef — set at the FACT-note emit, reset per brain turn, read by the deferral', () => {
+  pin(VTR, /const fixedScriptNoteDeliveredThisTurnRef = useRef\(false\);/);
+  pin(VTR, /verdictPrecheckKillUsedRef\.current = false;\n\s*fixedScriptNoteDeliveredThisTurnRef\.current = false;/);
+  pin(VTR, /if \(urgentNote\) \{\n\s*fixedScriptNoteDeliveredThisTurnRef\.current = true;\n\s*onDebugEvent\?\.\('fixed_script_note_delivered'/);
+  pin(VTR, /const clientAdvanceTransition = fixedScriptNoteDeliveredThisTurnRef\.current;/);
+  pin(VTR, /const deferPhraseCheck = advancedIntoSegmentThisTurn \|\| clientAdvanceTransition;/);
+  pin(VTR, /\(client auto-advance transition turn\)/);
+  // the check itself runs only when not deferred, and the deferral does not mark the segment checked
+  pin(VTR, /segIdForPhrases &&\n\s*!deferPhraseCheck &&\n\s*!segmentRequiredPhrasesCheckedRef\.current\.has\(segIdForPhrases\)/);
+  const at = VTR.indexOf('const deferPhraseCheck');
+  const deferBlock = VTR.slice(at, VTR.indexOf('!deferPhraseCheck', at));
+  assert.ok(!deferBlock.includes('segmentRequiredPhrasesCheckedRef.current.add'), 'deferral must not mark the segment checked');
+  // reset happens before the note can be delivered in the same turn
+  assert.ok(VTR.indexOf('fixedScriptNoteDeliveredThisTurnRef.current = false;') < VTR.indexOf('fixedScriptNoteDeliveredThisTurnRef.current = true;'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

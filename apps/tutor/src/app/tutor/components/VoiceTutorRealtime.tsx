@@ -4205,6 +4205,11 @@ export function VoiceTutorRealtime({
   // per segment so we don't re-narrate mid-trace. See the post-stream
   // check site for the matching condition.
   const segmentRequiredPhrasesCheckedRef = useRef<Set<string>>(new Set());
+  // Task 15 §D (GDI run 5): this brain turn carries a fixed-script FACT note
+  // (the CLIENT auto-advanced the cursor) — a transition turn, so the
+  // requiredPhrases check defers as it does for the brain's own advance.
+  // Reset at the start of every brain turn.
+  const fixedScriptNoteDeliveredThisTurnRef = useRef(false);
   // 2026-05-23: opener-merge-stress session T18 + T19 both started with
   // verbatim "Let me see what I have for you. Off the top of my head —
   // here's one for you." across consecutive generate_problem hits. The
@@ -11886,6 +11891,7 @@ export function VoiceTutorRealtime({
     // 2026-10-06: a prior turn's pre-check never applies to this one.
     verdictPrecheckRef.current = null;
     verdictPrecheckKillUsedRef.current = false;
+    fixedScriptNoteDeliveredThisTurnRef.current = false;
     verdictPrecheckSealRef.current = null;
     workThenMatchTurnRef.current = false;
     // 2026-10-02: fresh per-turn answer-attempt ledger slots (set below only
@@ -12777,7 +12783,10 @@ export function VoiceTutorRealtime({
           pendingRuntimeNoteRef.current = null;
           pendingRuntimeNoteUrgentRef.current = false;
           runtimeNoteHeldTurnsRef.current = 0;
-          if (urgentNote) onDebugEvent?.('fixed_script_note_delivered', `segment "${currentSegmentIdRef.current ?? ''}"`);
+          if (urgentNote) {
+            fixedScriptNoteDeliveredThisTurnRef.current = true;
+            onDebugEvent?.('fixed_script_note_delivered', `segment "${currentSegmentIdRef.current ?? ''}"`);
+          }
           onDebugEvent?.('segment_overlong_note_consumed', 'delivered with this turn');
         } else {
           runtimeNoteHeldTurnsRef.current += 1;
@@ -18522,21 +18531,27 @@ export function VoiceTutorRealtime({
           const advancedIntoSegmentThisTurn = !advanceRefusedHere && totalToolNamesSeen.some(
             (n) => n === 'advance_lesson' || n === 'generate_problem',
           );
+          // Task 15 §D (GDI run 5): the CLIENT auto-advanced the cursor and
+          // this turn is the first to carry the FACT note ("close the
+          // exchange in one sentence, then teach") — a transition turn too.
+          // Killing it for a missing phrase dropped the student's question.
+          const clientAdvanceTransition = fixedScriptNoteDeliveredThisTurnRef.current;
+          const deferPhraseCheck = advancedIntoSegmentThisTurn || clientAdvanceTransition;
           if (
             planForPhrases &&
             segIdForPhrases &&
-            advancedIntoSegmentThisTurn &&
+            deferPhraseCheck &&
             !segmentRequiredPhrasesCheckedRef.current.has(segIdForPhrases)
           ) {
             console.warn(
               `[brain-orchestrator] requiredPhrases check deferred on "${segIdForPhrases}" — turn auto-advanced into the segment (transition turn, not a teaching turn).`,
             );
-            onDebugEvent?.('required_phrase_check_deferred', `segId="${segIdForPhrases}" (auto-advance transition turn)`);
+            onDebugEvent?.('required_phrase_check_deferred', `segId="${segIdForPhrases}" ${advancedIntoSegmentThisTurn ? '(auto-advance transition turn)' : '(client auto-advance transition turn)'}`);
           }
           if (
             planForPhrases &&
             segIdForPhrases &&
-            !advancedIntoSegmentThisTurn &&
+            !deferPhraseCheck &&
             !segmentRequiredPhrasesCheckedRef.current.has(segIdForPhrases)
           ) {
             const segForPhrases = getSegment(planForPhrases, segIdForPhrases);
