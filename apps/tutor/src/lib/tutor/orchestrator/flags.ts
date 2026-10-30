@@ -958,3 +958,10 @@ export const TUTOR_WORKING_LEVEL_ESTIMATE = process.env.NEXT_PUBLIC_TUTOR_WORKIN
  *  visible): the current board page's title as a slim one-line header above
  *  the board content. Default ON; NEXT_PUBLIC_TUTOR_PAGE_TITLE_HEADER=off. */
 export const TUTOR_PAGE_TITLE_HEADER = process.env.NEXT_PUBLIC_TUTOR_PAGE_TITLE_HEADER !== 'off';
+
+/** Task 17 (GDI live, embed-1793326847152 02:35:44): a repeat_after_correct /
+ *  required_phrase_missing kill lets the sentence in flight finish (capped at
+ *  4 s) instead of cutting it mid-word — the offending sentence is a later
+ *  one (voice/speech-queue-boundary.ts). Default ON;
+ *  NEXT_PUBLIC_TUTOR_KILL_SENTENCE_BOUNDARY=off. */
+export const TUTOR_KILL_SENTENCE_BOUNDARY = process.env.NEXT_PUBLIC_TUTOR_KILL_SENTENCE_BOUNDARY !== 'off';

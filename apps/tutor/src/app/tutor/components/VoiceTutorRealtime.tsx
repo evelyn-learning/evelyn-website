@@ -10,7 +10,9 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY } from '@/lib/tutor/orchestrator/flags';
+import { shouldFinishInFlightSentence, resumeTailAfterBoundary } from '@/lib/tutor/voice/speech-queue-boundary';
+import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
@@ -2623,7 +2625,7 @@ export function VoiceTutorRealtime({
   // orchestrator (which is constructed BEFORE the hook returns) can call
   // hook methods. Pattern matches sendTextMessageRef / injectContextRef.
   const speakTextRef = useRef<((text: string, scriptId?: number) => void) | null>(null);
-  const clearSpeechQueueRef = useRef<(() => Promise<void>) | null>(null);
+  const clearSpeechQueueRef = useRef<((opts?: ClearSpeechQueueOptions) => Promise<ClearSpeechQueueResult | void>) | null>(null);
   // Stage 3.1 (2026-06-16): refs to the new resume-from-cut hook
   // methods. Following the same long-lived-closure pattern as
   // speakTextRef / clearSpeechQueueRef.
@@ -14517,6 +14519,42 @@ export function VoiceTutorRealtime({
           // (Skip-KILL never opens the gate, so audibleSentenceCount stays
           // 0; dedup-suppression `continue`s without killing). peekSpeechQueue
           // returns [in-flight, ...queued] per Stage 3.1 f435560.
+          // Task 17: repeat_after_correct / required_phrase_missing reject a
+          // LATER sentence — the one playing now is innocent, so it finishes
+          // (hook-capped at 4 s) instead of being cut mid-word. The resume
+          // snapshot then excludes it, and no bridge follows a sentence
+          // that ended naturally. The retry cannot speak before this await
+          // returns (both kill sites run after the stream; the next attempt
+          // starts only when performKill resolves).
+          const killAction = rejectionsThisAttempt[rejectionsThisAttempt.length - 1]?.action;
+          if (shouldFinishInFlightSentence(killAction, audibleSentenceCount, TUTOR_KILL_SENTENCE_BOUNDARY)) {
+            const tail = peekSpeechQueueRef.current?.() ?? [];
+            const res = await clearSpeechQueueRef.current?.({ afterCurrentSentence: true });
+            if (res) {
+              onDebugEvent?.('judge_kill_sentence_boundary', `waited=${res.waitedMs}${res.finished ? '' : ' · capped'}`);
+              const resumeTail = res.finished ? resumeTailAfterBoundary(tail, res.keptSentence) : tail;
+              if (resumeTail.length > 0) {
+                judgeKillResumeSnapshot = resumeTail;
+                judgeKillResumeKilledText = attemptText;
+                judgeKillResumeCoveredCount = audibleSentenceCount;
+                onDebugEvent?.('judge_kill_snapshot', `${resumeTail.length} unplayed · heard=${audibleSentenceCount} · finishing in-flight sentence`);
+              }
+              if (res.finished || resumeTail.length > 0) return;
+              await speakKillBridge();
+              return;
+            }
+            // Nothing was in flight (or the TTS path cannot split): the hook
+            // ran the hard clear; same arming as below.
+            if (tail.length > 0) {
+              judgeKillResumeSnapshot = tail;
+              judgeKillResumeKilledText = attemptText;
+              judgeKillResumeCoveredCount = audibleSentenceCount;
+              onDebugEvent?.('judge_kill_snapshot', `${tail.length} unplayed · heard=${audibleSentenceCount}`);
+              return;
+            }
+            await speakKillBridge();
+            return;
+          }
           if (audibleSentenceCount > 0) {
             const tail = peekSpeechQueueRef.current?.() ?? [];
             if (tail.length > 0) {
@@ -27281,7 +27319,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // Review-round-1 (finding 2): session ending — any armed lazy-pending
     // is moot, and must not dangle across a session-summary/teardown race.
     clearStage2LazyPending('session ending');
-    let speechCleared: Promise<void> = Promise.resolve();
+    let speechCleared: Promise<unknown> = Promise.resolve();
     try { speechCleared = realtime.clearSpeechQueue(); } catch {}
     try { realtime.interrupt(); } catch {}
     // Host-ended session (evelyn:host_end, GreenApple spec 2026-10-02 §1):
