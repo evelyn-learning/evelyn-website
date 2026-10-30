@@ -13,6 +13,7 @@ import {
   deferRemoval,
   takeRemovalsForBatch,
   takeRemovalsForIds,
+  takeDroppedReplacements,
   takeStaleRemovals,
   type DeferredRemovals,
 } from '../src/lib/tutor/whiteboard/deferred-removals';
@@ -61,6 +62,36 @@ test('a replacement that never paints releases its prior after the limit', () =>
   assert.deepEqual(Array.from(p.keys()), ['fresh']);
 });
 
+// ── Task 22 §B (GDI run 10, 1233–1236 s): sentence-board replace keeps its prior on a drop ──
+test('keepPriorOnDrop: a dropped replacement owes nothing; its prior is reported kept', () => {
+  const p: DeferredRemovals = new Map();
+  deferRemoval(p, 'showSentence-20', ['showSentence-18'], T, { keepPriorOnDrop: true });
+  deferRemoval(p, 'showSentence-21', ['showSentence-19'], T, { keepPriorOnDrop: true });
+  assert.deepEqual(takeDroppedReplacements(p, ['showSentence-20']), { owed: [], kept: ['showSentence-18'] });
+  assert.deepEqual(takeRemovalsForIds(p, ['showSentence-21']), [], 'the old entry point owes nothing either');
+  assert.equal(p.size, 0, 'both entries consumed');
+});
+test('without keepPriorOnDrop a dropped replacement still owes its prior (figure evolve unchanged)', () => {
+  const p: DeferredRemovals = new Map();
+  deferRemoval(p, 'new', ['old'], T);
+  assert.deepEqual(takeDroppedReplacements(p, ['new']), { owed: ['old'], kept: [] });
+  deferRemoval(p, 'new2', ['old2'], T, { keepPriorOnDrop: false });
+  assert.deepEqual(takeRemovalsForIds(p, ['new2']), ['old2']);
+});
+test('keepPriorOnDrop: the paint still releases the prior with its replacement', () => {
+  const p: DeferredRemovals = new Map();
+  deferRemoval(p, 'showSentence-20', ['showSentence-18'], T, { keepPriorOnDrop: true });
+  assert.deepEqual(takeRemovalsForBatch(p, [{ action: 'showSentence', id: 'showSentence-20' }]), ['showSentence-18']);
+  deferRemoval(p, 's2', ['s1'], T, { keepPriorOnDrop: true });
+  assert.deepEqual(takeStaleRemovals(p, T + DEFERRED_REMOVAL_MAX_MS), ['s1'], 'stale backstop unchanged');
+});
+test('a merged entry keeps its prior only if every deferral asked to', () => {
+  const p: DeferredRemovals = new Map();
+  deferRemoval(p, 'r', ['a'], T, { keepPriorOnDrop: true });
+  deferRemoval(p, 'r', ['b'], T);
+  assert.deepEqual(takeDroppedReplacements(p, ['r']), { owed: ['a', 'b'], kept: [] });
+});
+
 // ── Wiring (source scans) ──
 const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
 const flags = readFileSync(join(__dirname, '..', 'src/lib/tutor/orchestrator/flags.ts'), 'utf8');
@@ -83,7 +114,11 @@ test('VTR: evolve removals are parked under their replacement; unpaired ones go 
 });
 
 test('VTR: dropped and never-painted replacements release their prior', () => {
-  assert.match(vtr, /takeRemovalsForIds\(deferredRemovalsRef\.current, ids\)/);
+  assert.match(vtr, /const \{ owed, kept \} = takeDroppedReplacements\(deferredRemovalsRef\.current, ids\);/);
+  // Task 22 §B: kept priors stay on the board; their bookkeeping is put back
+  const drop = vtr.slice(vtr.indexOf('const dropRenderBuffer = useCallback('), vtr.indexOf("'render_sync_drop'"));
+  assert.match(drop, /if \(kept\.length > 0\) \{[\s\S]*?autoSentenceCardIdsRef\.current\.add\(id\);\s*onDebugEvent\?\.\('sentence_board_auto_replace_kept', `\$\{id\} \(replacement retracted\)`\);[\s\S]*?catalogRef\.current\.restoreItems\(catalogItems\)/);
+  assert.ok(!/removeItems', ids: kept/.test(drop), 'a kept prior is never removed');
   assert.match(vtr, /takeStaleRemovals\(deferredRemovalsRef\.current, Date\.now\(\)\)/);
 });
 

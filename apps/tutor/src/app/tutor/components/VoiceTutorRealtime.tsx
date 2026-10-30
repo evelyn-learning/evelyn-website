@@ -298,7 +298,7 @@ import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
-import { WhiteboardCatalog, buildShowSignature, catalogItemTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
+import { WhiteboardCatalog, type CatalogItem, buildShowSignature, catalogItemTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
 import { normalizeEquationLabel, decideLabelDuplicate, type SeenEquationLabel } from '@/lib/tutor/whiteboard/equation-label-dedup';
 import { shouldScrollToDedupedItem } from '@/lib/tutor/whiteboard/dedup-scroll';
 import { homeworkFigureFor } from '@/lib/tutor/whiteboard/homework-figure';
@@ -513,7 +513,7 @@ import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchest
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
 import { withdrawnVerdict } from '@/lib/tutor/portal/withdrawn-items';
 import { MOMENT_PRESTART_HOLD_MS, MOMENT_STALE_MS, shiftAnchor } from '@/lib/tutor/portal/host-lesson';
-import { DEFERRED_REMOVAL_MAX_MS, deferRemoval, takeRemovalsForBatch, takeRemovalsForIds, takeStaleRemovals, type DeferredRemovals } from '@/lib/tutor/whiteboard/deferred-removals';
+import { DEFERRED_REMOVAL_MAX_MS, deferRemoval, takeRemovalsForBatch, takeDroppedReplacements, takeStaleRemovals, type DeferredRemovals } from '@/lib/tutor/whiteboard/deferred-removals';
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
 import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
@@ -1659,9 +1659,15 @@ export function VoiceTutorRealtime({
   // that carries the replacement — both land in one tick, so the board never
   // shows the gap. Every paint in this component goes through this wrapper.
   const deferredRemovalsRef = useRef<DeferredRemovals>(new Map());
+  // Task 22 §B: what the sentence-board replace took out of the mirror /
+  // id map / catalog for an auto card whose board removal is deferred to its
+  // replacement's paint — put back if that replacement is retracted unpainted
+  // (the card never left the board). Keyed by the auto card's id.
+  const sentenceBoardReplacedPriorsRef = useRef<Map<string, { mirrorCmd: unknown; mirrorIndex: number; byId: unknown; catalogItem: CatalogItem | undefined }>>(new Map());
   const onWhiteboardCommand = useCallback((commands: WhiteboardCommand[], meta?: WhiteboardBatchMeta) => {
     const owed = takeRemovalsForBatch(deferredRemovalsRef.current, commands);
     if (owed.length > 0) onWhiteboardCommandProp([{ action: 'removeItems', ids: owed }]);
+    for (const id of owed) sentenceBoardReplacedPriorsRef.current.delete(id);
     onWhiteboardCommandProp(commands, meta);
   }, [onWhiteboardCommandProp]);
   const [isMicMuted, setIsMicMuted] = useState(false);
@@ -6345,8 +6351,10 @@ export function VoiceTutorRealtime({
     renderBufferRef.current = [];
     if (ids.length > 0) {
       // A dropped replacement still owes its prior's removal (the catalog
-      // already treats the prior as gone).
-      const owed = takeRemovalsForIds(deferredRemovalsRef.current, ids);
+      // already treats the prior as gone) — except a sentence-board replace
+      // (keepPriorOnDrop, Task 22 §B): its auto card never left the board,
+      // so it stays and its bookkeeping is put back below.
+      const { owed, kept } = takeDroppedReplacements(deferredRemovalsRef.current, ids);
       if (owed.length > 0) onWhiteboardCommandProp([{ action: 'removeItems', ids: owed }]);
       const idSet = new Set(ids);
       whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
@@ -6356,6 +6364,29 @@ export function VoiceTutorRealtime({
       whiteboardCommandCountRef.current = Math.max(0, whiteboardCommandCountRef.current - ids.length);
       for (const id of ids) commandByIdRef.current.delete(id);
       catalogRef.current.removeByIds(ids);
+      if (kept.length > 0) {
+        const memo = sentenceBoardReplacedPriorsRef.current;
+        const restoreOrder = kept
+          .map((id) => ({ id, m: memo.get(id) }))
+          .sort((a, b) => (a.m?.mirrorIndex ?? Infinity) - (b.m?.mirrorIndex ?? Infinity));
+        const catalogItems: CatalogItem[] = [];
+        for (const { id, m } of restoreOrder) {
+          memo.delete(id);
+          if (m) {
+            if (m.mirrorCmd && m.mirrorIndex >= 0) {
+              const at = Math.min(m.mirrorIndex, whiteboardCommandsRef.current.length);
+              whiteboardCommandsRef.current = [...whiteboardCommandsRef.current.slice(0, at), m.mirrorCmd as WhiteboardCommand, ...whiteboardCommandsRef.current.slice(at)];
+              whiteboardCommandCountRef.current += 1;
+            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if (m.byId) commandByIdRef.current.set(id, m.byId as any);
+            if (m.catalogItem) catalogItems.push(m.catalogItem);
+          }
+          autoSentenceCardIdsRef.current.add(id);
+          onDebugEvent?.('sentence_board_auto_replace_kept', `${id} (replacement retracted)`);
+        }
+        if (catalogItems.length > 0) catalogRef.current.restoreItems(catalogItems);
+      }
       // These renders were dispatched (which cleared the fallback-only flag)
       // but never painted — re-derive it from what is actually on the board.
       rearmOpenerFallbackOnlyRef.current(`${ids.length} buffered render(s) dropped before painting`);
@@ -10470,9 +10501,14 @@ export function VoiceTutorRealtime({
     // retry-feedback + dedup ordering are unaffected (catalog leads pixels).
     // One sentence card per sentence (GDI trial run 2): a brain show_sentence
     // that says the same sentence as an AUTO card on the current page
-    // replaces it — the auto card leaves before the brain's card paints.
+    // replaces it. Task 22 §B (GDI run 10, 1233–1236 s): the auto card leaves
+    // WHEN the brain's card paints (deferred-removals, keepPriorOnDrop), never
+    // before — a kill that retracts the buffered replacement leaves it on the
+    // board (dropRenderBuffer restores its bookkeeping).
     if (TUTOR_SENTENCE_BOARD && !opts?.sentenceBoardAuto && autoSentenceCardIdsRef.current.size > 0) {
       const replaced: string[] = [];
+      const immediate: string[] = [];
+      const byReplacement = new Map<string, string[]>();
       processed.forEach((c, i) => {
         if (c.action !== 'showSentence' || typeof c.sentence !== 'string') return;
         const ids = autoSentenceCardsToReplace(
@@ -10480,11 +10516,44 @@ export function VoiceTutorRealtime({
           autoSentenceCardIdsRef.current,
           c.sentence,
         );
-        for (const id of ids) if (!replaced.includes(id)) replaced.push(id);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const replacementId = (c as any).id;
+        for (const id of ids) {
+          if (replaced.includes(id)) continue;
+          replaced.push(id);
+          if (typeof replacementId === 'string' && replacementId) byReplacement.set(replacementId, [...(byReplacement.get(replacementId) ?? []), id]);
+          else immediate.push(id);
+        }
       });
       if (replaced.length > 0) {
         const idSet = new Set(replaced);
-        onWhiteboardCommandProp([{ action: 'removeItems', ids: replaced }]);
+        if (immediate.length > 0) onWhiteboardCommandProp([{ action: 'removeItems', ids: immediate }]);
+        for (const [replacementId, priors] of byReplacement) {
+          for (const priorId of priors) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const mirrorIndex = whiteboardCommandsRef.current.findIndex((c) => (c as any).id === priorId);
+            sentenceBoardReplacedPriorsRef.current.set(priorId, {
+              mirrorCmd: mirrorIndex >= 0 ? whiteboardCommandsRef.current[mirrorIndex] : undefined,
+              mirrorIndex,
+              byId: commandByIdRef.current.get(priorId),
+              catalogItem: catalogRef.current.getItem(priorId),
+            });
+          }
+          deferRemoval(deferredRemovalsRef.current, replacementId, priors, Date.now(), { keepPriorOnDrop: true });
+          onDebugEvent?.('sentence_board_auto_replace_deferred', `${priors.join(',')} leaves with ${replacementId}`);
+        }
+        if (byReplacement.size > 0) {
+          // Backstop: a replacement that never paints (and was never
+          // retracted) must not strand its prior — same as the figure swap.
+          setTimeout(() => {
+            const stale = takeStaleRemovals(deferredRemovalsRef.current, Date.now());
+            if (stale.length > 0) {
+              onWhiteboardCommandProp([{ action: 'removeItems', ids: stale }]);
+              for (const id of stale) sentenceBoardReplacedPriorsRef.current.delete(id);
+              onDebugEventRef.current?.('sentence_board_auto_replace_deferred', `stale: ${stale.join(',')} removed without a replacement paint`);
+            }
+          }, DEFERRED_REMOVAL_MAX_MS + 250);
+        }
         const beforeMirror = whiteboardCommandsRef.current.length;
         whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

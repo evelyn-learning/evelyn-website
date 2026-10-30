@@ -741,6 +741,21 @@ export class WhiteboardCatalog {
     return before - this.items.length;
   }
 
+  /** Task 22 §B: put back items removed by removeByIds whose removal turned
+   *  out to be premature (a sentence-board auto card whose replacement was
+   *  retracted by a kill before it painted). Items already present are
+   *  skipped; the list stays in insertion order. Returns the count restored. */
+  restoreItems(items: ReadonlyArray<CatalogItem>): number {
+    let restored = 0;
+    for (const item of items) {
+      if (this.items.some((it) => it.itemId === item.itemId)) continue;
+      this.items.push(item);
+      restored++;
+    }
+    if (restored > 0) this.items.sort((a, b) => a.order - b.order);
+    return restored;
+  }
+
   /** Resolve a query against page TITLES (not feature names). Used as a
    *  scroll-handler fallback when the brain emits the page title as the
    *  scrollTo target (e.g. `target: "Six Kingdoms"` after a recent

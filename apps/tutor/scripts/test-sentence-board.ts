@@ -202,14 +202,17 @@ test('A: the auto card goes through handleWhiteboardCommand with its anchor, nev
   assert.ok(/sentenceAnchorIndex\(turnNarrationRef\.current, card\.sentence\)/.test(block), 'anchored to its spoken sentence');
   assert.ok(!/onWhiteboardCommand\(\[cmd\]\)/.test(block), 'no raw opener-fallback paint');
 });
-test('C: a brain show_sentence replaces the auto card of the same sentence before it paints', () => {
+test('C: a brain show_sentence replaces the auto card of the same sentence — the card leaves WITH its replacement (Task 22 §B)', () => {
   const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   const at = vtr.indexOf("'sentence_board_auto_replaced'");
   assert.ok(at > 0, 'replace event');
-  const block = vtr.slice(at - 2000, at + 300);
+  const block = vtr.slice(at - 5000, at + 300);
   assert.ok(/!opts\?\.sentenceBoardAuto/.test(block), 'never for the auto card itself');
   assert.ok(/autoSentenceCardsToReplace\(/.test(block), 'pure helper decides');
-  assert.ok(/action: 'removeItems', ids: replaced/.test(block), 'removed from the board');
+  assert.ok(!/action: 'removeItems', ids: replaced/.test(block), 'no immediate removal of every replaced card');
+  assert.ok(/deferRemoval\(deferredRemovalsRef\.current, replacementId, priors, Date\.now\(\), \{ keepPriorOnDrop: true \}\)/.test(block), 'parked under the replacement, kept on drop');
+  assert.ok(/'sentence_board_auto_replace_deferred', `\$\{priors\.join\(','\)\} leaves with \$\{replacementId\}`/.test(block), 'deferred event');
+  assert.ok(/if \(immediate\.length > 0\) onWhiteboardCommandProp\(\[\{ action: 'removeItems', ids: immediate \}\]\);/.test(block), 'a replacement without an id removes at once, as before');
   assert.ok(/catalogRef\.current\.removeByIds\(replaced\)/.test(block), 'and from the catalog');
   assert.ok(at < vtr.indexOf('dispatchVisualRef.current(processed, opts?.anchorSentence)'), 'before the brain card dispatches');
 });
