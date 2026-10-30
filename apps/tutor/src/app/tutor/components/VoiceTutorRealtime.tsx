@@ -11,7 +11,7 @@
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
 import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY } from '@/lib/tutor/orchestrator/flags';
-import { shouldFinishInFlightSentence, resumeTailAfterBoundary } from '@/lib/tutor/voice/speech-queue-boundary';
+import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
@@ -12905,6 +12905,12 @@ export function VoiceTutorRealtime({
       // bridges across multiple kills) and only when there's been
       // audible speech to bridge from.
       let bridgeSpokenThisTurn = false;
+      // Task 17 fix round 1 (I1): set when a barge-in / end / farewell /
+      // abort landed while a sentence-boundary kill waited for the in-flight
+      // sentence — the killed attempt's brainAbort was already spent, so the
+      // retry would start a fresh brain call and speak after the goodbye or
+      // over the reply. The loop ends the turn instead of retrying.
+      let retrySkippedAfterKill: string | null = null;
       // Round-7+ Fix 4: verbatim-sentence dedup within a turn. The brain
       // sometimes emits the same sentence twice in one block of text
       // ("What's the mode of {4, 7, 4, 9, 2}?What's the mode of {4, 7, 4, 9, 2}?")
@@ -14531,7 +14537,20 @@ export function VoiceTutorRealtime({
             const tail = peekSpeechQueueRef.current?.() ?? [];
             const res = await clearSpeechQueueRef.current?.({ afterCurrentSentence: true });
             if (res) {
-              onDebugEvent?.('judge_kill_sentence_boundary', `waited=${res.waitedMs}${res.finished ? '' : ' · capped'}`);
+              onDebugEvent?.('judge_kill_sentence_boundary', `waited=${res.waitedMs}${res.outcome === 'ended' ? '' : ` · ${res.outcome}`}`);
+              // Same shape as the pronunciation hold: the session ended / was
+              // sealed (or the student cut in) during the wait — no retry.
+              const skipReason = shouldSkipRetryAfterKill({
+                preempted: res.preempted,
+                aborted: brainAbort.signal.aborted,
+                ending: endingRef.current,
+                sealed: farewellSealedRef.current,
+              });
+              if (skipReason) {
+                retrySkippedAfterKill = skipReason;
+                onDebugEvent?.('judge_kill_retry_skipped', `reason=${skipReason}`);
+                return;
+              }
               const resumeTail = res.finished ? resumeTailAfterBoundary(tail, res.keptSentence) : tail;
               if (resumeTail.length > 0) {
                 judgeKillResumeSnapshot = resumeTail;
@@ -19390,6 +19409,9 @@ export function VoiceTutorRealtime({
           continuationDeliveredRef.current = { turnStartMs: t0, fromMs: Date.now() };
         }
 
+        // Task 17 fix round 1 (I1): the sentence-boundary wait was cut by a
+        // barge-in / end / farewell / abort — end the turn, no retry.
+        if (retrySkippedAfterKill && rejectionsThisAttempt.length > 0) break;
         // No rejections OR we've burned the retry budget → done with this turn.
         if (rejectionsThisAttempt.length === 0 || attempt === attemptCap) {
           if (rejectionsThisAttempt.length > 0) {

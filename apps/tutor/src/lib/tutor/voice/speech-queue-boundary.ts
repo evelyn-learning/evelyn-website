@@ -83,3 +83,85 @@ export function resumeTailAfterBoundary(tail: readonly string[], finishedSentenc
   if (finishedSentence && tail[0] === finishedSentence) return tail.slice(1);
   return [...tail];
 }
+
+/** Fix round 1 (m3): with no streamed tail still arriving the remaining audio
+ *  is known; a sentence that cannot finish inside the cap takes the hard
+ *  clear at once (waiting would cut it mid-word anyway, 4 s later). */
+export function finishesWithinCap(remainingSec: number, tailLive: boolean, capMs = SENTENCE_BOUNDARY_CAP_MS): boolean {
+  if (tailLive) return true;
+  return remainingSec * 1000 <= capMs;
+}
+
+/** How the wait for the in-flight sentence ended. `preempted` = another
+ *  clear (barge-in, end/farewell, interrupt, pause, disconnect) cut it. */
+export type BoundaryOutcome = 'ended' | 'capped' | 'preempted';
+
+export interface BoundaryDrain {
+  promise: Promise<{ outcome: BoundaryOutcome; waitedMs: number }>;
+  /** The sentence ended naturally. */
+  ended: () => void;
+  /** Something else cut the sentence. */
+  preempted: () => void;
+}
+
+/**
+ * The wait's state machine: settles once — on `ended`, on `preempted`, or on
+ * the cap (after `onCap`, the hard drain, completes). Calls arriving while
+ * the cap's hard drain runs (it preempts as a side effect) are ignored, so a
+ * cap is reported as `capped`. Note: the cap is wall-clock — a barge-in
+ * pause during the wait counts against it (bounded; the hard drain resumes
+ * the clock).
+ */
+export function createBoundaryDrain(opts: {
+  capMs?: number;
+  onCap: () => Promise<unknown> | unknown;
+  now?: () => number;
+  setTimer?: (fn: () => void, ms: number) => unknown;
+  clearTimer?: (t: unknown) => void;
+}): BoundaryDrain {
+  const now = opts.now ?? Date.now;
+  const setTimer = opts.setTimer ?? ((fn: () => void, ms: number) => setTimeout(fn, ms));
+  const clearTimer = opts.clearTimer ?? ((t: unknown) => clearTimeout(t as ReturnType<typeof setTimeout>));
+  const startedAt = now();
+  let done = false;
+  let capping = false;
+  let resolveFn: (v: { outcome: BoundaryOutcome; waitedMs: number }) => void = () => {};
+  const promise = new Promise<{ outcome: BoundaryOutcome; waitedMs: number }>((r) => { resolveFn = r; });
+  let timer: unknown = null;
+  const settle = (outcome: BoundaryOutcome) => {
+    if (done) return;
+    done = true;
+    if (timer != null) clearTimer(timer);
+    resolveFn({ outcome, waitedMs: now() - startedAt });
+  };
+  timer = setTimer(() => {
+    timer = null;
+    if (done || capping) return;
+    capping = true;
+    Promise.resolve()
+      .then(() => opts.onCap())
+      .then(() => settle('capped'), () => settle('capped'));
+  }, opts.capMs ?? SENTENCE_BOUNDARY_CAP_MS);
+  return {
+    promise,
+    ended: () => { if (!capping) settle('ended'); },
+    preempted: () => { if (!capping) settle('preempted'); },
+  };
+}
+
+/** Fix round 1 (I1): after a sentence-boundary kill, the retry must not
+ *  start when the wait was cut by something else (barge-in, end, farewell),
+ *  the turn was aborted, or the session is ending / sealed. Returns the
+ *  reason, or null to retry. */
+export function shouldSkipRetryAfterKill(s: {
+  preempted: boolean;
+  aborted: boolean;
+  ending: boolean;
+  sealed: boolean;
+}): 'preempted' | 'aborted' | 'ending' | 'sealed' | null {
+  if (s.ending) return 'ending';
+  if (s.sealed) return 'sealed';
+  if (s.aborted) return 'aborted';
+  if (s.preempted) return 'preempted';
+  return null;
+}

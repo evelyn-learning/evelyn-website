@@ -112,7 +112,7 @@ test('wiring: pause at a speaking onset, partials and stops decide, every kill o
   // Task 17: the hard clear is clearSpeechQueueHard (clearSpeechQueue without
   // afterCurrentSentence, or paused, routes to it); it still resumes the clock.
   assert.ok(/const clearSpeechQueueHard = useCallback\(\(\): Promise<void> => \{[\s\S]{0,400}\/\/ A kill while paused for a barge-in[\s\S]{0,300}getAudioContext\(\)\.resume\(\)/.test(rt));
-  assert.ok(/playbackPausedRef\.current \|\|[\s\S]{0,200}return clearSpeechQueueHard\(\);/.test(rt), 'a paused kill never waits for the sentence');
+  assert.ok(/playbackPausedRef\.current \|\|[\s\S]{0,600}return clearSpeechQueueHard\(\);/.test(rt), 'a paused kill never waits for the sentence');
   const ink = readFileSync('src/app/tutor/hooks/useCartesiaInkWS.ts', 'utf8');
   assert.ok(ink.includes("onPartialTranscriptRef.current?.({ text: data.transcript, tMs })"));
   const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');

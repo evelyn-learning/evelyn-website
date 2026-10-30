@@ -15,6 +15,9 @@ import {
   resumeTailAfterBoundary,
   SENTENCE_BOUNDARY_KILL_ACTIONS,
   SENTENCE_BOUNDARY_CAP_MS,
+  finishesWithinCap,
+  createBoundaryDrain,
+  shouldSkipRetryAfterKill,
 } from '../src/lib/tutor/voice/speech-queue-boundary';
 
 let failed = 0;
@@ -95,6 +98,22 @@ test('first entry not the kept sentence ⇒ tail unchanged', () => {
 });
 test('cap is 4000 ms', () => assert.equal(SENTENCE_BOUNDARY_CAP_MS, 4000));
 
+console.log('finishesWithinCap / shouldSkipRetryAfterKill');
+test('known remainder: within the cap waits, beyond it hard-clears; a live tail always waits', () => {
+  assert.equal(finishesWithinCap(3.9, false), true);
+  assert.equal(finishesWithinCap(4.0, false), true);
+  assert.equal(finishesWithinCap(4.1, false), false);
+  assert.equal(finishesWithinCap(9, true), true);
+});
+test('skip reasons; none ⇒ retry', () => {
+  const base = { preempted: false, aborted: false, ending: false, sealed: false };
+  assert.equal(shouldSkipRetryAfterKill(base), null);
+  assert.equal(shouldSkipRetryAfterKill({ ...base, preempted: true }), 'preempted');
+  assert.equal(shouldSkipRetryAfterKill({ ...base, aborted: true }), 'aborted');
+  assert.equal(shouldSkipRetryAfterKill({ ...base, ending: true, preempted: true }), 'ending');
+  assert.equal(shouldSkipRetryAfterKill({ ...base, sealed: true, aborted: true }), 'sealed');
+});
+
 console.log('static pins');
 const root = join(__dirname, '..');
 const hook = readFileSync(join(root, 'src/app/tutor/hooks/useOpenAIRealtime.ts'), 'utf8');
@@ -104,9 +123,9 @@ const flags = readFileSync(join(root, 'src/lib/tutor/orchestrator/flags.ts'), 'u
 test('hook: clearSpeechQueue accepts { afterCurrentSentence } and falls back to the hard clear', () => {
   assert.match(hook, /clearSpeechQueue: \(opts\?: ClearSpeechQueueOptions\) => Promise<ClearSpeechQueueResult \| void>;/);
   assert.match(hook, /const clearSpeechQueue = useCallback\(\(opts\?: ClearSpeechQueueOptions\)/);
-  assert.match(hook, /!opts\?\.afterCurrentSentence \|\|[\s\S]{0,400}return clearSpeechQueueHard\(\);/);
+  assert.match(hook, /!opts\?\.afterCurrentSentence \|\|[\s\S]{0,700}return clearSpeechQueueHard\(\);/);
   assert.match(hook, /partitionQueueAtSentenceBoundary\(/);
-  assert.match(hook, /setTimeout\(\(\) => \{[\s\S]{0,300}SENTENCE_BOUNDARY_CAP_MS[\s\S]{0,80}clearSpeechQueueHard\(\)/);
+  assert.match(hook, /createBoundaryDrain\(\{\s*capMs: SENTENCE_BOUNDARY_CAP_MS,\s*onCap: \(\) => \{[\s\S]{0,300}return clearSpeechQueueHard\(\);/);
 });
 test('hook: the sentence end settles the wait before the next-sentence advance', () => {
   const i = hook.indexOf('boundary.ended();');
@@ -115,7 +134,7 @@ test('hook: the sentence end settles the wait before the next-sentence advance',
   assert.ok(hold > 0 && i > hold && j > i, `hold=${hold} ended=${i} advance=${j}`);
 });
 test('hook: a hard clear settles a pending boundary wait', () => {
-  assert.match(hook, /const clearSpeechQueueHard = useCallback\(\(\): Promise<void> => \{[\s\S]{0,300}boundary\.preempted\(\);/);
+  assert.match(hook, /const clearSpeechQueueHard = useCallback\(\(\): Promise<void> => \{[\s\S]{0,300}preemptBoundaryDrain\(\);/);
 });
 test('gemini: accepts the option and ignores it', () => {
   assert.match(gemini, /clearSpeechQueue: \(_opts\?: \{ afterCurrentSentence\?: boolean \}\): Promise<void> =>/);
@@ -132,9 +151,74 @@ test('orchestrator: both kill sites push their action immediately before perform
   assert.match(vtr, /rejectionsThisAttempt\.push\(\{ action: 'required_phrase_missing', reason \}\);\s*await performKill\(\);/);
   assert.match(vtr, /rejectionsThisAttempt\.push\(\{ action: 'repeat_after_correct', reason: REPEAT_AFTER_CORRECT_REASON \}\);\s*await performKill\(\);/);
 });
+test('fix round 1 (I2): the silent provider (text-only sessions) takes the hard clear', () => {
+  assert.match(hook, /!opts\?\.afterCurrentSentence \|\|[\s\S]{0,600}ttsProviderRef\.current === 'silent' \|\|[\s\S]{0,120}return clearSpeechQueueHard\(\);/);
+});
+test('fix round 1 (m3): a remainder longer than the cap takes the hard clear at once', () => {
+  assert.match(hook, /if \(!finishesWithinCap\(remainingSec, tailLive\)\) \{\s*return clearSpeechQueueHard\(\);/);
+});
+test('fix round 1 (m1): interrupt, pause, disconnect and reconnect preempt a pending wait', () => {
+  assert.ok((hook.match(/preemptBoundaryDrain\(\); \/\/ Task 17 fix round 1 \(m1\)/g) ?? []).length >= 4);
+  assert.match(hook, /const interrupt = useCallback\(\(\) => \{\s*preemptBoundaryDrain\(\);/);
+});
+test('fix round 1 (I1): a preempted / aborted / ending / sealed wait skips the retry', () => {
+  assert.match(vtr, /shouldSkipRetryAfterKill\(\{\s*preempted: res\.preempted,\s*aborted: brainAbort\.signal\.aborted,\s*ending: endingRef\.current,\s*sealed: farewellSealedRef\.current,\s*\}\)/);
+  assert.match(vtr, /'judge_kill_retry_skipped', `reason=\$\{skipReason\}`/);
+  const brk = vtr.indexOf('if (retrySkippedAfterKill && rejectionsThisAttempt.length > 0) break;');
+  const done = vtr.indexOf("// No rejections OR we've burned the retry budget");
+  const retry = vtr.indexOf("'brain_validator_retry',");
+  assert.ok(brk > 0 && brk < done && done < retry, `break=${brk} done=${done} retry=${retry}`);
+});
 test('flag declared, default ON', () => {
   assert.match(flags, /export const TUTOR_KILL_SENTENCE_BOUNDARY = process\.env\.NEXT_PUBLIC_TUTOR_KILL_SENTENCE_BOUNDARY !== 'off';/);
 });
 
-if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
-console.log('\nall passed');
+// createBoundaryDrain with a fake clock + timers (review m6).
+async function drainCases() {
+  console.log('createBoundaryDrain');
+  const mk = () => {
+    let t = 0;
+    const timers: Array<{ fn: () => void; at: number; live: boolean }> = [];
+    let caps = 0;
+    const drain = createBoundaryDrain({
+      capMs: 4000,
+      onCap: () => { caps++; },
+      now: () => t,
+      setTimer: (fn, ms) => { const h = { fn, at: t + ms, live: true }; timers.push(h); return h; },
+      clearTimer: (h) => { (h as { live: boolean }).live = false; },
+    });
+    const advance = (ms: number) => { t += ms; for (const h of timers) if (h.live && h.at <= t) { h.live = false; h.fn(); } };
+    return { drain, advance, caps: () => caps };
+  };
+  const flush = () => new Promise((r) => setTimeout(r, 0));
+  const cases: Array<[string, () => Promise<void>]> = [
+    ['ended at 1.2 s ⇒ ended, waited 1200; a late cap does nothing', async () => {
+      const m = mk(); m.advance(1200); m.drain.ended(); m.advance(5000); await flush();
+      assert.deepEqual(await m.drain.promise, { outcome: 'ended', waitedMs: 1200 });
+      assert.equal(m.caps(), 0);
+    }],
+    ['preempted then cap ⇒ preempted, no hard drain from the cap', async () => {
+      const m = mk(); m.advance(500); m.drain.preempted(); m.advance(5000); await flush();
+      assert.deepEqual(await m.drain.promise, { outcome: 'preempted', waitedMs: 500 });
+      assert.equal(m.caps(), 0);
+    }],
+    ['cap ⇒ hard drain once, capped; ended / preempted during the drain are ignored', async () => {
+      const m = mk(); m.advance(4000); m.drain.preempted(); m.drain.ended(); await flush();
+      const r = await m.drain.promise;
+      assert.equal(r.outcome, 'capped');
+      assert.equal(m.caps(), 1);
+    }],
+    ['double ended resolves once', async () => {
+      const m = mk(); m.drain.ended(); m.advance(10); m.drain.ended();
+      assert.equal((await m.drain.promise).outcome, 'ended');
+    }],
+  ];
+  for (const [name, fn] of cases) {
+    try { await fn(); console.log(`  ok  ${name}`); } catch (e) { failed++; console.log(`  FAIL ${name}\n       ${(e as Error).message}`); }
+  }
+}
+
+void drainCases().then(() => {
+  if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
+  console.log('\nall passed');
+});
