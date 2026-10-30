@@ -2,7 +2,7 @@
 // Unit tests for rewriteForTTS() additions: slash-pair whitelist,
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
-import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
+import { rewriteForTTS, speakPhonemeSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1472,4 +1472,25 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(rewriteForTTS('PRACTISED'), 'practiced');
   assert.match(rewriteForTTS('That skill is unpractised for now.'), /unpractised/, 'unpractised untouched');
   console.log('OK — practise → practice');
+}
+
+// Task 21 §C (GDI run 9, 931 s): "the /l/ sound" was spoken "the slash l slash sound".
+{
+  const say = (x: string) => rewriteForTTS(x);
+  assert.match(say('Especially the /l/ sound at the end.'), /the l sound at the end/, '/l/ → l');
+  assert.doesNotMatch(say('Especially the /l/ sound at the end.'), /\//);
+  assert.match(say('Try the /ð/ at the start of "the".'), /the voiced th at the start/, '/ð/ → voiced th');
+  assert.match(say('The /w/ in "will" rounds the lips.'), /The w in will/, '/w/ → w');
+  assert.match(say('Hold the /iː/ longer.'), /the ee longer/, '/iː/ → ee');
+  assert.match(say('Say /θ/, then /ʃ/.'), /Say th, then sh\./);
+  assert.match(say('Use (/tʃ/) here.'), /\(ch\)/);
+  // the phoneme rule never touches URLs, fractions or one-slash words
+  assert.equal(speakPhonemeSlashes('and/or'), 'and/or');
+  assert.equal(speakPhonemeSlashes('https://a.b/c'), 'https://a.b/c');
+  assert.equal(speakPhonemeSlashes('1/2/3'), '1/2/3');
+  assert.equal(speakPhonemeSlashes('either/or/both'), 'either/or/both');
+  assert.equal(speakPhonemeSlashes('the /l/ sound'), 'the l sound');
+  assert.equal(speakPhonemeSlashes('the /ð/ at the start'), 'the voiced th at the start');
+  assert.equal(speakPhonemeSlashes('/ɔːr/ and /oʊ/'), 'or and oh');
+  console.log('OK — phoneme slashes spoken as sounds');
 }

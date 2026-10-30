@@ -2268,6 +2268,24 @@ export function speakProseRelationalSigns(t: string): string {
   return t;
 }
 
+/** Task 21 §C: IPA symbols a pronunciation note writes between slashes, as
+ *  the sound a learner hears named. Plain Latin letters stay as the letters. */
+const IPA_SPOKEN: Record<string, string> = {
+  'ð': 'voiced th', 'θ': 'th', 'ɹ': 'r', 'r': 'r', 'ŋ': 'ng', 'ʃ': 'sh', 'ʒ': 'zh', 'æ': 'a', 'ɪ': 'i', 'ʊ': 'u',
+  'ɔː': 'or', 'ɔːr': 'or', 'ɔr': 'or', 'ɑː': 'ah', 'ə': 'uh', 'iː': 'ee', 'eɪ': 'ay', 'aɪ': 'eye', 'oʊ': 'oh', 'əʊ': 'oh',
+  'tʃ': 'ch', 'dʒ': 'j',
+};
+/** "/l/" → "l", "/ð/" → "voiced th": both slashes, 1–6 letters (IPA length
+ *  marks / stress ticks allowed) between them, the first slash at the start
+ *  or after a space / bracket and the second before a space / punctuation —
+ *  so "and/or", fractions and URLs ("https://a.b/c") never match. */
+export function speakPhonemeSlashes(text: string): string {
+  return (text ?? '').replace(/(^|[\s(\[“‘'])\/([\p{L}\p{M}ːˈˌ]{1,6})\/(?=$|[\s.,!?;:)\]”’'])/gu, (_m, pre: string, inner: string) => {
+    const spoken = IPA_SPOKEN[inner] ?? (/^[A-Za-z]+$/.test(inner) ? inner : inner.replace(/[ˈˌ]/g, ''));
+    return `${pre}${spoken}`;
+  });
+}
+
 export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string {
   let t = raw;
   // Known-name vocative comma (2026-07-19, closes the residual from the
@@ -2308,6 +2326,9 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // quotation marks add nothing audible elsewhere. Apostrophes /
   // single quotes are untouched (contractions).
   t = t.replace(/["“”]/g, '');
+  // Task 21 §C (GDI run 9, 931 s): "the /l/ sound" was spoken "the slash l
+  // slash sound". A phoneme between slashes is spoken as its sound name.
+  t = speakPhonemeSlashes(t);
   // Markdown emphasis — MUST run before $-span processing (R36, live SAT
   // session portal-fdee5b34): this strip used to sit in ALL_REPLACEMENTS,
   // which runs AFTER the span pass, so "*one-time*" asterisks were still
