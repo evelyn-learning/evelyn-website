@@ -14,6 +14,7 @@
  *
  * Pure: no React, no I/O.
  */
+import { dropFillersAndRepeats } from './filler-repeats';
 
 /** 'echo' (GDI run 3): the tutor quoting the student's own words back (often
  *  the wrong ones) — never a card, unless the check found the student's
@@ -146,9 +147,6 @@ export function isSaidQuote(before: string, after: string): boolean {
   return introWithin(SAID_INTRO_RE, before) || SAID_AFTER_RE.test(after ?? '');
 }
 
-/** Spoken fillers dropped from the student's words before the echo run check. */
-const SPOKEN_FILLERS = new Set(['uh', 'um', 'umm', 'uhm', 'er', 'erm', 'ah', 'hmm']);
-
 /** `needle` occurs in `hay` as one unbroken run. */
 function isContiguousRun(needle: readonly string[], hay: readonly string[]): boolean {
   if (needle.length === 0 || needle.length > hay.length) return false;
@@ -199,10 +197,16 @@ export function classifyQuotedSentence(sentence: string, studentLast: string | n
   // → "discussed", "I yesterday went" → "Yesterday I went" delete or reorder
   // the student's words, and those are corrections.
   if (novel === 0) {
-    const said = tokens(studentLast).filter((t) => !SPOKEN_FILLERS.has(t));
-    const quoted = tokens(sentence);
-    if (isContiguousRun(quoted, said)) return { sentence, kind: 'echo', emphasis: [] };
-    return { sentence, kind: 'correction', emphasis: reorderEmphasis(sentence, said) };
+    // Fix round 3 (N1): self-repairs and stutters ("to the, to the office",
+    // "worked worked", "like, like") collapse first, on both sides (the
+    // filler set includes "like", so the quote is filtered the same way).
+    const said = dropFillersAndRepeats(tokens(studentLast));
+    const quoted = dropFillersAndRepeats(tokens(sentence));
+    if (quoted.length === 0 || isContiguousRun(quoted, said)) return { sentence, kind: 'echo', emphasis: [] };
+    const emphasis = reorderEmphasis(sentence, said);
+    // nothing moved or neighbours a deletion ⇒ still the student's sentence
+    if (emphasis.length === 0) return { sentence, kind: 'echo', emphasis: [] };
+    return { sentence, kind: 'correction', emphasis };
   }
   if (shared / quoteSet.size < CORRECTION_OVERLAP) return model;
   const emphasis: string[] = [];

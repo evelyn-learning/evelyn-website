@@ -18,6 +18,9 @@
 import { precheckDecides, type PublicVerdictPrecheck } from './verdict-precheck-shared';
 import { isRetryAsk } from './retry-cap';
 import { extractQuotedSentences } from './sentence-board';
+import { FILLER_TOKENS, dropFillersAndRepeats } from './filler-repeats';
+
+export { dropFillersAndRepeats };
 
 /** Did this delivered turn re-ask for an answer the check found correct? */
 export function reAskedCheckedCorrect(p: PublicVerdictPrecheck | null | undefined, tutorText: string): boolean {
@@ -98,30 +101,9 @@ export function expectedRepeatFor(
   return recentClip && recentClip.trim() ? { text: recentClip.trim() } : null;
 }
 
-/** Spoken fillers, as standalone (lower-cased) tokens. */
-const FILLER_TOKENS = new Set(['uh', 'um', 'umm', 'uhm', 'er', 'erm', 'ah', 'hmm', 'like']);
 /** Japanese fillers (no word boundaries in Japanese: removed as substrings
  *  from the STUDENT's text only). */
 const JA_FILLER_RE = /えー+|えっと|えーと|あのー?|そのー?|まあ/g;
-
-/** Tokens with fillers dropped and an immediately repeated run of one to
- *  four words collapsed ("my department my department sells" → "my
- *  department sells"; "to um to think" → "to think"). */
-export function dropFillersAndRepeats(toks: readonly string[]): string[] {
-  const out = toks.filter((t) => !FILLER_TOKENS.has(t));
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (let n = 4; n >= 1 && !changed; n--) {
-      for (let i = 0; i + 2 * n <= out.length; i++) {
-        let same = true;
-        for (let j = 0; j < n; j++) if (out[i + j] !== out[i + n + j]) { same = false; break; }
-        if (same) { out.splice(i, n); changed = true; break; }
-      }
-    }
-  }
-  return out;
-}
 
 /** GDI run 4 (2026-10-29): the student's transcript as compared with a tutor
  *  sentence — Japanese fillers removed, then Latin fillers and stutter repeats

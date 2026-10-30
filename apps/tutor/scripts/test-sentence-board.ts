@@ -469,5 +469,19 @@ test('T18 R2 I2: "you said" counts only when it leads straight into the quote', 
   assert.equal(isSaidQuote('You said: ', ''), true);
 });
 
+// ── Task 18 fix round 3 (N1): self-repairs and stutters are still the student's sentence ──
+test('T18 R3 N1: a correct echo with a self-repair / stutter is an echo; with studentCorrect a promoted model card', () => {
+  const cases: Array<[string, string]> = [
+    ['I went to the, to the office yesterday.', 'I went to the office yesterday.'],
+    ['I have worked worked here for three years.', 'I have worked here for three years.'],
+    ['I like, like sushi very much.', 'I like sushi very much.'],
+  ];
+  for (const [student, quote] of cases) {
+    assert.equal(classifyQuotedSentence(quote, student).kind, 'echo', `${student} / ${quote}`);
+    const cards = planSentenceBoard({ tutorText: `Nice. "${quote}" Good sentence.`, studentLast: student, renderedThisTurn: false, studentCorrect: true });
+    assert.deepEqual(cards, [{ sentence: quote, kind: 'model', emphasis: [], source: 'echo' }], `${student} → ${JSON.stringify(cards)}`);
+  }
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
