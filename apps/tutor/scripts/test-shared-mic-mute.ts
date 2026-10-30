@@ -10,7 +10,9 @@
  *
  * Run: npm run test:shared-mic
  */
-import { resolveSharedMicEnabled } from '../src/lib/tutor/voice/shared-mic';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { resolveSharedMicEnabled, submitDespiteMute, SUBMIT_AFTER_MUTE_MS } from '../src/lib/tutor/voice/shared-mic';
 
 let pass = 0;
 let fail = 0;
@@ -47,6 +49,25 @@ check('mid-session: both unmuted → enabled',
 // the track must come back even before the start-gate unmutes Ink2.
 check('unmute: prod unmuted + ink2 still muted → enabled',
   resolveSharedMicEnabled([false, true]) === true);
+
+// Task 20 §H (GDI run 8): unmute 77.8 s, speech, mute 81.4 s, transcript 81.5 s.
+check('H: speech began before the mute ⇒ submitted',
+  submitDespiteMute({ mutedAt: 81_400, speechStartedAt: 78_200, now: 81_500 }) === true);
+check('H: speech began after the mute (ambient) ⇒ dropped',
+  submitDespiteMute({ mutedAt: 81_400, speechStartedAt: 82_000, now: 84_000 }) === false);
+check('H: start unknown, transcript ≤ 1500 ms after the mute ⇒ submitted',
+  submitDespiteMute({ mutedAt: 81_400, speechStartedAt: undefined, now: 81_400 + SUBMIT_AFTER_MUTE_MS }) === true);
+check('H: start unknown, transcript later than that ⇒ dropped',
+  submitDespiteMute({ mutedAt: 81_400, speechStartedAt: undefined, now: 81_400 + SUBMIT_AFTER_MUTE_MS + 1 }) === false);
+check('H: not muted by the student (null) ⇒ never',
+  submitDespiteMute({ mutedAt: null, speechStartedAt: 1, now: 2 }) === false);
+{
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('H: VTR stamps the mute and clears it on unmute',
+    vtr.includes('micMutedAtRef.current = Date.now();') && vtr.includes('micMutedAtRef.current = null;'));
+  check('H: VTR submits by timing through the perception_submit_on_mute branch',
+    /submitDespiteMute\(\{ mutedAt: micMutedAtRef\.current[\s\S]{0,200}if \(submitPendingUtteranceRef\.current \|\| submitByTiming\)[\s\S]{0,600}'perception_submit_on_mute'/.test(vtr));
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

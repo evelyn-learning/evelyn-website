@@ -89,6 +89,22 @@ function applySharedMicEnabled(): void {
  * Concurrent first-callers share one in-flight `getUserMedia` promise rather
  * than racing two permission prompts.
  */
+/**
+ * Task 20 §H (GDI run 8, 81.5 s): the student unmuted at 77.8 s, said "I sell
+ * washing machine to customers.", muted at 81.4 s — and the transcript, landing
+ * 0.1 s after the mute, was dropped (`perception_dropped_muted`: no utterance
+ * was flagged in flight at the mute). A transcript that arrives while muted is
+ * the student's answer when its speech began BEFORE the mute; when the start is
+ * unknown, one arriving within SUBMIT_AFTER_MUTE_MS of the mute counts.
+ */
+export const SUBMIT_AFTER_MUTE_MS = 1500;
+export function submitDespiteMute(input: { mutedAt: number | null | undefined; speechStartedAt: number | null | undefined; now: number }): boolean {
+  const { mutedAt, speechStartedAt, now } = input;
+  if (mutedAt == null) return false;
+  if (speechStartedAt != null && Number.isFinite(speechStartedAt)) return speechStartedAt < mutedAt;
+  return now - mutedAt <= SUBMIT_AFTER_MUTE_MS;
+}
+
 export async function acquireSharedMicStream(consumer: string): Promise<MediaStream> {
   holders.add(consumer);
 

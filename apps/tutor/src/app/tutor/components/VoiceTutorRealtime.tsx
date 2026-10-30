@@ -252,7 +252,7 @@ import { checkFalsePraiseOpener, studentDisagreesWithVerified } from '@/lib/tuto
 import { verifiedKeyForJudgeGate } from '@/lib/tutor/voice/judge-gate-key';
 import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
 import { pickFallbackMicDevice } from '@/lib/tutor/voice/mic-devices';
-import { getSharedMicLabel, switchSharedMicDevice } from '@/lib/tutor/voice/shared-mic';
+import { getSharedMicLabel, switchSharedMicDevice, submitDespiteMute } from '@/lib/tutor/voice/shared-mic';
 import { isVisualComplaint } from '@/lib/tutor/whiteboard/redraw-intent';
 import { decidePacingCredit, type ObjectiveCorrectSignal } from '@/lib/tutor/voice/objective-credit';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
@@ -2035,6 +2035,9 @@ export function VoiceTutorRealtime({
   // go quiet, instead of discarding it. Set true at mute time if an utterance is
   // in flight; lets the next transcript through the muted-drop guard once.
   const submitPendingUtteranceRef = useRef<boolean>(false);
+  // Task 20 §H: when the student last muted (null while unmuted) — a
+  // transcript whose speech began before it is submitted (submitDespiteMute).
+  const micMutedAtRef = useRef<number | null>(null);
   // Manual `input_audio_buffer.commit` errors on the transcription WS, so we
   // can't force-commit a mid-utterance buffer. Instead, on a mute-with-in-flight
   // we keep perception LISTENING for a short grace window so the server VAD
@@ -24219,7 +24222,13 @@ export function VoiceTutorRealtime({
         // Mute-to-submit: if the student muted right after finishing an
         // utterance, let THIS (the in-flight one) through to the brain, then
         // resume dropping. Phone-like "I'm done — send it and go quiet."
-        if (submitPendingUtteranceRef.current) {
+        // Task 20 §H (GDI run 8, 81.5 s): no in-flight flag at the mute, but
+        // the speech began before it — the answer is submitted, not dropped.
+        const nowMs = Date.now();
+        const speechStartedAtForMute = heldSpeechStartedAt ?? (t.latencyMs > 0 ? nowMs - t.latencyMs : undefined);
+        const submitByTiming = !submitPendingUtteranceRef.current
+          && submitDespiteMute({ mutedAt: micMutedAtRef.current, speechStartedAt: speechStartedAtForMute, now: nowMs });
+        if (submitPendingUtteranceRef.current || submitByTiming) {
           submitPendingUtteranceRef.current = false;
           // Utterance captured — end the grace window now so perception actually
           // mutes (don't wait out the full timeout).
@@ -27340,6 +27349,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // Gate BOTH inputs. perception owns the mic now (Stage 4); it's muted by the
     // start-gate effect (single owner, watches isMicMuted + hasStarted + muteGrace).
     if (newMuted) {
+      micMutedAtRef.current = Date.now();
       // R34 T3: a dangling-word fragment held for resumption ("give me a…")
       // must not be silently dropped by the ordinary muted-drop guard in
       // perceptionOnTranscript — the student muting mid-hold means the
@@ -27380,6 +27390,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // Clear any unused mute-to-submit one-shot + grace so they can't leak a
       // later ambient transcript through the muted guard.
       submitPendingUtteranceRef.current = false;
+      micMutedAtRef.current = null;
       if (muteGraceTimerRef.current) { clearTimeout(muteGraceTimerRef.current); muteGraceTimerRef.current = null; }
       setMuteGrace(false);
       // On unmute, reset any stale orchestrator flags (a pending brain call from
