@@ -929,6 +929,12 @@ export const TUTOR_SPOKEN_EMPHASIS_CAPS = process.env.NEXT_PUBLIC_TUTOR_SPOKEN_E
  *  overview). Skip button, {to:"free"} and the client's own advances are never
  *  refused. Default ON; NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ADVANCE_GUARD=off. */
 export const TUTOR_FIXED_SCRIPT_ADVANCE_GUARD = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ADVANCE_GUARD !== 'off';
+/** Fixed-script plans (GDI run 8, 2026-10-30: the brain said goodbye and
+ *  called close_session_notes in the pronunciation part; the summary never
+ *  ran): a close before the last part is refused (next-turn note) and the
+ *  attempt's farewell is killed + retried; a post-close turn that arms a
+ *  pronunciation target or asks something re-opens the lesson. Default ON. */
+export const TUTOR_FIXED_SCRIPT_CLOSE_GUARD = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_CLOSE_GUARD !== 'off';
 
 /** Fixed-script plans (GDI run 3, 2026-10-29): the opening turn puts the
  *  lesson outline on the board — one show_table titled with the plan title,

@@ -152,6 +152,38 @@ export function fixedScriptCloseForced(turnsSinceNote: number, lessonClosed: boo
   return !lessonClosed && turnsSinceNote >= FIXED_SCRIPT_CLOSE_GRACE_TURNS;
 }
 
+/** Task 20 §B (GDI run 8, 1543 s): in the pronunciation part the brain said
+ *  「今日はここまでです」… Goodbye! and called close_session_notes — the
+ *  summary part ("never end the lesson before it") never ran. On a fixed
+ *  script the brain may close only from the last non-extension segment (or a
+ *  recap); a student who asked to stop may always close. Any other plan, or an
+ *  unknown segment ⇒ true (never refuse a close it cannot place). */
+export function fixedScriptCloseAllowed(
+  plan: LessonPlan | null | undefined,
+  segmentId: string | null | undefined,
+  opts: { studentEndSignal?: boolean } = {},
+): boolean {
+  if (!plan || !isFixedScriptPlan(plan) || !segmentId || opts.studentEndSignal) return true;
+  const seg = plan.segments.find((s) => s.id === segmentId);
+  if (!seg) return true;
+  if ((seg.kind ?? '').toLowerCase() === 'recap') return true;
+  return segmentId === fixedScriptLastSegmentId(plan);
+}
+
+/** The plan's last non-extension segment id (the one a close belongs to). */
+export function fixedScriptLastSegmentId(plan: LessonPlan): string | null {
+  const real = plan.segments.filter((s) => (s.kind ?? '').toLowerCase() !== 'extension');
+  return real.length ? real[real.length - 1]!.id : null;
+}
+
+/** Planted for the next turn when a premature close_session_notes is refused. */
+export const FIXED_SCRIPT_CLOSE_REFUSED_NOTE =
+  '[runtime note — not from the student] The lesson is not over: the summary part has not been taught yet. Do not say goodbye or call close_session_notes; finish the current item in one sentence, then move on to the summary. Apply this silently; never mention this note.';
+
+/** Validator rejection reason for an attempt that says goodbye too early. */
+export const PREMATURE_FAREWELL_REASON =
+  'The lesson is not over — the summary part has not been taught yet. Do not say goodbye, thank the student for the lesson or say 今日はここまで; continue the current part, or move on to the summary in one sentence.';
+
 function segmentDueReason(input: AutoAdvanceInput): 'turns' | 'time' | null {
   const { plan, segmentId, turns, overlongTurns, elapsedMs } = input;
   if (!plan || !segmentId) return null;

@@ -65,7 +65,7 @@ import { isStockPraiseOpenerOnly } from '../src/lib/tutor/voice/praise-variety';
 import { isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '../src/lib/tutor/voice/english-reply';
 import { isMetaNarration as isMetaNarration2 } from '../src/lib/tutor/voice/meta-narration';
 import { settleCutToolUse, toolContinuationMessages, toolContinuationNote } from '../src/lib/tutor/voice/output-budget';
-import { isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE } from '../src/lib/tutor/voice/lesson-close';
+import { isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose } from '../src/lib/tutor/voice/lesson-close';
 import { stripMarkdownEmphasis } from '../src/lib/tutor/voice/sentence-spacing';
 import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
 import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
@@ -344,7 +344,7 @@ test('after the close: goodbyes/thanks are pleasantries; content and questions a
 test('lesson-closed state: set by closeSessionNotes, silences pleasantries, stands the idle nudge down', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("if (!opts?.silent && lessonClosedRef.current && decidePostCloseUtterance(transcript) === 'silence')"));
-  assert.ok(/cmd\.action === 'closeSessionNotes'\) \{[\s\S]{0,200}lessonClosedRef\.current = true/.test(vtr));
+  assert.ok(/cmd\.action === 'closeSessionNotes'\) \{[\s\S]{0,900}lessonClosedRef\.current = true/.test(vtr));
   assert.ok(vtr.includes('if (lessonClosedRef.current) return;'));
 });
 test('bare Japanese short answers survive the noise filter in a bilingual session', () => {
@@ -1268,6 +1268,34 @@ test('embed-1792378728971: the bridge line is wired with the session languages, 
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.match(vtr, /bridgeLineFor\(\{[^}]*tutorLanguages/s, 'bridgeLineFor must receive tutorLanguages');
   assert.ok(vtr.includes('BRIDGE_SPOKEN_NO_NAME_DIRECTIVE'), 'the opening directive must use the no-name variant after a nameless bridge');
+});
+
+// ── Task 20 §B (GDI run 8) ───────────────────────────────────────────────
+test('20B1: the 1543 s farewell is caught; a mid-lesson transition is not', () => {
+  const line = 'Your sentence is complete and clear, so let\'s close the pronunciation practice here. 「どうもありがとうございました。 今日はここまでです。」 Thank you for the lesson today, Praveen. Goodbye!';
+  assert.ok(prematureFarewellLine(line), 'caught');
+  assert.ok(prematureFarewellLine('Thank you for the lesson today, Praveen. Goodbye!'));
+  assert.equal(prematureFarewellLine('Good. Let\'s move on to the pronunciation part now.'), null);
+  assert.equal(prematureFarewellLine('続けますか、それとも今日はここまでにしましょうか？'), null, 'a question is never a close');
+  assert.equal(prematureFarewellLine('See you is a common goodbye. Can you say it?'), null);
+});
+test('20B1: VTR refuses the premature close and kills the farewell', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('fixed_script_close_refused'"));
+  assert.ok(vtr.includes('pendingCloseRefusedNoteRef.current = FIXED_SCRIPT_CLOSE_REFUSED_NOTE'));
+  assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'premature_farewell', reason: PREMATURE_FAREWELL_REASON })"));
+  const at = vtr.indexOf("if (cmd.action === 'closeSessionNotes') {");
+  const refuse = vtr.indexOf('fixedScriptCloseOk()', at);
+  const closed = vtr.indexOf('lessonClosedRef.current = true;', at);
+  assert.ok(at > 0 && refuse > at && refuse < closed, 'the refusal runs before lessonClosedRef is set');
+});
+test('20B2: a post-close turn that re-engages re-opens the lesson; a goodbye does not', () => {
+  assert.equal(reopensAfterClose('Of course, let\'s practice a little more. Here is the sentence again: "I was responsible for communicating with our customers." Please listen, then say it after me.', true), true);
+  assert.equal(reopensAfterClose('Of course. Which sentence would you like to practise?', false), true, 'a question re-opens');
+  assert.equal(reopensAfterClose('Homework is the review sheet on your page.', false), false, 'a plain answer stays closed');
+  assert.equal(reopensAfterClose('You are welcome. Goodbye!', true), false, 'a goodbye never re-opens');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('lesson_reopened'"));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

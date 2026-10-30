@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
@@ -217,7 +217,7 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } from '@/lib/tutor/voice/meta-narration';
-import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE } from '@/lib/tutor/voice/lesson-close';
+import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
@@ -432,7 +432,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -1457,6 +1457,9 @@ export function VoiceTutorRealtime({
   // Off ⇒ no tool offered, no capture object, the mic tap unchanged.
   const pronunciationActive = TUTOR_PRONUNCIATION_ASSESS && pronunciation && sessionMode !== 'text' && !!sessionId;
   const clipCaptureRef = useRef<ClipCapture | null>(null);
+  // Task 20 §B2: bumped on every pronunciation arm (a post-close turn that arms
+  // a target re-opens the lesson).
+  const pronunciationArmSeqRef = useRef(0);
   if (pronunciationActive && !clipCaptureRef.current) {
     clipCaptureRef.current = new ClipCapture({ maxMs: CLIP_MAX_MS, sampleRate: CLIP_SAMPLE_RATE, preRollMs: CLIP_PRE_ROLL_MS, minMs: CLIP_MIN_MS });
   }
@@ -1548,6 +1551,7 @@ export function VoiceTutorRealtime({
     if (!capture) return;
     if (!referenceText) { plantPronunciationUnavailable('no_reference_text'); return; }
     capture.arm(referenceText);
+    pronunciationArmSeqRef.current += 1;
     // Task 18 §C: every arm (tool, auto, re-arm) is the target a later
     // "say it once more" re-arms.
     lastPronunciationTargetRef.current = { referenceText, kind, segId: currentSegmentIdRef.current ?? '' };
@@ -4451,6 +4455,12 @@ export function VoiceTutorRealtime({
   // a tutor question was open — counted by the post-stream pacing credit only,
   // never by the kill guards that read isVerification as "final-answer turn".
   const lastStudentVerificationRef = useRef<{ turn: number; segId: string; isVerification: boolean; shortAnswer?: boolean; isSessionEndSignal: boolean; activeStatement?: string } | null>(null);
+  // Task 20 §B1 (GDI run 8): may the brain close the lesson / say goodbye now?
+  // Fixed scripts close only from their last part, or after the student's
+  // own end signal (fixed-script.ts fixedScriptCloseAllowed).
+  const fixedScriptCloseOk = (): boolean =>
+    !TUTOR_FIXED_SCRIPT_CLOSE_GUARD ||
+    fixedScriptCloseAllowed(lessonPlanRef.current, currentSegmentIdRef.current, { studentEndSignal: !!lastStudentVerificationRef.current?.isSessionEndSignal });
   // R47 Task 1 (live incident portal-d859df30): stash from a deterministic
   // false-denial kill (arith/simplification/inverse-verdict) this turn — the
   // checker already proved the student's answer right, so the post-stream
@@ -5042,6 +5052,8 @@ export function VoiceTutorRealtime({
   const pendingPronunciationNoteRef = useRef<string | null>(null);
   // lesson-close.ts: a 「今日はここまで」 said mid-lesson was dropped; one note follows.
   const pendingPrematureCloseNoteRef = useRef<string | null>(null);
+  // Task 20 §B1: planted when a premature close_session_notes is refused.
+  const pendingCloseRefusedNoteRef = useRef<string | null>(null);
   // praise-variety.ts: a prompted repeat was praised as the student's own sentence.
   const pendingPromptedRepeatNoteRef = useRef<string | null>(null);
   // student-hold.ts WAIT_REQUEST_NOTE: set for THIS turn by the heuristic hold
@@ -8724,6 +8736,15 @@ export function VoiceTutorRealtime({
       // above already excludes the action unconditionally, so flag-off
       // behaviour is byte-identical to pre-round).
       if (cmd.action === 'closeSessionNotes') {
+        // Task 20 §B1 (GDI run 8, 1543 s): the brain closed a fixed-script
+        // lesson in the pronunciation part — the summary never ran. Refused
+        // (not applied) unless this is the last part or the student asked to stop.
+        if (!lessonClosedRef.current && !fixedScriptCloseOk()) {
+          const planNow = lessonPlanRef.current;
+          onDebugEvent?.('fixed_script_close_refused', `"${currentSegmentIdRef.current}" → ${planNow ? fixedScriptLastSegmentId(planNow) : '?'}`);
+          pendingCloseRefusedNoteRef.current = FIXED_SCRIPT_CLOSE_REFUSED_NOTE;
+          continue;
+        }
         if (!lessonClosedRef.current) onDebugEvent?.('lesson_closed', 'closeSessionNotes');
         lessonClosedRef.current = true;
         armLessonCloseAutoEndRef.current();
@@ -12565,6 +12586,12 @@ export function VoiceTutorRealtime({
       let judgeRetriesUsed = 0;
       // correct-retry.ts (GDI run 3): one repeat_after_correct kill per turn.
       let repeatAfterCorrectRejected = false;
+      // Task 20 §B1: one premature_farewell kill per turn.
+      let prematureFarewellRejected = false;
+      // Task 20 §B2: the lesson was already closed when this turn started (it
+      // answers a post-close utterance); the arm counter tells a fresh arm.
+      const closedAtTurnStart = lessonClosedRef.current;
+      const pronunciationArmSeqAtTurnStart = pronunciationArmSeqRef.current;
       // Text mode "work it, then match": the opener backstop's kill fires at
       // most once per turn, and the student's turn shape is read once (on a
       // retry the last assistant turn in history is the killed attempt).
@@ -12671,6 +12698,7 @@ export function VoiceTutorRealtime({
         [pendingReadinessNoteRef, 'readiness_ask_note_consumed'],
         [pendingPronunciationNoteRef, 'pronunciation_claim_note_consumed'],
         [pendingPrematureCloseNoteRef, 'premature_close_note_consumed'],
+        [pendingCloseRefusedNoteRef, 'fixed_script_close_refused_note_consumed'],
         [pendingPromptedRepeatNoteRef, 'prompted_repeat_note_consumed'],
         [pendingWaitNoteRef, 'wait_request_note_consumed'],
         [pendingLanguageDriftNoteRef, 'language_drift_note_consumed'],
@@ -18701,6 +18729,20 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Task 20 §B1 (GDI run 8, 1543 s): 「今日はここまでです。」… Goodbye! in
+        // the pronunciation part of a fixed script — the summary never ran.
+        // The farewell is killed + retried (validator path, once per turn) the
+        // same way repeat_after_correct kills.
+        if (!attemptKilled && !prematureFarewellRejected && attemptText && !lessonClosedRef.current && !/^\s*\[/.test(transcript) && !fixedScriptCloseOk()) {
+          const farewell = prematureFarewellLine(attemptText);
+          if (farewell) {
+            prematureFarewellRejected = true;
+            rejectionsThisAttempt.push({ action: 'premature_farewell', reason: PREMATURE_FAREWELL_REASON });
+            await performKill();
+            onDebugEvent?.('premature_farewell', `"${currentSegmentIdRef.current}": "${farewell.slice(0, 60)}"`);
+          }
+        }
+
         // Judge LLM groundedness check (Lever B1). Only fires when the
         // attempt produced spoken text AND wasn't already killed by a
         // structural rejection (no point judging speech we're about to
@@ -19873,6 +19915,18 @@ export function VoiceTutorRealtime({
           armPronunciationCheckRef.current(last.referenceText, last.kind);
           onDebugEvent?.('pronunciation_rearmed', `"${last.referenceText.slice(0, 80)}"`);
         }
+      }
+      // Task 20 §B2 (GDI run 8, 1566 s): a post-close answer that re-engages
+      // (arms a target, asks something) re-opens the lesson — else the
+      // student's reply is silenced as chatter and the auto-end cuts the drill.
+      if (TUTOR_FIXED_SCRIPT_CLOSE_GUARD && closedAtTurnStart && lessonClosedRef.current && !opts?.prefetchOnly && totalSentenceCount > 0
+        && reopensAfterClose(fullText, pronunciationArmSeqRef.current !== pronunciationArmSeqAtTurnStart)) {
+        lessonClosedRef.current = false;
+        if (lessonCloseAutoEndTimerRef.current) {
+          clearTimeout(lessonCloseAutoEndTimerRef.current);
+          lessonCloseAutoEndTimerRef.current = null;
+        }
+        onDebugEvent?.('lesson_reopened', `"${fullText.slice(0, 60)}"`);
       }
       // Live check 6 (§1): the brain sat in `hook` for 12 minutes and six
       // substantive turns, improvised three worked examples in speech, then

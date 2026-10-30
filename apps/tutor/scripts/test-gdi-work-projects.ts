@@ -12,7 +12,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
-import { initialSegmentId, nextSegmentId, isFixedScriptPlan } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { initialSegmentId, nextSegmentId, isFixedScriptPlan, fixedScriptCloseAllowed, fixedScriptLastSegmentId } from '../src/lib/tutor/lesson-plan/fixed-script';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 import { fixedScriptSpokenOpener } from '../src/lib/tutor/lesson-plan/spoken-opener';
 
@@ -207,6 +207,17 @@ test('Task 14: the overview carries a client-spoken script (≤ 6 sentences, bot
   assert.equal(o!.next, 'level-check');
   assert.equal(fixedScriptSpokenOpener(plan, true)!.next, 'topic-intro');
   assert.ok((seg('overview').teacherNote ?? '').length > 0, 'teacherNote kept for flag-off');
+});
+
+// ── Task 20 §B1 (GDI run 8, 1543 s): no close before the summary ─────────
+test('20B1: the brain may close only from the summary (or after the student asked to stop)', () => {
+  assert.equal(fixedScriptLastSegmentId(plan), 'summary');
+  assert.equal(fixedScriptCloseAllowed(plan, 'pronunciation'), false);
+  assert.equal(fixedScriptCloseAllowed(plan, 'open-conversation'), false);
+  assert.equal(fixedScriptCloseAllowed(plan, 'summary'), true);
+  assert.equal(fixedScriptCloseAllowed(plan, 'pronunciation', { studentEndSignal: true }), true);
+  assert.equal(fixedScriptCloseAllowed(plan, 'no-such-part'), true, 'unknown segment ⇒ never refuse');
+  assert.equal(fixedScriptCloseAllowed({ ...plan, metadata: { ...plan.metadata, fixedScript: false } } as LessonPlan, 'pronunciation'), true, 'other plans untouched');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -10,6 +10,8 @@
  * with content (a question, a request) still does.
  */
 
+import { lastQuestionSentence, lastAskSentence } from '../question-gist-text';
+
 // Each clause of the utterance must be one of these, start to end.
 const PLEASANTRY_CLAUSE = new RegExp(
   '^(?:' + [
@@ -88,6 +90,20 @@ export function isTutorFarewell(tutorText: string): boolean {
   return !!prev && FAREWELL_RE.test(prev) && last.length <= 30 && !FAREWELL_TAIL_ASK_RE.test(last);
 }
 const FAREWELL_TAIL_ASK_RE = /言って|言い|読んで|答え|聞|質問|\b(?:say|repeat|try|answer|question)\b/i;
+
+/**
+ * Task 20 §B (GDI run 8, 1543 s): the farewell part of an attempt that closes
+ * the lesson too early — 「今日はここまでです」 (PREMATURE_CLOSE_LINE_RE, not a
+ * question) anywhere, or a turn whose ending is a goodbye (isTutorFarewell).
+ * Returns the offending sentence (for the debug event), else null.
+ */
+export function prematureFarewellLine(tutorText: string): string | null {
+  if (typeof tutorText !== 'string' || !tutorText.trim()) return null;
+  const sentences = tutorText.split(/(?<=[。！!.?？])\s*|\n+/).map((s) => s.trim()).filter(Boolean);
+  const ja = sentences.find((s) => PREMATURE_CLOSE_LINE_RE.test(s) && !/[?？]\s*$/.test(s) && !/(?:ましょうか|ますか|ですか|でしょうか)[」』]?\s*$/.test(s));
+  if (ja) return ja;
+  return isTutorFarewell(tutorText) ? (sentences[sentences.length - 1] ?? tutorText.trim()) : null;
+}
 
 /**
  * The STUDENT's session-end signal in Japanese: 今日はここまで / 終わりにします /
@@ -178,6 +194,20 @@ export function postCloseSilenceKind(studentText: string): 'pleasantry' | 'chatt
 
 /** Heads every brain turn after the close (the same session: after the close
  *  the model re-ran its bookkeeping and wrote the tool calls out as text). */
+/**
+ * Task 20 §B2 (GDI run 8, 1566 s): after the close the student asked "Can we
+ * practice pronunciation little bit more?", the brain said "Of course… say it
+ * after me" and armed a target — then his repeat was silenced as post-close
+ * chatter and the auto-end ended the session. A post-close turn that arms a
+ * pronunciation target or asks the student something re-opens the lesson; a
+ * goodbye never does.
+ */
+export function reopensAfterClose(tutorText: string, armed: boolean): boolean {
+  const t = tutorText ?? '';
+  if (isTutorFarewell(t)) return false;
+  return armed || lastQuestionSentence(t) != null || lastAskSentence(t) != null;
+}
+
 export const POST_CLOSE_NOTE =
   '[runtime note — not from the student] The lesson is already closed and its closing notes are recorded. ' +
   'Do not call close_session_notes, mark_segment_complete or advance_lesson again, and do not start or resume an exercise. ' +
