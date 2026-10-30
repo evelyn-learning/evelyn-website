@@ -5,6 +5,7 @@
  */
 import { placeNote, applyUserPos, rectsOverlap, placementStillClean, type Rect, type Placement } from '../src/lib/tutor/whiteboard/ink-placement';
 import { arrowSpine } from '../src/lib/tutor/whiteboard/hand-stroke';
+import { wrapNoteLines, NOTE_WRAP_MAX_LINES, NOTE_FONT_STEP } from '../src/lib/tutor/whiteboard/note-wrap';
 
 let passed = 0;
 let failed = 0;
@@ -249,6 +250,32 @@ const target: Rect = { x: 300, y: 200, w: 120, h: 60 };
   check('§E pin: cached candidate kept only when placementStillClean', /if \(placementStillClean\(candidate, occupied\)\) placement = candidate;\n\s*else cacheWentDirty = true;/.test(src));
   check('§E pin: a dirty cache with no clean re-placement is hidden and uncached', /if \(cacheWentDirty && !placementStillClean\(placement, occupied\)\) \{[\s\S]{0,240}placedCacheRef\.current\.delete\(src\.key\);\n\s*continue;/.test(src));
   check('§E pin: the old freeze-in-place branches are gone', !src.includes('if (!anchorMoved) placement = { ...cached.placement, rect };'));
+}
+
+// ── Task 22 §H (GDI run 10, Image 34): notes wrap to 4 whole-word lines ──
+{
+  const q = "What is one project you've worked on that you're particularly proud of?";
+  check('§H the run-10 note (~72 characters)', q.length >= 70 && q.length <= 72);
+  const w11 = (x: string) => x.length * 11; // ~24 px handwriting
+  const r = wrapNoteLines(q.split(' '), w11, 240);
+  check('§H ~72 chars → 4 whole lines, no ellipsis', NOTE_WRAP_MAX_LINES === 4 && r.lines.length === 4 && !r.overflow && r.lines.join(' ') === q && !r.lines.some((l) => l.includes('…')));
+  const long = 'Tell me about a time when you worked with a customer from another country and what you learned from the experience, including what went well, what was difficult, and what you would do differently next time around.';
+  check('§H the long text is ~200+ chars', long.length >= 200);
+  const r2 = wrapNoteLines(long.split(' '), w11, 240);
+  const last = r2.lines[r2.lines.length - 1]!;
+  const lastWords = last.replace(/…$/, '').split(' ');
+  check('§H a long text → 4 lines ending in a whole word + "…"', r2.overflow && r2.lines.length === 4 && last.endsWith('…') && lastWords.every((w) => long.split(' ').includes(w)) && w11(last) <= 240);
+  check('§H every line fits', r2.lines.every((l) => w11(l) <= 240));
+  // the smaller font step (×0.85) fits more per line
+  const w935 = (x: string) => x.length * 11 * NOTE_FONT_STEP;
+  const r3 = wrapNoteLines(long.split(' '), w935, 240);
+  check('§H the stepped-down font carries more words before the ellipsis', NOTE_FONT_STEP === 0.85 && r3.lines.join(' ').length > r2.lines.join(' ').length);
+  check('§H a single over-long word keeps its own line', wrapNoteLines(['Supercalifragilisticexpialidocious'], w11, 240).lines.length === 1);
+  const srcO: string = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'src/app/tutor/components/whiteboard/InkNotesOverlay.tsx'), 'utf8');
+  check('§H pin: measureNote steps the font down once before the ellipsis, and the note renders at that size',
+    /let wrapped = wrapNoteLines\(words, measure, NOTE_MAX_W, NOTE_WRAP_MAX_LINES\);\s*if \(wrapped\.overflow\) \{\s*fontPx = Math\.round\(NOTE_FONT_PX \* NOTE_FONT_STEP\);/.test(srcO)
+    && srcO.includes('h: lines.length * lineH + 4')
+    && srcO.includes('fontSize: e.fontPx ?? NOTE_FONT_PX'));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

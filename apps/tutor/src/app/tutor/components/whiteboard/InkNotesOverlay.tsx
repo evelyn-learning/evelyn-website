@@ -27,6 +27,7 @@ import { resolveNoteFontFamilies, noteFontFamilyVars, noteRevealMs, NOTE_FONT_PX
 import { TUTOR_NOTE_PRINT_HAND } from '@/lib/tutor/orchestrator/flags';
 import { arrowSpine, arrowHeads, strokeOutline, type Pt } from '@/lib/tutor/whiteboard/hand-stroke';
 import { exceedsDragThreshold } from '@/lib/tutor/qpin-behavior';
+import { wrapNoteLines, NOTE_WRAP_MAX_LINES, NOTE_FONT_STEP } from '@/lib/tutor/whiteboard/note-wrap';
 
 type HandwriteCmd = Extract<WhiteboardCommand, { action: 'handwrite' }>;
 type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
@@ -81,29 +82,32 @@ function noteFont(): string {
 // semantics, no namespace merging.
 let measureCanvas: HTMLCanvasElement | undefined;
 
-/** Measure and wrap note text to ≤3 lines (ellipsis on overflow) using a
- *  shared canvas 2d context. Returns wrapped lines + the box size. */
-function measureNote(text: string): { lines: string[]; w: number; h: number } {
+/** Measure and wrap note text to ≤ NOTE_WRAP_MAX_LINES lines using a shared
+ *  canvas 2d context. Task 22 §H: a text that does not fit in 4 lines at the
+ *  normal size is measured once more one font step down (NOTE_FONT_STEP, the
+ *  same NOTE_MAX_W); only then is it ellipsised — at a whole word
+ *  (wrapNoteLines). Returns the lines, the box size (height = lines × the
+ *  step's line height, so the placement / SessionStage re-measure see the
+ *  real box) and the font / line px the note renders at. */
+function measureNote(text: string): { lines: string[]; w: number; h: number; fontPx: number; lineH: number } {
   const canvas = measureCanvas ?? (measureCanvas = document.createElement('canvas'));
   const ctx = canvas.getContext('2d');
-  if (!ctx) return { lines: [text], w: NOTE_MAX_W, h: NOTE_LINE_H };
+  if (!ctx) return { lines: [text], w: NOTE_MAX_W, h: NOTE_LINE_H, fontPx: NOTE_FONT_PX, lineH: NOTE_LINE_H };
   ctx.font = noteFont();
   const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let line = '';
-  for (const word of words) {
-    const probe = line ? `${line} ${word}` : word;
-    if (ctx.measureText(probe).width <= NOTE_MAX_W || !line) line = probe;
-    else {
-      lines.push(line);
-      line = word;
-      if (lines.length === 3) break;
-    }
+  const measure = (s: string) => ctx.measureText(s).width;
+  let fontPx = NOTE_FONT_PX;
+  let lineH = NOTE_LINE_H;
+  let wrapped = wrapNoteLines(words, measure, NOTE_MAX_W, NOTE_WRAP_MAX_LINES);
+  if (wrapped.overflow) {
+    fontPx = Math.round(NOTE_FONT_PX * NOTE_FONT_STEP);
+    lineH = Math.round(NOTE_LINE_H * NOTE_FONT_STEP);
+    ctx.font = `${fontPx}px ${resolveNoteFontFamilies()}`;
+    wrapped = wrapNoteLines(words, measure, NOTE_MAX_W, NOTE_WRAP_MAX_LINES);
   }
-  if (lines.length < 3 && line) lines.push(line);
-  else if (line && lines.length === 3) lines[2] = `${lines[2].slice(0, -1)}…`;
-  const w = Math.min(NOTE_MAX_W, Math.max(...lines.map((l) => ctx.measureText(l).width), 24)) + 8;
-  return { lines, w, h: lines.length * NOTE_LINE_H + 4 };
+  const lines = wrapped.lines;
+  const w = Math.min(NOTE_MAX_W, Math.max(...lines.map((l) => measure(l)), 24)) + 8;
+  return { lines, w, h: lines.length * lineH + 4, fontPx, lineH };
 }
 
 type NoteEntry = {
@@ -112,6 +116,9 @@ type NoteEntry = {
    *  for data-wb-note-text; NOT the wrapped/ellipsized display lines. */
   text: string;
   lines: string[];
+  /** Task 22 §H: the font / line px measureNote settled on (one step down for a long note). */
+  fontPx?: number;
+  lineH?: number;
   color: string;
   placement: Placement;
   /** Host width at placement time — proportional rescale reference. */
@@ -626,7 +633,7 @@ export function InkNotesOverlay({
             placement,
           });
           placedRects.push(placement.rect);
-          next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width, kind: src.kind, id: src.id });
+          next.push({ key: src.key, text: src.text, lines: m.lines, fontPx: m.fontPx, lineH: m.lineH, color: src.color, placement, hostW: hostBox.width, kind: src.kind, id: src.id });
           continue;
         }
         // Sticky placement (round 29): reuse the cached spot when it is
@@ -691,7 +698,7 @@ export function InkNotesOverlay({
           placement,
         });
         placedRects.push(placement.rect);
-        next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width, kind: src.kind, id: src.id });
+        next.push({ key: src.key, text: src.text, lines: m.lines, fontPx: m.fontPx, lineH: m.lineH, color: src.color, placement, hostW: hostBox.width, kind: src.kind, id: src.id });
       }
       // Prune cache entries whose source is gone (kill-recovery, revise).
       const liveKeys = new Set(allSources.map((s) => s.key));
@@ -1040,8 +1047,8 @@ export function InkNotesOverlay({
               // must be the text width PLUS the padding.
               maxWidth: NOTE_MAX_W + 8,
               fontFamily: noteFontFamilyVars(),
-              fontSize: NOTE_FONT_PX,
-              lineHeight: `${NOTE_LINE_H}px`,
+              fontSize: e.fontPx ?? NOTE_FONT_PX,
+              lineHeight: `${e.lineH ?? NOTE_LINE_H}px`,
               color: e.color,
               // 2026-07-11 round 2: notes crossing axis/grid lines. The
               // round-1 text-shadow halo alone was too weak where a line
