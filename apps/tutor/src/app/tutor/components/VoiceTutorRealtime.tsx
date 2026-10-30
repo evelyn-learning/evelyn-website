@@ -13,7 +13,7 @@ import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } f
 import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
-import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction } from '@/lib/tutor/voice/sentence-board';
+import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
@@ -20571,7 +20571,8 @@ export function VoiceTutorRealtime({
           const cards = planSentenceBoard({
             tutorText: fullText,
             studentLast: sentenceStressRef.current.studentLast,
-            renderedThisTurn: totalToolNamesSeen.some((n) => RENDER_TOOLS.has(n)),
+            // Task 21 fix round 1 (concern 1): only the brain's own show_sentence blocks.
+            renderedThisTurn: sentenceBoardBlockedByRenders(totalToolNamesSeen),
             studentCorrect: boardStudentCorrect,
             checkedSentence: boardPc?.proposed ?? null,
             // Task 20 §G1 (GDI run 8: 558 s precheck none, 913 s / 1302 s
@@ -20597,6 +20598,7 @@ export function VoiceTutorRealtime({
               action: 'showSentence',
               sentence: card.sentence,
               ...(card.emphasis.length ? { emphasis: card.emphasis } : {}),
+              ...(card.emphasisAt?.length ? { emphasisAt: card.emphasisAt } : {}),
             } as WhiteboardCommand;
             const anchor = sentenceAnchorIndex(turnNarrationRef.current, card.sentence);
             const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true } : { sentenceBoardAuto: true });

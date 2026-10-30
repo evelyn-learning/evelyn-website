@@ -2846,15 +2846,18 @@ function DiagramPending() {
  * word (whole word, case-insensitive) in the board's amber ink and underlined;
  * optional small grey `label` above and `gloss` below. Wraps on a phone.
  */
-function SentenceCard({ sentence, emphasis, label, gloss }: { sentence: string; emphasis?: string[]; label?: string; gloss?: string }) {
+function SentenceCard({ sentence, emphasis, emphasisAt, label, gloss }: { sentence: string; emphasis?: string[]; emphasisAt?: number[]; label?: string; gloss?: string }) {
   const norm = (w: string) => w.toLowerCase().replace(/\u2019/g, "'");
   const marked = new Set((emphasis ?? []).map((w) => norm(w.trim())).filter(Boolean));
+  // Task 21 fix round 1: positions given ⇒ only those word positions are marked
+  // (a recast that inserted "a" does not underline every "a").
+  const at = Array.isArray(emphasisAt) && emphasisAt.length ? new Set(emphasisAt) : null;
   const parts = (sentence ?? '').split(/([\p{L}\p{N}]+(?:['\u2019][\p{L}\p{N}]+)*)/u);
   return (
     <div className="px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 font-sans">
       {label ? <p className="text-xs text-gray-500 mb-1">{label}</p> : null}
       <p className="text-xl leading-snug text-gray-900 break-words">
-        {parts.map((part, i) => (i % 2 === 1 && marked.has(norm(part))
+        {parts.map((part, i) => (i % 2 === 1 && marked.has(norm(part)) && (!at || at.has((i - 1) / 2))
           ? <span key={i} style={{ color: AMBER, textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationThickness: '2px' }} className="font-semibold">{part}</span>
           : <span key={i}>{part}</span>))}
       </p>
@@ -2974,7 +2977,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
       );
 
     case 'showSentence':
-      return <SentenceCard sentence={command.sentence} emphasis={command.emphasis} label={command.label} gloss={command.gloss} />;
+      return <SentenceCard sentence={command.sentence} emphasis={command.emphasis} emphasisAt={command.emphasisAt} label={command.label} gloss={command.gloss} />;
 
     case 'showTryYourself':
       return (

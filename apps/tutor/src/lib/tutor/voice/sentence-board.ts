@@ -30,6 +30,10 @@ export interface QuotedSentence {
    *  'introduced' = (Task 21 §B1) the tutor's own words after a "say it as a
    *  full sentence:" colon that repeat the student's words. */
   source?: 'echo' | 'checked' | 'affirmed' | 'introduced';
+  /** Task 21 fix round 1 (m, B2): word positions (0-based, words as the card
+   *  splits them) that carry the emphasis — only the edited position is
+   *  marked, not every copy of the word. */
+  emphasisAt?: number[];
 }
 
 export const SENTENCE_BOARD_MAX_PER_TURN = 2;
@@ -135,7 +139,18 @@ function quotedSpansWithContext(text: string): Array<{ span: string; before: str
  *  lead and ending the tutor's sentence is a span like a quoted one. Never a
  *  question ("Let's keep moving: when did you …?" fails isCardCandidate), a
  *  quote (the quote path has it) or an instruction ("Try this: Tell me …"). */
-const COLON_LEAD_RE = /\b(?:say|says|sentence|model|version|form|try|like this|in English|once more|again)\b[^:：]{0,40}[:：]\s*$/i;
+// Fix round 1 (I1): "Your sentence is correct: The past simple fits …", "Try
+// this: When you meet a customer, smile …", "Say these words again: Apple,
+// banana, …" were carded — the lead must PRESENT the sentence and end at the
+// colon, and the tail must be a declarative sentence.
+const COLON_LEAD_RE = /\b(?:say (?:it|this|that|the (?:full |whole )?sentence)(?: (?:once more|again|like this|as a full sentence|in English))?|(?:the|a|your) (?:model|correct(?:ed)? (?:sentence|version|form)|natural (?:way to say it|version)|full sentence) (?:is|would be)|(?:let['’]s )?(?:make|put|say) (?:that|it|this)(?: sentence)? (?:in English|as a full sentence)|in English,? (?:you could|we|you can) say)\s*[:：]\s*$/i;
+const COLON_TAIL_OPENER_RE = /^(?:when|if|remember|first|then)\b/i;
+/** "Apple, banana, cherry, grape." — ≥ 2 commas with one-word items. */
+function isCommaList(span: string): boolean {
+  const items = span.replace(/[.!?。！？]+$/, '').split(',').map((x) => x.trim()).filter(Boolean);
+  if (items.length < 3) return false;
+  return items.filter((x) => x.split(/\s+/).length === 1).length >= 2;
+}
 const COLON_INSTRUCTION_RE = /^(?:please|let['’]s|tell|say|give|use|try|think|describe|answer|repeat|listen|look|remember|make|start|add|write|read|explain|choose|pick|imagine)\b/i;
 const COLON_MIN_WORDS = 4;
 function colonIntroducedSpans(text: string): Array<{ span: string; before: string; after: string; at: number; end: number }> {
@@ -151,7 +166,7 @@ function colonIntroducedSpans(text: string): Array<{ span: string; before: strin
     // the span ends the tutor sentence: a sentence end or the end of the text
     if (!/[.!?。！？]$/.test(tail) && end < t.length) continue;
     const span = qualifyingSpan(tail);
-    if (!span || COLON_INSTRUCTION_RE.test(span)) continue;
+    if (!span || COLON_INSTRUCTION_RE.test(span) || COLON_TAIL_OPENER_RE.test(span) || isCommaList(span) || /[?？]["”’)]?$/.test(span)) continue;
     if (span.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length < COLON_MIN_WORDS) continue;
     out.push({ span, before: t.slice(Math.max(0, at - INTRO_WINDOW - 20), at), after: t.slice(end, end + INTRO_WINDOW), at, end });
   }
@@ -396,6 +411,9 @@ export function hasCorrectionCue(tutorText: string): boolean {
 const PRONOUN_CLASS: Record<string, string> = {
   i: '<pro>', you: '<pro>', me: '<pro>', we: '<pro>', us: '<pro>',
   my: '<poss>', your: '<poss>', our: '<poss>', mine: '<poss2>', yours: '<poss2>', ours: '<poss2>',
+  // Task 21 fix round 1 (m): reflexive and it / that flips are not edits either
+  myself: '<refl>', yourself: '<refl>', ourselves: '<refl>', yourselves: '<refl>',
+  it: '<it>', that: '<it>',
 };
 function recastTokens(text: string): string[] {
   return dropFillersAndRepeats(tokens(text)).map((t) => PRONOUN_CLASS[t] ?? t);
@@ -470,6 +488,29 @@ export function recastsStudentSentence(tutorText: string, student: string): bool
   return false;
 }
 
+/** Task 21 fix round 1 (I2): cues that a medium-confidence "correct" is not. */
+const MEDIUM_CUE_RE = /\bremember to\b|\bdon['’]t forget\b|\badd ["“]|\bthe meaning is clear\b|\bmeaning is clear\b|\bidea is clear\b/i;
+/** Any quoted span (any length) that is not a sentence starter. */
+function hasNonStarterQuote(text: string): boolean {
+  for (const m of text.matchAll(QUOTE_RE)) {
+    const inner = quoteInner(m).trim();
+    if (!inner) continue;
+    const at = m.index ?? 0;
+    if (/(…|\.\.\.)$/.test(inner)) continue;
+    if (isSentenceStarter(inner, text.slice(Math.max(0, at - INTRO_WINDOW - 20), at), text.slice(at + m[0].length, at + m[0].length + INTRO_WINDOW))) continue;
+    return true;
+  }
+  return false;
+}
+
+/** Task 21 fix round 1 (concern 1, GDI run 9 571 s: a showProblem in the same
+ *  turn blocked every card): only the brain's own show_sentence this turn
+ *  blocks the client's sentence cards — other renders (show_problem,
+ *  handwrite, show_table, tutor_scribble …) do not. */
+export function sentenceBoardBlockedByRenders(toolNames: readonly string[]): boolean {
+  return toolNames.some((n) => n === 'show_sentence' || n === 'showSentence');
+}
+
 /** Task 21 §B2: the WHOLE tutor sentence is the student's with exactly one
  *  edit — a local one-edit run inside a longer rewrite ("you took him around
  *  the company and sold him a washing machine") is several fixes, and a card
@@ -507,7 +548,13 @@ export function recastCorrectionCard(tutorText: string, student: string | null |
     const span = qualifyingSpan(sentence);
     if (!span || span.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length < CHECKED_CARD_MIN_WORDS) return null;
     const tok = edit.at >= 0 ? rawT[edit.at] : undefined;
-    const word = tok ? (dropThousands(span).match(TOKEN_RE) ?? []).find((w) => numberWordToken(lowerTok(w)) === tok) : undefined;
+    if (!tok) return { sentence: span, kind: 'correction', emphasis: [] };
+    // Fix round 1 (m): the edited POSITION — when the card's words line up
+    // one-to-one with the compared tokens, the index is exact.
+    const words = span.match(TOKEN_RE) ?? [];
+    const aligned = words.length === rawT.length && words.every((w, k) => numberWordToken(lowerTok(w)) === rawT[k]);
+    if (aligned) return { sentence: span, kind: 'correction', emphasis: [words[edit.at]!], emphasisAt: [edit.at] };
+    const word = (dropThousands(span).match(TOKEN_RE) ?? []).find((w) => numberWordToken(lowerTok(w)) === tok);
     return { sentence: span, kind: 'correction', emphasis: word ? [word] : [] };
   }
   return null;
@@ -547,6 +594,7 @@ function fragmentOfChecked(tutorText: string, checked: string): string[] | null 
  * `studentCorrect` falsy nothing changes.
  */
 export function planSentenceBoard(input: {
+  /** fix round 1: true only when the brain's own show_sentence ran this turn (sentenceBoardBlockedByRenders) */
   tutorText: string; studentLast: string | null | undefined; renderedThisTurn: boolean;
   /** the independent check found the student's last sentence correct (verdict 'correct', precheckDecides) */
   studentCorrect?: boolean;
@@ -616,10 +664,16 @@ export function planSentenceBoard(input: {
   // fix follow-up, plans no correction, and quotes none of the student's words
   // back (an un-affirmed echo is the tutor looking at the wrong sentence —
   // the Task 20 I6 probes).
+  // Fix round 1 (I2): 'Remember to add "a" before "project".', "The meaning
+  // is clear." carded the wrong sentence — the medium path needs a turn with
+  // NO quoted span of any length (a sentence starter "My part was..." aside)
+  // and none of the medium cues.
   const mediumChecked = !studentCorrect && input.checkedMedium === true
     && !classified.some((c) => c.q.kind === 'correction')
     && !raw.some((c) => c.q.kind === 'echo')
-    && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '');
+    && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '')
+    && !MEDIUM_CUE_RE.test(input.tutorText ?? '')
+    && !hasNonStarterQuote(input.tutorText ?? '');
   // Task 21 §B3 (GDI run 9, 626 s: `"Lots of health benefits" is exactly
   // right` carded the 4-word fragment): a quoted fragment of the checked
   // sentence gives way to the whole sentence, the fragment marked.

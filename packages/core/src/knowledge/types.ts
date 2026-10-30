@@ -814,7 +814,7 @@ export type WhiteboardCommand =
   // sentence; `emphasis` words are highlighted (amber + underline), `gloss`
   // is a short note in the student's language under it. Emitted by the
   // brain's show_sentence tool or by the client's sentence-board auto-card.
-  | { action: 'showSentence'; sentence: string; emphasis?: string[]; label?: string; gloss?: string; id?: string }
+  | { action: 'showSentence'; sentence: string; emphasis?: string[]; /** word positions (0-based) to mark; with emphasis, only those copies */ emphasisAt?: number[]; label?: string; gloss?: string; id?: string }
   | { action: 'highlight'; elementId: string; color?: string }
   | { action: 'showProblem'; problem: Partial<Problem> }
   | { action: 'showSolution'; steps: SolutionStep[] }
