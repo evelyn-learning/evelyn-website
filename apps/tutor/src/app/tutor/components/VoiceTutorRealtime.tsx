@@ -5931,6 +5931,31 @@ export function VoiceTutorRealtime({
   // deferred when the advancing turn is over opens now — after the turn's
   // renders (the held auto card included) have painted. Called on the turn
   // audio drain and when the brain goes idle; whichever comes last opens it.
+  // The command record every dispatched batch goes into: the session mirror
+  // (whiteboardCommandsRef — the duplicate-title guard, sentenceOnCurrentPage,
+  // problemStatementOnBoard walk it), the command count, the spoken-stress
+  // cards, and the latest tutor transcript entry (the resume snapshot).
+  const recordDispatchedCommandsRef = useRef<(processed: WhiteboardCommand[]) => void>(() => {});
+  recordDispatchedCommandsRef.current = (processed: WhiteboardCommand[]) => {
+    whiteboardCommandsRef.current = [...whiteboardCommandsRef.current, ...processed];
+    whiteboardCommandCountRef.current += processed.length;
+    for (const c of processed) {
+      if (c.action === 'showSentence' && Array.isArray(c.emphasis) && c.emphasis.length) {
+        sentenceStressRef.current.cards.push({ sentence: c.sentence, emphasis: c.emphasis });
+      }
+    }
+    console.log('[VoiceTutorRealtime] Whiteboard command count now:', whiteboardCommandCountRef.current);
+    // Attach validated commands to the most recent tutor transcript entry
+    const lastIdx = transcriptRef.current.length - 1;
+    if (lastIdx >= 0 && transcriptRef.current[lastIdx].role === 'tutor') {
+      const existing = transcriptRef.current[lastIdx].whiteboardCommands || [];
+      transcriptRef.current[lastIdx] = {
+        ...transcriptRef.current[lastIdx],
+        whiteboardCommands: [...existing, ...processed],
+      };
+      onTranscriptUpdate([...transcriptRef.current]);
+    }
+  };
   const flushDeferredPageAtTurnEndNow = useCallback((why: string) => {
     const deferred = pendingAdvanceNewPageRef.current;
     if (!flushDeferredPageAtTurnEnd({
@@ -5942,7 +5967,12 @@ export function VoiceTutorRealtime({
     pendingAdvanceNewPageRef.current = null;
     catalogRef.current.openPage({ title: deferred.title, segmentId: deferred.segmentId });
     catalogRef.current.setCurrentPage(deferred.title);
-    onWhiteboardCommand([{ action: 'newPage', title: deferred.title } as WhiteboardCommand]);
+    // Fix round 1 (I5): painted AND recorded like any dispatched batch — the
+    // mirror must see the new page, or the duplicate-title guard and the
+    // on-current-page checks still read the page being left.
+    const pageCmds = [{ action: 'newPage', title: deferred.title } as WhiteboardCommand];
+    onWhiteboardCommand(pageCmds);
+    recordDispatchedCommandsRef.current(pageCmds);
     console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED at turn end (${why}) → "${deferred.segmentId}" ("${deferred.title}")`);
     onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title} at turn end`);
     if (topicShiftPendingRef.current) {
@@ -10428,25 +10458,9 @@ export function VoiceTutorRealtime({
     // Mirror into our local running log so targetId lookups across future
     // batches can walk the full session history without round-tripping
     // through the parent's state.
-    whiteboardCommandsRef.current = [...whiteboardCommandsRef.current, ...processed];
-    whiteboardCommandCountRef.current += processed.length;
-    for (const c of processed) {
-      if (c.action === 'showSentence' && Array.isArray(c.emphasis) && c.emphasis.length) {
-        sentenceStressRef.current.cards.push({ sentence: c.sentence, emphasis: c.emphasis });
-      }
-    }
-    console.log('[VoiceTutorRealtime] Whiteboard command count now:', whiteboardCommandCountRef.current);
-
-    // Attach validated commands to the most recent tutor transcript entry
-    const lastIdx = transcriptRef.current.length - 1;
-    if (lastIdx >= 0 && transcriptRef.current[lastIdx].role === 'tutor') {
-      const existing = transcriptRef.current[lastIdx].whiteboardCommands || [];
-      transcriptRef.current[lastIdx] = {
-        ...transcriptRef.current[lastIdx],
-        whiteboardCommands: [...existing, ...processed],
-      };
-      onTranscriptUpdate([...transcriptRef.current]);
-    }
+    // (and attach them to the latest tutor transcript entry — the resume
+    // snapshot). Shared with the turn-end part-page flush (Task 20 fix round 1).
+    recordDispatchedCommandsRef.current(processed);
 
     processed.forEach((cmd) => {
       onTrackInteraction?.('tool_use', 'whiteboard', { ...cmd });

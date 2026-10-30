@@ -109,6 +109,25 @@ ok('emptyPageIndexes: pointer-only page is empty',
     VTR2.includes("flushDeferredPageAtTurnEndRef.current('audio drained')")
     && VTR2.includes("flushDeferredPageAtTurnEndRef.current('speech ended')")
     && VTR2.includes("flushDeferredPageAtTurnEndRef.current('brain idle')"));
+  // Fix round 1 (I5): the turn-end page goes into the command record, so the
+  // duplicate-title guard (which walks whiteboardCommandsRef for the latest
+  // newPage) strips a brain new_page with the same title, and the
+  // on-current-page checks read the NEW page.
+  const flushAt = VTR2.indexOf('const flushDeferredPageAtTurnEndNow = useCallback(');
+  const flushBody = VTR2.slice(flushAt, flushAt + 2500);
+  ok('D2/I5: the flush paints AND records the newPage', /onWhiteboardCommand\(pageCmds\);\s*recordDispatchedCommandsRef\.current\(pageCmds\);/.test(flushBody));
+  ok('D2/I5: the batch path records through the same helper', VTR2.includes('recordDispatchedCommandsRef.current(processed);'));
+  const recAt = VTR2.indexOf('recordDispatchedCommandsRef.current = (processed: WhiteboardCommand[]) => {');
+  ok('D2/I5: the record = the session mirror + count + transcript entry', recAt > 0
+    && /whiteboardCommandsRef\.current = \[\.\.\.whiteboardCommandsRef\.current, \.\.\.processed\];/.test(VTR2.slice(recAt, recAt + 1500))
+    && /whiteboardCommands: \[\.\.\.existing, \.\.\.processed\]/.test(VTR2.slice(recAt, recAt + 1500)));
+  ok('D2/I5: the duplicate-title guard reads the mirror for the latest newPage', /for \(let i = whiteboardCommandsRef\.current\.length - 1; i >= 0; i--\) \{\s*const c = whiteboardCommandsRef\.current\[i\];\s*if \(c\.action === 'newPage'\) \{\s*mostRecentTitle/.test(VTR2));
+  {
+    // The guard's rule on the recorded mirror: same title as the latest page ⇒ stripped.
+    const mirror = [{ action: 'newPage', title: 'Part 3 · Your job · 仕事について' }, { action: 'showSentence' }, { action: 'newPage', title: 'Part 4 · Present perfect · 現在完了' }];
+    const latest = [...mirror].reverse().find((c) => c.action === 'newPage')?.title;
+    ok('D2/I5: a brain new_page "Part 4 · Present perfect · 現在完了" after the flush is a duplicate', latest?.trim().toLowerCase() === 'part 4 · present perfect · 現在完了');
+  }
   ok('D2: same event name, "at turn end"', VTR2.includes("onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title} at turn end`)"));
 }
 
