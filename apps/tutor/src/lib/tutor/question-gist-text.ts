@@ -68,8 +68,16 @@ function splitSentences(text: string): string[] {
     .filter(Boolean);
 }
 
-const ASK_LEAD_RE =
-  /^(?:(?:now|next|then|so),\s*)?(?:tell me|please (?:say|tell|try|give)|try|say|could you|can you|give me|describe|finish|complete)\b/i;
+// Task 20 §E1 (GDI run 8, 1418 s): read / repeat asks ("please read the
+// sentence "…" after me") are asks too.
+const ASK_PHRASE = String.raw`(?:tell me|please (?:say|tell|try|give|read|repeat)|try|say|read|repeat|could you|can you|give me|describe|finish|complete)\b`;
+const ASK_LEAD_RE = new RegExp(String.raw`^(?:(?:now|next|then|so),\s*)?` + ASK_PHRASE, 'i');
+/** Task 20 §E1 (GDI run 8, 1302 s / 1418 s): an ask after a lead clause —
+ *  "Now, you asked earlier about …, so please tell me one thing …", "Let's
+ *  move on to the next part: please read the sentence …". The ask phrase
+ *  introduced by ", so " / ": " / " — " inside the sentence; the pin text runs
+ *  from the ask phrase on. */
+const INNER_ASK_RE = new RegExp(String.raw`(?:,\s*so\s+|:\s+|\s[—–]\s+)(?=` + ASK_PHRASE + ')', 'i');
 
 /** GDI run 3 (2026-10-29): language lessons ask in the imperative — `Next,
  *  tell me one thing you have been doing at your company for a long time,
@@ -81,14 +89,17 @@ const ASK_LEAD_RE =
 export function lastAskSentence(text: string): string | null {
   const sentences = splitSentences(stripMarkdownEmphasis(text ?? ''));
   let askIdx = -1;
+  let askText = '';
   for (let i = sentences.length - 1; i >= 0; i--) {
-    if (ASK_LEAD_RE.test(sentences[i])) { askIdx = i; break; }
+    if (ASK_LEAD_RE.test(sentences[i])) { askIdx = i; askText = sentences[i]; break; }
+    const inner = INNER_ASK_RE.exec(sentences[i]);
+    if (inner) { askIdx = i; askText = sentences[i].slice(inner.index + inner[0].length); break; }
   }
   if (askIdx < 0) return null;
   for (let j = askIdx + 1; j < sentences.length; j++) {
     if (/[?？]["”’)]?\s*$/.test(sentences[j])) return null;
   }
-  return capPinText(sentences[askIdx]);
+  return capPinText(askText);
 }
 
 /** A pin text capped at QPIN_MAX_CHARS, cut at a word boundary with "…". */

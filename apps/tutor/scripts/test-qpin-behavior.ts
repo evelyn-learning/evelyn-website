@@ -4,6 +4,8 @@
  *
  * Run: npx tsx scripts/test-qpin-behavior.ts
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   exceedsDragThreshold,
   qpinCollapseDeadline,
@@ -18,6 +20,7 @@ import {
   QPIN_TOP_MIN_PX,
   QPIN_BOTTOM_RESERVED_PX,
   QPIN_SIDE_PX,
+  qpinAutoTopPx,
 } from '../src/lib/tutor/qpin-behavior';
 
 let pass = 0;
@@ -404,6 +407,24 @@ check(
 check('unknown pin id → never clears', shouldClearQpinOnAnswer(W1, 'nope').clear, false);
 check('null pin id → never clears', shouldClearQpinOnAnswer(W1, null).clear, false);
 check('empty transcript → never clears', shouldClearQpinOnAnswer([], 'q1').clear, false);
+
+// Task 20 §E2 (GDI run 8, 199–200 s): the occupied set gaining a rect under
+// the placed pin ⇒ the next pass re-places it below that rect.
+{
+  const stage = { stageTop: 0, stageBottom: 900, headerClearance: 56, dockClearance: 96, pinH: 60 };
+  const card = { top: 80, bottom: 300, height: 220 };
+  const before = qpinAutoTopPx({ ...stage, occupied: [card] });
+  check('E2: pin sits below the question card', before, 308);
+  const handwrite = { top: 310, bottom: 380, height: 70 }; // painted under the pin a second later
+  const pinRect = { top: before!, bottom: before! + stage.pinH };
+  check('E2: the handwrite rect overlaps the cached pin', handwrite.top < pinRect.bottom && handwrite.bottom > pinRect.top, true);
+  const after = qpinAutoTopPx({ ...stage, occupied: [card, handwrite] });
+  check('E2: re-measure moves the pin below the handwrite', after, 388);
+  check('E2: no room ⇒ default top (null)', qpinAutoTopPx({ ...stage, occupied: [{ top: 80, bottom: 780, height: 700 }] }), null);
+  check('E2: zero-height and off-stage rects ignored', qpinAutoTopPx({ ...stage, occupied: [card, { top: 500, bottom: 500, height: 0 }, { top: 950, bottom: 990, height: 40 }] }), 308);
+  const stageSrc = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/SessionStage.tsx'), 'utf8');
+  check('E2: SessionStage re-measures on content mutations (MutationObserver → schedule)', /new MutationObserver\([\s\S]{0,200}schedule\(\)/.test(stageSrc) && stageSrc.includes('qpinAutoTopPx({'), true);
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

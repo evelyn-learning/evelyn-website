@@ -35,7 +35,7 @@ import {
   holdBackUnbalancedMathTail,
   normalizeCaptionMath,
 } from '@/lib/tutor/whiteboard/caption-fit';
-import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
+import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, qpinAutoTopPx, type QpinFraction } from '@/lib/tutor/qpin-behavior';
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 import { orbIsStartButton } from './prestart-affordances';
 import {
@@ -816,32 +816,58 @@ export default function SessionStage(props: SessionStageProps) {
       setQpinAutoTop(null);
       return;
     }
-    const raf = requestAnimationFrame(() => {
+    // Task 20 §E2 (GDI run 8: the pin was placed at 199 s, the handwritten
+    // question painted under it at 200 s, and the pin only moved when the
+    // tutor stopped talking): the top was measured ONCE per pin. It is now
+    // re-measured on the next frame whenever board content mounts or
+    // unmounts (a card, an ink / handwrite note) — the same rule
+    // (qpinAutoTopPx) against the occupied set as it now stands.
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
       const box = qpinBoxRef.current;
       const stageEl = box?.offsetParent as HTMLElement | null;
       if (!box || !stageEl) return;
+      observe();
       const stage = stageEl.getBoundingClientRect();
       // Header row, plus the in-flow agenda-rail row when present (the rail
       // sits between header and board, so "top of board" moves down with it).
       // Text-mode rail: the measured board top (same source as the panel).
       const HEADER_CLEARANCE = textToolRail ? textBoardTopPx : 56 + (railEl && !isFullscreen ? 40 : 0);
       const DOCK_CLEARANCE = 96;    // floating tutor bar + margin
-      let lowestBottom = stage.top + HEADER_CLEARANCE;
+      const occupied: Array<{ top: number; bottom: number; height: number }> = [];
       stageEl.querySelectorAll<HTMLElement>('[data-wb-item-index], [data-wb-note]').forEach((el) => {
         const r = el.getBoundingClientRect();
-        if (r.height === 0 || r.top >= stage.bottom) return;
-        const visibleBottom = Math.min(r.bottom, stage.bottom);
-        if (visibleBottom > lowestBottom) lowestBottom = visibleBottom;
+        occupied.push({ top: r.top, bottom: r.bottom, height: r.height });
       });
-      const pinH = box.getBoundingClientRect().height;
-      const freeBandTop = lowestBottom + 8;
-      if (stage.bottom - DOCK_CLEARANCE - freeBandTop >= pinH) {
-        setQpinAutoTop(freeBandTop - stage.top);
-      } else {
-        setQpinAutoTop(null);
-      }
-    });
-    return () => cancelAnimationFrame(raf);
+      setQpinAutoTop(qpinAutoTopPx({
+        stageTop: stage.top,
+        stageBottom: stage.bottom,
+        headerClearance: HEADER_CLEARANCE,
+        dockClearance: DOCK_CLEARANCE,
+        pinH: box.getBoundingClientRect().height,
+        occupied,
+      }));
+    };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(measure); };
+    // Only nodes the pin dodges re-measure (captions, the pin itself and
+    // other chrome churn the stage's subtree too).
+    const CONTENT_SEL = '[data-wb-item-index], [data-wb-note]';
+    const isContent = (n: Node) => n instanceof Element && (n.matches(CONTENT_SEL) || n.querySelector(CONTENT_SEL) != null);
+    let mo: MutationObserver | null = null;
+    const observe = () => {
+      const stageEl = qpinBoxRef.current?.offsetParent as HTMLElement | null;
+      if (mo || !stageEl || typeof MutationObserver === 'undefined') return;
+      mo = new MutationObserver((records) => {
+        if (records.some((r) => [...r.addedNodes, ...r.removedNodes].some(isContent))) schedule();
+      });
+      mo.observe(stageEl, { childList: true, subtree: true });
+    };
+    schedule();
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      mo?.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionPinKey, qpinMode, questionPin, qpinCustomPos, railEl, isFullscreen, textToolRail, textBoardTopPx]);
   const qpinDrag = useRef<{

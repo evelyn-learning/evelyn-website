@@ -270,3 +270,31 @@ function tutorMovedOnAfter<T extends { role: string; text?: string; historyOnly?
   }
   return false;
 }
+
+/**
+ * Task 20 §E2 (GDI run 8, 199–200 s): the pin's auto top — the free band
+ * below the lowest board content (items + ink / handwrite notes), else null
+ * (no room: the default top). Viewport px in, stage-relative px out. Pure,
+ * so a re-measure after the occupied set changes (a handwrite note painted
+ * one second after the pin was placed) gives the new top: the pin moves off
+ * the note on the next layout pass instead of when the tutor stops talking.
+ */
+export function qpinAutoTopPx(input: {
+  stageTop: number;
+  stageBottom: number;
+  headerClearance: number;
+  dockClearance: number;
+  pinH: number;
+  /** Board content rects (viewport px): [data-wb-item-index], [data-wb-note]. */
+  occupied: ReadonlyArray<{ top: number; bottom: number; height: number }>;
+}): number | null {
+  const { stageTop, stageBottom, headerClearance, dockClearance, pinH, occupied } = input;
+  let lowestBottom = stageTop + headerClearance;
+  for (const r of occupied) {
+    if (r.height === 0 || r.top >= stageBottom) continue;
+    const visibleBottom = Math.min(r.bottom, stageBottom);
+    if (visibleBottom > lowestBottom) lowestBottom = visibleBottom;
+  }
+  const freeBandTop = lowestBottom + 8;
+  return stageBottom - dockClearance - freeBandTop >= pinH ? freeBandTop - stageTop : null;
+}

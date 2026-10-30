@@ -207,5 +207,16 @@ check('replace: no pin → nothing to replace', pinReplacedByTurn(null, 't2', 'W
   check('TutorSession: qpin_set_verbatim event', /'qpin_set_verbatim'/.test(ts), true);
 }
 
+// --- Task 20 §E1 (GDI run 8): asks after a lead clause, read / repeat asks ---
+check('1302 s: ", so please tell me …" pinned from the ask phrase',
+  lastAskSentence('"The seminar was very good because it was motivational, and the result was positive." That sentence is complete and clear. Now, you asked earlier about one project you\'re proud of, so please tell me one thing you would do differently next time.'),
+  'please tell me one thing you would do differently next time.');
+check('1418 s: ": please read the sentence … after me" pinned from the ask phrase',
+  lastAskSentence('Your sentence was right too, so there\'s no error to fix. Let\'s move on to the next part: please read the sentence "I was responsible for communicating with our customers" after me, slowly and clearly.'),
+  'please read the sentence "I was responsible for communicating with our customers" after me, slowly and clearly.');
+check('"Let\'s move on to the summary." → null', lastAskSentence("Let's move on to the summary."), null);
+check('"Repeat after me: …" leads', /^Repeat after me/.test(lastAskSentence('Good. Repeat after me: I work in sales.') ?? ''), true);
+check('", so you did well." is no ask', lastAskSentence('You finished early, so you did well.'), null);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
