@@ -216,6 +216,35 @@ test('C: a brain show_sentence replaces the auto card of the same sentence — t
   assert.ok(/catalogRef\.current\.removeByIds\(replaced\)/.test(block), 'and from the catalog');
   assert.ok(at < vtr.indexOf('dispatchVisualRef.current(processed, opts?.anchorSentence)'), 'before the brain card dispatches');
 });
+// ── Task 22 §G (GDI run 10, 711 s / 781 s): affirmed conversational sentences ──
+test('22G the 781 s turn cards the student\'s sentence (precheck none, "Your sentence is clear.")', () => {
+  const st = 'The biggest challenge in that project was to convince customers to buy the washing machines.';
+  const t = 'Convincing customers was the challenge, so you named the real difficulty. Your sentence is clear. Next, how did you handle that challenge? Try starting with "I…".';
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, affirmFallback: true }),
+    [{ sentence: st, kind: 'model', emphasis: [], source: 'affirmed' }]);
+  // a deciding check / no fallback ⇒ not this path
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false }), []);
+  // the brain's own show_sentence this turn blocks it like every card
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: true, affirmFallback: true }), []);
+});
+test('22G the 711 s turn: quotes of the student\'s own words and "that\'s a clear role" / "fits perfectly"', () => {
+  const st = 'I was responsible for selling washing machines made by robots.';
+  const t = 'Selling washing machines made by robots, that\'s a clear role. Now, the phrase "responsible for" is followed by a noun or an -ing verb, and "selling" fits perfectly. Could you tell me one result of that project, starting with "The project helped…"?';
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, affirmFallback: true }),
+    [{ sentence: st, kind: 'model', emphasis: [], source: 'affirmed' }]);
+  // fillers out, capitalised, final period
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Your sentence is clear. What else?', studentLast: 'um, i would like to work with uh ABC Robotics in the future', renderedThisTurn: false, affirmFallback: true }).map((c) => c.sentence),
+    ['I would like to work with ABC Robotics in the future.']);
+});
+test('22G no affirmed card when qualified, quoting other words, a question, or too short', () => {
+  const st = 'The biggest challenge in that project was to convince customers to buy the washing machines.';
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Your sentence is clear, but "to convince" should be "convincing". Try again.', studentLast: st, renderedThisTurn: false, affirmFallback: true }), []);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Your sentence is clear. But we usually say "convincing customers" here.', studentLast: st, renderedThisTurn: false, affirmFallback: true }), []);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Good question. Yes, I do. What about you?', studentLast: 'Do you like robots?', renderedThisTurn: false, affirmFallback: true }), []);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Your sentence is clear. Remember to add "a" before "project".', studentLast: 'I worked on project to increase sales.', renderedThisTurn: false, affirmFallback: true }), []);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Your sentence is clear. What else?', studentLast: 'Sales manager.', renderedThisTurn: false, affirmFallback: true }), []);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Could you say that as one clear sentence, starting with "I talked to the customer about…"?', studentLast: 'Talk to customer about robots machines good.', renderedThisTurn: false, affirmFallback: true }), []);
+});
 test('hook pin: both Cartesia paths compose AFTER rewriteForTTS; the HTTP route skips its rewrite only for prerewritten text', () => {
   const hook = readFileSync(join(__dirname, '..', 'src/app/tutor/hooks/useOpenAIRealtime.ts'), 'utf8');
   assert.ok(/f\(trimmed, \(s\) => rewriteForTTS\(s, \{ studentName: studentNameRef\.current \}\)\)/.test(hook), 'cartesiaText composes with rewriteForTTS');
@@ -818,8 +847,11 @@ test('21B4: VTR passes checkedMedium (correct, medium, not other_part / neither)
 // ── Task 21 fix round 1 (§B) ──
 test('21B r1 I1: only an explicit presenting lead introduces a card; the tail must be declarative', () => {
   const st = 'I work in the sales department and sell washing machines.';
+  // Task 22 §G: "Your sentence is correct" with nothing else carded now cards
+  // the STUDENT's sentence (source 'affirmed') — never the introduced tail.
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Your sentence is correct: The past simple fits a finished event.', studentLast: st, renderedThisTurn: false, affirmFallback: true }),
+    [{ sentence: st, kind: 'model', emphasis: [], source: 'affirmed' }]);
   for (const t of [
-    'Your sentence is correct: The past simple fits a finished event.',
     'Let me explain the sentence: The verb comes after the subject.',
     "Let's look at the sentence again: The verb is in the wrong place here.",
     'Try this: When you meet a customer, smile and say hello.',

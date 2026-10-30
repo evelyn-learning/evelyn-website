@@ -181,7 +181,10 @@ function colonIntroducedSpans(text: string): Array<{ span: string; before: strin
  *  (I6): praise of the meaning or of a part ("The meaning is clear.", "The
  *  idea is clear.", 「過去形が正しい」, "That is clear, and nice try.") is not —
  *  a model card of a wrong sentence teaches the error. */
-const AFFIRM_EN_RE = /\b(?:that['’]s|is|what) (?:a )?(?:correct|natural|good|great|perfect|nice|clear) sentence\b|\bsentence is (?:correct|complete|clear|natural|right)\b|\bcomplete and clear\b|^\s*(?:yes, )?that['’]s (?:right|correct)[.!]/i;
+// Task 22 §G (GDI run 10, 711 s): "that's a clear role", "… fits perfectly",
+// "That's a clear answer". A bare "clear sentence" is NOT added — "Could you
+// say that as one clear sentence?" (862 s) is an instruction, not praise.
+const AFFIRM_EN_RE = /\b(?:that['’]s|is|what) (?:a )?(?:correct|natural|good|great|perfect|nice|clear) sentence\b|\bsentence is (?:correct|complete|clear|natural|right)\b|\bcomplete and clear\b|^\s*(?:yes, )?that['’]s (?:right|correct)[.!]|\bthat['’]s a clear (?:\w+ )?(?:sentence|answer|role)\b|\bclear role\b|\bfits perfectly\b/i;
 const AFFIRM_JA_RE = /正しい文|きちんと言え|自然な文|完璧です/;
 /** Fix round 1 (I6): a follow-up that fixes something ⇒ no promotion. Fix
  *  round 2 (m5): "but" only counts inside the affirmation window (see
@@ -213,6 +216,15 @@ export function quoteAffirmed(text: string, at: number, end: number): boolean {
   const after = sentenceRe.exec(rest.slice(consumed).trimStart())?.[0] ?? '';
   if ([...parts, after].some((p) => BUT_RE.test(p))) return false;
   return parts.some((p) => (AFFIRM_EN_RE.test(p) || AFFIRM_JA_RE.test(p)) && !QUALIFIED_PRAISE_RE.test(p));
+}
+
+/** Task 22 §G (GDI run 10, 711 s / 781 s): the turn affirms the student's
+ *  sentence somewhere — an AFFIRM_EN_RE / AFFIRM_JA_RE sentence not qualified
+ *  ("to start with") and with no "but" in it or in the sentence after it. */
+export function turnAffirmsStudent(text: string): boolean {
+  const sentences = (text ?? '').split(/(?<=[.!?。！？])\s*/).map((x) => x.trim()).filter(Boolean);
+  return sentences.some((p, i) => (AFFIRM_EN_RE.test(p) || AFFIRM_JA_RE.test(p)) && !QUALIFIED_PRAISE_RE.test(p)
+    && !BUT_RE.test(p) && !BUT_RE.test(sentences[i + 1] ?? ''));
 }
 
 /** Task 20 §G3 (GDI run 8, 864 s): the student's reply to a hint / more-time
@@ -499,6 +511,28 @@ const MEDIUM_CUE_RE = /\bremember to\b|\bdon['’]t forget\b|\badd ["“]|\bthe 
 // you remember most about …?" and "Did you write an article about it?" keep the card.
 const MEDIUM_CUE_EXTRA_RE = /\b(?:just |please )?remember,? (?:to|the|that we|(?:an?|the) )\b|\bkeep in mind\b|\b(?:an?|the) article (?:before|after|there|here|is missing)\b|\bwe (?:usually|normally|often) (?:say|put|use)\b|\bwhat you mean\b|\bnext time,? (?:say|use|try|add)\b/i;
 /** Any quoted span (any length) that is not a sentence starter. */
+/** Task 22 §G: every quoted span of the turn (sentence starters aside) is a
+ *  run of the student's own words — "the words "work with" fit well",
+ *  ""selling" fits perfectly" praise a part of what they said. A quote of
+ *  anything else ('Remember to add "a" before "project"', a new model
+ *  sentence) ⇒ false. */
+function quotesOnlyStudentWords(text: string, student: string): boolean {
+  const st = dropFillersAndRepeats(tokens(student));
+  for (const m of text.matchAll(QUOTE_RE)) {
+    const inner = quoteInner(m).trim();
+    if (!inner) continue;
+    const at = m.index ?? 0;
+    if (/(…|\.\.\.)$/.test(inner)) continue;
+    if (isSentenceStarter(inner, text.slice(Math.max(0, at - INTRO_WINDOW - 20), at), text.slice(at + m[0].length, at + m[0].length + INTRO_WINDOW))) continue;
+    const q = dropFillersAndRepeats(tokens(inner));
+    if (q.length === 0) return false;
+    let found = false;
+    for (let i = 0; i + q.length <= st.length && !found; i++) found = q.every((x, j) => st[i + j] === x);
+    if (!found) return false;
+  }
+  return true;
+}
+
 function hasNonStarterQuote(text: string): boolean {
   for (const m of text.matchAll(QUOTE_RE)) {
     const inner = quoteInner(m).trim();
@@ -705,6 +739,20 @@ export function planSentenceBoard(input: {
     if (checked && !recastsStudentSentence(input.tutorText, checked)
       && !classified.some((c) => sameSentence(c.q.sentence, checked))) {
       classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length, said: false, affirmed: false, introduced: false });
+    }
+  }
+  // Task 22 §G (GDI run 10, 711 s / 781 s / 618 s: precheck none, the tutor
+  // said "Your sentence is clear." — no quote, no recast, no card): with the
+  // check silent / undecided and nothing else carded, a turn that affirms the
+  // student (turnAffirmsStudent) and quotes nothing but the student's own
+  // words cards the student's cleaned sentence — source 'affirmed'.
+  if (affirmFallback && classified.length === 0 && input.studentLast
+    && turnAffirmsStudent(input.tutorText) && quotesOnlyStudentWords(input.tutorText ?? '', input.studentLast)
+    && !isMetaOfferTurn(input.prevTutorText)) {
+    let own = cardableStudentSentence(input.studentLast);
+    if (own && !CJK_RE.test(own)) {
+      own = own[0]!.toUpperCase() + own.slice(1);
+      classified.push({ q: { sentence: own, kind: 'model', emphasis: [], source: 'affirmed' }, len: norm(own).length, i: kept.length, said: false, affirmed: true, introduced: false });
     }
   }
   classified.sort((a, b) => {
