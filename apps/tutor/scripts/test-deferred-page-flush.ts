@@ -5,6 +5,8 @@
 // "Hook: Graph linear inequalities on a coordinate plane using boundary…"
 // in front of the page for the student's problem.
 import { strict as assert } from 'node:assert';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   decideDeferredPageFlush,
   emptyPageIndexes,
@@ -64,5 +66,25 @@ ok('non-content actions', !isPageContentAction('newPage') && !isPageContentActio
 ok('emptyPageIndexes: trailing newPage is not counted', emptyPageIndexes([{ action: 'showEquation' }, { action: 'newPage' }]).length === 0);
 ok('emptyPageIndexes: pointer-only page is empty',
   JSON.stringify(emptyPageIndexes([{ action: 'newPage' }, { action: 'scribble' }, { action: 'newPage' }, { action: 'showGraph' }])) === '[0]');
+
+// Task 14 §K (GDI run 4): the level-check and summary part pages were dropped
+// because the batch that flushed them carried a page-grouping break. An
+// authored fixed-script part page is never dropped — the batch's page is.
+{
+  const BATCH = [{ action: 'newPage', title: 'I have sold 300 machines' }, { action: 'showSegmentCard' }, { action: 'showSentence' }];
+  const r = decideDeferredPageFlush({ enabled: true, batch: BATCH, deferredIsAuthored: true });
+  ok('authored deferred page ⇒ the batch page is dropped, the part page kept',
+    r.action === 'drop-own-page' && r.reason === 'deferred-page-is-authored' && r.ownPageIndex === 0);
+  const emitted = [{ action: 'newPage', title: 'Part 3 · Level check' }, ...BATCH.filter((_, i) => i !== r.ownPageIndex)];
+  ok('authored case: one page carrying the card + sentence, nothing empty', emitted.filter((c) => c.action === 'newPage').length === 1 && emptyPageIndexes(emitted).length === 0);
+  ok('authored, content first ⇒ prepend (unchanged)', decideDeferredPageFlush({ enabled: true, batch: [{ action: 'showSentence' }], deferredIsAuthored: true }).action === 'prepend');
+  ok('not authored ⇒ deferred dropped (unchanged)', decideDeferredPageFlush({ enabled: true, batch: BATCH, deferredIsAuthored: false }).action === 'drop-deferred');
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('VTR passes deferredIsAuthored from the pending page', /deferredIsAuthored: pendingAdvanceNewPageRef\.current\.authored === true/.test(VTR));
+  ok('VTR: a post-turn auto card never flushes the part page', /const autoCardOfLeftPart = opts\?\.sentenceBoardAuto === true && pendingAdvanceNewPageRef\.current\.afterTurn === true;/.test(VTR)
+    && /const hasFreshTeaching = !autoCardOfLeftPart && /.test(VTR));
+  ok('VTR: the auto-advance marks its pending page afterTurn', /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\);\s*if \(pendingAdvanceNewPageRef\.current\?\.segmentId === autoNext\) pendingAdvanceNewPageRef\.current\.afterTurn = true;/.test(VTR));
+  ok('VTR: the flushed part page clears a held topic-shift mark', VTR.includes("onDebugEvent?.('topic_shift_cleared_by_segment_page'"));
+}
 
 console.log(`deferred-page-flush: ${n} cases passed`);

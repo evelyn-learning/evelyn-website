@@ -303,6 +303,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // portal-704e3e01 (2026-09-04): page retitled from the problem that actually
   // renders instead of the authored one from segment advance time.
   'auto_newpage_retitled_from_render',
+  // Task 14 §K: a post-turn auto card held off the next part's page.
+  'auto_newpage_on_advance_held_for_auto_card',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

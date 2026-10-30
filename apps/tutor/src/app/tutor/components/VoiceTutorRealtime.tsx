@@ -4221,7 +4221,7 @@ export function VoiceTutorRealtime({
   // (not dedup). If every teaching command dedups, the page stays
   // deferred — preventing the empty-page-after-advance bug observed
   // 2026-05-13 (10) session.
-  const pendingAdvanceNewPageRef = useRef<{ title: string; segmentId: string; /** fixed-script "Part n · label" title — never retitled from the card */ authored?: boolean } | null>(null);
+  const pendingAdvanceNewPageRef = useRef<{ title: string; segmentId: string; /** fixed-script "Part n · label" title — never retitled from the card */ authored?: boolean; /** armed by the client's post-turn advance (fixed-script auto-advance / spoken opener): the turn's own auto sentence cards belong to the part being LEFT and never open this page (Task 14 §K) */ afterTurn?: boolean } | null>(null);
 
   // Engagement / fatigue tracking. We track the last N student reply lengths
   // and fire a diagnostic prompt when replies collapse to short monosyllables
@@ -9208,7 +9208,11 @@ export function VoiceTutorRealtime({
       // session. The predicate is the single source of truth, so new show_* tools
       // never re-introduce this drift. showSegmentCard is OR'd back in to preserve
       // its prior flush behavior (it's excluded from isTeachingRender by design).
-      const hasFreshTeaching = processed.some((cmd) => {
+      // Task 14 §K: an auto sentence card of the turn that just ENDED (the
+      // client advanced after it) belongs to the part being left — it stays
+      // on that page and the segment page waits for the new part's content.
+      const autoCardOfLeftPart = opts?.sentenceBoardAuto === true && pendingAdvanceNewPageRef.current.afterTurn === true;
+      const hasFreshTeaching = !autoCardOfLeftPart && processed.some((cmd) => {
         const a = String(cmd.action);
         if (!isTeachingRenderAction(a) && a !== 'showSegmentCard') return false;
         try {
@@ -9231,14 +9235,16 @@ export function VoiceTutorRealtime({
         // A "(cont.)" page belongs to the PREVIOUS segment: there the
         // deferred segment page is kept and the continuation page dropped.
         ownPageIsContinuation: pageDecision.action === 'continuation',
+        // An authored fixed-script part page is never dropped (Task 14 §K).
+        deferredIsAuthored: pendingAdvanceNewPageRef.current.authored === true,
       });
       let droppedContinuationPage = false;
       if (hasFreshTeaching && deferredFlush.action === 'drop-own-page' && typeof deferredFlush.ownPageIndex === 'number') {
         const dropIdx = deferredFlush.ownPageIndex;
         processed = processed.filter((_, i) => i !== dropIdx);
         droppedContinuationPage = true;
-        console.log(`[VoiceTutorRealtime] page-grouping continuation page "${deferredFlush.ownPageTitle ?? ''}" DROPPED — a deferred segment page ("${pendingAdvanceNewPageRef.current.title}") takes this batch`);
-        onDebugEvent?.('auto_newpage_continuation_dropped', `"${deferredFlush.ownPageTitle ?? ''}" — deferred segment page "${pendingAdvanceNewPageRef.current.title}" kept`);
+        console.log(`[VoiceTutorRealtime] page-grouping page "${deferredFlush.ownPageTitle ?? ''}" DROPPED (${deferredFlush.reason}) — a deferred segment page ("${pendingAdvanceNewPageRef.current.title}") takes this batch`);
+        onDebugEvent?.('auto_newpage_continuation_dropped', `"${deferredFlush.ownPageTitle ?? ''}" (${deferredFlush.reason}) — deferred segment page "${pendingAdvanceNewPageRef.current.title}" kept`);
       }
       if (hasFreshTeaching && deferredFlush.action === 'drop-deferred') {
         const dropped = pendingAdvanceNewPageRef.current;
@@ -9278,6 +9284,15 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('auto_newpage_retitled_from_render', `${deferred.segmentId}: "${deferred.title}" → "${pageTitle}"`);
         }
         pendingAdvanceNewPageRef.current = null;
+        // The segment page IS the page break: a topic-shift mark held by an
+        // earlier sentence-only batch must not open yet another page for the
+        // part's next render (its authored card) — Task 14 §K.
+        if (topicShiftPendingRef.current) {
+          topicShiftPendingRef.current = null;
+          onDebugEvent?.('topic_shift_cleared_by_segment_page', `${deferred.segmentId}: ${pageTitle}`);
+        }
+      } else if (autoCardOfLeftPart) {
+        onDebugEvent?.('auto_newpage_on_advance_held_for_auto_card', `${pendingAdvanceNewPageRef.current.segmentId}: the auto card stays on the page being left`);
       } else {
         console.log('[VoiceTutorRealtime] auto-newPage on segment advance STILL deferred — no fresh teaching content this batch');
       }
@@ -19717,6 +19732,7 @@ export function VoiceTutorRealtime({
             // Resets turnsInSegmentRef for the new segment and disarms a
             // pending pronunciation arm (disarmPronunciationOnSegmentAdvance).
             applyResolvedAdvance(autoPlan, segIdNow, autoNext);
+            if (pendingAdvanceNewPageRef.current?.segmentId === autoNext) pendingAdvanceNewPageRef.current.afterTurn = true;
             const autoKind = autoPlan.segments.find((sg) => sg.id === autoNext)?.kind ?? 'segment';
             const merged = mergePendingRuntimeNote(
               { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
@@ -19940,7 +19956,9 @@ export function VoiceTutorRealtime({
           for (const card of cards) {
             // A pending segment page opens with this card, so the page the
             // log shows as current is the one being left — nothing to dedupe.
-            if (!pendingAdvanceNewPageRef.current
+            // Unless the client advanced after this turn (§K): then the card
+            // stays on the current page, so dedupe against it.
+            if ((!pendingAdvanceNewPageRef.current || pendingAdvanceNewPageRef.current.afterTurn)
               && sentenceOnCurrentPage(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, card.sentence)) continue;
             const cmd = {
               action: 'showSentence',

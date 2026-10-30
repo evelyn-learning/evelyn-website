@@ -21,8 +21,15 @@
  * belongs to the PREVIOUS segment; keeping it would land the new segment's
  * content on a continuation of the old one. There the deferred (segment)
  * page is kept and the continuation page is the one dropped.
+ *
+ * Exception — the deferred page is an AUTHORED fixed-script part page ("Part
+ * 3 · Level check", GDI run 4): it is the page the plan's author put there,
+ * and dropping it lost the level-check and summary pages whenever the batch
+ * that flushed it also carried a page-grouping break (a held topic-shift
+ * mark, a segment-advance break). The authored page is kept and the batch's
+ * own page dropped, as for a continuation page.
  */
-export type DeferredPageFlushReason = 'flag-off' | 'no-own-page' | 'content-before-own-page' | 'batch-opens-own-page' | 'own-page-is-continuation';
+export type DeferredPageFlushReason = 'flag-off' | 'no-own-page' | 'content-before-own-page' | 'batch-opens-own-page' | 'own-page-is-continuation' | 'deferred-page-is-authored';
 
 /** Actions that put something on a page. Everything else (navigation,
  *  pointers, bookkeeping) leaves a page empty. */
@@ -37,6 +44,8 @@ export function decideDeferredPageFlush(input: {
   batch: ReadonlyArray<{ action: string; title?: string }>;
   /** The batch's own (first) newPage is a page-grouping continuation page. */
   ownPageIsContinuation?: boolean;
+  /** The deferred page is an authored fixed-script part page — never dropped. */
+  deferredIsAuthored?: boolean;
 }): {
   /** 'drop-own-page': remove the batch's newPage at `ownPageIndex`, then prepend the deferred page. */
   action: 'prepend' | 'drop-deferred' | 'drop-own-page';
@@ -54,6 +63,9 @@ export function decideDeferredPageFlush(input: {
       const ownPageTitle = typeof cmd.title === 'string' ? cmd.title : '';
       if (input.ownPageIsContinuation === true) {
         return { action: 'drop-own-page', reason: 'own-page-is-continuation', ownPageTitle, ownPageIndex: i };
+      }
+      if (input.deferredIsAuthored === true) {
+        return { action: 'drop-own-page', reason: 'deferred-page-is-authored', ownPageTitle, ownPageIndex: i };
       }
       return { action: 'drop-deferred', reason: 'batch-opens-own-page', ownPageTitle };
     }
