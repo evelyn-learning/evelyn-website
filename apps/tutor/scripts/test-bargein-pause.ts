@@ -109,7 +109,10 @@ test('wiring: pause at a speaking onset, partials and stops decide, every kill o
   for (const ev of ['perception_bargein_paused', 'perception_bargein_pause_kill', 'perception_bargein_pause_resume']) assert.ok(vtr.includes(`'${ev}'`), ev);
   const rt = readFileSync('src/app/tutor/hooks/useOpenAIRealtime.ts', 'utf8');
   assert.ok(rt.includes('void ctx.suspend().catch('));
-  assert.ok(rt.includes('const clearSpeechQueue = useCallback((): Promise<void> => {\n    // A kill while paused for a barge-in'));
+  // Task 17: the hard clear is clearSpeechQueueHard (clearSpeechQueue without
+  // afterCurrentSentence, or paused, routes to it); it still resumes the clock.
+  assert.ok(/const clearSpeechQueueHard = useCallback\(\(\): Promise<void> => \{[\s\S]{0,400}\/\/ A kill while paused for a barge-in[\s\S]{0,300}getAudioContext\(\)\.resume\(\)/.test(rt));
+  assert.ok(/playbackPausedRef\.current \|\|[\s\S]{0,200}return clearSpeechQueueHard\(\);/.test(rt), 'a paused kill never waits for the sentence');
   const ink = readFileSync('src/app/tutor/hooks/useCartesiaInkWS.ts', 'utf8');
   assert.ok(ink.includes("onPartialTranscriptRef.current?.({ text: data.transcript, tMs })"));
   const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
