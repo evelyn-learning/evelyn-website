@@ -78,7 +78,19 @@ const JA_SAY_IT_ASK_RE = /言(?:って|い)(?:み(?:ましょう|てください
  *  is an ask. The 言って branch sits outside \b (no ASCII word boundary
  *  before a kana/kanji). A statement ("we can say that "…"", "you could say
  *  "…"") is not: the verb must not follow a modal or a "we / people" subject. */
-const SAY_QUOTE_ASK_RE = /(?:(?<!\b(?:can|could|might|would|also|often|usually|we|they|people)\s+)\b(?:say|repeat|try saying)\b|言って)[^"“「.!?。！？]{0,40}["“「]/iu;
+// Fix round 2 (m6): never / don't / do not / not / shouldn't before the verb
+// is a negated say ("Never say "I have went there".") — no ask.
+const SAY_QUOTE_ASK_RE = /(?:(?<!\b(?:can|could|might|would|also|often|usually|we|they|people|never|don['’]t|do not|not|shouldn['’]t)\s+)\b(?:say|repeat|try saying)\b|言って)[^"“「.!?。！？]{0,40}["“「]/iu;
+/** Fix round 2 (m6): a negated say and the quote it introduces — the wrong
+ *  form (`Don't say "I am agree", say "I agree"`), never a target. */
+const NEGATED_SAY_QUOTE_RE = /\b(?:never|don['’]t|do not|not|shouldn['’]t)\s+(?:say|use)\b[^"“「.!?。！？]{0,40}["“「][^"”」]*["”」]?/gi;
+
+/** The turn's quoted sentences that can be a repeat target: quotes after a
+ *  negated say dropped, then the last ≥ 3-word one. */
+function lastTargetQuote(text: string): string | null {
+  const quotes = extractQuotedSentences(text.replace(NEGATED_SAY_QUOTE_RE, ' '));
+  return quotes.length > 0 ? quotes[quotes.length - 1]! : null;
+}
 
 /** Fix round 2 (m1, m5): a repeat ask strict enough to act on — isRetryAsk,
  *  "say/repeat … once more / again", "repeat after me", a Japanese say-it
@@ -109,8 +121,8 @@ export function expectedRepeatFor(
   if (armedReference && armedReference.trim()) return { text: armedReference.trim() };
   const t = lastTutorTurn ?? '';
   if (t && isStrictRepeatAsk(t)) {
-    const quotes = extractQuotedSentences(t);
-    if (quotes.length > 0) return { text: quotes[quotes.length - 1]! };
+    const q = lastTargetQuote(t);
+    if (q) return { text: q };
   }
   // Task 19 fix round 1 (§A5, GDI run 7, 197 s): `Could you say that in one
   // English sentence, starting with "I work in the sales department"?` — the
@@ -118,8 +130,8 @@ export function expectedRepeatFor(
   // self-voice. A starter ask names a line the student is expected to say.
   // (extractQuotedSentences needs ≥ 3 words, so an "I am" starter is no target.)
   if (t && STARTER_ASK_RE.test(t)) {
-    const quotes = extractQuotedSentences(t);
-    if (quotes.length > 0) return { text: quotes[quotes.length - 1]! };
+    const q = lastTargetQuote(t);
+    if (q) return { text: q };
   }
   return recentClip && recentClip.trim() ? { text: recentClip.trim() } : null;
 }

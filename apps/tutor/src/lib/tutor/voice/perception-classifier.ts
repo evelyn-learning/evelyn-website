@@ -841,7 +841,9 @@ export const MIDLENGTH_ECHO_OVERLAP_THRESHOLD = 0.8;
  *    replays the contiguous TAIL ("…free body diagrams next"), while a
  *    student picking an option drops the trailing word(s);
  *  - speech ONSET is known and lands at the line's END: ≥ end − 500 ms and
- *    ≥ the option's start + 1000 ms (Task 19 §A3; was "after end + ε") — an
+ *    ≥ the option's start + 1000 ms, or line start + 1500 ms when the option
+ *    is not found in the line (Task 19 §A3 + fix round 2; was "after end +
+ *    ε") — an
  *    echo starts near the option's start; unknown onset fails safe to the
  *    drop.
  */
@@ -879,7 +881,11 @@ export function isOfferedOptionEcho(
     // the option's START, a learner at the line's END.
     if (s.spokenEndedAt == null) continue;
     if (studentT < s.spokenEndedAt - EXPECTED_REPEAT_END_LEAD_MS) continue;
-    if (studentT < s.spokenStartedAt + quoteOffsetMs(s, transcript) + EXPECTED_REPEAT_MIN_FROM_START_MS) continue;
+    // Fix round 2 (I1): with no located option the floor is the target-less
+    // 1500 ms (a one-word-off echo of a short line at BT delay + VAD lag).
+    const optOffset = quoteOffsetMs(s, transcript);
+    const floor = optOffset > 0 ? optOffset + EXPECTED_REPEAT_MIN_FROM_START_MS : ANSWER_END_MIN_FROM_START_MS;
+    if (studentT < s.spokenStartedAt + floor) continue;
     const qTokens = tokenize(s.text);
     if (qTokens.length < 2) continue;
     const qSet = new Set(contentTokens(qTokens));
@@ -903,19 +909,33 @@ export const EXPECTED_REPEAT_END_LEAD_MS = 500;
  *  matched line STARTED playing (an echo of a line starts within ~450 ms of
  *  its start). */
 export const EXPECTED_REPEAT_MIN_FROM_START_MS = 1000;
+/** Task 19 fix round 2 (I1): the floor for the TARGET-LESS exemptions (answer
+ *  at playback end; an offered option not located in the line). An echo's
+ *  onset is start + Bluetooth delay (≤ 1000 ms) + VAD lag (~200 ms), and with
+ *  no target the verbatim guard is all that is left — one ASR-substituted word
+ *  in a short line ("been in Tokyo") slips it. */
+export const ANSWER_END_MIN_FROM_START_MS = 1500;
+
+/** Lower-cased, [,.!?;:'"“”‘’「」『』] stripped, spaces collapsed. */
+function punctFree(text: string): string {
+  return text.toLowerCase().replace(/[,.!?;:'"“”‘’「」『』。！？、]/g, ' ').replace(/\s+/g, ' ').trim();
+}
 
 /** Fix round 3 (R1): estimated ms from a script's playback start to where
- *  `quoted` begins in it — its character offset (at the opening quote mark,
- *  when one precedes it) ÷ the script's length × its duration. 0 when the
+ *  `quoted` begins in it — its character offset (punctuation-free, whole
+ *  words) ÷ the script's length × its duration. 0 when the
  *  text is not found or the script has no end stamp (the whole-line floor). */
 export function quoteOffsetMs(s: RecentTtsScript, quoted: string): number {
   if (s.spokenEndedAt == null) return 0;
-  const text = s.text ?? '';
-  const core = (quoted ?? '').trim().replace(/[.!?。！？]+$/u, '').toLowerCase();
+  // Fix round 2 (m8): punctuation-insensitive — ASR "Yes I attended" against
+  // the line's "Yes, I attended" (quote marks drop out, so the index lands
+  // at the quote's first word).
+  const text = punctFree(s.text ?? '');
+  const core = punctFree(quoted ?? '');
   if (!core || !text) return 0;
-  let i = text.toLowerCase().indexOf(core);
+  // whole words only (padded): " i went " never matches inside "hi went"
+  const i = ` ${text} `.indexOf(` ${core} `);
   if (i < 0) return 0;
-  if (i > 0 && /["“「『‘]/.test(text[i - 1]!)) i -= 1;
   const duration = Math.max(0, s.spokenEndedAt - s.spokenStartedAt);
   return Math.round((i / text.length) * duration);
 }
@@ -978,7 +998,8 @@ export const ANSWER_END_VERBATIM_JACCARD = 0.9;
  * learner starts at its END. Kept when ALL hold:
  *  - production state 'listening', onset known;
  *  - the best-matching in-window script has an end stamp, and the onset is
- *    ≥ end − 500 ms and ≥ start + 1000 ms;
+ *    ≥ end − 500 ms and ≥ start + 1500 ms (fix round 2, I1: the target-less
+ *    floor, ANSWER_END_MIN_FROM_START_MS);
  *  - the transcript is NOT a copy of that script (filler-free jaccard < 0.9
  *    and not a substring of it) — a verbatim copy at playback end is exempt
  *    only through the expected-repeat / offered-option paths, which carry a
@@ -996,7 +1017,7 @@ export function isAnswerAtPlaybackEnd(
   const best = bestMatchingScript(transcript, recentTtsScripts, speechStartedAt, now);
   if (!best || best.spokenEndedAt == null) return false;
   if (speechStartedAt < best.spokenEndedAt - EXPECTED_REPEAT_END_LEAD_MS) return false;
-  if (speechStartedAt < best.spokenStartedAt + EXPECTED_REPEAT_MIN_FROM_START_MS) return false;
+  if (speechStartedAt < best.spokenStartedAt + ANSWER_END_MIN_FROM_START_MS) return false;
   const said = cleanStudentSentence(transcript);
   if (!said) return false;
   if (cleanJaccard(transcript, best.text) >= ANSWER_END_VERBATIM_JACCARD) return false;
@@ -1009,10 +1030,12 @@ export function selfVoiceDropDiag(input: HeuristicInput): string {
   const best = bestMatchingScript(input.transcript, input.recentTtsScripts, studentT, input.now);
   let onset = 'unknown';
   let end = 'unknown';
-  if (!best) {
+  if (input.speechStartedAt === undefined) {
+    // stays 'unknown' (fix round 2, m9)
+  } else if (!best) {
     onset = 'none';
     end = 'none';
-  } else if (input.speechStartedAt !== undefined) {
+  } else {
     const dur = best.spokenEndedAt == null ? 'live' : String(best.spokenEndedAt - best.spokenStartedAt);
     onset = `${input.speechStartedAt - best.spokenStartedAt}/${dur}`;
     end = best.spokenEndedAt == null ? 'none' : String(input.speechStartedAt - best.spokenEndedAt);

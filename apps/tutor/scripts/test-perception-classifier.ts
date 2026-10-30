@@ -24,6 +24,7 @@ import {
   TTS_PADDING_TRAIL_MS,
   expectedAnswerSpokenInScripts,
   quoteOffsetMs,
+  selfVoiceDropDiag,
   type HeuristicInput,
   type ProductionStateForClassifier,
   type RecentTtsScript,
@@ -1649,8 +1650,9 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
 
   // 2. 197 s — an answer assembled from the tutor's words (A2)
   const s2 = at('Could you say that in one English sentence, starting with "I work in the sales department"?');
-  // (run 7 logged only the score, not the dropped text; this assembled
-  // answer scores 0.57 against the line — over the 0.55 bar)
+  // (synthetic: run 7's real 197 s drop was the bare quoted starter, covered
+  // by §A5 below; this assembled answer scores 0.57 against the line — over
+  // the 0.55 bar — and exercises A2 on its own)
   const said2 = 'I work in the sales department, selling washing machines.';
   // A2 is tested on its own here (no target); §A5 below covers the starter.
   const in2 = { transcript: said2, recentTtsScripts: s2, now, productionState: L, expectedRepeat: null };
@@ -1722,6 +1724,38 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('§A5: "begin with" form', expectedRepeatFor('Please begin with "Last year, I went" and finish it.', null)?.text === 'Last year, I went');
   check('§A5: quote more than 20 chars after the verb phrase ⇒ null', expectedRepeatFor('Start with a short sentence about your job, like "I work in sales here."', null) === null);
   check('§A5: a strict repeat ask still wins (its last quote)', expectedRepeatFor('Not "I go golf". Say it once more, starting with "I went golfing last week."', null)?.text === 'I went golfing last week.');
+}
+
+// ── Task 19 fix round 2 (§A) ──
+{
+  const now = 7_000_000;
+  const start = now - 4000;
+  const L = 'listening' as ProductionStateForClassifier;
+  // I1: a one-word-off echo of a 1.3 s question near the old 1000 ms floor
+  const q: RecentTtsScript[] = [{ text: 'Have you been to Tokyo before?', spokenStartedAt: start, spokenEndedAt: start + 1300 }];
+  for (const at of [1000, 1100, 1200]) {
+    const r = classifyHeuristic({ transcript: 'Have you been in Tokyo before?', recentTtsScripts: q, now, productionState: L, speechStartedAt: start + at });
+    check(`§A19 R2 I1: "been in Tokyo" echo at start + ${at} ms ⇒ drop`, r.verdict === 'drop_self_voice', `${r.verdict} (${r.reason})`);
+  }
+  const fin: RecentTtsScript[] = [{ text: 'Is that your final answer?', spokenStartedAt: start, spokenEndedAt: start + 1000 }];
+  const rf = classifyHeuristic({ transcript: 'Is that you final answer?', recentTtsScripts: fin, now, productionState: L, speechStartedAt: start + 1100 });
+  check('§A19 R2 I1: "you final answer" echo at start + 1100 ms ⇒ drop', rf.verdict === 'drop_self_voice', `${rf.verdict} (${rf.reason})`);
+  // m11: offered-option path, option not located in the line
+  const m: RecentTtsScript[] = [{ text: 'What is three times four?', spokenStartedAt: start, spokenEndedAt: start + 1400 }];
+  const rm = classifyHeuristic({ transcript: 'What is three times for?', recentTtsScripts: m, now, productionState: L, speechStartedAt: start + 1150 });
+  check('§A19 R2 m11: "three times for" echo at start + 1150 ms ⇒ drop', rm.verdict === 'drop_self_voice', `${rm.verdict} (${rm.reason})`);
+  // m8: punctuation-insensitive quote offset
+  const opt: RecentTtsScript = { text: 'Please answer with "Yes, I attended" or "No, I didn\'t."', spokenStartedAt: start, spokenEndedAt: start + 2900 };
+  check('§A19 R2 m8: quoteOffsetMs finds "Yes I attended" in "Yes, I attended"', quoteOffsetMs(opt, 'Yes I attended') > 800 && quoteOffsetMs(opt, 'Yes I attended') === quoteOffsetMs(opt, 'Yes, I attended.'), String(quoteOffsetMs(opt, 'Yes I attended')));
+  check('§A19 R2 m8: whole words only', quoteOffsetMs({ text: 'Oh hi went there, I went home.', spokenStartedAt: 0, spokenEndedAt: 3000 }, 'I went') > 1500);
+  // m9: unknown onset ⇒ unknown even with no in-window script at now
+  const old: RecentTtsScript[] = [{ text: 'Have you been to Tokyo before?', spokenStartedAt: now - 20000, spokenEndedAt: now - 18000 }];
+  check('§A19 R2 m9: diag unknown onset with no in-window script', selfVoiceDropDiag({ transcript: 'Have you been to Tokyo before?', recentTtsScripts: old, now, productionState: L }) === 'prod=listening onset=unknown end=unknown target=n guard=0.00');
+  // m6: negated / corrective say
+  check('§A19 R2 m6: "Never say …" is no ask', !isStrictRepeatAsk('Never say "I have went there".') && expectedRepeatFor('Never say "I have went there".', null) === null);
+  check('§A19 R2 m6: "Don\'t say "I am agree", say "I agree"" ⇒ null (2-word fix)', expectedRepeatFor('Don\'t say "I am agree", say "I agree".', null) === null);
+  check('§A19 R2 m6: "Don\'t say X, say Y" ⇒ Y', expectedRepeatFor('Don\'t say "I goed there", say "I went there."', null)?.text === 'I went there.');
+  check('§A19 R2 m6: a once-more ask after a negated say still skips the wrong form', expectedRepeatFor('Don\'t say "I am agree with you". Say it once more: "I agree with you."', null)?.text === 'I agree with you.');
 }
 
 // ── Task 19 §A: VTR wiring ──
