@@ -425,6 +425,7 @@
     "test:fixed-script": "npx tsx scripts/test-fixed-script.ts",
     "test:sentence-board": "npx tsx scripts/test-sentence-board.ts",
     "test:fixed-script-advance": "npx tsx scripts/test-fixed-script-advance.ts",
+    "test:spoken-opener": "npx tsx scripts/test-spoken-opener.ts",
     "test:retry-preamble": "npx tsx scripts/test-retry-preamble.ts",
     "test:gdi-trial-mint": "node ../../docs/whitelabel/gdi/demo/mint.test.mjs",
     "test:gdi-work-projects": "npx tsx scripts/test-gdi-work-projects.ts",

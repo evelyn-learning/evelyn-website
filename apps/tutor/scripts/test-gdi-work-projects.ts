@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { initialSegmentId, nextSegmentId, isFixedScriptPlan } from '../src/lib/tutor/lesson-plan/fixed-script';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
+import { fixedScriptSpokenOpener } from '../src/lib/tutor/lesson-plan/spoken-opener';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -191,6 +192,21 @@ test('Task 13: every segment carries label / labelLocalized.ja / maxTurns; pronu
   }
   assert.equal(seg('level-check').metadata?.skipWhenLevelKnown, true);
   assert.ok((seg('pronunciation').metadata as { pronunciation?: unknown }).pronunciation, 'pronunciation targets kept');
+});
+
+test('Task 14: the overview carries a client-spoken script (≤ 6 sentences, both grammar names, a Japanese line, ends "Are you ready?")', () => {
+  const o = fixedScriptSpokenOpener(plan, false);
+  assert.ok(o, 'spoken opener');
+  assert.equal(o!.segmentId, 'overview');
+  assert.ok(o!.sentences.length <= 6, `${o!.sentences.length} sentences`);
+  assert.equal(o!.sentences[o!.sentences.length - 1], 'Are you ready?');
+  assert.ok(/present perfect/.test(o!.script) && /past simple/.test(o!.script));
+  const jaIdx = o!.sentences.findIndex((x) => /[぀-ヿ一-鿿]/.test(x));
+  assert.ok(jaIdx > 0 && jaIdx === o!.sentences.length - 2, 'a short Japanese sentence after the English summary');
+  assert.ok(o!.sentences[jaIdx].length <= 40, 'short');
+  assert.equal(o!.next, 'level-check');
+  assert.equal(fixedScriptSpokenOpener(plan, true)!.next, 'topic-intro');
+  assert.ok((seg('overview').teacherNote ?? '').length > 0, 'teacherNote kept for flag-off');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

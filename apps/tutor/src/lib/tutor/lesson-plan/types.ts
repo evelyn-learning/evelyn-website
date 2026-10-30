@@ -116,7 +116,9 @@ interface SegmentBase {
    *  - `labelLocalized?: Record<string, string>` — that name per language
    *    code (e.g. `{ ja: "概要" }`), shown after the label when the session's
    *    second tutor language matches;
-   *  - `optional?: boolean` — marked "(optional)" on the outline card. */
+   *  - `optional?: boolean` — marked "(optional)" on the outline card.
+   *  GDI run 4: `script?: string` on the FIRST segment — the client speaks it
+   *  as the opener and advances (lesson-plan/spoken-opener.ts). */
   metadata?: Record<string, unknown>;
 }
 

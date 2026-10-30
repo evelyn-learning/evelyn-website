@@ -199,3 +199,56 @@ export function stripMetaNarration(text: string): string {
   if (kept.length === parts.length) return src; // nothing matched
   return kept.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
 }
+
+const JAPANESE_SCRIPT_RE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u;
+/** Earliest boundary that is either a Japanese terminator (plus closing
+ *  brackets/quotes) or an English terminator directly before Japanese text. */
+const JAPANESE_BOUNDARY_RE =
+  /^([\s\S]+?(?:[。！？][」』）)"”]*|[.!?](?=\s*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}])))(\s*)/u;
+/** Shortest English sentence the boundary accepts (abbreviations and numbers
+ *  are typically shorter; false positives would voice a fragment). */
+export const SENTENCE_MIN_LEN = 25;
+
+/**
+ * The brain stream's sentence boundary (SentenceBuffer in claude-brain.ts —
+ * moved here so the client can split an authored script the same way, Task
+ * 14 §A). The earliest complete sentence at the head of `buf`: m[1] is the
+ * sentence, m[0] includes the trailing whitespace. English: a terminator
+ * after ≥ SENTENCE_MIN_LEN characters followed by whitespace, never an
+ * abbreviation tail ("Ms."). Bilingual text: Japanese ends sentences with
+ * 。！？ and no space, and TTS picks one language per sentence, so a
+ * Japanese sentence and an English one never share a chunk — only when the
+ * buffer holds Japanese script (English-only text splits exactly as before).
+ */
+export function matchSentenceBoundary(buf: string): RegExpMatchArray | null {
+  let minLen = SENTENCE_MIN_LEN;
+  let m: RegExpMatchArray | null = null;
+  while (true) {
+    m = buf.match(new RegExp(`^([\\s\\S]{${minLen},}?[.!?])(\\s+)`));
+    if (!m || !ABBREV_TAIL_RE.test(m[1])) break;
+    minLen = m[1].length + 1;
+  }
+  if (JAPANESE_SCRIPT_RE.test(buf)) {
+    const j = buf.match(JAPANESE_BOUNDARY_RE);
+    if (j && (!m || j[0].length < m[0].length) && !ABBREV_TAIL_RE.test(j[1])) m = j;
+  }
+  return m;
+}
+
+/** A whole authored text split as the brain stream would voice it
+ *  (matchSentenceBoundary repeatedly, then the remainder). No scrubbing —
+ *  authored text is spoken as written. */
+export function splitIntoSpokenSentences(text: string): string[] {
+  let buf = normalizeSentenceSpacing((text ?? '').trim());
+  const out: string[] = [];
+  while (buf) {
+    const m = matchSentenceBoundary(buf);
+    if (!m) break;
+    const s = m[1].trim();
+    if (s) out.push(s);
+    buf = buf.slice(m[0].length);
+  }
+  const rest = buf.trim();
+  if (rest) out.push(rest);
+  return out;
+}

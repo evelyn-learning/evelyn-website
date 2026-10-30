@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
@@ -87,6 +87,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
 import { decideDeferredPageFlush } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
 import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
 import {
@@ -26567,10 +26568,24 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // 2026-10-18: the bridge line covered the opener's brain latency. With
         // the opener already cached by the prefetch it only delays the real
         // first sentence (~2 s live) and says a placeholder name — skip it.
-        if (openerPrefetchReadyRef.current && TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current) {
+        // Task 14 §A: a fixed-script plan whose first part carries
+        // metadata.script — the client speaks the script itself (no bridge
+        // line, no brain opener), then moves to the next part.
+        const spokenOpenerPlan = lessonPlanRef.current;
+        const spokenOpener = TUTOR_FIXED_SCRIPT_SPOKEN_OPENER && claudeBrainMode && !resumeState && !isInFlow
+          && spokenOpenerPlan && isFixedScriptPlan(spokenOpenerPlan)
+          ? fixedScriptSpokenOpener(spokenOpenerPlan, !!workingLevelRef.current)
+          : null;
+        // The level decides where the script hands over (level check or the
+        // part after it): before the profile settled, the brain opens instead.
+        const spokenOpenerReady = !!spokenOpener && fixedScriptPromptReady() && currentSegmentIdRef.current === spokenOpener.segmentId;
+        if (spokenOpener && !spokenOpenerReady) {
+          onDebugEvent?.('fixed_script_spoken_opener_skipped', `profile/prompt not ready or cursor moved (cursor=${currentSegmentIdRef.current})`);
+        }
+        if (openerPrefetchReadyRef.current && TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current && !spokenOpenerReady) {
           onDebugEvent?.('bridge_skipped', 'opener prefetched — the cached opener is the first thing heard');
         }
-        if (TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current && !openerPrefetchReadyRef.current) {
+        if (TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current && !openerPrefetchReadyRef.current && !spokenOpenerReady) {
           const line = bridgeLineFor({
             studentName, title: lessonContext?.title, inFlow: isInFlow,
             // Text mode returned above (typed start, no dead air to cover).
@@ -26602,7 +26617,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // English-led sessions only: a bilingual demo (GDI, tutorLanguages with a
         // non-Latin script) keeps the prompt-side confirm — this line has no
         // Japanese variant yet and the opener prefetch owns its first turn.
-        const demoTopicChoice = TUTOR_DEMO_TOPIC_CHOICE && isTrial && claudeBrainMode && !resumeState && !isInFlow && !sessionAllowsNonLatin(tutorLanguages) && !demoTopicChoicePendingRef.current;
+        const demoTopicChoice = TUTOR_DEMO_TOPIC_CHOICE && isTrial && claudeBrainMode && !resumeState && !isInFlow && !sessionAllowsNonLatin(tutorLanguages) && !demoTopicChoicePendingRef.current && !spokenOpenerReady;
         if (demoTopicChoice) {
           const line = demoTopicChoiceLine({ studentName, topic, subject, level });
           demoTopicChoicePendingRef.current = line;
@@ -26621,6 +26636,53 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           realtime.sendTextMessage(greetingMessage);
         } else if (demoTopicChoice) {
           console.log('[STARTUP] demo topic choice: waiting for the student\'s answer (no synthetic kickoff).');
+        } else if (spokenOpenerReady && spokenOpener && spokenOpenerPlan) {
+          // Task 14 §A — the client-spoken opening script. The student's
+          // first words afterwards go to the brain as usual; that first
+          // brain turn carries the FACT note planted below.
+          console.log(`[STARTUP] fixed-script spoken opener: ${spokenOpener.sentences.length} sentence(s), then "${spokenOpener.next ?? '(none)'}".`);
+          // The opener IS this script: no opener turn, no opener directive.
+          openingTurnPendingRef.current = false;
+          for (const line of spokenOpener.sentences) {
+            try { realtime.speakText(line, pushTtsScriptForPerception(line)); } catch { /* the transcript still carries it */ }
+          }
+          // The part's required phrases are in the authored script: the
+          // end-of-turn check never runs on a client-spoken part.
+          segmentRequiredPhrasesCheckedRef.current.add(spokenOpener.segmentId);
+          // What counts as "said" for the part (required-phrase guards).
+          segmentNarrationRef.current.set(spokenOpener.segmentId, [...(segmentNarrationRef.current.get(spokenOpener.segmentId) ?? []), ...spokenOpener.sentences]);
+          transcriptRef.current = [
+            ...transcriptRef.current,
+            { id: `tutor-${Date.now()}-spoken-opener`, timestamp: new Date(), role: 'tutor', text: spokenOpener.script } as TranscriptEntry,
+          ];
+          onTranscriptUpdate([...transcriptRef.current]);
+          onTrackInteraction?.('message', spokenOpener.script, undefined, 'tutor');
+          onDebugEvent?.('fixed_script_spoken_opener', `sentences=${spokenOpener.sentences.length}`);
+          void (async () => {
+            // Outline card on the OPENING page first — then the advance,
+            // whose part page waits for the next part's first render.
+            if (TUTOR_FIXED_SCRIPT_OUTLINE && !fixedScriptOutlineShownRef.current) {
+              const outline = fixedScriptOutlineTable(spokenOpenerPlan, secondTutorLanguageRef.current);
+              if (outline) {
+                fixedScriptOutlineShownRef.current = true;
+                const cmd = { action: 'showTable', title: outline.title, headers: outline.headers, rows: outline.rows } as WhiteboardCommand;
+                try {
+                  const res = await handleWhiteboardCommand([cmd]);
+                  onDebugEvent?.('fixed_script_outline_card', `rows=${outline.rows.length}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'} (spoken opener)`);
+                } catch { /* board optional */ }
+              }
+            }
+            const next = spokenOpener.next;
+            if (!next || currentSegmentIdRef.current !== spokenOpener.segmentId) return;
+            applyResolvedAdvance(spokenOpenerPlan, spokenOpener.segmentId, next);
+            if (pendingAdvanceNewPageRef.current?.segmentId === next) pendingAdvanceNewPageRef.current.afterTurn = true;
+            const nextKind = spokenOpenerPlan.segments.find((sg) => sg.id === next)?.kind ?? 'segment';
+            pendingRuntimeNoteRef.current = fixedScriptAdvancedNote(spokenOpenerAdvanceLead(spokenOpener, next, nextKind), next);
+            pendingRuntimeNoteSegRef.current = next;
+            pendingRuntimeNoteUrgentRef.current = true;
+            runtimeNoteHeldTurnsRef.current = 0;
+            onDebugEvent?.('fixed_script_auto_advance', `"${spokenOpener.segmentId}" → "${next}" reason=spoken_opener`);
+          })();
         } else if (lessonPlanRef.current) {
           // Lesson-plan-driven session: the brain owns the opening (Hook
           // segment). Kick it with a synthetic student-side trigger so it
@@ -26698,7 +26760,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // tapAction === 'none' (mid-session, relay down): nothing actionable —
     // the start_tap event above is the whole point, so the tap is no longer
     // an invisible no-op.
-  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue, onDebugEvent, targetKind, sessionMode]);
+  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue, onDebugEvent, targetKind, sessionMode, handleWhiteboardCommand, applyResolvedAdvance]);
 
   // Keep the handle's startSession pointed at the CURRENT handleMicClick
   // closure — it reads hasStarted / isMicMuted / realtime.state, so a stale
@@ -27472,6 +27534,12 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       if (isFixedScriptPlan(lessonPlanRef.current) && !fixedScriptPromptReady()) {
         if (++tries < 8) { timer = setTimeout(tick, OPENER_PREFETCH_DELAY_MS); return; }
         onDebugEvent?.('opener_prefetch_skipped', `fixed script: profile/prompt not ready after ${tries} checks`);
+        return;
+      }
+      // Task 14 §A: the client speaks this plan's opener — nothing to prefetch.
+      if (TUTOR_FIXED_SCRIPT_SPOKEN_OPENER && claudeBrainMode && fixedScriptSpokenOpener(lessonPlanRef.current, !!workingLevelRef.current)) {
+        openerPrefetchFiredRef.current = true;
+        onDebugEvent?.('opener_prefetch_skipped', 'fixed script: the client speaks the opening script');
         return;
       }
       openerPrefetchFiredRef.current = true;

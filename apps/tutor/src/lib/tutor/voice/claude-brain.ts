@@ -27,7 +27,7 @@ import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, stripMarkdownEmphasis, ABBREV_TAIL_RE } from './sentence-spacing';
+import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, stripMarkdownEmphasis, matchSentenceBoundary } from './sentence-spacing';
 import { TUTOR_META_NARRATION_STRIP, TUTOR_DEMO_TOPIC_CHOICE } from '@/lib/tutor/orchestrator/flags';
 import { DEMO_PLAN_SUBORDINATE_RULE, DEMO_STOP_SWITCH_EXCEPTION, DEMO_WRAP_SWITCH_EXCEPTION, DEMO_WRAP_LAST_MINUTE_RULE, DEMO_WRAP_ALREADY_TOLD } from '@/lib/tutor/portal/demo-topic-choice';
 import {
@@ -840,21 +840,11 @@ export type BrainStreamEvent =
  * on flush; false positives (premature flush) would cause speakText to
  * fire on a fragment, which is worse — so we err toward holding back.
  */
-const JAPANESE_SCRIPT_RE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u;
-/** Earliest boundary that is either a Japanese terminator (plus closing
- *  brackets/quotes) or an English terminator directly before Japanese text. */
-const JAPANESE_BOUNDARY_RE =
-  /^([\s\S]+?(?:[。！？][」』）)"”]*|[.!?](?=\s*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}])))(\s*)/u;
-
 export class SentenceBuffer {
   private buf = '';
-  private static readonly MIN_LEN = 25;
-  /** Abbreviation tails whose period must NOT end a sentence. Live
-   *  2026-07-09: "…, Ms." was emitted as a full sentence and Cartesia
-   *  voiced the "Ms. Kiara" honorific with a sentence-final pause.
-   *  Round 28: extended (dotted initialisms like "U.S.", titles) and
-   *  moved to sentence-spacing.ts so tts-recovery.ts shares one list. */
-  private static readonly ABBREV_TAIL_RE = ABBREV_TAIL_RE;
+  /** Abbreviation tails whose period must NOT end a sentence (live
+   *  2026-07-09: "…, Ms." honorific) — ABBREV_TAIL_RE, applied inside
+   *  matchSentenceBoundary (sentence-spacing.ts). */
 
   /** Append delta, return zero or more newly-completed sentences. */
   push(delta: string): string[] {
@@ -889,21 +879,10 @@ export class SentenceBuffer {
     // boundary — re-match with the minimum pushed past it so the scan
     // continues to the NEXT terminator instead of splitting the honorific.
     while (true) {
-      let minLen = SentenceBuffer.MIN_LEN;
-      let m: RegExpMatchArray | null = null;
-      while (true) {
-        m = this.buf.match(new RegExp(`^([\\s\\S]{${minLen},}?[.!?])(\\s+)`));
-        if (!m || !SentenceBuffer.ABBREV_TAIL_RE.test(m[1])) break;
-        minLen = m[1].length + 1;
-      }
-      // Bilingual sessions: Japanese ends sentences with 。！？ and no space,
-      // and TTS picks one language per sentence, so a Japanese sentence and
-      // an English one must not share a chunk. Only runs when the buffer
-      // holds Japanese script ⇒ English-only text splits exactly as before.
-      if (JAPANESE_SCRIPT_RE.test(this.buf)) {
-        const j = this.buf.match(JAPANESE_BOUNDARY_RE);
-        if (j && (!m || j[0].length < m[0].length) && !SentenceBuffer.ABBREV_TAIL_RE.test(j[1])) m = j;
-      }
+      // The boundary rule lives in sentence-spacing.ts (matchSentenceBoundary)
+      // so the client's spoken opener script splits exactly as the brain's
+      // stream does (Task 14 §A).
+      const m = matchSentenceBoundary(this.buf);
       if (!m) break;
       // Stage-direction leak defense (live 2026-07-30): "(waiting for
       // the student's answer)" must never reach TTS or the transcript.
