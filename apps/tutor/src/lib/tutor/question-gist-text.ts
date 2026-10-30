@@ -77,7 +77,11 @@ const ASK_LEAD_RE = new RegExp(String.raw`^(?:(?:now|next|then|so),\s*)?` + ASK_
  *  move on to the next part: please read the sentence …". The ask phrase
  *  introduced by ", so " / ": " / " — " inside the sentence; the pin text runs
  *  from the ask phrase on. */
-const INNER_ASK_RE = new RegExp(String.raw`(?:,\s*so\s+|:\s+|\s[—–]\s+)(?=` + ASK_PHRASE + ')', 'i');
+// Fix round 1 (m2): after a lead clause only an unmistakable ask counts —
+// "please …", "tell me", "could / can you", "give me" — never a bare say / try
+// ("Pick any number — say 5 — and double it.").
+const INNER_ASK_PHRASE = String.raw`(?:please\s+\w+|tell me|could you|can you|give me)\b`;
+const INNER_ASK_RE = new RegExp(String.raw`(?:,\s*so\s+|:\s+|\s[—–]\s+)(?=` + INNER_ASK_PHRASE + ')', 'i');
 
 /** GDI run 3 (2026-10-29): language lessons ask in the imperative — `Next,
  *  tell me one thing you have been doing at your company for a long time,

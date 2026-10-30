@@ -216,6 +216,8 @@ check('1418 s: ": please read the sentence … after me" pinned from the ask phr
   'please read the sentence "I was responsible for communicating with our customers" after me, slowly and clearly.');
 check('"Let\'s move on to the summary." → null', lastAskSentence("Let's move on to the summary."), null);
 check('"Repeat after me: …" leads', /^Repeat after me/.test(lastAskSentence('Good. Repeat after me: I work in sales.') ?? ''), true);
+check('m2: "Pick any number — say 5 — and double it." → not an ask', lastAskSentence('Pick any number — say 5 — and double it.'), null);
+check('m2: "Let\'s repeat the rule: say have plus the past participle." → not an inner ask', lastAskSentence("Let's repeat the rule: say have plus the past participle."), null);
 check('", so you did well." is no ask', lastAskSentence('You finished early, so you did well.'), null);
 
 console.log(`\n${pass} passed, ${fail} failed`);
