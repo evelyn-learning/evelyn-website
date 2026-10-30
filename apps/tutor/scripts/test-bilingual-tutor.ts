@@ -49,7 +49,7 @@ import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/turn-cap';
 import { opensWithStockPraise, overusesStockPraiseOpener, PRAISE_OPENER_NOTE } from '../src/lib/tutor/voice/praise-variety';
-import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
+import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON, cleanStudentSentence, dropFillersAndRepeats } from '../src/lib/tutor/voice/correct-retry';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '../src/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
@@ -793,6 +793,27 @@ test('own-sentence re-ask: a repeat-ask quoting the sentence the student just sa
   assert.equal(reAskedOwnSentence(student, '言ってみましょう。 I went to the office last week.'), false, 'different sentence');
   assert.equal(reAskedOwnSentence('Yes', '言ってみましょう。Yes, I have.'), false, 'too short to count');
   assert.match(OWN_SENTENCE_RETRY_NOTE, /JUST said/);
+});
+
+test('Task 14 §D: fillers and stutter repeats are ignored when comparing the student\'s sentence', () => {
+  assert.equal(cleanStudentSentence('I showed the customer uh models of washing machines.'), 'i showed the customer models of washing machines');
+  assert.equal(cleanStudentSentence('My department, my department sells washing machines.'), 'my department sells washing machines');
+  assert.equal(cleanStudentSentence('えっと、 I um sold, er, sold twenty machines.'), 'i sold twenty machines');
+  assert.deepEqual(dropFillersAndRepeats(['to', 'um', 'to', 'think']), ['to', 'think']);
+  // live run 4: the tutor quotes the student's own (filler-free) sentence and asks for it once more ⇒ re-ask
+  const live = 'Models of washing machines, ですね。 That\'s clear. Let\'s make it a clean sentence: "I showed the customer models of washing machines." Can you say that once more?';
+  assert.equal(reAskedOwnSentence('I showed the customer uh models of washing machines.', live), true);
+  // live run 4: the tutor's clean sentence differs (a shorter correction) ⇒ NOT a re-ask
+  const student2 = 'My role in that project was uh, to um, to think of uh, good discount options.';
+  const tutor2 = 'Good. Let\'s make it a clean sentence: "My role was to think of good discount options." Can you say that once more?';
+  assert.equal(reAskedOwnSentence(student2, tutor2), false);
+  assert.equal(reAskedModelSentence('Say this: "My role was to think of good discount options."', student2, 'Can you say that sentence once more?'), null);
+  // the model path also ignores fillers
+  assert.equal(saidModelSentence('Last month, I sold 25 machines to Toyota.', 'Last month, uh, I sold, um, 25 machines to to Toyota.'), true);
+  // "like" is dropped on both sides, so a sentence with the verb "like" still compares
+  assert.equal(reAskedOwnSentence('I like my new job a lot.', 'Nice: "I like my new job a lot." Can you say that again?'), true);
+  // an "again" that is not a say-again ask is not a re-ask
+  assert.equal(reAskedOwnSentence('I went to Osaka last week.', '"I went to Osaka last week." Great! Let\'s practise again with a new verb.'), false);
 });
 
 test('unreadable word: "thef" is named; sound-alikes, plan names and dictionary words are not', () => {

@@ -49,11 +49,63 @@ function latinSentence(text: string): string {
 const SAY_IT_ASK_RE =
   /言(?:って|い)(?:み(?:ましょう|てください|て)|ましょう)|繰り返し|リピート|\brepeat after me\b|\bsay (?:it|this|that)\b|\btry saying\b/;
 
+/** Spoken fillers, as standalone (lower-cased) tokens. */
+const FILLER_TOKENS = new Set(['uh', 'um', 'umm', 'uhm', 'er', 'erm', 'ah', 'hmm', 'like']);
+/** Japanese fillers (no word boundaries in Japanese: removed as substrings
+ *  from the STUDENT's text only). */
+const JA_FILLER_RE = /えー+|えっと|えーと|あのー?|そのー?|まあ/g;
+
+/** Tokens with fillers dropped and an immediately repeated run of one to
+ *  four words collapsed ("my department my department sells" → "my
+ *  department sells"; "to um to think" → "to think"). */
+export function dropFillersAndRepeats(toks: readonly string[]): string[] {
+  const out = toks.filter((t) => !FILLER_TOKENS.has(t));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let n = 4; n >= 1 && !changed; n--) {
+      for (let i = 0; i + 2 * n <= out.length; i++) {
+        let same = true;
+        for (let j = 0; j < n; j++) if (out[i + j] !== out[i + n + j]) { same = false; break; }
+        if (same) { out.splice(i, n); changed = true; break; }
+      }
+    }
+  }
+  return out;
+}
+
+/** GDI run 4 (2026-10-29): the student's transcript as compared with a tutor
+ *  sentence — Japanese fillers removed, then Latin fillers and stutter repeats
+ *  (dropFillersAndRepeats). Lower-cased Latin words, space-joined. */
+export function cleanStudentSentence(studentText: string): string {
+  const latin = latinSentence((studentText ?? '').replace(JA_FILLER_RE, ' '));
+  return dropFillersAndRepeats(latin.split(' ').filter(Boolean)).join(' ');
+}
+
+/** The same filler-free tokens wordTokens gives (for saidModelSentence). */
+function cleanStudentTokens(studentText: string): string[] {
+  return dropFillersAndRepeats(wordTokens((studentText ?? '').replace(JA_FILLER_RE, ' ')));
+}
+
+/** A tutor text's Latin words with the filler tokens dropped ("like" is a
+ *  filler on both sides, so "I like sushi" still compares equal). */
+function tutorLatin(text: string): string {
+  return latinSentence(text).split(' ').filter((t) => t && !FILLER_TOKENS.has(t)).join(' ');
+}
+
 export function reAskedOwnSentence(studentText: string, tutorText: string): boolean {
-  if (!isRetryAsk(tutorText) && !SAY_IT_ASK_RE.test(tutorText ?? '')) return false;
-  const said = latinSentence(studentText ?? '');
+  const sayAgain = /\b(?:say|repeat)\b[^.!?。？]*\b(?:once more|again|one more time)\b/i.test(tutorText ?? '');
+  if (!isRetryAsk(tutorText) && !SAY_IT_ASK_RE.test(tutorText ?? '') && !sayAgain) return false;
+  const said = cleanStudentSentence(studentText);
   if (said.split(' ').filter(Boolean).length < 3) return false;
-  if (!latinSentence(tutorText ?? '').includes(said)) return false;
+  // GDI run 4: 'Let's make it a clean sentence: "I showed the customer models
+  // of washing machines." Can you say that once more?' after the student said
+  // exactly that (with an "uh") — the quoted sentence IS the student's, and
+  // every quoted sentence of three or more words in the turn is that one.
+  const quotes = quotedSpans(tutorText).map(tutorLatin).filter((q) => q.split(' ').filter(Boolean).length >= 3);
+  if (quotes.length > 0 && quotes.every((q) => q === said)) return true;
+  if (!isRetryAsk(tutorText) && !SAY_IT_ASK_RE.test(tutorText ?? '')) return false;
+  if (!tutorLatin(tutorText ?? '').includes(said)) return false;
   // 2026-10-18 (embed-1792350642171, turn 33): 「"I went to Nagoya Castle last
   // week." いいですね。次は "Have you ever eaten sushi?" 言ってみてください。」
   // quoted the student's correct sentence and asked for the NEXT item — not
@@ -68,7 +120,7 @@ export function reAskedOwnSentence(studentText: string, tutorText: string): bool
   // An ask with no English of its own takes its target from the sentences
   // around it (「言ってみましょう。I went to the office yesterday.」).
   const target = latinWordCount(own) >= 3 ? own : `${sentences[askIdx - 1] ?? ''} ${own} ${sentences[askIdx + 1] ?? ''}`;
-  const targetLatin = latinSentence(target);
+  const targetLatin = tutorLatin(target);
   if (!targetLatin.includes(said)) return false;
   const remainder = targetLatin.replace(said, ' ').trim();
   return latinWordCount(remainder) < 3;
@@ -99,8 +151,8 @@ function modelCandidates(tutorText: string): string[] {
  *  being corrected — and the student added at most max(2, 10 % of the model)
  *  tokens of their own (a "Yes," or "um" may ride along). */
 export function saidModelSentence(model: string, studentText: string): boolean {
-  const m = wordTokens(model);
-  const st = wordTokens(studentText);
+  const m = wordTokens(model).filter((t) => !FILLER_TOKENS.has(t));
+  const st = cleanStudentTokens(studentText);
   if (m.length < 3 || st.length === 0) return false;
   const left = new Map<string, number>();
   for (const w of st) left.set(w, (left.get(w) ?? 0) + 1);
