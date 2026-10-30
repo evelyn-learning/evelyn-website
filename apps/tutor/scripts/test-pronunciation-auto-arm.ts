@@ -222,5 +222,18 @@ test('21D r1 m (D2): a single word with try / repeat / say in its own sentence s
   assert.equal(detectPronunciationTarget('"Met" is the past form. Say the sentence again.', T), null);
 });
 
+// ── Task 21 fix round 2 (§D I4): the verb must govern the short quote ──
+test('21D r2 I4: a short quote is a word target only when the verb governs it', () => {
+  assert.equal(detectPronunciationTarget('We say "with", not "wiz". Say the sentence again.', T), null);
+  assert.equal(detectPronunciationTarget('We say "with", not "wiz". Say "with" again.', T)?.referenceText, 'with', '"wiz" never');
+  assert.equal(detectPronunciationTarget('Good. Say the full sentence again, and try "with" carefully.', T), null);
+  assert.equal(detectPronunciationTarget('Try to use "will" in your answer. Now say your sentence.', T), null);
+  assert.deepEqual(detectPronunciationTarget('Please say "will" once more, slowly.', T), { referenceText: 'will', kind: 'word' });
+  assert.deepEqual(detectPronunciationTarget('Nice. Repeat after me, "schedule".', T), { referenceText: 'schedule', kind: 'word' });
+  assert.deepEqual(detectPronunciationTarget('Good. Try "customer" again.', T), { referenceText: 'customer', kind: 'word' });
+  assert.deepEqual(detectPronunciationTarget('Please say the word "will" once more.', T), { referenceText: 'will', kind: 'word' });
+  assert.equal(detectPronunciationTarget('Say it with "rather", not "wather". Try again.', T), null);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

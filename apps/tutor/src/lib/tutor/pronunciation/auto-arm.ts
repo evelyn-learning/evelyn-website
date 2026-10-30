@@ -54,16 +54,25 @@ const isStarterQuote = (q: { text: string; before: string }) => STARTER_LEAD_RE.
  *  for it right there — "Please say "will" once more", "Repeat "schedule"",
  *  or a colon introduction ("Listen: "schedule." Repeat after me."). */
 const SHORT_TARGET_LEAD_RE = /[:：]\s*$/;
-/** Fix round 1 (m): a try / repeat / say verb anywhere in the quote's own
- *  sentence ('Try "customer" again.', 'Repeat after me, "schedule".'). */
-const SHORT_TARGET_VERB_RE = /\b(?:say|try|repeat|pronounce|practi[sc]e)\b/i;
-function quoteSentence(q: { before: string; after: string; text: string }): string {
-  // the quote's own text may end in "." — the sentence runs on to the next end after the quote
-  const head = q.before.slice(Math.max(q.before.search(/[^.!?。！？]*$/), 0));
-  const tail = /^[^.!?。！？]*/.exec(q.after)?.[0] ?? '';
-  return `${head} ${tail}`;
-}
-const isShortTargetAsked = (q: { before: string; after: string; text: string }) => SHORT_TARGET_LEAD_RE.test(q.before) || SHORT_TARGET_VERB_RE.test(quoteSentence(q));
+/** Fix round 2 (I4): the verb must GOVERN the short quote — 'We say "with",
+ *  not "wiz". Say the sentence again.' armed "wiz" because a say / try verb sat
+ *  somewhere in the sentence. Either the quote follows the verb directly
+ *  (say / repeat / try / pronounce [after me,] "…"), or the verb is at most
+ *  three words before it and only once more / again / slowly … ends the
+ *  sentence after it ('Please say the word "will" once more, slowly.'). */
+const SHORT_TARGET_DIRECT_RE = /\b(?:say|repeat|try|pronounce)\s+(?:after me,?\s*)?$/i;
+const SHORT_TARGET_NEAR_RE = /\b(?:say|repeat|try|pronounce)(?:\s+after me,?)?(?:\s+[\p{L}'’]+){0,3}\s*$/iu;
+const SHORT_TARGET_TAIL_RE = /^\s*(?:,?\s*(?:once more|again|slowly|carefully|for me|please)\b)*\s*[.!]?\s*(?:$|[.!?。！？]|\s+\p{Lu})/u;
+/** Fix round 2 (I4 a): the turn asks for the whole sentence — no word target. */
+const WHOLE_SENTENCE_ASK_RE = /\b(?:the (?:whole|full|complete) sentence|your sentence|the sentence again)\b/i;
+/** Fix round 2 (I4 b): the wrong form of an "X, not Y" pair. */
+const NEGATED_QUOTE_RE = /\b(?:not|instead of|rather than|never say)\s*$/i;
+const WE_SAY_NOT_RE = /\bwe say\b[^.!?。！？]*\bnot\s*$/i;
+const isShortTargetAsked = (q: { before: string; after: string; text: string }, turnText: string) => {
+  if (WHOLE_SENTENCE_ASK_RE.test(turnText) || NEGATED_QUOTE_RE.test(q.before) || WE_SAY_NOT_RE.test(q.before)) return false;
+  return SHORT_TARGET_LEAD_RE.test(q.before) || SHORT_TARGET_DIRECT_RE.test(q.before)
+    || (SHORT_TARGET_NEAR_RE.test(q.before) && SHORT_TARGET_TAIL_RE.test(q.after));
+};
 const SHORT_TARGET_MAX_WORDS = 2;
 /** Task 21 §D1 (GDI run 9, 889 s: "Here is the first model. Listen and repeat
  *  after me." — the model only in a show_sentence call): a listen / repeat /
@@ -128,7 +137,7 @@ export function detectPronunciationTarget(
     const last = [...quoted].reverse().find((q) => {
       const n = norm(q.text).split(' ').filter(Boolean).length;
       if (!/[A-Za-z]/.test(q.text) || n > 25 || isStarterQuote(q)) return false;
-      return n > SHORT_TARGET_MAX_WORDS || isShortTargetAsked(q);
+      return n > SHORT_TARGET_MAX_WORDS || isShortTargetAsked(q, turnText);
     });
     if (last) {
       const text = last.text.replace(/[.,!?;:]+$/u, '').trim();
