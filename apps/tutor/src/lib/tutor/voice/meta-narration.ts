@@ -216,6 +216,39 @@ export function stripNudgePlanClause(sentence: string): string {
   }
   return s;
 }
+// Task 21 §A (GDI run 9, 2026-10-30): a runtime note cited aloud on a
+// STUDENT turn — 88 s "The pace preference says to slow down, so I'll stay on
+// this one idea and check their understanding before moving on. Ryota here."
+// The plan shapes above are runtime-turn only (Task 20); these cite the notes
+// themselves and never carry teaching, so they apply on EVERY turn. Only a
+// colon / quote continuation keeps its content ("The lesson note says: what
+// is your job?" → "What is your job?") — a ", so I'll …" tail is more plan.
+// A bare "<Name> here." self-announcement goes too, but never an imperative
+// ("Look here.", "Start here.").
+const NOTE_CITING_OPENER_RE =
+  /^\s*The (?:pace|level|lesson|plan|persona|runtime|system|teacher) (?:preference|note|pointer|setting|directive|guidance)s? (?:says?|tells?|asks?|wants?)\b/i;
+const STAY_ON_ONE_IDEA_RE = /\bI['’]ll stay on this one idea\b/i;
+const NAME_SELF_ANNOUNCE_RE =
+  /^\s*(?!(?:Look|Come|Start|Click|Tap|Press|Stop|Sit|Stand|Write|Begin|Over|Right|Out|Up|Down|Put|Read|Point|Go|Stay|Wait|Listen|Hold|Move|Draw|Check|Focus|Circle|Underline|Answer|Type|Add|Pause|Rest|Sign|Fill|Enter|Get|Is|Was|Not|Nobody|Everyone|Somebody|Someone|Anyone|Nothing|Everything)\s)\p{Lu}\p{Ll}+ here[.!]?\s*$/u;
+const NOTE_CITATION_CONTINUATION_RE = /:\s+|\s(?=["“「])/g;
+/**
+ * A sentence that cites a runtime note with the citation removed: unchanged
+ * when there is none, the content after a colon / quote when there is some,
+ * '' when the whole sentence is note citation.
+ */
+export function stripNoteCitationClause(sentence: string): string {
+  const s = sentence ?? '';
+  if (STAY_ON_ONE_IDEA_RE.test(s) || NAME_SELF_ANNOUNCE_RE.test(s)) return '';
+  const m = NOTE_CITING_OPENER_RE.exec(s);
+  if (!m) return s;
+  NOTE_CITATION_CONTINUATION_RE.lastIndex = m.index + m[0].length;
+  const sep = NOTE_CITATION_CONTINUATION_RE.exec(s);
+  if (sep) {
+    const rest = s.slice(sep.index + sep[0].length);
+    if (substantiveRest(rest)) return capitaliseFirst(rest.trim());
+  }
+  return '';
+}
 const BARE_FILLER_JA_RE =
   /^\s*(?:(?:はい|いいですね|では|じゃあ|さて)[、,]?\s*)?(?:少し|ちょっと)?見てみましょう(?:ね|か)?[。！!]?\s*$/;
 
@@ -508,7 +541,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

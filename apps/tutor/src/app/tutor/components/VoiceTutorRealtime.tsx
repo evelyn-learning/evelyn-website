@@ -216,7 +216,7 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
-import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause } from '@/lib/tutor/voice/meta-narration';
+import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause } from '@/lib/tutor/voice/meta-narration';
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
@@ -14991,6 +14991,17 @@ export function VoiceTutorRealtime({
                   // Leaked stage label in front of a real sentence ("*opener* …",
                   // GDI starter 2026-10-15): strip it before anything reads the text.
                   if (typeof ev.text === 'string') (ev as { text?: string }).text = stripLeakedLabels(ev.text);
+                  // Task 21 §A (GDI run 9): a runtime note cited aloud on ANY turn
+                  // ("The pace preference says …") — a colon / quote continuation
+                  // keeps its content; an all-citation sentence is left whole
+                  // here and dropped by isMetaNarration below.
+                  if (typeof ev.text === 'string') {
+                    const noteStripped = stripNoteCitationClause(ev.text);
+                    if (noteStripped && noteStripped !== ev.text) {
+                      onDebugEvent?.('meta_narration_dropped_note_citation_clause', `"${ev.text.slice(0, 60)}" → "${noteStripped.slice(0, 60)}"`);
+                      (ev as { text?: string }).text = noteStripped;
+                    }
+                  }
                   // Task 20 fix round 2 (I4): on a runtime-triggered turn the
                   // spoken plan clause goes and the content after it stays ("So
                   // I'll keep going with fractions: what is 1/2 + 1/4?" → "What is

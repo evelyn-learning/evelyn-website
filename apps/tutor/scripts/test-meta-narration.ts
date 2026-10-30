@@ -7,7 +7,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -703,6 +703,39 @@ for (const t of [
   "Here is the next equation, 3x - 5 = 10, and I'll put it on the board.",
   'Here is the question on the board: what is 7 times 8?',
 ]) check(`I4 kept on a STUDENT turn: "${t}"`, !isMetaNarration(t));
+
+// ─── Task 21 §A (GDI run 9, 88 s): runtime notes cited on a STUDENT turn ───
+for (const t of [
+  "The pace preference says to slow down, so I'll stay on this one idea and check their understanding before moving on.",
+  'Ryota here.',
+  "I'll stay on this one idea for a moment.",
+  'The level note says the student is intermediate.',
+  'The lesson pointers want a follow-up question next.',
+  'The runtime directive tells me to move on.',
+]) check(`§A dropped on a student turn: "${t}"`, isMetaNarration(t) && stripNoteCitationClause(t) === '');
+for (const t of [
+  'The pace of the story speeds up in chapter two.',
+  'Here is the plan for today.',
+  'Look here.',
+  'Start here!',
+  'Come here.',
+  'The lesson today is about the past simple.',
+  'The teacher says hello to the class every morning.',
+  'Ryota here is a great salesperson.',
+  "「洗濯機を売っています」と、会社での仕事を一文で言えましたね。",
+  'Next I\'d like to hear your main responsibilities.',
+]) check(`§A kept: "${t}"`, !isMetaNarration(t) && stripNoteCitationClause(t) === t);
+check('§A colon continuation keeps its content',
+  stripNoteCitationClause('The lesson note says: what do you do every day at work?') === 'What do you do every day at work?');
+check('§A quote continuation keeps its content',
+  stripNoteCitationClause('The plan note says "Tell me about your last project at work."') === '"Tell me about your last project at work."');
+check('§A a short colon tail is still citation', stripNoteCitationClause('The pace note says: slow down.') === '');
+{
+  const vtr = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('§A VTR strips the note citation on every turn, before the nudge clause',
+    /if \(typeof ev\.text === 'string'\) \{\s*const noteStripped = stripNoteCitationClause\(ev\.text\);/.test(vtr)
+    && vtr.indexOf('stripNoteCitationClause(ev.text)') < vtr.indexOf('stripNudgePlanClause(ev.text)'));
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
