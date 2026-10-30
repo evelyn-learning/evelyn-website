@@ -863,11 +863,14 @@ export function isOfferedOptionEcho(
   return false;
 }
 
-/** Jaccard bar for "this script is the line the transcript matches" in the
- *  expected-repeat exemption, and the bar the transcript must reach against
- *  the line the student was asked to say. */
-export const EXPECTED_REPEAT_SCRIPT_MATCH = 0.5;
+/** The bar the transcript must reach (filler-free token jaccard) against the
+ *  line the student was asked to say, in the expected-repeat exemption. */
 export const EXPECTED_REPEAT_TARGET_MATCH = 0.6;
+/** Fix round 1: the student may begin the repeat during the line's last word —
+ *  onset up to this long BEFORE the best-matching line's end stamp still counts.
+ *  An acoustic echo of a whole line starts at the line's START, so a full-line
+ *  echo stays far earlier than this and still drops. */
+export const EXPECTED_REPEAT_END_LEAD_MS = 500;
 
 /**
  * Expected-repeat exemption (Task 18, GDI run 6): the tutor said `Please say
@@ -876,16 +879,18 @@ export const EXPECTED_REPEAT_TARGET_MATCH = 0.6;
  * n-gram self-voice measures (un-anchored, by design) scored 1.00 — the turn
  * was dropped as self-voice, six times in one lesson.
  *
- * Physics: an acoustic echo of a line cannot BEGIN after that line's
- * playback ended (+ the ε VAD-onset slop `echoAnchorSatisfied` encodes). So a
- * transcript is the student's requested repeat, not echo, when ALL hold:
+ * Physics: a learner repeats the moment the tutor stops (run 6: onset inside
+ * the 1.5 s trail, ~at the end stamp), while an acoustic echo of a whole line
+ * starts at the line's START. So a transcript is the student's requested
+ * repeat, not echo, when ALL hold (fix round 1):
  *  - the student was asked to say a line (`expectedRepeat`, set by the
  *    caller) and the transcript matches it (filler-free token jaccard ≥ 0.6);
  *  - production state is 'listening' (during playback a match IS echo);
  *  - speech onset is known (unknown onset fails safe to the drop);
- *  - EVERY in-window script the transcript matches (jaccard or n-gram ≥ 0.5)
- *    had finished playing before the onset — any matching script still
- *    inside its anchor window keeps the drop.
+ *  - the BEST-matching in-window script (the one behind the self-voice
+ *    score) has an end stamp (none ⇒ still playing ⇒ drop) and the onset is
+ *    no earlier than 500 ms before it (the student may start during the last
+ *    word).
  */
 export function isExpectedRepeat(
   transcript: string,
@@ -906,6 +911,9 @@ export function isExpectedRepeat(
   if (tTokens.length === 0) return false;
   const tSet = new Set(tTokens);
   const t3 = new Set(ngrams(tTokens, Math.min(3, tTokens.length)));
+  // The best-matching in-window script — the one behind the self-voice score.
+  let best: RecentTtsScript | null = null;
+  let bestScore = -1;
   for (const s of recentTtsScripts) {
     if (!scriptWindowContains(s, speechStartedAt, now)) continue;
     const sTokens = tokenize(s.text);
@@ -918,10 +926,12 @@ export function isExpectedRepeat(
       for (const g of t3) if (s3.has(g)) hit += 1;
       ngramHit = hit / t3.size;
     }
-    if (Math.max(j, ngramHit) < EXPECTED_REPEAT_SCRIPT_MATCH) continue;
-    if (echoAnchorSatisfied(s, speechStartedAt, now)) return false;
+    const score = Math.max(j, ngramHit);
+    if (score > bestScore) { bestScore = score; best = s; }
   }
-  return true;
+  // No end stamp ⇒ the line is still playing ⇒ a match is echo.
+  if (!best || best.spokenEndedAt == null) return false;
+  return speechStartedAt >= best.spokenEndedAt - EXPECTED_REPEAT_END_LEAD_MS;
 }
 
 // ── Expected-answer carve-out (Task 6, verdict-detector round, 2026-08-10) ──
@@ -1199,7 +1209,11 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   // in the (already 30s-bounded) buffer, window-free — echo can only carry
   // words the tutor actually said, whichever splinter of the killed turn
   // they came from. Unknown onset → gate off (fail toward dispatching).
+  // Task 18 fix round 1: an expected repeat may begin during the line's last
+  // word (onset ≥ end − 500 ms, see isExpectedRepeat) — that onset is "during
+  // playback" by these two gates' measure, so they stand down for it.
   if (
+    !expectedRepeatHit &&
     rawWordCount(text) <= 4 &&
     state !== 'speaking' &&
     input.speechStartedAt !== undefined &&
@@ -1233,6 +1247,7 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   {
     const rawWords = rawWordCount(text);
     if (
+      !expectedRepeatHit &&
       rawWords >= 5 && rawWords <= 10 &&
       input.speechStartedAt !== undefined &&
       (input.onsetDuringTutorSpeech === true ||
@@ -1313,7 +1328,7 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     // Task 18: an expected-repeat exemption lands here (it only opens in
     // 'listening'); its reason names the exemption for the log review.
     if (expectedRepeatHit) {
-      return { verdict: 'new_turn', reason: 'expected repeat after playback end', selfVoiceScore, exemption: 'expected_repeat' };
+      return { verdict: 'new_turn', reason: 'expected repeat at playback end', selfVoiceScore, exemption: 'expected_repeat' };
     }
     return { verdict: 'new_turn', reason: 'listening + non-filler', selfVoiceScore };
   }

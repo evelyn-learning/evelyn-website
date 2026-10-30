@@ -1529,39 +1529,45 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('ja: unrelated Japanese scores low', scoreSelfVoice('あの、次に進んでいいですか', scripts, now - 1500, now) < SELF_VOICE_THRESHOLD);
 }
 
-// ── Task 18 §A: a repeat the tutor asked for is not self-voice (GDI run 6) ──
-// The window/trail logic only scores a script whose trail (end + 1.5 s)
-// covers the onset, so the live shape is: the line ended, the student began
-// ~1 s later (past ε, inside the trail) and said the line verbatim.
+// ── Task 18 §A (fix round 1): a repeat the tutor asked for is not self-voice (GDI run 6) ──
+// Live shape: one 40-word line; the student began the repeat as it ended
+// (onset inside the 1.5 s trail, ~300 ms after the end stamp).
 {
   const now = 2_000_000;
-  const line = 'Please say it once more: "Last week, I went golfing with my manager."';
-  const end = now - 5000;
-  const scripts: RecentTtsScript[] = [{ text: line, spokenStartedAt: end - 3000, spokenEndedAt: end }];
   const said = 'Last week, I went golfing with my manager.';
+  const line = `Good, "went" is the right past form. Please say the full sentence once more: "${said}"`;
+  const end = now - 3000;
+  const scripts: RecentTtsScript[] = [{ text: line, spokenStartedAt: end - 16000, spokenEndedAt: end }];
+  const exp = { text: said };
   const base = { transcript: said, recentTtsScripts: scripts, now, productionState: 'listening' as ProductionStateForClassifier };
-  const live = classifyHeuristic({ ...base, speechStartedAt: end + 1000, expectedRepeat: { text: 'Last week, I went golfing with my manager.' } });
-  check('§A live: asked-for repeat after playback end is not dropped', live.verdict === 'new_turn' && live.exemption === 'expected_repeat', `${live.verdict} (${live.reason})`);
-  check('§A live: reason names the exemption', live.reason === 'expected repeat after playback end', live.reason);
-  const filler = classifyHeuristic({ ...base, transcript: 'um, Last week, I went golfing with my manager.', speechStartedAt: end + 1000, expectedRepeat: { text: 'Last week, I went golfing with my manager.' } });
+  const live = classifyHeuristic({ ...base, speechStartedAt: end + 300, expectedRepeat: exp });
+  check('§A live: onset 300 ms after the end stamp ⇒ not dropped', live.verdict === 'new_turn' && live.exemption === 'expected_repeat', `${live.verdict} (${live.reason})`);
+  check('§A live: reason names the exemption', live.reason === 'expected repeat at playback end', live.reason);
+  const lastWord = classifyHeuristic({ ...base, speechStartedAt: end - 400, expectedRepeat: exp });
+  check('§A: onset during the last word (400 ms before the end) ⇒ not dropped', lastWord.verdict === 'new_turn', `${lastWord.verdict} (${lastWord.reason})`);
+  const filler = classifyHeuristic({ ...base, transcript: `um, ${said}`, speechStartedAt: end + 300, expectedRepeat: exp });
   check('§A: fillers do not break the expected-repeat match', filler.verdict === 'new_turn', `${filler.verdict} (${filler.reason})`);
-  const inside = classifyHeuristic({ ...base, speechStartedAt: end + 100, expectedRepeat: { text: said } });
-  check('§A: onset inside the anchor window still drops', inside.verdict === 'drop_self_voice', `${inside.verdict} (${inside.reason})`);
-  const none = classifyHeuristic({ ...base, speechStartedAt: end + 1000 });
-  check('§A: no expectedRepeat ⇒ drop unchanged', none.verdict === 'drop_self_voice', `${none.verdict} (${none.reason})`);
-  const nul = classifyHeuristic({ ...base, speechStartedAt: end + 1000, expectedRepeat: null });
-  check('§A: expectedRepeat null ⇒ drop unchanged', nul.verdict === 'drop_self_voice', `${nul.verdict} (${nul.reason})`);
-  const speaking = classifyHeuristic({ ...base, productionState: 'speaking', speechStartedAt: end + 1000, expectedRepeat: { text: said } });
+  const echo = classifyHeuristic({ ...base, speechStartedAt: end - 2000, expectedRepeat: exp });
+  check('§A: onset 2 s BEFORE the end stamp (an echo of the line) ⇒ drop', echo.verdict === 'drop_self_voice', `${echo.verdict} (${echo.reason})`);
+  const noEnd = classifyHeuristic({ ...base, recentTtsScripts: [{ text: line, spokenStartedAt: end - 16000, spokenEndedAt: null }], speechStartedAt: end + 300, expectedRepeat: exp });
+  check('§A: no end stamp (still playing) ⇒ drop', noEnd.verdict === 'drop_self_voice', `${noEnd.verdict} (${noEnd.reason})`);
+  const speaking = classifyHeuristic({ ...base, productionState: 'speaking', speechStartedAt: end + 300, expectedRepeat: exp });
   check('§A: state speaking ⇒ drop', speaking.verdict === 'drop_self_voice', `${speaking.verdict} (${speaking.reason})`);
-  const nearScripts: RecentTtsScript[] = [{ text: line, spokenStartedAt: now - 4000, spokenEndedAt: now - 800 }];
-  const noOnset = classifyHeuristic({ ...base, recentTtsScripts: nearScripts, expectedRepeat: { text: said } });
+  // jaccard 0.4 to the expected text (4 shared of 10 distinct tokens)
+  const lowExp = { text: 'Last week, I played tennis at the park downtown.' };
+  const low = classifyHeuristic({ ...base, speechStartedAt: end + 300, expectedRepeat: lowExp });
+  check('§A: jaccard 0.4 to the expected text ⇒ drop', low.verdict === 'drop_self_voice', `${low.verdict} (${low.reason})`);
+  const none = classifyHeuristic({ ...base, speechStartedAt: end + 300 });
+  check('§A: no expectedRepeat ⇒ drop unchanged', none.verdict === 'drop_self_voice', `${none.verdict} (${none.reason})`);
+  const nul = classifyHeuristic({ ...base, speechStartedAt: end + 300, expectedRepeat: null });
+  check('§A: expectedRepeat null ⇒ drop unchanged', nul.verdict === 'drop_self_voice', `${nul.verdict} (${nul.reason})`);
+  const noOnset = classifyHeuristic({ ...base, recentTtsScripts: [{ text: line, spokenStartedAt: now - 4000, spokenEndedAt: now - 800 }], expectedRepeat: exp });
   check('§A: unknown onset ⇒ drop (fail safe)', noOnset.verdict === 'drop_self_voice', `${noOnset.verdict} (${noOnset.reason})`);
-  const other = classifyHeuristic({ ...base, speechStartedAt: end + 1000, expectedRepeat: { text: 'I want a robot that can build washing machines.' } });
-  check('§A: transcript not the expected line ⇒ drop', other.verdict === 'drop_self_voice', `${other.verdict} (${other.reason})`);
-  // A second matching script still playing at onset (null end) keeps the drop.
-  const live2: RecentTtsScript[] = [...scripts, { text: said, spokenStartedAt: end + 500, spokenEndedAt: null }];
-  const still = classifyHeuristic({ ...base, recentTtsScripts: live2, speechStartedAt: end + 1000, expectedRepeat: { text: said } });
-  check('§A: a matching script still inside its anchor window ⇒ drop', still.verdict === 'drop_self_voice', `${still.verdict} (${still.reason})`);
+  // run-5 exact shape: "Please say it once more: X", X said 400 ms after the end
+  const x = 'I have worked for my company for five years.';
+  const r5Line = `Please say it once more: "${x}"`;
+  const r5 = classifyHeuristic({ transcript: x, recentTtsScripts: [{ text: r5Line, spokenStartedAt: end - 3000, spokenEndedAt: end }], now, productionState: 'listening', speechStartedAt: end + 400, expectedRepeat: { text: x } });
+  check('§A run-5 exact: "Please say it once more: X", X 400 ms after the end ⇒ not dropped', r5.verdict === 'new_turn', `${r5.verdict} (${r5.reason})`);
 }
 
 // ── Task 18 §A: expectedRepeatFor (the caller's input) ──
