@@ -70,7 +70,7 @@ import { stripMarkdownEmphasis } from '../src/lib/tutor/voice/sentence-spacing';
 import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
 import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
 import { expectsEnglishReply } from '../src/lib/tutor/voice/english-reply';
-import { isBoardReadAloud, asksToReadAloud } from '../src/lib/tutor/voice/correct-retry';
+import { isBoardReadAloud, asksToReadAloud, normaliseNumberTokens } from '../src/lib/tutor/voice/correct-retry';
 
 let passed = 0;
 let failed = 0;
@@ -1371,6 +1371,32 @@ test('22E VTR holds a read-aloud before the brain dispatch (pin)', () => {
   assert.ok(/currentProblemRef\.current\?\.statement \?\?/.test(block));
   assert.ok(at < vtr.indexOf('recordStudentEngagement(idleNudgeStateRef.current)', h), 'before the engagement reset: the idle nudge stays armed');
   assert.ok(/export const TUTOR_BOARD_READ_ALOUD_HOLD = process\.env\.NEXT_PUBLIC_TUTOR_BOARD_READ_ALOUD_HOLD !== 'off';/.test(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8')));
+});
+
+// ─── Task 22 §F1 (GDI run 10, turns 23–27): digits vs number words ───
+test('22F1 normaliseNumberTokens + saidModelSentence across digits and words', () => {
+  assert.deepEqual(normaliseNumberTokens(['3']), ['three']);
+  assert.deepEqual(normaliseNumberTokens(['21']), ['twenty', 'one']);
+  assert.deepEqual(normaliseNumberTokens(['1000']), ['one', 'thousand']);
+  assert.deepEqual(normaliseNumberTokens(['300', '100', '0', '40']), ['three', 'hundred', 'one', 'hundred', 'zero', 'forty']);
+  assert.deepEqual(normaliseNumberTokens(['250', '2026', 'third']), ['250', '2026', 'third']);
+  assert.equal(saidModelSentence('I have worked at Nagoya Corporation for three years.', 'I have worked at Nagoya Corporation for 3 years.'), true);
+  assert.equal(saidModelSentence('I sold twenty-five machines.', 'I sold 25 machines'), true);
+  assert.equal(saidModelSentence('I sold 25 machines.', 'I sold twenty-five machines'), true);
+  assert.equal(saidModelSentence('I was the third person in the team.', 'I was the 3 person in the team.'), false);
+  // the run-10 301 s re-ask now fires repeat_after_correct
+  assert.equal(
+    reAskedModelSentence('Your sentence has the right tense. Now, please say it once more, with "I have worked at Nagoya Corporation for three years."', 'I have worked at Nagoya Corporation for 3 years.', "Let's say the full sentence once more."),
+    'I have worked at Nagoya Corporation for three years.',
+  );
+});
+
+test('22F2 the language-session prompt reads digits as the spoken number words; a non-language session does not carry the line', () => {
+  const line = 'Speech recognition writes numbers as digits ("3 years" is the student saying "three years"); never treat a digit as a missing or wrong word.';
+  const a = buildSystemPromptParts(base);
+  const b = buildSystemPromptParts({ ...base, tutorLanguages: ['en', 'ja'] });
+  assert.ok(b.session.includes(line));
+  assert.ok(!(a.core + a.session).includes(line));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
