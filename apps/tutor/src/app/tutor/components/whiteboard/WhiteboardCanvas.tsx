@@ -106,6 +106,7 @@ import { InkNotesOverlay, AMBER } from './InkNotesOverlay';
 import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
 import { shouldFollowNewRender, trailingNavSuppressesFollow } from '@/lib/tutor/whiteboard/view-follow';
 import { INK_NOTE_DRAG } from '@/lib/tutor/orchestrator/flags';
+import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 
 /** Actions that don't paint a teaching render — shared by the scrollTo
  *  processor and the auto-scroll-to-newest effect so both agree on which
@@ -231,6 +232,9 @@ interface WhiteboardCanvasProps {
    *  footgun with no place in playback. (Flag-gated host; default keeps every
    *  legacy caller identical.) */
   chrome?: 'full' | 'minimal' | 'replay';
+  /** 'minimal' chrome (GDI run 4, embed): show the current page's title as a
+   *  slim one-line header above the board content when the page has one. */
+  pageTitleHeader?: boolean;
   /** 'minimal' chrome normally clips horizontal overflow (`overflow-x-hidden`)
    *  — the board column has always been wide enough that a KaTeX/table
    *  blowout was rare and the renderers' own inner `overflow-x-auto`
@@ -409,6 +413,7 @@ export function WhiteboardCanvas({
   tutorBusy = false,
   suppressEmptyState = false,
   chrome = 'full',
+  pageTitleHeader = false,
   allowHorizontalScroll = false,
   onNavChange,
   openOnLastPage = false,
@@ -1725,8 +1730,15 @@ export function WhiteboardCanvas({
       ? getCommandTypeLabel(currentPage.commands[0].action)
       : currentPage.commands.map((c) => getCommandTypeLabel(c.action)).join(' + '));
 
+  const headerTitle = chrome === 'minimal' && pageTitleHeader ? stripLatexForTitle(currentPage.title).trim() : '';
   const bodyContent = (
     <>
+      {headerTitle && (
+        // One line, phone-safe: truncates, never wraps, never scrolls away.
+        <div className="shrink-0 px-4 pt-2 pb-1 border-b border-slate-100 text-[11px] sm:text-xs font-semibold text-slate-500 truncate" data-wb-page-title="1" title={headerTitle}>
+          {headerTitle}
+        </div>
+      )}
       {/* `key={currentIndex}` re-mounts the inner div on page change so
           the entrance animation fires. Direction-aware: forward slides
           in from the right, backward slides in from the left. */}

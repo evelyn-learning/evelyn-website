@@ -56,7 +56,7 @@ import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { type SessionMode, textModeSecondsPerWord } from '@/lib/tutor/voice/resolve-session-mode';
-import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL, TUTOR_PAGE_TITLE_HEADER } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, lastAskSentence, stripMarkdownEmphasis, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn } from '@/lib/tutor/question-gist-text';
 import { sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
 import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
@@ -920,6 +920,9 @@ export default function TutorSession(props: TutorSessionProps) {
         onTryYourselfAnswer={handleTryYourselfAnswer}
         suppressEmptyState
         chrome="minimal"
+        // GDI run 4: the embed shows the current page's title ("Part 3 ·
+        // Level check · レベルチェック") as a slim header line.
+        pageTitleHeader={TUTOR_PAGE_TITLE_HEADER && !!embedded}
         allowHorizontalScroll={sessionMode === 'text'}
         onNavChange={setBoardNav}
         openOnLastPage={!!resumeState}

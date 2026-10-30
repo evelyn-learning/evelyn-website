@@ -386,5 +386,16 @@ test('I-4: a brain advance off the level check with no level (and no set_working
   assert.ok(at < VTR.indexOf('const hwAdvance = next && TUTOR_HOMEWORK_ADVANCE_GUARD'), 'before any applyResolvedAdvance');
 });
 
+// ── Task 14 §J: page titles visible in the embed ──
+test('J: the embed board shows the current page title as a one-line header', () => {
+  const WB = read('src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx');
+  pin(WB, /const headerTitle = chrome === 'minimal' && pageTitleHeader \? stripLatexForTitle\(currentPage\.title\)\.trim\(\) : '';/);
+  pin(WB, /\{headerTitle && \(\s*\/\/[^\n]*\n\s*<div className="shrink-0 [^"]*truncate" data-wb-page-title="1"/);
+  pin(WB, /pageTitleHeader = false,/);
+  const TS = read('src/app/tutor/components/session/TutorSession.tsx');
+  pin(TS, /pageTitleHeader=\{TUTOR_PAGE_TITLE_HEADER && !!embedded\}/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_PAGE_TITLE_HEADER = process\.env\.NEXT_PUBLIC_TUTOR_PAGE_TITLE_HEADER !== 'off';/);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

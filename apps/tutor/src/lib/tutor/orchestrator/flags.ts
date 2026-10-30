@@ -930,3 +930,20 @@ export const TUTOR_FIXED_SCRIPT_ADVANCE_GUARD = process.env.NEXT_PUBLIC_TUTOR_FI
  *  a row per part (authored label, minutes). Default ON;
  *  NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_OUTLINE=off. */
 export const TUTOR_FIXED_SCRIPT_OUTLINE = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_OUTLINE !== 'off';
+
+/** Fixed-script plans (GDI run 4, 2026-10-29): when the FIRST segment carries
+ *  `metadata.script`, the client speaks it as the opener (no brain opener),
+ *  paints the outline, and advances to the next part with a FACT note.
+ *  Default ON; NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_SPOKEN_OPENER=off. */
+export const TUTOR_FIXED_SCRIPT_SPOKEN_OPENER = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_SPOKEN_OPENER !== 'off';
+
+/** Level check (GDI run 4: set_working_level never called): leaving the
+ *  level-check segment with no level stored asks /api/tutor/level/estimate
+ *  for one from the student's answers. Default ON;
+ *  NEXT_PUBLIC_TUTOR_WORKING_LEVEL_ESTIMATE=off. */
+export const TUTOR_WORKING_LEVEL_ESTIMATE = process.env.NEXT_PUBLIC_TUTOR_WORKING_LEVEL_ESTIMATE !== 'off';
+
+/** Embed (GDI run 4: "Part n · label" titles were in the page data but not
+ *  visible): the current board page's title as a slim one-line header above
+ *  the board content. Default ON; NEXT_PUBLIC_TUTOR_PAGE_TITLE_HEADER=off. */
+export const TUTOR_PAGE_TITLE_HEADER = process.env.NEXT_PUBLIC_TUTOR_PAGE_TITLE_HEADER !== 'off';
