@@ -26,7 +26,7 @@ import { splitRunTogetherEnglish } from '../src/lib/tutor/voice/run-together-eng
 import { hasKatakanaEnglish } from '../src/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE_FIRST } from '../src/lib/tutor/voice/voice-only';
 import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE } from '../src/lib/tutor/voice/english-reply';
-import { isRetryAsk, retryCapNote, RETRY_CAP_NOTE } from '../src/lib/tutor/voice/retry-cap';
+import { isRetryAsk, isNegatedAsk, retryCapNote, RETRY_CAP_NOTE } from '../src/lib/tutor/voice/retry-cap';
 import { readPacingVerdict } from '../src/lib/tutor/voice/pacing-verdict';
 import { shouldClearQpinOnAnswer } from '../src/lib/tutor/qpin-behavior';
 import { sentenceVerdictStance } from '../src/lib/tutor/voice/voice-judging';
@@ -503,6 +503,15 @@ test('retry cap: every repeat-ask form from embed-1792254012923 is counted', () 
   assert.ok(retryCapNote(2).includes('twice'));
   assert.ok(retryCapNote(5).includes('5 times'));
   assert.equal(RETRY_CAP_NOTE, retryCapNote(2));
+  // Task 15 §B (GDI run 5): a negated ask ("no need to repeat it") is not a repeat-ask.
+  const live = 'Your earlier sentence was right too, so there\'s no need to repeat it. Next, let\'s try one about a project you worked on.';
+  assert.equal(isRetryAsk(live), false, live);
+  assert.equal(isNegatedAsk('Your earlier sentence was right too, so there\'s no need to repeat it.'), true);
+  for (const t of ['Could you say that complete sentence once more?', 'Let\'s try again.', 'もう一度言ってみてください。']) assert.equal(isRetryAsk(t), true, t);
+  for (const t of ['You don\'t have to say it again — let\'s move on.', 'もう一度言う必要はありません。']) assert.equal(isRetryAsk(t), false, t);
+  // a negated ask in one sentence does not hide a real ask in the next
+  assert.equal(isRetryAsk('No need to repeat it. Now try again with a new verb.'), true);
+  assert.equal(isNegatedAsk('Let\'s try again.'), false);
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('pendingRetryCapNoteRef.current = retryCapNote(retryAskStreakRef.current);'));
   assert.ok(!vtr.includes('retryAskStreakRef.current = 0;\n            onDebugEvent'), 'the streak must not be zeroed on plant');

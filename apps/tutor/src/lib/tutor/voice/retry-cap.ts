@@ -31,10 +31,37 @@ const RETRY_ASK_JA_RE =
 const RETRY_ASK_EN_RE =
   /\b(?:try\s+)?say(?:ing)?\s+(?:it|that|this)\s+(?:once\s+more|again)\b|\btry\s+(?:it|that|this)\s+(?:again|once\s+more)\b|\bone\s+more\s+time\b|\btry\s+again\b|\brepeat\s+(?:after\s+me|that|it|this)\b|\bonce\s+more\b/i;
 
-/** Does this tutor turn ask the student to say something again? */
+/** Task 15 §B (GDI run 5): "…was right too, so there's no need to repeat
+ *  it." matched `repeat it` and counted as a repeat-ask (cap note + the
+ *  correct-retry note planted again). An ask preceded — within the same
+ *  sentence, up to three words between — by a negation is not an ask. */
+const NEGATED_EN_TAIL_RE =
+  /(?:\bno\s+need\s+(?:to|for)|\b(?:don['’]t|do\s+not|doesn['’]t|does\s+not)\s+(?:need|have)\s+to|\bnot\s+necessary\s+to|\bwithout(?:\s+having\s+to)?|\bnever\s+(?:need|have)\s+to)(?:\s+[^\s]+){0,3}\s*$/i;
+const NEGATED_JA_RE = /必要はありません|必要はない|しなくていい|しなくても/;
+const RETRY_ASK_EN_RE_G = new RegExp(RETRY_ASK_EN_RE.source, 'gi');
+
+/** One sentence: is its repeat-ask negated ("no need to repeat it",
+ *  「もう一度言う必要はありません」)? True only when the sentence holds an ask
+ *  and every ask in it is negated. */
+export function isNegatedAsk(sentence: string): boolean {
+  const s = sentence ?? '';
+  const ja = RETRY_ASK_JA_RE.test(s);
+  const en = [...s.matchAll(RETRY_ASK_EN_RE_G)];
+  if (!ja && en.length === 0) return false;
+  if (ja && !NEGATED_JA_RE.test(s)) return false;
+  return en.every((m) => NEGATED_EN_TAIL_RE.test(s.slice(0, m.index ?? 0)) || NEGATED_JA_RE.test(s));
+}
+
+/** Does this tutor turn ask the student to say something again? Sentence by
+ *  sentence; a negated ask (isNegatedAsk) does not count. */
 export function isRetryAsk(tutorText: string): boolean {
   const t = tutorText ?? '';
-  return RETRY_ASK_JA_RE.test(t) || RETRY_ASK_EN_RE.test(t);
+  for (const raw of t.split(/(?<=[。！？.!?])\s*|\n+/)) {
+    const s = raw.trim();
+    if (!s) continue;
+    if ((RETRY_ASK_JA_RE.test(s) || RETRY_ASK_EN_RE.test(s)) && !isNegatedAsk(s)) return true;
+  }
+  return false;
 }
 
 /** Consecutive repeat-asks after which the next turn is told to move on. */
