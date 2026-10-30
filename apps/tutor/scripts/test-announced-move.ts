@@ -145,6 +145,8 @@ test('review I-3: drills are not announcements; 次は + keyword + copula is', (
   assert.equal(at('次は過去形で言ってみましょう。', 'present-perfect'), null);
   assert.equal(at("Let's do your summary sentence again.", 'pronunciation'), null);
   assert.equal(at('次は会話です。', 'past-simple'), 'open-conversation');
+  assert.equal(at('次は会話へ進みます。', 'past-simple'), 'open-conversation');
+  assert.equal(at('次は会話への準備をしましょう。', 'past-simple'), null);
   assert.equal(at(LIVE, 'past-simple'), 'open-conversation');
   assert.ok(!MOVE_PHRASE_RE.test("Let's do the next one"));
 });

@@ -77,7 +77,7 @@ function sentenceHas(sentence: string, keyword: string): boolean {
  *  (に進 / に移 / を始め / です / へ) — 「次は会話です。」 announces; 「次は過去形で
  *  言ってみましょう。」 does not. */
 function jaNextIsMove(sentence: string, nextKeys: string[]): boolean {
-  return nextKeys.some((k) => isCjk(k) && new RegExp(`次は${k}(?:に進|に移|を始め|です|へ)`).test(sentence));
+  return nextKeys.some((k) => isCjk(k) && new RegExp(`次は${k}(?:に進|に移|を始め|です|へ(?!の))`).test(sentence));
 }
 
 /** The id of the NEXT segment when `tutorText` announces a move into it, else null. */
