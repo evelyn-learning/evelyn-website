@@ -4469,9 +4469,13 @@ export function VoiceTutorRealtime({
   // Task 20 §B1 (GDI run 8): may the brain close the lesson / say goodbye now?
   // Fixed scripts close only from their last part, or after the student's
   // own end signal (fixed-script.ts fixedScriptCloseAllowed).
+  // Fix round 1 (I1): the student's end signal is STICKY for the session — a
+  // "yes, that's fine" after 「今日はここまでにしてもいいですか」 is not itself an
+  // end signal, and the stop the student asked for must not be refused.
+  const studentEndSignalRef = useRef(false);
   const fixedScriptCloseOk = (): boolean =>
     !TUTOR_FIXED_SCRIPT_CLOSE_GUARD ||
-    fixedScriptCloseAllowed(lessonPlanRef.current, currentSegmentIdRef.current, { studentEndSignal: !!lastStudentVerificationRef.current?.isSessionEndSignal });
+    fixedScriptCloseAllowed(lessonPlanRef.current, currentSegmentIdRef.current, { studentEndSignal: studentEndSignalRef.current || !!lastStudentVerificationRef.current?.isSessionEndSignal });
   // R47 Task 1 (live incident portal-d859df30): stash from a deterministic
   // false-denial kill (arith/simplification/inverse-verdict) this turn — the
   // checker already proved the student's answer right, so the post-stream
@@ -12451,6 +12455,7 @@ export function VoiceTutorRealtime({
         // Session-end signal (Task Y4 farewell-exemption fix) — see
         // sessionEndSignalRegex definition above for scope/rationale.
         const isSessionEndSignal = sessionEndSignalRegex.test(lower) || isSessionEndSignalJa(t);
+        if (isSessionEndSignal) studentEndSignalRef.current = true; // Task 20 fix round 1 (I1): sticky
         ledgerStudentTextRef.current = t;
         ledgerPriorTutorTextRef.current = String([...priorWithoutCurrent].reverse().find((m) => m.role === 'assistant')?.content ?? '');
         lastStudentVerificationRef.current = {
@@ -18802,7 +18807,7 @@ export function VoiceTutorRealtime({
             prematureFarewellRejected = true;
             rejectionsThisAttempt.push({ action: 'premature_farewell', reason: PREMATURE_FAREWELL_REASON });
             await performKill();
-            onDebugEvent?.('premature_farewell', `"${currentSegmentIdRef.current}": "${farewell.slice(0, 60)}"`);
+            onDebugEvent?.('premature_farewell', `"${currentSegmentIdRef.current}": "${farewell.slice(0, 80)}"`);
           }
         }
 
@@ -19982,7 +19987,10 @@ export function VoiceTutorRealtime({
       // Task 20 §B2 (GDI run 8, 1566 s): a post-close answer that re-engages
       // (arms a target, asks something) re-opens the lesson — else the
       // student's reply is silenced as chatter and the auto-end cuts the drill.
+      // Fix round 1 (I3): fixed-script plans only — elsewhere a post-close
+      // answer never re-opens (the 10-15/10-17 farewell loops).
       if (TUTOR_FIXED_SCRIPT_CLOSE_GUARD && closedAtTurnStart && lessonClosedRef.current && !opts?.prefetchOnly && totalSentenceCount > 0
+        && isFixedScriptPlan(lessonPlanRef.current)
         && reopensAfterClose(fullText, pronunciationArmSeqRef.current !== pronunciationArmSeqAtTurnStart)) {
         lessonClosedRef.current = false;
         if (lessonCloseAutoEndTimerRef.current) {

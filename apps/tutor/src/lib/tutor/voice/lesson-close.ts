@@ -93,16 +93,35 @@ const FAREWELL_TAIL_ASK_RE = /言って|言い|読んで|答え|聞|質問|\b(?:
 
 /**
  * Task 20 §B (GDI run 8, 1543 s): the farewell part of an attempt that closes
- * the lesson too early — 「今日はここまでです」 (PREMATURE_CLOSE_LINE_RE, not a
- * question) anywhere, or a turn whose ending is a goodbye (isTutorFarewell).
- * Returns the offending sentence (for the debug event), else null.
+ * the lesson too early. Fix round 1 (I2): farewell words are lesson content
+ * too ("Repeat after me: "Have a nice day."", 「今日はここまでです」 as a
+ * phrase to learn) — so quoted spans are removed first, and a sentence counts
+ * only when, unquoted, it is a goodbye (FAREWELL_RE / PREMATURE_CLOSE_LINE_RE,
+ * not a question, no instruction in it) AND it is the turn's last sentence or
+ * is followed only by other goodbye / thanks sentences. Returns that sentence
+ * (for the debug event), else null.
  */
+const QUOTED_SPAN_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
+const FAREWELL_INSTRUCTION_RE = /言って|読んで|答え|練習|\b(?:say|repeat|try|answer|question|practi[cs]e|read|tell me|review|homework)\b/i;
+const THANKS_RE = /\b(?:thank you|thanks)\b|ありがとう|お疲れ(?:様|さま)/i;
+function isFarewellSentence(s: string): boolean {
+  if (/[?？]\s*$/.test(s) || /(?:ましょうか|ますか|ですか|でしょうか)\s*$/.test(s)) return false;
+  if (FAREWELL_INSTRUCTION_RE.test(s)) return false;
+  return FAREWELL_RE.test(s) || PREMATURE_CLOSE_LINE_RE.test(s);
+}
 export function prematureFarewellLine(tutorText: string): string | null {
   if (typeof tutorText !== 'string' || !tutorText.trim()) return null;
-  const sentences = tutorText.split(/(?<=[。！!.?？])\s*|\n+/).map((s) => s.trim()).filter(Boolean);
-  const ja = sentences.find((s) => PREMATURE_CLOSE_LINE_RE.test(s) && !/[?？]\s*$/.test(s) && !/(?:ましょうか|ますか|ですか|でしょうか)[」』]?\s*$/.test(s));
-  if (ja) return ja;
-  return isTutorFarewell(tutorText) ? (sentences[sentences.length - 1] ?? tutorText.trim()) : null;
+  const unquoted = tutorText.replace(QUOTED_SPAN_RE, ' ');
+  const sentences = unquoted
+    .split(/(?<=[。！!.?？])\s+|(?<=[。！？])|\n+/)
+    .map((s) => s.replace(/\s+/g, ' ').trim())
+    .filter((s) => /[\p{L}\p{N}]/u.test(s));
+  for (let i = 0; i < sentences.length; i++) {
+    if (!isFarewellSentence(sentences[i]!)) continue;
+    const tail = sentences.slice(i + 1);
+    if (tail.every((t) => isFarewellSentence(t) || (THANKS_RE.test(t) && !FAREWELL_INSTRUCTION_RE.test(t) && !/[?？]\s*$/.test(t)))) return sentences[i]!;
+  }
+  return null;
 }
 
 /**
@@ -192,22 +211,28 @@ export function postCloseSilenceKind(studentText: string): 'pleasantry' | 'chatt
   return isPleasantryOnly(studentText) ? 'pleasantry' : 'chatter';
 }
 
-/** Heads every brain turn after the close (the same session: after the close
- *  the model re-ran its bookkeeping and wrote the tool calls out as text). */
 /**
  * Task 20 §B2 (GDI run 8, 1566 s): after the close the student asked "Can we
  * practice pronunciation little bit more?", the brain said "Of course… say it
  * after me" and armed a target — then his repeat was silenced as post-close
  * chatter and the auto-end ended the session. A post-close turn that arms a
- * pronunciation target or asks the student something re-opens the lesson; a
- * goodbye never does.
+ * pronunciation target, carries an ask, or asks a real question re-opens the
+ * lesson (fixed-script plans only — the caller checks). Fix round 1 (I3): a
+ * courtesy question ("Is there anything else you'd like to ask?", 「他に質問は
+ * ありますか」) and a goodbye never do.
  */
+const POST_CLOSE_COURTESY_RE =
+  /\b(?:anything else|any (?:other |more )?questions?|is that (?:ok|okay|all right)|shall we (?:stop|finish)|ready to (?:finish|stop))\b|他に|よろしいですか|終わりにしましょうか/i;
 export function reopensAfterClose(tutorText: string, armed: boolean): boolean {
   const t = tutorText ?? '';
   if (isTutorFarewell(t)) return false;
-  return armed || lastQuestionSentence(t) != null || lastAskSentence(t) != null;
+  if (armed || lastAskSentence(t) != null) return true;
+  const q = lastQuestionSentence(t);
+  return q != null && !POST_CLOSE_COURTESY_RE.test(q);
 }
 
+/** Heads every brain turn after the close (the same session: after the close
+ *  the model re-ran its bookkeeping and wrote the tool calls out as text). */
 export const POST_CLOSE_NOTE =
   '[runtime note — not from the student] The lesson is already closed and its closing notes are recorded. ' +
   'Do not call close_session_notes, mark_segment_complete or advance_lesson again, and do not start or resume an exercise. ' +

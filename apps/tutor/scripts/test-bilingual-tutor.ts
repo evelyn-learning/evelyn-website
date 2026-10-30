@@ -1273,11 +1273,30 @@ test('embed-1792378728971: the bridge line is wired with the session languages, 
 // ── Task 20 §B (GDI run 8) ───────────────────────────────────────────────
 test('20B1: the 1543 s farewell is caught; a mid-lesson transition is not', () => {
   const line = 'Your sentence is complete and clear, so let\'s close the pronunciation practice here. 「どうもありがとうございました。 今日はここまでです。」 Thank you for the lesson today, Praveen. Goodbye!';
-  assert.ok(prematureFarewellLine(line), 'caught');
+  assert.equal(prematureFarewellLine(line), 'Goodbye!', 'caught, and the event names the sentence');
   assert.ok(prematureFarewellLine('Thank you for the lesson today, Praveen. Goodbye!'));
+  assert.ok(prematureFarewellLine('お疲れ様でした。今日はここまでです。さようなら。'));
   assert.equal(prematureFarewellLine('Good. Let\'s move on to the pronunciation part now.'), null);
   assert.equal(prematureFarewellLine('続けますか、それとも今日はここまでにしましょうか？'), null, 'a question is never a close');
   assert.equal(prematureFarewellLine('See you is a common goodbye. Can you say it?'), null);
+});
+test('20B1 fix round 1 (I2): farewell words as lesson content are not a close', () => {
+  for (const t of [
+    'Say "Have a nice day."',
+    'See you next week, and practice the sentence.',
+    'Please repeat after me: "Thank you for your time. Have a nice day."',
+    'Great. "I said goodbye to the clients at the station." is a natural sentence.',
+    'Good. Next phrase for the end of a meeting: "See you next week."',
+    'In business emails we often end with "Take care."',
+    'Let\'s practise: 「今日はここまでです」 means "That\'s all for today."',
+    'Goodbye is a common word. Now tell me about your job.',
+  ]) assert.equal(prematureFarewellLine(t), null, t);
+});
+test('20B1 fix round 1 (I1): the student end signal is sticky and feeds the close guard', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('if (isSessionEndSignal) studentEndSignalRef.current = true;'));
+  assert.ok(vtr.includes('studentEndSignal: studentEndSignalRef.current ||'));
+  assert.ok(!/studentEndSignalRef\.current = false/.test(vtr), 'never cleared');
 });
 test('20B1: VTR refuses the premature close and kills the farewell', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
@@ -1289,13 +1308,19 @@ test('20B1: VTR refuses the premature close and kills the farewell', () => {
   const closed = vtr.indexOf('lessonClosedRef.current = true;', at);
   assert.ok(at > 0 && refuse > at && refuse < closed, 'the refusal runs before lessonClosedRef is set');
 });
-test('20B2: a post-close turn that re-engages re-opens the lesson; a goodbye does not', () => {
+test('20B2: a post-close turn that re-engages re-opens the lesson; a goodbye / courtesy does not', () => {
   assert.equal(reopensAfterClose('Of course, let\'s practice a little more. Here is the sentence again: "I was responsible for communicating with our customers." Please listen, then say it after me.', true), true);
-  assert.equal(reopensAfterClose('Of course. Which sentence would you like to practise?', false), true, 'a question re-opens');
+  assert.equal(reopensAfterClose('Of course. Which sentence would you like to practise?', false), true, 'a real question re-opens');
+  assert.equal(reopensAfterClose('Now, please say the sentence once more.', false), true, 'an ask re-opens');
   assert.equal(reopensAfterClose('Homework is the review sheet on your page.', false), false, 'a plain answer stays closed');
   assert.equal(reopensAfterClose('You are welcome. Goodbye!', true), false, 'a goodbye never re-opens');
+  assert.equal(reopensAfterClose("You're welcome! Is there anything else you'd like to ask?", false), false, 'courtesy (I3)');
+  assert.equal(reopensAfterClose('Of course. "Responsible for" means 担当. Any other questions?', false), false, 'courtesy (I3)');
+  assert.equal(reopensAfterClose('どういたしまして。他に質問はありますか？', false), false, 'courtesy JA (I3)');
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("onDebugEvent?.('lesson_reopened'"));
+  const at = vtr.indexOf("onDebugEvent?.('lesson_reopened'");
+  assert.ok(/&& isFixedScriptPlan\(lessonPlanRef\.current\)/.test(vtr.slice(at - 900, at)), 'fixed-script only (I3)');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
