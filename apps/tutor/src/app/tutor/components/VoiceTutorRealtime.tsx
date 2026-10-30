@@ -1495,7 +1495,7 @@ export function VoiceTutorRealtime({
     pronunciationResultNoteRef.current = pronunciationNoteForBrain(note);
     pronunciationMeasuredRef.current = measured;
     pronunciationNotAttemptedRef.current = false;
-    if (measured) lastMeasuredPronunciationRef.current = { note, at: Date.now(), segmentId: currentSegmentIdRef.current ?? '' };
+    if (measured) lastMeasuredPronunciationRef.current = { note, at: Date.now(), segmentId: currentSegmentIdRef.current ?? '', referenceText: lastPronunciationClipRef.current?.text ?? lastPronunciationTargetRef.current?.referenceText ?? '' };
     onDebugEvent?.('pronunciation_note_planted', `${measured ? 'measured' : 'unavailable'} · ${note.slice(0, 160)}`);
   };
   const plantPronunciationUnavailable = (reason: string) => {
@@ -12736,6 +12736,7 @@ export function VoiceTutorRealtime({
           studentText: transcript,
           notAttempted: pronunciationNotAttemptedRef.current,
           measuredThisTurn: pronunciationMeasuredThisTurn,
+          currentTarget: lastPronunciationTargetRef.current?.referenceText,
         });
         pronunciationNotAttemptedRef.current = false;
         if (redelivery) {

@@ -143,7 +143,7 @@ export function notAttemptedDetail(result: { words?: Array<{ word?: unknown; err
  * was not attempted. null ⇒ nothing to re-deliver (no measurement for this
  * segment, a fresh measurement rides this turn, or neither trigger).
  */
-export interface LastMeasuredPronunciation { note: string; at: number; segmentId: string }
+export interface LastMeasuredPronunciation { note: string; at: number; segmentId: string; /** the sentence that was measured */ referenceText: string }
 const STUDENT_QUESTION_OPENER_RE =
   /^\s*(?:(?:um+|uh+|er+|so|well|sorry|ok(?:ay)?|and|but)[,.]?\s+)*(?:can|could|would|will|do|does|did|is|are|was|were|should|may|how|what|why|where|when|which|who)\b/i;
 export function isStudentQuestion(text: string): boolean {
@@ -157,10 +157,15 @@ export function measuredPronunciationRedelivery(input: {
   studentText: string;
   notAttempted: boolean;
   measuredThisTurn: boolean;
+  /** Fix round 1 (m3): the armed / last pronunciation target — the
+   *  measurement is re-sent only while it is still the measured sentence. */
+  currentTarget: string | null | undefined;
 }): string | null {
-  const { last, segmentId, inPronunciationSegment, studentText, notAttempted, measuredThisTurn } = input;
+  const { last, segmentId, inPronunciationSegment, studentText, notAttempted, measuredThisTurn, currentTarget } = input;
   if (!last || !inPronunciationSegment || measuredThisTurn || !segmentId || last.segmentId !== segmentId) return null;
+  if (!currentTarget || normTarget(currentTarget) !== normTarget(last.referenceText)) return null;
   if (/^\s*\[/.test(studentText ?? '')) return null; // runtime directives are not the student
   if (!notAttempted && !isStudentQuestion(studentText)) return null;
-  return `[pronunciation check result — not from the student] Last measurement (still current): ${last.note}`;
+  return `[pronunciation check result — not from the student] Last measurement for "${last.referenceText}" (still the current target): ${last.note}`;
 }
+const normTarget = (s: string) => (s ?? '').toLowerCase().replace(/[^\p{L}\p{N}' ]+/gu, ' ').replace(/\s+/g, ' ').trim();

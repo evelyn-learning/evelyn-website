@@ -94,11 +94,12 @@ test('VTR wiring (§C): last target kept at every arm, re-arm branch, not_attemp
 });
 
 // ── Task 20 §F (GDI run 8, 1395–1418 s) ──────────────────────────────────
-const LAST = { note: 'Measured pronunciation of "I have worked with international customers for several years.": overall 80/100. Weakest: "for" 45.', at: 1, segmentId: 'pronunciation' };
-const base = { last: LAST, segmentId: 'pronunciation', inPronunciationSegment: true, studentText: 'Um, can you repeat where I was wrong?', notAttempted: true, measuredThisTurn: false };
+const TARGET_A = 'I have worked with international customers for several years.';
+const LAST = { note: 'Measured pronunciation of "I have worked with international customers for several years.": overall 80/100. Weakest: "for" 45.', at: 1, segmentId: 'pronunciation', referenceText: TARGET_A };
+const base = { last: LAST, segmentId: 'pronunciation', inPronunciationSegment: true, studentText: 'Um, can you repeat where I was wrong?', notAttempted: true, measuredThisTurn: false, currentTarget: TARGET_A };
 test('20F2: "can you repeat where I was wrong?" after a not-attempted clip gets the last measurement', () => {
   const out = measuredPronunciationRedelivery(base);
-  assert.equal(out, `[pronunciation check result — not from the student] Last measurement (still current): ${LAST.note}`);
+  assert.equal(out, `[pronunciation check result — not from the student] Last measurement for "${TARGET_A}" (still the current target): ${LAST.note}`);
 });
 test('20F2: a question alone (clip measured nothing new, not not_attempted) re-delivers', () => {
   assert.ok(measuredPronunciationRedelivery({ ...base, notAttempted: false }));
@@ -111,6 +112,11 @@ test('20F2: no trigger / other segment / a fresh measurement / outside the part 
   assert.equal(measuredPronunciationRedelivery({ ...base, inPronunciationSegment: false }), null);
   assert.equal(measuredPronunciationRedelivery({ ...base, last: null }), null);
   assert.equal(measuredPronunciationRedelivery({ ...base, studentText: '[runtime note — not from the student] …' }), null);
+});
+test('20F2 fix round 1 (m3): re-sent only while the measured sentence is still the target', () => {
+  assert.equal(measuredPronunciationRedelivery({ ...base, currentTarget: 'I was responsible for communicating with our customers.' }), null, 'a new target replaces it');
+  assert.equal(measuredPronunciationRedelivery({ ...base, currentTarget: null }), null);
+  assert.ok(measuredPronunciationRedelivery({ ...base, currentTarget: 'i have worked with international customers for several years' }), 'case / punctuation ignored');
 });
 test('20F2: question shapes', () => {
   assert.equal(isStudentQuestion('Um, can you repeat where I was wrong?'), true);
