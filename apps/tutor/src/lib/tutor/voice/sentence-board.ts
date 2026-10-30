@@ -100,8 +100,12 @@ const INTRO_WINDOW = 40;
 const STARTER_INTRO_RE = /\b(?:starting with|beginning with|start with|begin with|that starts with)\s*[:,]?\s*$/i;
 const STARTER_AFTER_RE = /^\s*(?:で|から)始め/;
 /** "you said "Customer from USA."" — the student's own words quoted back. */
-/*  "you say" only as a report — never the ask "Can you say …" / "to you say". */
-const SAID_INTRO_RE = /\b(?:you said|(?<!\b(?:can|could|would|will|to|please|did|do|does|should|now|then|let)\s+)you say|you just said|you told me)\b[^"“「『‘]*$/i;
+/*  "you say" only as a report — never the ask "Can you say …" / "to you say".
+ *  Fix round 2 (I2): the intro must lead straight into the quote — no sentence
+ *  or clause break (. ! ? ; :) and no say / try / repeat / like / use between
+ *  them ("You said you sold nine machines, so say "…"" is a correction ask).
+ *  A colon right after the intro ("You said: "…"") still counts. */
+const SAID_INTRO_RE = /\b(?:you said|(?<!\b(?:can|could|would|will|to|please|did|do|does|should|now|then|let)\s+)you say|you just said|you told me)\b[,:]?(?![^"“「『‘]*(?:[.!?;:]|\b(?:say|try|repeat|like|use)\b))[^"“「『‘]*$/i;
 const SAID_AFTER_RE = /^\s*(?:と|って)言いました/;
 /** A span ending on a bare subject pronoun / article after a comma ("Last week, I"). */
 const DANGLING_END_RE = /,\s*(?:I|you|we|they|he|she|it|the|a|an)[.!?]?$/i;
@@ -142,6 +146,35 @@ export function isSaidQuote(before: string, after: string): boolean {
   return introWithin(SAID_INTRO_RE, before) || SAID_AFTER_RE.test(after ?? '');
 }
 
+/** Spoken fillers dropped from the student's words before the echo run check. */
+const SPOKEN_FILLERS = new Set(['uh', 'um', 'umm', 'uhm', 'er', 'erm', 'ah', 'hmm']);
+
+/** `needle` occurs in `hay` as one unbroken run. */
+function isContiguousRun(needle: readonly string[], hay: readonly string[]): boolean {
+  if (needle.length === 0 || needle.length > hay.length) return false;
+  outer: for (let i = 0; i + needle.length <= hay.length; i++) {
+    for (let j = 0; j < needle.length; j++) if (hay[i + j] !== needle[j]) continue outer;
+    return true;
+  }
+  return false;
+}
+
+/** Fix round 2 (I1): emphasis for a deletion / reorder correction — the quote
+ *  words that do not follow, in the student's words, the word before them in
+ *  the quote (they neighbour a deletion or moved), max MAX_EMPHASIS. */
+function reorderEmphasis(sentence: string, said: readonly string[]): string[] {
+  const pairs = new Set<string>();
+  for (let i = 1; i < said.length; i++) pairs.add(`${said[i - 1]} ${said[i]}`);
+  const words = dropThousands(sentence).match(TOKEN_RE) ?? [];
+  const out: string[] = [];
+  for (let i = 1; i < words.length && out.length < MAX_EMPHASIS; i++) {
+    const a = numberWordToken(lowerTok(words[i - 1]!));
+    const b = numberWordToken(lowerTok(words[i]!));
+    if (!pairs.has(`${a} ${b}`) && !out.includes(words[i]!)) out.push(words[i]!);
+  }
+  return out;
+}
+
 /**
  * correction ⇔ studentLast present AND |quoteTokens ∩ studentTokens| / |quoteTokens| ≥ 0.5
  * AND at least one quote token is not in studentTokens. emphasis = quote words
@@ -159,9 +192,18 @@ export function classifyQuotedSentence(sentence: string, studentLast: string | n
   for (const t of quoteSet) if (student.has(t)) shared++;
   const novel = quoteSet.size - shared;
   // Task 18 §D (GDI run 6: "I once had got" — the student's wrong fragment
-  // quoted inside a correction turn): every quote token is the student's ⇒
-  // an echo, however little of what the student said it covers.
-  if (novel === 0) return { sentence, kind: 'echo', emphasis: [] };
+  // quoted inside a correction turn): a quote that is an unbroken run of the
+  // student's own words, in the student's order, is an echo — however little
+  // of what the student said it covers. Fix round 2 (I1): every token being
+  // the student's is NOT enough — "I am agree" → "I agree", "discussed about"
+  // → "discussed", "I yesterday went" → "Yesterday I went" delete or reorder
+  // the student's words, and those are corrections.
+  if (novel === 0) {
+    const said = tokens(studentLast).filter((t) => !SPOKEN_FILLERS.has(t));
+    const quoted = tokens(sentence);
+    if (isContiguousRun(quoted, said)) return { sentence, kind: 'echo', emphasis: [] };
+    return { sentence, kind: 'correction', emphasis: reorderEmphasis(sentence, said) };
+  }
   if (shared / quoteSet.size < CORRECTION_OVERLAP) return model;
   const emphasis: string[] = [];
   const seen = new Set<string>();
@@ -288,6 +330,10 @@ function correctionSpan(spokenSentence: string, studentLast: string | null | und
   for (const m of spokenSentence.matchAll(QUOTE_RE)) {
     const inner = quoteInner(m);
     if (!qualifyingSpan(inner)) continue;
+    // A quoted sentence starter ("starting with "I have been"") is never a
+    // correction to stress (Task 18 fix round 2).
+    const at = m.index ?? 0;
+    if (isSentenceStarter(inner.trim(), spokenSentence.slice(Math.max(0, at - INTRO_WINDOW - 20), at), spokenSentence.slice(at + m[0].length, at + m[0].length + INTRO_WINDOW))) continue;
     const q = classifyQuotedSentence(inner.trim(), studentLast);
     if (q.kind !== 'correction' || q.emphasis.length === 0) continue;
     const len = norm(inner).length;

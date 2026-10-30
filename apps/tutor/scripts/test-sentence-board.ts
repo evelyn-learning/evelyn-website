@@ -441,5 +441,33 @@ test('T18 D4: digits read as number words — 3 ≡ three, 30 ≡ thirty, 1,000 
   assert.deepEqual(live.map((c) => [c.kind, c.sentence]), [['correction', 'I have worked at Nagoya Corporation for three years.']]);
 });
 
+// ── Task 18 fix round 2: deletion / reorder corrections (I1) and the "you said" window (I2) ──
+test('T18 R2 I1: a deletion or reorder of the student\'s words is a correction card', () => {
+  const cases: Array<[string, string, string]> = [
+    ['I am agree with your idea.', 'Say "I agree with your idea."', 'I agree with your idea.'],
+    ['We discussed about the plan.', 'Say "We discussed the plan."', 'We discussed the plan.'],
+    ['I yesterday went to the office.', 'Say "Yesterday I went to the office."', 'Yesterday I went to the office.'],
+  ];
+  for (const [student, tutor, card] of cases) {
+    const cards = planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: false });
+    assert.deepEqual(cards.map((c) => [c.kind, c.sentence]), [['correction', card]], `${student} → ${JSON.stringify(cards)}`);
+  }
+  assert.deepEqual(classifyQuotedSentence('I agree with your idea.', 'I am agree with your idea.').emphasis, ['agree']);
+});
+test('T18 R2 I1: unbroken runs of the student\'s words still echo', () => {
+  assert.equal(classifyQuotedSentence('I once had got', 'Um, I once had got, I once had got sushi from home and distributed to all my friends in the team.').kind, 'echo');
+  assert.equal(classifyQuotedSentence('Customer from USA.', 'Customer from USA.').kind, 'echo');
+  assert.equal(classifyQuotedSentence('since I started work', GOLF_STUDENT).kind, 'echo');
+});
+test('T18 R2 I2: "you said" counts only when it leads straight into the quote', () => {
+  const a = planSentenceBoard({ tutorText: 'You said you sold nine machines, so say "I sold nine washing machines last month."', studentLast: 'I sell nine machine last month.', renderedThisTurn: false });
+  assert.deepEqual(a.map((c) => c.sentence), ['I sold nine washing machines last month.']);
+  const b = planSentenceBoard({ tutorText: 'As you said, the meeting was long. Try: "The meeting was very long yesterday."', studentLast: 'Meeting is long.', renderedThisTurn: false });
+  assert.deepEqual(b.map((c) => c.sentence), ['The meeting was very long yesterday.']);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Good, you said "Customer from USA." Next question.', studentLast: 'Customer from USA.', renderedThisTurn: false, studentCorrect: true }), []);
+  assert.equal(isSaidQuote('Good, you said ', ''), true);
+  assert.equal(isSaidQuote('You said: ', ''), true);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
