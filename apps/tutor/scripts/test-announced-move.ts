@@ -8,8 +8,8 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords } from '../src/lib/tutor/lesson-plan/announced-move';
-import { fixedScriptAnnouncedAdvanceLead } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS } from '../src/lib/tutor/lesson-plan/announced-move';
+import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
 let failed = 0;
@@ -108,6 +108,41 @@ test('B: VTR — only when the budget rule did not fire, flag on, no advance_les
   // the same advance path (pron hold, applyResolvedAdvance, FACT note) runs on advanceReason
   pin(VTR, /if \(!advanceReason\) autoAdvancePronHeldRef\.current = 0;\n\s*if \(autoPlan && advanceReason\) \{/);
   pin(VTR, /reason=\$\{advanceReason\} turns=/);
+});
+
+// ── §C continuation ──────────────────────────────────────────────────────
+test('C: the live turn (no question, no ask) needs a continuation', () => {
+  assert.equal(announcedTurnNeedsContinuation(LIVE), true);
+  assert.equal(announcedTurnNeedsContinuation('次は会話に進みましょう。'), true);
+});
+test('C: a turn that asks something does not', () => {
+  assert.equal(announcedTurnNeedsContinuation("Now let's move on to the open conversation. What did you do last weekend?"), false);
+  assert.equal(announcedTurnNeedsContinuation("Now let's move on to the open conversation. Tell me about your last business trip."), false);
+  assert.equal(announcedTurnNeedsContinuation('次は会話に進みましょう。週末は何をしましたか？'), false);
+  assert.equal(announcedTurnNeedsContinuation(''), false);
+});
+test('C: decision — waits while speaking/busy/mid-utterance, min wait unseen, drops at the ceiling', () => {
+  const d = (o: Partial<Parameters<typeof announcedContinueDecision>[0]>) =>
+    announcedContinueDecision({ elapsedMs: 0, sawSpeaking: false, speaking: false, brainBusy: false, studentMidUtterance: false, ...o });
+  assert.equal(d({ speaking: true, elapsedMs: 5000 }), 'wait');
+  assert.equal(d({ brainBusy: true, elapsedMs: 5000 }), 'wait');
+  assert.equal(d({ studentMidUtterance: true, elapsedMs: 5000 }), 'wait');
+  assert.equal(d({ elapsedMs: ANNOUNCED_CONTINUE_MIN_MS - 1 }), 'wait');
+  assert.equal(d({ elapsedMs: ANNOUNCED_CONTINUE_MIN_MS }), 'fire');
+  assert.equal(d({ sawSpeaking: true, elapsedMs: 300 }), 'fire');
+  assert.equal(d({ speaking: true, elapsedMs: ANNOUNCED_CONTINUE_MAX_MS }), 'drop');
+});
+test('C: the directive is the brief text', () => {
+  assert.equal(FIXED_SCRIPT_CONTINUE_DIRECTIVE, '[System note: you announced the next part and then stopped without a question. The lesson pointer has moved; begin that part now from its notes — its first question or card — in one or two sentences. Do not repeat the announcement, do not recap.]');
+});
+test('C: VTR — scheduled once per segment on an announced advance, dispatched silently, cancelled by any other dispatch and on unmount', () => {
+  pin(VTR, /if \(advanceReason === 'announced' && announcedTurnNeedsContinuation\(fullText\) && !announcedContinuedSegsRef\.current\.has\(autoNext\)\) \{\s*announcedContinuedSegsRef\.current\.add\(autoNext\);/);
+  pin(VTR, /const speaking = productionStateRef\.current === 'speaking';/);
+  pin(VTR, /onDebugEvent\?\.\('fixed_script_announced_continue', `"\$\{contTarget\}" waited=\$\{waitedMs\}ms`\);\s*void handleStudentTranscriptForBrainRef\.current\?\.\(FIXED_SCRIPT_CONTINUE_DIRECTIVE, \{ silent: true, bypassPerceptionDedupe: true \}\);/);
+  pin(VTR, /if \(announcedContinueTimerRef\.current && transcript !== FIXED_SCRIPT_CONTINUE_DIRECTIVE\) \{\s*clearTimeout\(announcedContinueTimerRef\.current\);/);
+  const unmount = VTR.indexOf('// Student marks + tutor reactions: clear armed idle-send timers on unmount.');
+  pin(VTR.slice(unmount, unmount + 2000), /clearTimeout\(announcedContinueTimerRef\.current\)/);
+  pin(VTR, /productionStateRef\.current === 'disconnected' \|\| lessonClosedRef\.current \|\| farewellSealedRef\.current \|\| currentSegmentIdRef\.current !== contTarget/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

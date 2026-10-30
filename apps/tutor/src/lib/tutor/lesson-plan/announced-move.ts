@@ -14,6 +14,7 @@
  */
 import type { LessonPlan, Segment } from './types';
 import { isFixedScriptPlan, nextSegmentId } from './fixed-script';
+import { lastAskSentence, lastQuestionSentence } from '../question-gist-text';
 
 /** A sentence that announces moving on (EN + JA). The keyword gate in
  *  announcedMoveTarget is required too — the phrase alone never moves. */
@@ -96,4 +97,42 @@ export function announcedMoveTarget(input: {
     return nextId;
   }
   return null;
+}
+
+// ── §C: continuation when the announcing turn asked nothing ──────────────
+
+/** True ⇒ the announcing turn left the learner nothing to answer: its last
+ *  sentence carries no "?"/"？", and nothing in it would be pinned as the
+ *  open question (no question sentence — lastQuestionSentence — and no
+ *  imperative ask — lastAskSentence, the pin's own predicates). */
+export function announcedTurnNeedsContinuation(tutorText: string): boolean {
+  const text = (tutorText ?? '').trim();
+  if (!text) return false;
+  const sentences = text.split(/(?<=[。！？.!?])\s*|\n+/).map((x) => x.trim()).filter(Boolean);
+  const last = sentences[sentences.length - 1] ?? '';
+  if (/[?？]/.test(last)) return false;
+  if (lastQuestionSentence(text)) return false;
+  if (lastAskSentence(text)) return false;
+  return true;
+}
+
+/** Poll cadence while waiting for the announcing turn's audio to finish. */
+export const ANNOUNCED_CONTINUE_POLL_MS = 250;
+/** If the tutor was never seen speaking (audio not started yet, or a text
+ *  turn), wait at least this long before continuing. */
+export const ANNOUNCED_CONTINUE_MIN_MS = 1500;
+/** Give up when the tutor is still busy this long after the advance. */
+export const ANNOUNCED_CONTINUE_MAX_MS = 30_000;
+
+/** One poll of the scheduled continuation. 'wait' while the tutor speaks,
+ *  the brain is busy or the student is mid-utterance (their transcript will
+ *  cancel it), and — when speech was never observed — for the first
+ *  ANNOUNCED_CONTINUE_MIN_MS; 'drop' past ANNOUNCED_CONTINUE_MAX_MS. */
+export function announcedContinueDecision(input: {
+  elapsedMs: number; sawSpeaking: boolean; speaking: boolean; brainBusy: boolean; studentMidUtterance: boolean;
+}): 'fire' | 'wait' | 'drop' {
+  const { elapsedMs, sawSpeaking, speaking, brainBusy, studentMidUtterance } = input;
+  if (speaking || brainBusy || studentMidUtterance) return elapsedMs >= ANNOUNCED_CONTINUE_MAX_MS ? 'drop' : 'wait';
+  if (!sawSpeaking && elapsedMs < ANNOUNCED_CONTINUE_MIN_MS) return 'wait';
+  return 'fire';
 }
