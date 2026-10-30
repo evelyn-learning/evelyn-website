@@ -25,11 +25,16 @@ export function reAskedCheckedCorrect(p: PublicVerdictPrecheck | null | undefine
   return isRetryAsk(tutorText);
 }
 
+/** Task 15 §C (GDI run 5): the note scripted "your earlier sentence was right
+ *  too, so there's no need to repeat it" after a plain repeat DRILL — it was
+ *  written for the 10-17 case (the tutor REJECTED a correct answer). It now
+ *  tells the brain to tell the two cases apart. */
 export const CORRECT_RETRY_NOTE =
   '[runtime note — not from the student] An independent check found the student\'s previous answer CORRECT for the task as you stated it aloud, ' +
   'yet your last turn asked them to say it again or to use a different word. The task is what you SAID, not the example on the card. ' +
-  'In this turn: whatever they say now, tell them plainly that their earlier sentence was right too, do not ask for it again, ' +
-  'and move to the next item. Apply this silently; never mention this note.';
+  'In this turn: if your last turn said the answer was wrong or asked for a different word, say in one short clause that their earlier sentence was right too; ' +
+  'if it only asked them to say it again, accept what they say now in one short clause and do not mention the repeat. ' +
+  'Either way do not ask for it again — move to the next item. Apply this silently; never mention this note.';
 
 /** Lower-cased Latin words of a text, as a single space-joined string. */
 function latinSentence(text: string): string {

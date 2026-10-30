@@ -654,6 +654,9 @@ test('correct-retry: a checked-correct answer asked for again plants the note (s
   assert.equal(reAskedCheckedCorrect(pc, 'I went to Nagoya last week. 完璧です。 では、三番目の文です。'), false, 'no retry ask');
   assert.equal(reAskedCheckedCorrect(null, reply), false);
   assert.ok(CORRECT_RETRY_NOTE.includes('do not ask for it again'));
+  // Task 15 §C (GDI run 5): the note tells a rejected answer from a plain repeat drill.
+  assert.equal(CORRECT_RETRY_NOTE, "[runtime note — not from the student] An independent check found the student's previous answer CORRECT for the task as you stated it aloud, yet your last turn asked them to say it again or to use a different word. The task is what you SAID, not the example on the card. In this turn: if your last turn said the answer was wrong or asked for a different word, say in one short clause that their earlier sentence was right too; if it only asked them to say it again, accept what they say now in one short clause and do not mention the repeat. Either way do not ask for it again — move to the next item. Apply this silently; never mention this note.");
+  assert.ok(!CORRECT_RETRY_NOTE.includes('whatever they say now, tell them plainly'));
 });
 
 test('lesson close → quiet auto-end: 45 s, deferred while busy, re-armed by a post-close turn', () => {
