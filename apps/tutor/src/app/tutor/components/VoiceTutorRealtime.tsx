@@ -432,7 +432,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -472,7 +472,7 @@ import {
   TUTOR_TURN_SHAPE_GATE,
 } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
-import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
+import { lastQuestionSentence, turnEndsWithAsk } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback, shouldKillBareAssentPraise, bareAssentPraiseFeedback, ambiguousAssentKill, ambiguousAssentFeedback } from '@/lib/tutor/voice/nonanswer-praise';
 import {
@@ -4100,6 +4100,8 @@ export function VoiceTutorRealtime({
   /** Consecutive turns a due fixed-script auto-advance was held for an armed
    *  pronunciation clip (capped: FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS). */
   const autoAdvancePronHeldRef = useRef(0);
+  // Task 22 §A: consecutive turns a due auto-advance was held because the turn ended with an ask.
+  const autoAdvanceAskHeldRef = useRef(0);
   /** Task 16 §C: the scheduled continuation after an announced move whose
    *  turn asked nothing (cleared by any other dispatch and on unmount), and
    *  the segments already continued into (at most once per segment). */
@@ -20181,10 +20183,15 @@ export function VoiceTutorRealtime({
           : null;
         const advanceReason: 'turns' | 'time' | 'announced' | null = autoReason
           ?? (announcedTarget && autoPlan && announcedTarget === nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current) ? 'announced' : null);
-        if (!advanceReason) autoAdvancePronHeldRef.current = 0;
+        if (!advanceReason) { autoAdvancePronHeldRef.current = 0; autoAdvanceAskHeldRef.current = 0; }
         if (autoPlan && advanceReason) {
           const autoNext = nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current);
           const pronArmed = !!clipCaptureRef.current?.isArmed();
+          // Task 22 §A (GDI run 10, 574 s / 882 s): a budget advance (turns |
+          // time — never 'announced') on a turn that ENDS with an ask flipped
+          // the page at turn end, so the student's answer and its card landed
+          // on the next part. Hold one turn; the advance fires on the reply.
+          const askPending = advanceReason !== 'announced' && turnEndsWithAsk(fullText);
           if (autoNext && holdAutoAdvanceForPronunciation(pronArmed, autoAdvancePronHeldRef.current)) {
             // The brain asked for a pronunciation repeat this turn: advancing
             // would disarm it (disarmPronunciationOnSegmentAdvance) and the
@@ -20194,8 +20201,12 @@ export function VoiceTutorRealtime({
             // turns in a row (a drill re-arming every turn), disarm and all.
             autoAdvancePronHeldRef.current += 1;
             onDebugEvent?.('fixed_script_auto_advance_held_pron', `"${segIdNow}" ${autoAdvancePronHeldRef.current}/${FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS}`);
+          } else if (autoNext && holdAutoAdvanceForPendingAsk(askPending, autoAdvanceAskHeldRef.current)) {
+            autoAdvanceAskHeldRef.current += 1;
+            onDebugEvent?.('fixed_script_auto_advance_held_ask', `"${segIdNow}" ${autoAdvanceAskHeldRef.current}/${FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS}`);
           } else if (autoNext) {
             autoAdvancePronHeldRef.current = 0;
+            autoAdvanceAskHeldRef.current = 0;
             const autoTurns = cur.turns;
             const autoElapsedS = Math.round((Date.now() - cur.startedAt) / 1000);
             // Resets turnsInSegmentRef for the new segment and disarms a

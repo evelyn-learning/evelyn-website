@@ -268,6 +268,18 @@ export function holdAutoAdvanceForPronunciation(armed: boolean, heldTurns: numbe
   return armed && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS;
 }
 
+/** Task 22 §A (GDI run 10, 574 s / 882 s): a due auto-advance on a turn that
+ *  ENDS with a question to the student flipped the page at turn end — the
+ *  answer and its card landed on the NEXT part's page. Held like the
+ *  pronunciation hold, but for one turn only (the answer is the very next
+ *  student turn). The 'announced' reason is never held (the caller skips it:
+ *  an announced move already skips questions — Task 19 §B). */
+export const FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS = 1;
+/** True ⇒ hold this turn. `heldTurns` = consecutive turns already held for an ask. */
+export function holdAutoAdvanceForPendingAsk(endsWithAsk: boolean, heldTurns: number): boolean {
+  return endsWithAsk && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS;
+}
+
 /** GDI trial run 2 (2026-10-29): the opening turn called
  *  advance_lesson({to:"next"}) before the scripted overview was ever said, so
  *  the overview segment was skipped. The phrases of `seg.requiredPhrases` that

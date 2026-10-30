@@ -106,6 +106,22 @@ export function lastAskSentence(text: string): string | null {
   return capPinText(askText);
 }
 
+/** Task 22 §A (GDI run 10, 574 s / 882 s): the turn ENDS with something the
+ *  student must answer — its last sentence is a question, or the turn's last
+ *  ask (lastAskSentence's shapes: an ask lead / an inner ask) sits in one of
+ *  its last two sentences ("Could you tell me one result? Start with "As a
+ *  result, …"."). Used to hold a due fixed-script auto-advance one turn so
+ *  the answer lands on the part that asked it. */
+export function turnEndsWithAsk(text: string): boolean {
+  const sentences = splitSentences(stripMarkdownEmphasis(text ?? ''));
+  if (!sentences.length) return false;
+  if (/[?？]["”’)\]]*\s*$/.test(sentences[sentences.length - 1])) return true;
+  for (let i = sentences.length - 1; i >= Math.max(0, sentences.length - 2); i--) {
+    if (ASK_LEAD_RE.test(sentences[i]) || INNER_ASK_RE.test(sentences[i])) return true;
+  }
+  return false;
+}
+
 /** A pin text capped at QPIN_MAX_CHARS, cut at a word boundary with "…". */
 export function capPinText(text: string): string {
   if (text.length <= QPIN_MAX_CHARS) return text;

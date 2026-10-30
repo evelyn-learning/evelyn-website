@@ -21,11 +21,13 @@ import {
   fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote,
   FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_TIME_FACTOR, FIXED_SCRIPT_AUTO_ADVANCE_MIN_MS,
   FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPronunciation,
+  FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, holdAutoAdvanceForPendingAsk,
   missingRequiredPhrases, scriptMissingAdvanceReason,
   segmentMaxTurns, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON,
   fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_GRACE_TURNS,
   segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
@@ -161,7 +163,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 5000);
+  const block = VTR.slice(auto, auto + 6500);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
   pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{advanceReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
@@ -169,7 +171,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
 // ── fix round 10-11 ──────────────────────────────────────────────────────
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 5000);
+  const block = VTR.slice(auto, auto + 6500);
   pin(block, /if \(autoNext && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
   pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
@@ -181,11 +183,11 @@ test('C: the pronunciation hold is capped at 3 consecutive turns; the 4th advanc
   assert.equal(holdAutoAdvanceForPronunciation(true, 3), false);
   assert.equal(holdAutoAdvanceForPronunciation(false, 0), false);
   // the held count resets when nothing is due (a new segment) and on the advance
-  pin(VTR, /if \(!advanceReason\) autoAdvancePronHeldRef\.current = 0;/);
+  pin(VTR, /if \(!advanceReason\) \{ autoAdvancePronHeldRef\.current = 0; autoAdvanceAskHeldRef\.current = 0; \}/);
 });
 test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  pin(VTR.slice(auto, auto + 5000), /pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR.slice(auto, auto + 6500), /pendingRuntimeNoteUrgentRef\.current = true;/);
   // Task 14 §G: the tool path's level apply moved into applyWorkingLevelRef.
   const lv = VTR.indexOf("applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool')");
   assert.ok(lv > 0);
@@ -480,6 +482,28 @@ test('B: VoiceTutorRealtime wires segment_card_auto (pin)', () => {
   // before the sentence board, so the part's card leads its page
   assert.ok(VTR.indexOf("onDebugEvent?.('segment_card_auto'") < VTR.indexOf("onDebugEvent?.('sentence_board_auto'"));
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_SEGMENT_CARD_AUTO = process\.env\.NEXT_PUBLIC_TUTOR_SEGMENT_CARD_AUTO !== 'off';/);
+});
+
+// ── Task 22 §A (GDI run 10, 574 s / 882 s) ───────────────────────────────
+test('22A: a due budget advance on a turn ending with an ask is held one turn', () => {
+  assert.equal(FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, 1);
+  assert.equal(holdAutoAdvanceForPendingAsk(true, 0), true);   // due + ends with ask + held 0 → hold
+  assert.equal(holdAutoAdvanceForPendingAsk(true, 1), false);  // held 1 → advance
+  assert.equal(holdAutoAdvanceForPendingAsk(false, 0), false); // no ask → advance
+});
+test('22A: turnEndsWithAsk — the run-10 turns', () => {
+  assert.equal(turnEndsWithAsk('The robotics event introduced you to companies in China, so the past simple is right there. Could you say that in one clean sentence: "The event introduced me to…"?'), true);
+  assert.equal(turnEndsWithAsk('That\'s a clear sentence, and the "about how" part is natural. Now let\'s go a step further. Could you tell me one result of that talk with the customer? Start with "As a result, the customer…".'), true);
+  assert.equal(turnEndsWithAsk('Did the robotics event give you any useful contacts?'), true);
+  assert.equal(turnEndsWithAsk('Good work on the past simple. That was a clear sentence.'), false);
+  assert.equal(turnEndsWithAsk('Could you tell me more? Good. That is all for this part. Well done today.'), false);
+  assert.equal(turnEndsWithAsk(''), false);
+});
+test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
+  const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
+  const block = VTR.slice(auto, auto + 6000);
+  pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
+  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
