@@ -225,7 +225,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '@/lib/tutor/voice/correct-retry';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -1480,6 +1480,7 @@ export function VoiceTutorRealtime({
       pronunciationArmMaxTimerRef.current = null;
     }
   };
+  const lastPronunciationClipRef = useRef<{ text: string; at: number } | null>(null);
   const plantPronunciationNote = (note: string, measured: boolean) => {
     pronunciationResultNoteRef.current = pronunciationNoteForBrain(note);
     pronunciationMeasuredRef.current = measured;
@@ -1498,6 +1499,10 @@ export function VoiceTutorRealtime({
   const sendPronunciationClip = (clip: PronunciationClip) => {
     clearPronunciationNoSpeechTimer();
     clearPronunciationArmMaxTimer();
+    // Task 18 §A: the clip closes the arm before the perception transcript of
+    // the same utterance lands — remember the target briefly so the
+    // expected-repeat exemption still knows the student was asked to say it.
+    lastPronunciationClipRef.current = { text: clip.referenceText, at: Date.now() };
     onDebugEvent?.('pronunciation_clip_sent', `${clip.durationMs}ms "${clip.referenceText.slice(0, 80)}"`);
     const run = (async () => {
       const ctrl = new AbortController();
@@ -24446,6 +24451,16 @@ export function VoiceTutorRealtime({
         const recentTtsScripts: RecentTtsScript[] = ttsScriptBufferRef.current.filter(
           (s) => s.spokenStartedAt >= studentT - 30_000,
         );
+        // Task 18 §A: the line the student was asked to say (armed
+        // pronunciation target, a clip of one just sent, or the last tutor
+        // turn's quoted say-it / repeat ask) — a verbatim repeat that began
+        // after that line finished playing is the student, not echo.
+        const recentClip = lastPronunciationClipRef.current;
+        const expectedRepeat = expectedRepeatFor(
+          recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '',
+          clipCaptureRef.current?.armedReference()
+            ?? (recentClip && nowMs - recentClip.at < 30_000 ? recentClip.text : null),
+        );
         const heur = classifyHeuristic({
           transcript: t.text,
           productionState: prodState as ProductionStateForClassifier,
@@ -24465,6 +24480,7 @@ export function VoiceTutorRealtime({
           // the tutor never SPOKE that answer). undefined when no problem is
           // active; the carve-out is a no-op in that case.
           verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
+          expectedRepeat,
         });
         const ttsBufLen = recentTtsScripts.length;
         const svScore = heur.selfVoiceScore !== undefined
@@ -24474,6 +24490,9 @@ export function VoiceTutorRealtime({
           `[CLASSIFIER] heuristic=${heur.verdict} (sv=${svScore}, ttsBuf=${ttsBufLen}, prod=${prodState}) — ${heur.reason}`,
         );
         onDebugEvent?.('perception_heuristic', `${heur.verdict}:${heur.reason}`);
+        if (heur.exemption === 'expected_repeat') {
+          onDebugEvent?.('self_voice_exempt_expected_repeat', `"${t.text.slice(0, 60)}"`);
+        }
         if (heur.carveOut) {
           onDebugEvent?.('echo_carveout', `${heur.reason} · "${t.text.slice(0, 60)}"`);
         }

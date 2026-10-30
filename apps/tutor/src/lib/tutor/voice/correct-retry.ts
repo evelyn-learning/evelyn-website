@@ -17,6 +17,7 @@
  */
 import { precheckDecides, type PublicVerdictPrecheck } from './verdict-precheck-shared';
 import { isRetryAsk } from './retry-cap';
+import { extractQuotedSentences } from './sentence-board';
 
 /** Did this delivered turn re-ask for an answer the check found correct? */
 export function reAskedCheckedCorrect(p: PublicVerdictPrecheck | null | undefined, tutorText: string): boolean {
@@ -53,6 +54,29 @@ function latinSentence(text: string): string {
 // without the もう一度 that isRetryAsk needs: the live turn had none.
 const SAY_IT_ASK_RE =
   /言(?:って|い)(?:み(?:ましょう|てください|て)|ましょう)|繰り返し|リピート|\brepeat after me\b|\bsay (?:it|this|that)\b|\btry saying\b/;
+
+/** "Say it once more / again / one more time" in English. */
+const SAY_AGAIN_RE = /\b(?:say|repeat)\b[^.!?。？]*\b(?:once more|again|one more time)\b/i;
+
+/** Task 18 §A: a plain "say it" ask (言ってみましょう, repeat after me, say it,
+ *  try saying, "say the sentence once more") — isRetryAsk's もう一度 forms
+ *  are separate. */
+export function isSayItAsk(text: string): boolean {
+  const t = text ?? '';
+  return SAY_IT_ASK_RE.test(t) || SAY_AGAIN_RE.test(t) || /\brepeat (?:it |that |this )?after me\b/i.test(t);
+}
+
+/** Task 18 §A (GDI run 6): the line the student was asked to say, for the
+ *  perception classifier's expected-repeat exemption — an armed pronunciation
+ *  target first, else the last quoted sentence of the last delivered tutor
+ *  turn when that turn is a repeat / say-it ask. null otherwise. */
+export function expectedRepeatFor(lastTutorTurn: string | null | undefined, armedReference: string | null | undefined): { text: string } | null {
+  if (armedReference && armedReference.trim()) return { text: armedReference.trim() };
+  const t = lastTutorTurn ?? '';
+  if (!t || !(isRetryAsk(t) || isSayItAsk(t))) return null;
+  const quotes = extractQuotedSentences(t);
+  return quotes.length > 0 ? { text: quotes[quotes.length - 1]! } : null;
+}
 
 /** Spoken fillers, as standalone (lower-cased) tokens. */
 const FILLER_TOKENS = new Set(['uh', 'um', 'umm', 'uhm', 'er', 'erm', 'ah', 'hmm', 'like']);
@@ -99,7 +123,7 @@ function tutorLatin(text: string): string {
 }
 
 export function reAskedOwnSentence(studentText: string, tutorText: string): boolean {
-  const sayAgain = /\b(?:say|repeat)\b[^.!?。？]*\b(?:once more|again|one more time)\b/i.test(tutorText ?? '');
+  const sayAgain = SAY_AGAIN_RE.test(tutorText ?? '');
   if (!isRetryAsk(tutorText) && !SAY_IT_ASK_RE.test(tutorText ?? '') && !sayAgain) return false;
   const said = cleanStudentSentence(studentText);
   if (said.split(' ').filter(Boolean).length < 3) return false;

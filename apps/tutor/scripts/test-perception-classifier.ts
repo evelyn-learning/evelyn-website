@@ -12,6 +12,7 @@
  *
  * Run: npm run test:perception-classifier
  */
+import { expectedRepeatFor, isSayItAsk } from '../src/lib/tutor/voice/correct-retry';
 import {
   classifyHeuristic,
   scoreSelfVoice,
@@ -1526,6 +1527,52 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   const echo = classifyHeuristic({ ...base, transcript: '一つ目は昨日したことを言う形です' });
   check('ja: partial echo of the tutor line still drops', echo.verdict === 'drop_self_voice', `${echo.verdict} (${echo.reason})`);
   check('ja: unrelated Japanese scores low', scoreSelfVoice('あの、次に進んでいいですか', scripts, now - 1500, now) < SELF_VOICE_THRESHOLD);
+}
+
+// ── Task 18 §A: a repeat the tutor asked for is not self-voice (GDI run 6) ──
+// The window/trail logic only scores a script whose trail (end + 1.5 s)
+// covers the onset, so the live shape is: the line ended, the student began
+// ~1 s later (past ε, inside the trail) and said the line verbatim.
+{
+  const now = 2_000_000;
+  const line = 'Please say it once more: "Last week, I went golfing with my manager."';
+  const end = now - 5000;
+  const scripts: RecentTtsScript[] = [{ text: line, spokenStartedAt: end - 3000, spokenEndedAt: end }];
+  const said = 'Last week, I went golfing with my manager.';
+  const base = { transcript: said, recentTtsScripts: scripts, now, productionState: 'listening' as ProductionStateForClassifier };
+  const live = classifyHeuristic({ ...base, speechStartedAt: end + 1000, expectedRepeat: { text: 'Last week, I went golfing with my manager.' } });
+  check('§A live: asked-for repeat after playback end is not dropped', live.verdict === 'new_turn' && live.exemption === 'expected_repeat', `${live.verdict} (${live.reason})`);
+  check('§A live: reason names the exemption', live.reason === 'expected repeat after playback end', live.reason);
+  const filler = classifyHeuristic({ ...base, transcript: 'um, Last week, I went golfing with my manager.', speechStartedAt: end + 1000, expectedRepeat: { text: 'Last week, I went golfing with my manager.' } });
+  check('§A: fillers do not break the expected-repeat match', filler.verdict === 'new_turn', `${filler.verdict} (${filler.reason})`);
+  const inside = classifyHeuristic({ ...base, speechStartedAt: end + 100, expectedRepeat: { text: said } });
+  check('§A: onset inside the anchor window still drops', inside.verdict === 'drop_self_voice', `${inside.verdict} (${inside.reason})`);
+  const none = classifyHeuristic({ ...base, speechStartedAt: end + 1000 });
+  check('§A: no expectedRepeat ⇒ drop unchanged', none.verdict === 'drop_self_voice', `${none.verdict} (${none.reason})`);
+  const nul = classifyHeuristic({ ...base, speechStartedAt: end + 1000, expectedRepeat: null });
+  check('§A: expectedRepeat null ⇒ drop unchanged', nul.verdict === 'drop_self_voice', `${nul.verdict} (${nul.reason})`);
+  const speaking = classifyHeuristic({ ...base, productionState: 'speaking', speechStartedAt: end + 1000, expectedRepeat: { text: said } });
+  check('§A: state speaking ⇒ drop', speaking.verdict === 'drop_self_voice', `${speaking.verdict} (${speaking.reason})`);
+  const nearScripts: RecentTtsScript[] = [{ text: line, spokenStartedAt: now - 4000, spokenEndedAt: now - 800 }];
+  const noOnset = classifyHeuristic({ ...base, recentTtsScripts: nearScripts, expectedRepeat: { text: said } });
+  check('§A: unknown onset ⇒ drop (fail safe)', noOnset.verdict === 'drop_self_voice', `${noOnset.verdict} (${noOnset.reason})`);
+  const other = classifyHeuristic({ ...base, speechStartedAt: end + 1000, expectedRepeat: { text: 'I want a robot that can build washing machines.' } });
+  check('§A: transcript not the expected line ⇒ drop', other.verdict === 'drop_self_voice', `${other.verdict} (${other.reason})`);
+  // A second matching script still playing at onset (null end) keeps the drop.
+  const live2: RecentTtsScript[] = [...scripts, { text: said, spokenStartedAt: end + 500, spokenEndedAt: null }];
+  const still = classifyHeuristic({ ...base, recentTtsScripts: live2, speechStartedAt: end + 1000, expectedRepeat: { text: said } });
+  check('§A: a matching script still inside its anchor window ⇒ drop', still.verdict === 'drop_self_voice', `${still.verdict} (${still.reason})`);
+}
+
+// ── Task 18 §A: expectedRepeatFor (the caller's input) ──
+{
+  const ask = 'Please say it once more: "Last week, I went golfing with my manager."';
+  check('§A expectedRepeatFor: quoted retry ask ⇒ the quote', expectedRepeatFor(ask, null)?.text === 'Last week, I went golfing with my manager.');
+  check('§A expectedRepeatFor: armed target wins', expectedRepeatFor(ask, 'I was responsible for communicating with our customers.')?.text === 'I was responsible for communicating with our customers.');
+  check('§A expectedRepeatFor: no ask ⇒ null', expectedRepeatFor('Good. "Last week, I went golfing with my manager." is right.', null) === null);
+  check('§A expectedRepeatFor: ask without quote ⇒ null', expectedRepeatFor('Please say the sentence once more.', null) === null);
+  check('§A expectedRepeatFor: last quote taken', expectedRepeatFor('Not "I go golf", but "I went golfing." Repeat after me: "I went golfing last week."', null)?.text === 'I went golfing last week.');
+  check('§A isSayItAsk: say it once more / repeat after me / 言ってみましょう', isSayItAsk('Please say the sentence once more.') && isSayItAsk('Repeat after me.') && isSayItAsk('言ってみましょう。') && !isSayItAsk('Good job today.'));
 }
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

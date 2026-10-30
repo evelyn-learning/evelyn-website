@@ -150,6 +150,11 @@ export class ClipCapture {
     return this.referenceText !== null;
   }
 
+  /** The armed target's reference text (null when not armed). */
+  armedReference(): string | null {
+    return this.referenceText;
+  }
+
   isCapturing(): boolean {
     return this.capturing;
   }

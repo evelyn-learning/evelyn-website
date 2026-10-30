@@ -24,6 +24,7 @@
  */
 
 import { matchUtteranceToAnswer, canonicalizeMathExpression } from '@/lib/tutor/voice/utterance-answer-match';
+import { cleanStudentSentence } from '@/lib/tutor/voice/correct-retry';
 
 export type PerceptionVerdict =
   /** Matched a recent TTS script line — almost certainly the tutor's own
@@ -111,6 +112,11 @@ export interface HeuristicInput {
    *  carve-out never activates — existing echo-drop behaviour is
    *  unchanged. */
   verifiedExpectedAnswer?: string;
+  /** Task 18 (GDI run 6): the student was ASKED to say a line — the last
+   *  tutor turn was a repeat/say-it ask with a quoted sentence, or a
+   *  pronunciation target is armed. Powers the expected-repeat exemption
+   *  (`isExpectedRepeat`). Omitted / null ⇒ no exemption. */
+  expectedRepeat?: { text: string } | null;
 }
 
 export interface HeuristicResult {
@@ -126,6 +132,9 @@ export interface HeuristicResult {
    *  dispatch, for the Stage-1 FP-rate review to track the carve-out's own
    *  hit rate separately. */
   carveOut?: 'expected_answer';
+  /** Task 18: set when the expected-repeat exemption kept a self-voice-score
+   *  hit from dropping (the call site emits its own debug event). */
+  exemption?: 'expected_repeat';
 }
 
 // ── Lexicons ──────────────────────────────────────────────────────────
@@ -854,6 +863,67 @@ export function isOfferedOptionEcho(
   return false;
 }
 
+/** Jaccard bar for "this script is the line the transcript matches" in the
+ *  expected-repeat exemption, and the bar the transcript must reach against
+ *  the line the student was asked to say. */
+export const EXPECTED_REPEAT_SCRIPT_MATCH = 0.5;
+export const EXPECTED_REPEAT_TARGET_MATCH = 0.6;
+
+/**
+ * Expected-repeat exemption (Task 18, GDI run 6): the tutor said `Please say
+ * it once more: "Last week, I went golfing with my manager."`, the student
+ * said exactly that after the line had finished playing, and the jaccard /
+ * n-gram self-voice measures (un-anchored, by design) scored 1.00 — the turn
+ * was dropped as self-voice, six times in one lesson.
+ *
+ * Physics: an acoustic echo of a line cannot BEGIN after that line's
+ * playback ended (+ the ε VAD-onset slop `echoAnchorSatisfied` encodes). So a
+ * transcript is the student's requested repeat, not echo, when ALL hold:
+ *  - the student was asked to say a line (`expectedRepeat`, set by the
+ *    caller) and the transcript matches it (filler-free token jaccard ≥ 0.6);
+ *  - production state is 'listening' (during playback a match IS echo);
+ *  - speech onset is known (unknown onset fails safe to the drop);
+ *  - EVERY in-window script the transcript matches (jaccard or n-gram ≥ 0.5)
+ *    had finished playing before the onset — any matching script still
+ *    inside its anchor window keeps the drop.
+ */
+export function isExpectedRepeat(
+  transcript: string,
+  recentTtsScripts: RecentTtsScript[],
+  productionState: ProductionStateForClassifier,
+  speechStartedAt: number | undefined,
+  now: number,
+  expectedRepeat: { text: string } | null | undefined,
+): boolean {
+  if (!expectedRepeat || !expectedRepeat.text.trim()) return false;
+  if (productionState !== 'listening') return false;
+  if (speechStartedAt === undefined) return false;
+  const said = new Set(cleanStudentSentence(transcript).split(' ').filter(Boolean));
+  const target = new Set(cleanStudentSentence(expectedRepeat.text).split(' ').filter(Boolean));
+  if (said.size === 0 || target.size === 0) return false;
+  if (jaccard(said, target) < EXPECTED_REPEAT_TARGET_MATCH) return false;
+  const tTokens = tokenize(transcript);
+  if (tTokens.length === 0) return false;
+  const tSet = new Set(tTokens);
+  const t3 = new Set(ngrams(tTokens, Math.min(3, tTokens.length)));
+  for (const s of recentTtsScripts) {
+    if (!scriptWindowContains(s, speechStartedAt, now)) continue;
+    const sTokens = tokenize(s.text);
+    if (sTokens.length === 0) continue;
+    const j = jaccard(tSet, new Set(sTokens));
+    let ngramHit = 0;
+    if (t3.size > 0) {
+      const s3 = new Set(ngrams(sTokens, 3));
+      let hit = 0;
+      for (const g of t3) if (s3.has(g)) hit += 1;
+      ngramHit = hit / t3.size;
+    }
+    if (Math.max(j, ngramHit) < EXPECTED_REPEAT_SCRIPT_MATCH) continue;
+    if (echoAnchorSatisfied(s, speechStartedAt, now)) return false;
+  }
+  return true;
+}
+
 // ── Expected-answer carve-out (Task 6, verdict-detector round, 2026-08-10) ──
 //
 // Live incident (session portal-cb2addf5): the tutor asked "Differentiate
@@ -1017,7 +1087,15 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     isOfferedOptionEcho(
       text, input.recentTtsScripts, input.productionState, input.speechStartedAt, input.now,
     );
-  if (selfVoiceScore >= SELF_VOICE_THRESHOLD && !offeredOptionPick) {
+  // Expected repeat beats the echo drop too (see isExpectedRepeat doc).
+  const expectedRepeatHit =
+    selfVoiceScore >= SELF_VOICE_THRESHOLD &&
+    !offeredOptionPick &&
+    isExpectedRepeat(
+      text, input.recentTtsScripts, input.productionState, input.speechStartedAt, input.now,
+      input.expectedRepeat,
+    );
+  if (selfVoiceScore >= SELF_VOICE_THRESHOLD && !offeredOptionPick && !expectedRepeatHit) {
     // Fix wave (2026-07-15, review finding 3): when the drop verdict was
     // reached ONLY via the phonetic pass (text score alone stayed under
     // threshold), say so distinctly in the reason string so the Stage-1 FP
@@ -1232,6 +1310,11 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
 
   if (state === 'listening' || state === 'connected') {
     // Existing path — real student turn. Heuristic doesn't need to ask.
+    // Task 18: an expected-repeat exemption lands here (it only opens in
+    // 'listening'); its reason names the exemption for the log review.
+    if (expectedRepeatHit) {
+      return { verdict: 'new_turn', reason: 'expected repeat after playback end', selfVoiceScore, exemption: 'expected_repeat' };
+    }
     return { verdict: 'new_turn', reason: 'listening + non-filler', selfVoiceScore };
   }
 
