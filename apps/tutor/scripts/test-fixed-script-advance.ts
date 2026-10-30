@@ -185,7 +185,9 @@ test('C: the pronunciation hold is capped at 3 consecutive turns; the 4th advanc
 test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
   pin(VTR.slice(auto, auto + 3000), /pendingRuntimeNoteUrgentRef\.current = true;/);
-  const lv = VTR.indexOf("'working_level_set'");
+  // Task 14 §G: the tool path's level apply moved into applyWorkingLevelRef.
+  const lv = VTR.indexOf("applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool')");
+  assert.ok(lv > 0);
   pin(VTR.slice(lv, lv + 2500), /pendingRuntimeNoteUrgentRef\.current = true;/);
   pin(VTR, /const deliver = urgentNote \|\| !openQuestionAtTurnStartRef\.current/);
   pin(VTR, /if \(urgentNote\) onDebugEvent\?\.\('fixed_script_note_delivered'/);
@@ -198,7 +200,8 @@ test('D: the turn counter + auto-advance run under the auto-advance flag alone',
   pin(VTR, /if \(TUTOR_SEGMENT_OVERLONG_NOTE && !homeworkSession && !cur\.noted && cur\.turns >= overlongTurns/);
 });
 test('level-set advance wired in the setWorkingLevel handler with the double-advance guard', () => {
-  const at = VTR.indexOf("'working_level_set'");
+  const at = VTR.indexOf("applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool')");
+  assert.ok(at > 0);
   const block = VTR.slice(at, at + 2000);
   pin(block, /levelSetAdvanceTarget\(lvPlan, lvFrom\)/);
   pin(block, /applyResolvedAdvance\(lvPlan, lvFrom, lvNext\)/);
