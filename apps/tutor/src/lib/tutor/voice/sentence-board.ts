@@ -241,28 +241,82 @@ export function isCardCandidate(span: string): boolean {
   return !/^\p{Ll}/u.test(s);
 }
 
-/** Task 19 §D: leading fillers the student opens with ("Okay. Um, …"). */
-const LEADING_FILLER_RE = /^\s*(?:uh|um|okay|ok|well|so|hmm)\b[,.]?\s*/i;
+/** Task 19 §D: leading hesitations the student opens with ("Um, …") —
+ *  stripped with or without a following comma. */
+const LEADING_HESITATION_RE = /^\s*(?:uh|um|er|erm|hmm)\b[,.]?\s*/i;
+/** Fix round 2 (I3): okay / ok / well / so are words too ("So far, I have…",
+ *  "Well over half…") — stripped only when punctuation follows ("So, I…",
+ *  "Okay. Um, I…"). */
+const LEADING_DISCOURSE_RE = /^\s*(?:okay|ok|well|so)[,.]\s*/i;
 /** Hesitations inside the sentence ("I have uh attended") — never words. */
 const INNER_HESITATION_RE = /(?<=\s)(?:uh|um|erm|er|hmm)\b[,.]?\s+/gi;
 /** A checked card needs at least this many Latin words. */
 const CHECKED_CARD_MIN_WORDS = 4;
+/** Fix round 2 (I4): the precheck's `proposed` is cut at 200 chars — one this
+ *  long may end mid-clause. */
+const CHECKED_MAX_CHARS = 195;
 
-/** Task 19 §D: the checked student sentence as a card — leading fillers
- *  (uh, um, okay, ok, well, so, hmm, with a following comma / period) and
- *  inner hesitations removed, first letter capitalised, a trailing "." ensured;
- *  null unless it passes qualifyingSpan + isCardCandidate with ≥ 4 Latin words. */
+/** Task 19 §D: the checked student sentence as a card — leading fillers and
+ *  inner hesitations removed, a trailing "." ensured; null unless it is ONE
+ *  sentence (fix round 2, I4: no internal . ! ? before another word; raw under
+ *  195 chars) that passes qualifyingSpan + isCardCandidate with ≥ 4 Latin
+ *  words. Fix round 2 (m5): the lowercase-fragment / question guard runs
+ *  before capitalising — only a word that followed a stripped filler is
+ *  capitalised first (STT lowercases after "Um,"). */
 export function cardableStudentSentence(raw: string | null | undefined): string | null {
   let s = (raw ?? '').trim();
-  for (let prev = ''; prev !== s;) { prev = s; s = s.replace(LEADING_FILLER_RE, ''); }
+  if (s.length >= CHECKED_MAX_CHARS) return null;
+  const before = s;
+  for (let prev = ''; prev !== s;) {
+    prev = s;
+    s = s.replace(LEADING_HESITATION_RE, '').replace(LEADING_DISCOURSE_RE, '');
+  }
+  const stripped = s !== before;
   s = s.replace(INNER_HESITATION_RE, '').replace(/\s+/g, ' ').trim();
   if (!s) return null;
-  s = s[0]!.toUpperCase() + s.slice(1);
+  if (/[.!?]["”’)]?\s+\p{L}/u.test(s)) return null;
+  if (stripped || /^i\b/.test(s)) s = s[0]!.toUpperCase() + s.slice(1);
+  if (!isCardCandidate(s)) return null;
   if (!/[.!?]["”’)]?$/.test(s)) s = s.replace(/[,;:]+$/, '') + '.';
   const span = qualifyingSpan(s);
   if (!span || !isCardCandidate(span)) return null;
   if (span.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length < CHECKED_CARD_MIN_WORDS) return null;
   return span;
+}
+
+/** Fix round 2 (I2): the precheck's "correct" judges the task, not the
+ *  grammar — a turn that corrects the student in so many words gets no
+ *  checked card. */
+const CORRECTION_CUE_RE = /\b(?:small fix|one fix|quick fix|we say|should be|is missing|instead of|fuller form|correct form|not quite|almost right|be careful|the right (?:word|form)|rather than)\b|正しくは|直し|の方が/i;
+export function hasCorrectionCue(tutorText: string): boolean {
+  return CORRECTION_CUE_RE.test(tutorText ?? '');
+}
+
+/** Two word forms of one stem ("machine" / "machines", "work" / "worked"). */
+function nearForm(a: string, b: string): boolean {
+  if (a === b || a.length < 3 || b.length < 3) return false;
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  return long.startsWith(short) && long.length - short.length <= 3;
+}
+
+/** Fix round 2 (I2, review probe): an UNQUOTED recast — a tutor sentence made
+ *  mostly of the student's words that swaps one of them for another form of
+ *  it ("Nice, you sell washing machines in the sales department." after "…and
+ *  sell washing machine.") — corrects the sentence without saying so. */
+export function recastsStudentSentence(tutorText: string, student: string): boolean {
+  const said = new Set(tokens(student));
+  if (said.size === 0) return false;
+  for (const sentence of (tutorText ?? '').split(/(?<=[.!?。！？])\s+/)) {
+    const tset = new Set(tokens(sentence));
+    if (tset.size === 0 || sameSentence(sentence, student)) continue;
+    let shared = 0;
+    for (const t of tset) if (said.has(t)) shared++;
+    if (shared / tset.size < CORRECTION_OVERLAP) continue;
+    const novel = [...tset].filter((t) => !said.has(t));
+    const missing = [...said].filter((t) => !tset.has(t));
+    if (novel.some((n) => missing.some((m) => nearForm(n, m)))) return true;
+  }
+  return false;
 }
 
 /**
@@ -311,9 +365,10 @@ export function planSentenceBoard(input: {
   // the slogan was the challenge…") and nothing was carded for six minutes.
   // A correct student sentence goes on the board whether or not the tutor
   // repeats it — no sentenceContains requirement.
-  if (promote && input.checkedSentence) {
+  if (promote && input.checkedSentence && !hasCorrectionCue(input.tutorText)) {
     const checked = cardableStudentSentence(input.checkedSentence);
-    if (checked && !classified.some((c) => sameSentence(c.q.sentence, checked))) {
+    if (checked && !recastsStudentSentence(input.tutorText, checked)
+      && !classified.some((c) => sameSentence(c.q.sentence, checked))) {
       classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length, said: false });
     }
   }

@@ -14,7 +14,7 @@ import {
   applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
   sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex, autoSentenceCardsToReplace,
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
-  isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence,
+  isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -497,7 +497,7 @@ test('§D19: leading fillers dropped, capitalised, full stop ensured', () => {
   const tutor = 'Good. Next, tell me about your team.';
   const cards = planSentenceBoard({ tutorText: tutor, studentLast: 'x', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'Okay. Um, I have worked with international customers for several years.' });
   assert.deepEqual(cards.map((c) => c.sentence), ['I have worked with international customers for several years.']);
-  assert.equal(cardableStudentSentence('so i worked on a project to increase sales'), 'I worked on a project to increase sales.');
+  assert.equal(cardableStudentSentence('so, i worked on a project to increase sales'), 'I worked on a project to increase sales.');
   assert.equal(cardableStudentSentence('I have uh attended a sales seminar.'), 'I have attended a sales seminar.');
 });
 test('§D19: a 3-word checked answer ⇒ no card', () => {
@@ -513,6 +513,40 @@ test('§D19: unchanged — correction turn, renderedThisTurn, not checked correc
   assert.deepEqual(planSentenceBoard({ tutorText: 'Nice.', studentLast: ok, renderedThisTurn: true, studentCorrect: true, checkedSentence: ok }), []);
   assert.deepEqual(planSentenceBoard({ tutorText: 'Nice.', studentLast: ok, renderedThisTurn: false, studentCorrect: false, checkedSentence: ok }), []);
   assert.equal(cardableStudentSentence('Can you repeat the question please?'), null);
+});
+
+// ── Task 19 fix round 2 (§D) ──
+test('§D19 R2 I2: an unquoted recast or a correction cue ⇒ no checked card', () => {
+  const said = 'I work in the sales department and sell washing machine.';
+  const recast = 'Nice, you sell washing machines in the sales department. How long have you worked there?';
+  assert.deepEqual(planSentenceBoard({ tutorText: recast, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said }), []);
+  assert.equal(recastsStudentSentence(recast, said), true);
+  const cue = 'Good answer. In English we say "at work" for this. What else do you do there?';
+  const ok = 'I answer emails from customers every morning.';
+  assert.equal(hasCorrectionCue(cue), true);
+  assert.deepEqual(planSentenceBoard({ tutorText: cue, studentLast: ok, renderedThisTurn: false, studentCorrect: true, checkedSentence: ok }), []);
+  assert.equal(hasCorrectionCue('正しくは「I went」です。'), true);
+  // a plain paraphrase is not a recast
+  const para = "The project was successful and it increased sales. That's a clear result. What was the biggest challenge?";
+  assert.equal(recastsStudentSentence(para, 'The project was successful and it increased sales in my company.'), false);
+});
+test('§D19 R2 I3: so / well / okay / ok strip only before punctuation', () => {
+  assert.equal(cardableStudentSentence('So far, I have visited Osaka.'), 'So far, I have visited Osaka.');
+  assert.equal(cardableStudentSentence('So far I have visited three countries for work.'), 'So far I have visited three countries for work.');
+  assert.equal(cardableStudentSentence('Well, so far I have worked with five customers.'), 'So far I have worked with five customers.');
+  assert.equal(cardableStudentSentence('So, I work in sales every day.'), 'I work in sales every day.');
+  assert.equal(cardableStudentSentence('Um I work in sales every day.'), 'I work in sales every day.');
+});
+test('§D19 R2 I4: a truncated or multi-sentence proposed ⇒ no card', () => {
+  const long = 'I have been responsible for many large projects at my company for a long time and I have worked with customers in many different countries such as China, Korea and the United States, and I have learned a lot from them and';
+  assert.ok(long.length >= 195);
+  assert.equal(cardableStudentSentence(long), null);
+  assert.equal(cardableStudentSentence('I work in sales. I sell washing machines. I like my job.'), null);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Nice.', studentLast: 'x', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I work in sales. I sell washing machines every day.' }), []);
+});
+test('§D19 R2 m5: a lowercase fragment is not capitalised into a card', () => {
+  assert.equal(cardableStudentSentence('in the sales department, selling washing machines'), null);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Nice.', studentLast: 'x', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'in the sales department, selling washing machines' }), []);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
