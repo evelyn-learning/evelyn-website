@@ -11,7 +11,7 @@
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
 import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY } from '@/lib/tutor/orchestrator/flags';
-import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill } from '@/lib/tutor/voice/speech-queue-boundary';
+import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
@@ -12911,6 +12911,10 @@ export function VoiceTutorRealtime({
       // retry would start a fresh brain call and speak after the goodbye or
       // over the reply. The loop ends the turn instead of retrying.
       let retrySkippedAfterKill: string | null = null;
+      // Fix round 2 (N1): the sentences the student heard in full before that
+      // skip (only when the in-flight sentence ended) — kept as the turn's
+      // text so its bubble and the brain's memory hold what was said.
+      let retrySkippedHeardText = '';
       // Round-7+ Fix 4: verbatim-sentence dedup within a turn. The brain
       // sometimes emits the same sentence twice in one block of text
       // ("What's the mode of {4, 7, 4, 9, 2}?What's the mode of {4, 7, 4, 9, 2}?")
@@ -13475,6 +13479,9 @@ export function VoiceTutorRealtime({
         // ref, signal is never aborted, fetch behaves identically.
         const brainAbort = new AbortController();
         inFlightBrainAbortRef.current = brainAbort;
+        // Task 17 fix round 2: where this attempt's dispatched sentences
+        // start in turnNarrationRef (heardTextThroughKept).
+        const attemptNarrationStart = turnNarrationRef.current.length;
         // 2026-10-08: the student's typed message superseded this opening
         // turn between attempts (no fetch was in flight to abort) — this
         // attempt must not start. An aborted signal rejects the fetch at once.
@@ -14548,6 +14555,12 @@ export function VoiceTutorRealtime({
               });
               if (skipReason) {
                 retrySkippedAfterKill = skipReason;
+                if (res.outcome === 'ended') {
+                  retrySkippedHeardText = heardTextThroughKept(
+                    turnNarrationRef.current.slice(attemptNarrationStart),
+                    res.keptSentence,
+                  );
+                }
                 onDebugEvent?.('judge_kill_retry_skipped', `reason=${skipReason}`);
                 return;
               }
@@ -19411,7 +19424,14 @@ export function VoiceTutorRealtime({
 
         // Task 17 fix round 1 (I1): the sentence-boundary wait was cut by a
         // barge-in / end / farewell / abort — end the turn, no retry.
-        if (retrySkippedAfterKill && rejectionsThisAttempt.length > 0) break;
+        if (retrySkippedAfterKill && rejectionsThisAttempt.length > 0) {
+          if (retrySkippedHeardText) {
+            aggregatedFullText = aggregatedFullText
+              ? `${aggregatedFullText} ${retrySkippedHeardText}`
+              : retrySkippedHeardText;
+          }
+          break;
+        }
         // No rejections OR we've burned the retry budget → done with this turn.
         if (rejectionsThisAttempt.length === 0 || attempt === attemptCap) {
           if (rejectionsThisAttempt.length > 0) {
@@ -20814,7 +20834,11 @@ export function VoiceTutorRealtime({
       }
 
       // Empty-turn fallback. Brain produced neither text nor tool calls.
-      if (!fullText.trim() && totalToolNamesSeen.length === 0) {
+      // Task 17 fix round 2 (N1): not after a retry skipped because a
+      // barge-in / end / farewell cut the sentence-boundary wait — the turn
+      // is not empty, it was cut, and a spoken "Sorry, could you say that
+      // again?" would land after the goodbye or over the reply.
+      if (!fullText.trim() && totalToolNamesSeen.length === 0 && !retrySkippedAfterKill) {
         // Task X10 — HONEST fallback when the server exhausted its bounded
         // retries during a brain outage (overloaded_error / transient). The
         // empty stream is NOT the student's fault, so never say "say that

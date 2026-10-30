@@ -165,3 +165,13 @@ export function shouldSkipRetryAfterKill(s: {
   if (s.preempted) return 'preempted';
   return null;
 }
+
+/** Fix round 2 (N1): when the retry is skipped after the in-flight sentence
+ *  ENDED, the turn's text is what the student heard — this attempt's
+ *  dispatched sentences up to and including the kept one (the later ones
+ *  were dropped unheard). Not found ⇒ the kept sentence alone. */
+export function heardTextThroughKept(dispatchedThisAttempt: readonly string[], kept: string): string {
+  const i = dispatchedThisAttempt.lastIndexOf(kept);
+  const heard = i >= 0 ? dispatchedThisAttempt.slice(0, i + 1) : [kept];
+  return heard.map((x) => x.trim()).filter(Boolean).join(' ');
+}

@@ -18,6 +18,7 @@ import {
   finishesWithinCap,
   createBoundaryDrain,
   shouldSkipRetryAfterKill,
+  heardTextThroughKept,
 } from '../src/lib/tutor/voice/speech-queue-boundary';
 
 let failed = 0;
@@ -114,6 +115,13 @@ test('skip reasons; none ⇒ retry', () => {
   assert.equal(shouldSkipRetryAfterKill({ ...base, sealed: true, aborted: true }), 'sealed');
 });
 
+console.log('heardTextThroughKept');
+test('heard = dispatched up to and including the kept sentence', () => {
+  assert.equal(heardTextThroughKept([A, B, C], B), `${A} ${B}`);
+  assert.equal(heardTextThroughKept([B], B), B);
+  assert.equal(heardTextThroughKept([A, C], B), B);
+});
+
 console.log('static pins');
 const root = join(__dirname, '..');
 const hook = readFileSync(join(root, 'src/app/tutor/hooks/useOpenAIRealtime.ts'), 'utf8');
@@ -164,10 +172,20 @@ test('fix round 1 (m1): interrupt, pause, disconnect and reconnect preempt a pen
 test('fix round 1 (I1): a preempted / aborted / ending / sealed wait skips the retry', () => {
   assert.match(vtr, /shouldSkipRetryAfterKill\(\{\s*preempted: res\.preempted,\s*aborted: brainAbort\.signal\.aborted,\s*ending: endingRef\.current,\s*sealed: farewellSealedRef\.current,\s*\}\)/);
   assert.match(vtr, /'judge_kill_retry_skipped', `reason=\$\{skipReason\}`/);
-  const brk = vtr.indexOf('if (retrySkippedAfterKill && rejectionsThisAttempt.length > 0) break;');
+  const brk = vtr.indexOf('if (retrySkippedAfterKill && rejectionsThisAttempt.length > 0) {');
   const done = vtr.indexOf("// No rejections OR we've burned the retry budget");
   const retry = vtr.indexOf("'brain_validator_retry',");
   assert.ok(brk > 0 && brk < done && done < retry, `break=${brk} done=${done} retry=${retry}`);
+});
+test('fix round 2 (N1): no empty-turn fallback after a skipped retry; heard text kept as the turn text', () => {
+  assert.match(vtr, /if \(!fullText\.trim\(\) && totalToolNamesSeen\.length === 0 && !retrySkippedAfterKill\) \{/);
+  // The guarded block holds both the spoken and the chat-only fallback (and brain-unavailable).
+  const g = vtr.indexOf('&& !retrySkippedAfterKill) {');
+  const spoken = vtr.indexOf("speakTextRef.current?.('Sorry, could you say that again?');");
+  const chat = vtr.indexOf("Hmm, I didn't come up with anything for that");
+  assert.ok(g > 0 && spoken > g && chat > g && spoken - g < 6000, `guard=${g} spoken=${spoken} chat=${chat}`);
+  assert.match(vtr, /if \(res\.outcome === 'ended'\) \{\s*retrySkippedHeardText = heardTextThroughKept\(\s*turnNarrationRef\.current\.slice\(attemptNarrationStart\),\s*res\.keptSentence,/);
+  assert.match(vtr, /if \(retrySkippedAfterKill && rejectionsThisAttempt\.length > 0\) \{\s*if \(retrySkippedHeardText\) \{\s*aggregatedFullText = /);
 });
 test('flag declared, default ON', () => {
   assert.match(flags, /export const TUTOR_KILL_SENTENCE_BOUNDARY = process\.env\.NEXT_PUBLIC_TUTOR_KILL_SENTENCE_BOUNDARY !== 'off';/);
