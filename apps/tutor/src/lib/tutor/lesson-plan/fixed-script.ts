@@ -176,6 +176,15 @@ export function fixedScriptAdvancedNote(lead: string, next: string): string {
 export function fixedScriptAutoAdvanceLead(from: string, next: string, kind: string): string {
   return `The "${from}" part of the lesson is over and the lesson pointer has ALREADY moved to segment "${next}" (${kind}).`;
 }
+/** Task 16: the brain announced the move into the next part itself (no
+ *  advance_lesson) and the client moved the pointer on that announcement. */
+export function fixedScriptAnnouncedAdvanceLead(from: string, next: string, kind: string): string {
+  return `The "${from}" part is over — you announced the move yourself — and the lesson pointer has ALREADY moved to segment "${next}" (${kind}).`;
+}
+/** Task 16 §C: the announcing turn ended without a question — one silent
+ *  continuation starts the new part once the audio has finished. */
+export const FIXED_SCRIPT_CONTINUE_DIRECTIVE =
+  '[System note: you announced the next part and then stopped without a question. The lesson pointer has moved; begin that part now from its notes — its first question or card — in one or two sentences. Do not repeat the announcement, do not recap.]';
 /** GDI run 3: the client moved off the level check before the brain stored a
  *  level, so no level was ever kept. Leaving a `skipWhenLevelKnown` segment
  *  with no working level ⇒ the note asks for set_working_level first. */

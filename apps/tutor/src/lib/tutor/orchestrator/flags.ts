@@ -937,6 +937,15 @@ export const TUTOR_FIXED_SCRIPT_OUTLINE = process.env.NEXT_PUBLIC_TUTOR_FIXED_SC
  *  Default ON; NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_SPOKEN_OPENER=off. */
 export const TUTOR_FIXED_SCRIPT_SPOKEN_OPENER = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_SPOKEN_OPENER !== 'off';
 
+/** Fixed-script plans (GDI live, embed-1793326847152): a tutor turn that
+ *  announces the move into the NEXT part ("Now let's move on to the open
+ *  conversation.") with no advance_lesson moves the pointer as the turn
+ *  budget does (lesson-plan/announced-move.ts); when that turn ended with no
+ *  question, one continuation directive starts the new part once the audio
+ *  has finished. Default ON; NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE=off.
+ */
+export const TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE !== 'off';
+
 /** Level check (GDI run 4: set_working_level never called): leaving the
  *  level-check segment with no level stored asks /api/tutor/level/estimate
  *  for one from the student's answers. Default ON;

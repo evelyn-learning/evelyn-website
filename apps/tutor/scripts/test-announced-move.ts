@@ -9,6 +9,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords } from '../src/lib/tutor/lesson-plan/announced-move';
+import { fixedScriptAnnouncedAdvanceLead } from '../src/lib/tutor/lesson-plan/fixed-script';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
 let failed = 0;
@@ -85,6 +86,28 @@ test('segmentKeywords: label, ja label, id words; stopwords out; open kept', () 
 test('the real GDI plan: the live sentence from past-simple ⇒ open-conversation', () => {
   const real = JSON.parse(readFileSync(join(__dirname, '..', '..', '..', 'docs/whitelabel/gdi/plans/gdi-work-projects-v1.json'), 'utf8')) as LessonPlan;
   assert.equal(at(LIVE, 'past-simple', real), 'open-conversation');
+});
+
+// ── §B wiring pins ───────────────────────────────────────────────────────
+const read = (p: string) => readFileSync(join(__dirname, '..', p), 'utf8');
+const pin = (src: string, re: RegExp) => assert.ok(re.test(src), `missing ${re}`);
+const VTR = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
+const FLAGS = read('src/lib/tutor/orchestrator/flags.ts');
+test('B: flag default ON', () => {
+  pin(FLAGS, /export const TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE = process\.env\.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE !== 'off';/);
+});
+test('B: the announced lead (brief text)', () => {
+  assert.equal(
+    fixedScriptAnnouncedAdvanceLead('past-simple', 'open-conversation', 'extension'),
+    'The "past-simple" part is over — you announced the move yourself — and the lesson pointer has ALREADY moved to segment "open-conversation" (extension).',
+  );
+});
+test('B: VTR — only when the budget rule did not fire, flag on, no advance_lesson, not homework; the NEXT segment only', () => {
+  pin(VTR, /const announcedTarget = !autoReason && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts\?\.prefetchOnly\s*&& !totalToolNamesSeen\.includes\('advance_lesson'\)\s*\? announcedMoveTarget\(\{ tutorText: fullText, plan: autoPlan, currentSegmentId: segIdNow, levelKnown: !!workingLevelRef\.current \}\)/);
+  pin(VTR, /\?\? \(announcedTarget && autoPlan && announcedTarget === nextSegmentId\(autoPlan, segIdNow, !!workingLevelRef\.current\) \? 'announced' : null\)/);
+  // the same advance path (pron hold, applyResolvedAdvance, FACT note) runs on advanceReason
+  pin(VTR, /if \(!advanceReason\) autoAdvancePronHeldRef\.current = 0;\n\s*if \(autoPlan && advanceReason\) \{/);
+  pin(VTR, /reason=\$\{advanceReason\} turns=/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

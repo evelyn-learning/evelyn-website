@@ -160,15 +160,15 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 3000);
+  const block = VTR.slice(auto, auto + 5000);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
-  pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{autoReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
+  pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{advanceReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
 });
 // ── fix round 10-11 ──────────────────────────────────────────────────────
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 3000);
+  const block = VTR.slice(auto, auto + 5000);
   pin(block, /if \(autoNext && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
   pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
@@ -180,11 +180,11 @@ test('C: the pronunciation hold is capped at 3 consecutive turns; the 4th advanc
   assert.equal(holdAutoAdvanceForPronunciation(true, 3), false);
   assert.equal(holdAutoAdvanceForPronunciation(false, 0), false);
   // the held count resets when nothing is due (a new segment) and on the advance
-  pin(VTR, /if \(!autoReason\) autoAdvancePronHeldRef\.current = 0;/);
+  pin(VTR, /if \(!advanceReason\) autoAdvancePronHeldRef\.current = 0;/);
 });
 test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  pin(VTR.slice(auto, auto + 3000), /pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR.slice(auto, auto + 5000), /pendingRuntimeNoteUrgentRef\.current = true;/);
   // Task 14 §G: the tool path's level apply moved into applyWorkingLevelRef.
   const lv = VTR.indexOf("applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool')");
   assert.ok(lv > 0);
@@ -311,7 +311,7 @@ test('A: level-capture lead only when leaving a level check with no level', () =
   assert.equal(LEVEL_CAPTURE_LEAD, 'Before anything else this turn, call set_working_level with the level you heard in the level check. ');
 });
 test('VTR: auto-advance note prepends the level-capture lead', () => {
-  pin(VTR, /needsLevelCaptureLead\(autoPlan, segIdNow, !!workingLevelRef\.current\) \? LEVEL_CAPTURE_LEAD : ''\) \+\s*fixedScriptAutoAdvanceLead\(/);
+  pin(VTR, /needsLevelCaptureLead\(autoPlan, segIdNow, !!workingLevelRef\.current\) \? LEVEL_CAPTURE_LEAD : ''\) \+\s*\(advanceReason === 'announced'\s*\? fixedScriptAnnouncedAdvanceLead\(segIdNow, autoNext, autoKind\)\s*: fixedScriptAutoAdvanceLead\(/);
 });
 
 // ── Task 13 §B: authored labels → rail, page titles, outline ──

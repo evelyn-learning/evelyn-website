@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE } from '@/lib/tutor/orchestrator/flags';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
@@ -429,7 +429,8 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptAnnouncedAdvanceLead } from '@/lib/tutor/lesson-plan/fixed-script';
+import { announcedMoveTarget } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -19816,8 +19817,25 @@ export function VoiceTutorRealtime({
             levelKnown: !!workingLevelRef.current,
           })
           : null;
-        if (!autoReason) autoAdvancePronHeldRef.current = 0;
-        if (autoPlan && autoReason) {
+        // Task 16 (GDI live, embed-1793326847152): the brain said "Now let's
+        // move on to the open conversation." with no advance_lesson (Haiku
+        // never calls it) two turns before the budget rule — the pointer
+        // stayed, and the idle nudge re-asked the OLD part's question. A turn
+        // that announces the move into the NEXT segment (named by that
+        // segment's own label/id — announced-move.ts) advances through the
+        // SAME path as the budget rule: pronunciation hold, level-capture
+        // lead, FACT note. The script guard (missingRequiredPhrases /
+        // scriptMissingAdvanceReason) is NOT consulted: it refuses the
+        // BRAIN's advance_lesson off an unsaid script, and the overview — the
+        // only scripted part — is client-spoken now (spoken opener).
+        const announcedTarget = !autoReason && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts?.prefetchOnly
+          && !totalToolNamesSeen.includes('advance_lesson')
+          ? announcedMoveTarget({ tutorText: fullText, plan: autoPlan, currentSegmentId: segIdNow, levelKnown: !!workingLevelRef.current })
+          : null;
+        const advanceReason: 'turns' | 'time' | 'announced' | null = autoReason
+          ?? (announcedTarget && autoPlan && announcedTarget === nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current) ? 'announced' : null);
+        if (!advanceReason) autoAdvancePronHeldRef.current = 0;
+        if (autoPlan && advanceReason) {
           const autoNext = nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current);
           const pronArmed = !!clipCaptureRef.current?.isArmed();
           if (autoNext && holdAutoAdvanceForPronunciation(pronArmed, autoAdvancePronHeldRef.current)) {
@@ -19845,7 +19863,9 @@ export function VoiceTutorRealtime({
               // set_working_level before anything else.
               fixedScriptAdvancedNote(
                 (needsLevelCaptureLead(autoPlan, segIdNow, !!workingLevelRef.current) ? LEVEL_CAPTURE_LEAD : '') +
-                fixedScriptAutoAdvanceLead(segIdNow, autoNext, autoKind),
+                (advanceReason === 'announced'
+                  ? fixedScriptAnnouncedAdvanceLead(segIdNow, autoNext, autoKind)
+                  : fixedScriptAutoAdvanceLead(segIdNow, autoNext, autoKind)),
                 autoNext,
               ),
             );
@@ -19853,7 +19873,7 @@ export function VoiceTutorRealtime({
             pendingRuntimeNoteSegRef.current = merged.segId;
             pendingRuntimeNoteUrgentRef.current = true;
             runtimeNoteHeldTurnsRef.current = 0;
-            onDebugEvent?.('fixed_script_auto_advance', `"${segIdNow}" → "${autoNext}" reason=${autoReason} turns=${autoTurns} elapsed=${autoElapsedS}s`);
+            onDebugEvent?.('fixed_script_auto_advance', `"${segIdNow}" → "${autoNext}" reason=${advanceReason} turns=${autoTurns} elapsed=${autoElapsedS}s`);
           }
         }
         // Task 14 §H (GDI run 4: the summary looped 7 min — the last part
@@ -19876,7 +19896,7 @@ export function VoiceTutorRealtime({
             // another question; silence + a 45 s auto-end left it unanswered.
             void endSessionNowRef.current({ farewell: goodbyeLine(studentName) });
           }
-        } else if (!fixedScriptCloseRef.current && !lessonClosedRef.current && TUTOR_FIXED_SCRIPT_AUTO_ADVANCE && !homeworkSession && autoPlan && !autoReason) {
+        } else if (!fixedScriptCloseRef.current && !lessonClosedRef.current && TUTOR_FIXED_SCRIPT_AUTO_ADVANCE && !homeworkSession && autoPlan && !advanceReason) {
           const closeReason = fixedScriptCloseReason({
             plan: autoPlan,
             segmentId: segIdNow,
