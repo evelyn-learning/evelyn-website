@@ -26,8 +26,10 @@ export interface QuotedSentence {
    *  checked correct: 'echo' = a quote of the student's own (correct) words,
    *  'checked' = the check's sentence, said unquoted by the tutor;
    *  'affirmed' = (Task 20 §G1) a quote of the student's words the tutor
-   *  itself called correct while the check was silent / undecided. */
-  source?: 'echo' | 'checked' | 'affirmed';
+   *  itself called correct while the check was silent / undecided;
+   *  'introduced' = (Task 21 §B1) the tutor's own words after a "say it as a
+   *  full sentence:" colon that repeat the student's words. */
+  source?: 'echo' | 'checked' | 'affirmed' | 'introduced';
 }
 
 export const SENTENCE_BOARD_MAX_PER_TURN = 2;
@@ -123,6 +125,35 @@ function quotedSpansWithContext(text: string): Array<{ span: string; before: str
     if (!span) continue;
     const at = m.index ?? 0;
     out.push({ span, before: text.slice(Math.max(0, at - INTRO_WINDOW - 20), at), after: text.slice(at + m[0].length, at + m[0].length + INTRO_WINDOW), at, end: at + m[0].length });
+  }
+  return out;
+}
+
+/** Task 21 §B1 (GDI run 9: 477 / 527 / 571 s — "Let's say it as a full
+ *  sentence: I met a customer yesterday." — the brain stopped quoting and
+ *  nothing was carded): a sentence introduced by a colon after a say / model
+ *  lead and ending the tutor's sentence is a span like a quoted one. Never a
+ *  question ("Let's keep moving: when did you …?" fails isCardCandidate), a
+ *  quote (the quote path has it) or an instruction ("Try this: Tell me …"). */
+const COLON_LEAD_RE = /\b(?:say|says|sentence|model|version|form|try|like this|in English|once more|again)\b[^:：]{0,40}[:：]\s*$/i;
+const COLON_INSTRUCTION_RE = /^(?:please|let['’]s|tell|say|give|use|try|think|describe|answer|repeat|listen|look|remember|make|start|add|write|read|explain|choose|pick|imagine)\b/i;
+const COLON_MIN_WORDS = 4;
+function colonIntroducedSpans(text: string): Array<{ span: string; before: string; after: string; at: number; end: number }> {
+  const out: Array<{ span: string; before: string; after: string; at: number; end: number }> = [];
+  const t = text ?? '';
+  for (const m of t.matchAll(/[:：]\s*/g)) {
+    const colon = m.index ?? 0;
+    const sentStart = Math.max(t.slice(0, colon).search(/[^.!?。！？]*$/), 0);
+    if (!COLON_LEAD_RE.test(t.slice(sentStart, colon + m[0].length))) continue;
+    const at = colon + m[0].length;
+    const tail = /^[^.!?。！？"“「『‘]*[.!?。！？]?/.exec(t.slice(at))?.[0] ?? '';
+    const end = at + tail.length;
+    // the span ends the tutor sentence: a sentence end or the end of the text
+    if (!/[.!?。！？]$/.test(tail) && end < t.length) continue;
+    const span = qualifyingSpan(tail);
+    if (!span || COLON_INSTRUCTION_RE.test(span)) continue;
+    if (span.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length < COLON_MIN_WORDS) continue;
+    out.push({ span, before: t.slice(Math.max(0, at - INTRO_WINDOW - 20), at), after: t.slice(end, end + INTRO_WINDOW), at, end });
   }
   return out;
 }
@@ -388,7 +419,13 @@ const RECAST_FINAL_HEAD_MIN = 2;
  *  edit inside it (one token substituted, inserted or deleted, any stem).
  *  Inside: ≥ 1 matched token before the edit and ≥ 2 after, ≥ 4 student tokens
  *  in all — or a substitution of the student's final token after ≥ 2 matched. */
+type RecastEdit = { kind: 'sub' | 'ins' | 'del'; at: number };
 function oneEditRun(s: string[], t: string[]): boolean {
+  return oneEditAt(s, t) !== null;
+}
+/** The edit oneEditRun found: `at` = the index in `t` of the substituted /
+ *  inserted token (a deletion has no tutor word). */
+function oneEditAt(s: string[], t: string[]): RecastEdit | null {
   for (let i = 0; i < s.length; i++) {
     for (let j = 0; j < t.length; j++) {
       if (s[i] !== t[j] || (i > 0 && j > 0 && s[i - 1] === t[j - 1])) continue;
@@ -397,25 +434,25 @@ function oneEditRun(s: string[], t: string[]): boolean {
       const tj = j + p;
       if (si < s.length && tj < t.length) {
         const q = agree(s, si + 1, t, tj + 1); // substitution
-        if (q >= RECAST_TAIL_MIN && p + 1 + q >= RECAST_RUN_MIN) return true;
-        if (si === s.length - 1 && p >= RECAST_FINAL_HEAD_MIN) return true;
+        if (q >= RECAST_TAIL_MIN && p + 1 + q >= RECAST_RUN_MIN) return { kind: 'sub', at: tj };
+        if (si === s.length - 1 && p >= RECAST_FINAL_HEAD_MIN) return { kind: 'sub', at: tj };
       }
       // Fix round 4 (I2): an insertion / deletion right before the student's
       // last word, after ≥ 2 matched, is a fix too ("I work in the sales." →
       // "You work in sales.") — the tail is that last word.
       if (tj < t.length) {
         const q = agree(s, si, t, tj + 1); // insertion
-        if (q >= RECAST_TAIL_MIN && p + q >= RECAST_RUN_MIN) return true;
-        if (q >= 1 && si + q === s.length && p >= RECAST_FINAL_HEAD_MIN) return true;
+        if (q >= RECAST_TAIL_MIN && p + q >= RECAST_RUN_MIN) return { kind: 'ins', at: tj };
+        if (q >= 1 && si + q === s.length && p >= RECAST_FINAL_HEAD_MIN) return { kind: 'ins', at: tj };
       }
       if (si < s.length) {
         const q = agree(s, si + 1, t, tj); // deletion
-        if (q >= RECAST_TAIL_MIN && p + 1 + q >= RECAST_RUN_MIN) return true;
-        if (q >= 1 && si + 1 + q === s.length && p >= RECAST_FINAL_HEAD_MIN) return true;
+        if (q >= RECAST_TAIL_MIN && p + 1 + q >= RECAST_RUN_MIN) return { kind: 'del', at: -1 };
+        if (q >= 1 && si + 1 + q === s.length && p >= RECAST_FINAL_HEAD_MIN) return { kind: 'del', at: -1 };
       }
     }
   }
-  return false;
+  return null;
 }
 
 /** Fix round 2 (I2) / fix round 3: an UNQUOTED recast — a tutor sentence that
@@ -431,6 +468,74 @@ export function recastsStudentSentence(tutorText: string, student: string): bool
     if (oneEditRun(said, recastTokens(sentence))) return true;
   }
   return false;
+}
+
+/** Task 21 §B2: the WHOLE tutor sentence is the student's with exactly one
+ *  edit — a local one-edit run inside a longer rewrite ("you took him around
+ *  the company and sold him a washing machine") is several fixes, and a card
+ *  marking one of them would mislead. */
+function wholeOneEdit(s: string[], t: string[]): RecastEdit | null {
+  if (s.length < RECAST_RUN_MIN - 1 || Math.abs(s.length - t.length) > 1) return null;
+  let i = 0;
+  while (i < s.length && i < t.length && s[i] === t[i]) i++;
+  const eq = (a: string[], b: string[]) => a.length === b.length && a.every((x, k) => x === b[k]);
+  if (s.length === t.length) return i < s.length && eq(s.slice(i + 1), t.slice(i + 1)) ? { kind: 'sub', at: i } : null;
+  if (t.length === s.length + 1) return eq(s.slice(i), t.slice(i + 1)) ? { kind: 'ins', at: i } : null;
+  return eq(s.slice(i + 1), t.slice(i)) ? { kind: 'del', at: -1 } : null;
+}
+/** Task 21 §B2: an interjection the recast card leaves out ("Oh, you went …"). */
+const RECAST_LEAD_RE = /^\s*(?:oh|ah|so|yes|right|okay|ok|well|great|good|nice|i see)[,.!]\s*/i;
+/** Task 21 §B2 (GDI run 9, 598 s: "Your company gives a lot of health benefits
+ *  to its employees." after "…gives lot of…" — the learner expected the
+ *  sentence on the board with the fix marked): the first UNQUOTED tutor
+ *  sentence that recasts the student's with one edit, as a correction card —
+ *  emphasis = the inserted / substituted word (a deletion marks nothing). */
+export function recastCorrectionCard(tutorText: string, student: string | null | undefined): QuotedSentence | null {
+  const said = recastTokens(student ?? '');
+  if (said.length === 0) return null;
+  for (const raw of (tutorText ?? '').split(/(?<=[.!?。！？])\s+/)) {
+    if (/["“”「」『』‘]/.test(raw)) continue;
+    let sentence = raw.trim().replace(RECAST_LEAD_RE, '');
+    if (!sentence) continue;
+    sentence = sentence[0]!.toUpperCase() + sentence.slice(1);
+    const rawT = dropFillersAndRepeats(tokens(sentence));
+    const classed = rawT.map((x) => PRONOUN_CLASS[x] ?? x);
+    const edit = oneEditAt(said, classed) ? wholeOneEdit(said, classed) : null;
+    if (!edit) continue;
+    if (!isCardCandidate(sentence) || CJK_RE.test(sentence)) return null;
+    if (AUX_QUESTION_OPENING_RE.test(sentence) || WH_QUESTION_OPENING_RE.test(sentence)) return null;
+    const span = qualifyingSpan(sentence);
+    if (!span || span.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length < CHECKED_CARD_MIN_WORDS) return null;
+    const tok = edit.at >= 0 ? rawT[edit.at] : undefined;
+    const word = tok ? (dropThousands(span).match(TOKEN_RE) ?? []).find((w) => numberWordToken(lowerTok(w)) === tok) : undefined;
+    return { sentence: span, kind: 'correction', emphasis: word ? [word] : [] };
+  }
+  return null;
+}
+
+/** Task 21 §B3: a quoted fragment (≥ 2 words) of the checked-correct sentence
+ *  praises a part — the card is the whole sentence; the fragment's head (at
+ *  most two words, what the praise points at) is its emphasis. */
+const FRAGMENT_EMPHASIS_MAX = 2;
+function fragmentOfChecked(tutorText: string, checked: string): string[] | null {
+  const whole = norm(checked);
+  if (!whole) return null;
+  for (const m of (tutorText ?? '').matchAll(QUOTE_RE)) {
+    const inner = quoteInner(m).trim();
+    // only a fragment that would have been carded itself (run 9: "Lots of
+    // health benefits") — "helped us identify" mid-sentence never was
+    if (!inner || !isCardCandidate(inner) || CJK_RE.test(inner) || /(…|\.\.\.)$/.test(inner)) continue;
+    const fragToks = dropFillersAndRepeats(tokens(inner));
+    if (fragToks.length < 2) continue;
+    const f = fragToks.join(' ');
+    if (f === whole || !` ${whole} `.includes(` ${f} `)) continue;
+    const words = dropThousands(checked).match(TOKEN_RE) ?? [];
+    const toks = words.map((w) => numberWordToken(lowerTok(w)));
+    for (let i = 0; i + fragToks.length <= toks.length; i++) {
+      if (fragToks.every((x, j) => toks[i + j] === x)) return words.slice(i, i + Math.min(fragToks.length, FRAGMENT_EMPHASIS_MAX));
+    }
+  }
+  return null;
 }
 
 /**
@@ -453,28 +558,33 @@ export function planSentenceBoard(input: {
   /** Task 20 §G3: the previous tutor turn (a hint / more-time offer ⇒ the
    *  student's reply gets no checked card). */
   prevTutorText?: string | null;
+  /** Task 21 §B4: the check found the sentence correct at MEDIUM confidence
+   *  (not deciding) — counts for the checked card only, see below. */
+  checkedMedium?: boolean;
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   const studentCorrect = input.studentCorrect === true;
   const affirmFallback = !studentCorrect && input.affirmFallback === true && !hasCorrectionCue(input.tutorText) && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '');
-  const spans = quotedSpansWithContext(input.tutorText)
-    .filter((q) => isCardCandidate(q.span) && !isSentenceStarter(q.span, q.before, q.after));
-  const distinct: { s: string; n: string; said: boolean; affirmed: boolean }[] = [];
+  const spans = [
+    ...quotedSpansWithContext(input.tutorText).map((q) => ({ ...q, introduced: false })),
+    ...colonIntroducedSpans(input.tutorText).map((q) => ({ ...q, introduced: true })),
+  ].filter((q) => isCardCandidate(q.span) && !isSentenceStarter(q.span, q.before, q.after));
+  const distinct: { s: string; n: string; said: boolean; affirmed: boolean; introduced: boolean }[] = [];
   for (const q of spans) {
     const n = norm(q.span);
     const said = isSaidQuote(q.before, q.after);
-    const affirmed = affirmFallback && quoteAffirmed(input.tutorText, q.at, q.end);
+    const affirmed = !q.introduced && affirmFallback && quoteAffirmed(input.tutorText, q.at, q.end);
     const dup = distinct.find((d) => d.n === n);
-    if (dup) { dup.said = dup.said || said; dup.affirmed = dup.affirmed || affirmed; continue; }
+    if (dup) { dup.said = dup.said || said; dup.affirmed = dup.affirmed || affirmed; dup.introduced = dup.introduced || q.introduced; continue; }
     if (!n) continue;
-    distinct.push({ s: q.span, n, said, affirmed });
+    distinct.push({ s: q.span, n, said, affirmed, introduced: q.introduced });
   }
   const kept = distinct.filter((d) => !distinct.some((o) => o !== d && o.n.length > d.n.length && ` ${o.n} `.includes(` ${d.n} `)));
   // Task 18 §D: a quote introduced as the student's words ("you said …") is
   // an echo whatever its overlap, and is never promoted.
   const raw = kept.map((d, i) => ({
     q: d.said ? { sentence: d.s, kind: 'echo' as const, emphasis: [] } : classifyQuotedSentence(d.s, input.studentLast),
-    len: d.n.length, i, said: d.said, affirmed: d.affirmed,
+    len: d.n.length, i, said: d.said, affirmed: d.affirmed, introduced: d.introduced,
   }));
   // Fix round 1 (I2): a turn that corrects the student's sentence says it was
   // NOT right as it stood (it passed the check "for the task as stated") —
@@ -488,16 +598,51 @@ export function planSentenceBoard(input: {
   const classified = raw
     .map((c) => (c.q.kind === 'echo' && promote && !c.said ? { ...c, q: { sentence: c.q.sentence, kind: 'model' as const, emphasis: [], source: 'echo' as const } } : c))
     .map((c) => (c.q.kind === 'echo' && promoteAffirmed && c.affirmed && !c.said ? { ...c, q: { sentence: c.q.sentence, kind: 'model' as const, emphasis: [], source: 'affirmed' as const } } : c))
+    // Task 21 §B1: the tutor's own "say it as a full sentence: …" of the
+    // student's words is the sentence to say — a model card.
+    .map((c) => (c.q.kind === 'echo' && c.introduced && !c.said ? { ...c, q: { sentence: c.q.sentence, kind: 'model' as const, emphasis: [], source: 'introduced' as const } } : c))
     .filter((c) => c.q.kind !== 'echo');
+  // Task 21 §B2 (GDI run 9, 598 s): an unquoted one-edit recast is the
+  // correction — carded unless a quoted correction card already is.
+  if (!classified.some((c) => c.q.kind === 'correction')) {
+    const recast = recastCorrectionCard(input.tutorText, input.studentLast);
+    if (recast && !classified.some((c) => sameSentence(c.q.sentence, recast.sentence))) {
+      classified.push({ q: recast, len: norm(recast.sentence).length, i: -1, said: false, affirmed: false, introduced: false });
+    }
+  }
+  // Task 21 §B4 (GDI run 9, 693 s: correct at MEDIUM confidence, the tutor
+  // neither corrected nor recast — no card): for the checked card only, a
+  // medium-confidence "correct" counts when the turn has no correction cue /
+  // fix follow-up, plans no correction, and quotes none of the student's words
+  // back (an un-affirmed echo is the tutor looking at the wrong sentence —
+  // the Task 20 I6 probes).
+  const mediumChecked = !studentCorrect && input.checkedMedium === true
+    && !classified.some((c) => c.q.kind === 'correction')
+    && !raw.some((c) => c.q.kind === 'echo')
+    && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '');
+  // Task 21 §B3 (GDI run 9, 626 s: `"Lots of health benefits" is exactly
+  // right` carded the 4-word fragment): a quoted fragment of the checked
+  // sentence gives way to the whole sentence, the fragment marked.
+  if (promote && input.checkedSentence && !hasCorrectionCue(input.tutorText) && !isMetaOfferTurn(input.prevTutorText)) {
+    const checked = cardableStudentSentence(input.checkedSentence);
+    const frag = checked && !recastsStudentSentence(input.tutorText, checked) ? fragmentOfChecked(input.tutorText, checked) : null;
+    if (checked && frag) {
+      for (let k = classified.length - 1; k >= 0; k--) {
+        const c = classified[k]!;
+        if (c.q.kind === 'model' && sentenceContains(checked, c.q.sentence)) classified.splice(k, 1);
+      }
+      classified.push({ q: { sentence: checked, kind: 'model', emphasis: frag, source: 'checked' }, len: norm(checked).length, i: kept.length, said: false, affirmed: false, introduced: false });
+    }
+  }
   // Task 19 §D (GDI run 7): the tutor paraphrased correct sentences ("Creating
   // the slogan was the challenge…") and nothing was carded for six minutes.
   // A correct student sentence goes on the board whether or not the tutor
   // repeats it — no sentenceContains requirement.
-  if (promote && input.checkedSentence && !hasCorrectionCue(input.tutorText) && !isMetaOfferTurn(input.prevTutorText)) {
+  if ((promote || mediumChecked) && input.checkedSentence && !hasCorrectionCue(input.tutorText) && !isMetaOfferTurn(input.prevTutorText)) {
     const checked = cardableStudentSentence(input.checkedSentence);
     if (checked && !recastsStudentSentence(input.tutorText, checked)
       && !classified.some((c) => sameSentence(c.q.sentence, checked))) {
-      classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length, said: false, affirmed: false });
+      classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length, said: false, affirmed: false, introduced: false });
     }
   }
   classified.sort((a, b) => {

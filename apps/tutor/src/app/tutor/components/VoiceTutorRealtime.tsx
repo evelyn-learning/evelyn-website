@@ -20533,6 +20533,9 @@ export function VoiceTutorRealtime({
             affirmFallback: !boardStudentCorrect && (!boardPc || (boardPc.verdict === 'correct' && !precheckDecides(boardPc))),
             // Task 20 §G3 (864 s "Yes, I would like hint." boarded): the turn before.
             prevTutorText: prevBoardTutorTextRef.current,
+            // Task 21 §B4 (GDI run 9, 693 s): correct at MEDIUM confidence —
+            // the checked card only, when the turn corrects / echoes nothing.
+            checkedMedium: !boardStudentCorrect && !!boardPc && boardPc.verdict === 'correct' && boardPc.confidence === 'medium' && boardPc.answers !== 'other_part' && boardPc.answers !== 'neither',
           });
           prevBoardTutorTextRef.current = fullText;
           for (const card of cards) {

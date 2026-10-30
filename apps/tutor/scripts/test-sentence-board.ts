@@ -15,7 +15,7 @@ import {
   sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex, autoSentenceCardsToReplace,
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
-  quoteAffirmed, isMetaOfferTurn,
+  quoteAffirmed, isMetaOfferTurn, recastCorrectionCard,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -564,7 +564,10 @@ test('§D19 R3 I2: one-edit recasts block, any stem', () => {
   ];
   for (const [said, tutor] of blocks) {
     assert.equal(recastsStudentSentence(tutor, said), true, tutor);
-    assert.deepEqual(planSentenceBoard({ tutorText: `${tutor} What else?`, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said }), [], tutor);
+    // Task 21 §B2: a whole-sentence one-edit recast is now a CORRECTION card —
+    // still never the checked (wrong) sentence as a model.
+    const cards = planSentenceBoard({ tutorText: `${tutor} What else?`, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said });
+    assert.ok(cards.every((c) => c.kind === 'correction' && c.source === undefined), `${tutor} ${JSON.stringify(cards)}`);
   }
 });
 test('§D19 R3 I2: follow-ups and pronoun flips keep the card', () => {
@@ -603,10 +606,14 @@ test('§D19 R4 I2: the "more natural way" template and a fix before the last wor
   const tutor = 'A more natural way to say this is: I was responsible for communicating with our customers.';
   assert.equal(hasCorrectionCue(tutor), true);
   assert.equal(hasCorrectionCue('自然な言い方は「I was responsible for communicating」です。'), true);
-  assert.deepEqual(planSentenceBoard({ tutorText: tutor, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said }), []);
+  // Task 21 §B1: the template's colon-introduced sentence is the correction card.
+  assert.deepEqual(planSentenceBoard({ tutorText: tutor, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said }),
+    [{ sentence: 'I was responsible for communicating with our customers.', kind: 'correction', emphasis: ['for', 'communicating'] }]);
   assert.equal(recastsStudentSentence('You work in sales.', 'I work in the sales.'), true);
   assert.equal(recastsStudentSentence('You work in the sales.', 'I work in sales.'), true);
-  assert.deepEqual(planSentenceBoard({ tutorText: 'You work in sales. What else?', studentLast: 'I work in the sales.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I work in the sales.' }), []);
+  // Task 21 §B2: the deletion recast is a correction card (nothing to mark), never the checked card.
+  assert.deepEqual(planSentenceBoard({ tutorText: 'You work in sales. What else?', studentLast: 'I work in the sales.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I work in the sales.' }),
+    [{ sentence: 'You work in sales.', kind: 'correction', emphasis: [] }]);
 });
 test('§D19 R4 m5: only a real question opening drops the card', () => {
   assert.equal(cardableStudentSentence('Can you repeat the question please'), null);
@@ -718,6 +725,87 @@ test('20G3 fix round 1 (m1): a turn that GIVES a hint, or "take your time" befor
   assert.ok(planSentenceBoard({ tutorText: 'Good.', studentLast: 'I usually start work at nine.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I usually start work at nine.', prevTutorText: 'What time do you usually start work?' }).some((c) => c.source === 'checked'), 'carded after "What time…?"');
   const args = { tutorText: 'Good.', studentLast: 'I attended a robotics business event in Tokyo last year.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I attended a robotics business event in Tokyo last year.' };
   assert.ok(planSentenceBoard({ ...args, prevTutorText: 'Of course. Here\'s a hint: use the past simple. Try starting with "I attended…".' }).some((c) => c.source === 'checked'));
+});
+
+// ── Task 21 §B (GDI run 9, embed-1793389442113): unquoted model / corrected sentences ──
+const R9_477 = { tutorText: 'You said the word "exhibition" in pieces, and your sentence was the one I asked for. Let\'s say the full sentence once more: I attended the robotics exhibition in Tokyo last year.', studentLast: 'I attended the robotics exhibit ion in Tokyo last year.' };
+const R9_527 = { tutorText: 'You met a customer yesterday, so "met" is the right past simple form for a finished event at a specific time. Let\'s say it as a full sentence: I met a customer yesterday. What did you talk about with that customer?', studentLast: 'Uh, I met a customer yesterday in person in my company.' };
+const R9_571 = { tutorText: 'You told the customer how good your company is. Let\'s make that sentence in English: I talked to the customer about how good our company is. Now, what made your company stand out to that customer?', studentLast: 'I talked to the customer about how good my company is.' };
+test('21B1: the three run-9 colon-introduced lines → one card each', () => {
+  // 477 s: checked correct (high); the STT split "exhibit ion" makes the tutor's
+  // sentence differ from the student's by one word ⇒ a correction marking it.
+  const c477 = planSentenceBoard({ ...R9_477, renderedThisTurn: false, studentCorrect: true, checkedSentence: R9_477.studentLast });
+  assert.deepEqual(c477, [{ sentence: 'I attended the robotics exhibition in Tokyo last year.', kind: 'correction', emphasis: ['exhibition'] }]);
+  // the same line after a clean transcript is the model (echo of a correct sentence)
+  assert.deepEqual(planSentenceBoard({ tutorText: R9_477.tutorText, studentLast: 'I attended the robotics exhibition in Tokyo last year.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I attended the robotics exhibition in Tokyo last year.' }),
+    [{ sentence: 'I attended the robotics exhibition in Tokyo last year.', kind: 'model', emphasis: [], source: 'echo' }]);
+  // 527 s: precheck none — the introduced echo is the sentence to say
+  assert.deepEqual(planSentenceBoard({ ...R9_527, renderedThisTurn: false, affirmFallback: true }),
+    [{ sentence: 'I met a customer yesterday.', kind: 'model', emphasis: [], source: 'introduced' }]);
+  // 571 s: precheck none — a correction with [our]
+  assert.deepEqual(planSentenceBoard({ ...R9_571, renderedThisTurn: false, affirmFallback: true }),
+    [{ sentence: 'I talked to the customer about how good our company is.', kind: 'correction', emphasis: ['our'] }]);
+});
+test('21B1: a question / instruction / quote / short tail after a colon is no card', () => {
+  const st = 'I attended the robotics exhibit ion last year.';
+  for (const t of [
+    'Yes, your sentence was right. Let\'s keep moving: when did you last meet a customer in person?',
+    'Try this: Tell me about the last customer you met.',
+    'Say it once more: I met him.',
+    'Try this: "I have worked with customers for three years." Can you say one?',
+    'The question was: what is one project you\'ve worked on that you\'re particularly proud of?',
+    'You said: I attended the robotics exhibit ion last year.',
+    'Here is my plan for today: we will practise the past simple together.',
+  ]) assert.ok(!planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, affirmFallback: true }).some((c) => c.source === 'introduced' || (c.kind === 'model' && !t.includes('"'))), t);
+  // a "you said:" lead stays an echo
+  assert.deepEqual(planSentenceBoard({ tutorText: 'You said: I attended the robotics exhibit ion last year. Good try.', studentLast: st, renderedThisTurn: false }), []);
+});
+test('21B2: 598 s unquoted recast → correction card emphasis [a]', () => {
+  const t = 'Your company gives a lot of health benefits to its employees. Good, that\'s a clear reason. Could you say it once more with "lots of," since "lot" needs an "s" when it means "many"? Then tell me one thing you\'d like to try at work next year.';
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: 'My company gives lot of health benefits to its employees.', renderedThisTurn: false, affirmFallback: true }),
+    [{ sentence: 'Your company gives a lot of health benefits to its employees.', kind: 'correction', emphasis: ['a'] }]);
+  // substitution → the new word; leading interjection dropped
+  assert.deepEqual(recastCorrectionCard('Oh, you went to Osaka yesterday for a meeting.', 'I go to Osaka yesterday for a meeting.'),
+    { sentence: 'You went to Osaka yesterday for a meeting.', kind: 'correction', emphasis: ['went'] });
+  // several edits (a local one-edit run inside a rewrite) → no recast card
+  assert.equal(recastCorrectionCard('Right, you took him around the company and sold him a washing machine.', 'Uh, I take him around company and sell washing machine to him.'), null);
+  // a recast question is no card
+  assert.equal(recastCorrectionCard('So you went to Osaka yesterday for a meeting?', 'I go to Osaka yesterday for a meeting.'), null);
+  // a quoted correction already planned ⇒ no second (recast) card
+  const both = 'Your company gives a lot of health benefits to its employees. So the full sentence is "My company gives a lot of health benefits to its employees."';
+  assert.ok(recastCorrectionCard(both, 'My company gives lot of health benefits to its employees.'));
+  const cards = planSentenceBoard({ tutorText: both, studentLast: 'My company gives lot of health benefits to its employees.', renderedThisTurn: false });
+  assert.deepEqual(cards.map((c) => c.sentence), ['My company gives a lot of health benefits to its employees.']);
+});
+test('21B3: 626 s quoted fragment of the checked sentence → the full sentence, fragment marked', () => {
+  const t = '"Lots of health benefits" is exactly right, and the sentence is clear. Now let\'s go back to our extension question: what is one project you\'ve worked on that you\'re particularly proud of? Try starting with "I worked on a project to..."';
+  const st = 'My company gives lots of health benefits to its employees.';
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, studentCorrect: true, checkedSentence: st }),
+    [{ sentence: st, kind: 'model', emphasis: ['lots', 'of'], source: 'checked' }]);
+  // not checked correct ⇒ unchanged (the echo stays filtered)
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false }), []);
+});
+test('21B4: 693 s medium-confidence correct, the tutor neither corrects nor recasts → checked card', () => {
+  const st = 'I worked on the selling with a smile project at my company which I am very proud of.';
+  const t = 'Can you tell me what the project involved, and what was your part in it? Start with "My part was..."';
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, affirmFallback: true, checkedMedium: true, checkedSentence: st }),
+    [{ sentence: st, kind: 'model', emphasis: [], source: 'checked' }]);
+  assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, affirmFallback: true, checkedSentence: st }), [], 'without checkedMedium');
+  // a correction cue / a recast ⇒ none
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Good. We say "proud of" here. What was your part?', studentLast: st, renderedThisTurn: false, checkedMedium: true, checkedSentence: st }), []);
+  // the Task 20 I6 wrong-sentence probes still → no card, even with checkedMedium
+  for (const [tt, s2] of [
+    ['"I working in sales department." The meaning is clear.', 'I working in sales department.'],
+    ['"I working in sales department." The idea is clear. Let\'s fix the verb.', 'I working in sales department.'],
+    ['"I go to Tokyo last year." 過去形が正しいですね。', 'I go to Tokyo last year.'],
+    ['"I am responsible of the team." That is clear, and nice try.', 'I am responsible of the team.'],
+    ['"I have worked here for five years." That\'s a good question to ask a colleague.', 'I have worked here for five years.'],
+    ['"I attended a business event in Tokyo last year." That\'s a correct sentence, but let\'s add "an".', 'I attended a business event in Tokyo last year.'],
+  ]) assert.deepEqual(planSentenceBoard({ tutorText: tt, studentLast: s2, renderedThisTurn: false, affirmFallback: true, checkedMedium: true, checkedSentence: s2 }), [], tt);
+});
+test('21B4: VTR passes checkedMedium (correct, medium, not other_part / neither)', () => {
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes("checkedMedium: !boardStudentCorrect && !!boardPc && boardPc.verdict === 'correct' && boardPc.confidence === 'medium' && boardPc.answers !== 'other_part' && boardPc.answers !== 'neither',"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
