@@ -168,5 +168,13 @@ test('C: VTR — scheduled once per segment on an announced advance, dispatched 
   pin(VTR, /productionStateRef\.current === 'disconnected' \|\| lessonClosedRef\.current \|\| farewellSealedRef\.current \|\| currentSegmentIdRef\.current !== contTarget/);
 });
 
+test('Task 19 §B: an offer is never an announcement (GDI run 7, 1135 s)', () => {
+  assert.equal(at('Your sentence was complete and clear, so that\'s your pronunciation done for this item. Would you like to practise a few single words next, or move on to the summary?', 'pronunciation'), null);
+  assert.equal(at('Shall we move on to the summary？', 'pronunciation'), null);
+  assert.equal(at('Would you like to move on to the summary now.', 'pronunciation'), null);
+  assert.equal(at('Do you want to move on to the summary', 'pronunciation'), null);
+  assert.equal(at("Now let's move on to the summary.", 'pronunciation'), 'summary');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall announced-move tests passed');

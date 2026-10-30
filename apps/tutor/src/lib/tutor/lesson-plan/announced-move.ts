@@ -80,6 +80,9 @@ function jaNextIsMove(sentence: string, nextKeys: string[]): boolean {
   return nextKeys.some((k) => isCjk(k) && new RegExp(`次は${k}(?:に進|に移|を始め|です|へ(?!の))`).test(sentence));
 }
 
+/** An offer's opening, for one that lost its question mark (Task 19 §B). */
+const OFFER_LEAD_RE = /^(?:would you like|do you want|shall we|want to)\b/i;
+
 /** The id of the NEXT segment when `tutorText` announces a move into it, else null. */
 export function announcedMoveTarget(input: {
   tutorText: string; plan: LessonPlan; currentSegmentId: string; levelKnown: boolean;
@@ -101,6 +104,11 @@ export function announcedMoveTarget(input: {
   }
   const sentences = tutorText.split(/(?<=[。！？.!?])\s*|\n+/).map((x) => x.trim()).filter(Boolean);
   for (const sentence of sentences) {
+    // Task 19 §B (GDI run 7, 1135 s): `Would you like to practise a few single
+    // words next, or move on to the summary?` advanced into the summary; the
+    // student chose more practice and the lesson was force-closed mid-hint.
+    // An offer is never an announcement.
+    if (/[?？]/.test(sentence) || OFFER_LEAD_RE.test(sentence)) continue;
     if (!MOVE_PHRASE_RE.test(sentence) && !jaNextIsMove(sentence, nextKeys)) continue;
     if (!nextKeys.some((k) => sentenceHas(sentence, k))) continue;
     if ([...otherOnly].some((k) => sentenceHas(sentence, k))) continue;
