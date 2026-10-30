@@ -107,6 +107,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // (lib/tutor/pronunciation/clip-capture.ts). Exact names, so the existing
   // 'pronunciation_claim' prefix keeps its own meaning.
   'pronunciation_armed', 'pronunciation_clip_sent', 'pronunciation_note_planted', 'pronunciation_unavailable',
+  // Task 14 §F: the client armed the clip itself from the tutor's ask:
+  'pronunciation_auto_armed',
   'pronunciation_start_ignored_tutor_speaking', 'pronunciation_hold_skipped', 'pronunciation_disarmed_segment_advance',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',

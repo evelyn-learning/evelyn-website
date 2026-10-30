@@ -88,6 +88,7 @@ import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heu
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
 import { decideDeferredPageFlush } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
+import { detectPronunciationTarget, pronunciationTargetsOf } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
 import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
 import {
@@ -19647,6 +19648,34 @@ export function VoiceTutorRealtime({
         }
       }
       openTutorQuestionRef.current = /\?\s*$/.test(fullText.trim()) || !!lastQuestionSentence(fullText) ? Date.now() : null;
+      // Task 14 §F (GDI run 4: the brain never called
+      // request_pronunciation_check — nothing was measured — and the target
+      // was never on the board): in a segment that lists pronunciation
+      // targets, a turn that asks the learner to say one arms the clip
+      // through the SAME path as the tool and puts the target up (syllable
+      // pattern as the gloss). Runs before the auto-advance (so its
+      // pronunciation hold sees the arm) and before the sentence board (so
+      // this card, with its gloss, is the one that stays). The brain's own
+      // tool call wins. Once per turn (this block runs once per turn).
+      if (pronunciationActive && !opts?.prefetchOnly && !totalToolNamesSeen.includes('request_pronunciation_check')) {
+        const pronSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
+        const pronTargets = pronunciationTargetsOf(pronSeg?.metadata);
+        const auto = pronTargets ? detectPronunciationTarget(fullText, pronTargets) : null;
+        if (auto) {
+          armPronunciationCheckRef.current(auto.referenceText, auto.kind);
+          onDebugEvent?.('pronunciation_auto_armed', `"${auto.referenceText}"`);
+          const cmd = {
+            action: 'showSentence',
+            sentence: auto.referenceText,
+            ...(auto.gloss ? { gloss: auto.gloss } : {}),
+          } as WhiteboardCommand;
+          const anchor = sentenceAnchorIndex(turnNarrationRef.current, auto.referenceText);
+          try {
+            const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true } : { sentenceBoardAuto: true });
+            for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
+          } catch { /* the arm stands without the card */ }
+        }
+      }
       // Live check 6 (§1): the brain sat in `hook` for 12 minutes and six
       // substantive turns, improvised three worked examples in speech, then
       // jumped over both authored worked_example segments. The parent's
