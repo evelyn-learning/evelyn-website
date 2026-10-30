@@ -508,7 +508,10 @@ test('retry cap: every repeat-ask form from embed-1792254012923 is counted', () 
   assert.equal(isRetryAsk(live), false, live);
   assert.equal(isNegatedAsk('Your earlier sentence was right too, so there\'s no need to repeat it.'), true);
   for (const t of ['Could you say that complete sentence once more?', 'Let\'s try again.', 'もう一度言ってみてください。']) assert.equal(isRetryAsk(t), true, t);
-  for (const t of ['You don\'t have to say it again — let\'s move on.', 'もう一度言う必要はありません。']) assert.equal(isRetryAsk(t), false, t);
+  for (const t of ['You don\'t have to say it again — let\'s move on.', 'もう一度言う必要はありません。', 'もう一度言ってみる必要はありません。']) assert.equal(isRetryAsk(t), false, t);
+  assert.equal(isNegatedAsk('もう一度言ってみる必要はありません。'), true, 'the JA negation after the ask');
+  // fix round 1: a negation in another clause, or a JA negation BEFORE the ask, does not cancel the ask
+  for (const t of ['No need to worry, just try again.', 'No need to rush — try again.', 'Without the card, try again.', '心配しなくてもいいです、もう一度言ってみてください。']) assert.equal(isRetryAsk(t), true, t);
   // a negated ask in one sentence does not hide a real ask in the next
   assert.equal(isRetryAsk('No need to repeat it. Now try again with a new verb.'), true);
   assert.equal(isNegatedAsk('Let\'s try again.'), false);

@@ -36,20 +36,42 @@ const RETRY_ASK_EN_RE =
  *  correct-retry note planted again). An ask preceded — within the same
  *  sentence, up to three words between — by a negation is not an ask. */
 const NEGATED_EN_TAIL_RE =
-  /(?:\bno\s+need\s+(?:to|for)|\b(?:don['’]t|do\s+not|doesn['’]t|does\s+not)\s+(?:need|have)\s+to|\bnot\s+necessary\s+to|\bwithout(?:\s+having\s+to)?|\bnever\s+(?:need|have)\s+to)(?:\s+[^\s]+){0,3}\s*$/i;
+  /(?:\bno\s+need\s+(?:to|for)|\b(?:don['’]t|do\s+not|doesn['’]t|does\s+not)\s+(?:need|have)\s+to|\bnot\s+necessary\s+to|\bwithout(?:\s+having\s+to)?|\bnever\s+(?:need|have)\s+to)(?:\s+[^\s,;:—–、]+){0,3}\s*$/i;
 const NEGATED_JA_RE = /必要はありません|必要はない|しなくていい|しなくても/;
 const RETRY_ASK_EN_RE_G = new RegExp(RETRY_ASK_EN_RE.source, 'gi');
 
+/** Fix round 1: the English negation tail never crosses a clause break
+ *  (`, ; : — – 、`) — "No need to worry, just try again." is an ask — and the
+ *  Japanese negation counts only AFTER the ask (「もう一度言ってみる必要は
+ *  ありません」), never before it (「心配しなくてもいいです、もう一度言って
+ *  みてください」 is an ask). */
+const jaNegatedAfter = (s: string, end: number): boolean => NEGATED_JA_RE.test(s.slice(end));
+
+/** A Japanese repeat-ask in this sentence that is not negated after it. */
+function plainJaAsk(s: string): boolean {
+  const m = RETRY_ASK_JA_RE.exec(s);
+  return !!m && !jaNegatedAfter(s, (m.index ?? 0) + m[0].length);
+}
+
+/** English repeat-asks in this sentence that are not negated. */
+function plainEnAsks(s: string): number {
+  let n = 0;
+  for (const m of s.matchAll(RETRY_ASK_EN_RE_G)) {
+    const at = m.index ?? 0;
+    if (!NEGATED_EN_TAIL_RE.test(s.slice(0, at)) && !jaNegatedAfter(s, at + m[0].length)) n++;
+  }
+  return n;
+}
+
 /** One sentence: is its repeat-ask negated ("no need to repeat it",
- *  「もう一度言う必要はありません」)? True only when the sentence holds an ask
- *  and every ask in it is negated. */
+ *  「もう一度言ってみる必要はありません」)? True only when the sentence holds an
+ *  ask and every ask in it is negated. */
 export function isNegatedAsk(sentence: string): boolean {
   const s = sentence ?? '';
   const ja = RETRY_ASK_JA_RE.test(s);
-  const en = [...s.matchAll(RETRY_ASK_EN_RE_G)];
-  if (!ja && en.length === 0) return false;
-  if (ja && !NEGATED_JA_RE.test(s)) return false;
-  return en.every((m) => NEGATED_EN_TAIL_RE.test(s.slice(0, m.index ?? 0)) || NEGATED_JA_RE.test(s));
+  const en = RETRY_ASK_EN_RE.test(s);
+  if (!ja && !en) return false;
+  return !(ja && plainJaAsk(s)) && plainEnAsks(s) === 0;
 }
 
 /** Does this tutor turn ask the student to say something again? Sentence by
@@ -62,11 +84,11 @@ export function isRetryAsk(tutorText: string): boolean {
   const t = tutorText ?? '';
   for (const raw of t.split(/(?<=[。！？!?])\s*|\n+/)) {
     const s = raw.trim();
-    if (s && RETRY_ASK_JA_RE.test(s) && !NEGATED_JA_RE.test(s)) return true;
+    if (s && plainJaAsk(s)) return true;
   }
   for (const raw of t.split(/(?<=[。！？.!?])\s*|\n+/)) {
     const s = raw.trim();
-    if (s && RETRY_ASK_EN_RE.test(s) && !isNegatedAsk(s)) return true;
+    if (s && plainEnAsks(s) > 0) return true;
   }
   return false;
 }
