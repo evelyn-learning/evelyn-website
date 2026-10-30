@@ -1517,12 +1517,12 @@ export function VoiceTutorRealtime({
         });
         if (!res.ok) { plantPronunciationUnavailable(`http_${res.status}`); return; }
         const data = (await res.json()) as { status?: string; reason?: string; note?: unknown; measured?: unknown; result?: { words?: Array<{ word?: unknown; errorType?: unknown }> } | null };
+        // Task 18 §C: a not-attempted answer says what the vendor heard (a
+        // missed clip — nothing recognised — reads apart from a wrong one).
         if (data.status === 'ok' && typeof data.note === 'string' && data.note.trim()) {
           // measured:false ⇒ the learner did not say the target (the route's
           // not-attempted note): plant it, but the claim guard stays shut.
           const measured = data.measured === true;
-          // Task 18 §C: say what the vendor heard — a missed clip (nothing
-          // recognised) reads apart from a wrong one.
           if (!measured) onDebugEvent?.('pronunciation_unavailable', `not_attempted ${notAttemptedDetail(data.result)}`);
           plantPronunciationNote(data.note, measured);
         } else {
