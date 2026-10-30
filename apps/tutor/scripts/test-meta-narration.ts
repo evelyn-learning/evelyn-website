@@ -630,5 +630,15 @@ check('kept: "The line segment AB is 5 cm."', !isMetaNarration('The line segment
 check('kept: "Each segment of the circle has the same area."', !isMetaNarration('Each segment of the circle has the same area.'));
 check('kept: "This sentence needs a verb."', !isMetaNarration('This sentence needs a verb.'));
 
+// ─── Task 14 §E (GDI run 4): runtime notes / board staging read aloud ───
+check('dropped: "Those runtime notes are a mix, so let me just say it plainly."', isMetaNarration('Those runtime notes are a mix, so let me just say it plainly.'));
+check('dropped: "Let me put a quick hook on the board first."', isMetaNarration('Let me put a quick hook on the board first.'));
+check('dropped: "Let me put the sentence on the board." (the auto card writes it)', isMetaNarration('Let me put the sentence on the board.'));
+check('dropped: "Those system notes say we move on."', isMetaNarration('Those system notes say we move on.'));
+check('dropped: "These notes are mixed, so here it is."', isMetaNarration('These notes are mixed, so here it is.'));
+check('kept: "Look at the sentence on the board."', !isMetaNarration('Look at the sentence on the board.'));
+check('kept: "These notes are your summary for next week."', !isMetaNarration('These notes are your summary for next week.'));
+check('kept: "Put the hook of the letter j below the line."', !isMetaNarration('Put the hook of the letter j below the line.'));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

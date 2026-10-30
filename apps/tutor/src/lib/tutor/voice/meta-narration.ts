@@ -143,6 +143,16 @@ const PLAN_ALOUD_RE =
 // correction is dropped with it: the card and the next sentence re-deliver it.
 const RUNTIME_NOTE_NARRATION_RE =
   /\b(?:the|this) (?!line\b)[\w-]+ segment (?:still needs|has run|needs (?:a few|more) (?:answers|turns|questions)|is (?:over|complete|done|finished)|comes next)\b|\b(?:sentence card|segment card|runtime note|lesson pointer)\b|^\s*(?:I[’']?ll|Let me) show (?:you )?(?:the |one |a )?(?:corrected sentence|sentence card|segment card)\b/i;
+// GDI run 4 (2026-10-29): "Those runtime notes are a mix, so let me just say
+// it plainly." and "Let me put a quick hook on the board first." — the
+// runtime's notes and the board staging read aloud. "Put the sentence on the
+// board" is dropped too (the auto card already writes it); "Look at the
+// sentence on the board." survives. A bare "these notes are …" is only
+// dropped when it talks about the notes being mixed/unclear (a lesson can
+// have real notes). "system note" alone stays ("A system note in the log
+// shows the error." is a real sentence) — only the plural or those/these.
+const BOARD_STAGING_NARRATION_RE =
+  /\bruntime notes?\b|\b(?:those|these) system notes?\b|\bsystem notes\b|\bput (?:a|the|one) (?:quick )?(?:hook|card|sentence) on the board\b|^\s*(?:those|these|the) (?:runtime |system )?notes (?:are|were) (?:a mix|mixed|conflicting|unclear|confusing|contradictory)\b/i;
 const BARE_FILLER_JA_RE =
   /^\s*(?:(?:はい|いいですね|では|じゃあ|さて)[、,]?\s*)?(?:少し|ちょっと)?見てみましょう(?:ね|か)?[。！!]?\s*$/;
 
@@ -435,7 +445,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s)) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s)) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
