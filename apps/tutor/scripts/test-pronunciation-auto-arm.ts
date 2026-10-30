@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail } from '../src/lib/tutor/pronunciation/auto-arm';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
-import { isSayItAsk } from '../src/lib/tutor/voice/correct-retry';
+import { isStrictRepeatAsk } from '../src/lib/tutor/voice/correct-retry';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -64,7 +64,7 @@ test('rearm: the live case — no quote, same part, say-it ask ⇒ re-arm the la
   const targets = { words: ['responsibilities'], sentences: [last.referenceText] };
   const detected = detectPronunciationTarget(ask, targets);
   assert.equal(detected, null);
-  const isRepeatAsk = isRetryAsk(ask) || isSayItAsk(ask);
+  const isRepeatAsk = isStrictRepeatAsk(ask);
   assert.equal(isRepeatAsk, true);
   const base = { last, detected, toolCalled: false, isRepeatAsk, segId: 'pronunciation' };
   assert.equal(shouldRearmPronunciation(base), true);
@@ -86,7 +86,9 @@ test('VTR wiring (§C): last target kept at every arm, re-arm branch, not_attemp
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(/capture\.arm\(referenceText\);[\s\S]{0,200}lastPronunciationTargetRef\.current = \{ referenceText, kind, segId: currentSegmentIdRef\.current \?\? '' \};/.test(VTR), 'set at the arm');
   assert.ok(/\} else if \(shouldRearmPronunciation\(\{\n\s*last: lastPronunciationTargetRef\.current,\n\s*detected: auto,/.test(VTR), 're-arm branch');
-  assert.ok(/isRepeatAsk: isRetryAsk\(fullText\) \|\| isSayItAsk\(fullText\),/.test(VTR), 'repeat-ask');
+  assert.ok(/isRepeatAsk: isStrictRepeatAsk\(fullText\),/.test(VTR), 'repeat-ask');
+  // review m5: a bare "say it" that is not an ask does not re-arm
+  assert.equal(isStrictRepeatAsk('You can say it naturally now.'), false);
   assert.ok(VTR.includes("onDebugEvent?.('pronunciation_rearmed',"), 'event');
   assert.ok(VTR.includes("onDebugEvent?.('pronunciation_unavailable', `not_attempted ${notAttemptedDetail(data.result)}`)"), 'detail');
 });

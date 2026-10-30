@@ -225,7 +225,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isSayItAsk } from '@/lib/tutor/voice/correct-retry';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -19856,7 +19856,7 @@ export function VoiceTutorRealtime({
           last: lastPronunciationTargetRef.current,
           detected: auto,
           toolCalled: totalToolNamesSeen.includes('request_pronunciation_check'),
-          isRepeatAsk: isRetryAsk(fullText) || isSayItAsk(fullText),
+          isRepeatAsk: isStrictRepeatAsk(fullText),
           segId: currentSegmentIdRef.current,
         })) {
           // Task 18 §C: "say the sentence once more" with no quote — re-arm
@@ -24521,8 +24521,8 @@ export function VoiceTutorRealtime({
         const recentClip = lastPronunciationClipRef.current;
         const expectedRepeat = expectedRepeatFor(
           recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '',
-          clipCaptureRef.current?.armedReference()
-            ?? (recentClip && nowMs - recentClip.at < 30_000 ? recentClip.text : null),
+          clipCaptureRef.current?.armedReference(),
+          recentClip && nowMs - recentClip.at < 30_000 ? recentClip.text : null,
         );
         const heur = classifyHeuristic({
           transcript: t.text,

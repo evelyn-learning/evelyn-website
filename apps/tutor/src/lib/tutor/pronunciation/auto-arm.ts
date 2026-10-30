@@ -120,7 +120,9 @@ export function shouldRearmPronunciation(input: {
 }
 
 /** Task 18 §C: what the vendor recognised in a not-attempted clip, for the
- *  debug line — `recognized="<words not omitted>" omitted=<n>/<reference words>`
+ *  debug line. Note (review m6): the words are the vendor's REFERENCE words it
+ *  did not mark omitted (a mispronounced word is listed under its reference
+ *  spelling) — a match report, not an ASR transcript — `recognized="<words not omitted>" omitted=<n>/<reference words>`
  *  — so a missed clip (nothing recognised) reads apart from a wrong one. */
 export function notAttemptedDetail(result: { words?: Array<{ word?: unknown; errorType?: unknown }> } | null | undefined): string {
   const words = Array.isArray(result?.words) ? result!.words! : [];

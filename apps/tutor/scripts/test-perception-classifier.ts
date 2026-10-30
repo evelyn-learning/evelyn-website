@@ -12,7 +12,7 @@
  *
  * Run: npm run test:perception-classifier
  */
-import { expectedRepeatFor, isSayItAsk } from '../src/lib/tutor/voice/correct-retry';
+import { expectedRepeatFor, isSayItAsk, isStrictRepeatAsk } from '../src/lib/tutor/voice/correct-retry';
 import {
   classifyHeuristic,
   scoreSelfVoice,
@@ -1598,6 +1598,11 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('§A expectedRepeatFor: ask without quote ⇒ null', expectedRepeatFor('Please say the sentence once more.', null) === null);
   check('§A expectedRepeatFor: last quote taken', expectedRepeatFor('Not "I go golf", but "I went golfing." Repeat after me: "I went golfing last week."', null)?.text === 'I went golfing last week.');
   check('§A isSayItAsk: say it once more / repeat after me / 言ってみましょう', isSayItAsk('Please say the sentence once more.') && isSayItAsk('Repeat after me.') && isSayItAsk('言ってみましょう。') && !isSayItAsk('Good job today.'));
+  // review m1 / m2: strict asks only; armed target > turn quote > recent clip
+  check('§A R2 isStrictRepeatAsk: bare "say that" is not an ask', !isStrictRepeatAsk('We can say that "the slope is two" here.') && isStrictRepeatAsk('Please say the sentence once more.') && isStrictRepeatAsk('言ってみましょう。'));
+  check('§A R2 expectedRepeatFor: math "we can say that" ⇒ null', expectedRepeatFor('We can say that "the slope is two here" now.', null) === null);
+  check('§A R2 expectedRepeatFor: the turn quote beats a recent clip', expectedRepeatFor('Say it once more: "I went golfing last week."', null, 'I was responsible for communicating with our customers.')?.text === 'I went golfing last week.');
+  check('§A R2 expectedRepeatFor: recent clip when the turn has no ask', expectedRepeatFor('Good.', null, 'I was responsible.')?.text === 'I was responsible.');
 }
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

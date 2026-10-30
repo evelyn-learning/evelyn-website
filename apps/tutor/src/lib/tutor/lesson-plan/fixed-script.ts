@@ -284,8 +284,9 @@ export function segmentNeedsAutoCard(input: {
     && !input.completed;
 }
 
-/** Tool calls that put a problem / question card up. */
-export const PROBLEM_CARD_TOOLS: ReadonlySet<string> = new Set(['show_problem', 'show_segment_card', 'show_try_yourself']);
+/** Tool calls that put a problem / question card up (fix round 2, m3: the
+ *  generate_problem / show_quiz renders count too). */
+export const PROBLEM_CARD_TOOLS: ReadonlySet<string> = new Set(['show_problem', 'show_segment_card', 'show_try_yourself', 'generate_problem', 'show_quiz']);
 
 const normStatement = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 

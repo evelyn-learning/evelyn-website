@@ -66,16 +66,36 @@ export function isSayItAsk(text: string): boolean {
   return SAY_IT_ASK_RE.test(t) || SAY_AGAIN_RE.test(t) || /\brepeat (?:it |that |this )?after me\b/i.test(t);
 }
 
+/** Japanese "say it" asks only (言ってみましょう / 言ってみてください / 繰り返し / リピート). */
+const JA_SAY_IT_ASK_RE = /言(?:って|い)(?:み(?:ましょう|てください|て)|ましょう)|繰り返し|リピート/;
+
+/** Fix round 2 (m1, m5): a repeat ask strict enough to act on — isRetryAsk,
+ *  "say/repeat … once more / again", "repeat after me", or a Japanese say-it
+ *  ask. Not the bare "say it" / "say that" / "try saying" of isSayItAsk
+ *  ("you can say it naturally now", "we can say that …"). */
+export function isStrictRepeatAsk(text: string): boolean {
+  const t = text ?? '';
+  return isRetryAsk(t) || SAY_AGAIN_RE.test(t) || /\brepeat (?:it |that |this )?after me\b/i.test(t) || JA_SAY_IT_ASK_RE.test(t);
+}
+
 /** Task 18 §A (GDI run 6): the line the student was asked to say, for the
- *  perception classifier's expected-repeat exemption — an armed pronunciation
- *  target first, else the last quoted sentence of the last delivered tutor
- *  turn when that turn is a repeat / say-it ask. null otherwise. */
-export function expectedRepeatFor(lastTutorTurn: string | null | undefined, armedReference: string | null | undefined): { text: string } | null {
+ *  perception classifier's expected-repeat exemption. Fix round 2 (m2) order:
+ *  an armed pronunciation target, else the last quoted sentence of the last
+ *  delivered tutor turn when that turn is a strict repeat ask, else a
+ *  pronunciation clip sent moments ago (`recentClip` — the capture disarms
+ *  when the clip closes, before the transcript lands). null otherwise. */
+export function expectedRepeatFor(
+  lastTutorTurn: string | null | undefined,
+  armedReference: string | null | undefined,
+  recentClip?: string | null,
+): { text: string } | null {
   if (armedReference && armedReference.trim()) return { text: armedReference.trim() };
   const t = lastTutorTurn ?? '';
-  if (!t || !(isRetryAsk(t) || isSayItAsk(t))) return null;
-  const quotes = extractQuotedSentences(t);
-  return quotes.length > 0 ? { text: quotes[quotes.length - 1]! } : null;
+  if (t && isStrictRepeatAsk(t)) {
+    const quotes = extractQuotedSentences(t);
+    if (quotes.length > 0) return { text: quotes[quotes.length - 1]! };
+  }
+  return recentClip && recentClip.trim() ? { text: recentClip.trim() } : null;
 }
 
 /** Spoken fillers, as standalone (lower-cased) tokens. */
