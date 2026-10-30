@@ -14,6 +14,7 @@ import {
   applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
   sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex, autoSentenceCardsToReplace,
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
+  isSentenceStarter, isSaidQuote, numberWordToken, sameSentence,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -78,8 +79,10 @@ test('classify: no student line → model', () => {
   assert.equal(classifyQuotedSentence(GOLF_SENTENCE, null).kind, 'model');
   assert.equal(classifyQuotedSentence(GOLF_SENTENCE, '  ').kind, 'model');
 });
-test('classify: identical to the student → model (nothing changed)', () => {
-  assert.equal(classifyQuotedSentence('since I started work', GOLF_STUDENT).kind, 'model');
+// Task 18 §D rule 3: a quote made only of the student's words is an echo,
+// however little of the student's sentence it covers (was 'model' before).
+test('classify: a partial quote of the student (nothing changed) → echo', () => {
+  assert.equal(classifyQuotedSentence('since I started work', GOLF_STUDENT).kind, 'echo');
 });
 
 // ── spoken emphasis ──────────────────────────────────────────────────────
@@ -386,6 +389,56 @@ test('A: VTR passes the check to planSentenceBoard and tags the event source', (
   assert.ok(block.includes('checkedSentence: boardPc?.proposed ?? null'));
   assert.ok(VTR.includes('const boardPc = verdictPrecheckRef.current;'));
   assert.ok(VTR.includes("`kind=${card.kind}${card.source ? ` source=${card.source}` : ''}"));
+});
+
+// ── Task 18 §D (GDI run 6, embed-1793338574787): fragments, "you said" echoes, partial echoes, number words ──
+test('T18 D1: a quoted sentence starter is never a card', () => {
+  const t10 = 'Right, you took him around the company and sold him a washing machine. That\'s a clear sentence. Let\'s make it past simple: can you say what you did in one sentence, starting with "Last year, I"?';
+  assert.deepEqual(planSentenceBoard({ tutorText: t10, studentLast: 'Uh, I take him around company and sell washing machine to him.', renderedThisTurn: false }), []);
+  const t12 = 'Good. "Last year I sold a washing machine to a customer from the USA" is correct. Sold is the past form of sell, and "last year" tells us the event is finished. Now try one more about your own work. Say a sentence starting with "Last month, I".';
+  const c12 = planSentenceBoard({ tutorText: t12, studentLast: 'Last year I uh sold washing machine to customer from USA.', renderedThisTurn: false });
+  assert.ok(!c12.some((c) => /^Last month, I$/.test(c.sentence)), JSON.stringify(c12));
+  const t16 = 'Last month I sold nine washing machines. That\'s a clear sentence, and your past tense is right. Now let\'s keep the same tense: say one sentence starting with "Last week, I".';
+  assert.deepEqual(planSentenceBoard({ tutorText: t16, studentLast: 'Last month I sold 9 washing machines.', renderedThisTurn: false, studentCorrect: true }), []);
+  // dangling pronoun / article after a comma, and the Japanese starter cue
+  assert.equal(isSentenceStarter('Last year, I', 'try this: ', ''), true);
+  assert.equal(isSentenceStarter('Last year, I went', 'try this: ', ''), false);
+  assert.equal(isSentenceStarter('Last week I went', 'say ', 'で始めてください'), true);
+  assert.equal(isSentenceStarter('I went to Kyoto.', 'beginning with ', ''), true);
+});
+test('T18 D2: "you said …" is an echo whatever its overlap, never promoted', () => {
+  const t8 = 'Good, you said "Customer from USA." That\'s a clear answer about the country. Next, could you tell me one thing you did with that customer, in one short sentence?';
+  assert.deepEqual(planSentenceBoard({ tutorText: t8, studentLast: 'Customer from USA.', renderedThisTurn: false, studentCorrect: true, checkedSentence: null }), []);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'You told me "I sell robots to hotels." Good.', studentLast: 'I sell many robot.', renderedThisTurn: false }), []);
+  assert.equal(isSaidQuote('Nice. You said ', ''), true);
+  assert.equal(isSaidQuote('', 'と言いました。'), true);
+  // the ask "Can you say …" is not a report of the student's words
+  assert.equal(isSaidQuote('Can you say the whole sentence once more: ', ''), false);
+});
+test('T18 D3: a partial echo (every quote token the student\'s) is an echo — the wrong fragment gets no card', () => {
+  const student = 'Um, I once had got, I once had got sushi from home and distributed to all my friends in the team. and then they all became my friends.';
+  const t66 = 'That\'s a warm story, Praveen. Sharing food is a lovely way to build friendships at work. Now let\'s check one small thing: "I once had got" is not quite right here. For a finished event with "once," the simple past is natural, so try saying: "I once brought sushi from home and shared it with my team."';
+  const cards = planSentenceBoard({ tutorText: t66, studentLast: student, renderedThisTurn: false });
+  assert.deepEqual(cards.map((c) => c.sentence), ['I once brought sushi from home and shared it with my team.'], JSON.stringify(cards));
+  assert.equal(classifyQuotedSentence('I once had got', student).kind, 'echo');
+});
+test('T18 D4: digits read as number words — 3 ≡ three, 30 ≡ thirty, 1,000 ≡ 1000', () => {
+  assert.equal(numberWordToken('3'), 'three');
+  assert.equal(numberWordToken('30'), 'thirty');
+  assert.equal(numberWordToken('25'), '25');
+  assert.equal(numberWordToken('word'), 'word');
+  assert.equal(sameSentence('I sold 3 machines', 'I sold three machines.'), true);
+  assert.equal(sameSentence('We made 1,000 units', 'We made 1000 units'), true);
+  const student = 'I have worked for Nagoya for 3 years';
+  // studentCorrect, no correction ⇒ the echo is promoted: ONE model card
+  const correct = planSentenceBoard({ tutorText: 'Nice. "I have worked for Nagoya for three years" is the present perfect.', studentLast: student, renderedThisTurn: false, studentCorrect: true });
+  assert.deepEqual(correct, [{ sentence: 'I have worked for Nagoya for three years', kind: 'model', emphasis: [], source: 'echo' }]);
+  // with a correction card in the same turn ⇒ the correction only
+  const both = planSentenceBoard({ tutorText: 'Nice. "I have worked for Nagoya for three years" is fine, but say "I have worked at Nagoya Corporation for three years."', studentLast: student, renderedThisTurn: false, studentCorrect: true });
+  assert.deepEqual(both.map((c) => [c.kind, c.sentence]), [['correction', 'I have worked at Nagoya Corporation for three years.']]);
+  // the live turn (introduced by "You said") — the correction only
+  const live = planSentenceBoard({ tutorText: 'Nice. You said "I have worked for Nagoya for three years," and that\'s the present perfect. Let\'s make it sound natural: say "I have worked at Nagoya Corporation for three years." What do you like most about working there?', studentLast: 'Yes, I have worked uh for Nagoya for 3 years.', renderedThisTurn: false, studentCorrect: true });
+  assert.deepEqual(live.map((c) => [c.kind, c.sentence]), [['correction', 'I have worked at Nagoya Corporation for three years.']]);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

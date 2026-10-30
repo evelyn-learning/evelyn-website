@@ -32,9 +32,8 @@ export const SENTENCE_BOARD_MAX_PER_TURN = 2;
 const MIN_WORDS = 3;
 const MAX_EMPHASIS = 4;
 const CORRECTION_OVERLAP = 0.5;
-/** A quote whose tokens are all the student's, covering ≥ 90 % of what the
- *  student said, is an echo of the student. */
-const ECHO_OVERLAP = 0.9;
+/** A quote whose tokens are all the student's is an echo of the student
+ *  (Task 18 §D: whatever share of the student's words it covers). */
 
 /** Straight or curly double quotes, Japanese corner brackets 「…」 / 『…』
  *  (GDI run 4: the bilingual tutor quotes corrections that way) and curly
@@ -53,9 +52,25 @@ const TOKEN_RE = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
 const COMPOUND_RE = /[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu;
 const lowerTok = (w: string) => w.toLowerCase().replace(/’/g, "'");
 
-/** Lowercase words, punctuation stripped, apostrophes kept (haven't). */
+/** Task 18 §D (GDI run 6: "3" vs "three" made the student's own sentence
+ *  look corrected): digits read as number words — 0–20 and the tens 30…90 —
+ *  so "3" ≡ "three" and "30" ≡ "thirty". Other numbers stay digits. */
+const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+const TENS_WORDS: Record<number, string> = { 30: 'thirty', 40: 'forty', 50: 'fifty', 60: 'sixty', 70: 'seventy', 80: 'eighty', 90: 'ninety' };
+export function numberWordToken(tok: string): string {
+  if (!/^\d+$/.test(tok)) return tok;
+  const n = Number(tok);
+  if (n <= 20) return NUMBER_WORDS[n]!;
+  return TENS_WORDS[n] ?? String(n);
+}
+/** Thousands separators dropped ("1,000" → "1000") before tokenising. */
+const dropThousands = (text: string) => (text ?? '').replace(/(\d),(?=\d{3}(?!\d))/g, '$1');
+
+/** Lowercase words, punctuation stripped, apostrophes kept (haven't), digits
+ *  as number words (numberWordToken). */
 function tokens(text: string): string[] {
-  return (text.match(TOKEN_RE) ?? []).map((t) => t.toLowerCase().replace(/’/g, "'"));
+  return (dropThousands(text).match(TOKEN_RE) ?? []).map((t) => numberWordToken(t.toLowerCase().replace(/’/g, "'")));
 }
 
 /** A quoted span that may be a sentence card (trimmed), or null. */
@@ -79,6 +94,54 @@ export function extractQuotedSentences(text: string): string[] {
   return out;
 }
 
+/** Task 18 §D: how far before / after a quote its introducing words are read. */
+const INTRO_WINDOW = 40;
+/** "starting with "Last year, I"" — a sentence STARTER, not a sentence. */
+const STARTER_INTRO_RE = /\b(?:starting with|beginning with|start with|begin with|that starts with)\s*[:,]?\s*$/i;
+const STARTER_AFTER_RE = /^\s*(?:で|から)始め/;
+/** "you said "Customer from USA."" — the student's own words quoted back. */
+/*  "you say" only as a report — never the ask "Can you say …" / "to you say". */
+const SAID_INTRO_RE = /\b(?:you said|(?<!\b(?:can|could|would|will|to|please|did|do|does|should|now|then|let)\s+)you say|you just said|you told me)\b[^"“「『‘]*$/i;
+const SAID_AFTER_RE = /^\s*(?:と|って)言いました/;
+/** A span ending on a bare subject pronoun / article after a comma ("Last week, I"). */
+const DANGLING_END_RE = /,\s*(?:I|you|we|they|he|she|it|the|a|an)[.!?]?$/i;
+
+/** Qualifying quoted spans with the text just before (INTRO_WINDOW + 20 chars
+ *  of lookbehind context; introWithin) and after each. */
+function quotedSpansWithContext(text: string): Array<{ span: string; before: string; after: string }> {
+  const out: Array<{ span: string; before: string; after: string }> = [];
+  if (!text) return out;
+  for (const m of text.matchAll(QUOTE_RE)) {
+    const span = qualifyingSpan(quoteInner(m));
+    if (!span) continue;
+    const at = m.index ?? 0;
+    out.push({ span, before: text.slice(Math.max(0, at - INTRO_WINDOW - 20), at), after: text.slice(at + m[0].length, at + m[0].length + INTRO_WINDOW) });
+  }
+  return out;
+}
+
+/** True when `re` matches `before` with the match starting inside its last
+ *  INTRO_WINDOW characters — `before` may be longer so a lookbehind sees the
+ *  word ahead of the window ("Can| you say"). */
+function introWithin(re: RegExp, before: string): boolean {
+  const b = before ?? '';
+  const m = re.exec(b);
+  return !!m && (m.index ?? 0) >= b.length - INTRO_WINDOW;
+}
+
+/** Task 18 §D: a quoted sentence STARTER ("starting with "Last year, I"",
+ *  「"Last week, I"で始めて」, or any span ending ", I" / ", the" …) is not a
+ *  card. */
+export function isSentenceStarter(span: string, before: string, after: string): boolean {
+  return introWithin(STARTER_INTRO_RE, before) || STARTER_AFTER_RE.test(after ?? '') || DANGLING_END_RE.test((span ?? '').trim());
+}
+
+/** Task 18 §D: the quote is introduced as the student's own words ("you
+ *  said …", 「…と言いました」) — an echo, never promoted. */
+export function isSaidQuote(before: string, after: string): boolean {
+  return introWithin(SAID_INTRO_RE, before) || SAID_AFTER_RE.test(after ?? '');
+}
+
 /**
  * correction ⇔ studentLast present AND |quoteTokens ∩ studentTokens| / |quoteTokens| ≥ 0.5
  * AND at least one quote token is not in studentTokens. emphasis = quote words
@@ -90,19 +153,21 @@ export function classifyQuotedSentence(sentence: string, studentLast: string | n
   if (!studentLast || !studentLast.trim()) return model;
   const student = new Set(tokens(studentLast));
   if (student.size === 0) return model;
-  const quoteWords = sentence.match(TOKEN_RE) ?? [];
-  const quoteSet = new Set(quoteWords.map((w) => w.toLowerCase().replace(/’/g, "'")));
+  const quoteSet = new Set(tokens(sentence));
   if (quoteSet.size === 0) return model;
   let shared = 0;
   for (const t of quoteSet) if (student.has(t)) shared++;
   const novel = quoteSet.size - shared;
-  if (novel === 0 && shared / student.size >= ECHO_OVERLAP) return { sentence, kind: 'echo', emphasis: [] };
-  if (shared / quoteSet.size < CORRECTION_OVERLAP || novel === 0) return model;
+  // Task 18 §D (GDI run 6: "I once had got" — the student's wrong fragment
+  // quoted inside a correction turn): every quote token is the student's ⇒
+  // an echo, however little of what the student said it covers.
+  if (novel === 0) return { sentence, kind: 'echo', emphasis: [] };
+  if (shared / quoteSet.size < CORRECTION_OVERLAP) return model;
   const emphasis: string[] = [];
   const seen = new Set<string>();
-  const studentCompounds = new Set((studentLast.match(COMPOUND_RE) ?? []).map(lowerTok));
-  for (const w of sentence.match(COMPOUND_RE) ?? []) {
-    const t = lowerTok(w);
+  const studentCompounds = new Set((dropThousands(studentLast).match(COMPOUND_RE) ?? []).map(lowerTok));
+  for (const w of dropThousands(sentence).match(COMPOUND_RE) ?? []) {
+    const t = numberWordToken(lowerTok(w));
     if (seen.has(t)) continue;
     if (w.includes('-') ? studentCompounds.has(t) : student.has(t)) continue;
     seen.add(t);
@@ -147,27 +212,36 @@ export function planSentenceBoard(input: {
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   const studentCorrect = input.studentCorrect === true;
-  const spans = extractQuotedSentences(input.tutorText).filter(isCardCandidate);
-  const distinct: { s: string; n: string }[] = [];
-  for (const s of spans) {
-    const n = norm(s);
-    if (!n || distinct.some((d) => d.n === n)) continue;
-    distinct.push({ s, n });
+  const spans = quotedSpansWithContext(input.tutorText)
+    .filter((q) => isCardCandidate(q.span) && !isSentenceStarter(q.span, q.before, q.after));
+  const distinct: { s: string; n: string; said: boolean }[] = [];
+  for (const q of spans) {
+    const n = norm(q.span);
+    const said = isSaidQuote(q.before, q.after);
+    const dup = distinct.find((d) => d.n === n);
+    if (dup) { dup.said = dup.said || said; continue; }
+    if (!n) continue;
+    distinct.push({ s: q.span, n, said });
   }
   const kept = distinct.filter((d) => !distinct.some((o) => o !== d && o.n.length > d.n.length && ` ${o.n} `.includes(` ${d.n} `)));
-  const raw = kept.map((d, i) => ({ q: classifyQuotedSentence(d.s, input.studentLast), len: d.n.length, i }));
+  // Task 18 §D: a quote introduced as the student's words ("you said …") is
+  // an echo whatever its overlap, and is never promoted.
+  const raw = kept.map((d, i) => ({
+    q: d.said ? { sentence: d.s, kind: 'echo' as const, emphasis: [] } : classifyQuotedSentence(d.s, input.studentLast),
+    len: d.n.length, i, said: d.said,
+  }));
   // Fix round 1 (I2): a turn that corrects the student's sentence says it was
   // NOT right as it stood (it passed the check "for the task as stated") —
   // no echo promotion, no checked-sentence card; the correction is the card.
   const promote = studentCorrect && !raw.some((c) => c.q.kind === 'correction');
   const classified = raw
-    .map((c) => (c.q.kind === 'echo' && promote ? { ...c, q: { sentence: c.q.sentence, kind: 'model' as const, emphasis: [], source: 'echo' as const } } : c))
+    .map((c) => (c.q.kind === 'echo' && promote && !c.said ? { ...c, q: { sentence: c.q.sentence, kind: 'model' as const, emphasis: [], source: 'echo' as const } } : c))
     .filter((c) => c.q.kind !== 'echo');
   if (promote && input.checkedSentence) {
     const checked = qualifyingSpan(input.checkedSentence);
     if (checked && isCardCandidate(checked) && sentenceContains(input.tutorText, checked)
       && !classified.some((c) => sameSentence(c.q.sentence, checked))) {
-      classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length });
+      classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length, said: false });
     }
   }
   classified.sort((a, b) => {
