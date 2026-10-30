@@ -803,6 +803,14 @@ test('GDI run 3: VTR kills + retries a repeat_after_correct in a language sessio
   assert.match(vtr, /else if \(reAskedOwnSentence\(transcript, fullText\)\) \{\s*pendingCorrectRetryNoteRef\.current = OWN_SENTENCE_RETRY_NOTE;/);
 });
 
+test('Task 19 §C (GDI run 7): a turn carrying a measured pronunciation note is not killed for repeat_after_correct', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  // the measured case is checked BEFORE the kill branch and never reaches it
+  assert.match(vtr, /if \(repeated && pronunciationMeasuredThisTurn\) \{\s*repeatAfterCorrectRejected = true;\s*onDebugEvent\?\.\('repeat_after_correct_allowed', 'measured'\);\s*\} else if \(repeated\) \{\s*repeatAfterCorrectRejected = true;\s*rejectionsThisAttempt\.push\(\{ action: 'repeat_after_correct'/);
+  // the flag is set only from the consumed measured note
+  assert.match(vtr, /runTranscript = `\$\{pronunciationResultNoteRef\.current\}\\n\\n\$\{runTranscript\}`;\s*pronunciationMeasuredThisTurn = pronunciationMeasuredRef\.current;/);
+});
+
 test('own-sentence re-ask: a repeat-ask quoting the sentence the student just said', () => {
   const student = 'I went to the office yesterday .';
   assert.equal(reAskedOwnSentence(student, 'Nice. 言ってみましょう。 I went to the office yesterday. — 完璧です。'), true);

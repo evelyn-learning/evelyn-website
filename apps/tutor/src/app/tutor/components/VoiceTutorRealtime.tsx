@@ -18686,7 +18686,14 @@ export function VoiceTutorRealtime({
           const repeated = reAskedOwnSentence(transcript, attemptText)
             ? transcript
             : reAskedModelSentence(prevTutorForRepeat, transcript, attemptText);
-          if (repeated) {
+          // Task 19 §C (GDI run 7, 1132 s): on a turn carrying a MEASURED
+          // pronunciation note the re-ask is the coaching drill, not a
+          // redundant retry — the kill's retry was told "confirm it" and never
+          // gave the score or the weak sounds.
+          if (repeated && pronunciationMeasuredThisTurn) {
+            repeatAfterCorrectRejected = true;
+            onDebugEvent?.('repeat_after_correct_allowed', 'measured');
+          } else if (repeated) {
             repeatAfterCorrectRejected = true;
             rejectionsThisAttempt.push({ action: 'repeat_after_correct', reason: REPEAT_AFTER_CORRECT_REASON });
             await performKill();
