@@ -70,6 +70,7 @@ import { stripMarkdownEmphasis } from '../src/lib/tutor/voice/sentence-spacing';
 import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
 import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
 import { expectsEnglishReply } from '../src/lib/tutor/voice/english-reply';
+import { isBoardReadAloud, asksToReadAloud } from '../src/lib/tutor/voice/correct-retry';
 
 let passed = 0;
 let failed = 0;
@@ -1332,6 +1333,44 @@ test('20B2: a post-close turn that re-engages re-opens the lesson; a goodbye / c
   assert.ok(vtr.includes("onDebugEvent?.('lesson_reopened'"));
   const at = vtr.indexOf("onDebugEvent?.('lesson_reopened'");
   assert.ok(/&& isFixedScriptPlan\(lessonPlanRef\.current\)/.test(vtr.slice(at - 900, at)), 'fixed-script only (I3)');
+});
+
+// ─── Task 22 §E (GDI run 10, 241 s): the student reads the board question aloud ───
+test('22E isBoardReadAloud: the run-10 reading is held; asked-for, short, or answered readings are not', () => {
+  const board = 'Have you worked for your current company for a long time?';
+  assert.equal(isBoardReadAloud({ transcript: 'Have you worked for your company for a long time?', boardQuestion: board, expectedRepeat: null }), true);
+  assert.equal(isBoardReadAloud({ transcript: 'Um, have you worked for your current company for a long time?', boardQuestion: board, expectedRepeat: null }), true);
+  // the tutor asked "Please read the question aloud" → the reading IS the turn
+  assert.equal(isBoardReadAloud({ transcript: 'Have you worked for your company for a long time?', boardQuestion: board, expectedRepeat: board }), false);
+  // a statement under 4 words
+  assert.equal(isBoardReadAloud({ transcript: 'What do you do?', boardQuestion: 'What do you?', expectedRepeat: null }), false);
+  // a reading plus an answer — too many extras
+  assert.equal(isBoardReadAloud({ transcript: 'Have you worked for your current company for a long time — yes, three years', boardQuestion: board, expectedRepeat: null }), false);
+  // an answer is not a reading
+  assert.equal(isBoardReadAloud({ transcript: 'Yes, I have worked for my company for 3 years.', boardQuestion: board, expectedRepeat: null }), false);
+  // no board question
+  assert.equal(isBoardReadAloud({ transcript: 'Have you worked for your company for a long time?', boardQuestion: null, expectedRepeat: null }), false);
+  // a multi-line card: each numbered line separately
+  const card = '1. Can you tell me a little about your job?\n2. Have you ever worked with an international customer?\n3. What did you sell last month?';
+  assert.equal(isBoardReadAloud({ transcript: 'Have you ever worked with an international customer?', boardQuestion: card, expectedRepeat: null }), true);
+  assert.equal(isBoardReadAloud({ transcript: 'Yes, I have worked with an international customer.', boardQuestion: card, expectedRepeat: null }), false);
+});
+test('22E asksToReadAloud: an aloud ask, not a silent "read it through"', () => {
+  assert.equal(asksToReadAloud('Please read the question aloud.'), true);
+  assert.equal(asksToReadAloud('Can you read it out loud for me?'), true);
+  assert.equal(asksToReadAloud('Look at the card on the board and read it through. Then tell me one sentence about your work.'), false);
+});
+test('22E VTR holds a read-aloud before the brain dispatch (pin)', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  const h = vtr.indexOf('const handleStudentTranscriptForBrain = useCallback(');
+  const at = vtr.indexOf("'board_read_aloud_held'", h);
+  assert.ok(h > 0 && at > h && at - h < 9000, 'inside handleStudentTranscriptForBrain, near its top');
+  const block = vtr.slice(at - 2000, at + 200);
+  assert.ok(/if \(TUTOR_BOARD_READ_ALOUD_HOLD && !opts\?\.silent && !opts\?\.typed && languageSessionRef\.current && /.test(block));
+  assert.ok(/isBoardReadAloud\(\{ transcript, boardQuestion, expectedRepeat: readExpected\?\.text \?\? null \}\)\) \{\s*onDebugEvent\?\.\('board_read_aloud_held', `"\$\{transcript\.slice\(0, 80\)\}"`\);\s*return;/.test(block));
+  assert.ok(/currentProblemRef\.current\?\.statement \?\?/.test(block));
+  assert.ok(at < vtr.indexOf('recordStudentEngagement(idleNudgeStateRef.current)', h), 'before the engagement reset: the idle nudge stays armed');
+  assert.ok(/export const TUTOR_BOARD_READ_ALOUD_HOLD = process\.env\.NEXT_PUBLIC_TUTOR_BOARD_READ_ALOUD_HOLD !== 'off';/.test(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8')));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

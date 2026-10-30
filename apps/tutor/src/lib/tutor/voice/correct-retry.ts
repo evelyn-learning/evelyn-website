@@ -248,6 +248,53 @@ export function saidModelSentence(model: string, studentText: string): boolean {
   return extra <= Math.max(2, Math.ceil(m.length * 0.1));
 }
 
+/** A board line's leading item label ("Question 1:", "Q2.", "3)") — not
+ *  something the student reads aloud. */
+const BOARD_LINE_LABEL_RE = /^\s*(?:(?:question|q)\s*\d+\s*[:.)]?|\d+\s*[.)])\s*/i;
+
+/** Task 22 §E (GDI run 10, 241 s): "Look at the card on the board and read it
+ *  through. Then tell me one sentence…" — the student read the card's question
+ *  aloud and a brain turn ran at once, cutting across the answer to come. A
+ *  READ-ALOUD = the student's filler-free tokens are a near-verbatim reading
+ *  of one line of the current board question (≥ 4 words; at most one of its
+ *  tokens missing, at most two of the student's own added), and the last
+ *  tutor turn did not ask for exactly that line (`expectedRepeat`). */
+export function isBoardReadAloud(input: { transcript: string; boardQuestion: string | null | undefined; expectedRepeat: string | null | undefined }): boolean {
+  const board = input.boardQuestion ?? '';
+  if (!board.trim()) return false;
+  const st = cleanStudentTokens(input.transcript ?? '');
+  if (st.length === 0) return false;
+  const expected = input.expectedRepeat ? wordTokens(input.expectedRepeat).filter((t) => !FILLER_TOKENS.has(t)).join(' ') : '';
+  const lines = board.split(/\n+/).map((l) => l.replace(BOARD_LINE_LABEL_RE, '').trim()).filter(Boolean);
+  if (expected && expected === lines.flatMap((l) => wordTokens(l)).filter((t) => !FILLER_TOKENS.has(t)).join(' ')) return false;
+  for (const line of lines) {
+    const m = wordTokens(line).filter((t) => !FILLER_TOKENS.has(t));
+    if (m.length < 4) continue;
+    if (expected && expected === m.join(' ')) continue;
+    const left = new Map<string, number>();
+    for (const w of st) left.set(w, (left.get(w) ?? 0) + 1);
+    let missing = 0;
+    for (const w of m) {
+      const n = left.get(w) ?? 0;
+      if (n === 0) { missing++; continue; }
+      left.set(w, n - 1);
+    }
+    let extra = 0;
+    for (const n of left.values()) extra += n;
+    if (missing <= 1 && extra <= 2) return true;
+  }
+  return false;
+}
+
+/** The tutor asked the student to read something ALOUD ("Please read the
+ *  question aloud", "read it out loud for me", "読んでみてください") — then a
+ *  reading of the board question is the asked-for line, not a read-aloud to
+ *  hold. "Read it through" / "look at the card" (silent reading) is no ask. */
+const READ_ALOUD_ASK_RE = /\bread\b[^.!?。！？]{0,40}?\b(?:aloud|out loud|out|to me|for me)\b|読(?:んで|み上げ)/i;
+export function asksToReadAloud(tutorText: string | null | undefined): boolean {
+  return READ_ALOUD_ASK_RE.test(tutorText ?? '');
+}
+
 /** A re-ask cue. */
 const REASK_CUE_RE = /\b(?:once more|again|one more time)\b|もう一度/i;
 /** The attempt refers to the sentence already given, without quoting it. */

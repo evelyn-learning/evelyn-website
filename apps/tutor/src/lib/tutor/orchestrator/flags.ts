@@ -988,3 +988,8 @@ export const TUTOR_SEGMENT_CARD_AUTO = process.env.NEXT_PUBLIC_TUTOR_SEGMENT_CAR
  *  matched line's end (voice/perception-classifier.ts isAnswerAtPlaybackEnd).
  *  Default ON; NEXT_PUBLIC_TUTOR_SELF_VOICE_ANSWER_END=off. */
 export const TUTOR_SELF_VOICE_ANSWER_END = process.env.NEXT_PUBLIC_TUTOR_SELF_VOICE_ANSWER_END !== 'off';
+/** Task 22 §E (GDI run 10, 241 s): in a language session a student transcript
+ *  that only reads the current board question aloud (voice/correct-retry.ts
+ *  isBoardReadAloud) dispatches no brain turn — the answer is still to come.
+ *  Default ON; NEXT_PUBLIC_TUTOR_BOARD_READ_ALOUD_HOLD=off. */
+export const TUTOR_BOARD_READ_ALOUD_HOLD = process.env.NEXT_PUBLIC_TUTOR_BOARD_READ_ALOUD_HOLD !== 'off';
