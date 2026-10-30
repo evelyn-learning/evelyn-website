@@ -143,7 +143,9 @@ function quotedSpansWithContext(text: string): Array<{ span: string; before: str
 // this: When you meet a customer, smile …", "Say these words again: Apple,
 // banana, …" were carded — the lead must PRESENT the sentence and end at the
 // colon, and the tail must be a declarative sentence.
-const COLON_LEAD_RE = /\b(?:say (?:it|this|that|the (?:full |whole )?sentence)(?: (?:once more|again|like this|as a full sentence|in English))?|(?:the|a|your) (?:model|correct(?:ed)? (?:sentence|version|form)|natural (?:way to say it|version)|full sentence) (?:is|would be)|(?:let['’]s )?(?:make|put|say) (?:that|it|this)(?: sentence)? (?:in English|as a full sentence)|in English,? (?:you could|we|you can) say)\s*[:：]\s*$/i;
+// The GDI plan's own correction template ("A more natural way to say this
+// is: …") is a presenting lead too.
+const COLON_LEAD_RE = /\b(?:say (?:it|this|that|the (?:full |whole )?sentence)(?: (?:once more|again|like this|as a full sentence|in English))?|(?:the|a|your) (?:model|correct(?:ed)? (?:sentence|version|form)|natural (?:way to say it|version)|full sentence) (?:is|would be)|(?:let['’]s )?(?:make|put|say) (?:that|it|this)(?: sentence)? (?:in English|as a full sentence)|in English,? (?:you could|we|you can) say|a more natural way to say (?:this|that|it) is|a (?:better|clearer|more common) way to say (?:this|that|it) is|more naturally,? (?:you (?:could|can|would) say|we say))\s*[:：]\s*$/i;
 const COLON_TAIL_OPENER_RE = /^(?:when|if|remember|first|then)\b/i;
 /** "Apple, banana, cherry, grape." — ≥ 2 commas with one-word items. */
 function isCommaList(span: string): boolean {

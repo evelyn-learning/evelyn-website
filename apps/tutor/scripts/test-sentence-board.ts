@@ -606,9 +606,13 @@ test('§D19 R4 I2: the "more natural way" template and a fix before the last wor
   const tutor = 'A more natural way to say this is: I was responsible for communicating with our customers.';
   assert.equal(hasCorrectionCue(tutor), true);
   assert.equal(hasCorrectionCue('自然な言い方は「I was responsible for communicating」です。'), true);
-  // Task 21 fix round 1 (I1): "A more natural way to say this is:" is not one of
-  // the explicit presenting leads — no colon card; and never the checked card.
-  assert.deepEqual(planSentenceBoard({ tutorText: tutor, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said }), []);
+  // Task 21 §B1: the plan's own correction template is a presenting lead — the
+  // correction card, never the checked card.
+  assert.deepEqual(planSentenceBoard({ tutorText: tutor, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said }),
+    [{ sentence: 'I was responsible for communicating with our customers.', kind: 'correction', emphasis: ['for', 'communicating'] }]);
+  for (const t of ['A better way to say this is: I was responsible for communicating with our customers.', 'More naturally, you could say: I was responsible for communicating with our customers.']) {
+    assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: said, renderedThisTurn: false }).map((c) => c.kind), ['correction'], t);
+  }
   assert.equal(recastsStudentSentence('You work in sales.', 'I work in the sales.'), true);
   assert.equal(recastsStudentSentence('You work in the sales.', 'I work in sales.'), true);
   // Task 21 §B2: the deletion recast is a correction card (nothing to mark), never the checked card.
