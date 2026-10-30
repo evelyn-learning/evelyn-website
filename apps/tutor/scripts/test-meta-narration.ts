@@ -759,5 +759,18 @@ check('§C 22 no personaName → untouched', stripNoteCitationClause("Ryota says
 check('§C 22 "Ryota here." rule unchanged', stripNoteCitationClause('Ryota here.', RYOTA) === '');
 check('§C 22 a name not at the start untouched', stripNoteCitationClause('Well, Ryota says the meeting is at three.', RYOTA) === 'Well, Ryota says the meeting is at three.');
 
+// ─── Task 22 §D1 (GDI run 10, 1138 s): segment-close plan narration ───
+for (const t of [
+  'Let me close out the pronunciation part and move to the summary.',
+  'Before I give one, the pronunciation result shows "for" and "our" as the sounds to work on, so I\'ll keep that point in mind.',
+  'Let me wrap up this grammar section now, and go on to the conversation.',
+  "The student found the past simple hard, so I'll keep it noted.",
+]) check(`§D1 22 dropped on any turn: "${t}"`, stripNoteCitationClause(t) === '' && isMetaNarration(t));
+for (const t of [
+  'Let me close the window and move to the next slide.',
+  'Keep that point in mind for the exam.',
+  "Let me finish this sentence and move to the next one.",
+]) check(`§D1 22 untouched: "${t}"`, stripNoteCitationClause(t) === t && !isMetaNarration(t));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

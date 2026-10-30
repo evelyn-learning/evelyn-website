@@ -256,6 +256,16 @@ function stripPersonaLead(s: string, personaName: string | readonly string[] | n
   }
   return s;
 }
+// Task 22 §D1 (GDI run 10, 1138 s): plan narration and note citation on the
+// segment-close turn — "Let me close out the pronunciation part and move to
+// the summary." / "…, so I'll keep that point in mind." Whole-sentence
+// shapes (nothing kept); the part / section / segment / step noun is required
+// so "Let me finish this sentence and move to the next one" style teaching is
+// untouched, and a student-facing "Keep that point in mind …" has no "so I'll".
+const CLOSE_PART_NARRATION_RE =
+  /^\s*Let me (?:close out|wrap up|finish(?: up)?|round off) (?:the|this) \w+(?: \w+)? (?:part|section|segment|step)(?: now)?,? and (?:move|go|get) (?:on )?to\b/i;
+const KEEP_IN_MIND_TAIL_RE =
+  /,?\s*\bso I['’]ll keep (?:(?:that|this|it)(?: point| in mind| noted)|that (?:point )?in mind)\b[^.!?]*[.!]?\s*$/i;
 export interface NoteCitationOpts { /** the session persona's name(s) — full name and first name */ personaName?: string | readonly string[] | null }
 /**
  * A sentence that cites a runtime note with the citation removed: unchanged
@@ -267,6 +277,7 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   if (isPersonaSelfAnnounce(raw, opts?.personaName)) return '';
   const s = stripPersonaLead(raw, opts?.personaName);
   if (s !== raw && !s.trim()) return '';
+  if (CLOSE_PART_NARRATION_RE.test(s) || KEEP_IN_MIND_TAIL_RE.test(s)) return '';
   const m = NOTE_CITING_OPENER_RE.exec(s) ?? STAY_ON_ONE_IDEA_RE.exec(s);
   if (!m) return s;
   NOTE_CITATION_CONTINUATION_RE.lastIndex = m.index + m[0].length;

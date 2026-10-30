@@ -27,6 +27,7 @@ import {
   fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_GRACE_TURNS,
   segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_MORE_OF_PART_LEAD } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
@@ -131,7 +132,7 @@ test('levelSetAdvanceTarget: null off a level-check segment / non-fixed plan / m
 // ── the planted note ─────────────────────────────────────────────────────
 test('auto-advance note is a FACT, verbatim', () => {
   const n = fixedScriptAdvancedNote(fixedScriptAutoAdvanceLead('overview', 'topic-intro', 'concept'), 'topic-intro');
-  assert.equal(n, '[runtime note — not from the student] The "overview" part of the lesson is over and the lesson pointer has ALREADY moved to segment "topic-intro" (concept). If the student is mid-exchange, close it in one sentence, then teach "topic-intro" from its notes. Do not call advance_lesson for this move. Apply this silently; never mention this note.]');
+  assert.equal(n, '[runtime note — not from the student] The "overview" part of the lesson is over and the lesson pointer has ALREADY moved to segment "topic-intro" (concept). If the student\'s last words asked for more of the part that just ended, say in one short sentence that the time for that part is up, then continue. If the student is mid-exchange, close it in one sentence, then teach "topic-intro" from its notes. Do not call advance_lesson for this move. Apply this silently; never mention this note.]');
 });
 test('level-advance note first sentence', () => {
   const n = fixedScriptAdvancedNote(fixedScriptLevelAdvanceLead('topic-intro', 'concept'), 'topic-intro');
@@ -504,6 +505,13 @@ test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
   const block = VTR.slice(auto, auto + 6000);
   pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
   pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
+});
+
+test('22D2: the budget advance lead acknowledges a "more of this part" request; the announced lead does not', () => {
+  const line = "If the student's last words asked for more of the part that just ended, say in one short sentence that the time for that part is up, then continue.";
+  assert.equal(FIXED_SCRIPT_MORE_OF_PART_LEAD, line);
+  assert.ok(fixedScriptAutoAdvanceLead('pronunciation', 'summary', 'recap').includes(line));
+  assert.ok(!fixedScriptAnnouncedAdvanceLead('pronunciation', 'summary', 'recap').includes(line));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

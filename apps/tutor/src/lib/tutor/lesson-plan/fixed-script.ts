@@ -205,8 +205,13 @@ function segmentDueReason(input: AutoAdvanceInput): 'turns' | 'time' | null {
 export function fixedScriptAdvancedNote(lead: string, next: string): string {
   return `[runtime note — not from the student] ${lead} If the student is mid-exchange, close it in one sentence, then teach "${next}" from its notes. Do not call advance_lesson for this move. Apply this silently; never mention this note.]`;
 }
+/** Task 22 §D2 (GDI run 10, 1138 s): the student asked "Can you give me some
+ *  other sentence?" as the part's budget ran out; the advance turn ignored the
+ *  request. Budget advances only — an announced move was the brain's own. */
+export const FIXED_SCRIPT_MORE_OF_PART_LEAD =
+  "If the student's last words asked for more of the part that just ended, say in one short sentence that the time for that part is up, then continue.";
 export function fixedScriptAutoAdvanceLead(from: string, next: string, kind: string): string {
-  return `The "${from}" part of the lesson is over and the lesson pointer has ALREADY moved to segment "${next}" (${kind}).`;
+  return `The "${from}" part of the lesson is over and the lesson pointer has ALREADY moved to segment "${next}" (${kind}). ${FIXED_SCRIPT_MORE_OF_PART_LEAD}`;
 }
 /** Task 16: the brain announced the move into the next part itself (no
  *  advance_lesson) and the client moved the pointer on that announcement. */
