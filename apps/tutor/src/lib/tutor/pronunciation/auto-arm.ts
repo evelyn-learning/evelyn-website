@@ -64,12 +64,17 @@ const SHORT_TARGET_DIRECT_RE = /\b(?:say|repeat|try|pronounce)\s+(?:after me,?\s
 const SHORT_TARGET_NEAR_RE = /\b(?:say|repeat|try|pronounce)(?:\s+after me,?)?(?:\s+[\p{L}'’]+){0,3}\s*$/iu;
 const SHORT_TARGET_TAIL_RE = /^\s*(?:,?\s*(?:once more|again|slowly|carefully|for me|please)\b)*\s*[.!]?\s*(?:$|[.!?。！？]|\s+\p{Lu})/u;
 /** Fix round 2 (I4 a): the turn asks for the whole sentence — no word target. */
-const WHOLE_SENTENCE_ASK_RE = /\b(?:the (?:whole|full|complete) sentence|your sentence|the sentence again)\b/i;
+// Fix round 3 (I5): only an ASK clause — a say / repeat / try / read verb
+// governing the sentence in one of the turn's last two sentences; "Your
+// sentence was clear." is praise, not an ask.
+const WHOLE_SENTENCE_ASK_RE = /\b(?:say|repeat|try|read)\b[^.!?。！？]*?\b(?:the (?:whole|full|complete) sentence|your sentence|the sentence again|it again)\b/i;
+const asksWholeSentence = (turnText: string) =>
+  (turnText ?? '').split(/(?<=[.!?。！？])\s+/).map((x) => x.trim()).filter(Boolean).slice(-2).some((x) => WHOLE_SENTENCE_ASK_RE.test(x));
 /** Fix round 2 (I4 b): the wrong form of an "X, not Y" pair. */
 const NEGATED_QUOTE_RE = /\b(?:not|instead of|rather than|never say)\s*$/i;
 const WE_SAY_NOT_RE = /\bwe say\b[^.!?。！？]*\bnot\s*$/i;
 const isShortTargetAsked = (q: { before: string; after: string; text: string }, turnText: string) => {
-  if (WHOLE_SENTENCE_ASK_RE.test(turnText) || NEGATED_QUOTE_RE.test(q.before) || WE_SAY_NOT_RE.test(q.before)) return false;
+  if (asksWholeSentence(turnText) || NEGATED_QUOTE_RE.test(q.before) || WE_SAY_NOT_RE.test(q.before)) return false;
   return SHORT_TARGET_LEAD_RE.test(q.before) || SHORT_TARGET_DIRECT_RE.test(q.before)
     || (SHORT_TARGET_NEAR_RE.test(q.before) && SHORT_TARGET_TAIL_RE.test(q.after));
 };

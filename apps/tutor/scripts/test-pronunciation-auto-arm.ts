@@ -235,5 +235,11 @@ test('21D r2 I4: a short quote is a word target only when the verb governs it', 
   assert.equal(detectPronunciationTarget('Say it with "rather", not "wather". Try again.', T), null);
 });
 
+test('21D r3 I5: only an ASK for the whole sentence blocks a word target — praise of "your sentence" does not', () => {
+  assert.deepEqual(detectPronunciationTarget('Your sentence was clear. Now say "schedule" again, slowly.', T), { referenceText: 'schedule', kind: 'word' });
+  assert.equal(detectPronunciationTarget('We say "with", not "wiz". Say the sentence again.', T), null);
+  assert.equal(detectPronunciationTarget('Good. Say the full sentence again, and try "with" carefully.', T), null);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
