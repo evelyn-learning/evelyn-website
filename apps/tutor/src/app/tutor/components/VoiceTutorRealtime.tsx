@@ -16049,6 +16049,9 @@ export function VoiceTutorRealtime({
                   }
                   const metaNarrationRe = isMetaNarration(updatedSentence, {
                     structural: TUTOR_META_NARRATION_STRUCTURAL,
+                    // Task 20 fix round 1 (I4): the nudge plan shapes only on a
+                    // runtime-triggered turn (idle nudge / directive), never a student's.
+                    runtimeTriggered: /^\s*\[/.test(transcript),
                   });
                   if (metaNarrationRe) {
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));

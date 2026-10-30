@@ -158,18 +158,22 @@ const BOARD_STAGING_NARRATION_RE =
 // present-perfect question about their work.", "So I'll acknowledge briefly
 // and hand the question back.", "Thanks, I heard you.", "Here is a new
 // question, and I'll put it on the board. Here is the question on the board."
-// Whole-sentence shapes only: a first-person plan opener, third-person
-// reasoning about the learner ending in "so I'll", the nudge's stock lines and
-// the board staging. "I'll ask you one more question." and "The question was
-// about your weekend." are teaching sentences and stay.
+// Fix round 1 (I4): these shapes are also teaching sentences in a student
+// turn ("I'll mark the point (2, 3).", "Here is the question on the board:
+// what is 7 × 8?"), so they apply ONLY to runtime-triggered turns (isMetaNarration
+// opts.runtimeTriggered — a nudge / runtime directive, never the student), the
+// openers are only acknowledge / hand … back / re-ask / ask the next / keep
+// going with, the board staging only as a whole clause with nothing after it,
+// and the third-person reasoning only about the learner ("the student …" or
+// "… about their …").
 const NUDGE_PLAN_NARRATION_RE = new RegExp([
-  String.raw`^\s*(?:(?:so|ok(?:ay)?|right|alright),?\s*)?I['’]ll (?:acknowledge|hand|re-?ask|keep going with|move (?:on|to)|ask the next|put it on the board|note|mark|treat|take that as)\b`,
-  String.raw`^\s*The (?:question|student|learner|answer|last question) (?:was|is|asked|said|wants|needs)\b[^.!?]*\b(?:so|therefore) I['’]ll\b`,
-  String.raw`^\s*The (?:question|student|learner|answer|last question) (?:was|is|asked|said|wants|needs)\b[^.!?]*\babout their work\b`,
+  String.raw`^\s*(?:(?:so|ok(?:ay)?|right|alright),?\s*)?I['’]ll (?:acknowledge|hand\b[^.!?]*\bback|re-?ask|ask the next|keep going with)\b`,
+  String.raw`^\s*The (?:student|learner) (?:was|is|asked|said|wants|needs)\b[^.!?]*\b(?:so|therefore) I['’]ll\b`,
+  String.raw`^\s*The (?:question|student|learner|answer|last question) (?:was|is|asked|said|wants|needs)\b[^.!?]*\b(?:so|therefore) I['’]ll\b[^.!?]*\babout their\b`,
   String.raw`\bI may have missed your answer\b`,
   String.raw`^\s*Thanks, I heard (?:you|your answer|that)\b[.!]?\s*$`,
-  String.raw`\bI['’]ll put (?:it|this|that|the question) on the board\b`,
-  String.raw`^\s*Here is the question on the board\b`,
+  String.raw`\bI['’]ll put (?:it|this|that|the question) on the board\s*[.!]?\s*$`,
+  String.raw`^\s*Here is the question on the board\s*[.!]?\s*$`,
 ].join('|'), 'i');
 const BARE_FILLER_JA_RE =
   /^\s*(?:(?:はい|いいですね|では|じゃあ|さて)[、,]?\s*)?(?:少し|ちょっと)?見てみましょう(?:ね|か)?[。！!]?\s*$/;
@@ -459,11 +463,11 @@ function isLeakShape(s: string): boolean {
 
 export function isMetaNarration(
   sentence: string,
-  opts?: { structural?: boolean },
+  opts?: { structural?: boolean; /** Task 20 fix round 1: the turn answers a runtime directive / nudge (transcript starts with "["), not the student */ runtimeTriggered?: boolean },
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || NUDGE_PLAN_NARRATION_RE.test(s)) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || (opts?.runtimeTriggered === true && NUDGE_PLAN_NARRATION_RE.test(s))) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

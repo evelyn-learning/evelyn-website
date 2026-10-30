@@ -641,6 +641,7 @@ check('kept: "These notes are your summary for next week."', !isMetaNarration('T
 check('kept: "Put the hook of the letter j below the line."', !isMetaNarration('Put the hook of the letter j below the line.'));
 
 // ─── Task 20 §C (GDI run 8): the plan spoken on idle-nudge turns ───
+const RT = { runtimeTriggered: true };
 for (const t of [
   'Ah, I may have missed your answer just now, so please go ahead and tell me one thing you did at work last week.',
   "The question was about the present perfect, so I'll ask the next present-perfect question about their work.",
@@ -649,9 +650,8 @@ for (const t of [
   'Here is the question on the board.',
   "So I'll acknowledge briefly and hand the question back.",
   'Thanks, I heard you.',
-  "Okay, I'll move on to the next part.",
   'The student said they work in sales, so I’ll ask about customers.',
-]) check(`dropped (run 8): "${t}"`, isMetaNarration(t));
+]) check(`dropped on a runtime-triggered turn (run 8): "${t}"`, isMetaNarration(t, RT));
 for (const t of [
   "I'll ask you one more question.",
   'The question was about your weekend.',
@@ -659,7 +659,36 @@ for (const t of [
   'Take a moment to read it, then tell me your answer.',
   "Let's keep going with the present perfect.",
   'Look at the question on the board.',
-]) check(`kept: "${t}"`, !isMetaNarration(t));
+]) check(`kept: "${t}"`, !isMetaNarration(t, RT));
+// Fix round 1 (I4): teaching sentences — kept on a runtime turn too, and the
+// nudge shapes never apply to a student-triggered turn.
+for (const t of [
+  "I'll mark the point (2, 3) on the graph.",
+  "I'll note that x cannot be zero here.",
+  "I'll treat x as a constant.",
+  "I'll take that as our starting value, so a = 4.",
+  "I'll move on to the second step: subtract 3 from both sides.",
+  "The answer is 12, so I'll write it next to the box.",
+  "The question is about speed, so I'll draw a distance-time graph.",
+  "Here is the next equation, 3x - 5 = 10, and I'll put it on the board in a second.",
+  'Here is the question on the board: what is 7 times 8?',
+  'Here is the question on the board: how long have you worked there?',
+]) check(`I4 kept (runtime turn): "${t}"`, !isMetaNarration(t, RT));
+for (const t of [
+  "So I'll acknowledge briefly and hand the question back.",
+  'Here is the question on the board.',
+  "Here is a new question, and I'll put it on the board.",
+  // every I4 review example, verbatim
+  "I'll mark the point (2, 3) on the graph.",
+  "I'll note that x cannot be zero here.",
+  "I'll treat x as a constant.",
+  "I'll take that as our starting value, so a = 4.",
+  "I'll move on to the second step: subtract 3 from both sides.",
+  "The answer is 12, so I'll write it next to the box.",
+  "The question is about speed, so I'll draw a distance-time graph.",
+  "Here is the next equation, 3x - 5 = 10, and I'll put it on the board.",
+  'Here is the question on the board: what is 7 times 8?',
+]) check(`I4 kept on a STUDENT turn: "${t}"`, !isMetaNarration(t));
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
