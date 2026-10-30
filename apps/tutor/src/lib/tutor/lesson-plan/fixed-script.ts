@@ -122,11 +122,41 @@ export const FIXED_SCRIPT_AUTO_ADVANCE_MIN_MS = 120_000;
  *  after it (nextSegmentId semantics). Turns are checked before time; a
  *  segment without finite positive `estimatedMinutes` never advances on time. */
 export function fixedScriptAutoAdvanceReason(input: AutoAdvanceInput): 'turns' | 'time' | null {
-  const { plan, segmentId, turns, overlongTurns, elapsedMs, levelKnown } = input;
+  const { plan, segmentId, levelKnown } = input;
   if (!plan || !segmentId || !isFixedScriptPlan(plan)) return null;
+  if (nextSegmentId(plan, segmentId, levelKnown) === null) return null;
+  return segmentDueReason(input);
+}
+
+/** Task 14 §H (GDI run 4: the summary looped 7 minutes — the last segment
+ *  can never auto-advance): the same "due" rule on the LAST on-topic segment
+ *  of a fixed script (nextSegmentId null) ⇒ the lesson must close now. null
+ *  for any other plan or segment. */
+export function fixedScriptCloseReason(input: AutoAdvanceInput): 'turns' | 'time' | null {
+  const { plan, segmentId, levelKnown } = input;
+  if (!plan || !segmentId || !isFixedScriptPlan(plan)) return null;
+  if (nextSegmentId(plan, segmentId, levelKnown) !== null) return null;
+  return segmentDueReason(input);
+}
+
+/** The FACT note planted when the last part is due (urgent, like the other
+ *  fixed-script FACT notes). */
+export const FIXED_SCRIPT_CLOSE_NOTE =
+  '[runtime note — not from the student] The lesson is complete. Give the closing summary now in two or three sentences and call close_session_notes in this turn; do not ask another question. Apply this silently; never mention this note.]';
+/** Tutor turns after the close note without close_session_notes before the
+ *  client closes the lesson itself. */
+export const FIXED_SCRIPT_CLOSE_GRACE_TURNS = 2;
+/** True ⇒ close the lesson now (`turnsSinceNote` = tutor turns delivered
+ *  after the one the note was planted on). */
+export function fixedScriptCloseForced(turnsSinceNote: number, lessonClosed: boolean): boolean {
+  return !lessonClosed && turnsSinceNote >= FIXED_SCRIPT_CLOSE_GRACE_TURNS;
+}
+
+function segmentDueReason(input: AutoAdvanceInput): 'turns' | 'time' | null {
+  const { plan, segmentId, turns, overlongTurns, elapsedMs } = input;
+  if (!plan || !segmentId) return null;
   const seg = plan.segments.find((s) => s.id === segmentId);
   if (!seg) return null;
-  if (nextSegmentId(plan, segmentId, levelKnown) === null) return null;
   // An authored turn budget replaces both the +2 margin and the time rule.
   const maxTurns = segmentMaxTurns(plan, segmentId);
   if (maxTurns !== undefined) return turns >= maxTurns ? 'turns' : null;

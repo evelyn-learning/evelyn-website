@@ -427,7 +427,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE } from '@/lib/tutor/lesson-plan/fixed-script';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -4015,6 +4015,9 @@ export function VoiceTutorRealtime({
   /** Consecutive turns a due fixed-script auto-advance was held for an armed
    *  pronunciation clip (capped: FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS). */
   const autoAdvancePronHeldRef = useRef(0);
+  // Task 14 §H: the close note was planted on the last fixed-script part —
+  // tutor turns delivered since (null = not requested).
+  const fixedScriptCloseRef = useRef<{ segId: string; turnsSince: number } | null>(null);
   // Live check 7: the note must not land while the student is answering an
   // open question (portal-8ed0fb65 10:53:48Z — delivered with "12", the brain
   // advanced mid-problem and rendered the next card under the wrong problem).
@@ -19750,6 +19753,39 @@ export function VoiceTutorRealtime({
             pendingRuntimeNoteUrgentRef.current = true;
             runtimeNoteHeldTurnsRef.current = 0;
             onDebugEvent?.('fixed_script_auto_advance', `"${segIdNow}" → "${autoNext}" reason=${autoReason} turns=${autoTurns} elapsed=${autoElapsedS}s`);
+          }
+        }
+        // Task 14 §H (GDI run 4: the summary looped 7 min — the last part
+        // can never auto-advance): when the last on-topic part is due, the
+        // brain is told the lesson is complete (FACT note, urgent); two tutor
+        // turns later with no close_session_notes, the client closes the
+        // lesson itself through the normal close path (lessonClosedRef +
+        // the quiet auto-end, as close_session_notes does).
+        if (fixedScriptCloseRef.current && !lessonClosedRef.current) {
+          const fc = fixedScriptCloseRef.current;
+          fc.turnsSince += 1;
+          if (fixedScriptCloseForced(fc.turnsSince, lessonClosedRef.current)) {
+            lessonClosedRef.current = true;
+            onDebugEvent?.('fixed_script_close_forced', `"${fc.segId}" — ${fc.turnsSince} tutor turns after the close note, no close_session_notes`);
+            onDebugEvent?.('lesson_closed', 'fixed-script close forced');
+            armLessonCloseAutoEndRef.current();
+          }
+        } else if (!fixedScriptCloseRef.current && !lessonClosedRef.current && TUTOR_FIXED_SCRIPT_AUTO_ADVANCE && !homeworkSession && autoPlan && !autoReason) {
+          const closeReason = fixedScriptCloseReason({
+            plan: autoPlan,
+            segmentId: segIdNow,
+            turns: cur.turns,
+            overlongTurns,
+            elapsedMs: Date.now() - cur.startedAt,
+            levelKnown: !!workingLevelRef.current,
+          });
+          if (closeReason) {
+            fixedScriptCloseRef.current = { segId: segIdNow, turnsSince: 0 };
+            pendingRuntimeNoteRef.current = FIXED_SCRIPT_CLOSE_NOTE;
+            pendingRuntimeNoteSegRef.current = segIdNow;
+            pendingRuntimeNoteUrgentRef.current = true;
+            runtimeNoteHeldTurnsRef.current = 0;
+            onDebugEvent?.('fixed_script_close_requested', `"${segIdNow}" reason=${closeReason} turns=${cur.turns}`);
           }
         }
       }

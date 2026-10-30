@@ -23,6 +23,7 @@ import {
   FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPronunciation,
   missingRequiredPhrases, scriptMissingAdvanceReason,
   segmentMaxTurns, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON,
+  fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_GRACE_TURNS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
@@ -395,6 +396,29 @@ test('J: the embed board shows the current page title as a one-line header', () 
   const TS = read('src/app/tutor/components/session/TutorSession.tsx');
   pin(TS, /pageTitleHeader=\{TUTOR_PAGE_TITLE_HEADER && !!embedded\}/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_PAGE_TITLE_HEADER = process\.env\.NEXT_PUBLIC_TUTOR_PAGE_TITLE_HEADER !== 'off';/);
+});
+
+// ── Task 14 §H: the last part closes the lesson ──
+test('H: the last on-topic fixed-script part is due to CLOSE at its maxTurns; auto-advance stays null there', () => {
+  const plan: LessonPlan = { ...fixed, segments: fixed.segments.map((sg) => (sg.id === 'recap' ? { ...sg, metadata: { maxTurns: 4 } } : sg)) as LessonPlan['segments'] };
+  const base = { plan, segmentId: 'recap', overlongTurns: 3, elapsedMs: 0, levelKnown: false };
+  assert.equal(fixedScriptAutoAdvanceReason({ ...base, turns: 4 }), null);
+  assert.equal(fixedScriptCloseReason({ ...base, turns: 3 }), null);
+  assert.equal(fixedScriptCloseReason({ ...base, turns: 4 }), 'turns');
+  assert.equal(fixedScriptCloseReason({ ...base, segmentId: 'topic-intro', turns: 99 }), null, 'not the last part');
+  assert.equal(fixedScriptCloseReason({ ...base, plan: { ...plan, metadata: {} } as LessonPlan, turns: 9 }), null, 'not a fixed script');
+});
+test('H: the close note is the brief\'s FACT; forced after two tutor turns unless the lesson closed', () => {
+  assert.ok(FIXED_SCRIPT_CLOSE_NOTE.includes('The lesson is complete. Give the closing summary now in two or three sentences and call close_session_notes in this turn; do not ask another question.'));
+  assert.equal(FIXED_SCRIPT_CLOSE_GRACE_TURNS, 2);
+  assert.equal(fixedScriptCloseForced(1, false), false);
+  assert.equal(fixedScriptCloseForced(2, false), true);
+  assert.equal(fixedScriptCloseForced(2, true), false);
+});
+test('H: VTR plants the close note (urgent) and force-closes through the normal close path', () => {
+  pin(VTR, /pendingRuntimeNoteRef\.current = FIXED_SCRIPT_CLOSE_NOTE;\s*pendingRuntimeNoteSegRef\.current = segIdNow;\s*pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR, /onDebugEvent\?\.\('fixed_script_close_requested'/);
+  pin(VTR, /if \(fixedScriptCloseForced\(fc\.turnsSince, lessonClosedRef\.current\)\) \{\s*lessonClosedRef\.current = true;\s*onDebugEvent\?\.\('fixed_script_close_forced'[^\n]*\n\s*onDebugEvent\?\.\('lesson_closed', 'fixed-script close forced'\);\s*armLessonCloseAutoEndRef\.current\(\);/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

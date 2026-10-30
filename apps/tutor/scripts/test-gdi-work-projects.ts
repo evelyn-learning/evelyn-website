@@ -179,7 +179,7 @@ test('Task 13: every segment carries label / labelLocalized.ja / maxTurns; pronu
     overview: ['Overview', '概要', 2], 'level-check': ['Level check', 'レベルチェック', 5],
     'topic-intro': ['Your job', '仕事について', 4], 'present-perfect': ['Present perfect', '現在完了', 8],
     'past-simple': ['Past simple', '過去形', 8], 'open-conversation': ['Conversation', '会話', 12],
-    pronunciation: ['Pronunciation', '発音', 8], summary: ['Summary', 'まとめ', 3],
+    pronunciation: ['Pronunciation', '発音', 8], summary: ['Summary', 'まとめ', 4],
   };
   assert.deepEqual(plan.segments.map((x) => x.id), Object.keys(want));
   for (const [id, [label, ja, maxTurns]] of Object.entries(want)) {

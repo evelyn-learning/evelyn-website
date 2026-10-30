@@ -653,7 +653,7 @@ test('lesson close → quiet auto-end: 45 s, deferred while busy, re-armed by a 
   assert.equal(decideLessonCloseAutoEnd({ busy: false, elapsedMs: 44_000 }), 'recheck');
   assert.equal(decideLessonCloseAutoEnd({ busy: false, elapsedMs: 45_000 }), 'end');
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.equal(vtr.split('armLessonCloseAutoEndRef.current();').length - 1, 3, 'armed at both close sites and on a post-close student turn');
+  assert.equal(vtr.split('armLessonCloseAutoEndRef.current();').length - 1, 4, 'armed at the three close sites (close_session_notes, mutual farewell, fixed-script forced close) and on a post-close student turn');
   assert.ok(vtr.includes("onDebugEvent?.('lesson_closed_auto_end'"));
   // Per partner since the 2026-10-27 merge (partner-session-options.ts,
   // default on): the prop sits beside the build-time kill switch.

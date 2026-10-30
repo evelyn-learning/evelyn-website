@@ -123,7 +123,7 @@
       ],
       "teacherNote": "Summary and feedback, about two minutes. Never skip it and never end the lesson before it; if time is short, shorten the earlier activities instead. In this order: (1) 'Great work today! Let's quickly review what we practised.' Say they talked about their work, responsibilities and experiences, and name the two grammar points, each with a one-line meaning, using the learner's OWN sentences from this lesson as the examples (in their corrected form), not the textbook sentences; use the plan's examples only if they produced none. (2) Feedback based on what they actually said, not generic praise: say 'One thing you did well was…' (keep these words in English even when you explain in Japanese) with one specific strength, then one thing to improve, shown with their own sentence before and after the correction. (3) Ask the check question: 'Before we finish, can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago. Take your time; I'll help you if you need it.' Evaluate their answer and, if needed, explain briefly: the first means they started five years ago and still work here; the second means they worked here at a finished time in the past, five years ago. (4) Close warmly in one or two sentences: 'Well done! Thank you for today's lesson. Keep practising these grammar points when you talk about your work. See you next time!' Ask no further question after the close.",
       "requiredPhrases": ["one thing you did well"],
-      "metadata": { "label": "Summary", "labelLocalized": { "ja": "まとめ" }, "maxTurns": 3 },
+      "metadata": { "label": "Summary", "labelLocalized": { "ja": "まとめ" }, "maxTurns": 4 },
       "estimatedMinutes": 2
     }
   ],
