@@ -312,3 +312,44 @@ export function autoSentenceCardsToReplace(
   }
   return out;
 }
+
+/** Task 14 §I (GDI run 4: the hook sentence rendered on three pages): the
+ *  1-based page (pages = newPage boundaries in the session's command log)
+ *  where a showSentence card saying the same sentence (case, punctuation and
+ *  spacing ignored — word-for-word equal) already stands, or null. `skipIds`
+ *  = cards to ignore (an auto card on the current page that the brain's card
+ *  replaces). Earliest page wins. */
+export function sentenceOnBoardPage(
+  commands: ReadonlyArray<{ action: string } & Record<string, unknown>>,
+  sentence: string,
+  skipIds: ReadonlySet<string> = new Set(),
+): number | null {
+  const target = norm(sentence ?? '');
+  if (!target) return null;
+  let page = 1;
+  const hits: number[] = [];
+  for (const c of commands) {
+    if (c.action === 'newPage') { page++; continue; }
+    // a clear wipes the current page — its cards are no longer on the board
+    if (c.action === 'clear') { while (hits.length && hits[hits.length - 1] === page) hits.pop(); continue; }
+    if (c.action !== 'showSentence' || typeof c.sentence !== 'string') continue;
+    if (typeof c.id === 'string' && skipIds.has(c.id)) continue;
+    if (norm(c.sentence) === target) hits.push(page);
+  }
+  return hits.length ? hits[0] : null;
+}
+
+/** Ids of the AUTO sentence cards on the current page (after the last
+ *  newPage / clear) — the brain's card of the same sentence replaces them. */
+export function autoCardIdsOnCurrentPage(
+  commands: ReadonlyArray<{ action: string } & Record<string, unknown>>,
+  autoIds: ReadonlySet<string>,
+): Set<string> {
+  const out = new Set<string>();
+  for (let i = commands.length - 1; i >= 0; i--) {
+    const c = commands[i];
+    if (c.action === 'newPage' || c.action === 'clear') break;
+    if (c.action === 'showSentence' && typeof c.id === 'string' && autoIds.has(c.id)) out.add(c.id);
+  }
+  return out;
+}

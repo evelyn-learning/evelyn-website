@@ -13,7 +13,7 @@ import {
   extractQuotedSentences, classifyQuotedSentence, planSentenceBoard,
   applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
   sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex, autoSentenceCardsToReplace,
-  isCardCandidate,
+  isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -298,6 +298,37 @@ test('B: spoken stress inside a 「」 span (and an unclosed 「 cut by the spli
   const st = 'My department sell washing machine.';
   assert.equal(emphasiseSpokenCorrections('Let\'s fix it: 「My department sells washing machines.」 Good.', st), 'Let\'s fix it: 「My department SELLS washing MACHINES.」 Good.');
   assert.equal(emphasiseSpokenCorrections('Let\'s fix it: 「My department sells washing machines.', st), 'Let\'s fix it: 「My department SELLS washing MACHINES.');
+});
+
+// ── Task 14 §I: one hook card per session ──
+test('I: sentenceOnBoardPage finds the card on any page (case/punctuation-insensitive), earliest page', () => {
+  const log = [
+    { action: 'showSentence', id: 's1', sentence: 'I have sold 300 machines this year.' },
+    { action: 'newPage' },
+    { action: 'showTable' },
+    { action: 'newPage' },
+    { action: 'showSentence', id: 's2', sentence: 'I sold 25 machines last month.' },
+  ];
+  assert.equal(sentenceOnBoardPage(log, 'i have sold 300 machines this year'), 1);
+  assert.equal(sentenceOnBoardPage(log, 'I sold 25 machines last month!'), 3);
+  assert.equal(sentenceOnBoardPage(log, 'I sold 25 machines.'), null, 'word-for-word equal only');
+  assert.equal(sentenceOnBoardPage(log, 'I sold 25 machines last month.', new Set(['s2'])), null, 'skipped id');
+  assert.equal(sentenceOnBoardPage([...log, { action: 'clear' }], 'I sold 25 machines last month.'), null, 'a clear wipes the page');
+});
+test('I: autoCardIdsOnCurrentPage — only auto ids after the last newPage', () => {
+  const log = [
+    { action: 'showSentence', id: 'a1', sentence: 'x y z' },
+    { action: 'newPage' },
+    { action: 'showSentence', id: 'a2', sentence: 'x y z' },
+    { action: 'showSentence', id: 'b1', sentence: 'p q r' },
+  ];
+  assert.deepEqual([...autoCardIdsOnCurrentPage(log, new Set(['a1', 'a2']))], ['a2']);
+});
+test('I: VTR — duplicate show_sentence is a soft skip (note, not a rejection) with its debug event', () => {
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes("onDebugEvent?.('show_sentence_duplicate_skipped'"));
+  assert.ok(/duplicateSentenceNotes\.push\(`show_sentence: already on the board \(page \$\{page\}\)/.test(VTR));
+  assert.ok(!/rejected\.push\(\{ action: 'show_sentence'/.test(VTR));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

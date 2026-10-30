@@ -11,7 +11,7 @@
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
 import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD } from '@/lib/tutor/orchestrator/flags';
-import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace } from '@/lib/tutor/voice/sentence-board';
+import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
@@ -6334,6 +6334,28 @@ export function VoiceTutorRealtime({
       rejected.push({ action, reason });
       return false;
     });
+    const duplicateSentenceNotes: string[] = [];
+    // Task 14 §I (GDI run 4: the hook sentence rendered on three pages): a
+    // show_sentence (brain or the client's auto card) whose sentence already
+    // stands ANYWHERE on this session's board is not drawn again. For a brain
+    // card, auto cards on the current page are ignored here — the brain's
+    // card replaces those (below).
+    if (TUTOR_SENTENCE_BOARD) {
+      const log = whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>;
+      const currentPageAuto = opts?.sentenceBoardAuto ? new Set<string>() : autoCardIdsOnCurrentPage(log, autoSentenceCardIdsRef.current);
+      const seenThisBatch: Array<{ action: string } & Record<string, unknown>> = [];
+      commands = commands.filter((cmd) => {
+        const c = cmd as unknown as { action: string; sentence?: unknown } & Record<string, unknown>;
+        if (c.action !== 'showSentence' || typeof c.sentence !== 'string') return true;
+        const page = sentenceOnBoardPage([...log, ...seenThisBatch], c.sentence, currentPageAuto);
+        if (page === null) { seenThisBatch.push(c); return true; }
+        onDebugEvent?.('show_sentence_duplicate_skipped', `page ${page}: "${c.sentence.slice(0, 60)}"`);
+        // A soft skip, not a rejection: a rejection kills and retries the
+        // whole turn, and the sentence IS on the board.
+        duplicateSentenceNotes.push(`show_sentence: already on the board (page ${page}) — not drawn again; refer to it instead of writing it again.`);
+        return false;
+      });
+    }
     if (commands.length === 0) {
       // All commands in the batch were dedup-dropped. Return early with
       // the rejection list so the Realtime hook tells the tutor none
@@ -6344,6 +6366,7 @@ export function VoiceTutorRealtime({
         assignedIds: [],
         manifests: [],
         boardSnapshot: catalogRef.current.getSnapshot(),
+        ...(duplicateSentenceNotes.length ? { note: duplicateSentenceNotes.join(' ') } : {}),
       };
     }
 
@@ -10309,8 +10332,9 @@ export function VoiceTutorRealtime({
     // Task 13: close_session_notes' own report (assigned / nothing) rides
     // out on the result so the tool_result the model reads carries it.
     // Read-and-cleared: a later, unrelated command must never inherit it.
-    const note = closeNotesResultNoteRef.current;
+    const closeNote = closeNotesResultNoteRef.current;
     closeNotesResultNoteRef.current = null;
+    const note = [closeNote, ...duplicateSentenceNotes].filter(Boolean).join(' ');
     return { rejected, assignedIds, manifests, duplicates, boardSnapshot, ...(note ? { note } : {}) };
   }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent, applyResolvedAdvance]);
 

@@ -262,6 +262,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'repeat_after_correct',
   //   language lessons: the client put a quoted sentence on the board itself:
   'sentence_board_auto',
+  //   a show_sentence already on the board (any page) was not drawn again:
+  'show_sentence_duplicate_skipped',
   //   fixed-script lessons: the client moved / held the segment cursor, FACT note delivered:
   'fixed_script_',
   //   the dedup family (R49b's retry-context bug lived here):
