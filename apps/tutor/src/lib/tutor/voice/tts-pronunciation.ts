@@ -2545,7 +2545,10 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // Task 19 §E (GDI run 7): Cartesia reads the British verb spelling
   // "practise" as "prac-tize" — speak the American spelling (same sound as
   // the noun). Display text keeps whatever the tutor wrote.
-  t = t.replace(/\b([Pp])ractis(e|ed|es|ing)\b/g, '$1ractic$2');
+  // Fix round 2 (m10): case-insensitive, case-preserving (PRACTISE → PRACTICE;
+  // in practice the caps-run rule above has lowercased an all-caps word).
+  t = t.replace(/\b(practi)s(e|ed|es|ing)\b/gi, (_m, stem: string, end: string) =>
+    `${stem}${stem === stem.toUpperCase() && end === end.toUpperCase() ? 'C' : 'c'}${end}`);
   // Collapse repeated whitespace introduced by replacements.
   t = t.replace(/\s+/g, ' ').trim();
   // Stray whitespace directly before terminal punctuation (introduced by

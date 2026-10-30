@@ -1467,5 +1467,9 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(rewriteForTTS("Today we'll practise talking about your work."), "Today we'll practice talking about your work.");
   assert.equal(rewriteForTTS('Practise the sentence. You practised it, she practises it, practising helps.'), 'Practice the sentence. You practiced it, she practices it, practicing helps.');
   assert.match(rewriteForTTS('Good practice and a practitioner.'), /Good practice and a practitioner\./, 'other words untouched');
+  // all caps: the caps-run rule lowercases the word earlier; the c spelling still lands
+  assert.equal(rewriteForTTS("Let's PRACTISE now."), "Let's practice now.");
+  assert.equal(rewriteForTTS('PRACTISED'), 'practiced');
+  assert.match(rewriteForTTS('That skill is unpractised for now.'), /unpractised/, 'unpractised untouched');
   console.log('OK — practise → practice');
 }
