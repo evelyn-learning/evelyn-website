@@ -671,6 +671,13 @@ test('20G1 fix round 1 (I6): praise of the meaning / a part never boards a wrong
     ['"I attended a business event in Tokyo last year." That\'s a correct sentence, but let\'s add "an".', 'I attended a business event in Tokyo last year.'],
   ]) assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, affirmFallback: true }), [], t);
 });
+test('20G fix round 2 (m5, m6): "but" only near the affirmation; a qualified praise is no affirmation', () => {
+  const g558 = 'I attended a business event in Tokyo last year.';
+  assert.equal(planSentenceBoard({ tutorText: `"${g558}" That's a correct sentence, but let's add one detail: what was it about?`, studentLast: g558, renderedThisTurn: false, affirmFallback: true }).length, 0, ', but in the affirmation sentence');
+  assert.equal(planSentenceBoard({ tutorText: `"${g558}" That's a correct sentence. But we need one more detail.`, studentLast: g558, renderedThisTurn: false, affirmFallback: true }).length, 0, 'But opening the next sentence');
+  assert.equal(planSentenceBoard({ tutorText: `"${g558}" That's a correct sentence. Next: tell me what you did. I liked it, but it was long. What else?`, studentLast: g558, renderedThisTurn: false, affirmFallback: true }).length, 1, 'a "but" far away does not block');
+  assert.equal(planSentenceBoard({ tutorText: '"I am work in sales." That\'s a good sentence to start with. Now add "for five years".', studentLast: 'I am work in sales.', renderedThisTurn: false, affirmFallback: true }).length, 0, 'm6');
+});
 test('20G2: 913 s — verdict correct at MEDIUM confidence (precheckDecides false): ONE model card via the affirmation', () => {
   const cards = planSentenceBoard({ ...G913, renderedThisTurn: false, studentCorrect: false, affirmFallback: true, checkedSentence: 'I learned that robots can walk and talk.' });
   assert.deepEqual(cards.map((c) => c.sentence), ['I learned that robots can walk and talk']);
@@ -704,6 +711,11 @@ test('20G3 fix round 1 (m1): a turn that GIVES a hint, or "take your time" befor
   assert.equal(isMetaOfferTurn('Take your time — tell me about your last project.'), false);
   assert.equal(isMetaOfferTurn('Take your time. What did you learn at the event?'), false);
   assert.equal(isMetaOfferTurn('Would you like a hint?'), true);
+  assert.equal(isMetaOfferTurn('Do you need a little more time?'), true);
+  // Fix round 2 (m1): a bare "time" is no offer.
+  assert.equal(isMetaOfferTurn('What time do you usually start work?'), false);
+  assert.equal(isMetaOfferTurn('What did you do last time you met a client?'), false);
+  assert.ok(planSentenceBoard({ tutorText: 'Good.', studentLast: 'I usually start work at nine.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I usually start work at nine.', prevTutorText: 'What time do you usually start work?' }).some((c) => c.source === 'checked'), 'carded after "What time…?"');
   const args = { tutorText: 'Good.', studentLast: 'I attended a robotics business event in Tokyo last year.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I attended a robotics business event in Tokyo last year.' };
   assert.ok(planSentenceBoard({ ...args, prevTutorText: 'Of course. Here\'s a hint: use the past simple. Try starting with "I attended…".' }).some((c) => c.source === 'checked'));
 });

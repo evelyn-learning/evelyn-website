@@ -135,8 +135,15 @@ function quotedSpansWithContext(text: string): Array<{ span: string; before: str
  *  a model card of a wrong sentence teaches the error. */
 const AFFIRM_EN_RE = /\b(?:that['’]s|is|what) (?:a )?(?:correct|natural|good|great|perfect|nice|clear) sentence\b|\bsentence is (?:correct|complete|clear|natural|right)\b|\bcomplete and clear\b|^\s*(?:yes, )?that['’]s (?:right|correct)[.!]/i;
 const AFFIRM_JA_RE = /正しい文|きちんと言え|自然な文|完璧です/;
-/** Fix round 1 (I6): a follow-up that fixes something ⇒ no promotion. */
-const FIX_FOLLOW_UP_RE = /\blet['’]s fix\b|\bone small fix\b|\bbut\b/i;
+/** Fix round 1 (I6): a follow-up that fixes something ⇒ no promotion. Fix
+ *  round 2 (m5): "but" only counts inside the affirmation window (see
+ *  quoteAffirmed), not anywhere in the turn. */
+const FIX_FOLLOW_UP_RE = /\blet['’]s fix\b|\bone small fix\b/i;
+/** Fix round 2 (m5): "…, but …" / "But …" in the affirmation's own sentence or
+ *  the next one takes the praise back. */
+const BUT_RE = /^\s*but\b|,\s*but\b/i;
+/** Fix round 2 (m6): "a good sentence to start with" praises a draft. */
+const QUALIFIED_PRAISE_RE = /\b(?:to start with|to begin with|for now|as a start)\b/i;
 /** The text a quote's affirmation may sit in: its own sentence (the quote
  *  text itself left out) and the sentence after it. */
 export function quoteAffirmed(text: string, at: number, end: number): boolean {
@@ -151,8 +158,13 @@ export function quoteAffirmed(text: string, at: number, end: number): boolean {
   const quoteClosesSentence = /[.!?。！？]\s*["”’」』]?\s*$/.test(t.slice(at, end));
   const first = sentenceRe.exec(rest)?.[0] ?? '';
   const second = quoteClosesSentence ? '' : (sentenceRe.exec(rest.slice(first.length).trimStart())?.[0] ?? '');
-  const parts = [lead.slice(leadStart), first, second].map((x) => x.trim()).filter(Boolean);
-  return parts.some((p) => AFFIRM_EN_RE.test(p) || AFFIRM_JA_RE.test(p));
+  const ownSentence = `${lead.slice(leadStart)} ${quoteClosesSentence ? '' : first}`.trim();
+  const parts = (quoteClosesSentence ? [ownSentence, first] : [ownSentence, second]).map((x) => x.trim()).filter(Boolean);
+  // the sentence after the affirmation window: a "But …" there takes it back too
+  const consumed = first.length + (quoteClosesSentence ? 0 : (rest.slice(first.length).length - rest.slice(first.length).trimStart().length) + second.length);
+  const after = sentenceRe.exec(rest.slice(consumed).trimStart())?.[0] ?? '';
+  if ([...parts, after].some((p) => BUT_RE.test(p))) return false;
+  return parts.some((p) => (AFFIRM_EN_RE.test(p) || AFFIRM_JA_RE.test(p)) && !QUALIFIED_PRAISE_RE.test(p));
 }
 
 /** Task 20 §G3 (GDI run 8, 864 s): the student's reply to a hint / more-time
@@ -160,7 +172,8 @@ export function quoteAffirmed(text: string, at: number, end: number): boolean {
  *  (m1): only when the previous turn's LAST sentence is that offer — a
  *  question about a hint / waiting / time; a turn that GIVES a hint, or says
  *  "take your time" before asking the real question, does not block. */
-const META_OFFER_RE = /\b(?:hint|wait|time)\b|ヒント|待ち|時間/i;
+// Fix round 2 (m1): never a bare "time" ("What time do you usually start work?").
+const META_OFFER_RE = /\b(?:hint|more time|a little (?:more )?time|take your time|a moment|shall I wait)\b|ヒント|待ち/i;
 export function isMetaOfferTurn(prevTutorText: string | null | undefined): boolean {
   const sentences = (prevTutorText ?? '').split(/(?<=[.!?。！？])\s*/).map((x) => x.trim()).filter(Boolean);
   const last = sentences[sentences.length - 1] ?? '';
