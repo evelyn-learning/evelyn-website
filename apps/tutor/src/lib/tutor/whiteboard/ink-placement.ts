@@ -26,6 +26,15 @@ export function rectsOverlap(a: Rect, b: Rect, pad = 0): boolean {
   return a.x - pad < b.x + b.w && a.x + a.w + pad > b.x && a.y - pad < b.y + b.h && a.y + a.h + pad > b.y;
 }
 
+/** Task 18 §E (GDI run 6: a tutor note placed beside the last card; the next
+ *  card flowed into that space and the two overlapped): a cached (sticky)
+ *  placement is reused only while its rect intersects NO occupied rect —
+ *  content or another note. False ⇒ the caller re-places it against the
+ *  current occupied set (and hides it when no clean slot exists). */
+export function placementStillClean(placement: Placement, occupied: readonly Rect[]): boolean {
+  return !occupied.some((o) => rectsOverlap(placement.rect, o));
+}
+
 const GAP = 8;          // breathing room between a note and its target
 const CLEAR_PAD = 4;    // minimum clearance from other occupants
 const MARGIN_W = 12;    // inset from the page's right edge for the margin column

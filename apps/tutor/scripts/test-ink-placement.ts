@@ -3,7 +3,7 @@
  * Run: npm run test:ink-placement
  * Spec: docs/superpowers/specs/2026-07-10-smoothdraw-draw-on-board-design.md §5
  */
-import { placeNote, applyUserPos, rectsOverlap, type Rect } from '../src/lib/tutor/whiteboard/ink-placement';
+import { placeNote, applyUserPos, rectsOverlap, placementStillClean, type Rect, type Placement } from '../src/lib/tutor/whiteboard/ink-placement';
 import { arrowSpine } from '../src/lib/tutor/whiteboard/hand-stroke';
 
 let passed = 0;
@@ -222,6 +222,33 @@ const target: Rect = { x: 300, y: 200, w: 120, h: 60 };
   check('overlap true', rectsOverlap({ x: 0, y: 0, w: 10, h: 10 }, { x: 5, y: 5, w: 10, h: 10 }));
   check('overlap false when apart', !rectsOverlap({ x: 0, y: 0, w: 10, h: 10 }, { x: 20, y: 0, w: 10, h: 10 }));
   check('pad expands the test', rectsOverlap({ x: 0, y: 0, w: 10, h: 10 }, { x: 12, y: 0, w: 10, h: 10 }, 3));
+}
+
+// ── Task 18 §E: a cached note slot that a later card now overlaps is re-placed ──
+{
+  const page: Rect = { x: 0, y: 0, w: 800, h: 1200 };
+  const card1: Rect = { x: 20, y: 20, w: 500, h: 120 };
+  const note = { w: 220, h: 60 };
+  // the note lands in free space beside/below the last card
+  const first: Placement = placeNote({ target: null, occupied: [card1], page, note });
+  check('§E: the first placement is clean', placementStillClean(first, [card1]));
+  // the next sentence card flows into that space
+  const card2: Rect = { x: first.rect.x - 10, y: first.rect.y - 10, w: 300, h: 100 };
+  check('§E: a new content rect over the cached slot ⇒ not clean', !placementStillClean(first, [card1, card2]));
+  const again = placeNote({ target: null, occupied: [card1, card2], page, note });
+  check('§E: re-placed against the current occupied set ⇒ clean, and moved', placementStillClean(again, [card1, card2]) && (again.rect.x !== first.rect.x || again.rect.y !== first.rect.y));
+  // another note counts as occupied too
+  check('§E: another note over the slot ⇒ not clean', !placementStillClean(first, [card1, { ...first.rect }]));
+  check('§E: an untouched slot stays clean', placementStillClean(first, [card1, { x: 0, y: 1100, w: 50, h: 50 }]));
+}
+
+// ── Task 18 §E: InkNotesOverlay keeps a cached slot only while clean (pin) ──
+{
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const src: string = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'src/app/tutor/components/whiteboard/InkNotesOverlay.tsx'), 'utf8');
+  check('§E pin: cached candidate kept only when placementStillClean', /if \(placementStillClean\(candidate, occupied\)\) placement = candidate;\n\s*else cacheWentDirty = true;/.test(src));
+  check('§E pin: a dirty cache with no clean re-placement is hidden and uncached', /if \(cacheWentDirty && !placementStillClean\(placement, occupied\)\) \{[\s\S]{0,240}placedCacheRef\.current\.delete\(src\.key\);\n\s*continue;/.test(src));
+  check('§E pin: the old freeze-in-place branches are gone', !src.includes('if (!anchorMoved) placement = { ...cached.placement, rect };'));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

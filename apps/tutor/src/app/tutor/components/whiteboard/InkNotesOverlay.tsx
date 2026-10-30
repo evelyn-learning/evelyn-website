@@ -22,7 +22,7 @@
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { WhiteboardCommand } from '@core/knowledge/types';
-import { placeNote, applyUserPos, clampIntoPage, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
+import { placeNote, applyUserPos, clampIntoPage, placementStillClean, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
 import { resolveNoteFontFamilies, noteFontFamilyVars, noteRevealMs, NOTE_FONT_PX, NOTE_LINE_PX } from '@/lib/tutor/whiteboard/note-font';
 import { TUTOR_NOTE_PRINT_HAND } from '@/lib/tutor/orchestrator/flags';
 import { arrowSpine, arrowHeads, strokeOutline, type Pt } from '@/lib/tutor/whiteboard/hand-stroke';
@@ -635,44 +635,35 @@ export function InkNotesOverlay({
           a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
         const cached = placedCacheRef.current.get(src.key);
         let placement: Placement | null = null;
+        // Task 18 §E (GDI run 6): a cached spot is kept ONLY while it is
+        // still clean — no occupied content rect and no other note. The
+        // earlier freeze-over-drift branches (an anchored note degraded to
+        // the margin, an anchor-adjacent slot that new content grew into,
+        // an unanchored margin note) kept a slot that NOW sat under a later
+        // card; overlap is the failure the student sees, so a dirty slot is
+        // re-placed against the current occupied set, and hidden when no
+        // clean slot exists.
+        let cacheWentDirty = false;
         if (cached && cached.w === m.w && cached.h === m.h) {
+          let candidate: Placement | null = null;
           if (t?.rect && cached.anchor) {
-            const rect = { x: t.rect.x + cached.dx, y: t.rect.y + cached.dy, w: m.w, h: m.h };
-            if (!occupied.some((o) => rectsIntersect(rect, o))) {
-              placement = { ...cached.placement, rect };
-            } else if (cached.placement.slot === 'margin') {
-              // Anchored note that already degraded to the margin column
-              // (or its downward extension — same 'margin' slot): FREEZE
-              // it, exactly like the unanchored branch below. Falling
-              // through to placeNote here was the round-29 drift hole:
-              // its margin/extension fallback derives y from the CURRENT
-              // content bottom, so every appended item slid the note
-              // further down. Drift is worse than overlap — the same
-              // tradeoff the unanchored freeze already made.
-              placement = cached.placement;
-            } else {
-              // Anchor-adjacent slot (right/above/below/left) now
-              // collides. Only hand back to placeNote when the TARGET
-              // actually moved (layout shift — the ridden rect is stale
-              // in a way dx/dy can't express); if the target is where it
-              // was and new content merely grew into the slot, freeze in
-              // place — re-placing would degrade to the content-bottom
-              // fallback and drift.
-              const a = cached.anchor;
-              const anchorMoved =
-                Math.abs(t.rect.x - a.x) > 1 || Math.abs(t.rect.y - a.y) > 1 ||
-                Math.abs(t.rect.w - a.w) > 1 || Math.abs(t.rect.h - a.h) > 1;
-              if (!anchorMoved) placement = { ...cached.placement, rect };
-              // else: placement stays null → full placeNote below.
-            }
+            candidate = { ...cached.placement, rect: { x: t.rect.x + cached.dx, y: t.rect.y + cached.dy, w: m.w, h: m.h } };
           } else if (!t?.rect && !cached.anchor) {
-            // Margin/extension note: frozen at first placement for the
-            // life of the page — never re-derived from the content bottom.
-            placement = cached.placement;
+            candidate = cached.placement;
+          }
+          if (candidate) {
+            if (placementStillClean(candidate, occupied)) placement = candidate;
+            else cacheWentDirty = true;
           }
         }
         if (!placement) {
           placement = placeNote({ target: t?.rect ?? null, occupied, page, note: { w: m.w, h: m.h } });
+        }
+        if (cacheWentDirty && !placementStillClean(placement, occupied)) {
+          // No clean slot now: hidden rather than overlapping. Not cached,
+          // so it re-tries on every pass and returns when room appears.
+          placedCacheRef.current.delete(src.key);
+          continue;
         }
         // Round-6e (user call, IMG_7866): on phone-width hosts, a note that
         // could not find a clean slot is SKIPPED rather than overlapped or
