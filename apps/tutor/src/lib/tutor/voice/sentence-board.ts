@@ -241,6 +241,30 @@ export function isCardCandidate(span: string): boolean {
   return !/^\p{Ll}/u.test(s);
 }
 
+/** Task 19 §D: leading fillers the student opens with ("Okay. Um, …"). */
+const LEADING_FILLER_RE = /^\s*(?:uh|um|okay|ok|well|so|hmm)\b[,.]?\s*/i;
+/** Hesitations inside the sentence ("I have uh attended") — never words. */
+const INNER_HESITATION_RE = /(?<=\s)(?:uh|um|erm|er|hmm)\b[,.]?\s+/gi;
+/** A checked card needs at least this many Latin words. */
+const CHECKED_CARD_MIN_WORDS = 4;
+
+/** Task 19 §D: the checked student sentence as a card — leading fillers
+ *  (uh, um, okay, ok, well, so, hmm, with a following comma / period) and
+ *  inner hesitations removed, first letter capitalised, a trailing "." ensured;
+ *  null unless it passes qualifyingSpan + isCardCandidate with ≥ 4 Latin words. */
+export function cardableStudentSentence(raw: string | null | undefined): string | null {
+  let s = (raw ?? '').trim();
+  for (let prev = ''; prev !== s;) { prev = s; s = s.replace(LEADING_FILLER_RE, ''); }
+  s = s.replace(INNER_HESITATION_RE, '').replace(/\s+/g, ' ').trim();
+  if (!s) return null;
+  s = s[0]!.toUpperCase() + s.slice(1);
+  if (!/[.!?]["”’)]?$/.test(s)) s = s.replace(/[,;:]+$/, '') + '.';
+  const span = qualifyingSpan(s);
+  if (!span || !isCardCandidate(span)) return null;
+  if (span.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length < CHECKED_CARD_MIN_WORDS) return null;
+  return span;
+}
+
 /**
  * Task 15 §A (GDI run 5): a quote that echoes a sentence the independent check
  * found CORRECT is a model sentence, not the run-3 wrong-words echo — so with
@@ -283,10 +307,13 @@ export function planSentenceBoard(input: {
   const classified = raw
     .map((c) => (c.q.kind === 'echo' && promote && !c.said ? { ...c, q: { sentence: c.q.sentence, kind: 'model' as const, emphasis: [], source: 'echo' as const } } : c))
     .filter((c) => c.q.kind !== 'echo');
+  // Task 19 §D (GDI run 7): the tutor paraphrased correct sentences ("Creating
+  // the slogan was the challenge…") and nothing was carded for six minutes.
+  // A correct student sentence goes on the board whether or not the tutor
+  // repeats it — no sentenceContains requirement.
   if (promote && input.checkedSentence) {
-    const checked = qualifyingSpan(input.checkedSentence);
-    if (checked && isCardCandidate(checked) && sentenceContains(input.tutorText, checked)
-      && !classified.some((c) => sameSentence(c.q.sentence, checked))) {
+    const checked = cardableStudentSentence(input.checkedSentence);
+    if (checked && !classified.some((c) => sameSentence(c.q.sentence, checked))) {
       classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length, said: false });
     }
   }

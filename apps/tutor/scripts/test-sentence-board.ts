@@ -14,7 +14,7 @@ import {
   applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
   sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex, autoSentenceCardsToReplace,
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
-  isSentenceStarter, isSaidQuote, numberWordToken, sameSentence,
+  isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -481,6 +481,38 @@ test('T18 R3 N1: a correct echo with a self-repair / stutter is an echo; with st
     const cards = planSentenceBoard({ tutorText: `Nice. "${quote}" Good sentence.`, studentLast: student, renderedThisTurn: false, studentCorrect: true });
     assert.deepEqual(cards, [{ sentence: quote, kind: 'model', emphasis: [], source: 'echo' }], `${student} → ${JSON.stringify(cards)}`);
   }
+});
+
+// ── Task 19 §D (GDI run 7): a correct sentence is carded whether or not the tutor repeats it ──
+test('§D19: paraphrase turn + correct checked sentence ⇒ one model card (source checked)', () => {
+  const student = 'The project was successful and it increased sales in my company.';
+  const tutor = "The project was successful and it increased sales. That's a clear result, and \"increased\" is the right past simple form. What was the biggest challenge you faced during that project?";
+  const cards = planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: false, studentCorrect: true, checkedSentence: student });
+  assert.deepEqual(cards, [{ sentence: student, kind: 'model', emphasis: [], source: 'checked' }]);
+  const para = 'Creating the slogan was the challenge, and that\'s a great point to talk about. Could you tell me how you handled it, starting with "I"?';
+  const c2 = planSentenceBoard({ tutorText: para, studentLast: 'The biggest challenge in the advertisement project was to create the slogan.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'The biggest challenge in the advertisement project was to create the slogan.' });
+  assert.deepEqual(c2.map((c) => [c.sentence, c.source]), [['The biggest challenge in the advertisement project was to create the slogan.', 'checked']]);
+});
+test('§D19: leading fillers dropped, capitalised, full stop ensured', () => {
+  const tutor = 'Good. Next, tell me about your team.';
+  const cards = planSentenceBoard({ tutorText: tutor, studentLast: 'x', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'Okay. Um, I have worked with international customers for several years.' });
+  assert.deepEqual(cards.map((c) => c.sentence), ['I have worked with international customers for several years.']);
+  assert.equal(cardableStudentSentence('so i worked on a project to increase sales'), 'I worked on a project to increase sales.');
+  assert.equal(cardableStudentSentence('I have uh attended a sales seminar.'), 'I have attended a sales seminar.');
+});
+test('§D19: a 3-word checked answer ⇒ no card', () => {
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Good. What do you do?', studentLast: 'Yes, I attended.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'Yes, I attended.' }), []);
+  assert.equal(cardableStudentSentence('Um, I sell machines.'), null);
+});
+test('§D19: unchanged — correction turn, renderedThisTurn, not checked correct, a question', () => {
+  const student = 'I went to office yesterday.';
+  const tutor = 'You said "I went to office yesterday." Add "the": "I went to the office yesterday."';
+  const cards = planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: false, studentCorrect: true, checkedSentence: student });
+  assert.deepEqual(cards.map((c) => c.kind), ['correction']);
+  const ok = 'The project was successful and it increased sales in my company.';
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Nice.', studentLast: ok, renderedThisTurn: true, studentCorrect: true, checkedSentence: ok }), []);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Nice.', studentLast: ok, renderedThisTurn: false, studentCorrect: false, checkedSentence: ok }), []);
+  assert.equal(cardableStudentSentence('Can you repeat the question please?'), null);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
