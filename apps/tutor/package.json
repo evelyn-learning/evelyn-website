@@ -423,6 +423,7 @@
     "test:partner-session-options": "npx tsx scripts/test-partner-session-options.ts",
     "test:working-level": "npx tsx scripts/test-working-level.ts",
     "test:fixed-script": "npx tsx scripts/test-fixed-script.ts",
+    "test:announced-move": "npx tsx scripts/test-announced-move.ts",
     "test:sentence-board": "npx tsx scripts/test-sentence-board.ts",
     "test:fixed-script-advance": "npx tsx scripts/test-fixed-script-advance.ts",
     "test:spoken-opener": "npx tsx scripts/test-spoken-opener.ts",
