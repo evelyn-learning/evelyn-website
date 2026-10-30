@@ -424,6 +424,7 @@
     "test:working-level": "npx tsx scripts/test-working-level.ts",
     "test:fixed-script": "npx tsx scripts/test-fixed-script.ts",
     "test:announced-move": "npx tsx scripts/test-announced-move.ts",
+    "test:speech-queue-boundary": "npx tsx scripts/test-speech-queue-boundary.ts",
     "test:sentence-board": "npx tsx scripts/test-sentence-board.ts",
     "test:fixed-script-advance": "npx tsx scripts/test-fixed-script-advance.ts",
     "test:spoken-opener": "npx tsx scripts/test-spoken-opener.ts",
