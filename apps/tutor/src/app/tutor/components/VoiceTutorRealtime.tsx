@@ -428,7 +428,7 @@ import {
   PRONUNCIATION_NOTE_WAIT_MS, PRONUNCIATION_UNAVAILABLE_NOTE, PRONUNCIATION_ARM_MAX_MS, pronunciationNoteForBrain, pcm16ToBase64,
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
-import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
+import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE } from '@/lib/tutor/lesson-plan/fixed-script';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -1435,6 +1435,18 @@ export function VoiceTutorRealtime({
   // rule reads; the state rebuilds the system prompt with the clause.
   const workingLevelRef = useRef<{ level: WorkingLevel; known: boolean } | null>(null);
   const [workingLevelForPrompt, setWorkingLevelForPrompt] = useState<{ level: WorkingLevel; known: boolean } | null>(null);
+  // Task 14 §G: applies a level exactly as a set_working_level tool result
+  // does (once-only rule, held level, prompt clause, profile store) — the
+  // tool path and the estimate fallback both go through it. Assigned below
+  // scheduleProfileFlush.
+  const applyWorkingLevelRef = useRef<(requested: unknown, evidence: string, source: 'tool' | 'estimate') => ReturnType<typeof decideSetWorkingLevel>>(
+    () => ({ ok: false }),
+  );
+  // Student turns spoken while the cursor sat on a level-check segment with
+  // no level held (segment id → turns): the estimate's input.
+  const levelCheckAnswersRef = useRef<Map<string, string[]>>(new Map());
+  const levelEstimateInFlightRef = useRef(false);
+  const requestLevelEstimateRef = useRef<(fromSegId: string) => void>(() => {});
   // Pronunciation check (GDI trial, lib/tutor/pronunciation/clip-capture.ts).
   // Voice only (it needs the mic) and only with a session row for the route.
   // Off ⇒ no tool offered, no capture object, the mic tap unchanged.
@@ -2915,6 +2927,46 @@ export function VoiceTutorRealtime({
       void commitSessionToProfile();
     }, PROFILE_FLUSH_DEBOUNCE_MS);
   }, [studentId, commitSessionToProfile]);
+  applyWorkingLevelRef.current = (requested, evidence, source) => {
+    const decision = decideSetWorkingLevel(workingLevelRef.current?.level ?? null, requested);
+    if (decision.ok && decision.level) {
+      workingLevelRef.current = { level: decision.level, known: false };
+      setWorkingLevelForPrompt({ level: decision.level, known: false });
+      workingLevelSaveRef.current = { level: decision.level, planId: lessonPlanId ?? '', sent: false };
+      scheduleProfileFlush();
+      onDebugEvent?.('working_level_set', `${decision.level}${source === 'estimate' ? ' source=estimate' : ''} evidence=${(evidence ?? '').slice(0, 100)}`);
+    }
+    return decision;
+  };
+  // Task 14 §G (GDI run 4: set_working_level was never called): leaving the
+  // level check with no level held asks the estimate route, from the
+  // student's turns in that segment. Failure ⇒ nothing (unlevelled lesson).
+  requestLevelEstimateRef.current = (fromSegId: string) => {
+    if (!TUTOR_WORKING_LEVEL_ESTIMATE || !levelCheckActive || !sessionId || workingLevelRef.current || levelEstimateInFlightRef.current) return;
+    const answers = levelCheckAnswersRef.current.get(fromSegId) ?? [];
+    if (answers.length === 0) {
+      onDebugEvent?.('working_level_estimate_skipped', `"${fromSegId}": no student turns recorded`);
+      return;
+    }
+    levelEstimateInFlightRef.current = true;
+    onDebugEvent?.('working_level_estimate_requested', `"${fromSegId}" answers=${answers.length}`);
+    void fetch('/api/tutor/level/estimate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, answers, levels: WORKING_LEVELS }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`http_${r.status}`))))
+      .then((d: { status?: string; level?: unknown; evidence?: unknown; reason?: unknown }) => {
+        if (d?.status !== 'ok') {
+          onDebugEvent?.('working_level_estimate_failed', String(d?.reason ?? 'unavailable'));
+          return;
+        }
+        const decision = applyWorkingLevelRef.current(d.level, typeof d.evidence === 'string' ? d.evidence : '', 'estimate');
+        if (!decision.ok) onDebugEvent?.('working_level_estimate_failed', `not applied: ${decision.note ?? ''}`.slice(0, 120));
+      })
+      .catch((e) => onDebugEvent?.('working_level_estimate_failed', String((e as Error)?.message ?? e).slice(0, 80)))
+      .finally(() => { levelEstimateInFlightRef.current = false; });
+  };
   /** LOs already drafted as homework this page (server merges; this only saves round-trips). */
   const draftedLosRef = useRef<Set<string>>(new Set());
   /** True once a finalize returned an assignment THIS session — the only licence to speak about homework. */
@@ -5584,6 +5636,9 @@ export function VoiceTutorRealtime({
   // regardless of `opts`.
   const applyResolvedAdvance = useCallback((plan: LessonPlan, fromSegId: string, next: string, opts?: { seamMode?: boolean; /** homework-advance.ts: a segment the student SKIPPED — moved past, never auto-marked completed. */ leaveIncomplete?: string }) => {
     console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
+    // Task 14 §G: leaving a level check (skipWhenLevelKnown) with no level
+    // held — every advance path comes through here — estimate one.
+    if (needsLevelCaptureLead(plan, fromSegId, !!workingLevelRef.current)) requestLevelEstimateRef.current(fromSegId);
     // Live check 6 nets: remember the advance for the stream-end auto-card
     // and restart the per-segment turn counter.
     lastAdvanceRef.current = { segId: next, atMs: Date.now() };
@@ -7841,13 +7896,8 @@ export function VoiceTutorRealtime({
       if ((cmd.action as string) === 'setWorkingLevel') {
         if (!levelCheckActive) continue;
         const wl = cmd as unknown as { level?: unknown; evidence?: string };
-        const decision = decideSetWorkingLevel(workingLevelRef.current?.level ?? null, wl.level);
+        const decision = applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool');
         if (decision.ok && decision.level) {
-          workingLevelRef.current = { level: decision.level, known: false };
-          setWorkingLevelForPrompt({ level: decision.level, known: false });
-          workingLevelSaveRef.current = { level: decision.level, planId: lessonPlanId ?? '', sent: false };
-          scheduleProfileFlush();
-          onDebugEvent?.('working_level_set', `${decision.level} evidence=${(wl.evidence ?? '').slice(0, 100)}`);
           // GDI trial live run 1: the level is set ⇒ the level-check segment
           // is done. Move the pointer now (the brain did not advance on its
           // own) and tell the brain as a fact. A {to:"next"} later in this
@@ -21509,6 +21559,11 @@ export function VoiceTutorRealtime({
       recordStudentEngagement(idleNudgeStateRef.current);
       // A real turn after the close restarts the quiet-after-close clock.
       if (lessonClosedRef.current) armLessonCloseAutoEndRef.current();
+      // Task 14 §G: the level-check answers (the estimate's input).
+      if (TUTOR_WORKING_LEVEL_ESTIMATE && levelCheckActive && needsLevelCaptureLead(lessonPlanRef.current, currentSegmentIdRef.current, !!workingLevelRef.current)) {
+        const segAns = currentSegmentIdRef.current;
+        levelCheckAnswersRef.current.set(segAns, [...(levelCheckAnswersRef.current.get(segAns) ?? []), transcript.trim()].slice(-20));
+      }
       // GreenApple spec 2026-10-02 §1: real student input (text or voice —
       // both land here). A window-event bridge (like evelyn:session-started)
       // so the embed page — the only place that posts to the host — relays
