@@ -117,6 +117,10 @@ export interface HeuristicInput {
    *  pronunciation target is armed. Powers the expected-repeat exemption
    *  (`isExpectedRepeat`). Omitted / null ⇒ no exemption. */
   expectedRepeat?: { text: string } | null;
+  /** Task 19 §A2: the answer-at-playback-end exemption
+   *  (`isAnswerAtPlaybackEnd`). The caller passes TUTOR_SELF_VOICE_ANSWER_END;
+   *  omitted ⇒ on (flags default ON). */
+  answerEndExemption?: boolean;
 }
 
 export interface HeuristicResult {
@@ -134,7 +138,12 @@ export interface HeuristicResult {
   carveOut?: 'expected_answer';
   /** Task 18: set when the expected-repeat exemption kept a self-voice-score
    *  hit from dropping (the call site emits its own debug event). */
-  exemption?: 'expected_repeat';
+  exemption?: 'expected_repeat' | 'answer_at_playback_end' | 'offered_option';
+  /** Task 19 §A4 (GDI run 7: four drops logged only "self-voice score 1.00"):
+   *  on every drop_self_voice, the timing evidence behind it —
+   *  `prod=… onset=<ms from best script start>/<script ms> end=<onset − end
+   *  stamp | none> target=<y j=0.00 | n> guard=<verbatim jaccard>`. */
+  diag?: string;
 }
 
 // ── Lexicons ──────────────────────────────────────────────────────────
@@ -823,18 +832,31 @@ export const MIDLENGTH_ECHO_OVERLAP_THRESHOLD = 0.8;
  * of these hold — each one narrows the echo risk:
  *  - production state is 'listening' (the tutor is silent; live overtalk
  *    echo keeps today's drop);
- *  - the matched in-window script is a QUESTION (ends with '?') — a student
- *    only "picks" from something that was asked;
+ *  - the matched in-window script OFFERS options (ends with '?', or quoted
+ *    options joined by "or" — Task 19) — a student only "picks" from
+ *    something that was offered;
  *  - every content token of the utterance appears in that question
  *    (it IS an echo of offered words — that's the point);
  *  - the utterance does NOT contain the question's final word: a mic echo
  *    replays the contiguous TAIL ("…free body diagrams next"), while a
  *    student picking an option drops the trailing word(s);
- *  - speech ONSET is known and lands clearly AFTER the question finished
- *    playing (past the ε VAD-onset slop) — an onset during playback is the
- *    speaker in the mic, not a student answering; unknown onset fails safe
- *    to today's drop.
+ *  - speech ONSET is known and lands at the line's END: ≥ end − 500 ms and
+ *    ≥ the option's start + 1000 ms (Task 19 §A3; was "after end + ε") — an
+ *    echo starts near the option's start; unknown onset fails safe to the
+ *    drop.
  */
+// Task 19 §A (GDI run 7, 648 s): `Please answer with "Yes, I attended" or
+// "No, I didn't."` offers its options as quotes joined by "or" and ends with
+// a full stop — brain TTS is stamped per sentence, so the question before it
+// is a different script.
+const QUOTED_OPTIONS_RE = /["“][^"”]{1,80}["”][,.]?\s+or\s+["“]/i;
+
+/** A line that offers options: a question, or quoted options joined by "or". */
+function offersOptions(text: string): boolean {
+  const t = text.trim();
+  return t.endsWith('?') || t.endsWith('？') || QUOTED_OPTIONS_RE.test(t);
+}
+
 export function isOfferedOptionEcho(
   transcript: string,
   recentTtsScripts: RecentTtsScript[],
@@ -850,8 +872,14 @@ export function isOfferedOptionEcho(
   const studentT = speechStartedAt;
   for (const s of recentTtsScripts) {
     if (!scriptWindowContains(s, studentT, now)) continue;
-    if (!s.text.trim().endsWith('?')) continue;
-    if (s.spokenEndedAt == null || studentT <= s.spokenEndedAt + ECHO_ANCHOR_EPSILON_MS) continue;
+    if (!offersOptions(s.text)) continue;
+    // Task 19 §A3 (run 7, 648 s): the learner picked "Yes, I attended" while
+    // the line's last word was still in the trail — the old onset > end + ε
+    // dropped it. Same physics as the expected repeat: an echo starts near
+    // the option's START, a learner at the line's END.
+    if (s.spokenEndedAt == null) continue;
+    if (studentT < s.spokenEndedAt - EXPECTED_REPEAT_END_LEAD_MS) continue;
+    if (studentT < s.spokenStartedAt + quoteOffsetMs(s, transcript) + EXPECTED_REPEAT_MIN_FROM_START_MS) continue;
     const qTokens = tokenize(s.text);
     if (qTokens.length < 2) continue;
     const qSet = new Set(contentTokens(qTokens));
@@ -892,6 +920,109 @@ export function quoteOffsetMs(s: RecentTtsScript, quoted: string): number {
   return Math.round((i / text.length) * duration);
 }
 
+/** The in-window script that best matches the transcript (jaccard or 3-gram
+ *  hit rate) — the one behind the self-voice score. */
+function bestMatchingScript(
+  transcript: string,
+  recentTtsScripts: RecentTtsScript[],
+  studentT: number,
+  now: number,
+): RecentTtsScript | null {
+  const tTokens = tokenize(transcript);
+  if (tTokens.length === 0) return null;
+  const tSet = new Set(tTokens);
+  const t3 = new Set(ngrams(tTokens, Math.min(3, tTokens.length)));
+  let best: RecentTtsScript | null = null;
+  let bestScore = -1;
+  for (const s of recentTtsScripts) {
+    if (!scriptWindowContains(s, studentT, now)) continue;
+    const sTokens = tokenize(s.text);
+    if (sTokens.length === 0) continue;
+    const j = jaccard(tSet, new Set(sTokens));
+    let ngramHit = 0;
+    if (t3.size > 0) {
+      const s3 = new Set(ngrams(sTokens, 3));
+      let hit = 0;
+      for (const g of t3) if (s3.has(g)) hit += 1;
+      ngramHit = hit / t3.size;
+    }
+    const score = Math.max(j, ngramHit);
+    if (score > bestScore) { bestScore = score; best = s; }
+  }
+  return best;
+}
+
+/** Filler-free token jaccard between two texts (cleanStudentSentence both sides). */
+function cleanJaccard(a: string, b: string): number {
+  const sa = new Set(cleanStudentSentence(a).split(' ').filter(Boolean));
+  const sb = new Set(cleanStudentSentence(b).split(' ').filter(Boolean));
+  if (sa.size === 0 || sb.size === 0) return 0;
+  return jaccard(sa, sb);
+}
+
+/** Task 19 §A2: at or above this filler-free jaccard to the line, a transcript
+ *  is a copy of it, not an answer. */
+export const ANSWER_END_VERBATIM_JACCARD = 0.9;
+
+/**
+ * Answer-at-playback-end exemption (Task 19 §A2, GDI run 7): the tutor asked
+ * `Could you say that in one English sentence, starting with "I work in the
+ * sales department"?` and the student said "I work in the sales department
+ * and sell washing machine." — an answer ASSEMBLED from the tutor's own
+ * words, as asked; no repeat target exists, so the expected-repeat exemption
+ * cannot fire, and self-voice scored 1.00. Same for "Yes, I have attended a
+ * training course at Nagoya Corporation." after "have you ever attended a
+ * training course at Nagoya Corporation?".
+ *
+ * Physics (as isExpectedRepeat): an echo starts near the line's START; a
+ * learner starts at its END. Kept when ALL hold:
+ *  - production state 'listening', onset known;
+ *  - the best-matching in-window script has an end stamp, and the onset is
+ *    ≥ end − 500 ms and ≥ start + 1000 ms;
+ *  - the transcript is NOT a copy of that script (filler-free jaccard < 0.9
+ *    and not a substring of it) — a verbatim copy at playback end is exempt
+ *    only through the expected-repeat / offered-option paths, which carry a
+ *    target.
+ */
+export function isAnswerAtPlaybackEnd(
+  transcript: string,
+  recentTtsScripts: RecentTtsScript[],
+  productionState: ProductionStateForClassifier,
+  speechStartedAt: number | undefined,
+  now: number,
+): boolean {
+  if (productionState !== 'listening') return false;
+  if (speechStartedAt === undefined) return false;
+  const best = bestMatchingScript(transcript, recentTtsScripts, speechStartedAt, now);
+  if (!best || best.spokenEndedAt == null) return false;
+  if (speechStartedAt < best.spokenEndedAt - EXPECTED_REPEAT_END_LEAD_MS) return false;
+  if (speechStartedAt < best.spokenStartedAt + EXPECTED_REPEAT_MIN_FROM_START_MS) return false;
+  const said = cleanStudentSentence(transcript);
+  if (!said) return false;
+  if (cleanJaccard(transcript, best.text) >= ANSWER_END_VERBATIM_JACCARD) return false;
+  return !` ${cleanStudentSentence(best.text)} `.includes(` ${said} `);
+}
+
+/** Task 19 §A4: the evidence string for a drop_self_voice (see HeuristicResult.diag). */
+export function selfVoiceDropDiag(input: HeuristicInput): string {
+  const studentT = input.speechStartedAt ?? input.now;
+  const best = bestMatchingScript(input.transcript, input.recentTtsScripts, studentT, input.now);
+  let onset = 'unknown';
+  let end = 'unknown';
+  if (!best) {
+    onset = 'none';
+    end = 'none';
+  } else if (input.speechStartedAt !== undefined) {
+    const dur = best.spokenEndedAt == null ? 'live' : String(best.spokenEndedAt - best.spokenStartedAt);
+    onset = `${input.speechStartedAt - best.spokenStartedAt}/${dur}`;
+    end = best.spokenEndedAt == null ? 'none' : String(input.speechStartedAt - best.spokenEndedAt);
+  }
+  const exp = input.expectedRepeat?.text?.trim();
+  const target = exp ? `y j=${cleanJaccard(input.transcript, exp).toFixed(2)}` : 'n';
+  const guard = best ? cleanJaccard(input.transcript, best.text).toFixed(2) : '0.00';
+  return `prod=${input.productionState} onset=${onset} end=${end} target=${target} guard=${guard}`;
+}
+
 /**
  * Expected-repeat exemption (Task 18, GDI run 6): the tutor said `Please say
  * it once more: "Last week, I went golfing with my manager."`, the student
@@ -927,28 +1058,8 @@ export function isExpectedRepeat(
   const target = new Set(cleanStudentSentence(expectedRepeat.text).split(' ').filter(Boolean));
   if (said.size === 0 || target.size === 0) return false;
   if (jaccard(said, target) < EXPECTED_REPEAT_TARGET_MATCH) return false;
-  const tTokens = tokenize(transcript);
-  if (tTokens.length === 0) return false;
-  const tSet = new Set(tTokens);
-  const t3 = new Set(ngrams(tTokens, Math.min(3, tTokens.length)));
   // The best-matching in-window script — the one behind the self-voice score.
-  let best: RecentTtsScript | null = null;
-  let bestScore = -1;
-  for (const s of recentTtsScripts) {
-    if (!scriptWindowContains(s, speechStartedAt, now)) continue;
-    const sTokens = tokenize(s.text);
-    if (sTokens.length === 0) continue;
-    const j = jaccard(tSet, new Set(sTokens));
-    let ngramHit = 0;
-    if (t3.size > 0) {
-      const s3 = new Set(ngrams(sTokens, 3));
-      let hit = 0;
-      for (const g of t3) if (s3.has(g)) hit += 1;
-      ngramHit = hit / t3.size;
-    }
-    const score = Math.max(j, ngramHit);
-    if (score > bestScore) { bestScore = score; best = s; }
-  }
+  const best = bestMatchingScript(transcript, recentTtsScripts, speechStartedAt, now);
   // No end stamp ⇒ the line is still playing ⇒ a match is echo.
   if (!best || best.spokenEndedAt == null) return false;
   // Fix round 2 (I3): brain TTS is stamped per sentence, so a short quoted
@@ -1104,7 +1215,7 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
           carveOut: 'expected_answer',
           selfVoiceScore: result.selfVoiceScore,
         }
-      : result;
+      : { ...result, diag: selfVoiceDropDiag(input) };
 
   // 0. Empty → noise. Catches OpenAI's occasional empty-transcript event.
   if (wordCount === 0) return { verdict: 'noise', reason: 'empty transcript' };
@@ -1134,7 +1245,20 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       text, input.recentTtsScripts, input.productionState, input.speechStartedAt, input.now,
       input.expectedRepeat,
     );
-  if (selfVoiceScore >= SELF_VOICE_THRESHOLD && !offeredOptionPick && !expectedRepeatHit) {
+  // Task 19 §A2: an answer that began at playback end and is not a copy of
+  // the line (see isAnswerAtPlaybackEnd doc).
+  const answerEndHit =
+    selfVoiceScore >= SELF_VOICE_THRESHOLD &&
+    !offeredOptionPick &&
+    !expectedRepeatHit &&
+    input.answerEndExemption !== false &&
+    isAnswerAtPlaybackEnd(
+      text, input.recentTtsScripts, input.productionState, input.speechStartedAt, input.now,
+    );
+  // Task 19 §A3: all three exemptions admit an onset in the line's last
+  // 500 ms, which the onset-during-playback gates (1.6, 1.7) read as overtalk.
+  const playbackEndExempt = expectedRepeatHit || offeredOptionPick || answerEndHit;
+  if (selfVoiceScore >= SELF_VOICE_THRESHOLD && !playbackEndExempt) {
     // Fix wave (2026-07-15, review finding 3): when the drop verdict was
     // reached ONLY via the phonetic pass (text score alone stayed under
     // threshold), say so distinctly in the reason string so the Stage-1 FP
@@ -1242,7 +1366,7 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   // word (onset ≥ end − 500 ms, see isExpectedRepeat) — that onset is "during
   // playback" by these two gates' measure, so they stand down for it.
   if (
-    !expectedRepeatHit &&
+    !playbackEndExempt &&
     rawWordCount(text) <= 4 &&
     state !== 'speaking' &&
     input.speechStartedAt !== undefined &&
@@ -1276,7 +1400,7 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   {
     const rawWords = rawWordCount(text);
     if (
-      !expectedRepeatHit &&
+      !playbackEndExempt &&
       rawWords >= 5 && rawWords <= 10 &&
       input.speechStartedAt !== undefined &&
       (input.onsetDuringTutorSpeech === true ||
@@ -1358,6 +1482,12 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     // 'listening'); its reason names the exemption for the log review.
     if (expectedRepeatHit) {
       return { verdict: 'new_turn', reason: 'expected repeat at playback end', selfVoiceScore, exemption: 'expected_repeat' };
+    }
+    if (answerEndHit) {
+      return { verdict: 'new_turn', reason: 'answer at playback end', selfVoiceScore, exemption: 'answer_at_playback_end' };
+    }
+    if (offeredOptionPick) {
+      return { verdict: 'new_turn', reason: 'offered option pick', selfVoiceScore, exemption: 'offered_option' };
     }
     return { verdict: 'new_turn', reason: 'listening + non-filler', selfVoiceScore };
   }

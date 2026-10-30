@@ -12,6 +12,8 @@
  *
  * Run: npm run test:perception-classifier
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expectedRepeatFor, isSayItAsk, isStrictRepeatAsk } from '../src/lib/tutor/voice/correct-retry';
 import {
   classifyHeuristic,
@@ -695,6 +697,9 @@ console.log('\n=== Fix wave finding 3: distinct reason for phonetic-only drops =
     recentTtsScripts: scripts,
     now,
     speechStartedAt,
+    // The reason marker is under test; Task 19's answer-at-playback-end
+    // exemption would keep this post-playback onset.
+    answerEndExemption: false,
   };
   const r = classifyHeuristic(input);
   check(
@@ -811,6 +816,7 @@ console.log('\n=== Final-review item 1: distinct reason for containment-only dro
       recentTtsScripts: daduScripts,
       now,
       speechStartedAt,
+      answerEndExemption: false,
     });
     check(
       'phonetic-only drop keeps its own marker, not the containment one',
@@ -894,9 +900,16 @@ console.log('\n=== Task X6: echo anchor (speechStartedAt <= spokenEndedAt + ε) 
     const rAtEps = classifyWithScripts(
       'Dadu', 'listening', scripts, playEnd + ECHO_ANCHOR_EPSILON_MS, playEnd + ECHO_ANCHOR_EPSILON_MS + 300,
     );
+    // Task 19 §A3: the anchor still holds containment in at end + ε, but
+    // "Dadu" picks an option the question offered at the line's end — the
+    // offered-option exemption now admits onsets from end − 500 ms.
     check(
-      'onset exactly at playEnd+ε → still drop_self_voice (within VAD-onset slop)',
-      rAtEps.verdict === 'drop_self_voice',
+      'onset exactly at playEnd+ε → containment still anchored-in (score ≥ threshold)',
+      scoreSelfVoice('Dadu', scripts, playEnd + ECHO_ANCHOR_EPSILON_MS, playEnd + ECHO_ANCHOR_EPSILON_MS + 300) >= SELF_VOICE_THRESHOLD,
+    );
+    check(
+      'onset exactly at playEnd+ε → kept as an offered-option pick (Task 19 §A3)',
+      rAtEps.verdict === 'new_turn' && rAtEps.exemption === 'offered_option',
       `verdict=${rAtEps.verdict} (${rAtEps.reason})`,
     );
     const rPastEps = classifyWithScripts(
@@ -1615,6 +1628,84 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('§A R2 expectedRepeatFor: math "we can say that" ⇒ null', expectedRepeatFor('We can say that "the slope is two here" now.', null) === null);
   check('§A R2 expectedRepeatFor: the turn quote beats a recent clip', expectedRepeatFor('Say it once more: "I went golfing last week."', null, 'I was responsible for communicating with our customers.')?.text === 'I went golfing last week.');
   check('§A R2 expectedRepeatFor: recent clip when the turn has no ask', expectedRepeatFor('Good.', null, 'I was responsible.')?.text === 'I was responsible.');
+}
+
+// ── Task 19 §A (GDI run 7, embed-1793376775441): legitimate answers at playback end ──
+// Brain TTS is stamped per sentence; each line below is its own script.
+// The learner starts 200 ms before the line's end stamp.
+{
+  const now = 5_000_000;
+  const start = now - 9000;
+  const end = start + 5000;
+  const at = (text: string, dur = 5000): RecentTtsScript[] => [{ text, spokenStartedAt: end - dur, spokenEndedAt: end }];
+  const L = 'listening' as ProductionStateForClassifier;
+
+  // 1. 151 s — a bare say "<quote>" ask (A1 → expected repeat)
+  const turn1 = 'Sorry, I wasn\'t clear. The change I meant is "the cafeteria": say "I eat lunch at the cafeteria."';
+  const s1 = at('The change I meant is "the cafeteria": say "I eat lunch at the cafeteria."');
+  const r1 = classifyHeuristic({ transcript: 'I eat lunch at the cafeteria.', recentTtsScripts: s1, now, productionState: L, speechStartedAt: end - 200, expectedRepeat: expectedRepeatFor(turn1, null) });
+  check('§A19 run-7 151 s: say "<quote>" repeat at end − 200 ms ⇒ expected_repeat', r1.verdict === 'new_turn' && r1.exemption === 'expected_repeat', `${r1.verdict} (${r1.reason})`);
+
+  // 2. 197 s — an answer assembled from the tutor's words (A2)
+  const s2 = at('Could you say that in one English sentence, starting with "I work in the sales department"?');
+  // (run 7 logged only the score, not the dropped text; this assembled
+  // answer scores 0.57 against the line — over the 0.55 bar)
+  const said2 = 'I work in the sales department, selling washing machines.';
+  const in2 = { transcript: said2, recentTtsScripts: s2, now, productionState: L, expectedRepeat: expectedRepeatFor(s2[0]!.text, null) };
+  check('§A19 run-7 197 s: "say that … starting with" is no repeat target', in2.expectedRepeat === null);
+  const off2 = classifyHeuristic({ ...in2, speechStartedAt: end - 200, answerEndExemption: false });
+  check('§A19 run-7 197 s: flag off ⇒ drop (the run-7 behaviour)', off2.verdict === 'drop_self_voice', `${off2.verdict} (${off2.reason})`);
+  const r2 = classifyHeuristic({ ...in2, speechStartedAt: end - 200 });
+  check('§A19 run-7 197 s: assembled answer at end − 200 ms ⇒ answer_at_playback_end', r2.verdict === 'new_turn' && r2.exemption === 'answer_at_playback_end' && r2.reason === 'answer at playback end', `${r2.verdict} (${r2.reason})`);
+  // (c) the same answer starting 2 s BEFORE the end stamp ⇒ still dropped
+  const early2 = classifyHeuristic({ ...in2, speechStartedAt: end - 2000 });
+  check('§A19 (c): assembled answer with onset 2 s before the end ⇒ drop', early2.verdict === 'drop_self_voice', `${early2.verdict} (${early2.reason})`);
+  // (d) production still speaking ⇒ dropped
+  const spk2 = classifyHeuristic({ ...in2, productionState: 'speaking', speechStartedAt: end - 200 });
+  check('§A19 (d): state speaking ⇒ drop', spk2.verdict === 'drop_self_voice', `${spk2.verdict} (${spk2.reason})`);
+
+  // 3. 380 s — the answer echoes the question (A2), score 0.63 in the run
+  const s3 = at("We're still on the present perfect, so let me ask one more: have you ever attended a training course at Nagoya Corporation?", 7000);
+  const r3 = classifyHeuristic({ transcript: 'Yes, I have attended a training course at Nagoya Corporation.', recentTtsScripts: s3, now, productionState: L, speechStartedAt: end - 200 });
+  check('§A19 run-7 380 s: answer echoing the question at end − 200 ms ⇒ answer_at_playback_end', r3.verdict === 'new_turn' && r3.exemption === 'answer_at_playback_end', `${r3.verdict} (${r3.reason})`);
+
+  // 4. 648 s — quoted options offered in a full-stop line (A3)
+  const s4: RecentTtsScript[] = [
+    { text: "Now let's do a new one: did you attend any business event last year?", spokenStartedAt: end - 6500, spokenEndedAt: end - 3000 },
+    { text: 'Please answer with "Yes, I attended" or "No, I didn\'t."', spokenStartedAt: end - 2900, spokenEndedAt: end },
+  ];
+  const r4 = classifyHeuristic({ transcript: 'Yes, I attended.', recentTtsScripts: s4, now, productionState: L, speechStartedAt: end - 200 });
+  check('§A19 run-7 648 s: offered quoted option at end − 200 ms ⇒ offered_option', r4.verdict === 'new_turn' && r4.exemption === 'offered_option', `${r4.verdict} (${r4.reason})`);
+  const echo4 = classifyHeuristic({ transcript: 'Yes, I attended.', recentTtsScripts: s4, now, productionState: L, speechStartedAt: end - 2900 + 1000 + 300 });
+  check('§A19 A3: option echoed near its own start (before end − 500 ms) ⇒ drop', echo4.verdict === 'drop_self_voice', `${echo4.verdict} (${echo4.reason})`);
+
+  // (b) Bluetooth-delayed echo of a 1.3 s question, verbatim, onset start + 1000 ms ⇒ guard
+  const q = 'Have you been to Tokyo before?';
+  const sb: RecentTtsScript[] = [{ text: q, spokenStartedAt: end - 1300, spokenEndedAt: end }];
+  const rb = classifyHeuristic({ transcript: q, recentTtsScripts: sb, now, productionState: L, speechStartedAt: end - 300 });
+  check('§A19 (b): verbatim echo of a 1.3 s question at start + 1000 ms ⇒ drop (guard)', rb.verdict === 'drop_self_voice', `${rb.verdict} (${rb.reason})`);
+  const rbSub = classifyHeuristic({ transcript: 'you been to Tokyo before', recentTtsScripts: sb, now, productionState: L, speechStartedAt: end - 300 });
+  check('§A19 (b): a substring of the line ⇒ drop (guard)', rbSub.verdict === 'drop_self_voice', `${rbSub.verdict} (${rbSub.reason})`);
+
+  // A4: the drop carries its evidence
+  check('§A19 A4: diag format (flag-off drop)', off2.diag === `prod=listening onset=4800/5000 end=-200 target=n guard=${off2.diag?.match(/guard=(\d\.\d\d)$/)?.[1]}` && /guard=0\.\d\d$/.test(off2.diag ?? ''), off2.diag);
+  check('§A19 A4: diag with a target', /^prod=listening onset=3000\/5000 end=-2000 target=y j=0\.\d\d guard=\d\.\d\d$/.test(classifyHeuristic({ ...in2, speechStartedAt: end - 2000, expectedRepeat: { text: 'I work in the sales department.' } }).diag ?? ''));
+  const unk = classifyHeuristic({ transcript: said2, recentTtsScripts: [{ text: s2[0]!.text, spokenStartedAt: now - 3000, spokenEndedAt: now - 500 }], now, productionState: L });
+  check('§A19 A4: unknown onset ⇒ onset/end unknown', unk.verdict === 'drop_self_voice' && /^prod=listening onset=unknown end=unknown target=n guard=\d\.\d\d$/.test(unk.diag ?? ''), unk.diag);
+  check('§A19 A4: guard is 1.00 for a verbatim echo', /guard=1\.00$/.test(rb.diag ?? ''), rb.diag);
+
+  // (e) A1 positives / negatives
+  check('§A19 A1: bare say "<quote>" is a strict ask', isStrictRepeatAsk('The change I meant is "the cafeteria": say "I eat lunch at the cafeteria."') && isStrictRepeatAsk('Could you say "I went golfing"?') && isStrictRepeatAsk('Try saying "I have worked here for five years."'));
+  check('§A19 A1: m1/m5 negatives stay excluded', !isStrictRepeatAsk('You can say it naturally now.') && !isStrictRepeatAsk('We can say that "the slope is two" here.') && !isStrictRepeatAsk('You could say "I went golfing" too.'));
+  check('§A19 A1: say … quote more than 40 chars away ⇒ not an ask', !isStrictRepeatAsk('Could you say that in one English sentence, starting with "I work in the sales department"?'));
+  check('§A19 A1: sentence break between verb and quote ⇒ not an ask', !isStrictRepeatAsk('Say it. "Hello there."'));
+}
+// ── Task 19 §A: VTR wiring ──
+{
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('§A19 VTR: flag passed to the classifier', VTR.includes('answerEndExemption: TUTOR_SELF_VOICE_ANSWER_END,'));
+  check('§A19 VTR: answer-end exemption event', VTR.includes("onDebugEvent?.('self_voice_exempt_answer_end', `\"${t.text.slice(0, 60)}\"`);"));
+  check('§A19 VTR: diag appended to perception_heuristic', VTR.includes("onDebugEvent?.('perception_heuristic', `${heur.verdict}:${heur.reason}${heur.diag ? ` · ${heur.diag}` : ''}`);"));
 }
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

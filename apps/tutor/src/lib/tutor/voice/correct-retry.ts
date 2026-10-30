@@ -72,13 +72,22 @@ export function isSayItAsk(text: string): boolean {
 /** Japanese "say it" asks only (言ってみましょう / 言ってみてください / 繰り返し / リピート). */
 const JA_SAY_IT_ASK_RE = /言(?:って|い)(?:み(?:ましょう|てください|て)|ましょう)|繰り返し|リピート/;
 
+/** Task 19 §A1 (GDI run 7, 140 s): `The change I meant is "the cafeteria":
+ *  say "I eat lunch at the cafeteria."` — a say-verb leading straight into a
+ *  quoted sentence (opening quote within 40 chars, no sentence break between)
+ *  is an ask. The 言って branch sits outside \b (no ASCII word boundary
+ *  before a kana/kanji). A statement ("we can say that "…"", "you could say
+ *  "…"") is not: the verb must not follow a modal or a "we / people" subject. */
+const SAY_QUOTE_ASK_RE = /(?:(?<!\b(?:can|could|might|would|also|often|usually|we|they|people)\s+)\b(?:say|repeat|try saying)\b|言って)[^"“「.!?。！？]{0,40}["“「]/iu;
+
 /** Fix round 2 (m1, m5): a repeat ask strict enough to act on — isRetryAsk,
- *  "say/repeat … once more / again", "repeat after me", or a Japanese say-it
- *  ask. Not the bare "say it" / "say that" / "try saying" of isSayItAsk
- *  ("you can say it naturally now", "we can say that …"). */
+ *  "say/repeat … once more / again", "repeat after me", a Japanese say-it
+ *  ask, or (Task 19 §A1) a say-verb followed by a quoted sentence. Not the
+ *  bare "say it" / "say that" / "try saying" of isSayItAsk ("you can say it
+ *  naturally now", "we can say that …"). */
 export function isStrictRepeatAsk(text: string): boolean {
   const t = text ?? '';
-  return isRetryAsk(t) || SAY_AGAIN_RE.test(t) || /\brepeat (?:it |that |this )?after me\b/i.test(t) || JA_SAY_IT_ASK_RE.test(t);
+  return isRetryAsk(t) || SAY_AGAIN_RE.test(t) || /\brepeat (?:it |that |this )?after me\b/i.test(t) || JA_SAY_IT_ASK_RE.test(t) || SAY_QUOTE_ASK_RE.test(t);
 }
 
 /** Task 18 §A (GDI run 6): the line the student was asked to say, for the

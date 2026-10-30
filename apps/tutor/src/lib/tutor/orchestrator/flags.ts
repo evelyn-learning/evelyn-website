@@ -971,3 +971,9 @@ export const TUTOR_KILL_SENTENCE_BOUNDARY = process.env.NEXT_PUBLIC_TUTOR_KILL_S
  *  did not (lesson-plan/fixed-script.ts segmentNeedsAutoCard). Default ON;
  *  NEXT_PUBLIC_TUTOR_SEGMENT_CARD_AUTO=off. */
 export const TUTOR_SEGMENT_CARD_AUTO = process.env.NEXT_PUBLIC_TUTOR_SEGMENT_CARD_AUTO !== 'off';
+
+/** Task 19 §A2 (GDI run 7: assembled answers dropped as self-voice): the
+ *  perception classifier keeps a non-verbatim answer whose onset sits at the
+ *  matched line's end (voice/perception-classifier.ts isAnswerAtPlaybackEnd).
+ *  Default ON; NEXT_PUBLIC_TUTOR_SELF_VOICE_ANSWER_END=off. */
+export const TUTOR_SELF_VOICE_ANSWER_END = process.env.NEXT_PUBLIC_TUTOR_SELF_VOICE_ANSWER_END !== 'off';

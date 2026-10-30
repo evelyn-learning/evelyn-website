@@ -423,6 +423,7 @@ import {
   TUTOR_FIXED_SCRIPT_AUTO_ADVANCE,
   TUTOR_RETRY_PREAMBLE,
   TUTOR_FIXED_SCRIPT_OUTLINE,
+  TUTOR_SELF_VOICE_ANSWER_END,
 } from '@/lib/tutor/orchestrator/flags';
 import { withRetryPreamble } from '@/lib/tutor/voice/retry-preamble';
 import {
@@ -24544,6 +24545,7 @@ export function VoiceTutorRealtime({
           // active; the carve-out is a no-op in that case.
           verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
           expectedRepeat,
+          answerEndExemption: TUTOR_SELF_VOICE_ANSWER_END,
         });
         const ttsBufLen = recentTtsScripts.length;
         const svScore = heur.selfVoiceScore !== undefined
@@ -24552,9 +24554,12 @@ export function VoiceTutorRealtime({
         console.warn(
           `[CLASSIFIER] heuristic=${heur.verdict} (sv=${svScore}, ttsBuf=${ttsBufLen}, prod=${prodState}) — ${heur.reason}`,
         );
-        onDebugEvent?.('perception_heuristic', `${heur.verdict}:${heur.reason}`);
+        // Task 19 §A4: a self-voice drop carries its timing evidence.
+        onDebugEvent?.('perception_heuristic', `${heur.verdict}:${heur.reason}${heur.diag ? ` · ${heur.diag}` : ''}`);
         if (heur.exemption === 'expected_repeat') {
           onDebugEvent?.('self_voice_exempt_expected_repeat', `"${t.text.slice(0, 60)}"`);
+        } else if (heur.exemption === 'answer_at_playback_end') {
+          onDebugEvent?.('self_voice_exempt_answer_end', `"${t.text.slice(0, 60)}"`);
         }
         if (heur.carveOut) {
           onDebugEvent?.('echo_carveout', `${heur.reason} · "${t.text.slice(0, 60)}"`);
