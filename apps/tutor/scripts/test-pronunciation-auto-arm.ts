@@ -159,12 +159,12 @@ test('21D2: 910 s — a starter quote is never armed; a short quote only when as
 });
 test('21D1/D3: VTR wiring — card source, per-turn reset, pronunciation-model cards', () => {
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  assert.ok(VTR.includes('detectPronunciationTarget(fullText, pronTargets, { shownSentence: turnShownSentenceRef.current })'));
+  assert.ok(VTR.includes('detectPronunciationTarget(fullText, pronTargets, { shownSentence: turnShownSentenceRef.current, studentLast: sentenceStressRef.current.studentLast })'));
   assert.ok(VTR.includes("onDebugEvent?.('pronunciation_auto_armed', `\"${auto.referenceText}\" source=card`);"));
   assert.ok(VTR.includes('turnShownSentenceRef.current = null;'));
   assert.ok(VTR.includes('if (!opts?.sentenceBoardAuto) turnShownSentenceRef.current = c.sentence;'));
   assert.ok(VTR.includes('sentenceBoardAuto: true, pronunciationModel: true }'));
-  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel })'));
+  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch })'));
   assert.ok(VTR.includes("'show_sentence_duplicate_rehighlighted'") && VTR.includes("'show_sentence_duplicate_reshown'"));
   assert.ok(VTR.includes("target: 'item', targetId: existingId, pulse: true"));
   const embed = readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8');
@@ -174,7 +174,7 @@ test('21D1/D3: VTR wiring — card source, per-turn reset, pronunciation-model c
 });
 test('21D3: a duplicate pronunciation model is re-highlighted on this page, re-shown from another, never skipped', () => {
   assert.equal(duplicateSentenceAction({ page: null, currentPage: 9, pronunciationModel: true }), 'draw');
-  assert.equal(duplicateSentenceAction({ page: 9, currentPage: 9, pronunciationModel: true }), 'rehighlight');
+  assert.equal(duplicateSentenceAction({ page: 9, currentPage: 9, pronunciationModel: true, onCurrentPage: true }), 'rehighlight');
   assert.equal(duplicateSentenceAction({ page: 7, currentPage: 9, pronunciationModel: true }), 'reshow');
   assert.equal(duplicateSentenceAction({ page: 7, currentPage: 9, pronunciationModel: false }), 'skip', 'Task 14 §I unchanged elsewhere');
   // run 9 (1014 s): the sentence on page 9 — the current page — is found by id
@@ -185,6 +185,41 @@ test('21D3: a duplicate pronunciation model is re-highlighted on this page, re-s
   assert.equal(sentenceOnBoardPage(log, 'I have worked with international customers for several years'), 2);
   assert.equal(sentenceCardIdOnCurrentPage(log, 'I have worked with international customers for several years'), 'showSentence-11');
   assert.equal(sentenceCardIdOnCurrentPage([...log, { action: 'newPage', title: 'p3' }], 'I have worked with international customers for several years'), null);
+});
+
+// ── Task 21 fix round 1 (§D) ──
+test('21D r1 I3: a card on the CURRENT page ⇒ rehighlight even when the sentence is also on an earlier page', () => {
+  const S = 'I have worked with international customers for several years.';
+  const log = [
+    { action: 'showSentence', id: 'a1', sentence: S }, { action: 'newPage', title: 'p2' }, { action: 'newPage', title: 'p3' },
+    { action: 'showSentence', id: 'a2', sentence: S },
+  ];
+  const page = sentenceOnBoardPage(log, S);
+  assert.equal(page, 1);
+  assert.equal(currentBoardPage(log), 3);
+  const id = sentenceCardIdOnCurrentPage(log, S);
+  assert.equal(id, 'a2');
+  assert.equal(duplicateSentenceAction({ page, currentPage: 3, pronunciationModel: true, onCurrentPage: !!id }), 'rehighlight');
+  // only on page 1 ⇒ reshow
+  assert.equal(duplicateSentenceAction({ page: 1, currentPage: 3, pronunciationModel: true, onCurrentPage: false }), 'reshow');
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch })'));
+});
+test('21D r1 m: a same-batch duplicate is drawn once', () => {
+  assert.equal(duplicateSentenceAction({ page: 1, currentPage: 1, pronunciationModel: true, onCurrentPage: false, inThisBatch: true }), 'skip');
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes('const inThisBatch = sentenceOnBoardPage(seenThisBatch, c.sentence) !== null;'));
+});
+test('21D r1 m (D1): the card fallback never arms a question card or the student\'s own sentence', () => {
+  const turn = 'Here is the first model. Listen and repeat after me.';
+  assert.equal(detectPronunciationTarget(turn, T, { shownSentence: 'What do you sell at work?' }), null);
+  assert.equal(detectPronunciationTarget('Here is what you said. Listen and try again.', T, { shownSentence: 'I sell washing machine in my company.', studentLast: 'Uh, I sell washing machine in my company.' }), null);
+  assert.equal(detectPronunciationTarget(turn, T, { shownSentence: 'I sell washing machines in my company.', studentLast: 'I sell washing machine in my company.' })?.source, 'card');
+});
+test('21D r1 m (D2): a single word with try / repeat / say in its own sentence stays a word target', () => {
+  assert.deepEqual(detectPronunciationTarget('Good. Try "customer" again.', T), { referenceText: 'customer', kind: 'word' });
+  assert.deepEqual(detectPronunciationTarget('Nice. Repeat after me, "schedule".', T), { referenceText: 'schedule', kind: 'word' });
+  assert.equal(detectPronunciationTarget('"Met" is the past form. Say the sentence again.', T), null);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

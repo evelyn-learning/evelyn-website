@@ -6535,7 +6535,8 @@ export function VoiceTutorRealtime({
       // page "another page".
       const dupSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
       const dupPronModel = opts?.pronunciationModel === true || (!opts?.sentenceBoardAuto && !!pronunciationTargetsOf(dupSeg?.metadata));
-      const dupCurrentPage = currentBoardPage(log) + (pendingAdvanceNewPageRef.current && !pendingAdvanceNewPageRef.current.afterTurn ? 1 : 0);
+      const dupPageOpening = !!pendingAdvanceNewPageRef.current && !pendingAdvanceNewPageRef.current.afterTurn;
+      const dupCurrentPage = currentBoardPage(log) + (dupPageOpening ? 1 : 0);
       commands = commands.filter((cmd) => {
         const c = cmd as unknown as { action: string; sentence?: unknown } & Record<string, unknown>;
         if (c.action !== 'showSentence' || typeof c.sentence !== 'string') return true;
@@ -6543,7 +6544,11 @@ export function VoiceTutorRealtime({
         // pronunciation target when the text quotes none).
         if (!opts?.sentenceBoardAuto) turnShownSentenceRef.current = c.sentence;
         const page = sentenceOnBoardPage([...log, ...seenThisBatch], c.sentence, currentPageAuto);
-        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel });
+        // Fix round 1 (I3 / m): the card already on the page this one lands on
+        // (a deferred page opening with it ⇒ none), and a same-batch copy.
+        const existingId = dupPronModel && !dupPageOpening ? sentenceCardIdOnCurrentPage(log, c.sentence) : null;
+        const inThisBatch = sentenceOnBoardPage(seenThisBatch, c.sentence) !== null;
+        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch });
         if (dupAction === 'draw') { seenThisBatch.push(c); return true; }
         if (dupAction === 'reshow') {
           onDebugEvent?.('show_sentence_duplicate_reshown', `page ${page} → ${dupCurrentPage}: "${c.sentence.slice(0, 60)}"`);
@@ -6551,7 +6556,6 @@ export function VoiceTutorRealtime({
           return true;
         }
         if (dupAction === 'rehighlight') {
-          const existingId = sentenceCardIdOnCurrentPage(log, c.sentence);
           if (existingId) {
             // reuse the dedup scroll (dedup_scroll_to_existing) with a pulse
             onWhiteboardCommand([{ action: 'scrollTo', target: 'item', targetId: existingId, pulse: true } as unknown as WhiteboardCommand]);
@@ -20044,7 +20048,7 @@ export function VoiceTutorRealtime({
         const pronTargets = pronunciationTargetsOf(pronSeg?.metadata);
         // Task 21 §D1: the sentence this turn's show_sentence put up is the
         // target when the text asks to listen / repeat and quotes none.
-        const auto = pronTargets ? detectPronunciationTarget(fullText, pronTargets, { shownSentence: turnShownSentenceRef.current }) : null;
+        const auto = pronTargets ? detectPronunciationTarget(fullText, pronTargets, { shownSentence: turnShownSentenceRef.current, studentLast: sentenceStressRef.current.studentLast }) : null;
         if (auto?.source === 'card') {
           armPronunciationCheckRef.current(auto.referenceText, auto.kind);
           onDebugEvent?.('pronunciation_auto_armed', `"${auto.referenceText}" source=card`);

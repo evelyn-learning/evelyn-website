@@ -961,8 +961,18 @@ export function sentenceCardIdOnCurrentPage(commands: ReadonlyArray<{ action: st
  * and pulsed ('rehighlight'), on another page it is drawn again ('reshow').
  * Everything else keeps the Task 14 §I skip.
  */
-export function duplicateSentenceAction(input: { page: number | null; currentPage: number; pronunciationModel: boolean }): 'draw' | 'skip' | 'rehighlight' | 'reshow' {
+export function duplicateSentenceAction(input: {
+  page: number | null; currentPage: number; pronunciationModel: boolean;
+  /** fix round 1 (I3): a card saying it already stands on the page the new card would land on */
+  onCurrentPage?: boolean;
+  /** fix round 1 (m): the same sentence is already being drawn in this batch */
+  inThisBatch?: boolean;
+}): 'draw' | 'skip' | 'rehighlight' | 'reshow' {
+  if (input.inThisBatch) return 'skip';
+  // Fix round 1 (I3): the CURRENT page first — a model also standing on an
+  // earlier page is re-highlighted here, never drawn a second time here.
+  if (input.pronunciationModel && input.onCurrentPage) return 'rehighlight';
   if (input.page === null) return 'draw';
   if (!input.pronunciationModel) return 'skip';
-  return input.page === input.currentPage ? 'rehighlight' : 'reshow';
+  return 'reshow';
 }

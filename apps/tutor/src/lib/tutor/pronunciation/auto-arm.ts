@@ -37,10 +37,10 @@ export function pronunciationTargetsOf(metadata: Record<string, unknown> | undef
 
 /** "…", “…”, 「…」, 『…』, ‘…’ spans (inner text, trimmed) with the text
  *  before each, in order. */
-function quotedSpansAt(text: string): Array<{ text: string; before: string }> {
+function quotedSpansAt(text: string): Array<{ text: string; before: string; after: string }> {
   const t = text ?? '';
   return [...t.matchAll(/"([^"\n]+)"|“([^”\n]+)”|「([^」\n]+)」|『([^』\n]+)』|‘((?:[^’\n]|’(?=\p{L}))+)’/gu)]
-    .map((m) => ({ text: (m.slice(1).find((g) => g !== undefined) ?? '').trim(), before: t.slice(0, m.index ?? 0) }))
+    .map((m) => ({ text: (m.slice(1).find((g) => g !== undefined) ?? '').trim(), before: t.slice(0, m.index ?? 0), after: t.slice((m.index ?? 0) + m[0].length) }))
     .filter((x) => !!x.text);
 }
 
@@ -53,13 +53,26 @@ const isStarterQuote = (q: { text: string; before: string }) => STARTER_LEAD_RE.
 /** Task 21 §D2: a quote under 3 words is a target only when the turn asks
  *  for it right there — "Please say "will" once more", "Repeat "schedule"",
  *  or a colon introduction ("Listen: "schedule." Repeat after me."). */
-const SHORT_TARGET_LEAD_RE = /(?:\b(?:say|repeat|pronounce|practi[sc]e)\b(?:\s+(?:the\s+)?(?:word|phrase|sound))?|[:：])\s*$/i;
+const SHORT_TARGET_LEAD_RE = /[:：]\s*$/;
+/** Fix round 1 (m): a try / repeat / say verb anywhere in the quote's own
+ *  sentence ('Try "customer" again.', 'Repeat after me, "schedule".'). */
+const SHORT_TARGET_VERB_RE = /\b(?:say|try|repeat|pronounce|practi[sc]e)\b/i;
+function quoteSentence(q: { before: string; after: string; text: string }): string {
+  // the quote's own text may end in "." — the sentence runs on to the next end after the quote
+  const head = q.before.slice(Math.max(q.before.search(/[^.!?。！？]*$/), 0));
+  const tail = /^[^.!?。！？]*/.exec(q.after)?.[0] ?? '';
+  return `${head} ${tail}`;
+}
+const isShortTargetAsked = (q: { before: string; after: string; text: string }) => SHORT_TARGET_LEAD_RE.test(q.before) || SHORT_TARGET_VERB_RE.test(quoteSentence(q));
 const SHORT_TARGET_MAX_WORDS = 2;
 /** Task 21 §D1 (GDI run 9, 889 s: "Here is the first model. Listen and repeat
  *  after me." — the model only in a show_sentence call): a listen / repeat /
  *  say-it ask. */
 const CARD_ASK_RE = /\b(?:listen|repeat|after me|say (?:it|this|that|the (?:sentence|model|line|phrase)))\b/i;
 
+const FILLERS = new Set(['uh', 'um', 'er', 'erm', 'hmm', 'ah', 'oh']);
+/** Fix round 1: lower-cased words with hesitations dropped. */
+const fillerFree = (s: string) => norm(s).split(' ').filter((w) => w && !FILLERS.has(w)).join(' ');
 /** Lower-cased Latin words, punctuation dropped. */
 const norm = (s: string) => ((s ?? '').toLowerCase().match(/[a-z0-9]+(?:['’][a-z0-9]+)*/g) ?? []).join(' ');
 
@@ -93,7 +106,10 @@ export function syllablePatternFor(turnText: string, word: string): string | und
 export function detectPronunciationTarget(
   turnText: string,
   targets: PronunciationTargets,
-  opts?: { /** Task 21 §D1: the sentence this turn's show_sentence (or auto card) put up */ shownSentence?: string | null },
+  opts?: {
+    /** Task 21 §D1: the sentence this turn's show_sentence (or auto card) put up */ shownSentence?: string | null;
+    /** fix round 1 (m): the student's last utterance — a card repeating it is no model */ studentLast?: string | null;
+  },
 ): PronunciationAutoTarget | null {
   const quoted = quotedSpansAt(turnText);
   const spans = quoted.map((q) => q.text);
@@ -107,11 +123,12 @@ export function detectPronunciationTarget(
     const found = n ? listed.find((t) => norm(t.text) === n) : undefined;
     if (found) { hit = found; break; }
   }
-  if (!hit && SAY_ASK_RE.test(lastSentences(turnText, 2))) {
+  // fix round 1 (m): 'Try "customer" again.' is an ask too
+  if (!hit && (SAY_ASK_RE.test(lastSentences(turnText, 2)) || /\btry\s+["“]/i.test(lastSentences(turnText, 2)))) {
     const last = [...quoted].reverse().find((q) => {
       const n = norm(q.text).split(' ').filter(Boolean).length;
       if (!/[A-Za-z]/.test(q.text) || n > 25 || isStarterQuote(q)) return false;
-      return n > SHORT_TARGET_MAX_WORDS || SHORT_TARGET_LEAD_RE.test(q.before);
+      return n > SHORT_TARGET_MAX_WORDS || isShortTargetAsked(q);
     });
     if (last) {
       const text = last.text.replace(/[.,!?;:]+$/u, '').trim();
@@ -121,7 +138,9 @@ export function detectPronunciationTarget(
   // Task 21 §D1: nothing quoted to arm, a listen / repeat ask, and a sentence
   // shown this turn ⇒ that sentence is the target.
   const shown = (opts?.shownSentence ?? '').trim();
-  if (!hit && shown && /[A-Za-z]/.test(shown) && CARD_ASK_RE.test(lastSentences(turnText, 2))) {
+  // Fix round 1 (m): never a question card, never the student's own sentence.
+  const sameAsStudent = !!opts?.studentLast && fillerFree(shown) !== '' && fillerFree(shown) === fillerFree(opts.studentLast);
+  if (!hit && shown && /[A-Za-z]/.test(shown) && !/[?？]["”’)]?\s*$/.test(shown) && !sameAsStudent && CARD_ASK_RE.test(lastSentences(turnText, 2))) {
     const text = shown.replace(/[,;:]+$/u, '').trim();
     return { referenceText: text, kind: norm(text).split(' ').length === 1 ? 'word' : 'sentence', source: 'card' };
   }
