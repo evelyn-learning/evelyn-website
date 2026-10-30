@@ -16,7 +16,9 @@
  */
 
 /** 'echo' (GDI run 3): the tutor quoting the student's own words back (often
- *  the wrong ones) — never a card. */
+ *  the wrong ones) — never a card, unless the check found the student's
+ *  sentence correct and the turn corrects nothing (planSentenceBoard, Task 15
+ *  §A): then it is a model card. */
 export interface QuotedSentence {
   sentence: string; kind: 'correction' | 'model' | 'echo'; emphasis: string[];
   /** Task 15 §A — why a model card exists when the student's sentence was
@@ -153,13 +155,15 @@ export function planSentenceBoard(input: {
     distinct.push({ s, n });
   }
   const kept = distinct.filter((d) => !distinct.some((o) => o !== d && o.n.length > d.n.length && ` ${o.n} `.includes(` ${d.n} `)));
-  const classified = kept
-    .map((d, i) => {
-      const q = classifyQuotedSentence(d.s, input.studentLast);
-      return { q: q.kind === 'echo' && studentCorrect ? { sentence: q.sentence, kind: 'model' as const, emphasis: [], source: 'echo' as const } : q, len: d.n.length, i };
-    })
+  const raw = kept.map((d, i) => ({ q: classifyQuotedSentence(d.s, input.studentLast), len: d.n.length, i }));
+  // Fix round 1 (I2): a turn that corrects the student's sentence says it was
+  // NOT right as it stood (it passed the check "for the task as stated") —
+  // no echo promotion, no checked-sentence card; the correction is the card.
+  const promote = studentCorrect && !raw.some((c) => c.q.kind === 'correction');
+  const classified = raw
+    .map((c) => (c.q.kind === 'echo' && promote ? { ...c, q: { sentence: c.q.sentence, kind: 'model' as const, emphasis: [], source: 'echo' as const } } : c))
     .filter((c) => c.q.kind !== 'echo');
-  if (studentCorrect && input.checkedSentence) {
+  if (promote && input.checkedSentence) {
     const checked = qualifyingSpan(input.checkedSentence);
     if (checked && isCardCandidate(checked) && sentenceContains(input.tutorText, checked)
       && !classified.some((c) => sameSentence(c.q.sentence, checked))) {

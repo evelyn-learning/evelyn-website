@@ -370,6 +370,14 @@ test('A: a correction turn with a wrong (studentCorrect:false) checked sentence 
   assert.equal(cards[0].kind, 'correction');
   assert.equal(cards[0].sentence, 'I haven\'t taken leave from work.');
 });
+test('A fix round 1 (I2): a turn that corrects the student plans no echo / checked model card even when checked correct', () => {
+  const student = 'I went to office yesterday.';
+  const tutor = 'You said "I went to office yesterday." Add "the": "I went to the office yesterday."';
+  const cards = planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: false, studentCorrect: true, checkedSentence: student });
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].kind, 'correction');
+  assert.equal(cards[0].sentence, 'I went to the office yesterday.');
+});
 test('A: VTR passes the check to planSentenceBoard and tags the event source', () => {
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   const at = VTR.indexOf('const cards = planSentenceBoard({');
