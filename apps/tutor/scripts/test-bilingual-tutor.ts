@@ -512,6 +512,8 @@ test('retry cap: every repeat-ask form from embed-1792254012923 is counted', () 
   // a negated ask in one sentence does not hide a real ask in the next
   assert.equal(isRetryAsk('No need to repeat it. Now try again with a new verb.'), true);
   assert.equal(isNegatedAsk('Let\'s try again.'), false);
+  // an English model sentence with its own period inside a Japanese ask still counts
+  assert.equal(isRetryAsk('もう一度、"I went to Kyoto." と言ってみてください。'), true);
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('pendingRetryCapNoteRef.current = retryCapNote(retryAskStreakRef.current);'));
   assert.ok(!vtr.includes('retryAskStreakRef.current = 0;\n            onDebugEvent'), 'the streak must not be zeroed on plant');

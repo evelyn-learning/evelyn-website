@@ -53,13 +53,20 @@ export function isNegatedAsk(sentence: string): boolean {
 }
 
 /** Does this tutor turn ask the student to say something again? Sentence by
- *  sentence; a negated ask (isNegatedAsk) does not count. */
+ *  sentence; a negated ask (isNegatedAsk) does not count. A Japanese ask is
+ *  read per Japanese sentence (。！？!? / newline — the boundaries
+ *  RETRY_ASK_JA_RE already stops at), so an English model sentence with its
+ *  own period inside the ask (「もう一度、"I went to Kyoto." と言ってみて
+ *  ください」) still counts. */
 export function isRetryAsk(tutorText: string): boolean {
   const t = tutorText ?? '';
+  for (const raw of t.split(/(?<=[。！？!?])\s*|\n+/)) {
+    const s = raw.trim();
+    if (s && RETRY_ASK_JA_RE.test(s) && !NEGATED_JA_RE.test(s)) return true;
+  }
   for (const raw of t.split(/(?<=[。！？.!?])\s*|\n+/)) {
     const s = raw.trim();
-    if (!s) continue;
-    if ((RETRY_ASK_JA_RE.test(s) || RETRY_ASK_EN_RE.test(s)) && !isNegatedAsk(s)) return true;
+    if (s && RETRY_ASK_EN_RE.test(s) && !isNegatedAsk(s)) return true;
   }
   return false;
 }
