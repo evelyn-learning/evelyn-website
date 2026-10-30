@@ -876,6 +876,22 @@ export const EXPECTED_REPEAT_END_LEAD_MS = 500;
  *  its start). */
 export const EXPECTED_REPEAT_MIN_FROM_START_MS = 1000;
 
+/** Fix round 3 (R1): estimated ms from a script's playback start to where
+ *  `quoted` begins in it — its character offset (at the opening quote mark,
+ *  when one precedes it) ÷ the script's length × its duration. 0 when the
+ *  text is not found or the script has no end stamp (the whole-line floor). */
+export function quoteOffsetMs(s: RecentTtsScript, quoted: string): number {
+  if (s.spokenEndedAt == null) return 0;
+  const text = s.text ?? '';
+  const core = (quoted ?? '').trim().replace(/[.!?。！？]+$/u, '').toLowerCase();
+  if (!core || !text) return 0;
+  let i = text.toLowerCase().indexOf(core);
+  if (i < 0) return 0;
+  if (i > 0 && /["“「『‘]/.test(text[i - 1]!)) i -= 1;
+  const duration = Math.max(0, s.spokenEndedAt - s.spokenStartedAt);
+  return Math.round((i / text.length) * duration);
+}
+
 /**
  * Expected-repeat exemption (Task 18, GDI run 6): the tutor said `Please say
  * it once more: "Last week, I went golfing with my manager."`, the student
@@ -939,7 +955,11 @@ export function isExpectedRepeat(
   // line can be its own ~0.9 s script — its echo (speaker / Bluetooth delay +
   // onset lag ≈ start + 450 ms) would also sit inside the end lead. An echo
   // starts near the line's START; a repeat starts at its end.
-  if (speechStartedAt < best.spokenStartedAt + EXPECTED_REPEAT_MIN_FROM_START_MS) return false;
+  // Fix round 3 (R1): the floor counts from the estimated start of the QUOTE
+  // inside the script — an echo of just the quoted tail of a longer line
+  // ("Please say it once more: "I went golfing."") starts near the quote.
+  const quoteStart = best.spokenStartedAt + quoteOffsetMs(best, expectedRepeat.text);
+  if (speechStartedAt < quoteStart + EXPECTED_REPEAT_MIN_FROM_START_MS) return false;
   return speechStartedAt >= best.spokenEndedAt - EXPECTED_REPEAT_END_LEAD_MS;
 }
 

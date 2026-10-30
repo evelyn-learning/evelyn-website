@@ -1589,6 +1589,18 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('§A R2: live repeat shape (long line, onset at end − 300 ms) ⇒ not dropped', live.verdict === 'new_turn', `${live.verdict} (${live.reason})`);
 }
 
+// ── Task 18 fix round 3 (R1): an echo of just the quoted tail of a longer line ──
+{
+  const now = 4_000_000;
+  const x = 'I went golfing.';
+  const start = now - 5000;
+  const line: RecentTtsScript[] = [{ text: `Please say it once more: "${x}"`, spokenStartedAt: start, spokenEndedAt: start + 2600 }];
+  const tailEcho = classifyHeuristic({ transcript: x, recentTtsScripts: line, now, productionState: 'listening', speechStartedAt: start + 2600 - 450, expectedRepeat: { text: x } });
+  check('§A R3: echo of the quoted tail (2.6 s line, onset 450 ms before the end) ⇒ drop', tailEcho.verdict === 'drop_self_voice', `${tailEcho.verdict} (${tailEcho.reason})`);
+  const repeat = classifyHeuristic({ transcript: x, recentTtsScripts: line, now, productionState: 'listening', speechStartedAt: start + 2600 + 300, expectedRepeat: { text: x } });
+  check('§A R3: the same line, onset 300 ms after the end ⇒ not dropped', repeat.verdict === 'new_turn', `${repeat.verdict} (${repeat.reason})`);
+}
+
 // ── Task 18 §A: expectedRepeatFor (the caller's input) ──
 {
   const ask = 'Please say it once more: "Last week, I went golfing with my manager."';
