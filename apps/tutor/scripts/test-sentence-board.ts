@@ -863,5 +863,25 @@ test('21B r1 m (B2): emphasis marks the edited position; reflexive / it-that fli
   assert.ok(canvas.includes('(!at || at.has((i - 1) / 2))'));
 });
 
+// ── Task 21 fix round 2 (§B I2 residual): implicit-correction cues on the medium path ──
+test('21B r2 I2: implicit corrections block the medium-confidence card; silent acceptance still cards', () => {
+  const st = 'I worked on project to increase sales.';
+  const m = (t: string, s2 = st) => planSentenceBoard({ tutorText: t, studentLast: s2, renderedThisTurn: false, affirmFallback: true, checkedMedium: true, checkedSentence: s2 });
+  for (const t of [
+    'Nice! Just remember the article before project. What was the result?',
+    'Good. Remember the article before project next time. What was the result?',
+    'Good idea. In English we usually put an article there. What was the result?',
+    'Okay. Keep in mind we need an article there. What was the result?',
+  ]) assert.deepEqual(m(t), [], t);
+  assert.deepEqual(m('I understand what you mean. What happened next?', 'I working in sales department every day.'), [], 'what you mean');
+  // accepted residual: cue-free silent acceptance
+  assert.equal(m('I see. What else do you do there?', 'I am responsible of the sales team.').length, 1);
+  // 693 s still → card
+  const st3 = 'I worked on the selling with a smile project at my company which I am very proud of.';
+  assert.equal(m('Can you tell me what the project involved, and what was your part in it? Start with "My part was..."', st3).length, 1);
+  // the high-confidence path is unchanged by the medium cues
+  assert.equal(planSentenceBoard({ tutorText: 'Good. Remember the article before project next time.', studentLast: 'I worked on the project to increase sales.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I worked on the project to increase sales.' }).length, 1);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

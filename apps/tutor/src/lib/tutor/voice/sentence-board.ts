@@ -492,6 +492,10 @@ export function recastsStudentSentence(tutorText: string, student: string): bool
 
 /** Task 21 fix round 1 (I2): cues that a medium-confidence "correct" is not. */
 const MEDIUM_CUE_RE = /\bremember to\b|\bdon['’]t forget\b|\badd ["“]|\bthe meaning is clear\b|\bmeaning is clear\b|\bidea is clear\b/i;
+/** Fix round 2 (I2 residual): implicit corrections without the exact cue —
+ *  "Just remember the article before project.", "In English we usually put an
+ *  article there.", "Keep in mind …", "I understand what you mean." */
+const MEDIUM_CUE_EXTRA_RE = /\bremember\b|\bkeep in mind\b|\b(?:an? |the )?article\b|\bwe (?:usually|normally|often) (?:say|put|use)\b|\bwhat you mean\b|\bnext time,? (?:say|use|try|add)\b/i;
 /** Any quoted span (any length) that is not a sentence starter. */
 function hasNonStarterQuote(text: string): boolean {
   for (const m of text.matchAll(QUOTE_RE)) {
@@ -674,7 +678,7 @@ export function planSentenceBoard(input: {
     && !classified.some((c) => c.q.kind === 'correction')
     && !raw.some((c) => c.q.kind === 'echo')
     && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '')
-    && !MEDIUM_CUE_RE.test(input.tutorText ?? '')
+    && !MEDIUM_CUE_RE.test(input.tutorText ?? '') && !MEDIUM_CUE_EXTRA_RE.test(input.tutorText ?? '')
     && !hasNonStarterQuote(input.tutorText ?? '');
   // Task 21 §B3 (GDI run 9, 626 s: `"Lots of health benefits" is exactly
   // right` carded the 4-word fragment): a quoted fragment of the checked
