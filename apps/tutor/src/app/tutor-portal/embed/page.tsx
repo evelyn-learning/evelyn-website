@@ -266,6 +266,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'sentence_board_auto',
   //   a show_sentence already on the board (any page) was not drawn again:
   'show_sentence_duplicate_skipped',
+  //   Task 22 §E: the student read the board question aloud — no brain turn:
+  'board_read_aloud',
   //   Task 21 §D3: a duplicate pronunciation model re-highlighted / drawn again:
   'show_sentence_duplicate_rehighlighted', 'show_sentence_duplicate_reshown',
   //   fixed-script lessons: the client moved / held the segment cursor, FACT note delivered:
