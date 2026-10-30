@@ -13,7 +13,7 @@ import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } f
 import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
-import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage } from '@/lib/tutor/voice/sentence-board';
+import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
@@ -4930,6 +4930,8 @@ export function VoiceTutorRealtime({
   const fixedScriptOutlineShownRef = useRef(false);
   secondTutorLanguageRef.current = secondTutorLanguage(tutorLanguages);
   const sentenceStressRef = useRef<{ studentLast: string | null; cards: Array<{ sentence: string; emphasis: string[] }> }>({ studentLast: null, cards: [] });
+  /** Task 21 §D1: the sentence this turn's brain show_sentence put up (reset per turn). */
+  const turnShownSentenceRef = useRef<string | null>(null);
   // Task 20 §G3: the previous tutor turn the sentence board saw.
   const prevBoardTutorTextRef = useRef<string | null>(null);
   /** The Cartesia transcript only (rewriteForTTS first, stress after —
@@ -6399,7 +6401,7 @@ export function VoiceTutorRealtime({
   // arrives AFTER the turn's `done`, so the live TTS dispatch count no
   // longer describes its introducing sentence — the server tells us which
   // 1-based sentence spoke the content and the render buffers against THAT.
-  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean }): Promise<WhiteboardCommandResult> => {
+  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean; /** Task 21 §D3: the client's pronunciation-target card (a model to repeat) */ pronunciationModel?: boolean }): Promise<WhiteboardCommandResult> => {
     turnHadToolCallRef.current = true;
     // Structured entry log — gives us the shape of every batch arriving
     // at the handler (from Realtime function_call, from text-parse, or
@@ -6521,11 +6523,42 @@ export function VoiceTutorRealtime({
       const log = whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>;
       const currentPageAuto = opts?.sentenceBoardAuto ? new Set<string>() : autoCardIdsOnCurrentPage(log, autoSentenceCardIdsRef.current);
       const seenThisBatch: Array<{ action: string } & Record<string, unknown>> = [];
+      // Task 21 §D3: in the pronunciation part (the segment lists targets) a
+      // brain card, or the client's target card, is a model to repeat. A
+      // deferred part page about to open with this card makes every earlier
+      // page "another page".
+      const dupSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
+      const dupPronModel = opts?.pronunciationModel === true || (!opts?.sentenceBoardAuto && !!pronunciationTargetsOf(dupSeg?.metadata));
+      const dupCurrentPage = currentBoardPage(log) + (pendingAdvanceNewPageRef.current && !pendingAdvanceNewPageRef.current.afterTurn ? 1 : 0);
       commands = commands.filter((cmd) => {
         const c = cmd as unknown as { action: string; sentence?: unknown } & Record<string, unknown>;
         if (c.action !== 'showSentence' || typeof c.sentence !== 'string') return true;
+        // Task 21 §D1: the sentence this turn's brain card shows (a possible
+        // pronunciation target when the text quotes none).
+        if (!opts?.sentenceBoardAuto) turnShownSentenceRef.current = c.sentence;
         const page = sentenceOnBoardPage([...log, ...seenThisBatch], c.sentence, currentPageAuto);
-        if (page === null) { seenThisBatch.push(c); return true; }
+        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel });
+        if (dupAction === 'draw') { seenThisBatch.push(c); return true; }
+        if (dupAction === 'reshow') {
+          onDebugEvent?.('show_sentence_duplicate_reshown', `page ${page} → ${dupCurrentPage}: "${c.sentence.slice(0, 60)}"`);
+          seenThisBatch.push(c);
+          return true;
+        }
+        if (dupAction === 'rehighlight') {
+          const existingId = sentenceCardIdOnCurrentPage(log, c.sentence);
+          if (existingId) {
+            // reuse the dedup scroll (dedup_scroll_to_existing) with a pulse
+            onWhiteboardCommand([{ action: 'scrollTo', target: 'item', targetId: existingId, pulse: true } as unknown as WhiteboardCommand]);
+            onDebugEvent?.('dedup_scroll_to_existing', `${existingId} (pronunciation model)`);
+            onDebugEvent?.('show_sentence_duplicate_rehighlighted', `page ${page}: ${existingId} "${c.sentence.slice(0, 60)}"`);
+            duplicateSentenceNotes.push(`show_sentence: already on the board (this page) — scrolled to it and highlighted; refer to it instead of writing it again.`);
+            return false;
+          }
+          // the card is on this page only as a handwrite line / not found ⇒ draw it
+          onDebugEvent?.('show_sentence_duplicate_reshown', `page ${page} (no card id): "${c.sentence.slice(0, 60)}"`);
+          seenThisBatch.push(c);
+          return true;
+        }
         onDebugEvent?.('show_sentence_duplicate_skipped', `page ${page}: "${c.sentence.slice(0, 60)}"`);
         // A soft skip, not a rejection: a rejection kills and retries the
         // whole turn, and the sentence IS on the board.
@@ -11986,6 +12019,7 @@ export function VoiceTutorRealtime({
         studentLast: /^\s*\[/.test(transcript) ? sentenceStressRef.current.studentLast : transcript,
         cards: [],
       };
+      turnShownSentenceRef.current = null;
     }
     // R47 Task 1: fresh per-turn objective-credit slot. A kill site below
     // may set this DURING this turn's retry loop; must not carry a signal
@@ -20000,8 +20034,13 @@ export function VoiceTutorRealtime({
       if (pronunciationActive && !opts?.prefetchOnly && !totalToolNamesSeen.includes('request_pronunciation_check')) {
         const pronSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
         const pronTargets = pronunciationTargetsOf(pronSeg?.metadata);
-        const auto = pronTargets ? detectPronunciationTarget(fullText, pronTargets) : null;
-        if (auto) {
+        // Task 21 §D1: the sentence this turn's show_sentence put up is the
+        // target when the text asks to listen / repeat and quotes none.
+        const auto = pronTargets ? detectPronunciationTarget(fullText, pronTargets, { shownSentence: turnShownSentenceRef.current }) : null;
+        if (auto?.source === 'card') {
+          armPronunciationCheckRef.current(auto.referenceText, auto.kind);
+          onDebugEvent?.('pronunciation_auto_armed', `"${auto.referenceText}" source=card`);
+        } else if (auto) {
           armPronunciationCheckRef.current(auto.referenceText, auto.kind);
           onDebugEvent?.('pronunciation_auto_armed', `"${auto.referenceText}"`);
           const cmd = {
@@ -20011,7 +20050,8 @@ export function VoiceTutorRealtime({
           } as WhiteboardCommand;
           const anchor = sentenceAnchorIndex(turnNarrationRef.current, auto.referenceText);
           try {
-            const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true } : { sentenceBoardAuto: true });
+            // Task 21 §D3: a model to repeat — a duplicate is re-highlighted / re-shown, never skipped.
+            const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true, pronunciationModel: true } : { sentenceBoardAuto: true, pronunciationModel: true });
             for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
           } catch { /* the arm stands without the card */ }
         } else if (shouldRearmPronunciation({

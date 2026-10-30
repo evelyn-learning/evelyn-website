@@ -6,6 +6,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion } from '../src/lib/tutor/pronunciation/auto-arm';
+import { duplicateSentenceAction, currentBoardPage, sentenceCardIdOnCurrentPage, sentenceOnBoardPage } from '../src/lib/tutor/voice/sentence-board';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { isStrictRepeatAsk } from '../src/lib/tutor/voice/correct-retry';
 
@@ -131,6 +132,59 @@ test('20F: VTR wiring — no correct-retry note on a measured turn; redelivery e
   assert.ok(at > 0 && gate > at && gate < plant, 'the measured gate precedes both correct-retry plants');
   assert.ok(VTR.includes("onDebugEvent?.('pronunciation_note_redelivered'"));
   assert.ok(VTR.includes('if (measured) lastMeasuredPronunciationRef.current = {'));
+});
+
+// ── Task 21 §D (GDI run 9, embed-1793389442113) ──
+test('21D1: 889 s — the model only in a show_sentence call ⇒ armed from the card (source card)', () => {
+  const turn = 'Option two, a complete sentence, it is. Here is the first model. Listen and repeat after me.';
+  assert.deepEqual(detectPronunciationTarget(turn, T, { shownSentence: 'I have worked with international customers for several years.' }),
+    { referenceText: 'I have worked with international customers for several years.', kind: 'sentence', source: 'card' });
+  assert.equal(detectPronunciationTarget(turn, T), null, 'no card, nothing to arm');
+  // no listen / repeat ask ⇒ the card is not a target
+  assert.equal(detectPronunciationTarget('Here is a sentence from earlier. What does it mean?', T, { shownSentence: 'I sell washing machines.' }), null);
+  // a quoted target wins over the card
+  assert.equal(detectPronunciationTarget('Please say "I was responsible for communicating with our customers." after me.', T, { shownSentence: 'I sell washing machines.' })?.source, undefined);
+});
+test('21D2: 910 s — a starter quote is never armed; a short quote only when asked for', () => {
+  assert.equal(detectPronunciationTarget('You repeated it clearly. Now, can you tell me one thing you would like to say to a customer next week? Start with "I will..."', T), null);
+  assert.equal(detectPronunciationTarget('Say a sentence starting with "I have worked" for me.', T), null, 'starter lead');
+  assert.equal(detectPronunciationTarget('Say one sentence about it, "my plan…"', T), null, 'trailing ellipsis');
+  assert.equal(detectPronunciationTarget('"Met" is the past form. Say the sentence again.', T), null, 'a 1-word quote with no ask for it');
+  // 931 s: the explicit word ask stays a word target
+  assert.deepEqual(detectPronunciationTarget('The measured check gave low marks for "will", especially the /l/ sound at the end, so let\'s practice that one word. Please say "will" once more, slowly.', T),
+    { referenceText: 'will', kind: 'word' });
+  // pre-existing: "say "project manager"" and "Listen: "schedule." Repeat after me." still arm
+  assert.deepEqual(detectPronunciationTarget('Good. Now say "project manager" for me.', T), { referenceText: 'project manager', kind: 'sentence' });
+  assert.deepEqual(detectPronunciationTarget('Listen: "schedule." Repeat after me.', T), { referenceText: 'schedule', kind: 'word' });
+});
+test('21D1/D3: VTR wiring — card source, per-turn reset, pronunciation-model cards', () => {
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes('detectPronunciationTarget(fullText, pronTargets, { shownSentence: turnShownSentenceRef.current })'));
+  assert.ok(VTR.includes("onDebugEvent?.('pronunciation_auto_armed', `\"${auto.referenceText}\" source=card`);"));
+  assert.ok(VTR.includes('turnShownSentenceRef.current = null;'));
+  assert.ok(VTR.includes('if (!opts?.sentenceBoardAuto) turnShownSentenceRef.current = c.sentence;'));
+  assert.ok(VTR.includes('sentenceBoardAuto: true, pronunciationModel: true }'));
+  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel })'));
+  assert.ok(VTR.includes("'show_sentence_duplicate_rehighlighted'") && VTR.includes("'show_sentence_duplicate_reshown'"));
+  assert.ok(VTR.includes("target: 'item', targetId: existingId, pulse: true"));
+  const embed = readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8');
+  assert.ok(embed.includes("'show_sentence_duplicate_rehighlighted', 'show_sentence_duplicate_reshown'"));
+  const canvas = readFileSync(join(__dirname, '..', 'src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx'), 'utf8');
+  assert.ok(canvas.includes('(cmd as any).pulse === true'));
+});
+test('21D3: a duplicate pronunciation model is re-highlighted on this page, re-shown from another, never skipped', () => {
+  assert.equal(duplicateSentenceAction({ page: null, currentPage: 9, pronunciationModel: true }), 'draw');
+  assert.equal(duplicateSentenceAction({ page: 9, currentPage: 9, pronunciationModel: true }), 'rehighlight');
+  assert.equal(duplicateSentenceAction({ page: 7, currentPage: 9, pronunciationModel: true }), 'reshow');
+  assert.equal(duplicateSentenceAction({ page: 7, currentPage: 9, pronunciationModel: false }), 'skip', 'Task 14 §I unchanged elsewhere');
+  // run 9 (1014 s): the sentence on page 9 — the current page — is found by id
+  const log = [
+    { action: 'newPage', title: 'p2' }, { action: 'showSentence', id: 'showSentence-11', sentence: 'I have worked with international customers for several years.' },
+  ];
+  assert.equal(currentBoardPage(log), 2);
+  assert.equal(sentenceOnBoardPage(log, 'I have worked with international customers for several years'), 2);
+  assert.equal(sentenceCardIdOnCurrentPage(log, 'I have worked with international customers for several years'), 'showSentence-11');
+  assert.equal(sentenceCardIdOnCurrentPage([...log, { action: 'newPage', title: 'p3' }], 'I have worked with international customers for several years'), null);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

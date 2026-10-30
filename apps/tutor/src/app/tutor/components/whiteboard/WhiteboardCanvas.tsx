@@ -819,6 +819,17 @@ export function WhiteboardCanvas({
             }
           }
           if (!scrolled) scrollElementIntoContainer(container, itemEl, 'start');
+          // Task 21 §D3 (GDI run 9): a re-asked pronunciation model already on
+          // this page is pulsed so the learner finds the sentence to say.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((cmd as any).pulse === true && typeof itemEl.animate === 'function') {
+            try {
+              itemEl.animate(
+                [{ backgroundColor: 'rgba(250, 204, 21, 0)' }, { backgroundColor: 'rgba(250, 204, 21, 0.35)' }, { backgroundColor: 'rgba(250, 204, 21, 0)' }],
+                { duration: 900, iterations: 2, easing: 'ease-in-out' },
+              );
+            } catch { /* the scroll stands without the pulse */ }
+          }
         }
       }
     };

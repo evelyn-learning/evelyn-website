@@ -20,6 +20,9 @@ export interface PronunciationAutoTarget {
   kind: 'word' | 'sentence';
   /** hyphenated syllable pattern for the target, when the turn gave one */
   gloss?: string;
+  /** Task 21 §D1: the target is the sentence this turn put on the board
+   *  (show_sentence / the auto card), not a quote in the text. */
+  source?: 'card';
 }
 
 /** The segment's targets from `metadata.pronunciation`, or null. */
@@ -32,12 +35,30 @@ export function pronunciationTargetsOf(metadata: Record<string, unknown> | undef
   return words.length || sentences.length ? { words, sentences } : null;
 }
 
-/** "…", “…”, 「…」, 『…』, ‘…’ spans (inner text, trimmed), in order. */
-function quotedSpans(text: string): string[] {
-  return [...(text ?? '').matchAll(/"([^"\n]+)"|“([^”\n]+)”|「([^」\n]+)」|『([^』\n]+)』|‘((?:[^’\n]|’(?=\p{L}))+)’/gu)]
-    .map((m) => (m.slice(1).find((g) => g !== undefined) ?? '').trim())
-    .filter(Boolean);
+/** "…", “…”, 「…」, 『…』, ‘…’ spans (inner text, trimmed) with the text
+ *  before each, in order. */
+function quotedSpansAt(text: string): Array<{ text: string; before: string }> {
+  const t = text ?? '';
+  return [...t.matchAll(/"([^"\n]+)"|“([^”\n]+)”|「([^」\n]+)」|『([^』\n]+)』|‘((?:[^’\n]|’(?=\p{L}))+)’/gu)]
+    .map((m) => ({ text: (m.slice(1).find((g) => g !== undefined) ?? '').trim(), before: t.slice(0, m.index ?? 0) }))
+    .filter((x) => !!x.text);
 }
+
+/** Task 21 §D2 (GDI run 9, 910 s: `Start with "I will..."` was armed as the
+ *  target and the learner's free sentence scored 44/100 against "I will"): a
+ *  sentence STARTER is never a target — a starter lead before the quote, or a
+ *  quote ending in "..." / "…". */
+const STARTER_LEAD_RE = /\b(?:start|starting|begin|beginning)\s+with\s*[:,]?\s*$/i;
+const isStarterQuote = (q: { text: string; before: string }) => STARTER_LEAD_RE.test(q.before) || /(?:\.\.\.|…)\s*$/.test(q.text);
+/** Task 21 §D2: a quote under 3 words is a target only when the turn asks
+ *  for it right there — "Please say "will" once more", "Repeat "schedule"",
+ *  or a colon introduction ("Listen: "schedule." Repeat after me."). */
+const SHORT_TARGET_LEAD_RE = /(?:\b(?:say|repeat|pronounce|practi[sc]e)\b(?:\s+(?:the\s+)?(?:word|phrase|sound))?|[:：])\s*$/i;
+const SHORT_TARGET_MAX_WORDS = 2;
+/** Task 21 §D1 (GDI run 9, 889 s: "Here is the first model. Listen and repeat
+ *  after me." — the model only in a show_sentence call): a listen / repeat /
+ *  say-it ask. */
+const CARD_ASK_RE = /\b(?:listen|repeat|after me|say (?:it|this|that|the (?:sentence|model|line|phrase)))\b/i;
 
 /** Lower-cased Latin words, punctuation dropped. */
 const norm = (s: string) => ((s ?? '').toLowerCase().match(/[a-z0-9]+(?:['’][a-z0-9]+)*/g) ?? []).join(' ');
@@ -69,9 +90,13 @@ export function syllablePatternFor(turnText: string, word: string): string | und
  *     the LAST quoted span of the turn (≤ 25 words, Latin letters) ⇒ it.
  * The gloss is a syllable pattern for a single-word target.
  */
-export function detectPronunciationTarget(turnText: string, targets: PronunciationTargets): PronunciationAutoTarget | null {
-  const spans = quotedSpans(turnText);
-  if (spans.length === 0) return null;
+export function detectPronunciationTarget(
+  turnText: string,
+  targets: PronunciationTargets,
+  opts?: { /** Task 21 §D1: the sentence this turn's show_sentence (or auto card) put up */ shownSentence?: string | null },
+): PronunciationAutoTarget | null {
+  const quoted = quotedSpansAt(turnText);
+  const spans = quoted.map((q) => q.text);
   const listed: Array<{ text: string; kind: 'word' | 'sentence' }> = [
     ...targets.words.map((t) => ({ text: t, kind: 'word' as const })),
     ...targets.sentences.map((t) => ({ text: t, kind: 'sentence' as const })),
@@ -83,11 +108,22 @@ export function detectPronunciationTarget(turnText: string, targets: Pronunciati
     if (found) { hit = found; break; }
   }
   if (!hit && SAY_ASK_RE.test(lastSentences(turnText, 2))) {
-    const last = [...spans].reverse().find((sp) => /[A-Za-z]/.test(sp) && norm(sp).split(' ').length <= 25);
+    const last = [...quoted].reverse().find((q) => {
+      const n = norm(q.text).split(' ').filter(Boolean).length;
+      if (!/[A-Za-z]/.test(q.text) || n > 25 || isStarterQuote(q)) return false;
+      return n > SHORT_TARGET_MAX_WORDS || SHORT_TARGET_LEAD_RE.test(q.before);
+    });
     if (last) {
-      const text = last.replace(/[.,!?;:]+$/u, '').trim();
+      const text = last.text.replace(/[.,!?;:]+$/u, '').trim();
       hit = { text, kind: norm(text).split(' ').length === 1 ? 'word' : 'sentence' };
     }
+  }
+  // Task 21 §D1: nothing quoted to arm, a listen / repeat ask, and a sentence
+  // shown this turn ⇒ that sentence is the target.
+  const shown = (opts?.shownSentence ?? '').trim();
+  if (!hit && shown && /[A-Za-z]/.test(shown) && CARD_ASK_RE.test(lastSentences(turnText, 2))) {
+    const text = shown.replace(/[,;:]+$/u, '').trim();
+    return { referenceText: text, kind: norm(text).split(' ').length === 1 ? 'word' : 'sentence', source: 'card' };
   }
   if (!hit) return null;
   const gloss = hit.kind === 'word' ? syllablePatternFor(turnText, hit.text) : undefined;

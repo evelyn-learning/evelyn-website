@@ -875,3 +875,40 @@ export function autoCardIdsOnCurrentPage(
   }
   return out;
 }
+
+/** The 1-based page the next card lands on (pages = newPage boundaries, as
+ *  sentenceOnBoardPage numbers them). */
+export function currentBoardPage(commands: ReadonlyArray<{ action: string }>): number {
+  let page = 1;
+  for (const c of commands) if (c.action === 'newPage') page++;
+  return page;
+}
+
+/** Id of the showSentence card on the CURRENT page (after the last newPage /
+ *  clear) saying `sentence` (word-for-word, case / punctuation ignored), or null. */
+export function sentenceCardIdOnCurrentPage(commands: ReadonlyArray<{ action: string } & Record<string, unknown>>, sentence: string): string | null {
+  const target = norm(sentence ?? '');
+  if (!target) return null;
+  for (let i = commands.length - 1; i >= 0; i--) {
+    const c = commands[i];
+    if (c.action === 'newPage' || c.action === 'clear') return null;
+    if (c.action === 'showSentence' && typeof c.sentence === 'string' && typeof c.id === 'string' && norm(c.sentence) === target) return c.id;
+  }
+  return null;
+}
+
+/**
+ * Task 21 §D3 (GDI run 9, 1014 s: "The model is "…" Listen, then say it
+ * once" — the sentence stood on page 9, show_sentence_duplicate_skipped, and
+ * the learner "did not see the sentence I needed to speak"): what a duplicate
+ * show_sentence does. `page` = where it already stands (sentenceOnBoardPage),
+ * null = not a duplicate (drawn). A pronunciation model the learner is asked
+ * to repeat is never silently skipped: on the current page it is scrolled to
+ * and pulsed ('rehighlight'), on another page it is drawn again ('reshow').
+ * Everything else keeps the Task 14 §I skip.
+ */
+export function duplicateSentenceAction(input: { page: number | null; currentPage: number; pronunciationModel: boolean }): 'draw' | 'skip' | 'rehighlight' | 'reshow' {
+  if (input.page === null) return 'draw';
+  if (!input.pronunciationModel) return 'skip';
+  return input.page === input.currentPage ? 'rehighlight' : 'reshow';
+}
