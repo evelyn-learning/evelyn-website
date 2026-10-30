@@ -1767,6 +1767,13 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('§A19 R3 m6: a descriptive say then an ask ⇒ the ask counts', expectedRepeatFor('We often just say "I go golf". Say "I went golfing last week."', null)?.text === 'I went golfing last week.');
 }
 
+// ── Task 19 fix round 4 (§A m6): a plural-noun subject's say is descriptive ──
+{
+  check('§A19 R4 m6: "Native speakers just say "…" here." ⇒ null', expectedRepeatFor('Native speakers just say "I went golfing" here.', null) === null && !isStrictRepeatAsk('Native speakers just say "I went golfing" here.'));
+  check('§A19 R4 m6: "Say "…"" ⇒ target', expectedRepeatFor('Say "I went golfing."', null)?.text === 'I went golfing.');
+  check('§A19 R4 m6: "Could you say "…"?" ⇒ target', expectedRepeatFor('Could you say "I went golfing"?', null)?.text === 'I went golfing');
+}
+
 // ── Task 19 §A: VTR wiring ──
 {
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');

@@ -252,8 +252,11 @@ const LEADING_DISCOURSE_RE = /^\s*(?:okay|ok|well|so)[,.]\s*/i;
 const INNER_HESITATION_RE = /(?<=\s)(?:uh|um|erm|er|hmm)\b[,.]?\s+/gi;
 /** A checked card needs at least this many Latin words. */
 const CHECKED_CARD_MIN_WORDS = 4;
-/** Fix round 3 (m5): a question-word / auxiliary opening. */
-const QUESTION_OPENING_RE = /^(?:can|could|would|will|shall|do|does|did|is|are|was|were|have|has|what|why|how|when|where|who|which)\b/i;
+/** Fix round 4 (m5): a question opening — an auxiliary / modal then a subject
+ *  ("Can you repeat…"), or a wh-word then an auxiliary ("What is your job").
+ *  A wh-clause ("When I was a student, …", "What I like … is …") is no question. */
+const AUX_QUESTION_OPENING_RE = /^(?:can|could|would|will|shall|should|do|does|did|is|are|was|were|have|has|had)\s+(?:you|i|we|they|he|she|it|there|this|that|the|a|an)\b/i;
+const WH_QUESTION_OPENING_RE = /^(?:what|why|how|when|where|who|which)\s+(?:is|are|was|were|do|does|did|can|could|would|will|should|have|has)\b/i;
 /** Fix round 2 (I4): the precheck's `proposed` is cut at 200 chars — one this
  *  long may end mid-clause. */
 const CHECKED_MAX_CHARS = 195;
@@ -281,7 +284,7 @@ export function cardableStudentSentence(raw: string | null | undefined): string 
   if (!isCardCandidate(s)) return null;
   // Fix round 3 (m5): a question that lost its "?" ("Can you repeat the
   // question please") is not a model sentence.
-  if (QUESTION_OPENING_RE.test(s) && !/[?？]["”’)]?$/.test(s)) return null;
+  if ((AUX_QUESTION_OPENING_RE.test(s) || WH_QUESTION_OPENING_RE.test(s)) && !/[?？]["”’)]?$/.test(s)) return null;
   if (!/[.!?]["”’)]?$/.test(s)) s = s.replace(/[,;:]+$/, '') + '.';
   const span = qualifyingSpan(s);
   if (!span || !isCardCandidate(span)) return null;
@@ -293,13 +296,21 @@ export function cardableStudentSentence(raw: string | null | undefined): string 
  *  grammar — a turn that corrects the student in so many words gets no
  *  checked card. */
 const CORRECTION_CUE_RE = /\b(?:small fix|one fix|quick fix|we say|should be|is missing|instead of|fuller form|correct form|not quite|almost right|be careful|the right (?:word|form)|rather than)\b|正しくは|直し|の方が/i;
+/** Fix round 4 (I2): the lesson's own correction template ("A more natural
+ *  way to say this is: …") and its kin. */
+const NATURAL_WAY_CUE_RE = /\b(?:more natural(?:ly)?|a (?:better|clearer|more common) way|natural way to say|way to say (?:this|that|it)|you (?:could|can) (?:also )?say|try saying|we(?:'d| would) say|sounds more natural)\b|自然な言い方|の方が自然/i;
 export function hasCorrectionCue(tutorText: string): boolean {
-  return CORRECTION_CUE_RE.test(tutorText ?? '');
+  const t = tutorText ?? '';
+  return CORRECTION_CUE_RE.test(t) || NATURAL_WAY_CUE_RE.test(t);
 }
 
 /** Fix round 3 (I2): a pronoun flip is not an edit ("I worked …" → "You
- *  worked …" is an echo). */
-const PRONOUN_CLASS: Record<string, string> = { i: '<pro>', you: '<pro>', me: '<pro>', my: '<poss>', your: '<poss>' };
+ *  worked …" is an echo). Fix round 4 (I1): so is we / us / our / ours ↔ you /
+ *  your / yours ("We sell our machines" → "You sell your machines"). */
+const PRONOUN_CLASS: Record<string, string> = {
+  i: '<pro>', you: '<pro>', me: '<pro>', we: '<pro>', us: '<pro>',
+  my: '<poss>', your: '<poss>', our: '<poss>', mine: '<poss2>', yours: '<poss2>', ours: '<poss2>',
+};
 function recastTokens(text: string): string[] {
   return dropFillersAndRepeats(tokens(text)).map((t) => PRONOUN_CLASS[t] ?? t);
 }
@@ -334,13 +345,18 @@ function oneEditRun(s: string[], t: string[]): boolean {
         if (q >= RECAST_TAIL_MIN && p + 1 + q >= RECAST_RUN_MIN) return true;
         if (si === s.length - 1 && p >= RECAST_FINAL_HEAD_MIN) return true;
       }
+      // Fix round 4 (I2): an insertion / deletion right before the student's
+      // last word, after ≥ 2 matched, is a fix too ("I work in the sales." →
+      // "You work in sales.") — the tail is that last word.
       if (tj < t.length) {
         const q = agree(s, si, t, tj + 1); // insertion
         if (q >= RECAST_TAIL_MIN && p + q >= RECAST_RUN_MIN) return true;
+        if (q >= 1 && si + q === s.length && p >= RECAST_FINAL_HEAD_MIN) return true;
       }
       if (si < s.length) {
         const q = agree(s, si + 1, t, tj); // deletion
         if (q >= RECAST_TAIL_MIN && p + 1 + q >= RECAST_RUN_MIN) return true;
+        if (q >= 1 && si + 1 + q === s.length && p >= RECAST_FINAL_HEAD_MIN) return true;
       }
     }
   }

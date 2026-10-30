@@ -85,8 +85,9 @@ const SAY_QUOTE_ASK_RE = /(?:(?<!\b(?:can|could|might|would|also|often|usually|w
  *  "In English we often just say "…"", "people normally say "…"", "you
  *  sometimes say "…"" — is no ask. A bare "you" stays an ask ("Now you say
  *  "…"", "Could you say "…"?"): it needs an adverb, and never after can /
- *  could / would / will / do / did. */
-const DESCRIPTIVE_SAY_LEAD_RE = /(?:\b(?:we|they|people)\s+(?:\w+\s+){0,2}|(?<!\b(?:can|could|would|will|do|did)\s+)\byou\s+(?:\w+\s+){0,1}(?:often|usually|just|normally|also|sometimes)\s+)$/i;
+ *  could / would / will / do / did. Fix round 4 (m6): a plural-noun subject
+ *  ("Native speakers just say "…" here.") is descriptive too. */
+const DESCRIPTIVE_SAY_LEAD_RE = /(?:\b(?:we|they|people|(?:native )?speakers|natives|americans|britons|everyone|most people)\s+(?:\w+\s+){0,2}|(?<!\b(?:can|could|would|will|do|did)\s+)\byou\s+(?:\w+\s+){0,1}(?:often|usually|just|normally|also|sometimes)\s+)$/i;
 
 /** A say-verb leading into a quote that is not descriptive (fix round 3, m6). */
 function hasSayQuoteAsk(t: string): boolean {

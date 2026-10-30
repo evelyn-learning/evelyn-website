@@ -581,5 +581,36 @@ test('§D19 R3 m5: a question without "?" is no card', () => {
   assert.equal(cardableStudentSentence('Yes, I attended a training course at Nagoya Corporation.'), 'Yes, I attended a training course at Nagoya Corporation.');
 });
 
+// ── Task 19 fix round 4 (§D) ──
+test('§D19 R4 I1: we / our ↔ you / your flips keep the card', () => {
+  const keeps: Array<[string, string]> = [
+    ['I visited our customer in Germany last month.', 'You visited your customer in Germany last month.'],
+    ['We sell our machines to hospitals.', 'You sell your machines to hospitals.'],
+    ['I work in the sales department.', 'You work in the sales department.'],
+  ];
+  for (const [said, tutor] of keeps) {
+    assert.equal(recastsStudentSentence(tutor, said), false, tutor);
+    const cards = planSentenceBoard({ tutorText: `${tutor} What happened next?`, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said });
+    assert.deepEqual(cards.map((c) => c.sentence), [said], tutor);
+  }
+});
+test('§D19 R4 I2: the "more natural way" template and a fix before the last word block', () => {
+  const said = 'I was responsible to communicate with our customers.';
+  const tutor = 'A more natural way to say this is: I was responsible for communicating with our customers.';
+  assert.equal(hasCorrectionCue(tutor), true);
+  assert.equal(hasCorrectionCue('自然な言い方は「I was responsible for communicating」です。'), true);
+  assert.deepEqual(planSentenceBoard({ tutorText: tutor, studentLast: said, renderedThisTurn: false, studentCorrect: true, checkedSentence: said }), []);
+  assert.equal(recastsStudentSentence('You work in sales.', 'I work in the sales.'), true);
+  assert.equal(recastsStudentSentence('You work in the sales.', 'I work in sales.'), true);
+  assert.deepEqual(planSentenceBoard({ tutorText: 'You work in sales. What else?', studentLast: 'I work in the sales.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I work in the sales.' }), []);
+});
+test('§D19 R4 m5: only a real question opening drops the card', () => {
+  assert.equal(cardableStudentSentence('Can you repeat the question please'), null);
+  assert.equal(cardableStudentSentence('What is your job'), null);
+  for (const keep of ['When I was a student, I studied English in Tokyo.', 'What I like about my job is the people.', 'Where I work, we use English every day.']) {
+    assert.equal(cardableStudentSentence(keep), keep, keep);
+  }
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
