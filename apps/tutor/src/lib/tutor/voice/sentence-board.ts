@@ -128,10 +128,15 @@ function quotedSpansWithContext(text: string): Array<{ span: string; before: str
 }
 
 /** Task 20 §G1 (GDI run 8, 558 s): the tutor's own word that a quoted
- *  sentence is right — "… is a natural sentence", "That's a correct
- *  sentence", "complete and clear", 「自然」「伝わります」. */
-const AFFIRM_EN_RE = /\b(?:is|that['’]s|what a) (?:a )?(?:correct|right|natural|clear|complete|good|great|perfect|nice)(?: (?:sentence|statement|answer))?\b|\bcomplete and clear\b|\bis correct\b|\bsounds (?:natural|right)\b/i;
-const AFFIRM_JA_RE = /正しい|自然|きちんと言え|伝わります/;
+ *  SENTENCE is right — "That's a correct sentence", "… is a natural
+ *  sentence", "That sentence is complete and clear", 「正しい文」. Fix round 1
+ *  (I6): praise of the meaning or of a part ("The meaning is clear.", "The
+ *  idea is clear.", 「過去形が正しい」, "That is clear, and nice try.") is not —
+ *  a model card of a wrong sentence teaches the error. */
+const AFFIRM_EN_RE = /\b(?:that['’]s|is|what) (?:a )?(?:correct|natural|good|great|perfect|nice|clear) sentence\b|\bsentence is (?:correct|complete|clear|natural|right)\b|\bcomplete and clear\b|^\s*(?:yes, )?that['’]s (?:right|correct)[.!]/i;
+const AFFIRM_JA_RE = /正しい文|きちんと言え|自然な文|完璧です/;
+/** Fix round 1 (I6): a follow-up that fixes something ⇒ no promotion. */
+const FIX_FOLLOW_UP_RE = /\blet['’]s fix\b|\bone small fix\b|\bbut\b/i;
 /** The text a quote's affirmation may sit in: its own sentence (the quote
  *  text itself left out) and the sentence after it. */
 export function quoteAffirmed(text: string, at: number, end: number): boolean {
@@ -146,15 +151,20 @@ export function quoteAffirmed(text: string, at: number, end: number): boolean {
   const quoteClosesSentence = /[.!?。！？]\s*["”’」』]?\s*$/.test(t.slice(at, end));
   const first = sentenceRe.exec(rest)?.[0] ?? '';
   const second = quoteClosesSentence ? '' : (sentenceRe.exec(rest.slice(first.length).trimStart())?.[0] ?? '');
-  const window = `${lead.slice(leadStart)} ${first} ${second}`;
-  return AFFIRM_EN_RE.test(window) || AFFIRM_JA_RE.test(window);
+  const parts = [lead.slice(leadStart), first, second].map((x) => x.trim()).filter(Boolean);
+  return parts.some((p) => AFFIRM_EN_RE.test(p) || AFFIRM_JA_RE.test(p));
 }
 
 /** Task 20 §G3 (GDI run 8, 864 s): the student's reply to a hint / more-time
- *  offer ("Yes, I would like hint.") is not a sentence to board. */
-const META_OFFER_RE = /\b(?:hint|wait a little|more time|take your time|shall I wait|need a moment)\b|ヒント|待ち/i;
+ *  OFFER ("Yes, I would like hint.") is not a sentence to board. Fix round 1
+ *  (m1): only when the previous turn's LAST sentence is that offer — a
+ *  question about a hint / waiting / time; a turn that GIVES a hint, or says
+ *  "take your time" before asking the real question, does not block. */
+const META_OFFER_RE = /\b(?:hint|wait|time)\b|ヒント|待ち|時間/i;
 export function isMetaOfferTurn(prevTutorText: string | null | undefined): boolean {
-  return META_OFFER_RE.test(prevTutorText ?? '');
+  const sentences = (prevTutorText ?? '').split(/(?<=[.!?。！？])\s*/).map((x) => x.trim()).filter(Boolean);
+  const last = sentences[sentences.length - 1] ?? '';
+  return /[?？]["”’)」]?$/.test(last) && META_OFFER_RE.test(last);
 }
 
 /** True when `re` matches `before` with the match starting inside its last
@@ -433,7 +443,7 @@ export function planSentenceBoard(input: {
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   const studentCorrect = input.studentCorrect === true;
-  const affirmFallback = !studentCorrect && input.affirmFallback === true && !hasCorrectionCue(input.tutorText);
+  const affirmFallback = !studentCorrect && input.affirmFallback === true && !hasCorrectionCue(input.tutorText) && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '');
   const spans = quotedSpansWithContext(input.tutorText)
     .filter((q) => isCardCandidate(q.span) && !isSentenceStarter(q.span, q.before, q.after));
   const distinct: { s: string; n: string; said: boolean; affirmed: boolean }[] = [];

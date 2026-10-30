@@ -656,10 +656,21 @@ test('20G1: affirmation window = the quote\'s sentence or the next one (JA too)'
   const at = t.indexOf('"I work');
   assert.equal(quoteAffirmed(t, at, t.indexOf('." Then') + 2), false, 'two sentences on is too far');
   const ja = '「I sell washing machines.」と、きちんと言えましたね。';
+  assert.equal(quoteAffirmed('"I work in sales." That\'s right!', 0, 18), true);
   assert.equal(quoteAffirmed(ja, 0, ja.indexOf('」') + 1), true);
 });
 const G913 = { tutorText: `"Robots can walk and talk" is a clear statement, and you used "learned" correctly. Now let's check your English: "I learned that robots can walk and talk" is a natural sentence. Could you tell me one more thing you learned at the event, starting with "I learned that…"?`, studentLast: 'I learned uh that robots can walk and talk.' };
 const G1302 = { tutorText: `"The seminar was very good because it was motivational, and the result was positive." That sentence is complete and clear. Now, you asked earlier about one project you're proud of, so please tell me one thing you would do differently next time.`, studentLast: 'The seminar was very good because it was motivational and the result was positive.' };
+test('20G1 fix round 1 (I6): praise of the meaning / a part never boards a wrong sentence', () => {
+  for (const [t, st] of [
+    ['"I working in sales department." The meaning is clear.', 'I working in sales department.'],
+    ['"I working in sales department." The idea is clear. Let\'s fix the verb.', 'I working in sales department.'],
+    ['"I go to Tokyo last year." 過去形が正しいですね。', 'I go to Tokyo last year.'],
+    ['"I am responsible of the team." That is clear, and nice try.', 'I am responsible of the team.'],
+    ['"I have worked here for five years." That\'s a good question to ask a colleague.', 'I have worked here for five years.'],
+    ['"I attended a business event in Tokyo last year." That\'s a correct sentence, but let\'s add "an".', 'I attended a business event in Tokyo last year.'],
+  ]) assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, affirmFallback: true }), [], t);
+});
 test('20G2: 913 s — verdict correct at MEDIUM confidence (precheckDecides false): ONE model card via the affirmation', () => {
   const cards = planSentenceBoard({ ...G913, renderedThisTurn: false, studentCorrect: false, affirmFallback: true, checkedSentence: 'I learned that robots can walk and talk.' });
   assert.deepEqual(cards.map((c) => c.sentence), ['I learned that robots can walk and talk']);
@@ -687,6 +698,14 @@ test('20G3: a reply to a hint / more-time offer gets no checked card', () => {
   assert.equal(planSentenceBoard({ ...args, prevTutorText: prev }).some((c) => c.source === 'checked'), false);
   assert.equal(isMetaOfferTurn('ヒントが必要ですか？'), true);
   assert.equal(isMetaOfferTurn('What did you do last weekend?'), false);
+});
+test('20G3 fix round 1 (m1): a turn that GIVES a hint, or "take your time" before the real question, does not block', () => {
+  assert.equal(isMetaOfferTurn('Of course. Here\'s a hint: use the past simple. Try starting with "I attended…" and tell me one event you went to last year.'), false);
+  assert.equal(isMetaOfferTurn('Take your time — tell me about your last project.'), false);
+  assert.equal(isMetaOfferTurn('Take your time. What did you learn at the event?'), false);
+  assert.equal(isMetaOfferTurn('Would you like a hint?'), true);
+  const args = { tutorText: 'Good.', studentLast: 'I attended a robotics business event in Tokyo last year.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I attended a robotics business event in Tokyo last year.' };
+  assert.ok(planSentenceBoard({ ...args, prevTutorText: 'Of course. Here\'s a hint: use the past simple. Try starting with "I attended…".' }).some((c) => c.source === 'checked'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
