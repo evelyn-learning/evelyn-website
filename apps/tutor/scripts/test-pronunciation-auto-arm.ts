@@ -5,7 +5,9 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor } from '../src/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail } from '../src/lib/tutor/pronunciation/auto-arm';
+import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
+import { isSayItAsk } from '../src/lib/tutor/voice/correct-retry';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -53,6 +55,40 @@ test('VTR wiring: pronunciation active, segment targets, brain tool wins, once p
   assert.ok(/action: 'showSentence',\s*sentence: auto\.referenceText,\s*\.\.\.\(auto\.gloss \? \{ gloss: auto\.gloss \} : \{\}\),/.test(VTR), 'card');
   // before the sentence board, so the card (with its gloss) is the one that stays
   assert.ok(VTR.indexOf("'pronunciation_auto_armed'") < VTR.indexOf('const cards = planSentenceBoard({'));
+});
+
+// ── Task 18 §C: re-arm on a repeat-ask, and say what the vendor heard ──
+test('rearm: the live case — no quote, same part, say-it ask ⇒ re-arm the last target', () => {
+  const ask = "Please say the sentence once more, and I'll check the words.";
+  const last = { referenceText: 'I was responsible for communicating with our customers.', kind: 'sentence', segId: 'pronunciation' };
+  const targets = { words: ['responsibilities'], sentences: [last.referenceText] };
+  const detected = detectPronunciationTarget(ask, targets);
+  assert.equal(detected, null);
+  const isRepeatAsk = isRetryAsk(ask) || isSayItAsk(ask);
+  assert.equal(isRepeatAsk, true);
+  const base = { last, detected, toolCalled: false, isRepeatAsk, segId: 'pronunciation' };
+  assert.equal(shouldRearmPronunciation(base), true);
+  assert.equal(shouldRearmPronunciation({ ...base, detected: { referenceText: 'responsibilities', kind: 'word' } }), false, 'a detected target wins');
+  assert.equal(shouldRearmPronunciation({ ...base, segId: 'summary' }), false, 'different segment');
+  assert.equal(shouldRearmPronunciation({ ...base, isRepeatAsk: false }), false, 'not a repeat-ask');
+  assert.equal(shouldRearmPronunciation({ ...base, toolCalled: true }), false, 'the brain called the tool');
+  assert.equal(shouldRearmPronunciation({ ...base, last: null }), false, 'nothing armed yet');
+});
+test('not_attempted detail: recognised words and omitted count', () => {
+  const r = { words: [
+    { word: 'I', errorType: 'none' }, { word: 'was', errorType: 'omission' }, { word: 'responsible', errorType: 'mispronunciation' },
+    { word: 'for', errorType: 'omission' }, { word: 'uh', errorType: 'insertion' },
+  ] };
+  assert.equal(notAttemptedDetail(r), 'recognized="I responsible uh" omitted=2/4');
+  assert.equal(notAttemptedDetail(null), 'recognized="" omitted=0/0');
+});
+test('VTR wiring (§C): last target kept at every arm, re-arm branch, not_attempted carries the detail', () => {
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(/capture\.arm\(referenceText\);[\s\S]{0,200}lastPronunciationTargetRef\.current = \{ referenceText, kind, segId: currentSegmentIdRef\.current \?\? '' \};/.test(VTR), 'set at the arm');
+  assert.ok(/\} else if \(shouldRearmPronunciation\(\{\n\s*last: lastPronunciationTargetRef\.current,\n\s*detected: auto,/.test(VTR), 're-arm branch');
+  assert.ok(/isRepeatAsk: isRetryAsk\(fullText\) \|\| isSayItAsk\(fullText\),/.test(VTR), 'repeat-ask');
+  assert.ok(VTR.includes("onDebugEvent?.('pronunciation_rearmed',"), 'event');
+  assert.ok(VTR.includes("onDebugEvent?.('pronunciation_unavailable', `not_attempted ${notAttemptedDetail(data.result)}`)"), 'detail');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

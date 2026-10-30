@@ -90,7 +90,7 @@ import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heu
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
 import { decideDeferredPageFlush } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
-import { detectPronunciationTarget, pronunciationTargetsOf } from '@/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, type LastPronunciationTarget } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
 import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
 import {
@@ -225,7 +225,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor } from '@/lib/tutor/voice/correct-retry';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isSayItAsk } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -1481,6 +1481,7 @@ export function VoiceTutorRealtime({
     }
   };
   const lastPronunciationClipRef = useRef<{ text: string; at: number } | null>(null);
+  const lastPronunciationTargetRef = useRef<LastPronunciationTarget | null>(null);
   const plantPronunciationNote = (note: string, measured: boolean) => {
     pronunciationResultNoteRef.current = pronunciationNoteForBrain(note);
     pronunciationMeasuredRef.current = measured;
@@ -1515,12 +1516,14 @@ export function VoiceTutorRealtime({
           signal: ctrl.signal,
         });
         if (!res.ok) { plantPronunciationUnavailable(`http_${res.status}`); return; }
-        const data = (await res.json()) as { status?: string; reason?: string; note?: unknown; measured?: unknown };
+        const data = (await res.json()) as { status?: string; reason?: string; note?: unknown; measured?: unknown; result?: { words?: Array<{ word?: unknown; errorType?: unknown }> } | null };
         if (data.status === 'ok' && typeof data.note === 'string' && data.note.trim()) {
           // measured:false ⇒ the learner did not say the target (the route's
           // not-attempted note): plant it, but the claim guard stays shut.
           const measured = data.measured === true;
-          if (!measured) onDebugEvent?.('pronunciation_unavailable', 'not_attempted');
+          // Task 18 §C: say what the vendor heard — a missed clip (nothing
+          // recognised) reads apart from a wrong one.
+          if (!measured) onDebugEvent?.('pronunciation_unavailable', `not_attempted ${notAttemptedDetail(data.result)}`);
           plantPronunciationNote(data.note, measured);
         } else {
           plantPronunciationUnavailable(typeof data.reason === 'string' ? data.reason : 'bad_response');
@@ -1544,6 +1547,9 @@ export function VoiceTutorRealtime({
     if (!capture) return;
     if (!referenceText) { plantPronunciationUnavailable('no_reference_text'); return; }
     capture.arm(referenceText);
+    // Task 18 §C: every arm (tool, auto, re-arm) is the target a later
+    // "say it once more" re-arms.
+    lastPronunciationTargetRef.current = { referenceText, kind, segId: currentSegmentIdRef.current ?? '' };
     onDebugEvent?.('pronunciation_armed', `${kind} "${referenceText.slice(0, 80)}"`);
     clearPronunciationNoSpeechTimer();
     clearPronunciationArmMaxTimer();
@@ -19846,6 +19852,18 @@ export function VoiceTutorRealtime({
             const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true } : { sentenceBoardAuto: true });
             for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
           } catch { /* the arm stands without the card */ }
+        } else if (shouldRearmPronunciation({
+          last: lastPronunciationTargetRef.current,
+          detected: auto,
+          toolCalled: totalToolNamesSeen.includes('request_pronunciation_check'),
+          isRepeatAsk: isRetryAsk(fullText) || isSayItAsk(fullText),
+          segId: currentSegmentIdRef.current,
+        })) {
+          // Task 18 §C: "say the sentence once more" with no quote — re-arm
+          // the last target of this part (its card is already on the board).
+          const last = lastPronunciationTargetRef.current!;
+          armPronunciationCheckRef.current(last.referenceText, last.kind);
+          onDebugEvent?.('pronunciation_rearmed', `"${last.referenceText.slice(0, 80)}"`);
         }
       }
       // Live check 6 (§1): the brain sat in `hook` for 12 minutes and six

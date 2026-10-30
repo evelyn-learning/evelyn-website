@@ -93,3 +93,40 @@ export function detectPronunciationTarget(turnText: string, targets: Pronunciati
   const gloss = hit.kind === 'word' ? syllablePatternFor(turnText, hit.text) : undefined;
   return { referenceText: hit.text, kind: hit.kind, ...(gloss ? { gloss } : {}) };
 }
+
+/** The last target armed this session (tool or auto path) and the segment it
+ *  belongs to. */
+export interface LastPronunciationTarget { referenceText: string; kind: string; segId: string }
+
+/**
+ * Task 18 §C (GDI run 6): the clip of target 2 came back not_attempted, the
+ * tutor asked "Please say the sentence once more, and I'll check the words."
+ * — no quoted target, so detectPronunciationTarget found nothing, nothing was
+ * re-armed, and the repeat was never measured. Re-arm the LAST target when:
+ * there is one, it belongs to the current segment, this turn detected no
+ * target of its own, the brain did not call request_pronunciation_check, and
+ * the turn is a repeat / say-it ask.
+ */
+export function shouldRearmPronunciation(input: {
+  last: LastPronunciationTarget | null | undefined;
+  detected: PronunciationAutoTarget | null | undefined;
+  toolCalled: boolean;
+  isRepeatAsk: boolean;
+  segId: string | null | undefined;
+}): boolean {
+  const { last } = input;
+  return !!last && !!last.referenceText && !!input.segId && last.segId === input.segId
+    && !input.detected && !input.toolCalled && input.isRepeatAsk;
+}
+
+/** Task 18 §C: what the vendor recognised in a not-attempted clip, for the
+ *  debug line — `recognized="<words not omitted>" omitted=<n>/<reference words>`
+ *  — so a missed clip (nothing recognised) reads apart from a wrong one. */
+export function notAttemptedDetail(result: { words?: Array<{ word?: unknown; errorType?: unknown }> } | null | undefined): string {
+  const words = Array.isArray(result?.words) ? result!.words! : [];
+  const heard = words.filter((w) => w && w.errorType !== 'omission').map((w) => String(w.word ?? '')).filter(Boolean);
+  // reference words = everything but the vendor's insertions
+  const ref = words.filter((w) => w?.errorType !== 'insertion');
+  const omitted = ref.filter((w) => w?.errorType === 'omission').length;
+  return `recognized="${heard.join(' ')}" omitted=${omitted}/${ref.length}`;
+}
