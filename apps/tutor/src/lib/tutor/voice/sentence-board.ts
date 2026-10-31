@@ -1282,6 +1282,25 @@ export function duplicateSentenceAction(input: {
 export function isStudentSentenceCard(sentence: string, studentLast: string | null | undefined): boolean {
   if (!studentLast || !studentLast.trim() || !sentence || !sentence.trim()) return false;
   const kind = classifyQuotedSentence(sentence, studentLast).kind;
-  if (kind === 'echo' || kind === 'correction') return true;
-  return recastsStudentSentence(sentence, studentLast);
+  if (kind === 'echo') return true;
+  // Task 23 fix round 1 (m5): "correction" is loose (half the words shared) —
+  // a NEW model sentence of the next part ("I have worked with international
+  // customers for several years." after "Yes, I have worked with an
+  // international customer before.") is not the student's. A correction /
+  // recast counts only when it is the student's sentence with few edits: a
+  // token edit distance of at most a third of the longer sentence.
+  const a = recastTokens(studentLast);
+  const b = recastTokens(sentence);
+  if (a.length === 0 || b.length === 0) return false;
+  return tokenEditDistance(a, b) * 3 <= Math.max(a.length, b.length);
+}
+/** Levenshtein distance over tokens. */
+function tokenEditDistance(a: readonly string[], b: readonly string[]): number {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j]! + 1, cur[j - 1]! + 1, prev[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length]!;
 }

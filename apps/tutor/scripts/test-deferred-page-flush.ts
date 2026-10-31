@@ -185,4 +185,16 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('23A2: both segment-page openings record the page id', (VTR4.match(/segmentPageIdRef\.current = catalogRef\.current\.openPage\(\{ title: /g) ?? []).length === 2);
 }
 
+// Task 23 fix round 1 (m5): a brain show_sentence of the NEW part's model is not the student's.
+{
+  ok('23 r1 m5: a new model sentence sharing words is not the student\'s', !isStudentSentenceCard('I have worked with international customers for several years.', 'Yes, I have worked with an international customer before.'));
+  ok('23 r1 m5: a reworded sentence with new content is not', !isStudentSentenceCard('I talked to customers from China last year.', 'I talk to customers from China.'));
+  ok('23 r1 m5: the 271 s correction still is', isStudentSentenceCard('I work as a sales manager, and I help customers buy washing machines.', 'I work as sales manager and help customer buy washing machine.'));
+  ok('23 r1 m5: a one-word fix in the student\'s person shift still is', isStudentSentenceCard('You sell washing machines to hospitals.', 'I sell washing machine to hospitals.'));
+  const page = { action: 'newPage' };
+  const model = { action: 'showSentence', sentence: 'I have worked with international customers for several years.' };
+  const r = orderStudentCardsBeforePageBreak([page, model], (c) => typeof (c as { sentence?: string }).sentence === 'string' && isStudentSentenceCard((c as { sentence: string }).sentence, 'Yes, I have worked with an international customer before.'));
+  ok('23 r1 m5: that model stays after the page break', r.moved.length === 0 && r.cmds[0] === page);
+}
+
 console.log(`deferred-page-flush: ${n} cases passed`);
