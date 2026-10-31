@@ -814,6 +814,10 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   const B = "The last resort says the sentence wasn't captured, so I'll check the words only.";
   check('24A5: 1092 s capture narration → dropped', stripNoteCitationClause(A) === '' && isMetaNarration(A));
   check('24A5: last-resort narration → dropped', stripNoteCitationClause(B) === '' && isMetaNarration(B));
+  check('24 r1 m-2: "I can hear your th sounds clearer." untouched', stripNoteCitationClause('I can hear your th sounds clearer.') === 'I can hear your th sounds clearer.' && !isMetaNarration('I can hear your th sounds clearer.'));
+  check('24 r1 m-2: "I can check the words but not how they sounded." → dropped', stripNoteCitationClause('I can check the words but not how they sounded.') === '');
+  check('24 r1 m-2: "I can tell the words are linked well." untouched', stripNoteCitationClause('I can tell the words are linked well.') === 'I can tell the words are linked well.');
+  check("24 r1 m-2: \"I can't judge how the words sounded.\" → dropped", stripNoteCitationClause("I can't judge how the words sounded.") === '');
   check('24A5: "The sentence is clear." untouched', stripNoteCitationClause('The sentence is clear.') === 'The sentence is clear.' && !isMetaNarration('The sentence is clear.'));
   check('24A5: "Please write the transcript of the meeting." untouched', stripNoteCitationClause('Please write the transcript of the meeting.') === 'Please write the transcript of the meeting.' && !isMetaNarration('Please write the transcript of the meeting.'));
   const S = 'The student said "I have worked at Nagoya Corporation for 3 years," which is correct, with the number written as a digit.';

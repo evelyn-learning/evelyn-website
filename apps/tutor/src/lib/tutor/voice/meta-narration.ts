@@ -305,7 +305,19 @@ const QUESTION_LEAD_RE = /^\s*(?:The question I['’]m asking (?:you )?now is|(?
 // "The last resort says the sentence wasn't captured …"): the capture /
 // scoring pipeline narrated aloud. A transcript sentence needs shows / says /
 // only after it ("Please write the transcript of the meeting." stays).
-const CAPTURE_NARRATION_RE = /\btranscript\b[^.!?]*\b(?:shows?|says?|only)\b|\b(?:wasn'?t|was not|isn'?t|not) captured\b|\bthe last resort\b|\bI (?:can(?:'t|not)?|cannot|could(?:n'?t)?) (?:check|hear|tell|judge|score)\b[^.!?]*\b(?:words|sound(?:ed|s)?)\b/i;
+const CAPTURE_NARRATION_RE = /\btranscript\b[^.!?]*\b(?:shows?|says?|only)\b|\b(?:wasn'?t|was not|isn'?t|not) captured\b|\bthe last resort\b/i;
+// Fix round 1 (m-2): "I can check the words but not how they sounded." is
+// capture narration; "I can hear your th sounds clearer." is feedback. The
+// first-person check clause counts only when NEGATED (can't / cannot /
+// couldn't / could not / can … but not) or when the sentence also names the
+// capture (transcript / recording / captured / last resort).
+const CAPTURE_CHECK_CLAUSE_RE = /\bI (?:can(?:'t|not)?|cannot|could(?:n'?t| not)?) (?:check|hear|tell|judge|score)\b[^.!?]*\b(?:words|sound(?:ed|s)?)\b/i;
+const CAPTURE_CHECK_NEGATED_RE = /\bI (?:can'?t|cannot|can not|couldn'?t|could not) (?:check|hear|tell|judge|score)\b|\bI can (?:check|hear|tell|judge|score)\b[^.!?]*\bbut not\b/i;
+const CAPTURE_WORD_RE = /\b(?:transcript|recording|captured|last resort)\b/i;
+function isCaptureNarration(s: string): boolean {
+  if (CAPTURE_NARRATION_RE.test(s)) return true;
+  return CAPTURE_CHECK_CLAUSE_RE.test(s) && (CAPTURE_CHECK_NEGATED_RE.test(s) || CAPTURE_WORD_RE.test(s));
+}
 // Task 24 §B1 (GDI run 12, 352 s: `The student said "I have worked …," which
 // is correct …` was dropped whole by PHRASE_START_RE and the turn went
 // silent): the learner's quoted words named in the third person are
@@ -333,7 +345,7 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   const s = addressLearner(stripPersonaLead(raw, opts?.personaName));
   if (s !== raw && !s.trim()) return '';
   if (CLOSE_PART_NARRATION_RE.test(s)) return '';
-  if (CAPTURE_NARRATION_RE.test(s)) return '';
+  if (isCaptureNarration(s)) return '';
   const keepStripped = stripKeepInMindTail(s);
   if (keepStripped !== null) return keepStripped;
   const m = NOTE_CITING_OPENER_RE.exec(s) ?? STAY_ON_ONE_IDEA_RE.exec(s);

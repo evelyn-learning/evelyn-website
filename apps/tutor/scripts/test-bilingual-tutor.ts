@@ -49,7 +49,7 @@ import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/turn-cap';
 import { opensWithStockPraise, overusesStockPraiseOpener, PRAISE_OPENER_NOTE } from '../src/lib/tutor/voice/praise-variety';
-import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON, cleanStudentSentence, dropFillersAndRepeats } from '../src/lib/tutor/voice/correct-retry';
+import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON, cleanStudentSentence, dropFillersAndRepeats, precheckCorrectness } from '../src/lib/tutor/voice/correct-retry';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '../src/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
@@ -801,7 +801,7 @@ test('GDI run 3: VTR kills + retries a repeat_after_correct in a language sessio
   assert.match(vtr, /!repeatAfterCorrectRejected && attemptText && languageSessionRef\.current/);
   assert.match(vtr, /rejectionsThisAttempt\.push\(\{ action: 'repeat_after_correct', reason: REPEAT_AFTER_CORRECT_REASON \}\);\s*await performKill\(\);/);
   // the note path stays for every session
-  assert.match(vtr, /else if \(reAskedOwnSentence\(transcript, fullText, \{ studentCorrect: verdictPrecheckRef\.current\?\.verdict === 'correct' \}\)\) \{\s*pendingCorrectRetryNoteRef\.current = OWN_SENTENCE_RETRY_NOTE;/);
+  assert.match(vtr, /else if \(reAskedOwnSentence\(transcript, fullText, \{ studentCorrect: precheckCorrectness\(verdictPrecheckRef\.current\?\.verdict\) \}\)\) \{\s*pendingCorrectRetryNoteRef\.current = OWN_SENTENCE_RETRY_NOTE;/);
 });
 
 test('Task 19 §C (GDI run 7): a turn carrying a measured pronunciation note is not killed for repeat_after_correct', () => {
@@ -1487,6 +1487,9 @@ test('Task 24 §E1 (GDI run 12, 231 s): a quote inside a PRAISE sentence, the as
   assert.equal(reAskedOwnSentence('I have worked with international customers.', t231), false);
   // run 4 still a re-ask (quote right before the ask, no next-item cue)
   assert.equal(reAskedOwnSentence('I showed the customer uh models of washing machines.', 'Let\'s make it a clean sentence: "I showed the customer models of washing machines." Can you say that once more?'), true);
+  // fix round 1 (m-1): one praise sentence between the quote and the ask ⇒ still a re-ask
+  assert.equal(reAskedOwnSentence('I showed the customer models.', 'Let\'s make it a clean sentence: "I showed the customer models." Nice work. Can you say that once more?'), true);
+  assert.equal(reAskedOwnSentence('I showed the customer models of washing machines.', 'Nice: "I showed the customer models of washing machines." That is correct. Can you say that once more?'), true);
   // a quote in the ask sentence itself, but a next-item cue between ⇒ not the early re-ask
   assert.equal(reAskedOwnSentence('I like my new job a lot.', '"I like my new job a lot." Now let\'s try another one. Can you say that again?'), false);
 });
@@ -1502,8 +1505,9 @@ test('Task 24 §E2 (GDI run 12, 1018 s): full-sentence ask with a starter that b
   const wrong = 'The seminar take place last year.';
   const drill = 'You said "The seminar take place last year." We need "took place" here. Could you say the full sentence again, starting with "The seminar…"?';
   assert.equal(reAskedOwnSentence(wrong, drill, { studentCorrect: false }), false);
+  assert.deepEqual([precheckCorrectness('correct'), precheckCorrectness('incorrect'), precheckCorrectness('unsure'), precheckCorrectness(null)], [true, false, undefined, undefined]);
   const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.equal((v.match(/reAskedOwnSentence\(transcript, (?:attemptText|fullText), \{ studentCorrect: verdictPrecheckRef\.current\?\.verdict === 'correct' \}\)/g) ?? []).length, 2, 'both callers pass the verdict');
+  assert.equal((v.match(/reAskedOwnSentence\(transcript, (?:attemptText|fullText), \{ studentCorrect: precheckCorrectness\(verdictPrecheckRef\.current\?\.verdict\) \}\)/g) ?? []).length, 2, 'both callers pass the verdict');
   // 1001 s: the student's sentence was wrong ("take place") — the tutor's prose does not contain it
   const t1001 = 'The seminar took place last year, so the past simple is right. Let\'s check the verb: could you say the full sentence starting with "The seminar…" and use "took place"?';
   assert.equal(reAskedOwnSentence('The seminar take place last year.', t1001, { studentCorrect: false }), false);

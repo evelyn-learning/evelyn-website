@@ -226,7 +226,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence } from '@/lib/tutor/voice/correct-retry';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -19195,7 +19195,7 @@ export function VoiceTutorRealtime({
         // required_phrase_missing; once per turn. Other sessions keep the note.
         if (!attemptKilled && !repeatAfterCorrectRejected && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
           const prevTutorForRepeat = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
-          const repeated = reAskedOwnSentence(transcript, attemptText, { studentCorrect: verdictPrecheckRef.current?.verdict === 'correct' })
+          const repeated = reAskedOwnSentence(transcript, attemptText, { studentCorrect: precheckCorrectness(verdictPrecheckRef.current?.verdict) })
             ? transcript
             : reAskedModelSentence(prevTutorForRepeat, transcript, attemptText);
           // Task 19 §C (GDI run 7, 1132 s): on a turn carrying a MEASURED
@@ -20758,7 +20758,7 @@ export function VoiceTutorRealtime({
         } else if (reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)) {
           pendingCorrectRetryNoteRef.current = CORRECT_RETRY_NOTE;
           onDebugEvent?.('correct_retry_note_planted', `checked correct: "${verdictPrecheckRef.current?.proposed.slice(0, 60) ?? ''}"`);
-        } else if (reAskedOwnSentence(transcript, fullText, { studentCorrect: verdictPrecheckRef.current?.verdict === 'correct' })) {
+        } else if (reAskedOwnSentence(transcript, fullText, { studentCorrect: precheckCorrectness(verdictPrecheckRef.current?.verdict) })) {
           pendingCorrectRetryNoteRef.current = OWN_SENTENCE_RETRY_NOTE;
           onDebugEvent?.('correct_retry_note_planted', `own sentence re-asked: "${transcript.slice(0, 60)}"`);
         }

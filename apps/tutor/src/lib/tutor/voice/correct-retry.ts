@@ -226,13 +226,21 @@ function fullSentenceStarter(tutorText: string): string | null {
   return starter.split(' ').filter(Boolean).length >= 2 ? starter : null;
 }
 
+/** Fix round 1 (I-1): the pre-check verdict as reAskedOwnSentence's
+ *  `studentCorrect` — true / false for correct / incorrect, else undefined. */
+export function precheckCorrectness(verdict: string | null | undefined): boolean | undefined {
+  return verdict === 'correct' ? true : verdict === 'incorrect' ? false : undefined;
+}
+
 export function reAskedOwnSentence(
   studentText: string,
   tutorText: string,
-  /** Task 24 fix round 1 (I-1): the student's turn was judged correct (the
-   *  verdict pre-check, any confidence). The §E2 starter path needs it — a
-   *  correction drill that quotes the learner's WRONG sentence and asks for
-   *  it again ("…starting with "The seminar…"?") is not a re-ask. */
+  /** Task 24 fix round 1 (I-1): the verdict pre-check on the student's turn,
+   *  any confidence — true = correct, false = incorrect, undefined = none.
+   *  The §E2 starter path needs `true`; the quote early return is off on
+   *  `false` — a correction drill that quotes the learner's WRONG sentence
+   *  and asks for it again ("…starting with "The seminar…"?") is not a
+   *  re-ask. */
   opts?: { studentCorrect?: boolean },
 ): boolean {
   // Task 24 §E2: the full-sentence ask with a starter that begins the
@@ -258,7 +266,7 @@ export function reAskedOwnSentence(
   // Let's move on. 次は… 言ってみましょう。Have you worked …?"). The early
   // return holds only when the quote is in the ask sentence or the one right
   // before it, with no next-item cue from the quote through the ask.
-  if (quotes.length > 0 && quotes.every((q) => q === said) && quoteTargetsAsk(tutorText ?? '', said)) return true;
+  if (opts?.studentCorrect !== false && quotes.length > 0 && quotes.every((q) => q === said) && quoteTargetsAsk(tutorText ?? '', said)) return true;
   if (!isRetryAsk(tutorText) && !SAY_IT_ASK_RE.test(tutorText ?? '')) return false;
   if (!tutorLatin(tutorText ?? '').includes(said)) return false;
   // 2026-10-18 (embed-1792350642171, turn 33): 「"I went to Nagoya Castle last
@@ -281,8 +289,8 @@ export function reAskedOwnSentence(
   return latinWordCount(remainder) < 3;
 }
 
-/** §E1: the sentence quoting `said` is the (last) ask sentence or the one
- *  right before it, and no sentence from it through the ask carries a
+/** §E1: the sentence quoting `said` is the (last) ask sentence or one of
+ *  the two before it (fix round 1, m-1), and no sentence from it through the ask carries a
  *  next-item cue. No ask sentence ⇒ the last sentence is the ask. */
 function quoteTargetsAsk(tutorText: string, said: string): boolean {
   const sentences = tutorText.split(/(?<=[。！？.!?])\s*|\n+/).map((x) => x.trim()).filter(Boolean);
@@ -297,7 +305,9 @@ function quoteTargetsAsk(tutorText: string, said: string): boolean {
   for (let i = askIdx; i >= 0; i--) {
     if (tutorLatin(sentences[i]!).includes(said)) { quoteIdx = i; break; }
   }
-  if (quoteIdx < 0 || askIdx - quoteIdx > 1) return false;
+  // Fix round 1 (m-1): the ask sentence or either of the TWO before it (one
+  // praise sentence may sit between the quote and the ask).
+  if (quoteIdx < 0 || askIdx - quoteIdx > 2) return false;
   for (let i = quoteIdx; i <= askIdx; i++) if (NEXT_ITEM_CUE_RE.test(sentences[i]!)) return false;
   return true;
 }
