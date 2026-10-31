@@ -187,3 +187,27 @@ export function levelAdvanceNeedsContinuation(input: {
   if (input.currentSegmentId !== input.levelAdvancedTo) return false;
   return announcedTurnNeedsContinuation(input.tutorText);
 }
+
+/** Tools whose turn has its own continuation or ask: an advance (the FACT
+ *  note / announced continuation opens the new part) or a problem card. */
+const NOASK_EXEMPT_TOOLS = new Set(['advance_lesson', 'show_segment_card', 'show_problem', 'generate_problem']);
+
+/** Task 24 §B2 (GDI run 12, 352 s: the turn ended "Let me put the correct
+ *  sentence on the board and move on." with only a show_sentence, and the
+ *  board sat silent 30 s until the idle nudge): a fixed-script turn that
+ *  answered the student and left them nothing to answer gets the announced
+ *  advance's silent continuation. Never on a runtime-triggered turn (the
+ *  continuation itself, a nudge), a closing turn, while a pronunciation clip
+ *  is armed (the learner is about to repeat), or when an exempt tool ran. */
+export function noAskTurnNeedsContinuation(input: {
+  text: string;
+  fixedScript: boolean;
+  runtimeTriggered: boolean;
+  toolsSeen: readonly string[];
+  closing: boolean;
+  pronunciationArmed: boolean;
+}): boolean {
+  if (!input.fixedScript || input.runtimeTriggered || input.closing || input.pronunciationArmed) return false;
+  if (input.toolsSeen.some((t) => NOASK_EXEMPT_TOOLS.has(t))) return false;
+  return announcedTurnNeedsContinuation(input.text);
+}

@@ -229,6 +229,11 @@ export const FIXED_SCRIPT_CONTINUE_DIRECTIVE =
  *  the brain announced nothing there, so the new part opens with a bridge. */
 export const FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE =
   '[System note: the level check is complete and the lesson pointer has moved to the next part; begin that part now from its notes — a one-sentence bridge, then its first question or card. Do not recap the level check.]';
+/** Task 24 §B2 (GDI run 12, 352 s: "Let me put the correct sentence on the
+ *  board and move on." — then 30 s of silence): the silent continuation after
+ *  a fixed-script turn that left the learner nothing to answer. */
+export const FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE =
+  '[System note: your last turn ended without a question or an instruction for the student. Continue now with the next question or item of the current part, in one or two sentences. Do not repeat what you just said; do not recap.]';
 /** GDI run 3: the client moved off the level check before the brain stored a
  *  level, so no level was ever kept. Leaving a `skipWhenLevelKnown` segment
  *  with no working level ⇒ the note asks for set_working_level first. */

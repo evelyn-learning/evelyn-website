@@ -808,7 +808,7 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   check('23H2: "bring back" without the so I\'ll plan untouched', stripNoteCitationClause('Please bring that back tomorrow.') === 'Please bring that back tomorrow.');
 }
 
-// ── Task 24 §A5 (GDI run 12) ──
+// ── Task 24 §A5 / §B1 (GDI run 12) ──
 {
   const A = 'The transcript shows only the sentence itself, so I can check the words but not how they sounded.';
   const B = "The last resort says the sentence wasn't captured, so I'll check the words only.";
@@ -816,6 +816,11 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   check('24A5: last-resort narration → dropped', stripNoteCitationClause(B) === '' && isMetaNarration(B));
   check('24A5: "The sentence is clear." untouched', stripNoteCitationClause('The sentence is clear.') === 'The sentence is clear.' && !isMetaNarration('The sentence is clear.'));
   check('24A5: "Please write the transcript of the meeting." untouched', stripNoteCitationClause('Please write the transcript of the meeting.') === 'Please write the transcript of the meeting.' && !isMetaNarration('Please write the transcript of the meeting.'));
+  const S = 'The student said "I have worked at Nagoya Corporation for 3 years," which is correct, with the number written as a digit.';
+  const R = 'You said "I have worked at Nagoya Corporation for 3 years," which is correct, with the number written as a digit.';
+  check('24B1: 352 s "The student said "…"" → "You said "…"", then spoken', stripNoteCitationClause(S) === R && !isMetaNarration(R), stripNoteCitationClause(S));
+  check('24B1: "The learner said that …" → "You said that …"', stripNoteCitationClause('The learner said that it was late.') === 'You said that it was late.');
+  check('24B1: "The student said nothing." still dropped', stripNoteCitationClause('The student said nothing.') === 'The student said nothing.' && isMetaNarration('The student said nothing.'));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

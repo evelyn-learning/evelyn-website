@@ -432,8 +432,8 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
-import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation } from '@/lib/tutor/lesson-plan/announced-move';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
+import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -4167,8 +4167,11 @@ export function VoiceTutorRealtime({
   // advance) has finished speaking — polled with the idle nudge's guard set;
   // any other dispatch first cancels it (announcedContinueTimerRef), a moved
   // pointer / ended session / another brain turn drops it.
-  const scheduleFixedScriptContinueRef = useRef<(contTarget: string, via: 'announced' | 'level') => void>(() => {});
-  scheduleFixedScriptContinueRef.current = (contTarget: string, via: 'announced' | 'level') => {
+  // Task 24 §B2: 'noask' — a fixed-script turn that left the student nothing
+  // to answer continues the CURRENT part (contTarget = the current segment).
+  const scheduleFixedScriptContinueRef = useRef<(contTarget: string, via: 'announced' | 'level' | 'noask') => void>(() => {});
+  scheduleFixedScriptContinueRef.current = (contTarget: string, via: 'announced' | 'level' | 'noask') => {
+    const dropEvent = via === 'level' ? 'fixed_script_level_continue_dropped' : via === 'noask' ? 'fixed_script_noask_continue_dropped' : 'fixed_script_announced_continue_dropped';
     if (announcedContinueTimerRef.current) clearTimeout(announcedContinueTimerRef.current);
     const contStartedAt = Date.now();
     // Review I-2: any brain call after this one (a queued student
@@ -4182,7 +4185,7 @@ export function VoiceTutorRealtime({
       const speaking = productionStateRef.current === 'speaking';
       if (speaking) contSawSpeaking = true;
       if (productionStateRef.current === 'disconnected' || lessonClosedRef.current || farewellSealedRef.current || currentSegmentIdRef.current !== contTarget) {
-        onDebugEvent?.(via === 'level' ? 'fixed_script_level_continue_dropped' : 'fixed_script_announced_continue_dropped', `"${contTarget}" after ${waitedMs}ms — session ended or pointer moved`);
+        onDebugEvent?.(dropEvent, `"${contTarget}" after ${waitedMs}ms — session ended or pointer moved`);
         return;
       }
       let speechPending = false;
@@ -4209,11 +4212,11 @@ export function VoiceTutorRealtime({
         return;
       }
       if (decision === 'drop') {
-        onDebugEvent?.(via === 'level' ? 'fixed_script_level_continue_dropped' : 'fixed_script_announced_continue_dropped', `"${contTarget}" after ${waitedMs}ms — ${brainCallSeqRef.current !== contTurnSeq ? 'another turn ran' : standbyRef.current || endingRef.current ? 'standby/ending' : 'tutor still busy'}`);
+        onDebugEvent?.(dropEvent, `"${contTarget}" after ${waitedMs}ms — ${brainCallSeqRef.current !== contTurnSeq ? 'another turn ran' : standbyRef.current || endingRef.current ? 'standby/ending' : 'tutor still busy'}`);
         return;
       }
-      onDebugEvent?.(via === 'level' ? 'fixed_script_level_continue' : 'fixed_script_announced_continue', `"${contTarget}" waited=${waitedMs}ms`);
-      void handleStudentTranscriptForBrainRef.current?.(via === 'level' ? FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE : FIXED_SCRIPT_CONTINUE_DIRECTIVE, { silent: true, bypassPerceptionDedupe: true });
+      onDebugEvent?.(via === 'level' ? 'fixed_script_level_continue' : via === 'noask' ? 'fixed_script_noask_continue' : 'fixed_script_announced_continue', `"${contTarget}" waited=${waitedMs}ms`);
+      void handleStudentTranscriptForBrainRef.current?.(via === 'level' ? FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE : via === 'noask' ? FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE : FIXED_SCRIPT_CONTINUE_DIRECTIVE, { silent: true, bypassPerceptionDedupe: true });
     };
     announcedContinueTimerRef.current = setTimeout(contTick, ANNOUNCED_CONTINUE_POLL_MS);
   };
@@ -20607,6 +20610,24 @@ export function VoiceTutorRealtime({
           }
         }
       }
+      // Task 24 §B2 (GDI run 12, 352 s: "Let me put the correct sentence on
+      // the board and move on." + show_sentence, then 30 s of silence until
+      // the idle nudge): a fixed-script turn that left the student nothing to
+      // answer continues the current part silently — the same scheduler and
+      // guard set as the announced advance. Not when another continuation is
+      // already scheduled this turn (announced / level).
+      if (!opts?.prefetchOnly && totalSentenceCount > 0 && !announcedContinueTimerRef.current
+        && noAskTurnNeedsContinuation({
+          text: fullText,
+          fixedScript: isFixedScriptPlan(lessonPlanRef.current),
+          runtimeTriggered: /^\s*\[/.test(transcript),
+          toolsSeen: totalToolNamesSeen,
+          closing: lessonClosedRef.current || farewellSealedRef.current || fixedScriptCloseRef.current != null,
+          pronunciationArmed: !!clipCaptureRef.current?.isArmed(),
+        })) {
+        const noaskSeg = currentSegmentIdRef.current ?? '';
+        if (noaskSeg) scheduleFixedScriptContinueRef.current(noaskSeg, 'noask');
+      }
       if (sessionAllowsNonLatin(tutorLanguages) && totalSentenceCount > 0) {
         if (isRetryAsk(fullText)) {
           // The streak is NOT zeroed on plant (embed-1792254012923): every
@@ -22322,7 +22343,7 @@ export function VoiceTutorRealtime({
     // Task 16 §C: any dispatch other than the continuation itself (a student
     // turn, a nudge, a mark) starts its own turn — the scheduled
     // announced-move continuation stands down.
-    if (announcedContinueTimerRef.current && transcript !== FIXED_SCRIPT_CONTINUE_DIRECTIVE && transcript !== FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE) {
+    if (announcedContinueTimerRef.current && transcript !== FIXED_SCRIPT_CONTINUE_DIRECTIVE && transcript !== FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE && transcript !== FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE) {
       clearTimeout(announcedContinueTimerRef.current);
       announcedContinueTimerRef.current = null;
       onDebugEvent?.('fixed_script_announced_continue_cancelled', `dispatch first: ${transcript.slice(0, 40)}`);

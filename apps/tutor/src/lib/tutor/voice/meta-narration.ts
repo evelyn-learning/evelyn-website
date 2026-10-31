@@ -306,7 +306,14 @@ const QUESTION_LEAD_RE = /^\s*(?:The question I['’]m asking (?:you )?now is|(?
 // scoring pipeline narrated aloud. A transcript sentence needs shows / says /
 // only after it ("Please write the transcript of the meeting." stays).
 const CAPTURE_NARRATION_RE = /\btranscript\b[^.!?]*\b(?:shows?|says?|only)\b|\b(?:wasn'?t|was not|isn'?t|not) captured\b|\bthe last resort\b|\bI (?:can(?:'t|not)?|cannot|could(?:n'?t)?) (?:check|hear|tell|judge|score)\b[^.!?]*\b(?:words|sound(?:ed|s)?)\b/i;
+// Task 24 §B1 (GDI run 12, 352 s: `The student said "I have worked …," which
+// is correct …` was dropped whole by PHRASE_START_RE and the turn went
+// silent): the learner's quoted words named in the third person are
+// addressed — "The student said "…"" → "You said "…"". Only before a quote /
+// that / it / the; "The student said nothing." is still dropped.
+const THIRD_PERSON_SAID_RE = /^(\s*)The (?:student|learner) said\b(?=\s*(?:["“]|that\b|it\b|the\b))/i;
 function addressLearner(s: string): string {
+  s = s.replace(THIRD_PERSON_SAID_RE, '$1You said');
   let out = s.replace(THIRD_PERSON_LEARNER_LEAD_RE, (_m, sp: string, noun: string) => `${sp}Your ${noun.toLowerCase()}`);
   const tail = BRING_BACK_TAIL_RE.exec(out);
   if (tail && tail.index > 0) out = `${out.slice(0, tail.index).replace(/[,;:\s]+$/, '')}.`;
