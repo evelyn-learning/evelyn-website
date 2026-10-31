@@ -9,7 +9,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation } from '../src/lib/tutor/lesson-plan/announced-move';
-import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
 let failed = 0;
@@ -157,9 +157,9 @@ test('C: VTR — scheduled once per segment on an announced advance, dispatched 
   pin(VTR, /if \(advanceReason === 'announced' && announcedTurnNeedsContinuation\(fullText\) && !announcedContinuedSegsRef\.current\.has\(autoNext\)\) \{\s*announcedContinuedSegsRef\.current\.add\(autoNext\);/);
   pin(VTR, /const speaking = productionStateRef\.current === 'speaking';/);
   // Task 23 §C: the scheduler is shared with the level-set advance (event per path).
-  pin(VTR, /onDebugEvent\?\.\(via === 'level' \? 'fixed_script_level_continue' : 'fixed_script_announced_continue', `"\$\{contTarget\}" waited=\$\{waitedMs\}ms`\);\s*void handleStudentTranscriptForBrainRef\.current\?\.\(FIXED_SCRIPT_CONTINUE_DIRECTIVE, \{ silent: true, bypassPerceptionDedupe: true \}\);/);
+  pin(VTR, /onDebugEvent\?\.\(via === 'level' \? 'fixed_script_level_continue' : 'fixed_script_announced_continue', `"\$\{contTarget\}" waited=\$\{waitedMs\}ms`\);\s*void handleStudentTranscriptForBrainRef\.current\?\.\(via === 'level' \? FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE : FIXED_SCRIPT_CONTINUE_DIRECTIVE, \{ silent: true, bypassPerceptionDedupe: true \}\);/);
   pin(VTR, /announcedContinuedSegsRef\.current\.add\(autoNext\);\s*scheduleFixedScriptContinueRef\.current\(autoNext, 'announced'\);/);
-  pin(VTR, /if \(announcedContinueTimerRef\.current && transcript !== FIXED_SCRIPT_CONTINUE_DIRECTIVE\) \{\s*clearTimeout\(announcedContinueTimerRef\.current\);/);
+  pin(VTR, /if \(announcedContinueTimerRef\.current && transcript !== FIXED_SCRIPT_CONTINUE_DIRECTIVE && transcript !== FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE\) \{\s*clearTimeout\(announcedContinueTimerRef\.current\);/);
   const unmount = VTR.indexOf('// Student marks + tutor reactions: clear armed idle-send timers on unmount.');
   pin(VTR.slice(unmount, unmount + 2000), /clearTimeout\(announcedContinueTimerRef\.current\)/);
   // review I-1/I-2: guard set + turn sequence + drain-loop clear
@@ -201,7 +201,11 @@ test('23C: VTR — the level advance records its target and the turn end schedul
   pin(VTR, /announcedContinuedSegsRef\.current\.add\(lvTarget\);\s*scheduleFixedScriptContinueRef\.current\(lvTarget, 'level'\);/);
   pin(VTR, /levelAdvanceThisTurnRef\.current = '';/);
   // the same cancel rules: the shared timer is cleared by any other dispatch
-  pin(VTR, /if \(announcedContinueTimerRef\.current && transcript !== FIXED_SCRIPT_CONTINUE_DIRECTIVE\) \{/);
+  pin(VTR, /if \(announcedContinueTimerRef\.current && transcript !== FIXED_SCRIPT_CONTINUE_DIRECTIVE && transcript !== FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE\) \{/);
+});
+test('23 r2 m5: the level-set continuation has its own directive; the announced one is unchanged', () => {
+  assert.equal(FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, '[System note: the level check is complete and the lesson pointer has moved to the next part; begin that part now from its notes — a one-sentence bridge, then its first question or card. Do not recap the level check.]');
+  assert.ok(FIXED_SCRIPT_CONTINUE_DIRECTIVE.startsWith('[System note: you announced the next part'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

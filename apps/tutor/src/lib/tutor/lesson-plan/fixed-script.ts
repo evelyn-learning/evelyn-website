@@ -225,6 +225,10 @@ export function fixedScriptAnnouncedAdvanceLead(from: string, next: string, kind
  *  continuation starts the new part once the audio has finished. */
 export const FIXED_SCRIPT_CONTINUE_DIRECTIVE =
   '[System note: you announced the next part and then stopped without a question. The lesson pointer has moved; begin that part now from its notes — its first question or card — in one or two sentences. Do not repeat the announcement, do not recap.]';
+/** Task 23 fix round 2 (m5): the level-set advance's silent continuation —
+ *  the brain announced nothing there, so the new part opens with a bridge. */
+export const FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE =
+  '[System note: the level check is complete and the lesson pointer has moved to the next part; begin that part now from its notes — a one-sentence bridge, then its first question or card. Do not recap the level check.]';
 /** GDI run 3: the client moved off the level check before the brain stored a
  *  level, so no level was ever kept. Leaving a `skipWhenLevelKnown` segment
  *  with no working level ⇒ the note asks for set_working_level first. */
