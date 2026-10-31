@@ -1058,7 +1058,8 @@ test('21B r3: "remember" / "article" are cues only in a correcting frame', () =>
   test('23D3: isQuotedFragment shapes', () => {
     assert.equal(isQuotedFragment('I have worked,', 'the present perfect, ', ' well.'), true);
     assert.equal(isQuotedFragment('I have sold', '', ' is the right form'), true);
-    assert.equal(isQuotedFragment('I have worked with customers', 'Try using ', '.'), true);
+    // fix round 1 (m1): "using" no longer marks a fragment
+    assert.equal(isQuotedFragment('I have worked with customers', 'Try using ', '.'), false);
     assert.equal(isQuotedFragment('I have worked with customers', 'Remember the form ', '.'), true);
     assert.equal(isQuotedFragment('I have worked with customers', 'Use the phrase ', '.'), true);
     assert.equal(isQuotedFragment('I have worked with customers for years', 'You said ', ' correctly.'), true);
@@ -1120,6 +1121,15 @@ test('23 r1 m2: "I is / I are" → "I am" is a correction with [am]', () => {
     [{ sentence: 'I am a sales manager at Nagoya.', kind: 'correction', emphasis: ['am'], emphasisAt: [1] }]);
   // an agreeing I am ↔ you are is still a person shift, not an edit
   assert.equal(recastsStudentSentence('You are the leader of a small team.', 'I am the leader of a small team.'), false);
+});
+
+test('23 r1 m1: "Use "…"" and a whole sentence quoted with its comma card; a short comma starter does not', () => {
+  const c1 = planSentenceBoard({ renderedThisTurn: false, tutorText: 'Close. Use "I attended a robotics exhibition in Tokyo last year." Can you say it?', studentLast: 'I attend robotics exhibition in Tokyo last year.' });
+  assert.deepEqual(c1.map((c) => c.sentence), ['I attended a robotics exhibition in Tokyo last year.']);
+  const T302 = 'Yes, that\'s right. You said you have worked with an international customer, and you used the present perfect, "I have worked," well.';
+  assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, studentCorrect: true, tutorText: T302, studentLast: 'Yes, I have worked with an international customer before.' }), []);
+  const c3 = planSentenceBoard({ renderedThisTurn: false, studentCorrect: true, tutorText: 'Good, "Last month, I sold 25 machines to Toyota," is correct.', studentLast: 'Last month, I sold 25 machines to Toyota.', checkedSentence: 'Last month, I sold 25 machines to Toyota.' });
+  assert.deepEqual(c3.map((c) => c.sentence), ['Last month, I sold 25 machines to Toyota.']);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -288,12 +288,17 @@ export function isSentenceStarter(span: string, before: string, after: string): 
  *  verb / tense / phrase / pattern") or is followed by a form comment ("…"
  *  well / correctly / right). "…" is correct still cards. */
 const FRAGMENT_MIN_WORDS = 4;
-const FRAGMENT_INTRO_RE = /\b(?:start(?:ing)? with|begin(?:ning)? with|using|use|with the form|the form|the (?:verb|tense|phrase|pattern))\s*[:,]?\s*$/i;
+// Fix round 1 (m1): no using / use — "Use "I have worked here since 2020."" is a correction.
+const FRAGMENT_INTRO_RE = /\b(?:start(?:ing)? with|begin(?:ning)? with|with the form|the form|the (?:verb|tense|phrase|pattern))\s*[:,]?\s*$/i;
+/** Fix round 1 (m1): a trailing comma marks a starter only in a short quote —
+ *  a whole sentence quoted with its comma inside (US style) stays a card. */
+const FRAGMENT_COMMA_MAX_WORDS = 6;
 const FRAGMENT_AFTER_RE = /^\s*[,.]?\s*(?:well|correctly|right)\b/i;
 export function isQuotedFragment(span: string, before: string, after: string): boolean {
   const s = (span ?? '').trim();
-  if (/,\s*$/.test(s)) return true;
-  if (s.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length < FRAGMENT_MIN_WORDS) return true;
+  const words = s.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length;
+  if (/,\s*$/.test(s) && words < FRAGMENT_COMMA_MAX_WORDS) return true;
+  if (words < FRAGMENT_MIN_WORDS) return true;
   if (introWithin(FRAGMENT_INTRO_RE, before)) return true;
   return FRAGMENT_AFTER_RE.test(after ?? '');
 }
@@ -861,7 +866,8 @@ export function planSentenceBoard(input: {
   const affirmFallback = !studentCorrect && input.affirmFallback === true && !hasCorrectionCue(input.tutorText) && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '');
   const spans = [
     // Task 23 §D3: a quoted starter / fragment is never a card.
-    ...quotedSpansWithContext(input.tutorText).filter((q) => !isQuotedFragment(q.span, q.before, q.after)).map((q) => ({ ...q, introduced: false })),
+    // Fix round 1 (m1): a whole sentence quoted with its comma inside ends in "." on the card.
+    ...quotedSpansWithContext(input.tutorText).filter((q) => !isQuotedFragment(q.span, q.before, q.after)).map((q) => ({ ...q, span: q.span.replace(/,\s*$/, '.'), introduced: false })),
     ...colonIntroducedSpans(input.tutorText).map((q) => ({ ...q, introduced: true })),
   ].filter((q) => isCardCandidate(q.span) && !isSentenceStarter(q.span, q.before, q.after));
   const distinct: { s: string; n: string; said: boolean; affirmed: boolean; introduced: boolean }[] = [];
