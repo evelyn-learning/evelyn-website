@@ -274,6 +274,16 @@ const CLOSE_PART_NARRATION_RE =
   /^\s*Let me (?:close out|wrap up|finish(?: up)?|round off) (?:the|this) \w+(?: \w+)? (?:part|section|segment|step)(?: now)?,? and (?:move|go|get) (?:on )?to\b/i;
 const KEEP_IN_MIND_TAIL_RE =
   /,?\s*\bso I['’]ll keep (?:(?:that|this|it)(?: point| in mind| noted)|that (?:point )?in mind)\b[^.!?]*[.!]?\s*$/i;
+/** Fix round 1 (m7): a head that speaks TO the student ("You prefer short
+ *  sentences, so I'll keep that in mind.") keeps its head; only the tail goes. */
+function stripKeepInMindTail(s: string): string | null {
+  const m = KEEP_IN_MIND_TAIL_RE.exec(s);
+  if (!m) return null;
+  const head = s.slice(0, m.index).trim();
+  // quoted words ("for" and "our" as the sounds to work on) are not address
+  if (!head || !ADDRESSES_STUDENT_RE.test(head.replace(/["“「‘][^"”」’]*["”」’]/g, ' '))) return '';
+  return `${head.replace(/[,;:\s]+$/, '')}.`;
+}
 export interface NoteCitationOpts { /** the session persona's name(s) — full name and first name */ personaName?: string | readonly string[] | null }
 /**
  * A sentence that cites a runtime note with the citation removed: unchanged
@@ -285,7 +295,9 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   if (isPersonaSelfAnnounce(raw, opts?.personaName)) return '';
   const s = stripPersonaLead(raw, opts?.personaName);
   if (s !== raw && !s.trim()) return '';
-  if (CLOSE_PART_NARRATION_RE.test(s) || KEEP_IN_MIND_TAIL_RE.test(s)) return '';
+  if (CLOSE_PART_NARRATION_RE.test(s)) return '';
+  const keepStripped = stripKeepInMindTail(s);
+  if (keepStripped !== null) return keepStripped;
   const m = NOTE_CITING_OPENER_RE.exec(s) ?? STAY_ON_ONE_IDEA_RE.exec(s);
   if (!m) return s;
   NOTE_CITATION_CONTINUATION_RE.lastIndex = m.index + m[0].length;

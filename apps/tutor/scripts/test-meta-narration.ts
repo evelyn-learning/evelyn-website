@@ -777,5 +777,10 @@ check('m6 "Ryota asks you to say it once more." untouched', stripNoteCitationCla
 check('m6 "Ryota suggests that we try again." untouched', stripNoteCitationClause('Ryota suggests that we try again.', RYOTA) === 'Ryota suggests that we try again.');
 check('m6 "Ryota asks: what did you sell?" → the question', stripNoteCitationClause('Ryota asks: what did you sell?', RYOTA) === 'What did you sell?');
 check('m6 a quote after "asks" loses the lead', stripNoteCitationClause('Ryota asks "What did you sell?"', RYOTA) === '"What did you sell?"');
+check('m7 "You prefer short sentences, so I\'ll keep that in mind." → "You prefer short sentences."',
+  stripNoteCitationClause("You prefer short sentences, so I'll keep that in mind.") === 'You prefer short sentences.');
+check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
+  stripNoteCitationClause('Before I give one, the pronunciation result shows "for" and "our" as the sounds to work on, so I\'ll keep that point in mind.') === '');
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
