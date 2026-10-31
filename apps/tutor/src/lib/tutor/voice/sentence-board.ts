@@ -490,16 +490,29 @@ const PRONOUN_CLASS: Record<string, string> = {
 /** Task 23 fix round 1 (m2): a be-verb is a person shift only when it AGREES
  *  with the pronoun right before it (I am / you are / we are) — "I is" / "I
  *  are" keep their verb, so the fix to "I am" is an edit and gets its card. */
-const BE_AGREES: Record<string, string> = { i: 'am', you: 'are', we: 'are' };
+/** Fix round 3 (I1): the be-verb by tense / negation — each class names the
+ *  form that agrees with I / you / we. "I" has no one-word negative present
+ *  ("am not" is two words), so that slot cannot be written back. */
+const BE_FORMS: Record<string, Record<string, string>> = {
+  '<be>': { i: 'am', you: 'are', we: 'are' },
+  '<bepast>': { i: 'was', you: 'were', we: 'were' },
+  '<beneg>': { you: "aren't", we: "aren't" },
+  '<bepastneg>': { i: "wasn't", you: "weren't", we: "weren't" },
+};
+const BE_CLASS_OF: Record<string, string> = {
+  am: '<be>', are: '<be>', was: '<bepast>', were: '<bepast>', "aren't": '<beneg>', "wasn't": '<bepastneg>', "weren't": '<bepastneg>',
+};
 function personClassTokens(toks: readonly string[]): string[] {
   return toks.map((t, k) => {
-    if ((t === 'am' || t === 'are') && k > 0 && BE_AGREES[toks[k - 1]!] === t) return '<be>';
+    // Fix round 3 (I1): past and negative be-forms too ("I was" ↔ "you were").
+    const beClass = BE_CLASS_OF[t];
+    if (beClass && k > 0 && BE_FORMS[beClass]![toks[k - 1]!] === t) return beClass;
     return PRONOUN_CLASS[t] ?? t;
   });
 }
 /** Task 23 §D2: the classes that carry the speaker's person (written back
  *  into the student's own form on a recast card). */
-const PERSON_CLASSES = new Set(['<pro>', '<poss>', '<poss2>', '<refl>', '<be>', '<pro-be>']);
+const PERSON_CLASSES = new Set(['<pro>', '<poss>', '<poss2>', '<refl>', '<be>', '<bepast>', '<beneg>', '<bepastneg>', '<pro-be>']);
 function recastTokens(text: string): string[] {
   return personClassTokens(dropFillersAndRepeats(tokens(text)));
 }
@@ -639,7 +652,8 @@ function writeBackPerson(span: string, rawT: readonly string[], classed: readonl
     const sj = studentIndex(j);
     if (sj >= 0 && saidClassed[sj] === classed[j] && saidRaw[sj]) { out[j] = saidRaw[sj]!; continue; }
     const subject = j > 0 ? out[j - 1] : null;
-    if (classed[j] === '<be>' && subject && BE_AGREES[subject]) { out[j] = BE_AGREES[subject]!; continue; }
+    const agreeing = subject ? BE_FORMS[classed[j]!]?.[subject] : undefined;
+    if (agreeing) { out[j] = agreeing; continue; }
     blocked = j;
     break;
   }

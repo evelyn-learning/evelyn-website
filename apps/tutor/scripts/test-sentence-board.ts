@@ -1169,5 +1169,19 @@ test('23 r2 m4: comma-ended clause starters and questions are no cards; a comple
   assert.deepEqual(c('Use the past: "I went to Osaka last week," right?', 'I go to Osaka last week.'), ['I went to Osaka last week.']);
 });
 
+test('23 r3 I1: past and negative be-verbs are written back in the agreeing form, or no card', () => {
+  const c = (t: string, st: string) => planSentenceBoard({ renderedThisTurn: false, tutorText: t, studentLast: st });
+  // "I was" ↔ "You were" is a person shift: identical ⇒ no card
+  assert.deepEqual(c('Good. You were a sales manager last year. Why?', 'I was a sales manager last year.'), []);
+  // "I" has no one-word negative present ("am not") ⇒ no card, never "I aren't"
+  assert.deepEqual(c("Hmm. You aren't working in sales now. Why not?", 'I working in sales now.'), []);
+  assert.deepEqual(c('Good. You were there last year. Why?', 'We was there last year.').map((x) => [x.sentence, x.emphasis]), [['We were there last year.', ['were']]]);
+  assert.deepEqual(c('Good. You were a sales manager last year. Why?', 'I were a sales manager last year.').map((x) => [x.sentence, x.emphasis]), [['I was a sales manager last year.', ['was']]]);
+  assert.deepEqual(c("OK. You weren't at the meeting yesterday. Why?", "I weren't at the meeting yesterday.").map((x) => [x.sentence, x.emphasis]), [["I wasn't at the meeting yesterday.", ["wasn't"]]]);
+  for (const x of [...c('Good. You were a sales manager last year. Why?', 'I were a sales manager last year.'), ...c("Hmm. You aren't working in sales now.", 'I working in sales now.')]) {
+    assert.ok(!/\bI (?:were|aren't|are)\b/.test(x.sentence), x.sentence);
+  }
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
