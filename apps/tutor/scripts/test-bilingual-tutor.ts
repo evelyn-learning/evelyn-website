@@ -1471,6 +1471,10 @@ test('23I verb-form errors are grammar, not mishearing: the judge block and the 
   assert.ok(buildJudgeUserContent({ ...jb, learnerSpeech: true }).includes(judgeLine));
   assert.ok(!buildJudgeUserContent(jb).includes(judgeLine));
   const brainLine = 'When you correct a word, say the correction plainly; never tell the student they used the corrected form.';
+  // fix round 2 (I2): the brain's sound-alike example agrees with the judge (no inflection pair)
+  const clause = buildBilingualClause(['en', 'ja'])!;
+  assert.ok(clause.includes('(bought → "boat", walked → "woke", thirteen → "thirty")'));
+  assert.ok(!clause.includes('walked → "work"'));
   assert.ok(buildBilingualClause(['en', 'ja'])!.includes(brainLine));
   const a = buildSystemPromptParts(base);
   const b = buildSystemPromptParts({ ...base, tutorLanguages: ['en', 'ja'] });
