@@ -281,9 +281,17 @@ const BOARD_LINE_LABEL_RE = /^\s*(?:(?:question|q)\s*\d+\s*[:.)]?|\d+\s*[.)])\s*
  *  of one line of the current board question (≥ 4 words; at most one of its
  *  tokens missing, at most two of the student's own added), and the last
  *  tutor turn did not ask for exactly that line (`expectedRepeat`). */
-export function isBoardReadAloud(input: { transcript: string; boardQuestion: string | null | undefined; expectedRepeat: string | null | undefined }): boolean {
+/** Fix round 1 (I3): the student asks the question BACK — "And you? Have
+ *  you …?", "How about you?", "What about you, have you …?", "You?". */
+const QUESTION_BACK_LEAD_RE = /^\s*(?:(?:um|uh|so|well|ok(?:ay)?|yes|yeah|no)\s*[,.]?\s*)*(?:(?:and|how about|what about) you\b|you\s*\?)/i;
+export function isBoardReadAloud(input: {
+  transcript: string; boardQuestion: string | null | undefined; expectedRepeat: string | null | undefined;
+  /** Fix round 1 (I3): this board statement was held once already — a second reading is a turn. */
+  heldBefore?: boolean;
+}): boolean {
   const board = input.boardQuestion ?? '';
-  if (!board.trim()) return false;
+  if (!board.trim() || input.heldBefore === true) return false;
+  if (QUESTION_BACK_LEAD_RE.test(input.transcript ?? '')) return false;
   const st = cleanStudentTokens(input.transcript ?? '');
   if (st.length === 0) return false;
   // Fix round 1 (I2): the student said the line they were asked for —

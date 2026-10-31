@@ -4108,6 +4108,8 @@ export function VoiceTutorRealtime({
   const autoAdvancePronHeldRef = useRef(0);
   // Task 22 §A: consecutive turns a due auto-advance was held because the turn ended with an ask.
   const autoAdvanceAskHeldRef = useRef(0);
+  // Task 22 fix round 1 (I3): board statements whose read-aloud was held once.
+  const boardReadAloudHeldRef = useRef<Set<string>>(new Set());
   /** Task 16 §C: the scheduled continuation after an announced move whose
    *  turn asked nothing (cleared by any other dispatch and on unmount), and
    *  the segments already continued into (at most once per segment). */
@@ -22089,6 +22091,11 @@ export function VoiceTutorRealtime({
       // one entry point every dispatch passes — and attached to the student
       // entry by callBrainOnce. Never forwarded to the brain.
       image?: { dataUrl: string; name?: string };
+      // Task 22 fix round 1 (I3): this utterance stopped the tutor's speech
+      // (perception MERGE / FRESH after the interrupt cancel, or the
+      // late-fallback barge-in that cleared the speech queue) — it is never
+      // held as a board read-aloud, or the student would talk into silence.
+      stoppedTutor?: boolean;
     },
   ) => {
     // Task 16 §C: any dispatch other than the continuation itself (a student
@@ -22125,7 +22132,7 @@ export function VoiceTutorRealtime({
     // me…") — not a turn. No brain dispatch; keep listening (the idle nudge
     // stays armed as the fallback). Spoken language-session turns only, and
     // never when the last tutor turn asked for exactly that line.
-    if (TUTOR_BOARD_READ_ALOUD_HOLD && !opts?.silent && !opts?.typed && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
+    if (TUTOR_BOARD_READ_ALOUD_HOLD && !opts?.silent && !opts?.typed && !opts?.stoppedTutor && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const lastShown = [...whiteboardCommandsRef.current].reverse().find((c) => (c as any).action === 'showProblem') as any;
       const boardQuestion = currentProblemRef.current?.statement ?? (typeof lastShown?.problem?.statement === 'string' ? lastShown.problem.statement : null);
@@ -22138,7 +22145,10 @@ export function VoiceTutorRealtime({
           clipCaptureRef.current?.armedReference(),
           readClip && Date.now() - readClip.at < 30_000 ? readClip.text : null,
         );
-      if (isBoardReadAloud({ transcript, boardQuestion, expectedRepeat: readExpected?.text ?? null })) {
+      const heldBefore = !!boardQuestion && boardReadAloudHeldRef.current.has(boardQuestion);
+      if (isBoardReadAloud({ transcript, boardQuestion, expectedRepeat: readExpected?.text ?? null, heldBefore })) {
+        // Fix round 1 (I3): once per board statement — a second reading dispatches.
+        if (boardQuestion) boardReadAloudHeldRef.current.add(boardQuestion);
         onDebugEvent?.('board_read_aloud_held', `"${transcript.slice(0, 80)}"`);
         return;
       }
@@ -23239,6 +23249,7 @@ export function VoiceTutorRealtime({
       void handleStudentTranscriptForBrain(freshText, {
         bypassPerceptionDedupe: true,
         queueOnMidUtterance: true,
+        stoppedTutor: true,
         ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
       });
       return;
@@ -23260,6 +23271,7 @@ export function VoiceTutorRealtime({
     void handleStudentTranscriptForBrain(fresh, {
       bypassPerceptionDedupe: true,
       queueOnMidUtterance: true,
+      stoppedTutor: true,
       ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
     });
   }, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, logPacing]);
@@ -25015,7 +25027,7 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('late_fallback_barge_stopped_speech', t.text.slice(0, 60));
             void clearSpeechQueueRef.current?.();
           }
-          void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
+          void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true, ...(heur.verdict === 'barge_in' && prodState === 'speaking' ? { stoppedTutor: true } : {}) });
           return;
         }
 

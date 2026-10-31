@@ -1377,14 +1377,33 @@ test('22E r1 I2: an asked-for reading is not held — a quoted target one word o
   assert.equal(asksToReadAloud(t217), false);
   assert.equal(isBoardReadAloud({ transcript: quoted, boardQuestion: board, expectedRepeat: null }), true);
 });
+test('22E r1 I3: held once per statement; a question asked back is a turn; a barge-in is never held', () => {
+  const board = 'Have you worked for your current company for a long time?';
+  const read = 'Have you worked for your company for a long time?';
+  assert.equal(isBoardReadAloud({ transcript: read, boardQuestion: board, expectedRepeat: null, heldBefore: false }), true);
+  assert.equal(isBoardReadAloud({ transcript: read, boardQuestion: board, expectedRepeat: null, heldBefore: true }), false);
+  for (const t of [
+    'And you? Have you worked for your current company for a long time?',
+    'How about you? Have you worked for your current company for a long time?',
+    'What about you, have you worked for your current company for a long time?',
+    'You? Have you worked for your current company for a long time?',
+    'Um, and you, have you worked for your company for a long time?',
+  ]) assert.equal(isBoardReadAloud({ transcript: t, boardQuestion: board, expectedRepeat: null }), false, t);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(/if \(TUTOR_BOARD_READ_ALOUD_HOLD && !opts\?\.silent && !opts\?\.typed && !opts\?\.stoppedTutor && languageSessionRef\.current/.test(vtr), 'a transcript that stopped the tutor is never held');
+  assert.ok(/const heldBefore = !!boardQuestion && boardReadAloudHeldRef\.current\.has\(boardQuestion\);\s*if \(isBoardReadAloud\(\{ transcript, boardQuestion, expectedRepeat: readExpected\?\.text \?\? null, heldBefore \}\)\) \{\s*\/\/[^\n]*\n\s*if \(boardQuestion\) boardReadAloudHeldRef\.current\.add\(boardQuestion\);/.test(vtr), 'once per statement');
+  // the three paths where the utterance stopped the tutor pass the signal
+  assert.equal((vtr.match(/queueOnMidUtterance: true,\n\s*stoppedTutor: true,/g) ?? []).length, 2, 'perception MERGE + FRESH');
+  assert.ok(/void handleStudentTranscriptForBrain\(t\.text, \{ bypassPerceptionDedupe: true, \.\.\.\(heur\.verdict === 'barge_in' && prodState === 'speaking' \? \{ stoppedTutor: true \} : \{\}\) \}\);/.test(vtr), 'late-fallback barge-in');
+});
 test('22E VTR holds a read-aloud before the brain dispatch (pin)', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   const h = vtr.indexOf('const handleStudentTranscriptForBrain = useCallback(');
   const at = vtr.indexOf("'board_read_aloud_held'", h);
   assert.ok(h > 0 && at > h && at - h < 9000, 'inside handleStudentTranscriptForBrain, near its top');
   const block = vtr.slice(at - 2000, at + 200);
-  assert.ok(/if \(TUTOR_BOARD_READ_ALOUD_HOLD && !opts\?\.silent && !opts\?\.typed && languageSessionRef\.current && /.test(block));
-  assert.ok(/isBoardReadAloud\(\{ transcript, boardQuestion, expectedRepeat: readExpected\?\.text \?\? null \}\)\) \{\s*onDebugEvent\?\.\('board_read_aloud_held', `"\$\{transcript\.slice\(0, 80\)\}"`\);\s*return;/.test(block));
+  assert.ok(/if \(TUTOR_BOARD_READ_ALOUD_HOLD && !opts\?\.silent && !opts\?\.typed && !opts\?\.stoppedTutor && languageSessionRef\.current && /.test(block));
+  assert.ok(/isBoardReadAloud\(\{ transcript, boardQuestion, expectedRepeat: readExpected\?\.text \?\? null, heldBefore \}\)\) \{[\s\S]{0,200}?onDebugEvent\?\.\('board_read_aloud_held', `"\$\{transcript\.slice\(0, 80\)\}"`\);\s*return;/.test(block));
   assert.ok(/currentProblemRef\.current\?\.statement \?\?/.test(block));
   assert.ok(at < vtr.indexOf('recordStudentEngagement(idleNudgeStateRef.current)', h), 'before the engagement reset: the idle nudge stays armed');
   assert.ok(/export const TUTOR_BOARD_READ_ALOUD_HOLD = process\.env\.NEXT_PUBLIC_TUTOR_BOARD_READ_ALOUD_HOLD !== 'off';/.test(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8')));
