@@ -1058,3 +1058,15 @@ export function duplicateSentenceAction(input: {
   if (!input.pronunciationModel) return 'skip';
   return 'reshow';
 }
+
+/** Task 23 §A: a card sentence that is the STUDENT's sentence — their own
+ *  words (echo), their sentence with a fix (correction), or a one-edit recast
+ *  of it — as opposed to a new model sentence. Used to keep a brain
+ *  show_sentence of the answer to the part being left in front of that part's
+ *  page break. No student turn ⇒ false. */
+export function isStudentSentenceCard(sentence: string, studentLast: string | null | undefined): boolean {
+  if (!studentLast || !studentLast.trim() || !sentence || !sentence.trim()) return false;
+  const kind = classifyQuotedSentence(sentence, studentLast).kind;
+  if (kind === 'echo' || kind === 'correction') return true;
+  return recastsStudentSentence(sentence, studentLast);
+}

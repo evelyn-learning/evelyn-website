@@ -311,6 +311,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'auto_newpage_retitled_from_render',
   // Task 14 §K: a post-turn auto card held off the next part's page.
   'auto_newpage_on_advance_held_for_auto_card',
+  // Task 23 §A2: an empty segment page kept the batch (no topic-shift page on top).
+  'auto_new_page_skipped_empty_segment_page',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

@@ -114,3 +114,26 @@ export function flushDeferredPageAtTurnEnd(input: {
   const { pending, brainBusy, speaking, bufferedRenders } = input;
   return !!pending && pending.authored === true && !brainBusy && !speaking && bufferedRenders === 0;
 }
+
+/**
+ * Task 23 §A (GDI run 11, 143 s / 271 s / 1017 s): the advancing turn's card
+ * of the STUDENT's sentence (an auto echo / correction / checked / affirmed /
+ * recast card, or a brain show_sentence of the student's sentence) painted
+ * AFTER the new part's page break — the correction of the answer to the part
+ * being left landed on the next part's page. Every student sentence card that
+ * follows the page break is moved in front of it (stream order otherwise
+ * kept); the segment card and any other render stay after it. `moved` = the
+ * cards moved, in order. No newPage in `cmds` ⇒ unchanged.
+ */
+export function orderStudentCardsBeforePageBreak<T extends { action: string }>(
+  cmds: readonly T[],
+  isStudentCard: (c: T) => boolean,
+): { cmds: T[]; moved: T[] } {
+  const breakIdx = cmds.findIndex((c) => c.action === 'newPage');
+  if (breakIdx < 0) return { cmds: [...cmds], moved: [] };
+  const moved = cmds.filter((c, i) => i > breakIdx && c.action === 'showSentence' && isStudentCard(c));
+  if (moved.length === 0) return { cmds: [...cmds], moved: [] };
+  const rest = cmds.filter((c) => !moved.includes(c));
+  const at = rest.indexOf(cmds[breakIdx]!);
+  return { cmds: [...rest.slice(0, at), ...moved, ...rest.slice(at)], moved };
+}

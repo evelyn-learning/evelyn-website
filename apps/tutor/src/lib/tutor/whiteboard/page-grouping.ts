@@ -448,3 +448,21 @@ export function decidePageForBatch(input: PageGroupingInput): PageDecision {
 
   return { action: 'none', reason: 'default — group onto active page (Tier 4)' };
 }
+
+/**
+ * Task 23 §A2 (GDI run 11, 690 → 713 s: the "Part 6 · Conversation" page
+ * opened empty at the end of the advancing turn, then a topic-shift page
+ * "Extension" opened on top of it and the part's card went there): while the
+ * current page is a segment page with nothing on it yet, a topic-shift / auto
+ * newPage (or continuation) is skipped — the batch goes on the segment page.
+ * The student's explicit reset ("new page, please") still opens one.
+ */
+export function keepBatchOnEmptySegmentPage(
+  decision: PageDecision,
+  page: { isSegmentPage: boolean; itemCount: number } | null | undefined,
+): PageDecision {
+  if (decision.action !== 'newPage' && decision.action !== 'continuation') return decision;
+  if (decision.event === 'auto_new_page_reset') return decision;
+  if (!page || !page.isSegmentPage || page.itemCount > 0) return decision;
+  return { action: 'none', reason: `empty segment page takes the batch (was ${decision.action}: ${decision.reason})` };
+}

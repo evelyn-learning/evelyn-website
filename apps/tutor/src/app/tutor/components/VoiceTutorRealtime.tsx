@@ -13,7 +13,7 @@ import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } f
 import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
-import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders } from '@/lib/tutor/voice/sentence-board';
+import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
@@ -88,7 +88,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
@@ -319,7 +319,7 @@ import {
   type IdleNudgePostponeReason,
 } from '@/lib/tutor/voice/idle-nudge';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
-import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, newPageTitle, weightOfAction, STALE_TURNS, isSentenceOnlyBatch, keepSentenceBatchOnPage } from '@/lib/tutor/whiteboard/page-grouping';
+import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, newPageTitle, weightOfAction, STALE_TURNS, isSentenceOnlyBatch, keepSentenceBatchOnPage, keepBatchOnEmptySegmentPage } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
 import { flushableCount, shouldBypassRenderSync } from '@/lib/tutor/whiteboard/render-sync';
 import { shouldAbortStalledBrain, decideStallRecovery, shouldRetryStalledOpener, BRAIN_STALL_APOLOGY } from '@/lib/tutor/voice/brain-stall';
@@ -4355,6 +4355,13 @@ export function VoiceTutorRealtime({
   // deferred — preventing the empty-page-after-advance bug observed
   // 2026-05-13 (10) session.
   const pendingAdvanceNewPageRef = useRef<{ title: string; segmentId: string; /** fixed-script "Part n · label" title — never retitled from the card */ authored?: boolean; /** armed by the client's post-turn advance (fixed-script auto-advance / spoken opener): the turn's own auto sentence cards belong to the part being LEFT and never open this page (Task 14 §K) */ afterTurn?: boolean } | null>(null);
+  // Task 23 §A: the deferred segment page break flushed into a batch this
+  // turn (the newPage command object, still in the render buffer until it
+  // paints) and the page being left — a later student sentence card of the
+  // same turn is buffered in FRONT of it and catalogued on the page left.
+  const segmentPageBreakRef = useRef<{ cmd: WhiteboardCommand; priorPageId: string | null; segmentId: string; title: string } | null>(null);
+  // Task 23 §A2: the catalog page id of the last deferred segment page opened.
+  const segmentPageIdRef = useRef<string | null>(null);
 
   // Engagement / fatigue tracking. We track the last N student reply lengths
   // and fire a diagnostic prompt when replies collapse to short monosyllables
@@ -6003,7 +6010,7 @@ export function VoiceTutorRealtime({
       bufferedRenders: renderBufferRef.current.length,
     }) || !deferred) return;
     pendingAdvanceNewPageRef.current = null;
-    catalogRef.current.openPage({ title: deferred.title, segmentId: deferred.segmentId });
+    segmentPageIdRef.current = catalogRef.current.openPage({ title: deferred.title, segmentId: deferred.segmentId });
     catalogRef.current.setCurrentPage(deferred.title);
     // Fix round 1 (I5): painted AND recorded like any dispatched batch — the
     // mirror must see the new page, or the duplicate-title guard and the
@@ -6146,8 +6153,11 @@ export function VoiceTutorRealtime({
   // Buffer one render batch (or dispatch immediately when render-sync is
   // off / not on the brain-stream path). Anchored to the count of
   // sentences dispatched to TTS so far this turn.
-  const dispatchVisualRef = useRef<(processed: WhiteboardCommand[], anchorOverride?: number) => void>(() => {});
-  dispatchVisualRef.current = (processed: WhiteboardCommand[], anchorOverride?: number) => {
+  // Task 23 §A: `beforeBreak` — student sentence cards of this batch go into
+  // the buffer IN FRONT of the still-buffered segment page break.
+  type BeforeSegmentBreak = { breakCmd: WhiteboardCommand; cards: ReadonlySet<WhiteboardCommand>; onMoved?: (n: number) => void };
+  const dispatchVisualRef = useRef<(processed: WhiteboardCommand[], anchorOverride?: number, beforeBreak?: BeforeSegmentBreak) => void>(() => {});
+  dispatchVisualRef.current = (processed: WhiteboardCommand[], anchorOverride?: number, beforeBreak?: BeforeSegmentBreak) => {
     // Task B3 (flag-gated): count valid (post-validation, about-to-render)
     // board renders this batch contributes toward the opener turn, so the
     // finally-block check can tell "opener drew nothing" from "opener drew
@@ -6333,6 +6343,20 @@ export function VoiceTutorRealtime({
         if (kw) { anchorKeywords = kw; break; }
       }
     }
+    if (beforeBreak) {
+      const breakAt = renderBufferRef.current.findIndex((e) => e.processed.includes(beforeBreak.breakCmd));
+      const cards = processed.filter((c) => beforeBreak.cards.has(c));
+      if (breakAt >= 0 && cards.length > 0) {
+        renderBufferRef.current.splice(breakAt, 0, { processed: cards, anchorM: Math.min(anchorM, renderBufferRef.current[breakAt]!.anchorM) });
+        beforeBreak.onMoved?.(cards.length);
+        processed = processed.filter((c) => !beforeBreak.cards.has(c));
+        if (processed.length === 0) {
+          armRenderStall();
+          flushReadyRenders();
+          return;
+        }
+      }
+    }
     renderBufferRef.current.push({ processed, anchorM, pendingReanchor, anchorKeywords, anchorWord });
     onDebugEvent?.('render_sync_buffer', `anchor=${anchorM} depth=${renderBufferRef.current.length}${pendingReanchor ? ' pending-reanchor' : ''}${anchorWord !== undefined ? ` word=${anchorWord}` : ''}${anchorOverride !== undefined ? ' repair-anchor' : ''}`);
     armRenderStall();
@@ -6462,7 +6486,7 @@ export function VoiceTutorRealtime({
   // arrives AFTER the turn's `done`, so the live TTS dispatch count no
   // longer describes its introducing sentence — the server tells us which
   // 1-based sentence spoke the content and the render buffers against THAT.
-  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean; /** Task 21 §D3: the client's pronunciation-target card (a model to repeat) */ pronunciationModel?: boolean }): Promise<WhiteboardCommandResult> => {
+  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean; /** Task 21 §D3: the client's pronunciation-target card (a model to repeat) */ pronunciationModel?: boolean; /** Task 23 §A: the auto card is the STUDENT's sentence (echo / correction / checked / affirmed / recast) */ studentSentenceCard?: boolean }): Promise<WhiteboardCommandResult> => {
     turnHadToolCallRef.current = true;
     // Structured entry log — gives us the shape of every batch arriving
     // at the handler (from Realtime function_call, from text-parse, or
@@ -9401,7 +9425,7 @@ export function VoiceTutorRealtime({
         }
       : null;
 
-    const pageDecision = keepSentenceBatchOnPage(decidePageForBatch({
+    const rawPageDecision = keepSentenceBatchOnPage(decidePageForBatch({
       batch: processed,
       studentText: lastStudentText,
       activePage: activePageView,
@@ -9422,6 +9446,15 @@ export function VoiceTutorRealtime({
         firstTeachingWillDedup,
       },
     }), sentenceOnlyBatch);
+    // Task 23 §A2 (GDI run 11, 690 → 713 s): an empty segment page takes the
+    // batch — no topic-shift / auto page on top of it.
+    const pageDecision = keepBatchOnEmptySegmentPage(rawPageDecision,
+      activePageObj && segmentPageIdRef.current === activePageObj.id
+        ? { isSegmentPage: true, itemCount: catalogRef.current.pageItemCount(activePageObj.id) }
+        : null);
+    if (pageDecision !== rawPageDecision && rawPageDecision.action !== 'none' && rawPageDecision.action !== 'pin') {
+      onDebugEvent?.('auto_new_page_skipped_empty_segment_page', `"${activePageObj?.title ?? ''}" — ${rawPageDecision.event}: ${rawPageDecision.reason}`);
+    }
     if (sentenceOnlyBatch && topicShiftPendingRef.current) {
       onDebugEvent?.('topic_shift_held_for_sentence', 'sentence-only batch stays on the current page; the newPage mark waits for the next batch');
     }
@@ -9474,6 +9507,32 @@ export function VoiceTutorRealtime({
     // item). If every teaching command would dedup, keep the newPage
     // deferred for a future batch — the brain may emit fresh content
     // later. See pendingAdvanceNewPageRef declaration.
+    // Task 23 §A (GDI run 11, 143 s / 271 s / 1017 s): a card of the
+    // STUDENT's sentence never lands behind the new part's page break — the
+    // client's own auto card (flagged by its caller) or a brain show_sentence
+    // that is the student's sentence (echo / correction / recast) or replaces
+    // an auto card. Moved cards are catalogued on the page being left.
+    const studentLastForBreak = sentenceStressRef.current.studentLast;
+    const isStudentCardCmd = (c: WhiteboardCommand): boolean => {
+      if (c.action !== 'showSentence' || typeof c.sentence !== 'string') return false;
+      if (opts?.sentenceBoardAuto) return opts.studentSentenceCard === true;
+      if (isStudentSentenceCard(c.sentence, studentLastForBreak)) return true;
+      return autoSentenceCardIdsRef.current.size > 0 && autoSentenceCardsToReplace(
+        whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>,
+        autoSentenceCardIdsRef.current,
+        c.sentence,
+      ).length > 0;
+    };
+    const movedBeforeBreak = new Set<WhiteboardCommand>();
+    let movedBeforeBreakPageId: string | null = null;
+    // The break flushed by an EARLIER batch of this turn and still buffered.
+    const bufferedSegmentBreak = segmentPageBreakRef.current
+      && renderBufferRef.current.some((e) => e.processed.includes(segmentPageBreakRef.current!.cmd))
+      ? segmentPageBreakRef.current : null;
+    if (bufferedSegmentBreak && !pendingAdvanceNewPageRef.current) {
+      for (const c of processed) if (isStudentCardCmd(c)) movedBeforeBreak.add(c);
+      if (movedBeforeBreak.size > 0) movedBeforeBreakPageId = bufferedSegmentBreak.priorPageId;
+    }
     if (pendingAdvanceNewPageRef.current) {
       // "Fresh teaching content" = any teaching render not already on the board.
       // Uses the canonical isTeachingRender predicate (page-grouping.ts) rather
@@ -9549,16 +9608,24 @@ export function VoiceTutorRealtime({
           ? retitleFromBatch({ deferredTitle: deferred.title, renderedStatement, authored: deferred.authored === true })
           : { title: deferred.title, retitled: false };
         const pageTitle = titleDecision.title;
-        processed = [{ action: 'newPage', title: pageTitle } as WhiteboardCommand, ...processed];
+        const segmentBreakCmd = { action: 'newPage', title: pageTitle } as WhiteboardCommand;
+        processed = [segmentBreakCmd, ...processed];
+        // Task 23 §A: the student's sentence cards go in front of the break.
+        const orderedForBreak = orderStudentCardsBeforePageBreak(processed, isStudentCardCmd);
+        processed = orderedForBreak.cmds;
+        const priorPageIdForBreak = activePageObj?.id ?? null;
+        for (const c of orderedForBreak.moved) movedBeforeBreak.add(c);
+        if (orderedForBreak.moved.length > 0) movedBeforeBreakPageId = priorPageIdForBreak;
         // Open the deferred page in the catalog Page model (this synthetic
         // newPage is prepended after the step-1 side-effect loop, so the
         // setCurrentPage bridge never sees it). setCurrentPage syncs the view.
-        catalogRef.current.openPage({ title: pageTitle, segmentId: deferred.segmentId });
+        segmentPageIdRef.current = catalogRef.current.openPage({ title: pageTitle, segmentId: deferred.segmentId });
+        segmentPageBreakRef.current = { cmd: segmentBreakCmd, priorPageId: priorPageIdForBreak, segmentId: deferred.segmentId, title: pageTitle };
         catalogRef.current.setCurrentPage(pageTitle);
         // The continuation page opened above is now a non-active empty page.
         if (droppedContinuationPage) catalogRef.current.gcEmptyPages();
         console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${pageTitle}")`);
-        onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${pageTitle}`);
+        onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${pageTitle}${orderedForBreak.moved.length > 0 ? ` after ${orderedForBreak.moved.length} student card(s)` : ''}`);
         if (titleDecision.retitled) {
           onDebugEvent?.('auto_newpage_retitled_from_render', `${deferred.segmentId}: "${deferred.title}" → "${pageTitle}"`);
         }
@@ -9857,7 +9924,7 @@ export function VoiceTutorRealtime({
         // Kill-recovery replace (Tier 0): pin the replacement onto the killed
         // render's page so it replaces in place, beating any boundary signal.
         // Otherwise undefined → the catalog stamps the active page.
-        pageId: killRecoveryPinPageId ?? undefined,
+        pageId: killRecoveryPinPageId ?? (movedBeforeBreak.has(cmd) && movedBeforeBreakPageId ? movedBeforeBreakPageId : undefined),
         title: catalogItemTitle(cmd),
         signature,
         // Subject key for PRIMARY figures only (undefined for supporting
@@ -10590,7 +10657,14 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('sentence_board_auto_replaced', `${replaced.join(',')} → brain show_sentence`);
       }
     }
-    dispatchVisualRef.current(processed, opts?.anchorSentence);
+    dispatchVisualRef.current(processed, opts?.anchorSentence,
+      bufferedSegmentBreak && movedBeforeBreak.size > 0
+        ? {
+            breakCmd: bufferedSegmentBreak.cmd,
+            cards: movedBeforeBreak,
+            onMoved: (n: number) => onDebugEvent?.('auto_newpage_on_advance_flushed', `${bufferedSegmentBreak.segmentId}: ${bufferedSegmentBreak.title} after ${n} student card(s) (buffered)`),
+          }
+        : undefined);
     // Mirror into our local running log so targetId lookups across future
     // batches can walk the full session history without round-tripping
     // through the parent's state.
@@ -12204,6 +12278,8 @@ export function VoiceTutorRealtime({
     // on, the new part's own auto cards (corrections, pronunciation target)
     // open the pending part page as any fresh render does.
     if (pendingAdvanceNewPageRef.current?.afterTurn) pendingAdvanceNewPageRef.current.afterTurn = false;
+    // Task 23 §A: a break from an earlier turn never pulls this turn's cards.
+    segmentPageBreakRef.current = null;
     rendersDispatchedThisTurnRef.current = 0;
     boardRendersThisTurnRef.current = 0;
     turnRenderPayloadTextRef.current = '';
@@ -20707,7 +20783,9 @@ export function VoiceTutorRealtime({
               ...(card.emphasisAt?.length ? { emphasisAt: card.emphasisAt } : {}),
             } as WhiteboardCommand;
             const anchor = sentenceAnchorIndex(turnNarrationRef.current, card.sentence);
-            const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true } : { sentenceBoardAuto: true });
+            // Task 23 §A: every auto card but a plain new model sentence is the student's.
+            const studentSentenceCard = card.kind === 'correction' || !!card.source;
+            const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard } : { sentenceBoardAuto: true, studentSentenceCard });
             const placedId = res?.assignedIds?.[0];
             for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
             // Runtime-origin marker: this event (the card is not a brain tool call).

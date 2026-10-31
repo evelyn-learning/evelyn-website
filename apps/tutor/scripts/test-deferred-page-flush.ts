@@ -12,7 +12,10 @@ import {
   emptyPageIndexes,
   isPageContentAction,
   flushDeferredPageAtTurnEnd,
+  orderStudentCardsBeforePageBreak,
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
+import { keepBatchOnEmptySegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
+import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
 
 let n = 0;
 const ok = (name: string, cond: boolean) => { assert.ok(cond, name); n++; };
@@ -129,6 +132,57 @@ ok('emptyPageIndexes: pointer-only page is empty',
     ok('D2/I5: a brain new_page "Part 4 · Present perfect · 現在完了" after the flush is a duplicate', latest?.trim().toLowerCase() === 'part 4 · present perfect · 現在完了');
   }
   ok('D2: same event name, "at turn end"', VTR2.includes("onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title} at turn end`)"));
+}
+
+// Task 23 §A (GDI run 11, 143 s / 271 s / 1017 s): the student's sentence card
+// of the advancing turn paints BEFORE the new part's page break.
+{
+  type C = { action: string; title?: string; sentence?: string; student?: boolean };
+  const page: C = { action: 'newPage', title: 'Part 4 · Present perfect · 現在完了' };
+  const card: C = { action: 'showProblem' };
+  const student: C = { action: 'showSentence', sentence: 'I work as a sales manager, and I help customers buy washing machines.', student: true };
+  const model: C = { action: 'showSentence', sentence: 'I have worked here for five years.' };
+  const r = orderStudentCardsBeforePageBreak([page, card, student, model], (c) => c.student === true);
+  ok('23A: [newPage, showProblem, showSentence(student), showSentence(model)] → [student, newPage, showProblem, model]',
+    r.cmds[0] === student && r.cmds[1] === page && r.cmds[2] === card && r.cmds[3] === model && r.cmds.length === 4);
+  ok('23A: moved = the student card', r.moved.length === 1 && r.moved[0] === student);
+  const lone = orderStudentCardsBeforePageBreak([page, student], (c) => c.student === true);
+  ok('23A: the 143 s auto-card batch [newPage, student] → [student, newPage]', lone.cmds[0] === student && lone.cmds[1] === page);
+  const none = orderStudentCardsBeforePageBreak([page, card, model], (c) => c.student === true);
+  ok('23A: no student card ⇒ unchanged', none.moved.length === 0 && none.cmds[0] === page && none.cmds[2] === model);
+  const noPage = orderStudentCardsBeforePageBreak([card, student], (c) => c.student === true);
+  ok('23A: no page break ⇒ unchanged', noPage.moved.length === 0 && noPage.cmds[0] === card);
+  const before = orderStudentCardsBeforePageBreak([student, page, card], (c) => c.student === true);
+  ok('23A: a student card already before the break stays', before.moved.length === 0 && before.cmds[0] === student);
+  // The classifier a brain show_sentence goes through.
+  ok('23A: the 271 s correction is the student\'s sentence', isStudentSentenceCard('I work as a sales manager, and I help customers buy washing machines.', 'I work as sales manager and help customer buy washing machine.'));
+  ok('23A: an echo of the student is the student\'s sentence', isStudentSentenceCard('I gave everyone sweets to get them to come to the seminar.', 'I gave everyone sweets to get them to come to the seminar.'));
+  ok('23A: a new model sentence is not', !isStudentSentenceCard('I have worked here for five years.', 'Yes, I have worked with an international customer before.'));
+  ok('23A: no student turn ⇒ not the student\'s', !isStudentSentenceCard('I have worked here for five years.', null));
+  const VTR3 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('23A: the batch flush orders the student cards in front of the break', /processed = \[segmentBreakCmd, \.\.\.processed\];\s*\/\/ Task 23 §A[^\n]*\n\s*const orderedForBreak = orderStudentCardsBeforePageBreak\(processed, isStudentCardCmd\);/.test(VTR3));
+  ok('23A: event "after N student card(s)"', VTR3.includes("` after ${orderedForBreak.moved.length} student card(s)`") && VTR3.includes('after ${n} student card(s) (buffered)'));
+  ok('23A: moved cards are catalogued on the page being left', VTR3.includes('pageId: killRecoveryPinPageId ?? (movedBeforeBreak.has(cmd) && movedBeforeBreakPageId ? movedBeforeBreakPageId : undefined),'));
+  ok('23A: a buffered break takes the later student card in front of it', /renderBufferRef\.current\.splice\(breakAt, 0, \{ processed: cards,/.test(VTR3));
+  ok('23A: the auto card says whether it is the student\'s sentence', VTR3.includes("const studentSentenceCard = card.kind === 'correction' || !!card.source;"));
+  ok('23A: the break is per turn', /segmentPageBreakRef\.current = null;\s*rendersDispatchedThisTurnRef\.current = 0;/.test(VTR3));
+}
+
+// Task 23 §A2 (GDI run 11, 690 → 713 s): an empty segment page takes the next batch.
+{
+  const topic: PageDecision = { action: 'newPage', title: 'Extension', reason: 'topic shift (dist=0.511) (H4)', event: 'auto_new_page', anchorKey: null };
+  const keep = keepBatchOnEmptySegmentPage(topic, { isSegmentPage: true, itemCount: 0 });
+  ok('23A2: topic-shift page on an empty segment page ⇒ none', keep.action === 'none');
+  ok('23A2: a segment page with items ⇒ the topic page opens', keepBatchOnEmptySegmentPage(topic, { isSegmentPage: true, itemCount: 1 }) === topic);
+  ok('23A2: a non-segment empty page ⇒ the topic page opens', keepBatchOnEmptySegmentPage(topic, { isSegmentPage: false, itemCount: 0 }) === topic);
+  ok('23A2: no page info ⇒ unchanged', keepBatchOnEmptySegmentPage(topic, null) === topic);
+  const cont: PageDecision = { action: 'continuation', title: 'x (cont.)', reason: 'overflow', event: 'auto_new_page_overflow', anchorKey: null };
+  ok('23A2: a continuation is skipped too', keepBatchOnEmptySegmentPage(cont, { isSegmentPage: true, itemCount: 0 }).action === 'none');
+  const reset: PageDecision = { action: 'newPage', title: 'New', reason: 'explicit student reset', event: 'auto_new_page_reset', anchorKey: null };
+  ok('23A2: the student\'s explicit reset still opens a page', keepBatchOnEmptySegmentPage(reset, { isSegmentPage: true, itemCount: 0 }) === reset);
+  const VTR4 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('23A2: VTR logs auto_new_page_skipped_empty_segment_page', VTR4.includes("onDebugEvent?.('auto_new_page_skipped_empty_segment_page',"));
+  ok('23A2: both segment-page openings record the page id', (VTR4.match(/segmentPageIdRef\.current = catalogRef\.current\.openPage\(\{ title: /g) ?? []).length === 2);
 }
 
 console.log(`deferred-page-flush: ${n} cases passed`);

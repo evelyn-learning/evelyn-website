@@ -197,7 +197,8 @@ test('A: the auto card goes through handleWhiteboardCommand with its anchor, nev
   const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   const at = vtr.indexOf("'sentence_board_auto'");
   const block = vtr.slice(at - 2500, at + 200);
-  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor, sentenceBoardAuto: true \} : \{ sentenceBoardAuto: true \}\)/.test(block), 'normal board path, marked as the auto card');
+  // Task 23 §A: the call also says whether the card is the student's sentence.
+  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard \} : \{ sentenceBoardAuto: true, studentSentenceCard \}\)/.test(block), 'normal board path, marked as the auto card');
   assert.ok(/autoSentenceCardIdsRef\.current\.add\(id\)/.test(vtr.slice(at - 2500, at + 600)), 'auto card ids remembered');
   assert.ok(/sentenceAnchorIndex\(turnNarrationRef\.current, card\.sentence\)/.test(block), 'anchored to its spoken sentence');
   assert.ok(!/onWhiteboardCommand\(\[cmd\]\)/.test(block), 'no raw opener-fallback paint');
@@ -214,7 +215,7 @@ test('C: a brain show_sentence replaces the auto card of the same sentence — t
   assert.ok(/'sentence_board_auto_replace_deferred', `\$\{priors\.join\(','\)\} leaves with \$\{replacementId\}`/.test(block), 'deferred event');
   assert.ok(/if \(immediate\.length > 0\) onWhiteboardCommandProp\(\[\{ action: 'removeItems', ids: immediate \}\]\);/.test(block), 'a replacement without an id removes at once, as before');
   assert.ok(/catalogRef\.current\.removeByIds\(replaced\)/.test(block), 'and from the catalog');
-  assert.ok(at < vtr.indexOf('dispatchVisualRef.current(processed, opts?.anchorSentence)'), 'before the brain card dispatches');
+  assert.ok(at < vtr.indexOf('dispatchVisualRef.current(processed, opts?.anchorSentence,'), 'before the brain card dispatches');
 });
 // ── Task 22 §G (GDI run 10, 711 s / 781 s): affirmed conversational sentences ──
 test('22G the 781 s turn cards the student\'s sentence (precheck none, "Your sentence is clear.")', () => {
@@ -337,7 +338,9 @@ test('C: a sentence-only batch turns newPage/continuation into none; pin and oth
 test('C: VTR — a sentence-only batch neither sees nor consumes the topic-shift mark', () => {
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(/const topicShiftPending = sentenceOnlyBatch \? null : topicShiftPendingRef\.current;/.test(VTR));
-  assert.ok(/const pageDecision = keepSentenceBatchOnPage\(decidePageForBatch\(\{/.test(VTR));
+  // Task 23 §A2: the sentence-batch decision then goes through the empty-segment-page keep.
+  assert.ok(/const rawPageDecision = keepSentenceBatchOnPage\(decidePageForBatch\(\{/.test(VTR));
+  assert.ok(/const pageDecision = keepBatchOnEmptySegmentPage\(rawPageDecision,/.test(VTR));
   assert.ok(/if \(!sentenceOnlyBatch\) topicShiftPendingRef\.current = null;/.test(VTR));
   // the deferred segment page flush runs AFTER the decision (so a sentence
   // batch with no page of its own opens the pending segment page first)
