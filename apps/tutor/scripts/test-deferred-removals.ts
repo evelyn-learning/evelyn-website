@@ -140,7 +140,10 @@ test('22 r1 m4 VTR: a painted sentence-board replacement survives a later kill r
   assert.match(w, /deferredRemovalsRef\.current\.get\(cid\)\?\.keepPriorOnDrop\) sentenceBoardPaintedReplacementsRef\.current\.add\(cid\);/);
   assert.ok(w.indexOf('sentenceBoardPaintedReplacementsRef.current.add(cid)') < w.indexOf('takeRemovalsForBatch('), 'recorded before the entry is taken');
   assert.match(vtr, /const unique = keepPaintedSentenceReplacements\(Array\.from\(new Set\(ids\.filter\(Boolean\)\)\), 'kill rollback'\);/);
-  assert.match(vtr, /const sweepDeferred = \(allIds: string\[\]\): void => \{\s*const ids = keepPaintedSentenceReplacements\(allIds, 'deferred sweep'\);/);
+  assert.match(vtr, /const sweepDeferred = \(allIds: string\[\], keepPainted = true\): void => \{\s*if \(!keepPainted\) for \(const id of allIds\) sentenceBoardPaintedReplacementsRef\.current\.delete\(id\);\s*const ids = keepPainted \? keepPaintedSentenceReplacements\(allIds, 'deferred sweep'\) : allIds;/);
+  // fix round 2 (m3): the answer-revealing discard is never overridden
+  assert.match(vtr, /sweepDeferred\(killedForAnswer\.discard, false\);/);
+  assert.equal((vtr.match(/sweepDeferred\([^)]*\);/g) ?? []).filter((c) => c.includes(', false')).length, 1, 'only the discard opts out');
   assert.match(vtr, /'sentence_board_auto_replace_kept', `\$\{kept\.join\(','\)\} \(painted replacement kept on \$\{how\}\)`/);
 });
 

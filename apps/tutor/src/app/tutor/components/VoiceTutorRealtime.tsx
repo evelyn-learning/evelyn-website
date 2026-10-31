@@ -21652,8 +21652,12 @@ export function VoiceTutorRealtime({
         const staleIds = [...pendingRevisionRef.current];
         pendingRevisionRef.current = new Set();
         // Hard-remove deferred ids off the board + mirror + id-map + catalog.
-        const sweepDeferred = (allIds: string[]): void => {
-          const ids = keepPaintedSentenceReplacements(allIds, 'deferred sweep');
+        // Task 22 fix round 2 (m3): `keepPainted` false for the answer-revealing
+        // discard — a verdict / assent-killed attempt's replacement is rolled
+        // back as before (and forgotten).
+        const sweepDeferred = (allIds: string[], keepPainted = true): void => {
+          if (!keepPainted) for (const id of allIds) sentenceBoardPaintedReplacementsRef.current.delete(id);
+          const ids = keepPainted ? keepPaintedSentenceReplacements(allIds, 'deferred sweep') : allIds;
           if (ids.length === 0) return;
           onWhiteboardCommand([{ action: 'removeItems', ids }]);
           const idSet = new Set(ids);
@@ -21680,7 +21684,7 @@ export function VoiceTutorRealtime({
           // already confirmed it, which removed it from staleIds).
           const killedForAnswer = splitAnswerRevealingKilled(staleIds, answerKilledThisCall);
           if (killedForAnswer.discard.length > 0) {
-            sweepDeferred(killedForAnswer.discard);
+            sweepDeferred(killedForAnswer.discard, false);
             console.warn(`[brain-orchestrator] kill-recovery: discarded ${killedForAnswer.discard.length} render(s) of a verdict/assent-killed attempt [${killedForAnswer.discard.join(', ')}]`);
             onDebugEvent?.('killed_render_discarded_answer', `${killedForAnswer.discard.length}: ${killedForAnswer.discard.join(',')}`);
           }
