@@ -113,3 +113,43 @@ export function refuseSilentDedupDrop(input: {
   if (input.substitutedBrainStatement === null) return false;
   return !sameProblemStatement(input.substitutedBrainStatement, input.authoredStatement);
 }
+
+/** Task 23 §B1: a numbered card line's label ("1.", "2)", "Question 3:"). */
+const CARD_LINE_LABEL_RE = /^\s*(?:question\s*)?\d+\s*[.):：]\s*/i;
+const CARD_LINE_FILLERS = new Set(['um', 'uh', 'er', 'erm', 'hmm', 'so', 'well', 'okay', 'ok', 'please', 'now']);
+function cardLineTokens(s: string): string[] {
+  return ((s ?? '').replace(CARD_LINE_LABEL_RE, '').toLowerCase().replace(/’/g, "'").match(/[\p{L}\p{N}]+(?:'[\p{L}\p{N}]+)*/gu) ?? [])
+    .filter((t) => !CARD_LINE_FILLERS.has(t));
+}
+/** Shared tokens (with multiplicity) over the longer side. */
+function cardLineMatch(a: string[], b: string[]): number {
+  if (a.length === 0 || b.length === 0) return 0;
+  const left = new Map<string, number>();
+  for (const t of b) left.set(t, (left.get(t) ?? 0) + 1);
+  let shared = 0;
+  for (const t of a) {
+    const n = left.get(t) ?? 0;
+    if (n > 0) { shared++; left.set(t, n - 1); }
+  }
+  return shared / Math.max(a.length, b.length);
+}
+export const AUTHORED_CARD_LINE_MATCH = 0.9;
+
+/**
+ * Task 23 §B1 (GDI run 11, 44 s / 139 s: the level check's authored card has
+ * three numbered questions; the brain showed its own "Level check, question 1"
+ * card with ONE of them — `different-problem`, and the authored card never
+ * went up). True when the brain's statement is a single line that IS one
+ * numbered line of a multi-line authored statement: labels ("1.", "Question
+ * 3:") stripped, filler-free token match ≥ 90 %. The caller then substitutes
+ * the WHOLE authored card (or, when it is already on the board, points at it).
+ */
+export function isAuthoredCardLine(brainStatement: string, authoredStatement: string): boolean {
+  const brain = (brainStatement ?? '').trim();
+  if (!brain || /\n/.test(brain)) return false;
+  const lines = (authoredStatement ?? '').split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const numbered = lines.filter((l) => CARD_LINE_LABEL_RE.test(l));
+  if (numbered.length < 2) return false;
+  const bt = cardLineTokens(brain);
+  return numbered.some((l) => cardLineMatch(bt, cardLineTokens(l)) >= AUTHORED_CARD_LINE_MATCH);
+}

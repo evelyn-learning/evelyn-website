@@ -362,3 +362,27 @@ export function problemStatementOnBoard(
   }
   return earlier || onPage;
 }
+
+/** Task 23 §B1: the id of the latest showProblem card with this statement
+ *  (problemStatementOnBoard's comparison), not wiped by a later clear of its
+ *  page — the card a repeated single-line show_problem points back at. */
+export function problemCardIdOnBoard(
+  commands: ReadonlyArray<{ action: string } & Record<string, unknown>>,
+  statement: string,
+): string | null {
+  const target = normStatement(statement ?? '');
+  if (!target) return null;
+  let pageIds: string[] = [];
+  let found: string | null = null;
+  for (const c of commands) {
+    if (c.action === 'newPage') { pageIds = []; continue; }
+    if (c.action === 'clear') { if (found && pageIds.includes(found)) found = null; pageIds = []; continue; }
+    if (c.action !== 'showProblem') continue;
+    const p = c.problem as { statement?: unknown } | undefined;
+    if (p && typeof p.statement === 'string' && normStatement(p.statement) === target && typeof c.id === 'string') {
+      found = c.id;
+      pageIds.push(c.id);
+    }
+  }
+  return found;
+}

@@ -29,8 +29,10 @@ export interface QuotedSentence {
    *  'affirmed' = (Task 20 §G1) a quote of the student's words the tutor
    *  itself called correct while the check was silent / undecided;
    *  'introduced' = (Task 21 §B1) the tutor's own words after a "say it as a
-   *  full sentence:" colon that repeat the student's words. */
-  source?: 'echo' | 'checked' | 'affirmed' | 'introduced';
+   *  full sentence:" colon that repeat the student's words;
+   *  'levelcheck' = (Task 23 §B2) the student's own answer in a level-check
+   *  part, carded whatever the verdict. */
+  source?: 'echo' | 'checked' | 'affirmed' | 'introduced' | 'levelcheck';
   /** Task 21 fix round 1 (m, B2): word positions (0-based, words as the card
    *  splits them) that carry the emphasis — only the edited position is
    *  marked, not every copy of the word. */
@@ -650,6 +652,22 @@ function fragmentOfChecked(tutorText: string, checked: string): string[] | null 
   return null;
 }
 
+/** Task 23 §B2: the student's level-check answer as a card — each sentence
+ *  cleaned like the checked card (fillers out, ≥ 4 Latin words, no question;
+ *  cardableStudentSentence), the ones that pass joined in order ("Yes, I
+ *  worked with an international customer. I work with customer from USA.").
+ *  A spoken answer is the transcript, not the precheck's 200-char cut, so
+ *  more than one sentence is fine. null when no sentence passes or any CJK. */
+export function levelCheckAnswerCard(studentLast: string | null | undefined): string | null {
+  const raw = (studentLast ?? '').trim();
+  if (!raw || CJK_RE.test(raw)) return null;
+  const parts = raw.split(/(?<=[.!?])\s+(?=\p{L})/u)
+    .map((x) => cardableStudentSentence(x))
+    .filter((x): x is string => !!x)
+    .map((x) => x[0]!.toUpperCase() + x.slice(1));
+  return parts.length ? parts.join(' ') : null;
+}
+
 /**
  * Task 15 §A (GDI run 5): a quote that echoes a sentence the independent check
  * found CORRECT is a model sentence, not the run-3 wrong-words echo — so with
@@ -674,6 +692,9 @@ export function planSentenceBoard(input: {
   /** Task 21 §B4: the check found the sentence correct at MEDIUM confidence
    *  (not deciding) — counts for the checked card only, see below. */
   checkedMedium?: boolean;
+  /** Task 23 §B2: the current part is the level check (segment metadata
+   *  `skipWhenLevelKnown`) — every spoken answer goes on the board. */
+  levelCheck?: boolean;
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   const studentCorrect = input.studentCorrect === true;
@@ -779,6 +800,17 @@ export function planSentenceBoard(input: {
     if (own && !CJK_RE.test(own)) {
       own = own[0]!.toUpperCase() + own.slice(1);
       classified.push({ q: { sentence: own, kind: 'model', emphasis: [], source: 'affirmed' }, len: norm(own).length, i: kept.length, said: false, affirmed: true, introduced: false });
+    }
+  }
+  // Task 23 §B2 (GDI run 11, 81 s / 99 s: answers 2 and 3 of the level check
+  // were partly correct, unaffirmed and unquoted — no card; the learner wants
+  // the questions with their answers on the board): in the level check the
+  // student's own answer (≥ 4 Latin words, no question, cleaned like the
+  // checked card) is carded whatever the verdict, unless a card already says it.
+  if (input.levelCheck === true && input.studentLast && !isMetaOfferTurn(input.prevTutorText)) {
+    const own = levelCheckAnswerCard(input.studentLast);
+    if (own && !classified.some((c) => sameSentence(c.q.sentence, own))) {
+      classified.push({ q: { sentence: own, kind: 'model', emphasis: [], source: 'levelcheck' }, len: norm(own).length, i: kept.length + 1, said: false, affirmed: false, introduced: false });
     }
   }
   classified.sort((a, b) => {

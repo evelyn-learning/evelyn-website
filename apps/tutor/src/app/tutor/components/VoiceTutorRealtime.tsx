@@ -432,7 +432,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -517,7 +517,7 @@ import { DEFERRED_REMOVAL_MAX_MS, deferRemoval, takeRemovalsForBatch, takeDroppe
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
 import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
-import { shouldSubstituteShowProblem, shouldAutoCardAfterOwnProblem, refuseSilentDedupDrop } from '@/lib/tutor/orchestrator/show-problem-substitution';
+import { shouldSubstituteShowProblem, shouldAutoCardAfterOwnProblem, refuseSilentDedupDrop, isAuthoredCardLine } from '@/lib/tutor/orchestrator/show-problem-substitution';
 import { checkEquationRelations, syncRelationTrail, describeRelationCheck, claimedAnswerContradictsProblem, type RelationTrail } from '@/lib/tutor/voice/relation-step-check';
 import { formatWitness, extractProblemRelation } from '@/lib/tutor/voice/relation-sampling';
 import { decideRelationStepNote, settleRelationStepNote, recordRelationStepNoteDispatch, relationStepNoteExpired, type RelationStepNoteRecord } from '@/lib/tutor/voice/relation-step-note';
@@ -17494,6 +17494,15 @@ export function VoiceTutorRealtime({
                         const lastStudentTextForSub = ([...transcriptRef.current]
                           .reverse()
                           .find((e) => e.role === 'student')?.text ?? '');
+                        // Task 23 §B1 (GDI run 11, 44 s / 139 s): ONE numbered
+                        // line of the authored card IS the authored problem —
+                        // the whole card goes up (once: while it is on the
+                        // board, a later line points back at it).
+                        const authoredLine = isAuthoredCardLine(brainStatement, truth.problemText);
+                        const authoredLineCardId = authoredLine
+                          ? problemCardIdOnBoard(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, stripWbEmphasisText(truth.problemText))
+                          : null;
+                        const sameProblemForSub = sameProblemStatement(brainStatement, truth.problemText) || authoredLine;
                         const subDecision = shouldSubstituteShowProblem({
                           targetsDiverge,
                           newPageInTurn,
@@ -17505,17 +17514,19 @@ export function VoiceTutorRealtime({
                           // test — a ticket-resale problem was swapped for the
                           // authored inequality card under speech about tickets.
                           sameOnly: TUTOR_SUBSTITUTE_SAME_ONLY,
-                          sameProblem: sameProblemStatement(brainStatement, truth.problemText),
-                          authoredOnBoard: statementsReadIdentically(currentProblemRef.current?.statement ?? '', truth.problemText),
+                          sameProblem: sameProblemForSub,
+                          authoredOnBoard: statementsReadIdentically(currentProblemRef.current?.statement ?? '', truth.problemText) || authoredLineCardId !== null,
                         });
                         if (TUTOR_SUBSTITUTE_SAME_ONLY && !subDecision.substitute && !subDecision.drop
-                            && !sameProblemStatement(brainStatement, truth.problemText)) {
+                            && !sameProblemForSub) {
                           ownProblemReason = subDecision.skipReason ?? 'not-substituted';
                         }
                         if (subDecision.substitute) {
                           console.log(`[brain-orchestrator] auto-substitute show_problem → show_segment_card for segment "${segId}" (authored truth exists)`);
-                          onDebugEvent?.('show_problem_substituted', `→ show_segment_card("${segId}")`);
-                          substitutedProblemStatement = brainStatement;
+                          onDebugEvent?.('show_problem_substituted', `${authoredLine ? 'authored-line ' : ''}→ show_segment_card("${segId}")`);
+                          // §B1: the line IS the authored problem — the dedup
+                          // companions compare the whole card.
+                          substitutedProblemStatement = authoredLine ? truth.problemText : brainStatement;
                           name = 'show_segment_card';
                           args = { segmentId: segId };
                         } else if (subDecision.skipReason === 'new-page-in-turn') {
@@ -17547,6 +17558,11 @@ export function VoiceTutorRealtime({
                           // end-of-turn auto card does not re-append it.
                           console.log(`[brain-orchestrator] show_problem DROPPED (authored-already-on-board) for segment "${segId}" — same problem, card already on the board.`);
                           onDebugEvent?.('show_problem_substitution_skipped', `authored-already-on-board; segId="${segId}" — call dropped, no retry`);
+                          // §B1: a repeated single line rehighlights the authored card.
+                          if (authoredLine && authoredLineCardId) {
+                            onWhiteboardCommand([{ action: 'scrollTo', target: 'item', targetId: authoredLineCardId, pulse: true } as unknown as WhiteboardCommand]);
+                            onDebugEvent?.('dedup_scroll_to_existing', `${authoredLineCardId} (authored-line)`);
+                          }
                           segmentCardRenderedThisAttempt = true;
                           segmentCardsRenderedThisAttempt.push(segId);
                           renderedTextsThisAttempt.push(truth.problemText);
@@ -20767,6 +20783,10 @@ export function VoiceTutorRealtime({
             // Task 21 §B4 (GDI run 9, 693 s): correct at MEDIUM confidence —
             // the checked card only, when the turn corrects / echoes nothing.
             checkedMedium: !boardStudentCorrect && !!boardPc && boardPc.verdict === 'correct' && boardPc.confidence === 'medium' && boardPc.answers !== 'other_part' && boardPc.answers !== 'neither',
+            // Task 23 §B2 (GDI run 11, 81 s / 99 s): the part the student
+            // ANSWERED in (the turn-start segment — the level-set advance
+            // moves the pointer mid-turn) is the level check.
+            levelCheck: lessonPlanRef.current?.segments.find((sg) => sg.id === turnStartSegmentId)?.metadata?.skipWhenLevelKnown === true,
           });
           prevBoardTutorTextRef.current = fullText;
           for (const card of cards) {

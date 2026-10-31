@@ -9,7 +9,11 @@ import {
   shouldSubstituteShowProblem,
   shouldAutoCardAfterOwnProblem,
   refuseSilentDedupDrop,
+  isAuthoredCardLine,
 } from '../src/lib/tutor/orchestrator/show-problem-substitution';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { problemCardIdOnBoard } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { sameProblemStatement, statementsReadIdentically } from '../src/lib/tutor/whiteboard/soft-rejections';
 
 let passed = 0;
@@ -180,6 +184,33 @@ check('substituted with an empty brain statement counts as a different problem',
   refuseSilentDedupDrop({ enabled: true, substitutedBrainStatement: '', authoredStatement: AUTHORED }) === true);
 check('dedup refusal: flag off ⇒ never refuses',
   refuseSilentDedupDrop({ enabled: false, substitutedBrainStatement: TICKETS, authoredStatement: AUTHORED }) === false);
+
+// Task 23 §B1 (GDI run 11, 44 s / 139 s): one numbered line of the authored card.
+{
+  const LEVEL = "1. Can you tell me a little about your job? What do you do?\n2. Have you ever worked with an international customer? If so, can you tell me about the experience?\n3. What is one skill you'd like to improve in your English, and why is it important to you?";
+  check('23B1: the 44 s brain card = line 1', isAuthoredCardLine('1. Can you tell me a little about your job? What do you do?', LEVEL));
+  check('23B1: the 139 s brain card = line 3', isAuthoredCardLine("3. What is one skill you'd like to improve in your English, and why is it important to you?", LEVEL));
+  check('23B1: unlabelled / "Question 2:" labels match too', isAuthoredCardLine('Question 2: Have you ever worked with an international customer? If so, can you tell me about the experience?', LEVEL)
+    && isAuthoredCardLine('Can you tell me a little about your job? What do you do?', LEVEL));
+  check('23B1: a reworded line under 90 % is not', !isAuthoredCardLine('Tell me about your job and your company.', LEVEL));
+  check('23B1: a different problem is not', !isAuthoredCardLine('Did you attend any business events or exhibitions last year?', LEVEL));
+  check('23B1: the whole card (multi-line) is not a LINE', !isAuthoredCardLine(LEVEL, LEVEL));
+  check('23B1: a one-line authored card has no lines to match', !isAuthoredCardLine('Have you worked for your current company for a long time?', 'Have you worked for your current company for a long time?'));
+  const mirror = [
+    { action: 'newPage', title: 'Part 2' },
+    { action: 'showProblem', id: 'showProblem-1', problem: { statement: LEVEL } },
+    { action: 'showSentence', id: 'showSentence-1', sentence: 'x' },
+  ];
+  check('23B1: the authored card on the board is found by id', problemCardIdOnBoard(mirror, LEVEL) === 'showProblem-1');
+  check('23B1: not on the board ⇒ null', problemCardIdOnBoard(mirror.slice(0, 1), LEVEL) === null);
+  check('23B1: a cleared page takes it off', problemCardIdOnBoard([...mirror, { action: 'clear' }], LEVEL) === null);
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('23B1: VTR substitutes on a line match (sameProblem || authoredLine)', VTR.includes('const sameProblemForSub = sameProblemStatement(brainStatement, truth.problemText) || authoredLine;')
+    && VTR.includes('sameProblem: sameProblemForSub,'));
+  check('23B1: once on the board, a later line drops + rehighlights', VTR.includes("|| authoredLineCardId !== null,")
+    && VTR.includes("onDebugEvent?.('dedup_scroll_to_existing', `${authoredLineCardId} (authored-line)`);"));
+  check('23B1: event show_problem_substituted authored-line', VTR.includes("onDebugEvent?.('show_problem_substituted', `${authoredLine ? 'authored-line ' : ''}→ show_segment_card(\"${segId}\")`);"));
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

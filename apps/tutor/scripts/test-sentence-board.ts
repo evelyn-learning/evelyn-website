@@ -16,6 +16,7 @@ import {
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
+  levelCheckAnswerCard,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -967,6 +968,45 @@ test('21B r3: "remember" / "article" are cues only in a correcting frame', () =>
   assert.equal(m('What do you remember most about the exhibition?').length, 1);
   assert.equal(m('Did you write an article about it?').length, 1);
 });
+
+// ── Task 23 §B2: every level-check answer goes on the board ──
+{
+  const T81 = "Thank you, that's a useful example. Could you tell me one thing about that work, like a project or a meeting, in one or two sentences?";
+  const S81 = 'Yes, I worked with an international customer. I work with customer from USA.';
+  const T99 = "Thank you. You sell washing machines to a US company, so that's useful experience. Now, question 3, please answer in English: What is one skill you'd like to improve in your English, and why is it important to you?";
+  const S99 = 'I sell washing machine to the USA customer for their company.';
+  const base = { renderedThisTurn: false, studentCorrect: false, affirmFallback: false, checkedMedium: false };
+  test('23B2: 81 s level-check answer (partly correct, unquoted) → one levelcheck card', () => {
+    const cards = planSentenceBoard({ ...base, tutorText: T81, studentLast: S81, checkedSentence: S81, levelCheck: true });
+    assert.equal(cards.length, 1);
+    assert.equal(cards[0]!.source, 'levelcheck');
+    assert.equal(cards[0]!.kind, 'model');
+    assert.equal(cards[0]!.sentence, 'Yes, I worked with an international customer. I work with customer from USA.');
+  });
+  test('23B2: 99 s level-check answer → one levelcheck card', () => {
+    const cards = planSentenceBoard({ ...base, tutorText: T99, studentLast: S99, checkedSentence: S99, levelCheck: true });
+    assert.deepEqual(cards.map((c) => [c.source, c.sentence]), [['levelcheck', 'I sell washing machine to the USA customer for their company.']]);
+  });
+  test('23B2: the same inputs outside the level check → no card', () => {
+    assert.equal(planSentenceBoard({ ...base, tutorText: T81, studentLast: S81, checkedSentence: S81 }).length, 0);
+    assert.equal(planSentenceBoard({ ...base, tutorText: T99, studentLast: S99, checkedSentence: S99 }).length, 0);
+  });
+  test('23B2: a question, a short reply, a Japanese reply → no levelcheck card', () => {
+    assert.equal(planSentenceBoard({ ...base, tutorText: T81, studentLast: 'Can you repeat the question?', levelCheck: true }).length, 0);
+    assert.equal(planSentenceBoard({ ...base, tutorText: T81, studentLast: 'Yes, I did.', levelCheck: true }).length, 0);
+    assert.equal(planSentenceBoard({ ...base, tutorText: T81, studentLast: 'わかりません', levelCheck: true }).length, 0);
+    assert.equal(levelCheckAnswerCard('Um, I work in sales at Nagoya.'), 'I work in sales at Nagoya.');
+  });
+  test('23B2: a card of the same sentence already planned ⇒ no second one', () => {
+    const t = 'You said "I work as sales manager at Nagoya Corporation." That\'s a correct sentence.';
+    const cards = planSentenceBoard({ renderedThisTurn: false, affirmFallback: true, tutorText: t, studentLast: 'I work as sales manager at Nagoya Corporation.', levelCheck: true });
+    assert.equal(cards.length, 1);
+  });
+  test('23B2: VTR keys the level check on the turn-start segment\'s skipWhenLevelKnown', () => {
+    const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+    assert.ok(vtr.includes('levelCheck: lessonPlanRef.current?.segments.find((sg) => sg.id === turnStartSegmentId)?.metadata?.skipWhenLevelKnown === true,'));
+  });
+}
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
