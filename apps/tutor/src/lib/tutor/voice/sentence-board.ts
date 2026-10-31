@@ -223,7 +223,7 @@ export function quoteAffirmed(text: string, at: number, end: number): boolean {
  *  acknowledgement ("That's right.", "That's a clear answer", "That fits
  *  perfectly with your job") — those say nothing about the grammar. Not
  *  qualified ("to start with") and no "but" in it or the sentence after it. */
-const SENTENCE_PRAISE_RE = /\b(?:that['’]s|is|what) (?:a )?(?:correct|natural|good|great|perfect|nice|clear) sentence\b|\b(?:your|that|the|this) sentence is (?:correct|complete|clear|natural|right)\b|\bcomplete and clear\b|["”’」]\s*(?:fits|works) perfectly\b/i;
+const SENTENCE_PRAISE_RE = /\b(?:that['’]s|is|what) (?:a )?(?:correct|natural|good|great|perfect|nice|clear) sentence\b|\b(?:your|that|the|this) sentence is (?:correct|complete|clear|natural|right)\b|\bcomplete and clear\b|["”’」']\s*(?:fits|works) perfectly\b/i;
 const SENTENCE_PRAISE_JA_RE = /正しい文|自然な文/;
 /** Fix round 2 (I3): the praise phrase inside an instruction or a question —
  *  "Make sure your sentence is complete.", "Check that the sentence is
@@ -542,8 +542,18 @@ function quotesOnlyStudentWords(text: string, student: string): boolean {
     for (let i = 0; i + q.length <= st.length && !found; i++) found = q.every((x, j) => st[i + j] === x);
     if (!found) return false;
   }
+  // Fix round 2 (m5): straight single quotes ('selling') — QUOTE_RE leaves
+  // them out (apostrophes); a span opened and closed outside a word counts.
+  for (const m of text.matchAll(STRAIGHT_SINGLE_QUOTE_RE)) {
+    const q = dropFillersAndRepeats(tokens(m[1] ?? ''));
+    if (q.length === 0) continue;
+    let found = false;
+    for (let i = 0; i + q.length <= st.length && !found; i++) found = q.every((x, j) => st[i + j] === x);
+    if (!found) return false;
+  }
   return true;
 }
+const STRAIGHT_SINGLE_QUOTE_RE = /(?<![\p{L}\p{N}])'(\p{L}[^'\n]*?)'(?![\p{L}\p{N}])/gu;
 
 /** Any quoted span (any length) that is not a sentence starter. */
 function hasNonStarterQuote(text: string): boolean {

@@ -278,6 +278,12 @@ test('22G r2 I3: instructions, questions and retry asks give no affirmed card', 
   const st711 = 'I was responsible for selling washing machines made by robots.';
   assert.deepEqual(planSentenceBoard({ tutorText: 'Selling washing machines made by robots, that\'s a clear role. Now, the phrase "responsible for" is followed by a noun or an -ing verb, and "selling" fits perfectly. Could you tell me one result of that project, starting with "The project helped…"?', studentLast: st711, renderedThisTurn: false, affirmFallback: true }).map((c) => c.source), ['affirmed']);
 });
+test('22G r2 m5: a straight single-quoted student word that "fits perfectly" is praise too', () => {
+  const st = 'I was responsible for selling washing machines made by robots.';
+  assert.deepEqual(planSentenceBoard({ tutorText: "Good. The word 'selling' fits perfectly. What was the result?", studentLast: st, renderedThisTurn: false, affirmFallback: true }).map((c) => [c.sentence, c.source]), [[st, 'affirmed']]);
+  // a single-quoted word that is NOT the student's still blocks
+  assert.deepEqual(planSentenceBoard({ tutorText: "Good. 'Sales' fits perfectly. What was the result?", studentLast: st, renderedThisTurn: false, affirmFallback: true }), []);
+});
 test('hook pin: both Cartesia paths compose AFTER rewriteForTTS; the HTTP route skips its rewrite only for prerewritten text', () => {
   const hook = readFileSync(join(__dirname, '..', 'src/app/tutor/hooks/useOpenAIRealtime.ts'), 'utf8');
   assert.ok(/f\(trimmed, \(s\) => rewriteForTTS\(s, \{ studentName: studentNameRef\.current \}\)\)/.test(hook), 'cartesiaText composes with rewriteForTTS');
