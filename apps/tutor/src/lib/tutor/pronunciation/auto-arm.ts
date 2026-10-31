@@ -243,3 +243,25 @@ export function measuredPronunciationRedelivery(input: {
   return `[pronunciation check result — not from the student] Last measurement for "${last.referenceText}" (still the current target): ${last.note}`;
 }
 const normTarget = (s: string) => (s ?? '').toLowerCase().replace(/[^\p{L}\p{N}' ]+/gu, ' ').replace(/\s+/g, ' ').trim();
+
+/** Task 23 §G1 (GDI run 11, 1094–1099 s: the clip measured 80/100 and the
+ *  first attempt, "Good effort. Your overall sentence was clear and close to
+ *  the…", was CUT as denied_correct): on a turn carrying a MEASURED
+ *  pronunciation result the measured score is the verdict — the voice
+ *  verdict hold / cut stands down ("Good effort" is not a denial there). */
+export function voiceVerdictHoldStandsDown(measuredThisTurn: boolean): boolean {
+  return measuredThisTurn === true;
+}
+
+/** Task 23 §G2: the instruction riding a re-delivered measurement on a retry. */
+export const PRONUNCIATION_RETRY_INSTRUCTION =
+  '[runtime note — not from the student] Your previous attempt was not spoken, so the student has not heard this measurement yet. Give the overall score and name the weak words and sounds from it, in one or two sentences, then continue.';
+/** Task 23 §G2 (generalising Task 20 §F): ANY kill of a measured turn —
+ *  validator retry, voice verdict cut, judge kill — re-delivers the turn's
+ *  pronunciation note to the retry (the retry message replaces the turn's
+ *  input, and in run 11 the retry said only "Yes, you've got it right…").
+ *  null when the turn was not measured or no note was kept. */
+export function pronunciationNoteForRetry(input: { measuredThisTurn: boolean; note: string | null | undefined }): string | null {
+  if (!input.measuredThisTurn || !input.note || !input.note.trim()) return null;
+  return `${input.note.trim()}\n${PRONUNCIATION_RETRY_INSTRUCTION}`;
+}

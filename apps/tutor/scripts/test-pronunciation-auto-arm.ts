@@ -5,7 +5,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion } from '../src/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION } from '../src/lib/tutor/pronunciation/auto-arm';
 import { duplicateSentenceAction, currentBoardPage, sentenceCardIdOnCurrentPage, sentenceOnBoardPage } from '../src/lib/tutor/voice/sentence-board';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { isStrictRepeatAsk } from '../src/lib/tutor/voice/correct-retry';
@@ -245,6 +245,31 @@ test('21D r4 I6: "say it again" after a single introduced word is a WORD ask, no
   assert.deepEqual(detectPronunciationTarget('Listen: "schedule." Now say it again.', T), { referenceText: 'schedule', kind: 'word' });
   assert.deepEqual(detectPronunciationTarget('The word is "schedule". Say it again, slowly.', T), { referenceText: 'schedule', kind: 'word' });
   assert.equal(detectPronunciationTarget('We say "with", not "wiz". Say the sentence again.', T), null);
+});
+
+// ── Task 23 §G: a measured turn keeps its score through a kill ──
+test('23G1: a measured turn stands the voice verdict hold down; an unmeasured one does not', () => {
+  assert.equal(voiceVerdictHoldStandsDown(true), true);
+  assert.equal(voiceVerdictHoldStandsDown(false), false);
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(v.includes('const voiceGateSkipMeasured = voiceGateWanted && voiceVerdictHoldStandsDown(pronunciationMeasuredThisTurn);'));
+  assert.ok(v.includes("if (voiceGateSkipMeasured) onDebugEvent?.('voice_verdict_hold_skipped', 'measured');"));
+  assert.ok(v.includes('enabled: voiceGateWanted && !voiceGateSkipMeasured,'));
+});
+test('23G2: any retry of a measured turn re-delivers the note with the score instruction', () => {
+  const note = '[pronunciation check result — not from the student] Measured pronunciation of "I have worked with international customers for several years.": overall 80/100. Weakest: "for" 45, weakest sound /ɔɹ/ 39; "with" 46.';
+  const r = pronunciationNoteForRetry({ measuredThisTurn: true, note });
+  assert.ok(r && r.startsWith(note) && r.endsWith(PRONUNCIATION_RETRY_INSTRUCTION));
+  assert.ok(/overall score/.test(PRONUNCIATION_RETRY_INSTRUCTION) && /weak words and sounds/.test(PRONUNCIATION_RETRY_INSTRUCTION));
+  assert.equal(pronunciationNoteForRetry({ measuredThisTurn: false, note }), null);
+  assert.equal(pronunciationNoteForRetry({ measuredThisTurn: true, note: null }), null);
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  // in the single retry builder every kill goes through (validator / verdict cut / judge)
+  const at = v.indexOf("'brain_validator_retry',");
+  const block = v.slice(at, at + 4000);
+  assert.ok(block.includes('const retryNote = pronunciationNoteForRetry({ measuredThisTurn: pronunciationMeasuredThisTurn, note: pronunciationNoteThisTurn });'));
+  assert.ok(block.includes("onDebugEvent?.('pronunciation_note_redelivered', `${rejectionsThisAttempt.map((r) => r.action).join(',') || 'retry'}:"));
+  assert.ok(v.includes('pronunciationNoteThisTurn = pronunciationResultNoteRef.current;'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

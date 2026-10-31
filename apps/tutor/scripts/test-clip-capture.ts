@@ -31,10 +31,18 @@ const SR = 24000;
 const chunk = (n: number, v: number) => new Float32Array(n).fill(v);
 const make = () => new ClipCapture({ maxMs: 10000, sampleRate: 24000 });
 
-test('constants: 10 s max, 24 kHz, 20 s no-speech timeout', () => {
+test('constants: 10 s max, 24 kHz, 40 s no-speech timeout (Task 23 §G3)', () => {
   assert.equal(CLIP_MAX_MS, 10000);
   assert.equal(CLIP_SAMPLE_RATE, 24000);
-  assert.equal(CLIP_NO_SPEECH_TIMEOUT_MS, 20000);
+  assert.equal(CLIP_NO_SPEECH_TIMEOUT_MS, 40000);
+  assert.ok(CLIP_NO_SPEECH_TIMEOUT_MS < PRONUNCIATION_ARM_MAX_MS, 'below the arm lifetime');
+});
+test('Task 23 §G3: the reason is no_speech_40s; the idle nudge stands down while a clip is armed', () => {
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(v.includes("plantPronunciationUnavailable('no_speech_40s');"));
+  assert.ok(!v.includes("'no_speech_20s'"));
+  assert.match(v, /const pronClipArmed = !!clipCaptureRef\.current\?\.isArmed\(\);\s*const busy =\s*pronClipArmed \|\|/);
+  assert.match(v, /hardBusy:\s*pronClipArmed \|\|/);
 });
 
 test('not armed ⇒ push ignored and onSpeechStop null', () => {
@@ -333,7 +341,7 @@ test('runtime: gate, request field only when active, RT-2 site, learner mic tap,
 
 test('runtime: note planted for the next turn; measured opens BOTH claim-guard sites for that turn only', () => {
   const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
-  assert.match(v, /pronunciationMeasuredThisTurn = pronunciationMeasuredRef\.current;\s*pronunciationResultNoteRef\.current = null;\s*pronunciationMeasuredRef\.current = false;/);
+  assert.match(v, /pronunciationMeasuredThisTurn = pronunciationMeasuredRef\.current;\s*(?:\/\/[^\n]*\n\s*)?pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;\s*pronunciationResultNoteRef\.current = null;\s*pronunciationMeasuredRef\.current = false;/);
   assert.match(v, /isPronunciationClaimSentence\(updatedSentence, transcript, pronunciationMeasuredThisTurn \? \{ measured: true \} : undefined\)/);
   assert.match(v, /claimsPronunciation\(fullText, transcript, pronunciationMeasuredThisTurn \? \{ measured: true \} : undefined\)/);
   assert.match(v, /data\.status === 'ok' && typeof data\.note === 'string'[\s\S]{0,400}plantPronunciationNote\(data\.note, measured\)/);

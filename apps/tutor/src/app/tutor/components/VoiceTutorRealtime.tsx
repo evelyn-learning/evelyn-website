@@ -90,7 +90,7 @@ import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heu
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
 import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
-import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
 import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
 import {
@@ -1582,7 +1582,7 @@ export function VoiceTutorRealtime({
     }
     startPronunciationNoSpeechTimerRef.current();
   };
-  // Nothing heard within 20 s ⇒ stop waiting; the tutor coaches from the model.
+  // Nothing heard within 40 s (Task 23 §G3; was 20 s) ⇒ stop waiting; the tutor coaches from the model.
   const startPronunciationNoSpeechTimer = () => {
     const capture = clipCaptureRef.current;
     pronunciationTimerAwaitsIdleRef.current = false;
@@ -1593,7 +1593,7 @@ export function VoiceTutorRealtime({
       if (capture.isArmed() && capture.bufferedMs() === 0) {
         capture.disarm();
         clearPronunciationArmMaxTimer();
-        plantPronunciationUnavailable('no_speech_20s');
+        plantPronunciationUnavailable('no_speech_40s');
       }
     }, CLIP_NO_SPEECH_TIMEOUT_MS);
   };
@@ -12364,6 +12364,8 @@ export function VoiceTutorRealtime({
     // Pronunciation check: this turn carries a MEASURED result ⇒ the
     // pronunciation-claim guard lets its claims through (this turn only).
     let pronunciationMeasuredThisTurn = false;
+    // Task 23 §G2: the note this turn carried — re-delivered on any retry.
+    let pronunciationNoteThisTurn: string | null = null;
     const turnStartSegmentId = currentSegmentIdRef.current;
     const turnStartCompletedSegmentIds = new Set(completedSegmentIdsRef.current);
     // Number of sentences actually dispatched to TTS this turn. Tracks
@@ -12992,6 +12994,7 @@ export function VoiceTutorRealtime({
       if (pronunciationResultNoteRef.current && !opts?.prefetchOnly) {
         runTranscript = `${pronunciationResultNoteRef.current}\n\n${runTranscript}`;
         pronunciationMeasuredThisTurn = pronunciationMeasuredRef.current;
+        pronunciationNoteThisTurn = pronunciationResultNoteRef.current;
         pronunciationResultNoteRef.current = null;
         pronunciationMeasuredRef.current = false;
       }
@@ -14558,9 +14561,14 @@ export function VoiceTutorRealtime({
         // (the retry hand-off below) with the checked fact. Audio already
         // playing is NOT cut (this is not performKill). First attempt of a
         // voice turn only; inert unless the server sends its frames.
+        const voiceGateWanted = TUTOR_VOICE_VERDICT_HOLD && sessionMode !== 'text' && attempt === 0
+          && voiceHoldAppliesTo(classifyTurnShape(transcript ?? '', String([...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '')), transcript ?? '');
+        // Task 23 §G1 (GDI run 11, 1098 s): a measured pronunciation turn's
+        // score is the verdict — the hold / cut stands down.
+        const voiceGateSkipMeasured = voiceGateWanted && voiceVerdictHoldStandsDown(pronunciationMeasuredThisTurn);
+        if (voiceGateSkipMeasured) onDebugEvent?.('voice_verdict_hold_skipped', 'measured');
         const voiceGate = new VoiceVerdictGate({
-          enabled: TUTOR_VOICE_VERDICT_HOLD && sessionMode !== 'text' && attempt === 0
-            && voiceHoldAppliesTo(classifyTurnShape(transcript ?? '', String([...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '')), transcript ?? ''),
+          enabled: voiceGateWanted && !voiceGateSkipMeasured,
           studentText: transcript ?? '',
         });
         let voiceVerdictCut: VoiceVerdictCut | null = null;
@@ -20015,6 +20023,16 @@ export function VoiceTutorRealtime({
         // when the attempt's speech was cut — a delivered-in-full attempt is
         // told so by the feedback itself and must not be re-narrated.
         if (TUTOR_RETRY_PREAMBLE && attemptKilled) runTranscript = withRetryPreamble(runTranscript);
+        // Task 23 §G2 (GDI run 11, 1098 s): any kill of a measured turn —
+        // validator retry, verdict cut, judge kill — re-delivers the
+        // measurement, with the order to give the score and weak sounds.
+        {
+          const retryNote = pronunciationNoteForRetry({ measuredThisTurn: pronunciationMeasuredThisTurn, note: pronunciationNoteThisTurn });
+          if (retryNote) {
+            runTranscript = `${retryNote}\n\n${runTranscript}`;
+            onDebugEvent?.('pronunciation_note_redelivered', `${rejectionsThisAttempt.map((r) => r.action).join(',') || 'retry'}: ${(pronunciationNoteThisTurn ?? '').slice(0, 80)}`);
+          }
+        }
         if (TUTOR_RETRY_STUDENT_CONTEXT) {
           onDebugEvent?.(
             'brain_validator_retry_context',
@@ -23931,7 +23949,11 @@ export function VoiceTutorRealtime({
     const fireOrRecheck = () => {
       idleNudgeTimerRef.current = null;
       if (standbyRef.current) return; // standing by: silence is expected (re-armed on leave)
+      // Task 23 §G3: an armed pronunciation clip waits for the learner (its own
+      // 40 s no-speech timer ends it) — the idle nudge never talks over it.
+      const pronClipArmed = !!clipCaptureRef.current?.isArmed();
       const busy =
+        pronClipArmed ||
         productionStateRef.current === 'speaking' ||
         brainBusyRef.current ||
         perceptionMidUtteranceRef.current ||
@@ -23963,6 +23985,7 @@ export function VoiceTutorRealtime({
             dueAtMs: idleNudgeDueAtRef.current,
             lastOnsetAtMs: idleNudgeLastOnsetAtRef.current,
             hardBusy:
+              pronClipArmed ||
               productionStateRef.current === 'speaking' ||
               brainBusyRef.current ||
               awaitingDispatchTimerRef.current != null ||

@@ -34,8 +34,12 @@
 export const CLIP_MAX_MS = 10000;
 export const CLIP_SAMPLE_RATE = 24000;
 /** Armed with nothing buffered this long ⇒ the runtime disarms and plants
- *  the unavailable note, so the tutor never waits on a clip that never came. */
-export const CLIP_NO_SPEECH_TIMEOUT_MS = 20000;
+ *  the unavailable note, so the tutor never waits on a clip that never came.
+ *  Task 23 §G3 (GDI run 11, 1148 s: the learner took ~28 s to say
+ *  "responsibilities" and the 20 s window had closed): 40 s, counted from the
+ *  end of the model line; the idle nudge stands down while a clip is armed,
+ *  and the arm's absolute lifetime (PRONUNCIATION_ARM_MAX_MS) still bounds it. */
+export const CLIP_NO_SPEECH_TIMEOUT_MS = 40000;
 /** Absolute lifetime of one arm, from the arm, whatever the playback state:
  *  past it the runtime disarms and plants the unavailable note, so a stale
  *  arm can never score some later, unrelated turn. */
