@@ -106,13 +106,28 @@ export function emptyPageIndexes(batch: ReadonlyArray<{ action: string }>): numb
  * deferred pages keep waiting for content (the empty-page guard they exist for).
  */
 export function flushDeferredPageAtTurnEnd(input: {
-  pending: { authored?: boolean } | null | undefined;
+  /** `flushAfterNextTurn` (Task 24 §C3): the page waits for the end of the
+   *  next brain turn — never flushed at this turn's end. */
+  pending: { authored?: boolean; flushAfterNextTurn?: boolean } | null | undefined;
   brainBusy: boolean;
   speaking: boolean;
   bufferedRenders: number;
 }): boolean {
   const { pending, brainBusy, speaking, bufferedRenders } = input;
-  return !!pending && pending.authored === true && !brainBusy && !speaking && bufferedRenders === 0;
+  return !!pending && pending.authored === true && pending.flushAfterNextTurn !== true && !brainBusy && !speaking && bufferedRenders === 0;
+}
+
+/**
+ * Task 24 §C3 (GDI run 12, 962–968 s): the budget advance fired on a turn
+ * that ended with a question because the one-turn ask hold was spent, and
+ * the page flipped at that turn's end — the student's answer and its card
+ * then landed on the next part's page. When the advance fires on an ask
+ * turn with the hold spent, the part page is flushed at the end of the NEXT
+ * brain turn (the transition turn, whose sentence board cards the answer on
+ * the part being left first); otherwise at this turn's end, as before.
+ */
+export function advancePageFlushTiming(input: { askPending: boolean; holdSpent: boolean }): 'next-turn' | 'turn-end' {
+  return input.askPending && input.holdSpent ? 'next-turn' : 'turn-end';
 }
 
 /**

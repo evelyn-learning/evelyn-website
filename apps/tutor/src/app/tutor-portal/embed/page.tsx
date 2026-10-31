@@ -315,6 +315,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'auto_newpage_on_advance_held_for_auto_card',
   // Task 23 §A2: an empty segment page kept the batch (no topic-shift page on top).
   'auto_new_page_skipped_empty_segment_page',
+  // Task 24 §C: the transition ask was off the new part (killed once); the part page waits for the transition turn's end.
+  'transition_ask_off_part', 'auto_newpage_on_advance_deferred_next_turn',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

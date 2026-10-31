@@ -88,7 +88,8 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
@@ -4439,7 +4440,7 @@ export function VoiceTutorRealtime({
   // (not dedup). If every teaching command dedups, the page stays
   // deferred — preventing the empty-page-after-advance bug observed
   // 2026-05-13 (10) session.
-  const pendingAdvanceNewPageRef = useRef<{ title: string; segmentId: string; /** fixed-script "Part n · label" title — never retitled from the card */ authored?: boolean; /** armed by the client's post-turn advance (fixed-script auto-advance / spoken opener): the turn's own auto sentence cards belong to the part being LEFT and never open this page (Task 14 §K) */ afterTurn?: boolean } | null>(null);
+  const pendingAdvanceNewPageRef = useRef<{ title: string; segmentId: string; /** fixed-script "Part n · label" title — never retitled from the card */ authored?: boolean; /** armed by the client's post-turn advance (fixed-script auto-advance / spoken opener): the turn's own auto sentence cards belong to the part being LEFT and never open this page (Task 14 §K) */ afterTurn?: boolean; /** Task 24 §C3: the advance fired on an ask turn with the hold spent — `afterTurn` survives the NEXT turn start, the turn-end flush waits for that turn's end */ flushAfterNextTurn?: boolean; /** the carried turn has started (set at its turn start) */ carriedTurnStarted?: boolean } | null>(null);
   // Task 23 §A: the deferred segment page break flushed into a batch this
   // turn (the newPage command object, still in the render buffer until it
   // paints) and the page being left — a later student sentence card of the
@@ -12363,7 +12364,15 @@ export function VoiceTutorRealtime({
     // (its auto cards stay on the part being left). From the next brain turn
     // on, the new part's own auto cards (corrections, pronunciation target)
     // open the pending part page as any fresh render does.
-    if (pendingAdvanceNewPageRef.current?.afterTurn) pendingAdvanceNewPageRef.current.afterTurn = false;
+    // Task 24 §C3: an advance on an ask turn with the hold spent carries
+    // `afterTurn` through ONE turn start (the transition turn), so that
+    // turn's card of the student's answer stays on the part being left.
+    if (pendingAdvanceNewPageRef.current?.flushAfterNextTurn && !pendingAdvanceNewPageRef.current.carriedTurnStarted) {
+      pendingAdvanceNewPageRef.current.carriedTurnStarted = true;
+    } else if (pendingAdvanceNewPageRef.current?.afterTurn) {
+      pendingAdvanceNewPageRef.current.afterTurn = false;
+      pendingAdvanceNewPageRef.current.flushAfterNextTurn = false;
+    }
     // Task 23 §A: a break from an earlier turn never pulls this turn's cards.
     segmentPageBreakRef.current = null;
     levelAdvanceThisTurnRef.current = '';
@@ -12952,6 +12961,8 @@ export function VoiceTutorRealtime({
       let repeatAfterCorrectRejected = false;
       // Task 20 §B1: one premature_farewell kill per turn.
       let prematureFarewellRejected = false;
+      // Task 24 §C1: one transition_ask_off_part kill per turn.
+      let transitionAskRejected = false;
       // Task 20 §B2: the lesson was already closed when this turn started (it
       // answers a post-close utterance); the arm counter tells a fresh arm.
       const closedAtTurnStart = lessonClosedRef.current;
@@ -19200,6 +19211,26 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Task 24 §C1 (GDI run 12, 977–1018 s: the transition turn under the
+        // new pronunciation card asked "Did the seminar take place last year,
+        // or more recently?" — the old part's thread ran three more turns):
+        // on the turn carrying the FACT note, an attempt whose closing ask
+        // shares < 2 content tokens with the new part's card statement is
+        // killed + retried once (the premature_farewell path).
+        if (!attemptKilled && !transitionAskRejected && attemptText && fixedScriptNoteDeliveredThisTurnRef.current) {
+          const taPlan = lessonPlanRef.current;
+          const taSeg = taPlan?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
+          const taTruth = taSeg && taPlan ? getSegmentTruth(taSeg, taPlan.id) : null;
+          const taCard = taTruth?.problemText ? stripWbEmphasisText(taTruth.problemText) : '';
+          const taAsk = taCard ? transitionAskSentence(attemptText) : null;
+          if (taAsk && askOffNewPart(taAsk, taCard)) {
+            transitionAskRejected = true;
+            rejectionsThisAttempt.push({ action: 'transition_ask_off_part', reason: TRANSITION_ASK_REASON });
+            await performKill();
+            onDebugEvent?.('transition_ask_off_part', `"${taAsk.slice(0, 80)}" vs "${taCard.slice(0, 60)}…"`);
+          }
+        }
+
         // Judge LLM groundedness check (Lever B1). Only fires when the
         // attempt produced spoken text AND wasn't already killed by a
         // structural rejection (no point judging speech we're about to
@@ -20536,7 +20567,19 @@ export function VoiceTutorRealtime({
             // Resets turnsInSegmentRef for the new segment and disarms a
             // pending pronunciation arm (disarmPronunciationOnSegmentAdvance).
             applyResolvedAdvance(autoPlan, segIdNow, autoNext);
-            if (pendingAdvanceNewPageRef.current?.segmentId === autoNext) pendingAdvanceNewPageRef.current.afterTurn = true;
+            if (pendingAdvanceNewPageRef.current?.segmentId === autoNext) {
+              pendingAdvanceNewPageRef.current.afterTurn = true;
+              // Task 24 §C3 (GDI run 12, 962 s): the hold was spent on an ask
+              // turn — the page waits for the end of the transition turn.
+              // Reaching this branch with askPending means
+              // holdAutoAdvanceForPendingAsk refused to hold again: spent.
+              const askHoldSpent = askPending;
+              if (advancePageFlushTiming({ askPending, holdSpent: askHoldSpent }) === 'next-turn') {
+                pendingAdvanceNewPageRef.current.flushAfterNextTurn = true;
+                pendingAdvanceNewPageRef.current.carriedTurnStarted = false;
+                onDebugEvent?.('auto_newpage_on_advance_deferred_next_turn', autoNext);
+              }
+            }
             const autoKind = autoPlan.segments.find((sg) => sg.id === autoNext)?.kind ?? 'segment';
             const merged = mergePendingRuntimeNote(
               { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
@@ -20988,6 +21031,13 @@ export function VoiceTutorRealtime({
             );
           }
         }
+      }
+      // Task 24 §C3: the carried (transition) turn is over and its sentence
+      // board has run — the part page may now flush at turn end.
+      if (!opts?.prefetchOnly && pendingAdvanceNewPageRef.current?.flushAfterNextTurn && pendingAdvanceNewPageRef.current.carriedTurnStarted) {
+        pendingAdvanceNewPageRef.current.flushAfterNextTurn = false;
+        pendingAdvanceNewPageRef.current.carriedTurnStarted = false;
+        pendingAdvanceNewPageRef.current.afterTurn = false;
       }
       // Opener-recency (part A): capture THIS session's opener record once,
       // on the opener turn. openingTurnPendingRef is still armed here — it's

@@ -13,6 +13,7 @@ import {
   isPageContentAction,
   flushDeferredPageAtTurnEnd,
   orderStudentCardsBeforePageBreak,
+  advancePageFlushTiming,
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 import { keepBatchOnEmptySegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
@@ -87,13 +88,13 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('VTR passes deferredIsAuthored from the pending page', /deferredIsAuthored: pendingAdvanceNewPageRef\.current\.authored === true/.test(VTR));
   ok('VTR: a post-turn auto card never flushes the part page', /const autoCardOfLeftPart = opts\?\.sentenceBoardAuto === true && pendingAdvanceNewPageRef\.current\.afterTurn === true;/.test(VTR)
     && /const hasFreshTeaching = !autoCardOfLeftPart && /.test(VTR));
-  ok('VTR: the auto-advance marks its pending page afterTurn', /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\);\s*if \(pendingAdvanceNewPageRef\.current\?\.segmentId === autoNext\) pendingAdvanceNewPageRef\.current\.afterTurn = true;/.test(VTR));
+  ok('VTR: the auto-advance marks its pending page afterTurn', /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\);\s*if \(pendingAdvanceNewPageRef\.current\?\.segmentId === autoNext\) \{\s*pendingAdvanceNewPageRef\.current\.afterTurn = true;/.test(VTR));
   // Fix round 1 (review I-1): afterTurn is scoped to the advancing turn —
   // cleared at the next brain turn's start, so the new part's own auto
   // cards open the part page.
   const turnStart = VTR.indexOf('turnNarrationRef.current = [];');
   ok('VTR: afterTurn cleared at the next brain turn start', turnStart > 0
-    && /if \(pendingAdvanceNewPageRef\.current\?\.afterTurn\) pendingAdvanceNewPageRef\.current\.afterTurn = false;/.test(VTR.slice(turnStart, turnStart + 800)));
+    && /\} else if \(pendingAdvanceNewPageRef\.current\?\.afterTurn\) \{\s*pendingAdvanceNewPageRef\.current\.afterTurn = false;/.test(VTR.slice(turnStart, turnStart + 1400)));
   ok('VTR: afterTurn is set only right after the client advances (auto-advance, spoken opener)', (VTR.match(/\.afterTurn = true;/g) ?? []).length === 2);
   ok('VTR: the flushed part page clears a held topic-shift mark', VTR.includes("onDebugEvent?.('topic_shift_cleared_by_segment_page'"));
 }
@@ -195,6 +196,20 @@ ok('emptyPageIndexes: pointer-only page is empty',
   const model = { action: 'showSentence', sentence: 'I have worked with international customers for several years.' };
   const r = orderStudentCardsBeforePageBreak([page, model], (c) => typeof (c as { sentence?: string }).sentence === 'string' && isStudentSentenceCard((c as { sentence: string }).sentence, 'Yes, I have worked with an international customer before.'));
   ok('23 r1 m5: that model stays after the page break', r.moved.length === 0 && r.cmds[0] === page);
+}
+
+// Task 24 §C3 (GDI run 12, 962 s): an advance on an ask turn with the hold spent flushes after the NEXT turn.
+{
+  ok('24C3: ask pending + hold spent ⇒ next-turn', advancePageFlushTiming({ askPending: true, holdSpent: true }) === 'next-turn');
+  ok('24C3: no ask ⇒ turn-end', advancePageFlushTiming({ askPending: false, holdSpent: false }) === 'turn-end');
+  ok('24C3: ask pending, hold not spent ⇒ turn-end', advancePageFlushTiming({ askPending: true, holdSpent: false }) === 'turn-end');
+  ok('24C3: the turn-end flush waits while flushAfterNextTurn is set',
+    !flushDeferredPageAtTurnEnd({ pending: { authored: true, flushAfterNextTurn: true }, brainBusy: false, speaking: false, bufferedRenders: 0 })
+    && flushDeferredPageAtTurnEnd({ pending: { authored: true, flushAfterNextTurn: false }, brainBusy: false, speaking: false, bufferedRenders: 0 }));
+  const V = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('24C3: VTR marks the carry at the advance', V.includes("if (advancePageFlushTiming({ askPending, holdSpent: askHoldSpent }) === 'next-turn') {") && V.includes("onDebugEvent?.('auto_newpage_on_advance_deferred_next_turn', autoNext);"));
+  ok('24C3: VTR keeps afterTurn through one turn start', V.includes('if (pendingAdvanceNewPageRef.current?.flushAfterNextTurn && !pendingAdvanceNewPageRef.current.carriedTurnStarted) {'));
+  ok('24C3: VTR clears the carry at the carried turn\'s end', V.includes('if (!opts?.prefetchOnly && pendingAdvanceNewPageRef.current?.flushAfterNextTurn && pendingAdvanceNewPageRef.current.carriedTurnStarted) {'));
 }
 
 console.log(`deferred-page-flush: ${n} cases passed`);

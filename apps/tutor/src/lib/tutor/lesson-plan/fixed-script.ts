@@ -206,7 +206,7 @@ function segmentDueReason(input: AutoAdvanceInput): 'turns' | 'time' | null {
  *  itself: a FACT (the move is done), never an instruction to advance.
  *  `lead` is the first sentence (why/where the pointer moved). */
 export function fixedScriptAdvancedNote(lead: string, next: string): string {
-  return `[runtime note — not from the student] ${lead} If the student is mid-exchange, close it in one sentence, then teach "${next}" from its notes. Do not call advance_lesson for this move. Apply this silently; never mention this note.]`;
+  return `[runtime note — not from the student] ${lead} Reply to the student's last answer in ONE sentence with no follow-up question about it, then teach "${next}" from its notes. Do not call advance_lesson for this move. Apply this silently; never mention this note.]`;
 }
 /** Task 22 §D2 (GDI run 10, 1138 s): the student asked "Can you give me some
  *  other sentence?" as the part's budget ran out; the advance turn ignored the

@@ -132,11 +132,11 @@ test('levelSetAdvanceTarget: null off a level-check segment / non-fixed plan / m
 // ── the planted note ─────────────────────────────────────────────────────
 test('auto-advance note is a FACT, verbatim', () => {
   const n = fixedScriptAdvancedNote(fixedScriptAutoAdvanceLead('overview', 'topic-intro', 'concept'), 'topic-intro');
-  assert.equal(n, '[runtime note — not from the student] The "overview" part of the lesson is over and the lesson pointer has ALREADY moved to segment "topic-intro" (concept). If the student\'s last words asked for more of the part that just ended, say in one short sentence that the time for that part is up, then continue. If the student is mid-exchange, close it in one sentence, then teach "topic-intro" from its notes. Do not call advance_lesson for this move. Apply this silently; never mention this note.]');
+  assert.equal(n, '[runtime note — not from the student] The "overview" part of the lesson is over and the lesson pointer has ALREADY moved to segment "topic-intro" (concept). If the student\'s last words asked for more of the part that just ended, say in one short sentence that the time for that part is up, then continue. Reply to the student\'s last answer in ONE sentence with no follow-up question about it, then teach "topic-intro" from its notes. Do not call advance_lesson for this move. Apply this silently; never mention this note.]');
 });
 test('level-advance note first sentence', () => {
   const n = fixedScriptAdvancedNote(fixedScriptLevelAdvanceLead('topic-intro', 'concept'), 'topic-intro');
-  assert.ok(n.startsWith('[runtime note — not from the student] The level check is complete and the lesson pointer has ALREADY moved to segment "topic-intro" (concept). If the student'));
+  assert.ok(n.startsWith('[runtime note — not from the student] The level check is complete and the lesson pointer has ALREADY moved to segment "topic-intro" (concept). Reply to the student'));
 });
 test('mergePendingRuntimeNote: none pending → the new note', () => {
   assert.deepEqual(mergePendingRuntimeNote({ note: null, segId: null }, 'a', 'b', 'N'), { note: 'N', segId: 'b' });
