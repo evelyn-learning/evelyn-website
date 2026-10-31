@@ -35,6 +35,15 @@ test('numbers are ignored; a card with < 2 content tokens checks nothing; no ask
   assert.equal(askOffNewPart('Did the seminar take place last year?', 'Part 7'), false);
   assert.equal(transitionAskSentence('Good. Here is the card.'), null);
 });
+test('fix round 1 (I-2): short asks and the card\'s own question are on-part; 977 s still off', () => {
+  const INTRO = '1. We use simple sentences to talk about our job: I work in sales. / I help customers. / I work with international clients. / I joined my company three years ago.\n2. Practice question: What do you do at work? Answer with one or two sentences.';
+  assert.equal(askOffNewPart('What do you do at work?', INTRO), false);
+  assert.equal(askOffNewPart('Which would you like to start with?', INTRO), false);
+  assert.equal(askOffNewPart('What do you do at work, in one or two sentences?', INTRO), false, 'every token in the card');
+  assert.equal(askOffNewPart('Ready?', CARD), false);
+  assert.equal(askOffNewPart('Which one would you like to try?', CARD), false, 'all stopwords ⇒ 0 content tokens');
+  assert.equal(askOffNewPart('Did the seminar take place last year or more recently?', CARD), true);
+});
 test('the retry reason, verbatim; VTR kills once per turn on the FACT-note turn', () => {
   assert.equal(TRANSITION_ASK_REASON, "The lesson has moved to the next part. Reply to the student's last answer in ONE sentence with no follow-up question about it, then present the new part's card and end with that part's own question.");
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');

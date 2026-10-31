@@ -11,8 +11,10 @@
  * and end with the new part's own question.
  *
  * Tokens: Latin letter runs of ≥ 3, lower-cased, minus a stopword list;
- * numbers are ignored. An ask with no Latin tokens (a Japanese ask) is never
- * flagged; a card with fewer than two content tokens gives nothing to check.
+ * numbers are ignored. An ask with fewer than two content tokens (a Japanese
+ * ask, a short closer) is never flagged, nor one the card contains or whose
+ * tokens all appear in the card; a card with fewer than two content tokens
+ * gives nothing to check.
  *
  * Pure. Generic: no topic words.
  */
@@ -45,13 +47,25 @@ export function contentTokens(text: string): string[] {
 /** Whether the ask is about something other than the new part's card:
  *  fewer than 2 of its content tokens appear in the card statement. */
 export function askOffNewPart(ask: string, cardStatement: string): boolean {
+  // Fix round 1 (I-2, m-7): fail toward not killing. An ask with 0–1 content
+  // tokens (a Japanese ask, "Ready?", "Which would you like to start with?",
+  // "What do you do at work?") is never flagged; an ask the card contains
+  // (normalised) or whose content tokens all appear in the card is on-part.
   const askTokens = [...new Set(contentTokens(ask))];
-  if (askTokens.length === 0) return false; // no Latin tokens (e.g. a Japanese ask)
+  if (askTokens.length < 2) return false;
   const card = new Set(contentTokens(cardStatement));
   if (card.size < 2) return false; // nothing to compare against
+  const askNorm = latinWords(ask);
+  if (askNorm && ` ${latinWords(cardStatement)} `.includes(` ${askNorm} `)) return false;
   let shared = 0;
   for (const t of askTokens) if (card.has(t)) shared += 1;
+  if (shared === askTokens.length) return false;
   return shared < 2;
+}
+
+/** Lower-cased Latin words, space-joined (the normalised text compare). */
+function latinWords(text: string): string {
+  return ((text ?? '').toLowerCase().match(/[a-z]+(?:['’][a-z]+)?/g) ?? []).join(' ');
 }
 
 /** The attempt's closing ask sentence, or null when it does not end with an
