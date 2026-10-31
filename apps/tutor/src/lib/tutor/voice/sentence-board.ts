@@ -471,15 +471,25 @@ const PRONOUN_CLASS: Record<string, string> = {
   // Task 21 fix round 1 (m): reflexive and it / that flips are not edits either
   myself: '<refl>', yourself: '<refl>', ourselves: '<refl>', yourselves: '<refl>',
   it: '<it>', that: '<it>',
-  // Task 23 §D2 (GDI run 11, 399 s): the verb follows the person — I am ↔ you
-  // are, I'm ↔ you're — so the shift is not an edit either.
-  am: '<be>', are: '<be>', "i'm": '<pro-be>', "you're": '<pro-be>', "we're": '<pro-be>',
+  // Task 23 §D2 (GDI run 11, 399 s): I'm ↔ you're is a person shift, not an
+  // edit. (am / are: see personClassTokens — only when they agree.)
+  "i'm": '<pro-be>', "you're": '<pro-be>', "we're": '<pro-be>',
 };
+/** Task 23 fix round 1 (m2): a be-verb is a person shift only when it AGREES
+ *  with the pronoun right before it (I am / you are / we are) — "I is" / "I
+ *  are" keep their verb, so the fix to "I am" is an edit and gets its card. */
+const BE_AGREES: Record<string, string> = { i: 'am', you: 'are', we: 'are' };
+function personClassTokens(toks: readonly string[]): string[] {
+  return toks.map((t, k) => {
+    if ((t === 'am' || t === 'are') && k > 0 && BE_AGREES[toks[k - 1]!] === t) return '<be>';
+    return PRONOUN_CLASS[t] ?? t;
+  });
+}
 /** Task 23 §D2: the classes that carry the speaker's person (written back
  *  into the student's own form on a recast card). */
 const PERSON_CLASSES = new Set(['<pro>', '<poss>', '<poss2>', '<refl>', '<be>', '<pro-be>']);
 function recastTokens(text: string): string[] {
-  return dropFillersAndRepeats(tokens(text)).map((t) => PRONOUN_CLASS[t] ?? t);
+  return personClassTokens(dropFillersAndRepeats(tokens(text)));
 }
 /** Length of the run where s (from i) and t (from j) agree. */
 function agree(s: string[], i: number, t: string[], j: number): number {
@@ -602,6 +612,15 @@ function writeBackPerson(span: string, rawT: readonly string[], classed: readonl
     if (edit.kind === 'del') return k < del ? k : k + 1;
     return k;
   };
+  // Task 23 fix round 1 (I1): all or nothing — every person-class word of the
+  // tutor's sentence must have a student word of the same class at its aligned
+  // position ("You ARE working" after "I working": "are" has none ⇒ the card
+  // is the tutor's sentence as spoken, never "I are working").
+  for (let j = 0; j < classed.length; j++) {
+    if (!PERSON_CLASSES.has(classed[j]!)) continue;
+    const sj = studentIndex(j);
+    if (sj < 0 || saidClassed[sj] !== classed[j] || !saidRaw[sj]) return span;
+  }
   let k = -1;
   return span.replace(TOKEN_RE, (w) => {
     k++;
@@ -705,7 +724,7 @@ export function recastCorrectionCard(tutorText: string, student: string | null |
     if (!sentence) continue;
     sentence = sentence[0]!.toUpperCase() + sentence.slice(1);
     const rawT = dropFillersAndRepeats(tokens(sentence));
-    const classed = rawT.map((x) => PRONOUN_CLASS[x] ?? x);
+    const classed = personClassTokens(rawT);
     const edit = oneEditAt(said, classed) ? wholeOneEdit(said, classed) : null;
     if (edit) {
       if (!isCardCandidate(sentence) || CJK_RE.test(sentence)) return null;
@@ -717,7 +736,7 @@ export function recastCorrectionCard(tutorText: string, student: string | null |
     if (/[?？]["”’)]?\s*$/.test(raw.trim())) continue;
     for (const clause of recastClauses(sentence)) {
       const cT = dropFillersAndRepeats(tokens(clause));
-      const cClassed = cT.map((x) => PRONOUN_CLASS[x] ?? x);
+      const cClassed = personClassTokens(cT);
       const cEdit = prefixOneEdit(said, cClassed);
       if (!cEdit) continue;
       let c = clause[0]!.toUpperCase() + clause.slice(1);

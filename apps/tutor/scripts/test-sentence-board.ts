@@ -1103,5 +1103,24 @@ test('21B r3: "remember" / "article" are cues only in a correcting frame', () =>
   });
 }
 
+// ── Task 23 fix round 1 (I1, m2): write-back keeps agreement; a be-verb fix is an edit ──
+test('23 r1 I1: a person word with no student counterpart ⇒ no write-back (never "I are")', () => {
+  assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, tutorText: 'Nice. You are working in sales now. What do you sell?', studentLast: 'I working in sales now.' }),
+    [{ sentence: 'You are working in sales now.', kind: 'correction', emphasis: ['are'], emphasisAt: [1] }]);
+  assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, tutorText: 'You are working in sales, and that sounds busy.', studentLast: 'I working in sales at Nagoya.' }).map((c) => c.sentence), ['You are working in sales.']);
+  const t399 = "Good, that's a clear answer. You learned how to sell washing machines, and you used the present perfect correctly.";
+  assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, tutorText: t399, studentLast: 'I learned how to sell washing machine at Nagoya during those 3 years.' }),
+    [{ sentence: 'I learned how to sell washing machines.', kind: 'correction', emphasis: ['machines'], emphasisAt: [6] }]);
+  assert.deepEqual(recastCorrectionCard('You are the leader of a small team.', 'I am leader of a small team.')?.sentence, 'I am the leader of a small team.');
+});
+test('23 r1 m2: "I is / I are" → "I am" is a correction with [am]', () => {
+  assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, tutorText: 'Good. I am working on a new project. What is it about?', studentLast: 'I is working on a new project.' }),
+    [{ sentence: 'I am working on a new project.', kind: 'correction', emphasis: ['am'], emphasisAt: [1] }]);
+  assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, tutorText: 'Good. I am a sales manager at Nagoya. What do you sell?', studentLast: 'I are a sales manager at Nagoya.' }),
+    [{ sentence: 'I am a sales manager at Nagoya.', kind: 'correction', emphasis: ['am'], emphasisAt: [1] }]);
+  // an agreeing I am ↔ you are is still a person shift, not an edit
+  assert.equal(recastsStudentSentence('You are the leader of a small team.', 'I am the leader of a small team.'), false);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
