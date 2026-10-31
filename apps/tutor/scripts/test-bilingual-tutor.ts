@@ -1463,5 +1463,18 @@ test('22F2 the language-session prompt reads digits as the spoken number words; 
   assert.ok(!(a.core + a.session).includes(line));
 });
 
+test('23I verb-form errors are grammar, not mishearing: the judge block and the bilingual clause carry the lines; English-only unchanged', () => {
+  const judgeLine = 'A difference of verb form or inflection (spoke/spoken, work/worked, go/went, machine/machines) is grammar, not mishearing: praise that calls such a form correct IS an issue.';
+  const jb = { boardSummary: '', spokenText: 'Great.' };
+  assert.ok(buildJudgeUserContent({ ...jb, learnerSpeech: true }).includes(judgeLine));
+  assert.ok(!buildJudgeUserContent(jb).includes(judgeLine));
+  const brainLine = 'When you correct a word, say the correction plainly; never tell the student they used the corrected form.';
+  assert.ok(buildBilingualClause(['en', 'ja'])!.includes(brainLine));
+  const a = buildSystemPromptParts(base);
+  const b = buildSystemPromptParts({ ...base, tutorLanguages: ['en', 'ja'] });
+  assert.ok(b.session.includes(brainLine));
+  assert.ok(!(a.core + a.session).includes(brainLine));
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
