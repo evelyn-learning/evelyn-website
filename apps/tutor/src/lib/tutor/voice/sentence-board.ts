@@ -293,7 +293,8 @@ const FRAGMENT_INTRO_RE = /\b(?:start(?:ing)? with|begin(?:ning)? with|with the 
 /** Fix round 1 (m1): a trailing comma marks a starter only in a short quote —
  *  a whole sentence quoted with its comma inside (US style) stays a card. */
 const FRAGMENT_COMMA_MAX_WORDS = 6;
-const FRAGMENT_AFTER_RE = /^\s*[,.]?\s*(?:well|correctly|right)\b/i;
+// Fix round 2 (m1): ", right?" / "correctly?" is a question tag, not a form comment.
+const FRAGMENT_AFTER_RE = /^\s*[,.]?\s*(?:well|correctly|right)\b(?!\s*[?？])/i;
 export function isQuotedFragment(span: string, before: string, after: string): boolean {
   const s = (span ?? '').trim();
   const words = s.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length;

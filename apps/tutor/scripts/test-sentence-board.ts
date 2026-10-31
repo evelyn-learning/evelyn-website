@@ -1153,5 +1153,12 @@ test('23 r2 I1: a be-verb correction is shown in the student\'s person with the 
   }
 });
 
+test('23 r2 m1: a ", right?" tag after the quote is a question tag — the card stays', () => {
+  const cards = planSentenceBoard({ renderedThisTurn: false, tutorText: 'Use the past: "I went to Osaka last week," right?', studentLast: 'I go to Osaka last week.' });
+  assert.deepEqual(cards.map((c) => [c.kind, c.sentence]), [['correction', 'I went to Osaka last week.']]);
+  assert.equal(isQuotedFragment('I went to Osaka last week,', 'Use the past: ', ' right?'), false);
+  assert.equal(isQuotedFragment('I have worked with customers', 'You used ', ' correctly.'), true);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
