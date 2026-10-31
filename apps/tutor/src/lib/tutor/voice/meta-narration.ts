@@ -284,6 +284,26 @@ function stripKeepInMindTail(s: string): string | null {
   if (!head || !ADDRESSES_STUDENT_RE.test(head.replace(/["“「‘][^"”」’]*["”」’]/g, ' '))) return '';
   return `${head.replace(/[,;:\s]+$/, '')}.`;
 }
+// Task 23 §H (GDI run 11, 555 s SPOKEN: `Their sentence, "I met a customer
+// from the USA last year," is correct, but the question on the board is still
+// about business events, so I'll bring that back. The question I'm asking now
+// is: did you attend …?`). H1: the learner named in the third person at the
+// start of a sentence about their sentence / answer / words / reply is
+// addressed — "Their sentence" → "Your sentence", "The student's answer" →
+// "Your answer"; the rest is kept. H2: a plan tail ", so I'll bring that
+// back …" goes (the head stays), and a "The question I'm asking now is:" /
+// "So / Now the question is:" lead goes (the question stays).
+const THIRD_PERSON_LEARNER_LEAD_RE = /^(\s*)(?:Their|The student['’]s|The learner['’]s) (sentence|answer|words|reply)\b/i;
+const BRING_BACK_TAIL_RE = /,?\s*\bso I['’]ll bring (?:that|it|this) back\b[^.!?]*[.!?]?\s*$/i;
+const QUESTION_LEAD_RE = /^\s*(?:The question I['’]m asking (?:you )?now is|(?:So|Now),? the question is)\s*:\s*/i;
+function addressLearner(s: string): string {
+  let out = s.replace(THIRD_PERSON_LEARNER_LEAD_RE, (_m, sp: string, noun: string) => `${sp}Your ${noun.toLowerCase()}`);
+  const tail = BRING_BACK_TAIL_RE.exec(out);
+  if (tail && tail.index > 0) out = `${out.slice(0, tail.index).replace(/[,;:\s]+$/, '')}.`;
+  const lead = QUESTION_LEAD_RE.exec(out);
+  if (lead && out.slice(lead[0].length).trim()) out = capitaliseFirst(out.slice(lead[0].length));
+  return out;
+}
 export interface NoteCitationOpts { /** the session persona's name(s) — full name and first name */ personaName?: string | readonly string[] | null }
 /**
  * A sentence that cites a runtime note with the citation removed: unchanged
@@ -293,7 +313,7 @@ export interface NoteCitationOpts { /** the session persona's name(s) — full n
 export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpts): string {
   const raw = sentence ?? '';
   if (isPersonaSelfAnnounce(raw, opts?.personaName)) return '';
-  const s = stripPersonaLead(raw, opts?.personaName);
+  const s = addressLearner(stripPersonaLead(raw, opts?.personaName));
   if (s !== raw && !s.trim()) return '';
   if (CLOSE_PART_NARRATION_RE.test(s)) return '';
   const keepStripped = stripKeepInMindTail(s);

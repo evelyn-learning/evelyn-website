@@ -782,5 +782,25 @@ check('m7 "You prefer short sentences, so I\'ll keep that in mind." → "You pre
 check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   stripNoteCitationClause('Before I give one, the pronunciation result shows "for" and "our" as the sounds to work on, so I\'ll keep that point in mind.') === '');
 
+// ── Task 23 §H: third-person learner reference and plan tails (GDI run 11, 555 s) ──
+{
+  const S1 = 'Their sentence, "I met a customer from the USA last year," is correct, but the question on the board is still about business events, so I\'ll bring that back.';
+  const S2 = 'The question I\'m asking now is: did you attend any business events or exhibitions last year?';
+  check('23H: 555 s sentence 1 → second person, plan tail gone', stripNoteCitationClause(S1) === 'Your sentence, "I met a customer from the USA last year," is correct, but the question on the board is still about business events.', stripNoteCitationClause(S1));
+  check('23H: 555 s sentence 2 → the question', stripNoteCitationClause(S2) === 'Did you attend any business events or exhibitions last year?', stripNoteCitationClause(S2));
+  check('23H: neither is then dropped as meta narration', !isMetaNarration(stripNoteCitationClause(S1)) && !isMetaNarration(stripNoteCitationClause(S2)));
+  check('23H1: "The student\'s answer" / "The learner\'s words" / "Their reply" → Your …',
+    stripNoteCitationClause("The student's answer is clear.") === 'Your answer is clear.'
+    && stripNoteCitationClause('The learner’s words were natural.') === 'Your words were natural.'
+    && stripNoteCitationClause('Their reply was complete.') === 'Your reply was complete.');
+  check('23H1: "Their manager said no." untouched (not sentence / answer / words / reply)', stripNoteCitationClause('Their manager said no.') === 'Their manager said no.');
+  check('23H1: mid-sentence "their sentence" untouched', stripNoteCitationClause('Ask them to read their sentence aloud.') === 'Ask them to read their sentence aloud.');
+  check('23H2: "So the question is:" / "Now the question is:" leads go', stripNoteCitationClause('So the question is: what did you sell?') === 'What did you sell?'
+    && stripNoteCitationClause('Now, the question is: where did you go?') === 'Where did you go?');
+  check('23H2: a bare lead with nothing after it stays', stripNoteCitationClause('So the question is:') === 'So the question is:');
+  check('23H2: "bring it back" tail on its own sentence head', stripNoteCitationClause('That is a good point, so I\'ll bring it back to the card.') === 'That is a good point.');
+  check('23H2: "bring back" without the so I\'ll plan untouched', stripNoteCitationClause('Please bring that back tomorrow.') === 'Please bring that back tomorrow.');
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
