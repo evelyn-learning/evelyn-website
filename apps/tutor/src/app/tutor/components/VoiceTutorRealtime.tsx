@@ -461,7 +461,7 @@ import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
 // Verdict/counting round (2026-10-04): praise-then-exclusion, the judge's
 // structured verdict, short answers, questions/self-reports.
 import { decidePraiseExclusion, buildPraiseExclusionNote, isPraiseExclusionNote, shouldPlantPraiseExclusionNote, praiseExclusionNoteExpired, type PraiseExclusionNoteRecord } from '@/lib/tutor/voice/praise-exclusion';
-import { decideJudgeIssue, planJudgeNote, buildPlannedJudgeNote, isSuppressibleDenial, describeJudgeIssueDecision, readJudgeTurnContext, describePrecheckDisagreement, formatJudgeAnswerCheck } from '@/lib/tutor/voice/judge-issue-decision';
+import { decideJudgeIssue, planJudgeNote, buildPlannedJudgeNote, isSuppressibleDenial, describeJudgeIssueDecision, readJudgeTurnContext, describePrecheckDisagreement, formatJudgeAnswerCheck, judgeNoteMootByCorrectionCard } from '@/lib/tutor/voice/judge-issue-decision';
 import { studentTurnShape, isHedgedValueAnswer } from '@/lib/tutor/orchestrator/student-turn-shape';
 import {
   TUTOR_PRAISE_EXCLUSION_KILL,
@@ -5242,6 +5242,12 @@ export function VoiceTutorRealtime({
   // false reject can be owned instead of standing forever. Same lifecycle as
   // the three refs above.
   const pendingJudgeCorrectionNoteRef = useRef<string | null>(null);
+  // Task 24 §F: the advisory judge note's kind and the brain call that
+  // planted it, and the brain call whose sentence board placed a correction
+  // card of the student's sentence (-1 = none) — a false_praise note is moot
+  // when the same call carried the correction (judgeNoteMootByCorrectionCard).
+  const judgeNotePlantRef = useRef<{ note: string; kind: string; callSeq: number } | null>(null);
+  const correctionCardCallSeqRef = useRef(-1);
   // 2026-10-03: text of the last DETERMINISTIC note planted in the slot above
   // (relation-step witness note; answer-dispute note decided by exact
   // substitution). While the slot still holds exactly this text the LLM judge
@@ -5274,6 +5280,16 @@ export function VoiceTutorRealtime({
       // student was asked to find). A timer left over from an earlier note
       // must not volunteer it either.
       if (relationStepNoteRef.current?.note === pendingJudgeCorrectionNoteRef.current) return;
+      // Task 24 §F (GDI run 12, 289 s): the note's own turn carried the
+      // correction card — volunteering it would correct the sentence twice.
+      const plantRec = judgeNotePlantRef.current;
+      if (plantRec && plantRec.note === pendingJudgeCorrectionNoteRef.current
+        && judgeNoteMootByCorrectionCard({ noteKind: plantRec.kind, turnCorrectionCard: correctionCardCallSeqRef.current === plantRec.callSeq })) {
+        pendingJudgeCorrectionNoteRef.current = null;
+        judgeNotePlantRef.current = null;
+        onDebugEvent?.('judge_correction_note_dropped', 'turn carried the correction');
+        return;
+      }
       // 2026-10-20: a one-problem homework session issues no correction
       // follow-up turn — the note waits for the student's next real turn.
       if (homeworkProblemRef.current) {
@@ -19678,8 +19694,12 @@ export function VoiceTutorRealtime({
                     if (advisoryCorrectionNote && !advisoryPlant.plant) {
                       skippedJudgeNoteRef.current = advisoryCorrectionNote;
                       onDebugEvent?.('judge_correction_note_skipped', `${advisoryPlant.reason} · advisory: ${noteworthyAdvisoryIssues[0].claim.slice(0, 60)}`);
+                    } else if (advisoryCorrectionNote && judgeNoteMootByCorrectionCard({ noteKind: advisoryNotePlan?.mode ?? '', turnCorrectionCard: correctionCardCallSeqRef.current === brainCallSeqRef.current })) {
+                      // Task 24 §F: this turn already carried the correction card.
+                      onDebugEvent?.('judge_correction_note_dropped', 'turn carried the correction');
                     } else if (advisoryCorrectionNote) {
                       pendingJudgeCorrectionNoteRef.current = advisoryCorrectionNote;
+                      judgeNotePlantRef.current = { note: advisoryCorrectionNote, kind: advisoryNotePlan?.mode ?? '', callSeq: brainCallSeqRef.current };
                       armCorrectionNoteDeadline();   // R50 T3
                       onDebugEvent?.('judge_correction_note_planted', `advisory: ${noteworthyAdvisoryIssues[0].claim.slice(0, 60)}`);
                     }
@@ -20974,6 +20994,20 @@ export function VoiceTutorRealtime({
             const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard } : { sentenceBoardAuto: true, studentSentenceCard });
             const placedId = res?.assignedIds?.[0];
             for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
+            // Task 24 §F (GDI run 12, 269 s): this brain call corrected the
+            // student's sentence on the board — a false_praise judge note it
+            // planted is moot.
+            if (placedId && card.kind === 'correction') {
+              correctionCardCallSeqRef.current = brainCallSeqRef.current;
+              const plantRec = judgeNotePlantRef.current;
+              if (plantRec && plantRec.note === pendingJudgeCorrectionNoteRef.current
+                && judgeNoteMootByCorrectionCard({ noteKind: plantRec.kind, turnCorrectionCard: plantRec.callSeq === brainCallSeqRef.current })) {
+                pendingJudgeCorrectionNoteRef.current = null;
+                judgeNotePlantRef.current = null;
+                if (correctionNoteTimerRef.current) { clearTimeout(correctionNoteTimerRef.current); correctionNoteTimerRef.current = null; }
+                onDebugEvent?.('judge_correction_note_dropped', 'turn carried the correction');
+              }
+            }
             // Runtime-origin marker: this event (the card is not a brain tool call).
             onDebugEvent?.('sentence_board_auto', `kind=${card.kind}${card.source ? ` source=${card.source}` : ''} emphasis=[${card.emphasis.join(', ')}] "${card.sentence}" anchor=${anchorLabel} ${placedId ? `id=${placedId}` : `not placed${res?.rejected?.length ? ` (${res.rejected.map((r) => r.reason).join('; ').slice(0, 80)})` : ''}`}`);
           }

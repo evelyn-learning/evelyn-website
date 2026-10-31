@@ -612,3 +612,13 @@ export function describeJudgeIssueDecision(d: JudgeIssueDecision): string {
   return `kind=${d.fields.issueKind ?? '-'} verdict=${d.fields.studentAnswerVerdict ?? '-'} → ` +
     `${d.plantNote ? `note:${d.noteMode}` : 'no-note'} ${d.withholdCredit ? 'withhold' : 'no-withhold'} (${d.reason})`;
 }
+
+/** Task 24 §F (GDI run 12, 269 s: the turn already carried the correction —
+ *  a sentence-board correction card of the student's sentence — yet the
+ *  judge's false_praise note was planted and, 20 s later, volunteered as a
+ *  second correction of the same sentence): a false_praise note is moot when
+ *  the same brain turn produced a correction card for the student's sentence.
+ *  Every other note kind stands. Pure. */
+export function judgeNoteMootByCorrectionCard(input: { noteKind: 'false_praise' | string; turnCorrectionCard: boolean }): boolean {
+  return input.noteKind === 'false_praise' && input.turnCorrectionCard;
+}
