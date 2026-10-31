@@ -286,6 +286,10 @@ export function isBoardReadAloud(input: { transcript: string; boardQuestion: str
   if (!board.trim()) return false;
   const st = cleanStudentTokens(input.transcript ?? '');
   if (st.length === 0) return false;
+  // Fix round 1 (I2): the student said the line they were asked for —
+  // matched as saidModelSentence does (a quoted target one word off the
+  // board line is still the asked-for line), not by string equality.
+  if (input.expectedRepeat && saidModelSentence(input.expectedRepeat, input.transcript ?? '')) return false;
   const expected = input.expectedRepeat ? wordTokens(input.expectedRepeat).filter((t) => !FILLER_TOKENS.has(t)).join(' ') : '';
   const lines = board.split(/\n+/).map((l) => l.replace(BOARD_LINE_LABEL_RE, '').trim()).filter(Boolean);
   if (expected && expected === lines.flatMap((l) => wordTokens(l)).filter((t) => !FILLER_TOKENS.has(t)).join(' ')) return false;
@@ -312,9 +316,14 @@ export function isBoardReadAloud(input: { transcript: string; boardQuestion: str
  *  question aloud", "read it out loud for me", "読んでみてください") — then a
  *  reading of the board question is the asked-for line, not a read-aloud to
  *  hold. "Read it through" / "look at the card" (silent reading) is no ask. */
-const READ_ALOUD_ASK_RE = /\bread\b[^.!?。！？]{0,40}?\b(?:aloud|out loud|out|to me|for me)\b|読(?:んで|み上げ)/i;
+const READ_ALOUD_ASK_RE = /\bread(?:ing)?\b[^.!?。！？]{0,40}?\b(?:aloud|out loud|out|to me|for me)\b|読(?:んで|み上げ)/i;
+/** Fix round 1 (I2): "Say the question on the card.", "Please ask me the
+ *  question on the card.", "Repeat the question after me." — a say / read /
+ *  repeat / ask-me / tell-me ask pointing at the question, card or board. */
+const BOARD_LINE_ASK_RE = /\b(?:say|read(?:ing)?|repeat|ask me|tell me)\b[^.!?。！？]{0,40}?\b(?:question|card|board|line)\b/i;
 export function asksToReadAloud(tutorText: string | null | undefined): boolean {
-  return READ_ALOUD_ASK_RE.test(tutorText ?? '');
+  const t = tutorText ?? '';
+  return READ_ALOUD_ASK_RE.test(t) || BOARD_LINE_ASK_RE.test(t) || isSayItAsk(t) || isStrictRepeatAsk(t);
 }
 
 /** A re-ask cue. */

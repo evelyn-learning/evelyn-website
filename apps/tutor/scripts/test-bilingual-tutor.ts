@@ -1360,6 +1360,23 @@ test('22E asksToReadAloud: an aloud ask, not a silent "read it through"', () => 
   assert.equal(asksToReadAloud('Can you read it out loud for me?'), true);
   assert.equal(asksToReadAloud('Look at the card on the board and read it through. Then tell me one sentence about your work.'), false);
 });
+test('22E r1 I2: an asked-for reading is not held — a quoted target one word off, or a say / repeat / ask-me ask at the card', () => {
+  const board = 'Have you worked for your current company for a long time?';
+  const quoted = 'Have you worked for your company for a long time?';
+  assert.equal(isBoardReadAloud({ transcript: quoted, boardQuestion: board, expectedRepeat: quoted }), false);
+  for (const t of [
+    'Say the question on the card.',
+    'Now say the question on the board once more.',
+    'Repeat the question after me.',
+    'Please ask me the question on the card.',
+    'Try reading the question out.',
+    `Please say it after me: "${quoted}"`,
+  ]) assert.equal(asksToReadAloud(t), true, t);
+  // the run-10 241 s ask still holds the reading
+  const t217 = 'Your sentence is correct: "I have worked as a sales manager for three years." Let\'s move on to the present perfect practice. Look at the card on the board and read it through. Then tell me one sentence about your work using "I have worked" with a time expression like "for" or "since".';
+  assert.equal(asksToReadAloud(t217), false);
+  assert.equal(isBoardReadAloud({ transcript: quoted, boardQuestion: board, expectedRepeat: null }), true);
+});
 test('22E VTR holds a read-aloud before the brain dispatch (pin)', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   const h = vtr.indexOf('const handleStudentTranscriptForBrain = useCallback(');
