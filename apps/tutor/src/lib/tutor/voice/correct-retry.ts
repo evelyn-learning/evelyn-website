@@ -329,9 +329,16 @@ const READ_ALOUD_ASK_RE = /\bread(?:ing)?\b[^.!?。！？]{0,40}?\b(?:aloud|out 
  *  question on the card.", "Repeat the question after me." — a say / read /
  *  repeat / ask-me / tell-me ask pointing at the question, card or board. */
 const BOARD_LINE_ASK_RE = /\b(?:say|read(?:ing)?|repeat|ask me|tell me)\b[^.!?。！？]{0,40}?\b(?:question|card|board|line)\b/i;
+/** Fix round 2 (I2): the ask's TARGET must be the question itself — a
+ *  sentence that also asks for the answer ("Read the question on the board
+ *  and answer it.", "Tell me your answer to the question on the board.") is
+ *  a reading we hold (the answer is what we wait for). A say-it / repeat ask
+ *  for some other sentence is not a board ask at all: its quoted target goes
+ *  through expectedRepeatFor + saidModelSentence instead. */
+const ANSWER_ASK_RE = /\banswer/i;
 export function asksToReadAloud(tutorText: string | null | undefined): boolean {
-  const t = tutorText ?? '';
-  return READ_ALOUD_ASK_RE.test(t) || BOARD_LINE_ASK_RE.test(t) || isSayItAsk(t) || isStrictRepeatAsk(t);
+  const sentences = (tutorText ?? '').split(/(?<=[.!?。！？])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
+  return sentences.some((x) => (READ_ALOUD_ASK_RE.test(x) || BOARD_LINE_ASK_RE.test(x)) && !ANSWER_ASK_RE.test(x));
 }
 
 /** A re-ask cue. */

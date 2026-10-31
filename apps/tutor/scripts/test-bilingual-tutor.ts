@@ -1370,12 +1370,31 @@ test('22E r1 I2: an asked-for reading is not held — a quoted target one word o
     'Repeat the question after me.',
     'Please ask me the question on the card.',
     'Try reading the question out.',
-    `Please say it after me: "${quoted}"`,
+    'Please read the question on the card aloud.',
   ]) assert.equal(asksToReadAloud(t), true, t);
+  // fix round 2 (I2): a quoted say-it target is tested through expectedRepeatFor + saidModelSentence, not asksToReadAloud
+  assert.equal(asksToReadAloud(`Please say it after me: "${quoted}"`), false);
   // the run-10 241 s ask still holds the reading
   const t217 = 'Your sentence is correct: "I have worked as a sales manager for three years." Let\'s move on to the present perfect practice. Look at the card on the board and read it through. Then tell me one sentence about your work using "I have worked" with a time expression like "for" or "since".';
   assert.equal(asksToReadAloud(t217), false);
   assert.equal(isBoardReadAloud({ transcript: quoted, boardQuestion: board, expectedRepeat: null }), true);
+});
+test('22E r2 I2: only an ask whose TARGET is the question exempts the reading', () => {
+  const board = 'Have you worked for your current company for a long time?';
+  const read = 'Have you worked for your current company for a long time?';
+  // an exempt ask makes the board line the expected repeat (VTR: asksToReadAloud ⇒ { text: boardQuestion })
+  const held = (tutor: string) => isBoardReadAloud({ transcript: read, boardQuestion: board, expectedRepeat: asksToReadAloud(tutor) ? board : null });
+  const t217 = 'Your sentence is correct: "I have worked as a sales manager for three years." Let\'s move on to the present perfect practice. Look at the card on the board and read it through. Then tell me one sentence about your work using "I have worked" with a time expression like "for" or "since".';
+  assert.equal(held(t217), true, '217 s "read it through" ⇒ held');
+  assert.equal(held('Please read the question on the card aloud.'), false);
+  for (const t of [
+    'Read the question on the board and answer it.',
+    'Tell me your answer to the question on the board.',
+    'Good. Try saying it with "since". Then look at the card and answer the question.',
+    'Can you say that in a full sentence? Then look at the card on the board.',
+    'Good. Say it once more: "I have worked here for three years."',
+    'Please repeat after me.',
+  ]) assert.equal(held(t), true, t);
 });
 test('22E r1 I3: held once per statement; a question asked back is a turn; a barge-in is never held', () => {
   const board = 'Have you worked for your current company for a long time?';
