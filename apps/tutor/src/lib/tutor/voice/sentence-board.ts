@@ -1152,6 +1152,18 @@ function locateWords(text: string, words: string): [number, number] | null {
   return m ? [m.index, m.index + m[0].length] : null;
 }
 
+/** Task 24 §D (GDI run 12, 54 s: every echo / checked / levelcheck card
+ *  painted at the END of the reply — the tutor never says the student's
+ *  sentence verbatim, so no narration anchor, so the live anchor): an auto
+ *  card's render-sync anchor. The narration anchor when the card's sentence
+ *  is spoken; 0 (paint as the reply starts) for a card of the STUDENT's own
+ *  sentence nobody spoke; undefined (the live anchor) for a model sentence
+ *  nobody spoke. Pure. */
+export function autoCardAnchor(fromNarration: number | undefined, studentSentenceCard: boolean): number | undefined {
+  if (fromNarration !== undefined) return fromNarration;
+  return studentSentenceCard ? 0 : undefined;
+}
+
 /** Render-sync anchor for an auto card: the number of spoken sentences that
  *  PRECEDE the one saying `sentence` (render-sync paints a command once that
  *  many sentences have played, i.e. as the card's own sentence starts — "the

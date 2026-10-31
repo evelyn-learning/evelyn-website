@@ -13,7 +13,7 @@ import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } f
 import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
-import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices } from '@/lib/tutor/voice/sentence-board';
+import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
@@ -20964,14 +20964,18 @@ export function VoiceTutorRealtime({
               ...(card.emphasis.length ? { emphasis: card.emphasis } : {}),
               ...(card.emphasisAt?.length ? { emphasisAt: card.emphasisAt } : {}),
             } as WhiteboardCommand;
-            const anchor = sentenceAnchorIndex(turnNarrationRef.current, card.sentence);
+            const narrationAnchor = sentenceAnchorIndex(turnNarrationRef.current, card.sentence);
             // Task 23 §A: every auto card but a plain new model sentence is the student's.
             const studentSentenceCard = card.kind === 'correction' || !!card.source;
+            // Task 24 §D (GDI run 12, 54 s): the student's own sentence nobody
+            // spoke paints as the reply starts, not after its last sentence.
+            const anchor = autoCardAnchor(narrationAnchor, studentSentenceCard);
+            const anchorLabel = narrationAnchor === undefined && anchor === 0 ? 'start' : String(anchor ?? 'live');
             const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard } : { sentenceBoardAuto: true, studentSentenceCard });
             const placedId = res?.assignedIds?.[0];
             for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
             // Runtime-origin marker: this event (the card is not a brain tool call).
-            onDebugEvent?.('sentence_board_auto', `kind=${card.kind}${card.source ? ` source=${card.source}` : ''} emphasis=[${card.emphasis.join(', ')}] "${card.sentence}" anchor=${anchor ?? 'live'} ${placedId ? `id=${placedId}` : `not placed${res?.rejected?.length ? ` (${res.rejected.map((r) => r.reason).join('; ').slice(0, 80)})` : ''}`}`);
+            onDebugEvent?.('sentence_board_auto', `kind=${card.kind}${card.source ? ` source=${card.source}` : ''} emphasis=[${card.emphasis.join(', ')}] "${card.sentence}" anchor=${anchorLabel} ${placedId ? `id=${placedId}` : `not placed${res?.rejected?.length ? ` (${res.rejected.map((r) => r.reason).join('; ').slice(0, 80)})` : ''}`}`);
           }
         }
         // R49b: the CONTENT companion to the presence check above. A render

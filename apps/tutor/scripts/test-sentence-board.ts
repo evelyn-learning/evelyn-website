@@ -12,7 +12,7 @@ import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import {
   extractQuotedSentences, classifyQuotedSentence, planSentenceBoard,
   applySpokenEmphasis, emphasiseSpokenCorrections, SENTENCE_BOARD_MAX_PER_TURN,
-  sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex, autoSentenceCardsToReplace,
+  sentenceContains, sentenceOnCurrentPage, composeSpokenText, sentenceAnchorIndex, autoCardAnchor, autoSentenceCardsToReplace,
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
@@ -1181,6 +1181,16 @@ test('23 r3 I1: past and negative be-verbs are written back in the agreeing form
   for (const x of [...c('Good. You were a sales manager last year. Why?', 'I were a sales manager last year.'), ...c("Hmm. You aren't working in sales now.", 'I working in sales now.')]) {
     assert.ok(!/\bI (?:were|aren't|are)\b/.test(x.sentence), x.sentence);
   }
+});
+
+test('Task 24 §D: autoCardAnchor — the student\'s card nobody spoke paints at the start; spoken ⇒ its sentence; a model nobody spoke ⇒ live', () => {
+  assert.equal(autoCardAnchor(undefined, true), 0);
+  assert.equal(autoCardAnchor(1, true), 1);
+  assert.equal(autoCardAnchor(undefined, false), undefined);
+  assert.equal(autoCardAnchor(2, false), 2);
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(v.includes('const anchor = autoCardAnchor(narrationAnchor, studentSentenceCard);'));
+  assert.ok(v.includes("const anchorLabel = narrationAnchor === undefined && anchor === 0 ? 'start' : String(anchor ?? 'live');"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
