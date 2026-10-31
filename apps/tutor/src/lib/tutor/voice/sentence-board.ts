@@ -610,29 +610,38 @@ function prefixOneEdit(s: string[], t: string[]): RecastEdit | null {
  *  student's words is written back as the student's word ("You learned …" →
  *  "I learned …", "Your company …" → "My company …"). `words` must line up
  *  one-to-one with `rawT`; the edit tells how the two token lists align. */
-function writeBackPerson(span: string, rawT: readonly string[], classed: readonly string[], saidRaw: readonly string[], saidClassed: readonly string[], edit: RecastEdit): string {
+function writeBackPerson(span: string, rawT: readonly string[], classed: readonly string[], saidRaw: readonly string[], saidClassed: readonly string[], edit: RecastEdit): string | null {
   const del = edit.kind === 'del' ? firstMismatch(saidClassed, classed) : -1;
   const studentIndex = (k: number): number => {
     if (edit.kind === 'ins') return k < edit.at ? k : k === edit.at ? -1 : k - 1;
     if (edit.kind === 'del') return k < del ? k : k + 1;
     return k;
   };
-  // Task 23 fix round 1 (I1): all or nothing — every person-class word of the
-  // tutor's sentence must have a student word of the same class at its aligned
-  // position ("You ARE working" after "I working": "are" has none ⇒ the card
-  // is the tutor's sentence as spoken, never "I are working").
+  // Task 23 fix round 1 (I1) / fix round 2 (I1): every person-class word of the
+  // tutor's sentence gets the STUDENT's form — the same-class student word at
+  // its aligned position, or, for a be-verb slot with none (inserted, or the
+  // student's own disagreeing be-verb), the form that agrees with the
+  // student's subject right before it (I → am, we / you → are). Anything else
+  // cannot be written back: the tutor's sentence as spoken — unless the
+  // blocked word IS the edit (the fix itself would show the wrong person):
+  // then no card (null).
+  const out: Array<string | null> = rawT.map(() => null);
+  let blocked = -1;
   for (let j = 0; j < classed.length; j++) {
     if (!PERSON_CLASSES.has(classed[j]!)) continue;
     const sj = studentIndex(j);
-    if (sj < 0 || saidClassed[sj] !== classed[j] || !saidRaw[sj]) return span;
+    if (sj >= 0 && saidClassed[sj] === classed[j] && saidRaw[sj]) { out[j] = saidRaw[sj]!; continue; }
+    const subject = j > 0 ? out[j - 1] : null;
+    if (classed[j] === '<be>' && subject && BE_AGREES[subject]) { out[j] = BE_AGREES[subject]!; continue; }
+    blocked = j;
+    break;
   }
+  if (blocked >= 0) return edit.at === blocked ? null : span;
   let k = -1;
   return span.replace(TOKEN_RE, (w) => {
     k++;
-    if (!PERSON_CLASSES.has(classed[k] ?? '')) return w;
-    const si = studentIndex(k);
-    const mine = si >= 0 ? saidRaw[si] : undefined;
-    if (!mine || saidClassed[si] !== classed[k] || mine === rawT[k]) return w;
+    const mine = out[k];
+    if (!mine || mine === rawT[k]) return w;
     if (mine === 'i' || mine.startsWith("i'")) return 'I' + mine.slice(1);
     return /^\p{Lu}/u.test(w) ? mine[0]!.toUpperCase() + mine.slice(1) : mine;
   });
@@ -764,7 +773,11 @@ function recastCard(sentence: string, rawT: readonly string[], classed: readonly
   const aligned = words0.length === rawT.length && words0.every((w, k) => wordToks(w).join(' ') === rawT[k]);
   // §D2: written back into the student's person only when aligned (else the
   // tutor's sentence as spoken).
+  // Fix round 2 (I1): a person-class / be-verb edit that cannot be written
+  // back in the student's person is no card.
+  if (!aligned && edit.at >= 0 && (PERSON_CLASSES.has(classed[edit.at] ?? '') || /^(?:am|are|is)$/.test(rawT[edit.at] ?? ''))) return null;
   const span = aligned ? writeBackPerson(span0, rawT, classed, saidRaw, said, edit) : span0;
+  if (span === null) return null;
   const tok = edit.at >= 0 ? rawT[edit.at] : undefined;
   if (!tok) return { sentence: span, kind: 'correction', emphasis: [] };
   const words = span.match(TOKEN_RE) ?? [];

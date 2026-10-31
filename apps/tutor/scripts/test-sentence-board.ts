@@ -1107,8 +1107,9 @@ test('21B r3: "remember" / "article" are cues only in a correcting frame', () =>
 // ── Task 23 fix round 1 (I1, m2): write-back keeps agreement; a be-verb fix is an edit ──
 test('23 r1 I1: a person word with no student counterpart ⇒ no write-back (never "I are")', () => {
   assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, tutorText: 'Nice. You are working in sales now. What do you sell?', studentLast: 'I working in sales now.' }),
-    [{ sentence: 'You are working in sales now.', kind: 'correction', emphasis: ['are'], emphasisAt: [1] }]);
-  assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, tutorText: 'You are working in sales, and that sounds busy.', studentLast: 'I working in sales at Nagoya.' }).map((c) => c.sentence), ['You are working in sales.']);
+    // fix round 2 (I1): the be-verb is written back in the agreeing first-person form
+    [{ sentence: 'I am working in sales now.', kind: 'correction', emphasis: ['am'], emphasisAt: [1] }]);
+  assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, tutorText: 'You are working in sales, and that sounds busy.', studentLast: 'I working in sales at Nagoya.' }).map((c) => c.sentence), ['I am working in sales.']);
   const t399 = "Good, that's a clear answer. You learned how to sell washing machines, and you used the present perfect correctly.";
   assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, tutorText: t399, studentLast: 'I learned how to sell washing machine at Nagoya during those 3 years.' }),
     [{ sentence: 'I learned how to sell washing machines.', kind: 'correction', emphasis: ['machines'], emphasisAt: [6] }]);
@@ -1136,6 +1137,20 @@ test('23 r1 m3: a quoted fragment with a 21–99 number locates its emphasis (no
   const ch = 'I sold 35 washing machines to hospitals this year.';
   assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, studentCorrect: true, tutorText: '"35 washing machines to hospitals" is a great detail. What else did you sell?', studentLast: ch, checkedSentence: ch }),
     [{ sentence: ch, kind: 'model', emphasis: ['35', 'washing'], source: 'checked' }]);
+});
+
+test('23 r2 I1: a be-verb correction is shown in the student\'s person with the agreeing form', () => {
+  const c = (t: string, st: string) => planSentenceBoard({ renderedThisTurn: false, tutorText: t, studentLast: st });
+  assert.deepEqual(c('Good. You are a sales manager at Nagoya. What do you sell?', 'I are a sales manager at Nagoya.'),
+    [{ sentence: 'I am a sales manager at Nagoya.', kind: 'correction', emphasis: ['am'], emphasisAt: [1] }]);
+  assert.deepEqual(c('Good. You are working in sales now. What do you sell?', 'I is working in sales now.').map((x) => [x.sentence, x.emphasis]), [['I am working in sales now.', ['am']]]);
+  assert.deepEqual(c('Nice. You are working in sales now. What do you sell?', 'I working in sales now.').map((x) => [x.sentence, x.emphasis]), [['I am working in sales now.', ['am']]]);
+  assert.deepEqual(c('Great. You are a big team. How many people?', 'We is a big team.').map((x) => [x.sentence, x.emphasis]), [['We are a big team.', ['are']]]);
+  assert.deepEqual(c('Great. We are a big team. How many people?', 'We is a big team.').map((x) => [x.sentence, x.emphasis]), [['We are a big team.', ['are']]]);
+  // never the tutor's "You are …" with [are]
+  for (const st of ['I are a sales manager at Nagoya.', 'I is working in sales now.']) {
+    assert.ok(c('Good. You are a sales manager at Nagoya. You are working in sales now.', st).every((x) => !/^You are/.test(x.sentence)));
+  }
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
