@@ -790,9 +790,16 @@ function fragmentOfChecked(tutorText: string, checked: string): string[] | null 
     const f = fragToks.join(' ');
     if (f === whole || !` ${whole} `.includes(` ${f} `)) continue;
     const words = dropThousands(checked).match(TOKEN_RE) ?? [];
-    const toks = words.map((w) => numberWordToken(lowerTok(w)));
+    // Task 23 fix round 1 (m3): the same normaliseNumberTokens as tokens() —
+    // a number may be two tokens ("35"), so each token remembers its word.
+    const toks: string[] = [];
+    const wordOf: number[] = [];
+    words.forEach((w, wi) => { for (const t of wordToks(w)) { toks.push(t); wordOf.push(wi); } });
     for (let i = 0; i + fragToks.length <= toks.length; i++) {
-      if (fragToks.every((x, j) => toks[i + j] === x)) return words.slice(i, i + Math.min(fragToks.length, FRAGMENT_EMPHASIS_MAX));
+      if (!fragToks.every((x, j) => toks[i + j] === x)) continue;
+      const first = wordOf[i]!;
+      const last = wordOf[i + fragToks.length - 1]!;
+      return words.slice(first, Math.min(last + 1, first + FRAGMENT_EMPHASIS_MAX));
     }
   }
   return null;

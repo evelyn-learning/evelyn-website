@@ -1132,5 +1132,11 @@ test('23 r1 m1: "Use "…"" and a whole sentence quoted with its comma card; a s
   assert.deepEqual(c3.map((c) => c.sentence), ['Last month, I sold 25 machines to Toyota.']);
 });
 
+test('23 r1 m3: a quoted fragment with a 21–99 number locates its emphasis (normaliseNumberTokens)', () => {
+  const ch = 'I sold 35 washing machines to hospitals this year.';
+  assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, studentCorrect: true, tutorText: '"35 washing machines to hospitals" is a great detail. What else did you sell?', studentLast: ch, checkedSentence: ch }),
+    [{ sentence: ch, kind: 'model', emphasis: ['35', 'washing'], source: 'checked' }]);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
