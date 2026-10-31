@@ -1464,7 +1464,9 @@ test('22F2 the language-session prompt reads digits as the spoken number words; 
 });
 
 test('23I verb-form errors are grammar, not mishearing: the judge block and the bilingual clause carry the lines; English-only unchanged', () => {
-  const judgeLine = 'A difference of verb form or inflection (spoke/spoken, work/worked, go/went, machine/machines) is grammar, not mishearing: praise that calls such a form correct IS an issue.';
+  // fix round 1 (m11): reworded so it no longer contradicts the sound-alike sentence
+  const judgeLine = 'Sound-alike words (bought/boat) are mishearing. A difference of verb form or inflection (spoke/spoken, work/worked, machine/machines) is NOT mishearing: it is grammar, and praise that calls such a form correct IS an issue.';
+  assert.ok(!buildJudgeUserContent({ boardSummary: '', spokenText: 'x', learnerSpeech: true }).includes('walked → "work"'), 'no sound-alike example that is an inflection');
   const jb = { boardSummary: '', spokenText: 'Great.' };
   assert.ok(buildJudgeUserContent({ ...jb, learnerSpeech: true }).includes(judgeLine));
   assert.ok(!buildJudgeUserContent(jb).includes(judgeLine));
