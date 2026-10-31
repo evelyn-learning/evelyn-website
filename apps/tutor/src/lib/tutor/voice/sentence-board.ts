@@ -16,6 +16,7 @@
  */
 import { dropFillersAndRepeats } from './filler-repeats';
 import { isRetryAsk } from './retry-cap';
+import { normaliseNumberTokens } from './number-tokens';
 
 /** 'echo' (GDI run 3): the tutor quoting the student's own words back (often
  *  the wrong ones) — never a card, unless the check found the student's
@@ -80,10 +81,14 @@ export function numberWordToken(tok: string): string {
 const dropThousands = (text: string) => (text ?? '').replace(/(\d),(?=\d{3}(?!\d))/g, '$1');
 
 /** Lowercase words, punctuation stripped, apostrophes kept (haven't), digits
- *  as number words (numberWordToken). */
+ *  as number words. Task 23 §D1: the same normaliseNumberTokens the
+ *  correct-retry tokeniser uses ("35" → "thirty" "five", "21" ↔
+ *  "twenty-one"), on both sides of every comparison. */
 function tokens(text: string): string[] {
-  return (dropThousands(text).match(TOKEN_RE) ?? []).map((t) => numberWordToken(t.toLowerCase().replace(/’/g, "'")));
+  return normaliseNumberTokens((dropThousands(text).match(TOKEN_RE) ?? []).map((t) => t.toLowerCase().replace(/’/g, "'")));
 }
+/** One display word as comparison tokens (a number may be two: "35"). */
+const wordToks = (w: string): string[] => normaliseNumberTokens([lowerTok(w)]);
 
 /** A quoted span that may be a sentence card (trimmed), or null. */
 function qualifyingSpan(raw: string): string | null {
@@ -215,8 +220,13 @@ export function quoteAffirmed(text: string, at: number, end: number): boolean {
   const consumed = first.length + (quoteClosesSentence ? 0 : (rest.slice(first.length).length - rest.slice(first.length).trimStart().length) + second.length);
   const after = sentenceRe.exec(rest.slice(consumed).trimStart())?.[0] ?? '';
   if ([...parts, after].some((p) => BUT_RE.test(p))) return false;
+  // Task 23 §D1 (GDI run 11, 344 s: 'Good, "I have worked for Nagoya for
+  // three years" is correct.'): the quoted sentence itself is the subject of
+  // the praise — the quote, then "is correct / right / perfect / natural".
+  if (QUOTE_IS_CORRECT_RE.test(rest) && !QUALIFIED_PRAISE_RE.test(first)) return true;
   return parts.some((p) => (AFFIRM_EN_RE.test(p) || AFFIRM_JA_RE.test(p)) && !QUALIFIED_PRAISE_RE.test(p));
 }
+const QUOTE_IS_CORRECT_RE = /^\s*[,.]?\s*(?:is|was|sounds) (?:(?:exactly|completely|totally|perfectly) )?(?:correct|right|perfect|natural)\b/i;
 
 /** Task 22 §G (GDI run 10, 711 s / 781 s): the turn praises the student's
  *  SENTENCE somewhere — "Your sentence is clear.", "That's a natural
@@ -271,6 +281,23 @@ export function isSentenceStarter(span: string, before: string, after: string): 
   return introWithin(STARTER_INTRO_RE, before) || STARTER_AFTER_RE.test(after ?? '') || DANGLING_END_RE.test((span ?? '').trim());
 }
 
+/** Task 23 §D3 (GDI run 11, 302 s `"I have worked," well.`, 1260 s `"I have
+ *  sold" is the right present perfect form`): a quoted sentence STARTER or
+ *  FRAGMENT is never a card — it ends with a comma, has fewer than 4 words,
+ *  is introduced as a form ("starting with", "using", "the form", "the
+ *  verb / tense / phrase / pattern") or is followed by a form comment ("…"
+ *  well / correctly / right). "…" is correct still cards. */
+const FRAGMENT_MIN_WORDS = 4;
+const FRAGMENT_INTRO_RE = /\b(?:start(?:ing)? with|begin(?:ning)? with|using|use|with the form|the form|the (?:verb|tense|phrase|pattern))\s*[:,]?\s*$/i;
+const FRAGMENT_AFTER_RE = /^\s*[,.]?\s*(?:well|correctly|right)\b/i;
+export function isQuotedFragment(span: string, before: string, after: string): boolean {
+  const s = (span ?? '').trim();
+  if (/,\s*$/.test(s)) return true;
+  if (s.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length < FRAGMENT_MIN_WORDS) return true;
+  if (introWithin(FRAGMENT_INTRO_RE, before)) return true;
+  return FRAGMENT_AFTER_RE.test(after ?? '');
+}
+
 /** Task 18 §D: the quote is introduced as the student's own words ("you
  *  said …", 「…と言いました」) — an echo, never promoted. */
 export function isSaidQuote(before: string, after: string): boolean {
@@ -296,8 +323,8 @@ function reorderEmphasis(sentence: string, said: readonly string[]): string[] {
   const words = dropThousands(sentence).match(TOKEN_RE) ?? [];
   const out: string[] = [];
   for (let i = 1; i < words.length && out.length < MAX_EMPHASIS; i++) {
-    const a = numberWordToken(lowerTok(words[i - 1]!));
-    const b = numberWordToken(lowerTok(words[i]!));
+    const a = wordToks(words[i - 1]!).slice(-1)[0];
+    const b = wordToks(words[i]!)[0];
     if (!pairs.has(`${a} ${b}`) && !out.includes(words[i]!)) out.push(words[i]!);
   }
   return out;
@@ -343,9 +370,10 @@ export function classifyQuotedSentence(sentence: string, studentLast: string | n
   const seen = new Set<string>();
   const studentCompounds = new Set((dropThousands(studentLast).match(COMPOUND_RE) ?? []).map(lowerTok));
   for (const w of dropThousands(sentence).match(COMPOUND_RE) ?? []) {
-    const t = numberWordToken(lowerTok(w));
+    const parts = wordToks(w);
+    const t = parts.join(' ');
     if (seen.has(t)) continue;
-    if (w.includes('-') ? studentCompounds.has(t) : student.has(t)) continue;
+    if (w.includes('-') ? studentCompounds.has(lowerTok(w)) : parts.every((x) => student.has(x))) continue;
     seen.add(t);
     emphasis.push(w);
     if (emphasis.length >= MAX_EMPHASIS) break;
@@ -443,7 +471,13 @@ const PRONOUN_CLASS: Record<string, string> = {
   // Task 21 fix round 1 (m): reflexive and it / that flips are not edits either
   myself: '<refl>', yourself: '<refl>', ourselves: '<refl>', yourselves: '<refl>',
   it: '<it>', that: '<it>',
+  // Task 23 §D2 (GDI run 11, 399 s): the verb follows the person — I am ↔ you
+  // are, I'm ↔ you're — so the shift is not an edit either.
+  am: '<be>', are: '<be>', "i'm": '<pro-be>', "you're": '<pro-be>', "we're": '<pro-be>',
 };
+/** Task 23 §D2: the classes that carry the speaker's person (written back
+ *  into the student's own form on a recast card). */
+const PERSON_CLASSES = new Set(['<pro>', '<poss>', '<poss2>', '<refl>', '<be>', '<pro-be>']);
 function recastTokens(text: string): string[] {
   return dropFillersAndRepeats(tokens(text)).map((t) => PRONOUN_CLASS[t] ?? t);
 }
@@ -513,8 +547,71 @@ export function recastsStudentSentence(tutorText: string, student: string): bool
   if (said.length === 0) return false;
   for (const sentence of (tutorText ?? '').split(/(?<=[.!?。！？])\s+/)) {
     if (oneEditRun(said, recastTokens(sentence))) return true;
+    // Task 23 §D2: a clause that recasts the head of the student's sentence
+    // ("You learned how to sell washing machines, and …").
+    if (recastClauses(sentence).some((c) => prefixOneEdit(said, recastTokens(c)) !== null)) return true;
   }
   return false;
+}
+
+/** Task 23 §D2: the comma clauses of a tutor sentence (lead interjection and
+ *  a leading and / but / so dropped) when it has more than one. */
+function recastClauses(sentence: string): string[] {
+  const parts = (sentence ?? '').trim().replace(RECAST_LEAD_RE, '').split(/\s*[,;]\s*/)
+    .map((c) => c.replace(/^(?:and|but|so)\s+/i, '').replace(/[.!?。！？]+$/, '').trim())
+    .filter(Boolean);
+  return parts.length > 1 ? parts : [];
+}
+/** First index where the two token lists differ (the shorter length if none). */
+function firstMismatch(a: readonly string[], b: readonly string[]): number {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  return i;
+}
+/** Task 23 §D2 (GDI run 11, 399 s: "You learned how to sell washing machines,
+ *  and you used …" after "I learned how to sell washing machine at Nagoya
+ *  during those 3 years."): the tutor clause `t` is the HEAD of the student's
+ *  sentence `s` with exactly one edit — two matched tokens after it, or a
+ *  substitution of the clause's last token after ≥ 3 matched (the recast
+ *  stops at the fixed word). ≥ 4 tokens; the student's sentence goes on. */
+function prefixOneEdit(s: string[], t: string[]): RecastEdit | null {
+  if (t.length < RECAST_RUN_MIN) return null;
+  for (const n of [t.length, t.length - 1, t.length + 1]) {
+    if (n >= s.length || n < RECAST_RUN_MIN - 1) continue;
+    const head = s.slice(0, n);
+    const e = wholeOneEdit(head, t);
+    if (!e) continue;
+    if (e.kind === 'sub' && !(t.length - e.at - 1 >= RECAST_TAIL_MIN || (e.at === t.length - 1 && e.at >= RECAST_RUN_MIN - 1))) continue;
+    if (e.kind === 'ins' && t.length - e.at - 1 < RECAST_TAIL_MIN) continue;
+    if (e.kind === 'del' && t.length - firstMismatch(head, t) < RECAST_TAIL_MIN) continue;
+    return e;
+  }
+  return null;
+}
+
+/** Task 23 §D2: the recast card keeps the STUDENT's person — every word of
+ *  the tutor's sentence in a person class (I / you, my / your, am / are,
+ *  I'm / you're …) aligned with a different form of the same class in the
+ *  student's words is written back as the student's word ("You learned …" →
+ *  "I learned …", "Your company …" → "My company …"). `words` must line up
+ *  one-to-one with `rawT`; the edit tells how the two token lists align. */
+function writeBackPerson(span: string, rawT: readonly string[], classed: readonly string[], saidRaw: readonly string[], saidClassed: readonly string[], edit: RecastEdit): string {
+  const del = edit.kind === 'del' ? firstMismatch(saidClassed, classed) : -1;
+  const studentIndex = (k: number): number => {
+    if (edit.kind === 'ins') return k < edit.at ? k : k === edit.at ? -1 : k - 1;
+    if (edit.kind === 'del') return k < del ? k : k + 1;
+    return k;
+  };
+  let k = -1;
+  return span.replace(TOKEN_RE, (w) => {
+    k++;
+    if (!PERSON_CLASSES.has(classed[k] ?? '')) return w;
+    const si = studentIndex(k);
+    const mine = si >= 0 ? saidRaw[si] : undefined;
+    if (!mine || saidClassed[si] !== classed[k] || mine === rawT[k]) return w;
+    if (mine === 'i' || mine.startsWith("i'")) return 'I' + mine.slice(1);
+    return /^\p{Lu}/u.test(w) ? mine[0]!.toUpperCase() + mine.slice(1) : mine;
+  });
 }
 
 /** Task 21 fix round 1 (I2): cues that a medium-confidence "correct" is not. */
@@ -601,6 +698,7 @@ const RECAST_LEAD_RE = /^\s*(?:oh|ah|so|yes|right|okay|ok|well|great|good|nice|i
 export function recastCorrectionCard(tutorText: string, student: string | null | undefined): QuotedSentence | null {
   const said = recastTokens(student ?? '');
   if (said.length === 0) return null;
+  const saidRaw = dropFillersAndRepeats(tokens(student ?? ''));
   for (const raw of (tutorText ?? '').split(/(?<=[.!?。！？])\s+/)) {
     if (/["“”「」『』‘]/.test(raw)) continue;
     let sentence = raw.trim().replace(RECAST_LEAD_RE, '');
@@ -609,22 +707,46 @@ export function recastCorrectionCard(tutorText: string, student: string | null |
     const rawT = dropFillersAndRepeats(tokens(sentence));
     const classed = rawT.map((x) => PRONOUN_CLASS[x] ?? x);
     const edit = oneEditAt(said, classed) ? wholeOneEdit(said, classed) : null;
-    if (!edit) continue;
-    if (!isCardCandidate(sentence) || CJK_RE.test(sentence)) return null;
-    if (AUX_QUESTION_OPENING_RE.test(sentence) || WH_QUESTION_OPENING_RE.test(sentence)) return null;
-    const span = qualifyingSpan(sentence);
-    if (!span || span.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length < CHECKED_CARD_MIN_WORDS) return null;
-    const tok = edit.at >= 0 ? rawT[edit.at] : undefined;
-    if (!tok) return { sentence: span, kind: 'correction', emphasis: [] };
-    // Fix round 1 (m): the edited POSITION — when the card's words line up
-    // one-to-one with the compared tokens, the index is exact.
-    const words = span.match(TOKEN_RE) ?? [];
-    const aligned = words.length === rawT.length && words.every((w, k) => numberWordToken(lowerTok(w)) === rawT[k]);
-    if (aligned) return { sentence: span, kind: 'correction', emphasis: [words[edit.at]!], emphasisAt: [edit.at] };
-    const word = (dropThousands(span).match(TOKEN_RE) ?? []).find((w) => numberWordToken(lowerTok(w)) === tok);
-    return { sentence: span, kind: 'correction', emphasis: word ? [word] : [] };
+    if (edit) {
+      if (!isCardCandidate(sentence) || CJK_RE.test(sentence)) return null;
+      if (AUX_QUESTION_OPENING_RE.test(sentence) || WH_QUESTION_OPENING_RE.test(sentence)) return null;
+      return recastCard(sentence, rawT, classed, saidRaw, said, edit);
+    }
+    // Task 23 §D2: a comma clause recasting the head of the student's
+    // sentence — never inside a question.
+    if (/[?？]["”’)]?\s*$/.test(raw.trim())) continue;
+    for (const clause of recastClauses(sentence)) {
+      const cT = dropFillersAndRepeats(tokens(clause));
+      const cClassed = cT.map((x) => PRONOUN_CLASS[x] ?? x);
+      const cEdit = prefixOneEdit(said, cClassed);
+      if (!cEdit) continue;
+      let c = clause[0]!.toUpperCase() + clause.slice(1);
+      if (!isCardCandidate(c) || CJK_RE.test(c) || AUX_QUESTION_OPENING_RE.test(c) || WH_QUESTION_OPENING_RE.test(c)) continue;
+      c = c.replace(/[,;:]+$/, '') + '.';
+      const card = recastCard(c, cT, cClassed, saidRaw, said, cEdit);
+      if (card) return card;
+    }
   }
   return null;
+}
+/** The recast card of `sentence` (its tokens `rawT` / `classed`, one `edit`
+ *  from the student's): person written back (§D2), the edited word marked. */
+function recastCard(sentence: string, rawT: readonly string[], classed: readonly string[], saidRaw: readonly string[], said: readonly string[], edit: RecastEdit): QuotedSentence | null {
+  const span0 = qualifyingSpan(sentence);
+  if (!span0 || span0.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length < CHECKED_CARD_MIN_WORDS) return null;
+  // Fix round 1 (m): the edited POSITION — when the card's words line up
+  // one-to-one with the compared tokens, the index is exact.
+  const words0 = span0.match(TOKEN_RE) ?? [];
+  const aligned = words0.length === rawT.length && words0.every((w, k) => wordToks(w).join(' ') === rawT[k]);
+  // §D2: written back into the student's person only when aligned (else the
+  // tutor's sentence as spoken).
+  const span = aligned ? writeBackPerson(span0, rawT, classed, saidRaw, said, edit) : span0;
+  const tok = edit.at >= 0 ? rawT[edit.at] : undefined;
+  if (!tok) return { sentence: span, kind: 'correction', emphasis: [] };
+  const words = span.match(TOKEN_RE) ?? [];
+  if (aligned) return { sentence: span, kind: 'correction', emphasis: [words[edit.at]!], emphasisAt: [edit.at] };
+  const word = (dropThousands(span).match(TOKEN_RE) ?? []).find((w) => wordToks(w).includes(tok));
+  return { sentence: span, kind: 'correction', emphasis: word ? [word] : [] };
 }
 
 /** Task 21 §B3: a quoted fragment (≥ 2 words) of the checked-correct sentence
@@ -700,7 +822,8 @@ export function planSentenceBoard(input: {
   const studentCorrect = input.studentCorrect === true;
   const affirmFallback = !studentCorrect && input.affirmFallback === true && !hasCorrectionCue(input.tutorText) && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '');
   const spans = [
-    ...quotedSpansWithContext(input.tutorText).map((q) => ({ ...q, introduced: false })),
+    // Task 23 §D3: a quoted starter / fragment is never a card.
+    ...quotedSpansWithContext(input.tutorText).filter((q) => !isQuotedFragment(q.span, q.before, q.after)).map((q) => ({ ...q, introduced: false })),
     ...colonIntroducedSpans(input.tutorText).map((q) => ({ ...q, introduced: true })),
   ].filter((q) => isCardCandidate(q.span) && !isSentenceStarter(q.span, q.before, q.after));
   const distinct: { s: string; n: string; said: boolean; affirmed: boolean; introduced: boolean }[] = [];

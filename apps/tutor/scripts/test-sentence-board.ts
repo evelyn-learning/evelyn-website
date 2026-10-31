@@ -16,7 +16,7 @@ import {
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
-  levelCheckAnswerCard,
+  levelCheckAnswerCard, isQuotedFragment,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -692,7 +692,8 @@ test('§D19 R4 I2: the "more natural way" template and a fix before the last wor
   assert.equal(recastsStudentSentence('You work in the sales.', 'I work in sales.'), true);
   // Task 21 §B2: the deletion recast is a correction card (nothing to mark), never the checked card.
   assert.deepEqual(planSentenceBoard({ tutorText: 'You work in sales. What else?', studentLast: 'I work in the sales.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I work in the sales.' }),
-    [{ sentence: 'You work in sales.', kind: 'correction', emphasis: [] }]);
+    // Task 23 §D2: the recast card keeps the student's person.
+    [{ sentence: 'I work in sales.', kind: 'correction', emphasis: [] }]);
 });
 test('§D19 R4 m5: only a real question opening drops the card', () => {
   assert.equal(cardableStudentSentence('Can you repeat the question please'), null);
@@ -842,10 +843,11 @@ test('21B1: a question / instruction / quote / short tail after a colon is no ca
 test('21B2: 598 s unquoted recast → correction card emphasis [a]', () => {
   const t = 'Your company gives a lot of health benefits to its employees. Good, that\'s a clear reason. Could you say it once more with "lots of," since "lot" needs an "s" when it means "many"? Then tell me one thing you\'d like to try at work next year.';
   assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: 'My company gives lot of health benefits to its employees.', renderedThisTurn: false, affirmFallback: true }),
-    [{ sentence: 'Your company gives a lot of health benefits to its employees.', kind: 'correction', emphasis: ['a'], emphasisAt: [3] }]);
+    // Task 23 §D2: written back into the student's person (Your → My).
+    [{ sentence: 'My company gives a lot of health benefits to its employees.', kind: 'correction', emphasis: ['a'], emphasisAt: [3] }]);
   // substitution → the new word; leading interjection dropped
   assert.deepEqual(recastCorrectionCard('Oh, you went to Osaka yesterday for a meeting.', 'I go to Osaka yesterday for a meeting.'),
-    { sentence: 'You went to Osaka yesterday for a meeting.', kind: 'correction', emphasis: ['went'], emphasisAt: [1] });
+    { sentence: 'I went to Osaka yesterday for a meeting.', kind: 'correction', emphasis: ['went'], emphasisAt: [1] });
   // several edits (a local one-edit run inside a rewrite) → no recast card
   assert.equal(recastCorrectionCard('Right, you took him around the company and sold him a washing machine.', 'Uh, I take him around company and sell washing machine to him.'), null);
   // a recast question is no card
@@ -934,7 +936,7 @@ test('21B r1 concern 1: only the brain\'s own show_sentence blocks the client\'s
 });
 test('21B r1 m (B2): emphasis marks the edited position; reflexive / it-that flips are no edits', () => {
   assert.deepEqual(recastCorrectionCard('You have a meeting with a client every day.', 'I have meeting with a client every day.'),
-    { sentence: 'You have a meeting with a client every day.', kind: 'correction', emphasis: ['a'], emphasisAt: [2] });
+    { sentence: 'I have a meeting with a client every day.', kind: 'correction', emphasis: ['a'], emphasisAt: [2] });
   assert.equal(recastCorrectionCard('You talked with him yourself about it.', 'I talked with him myself about it.'), null);
   assert.equal(recastCorrectionCard('You said that was the best part of the trip.', 'I said it was the best part of the trip.'), null);
   const canvas = readFileSync(join(__dirname, '..', 'src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx'), 'utf8');
@@ -1005,6 +1007,62 @@ test('21B r3: "remember" / "article" are cues only in a correcting frame', () =>
   test('23B2: VTR keys the level check on the turn-start segment\'s skipWhenLevelKnown', () => {
     const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
     assert.ok(vtr.includes('levelCheck: lessonPlanRef.current?.segments.find((sg) => sg.id === turnStartSegmentId)?.metadata?.skipWhenLevelKnown === true,'));
+  });
+}
+
+// ── Task 23 §D: numbers, pronoun shift, starter / fragment quotes ──
+{
+  const T344 = 'Good, "I have worked for Nagoya for three years" is correct. You used the present perfect because you started in the past and still work there now. Could you say the complete sentence once more, with "Nagoya Corporation"?';
+  const S344 = 'Yes, I have worked for uh Nagoya for 3 years.';
+  test('23D1: 344 s — digits vs words on the board, "…" is correct ⇒ model card', () => {
+    // run-11 precheck: correct at medium confidence ⇒ affirmFallback + checkedMedium
+    const cards = planSentenceBoard({ renderedThisTurn: false, studentCorrect: false, affirmFallback: true, checkedMedium: true, tutorText: T344, studentLast: S344, checkedSentence: S344 });
+    assert.deepEqual(cards.map((c) => [c.kind, c.sentence]), [['model', 'I have worked for Nagoya for three years']]);
+    // the tokeniser: 35 ≡ thirty-five, 21 ≡ twenty one (normaliseNumberTokens on both sides)
+    assert.equal(classifyQuotedSentence('I sold thirty-five machines this year', 'I sold 35 machines this year.').kind, 'echo');
+    assert.equal(classifyQuotedSentence('I have twenty one customers now', 'I have 21 customers now.').kind, 'echo');
+    assert.deepEqual(classifyQuotedSentence('I sold 35 washing machines this year', 'I sold 35 washing machine this year.').emphasis, ['machines']);
+  });
+  test('23D1: "…" is correct promotes; a qualified or "but" one does not', () => {
+    const t = 'Good, "I have worked for Nagoya for three years" is correct, but say "Nagoya Corporation".';
+    assert.equal(planSentenceBoard({ renderedThisTurn: false, affirmFallback: true, tutorText: t, studentLast: S344 }).length, 0);
+  });
+  const T399 = "Good, that's a clear answer. You learned how to sell washing machines, and you used the present perfect correctly. Now, can you tell me one way that skill has helped you with your customers?";
+  const S399 = 'I learned how to sell washing machine at Nagoya during those 3 years.';
+  test('23D2: 399 s — a clause recast of the head of the student\'s sentence ⇒ correction card in the student\'s person', () => {
+    const cards = planSentenceBoard({ renderedThisTurn: false, studentCorrect: false, affirmFallback: false, tutorText: T399, studentLast: S399, checkedSentence: S399 });
+    assert.deepEqual(cards, [{ sentence: 'I learned how to sell washing machines.', kind: 'correction', emphasis: ['machines'], emphasisAt: [6] }]);
+    assert.equal(recastsStudentSentence(T399, S399), true);
+  });
+  test('23D2: am / are, I\'m / you\'re are person shifts, not edits; the card is written back', () => {
+    assert.equal(recastsStudentSentence('You are the leader of a small team.', 'I am the leader of a small team.'), false);
+    assert.deepEqual(recastCorrectionCard('You are the leader of a small team.', 'I am leader of a small team.'),
+      { sentence: 'I am the leader of a small team.', kind: 'correction', emphasis: ['the'], emphasisAt: [2] });
+    assert.deepEqual(recastCorrectionCard('Your team sells washing machines to hospitals.', 'My team sell washing machines to hospitals.'),
+      { sentence: 'My team sells washing machines to hospitals.', kind: 'correction', emphasis: ['sells'], emphasisAt: [2] });
+  });
+  test('23D2: a rephrase / truncated echo clause is no recast', () => {
+    assert.equal(recastsStudentSentence('Your company makes car parts, and that is a big market.', 'My company makes parts for cars in Nagoya.'), false);
+    assert.equal(recastCorrectionCard('You learned how to sell, and that is useful.', S399), null);
+    assert.equal(recastCorrectionCard('You learned how to sell washing machines, right?', S399), null);
+  });
+  test('23D3: 302 s / 1260 s — a quoted starter / fragment is never a card', () => {
+    const T302 = 'Yes, that\'s right. You said you have worked with an international customer, and you used the present perfect, "I have worked," well. Now, can you tell me one thing about that customer, using "I have worked with..." again?';
+    assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, studentCorrect: true, tutorText: T302, studentLast: 'Yes, I have worked with an international customer before.', checkedSentence: 'Yes, I have worked with an international customer before.' }), []);
+    const T1260 = 'You sold 35 washing machines this year, and "I have sold" is the right present perfect form. Can you say that sentence once more, starting with "I have sold"?';
+    assert.deepEqual(planSentenceBoard({ renderedThisTurn: false, studentCorrect: true, tutorText: T1260, studentLast: 'I have uh sold 35 washing machines this year.', checkedSentence: 'I have uh sold 35 washing machines this year.' }), []);
+    // a whole sentence still cards
+    const ok1 = planSentenceBoard({ renderedThisTurn: false, studentCorrect: true, tutorText: 'Good, "I have worked at Nagoya for three years" is correct.', studentLast: 'I have worked at Nagoya for three years.', checkedSentence: 'I have worked at Nagoya for three years.' });
+    assert.deepEqual(ok1.map((c) => c.sentence), ['I have worked at Nagoya for three years']);
+  });
+  test('23D3: isQuotedFragment shapes', () => {
+    assert.equal(isQuotedFragment('I have worked,', 'the present perfect, ', ' well.'), true);
+    assert.equal(isQuotedFragment('I have sold', '', ' is the right form'), true);
+    assert.equal(isQuotedFragment('I have worked with customers', 'Try using ', '.'), true);
+    assert.equal(isQuotedFragment('I have worked with customers', 'Remember the form ', '.'), true);
+    assert.equal(isQuotedFragment('I have worked with customers', 'Use the phrase ', '.'), true);
+    assert.equal(isQuotedFragment('I have worked with customers for years', 'You said ', ' correctly.'), true);
+    assert.equal(isQuotedFragment('I have worked at Nagoya for three years', 'Good, ', ' is correct.'), false);
   });
 }
 
