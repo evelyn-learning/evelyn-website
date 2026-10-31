@@ -20027,7 +20027,7 @@ export function VoiceTutorRealtime({
         // validator retry, verdict cut, judge kill — re-delivers the
         // measurement, with the order to give the score and weak sounds.
         {
-          const retryNote = pronunciationNoteForRetry({ measuredThisTurn: pronunciationMeasuredThisTurn, note: pronunciationNoteThisTurn });
+          const retryNote = pronunciationNoteForRetry({ measuredThisTurn: pronunciationMeasuredThisTurn, note: pronunciationNoteThisTurn, attemptCut: attemptKilled || voiceVerdictCut !== null });
           if (retryNote) {
             runTranscript = `${retryNote}\n\n${runTranscript}`;
             onDebugEvent?.('pronunciation_note_redelivered', `${rejectionsThisAttempt.map((r) => r.action).join(',') || 'retry'}: ${(pronunciationNoteThisTurn ?? '').slice(0, 80)}`);

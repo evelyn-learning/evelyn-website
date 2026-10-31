@@ -261,7 +261,14 @@ export const PRONUNCIATION_RETRY_INSTRUCTION =
  *  pronunciation note to the retry (the retry message replaces the turn's
  *  input, and in run 11 the retry said only "Yes, you've got it right…").
  *  null when the turn was not measured or no note was kept. */
-export function pronunciationNoteForRetry(input: { measuredThisTurn: boolean; note: string | null | undefined }): string | null {
+export function pronunciationNoteForRetry(input: {
+  measuredThisTurn: boolean;
+  note: string | null | undefined;
+  /** Fix round 1 (m8): the attempt's speech was cut (a kill, or a verdict cut
+   *  before audio) — only then is the "not spoken … give the score" order
+   *  true; after a fully delivered attempt the note rides alone. */
+  attemptCut: boolean;
+}): string | null {
   if (!input.measuredThisTurn || !input.note || !input.note.trim()) return null;
-  return `${input.note.trim()}\n${PRONUNCIATION_RETRY_INSTRUCTION}`;
+  return input.attemptCut ? `${input.note.trim()}\n${PRONUNCIATION_RETRY_INSTRUCTION}` : input.note.trim();
 }

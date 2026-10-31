@@ -258,16 +258,18 @@ test('23G1: a measured turn stands the voice verdict hold down; an unmeasured on
 });
 test('23G2: any retry of a measured turn re-delivers the note with the score instruction', () => {
   const note = '[pronunciation check result — not from the student] Measured pronunciation of "I have worked with international customers for several years.": overall 80/100. Weakest: "for" 45, weakest sound /ɔɹ/ 39; "with" 46.';
-  const r = pronunciationNoteForRetry({ measuredThisTurn: true, note });
+  const r = pronunciationNoteForRetry({ measuredThisTurn: true, note, attemptCut: true });
   assert.ok(r && r.startsWith(note) && r.endsWith(PRONUNCIATION_RETRY_INSTRUCTION));
   assert.ok(/overall score/.test(PRONUNCIATION_RETRY_INSTRUCTION) && /weak words and sounds/.test(PRONUNCIATION_RETRY_INSTRUCTION));
-  assert.equal(pronunciationNoteForRetry({ measuredThisTurn: false, note }), null);
-  assert.equal(pronunciationNoteForRetry({ measuredThisTurn: true, note: null }), null);
+  assert.equal(pronunciationNoteForRetry({ measuredThisTurn: false, note, attemptCut: true }), null);
+  // fix round 1 (m8): a fully delivered attempt gets the note without the "not spoken" order
+  assert.equal(pronunciationNoteForRetry({ measuredThisTurn: true, note, attemptCut: false }), note);
+  assert.equal(pronunciationNoteForRetry({ measuredThisTurn: true, note: null, attemptCut: true }), null);
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   // in the single retry builder every kill goes through (validator / verdict cut / judge)
   const at = v.indexOf("'brain_validator_retry',");
   const block = v.slice(at, at + 4000);
-  assert.ok(block.includes('const retryNote = pronunciationNoteForRetry({ measuredThisTurn: pronunciationMeasuredThisTurn, note: pronunciationNoteThisTurn });'));
+  assert.ok(block.includes('const retryNote = pronunciationNoteForRetry({ measuredThisTurn: pronunciationMeasuredThisTurn, note: pronunciationNoteThisTurn, attemptCut: attemptKilled || voiceVerdictCut !== null });'));
   assert.ok(block.includes("onDebugEvent?.('pronunciation_note_redelivered', `${rejectionsThisAttempt.map((r) => r.action).join(',') || 'retry'}:"));
   assert.ok(v.includes('pronunciationNoteThisTurn = pronunciationResultNoteRef.current;'));
 });
