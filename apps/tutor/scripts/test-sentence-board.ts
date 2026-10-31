@@ -245,6 +245,24 @@ test('22G no affirmed card when qualified, quoting other words, a question, or t
   assert.deepEqual(planSentenceBoard({ tutorText: 'Your sentence is clear. What else?', studentLast: 'Sales manager.', renderedThisTurn: false, affirmFallback: true }), []);
   assert.deepEqual(planSentenceBoard({ tutorText: 'Could you say that as one clear sentence, starting with "I talked to the customer about…"?', studentLast: 'Talk to customer about robots machines good.', renderedThisTurn: false, affirmFallback: true }), []);
 });
+test('22G r1 I1: implicit corrections and content acknowledgements give no affirmed card', () => {
+  const g = (t: string, st: string) => planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, affirmFallback: true });
+  const st = 'I worked on project to increase sales.';
+  for (const t of [
+    'Your sentence is clear. Just remember the article before project.',
+    'Your sentence is clear. In English we usually put an article there.',
+    'Your sentence is clear. Next time, say a project.',
+    'Your sentence is clear. Keep in mind we use the past here.',
+  ]) assert.deepEqual(g(t, st), [], t);
+  assert.deepEqual(g('That\'s right. Which company?', 'Yesterday I go to the customer office.'), []);
+  assert.deepEqual(g('That\'s right. What did you do next?', 'Yesterday I go to the customer office.'), []);
+  assert.deepEqual(g('That\'s a clear answer. Now ask me a question.', 'I goed to Tokyo last week for meeting.'), []);
+  assert.deepEqual(g('That fits perfectly with your job. What else do you do?', 'I goed to Tokyo last week for meeting.'), []);
+  assert.deepEqual(g('Selling washing machines, that\'s a clear role. What else?', 'I was responsible for sell washing machines.'), []);
+  // the 781 s turn still cards
+  const st781 = 'The biggest challenge in that project was to convince customers to buy the washing machines.';
+  assert.deepEqual(g('Convincing customers was the challenge, so you named the real difficulty. Your sentence is clear. Next, how did you handle that challenge? Try starting with "I…".', st781).map((c) => c.source), ['affirmed']);
+});
 test('hook pin: both Cartesia paths compose AFTER rewriteForTTS; the HTTP route skips its rewrite only for prerewritten text', () => {
   const hook = readFileSync(join(__dirname, '..', 'src/app/tutor/hooks/useOpenAIRealtime.ts'), 'utf8');
   assert.ok(/f\(trimmed, \(s\) => rewriteForTTS\(s, \{ studentName: studentNameRef\.current \}\)\)/.test(hook), 'cartesiaText composes with rewriteForTTS');
