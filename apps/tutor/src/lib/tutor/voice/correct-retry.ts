@@ -150,7 +150,42 @@ export function expectedRepeatFor(
     const q = lastTargetQuote(t);
     if (q) return { text: q };
   }
+  // Task 23 §F (GDI run 11, 987 s): the quote in one sentence, the ask that
+  // points at it in a later one ("Could you say that one for me?").
+  const referred = t ? quoteReferredByLaterAsk(t) : null;
+  if (referred) return { text: referred };
   return recentClip && recentClip.trim() ? { text: recentClip.trim() } : null;
+}
+
+/** Task 23 §F: an ask that points back at a sentence — say / repeat / try …
+ *  that / this / it / that one / the sentence, or once more / again. */
+const REFERRING_ASK_RE = /\b(?:say|repeat|try)\b[^.!?。？]*\b(?:that one|this one|that sentence|the sentence|that|this|it)\b|\b(?:once more|again)\b/i;
+const REFERRED_QUOTE_RE = /"([^"\n]+)"|“([^”\n]+)”/g;
+const REFERRED_QUOTE_MIN_WORDS = 4;
+/** Task 23 §F (GDI run 11, 987 s: `Now let's make it smoother: "I gave
+ *  everyone sweets to get them to come to the seminar." Could you say that
+ *  one for me?` — no expected repeat, the repeat dropped as self-voice): the
+ *  last quoted span of ≥ 4 words that ends BEFORE a later sentence of the
+ *  turn asking to say / repeat it. Quotes after a negated say ("Don't say
+ *  "…"") are never a target. null when no such ask follows a quote. */
+export function quoteReferredByLaterAsk(text: string): string | null {
+  const t = (text ?? '').replace(NEGATED_SAY_QUOTE_RE, (m) => ' '.repeat(m.length));
+  const quotes: Array<{ q: string; start: number; end: number }> = [];
+  for (const m of t.matchAll(REFERRED_QUOTE_RE)) {
+    const q = (m[1] ?? m[2] ?? '').trim();
+    quotes.push({ q, start: m.index ?? 0, end: (m.index ?? 0) + m[0].length });
+  }
+  let found: string | null = null;
+  quotes.forEach((x, i) => {
+    if (latinWordCount(x.q) < REFERRED_QUOTE_MIN_WORDS) return;
+    // the text after the quote up to the next quote; a quote that does not
+    // end its sentence leaves the rest of that sentence as its own
+    let region = t.slice(x.end, quotes[i + 1]?.start ?? t.length);
+    if (!/[.!?。！？]$/.test(x.q)) region = region.replace(/^[^.!?。！？]*[.!?。！？]?/, '');
+    const later = region.split(/(?<=[.!?。！？])\s+/).map((y) => y.trim()).filter(Boolean);
+    if (later.some((y) => REFERRING_ASK_RE.test(y))) found = x.q;
+  });
+  return found;
 }
 
 /** Japanese fillers (no word boundaries in Japanese: removed as substrings

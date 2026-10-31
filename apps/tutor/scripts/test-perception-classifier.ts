@@ -14,7 +14,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expectedRepeatFor, isSayItAsk, isStrictRepeatAsk } from '../src/lib/tutor/voice/correct-retry';
+import { expectedRepeatFor, isSayItAsk, isStrictRepeatAsk, quoteReferredByLaterAsk } from '../src/lib/tutor/voice/correct-retry';
 import {
   classifyHeuristic,
   scoreSelfVoice,
@@ -1780,6 +1780,18 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('§A19 VTR: flag passed to the classifier', VTR.includes('answerEndExemption: TUTOR_SELF_VOICE_ANSWER_END,'));
   check('§A19 VTR: answer-end exemption event', VTR.includes("onDebugEvent?.('self_voice_exempt_answer_end', `\"${t.text.slice(0, 60)}\"`);"));
   check('§A19 VTR: diag appended to perception_heuristic', VTR.includes("onDebugEvent?.('perception_heuristic', `${heur.verdict}:${heur.reason}${heur.diag ? ` · ${heur.diag}` : ''}`);"));
+}
+// ── Task 23 §F: the quote earlier in the turn, the ask that points at it later ──
+{
+  const T987 = 'Now let\'s make it smoother: "I gave everyone sweets to get them to come to the seminar." Could you say that one for me?';
+  check('23F: the 987 s turn ⇒ the quote is the expected repeat', expectedRepeatFor(T987, null)?.text === 'I gave everyone sweets to get them to come to the seminar.');
+  check('23F: two quotes, the ask after the second ⇒ the second',
+    quoteReferredByLaterAsk('First, "I worked at Nagoya for three years." Then, "I have worked at Nagoya for three years." Can you repeat that?') === 'I have worked at Nagoya for three years.');
+  check('23F: a quote followed by an unrelated question ⇒ null', expectedRepeatFor('"I gave everyone sweets to get them." Where was the seminar?', null) === null);
+  check('23F: once more / again in a later sentence', quoteReferredByLaterAsk('That is close: "I attended a robotics exhibition last year." Once more, please.') === 'I attended a robotics exhibition last year.');
+  check('23F: a 3-word quote is no target', quoteReferredByLaterAsk('Use "I have sold". Say it again.') === null);
+  check('23F: a negated-say quote is no target', quoteReferredByLaterAsk('Don\'t say "I am agree with you". Try that again.') === null);
+  check('23F: the ask inside the quote\'s own sentence is the old rule (quote after the ask still the strict path)', expectedRepeatFor('Please say it once more: "Last week, I went golfing with my manager."', null)?.text === 'Last week, I went golfing with my manager.');
 }
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
