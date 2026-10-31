@@ -723,7 +723,9 @@ async function main() {
   });
   await test('browser: the gate is first attempt + voice + its own switch; frames settle it; a cut mutes the rest and continues', () => {
     const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
-    assert.match(vtr, /enabled: TUTOR_VOICE_VERDICT_HOLD && sessionMode !== 'text' && attempt === 0/);
+    // Task 23 §G1: the same conditions, then a measured pronunciation turn stands it down.
+    assert.match(vtr, /const voiceGateWanted = TUTOR_VOICE_VERDICT_HOLD && sessionMode !== 'text' && attempt === 0/);
+    assert.match(vtr, /enabled: voiceGateWanted && !voiceGateSkipMeasured,/);
     assert.match(vtr, /const voiceEmit = voiceGate\.onEmit\(s\);/);
     assert.match(vtr, /voiceGate\.onSentence\(trimmedSentence, sentenceForSpeech,/);
     assert.match(vtr, /type === 'verdict-precheck-pending'\) \{[\s\S]{0,200}voiceGate\.onPending\(\)/);
