@@ -293,7 +293,10 @@ function stripKeepInMindTail(s: string): string | null {
 // "Your answer"; the rest is kept. H2: a plan tail ", so I'll bring that
 // back …" goes (the head stays), and a "The question I'm asking now is:" /
 // "So / Now the question is:" lead goes (the question stays).
-const THIRD_PERSON_LEARNER_LEAD_RE = /^(\s*)(?:Their|The student['’]s|The learner['’]s) (sentence|answer|words|reply)\b/i;
+// Fix round 1 (m10): only about the student's own output — the noun is
+// followed by an evaluation verb or a quote ("Their answer arrived by email."
+// stays).
+const THIRD_PERSON_LEARNER_LEAD_RE = /^(\s*)(?:Their|The student['’]s|The learner['’]s) (sentence|answer|words|reply)\b(?=\s+(?:is|was|are|were|has|sounds|reads|means|needs|works)\b|\s*,\s*["“])/i;
 const BRING_BACK_TAIL_RE = /,?\s*\bso I['’]ll bring (?:that|it|this) back\b[^.!?]*[.!?]?\s*$/i;
 const QUESTION_LEAD_RE = /^\s*(?:The question I['’]m asking (?:you )?now is|(?:So|Now),? the question is)\s*:\s*/i;
 function addressLearner(s: string): string {
