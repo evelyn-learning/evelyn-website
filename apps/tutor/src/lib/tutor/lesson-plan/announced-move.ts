@@ -170,3 +170,20 @@ export function announcedContinueDecision(input: {
   if (!sawSpeaking && elapsedMs < ANNOUNCED_CONTINUE_MIN_MS) return 'wait';
   return 'fire';
 }
+
+/** Task 23 §C (GDI run 11, 130 s: the level check's last turn ended "…so the
+ *  level check is complete.", the pointer moved, and the board sat silent
+ *  43 s until the idle nudge): a turn whose set_working_level moved the
+ *  pointer gets the announced advance's silent continuation when it asked
+ *  nothing (announcedTurnNeedsContinuation) — once per target part, and only
+ *  while the pointer is still on that part. */
+export function levelAdvanceNeedsContinuation(input: {
+  levelAdvancedTo: string;
+  currentSegmentId: string;
+  tutorText: string;
+  alreadyContinued: boolean;
+}): boolean {
+  if (!input.levelAdvancedTo || input.alreadyContinued) return false;
+  if (input.currentSegmentId !== input.levelAdvancedTo) return false;
+  return announcedTurnNeedsContinuation(input.tutorText);
+}

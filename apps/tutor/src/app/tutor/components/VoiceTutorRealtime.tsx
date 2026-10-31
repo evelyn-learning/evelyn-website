@@ -433,7 +433,7 @@ import {
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
-import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS } from '@/lib/tutor/lesson-plan/announced-move';
+import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -4135,6 +4135,63 @@ export function VoiceTutorRealtime({
    *  the segments already continued into (at most once per segment). */
   const announcedContinueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const announcedContinuedSegsRef = useRef<Set<string>>(new Set());
+  // Task 23 §C: the segment the level-set advance moved to this turn ('' = none).
+  const levelAdvanceThisTurnRef = useRef('');
+  // Task 16 §C / Task 23 §C: one silent continuation into `contTarget` once
+  // the turn that moved the pointer (an announced advance, or the level-set
+  // advance) has finished speaking — polled with the idle nudge's guard set;
+  // any other dispatch first cancels it (announcedContinueTimerRef), a moved
+  // pointer / ended session / another brain turn drops it.
+  const scheduleFixedScriptContinueRef = useRef<(contTarget: string, via: 'announced' | 'level') => void>(() => {});
+  scheduleFixedScriptContinueRef.current = (contTarget: string, via: 'announced' | 'level') => {
+    if (announcedContinueTimerRef.current) clearTimeout(announcedContinueTimerRef.current);
+    const contStartedAt = Date.now();
+    // Review I-2: any brain call after this one (a queued student
+    // reply drains straight into callBrainOnce, skipping the cancel
+    // in handleStudentTranscriptForBrain) opened the part already.
+    const contTurnSeq = brainCallSeqRef.current;
+    let contSawSpeaking = false;
+    const contTick = () => {
+      announcedContinueTimerRef.current = null;
+      const waitedMs = Date.now() - contStartedAt;
+      const speaking = productionStateRef.current === 'speaking';
+      if (speaking) contSawSpeaking = true;
+      if (productionStateRef.current === 'disconnected' || lessonClosedRef.current || farewellSealedRef.current || currentSegmentIdRef.current !== contTarget) {
+        onDebugEvent?.(via === 'level' ? 'fixed_script_level_continue_dropped' : 'fixed_script_announced_continue_dropped', `"${contTarget}" after ${waitedMs}ms — session ended or pointer moved`);
+        return;
+      }
+      let speechPending = false;
+      try { speechPending = !!speechPendingProbeRef.current?.(); } catch { /* relay gone */ }
+      // Review I-1: the idle nudge's guard set.
+      const decision = announcedContinueDecision({
+        elapsedMs: waitedMs,
+        sawSpeaking: contSawSpeaking,
+        speaking,
+        speechPending,
+        brainBusy: brainBusyRef.current,
+        studentMidUtterance: perceptionMidUtteranceRef.current,
+        awaitingDispatch: awaitingDispatchTimerRef.current != null,
+        studentTyping: studentTypingRef.current,
+        hold: TUTOR_STUDENT_HOLD && !!studentHoldRef.current,
+        paused: isPausedRef.current,
+        hidden: typeof document !== 'undefined' && document.visibilityState === 'hidden',
+        standby: standbyRef.current,
+        ending: endingRef.current,
+        turnSeqChanged: brainCallSeqRef.current !== contTurnSeq,
+      });
+      if (decision === 'wait') {
+        announcedContinueTimerRef.current = setTimeout(contTick, ANNOUNCED_CONTINUE_POLL_MS);
+        return;
+      }
+      if (decision === 'drop') {
+        onDebugEvent?.(via === 'level' ? 'fixed_script_level_continue_dropped' : 'fixed_script_announced_continue_dropped', `"${contTarget}" after ${waitedMs}ms — ${brainCallSeqRef.current !== contTurnSeq ? 'another turn ran' : standbyRef.current || endingRef.current ? 'standby/ending' : 'tutor still busy'}`);
+        return;
+      }
+      onDebugEvent?.(via === 'level' ? 'fixed_script_level_continue' : 'fixed_script_announced_continue', `"${contTarget}" waited=${waitedMs}ms`);
+      void handleStudentTranscriptForBrainRef.current?.(FIXED_SCRIPT_CONTINUE_DIRECTIVE, { silent: true, bypassPerceptionDedupe: true });
+    };
+    announcedContinueTimerRef.current = setTimeout(contTick, ANNOUNCED_CONTINUE_POLL_MS);
+  };
   // Review I-1 / m-1: the pause state and the hook's speech-pending probe,
   // read by the continuation's poller (both live later in the body).
   const isPausedRef = useRef(false);
@@ -8158,6 +8215,7 @@ export function VoiceTutorRealtime({
             pendingRuntimeNoteUrgentRef.current = true;
             runtimeNoteHeldTurnsRef.current = 0;
             onDebugEvent?.('fixed_script_level_advance', `"${lvFrom}" → "${lvNext}"`);
+            levelAdvanceThisTurnRef.current = lvNext;
           }
         } else {
           onDebugEvent?.('working_level_refused', `requested=${String(wl.level).slice(0, 20)} current=${workingLevelRef.current?.level ?? 'none'}`);
@@ -12280,6 +12338,7 @@ export function VoiceTutorRealtime({
     if (pendingAdvanceNewPageRef.current?.afterTurn) pendingAdvanceNewPageRef.current.afterTurn = false;
     // Task 23 §A: a break from an earlier turn never pulls this turn's cards.
     segmentPageBreakRef.current = null;
+    levelAdvanceThisTurnRef.current = '';
     rendersDispatchedThisTurnRef.current = 0;
     boardRendersThisTurnRef.current = 0;
     turnRenderPayloadTextRef.current = '';
@@ -20280,6 +20339,23 @@ export function VoiceTutorRealtime({
         }
         onDebugEvent?.('lesson_reopened', `"${fullText.slice(0, 60)}"`);
       }
+      // Task 23 §C (GDI run 11, 130 s: "…so the level check is complete." —
+      // the pointer moved to the next part and nothing happened for 43 s): a
+      // level-set advance whose turn asked nothing gets the announced
+      // advance's silent continuation.
+      if (levelAdvanceThisTurnRef.current && !opts?.prefetchOnly) {
+        const lvTarget = levelAdvanceThisTurnRef.current;
+        levelAdvanceThisTurnRef.current = '';
+        if (levelAdvanceNeedsContinuation({
+          levelAdvancedTo: lvTarget,
+          currentSegmentId: currentSegmentIdRef.current ?? '',
+          tutorText: fullText,
+          alreadyContinued: announcedContinuedSegsRef.current.has(lvTarget),
+        })) {
+          announcedContinuedSegsRef.current.add(lvTarget);
+          scheduleFixedScriptContinueRef.current(lvTarget, 'level');
+        }
+      }
       // Live check 6 (§1): the brain sat in `hook` for 12 minutes and six
       // substantive turns, improvised three worked examples in speech, then
       // jumped over both authored worked_example segments. The parent's
@@ -20426,54 +20502,7 @@ export function VoiceTutorRealtime({
             // disconnected/closed session or a moved pointer drops it.
             if (advanceReason === 'announced' && announcedTurnNeedsContinuation(fullText) && !announcedContinuedSegsRef.current.has(autoNext)) {
               announcedContinuedSegsRef.current.add(autoNext);
-              if (announcedContinueTimerRef.current) clearTimeout(announcedContinueTimerRef.current);
-              const contTarget = autoNext;
-              const contStartedAt = Date.now();
-              // Review I-2: any brain call after this one (a queued student
-              // reply drains straight into callBrainOnce, skipping the cancel
-              // in handleStudentTranscriptForBrain) opened the part already.
-              const contTurnSeq = brainCallSeqRef.current;
-              let contSawSpeaking = false;
-              const contTick = () => {
-                announcedContinueTimerRef.current = null;
-                const waitedMs = Date.now() - contStartedAt;
-                const speaking = productionStateRef.current === 'speaking';
-                if (speaking) contSawSpeaking = true;
-                if (productionStateRef.current === 'disconnected' || lessonClosedRef.current || farewellSealedRef.current || currentSegmentIdRef.current !== contTarget) {
-                  onDebugEvent?.('fixed_script_announced_continue_dropped', `"${contTarget}" after ${waitedMs}ms — session ended or pointer moved`);
-                  return;
-                }
-                let speechPending = false;
-                try { speechPending = !!speechPendingProbeRef.current?.(); } catch { /* relay gone */ }
-                // Review I-1: the idle nudge's guard set.
-                const decision = announcedContinueDecision({
-                  elapsedMs: waitedMs,
-                  sawSpeaking: contSawSpeaking,
-                  speaking,
-                  speechPending,
-                  brainBusy: brainBusyRef.current,
-                  studentMidUtterance: perceptionMidUtteranceRef.current,
-                  awaitingDispatch: awaitingDispatchTimerRef.current != null,
-                  studentTyping: studentTypingRef.current,
-                  hold: TUTOR_STUDENT_HOLD && !!studentHoldRef.current,
-                  paused: isPausedRef.current,
-                  hidden: typeof document !== 'undefined' && document.visibilityState === 'hidden',
-                  standby: standbyRef.current,
-                  ending: endingRef.current,
-                  turnSeqChanged: brainCallSeqRef.current !== contTurnSeq,
-                });
-                if (decision === 'wait') {
-                  announcedContinueTimerRef.current = setTimeout(contTick, ANNOUNCED_CONTINUE_POLL_MS);
-                  return;
-                }
-                if (decision === 'drop') {
-                  onDebugEvent?.('fixed_script_announced_continue_dropped', `"${contTarget}" after ${waitedMs}ms — ${brainCallSeqRef.current !== contTurnSeq ? 'another turn ran' : standbyRef.current || endingRef.current ? 'standby/ending' : 'tutor still busy'}`);
-                  return;
-                }
-                onDebugEvent?.('fixed_script_announced_continue', `"${contTarget}" waited=${waitedMs}ms`);
-                void handleStudentTranscriptForBrainRef.current?.(FIXED_SCRIPT_CONTINUE_DIRECTIVE, { silent: true, bypassPerceptionDedupe: true });
-              };
-              announcedContinueTimerRef.current = setTimeout(contTick, ANNOUNCED_CONTINUE_POLL_MS);
+              scheduleFixedScriptContinueRef.current(autoNext, 'announced');
             }
           }
         }
