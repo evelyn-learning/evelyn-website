@@ -293,12 +293,18 @@ const FRAGMENT_INTRO_RE = /\b(?:start(?:ing)? with|begin(?:ning)? with|with the 
 /** Fix round 1 (m1): a trailing comma marks a starter only in a short quote —
  *  a whole sentence quoted with its comma inside (US style) stays a card. */
 const FRAGMENT_COMMA_MAX_WORDS = 6;
+const CLAUSE_STARTER_OPENING_RE = /^(?:if|when|whenever|because|after|before|although|though|while|since|unless|until|once|as soon as)\b/i;
 // Fix round 2 (m1): ", right?" / "correctly?" is a question tag, not a form comment.
 const FRAGMENT_AFTER_RE = /^\s*[,.]?\s*(?:well|correctly|right)\b(?!\s*[?？])/i;
 export function isQuotedFragment(span: string, before: string, after: string): boolean {
   const s = (span ?? '').trim();
   const words = s.split(/\s+/).filter((w) => LATIN_WORD_RE.test(w)).length;
   if (/,\s*$/.test(s) && words < FRAGMENT_COMMA_MAX_WORDS) return true;
+  // Fix round 2 (m4): a comma-ended quote that opens with a subordinator ("If
+  // I have more time next year,", "Because …,", "After …,") is a clause
+  // STARTER, and one that opens like a question ("Can you send me …,") is no
+  // model — neither is carded (only a complete clause gets the "." rewrite).
+  if (/,\s*$/.test(s) && (CLAUSE_STARTER_OPENING_RE.test(s) || AUX_QUESTION_OPENING_RE.test(s) || WH_QUESTION_OPENING_RE.test(s))) return true;
   if (words < FRAGMENT_MIN_WORDS) return true;
   if (introWithin(FRAGMENT_INTRO_RE, before)) return true;
   return FRAGMENT_AFTER_RE.test(after ?? '');

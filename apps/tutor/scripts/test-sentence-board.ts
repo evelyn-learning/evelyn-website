@@ -1160,5 +1160,14 @@ test('23 r2 m1: a ", right?" tag after the quote is a question tag — the card 
   assert.equal(isQuotedFragment('I have worked with customers', 'You used ', ' correctly.'), true);
 });
 
+test('23 r2 m4: comma-ended clause starters and questions are no cards; a complete clause gets its "."', () => {
+  const c = (t: string, st: string) => planSentenceBoard({ renderedThisTurn: false, tutorText: t, studentLast: st }).map((x) => x.sentence);
+  assert.deepEqual(c('Start like this: "If I have more time next year," and finish the sentence.', 'I want more time.'), []);
+  assert.deepEqual(c('Try "Because I like my customers very much," then add more.', 'I like customers.'), []);
+  assert.deepEqual(c('Begin your answer "After I finished the project in March," and go on.', 'I finished project.'), []);
+  assert.deepEqual(c('You asked "Can you send me the price list today," and that is polite.', 'Can you send me price list today?'), []);
+  assert.deepEqual(c('Use the past: "I went to Osaka last week," right?', 'I go to Osaka last week.'), ['I went to Osaka last week.']);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
