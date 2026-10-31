@@ -791,13 +791,15 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   check('23H: neither is then dropped as meta narration', !isMetaNarration(stripNoteCitationClause(S1)) && !isMetaNarration(stripNoteCitationClause(S2)));
   check('23H1: "The student\'s answer" / "The learner\'s words" / "Their reply" → Your …',
     stripNoteCitationClause("The student's answer is clear.") === 'Your answer is clear.'
-    && stripNoteCitationClause('The learner’s words were natural.') === 'Your words were natural.'
-    && stripNoteCitationClause('Their reply was complete.') === 'Your reply was complete.');
+    && stripNoteCitationClause('The learner’s answer needs one more word.') === 'Your answer needs one more word.'
+    && stripNoteCitationClause('Their reply sounds complete.') === 'Your reply sounds complete.');
   check('23H1: "Their manager said no." untouched (not sentence / answer / words / reply)', stripNoteCitationClause('Their manager said no.') === 'Their manager said no.');
   check('23 r1 m10: "Their answer arrived by email." stays; an evaluated / quoted one is rewritten',
     stripNoteCitationClause('Their answer arrived by email.') === 'Their answer arrived by email.'
     && stripNoteCitationClause('The student\'s reply came late.') === 'The student\'s reply came late.'
     && stripNoteCitationClause('Their sentence sounds natural.') === 'Your sentence sounds natural.');
+  check('23 r2 m2: descriptive was / were stay third person', stripNoteCitationClause('Their reply was quick, so you won the contract.') === 'Their reply was quick, so you won the contract.'
+    && stripNoteCitationClause('Their words were kind, and you thanked them.') === 'Their words were kind, and you thanked them.');
   check('23H1: mid-sentence "their sentence" untouched', stripNoteCitationClause('Ask them to read their sentence aloud.') === 'Ask them to read their sentence aloud.');
   check('23H2: "So the question is:" / "Now the question is:" leads go', stripNoteCitationClause('So the question is: what did you sell?') === 'What did you sell?'
     && stripNoteCitationClause('Now, the question is: where did you go?') === 'Where did you go?');
