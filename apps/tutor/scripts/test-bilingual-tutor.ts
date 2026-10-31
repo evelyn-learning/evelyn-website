@@ -801,7 +801,7 @@ test('GDI run 3: VTR kills + retries a repeat_after_correct in a language sessio
   assert.match(vtr, /!repeatAfterCorrectRejected && attemptText && languageSessionRef\.current/);
   assert.match(vtr, /rejectionsThisAttempt\.push\(\{ action: 'repeat_after_correct', reason: REPEAT_AFTER_CORRECT_REASON \}\);\s*await performKill\(\);/);
   // the note path stays for every session
-  assert.match(vtr, /else if \(reAskedOwnSentence\(transcript, fullText\)\) \{\s*pendingCorrectRetryNoteRef\.current = OWN_SENTENCE_RETRY_NOTE;/);
+  assert.match(vtr, /else if \(reAskedOwnSentence\(transcript, fullText, \{ studentCorrect: verdictPrecheckRef\.current\?\.verdict === 'correct' \}\)\) \{\s*pendingCorrectRetryNoteRef\.current = OWN_SENTENCE_RETRY_NOTE;/);
 });
 
 test('Task 19 §C (GDI run 7): a turn carrying a measured pronunciation note is not killed for repeat_after_correct', () => {
@@ -1493,12 +1493,20 @@ test('Task 24 §E1 (GDI run 12, 231 s): a quote inside a PRAISE sentence, the as
 test('Task 24 §E2 (GDI run 12, 1018 s): full-sentence ask with a starter that begins the student\'s correct sentence ⇒ re-ask', () => {
   const s1018 = 'The seminar took place last year.';
   const t1018 = 'The seminar took place last year, so "took place" is the right form, and the sentence is correct. Could you try saying the full sentence now, starting with "The seminar…"?';
-  assert.equal(reAskedOwnSentence(s1018, t1018), true);
-  assert.equal(reAskedOwnSentence(s1018, t1018.replace('"The seminar…"', '"Last year…"')), false, 'starter is not a prefix');
-  assert.equal(reAskedOwnSentence(s1018, t1018.replace('"The seminar…"', '"The seminar..."')), true, 'ASCII ellipsis stripped');
+  const ok = { studentCorrect: true };
+  assert.equal(reAskedOwnSentence(s1018, t1018, ok), true);
+  assert.equal(reAskedOwnSentence(s1018, t1018), false, 'fix round 1 (I-1): no verdict ⇒ no starter re-ask');
+  assert.equal(reAskedOwnSentence(s1018, t1018.replace('"The seminar…"', '"Last year…"'), ok), false, 'starter is not a prefix');
+  assert.equal(reAskedOwnSentence(s1018, t1018.replace('"The seminar…"', '"The seminar..."'), ok), true, 'ASCII ellipsis stripped');
+  // fix round 1 (I-1): a correction drill quoting the learner's WRONG sentence, verdict incorrect ⇒ not a re-ask
+  const wrong = 'The seminar take place last year.';
+  const drill = 'You said "The seminar take place last year." We need "took place" here. Could you say the full sentence again, starting with "The seminar…"?';
+  assert.equal(reAskedOwnSentence(wrong, drill, { studentCorrect: false }), false);
+  const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.equal((v.match(/reAskedOwnSentence\(transcript, (?:attemptText|fullText), \{ studentCorrect: verdictPrecheckRef\.current\?\.verdict === 'correct' \}\)/g) ?? []).length, 2, 'both callers pass the verdict');
   // 1001 s: the student's sentence was wrong ("take place") — the tutor's prose does not contain it
   const t1001 = 'The seminar took place last year, so the past simple is right. Let\'s check the verb: could you say the full sentence starting with "The seminar…" and use "took place"?';
-  assert.equal(reAskedOwnSentence('The seminar take place last year.', t1001), false);
+  assert.equal(reAskedOwnSentence('The seminar take place last year.', t1001, { studentCorrect: false }), false);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -19195,7 +19195,7 @@ export function VoiceTutorRealtime({
         // required_phrase_missing; once per turn. Other sessions keep the note.
         if (!attemptKilled && !repeatAfterCorrectRejected && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
           const prevTutorForRepeat = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
-          const repeated = reAskedOwnSentence(transcript, attemptText)
+          const repeated = reAskedOwnSentence(transcript, attemptText, { studentCorrect: verdictPrecheckRef.current?.verdict === 'correct' })
             ? transcript
             : reAskedModelSentence(prevTutorForRepeat, transcript, attemptText);
           // Task 19 §C (GDI run 7, 1132 s): on a turn carrying a MEASURED
@@ -20758,7 +20758,7 @@ export function VoiceTutorRealtime({
         } else if (reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)) {
           pendingCorrectRetryNoteRef.current = CORRECT_RETRY_NOTE;
           onDebugEvent?.('correct_retry_note_planted', `checked correct: "${verdictPrecheckRef.current?.proposed.slice(0, 60) ?? ''}"`);
-        } else if (reAskedOwnSentence(transcript, fullText)) {
+        } else if (reAskedOwnSentence(transcript, fullText, { studentCorrect: verdictPrecheckRef.current?.verdict === 'correct' })) {
           pendingCorrectRetryNoteRef.current = OWN_SENTENCE_RETRY_NOTE;
           onDebugEvent?.('correct_retry_note_planted', `own sentence re-asked: "${transcript.slice(0, 60)}"`);
         }

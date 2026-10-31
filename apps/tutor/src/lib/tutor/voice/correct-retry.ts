@@ -226,10 +226,18 @@ function fullSentenceStarter(tutorText: string): string | null {
   return starter.split(' ').filter(Boolean).length >= 2 ? starter : null;
 }
 
-export function reAskedOwnSentence(studentText: string, tutorText: string): boolean {
+export function reAskedOwnSentence(
+  studentText: string,
+  tutorText: string,
+  /** Task 24 fix round 1 (I-1): the student's turn was judged correct (the
+   *  verdict pre-check, any confidence). The §E2 starter path needs it — a
+   *  correction drill that quotes the learner's WRONG sentence and asks for
+   *  it again ("…starting with "The seminar…"?") is not a re-ask. */
+  opts?: { studentCorrect?: boolean },
+): boolean {
   // Task 24 §E2: the full-sentence ask with a starter that begins the
   // student's own (correct) sentence, in a turn that already says it back.
-  const starter = fullSentenceStarter(tutorText);
+  const starter = opts?.studentCorrect === true ? fullSentenceStarter(tutorText) : null;
   if (starter) {
     const saidForStarter = cleanStudentSentence(studentText);
     if (saidForStarter.split(' ').filter(Boolean).length >= 3
