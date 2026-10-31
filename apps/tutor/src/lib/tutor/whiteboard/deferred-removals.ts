@@ -88,9 +88,20 @@ export function takeDroppedReplacements(pending: DeferredRemovals, replacementId
   return { owed, kept };
 }
 
-/** Prior ids whose replacement never painted within DEFERRED_REMOVAL_MAX_MS. */
-export function takeStaleRemovals(pending: DeferredRemovals, nowMs: number, maxAgeMs: number = DEFERRED_REMOVAL_MAX_MS): string[] {
+/** Prior ids whose replacement never painted within DEFERRED_REMOVAL_MAX_MS.
+ *  Task 22 fix round 1 (m3): `only` limits the sweep to one kind of entry —
+ *  the figure-evolve backstop (keepPriorOnDrop false) and the sentence-board
+ *  backstop (true) each sweep their own. */
+export function takeStaleRemovals(
+  pending: DeferredRemovals,
+  nowMs: number,
+  maxAgeMs: number = DEFERRED_REMOVAL_MAX_MS,
+  only?: { keepPriorOnDrop: boolean },
+): string[] {
   const stale: string[] = [];
-  for (const [id, entry] of pending) if (nowMs - entry.atMs >= maxAgeMs) stale.push(id);
+  for (const [id, entry] of pending) {
+    if (only && entry.keepPriorOnDrop !== only.keepPriorOnDrop) continue;
+    if (nowMs - entry.atMs >= maxAgeMs) stale.push(id);
+  }
   return take(pending, stale);
 }

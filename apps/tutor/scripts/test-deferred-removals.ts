@@ -92,6 +92,17 @@ test('a merged entry keeps its prior only if every deferral asked to', () => {
   assert.deepEqual(takeDroppedReplacements(p, ['r']), { owed: ['a', 'b'], kept: [] });
 });
 
+test('22 r1 m3: each stale backstop sweeps only its own kind of entry', () => {
+  const p: DeferredRemovals = new Map();
+  deferRemoval(p, 'showTree-2', ['showTree-1'], T);
+  deferRemoval(p, 'showSentence-20', ['showSentence-18'], T, { keepPriorOnDrop: true });
+  const late = T + DEFERRED_REMOVAL_MAX_MS;
+  assert.deepEqual(takeStaleRemovals(p, late, DEFERRED_REMOVAL_MAX_MS, { keepPriorOnDrop: false }), ['showTree-1']);
+  assert.deepEqual(Array.from(p.keys()), ['showSentence-20'], 'the sentence entry survives the figure sweep');
+  assert.deepEqual(takeStaleRemovals(p, late, DEFERRED_REMOVAL_MAX_MS, { keepPriorOnDrop: true }), ['showSentence-18']);
+  assert.equal(p.size, 0);
+});
+
 // ── Wiring (source scans) ──
 const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
 const flags = readFileSync(join(__dirname, '..', 'src/lib/tutor/orchestrator/flags.ts'), 'utf8');
@@ -119,7 +130,9 @@ test('VTR: dropped and never-painted replacements release their prior', () => {
   const drop = vtr.slice(vtr.indexOf('const dropRenderBuffer = useCallback('), vtr.indexOf("'render_sync_drop'"));
   assert.match(drop, /if \(kept\.length > 0\) \{[\s\S]*?autoSentenceCardIdsRef\.current\.add\(id\);\s*onDebugEvent\?\.\('sentence_board_auto_replace_kept', `\$\{id\} \(replacement retracted\)`\);[\s\S]*?catalogRef\.current\.restoreItems\(catalogItems\)/);
   assert.ok(!/removeItems', ids: kept/.test(drop), 'a kept prior is never removed');
-  assert.match(vtr, /takeStaleRemovals\(deferredRemovalsRef\.current, Date\.now\(\)\)/);
+  assert.match(vtr, /takeStaleRemovals\(deferredRemovalsRef\.current, Date\.now\(\), DEFERRED_REMOVAL_MAX_MS, \{ keepPriorOnDrop: false \}\)/);
+  assert.match(vtr, /takeStaleRemovals\(deferredRemovalsRef\.current, Date\.now\(\), DEFERRED_REMOVAL_MAX_MS, \{ keepPriorOnDrop: true \}\)/);
+  assert.equal((vtr.match(/takeStaleRemovals\(deferredRemovalsRef\.current, Date\.now\(\)\)/g) ?? []).length, 0, 'no unfiltered sweep left');
 });
 
 console.log(`\n${passed}/${passed + failed} passed`);

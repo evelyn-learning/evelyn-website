@@ -9893,7 +9893,7 @@ export function VoiceTutorRealtime({
       if (byReplacement.size > 0) {
         // Backstop: a replacement that never paints must not strand its prior.
         setTimeout(() => {
-          const stale = takeStaleRemovals(deferredRemovalsRef.current, Date.now());
+          const stale = takeStaleRemovals(deferredRemovalsRef.current, Date.now(), DEFERRED_REMOVAL_MAX_MS, { keepPriorOnDrop: false });
           if (stale.length > 0) {
             onWhiteboardCommandProp([{ action: 'removeItems', ids: stale }]);
             onDebugEventRef.current?.('figure_evolve_deferred', `stale: ${stale.join(',')} removed without a replacement paint`);
@@ -10548,7 +10548,7 @@ export function VoiceTutorRealtime({
           // Backstop: a replacement that never paints (and was never
           // retracted) must not strand its prior — same as the figure swap.
           setTimeout(() => {
-            const stale = takeStaleRemovals(deferredRemovalsRef.current, Date.now());
+            const stale = takeStaleRemovals(deferredRemovalsRef.current, Date.now(), DEFERRED_REMOVAL_MAX_MS, { keepPriorOnDrop: true });
             if (stale.length > 0) {
               onWhiteboardCommandProp([{ action: 'removeItems', ids: stale }]);
               for (const id of stale) sentenceBoardReplacedPriorsRef.current.delete(id);
