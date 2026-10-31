@@ -355,9 +355,11 @@ test('runtime (review r1): 20 s window starts at playback idle; the hold skips t
   assert.match(v, /PRONUNCIATION_NOTE_WAIT_MS\); \}\)\]\);[\s\S]{0,200}if \(endingRef\.current \|\| farewellSealedRef\.current\) \{\s*onDebugEvent\?\.\('pronunciation_hold_skipped'[\s\S]{0,120}return;/);
 });
 
-test('runtime (final review #1a): the arm has an absolute 45 s lifetime, then disarms + plants unavailable', () => {
+test('runtime (final review #1a; Task 23 r1 m9): the arm has an absolute 75 s lifetime, then disarms + plants unavailable', () => {
   const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
-  assert.equal(PRONUNCIATION_ARM_MAX_MS, 45000);
+  assert.equal(PRONUNCIATION_ARM_MAX_MS, 75000);
+  // outlasts the 40 s no-speech window plus a model line and a late answer
+  assert.ok(PRONUNCIATION_ARM_MAX_MS >= CLIP_NO_SPEECH_TIMEOUT_MS + 30000);
   // Started at the arm itself, BEFORE the playback-state branch (so a tutor
   // still speaking does not defer it).
   const armIdx = v.indexOf('const armPronunciationCheck = ');
@@ -365,7 +367,7 @@ test('runtime (final review #1a): the arm has an absolute 45 s lifetime, then di
   const speakingIdx = v.indexOf("if (productionStateRef.current === 'speaking')", armIdx);
   assert.ok(armIdx > 0 && timerIdx > armIdx && timerIdx < speakingIdx, 'timer set at the arm, before the speaking branch');
   const body = v.slice(armIdx, timerIdx);
-  assert.match(body, /if \(!capture\.isArmed\(\)\) return;\s*capture\.disarm\(\);[\s\S]{0,200}plantPronunciationUnavailable\('arm_expired_45s'\);/);
+  assert.match(body, /if \(!capture\.isArmed\(\)\) return;\s*capture\.disarm\(\);[\s\S]{0,200}plantPronunciationUnavailable\('arm_expired_75s'\);/);
   // A sent clip ends the arm's lifetime timer.
   assert.match(v, /const sendPronunciationClip = \(clip: PronunciationClip\) => \{\s*clearPronunciationNoSpeechTimer\(\);\s*clearPronunciationArmMaxTimer\(\);/);
 });

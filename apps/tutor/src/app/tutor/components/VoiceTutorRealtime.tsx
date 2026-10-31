@@ -1572,7 +1572,7 @@ export function VoiceTutorRealtime({
       capture.disarm();
       clearPronunciationNoSpeechTimer();
       pronunciationTimerAwaitsIdleRef.current = false;
-      plantPronunciationUnavailable('arm_expired_45s');
+      plantPronunciationUnavailable('arm_expired_75s');
     }, PRONUNCIATION_ARM_MAX_MS);
     // The model line is usually still playing: start the learner's 20 s
     // window when playback goes idle, so a long line does not eat it.

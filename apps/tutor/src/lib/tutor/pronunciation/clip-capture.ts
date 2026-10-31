@@ -43,7 +43,10 @@ export const CLIP_NO_SPEECH_TIMEOUT_MS = 40000;
 /** Absolute lifetime of one arm, from the arm, whatever the playback state:
  *  past it the runtime disarms and plants the unavailable note, so a stale
  *  arm can never score some later, unrelated turn. */
-export const PRONUNCIATION_ARM_MAX_MS = 45000;
+// Task 23 fix round 1 (m9): 75 s (was 45 s). The lifetime still counts from
+// the arm (usually before the model line plays), so it must outlast the model
+// line plus the 40 s no-speech window plus a late learner's own speech.
+export const PRONUNCIATION_ARM_MAX_MS = 75000;
 /** Audio kept from just BEFORE the speech start: Ink's turn.start reaches the
  *  browser a few hundred ms after the learner's first sound, and the first
  *  consonant ("th" in "think") is exactly what the check is for. */
