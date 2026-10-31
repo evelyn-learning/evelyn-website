@@ -300,6 +300,12 @@ function stripKeepInMindTail(s: string): string | null {
 const THIRD_PERSON_LEARNER_LEAD_RE = /^(\s*)(?:Their|The student['’]s|The learner['’]s) (sentence|answer|words|reply)\b(?=\s+(?:is|has|sounds|reads|means|needs|works)\b|\s*,\s*["“])/i;
 const BRING_BACK_TAIL_RE = /,?\s*\bso I['’]ll bring (?:that|it|this) back\b[^.!?]*[.!?]?\s*$/i;
 const QUESTION_LEAD_RE = /^\s*(?:The question I['’]m asking (?:you )?now is|(?:So|Now),? the question is)\s*:\s*/i;
+// Task 24 §A5 (GDI run 12, 1092 s / 1168 s SPOKEN: "The transcript shows only
+// the sentence itself, so I can check the words but not how they sounded.",
+// "The last resort says the sentence wasn't captured …"): the capture /
+// scoring pipeline narrated aloud. A transcript sentence needs shows / says /
+// only after it ("Please write the transcript of the meeting." stays).
+const CAPTURE_NARRATION_RE = /\btranscript\b[^.!?]*\b(?:shows?|says?|only)\b|\b(?:wasn'?t|was not|isn'?t|not) captured\b|\bthe last resort\b|\bI (?:can(?:'t|not)?|cannot|could(?:n'?t)?) (?:check|hear|tell|judge|score)\b[^.!?]*\b(?:words|sound(?:ed|s)?)\b/i;
 function addressLearner(s: string): string {
   let out = s.replace(THIRD_PERSON_LEARNER_LEAD_RE, (_m, sp: string, noun: string) => `${sp}Your ${noun.toLowerCase()}`);
   const tail = BRING_BACK_TAIL_RE.exec(out);
@@ -320,6 +326,7 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   const s = addressLearner(stripPersonaLead(raw, opts?.personaName));
   if (s !== raw && !s.trim()) return '';
   if (CLOSE_PART_NARRATION_RE.test(s)) return '';
+  if (CAPTURE_NARRATION_RE.test(s)) return '';
   const keepStripped = stripKeepInMindTail(s);
   if (keepStripped !== null) return keepStripped;
   const m = NOTE_CITING_OPENER_RE.exec(s) ?? STAY_ON_ONE_IDEA_RE.exec(s);

@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices } from '@/lib/tutor/voice/sentence-board';
@@ -90,7 +90,7 @@ import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heu
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
 import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
-import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
 import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
 import {
@@ -225,7 +225,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud } from '@/lib/tutor/voice/correct-retry';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -428,7 +428,7 @@ import {
 import { withRetryPreamble } from '@/lib/tutor/voice/retry-preamble';
 import {
   ClipCapture, CLIP_MAX_MS, CLIP_SAMPLE_RATE, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_NO_SPEECH_TIMEOUT_MS,
-  PRONUNCIATION_NOTE_WAIT_MS, PRONUNCIATION_UNAVAILABLE_NOTE, PRONUNCIATION_ARM_MAX_MS, pronunciationNoteForBrain, pcm16ToBase64,
+  PRONUNCIATION_NOTE_WAIT_MS, PRONUNCIATION_UNAVAILABLE_NOTE, PRONUNCIATION_ARM_MAX_MS, pronunciationNoteForBrain, pcm16ToBase64, clipPeakDbfs, CLIP_SILENT_DBFS,
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
@@ -1491,8 +1491,13 @@ export function VoiceTutorRealtime({
   // whether the latest planted note was a not-attempted one.
   const lastMeasuredPronunciationRef = useRef<LastMeasuredPronunciation | null>(null);
   const pronunciationNotAttemptedRef = useRef(false);
+  // Task 24 §A4: the planted note as the route gave it (unwrapped) and the
+  // sentence it was about, so the turn that carries it can rewrite it when
+  // the learner's words matched but nothing was scored.
+  const pronunciationRawNoteRef = useRef<{ note: string; referenceText: string } | null>(null);
   const plantPronunciationNote = (note: string, measured: boolean) => {
     pronunciationResultNoteRef.current = pronunciationNoteForBrain(note);
+    pronunciationRawNoteRef.current = { note, referenceText: lastPronunciationClipRef.current?.text ?? lastPronunciationTargetRef.current?.referenceText ?? '' };
     pronunciationMeasuredRef.current = measured;
     pronunciationNotAttemptedRef.current = false;
     if (measured) lastMeasuredPronunciationRef.current = { note, at: Date.now(), segmentId: currentSegmentIdRef.current ?? '', referenceText: lastPronunciationClipRef.current?.text ?? lastPronunciationTargetRef.current?.referenceText ?? '' };
@@ -1515,7 +1520,16 @@ export function VoiceTutorRealtime({
     // the same utterance lands — remember the target briefly so the
     // expected-repeat exemption still knows the student was asked to say it.
     lastPronunciationClipRef.current = { text: clip.referenceText, at: Date.now() };
-    onDebugEvent?.('pronunciation_clip_sent', `${clip.durationMs}ms "${clip.referenceText.slice(0, 80)}"`);
+    // Task 24 §A2 (GDI run 12: both clips were all zeros — Azure answers
+    // "not attempted" for silence): a silent clip is not posted. The arm's
+    // target stays the last target, so "say it once more" re-arms it.
+    const peak = clipPeakDbfs(clip.pcm16);
+    const peakLabel = Number.isFinite(peak) ? peak.toFixed(1) : '-inf';
+    onDebugEvent?.('pronunciation_clip_sent', `${clip.durationMs}ms peak=${peakLabel}dBFS "${clip.referenceText.slice(0, 80)}"`);
+    if (!(peak >= CLIP_SILENT_DBFS)) {
+      plantPronunciationUnavailable(`clip_silent peak=${peakLabel}dBFS`);
+      return;
+    }
     const run = (async () => {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 15000);
@@ -1620,6 +1634,17 @@ export function VoiceTutorRealtime({
   const pushStudentAudioForPronunciation = (float32: Float32Array) => {
     const clip = clipCaptureRef.current?.push(float32);
     if (clip) sendPronunciationClipRef.current(clip);
+  };
+  // Task 24 §A1: which tap feeds the clip — the recogniser's frames
+  // (TUTOR_CLIP_FROM_PERCEPTION, default) or the realtime hook's mic tap.
+  // One event per session, at the first frame.
+  const pronunciationTapLoggedRef = useRef(false);
+  const clipTapFrame = (tap: 'perception' | 'realtime') => (float32: Float32Array) => {
+    if (!pronunciationTapLoggedRef.current) {
+      pronunciationTapLoggedRef.current = true;
+      onDebugEvent?.('pronunciation_tap', tap);
+    }
+    pushStudentAudioForPronunciation(float32);
   };
   useEffect(() => () => {
     if (pronunciationNoSpeechTimerRef.current) clearTimeout(pronunciationNoSpeechTimerRef.current);
@@ -12992,6 +13017,25 @@ export function VoiceTutorRealtime({
       // result…") for this one turn; a measured note opens the claim guard
       // for this turn only.
       if (pronunciationResultNoteRef.current && !opts?.prefetchOnly) {
+        // Task 24 §A4 (GDI run 12, 1092 s): nothing was scored but the turn's
+        // transcript is the target ⇒ the unscored note (confirm, ask once
+        // more), never the not-attempted one read aloud as a verdict.
+        const raw = pronunciationRawNoteRef.current;
+        if (raw) {
+          const rewritten = pronunciationNoteForTurn({
+            note: raw.note,
+            measured: pronunciationMeasuredRef.current,
+            notAttempted: pronunciationNotAttemptedRef.current,
+            saidTarget: !!raw.referenceText && saidModelSentence(raw.referenceText, transcript),
+          });
+          if (rewritten !== raw.note) {
+            pronunciationResultNoteRef.current = pronunciationNoteForBrain(rewritten);
+            // The learner did attempt it: no "last measured result" redelivery.
+            pronunciationNotAttemptedRef.current = false;
+            onDebugEvent?.('pronunciation_note_rewritten', 'unscored');
+          }
+        }
+        pronunciationRawNoteRef.current = null;
         runTranscript = `${pronunciationResultNoteRef.current}\n\n${runTranscript}`;
         pronunciationMeasuredThisTurn = pronunciationMeasuredRef.current;
         pronunciationNoteThisTurn = pronunciationResultNoteRef.current;
@@ -23586,10 +23630,13 @@ export function VoiceTutorRealtime({
     onStateChange,
     // Pronunciation check: the clip is taken from this same mic tap (the
     // learner's audio only, never the recorder's mixed stream).
-    onStudentAudioChunk: pronunciationActive
+    // Task 24 §A1: with TUTOR_CLIP_FROM_PERCEPTION the clip comes from the
+    // recogniser's frames (perception hooks below); this tap then feeds only
+    // the session recorder.
+    onStudentAudioChunk: pronunciationActive && !TUTOR_CLIP_FROM_PERCEPTION
       ? (float32: Float32Array) => {
           if (audioRecordEnabled) audioRecorder.pushStudentChunk(float32);
-          pushStudentAudioForPronunciation(float32);
+          clipTapFrame('realtime')(float32);
         }
       : audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,
     onTutorAudioChunk: tutorAudioCapture.capture ? audioRecorder.pushTutorChunk : undefined,
@@ -26217,6 +26264,8 @@ export function VoiceTutorRealtime({
     onDebugEvent?.('perception_error', err.message);
   }, [onDebugEvent]);
 
+  // Task 24 §A1: the pronunciation clip from the frames the recogniser hears.
+  const perceptionClipFrame = pronunciationActive && TUTOR_CLIP_FROM_PERCEPTION ? clipTapFrame('perception') : undefined;
   const perceptionWS = usePerceptionWS({
     enabled: perceptionEnabled && !TUTOR_STT_ENGINE_INK2,
     vadThreshold,
@@ -26226,6 +26275,7 @@ export function VoiceTutorRealtime({
     onSpeechStart: perceptionOnSpeechStart,
     onSpeechStop: perceptionOnSpeechStop,
     onMicLevel,
+    onStudentAudioFrame: perceptionClipFrame,
     onTranscriptionFailed: perceptionOnTranscriptionFailed,
     onStateChange: perceptionOnStateChange,
     onError: perceptionOnError,
@@ -26240,6 +26290,7 @@ export function VoiceTutorRealtime({
     onSpeechStop: perceptionOnSpeechStop,
     onPartialTranscript: perceptionOnPartialTranscript,
     onMicLevel,
+    onStudentAudioFrame: perceptionClipFrame,
     onTranscript: perceptionOnTranscript,
     onTranscriptionFailed: perceptionOnTranscriptionFailed,
     onStateChange: perceptionOnStateChange,

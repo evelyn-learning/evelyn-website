@@ -993,3 +993,10 @@ export const TUTOR_SELF_VOICE_ANSWER_END = process.env.NEXT_PUBLIC_TUTOR_SELF_VO
  *  isBoardReadAloud) dispatches no brain turn — the answer is still to come.
  *  Default ON; NEXT_PUBLIC_TUTOR_BOARD_READ_ALOUD_HOLD=off. */
 export const TUTOR_BOARD_READ_ALOUD_HOLD = process.env.NEXT_PUBLIC_TUTOR_BOARD_READ_ALOUD_HOLD !== 'off';
+/** Task 24 §A1 (GDI run 12, 1092 s / 1168 s: both pronunciation clips were
+ *  silent while the recogniser transcribed the sentence word-perfect): the
+ *  clip is captured from the frames the speech recogniser hears (the
+ *  perception / Ink hook's `onStudentAudioFrame`), not from the realtime
+ *  hook's mic tap. Default ON; NEXT_PUBLIC_TUTOR_CLIP_FROM_PERCEPTION=off ⇒
+ *  the realtime tap, as before. */
+export const TUTOR_CLIP_FROM_PERCEPTION = process.env.NEXT_PUBLIC_TUTOR_CLIP_FROM_PERCEPTION !== 'off';

@@ -808,5 +808,15 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   check('23H2: "bring back" without the so I\'ll plan untouched', stripNoteCitationClause('Please bring that back tomorrow.') === 'Please bring that back tomorrow.');
 }
 
+// ── Task 24 §A5 (GDI run 12) ──
+{
+  const A = 'The transcript shows only the sentence itself, so I can check the words but not how they sounded.';
+  const B = "The last resort says the sentence wasn't captured, so I'll check the words only.";
+  check('24A5: 1092 s capture narration → dropped', stripNoteCitationClause(A) === '' && isMetaNarration(A));
+  check('24A5: last-resort narration → dropped', stripNoteCitationClause(B) === '' && isMetaNarration(B));
+  check('24A5: "The sentence is clear." untouched', stripNoteCitationClause('The sentence is clear.') === 'The sentence is clear.' && !isMetaNarration('The sentence is clear.'));
+  check('24A5: "Please write the transcript of the meeting." untouched', stripNoteCitationClause('Please write the transcript of the meeting.') === 'Please write the transcript of the meeting.' && !isMetaNarration('Please write the transcript of the meeting.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

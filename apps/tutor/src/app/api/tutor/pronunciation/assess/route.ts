@@ -86,5 +86,13 @@ export async function POST(request: NextRequest) {
   const out = await assessPronunciation({ pcm16: parsed.pcm16, sampleRate: 24000, referenceText: parsed.referenceText });
   // `measured` is false for an 'ok' result that was not an attempt at the
   // reference text (isMeasuredResult) — the client keeps the claim guard shut.
-  return NextResponse.json({ ...out, note: formatPronunciationNote(out, parsed.referenceText), measured: isMeasuredResult(out) });
+  const measured = isMeasuredResult(out);
+  // Task 24 §A3 (GDI run 12: two silent clips read "not attempted"): what the
+  // vendor heard, for the server log only — no audio, no key, no session text.
+  if (out.status === 'ok' && !measured) {
+    const r = out.result;
+    const omitted = r.words.filter((w) => w.errorType === 'omission').length;
+    console.warn(`[pronunciation] not_attempted display="${(r.display ?? '').slice(0, 120)}" completeness=${r.completeness ?? 'n/a'} omitted=${omitted}/${r.words.length} latency=${r.latencyMs}ms`);
+  }
+  return NextResponse.json({ ...out, note: formatPronunciationNote(out, parsed.referenceText), measured });
 }

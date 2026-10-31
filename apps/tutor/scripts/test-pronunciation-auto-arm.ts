@@ -5,10 +5,10 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION } from '../src/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION, pronunciationNoteForTurn, PRONUNCIATION_UNSCORED_NOTE } from '../src/lib/tutor/pronunciation/auto-arm';
 import { duplicateSentenceAction, currentBoardPage, sentenceCardIdOnCurrentPage, sentenceOnBoardPage } from '../src/lib/tutor/voice/sentence-board';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
-import { isStrictRepeatAsk } from '../src/lib/tutor/voice/correct-retry';
+import { isStrictRepeatAsk, saidModelSentence } from '../src/lib/tutor/voice/correct-retry';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -272,6 +272,28 @@ test('23G2: any retry of a measured turn re-delivers the note with the score ins
   assert.ok(block.includes('const retryNote = pronunciationNoteForRetry({ measuredThisTurn: pronunciationMeasuredThisTurn, note: pronunciationNoteThisTurn, attemptCut: attemptKilled || voiceVerdictCut !== null });'));
   assert.ok(block.includes("onDebugEvent?.('pronunciation_note_redelivered', `${rejectionsThisAttempt.map((r) => r.action).join(',') || 'retry'}:"));
   assert.ok(v.includes('pronunciationNoteThisTurn = pronunciationResultNoteRef.current;'));
+});
+
+test('Task 24 §A4: 1092 s — not attempted, the transcript is the target ⇒ the unscored note', () => {
+  const ref = 'I have worked with international customers for several years.';
+  const NA = 'The learner did not say the target text; nothing was measured. Ask them to repeat it, or coach from your model.';
+  const said = saidModelSentence(ref, 'I have worked with international customers for several years.');
+  assert.equal(said, true);
+  assert.equal(pronunciationNoteForTurn({ note: NA, measured: false, notAttempted: true, saidTarget: said }), PRONUNCIATION_UNSCORED_NOTE);
+  assert.equal(PRONUNCIATION_UNSCORED_NOTE, 'The learner said the sentence (the words matched) but the recording could not be scored this time. Confirm the sentence in one short sentence and ask them to say it once more so you can listen. Do not mention recordings, transcripts, captures, checks or scores.');
+  // a silent clip (unavailable note) with the target said ⇒ the same rewrite
+  assert.equal(pronunciationNoteForTurn({ note: 'No measured result: coach stress and linking from your model; do not describe sounds.', measured: false, notAttempted: false, saidTarget: true }), PRONUNCIATION_UNSCORED_NOTE);
+});
+test('Task 24 §A4: a not-attempted clip whose transcript is NOT the target ⇒ the note unchanged; measured ⇒ unchanged', () => {
+  const ref = 'I have worked with international customers for several years.';
+  const NA = 'The learner did not say the target text; nothing was measured. Ask them to repeat it, or coach from your model.';
+  const said = saidModelSentence(ref, 'Um, could you say it again?');
+  assert.equal(said, false);
+  assert.equal(pronunciationNoteForTurn({ note: NA, measured: false, notAttempted: true, saidTarget: said }), NA);
+  assert.equal(pronunciationNoteForTurn({ note: 'Overall 82.', measured: true, notAttempted: false, saidTarget: true }), 'Overall 82.');
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(v.includes('saidTarget: !!raw.referenceText && saidModelSentence(raw.referenceText, transcript),'));
+  assert.ok(v.includes("onDebugEvent?.('pronunciation_note_rewritten', 'unscored');"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

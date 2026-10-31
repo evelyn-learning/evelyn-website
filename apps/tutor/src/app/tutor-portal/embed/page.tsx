@@ -110,6 +110,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // Task 14 §F: the client armed the clip itself from the tutor's ask:
   'pronunciation_auto_armed',
   'pronunciation_start_ignored_tutor_speaking', 'pronunciation_hold_skipped', 'pronunciation_disarmed_segment_advance',
+  // Task 24 §A1 / §A4: which tap fed the clip; the not-attempted note rewritten as unscored.
+  'pronunciation_tap', 'pronunciation_note_rewritten',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued

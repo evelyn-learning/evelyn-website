@@ -77,6 +77,11 @@ export interface UsePerceptionWSOptions {
   onSpeechStop?: (e: PerceptionSpeechEvent) => void;
   /** Live student-mic amplitude (0..1, already scaled) emitted ~12×/sec from
    *  the audio processor, for the "being heard" indicator. Emits 0 while muted. */
+  /** Task 24 §A1 (GDI run 12): every unmuted mic frame the recogniser hears,
+   *  24 kHz float32, delivered whether or not the WS is open (a closed WS
+   *  must not stop the tap). The frame is a view into a reused buffer — copy
+   *  it to keep it. The pronunciation clip is captured from these frames. */
+  onStudentAudioFrame?: (float32: Float32Array) => void;
   onMicLevel?: (level: number) => void;
   onTranscript?: (t: PerceptionTranscript) => void;
   onTranscriptionFailed?: (errorType: string | undefined) => void;
@@ -181,6 +186,7 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
     onSpeechStart,
     onSpeechStop,
     onMicLevel,
+    onStudentAudioFrame,
     onTranscript,
     onTranscriptionFailed,
     onStateChange,
@@ -200,6 +206,8 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
   onSpeechStartRef.current = onSpeechStart;
   onSpeechStopRef.current = onSpeechStop;
   onMicLevelRef.current = onMicLevel;
+  const onStudentAudioFrameRef = useRef(onStudentAudioFrame);
+  onStudentAudioFrameRef.current = onStudentAudioFrame;
   onTranscriptRef.current = onTranscript;
   onTranscriptionFailedRef.current = onTranscriptionFailed;
   onStateChangeRef.current = onStateChange;
@@ -375,8 +383,6 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       const resamplerState: ResamplerState = { phase: 0, carry: null };
 
       processor.onaudioprocess = (e) => {
-        const ws = wsRef.current;
-        if (!ws || ws.readyState !== WebSocket.OPEN) return;
         // Muted: don't forward audio to the perception transcriber, and report
         // a flat level so the "being heard" meter goes calm.
         if (mutedRef.current) {
@@ -400,6 +406,11 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
         const resampled = captureRate === PERCEPTION_SAMPLE_RATE
           ? inputData
           : resampleLinear(inputData, captureRate, PERCEPTION_SAMPLE_RATE, resamplerState);
+        // Task 24 §A1: the pronunciation clip taps the frames the recogniser
+        // hears, before the WS guard — a closed WS must not stop the tap.
+        try { onStudentAudioFrameRef.current?.(resampled); } catch {}
+        const ws = wsRef.current;
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
         const base64Audio = float32ToBase64PCM16(resampled);
         try {
           ws.send(JSON.stringify({

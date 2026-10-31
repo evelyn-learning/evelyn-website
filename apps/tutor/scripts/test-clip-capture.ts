@@ -11,7 +11,7 @@
 import { strict as assert } from 'node:assert';
 import {
   ClipCapture, CLIP_MAX_MS, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_SAMPLE_RATE, CLIP_NO_SPEECH_TIMEOUT_MS, PRONUNCIATION_ARM_MAX_MS,
-  float32ToPcm16, pcm16ToBase64, PRONUNCIATION_UNAVAILABLE_NOTE, pronunciationNoteForBrain,
+  float32ToPcm16, pcm16ToBase64, PRONUNCIATION_UNAVAILABLE_NOTE, pronunciationNoteForBrain, clipPeakDbfs, CLIP_SILENT_DBFS,
 } from '../src/lib/tutor/pronunciation/clip-capture';
 import { PRONUNCIATION_UNAVAILABLE_NOTE as SERVER_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
 import { ttsLanguageFor } from '../src/lib/tutor/voice/tts-language';
@@ -289,6 +289,17 @@ test('TTS: an all-Latin model sentence in a bilingual (en+ja) session is voiced 
   assert.equal(ttsLanguageFor('もう一度言ってください。', ['en', 'ja']), 'ja');
 });
 
+test('Task 24 §A2: clipPeakDbfs — zeros ⇒ −Infinity; full scale ⇒ 0; −40 dB clip above the silence floor', () => {
+  assert.equal(clipPeakDbfs(new Int16Array(24000)), -Infinity);
+  assert.equal(clipPeakDbfs(new Int16Array(0)), -Infinity);
+  assert.equal(clipPeakDbfs(Int16Array.from([0, -32768, 5])), 0);
+  const quiet = clipPeakDbfs(Int16Array.from([0, 328, -100]));
+  assert.ok(Math.abs(quiet - -40) < 0.1, String(quiet));
+  assert.equal(CLIP_SILENT_DBFS, -60);
+  assert.ok(quiet >= CLIP_SILENT_DBFS);
+  assert.ok(!(clipPeakDbfs(Int16Array.from([0, 16, -16])) >= CLIP_SILENT_DBFS));
+});
+
 // ── Wiring ────────────────────────────────────────────────────────────
 const pending: Promise<void>[] = [];
 function atest(name: string, fn: () => Promise<void>) {
@@ -332,7 +343,8 @@ test('runtime: gate, request field only when active, RT-2 site, learner mic tap,
   assert.match(v, /const pronunciationActive = TUTOR_PRONUNCIATION_ASSESS && pronunciation && sessionMode !== 'text' && !!sessionId;/);
   assert.match(v, /pronunciationCheck: pronunciationActive \? true : undefined,/);
   assert.match(v, /pronunciationActive \? \[REQUEST_PRONUNCIATION_CHECK_TOOL\] : \[\]/);
-  assert.match(v, /onStudentAudioChunk: pronunciationActive\s*\? [\s\S]{0,250}pushStudentAudioForPronunciation\(float32\);[\s\S]{0,40}: audioRecordEnabled \? audioRecorder\.pushStudentChunk : undefined,/);
+  // Task 24 §A1: the realtime tap feeds the clip only with TUTOR_CLIP_FROM_PERCEPTION off.
+  assert.match(v, /onStudentAudioChunk: pronunciationActive && !TUTOR_CLIP_FROM_PERCEPTION\s*\? [\s\S]{0,250}clipTapFrame\('realtime'\)\(float32\);[\s\S]{0,40}: audioRecordEnabled \? audioRecorder\.pushStudentChunk : undefined,/);
   assert.match(v, /const perceptionOnSpeechStart = useCallback\(\(e: PerceptionSpeechEvent\) => \{[\s\S]{0,700}if \(productionStateRef\.current === 'speaking' \|\| wasTutorSpeakingAt\(Date\.now\(\)\)\) \{\s*onDebugEvent\?\.\('pronunciation_start_ignored_tutor_speaking'[\s\S]{0,120}\} else \{\s*pronunciationCapture\.onSpeechStart\(\);/);
   assert.match(v, /new ClipCapture\(\{ maxMs: CLIP_MAX_MS, sampleRate: CLIP_SAMPLE_RATE, preRollMs: CLIP_PRE_ROLL_MS, minMs: CLIP_MIN_MS \}\)/);
   assert.match(v, /const perceptionOnSpeechStop = useCallback\(\(e: PerceptionSpeechEvent\) => \{[\s\S]{0,200}clipCaptureRef\.current\?\.onSpeechStop\(\);/);
@@ -385,6 +397,24 @@ test('runtime (final review #1c): an ok-but-not-measured route answer keeps the 
   const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
   assert.match(v, /const measured = data\.measured === true;[\s\S]{0,200}plantPronunciationNote\(data\.note, measured\);/);
   assert.ok(!v.includes('plantPronunciationNote(data.note, true)'), 'no unconditional measured plant');
+});
+
+test('Task 24 §A1/§A2 wiring: clip from the recogniser frames (flag), silent clip not posted', () => {
+  const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  const e = src('src/app/tutor-portal/embed/page.tsx');
+  assert.match(v, /onStudentAudioChunk: pronunciationActive && !TUTOR_CLIP_FROM_PERCEPTION/);
+  assert.equal((v.match(/onStudentAudioFrame: perceptionClipFrame,/g) ?? []).length, 2, 'both recogniser hooks');
+  assert.ok(v.includes("const perceptionClipFrame = pronunciationActive && TUTOR_CLIP_FROM_PERCEPTION ? clipTapFrame('perception') : undefined;"));
+  assert.ok(v.includes("onDebugEvent?.('pronunciation_tap', tap);"));
+  assert.ok(v.includes('plantPronunciationUnavailable(`clip_silent peak=${peakLabel}dBFS`);'));
+  for (const name of ['pronunciation_tap', 'pronunciation_note_rewritten']) assert.ok(e.includes(`'${name}'`), `embed persists ${name}`);
+  for (const h of ['src/app/tutor/hooks/usePerceptionWS.ts', 'src/app/tutor/hooks/useCartesiaInkWS.ts']) {
+    const t = src(h);
+    const tap = t.indexOf('onStudentAudioFrameRef.current?.(');
+    const guard = t.indexOf('readyState !== WebSocket.OPEN) return;', t.indexOf('processor.onaudioprocess'));
+    assert.ok(tap > 0 && guard > tap, `${h}: the tap runs before the WS guard`);
+    assert.ok(t.indexOf('if (mutedRef.current)', t.indexOf('processor.onaudioprocess')) < tap, `${h}: after the mute check`);
+  }
 });
 
 test('debug events: the four exact names are emitted and persisted by the embed', () => {

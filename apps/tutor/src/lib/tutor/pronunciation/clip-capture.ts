@@ -92,6 +92,22 @@ export function float32ToPcm16(input: Float32Array): Int16Array {
   return out;
 }
 
+/** Task 24 §A2 (GDI run 12, 1092 s / 1168 s: both clips were all zeros and
+ *  Azure answered "not attempted, 9/9 omitted"): a clip whose peak sits below
+ *  this is silence — it is not posted, and the unavailable note is planted. */
+export const CLIP_SILENT_DBFS = -60;
+
+/** Peak level of a PCM16 clip in dBFS (full scale = 32768); −Infinity for an
+ *  all-zero (or empty) clip. Pure. */
+export function clipPeakDbfs(pcm16: Int16Array): number {
+  let peak = 0;
+  for (let i = 0; i < pcm16.length; i++) {
+    const v = pcm16[i] < 0 ? -pcm16[i] : pcm16[i];
+    if (v > peak) peak = v;
+  }
+  return peak > 0 ? 20 * Math.log10(peak / 32768) : -Infinity;
+}
+
 /** PCM16 → base64 of its little-endian bytes (the route's `audio` field).
  *  Browser-safe (btoa), chunked so a 10 s clip never overflows the call stack. */
 export function pcm16ToBase64(pcm: Int16Array): string {

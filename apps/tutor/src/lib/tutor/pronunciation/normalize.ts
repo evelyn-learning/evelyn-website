@@ -75,6 +75,8 @@ export function normalizeAzure(json: unknown): PronunciationResult {
     fluency: num(pa.FluencyScore),
     completeness: num(pa.CompletenessScore),
     latencyMs: 0,
+    // Task 24 §A3: what Azure recognised (a silent clip reads ".").
+    display: typeof best.Display === 'string' ? best.Display : undefined,
   };
 }
 

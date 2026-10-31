@@ -272,3 +272,20 @@ export function pronunciationNoteForRetry(input: {
   if (!input.measuredThisTurn || !input.note || !input.note.trim()) return null;
   return input.attemptCut ? `${input.note.trim()}\n${PRONUNCIATION_RETRY_INSTRUCTION}` : input.note.trim();
 }
+
+/** Task 24 §A4 (GDI run 12, 1092 s: the clip was silent, the recogniser heard
+ *  the sentence word-perfect, and the tutor read "not attempted" aloud as
+ *  "the transcript shows…"): the note the brain reads when nothing was
+ *  scored but the learner's words matched the target. */
+export const PRONUNCIATION_UNSCORED_NOTE =
+  'The learner said the sentence (the words matched) but the recording could not be scored this time. Confirm the sentence in one short sentence and ask them to say it once more so you can listen. Do not mention recordings, transcripts, captures, checks or scores.';
+
+/** The planted pronunciation note for this brain turn: unscored + the turn's
+ *  transcript said the target ⇒ PRONUNCIATION_UNSCORED_NOTE; otherwise the
+ *  note unchanged (a measured result, or a not-attempted / unavailable note
+ *  whose transcript is not the target). `saidTarget` is the caller's
+ *  `saidModelSentence(referenceText, transcript)`. Pure. */
+export function pronunciationNoteForTurn(input: { note: string; measured: boolean; notAttempted: boolean; saidTarget: boolean }): string {
+  if (!input.measured && input.saidTarget) return PRONUNCIATION_UNSCORED_NOTE;
+  return input.note;
+}

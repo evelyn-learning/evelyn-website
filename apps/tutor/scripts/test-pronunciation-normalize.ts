@@ -64,6 +64,10 @@ test('Azure carries no syllable-stress verdict', () => {
   assert.ok(az.words.every((w) => w.stress === undefined));
 });
 test('latencyMs defaults to 0 (the client stamps it)', () => assert.equal(az.latencyMs, 0));
+test('Task 24 §A3: display = NBest[0].Display (server diagnostics)', () => {
+  assert.equal(az.display, 'We went the countryside.');
+  assert.equal(normalizeAzure(azureRestJson).display, 'We went the countryside.');
+});
 test('prosody flags list break + monotone errors per word', () => {
   assert.deepEqual(azureProsodyFlags(azureJson), ['the: UnexpectedBreak', 'countryside: Monotone']);
 });

@@ -135,6 +135,11 @@ export interface UseCartesiaInkWSOptions {
   /** The cumulative partial transcript on every `turn.update` (pause-first
    *  barge-in, bargein-pause.ts): the earliest content evidence Ink gives. */
   onPartialTranscript?: (p: { text: string; tMs: number }) => void;
+  /** Task 24 §A1 (GDI run 12): every unmuted mic frame the recogniser hears,
+   *  24 kHz float32, delivered whether or not the WS is open (a closed WS
+   *  must not stop the tap). The frame is a view into a reused buffer — copy
+   *  it to keep it. The pronunciation clip is captured from these frames. */
+  onStudentAudioFrame?: (float32: Float32Array) => void;
   onMicLevel?: (level: number) => void;
   onTranscript?: (t: PerceptionTranscript) => void;
   onTranscriptionFailed?: (errorType: string | undefined) => void;
@@ -218,6 +223,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     onSpeechStop,
     onPartialTranscript,
     onMicLevel,
+    onStudentAudioFrame,
     onTranscript,
     onTranscriptionFailed,
     onStateChange,
@@ -240,6 +246,8 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   onSpeechStopRef.current = onSpeechStop;
   onPartialTranscriptRef.current = onPartialTranscript;
   onMicLevelRef.current = onMicLevel;
+  const onStudentAudioFrameRef = useRef(onStudentAudioFrame);
+  onStudentAudioFrameRef.current = onStudentAudioFrame;
   onTranscriptRef.current = onTranscript;
   onTranscriptionFailedRef.current = onTranscriptionFailed;
   onStateChangeRef.current = onStateChange;
@@ -368,8 +376,6 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       const processor = ctx.createScriptProcessor(4096, 1, 1);
 
       processor.onaudioprocess = (e) => {
-        const ws = wsRef.current;
-        if (!ws || ws.readyState !== WebSocket.OPEN) return;
         if (mutedRef.current) {
           // Push a zero frame too: a muted mic carries no energy, and leaving
           // the window frozen would let the gate read pre-mute frames as a
@@ -385,6 +391,12 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
         const level = Math.min(1, rms * 6);
         pushEnergyFrame(level);
         try { onMicLevelRef.current?.(level); } catch {}
+        // Task 24 §A1: the pronunciation clip taps the frames the recogniser
+        // hears (ctx at INK_SAMPLE_RATE), before the WS guard — a closed WS
+        // must not stop the tap.
+        try { onStudentAudioFrameRef.current?.(inputData); } catch {}
+        const ws = wsRef.current;
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
         // Raw Float32 binary frame — no base64, no PCM16 downconvert.
         // inputData is a view into a reusable buffer owned by the audio
         // pipeline; copy it before handing to ws.send() so the browser

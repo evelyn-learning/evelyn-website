@@ -29,4 +29,7 @@ export interface PronunciationResult {
   completeness?: number;
   /** Wall-clock ms for the vendor call (0 when the result came from a stored JSON). */
   latencyMs: number;
+  /** What the vendor recognised (Azure NBest[0].Display), for server diagnostics
+   *  only (Task 24 §A3) — never shown to the learner or the brain. */
+  display?: string;
 }
