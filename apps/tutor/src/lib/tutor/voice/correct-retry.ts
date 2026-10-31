@@ -211,7 +211,31 @@ function tutorLatin(text: string): string {
   return latinSentence(text).split(' ').filter((t) => t && !FILLER_TOKENS.has(t)).join(' ');
 }
 
+/** Task 24 §E1: a cue that the turn has moved to the NEXT item. */
+const NEXT_ITEM_CUE_RE = /\b(?:next|move on|moving on|go on|now let'?s|let'?s (?:try|look at|practice))\b|次(?:は|に|の)|では次/i;
+
+/** Task 24 §E2 (GDI run 12, 1018 s): "Could you try saying the full sentence
+ *  now, starting with "The seminar…"?" — an ask for the full / whole /
+ *  complete / same sentence with a starter quote. The starter (≥ 2 words,
+ *  trailing … / ... stripped) as lower-cased Latin words, or null. */
+const FULL_SENTENCE_STARTER_RE = /\b(?:say|try saying|give me|tell me)\b[^.!?]*\b(?:the|that|this) (?:full|whole|complete|same) sentence\b[^?!]*?\bstart(?:ing)? with\s*["“]([^"”\n]+)["”]/i;
+function fullSentenceStarter(tutorText: string): string | null {
+  const m = FULL_SENTENCE_STARTER_RE.exec(tutorText ?? '');
+  if (!m) return null;
+  const starter = latinSentence(m[1].replace(/(?:…|\.{2,})\s*$/, ''));
+  return starter.split(' ').filter(Boolean).length >= 2 ? starter : null;
+}
+
 export function reAskedOwnSentence(studentText: string, tutorText: string): boolean {
+  // Task 24 §E2: the full-sentence ask with a starter that begins the
+  // student's own (correct) sentence, in a turn that already says it back.
+  const starter = fullSentenceStarter(tutorText);
+  if (starter) {
+    const saidForStarter = cleanStudentSentence(studentText);
+    if (saidForStarter.split(' ').filter(Boolean).length >= 3
+      && (saidForStarter === starter || saidForStarter.startsWith(`${starter} `))
+      && tutorLatin(tutorText ?? '').includes(saidForStarter)) return true;
+  }
   const sayAgain = SAY_AGAIN_RE.test(tutorText ?? '');
   if (!isRetryAsk(tutorText) && !SAY_IT_ASK_RE.test(tutorText ?? '') && !sayAgain) return false;
   const said = cleanStudentSentence(studentText);
@@ -221,7 +245,12 @@ export function reAskedOwnSentence(studentText: string, tutorText: string): bool
   // exactly that (with an "uh") — the quoted sentence IS the student's, and
   // every quoted sentence of three or more words in the turn is that one.
   const quotes = quotedSpans(tutorText).map(tutorLatin).filter((q) => q.split(' ').filter(Boolean).length >= 3);
-  if (quotes.length > 0 && quotes.every((q) => q === said)) return true;
+  // Task 24 §E1 (GDI run 12, 231 s): the quote may sit in a PRAISE sentence
+  // while the ask targets the next item ("…correctly: "I have worked …"
+  // Let's move on. 次は… 言ってみましょう。Have you worked …?"). The early
+  // return holds only when the quote is in the ask sentence or the one right
+  // before it, with no next-item cue from the quote through the ask.
+  if (quotes.length > 0 && quotes.every((q) => q === said) && quoteTargetsAsk(tutorText ?? '', said)) return true;
   if (!isRetryAsk(tutorText) && !SAY_IT_ASK_RE.test(tutorText ?? '')) return false;
   if (!tutorLatin(tutorText ?? '').includes(said)) return false;
   // 2026-10-18 (embed-1792350642171, turn 33): 「"I went to Nagoya Castle last
@@ -242,6 +271,27 @@ export function reAskedOwnSentence(studentText: string, tutorText: string): bool
   if (!targetLatin.includes(said)) return false;
   const remainder = targetLatin.replace(said, ' ').trim();
   return latinWordCount(remainder) < 3;
+}
+
+/** §E1: the sentence quoting `said` is the (last) ask sentence or the one
+ *  right before it, and no sentence from it through the ask carries a
+ *  next-item cue. No ask sentence ⇒ the last sentence is the ask. */
+function quoteTargetsAsk(tutorText: string, said: string): boolean {
+  const sentences = tutorText.split(/(?<=[。！？.!?])\s*|\n+/).map((x) => x.trim()).filter(Boolean);
+  if (!sentences.length) return false;
+  let askIdx = -1;
+  for (let i = sentences.length - 1; i >= 0; i--) {
+    const x = sentences[i]!;
+    if (isRetryAsk(x) || SAY_IT_ASK_RE.test(x) || SAY_AGAIN_RE.test(x)) { askIdx = i; break; }
+  }
+  if (askIdx < 0) askIdx = sentences.length - 1;
+  let quoteIdx = -1;
+  for (let i = askIdx; i >= 0; i--) {
+    if (tutorLatin(sentences[i]!).includes(said)) { quoteIdx = i; break; }
+  }
+  if (quoteIdx < 0 || askIdx - quoteIdx > 1) return false;
+  for (let i = quoteIdx; i <= askIdx; i++) if (NEXT_ITEM_CUE_RE.test(sentences[i]!)) return false;
+  return true;
 }
 
 function latinWordCount(text: string): number {
