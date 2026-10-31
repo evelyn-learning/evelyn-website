@@ -1395,6 +1395,10 @@ test('22E r1 I3: held once per statement; a question asked back is a turn; a bar
   // the three paths where the utterance stopped the tutor pass the signal
   assert.equal((vtr.match(/queueOnMidUtterance: true,\n\s*stoppedTutor: true,/g) ?? []).length, 2, 'perception MERGE + FRESH');
   assert.ok(/void handleStudentTranscriptForBrain\(t\.text, \{ bypassPerceptionDedupe: true, \.\.\.\(heur\.verdict === 'barge_in' && prodState === 'speaking' \? \{ stoppedTutor: true \} : \{\}\) \}\);/.test(vtr), 'late-fallback barge-in');
+  // fix round 2 (I1): the stage-2 lazy abort killed the in-flight turn ⇒ stoppedTutor
+  const lazy = vtr.slice(vtr.indexOf('const resolveStage2LazyVerdict = '), vtr.indexOf('const resolveStage2LazyVerdict = ') + 6000);
+  assert.ok(/const lazyKilledTutor = inFlightBrainAbortRef\.current !== null;\s*if \(lazyKilledTutor\) \{\s*const cancelStage[^\n]*\n\s*runPerceptionKillRef\.current\?\.\(cancelStage\);/.test(lazy), 'the kill decision is captured');
+  assert.ok(/void handleStudentTranscriptForBrain\(text, \{ bypassPerceptionDedupe: true, queueOnMidUtterance: true, \.\.\.\(lazyKilledTutor \? \{ stoppedTutor: true \} : \{\}\) \}\);/.test(lazy), 'stage-2 lazy abort passes stoppedTutor');
 });
 test('22E VTR holds a read-aloud before the brain dispatch (pin)', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');

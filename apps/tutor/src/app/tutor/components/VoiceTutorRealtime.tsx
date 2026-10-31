@@ -24554,7 +24554,10 @@ export function VoiceTutorRealtime({
         // checkpoint-null outcome) if the turn already finished or a
         // self-echo/cancel-storm guard declines — either way we still
         // dispatch the new transcript below.
-        if (inFlightBrainAbortRef.current !== null) {
+        // Task 22 fix round 2 (I1): a dispatch that killed the tutor's turn is
+        // never held as a board read-aloud (stoppedTutor below).
+        const lazyKilledTutor = inFlightBrainAbortRef.current !== null;
+        if (lazyKilledTutor) {
           const cancelStage: 'processing' | 'speaking' = productionStateRef.current === 'speaking' ? 'speaking' : 'processing';
           runPerceptionKillRef.current?.(cancelStage);
         }
@@ -24572,7 +24575,7 @@ export function VoiceTutorRealtime({
         // every other orchestrator-authored re-dispatch (RESTORE/MERGE/
         // FRESH in applyPerceptionVerdict) — a student already mid their
         // NEXT utterance when this lands must not get it bare-dropped.
-        void handleStudentTranscriptForBrain(text, { bypassPerceptionDedupe: true, queueOnMidUtterance: true });
+        void handleStudentTranscriptForBrain(text, { bypassPerceptionDedupe: true, queueOnMidUtterance: true, ...(lazyKilledTutor ? { stoppedTutor: true } : {}) });
         // Final-review fix (stranded checkpoint): runPerceptionKill above
         // (if it ran) armed perceptionInterruptCheckpointRef AND the 7s
         // stage2TimeoutRestoreTimerRef, on the assumption its caller
