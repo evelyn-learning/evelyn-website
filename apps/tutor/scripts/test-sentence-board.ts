@@ -263,6 +263,21 @@ test('22G r1 I1: implicit corrections and content acknowledgements give no affir
   const st781 = 'The biggest challenge in that project was to convince customers to buy the washing machines.';
   assert.deepEqual(g('Convincing customers was the challenge, so you named the real difficulty. Your sentence is clear. Next, how did you handle that challenge? Try starting with "I…".', st781).map((c) => c.source), ['affirmed']);
 });
+test('22G r2 I3: instructions, questions and retry asks give no affirmed card', () => {
+  const g = (t: string) => planSentenceBoard({ tutorText: t, studentLast: 'Yesterday I go to the customer office for meeting.', renderedThisTurn: false, affirmFallback: true });
+  for (const t of [
+    'Make sure your sentence is complete. Try again.',
+    'Try again, and check that the sentence is correct.',
+    'Do you think your sentence is correct? Listen again.',
+    'Your sentence is clear. Try once more with the past tense.',
+    'Your sentence is clear. Yesterday is past, so think about the verb.',
+    'Your sentence is clear. Please say it again.',
+  ]) assert.deepEqual(g(t), [], t);
+  const st781 = 'The biggest challenge in that project was to convince customers to buy the washing machines.';
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Convincing customers was the challenge, so you named the real difficulty. Your sentence is clear. Next, how did you handle that challenge? Try starting with "I…".', studentLast: st781, renderedThisTurn: false, affirmFallback: true }).map((c) => c.source), ['affirmed']);
+  const st711 = 'I was responsible for selling washing machines made by robots.';
+  assert.deepEqual(planSentenceBoard({ tutorText: 'Selling washing machines made by robots, that\'s a clear role. Now, the phrase "responsible for" is followed by a noun or an -ing verb, and "selling" fits perfectly. Could you tell me one result of that project, starting with "The project helped…"?', studentLast: st711, renderedThisTurn: false, affirmFallback: true }).map((c) => c.source), ['affirmed']);
+});
 test('hook pin: both Cartesia paths compose AFTER rewriteForTTS; the HTTP route skips its rewrite only for prerewritten text', () => {
   const hook = readFileSync(join(__dirname, '..', 'src/app/tutor/hooks/useOpenAIRealtime.ts'), 'utf8');
   assert.ok(/f\(trimmed, \(s\) => rewriteForTTS\(s, \{ studentName: studentNameRef\.current \}\)\)/.test(hook), 'cartesiaText composes with rewriteForTTS');

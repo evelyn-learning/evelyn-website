@@ -15,6 +15,7 @@
  * Pure: no React, no I/O.
  */
 import { dropFillersAndRepeats } from './filler-repeats';
+import { isRetryAsk } from './retry-cap';
 
 /** 'echo' (GDI run 3): the tutor quoting the student's own words back (often
  *  the wrong ones) — never a card, unless the check found the student's
@@ -224,9 +225,18 @@ export function quoteAffirmed(text: string, at: number, end: number): boolean {
  *  qualified ("to start with") and no "but" in it or the sentence after it. */
 const SENTENCE_PRAISE_RE = /\b(?:that['’]s|is|what) (?:a )?(?:correct|natural|good|great|perfect|nice|clear) sentence\b|\b(?:your|that|the|this) sentence is (?:correct|complete|clear|natural|right)\b|\bcomplete and clear\b|["”’」]\s*(?:fits|works) perfectly\b/i;
 const SENTENCE_PRAISE_JA_RE = /正しい文|自然な文/;
+/** Fix round 2 (I3): the praise phrase inside an instruction or a question —
+ *  "Make sure your sentence is complete.", "Check that the sentence is
+ *  correct.", "Do you think your sentence is correct?" — is no praise. */
+const NOT_DECLARATIVE_PRAISE_RE = /[?？]\s*["”’)]?\s*$|^\s*(?:(?:now|so|ok(?:ay)?|good|and|then),?\s+)*(?:make sure|try|check|say|remember|think|look|listen|please)\b|\b(?:make sure|check (?:that|if|whether)|do you think|is it)\b/i;
+/** Fix round 2 (I3): a retry ask anywhere in the turn — "Try once more with
+ *  the past tense.", "Try again", "say it again", "think about the verb". */
+const AFFIRM_RETRY_ASK_RE = /\b(?:try|say it|say that|say the sentence) (?:it )?(?:again|once more|one more time)\b|\btry once more\b|\bthink about\b|\b(?:say|repeat)\b[^.!?。？]*\b(?:once more|again|one more time)\b/i;
 export function turnAffirmsStudent(text: string): boolean {
+  if (isRetryAsk(text ?? '') || AFFIRM_RETRY_ASK_RE.test(text ?? '')) return false;
   const sentences = (text ?? '').split(/(?<=[.!?。！？])\s*/).map((x) => x.trim()).filter(Boolean);
   return sentences.some((p, i) => (SENTENCE_PRAISE_RE.test(p) || SENTENCE_PRAISE_JA_RE.test(p)) && !QUALIFIED_PRAISE_RE.test(p)
+    && !NOT_DECLARATIVE_PRAISE_RE.test(p)
     && !BUT_RE.test(p) && !BUT_RE.test(sentences[i + 1] ?? ''));
 }
 
