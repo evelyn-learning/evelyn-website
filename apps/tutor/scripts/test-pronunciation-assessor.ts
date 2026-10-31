@@ -264,7 +264,7 @@ const REF = 'We went to the countryside.';
     assert.ok(capIdx < src.indexOf('TutorSession.findOne'), 'cap before the tenant gate');
     assert.match(src, /if \(text === null\) return notFound\(\);/);
     assert.match(src, /contentLength !== null && Number\(contentLength\) > MAX_REQUEST_BYTES\) return notFound\(\)/);
-    assert.match(src, /measured: isMeasuredResult\(out\)/);
+    assert.match(src, /const measured = isMeasuredResult\(out\);[\s\S]*measured \}\);/);
   });
 
   console.log('\npronunciation claim guard — measured bypass:\n');

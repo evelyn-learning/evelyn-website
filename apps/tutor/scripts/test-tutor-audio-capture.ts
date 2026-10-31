@@ -61,7 +61,7 @@ test('wiring: the tap is attached only when the decision says so; the student ta
   // The student tap is untouched by this fix; the pronunciation check (GDI
   // trial) wraps it only for its own sessions, else the same expression.
   assert.ok(vtr.includes(': audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,'));
-  assert.match(vtr, /onStudentAudioChunk: pronunciationActive\s*\?/);
+  assert.match(vtr, /onStudentAudioChunk: pronunciationActive && !TUTOR_CLIP_FROM_PERCEPTION\s*\?/);
   assert.equal(vtr.split('audioRecorder.pushTutorChunk').length - 1, 1, 'one tap site');
 });
 test('wiring: the hook has ONE tutor tap, at playback dequeue, and it is optional', () => {
