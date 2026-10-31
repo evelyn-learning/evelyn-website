@@ -16,7 +16,7 @@ import {
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
-  levelCheckAnswerCard, isQuotedFragment,
+  levelCheckAnswerCard, isQuotedFragment, acknowledgesOption, boardOffersChoices,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -1063,6 +1063,43 @@ test('21B r3: "remember" / "article" are cues only in a correcting frame', () =>
     assert.equal(isQuotedFragment('I have worked with customers', 'Use the phrase ', '.'), true);
     assert.equal(isQuotedFragment('I have worked with customers for years', 'You said ', ' correctly.'), true);
     assert.equal(isQuotedFragment('I have worked at Nagoya for three years', 'Good, ', ' is correct.'), false);
+  });
+}
+
+// ── Task 23 §E: the answer to a choice menu is no card ──
+{
+  const T1063 = 'Option 2, a complete sentence, let\'s do it. Please listen and repeat this one: "I have worked with international customers for several years."';
+  const S1063 = 'Yes, I would like to do practice pronunciation of complete sentence.';
+  const P1063 = 'Yes, practice pronunciation of a complete sentence (option 2).';
+  const MENU = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  test('23E: 1063 s — the pick is not carded; the drill sentence still is', () => {
+    const cards = planSentenceBoard({ renderedThisTurn: false, studentCorrect: true, tutorText: T1063, studentLast: S1063, checkedSentence: P1063, choiceMenu: boardOffersChoices({ statement: MENU }) });
+    assert.deepEqual(cards.map((c) => c.sentence), ['I have worked with international customers for several years.']);
+    assert.ok(cards.every((c) => !c.source));
+    // the option acknowledgement alone blocks too
+    const cards2 = planSentenceBoard({ renderedThisTurn: false, studentCorrect: true, tutorText: T1063, studentLast: S1063, checkedSentence: P1063 });
+    assert.ok(cards2.every((c) => c.source !== 'checked'));
+  });
+  test('23E: an open question with the same student sentence still cards it', () => {
+    const t = 'Good. Which part of your job do you enjoy most?';
+    const s1 = 'I would like to practise pronunciation of a complete sentence.';
+    const cards = planSentenceBoard({ renderedThisTurn: false, studentCorrect: true, tutorText: t, studentLast: s1, checkedSentence: s1, choiceMenu: boardOffersChoices({ statement: 'What would you like to practise today?' }) });
+    assert.deepEqual(cards.map((c) => [c.source, c.sentence]), [['checked', s1]]);
+  });
+  test('23E: menu detection — hasChoices, ≥ 2 markers, option acknowledgements', () => {
+    assert.equal(boardOffersChoices({ statement: MENU }), true);
+    assert.equal(boardOffersChoices({ statement: 'Pick one: A) a word B) a sentence' }), true);
+    assert.equal(boardOffersChoices({ statement: 'Have you worked for your current company for a long time?' }), false);
+    assert.equal(boardOffersChoices({ statement: 'Step 1) say it.' }), false);
+    assert.equal(boardOffersChoices({ hasChoices: true, statement: 'x' }), true);
+    assert.equal(boardOffersChoices(null), false);
+    assert.equal(acknowledgesOption(T1063), true);
+    assert.equal(acknowledgesOption('Great, you chose option two. Listen.'), true);
+    assert.equal(acknowledgesOption('Good sentence. Option 2 is next time.'), false);
+  });
+  test('23E: VTR passes the board problem as choiceMenu', () => {
+    const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+    assert.ok(vtr.includes('choiceMenu: boardOffersChoices(currentProblemRef.current ?? (() => {'));
   });
 }
 

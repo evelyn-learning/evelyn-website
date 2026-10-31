@@ -774,6 +774,22 @@ function fragmentOfChecked(tutorText: string, checked: string): string[] | null 
   return null;
 }
 
+/** Task 23 §E: the tutor's FIRST sentence acknowledges a menu option
+ *  ("Option 2, a complete sentence, let's do it.", "You chose option two."). */
+const OPTION_ACK_RE = /^\s*Option \d|\boption (?:one|two|three|four)\b/i;
+export function acknowledgesOption(tutorText: string | null | undefined): boolean {
+  const first = (tutorText ?? '').trim().split(/(?<=[.!?。！？])\s+/)[0] ?? '';
+  return OPTION_ACK_RE.test(first);
+}
+/** Task 23 §E: a board problem that offers choices — the tracked
+ *  `hasChoices`, or ≥ 2 list markers "1)" … "9)" / "A)" … "D)" in its
+ *  statement ("You can choose: 1) individual words, 2) a complete sentence, …"). */
+export function boardOffersChoices(problem: { hasChoices?: boolean; statement?: string } | null | undefined): boolean {
+  if (!problem) return false;
+  if (problem.hasChoices === true) return true;
+  return ((problem.statement ?? '').match(/\b(?:[1-9]|[A-D])\)/g) ?? []).length >= 2;
+}
+
 /** Task 23 §B2: the student's level-check answer as a card — each sentence
  *  cleaned like the checked card (fillers out, ≥ 4 Latin words, no question;
  *  cardableStudentSentence), the ones that pass joined in order ("Yes, I
@@ -817,6 +833,9 @@ export function planSentenceBoard(input: {
   /** Task 23 §B2: the current part is the level check (segment metadata
    *  `skipWhenLevelKnown`) — every spoken answer goes on the board. */
   levelCheck?: boolean;
+  /** Task 23 §E: the board's current problem offers choices (hasChoices, or
+   *  ≥ 2 "1)" / "A)" markers in its statement — boardOffersChoices). */
+  choiceMenu?: boolean;
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   const studentCorrect = input.studentCorrect === true;
@@ -935,6 +954,15 @@ export function planSentenceBoard(input: {
     if (own && !classified.some((c) => sameSentence(c.q.sentence, own))) {
       classified.push({ q: { sentence: own, kind: 'model', emphasis: [], source: 'levelcheck' }, len: norm(own).length, i: kept.length + 1, said: false, affirmed: false, introduced: false });
     }
+  }
+  // Task 23 §E (GDI run 11, 1063 s: "Yes, practice pronunciation of a
+  // complete sentence (option 2)." was checked correct and carded): the
+  // answer to a choice menu is a pick, not a sentence to learn — no echo /
+  // checked / affirmed / levelcheck card when the board offers choices or the
+  // tutor's first sentence acknowledges an option. Corrections and new model
+  // sentences (the drill's own sentence) still card.
+  if (input.choiceMenu === true || acknowledgesOption(input.tutorText)) {
+    for (let k = classified.length - 1; k >= 0; k--) if (classified[k]!.q.source) classified.splice(k, 1);
   }
   classified.sort((a, b) => {
     const ka = a.q.kind === 'correction' ? 0 : 1;
