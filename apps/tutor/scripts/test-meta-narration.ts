@@ -772,5 +772,10 @@ for (const t of [
   "Let me finish this sentence and move to the next one.",
 ]) check(`§D1 22 untouched: "${t}"`, stripNoteCitationClause(t) === t && !isMetaNarration(t));
 
+// ─── Task 22 fix round 1 (m6, m7) ───
+check('m6 "Ryota asks you to say it once more." untouched', stripNoteCitationClause('Ryota asks you to say it once more.', RYOTA) === 'Ryota asks you to say it once more.');
+check('m6 "Ryota suggests that we try again." untouched', stripNoteCitationClause('Ryota suggests that we try again.', RYOTA) === 'Ryota suggests that we try again.');
+check('m6 "Ryota asks: what did you sell?" → the question', stripNoteCitationClause('Ryota asks: what did you sell?', RYOTA) === 'What did you sell?');
+check('m6 a quote after "asks" loses the lead', stripNoteCitationClause('Ryota asks "What did you sell?"', RYOTA) === '"What did you sell?"');
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

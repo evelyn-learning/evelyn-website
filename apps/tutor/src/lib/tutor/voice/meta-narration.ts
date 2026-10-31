@@ -245,14 +245,22 @@ function isPersonaSelfAnnounce(s: string, personaName: string | readonly string[
 // the rest; a sentence that is only the lead goes. Persona names only
 // (opts.personaName; off without one) — "Ken says hello." is never touched.
 const PERSONA_LEAD_VERBS = '(?:explains|says|notes|adds|replies|responds|continues|answers|asks|suggests)';
+// Fix round 1 (m6): "Ryota asks you to say it once more." / "Ryota suggests
+// that we …" — asks / suggests take an object; their lead goes only before a
+// colon / comma or a quote.
+const PERSONA_LEAD_OBJECT_VERBS_RE = /^(?:asks|suggests)$/i;
 function stripPersonaLead(s: string, personaName: string | readonly string[] | null | undefined): string {
   const names = (Array.isArray(personaName) ? personaName : [personaName])
     .map((n) => (n ?? '').trim()).filter((n) => n.length >= 2 && n.length <= 60)
     .sort((a, b) => b.length - a.length);
   for (const n of names) {
     if (new RegExp(`^\\s*${escapeName(n)}\\s+${PERSONA_LEAD_VERBS}\\s*[:,.!]?\\s*$`, 'i').test(s)) return '';
-    const m = new RegExp(`^\\s*${escapeName(n)}\\s+${PERSONA_LEAD_VERBS}[:,]?\\s+`, 'i').exec(s);
-    if (m) return capitaliseFirst(s.slice(m[0].length));
+    const m = new RegExp(`^\\s*${escapeName(n)}\\s+(${PERSONA_LEAD_VERBS})([:,])?\\s+`, 'i').exec(s);
+    if (m) {
+      const rest = s.slice(m[0].length);
+      if (PERSONA_LEAD_OBJECT_VERBS_RE.test(m[1]!) && !m[2] && !/^["“「‘]/.test(rest)) return s;
+      return capitaliseFirst(rest);
+    }
   }
   return s;
 }
