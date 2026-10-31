@@ -1399,6 +1399,11 @@ test('22E r1 I3: held once per statement; a question asked back is a turn; a bar
   const lazy = vtr.slice(vtr.indexOf('const resolveStage2LazyVerdict = '), vtr.indexOf('const resolveStage2LazyVerdict = ') + 6000);
   assert.ok(/const lazyKilledTutor = inFlightBrainAbortRef\.current !== null;\s*if \(lazyKilledTutor\) \{\s*const cancelStage[^\n]*\n\s*runPerceptionKillRef\.current\?\.\(cancelStage\);/.test(lazy), 'the kill decision is captured');
   assert.ok(/void handleStudentTranscriptForBrain\(text, \{ bypassPerceptionDedupe: true, queueOnMidUtterance: true, \.\.\.\(lazyKilledTutor \? \{ stoppedTutor: true \} : \{\}\) \}\);/.test(lazy), 'stage-2 lazy abort passes stoppedTutor');
+  // fix round 2 (m1): a queued stoppedTutor dispatch keeps the flag on re-entry
+  assert.equal((vtr.match(/if \(opts\?\.stoppedTutor\) queuedStoppedTutorRef\.current = true;/g) ?? []).length, 2, 'both queue push sites remember it');
+  assert.equal((vtr.match(/const stuckStoppedTutor = queuedStoppedTutorRef\.current;\s*queuedStoppedTutorRef\.current = false;/g) ?? []).length, 2, 'drain timer + watchdog take it');
+  assert.equal((vtr.match(/void handleStudentTranscriptForBrain\(joined, \{ bypassPerceptionDedupe: true, \.\.\.\(stuckStoppedTutor \? \{ stoppedTutor: true \} : \{\}\) \}\);/g) ?? []).length, 2, 'both re-entries pass it');
+  assert.equal((vtr.match(/handleStudentTranscriptForBrain\(joined, \{ bypassPerceptionDedupe: true \}\)/g) ?? []).length, 0, 'no bare re-entry left');
 });
 test('22E VTR holds a read-aloud before the brain dispatch (pin)', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');

@@ -3965,6 +3965,11 @@ export function VoiceTutorRealtime({
   // keep, so a valid render the student asked for doesn't vanish).
   const winningAttemptRenderedRef = useRef(false);
   const queuedTranscriptsRef = useRef<string[]>([]);
+  // Task 22 fix round 2 (m1): a queued transcript came from a dispatch that
+  // stopped the tutor (stoppedTutor) — the drain-guarantee timer and the 90 s
+  // watchdog requeue re-enter with it so the board read-aloud hold still skips
+  // it. Cleared whenever the queue is taken.
+  const queuedStoppedTutorRef = useRef(false);
   // GreenApple round-2 Task 9: uploaded images waiting to be attached as a
   // LIVE-ONLY thumbnail to the student transcript entry their dispatch
   // produces. Keyed by the dispatched (trimmed) transcript text rather than
@@ -22303,6 +22308,7 @@ export function VoiceTutorRealtime({
           return;
         }
         queuedTranscriptsRef.current.push(transcript);
+        if (opts?.stoppedTutor) queuedStoppedTutorRef.current = true;
         // Issue E fix-round-1: this ref tracks the shared queue's true last-
         // push time regardless of which of the two push sites wrote the
         // entry — the busy-branch coalesce check below reads it to decide
@@ -22337,6 +22343,8 @@ export function VoiceTutorRealtime({
               return;
             }
             const stuck = queuedTranscriptsRef.current.splice(0);
+            const stuckStoppedTutor = queuedStoppedTutorRef.current;
+            queuedStoppedTutorRef.current = false;
             // Final-review Finding 2, defense-in-depth: the push sites already
             // keep '['-prefixed synthetic markers out of this queue — filter
             // again here so a marker can never be concatenated into text that
@@ -22350,7 +22358,7 @@ export function VoiceTutorRealtime({
             // orchestrator-authored re-dispatch (RESTORE/MERGE/FRESH,
             // watchdog requeue) — this is a synthetic internal drain, not
             // a fresh perception event.
-            void handleStudentTranscriptForBrain(joined, { bypassPerceptionDedupe: true });
+            void handleStudentTranscriptForBrain(joined, { bypassPerceptionDedupe: true, ...(stuckStoppedTutor ? { stoppedTutor: true } : {}) });
           };
           queueMidUtteranceDrainTimerRef.current = setTimeout(checkQueueDrain, 4_000);
         }
@@ -22507,6 +22515,7 @@ export function VoiceTutorRealtime({
       }
       console.log('[brain-orchestrator] queued (brain busy):', JSON.stringify(transcript).slice(0, 80));
       queuedTranscriptsRef.current.push(transcript);
+      if (opts?.stoppedTutor) queuedStoppedTutorRef.current = true;
       queuedTranscriptCoalesceAtRef.current = Date.now();
       return;
     }
@@ -22565,6 +22574,8 @@ export function VoiceTutorRealtime({
         // this is a synthetic internal re-fire, not a fresh perception
         // event, so the perception-dedupe suppression slot must not apply).
         const stuck = queuedTranscriptsRef.current.splice(0);
+        const stuckStoppedTutor = queuedStoppedTutorRef.current;
+        queuedStoppedTutorRef.current = false;
         setBrainBusy(false);
         onDebugEvent?.('brain_watchdog_reset', '90s timeout');
         if (stuck.length > 0) {
@@ -22579,7 +22590,7 @@ export function VoiceTutorRealtime({
             // brainBusyRef synchronously) so this re-fire lands as a fresh
             // dispatch rather than being swallowed by the busy check and
             // queued right back onto the ref we just cleared.
-            void handleStudentTranscriptForBrain(joined, { bypassPerceptionDedupe: true });
+            void handleStudentTranscriptForBrain(joined, { bypassPerceptionDedupe: true, ...(stuckStoppedTutor ? { stoppedTutor: true } : {}) });
           }
         }
       }
@@ -22749,6 +22760,7 @@ export function VoiceTutorRealtime({
         // can never concatenate one into text the brain (and the student
         // chat bubble) sees as genuine speech.
         const all = queuedTranscriptsRef.current.splice(0).filter((s) => !s.startsWith('['));
+        queuedStoppedTutorRef.current = false;
         // R32 Task 5 (review round 1): every entry here is a genuine
         // student-originated dispatch — the cutoff-resume marker is
         // staged in pendingCutoffResumeRef, never pushed onto this queue
