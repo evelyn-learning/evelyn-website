@@ -1664,7 +1664,22 @@ export function VoiceTutorRealtime({
   // replacement's paint — put back if that replacement is retracted unpainted
   // (the card never left the board). Keyed by the auto card's id.
   const sentenceBoardReplacedPriorsRef = useRef<Map<string, { mirrorCmd: unknown; mirrorIndex: number; byId: unknown; catalogItem: CatalogItem | undefined }>>(new Map());
+  // Task 22 fix round 1 (m4): brain show_sentence cards that PAINTED as the
+  // replacement of an auto card (their prior already left) — a later kill
+  // rollback keeps them: the sentence belongs on the board either way.
+  const sentenceBoardPaintedReplacementsRef = useRef<Set<string>>(new Set());
+  const keepPaintedSentenceReplacements = (ids: string[], how: string): string[] => {
+    const kept = ids.filter((id) => sentenceBoardPaintedReplacementsRef.current.has(id));
+    if (kept.length === 0) return ids;
+    onWhiteboardCommandProp([{ action: 'reviseItems', ids: kept, revising: false }]);
+    onDebugEventRef.current?.('sentence_board_auto_replace_kept', `${kept.join(',')} (painted replacement kept on ${how})`);
+    return ids.filter((id) => !sentenceBoardPaintedReplacementsRef.current.has(id));
+  };
   const onWhiteboardCommand = useCallback((commands: WhiteboardCommand[], meta?: WhiteboardBatchMeta) => {
+    for (const c of commands) {
+      const cid = (c as { id?: unknown }).id;
+      if (typeof cid === 'string' && deferredRemovalsRef.current.get(cid)?.keepPriorOnDrop) sentenceBoardPaintedReplacementsRef.current.add(cid);
+    }
     const owed = takeRemovalsForBatch(deferredRemovalsRef.current, commands);
     if (owed.length > 0) onWhiteboardCommandProp([{ action: 'removeItems', ids: owed }]);
     for (const id of owed) sentenceBoardReplacedPriorsRef.current.delete(id);
@@ -13239,7 +13254,7 @@ export function VoiceTutorRealtime({
       // by the existing retry/give-up cleanup, so its attached
       // whiteboardCommands go with it — no transcript work needed here.
       const rollbackKilledRenders = (ids: string[]): void => {
-        const unique = Array.from(new Set(ids.filter(Boolean)));
+        const unique = keepPaintedSentenceReplacements(Array.from(new Set(ids.filter(Boolean))), 'kill rollback');
         if (unique.length === 0) return;
         const idSet = new Set(unique);
         onWhiteboardCommand([{ action: 'removeItems', ids: unique }]);
@@ -21632,7 +21647,8 @@ export function VoiceTutorRealtime({
         const staleIds = [...pendingRevisionRef.current];
         pendingRevisionRef.current = new Set();
         // Hard-remove deferred ids off the board + mirror + id-map + catalog.
-        const sweepDeferred = (ids: string[]): void => {
+        const sweepDeferred = (allIds: string[]): void => {
+          const ids = keepPaintedSentenceReplacements(allIds, 'deferred sweep');
           if (ids.length === 0) return;
           onWhiteboardCommand([{ action: 'removeItems', ids }]);
           const idSet = new Set(ids);

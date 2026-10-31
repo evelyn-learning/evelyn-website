@@ -135,5 +135,14 @@ test('VTR: dropped and never-painted replacements release their prior', () => {
   assert.equal((vtr.match(/takeStaleRemovals\(deferredRemovalsRef\.current, Date\.now\(\)\)/g) ?? []).length, 0, 'no unfiltered sweep left');
 });
 
+test('22 r1 m4 VTR: a painted sentence-board replacement survives a later kill rollback / deferred sweep', () => {
+  const w = vtr.slice(vtr.indexOf('const onWhiteboardCommand = useCallback('), vtr.indexOf('}, [onWhiteboardCommandProp]);'));
+  assert.match(w, /deferredRemovalsRef\.current\.get\(cid\)\?\.keepPriorOnDrop\) sentenceBoardPaintedReplacementsRef\.current\.add\(cid\);/);
+  assert.ok(w.indexOf('sentenceBoardPaintedReplacementsRef.current.add(cid)') < w.indexOf('takeRemovalsForBatch('), 'recorded before the entry is taken');
+  assert.match(vtr, /const unique = keepPaintedSentenceReplacements\(Array\.from\(new Set\(ids\.filter\(Boolean\)\)\), 'kill rollback'\);/);
+  assert.match(vtr, /const sweepDeferred = \(allIds: string\[\]\): void => \{\s*const ids = keepPaintedSentenceReplacements\(allIds, 'deferred sweep'\);/);
+  assert.match(vtr, /'sentence_board_auto_replace_kept', `\$\{kept\.join\(','\)\} \(painted replacement kept on \$\{how\}\)`/);
+});
+
 console.log(`\n${passed}/${passed + failed} passed`);
 if (failed > 0) process.exit(1);
