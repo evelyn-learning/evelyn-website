@@ -404,6 +404,25 @@ export function stripLeakedLabels(sentence: string, personaNames?: string | read
 // the board.", "Here is the next question." are speech and survive.
 const DIRECTIVE_ECHO_RE =
   /\bas the (?:session|lesson|notes?|instructions?|prompt|guidelines?) (?:asks?|says?|requires?|wants?|suggests?)\b|^\s*Keep it (?:brief|short)\b|\b(?:use|in) Japanese for the explanation\b/i;
+// Task 27 §D1 (GDI run 14, 840–886 s): a continuation / retry turn SPOKE its
+// directive — "Hmm, I need to be careful: the last thing I said was a
+// correction, so …", "Confirm plainly and move on: the next question is about
+// …, and it's a good moment to ask …". Whole-sentence drops: a first-person
+// caution about the tutor's own last turn, an imperative lead with a colon
+// (the note's own shape — "Confirm your booking: …" is no tutor sentence),
+// "it's a good moment to", and a note-shaped "The next question is about …,
+// and it's …". Second-person advice ("Be careful with the article.") and the
+// questions themselves survive.
+const DIRECTIVE_ECHO_NOTE_RE = new RegExp(
+  [
+    String.raw`^\s*(?:Hmm,?\s*)?I (?:need|have) to be careful\b`,
+    String.raw`\bthe last thing I said was an? \w+\b`,
+    String.raw`^\s*(?:Confirm|Acknowledge|Affirm|Reply|Respond|Answer)(?: plainly| briefly| in one sentence)?(?: and move on)?\s*:`,
+    String.raw`\bit['’]s a good moment to\b`,
+    String.raw`^\s*(?:The|My) next question is about\b[^.!?]*\b(?:and|so) it['’]s\b`,
+  ].join('|'),
+  'i',
+);
 const THIRD_PERSON_PLAN_ANYWHERE_RE =
   /\bI(?:['’]ll| will) (?:ask|tell|have|get|let|help|guide|remind|prompt) (?:them|the student|the learner)\b/i;
 const BOARD_ALREADY_NARRATION_RE =
@@ -682,7 +701,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

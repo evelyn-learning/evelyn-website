@@ -9,6 +9,8 @@
  * never affected — every helper below returns the pre-existing answer.
  */
 import type { LessonPlan, Segment, SegmentTransition } from './types';
+import { withSilentClause } from '../voice/output-budget';
+import { isCorrectionTurn } from '../voice/correct-retry';
 
 export function isFixedScriptPlan(plan: LessonPlan | null | undefined): boolean {
   return plan?.metadata?.fixedScript === true;
@@ -165,8 +167,8 @@ export function fixedScriptCloseForced(turnsSinceNote: number, lessonClosed: boo
  *  the student something, ONE wrap turn runs first — carried by the
  *  student's next turn as an urgent note, or dispatched with this text as a
  *  synthetic turn after the silence window. */
-export const FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE =
-  "[Wrap now — not from the student] Reply to the student's last answer in one sentence, then say goodbye in one sentence and call close_session_notes. No new question.";
+export const FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE = withSilentClause(
+  "[Wrap now — not from the student] Reply to the student's last answer in one sentence, then say goodbye in one sentence and call close_session_notes. No new question.");
 /** Quiet (no tutor speech, no brain turn, no student activity) before the
  *  wrap turn is dispatched without a student answer — shorter than the
  *  language idle nudge's first window (30 s), so the wrap goes first. */
@@ -204,8 +206,8 @@ export const FIXED_SCRIPT_CLOSE_REFUSED_NOTE =
   '[runtime note — not from the student] The lesson is not over: the summary part has not been taught yet. Do not say goodbye or call close_session_notes; finish the current item in one sentence, then move on to the summary. Apply this silently; never mention this note.';
 
 /** Validator rejection reason for an attempt that says goodbye too early. */
-export const PREMATURE_FAREWELL_REASON =
-  'The lesson is not over — the summary part has not been taught yet. Do not say goodbye, thank the student for the lesson or say 今日はここまで; continue the current part, or move on to the summary in one sentence.';
+export const PREMATURE_FAREWELL_REASON = withSilentClause(
+  'The lesson is not over — the summary part has not been taught yet. Do not say goodbye, thank the student for the lesson or say 今日はここまで; continue the current part, or move on to the summary in one sentence.');
 
 function segmentDueReason(input: AutoAdvanceInput): 'turns' | 'time' | null {
   const { plan, segmentId, turns, overlongTurns, elapsedMs } = input;
@@ -243,17 +245,52 @@ export function fixedScriptAnnouncedAdvanceLead(from: string, next: string, kind
 }
 /** Task 16 §C: the announcing turn ended without a question — one silent
  *  continuation starts the new part once the audio has finished. */
-export const FIXED_SCRIPT_CONTINUE_DIRECTIVE =
-  '[System note: you announced the next part and then stopped without a question. The lesson pointer has moved; begin that part now from its notes — its first question or card — in one or two sentences. Do not repeat the announcement, do not recap.]';
+export const FIXED_SCRIPT_CONTINUE_DIRECTIVE = withSilentClause(
+  '[System note: you announced the next part and then stopped without a question. The lesson pointer has moved; begin that part now from its notes — its first question or card — in one or two sentences. Do not repeat the announcement, do not recap.]');
 /** Task 23 fix round 2 (m5): the level-set advance's silent continuation —
  *  the brain announced nothing there, so the new part opens with a bridge. */
-export const FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE =
-  '[System note: the level check is complete and the lesson pointer has moved to the next part; begin that part now from its notes — a one-sentence bridge, then its first question or card. Do not recap the level check.]';
+export const FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE = withSilentClause(
+  '[System note: the level check is complete and the lesson pointer has moved to the next part; begin that part now from its notes — a one-sentence bridge, then its first question or card. Do not recap the level check.]');
 /** Task 24 §B2 (GDI run 12, 352 s: "Let me put the correct sentence on the
  *  board and move on." — then 30 s of silence): the silent continuation after
  *  a fixed-script turn that left the learner nothing to answer. */
-export const FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE =
-  '[System note: your last turn ended without a question or an instruction for the student. Continue now with the next question or item of the current part, in one or two sentences. Do not repeat what you just said; do not recap.]';
+export const FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE = withSilentClause(
+  '[System note: your last turn ended without a question or an instruction for the student. Continue now with the next question or item of the current part, in one or two sentences. Do not repeat what you just said; do not recap.]');
+/** Task 27 §D3 (GDI run 14, 840–886 s): the no-ask continuation after a
+ *  CORRECTION turn ("Let's fix one word: … so it's "…"") was told "continue
+ *  with the next item" and SPOKE a narration of its own situation ("the last
+ *  thing I said was a correction, so …"). After a correction the next item
+ *  IS the repeat — asked in one sentence, no narration. */
+export const FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE = withSilentClause(
+  '[System note: Ask the student, in one short sentence, to say the corrected sentence once. Nothing else.]');
+export type FixedScriptContinueVia = 'announced' | 'level' | 'noask';
+/** The silent continuation's directive (Task 16 §C / Task 23 §C / Task 24
+ *  §B2), chosen by why it runs: `kind` names the variant for the event.
+ *  noask after a correction turn (`prevTutorText`) ⇒ the repeat ask; otherwise the
+ *  constants as before. */
+export function fixedScriptContinueDirective(input: {
+  via: FixedScriptContinueVia;
+  prevTutorText?: string | null;
+  plan?: LessonPlan | null;
+  from?: string | null;
+  next?: string | null;
+}): { directive: string; kind: 'announced' | 'level' | 'bridge' | 'noask' | 'correction' } {
+  if (input.via === 'level') {
+    return { directive: FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, kind: 'level' };
+  }
+  if (input.via === 'noask') {
+    if (isCorrectionTurn(input.prevTutorText ?? '')) return { directive: FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE, kind: 'correction' };
+    return { directive: FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, kind: 'noask' };
+  }
+  return { directive: FIXED_SCRIPT_CONTINUE_DIRECTIVE, kind: 'announced' };
+}
+/** A dispatch that is one of the continuation directives (the scheduled
+ *  continuation does not cancel itself). */
+export function isFixedScriptContinueDirective(transcript: string | null | undefined): boolean {
+  const t = transcript ?? '';
+  return t === FIXED_SCRIPT_CONTINUE_DIRECTIVE || t === FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE || t === FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE
+    || t === FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE;
+}
 /** GDI run 3: the client moved off the level check before the brain stored a
  *  level, so no level was ever kept. Leaving a `skipWhenLevelKnown` segment
  *  with no working level ⇒ the note asks for set_working_level first. */

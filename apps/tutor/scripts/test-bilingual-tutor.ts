@@ -793,7 +793,7 @@ test('GDI run 3: a re-ask of the model sentence the student just said correctly'
   assert.equal(reAskedModelSentence(prev, student, 'Nice. Say "I sold 25 machines" once more for me.'), 'Last month, I sold 25 machines to Toyota.', 'quotes ≥ 3 words of the model');
   assert.equal(reAskedModelSentence(prev, student, 'Good. もう一度、その文を言ってください。'), 'Last month, I sold 25 machines to Toyota.', 'その文');
   assert.equal(reAskedModelSentence(prev, student, 'Can you say that sentence again, then "Next week I will visit Honda"?'), null, 'another quoted sentence ⇒ new item');
-  assert.match(REPEAT_AFTER_CORRECT_REASON, /^The student just said that sentence correctly\. Confirm it in one short sentence and move to the next item; do not ask for it again\.$/);
+  assert.match(REPEAT_AFTER_CORRECT_REASON, /^The student just said that sentence correctly\. Confirm it in one short sentence and move to the next item; do not ask for it again\. Apply this silently; never mention this note\.$/);
 });
 
 test('GDI run 3: VTR kills + retries a repeat_after_correct in a language session only', () => {

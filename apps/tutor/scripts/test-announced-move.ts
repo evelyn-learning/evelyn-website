@@ -9,7 +9,11 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation } from '../src/lib/tutor/lesson-plan/announced-move';
-import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, isFixedScriptContinueDirective, fixedScriptContinueDirective, FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE,
+  FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { TRANSITION_ASK_REASON } from '../src/lib/tutor/lesson-plan/transition-ask';
+import { REPEAT_ASK_THIRD_VERSION_REASON, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, REASKED_QUESTION_NOTE, REASKED_EARLIER_QUESTION_NOTE, ALREADY_ANSWERED_NOTE, isCorrectionTurn } from '../src/lib/tutor/voice/correct-retry';
+import { SILENT_NOTE_CLAUSE, withSilentClause, outputBudgetNote } from '../src/lib/tutor/voice/output-budget';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
 let failed = 0;
@@ -152,15 +156,17 @@ test('review I-3: drills are not announcements; 次は + keyword + copula is', (
   assert.ok(!MOVE_PHRASE_RE.test("Let's do the next one"));
 });
 test('C: the directive is the brief text', () => {
-  assert.equal(FIXED_SCRIPT_CONTINUE_DIRECTIVE, '[System note: you announced the next part and then stopped without a question. The lesson pointer has moved; begin that part now from its notes — its first question or card — in one or two sentences. Do not repeat the announcement, do not recap.]');
+  assert.equal(FIXED_SCRIPT_CONTINUE_DIRECTIVE, '[System note: you announced the next part and then stopped without a question. The lesson pointer has moved; begin that part now from its notes — its first question or card — in one or two sentences. Do not repeat the announcement, do not recap. Apply this silently; never mention this note.]');
 });
 test('C: VTR — scheduled once per segment on an announced advance, dispatched silently, cancelled by any other dispatch and on unmount', () => {
   pin(VTR, /if \(advanceReason === 'announced' && announcedTurnNeedsContinuation\(fullText\) && !announcedContinuedSegsRef\.current\.has\(autoNext\)\) \{\s*announcedContinuedSegsRef\.current\.add\(autoNext\);/);
   pin(VTR, /const speaking = productionStateRef\.current === 'speaking';/);
   // Task 23 §C: the scheduler is shared with the level-set advance (event per path).
-  pin(VTR, /onDebugEvent\?\.\(via === 'level' \? 'fixed_script_level_continue' : via === 'noask' \? 'fixed_script_noask_continue' : 'fixed_script_announced_continue', `"\$\{contTarget\}" waited=\$\{waitedMs\}ms`\);\s*void handleStudentTranscriptForBrainRef\.current\?\.\(via === 'level' \? FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE : via === 'noask' \? FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE : FIXED_SCRIPT_CONTINUE_DIRECTIVE, \{ silent: true, bypassPerceptionDedupe: true \}\);/);
+  // Task 27 §D3/§I: the directive comes from fixedScriptContinueDirective (the caller's choice, else the via's constant).
+  pin(VTR, /const contChoice = cont \?\? fixedScriptContinueDirective\(\{ via \}\);/);
+  pin(VTR, /onDebugEvent\?\.\(via === 'level' \? 'fixed_script_level_continue' : via === 'noask' \? 'fixed_script_noask_continue' : 'fixed_script_announced_continue', `\$\{contChoice\.kind === 'correction' \|\| contChoice\.kind === 'bridge' \? `\$\{contChoice\.kind\} ` : ''\}"\$\{contTarget\}" waited=\$\{waitedMs\}ms`\);\s*void handleStudentTranscriptForBrainRef\.current\?\.\(contChoice\.directive, \{ silent: true, bypassPerceptionDedupe: true \}\);/);
   pin(VTR, /announcedContinuedSegsRef\.current\.add\(autoNext\);\s*scheduleFixedScriptContinueRef\.current\(autoNext, 'announced'\);/);
-  pin(VTR, /if \(announcedContinueTimerRef\.current && transcript !== FIXED_SCRIPT_CONTINUE_DIRECTIVE && transcript !== FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE && transcript !== FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE\) \{\s*clearTimeout\(announcedContinueTimerRef\.current\);/);
+  pin(VTR, /if \(announcedContinueTimerRef\.current && !isFixedScriptContinueDirective\(transcript\)\) \{\s*clearTimeout\(announcedContinueTimerRef\.current\);/);
   const unmount = VTR.indexOf('// Student marks + tutor reactions: clear armed idle-send timers on unmount.');
   pin(VTR.slice(unmount, unmount + 2000), /clearTimeout\(announcedContinueTimerRef\.current\)/);
   // review I-1/I-2: guard set + turn sequence + drain-loop clear
@@ -199,13 +205,13 @@ test('23C: level advance + a turn that asks nothing → continue; a question →
 });
 test('23C: VTR — the level advance records its target and the turn end schedules the shared continuation', () => {
   pin(VTR, /onDebugEvent\?\.\('fixed_script_level_advance', `"\$\{lvFrom\}" → "\$\{lvNext\}"`\);\s*levelAdvanceThisTurnRef\.current = lvNext;/);
-  pin(VTR, /announcedContinuedSegsRef\.current\.add\(lvTarget\);\s*scheduleFixedScriptContinueRef\.current\(lvTarget, 'level'\);/);
+  pin(VTR, /announcedContinuedSegsRef\.current\.add\(lvTarget\);\s*\/\/[^\n]*\n\s*scheduleFixedScriptContinueRef\.current\(lvTarget, 'level', fixedScriptContinueDirective\(\{ via: 'level', plan: lessonPlanRef\.current, from: lvFromForCont, next: lvTarget \}\)\);/);
   pin(VTR, /levelAdvanceThisTurnRef\.current = '';/);
   // the same cancel rules: the shared timer is cleared by any other dispatch
-  pin(VTR, /if \(announcedContinueTimerRef\.current && transcript !== FIXED_SCRIPT_CONTINUE_DIRECTIVE && transcript !== FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE && transcript !== FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE\) \{/);
+  pin(VTR, /if \(announcedContinueTimerRef\.current && !isFixedScriptContinueDirective\(transcript\)\) \{/);
 });
 test('23 r2 m5: the level-set continuation has its own directive; the announced one is unchanged', () => {
-  assert.equal(FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, '[System note: the level check is complete and the lesson pointer has moved to the next part; begin that part now from its notes — a one-sentence bridge, then its first question or card. Do not recap the level check.]');
+  assert.equal(FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, '[System note: the level check is complete and the lesson pointer has moved to the next part; begin that part now from its notes — a one-sentence bridge, then its first question or card. Do not recap the level check. Apply this silently; never mention this note.]');
   assert.ok(FIXED_SCRIPT_CONTINUE_DIRECTIVE.startsWith('[System note: you announced the next part'));
 });
 
@@ -220,14 +226,51 @@ test('24B2: the 355 s statement turn (show_sentence only) → continue; advance 
   assert.equal(noAskTurnNeedsContinuation({ ...base, closing: true }), false, 'closing');
   assert.equal(noAskTurnNeedsContinuation({ ...base, pronunciationArmed: true }), false, 'clip armed');
   assert.equal(noAskTurnNeedsContinuation({ ...base, fixedScript: false }), false, 'not a fixed script');
-  assert.equal(FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, '[System note: your last turn ended without a question or an instruction for the student. Continue now with the next question or item of the current part, in one or two sentences. Do not repeat what you just said; do not recap.]');
+  assert.equal(FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, '[System note: your last turn ended without a question or an instruction for the student. Continue now with the next question or item of the current part, in one or two sentences. Do not repeat what you just said; do not recap. Apply this silently; never mention this note.]');
 });
 test('24B2: VTR — the turn end schedules the noask continuation on the shared scheduler; the directive does not cancel it', () => {
-  pin(VTR, /if \(noaskSeg\) scheduleFixedScriptContinueRef\.current\(noaskSeg, 'noask'\);/);
+  pin(VTR, /if \(noaskSeg\) scheduleFixedScriptContinueRef\.current\(noaskSeg, 'noask', fixedScriptContinueDirective\(\{ via: 'noask', prevTutorText: fullText \}\)\);/);
   pin(VTR, /via === 'noask' \? 'fixed_script_noask_continue_dropped'/);
   pin(VTR, /via === 'noask' \? 'fixed_script_noask_continue' : 'fixed_script_announced_continue'/);
-  pin(VTR, /transcript !== FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE && transcript !== FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE\) \{/);
+  pin(VTR, /announcedContinueTimerRef\.current && !isFixedScriptContinueDirective\(transcript\)\) \{/);
+  for (const d of [FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE]) assert.ok(isFixedScriptContinueDirective(d));
   pin(VTR, /closing: lessonClosedRef\.current \|\| farewellSealedRef\.current \|\| fixedScriptCloseRef\.current != null,/);
+});
+
+// Task 27 §D2: every synthetic directive / validator retry directive ends with the output-budget note's silent clause.
+test('27D2: each directive ends with "Apply this silently; never mention this note." (before a closing bracket)', () => {
+  assert.equal(SILENT_NOTE_CLAUSE, 'Apply this silently; never mention this note.');
+  assert.ok(outputBudgetNote(220).endsWith(SILENT_NOTE_CLAUSE));
+  const all: Record<string, string> = {
+    FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE,
+    FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON,
+    TRANSITION_ASK_REASON, REPEAT_ASK_THIRD_VERSION_REASON, REPEAT_AFTER_CORRECT_REASON,
+    OWN_SENTENCE_RETRY_NOTE, REASKED_QUESTION_NOTE, REASKED_EARLIER_QUESTION_NOTE, ALREADY_ANSWERED_NOTE,
+  };
+  for (const [k, v] of Object.entries(all)) assert.ok(v.replace(/\]$/, '').endsWith(SILENT_NOTE_CLAUSE), k);
+  // bracketed whole stays bracketed whole (the client's silent-transcript test)
+  for (const v of [FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE]) assert.ok(v.startsWith('[') && v.endsWith(']'), v);
+  assert.equal(withSilentClause('[System note: x.]'), '[System note: x. Apply this silently; never mention this note.]');
+  assert.equal(withSilentClause(withSilentClause('Do y.')), 'Do y. Apply this silently; never mention this note.');
+});
+// Task 27 §D3 (GDI run 14, 840–854 s): the no-ask continuation after a correction asks for the repeat, no narration.
+test('27D3: correction turn → the repeat directive; plain statement → the existing continue directive', () => {
+  const T60 = 'Good, you handled it by writing an email to everyone. Let\'s fix one word: "pleading" should be "inviting," so it\'s "I wrote an email inviting everyone to come and listen to me."';
+  assert.equal(isCorrectionTurn(T60), true);
+  const c = fixedScriptContinueDirective({ via: 'noask', prevTutorText: T60 });
+  assert.equal(c.kind, 'correction');
+  assert.equal(c.directive, '[System note: Ask the student, in one short sentence, to say the corrected sentence once. Nothing else. Apply this silently; never mention this note.]');
+  for (const t of ['The natural form is "I have worked here for three years."', 'Small fix: we say "I went to the office yesterday."']) {
+    assert.equal(fixedScriptContinueDirective({ via: 'noask', prevTutorText: t }).kind, 'correction', t);
+  }
+  for (const t of ['Let me put the correct sentence on the board and move on.', 'Good, "I work in the sales department" is a clear sentence.', 'That should be fun.']) {
+    const p = fixedScriptContinueDirective({ via: 'noask', prevTutorText: t });
+    assert.equal(p.kind, 'noask', t);
+    assert.equal(p.directive, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE);
+  }
+  assert.equal(fixedScriptContinueDirective({ via: 'announced' }).directive, FIXED_SCRIPT_CONTINUE_DIRECTIVE);
+  assert.ok(isFixedScriptContinueDirective(FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE));
+  assert.ok(!isFixedScriptContinueDirective('I wrote an email.'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

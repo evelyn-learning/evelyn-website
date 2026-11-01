@@ -19,9 +19,10 @@
  * Pure. Generic: no topic words.
  */
 import { lastAskSentence, lastQuestionSentence, turnEndsWithAsk } from '../question-gist-text';
+import { withSilentClause } from '../voice/output-budget';
 
-export const TRANSITION_ASK_REASON =
-  "The lesson has moved to the next part. Reply to the student's last answer in ONE sentence with no follow-up question about it, then present the new part's card and end with that part's own question.";
+export const TRANSITION_ASK_REASON = withSilentClause(
+  "The lesson has moved to the next part. Reply to the student's last answer in ONE sentence with no follow-up question about it, then present the new part's card and end with that part's own question.");
 
 const STOPWORDS = new Set([
   'the', 'and', 'but', 'for', 'nor', 'yet', 'not', 'are', 'was', 'were', 'has', 'have', 'had', 'been', 'being',

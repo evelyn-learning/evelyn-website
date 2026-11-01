@@ -857,5 +857,23 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   check('25A5: another name is not a persona label', stripLeakedLabels('Ken: hello', ['Ryota']) === 'Ken: hello');
 }
 
+{
+  // Task 27 §D1 (GDI run 14, 854 / 885 s): the continuation / retry turn spoke its directive.
+  const spoken = [
+    "Hmm, I need to be careful: the last thing I said was a correction, so I'd like you to say the sentence again.",
+    'Confirm plainly and move on: the next question is about how the project went, and it\'s a good moment to ask a short follow-up about the result.',
+    'I have to be careful here.',
+    'The last thing I said was a question.',
+    'Acknowledge briefly: the student answered.',
+    'Reply in one sentence: say it is right.',
+    "The next question is about the result, so it's time to ask it.",
+    "Now it's a good moment to ask about the result.",
+  ];
+  for (const x of spoken) check(`27D1: "${x}" → dropped`, isMetaNarration(x));
+  for (const x of ['Could you try it once more?', 'Now, how did people respond to your email?', 'Be careful with the article.', 'Please be careful with "the".', 'The next question is about your project.', 'Confirm your answer with a full sentence.']) {
+    check(`27D1: "${x}" kept`, !isMetaNarration(x));
+  }
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

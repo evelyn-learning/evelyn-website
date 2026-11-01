@@ -20,6 +20,8 @@ import { isRetryAsk } from './retry-cap';
 import { extractQuotedSentences } from './sentence-board';
 import { FILLER_TOKENS, dropFillersAndRepeats } from './filler-repeats';
 import { normaliseNumberTokens } from './number-tokens';
+import { withSilentClause } from './output-budget';
+import { hasCorrectionCue } from './sentence-board';
 
 export { dropFillersAndRepeats };
 
@@ -168,8 +170,19 @@ export function repeatAskThirdVersion(input: {
   return isRepeatAskForThirdVersion(input.attemptText ?? '');
 }
 /** The directive the killed attempt's retry gets. */
-export const REPEAT_ASK_THIRD_VERSION_REASON =
-  'The student has already tried this sentence twice. Accept their attempt in one sentence (say the natural form once if you must), then continue with your next question. Do not ask them to say it again.';
+export const REPEAT_ASK_THIRD_VERSION_REASON = withSilentClause(
+  'The student has already tried this sentence twice. Accept their attempt in one sentence (say the natural form once if you must), then continue with your next question. Do not ask them to say it again.');
+
+/** Task 27 §D3: a tutor turn that CORRECTS the student — a quoted model
+ *  sentence (3+ words) with a correction cue ("should be", "so it's", "the
+ *  natural form is", "let's fix", or sentence-board's hasCorrectionCue). */
+const CORRECTION_TURN_CUE_RE = /\b(?:should be|so it['’]s|the natural (?:form|way)\b[^.!?]*\bis|let['’]s fix|the correct (?:form|sentence) is)\b/i;
+const QUOTED_MODEL_RE = /["“「]\s*[A-Za-z][^"”」]*?(?:\s+[A-Za-z'’,-]+){2,}[^"”」]*["”」]/;
+export function isCorrectionTurn(text: string | null | undefined): boolean {
+  const t = text ?? '';
+  if (!QUOTED_MODEL_RE.test(t)) return false;
+  return CORRECTION_TURN_CUE_RE.test(t) || hasCorrectionCue(t);
+}
 
 /** Task 19 §A5: "starting with / begin with "…"" — the verb phrase leads into
  *  an opening quote within 20 chars, no sentence break between. */
@@ -528,8 +541,8 @@ export function reAskedModelSentence(prevTutorText: string, studentText: string,
 }
 
 /** Language sessions: the validator rejection (kill + retry) for such a re-ask. */
-export const REPEAT_AFTER_CORRECT_REASON =
-  'The student just said that sentence correctly. Confirm it in one short sentence and move to the next item; do not ask for it again.';
+export const REPEAT_AFTER_CORRECT_REASON = withSilentClause(
+  'The student just said that sentence correctly. Confirm it in one short sentence and move to the next item; do not ask for it again.');
 
 export const OWN_SENTENCE_RETRY_NOTE =
   '[runtime note — not from the student] Your last turn asked the student to say a sentence they had JUST said, in those words. ' +

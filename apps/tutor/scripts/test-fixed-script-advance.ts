@@ -642,7 +642,7 @@ test('26B1: fixedScriptCloseForcedAction — a question ⇒ wrap-turn; no questi
   assert.equal(fixedScriptCloseForcedAction({ ...b, lessonClosed: true, tutorText: q }), 'none');
 });
 test('26B1: the wrap directive (brief text) and the poll — carried by the next turn, fired after the quiet window; the 45 s bound overrides only a stale speech state', () => {
-  assert.equal(FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, "[Wrap now — not from the student] Reply to the student's last answer in one sentence, then say goodbye in one sentence and call close_session_notes. No new question.");
+  assert.equal(FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, "[Wrap now — not from the student] Reply to the student's last answer in one sentence, then say goodbye in one sentence and call close_session_notes. No new question. Apply this silently; never mention this note.");
   assert.equal(FIXED_SCRIPT_CLOSE_WRAP_MAX_MS, 45_000);
   assert.ok(FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS <= 30_000 && FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS < FIXED_SCRIPT_CLOSE_WRAP_MAX_MS);
   const p = { elapsedMs: 1000, quietMs: 1000, ended: false, turnSeqChanged: false, brainBusy: false, studentActive: false, suspended: false };

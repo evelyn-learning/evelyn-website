@@ -91,13 +91,27 @@ export function requiredPhraseMissAction(input: { missing: readonly string[]; st
   return input.stoppedOnMaxTokens ? 'defer' : 'kill';
 }
 
+/** Task 27 §D2: the closing sentence of every bracketed note / synthetic
+ *  directive the client sends the brain (one shared constant). */
+export const SILENT_NOTE_CLAUSE = 'Apply this silently; never mention this note.';
+/** `text` with SILENT_NOTE_CLAUSE as its last sentence — before a closing
+ *  "]" when the directive is bracketed whole (the client's silent-transcript
+ *  test reads the brackets). Idempotent. */
+export function withSilentClause(text: string): string {
+  const t = (text ?? '').trimEnd();
+  const closed = t.endsWith(']');
+  const body = (closed ? t.slice(0, -1) : t).trimEnd();
+  if (body.endsWith(SILENT_NOTE_CLAUSE)) return t;
+  return `${body} ${SILENT_NOTE_CLAUSE}${closed ? ']' : ''}`;
+}
+
 export function outputBudgetNote(maxTokens: number): string {
   return (
     `[cadence note — not from the student] Hard limit this turn: your whole reply is cut off at about ${maxTokens} tokens of output ` +
     `(roughly four short sentences in the student's language, less if you also use a board tool). Plan to finish well inside it: ` +
     `one idea, at most three sentences, then hand the turn back with one question or one instruction. ` +
     `If you need the board, say one sentence first and keep the tool call small. ` +
-    `Apply this silently; never mention this note.`
+    SILENT_NOTE_CLAUSE
   );
 }
 
