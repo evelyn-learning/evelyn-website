@@ -964,6 +964,11 @@ export const TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE = process.env.NEXT_PUBLIC_TUTO
  *  asks for one sentence of what it learned (lesson-plan/fixed-script.ts).
  *  Default ON; NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_TRANSITIONS=off. */
 export const TUTOR_FIXED_SCRIPT_TRANSITIONS = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_TRANSITIONS !== 'off';
+/** Task 26 §B1 (GDI run 13, 1435 s): a due fixed-script forced close on a
+ *  turn that asked the student something runs ONE wrap turn (reply + goodbye
+ *  + close_session_notes) before the fixed goodbye. Default ON;
+ *  NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_CLOSE_WRAP=off. */
+export const TUTOR_FIXED_SCRIPT_CLOSE_WRAP = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_CLOSE_WRAP !== 'off';
 
 /** Level check (GDI run 4: set_working_level never called): leaving the
  *  level-check segment with no level stored asks /api/tutor/level/estimate

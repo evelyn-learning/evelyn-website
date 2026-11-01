@@ -32,6 +32,10 @@ import {
   segmentTransitionKind, fixedScriptPartLabel, fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause,
   holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
+import {
+  FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
+} from '../src/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '../src/lib/tutor/lesson-plan/announced-move';
 import { turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
@@ -431,7 +435,7 @@ test('H: the close note is the brief\'s FACT; forced after two tutor turns unles
 test('H: VTR plants the close note (urgent) and force-closes through the normal close path', () => {
   pin(VTR, /pendingRuntimeNoteRef\.current = FIXED_SCRIPT_CLOSE_NOTE;\s*pendingRuntimeNoteSegRef\.current = segIdNow;\s*pendingRuntimeNoteUrgentRef\.current = true;/);
   pin(VTR, /onDebugEvent\?\.\('fixed_script_close_requested'/);
-  pin(VTR, /if \(fixedScriptCloseForced\(fc\.turnsSince, lessonClosedRef\.current\)\) \{\s*lessonClosedRef\.current = true;\s*onDebugEvent\?\.\('fixed_script_close_forced'[^\n]*\n\s*onDebugEvent\?\.\('lesson_closed', 'fixed-script close forced'\);[\s\S]{0,600}?void endSessionNowRef\.current\(\{ farewell: goodbyeLine\(studentName\) \}\);/);
+  pin(VTR, /\} else if \(closeAction === 'force'\) \{\s*lessonClosedRef\.current = true;\s*onDebugEvent\?\.\('fixed_script_close_forced'[^\n]*\n\s*onDebugEvent\?\.\('lesson_closed', 'fixed-script close forced'\);[\s\S]{0,600}?void endSessionNowRef\.current\(\{ farewell: goodbyeLine\(studentName\) \}\);/);
   // the same farewell + end call the time-box hard stop makes
   pin(VTR, /void endSessionNowRef\.current\(\{ farewell: line, reason: 'time_limit' \}\);/);
 });
@@ -613,6 +617,55 @@ test('26A3: the GDI plan carries the four transitions; the other parts none', ()
     overview: null, 'level-check': 'bridge', 'topic-intro': 'bridge', 'present-perfect': 'offer', 'past-simple': 'offer',
     'open-conversation': null, pronunciation: null, summary: null,
   });
+});
+
+// ── Task 26 §B (GDI run 13, 1338–1435 s): a softer forced close ──
+test('26B2: fixedScriptCloseForced — recap waits 3 tutor turns; other kinds 2', () => {
+  assert.equal(FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, 3);
+  assert.equal(fixedScriptCloseForced(2, false, 'recap'), false);
+  assert.equal(fixedScriptCloseForced(3, false, 'recap'), true);
+  assert.equal(fixedScriptCloseForced(3, true, 'recap'), false);
+  assert.equal(fixedScriptCloseForced(2, false, 'Recap'), false);
+  for (const k of ['concept', 'extension', 'try_yourself', '']) assert.equal(fixedScriptCloseForced(2, false, k), true, k);
+  assert.equal(fixedScriptCloseForced(1, false, 'concept'), false);
+});
+test('26B1: fixedScriptCloseForcedAction — a question ⇒ wrap-turn; no question ⇒ force; wrap already run ⇒ force; not due ⇒ none', () => {
+  const q = 'Great. Now, can you say which of the two sentences means you still work there?';
+  const b = { turnsSince: 3, lessonClosed: false, kind: 'recap', wrapRun: false };
+  assert.equal(fixedScriptCloseForcedAction({ ...b, tutorText: q }), 'wrap-turn');
+  assert.equal(fixedScriptCloseForcedAction({ ...b, tutorText: 'Tell me one thing you did last week.' }), 'wrap-turn', 'an imperative ask');
+  assert.equal(fixedScriptCloseForcedAction({ ...b, tutorText: 'Well done today. You used both tenses clearly.' }), 'force');
+  assert.equal(fixedScriptCloseForcedAction({ ...b, tutorText: '' }), 'force');
+  assert.equal(fixedScriptCloseForcedAction({ ...b, tutorText: q, wrapRun: true }), 'force');
+  assert.equal(fixedScriptCloseForcedAction({ ...b, turnsSince: 2, tutorText: q }), 'none', 'recap: not due at 2');
+  assert.equal(fixedScriptCloseForcedAction({ ...b, kind: 'concept', turnsSince: 2, tutorText: q }), 'wrap-turn');
+  assert.equal(fixedScriptCloseForcedAction({ ...b, lessonClosed: true, tutorText: q }), 'none');
+});
+test('26B1: the wrap directive (brief text) and the poll — carried by the next turn, fired after the quiet window, bounded at 45 s', () => {
+  assert.equal(FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, "[Wrap now — not from the student] Reply to the student's last answer in one sentence, then say goodbye in one sentence and call close_session_notes. No new question.");
+  assert.equal(FIXED_SCRIPT_CLOSE_WRAP_MAX_MS, 45_000);
+  assert.ok(FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS <= 30_000 && FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS < FIXED_SCRIPT_CLOSE_WRAP_MAX_MS);
+  const p = { elapsedMs: 1000, quietMs: 1000, ended: false, turnSeqChanged: false, brainBusy: false, studentActive: false, suspended: false };
+  assert.equal(closeWrapPollDecision(p), 'wait');
+  assert.equal(closeWrapPollDecision({ ...p, turnSeqChanged: true }), 'carried');
+  assert.equal(closeWrapPollDecision({ ...p, ended: true, turnSeqChanged: true }), 'drop');
+  assert.equal(closeWrapPollDecision({ ...p, quietMs: FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, elapsedMs: FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS }), 'fire');
+  assert.equal(closeWrapPollDecision({ ...p, quietMs: FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, studentActive: true }), 'wait');
+  assert.equal(closeWrapPollDecision({ ...p, quietMs: FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, suspended: true }), 'wait');
+  assert.equal(closeWrapPollDecision({ ...p, quietMs: 0, elapsedMs: 45_000 }), 'fire', 'the bound');
+  assert.equal(closeWrapPollDecision({ ...p, quietMs: 0, elapsedMs: 45_000, brainBusy: true }), 'wait');
+});
+test('26B: VTR wiring — the close check passes the kind and the turn text; wrap arms the note + poller; force unchanged (pins)', () => {
+  pin(VTR, /const closeKind = \(lessonPlanRef\.current\?\.segments\.find\(\(sg\) => sg\.id === fc\.segId\)\?\.kind \?\? ''\)\.toLowerCase\(\);\s*const closeAction = fixedScriptCloseForcedAction\(\{\s*turnsSince: fc\.turnsSince,\s*lessonClosed: lessonClosedRef\.current,\s*kind: closeKind,\s*tutorText: fullText,\s*wrapRun: !TUTOR_FIXED_SCRIPT_CLOSE_WRAP \|\| fc\.wrapRun === true,\s*\}\);/);
+  pin(VTR, /if \(closeAction === 'wrap-turn'\) \{\s*fc\.wrapRun = true;[\s\S]{0,200}?FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE\}`\s*: FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE;\s*pendingRuntimeNoteSegRef\.current = fc\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_close_wrap_armed'[^\n]*\n\s*scheduleFixedScriptCloseWrapRef\.current\(fc\.segId\);\s*\} else if \(closeAction === 'force'\) \{/);
+  // the poller: quiet window ⇒ the note becomes the synthetic turn; a turn first ⇒ carried
+  pin(VTR, /if \(decision === 'carried'\) \{ onDebugEvent\?\.\('fixed_script_close_wrap_turn', `"\$\{segId\}" via=next turn/);
+  pin(VTR, /onDebugEvent\?\.\('fixed_script_close_wrap_turn', `"\$\{segId\}" via=silence waited=\$\{now - armedAt\}ms`\);\s*void handleStudentTranscriptForBrainRef\.current\?\.\(FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, \{ silent: true, bypassPerceptionDedupe: true \}\);/);
+  pin(VTR, /if \(pendingRuntimeNoteRef\.current === FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE\) \{\s*pendingRuntimeNoteRef\.current = null;/);
+  pin(VTR, /\/\/ Task 26 §B1: the close wrap-turn poller\.\s*if \(closeWrapTimerRef\.current\) \{\s*clearTimeout\(closeWrapTimerRef\.current\);/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_FIXED_SCRIPT_CLOSE_WRAP = process\.env\.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_CLOSE_WRAP !== 'off';/);
+  // B3: the time-box hard stop is untouched
+  pin(VTR, /void endSessionNowRef\.current\(\{ farewell: line, reason: 'time_limit' \}\);/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

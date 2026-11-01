@@ -13,7 +13,7 @@
  * advance_lesson ran this turn.
  */
 import type { LessonPlan, Segment } from './types';
-import { isFixedScriptPlan, nextSegmentId } from './fixed-script';
+import { isFixedScriptPlan, nextSegmentId, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS } from './fixed-script';
 import { lastAskSentence, lastQuestionSentence } from '../question-gist-text';
 
 /** A sentence that announces moving on (EN + JA). The keyword gate in
@@ -210,4 +210,47 @@ export function noAskTurnNeedsContinuation(input: {
   if (!input.fixedScript || input.runtimeTriggered || input.closing || input.pronunciationArmed) return false;
   if (input.toolsSeen.some((t) => NOASK_EXEMPT_TOOLS.has(t))) return false;
   return announcedTurnNeedsContinuation(input.text);
+}
+
+// ── Task 26 §B1: the forced close waits for the answer to its question ────
+
+/** What the forced-close check does after a tutor turn. 'none' ⇒ not due
+ *  yet (or the lesson closed); 'wrap-turn' ⇒ due, but the turn asked the
+ *  student something (the inverse of announcedTurnNeedsContinuation — a
+ *  question or an imperative ask) and no wrap turn ran yet: run ONE wrap
+ *  turn first; 'force' ⇒ the fixed goodbye + end now. */
+export function fixedScriptCloseForcedAction(input: {
+  turnsSince: number;
+  lessonClosed: boolean;
+  kind: string;
+  tutorText: string;
+  wrapRun: boolean;
+}): 'none' | 'wrap-turn' | 'force' {
+  if (!fixedScriptCloseForced(input.turnsSince, input.lessonClosed, input.kind)) return 'none';
+  if (input.wrapRun) return 'force';
+  const text = (input.tutorText ?? '').trim();
+  return text && !announcedTurnNeedsContinuation(text) ? 'wrap-turn' : 'force';
+}
+
+/** One poll of the armed wrap turn. 'carried' ⇒ another brain turn ran
+ *  since arming (the student's answer, a nudge) and took the wrap note with
+ *  it; 'drop' ⇒ the session ended / closed; 'fire' ⇒ dispatch the wrap
+ *  directive now: the tutor has been quiet FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS
+ *  with the student idle, or FIXED_SCRIPT_CLOSE_WRAP_MAX_MS passed with no
+ *  brain turn running and the student idle; 'wait' otherwise (also while
+ *  paused, held or hidden). */
+export function closeWrapPollDecision(input: {
+  elapsedMs: number;
+  quietMs: number;
+  ended: boolean;
+  turnSeqChanged: boolean;
+  brainBusy: boolean;
+  studentActive: boolean;
+  suspended: boolean;
+}): 'fire' | 'wait' | 'drop' | 'carried' {
+  if (input.ended) return 'drop';
+  if (input.turnSeqChanged) return 'carried';
+  if (input.brainBusy || input.studentActive || input.suspended) return 'wait';
+  if (input.quietMs >= FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS || input.elapsedMs >= FIXED_SCRIPT_CLOSE_WRAP_MAX_MS) return 'fire';
+  return 'wait';
 }

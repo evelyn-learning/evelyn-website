@@ -149,11 +149,31 @@ export const FIXED_SCRIPT_CLOSE_NOTE =
 /** Tutor turns after the close note without close_session_notes before the
  *  client closes the lesson itself. */
 export const FIXED_SCRIPT_CLOSE_GRACE_TURNS = 2;
+/** Task 26 §B2 (GDI run 13, 1338–1435 s): a recap part's check question
+ *  needs the student's answer and the tutor's reply before the close — three
+ *  tutor turns there. */
+export const FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS = 3;
 /** True ⇒ close the lesson now (`turnsSinceNote` = tutor turns delivered
- *  after the one the note was planted on). */
-export function fixedScriptCloseForced(turnsSinceNote: number, lessonClosed: boolean): boolean {
-  return !lessonClosed && turnsSinceNote >= FIXED_SCRIPT_CLOSE_GRACE_TURNS;
+ *  after the one the note was planted on; `kind` = the closing segment's
+ *  kind — 'recap' waits FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS). */
+export function fixedScriptCloseForced(turnsSinceNote: number, lessonClosed: boolean, kind = ''): boolean {
+  const grace = kind.toLowerCase() === 'recap' ? FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS : FIXED_SCRIPT_CLOSE_GRACE_TURNS;
+  return !lessonClosed && turnsSinceNote >= grace;
 }
+/** Task 26 §B1 (GDI run 13, 1435 s: the fixed goodbye right after the
+ *  tutor's own question): when the forced close is due on a turn that asked
+ *  the student something, ONE wrap turn runs first — carried by the
+ *  student's next turn as an urgent note, or dispatched with this text as a
+ *  synthetic turn after the silence window. */
+export const FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE =
+  "[Wrap now — not from the student] Reply to the student's last answer in one sentence, then say goodbye in one sentence and call close_session_notes. No new question.";
+/** Quiet (no tutor speech, no brain turn, no student activity) before the
+ *  wrap turn is dispatched without a student answer — shorter than the
+ *  language idle nudge's first window (30 s), so the wrap goes first. */
+export const FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS = 20_000;
+/** The bound: from arming, the wrap turn waits at most this long for a quiet
+ *  moment (tutor-speech state left stale counts as quiet past it). */
+export const FIXED_SCRIPT_CLOSE_WRAP_MAX_MS = 45_000;
 
 /** Task 20 §B (GDI run 8, 1543 s): in the pronunciation part the brain said
  *  「今日はここまでです」… Goodbye! and called close_session_notes — the

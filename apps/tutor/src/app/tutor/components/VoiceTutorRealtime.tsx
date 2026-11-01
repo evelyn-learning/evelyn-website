@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -435,7 +435,9 @@ import {
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause, holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS } from '@/lib/tutor/lesson-plan/fixed-script';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
+import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -4234,7 +4236,49 @@ export function VoiceTutorRealtime({
   const speechPendingProbeRef = useRef<(() => boolean) | null>(null);
   // Task 14 §H: the close note was planted on the last fixed-script part —
   // tutor turns delivered since (null = not requested).
-  const fixedScriptCloseRef = useRef<{ segId: string; turnsSince: number } | null>(null);
+  // Task 26 §B1: `wrapRun` — the one wrap turn was armed (its note planted).
+  const fixedScriptCloseRef = useRef<{ segId: string; turnsSince: number; wrapRun?: boolean } | null>(null);
+  // Task 26 §B1: the armed wrap turn's poller (cleared on unmount). The wrap
+  // note is planted when it is armed, so ANY next brain turn (the student's
+  // answer, a nudge, a drained queue) carries it; only a quiet window with
+  // no turn dispatches FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE itself.
+  const closeWrapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleFixedScriptCloseWrapRef = useRef<(segId: string) => void>(() => {});
+  scheduleFixedScriptCloseWrapRef.current = (segId: string) => {
+    if (closeWrapTimerRef.current) clearTimeout(closeWrapTimerRef.current);
+    const armedAt = Date.now();
+    let quietSince = armedAt;
+    const armedSeq = brainCallSeqRef.current;
+    const tick = () => {
+      closeWrapTimerRef.current = null;
+      const now = Date.now();
+      let speechPending = false;
+      try { speechPending = !!speechPendingProbeRef.current?.(); } catch { /* relay gone */ }
+      if (productionStateRef.current === 'speaking' || speechPending || brainBusyRef.current) quietSince = now;
+      const decision = closeWrapPollDecision({
+        elapsedMs: now - armedAt,
+        quietMs: now - quietSince,
+        ended: productionStateRef.current === 'disconnected' || lessonClosedRef.current || farewellSealedRef.current || endingRef.current || standbyRef.current,
+        turnSeqChanged: brainCallSeqRef.current !== armedSeq,
+        brainBusy: brainBusyRef.current,
+        studentActive: perceptionMidUtteranceRef.current || awaitingDispatchTimerRef.current != null || studentTypingRef.current,
+        suspended: (TUTOR_STUDENT_HOLD && !!studentHoldRef.current) || isPausedRef.current || (typeof document !== 'undefined' && document.visibilityState === 'hidden'),
+      });
+      if (decision === 'wait') { closeWrapTimerRef.current = setTimeout(tick, ANNOUNCED_CONTINUE_POLL_MS); return; }
+      if (decision === 'drop') { onDebugEvent?.('fixed_script_close_wrap_dropped', `"${segId}" after ${now - armedAt}ms — session ended or closed`); return; }
+      if (decision === 'carried') { onDebugEvent?.('fixed_script_close_wrap_turn', `"${segId}" via=next turn waited=${now - armedAt}ms`); return; }
+      // Quiet window: the planted wrap note becomes the synthetic turn itself.
+      if (pendingRuntimeNoteRef.current === FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE) {
+        pendingRuntimeNoteRef.current = null;
+        pendingRuntimeNoteUrgentRef.current = false;
+      } else if (pendingRuntimeNoteRef.current?.includes(FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE)) {
+        pendingRuntimeNoteRef.current = pendingRuntimeNoteRef.current.replace(`\n\n${FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE}`, '').replace(FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, '').trim() || null;
+      }
+      onDebugEvent?.('fixed_script_close_wrap_turn', `"${segId}" via=silence waited=${now - armedAt}ms`);
+      void handleStudentTranscriptForBrainRef.current?.(FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, { silent: true, bypassPerceptionDedupe: true });
+    };
+    closeWrapTimerRef.current = setTimeout(tick, ANNOUNCED_CONTINUE_POLL_MS);
+  };
   // Live check 7: the note must not land while the student is answering an
   // open question (portal-8ed0fb65 10:53:48Z — delivered with "12", the brain
   // advanced mid-problem and rendered the next card under the wrong problem).
@@ -12193,6 +12237,11 @@ export function VoiceTutorRealtime({
       if (announcedContinueTimerRef.current) {
         clearTimeout(announcedContinueTimerRef.current);
         announcedContinueTimerRef.current = null;
+      }
+      // Task 26 §B1: the close wrap-turn poller.
+      if (closeWrapTimerRef.current) {
+        clearTimeout(closeWrapTimerRef.current);
+        closeWrapTimerRef.current = null;
       }
       // R32 (H1 review round 1, Finding 1): the queueOnMidUtterance
       // drain-guarantee poller — same idle-send shape, same cleanup need.
@@ -20791,7 +20840,30 @@ export function VoiceTutorRealtime({
         if (fixedScriptCloseRef.current && !lessonClosedRef.current) {
           const fc = fixedScriptCloseRef.current;
           fc.turnsSince += 1;
-          if (fixedScriptCloseForced(fc.turnsSince, lessonClosedRef.current)) {
+          // Task 26 §B (GDI run 13, 1435 s: the fixed goodbye right after
+          // the tutor's own question): a recap part waits three turns (B2);
+          // a due close on a turn that asked something runs ONE wrap turn
+          // first (B1) — its note rides the student's answer, or the
+          // directive is dispatched after the quiet window.
+          const closeKind = (lessonPlanRef.current?.segments.find((sg) => sg.id === fc.segId)?.kind ?? '').toLowerCase();
+          const closeAction = fixedScriptCloseForcedAction({
+            turnsSince: fc.turnsSince,
+            lessonClosed: lessonClosedRef.current,
+            kind: closeKind,
+            tutorText: fullText,
+            wrapRun: !TUTOR_FIXED_SCRIPT_CLOSE_WRAP || fc.wrapRun === true,
+          });
+          if (closeAction === 'wrap-turn') {
+            fc.wrapRun = true;
+            pendingRuntimeNoteRef.current = pendingRuntimeNoteRef.current
+              ? `${pendingRuntimeNoteRef.current}\n\n${FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE}`
+              : FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE;
+            pendingRuntimeNoteSegRef.current = fc.segId;
+            pendingRuntimeNoteUrgentRef.current = true;
+            runtimeNoteHeldTurnsRef.current = 0;
+            onDebugEvent?.('fixed_script_close_wrap_armed', `"${fc.segId}" — ${fc.turnsSince} tutor turns after the close note, the turn asked the student`);
+            scheduleFixedScriptCloseWrapRef.current(fc.segId);
+          } else if (closeAction === 'force') {
             lessonClosedRef.current = true;
             onDebugEvent?.('fixed_script_close_forced', `"${fc.segId}" — ${fc.turnsSince} tutor turns after the close note, no close_session_notes`);
             onDebugEvent?.('lesson_closed', 'fixed-script close forced');
