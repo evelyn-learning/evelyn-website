@@ -17,6 +17,7 @@ import {
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
   levelCheckAnswerCard, isQuotedFragment, acknowledgesOption, boardOffersChoices,
+  grammarRecastCard, isTranslationQuote,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -1191,6 +1192,63 @@ test('Task 24 §D: autoCardAnchor — the student\'s card nobody spoke paints at
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(v.includes('const anchor = autoCardAnchor(narrationAnchor, studentSentenceCard);'));
   assert.ok(v.includes("const anchorLabel = narrationAnchor === undefined && anchor === 0 ? 'start' : String(anchor ?? 'live');"));
+});
+
+// ── Task 25 §C (GDI run 13) ──
+test('25C1: 181 s grammar recast ⇒ correction card of the tutor\'s sentence, no checked card', () => {
+  const student = 'Yes, customer buy washing machine';
+  const tutor = "Yes, the customer bought the washing machine. That's a good result. Let's move on to the next part, where we look at your job in more detail. Could you tell me one thing your job involves day to day?";
+  const cards = planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: false, studentCorrect: true, checkedSentence: student });
+  assert.equal(cards.length, 1, JSON.stringify(cards));
+  assert.equal(cards[0]!.kind, 'correction');
+  assert.equal(cards[0]!.source, 'grammar-recast');
+  assert.equal(cards[0]!.sentence, 'Yes, the customer bought the washing machine.');
+  assert.deepEqual(cards[0]!.emphasis, ['the', 'bought', 'the']);
+  // the same in a level-check part: still no levelcheck card of the wrong sentence
+  const lc = planSentenceBoard({ tutorText: tutor, studentLast: student, renderedThisTurn: false, levelCheck: true });
+  assert.ok(lc.every((c) => c.source !== 'levelcheck' && c.source !== 'checked'), JSON.stringify(lc));
+});
+test('25C1: the quoted path still wins', () => {
+  const cards = planSentenceBoard({ tutorText: '"I work in the sales department of Goya Corporation" is exactly the kind of sentence we need.', studentLast: 'I work in sales department of Goya Corporation', renderedThisTurn: false });
+  assert.equal(cards[0]!.kind, 'correction');
+  assert.equal(cards[0]!.source, undefined);
+  assert.deepEqual(cards[0]!.emphasis, ['the']);
+});
+test('25C1: a question / low overlap ⇒ no card from this rule', () => {
+  assert.equal(grammarRecastCard('Good. Did the customer buy the washing machine?', 'I speak to him politely'), null);
+  assert.equal(grammarRecastCard('Did the customer buy the washing machine?', 'customer buy washing machine'), null);
+  // identical restatement (no difference) ⇒ none
+  assert.equal(grammarRecastCard('The customer bought the washing machine.', 'The customer bought the washing machine'), null);
+  // person shift to "you" is §D2's, never this rule
+  assert.equal(grammarRecastCard('You sold washing machines to a customer from the USA.', 'I sold washing machine to customer from USA'), null);
+  // a comment on the student's words (head dropped, a remark added) is praise, not a recast
+  assert.equal(grammarRecastCard("Selling washing machines made by robots, that's a clear role.", 'I was responsible for selling washing machines made by robots.'), null);
+  // tense + articles fixed in place ⇒ a recast
+  const y = grammarRecastCard('Right, yesterday I went to the customer office for a meeting.', 'Yesterday I go to customer office for meeting');
+  assert.ok(y && y.sentence === 'Right, yesterday I went to the customer office for a meeting.' && y.emphasis.join(',') === 'went,the,a', JSON.stringify(y));
+  // only the first two sentences
+  assert.equal(grammarRecastCard('Nice. Thanks for that. The customer bought the washing machine.', 'customer buy washing machine'), null);
+});
+test('25C2: 828 s a quote translating a quoted Japanese span ⇒ no card', () => {
+  const tutor = 'Ah, your manager and other colleagues — that\'s a good way to solve the problem. Let\'s keep it natural: 「同僚に相談しました」 is "I asked my colleagues for help." Can you say: I talked to my manager and other colleagues?';
+  const skipped: string[] = [];
+  const cards = planSentenceBoard({ tutorText: tutor, studentLast: 'I spoke to other colleagues and uh my manager.', renderedThisTurn: false, onQuoteSkipped: (r, sp) => skipped.push(`${r}:${sp}`) });
+  assert.deepEqual(cards, [], JSON.stringify(cards));
+  assert.deepEqual(skipped, ['translation:I asked my colleagues for help.']);
+});
+test('25C2: an untranslated quote still cards as before', () => {
+  const cards = planSentenceBoard({ tutorText: '"I asked my colleagues for help" is the natural version.', studentLast: 'I spoke to other colleagues and uh my manager.', renderedThisTurn: false });
+  assert.ok(cards.length >= 1 && cards[0]!.sentence.startsWith('I asked my colleagues for help'), JSON.stringify(cards));
+});
+test('25C2: isTranslationQuote shapes', () => {
+  const a = '営業部で働いています is, in English: "I work in the sales team." Try it.';
+  const a2 = 'Now let\'s say that in English: "I have been a sales manager for four years."';
+  assert.equal(isTranslationQuote(a2, a2.indexOf('"'), a2.length), false);
+  assert.equal(isTranslationQuote(a, a.indexOf('"'), a.indexOf('team."') + 6), true);
+  const b = '"I work in the sales team" in Japanese is 営業部で働いています.';
+  assert.equal(isTranslationQuote(b, 0, b.indexOf('team"') + 5), true);
+  const c = 'Good. "I work in the sales team" is right.';
+  assert.equal(isTranslationQuote(c, c.indexOf('"'), c.indexOf('team"') + 5), false);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

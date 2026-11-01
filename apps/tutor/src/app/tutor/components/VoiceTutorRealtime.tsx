@@ -20969,6 +20969,8 @@ export function VoiceTutorRealtime({
           const boardStudentCorrect = precheckDecides(boardPc) && boardPc.verdict === 'correct' && boardPc.answers !== 'other_part' && boardPc.answers !== 'neither';
           const cards = planSentenceBoard({
             tutorText: fullText,
+            // Task 25 §C2: a quote that translates another script's span is no card.
+            onQuoteSkipped: (reason, span) => onDebugEvent?.('sentence_board_quote_skipped', `${reason} "${span.slice(0, 60)}"`),
             studentLast: sentenceStressRef.current.studentLast,
             // Task 21 fix round 1 (concern 1): only the brain's own show_sentence blocks.
             renderedThisTurn: sentenceBoardBlockedByRenders(totalToolNamesSeen),

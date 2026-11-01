@@ -33,7 +33,7 @@ export interface QuotedSentence {
    *  full sentence:" colon that repeat the student's words;
    *  'levelcheck' = (Task 23 §B2) the student's own answer in a level-check
    *  part, carded whatever the verdict. */
-  source?: 'echo' | 'checked' | 'affirmed' | 'introduced' | 'levelcheck';
+  source?: 'echo' | 'checked' | 'affirmed' | 'introduced' | 'levelcheck' | 'grammar-recast';
   /** Task 21 fix round 1 (m, B2): word positions (0-based, words as the card
    *  splits them) that carry the emphasis — only the edited position is
    *  marked, not every copy of the word. */
@@ -871,6 +871,122 @@ export function levelCheckAnswerCard(studentLast: string | null | undefined): st
   return parts.length ? parts.join(' ') : null;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Task 25 §C2 (GDI run 13, 828 s: `「同僚に相談しました」 is "I asked my
+// colleagues for help."` was carded as a correction of the student's
+// sentence): a quote that TRANSLATES a span of another script, or is named as
+// the English / Japanese of something, is a translation — never a card.
+// ─────────────────────────────────────────────────────────────────────────
+const TRANSLATION_BRACKET_BEFORE_RES: RegExp[] = [
+  /」\s*(?:is|means|=|→|:)\s*$/i,
+  /』\s*(?:is|means)\s*$/i,
+];
+const TRANSLATION_NAMED_BEFORE_RE = /\b(?:in English|in Japanese|translates? (?:to|as)|means)\s*[:,]?\s*$/i;
+const TRANSLATION_AFTER_RE = /^\s*(?:in Japanese|in English|is 「|means 「)/i;
+/** The quote at [at, end) of `text` translates a quoted span / is named as the
+ *  English or Japanese of something (context read inside its own sentence).
+ *  The named forms ("in English: "…"", "… in Japanese is …") count only when
+ *  the sentence carries another script — "Now let's say that in English:
+ *  "I have been a sales manager for four years."" is a model, not a
+ *  translation. */
+export function isTranslationQuote(text: string, at: number, end: number): boolean {
+  const t = text ?? '';
+  const head = t.slice(0, at);
+  const cut = Math.max(head.lastIndexOf('. '), head.lastIndexOf('? '), head.lastIndexOf('! '), head.lastIndexOf('。'), head.lastIndexOf('？'), head.lastIndexOf('！'));
+  const before = cut >= 0 ? head.slice(cut + 1) : head;
+  const tail = t.slice(end);
+  const stop = tail.search(/[.!?](?:\s|$)|[。？！]/);
+  const afterSentence = stop >= 0 ? tail.slice(0, stop + 1) : tail;
+  if (TRANSLATION_BRACKET_BEFORE_RES.some((re) => re.test(before))) return true;
+  if (!CJK_RE.test(before) && !CJK_RE.test(afterSentence)) return false;
+  return TRANSLATION_NAMED_BEFORE_RE.test(before) || TRANSLATION_AFTER_RE.test(t.slice(end, end + INTRO_WINDOW));
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Task 25 §C1 (GDI run 13, 181 s: student "Yes, customer buy washing machine",
+// tutor "Yes, the customer bought the washing machine." — three edits, so the
+// one-edit recast missed it and the STUDENT's wrong sentence was carded as a
+// checked model): the tutor's first or second sentence restating the
+// student's content with grammar fixed is the correction card — whatever the
+// precheck said. Fallback after the quoted and one-edit (§B2 / §D2) paths.
+// ─────────────────────────────────────────────────────────────────────────
+/** Minimum share of the student's content tokens the restatement contains. */
+export const GRAMMAR_RECAST_OVERLAP = 0.6;
+const GRAMMAR_RECAST_MIN_WORDS = 4;
+const GRAMMAR_RECAST_EXTRA_WORDS = 4;
+const GRAMMAR_RECAST_MIN_STUDENT_TOKENS = 3;
+const GRAMMAR_RECAST_STEM = 4;
+const ARTICLE_TOKENS = new Set(['a', 'an', 'the']);
+const RECAST_FILLER_TOKENS = new Set(['uh', 'um', 'er', 'erm', 'hmm', 'yes', 'yeah', 'no', 'ok', 'okay', 'well', 'so', 'oh', 'ah', 'right', 'good']);
+const GRAMMAR_RECAST_LEAD_RE = /^\s*(?:(?:oh|ah|so|okay|ok|well|great|nice|i see|yes|right|good)[,.!]\s*)+/i;
+const GRAMMAR_RECAST_FORM_RE = /\b(?:start(?:ing)? with|begin(?:ning)? with|the form|the (?:verb|tense|phrase|pattern|word))\b/i;
+const SECOND_PERSON_RE = /\b(?:you|your|yours|yourself)\b/i;
+const sameStem = (a: string, b: string) => a === b || (a.length >= GRAMMAR_RECAST_STEM && b.length >= GRAMMAR_RECAST_STEM && a.slice(0, GRAMMAR_RECAST_STEM) === b.slice(0, GRAMMAR_RECAST_STEM));
+const contentTokens = (toks: readonly string[]) => toks.filter((t) => !ARTICLE_TOKENS.has(t) && !RECAST_FILLER_TOKENS.has(t));
+/** A recast edits the student's sentence in place: aligned in order (LCS,
+ *  same-stem tokens), no gap DROPS two or more of the student's content words
+ *  with nothing in their place, and none ADDS two or more new content words
+ *  where the student had none ("Selling washing machines made by robots,
+ *  that's a clear role." — the head dropped, a comment added — is praise). */
+function editsInPlace(s: readonly string[], t: readonly string[]): boolean {
+  const n = s.length, m = t.length;
+  const L: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) {
+    L[i]![j] = sameStem(s[i]!, t[j]!) ? L[i + 1]![j + 1]! + 1 : Math.max(L[i + 1]![j]!, L[i]![j + 1]!);
+  }
+  let i = 0, j = 0, ds = 0, dt = 0;
+  const gapOk = () => !((ds >= 2 && dt === 0) || (dt >= 2 && ds === 0));
+  while (i < n && j < m) {
+    if (sameStem(s[i]!, t[j]!)) { if (!gapOk()) return false; ds = 0; dt = 0; i++; j++; }
+    else if (L[i + 1]![j]! >= L[i]![j + 1]!) { ds++; i++; }
+    else { dt++; j++; }
+  }
+  ds += n - i; dt += m - j;
+  return gapOk();
+}
+/** The tutor's grammar recast of the student's sentence as a correction card
+ *  (emphasis = every tutor word not among the student's words, articles
+ *  included), or null. Only the turn's first two sentences; never a question,
+ *  a quote, a form / starter comment, CJK, or a person shift to "you". */
+export function grammarRecastCard(tutorText: string, student: string | null | undefined): QuotedSentence | null {
+  const studentRaw = dropFillersAndRepeats(tokens(student ?? ''));
+  const studentContent = contentTokens(studentRaw);
+  if (studentContent.length < GRAMMAR_RECAST_MIN_STUDENT_TOKENS) return null;
+  const studentWords = (student ?? '').match(TOKEN_RE)?.length ?? 0;
+  const sentences = (tutorText ?? '').split(/(?<=[.!?。！？])\s+/).slice(0, 2);
+  for (const raw of sentences) {
+    const full = raw.trim();
+    if (!full || /["“”「」『』‘]/.test(full) || CJK_RE.test(full)) continue;
+    if (/[?？]["”’)]?\s*$/.test(full)) continue;
+    const core = full.replace(GRAMMAR_RECAST_LEAD_RE, '');
+    if (!core || AUX_QUESTION_OPENING_RE.test(core) || WH_QUESTION_OPENING_RE.test(core)) continue;
+    if (GRAMMAR_RECAST_FORM_RE.test(core)) continue;
+    if (SECOND_PERSON_RE.test(core) && !SECOND_PERSON_RE.test(student ?? '')) continue;
+    const coreWords = core.match(TOKEN_RE) ?? [];
+    if (coreWords.length < GRAMMAR_RECAST_MIN_WORDS || coreWords.length > studentWords + GRAMMAR_RECAST_EXTRA_WORDS) continue;
+    const tutorToks = dropFillersAndRepeats(tokens(core));
+    const tutorContent = contentTokens(tutorToks);
+    const matched = studentContent.filter((t) => tutorContent.some((u) => sameStem(t, u))).length;
+    if (matched / studentContent.length < GRAMMAR_RECAST_OVERLAP) continue;
+    if (!editsInPlace(studentContent, tutorContent)) continue;
+    const articleInserted = tutorToks.filter((t) => ARTICLE_TOKENS.has(t)).length > studentRaw.filter((t) => ARTICLE_TOKENS.has(t)).length;
+    const tokenDiffers = tutorContent.some((u) => !studentContent.includes(u)) || studentContent.some((t) => !tutorContent.includes(t));
+    if (!articleInserted && !tokenDiffers) continue;
+    if (!isCardCandidate(full)) continue;
+    const words = full.match(TOKEN_RE) ?? [];
+    const leadWords = (full.slice(0, full.length - core.length).match(TOKEN_RE) ?? []).length;
+    const emphasis: string[] = [];
+    const emphasisAt: number[] = [];
+    words.forEach((w, k) => {
+      if (k < leadWords) return;
+      if (wordToks(w).some((t) => !studentRaw.includes(t))) { emphasis.push(w); emphasisAt.push(k); }
+    });
+    if (emphasis.length === 0) continue;
+    return { sentence: full, kind: 'correction', emphasis, emphasisAt, source: 'grammar-recast' };
+  }
+  return null;
+}
+
 /**
  * Task 15 §A (GDI run 5): a quote that echoes a sentence the independent check
  * found CORRECT is a model sentence, not the run-3 wrong-words echo — so with
@@ -901,6 +1017,8 @@ export function planSentenceBoard(input: {
   /** Task 23 §E: the board's current problem offers choices (hasChoices, or
    *  ≥ 2 "1)" / "A)" markers in its statement — boardOffersChoices). */
   choiceMenu?: boolean;
+  /** Task 25 §C2: told about each quote skipped as a translation. */
+  onQuoteSkipped?: (reason: 'translation', span: string) => void;
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   const studentCorrect = input.studentCorrect === true;
@@ -908,7 +1026,12 @@ export function planSentenceBoard(input: {
   const spans = [
     // Task 23 §D3: a quoted starter / fragment is never a card.
     // Fix round 1 (m1): a whole sentence quoted with its comma inside ends in "." on the card.
-    ...quotedSpansWithContext(input.tutorText).filter((q) => !isQuotedFragment(q.span, q.before, q.after)).map((q) => ({ ...q, span: q.span.replace(/,\s*$/, '.'), introduced: false })),
+    // Task 25 §C2: a translation of a quoted span is never a card.
+    ...quotedSpansWithContext(input.tutorText).filter((q) => !isQuotedFragment(q.span, q.before, q.after)).filter((q) => {
+      if (!isTranslationQuote(input.tutorText, q.at, q.end)) return true;
+      input.onQuoteSkipped?.('translation', q.span);
+      return false;
+    }).map((q) => ({ ...q, span: q.span.replace(/,\s*$/, '.'), introduced: false })),
     ...colonIntroducedSpans(input.tutorText).map((q) => ({ ...q, introduced: true })),
   ].filter((q) => isCardCandidate(q.span) && !isSentenceStarter(q.span, q.before, q.after));
   const distinct: { s: string; n: string; said: boolean; affirmed: boolean; introduced: boolean }[] = [];
@@ -950,6 +1073,17 @@ export function planSentenceBoard(input: {
     const recast = recastCorrectionCard(input.tutorText, input.studentLast);
     if (recast && !classified.some((c) => sameSentence(c.q.sentence, recast.sentence))) {
       classified.push({ q: recast, len: norm(recast.sentence).length, i: -1, said: false, affirmed: false, introduced: false });
+    }
+  }
+  // Task 25 §C1 (GDI run 13, 181 s): with no correction carded yet, the
+  // tutor's grammar recast of the student's sentence is the correction — and
+  // the student's own sentence is then not carded (below), whatever the check.
+  let grammarRecast = false;
+  if (!classified.some((c) => c.q.kind === 'correction')) {
+    const recast = grammarRecastCard(input.tutorText, input.studentLast);
+    if (recast && !classified.some((c) => sameSentence(c.q.sentence, recast.sentence))) {
+      classified.push({ q: recast, len: norm(recast.sentence).length, i: -1, said: false, affirmed: false, introduced: false });
+      grammarRecast = true;
     }
   }
   // Task 21 §B4 (GDI run 9, 693 s: correct at MEDIUM confidence, the tutor
@@ -1028,7 +1162,14 @@ export function planSentenceBoard(input: {
   // tutor's first sentence acknowledges an option. Corrections and new model
   // sentences (the drill's own sentence) still card.
   if (input.choiceMenu === true || acknowledgesOption(input.tutorText)) {
-    for (let k = classified.length - 1; k >= 0; k--) if (classified[k]!.q.source) classified.splice(k, 1);
+    for (let k = classified.length - 1; k >= 0; k--) if (classified[k]!.q.source && classified[k]!.q.kind !== 'correction') classified.splice(k, 1);
+  }
+  // Task 25 §C1: the grammar recast replaces the student's own sentence.
+  if (grammarRecast) {
+    for (let k = classified.length - 1; k >= 0; k--) {
+      const src = classified[k]!.q.source;
+      if (src === 'checked' || src === 'levelcheck' || src === 'echo') classified.splice(k, 1);
+    }
   }
   classified.sort((a, b) => {
     const ka = a.q.kind === 'correction' ? 0 : 1;
