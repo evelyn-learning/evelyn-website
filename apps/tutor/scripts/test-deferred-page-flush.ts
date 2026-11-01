@@ -166,7 +166,7 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('23A: moved cards are catalogued on the page being left', VTR3.includes('pageId: killRecoveryPinPageId ?? (movedBeforeBreak.has(cmd) && movedBeforeBreakPageId ? movedBeforeBreakPageId : undefined),'));
   ok('23A: a buffered break takes the later student card in front of it', /renderBufferRef\.current\.splice\(breakAt, 0, \{ processed: cards,/.test(VTR3));
   ok('23A: the auto card says whether it is the student\'s sentence', VTR3.includes("const studentSentenceCard = card.kind === 'correction' || !!card.source;"));
-  ok('23A: the break is per turn', /segmentPageBreakRef\.current = null;\s*(?:levelAdvanceThisTurnRef\.current = '';\s*)?rendersDispatchedThisTurnRef\.current = 0;/.test(VTR3));
+  ok('23A: the break is per turn', /segmentPageBreakRef\.current = null;\s*(?:levelAdvanceThisTurnRef\.current = '';\s*)?(?:levelAdvanceFromThisTurnRef\.current = '';\s*)?(?:cardedStudentSentenceRef\.current = new Set\(\);\s*)?rendersDispatchedThisTurnRef\.current = 0;/.test(VTR3));
 }
 
 // Task 23 §A2 (GDI run 11, 690 → 713 s): an empty segment page takes the next batch.

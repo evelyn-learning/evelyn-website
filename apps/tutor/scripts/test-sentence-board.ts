@@ -1271,5 +1271,32 @@ test('25 r1 m-3: a grammar recast of a choice-menu pick is no card', () => {
   assert.deepEqual(cards, [], JSON.stringify(cards));
 });
 
+// ── Task 27 §A (GDI run 14, 87 s): a correction card of the student's sentence replaces its level-check card ──
+test('27A: the 87 s inputs → exactly one card, the correction (in-call and with a second plan call in either order)', () => {
+  const T87 = "Good, the customer was from the USA. That's a useful detail. Now, Question 3, and please take your time: What is one skill you'd like to improve in your English, and why is it important to you?";
+  const S87 = 'Uh, the customer was from USA.';
+  const inp = { tutorText: T87, studentLast: S87, renderedThisTurn: false, studentCorrect: true, checkedSentence: 'the customer was from USA', levelCheck: true };
+  const suppressed: string[] = [];
+  const rec = new Set<string>();
+  const cards = planSentenceBoard({ ...inp, cardedStudentSentence: rec, onSuppressed: (r, x) => suppressed.push(`${r}: ${x}`) });
+  assert.deepEqual(cards.map((c) => [c.kind, c.sentence]), [['correction', 'The customer was from the USA.']], JSON.stringify(cards));
+  assert.deepEqual(suppressed, ['corrected this turn: The customer was from USA.']);
+  assert.equal(rec.size, 1, 'the correction is recorded for the turn');
+  // a second plan call of the same turn that would card only the student's sentence sees the record
+  const second = planSentenceBoard({ ...inp, tutorText: "That's a useful detail. Now, what is one skill you'd like to improve?", cardedStudentSentence: rec });
+  assert.deepEqual(second, [], JSON.stringify(second));
+  // the levelcheck plan first (fresh record), then the correction plan: the correction is carded
+  const rec2 = new Set<string>();
+  const lc = planSentenceBoard({ ...inp, tutorText: "That's a useful detail. Now, what is one skill you'd like to improve?", cardedStudentSentence: rec2 });
+  assert.deepEqual(lc.map((c) => c.source), ['levelcheck']);
+  const corr = planSentenceBoard({ ...inp, cardedStudentSentence: rec2 });
+  assert.deepEqual(corr.map((c) => c.kind), ['correction']);
+  // without a correction the level-check card stays (Task 23 §B2)
+  assert.deepEqual(planSentenceBoard({ ...inp, tutorText: "Thank you, that's a useful detail. What is one skill you'd like to improve?" }).map((c) => c.source), ['levelcheck']);
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.match(v, /cardedStudentSentence: cardedStudentSentenceRef\.current,\s*onSuppressed: \(reason, sentence\) => onDebugEvent\?\.\('sentence_board_auto_suppressed', /);
+  assert.match(v, /cardedStudentSentenceRef\.current = new Set\(\);/);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

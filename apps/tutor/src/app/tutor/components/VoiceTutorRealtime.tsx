@@ -4173,6 +4173,8 @@ export function VoiceTutorRealtime({
   const levelAdvanceThisTurnRef = useRef('');
   // Task 27 §I: the segment that level-set advance left.
   const levelAdvanceFromThisTurnRef = useRef('');
+  // Task 27 §A: normalised student sentences given a correction card this turn.
+  const cardedStudentSentenceRef = useRef<Set<string>>(new Set());
   // Task 16 §C / Task 23 §C: one silent continuation into `contTarget` once
   // the turn that moved the pointer (an announced advance, or the level-set
   // advance) has finished speaking — polled with the idle nudge's guard set;
@@ -12472,6 +12474,7 @@ export function VoiceTutorRealtime({
     segmentPageBreakRef.current = null;
     levelAdvanceThisTurnRef.current = '';
     levelAdvanceFromThisTurnRef.current = '';
+    cardedStudentSentenceRef.current = new Set();
     rendersDispatchedThisTurnRef.current = 0;
     boardRendersThisTurnRef.current = 0;
     turnRenderPayloadTextRef.current = '';
@@ -21202,6 +21205,9 @@ export function VoiceTutorRealtime({
             tutorText: fullText,
             // Task 25 §C2: a quote that translates another script's span is no card.
             onQuoteSkipped: (reason, span) => onDebugEvent?.('sentence_board_quote_skipped', `${reason} "${span.slice(0, 60)}"`),
+            // Task 27 §A: a correction of the student's sentence carded this turn replaces its model card.
+            cardedStudentSentence: cardedStudentSentenceRef.current,
+            onSuppressed: (reason, sentence) => onDebugEvent?.('sentence_board_auto_suppressed', `${reason} "${sentence.slice(0, 60)}"`),
             studentLast: sentenceStressRef.current.studentLast,
             // Task 21 fix round 1 (concern 1): only the brain's own show_sentence blocks.
             renderedThisTurn: sentenceBoardBlockedByRenders(totalToolNamesSeen),

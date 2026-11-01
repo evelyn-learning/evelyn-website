@@ -1032,6 +1032,13 @@ export function planSentenceBoard(input: {
   choiceMenu?: boolean;
   /** Task 25 §C2: told about each quote skipped as a translation. */
   onQuoteSkipped?: (reason: 'translation', span: string) => void;
+  /** Task 27 §A: the turn's record of student sentences already given a
+   *  correction card (normalised student sentence) — read and written, so a
+   *  second plan call in the same turn sees the first. */
+  cardedStudentSentence?: Set<string>;
+  /** Task 27 §A: told about each card of the student's sentence dropped
+   *  because a correction of it was carded this turn. */
+  onSuppressed?: (reason: 'corrected this turn', sentence: string) => void;
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   const studentCorrect = input.studentCorrect === true;
@@ -1179,12 +1186,24 @@ export function planSentenceBoard(input: {
     for (let k = classified.length - 1; k >= 0; k--) if (classified[k]!.q.source) classified.splice(k, 1);
   }
   // Task 25 §C1: the grammar recast replaces the student's own sentence.
-  if (grammarRecast) {
+  // Task 27 §A (GDI run 14, 87 s: the one-edit recast "The customer was from
+  // the USA." AND the level-check card "The customer was from USA." under
+  // it): ANY correction card of the student's sentence (quoted, recast,
+  // grammar recast — here or in an earlier plan call of this turn) replaces
+  // the model cards of that same sentence (checked / levelcheck / echo).
+  const studentKey = input.studentLast ? norm(input.studentLast) : '';
+  const correctedHere = classified.some((c) => c.q.kind === 'correction');
+  const correctedEarlier = !!studentKey && input.cardedStudentSentence?.has(studentKey) === true;
+  if (grammarRecast || correctedHere || correctedEarlier) {
     for (let k = classified.length - 1; k >= 0; k--) {
       const src = classified[k]!.q.source;
-      if (src === 'checked' || src === 'levelcheck' || src === 'echo') classified.splice(k, 1);
+      if (src === 'checked' || src === 'levelcheck' || src === 'echo') {
+        if (!grammarRecast) input.onSuppressed?.('corrected this turn', classified[k]!.q.sentence);
+        classified.splice(k, 1);
+      }
     }
   }
+  if (correctedHere && studentKey) input.cardedStudentSentence?.add(studentKey);
   classified.sort((a, b) => {
     const ka = a.q.kind === 'correction' ? 0 : 1;
     const kb = b.q.kind === 'correction' ? 0 : 1;
