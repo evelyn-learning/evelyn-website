@@ -132,12 +132,12 @@ export function recordStudentEngagement(state: IdleNudgeState): void {
  *  bubble, skips covers, never starts the session clock. */
 // Task 27 fix round 1 (§D2): every synthetic directive ends with the shared silent clause.
 export const IDLE_NUDGE_DIRECTIVE = withSilentClause(
-  '[System note: the student has been silent since your last turn — there is nothing to acknowledge. ' +
-  'RE-ASK the open question in ONE short sentence, with no acknowledgement and no praise. ' +
-  'If your last turn asked a question, ' +
-  "softly check in or offer a choice — a hint, or more time. If it handed them " +
+  '[System note: the student has been silent since your last turn — there is nothing to acknowledge, so no acknowledgement and no praise. ' +
+  // Task 28 fix round 1 (I-3): the action depends on what the last turn left open.
+  'If your last turn asked a question, re-ask it in ONE short sentence — repeat only the question, no new content — ' +
+  "or softly offer a choice: a hint, or more time. If it handed them " +
   'time to read or work, ask how it\'s going. If it ended without a question, ' +
-  'offer the next small step. Do not repeat or summarize earlier content, and ' +
+  'offer the next small step. Do not repeat or summarize earlier explanations, and ' +
   'never scold the silence.]');
 
 /**
@@ -179,22 +179,28 @@ export interface IdleNudgeDirectiveOpts {
 
 export function idleNudgeDirective(opts: IdleNudgeDirectiveOpts): string {
   if (!opts?.v2) return IDLE_NUDGE_DIRECTIVE;
+  // Task 28 §C / fix round 1 (I-3): the first line says the student is silent
+  // and there is nothing to acknowledge; the ACTION depends on the state — an
+  // open question is handed back (repeat only the question, or the hint /
+  // more-time offer), no open question re-offers the choice / next step.
   return withSilentClause(
-    '[System note: the student has been silent since your last turn — there is nothing to acknowledge. ' +
-    'RE-ASK the open question in ONE short sentence, with no acknowledgement and no praise. The question you last asked is ' +
-    'STILL OUTSTANDING and still theirs to answer — DO NOT ANSWER IT, and do not ' +
-    'say the word, value, or term you asked them for. Silence means they are ' +
-    'thinking, not that they have given up. ' +
+    '[System note: the student has been silent since your last turn — there is nothing to acknowledge, so no acknowledgement and no praise. ' +
     (opts.hasOpenQuestion === false
-      ? 'There is no problem on the table to hint at. Re-offer the choice or next step you last asked about, in different words, in one short sentence. '
-      : 'Offer a choice: more time, or a hint. ' +
+      ? 'There is no problem on the table to hint at. Re-offer the choice or next step you last asked about, in different words, in one short sentence. ' +
+        'Do not ask a NEW question and do not move on to the next step; this turn exists only to hand that choice back warmly. '
+      : 'The question you last asked is ' +
+        'STILL OUTSTANDING and still theirs to answer — DO NOT ANSWER IT, and do not ' +
+        'say the word, value, or term you asked them for. Silence means they are ' +
+        'thinking, not that they have given up. ' +
+        'In ONE short sentence, re-ask it — repeat only the question, no new content — or offer a choice: more time, or a hint. ' +
         'A hint must NARROW the search — point at what to look at, or rule something ' +
-        'out — and must not give the answer inside it. ') +
-    'Do not ask a NEW question and ' +
-    'do not move on to the next step; this turn exists only to hand the same ' +
-    'question back warmly. If your last turn handed them something to read or ' +
+        'out — and must not give the answer inside it. ' +
+        'Do not ask a NEW question and ' +
+        'do not move on to the next step; this turn exists only to hand the same ' +
+        'question back warmly. ') +
+    "If your last turn handed them something to read or " +
     "work through, ask how it's going. If it ended without a question, offer the " +
-    'next small step. Do not repeat or summarize earlier content, and never scold ' +
+    'next small step. Do not repeat or summarize earlier explanations, and never scold ' +
     'the silence.]'
   );
 }

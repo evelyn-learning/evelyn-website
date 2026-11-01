@@ -428,22 +428,28 @@ const DIRECTIVE_ECHO_NOTE_RE = new RegExp(
 // in its own words — "Acknowledge it briefly, then move on to the next item."
 // — and a staging line "The board card is up." went out before a repeat ask.
 // Whole-sentence drops: an order to acknowledge / confirm / praise / correct
-// "it / that / the answer …" then move on / continue / ask; "move on to the
-// next item / question / step / part" with no second-person subject (you /
-// your / let's / we absent — "Let's move on to the next part." and "You can
-// move on to the next question." are the tutor talking); "The (board) card is
-// up / on the board / ready." "Here's the next question." is a fine bridge
-// and is kept.
+// "it / that / the answer …" then move on / continue / ask; a bare "move on
+// to the next item / question / step / part" order (fix round 1, I-2 —
+// below); "The (board) card is up / on the board / ready." "Here's the next
+// question." is a fine bridge and is kept.
 const NUDGE_ECHO_ORDER_RE =
   /^\s*(?:Acknowledge|Confirm|Affirm|Praise|Correct)\s+(?:it|that|this|the (?:answer|sentence|student|learner))(?:\s+briefly|\s+in one sentence)?\b[^.!?]*\b(?:then|and) (?:move on|continue|go on|ask)\b/i;
-const NEXT_ITEM_MOVE_RE = /\bmove on to the next (?:item|question|step|part)\b/i;
-const SECOND_PERSON_SUBJECT_RE = /\b(?:you|your|let['’]?s|we)\b/i;
-const BOARD_CARD_UP_RE = /^\s*The (?:board )?card is (?:up|on the board|ready)\.?\s*$/i;
+// Fix round 1 (I-2): the "move on" drop is for a sentence that is NOTHING but
+// the order — "Acknowledge briefly, then move on." / "Then move on to the next
+// question." — never one with a subject (you / we / let's / let us / I) or a
+// step after it ("Move on to the next step and divide both sides by 2.",
+// "Time to move on to the next question." survive).
+const ORDER_THEN_MOVE_ON_RE = /^\s*(?:Acknowledge|Confirm|Affirm|Praise|Correct)[^.!?]*\b(?:then|and) (?:move on|continue|go on)\b[^.!?]*[.!]?\s*$/i;
+const BARE_NEXT_ITEM_MOVE_RE = /^\s*(?:then,?\s+)?move on to the next (?:item|question|step|part)\s*[.!]?\s*$/i;
+const ORDER_HAS_SUBJECT_RE = /\b(?:you|your|we|let['’]?s|let us|us|I|I['’]ll|I will)\b/i;
+// Fix round 1 (m-3): "The card is up on the board." / "The board card is up now."
+const BOARD_CARD_UP_RE = /^\s*The (?:board )?card is (?:up(?: on the board)?|on the board|ready)(?: now)?\s*[.!]?\s*$/i;
 /** Task 28 §C: a nudge-note echo or a board-card staging line (see above). */
 export function isNudgeDirectiveEcho(sentence: string): boolean {
   const s = sentence ?? '';
   if (NUDGE_ECHO_ORDER_RE.test(s) || BOARD_CARD_UP_RE.test(s)) return true;
-  return NEXT_ITEM_MOVE_RE.test(s) && !SECOND_PERSON_SUBJECT_RE.test(s);
+  if (ORDER_HAS_SUBJECT_RE.test(s)) return false;
+  return ORDER_THEN_MOVE_ON_RE.test(s) || BARE_NEXT_ITEM_MOVE_RE.test(s);
 }
 const THIRD_PERSON_PLAN_ANYWHERE_RE =
   /\bI(?:['’]ll| will) (?:ask|tell|have|get|let|help|guide|remind|prompt) (?:them|the student|the learner)\b/i;

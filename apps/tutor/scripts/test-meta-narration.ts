@@ -884,14 +884,33 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
     check(`28C: "${x}" → dropped`, isMetaNarration(x));
   for (const x of ["Let's move on to the next part.", 'You can move on to the next question.', "Here's the next question.", 'Here is the next question.', 'Could you tell me one skill you have learned at your company?', 'We can move on to the next step now.'])
     check(`28C: "${x}" kept`, !isMetaNarration(x));
-  // the nudge note says, first, that the student is silent and the tutor re-asks — nothing to acknowledge
+  // the nudge note's first line: silent, nothing to acknowledge (fix round 1, I-3: the action by state)
   for (const d of [IDLE_NUDGE_DIRECTIVE, idleNudgeDirective({ v2: true }), idleNudgeDirective({ v2: true, hasOpenQuestion: false })]) {
-    const first = d.split(/(?<=\.)\s/)[0] + ' ' + d.split(/(?<=\.)\s/)[1];
-    check('28C: nudge note leads with silent + re-ask, no acknowledgement', /student has been silent/.test(first) && /nothing to acknowledge/.test(first) && /RE-ASK the open question in ONE short sentence/.test(first));
+    const first = d.split(/(?<=\.)\s/)[0];
+    check('28C: nudge note leads with silent + nothing to acknowledge', /student has been silent/.test(first) && /nothing to acknowledge, so no acknowledgement and no praise\./.test(first));
+    check('28C r1: no bare "re-ask the open question" order', !/RE-ASK the open question/.test(d));
+    check('28C r1: "earlier explanations", not "earlier content"', /Do not repeat or summarize earlier explanations/.test(d) && !/earlier content/.test(d));
     // a bracketed directive is never an already-answered complaint ("…the same question back…")
     check('28C: the nudge directive is not an already-answered complaint', !saysAlreadyAnswered(d));
   }
+  check('28C r1 v1: open question → re-ask, repeat only the question; else the next small step',
+    IDLE_NUDGE_DIRECTIVE.includes('If your last turn asked a question, re-ask it in ONE short sentence — repeat only the question, no new content — or softly offer a choice: a hint, or more time.')
+    && IDLE_NUDGE_DIRECTIVE.includes('If it ended without a question, offer the next small step.'));
+  check('28C r1 v2 default: re-ask or the hint / more-time offer',
+    idleNudgeDirective({ v2: true }).includes('In ONE short sentence, re-ask it — repeat only the question, no new content — or offer a choice: more time, or a hint.'));
+  check('28C r1 v2 no open question: re-offer the choice, no re-ask, no hint',
+    idleNudgeDirective({ v2: true, hasOpenQuestion: false }).includes('Re-offer the choice or next step you last asked about, in different words, in one short sentence.')
+    && !idleNudgeDirective({ v2: true, hasOpenQuestion: false }).includes('re-ask it') && !idleNudgeDirective({ v2: true, hasOpenQuestion: false }).includes('STILL OUTSTANDING'));
   check('28C: a real complaint still is', saysAlreadyAnswered('Same question again?') && saysAlreadyAnswered('I already said that.'));
+}
+
+{
+  // Task 28 fix round 1 (I-2, m-3): the "move on" drop only takes a sentence that is nothing but the order.
+  for (const x of ['Acknowledge briefly, then move on.', 'Then move on to the next question.', 'Move on to the next item.', 'Praise the answer and continue.', 'The card is up on the board.', 'The board card is up now.'])
+    check(`28C r1: "${x}" → dropped`, isMetaNarration(x));
+  for (const x of ['Move on to the next step and divide both sides by 2.', 'Nice work, now move on to the next part of the problem.', 'Time to move on to the next question.', 'Perfect! Time to move on to the next question.',
+    'Let us move on to the next part.', 'You can move on to the next question.', 'OK, I will move on to the next question.', "Let's move on to the next part."])
+    check(`28C r1: "${x}" kept`, !isMetaNarration(x));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
