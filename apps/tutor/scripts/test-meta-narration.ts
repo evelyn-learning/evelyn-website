@@ -5,6 +5,8 @@
  *
  * Usage: npx tsx scripts/test-meta-narration.ts  (npm run test:meta-narration)
  */
+import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice/idle-nudge';
+import { saysAlreadyAnswered } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
 import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels } from '../src/lib/tutor/voice/meta-narration';
@@ -874,6 +876,22 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   for (const x of ['Could you try it once more?', 'Now, how did people respond to your email?', 'Be careful with the article.', 'Please be careful with "the".', 'The next question is about your project.', 'Confirm your answer with a full sentence.']) {
     check(`27D1: "${x}" kept`, !isMetaNarration(x));
   }
+}
+
+{
+  // Task 28 §C (GDI run 15, 374 s / 461 s): the idle-nudge turn spoke its note; a staging line before a repeat ask.
+  for (const x of ['Acknowledge it briefly, then move on to the next item.', 'The board card is up.', 'The card is ready.', 'Confirm the answer in one sentence and ask the next question.', 'Then move on to the next question.'])
+    check(`28C: "${x}" → dropped`, isMetaNarration(x));
+  for (const x of ["Let's move on to the next part.", 'You can move on to the next question.', "Here's the next question.", 'Here is the next question.', 'Could you tell me one skill you have learned at your company?', 'We can move on to the next step now.'])
+    check(`28C: "${x}" kept`, !isMetaNarration(x));
+  // the nudge note says, first, that the student is silent and the tutor re-asks — nothing to acknowledge
+  for (const d of [IDLE_NUDGE_DIRECTIVE, idleNudgeDirective({ v2: true }), idleNudgeDirective({ v2: true, hasOpenQuestion: false })]) {
+    const first = d.split(/(?<=\.)\s/)[0] + ' ' + d.split(/(?<=\.)\s/)[1];
+    check('28C: nudge note leads with silent + re-ask, no acknowledgement', /student has been silent/.test(first) && /nothing to acknowledge/.test(first) && /RE-ASK the open question in ONE short sentence/.test(first));
+    // a bracketed directive is never an already-answered complaint ("…the same question back…")
+    check('28C: the nudge directive is not an already-answered complaint', !saysAlreadyAnswered(d));
+  }
+  check('28C: a real complaint still is', saysAlreadyAnswered('Same question again?') && saysAlreadyAnswered('I already said that.'));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

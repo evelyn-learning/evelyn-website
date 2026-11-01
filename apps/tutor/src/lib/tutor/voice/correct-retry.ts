@@ -636,6 +636,11 @@ const ALREADY_ANSWERED_RE =
   /さっき(?:も)?(?:言い|答え|話し)ました|(?:それ|これ)?(?:は)?もう(?:答え|言い|話し)ました|もう答えた|二回目|2回目|同じ質問|また同じ|\b(?:i (?:already|just) (?:said|answered|told you)(?: that)?|you (?:already |just )?asked (?:me )?that|same question(?: again)?|again\?)/i;
 
 export function saysAlreadyAnswered(studentText: string): boolean {
+  // Task 28 §C (GDI run 15, 373 s): the idle-nudge directive ("…hand the same
+  // question back warmly…") matched "same question", so the already-answered
+  // note rode the nudge turn and the tutor spoke "Acknowledge it briefly, then
+  // move on to the next item." A bracketed runtime directive is not the student.
+  if (/^\s*\[/.test(studentText ?? '')) return false;
   return ALREADY_ANSWERED_RE.test(studentText ?? '');
 }
 

@@ -424,6 +424,27 @@ const DIRECTIVE_ECHO_NOTE_RE = new RegExp(
   ].join('|'),
   'i',
 );
+// Task 28 §C (GDI run 15, 374 s / 461 s): the idle-nudge turn SPOKE its note
+// in its own words — "Acknowledge it briefly, then move on to the next item."
+// — and a staging line "The board card is up." went out before a repeat ask.
+// Whole-sentence drops: an order to acknowledge / confirm / praise / correct
+// "it / that / the answer …" then move on / continue / ask; "move on to the
+// next item / question / step / part" with no second-person subject (you /
+// your / let's / we absent — "Let's move on to the next part." and "You can
+// move on to the next question." are the tutor talking); "The (board) card is
+// up / on the board / ready." "Here's the next question." is a fine bridge
+// and is kept.
+const NUDGE_ECHO_ORDER_RE =
+  /^\s*(?:Acknowledge|Confirm|Affirm|Praise|Correct)\s+(?:it|that|this|the (?:answer|sentence|student|learner))(?:\s+briefly|\s+in one sentence)?\b[^.!?]*\b(?:then|and) (?:move on|continue|go on|ask)\b/i;
+const NEXT_ITEM_MOVE_RE = /\bmove on to the next (?:item|question|step|part)\b/i;
+const SECOND_PERSON_SUBJECT_RE = /\b(?:you|your|let['’]?s|we)\b/i;
+const BOARD_CARD_UP_RE = /^\s*The (?:board )?card is (?:up|on the board|ready)\.?\s*$/i;
+/** Task 28 §C: a nudge-note echo or a board-card staging line (see above). */
+export function isNudgeDirectiveEcho(sentence: string): boolean {
+  const s = sentence ?? '';
+  if (NUDGE_ECHO_ORDER_RE.test(s) || BOARD_CARD_UP_RE.test(s)) return true;
+  return NEXT_ITEM_MOVE_RE.test(s) && !SECOND_PERSON_SUBJECT_RE.test(s);
+}
 const THIRD_PERSON_PLAN_ANYWHERE_RE =
   /\bI(?:['’]ll| will) (?:ask|tell|have|get|let|help|guide|remind|prompt) (?:them|the student|the learner)\b/i;
 const BOARD_ALREADY_NARRATION_RE =
@@ -702,7 +723,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

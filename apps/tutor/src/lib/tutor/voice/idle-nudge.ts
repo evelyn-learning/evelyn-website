@@ -132,8 +132,9 @@ export function recordStudentEngagement(state: IdleNudgeState): void {
  *  bubble, skips covers, never starts the session clock. */
 // Task 27 fix round 1 (§D2): every synthetic directive ends with the shared silent clause.
 export const IDLE_NUDGE_DIRECTIVE = withSilentClause(
-  '[System note: the student has been quiet for a while since your last turn. ' +
-  'Re-engage gently in ONE short sentence. If your last turn asked a question, ' +
+  '[System note: the student has been silent since your last turn — there is nothing to acknowledge. ' +
+  'RE-ASK the open question in ONE short sentence, with no acknowledgement and no praise. ' +
+  'If your last turn asked a question, ' +
   "softly check in or offer a choice — a hint, or more time. If it handed them " +
   'time to read or work, ask how it\'s going. If it ended without a question, ' +
   'offer the next small step. Do not repeat or summarize earlier content, and ' +
@@ -179,8 +180,8 @@ export interface IdleNudgeDirectiveOpts {
 export function idleNudgeDirective(opts: IdleNudgeDirectiveOpts): string {
   if (!opts?.v2) return IDLE_NUDGE_DIRECTIVE;
   return withSilentClause(
-    '[System note: the student has been quiet for a while since your last turn. ' +
-    'Re-engage gently in ONE short sentence. The question you last asked is ' +
+    '[System note: the student has been silent since your last turn — there is nothing to acknowledge. ' +
+    'RE-ASK the open question in ONE short sentence, with no acknowledgement and no praise. The question you last asked is ' +
     'STILL OUTSTANDING and still theirs to answer — DO NOT ANSWER IT, and do not ' +
     'say the word, value, or term you asked them for. Silence means they are ' +
     'thinking, not that they have given up. ' +
