@@ -862,13 +862,73 @@ export function boardOffersChoices(problem: { hasChoices?: boolean; statement?: 
  *  A spoken answer is the transcript, not the precheck's 200-char cut, so
  *  more than one sentence is fine. null when no sentence passes or any CJK. */
 export function levelCheckAnswerCard(studentLast: string | null | undefined): string | null {
+  const parts = levelCheckAnswerParts(studentLast);
+  return parts.length ? parts.join(' ') : null;
+}
+/** The cleaned sentences levelCheckAnswerCard joins (empty for CJK / none). */
+export function levelCheckAnswerParts(studentLast: string | null | undefined): string[] {
   const raw = (studentLast ?? '').trim();
-  if (!raw || CJK_RE.test(raw)) return null;
-  const parts = raw.split(/(?<=[.!?])\s+(?=\p{L})/u)
+  if (!raw || CJK_RE.test(raw)) return [];
+  return raw.split(/(?<=[.!?])\s+(?=\p{L})/u)
     .map((x) => cardableStudentSentence(x))
     .filter((x): x is string => !!x)
     .map((x) => x[0]!.toUpperCase() + x.slice(1));
-  return parts.length ? parts.join(' ') : null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Task 28 §A (GDI run 15, 94 s: student "I sell washing machine to customer
+// from USA, 35 washing machine.", tutor "You sold 35 washing machines to a US
+// customer." — second person, reordered, "US customer": neither the one-edit
+// nor the grammar-recast path saw it, and the level-check card showed the
+// student's uncorrected sentence under the tutor's corrected one). A tutor
+// sentence that restates the student's sentence with a change is a recast; the
+// level-check card of the student's own words is then not drawn.
+// ─────────────────────────────────────────────────────────────────────────
+/** Share of the student's (distinct) content tokens a restatement contains. */
+export const LEVELCHECK_RECAST_OVERLAP = 0.5;
+/** Recast comparison tokens: fillers / repeats dropped, numbers normalised,
+ *  second-person words mapped to the first person's class (§D2). */
+const levelRecastToks = (text: string): string[] => personClassTokens(dropFillersAndRepeats(tokens(text)))
+  .filter((t) => !RECAST_FILLER_TOKENS.has(t));
+/** True when `piece` (one tutor sentence, or one quoted span of it) restates
+ *  the student's sentence with a change: ≥ 50 % of the student's distinct
+ *  content tokens (articles out, 4-char stems), order-insensitive, AND the
+ *  two differ in at least one token (inflection, article, number word, or a
+ *  token added / removed). */
+function restatesWithChange(studentToks: readonly string[], piece: string): boolean {
+  const core = piece.trim().replace(GRAMMAR_RECAST_LEAD_RE, '');
+  const t = levelRecastToks(core);
+  if (t.length === 0) return false;
+  const content = [...new Set(contentTokens(studentToks))];
+  if (content.length === 0) return false;
+  const tContent = contentTokens(t);
+  const matched = content.filter((x) => tContent.some((u) => sameStem(x, u))).length;
+  if (matched / content.length < LEVELCHECK_RECAST_OVERLAP) return false;
+  const count = (xs: readonly string[]) => { const m = new Map<string, number>(); for (const x of xs) m.set(x, (m.get(x) ?? 0) + 1); return m; };
+  const a = count(studentToks), b = count(t);
+  for (const [k, n] of a) if ((b.get(k) ?? 0) !== n) return true;
+  for (const [k, n] of b) if ((a.get(k) ?? 0) !== n) return true;
+  return false;
+}
+/** Task 28 §A: the tutor's turn recasts the student's sentence — any tutor
+ *  sentence (lead interjection stripped; a quoted span tested on its own, the
+ *  rest of its sentence without it) that restates it with a change. A
+ *  verbatim quote ("…" is correct) or no restatement ⇒ false. */
+export function levelCheckRecast(tutorText: string | null | undefined, student: string | null | undefined): boolean {
+  const studentToks = levelRecastToks(student ?? '');
+  if (contentTokens(studentToks).length < GRAMMAR_RECAST_MIN_STUDENT_TOKENS) return false;
+  for (const sentence of (tutorText ?? '').split(/(?<=[.!?。！？])\s+/)) {
+    if (!sentence.trim() || CJK_RE.test(sentence)) continue;
+    const pieces: string[] = [];
+    let rest = sentence;
+    for (const m of sentence.matchAll(QUOTE_RE)) {
+      pieces.push(quoteInner(m));
+      rest = rest.replace(m[0], ' ');
+    }
+    pieces.push(rest);
+    if (pieces.some((p) => restatesWithChange(studentToks, p))) return true;
+  }
+  return false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1039,6 +1099,9 @@ export function planSentenceBoard(input: {
   /** Task 27 §A: told about each card of the student's sentence dropped
    *  because a correction of it was carded this turn. */
   onSuppressed?: (reason: 'corrected this turn', sentence: string) => void;
+  /** Task 28 §A: told about each level-check sentence not carded because the
+   *  tutor recast it and no correction card came of the recast. */
+  onLevelCheckSkipped?: (reason: 'recast without card', sentence: string) => void;
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   const studentCorrect = input.studentCorrect === true;
@@ -1170,7 +1233,24 @@ export function planSentenceBoard(input: {
   // student's own answer (≥ 4 Latin words, no question, cleaned like the
   // checked card) is carded whatever the verdict, unless a card already says it.
   if (input.levelCheck === true && input.studentLast && !isMetaOfferTurn(input.prevTutorText)) {
-    const own = levelCheckAnswerCard(input.studentLast);
+    // Task 28 §A: with no correction card, a sentence of the answer the tutor
+    // recast (levelCheckRecast) is not carded — its uncorrected words would
+    // stand under the tutor's corrected ones. (With a correction card the
+    // Task 27 §A rule below drops the level-check card, as before.)
+    let parts = levelCheckAnswerParts(input.studentLast);
+    if (!classified.some((c) => c.q.kind === 'correction')) {
+      const kept = parts.filter((p) => !levelCheckRecast(input.tutorText, p));
+      if (kept.length < parts.length) input.onLevelCheckSkipped?.('recast without card', parts.filter((p) => !kept.includes(p)).join(' '));
+      parts = kept;
+      // the check's sentence (a medium "correct") is the student's words too — same rule
+      for (let k = classified.length - 1; k >= 0; k--) {
+        const c = classified[k]!;
+        if (c.q.source !== 'checked' || !levelCheckRecast(input.tutorText, c.q.sentence)) continue;
+        input.onLevelCheckSkipped?.('recast without card', c.q.sentence);
+        classified.splice(k, 1);
+      }
+    }
+    const own = parts.length ? parts.join(' ') : null;
     if (own && !classified.some((c) => sameSentence(c.q.sentence, own))) {
       classified.push({ q: { sentence: own, kind: 'model', emphasis: [], source: 'levelcheck' }, len: norm(own).length, i: kept.length + 1, said: false, affirmed: false, introduced: false });
     }

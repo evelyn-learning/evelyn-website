@@ -16,7 +16,7 @@ import {
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
-  levelCheckAnswerCard, isQuotedFragment, acknowledgesOption, boardOffersChoices,
+  levelCheckAnswerCard, levelCheckRecast, isQuotedFragment, acknowledgesOption, boardOffersChoices,
   grammarRecastCard, isTranslationQuote,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
@@ -986,9 +986,11 @@ test('21B r3: "remember" / "article" are cues only in a correcting frame', () =>
     assert.equal(cards[0]!.kind, 'model');
     assert.equal(cards[0]!.sentence, 'Yes, I worked with an international customer. I work with customer from USA.');
   });
-  test('23B2: 99 s level-check answer → one levelcheck card', () => {
+  // Task 28 §A: T99 recasts S99 ("You sell washing machines to a US company") — the
+  // uncorrected level-check card is no longer drawn under it (was one levelcheck card).
+  test('23B2 / 28A: 99 s level-check answer the tutor recast → no card', () => {
     const cards = planSentenceBoard({ ...base, tutorText: T99, studentLast: S99, checkedSentence: S99, levelCheck: true });
-    assert.deepEqual(cards.map((c) => [c.source, c.sentence]), [['levelcheck', 'I sell washing machine to the USA customer for their company.']]);
+    assert.deepEqual(cards, [], JSON.stringify(cards));
   });
   test('23B2: the same inputs outside the level check → no card', () => {
     assert.equal(planSentenceBoard({ ...base, tutorText: T81, studentLast: S81, checkedSentence: S81 }).length, 0);
@@ -1298,6 +1300,47 @@ test('27A: the 87 s inputs → exactly one card, the correction (in-call and wit
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.match(v, /cardedStudentSentence: cardedStudentSentenceRef\.current,\s*onSuppressed: \(reason, sentence\) => onDebugEvent\?\.\('sentence_board_auto_suppressed', /);
   assert.match(v, /cardedStudentSentenceRef\.current = new Set\(\);/);
+});
+
+// ── Task 28 §A (GDI run 15, 94 s): no level-check card of the student's words the tutor recast ──
+test('28A: the 94 s inputs → no card, sentence_board_levelcheck_skipped', () => {
+  const S94 = 'Um, I sell uh washing machine to customer from USA, 35 washing machine.';
+  const T94 = "Thank you, that's clear. You sold 35 washing machines to a US customer. Now, question 2: what was one difficulty you had with that customer?";
+  const skipped: string[] = [];
+  const cards = planSentenceBoard({ tutorText: T94, studentLast: S94, renderedThisTurn: false, checkedMedium: true, checkedSentence: 'I sell washing machine to customer from USA, 35 washing machine.', levelCheck: true, onLevelCheckSkipped: (r, x) => skipped.push(`${r}: ${x}`) });
+  assert.deepEqual(cards, [], JSON.stringify(cards));
+  assert.deepEqual(skipped, ['recast without card: I sell washing machine to customer from USA, 35 washing machine.']);
+  assert.equal(levelCheckRecast(T94, S94), true);
+  // a cut check sentence ("…customer from") carded as 'checked' is the student's words too → dropped
+  const cut = planSentenceBoard({ tutorText: T94, studentLast: S94, renderedThisTurn: false, checkedMedium: true, checkedSentence: 'I sell washing machine to customer from ', levelCheck: true });
+  assert.deepEqual(cut, [], JSON.stringify(cut));
+});
+test('28A: run-14 72 s (no recast) → the level-check card as today', () => {
+  const S72 = 'Yes, I have worked with international customer.';
+  const T72 = "Thank you, that's a good answer. Could you tell me one thing about that experience, like a project or a meeting?";
+  const skipped: string[] = [];
+  const cards = planSentenceBoard({ tutorText: T72, studentLast: S72, renderedThisTurn: false, levelCheck: true, onLevelCheckSkipped: (r, x) => skipped.push(`${r}: ${x}`) });
+  assert.deepEqual(cards.map((c) => [c.source, c.sentence]), [['levelcheck', 'Yes, I have worked with international customer.']]);
+  assert.deepEqual(skipped, []);
+});
+test('28A: run-14 87 s → the correction card only', () => {
+  const T87 = "Good, the customer was from the USA. That's a useful detail. Now, Question 3, and please take your time: What is one skill you'd like to improve in your English, and why is it important to you?";
+  const cards = planSentenceBoard({ tutorText: T87, studentLast: 'Uh, the customer was from USA.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'the customer was from USA', levelCheck: true });
+  assert.deepEqual(cards.map((c) => [c.kind, c.sentence]), [['correction', 'The customer was from the USA.']]);
+});
+test('28A: an affirmation with no recast still cards (verbatim quote, "is correct")', () => {
+  const st = 'I work as a sales manager in Nagoya.';
+  assert.equal(levelCheckRecast('"I work as a sales manager in Nagoya." is correct. Next question: what do you like about it?', st), false);
+  assert.equal(levelCheckRecast('That is correct. What do you like about your job?', st), false);
+  const cards = planSentenceBoard({ tutorText: 'That is correct. What do you like about your job?', studentLast: st, renderedThisTurn: false, levelCheck: true });
+  assert.deepEqual(cards.map((c) => c.source), ['levelcheck']);
+  // a restatement with a change in second person, reordered → recast
+  assert.equal(levelCheckRecast('So you are a sales manager, working in Nagoya.', st), true);
+  // outside the level check nothing changes (the flag-free rule only touches levelcheck cards)
+  assert.deepEqual(planSentenceBoard({ tutorText: 'That is correct. What do you like about your job?', studentLast: st, renderedThisTurn: false }), []);
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.match(v, /onLevelCheckSkipped: \(reason, sentence\) => onDebugEvent\?\.\('sentence_board_levelcheck_skipped', /);
+  assert.ok(readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8').includes("'sentence_board_levelcheck_skipped',"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

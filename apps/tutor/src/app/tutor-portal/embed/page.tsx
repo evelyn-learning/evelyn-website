@@ -284,6 +284,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'segment_card_auto', 'student_card_on_previous_page',
   //   §C: the part chip held on the displayed part until the new part's page paints:
   'rail_segment_held', 'rail_segment_released',
+  //   Task 28 §A (GDI run 15): a level-check answer the tutor recast, not carded:
+  'sentence_board_levelcheck_skipped',
   //   §F: a move-on request the attempt did not act on (killed + retried):
   'move_on_ignored',
   //   fixed-script lessons: the client moved / held the segment cursor, FACT note delivered:

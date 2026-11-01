@@ -21370,6 +21370,8 @@ export function VoiceTutorRealtime({
             // ANSWERED in (the turn-start segment — the level-set advance
             // moves the pointer mid-turn) is the level check.
             levelCheck: lessonPlanRef.current?.segments.find((sg) => sg.id === turnStartSegmentId)?.metadata?.skipWhenLevelKnown === true,
+            // Task 28 §A: a level-check sentence the tutor recast with no correction card of it.
+            onLevelCheckSkipped: (reason, sentence) => onDebugEvent?.('sentence_board_levelcheck_skipped', `${reason} "${sentence.slice(0, 60)}"`),
             // Task 23 §E (GDI run 11, 1063 s): the board problem is a choice
             // menu — the tracked problem, else the last problem card painted.
             choiceMenu: boardOffersChoices(currentProblemRef.current ?? (() => {
