@@ -1044,3 +1044,11 @@ export const TUTOR_RAIL_FOLLOWS_PAGE = process.env.NEXT_PUBLIC_TUTOR_RAIL_FOLLOW
  *  NEXT_PUBLIC_TUTOR_TRANSITION_ASK_EVERY_ADVANCE=off ⇒ the FACT-note turn
  *  only, no menu clause. */
 export const TUTOR_TRANSITION_ASK_EVERY_ADVANCE = process.env.NEXT_PUBLIC_TUTOR_TRANSITION_ASK_EVERY_ADVANCE !== 'off';
+
+/** Task 27 §F (GDI run 14, 1093 s; pacing rule 2026-10-30): "move on" is an
+ *  order — on a fixed-script lesson a student turn asking to move on ("let's
+ *  do summary", "skip", "next", a later part's label after do / go to /
+ *  start) is followed by a turn that advances, or the attempt is killed once
+ *  (validator move_on_ignored; correct-retry.ts moveOnIgnored). Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_MOVE_ON_ORDER=off. */
+export const TUTOR_MOVE_ON_ORDER = process.env.NEXT_PUBLIC_TUTOR_MOVE_ON_ORDER !== 'off';

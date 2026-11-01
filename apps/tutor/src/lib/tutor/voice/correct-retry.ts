@@ -642,3 +642,67 @@ export const ALREADY_ANSWERED_NOTE =
   '[runtime note — not from the student] The student is telling you they already answered this question. They are right: ' +
   'acknowledge it in a few words, do not grade these words as a new answer, do not ask that question again, and move to the next item. ' +
   'Apply this silently; never mention this note.';
+
+// ─────────────────────────────────────────────────────────────────────────
+// Task 27 §F (GDI run 14, 1083–1142 s; the pacing rule agreed 2026-10-30:
+// "move on" is an order): offered "shall we stop here for today, or would you
+// like one more pronunciation item?", the student said "Uh, let's do
+// summary." — the tutor said "Let's do it", put a key sentence up, asked for
+// it once more and ran two more drills before the part advanced. A student
+// turn that asks to move on must be followed by a turn that moves the lesson
+// (advance_lesson, or the pointer moved); otherwise the attempt is killed
+// once and the retry closes the part and advances. Not in the last part
+// (nothing to advance to), nor when the student's turn also answers (3+
+// Latin words besides the request).
+// ─────────────────────────────────────────────────────────────────────────
+const MOVE_ON_PHRASE_RE = /\b(?:let'?s|can we|shall we|i(?:'d| would) like to)? ?(?:move on|go on|skip|continue|go to|do|start) (?:to )?(?:the )?(?:next(?: part| one)?|summary|wrap[- ]?up|end)\b/;
+const MOVE_ON_WHOLE_TURN_RE = /^(?:skip|move on|next)$/;
+const MOVE_ON_LABEL_VERB = String.raw`(?:do|go to|start)\s+(?:(?:the|with)\s+)?`;
+const MOVE_ON_FILLERS = new Set(['uh', 'um', 'umm', 'uhm', 'er', 'erm', 'ah', 'hmm', 'oh', 'ok', 'okay', 'yes', 'yeah', 'yep', 'so', 'well', 'please', 'now', 'then', 'and', 'i', 'think', 'want', 'to', 'please']);
+const escapeMoveOnRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** The span of the student's turn that asks to move on (lower-cased), or
+ *  null. `labels`: the later parts' labels in any language (metadata.label /
+ *  labelLocalized) — a Latin label matches as whole words, a Japanese one as
+ *  a run. */
+export function moveOnRequestSpan(studentText: string | null | undefined, labels: readonly string[] = []): string | null {
+  const t = (studentText ?? '').toLowerCase().replace(/[’]/g, "'").trim();
+  if (!t) return null;
+  const m = t.match(MOVE_ON_PHRASE_RE);
+  if (m) return m[0];
+  const bare = t.replace(/[^\p{L}\p{N}' ]+/gu, ' ').split(/\s+/).filter((w) => w && !MOVE_ON_FILLERS.has(w)).join(' ');
+  if (MOVE_ON_WHOLE_TURN_RE.test(bare)) return bare;
+  for (const raw of labels) {
+    const label = (raw ?? '').toLowerCase().trim();
+    if (!label) continue;
+    const cjk = /[぀-ヿ㐀-鿿]/.test(label);
+    const re = cjk
+      ? new RegExp(`${escapeMoveOnRe(label)}`)
+      : new RegExp(`\\b${MOVE_ON_LABEL_VERB}${escapeMoveOnRe(label).replace(/\s+/g, '\\s+')}\\b`);
+    const lm = t.match(re);
+    if (lm && (!cjk || /\b(?:do|go to|start)\b/.test(t) || /(?:に進|をやり|を始め|へ進)/.test(t))) return lm[0];
+  }
+  return null;
+}
+/** The student's turn says more than the request (an answer to the open question). */
+function answersBesidesMoveOn(studentText: string, span: string): boolean {
+  const rest = (studentText ?? '').toLowerCase().replace(/[’]/g, "'").replace(span, ' ');
+  const words = (rest.match(/[a-z]+(?:'[a-z]+)*/g) ?? []).filter((w) => !MOVE_ON_FILLERS.has(w) && !/^(?:let'?s|can|we|shall|like|would|i'd)$/.test(w));
+  return words.length >= 3;
+}
+export function moveOnIgnored(input: {
+  studentText: string | null | undefined;
+  /** the attempt called advance_lesson, or the segment pointer moved this turn */
+  advanced: boolean;
+  /** the current part has a part after it */
+  hasNextSegment: boolean;
+  /** the later parts' labels, any language */
+  labels?: readonly string[];
+}): boolean {
+  if (input.advanced || !input.hasNextSegment) return false;
+  const span = moveOnRequestSpan(input.studentText, input.labels ?? []);
+  if (!span) return false;
+  return !answersBesidesMoveOn(input.studentText ?? '', span);
+}
+/** The directive the killed attempt's retry gets. */
+export const MOVE_ON_IGNORED_REASON = withSilentClause(
+  'The student asked to move on. Close this part in one sentence and call advance_lesson now. No practice, no repeat.');

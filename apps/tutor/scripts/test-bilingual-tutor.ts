@@ -70,7 +70,7 @@ import { stripMarkdownEmphasis, matchSentenceBoundary, splitIntoSpokenSentences 
 import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
 import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
 import { expectsEnglishReply } from '../src/lib/tutor/voice/english-reply';
-import { isBoardReadAloud, asksToReadAloud, normaliseNumberTokens, repeatAskThirdVersion, isRepeatAskForThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON } from '../src/lib/tutor/voice/correct-retry';
+import { isBoardReadAloud, asksToReadAloud, normaliseNumberTokens, repeatAskThirdVersion, isRepeatAskForThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, moveOnIgnored, moveOnRequestSpan, MOVE_ON_IGNORED_REASON } from '../src/lib/tutor/voice/correct-retry';
 
 let passed = 0;
 let failed = 0;
@@ -1659,6 +1659,36 @@ test('Task 27 §H (GDI run 14, 408/489 s): a bracketed quote ending with a full 
   assert.match(block, /const openerParts = splitSentenceForTts\(sentenceForSpeech, ttsSplitLanguagesRef\.current\);/);
   assert.match(block, /for \(const \{ text: openerPart \} of openerParts\) \{/);
   assert.doesNotMatch(block, /speakTextRef\.current\?\.\(sentenceForSpeech, /);
+});
+
+test('Task 27 §F (GDI run 14, 1093 s): "move on" is an order — move_on_ignored', () => {
+  const LABELS = ['Summary', 'まとめ'];
+  // 1093 s: in the pronunciation part (summary follows), no advance in the attempt
+  assert.equal(moveOnIgnored({ studentText: 'Uh, let\'s do summary.', advanced: false, hasNextSegment: true, labels: LABELS }), true);
+  assert.equal(moveOnIgnored({ studentText: "Let's do one more", advanced: false, hasNextSegment: true, labels: LABELS }), false);
+  // in the summary part (nothing to advance to)
+  assert.equal(moveOnIgnored({ studentText: 'Uh, let\'s do summary.', advanced: false, hasNextSegment: false, labels: [] }), false);
+  // the attempt advanced
+  assert.equal(moveOnIgnored({ studentText: 'Uh, let\'s do summary.', advanced: true, hasNextSegment: true, labels: LABELS }), false);
+  for (const x of ['Skip.', 'Next.', 'Um, move on.', "Can we move on to the next part?", "I'd like to go to the summary.", 'Shall we skip to the end?']) {
+    assert.ok(moveOnRequestSpan(x, LABELS), x);
+  }
+  // a later part's label after do / go to / start, whole words only
+  assert.ok(moveOnRequestSpan('Can we start conversation now?', ['Conversation']));
+  assert.equal(moveOnRequestSpan('I had a conversation with my boss.', ['Conversation']), null);
+  assert.equal(moveOnRequestSpan('Can we start conversations?', ['Conversation']), null, 'whole words');
+  assert.ok(moveOnRequestSpan('まとめに進みたいです。', LABELS));
+  // ordinary answers are no request
+  for (const x of ['I do the summary report every Friday at work.', 'I continue to work on sales.', 'Next week I will visit the customer.']) {
+    assert.equal(moveOnIgnored({ studentText: x, advanced: false, hasNextSegment: true, labels: LABELS }), false, x);
+  }
+  // the turn also answers the open question
+  assert.equal(moveOnIgnored({ studentText: 'I have worked here for three years. Let\'s move on to the next part.', advanced: false, hasNextSegment: true, labels: LABELS }), false);
+  assert.equal(MOVE_ON_IGNORED_REASON, 'The student asked to move on. Close this part in one sentence and call advance_lesson now. No practice, no repeat. Apply this silently; never mention this note.');
+  const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(v.includes("rejectionsThisAttempt.push({ action: 'move_on_ignored', reason: MOVE_ON_IGNORED_REASON });"));
+  assert.ok(v.includes("advanced: toolNamesThisAttempt.includes('advance_lesson') || moSegId !== turnStartSegmentId,"));
+  assert.ok(v.includes("if (TUTOR_MOVE_ON_ORDER && !attemptKilled && !moveOnRejected && attemptText && !/^\\s*\\[/.test(transcript)) {"));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
