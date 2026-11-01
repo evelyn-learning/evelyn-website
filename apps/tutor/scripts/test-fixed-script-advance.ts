@@ -30,7 +30,7 @@ import {
 import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_MORE_OF_PART_LEAD } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   segmentTransitionKind, fixedScriptPartLabel, fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause,
-  holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS,
+  holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
@@ -600,7 +600,7 @@ test('26A: VTR wiring — offer planted (urgent FACT) instead of the advance, he
   const block = VTR.slice(auto, auto + 12000);
   pin(block, /const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS\s*\? fixedScriptTransitionDecision\(\{ plan: autoPlan, segmentId: segIdNow, reason: advanceReason, offerMade: transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\), offerHeldTurns: autoAdvanceOfferHeldRef\.current \}\)\s*: 'advance';/);
   // order: pronunciation hold → offer → offer hold → ask hold → advance
-  pin(block, /'fixed_script_auto_advance_held_pron'[^\n]*\n\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*autoAdvanceOfferHeldRef\.current = 0;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'hold-offer'\) \{\s*autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
+  pin(block, /'fixed_script_auto_advance_held_pron'[^\n]*\n\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'hold-offer'\) \{\s*autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
   pin(block, /autoAdvanceAskHeldRef\.current = 0;\s*autoAdvanceOfferHeldRef\.current = 0;\s*const autoTurns = cur\.turns;/);
   pin(block, /: fixedScriptAutoAdvanceLead\(segIdNow, autoNext, autoKind\)\) \+[^\n]*\n\s*\/\/[^\n]*\n\s*\(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(autoPlan, segIdNow, autoNext\) : ''\),\s*autoNext,/);
   pin(VTR, /fixedScriptAdvancedNote\(fixedScriptLevelAdvanceLead\(lvNext, lvKind\) \+ \(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(lvPlan, lvFrom, lvNext\) : ''\), lvNext\),/);
@@ -666,6 +666,30 @@ test('26B: VTR wiring — the close check passes the kind and the turn text; wra
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_FIXED_SCRIPT_CLOSE_WRAP = process\.env\.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_CLOSE_WRAP !== 'off';/);
   // B3: the time-box hard stop is untouched
   pin(VTR, /void endSessionNowRef\.current\(\{ farewell: line, reason: 'time_limit' \}\);/);
+});
+
+// ── Task 26 fix round 1 ──
+// Walks the VTR branch order for one due segment, turn by turn, with the
+// component's counter rules (plant ⇒ FIXED_SCRIPT_OFFER_HELD_AT_PLANT,
+// hold ⇒ +1). Returns the decision at the end of each tutor turn.
+function walkOffer(turns: number, reason: 'turns' | 'time' = 'turns'): string[] {
+  let offerMade = false;
+  let held = 0;
+  const out: string[] = [];
+  for (let t = 0; t < turns; t++) {
+    const d = fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason, offerMade, offerHeldTurns: held });
+    out.push(d);
+    if (d === 'offer') { offerMade = true; held = FIXED_SCRIPT_OFFER_HELD_AT_PLANT; }
+    else if (d === 'hold-offer') held += 1;
+    else break;
+  }
+  return out;
+}
+test('26 I-1: plant → offer turn (held) → practice turn ⇒ advance — two tutor turns after the plant', () => {
+  assert.equal(FIXED_SCRIPT_OFFER_HELD_AT_PLANT, 1);
+  assert.deepEqual(walkOffer(6), ['offer', 'hold-offer', 'advance']);
+  assert.deepEqual(walkOffer(6, 'time'), ['offer', 'hold-offer', 'advance']);
+  // the VTR events read n/2: the one hold event shows 2/2
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

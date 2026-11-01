@@ -333,7 +333,19 @@ export function fixedScriptPartLabel(plan: LessonPlan | null | undefined, segmen
 /** Turns a due advance waits after the offer note was planted: the offer
  *  turn + one practice turn. */
 export const FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS = 2;
-/** True ⇒ hold this turn. `heldTurns` = turns already held after the offer. */
+/** Task 26 fix round 1 (I-1): the plant turn counts as the first held turn,
+ *  so the re-check advances at the end of the SECOND tutor turn after the
+ *  plant (the offer turn + one practice turn), not the third. */
+export const FIXED_SCRIPT_OFFER_HELD_AT_PLANT = 1;
+/** Task 26 fix round 1 (I-2a): the segment-overlong note ("call
+ *  advance_lesson …") lands one turn before the budget and would skip the
+ *  offer — on an offer part that has not made its offer, the offer note
+ *  takes its place. */
+export function overlongNoteYieldsToOffer(plan: LessonPlan | null | undefined, segmentId: string | null | undefined, offerMade: boolean): boolean {
+  return !offerMade && segmentTransitionKind(plan, segmentId) === 'offer';
+}
+/** True ⇒ hold this turn. `heldTurns` = turns already held after the offer
+ *  (FIXED_SCRIPT_OFFER_HELD_AT_PLANT at the plant). */
 export function holdAutoAdvanceForOffer(offerMade: boolean, heldTurns: number): boolean {
   return offerMade && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS;
 }
