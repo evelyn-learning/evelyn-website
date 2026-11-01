@@ -22,6 +22,7 @@
  * thing kept here is the IdleNudgeState object the caller passes back in
  * (counts, and planIdleNudge's clock bookkeeping).
  */
+import { withSilentClause } from './output-budget';
 
 /** Quiet time after a delivered tutor turn before the first nudge. Long
  *  enough for reading a dense render or working a step ("take a moment to
@@ -129,13 +130,14 @@ export function recordStudentEngagement(state: IdleNudgeState): void {
 /** Bracketed silent directive ([System note:] convention from
  *  tutor-reactions.ts): synthetic throughout the orchestrator — no student
  *  bubble, skips covers, never starts the session clock. */
-export const IDLE_NUDGE_DIRECTIVE =
+// Task 27 fix round 1 (§D2): every synthetic directive ends with the shared silent clause.
+export const IDLE_NUDGE_DIRECTIVE = withSilentClause(
   '[System note: the student has been quiet for a while since your last turn. ' +
   'Re-engage gently in ONE short sentence. If your last turn asked a question, ' +
   "softly check in or offer a choice — a hint, or more time. If it handed them " +
   'time to read or work, ask how it\'s going. If it ended without a question, ' +
   'offer the next small step. Do not repeat or summarize earlier content, and ' +
-  'never scold the silence.]';
+  'never scold the silence.]');
 
 /**
  * R49b nudge directive v2 (live 2026-08-20, portal-2d53e403 at 1003.4s).
@@ -176,7 +178,7 @@ export interface IdleNudgeDirectiveOpts {
 
 export function idleNudgeDirective(opts: IdleNudgeDirectiveOpts): string {
   if (!opts?.v2) return IDLE_NUDGE_DIRECTIVE;
-  return (
+  return withSilentClause(
     '[System note: the student has been quiet for a while since your last turn. ' +
     'Re-engage gently in ONE short sentence. The question you last asked is ' +
     'STILL OUTSTANDING and still theirs to answer — DO NOT ANSWER IT, and do not ' +

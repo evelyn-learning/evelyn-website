@@ -24,6 +24,7 @@
  */
 
 import { TUTOR_JUDGE_NOTE_FALSE_PRAISE, TUTOR_RETRACTION_OWN_IT } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { withSilentClause } from './output-budget';
 
 const MAX_CLAIMS = 2;
 const MAX_CLAIM_CHARS = 160;
@@ -84,14 +85,14 @@ export const CORRECTION_DUE_PREFIX = '[Correction-due]';
 /** Dispatched when a planted note has gone undelivered past its deadline.
  *  Deliberately does NOT restate the flagged claim — the note itself is
  *  prepended to this same turn and already carries it. */
-export const CORRECTION_DUE_DIRECTIVE =
+export const CORRECTION_DUE_DIRECTIVE = withSilentClause(
   `${CORRECTION_DUE_PREFIX} The student has gone quiet since your last turn. ` +
   `Act on the correction note above now rather than waiting for them to speak: ` +
   `if you got it wrong, own it in one short sentence and re-ask the question. ` +
   `If on re-checking you stand by what you said, say nothing about the review and ` +
   `simply offer the student a way back in. Never narrate the act of checking ` +
   `("that check was correct", "no correction needed") — the student must never ` +
-  `learn a check happened.`;
+  `learn a check happened.`);
 
 /**
  * A note is consumed by a REAL student turn, never by an ordinary synthetic

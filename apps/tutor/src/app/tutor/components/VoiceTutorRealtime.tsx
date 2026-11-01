@@ -229,7 +229,7 @@ import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeat
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
 import { moveOnIgnored, MOVE_ON_IGNORED_REASON, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
-import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction } from '@/lib/tutor/voice/output-budget';
+import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '@/lib/tutor/voice/tutor-language-drift';
@@ -19426,10 +19426,11 @@ export function VoiceTutorRealtime({
                 pendingRequiredPhraseNoteSegRef.current = segIdForPhrases;
                 onDebugEvent?.('required_phrase_deferred', `max_tokens: segId="${segIdForPhrases}" missing=[${missing.join(', ')}]`);
               } else if (phraseAction === 'kill') {
-                const reason =
+                // Task 27 fix round 1 (§D2): the retry directive ends with the shared silent clause.
+                const reason = withSilentClause(
                   `Your narration for segment "${segIdForPhrases}" is missing required phrase(s): ${missing.map((m) => `"${m}"`).join(', ')}. ` +
                   `This segment pins specific narrative parameters (target values, example inputs, etc.) that you must reference verbatim — substituting a different value mid-segment desynchronizes the lesson from the board/segment-card and the student's tracking. ` +
-                  `Re-emit your response with each required phrase appearing at least once in the spoken narration.`;
+                  `Re-emit your response with each required phrase appearing at least once in the spoken narration.`);
                 rejectionsThisAttempt.push({ action: 'required_phrase_missing', reason });
                 await performKill();
                 console.warn(`[brain-orchestrator] requiredPhrases miss on segment "${segIdForPhrases}": missing=[${missing.join(', ')}]`);

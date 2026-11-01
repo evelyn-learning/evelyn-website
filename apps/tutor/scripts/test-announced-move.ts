@@ -14,6 +14,9 @@ import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED
 import { TRANSITION_ASK_REASON } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { REPEAT_ASK_THIRD_VERSION_REASON, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, REASKED_QUESTION_NOTE, REASKED_EARLIER_QUESTION_NOTE, ALREADY_ANSWERED_NOTE, isCorrectionTurn } from '../src/lib/tutor/voice/correct-retry';
 import { SILENT_NOTE_CLAUSE, withSilentClause, outputBudgetNote } from '../src/lib/tutor/voice/output-budget';
+import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice/idle-nudge';
+import { CORRECTION_DUE_DIRECTIVE } from '../src/lib/tutor/voice/judge-correction-note';
+import { MOVE_ON_IGNORED_REASON } from '../src/lib/tutor/voice/correct-retry';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
 let failed = 0;
@@ -246,10 +249,15 @@ test('27D2: each directive ends with "Apply this silently; never mention this no
     FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON,
     TRANSITION_ASK_REASON, REPEAT_ASK_THIRD_VERSION_REASON, REPEAT_AFTER_CORRECT_REASON,
     OWN_SENTENCE_RETRY_NOTE, REASKED_QUESTION_NOTE, REASKED_EARLIER_QUESTION_NOTE, ALREADY_ANSWERED_NOTE,
+    // fix round 1 (§D2 gap): the idle nudges, the correction-due sentinel, the move-on retry
+    IDLE_NUDGE_DIRECTIVE, IDLE_NUDGE_V2: idleNudgeDirective({ v2: true }), IDLE_NUDGE_V2_NO_Q: idleNudgeDirective({ v2: true, hasOpenQuestion: false }),
+    CORRECTION_DUE_DIRECTIVE, MOVE_ON_IGNORED_REASON,
   };
   for (const [k, v] of Object.entries(all)) assert.ok(v.replace(/\]$/, '').endsWith(SILENT_NOTE_CLAUSE), k);
   // bracketed whole stays bracketed whole (the client's silent-transcript test)
   for (const v of [FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE]) assert.ok(v.startsWith('[') && v.endsWith(']'), v);
+  // the inline required_phrase_missing retry reason
+  pin(VTR, /const reason = withSilentClause\(\s*`Your narration for segment /);
   assert.equal(withSilentClause('[System note: x.]'), '[System note: x. Apply this silently; never mention this note.]');
   assert.equal(withSilentClause(withSilentClause('Do y.')), 'Do y. Apply this silently; never mention this note.');
 });
