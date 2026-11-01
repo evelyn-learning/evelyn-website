@@ -17,6 +17,7 @@
 import { dropFillersAndRepeats } from './filler-repeats';
 import { isRetryAsk } from './retry-cap';
 import { normaliseNumberTokens } from './number-tokens';
+import { sentenceAsksStudent } from '../question-gist-text';
 
 /** 'echo' (GDI run 3): the tutor quoting the student's own words back (often
  *  the wrong ones) — never a card, unless the check found the student's
@@ -890,35 +891,48 @@ export const LEVELCHECK_RECAST_OVERLAP = 0.5;
  *  second-person words mapped to the first person's class (§D2). */
 const levelRecastToks = (text: string): string[] => personClassTokens(dropFillersAndRepeats(tokens(text)))
   .filter((t) => !RECAST_FILLER_TOKENS.has(t));
+/** Acknowledgement words a restatement may carry without changing anything
+ *  ("A sales manager at Nagoya Corporation, thank you."). */
+const RECAST_ACK_PHRASE_RE = /\b(?:thank you(?: so much| very much)?|thanks)\b/gi;
+const RECAST_ACK_TOKENS = new Set(['great', 'good', 'nice', 'clear', 'perfect', 'excellent', 'wonderful', 'interesting', 'correct', 'exactly', 'right', 'okay', 'ok', 'yes', 'yeah', 'sure', 'thanks']);
 /** True when `piece` (one tutor sentence, or one quoted span of it) restates
  *  the student's sentence with a change: ≥ 50 % of the student's distinct
- *  content tokens (articles out, 4-char stems), order-insensitive, AND the
- *  two differ in at least one token (inflection, article, number word, or a
- *  token added / removed). */
+ *  content tokens (articles out, 4-char stems), order-insensitive, AND (fix
+ *  round 1, I-1) at least one tutor token ADDED or CHANGED relative to the
+ *  student's tokens — an inflection, an article, a number word, a new word.
+ *  A piece that is only a subset of the student's words (an echo, with or
+ *  without acknowledgement words) is no recast. */
 function restatesWithChange(studentToks: readonly string[], piece: string): boolean {
-  const core = piece.trim().replace(GRAMMAR_RECAST_LEAD_RE, '');
-  const t = levelRecastToks(core);
+  const core = piece.trim().replace(GRAMMAR_RECAST_LEAD_RE, '').replace(RECAST_ACK_PHRASE_RE, ' ');
+  const t = levelRecastToks(core).filter((x) => !RECAST_ACK_TOKENS.has(x));
   if (t.length === 0) return false;
   const content = [...new Set(contentTokens(studentToks))];
   if (content.length === 0) return false;
   const tContent = contentTokens(t);
   const matched = content.filter((x) => tContent.some((u) => sameStem(x, u))).length;
   if (matched / content.length < LEVELCHECK_RECAST_OVERLAP) return false;
-  const count = (xs: readonly string[]) => { const m = new Map<string, number>(); for (const x of xs) m.set(x, (m.get(x) ?? 0) + 1); return m; };
-  const a = count(studentToks), b = count(t);
-  for (const [k, n] of a) if ((b.get(k) ?? 0) !== n) return true;
-  for (const [k, n] of b) if ((a.get(k) ?? 0) !== n) return true;
+  const have = new Map<string, number>();
+  for (const x of studentToks) have.set(x, (have.get(x) ?? 0) + 1);
+  for (const x of t) {
+    const n = have.get(x) ?? 0;
+    if (n === 0) return true;
+    have.set(x, n - 1);
+  }
   return false;
 }
 /** Task 28 §A: the tutor's turn recasts the student's sentence — any tutor
  *  sentence (lead interjection stripped; a quoted span tested on its own, the
  *  rest of its sentence without it) that restates it with a change. A
- *  verbatim quote ("…" is correct) or no restatement ⇒ false. */
+ *  verbatim quote ("…" is correct), an echo, or no restatement ⇒ false. Fix
+ *  round 1 (I-1): a sentence that ASKS (ends with "?", or an imperative ask —
+ *  sentenceAsksStudent, the §B helper) is never a recast, quotes included
+ *  ("What do you like about working as a sales manager at …?"). */
 export function levelCheckRecast(tutorText: string | null | undefined, student: string | null | undefined): boolean {
   const studentToks = levelRecastToks(student ?? '');
   if (contentTokens(studentToks).length < GRAMMAR_RECAST_MIN_STUDENT_TOKENS) return false;
   for (const sentence of (tutorText ?? '').split(/(?<=[.!?。！？])\s+/)) {
     if (!sentence.trim() || CJK_RE.test(sentence)) continue;
+    if (sentenceAsksStudent(sentence)) continue;
     const pieces: string[] = [];
     let rest = sentence;
     for (const m of sentence.matchAll(QUOTE_RE)) {

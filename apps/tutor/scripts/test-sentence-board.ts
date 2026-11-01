@@ -1343,5 +1343,26 @@ test('28A: an affirmation with no recast still cards (verbatim quote, "is correc
   assert.ok(readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8').includes("'sentence_board_levelcheck_skipped',"));
 });
 
+// ── Task 28 fix round 1 (I-1): an echo or a follow-up question is no recast — the level-check card stays ──
+test('28A r1 I-1: echo / follow-up question built from the student\'s words → levelcheck card', () => {
+  const st = 'I work as a sales manager at Nagoya Corporation.';
+  const echo = 'A sales manager at Nagoya Corporation, thank you. Question two: what is one difficulty you had at work?';
+  const follow = 'Great. What do you like about working as a sales manager at Nagoya Corporation?';
+  for (const t of [echo, follow]) {
+    assert.equal(levelCheckRecast(t, st), false, t);
+    assert.deepEqual(planSentenceBoard({ tutorText: t, studentLast: st, renderedThisTurn: false, levelCheck: true }).map((c) => c.source), ['levelcheck'], t);
+  }
+  const st2 = 'I have worked with international customers.';
+  const t2 = 'What did you learn from working with international customers?';
+  assert.equal(levelCheckRecast(t2, st2), false);
+  assert.deepEqual(planSentenceBoard({ tutorText: t2, studentLast: st2, renderedThisTurn: false, levelCheck: true }).map((c) => c.source), ['levelcheck']);
+  // an imperative ask built from the student's words is no recast either
+  assert.equal(levelCheckRecast('Tell me more about working as a sales manager at Nagoya Corporation.', st), false);
+  // run-15 94 s still: a real change ("sold", "machines", "a", "US") → no card
+  assert.equal(levelCheckRecast("Thank you, that's clear. You sold 35 washing machines to a US customer. Now, question 2: what was one difficulty you had with that customer?", 'Um, I sell uh washing machine to customer from USA, 35 washing machine.'), true);
+  // the 23B2 99 s line is a true recast ("machines", "a", "US" added) — its flipped expectation stands
+  assert.equal(levelCheckRecast("Thank you. You sell washing machines to a US company, so that's useful experience. Now, question 3, please answer in English: What is one skill you'd like to improve in your English, and why is it important to you?", 'I sell washing machine to the USA customer for their company.'), true);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
