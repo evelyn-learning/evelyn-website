@@ -6,7 +6,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { askOffNewPart, transitionAskSentence, contentTokens, TRANSITION_ASK_REASON } from '../src/lib/tutor/lesson-plan/transition-ask';
+import { askOffNewPart, transitionAskSentence, contentTokens, TRANSITION_ASK_REASON, transitionAskCheckDue, cardAsksOrOffersChoices } from '../src/lib/tutor/lesson-plan/transition-ask';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -48,8 +48,29 @@ test('the retry reason, verbatim; VTR kills once per turn on the FACT-note turn'
   assert.equal(TRANSITION_ASK_REASON, "The lesson has moved to the next part. Reply to the student's last answer in ONE sentence with no follow-up question about it, then present the new part's card and end with that part's own question. Apply this silently; never mention this note.");
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(v.includes("rejectionsThisAttempt.push({ action: 'transition_ask_off_part', reason: TRANSITION_ASK_REASON });"));
-  assert.ok(v.includes('if (!attemptKilled && !transitionAskRejected && attemptText && fixedScriptNoteDeliveredThisTurnRef.current'));
+  assert.ok(v.includes('if (!attemptKilled && !transitionAskRejected && attemptText\n          && (fixedScriptNoteDeliveredThisTurnRef.current || (TUTOR_TRANSITION_ASK_EVERY_ADVANCE && currentSegmentIdRef.current !== turnStartSegmentId))) {'));
   assert.ok(v.includes("onDebugEvent?.('transition_ask_off_part', "));
+});
+
+// Task 27 §E1 (GDI run 14, 955–958 s): the brain's own advance_lesson into a choice-menu part.
+test('27E1: the 958 s turn — brain advance, ask "read the sentence on the board" vs the menu card → reject', () => {
+  const T958 = 'Good, you learned that presenting to the team helps everyone learn. "I learned that presenting to the team helps everyone learn" is clear. That\'s a good place to close this part. Next, we\'ll practice pronunciation. Can you read the sentence on the board aloud for me?';
+  const ask = transitionAskSentence(T958);
+  assert.equal(ask, 'Can you read the sentence on the board aloud for me?');
+  assert.equal(cardAsksOrOffersChoices(CARD), true);
+  const due = transitionAskCheckDue({ factNoteDelivered: false, advancedThisTurn: true, fixedScript: true, card: CARD });
+  assert.equal(due, true);
+  assert.equal(askOffNewPart(ask!, CARD), true);
+  // not due: no advance and no FACT note; not a fixed script; a card that neither asks nor offers choices; the flag off
+  assert.equal(transitionAskCheckDue({ factNoteDelivered: false, advancedThisTurn: false, fixedScript: true, card: CARD }), false);
+  assert.equal(transitionAskCheckDue({ factNoteDelivered: false, advancedThisTurn: true, fixedScript: false, card: CARD }), false);
+  assert.equal(transitionAskCheckDue({ factNoteDelivered: false, advancedThisTurn: true, fixedScript: true, card: 'We use the past simple for finished events.' }), false);
+  assert.equal(transitionAskCheckDue({ factNoteDelivered: false, advancedThisTurn: true, fixedScript: true, card: CARD, everyAdvance: false }), false);
+  // the FACT-note turn as before (any card)
+  assert.equal(transitionAskCheckDue({ factNoteDelivered: true, advancedThisTurn: false, fixedScript: true, card: 'We use the past simple for finished events.' }), true);
+  assert.equal(transitionAskCheckDue({ factNoteDelivered: true, advancedThisTurn: true, fixedScript: true, card: '' }), false);
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(v.includes('advancedThisTurn: currentSegmentIdRef.current !== turnStartSegmentId,'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

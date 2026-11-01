@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -89,7 +89,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
 import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget } from '@/lib/tutor/whiteboard/deferred-page-flush';
-import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON } from '@/lib/tutor/lesson-plan/transition-ask';
+import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
@@ -434,7 +434,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptTransitionDecision, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -647,6 +647,12 @@ import {
   type StudentMarkEvent,
   type ResolvedMark,
 } from '@/lib/tutor/whiteboard/student-marks';
+/** Task 27 §E2: a segment's card statement as the board shows it ('' = none). */
+function segmentCardStatement(plan: LessonPlan | null | undefined, segId: string): string {
+  const sg = plan?.segments.find((x) => x.id === segId);
+  const truth = sg && plan ? getSegmentTruth(sg, plan.id) : null;
+  return truth?.problemText ? stripWbEmphasisText(truth.problemText) : '';
+}
 
 // R42 (2026-08-10, session portal-cb2addf5): shared skip-with-debug-note
 // backstop for every turn_latency emit site. `turn_latency
@@ -8365,7 +8371,7 @@ export function VoiceTutorRealtime({
             const merged = mergePendingRuntimeNote(
               { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
               lvFrom, lvNext,
-              fixedScriptAdvancedNote(fixedScriptLevelAdvanceLead(lvNext, lvKind) + (TUTOR_FIXED_SCRIPT_TRANSITIONS ? fixedScriptBridgeClause(lvPlan, lvFrom, lvNext) : ''), lvNext),
+              fixedScriptAdvancedNote(fixedScriptLevelAdvanceLead(lvNext, lvKind) + (TUTOR_FIXED_SCRIPT_TRANSITIONS ? fixedScriptBridgeClause(lvPlan, lvFrom, lvNext) : '') + (TUTOR_TRANSITION_ASK_EVERY_ADVANCE ? fixedScriptChoiceMenuClause(segmentCardStatement(lvPlan, lvNext)) : ''), lvNext),
             );
             pendingRuntimeNoteRef.current = merged.note;
             pendingRuntimeNoteSegRef.current = merged.segId;
@@ -19493,11 +19499,22 @@ export function VoiceTutorRealtime({
         // on the turn carrying the FACT note, an attempt whose closing ask
         // shares < 2 content tokens with the new part's card statement is
         // killed + retried once (the premature_farewell path).
-        if (!attemptKilled && !transitionAskRejected && attemptText && fixedScriptNoteDeliveredThisTurnRef.current) {
+        // Task 27 §E1 (GDI run 14, 958 s): also on any turn that moved the
+        // pointer (the brain's own advance_lesson) into a part whose card
+        // asks something or offers choices.
+        if (!attemptKilled && !transitionAskRejected && attemptText
+          && (fixedScriptNoteDeliveredThisTurnRef.current || (TUTOR_TRANSITION_ASK_EVERY_ADVANCE && currentSegmentIdRef.current !== turnStartSegmentId))) {
           const taPlan = lessonPlanRef.current;
           const taSeg = taPlan?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
           const taTruth = taSeg && taPlan ? getSegmentTruth(taSeg, taPlan.id) : null;
-          const taCard = taTruth?.problemText ? stripWbEmphasisText(taTruth.problemText) : '';
+          const taCardText = taTruth?.problemText ? stripWbEmphasisText(taTruth.problemText) : '';
+          const taCard = transitionAskCheckDue({
+            factNoteDelivered: fixedScriptNoteDeliveredThisTurnRef.current,
+            advancedThisTurn: currentSegmentIdRef.current !== turnStartSegmentId,
+            fixedScript: isFixedScriptPlan(taPlan),
+            card: taCardText,
+            everyAdvance: TUTOR_TRANSITION_ASK_EVERY_ADVANCE,
+          }) ? taCardText : '';
           const taAsk = taCard ? transitionAskSentence(attemptText) : null;
           if (taAsk && askOffNewPart(taAsk, taCard)) {
             transitionAskRejected = true;
@@ -20923,7 +20940,9 @@ export function VoiceTutorRealtime({
                   ? fixedScriptAnnouncedAdvanceLead(segIdNow, autoNext, autoKind)
                   : fixedScriptAutoAdvanceLead(segIdNow, autoNext, autoKind)) +
                 // Task 26 §A: a bridge part says what it learned first.
-                (TUTOR_FIXED_SCRIPT_TRANSITIONS ? fixedScriptBridgeClause(autoPlan, segIdNow, autoNext) : ''),
+                (TUTOR_FIXED_SCRIPT_TRANSITIONS ? fixedScriptBridgeClause(autoPlan, segIdNow, autoNext) : '') +
+                // Task 27 §E2: a choice-menu card is read and asked, nothing else.
+                (TUTOR_TRANSITION_ASK_EVERY_ADVANCE ? fixedScriptChoiceMenuClause(segmentCardStatement(autoPlan, autoNext)) : ''),
                 autoNext,
               ),
             );

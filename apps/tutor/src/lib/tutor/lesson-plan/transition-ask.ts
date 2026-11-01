@@ -20,6 +20,7 @@
  */
 import { lastAskSentence, lastQuestionSentence, turnEndsWithAsk } from '../question-gist-text';
 import { withSilentClause } from '../voice/output-budget';
+import { boardOffersChoices } from '../voice/sentence-board';
 
 export const TRANSITION_ASK_REASON = withSilentClause(
   "The lesson has moved to the next part. Reply to the student's last answer in ONE sentence with no follow-up question about it, then present the new part's card and end with that part's own question.");
@@ -78,4 +79,31 @@ export function transitionAskSentence(text: string): string | null {
   const last = sentences[sentences.length - 1] ?? '';
   if (/[?？]["”’)\]]*\s*$/.test(last)) return lastQuestionSentence(t) ?? last;
   return lastAskSentence(t) ?? last;
+}
+
+/** Task 27 §E1 (GDI run 14, 955–958 s): the brain's OWN advance_lesson into
+ *  the pronunciation part ended "Can you read the sentence on the board aloud
+ *  for me?" — no sentence was on the board and the part's menu was never
+ *  asked; the check ran only on the FACT-note turn of a client advance. It
+ *  now runs on every turn that moved the segment pointer (any path) into a
+ *  part whose card asks something or offers choices; the FACT-note turn as
+ *  before. */
+export function cardAsksOrOffersChoices(card: string | null | undefined): boolean {
+  const c = card ?? '';
+  return /[?？]/.test(c) || boardOffersChoices({ statement: c });
+}
+export function transitionAskCheckDue(input: {
+  /** the turn carried a fixed-script FACT note (the client moved the pointer) */
+  factNoteDelivered: boolean;
+  /** the pointer moved during this turn (the brain's advance_lesson included) */
+  advancedThisTurn: boolean;
+  fixedScript: boolean;
+  /** the new part's card statement ('' = none) */
+  card: string;
+  /** TUTOR_TRANSITION_ASK_EVERY_ADVANCE */
+  everyAdvance?: boolean;
+}): boolean {
+  if (!input.card) return false;
+  if (input.factNoteDelivered) return true;
+  return input.everyAdvance !== false && input.fixedScript && input.advancedThisTurn && cardAsksOrOffersChoices(input.card);
 }

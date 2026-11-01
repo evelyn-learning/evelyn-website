@@ -11,6 +11,7 @@
 import type { LessonPlan, Segment, SegmentTransition } from './types';
 import { withSilentClause } from '../voice/output-budget';
 import { isCorrectionTurn } from '../voice/correct-retry';
+import { boardOffersChoices } from '../voice/sentence-board';
 
 export function isFixedScriptPlan(plan: LessonPlan | null | undefined): boolean {
   return plan?.metadata?.fixedScript === true;
@@ -424,6 +425,17 @@ export function fixedScriptOfferNote(plan: LessonPlan | null | undefined, from: 
 export function fixedScriptBridgeClause(plan: LessonPlan | null | undefined, from: string, next: string): string {
   if (segmentTransitionKind(plan, from) !== 'bridge') return '';
   return ` Before the new part's first question, say in one sentence what you learned about the student in "${fixedScriptPartLabel(plan, from)}" (their level / their job / their answers — whatever that part gathered), then start "${fixedScriptPartLabel(plan, next)}".`;
+}
+
+/** Task 27 §E2 (GDI run 14, 958 s: the pronunciation part opened with "Can
+ *  you read the sentence on the board aloud?" over its choice menu): the
+ *  extra clause of the advance lead when the new part's card is a choice
+ *  menu (≥ 2 "1)" / "A)" markers, or hasChoices) — leading space; '' otherwise. */
+export const FIXED_SCRIPT_CHOICE_MENU_CLAUSE =
+  " The new part's card is a choice menu. Read the choices, ask the student to pick one, and wait for their choice. Nothing else is on the board yet.";
+export function fixedScriptChoiceMenuClause(card: { statement?: string; hasChoices?: boolean } | string | null | undefined): string {
+  const problem = typeof card === 'string' ? { statement: card } : card;
+  return boardOffersChoices(problem) ? FIXED_SCRIPT_CHOICE_MENU_CLAUSE : '';
 }
 
 /** Task 22 §A (GDI run 10, 574 s / 882 s): a due auto-advance on a turn that

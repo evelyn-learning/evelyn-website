@@ -27,7 +27,7 @@ import {
   fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_GRACE_TURNS,
   segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
-import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_MORE_OF_PART_LEAD, fixedScriptContinueDirective, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, isFixedScriptContinueDirective } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_MORE_OF_PART_LEAD, fixedScriptContinueDirective, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, isFixedScriptContinueDirective, fixedScriptChoiceMenuClause, FIXED_SCRIPT_CHOICE_MENU_CLAUSE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   segmentTransitionKind, fixedScriptPartLabel, fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause,
   holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer,
@@ -172,7 +172,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 9000  /* Task 26: the offer branches */);
+  const block = VTR.slice(auto, auto + 9600  /* Task 26: the offer branches; Task 27 §E2: the menu clause */);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
   pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{advanceReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
@@ -602,8 +602,8 @@ test('26A: VTR wiring — offer planted (urgent FACT) instead of the advance, he
   // order: pronunciation hold → offer → offer hold → ask hold → advance
   pin(block, /'fixed_script_auto_advance_held_pron'[^\n]*\n\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'hold-offer'\) \{\s*autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
   pin(block, /autoAdvanceAskHeldRef\.current = 0;\s*autoAdvanceOfferHeldRef\.current = 0;\s*const autoTurns = cur\.turns;/);
-  pin(block, /: fixedScriptAutoAdvanceLead\(segIdNow, autoNext, autoKind\)\) \+[^\n]*\n\s*\/\/[^\n]*\n\s*\(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(autoPlan, segIdNow, autoNext\) : ''\),\s*autoNext,/);
-  pin(VTR, /fixedScriptAdvancedNote\(fixedScriptLevelAdvanceLead\(lvNext, lvKind\) \+ \(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(lvPlan, lvFrom, lvNext\) : ''\), lvNext\),/);
+  pin(block, /: fixedScriptAutoAdvanceLead\(segIdNow, autoNext, autoKind\)\) \+[^\n]*\n\s*\/\/[^\n]*\n\s*\(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(autoPlan, segIdNow, autoNext\) : ''\) \+\s*\/\/[^\n]*\n\s*\(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(autoPlan, autoNext\)\) : ''\),\s*autoNext,/);
+  pin(VTR, /fixedScriptAdvancedNote\(fixedScriptLevelAdvanceLead\(lvNext, lvKind\) \+ \(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(lvPlan, lvFrom, lvNext\) : ''\) \+ \(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(lvPlan, lvNext\)\) : ''\), lvNext\),/);
   // the offer counter resets when the turn counter moves to a new segment
   pin(VTR, /if \(st\.segId !== segIdNow\) \{ turnsInSegmentRef\.current = \{ segId: segIdNow, turns: 0, noted: false, startedAt: Date\.now\(\) \}; autoAdvanceOfferHeldRef\.current = 0; \}/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_FIXED_SCRIPT_TRANSITIONS = process\.env\.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_TRANSITIONS !== 'off';/);
@@ -753,6 +753,18 @@ test('27C: displayedSegmentId — pending page ⇒ the previous part; after the 
   const TS = read('src/app/tutor/components/session/TutorSession.tsx');
   pin(TS, /const chipSegmentId = lessonProgress\.displayedSegmentId \?\? lessonProgress\.currentSegmentId \?\? '';/);
   pin(TS, /buildRailModel\(lessonProgress\.plan, chipSegmentId,\s*new Set\(chipCompletedIds\)/);
+});
+
+// Task 27 §E2 (GDI run 14, 958 s): the advance lead into a choice-menu part says so.
+test('27E2: choice-menu card → the menu clause in the lead; a plain question card → absent', () => {
+  const MENU = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  assert.equal(FIXED_SCRIPT_CHOICE_MENU_CLAUSE, " The new part's card is a choice menu. Read the choices, ask the student to pick one, and wait for their choice. Nothing else is on the board yet.");
+  assert.equal(fixedScriptChoiceMenuClause(MENU), FIXED_SCRIPT_CHOICE_MENU_CLAUSE);
+  assert.equal(fixedScriptChoiceMenuClause({ statement: 'Pick one.', hasChoices: true }), FIXED_SCRIPT_CHOICE_MENU_CLAUSE);
+  assert.equal(fixedScriptChoiceMenuClause('Did you attend any business events last year?'), '');
+  assert.equal(fixedScriptChoiceMenuClause(''), '');
+  const lead = fixedScriptAutoAdvanceLead('open-conversation', 'pronunciation', 'try_yourself') + fixedScriptChoiceMenuClause(MENU);
+  assert.ok(fixedScriptAdvancedNote(lead, 'pronunciation').includes('Nothing else is on the board yet. Reply to the student'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

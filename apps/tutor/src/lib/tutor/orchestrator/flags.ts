@@ -1035,3 +1035,12 @@ export const TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE = process.env.NEXT_PUBLIC_TUTO
  *  and the completed set the host persists are unchanged). Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_RAIL_FOLLOWS_PAGE=off ⇒ the pointer at once. */
 export const TUTOR_RAIL_FOLLOWS_PAGE = process.env.NEXT_PUBLIC_TUTOR_RAIL_FOLLOWS_PAGE !== 'off';
+
+/** Task 27 §E (GDI run 14, 955–958 s): entering a part whose card is a
+ *  question / choice menu — the off-part ask check (transition-ask.ts) runs
+ *  on every turn that moved the pointer, the brain's own advance_lesson
+ *  included (E1), and the client's advance lead names a choice menu (E2,
+ *  fixedScriptChoiceMenuClause). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_TRANSITION_ASK_EVERY_ADVANCE=off ⇒ the FACT-note turn
+ *  only, no menu clause. */
+export const TUTOR_TRANSITION_ASK_EVERY_ADVANCE = process.env.NEXT_PUBLIC_TUTOR_TRANSITION_ASK_EVERY_ADVANCE !== 'off';
