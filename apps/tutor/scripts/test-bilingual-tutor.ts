@@ -1594,5 +1594,11 @@ test('Task 25 §G (GDI run 13, 824 s): no third version of a model sentence', ()
   assert.match(v, /repeatAskThirdVersion\(\{ prevTutorText: tvPrev, studentText: transcript, verdict: verdictPrecheckRef\.current\?\.verdict, attemptText \}\)/);
 });
 
+test('Task 25 fix round 1 (I-1): scrubTutorText (SentenceBuffer) keeps a "Say: / Listen:" label — no unnamed label strip', () => {
+  for (const x of ['Say: "I have worked here for five years."', 'Listen: 「I have worked here」', 'Perfect: "I went there yesterday."', 'Remember: "a" goes before a vowel.']) {
+    assert.deepEqual(split(x), [x]);
+  }
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

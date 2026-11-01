@@ -374,30 +374,24 @@ export function stripEchoedTags(sentence: string): string {
     .trim();
 }
 
-/** Task 25 §A5 (GDI run 13): words that open a real labelled line
- *  ("Question: "…"", "Example: 「…」") — never stripped as a speaker label. */
-const NON_SPEAKER_LABEL_WORDS = new Set(['note', 'question', 'answer', 'example', 'tip', 'hint', 'step', 'part', 'option', 'student', 'teacher']);
 const escapeRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 /** Bare stage labels the model sometimes writes in front of a real sentence
  *  ("*opener* はい、…" — same session). Stripped, the sentence itself kept.
  *  Task 25 §A5 (GDI run 13, 1214 / 1292 / 1336 s): the persona's name written
- *  as a script label ("Ryota: 過去完了を…", "Ryota：「…」") — stripped when the
- *  name is one of `personaNames` (case-insensitive, ASCII or full-width
- *  colon); with no names known, a single capitalised Latin word label is
- *  stripped only when a quote follows it (「 “ ") and the word is not a
- *  content label (Question / Example / …). The rest is kept. */
+ *  as a script label ("Ryota: 過去完了を…", "Ryota：「…」") — stripped ONLY when
+ *  the persona's names are known and the label is one of them
+ *  (case-insensitive, ASCII or full-width colon); the rest is kept.
+ *  Fix round 1 (I-1): no capitalised-word fallback — scrubTutorText runs this
+ *  on every sentence of every session without names, and "Say: "…"",
+ *  "Listen: 「…」", "Remember: "…"" are instructions, never labels. */
 export function stripLeakedLabels(sentence: string, personaNames?: string | readonly string[] | null): string {
   const s = (sentence ?? '').replace(/^\s*\*(?:opener|opening|ack|acknowledg(?:e)?ment|verdict|recap|closing|bridge)\*\s*/i, '');
   const names = (typeof personaNames === 'string' ? [personaNames] : (personaNames ?? []))
     .map((n) => (n ?? '').trim()).filter((n) => n.length > 0);
-  if (names.length > 0) {
-    const re = new RegExp(String.raw`^\s*(?:${names.map(escapeRe).sort((a, b) => b.length - a.length).join('|')})\s*[:：]\s*`, 'i');
-    const m = re.exec(s);
-    if (m && s.slice(m[0].length).trim()) return s.slice(m[0].length);
-    return s;
-  }
-  const m = /^\s*([A-Z][a-z]+)\s*[:：]\s*(?=[「“"])/.exec(s);
-  if (m && !NON_SPEAKER_LABEL_WORDS.has(m[1].toLowerCase())) return s.slice(m[0].length);
+  if (names.length === 0) return s;
+  const re = new RegExp(String.raw`^\s*(?:${names.map(escapeRe).sort((a, b) => b.length - a.length).join('|')})\s*[:：]\s*`, 'i');
+  const m = re.exec(s);
+  if (m && s.slice(m[0].length).trim()) return s.slice(m[0].length);
   return s;
 }
 

@@ -844,10 +844,13 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   check('25A2: "I will help the learner" → dropped', isMetaNarration('Next I will help the learner with the past tense.'));
   check('25A5: persona label stripped', stripLeakedLabels('Ryota: 「International customers」の部分', ['Ryota Tanaka', 'Ryota']) === '「International customers」の部分');
   check('25A5: persona label, full-width colon, case-insensitive', stripLeakedLabels('ryota：過去完了を使うつもりなんですね。', ['Ryota']) === '過去完了を使うつもりなんですね。');
-  check('25A5: no names, capitalised word + quote stripped', stripLeakedLabels('Ryota: 「Great work today」です。') === '「Great work today」です。');
   check('25A5: "Question: What do you do?" untouched', stripLeakedLabels('Question: What do you do?') === 'Question: What do you do?' && stripLeakedLabels('Question: What do you do?', ['Ryota']) === 'Question: What do you do?');
-  check('25A5: "Example: 「…」" untouched with no names', stripLeakedLabels('Example: 「I work in sales」') === 'Example: 「I work in sales」');
   check('25A5: "Ryota: hello" with no names untouched', stripLeakedLabels('Ryota: hello') === 'Ryota: hello');
+  check('25 r1 I-1: with no names known nothing is stripped (persona label before a quote too)', stripLeakedLabels('Ryota: 「Great work today」です。') === 'Ryota: 「Great work today」です。');
+  for (const x of ['Say: "I have worked here for five years."', 'Listen: 「I have worked here」', 'Perfect: "I went there yesterday."', 'Remember: "a" goes before a vowel.', 'Example: 「I work in sales」']) {
+    check(`25 r1 I-1: "${x}" untouched (no names, and names known)`, stripLeakedLabels(x) === x && stripLeakedLabels(x, ['Ryota Tanaka', 'Ryota']) === x);
+  }
+  check('25 r1 I-1: persona label with a quote still stripped when names are known', stripLeakedLabels('Ryota: 「Great work today」です。', ['Ryota']) === '「Great work today」です。');
   check('25A5: "*opener*" label still stripped', stripLeakedLabels('*opener* はい、始めましょう。') === 'はい、始めましょう。');
   check('25A5: another name is not a persona label', stripLeakedLabels('Ken: hello', ['Ryota']) === 'Ken: hello');
 }
