@@ -14,7 +14,7 @@
  */
 import type { LessonPlan, Segment } from './types';
 import { isFixedScriptPlan, nextSegmentId, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS } from './fixed-script';
-import { lastAskSentence, lastQuestionSentence } from '../question-gist-text';
+import { lastAskSentence, lastQuestionSentence, lastSentenceAsks } from '../question-gist-text';
 
 /** A sentence that announces moving on (EN + JA). The keyword gate in
  *  announcedMoveTarget is required too — the phrase alone never moves. */
@@ -136,6 +136,10 @@ export function announcedTurnNeedsContinuation(tutorText: string): boolean {
   if (/[?？]/.test(last)) return false;
   if (lastQuestionSentence(text)) return false;
   if (lastAskSentence(text)) return false;
+  // Task 28 §B (GDI run 15, 150 s): an imperative ask in the last sentence
+  // ("Take a look at the board, and tell me one thing you do at work.") ends
+  // the turn too — the shared helper every continuation decider goes through.
+  if (lastSentenceAsks(text)) return false;
   return true;
 }
 

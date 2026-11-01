@@ -106,6 +106,48 @@ export function lastAskSentence(text: string): string | null {
   return capPinText(askText);
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Task 28 §B (GDI run 15, 150–178 s: the level-set turn ended "Take a look at
+// the board, and tell me one thing you do at work." — an ask with no "?" and
+// no ask lead the pin knew, so the silent continuation fired and a second
+// full turn re-asked it in other words). The turn's LAST sentence asks the
+// student when it ends with "?", ends with a colon-led prompt ("Start with:
+// …"), or carries an imperative ask at a clause start — after an optional
+// lead ("Now," / "Next," / "Then," / "First," / "So," / "Take a look at the
+// board, and" / "Look at the board and", "please") — in the second person
+// (no "I'll" / "I will" / "let me" before it). One helper, used by every
+// continuation decider (announcedTurnNeedsContinuation and the deciders that
+// call it) and by turnEndsWithAsk.
+// ─────────────────────────────────────────────────────────────────────────
+const IMPERATIVE_ASK_VERB = String.raw`(?:tell me|say|try|give me|describe|explain|show me|read|repeat|answer|choose|pick|name|list|make a sentence|use|finish|complete)\b`;
+const IMPERATIVE_ASK_LEAD = String.raw`(?:(?:now|next|then|first|so),\s*|take a look at the board,?\s*and\s+|look at the board,?\s*and\s+)*(?:please,?\s+)?`;
+/** An imperative ask at a clause start: the sentence start, or after , ; : — –
+ *  (optionally + and / so / then / now). */
+const IMPERATIVE_ASK_RE = new RegExp(String.raw`(?:^|[,;:—–]\s*(?:(?:and|so|then|now)\s+)?)` + IMPERATIVE_ASK_LEAD + IMPERATIVE_ASK_VERB, 'i');
+/** A first-person plan before the verb ("I'll read it first, then …"). */
+const FIRST_PERSON_PLAN_RE = /\b(?:I['’]ll|I will|I['’]m going to|I am going to|let me)\b/i;
+/** A colon-led prompt closing the sentence ("Start with: …", "Begin with: …"). */
+const COLON_PROMPT_RE = /\b(?:start|begin|starting|beginning)\s+with\s*:\s*\S/i;
+const QUOTED_SPAN_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
+/** Task 28 §B: one sentence asks the student (see above). */
+export function sentenceAsksStudent(sentence: string): boolean {
+  const raw = stripMarkdownEmphasis(sentence ?? '').trim();
+  if (!raw) return false;
+  if (/[?？]["”’)\]]*\s*$/.test(raw)) return true;
+  if (COLON_PROMPT_RE.test(raw)) return true;
+  // quoted model words never count ("The sentence is "Tell me more."")
+  const s = raw.replace(QUOTED_SPAN_RE, '"…"');
+  const m = IMPERATIVE_ASK_RE.exec(s);
+  if (!m) return false;
+  return !FIRST_PERSON_PLAN_RE.test(s.slice(0, m.index + m[0].length));
+}
+/** Task 28 §B: the turn's LAST sentence asks the student (sentenceAsksStudent). */
+export function lastSentenceAsks(text: string): boolean {
+  const sentences = splitSentences(stripMarkdownEmphasis(text ?? ''));
+  const last = sentences[sentences.length - 1];
+  return !!last && sentenceAsksStudent(last);
+}
+
 /** Task 22 §A (GDI run 10, 574 s / 882 s): the turn ENDS with something the
  *  student must answer — its last sentence is a question, or the turn's last
  *  ask (lastAskSentence's shapes: an ask lead / an inner ask) sits in one of
@@ -116,6 +158,8 @@ export function turnEndsWithAsk(text: string): boolean {
   const sentences = splitSentences(stripMarkdownEmphasis(text ?? ''));
   if (!sentences.length) return false;
   if (/[?？]["”’)\]]*\s*$/.test(sentences[sentences.length - 1])) return true;
+  // Task 28 §B: an imperative ask / colon-led prompt in the last sentence.
+  if (sentenceAsksStudent(sentences[sentences.length - 1])) return true;
   for (let i = sentences.length - 1; i >= Math.max(0, sentences.length - 2); i--) {
     if (ASK_LEAD_RE.test(sentences[i]) || INNER_ASK_RE.test(sentences[i])) return true;
   }

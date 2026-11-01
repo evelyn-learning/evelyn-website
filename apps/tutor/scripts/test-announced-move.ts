@@ -18,6 +18,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { CORRECTION_DUE_DIRECTIVE } from '../src/lib/tutor/voice/judge-correction-note';
 import { MOVE_ON_IGNORED_REASON } from '../src/lib/tutor/voice/correct-retry';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
+import { sentenceAsksStudent, lastSentenceAsks, turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -281,6 +282,33 @@ test('27D3: correction turn → the repeat directive; plain statement → the ex
   assert.equal(fixedScriptContinueDirective({ via: 'announced' }).directive, FIXED_SCRIPT_CONTINUE_DIRECTIVE);
   assert.ok(isFixedScriptContinueDirective(FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE));
   assert.ok(!isFixedScriptContinueDirective('I wrote an email.'));
+});
+
+// ── Task 28 §B (GDI run 15, 150–178 s): an imperative ask ends the turn ──
+test('28B: the 150 s level-set turn (ends "…, and tell me one thing you do at work.") → no continuation', () => {
+  const T150 = "Good, you said that sentence clearly. Your level check is done, and we'll work at the beginner level today, focusing on natural sentences and the grammar for talking about your experience. Next, we'll look at how to talk about your work. Today you'll practice two things: sentences about your experience, and sentences about past events. Take a look at the board, and tell me one thing you do at work.";
+  assert.equal(lastSentenceAsks(T150), true);
+  assert.equal(announcedTurnNeedsContinuation(T150), false);
+  assert.equal(levelAdvanceNeedsContinuation({ levelAdvancedTo: 'topic-intro', currentSegmentId: 'topic-intro', tutorText: T150, alreadyContinued: false }), false);
+  assert.equal(noAskTurnNeedsContinuation({ text: T150, fixedScript: true, runtimeTriggered: false, toolsSeen: [], closing: false, pronunciationArmed: false }), false);
+  assert.equal(turnEndsWithAsk(T150), true, 'the offer / ask hold sees it too');
+});
+test('28B: the brief\'s pins', () => {
+  assert.equal(announcedTurnNeedsContinuation("We're moving on to the next part."), true);
+  assert.equal(announcedTurnNeedsContinuation('Please answer in English.'), false);
+  assert.equal(announcedTurnNeedsContinuation('Here is the first question: Can you tell me a little about your job?'), false);
+});
+test('28B: the imperative-ask shapes (leads, clause start, colon prompt) and what is not one', () => {
+  for (const s of ['Now, describe your last project in one sentence.', 'Next, please say the sentence again.', 'Look at the board and read the first sentence.',
+    'Listen once more, then repeat it.', "Let's practise: say the sentence after me.", 'Choose one of the three options.', 'Make a sentence with "I have worked".',
+    'Start with: "Last year, I …".', 'Try starting with "In my job, I …".', 'First, give me one example.', 'Pick a number from the card.'])
+    assert.equal(sentenceAsksStudent(s), true, s);
+  for (const s of ["We're moving on to the next part.", 'We use the present perfect for experience.', "I'll read the sentence first, then you repeat it.",
+    "Let me show you the next card.", 'The sentence on the board is "Tell me about your job."', 'Your level check is done.', "Next, we'll look at how to talk about your work."])
+    assert.equal(sentenceAsksStudent(s), false, s);
+  // the new helper reads only the LAST sentence (an earlier ask lead is lastAskSentence's, unchanged)
+  assert.equal(lastSentenceAsks('Good, and tell me more later. We are moving on to the next part.'), false);
+  assert.equal(announcedTurnNeedsContinuation('Good, and tell me more later. We are moving on to the next part.'), true);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
