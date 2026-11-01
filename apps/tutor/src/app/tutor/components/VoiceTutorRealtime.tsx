@@ -91,7 +91,7 @@ import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-reject
 import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
-import { detectPronunciationTarget, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
 import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
 import {
@@ -4993,6 +4993,8 @@ export function VoiceTutorRealtime({
   // catalog stamps it onto Page.lastRenderTurn on every render append. See
   // project_tutor_page_grouping_design.md.
   const pageTurnRef = useRef(0);
+  /** Task 25 §D1/§D2: the pageTurnRef turn in which a deferred part page was last flushed by a batch (-1 = none). */
+  const segmentPageFlushedTurnRef = useRef(-1);
   // Distinct from newPageThisTurnRef: tracks whether the brain EMITTED
   // a new_page tool-call in the current turn, regardless of whether the
   // tutor-side same-context guard later stripped that command. Set on
@@ -6733,7 +6735,10 @@ export function VoiceTutorRealtime({
         // (a deferred page opening with it ⇒ none), and a same-batch copy.
         const existingId = dupPronModel && !dupPageOpening ? sentenceCardIdOnCurrentPage(log, c.sentence) : null;
         const inThisBatch = sentenceOnBoardPage(seenThisBatch, c.sentence) !== null;
-        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch });
+        // Task 25 §D1: the part page opened this turn + the student's own sentence ⇒ it stays on the part it answered.
+        const dupAdvancedThisTurn = dupPageOpening || segmentPageFlushedTurnRef.current === pageTurnRef.current;
+        const dupStudentCard = (opts?.sentenceBoardAuto === true && opts.studentSentenceCard === true) || isStudentSentenceCard(c.sentence, sentenceStressRef.current.studentLast);
+        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard });
         if (dupAction === 'draw') { seenThisBatch.push(c); return true; }
         if (dupAction === 'reshow') {
           onDebugEvent?.('show_sentence_duplicate_reshown', `page ${page} → ${dupCurrentPage}: "${c.sentence.slice(0, 60)}"`);
@@ -6753,6 +6758,11 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('show_sentence_duplicate_reshown', `page ${page} (no card id): "${c.sentence.slice(0, 60)}"`);
           seenThisBatch.push(c);
           return true;
+        }
+        if (page !== null && dupAdvancedThisTurn && dupStudentCard) {
+          onDebugEvent?.('show_sentence_duplicate_skipped', `student card stays on the part it answered (page ${page}): "${c.sentence.slice(0, 60)}"`);
+          duplicateSentenceNotes.push(`show_sentence: already on the previous page — not drawn again on the new part's page; refer to it instead of writing it again.`);
+          return false;
         }
         onDebugEvent?.('show_sentence_duplicate_skipped', `page ${page}: "${c.sentence.slice(0, 60)}"`);
         // A soft skip, not a rejection: a rejection kills and retries the
@@ -9732,6 +9742,7 @@ export function VoiceTutorRealtime({
         // The continuation page opened above is now a non-active empty page.
         if (droppedContinuationPage) catalogRef.current.gcEmptyPages();
         console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${pageTitle}")`);
+        segmentPageFlushedTurnRef.current = pageTurnRef.current;
         onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${pageTitle}${orderedForBreak.moved.length > 0 ? ` after ${orderedForBreak.moved.length} student card(s)` : ''}`);
         if (titleDecision.retitled) {
           onDebugEvent?.('auto_newpage_retitled_from_render', `${deferred.segmentId}: "${deferred.title}" → "${pageTitle}"`);
@@ -20434,7 +20445,12 @@ export function VoiceTutorRealtime({
         const pronTargets = pronunciationTargetsOf(pronSeg?.metadata);
         // Task 21 §D1: the sentence this turn's show_sentence put up is the
         // target when the text asks to listen / repeat and quotes none.
-        const auto = pronTargets ? detectPronunciationTarget(fullText, pronTargets, { shownSentence: turnShownSentenceRef.current, studentLast: sentenceStressRef.current.studentLast }) : null;
+        const detectedAuto = pronTargets ? detectPronunciationTarget(fullText, pronTargets, { shownSentence: turnShownSentenceRef.current, studentLast: sentenceStressRef.current.studentLast }) : null;
+        // Task 25 §D2: the turn that enters the part (the segment changed this
+        // turn, or its page opened this turn) offers the menu — no auto arm.
+        const pronPartEntry = turnStartSegmentId !== currentSegmentIdRef.current || segmentPageFlushedTurnRef.current === pageTurnRef.current;
+        const auto = autoArmTargetForTurn(detectedAuto, { partEntry: pronPartEntry });
+        if (detectedAuto && !auto) onDebugEvent?.('pronunciation_auto_arm_skipped', `part entry: "${detectedAuto.referenceText.slice(0, 60)}"`);
         if (auto?.source === 'card') {
           armPronunciationCheckRef.current(auto.referenceText, auto.kind);
           onDebugEvent?.('pronunciation_auto_armed', `"${auto.referenceText}" source=card`);

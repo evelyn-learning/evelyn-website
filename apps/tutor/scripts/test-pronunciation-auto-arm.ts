@@ -5,7 +5,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { detectPronunciationTarget, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION, pronunciationNoteForTurn, PRONUNCIATION_UNSCORED_NOTE } from '../src/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION, pronunciationNoteForTurn, PRONUNCIATION_UNSCORED_NOTE } from '../src/lib/tutor/pronunciation/auto-arm';
 import { duplicateSentenceAction, currentBoardPage, sentenceCardIdOnCurrentPage, sentenceOnBoardPage } from '../src/lib/tutor/voice/sentence-board';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { isStrictRepeatAsk, saidModelSentence } from '../src/lib/tutor/voice/correct-retry';
@@ -164,7 +164,7 @@ test('21D1/D3: VTR wiring — card source, per-turn reset, pronunciation-model c
   assert.ok(VTR.includes('turnShownSentenceRef.current = null;'));
   assert.ok(VTR.includes('if (!opts?.sentenceBoardAuto) turnShownSentenceRef.current = c.sentence;'));
   assert.ok(VTR.includes('sentenceBoardAuto: true, pronunciationModel: true }'));
-  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch })'));
+  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard })'));
   assert.ok(VTR.includes("'show_sentence_duplicate_rehighlighted'") && VTR.includes("'show_sentence_duplicate_reshown'"));
   assert.ok(VTR.includes("target: 'item', targetId: existingId, pulse: true"));
   const embed = readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8');
@@ -203,7 +203,7 @@ test('21D r1 I3: a card on the CURRENT page ⇒ rehighlight even when the senten
   // only on page 1 ⇒ reshow
   assert.equal(duplicateSentenceAction({ page: 1, currentPage: 3, pronunciationModel: true, onCurrentPage: false }), 'reshow');
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch })'));
+  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard })'));
 });
 test('21D r1 m: a same-batch duplicate is drawn once', () => {
   assert.equal(duplicateSentenceAction({ page: 1, currentPage: 1, pronunciationModel: true, onCurrentPage: false, inThisBatch: true }), 'skip');
@@ -294,6 +294,26 @@ test('Task 24 §A4: a not-attempted clip whose transcript is NOT the target ⇒ 
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(v.includes('saidTarget: !!raw.referenceText && saidModelSentence(raw.referenceText, transcript),'));
   assert.ok(v.includes("onDebugEvent?.('pronunciation_note_rewritten', 'unscored');"));
+});
+
+test('25D1 (GDI run 13, 1026–1044 s): on the turn that opens a part, the student\'s card stays on the part it answered', () => {
+  assert.equal(duplicateSentenceAction({ page: 7, currentPage: 8, pronunciationModel: true, advancedThisTurn: true, studentCard: true }), 'skip');
+  assert.equal(duplicateSentenceAction({ page: 7, currentPage: 8, pronunciationModel: true, advancedThisTurn: true, studentCard: false }), 'reshow', 'a listed target re-shown on the part page');
+  assert.equal(duplicateSentenceAction({ page: 7, currentPage: 8, pronunciationModel: true, advancedThisTurn: false, studentCard: true }), 'reshow', 'unchanged');
+  assert.equal(duplicateSentenceAction({ page: null, currentPage: 8, pronunciationModel: true, advancedThisTurn: true, studentCard: true }), 'draw', 'not a duplicate ⇒ drawn');
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes('const dupAdvancedThisTurn = dupPageOpening || segmentPageFlushedTurnRef.current === pageTurnRef.current;'));
+  assert.ok(VTR.includes("'show_sentence_duplicate_skipped', `student card stays on the part it answered"));
+  assert.ok(VTR.includes('segmentPageFlushedTurnRef.current = pageTurnRef.current;'));
+});
+test('25D2: no automatic arm on the turn that enters the part', () => {
+  const t = { referenceText: 'I thought of other animals that I like', kind: 'sentence' as const, source: 'card' as const };
+  assert.equal(autoArmTargetForTurn(t, { partEntry: true }), null);
+  assert.equal(autoArmTargetForTurn(t, { partEntry: false }), t);
+  assert.equal(autoArmTargetForTurn(null, { partEntry: false }), null);
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes('const auto = autoArmTargetForTurn(detectedAuto, { partEntry: pronPartEntry });'));
+  assert.ok(VTR.includes("onDebugEvent?.('pronunciation_auto_arm_skipped', `part entry:"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

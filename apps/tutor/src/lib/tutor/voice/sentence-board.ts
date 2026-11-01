@@ -1451,8 +1451,17 @@ export function duplicateSentenceAction(input: {
   onCurrentPage?: boolean;
   /** fix round 1 (m): the same sentence is already being drawn in this batch */
   inThisBatch?: boolean;
+  /** Task 25 §D1: the deferred part page opened in this turn (this batch or an earlier batch of the turn) */
+  advancedThisTurn?: boolean;
+  /** Task 25 §D1: the card is the STUDENT's sentence (isStudentSentenceCard) */
+  studentCard?: boolean;
 }): 'draw' | 'skip' | 'rehighlight' | 'reshow' {
   if (input.inThisBatch) return 'skip';
+  // Task 25 §D1 (GDI run 13, 1026–1044 s: the conversation answer, already on
+  // page 7, was re-drawn on the new pronunciation page under its menu card):
+  // on the turn that opens a new part, the student's sentence card stays on
+  // the part it answered.
+  if (input.page !== null && input.advancedThisTurn === true && input.studentCard === true) return 'skip';
   // Fix round 1 (I3): the CURRENT page first — a model also standing on an
   // earlier page is re-highlighted here, never drawn a second time here.
   if (input.pronunciationModel && input.onCurrentPage) return 'rehighlight';

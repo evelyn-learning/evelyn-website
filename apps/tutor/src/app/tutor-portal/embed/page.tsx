@@ -272,6 +272,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'board_read_aloud',
   //   Task 21 §D3: a duplicate pronunciation model re-highlighted / drawn again:
   'show_sentence_duplicate_rehighlighted', 'show_sentence_duplicate_reshown',
+  //   Task 25 (GDI run 13): a sentence spoken as split TTS parts (§B), a quote
+  //   skipped as a translation (§C2), no auto arm on a part's entry turn (§D2),
+  //   a required-phrase kill deferred on a cut turn (§F2):
+  'tts_sentence_split', 'sentence_board_quote_skipped', 'pronunciation_auto_arm_skipped', 'required_phrase_deferred',
   //   fixed-script lessons: the client moved / held the segment cursor, FACT note delivered:
   'fixed_script_',
   //   the dedup family (R49b's retry-context bug lived here):

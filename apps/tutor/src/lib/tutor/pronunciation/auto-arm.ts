@@ -168,6 +168,21 @@ export function detectPronunciationTarget(
   return { referenceText: hit.text, kind: hit.kind, ...(gloss ? { gloss } : {}) };
 }
 
+/**
+ * Task 25 §D2 (GDI run 13, 1026–1044 s: the turn that advanced into the
+ * pronunciation part presented its choice menu, yet the conversation answer
+ * on the board was auto-armed as the target and the tutor said "say the
+ * sentence after me" with the menu unanswered): no automatic arm on the turn
+ * that ENTERS the part — arming starts from the next tutor turn.
+ */
+export function autoArmTargetForTurn(
+  detected: PronunciationAutoTarget | null | undefined,
+  opts: { partEntry: boolean },
+): PronunciationAutoTarget | null {
+  if (opts.partEntry) return null;
+  return detected ?? null;
+}
+
 /** The last target armed this session (tool or auto path) and the segment it
  *  belongs to. */
 export interface LastPronunciationTarget { referenceText: string; kind: string; segId: string }
