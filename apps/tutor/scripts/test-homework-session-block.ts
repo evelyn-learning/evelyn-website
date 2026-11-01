@@ -117,7 +117,7 @@ if (noAns.includes(ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX)) fail('no expectedAnsw
 {
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8') as string;
   const at = src.indexOf('const homeworkSession = (homeworkProblemsRef.current?.length ?? 0) > 0 || homeworkProblemRef.current != null;');
-  const window = at >= 0 ? src.slice(at, at + 1400) : '';
+  const window = at >= 0 ? src.slice(at, at + 2400) : ''; // Task 26 fix round 1: + the offer-yield skip block
   if (at < 0) fail('overlong note: homeworkSession guard missing from VoiceTutorRealtime');
   if (!window.includes("segment_overlong_note_skipped_homework")) fail('overlong note: homework skip must be observable (debug event)');
   if (!window.includes("if (TUTOR_SEGMENT_OVERLONG_NOTE && !homeworkSession && !cur.noted && cur.turns >= overlongTurns")) fail('overlong note: planting must be gated on !homeworkSession');

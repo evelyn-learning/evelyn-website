@@ -692,5 +692,24 @@ test('26 I-1: plant → offer turn (held) → practice turn ⇒ advance — two 
   // the VTR events read n/2: the one hold event shows 2/2
 });
 
+test('26 I-2a: the overlong note yields to an offer part with no offer made (helper + VTR pin, before the plant)', () => {
+  assert.equal(overlongNoteYieldsToOffer(tr, 'part-a', false), true);
+  assert.equal(overlongNoteYieldsToOffer(tr, 'part-a', true), false);
+  assert.equal(overlongNoteYieldsToOffer(tr, 'level-check', false), false, 'bridge part');
+  assert.equal(overlongNoteYieldsToOffer(tr, 'overview', false), false);
+  assert.equal(overlongNoteYieldsToOffer({ ...tr, metadata: {} }, 'part-a', false), false, 'not a fixed script');
+  pin(VTR, /if \(TUTOR_SEGMENT_OVERLONG_NOTE && TUTOR_FIXED_SCRIPT_TRANSITIONS && !cur\.noted && cur\.turns >= overlongTurns\s*&& overlongNoteYieldsToOffer\(lessonPlanRef\.current, segIdNow, transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\)\)\) \{\s*cur\.noted = true;\s*onDebugEvent\?\.\('segment_overlong_note_skipped_offer'/);
+  assert.ok(VTR.indexOf("'segment_overlong_note_skipped_offer'") < VTR.indexOf("'segment_overlong_note_planted'"));
+  // persisted for embed sessions by the 'segment_overlong' prefix
+  pin(read('src/app/tutor-portal/embed/page.tsx'), /'segment_overlong',/);
+});
+test('26 I-2b: a move announced on the budget turn of an offer part advances with no offer', () => {
+  // VTR: the announced target is consulted on a due offer part, and wins
+  pin(VTR, /const offerPartDue = !!autoReason && TUTOR_FIXED_SCRIPT_TRANSITIONS && segmentTransitionKind\(autoPlan, segIdNow\) === 'offer';/);
+  pin(VTR, /const advanceReason: 'turns' \| 'time' \| 'announced' \| null = \(offerPartDue && announcedNext \? 'announced' : autoReason\)/);
+  // …and an 'announced' reason is never offered (budget turn: no offer made yet)
+  assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'announced', offerMade: false, offerHeldTurns: 0 }), 'advance');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

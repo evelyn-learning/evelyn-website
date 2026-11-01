@@ -434,7 +434,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause, holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -20667,6 +20667,14 @@ export function VoiceTutorRealtime({
           cur.noted = true;
           onDebugEvent?.('segment_overlong_note_skipped_homework', `${segIdNow} after ${cur.turns} turns — homework session paces by problem`);
         }
+        // Task 26 fix round 1 (I-2a): the overlong note ("call advance_lesson")
+        // lands on the budget turn and would skip the offer — on an offer part
+        // with no offer made yet, the offer note takes its place.
+        if (TUTOR_SEGMENT_OVERLONG_NOTE && TUTOR_FIXED_SCRIPT_TRANSITIONS && !cur.noted && cur.turns >= overlongTurns
+          && overlongNoteYieldsToOffer(lessonPlanRef.current, segIdNow, transitionOfferMadeRef.current.has(segIdNow ?? ''))) {
+          cur.noted = true;
+          onDebugEvent?.('segment_overlong_note_skipped_offer', `${segIdNow} after ${cur.turns} turns — the part's offer replaces it`);
+        }
         if (TUTOR_SEGMENT_OVERLONG_NOTE && !homeworkSession && !cur.noted && cur.turns >= overlongTurns && (kindNow === 'hook' || kindNow === 'concept' || (sessionAllowsNonLatin(tutorLanguages) && kindNow !== 'recap'))) {
           cur.noted = true;
           const plan = lessonPlanRef.current;
@@ -20717,16 +20725,17 @@ export function VoiceTutorRealtime({
         // scriptMissingAdvanceReason) is NOT consulted: it refuses the
         // BRAIN's advance_lesson off an unsaid script, and the overview — the
         // only scripted part — is client-spoken now (spoken opener).
-        // Task 26 §A: while an offer part waits out its offer (the offer turn
-        // + one practice turn), a turn announcing the move still moves.
-        const offerHoldActive = !!autoReason && TUTOR_FIXED_SCRIPT_TRANSITIONS && transitionOfferMadeRef.current.has(segIdNow ?? '')
-          && holdAutoAdvanceForOffer(true, autoAdvanceOfferHeldRef.current);
-        const announcedTarget = (!autoReason || offerHoldActive) && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts?.prefetchOnly
+        // Task 26 §A + fix round 1 (I-2b): on a due offer part — the budget
+        // turn itself or the offer's hold — a turn announcing the move is the
+        // brain closing the part: it advances, with no offer (the offer only
+        // replaces the SILENT auto advance).
+        const offerPartDue = !!autoReason && TUTOR_FIXED_SCRIPT_TRANSITIONS && segmentTransitionKind(autoPlan, segIdNow) === 'offer';
+        const announcedTarget = (!autoReason || offerPartDue) && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts?.prefetchOnly
           && !totalToolNamesSeen.includes('advance_lesson')
           ? announcedMoveTarget({ tutorText: fullText, plan: autoPlan, currentSegmentId: segIdNow, levelKnown: !!workingLevelRef.current })
           : null;
         const announcedNext = !!announcedTarget && !!autoPlan && announcedTarget === nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current);
-        const advanceReason: 'turns' | 'time' | 'announced' | null = (offerHoldActive && announcedNext ? 'announced' : autoReason)
+        const advanceReason: 'turns' | 'time' | 'announced' | null = (offerPartDue && announcedNext ? 'announced' : autoReason)
           ?? (announcedNext ? 'announced' : null);
         if (!advanceReason) { autoAdvancePronHeldRef.current = 0; autoAdvanceAskHeldRef.current = 0; }
         if (autoPlan && advanceReason) {
