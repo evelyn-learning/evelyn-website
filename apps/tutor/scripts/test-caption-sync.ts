@@ -180,5 +180,21 @@ check('strips **bold** and *italic*',
   check('trailing-space speech key still exact-matches the trimmed report', c.text === 'Watch this —');
 }
 
+// ── 16. Task 25 §B: a sentence spoken as split TTS parts keeps one caption ──
+{
+  const t = new CaptionSyncTracker();
+  t.beginAttempt('turn-15-0');
+  const display = '「My manager showed me slogans」ですね、いい答えです。';
+  t.registerSentence(display, display, ['My manager showed me slogans.', 'ですね、いい答えです。']);
+  const a = t.poll(prog('My manager showed me slogans.', 2, 2));
+  check('split: first part played ⇒ a proper prefix of the ORIGINAL display', a.live && a.text.length > 0 && a.text.length < display.length && display.startsWith(a.text));
+  const b = t.poll(prog('ですね、いい答えです。', 2, 2));
+  check('split: last part played ⇒ the whole original sentence', b.text === display);
+  const t2 = new CaptionSyncTracker();
+  t2.beginAttempt('turn-15-1');
+  t2.registerSentence('Plain one.', 'Plain one.', ['Plain one.']);
+  check('one part ⇒ unchanged exact match', t2.poll(prog('Plain one.', 1, 1)).text === 'Plain one.');
+}
+
 console.log(`\ncaption-sync: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

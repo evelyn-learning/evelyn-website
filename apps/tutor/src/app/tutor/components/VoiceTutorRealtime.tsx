@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -217,6 +217,7 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
+import { splitSentenceForTts } from '@/lib/tutor/voice/tts-language';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause } from '@/lib/tutor/voice/meta-narration';
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
@@ -5056,6 +5057,9 @@ export function VoiceTutorRealtime({
   /** Task 21 §A fix round 1: the persona's own name(s) — the only names a
    *  "<Name> here." self-announcement is dropped for. */
   const personaNamesRef = useRef<string[] | null>(null);
+  /** Task 25 §B: the session's tutor languages, read where a sentence is split for TTS. */
+  const ttsSplitLanguagesRef = useRef<string[] | undefined>(tutorLanguages);
+  ttsSplitLanguagesRef.current = TUTOR_TTS_SPLIT_QUOTED_SPANS ? tutorLanguages : undefined;
   personaNamesRef.current = teacherPersona?.name
     ? (isRoleStyleTeacherName(teacherPersona) ? [teacherPersona.name] : [teacherPersona.name, teacherFirstName(teacherPersona.name)])
     : null;
@@ -14532,19 +14536,18 @@ export function VoiceTutorRealtime({
         // count as audible. The single place a brain sentence actually
         // reaches the speaker.
         const speakOne = (s: string): void => {
-          // V2: capture the perception scriptId and hand it to speakText so the
-          // audio queue can stamp this sentence's window at real playback time.
-          const scriptId = pushTtsScriptForPerception(s);
-          speakTextRef.current?.(s, scriptId);
-          audibleSentenceCount++;
-          markInFlightTurnShown();
-          // R49: audio is playing now — widen the stall window so a slow
-          // tail is never cut out from under a turn the student is hearing.
-          stallState.spokeAnySentence = true;
-          // Always recorded (was gated behind TUTOR_BOARD_ANCHOR_ASSIST):
-          // the anchor assists read only the last element, and rule-8 v2's
-          // client repair needs the full spoken-sentence list at turn end.
-          turnNarrationRef.current.push(s);
+          // Task 25 §B: a Japanese sentence quoting an English span of 3+
+          // words is spoken as consecutive TTS requests, each in its own
+          // voice language. Split HERE (one level above the audio layer,
+          // which keys captions, kill retraction, self-voice stamps and
+          // render-sync on one request per sentence): every part is its own
+          // dispatched sentence — turn narration and the render-sync count
+          // advance per part, in step with the audio layer's sentence-start
+          // events — while the sentence is still ONE audible sentence, ONE
+          // segment-narration entry and one caption pair (registered with its
+          // parts, so the caption shows the original sentence).
+          const ttsParts = splitSentenceForTts(s, ttsSplitLanguagesRef.current);
+          if (ttsParts.length > 1) onDebugEvent?.('tts_sentence_split', `${ttsParts.length} parts: ${ttsParts.map((p) => `${p.language ?? '-'}"${p.text.slice(0, 30)}"`).join(' | ')}`);
           {
             const segNow = currentSegmentIdRef.current;
             if (segNow) {
@@ -14552,6 +14555,22 @@ export function VoiceTutorRealtime({
               if (said) said.push(s); else segmentNarrationRef.current.set(segNow, [s]);
             }
           }
+          for (const { text: part } of ttsParts) speakOnePart(part);
+          audibleSentenceCount++;
+          markInFlightTurnShown();
+          // R49: audio is playing now — widen the stall window so a slow
+          // tail is never cut out from under a turn the student is hearing.
+          stallState.spokeAnySentence = true;
+        };
+        const speakOnePart = (s: string): void => {
+          // V2: capture the perception scriptId and hand it to speakText so the
+          // audio queue can stamp this sentence's window at real playback time.
+          const scriptId = pushTtsScriptForPerception(s);
+          speakTextRef.current?.(s, scriptId);
+          // Always recorded (was gated behind TUTOR_BOARD_ANCHOR_ASSIST):
+          // the anchor assists read only the last element, and rule-8 v2's
+          // client repair needs the full spoken-sentence list at turn end.
+          turnNarrationRef.current.push(s);
           if (TUTOR_BOARD_ANCHOR_ASSIST) {
             // Re-anchor: if a held turn-opening anchor is NAMED by this sentence,
             // bind it here so it flushes as this sentence plays. anchorM =
@@ -16730,7 +16749,7 @@ export function VoiceTutorRealtime({
                     // form the audio layer will report back. Registered only
                     // while the attempt is alive — post-kill sentences never
                     // reach TTS, so the caption freezes at voiced content.
-                    captionSyncRef.current.registerSentence(sentenceForSpeech, trimmedSentence);
+                    captionSyncRef.current.registerSentence(sentenceForSpeech, trimmedSentence, splitSentenceForTts(sentenceForSpeech, ttsSplitLanguagesRef.current).map((p) => p.text));
                     // FIX A — fast opener. The brain is prompted to open
                     // every turn with a short content-free runway phrase
                     // (TURN_OPENER_RULE). Voice that sentence-0 the moment

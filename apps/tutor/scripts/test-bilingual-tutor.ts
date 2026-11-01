@@ -14,7 +14,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { SentenceBuffer } from '../src/lib/tutor/voice/claude-brain';
 import { buildBilingualClause, buildSystemPromptParts } from '../src/lib/tutor/ai/system-prompt-builder';
-import { parseTutorLanguages, ttsLanguageFor } from '../src/lib/tutor/voice/tts-language';
+import { parseTutorLanguages, ttsLanguageFor, splitSentenceForTts } from '../src/lib/tutor/voice/tts-language';
 import { isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
 import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import { latexAsProse } from '../src/lib/tutor/whiteboard/prose-latex';
@@ -1511,6 +1511,45 @@ test('Task 24 §E2 (GDI run 12, 1018 s): full-sentence ask with a starter that b
   // 1001 s: the student's sentence was wrong ("take place") — the tutor's prose does not contain it
   const t1001 = 'The seminar took place last year, so the past simple is right. Let\'s check the verb: could you say the full sentence starting with "The seminar…" and use "took place"?';
   assert.equal(reAskedOwnSentence('The seminar take place last year.', t1001, { studentCorrect: false }), false);
+});
+
+test('Task 25 §B (GDI run 13, 889 s): a Japanese sentence quoting an English span of 3+ words ⇒ spoken as parts', () => {
+  const L = ['en', 'ja'];
+  assert.deepEqual(splitSentenceForTts('「My manager showed me slogans he had written earlier」ですね、具体的でいい答えです。', L), [
+    { text: 'My manager showed me slogans he had written earlier.', language: 'en' },
+    { text: 'ですね、具体的でいい答えです。', language: 'ja' },
+  ]);
+  const one = '「for」と「international」の音が少し弱かったようです。';
+  assert.deepEqual(splitSentenceForTts(one, L), [{ text: one, language: 'ja' }]);
+  assert.deepEqual(splitSentenceForTts("Great, let's begin.", L), [{ text: "Great, let's begin.", language: 'en' }]);
+  const ja = '今日は、仕事について英語で話す練習をしましょう。';
+  assert.deepEqual(splitSentenceForTts(ja, L), [{ text: ja, language: 'ja' }]);
+  assert.deepEqual(splitSentenceForTts('その文、「I have worked here for five years」は現在完了です。', L), [
+    { text: 'その文、', language: 'ja' },
+    { text: 'I have worked here for five years.', language: 'en' },
+    { text: 'は現在完了です。', language: 'ja' },
+  ]);
+  // English-only sessions: one part, byte-identical, language undefined
+  const q = 'その文、「I have worked here for five years」は現在完了です。';
+  assert.deepEqual(splitSentenceForTts(q, null), [{ text: q, language: undefined }]);
+  assert.deepEqual(splitSentenceForTts(q, ['en']), [{ text: q, language: undefined }]);
+  // an all-English sentence with an English quote is not split
+  const en = 'You said "I work in sales," which is right.';
+  assert.deepEqual(splitSentenceForTts(en, L), [{ text: en, language: 'en' }]);
+  // double quotes, terminal punctuation kept, a trailing comma dropped
+  assert.deepEqual(splitSentenceForTts('"Did you finish the report?" と聞きます。', L).map((p) => p.text), ['Did you finish the report?', 'と聞きます。']);
+  assert.deepEqual(splitSentenceForTts('「I work in sales,」ですね。', L).map((p) => p.text), ['I work in sales.', 'ですね。']);
+  // a quote with nothing spoken after it stays one part pair-free of punctuation-only frames
+  assert.deepEqual(splitSentenceForTts('いい文です：「I work in the sales department」。', L).map((p) => p.language), ['ja', 'en']);
+});
+
+test('Task 25 §B: the component splits at the sentence consumer, flag-gated, caption registered with its parts', () => {
+  const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.match(v, /const ttsParts = splitSentenceForTts\(s, ttsSplitLanguagesRef\.current\);/);
+  assert.match(v, /onDebugEvent\?\.\('tts_sentence_split', `\$\{ttsParts\.length\} parts/);
+  assert.match(v, /for \(const \{ text: part \} of ttsParts\) speakOnePart\(part\);/);
+  assert.match(v, /registerSentence\(sentenceForSpeech, trimmedSentence, splitSentenceForTts\(sentenceForSpeech, ttsSplitLanguagesRef\.current\)\.map/);
+  assert.match(v, /ttsSplitLanguagesRef\.current = TUTOR_TTS_SPLIT_QUOTED_SPANS \? tutorLanguages : undefined;/);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

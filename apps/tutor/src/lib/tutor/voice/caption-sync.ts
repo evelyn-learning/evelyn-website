@@ -58,6 +58,10 @@ function wordClamp(s: string, chars: number): string {
 interface SentencePair {
   speech: string;
   display: string;
+  /** Task 25 §B: the TTS requests this sentence is spoken as, when it was
+   *  split (tts-language.ts splitSentenceForTts) — each reported back by the
+   *  audio layer as its own sentence; the caption still shows `display`. */
+  parts?: string[];
 }
 
 export class CaptionSyncTracker {
@@ -93,11 +97,12 @@ export class CaptionSyncTracker {
     this.silentPolls = 0;
   }
 
-  registerSentence(speech: string, display: string): void {
+  registerSentence(speech: string, display: string, parts?: readonly string[]): void {
     // The audio layer reports the TRIMMED dispatch string when labeling
     // chunks, but TTS normalization (e.g. em-dash → ', ') can leave a
     // trailing space on `speech` — trim so poll()'s exact match still hits.
-    this.pairs.push({ speech: speech.trim(), display: stripMarkdownEmphasis(display).trim() });
+    const split = parts && parts.length > 1 ? parts.map((x) => x.trim()) : undefined;
+    this.pairs.push({ speech: speech.trim(), display: stripMarkdownEmphasis(display).trim(), ...(split ? { parts: split } : {}) });
   }
 
   markStreamEnd(): void {
@@ -147,8 +152,21 @@ export class CaptionSyncTracker {
       // order); suffix fallback for resume-from-cut clause tails.
       let idx = -1;
       let tailOffset = 0;
+      // Task 25 §B: a split sentence's part covers its share of the display.
+      let span = -1;
+      let speechLen = -1;
       for (let i = this.cursor; i < this.pairs.length; i++) {
         if (this.pairs[i].speech === s) { idx = i; break; }
+        const parts = this.pairs[i].parts;
+        const k = parts ? parts.indexOf(s) : -1;
+        if (parts && k >= 0) {
+          const total = parts.reduce((n, x) => n + x.length, 0) || 1;
+          tailOffset = parts.slice(0, k).reduce((n, x) => n + x.length, 0) / total;
+          span = parts[k].length / total;
+          speechLen = parts[k].length;
+          idx = i;
+          break;
+        }
       }
       if (idx < 0) {
         for (let i = this.cursor; i < this.pairs.length; i++) {
@@ -172,16 +190,16 @@ export class CaptionSyncTracker {
         }
         this.lastSentence = s;
         this.lastSentenceDur = progress!.arrivedTotalSec;
-        this.lastSentenceSpeechLen = this.pairs[idx].speech.length;
+        this.lastSentenceSpeechLen = speechLen >= 0 ? speechLen : this.pairs[idx].speech.length;
         this.cursor = idx;
         const pair = this.pairs[idx];
         // Conservative denominator: arrived audio may undercount a sentence
         // still streaming in (Realtime path) — floor it with a char estimate
         // so the caption can trail and catch up, never race ahead.
-        const estimate = pair.speech.length / this.charsPerSec;
+        const estimate = (speechLen >= 0 ? speechLen : pair.speech.length) / this.charsPerSec;
         const total = Math.max(progress!.arrivedTotalSec, estimate);
         let frac = total > 0 ? Math.min(1, progress!.elapsedSec / total) : 0;
-        frac = tailOffset + frac * (1 - tailOffset);
+        frac = tailOffset + frac * (span >= 0 ? span : 1 - tailOffset);
         const within = wordClamp(pair.display, Math.round(pair.display.length * frac));
         const before = this.joinedDisplayLen(idx);
         const candidate = idx > 0
