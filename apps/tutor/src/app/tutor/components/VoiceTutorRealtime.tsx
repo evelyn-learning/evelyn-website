@@ -217,7 +217,7 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
-import { splitSentenceForTts } from '@/lib/tutor/voice/tts-language';
+import { splitSentenceForTts, keptRestRemoved } from '@/lib/tutor/voice/tts-language';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause } from '@/lib/tutor/voice/meta-narration';
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
@@ -14565,6 +14565,8 @@ export function VoiceTutorRealtime({
         // Raw TTS dispatch: push to the perception self-voice buffer, speak,
         // count as audible. The single place a brain sentence actually
         // reaches the speaker.
+        // Task 25 fix round 1 (I-2): part text → the parts of its sentence after it.
+        const splitLaterParts = new Map<string, string[]>();
         const speakOne = (s: string): void => {
           // Task 25 §B: a Japanese sentence quoting an English span of 3+
           // words is spoken as consecutive TTS requests, each in its own
@@ -14577,6 +14579,9 @@ export function VoiceTutorRealtime({
           // segment-narration entry and one caption pair (registered with its
           // parts, so the caption shows the original sentence).
           const ttsParts = splitSentenceForTts(s, ttsSplitLanguagesRef.current);
+          // Fix round 1 (I-2): a sentence-boundary kill keeps the WHOLE sentence —
+          // the parts after the one playing are spoken after the kill.
+          if (ttsParts.length > 1) ttsParts.forEach((p, k) => { if (k < ttsParts.length - 1) splitLaterParts.set(p.text, ttsParts.slice(k + 1).map((q) => q.text)); });
           if (ttsParts.length > 1) onDebugEvent?.('tts_sentence_split', `${ttsParts.length} parts: ${ttsParts.map((p) => `${p.language ?? '-'}"${p.text.slice(0, 30)}"`).join(' | ')}`);
           {
             const segNow = currentSegmentIdRef.current;
@@ -14592,7 +14597,7 @@ export function VoiceTutorRealtime({
           // tail is never cut out from under a turn the student is hearing.
           stallState.spokeAnySentence = true;
         };
-        const speakOnePart = (s: string): void => {
+        const speakOnePart = (s: string, opts?: { /** fix round 1 (I-2): a kept sentence's remaining part, already in the narration */ replay?: boolean }): void => {
           // V2: capture the perception scriptId and hand it to speakText so the
           // audio queue can stamp this sentence's window at real playback time.
           const scriptId = pushTtsScriptForPerception(s);
@@ -14600,7 +14605,7 @@ export function VoiceTutorRealtime({
           // Always recorded (was gated behind TUTOR_BOARD_ANCHOR_ASSIST):
           // the anchor assists read only the last element, and rule-8 v2's
           // client repair needs the full spoken-sentence list at turn end.
-          turnNarrationRef.current.push(s);
+          if (!opts?.replay) turnNarrationRef.current.push(s);
           if (TUTOR_BOARD_ANCHOR_ASSIST) {
             // Re-anchor: if a held turn-opening anchor is NAMED by this sentence,
             // bind it here so it flushes as this sentence plays. anchorM =
@@ -15093,7 +15098,17 @@ export function VoiceTutorRealtime({
                 onDebugEvent?.('judge_kill_retry_skipped', `reason=${skipReason}`);
                 return;
               }
-              const resumeTail = res.finished ? resumeTailAfterBoundary(tail, res.keptSentence) : tail;
+              let resumeTail = res.finished ? resumeTailAfterBoundary(tail, res.keptSentence) : tail;
+              // Task 25 fix round 1 (I-2): the kept sentence was split for TTS
+              // and a non-final part finished — its remaining parts are still
+              // spoken (the student hears the sentence whole); only sentences
+              // after it are cut. They leave the resume tail so they never play twice.
+              const keptRest = res.finished && res.keptSentence ? splitLaterParts.get(res.keptSentence) : undefined;
+              if (keptRest && keptRest.length > 0) {
+                resumeTail = keptRestRemoved(resumeTail, keptRest);
+                for (const part of keptRest) speakOnePart(part, { replay: true });
+                onDebugEvent?.('judge_kill_sentence_boundary', `kept split sentence: ${keptRest.length} remaining part(s) spoken`);
+              }
               if (resumeTail.length > 0) {
                 judgeKillResumeSnapshot = resumeTail;
                 judgeKillResumeKilledText = attemptText;

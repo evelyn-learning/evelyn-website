@@ -103,3 +103,12 @@ export function splitSentenceForTts(text: string, languages: readonly string[] |
   pushFrame(text.slice(last));
   return parts.length > 1 ? parts : whole;
 }
+
+/** Task 25 fix round 1 (I-2): the resume tail with the kept split sentence's
+ *  remaining parts removed from its head (they are spoken right after the
+ *  kill, so the resume must not play them again). */
+export function keptRestRemoved(tail: readonly string[], rest: readonly string[]): string[] {
+  let k = 0;
+  while (k < rest.length && k < tail.length && tail[k] === rest[k]) k++;
+  return tail.slice(k);
+}

@@ -14,7 +14,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { SentenceBuffer } from '../src/lib/tutor/voice/claude-brain';
 import { buildBilingualClause, buildSystemPromptParts } from '../src/lib/tutor/ai/system-prompt-builder';
-import { parseTutorLanguages, ttsLanguageFor, splitSentenceForTts } from '../src/lib/tutor/voice/tts-language';
+import { parseTutorLanguages, ttsLanguageFor, splitSentenceForTts, keptRestRemoved } from '../src/lib/tutor/voice/tts-language';
 import { isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
 import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import { latexAsProse } from '../src/lib/tutor/whiteboard/prose-latex';
@@ -1598,6 +1598,19 @@ test('Task 25 fix round 1 (I-1): scrubTutorText (SentenceBuffer) keeps a "Say: /
   for (const x of ['Say: "I have worked here for five years."', 'Listen: 「I have worked here」', 'Perfect: "I went there yesterday."', 'Remember: "a" goes before a vowel.']) {
     assert.deepEqual(split(x), [x]);
   }
+});
+
+test('Task 25 fix round 1 (I-2): a sentence-boundary kill keeps the whole split sentence', () => {
+  const parts = splitSentenceForTts('その文、「I have worked here for five years」は現在完了です。', ['en', 'ja']).map((p) => p.text);
+  // peekSpeechQueue = [in-flight, ...queued]; resumeTailAfterBoundary drops the in-flight part
+  const tailAfterKept = [parts[1]!, parts[2]!, 'Can you say it again?'];
+  assert.deepEqual(keptRestRemoved(tailAfterKept, parts.slice(1)), ['Can you say it again?']);
+  assert.deepEqual(keptRestRemoved(['Can you say it again?'], parts.slice(1)), ['Can you say it again?'], 'nothing queued of the sentence');
+  const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.match(v, /const keptRest = res\.finished && res\.keptSentence \? splitLaterParts\.get\(res\.keptSentence\) : undefined;/);
+  assert.match(v, /for \(const part of keptRest\) speakOnePart\(part, \{ replay: true \}\);/);
+  assert.match(v, /if \(!opts\?\.replay\) turnNarrationRef\.current\.push\(s\);/);
+  assert.ok(v.indexOf('resumeTail = keptRestRemoved(resumeTail, keptRest);') > v.indexOf('let resumeTail = res.finished ? resumeTailAfterBoundary(tail, res.keptSentence) : tail;'));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
