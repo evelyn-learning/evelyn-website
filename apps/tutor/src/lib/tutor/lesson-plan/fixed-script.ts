@@ -263,10 +263,18 @@ export const FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE = withSilentClause(
  *  IS the repeat — asked in one sentence, no narration. */
 export const FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE = withSilentClause(
   '[System note: Ask the student, in one short sentence, to say the corrected sentence once. Nothing else.]');
+/** Task 27 §I (Task 26 concern 2): the level continuation leaving a
+ *  transition.kind=bridge part — the bridge wins over "do not recap". */
+export const FIXED_SCRIPT_LEVEL_BRIDGE_PREFIX =
+  '[System note: the level check is complete and the lesson pointer has moved to the next part; begin that part now from its notes —';
+export function fixedScriptLevelBridgeDirective(plan: LessonPlan | null | undefined, from: string, next: string): string {
+  return withSilentClause(`${FIXED_SCRIPT_LEVEL_BRIDGE_PREFIX} say one sentence on what you learned about the student in "${fixedScriptPartLabel(plan, from)}", then start "${fixedScriptPartLabel(plan, next)}" with its first question or card.]`);
+}
 export type FixedScriptContinueVia = 'announced' | 'level' | 'noask';
 /** The silent continuation's directive (Task 16 §C / Task 23 §C / Task 24
  *  §B2), chosen by why it runs: `kind` names the variant for the event.
- *  noask after a correction turn (`prevTutorText`) ⇒ the repeat ask; otherwise the
+ *  level + a bridge part left (`from`) ⇒ the bridge wording; noask after a
+ *  correction turn (`prevTutorText`) ⇒ the repeat ask; otherwise the
  *  constants as before. */
 export function fixedScriptContinueDirective(input: {
   via: FixedScriptContinueVia;
@@ -276,6 +284,9 @@ export function fixedScriptContinueDirective(input: {
   next?: string | null;
 }): { directive: string; kind: 'announced' | 'level' | 'bridge' | 'noask' | 'correction' } {
   if (input.via === 'level') {
+    if (input.from && input.next && segmentTransitionKind(input.plan, input.from) === 'bridge') {
+      return { directive: fixedScriptLevelBridgeDirective(input.plan, input.from, input.next), kind: 'bridge' };
+    }
     return { directive: FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, kind: 'level' };
   }
   if (input.via === 'noask') {
@@ -289,7 +300,7 @@ export function fixedScriptContinueDirective(input: {
 export function isFixedScriptContinueDirective(transcript: string | null | undefined): boolean {
   const t = transcript ?? '';
   return t === FIXED_SCRIPT_CONTINUE_DIRECTIVE || t === FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE || t === FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE
-    || t === FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE;
+    || t === FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE || t.startsWith(FIXED_SCRIPT_LEVEL_BRIDGE_PREFIX);
 }
 /** GDI run 3: the client moved off the level check before the brain stored a
  *  level, so no level was ever kept. Leaving a `skipWhenLevelKnown` segment

@@ -205,7 +205,7 @@ test('23C: level advance + a turn that asks nothing → continue; a question →
 });
 test('23C: VTR — the level advance records its target and the turn end schedules the shared continuation', () => {
   pin(VTR, /onDebugEvent\?\.\('fixed_script_level_advance', `"\$\{lvFrom\}" → "\$\{lvNext\}"`\);\s*levelAdvanceThisTurnRef\.current = lvNext;/);
-  pin(VTR, /announcedContinuedSegsRef\.current\.add\(lvTarget\);\s*\/\/[^\n]*\n\s*scheduleFixedScriptContinueRef\.current\(lvTarget, 'level', fixedScriptContinueDirective\(\{ via: 'level', plan: lessonPlanRef\.current, from: lvFromForCont, next: lvTarget \}\)\);/);
+  pin(VTR, /announcedContinuedSegsRef\.current\.add\(lvTarget\);\s*\/\/[^\n]*\n\s*scheduleFixedScriptContinueRef\.current\(lvTarget, 'level', fixedScriptContinueDirective\(\{ via: 'level', plan: TUTOR_FIXED_SCRIPT_TRANSITIONS \? lessonPlanRef\.current : null, from: lvFromForCont, next: lvTarget \}\)\);/);
   pin(VTR, /levelAdvanceThisTurnRef\.current = '';/);
   // the same cancel rules: the shared timer is cleared by any other dispatch
   pin(VTR, /if \(announcedContinueTimerRef\.current && !isFixedScriptContinueDirective\(transcript\)\) \{/);

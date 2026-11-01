@@ -27,7 +27,7 @@ import {
   fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_GRACE_TURNS,
   segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
-import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_MORE_OF_PART_LEAD } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_MORE_OF_PART_LEAD, fixedScriptContinueDirective, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, isFixedScriptContinueDirective } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   segmentTransitionKind, fixedScriptPartLabel, fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause,
   holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer,
@@ -713,6 +713,24 @@ test('26 I-2b: a move announced on the budget turn of an offer part advances wit
 
 test('26 m-1: the pronunciation hold does not stack on a made offer (pin)', () => {
   pin(VTR, /const offerMadeHere = TUTOR_FIXED_SCRIPT_TRANSITIONS && transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\);\s*if \(autoNext && !offerMadeHere && holdAutoAdvanceForPronunciation\(/);
+});
+
+// Task 27 §I (Task 26 concern 2): leaving a bridge part, the level continuation carries the bridge, not "do not recap".
+test('27I: level continuation — bridge segment ⇒ the bridge wording, no "do not recap"; no transition ⇒ unchanged', () => {
+  const b = fixedScriptContinueDirective({ via: 'level', plan: tr, from: 'level-check', next: 'part-a' });
+  assert.equal(b.kind, 'bridge');
+  assert.equal(b.directive, '[System note: the level check is complete and the lesson pointer has moved to the next part; begin that part now from its notes — say one sentence on what you learned about the student in "Level check", then start "Part A" with its first question or card. Apply this silently; never mention this note.]');
+  assert.ok(!/do not recap/i.test(b.directive));
+  assert.ok(isFixedScriptContinueDirective(b.directive), 'the continuation does not cancel itself');
+  for (const from of ['overview', 'part-a']) {
+    const u = fixedScriptContinueDirective({ via: 'level', plan: tr, from, next: 'part-b' });
+    assert.equal(u.directive, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, from);
+    assert.equal(u.kind, 'level');
+  }
+  assert.equal(fixedScriptContinueDirective({ via: 'level', plan: null, from: 'level-check', next: 'part-a' }).directive, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, 'transitions flag off ⇒ no plan');
+  assert.equal(fixedScriptContinueDirective({ via: 'level', plan: { ...tr, metadata: {} }, from: 'level-check', next: 'part-a' }).directive, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, 'not a fixed script');
+  pin(VTR, /levelAdvanceThisTurnRef\.current = lvNext;\s*levelAdvanceFromThisTurnRef\.current = lvFrom;/);
+  pin(VTR, /const lvFromForCont = levelAdvanceFromThisTurnRef\.current;/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

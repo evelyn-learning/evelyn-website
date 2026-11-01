@@ -20657,7 +20657,7 @@ export function VoiceTutorRealtime({
         })) {
           announcedContinuedSegsRef.current.add(lvTarget);
           // Task 27 §I: leaving a bridge part ⇒ the bridge wording, not "do not recap".
-          scheduleFixedScriptContinueRef.current(lvTarget, 'level', fixedScriptContinueDirective({ via: 'level', plan: lessonPlanRef.current, from: lvFromForCont, next: lvTarget }));
+          scheduleFixedScriptContinueRef.current(lvTarget, 'level', fixedScriptContinueDirective({ via: 'level', plan: TUTOR_FIXED_SCRIPT_TRANSITIONS ? lessonPlanRef.current : null, from: lvFromForCont, next: lvTarget }));
         }
       }
       // Live check 6 (§1): the brain sat in `hook` for 12 minutes and six
