@@ -39,7 +39,7 @@ import { thinkingCueVisible, thinkingCueLabel, thinkingCueLanguage } from '@/lib
 import { lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
 import { AgendaRail } from './AgendaRail';
 import { resolveStartWatchdog, START_WATCHDOG_MS } from './start-tap';
-import { buildRailModel, secondTutorLanguage, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
+import { buildRailModel, secondTutorLanguage, displayedCompletedSegments, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { homeworkPinText } from '@/lib/tutor/action-pin-text';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
@@ -306,6 +306,8 @@ export interface TutorSessionProps {
 interface LessonProgressState {
   plan: LessonPlanType | null;
   currentSegmentId: string;
+  /** Task 27 §C: the segment the board displays (the chip strip follows it). */
+  displayedSegmentId?: string;
 }
 
 export default function TutorSession(props: TutorSessionProps) {
@@ -1840,13 +1842,17 @@ export default function TutorSession(props: TutorSessionProps) {
   // handles plan progress instead. When the flag is off, fall back to the
   // exact pre-rail composition (practice meter still takes precedence) so
   // flag-off is byte-identical to the old behavior.
+  // Task 27 §C: the chips follow the DISPLAYED segment (the part page on the
+  // board), not the pointer — a held part is active and not yet completed.
+  const chipSegmentId = lessonProgress.displayedSegmentId ?? lessonProgress.currentSegmentId ?? '';
+  const chipCompletedIds = displayedCompletedSegments(completedSegmentIds, chipSegmentId, lessonProgress.currentSegmentId ?? '');
   const beatsEl = practiceMeterEl ?? (TUTOR_AGENDA_RAIL ? null : (lessonProgress.plan ? (
-    <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={lessonProgress.currentSegmentId} completedSegmentIds={completedSegmentIds} />
+    <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={chipSegmentId} completedSegmentIds={chipCompletedIds} />
   ) : null));
 
   const railModel = TUTOR_AGENDA_RAIL && lessonProgress.plan
-    ? buildRailModel(lessonProgress.plan, lessonProgress.currentSegmentId ?? '',
-        new Set(completedSegmentIds), segmentLabels, secondTutorLanguage(tutorLanguages))
+    ? buildRailModel(lessonProgress.plan, chipSegmentId,
+        new Set(chipCompletedIds), segmentLabels, secondTutorLanguage(tutorLanguages))
     : null;
   const railItems = railModel?.items ?? null;
   const agendaRailEl = railItems && railItems.length > 0

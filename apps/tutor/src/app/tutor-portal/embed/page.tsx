@@ -282,6 +282,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   //   §B traced 493 s through it) and a student card sent to the page before a
   //   part page that painted first (§B fallback):
   'segment_card_auto', 'student_card_on_previous_page',
+  //   §C: the part chip held on the displayed part until the new part's page paints:
+  'rail_segment_held', 'rail_segment_released',
   //   fixed-script lessons: the client moved / held the segment cursor, FACT note delivered:
   'fixed_script_',
   //   the dedup family (R49b's retry-context bug lived here):

@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -175,7 +175,7 @@ import { inferWrongEvent, isBareShortAnswer, hedgedDenialCounts } from '@/lib/tu
 import { decideDimensionalCheck } from '@/lib/tutor/validation/dimensional-gate';
 import { normalizeGraphicOrganizerSpec } from '@/lib/tutor/validation/graphic-organizer-guard';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
-import { railJumpCandidates, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable } from '@/lib/tutor/lesson-plan/rail-labels';
+import { railJumpCandidates, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, displayedSegmentId } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
 import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import { LessonPlanProgress } from './LessonPlanProgress';
@@ -1000,6 +1000,10 @@ interface VoiceTutorRealtimeProps {
   onLessonPlanProgress?: (info: {
     plan: import('@/lib/tutor/lesson-plan/types').LessonPlan | null;
     currentSegmentId: string;
+    /** Task 27 §C: the segment the board displays (the chip strip's active
+     *  part) — the pointer, or the previous segment while the pointer's part
+     *  page has not painted yet. */
+    displayedSegmentId?: string;
   }) => void;
   /** Homework mode (GreenApple round 2): fires when a homework-help plan
    *  arrives (current=1) and whenever the brain's set_current_problem moves
@@ -1705,7 +1709,23 @@ export function VoiceTutorRealtime({
     onDebugEventRef.current?.('sentence_board_auto_replace_kept', `${kept.join(',')} (painted replacement kept on ${how})`);
     return ids.filter((id) => !sentenceBoardPaintedReplacementsRef.current.has(id));
   };
+  // Task 27 §C: the chip strip's displayed segment held while the pointer's
+  // part page waits (null = follow the pointer), and the page break whose
+  // paint releases it.
+  const [displayHold, setDisplayHold] = useState<{ shown: string; forSeg: string } | null>(null);
+  const displayHoldRef = useRef<{ shown: string; forSeg: string } | null>(null);
+  const displayHoldBreakRef = useRef<WhiteboardCommand | null>(null);
+  const releaseDisplayHoldRef = useRef<(why: string) => void>(() => {});
+  releaseDisplayHoldRef.current = (why: string) => {
+    displayHoldBreakRef.current = null;
+    const held = displayHoldRef.current;
+    if (!held) return;
+    displayHoldRef.current = null;
+    setDisplayHold(null);
+    onDebugEventRef.current?.('rail_segment_released', `"${held.forSeg}" (${why})`);
+  };
   const onWhiteboardCommand = useCallback((commands: WhiteboardCommand[], meta?: WhiteboardBatchMeta) => {
+    if (displayHoldBreakRef.current && commands.includes(displayHoldBreakRef.current)) releaseDisplayHoldRef.current('its page painted');
     for (const c of commands) {
       const cid = (c as { id?: unknown }).id;
       if (typeof cid === 'string' && deferredRemovalsRef.current.get(cid)?.keepPriorOnDrop) sentenceBoardPaintedReplacementsRef.current.add(cid);
@@ -3461,8 +3481,12 @@ export function VoiceTutorRealtime({
     onMilestoneRef.current?.(m);
   }, []);
   useEffect(() => {
-    onLessonPlanProgressRef.current?.({ plan: activePlan, currentSegmentId: activeSegmentId });
-  }, [activePlan, activeSegmentId]);
+    onLessonPlanProgressRef.current?.({
+      plan: activePlan,
+      currentSegmentId: activeSegmentId,
+      displayedSegmentId: displayedSegmentId({ pointer: activeSegmentId, pendingPageFor: displayHold?.forSeg ?? null, flushed: !displayHold, previous: displayHold?.shown ?? '' }),
+    });
+  }, [activePlan, activeSegmentId, displayHold]);
 
   // Student profile context (when studentId prop is set). The block is
   // a pre-rendered string the brain reads on every turn. The accumulator
@@ -5978,6 +6002,8 @@ export function VoiceTutorRealtime({
         onCompletedSegmentsChange?.([...completedSegmentIdsRef.current]);
       }
     }
+    // Task 27 §C: the segment the strip shows until the new part's page paints.
+    const segShownBefore = displayHoldRef.current?.shown ?? currentSegmentIdRef.current;
     disarmPronunciationOnSegmentAdvanceRef.current(currentSegmentIdRef.current, next);
     currentSegmentIdRef.current = next;
     setActiveSegmentId(next);
@@ -6089,6 +6115,17 @@ export function VoiceTutorRealtime({
       pendingAdvanceNewPageRef.current = { title: pageTitleStr, segmentId: next, ...(authoredPartTitle ? { authored: true } : {}) };
       console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DEFERRED → "${next}" ("${pageTitleStr}")`);
       onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
+      if (TUTOR_RAIL_FOLLOWS_PAGE && segShownBefore && segShownBefore !== next) {
+        const hold = { shown: segShownBefore, forSeg: next };
+        displayHoldRef.current = hold;
+        displayHoldBreakRef.current = null;
+        setDisplayHold(hold);
+        onDebugEvent?.('rail_segment_held', `"${segShownBefore}" stays active until the "${next}" page paints`);
+      } else {
+        releaseDisplayHoldRef.current('no hold');
+      }
+    } else {
+      releaseDisplayHoldRef.current('no deferred page');
     }
   }, [onCompletedSegmentsChange, useRealtimeV2, onDebugEvent]);
 
@@ -6184,6 +6221,7 @@ export function VoiceTutorRealtime({
     // mirror must see the new page, or the duplicate-title guard and the
     // on-current-page checks still read the page being left.
     const pageCmds = [{ action: 'newPage', title: deferred.title } as WhiteboardCommand];
+    displayHoldBreakRef.current = pageCmds[0]!;
     onWhiteboardCommand(pageCmds);
     recordDispatchedCommandsRef.current(pageCmds);
     console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED at turn end (${why}) → "${deferred.segmentId}" ("${deferred.title}")`);
@@ -9787,6 +9825,9 @@ export function VoiceTutorRealtime({
       if (hasFreshTeaching && deferredFlush.action === 'drop-deferred') {
         const dropped = pendingAdvanceNewPageRef.current;
         pendingAdvanceNewPageRef.current = null;
+        // Task 27 §C: the batch's own page is the part's page now.
+        const ownPageCmd = processed.find((c) => c.action === 'newPage') ?? null;
+        if (ownPageCmd) displayHoldBreakRef.current = ownPageCmd; else releaseDisplayHoldRef.current('page dropped');
         console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DROPPED → "${dropped.segmentId}" ("${dropped.title}") — batch already opens "${deferredFlush.ownPageTitle ?? ''}"`);
         onDebugEvent?.('auto_newpage_on_advance_dropped', `${dropped.segmentId}: "${dropped.title}" — batch opens its own page "${deferredFlush.ownPageTitle ?? ''}"`);
       } else if (hasFreshTeaching) {
@@ -9821,6 +9862,8 @@ export function VoiceTutorRealtime({
         // setCurrentPage bridge never sees it). setCurrentPage syncs the view.
         segmentPageIdRef.current = catalogRef.current.openPage({ title: pageTitle, segmentId: deferred.segmentId });
         segmentPageBreakRef.current = { cmd: segmentBreakCmd, priorPageId: priorPageIdForBreak, segmentId: deferred.segmentId, title: pageTitle };
+        // Task 27 §C: the strip moves when this break paints.
+        displayHoldBreakRef.current = segmentBreakCmd;
         catalogRef.current.setCurrentPage(pageTitle);
         // The continuation page opened above is now a non-active empty page.
         if (droppedContinuationPage) catalogRef.current.gcEmptyPages();
@@ -12506,6 +12549,11 @@ export function VoiceTutorRealtime({
     cardedStudentSentenceRef.current = new Set();
     rendersDispatchedThisTurnRef.current = 0;
     boardRendersThisTurnRef.current = 0;
+    // Task 27 §C: a hold whose page is neither pending nor buffered (retracted) follows the pointer again.
+    if (displayHoldRef.current && !pendingAdvanceNewPageRef.current
+      && !(displayHoldBreakRef.current && renderBufferRef.current.some((e) => e.processed.includes(displayHoldBreakRef.current!)))) {
+      releaseDisplayHoldRef.current('stale at turn start');
+    }
     turnRenderPayloadTextRef.current = '';
     // Task B3 (flag-gated): fresh per-turn valid-render counter for the
     // opener-fallback check. openingTurnPendingRef itself is NOT reset here

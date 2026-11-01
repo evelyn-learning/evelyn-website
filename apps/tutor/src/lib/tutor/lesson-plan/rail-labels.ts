@@ -402,3 +402,31 @@ export function buildAdvanceBeatNote(beat: { title: string; index: number; total
  *  that follows them — the same channel as the LO-boundary beat. */
 export const SEGMENT_INTRO_RULE =
   'The text of this reply introduces it: in one or two sentences, say what the student is about to look at and what they will do. A lead-in alone ("Here we go.", "Okay!") is not an introduction.';
+
+/**
+ * Task 27 §C (GDI run 14, Image 47): the chip strip marked "Conversation"
+ * active while the board still showed "Part 5 · Past simple" — the chip
+ * followed the lesson pointer at once, the part page waited for turn end.
+ * The strip follows the DISPLAYED segment: while the pointer's segment page
+ * is pending (not yet painted) the previously displayed segment stays
+ * active; once its page is painted — or when no page is pending — the
+ * pointer. Pure.
+ */
+export function displayedSegmentId(input: {
+  pointer: string;
+  /** the segment whose deferred page is waiting (null = none) */
+  pendingPageFor: string | null;
+  /** that page has painted */
+  flushed: boolean;
+  /** the segment displayed before the pointer moved */
+  previous: string;
+}): string {
+  const { pointer, pendingPageFor, flushed, previous } = input;
+  if (pendingPageFor && pendingPageFor === pointer && !flushed && previous && previous !== pointer) return previous;
+  return pointer;
+}
+/** The completed set the strip shows: while a segment is held as displayed
+ *  (it differs from the pointer) it is not shown completed. */
+export function displayedCompletedSegments(completed: readonly string[], displayed: string, pointer: string): string[] {
+  return displayed && displayed !== pointer ? completed.filter((id) => id !== displayed) : [...completed];
+}

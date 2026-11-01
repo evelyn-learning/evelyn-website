@@ -1027,3 +1027,11 @@ export const TUTOR_TTS_SPLIT_QUOTED_SPANS = process.env.NEXT_PUBLIC_TUTOR_TTS_SP
  *  (previousPageTarget). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE=off ⇒ as before. */
 export const TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE = process.env.NEXT_PUBLIC_TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE !== 'off';
+
+/** Task 27 §C (GDI run 14, Image 47): the part chip strip follows the
+ *  DISPLAYED segment — a pointer move whose part page is still deferred keeps
+ *  the previous chip active until that page paints (rail-labels.ts
+ *  displayedSegmentId). Display only (the reported pointer, the resume state
+ *  and the completed set the host persists are unchanged). Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_RAIL_FOLLOWS_PAGE=off ⇒ the pointer at once. */
+export const TUTOR_RAIL_FOLLOWS_PAGE = process.env.NEXT_PUBLIC_TUTOR_RAIL_FOLLOWS_PAGE !== 'off';

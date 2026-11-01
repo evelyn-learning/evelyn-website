@@ -37,7 +37,7 @@ import {
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '../src/lib/tutor/lesson-plan/announced-move';
 import { turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
-import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel } from '../src/lib/tutor/lesson-plan/rail-labels';
+import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel, displayedSegmentId, displayedCompletedSegments } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
@@ -731,6 +731,28 @@ test('27I: level continuation — bridge segment ⇒ the bridge wording, no "do 
   assert.equal(fixedScriptContinueDirective({ via: 'level', plan: { ...tr, metadata: {} }, from: 'level-check', next: 'part-a' }).directive, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, 'not a fixed script');
   pin(VTR, /levelAdvanceThisTurnRef\.current = lvNext;\s*levelAdvanceFromThisTurnRef\.current = lvFrom;/);
   pin(VTR, /const lvFromForCont = levelAdvanceFromThisTurnRef\.current;/);
+});
+
+// Task 27 §C (GDI run 14, Image 47): the chip strip follows the displayed part page, not the pointer.
+test('27C: displayedSegmentId — pending page ⇒ the previous part; after the flush ⇒ the pointer; no pending page ⇒ the pointer', () => {
+  assert.equal(displayedSegmentId({ pointer: 'open-conversation', pendingPageFor: 'open-conversation', flushed: false, previous: 'past-simple' }), 'past-simple');
+  assert.equal(displayedSegmentId({ pointer: 'open-conversation', pendingPageFor: 'open-conversation', flushed: true, previous: 'past-simple' }), 'open-conversation');
+  assert.equal(displayedSegmentId({ pointer: 'open-conversation', pendingPageFor: null, flushed: false, previous: 'past-simple' }), 'open-conversation');
+  assert.equal(displayedSegmentId({ pointer: 'summary', pendingPageFor: 'open-conversation', flushed: false, previous: 'past-simple' }), 'summary', 'the pointer moved past the pending page');
+  assert.equal(displayedSegmentId({ pointer: 'open-conversation', pendingPageFor: 'open-conversation', flushed: false, previous: '' }), 'open-conversation', 'nothing displayed before');
+  assert.deepEqual(displayedCompletedSegments(['level-check', 'past-simple'], 'past-simple', 'open-conversation'), ['level-check']);
+  assert.deepEqual(displayedCompletedSegments(['level-check', 'past-simple'], 'open-conversation', 'open-conversation'), ['level-check', 'past-simple']);
+  const rail = buildRailModel(fixed, displayedSegmentId({ pointer: 'topic-intro', pendingPageFor: 'topic-intro', flushed: false, previous: 'level-check' }), new Set(displayedCompletedSegments(['overview', 'level-check'], 'level-check', 'topic-intro')), null);
+  assert.ok(rail && rail.items.some((it) => it.current && it.segIds.includes('level-check') && !it.done), JSON.stringify(rail?.items));
+  // wiring: held at the deferred advance, released when the break paints; the chips read the displayed segment
+  pin(VTR, /if \(TUTOR_RAIL_FOLLOWS_PAGE && segShownBefore && segShownBefore !== next\) \{/);
+  pin(VTR, /if \(displayHoldBreakRef\.current && commands\.includes\(displayHoldBreakRef\.current\)\) releaseDisplayHoldRef\.current\('its page painted'\);/);
+  pin(VTR, /displayHoldBreakRef\.current = segmentBreakCmd;/);
+  pin(VTR, /displayHoldBreakRef\.current = pageCmds\[0\]!;\s*onWhiteboardCommand\(pageCmds\);/);
+  pin(VTR, /displayedSegmentId: displayedSegmentId\(\{ pointer: activeSegmentId, pendingPageFor: displayHold\?\.forSeg \?\? null, flushed: !displayHold, previous: displayHold\?\.shown \?\? '' \}\),/);
+  const TS = read('src/app/tutor/components/session/TutorSession.tsx');
+  pin(TS, /const chipSegmentId = lessonProgress\.displayedSegmentId \?\? lessonProgress\.currentSegmentId \?\? '';/);
+  pin(TS, /buildRailModel\(lessonProgress\.plan, chipSegmentId,\s*new Set\(chipCompletedIds\)/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
