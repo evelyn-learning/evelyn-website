@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -88,7 +88,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
@@ -9711,6 +9711,28 @@ export function VoiceTutorRealtime({
       for (const c of processed) if (isStudentCardCmd(c)) movedBeforeBreak.add(c);
       if (movedBeforeBreak.size > 0) movedBeforeBreakPageId = bufferedSegmentBreak.priorPageId;
     }
+    // Task 27 §B fallback: the part page this turn opened has already PAINTED
+    // — a card of the student's sentence planned now goes to the page the
+    // student answered on (a page target the board relocates it by), and the
+    // catalog lists it there.
+    const paintedSegmentBreak = !bufferedSegmentBreak && !pendingAdvanceNewPageRef.current ? segmentPageBreakRef.current : null;
+    const toPreviousPage = new Set<WhiteboardCommand>();
+    if (paintedSegmentBreak && TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE) {
+      const target = previousPageTarget(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, paintedSegmentBreak.cmd);
+      if (target) {
+        processed = processed.map((c) => {
+          if (!isStudentCardCmd(c)) return c;
+          const moved = { ...c, ...target } as WhiteboardCommand;
+          toPreviousPage.add(moved);
+          movedBeforeBreak.add(moved);
+          return moved;
+        });
+        if (toPreviousPage.size > 0) {
+          movedBeforeBreakPageId = paintedSegmentBreak.priorPageId;
+          onDebugEvent?.('student_card_on_previous_page', `${toPreviousPage.size} card(s) → page ${target.targetPageIndex + 1}${target.targetPageTitle ? ` "${target.targetPageTitle}"` : ''} (the "${paintedSegmentBreak.segmentId}" page painted first)`);
+        }
+      }
+    }
     if (pendingAdvanceNewPageRef.current) {
       // "Fresh teaching content" = any teaching render not already on the board.
       // Uses the canonical isTeachingRender predicate (page-grouping.ts) rather
@@ -10850,6 +10872,13 @@ export function VoiceTutorRealtime({
     // (and attach them to the latest tutor transcript entry — the resume
     // snapshot). Shared with the turn-end part-page flush (Task 20 fix round 1).
     recordDispatchedCommandsRef.current(processed);
+    // Task 27 §B fallback: the mirror keeps a relocated student card on the
+    // page before the painted break (the on-current-page checks walk it).
+    if (toPreviousPage.size > 0 && paintedSegmentBreak) {
+      const rest = whiteboardCommandsRef.current.filter((c) => !toPreviousPage.has(c));
+      const at = rest.indexOf(paintedSegmentBreak.cmd);
+      if (at >= 0) whiteboardCommandsRef.current = [...rest.slice(0, at), ...processed.filter((c) => toPreviousPage.has(c)), ...rest.slice(at)];
+    }
 
     processed.forEach((cmd) => {
       onTrackInteraction?.('tool_use', 'whiteboard', { ...cmd });
@@ -21149,6 +21178,9 @@ export function VoiceTutorRealtime({
         // (catalog stamped with the segment; a deferred segment page opens
         // with it — it is fresh teaching content). Runs before the sentence
         // board so the part's card is the first thing on its page.
+        // Task 27 §B (GDI run 14, 493 s): with a part page pending, the part
+        // card waits for the turn's student cards (orderTurnEndDispatches).
+        let deferredSegmentCardRun: (() => Promise<void>) | null = null;
         if (TUTOR_SEGMENT_CARD_AUTO && !opts?.prefetchOnly && totalSentenceCount > 0) {
           const acPlan = lessonPlanRef.current;
           const acSegId = currentSegmentIdRef.current ?? '';
@@ -21180,10 +21212,14 @@ export function VoiceTutorRealtime({
                   : undefined,
               },
             } as unknown as WhiteboardCommand;
-            try {
-              const res = await handleWhiteboardCommand([cmd], { anchorSentence: 0 });
-              onDebugEvent?.('segment_card_auto', `${acSegId}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'} "${acStatement.slice(0, 50)}"`);
-            } catch { /* the turn stands without the card */ }
+            const runSegmentCard = async () => {
+              try {
+                const res = await handleWhiteboardCommand([cmd], { anchorSentence: 0 });
+                onDebugEvent?.('segment_card_auto', `${acSegId}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'} "${acStatement.slice(0, 50)}"`);
+              } catch { /* the turn stands without the card */ }
+            };
+            if (pendingAdvanceNewPageRef.current && TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE) deferredSegmentCardRun = runSegmentCard;
+            else await runSegmentCard();
           }
         }
         // Sentence board (2026-10-29, GDI trial run 1: the brain boarded 3
@@ -21236,13 +21272,13 @@ export function VoiceTutorRealtime({
             })()),
           });
           prevBoardTutorTextRef.current = fullText;
-          for (const card of cards) {
+          const dispatchBoardCard = async (card: (typeof cards)[number]): Promise<void> => {
             // A pending segment page opens with this card, so the page the
             // log shows as current is the one being left — nothing to dedupe.
             // Unless the client advanced after this turn (§K): then the card
             // stays on the current page, so dedupe against it.
             if ((!pendingAdvanceNewPageRef.current || pendingAdvanceNewPageRef.current.afterTurn)
-              && sentenceOnCurrentPage(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, card.sentence)) continue;
+              && sentenceOnCurrentPage(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, card.sentence)) return;
             const cmd = {
               action: 'showSentence',
               sentence: card.sentence,
@@ -21275,8 +21311,21 @@ export function VoiceTutorRealtime({
             }
             // Runtime-origin marker: this event (the card is not a brain tool call).
             onDebugEvent?.('sentence_board_auto', `kind=${card.kind}${card.source ? ` source=${card.source}` : ''} emphasis=[${card.emphasis.join(', ')}] "${card.sentence}" anchor=${anchorLabel} ${placedId ? `id=${placedId}` : `not placed${res?.rejected?.length ? ` (${res.rejected.map((r) => r.reason).join('; ').slice(0, 80)})` : ''}`}`);
+          };
+          // Task 27 §B: student cards, then the waiting part card (it opens the
+          // part page), then any other card; no page pending ⇒ stream order.
+          const turnEndPlanned = orderTurnEndDispatches([
+            ...(deferredSegmentCardRun ? [{ kind: 'segment' as const, run: deferredSegmentCardRun }] : []),
+            ...cards.map((card) => ({ kind: (card.kind === 'correction' || !!card.source ? 'student' : 'other') as 'student' | 'other', run: () => dispatchBoardCard(card) })),
+          ], !!deferredSegmentCardRun);
+          deferredSegmentCardRun = null;
+          if (turnEndPlanned.length > 1 && turnEndPlanned[0]!.kind === 'student' && turnEndPlanned.some((p) => p.kind === 'segment')) {
+            onDebugEvent?.('segment_card_auto_after_student_cards', `${turnEndPlanned.filter((p) => p.kind === 'student').length} student card(s) first`);
           }
+          for (const planned of turnEndPlanned) await planned.run();
         }
+        // Task 27 §B: no sentence board this turn — the waiting part card goes up now.
+        if (deferredSegmentCardRun) await (deferredSegmentCardRun as () => Promise<void>)();
         // R49b: the CONTENT companion to the presence check above. A render
         // tool firing is not the same as the problem reaching the board —
         // portal-2d53e403's opener called show_number_line with a single

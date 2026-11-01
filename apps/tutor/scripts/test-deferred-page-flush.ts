@@ -14,6 +14,8 @@ import {
   flushDeferredPageAtTurnEnd,
   orderStudentCardsBeforePageBreak,
   advancePageFlushTiming,
+  orderTurnEndDispatches,
+  previousPageTarget,
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 import { keepBatchOnEmptySegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
@@ -210,6 +212,53 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('24C3: VTR marks the carry at the advance', V.includes("if (advancePageFlushTiming({ askPending, holdSpent: askHoldSpent }) === 'next-turn') {") && V.includes("onDebugEvent?.('auto_newpage_on_advance_deferred_next_turn', autoNext);"));
   ok('24C3: VTR keeps afterTurn through one turn start', V.includes('if (pendingAdvanceNewPageRef.current?.flushAfterNextTurn && !pendingAdvanceNewPageRef.current.carriedTurnStarted) {'));
   ok('24C3: VTR clears the carry at the carried turn\'s end', V.includes('if (!opts?.prefetchOnly && pendingAdvanceNewPageRef.current?.flushAfterNextTurn && pendingAdvanceNewPageRef.current.carriedTurnStarted) {'));
+}
+
+// Task 27 §B (GDI run 14, 493 s): the turn-end part card flushed the pending part page before the
+// sentence board planned the student's correction card — the card landed on the next part's page.
+{
+  type P = { kind: 'segment' | 'student' | 'other'; cmd: { action: string; title?: string; student?: boolean } };
+  // A model of the board at turn end: a pending part page opens with the first batch that is not a
+  // card of the student's sentence (the held auto card of the part being left); a student card that
+  // does flush it goes in front of its break (Task 23 §A).
+  const board = (dispatches: P[]): string[] => {
+    let pending = true;
+    const out: string[] = [];
+    for (const p of dispatches) {
+      if (pending && p.kind !== 'student') { out.push('newPage'); pending = false; }
+      out.push(`${p.cmd.action}${p.kind === 'student' ? '(student)' : ''}`);
+    }
+    return out;
+  };
+  const showProblem: P = { kind: 'segment', cmd: { action: 'showProblem' } };
+  const studentCard: P = { kind: 'student', cmd: { action: 'showSentence', student: true } };
+  const modelCard: P = { kind: 'other', cmd: { action: 'showSentence' } };
+  // before: stream order [showProblem (opens the deferred page), showSentence(student, planned later)]
+  ok('27B: before — the student card lands after the page break', board([showProblem, studentCard]).join(',') === 'newPage,showProblem,showSentence(student)');
+  const ordered = orderTurnEndDispatches([showProblem, studentCard], true);
+  ok('27B: [showProblem, newPage(deferred), showSentence(student)] → [showSentence(student), newPage, showProblem]', board(ordered).join(',') === 'showSentence(student),newPage,showProblem');
+  ok('27B: a new model sentence of the new part follows the part card', orderTurnEndDispatches([showProblem, modelCard, studentCard], true).map((p) => p.kind).join(',') === 'student,segment,other');
+  ok('27B: no page pending ⇒ the part card first, stream order otherwise', orderTurnEndDispatches([studentCard, showProblem, modelCard], false).map((p) => p.kind).join(',') === 'segment,student,other');
+  ok('27B: nothing planned ⇒ nothing', orderTurnEndDispatches([], true).length === 0);
+  // fallback: the part page already painted — the student card targets the page before the break
+  const brk = { action: 'newPage', title: 'Part 5 · Past simple' };
+  const cmds = [
+    { action: 'newPage', title: 'Part 3 · Your job' }, { action: 'showProblem', id: 'p1' },
+    { action: 'newPage', title: 'Part 4 · Present perfect' }, { action: 'showProblem', id: 'p2' }, { action: 'showSentence', id: 's1' },
+    brk, { action: 'showProblem', id: 'p3' },
+  ];
+  const tgt = previousPageTarget(cmds, brk);
+  ok('27B: previous page = "Part 4 · Present perfect", index 1', tgt?.targetPageTitle === 'Part 4 · Present perfect' && tgt?.targetPageIndex === 1);
+  ok('27B: an empty page is no page (the canvas skips it)', previousPageTarget([{ action: 'newPage', title: 'A' }, { action: 'showProblem' }, { action: 'newPage', title: 'Empty' }, brk], brk)?.targetPageTitle === 'A');
+  ok('27B: removed items do not count', previousPageTarget([{ action: 'newPage', title: 'A' }, { action: 'showProblem' }, { action: 'newPage', title: 'B' }, { action: 'showSentence', id: 'x' }, { action: 'removeItems', ids: ['x'] }, brk], brk)?.targetPageTitle === 'A');
+  ok('27B: no break in the log / nothing before it ⇒ null', previousPageTarget(cmds, { action: 'newPage' }) === null && previousPageTarget([brk], brk) === null);
+  const V = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('27B: VTR defers the turn-end part card while a part page is pending', V.includes('if (pendingAdvanceNewPageRef.current && TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE) deferredSegmentCardRun = runSegmentCard;'));
+  ok('27B: VTR orders the turn-end dispatches and runs them in order', /const turnEndPlanned = orderTurnEndDispatches\(\[[\s\S]{0,400}\], !!deferredSegmentCardRun\);[\s\S]{0,600}for \(const planned of turnEndPlanned\) await planned\.run\(\);/.test(V));
+  ok('27B: VTR runs a waiting part card when no sentence board ran', V.includes('if (deferredSegmentCardRun) await (deferredSegmentCardRun as () => Promise<void>)();'));
+  ok('27B: VTR fallback — painted break ⇒ previous page target + event', V.includes("const paintedSegmentBreak = !bufferedSegmentBreak && !pendingAdvanceNewPageRef.current ? segmentPageBreakRef.current : null;") && V.includes("onDebugEvent?.('student_card_on_previous_page', "));
+  const C = readFileSync(join(__dirname, '..', 'src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx'), 'utf8');
+  ok('27B: the canvas relocates a page-targeted showSentence like a scribble', C.includes("if (cmd.action !== 'scribble' && !pageTargeted) { keep.push(cmd); continue; }"));
 }
 
 console.log(`deferred-page-flush: ${n} cases passed`);

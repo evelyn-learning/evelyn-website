@@ -278,6 +278,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   //   skipped as a translation (§C2), no auto arm on a part's entry turn (§D2),
   //   a required-phrase kill deferred on a cut turn (§F2):
   'tts_sentence_split', 'sentence_board_quote_skipped', 'pronunciation_auto_arm_skipped', 'required_phrase_deferred',
+  //   Task 27 (GDI run 14): the turn-end part card (it never reached the dump —
+  //   §B traced 493 s through it) and a student card sent to the page before a
+  //   part page that painted first (§B fallback):
+  'segment_card_auto', 'student_card_on_previous_page',
   //   fixed-script lessons: the client moved / held the segment cursor, FACT note delivered:
   'fixed_script_',
   //   the dedup family (R49b's retry-context bug lived here):

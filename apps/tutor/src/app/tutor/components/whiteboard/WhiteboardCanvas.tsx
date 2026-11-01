@@ -579,7 +579,11 @@ export function WhiteboardCanvas({
     for (let i = 0; i < relocated.length; i++) {
       const keep: WhiteboardCommand[] = [];
       for (const cmd of relocated[i].commands) {
-        if (cmd.action !== 'scribble') { keep.push(cmd); continue; }
+        // Task 27 §B: a student sentence card sent to the page before a part
+        // page that painted first carries the same page target.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pageTargeted = cmd.action === 'showSentence' && ((cmd as any).targetPageTitle !== undefined || (cmd as any).targetPageIndex !== undefined);
+        if (cmd.action !== 'scribble' && !pageTargeted) { keep.push(cmd); continue; }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const cmdAny = cmd as any;
         const targetId = cmdAny.targetId as string | undefined;

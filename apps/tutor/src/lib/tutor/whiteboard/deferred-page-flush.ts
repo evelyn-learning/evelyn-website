@@ -152,3 +152,71 @@ export function orderStudentCardsBeforePageBreak<T extends { action: string }>(
   const at = rest.indexOf(cmds[breakIdx]!);
   return { cmds: [...rest.slice(0, at), ...moved, ...rest.slice(at)], moved };
 }
+
+/**
+ * Task 27 §B (GDI run 14, 493 s): the transition turn's turn-end renders ran
+ * in code order — the client's part card (segment_card_auto, a showProblem:
+ * fresh teaching, so the deferred part page flushed with it) BEFORE the
+ * sentence board — and with the turn's audio over both painted at once: the
+ * correction card of the student's answer (planned later, at the sentence
+ * board) landed on the NEXT part's page. At 958 s the same shape went right
+ * because the break was still buffered and the card moved in front of it.
+ *
+ * With a part page pending, the turn-end part card waits: the student's
+ * sentence cards go first (they stay on the page being left — or, flushing the
+ * page themselves, go in front of its break), then the part card (it opens the
+ * part page), then any other card (a new model sentence of the new part).
+ * No page pending ⇒ the part card first, as before ("the first thing on its
+ * page"). `kind` of each planned dispatch: 'segment' (the part card),
+ * 'student' (a card of the student's sentence), 'other'.
+ */
+export function orderTurnEndDispatches<T extends { kind: 'segment' | 'student' | 'other' }>(
+  planned: readonly T[],
+  pagePending: boolean,
+): T[] {
+  if (!pagePending) {
+    return [...planned.filter((p) => p.kind === 'segment'), ...planned.filter((p) => p.kind !== 'segment')];
+  }
+  return [
+    ...planned.filter((p) => p.kind === 'student'),
+    ...planned.filter((p) => p.kind === 'segment'),
+    ...planned.filter((p) => p.kind === 'other'),
+  ];
+}
+
+/**
+ * Task 27 §B fallback: the part page already PAINTED earlier in this turn
+ * (its break left the render buffer) when a card of the student's sentence is
+ * planned — the card goes to the page the student answered on, the page
+ * before the break. The board groups commands into pages as WhiteboardCanvas
+ * does (newPage splits; clear / goToPage / removeItems / reviseItems and
+ * removed ids render nothing; an empty group is no page): the target is that
+ * page's title and index. null when the break is not in `commands` or there
+ * is no page before it.
+ */
+export function previousPageTarget(
+  commands: ReadonlyArray<{ action: string; title?: string; id?: string; ids?: readonly string[] } & Record<string, unknown>>,
+  breakCmd: unknown,
+): { targetPageTitle?: string; targetPageIndex: number } | null {
+  const breakIdx = commands.indexOf(breakCmd as (typeof commands)[number]);
+  if (breakIdx <= 0) return null;
+  const removed = new Set<string>();
+  for (const c of commands) if (c.action === 'removeItems' && Array.isArray(c.ids)) for (const id of c.ids) removed.add(id);
+  let pages = 0;
+  let lastTitle: string | undefined;
+  let current: { title?: string; n: number } = { n: 0 };
+  for (let i = 0; i < breakIdx; i++) {
+    const c = commands[i]!;
+    if (c.action === 'clear' || c.action === 'goToPage' || c.action === 'removeItems' || c.action === 'reviseItems') continue;
+    if (typeof c.id === 'string' && removed.has(c.id)) continue;
+    if (c.action === 'newPage') {
+      if (current.n > 0) { pages += 1; lastTitle = current.title; }
+      current = { title: typeof c.title === 'string' ? c.title : undefined, n: 0 };
+    } else {
+      current.n += 1;
+    }
+  }
+  if (current.n > 0) { pages += 1; lastTitle = current.title; }
+  if (pages === 0) return null;
+  return { ...(lastTitle ? { targetPageTitle: lastTitle } : {}), targetPageIndex: pages - 1 };
+}

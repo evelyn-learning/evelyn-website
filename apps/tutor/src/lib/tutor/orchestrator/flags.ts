@@ -1018,3 +1018,12 @@ export const TUTOR_CLIP_FROM_PERCEPTION = process.env.NEXT_PUBLIC_TUTOR_CLIP_FRO
  *  works: default ON; NEXT_PUBLIC_TUTOR_TTS_SPLIT_QUOTED_SPANS=off ⇒ one
  *  request per sentence, as before. */
 export const TUTOR_TTS_SPLIT_QUOTED_SPANS = process.env.NEXT_PUBLIC_TUTOR_TTS_SPLIT_QUOTED_SPANS !== 'off';
+
+/** Task 27 §B (GDI run 14, 493 s): the student's card of a transition turn
+ *  stays on the page the student answered on — with a part page pending, the
+ *  turn-end part card waits for the turn's student cards
+ *  (deferred-page-flush.ts orderTurnEndDispatches); a part page that already
+ *  painted this turn sends a later student card to the previous page
+ *  (previousPageTarget). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE=off ⇒ as before. */
+export const TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE = process.env.NEXT_PUBLIC_TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE !== 'off';
