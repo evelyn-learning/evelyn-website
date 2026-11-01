@@ -70,7 +70,7 @@ import { stripMarkdownEmphasis } from '../src/lib/tutor/voice/sentence-spacing';
 import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
 import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
 import { expectsEnglishReply } from '../src/lib/tutor/voice/english-reply';
-import { isBoardReadAloud, asksToReadAloud, normaliseNumberTokens } from '../src/lib/tutor/voice/correct-retry';
+import { isBoardReadAloud, asksToReadAloud, normaliseNumberTokens, repeatAskThirdVersion, isRepeatAskForThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON } from '../src/lib/tutor/voice/correct-retry';
 
 let passed = 0;
 let failed = 0;
@@ -1573,6 +1573,25 @@ test('Task 25 §F2: a required-phrase miss on a max_tokens-cut turn is deferred,
   assert.match(v, /onDebugEvent\?\.\('required_phrase_deferred', `max_tokens:/);
   assert.match(v, /\[pendingRequiredPhraseNoteRef, 'required_phrase_note_consumed'\]/);
   assert.match(v, /if \(lastStopReason === 'max_tokens'\) maxTokensStopThisAttempt = true;/);
+});
+
+test('Task 25 §G (GDI run 13, 824 s): no third version of a model sentence', () => {
+  const prev = 'Good try. In English we use "colleagues" for people at work, so let\'s say "other experienced colleagues" instead. Can you try that sentence once more?';
+  const student = 'I spoke to other colleagues and uh my manager.';
+  const attempt = 'Ah, your manager and other colleagues — that\'s a good way to solve the problem. Let\'s keep it natural: 「同僚に相談しました」 is "I asked my colleagues for help." Can you say: I talked to my manager and other colleagues?';
+  assert.equal(repeatAskThirdVersion({ prevTutorText: prev, studentText: student, verdict: 'partly_correct', attemptText: attempt }), true);
+  assert.equal(repeatAskThirdVersion({ prevTutorText: prev, studentText: student, verdict: 'incorrect', attemptText: attempt }), false, 'a wrong repeat may be asked once more');
+  assert.equal(repeatAskThirdVersion({ prevTutorText: 'What did you do when the project had a problem?', studentText: student, verdict: 'partly_correct', attemptText: attempt }), false, 'a first repeat ask');
+  assert.equal(repeatAskThirdVersion({ prevTutorText: prev, studentText: 'Um, sorry?', verdict: null, attemptText: attempt }), false, 'not an attempt');
+  assert.equal(repeatAskThirdVersion({ prevTutorText: prev, studentText: 'Can I say it in Japanese?', verdict: null, attemptText: attempt }), false, 'a question is not an attempt');
+  assert.equal(repeatAskThirdVersion({ prevTutorText: prev, studentText: student, verdict: 'partly_correct', attemptText: 'Good, that works. Next question: who helped you most?' }), false, 'moving on is fine');
+  assert.ok(!isRepeatAskForThirdVersion('Can you say what you did next?'), 'a new question');
+  assert.ok(isRepeatAskForThirdVersion('Can you say "I asked my manager for help"?'));
+  assert.ok(isRepeatAskForThirdVersion('Please say the sentence once more.'));
+  assert.ok(REPEAT_ASK_THIRD_VERSION_REASON.startsWith('The student has already tried this sentence twice.'));
+  const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.match(v, /rejectionsThisAttempt\.push\(\{ action: 'repeat_ask_third_version', reason: REPEAT_ASK_THIRD_VERSION_REASON \}\);/);
+  assert.match(v, /repeatAskThirdVersion\(\{ prevTutorText: tvPrev, studentText: transcript, verdict: verdictPrecheckRef\.current\?\.verdict, attemptText \}\)/);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

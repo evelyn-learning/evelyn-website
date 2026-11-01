@@ -119,6 +119,49 @@ export function isStrictRepeatAsk(text: string): boolean {
   return isRetryAsk(t) || SAY_AGAIN_RE.test(t) || /\brepeat (?:it |that |this )?after me\b/i.test(t) || JA_SAY_IT_ASK_RE.test(t) || hasSayQuoteAsk(t);
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Task 25 §G (GDI run 13, 798–854 s): "let's say "other experienced
+// colleagues" instead. Can you try that sentence once more?" → the student's
+// attempt (partly correct) → "Can you say: I talked to my manager and other
+// colleagues?" — a THIRD wording to repeat. Two tries, then teach (10-30): a
+// correct-enough repeat ends the probe.
+// ─────────────────────────────────────────────────────────────────────────
+/** "Can you say: …" / "Can you say "…"" / "can you repeat / try it / that /
+ *  the sentence / saying …", "try that sentence". Narrowed from a bare "can
+ *  you say / try": "Can you say what you did next?" is a new question. */
+const CAN_YOU_REPEAT_RE = /\bcan you (?:say|repeat|try)\b(?:\s*[:："“「]|\s+(?:it|that|this|the (?:whole |full |same )?sentence|saying)\b)|\btry that sentence\b/i;
+/** A repeat ask for the third-version rule: isStrictRepeatAsk's forms, plus
+ *  the "can you say: …" / "try that sentence" asks. */
+export function isRepeatAskForThirdVersion(text: string): boolean {
+  const t = text ?? '';
+  return isStrictRepeatAsk(t) || CAN_YOU_REPEAT_RE.test(t);
+}
+const ATTEMPT_MIN_CONTENT_TOKENS = 3;
+const ATTEMPT_FILLERS = new Set(['uh', 'um', 'umm', 'uhm', 'er', 'erm', 'ah', 'hmm', 'like', 'yes', 'yeah', 'no', 'ok', 'okay', 'so', 'well', 'oh']);
+/**
+ * The attempt asks the learner to say a sentence AGAIN after a repeat ask
+ * they answered with an attempt (≥ 3 content words, not a question) that the
+ * check did not find incorrect ⇒ reject (validator repeat_ask_third_version).
+ * An incorrect repeat may be asked once more (the "two tries" rule).
+ */
+export function repeatAskThirdVersion(input: {
+  prevTutorText: string | null | undefined;
+  studentText: string | null | undefined;
+  verdict: string | null | undefined;
+  attemptText: string | null | undefined;
+}): boolean {
+  if (input.verdict === 'incorrect') return false;
+  if (!isRepeatAskForThirdVersion(input.prevTutorText ?? '')) return false;
+  const student = (input.studentText ?? '').trim();
+  if (!student || /[?？]\s*$/.test(student)) return false;
+  const content = (student.toLowerCase().match(/[a-z]+(?:['’][a-z]+)*/g) ?? []).filter((w) => !ATTEMPT_FILLERS.has(w));
+  if (content.length < ATTEMPT_MIN_CONTENT_TOKENS) return false;
+  return isRepeatAskForThirdVersion(input.attemptText ?? '');
+}
+/** The directive the killed attempt's retry gets. */
+export const REPEAT_ASK_THIRD_VERSION_REASON =
+  'The student has already tried this sentence twice. Accept their attempt in one sentence (say the natural form once if you must), then continue with your next question. Do not ask them to say it again.';
+
 /** Task 19 §A5: "starting with / begin with "…"" — the verb phrase leads into
  *  an opening quote within 20 chars, no sentence break between. */
 const STARTER_ASK_RE = /\b(?:start(?:ing)?|begin(?:ning)?)\s+with\b[^"“「.!?。！？]{0,20}["“「]/i;

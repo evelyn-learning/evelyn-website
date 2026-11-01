@@ -74,7 +74,7 @@ test('unlabelled scriptIds (kill bridge / greeting) match undefined and stamp no
 
 console.log('shouldFinishInFlightSentence');
 test('exactly the two actions whose offending sentence is never the first', () => {
-  assert.deepEqual([...SENTENCE_BOUNDARY_KILL_ACTIONS].sort(), ['repeat_after_correct', 'required_phrase_missing']);
+  assert.deepEqual([...SENTENCE_BOUNDARY_KILL_ACTIONS].sort(), ['repeat_after_correct', 'repeat_ask_third_version', 'required_phrase_missing']);
   assert.equal(shouldFinishInFlightSentence('repeat_after_correct', 1), true);
   assert.equal(shouldFinishInFlightSentence('required_phrase_missing', 3), true);
 });

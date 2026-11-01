@@ -17,6 +17,8 @@
 export const SENTENCE_BOUNDARY_KILL_ACTIONS: ReadonlySet<string> = new Set([
   'repeat_after_correct',
   'required_phrase_missing',
+  // Task 25 §G: the offending sentence is the closing repeat ask.
+  'repeat_ask_third_version',
 ]);
 
 /** Cap on the wait for the in-flight sentence; on the cap the queue is

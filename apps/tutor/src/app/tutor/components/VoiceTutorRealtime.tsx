@@ -227,7 +227,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
+import { reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -12996,6 +12996,8 @@ export function VoiceTutorRealtime({
       let prematureFarewellRejected = false;
       // Task 24 §C1: one transition_ask_off_part kill per turn.
       let transitionAskRejected = false;
+      // Task 25 §G: one repeat_ask_third_version kill per turn.
+      let thirdVersionRejected = false;
       // Task 20 §B2: the lesson was already closed when this turn started (it
       // answers a post-close utterance); the arm counter tells a fresh arm.
       const closedAtTurnStart = lessonClosedRef.current;
@@ -19286,6 +19288,23 @@ export function VoiceTutorRealtime({
             rejectionsThisAttempt.push({ action: 'premature_farewell', reason: PREMATURE_FAREWELL_REASON });
             await performKill();
             onDebugEvent?.('premature_farewell', `"${currentSegmentIdRef.current}": "${farewell.slice(0, 80)}"`);
+          }
+        }
+
+        // Task 25 §G (GDI run 13, 798–854 s): the previous turn asked for a
+        // repeat, the student tried (not incorrect), and this attempt asks for
+        // a THIRD version — kill + retry once: accept, then move on. A
+        // pronunciation drill (a measured note this turn, or a part that lists
+        // pronunciation targets) repeats by design and is left alone.
+        if (!attemptKilled && !thirdVersionRejected && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)
+          && !pronunciationMeasuredThisTurn
+          && !pronunciationTargetsOf(lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.metadata)) {
+          const tvPrev = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
+          if (repeatAskThirdVersion({ prevTutorText: tvPrev, studentText: transcript, verdict: verdictPrecheckRef.current?.verdict, attemptText })) {
+            thirdVersionRejected = true;
+            rejectionsThisAttempt.push({ action: 'repeat_ask_third_version', reason: REPEAT_ASK_THIRD_VERSION_REASON });
+            await performKill();
+            onDebugEvent?.('repeat_ask_third_version', `"${attemptText.slice(-80)}" after "${tvPrev.slice(-60)}"`);
           }
         }
 
