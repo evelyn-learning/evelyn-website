@@ -96,6 +96,14 @@ const round = (n: number) => Math.round(n);
  * prosody when measured. Generic on purpose — the brain decides what to say.
  * A non-attempt (see isMeasuredResult) gets PRONUNCIATION_NOT_ATTEMPTED_NOTE.
  */
+/** Task 25 §E (GDI runs 12–13: "was it graded?" — the number was never
+ *  said): score bands the measured note names. */
+export const PRONUNCIATION_SCORE_EXCELLENT = 90;
+export const PRONUNCIATION_SCORE_GOOD = 75;
+/** The closing order of every MEASURED note: say the score, then the weak items. */
+export function pronunciationScoreOrder(overall: number): string {
+  return `Tell the student the overall score as "${round(overall)} out of 100" in one short clause (in the explanation language), then the weak items; a score of ${PRONUNCIATION_SCORE_EXCELLENT} or more is "excellent", ${PRONUNCIATION_SCORE_GOOD}–${PRONUNCIATION_SCORE_EXCELLENT - 1} "good", below ${PRONUNCIATION_SCORE_GOOD} "needs work" — say which.`;
+}
 export function formatPronunciationNote(r: PronunciationAssessment, referenceText: string): string {
   if (r.status !== 'ok') return PRONUNCIATION_UNAVAILABLE_NOTE;
   if (!isMeasuredResult(r)) return PRONUNCIATION_NOT_ATTEMPTED_NOTE;
@@ -119,5 +127,6 @@ export function formatPronunciationNote(r: PronunciationAssessment, referenceTex
   parts.push(weak.length ? `Weakest: ${weak.join('; ')}.` : `No word below ${WORD_FLAG_SCORE}.`);
   if (typeof res.prosody === 'number') parts.push(`Prosody ${round(res.prosody)}/100.`);
   parts.push('Feed back only on these measured items.');
+  parts.push(pronunciationScoreOrder(res.overall));
   return parts.join(' ');
 }

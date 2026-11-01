@@ -9,7 +9,7 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
-import { assessPronunciation, formatPronunciationNote, isMeasuredResult, PRONUNCIATION_NOT_ATTEMPTED_NOTE, PRONUNCIATION_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
+import { assessPronunciation, formatPronunciationNote, isMeasuredResult, PRONUNCIATION_NOT_ATTEMPTED_NOTE, PRONUNCIATION_UNAVAILABLE_NOTE, PRONUNCIATION_SCORE_EXCELLENT, PRONUNCIATION_SCORE_GOOD } from '../src/lib/tutor/pronunciation/assessor';
 import { resamplePcm16 } from '../src/lib/tutor/pronunciation/resample';
 import { parseAssessBody, pronunciationRouteEnabled, MAX_AUDIO_BYTES, MAX_REQUEST_BYTES, sessionAllowsAssess, CallBudget, MAX_ASSESS_CALLS_PER_SESSION, readBodyCapped } from '../src/lib/tutor/pronunciation/assess-request';
 import { normalizeAzure } from '../src/lib/tutor/pronunciation/normalize';
@@ -113,6 +113,23 @@ const REF = 'We went to the countryside.';
     assert.ok(note.indexOf('"beta"') < note.indexOf('"gamma"'), note);
     assert.match(note, /stress wrong/);
     assert.ok(!/[Pp]rosody/.test(note), 'no prosody when absent');
+  });
+  await test('Task 25 §E: every measured note ends with the score order — "79 out of 100", the bands', () => {
+    const r: PronunciationResult = {
+      vendor: 'speechace', overall: 79, latencyMs: 1,
+      words: [
+        { word: 'for', score: 44, errorType: 'mispronunciation', phonemes: [{ ipa: 'ɔɹ', score: 43 }] },
+        { word: 'international', score: 70, errorType: 'mispronunciation', phonemes: [{ ipa: 'n', score: 60 }] },
+        { word: 'customers', score: 92, errorType: 'none', phonemes: [] },
+      ],
+    };
+    const note = formatPronunciationNote({ status: 'ok', result: r }, 'for international customers');
+    assert.ok(note.includes('79 out of 100'), note);
+    assert.ok(note.endsWith('a score of 90 or more is "excellent", 75–89 "good", below 75 "needs work" — say which.'), note);
+    assert.ok(note.indexOf('Feed back only on these measured items.') < note.indexOf('Tell the student the overall score'), note);
+    assert.ok(formatPronunciationNote({ status: 'ok', result: { ...r, overall: 96.4 } }, 'for international customers').includes('"96 out of 100"'));
+    assert.equal(PRONUNCIATION_SCORE_EXCELLENT, 90); assert.equal(PRONUNCIATION_SCORE_GOOD, 75);
+    assert.ok(!PRONUNCIATION_UNAVAILABLE_NOTE.includes('out of 100') && !PRONUNCIATION_NOT_ATTEMPTED_NOTE.includes('out of 100'));
   });
   await test('long reference text still ≤ 80 words', () => {
     const long = Array.from({ length: 70 }, (_, i) => `word${i}`).join(' ');
