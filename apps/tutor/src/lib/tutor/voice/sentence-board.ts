@@ -928,6 +928,14 @@ const contentTokens = (toks: readonly string[]) => toks.filter((t) => !ARTICLE_T
  *  with nothing in their place, and none ADDS two or more new content words
  *  where the student had none ("Selling washing machines made by robots,
  *  that's a clear role." — the head dropped, a comment added — is praise). */
+const NUMBER_TOKEN_RE = /^\d+(?:[.,]\d+)?$/;
+const isNumberToken = (t: string) => NUMBER_TOKEN_RE.test(t) || NUMBER_WORDS.includes(t) || Object.values(TENS_WORDS).includes(t);
+/** Task 25 fix round 1 (I-3): a number token (digits or a number word) on one
+ *  side that the other side does not have. */
+function numbersDiffer(s: readonly string[], t: readonly string[]): boolean {
+  const a = s.filter(isNumberToken), b = t.filter(isNumberToken);
+  return a.some((x) => !b.includes(x)) || b.some((x) => !a.includes(x));
+}
 function editsInPlace(s: readonly string[], t: readonly string[]): boolean {
   const n = s.length, m = t.length;
   const L: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
@@ -935,7 +943,9 @@ function editsInPlace(s: readonly string[], t: readonly string[]): boolean {
     L[i]![j] = sameStem(s[i]!, t[j]!) ? L[i + 1]![j + 1]! + 1 : Math.max(L[i + 1]![j]!, L[i]![j + 1]!);
   }
   let i = 0, j = 0, ds = 0, dt = 0;
-  const gapOk = () => !((ds >= 2 && dt === 0) || (dt >= 2 && ds === 0));
+  // Fix round 1 (I-3): a substitution gap is at most 1:1 (or 1:2 / 2:1 for a
+  // split word) — "every day" → "yesterday too" is new content, not a fix.
+  const gapOk = () => !((ds >= 2 && dt === 0) || (dt >= 2 && ds === 0) || (ds >= 2 && dt >= 2));
   while (i < n && j < m) {
     if (sameStem(s[i]!, t[j]!)) { if (!gapOk()) return false; ds = 0; dt = 0; i++; j++; }
     else if (L[i + 1]![j]! >= L[i]![j + 1]!) { ds++; i++; }
@@ -969,6 +979,9 @@ export function grammarRecastCard(tutorText: string, student: string | null | un
     const matched = studentContent.filter((t) => tutorContent.some((u) => sameStem(t, u))).length;
     if (matched / studentContent.length < GRAMMAR_RECAST_OVERLAP) continue;
     if (!editsInPlace(studentContent, tutorContent)) continue;
+    // Fix round 1 (I-3): a changed number is a changed fact, not grammar
+    // ("five years" → "three years myself").
+    if (numbersDiffer(studentContent, tutorContent)) continue;
     const articleInserted = tutorToks.filter((t) => ARTICLE_TOKENS.has(t)).length > studentRaw.filter((t) => ARTICLE_TOKENS.has(t)).length;
     const tokenDiffers = tutorContent.some((u) => !studentContent.includes(u)) || studentContent.some((t) => !tutorContent.includes(t));
     if (!articleInserted && !tokenDiffers) continue;

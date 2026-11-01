@@ -1251,5 +1251,20 @@ test('25C2: isTranslationQuote shapes', () => {
   assert.equal(isTranslationQuote(c, c.indexOf('"'), c.indexOf('team"') + 5), false);
 });
 
+test('25 r1 I-3: a follow-up that changes content / a number is no grammar recast', () => {
+  assert.equal(grammarRecastCard('I talked to customers yesterday too.', 'I talk to customers every day'), null);
+  assert.equal(grammarRecastCard('I have worked here for three years myself.', 'I have worked here for five years'), null);
+  assert.equal(grammarRecastCard('I have worked here for 3 years.', 'I have work here for five years'), null, 'number changed');
+  const a = planSentenceBoard({ tutorText: 'I talked to customers yesterday too. What did you talk about?', studentLast: 'I talk to customers every day', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I talk to customers every day' });
+  assert.ok(a.every((c) => c.source !== 'grammar-recast' && c.kind !== 'correction'), JSON.stringify(a));
+  const b = planSentenceBoard({ tutorText: 'I have worked here for three years myself. How about your team?', studentLast: 'I have worked here for five years', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I have worked here for five years' });
+  assert.ok(b.every((c) => c.source !== 'grammar-recast') && b.some((c) => c.source === 'checked'), JSON.stringify(b));
+  // a 1:1 fix with the same number still recasts
+  const y = grammarRecastCard('Yes, I have worked here for five years.', 'Yes, I work here for five years');
+  assert.ok(y && y.kind === 'correction', JSON.stringify(y));
+  // the 181 s pin still holds
+  assert.deepEqual(grammarRecastCard('Yes, the customer bought the washing machine.', 'Yes, customer buy washing machine')?.emphasis, ['the', 'bought', 'the']);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
