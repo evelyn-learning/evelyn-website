@@ -218,7 +218,10 @@ export function noAskTurnNeedsContinuation(input: {
  *  yet (or the lesson closed); 'wrap-turn' ⇒ due, but the turn asked the
  *  student something (the inverse of announcedTurnNeedsContinuation — a
  *  question or an imperative ask) and no wrap turn ran yet: run ONE wrap
- *  turn first; 'force' ⇒ the fixed goodbye + end now. */
+ *  turn first; 'force' ⇒ the fixed goodbye + end now.
+ *  Intentionally wider than "ends with a question" (fix round 1, m-3): an
+ *  imperative ask, or a question earlier in the turn that the pin would keep
+ *  open, also gets the wrap — the gentler outcome; the wrap runs once. */
 export function fixedScriptCloseForcedAction(input: {
   turnsSince: number;
   lessonClosed: boolean;
@@ -238,7 +241,10 @@ export function fixedScriptCloseForcedAction(input: {
  *  directive now: the tutor has been quiet FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS
  *  with the student idle, or FIXED_SCRIPT_CLOSE_WRAP_MAX_MS passed with no
  *  brain turn running and the student idle; 'wait' otherwise (also while
- *  paused, held or hidden). */
+ *  paused, held or hidden). The 45 s bound is not hard (fix round 1, m-4):
+ *  it only overrides a stale tutor-speech state (the quiet clock); a running
+ *  brain turn, an active student or a paused / held / hidden session still
+ *  wait past it. */
 export function closeWrapPollDecision(input: {
   elapsedMs: number;
   quietMs: number;

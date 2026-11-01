@@ -180,8 +180,8 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
 // ── fix round 10-11 ──────────────────────────────────────────────────────
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 6500);
-  pin(block, /if \(autoNext && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
+  const block = VTR.slice(auto, auto + 9500);
+  pin(block, /if \(autoNext && !offerMadeHere && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
   pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
 });
@@ -512,7 +512,7 @@ test('22A: turnEndsWithAsk — the run-10 turns', () => {
 });
 test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 6000);
+  const block = VTR.slice(auto, auto + 9500);
   pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
   pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
 });
@@ -641,7 +641,7 @@ test('26B1: fixedScriptCloseForcedAction — a question ⇒ wrap-turn; no questi
   assert.equal(fixedScriptCloseForcedAction({ ...b, kind: 'concept', turnsSince: 2, tutorText: q }), 'wrap-turn');
   assert.equal(fixedScriptCloseForcedAction({ ...b, lessonClosed: true, tutorText: q }), 'none');
 });
-test('26B1: the wrap directive (brief text) and the poll — carried by the next turn, fired after the quiet window, bounded at 45 s', () => {
+test('26B1: the wrap directive (brief text) and the poll — carried by the next turn, fired after the quiet window; the 45 s bound overrides only a stale speech state', () => {
   assert.equal(FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, "[Wrap now — not from the student] Reply to the student's last answer in one sentence, then say goodbye in one sentence and call close_session_notes. No new question.");
   assert.equal(FIXED_SCRIPT_CLOSE_WRAP_MAX_MS, 45_000);
   assert.ok(FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS <= 30_000 && FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS < FIXED_SCRIPT_CLOSE_WRAP_MAX_MS);
@@ -709,6 +709,10 @@ test('26 I-2b: a move announced on the budget turn of an offer part advances wit
   pin(VTR, /const advanceReason: 'turns' \| 'time' \| 'announced' \| null = \(offerPartDue && announcedNext \? 'announced' : autoReason\)/);
   // …and an 'announced' reason is never offered (budget turn: no offer made yet)
   assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'announced', offerMade: false, offerHeldTurns: 0 }), 'advance');
+});
+
+test('26 m-1: the pronunciation hold does not stack on a made offer (pin)', () => {
+  pin(VTR, /const offerMadeHere = TUTOR_FIXED_SCRIPT_TRANSITIONS && transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\);\s*if \(autoNext && !offerMadeHere && holdAutoAdvanceForPronunciation\(/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

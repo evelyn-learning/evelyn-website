@@ -20751,7 +20751,10 @@ export function VoiceTutorRealtime({
           const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS
             ? fixedScriptTransitionDecision({ plan: autoPlan, segmentId: segIdNow, reason: advanceReason, offerMade: transitionOfferMadeRef.current.has(segIdNow ?? ''), offerHeldTurns: autoAdvanceOfferHeldRef.current })
             : 'advance';
-          if (autoNext && holdAutoAdvanceForPronunciation(pronArmed, autoAdvancePronHeldRef.current)) {
+          // Task 26 fix round 1 (m-1): once the part's offer was made the
+          // pronunciation hold no longer stacks on the offer's own hold.
+          const offerMadeHere = TUTOR_FIXED_SCRIPT_TRANSITIONS && transitionOfferMadeRef.current.has(segIdNow ?? '');
+          if (autoNext && !offerMadeHere && holdAutoAdvanceForPronunciation(pronArmed, autoAdvancePronHeldRef.current)) {
             // The brain asked for a pronunciation repeat this turn: advancing
             // would disarm it (disarmPronunciationOnSegmentAdvance) and the
             // learner's repeat would never be measured. Hold; the counters
