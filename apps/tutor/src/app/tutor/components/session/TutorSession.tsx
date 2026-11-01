@@ -353,6 +353,8 @@ export default function TutorSession(props: TutorSessionProps) {
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
   const [lessonProgress, setLessonProgress] = useState<LessonProgressState>({ plan: null, currentSegmentId: '' });
+  // Task 27 §G: the on-stage notice while the microphone is re-acquired.
+  const [stageNotice, setStageNotice] = useState<string | null>(null);
   const [completedSegmentIds, setCompletedSegmentIds] = useState<string[]>([]);
   // Agenda rail (2026-08-10): cached content labels for the current plan.
   // Rendered stage-only (buildRailModel's fallback) until this lands, then
@@ -1762,6 +1764,7 @@ export default function TutorSession(props: TutorSessionProps) {
         speechRate={speechRate}
         thinkingCue={thinkingCue}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
+        onStageNotice={setStageNotice}
         onHomeworkProgress={setHomeworkProgress}
         onHomeworkProblem={setHomeworkProblem}
         onLessonPlanLoadSettled={setSettledPlanId}
@@ -2215,7 +2218,7 @@ export default function TutorSession(props: TutorSessionProps) {
         hiccupPin={hiccupPinEl}
         actionPin={actionPinEl}
         voiceState={voiceState}
-        thinkingCueText={thinkingCueText}
+        thinkingCueText={stageNotice ?? thinkingCueText}
         warmupOverlay={warmupOverlay}
         micLevelRef={micLevelRef}
         listeningHint={listeningHint}

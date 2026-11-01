@@ -6,6 +6,7 @@
  * now offers a one-tap switch; this rule picks WHICH device to offer.
  */
 import { pickFallbackMicDevice } from '../src/lib/tutor/voice/mic-devices';
+import { micReacquireDecision, micReacquireReason, MIC_TRACK_MUTED_REACQUIRE_MS, MIC_REACQUIRE_COOLDOWN_MS } from '../src/lib/tutor/voice/mic-reacquire';
 
 let failures = 0;
 function check(name: string, actual: unknown, expected: unknown) {
@@ -72,6 +73,25 @@ check(
   null,
 );
 check('empty device list → null', pickFallbackMicDevice([], 'Current', []), null);
+
+// Task 27 §G (GDI run 14, 1141 s): when the session re-acquires the shared mic.
+{
+  const live = { enabled: true, captureOpen: true, inFlight: false, sinceLastReacquireMs: null };
+  check('27G: devicechange → reacquire', micReacquireDecision({ kind: 'devicechange' }, live), 'reacquire');
+  check('27G: track ended → reacquire', micReacquireDecision({ kind: 'track-ended' }, live), 'reacquire');
+  check('27G: the 3 s mute threshold', MIC_TRACK_MUTED_REACQUIRE_MS, 3000);
+  check('27G: muted 2.9 s → wait', micReacquireDecision({ kind: 'track-muted', mutedForMs: 2900 }, live), 'wait');
+  check('27G: muted 3.0 s → reacquire', micReacquireDecision({ kind: 'track-muted', mutedForMs: 3000 }, live), 'reacquire');
+  check('27G: a re-acquire in flight ⇒ no second one (every trigger)',
+    [micReacquireDecision({ kind: 'devicechange' }, { ...live, inFlight: true }), micReacquireDecision({ kind: 'track-ended' }, { ...live, inFlight: true }), micReacquireDecision({ kind: 'track-muted', mutedForMs: 5000 }, { ...live, inFlight: true })],
+    ['ignore', 'ignore', 'ignore']);
+  check('27G: devicechange burst within the cooldown → ignore', micReacquireDecision({ kind: 'devicechange' }, { ...live, sinceLastReacquireMs: MIC_REACQUIRE_COOLDOWN_MS - 1 }), 'ignore');
+  check('27G: devicechange after the cooldown → reacquire', micReacquireDecision({ kind: 'devicechange' }, { ...live, sinceLastReacquireMs: MIC_REACQUIRE_COOLDOWN_MS }), 'reacquire');
+  check('27G: track ended ignores the cooldown', micReacquireDecision({ kind: 'track-ended' }, { ...live, sinceLastReacquireMs: 10 }), 'reacquire');
+  check('27G: no capture open / flag off → ignore',
+    [micReacquireDecision({ kind: 'devicechange' }, { ...live, captureOpen: false }), micReacquireDecision({ kind: 'track-ended' }, { ...live, enabled: false })], ['ignore', 'ignore']);
+  check('27G: reasons', [micReacquireReason({ kind: 'devicechange' }), micReacquireReason({ kind: 'track-ended' }), micReacquireReason({ kind: 'track-muted', mutedForMs: 3100 })], ['devicechange', 'track-ended', 'track-muted 3.1s']);
+}
 
 if (failures > 0) {
   console.error(`\n${failures} failure(s)`);

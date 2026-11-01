@@ -1052,3 +1052,12 @@ export const TUTOR_TRANSITION_ASK_EVERY_ADVANCE = process.env.NEXT_PUBLIC_TUTOR_
  *  (validator move_on_ignored; correct-retry.ts moveOnIgnored). Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_MOVE_ON_ORDER=off. */
 export const TUTOR_MOVE_ON_ORDER = process.env.NEXT_PUBLIC_TUTOR_MOVE_ON_ORDER !== 'off';
+
+/** Task 27 §G (GDI run 14, 1141 s): a microphone device change mid-session
+ *  (devicechange, the shared track ended, or muted at the source > 3 s)
+ *  re-acquires the shared capture on the current default input and swaps the
+ *  source of every capture graph without reconnecting the WebSockets
+ *  (shared-mic.ts reacquireSharedMicStream / followSharedMicSwaps;
+ *  mic-reacquire.ts). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_MIC_REACQUIRE=off. */
+export const TUTOR_MIC_REACQUIRE = process.env.NEXT_PUBLIC_TUTOR_MIC_REACQUIRE !== 'off';

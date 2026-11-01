@@ -68,7 +68,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PerceptionState, PerceptionTranscript, PerceptionSpeechEvent } from './usePerceptionWS';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
-import { acquireSharedMicStream, releaseSharedMicStream, setSharedMicConsumerMuted } from '@/lib/tutor/voice/shared-mic';
+import { acquireSharedMicStream, releaseSharedMicStream, setSharedMicConsumerMuted, followSharedMicSwaps, noteSharedMicFrame } from '@/lib/tutor/voice/shared-mic';
 import { shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
 import { isStaleInkFinal, countSpeechTokens } from '@/lib/tutor/voice/stale-ink-final';
 import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
@@ -257,6 +257,8 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   const wsRef = useRef<WebSocket | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  // Task 27 §G: the swap subscription of the live capture graph.
+  const micSwapUnsubRef = useRef<(() => void) | null>(null);
   const mutedRef = useRef<boolean>(false);
   // Rolling mic-energy window (round-5 echo fix, 2026-07-27). Until now this
   // hook exposed NO energy signal, so VoiceTutorRealtime hard-nulled the
@@ -311,6 +313,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   }, []);
 
   const teardownMic = useCallback(() => {
+    if (micSwapUnsubRef.current) { micSwapUnsubRef.current(); micSwapUnsubRef.current = null; }
     if (processorRef.current) {
       try { processorRef.current.disconnect(); } catch {}
       processorRef.current = null;
@@ -385,6 +388,8 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
           return;
         }
         const inputData = e.inputBuffer.getChannelData(0);
+        // Task 27 §G: the first frame after a device swap clears the notice.
+        noteSharedMicFrame();
         let sumSq = 0;
         for (let i = 0; i < inputData.length; i++) sumSq += inputData[i] * inputData[i];
         const rms = Math.sqrt(sumSq / inputData.length);
@@ -417,6 +422,10 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       processor.connect(silentSink);
       silentSink.connect(ctx.destination);
       processorRef.current = processor;
+      // Task 27 §G: a mid-session device change swaps the source feeding this
+      // processor; the Cartesia WebSocket keeps running.
+      if (micSwapUnsubRef.current) micSwapUnsubRef.current();
+      micSwapUnsubRef.current = followSharedMicSwaps(ctx, source, processor, () => processorRef.current === processor, (s) => { mediaStreamRef.current = s; });
       setState('listening');
       console.warn(`${logPrefix} microphone started (independent stream, ${ctx.sampleRate}Hz)`);
     } catch (err) {

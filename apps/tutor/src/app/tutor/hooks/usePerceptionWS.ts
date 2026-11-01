@@ -23,7 +23,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { shouldForceReconnectOnWatchdog } from '@/lib/tutor/voice/perception-watchdog';
-import { getPreferredMicDeviceId } from '@/lib/tutor/voice/shared-mic';
+import { getPreferredMicDeviceId, onSharedMicStreamSwapped } from '@/lib/tutor/voice/shared-mic';
 import { shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 
@@ -216,6 +216,8 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
   const wsRef = useRef<WebSocket | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  // Task 27 §G: the device-swap subscription of the live capture graph.
+  const micSwapUnsubRef = useRef<(() => void) | null>(null);
   // Mute gate (2026-06-16). With perception as the sole input authority,
   // the student mute button must gate THIS mic — otherwise muting only
   // silences the (now input-less) production WS while perception keeps
@@ -277,6 +279,7 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
   }, []);
 
   const teardownMic = useCallback(() => {
+    if (micSwapUnsubRef.current) { micSwapUnsubRef.current(); micSwapUnsubRef.current = null; }
     if (processorRef.current) {
       try { processorRef.current.disconnect(); } catch {}
       processorRef.current = null;
@@ -431,6 +434,34 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       processor.connect(silentSink);
       silentSink.connect(ctx.destination);
       processorRef.current = processor;
+      // Task 27 §G: this hook has its OWN capture — when the session
+      // re-acquires the shared mic (a device change), re-open this one on the
+      // same input and swap the source feeding the processor; the perception
+      // WebSocket keeps running.
+      if (micSwapUnsubRef.current) micSwapUnsubRef.current();
+      let liveSource = source;
+      micSwapUnsubRef.current = onSharedMicStreamSwapped(() => {
+        if (processorRef.current !== processor) return;
+        void (async () => {
+          let fresh: MediaStream;
+          const pref = getPreferredMicDeviceId();
+          try {
+            fresh = await navigator.mediaDevices.getUserMedia({ audio: pref ? { ...baseConstraints, deviceId: { exact: pref } } : baseConstraints })
+              .catch((err) => { if (!pref) throw err; return navigator.mediaDevices.getUserMedia({ audio: baseConstraints }); });
+          } catch (err) {
+            console.warn(`${logPrefix} mic re-acquire failed:`, err);
+            return;
+          }
+          if (processorRef.current !== processor) { fresh.getTracks().forEach((t) => t.stop()); return; }
+          const old = mediaStreamRef.current;
+          try { liveSource.disconnect(); } catch {}
+          liveSource = ctx.createMediaStreamSource(fresh);
+          liveSource.connect(processor);
+          mediaStreamRef.current = fresh;
+          if (old && old !== fresh) old.getTracks().forEach((t) => { try { t.stop(); } catch {} });
+          console.warn(`${logPrefix} microphone re-acquired (device change)`);
+        })();
+      });
       setState('listening');
       console.warn(`${logPrefix} microphone started (independent stream)`);
     } catch (err) {

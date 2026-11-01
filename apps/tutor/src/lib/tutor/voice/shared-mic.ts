@@ -105,6 +105,20 @@ export function submitDespiteMute(input: { mutedAt: number | null | undefined; s
   return now - mutedAt <= SUBMIT_AFTER_MUTE_MS;
 }
 
+async function openWithPreference(): Promise<MediaStream> {
+  if (preferredDeviceId) {
+    try {
+      return await navigator.mediaDevices.getUserMedia({
+        audio: { ...AUDIO_CONSTRAINTS, deviceId: { exact: preferredDeviceId } },
+      });
+    } catch (err) {
+      console.warn(`[shared-mic] preferred device "${preferredDeviceId}" failed to open — falling back to default:`, err);
+      preferredDeviceId = null;
+    }
+  }
+  return navigator.mediaDevices.getUserMedia({ audio: AUDIO_CONSTRAINTS });
+}
+
 export async function acquireSharedMicStream(consumer: string): Promise<MediaStream> {
   holders.add(consumer);
 
@@ -115,24 +129,11 @@ export async function acquireSharedMicStream(consumer: string): Promise<MediaStr
   }
   if (pending) return pending;
 
-  const openWithPreference = async (): Promise<MediaStream> => {
-    if (preferredDeviceId) {
-      try {
-        return await navigator.mediaDevices.getUserMedia({
-          audio: { ...AUDIO_CONSTRAINTS, deviceId: { exact: preferredDeviceId } },
-        });
-      } catch (err) {
-        console.warn(`[shared-mic] preferred device "${preferredDeviceId}" failed to open — falling back to default:`, err);
-        preferredDeviceId = null;
-      }
-    }
-    return navigator.mediaDevices.getUserMedia({ audio: AUDIO_CONSTRAINTS });
-  };
-
   pending = openWithPreference()
     .then((stream) => {
       sharedStream = stream;
       pending = null;
+      watchSharedMicTrack(stream);
       // Honour intents registered before the capture existed (the start-gate
       // mutes Ink2 at mount, well before any getUserMedia).
       applySharedMicEnabled();
@@ -232,4 +233,118 @@ export function switchSharedMicDevice(deviceId: string): void {
     sharedStream = null;
   }
   console.warn(`[shared-mic] device switch requested → ${deviceId} (stream dropped; consumers reopen on next acquire)`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Task 27 §G (GDI run 14, 1141 s): the student switched from AirPods to the
+// laptop's microphone mid-session and the recogniser never heard him again —
+// the capture stayed on the departed device. The session re-acquires the
+// shared stream on the current default input (reacquireSharedMicStream) and
+// every consumer re-points its OWN capture graph at the new stream
+// (followSharedMicSwaps: a fresh MediaStreamSource into the same processor)
+// — the WebSocket sessions, AudioContexts and processors are untouched.
+// The active track's ended / mute / unmute are surfaced as the window event
+// `evelyn:shared-mic-track` for the session's re-acquire decision
+// (mic-reacquire.ts); the first audio frame after a swap as
+// `evelyn:shared-mic-frame`.
+// ─────────────────────────────────────────────────────────────────────────
+type SharedMicSwapListener = (stream: MediaStream) => void;
+const swapListeners = new Set<SharedMicSwapListener>();
+let reacquireInFlight: Promise<MediaStream> | null = null;
+let awaitingFirstFrame = false;
+const watchedTracks = new WeakSet<MediaStreamTrack>();
+
+function dispatchMicWindowEvent(name: string, detail: Record<string, unknown>): void {
+  try { window.dispatchEvent(new CustomEvent(name, { detail })); } catch {}
+}
+
+/** Surface the stream's audio track lifecycle (once per track). */
+function watchSharedMicTrack(stream: MediaStream): void {
+  const track = stream.getAudioTracks()[0];
+  if (!track || watchedTracks.has(track) || typeof track.addEventListener !== 'function') return;
+  watchedTracks.add(track);
+  for (const kind of ['ended', 'mute', 'unmute'] as const) {
+    track.addEventListener(kind, () => {
+      // A replaced stream's track ends when it is stopped — not news.
+      if (sharedStream && !sharedStream.getAudioTracks().includes(track)) return;
+      dispatchMicWindowEvent('evelyn:shared-mic-track', { kind, label: track.label ?? '' });
+    });
+  }
+}
+
+/** The shared capture's track is muted at the source (OS / device), not by
+ *  the student's mute button (that is `enabled`, which fires no event). */
+export function sharedMicTrackMuted(): boolean {
+  return sharedStream?.getAudioTracks()[0]?.muted === true;
+}
+/** A capture is open (some consumer holds the shared stream). */
+export function sharedMicCaptureOpen(): boolean {
+  return holders.size > 0 && sharedStream != null;
+}
+export function sharedMicReacquireInFlight(): boolean {
+  return reacquireInFlight != null;
+}
+
+/** Subscribe to stream replacements; returns the unsubscribe. */
+export function onSharedMicStreamSwapped(fn: SharedMicSwapListener): () => void {
+  swapListeners.add(fn);
+  return () => { swapListeners.delete(fn); };
+}
+
+/**
+ * Re-point one consumer's capture graph at every replacement stream: the old
+ * source is disconnected and a new MediaStreamSource from the same context
+ * feeds the same processor. `isLive` false ⇒ the consumer has torn down (the
+ * subscription removes itself). Returns the unsubscribe.
+ */
+export function followSharedMicSwaps(
+  ctx: AudioContext,
+  source: MediaStreamAudioSourceNode,
+  processor: AudioNode,
+  isLive: () => boolean,
+  onStream?: (stream: MediaStream) => void,
+): () => void {
+  let current = source;
+  const unsub = onSharedMicStreamSwapped((stream) => {
+    if (!isLive()) { unsub(); return; }
+    try { current.disconnect(); } catch {}
+    current = ctx.createMediaStreamSource(stream);
+    current.connect(processor);
+    try { onStream?.(stream); } catch {}
+  });
+  return unsub;
+}
+
+/**
+ * Open the shared capture again on the current default input (or the
+ * student's chosen device, falling back to the default) and hand it to every
+ * consumer; the old tracks stop after the swap. Holders and mute intents are
+ * kept. One at a time: a call while one is in flight joins it.
+ */
+export function reacquireSharedMicStream(reason: string): Promise<MediaStream> {
+  if (reacquireInFlight) return reacquireInFlight;
+  if (holders.size === 0) return Promise.reject(new Error('no consumer holds the microphone'));
+  reacquireInFlight = (async () => {
+    const fresh = await openWithPreference();
+    const old = sharedStream;
+    sharedStream = fresh;
+    applySharedMicEnabled();
+    watchSharedMicTrack(fresh);
+    awaitingFirstFrame = true;
+    for (const fn of [...swapListeners]) { try { fn(fresh); } catch (err) { console.warn('[shared-mic] swap listener failed:', err); } }
+    if (old && old !== fresh) old.getTracks().forEach((t) => { try { t.stop(); } catch {} });
+    const label = fresh.getAudioTracks()[0]?.label ?? '';
+    console.warn(`[shared-mic] re-acquired (${reason}) — device="${label.slice(0, 60)}"`);
+    dispatchMicWindowEvent('evelyn:shared-mic', { kind: 'reacquired', detail: `${reason}${label ? ` device="${label.slice(0, 60)}"` : ''}` });
+    return fresh;
+  })().finally(() => { reacquireInFlight = null; });
+  return reacquireInFlight;
+}
+
+/** Called by the consumers' processors for each live (unmuted) frame: the
+ *  first frame after a swap is announced once (the on-stage notice clears). */
+export function noteSharedMicFrame(): void {
+  if (!awaitingFirstFrame) return;
+  awaitingFirstFrame = false;
+  dispatchMicWindowEvent('evelyn:shared-mic-frame', {});
 }

@@ -69,5 +69,72 @@ check('H: not muted by the student (null) ⇒ never',
     /submitDespiteMute\(\{ mutedAt: micMutedAtRef\.current[\s\S]{0,200}if \(submitPendingUtteranceRef\.current \|\| submitByTiming\)[\s\S]{0,600}'perception_submit_on_mute'/.test(vtr));
 }
 
-console.log(`\n${pass} passed, ${fail} failed`);
-if (fail > 0) process.exit(1);
+// Task 27 §G (GDI run 14, 1141 s): re-acquire swaps every consumer's source; the WebSockets are untouched.
+void (async () => {
+  const sm = await import('../src/lib/tutor/voice/shared-mic');
+  type FakeTrack = { label: string; readyState: string; enabled: boolean; muted: boolean; stopped: boolean; stop: () => void; getSettings: () => object; addEventListener: (k: string, fn: () => void) => void; fire: (k: string) => void };
+  const mkStream = (label: string) => {
+    const handlers: Record<string, Array<() => void>> = {};
+    const track: FakeTrack = { label, readyState: 'live', enabled: true, muted: false, stopped: false,
+      stop() { this.stopped = true; this.readyState = 'ended'; }, getSettings: () => ({}),
+      addEventListener: (k, fn) => { (handlers[k] ??= []).push(fn); }, fire: (k) => (handlers[k] ?? []).forEach((f) => f()) };
+    return { track, stream: { getAudioTracks: () => [track], getTracks: () => [track] } as unknown as MediaStream };
+  };
+  const devices = [mkStream('AirPods'), mkStream('MacBook Air Microphone')];
+  let opened = 0;
+  const g = globalThis as unknown as { window?: EventTarget; navigator?: { mediaDevices?: unknown } };
+  g.window = new EventTarget();
+  Object.defineProperty(globalThis, 'navigator', { value: { mediaDevices: { getUserMedia: async () => devices[Math.min(opened++, devices.length - 1)]!.stream } }, configurable: true, writable: true });
+  const events: string[] = [];
+  g.window.addEventListener('evelyn:shared-mic-track', (e) => events.push(`track:${(e as CustomEvent).detail.kind}`));
+  g.window.addEventListener('evelyn:shared-mic-frame', () => events.push('frame'));
+  const first = await sm.acquireSharedMicStream('ink');
+  await sm.acquireSharedMicStream('realtime');
+  check('G: one capture shared by two consumers', first === devices[0]!.stream && opened === 1);
+  // two consumers' graphs: a fake ctx whose sources record their stream
+  const connected: string[] = [];
+  const mkCtx = (name: string) => ({ createMediaStreamSource: (s: MediaStream) => ({ s, connect: () => connected.push(`${name}:${(s.getAudioTracks()[0] as unknown as FakeTrack).label}`), disconnect: () => connected.push(`${name}:-`) }) });
+  let inkLive = true;
+  const inkCtx = mkCtx('ink');
+  const inkSrc = inkCtx.createMediaStreamSource(first);
+  const proc = {} as AudioNode;
+  let inkStream: MediaStream = first;
+  sm.followSharedMicSwaps(inkCtx as unknown as AudioContext, inkSrc as unknown as MediaStreamAudioSourceNode, proc, () => inkLive, (s) => { inkStream = s; });
+  const recCtx = mkCtx('rec');
+  sm.followSharedMicSwaps(recCtx as unknown as AudioContext, recCtx.createMediaStreamSource(first) as unknown as MediaStreamAudioSourceNode, proc, () => true);
+  devices[0]!.track.fire('ended');
+  check('G: the shared track\'s ended is surfaced', events.includes('track:ended'));
+  check('G: a capture is open, nothing in flight', sm.sharedMicCaptureOpen() && !sm.sharedMicReacquireInFlight());
+  const p1 = sm.reacquireSharedMicStream('track-ended');
+  const p2 = sm.reacquireSharedMicStream('devicechange');
+  check('G: a re-acquire in flight is joined, not repeated', p1 === p2 && sm.sharedMicReacquireInFlight());
+  const fresh = await p1;
+  check('G: re-acquired on the new default input', fresh === devices[1]!.stream && opened === 2);
+  check('G: both graphs swapped their source (old disconnected, new connected)', connected.join(',') === 'ink:-,ink:MacBook Air Microphone,rec:-,rec:MacBook Air Microphone', connected.join(','));
+  check('G: the consumer sees the new stream; the old tracks stopped', inkStream === fresh && devices[0]!.track.stopped);
+  sm.noteSharedMicFrame(); sm.noteSharedMicFrame();
+  check('G: the first frame after the swap is announced once', events.filter((e) => e === 'frame').length === 1);
+  // a torn-down consumer drops out at the next swap
+  inkLive = false;
+  connected.length = 0;
+  devices.push(mkStream('USB Mic'));
+  await sm.reacquireSharedMicStream('devicechange');
+  check('G: a torn-down graph is not re-pointed', connected.join(',') === 'rec:-,rec:USB Mic', connected.join(','));
+  // the student mute intent survives the swap
+  sm.setSharedMicConsumerMuted('ink', true); sm.setSharedMicConsumerMuted('realtime', true);
+  devices.push(mkStream('Headset'));
+  const h = await sm.reacquireSharedMicStream('devicechange');
+  check('G: the student\'s mute survives a swap (track disabled)', (h.getAudioTracks()[0] as unknown as FakeTrack).enabled === false);
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('G: VTR listens for devicechange + the track events, events named', vtr.includes("md?.addEventListener?.('devicechange', onDeviceChange);") && vtr.includes("window.addEventListener('evelyn:shared-mic-track', onTrack);")
+    && vtr.includes("onDebugEvent?.('mic_device_changed', reason);") && vtr.includes("onDebugEvent?.('mic_reacquired', ") && vtr.includes("onDebugEvent?.('mic_reacquire_failed', "));
+  for (const hook of ['useCartesiaInkWS', 'useOpenAIRealtime']) {
+    const src = readFileSync(join(__dirname, '..', `src/app/tutor/hooks/${hook}.ts`), 'utf8');
+    check(`G: ${hook} follows swaps without touching its WebSocket`, src.includes('followSharedMicSwaps(ctx, source, processor, ') && src.includes('noteSharedMicFrame();'));
+  }
+  const perc = readFileSync(join(__dirname, '..', 'src/app/tutor/hooks/usePerceptionWS.ts'), 'utf8');
+  check('G: usePerceptionWS re-opens its own capture on a swap', perc.includes('micSwapUnsubRef.current = onSharedMicStreamSwapped(() => {'));
+  console.log(`\n${pass} passed, ${fail} failed`);
+  if (fail > 0) process.exit(1);
+})();
+

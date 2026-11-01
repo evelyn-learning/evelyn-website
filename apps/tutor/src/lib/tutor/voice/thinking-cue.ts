@@ -87,6 +87,16 @@ export function thinkingCueLabel(lang: string | undefined): string {
   return (lang && THINKING_LABELS[lang.toLowerCase()]) || THINKING_LABELS.en;
 }
 
+/** Task 27 §G: the on-stage notice while the microphone is re-acquired after
+ *  a device change (same slot and language rule as the thinking cue). */
+const MIC_CHANGED_LABELS: Readonly<Record<string, string>> = {
+  en: 'Microphone changed — reconnecting…',
+  ja: 'マイクが切り替わりました。再接続しています…',
+};
+export function micChangedLabel(lang: string | undefined): string {
+  return (lang && MIC_CHANGED_LABELS[lang.toLowerCase()]) || MIC_CHANGED_LABELS.en;
+}
+
 const JAPANESE_SCRIPT_RE = /[\u3040-\u30ff\u4e00-\u9fff]/;
 
 /** Which label language to show: a session taught in one non-English

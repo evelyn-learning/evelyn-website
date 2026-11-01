@@ -329,7 +329,7 @@ test('thinking cue wiring: claim → TutorSession → runtime + stage; head cove
   const ts = readFileSync('src/app/tutor/components/session/TutorSession.tsx', 'utf8');
   // 2026-10-29: the claim defaults ON for every tenant (resolveThinkingCueClaim).
   assert.ok(embed.includes('TUTOR_THINKING_CUE && resolveThinkingCueClaim(config.thinking_cue)') && embed.includes('thinkingCue={thinkingCue}'));
-  assert.ok(ts.includes('thinkingCue={thinkingCue}') && ts.includes('thinkingCueText={thinkingCueText}'));
+  assert.ok(ts.includes('thinkingCue={thinkingCue}') && ts.includes('thinkingCueText={stageNotice ?? thinkingCueText}') /* Task 27 §G: the mic notice shares the slot */);
   assert.ok(vtr.includes("onDebugEvent?.('thinking_cue_ack_skipped'"));
   assert.ok(vtr.includes('cueStudentTurnAccepted();\n      await callBrainOnce(transcript, opts);') || vtr.includes('cueStudentTurnAccepted();'));
   for (const ev of ['thinking_cue_chime', 'thinking_cue_ack_skipped']) assert.ok(embed.includes(`'${ev}',`), ev);

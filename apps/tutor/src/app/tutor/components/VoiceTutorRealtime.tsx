@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -28,7 +28,8 @@ import {
   type PerceptionVerdict,
 } from '@/lib/tutor/voice/perception-classifier';
 import { pushTtsScript, applyPlaybackStamp } from '@/lib/tutor/voice/tts-script-buffer';
-import { initialThinkingCue, cueTurnAccepted, cueTick, cueStop, type ThinkingCueState } from '@/lib/tutor/voice/thinking-cue';
+import { initialThinkingCue, cueTurnAccepted, cueTick, cueStop, type ThinkingCueState, micChangedLabel, thinkingCueLanguage } from '@/lib/tutor/voice/thinking-cue';
+import { micReacquireDecision, micReacquireReason, MIC_TRACK_MUTED_REACQUIRE_MS, type MicReacquireTrigger } from '@/lib/tutor/voice/mic-reacquire';
 import { playTurnChime, playThinkingPulse, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 // Aliased: this file already has a `SessionMode` (opening-behavior's
 // lessonNode/freestyle/diagnostic `targetKind`, unrelated concept) — the
@@ -254,7 +255,7 @@ import { checkFalsePraiseOpener, studentDisagreesWithVerified } from '@/lib/tuto
 import { verifiedKeyForJudgeGate } from '@/lib/tutor/voice/judge-gate-key';
 import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
 import { pickFallbackMicDevice } from '@/lib/tutor/voice/mic-devices';
-import { getSharedMicLabel, switchSharedMicDevice, submitDespiteMute } from '@/lib/tutor/voice/shared-mic';
+import { getSharedMicLabel, switchSharedMicDevice, submitDespiteMute, reacquireSharedMicStream, sharedMicCaptureOpen, sharedMicReacquireInFlight, sharedMicTrackMuted } from '@/lib/tutor/voice/shared-mic';
 import { isVisualComplaint } from '@/lib/tutor/whiteboard/redraw-intent';
 import { decidePacingCredit, type ObjectiveCorrectSignal } from '@/lib/tutor/voice/objective-credit';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
@@ -1001,6 +1002,9 @@ interface VoiceTutorRealtimeProps {
    *  accepted, soft pulse while the reply is still coming, head cover line
    *  skipped (the chime replaces it). See lib/tutor/voice/thinking-cue.ts. */
   thinkingCue?: boolean;
+  /** Task 27 §G: a short on-stage notice (the thinking-cue slot) — the
+   *  microphone is being re-acquired after a device change; null clears it. */
+  onStageNotice?: (text: string | null) => void;
   /** Fires whenever the active lesson plan or current segment changes.
    *  Lets the parent render a progress strip above the whiteboard. */
   onLessonPlanProgress?: (info: {
@@ -1391,6 +1395,7 @@ export function VoiceTutorRealtime({
   speechRate,
   thinkingCue = false,
   onLessonPlanProgress,
+  onStageNotice,
   onHomeworkProgress,
   onHomeworkProblem,
   onLessonPlanLoadSettled,
@@ -24400,6 +24405,84 @@ export function VoiceTutorRealtime({
       window.removeEventListener('evelyn:shared-mic', onMic);
     };
   }, [onDebugEvent]);
+
+  // Task 27 §G (GDI run 14, 1141 s: AirPods → the laptop microphone, and the
+  // recogniser never heard the student again): a device change, the shared
+  // track ending, or the track muted at the source for > 3 s re-acquires the
+  // shared capture on the current default input; every capture graph swaps
+  // its source (shared-mic.ts) — no WebSocket reconnects. A short on-stage
+  // notice shows until the first audio frame from the new capture.
+  const onStageNoticeRef = useRef(onStageNotice);
+  onStageNoticeRef.current = onStageNotice;
+  useEffect(() => {
+    if (!TUTOR_MIC_REACQUIRE || sessionMode === 'text' || typeof window === 'undefined') return;
+    const md = typeof navigator !== 'undefined' ? navigator.mediaDevices : undefined;
+    let lastReacquireAt: number | null = null;
+    let mutedSince: number | null = null;
+    let muteTimer: ReturnType<typeof setTimeout> | null = null;
+    let noticeTimer: ReturnType<typeof setTimeout> | null = null;
+    let noticeUp = false;
+    const clearNotice = () => {
+      if (noticeTimer) { clearTimeout(noticeTimer); noticeTimer = null; }
+      if (noticeUp) { noticeUp = false; onStageNoticeRef.current?.(null); }
+    };
+    const showNotice = () => {
+      const lastTutor = [...transcriptRef.current].reverse().find((t) => t.role === 'tutor')?.text;
+      noticeUp = true;
+      onStageNoticeRef.current?.(micChangedLabel(thinkingCueLanguage(tutorLanguages, typeof lastTutor === 'string' ? lastTutor : undefined)));
+      if (noticeTimer) clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(clearNotice, 15_000);
+    };
+    const run = (trigger: MicReacquireTrigger) => {
+      const decision = micReacquireDecision(trigger, {
+        enabled: true,
+        captureOpen: sharedMicCaptureOpen(),
+        inFlight: sharedMicReacquireInFlight(),
+        sinceLastReacquireMs: lastReacquireAt == null ? null : Date.now() - lastReacquireAt,
+      });
+      if (decision === 'wait' && trigger.kind === 'track-muted') {
+        if (muteTimer) clearTimeout(muteTimer);
+        muteTimer = setTimeout(() => {
+          muteTimer = null;
+          if (mutedSince != null && sharedMicTrackMuted()) run({ kind: 'track-muted', mutedForMs: Date.now() - mutedSince });
+        }, Math.max(0, MIC_TRACK_MUTED_REACQUIRE_MS - trigger.mutedForMs) + 50);
+        return;
+      }
+      if (decision !== 'reacquire') return;
+      lastReacquireAt = Date.now();
+      const reason = micReacquireReason(trigger);
+      onDebugEvent?.('mic_device_changed', reason);
+      showNotice();
+      reacquireSharedMicStream(reason)
+        .then((stream) => {
+          mutedSince = null;
+          onDebugEvent?.('mic_reacquired', (stream.getAudioTracks()[0]?.label ?? '').slice(0, 60) || 'default input');
+        })
+        .catch((err) => {
+          clearNotice();
+          onDebugEvent?.('mic_reacquire_failed', err instanceof Error ? `${err.name}: ${err.message}`.slice(0, 120) : String(err).slice(0, 120));
+        });
+    };
+    const onDeviceChange = () => run({ kind: 'devicechange' });
+    const onTrack = (e: Event) => {
+      const kind = (e as CustomEvent<{ kind?: string }>).detail?.kind;
+      if (kind === 'ended') run({ kind: 'track-ended' });
+      else if (kind === 'mute') { mutedSince = Date.now(); run({ kind: 'track-muted', mutedForMs: 0 }); }
+      else if (kind === 'unmute') { mutedSince = null; if (muteTimer) { clearTimeout(muteTimer); muteTimer = null; } }
+    };
+    const onFrame = () => clearNotice();
+    md?.addEventListener?.('devicechange', onDeviceChange);
+    window.addEventListener('evelyn:shared-mic-track', onTrack);
+    window.addEventListener('evelyn:shared-mic-frame', onFrame);
+    return () => {
+      md?.removeEventListener?.('devicechange', onDeviceChange);
+      window.removeEventListener('evelyn:shared-mic-track', onTrack);
+      window.removeEventListener('evelyn:shared-mic-frame', onFrame);
+      if (muteTimer) clearTimeout(muteTimer);
+      clearNotice();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionMode, onDebugEvent]);
 
   // Student marks (Phase 1) idle-send: fires ~4s after the last mark, ONLY
   // when the tutor is not speaking (productionStateRef, the existing

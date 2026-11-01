@@ -20,6 +20,8 @@ import { decideTypedDelivery, describeTokenFailure, REALTIME_CONNECT_ERROR_NAME 
 import {
   acquireSharedMicStream,
   releaseSharedMicStream,
+  followSharedMicSwaps,
+  noteSharedMicFrame,
   setSharedMicConsumerMuted,
 } from '@/lib/tutor/voice/shared-mic';
 import {
@@ -2808,6 +2810,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         // on WS state made the student track silently stop whenever the WS
         // dropped mid-session (and never exist if it was closed at tap time).
         const inputData = e.inputBuffer.getChannelData(0);
+        // Task 27 §G: the first frame after a device swap clears the notice.
+        noteSharedMicFrame();
         const resampledData =
           captureRate === 24000
             ? inputData
@@ -2865,6 +2869,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       processor.connect(silentSink);
       silentSink.connect(ctx.destination);
       audioProcessorRef.current = processor;
+      // Task 27 §G: a mid-session device change swaps this processor's source
+      // (the recorder keeps recording; the WebSocket is untouched). The
+      // subscription removes itself once this capture graph is torn down.
+      followSharedMicSwaps(ctx, source, processor, () => audioProcessorRef.current === processor, (s) => { mediaStreamRef.current = s; });
 
       updateState('listening');
       console.log('[Realtime] Microphone started');
