@@ -228,7 +228,7 @@ import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeat
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
 import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
-import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
+import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '@/lib/tutor/voice/tutor-language-drift';
@@ -5210,6 +5210,8 @@ export function VoiceTutorRealtime({
   const pendingCloseRefusedNoteRef = useRef<string | null>(null);
   // praise-variety.ts: a prompted repeat was praised as the student's own sentence.
   const pendingPromptedRepeatNoteRef = useRef<string | null>(null);
+  // Task 25 §F2: a required-phrase miss on a turn the output cap cut — the next turn is told what is missing.
+  const pendingRequiredPhraseNoteRef = useRef<string | null>(null);
   // student-hold.ts WAIT_REQUEST_NOTE: set for THIS turn by the heuristic hold
   // (a soft, cue-less hold), consumed where the other notes are.
   const pendingWaitNoteRef = useRef<string | null>(null);
@@ -13153,6 +13155,7 @@ export function VoiceTutorRealtime({
         [pendingWaitNoteRef, 'wait_request_note_consumed'],
         [pendingLanguageDriftNoteRef, 'language_drift_note_consumed'],
         [pendingLateTailRef, 'late_tail_note_consumed'],
+        [pendingRequiredPhraseNoteRef, 'required_phrase_note_consumed'],
       ] as const) {
         if (ref.current) {
           runTranscript = `${ref.current}\n\n${runTranscript}`;
@@ -13692,16 +13695,28 @@ export function VoiceTutorRealtime({
       // tools keep the normal cap: the opener and any bracketed directive, a
       // turn carrying the segment-advance note, the closing turn after the
       // student's end signal, a recap go/wrap turn.
+      // Task 25 §F1: a recap part, or a part whose required phrases are still unsaid, keeps the normal cap too.
+      const headroomSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
+      const headroom = needsHeadroomFor({
+        directive: /^\s*\[/.test(transcript),
+        advanceNote: /call advance_lesson\(/.test(runTranscript),
+        sessionEnd: !!lastStudentVerificationRef.current?.isSessionEndSignal,
+        recapTurn: !!recapGoForTurn || !!recapWrapForTurn,
+        segmentKind: headroomSeg?.kind ?? null,
+        requiredPhrasesPending: !!headroomSeg && missingRequiredPhrases(
+          headroomSeg as { requiredPhrases?: string[] },
+          segmentNarrationRef.current.get(headroomSeg.id) ?? [],
+        ).length > 0,
+      });
       const turnMaxTokens = languageTurnMaxTokens({
         languageLesson: sessionAllowsNonLatin(tutorLanguages),
         voice: sessionMode !== 'text',
-        needsHeadroom:
-          /^\s*\[/.test(transcript) ||
-          /call advance_lesson\(/.test(runTranscript) ||
-          !!lastStudentVerificationRef.current?.isSessionEndSignal ||
-          !!recapGoForTurn || !!recapWrapForTurn,
+        needsHeadroom: headroom.needsHeadroom,
         cap: TUTOR_LANGUAGE_TURN_MAX_TOKENS,
       });
+      if ((headroom.reason === 'recap' || headroom.reason === 'required-phrases') && sessionAllowsNonLatin(tutorLanguages) && sessionMode !== 'text' && TUTOR_LANGUAGE_TURN_MAX_TOKENS !== null) {
+        onDebugEvent?.('output_budget_headroom', headroom.reason);
+      }
       if (turnMaxTokens !== undefined) {
         runTranscript = `${outputBudgetNote(turnMaxTokens)}\n\n${runTranscript}`;
         onDebugEvent?.('output_budget_capped', `max_tokens=${turnMaxTokens}`);
@@ -13713,6 +13728,8 @@ export function VoiceTutorRealtime({
         // This attempt continues a turn that stopped early (turn-shape.ts): it
         // is NEW content, not a correction of a killed/rejected attempt.
         const isContinuationAttempt = continuationNextAttempt;
+        // Task 25 §F2: this attempt stopped on the output cap (its tail was dropped).
+        let maxTokensStopThisAttempt = false;
         continuationNextAttempt = false;
         // Speech guards that must not fire on correction retries (a retry
         // legitimately says "my mistake — …") DO apply to a continuation's
@@ -18699,12 +18716,14 @@ export function VoiceTutorRealtime({
                 } else if (ev.type === 'tool-markup-stripped') {
                   onDebugEvent?.('tool_markup_stripped', String(ev.text ?? '').slice(0, 80));
                 } else if (ev.type === 'max-tokens-tail-dropped') {
+                  maxTokensStopThisAttempt = true;
                   onDebugEvent?.('max_tokens_tail_dropped', String(ev.text ?? '').slice(0, 80));
                 } else if (ev.type === 'tool-call-continued') {
                   // output-budget.ts: the cap cut a tool call; the brain finished it in one more call.
                   onDebugEvent?.('tool_call_continued', String((ev as { name?: string }).name ?? ''));
                 } else if (ev.type === 'done') {
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
+                  if (lastStopReason === 'max_tokens') maxTokensStopThisAttempt = true;
                   // `||` not `??`: a give-up done frame (stop=error) can carry
                   // an EMPTY fullText even though sentences were already
                   // spoken — clobbering attemptText to '' purged the turn's
@@ -19206,7 +19225,13 @@ export function VoiceTutorRealtime({
             if (Array.isArray(required) && required.length > 0 && totalSentenceCount >= 3 && attemptText) {
               const haystack = attemptText.toLowerCase();
               const missing = required.filter((p) => !haystack.includes(p.toLowerCase()));
-              if (missing.length > 0) {
+              // Task 25 §F2: a turn the output cap cut (tail dropped) is not
+              // killed for what it never got to say — the next turn is told.
+              const phraseAction = requiredPhraseMissAction({ missing, stoppedOnMaxTokens: maxTokensStopThisAttempt });
+              if (phraseAction === 'defer') {
+                pendingRequiredPhraseNoteRef.current = `[runtime note — not from the student] ${scriptMissingAdvanceReason(missing)} Apply this silently; never mention this note.`;
+                onDebugEvent?.('required_phrase_deferred', `max_tokens: segId="${segIdForPhrases}" missing=[${missing.join(', ')}]`);
+              } else if (phraseAction === 'kill') {
                 const reason =
                   `Your narration for segment "${segIdForPhrases}" is missing required phrase(s): ${missing.map((m) => `"${m}"`).join(', ')}. ` +
                   `This segment pins specific narrative parameters (target values, example inputs, etc.) that you must reference verbatim — substituting a different value mid-segment desynchronizes the lesson from the board/segment-card and the student's tracking. ` +

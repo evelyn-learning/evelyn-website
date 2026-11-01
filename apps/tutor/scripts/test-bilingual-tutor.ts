@@ -64,7 +64,7 @@ import { hasDottedKatakanaReading, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STIC
 import { isStockPraiseOpenerOnly } from '../src/lib/tutor/voice/praise-variety';
 import { isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '../src/lib/tutor/voice/english-reply';
 import { isMetaNarration as isMetaNarration2 } from '../src/lib/tutor/voice/meta-narration';
-import { settleCutToolUse, toolContinuationMessages, toolContinuationNote } from '../src/lib/tutor/voice/output-budget';
+import { settleCutToolUse, toolContinuationMessages, toolContinuationNote, needsHeadroomFor, requiredPhraseMissAction } from '../src/lib/tutor/voice/output-budget';
 import { isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '../src/lib/tutor/voice/lesson-close';
 import { stripMarkdownEmphasis } from '../src/lib/tutor/voice/sentence-spacing';
 import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
@@ -1550,6 +1550,29 @@ test('Task 25 §B: the component splits at the sentence consumer, flag-gated, ca
   assert.match(v, /for \(const \{ text: part \} of ttsParts\) speakOnePart\(part\);/);
   assert.match(v, /registerSentence\(sentenceForSpeech, trimmedSentence, splitSentenceForTts\(sentenceForSpeech, ttsSplitLanguagesRef\.current\)\.map/);
   assert.match(v, /ttsSplitLanguagesRef\.current = TUTOR_TTS_SPLIT_QUOTED_SPANS \? tutorLanguages : undefined;/);
+});
+
+test('Task 25 §F1 (GDI run 13, 1333 s): a recap part / unsaid required phrases keep the normal cap', () => {
+  assert.deepEqual(needsHeadroomFor({ segmentKind: 'recap' }), { needsHeadroom: true, reason: 'recap' });
+  assert.deepEqual(needsHeadroomFor({ segmentKind: 'try_yourself', requiredPhrasesPending: false }), { needsHeadroom: false, reason: null });
+  assert.deepEqual(needsHeadroomFor({ segmentKind: 'concept', requiredPhrasesPending: true }), { needsHeadroom: true, reason: 'required-phrases' });
+  assert.equal(needsHeadroomFor({ directive: true, segmentKind: 'recap' }).reason, 'directive', 'the existing inputs first');
+  assert.equal(languageTurnMaxTokens({ languageLesson: true, voice: true, needsHeadroom: needsHeadroomFor({ segmentKind: 'recap' }).needsHeadroom, cap: 220 }), undefined);
+  assert.equal(languageTurnMaxTokens({ languageLesson: true, voice: true, needsHeadroom: needsHeadroomFor({ segmentKind: 'try_yourself' }).needsHeadroom, cap: 220 }), 220);
+  const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.match(v, /needsHeadroom: headroom\.needsHeadroom,/);
+  assert.match(v, /onDebugEvent\?\.\('output_budget_headroom', headroom\.reason\)/);
+});
+
+test('Task 25 §F2: a required-phrase miss on a max_tokens-cut turn is deferred, not killed', () => {
+  assert.equal(requiredPhraseMissAction({ missing: ['one thing you did well'], stoppedOnMaxTokens: true }), 'defer');
+  assert.equal(requiredPhraseMissAction({ missing: ['one thing you did well'], stoppedOnMaxTokens: false }), 'kill');
+  assert.equal(requiredPhraseMissAction({ missing: [], stoppedOnMaxTokens: true }), 'none');
+  const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.match(v, /requiredPhraseMissAction\(\{ missing, stoppedOnMaxTokens: maxTokensStopThisAttempt \}\)/);
+  assert.match(v, /onDebugEvent\?\.\('required_phrase_deferred', `max_tokens:/);
+  assert.match(v, /\[pendingRequiredPhraseNoteRef, 'required_phrase_note_consumed'\]/);
+  assert.match(v, /if \(lastStopReason === 'max_tokens'\) maxTokensStopThisAttempt = true;/);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

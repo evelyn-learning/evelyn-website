@@ -53,6 +53,44 @@ export function languageTurnMaxTokens(opts: {
   return Math.round(opts.cap);
 }
 
+/**
+ * Task 25 §F1 (GDI run 13, 1333–1338 s: the summary turn ran under the 220-token
+ * cap, was cut before its last required item, killed, and the retry ran into
+ * the cap again): the inputs that give a turn the normal cap. Besides the
+ * existing ones (a bracketed directive, a pending advance note, the end
+ * signal, a recap go / wrap turn), a turn in a `recap` part, or in any part
+ * whose required phrases have not all been said yet. `reason` names the first
+ * that holds (null ⇒ capped as usual).
+ */
+export function needsHeadroomFor(input: {
+  segmentKind?: string | null;
+  requiredPhrasesPending?: boolean;
+  directive?: boolean;
+  advanceNote?: boolean;
+  sessionEnd?: boolean;
+  recapTurn?: boolean;
+}): { needsHeadroom: boolean; reason: string | null } {
+  const reason = input.directive ? 'directive'
+    : input.advanceNote ? 'advance-note'
+    : input.sessionEnd ? 'session-end'
+    : input.recapTurn ? 'recap-turn'
+    : input.segmentKind === 'recap' ? 'recap'
+    : input.requiredPhrasesPending ? 'required-phrases'
+    : null;
+  return { needsHeadroom: reason !== null, reason };
+}
+
+/**
+ * Task 25 §F2: what a required-phrase miss does. A turn that stopped on
+ * `max_tokens` (the tail was dropped) never got to say the rest — killing it
+ * makes the retry narrate its continuation and run into the cap again; the
+ * missing phrases go to the next turn as a note instead.
+ */
+export function requiredPhraseMissAction(input: { missing: readonly string[]; stoppedOnMaxTokens: boolean }): 'none' | 'kill' | 'defer' {
+  if (input.missing.length === 0) return 'none';
+  return input.stoppedOnMaxTokens ? 'defer' : 'kill';
+}
+
 export function outputBudgetNote(maxTokens: number): string {
   return (
     `[cadence note — not from the student] Hard limit this turn: your whole reply is cut off at about ${maxTokens} tokens of output ` +
