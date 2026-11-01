@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -434,6 +434,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
+import { fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause, holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation } from '@/lib/tutor/lesson-plan/announced-move';
 
@@ -4155,6 +4156,10 @@ export function VoiceTutorRealtime({
   const autoAdvancePronHeldRef = useRef(0);
   // Task 22 §A: consecutive turns a due auto-advance was held because the turn ended with an ask.
   const autoAdvanceAskHeldRef = useRef(0);
+  // Task 26 §A: segments whose transition offer was planted (one per
+  // segment), and the turns a due advance has waited since the offer.
+  const transitionOfferMadeRef = useRef<Set<string>>(new Set());
+  const autoAdvanceOfferHeldRef = useRef(0);
   // Task 22 fix round 1 (I3): board statements whose read-aloud was held once.
   const boardReadAloudHeldRef = useRef<Set<string>>(new Set());
   /** Task 16 §C: the scheduled continuation after an announced move whose
@@ -8271,7 +8276,7 @@ export function VoiceTutorRealtime({
             const merged = mergePendingRuntimeNote(
               { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
               lvFrom, lvNext,
-              fixedScriptAdvancedNote(fixedScriptLevelAdvanceLead(lvNext, lvKind), lvNext),
+              fixedScriptAdvancedNote(fixedScriptLevelAdvanceLead(lvNext, lvKind) + (TUTOR_FIXED_SCRIPT_TRANSITIONS ? fixedScriptBridgeClause(lvPlan, lvFrom, lvNext) : ''), lvNext),
             );
             pendingRuntimeNoteRef.current = merged.note;
             pendingRuntimeNoteSegRef.current = merged.segId;
@@ -20593,7 +20598,7 @@ export function VoiceTutorRealtime({
       if ((TUTOR_SEGMENT_OVERLONG_NOTE || TUTOR_FIXED_SCRIPT_AUTO_ADVANCE) && totalSentenceCount > 0) {
         const segIdNow = currentSegmentIdRef.current;
         const st = turnsInSegmentRef.current;
-        if (st.segId !== segIdNow) turnsInSegmentRef.current = { segId: segIdNow, turns: 0, noted: false, startedAt: Date.now() };
+        if (st.segId !== segIdNow) { turnsInSegmentRef.current = { segId: segIdNow, turns: 0, noted: false, startedAt: Date.now() }; autoAdvanceOfferHeldRef.current = 0; }
         const cur = turnsInSegmentRef.current;
         cur.turns += 1;
         const segNow = lessonPlanRef.current?.segments.find((sg) => sg.id === segIdNow);
@@ -20663,12 +20668,17 @@ export function VoiceTutorRealtime({
         // scriptMissingAdvanceReason) is NOT consulted: it refuses the
         // BRAIN's advance_lesson off an unsaid script, and the overview — the
         // only scripted part — is client-spoken now (spoken opener).
-        const announcedTarget = !autoReason && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts?.prefetchOnly
+        // Task 26 §A: while an offer part waits out its offer (the offer turn
+        // + one practice turn), a turn announcing the move still moves.
+        const offerHoldActive = !!autoReason && TUTOR_FIXED_SCRIPT_TRANSITIONS && transitionOfferMadeRef.current.has(segIdNow ?? '')
+          && holdAutoAdvanceForOffer(true, autoAdvanceOfferHeldRef.current);
+        const announcedTarget = (!autoReason || offerHoldActive) && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts?.prefetchOnly
           && !totalToolNamesSeen.includes('advance_lesson')
           ? announcedMoveTarget({ tutorText: fullText, plan: autoPlan, currentSegmentId: segIdNow, levelKnown: !!workingLevelRef.current })
           : null;
-        const advanceReason: 'turns' | 'time' | 'announced' | null = autoReason
-          ?? (announcedTarget && autoPlan && announcedTarget === nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current) ? 'announced' : null);
+        const announcedNext = !!announcedTarget && !!autoPlan && announcedTarget === nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current);
+        const advanceReason: 'turns' | 'time' | 'announced' | null = (offerHoldActive && announcedNext ? 'announced' : autoReason)
+          ?? (announcedNext ? 'announced' : null);
         if (!advanceReason) { autoAdvancePronHeldRef.current = 0; autoAdvanceAskHeldRef.current = 0; }
         if (autoPlan && advanceReason) {
           const autoNext = nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current);
@@ -20678,6 +20688,11 @@ export function VoiceTutorRealtime({
           // the page at turn end, so the student's answer and its card landed
           // on the next part. Hold one turn; the advance fires on the reply.
           const askPending = advanceReason !== 'announced' && turnEndsWithAsk(fullText);
+          // Task 26 §A (GDI run 13, 475 s): an offer part's budget asks the
+          // student first — one more practice sentence, or the move on.
+          const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS
+            ? fixedScriptTransitionDecision({ plan: autoPlan, segmentId: segIdNow, reason: advanceReason, offerMade: transitionOfferMadeRef.current.has(segIdNow ?? ''), offerHeldTurns: autoAdvanceOfferHeldRef.current })
+            : 'advance';
           if (autoNext && holdAutoAdvanceForPronunciation(pronArmed, autoAdvancePronHeldRef.current)) {
             // The brain asked for a pronunciation repeat this turn: advancing
             // would disarm it (disarmPronunciationOnSegmentAdvance) and the
@@ -20687,12 +20702,32 @@ export function VoiceTutorRealtime({
             // turns in a row (a drill re-arming every turn), disarm and all.
             autoAdvancePronHeldRef.current += 1;
             onDebugEvent?.('fixed_script_auto_advance_held_pron', `"${segIdNow}" ${autoAdvancePronHeldRef.current}/${FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS}`);
+          } else if (autoNext && segIdNow && transition === 'offer') {
+            // The offer note replaces the advance (urgent FACT note, same
+            // path as the advance note); a pending note about this part is
+            // superseded by it (mergePendingRuntimeNote drops `from` notes).
+            transitionOfferMadeRef.current.add(segIdNow);
+            autoAdvanceOfferHeldRef.current = 0;
+            const merged = mergePendingRuntimeNote(
+              { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
+              segIdNow, segIdNow,
+              fixedScriptOfferNote(autoPlan, segIdNow, autoNext),
+            );
+            pendingRuntimeNoteRef.current = merged.note;
+            pendingRuntimeNoteSegRef.current = merged.segId;
+            pendingRuntimeNoteUrgentRef.current = true;
+            runtimeNoteHeldTurnsRef.current = 0;
+            onDebugEvent?.('fixed_script_offer_planted', `"${segIdNow}" → "${autoNext}"`);
+          } else if (autoNext && transition === 'hold-offer') {
+            autoAdvanceOfferHeldRef.current += 1;
+            onDebugEvent?.('fixed_script_offer_hold', `"${segIdNow}" ${autoAdvanceOfferHeldRef.current}/${FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS}`);
           } else if (autoNext && holdAutoAdvanceForPendingAsk(askPending, autoAdvanceAskHeldRef.current)) {
             autoAdvanceAskHeldRef.current += 1;
             onDebugEvent?.('fixed_script_auto_advance_held_ask', `"${segIdNow}" ${autoAdvanceAskHeldRef.current}/${FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS}`);
           } else if (autoNext) {
             autoAdvancePronHeldRef.current = 0;
             autoAdvanceAskHeldRef.current = 0;
+            autoAdvanceOfferHeldRef.current = 0;
             const autoTurns = cur.turns;
             const autoElapsedS = Math.round((Date.now() - cur.startedAt) / 1000);
             // Resets turnsInSegmentRef for the new segment and disarms a
@@ -20721,7 +20756,9 @@ export function VoiceTutorRealtime({
                 (needsLevelCaptureLead(autoPlan, segIdNow, !!workingLevelRef.current) ? LEVEL_CAPTURE_LEAD : '') +
                 (advanceReason === 'announced'
                   ? fixedScriptAnnouncedAdvanceLead(segIdNow, autoNext, autoKind)
-                  : fixedScriptAutoAdvanceLead(segIdNow, autoNext, autoKind)),
+                  : fixedScriptAutoAdvanceLead(segIdNow, autoNext, autoKind)) +
+                // Task 26 §A: a bridge part says what it learned first.
+                (TUTOR_FIXED_SCRIPT_TRANSITIONS ? fixedScriptBridgeClause(autoPlan, segIdNow, autoNext) : ''),
                 autoNext,
               ),
             );

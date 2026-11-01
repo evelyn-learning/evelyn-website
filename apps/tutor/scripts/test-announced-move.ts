@@ -103,8 +103,9 @@ test('B: the announced lead (brief text)', () => {
   );
 });
 test('B: VTR — only when the budget rule did not fire, flag on, no advance_lesson, not homework; the NEXT segment only', () => {
-  pin(VTR, /const announcedTarget = !autoReason && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts\?\.prefetchOnly\s*&& !totalToolNamesSeen\.includes\('advance_lesson'\)\s*\? announcedMoveTarget\(\{ tutorText: fullText, plan: autoPlan, currentSegmentId: segIdNow, levelKnown: !!workingLevelRef\.current \}\)/);
-  pin(VTR, /\?\? \(announcedTarget && autoPlan && announcedTarget === nextSegmentId\(autoPlan, segIdNow, !!workingLevelRef\.current\) \? 'announced' : null\)/);
+  // Task 26 §A: or while an offer part waits out its offer (offerHoldActive)
+  pin(VTR, /const announcedTarget = \(!autoReason \|\| offerHoldActive\) && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts\?\.prefetchOnly\s*&& !totalToolNamesSeen\.includes\('advance_lesson'\)\s*\? announcedMoveTarget\(\{ tutorText: fullText, plan: autoPlan, currentSegmentId: segIdNow, levelKnown: !!workingLevelRef\.current \}\)/);
+  pin(VTR, /const announcedNext = !!announcedTarget && !!autoPlan && announcedTarget === nextSegmentId\(autoPlan, segIdNow, !!workingLevelRef\.current\);\s*const advanceReason: 'turns' \| 'time' \| 'announced' \| null = \(offerHoldActive && announcedNext \? 'announced' : autoReason\)\s*\?\? \(announcedNext \? 'announced' : null\);/);
   // the same advance path (pron hold, applyResolvedAdvance, FACT note) runs on advanceReason
   pin(VTR, /if \(!advanceReason\) \{ autoAdvancePronHeldRef\.current = 0; autoAdvanceAskHeldRef\.current = 0; \}\n\s*if \(autoPlan && advanceReason\) \{/);
   pin(VTR, /reason=\$\{advanceReason\} turns=/);

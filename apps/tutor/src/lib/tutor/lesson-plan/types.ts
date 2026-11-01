@@ -117,10 +117,17 @@ interface SegmentBase {
    *    code (e.g. `{ ja: "概要" }`), shown after the label when the session's
    *    second tutor language matches;
    *  - `optional?: boolean` — marked "(optional)" on the outline card.
+   *  - `transition?: { kind: "offer" | "bridge" }` — Task 26: how the part
+   *    hands over at its budget (fixed-script.ts segmentTransitionKind):
+   *    "offer" asks the student whether they want one more practice sentence
+   *    first; "bridge" says what the part learned before the next part.
    *  GDI run 4: `script?: string` on the FIRST segment — the client speaks it
    *  as the opener and advances (lesson-plan/spoken-opener.ts). */
   metadata?: Record<string, unknown>;
 }
+
+/** Task 26: a segment's `metadata.transition` (see Segment.metadata). */
+export interface SegmentTransition { kind: 'offer' | 'bridge' }
 
 /** Opening hook — pique curiosity, connect to prior knowledge, real-world
  *  motivation. The brain is told to be brief here (~30 seconds). */

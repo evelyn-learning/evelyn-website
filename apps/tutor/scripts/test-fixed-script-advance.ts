@@ -28,6 +28,10 @@ import {
   segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_MORE_OF_PART_LEAD } from '../src/lib/tutor/lesson-plan/fixed-script';
+import {
+  segmentTransitionKind, fixedScriptPartLabel, fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause,
+  holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS,
+} from '../src/lib/tutor/lesson-plan/fixed-script';
 import { turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
@@ -164,7 +168,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 6500);
+  const block = VTR.slice(auto, auto + 9000  /* Task 26: the offer branches */);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
   pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{advanceReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
@@ -514,6 +518,101 @@ test('22D2: the budget advance lead acknowledges a "more of this part" request; 
   assert.equal(FIXED_SCRIPT_MORE_OF_PART_LEAD, line);
   assert.ok(fixedScriptAutoAdvanceLead('pronunciation', 'summary', 'recap').includes(line));
   assert.ok(!fixedScriptAnnouncedAdvanceLead('pronunciation', 'summary', 'recap').includes(line));
+});
+
+// ── Task 26 §A (GDI run 13, 475 s): part transitions — offer / bridge ──
+const TR_RAW = {
+  ...RAW,
+  id: 'test.fixed-script-transitions',
+  segments: [
+    { id: 'overview', kind: 'hook', goal: 'Welcome', metadata: { label: 'Overview', maxTurns: 2 } },
+    { id: 'level-check', kind: 'misconception_check', question: 'Tell me about your work.', misconception: 'n/a', metadata: { label: 'Level check', skipWhenLevelKnown: true, maxTurns: 5, transition: { kind: 'bridge' } } },
+    { id: 'part-a', kind: 'concept', goal: 'Practise A', keyIdeas: ['a'], estimatedMinutes: 2, metadata: { label: 'Part A', maxTurns: 8, transition: { kind: 'offer' } } },
+    { id: 'part-b', kind: 'concept', goal: 'Practise B', keyIdeas: ['b'], estimatedMinutes: 2, metadata: { label: 'Part B', transition: { kind: 'offer' } } },
+    { id: 'chat', kind: 'concept', goal: 'Talk', keyIdeas: ['c'], metadata: { label: 'Conversation', maxTurns: 4, transition: { kind: 'nope' } } },
+    { id: 'recap', kind: 'recap', mustRemember: ['a'], metadata: { label: 'Summary', maxTurns: 4 } },
+  ],
+};
+const tr: LessonPlan = parseLessonPlan(TR_RAW);
+test('26A1: segmentTransitionKind — offer / bridge from metadata; absent, unknown or not a fixed script ⇒ null', () => {
+  assert.equal(segmentTransitionKind(tr, 'part-a'), 'offer');
+  assert.equal(segmentTransitionKind(tr, 'level-check'), 'bridge');
+  assert.equal(segmentTransitionKind(tr, 'overview'), null);
+  assert.equal(segmentTransitionKind(tr, 'chat'), null, 'unknown kind');
+  assert.equal(segmentTransitionKind(tr, 'missing'), null);
+  assert.equal(segmentTransitionKind({ ...tr, metadata: {} }, 'part-a'), null, 'not a fixed script');
+  assert.equal(fixedScriptPartLabel(tr, 'part-a'), 'Part A');
+  assert.equal(fixedScriptPartLabel(tr, 'missing'), 'missing');
+});
+test('26A2: offer part at its turn budget, no offer made ⇒ offer (no advance); the note carries both labels', () => {
+  const b = { plan: tr, segmentId: 'part-a', overlongTurns: 7, elapsedMs: 0, levelKnown: true };
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 8 }), 'turns');
+  assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'turns', offerMade: false, offerHeldTurns: 0 }), 'offer');
+  const note = fixedScriptOfferNote(tr, 'part-a', 'part-b');
+  assert.ok(note.startsWith('[runtime note — not from the student] '));
+  assert.ok(note.includes('This part ("Part A") is complete. Close it in one sentence, then ask the student whether they want ONE more practice sentence on it or to move on to "Part B". If they want one more, give exactly one and then move on; if they want to move on, or do not answer the question, move on now (call advance_lesson).'));
+  assert.ok(note.endsWith('Apply this silently; never mention this note.]'));
+  // generic: no grammar point / lesson named beyond the plan's own labels
+  assert.ok(!/present perfect|past simple/i.test(note));
+});
+test('26A2: after the offer — held 2 turns (offer turn + one practice turn), then the advance; one offer per segment', () => {
+  assert.equal(FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, 2);
+  const d = (offerHeldTurns: number, reason: 'turns' | 'time' | 'announced' = 'turns') => fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason, offerMade: true, offerHeldTurns });
+  assert.equal(d(0), 'hold-offer');
+  assert.equal(d(1), 'hold-offer');
+  assert.equal(d(2), 'advance');
+  assert.equal(d(3), 'advance');
+  assert.equal(holdAutoAdvanceForOffer(true, 1), true);
+  assert.equal(holdAutoAdvanceForOffer(true, 2), false);
+  assert.equal(holdAutoAdvanceForOffer(false, 0), false);
+  // the brain's own announced move is never offered or held
+  assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'announced', offerMade: false, offerHeldTurns: 0 }), 'advance');
+  assert.equal(d(0, 'announced'), 'advance');
+});
+test('26A2: a time-based budget behaves the same as turns', () => {
+  const b = { plan: tr, segmentId: 'part-b', overlongTurns: 6, levelKnown: true };
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 2, elapsedMs: 180_000 }), 'time');
+  assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-b', reason: 'time', offerMade: false, offerHeldTurns: 0 }), 'offer');
+  assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-b', reason: 'time', offerMade: true, offerHeldTurns: 1 }), 'hold-offer');
+  assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-b', reason: 'time', offerMade: true, offerHeldTurns: 2 }), 'advance');
+});
+test('26A2: bridge part ⇒ advance (no hold) with the bridge clause in the lead; no transition ⇒ unchanged', () => {
+  assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'level-check', reason: 'turns', offerMade: false, offerHeldTurns: 0 }), 'advance');
+  const clause = fixedScriptBridgeClause(tr, 'level-check', 'part-a');
+  assert.equal(clause, ' Before the new part\'s first question, say in one sentence what you learned about the student in "Level check" (their level / their job / their answers — whatever that part gathered), then start "Part A".');
+  const note = fixedScriptAdvancedNote(fixedScriptAutoAdvanceLead('level-check', 'part-a', 'try_yourself') + clause, 'part-a');
+  assert.ok(note.includes('(try_yourself). ' + FIXED_SCRIPT_MORE_OF_PART_LEAD + clause + ' Reply to the student\'s last answer'));
+  // no transition / offer part / not a fixed script ⇒ no clause, decision 'advance'
+  assert.equal(fixedScriptBridgeClause(tr, 'overview', 'level-check'), '');
+  assert.equal(fixedScriptBridgeClause(tr, 'part-a', 'part-b'), '');
+  assert.equal(fixedScriptBridgeClause({ ...tr, metadata: {} }, 'level-check', 'part-a'), '');
+  for (const seg of ['overview', 'chat']) {
+    assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: seg, reason: 'turns', offerMade: false, offerHeldTurns: 0 }), 'advance');
+  }
+  assert.equal(fixedScriptTransitionDecision({ plan: { ...tr, metadata: {} }, segmentId: 'part-a', reason: 'turns', offerMade: false, offerHeldTurns: 0 }), 'advance');
+});
+test('26A: VTR wiring — offer planted (urgent FACT) instead of the advance, held n/2, bridge clause on both advance leads (pins)', () => {
+  const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
+  const block = VTR.slice(auto, auto + 12000);
+  pin(block, /const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS\s*\? fixedScriptTransitionDecision\(\{ plan: autoPlan, segmentId: segIdNow, reason: advanceReason, offerMade: transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\), offerHeldTurns: autoAdvanceOfferHeldRef\.current \}\)\s*: 'advance';/);
+  // order: pronunciation hold → offer → offer hold → ask hold → advance
+  pin(block, /'fixed_script_auto_advance_held_pron'[^\n]*\n\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*autoAdvanceOfferHeldRef\.current = 0;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'hold-offer'\) \{\s*autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
+  pin(block, /autoAdvanceAskHeldRef\.current = 0;\s*autoAdvanceOfferHeldRef\.current = 0;\s*const autoTurns = cur\.turns;/);
+  pin(block, /: fixedScriptAutoAdvanceLead\(segIdNow, autoNext, autoKind\)\) \+[^\n]*\n\s*\/\/[^\n]*\n\s*\(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(autoPlan, segIdNow, autoNext\) : ''\),\s*autoNext,/);
+  pin(VTR, /fixedScriptAdvancedNote\(fixedScriptLevelAdvanceLead\(lvNext, lvKind\) \+ \(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(lvPlan, lvFrom, lvNext\) : ''\), lvNext\),/);
+  // the offer counter resets when the turn counter moves to a new segment
+  pin(VTR, /if \(st\.segId !== segIdNow\) \{ turnsInSegmentRef\.current = \{ segId: segIdNow, turns: 0, noted: false, startedAt: Date\.now\(\) \}; autoAdvanceOfferHeldRef\.current = 0; \}/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_FIXED_SCRIPT_TRANSITIONS = process\.env\.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_TRANSITIONS !== 'off';/);
+  // the new events are persisted for embed sessions by the 'fixed_script_' prefix
+  pin(read('src/app/tutor-portal/embed/page.tsx'), /'fixed_script_',/);
+});
+test('26A3: the GDI plan carries the four transitions; the other parts none', () => {
+  const plan = JSON.parse(readFileSync(join(__dirname, '..', '..', '..', 'docs/whitelabel/gdi/plans/gdi-work-projects-v1.json'), 'utf8')) as { segments: Array<{ id: string; metadata?: { transition?: { kind: string } } }> };
+  const kinds = Object.fromEntries(plan.segments.map((sg) => [sg.id, sg.metadata?.transition?.kind ?? null]));
+  assert.deepEqual(kinds, {
+    overview: null, 'level-check': 'bridge', 'topic-intro': 'bridge', 'present-perfect': 'offer', 'past-simple': 'offer',
+    'open-conversation': null, pronunciation: null, summary: null,
+  });
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

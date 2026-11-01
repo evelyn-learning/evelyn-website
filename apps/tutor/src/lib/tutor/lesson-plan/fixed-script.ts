@@ -8,7 +8,7 @@
  * Generic: any plan can carry the flags. Plans without `fixedScript` are
  * never affected — every helper below returns the pre-existing answer.
  */
-import type { LessonPlan, Segment } from './types';
+import type { LessonPlan, Segment, SegmentTransition } from './types';
 
 export function isFixedScriptPlan(plan: LessonPlan | null | undefined): boolean {
   return plan?.metadata?.fixedScript === true;
@@ -283,6 +283,67 @@ export const FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS = 3;
 /** True ⇒ hold this turn. `heldTurns` = consecutive turns already held. */
 export function holdAutoAdvanceForPronunciation(armed: boolean, heldTurns: number): boolean {
   return armed && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS;
+}
+
+/** Task 26 §A (GDI run 13, 475 s): the budget advance between the two
+ *  grammar parts was one sentence ("We're moving on to the next part, the
+ *  past simple.") and the information parts closed with nothing learned. A
+ *  fixed-script segment may carry `metadata.transition`:
+ *  `{ kind: "offer" }` (a practice part: at its budget the student is offered
+ *  ONE more practice sentence or the move on) or `{ kind: "bridge" }` (an
+ *  information part: the advance note asks for one sentence of what the part
+ *  learned). Absent / unknown / not a fixed script ⇒ null (today's advance). */
+export type FixedScriptTransitionKind = SegmentTransition['kind'];
+export function segmentTransitionKind(plan: LessonPlan | null | undefined, segmentId: string | null | undefined): FixedScriptTransitionKind | null {
+  if (!plan || !segmentId || !isFixedScriptPlan(plan)) return null;
+  const t = plan.segments.find((s) => s.id === segmentId)?.metadata?.transition;
+  const kind = t && typeof t === 'object' ? (t as { kind?: unknown }).kind : undefined;
+  return kind === 'offer' || kind === 'bridge' ? kind : null;
+}
+/** The part's name as the plan authors it (`metadata.label`), else its
+ *  title, else its id — the labels the transition notes quote. */
+export function fixedScriptPartLabel(plan: LessonPlan | null | undefined, segmentId: string): string {
+  const seg = plan?.segments.find((s) => s.id === segmentId);
+  const label = seg?.metadata?.label;
+  if (typeof label === 'string' && label.trim()) return label.trim();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const title = (seg as any)?.title;
+  return typeof title === 'string' && title.trim() ? title.trim() : segmentId;
+}
+/** Turns a due advance waits after the offer note was planted: the offer
+ *  turn + one practice turn. */
+export const FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS = 2;
+/** True ⇒ hold this turn. `heldTurns` = turns already held after the offer. */
+export function holdAutoAdvanceForOffer(offerMade: boolean, heldTurns: number): boolean {
+  return offerMade && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS;
+}
+/** What a DUE fixed-script advance does now. 'offer' ⇒ plant the offer note
+ *  instead of advancing (an offer part, no offer made yet); 'hold-offer' ⇒
+ *  the offer was made and its two turns are not spent; 'advance' ⇒ the
+ *  ordinary advance path (its own pronunciation / ask holds included). An
+ *  announced move (the brain's own) is never offered or held. One offer per
+ *  segment (`offerMade`). */
+export function fixedScriptTransitionDecision(input: {
+  plan: LessonPlan | null | undefined;
+  segmentId: string | null | undefined;
+  reason: 'turns' | 'time' | 'announced';
+  offerMade: boolean;
+  offerHeldTurns: number;
+}): 'offer' | 'hold-offer' | 'advance' {
+  if (input.reason === 'announced') return 'advance';
+  if (segmentTransitionKind(input.plan, input.segmentId) !== 'offer') return 'advance';
+  if (!input.offerMade) return 'offer';
+  return holdAutoAdvanceForOffer(true, input.offerHeldTurns) ? 'hold-offer' : 'advance';
+}
+/** The FACT note planted (urgent) instead of the advance on an offer part. */
+export function fixedScriptOfferNote(plan: LessonPlan | null | undefined, from: string, next: string): string {
+  return `[runtime note — not from the student] This part ("${fixedScriptPartLabel(plan, from)}") is complete. Close it in one sentence, then ask the student whether they want ONE more practice sentence on it or to move on to "${fixedScriptPartLabel(plan, next)}". If they want one more, give exactly one and then move on; if they want to move on, or do not answer the question, move on now (call advance_lesson). Apply this silently; never mention this note.]`;
+}
+/** The extra clause of the advance lead when the part just left is a bridge
+ *  part (leading space); '' otherwise. */
+export function fixedScriptBridgeClause(plan: LessonPlan | null | undefined, from: string, next: string): string {
+  if (segmentTransitionKind(plan, from) !== 'bridge') return '';
+  return ` Before the new part's first question, say in one sentence what you learned about the student in "${fixedScriptPartLabel(plan, from)}" (their level / their job / their answers — whatever that part gathered), then start "${fixedScriptPartLabel(plan, next)}".`;
 }
 
 /** Task 22 §A (GDI run 10, 574 s / 882 s): a due auto-advance on a turn that

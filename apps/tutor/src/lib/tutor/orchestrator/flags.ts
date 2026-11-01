@@ -958,6 +958,12 @@ export const TUTOR_FIXED_SCRIPT_SPOKEN_OPENER = process.env.NEXT_PUBLIC_TUTOR_FI
  *  NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE=off.
  */
 export const TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE !== 'off';
+/** Task 26 §A (GDI run 13): fixed-script part transitions from the plan's
+ *  `metadata.transition` — an "offer" part asks for one more practice
+ *  sentence or the move on at its budget; a "bridge" part's advance note
+ *  asks for one sentence of what it learned (lesson-plan/fixed-script.ts).
+ *  Default ON; NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_TRANSITIONS=off. */
+export const TUTOR_FIXED_SCRIPT_TRANSITIONS = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_TRANSITIONS !== 'off';
 
 /** Level check (GDI run 4: set_working_level never called): leaving the
  *  level-check segment with no level stored asks /api/tutor/level/estimate
