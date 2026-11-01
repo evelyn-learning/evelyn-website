@@ -192,8 +192,29 @@ export const REPEAT_ASK_MAX_TRIES = 2;
  *  attempts at it since. */
 export interface RepeatAskTries { sentence: string | null; words: string[]; segmentId: string; attempts: number }
 const QUOTED_ANY_RE = /"([^"\n]+)"|“([^”\n]+)”|「([^」\n]+)」/g;
-const repeatToks = (text: string): string[] =>
-  normaliseNumberTokens((text.toLowerCase().replace(/’/g, "'").match(/[\p{L}\p{N}]+(?:'[\p{L}\p{N}]+)*/gu) ?? []));
+/** Fix round 1 (m-4): contractions expanded, so "I've learned" ≡ "I have learned". */
+const CONTRACTION_EXPANSIONS: Array<[RegExp, string]> = [
+  [/\b(i|you|we|they)'ve\b/g, '$1 have'], [/\bi'm\b/g, 'i am'], [/\b(you|we|they)'re\b/g, '$1 are'],
+  [/\b(i|you|we|they|he|she|it)'ll\b/g, '$1 will'], [/\b(it|that|he|she|there)'s\b/g, '$1 is'],
+  [/\bcan't\b/g, 'can not'], [/\bwon't\b/g, 'will not'], [/\b(\w+)n't\b/g, '$1 not'],
+];
+const repeatToks = (text: string): string[] => {
+  let t = (text ?? '').toLowerCase().replace(/’/g, "'");
+  for (const [re, to] of CONTRACTION_EXPANSIONS) t = t.replace(re, to);
+  return normaliseNumberTokens(t.match(/[\p{L}\p{N}]+(?:'[\p{L}\p{N}]+)*/gu) ?? []);
+};
+/** Fix round 1 (m-4): two model sentences are the same target when ≥ 80 % of
+ *  the longer one's tokens are shared (a rewording or one edit). */
+const SAME_TARGET_SHARE = 0.8;
+function sameModelSentence(a: string, b: string): boolean {
+  if (a === b) return true;
+  const x = a.split(' '), y = b.split(' ');
+  const left = new Map<string, number>();
+  for (const w of x) left.set(w, (left.get(w) ?? 0) + 1);
+  let common = 0;
+  for (const w of y) { const n = left.get(w) ?? 0; if (n > 0) { common++; left.set(w, n - 1); } }
+  return common / Math.max(x.length, y.length) >= SAME_TARGET_SHARE;
+}
 /** The target a repeat ask names, or null when the text is no repeat ask
  *  (isRepeatAskForThirdVersion). sentence = the last ≥ 3-word quote (negated
  *  says aside), words = the quoted 1–2-word spans ("presentations"). */
@@ -214,7 +235,7 @@ export function repeatAskTargetOf(text: string | null | undefined): { sentence: 
 function sameRepeatTarget(tries: RepeatAskTries, t: { sentence: string | null; words: string[] }): boolean {
   if (!t.sentence && t.words.length === 0) return true;
   const inTracked = (w: string) => tries.words.includes(w) || (!!tries.sentence && ` ${tries.sentence} `.includes(` ${w} `));
-  if (t.sentence && tries.sentence) return t.sentence === tries.sentence;
+  if (t.sentence && tries.sentence) return sameModelSentence(t.sentence, tries.sentence);
   if (!t.sentence) return t.words.every(inTracked);
   return tries.words.length > 0 && tries.words.every((w) => ` ${t.sentence} `.includes(` ${w} `));
 }
@@ -250,7 +271,9 @@ export function repeatAskTriesAfterStudentTurn(
   const toks = repeatToks(student);
   const content = toks.filter((w) => !ATTEMPT_FILLERS.has(w));
   const target = new Set([...(tries.sentence ? tries.sentence.split(' ') : []), ...tries.words.flatMap((w) => w.split(' '))]);
-  const hasWord = tries.words.some((w) => ` ${toks.join(' ')} `.includes(` ${w} `));
+  // Fix round 1 (m-5): a quoted function word ("the" before USA) is no target word to say.
+  const hasWord = tries.words.filter((w) => !w.split(' ').every((x) => ATTEMPT_FUNCTION_WORDS.has(x)))
+    .some((w) => ` ${toks.join(' ')} `.includes(` ${w} `));
   const said = content.filter((w) => !ATTEMPT_FUNCTION_WORDS.has(w));
   const overlap = said.length > 0 && said.filter((w) => target.has(w)).length / said.length >= ATTEMPT_MIN_OVERLAP;
   const attempt = hasWord || (content.length >= ATTEMPT_MIN_CONTENT_TOKENS && overlap);

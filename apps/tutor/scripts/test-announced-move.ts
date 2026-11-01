@@ -313,5 +313,12 @@ test('28B: the imperative-ask shapes (leads, clause start, colon prompt) and wha
   assert.equal(announcedTurnNeedsContinuation('Good, and tell me more later. We are moving on to the next part.'), true);
 });
 
+test('28B r1 m-1: noun / interjection / negated readings are no ask; "let me know …, and tell me" is one', () => {
+  for (const x of ['Now, use of articles is our next topic.', 'Say, that was a great answer.', 'Then, list of verbs is ready.', 'Time to move on, and try not to worry.'])
+    assert.equal(sentenceAsksStudent(x), false, x);
+  assert.equal(sentenceAsksStudent("Let me know when you're ready, and tell me one thing you did."), true);
+  assert.equal(sentenceAsksStudent("Let me show you the card, and then I'll read it."), false);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall announced-move tests passed');

@@ -123,9 +123,13 @@ const IMPERATIVE_ASK_VERB = String.raw`(?:tell me|say|try|give me|describe|expla
 const IMPERATIVE_ASK_LEAD = String.raw`(?:(?:now|next|then|first|so),\s*|take a look at the board,?\s*and\s+|look at the board,?\s*and\s+)*(?:please,?\s+)?`;
 /** An imperative ask at a clause start: the sentence start, or after , ; : — –
  *  (optionally + and / so / then / now). */
-const IMPERATIVE_ASK_RE = new RegExp(String.raw`(?:^|[,;:—–]\s*(?:(?:and|so|then|now)\s+)?)` + IMPERATIVE_ASK_LEAD + IMPERATIVE_ASK_VERB, 'i');
+// Fix round 1 (m-1): a verb read as a noun or an interjection ("use of
+// articles", "list of verbs", "Say, that was …") or negated ("try not to
+// worry") is no ask.
+const IMPERATIVE_ASK_RE = new RegExp(String.raw`(?:^|[,;:—–]\s*(?:(?:and|so|then|now)\s+)?)` + IMPERATIVE_ASK_LEAD + IMPERATIVE_ASK_VERB + String.raw`(?!\s*(?:of\b|,|not\b))`, 'i');
 /** A first-person plan before the verb ("I'll read it first, then …"). */
-const FIRST_PERSON_PLAN_RE = /\b(?:I['’]ll|I will|I['’]m going to|I am going to|let me)\b/i;
+// Fix round 1 (m-1): "let me know …, and tell me …" is no first-person plan.
+const FIRST_PERSON_PLAN_RE = /\b(?:I['’]ll|I will|I['’]m going to|I am going to|let me(?! know\b))\b/i;
 /** A colon-led prompt closing the sentence ("Start with: …", "Begin with: …"). */
 const COLON_PROMPT_RE = /\b(?:start|begin|starting|beginning)\s+with\s*:\s*\S/i;
 const QUOTED_SPAN_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;

@@ -79,5 +79,16 @@ test('27 r1 m-7: a pick question on a choice-menu card is on-part', () => {
   assert.equal(askOffNewPart('Which seminar did you attend last year?', 'We use the past simple for finished events at a time in the past.'), true, 'no menu ⇒ the token rule');
 });
 
+test('Task 28 r1 m-2: an imperative on-part ask (now seen by turnEndsWithAsk) → not off the part', () => {
+  const T = 'Good, that is the past simple. Now we move to pronunciation. Take a look at the board, and choose one: individual words, a complete sentence, speaking more naturally, or skip.';
+  const ask = transitionAskSentence(T);
+  assert.ok(ask, 'the imperative last sentence is the ask');
+  assert.equal(askOffNewPart(ask!, CARD), false);
+  // an imperative ask about the old topic is still off the part
+  const off = transitionAskSentence('Good. Tell me one more thing about the seminar last year.');
+  assert.ok(off);
+  assert.equal(askOffNewPart(off!, CARD), true);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall transition-ask tests passed');

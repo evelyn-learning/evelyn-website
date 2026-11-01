@@ -1751,5 +1751,24 @@ test('Task 28 §D (GDI run 15, 444–518 s): no repeat ask after two failed trie
   assert.ok(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8').includes("export const TUTOR_REPEAT_ASK_TWO_TRIES = process.env.NEXT_PUBLIC_TUTOR_REPEAT_ASK_TWO_TRIES !== 'off';"));
 });
 
+test('Task 28 fix round 1 (m-4, m-5): a rewording keeps the count; a quoted function word is no target word', () => {
+  const seg = 'present-perfect';
+  let tries = repeatAskTriesAfterTutorTurn(null, { tutorText: 'Can you say that once more: "I have learned how to make good presentations."?', segmentId: seg, runtimeTriggered: false });
+  tries = repeatAskTriesAfterStudentTurn(tries, { studentText: 'I have learned how to make good presentation.', segmentId: seg });
+  tries = repeatAskTriesAfterStudentTurn(tries, { studentText: 'I have learn how to make good presentation.', segmentId: seg });
+  assert.equal(tries?.attempts, 2);
+  // a contraction rewording / one added word after two tries → still the same target → reject
+  assert.equal(repeatAskAfterTwoTries({ tries, attemptText: 'Please say it again: "I\'ve learned how to make good presentations."', segmentId: seg }), true);
+  assert.equal(repeatAskAfterTwoTries({ tries, attemptText: 'Please say it again: "I have learned how to make really good presentations."', segmentId: seg }), true);
+  assert.equal(repeatAskTriesAfterTutorTurn(tries, { tutorText: 'Say it once more: "I\'ve learned how to make good presentations."', segmentId: seg, runtimeTriggered: false })?.attempts, 2);
+  // a different sentence is still a new target
+  assert.equal(repeatAskAfterTwoTries({ tries, attemptText: 'Now say this one: "This skill has helped me at work."', segmentId: seg }), false);
+  // m-5: "the" quoted as the fix is no word to say — a reply holding "the" is no attempt by itself
+  let t2 = repeatAskTriesAfterTutorTurn(null, { tutorText: 'Please say it again with "the" before USA: "I sell to the USA."', segmentId: seg, runtimeTriggered: false });
+  assert.ok(t2);
+  t2 = repeatAskTriesAfterStudentTurn(t2, { studentText: 'The weather is nice today.', segmentId: seg });
+  assert.equal(t2?.attempts, 0);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
