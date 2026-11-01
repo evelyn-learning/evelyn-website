@@ -407,7 +407,7 @@ const DIRECTIVE_ECHO_RE =
 const THIRD_PERSON_PLAN_ANYWHERE_RE =
   /\bI(?:['’]ll| will) (?:ask|tell|have|get|let|help|guide|remind|prompt) (?:them|the student|the learner)\b/i;
 const BOARD_ALREADY_NARRATION_RE =
-  /^\s*(?:The board|It) already (?:shows|has|displays)\b[^.!?]*[.!?]?\s*$|^\s*(?:That|This|The) (?:sentence|question|card|answer) is already (?:on|up on) the board[.!]?\s*$/i;
+  /^\s*(?:The board already (?:shows|has|displays)\b|It already (?:shows|has|displays) (?:the|that|this) (?:model )?(?:sentence|question|card|answer)\b)[^.!?]*[.!?]?\s*$|^\s*(?:That|This|The) (?:sentence|question|card|answer) is already (?:on|up on) the board[.!]?\s*$/i;
 const CONTINUATION_NARRATION_RE =
   /^\s*(?:Here is|Here's|This is) the rest of (?:the|my|your|today's) \w+[.!:]?\s*$/i;
 

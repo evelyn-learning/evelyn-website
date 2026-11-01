@@ -1613,5 +1613,20 @@ test('Task 25 fix round 1 (I-2): a sentence-boundary kill keeps the whole split 
   assert.ok(v.indexOf('resumeTail = keptRestRemoved(resumeTail, keptRest);') > v.indexOf('let resumeTail = res.finished ? resumeTailAfterBoundary(tail, res.keptSentence) : tail;'));
 });
 
+test('Task 25 fix round 1 (m-4, m-5, m-7)', () => {
+  const prev = 'Right, you solved the challenge by talking with your manager and other intelligent people. The phrase "intelligent people" is a bit unusual, so let\'s say "other experienced colleagues" instead. Can you try that sentence once more?';
+  const attempt = 'Okay. Can you say: I talked to my manager and other colleagues?';
+  for (const st of ["I don't understand that", 'Sorry I forgot it', 'What does experienced mean']) {
+    assert.equal(repeatAskThirdVersion({ prevTutorText: prev, studentText: st, verdict: null, attemptText: attempt }), false, st);
+  }
+  assert.equal(repeatAskThirdVersion({ prevTutorText: prev, studentText: 'I spoke to other colleagues and uh my manager.', verdict: null, attemptText: attempt }), true);
+  const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.match(v, /pendingRequiredPhraseNoteSegRef\.current = segIdForPhrases;/);
+  assert.match(v, /if \(pendingRequiredPhraseNoteRef\.current && pendingRequiredPhraseNoteSegRef\.current !== currentSegmentIdRef\.current\)/);
+  // m-7 accepted: two quotes joined by a particle keep the particle as its own Japanese part
+  assert.deepEqual(splitSentenceForTts('"I have worked here" と "I worked here" の違いは何ですか。', ['en', 'ja']).map((p) => [p.language, p.text]),
+    [['en', 'I have worked here.'], ['ja', 'と'], ['en', 'I worked here.'], ['ja', 'の違いは何ですか。']]);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

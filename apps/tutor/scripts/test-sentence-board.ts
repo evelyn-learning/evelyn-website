@@ -1266,5 +1266,10 @@ test('25 r1 I-3: a follow-up that changes content / a number is no grammar recas
   assert.deepEqual(grammarRecastCard('Yes, the customer bought the washing machine.', 'Yes, customer buy washing machine')?.emphasis, ['the', 'bought', 'the']);
 });
 
+test('25 r1 m-3: a grammar recast of a choice-menu pick is no card', () => {
+  const cards = planSentenceBoard({ tutorText: 'Yes, practice the pronunciation of a complete sentence. Here is your sentence.', studentLast: 'Yes, practice pronunciation of complete sentence', renderedThisTurn: false, choiceMenu: true });
+  assert.deepEqual(cards, [], JSON.stringify(cards));
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

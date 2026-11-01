@@ -842,6 +842,8 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   }
   check('25A1: "as the lesson says" anywhere → dropped', isMetaNarration('Two short sentences, as the lesson says.'));
   check('25A2: "I will help the learner" → dropped', isMetaNarration('Next I will help the learner with the past tense.'));
+  for (const x of ['It already has a verb.', 'It already has the past tense, so it is correct.']) check(`25 r1 m-1: "${x}" kept`, !isMetaNarration(x));
+  check('25 r1 m-1: "It already shows the model sentence." dropped', isMetaNarration('It already shows the model sentence.'));
   check('25A5: persona label stripped', stripLeakedLabels('Ryota: 「International customers」の部分', ['Ryota Tanaka', 'Ryota']) === '「International customers」の部分');
   check('25A5: persona label, full-width colon, case-insensitive', stripLeakedLabels('ryota：過去完了を使うつもりなんですね。', ['Ryota']) === '過去完了を使うつもりなんですね。');
   check('25A5: "Question: What do you do?" untouched', stripLeakedLabels('Question: What do you do?') === 'Question: What do you do?' && stripLeakedLabels('Question: What do you do?', ['Ryota']) === 'Question: What do you do?');

@@ -137,6 +137,9 @@ export function isRepeatAskForThirdVersion(text: string): boolean {
   return isStrictRepeatAsk(t) || CAN_YOU_REPEAT_RE.test(t);
 }
 const ATTEMPT_MIN_CONTENT_TOKENS = 3;
+const ATTEMPT_MIN_OVERLAP = 0.5;
+const ATTEMPT_FUNCTION_WORDS = new Set(['i', 'me', 'my', 'you', 'your', 'we', 'our', 'he', 'she', 'it', 'they', 'them', 'his', 'her', 'their',
+  'a', 'an', 'the', 'to', 'of', 'in', 'on', 'at', 'for', 'with', 'and', 'or', 'but', 'is', 'am', 'are', 'was', 'were', 'be', 'that', 'this']);
 const ATTEMPT_FILLERS = new Set(['uh', 'um', 'umm', 'uhm', 'er', 'erm', 'ah', 'hmm', 'like', 'yes', 'yeah', 'no', 'ok', 'okay', 'so', 'well', 'oh']);
 /**
  * The attempt asks the learner to say a sentence AGAIN after a repeat ask
@@ -156,6 +159,12 @@ export function repeatAskThirdVersion(input: {
   if (!student || /[?？]\s*$/.test(student)) return false;
   const content = (student.toLowerCase().match(/[a-z]+(?:['’][a-z]+)*/g) ?? []).filter((w) => !ATTEMPT_FILLERS.has(w));
   if (content.length < ATTEMPT_MIN_CONTENT_TOKENS) return false;
+  // Fix round 1 (m-4): an attempt says (half of) what was asked — "I don't
+  // understand that" / "Sorry I forgot it" are no attempts. Function words
+  // aside, ≥ 50 % of the reply's words appear in the previous turn.
+  const asked = new Set((input.prevTutorText ?? '').toLowerCase().match(/[a-z]+(?:['’][a-z]+)*/g) ?? []);
+  const said = content.filter((w) => !ATTEMPT_FUNCTION_WORDS.has(w));
+  if (said.length === 0 || said.filter((w) => asked.has(w)).length / said.length < ATTEMPT_MIN_OVERLAP) return false;
   return isRepeatAskForThirdVersion(input.attemptText ?? '');
 }
 /** The directive the killed attempt's retry gets. */

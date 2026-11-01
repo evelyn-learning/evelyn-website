@@ -90,12 +90,6 @@ export function isMeasuredResult(r: PronunciationAssessment): boolean {
 const MAX_REF_WORDS = 12;
 const round = (n: number) => Math.round(n);
 
-/**
- * ≤ 80 words of plain prose for the brain: overall score, up to two weakest
- * words (score < WORD_FLAG_SCORE) with their worst phoneme and stress flag,
- * prosody when measured. Generic on purpose — the brain decides what to say.
- * A non-attempt (see isMeasuredResult) gets PRONUNCIATION_NOT_ATTEMPTED_NOTE.
- */
 /** Task 25 §E (GDI runs 12–13: "was it graded?" — the number was never
  *  said): score bands the measured note names. */
 export const PRONUNCIATION_SCORE_EXCELLENT = 90;
@@ -104,6 +98,12 @@ export const PRONUNCIATION_SCORE_GOOD = 75;
 export function pronunciationScoreOrder(overall: number): string {
   return `Tell the student the overall score as "${round(overall)} out of 100" in one short clause (in the explanation language), then the weak items; a score of ${PRONUNCIATION_SCORE_EXCELLENT} or more is "excellent", ${PRONUNCIATION_SCORE_GOOD}–${PRONUNCIATION_SCORE_EXCELLENT - 1} "good", below ${PRONUNCIATION_SCORE_GOOD} "needs work" — say which.`;
 }
+/**
+ * ≤ 80 words of plain prose for the brain: overall score, up to two weakest
+ * words (score < WORD_FLAG_SCORE) with their worst phoneme and stress flag,
+ * prosody when measured. Generic on purpose — the brain decides what to say.
+ * A non-attempt (see isMeasuredResult) gets PRONUNCIATION_NOT_ATTEMPTED_NOTE.
+ */
 export function formatPronunciationNote(r: PronunciationAssessment, referenceText: string): string {
   if (r.status !== 'ok') return PRONUNCIATION_UNAVAILABLE_NOTE;
   if (!isMeasuredResult(r)) return PRONUNCIATION_NOT_ATTEMPTED_NOTE;

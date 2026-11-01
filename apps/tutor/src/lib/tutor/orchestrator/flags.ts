@@ -1003,7 +1003,7 @@ export const TUTOR_CLIP_FROM_PERCEPTION = process.env.NEXT_PUBLIC_TUTOR_CLIP_FRO
 /** Task 25 §B (GDI run 13, 889 s): in a bilingual session a Japanese sentence
  *  quoting an English span of 3+ words is spoken as consecutive TTS requests,
  *  the English span in the English voice (voice/tts-language.ts
- *  splitSentenceForTts). Default ON; NEXT_PUBLIC_TUTOR_TTS_SPLIT_QUOTED_SPANS=off
- *  (or TUTOR_TTS_SPLIT_QUOTED_SPANS=off) ⇒ one request per sentence, as before. */
-export const TUTOR_TTS_SPLIT_QUOTED_SPANS =
-  process.env.NEXT_PUBLIC_TUTOR_TTS_SPLIT_QUOTED_SPANS !== 'off' && process.env.TUTOR_TTS_SPLIT_QUOTED_SPANS !== 'off';
+ *  splitSentenceForTts). The decision is client-side, so only the public flag
+ *  works: default ON; NEXT_PUBLIC_TUTOR_TTS_SPLIT_QUOTED_SPANS=off ⇒ one
+ *  request per sentence, as before. */
+export const TUTOR_TTS_SPLIT_QUOTED_SPANS = process.env.NEXT_PUBLIC_TUTOR_TTS_SPLIT_QUOTED_SPANS !== 'off';

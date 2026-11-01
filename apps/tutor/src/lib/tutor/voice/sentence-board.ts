@@ -1175,7 +1175,8 @@ export function planSentenceBoard(input: {
   // tutor's first sentence acknowledges an option. Corrections and new model
   // sentences (the drill's own sentence) still card.
   if (input.choiceMenu === true || acknowledgesOption(input.tutorText)) {
-    for (let k = classified.length - 1; k >= 0; k--) if (classified[k]!.q.source && classified[k]!.q.kind !== 'correction') classified.splice(k, 1);
+    // Fix round 1 (m-3): a grammar recast of a menu pick is a pick too — removed with the sourced cards.
+    for (let k = classified.length - 1; k >= 0; k--) if (classified[k]!.q.source) classified.splice(k, 1);
   }
   // Task 25 §C1: the grammar recast replaces the student's own sentence.
   if (grammarRecast) {

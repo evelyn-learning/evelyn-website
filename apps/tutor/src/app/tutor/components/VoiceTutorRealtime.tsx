@@ -5212,6 +5212,8 @@ export function VoiceTutorRealtime({
   const pendingPromptedRepeatNoteRef = useRef<string | null>(null);
   // Task 25 §F2: a required-phrase miss on a turn the output cap cut — the next turn is told what is missing.
   const pendingRequiredPhraseNoteRef = useRef<string | null>(null);
+  // Fix round 1 (m-5): the part the deferred note is about — delivered only while still in it.
+  const pendingRequiredPhraseNoteSegRef = useRef<string | null>(null);
   // student-hold.ts WAIT_REQUEST_NOTE: set for THIS turn by the heuristic hold
   // (a soft, cue-less hold), consumed where the other notes are.
   const pendingWaitNoteRef = useRef<string | null>(null);
@@ -13145,6 +13147,13 @@ export function VoiceTutorRealtime({
         pendingKatakanaNoteRef.current = null;
         onDebugEvent?.('katakana_english_note_consumed', 'delivered with this turn');
       }
+      // Task 25 fix round 1 (m-5): a deferred required-phrase note about a part
+      // the lesson has left is stale — dropped, never delivered.
+      if (pendingRequiredPhraseNoteRef.current && pendingRequiredPhraseNoteSegRef.current !== currentSegmentIdRef.current) {
+        onDebugEvent?.('required_phrase_deferred', `stale: planted for ${pendingRequiredPhraseNoteSegRef.current}, now ${currentSegmentIdRef.current ?? 'none'} — dropped`);
+        pendingRequiredPhraseNoteRef.current = null;
+        pendingRequiredPhraseNoteSegRef.current = null;
+      }
       for (const [ref, consumed] of [
         [pendingLearnerAddressNoteRef, 'learner_address_note_consumed'],
         [pendingPraiseVarietyNoteRef, 'praise_variety_note_consumed'],
@@ -19247,6 +19256,7 @@ export function VoiceTutorRealtime({
               const phraseAction = requiredPhraseMissAction({ missing, stoppedOnMaxTokens: maxTokensStopThisAttempt });
               if (phraseAction === 'defer') {
                 pendingRequiredPhraseNoteRef.current = `[runtime note — not from the student] ${scriptMissingAdvanceReason(missing)} Apply this silently; never mention this note.`;
+                pendingRequiredPhraseNoteSegRef.current = segIdForPhrases;
                 onDebugEvent?.('required_phrase_deferred', `max_tokens: segId="${segIdForPhrases}" missing=[${missing.join(', ')}]`);
               } else if (phraseAction === 'kill') {
                 const reason =
