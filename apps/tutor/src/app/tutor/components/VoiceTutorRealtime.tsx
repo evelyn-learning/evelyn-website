@@ -16890,13 +16890,26 @@ export function VoiceTutorRealtime({
                         console.warn('[brain-orchestrator] STAGE-3 fix #10: fast-opener dropped — perception cancel gate active:', sentenceForSpeech.slice(0, 80));
                         onDebugEvent?.('speak_text_gated_opener', sentenceForSpeech.slice(0, 80));
                       } else {
-                        const openerScriptId = pushTtsScriptForPerception(sentenceForSpeech);
-                        speakTextRef.current?.(sentenceForSpeech, openerScriptId);
+                        // Task 27 §H (GDI run 14, 408/489 s): the fast opener
+                        // bypasses speakOne, so a first sentence quoting an
+                        // English span 「…」ですね。 reached the Japanese voice
+                        // whole. It takes the same TTS split (one request per
+                        // part, each counted as dispatched — the caption pair
+                        // above is already registered with these parts).
+                        const openerParts = splitSentenceForTts(sentenceForSpeech, ttsSplitLanguagesRef.current);
+                        if (openerParts.length > 1) {
+                          openerParts.forEach((p, k) => { if (k < openerParts.length - 1) splitLaterParts.set(p.text, openerParts.slice(k + 1).map((q) => q.text)); });
+                          onDebugEvent?.('tts_sentence_split', `${openerParts.length} parts (opener): ${openerParts.map((p) => `${p.language ?? '-'}"${p.text.slice(0, 30)}"`).join(' | ')}`);
+                        }
+                        for (const { text: openerPart } of openerParts) {
+                          const openerScriptId = pushTtsScriptForPerception(openerPart);
+                          speakTextRef.current?.(openerPart, openerScriptId);
+                          // Render↔speech sync: count the fast-opener too (it
+                          // bypasses speakOne but still reaches the speaker).
+                          ttsDispatchedCountRef.current++;
+                        }
                         audibleSentenceCount++;
                         markInFlightTurnShown();
-                        // Render↔speech sync: count the fast-opener too (it
-                        // bypasses speakOne but still reaches the speaker).
-                        ttsDispatchedCountRef.current++;
                         turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
                       }
                     } else if (gateState === 'gated') {

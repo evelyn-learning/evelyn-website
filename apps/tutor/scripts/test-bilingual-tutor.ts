@@ -66,7 +66,7 @@ import { isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '../src/lib/tutor/vo
 import { isMetaNarration as isMetaNarration2 } from '../src/lib/tutor/voice/meta-narration';
 import { settleCutToolUse, toolContinuationMessages, toolContinuationNote, needsHeadroomFor, requiredPhraseMissAction } from '../src/lib/tutor/voice/output-budget';
 import { isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '../src/lib/tutor/voice/lesson-close';
-import { stripMarkdownEmphasis } from '../src/lib/tutor/voice/sentence-spacing';
+import { stripMarkdownEmphasis, matchSentenceBoundary, splitIntoSpokenSentences } from '../src/lib/tutor/voice/sentence-spacing';
 import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
 import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
 import { expectsEnglishReply } from '../src/lib/tutor/voice/english-reply';
@@ -1626,6 +1626,39 @@ test('Task 25 fix round 1 (m-4, m-5, m-7)', () => {
   // m-7 accepted: two quotes joined by a particle keep the particle as its own Japanese part
   assert.deepEqual(splitSentenceForTts('"I have worked here" と "I worked here" の違いは何ですか。', ['en', 'ja']).map((p) => [p.language, p.text]),
     [['en', 'I have worked here.'], ['ja', 'と'], ['en', 'I worked here.'], ['ja', 'の違いは何ですか。']]);
+});
+
+test('Task 27 §H (GDI run 14, 408/489 s): a bracketed quote ending with a full stop ⇒ split; the fast opener takes the split', () => {
+  const L = ['en', 'ja'];
+  assert.deepEqual(splitSentenceForTts('「I have learned how to make presentations.」ですね。', L), [
+    { text: 'I have learned how to make presentations.', language: 'en' },
+    { text: 'ですね。', language: 'ja' },
+  ]);
+  assert.deepEqual(splitSentenceForTts('「I gave them sweets so they could listen to me.」ですね。', L).map((p) => p.language), ['en', 'ja']);
+  const ja = '「上司への発表」ですね。';
+  assert.deepEqual(splitSentenceForTts(ja, L), [{ text: ja, language: 'ja' }]);
+  // the stream boundary never ends a sentence inside the brackets: every
+  // streamed prefix either has no boundary or one after the closing bracket
+  const turn = '「I have learned how to make presentations.」ですね。 Good, that\'s a clear sentence.';
+  for (let i = 1; i <= turn.length; i++) {
+    const m = matchSentenceBoundary(turn.slice(0, i));
+    if (m) assert.ok(!/[.!?]$/.test(m[1]) || !m[1].startsWith('「') || m[1].includes('」'), `prefix ${i}: "${m[1]}"`);
+  }
+  assert.deepEqual(splitIntoSpokenSentences(turn), ['「I have learned how to make presentations.」ですね。', "Good, that's a clear sentence."]);
+  for (const q of ['“I gave them sweets so they could listen to me.”ですね。', '"I gave them sweets so they could listen to me."ですね。']) {
+    assert.deepEqual(splitIntoSpokenSentences(q), [q], q);
+    assert.deepEqual(splitSentenceForTts(q, L).map((p) => p.language), ['en', 'ja'], q);
+  }
+  // root cause: the turn's first sentence went out on the fast-opener path,
+  // which bypassed speakOne (and its split). It now splits the same way.
+  const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  const fo = v.indexOf('if (fastOpenerEligible) {');
+  const foEnd = v.indexOf('} else if (gateState === \'gated\') {', fo);
+  assert.ok(fo > 0 && foEnd > fo);
+  const block = v.slice(fo, foEnd);
+  assert.match(block, /const openerParts = splitSentenceForTts\(sentenceForSpeech, ttsSplitLanguagesRef\.current\);/);
+  assert.match(block, /for \(const \{ text: openerPart \} of openerParts\) \{/);
+  assert.doesNotMatch(block, /speakTextRef\.current\?\.\(sentenceForSpeech, /);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
