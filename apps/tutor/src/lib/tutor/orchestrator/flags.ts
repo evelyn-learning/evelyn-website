@@ -1053,6 +1053,13 @@ export const TUTOR_TRANSITION_ASK_EVERY_ADVANCE = process.env.NEXT_PUBLIC_TUTOR_
  *  default ON; NEXT_PUBLIC_TUTOR_MOVE_ON_ORDER=off. */
 export const TUTOR_MOVE_ON_ORDER = process.env.NEXT_PUBLIC_TUTOR_MOVE_ON_ORDER !== 'off';
 
+/** Task 28 §D (GDI run 15, 444–518 s; "two tries, then teach"): after two
+ *  attempts at the same model sentence / target word since the first repeat
+ *  ask, a turn that asks for it again is killed once and retried (validator
+ *  repeat_ask_after_two_tries; correct-retry.ts repeatAskAfterTwoTries).
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_REPEAT_ASK_TWO_TRIES=off. */
+export const TUTOR_REPEAT_ASK_TWO_TRIES = process.env.NEXT_PUBLIC_TUTOR_REPEAT_ASK_TWO_TRIES !== 'off';
+
 /** Task 27 §G (GDI run 14, 1141 s): a microphone device change mid-session
  *  (devicechange, the shared track ended, or muted at the source > 3 s)
  *  re-acquires the shared capture on the current default input and swaps the

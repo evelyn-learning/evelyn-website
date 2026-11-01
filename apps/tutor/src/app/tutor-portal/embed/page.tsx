@@ -266,6 +266,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'repeat_after_correct',
   //   Task 25 §G: a third wording of a sentence the student already tried twice:
   'repeat_ask_third_version',
+  //   Task 28 §D: a repeat ask after two tries of the same sentence (killed + retried):
+  'repeat_ask_after_two_tries',
   //   language lessons: the client put a quoted sentence on the board itself:
   'sentence_board_auto',
   //   a show_sentence already on the board (any page) was not drawn again:

@@ -70,7 +70,8 @@ import { stripMarkdownEmphasis, matchSentenceBoundary, splitIntoSpokenSentences 
 import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
 import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
 import { expectsEnglishReply } from '../src/lib/tutor/voice/english-reply';
-import { isBoardReadAloud, asksToReadAloud, normaliseNumberTokens, repeatAskThirdVersion, isRepeatAskForThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, moveOnIgnored, moveOnRequestSpan, MOVE_ON_IGNORED_REASON } from '../src/lib/tutor/voice/correct-retry';
+import { isBoardReadAloud, asksToReadAloud, normaliseNumberTokens, repeatAskThirdVersion, isRepeatAskForThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, moveOnIgnored, moveOnRequestSpan, MOVE_ON_IGNORED_REASON,
+  repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, repeatAskTargetOf, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries } from '../src/lib/tutor/voice/correct-retry';
 
 let passed = 0;
 let failed = 0;
@@ -1698,6 +1699,56 @@ test('Task 27 §F (GDI run 14, 1093 s): "move on" is an order — move_on_ignore
   assert.ok(v.includes("rejectionsThisAttempt.push({ action: 'move_on_ignored', reason: MOVE_ON_IGNORED_REASON });"));
   assert.ok(v.includes("advanced: toolNamesThisAttempt.includes('advance_lesson') || moSegId !== turnStartSegmentId,"));
   assert.ok(v.includes("if (TUTOR_MOVE_ON_ORDER && !attemptKilled && !moveOnRejected && attemptText && !/^\\s*\\[/.test(transcript)) {"));
+});
+
+test('Task 28 §D (GDI run 15, 444–518 s): no repeat ask after two failed tries of the same sentence', () => {
+  const seg = 'present-perfect';
+  const T444 = 'Good, "I have learned how to make good presentations" is a natural way to say it. Can you say that once more, with "presentations" in the plural?';
+  const T461 = 'The board card is up. Please say the whole sentence with "presentations" in the plural.';
+  const T497 = 'Take your time. Would you like a hint, or a little more time to think about "presentations"?';
+  const T503 = 'Your sentence is understandable, but the word should be "presentations," with the s on the end. Could you say the whole sentence once more: "I have learned how to make good presentations."?';
+  const after = (t: RepeatAskTries | null, tutorText: string, runtimeTriggered = false) => repeatAskTriesAfterTutorTurn(t, { tutorText, segmentId: seg, runtimeTriggered });
+  const said = (t: RepeatAskTries | null, studentText: string) => repeatAskTriesAfterStudentTurn(t, { studentText, segmentId: seg });
+  // replay the run: ask (444) → try 1 (458, incorrect) → ask again (461) → nudge (497) → try 2 (501) → the 503 s attempt
+  let tries = after(null, T444);
+  assert.deepEqual(tries, { sentence: 'i have learned how to make good presentations', words: ['presentations'], segmentId: seg, attempts: 0 });
+  tries = said(tries, 'I have learned how to make good presentation.');
+  assert.equal(tries?.attempts, 1);
+  assert.equal(repeatAskAfterTwoTries({ tries, attemptText: T461, segmentId: seg }), false, 'one prior attempt → allowed (the §G rule decides)');
+  tries = after(tries, T461);
+  assert.equal(tries?.attempts, 1, 'the same target (a quoted word of the tracked sentence) keeps the count');
+  tries = after(tries, T497, true);
+  assert.equal(tries?.attempts, 1, 'the idle nudge (runtime) keeps it');
+  tries = said(tries, 'I have learned how to make good present at ions.');
+  assert.equal(tries?.attempts, 2);
+  assert.equal(repeatAskAfterTwoTries({ tries, attemptText: T503, segmentId: seg }), true, 'the 503 s attempt → reject');
+  assert.equal(repeatAskAfterTwoTries({ tries, attemptText: T461, segmentId: seg }), true, 'a word-only re-ask of it too');
+  assert.equal(repeatAskAfterTwoTries({ tries, attemptText: 'Can you say that once more?', segmentId: seg }), true, 'an ask pointing back at it too');
+  // allowed after two tries: a new model sentence, moving on, another segment
+  assert.equal(repeatAskAfterTwoTries({ tries, attemptText: 'Good effort. Now say this one: "This skill has helped me at work."', segmentId: seg }), false, 'a new model sentence');
+  assert.equal(repeatAskAfterTwoTries({ tries, attemptText: 'Good, you have the right structure: "I have learned how to make good presentations." Let\'s move on. Can you tell me one way this skill has helped you at work?', segmentId: seg }), false, 'moving on');
+  assert.equal(repeatAskAfterTwoTries({ tries, attemptText: T503, segmentId: 'past-simple' }), false, 'the segment advanced');
+  // the counter resets: a new model sentence, a turn that moves on, a new segment
+  assert.equal(after(tries, 'Now say this one: "This skill has helped me at work."')?.attempts, 0);
+  assert.equal(after(tries, 'Good. Can you tell me one way this skill has helped you at work?'), null);
+  assert.equal(repeatAskTriesAfterTutorTurn(tries, { tutorText: T503, segmentId: 'past-simple', runtimeTriggered: false })?.attempts, 0);
+  assert.equal(repeatAskTriesAfterStudentTurn(tries, { studentText: 'I have learned how to make good presentations.', segmentId: 'past-simple' }), null);
+  // not attempts: a question, a non-answer, a bracketed directive
+  const one = said(after(null, T444), 'I have learned how to make good presentation.');
+  assert.equal(said(one, 'Can I say it in Japanese?')?.attempts, 1);
+  assert.equal(said(one, "Sorry, I don't understand.")?.attempts, 1);
+  assert.equal(said(one, '[System note: the student has been silent.]')?.attempts, 1);
+  // the target word alone is an attempt
+  assert.equal(said(one, 'presentations')?.attempts, 2);
+  assert.deepEqual(repeatAskTargetOf('What did you do next?'), null);
+  assert.ok(REPEAT_ASK_AFTER_TWO_TRIES_REASON.startsWith('The student has tried this twice. Say the correct form once yourself, accept their effort in one sentence, and continue with the next question. Do not ask them to say it again.'));
+  const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(v.includes("rejectionsThisAttempt.push({ action: 'repeat_ask_after_two_tries', reason: REPEAT_ASK_AFTER_TWO_TRIES_REASON });"));
+  assert.ok(v.includes("repeatAskAfterTwoTries({ tries: repeatAskTriesRef.current, attemptText, segmentId: turnStartSegmentId ?? '' })"));
+  assert.ok(v.includes("repeatAskTriesRef.current = repeatAskTriesAfterStudentTurn(repeatAskTriesRef.current, { studentText: transcript, segmentId: turnStartSegmentId ?? '' });"));
+  assert.ok(v.includes("repeatAskTriesRef.current = repeatAskTriesAfterTutorTurn(repeatAskTriesRef.current, { tutorText: fullText, segmentId: currentSegmentIdRef.current ?? '', runtimeTriggered: /^\\s*\\[/.test(transcript) });"));
+  assert.ok(readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8').includes("'repeat_ask_after_two_tries',"));
+  assert.ok(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8').includes("export const TUTOR_REPEAT_ASK_TWO_TRIES = process.env.NEXT_PUBLIC_TUTOR_REPEAT_ASK_TWO_TRIES !== 'off';"));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

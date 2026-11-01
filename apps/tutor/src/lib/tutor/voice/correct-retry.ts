@@ -173,6 +173,101 @@ export function repeatAskThirdVersion(input: {
 export const REPEAT_ASK_THIRD_VERSION_REASON = withSilentClause(
   'The student has already tried this sentence twice. Accept their attempt in one sentence (say the natural form once if you must), then continue with your next question. Do not ask them to say it again.');
 
+// ─────────────────────────────────────────────────────────────────────────
+// Task 28 §D (GDI run 15, 444–518 s; the pacing rule "two tries, then teach",
+// 2026-10-30): the tutor asked for "presentations" (plural); the student said
+// the singular (458 s, incorrect) → asked again (461 s); "present at ions"
+// (501 s) → asked AGAIN (503 s). §G lets an incorrect repeat be asked once
+// more but puts no ceiling on it. After TWO attempts at the same model
+// sentence / target word since the first repeat ask, a turn that asks for it
+// again is rejected whatever the verdict (validator repeat_ask_after_two_tries).
+// The counter (RepeatAskTries, held by VTR next to the re-ask state) resets
+// when the model sentence changes or the segment advances.
+// ─────────────────────────────────────────────────────────────────────────
+/** Attempts after which a repeat ask of the same target is rejected. */
+export const REPEAT_ASK_MAX_TRIES = 2;
+/** The open repeat ask: its model sentence (normalised tokens joined, or
+ *  null when the ask quoted only a word), its target words (quoted 1–2-word
+ *  spans, normalised), the segment it was asked on, and the student's
+ *  attempts at it since. */
+export interface RepeatAskTries { sentence: string | null; words: string[]; segmentId: string; attempts: number }
+const QUOTED_ANY_RE = /"([^"\n]+)"|“([^”\n]+)”|「([^」\n]+)」/g;
+const repeatToks = (text: string): string[] =>
+  normaliseNumberTokens((text.toLowerCase().replace(/’/g, "'").match(/[\p{L}\p{N}]+(?:'[\p{L}\p{N}]+)*/gu) ?? []));
+/** The target a repeat ask names, or null when the text is no repeat ask
+ *  (isRepeatAskForThirdVersion). sentence = the last ≥ 3-word quote (negated
+ *  says aside), words = the quoted 1–2-word spans ("presentations"). */
+export function repeatAskTargetOf(text: string | null | undefined): { sentence: string | null; words: string[] } | null {
+  const t = text ?? '';
+  if (!isRepeatAskForThirdVersion(t)) return null;
+  const q = lastTargetQuote(t);
+  const words: string[] = [];
+  for (const m of t.replace(NEGATED_SAY_QUOTE_RE, ' ').matchAll(QUOTED_ANY_RE)) {
+    const inner = repeatToks(m.slice(1).find((g) => g !== undefined) ?? '');
+    if (inner.length >= 1 && inner.length <= 2) words.push(inner.join(' '));
+  }
+  return { sentence: q ? repeatToks(q).join(' ') : null, words };
+}
+/** The target `t` is the one `tries` counts: the same sentence; words only,
+ *  all inside the tracked sentence / words; a sentence holding all the tracked
+ *  words (a word-only ask before); or no quote at all (an ask that points back). */
+function sameRepeatTarget(tries: RepeatAskTries, t: { sentence: string | null; words: string[] }): boolean {
+  if (!t.sentence && t.words.length === 0) return true;
+  const inTracked = (w: string) => tries.words.includes(w) || (!!tries.sentence && ` ${tries.sentence} `.includes(` ${w} `));
+  if (t.sentence && tries.sentence) return t.sentence === tries.sentence;
+  if (!t.sentence) return t.words.every(inTracked);
+  return tries.words.length > 0 && tries.words.every((w) => ` ${t.sentence} `.includes(` ${w} `));
+}
+/** After a delivered tutor turn: a repeat ask of the tracked target keeps the
+ *  count (sentence / words merged); a repeat ask of a new target starts a new
+ *  count at 0; a turn that asks no repeat ends it — unless it answered a
+ *  runtime directive (an idle nudge, a continuation), which keeps it. A new
+ *  segment always ends it. */
+export function repeatAskTriesAfterTutorTurn(
+  tries: RepeatAskTries | null,
+  input: { tutorText: string; segmentId: string; runtimeTriggered: boolean },
+): RepeatAskTries | null {
+  const cur = tries && tries.segmentId === input.segmentId ? tries : null;
+  const target = repeatAskTargetOf(input.tutorText);
+  if (!target) return input.runtimeTriggered ? cur : null;
+  if (cur && sameRepeatTarget(cur, target)) {
+    return { ...cur, sentence: cur.sentence ?? target.sentence, words: [...new Set([...cur.words, ...target.words])] };
+  }
+  if (!target.sentence && target.words.length === 0) return null;
+  return { sentence: target.sentence, words: target.words, segmentId: input.segmentId, attempts: 0 };
+}
+/** A student turn at the tracked target: not a question, and ≥ 3 content
+ *  words of which (function words aside) ≥ 50 % are the target's, or a
+ *  target word itself ("presentations"). Counts one attempt. */
+export function repeatAskTriesAfterStudentTurn(
+  tries: RepeatAskTries | null,
+  input: { studentText: string; segmentId: string },
+): RepeatAskTries | null {
+  if (!tries) return null;
+  if (tries.segmentId !== input.segmentId) return null;
+  const student = (input.studentText ?? '').trim();
+  if (!student || /^\s*\[/.test(student) || /[?？]\s*$/.test(student)) return tries;
+  const toks = repeatToks(student);
+  const content = toks.filter((w) => !ATTEMPT_FILLERS.has(w));
+  const target = new Set([...(tries.sentence ? tries.sentence.split(' ') : []), ...tries.words.flatMap((w) => w.split(' '))]);
+  const hasWord = tries.words.some((w) => ` ${toks.join(' ')} `.includes(` ${w} `));
+  const said = content.filter((w) => !ATTEMPT_FUNCTION_WORDS.has(w));
+  const overlap = said.length > 0 && said.filter((w) => target.has(w)).length / said.length >= ATTEMPT_MIN_OVERLAP;
+  const attempt = hasWord || (content.length >= ATTEMPT_MIN_CONTENT_TOKENS && overlap);
+  return attempt ? { ...tries, attempts: tries.attempts + 1 } : tries;
+}
+/** The attempt asks for the tracked target again after REPEAT_ASK_MAX_TRIES
+ *  attempts on this segment ⇒ reject. A new model sentence is allowed. */
+export function repeatAskAfterTwoTries(input: { tries: RepeatAskTries | null; attemptText: string | null | undefined; segmentId: string }): boolean {
+  const tries = input.tries;
+  if (!tries || tries.segmentId !== input.segmentId || tries.attempts < REPEAT_ASK_MAX_TRIES) return false;
+  const target = repeatAskTargetOf(input.attemptText);
+  return !!target && sameRepeatTarget(tries, target);
+}
+/** The directive the killed attempt's retry gets. */
+export const REPEAT_ASK_AFTER_TWO_TRIES_REASON = withSilentClause(
+  'The student has tried this twice. Say the correct form once yourself, accept their effort in one sentence, and continue with the next question. Do not ask them to say it again.');
+
 /** Task 27 §D3: a tutor turn that CORRECTS the student — a quoted model
  *  sentence (3+ words) with a correction cue ("should be", "so it's", "the
  *  natural form is", "let's fix", or sentence-board's hasCorrectionCue). */

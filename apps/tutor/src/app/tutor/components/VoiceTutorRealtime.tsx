@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -228,7 +228,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, MOVE_ON_IGNORED_REASON, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -5272,6 +5272,8 @@ export function VoiceTutorRealtime({
   const pendingPraiseVarietyNoteRef = useRef<string | null>(null);
   const pendingCorrectRetryNoteRef = useRef<string | null>(null);
   const recentTutorTurnsRef = useRef<string[]>([]);
+  // Task 28 §D: the open repeat ask (model sentence / target words) and the student's attempts since.
+  const repeatAskTriesRef = useRef<RepeatAskTries | null>(null);
   const praiseVarietyPlantsRef = useRef(0);
   /** 2026-10-18: which praise note was planted last — the sticky re-plant repeats it. */
   const praiseLastNoteRef = useRef<string | null>(null);
@@ -12594,6 +12596,10 @@ export function VoiceTutorRealtime({
     let pronunciationNoteThisTurn: string | null = null;
     const turnStartSegmentId = currentSegmentIdRef.current;
     const turnStartCompletedSegmentIds = new Set(completedSegmentIdsRef.current);
+    // Task 28 §D: a student turn at the open repeat ask counts one attempt.
+    if (!opts?.prefetchOnly && repeatAskTriesRef.current) {
+      repeatAskTriesRef.current = repeatAskTriesAfterStudentTurn(repeatAskTriesRef.current, { studentText: transcript, segmentId: turnStartSegmentId ?? '' });
+    }
     // Number of sentences actually dispatched to TTS this turn. Tracks
     // a strict subset of totalSentenceCount — sentences buffered in the
     // gate then dropped on rejection are counted in totalSentenceCount
@@ -13156,6 +13162,8 @@ export function VoiceTutorRealtime({
       let thirdVersionRejected = false;
       // Task 27 §F: once per turn — a move-on request the attempt did not act on.
       let moveOnRejected = false;
+      // Task 28 §D: once per turn — a repeat ask after two tries of the same sentence.
+      let twoTriesRejected = false;
       // Task 20 §B2: the lesson was already closed when this turn started (it
       // answers a post-close utterance); the arm counter tells a fresh arm.
       const closedAtTurnStart = lessonClosedRef.current;
@@ -19486,6 +19494,21 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Task 28 §D (GDI run 15, 503 s): two attempts at the same model
+        // sentence / target word since the first repeat ask, and this attempt
+        // asks for it again — kill + retry once, whatever the verdict: say the
+        // correct form once, accept the effort, continue. The §G pronunciation
+        // drill exemption applies.
+        if (TUTOR_REPEAT_ASK_TWO_TRIES && !attemptKilled && !twoTriesRejected && attemptText && languageSessionRef.current
+          && !pronunciationMeasuredThisTurn
+          && !pronunciationTargetsOf(lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.metadata)
+          && repeatAskAfterTwoTries({ tries: repeatAskTriesRef.current, attemptText, segmentId: turnStartSegmentId ?? '' })) {
+          twoTriesRejected = true;
+          rejectionsThisAttempt.push({ action: 'repeat_ask_after_two_tries', reason: REPEAT_ASK_AFTER_TWO_TRIES_REASON });
+          await performKill();
+          onDebugEvent?.('repeat_ask_after_two_tries', `tries=${repeatAskTriesRef.current?.attempts ?? 0} "${attemptText.slice(-80)}"`);
+        }
+
         // Task 25 §G (GDI run 13, 798–854 s): the previous turn asked for a
         // repeat, the student tried (not incorrect), and this attempt asks for
         // a THIRD version — kill + retry once: accept, then move on. A
@@ -21115,6 +21138,8 @@ export function VoiceTutorRealtime({
         }
         // praise-variety.ts: 完璧 in most of the recent turns.
         recentTutorTurnsRef.current = [...recentTutorTurnsRef.current.slice(-(PRAISE_WINDOW_TURNS - 1)), fullText];
+        // Task 28 §D: the open repeat ask's target and count after this turn.
+        repeatAskTriesRef.current = repeatAskTriesAfterTutorTurn(repeatAskTriesRef.current, { tutorText: fullText, segmentId: currentSegmentIdRef.current ?? '', runtimeTriggered: /^\s*\[/.test(transcript) });
         const praiseNote = overusesSuperlative(recentTutorTurnsRef.current)
           ? PRAISE_VARIETY_NOTE
           : overusesStockPraiseOpener(recentTutorTurnsRef.current) ? PRAISE_OPENER_NOTE : null;
