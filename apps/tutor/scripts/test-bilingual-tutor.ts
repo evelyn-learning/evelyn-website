@@ -1670,7 +1670,7 @@ test('Task 27 §F (GDI run 14, 1093 s): "move on" is an order — move_on_ignore
   assert.equal(moveOnIgnored({ studentText: 'Uh, let\'s do summary.', advanced: false, hasNextSegment: false, labels: [] }), false);
   // the attempt advanced
   assert.equal(moveOnIgnored({ studentText: 'Uh, let\'s do summary.', advanced: true, hasNextSegment: true, labels: LABELS }), false);
-  for (const x of ['Skip.', 'Next.', 'Um, move on.', "Can we move on to the next part?", "I'd like to go to the summary.", 'Shall we skip to the end?']) {
+  for (const x of ['Skip.', 'Next part.', 'Summary.', 'Um, move on.', "Can we move on to the next part?", "I'd like to go to the summary.", 'Shall we skip to the end?', 'Please continue.', 'Could we wrap up?', 'Do summary.', "Let's go to the next part.", 'I want to start the summary.']) {
     assert.ok(moveOnRequestSpan(x, LABELS), x);
   }
   // a later part's label after do / go to / start, whole words only
@@ -1682,6 +1682,15 @@ test('Task 27 §F (GDI run 14, 1093 s): "move on" is an order — move_on_ignore
   for (const x of ['I do the summary report every Friday at work.', 'I continue to work on sales.', 'Next week I will visit the customer.']) {
     assert.equal(moveOnIgnored({ studentText: x, advanced: false, hasNextSegment: true, labels: LABELS }), false, x);
   }
+  // Fix round 1 (I-1): the review's probes — in-part requests and short answers are no order
+  const ALL = ['Pronunciation', 'Summary', 'まとめ', 'Conversation', 'Past simple'];
+  for (const x of ["Let's do the next one.", "Let's do the next sentence.", 'Can we do the next question?', 'I do conversation at work.', 'I start conversation with customers.', "OK, let's move on to the next point.", 'I do summary every day.', 'Next.', "Let's do the next item.", 'I want to continue my English study.', 'I start work at nine.']) {
+    assert.equal(moveOnIgnored({ studentText: x, advanced: false, hasNextSegment: true, labels: ALL }), false, x);
+  }
+  // a request plus an answer word is an answer
+  assert.equal(moveOnIgnored({ studentText: "Yes, presentations. Let's move on.", advanced: false, hasNextSegment: true, labels: ALL }), false);
+  assert.equal(moveOnIgnored({ studentText: "Okay, let's do the summary.", advanced: false, hasNextSegment: true, labels: ALL }), true);
+  assert.equal(moveOnIgnored({ studentText: "Can we do past simple now?", advanced: false, hasNextSegment: true, labels: ALL }), true, 'a later label as a whole phrase');
   // the turn also answers the open question
   assert.equal(moveOnIgnored({ studentText: 'I have worked here for three years. Let\'s move on to the next part.', advanced: false, hasNextSegment: true, labels: LABELS }), false);
   assert.equal(MOVE_ON_IGNORED_REASON, 'The student asked to move on. Close this part in one sentence and call advance_lesson now. No practice, no repeat. Apply this silently; never mention this note.');
