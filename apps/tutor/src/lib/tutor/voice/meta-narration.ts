@@ -374,11 +374,48 @@ export function stripEchoedTags(sentence: string): string {
     .trim();
 }
 
+/** Task 25 §A5 (GDI run 13): words that open a real labelled line
+ *  ("Question: "…"", "Example: 「…」") — never stripped as a speaker label. */
+const NON_SPEAKER_LABEL_WORDS = new Set(['note', 'question', 'answer', 'example', 'tip', 'hint', 'step', 'part', 'option', 'student', 'teacher']);
+const escapeRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 /** Bare stage labels the model sometimes writes in front of a real sentence
- *  ("*opener* はい、…" — same session). Stripped, the sentence itself kept. */
-export function stripLeakedLabels(sentence: string): string {
-  return (sentence ?? '').replace(/^\s*\*(?:opener|opening|ack|acknowledg(?:e)?ment|verdict|recap|closing|bridge)\*\s*/i, '');
+ *  ("*opener* はい、…" — same session). Stripped, the sentence itself kept.
+ *  Task 25 §A5 (GDI run 13, 1214 / 1292 / 1336 s): the persona's name written
+ *  as a script label ("Ryota: 過去完了を…", "Ryota：「…」") — stripped when the
+ *  name is one of `personaNames` (case-insensitive, ASCII or full-width
+ *  colon); with no names known, a single capitalised Latin word label is
+ *  stripped only when a quote follows it (「 “ ") and the word is not a
+ *  content label (Question / Example / …). The rest is kept. */
+export function stripLeakedLabels(sentence: string, personaNames?: string | readonly string[] | null): string {
+  const s = (sentence ?? '').replace(/^\s*\*(?:opener|opening|ack|acknowledg(?:e)?ment|verdict|recap|closing|bridge)\*\s*/i, '');
+  const names = (typeof personaNames === 'string' ? [personaNames] : (personaNames ?? []))
+    .map((n) => (n ?? '').trim()).filter((n) => n.length > 0);
+  if (names.length > 0) {
+    const re = new RegExp(String.raw`^\s*(?:${names.map(escapeRe).sort((a, b) => b.length - a.length).join('|')})\s*[:：]\s*`, 'i');
+    const m = re.exec(s);
+    if (m && s.slice(m[0].length).trim()) return s.slice(m[0].length);
+    return s;
+  }
+  const m = /^\s*([A-Z][a-z]+)\s*[:：]\s*(?=[「“"])/.exec(s);
+  if (m && !NON_SPEAKER_LABEL_WORDS.has(m[1].toLowerCase())) return s.slice(m[0].length);
+  return s;
 }
+
+// Task 25 §A1–A4 (GDI run 13): directive echo ("Keep it brief and use
+// Japanese for the explanation, as the session asks."), third-person plan
+// anywhere ("…, so I'll ask them to finish it."), board narration ("The board
+// already shows the model sentence.", "That sentence is already on the
+// board.") and a retry narrating its own continuation ("Here is the rest of
+// the summary."). Whole-sentence drops. "I'll ask you …", "Let's put it on
+// the board.", "Here is the next question." are speech and survive.
+const DIRECTIVE_ECHO_RE =
+  /\bas the (?:session|lesson|notes?|instructions?|prompt|guidelines?) (?:asks?|says?|requires?|wants?|suggests?)\b|^\s*Keep it (?:brief|short)\b|\b(?:use|in) Japanese for the explanation\b/i;
+const THIRD_PERSON_PLAN_ANYWHERE_RE =
+  /\bI(?:['’]ll| will) (?:ask|tell|have|get|let|help|guide|remind|prompt) (?:them|the student|the learner)\b/i;
+const BOARD_ALREADY_NARRATION_RE =
+  /^\s*(?:The board|It) already (?:shows|has|displays)\b[^.!?]*[.!?]?\s*$|^\s*(?:That|This|The) (?:sentence|question|card|answer) is already (?:on|up on) the board[.!]?\s*$/i;
+const CONTINUATION_NARRATION_RE =
+  /^\s*(?:Here is|Here's|This is) the rest of (?:the|my|your|today's) \w+[.!:]?\s*$/i;
 
 const THIRD_PERSON_PLAN_RE =
   /^\s*let me (?:support|help|guide|redirect|steer|reassure|encourage) them\b/i;
@@ -651,7 +688,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

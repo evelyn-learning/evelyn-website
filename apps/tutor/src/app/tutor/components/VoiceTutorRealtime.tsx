@@ -15344,7 +15344,14 @@ export function VoiceTutorRealtime({
                   }
                   // Leaked stage label in front of a real sentence ("*opener* …",
                   // GDI starter 2026-10-15): strip it before anything reads the text.
-                  if (typeof ev.text === 'string') (ev as { text?: string }).text = stripLeakedLabels(ev.text);
+                  // Task 25 §A5: the persona's name as a script label ("Ryota: …") too.
+                  if (typeof ev.text === 'string') {
+                    const unlabelled = stripLeakedLabels(ev.text, personaNamesRef.current);
+                    if (unlabelled !== ev.text) {
+                      onDebugEvent?.('meta_narration_dropped_speaker_label', `"${ev.text.slice(0, 60)}" → "${unlabelled.slice(0, 60)}"`);
+                      (ev as { text?: string }).text = unlabelled;
+                    }
+                  }
                   // Task 21 §A (GDI run 9): a runtime note cited aloud on ANY turn
                   // ("The pace preference says …") — a colon / quote continuation
                   // keeps its content; an all-citation sentence is left whole

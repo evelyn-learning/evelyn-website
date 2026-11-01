@@ -7,7 +7,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -825,6 +825,31 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   check('24B1: 352 s "The student said "…"" → "You said "…"", then spoken', stripNoteCitationClause(S) === R && !isMetaNarration(R), stripNoteCitationClause(S));
   check('24B1: "The learner said that …" → "You said that …"', stripNoteCitationClause('The learner said that it was late.') === 'You said that it was late.');
   check('24B1: "The student said nothing." still dropped', stripNoteCitationClause('The student said nothing.') === 'The student said nothing.' && isMetaNarration('The student said nothing.'));
+}
+
+// ── Task 25 §A (GDI run 13) ──
+{
+  const spoken = [
+    'Keep it brief and use Japanese for the explanation, as the session asks.',
+    "The sentence is not complete yet, so I'll ask them to finish it.",
+    'The board already shows the model sentence.',
+    'That sentence is already on the board.',
+    'Here is the rest of the summary.',
+  ];
+  for (const x of spoken) check(`25A1–A4: "${x}" → dropped`, isMetaNarration(x));
+  for (const x of ["I'll ask you one more question.", "Let's put it on the board.", 'Here is the next question.', 'Look at the board.', 'The board shows two sentences: one past, one present.']) {
+    check(`25A1–A4: "${x}" kept`, !isMetaNarration(x));
+  }
+  check('25A1: "as the lesson says" anywhere → dropped', isMetaNarration('Two short sentences, as the lesson says.'));
+  check('25A2: "I will help the learner" → dropped', isMetaNarration('Next I will help the learner with the past tense.'));
+  check('25A5: persona label stripped', stripLeakedLabels('Ryota: 「International customers」の部分', ['Ryota Tanaka', 'Ryota']) === '「International customers」の部分');
+  check('25A5: persona label, full-width colon, case-insensitive', stripLeakedLabels('ryota：過去完了を使うつもりなんですね。', ['Ryota']) === '過去完了を使うつもりなんですね。');
+  check('25A5: no names, capitalised word + quote stripped', stripLeakedLabels('Ryota: 「Great work today」です。') === '「Great work today」です。');
+  check('25A5: "Question: What do you do?" untouched', stripLeakedLabels('Question: What do you do?') === 'Question: What do you do?' && stripLeakedLabels('Question: What do you do?', ['Ryota']) === 'Question: What do you do?');
+  check('25A5: "Example: 「…」" untouched with no names', stripLeakedLabels('Example: 「I work in sales」') === 'Example: 「I work in sales」');
+  check('25A5: "Ryota: hello" with no names untouched', stripLeakedLabels('Ryota: hello') === 'Ryota: hello');
+  check('25A5: "*opener*" label still stripped', stripLeakedLabels('*opener* はい、始めましょう。') === 'はい、始めましょう。');
+  check('25A5: another name is not a persona label', stripLeakedLabels('Ken: hello', ['Ryota']) === 'Ken: hello');
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
