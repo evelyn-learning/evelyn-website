@@ -29,7 +29,7 @@ import {
 } from '@/lib/tutor/voice/perception-classifier';
 import { pushTtsScript, applyPlaybackStamp } from '@/lib/tutor/voice/tts-script-buffer';
 import { initialThinkingCue, cueTurnAccepted, cueTick, cueStop, type ThinkingCueState, micChangedLabel, thinkingCueLanguage } from '@/lib/tutor/voice/thinking-cue';
-import { micReacquireDecision, micReacquireReason, MIC_TRACK_MUTED_REACQUIRE_MS, type MicReacquireTrigger } from '@/lib/tutor/voice/mic-reacquire';
+import { micReacquireDecision, micReacquireReason, MIC_TRACK_MUTED_REACQUIRE_MS, defaultInputChanged, type MicReacquireTrigger } from '@/lib/tutor/voice/mic-reacquire';
 import { playTurnChime, playThinkingPulse, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 // Aliased: this file already has a `SessionMode` (opening-behavior's
 // lessonNode/freestyle/diagnostic `targetKind`, unrelated concept) — the
@@ -9770,7 +9770,9 @@ export function VoiceTutorRealtime({
       const target = previousPageTarget(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, paintedSegmentBreak.cmd);
       if (target) {
         processed = processed.map((c) => {
-          if (!isStudentCardCmd(c)) return c;
+          // Fix round 1 (m-1): only the client's own auto cards — a brain show_sentence
+          // after the part page painted may be the new part's deliberate model.
+          if (!opts?.sentenceBoardAuto || !isStudentCardCmd(c)) return c;
           const moved = { ...c, ...target } as WhiteboardCommand;
           toPreviousPage.add(moved);
           movedBeforeBreak.add(moved);
@@ -24415,6 +24417,9 @@ export function VoiceTutorRealtime({
   // notice shows until the first audio frame from the new capture.
   const onStageNoticeRef = useRef(onStageNotice);
   onStageNoticeRef.current = onStageNotice;
+  // Fix round 1 (m-8): live reads — the effect below never re-runs for them.
+  const micTutorLanguagesRef = useRef(tutorLanguages);
+  micTutorLanguagesRef.current = tutorLanguages;
   useEffect(() => {
     if (!TUTOR_MIC_REACQUIRE || sessionMode === 'text' || typeof window === 'undefined') return;
     const md = typeof navigator !== 'undefined' ? navigator.mediaDevices : undefined;
@@ -24430,7 +24435,7 @@ export function VoiceTutorRealtime({
     const showNotice = () => {
       const lastTutor = [...transcriptRef.current].reverse().find((t) => t.role === 'tutor')?.text;
       noticeUp = true;
-      onStageNoticeRef.current?.(micChangedLabel(thinkingCueLanguage(tutorLanguages, typeof lastTutor === 'string' ? lastTutor : undefined)));
+      onStageNoticeRef.current?.(micChangedLabel(thinkingCueLanguage(micTutorLanguagesRef.current, typeof lastTutor === 'string' ? lastTutor : undefined)));
       if (noticeTimer) clearTimeout(noticeTimer);
       noticeTimer = setTimeout(clearNotice, 15_000);
     };
@@ -24452,19 +24457,29 @@ export function VoiceTutorRealtime({
       if (decision !== 'reacquire') return;
       lastReacquireAt = Date.now();
       const reason = micReacquireReason(trigger);
-      onDebugEvent?.('mic_device_changed', reason);
+      onDebugEventRef.current?.('mic_device_changed', reason);
       showNotice();
       reacquireSharedMicStream(reason)
         .then((stream) => {
           mutedSince = null;
-          onDebugEvent?.('mic_reacquired', (stream.getAudioTracks()[0]?.label ?? '').slice(0, 60) || 'default input');
+          onDebugEventRef.current?.('mic_reacquired', (stream.getAudioTracks()[0]?.label ?? '').slice(0, 60) || 'default input');
         })
         .catch((err) => {
           clearNotice();
-          onDebugEvent?.('mic_reacquire_failed', err instanceof Error ? `${err.name}: ${err.message}`.slice(0, 120) : String(err).slice(0, 120));
+          onDebugEventRef.current?.('mic_reacquire_failed', err instanceof Error ? `${err.name}: ${err.message}`.slice(0, 120) : String(err).slice(0, 120));
         });
     };
-    const onDeviceChange = () => run({ kind: 'devicechange' });
+    // Fix round 1 (m-8): only when the default input is no longer the captured device.
+    const onDeviceChange = () => {
+      const trackLive = sharedMicCaptureOpen() && !!getSharedMicLabel();
+      if (!trackLive || typeof md?.enumerateDevices !== 'function') { run({ kind: 'devicechange' }); return; }
+      md.enumerateDevices()
+        .then((list) => {
+          if (defaultInputChanged(list, getSharedMicLabel())) run({ kind: 'devicechange' });
+          else onDebugEventRef.current?.('mic_device_change_ignored', `default input unchanged ("${getSharedMicLabel().slice(0, 40)}")`);
+        })
+        .catch(() => run({ kind: 'devicechange' }));
+    };
     const onTrack = (e: Event) => {
       const kind = (e as CustomEvent<{ kind?: string }>).detail?.kind;
       if (kind === 'ended') run({ kind: 'track-ended' });
@@ -24482,8 +24497,7 @@ export function VoiceTutorRealtime({
       if (muteTimer) clearTimeout(muteTimer);
       clearNotice();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionMode, onDebugEvent]);
+  }, [sessionMode]);
 
   // Student marks (Phase 1) idle-send: fires ~4s after the last mark, ONLY
   // when the tutor is not speaking (productionStateRef, the existing

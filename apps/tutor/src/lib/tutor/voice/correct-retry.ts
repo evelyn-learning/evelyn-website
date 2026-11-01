@@ -176,7 +176,8 @@ export const REPEAT_ASK_THIRD_VERSION_REASON = withSilentClause(
 /** Task 27 §D3: a tutor turn that CORRECTS the student — a quoted model
  *  sentence (3+ words) with a correction cue ("should be", "so it's", "the
  *  natural form is", "let's fix", or sentence-board's hasCorrectionCue). */
-const CORRECTION_TURN_CUE_RE = /\b(?:should be|so it['’]s|the natural (?:form|way)\b[^.!?]*\bis|let['’]s fix|the correct (?:form|sentence) is)\b/i;
+// Fix round 1 (m-5): "should be" / "so it's" count only when they lead into a quote.
+const CORRECTION_TURN_CUE_RE = /\b(?:should be|so it['’]s)\s*["“「]|\b(?:the natural (?:form|way)\b[^.!?]*\bis|let['’]s fix|the correct (?:form|sentence) is)\b/i;
 const QUOTED_MODEL_RE = /["“「]\s*[A-Za-z][^"”」]*?(?:\s+[A-Za-z'’,-]+){2,}[^"”」]*["”」]/;
 export function isCorrectionTurn(text: string | null | undefined): boolean {
   const t = text ?? '';

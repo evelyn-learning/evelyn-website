@@ -38,3 +38,18 @@ export function micReacquireDecision(
 export function micReacquireReason(trigger: MicReacquireTrigger): string {
   return trigger.kind === 'track-muted' ? `track-muted ${(trigger.mutedForMs / 1000).toFixed(1)}s` : trigger.kind;
 }
+
+/** Fix round 1 (m-8): `devicechange` also fires for output-only or unrelated
+ *  devices. The capture is re-acquired only when the system DEFAULT input is
+ *  no longer the device being captured (labels compared without the
+ *  "Default - " wrapper), or the default cannot be read. */
+export function defaultInputChanged(
+  devices: ReadonlyArray<{ kind: string; deviceId: string; label: string }>,
+  currentLabel: string,
+): boolean {
+  const norm = (x: string) => x.trim().toLowerCase().replace(/^default\s*-\s*/, '');
+  const inputs = devices.filter((d) => d.kind === 'audioinput');
+  const def = inputs.find((d) => d.deviceId === 'default') ?? inputs[0];
+  if (!def || !def.label.trim() || !currentLabel.trim()) return true;
+  return norm(def.label) !== norm(currentLabel);
+}

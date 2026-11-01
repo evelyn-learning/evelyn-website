@@ -271,6 +271,8 @@ test('27D3: correction turn → the repeat directive; plain statement → the ex
   for (const t of ['The natural form is "I have worked here for three years."', 'Small fix: we say "I went to the office yesterday."']) {
     assert.equal(fixedScriptContinueDirective({ via: 'noask', prevTutorText: t }).kind, 'correction', t);
   }
+  // fix round 1 (m-5): "so it's" / "should be" must lead into the quote
+  assert.equal(isCorrectionTurn('You said "I went to Kyoto last year", so it\'s past tense.'), false);
   for (const t of ['Let me put the correct sentence on the board and move on.', 'Good, "I work in the sales department" is a clear sentence.', 'That should be fun.']) {
     const p = fixedScriptContinueDirective({ via: 'noask', prevTutorText: t });
     assert.equal(p.kind, 'noask', t);

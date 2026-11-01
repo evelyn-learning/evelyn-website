@@ -55,6 +55,9 @@ export function askOffNewPart(ask: string, cardStatement: string): boolean {
   // (normalised) or whose content tokens all appear in the card is on-part.
   const askTokens = [...new Set(contentTokens(ask))];
   if (askTokens.length < 2) return false;
+  // Task 27 fix round 1 (m-7): on a choice-menu card, a pick question ("Which
+  // option would you like to practise?") is the part's own ask.
+  if (boardOffersChoices({ statement: cardStatement }) && /\b(?:which|choose|pick|option|options|number)\b/i.test(ask)) return false;
   const card = new Set(contentTokens(cardStatement));
   if (card.size < 2) return false; // nothing to compare against
   const askNorm = latinWords(ask);

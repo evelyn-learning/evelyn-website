@@ -870,6 +870,7 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
     "Now it's a good moment to ask about the result.",
   ];
   for (const x of spoken) check(`27D1: "${x}" → dropped`, isMetaNarration(x));
+  check('27 r1 m-4: an imperative lead with a question after the colon is kept', !isMetaNarration('Reply in one sentence: what did you do?'));
   for (const x of ['Could you try it once more?', 'Now, how did people respond to your email?', 'Be careful with the article.', 'Please be careful with "the".', 'The next question is about your project.', 'Confirm your answer with a full sentence.']) {
     check(`27D1: "${x}" kept`, !isMetaNarration(x));
   }

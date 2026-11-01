@@ -1285,7 +1285,9 @@ test('27A: the 87 s inputs → exactly one card, the correction (in-call and wit
   // a second plan call of the same turn that would card only the student's sentence sees the record
   const second = planSentenceBoard({ ...inp, tutorText: "That's a useful detail. Now, what is one skill you'd like to improve?", cardedStudentSentence: rec });
   assert.deepEqual(second, [], JSON.stringify(second));
-  // the levelcheck plan first (fresh record), then the correction plan: the correction is carded
+  // the levelcheck plan first (fresh record), then the correction plan: both are carded — this order
+  // is unreachable today (VTR has exactly ONE planSentenceBoard call per turn, at turn end), so the
+  // in-call rule above is the fix; the record only covers a later call after a correction (fix round 1, m-6)
   const rec2 = new Set<string>();
   const lc = planSentenceBoard({ ...inp, tutorText: "That's a useful detail. Now, what is one skill you'd like to improve?", cardedStudentSentence: rec2 });
   assert.deepEqual(lc.map((c) => c.source), ['levelcheck']);

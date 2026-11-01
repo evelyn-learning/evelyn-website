@@ -73,5 +73,11 @@ test('27E1: the 958 s turn — brain advance, ask "read the sentence on the boar
   assert.ok(v.includes('advancedThisTurn: currentSegmentIdRef.current !== turnStartSegmentId,'));
 });
 
+test('27 r1 m-7: a pick question on a choice-menu card is on-part', () => {
+  for (const x of ['Shall we pick one of these options?', 'Which option would you like to practise?', 'Which number would you like?']) assert.equal(askOffNewPart(x, CARD), false, x);
+  assert.equal(askOffNewPart('Can you read the sentence on the board aloud for me?', CARD), true, '958 s still off');
+  assert.equal(askOffNewPart('Which seminar did you attend last year?', 'We use the past simple for finished events at a time in the past.'), true, 'no menu ⇒ the token rule');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall transition-ask tests passed');

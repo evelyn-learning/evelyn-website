@@ -6,7 +6,7 @@
  * now offers a one-tap switch; this rule picks WHICH device to offer.
  */
 import { pickFallbackMicDevice } from '../src/lib/tutor/voice/mic-devices';
-import { micReacquireDecision, micReacquireReason, MIC_TRACK_MUTED_REACQUIRE_MS, MIC_REACQUIRE_COOLDOWN_MS } from '../src/lib/tutor/voice/mic-reacquire';
+import { micReacquireDecision, micReacquireReason, MIC_TRACK_MUTED_REACQUIRE_MS, MIC_REACQUIRE_COOLDOWN_MS, defaultInputChanged } from '../src/lib/tutor/voice/mic-reacquire';
 
 let failures = 0;
 function check(name: string, actual: unknown, expected: unknown) {
@@ -90,6 +90,14 @@ check('empty device list → null', pickFallbackMicDevice([], 'Current', []), nu
   check('27G: track ended ignores the cooldown', micReacquireDecision({ kind: 'track-ended' }, { ...live, sinceLastReacquireMs: 10 }), 'reacquire');
   check('27G: no capture open / flag off → ignore',
     [micReacquireDecision({ kind: 'devicechange' }, { ...live, captureOpen: false }), micReacquireDecision({ kind: 'track-ended' }, { ...live, enabled: false })], ['ignore', 'ignore']);
+  const DEV = [
+    { kind: 'audioinput', deviceId: 'default', label: 'Default - MacBook Air Microphone (Built-in)' },
+    { kind: 'audioinput', deviceId: 'a1', label: 'AirPods Pro' },
+    { kind: 'audiooutput', deviceId: 'default', label: 'Default - AirPods Pro' },
+  ];
+  check('27 r1 m-8: the default input moved off the captured device → changed', defaultInputChanged(DEV, 'AirPods Pro'), true);
+  check('27 r1 m-8: the default input is the captured device (an output changed) → unchanged', defaultInputChanged(DEV, 'MacBook Air Microphone (Built-in)'), false);
+  check('27 r1 m-8: no labels (no permission) → changed (re-acquire)', defaultInputChanged([{ kind: 'audioinput', deviceId: 'default', label: '' }], 'AirPods Pro'), true);
   check('27G: reasons', [micReacquireReason({ kind: 'devicechange' }), micReacquireReason({ kind: 'track-ended' }), micReacquireReason({ kind: 'track-muted', mutedForMs: 3100 })], ['devicechange', 'track-ended', 'track-muted 3.1s']);
 }
 

@@ -417,7 +417,8 @@ const DIRECTIVE_ECHO_NOTE_RE = new RegExp(
   [
     String.raw`^\s*(?:Hmm,?\s*)?I (?:need|have) to be careful\b`,
     String.raw`\bthe last thing I said was an? \w+\b`,
-    String.raw`^\s*(?:Confirm|Acknowledge|Affirm|Reply|Respond|Answer)(?: plainly| briefly| in one sentence)?(?: and move on)?\s*:`,
+    // fix round 1 (m-4): not when the text after the colon is a question to the student
+    String.raw`^\s*(?:Confirm|Acknowledge|Affirm|Reply|Respond|Answer)(?: plainly| briefly| in one sentence)?(?: and move on)?\s*:(?![^:]*\?\s*$)`,
     String.raw`\bit['’]s a good moment to\b`,
     String.raw`^\s*(?:The|My) next question is about\b[^.!?]*\b(?:and|so) it['’]s\b`,
   ].join('|'),

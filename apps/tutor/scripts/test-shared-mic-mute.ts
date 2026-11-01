@@ -127,7 +127,8 @@ void (async () => {
   check('G: the student\'s mute survives a swap (track disabled)', (h.getAudioTracks()[0] as unknown as FakeTrack).enabled === false);
   const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('G: VTR listens for devicechange + the track events, events named', vtr.includes("md?.addEventListener?.('devicechange', onDeviceChange);") && vtr.includes("window.addEventListener('evelyn:shared-mic-track', onTrack);")
-    && vtr.includes("onDebugEvent?.('mic_device_changed', reason);") && vtr.includes("onDebugEvent?.('mic_reacquired', ") && vtr.includes("onDebugEvent?.('mic_reacquire_failed', "));
+    && vtr.includes("onDebugEventRef.current?.('mic_device_changed', reason);") && vtr.includes("onDebugEventRef.current?.('mic_reacquired', ") && vtr.includes("onDebugEventRef.current?.('mic_reacquire_failed', ")
+    && vtr.includes('if (defaultInputChanged(list, getSharedMicLabel())) run({ kind: \'devicechange\' });'));
   for (const hook of ['useCartesiaInkWS', 'useOpenAIRealtime']) {
     const src = readFileSync(join(__dirname, '..', `src/app/tutor/hooks/${hook}.ts`), 'utf8');
     check(`G: ${hook} follows swaps without touching its WebSocket`, src.includes('followSharedMicSwaps(ctx, source, processor, ') && src.includes('noteSharedMicFrame();'));
