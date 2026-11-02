@@ -1057,5 +1057,11 @@ check('S7: "Let me ask you about your job." ⇒ kept', !isMetaNarration('Let me 
   check('E1: VTR filters the done-frame backfill', VE1.includes('const filtered = filterNarrationText(doneBackfill,') && VE1.includes("attemptText = (voiceVerdictCut ? attemptText : ((attemptText || doneBackfill) ?? '')).trim();"));
 }
 
+// Task 30 fix round 2 E4 (r1 63 s): the brain's board instruction to itself.
+check('E4: "Please show this one on the board." ⇒ dropped', isMetaNarration('Please show this one on the board.'));
+check('E4: "Put the sentence up on the board." ⇒ dropped', isMetaNarration('Put the sentence up on the board.'));
+check('E4: "Look at the board." kept', !isMetaNarration('Look at the board.'));
+check('E4: "Read the question on the board." kept', !isMetaNarration('Read the question on the board.'));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
