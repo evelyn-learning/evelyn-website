@@ -223,7 +223,7 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { splitSentenceForTts, keptRestRemoved } from '@/lib/tutor/voice/tts-language';
-import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isPlanContinuationSentence, doneTurnText } from '@/lib/tutor/voice/meta-narration';
+import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isThankAck, isRepeatThankAck, isPlanContinuationSentence, doneTurnText } from '@/lib/tutor/voice/meta-narration';
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish, replaceLastStudentEntry, rememberStudentEntryId } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
@@ -14502,6 +14502,8 @@ export function VoiceTutorRealtime({
         const attemptNarrationStart = turnNarrationRef.current.length;
         // Task 30 §F1: the attempt's last sentence that passed the per-sentence filters.
         let adjacentPrevSentence = '';
+        // Task 31 §H1: a thank-you ack was spoken in this attempt.
+        let thankAckSpoken = false;
         // Task 30 fix round 3 (P-2): stream sentences this attempt (kept or dropped).
         let streamSentencesThisAttempt = 0;
         // Task 30 fix round 1 S2: the attempt's previous sentence was dropped as narration.
@@ -17077,6 +17079,12 @@ export function VoiceTutorRealtime({
                     onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" after "${adjacentPrevSentence.slice(0, 40)}"`);
                     continue;
                   }
+                  // Task 31 §H1 (GDI run 18, 71 s): a second ack-only thank-you in one turn.
+                  if (TUTOR_ADJACENT_DUPLICATE_DROP && isRepeatThankAck(thankAckSpoken, updatedSentence)) {
+                    onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" (second thank-you ack)`);
+                    continue;
+                  }
+                  if (isThankAck(updatedSentence)) thankAckSpoken = true;
                   adjacentPrevSentence = updatedSentence;
                   // The derivation that follows the announcement is ordinary
                   // maths with no per-sentence signature — dropped by position

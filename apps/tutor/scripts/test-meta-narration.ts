@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -1005,7 +1005,7 @@ check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("
   check('30F1: different content ⇒ kept', !isAdjacentDuplicate("Let's move on to the next part now.", 'Tell me one more thing about a past event.'));
   check('30F1: no previous sentence ⇒ kept', !isAdjacentDuplicate('', "Let's go on to the next part."));
   const VTRF = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('30F1: VTR drops it per sentence, after the continuation duplicate check', /continuation_duplicate_dropped[\s\S]{0,300}?if \(TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate\(adjacentPrevSentence, updatedSentence\)\) \{\s*onDebugEvent\?\.\('adjacent_duplicate_sentence_dropped',[\s\S]{0,200}?continue;\s*\}\s*adjacentPrevSentence = updatedSentence;/.test(VTRF));
+  check('30F1: VTR drops it per sentence, after the continuation duplicate check', /continuation_duplicate_dropped[\s\S]{0,300}?if \(TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate\(adjacentPrevSentence, updatedSentence\)\) \{\s*onDebugEvent\?\.\('adjacent_duplicate_sentence_dropped',[\s\S]{0,200}?continue;\s*\}[\s\S]{0,600}?adjacentPrevSentence = updatedSentence;/.test(VTRF));
 }
 
 // Task 30 fix round 1 S2 (smoke run 334 s): a spoken multi-clause plan; a plan that continues after a dropped narration.
@@ -1266,6 +1266,16 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('31E: "We\'ll finish the lesson with a summary." kept', keep("We'll finish the lesson with a summary."));
   check('31E: "Read the sentence below." kept (one position word)', keep('Read the sentence below.'));
   check('31E: "We\'re not finished with this part yet, are you ready for one more?" kept', keep("We're not finished with this part yet, are you ready for one more?"));
+}
+
+// Task 31 fix round 9 §H1 (GDI run 18, 71 s): a second ack-only thank-you in one turn is dropped.
+{
+  check('31H1: "Thank you, that\'s helpful to know." is a thank-you ack', isThankAck("Thank you, that's helpful to know."));
+  check('31H1: "Thank you for sharing that." after one ⇒ dropped', isRepeatThankAck(true, 'Thank you for sharing that.'));
+  check('31H1: the first ack is never dropped', !isRepeatThankAck(false, 'Thank you for sharing that.'));
+  check('31H1: a thank-you with content after it is kept', !isRepeatThankAck(true, 'Thank you, you worked with a customer from Canada last year, so that is a real experience.'));
+  const VTR31 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('31H1: VTR drops it in the stream', VTR31.includes('if (TUTOR_ADJACENT_DUPLICATE_DROP && isRepeatThankAck(thankAckSpoken, updatedSentence)) {') && VTR31.includes('if (isThankAck(updatedSentence)) thankAckSpoken = true;'));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

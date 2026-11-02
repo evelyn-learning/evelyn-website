@@ -1329,6 +1329,18 @@ function adjacentDuplicateWords(s: string): string[] {
     .replace(/\b(?:go|move|moving|carry|going) on\b/g, ' moveon ');
   return t.match(/[\p{L}\p{N}]+(?:'[\p{L}]+)*/gu) ?? [];
 }
+/** Task 31 §H1 (GDI run 18, 71 s: "Thank you, that's helpful to know. Here's
+ *  the last question. Thank you for sharing that."): a second thank-you ack in
+ *  one turn. The stream has already spoken the first, so the LATER one goes
+ *  when it is ack-only ("Thank you (so much) (for sharing / telling me …)."). */
+const THANK_ACK_LEAD_RE = /^\s*(?:thank you|thanks)\b/i;
+const THANK_ACK_ONLY_RE = /^\s*(?:thank you|thanks)(?: (?:so|very) much)?(?:,? (?:for (?:sharing|telling me|your answer|that)\b[^.!?]{0,30}))?[.!]?\s*$/i;
+export function isThankAck(s: string | null | undefined): boolean {
+  return THANK_ACK_LEAD_RE.test(s ?? '');
+}
+export function isRepeatThankAck(ackAlreadySpoken: boolean, s: string | null | undefined): boolean {
+  return ackAlreadySpoken && THANK_ACK_ONLY_RE.test(s ?? '');
+}
 export function isAdjacentDuplicate(prev: string | null | undefined, cur: string | null | undefined): boolean {
   const p = prev ?? '';
   const c = cur ?? '';
