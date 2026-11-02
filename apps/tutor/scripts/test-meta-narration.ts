@@ -983,6 +983,16 @@ check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("
   check('30F1: the 688 s pair ⇒ the second dropped', isAdjacentDuplicate("Let's move on to the next part now.", "Let's go on to the next part."));
   check('30F1: "Good." / "Good job." ⇒ kept (under 3 content tokens)', !isAdjacentDuplicate('Good.', 'Good job.'));
   check('30F1: "Say it again." / "Say it once more." ⇒ kept (the normaliser does not fold again / once more)', !isAdjacentDuplicate('Say it again.', 'Say it once more.'));
+  for (const [a, b] of [
+    ['I have worked here for five years.', 'I worked here for five years.'],
+    ['I have lived in Nagoya for three years.', 'I lived in Nagoya for three years.'],
+    ['She has finished the report.', 'Has she finished the report?'],
+    ['Are you a teacher?', 'You are a teacher.'],
+    ['2 times 3 is 6.', '3 times 2 is 6.'],
+    ['I have work at Toyota for five years.', 'I have worked at Toyota for five years.'],
+    ['Listen: "I was responsible for communicating with our customers."', '"I was responsible for communicating with our customers."'],
+  ]) check(`30F1 r1 (I-1): "${a}" / "${b}" ⇒ kept`, !isAdjacentDuplicate(a, b));
+  check('30F1 r1: a filler-only difference ⇒ dropped', isAdjacentDuplicate('Okay, let\'s look at the board.', 'Let\'s look at the board now.'));
   check('30F1: different content ⇒ kept', !isAdjacentDuplicate("Let's move on to the next part now.", 'Tell me one more thing about a past event.'));
   check('30F1: no previous sentence ⇒ kept', !isAdjacentDuplicate('', "Let's go on to the next part."));
   const VTRF = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');

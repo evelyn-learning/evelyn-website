@@ -985,25 +985,30 @@ export function markCorrectionNoteWorking(sentences: string[], answersCorrection
 /**
  * Task 30 §F1 (GDI run 17, 688 s SPOKEN: "Let's move on to the next part now.
  * Let's go on to the next part."): two near-identical sentences back to back
- * in one turn. True when `cur` has ≥ 3 content tokens and their content-token
- * Jaccard with `prev` (the turn's preceding kept sentence) is ≥ 0.75, after
- * folding go on / moving on / carry on / move on to one token and dropping
- * now / then / next and a few function words. Pure, generic.
+ * in one turn. Fix round 1 (I-1): ORDERED tokens — `cur` is a duplicate of
+ * `prev` only when their word sequences are equal once go on / moving on /
+ * carry on / move on are folded to one token and filler words (let's, now,
+ * then, next, so, okay, ok, well, just, again) are removed. A sentence with
+ * a quote or a digit / number word is never a duplicate, so a tense contrast
+ * ("I have worked …" / "I worked …"), a question formation or a commutative
+ * maths line is always kept. `cur` needs ≥ 3 words. Pure, generic.
  */
-const ADJ_DUP_STOP = new Set(['a', 'an', 'the', 'to', 'of', 'and', 'or', 'is', 'it', 'now', 'then', 'next']);
-function adjacentDuplicateTokens(s: string): string[] {
+const ADJ_DUP_FILLER = new Set(["let's", 'lets', 'now', 'then', 'next', 'so', 'okay', 'ok', 'well', 'just', 'again']);
+const ADJ_DUP_NUMBER_RE = /\d|\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|hundred|thousand)\b/i;
+const ADJ_DUP_QUOTE_RE = /["“”「」『』]/;
+function adjacentDuplicateWords(s: string): string[] {
   const t = (s ?? '').toLowerCase().replace(/[’]/g, "'")
     .replace(/\b(?:go|move|moving|carry|going) on\b/g, ' moveon ');
-  return (t.match(/[\p{L}\p{N}]+(?:'[\p{L}]+)*/gu) ?? []).filter((w) => !ADJ_DUP_STOP.has(w));
+  return t.match(/[\p{L}\p{N}]+(?:'[\p{L}]+)*/gu) ?? [];
 }
-export const ADJACENT_DUPLICATE_JACCARD = 0.75;
 export function isAdjacentDuplicate(prev: string | null | undefined, cur: string | null | undefined): boolean {
-  const b = adjacentDuplicateTokens(cur ?? '');
-  if (b.length < 3) return false;
-  const a = new Set(adjacentDuplicateTokens(prev ?? ''));
-  if (a.size === 0) return false;
-  const bs = new Set(b);
-  let inter = 0;
-  for (const x of bs) if (a.has(x)) inter += 1;
-  return inter / (a.size + bs.size - inter) >= ADJACENT_DUPLICATE_JACCARD;
+  const p = prev ?? '';
+  const c = cur ?? '';
+  if (!p.trim() || !c.trim()) return false;
+  if (ADJ_DUP_QUOTE_RE.test(p) || ADJ_DUP_QUOTE_RE.test(c) || ADJ_DUP_NUMBER_RE.test(p) || ADJ_DUP_NUMBER_RE.test(c)) return false;
+  const cw = adjacentDuplicateWords(c);
+  if (cw.length < 3) return false;
+  const a = adjacentDuplicateWords(p).filter((w) => !ADJ_DUP_FILLER.has(w));
+  const b = cw.filter((w) => !ADJ_DUP_FILLER.has(w));
+  return b.length > 0 && a.length === b.length && a.every((w, i) => w === b[i]);
 }
