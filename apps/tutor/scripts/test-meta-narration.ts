@@ -1150,5 +1150,12 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('R3-3: "Your level of detail is great." kept', !isMetaNarration('Your level of detail is great.'));
 }
 
+// Task 30 fix round 4 R3-5b (run r3 858 s): a Japanese narration lead.
+{
+  check('R3-5b: 「このやり取りは、次の練習に進むところです。」 ⇒ dropped', isMetaNarration('このやり取りは、次の練習に進むところです。'));
+  check('R3-5b: 「今のターンは確認です。」 ⇒ dropped', isMetaNarration('今のターンは確認です。'));
+  check('R3-5b: 「この文は現在完了です。」 kept', !isMetaNarration('この文は現在完了です。'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
