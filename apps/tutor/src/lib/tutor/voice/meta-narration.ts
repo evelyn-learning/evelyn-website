@@ -513,7 +513,43 @@ const JUDGING_NARRATION_RE = /\bthe (?:stutter|hesitation|repeat|filler)\b[^.!?;
 export function isNotePlanNarration(sentence: string): boolean {
   const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' '));
   return (NOTE_STATE_REASON_RE.test(s) && !NOTE_PLAN_ADDRESSES_RE.test(s)) || PLAN_ASK_THIRD_PERSON_RE.test(s) || PLAN_THIRD_PERSON_WANTS_RE.test(s)
-    || NOTE_PLAN_CLAUSE_RE.test(s) || (NOTE_PLAN_SHOULD_RE.test(s) && STUDENT_OUTPUT_RE.test(s)) || JUDGING_NARRATION_RE.test(s);
+    || NOTE_PLAN_CLAUSE_RE.test(s) || (NOTE_PLAN_SHOULD_RE.test(s) && STUDENT_OUTPUT_RE.test(s)) || JUDGING_NARRATION_RE.test(s)
+    || isImperativePlanSentence(s);
+}
+/**
+ * Task 30 fix round 1 S2 (smoke run 334 s SPOKEN: `Gently point that out,
+ * model the pattern, and ask for one sentence starting with "I have
+ * worked".` — the tutor's plan for the turn, read aloud after the sentence
+ * before it was dropped as narration). Tutor-plan verbs: point that / this /
+ * it out, model, ask for, name, acknowledge, accept, praise, note, confirm,
+ * keep, move on, redirect, steer (an optional -ly adverb / then / first in
+ * front).
+ *  (a) isImperativePlanSentence: ≥ 2 comma / "and"-joined imperative clauses
+ *      led by those verbs, with no second-person address (you / your /
+ *      let's) — dropped wherever it stands;
+ *  (b) isPlanContinuationSentence: the sentence right after a dropped
+ *      narration sentence that opens with an adverb or one of those verbs
+ *      and addresses no one — the plan goes on across sentences (the caller
+ *      knows what was dropped).
+ * "Point to the board and read the sentence." (no plan verb) and "Try
+ * starting with "I have worked", and tell me about your work …" (addressed)
+ * are kept. Quoted spans are blanked first. Pure, generic.
+ */
+const PLAN_VERB_LEAD_RE = /^(?:(?:\w+ly|then|first|now)\s+)?(?:point (?:that|this|it) out|model|ask for|name|acknowledge|accept|praise|note|confirm|keep|move on|redirect|steer)\b/i;
+const PLAN_ADDRESS_RE = /\b(?:you|your|yours|let['’]?s|let us)\b/i;
+const PLAN_ADVERB_LEAD_RE = /^\s*(?:\w+ly|then|first)\b/i;
+function planClauses(sentence: string): string[] {
+  return sentence.replace(/[.!?]+\s*$/, '').split(/\s*,\s*(?:and\s+|then\s+)?|\s+and\s+(?:then\s+)?/i).map((c) => c.trim()).filter(Boolean);
+}
+export function isImperativePlanSentence(sentence: string): boolean {
+  const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' '));
+  if (!s.trim() || PLAN_ADDRESS_RE.test(s)) return false;
+  return planClauses(s).filter((c) => PLAN_VERB_LEAD_RE.test(c)).length >= 2;
+}
+export function isPlanContinuationSentence(sentence: string): boolean {
+  const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' ')).trim();
+  if (!s || PLAN_ADDRESS_RE.test(s) || /[?？]/.test(s)) return false;
+  return PLAN_VERB_LEAD_RE.test(s) || PLAN_ADVERB_LEAD_RE.test(s);
 }
 /** Task 30 §E1: the learner still in the third person outside quotes. */
 const THIRD_PERSON_RESIDUE_RE = /\b(?:them|their|the student(?:['’]s)?|the learner(?:['’]s)?)\b/i;

@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isAdjacentDuplicate } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -1005,6 +1005,19 @@ check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("
   check('30F1: no previous sentence ⇒ kept', !isAdjacentDuplicate('', "Let's go on to the next part."));
   const VTRF = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('30F1: VTR drops it per sentence, after the continuation duplicate check', /continuation_duplicate_dropped[\s\S]{0,300}?if \(TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate\(adjacentPrevSentence, updatedSentence\)\) \{\s*onDebugEvent\?\.\('adjacent_duplicate_sentence_dropped',[\s\S]{0,200}?continue;\s*\}\s*adjacentPrevSentence = updatedSentence;/.test(VTRF));
+}
+
+// Task 30 fix round 1 S2 (smoke run 334 s): a spoken multi-clause plan; a plan that continues after a dropped narration.
+{
+  const S334 = 'Gently point that out, model the pattern, and ask for one sentence starting with "I have worked".';
+  check('S2: the 334 s sentence ⇒ dropped (≥ 2 plan clauses, unaddressed)', isImperativePlanSentence(S334) && isMetaNarration(S334));
+  check('S2: … and a plan continuation after a dropped sentence', isPlanContinuationSentence(S334));
+  for (const kept of ['Point to the board and read the sentence.', 'Try starting with "I have worked", and tell me about your work on the product launch.', 'Good example.', "That's about the past, though, so let's use the present perfect."]) {
+    check(`S2: "${kept}" kept`, !isImperativePlanSentence(kept) && !isMetaNarration(kept) && !isPlanContinuationSentence(kept));
+  }
+  check('S2: a single plan-verb sentence is only a continuation (not dropped alone)', !isMetaNarration('Model the pattern once.') && isPlanContinuationSentence('Model the pattern once.'));
+  const VS2 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('S2: VTR drops the continuation after a dropped narration sentence', /prevSentenceDroppedAsNarration = true;\s*continue;\s*\}[\s\S]{0,400}?if \(prevSentenceDroppedAsNarration && isPlanContinuationSentence\(updatedSentence\)\) \{\s*onDebugEvent\?\.\('meta_narration_dropped_plan_continuation'/.test(VS2));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
