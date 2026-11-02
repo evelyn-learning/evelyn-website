@@ -203,8 +203,20 @@ const DENYING_OPENER_RE = /^(?:no|nope|not\b|close|so\s+close|almost|nearly|inco
  *  its start ("…so that is not quite right", "…which is correct"). Explicit
  *  phrases only: "<something> is right" on its own is ordinary teaching prose
  *  ("your setup is right, but…" is partial credit and reads as neither). */
+// Task 29 §J2 (GDI run 16, 1525 s: "The meaning is reversed, so let me
+// correct it." after a CORRECT answer read as no verdict — the
+// denied_correct cut never fired): "is / are / was / were reversed /
+// backwards / the other way round / swapped" and "(so) let me correct it /
+// that / this / you" (LET_ME_CORRECT_RE, not after a praise lead) deny. "Let
+// me correct one small thing: …" is unchanged (no it / that / this / you
+// after "correct"), and so is "Good, let me correct that slip." (no verdict).
 const INLINE_DENY_RE =
-  /\b(?:(?:that|this|it|which)(?:'?s|\s+is|\s+was)\s+(?:not\s+(?:quite\s+)?(?:right|correct|it)\b|incorrect\b|wrong\b)|(?:that|this|it)\s+(?:isn'?t|wasn'?t)\s+(?:quite\s+)?(?:right|correct)\b|not\s+quite\s+(?:right|correct|there)\b)/i;
+  /\b(?:(?:that|this|it|which)(?:'?s|\s+is|\s+was)\s+(?:not\s+(?:quite\s+)?(?:right|correct|it)\b|incorrect\b|wrong\b)|(?:that|this|it)\s+(?:isn'?t|wasn'?t)\s+(?:quite\s+)?(?:right|correct)\b|not\s+quite\s+(?:right|correct|there)\b|(?:is|are|was|were)\s+(?:reversed|backwards|the\s+other\s+way\s+(?:a)?round|swapped)\b)/i;
+/** Task 29 §J2: "(so) let me correct it / that / this / you" — a denial unless
+ *  the sentence opens with praise ("Good, let me correct that slip." keeps
+ *  its pre-Task-29 reading). */
+const LET_ME_CORRECT_RE = /\b(?:so\s+)?let\s+me\s+correct\s+(?:it|that|this|you)\b/i;
+const PRAISE_LEAD_RE = /^[*_~`\s"'“(]*(?:good|great|nice|yes|yep|yeah|right|correct|perfect|exactly|excellent|well done)\b/i;
 const INLINE_AFFIRM_RE =
   /\b(?:(?:that|this|which)(?:'?s|\s+is|\s+was)\s+(?:exactly\s+|absolutely\s+)?(?:right|correct)\b|you(?:'?re|\s+are|\s+were)\s+(?:exactly\s+|absolutely\s+)?(?:right|correct)\b|you(?:'?ve)?\s+got\s+it\b|you\s+had\s+it\b|spot\s+on\b|exactly\s+right\b)/i;
 /** An affirmation the opener readers leave alone because a comma follows the
@@ -268,7 +280,7 @@ export function sentenceVerdictStance(sentence: string, studentText?: string): V
   if (match === 'differs') return 'deny';
   // A plain question asserts nothing.
   if (/\?\s*$/.test(s) && !/\s[—–]\s|;\s/.test(s)) return null;
-  const deny = INLINE_DENY_RE.test(s) || SPOKEN_DIFFERS_RE.test(s);
+  const deny = INLINE_DENY_RE.test(s) || SPOKEN_DIFFERS_RE.test(s) || (LET_ME_CORRECT_RE.test(s) && !PRAISE_LEAD_RE.test(s));
   const affirm = !deny && (INLINE_AFFIRM_RE.test(s) || COMMA_AFFIRM_RE.test(s) || PRAISE_THEN_AGREES_RE.test(s) || PRAISE_FOR_EYE_RE.test(s) || TRAILING_PRAISE_RE.test(s) || SPOKEN_MATCHES_RE.test(s));
   if (deny && /\b(?:actually|after\s+all)\b/i.test(s)) return null; // a reversal inside one sentence: other guards own it
   return deny ? 'deny' : affirm ? 'affirm' : null;

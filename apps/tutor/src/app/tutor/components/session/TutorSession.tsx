@@ -1695,6 +1695,11 @@ export default function TutorSession(props: TutorSessionProps) {
         level={level}
         studentName={studentName || undefined}
         hasOpenQuestion={questionPin != null}
+        // Task 29 §J1: the lesson closed — the pin is no longer an open question.
+        onLessonClosed={(source) => {
+          onDebugEvent?.('qpin_cleared_closed', `${source}${questionPin ? ` — "${questionPin.gist.slice(0, 60)}"` : ' — no pin'}`);
+          setQuestionPin(null);
+        }}
         studentId={studentId}
         embedToken={embedToken}
         socialMemory={socialMemory}

@@ -782,6 +782,24 @@ async function main() {
     }
   });
 
+  // Task 29 §J2 (GDI run 16, 1525 s): "The meaning is reversed, so let me correct it." after a correct answer.
+  await test('29J2: a "reversed / backwards / swapped" or "let me correct it" sentence denies', () => {
+    assert.equal(sentenceVerdictStance('The meaning is reversed, so let me correct it.'), 'deny');
+    assert.equal(sentenceVerdictStance('The two meanings are backwards.'), 'deny');
+    assert.equal(sentenceVerdictStance('The order was swapped.'), 'deny');
+    assert.equal(sentenceVerdictStance('Those two are the other way round.'), 'deny');
+    assert.equal(sentenceVerdictStance('Let me correct that for you.'), 'deny');
+    // documented, unchanged: "Let me correct one small thing: …" carries no verdict (no it / that / this / you)
+    assert.equal(sentenceVerdictStance('Let me correct one small thing: say "the USA".'), null);
+    // documented, unchanged: after a praise lead "let me correct that" stays no verdict (as before Task 29)
+    assert.equal(sentenceVerdictStance('Good, let me correct that small slip.'), null);
+    // …and a separate affirm opener sentence keeps its affirm
+    assert.equal(sentenceVerdictStance("That's right."), 'affirm');
+    // the precheck-correct + deny path fires (denied_correct)
+    const pcCorrect = { verdict: 'correct', confidence: 'high', answers: 'open_question', proposed: 'x' } as unknown as Parameters<typeof stanceContradictsPrecheck>[0];
+    assert.equal(stanceContradictsPrecheck(pcCorrect, sentenceVerdictStance('The meaning is reversed, so let me correct it.')!), 'denied_correct');
+  });
+
   console.log(`\n${failed === 0 ? `All ${passed} voice-judging tests passed.` : `${failed} FAILED, ${passed} passed.`}`);
   process.exit(failed === 0 ? 0 : 1);
 }

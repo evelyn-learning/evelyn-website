@@ -426,5 +426,16 @@ check('empty transcript → never clears', shouldClearQpinOnAnswer([], 'q1').cle
   check('E2: SessionStage re-measures on content mutations (MutationObserver → schedule)', /new MutationObserver\([\s\S]{0,200}schedule\(\)/.test(stageSrc) && stageSrc.includes('qpinAutoTopPx({'), true);
 }
 
+// Task 29 §J1 (GDI run 16, 1409 → 1452 s): on lesson_closed the Q-pin and the <active_problem> are emptied.
+{
+  const V = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  const S = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
+  check('29J1: every lesson_closed goes through noteLessonClosed', (V.match(/onDebugEvent\?\.\('lesson_closed'/g) ?? []).length, 1);
+  check('29J1: the three close sources call it', ['noteLessonClosed(\'closeSessionNotes\')', "noteLessonClosed('fixed-script close forced')", "noteLessonClosed('mutual farewell"].every((x) => V.includes(x)), true);
+  check('29J1: the active problem is emptied and the host told', /const noteLessonClosed = \(source: string\) => \{\s*onDebugEvent\?\.\('lesson_closed', source\);\s*if \(!TUTOR_CLOSE_CLEARS_OPEN_QUESTION\) return;\s*currentProblemRef\.current = null;\s*onLessonClosedRef\.current\?\.\(source\);/.test(V), true);
+  check('29J1: the host clears its pin (qpin_cleared_closed)', /onLessonClosed=\{\(source\) => \{\s*onDebugEvent\?\.\('qpin_cleared_closed',[^\n]*\n\s*setQuestionPin\(null\);/.test(S), true);
+  check('29J1: the event is allowlisted', readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8').includes("'qpin_cleared_closed'"), true);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -752,6 +752,10 @@ interface VoiceTutorRealtimeProps {
    *  question pin for the last tutor turn. Feeds the idle nudge: with no pin
    *  it re-offers the choice instead of a hint. Absent ⇒ treated as pinned. */
   hasOpenQuestion?: boolean;
+  /** Task 29 §J1: the lesson closed (any source) — the host clears its
+   *  question pin so a post-close extra never returns to the lesson's last
+   *  question. */
+  onLessonClosed?: (source: string) => void;
   sessionId?: string;
   // Wallclock ms for session.startedAt — passed through to the audio recorder
   // so both .pcm16 tracks align with the chat timeline in the replay UI.
@@ -1348,6 +1352,7 @@ export function VoiceTutorRealtime({
   level,
   studentName: rawStudentName,
   hasOpenQuestion,
+  onLessonClosed,
   sessionId,
   sessionStartedAtMs,
   sessionGoal,
@@ -4169,6 +4174,18 @@ export function VoiceTutorRealtime({
   const relationStepNoteRef = useRef<RelationStepNoteRecord | null>(null);
   const relationStepNotedKeysRef = useRef<Set<string>>(new Set());
   const currentProblemRef = useRef<{ statement: string; /** Student-brought problems only: the ONE relation the student asked to solve (decideStudentProblemGrounding). The relation checks prefer it over parsing `statement`. */ relation?: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[]; choiceOptions?: ChoiceOption[]; trackedAtMs?: number; resolvedAtMs?: number } | null>(null);
+  // Task 29 §J1 (GDI run 16, 1409 → 1452 s): on lesson_closed (any source)
+  // the open question the brain is handed is emptied — the host's Q-pin
+  // (onLessonClosed) and the <active_problem> card — so a post-close extra
+  // never returns to the lesson's last question.
+  const onLessonClosedRef = useRef(onLessonClosed);
+  onLessonClosedRef.current = onLessonClosed;
+  const noteLessonClosed = (source: string) => {
+    onDebugEvent?.('lesson_closed', source);
+    if (!TUTOR_CLOSE_CLEARS_OPEN_QUESTION) return;
+    currentProblemRef.current = null;
+    onLessonClosedRef.current?.(source);
+  };
   // Live check 6 (2026-09-07) runtime nets — see the TUTOR_SPOKEN_PROBLEM_BOARD
   // flag block for the design. Rolling window of recent board text (problem
   // statements, equation latex) so the spoken-problem net can tell "numbers
@@ -9181,7 +9198,7 @@ export function VoiceTutorRealtime({
           pendingCloseRefusedNoteRef.current = FIXED_SCRIPT_CLOSE_REFUSED_NOTE;
           continue;
         }
-        if (!lessonClosedRef.current) onDebugEvent?.('lesson_closed', 'closeSessionNotes');
+        if (!lessonClosedRef.current) noteLessonClosed('closeSessionNotes');
         lessonClosedRef.current = true;
         armLessonCloseAutoEndRef.current();
         if (!TUTOR_CLOSE_NOTES) continue;
@@ -21161,7 +21178,7 @@ export function VoiceTutorRealtime({
           } else if (closeAction === 'force') {
             lessonClosedRef.current = true;
             onDebugEvent?.('fixed_script_close_forced', `"${fc.segId}" — ${fc.turnsSince} tutor turns after the close note, no close_session_notes`);
-            onDebugEvent?.('lesson_closed', 'fixed-script close forced');
+            noteLessonClosed('fixed-script close forced');
             // Fix round 1 (review I-2): the same farewell + end path as the
             // time-box hard stop — seals the brain, speaks the fixed goodbye,
             // bounded wait, then the graceful end (mic and TTS stopped). The
@@ -21321,7 +21338,7 @@ export function VoiceTutorRealtime({
       // the exercise). The commit route's fallback still assigns practice.
       if (!lessonClosedRef.current && totalSentenceCount > 0 && lastStudentVerificationRef.current?.isSessionEndSignal && isTutorFarewell(fullText)) {
         lessonClosedRef.current = true;
-        onDebugEvent?.('lesson_closed', 'mutual farewell — student signalled the end, tutor said goodbye');
+        noteLessonClosed('mutual farewell — student signalled the end, tutor said goodbye');
         armLessonCloseAutoEndRef.current();
       }
       // 2026-10-20: not in a one-problem homework session — the problem and

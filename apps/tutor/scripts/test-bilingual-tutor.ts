@@ -554,7 +554,8 @@ test('mutual farewell closes the lesson: tutor farewell + Japanese session-end s
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('sessionEndSignalRegex.test(lower) || isSessionEndSignalJa(t)'));
   assert.ok(vtr.includes("lastStudentVerificationRef.current?.isSessionEndSignal && isTutorFarewell(fullText)"));
-  assert.ok(vtr.includes("onDebugEvent?.('lesson_closed', 'mutual farewell"));
+  // Task 29 §J1: through noteLessonClosed (which logs lesson_closed)
+  assert.ok(vtr.includes("noteLessonClosed('mutual farewell"));
 });
 
 test('english-reply: an English ask answered with no Latin letters gets the note (embed-1792254012923 seq 32)', () => {

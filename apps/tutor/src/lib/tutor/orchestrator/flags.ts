@@ -1075,6 +1075,13 @@ export const TUTOR_TRANSITION_OFFER_SPOKEN = process.env.NEXT_PUBLIC_TUTOR_TRANS
  *  turn. Client-side: default ON; NEXT_PUBLIC_TUTOR_IDLE_NUDGE_REPEAT_KIND=off. */
 export const TUTOR_IDLE_NUDGE_REPEAT_KIND = process.env.NEXT_PUBLIC_TUTOR_IDLE_NUDGE_REPEAT_KIND !== 'off';
 
+/** Task 29 §J1 (GDI run 16, 1409 → 1452 s): on lesson_closed (any source)
+ *  the host's Q-pin is cleared (event qpin_cleared_closed) and the
+ *  <active_problem> card is emptied, so a post-close extra never returns to
+ *  the lesson's last question. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_CLOSE_CLEARS_OPEN_QUESTION=off. */
+export const TUTOR_CLOSE_CLEARS_OPEN_QUESTION = process.env.NEXT_PUBLIC_TUTOR_CLOSE_CLEARS_OPEN_QUESTION !== 'off';
+
 /** Task 27 §G (GDI run 14, 1141 s): a microphone device change mid-session
  *  (devicechange, the shared track ended, or muted at the source > 3 s)
  *  re-acquires the shared capture on the current default input and swaps the

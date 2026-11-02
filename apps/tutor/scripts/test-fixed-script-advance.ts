@@ -436,7 +436,7 @@ test('H: the close note is the brief\'s FACT; forced after two tutor turns unles
 test('H: VTR plants the close note (urgent) and force-closes through the normal close path', () => {
   pin(VTR, /pendingRuntimeNoteRef\.current = FIXED_SCRIPT_CLOSE_NOTE;\s*pendingRuntimeNoteSegRef\.current = segIdNow;\s*pendingRuntimeNoteUrgentRef\.current = true;/);
   pin(VTR, /onDebugEvent\?\.\('fixed_script_close_requested'/);
-  pin(VTR, /\} else if \(closeAction === 'force'\) \{\s*lessonClosedRef\.current = true;\s*onDebugEvent\?\.\('fixed_script_close_forced'[^\n]*\n\s*onDebugEvent\?\.\('lesson_closed', 'fixed-script close forced'\);[\s\S]{0,600}?void endSessionNowRef\.current\(\{ farewell: goodbyeLine\(studentName\) \}\);/);
+  pin(VTR, /\} else if \(closeAction === 'force'\) \{\s*lessonClosedRef\.current = true;\s*onDebugEvent\?\.\('fixed_script_close_forced'[^\n]*\n\s*noteLessonClosed\('fixed-script close forced'\);[\s\S]{0,600}?void endSessionNowRef\.current\(\{ farewell: goodbyeLine\(studentName\) \}\);/);
   // the same farewell + end call the time-box hard stop makes
   pin(VTR, /void endSessionNowRef\.current\(\{ farewell: line, reason: 'time_limit' \}\);/);
 });
