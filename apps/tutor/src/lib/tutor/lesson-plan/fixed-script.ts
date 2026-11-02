@@ -528,14 +528,25 @@ const OFFER_MORE_RE = /\b(?:one more|another|more practice|again|once more)\b|�
 // practice", "one more?", もう一つ / 一回 / 一度 — in the asking sentence or
 // the one before it; or the "one <noun>" item shape inside the asking
 // sentence itself (turn 36).
-const OFFER_MORE_ITEM_RE = /\b(?:one more|another)\s+(?:[a-z]+\s+)?(?:practice|question|sentence|item|example|exercise|word|phrase|one|try|round)\b|\bmore practice\b|\bone more\s*[?？,]|もう(?:一|ひと)(?:つ|回|度)/i;
+// Task 33 fix round 2 (R10-1, bot run r10 299 s: 「…はここまでです。 もう一文
+// 練習しますか。 それとも「過去形」に進みますか。」): the Japanese item shapes
+// もう一つ / 一文 / 一問 / 一回 / 一度 (+ 練習 / やって / 言って) count.
+const OFFER_MORE_ITEM_RE = /\b(?:one more|another)\s+(?:[a-z]+\s+)?(?:practice|question|sentence|item|example|exercise|word|phrase|one|try|round)\b|\bmore practice\b|\bone more\s*[?？,]|もう(?:一|ひと)(?:つ|回|度|文|問)(?:だけ)?(?:練習|やって|言って)?/i;
 const OFFER_STRICT_MOVE_RE = /\b(?:move on|moving on|go on to|carry on to|continue (?:to|with|on to)|(?:the )?next (?:part|section|topic|point|step|grammar point|lesson part))\b|\bor (?:shall we |should we |we can |to |would you (?:rather|like to) )?(?:go on|continue|carry on|stop)\b|次(?:に進|の(?:パート|部分|セクション|トピック))|進み|進む/i;
 const OFFER_ONE_ITEM_RE = /\bone [a-z]+\b/i;
 const OFFER_OR_RE = /\bor\b|それとも/i;
+// R10-1: Japanese sentences are split at 。 / ？ too (the splitter keeps a
+// Japanese run whole), and a Japanese ask ending (ますか / ですか / でしょうか)
+// asks; the OR may open the asking sentence (それとも / Or …) with the MORE
+// in the sentence before it.
+const JA_ASK_END_RE = /(?:ますか|ですか|でしょうか|ませんか)[。？?]?\s*$/;
+function offerSentences(text: string | null | undefined): string[] {
+  return splitSentences(stripMarkdownEmphasis(text ?? '')).flatMap((s) => s.split(/(?<=[。！？])\s*/)).map((s) => s.trim()).filter(Boolean);
+}
 export function offerAsked(text: string | null | undefined): boolean {
-  const sentences = splitSentences(stripMarkdownEmphasis(text ?? ''));
+  const sentences = offerSentences(text);
   return sentences.some((s, i) => {
-    if (!sentenceAsksStudent(s) || !OFFER_STRICT_MOVE_RE.test(s) || !OFFER_OR_RE.test(s)) return false;
+    if (!(sentenceAsksStudent(s) || JA_ASK_END_RE.test(s)) || !OFFER_STRICT_MOVE_RE.test(s) || !OFFER_OR_RE.test(s)) return false;
     if (OFFER_MORE_ITEM_RE.test(s) || OFFER_ONE_ITEM_RE.test(s)) return true;
     return i > 0 && OFFER_MORE_ITEM_RE.test(sentences[i - 1]!);
   });
@@ -727,6 +738,15 @@ export function fixedScriptEngineOfferLines(plan: LessonPlan | null | undefined,
   const lines = [`Would you like one more practice item on "${a}", or shall we move on to "${b}"?`];
   if (opts.japanese) lines.push(`「${a}」をもう一つ練習しますか？それとも「${b}」に進みますか？`);
   return lines;
+}
+/** Fix round 2 (R10-1, bot run r10 322–327 s: the engine asked the offer
+ *  right after the student had said "One more practice."): before the
+ *  engine speaks the offer, a student turn that already accepts or declines
+ *  it is the answer — the offer is recorded spoken AND answered instead. */
+export function engineOfferFallbackAction(studentText: string | null | undefined, lastTutorText: string | null | undefined): 'accepted' | 'declined' | 'speak' {
+  if (offerDeclined(studentText)) return 'declined';
+  if (offerAccepted(studentText, lastTutorText)) return 'accepted';
+  return 'speak';
 }
 /** R9-2: the validator's 'unmade' ⇒ the engine speaks the offer (flag on). */
 export function offerEngineFallbackDue(decision: string, flagOn: boolean): boolean {

@@ -441,7 +441,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind, fixedScriptPartLabel, offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerReaskedMovedReason, offerAcceptedReplantDue, type OfferAcceptState, fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE, FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue } from '@/lib/tutor/lesson-plan/fixed-script';
+import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind, fixedScriptPartLabel, offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerReaskedMovedReason, offerAcceptedReplantDue, type OfferAcceptState, fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE, FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -20827,12 +20827,21 @@ export function VoiceTutorRealtime({
         // Task 33 fix round 1 (R9-2): the engine's own offer closes the
         // standing attempt — spoken, part of the turn text, recorded spoken.
         if (!attemptKilled && engineOfferLines && engineOfferSeg && currentSegmentIdRef.current === engineOfferSeg) {
-          for (const line of engineOfferLines) speakOnePart(line);
-          attemptText = `${attemptText} ${engineOfferLines.join(' ')}`.trim();
+          // Fix round 2 (R10-1): the student's turn already answered the offer —
+          // recorded spoken and answered, never asked again.
+          const efAction = /^\s*\[/.test(transcript) ? 'speak' : engineOfferFallbackAction(transcript, recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? null);
+          if (efAction === 'speak') {
+            for (const line of engineOfferLines) speakOnePart(line);
+            attemptText = `${attemptText} ${engineOfferLines.join(' ')}`.trim();
+          }
           transitionOfferSpokenRef.current.add(engineOfferSeg);
           transitionOfferSpokenAtRef.current.set(engineOfferSeg, Date.now());
           autoAdvanceOfferHeldRef.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;
-          onDebugEvent?.('fixed_script_offer_spoken', `"${engineOfferSeg}" (engine fallback)`);
+          if (efAction === 'accepted' && offerAcceptedRef.current?.segId !== engineOfferSeg) {
+            offerAcceptedRef.current = { segId: engineOfferSeg, studentTurns: -1, at: Date.now() };
+            onDebugEvent?.('fixed_script_offer_accepted', `"${engineOfferSeg}" (already, engine fallback skipped) "${transcript.slice(0, 60)}"`);
+          }
+          onDebugEvent?.('fixed_script_offer_spoken', `"${engineOfferSeg}" (engine fallback${efAction === 'speak' ? '' : `: student already ${efAction}`})`);
         }
         engineOfferLines = null;
         engineOfferSeg = '';

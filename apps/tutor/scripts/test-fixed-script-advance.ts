@@ -48,7 +48,7 @@ import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboa
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
-import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -1203,7 +1203,7 @@ test('33 r1 R9-2: an offer-less retry ⇒ the engine speaks the composed offer (
   // the decision that leads there: a retry still without the offer
   assert.equal(transitionOfferValidatorDecision({ offerPending: true, text: "The past simple part is almost done. Please answer in one sentence: what did you learn?", announcedMove: false, calledAdvance: false, alreadyRetried: true }), 'unmade');
   pin(VTR, /for \(const line of engineOfferLines\) speakOnePart\(line\);/);
-  pin(VTR, /onDebugEvent\?\.\('fixed_script_offer_spoken', `"\$\{engineOfferSeg\}" \(engine fallback\)`\);/);
+  pin(VTR, /onDebugEvent\?\.\('fixed_script_offer_spoken', `"\$\{engineOfferSeg\}" \(engine fallback\$\{efAction === 'speak'/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_OFFER_ENGINE_FALLBACK = process\.env\.NEXT_PUBLIC_TUTOR_OFFER_ENGINE_FALLBACK !== 'off';/);
 });
 
@@ -1213,6 +1213,26 @@ test('33 r2 B-1: "Can we stop here?" while the choice is pending is an explicit 
     assert.equal(stopRequestDecision({ stopRequest: isStopRequest(t), midLesson: true, choicePending: true, explicitStop: isExplicitStop(t), choosesFinish: choosesFinish(t) }), 'close', t);
   }
   assert.equal(isExplicitStop('Can we finish?'), false, 'a finish word stays the finish path');
+});
+
+// ── Task 33 fix round 2 R10-1: the Japanese two-sentence offer ──
+test('33 r2 R10-1: the Japanese offer over two sentences is asked; "One more." accepts it', () => {
+  const JA = '「現在完了」の練習はここまでです。 もう一文練習しますか。 それとも「過去形」に進みますか。';
+  assert.equal(offerAsked(JA), true);
+  assert.equal(offerAsked('わかりました、現在完了の練習はここまでです。 もう一文だけ練習しますか。 それとも「過去形」に進みますか。'), true);
+  assert.equal(offerAsked('Would you like one more sentence? Or shall we move on to the past simple?'), true, 'English: the OR opens the next sentence');
+  assert.equal(offerAccepted('One more.', JA), true);
+  assert.equal(offerAccepted('はい', JA), true, 'a bare yes after the Japanese offer');
+  assert.equal(offerAsked('もう一文練習しましょう。'), false, 'no choice, no move');
+  assert.equal(offerAsked('それとも、別の文を言いますか。'), false, 'no move');
+});
+test('33 r2 R10-1: the engine fallback is skipped when the student already answered the offer', () => {
+  const JA = '「現在完了」の練習はここまでです。 もう一文練習しますか。 それとも「過去形」に進みますか。';
+  assert.equal(engineOfferFallbackAction('One more practice.', JA), 'accepted');
+  assert.equal(engineOfferFallbackAction("No, let's move on.", JA), 'declined');
+  assert.equal(engineOfferFallbackAction('I have worked here for three years.', JA), 'speak');
+  pin(VTR, /const efAction = \/\^\\s\*\\\[\/\.test\(transcript\) \? 'speak' : engineOfferFallbackAction\(transcript,/);
+  pin(VTR, /if \(efAction === 'speak'\) \{\s*for \(const line of engineOfferLines\) speakOnePart\(line\);/);
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
