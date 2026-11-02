@@ -205,10 +205,11 @@ export function isStopRequest(studentText: string | null | undefined): boolean {
  * "finish" word never is one. Pure.
  */
 const EXPLICIT_STOP_RE =
-  /^(?:(?:no|ok(?:ay)?|yes|yeah|well|so|um+|uh+|please|i think)[,\s]+)*(?:(?:let['’]?s |let us |i (?:want|would like|'d like|wanna) to |we can |can we |i['’]d rather )?(?:stop|end(?: it)?|quit)(?: (?:here|now|for today|today|the lesson|please))*|no more(?: (?:today|for today|please))?|that['’]?s enough(?: for (?:today|now))?|(?:good)?bye|see you(?: (?:next time|later))?|stop,? please)[\s.!]*$/i;
+  /^(?:(?:no|ok(?:ay)?|yes|yeah|well|so|um+|uh+|please|i think)[,\s]+)*(?:(?:let['’]?s |let us |i (?:want|would like|'d like|wanna) to |we can |can we |could we |shall we |i['’]d rather )?(?:stop|end(?: it)?|quit)(?: (?:here|now|for today|today|the lesson|please))*|no more(?: (?:today|for today|please))?|that['’]?s enough(?: for (?:today|now))?|(?:good)?bye|see you(?: (?:next time|later))?|stop,? please)[\s.!]*$/i;
 const FINISH_WORD_RE = /\b(?:finish|finishing|complete|go on|continue|carry on)\b|最後まで|続け/i;
 export function isExplicitStop(studentText: string | null | undefined): boolean {
-  const t = (studentText ?? '').trim();
+  // Fix round 2: a stop phrased as a polite question ("Can we stop here?") is a stop.
+  const t = (studentText ?? '').trim().replace(/[?？]+\s*$/, '').trim();
   if (!t || /^\s*\[/.test(t)) return false;
   if (/やめ|今日はここまで|終わりにします|終わりにしましょう/.test(t)) return true;
   if (FINISH_WORD_RE.test(t)) return false;

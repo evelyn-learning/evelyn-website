@@ -1206,6 +1206,14 @@ test('33 r1 R9-2: an offer-less retry ⇒ the engine speaks the composed offer (
   pin(VTR, /onDebugEvent\?\.\('fixed_script_offer_spoken', `"\$\{engineOfferSeg\}" \(engine fallback\)`\);/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_OFFER_ENGINE_FALLBACK = process\.env\.NEXT_PUBLIC_TUTOR_OFFER_ENGINE_FALLBACK !== 'off';/);
 });
+
+test('33 r2 B-1: "Can we stop here?" while the choice is pending is an explicit stop', () => {
+  for (const t of ['Can we stop here?', 'Could we stop now?', 'Can we end it here?']) {
+    assert.equal(isExplicitStop(t), true, t);
+    assert.equal(stopRequestDecision({ stopRequest: isStopRequest(t), midLesson: true, choicePending: true, explicitStop: isExplicitStop(t), choosesFinish: choosesFinish(t) }), 'close', t);
+  }
+  assert.equal(isExplicitStop('Can we finish?'), false, 'a finish word stays the finish path');
+});
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 
