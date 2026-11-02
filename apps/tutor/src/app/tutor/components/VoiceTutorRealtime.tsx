@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, menuPickNote } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { emptyTurnFallbackLine } from '@/lib/tutor/voice/empty-turn-fallback';
@@ -441,7 +441,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
+import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind, offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerReaskedMovedReason, offerAcceptedReplantDue, type OfferAcceptState } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -4258,7 +4258,7 @@ export function VoiceTutorRealtime({
   const transitionOfferSpokenAtRef = useRef<Map<string, number>>(new Map());
   // Task 30 §B1: the student accepted the spoken offer — student turns ended
   // since (-1 until the accepting turn ends) and when.
-  const offerAcceptedRef = useRef<{ segId: string; studentTurns: number; at: number } | null>(null);
+  const offerAcceptedRef = useRef<OfferAcceptState | null>(null);
   // Task 30 §D1: transition_offer_missing fired after heard sentences — the
   // segment whose offer a silent continuation asks at this turn's end.
   const offerContinueSegRef = useRef('');
@@ -13404,6 +13404,8 @@ export function VoiceTutorRealtime({
       let twoTriesRejected = false;
       // Task 29 §A3: once per turn — a turn under a pending offer note that never offered.
       let offerMissingRejected = false;
+      // Task 33 §A1: offer_reasked_after_accept retried once per turn.
+      let offerReaskRejected = false;
       // Task 20 §B2: the lesson was already closed when this turn started (it
       // answers a post-close utterance); the arm counter tells a fresh arm.
       const closedAtTurnStart = lessonClosedRef.current;
@@ -13598,6 +13600,7 @@ export function VoiceTutorRealtime({
       // Task 30 §B1 (GDI run 17, 499–504 s): the student accepted the spoken
       // offer ("Yes, one more practice.") — ONE new item, not the question
       // already on the board, then the move on without a second offer.
+      let offerAcceptedFirstNote: string | null = null;
       if (TUTOR_TRANSITION_OFFER_SPOKEN && TUTOR_FIXED_SCRIPT_TRANSITIONS && !opts?.prefetchOnly) {
         const oaSeg = currentSegmentIdRef.current ?? '';
         const oaPlan = lessonPlanRef.current;
@@ -13617,6 +13620,25 @@ export function VoiceTutorRealtime({
           offerAcceptedRef.current = { segId: oaSeg, studentTurns: -1, at: Date.now() };
           runTranscript = `${fixedScriptOfferAcceptedNote(oaPlan, oaSeg, oaNext)}\n\n${runTranscript}`;
           onDebugEvent?.('fixed_script_offer_accepted', `"${oaSeg}" "${transcript.slice(0, 60)}"`);
+        }
+        // Task 33 §A3 (GDI bot run r8, 1220–1281 s): the summary's close offer
+        // ("more practice, or stop for today?") — a bare "Yes" is one more
+        // item, never "which one do you mean?".
+        if (TUTOR_OFFER_REASK_KILL && oaSeg && oaPlan && !oaNext && isFixedScriptPlan(oaPlan) && offerAcceptedRef.current?.segId !== oaSeg
+          && !/^\s*\[/.test(transcript) && closeOfferAccepted(transcript, oaLastTutor)) {
+          offerAcceptedRef.current = { segId: oaSeg, studentTurns: -1, at: Date.now(), close: true };
+          runTranscript = `${FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE}\n\n${runTranscript}`;
+          onDebugEvent?.('fixed_script_offer_accepted', `"${oaSeg}" (close offer) "${transcript.slice(0, 60)}"`);
+        } else if (TUTOR_OFFER_REASK_KILL && oaSeg && offerAcceptedReplantDue({
+          accepted: offerAcceptedRef.current, currentSegId: oaSeg, studentTurn: !/^\s*\[/.test(transcript), lastTutorText: oaLastTutor,
+        })) {
+          // Task 33 §A2: the acceptance is unserved and the last tutor turn
+          // asked the offer again — the brain lost the note; it rides this
+          // turn in the first-position slot.
+          offerAcceptedFirstNote = offerAcceptedRef.current?.close
+            ? FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE
+            : (oaNext ? fixedScriptOfferAcceptedNote(oaPlan, oaSeg, oaNext) : null);
+          if (offerAcceptedFirstNote) onDebugEvent?.('fixed_script_offer_accepted_replanted', `"${oaSeg}" "${oaLastTutor?.slice(0, 60) ?? ''}"`);
         }
       }
       // Task 30 fix round 4 R3-13 (run r3, 155–372 s: the level check asked
@@ -14244,6 +14266,8 @@ export function VoiceTutorRealtime({
       if ((headroom.reason === 'recap' || headroom.reason === 'required-phrases') && sessionAllowsNonLatin(tutorLanguages) && sessionMode !== 'text' && TUTOR_LANGUAGE_TURN_MAX_TOKENS !== null) {
         onDebugEvent?.('output_budget_headroom', headroom.reason);
       }
+      // Task 33 §A2: the re-planted accepted note goes first (after the budget line).
+      if (offerAcceptedFirstNote) runTranscript = `${offerAcceptedFirstNote}\n\n${runTranscript}`;
       if (turnMaxTokens !== undefined) {
         runTranscript = `${outputBudgetNote(turnMaxTokens)}\n\n${runTranscript}`;
         onDebugEvent?.('output_budget_capped', `max_tokens=${turnMaxTokens}`);
@@ -20042,6 +20066,31 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Task 33 §A1 (GDI bot run r8, 415–504 s): the offer was accepted and
+        // its new item is still unasked — a turn that asks the choice again
+        // (or "which do you mean?") is killed once and retried with the order
+        // to ask the new item. Also right after the lesson left that part.
+        if (TUTOR_OFFER_REASK_KILL && !attemptKilled && attemptText && !/^\s*\[/.test(transcript)) {
+          const orkSeg = currentSegmentIdRef.current ?? '';
+          const orkPlan = lessonPlanRef.current;
+          const orkAcc = offerAcceptedRef.current;
+          const orkDecision = offerReaskValidatorDecision({
+            accepted: orkAcc,
+            currentSegId: orkSeg,
+            acceptedNextSegId: orkPlan && orkAcc ? nextSegmentId(orkPlan, orkAcc.segId, !!workingLevelRef.current) : null,
+            currentIsLast: !!orkPlan && !!orkSeg && !nextSegmentId(orkPlan, orkSeg, !!workingLevelRef.current),
+            currentOfferMade: transitionOfferMadeRef.current.has(orkSeg),
+            text: attemptText,
+            alreadyRetried: offerReaskRejected,
+          });
+          if (orkDecision !== 'ok') {
+            offerReaskRejected = true;
+            rejectionsThisAttempt.push({ action: 'offer_reasked_after_accept', reason: orkDecision === 'same' ? OFFER_REASKED_AFTER_ACCEPT_REASON : offerReaskedMovedReason(orkPlan, orkSeg) });
+            await performKill();
+            onDebugEvent?.('offer_reasked_after_accept', `${orkDecision} "${orkSeg}" "${attemptText.slice(0, 60)}"`);
+          }
+        }
+
         // Task 24 §C1 (GDI run 12, 977–1018 s: the transition turn under the
         // new pronunciation card asked "Did the seminar take place last year,
         // or more recently?" — the old part's thread ran three more turns):
@@ -21431,6 +21480,12 @@ export function VoiceTutorRealtime({
         const announcedNext = !!announcedTarget && !!autoPlan && announcedTarget === nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current);
         const advanceReason: 'turns' | 'time' | 'announced' | null = (offerPartDue && announcedNext ? 'announced' : autoReason)
           ?? (announcedNext ? 'announced' : null);
+        // Task 33 §A1: a delivered turn that asked something other than the
+        // offer served the acceptance (the re-ask validator stands down).
+        if (offerAcceptedRef.current && !offerAcceptedRef.current.itemAsked && !opts?.prefetchOnly && offerItemAskedIn(fullText)) {
+          offerAcceptedRef.current.itemAsked = true;
+          onDebugEvent?.('fixed_script_offer_item_asked', `"${offerAcceptedRef.current.segId}"`);
+        }
         if (!advanceReason) { autoAdvancePronHeldRef.current = 0; autoAdvanceAskHeldRef.current = 0; }
         // Task 29 §A2: the offer hold starts when the offer is SPOKEN — the
         // turn that spoke it is hold turn 1 (no hold increment on it). A turn

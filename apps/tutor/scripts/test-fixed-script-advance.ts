@@ -45,6 +45,7 @@ import { turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
 import { askOffNewPart, transitionAskCheckDue as transitionAskCheckDueR1 } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel, displayedSegmentId, displayedCompletedSegments } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
+import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -186,7 +187,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
 // ── fix round 10-11 ──────────────────────────────────────────────────────
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 11500);
+  const block = VTR.slice(auto, auto + 12500);
   pin(block, /if \(autoNext && !offerMadeHere && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
   pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
@@ -202,7 +203,7 @@ test('C: the pronunciation hold is capped at 3 consecutive turns; the 4th advanc
 });
 test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  pin(VTR.slice(auto, auto + 11500), /pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR.slice(auto, auto + 12500), /pendingRuntimeNoteUrgentRef\.current = true;/);
   // Task 14 §G: the tool path's level apply moved into applyWorkingLevelRef.
   const lv = VTR.indexOf("applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool')");
   assert.ok(lv > 0);
@@ -518,7 +519,7 @@ test('22A: turnEndsWithAsk — the run-10 turns', () => {
 });
 test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 11500);
+  const block = VTR.slice(auto, auto + 12500);
   pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
   pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
 });
@@ -1072,6 +1073,66 @@ test('31 r1 B-2: the entry note is delivered without marking a FACT note, so an 
   assert.equal(transitionAskCheckDueR1({ factNoteDelivered: false, advancedThisTurn: false, fixedScript: true, card, everyAdvance: true }), false, 'next turn after a brain advance: no check');
   assert.equal(transitionAskCheckDueR1({ factNoteDelivered: true, advancedThisTurn: false, fixedScript: true, card, everyAdvance: true }), true, 'a FACT delivery would have armed it');
 });
+
+// ── Task 33 §A: the accepted offer is never asked again ─────────────────
+{
+  const OFFER = 'Before we move on, would you like one more practice sentence on the present perfect, or shall we move on to the past simple?';
+  const REASK = [
+    'はい。 ひとつ確認ですね。 Would you like one more practice sentence on the present perfect, or shall we move on to the past simple?',
+    'はい、ありがとうございます。 Which would you like: one more present perfect practice sentence, or moving on to the past simple? Just tell me which one.',
+    'すみません、もう一度だけ確認させてください。 「one more present perfect sentence」と「past simple に進む」のどちらでしょうか。',
+    'Which one do you mean: more practice, or stop for today?',
+  ];
+  const acc = { segId: 'present-perfect', studentTurns: 0, at: 0 };
+  test('33 §A1: offerReasked — the offer and its "which do you mean" clarifications', () => {
+    for (const t of REASK) assert.equal(offerReasked(t), true, t);
+    assert.equal(offerReasked('どちらが正しいですか。 "I have went" or "I have gone"?'), false, 'a which-question about the lesson');
+    assert.equal(offerReasked('Here is one more: have you ever given a presentation in English? Try "I have…".'), false);
+  });
+  test('33 §A1: accepted + re-ask in the same part ⇒ validator fires (once per turn)', () => {
+    const base = { accepted: acc, currentSegId: 'present-perfect', acceptedNextSegId: 'past-simple', currentIsLast: false, currentOfferMade: true, alreadyRetried: false };
+    for (const t of REASK) assert.equal(offerReaskValidatorDecision({ ...base, text: t }), 'same', t);
+    assert.equal(offerReaskValidatorDecision({ ...base, text: REASK[0], alreadyRetried: true }), 'ok');
+    assert.equal(offerReaskValidatorDecision({ ...base, accepted: null, text: REASK[0] }), 'ok', 'nothing accepted');
+    assert.equal(offerReaskValidatorDecision({ ...base, accepted: { ...acc, itemAsked: true }, text: REASK[0] }), 'ok', 'the item was asked — served');
+    assert.equal(offerReaskValidatorDecision({ ...base, text: 'Have you ever met a client from abroad? Try "I have…".' }), 'ok');
+    assert.match(OFFER_REASKED_AFTER_ACCEPT_REASON, /already chose ONE more item\. Do not ask the choice again\. Ask ONE new practice question on this point now \(spoken in full, written with handwrite\)/);
+  });
+  test('33 §A1: right after the lesson left the accepted part ⇒ "moved"; the last part\'s own close offer is legit', () => {
+    const moved = { accepted: acc, currentSegId: 'past-simple', acceptedNextSegId: 'past-simple', currentIsLast: false, currentOfferMade: false, alreadyRetried: false };
+    assert.equal(offerReaskValidatorDecision({ ...moved, text: REASK[2] }), 'moved');
+    assert.equal(offerReaskValidatorDecision({ ...moved, currentOfferMade: true, text: REASK[0] }), 'ok', 'the new part\'s own offer');
+    assert.equal(offerReaskValidatorDecision({ ...moved, currentSegId: 'summary', acceptedNextSegId: 'past-simple', currentIsLast: true, text: REASK[3] }), 'ok');
+  });
+  test('33 §A1: offerItemAskedIn — a non-offer ask serves the acceptance', () => {
+    assert.equal(offerItemAskedIn('Here is one: have you ever led a meeting? Try "I have…".'), true);
+    assert.equal(offerItemAskedIn(REASK[0]), false);
+    assert.equal(offerItemAskedIn('Good.'), false);
+  });
+  test('33 §A2: the accepted note is re-planted after a re-ask (not on the accepting turn itself)', () => {
+    const r = { accepted: acc, currentSegId: 'present-perfect', studentTurn: true, lastTutorText: REASK[0] };
+    assert.equal(offerAcceptedReplantDue(r), true);
+    assert.equal(offerAcceptedReplantDue({ ...r, accepted: { ...acc, studentTurns: -1 } }), false, 'the accepting turn carries its own note');
+    assert.equal(offerAcceptedReplantDue({ ...r, lastTutorText: 'Have you ever met a client from abroad?' }), false);
+    assert.equal(offerAcceptedReplantDue({ ...r, studentTurn: false }), false);
+    assert.equal(offerAcceptedReplantDue({ ...r, currentSegId: 'past-simple' }), false);
+  });
+  test('33 §A3: the summary offer + "Yes." ⇒ accepted (one more item); "Stop." is not', () => {
+    const SUM = 'The summary card is on the board now. Would you like to continue with more practice, or stop for today?';
+    assert.equal(closeOfferAccepted('Yes.', SUM), true);
+    assert.equal(closeOfferAccepted('OK.', SUM), true);
+    assert.equal(closeOfferAccepted('More practice, please.', SUM), true);
+    assert.equal(closeOfferAccepted('Stop.', SUM), false);
+    assert.equal(closeOfferAccepted('Yes.', 'Is that clear?'), false);
+    assert.match(FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, /ONE more practice item\. Do not ask the choice again/);
+  });
+  test('33 §A: VTR wires the validator, the re-plant (first slot) and the close-offer acceptance', () => {
+    pin(VTR, /rejectionsThisAttempt\.push\(\{ action: 'offer_reasked_after_accept'/);
+    pin(VTR, /if \(offerAcceptedFirstNote\) runTranscript = `\$\{offerAcceptedFirstNote\}\\n\\n\$\{runTranscript\}`;\n      if \(turnMaxTokens !== undefined\)/);
+    pin(VTR, /closeOfferAccepted\(transcript, oaLastTutor\)/);
+    pin(VTR, /offerAcceptedRef\.current\.itemAsked = true;/);
+  });
+}
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 

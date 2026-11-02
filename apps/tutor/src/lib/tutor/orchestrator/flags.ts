@@ -1197,3 +1197,12 @@ export const TUTOR_BRAIN_ADVANCE_ENTRY_NOTE = process.env.NEXT_PUBLIC_TUTOR_BRAI
  *  next brain turn carries the check-in note (no third follow-up).
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_PROBE_CHECKIN=off. */
 export const TUTOR_PROBE_CHECKIN = process.env.NEXT_PUBLIC_TUTOR_PROBE_CHECKIN !== 'off';
+
+/** Task 33 §A (GDI bot run r8, 415–504 s: the accepted offer re-asked six
+ *  times): while an accepted offer's new item is unasked, a turn that asks
+ *  the offer again (or "which do you mean?") is killed once and retried
+ *  (validator offer_reasked_after_accept), the accepted note is re-planted
+ *  first on the next student turn, and the summary's close offer takes a
+ *  bare "Yes" as one more item. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_OFFER_REASK_KILL=off. */
+export const TUTOR_OFFER_REASK_KILL = process.env.NEXT_PUBLIC_TUTOR_OFFER_REASK_KILL !== 'off';

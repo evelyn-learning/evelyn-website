@@ -601,6 +601,75 @@ export const FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS = 2;
 export function fixedScriptOfferAcceptedNote(plan: LessonPlan | null | undefined, segId: string, next: string): string {
   return withSilentClause(`[runtime note — not from the student] The student wants ONE more item on "${fixedScriptPartLabel(plan, segId)}". Ask ONE new question on this point that you have not asked in this lesson — spoken in full and written with handwrite — not the question already on the board. When they have answered and you have corrected it, close the part in one sentence and move on to "${fixedScriptPartLabel(plan, next)}" (call advance_lesson) without offering again.]`);
 }
+/** Task 33 §A (GDI bot run r8, 415–504 s / 1220–1281 s: "Yes." accepted the
+ *  offer, the accepted note rode ONE brain call, and the offer — or a "which
+ *  do you mean?" clarification of its two options — was asked six more
+ *  times). True ⇒ `text` asks the offer again: offerAsked, or a sentence that
+ *  asks the student WHICH (which do you mean / which would you like / just
+ *  tell me which / どちら / どっち) and names a side of the offer (a more-item
+ *  or a strict move). "どちらが正しいですか" (no offer side) is no re-ask. Pure. */
+const OFFER_CLARIFY_RE = /\bwhich(?: one)? (?:do you mean|would you like|do you want|is it)\b|\b(?:just )?tell me which(?: one)?\b|どちら|どっち/i;
+export function offerReasked(text: string | null | undefined): boolean {
+  if (offerAsked(text)) return true;
+  return splitSentences(stripMarkdownEmphasis(text ?? '')).some((s) =>
+    (/[?？]|か[。.]?\s*$/.test(s) || sentenceAsksStudent(s)) && OFFER_CLARIFY_RE.test(s)
+    && (OFFER_MORE_ITEM_RE.test(s) || OFFER_STRICT_MOVE_RE.test(s) || OFFER_MORE_RE.test(s)));
+}
+/** Task 33 §A3: the summary / close offer ("continue with more practice, or
+ *  stop for today?") follows the bare-affirmative rule — on the LAST part
+ *  (no next segment) a reply that accepts (offerAccepted: a more-word, or a
+ *  bare yes) to a tutor turn that asked the offer is "one more item", never a
+ *  clarification. Pure. */
+export function closeOfferAccepted(studentText: string | null | undefined, lastTutorText: string | null | undefined): boolean {
+  return offerAsked(lastTutorText) && offerAccepted(studentText, lastTutorText);
+}
+/** Task 33 §A3: the urgent note on the turn that accepted the close offer. */
+export const FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE = withSilentClause(
+  "[runtime note — not from the student] The student wants ONE more practice item. Do not ask the choice again and do not ask which one they mean. Ask ONE new practice question on today's lesson now — spoken in full and written with handwrite. When they have answered and you have corrected it, close the lesson without offering again.]");
+/** Task 33 §A1: the accepted offer — the state the re-ask validator reads. */
+export interface OfferAcceptState { segId: string; studentTurns: number; at: number; itemAsked?: boolean; close?: boolean }
+/** Task 33 §A1: a tutor turn after the acceptance asked the new item (some
+ *  ask that is not the offer again) — the acceptance is served. Pure. */
+export function offerItemAskedIn(text: string | null | undefined): boolean {
+  return attemptAsksStudent(text) && !offerReasked(text);
+}
+/** Task 33 §A1: the validator offer_reasked_after_accept. 'same' ⇒ the offer
+ *  was accepted in the current part and the attempt asks it again (before the
+ *  new item was asked); 'moved' ⇒ the lesson has just left the part where it
+ *  was accepted (current = its next part, not the last part, the current
+ *  part's own offer not made) and the attempt asks the old choice again.
+ *  Once per turn (`alreadyRetried`). Pure. */
+export function offerReaskValidatorDecision(input: {
+  accepted: OfferAcceptState | null | undefined;
+  currentSegId: string | null | undefined;
+  /** nextSegmentId(plan, accepted.segId) */
+  acceptedNextSegId: string | null | undefined;
+  currentIsLast: boolean;
+  currentOfferMade: boolean;
+  text: string | null | undefined;
+  alreadyRetried: boolean;
+}): 'ok' | 'same' | 'moved' {
+  const a = input.accepted;
+  if (!a || a.itemAsked || input.alreadyRetried || !input.currentSegId) return 'ok';
+  if (!offerReasked(input.text)) return 'ok';
+  if (a.segId === input.currentSegId) return 'same';
+  if (input.acceptedNextSegId === input.currentSegId && !input.currentIsLast && !input.currentOfferMade) return 'moved';
+  return 'ok';
+}
+/** Task 33 §A1: the retry directive of offer_reasked_after_accept. */
+export const OFFER_REASKED_AFTER_ACCEPT_REASON = withRetryStyle(
+  'The student already chose ONE more item. Do not ask the choice again. Ask ONE new practice question on this point now (spoken in full, written with handwrite).');
+export function offerReaskedMovedReason(plan: LessonPlan | null | undefined, current: string): string {
+  return withRetryStyle(`The student already answered that choice and the lesson has moved on to "${fixedScriptPartLabel(plan, current)}". Do not ask the choice again. Ask this part's question now (spoken in full).`);
+}
+/** Task 33 §A2: the accepted note is re-planted (first position) on a
+ *  student turn while the acceptance is unserved and the previous tutor turn
+ *  asked the offer again — the brain lost the note. Pure. */
+export function offerAcceptedReplantDue(input: { accepted: OfferAcceptState | null | undefined; currentSegId: string | null | undefined; studentTurn: boolean; lastTutorText: string | null | undefined }): boolean {
+  const a = input.accepted;
+  // studentTurns < 0 ⇒ this very turn accepted (its own note rides it).
+  return !!a && !a.itemAsked && a.studentTurns >= 0 && a.segId === input.currentSegId && input.studentTurn && offerReasked(input.lastTutorText);
+}
 /** The retry directive of transition_offer_missing (shared silent clause). */
 export function fixedScriptOfferMissingReason(plan: LessonPlan | null | undefined, from: string, next: string): string {
   return withRetryStyle(`Reply to what the student just said in ONE sentence (answer a question or a correction first), then ask the student whether they want one more practice item on "${fixedScriptPartLabel(plan, from)}" or to move on to "${fixedScriptPartLabel(plan, next)}". End the turn with that question.`);
