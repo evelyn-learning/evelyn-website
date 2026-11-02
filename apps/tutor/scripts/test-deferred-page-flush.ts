@@ -311,6 +311,8 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('30C: VTR dropRenderBuffer re-arms the page as deferred with its card', V8.includes("pendingAdvanceNewPageRef.current = { title: killBreak.title, segmentId: killBreak.segmentId, authored: true, afterTurn: true, cardOnFlush: true };")
     && V8.includes("onDebugEvent?.('advance_page_rearmed_after_kill',"));
   ok('30C: VTR prunes the retracted ids from the pending revisions', V8.includes('if (pendingRevisionRef.current.size !== rearm.keepIds.length) pendingRevisionRef.current = new Set(rearm.keepIds);'));
+  ok('30C: VTR never re-defers a retracted id at the retry (so reviseItems never names it)', V8.includes('for (const id of ids) retractedRenderIdsRef.current.add(id);')
+    && V8.includes('const deferIds = retryRollbackTargets.filter((id) => !!id && !retractedRenderIdsRef.current.has(id));'));
   // ordering: the rearm runs before the buffer is cleared (it reads the dropped entries)
   ok('30C: VTR rearm reads the buffer before clearing it', V8.indexOf('const killBreakDropped = ') > 0 && V8.indexOf('const killBreakDropped = ') < V8.indexOf("onDebugEvent?.('render_sync_drop',"));
 }

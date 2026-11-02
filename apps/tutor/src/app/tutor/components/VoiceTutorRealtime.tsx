@@ -4030,6 +4030,9 @@ export function VoiceTutorRealtime({
   // in the finally. Cleared at the start of each brain call. (Visual dim layer
   // is phase A, on top of this.)
   const pendingRevisionRef = useRef<Set<string>>(new Set());
+  // Task 30 §C: ids a kill retraction dropped before they painted — never
+  // dimmed / revised / kept later (reviseItems for them would name nothing).
+  const retractedRenderIdsRef = useRef<Set<string>>(new Set());
   // 2026-10-06 (portal-897212b5 @229s): the subset of pendingRevisionRef whose
   // attempt was killed for a verdict / assent reason (kill-keep.ts
   // isAnswerRevealingKill). Those renders state the conclusion the kill
@@ -6685,6 +6688,7 @@ export function VoiceTutorRealtime({
       const cc = c as any;
       if (killCardStatement && cc.action === 'showProblem' && typeof cc.id === 'string' && cc.problem?.statement === killCardStatement) killCardId = cc.id;
     }
+    for (const id of ids) retractedRenderIdsRef.current.add(id);
     const rearm = rearmAfterKill({ droppedIds: ids, segmentBreak: killBreakDropped, segmentCardId: killCardId, pendingRevisionIds: [...pendingRevisionRef.current] });
     if (pendingRevisionRef.current.size !== rearm.keepIds.length) pendingRevisionRef.current = new Set(rearm.keepIds);
     if (rearm.rearm && killBreak && !pendingAdvanceNewPageRef.current) {
@@ -20697,7 +20701,8 @@ export function VoiceTutorRealtime({
             renderCountAtAdvance !== null
               ? renderIdsThisAttempt.slice(renderCountAtAdvance)
               : renderIdsThisAttempt;
-          const deferIds = retryRollbackTargets.filter(Boolean);
+          // Task 30 §C: a render the kill retracted before it painted is not deferred.
+          const deferIds = retryRollbackTargets.filter((id) => !!id && !retractedRenderIdsRef.current.has(id));
           for (const id of deferIds) pendingRevisionRef.current.add(id);
           // Renders this attempt painted BEFORE an answer-revealing kill are
           // remembered so the end-of-call cleanup discards them rather than
