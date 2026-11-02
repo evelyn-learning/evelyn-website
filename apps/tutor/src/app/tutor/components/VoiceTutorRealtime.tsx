@@ -96,7 +96,7 @@ import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-reject
 import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead, proactiveOpenerAllowed } from '@/lib/tutor/lesson-plan/spoken-opener';
-import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, handwriteShownSentence, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
 import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
 import {
@@ -6955,6 +6955,14 @@ export function VoiceTutorRealtime({
       return false;
     });
     const duplicateSentenceNotes: string[] = [];
+    // Task 31 §C3: a brain handwrite of a sentence is this turn's shown sentence too.
+    if (!opts?.sentenceBoardAuto) {
+      for (const cmd of commands) {
+        const hw = cmd as unknown as { action: string; text?: unknown };
+        const hwSentence = hw.action === 'handwrite' ? handwriteShownSentence(hw.text) : null;
+        if (hwSentence) turnShownSentenceRef.current = hwSentence;
+      }
+    }
     // Task 14 §I (GDI run 4: the hook sentence rendered on three pages): a
     // show_sentence (brain or the client's auto card) whose sentence already
     // stands ANYWHERE on this session's board is not drawn again. For a brain

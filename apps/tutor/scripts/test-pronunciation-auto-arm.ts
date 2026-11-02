@@ -5,7 +5,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION, pronunciationNoteForTurn, PRONUNCIATION_UNSCORED_NOTE } from '../src/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION, pronunciationNoteForTurn, PRONUNCIATION_UNSCORED_NOTE, colonTarget, handwriteShownSentence } from '../src/lib/tutor/pronunciation/auto-arm';
 import { duplicateSentenceAction, currentBoardPage, sentenceCardIdOnCurrentPage, sentenceOnBoardPage } from '../src/lib/tutor/voice/sentence-board';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { isStrictRepeatAsk, saidModelSentence } from '../src/lib/tutor/voice/correct-retry';
@@ -314,6 +314,32 @@ test('25D2: no automatic arm on the turn that enters the part', () => {
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(VTR.includes('const auto = autoArmTargetForTurn(detectedAuto, { partEntry: pronPartEntry });'));
   assert.ok(VTR.includes("onDebugEvent?.('pronunciation_auto_arm_skipped', `part entry:"));
+});
+
+// ── Task 31 §C (GDI run 18, 1203–1264 s): a measured word is a mention; the colon-led sentence is the ask ──
+const T31 = { words: ['responsibilities', 'international', 'communicate', 'customers', 'developed'], sentences: ['I have worked with international customers for several years.', 'I was responsible for communicating with our customers.'] };
+const S31 = 'I have worked with international customers for several years.';
+test('31C: turn 100 → the sentence, not the measured word', () => {
+  const t = 'Your pronunciation of "responsibilities" scored 90 out of 100, which is excellent. 全体の発音はとても良いです。 Next, let\'s try one sentence: I have worked with international customers for several years. Please listen, then repeat after me.';
+  assert.deepEqual(detectPronunciationTarget(t, T31), { referenceText: S31, kind: 'sentence' });
+});
+test('31C: turn 102 → the sentence', () => {
+  const t = 'I\'ll go with the measured result for "responsibilities": 90 out of 100 is excellent. Your sentence didn\'t come through, so please repeat it: I have worked with international customers for several years.';
+  assert.deepEqual(detectPronunciationTarget(t, T31), { referenceText: S31, kind: 'sentence' });
+});
+test('31C: a quoted word ask is unchanged; a mention with no ask is not skipped into a target', () => {
+  assert.equal(detectPronunciationTarget('Listen, then repeat after me: "responsibilities".', T31)?.referenceText, 'responsibilities');
+  assert.equal(detectPronunciationTarget('Please say "international" once more.', T31)?.referenceText, 'international');
+  assert.equal(colonTarget("Here's the question on the board: did you attend any events?"), null, 'a question is never a target');
+  assert.equal(colonTarget('Next, the sentence: I went to Tokyo last year. Good luck with your email.'), null, 'an introduction without an ask');
+});
+test('31C3: a handwritten sentence is the shown sentence (VTR)', () => {
+  assert.equal(handwriteShownSentence(S31), S31);
+  assert.equal(handwriteShownSentence('Did you go there?'), null);
+  assert.equal(handwriteShownSentence('have used'), null);
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes("const hwSentence = hw.action === 'handwrite' ? handwriteShownSentence(hw.text) : null;"));
+  assert.ok(VTR.includes('if (hwSentence) turnShownSentenceRef.current = hwSentence;'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

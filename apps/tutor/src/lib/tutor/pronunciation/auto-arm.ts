@@ -103,6 +103,63 @@ function lastSentences(text: string, n: number): string {
   return parts.slice(-n).join(' ');
 }
 
+/** Task 31 §C1: a quote that reports a measured result — "pronunciation of
+ *  / result for / score for "…"", or the quote's own sentence goes on with
+ *  scored / measured / out of 100. */
+const MENTION_BEFORE_RE = /\b(?:pronunciation of|result (?:for|of)|score (?:for|of)|scored)\s*$/i;
+const MENTION_AFTER_RE = /^[^.!?。！？]*\b(?:scored|measured|out of 100)\b/i;
+function isMeasuredMention(q: { before: string; after: string }): boolean {
+  return MENTION_BEFORE_RE.test(q.before) || MENTION_AFTER_RE.test(q.after);
+}
+/** Task 31 §C2: a listen / repeat ask without a say verb ("Please listen,
+ *  then repeat after me." is caught by SAY_ASK_RE too). */
+const LISTEN_ASK_RE = /\blisten\b/i;
+/** Task 31 §C2 / §D: the lead of an unquoted colon target — an ask (repeat
+ *  after me / listen (and|then) repeat / say / repeat / try [it / this / one
+ *  sentence …]) or an introduction (the / this / next / one sentence / word
+ *  [is]) — then a colon and the text. */
+const COLON_ASK_LEAD_RE = /\b(?:repeat after me|listen,?\s+(?:and\s+|then\s+|and then\s+)?repeat(?: after me)?|(?:say|repeat|try)(?: it| this| that| (?:the|this|one|a) (?:whole |full |complete )?(?:sentence|word|phrase|line))?)\s*[:：]\s*(.+)$/i;
+const COLON_INTRO_LEAD_RE = /\b(?:(?:the|this|next|one|a|our|first) (?:sentence|word|phrase|line)(?: is)?)\s*[:：]\s*(.+)$/i;
+const TURN_SENTENCES = (text: string) => (text ?? '').split(/(?<=[.!?。！？])\s+/).map((x) => x.trim()).filter(Boolean);
+function cleanColonTarget(raw: string): string | null {
+  const t = raw.replace(/^["“「『'‘]+|["”」』'’]+$/gu, '').replace(/[.,!;:]+$/u, '').trim();
+  if (!t || /[?？]/.test(t) || !/[A-Za-z]/.test(t) || /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(t)) return null;
+  const words = norm(t).split(' ').filter(Boolean);
+  if (!words.length || words.length > 25) return null;
+  // "responsibilities, responsibilities" — a trailing duplicate of the same word
+  if (words.length === 2 && words[0] === words[1]) return t.split(/[\s,]+/)[0]!.trim();
+  return t;
+}
+/** Task 31 §C2 / §D: the unquoted target of the turn's last ask, or null. In
+ *  the last three sentences (latest first): a colon ask carries its target
+ *  after the colon; a colon introduction counts when a listen / say / repeat
+ *  ask is in that sentence or the next one. Pure. */
+export function colonTarget(turnText: string): string | null {
+  const sentences = TURN_SENTENCES(turnText);
+  const start = Math.max(0, sentences.length - 3);
+  for (let i = sentences.length - 1; i >= start; i -= 1) {
+    const s = sentences[i]!;
+    const ask = COLON_ASK_LEAD_RE.exec(s);
+    if (ask) { const c = cleanColonTarget(ask[1]!); if (c) return c; }
+    const intro = COLON_INTRO_LEAD_RE.exec(s);
+    if (intro) {
+      const window = `${s} ${sentences[i + 1] ?? ''}`;
+      if (CARD_ASK_RE.test(window)) { const c = cleanColonTarget(intro[1]!); if (c) return c; }
+    }
+  }
+  return null;
+}
+
+/** Task 31 §C3 (run 18, 1204 s: the sentence went up by handwrite, which the
+ *  card rule ignored): a handwrite of a sentence — ≥ 3 words, no "?" — is
+ *  the turn's shown sentence. */
+export function handwriteShownSentence(text: unknown): string | null {
+  if (typeof text !== 'string') return null;
+  const t = text.trim();
+  if (!t || /[?？]/.test(t) || (t.match(/[\p{L}\p{N}]+(?:['’][\p{L}]+)*/gu) ?? []).length < 3) return null;
+  return t;
+}
+
 /** A hyphenated syllable pattern (≥ 3 parts) in the turn whose letters spell
  *  `word` (case-insensitive) — "re-spon-si-BIL-i-ties" for "responsibilities". */
 export function syllablePatternFor(turnText: string, word: string): string | undefined {
@@ -137,14 +194,21 @@ export function detectPronunciationTarget(
     ...targets.sentences.map((t) => ({ text: t, kind: 'sentence' as const })),
   ];
   let hit: { text: string; kind: 'word' | 'sentence' } | undefined;
-  for (const sp of spans) {
-    const n = norm(sp);
+  // Task 31 §C1 (GDI run 18, 1203 s: `Your pronunciation of "responsibilities"
+  // scored 90 out of 100 … Next, let's try one sentence: … Please listen, then
+  // repeat after me.` re-armed the measured word): a quote reporting a
+  // measured result is a mention, not an ask — skipped when the turn asks
+  // the student to say something.
+  const sayAsk = SAY_ASK_RE.test(lastSentences(turnText, 2)) || LISTEN_ASK_RE.test(lastSentences(turnText, 2));
+  const askable = sayAsk ? quoted.filter((q) => !isMeasuredMention(q)) : quoted;
+  for (const q of askable) {
+    const n = norm(q.text);
     const found = n ? listed.find((t) => norm(t.text) === n) : undefined;
     if (found) { hit = found; break; }
   }
   // fix round 1 (m): 'Try "customer" again.' is an ask too
   if (!hit && (SAY_ASK_RE.test(lastSentences(turnText, 2)) || /\btry\s+["“]/i.test(lastSentences(turnText, 2)))) {
-    const last = [...quoted].reverse().find((q) => {
+    const last = [...askable].reverse().find((q) => {
       const n = norm(q.text).split(' ').filter(Boolean).length;
       if (!/[A-Za-z]/.test(q.text) || n > 25 || isStarterQuote(q)) return false;
       return n > SHORT_TARGET_MAX_WORDS || isShortTargetAsked(q, turnText);
@@ -152,6 +216,17 @@ export function detectPronunciationTarget(
     if (last) {
       const text = last.text.replace(/[.,!?;:]+$/u, '').trim();
       hit = { text, kind: norm(text).split(' ').length === 1 ? 'word' : 'sentence' };
+    }
+  }
+  // Task 31 §C2 / §D (run 18, 1141 s / 1203 s / 1233 s): an unquoted target
+  // after a colon — "repeat after me: responsibilities.", "please repeat it:
+  // <sentence>", or "let's try one sentence: <sentence>" followed by the
+  // listen / repeat ask.
+  if (!hit) {
+    const colon = colonTarget(turnText);
+    if (colon) {
+      const n = norm(colon);
+      hit = listed.find((t) => norm(t.text) === n) ?? { text: colon, kind: n.split(' ').length === 1 ? 'word' : 'sentence' };
     }
   }
   // Task 21 §D1: nothing quoted to arm, a listen / repeat ask, and a sentence
