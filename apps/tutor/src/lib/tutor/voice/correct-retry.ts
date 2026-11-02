@@ -22,6 +22,7 @@ import { FILLER_TOKENS, dropFillersAndRepeats } from './filler-repeats';
 import { normaliseNumberTokens } from './number-tokens';
 import { withSilentClause, withRetryStyle } from './output-budget';
 import { hasCorrectionCue } from './sentence-board';
+import { lastQuestionSentence, lastAskSentence } from '../question-gist-text';
 
 export { dropFillersAndRepeats };
 
@@ -878,3 +879,47 @@ export function moveOnIgnored(input: {
 /** The directive the killed attempt's retry gets. */
 export const MOVE_ON_IGNORED_REASON = withRetryStyle(
   'The student asked to move on. Close this part in one sentence and call advance_lesson now. No practice, no repeat.');
+
+// ─────────────────────────────────────────────────────────────────────────
+// Task 30 fix round 3 R2-2a (run r2, 147–437 s: the level check became a
+// ten-turn grammar quiz — the same concept question, "which tense would you
+// use …?", asked eight times while the student answered "OK" / "I see" / an
+// unrelated sentence). A turn whose ask has the same gist as the asks of the
+// two previous tutor turns, when neither student turn in between answered
+// it, is killed once and retried with SAME_QUESTION_THIRD_TIME_REASON.
+
+/** The ask of a tutor turn: its last question sentence, else its last ask. */
+export function turnAskGist(text: string | null | undefined): string {
+  const t = text ?? '';
+  return lastQuestionSentence(t) ?? lastAskSentence(t) ?? '';
+}
+const GIST_STOPWORDS = new Set(['a', 'an', 'the', 'to', 'of', 'in', 'on', 'at', 'for', 'and', 'or', 'is', 'are', 'do', 'does', 'did', 'it', 'this', 'that', 'so', 'now', 'then', 'please', 'can', 'could', 'would', 'will', 'me', 'okay', 'ok']);
+function gistTokens(s: string): Set<string> {
+  return new Set((s.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).filter((w) => !GIST_STOPWORDS.has(w)));
+}
+export const SAME_QUESTION_GIST_JACCARD = 0.7;
+export function askGistsSame(a: string, b: string): boolean {
+  const x = gistTokens(a);
+  const y = gistTokens(b);
+  if (x.size === 0 || y.size === 0) return false;
+  let inter = 0;
+  for (const w of x) if (y.has(w)) inter += 1;
+  return inter / (x.size + y.size - inter) >= SAME_QUESTION_GIST_JACCARD;
+}
+/** True ⇒ the third ask of the same question with no answer in between.
+ *  `askGists` = [two turns ago, last turn, this attempt]; `answered` = the
+ *  student turn after each of the two earlier asks answered it. */
+export function sameQuestionThirdTime(input: { askGists: readonly [string, string, string]; answered: readonly [boolean, boolean] }): boolean {
+  const [g1, g2, g3] = input.askGists;
+  if (!g1 || !g2 || !g3) return false;
+  if (input.answered.some(Boolean)) return false;
+  return askGistsSame(g3, g2) && askGistsSame(g3, g1);
+}
+/** The student turn answered the pending ask: the check found it correct /
+ *  partly correct and about this question (not another part / neither). */
+export function studentAnsweredAsk(pc: { verdict?: string | null; answers?: string | null } | null | undefined): boolean {
+  if (!pc) return false;
+  return (pc.verdict === 'correct' || pc.verdict === 'partly_correct') && pc.answers !== 'other_part' && pc.answers !== 'neither';
+}
+export const SAME_QUESTION_THIRD_TIME_REASON = withRetryStyle(
+  'You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item.');

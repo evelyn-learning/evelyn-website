@@ -353,6 +353,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'language_digit_words',
   // Task 30 fix round 1 S2: a plan sentence right after a dropped narration sentence.
   'meta_narration_dropped_plan_continuation',
+  // Task 30 fix rounds 2–3: the done-frame text backfill filtered; the same question asked a third time (killed once / let through).
+  'meta_narration_backfill_filtered', 'same_question_third_time', 'same_question_third_time_unmade',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

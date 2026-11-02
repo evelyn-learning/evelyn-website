@@ -1151,3 +1151,11 @@ export const TUTOR_NARRATION_BACKFILL_FILTER = process.env.NEXT_PUBLIC_TUTOR_NAR
  *  client's auto cards included — is skipped, never drawn as a second card.
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_SENTENCE_SAME_TEXT_DEDUP=off. */
 export const TUTOR_SENTENCE_SAME_TEXT_DEDUP = process.env.NEXT_PUBLIC_TUTOR_SENTENCE_SAME_TEXT_DEDUP !== 'off';
+
+/** Task 30 fix round 3 R2-2a (run r2, 147–437 s: the same concept question
+ *  asked eight times): a language-lesson turn whose ask has the same gist as
+ *  the asks of the two previous tutor turns, with neither student turn in
+ *  between answering it, is killed once and retried (validator
+ *  same_question_third_time). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_SAME_QUESTION_THIRD_TIME=off. */
+export const TUTOR_SAME_QUESTION_THIRD_TIME = process.env.NEXT_PUBLIC_TUTOR_SAME_QUESTION_THIRD_TIME !== 'off';

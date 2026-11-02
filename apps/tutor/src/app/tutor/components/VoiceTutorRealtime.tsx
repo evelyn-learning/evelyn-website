@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, menuPickNote } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { pendingAnswerVocabularyFor, countsAsNoiseCancel } from '@/lib/tutor/voice/pending-answer';
@@ -231,7 +231,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -4261,6 +4261,8 @@ export function VoiceTutorRealtime({
   const offerContinueSegRef = useRef('');
   // Task 30 fix round 1 S8: cleanStudentSentence forms of earlier turns' checked-correct sentences.
   const affirmedStudentSentencesRef = useRef<Set<string>>(new Set());
+  // Task 30 fix round 3 R2-2a: per real student turn, whether it answered the tutor's pending ask (last 3).
+  const studentAnsweredHistoryRef = useRef<boolean[]>([]);
   // Task 22 fix round 1 (I3): board statements whose read-aloud was held once.
   const boardReadAloudHeldRef = useRef<Set<string>>(new Set());
   /** Task 16 §C: the scheduled continuation after an announced move whose
@@ -13315,6 +13317,8 @@ export function VoiceTutorRealtime({
       let judgeRetriesUsed = 0;
       // correct-retry.ts (GDI run 3): one repeat_after_correct kill per turn.
       let repeatAfterCorrectRejected = false;
+      // Task 30 fix round 3 R2-2a: same_question_third_time fired this turn (once).
+      let sameQuestionRejected = false;
       // Task 20 §B1: one premature_farewell kill per turn.
       let prematureFarewellRejected = false;
       // Task 24 §C1: one transition_ask_off_part kill per turn.
@@ -19800,6 +19804,27 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Task 30 fix round 3 R2-2a (run r2, 147–437 s): the same question a
+        // third time with no answer in between — kill once; the retry gives
+        // the answer and asks something different. A retry that still asks
+        // it stands (sameQuestionRejected — no second kill).
+        if (TUTOR_SAME_QUESTION_THIRD_TIME && !attemptKilled && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
+          const sqTurns = recentTutorTurnsRef.current;
+          const sqHist = studentAnsweredHistoryRef.current;
+          const sqDue = sqTurns.length >= 2 && sqHist.length >= 1 && sameQuestionThirdTime({
+            askGists: [turnAskGist(sqTurns[sqTurns.length - 2]), turnAskGist(sqTurns[sqTurns.length - 1]), turnAskGist(attemptText)],
+            answered: [sqHist[sqHist.length - 1]!, studentAnsweredAsk(verdictPrecheckRef.current)],
+          });
+          if (sqDue && !sameQuestionRejected) {
+            sameQuestionRejected = true;
+            rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: SAME_QUESTION_THIRD_TIME_REASON });
+            await performKill();
+            onDebugEvent?.('same_question_third_time', `"${turnAskGist(attemptText).slice(0, 80)}"`);
+          } else if (sqDue) {
+            onDebugEvent?.('same_question_third_time_unmade', `"${turnAskGist(attemptText).slice(0, 80)}"`);
+          }
+        }
+
         // Task 27 §F (GDI run 14, 1093 s: "Uh, let's do summary." → "Let's do
         // it … Please say it once more" and two more drills): "move on" is an
         // order — on a fixed-script lesson a student turn that asks to move on
@@ -21581,6 +21606,10 @@ export function VoiceTutorRealtime({
         if (claimsPronunciation(fullText, transcript, pronunciationMeasuredThisTurn ? { measured: true } : undefined)) {
           pendingPronunciationNoteRef.current = PRONUNCIATION_CLAIM_NOTE;
           onDebugEvent?.('pronunciation_claim_note_planted', fullText.slice(0, 80));
+        }
+        // Task 30 fix round 3 R2-2a: did this student turn answer the pending ask?
+        if (!/^\s*\[/.test(transcript) && !opts?.prefetchOnly) {
+          studentAnsweredHistoryRef.current = [...studentAnsweredHistoryRef.current.slice(-2), studentAnsweredAsk(verdictPrecheckRef.current)];
         }
         // Task 30 fix round 1 S8: the lesson's checked-correct student sentences.
         if (!/^\s*\[/.test(transcript) && precheckCorrectness(verdictPrecheckRef.current?.verdict)) {

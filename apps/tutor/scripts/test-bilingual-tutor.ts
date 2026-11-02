@@ -51,7 +51,7 @@ import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/turn-cap';
 import { opensWithStockPraise, overusesStockPraiseOpener, PRAISE_OPENER_NOTE } from '../src/lib/tutor/voice/praise-variety';
-import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, dropFillersAndRepeats, precheckCorrectness } from '../src/lib/tutor/voice/correct-retry';
+import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, sameQuestionThirdTime, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, cleanStudentSentence, dropFillersAndRepeats, precheckCorrectness } from '../src/lib/tutor/voice/correct-retry';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '../src/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
@@ -1801,6 +1801,28 @@ test('Task 30 fix round 2 E7: every validator retry directive carries the no-ope
     assert.ok(r.includes(SC), name);
     assert.ok(r.endsWith('Apply this silently; never mention this note.'), name);
   }
+});
+
+test('Task 30 fix round 3 R2-2a: same_question_third_time — the same ask a third time with no answer in between', () => {
+  const T230 = 'Ask again, simply: if you have given a presentation many times over your career, would you use the past simple or the present perfect? Just say which one you think, with a short reason.';
+  const T259 = 'If you have given a presentation many times over your career, would you use past simple or present perfect? Tell me which one, with a short reason.';
+  const T302 = "Just to make sure we're on the same page: the question is whether you'd use past simple or present perfect for a presentation you've given many times over your career. Which one would you choose?";
+  const T355 = "Yes, that's a good reason. Now, which tense would you choose for a presentation you've given many times over your career, past simple or present perfect?";
+  const g = (t: string) => turnAskGist(t);
+  assert.equal(sameQuestionThirdTime({ askGists: [g(T230), g(T259), g(T259)], answered: [false, false] }), true);
+  assert.equal(sameQuestionThirdTime({ askGists: [g(T230), g(T259), g(T259)], answered: [false, true] }), false, 'an answer in between ⇒ no kill');
+  assert.equal(sameQuestionThirdTime({ askGists: [g(T230), g(T259), g('Great. Next, tell me about a project you are proud of.')], answered: [false, false] }), false, 'a different question');
+  assert.equal(sameQuestionThirdTime({ askGists: ['', g(T259), g(T259)], answered: [false, false] }), false);
+  void T302; void T355;
+  assert.equal(studentAnsweredAsk({ verdict: 'correct', answers: 'this_question' }), true);
+  assert.equal(studentAnsweredAsk({ verdict: 'correct', answers: 'other_part' }), false);
+  assert.equal(studentAnsweredAsk({ verdict: 'incorrect', answers: 'this_question' }), false);
+  assert.equal(studentAnsweredAsk(null), false);
+  assert.ok(SAME_QUESTION_THIRD_TIME_REASON.startsWith('You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item. Start directly with your reply'));
+  assert.ok(SAME_QUESTION_THIRD_TIME_REASON.endsWith('Apply this silently; never mention this note.'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: SAME_QUESTION_THIRD_TIME_REASON });"));
+  assert.ok(vtr.includes("onDebugEvent?.('same_question_third_time_unmade',"));
 });
 
 if (failed) process.exit(1);
