@@ -33,6 +33,7 @@ import {
   holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer,
   offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason,
   FIXED_SCRIPT_OFFER_MAX_WAIT_MS, offerWaitExpired,
+  offerAccepted, fixedScriptOfferAcceptedNote, FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
@@ -861,9 +862,37 @@ test('30A2: held 2 + runtime turn ⇒ hold-offer; held 2 + student turn ⇒ adva
 test('30A2: VTR wiring — runtime turns do not count; spoken-at stamped; the expiry event (pins)', () => {
   assert.ok(VTR.includes("const offerRuntimeTurn = /^\\s*\\[/.test(transcript);"));
   assert.ok(VTR.includes('studentTurn: !offerRuntimeTurn,'));
-  assert.ok(VTR.includes("offerSpokenAtMs: transitionOfferSpokenAtRef.current.get(segIdNow ?? '') ?? null,"));
+  assert.ok(VTR.includes("offerSpokenAtMs: offerAccept?.at ?? transitionOfferSpokenAtRef.current.get(segIdNow ?? '') ?? null,"));
   assert.equal((VTR.match(/transitionOfferSpokenAtRef\.current\.set\(/g) ?? []).length >= 3, true);
   assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_wait_expired',"));
+});
+
+// ── Task 30 §B1: "one more" accepted ⇒ one NEW item, then the move ──────
+test('30B1: offerAccepted — one more / もう一回 accept; a move-on wins', () => {
+  assert.equal(offerAccepted('Yes, one more practice.'), true);
+  assert.equal(offerAccepted("Let's move on"), false);
+  assert.equal(offerAccepted('one more, then move on'), false, 'decline wins');
+  assert.equal(offerAccepted('もう一回'), true);
+  assert.equal(offerAccepted('Practice, please.'), true);
+  assert.equal(offerAccepted('Summary.'), false);
+  assert.equal(offerAccepted('[runtime note] one more'), false);
+});
+test('30B1: the accepting turn and the next student turn hold; the turn after advances', () => {
+  const d = (offerAcceptedStudentTurns: number | null, offerHeldTurns = 2) =>
+    fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'turns', offerMade: true, offerHeldTurns, offerSpoken: true, offerDeclined: false, studentTurn: true, offerAcceptedStudentTurns });
+  assert.equal(FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS, 2);
+  assert.equal(d(0), 'hold-offer', 'the accepting turn');
+  assert.equal(d(1), 'hold-offer', 'the answer to the new item');
+  assert.equal(d(2), 'advance');
+  assert.equal(d(null), 'advance', 'not accepted ⇒ as before');
+});
+test('30B1: the accepted note (pin) and the VTR wiring', () => {
+  assert.equal(fixedScriptOfferAcceptedNote(tr, 'part-a', 'part-b'),
+    '[runtime note — not from the student] The student wants ONE more item on "Part A". Ask ONE new question on this point that you have not asked in this lesson — spoken in full and written with handwrite — not the question already on the board. When they have answered and you have corrected it, close the part in one sentence and move on to "Part B" (call advance_lesson) without offering again. Apply this silently; never mention this note.]');
+  assert.ok(VTR.includes('runTranscript = `${fixedScriptOfferAcceptedNote(oaPlan, oaSeg, oaNext)}\\n\\n${runTranscript}`;'));
+  assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_accepted',"));
+  assert.ok(VTR.includes('if (offerAccept && !offerRuntimeTurn && !opts?.prefetchOnly) offerAccept.studentTurns += 1;'));
+  assert.ok(VTR.includes('offerAcceptedStudentTurns: offerAccept ? offerAccept.studentTurns : null,'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

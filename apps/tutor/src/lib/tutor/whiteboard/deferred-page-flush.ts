@@ -226,3 +226,35 @@ export function previousPageTarget(
   if (pages === 0) return null;
   return { ...(lastTitle ? { targetPageTitle: lastTitle } : {}), targetPageIndex: pages - 1 };
 }
+
+/** The card title of an authored segment card by its truth kind (the
+ *  show_segment_card resolution's titles). */
+export function segmentCardTitle(kind: string | null | undefined): string | undefined {
+  return kind === 'try_yourself' ? 'Try Yourself'
+    : kind === 'worked_example' ? 'Worked Example'
+    : kind === 'misconception_check' ? 'Check'
+    : kind === 'extension' ? 'Extension'
+    : undefined;
+}
+
+/**
+ * Task 30 §B2 (GDI run 17, 499–510 s, Image 68): the fixed-script budget
+ * advance into the past-simple part flushed its page EMPTY — the brain's
+ * show_problem carried the old part's statement (dropped as a duplicate) and
+ * nothing else put the authored card on the page. At the flush of a page
+ * armed by a fixed-script auto advance (and a page re-armed after a kill,
+ * §C), the new segment's authored card goes up right after the newPage when
+ * the batch has no card of its own. null when the batch has one, or the
+ * segment has no authored card (a kind without a problem truth).
+ */
+export function segmentCardForFlush(input: {
+  segmentId: string;
+  batchHasSegmentCard: boolean;
+  authored: { statement: string; kind?: string | null } | null | undefined;
+}): { action: 'showProblem'; problem: { statement: string; format: 'free-response'; title?: string } } | null {
+  if (input.batchHasSegmentCard || !input.segmentId) return null;
+  const statement = (input.authored?.statement ?? '').trim();
+  if (!statement) return null;
+  const title = segmentCardTitle(input.authored?.kind);
+  return { action: 'showProblem', problem: { statement, format: 'free-response', ...(title ? { title } : {}) } };
+}

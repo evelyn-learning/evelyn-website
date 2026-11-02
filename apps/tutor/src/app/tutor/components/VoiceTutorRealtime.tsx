@@ -90,7 +90,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
@@ -438,7 +438,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { fixedScriptTransitionDecision, offerWaitExpired, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -651,6 +651,12 @@ import {
   type StudentMarkEvent,
   type ResolvedMark,
 } from '@/lib/tutor/whiteboard/student-marks';
+/** Task 30 §B2: a segment's authored card (statement as the board shows it + truth kind), null = none. */
+function authoredSegmentCard(plan: LessonPlan | null | undefined, segId: string): { statement: string; kind: string | null } | null {
+  const sg = plan?.segments.find((x) => x.id === segId);
+  const truth = sg && plan ? getSegmentTruth(sg, plan.id) : null;
+  return truth?.problemText ? { statement: stripWbEmphasisText(truth.problemText), kind: truth.kind ?? null } : null;
+}
 /** Task 27 §E2: a segment's card statement as the board shows it ('' = none). */
 function segmentCardStatement(plan: LessonPlan | null | undefined, segId: string): string {
   const sg = plan?.segments.find((x) => x.id === segId);
@@ -4228,6 +4234,9 @@ export function VoiceTutorRealtime({
   const transitionOfferUnmadeRef = useRef('');
   // Task 30 §A2: when each segment's offer was spoken (the wait cap).
   const transitionOfferSpokenAtRef = useRef<Map<string, number>>(new Map());
+  // Task 30 §B1: the student accepted the spoken offer — student turns ended
+  // since (-1 until the accepting turn ends) and when.
+  const offerAcceptedRef = useRef<{ segId: string; studentTurns: number; at: number } | null>(null);
   // Task 22 fix round 1 (I3): board statements whose read-aloud was held once.
   const boardReadAloudHeldRef = useRef<Set<string>>(new Set());
   /** Task 16 §C: the scheduled continuation after an announced move whose
@@ -4563,7 +4572,7 @@ export function VoiceTutorRealtime({
   // (not dedup). If every teaching command dedups, the page stays
   // deferred — preventing the empty-page-after-advance bug observed
   // 2026-05-13 (10) session.
-  const pendingAdvanceNewPageRef = useRef<{ title: string; segmentId: string; /** fixed-script "Part n · label" title — never retitled from the card */ authored?: boolean; /** armed by the client's post-turn advance (fixed-script auto-advance / spoken opener): the turn's own auto sentence cards belong to the part being LEFT and never open this page (Task 14 §K) */ afterTurn?: boolean; /** Task 24 §C3: the advance fired on an ask turn with the hold spent — `afterTurn` survives the NEXT turn start, the turn-end flush waits for that turn's end */ flushAfterNextTurn?: boolean; /** the carried turn has started (set at its turn start) */ carriedTurnStarted?: boolean } | null>(null);
+  const pendingAdvanceNewPageRef = useRef<{ title: string; segmentId: string; /** fixed-script "Part n · label" title — never retitled from the card */ authored?: boolean; /** armed by the client's post-turn advance (fixed-script auto-advance / spoken opener): the turn's own auto sentence cards belong to the part being LEFT and never open this page (Task 14 §K) */ afterTurn?: boolean; /** Task 24 §C3: the advance fired on an ask turn with the hold spent — `afterTurn` survives the NEXT turn start, the turn-end flush waits for that turn's end */ flushAfterNextTurn?: boolean; /** the carried turn has started (set at its turn start) */ carriedTurnStarted?: boolean; /** Task 30 §B2 / §C: the flush carries the segment's authored card when the batch has none (fixed-script auto advance; a page re-armed after a kill) */ cardOnFlush?: boolean } | null>(null);
   // Task 23 §A: the deferred segment page break flushed into a batch this
   // turn (the newPage command object, still in the render buffer until it
   // paints) and the page being left — a later student sentence card of the
@@ -6250,6 +6259,7 @@ export function VoiceTutorRealtime({
       onTranscriptUpdate([...transcriptRef.current]);
     }
   };
+  const handleWhiteboardCommandRef = useRef<((commands: WhiteboardCommand[]) => Promise<WhiteboardCommandResult>) | null>(null);
   const flushDeferredPageAtTurnEndNow = useCallback((why: string) => {
     const deferred = pendingAdvanceNewPageRef.current;
     if (!flushDeferredPageAtTurnEnd({
@@ -6270,6 +6280,21 @@ export function VoiceTutorRealtime({
     recordDispatchedCommandsRef.current(pageCmds);
     console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED at turn end (${why}) → "${deferred.segmentId}" ("${deferred.title}")`);
     onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title} at turn end`);
+    // Task 30 §B2: an auto-advanced part page never paints empty — its
+    // authored card goes up with it (through the normal board path).
+    if (deferred.cardOnFlush) {
+      const authored = authoredSegmentCard(lessonPlanRef.current, deferred.segmentId);
+      const card = segmentCardForFlush({
+        segmentId: deferred.segmentId,
+        batchHasSegmentCard: !!authored && problemStatementOnBoard(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, authored.statement),
+        authored,
+      });
+      if (card) {
+        catalogRef.current.setCurrentSegment(deferred.segmentId);
+        void handleWhiteboardCommandRef.current?.([card as unknown as WhiteboardCommand]);
+        onDebugEvent?.('auto_newpage_on_advance_card_added', `${deferred.segmentId} (turn end)`);
+      }
+    }
     if (topicShiftPendingRef.current) {
       topicShiftPendingRef.current = null;
       onDebugEvent?.('topic_shift_cleared_by_segment_page', `${deferred.segmentId}: ${deferred.title}`);
@@ -9906,7 +9931,20 @@ export function VoiceTutorRealtime({
           : { title: deferred.title, retitled: false };
         const pageTitle = titleDecision.title;
         const segmentBreakCmd = { action: 'newPage', title: pageTitle } as WhiteboardCommand;
-        processed = [segmentBreakCmd, ...processed];
+        // Task 30 §B2: the auto-advanced part's authored card rides the
+        // break when the batch carries no card of its own.
+        const flushAuthored = deferred.cardOnFlush ? authoredSegmentCard(lessonPlanRef.current, deferred.segmentId) : null;
+        const flushCard = flushAuthored ? segmentCardForFlush({
+          segmentId: deferred.segmentId,
+          batchHasSegmentCard: processed.some((c) => c.action === 'showProblem')
+            || problemStatementOnBoard(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, flushAuthored.statement),
+          authored: flushAuthored,
+        }) : null;
+        processed = flushCard ? [segmentBreakCmd, flushCard as unknown as WhiteboardCommand, ...processed] : [segmentBreakCmd, ...processed];
+        if (flushCard) {
+          catalogRef.current.setCurrentSegment(deferred.segmentId);
+          onDebugEvent?.('auto_newpage_on_advance_card_added', deferred.segmentId);
+        }
         // Task 23 §A: the student's sentence cards go in front of the break.
         const orderedForBreak = orderStudentCardsBeforePageBreak(processed, isStudentCardCmd);
         processed = orderedForBreak.cmds;
@@ -11034,6 +11072,8 @@ export function VoiceTutorRealtime({
     const note = [closeNote, ...duplicateSentenceNotes].filter(Boolean).join(' ');
     return { rejected, assignedIds, manifests, duplicates, boardSnapshot, ...(note ? { note } : {}) };
   }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent, applyResolvedAdvance]);
+  // Task 30 §B2: the turn-end page flush (defined above) puts the part card up through this.
+  handleWhiteboardCommandRef.current = handleWhiteboardCommand;
 
   // Build a context summary from the current transcript
   const buildContextSummary = useCallback(() => {
@@ -13387,6 +13427,19 @@ export function VoiceTutorRealtime({
           runTranscript = `${ref.current}\n\n${runTranscript}`;
           ref.current = null;
           onDebugEvent?.(consumed, 'delivered with this turn');
+        }
+      }
+      // Task 30 §B1 (GDI run 17, 499–504 s): the student accepted the spoken
+      // offer ("Yes, one more practice.") — ONE new item, not the question
+      // already on the board, then the move on without a second offer.
+      if (TUTOR_TRANSITION_OFFER_SPOKEN && TUTOR_FIXED_SCRIPT_TRANSITIONS && !opts?.prefetchOnly) {
+        const oaSeg = currentSegmentIdRef.current ?? '';
+        const oaPlan = lessonPlanRef.current;
+        const oaNext = oaPlan && oaSeg ? nextSegmentId(oaPlan, oaSeg, !!workingLevelRef.current) : null;
+        if (oaSeg && oaNext && transitionOfferSpokenRef.current.has(oaSeg) && offerAcceptedRef.current?.segId !== oaSeg && offerAccepted(transcript)) {
+          offerAcceptedRef.current = { segId: oaSeg, studentTurns: -1, at: Date.now() };
+          runTranscript = `${fixedScriptOfferAcceptedNote(oaPlan, oaSeg, oaNext)}\n\n${runTranscript}`;
+          onDebugEvent?.('fixed_script_offer_accepted', `"${oaSeg}" "${transcript.slice(0, 60)}"`);
         }
       }
       // Voice-only (voice-only.ts): sticky from the turn the student says they
@@ -21028,6 +21081,9 @@ export function VoiceTutorRealtime({
         const offerSeg = segIdNow ?? '';
         // Task 30 §A2: a nudge / nag / continuation / note-only turn (no student speech).
         const offerRuntimeTurn = /^\s*\[/.test(transcript);
+        // Task 30 §B1: the accepted offer counts the student turns since.
+        const offerAccept = offerAcceptedRef.current && offerAcceptedRef.current.segId === offerSeg ? offerAcceptedRef.current : null;
+        if (offerAccept && !offerRuntimeTurn && !opts?.prefetchOnly) offerAccept.studentTurns += 1;
         if (TUTOR_TRANSITION_OFFER_SPOKEN && TUTOR_FIXED_SCRIPT_TRANSITIONS && !opts?.prefetchOnly && offerSeg
           && transitionOfferMadeRef.current.has(offerSeg) && !transitionOfferSpokenRef.current.has(offerSeg)) {
           if (offerAsked(fullText)) {
@@ -21064,14 +21120,15 @@ export function VoiceTutorRealtime({
                 offerDeclined: !offerSpokenThisTurn && offerDeclined(transcript),
                 // Task 30 §A2: a runtime-triggered turn never spends the hold; the wait cap.
                 studentTurn: !offerRuntimeTurn,
-                offerSpokenAtMs: transitionOfferSpokenAtRef.current.get(segIdNow ?? '') ?? null,
+                offerSpokenAtMs: offerAccept?.at ?? transitionOfferSpokenAtRef.current.get(segIdNow ?? '') ?? null,
                 nowMs: Date.now(),
+                offerAcceptedStudentTurns: offerAccept ? offerAccept.studentTurns : null,
               } : {}),
             })
             : 'advance';
           if (TUTOR_TRANSITION_OFFER_SPOKEN && transition === 'advance' && transitionOfferSpokenRef.current.has(segIdNow ?? '')
-            && offerWaitExpired(transitionOfferSpokenAtRef.current.get(segIdNow ?? ''), Date.now())) {
-            onDebugEvent?.('fixed_script_offer_wait_expired', `"${segIdNow}" ${Math.round((Date.now() - (transitionOfferSpokenAtRef.current.get(segIdNow ?? '') ?? Date.now())) / 1000)}s after the offer`);
+            && offerWaitExpired(offerAccept?.at ?? transitionOfferSpokenAtRef.current.get(segIdNow ?? ''), Date.now())) {
+            onDebugEvent?.('fixed_script_offer_wait_expired', `"${segIdNow}" ${Math.round((Date.now() - (offerAccept?.at ?? transitionOfferSpokenAtRef.current.get(segIdNow ?? '') ?? Date.now())) / 1000)}s after the offer${offerAccept ? ' (accepted)' : ''}`);
           }
           // Task 26 fix round 1 (m-1): once the part's offer was made the
           // pronunciation hold no longer stacks on the offer's own hold.
@@ -21132,6 +21189,8 @@ export function VoiceTutorRealtime({
             applyResolvedAdvance(autoPlan, segIdNow, autoNext);
             if (pendingAdvanceNewPageRef.current?.segmentId === autoNext) {
               pendingAdvanceNewPageRef.current.afterTurn = true;
+              // Task 30 §B2: a budget advance's page carries the part's card.
+              if (advanceReason !== 'announced') pendingAdvanceNewPageRef.current.cardOnFlush = true;
               // Task 24 §C3 (GDI run 12, 962 s): the hold was spent on an ask
               // turn — the page waits for the end of the transition turn.
               // Reaching this branch with askPending means

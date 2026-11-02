@@ -16,6 +16,7 @@ import {
   advancePageFlushTiming,
   orderTurnEndDispatches,
   previousPageTarget,
+  segmentCardForFlush,
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 import { keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
@@ -163,7 +164,7 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('23A: a new model sentence is not', !isStudentSentenceCard('I have worked here for five years.', 'Yes, I have worked with an international customer before.'));
   ok('23A: no student turn ⇒ not the student\'s', !isStudentSentenceCard('I have worked here for five years.', null));
   const VTR3 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  ok('23A: the batch flush orders the student cards in front of the break', /processed = \[segmentBreakCmd, \.\.\.processed\];\s*\/\/ Task 23 §A[^\n]*\n\s*const orderedForBreak = orderStudentCardsBeforePageBreak\(processed, isStudentCardCmd\);/.test(VTR3));
+  ok('23A: the batch flush orders the student cards in front of the break', /processed = flushCard \? \[segmentBreakCmd, flushCard as unknown as WhiteboardCommand, \.\.\.processed\] : \[segmentBreakCmd, \.\.\.processed\];[\s\S]{0,300}?\/\/ Task 23 §A[^\n]*\n\s*const orderedForBreak = orderStudentCardsBeforePageBreak\(processed, isStudentCardCmd\);/.test(VTR3));
   ok('23A: event "after N student card(s)"', VTR3.includes("` after ${orderedForBreak.moved.length} student card(s)`") && VTR3.includes('after ${n} student card(s) (buffered)'));
   ok('23A: moved cards are catalogued on the page being left', VTR3.includes('pageId: killRecoveryPinPageId ?? (movedBeforeBreak.has(cmd) && movedBeforeBreakPageId ? movedBeforeBreakPageId : undefined),'));
   ok('23A: a buffered break takes the later student card in front of it', /renderBufferRef\.current\.splice\(breakAt, 0, \{ processed: cards,/.test(VTR3));
@@ -282,6 +283,20 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('29L: other reasons unchanged', advancePageFlushTiming({ askPending: false, holdSpent: false, reason: 'turns' }) === 'turn-end' && advancePageFlushTiming({ askPending: true, holdSpent: true, reason: 'announced' }) === 'next-turn');
   const V6 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   ok('29L: VTR defers the spoken-opener page to the end of the first brain turn', /applyResolvedAdvance\(spokenOpenerPlan, spokenOpener\.segmentId, next\);\s*if \(pendingAdvanceNewPageRef\.current\?\.segmentId === next\) \{\s*pendingAdvanceNewPageRef\.current\.afterTurn = true;[\s\S]{0,300}?advancePageFlushTiming\(\{ askPending: false, holdSpent: false, reason: 'spoken_opener' \}\) === 'next-turn'\) \{\s*pendingAdvanceNewPageRef\.current\.flushAfterNextTurn = true;\s*pendingAdvanceNewPageRef\.current\.carriedTurnStarted = false;\s*onDebugEvent\?\.\('auto_newpage_on_advance_deferred_next_turn'/.test(V6));
+}
+
+// Task 30 §B2 (GDI run 17, 510 s): an auto-advanced part page carries its authored card.
+{
+  const authored = { statement: 'Did you attend any business events last year?', kind: 'try_yourself' };
+  const card = segmentCardForFlush({ segmentId: 'past-simple', batchHasSegmentCard: false, authored });
+  ok('30B2: batch without a card ⇒ the authored card', !!card && card.action === 'showProblem' && card.problem.statement === authored.statement && card.problem.title === 'Try Yourself' && card.problem.format === 'free-response');
+  ok('30B2: batch with the segment\'s card ⇒ null', segmentCardForFlush({ segmentId: 'past-simple', batchHasSegmentCard: true, authored }) === null);
+  ok('30B2: a segment with no authored card ⇒ null', segmentCardForFlush({ segmentId: 'overview', batchHasSegmentCard: false, authored: null }) === null
+    && segmentCardForFlush({ segmentId: 'overview', batchHasSegmentCard: false, authored: { statement: '  ', kind: null } }) === null);
+  const V7 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('30B2: VTR arms cardOnFlush on a budget advance', V7.includes("if (advanceReason !== 'announced') pendingAdvanceNewPageRef.current.cardOnFlush = true;"));
+  ok('30B2: VTR adds the card at the in-batch flush after the break', V7.includes('processed = flushCard ? [segmentBreakCmd, flushCard as unknown as WhiteboardCommand, ...processed] : [segmentBreakCmd, ...processed];'));
+  ok('30B2: VTR adds the card at the turn-end flush through the board path', /if \(deferred\.cardOnFlush\) \{[\s\S]{0,700}?void handleWhiteboardCommandRef\.current\?\.\(\[card as unknown as WhiteboardCommand\]\);\s*onDebugEvent\?\.\('auto_newpage_on_advance_card_added'/.test(V7));
 }
 
 console.log(`deferred-page-flush: ${n} cases passed`);

@@ -424,6 +424,11 @@ export function fixedScriptTransitionDecision(input: {
   /** Task 30 §A2: when the offer was spoken (ms) and now — the wait cap. */
   offerSpokenAtMs?: number | null;
   nowMs?: number;
+  /** Task 30 §B1: student turns ended since the student ACCEPTED the offer
+   *  (0 = the accepting turn itself); null / absent ⇒ not accepted. Below
+   *  FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS ⇒ 'hold-offer' (the new item is
+   *  asked, answered and corrected first). */
+  offerAcceptedStudentTurns?: number | null;
 }): 'offer' | 'await-offer' | 'hold-offer' | 'advance' {
   if (input.reason === 'announced') return 'advance';
   if (segmentTransitionKind(input.plan, input.segmentId) !== 'offer') return 'advance';
@@ -431,6 +436,7 @@ export function fixedScriptTransitionDecision(input: {
   if (input.offerSpoken === false) return 'await-offer';
   if (input.offerDeclined) return 'advance';
   if (offerWaitExpired(input.offerSpokenAtMs, input.nowMs)) return 'advance';
+  if (typeof input.offerAcceptedStudentTurns === 'number' && input.offerAcceptedStudentTurns < FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS) return 'hold-offer';
   if (holdAutoAdvanceForOffer(true, input.offerHeldTurns)) return 'hold-offer';
   return input.studentTurn === false ? 'hold-offer' : 'advance';
 }
@@ -483,6 +489,26 @@ export function transitionOfferValidatorDecision(input: {
   if (offerAsked(input.text)) return 'spoken';
   if (input.announcedMove || input.calledAdvance) return 'ok';
   return input.alreadyRetried ? 'unmade' : 'kill';
+}
+/** Task 30 §B1 (GDI run 17, 499–504 s: "Yes, one more practice." was answered
+ *  with "Look at the question on the board" — the question answered at
+ *  279 s): the student's reply ACCEPTS the spoken offer — a more-word (one
+ *  more / another / more practice / again / once more / もう一…), "yes /
+ *  yeah / sure / ok" with one, or "practice"; a move-word anywhere ("move on",
+ *  "next", "skip", "continue", 次 / 進) is a decline and wins. Pure. */
+const OFFER_ACCEPT_MOVE_RE = /\b(?:move on|moving on|go on|next|skip|continue|summary)\b|次|進/i;
+export function offerAccepted(studentText: string | null | undefined): boolean {
+  const t = (studentText ?? '').trim();
+  if (!t || /^\s*\[/.test(t)) return false;
+  if (OFFER_ACCEPT_MOVE_RE.test(t)) return false;
+  return OFFER_MORE_RE.test(t) || /\bpractice\b/i.test(t);
+}
+/** Task 30 §B1: student turns the accepted offer holds the advance for — the
+ *  accepting turn (the new item is asked) and the answer (corrected). */
+export const FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS = 2;
+/** Task 30 §B1: the urgent directive on the accepting turn. */
+export function fixedScriptOfferAcceptedNote(plan: LessonPlan | null | undefined, segId: string, next: string): string {
+  return withSilentClause(`[runtime note — not from the student] The student wants ONE more item on "${fixedScriptPartLabel(plan, segId)}". Ask ONE new question on this point that you have not asked in this lesson — spoken in full and written with handwrite — not the question already on the board. When they have answered and you have corrected it, close the part in one sentence and move on to "${fixedScriptPartLabel(plan, next)}" (call advance_lesson) without offering again.]`);
 }
 /** The retry directive of transition_offer_missing (shared silent clause). */
 export function fixedScriptOfferMissingReason(plan: LessonPlan | null | undefined, from: string, next: string): string {
