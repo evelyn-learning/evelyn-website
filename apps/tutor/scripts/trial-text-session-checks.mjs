@@ -40,6 +40,7 @@ export function runChecks(dump) {
   const completed = (header?.lp?.completedSegmentIds ?? []).filter((s) => s !== 'overview');
   ok('one page per part reached', partPages.length >= completed.length, `${partPages.length} part pages for ${completed.length} completed parts (+current)`);
   for (const p of partPages) {
+    if (/Summary|まとめ/.test(p.title)) continue; // the recap part has no authored card
     const first = p.items[0];
     ok(`page "${p.title}" opens with its card`, !!first && first.action === 'showProblem', first ? `${first.action} first` : 'EMPTY page');
   }

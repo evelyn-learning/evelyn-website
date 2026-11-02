@@ -85,11 +85,14 @@ const POOL = {
   who: ['My manager and two colleagues.'],
   where: ['In Osaka, at our head office.'],
   generic: ['OK.', 'I see.', 'Yes, I understand.', 'OK, thank you.'],
+  whichTense: ['Present perfect, because it is my experience until now.', 'I think past simple.'],
+  whichWords: ['Last month.', '"Last year" shows the time is finished.'],
   howLong: ['For three years.', 'I have worked in my current department for three years.'],
   department: ['I have worked in my current department for three years.'],
 };
 // "starting with "X"" scaffolds: X + a tail that fits
 const PREFIX_TAILS = [
+  [/^i$/i, ['visited our factory in Vietnam last year.', 'made a presentation for a new product launch.']],
   [/^i (?:worked|met|talked|spoke) with/i, ['a customer from Germany two years ago.', 'our supplier in Vietnam last year.']],
   [/^i have worked/i, ['with a customer from Germany.', 'at my company for five years.', 'on the new website project for two months.']],
   [/^i have learned/i, ['how to negotiate with suppliers.']], [/^it has helped me/i, ['get a better price from suppliers.']],
@@ -173,7 +176,7 @@ function decide(text) {
   }
   if (/\bare you ready\b|準備|\bshall we (?:start|begin)\b|\bready to (?:start|begin)\b/i.test(last)) return { text: pick(['Yes, I\'m ready.', 'Yes, let\'s start.', 'OK, ready.']), why: 'ready' };
   if (/\bdifference between\b/i.test(t) && /\bworked here\b|\bhave worked\b/i.test(t)) return { text: V.wrongDifference ? POOL.differenceWrong[0] : fromPool('difference'), why: 'difference' };
-  const q = quoted(t);
+  const q = quoted(t).filter((x) => !/[?？]\s*$/.test(x));
   if (q.length && (REPEAT_RE.test(t) || /\bstarting with\b/i.test(last) === false && /\bsay\b|\brepeat\b|\btry\b/i.test(last))) {
     const target = q[q.length - 1];
     if (/\bstarting with\b|\bstart with\b|\bbegin with\b/i.test(last) && target.split(' ').length <= 3) { /* a starter, not a repeat */ } else {
@@ -188,6 +191,7 @@ function decide(text) {
   if (V.japanese && !state.japaneseDone && state.student > 3 && /\bwhy\b|\bwhen\b/i.test(last)) { state.japaneseDone = true; return { text: 'すみません、もう一度言ってください。', why: 'japanese' }; }
   const L = lastQ.toLowerCase();
   const rules = [
+    [/which tense|past simple or present perfect|present perfect or past simple/, 'whichTense'], [/which words?|what words?|time word/, 'whichWords'],
     [/skill.*(improve|better)|improve/, 'improve'], [/international|foreign|overseas|abroad/, 'international'],
     [/what do you do|your job|about your work|about your job|where do you work|what is your job/, 'job'],
     [/recent (sale|project)|project you worked|one project|sale or project|working on now|preparing/, 'recent'],
