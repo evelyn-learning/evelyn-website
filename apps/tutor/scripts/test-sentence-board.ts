@@ -1529,7 +1529,18 @@ test('E13: the same text on the current page (any kind / emphasis / gloss, auto 
   assert.equal(duplicateSentenceAction({ page: null, currentPage: 4, pronunciationModel: false, sameTextOnCurrentPage: false }), 'draw');
   assert.equal(duplicateSentenceAction({ page: null, currentPage: 4, pronunciationModel: true, onCurrentPage: true, sameTextOnCurrentPage: true }), 'rehighlight', 'a pronunciation model is re-highlighted as before');
   const V = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  assert.ok(V.includes('const sameTextOnCurrentPage = TUTOR_SENTENCE_SAME_TEXT_DEDUP && !dupPageOpening && !!sentenceCardIdOnCurrentPage(log, c.sentence);'));
+  assert.ok(V.includes('const sameTextId = TUTOR_SENTENCE_SAME_TEXT_DEDUP && !dupPageOpening ? sentenceCardIdOnCurrentPage(log, c.sentence) : null;'));
+});
+test('P-1 (fix round 3): a glossed / emphasised brain card replaces the auto card of the same text; otherwise skip', () => {
+  const d = (existingIsAuto: boolean, newBrainCardAddsMarkup: boolean) =>
+    duplicateSentenceAction({ page: null, currentPage: 4, pronunciationModel: false, sameTextOnCurrentPage: true, existingIsAuto, newBrainCardAddsMarkup });
+  assert.equal(d(true, true), 'draw', 'same text + gloss over an auto card ⇒ drawn (the replace path removes the auto card: one card, glossed)');
+  assert.equal(d(true, false), 'skip', 'same text, no gloss, no emphasis ⇒ skip');
+  assert.equal(d(false, true), 'skip', 'an existing brain card ⇒ skip');
+  assert.equal(d(false, false), 'skip', 'existing brain card + a new auto card ⇒ skip');
+  const V = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(V.includes('const existingIsAuto = !!sameTextId && autoSentenceCardIdsRef.current.has(sameTextId);'));
+  assert.ok(V.includes("const newBrainCardAddsMarkup = !opts?.sentenceBoardAuto\n          && ((typeof c.gloss === 'string' && c.gloss.trim() !== '') || (Array.isArray(c.emphasis) && c.emphasis.length > 0));"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

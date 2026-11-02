@@ -6973,8 +6973,13 @@ export function VoiceTutorRealtime({
         const dupAdvancedThisTurn = dupPageOpening || segmentPageFlushedTurnRef.current === pageTurnRef.current;
         const dupStudentCard = (opts?.sentenceBoardAuto === true && opts.studentSentenceCard === true) || isStudentSentenceCard(c.sentence, sentenceStressRef.current.studentLast);
         // Task 30 fix round 2 E13: the same text on the current page (auto cards included) — never a second card.
-        const sameTextOnCurrentPage = TUTOR_SENTENCE_SAME_TEXT_DEDUP && !dupPageOpening && !!sentenceCardIdOnCurrentPage(log, c.sentence);
-        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage });
+        const sameTextId = TUTOR_SENTENCE_SAME_TEXT_DEDUP && !dupPageOpening ? sentenceCardIdOnCurrentPage(log, c.sentence) : null;
+        const sameTextOnCurrentPage = !!sameTextId;
+        // Fix round 3 (P-1): a glossed / emphasised brain card replaces the client's auto card of the same text.
+        const existingIsAuto = !!sameTextId && autoSentenceCardIdsRef.current.has(sameTextId);
+        const newBrainCardAddsMarkup = !opts?.sentenceBoardAuto
+          && ((typeof c.gloss === 'string' && c.gloss.trim() !== '') || (Array.isArray(c.emphasis) && c.emphasis.length > 0));
+        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage, existingIsAuto, newBrainCardAddsMarkup });
         if (dupAction === 'draw') { seenThisBatch.push(c); return true; }
         if (dupAction === 'reshow') {
           onDebugEvent?.('show_sentence_duplicate_reshown', `page ${page} → ${dupCurrentPage}: "${c.sentence.slice(0, 60)}"`);

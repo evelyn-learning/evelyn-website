@@ -1773,11 +1773,22 @@ export function duplicateSentenceAction(input: {
    *  current page — whatever its kind (model / correction / checked), its
    *  emphasis or gloss, and whether the client drew it (an auto card). */
   sameTextOnCurrentPage?: boolean;
+  /** Fix round 3 (P-1): the same-text card on the page is the client's AUTO card. */
+  existingIsAuto?: boolean;
+  /** Fix round 3 (P-1): the new card is the brain's and carries a gloss or emphasis. */
+  newBrainCardAddsMarkup?: boolean;
 }): 'draw' | 'skip' | 'rehighlight' | 'reshow' {
   if (input.inThisBatch) return 'skip';
   // Task 30 fix round 2 E13 (r1 569 / 628 s: the auto correction card and the
   // brain's glossed card of the same sentence, both on the Part 4 page).
-  if (input.sameTextOnCurrentPage && !input.pronunciationModel) return 'skip';
+  // Fix round 3 (P-1): a brain card that adds a gloss / emphasis to the
+  // client's own auto card of the same text REPLACES it (Task 22 §B — the
+  // caller's replace path, one card, glossed); otherwise the second card is
+  // skipped (an existing brain card, or nothing new to show).
+  if (input.sameTextOnCurrentPage && !input.pronunciationModel) {
+    if (input.existingIsAuto && input.newBrainCardAddsMarkup) return 'draw';
+    return 'skip';
+  }
   // Task 25 §D1 (GDI run 13, 1026–1044 s: the conversation answer, already on
   // page 7, was re-drawn on the new pronunciation page under its menu card):
   // on the turn that opens a new part, the student's sentence card stays on
