@@ -49,7 +49,7 @@ import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/turn-cap';
 import { opensWithStockPraise, overusesStockPraiseOpener, PRAISE_OPENER_NOTE } from '../src/lib/tutor/voice/praise-variety';
-import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON, cleanStudentSentence, dropFillersAndRepeats, precheckCorrectness } from '../src/lib/tutor/voice/correct-retry';
+import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, dropFillersAndRepeats, precheckCorrectness } from '../src/lib/tutor/voice/correct-retry';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '../src/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
@@ -812,7 +812,7 @@ test('GDI run 3: VTR kills + retries a repeat_after_correct in a language sessio
 test('Task 19 §C (GDI run 7): a turn carrying a measured pronunciation note is not killed for repeat_after_correct', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   // the measured case is checked BEFORE the kill branch and never reaches it
-  assert.match(vtr, /if \(repeated && pronunciationMeasuredThisTurn\) \{\s*repeatAfterCorrectRejected = true;\s*onDebugEvent\?\.\('repeat_after_correct_allowed', 'measured'\);\s*\} else if \(repeated\) \{\s*repeatAfterCorrectRejected = true;\s*rejectionsThisAttempt\.push\(\{ action: 'repeat_after_correct'/);
+  assert.match(vtr, /if \(repeated && pronunciationMeasuredThisTurn\) \{\s*repeatAfterCorrectRejected = true;\s*onDebugEvent\?\.\('repeat_after_correct_allowed', 'measured'\);\s*\} else if \(repeated && racSkip\) \{[\s\S]{0,200}?\} else if \(repeated\) \{\s*repeatAfterCorrectRejected = true;\s*rejectionsThisAttempt\.push\(\{ action: 'repeat_after_correct'/);
   // the flag is set only from the consumed measured note
   assert.match(vtr, /runTranscript = `\$\{pronunciationResultNoteRef\.current\}\\n\\n\$\{runTranscript\}`;\s*pronunciationMeasuredThisTurn = pronunciationMeasuredRef\.current;/);
 });
@@ -1775,4 +1775,16 @@ test('Task 28 fix round 1 (m-4, m-5): a rewording keeps the count; a quoted func
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
+test('Task 30 fix round 1 S8: repeat_after_correct stands down for other_part / neither / an already-affirmed sentence', () => {
+  const S = 'Yes, I have worked at my company for five years.';
+  const none = new Set<string>();
+  assert.equal(repeatAfterCorrectStandDown({ answers: 'other_part', repeated: S, affirmedBefore: none }), 'other_part');
+  assert.equal(repeatAfterCorrectStandDown({ answers: 'neither', repeated: S, affirmedBefore: none }), 'neither');
+  assert.equal(repeatAfterCorrectStandDown({ answers: 'this_question', repeated: S, affirmedBefore: new Set([cleanStudentSentence(S)]) }), 'already affirmed');
+  assert.equal(repeatAfterCorrectStandDown({ answers: 'this_question', repeated: S, affirmedBefore: none }), null, 'a fresh correct repeat ⇒ the kill as before');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('repeat_after_correct_skipped', `${racSkip} \"${repeated.slice(0, 60)}\"`);"));
+  assert.ok(vtr.includes('if (affirmedKey) affirmedStudentSentencesRef.current.add(affirmedKey);'));
+});
+
 if (failed) process.exit(1);

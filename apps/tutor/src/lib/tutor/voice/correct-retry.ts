@@ -666,6 +666,27 @@ export function reAskedModelSentence(prevTutorText: string, studentText: string,
 export const REPEAT_AFTER_CORRECT_REASON = withSilentClause(
   'The student just said that sentence correctly. Confirm it in one short sentence and move to the next item; do not ask for it again. Say that it is right and go on; do not explain how you judged it (no talk of stutters, repeats, matching the model, or what counts).');
 
+/**
+ * Task 30 fix round 1 S8 (smoke run 467–475 s): the student said, a third
+ * time, a sentence already affirmed two turns earlier instead of answering
+ * the new question (precheck answers=other_part) — repeat_after_correct
+ * killed the turn that re-asked the NEW question and forced "confirm it".
+ * The kill stands down when the check says the reply answers another part /
+ * neither, or the repeated sentence was already affirmed earlier in the
+ * lesson (`affirmedBefore`: cleanStudentSentence forms of earlier turns'
+ * checked-correct sentences). Returns the reason, or null (kill as before).
+ */
+export function repeatAfterCorrectStandDown(input: {
+  answers: string | null | undefined;
+  repeated: string;
+  affirmedBefore: ReadonlySet<string>;
+}): 'other_part' | 'neither' | 'already affirmed' | null {
+  if (input.answers === 'other_part' || input.answers === 'neither') return input.answers;
+  const key = cleanStudentSentence(input.repeated);
+  if (key && input.affirmedBefore.has(key)) return 'already affirmed';
+  return null;
+}
+
 export const OWN_SENTENCE_RETRY_NOTE =
   '[runtime note — not from the student] Your last turn asked the student to say a sentence they had JUST said, in those words. ' +
   'A sentence they already produced is done: confirm it in one short clause and move to the next item. ' +

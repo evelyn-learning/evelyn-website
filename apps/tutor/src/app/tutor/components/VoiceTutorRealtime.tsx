@@ -231,7 +231,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -4259,6 +4259,8 @@ export function VoiceTutorRealtime({
   // Task 30 §D1: transition_offer_missing fired after heard sentences — the
   // segment whose offer a silent continuation asks at this turn's end.
   const offerContinueSegRef = useRef('');
+  // Task 30 fix round 1 S8: cleanStudentSentence forms of earlier turns' checked-correct sentences.
+  const affirmedStudentSentencesRef = useRef<Set<string>>(new Set());
   // Task 22 fix round 1 (I3): board statements whose read-aloud was held once.
   const boardReadAloudHeldRef = useRef<Set<string>>(new Set());
   /** Task 16 §C: the scheduled continuation after an announced move whose
@@ -19706,9 +19708,15 @@ export function VoiceTutorRealtime({
           // pronunciation note the re-ask is the coaching drill, not a
           // redundant retry — the kill's retry was told "confirm it" and never
           // gave the score or the weak sounds.
+          // Task 30 fix round 1 S8: not when the reply answers another part /
+          // neither, or the sentence was affirmed on an earlier turn.
+          const racSkip = repeated ? repeatAfterCorrectStandDown({ answers: verdictPrecheckRef.current?.answers ?? null, repeated, affirmedBefore: affirmedStudentSentencesRef.current }) : null;
           if (repeated && pronunciationMeasuredThisTurn) {
             repeatAfterCorrectRejected = true;
             onDebugEvent?.('repeat_after_correct_allowed', 'measured');
+          } else if (repeated && racSkip) {
+            repeatAfterCorrectRejected = true;
+            onDebugEvent?.('repeat_after_correct_skipped', `${racSkip} "${repeated.slice(0, 60)}"`);
           } else if (repeated) {
             repeatAfterCorrectRejected = true;
             rejectionsThisAttempt.push({ action: 'repeat_after_correct', reason: REPEAT_AFTER_CORRECT_REASON });
@@ -21544,6 +21552,11 @@ export function VoiceTutorRealtime({
         if (claimsPronunciation(fullText, transcript, pronunciationMeasuredThisTurn ? { measured: true } : undefined)) {
           pendingPronunciationNoteRef.current = PRONUNCIATION_CLAIM_NOTE;
           onDebugEvent?.('pronunciation_claim_note_planted', fullText.slice(0, 80));
+        }
+        // Task 30 fix round 1 S8: the lesson's checked-correct student sentences.
+        if (!/^\s*\[/.test(transcript) && precheckCorrectness(verdictPrecheckRef.current?.verdict)) {
+          const affirmedKey = cleanStudentSentence(transcript);
+          if (affirmedKey) affirmedStudentSentencesRef.current.add(affirmedKey);
         }
         // correct-retry.ts: the check said correct; this turn asked for it again.
         // Task 20 §F1 (GDI run 8, 1395 s): never on a turn carrying a MEASURED
