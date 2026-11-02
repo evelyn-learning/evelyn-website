@@ -127,6 +127,10 @@ const VARIANTS = {
   lost: { errors: 0.7, repeatErrorFirst: true, offers: ['Yes.', 'Yes.'], ambiguousYes: true, slowTurn: true, bargeTyped: false, askQuestion: true, postCloseMore: false, menu: 'I want to skip pronunciation.', japanese: true, moveOnOrder: false, wrongDifference: false },
   beginner: { errors: 1.0, repeatErrorFirst: true, offers: ['One more please.', 'Move on.'], ambiguousYes: false, bargeTyped: false, slowTurn: true, askQuestion: false, postCloseMore: true, menu: 'skip', japanese: true, moveOnOrder: false, wrongDifference: true },
   polite: { errors: 0.2, repeatErrorFirst: false, offers: ['Another one, please.', "No, let's go on to the next part."], ambiguousYes: false, bargeTyped: true, slowTurn: false, askQuestion: false, postCloseMore: false, menu: 'number four', japanese: false, moveOnOrder: false, wrongDifference: false },
+  // run 18: quiet — 20 s pause after every repeat ask (the silent-continue path); offers answered loosely ("Uh, yeah, one more. sentence.")
+  quiet: { errors: 0.5, repeatErrorFirst: true, offers: ['Uh, yeah, one more. sentence.', 'Yes.'], ambiguousYes: false, bargeTyped: false, slowTurn: false, askQuestion: false, postCloseMore: false, menu: 'Skip, please.', japanese: false, moveOnOrder: false, wrongDifference: false, silentAfterRepeat: true, finishEarly: true },
+  // run 18: pron — picks the sentence drill; the clip is silence so the tutor must re-ask the SAME target; 20 s pauses after repeat asks
+  pron: { errors: 0.4, repeatErrorFirst: false, offers: ['One more, please.', "Let's move on."], ambiguousYes: false, bargeTyped: false, slowTurn: false, askQuestion: false, postCloseMore: false, menu: 'A complete sentence, please.', japanese: false, moveOnOrder: false, wrongDifference: false, silentAfterRepeat: true, finishEarly: false },
 };
 const V = VARIANTS[variantName];
 if (!V) { console.error(`unknown variant ${variantName}; one of ${Object.keys(VARIANTS).join(', ')}`); process.exit(1); }
@@ -288,6 +292,8 @@ while (Date.now() - t0 < maxMin * 60000 && state.student < 80 && !state.closed) 
   if (smoke && state.offers >= 1 && d.why.startsWith('offer') === false && /offer/.test(log.slice(-3).join(' '))) { say('SMOKE: first offer answered — stopping'); break; }
   let think = 2000 + rand() * 3000;
   if (V.slowTurn && !state.slowDone && state.student > 5 && !d.why.startsWith('repeat')) { state.slowDone = true; think = 48000; say('(slow turn: 48 s silence)'); }
+  if (V.silentAfterRepeat && (d.why.startsWith('repeat') || d.why === 'scaffold')) { think = 20000; say('(20 s pause before the repeat)'); }
+  if (V.finishEarly && !state.finishEarlyDone && state.student > 20 && /\?\s*$/.test(text.trim()) && !d.why.startsWith('offer')) { state.finishEarlyDone = true; d.text = 'We can finish it.'; d.why = 'finish early'; }
   if (state.bargeNext) { state.bargeNext = false; think = 0; say('(typed during playback)'); }
   await wait(think);
   await input.click(); await input.fill(d.text); await input.press('Enter');
