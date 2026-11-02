@@ -22,8 +22,9 @@ export type VideoState = (typeof VIDEO_STATES)[number];
 export const MOMENT_KINDS = ['teaching_moment', 'question', 'quiz', 'exit_ticket'] as const;
 export type MomentKind = (typeof MOMENT_KINDS)[number];
 
-/** Shown in the dock while standing by (spec §1). */
-export const STANDBY_LINE = 'Feel free to ask a question about anything you see.';
+/** Shown in the dock while standing by (spec §1). Skyler 2026-11-02: name
+ *  the pause, the experience works best when the student pauses first. */
+export const STANDBY_LINE = 'Feel free to pause the video and ask a question about anything you see.';
 /** The tutor's own play command must be confirmed by `video_state: playing`
  *  within this long, else the tutor stays available (spec §3.4). */
 export const RESUME_CONFIRM_MS = 3000;

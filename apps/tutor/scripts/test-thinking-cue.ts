@@ -31,6 +31,9 @@ check('absent claim ⇒ on', resolveThinkingCueClaim(undefined) === true);
 check('explicit false ⇒ off', resolveThinkingCueClaim(false) === false);
 check('"off" ⇒ off', resolveThinkingCueClaim('off') === false);
 check('true stays on', resolveThinkingCueClaim(true) === true);
+check('absent claim, partner default off ⇒ off', resolveThinkingCueClaim(undefined, false) === false);
+check('explicit true beats a partner default off', resolveThinkingCueClaim(true, false) === true);
+check('explicit false beats a partner default on', resolveThinkingCueClaim(false, true) === false);
 check('parseThinkingCue unchanged', parseThinkingCue(undefined) === false && parseThinkingCue('on') === true);
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }

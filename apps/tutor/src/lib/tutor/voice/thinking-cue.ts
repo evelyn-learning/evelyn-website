@@ -101,10 +101,11 @@ export function thinkingCueLanguage(languages: readonly string[] | null | undefi
   return undefined;
 }
 
-/** The `thinking_cue` claim with the 2026-10-29 default: absent ⇒ ON; an
- *  explicit false / "off" / 0 ⇒ off (a host that draws its own wait state). */
-export function resolveThinkingCueClaim(raw: unknown): boolean {
-  if (raw === undefined || raw === null) return true;
+/** The `thinking_cue` claim with the 2026-10-29 default: absent ⇒ the
+ *  partner's default (ON unless its row in partner-session-options.ts says
+ *  otherwise); an explicit claim wins either way — false / "off" / 0 ⇒ off. */
+export function resolveThinkingCueClaim(raw: unknown, partnerDefault = true): boolean {
+  if (raw === undefined || raw === null) return partnerDefault;
   return parseThinkingCue(raw);
 }
 

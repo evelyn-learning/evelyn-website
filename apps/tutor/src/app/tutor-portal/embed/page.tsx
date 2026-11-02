@@ -713,8 +713,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // says otherwise. See lib/tutor/portal/partner-session-options.ts.
   const sessionOptions = resolvePartnerSessionOptions({ partnerId: config.partner_id, tutorLanguages });
   const speechRate = parseSpeechRate(config.speech_rate);
-  // 2026-10-29: on for every tenant unless the token says otherwise.
-  const thinkingCue = TUTOR_THINKING_CUE && resolveThinkingCueClaim(config.thinking_cue);
+  // 2026-10-29: on for every tenant unless the partner row (GameClass off,
+  // 2026-11-02) or the token says otherwise; the token wins.
+  const thinkingCue = TUTOR_THINKING_CUE && resolveThinkingCueClaim(config.thinking_cue, sessionOptions.thinkingCue);
   // Clamp partner-supplied session length to [1, 120] min. The hard
   // ceiling matches the bound in lib/tutor/lesson-plan/session-budget
   // (MAX_SESSION_MINUTES) and exists to prevent runaway voice-API

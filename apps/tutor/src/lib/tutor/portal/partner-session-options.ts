@@ -33,6 +33,11 @@ export interface PartnerSessionOptions {
    *  student turn restarts it; text sessions are exempt in the runtime.
    *  Default: on (decision 2026-10-27), per partner reversible here. */
   lessonCloseAutoEnd: boolean;
+  /** The thinking cue (chime + on-stage "Thinking…" label) while the tutor
+   *  prepares a reply (lib/tutor/voice/thinking-cue.ts). Default: on
+   *  (decision 2026-10-29); an explicit `thinking_cue` token claim still wins
+   *  either way. With the cue off, the spoken ack fillers come back. */
+  thinkingCue: boolean;
 }
 
 /** Partner rows — applied when present. A partner absent from this table
@@ -54,7 +59,9 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   evelyntutor: { openerPrefetch: false },
   kanzoo: { openerPrefetch: false },
   greenapple: { openerPrefetch: false },
-  gameclass: { openerPrefetch: false },
+  // Skyler 2026-11-02: the chime distracts in their video lessons and the
+  // label sits half under their chat box. Cue off; their ack fillers return.
+  gameclass: { openerPrefetch: false, thinkingCue: false },
   globalead: { openerPrefetch: false },
 };
 
@@ -67,6 +74,7 @@ export function defaultPartnerSessionOptions(tutorLanguages: string[] | undefine
   return {
     openerPrefetch: sessionAllowsNonLatin(tutorLanguages),
     lessonCloseAutoEnd: true,
+    thinkingCue: true,
   };
 }
 
@@ -77,5 +85,6 @@ export function resolvePartnerSessionOptions(session: PartnerSessionLike | null 
   return {
     openerPrefetch: row?.openerPrefetch ?? base.openerPrefetch,
     lessonCloseAutoEnd: row?.lessonCloseAutoEnd ?? base.lessonCloseAutoEnd,
+    thinkingCue: row?.thinkingCue ?? base.thinkingCue,
   };
 }

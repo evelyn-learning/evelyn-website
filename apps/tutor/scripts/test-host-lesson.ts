@@ -59,7 +59,7 @@ const pause = (s: LessonHostState, at: number, pos: number | null = null) =>
 test('constants are the spec values', () => {
   assert.equal(RESUME_CONFIRM_MS, 3000);
   assert.equal(STANDBY_IDLE_END_MS, 30 * 60 * 1000);
-  assert.equal(STANDBY_LINE, 'Feel free to ask a question about anything you see.');
+  assert.equal(STANDBY_LINE, 'Feel free to pause the video and ask a question about anything you see.');
   assert.ok(MOMENT_STALE_MS >= 30_000);
 });
 
