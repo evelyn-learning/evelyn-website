@@ -1235,3 +1235,12 @@ export const TUTOR_OFFER_ENGINE_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_OFFER_E
  *  re-asks has the ask dropped and the part's turn budget counts as reached.
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_NO_ATTEMPT_MOVE_ON=off. */
 export const TUTOR_NO_ATTEMPT_MOVE_ON = process.env.NEXT_PUBLIC_TUTOR_NO_ATTEMPT_MOVE_ON !== 'off';
+
+/** Task 35 §A (bot run r14, 203–207 s: the advancing turn was killed, the
+ *  page re-armed, and the retry's re-emitted advance_lesson moved the
+ *  pointer a SECOND time — present-perfect ran without its entry note): on a
+ *  fixed script the kill re-arm plants the part's entry note and marks the
+ *  advance as already made, so the retry's {to:"next"} is satisfied, not
+ *  applied again. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_KILL_REARM_ENTRY_NOTE=off. */
+export const TUTOR_KILL_REARM_ENTRY_NOTE = process.env.NEXT_PUBLIC_TUTOR_KILL_REARM_ENTRY_NOTE !== 'off';

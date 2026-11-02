@@ -1249,6 +1249,21 @@ test('34 r2 R13-1: a typed / skip / menu-cap advance plants the new part\'s entr
   const consumeAt = VTR.indexOf("onDebugEvent?.('fixed_script_entry_note_planted', `\"${en.segId}\" delivered with this turn`);");
   assert.ok(typedAt > 0 && consumeAt > typedAt, 'typed advance → the next brain call carries the entry note');
 });
+
+// ── Task 35 §A: advance → kill → re-arm → the next turn carries the entry note ──
+test('35 §A: the kill re-arm commits the advance: entry note planted, the retry\'s {to:"next"} satisfied', () => {
+  assert.equal(entryNoteDueAfterAdvance({ fixedScript: true, via: 'brain', lessonClosed: false }), true);
+  const rearmAt = VTR.indexOf("onDebugEvent?.('advance_page_rearmed_after_kill'");
+  const block = VTR.slice(rearmAt, rearmAt + 900);
+  pin(block, /if \(TUTOR_KILL_REARM_ENTRY_NOTE && isFixedScriptPlan\(lessonPlanRef\.current\) && currentSegmentIdRef\.current === killBreak\.segmentId\) \{\s*plantAdvanceEntryNote\(killBreak\.segmentId, 'brain'\);\s*inferredAdvanceThisTurnRef\.current = killBreak\.segmentId;/);
+  // the retry's relative advance is consumed by the inference (no double advance)
+  pin(VTR, /if \(to === 'next' && inferredAdvanceThisTurnRef\.current\s*&& currentSegmentIdRef\.current === inferredAdvanceThisTurnRef\.current\) \{/);
+  // the pending entry note is consumed at the NEXT brain call's note assembly, and no kill path clears it
+  pin(VTR, /if \(pendingEntryNoteRef\.current && !opts\?\.prefetchOnly\) \{\s*const en = pendingEntryNoteRef\.current;/);
+  const clears = VTR.match(/pendingEntryNoteRef\.current = null;/g) ?? [];
+  assert.equal(clears.length, 1, 'cleared only where it is consumed');
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_KILL_REARM_ENTRY_NOTE = process\.env\.NEXT_PUBLIC_TUTOR_KILL_REARM_ENTRY_NOTE !== 'off';/);
+});
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 
