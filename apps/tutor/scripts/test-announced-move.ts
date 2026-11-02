@@ -8,7 +8,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, endsWithRepeatAsk, continuationRepeatsSentence, endsWithImperativeReplyRequest } from '../src/lib/tutor/lesson-plan/announced-move';
+import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, endsWithRepeatAsk, endsWithSayOrListenAsk, continuationRepeatsSentence, endsWithImperativeReplyRequest } from '../src/lib/tutor/lesson-plan/announced-move';
 import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, isFixedScriptContinueDirective, fixedScriptContinueDirective, FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE,
   FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { TRANSITION_ASK_REASON } from '../src/lib/tutor/lesson-plan/transition-ask';
@@ -230,7 +230,7 @@ test('24B2: the 355 s statement turn (show_sentence only) → continue; advance 
   assert.equal(noAskTurnNeedsContinuation({ ...base, closing: true }), false, 'closing');
   assert.equal(noAskTurnNeedsContinuation({ ...base, pronunciationArmed: true }), false, 'clip armed');
   assert.equal(noAskTurnNeedsContinuation({ ...base, fixedScript: false }), false, 'not a fixed script');
-  assert.equal(FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, '[System note: your last turn ended without a question or an instruction for the student. Continue now with the next question or item of the current part, in one or two sentences. Do not repeat what you just said; do not recap. Apply this silently; never mention this note.]');
+  assert.equal(FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, '[System note: your last turn ended without a question or an instruction for the student. The student has said nothing since your last turn: do not evaluate, praise or confirm anything. Continue now with the next step of the current part — its next question or item — in one or two sentences. Do not repeat what you just said; do not recap. Apply this silently; never mention this note.]');
 });
 test('24B2: VTR — the turn end schedules the noask continuation on the shared scheduler; the directive does not cancel it', () => {
   pin(VTR, /if \(noaskSeg\) scheduleFixedScriptContinueRef\.current\(noaskSeg, 'noask', fixedScriptContinueDirective\(\{ via: 'noask', prevTutorText: fullText \}\)\);/);
@@ -270,7 +270,7 @@ test('27D3: correction turn → the repeat directive; plain statement → the ex
   assert.equal(isCorrectionTurn(T60), true);
   const c = fixedScriptContinueDirective({ via: 'noask', prevTutorText: T60 });
   assert.equal(c.kind, 'correction');
-  assert.equal(c.directive, '[System note: Ask the student, in one short sentence, to say the corrected sentence once. Nothing else. Apply this silently; never mention this note.]');
+  assert.equal(c.directive, '[System note: The student has not spoken since your correction. Ask the student, in one short sentence, to say the corrected sentence once. Do not praise or evaluate anything. Nothing else. Apply this silently; never mention this note.]');
   for (const t of ['The natural form is "I have worked here for three years."', 'Small fix: we say "I went to the office yesterday."']) {
     assert.equal(fixedScriptContinueDirective({ via: 'noask', prevTutorText: t }).kind, 'correction', t);
   }
@@ -357,4 +357,35 @@ test('30G: "Just tell me the number or the option name." ⇒ no continuation; a 
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
+// ── Task 31 §A (GDI run 18): no silent continue after a repeat / listen ask ──
+test('31A: the run-18 say / listen asks → no no-ask continuation', () => {
+  const base = { fixedScript: true, runtimeTriggered: false, toolsSeen: [] as string[], closing: false, pronunciationArmed: false };
+  const T437 = '「two years」ですね。 ABC software は two years 使っている、という意味ですね。 Let\'s say the full sentence: I have used ABC software for two years.';
+  const T1149 = 'No problem. Let\'s start with a word. Please listen, then repeat after me: responsibilities. Responsibilities.';
+  for (const t of [T437, T1149, 'Good. Now say the sentence with "have used".', 'Try saying it with "I have worked" and no "uh."', 'Listen and repeat: I went to the office.']) {
+    assert.equal(endsWithSayOrListenAsk(t), true, t);
+    assert.equal(noAskTurnNeedsContinuation({ ...base, text: t }), false, t);
+  }
+  // a plain teaching turn with no ask keeps its continuation (Task 24 §B2)
+  const T568 = 'Good, you named a specific skill now. "I have used Python for one year" is a complete sentence, and you used "have used" correctly. Here\'s the next point: because "one year" is a time that ends now, the present perfect works well here.';
+  for (const t of [T568, 'Let me put the correct sentence on the board and move on.', "Let's say you have a meeting tomorrow, so the future fits there.", 'Listening practice is useful for your work.']) {
+    assert.equal(endsWithSayOrListenAsk(t), false, t);
+    assert.equal(noAskTurnNeedsContinuation({ ...base, text: t }), true, t);
+  }
+  // the ask counts only in the last two sentences
+  assert.equal(endsWithSayOrListenAsk('Say it once more. Good. That is the present perfect. It fits your job.'), false);
+});
+test('31A3: the continuation directives say the student has not spoken yet', () => {
+  assert.ok(FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE.includes('The student has said nothing since your last turn: do not evaluate, praise or confirm anything.'));
+  assert.ok(FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE.includes('next step of the current part'));
+  assert.ok(FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE.includes('The student has not spoken since your correction.'));
+  assert.ok(FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE.includes('Do not praise or evaluate anything.'));
+});
+test('31A2: VTR wiring — the no-ask guard sees the arm decided this turn', () => {
+  const src = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(src.includes('turnPronTargetDetected = !!detectedAuto;'));
+  assert.ok(src.includes('pronunciationArmed: !!clipCaptureRef.current?.isArmed() || pronunciationArmSeqRef.current !== pronunciationArmSeqAtTurnStart || turnPronTargetDetected,'));
+  assert.ok(src.indexOf('turnPronTargetDetected = !!detectedAuto;') < src.indexOf('pronunciationArmed: !!clipCaptureRef.current?.isArmed() ||'), 'the arm runs before the no-ask check');
+});
+
 console.log('\nall announced-move tests passed');

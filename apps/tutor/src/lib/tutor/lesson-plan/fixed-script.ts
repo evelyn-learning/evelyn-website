@@ -257,14 +257,14 @@ export const FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE = withSilentClause(
  *  board and move on." — then 30 s of silence): the silent continuation after
  *  a fixed-script turn that left the learner nothing to answer. */
 export const FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE = withSilentClause(
-  '[System note: your last turn ended without a question or an instruction for the student. Continue now with the next question or item of the current part, in one or two sentences. Do not repeat what you just said; do not recap.]');
+  '[System note: your last turn ended without a question or an instruction for the student. The student has said nothing since your last turn: do not evaluate, praise or confirm anything. Continue now with the next step of the current part — its next question or item — in one or two sentences. Do not repeat what you just said; do not recap.]');
 /** Task 27 §D3 (GDI run 14, 840–886 s): the no-ask continuation after a
  *  CORRECTION turn ("Let's fix one word: … so it's "…"") was told "continue
  *  with the next item" and SPOKE a narration of its own situation ("the last
  *  thing I said was a correction, so …"). After a correction the next item
  *  IS the repeat — asked in one sentence, no narration. */
 export const FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE = withSilentClause(
-  '[System note: Ask the student, in one short sentence, to say the corrected sentence once. Nothing else.]');
+  '[System note: The student has not spoken since your correction. Ask the student, in one short sentence, to say the corrected sentence once. Do not praise or evaluate anything. Nothing else.]');
 /** Task 27 §I (Task 26 concern 2): the level continuation leaving a
  *  transition.kind=bridge part — the bridge wins over "do not recap". */
 export const FIXED_SCRIPT_LEVEL_BRIDGE_PREFIX =

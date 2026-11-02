@@ -15,7 +15,7 @@
 import type { LessonPlan, Segment } from './types';
 import { isFixedScriptPlan, nextSegmentId, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS } from './fixed-script';
 import { lastAskSentence, lastQuestionSentence, lastSentenceAsks, splitSentences, stripMarkdownEmphasis } from '../question-gist-text';
-import { expectedRepeatFor } from '../voice/correct-retry';
+import { expectedRepeatFor, isStrictRepeatAsk } from '../voice/correct-retry';
 import { sameSentence } from '../voice/sentence-board';
 
 /** A sentence that announces moving on (EN + JA). The keyword gate in
@@ -236,7 +236,31 @@ export function noAskTurnNeedsContinuation(input: {
   if (input.toolsSeen.some((t) => NOASK_EXEMPT_TOOLS.has(t))) return false;
   // Task 29 §K1: a turn ending on a repeat ask is an ask.
   if (endsWithRepeatAsk(input.text)) return false;
+  // Task 31 §A (run 18, 437 s / 1149 s): a say / listen-and-repeat ask in
+  // the last two sentences leaves the student something to do.
+  if (endsWithSayOrListenAsk(input.text)) return false;
   return announcedTurnNeedsContinuation(input.text);
+}
+
+/** Task 31 §A (GDI run 18: "Let's say the full sentence: I have used ABC
+ *  software for two years." and "Please listen, then repeat after me:
+ *  responsibilities. Responsibilities." each got a no-ask continuation that
+ *  spoke over — or praised — the repeat the student had not said yet): one of
+ *  the turn's last two sentences is a strict repeat ask (isStrictRepeatAsk)
+ *  or an imperative say / listen ask — "(Let's) say / try saying / repeat …",
+ *  "Let's say the sentence / it / … :", "(please) listen, (and|then)
+ *  repeat / say". "Let's say" needs a colon or a sentence / word / it object
+ *  ("Let's say you have a meeting" is a supposition). Pure. */
+const ASK_LEAD = '^(?:(?:now|so|okay|ok|please|good|great|then|next|alright|all right),?\\s+)*';
+const SAY_IMPERATIVE_RE = new RegExp(`${ASK_LEAD}(?:say|try saying|repeat)\\b`, 'i');
+const LETS_SAY_RE = new RegExp(`${ASK_LEAD}(?:let'?s|let us)\\s+(?:say|try saying|repeat)\\b(?:[^.!?。！？]*[:：]|\\s+(?:it|that|this|the (?:whole |full |complete |corrected |new )?(?:sentence|word|phrase|line)))`, 'i');
+const LISTEN_REPEAT_RE = /\b(?:please\s+)?listen,?\s+(?:and\s+|then\s+|and then\s+)?(?:repeat|say)\b|\brepeat after me\b/i;
+export function endsWithSayOrListenAsk(text: string | null | undefined): boolean {
+  const t = (text ?? '').trim();
+  if (!t) return false;
+  const sentences = splitSentences(stripMarkdownEmphasis(t));
+  const tail = sentences.slice(-2).map((x) => x.replace(/^["“'‘(「]+/, '').trim());
+  return tail.some((x) => isStrictRepeatAsk(x) || SAY_IMPERATIVE_RE.test(x) || LETS_SAY_RE.test(x) || LISTEN_REPEAT_RE.test(x));
 }
 
 /** Task 29 §K1 (GDI run 16, 467 → 479 s: the turn ended `Let's say it with

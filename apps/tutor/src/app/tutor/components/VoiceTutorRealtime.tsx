@@ -21181,6 +21181,9 @@ export function VoiceTutorRealtime({
       // pronunciation hold sees the arm) and before the sentence board (so
       // this card, with its gloss, is the one that stays). The brain's own
       // tool call wins. Once per turn (this block runs once per turn).
+      // Task 31 §A2: the target this turn's text asks the student to say (also
+      // when the part-entry rule skips the arm) — the no-ask check below sees it.
+      let turnPronTargetDetected = false;
       if (pronunciationActive && !opts?.prefetchOnly && !totalToolNamesSeen.includes('request_pronunciation_check')) {
         const pronSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
         const pronTargets = pronunciationTargetsOf(pronSeg?.metadata);
@@ -21191,6 +21194,7 @@ export function VoiceTutorRealtime({
         // turn, or its page opened this turn) offers the menu — no auto arm.
         const pronPartEntry = turnStartSegmentId !== currentSegmentIdRef.current || segmentPageFlushedTurnRef.current === pageTurnRef.current;
         const auto = autoArmTargetForTurn(detectedAuto, { partEntry: pronPartEntry });
+        turnPronTargetDetected = !!detectedAuto;
         if (detectedAuto && !auto) onDebugEvent?.('pronunciation_auto_arm_skipped', `part entry: "${detectedAuto.referenceText.slice(0, 60)}"`);
         if (auto?.source === 'card') {
           armPronunciationCheckRef.current(auto.referenceText, auto.kind);
@@ -21620,7 +21624,8 @@ export function VoiceTutorRealtime({
           runtimeTriggered: /^\s*\[/.test(transcript),
           toolsSeen: totalToolNamesSeen,
           closing: lessonClosedRef.current || farewellSealedRef.current || fixedScriptCloseRef.current != null,
-          pronunciationArmed: !!clipCaptureRef.current?.isArmed(),
+          // Task 31 §A2: the arm decided for THIS turn counts (tool, auto arm or a detected target).
+          pronunciationArmed: !!clipCaptureRef.current?.isArmed() || pronunciationArmSeqRef.current !== pronunciationArmSeqAtTurnStart || turnPronTargetDetected,
         })) {
         const noaskSeg = currentSegmentIdRef.current ?? '';
         // Task 27 §D3: after a correction turn the continuation asks for the repeat.
