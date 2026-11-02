@@ -10,7 +10,8 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT } from '@/lib/tutor/orchestrator/flags';
+import { pendingAnswerVocabularyFor, countsAsNoiseCancel } from '@/lib/tutor/voice/pending-answer';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -437,7 +438,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { fixedScriptTransitionDecision, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptTransitionDecision, offerWaitExpired, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -4225,6 +4226,8 @@ export function VoiceTutorRealtime({
   // one transition_offer_missing retry (the hold then runs as before).
   const transitionOfferSpokenRef = useRef<Set<string>>(new Set());
   const transitionOfferUnmadeRef = useRef('');
+  // Task 30 §A2: when each segment's offer was spoken (the wait cap).
+  const transitionOfferSpokenAtRef = useRef<Map<string, number>>(new Map());
   // Task 22 fix round 1 (I3): board statements whose read-aloud was held once.
   const boardReadAloudHeldRef = useRef<Set<string>>(new Set());
   /** Task 16 §C: the scheduled continuation after an announced move whose
@@ -21023,15 +21026,19 @@ export function VoiceTutorRealtime({
         // (unmade) runs the hold as before (it is the offer turn).
         let offerSpokenThisTurn = false;
         const offerSeg = segIdNow ?? '';
+        // Task 30 §A2: a nudge / nag / continuation / note-only turn (no student speech).
+        const offerRuntimeTurn = /^\s*\[/.test(transcript);
         if (TUTOR_TRANSITION_OFFER_SPOKEN && TUTOR_FIXED_SCRIPT_TRANSITIONS && !opts?.prefetchOnly && offerSeg
           && transitionOfferMadeRef.current.has(offerSeg) && !transitionOfferSpokenRef.current.has(offerSeg)) {
           if (offerAsked(fullText)) {
             transitionOfferSpokenRef.current.add(offerSeg);
+            transitionOfferSpokenAtRef.current.set(offerSeg, Date.now());
             autoAdvanceOfferHeldRef.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;
             offerSpokenThisTurn = true;
             onDebugEvent?.('fixed_script_offer_spoken', `"${offerSeg}"`);
           } else if (transitionOfferUnmadeRef.current === offerSeg) {
             transitionOfferSpokenRef.current.add(offerSeg);
+            transitionOfferSpokenAtRef.current.set(offerSeg, Date.now());
             autoAdvanceOfferHeldRef.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;
           }
         }
@@ -21055,9 +21062,17 @@ export function VoiceTutorRealtime({
               ...(TUTOR_TRANSITION_OFFER_SPOKEN ? {
                 offerSpoken: transitionOfferSpokenRef.current.has(segIdNow ?? ''),
                 offerDeclined: !offerSpokenThisTurn && offerDeclined(transcript),
+                // Task 30 §A2: a runtime-triggered turn never spends the hold; the wait cap.
+                studentTurn: !offerRuntimeTurn,
+                offerSpokenAtMs: transitionOfferSpokenAtRef.current.get(segIdNow ?? '') ?? null,
+                nowMs: Date.now(),
               } : {}),
             })
             : 'advance';
+          if (TUTOR_TRANSITION_OFFER_SPOKEN && transition === 'advance' && transitionOfferSpokenRef.current.has(segIdNow ?? '')
+            && offerWaitExpired(transitionOfferSpokenAtRef.current.get(segIdNow ?? ''), Date.now())) {
+            onDebugEvent?.('fixed_script_offer_wait_expired', `"${segIdNow}" ${Math.round((Date.now() - (transitionOfferSpokenAtRef.current.get(segIdNow ?? '') ?? Date.now())) / 1000)}s after the offer`);
+          }
           // Task 26 fix round 1 (m-1): once the part's offer was made the
           // pronunciation hold no longer stacks on the offer's own hold.
           const offerMadeHere = TUTOR_FIXED_SCRIPT_TRANSITIONS && transitionOfferMadeRef.current.has(segIdNow ?? '');
@@ -21076,6 +21091,7 @@ export function VoiceTutorRealtime({
             // note is planted (it would make the next turn ask again).
             transitionOfferMadeRef.current.add(segIdNow);
             transitionOfferSpokenRef.current.add(segIdNow);
+            transitionOfferSpokenAtRef.current.set(segIdNow, Date.now());
             autoAdvanceOfferHeldRef.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;
             onDebugEvent?.('fixed_script_offer_spoken', `"${segIdNow}" (on the budget turn)`);
           } else if (autoNext && segIdNow && transition === 'offer') {
@@ -21100,7 +21116,7 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('fixed_script_offer_await', `"${segIdNow}"`);
           } else if (autoNext && transition === 'hold-offer') {
             // Task 29 §A2: the spoken-offer turn is hold turn 1 itself.
-            if (!offerSpokenThisTurn) autoAdvanceOfferHeldRef.current += 1;
+            if (!offerSpokenThisTurn && !offerRuntimeTurn) autoAdvanceOfferHeldRef.current += 1;
             onDebugEvent?.('fixed_script_offer_hold', `"${segIdNow}" ${autoAdvanceOfferHeldRef.current}/${FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS}`);
           } else if (autoNext && holdAutoAdvanceForPendingAsk(askPending, autoAdvanceAskHeldRef.current)) {
             autoAdvanceAskHeldRef.current += 1;
@@ -23942,7 +23958,14 @@ export function VoiceTutorRealtime({
       // on threshold, stash the one-time directive and let the idle-send
       // voice it at the next quiet beat. Never interrupts the resume paths
       // below — recording is pure bookkeeping.
-      if (TUTOR_NOISE_NAG && recordReactionEvent(noiseReactionStateRef.current, NOISE_INTERRUPTION_REACTION, Date.now())) {
+      // Task 30 §A3: a self-voice drop of an answer to the pending offer /
+      // menu is not noise (countsAsNoiseCancel).
+      const noisePendingVocab = TUTOR_PENDING_ANSWER_EXEMPT
+        ? pendingAnswerVocabularyFor(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '')
+        : null;
+      const noiseCounts = countsAsNoiseCancel(verdict, cleanPerceptionText, noisePendingVocab);
+      if (!noiseCounts) onDebugEvent?.('noise_nag_skip_pending_answer', `"${cleanPerceptionText.slice(0, 60)}"`);
+      if (TUTOR_NOISE_NAG && noiseCounts && recordReactionEvent(noiseReactionStateRef.current, NOISE_INTERRUPTION_REACTION, Date.now())) {
         pendingReactionDirectiveRef.current = NOISE_INTERRUPTION_REACTION.directive;
         onDebugEvent?.('noise_nag_armed', `threshold hit (${NOISE_INTERRUPTION_REACTION.threshold} noise cancels in window)`);
         armReactionIdleSendRef.current();
@@ -25949,6 +25972,10 @@ export function VoiceTutorRealtime({
           verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
           expectedRepeat,
           answerEndExemption: TUTOR_SELF_VOICE_ANSWER_END,
+          // Task 30 §A1: an answer to the pending offer / menu is made of its words.
+          pendingAnswerVocabulary: TUTOR_PENDING_ANSWER_EXEMPT
+            ? pendingAnswerVocabularyFor(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '')
+            : null,
         });
         const ttsBufLen = recentTtsScripts.length;
         const svScore = heur.selfVoiceScore !== undefined
@@ -25959,6 +25986,9 @@ export function VoiceTutorRealtime({
         );
         // Task 19 §A4: a self-voice drop carries its timing evidence.
         onDebugEvent?.('perception_heuristic', `${heur.verdict}:${heur.reason}${heur.diag ? ` · ${heur.diag}` : ''}`);
+        if (/pending_answer_exempt/.test(heur.reason)) {
+          onDebugEvent?.('self_voice_exempt_pending_answer', `"${t.text.slice(0, 60)}"`);
+        }
         if (heur.exemption === 'expected_repeat') {
           onDebugEvent?.('self_voice_exempt_expected_repeat', `"${t.text.slice(0, 60)}"`);
         } else if (heur.exemption === 'answer_at_playback_end') {

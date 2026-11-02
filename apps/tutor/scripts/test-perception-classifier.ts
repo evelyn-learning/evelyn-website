@@ -14,6 +14,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pendingAnswerVocabularyFor, countsAsNoiseCancel } from '../src/lib/tutor/voice/pending-answer';
 import { expectedRepeatFor, isSayItAsk, isStrictRepeatAsk, quoteReferredByLaterAsk } from '../src/lib/tutor/voice/correct-retry';
 import {
   classifyHeuristic,
@@ -28,6 +29,7 @@ import {
   type HeuristicInput,
   type ProductionStateForClassifier,
   type RecentTtsScript,
+  isPendingAnswer,
 } from '../src/lib/tutor/voice/perception-classifier';
 import {
   pushTtsScript,
@@ -1792,6 +1794,45 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('23F: a 3-word quote is no target', quoteReferredByLaterAsk('Use "I have sold". Say it again.') === null);
   check('23F: a negated-say quote is no target', quoteReferredByLaterAsk('Don\'t say "I am agree with you". Try that again.') === null);
   check('23F: the ask inside the quote\'s own sentence is the old rule (quote after the ask still the strict path)', expectedRepeatFor('Please say it once more: "Last week, I went golfing with my manager."', null)?.text === 'Last week, I went golfing with my manager.');
+}
+// ── Task 30 §A1 / §A3: an answer to the pending offer / menu is not echo ──
+{
+  const OFFER_433 = 'The present perfect part is done, and you used it well. Would you like one more practice sentence on it, or shall we move on to the past simple?';
+  const NUDGE_471 = 'Take your time. Would you like one more practice sentence on the present perfect, or shall we move on to the past simple?';
+  const vocab = pendingAnswerVocabularyFor(OFFER_433);
+  check('30A1: the 433 s offer ⇒ a pending-answer vocabulary', !!vocab && vocab.includes('yes') && vocab.includes('one'));
+  check('30A1: a statement ⇒ no vocabulary', pendingAnswerVocabularyFor('Good, that sentence is correct.') === null);
+  const menu = pendingAnswerVocabularyFor('Would you like to try: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue? Just say the number.');
+  check('30A1: a numbered menu ⇒ its options\' words join', !!menu && menu.includes('complete') && menu.includes('naturally') && menu.includes('individual'));
+  // The 477 s shape: the nudge re-asked the offer, the student's "Yes. one"
+  // began while it played, and arrived after the state flipped to listening.
+  const scripts: RecentTtsScript[] = [
+    { text: 'Take your time.', spokenStartedAt: 2_000_000, spokenEndedAt: 2_000_900 },
+    { text: NUDGE_471.replace('Take your time. ', ''), spokenStartedAt: 2_001_000, spokenEndedAt: 2_006_000 },
+  ];
+  const base = { transcript: 'Yes. one', productionState: 'listening' as const, recentTtsScripts: scripts, now: 2_008_000, speechStartedAt: 2_004_800, onsetDuringTutorSpeech: true };
+  const dropped = classifyHeuristic({ ...base, pendingAnswerVocabulary: null });
+  check('30A1: "Yes. one" during playback, no vocabulary ⇒ dropped as before', dropped.verdict === 'drop_self_voice' && /onset-during-playback/.test(dropped.reason), `${dropped.verdict} (${dropped.reason})`);
+  const kept = classifyHeuristic({ ...base, pendingAnswerVocabulary: vocab });
+  check('30A1: "Yes. one" with the pending vocabulary ⇒ NOT dropped (new_turn, pending_answer_exempt)', kept.verdict === 'new_turn' && /pending_answer_exempt/.test(kept.reason), `${kept.verdict} (${kept.reason})`);
+  const echo = classifyHeuristic({ ...base, transcript: 'one more practice sentence on it or shall we', pendingAnswerVocabulary: vocab });
+  check('30A1: "one more practice sentence on it or shall we" (8w) ⇒ still dropped', echo.verdict === 'drop_self_voice', `${echo.verdict} (${echo.reason})`);
+  check('30A1: isPendingAnswer — "Yes, one more practice." in; "sentence … shall" out',
+    isPendingAnswer('Yes, one more practice.', vocab) && !isPendingAnswer('one more practice sentence on it or shall we', vocab));
+  check('30A1: isPendingAnswer — Japanese もう一回 in; an empty / hesitation-only utterance out',
+    isPendingAnswer('もう一回', vocab) && !isPendingAnswer('um', vocab) && !isPendingAnswer('', vocab));
+  check('30A1: isPendingAnswer — "sentence" for menu option "a complete sentence" (plural folded "sentences" too)',
+    isPendingAnswer('the sentence', menu) && isPendingAnswer('sentences', menu));
+  // §A3: the noise nag's counting predicate.
+  check('30A3: a self-voice drop of a pending answer does not count', countsAsNoiseCancel('drop_self_voice', 'Yes. one', vocab) === false);
+  check('30A3: a ≤ 3-word self-voice drop while an answer is pending does not count', countsAsNoiseCancel('drop_self_voice', 'shall we go', vocab) === false);
+  check('30A3: a long self-voice drop while pending counts', countsAsNoiseCancel('drop_self_voice', 'one more practice sentence on it or shall we', vocab) === true);
+  check('30A3: no pending answer ⇒ counts as before', countsAsNoiseCancel('drop_self_voice', 'Yes. one', null) === true);
+  check('30A3: noise / filler always count; new_turn never', countsAsNoiseCancel('noise', '', vocab) && countsAsNoiseCancel('filler', 'um', vocab) && !countsAsNoiseCancel('new_turn', 'Yes', vocab));
+  const VTR30 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('30A VTR: the classifier gets the pending vocabulary of the last tutor turn', VTR30.includes('pendingAnswerVocabulary: TUTOR_PENDING_ANSWER_EXEMPT\n            ? pendingAnswerVocabularyFor(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? \'\')'));
+  check('30A3 VTR: the noise nag counts through countsAsNoiseCancel', VTR30.includes('if (TUTOR_NOISE_NAG && noiseCounts && recordReactionEvent(noiseReactionStateRef.current, NOISE_INTERRUPTION_REACTION, Date.now())) {')
+    && VTR30.includes("onDebugEvent?.('noise_nag_skip_pending_answer',"));
 }
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

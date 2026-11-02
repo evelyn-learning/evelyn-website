@@ -121,6 +121,12 @@ export interface HeuristicInput {
    *  (`isAnswerAtPlaybackEnd`). The caller passes TUTOR_SELF_VOICE_ANSWER_END;
    *  omitted ⇒ on (flags default ON). */
   answerEndExemption?: boolean;
+  /** Task 30 §A1: the words an answer to the tutor's pending offer / menu is
+   *  made of (pendingAnswerVocabularyFor). When set and the utterance is made
+   *  only of them (`isPendingAnswer`), the onset-during-playback lookback
+   *  gates 1.6 and 1.7 stand down (reason suffix `pending_answer_exempt`);
+   *  the self-voice SCORE gate is untouched. Omitted / null ⇒ no exemption. */
+  pendingAnswerVocabulary?: readonly string[] | null;
 }
 
 export interface HeuristicResult {
@@ -1097,6 +1103,34 @@ export function isExpectedRepeat(
   return speechStartedAt >= best.spokenEndedAt - EXPECTED_REPEAT_END_LEAD_MS;
 }
 
+/**
+ * Pending-answer exemption (Task 30 §A1, GDI run 17, 477–488 s): the tutor
+ * asked "Would you like one more practice sentence on it, or shall we move
+ * on to …?" and the student's "Yes. one" / "Yes" were dropped three times by
+ * the lookback-overlap gates (1.6 / 1.7) — an answer to "one more or move
+ * on?" (or to a numbered menu) is MADE of the tutor's words. True when the
+ * utterance has a non-hesitation word and every content token (after the
+ * filler strip; digits and number words kept) is in `vocabulary` (plural /
+ * singular folded); a non-Latin token passes when the vocabulary's non-Latin
+ * entries cover it whole. Pure.
+ */
+export function isPendingAnswer(transcript: string, vocabulary: readonly string[] | null | undefined): boolean {
+  if (!vocabulary || vocabulary.length === 0) return false;
+  const tokens = tokenize(transcript).filter((t) => !HESITATION_TOKENS.has(t));
+  if (tokens.length === 0) return false;
+  const vocab = new Set(vocabulary.map((v) => v.toLowerCase()));
+  const nonLatin = vocabulary.filter((v) => /[^\u0000-\u024f]/.test(v)).sort((a, b) => b.length - a.length);
+  const inVocab = (t: string): boolean => {
+    if (vocab.has(t) || vocab.has(t.replace(/s$/, '')) || vocab.has(`${t}s`)) return true;
+    if (!/[^\u0000-\u024f]/.test(t)) return false;
+    let rest = t;
+    for (const v of nonLatin) rest = rest.split(v).join('');
+    return rest.replace(/[、。！？!?]/g, '') === '';
+  };
+  const content = tokens.filter((t) => !PHONETIC_STOPWORDS.has(t) || NUMBER_WORDS.has(t) || NUMERIC_TOKEN_RE.test(t));
+  return content.every(inVocab);
+}
+
 // ── Expected-answer carve-out (Task 6, verdict-detector round, 2026-08-10) ──
 //
 // Live incident (session portal-cb2addf5): the tutor asked "Differentiate
@@ -1363,6 +1397,11 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     }
   }
 
+  // Task 30 §A1: an answer made only of the pending offer / menu's words
+  // (isPendingAnswer) — gates 1.6 and 1.7 stand down for it.
+  const pendingAnswerExempt = isPendingAnswer(text, input.pendingAnswerVocabulary);
+  let pendingAnswerStoodDown = false;
+
   // 1.6. Onset-during-playback echo arriving after the state flipped
   // (round-6 opener-echo fix, 2026-07-28, portal-b3838f70). The 1.5 gate
   // above keys on CURRENT state, but STT latency routinely delivers a
@@ -1397,7 +1436,9 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       onsetDuringScriptPlayback(input.recentTtsScripts, input.speechStartedAt, input.now))
   ) {
     const lookbackOverlap = scoreLookbackEchoOverlap(text, input.recentTtsScripts);
-    if (lookbackOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {
+    if (lookbackOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD && pendingAnswerExempt) {
+      pendingAnswerStoodDown = true;
+    } else if (lookbackOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {
       return dropAsEcho({
         verdict: 'drop_self_voice',
         reason: `onset-during-playback echo overlap ${lookbackOverlap.toFixed(2)} ≥ ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
@@ -1431,7 +1472,9 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     ) {
       const tContentLen = contentTokens(tokenize(text)).length;
       const lookbackOverlap = scoreLookbackEchoOverlap(text, input.recentTtsScripts);
-      if (tContentLen >= 3 && lookbackOverlap >= MIDLENGTH_ECHO_OVERLAP_THRESHOLD) {
+      if (tContentLen >= 3 && lookbackOverlap >= MIDLENGTH_ECHO_OVERLAP_THRESHOLD && pendingAnswerExempt) {
+        pendingAnswerStoodDown = true;
+      } else if (tContentLen >= 3 && lookbackOverlap >= MIDLENGTH_ECHO_OVERLAP_THRESHOLD) {
         return dropAsEcho({
           verdict: 'drop_self_voice',
           reason: `mid-length echo splice overlap ${lookbackOverlap.toFixed(2)} ≥ ${MIDLENGTH_ECHO_OVERLAP_THRESHOLD} (${rawWords}w)`,
@@ -1441,6 +1484,7 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     }
   }
 
+  const stateVerdict = (): HeuristicResult => {
   // 2. Filler tokens — state-aware (2026-07-11). While the tutor is
   // LISTENING (or 'connected'), an utterance containing an acknowledgement
   // is the student's answer and falls through to the state branch below
@@ -1518,4 +1562,9 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   // connecting / disconnected / error / recording — pre-session or
   // transient. Treat as noise (no action would be taken anyway).
   return { verdict: 'noise', reason: `transient prod state "${state}"`, selfVoiceScore };
+  };
+  const verdictAfterGates = stateVerdict();
+  return pendingAnswerStoodDown
+    ? { ...verdictAfterGates, reason: `${verdictAfterGates.reason} · pending_answer_exempt` }
+    : verdictAfterGates;
 }

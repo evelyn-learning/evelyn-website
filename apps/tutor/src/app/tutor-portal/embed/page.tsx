@@ -343,6 +343,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'transition_ask_off_part', 'auto_newpage_on_advance_deferred_next_turn',
   // Task 29 §A3: a turn under a pending offer note that did not ask the offer (killed once).
   'transition_offer_missing',
+  // Task 30 §A1: an answer to the pending offer / menu kept past the self-voice lookback gates.
+  'self_voice_exempt_pending_answer',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

@@ -1090,3 +1090,12 @@ export const TUTOR_CLOSE_CLEARS_OPEN_QUESTION = process.env.NEXT_PUBLIC_TUTOR_CL
  *  mic-reacquire.ts). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_MIC_REACQUIRE=off. */
 export const TUTOR_MIC_REACQUIRE = process.env.NEXT_PUBLIC_TUTOR_MIC_REACQUIRE !== 'off';
+
+/** Task 30 §A1 / §A3 (GDI run 17, 477–488 s): an answer to the tutor's
+ *  pending offer ("one more or move on?") or numbered menu is made of the
+ *  tutor's own words — the self-voice lookback gates (1.6 / 1.7) stand down
+ *  for it (pendingAnswerVocabularyFor → classifier `pendingAnswerVocabulary`),
+ *  and a self-voice drop of such an answer does not count toward the noise
+ *  nag (countsAsNoiseCancel). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_PENDING_ANSWER_EXEMPT=off. */
+export const TUTOR_PENDING_ANSWER_EXEMPT = process.env.NEXT_PUBLIC_TUTOR_PENDING_ANSWER_EXEMPT !== 'off';

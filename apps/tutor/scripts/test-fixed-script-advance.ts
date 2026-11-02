@@ -32,6 +32,7 @@ import {
   segmentTransitionKind, fixedScriptPartLabel, fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause,
   holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer,
   offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason,
+  FIXED_SCRIPT_OFFER_MAX_WAIT_MS, offerWaitExpired,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
@@ -174,7 +175,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 12600  /* Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer */);
+  const block = VTR.slice(auto, auto + 14500  /* Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer; Task 30 §A2: the wait cap */);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
   pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{advanceReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
@@ -182,7 +183,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
 // ── fix round 10-11 ──────────────────────────────────────────────────────
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 9500);
+  const block = VTR.slice(auto, auto + 11500);
   pin(block, /if \(autoNext && !offerMadeHere && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
   pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
@@ -198,7 +199,7 @@ test('C: the pronunciation hold is capped at 3 consecutive turns; the 4th advanc
 });
 test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  pin(VTR.slice(auto, auto + 9500), /pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR.slice(auto, auto + 11500), /pendingRuntimeNoteUrgentRef\.current = true;/);
   // Task 14 §G: the tool path's level apply moved into applyWorkingLevelRef.
   const lv = VTR.indexOf("applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool')");
   assert.ok(lv > 0);
@@ -514,7 +515,7 @@ test('22A: turnEndsWithAsk — the run-10 turns', () => {
 });
 test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 9500);
+  const block = VTR.slice(auto, auto + 11500);
   pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
   pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
 });
@@ -602,7 +603,7 @@ test('26A: VTR wiring — offer planted (urgent FACT) instead of the advance, he
   const block = VTR.slice(auto, auto + 15000);
   pin(block, /const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS\s*\? fixedScriptTransitionDecision\(\{\s*plan: autoPlan, segmentId: segIdNow, reason: advanceReason,\s*offerMade: transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\),\s*offerHeldTurns: autoAdvanceOfferHeldRef\.current,/);
   // order: pronunciation hold → offer → offer hold → ask hold → advance
-  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]{0,900}?\} else if \(autoNext && segIdNow && transition === 'offer'\) \{\s*\/\/ The offer note replaces[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'await-offer'\) \{[\s\S]*?\} else if \(autoNext && transition === 'hold-offer'\) \{\s*\/\/[^\n]*\n\s*if \(!offerSpokenThisTurn\) autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
+  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]{0,900}?\} else if \(autoNext && segIdNow && transition === 'offer'\) \{\s*\/\/ The offer note replaces[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'await-offer'\) \{[\s\S]*?\} else if \(autoNext && transition === 'hold-offer'\) \{\s*\/\/[^\n]*\n\s*if \(!offerSpokenThisTurn && !offerRuntimeTurn\) autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
   pin(block, /autoAdvanceAskHeldRef\.current = 0;\s*autoAdvanceOfferHeldRef\.current = 0;\s*const autoTurns = cur\.turns;/);
   pin(block, /: fixedScriptAutoAdvanceLead\(segIdNow, autoNext, autoKind\)\) \+[^\n]*\n\s*\/\/[^\n]*\n\s*\(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(autoPlan, segIdNow, autoNext\) : ''\) \+\s*\/\/[^\n]*\n\s*\(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(autoPlan, autoNext\)\) : ''\),\s*autoNext,/);
   pin(VTR, /fixedScriptAdvancedNote\(fixedScriptLevelAdvanceLead\(lvNext, lvKind\) \+ \(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(lvPlan, lvFrom, lvNext\) : ''\) \+ \(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(lvPlan, lvNext\)\) : ''\), lvNext\),/);
@@ -823,7 +824,7 @@ test('29A: VTR wiring — validator kill + retry, spoken event, hold from the sp
   assert.ok(VTR.includes("onDebugEvent?.('transition_offer_missing', `\"${attemptText.slice(0, 60)}\"`);"));
   assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_unmade',"));
   assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_spoken', `\"${offerSeg}\"`);"));
-  assert.ok(VTR.includes('if (!offerSpokenThisTurn) autoAdvanceOfferHeldRef.current += 1;'));
+  assert.ok(VTR.includes('if (!offerSpokenThisTurn && !offerRuntimeTurn) autoAdvanceOfferHeldRef.current += 1;'));
   assert.ok(VTR.includes("} else if (autoNext && transition === 'await-offer') {"));
   assert.ok(VTR.includes('offerDeclined: !offerSpokenThisTurn && offerDeclined(transcript),'));
   assert.ok(readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8').includes("'transition_offer_missing',"));
@@ -839,7 +840,30 @@ test('29 r1 I-1: transition_ask_off_part skips the offer turn (pointer unchanged
 });
 test('29 r1 I-2: an offer on the budget turn itself is SPOKEN at once — no note planted', () => {
   assert.equal(offerAsked('Nice. Would you like one more practice sentence, or move on to the past simple?'), true);
-  pin(VTR, /\} else if \(autoNext && segIdNow && transition === 'offer' && TUTOR_TRANSITION_OFFER_SPOKEN && offerAsked\(fullText\)\) \{[\s\S]{0,400}?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*transitionOfferSpokenRef\.current\.add\(segIdNow\);\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;\s*onDebugEvent\?\.\('fixed_script_offer_spoken', `"\$\{segIdNow\}" \(on the budget turn\)`\);\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{/);
+  pin(VTR, /\} else if \(autoNext && segIdNow && transition === 'offer' && TUTOR_TRANSITION_OFFER_SPOKEN && offerAsked\(fullText\)\) \{[\s\S]{0,400}?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*transitionOfferSpokenRef\.current\.add\(segIdNow\);\s*transitionOfferSpokenAtRef\.current\.set\(segIdNow, Date\.now\(\)\);\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;\s*onDebugEvent\?\.\('fixed_script_offer_spoken', `"\$\{segIdNow\}" \(on the budget turn\)`\);\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{/);
+});
+
+// ── Task 30 §A2: the hold runs on student turns; a wait cap ─────────────
+test('30A2: held 2 + runtime turn ⇒ hold-offer; held 2 + student turn ⇒ advance; spoken 160 s ago ⇒ advance', () => {
+  const now = 10_000_000;
+  const d = (offerHeldTurns: number, studentTurn: boolean, spokenAgoMs: number) =>
+    fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'turns', offerMade: true, offerHeldTurns, offerSpoken: true, offerDeclined: false, studentTurn, offerSpokenAtMs: now - spokenAgoMs, nowMs: now });
+  assert.equal(d(2, false, 40_000), 'hold-offer', 'a nudge / nag turn never spends the hold');
+  assert.equal(d(2, true, 40_000), 'advance');
+  assert.equal(d(1, true, 40_000), 'hold-offer');
+  assert.equal(d(2, false, 160_000), 'advance', 'the wait cap');
+  assert.equal(d(1, false, 160_000), 'advance', 'the cap wins over the held turns');
+  assert.equal(FIXED_SCRIPT_OFFER_MAX_WAIT_MS, 150_000);
+  assert.equal(offerWaitExpired(now - 150_000, now), true);
+  assert.equal(offerWaitExpired(now - 149_999, now), false);
+  assert.equal(offerWaitExpired(null, now), false);
+});
+test('30A2: VTR wiring — runtime turns do not count; spoken-at stamped; the expiry event (pins)', () => {
+  assert.ok(VTR.includes("const offerRuntimeTurn = /^\\s*\\[/.test(transcript);"));
+  assert.ok(VTR.includes('studentTurn: !offerRuntimeTurn,'));
+  assert.ok(VTR.includes("offerSpokenAtMs: transitionOfferSpokenAtRef.current.get(segIdNow ?? '') ?? null,"));
+  assert.equal((VTR.match(/transitionOfferSpokenAtRef\.current\.set\(/g) ?? []).length >= 3, true);
+  assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_wait_expired',"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

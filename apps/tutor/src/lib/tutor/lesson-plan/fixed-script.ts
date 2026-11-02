@@ -417,13 +417,30 @@ export function fixedScriptTransitionDecision(input: {
   offerHeldTurns: number;
   offerSpoken?: boolean;
   offerDeclined?: boolean;
+  /** Task 30 §A2: false ⇒ a runtime-triggered turn (nudge, nag,
+   *  continuation, note-only — no student speech): a spent hold never
+   *  advances on it. Absent ⇒ a student turn (the pre-Task-30 behaviour). */
+  studentTurn?: boolean;
+  /** Task 30 §A2: when the offer was spoken (ms) and now — the wait cap. */
+  offerSpokenAtMs?: number | null;
+  nowMs?: number;
 }): 'offer' | 'await-offer' | 'hold-offer' | 'advance' {
   if (input.reason === 'announced') return 'advance';
   if (segmentTransitionKind(input.plan, input.segmentId) !== 'offer') return 'advance';
   if (!input.offerMade) return 'offer';
   if (input.offerSpoken === false) return 'await-offer';
   if (input.offerDeclined) return 'advance';
-  return holdAutoAdvanceForOffer(true, input.offerHeldTurns) ? 'hold-offer' : 'advance';
+  if (offerWaitExpired(input.offerSpokenAtMs, input.nowMs)) return 'advance';
+  if (holdAutoAdvanceForOffer(true, input.offerHeldTurns)) return 'hold-offer';
+  return input.studentTurn === false ? 'hold-offer' : 'advance';
+}
+/** Task 30 §A2 (GDI run 17, 433–499 s: the offer's two hold turns were an
+ *  idle nudge and a noise nag — the student's answer came after the part had
+ *  advanced): the hold runs on student turns only, and this cap keeps a
+ *  silent student from parking the lesson on the offer. */
+export const FIXED_SCRIPT_OFFER_MAX_WAIT_MS = 150_000;
+export function offerWaitExpired(offerSpokenAtMs: number | null | undefined, nowMs: number | null | undefined): boolean {
+  return typeof offerSpokenAtMs === 'number' && typeof nowMs === 'number' && nowMs - offerSpokenAtMs >= FIXED_SCRIPT_OFFER_MAX_WAIT_MS;
 }
 
 /** Task 29 §A1 (GDI run 16, 441–486 s / 672–734 s): the offer note was
