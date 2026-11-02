@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead, isTutorDirectiveImperative, directiveSentencesOf, isDirectiveEchoOf, directiveSentencesForInput } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead, isTutorDirectiveImperative, directiveSentencesOf, isDirectiveEchoOf, directiveSentencesForInput, isStudentEchoOpener } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -1312,6 +1312,20 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('33B: memo returns the same list', directiveSentencesForInput(input, 'Yes, I understand.') === directiveSentencesForInput(input, 'Yes, I understand.'));
   const VTR33 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('33B: VTR passes this attempt\'s directive sentences to the filter', VTR33.includes('directiveSentences: directiveSentencesForInput(runTranscript, transcript),'));
+}
+
+
+// Task 33 §F (bot run r8, 1090 s): the turn's first sentence reads the student's sentence back.
+{
+  const st = 'Last month I made a presentation for a new product launch.';
+  check('33F: the 1090 s opener (a contiguous 82 % run of the student\'s sentence) dropped', isStudentEchoOpener(st, 'I made a presentation for a new product launch.'));
+  check('33F: the exact sentence dropped', isStudentEchoOpener('I went with my team.', 'I went with my team.'));
+  check('33F: a correction (a word changed) kept', !isStudentEchoOpener('I go to Tokyo last year.', 'I went to Tokyo last year.'));
+  check('33F: a quoted echo (a verdict) kept', !isStudentEchoOpener(st, '"I made a presentation for a new product launch" is correct.'));
+  check('33F: a short fragment kept', !isStudentEchoOpener(st, 'A new product launch.'));
+  check('33F: a runtime turn never', !isStudentEchoOpener('[idle nudge] Last month I made a presentation.', 'Last month I made a presentation.'));
+  const VTR33F = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('33F: VTR drops it as the attempt\'s first sentence only', VTR33F.includes("if (TUTOR_ADJACENT_DUPLICATE_DROP && !adjacentPrevSentence && !/^\\s*\\[/.test(transcript) && isStudentEchoOpener(transcript, updatedSentence)) {"));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

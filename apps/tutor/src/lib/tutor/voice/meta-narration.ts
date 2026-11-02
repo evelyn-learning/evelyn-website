@@ -1442,6 +1442,28 @@ export function isAdjacentDuplicate(prev: string | null | undefined, cur: string
   return b.length > 0 && a.length === b.length && a.every((w, i) => w === b[i]);
 }
 
+/** Task 33 §F (GDI bot run r8, 1090 s: the turn opened by reading the
+ *  student's sentence back — "I made a presentation for a new product
+ *  launch. Yes, …"): the turn's FIRST spoken sentence that is the student's
+ *  last sentence again — its words (fillers out, ≥ 4) equal to, or a
+ *  contiguous run covering ≥ 80 % of, one sentence of the student's turn. A
+ *  quoted echo ("“…” is correct") and a correction (any word changed) are
+ *  kept; the sentence board shows the student's sentence as a card. Pure. */
+export const STUDENT_ECHO_OPENER_COVERAGE = 0.8;
+export function isStudentEchoOpener(studentText: string | null | undefined, cur: string | null | undefined): boolean {
+  const c = cur ?? '';
+  const st = studentText ?? '';
+  if (!c.trim() || !st.trim() || /^\s*\[/.test(st) || ADJ_DUP_QUOTE_RE.test(c)) return false;
+  const b = adjacentDuplicateWords(c).filter((w) => !ADJ_DUP_FILLER.has(w));
+  if (b.length < 4) return false;
+  return st.split(/(?<=[.!?。！？])\s+/).some((sent) => {
+    const a = adjacentDuplicateWords(sent).filter((w) => !ADJ_DUP_FILLER.has(w));
+    if (a.length < b.length || b.length / a.length < STUDENT_ECHO_OPENER_COVERAGE) return false;
+    for (let i = 0; i + b.length <= a.length; i++) if (b.every((w, k) => a[i + k] === w)) return true;
+    return false;
+  });
+}
+
 /**
  * Task 30 fix round 2 E1 (r1 148 s: both sentences of a turn were dropped as
  * narration — "0 sentence(s)" — yet the bubble, the history and the judge

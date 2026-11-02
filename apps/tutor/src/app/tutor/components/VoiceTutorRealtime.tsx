@@ -223,7 +223,7 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { splitSentenceForTts, keptRestRemoved } from '@/lib/tutor/voice/tts-language';
-import { isMetaNarration, directiveSentencesForInput, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isThankAck, isRepeatThankAck, isPlanContinuationSentence, doneTurnText } from '@/lib/tutor/voice/meta-narration';
+import { isMetaNarration, directiveSentencesForInput, isStudentEchoOpener, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isThankAck, isRepeatThankAck, isPlanContinuationSentence, doneTurnText } from '@/lib/tutor/voice/meta-narration';
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance, isStopRequest } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish, replaceLastStudentEntry, rememberStudentEntryId } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
@@ -17178,6 +17178,12 @@ export function VoiceTutorRealtime({
                     continue;
                   }
                   prevSentenceDroppedAsNarration = false;
+                  // Task 33 §F (GDI bot run r8, 1090 s): the turn's first sentence
+                  // reads the student's sentence back — the board card shows it.
+                  if (TUTOR_ADJACENT_DUPLICATE_DROP && !adjacentPrevSentence && !/^\s*\[/.test(transcript) && isStudentEchoOpener(transcript, updatedSentence)) {
+                    onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" (echo of the student's sentence)`);
+                    continue;
+                  }
                   // Task 29 §K2 (GDI run 16, 479 s): the continuation re-spoke
                   // the continued turn's first sentence — the student heard it twice.
                   if (continuedTurnText && continuationRepeatsSentence(updatedSentence, continuedTurnText)) {
