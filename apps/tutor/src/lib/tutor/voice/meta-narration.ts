@@ -761,8 +761,18 @@ const LEARNER_NARRATION_RE = /^\s*(?:No\.\s*)?They (?:only|just) (?:said|repeate
 const INTERNAL_NOTES_RE = /\b(?:those|these|the) notes (?:are|were) internal\b|\bnot from you\b/i;
 const ASK_AGAIN_LEAD_RE = /^\s*(?:Ask|Say|Try) (?:it )?again,? (?:simply|more simply|once more)[:,]\s*/i;
 const PLAN_TAIL_RE = /,?\s*\bso I['’]ll (?:note|ask|point|model|name|acknowledge|accept|try|check|give)\b([^.?!]*)[.?!]?\s*$/i;
+// Task 33 fix round 1 (R9-1, bot run r9 592 s: "So I'll gently bring it
+// back: which country did you visit …?"): a first-person steering lead
+// before a colon is stripped and the question kept; nothing after it ⇒ ''.
+const STEER_LEAD_RE = /^\s*(?:So|Then|Now),? I['’]?ll (?:gently )?(?:bring (?:it|that|us) back|move us on|move on to|take us to)[^:]*:\s*/i;
 export function stripSpokenPlanLeadTail(sentence: string): string {
   let s = sentence ?? '';
+  const steer = STEER_LEAD_RE.exec(s);
+  if (steer) {
+    const rest = s.slice(steer[0].length).trim();
+    if (!/[\p{L}\p{N}]/u.test(rest)) return '';
+    s = capitaliseFirst(rest);
+  }
   const lead = ASK_AGAIN_LEAD_RE.exec(s);
   if (lead && s.slice(lead[0].length).trim()) s = capitaliseFirst(s.slice(lead[0].length).trim());
   const tail = PLAN_TAIL_RE.exec(s);
@@ -1148,6 +1158,18 @@ const DIRECTIVE_MARKER_RE =
 const KEEP_IT_SHORT_ADVICE_RE = /^\s*Keep it (?:brief|short)\s*:(?![^.!?]*\bthen\b)/i;
 const DIRECTIVE_ADDRESSES_STUDENT_RE = /\b(?:you|your|yours|yourself|we|let['’]?s|let us|us|our)\b/i;
 const ASK_AGAIN_PLAINLY_RE = /^\s*I['’]?ll ask (?:it |that |the question )?again,? plainly\b/i;
+// Task 33 fix round 1 (R9-1, bot run r9 1262 s / 849 s): "Now I'll move us
+// on to the pronunciation practice." (a steering plan with no colon) and
+// "The past simple part is almost done, so I'll give you one more …" (the
+// part's state as the reason for a first-person plan) — whole drops.
+// "Now let's move on to the past simple." / "Let's bring it back to your
+// sentence." are speech.
+const STEER_PLAN_RE = /^\s*(?:So|Then|Now),? I['’]?ll (?:gently )?(?:bring (?:it|that|us) back|move us on|move on|take us)\b[^:?]*$/i;
+const PART_STATE_PLAN_RE = /\b(?:part|section|segment|step)\s+is\s+(?:almost |nearly |now |already )?(?:done|finished|over|complete|completed)\b,?\s*(?:so|and) I['’]ll\b/i;
+export function isSteeringPlanNarration(sentence: string): boolean {
+  const s = sentence ?? '';
+  return STEER_PLAN_RE.test(s) || PART_STATE_PLAN_RE.test(s);
+}
 export function isTutorDirectiveImperative(sentence: string): boolean {
   const s = sentence ?? '';
   if (ASK_AGAIN_PLAINLY_RE.test(s)) return true;
@@ -1213,7 +1235,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if (directiveEchoEnabled() && (isTutorDirectiveImperative(s) || isDirectiveEchoOf(s, opts?.directiveSentences))) return true;
+  if (directiveEchoEnabled() && (isTutorDirectiveImperative(s) || isDirectiveEchoOf(s, opts?.directiveSentences) || isSteeringPlanNarration(s))) return true;
   if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || (BOARD_STAGING_NARRATION_RE.test(s) && !isFirstPersonBoardOfferToLearner(s)) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;

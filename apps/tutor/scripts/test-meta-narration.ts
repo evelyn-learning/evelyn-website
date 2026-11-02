@@ -1346,5 +1346,17 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
     check(`33 r1 I-2: directive dropped — ${x}`, isMetaNarration(x));
 }
 
+
+// Task 33 fix round 1 R9-1 (bot run r9 592 / 1262 / 849 s): steering leads and part-state plans.
+{
+  check('33 r1 R9-1: the steering lead is stripped, the question kept', stripNoteCitationClause("So I'll gently bring it back: which country did you visit for your company last year?") === 'Which country did you visit for your company last year?', stripNoteCitationClause("So I'll gently bring it back: which country did you visit for your company last year?"));
+  check('33 r1 R9-1: the sentence is not dropped whole', !isMetaNarration("So I'll gently bring it back: which country did you visit for your company last year?"));
+  check('33 r1 R9-1: a lead with nothing after it is dropped', isMetaNarration("So I'll bring it back:"));
+  check('33 r1 R9-1: "Now I\'ll move us on to the pronunciation practice." dropped', isMetaNarration("Now I'll move us on to the pronunciation practice."));
+  check('33 r1 R9-1: the 849 s part-state plan dropped', isMetaNarration("The past simple part is almost done, so I'll give you one more short question before we move on."));
+  for (const x of ["Now let's move on to the past simple.", "Let's bring it back to your sentence.", 'This part is about your work.', "Now I'll ask you about your weekend?"])
+    check(`33 r1 R9-1: kept — ${x}`, !isMetaNarration(x) && stripNoteCitationClause(x) === x);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
