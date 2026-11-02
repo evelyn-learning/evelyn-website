@@ -756,6 +756,14 @@ export function recordAnsweredQuestions(answered: Set<string>, prevTutorText: st
   for (const q of englishQuestions(prevTutorText)) answered.add(q);
 }
 
+/** Task 31 §G: the English question sentences of `prevTutorText` the student
+ *  answered (same rule as recordAnsweredQuestions), verbatim. */
+export function answeredQuestionSentences(prevTutorText: string, studentText: string): string[] {
+  if (!carriesAnswer(studentText)) return [];
+  return (prevTutorText ?? '').split(/(?<=[。！？.!?])\s+|\n+/).map((x) => x.trim())
+    .filter((x) => /[?？]\s*$/.test(x) && (x.match(/[A-Za-z][A-Za-z']*/g) ?? []).length >= 3);
+}
+
 export function reAskedEarlierQuestion(answered: ReadonlySet<string>, prevTutorText: string, tutorText: string): string | null {
   if (answered.size === 0) return null;
   const prev = new Set(englishQuestions(prevTutorText));

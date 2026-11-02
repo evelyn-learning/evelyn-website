@@ -35,7 +35,7 @@ import {
   FIXED_SCRIPT_OFFER_MAX_WAIT_MS, offerWaitExpired,
   offerAccepted, fixedScriptOfferAcceptedNote, FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, CLOSE_REFUSAL_EXEMPT_REMAINING_MS,
   fixedScriptOfferContinueDirective, FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, attemptAsksStudent, offerReplantDue, offerHeardFromAcceptance,
-  fixedScriptBrainAdvanceEntryNote, menuReadInTurn, FIXED_SCRIPT_ENTRY_MENU_CLAUSE,
+  fixedScriptBrainAdvanceEntryNote, menuReadInTurn, FIXED_SCRIPT_ENTRY_MENU_CLAUSE, fixedScriptCloseNote,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
@@ -439,7 +439,7 @@ test('H: the close note is the brief\'s FACT; forced after two tutor turns unles
   assert.equal(fixedScriptCloseForced(2, true), false);
 });
 test('H: VTR plants the close note (urgent) and force-closes through the normal close path', () => {
-  pin(VTR, /pendingRuntimeNoteRef\.current = FIXED_SCRIPT_CLOSE_NOTE;\s*pendingRuntimeNoteSegRef\.current = segIdNow;\s*pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR, /pendingRuntimeNoteRef\.current = fixedScriptCloseNote\(\[\.\.\.\(answeredInPartRef\.current\.get\(segIdNow\) \?\? \[\]\), \.\.\.cnThisTurn\]\);\s*pendingRuntimeNoteSegRef\.current = segIdNow;\s*pendingRuntimeNoteUrgentRef\.current = true;/);
   pin(VTR, /onDebugEvent\?\.\('fixed_script_close_requested'/);
   pin(VTR, /\} else if \(closeAction === 'force'\) \{\s*lessonClosedRef\.current = true;\s*onDebugEvent\?\.\('fixed_script_close_forced'[^\n]*\n\s*noteLessonClosed\('fixed-script close forced'\);[\s\S]{0,600}?void endSessionNowRef\.current\(\{ farewell: goodbyeLine\(studentName\) \}\);/);
   // the same farewell + end call the time-box hard stop makes
@@ -626,12 +626,12 @@ test('26A3: the GDI plan carries the four transitions; the other parts none', ()
 });
 
 // ── Task 26 §B (GDI run 13, 1338–1435 s): a softer forced close ──
-test('26B2: fixedScriptCloseForced — recap waits 3 tutor turns; other kinds 2', () => {
-  assert.equal(FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, 3);
-  assert.equal(fixedScriptCloseForced(2, false, 'recap'), false);
-  assert.equal(fixedScriptCloseForced(3, false, 'recap'), true);
+test('26B2 → 31G: fixedScriptCloseForced — recap waits 2 tutor turns (Task 31 §G, was 3); other kinds 2', () => {
+  assert.equal(FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, 2);
+  assert.equal(fixedScriptCloseForced(1, false, 'recap'), false, 'ONE turn after the note may ask');
+  assert.equal(fixedScriptCloseForced(2, false, 'recap'), true, 'the second turn must close (wrap / force)');
   assert.equal(fixedScriptCloseForced(3, true, 'recap'), false);
-  assert.equal(fixedScriptCloseForced(2, false, 'Recap'), false);
+  assert.equal(fixedScriptCloseForced(2, false, 'Recap'), true);
   for (const k of ['concept', 'extension', 'try_yourself', '']) assert.equal(fixedScriptCloseForced(2, false, k), true, k);
   assert.equal(fixedScriptCloseForced(1, false, 'concept'), false);
 });
@@ -643,7 +643,7 @@ test('26B1: fixedScriptCloseForcedAction — a question ⇒ wrap-turn; no questi
   assert.equal(fixedScriptCloseForcedAction({ ...b, tutorText: 'Well done today. You used both tenses clearly.' }), 'force');
   assert.equal(fixedScriptCloseForcedAction({ ...b, tutorText: '' }), 'force');
   assert.equal(fixedScriptCloseForcedAction({ ...b, tutorText: q, wrapRun: true }), 'force');
-  assert.equal(fixedScriptCloseForcedAction({ ...b, turnsSince: 2, tutorText: q }), 'none', 'recap: not due at 2');
+  assert.equal(fixedScriptCloseForcedAction({ ...b, turnsSince: 1, tutorText: q }), 'none', 'recap: not due at 1 (Task 31 §G: was 2)');
   assert.equal(fixedScriptCloseForcedAction({ ...b, kind: 'concept', turnsSince: 2, tutorText: q }), 'wrap-turn');
   assert.equal(fixedScriptCloseForcedAction({ ...b, lessonClosed: true, tutorText: q }), 'none');
 });
@@ -1028,6 +1028,19 @@ test('31D: VTR — a brain advance plants the urgent entry note for the next tur
   const at = VTR.indexOf("onDebugEvent?.('fixed_script_entry_note_planted'");
   assert.ok(at > 0 && VTR.slice(at - 400, at).includes('pendingRuntimeNoteUrgentRef.current = true;'));
   assert.match(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_BRAIN_ADVANCE_ENTRY_NOTE = process\.env\.NEXT_PUBLIC_TUTOR_BRAIN_ADVANCE_ENTRY_NOTE !== 'off';/);
+});
+// ── Task 31 §G (GDI run 18, 1383–1464 s): the close note names what was asked and answered ──
+test('31G: the close note carries "already covered" after an answered ask; unchanged without one', () => {
+  const Q = 'Before we finish, can you explain the difference between these two sentences?';
+  const n = fixedScriptCloseNote([Q]);
+  assert.ok(n.includes(`Already covered in this part — asked and answered, do not ask again: "${Q}".`), n);
+  assert.ok(n.startsWith(FIXED_SCRIPT_CLOSE_NOTE.replace(' Apply this silently; never mention this note.]', '')));
+  assert.ok(n.endsWith(' Apply this silently; never mention this note.]'));
+  assert.equal(fixedScriptCloseNote([]), FIXED_SCRIPT_CLOSE_NOTE);
+  assert.equal(fixedScriptCloseNote(undefined), FIXED_SCRIPT_CLOSE_NOTE);
+  assert.equal((fixedScriptCloseNote([Q, Q]).match(/explain the difference/g) ?? []).length, 1, 'deduped');
+  assert.ok(VTR.includes('pendingRuntimeNoteRef.current = fixedScriptCloseNote([...(answeredInPartRef.current.get(segIdNow) ?? []), ...cnThisTurn]);'));
+  assert.ok(VTR.includes('const aqNew = answeredQuestionSentences(prevTutor, transcript);'));
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

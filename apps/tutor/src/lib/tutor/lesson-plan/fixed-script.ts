@@ -150,13 +150,24 @@ export function fixedScriptCloseReason(input: AutoAdvanceInput): 'turns' | 'time
 // sentences…?") — the note now says what to do with an open wrong answer.
 export const FIXED_SCRIPT_CLOSE_NOTE =
   "[runtime note — not from the student] The lesson is complete. If the student's last answer was wrong or incomplete, give the correct answer in one sentence (no question). Then give the closing summary in two or three sentences and call close_session_notes in this turn; do not ask another question. Apply this silently; never mention this note.]";
+/** Task 31 §G (GDI run 18, 1463 s: the summary's "explain the difference"
+ *  question re-asked after it was answered at 1358 s): the close note names
+ *  the part's questions already asked AND answered (newest last, ≤ 3). */
+export function fixedScriptCloseNote(answeredInPart: readonly string[] | null | undefined): string {
+  const qs = [...new Set((answeredInPart ?? []).map((q) => q.trim()).filter(Boolean))].slice(-3);
+  if (!qs.length) return FIXED_SCRIPT_CLOSE_NOTE;
+  const clause = ` Already covered in this part — asked and answered, do not ask again: ${qs.map((q) => `"${q.replace(/"/g, "'")}"`).join('; ')}.`;
+  return FIXED_SCRIPT_CLOSE_NOTE.replace(' Apply this silently; never mention this note.]', `${clause} Apply this silently; never mention this note.]`);
+}
 /** Tutor turns after the close note without close_session_notes before the
  *  client closes the lesson itself. */
 export const FIXED_SCRIPT_CLOSE_GRACE_TURNS = 2;
 /** Task 26 §B2 (GDI run 13, 1338–1435 s): a recap part's check question
  *  needs the student's answer and the tutor's reply before the close — three
  *  tutor turns there. */
-export const FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS = 3;
+// Task 31 §G (GDI run 18, 1383–1464 s: three more questions after the close
+// note): ONE turn after the note may ask; the second must close — 3 → 2.
+export const FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS = 2;
 /** True ⇒ close the lesson now (`turnsSinceNote` = tutor turns delivered
  *  after the one the note was planted on; `kind` = the closing segment's
  *  kind — 'recap' waits FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS). */
