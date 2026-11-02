@@ -12,6 +12,7 @@
  */
 import { TRANSITION_ASK_REASON as TRANSITION_ASK_REASON_E7 } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptOfferMissingReason as fixedScriptOfferMissingReasonE7 } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { splitRunTogetherEnglish as splitRunTogetherEnglishR3, isKnownWordForm as isKnownWordFormR3, replaceLastStudentEntry as replaceLastStudentEntryR3 } from '../src/lib/tutor/voice/run-together-english';
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { SentenceBuffer } from '../src/lib/tutor/voice/claude-brain';
@@ -1823,6 +1824,20 @@ test('Task 30 fix round 3 R2-2a: same_question_third_time — the same ask a thi
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: SAME_QUESTION_THIRD_TIME_REASON });"));
   assert.ok(vtr.includes("onDebugEvent?.('same_question_third_time_unmade',"));
+});
+
+test('Task 30 fix round 3 R2-3: a real word is never split; a split rewrites the typed entry (one student turn)', () => {
+  assert.equal(splitRunTogetherEnglishR3('Did you attend any business events or exhibitions last year?'), 'Did you attend any business events or exhibitions last year?');
+  assert.equal(splitRunTogetherEnglishR3('I went there lastyear'), 'I went there last year');
+  assert.equal(splitRunTogetherEnglishR3('Iwenttoplaygolfyesterday'), 'I went to play golf yesterday');
+  assert.equal(isKnownWordFormR3('presentations'), true);
+  const entries = [{ role: 'tutor', text: 'Hi' }, { role: 'student', text: 'I went there lastyear' }];
+  const out = replaceLastStudentEntryR3(entries, 'I went there lastyear', 'I went there last year');
+  assert.ok(out && out.length === 2 && out[1]!.text === 'I went there last year', 'replaced, not appended');
+  assert.equal(replaceLastStudentEntryR3([{ role: 'tutor', text: 'Hi' }], 'a', 'b'), null);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, split);'));
+  assert.ok(vtr.includes('const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, spelled);'));
 });
 
 if (failed) process.exit(1);

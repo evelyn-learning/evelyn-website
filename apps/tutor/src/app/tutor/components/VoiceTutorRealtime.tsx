@@ -224,7 +224,7 @@ import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { splitSentenceForTts, keptRestRemoved } from '@/lib/tutor/voice/tts-language';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isPlanContinuationSentence, doneTurnText } from '@/lib/tutor/voice/meta-narration';
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '@/lib/tutor/voice/lesson-close';
-import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
+import { splitRunTogetherEnglish, replaceLastStudentEntry } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
@@ -23331,6 +23331,9 @@ export function VoiceTutorRealtime({
       const spelled = normaliseDigitsToWords(transcript);
       if (spelled !== transcript) {
         onDebugEvent?.('language_digit_words', `"${transcript.slice(0, 60)}" → "${spelled.slice(0, 60)}"`);
+        // Task 30 fix round 3 R2-3: a typed entry is rewritten, never doubled.
+        const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, spelled);
+        if (replacedEntries) { transcriptRef.current = replacedEntries; onTranscriptUpdate([...transcriptRef.current]); }
         transcript = spelled;
       }
     }
@@ -23349,6 +23352,9 @@ export function VoiceTutorRealtime({
       const split = splitRunTogetherEnglish(transcript);
       if (split !== transcript) {
         onDebugEvent?.('run_together_split', split.slice(0, 80));
+        // Task 30 fix round 3 R2-3: the split replaces the typed entry (one student turn).
+        const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, split);
+        if (replacedEntries) { transcriptRef.current = replacedEntries; onTranscriptUpdate([...transcriptRef.current]); }
         transcript = split;
       }
     }
