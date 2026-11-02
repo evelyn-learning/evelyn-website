@@ -1143,5 +1143,12 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('R3-2: "The question has two parts." kept', !isMetaNarration('The question has two parts.'));
 }
 
+// Task 30 fix round 4 R3-3 (run r3 155 s): the silent level tool is never announced.
+{
+  check('R3-3: "Before that, I\'ll note your level so the lesson fits you." ⇒ dropped', isMetaNarration("Before that, I'll note your level so the lesson fits you."));
+  check('R3-3: "I\'ll set your level now." ⇒ dropped', isMetaNarration("I'll set your level now."));
+  check('R3-3: "Your level of detail is great." kept', !isMetaNarration('Your level of detail is great.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
