@@ -717,8 +717,8 @@ for (const t of [
 ]) check(`§A dropped on a student turn: "${t}"`, isMetaNarration(t) && stripNoteCitationClause(t) === '');
 // fix round 1: "<Name> here." only for the persona's own name
 check('§A r1 "Ryota here." dropped with personaName Ryota', isMetaNarration('Ryota here.', RYOTA) && stripNoteCitationClause('Ryota here.', RYOTA) === '');
-// Task 30 fix round 5 R4-1 overrides: a bare "<Name> here." (a non-word name) is dropped without a persona name too.
-check('§A r1 → R4-1: "Ryota here." dropped without a persona name', isMetaNarration('Ryota here.'));
+// Task 30 fix round 6 (T-1): the §A r1 ruling is back — no persona name, nothing dropped.
+check('§A r1 / T-1: "Ryota here." kept without a persona name', !isMetaNarration('Ryota here.'));
 for (const t of ['Careful here!', 'Same here.', 'Five here.', 'Look here.', 'Exactly here.']) {
   check(`§A r1 kept with personaName Ryota: "${t}"`, !isMetaNarration(t, RYOTA) && stripNoteCitationClause(t, RYOTA) === t);
 }
@@ -1177,8 +1177,6 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
     "Those blocks in your message look like internal notes rather than something you meant to say, so I'll just pick up the lesson.",
     "The text you just sent is a set of notes meant for me, not your answer, so I'll set them aside.",
     "I think there's a mix-up: the notes above are internal, not your words, so I'll ignore them.",
-    'Ryotaです。',
-    'Ryota here.',
   ]) check(`R4-1: "${dropped}" dropped`, isMetaNarration(dropped));
   for (const kept of ['Take notes during the meeting.', 'Look here.', 'Start here.', 'これはRyotaです。', 'The internal meeting is on Monday.', 'Keep your notes short and clear.']) check(`R4-1: "${kept}" kept`, !isMetaNarration(kept));
 }
@@ -1188,6 +1186,22 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('R4-6: "this one came after my model, so a plain confirmation is right." ⇒ dropped', isMetaNarration('this one came after my model, so a plain confirmation is right.'));
   check('R4-6: "A simple confirmation is right here." ⇒ dropped', isMetaNarration('A simple confirmation is right here.'));
   check('R4-6: "Listen to my model, then say it." kept', !isMetaNarration('Listen to my model, then say it.'));
+}
+
+// Task 30 fix round 6 (T-1): a bare name is dropped only when it is the persona's, and never in the first tutor turn.
+{
+  const LATER = { personaName: ['Ryota Tanaka', 'Ryota'], firstTutorTurn: false };
+  const FIRST = { personaName: ['Ryota Tanaka', 'Ryota'], firstTutorTurn: true };
+  check('T-1: "Tanaka here." kept (a role-play model line)', !isMetaNarration('Tanaka here.', LATER) && !isMetaNarration('Tanaka here.'));
+  check('T-1: "Sato here." kept', !isMetaNarration('Sato here.', LATER));
+  check('T-1: "Ryotaです。" kept in the first tutor turn', !isMetaNarration('Ryotaです。', FIRST));
+  check('T-1: "Ryotaです。" dropped later', isMetaNarration('Ryotaです。', LATER));
+  check('T-1: "ryotaです。" dropped later (case-insensitive)', isMetaNarration('ryotaです。', LATER));
+  check('T-1: "Ryota here." dropped later', isMetaNarration('Ryota here.', LATER));
+  check('T-1: "Tanakaです。" kept without the persona', !isMetaNarration('Tanakaです。', { personaName: ['Ryota'], firstTutorTurn: false }));
+  check('T-1: filterNarrationText keeps the first-turn intro', filterNarrationText('Ryotaです。 Let us begin.', FIRST) === 'Ryotaです。 Let us begin.');
+  const vtr = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('T-1: VTR passes firstTutorTurn at both filter sites', (vtr.match(/firstTutorTurn: recentTutorTurnsRef\.current\.length === 0/g) ?? []).length === 2);
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

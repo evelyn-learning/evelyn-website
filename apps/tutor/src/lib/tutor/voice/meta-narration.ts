@@ -17,7 +17,6 @@
  *
  * Pure module — no side effects, never throws.
  */
-import { ENGLISH_WORDS_BY_FREQUENCY } from './english-word-freq';
 
 // The phrase-start rule as it stood before the 2026-10-03 round: EVERY sentence
 // opening "The system …" / "The runtime …" is dropped. Used when
@@ -568,14 +567,17 @@ export function isBundledNotesNarration(s: string): boolean {
   return NOTES_MENTION_RE.test(s) && NOTES_VERDICT_RE.test(s);
 }
 /** R4-1: the tutor announcing its own name as a sentence ("Ryotaです。",
- *  "Ryota here.") — a single capitalised token that is not an English word. */
-const NAME_ANNOUNCE_RE = /^\s*([A-Z][a-z]+)(?:です。|\s+here\.)\s*$/;
-let englishWordSet: Set<string> | null = null;
-export function isBareNameAnnounce(s: string): boolean {
+ *  "Ryota here."). Fix round 6 (T-1): ONLY the session's persona / teacher
+ *  name (case-insensitive) and never in the session's first tutor turn (the
+ *  persona's own introduction); any other bare name is a role-play model line
+ *  ("Tanaka here.") and is kept. */
+const NAME_ANNOUNCE_RE = /^\s*([\p{L}][\p{L}'’-]*)(?:\s*です。|\s+here\.)\s*$/u;
+export function isBareNameAnnounce(s: string, opts?: { personaName?: string | readonly string[] | null; firstTutorTurn?: boolean }): boolean {
+  if (opts?.firstTutorTurn) return false;
   const m = NAME_ANNOUNCE_RE.exec(s ?? '');
   if (!m) return false;
-  englishWordSet ??= new Set(ENGLISH_WORDS_BY_FREQUENCY.split(' '));
-  return !englishWordSet.has(m[1]!.toLowerCase());
+  const names = (Array.isArray(opts?.personaName) ? opts!.personaName : [opts?.personaName]).map((n) => (n ?? '').trim().toLowerCase()).filter(Boolean);
+  return names.includes(m[1]!.toLowerCase());
 }
 /** Task 30 fix round 5 R4-6 (run r4 794 s, spoken: "this one came after my
  *  model, so a plain confirmation is right.") — the tutor judging its own
@@ -989,11 +991,11 @@ function isLeakShape(s: string): boolean {
 
 export function isMetaNarration(
   sentence: string,
-  opts?: { structural?: boolean; /** Task 20 fix round 1: the turn answers a runtime directive / nudge (transcript starts with "["), not the student */ runtimeTriggered?: boolean; /** Task 21 fix round 1: the persona's name(s) for the "<Name> here." rule */ personaName?: string | readonly string[] | null },
+  opts?: { structural?: boolean; /** Task 20 fix round 1: the turn answers a runtime directive / nudge (transcript starts with "["), not the student */ runtimeTriggered?: boolean; /** Task 21 fix round 1: the persona's name(s) for the "<Name> here." rule */ personaName?: string | readonly string[] | null ; /** Task 30 fix round 6 (T-1): the session's first tutor turn — the persona may introduce itself */ firstTutorTurn?: boolean },
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s) || isBareNameAnnounce(s) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
@@ -1233,7 +1235,7 @@ export function isAdjacentDuplicate(prev: string | null | undefined, cur: string
  */
 export function filterNarrationText(
   text: string | null | undefined,
-  opts?: { structural?: boolean; runtimeTriggered?: boolean; personaName?: string | readonly string[] | null },
+  opts?: { structural?: boolean; runtimeTriggered?: boolean; personaName?: string | readonly string[] | null; firstTutorTurn?: boolean },
 ): string {
   const parts = (text ?? '').split(/(?<=[.!?。！？])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
   const kept: string[] = [];
@@ -1264,7 +1266,7 @@ export function doneTurnText(input: {
   fullText: string | null | undefined;
   streamSentences: number;
   filter: boolean;
-  opts?: { structural?: boolean; runtimeTriggered?: boolean; personaName?: string | readonly string[] | null };
+  opts?: { structural?: boolean; runtimeTriggered?: boolean; personaName?: string | readonly string[] | null; firstTutorTurn?: boolean };
 }): string {
   if (input.attemptText) return input.attemptText.trim();
   const full = (input.fullText ?? '').trim();

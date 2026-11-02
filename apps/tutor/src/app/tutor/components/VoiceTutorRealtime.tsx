@@ -16996,6 +16996,8 @@ export function VoiceTutorRealtime({
                     runtimeTriggered: /^\s*\[/.test(transcript),
                     // Task 21 §A fix round 1: "<Name> here." only for the persona's name.
                     personaName: personaNamesRef.current,
+                    // Task 30 fix round 6 (T-1): the persona may introduce itself in the first tutor turn.
+                    firstTutorTurn: recentTutorTurnsRef.current.length === 0,
                   });
                   if (metaNarrationRe) {
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
@@ -19284,7 +19286,7 @@ export function VoiceTutorRealtime({
                     const doneFull = (ev.fullText as string) ?? '';
                     const doneText = doneTurnText({
                       attemptText, fullText: doneFull, streamSentences: streamSentencesThisAttempt, filter: TUTOR_NARRATION_BACKFILL_FILTER,
-                      opts: { structural: TUTOR_META_NARRATION_STRUCTURAL, runtimeTriggered: /^\s*\[/.test(transcript), personaName: personaNamesRef.current },
+                      opts: { structural: TUTOR_META_NARRATION_STRUCTURAL, runtimeTriggered: /^\s*\[/.test(transcript), personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0 },
                     });
                     if (!attemptText && doneFull.trim() && doneText !== doneFull.trim()) onDebugEvent?.('meta_narration_backfill_filtered', `${streamSentencesThisAttempt > 0 ? `${streamSentencesThisAttempt} stream sentence(s) all dropped — no backfill` : 'no stream sentence'}: "${doneFull.slice(0, 60)}" → "${doneText.slice(0, 60)}"`);
                     attemptText = doneText;
