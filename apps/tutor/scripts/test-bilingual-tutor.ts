@@ -1930,8 +1930,12 @@ test('33 §D: same_question_third_time — personal question with no authored an
 test('33 r1 I-3: personal-question directive is language-lesson only; maths questions keep the answer directive', () => {
   for (const q of ['What is the slope of your line?', 'What is the slope?', 'How many apples does Sam have?', 'What did you get for the area?', 'What is your answer for part b?']) {
     assert.equal(sameQuestionThirdTimeReason({ question: q, authoredAnswer: false, studentRecent: ['the slope is two', 'Sam has apples', 'the area'], languageLesson: false }), SAME_QUESTION_THIRD_TIME_REASON, `${q} (maths session)`);
-    assert.equal(sameQuestionThirdTimeReason({ question: q, authoredAnswer: false, studentRecent: ['the slope is two', 'Sam has apples', 'the area'], languageLesson: true }), SAME_QUESTION_THIRD_TIME_REASON, `${q} (maths shape)`);
   }
+  for (const q of ['What is the slope of your line?', 'What is the slope?', 'How many apples does Sam have?', 'What did you get for the area?', 'What is x if you add 3?'])
+    assert.equal(sameQuestionThirdTimeReason({ question: q, authoredAnswer: false, studentRecent: ['the slope is two', 'Sam has apples', 'the area'], languageLesson: true }), SAME_QUESTION_THIRD_TIME_REASON, `${q} (maths shape)`);
+  // Fix round 2: no bare "answer" / digit marker — these stay personal in a language lesson.
+  for (const q of ['What was your answer?', 'What did you do in 2020?'])
+    assert.equal(sameQuestionThirdTimeReason({ question: q, authoredAnswer: false, languageLesson: true }), SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, q);
   assert.equal(sameQuestionThirdTimeReason({ question: 'What did you see at the trade show?', authoredAnswer: false, languageLesson: false }), SAME_QUESTION_THIRD_TIME_REASON, 'outside a language lesson');
   assert.equal(readFileSync('src/lib/tutor/voice/correct-retry.ts', 'utf8').includes('present perfect|'), false, 'no topic words in code (M-4)');
 });

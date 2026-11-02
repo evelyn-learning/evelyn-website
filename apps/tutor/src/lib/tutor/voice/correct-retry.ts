@@ -1003,7 +1003,9 @@ const LANGUAGE_META_RE = /\b(?:tense|verb|verbs|word|words|sentence|sentences|ph
 // word (≥ 4 letters) of the question is in the student's recent words.
 const PERSONAL_STOP = new Set(['what', 'when', 'where', 'which', 'about', 'there', 'that', 'this', 'with', 'from', 'have', 'were', 'your', 'they', 'them', 'then', 'just', 'like', 'some', 'more', 'last', 'year', 'time', 'make', 'made', 'tell', 'said', 'does', 'into']);
 // Fix round 1 (I-3): a quantity / maths shape is never personal.
-const MATHS_SHAPE_RE = /\d|=|\bhow (?:many|much)\b|\b(?:value|slope|area|equals?|answer|total|sum|solve|solution)\b/i;
+// Fix round 2: maths markers only — never a bare "answer" or a bare digit
+// ("What was your answer?", "What did you do in 2020?" stay personal).
+const MATHS_SHAPE_RE = /[=+−×÷]|\d\s*[-*/]\s*\d|\bhow (?:many|much)\b|\b(?:equations?|solve|solution|slope|value of|equals?|area|perimeter|volume|fraction|plus|minus|times|divided)\b|\b[xyz]\b|\d\s*(?:cm|mm|km|kg|g|m|ml|l)\b|\bwhat is (?:\d|the (?:sum|product|difference|value))/i;
 export function isPersonalQuestion(question: string | null | undefined, studentRecent?: readonly string[] | null): boolean {
   const q = question ?? '';
   if (LANGUAGE_META_RE.test(q) || MATHS_SHAPE_RE.test(q)) return false;
