@@ -1068,6 +1068,13 @@ export const TUTOR_REPEAT_ASK_TWO_TRIES = process.env.NEXT_PUBLIC_TUTOR_REPEAT_A
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_TRANSITION_OFFER_SPOKEN=off. */
 export const TUTOR_TRANSITION_OFFER_SPOKEN = process.env.NEXT_PUBLIC_TUTOR_TRANSITION_OFFER_SPOKEN !== 'off';
 
+/** Task 29 §E (GDI run 16, 1057–1143 s): the idle nudge after an unanswered
+ *  say-it-aloud ask re-asks the repeat (idleNudgeDirective lastAskKind
+ *  'repeat') instead of the part's menu, and the "no speech in 40 s"
+ *  pronunciation note is held off the nudge turn for the next real student
+ *  turn. Client-side: default ON; NEXT_PUBLIC_TUTOR_IDLE_NUDGE_REPEAT_KIND=off. */
+export const TUTOR_IDLE_NUDGE_REPEAT_KIND = process.env.NEXT_PUBLIC_TUTOR_IDLE_NUDGE_REPEAT_KIND !== 'off';
+
 /** Task 27 §G (GDI run 14, 1141 s): a microphone device change mid-session
  *  (devicechange, the shared track ended, or muted at the source > 3 s)
  *  re-acquires the shared capture on the current default input and swaps the

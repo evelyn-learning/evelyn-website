@@ -175,9 +175,38 @@ export interface IdleNudgeDirectiveOpts {
    *  text then re-offers the choice instead of a hint there is nothing to
    *  hint at. Absent/true ⇒ the hint offer as before. v1 ignores it. */
   hasOpenQuestion?: boolean;
+  /** Task 29 §E1: 'repeat' ⇒ the repeat action line (v1 and v2); 'question'
+   *  / 'none' ⇒ as hasOpenQuestion true / false (v2). Absent ⇒ hasOpenQuestion. */
+  lastAskKind?: IdleNudgeLastAskKind;
+}
+
+/** Task 29 §E1 (GDI run 16, 1057 → 1101 s): the tutor asked the student to
+ *  say a phrase aloud; the nudge's "re-ask the question you last asked" sent
+ *  the brain back to the part's four-option menu. What the last tutor turn
+ *  left open: 'repeat' (an expected repeat / an armed pronunciation clip),
+ *  'question' (an answerable question), 'none'. */
+export type IdleNudgeLastAskKind = 'repeat' | 'question' | 'none';
+/** The first line every nudge directive (v1 and v2) opens with. */
+export const IDLE_NUDGE_LEAD = '[System note: the student has been silent since your last turn';
+const IDLE_NUDGE_FACTS = `${IDLE_NUDGE_LEAD} — there is nothing to acknowledge, so no acknowledgement and no praise. `;
+/** The 'repeat' action line (v1 and v2 alike). */
+export const IDLE_NUDGE_REPEAT_ACTION =
+  'The student was asked to say something aloud and has not yet. In ONE short sentence ask them to say it once more; do not re-offer any menu and do not explain.';
+/** True for an idle-nudge directive transcript (either version, any kind). */
+export function isIdleNudgeDirective(transcript: string | null | undefined): boolean {
+  return (transcript ?? '').startsWith(IDLE_NUDGE_LEAD);
+}
+/** Task 29 §E2 (GDI run 16, 1101 s): the "no speech in 40 s" pronunciation
+ *  note is not planted onto an idle-nudge turn (the nudge re-asks; it does
+ *  not coach) — it waits for the next real student turn. */
+export function holdPronunciationNoteForNudge(input: { noSpeechNote: boolean; transcript: string | null | undefined }): boolean {
+  return input.noSpeechNote && isIdleNudgeDirective(input.transcript);
 }
 
 export function idleNudgeDirective(opts: IdleNudgeDirectiveOpts): string {
+  if (opts?.lastAskKind === 'repeat') {
+    return withSilentClause(`${IDLE_NUDGE_FACTS}${IDLE_NUDGE_REPEAT_ACTION} Never scold the silence.]`);
+  }
   if (!opts?.v2) return IDLE_NUDGE_DIRECTIVE;
   // Task 28 §C / fix round 1 (I-3): the first line says the student is silent
   // and there is nothing to acknowledge; the ACTION depends on the state — an
@@ -185,7 +214,7 @@ export function idleNudgeDirective(opts: IdleNudgeDirectiveOpts): string {
   // more-time offer), no open question re-offers the choice / next step.
   return withSilentClause(
     '[System note: the student has been silent since your last turn — there is nothing to acknowledge, so no acknowledgement and no praise. ' +
-    (opts.hasOpenQuestion === false
+    ((opts.lastAskKind ? opts.lastAskKind === 'none' : opts.hasOpenQuestion === false)
       ? 'There is no problem on the table to hint at. Re-offer the choice or next step you last asked about, in different words, in one short sentence. ' +
         'Do not ask a NEW question and do not move on to the next step; this turn exists only to hand that choice back warmly. '
       : 'The question you last asked is ' +

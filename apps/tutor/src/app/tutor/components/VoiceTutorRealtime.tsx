@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND } from '@/lib/tutor/orchestrator/flags';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
 import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
@@ -320,6 +320,8 @@ import {
   onsetResetsIdleNudge,
   shouldLogIdleNudgePostponed,
   type IdleNudgePostponeReason,
+  holdPronunciationNoteForNudge,
+  type IdleNudgeLastAskKind,
 } from '@/lib/tutor/voice/idle-nudge';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, newPageTitle, weightOfAction, STALE_TURNS, isSentenceOnlyBatch, keepSentenceBatchOnPage, keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage } from '@/lib/tutor/whiteboard/page-grouping';
@@ -1520,12 +1522,16 @@ export function VoiceTutorRealtime({
     pronunciationRawNoteRef.current = { note, referenceText: lastPronunciationClipRef.current?.text ?? lastPronunciationTargetRef.current?.referenceText ?? '' };
     pronunciationMeasuredRef.current = measured;
     pronunciationNotAttemptedRef.current = false;
+    pronunciationNoSpeechNoteRef.current = false;
     if (measured) lastMeasuredPronunciationRef.current = { note, at: Date.now(), segmentId: currentSegmentIdRef.current ?? '', referenceText: lastPronunciationClipRef.current?.text ?? lastPronunciationTargetRef.current?.referenceText ?? '' };
     onDebugEvent?.('pronunciation_note_planted', `${measured ? 'measured' : 'unavailable'} · ${note.slice(0, 160)}`);
   };
+  // Task 29 §E2: the planted note is the "no speech in 40 s" one (held off an idle-nudge turn).
+  const pronunciationNoSpeechNoteRef = useRef(false);
   const plantPronunciationUnavailable = (reason: string) => {
     onDebugEvent?.('pronunciation_unavailable', reason);
     plantPronunciationNote(PRONUNCIATION_UNAVAILABLE_NOTE, false);
+    pronunciationNoSpeechNoteRef.current = reason === 'no_speech_40s';
   };
   const clearPronunciationNoSpeechTimer = () => {
     if (pronunciationNoSpeechTimerRef.current) {
@@ -13248,7 +13254,13 @@ export function VoiceTutorRealtime({
       // Pronunciation check: the route's note (measured, or "No measured
       // result…") for this one turn; a measured note opens the claim guard
       // for this turn only.
-      if (pronunciationResultNoteRef.current && !opts?.prefetchOnly) {
+      // Task 29 §E2 (GDI run 16, 1101 s): the no-speech note waits for the
+      // next real student turn — an idle-nudge turn re-asks, it does not coach.
+      const holdNoSpeechNote = !!pronunciationResultNoteRef.current && !opts?.prefetchOnly
+        && TUTOR_IDLE_NUDGE_REPEAT_KIND && holdPronunciationNoteForNudge({ noSpeechNote: pronunciationNoSpeechNoteRef.current, transcript });
+      if (holdNoSpeechNote) onDebugEvent?.('pronunciation_note_held_for_nudge', 'no_speech_40s');
+      if (pronunciationResultNoteRef.current && !opts?.prefetchOnly && !holdNoSpeechNote) {
+        pronunciationNoSpeechNoteRef.current = false;
         // Task 24 §A4 (GDI run 12, 1092 s): nothing was scored but the turn's
         // transcript is the target ⇒ the unscored note (confirm, ask once
         // more), never the not-attempted one read aloud as a verdict.
@@ -24808,7 +24820,16 @@ export function VoiceTutorRealtime({
         'idle_nudge_sent',
         `stretch=${idleNudgeStateRef.current.stretchCount} session=${idleNudgeStateRef.current.sessionCount}${nudgePlan?.ceilingHit ? ' ceiling=1' : ''}`,
       );
-      void handleStudentTranscriptForBrain(idleNudgeDirective({ v2: TUTOR_IDLE_NUDGE_V2, hasOpenQuestion: hasOpenQuestionRef.current }), { silent: true, bypassPerceptionDedupe: true });
+      // Task 29 §E1 (GDI run 16, 1101 s): a pending repeat (an armed clip, an
+      // unanswered no-speech pronunciation ask, or the last turn's repeat ask)
+      // is re-asked as a repeat — never the part's menu.
+      const nudgeLastTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
+      const nudgeRepeatPending = !!clipCaptureRef.current?.isArmed()
+        || (pronunciationNoSpeechNoteRef.current && !!pronunciationResultNoteRef.current)
+        || !!expectedRepeatFor(nudgeLastTutor, clipCaptureRef.current?.armedReference(), null);
+      const nudgeLastAskKind: IdleNudgeLastAskKind = nudgeRepeatPending ? 'repeat' : hasOpenQuestionRef.current === false ? 'none' : 'question';
+      if (nudgeRepeatPending) onDebugEvent?.('idle_nudge_repeat_ask', `"${nudgeLastTutor.slice(-60)}"`);
+      void handleStudentTranscriptForBrain(idleNudgeDirective({ v2: TUTOR_IDLE_NUDGE_V2, hasOpenQuestion: hasOpenQuestionRef.current, ...(TUTOR_IDLE_NUDGE_REPEAT_KIND ? { lastAskKind: nudgeLastAskKind } : {}) }), { silent: true, bypassPerceptionDedupe: true });
     };
     const idleNudgeArmDelay = idleNudgeArmDelayMs(idleNudgeStateRef.current, { languageLesson: sessionAllowsNonLatin(tutorLanguages) });
     idleNudgeDueAtRef.current = Date.now() + idleNudgeArmDelay;

@@ -335,6 +335,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'auto_new_page_skipped_empty_segment_page',
   // Task 29 §D: a fixed-script part page kept the batch (no topic-shift page); a measured-pronunciation turn boarded no spoken problem.
   'auto_new_page_skipped_segment_page', 'spoken_problem_skipped_pronunciation',
+  // Task 29 §E: an idle nudge re-asked a pending repeat; the no-speech pronunciation note waited past a nudge turn.
+  'idle_nudge_repeat_ask', 'pronunciation_note_held_for_nudge',
   // Task 24 §C: the transition ask was off the new part (killed once); the part page waits for the transition turn's end.
   'transition_ask_off_part', 'auto_newpage_on_advance_deferred_next_turn',
   // Task 29 §A3: a turn under a pending offer note that did not ask the offer (killed once).

@@ -220,5 +220,13 @@ test('20B1: the brain may close only from the summary (or after the student aske
   assert.equal(fixedScriptCloseAllowed({ ...plan, metadata: { ...plan.metadata, fixedScript: false } } as LessonPlan, 'pronunciation'), true, 'other plans untouched');
 });
 
+test('29E3: the pronunciation note — every item new, instruction first / model text last, no menu after a result', () => {
+  const n = seg('pronunciation').teacherNote ?? '';
+  assert.ok(n.includes('Every item is NEW: never give a word or sentence the learner has already practised in this part; when the menu\'s items are used up, take a corrected sentence of the learner\'s from earlier in the lesson.'));
+  assert.ok(n.includes('Say the instruction first ("Listen, then repeat after me:") and the model text as the LAST sentence of your turn.'));
+  assert.ok(n.endsWith('After a result, do not offer the four options again: work on the weakest word or sound with one more repeat, then ask: one more item, or move on to the summary?'));
+  assert.ok(n.startsWith('Optional pronunciation practice. Offer the four options'), 'the rest of the note kept');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall gdi-work-projects tests passed');

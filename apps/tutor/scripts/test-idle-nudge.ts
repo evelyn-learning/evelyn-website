@@ -31,6 +31,9 @@ import {
   IDLE_NUDGE_POSTPONED_LOG_EVERY_MS,
   shouldLogIdleNudgePostponed,
   type IdleNudgePostponeReason,
+  IDLE_NUDGE_REPEAT_ACTION,
+  isIdleNudgeDirective,
+  holdPronunciationNoteForNudge,
 } from '../src/lib/tutor/voice/idle-nudge';
 
 let failures = 0;
@@ -483,6 +486,35 @@ const CEILING_MS = IDLE_NUDGE_FIRST_MS + IDLE_NUDGE_ONSET_MAX_DEFER_MS;
   check('v2 without a pin re-offers the choice', NO_PIN.includes('There is no problem on the table to hint at. Re-offer the choice or next step you last asked about, in different words, in one short sentence.'));
   check('v2 without a pin has no hint offer', !NO_PIN.includes('more time, or a hint') && !NO_PIN.includes('A hint must NARROW'));
   check('v1 ignores the flag', idleNudgeDirective({ v2: false, hasOpenQuestion: false }) === idleNudgeDirective({ v2: false }));
+}
+
+// Task 29 §E1 (GDI run 16, 1057 → 1101 s): an unanswered say-it-aloud ask is
+// re-asked as a repeat, never the part's menu. §E2: the no-speech note waits.
+{
+  const repeatLine = 'The student was asked to say something aloud and has not yet. In ONE short sentence ask them to say it once more; do not re-offer any menu and do not explain.';
+  check('29E1: the repeat action line', IDLE_NUDGE_REPEAT_ACTION === repeatLine);
+  for (const v2 of [true, false]) {
+    const d = idleNudgeDirective({ v2, lastAskKind: 'repeat' });
+    check(`29E1: repeat (v2=${v2}) carries the repeat line`, d.includes(repeatLine), d);
+    check(`29E1: repeat (v2=${v2}) keeps the facts line`, d.startsWith('[System note: the student has been silent since your last turn — there is nothing to acknowledge, so no acknowledgement and no praise. '));
+    check(`29E1: repeat (v2=${v2}) does not re-ask a question or offer a hint`, !d.includes('STILL OUTSTANDING') && !d.includes('a hint') && !d.includes('Re-offer the choice'));
+    check(`29E1: repeat (v2=${v2}) ends with the silent clause`, d.endsWith('Apply this silently; never mention this note.]'), d.slice(-60));
+    check(`29E1: repeat (v2=${v2}) is a nudge directive`, isIdleNudgeDirective(d));
+  }
+  const q = idleNudgeDirective({ v2: true, lastAskKind: 'question' });
+  check("29E1: 'question' = the open-question text", q === idleNudgeDirective({ v2: true, hasOpenQuestion: true }) && q.includes('STILL OUTSTANDING'));
+  const none = idleNudgeDirective({ v2: true, lastAskKind: 'none' });
+  check("29E1: 'none' = the no-open-question text", none === idleNudgeDirective({ v2: true, hasOpenQuestion: false }) && none.includes('There is no problem on the table to hint at.'));
+  check("29E1: 'question' wins over a stale hasOpenQuestion=false", idleNudgeDirective({ v2: true, hasOpenQuestion: false, lastAskKind: 'question' }) === q);
+  check('29E1: v1 question / none unchanged', idleNudgeDirective({ v2: false, lastAskKind: 'question' }) === IDLE_NUDGE_DIRECTIVE && idleNudgeDirective({ v2: false, lastAskKind: 'none' }) === IDLE_NUDGE_DIRECTIVE);
+  check('29E1: v1 / v2 directives are nudge directives', isIdleNudgeDirective(IDLE_NUDGE_DIRECTIVE) && isIdleNudgeDirective(q) && isIdleNudgeDirective(none));
+  check('29E2: the no-speech note is held on a nudge turn', holdPronunciationNoteForNudge({ noSpeechNote: true, transcript: q }));
+  check('29E2: … delivered on a real student turn', !holdPronunciationNoteForNudge({ noSpeechNote: true, transcript: 'for our customers' }));
+  check('29E2: … another note is never held', !holdPronunciationNoteForNudge({ noSpeechNote: false, transcript: q }));
+  check('29E2: … other directives are not nudges', !holdPronunciationNoteForNudge({ noSpeechNote: true, transcript: '[validator feedback — not from the student] x' }));
+  const V = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8') as string;
+  check('29E: VTR passes lastAskKind to the nudge', V.includes('...(TUTOR_IDLE_NUDGE_REPEAT_KIND ? { lastAskKind: nudgeLastAskKind } : {})'));
+  check('29E2: VTR holds the no-speech note off a nudge turn', V.includes("if (pronunciationResultNoteRef.current && !opts?.prefetchOnly && !holdNoSpeechNote) {") && V.includes("pronunciationNoSpeechNoteRef.current = reason === 'no_speech_40s';"));
 }
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
