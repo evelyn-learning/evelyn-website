@@ -1105,12 +1105,38 @@ export function filterNarrationText(
 ): string {
   const parts = (text ?? '').split(/(?<=[.!?。！？])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
   const kept: string[] = [];
+  // Fix round 3 (P-2): the full chain, the plan-continuation rule included.
+  let prevDropped = false;
   for (const raw of parts) {
     let s = stripLeakedLabels(raw, opts?.personaName ?? null);
     const cited = stripNoteCitationClause(s, { personaName: opts?.personaName });
     if (cited && cited !== s) s = cited;
-    if (!s.trim() || isMetaNarration(s, opts)) continue;
+    if (!s.trim() || isMetaNarration(s, opts)) { prevDropped = true; continue; }
+    if (prevDropped && isPlanContinuationSentence(s)) { prevDropped = false; continue; }
+    prevDropped = false;
     kept.push(s.trim());
   }
   return kept.join(' ');
+}
+
+/**
+ * Fix round 3 (P-2): the turn text the done frame leaves. The locally kept
+ * sentences when there are any; when the STREAM delivered sentences and every
+ * one was dropped, nothing (the stored text is what was actually spoken —
+ * the server's unfiltered fullText would resurrect the drops); only a turn
+ * with NO stream sentence at all is backfilled from fullText, through the
+ * full filter chain (filterNarrationText). Pure.
+ */
+export function doneTurnText(input: {
+  attemptText: string;
+  fullText: string | null | undefined;
+  streamSentences: number;
+  filter: boolean;
+  opts?: { structural?: boolean; runtimeTriggered?: boolean; personaName?: string | readonly string[] | null };
+}): string {
+  if (input.attemptText) return input.attemptText.trim();
+  const full = (input.fullText ?? '').trim();
+  if (!input.filter) return full;
+  if (input.streamSentences > 0) return '';
+  return filterNarrationText(full, input.opts);
 }

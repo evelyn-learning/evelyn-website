@@ -222,7 +222,7 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { splitSentenceForTts, keptRestRemoved } from '@/lib/tutor/voice/tts-language';
-import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isPlanContinuationSentence, filterNarrationText } from '@/lib/tutor/voice/meta-narration';
+import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isPlanContinuationSentence, doneTurnText } from '@/lib/tutor/voice/meta-narration';
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
@@ -14378,6 +14378,8 @@ export function VoiceTutorRealtime({
         const attemptNarrationStart = turnNarrationRef.current.length;
         // Task 30 §F1: the attempt's last sentence that passed the per-sentence filters.
         let adjacentPrevSentence = '';
+        // Task 30 fix round 3 (P-2): stream sentences this attempt (kept or dropped).
+        let streamSentencesThisAttempt = 0;
         // Task 30 fix round 1 S2: the attempt's previous sentence was dropped as narration.
         let prevSentenceDroppedAsNarration = false;
         // 2026-10-08: the student's typed message superseded this opening
@@ -15716,6 +15718,7 @@ export function VoiceTutorRealtime({
                 if (ev.type === 'sentence') {
                   let sentence = (ev.text as string) || '';
                   if (!sentence.trim()) continue;
+                  streamSentencesThisAttempt += 1;
                   // Voice answer judging: the turn was cut at a withheld
                   // verdict sentence — nothing after it is shown or spoken.
                   if (voiceVerdictCut) continue;
@@ -19199,13 +19202,19 @@ export function VoiceTutorRealtime({
                   // backfill from the server's unfiltered fullText resurrected
                   // the narration into the bubble / history / judge. The
                   // backfill goes through the same sentence filters.
-                  let doneBackfill = (ev.fullText as string) ?? '';
-                  if (!voiceVerdictCut && !attemptText && doneBackfill && TUTOR_NARRATION_BACKFILL_FILTER) {
-                    const filtered = filterNarrationText(doneBackfill, { structural: TUTOR_META_NARRATION_STRUCTURAL, runtimeTriggered: /^\s*\[/.test(transcript), personaName: personaNamesRef.current });
-                    if (filtered !== doneBackfill.trim()) onDebugEvent?.('meta_narration_backfill_filtered', `"${doneBackfill.slice(0, 60)}" → "${filtered.slice(0, 60)}"`);
-                    doneBackfill = filtered;
+                  // Fix round 3 (P-2): stream sentences that were all dropped ⇒
+                  // no backfill at all (the stored text is what was spoken).
+                  if (!voiceVerdictCut) {
+                    const doneFull = (ev.fullText as string) ?? '';
+                    const doneText = doneTurnText({
+                      attemptText, fullText: doneFull, streamSentences: streamSentencesThisAttempt, filter: TUTOR_NARRATION_BACKFILL_FILTER,
+                      opts: { structural: TUTOR_META_NARRATION_STRUCTURAL, runtimeTriggered: /^\s*\[/.test(transcript), personaName: personaNamesRef.current },
+                    });
+                    if (!attemptText && doneFull.trim() && doneText !== doneFull.trim()) onDebugEvent?.('meta_narration_backfill_filtered', `${streamSentencesThisAttempt > 0 ? `${streamSentencesThisAttempt} stream sentence(s) all dropped — no backfill` : 'no stream sentence'}: "${doneFull.slice(0, 60)}" → "${doneText.slice(0, 60)}"`);
+                    attemptText = doneText;
+                  } else {
+                    attemptText = attemptText.trim();
                   }
-                  attemptText = (voiceVerdictCut ? attemptText : ((attemptText || doneBackfill) ?? '')).trim();
                   lastUsage = ev.usage as typeof lastUsage;
                   // Task X10: carry the server's brain-unavailable + retry
                   // signals out to the post-stream empty-turn fallback.

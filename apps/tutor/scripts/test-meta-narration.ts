@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -1054,7 +1054,7 @@ check('S7: "Let me ask you about your job." ⇒ kept', !isMetaNarration('Let me 
   check('E1: the 148 s backfill ⇒ nothing survives', filterNarrationText(T148) === '');
   check('E1: real speech in the backfill survives', filterNarrationText('Ryota here. Good, that is right. Could you say it once more?', { personaName: ['Ryota'] }) === 'Good, that is right. Could you say it once more?');
   const VE1 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('E1: VTR filters the done-frame backfill', VE1.includes('const filtered = filterNarrationText(doneBackfill,') && VE1.includes("attemptText = (voiceVerdictCut ? attemptText : ((attemptText || doneBackfill) ?? '')).trim();"));
+  check('E1 / P-2: VTR leaves the done text to doneTurnText', VE1.includes('const doneText = doneTurnText({') && VE1.includes('streamSentencesThisAttempt += 1;'));
 }
 
 // Task 30 fix round 2 E4 (r1 63 s): the brain's board instruction to itself.
@@ -1062,6 +1062,16 @@ check('E4: "Please show this one on the board." ⇒ dropped', isMetaNarration('P
 check('E4: "Put the sentence up on the board." ⇒ dropped', isMetaNarration('Put the sentence up on the board.'));
 check('E4: "Look at the board." kept', !isMetaNarration('Look at the board.'));
 check('E4: "Read the question on the board." kept', !isMetaNarration('Read the question on the board.'));
+
+// Task 30 fix round 3 (P-2): the done text — no backfill after stream drops; the full chain otherwise.
+{
+  const T148 = 'The student\'s latest line is mostly my own sentence read back, so I should check what they actually said. I\'ll ask them to try the full sentence again with "made" in it.';
+  check('P-2: kept sentences win', doneTurnText({ attemptText: 'Good. ', fullText: T148, streamSentences: 3, filter: true }) === 'Good.');
+  check('P-2: stream sentences all dropped ⇒ nothing (no backfill)', doneTurnText({ attemptText: '', fullText: 'Exactly, that is right. Their reply is "OK", so I will praise it.', streamSentences: 2, filter: true }) === '');
+  check('P-2: no stream sentence ⇒ the filtered backfill', doneTurnText({ attemptText: '', fullText: 'Good, that is right. Could you say it once more?', streamSentences: 0, filter: true }) === 'Good, that is right. Could you say it once more?');
+  check('P-2: the backfill applies the plan-continuation rule', filterNarrationText("The student repeated the sentence I gave them. I'll point out that one word. Please say it once more.") === 'Please say it once more.');
+  check('P-2: flag off ⇒ the old backfill', doneTurnText({ attemptText: '', fullText: T148, streamSentences: 2, filter: false }) === T148);
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
