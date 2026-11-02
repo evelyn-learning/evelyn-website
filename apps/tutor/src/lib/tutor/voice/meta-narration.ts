@@ -624,15 +624,21 @@ export const EXCHANGE_NARRATION_JA_RE = /^\s*(?:この|今の)(?:やり取り|�
  *  notes / blocks / bracketed text / "the text you sent" WITH a verdict on
  *  them (internal, meant for me, not your words / answer, set aside, ignore,
  *  pick up the lesson, mix-up). */
+const NOTES_MENTION_RE = /\bnotes?\b|\bblocks?\b|\bbracketed text\b|\bthe text you (?:just )?sent\b/i;
 // Task 34 §B (bot run r11, 1250 s: "Those notes are runtime instructions, so
-// let's keep going." was spoken): "instructions" is a mention too, and
-// "runtime instruction(s) / keep going / carry on / get back to / for me" a verdict.
-const NOTES_MENTION_RE = /\bnotes?\b|\bblocks?\b|\bbracketed text\b|\bthe text you (?:just )?sent\b|\binstructions?\b/i;
+// let's keep going." was spoken) + fix round 1 (I-1): the NOTES are the
+// subject ("Those notes are…", "The notes above…", "These instructions
+// are…", "a few of these notes are…") and the predicate is a verdict
+// (runtime / instructions / for me / internal / meant / keep going / carry
+// on / get back to). An imperative to the student keeps ("Read the
+// instructions and keep going.", "Keep your notes for me, please.").
+const NOTES_SUBJECT_VERDICT_RE = /^\s*(?:(?:so|okay|ok|well|now),?\s+)?(?:(?:a few|some|all|most|both) of\s+)?(?:those|these|the)\s+(?:runtime\s+|bracketed\s+|system\s+)?(?:notes?|blocks?|instructions?|text)\b(?:\s+(?:above|below|here|there|you sent))?\s+(?:are|is|were|was|seem|look)\b[^.!?]*\b(?:runtime|instructions?|for me|internal|meant|keep going|carry on|get back to|not (?:from|for) you)\b/i;
 // Task 31 §E (GDI run 18, 568 s, spoken: "I'll stop here for a moment; the
 // notes above are instructions for me, so let me just carry on with the
 // lesson."): instructions for me / carry on with the lesson / let me get on.
-const NOTES_VERDICT_RE = /\binternal\b|\bmeant for me\b|\bnot (?:your|the student['’]?s) (?:words|answer)\b|\bset (?:them|it) aside\b|\bignore (?:them|it)\b|\bpick up the lesson\b|\bmix-up\b|\binstructions for me\b|\bcarry on with the lesson\b|\bjust carry on\b|\blet me (?:just )?(?:carry|get) on\b|\bruntime instructions?\b|\bkeep going\b|\bcarry on\b|\bget back to\b|\bfor me\b/i;
+const NOTES_VERDICT_RE = /\binternal\b|\bmeant for me\b|\bnot (?:your|the student['’]?s) (?:words|answer)\b|\bset (?:them|it) aside\b|\bignore (?:them|it)\b|\bpick up the lesson\b|\bmix-up\b|\binstructions for me\b|\bcarry on with the lesson\b|\bjust carry on\b|\blet me (?:just )?(?:carry|get) on\b/i;
 export function isBundledNotesNarration(s: string): boolean {
+  if (NOTES_SUBJECT_VERDICT_RE.test(s)) return true;
   return NOTES_MENTION_RE.test(s) && NOTES_VERDICT_RE.test(s);
 }
 /** R4-1: the tutor announcing its own name as a sentence ("Ryotaです。",

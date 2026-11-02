@@ -1379,5 +1379,14 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('34B: "Your notes: …" (the student\'s notes) is kept whole', stripNoteCitationClause('Your notes: the first point is clear.') === 'Your notes: the first point is clear.' && !isMetaNarration('Your notes: the first point is clear.'));
 }
 
+
+// Task 34 fix round 1 I-1: notes-as-subject only; imperatives to the student keep.
+{
+  for (const x of ['Read the instructions and keep going.', 'Keep your notes for me, please.', 'Write your notes for me on the board.', 'Let us get back to your meeting notes.', 'Please read the instructions on the board and carry on.', "Let's keep going with the next question.", 'Your notes from the meeting were clear.'])
+    check(`34 r1 I-1: kept — ${x}`, !isMetaNarration(x) && stripNoteCitationClause(x) === x);
+  for (const x of ["Those notes are for me, so let's keep going.", "Those notes are runtime instructions, so let's keep going.", 'These instructions are for me, so let us carry on.', 'A few of these notes are runtime instructions.', 'The notes above are meant for me.'])
+    check(`34 r1 I-1: dropped — ${x}`, isMetaNarration(x));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
