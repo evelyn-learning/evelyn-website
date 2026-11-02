@@ -128,8 +128,19 @@ export function splitRunTogetherEnglish(text: string): string {
  * holds the original text; null when there is no such entry (the caller's
  * normal append then adds the rewritten text once). Pure.
  */
-export function replaceLastStudentEntry<T extends { role: string; text: string }>(entries: readonly T[], from: string, to: string): T[] | null {
+// Fix round 4 (Q-4): only the entry created in THIS turn (by id) is
+// rewritten — a previous turn's identical entry ("3" twice) is never touched.
+export function replaceLastStudentEntry<T extends { id?: string; role: string; text: string }>(entries: readonly T[], from: string, to: string, turnEntryId: string | null | undefined): T[] | null {
   const last = entries[entries.length - 1];
-  if (!last || last.role !== 'student' || last.text !== from || from === to) return null;
+  if (!turnEntryId || !last || last.id !== turnEntryId) return null;
+  if (last.role !== 'student' || last.text !== from || from === to) return null;
   return [...entries.slice(0, -1), { ...last, text: to }];
+}
+
+/** Fix round 4 (Q-4): record the id of the student entry an utterance
+ *  appended, keyed by its text (latest wins; bounded). */
+export function rememberStudentEntryId(map: Map<string, string>, text: string, id: string): void {
+  map.delete(text);
+  map.set(text, id);
+  while (map.size > 20) { const oldest = map.keys().next().value; if (oldest === undefined) break; map.delete(oldest); }
 }

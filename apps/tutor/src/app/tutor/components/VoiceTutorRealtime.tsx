@@ -224,7 +224,7 @@ import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { splitSentenceForTts, keptRestRemoved } from '@/lib/tutor/voice/tts-language';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isPlanContinuationSentence, doneTurnText } from '@/lib/tutor/voice/meta-narration';
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '@/lib/tutor/voice/lesson-close';
-import { splitRunTogetherEnglish, replaceLastStudentEntry } from '@/lib/tutor/voice/run-together-english';
+import { splitRunTogetherEnglish, replaceLastStudentEntry, rememberStudentEntryId } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
@@ -4263,6 +4263,10 @@ export function VoiceTutorRealtime({
   const affirmedStudentSentencesRef = useRef<Set<string>>(new Set());
   // Task 30 fix round 3 R2-2a: per real student turn, whether it answered the tutor's pending ask (last 3).
   const studentAnsweredHistoryRef = useRef<boolean[]>([]);
+  // Task 30 fix round 4 (Q-4): the id of the student entry each finalized /
+  // typed utterance appended, keyed by its text — the dispatch that carries
+  // that text may rewrite only that entry (replaceLastStudentEntry).
+  const studentEntryIdByTextRef = useRef<Map<string, string>>(new Map());
   // Task 22 fix round 1 (I3): board statements whose read-aloud was held once.
   const boardReadAloudHeldRef = useRef<Set<string>>(new Set());
   /** Task 16 §C: the scheduled continuation after an announced move whose
@@ -5736,6 +5740,7 @@ export function VoiceTutorRealtime({
         };
         transcriptRef.current = [...transcriptRef.current, entry];
         onTranscriptUpdate(transcriptRef.current);
+        rememberStudentEntryId(studentEntryIdByTextRef.current, filteredText, entry.id);
         onTrackInteraction?.('message', filteredText, undefined, 'student');
         currentUserTextRef.current = '';
         // Fresh student message → fresh tutor turn. Reset the per-turn
@@ -23327,12 +23332,15 @@ export function VoiceTutorRealtime({
     // Task 30 §J2 (GDI run 17, 299 s / 855 s): in a language lesson a
     // standalone digit 0–12 is the recogniser's spelling, not the learner's —
     // spelled out before the brain sees the transcript or a card is built.
+    // Task 30 fix round 4 (Q-4): the entry this utterance appended (if any).
+    const turnStudentEntryId = studentEntryIdByTextRef.current.get(transcript) ?? null;
+    studentEntryIdByTextRef.current.delete(transcript);
     if (TUTOR_LANGUAGE_DIGIT_WORDS && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
       const spelled = normaliseDigitsToWords(transcript);
       if (spelled !== transcript) {
         onDebugEvent?.('language_digit_words', `"${transcript.slice(0, 60)}" → "${spelled.slice(0, 60)}"`);
         // Task 30 fix round 3 R2-3: a typed entry is rewritten, never doubled.
-        const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, spelled);
+        const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, spelled, turnStudentEntryId);
         if (replacedEntries) { transcriptRef.current = replacedEntries; onTranscriptUpdate([...transcriptRef.current]); }
         transcript = spelled;
       }
@@ -23353,7 +23361,7 @@ export function VoiceTutorRealtime({
       if (split !== transcript) {
         onDebugEvent?.('run_together_split', split.slice(0, 80));
         // Task 30 fix round 3 R2-3: the split replaces the typed entry (one student turn).
-        const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, split);
+        const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, split, turnStudentEntryId);
         if (replacedEntries) { transcriptRef.current = replacedEntries; onTranscriptUpdate([...transcriptRef.current]); }
         transcript = split;
       }
@@ -30013,6 +30021,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             };
             transcriptRef.current = [...transcriptRef.current, entry];
             onTranscriptUpdate(transcriptRef.current);
+            rememberStudentEntryId(studentEntryIdByTextRef.current, text, entry.id);
             onTrackInteraction?.('message', text, undefined, 'student');
             // Signal "tutor is preparing" so the chat shows the typing
             // dots while plan-from-text runs. Without this, the wait

@@ -12,7 +12,7 @@
  */
 import { TRANSITION_ASK_REASON as TRANSITION_ASK_REASON_E7 } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptOfferMissingReason as fixedScriptOfferMissingReasonE7 } from '../src/lib/tutor/lesson-plan/fixed-script';
-import { splitRunTogetherEnglish as splitRunTogetherEnglishR3, isKnownWordForm as isKnownWordFormR3, replaceLastStudentEntry as replaceLastStudentEntryR3 } from '../src/lib/tutor/voice/run-together-english';
+import { splitRunTogetherEnglish as splitRunTogetherEnglishR3, isKnownWordForm as isKnownWordFormR3, replaceLastStudentEntry as replaceLastStudentEntryR3, rememberStudentEntryId as rememberStudentEntryIdR4 } from '../src/lib/tutor/voice/run-together-english';
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { SentenceBuffer } from '../src/lib/tutor/voice/claude-brain';
@@ -1831,13 +1831,10 @@ test('Task 30 fix round 3 R2-3: a real word is never split; a split rewrites the
   assert.equal(splitRunTogetherEnglishR3('I went there lastyear'), 'I went there last year');
   assert.equal(splitRunTogetherEnglishR3('Iwenttoplaygolfyesterday'), 'I went to play golf yesterday');
   assert.equal(isKnownWordFormR3('presentations'), true);
-  const entries = [{ role: 'tutor', text: 'Hi' }, { role: 'student', text: 'I went there lastyear' }];
-  const out = replaceLastStudentEntryR3(entries, 'I went there lastyear', 'I went there last year');
+  const entries = [{ id: 't1', role: 'tutor', text: 'Hi' }, { id: 's1', role: 'student', text: 'I went there lastyear' }];
+  const out = replaceLastStudentEntryR3(entries, 'I went there lastyear', 'I went there last year', 's1');
   assert.ok(out && out.length === 2 && out[1]!.text === 'I went there last year', 'replaced, not appended');
-  assert.equal(replaceLastStudentEntryR3([{ role: 'tutor', text: 'Hi' }], 'a', 'b'), null);
-  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.ok(vtr.includes('const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, split);'));
-  assert.ok(vtr.includes('const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, spelled);'));
+  assert.equal(replaceLastStudentEntryR3([{ id: 't1', role: 'tutor', text: 'Hi' }], 'a', 'b', 't1'), null);
 });
 
 test('Task 30 fix round 4 Q-3: same_question_third_time needs the SAME question and an unanswered student turn', () => {
@@ -1861,6 +1858,28 @@ test('Task 30 fix round 4 Q-3: same_question_third_time needs the SAME question 
   assert.equal(studentAnsweredAsk(null, 'I think it is the present perfect.'), true, 'missing verdict with ≥ 4 words ⇒ answered');
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.equal((vtr.match(/studentAnsweredAsk\(verdictPrecheckRef\.current, transcript\)/g) ?? []).length, 2);
+});
+
+test('Task 30 fix round 4 Q-4: the rewrite replaces only the entry created in this turn (by id)', () => {
+  const prev = [{ id: 'tutor-1', role: 'tutor', text: 'How many?' }, { id: 'user-1', role: 'student', text: '3' }, { id: 'tutor-2', role: 'tutor', text: 'And now?' }, { id: 'user-2', role: 'student', text: '3' }];
+  // this turn's entry (user-2) ⇒ rewritten
+  const ok = replaceLastStudentEntryR3(prev, '3', 'three', 'user-2');
+  assert.ok(ok && ok[3]!.text === 'three' && ok[1]!.text === '3');
+  // the voice path appends after dispatch: the last entry is the PREVIOUS turn's identical "3" ⇒ untouched
+  const voice = prev.slice(0, 2);
+  assert.equal(replaceLastStudentEntryR3(voice, '3', 'three', null), null);
+  assert.equal(replaceLastStudentEntryR3(voice, '3', 'three', 'user-9'), null);
+  const m = new Map<string, string>();
+  rememberStudentEntryIdR4(m, '3', 'user-1');
+  rememberStudentEntryIdR4(m, '3', 'user-2');
+  assert.equal(m.get('3'), 'user-2', 'latest wins');
+  for (let i = 0; i < 30; i++) rememberStudentEntryIdR4(m, `t${i}`, `id${i}`);
+  assert.ok(m.size <= 20, 'bounded');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, split, turnStudentEntryId);'));
+  assert.ok(vtr.includes('const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, spelled, turnStudentEntryId);'));
+  assert.ok(vtr.includes('const turnStudentEntryId = studentEntryIdByTextRef.current.get(transcript) ?? null;'));
+  assert.equal((vtr.match(/rememberStudentEntryId\(studentEntryIdByTextRef\.current, /g) ?? []).length, 2, 'voice-finalize + typed appends record their id');
 });
 
 if (failed) process.exit(1);
