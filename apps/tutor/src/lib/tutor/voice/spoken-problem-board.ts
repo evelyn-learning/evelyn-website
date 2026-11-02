@@ -19,6 +19,7 @@
  */
 
 import { TUTOR_SPOKEN_PROBLEM_VERDICT_EXCLUDE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { sentenceAsksStudent } from '../question-gist-text';
 
 export interface SpokenProblemDetection {
   /** The spoken sentences that carry the problem, joined, discourse-stripped. */
@@ -117,6 +118,32 @@ export function windowIsFeedbackOnAnAnswer(statement: string): boolean {
  * coverage rule inline); the window reads as logistics; or the statement is
  * too long to be a card.
  */
+/** Task 29 §D1 (GDI run 16, 1056 / 1189 / 1252 s): "Your overall score is 72
+ *  out of 100, which needs work." was boarded as a "Question" card (ASK_RE's
+ *  "which"). A window that does not ask the student anything (no sentence
+ *  ends with "?", passes sentenceAsksStudent or carries a problem verb —
+ *  set up / find / solve / work out / tell me …) is a statement, not a problem, when every
+ *  number in it sits in a score / measure form ("72 out of 100", "8/10",
+ *  "3 of 5", "85%", "90 percent", "12 points") or its first sentence is a
+ *  second-person statement ("Your … / You …"). A window that asks ("If 18
+ *  out of 24 shots hit …, tell me the percent.", "What is 72 plus 28?")
+ *  keeps today's rule. */
+const SCORE_FORM_RE = /\d+(?:\.\d+)?\s*(?:out of|\/|of)\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*(?:%|percent\b|points?\b)/gi;
+/** A problem verb that asks for work (ASK_RE without its bare wh-words). */
+const PROBLEM_VERB_ASK_RE = /\b(?:set (?:it|that|this|one|them) up|set up|find|figure out|work out|solve|calculate|compute|tell me)\b/i;
+const windowAsks = (x: string) => /[?？]["”’)\]]*\s*$/.test(x) || sentenceAsksStudent(x) || PROBLEM_VERB_ASK_RE.test(x);
+export function isSpokenScoreLine(window: readonly string[]): boolean {
+  const sentences = (window ?? []).map((x) => (x ?? '').trim()).filter(Boolean);
+  if (!sentences.length || sentences.some(windowAsks)) return false;
+  const text = sentences.join(' ');
+  if (/^(?:Your|You)\b/.test(sentences[0])) return true;
+  const all = numericTokens(text);
+  if (!all.length) return false;
+  const inScore = new Set<string>();
+  for (const m of text.match(SCORE_FORM_RE) ?? []) for (const n of numericTokens(m)) inScore.add(n);
+  return all.every((n) => inScore.has(n));
+}
+
 export function detectSpokenProblem(
   sentences: string[],
   boardTexts: string[],
@@ -144,6 +171,7 @@ export function detectSpokenProblem(
     }
     const statementRaw = window.join(' ');
     if (EXCLUDE_RE.test(statementRaw)) return null;
+    if (isSpokenScoreLine(window)) return null;
     if ((opts.excludeFeedback ?? TUTOR_SPOKEN_PROBLEM_VERDICT_EXCLUDE) && windowIsFeedbackOnAnAnswer(statementRaw)) return null;
     const numbers = numericTokens(statementRaw);
     if (numbers.length < 2) return null;

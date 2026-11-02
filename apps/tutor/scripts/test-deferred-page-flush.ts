@@ -17,7 +17,7 @@ import {
   orderTurnEndDispatches,
   previousPageTarget,
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
-import { keepBatchOnEmptySegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
+import { keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
 
 let n = 0;
@@ -259,6 +259,21 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('27B: VTR fallback — painted break ⇒ previous page target + event', V.includes("const paintedSegmentBreak = !bufferedSegmentBreak && !pendingAdvanceNewPageRef.current ? segmentPageBreakRef.current : null;") && V.includes("onDebugEvent?.('student_card_on_previous_page', "));
   const C = readFileSync(join(__dirname, '..', 'src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx'), 'utf8');
   ok('27B: the canvas relocates a page-targeted showSentence like a scribble', C.includes("if (cmd.action !== 'scribble' && !pageTargeted) { keep.push(cmd); continue; }"));
+}
+
+// Task 29 §D3 (GDI run 16, 1056 s): a fixed-script part page takes a topic-shift batch.
+{
+  const topic: PageDecision = { action: 'newPage', title: 'Question', reason: 'topic shift (dist=0.768) (H4)', event: 'auto_new_page', anchorKey: null };
+  ok('29D3: fixed script on the current part page ⇒ none', keepTopicShiftOnSegmentPage(topic, { fixedScript: true, onCurrentSegmentPage: true }).action === 'none');
+  ok('29D3: not a fixed script ⇒ unchanged', keepTopicShiftOnSegmentPage(topic, { fixedScript: false, onCurrentSegmentPage: true }) === topic);
+  ok('29D3: off the part page ⇒ unchanged', keepTopicShiftOnSegmentPage(topic, { fixedScript: true, onCurrentSegmentPage: false }) === topic);
+  const reset: PageDecision = { action: 'newPage', title: 'New', reason: 'explicit student reset', event: 'auto_new_page_reset', anchorKey: null };
+  ok('29D3: the student reset still opens a page', keepTopicShiftOnSegmentPage(reset, { fixedScript: true, onCurrentSegmentPage: true }) === reset);
+  const cont: PageDecision = { action: 'continuation', title: 'x (cont.)', reason: 'overflow', event: 'auto_new_page_overflow', anchorKey: null };
+  ok('29D3: an overflow continuation is unchanged', keepTopicShiftOnSegmentPage(cont, { fixedScript: true, onCurrentSegmentPage: true }) === cont);
+  const V5 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('29D3: VTR logs auto_new_page_skipped_segment_page', V5.includes("onDebugEvent?.('auto_new_page_skipped_segment_page',"));
+  ok('29D2: VTR skips spoken-problem boarding on a measured pronunciation turn', /if \(TUTOR_SPOKEN_PROBLEM_BOARD && out\.length === 0 && pronunciationMeasuredThisTurn\) \{\s*onDebugEvent\?\.\('spoken_problem_skipped_pronunciation'/.test(V5));
 }
 
 console.log(`deferred-page-flush: ${n} cases passed`);

@@ -333,6 +333,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'auto_newpage_on_advance_held_for_auto_card',
   // Task 23 §A2: an empty segment page kept the batch (no topic-shift page on top).
   'auto_new_page_skipped_empty_segment_page',
+  // Task 29 §D: a fixed-script part page kept the batch (no topic-shift page); a measured-pronunciation turn boarded no spoken problem.
+  'auto_new_page_skipped_segment_page', 'spoken_problem_skipped_pronunciation',
   // Task 24 §C: the transition ask was off the new part (killed once); the part page waits for the transition turn's end.
   'transition_ask_off_part', 'auto_newpage_on_advance_deferred_next_turn',
   // Task 29 §A3: a turn under a pending offer note that did not ask the offer (killed once).

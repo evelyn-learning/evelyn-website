@@ -2,7 +2,7 @@
  * Spoken-problem board net (live check 6, portal-63ee9f2c). Run:
  *   npm run test:spoken-problem-board
  */
-import { detectSpokenProblem, numericTokens, detectSpokenEquationClaim } from '../src/lib/tutor/voice/spoken-problem-board';
+import { detectSpokenProblem, numericTokens, detectSpokenEquationClaim, isSpokenScoreLine } from '../src/lib/tutor/voice/spoken-problem-board';
 
 let pass = 0, fail = 0;
 function check(name: string, ok: boolean, detail?: string) {
@@ -114,5 +114,20 @@ check('two small covered ints: null', detectSpokenProblem(['Which is bigger, 2 o
   check('hypothetical wrong formula: null', detectSpokenEquationClaim(["Say instead the formula reads $P = 2l + 2l w$, weird made-up formula, but l shows up twice."], []) === null);
   check('frac forms match: null', detectSpokenEquationClaim(["Look at that proportion on the board: $\\frac{12}{2.40} = \\frac{20}{x}$."], ['\\dfrac{12}{2.40} = \\dfrac{20}{x}']) === null);
 }
+// Task 29 §D1 (GDI run 16, 1056 / 1189 / 1252 s): a spoken score line is no problem.
+for (const line of [
+  'Your overall score is 72 out of 100, which needs work.',
+  'Your score is 94 out of 100, which is excellent.',
+  'Your pronunciation score is 84 out of 100, which is good.',
+]) {
+  check(`29D1: "${line}" → null`, detectSpokenProblem([line, 'The weakest parts were "for," especially the /f/ sound.'], []) === null);
+  check(`29D1: "${line}" alone → null`, detectSpokenProblem([line], []) === null);
+  check(`29D1: isSpokenScoreLine "${line}"`, isSpokenScoreLine([line]));
+}
+check('29D1: a score form with no second person, no ask → null', detectSpokenProblem(['That was 8 out of 10 overall, which is strong.'], []) === null);
+check('29D1: percent / points forms are score forms', isSpokenScoreLine(['That gives 85% and 12 points, which is fine.']));
+check('29D1: "What is 72 plus 28?" still a hit', detectSpokenProblem(['What is 72 plus 28?'], []) !== null);
+check('29D1: an ask with a score form keeps the old rule (LC6 T15)', !isSpokenScoreLine(['If 18 out of 24 shots hit the target, set up the proportion and tell me the percent.']));
+check('29D1: a second-person setup followed by a real ask is not a score line', !isSpokenScoreLine(['You buy 3 pens at $12 each.', 'How much do you pay?']));
 console.log(`${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

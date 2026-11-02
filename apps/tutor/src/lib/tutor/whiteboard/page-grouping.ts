@@ -466,3 +466,22 @@ export function keepBatchOnEmptySegmentPage(
   if (!page || !page.isSegmentPage || page.itemCount > 0) return decision;
   return { action: 'none', reason: `empty segment page takes the batch (was ${decision.action}: ${decision.reason})` };
 }
+
+/**
+ * Task 29 §D3 (GDI run 16, 1056 s, Image 63): a score line in the
+ * pronunciation part tripped the topic-shift detector (dist=0.768) and a new
+ * page titled "Question" opened under the part. On a FIXED-SCRIPT plan the
+ * parts ARE the pages (the advance opens the next one), so while the active
+ * page is the current segment's page a topic-shift newPage (H4) is skipped —
+ * the batch stays on the part's page. Other decisions (the student's reset,
+ * overflow continuation, subject-anchor pages) and non-fixed-script sessions
+ * are unchanged.
+ */
+export function keepTopicShiftOnSegmentPage(
+  decision: PageDecision,
+  ctx: { fixedScript: boolean; onCurrentSegmentPage: boolean },
+): PageDecision {
+  if (!ctx.fixedScript || !ctx.onCurrentSegmentPage) return decision;
+  if (decision.action !== 'newPage' || decision.event !== 'auto_new_page' || !/^topic shift\b/.test(decision.reason)) return decision;
+  return { action: 'none', reason: `fixed-script part page takes the batch (was ${decision.action}: ${decision.reason})` };
+}

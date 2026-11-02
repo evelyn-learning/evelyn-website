@@ -322,7 +322,7 @@ import {
   type IdleNudgePostponeReason,
 } from '@/lib/tutor/voice/idle-nudge';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
-import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, newPageTitle, weightOfAction, STALE_TURNS, isSentenceOnlyBatch, keepSentenceBatchOnPage, keepBatchOnEmptySegmentPage } from '@/lib/tutor/whiteboard/page-grouping';
+import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, newPageTitle, weightOfAction, STALE_TURNS, isSentenceOnlyBatch, keepSentenceBatchOnPage, keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
 import { flushableCount, shouldBypassRenderSync } from '@/lib/tutor/whiteboard/render-sync';
 import { shouldAbortStalledBrain, decideStallRecovery, shouldRetryStalledOpener, BRAIN_STALL_APOLOGY } from '@/lib/tutor/voice/brain-stall';
@@ -9682,12 +9682,22 @@ export function VoiceTutorRealtime({
     }), sentenceOnlyBatch);
     // Task 23 §A2 (GDI run 11, 690 → 713 s): an empty segment page takes the
     // batch — no topic-shift / auto page on top of it.
-    const pageDecision = keepBatchOnEmptySegmentPage(rawPageDecision,
+    const emptySegPageDecision = keepBatchOnEmptySegmentPage(rawPageDecision,
       activePageObj && segmentPageIdRef.current === activePageObj.id
         ? { isSegmentPage: true, itemCount: catalogRef.current.pageItemCount(activePageObj.id) }
         : null);
-    if (pageDecision !== rawPageDecision && rawPageDecision.action !== 'none' && rawPageDecision.action !== 'pin') {
+    if (emptySegPageDecision !== rawPageDecision && rawPageDecision.action !== 'none' && rawPageDecision.action !== 'pin') {
       onDebugEvent?.('auto_new_page_skipped_empty_segment_page', `"${activePageObj?.title ?? ''}" — ${rawPageDecision.event}: ${rawPageDecision.reason}`);
+    }
+    // Task 29 §D3 (GDI run 16, 1056 s): on a fixed script the parts are the
+    // pages — no topic-shift page on top of the current part's page.
+    const pageDecision = keepTopicShiftOnSegmentPage(emptySegPageDecision, {
+      fixedScript: fixedScriptActive(),
+      onCurrentSegmentPage: !!activePageObj && segmentPageIdRef.current === activePageObj.id
+        && !!activePageObj.segmentId && activePageObj.segmentId === currentSegmentIdRef.current,
+    });
+    if (pageDecision !== emptySegPageDecision) {
+      onDebugEvent?.('auto_new_page_skipped_segment_page', `"${activePageObj?.title ?? ''}" — ${'event' in emptySegPageDecision ? emptySegPageDecision.event : ''}: ${emptySegPageDecision.reason}`);
     }
     if (sentenceOnlyBatch && topicShiftPendingRef.current) {
       onDebugEvent?.('topic_shift_held_for_sentence', 'sentence-only batch stays on the current page; the newPage mark waits for the next batch');
@@ -15444,7 +15454,11 @@ export function VoiceTutorRealtime({
             // question is already pinned (Q-pin) and in the transcript; a
             // "Question" card made it three copies of the same sentence.
             const oneProblemSession = homeworkProblemRef.current != null;
-            if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0 && !typedHomeworkTurn && !oneProblemSession) {
+            // Task 29 §D2 (GDI run 16, 1056 s): a turn carrying a measured
+            // pronunciation note reports a score — never a problem to board.
+            if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0 && pronunciationMeasuredThisTurn) {
+              onDebugEvent?.('spoken_problem_skipped_pronunciation', 'measured pronunciation note this turn');
+            } else if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0 && !typedHomeworkTurn && !oneProblemSession) {
               const boardTexts = [...renderedTextsThisAttempt, ...recentBoardTextsRef.current, currentProblemRef.current?.statement ?? ''];
               const hit = detectSpokenProblem(attemptSentences, boardTexts);
               if (hit) {
