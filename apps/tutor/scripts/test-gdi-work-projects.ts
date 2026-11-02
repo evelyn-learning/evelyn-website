@@ -231,7 +231,7 @@ test('29E3: the pronunciation note — every item new, instruction first / model
   assert.ok(n.includes('Every item is NEW: never give a word or sentence the learner has already practised in this part; when the menu\'s items are used up, take a corrected sentence of the learner\'s from earlier in the lesson.'));
   assert.ok(n.includes('For options 1 to 3: give the instruction first ("Listen, then repeat after me:"), then say the model text exactly, in English, as the LAST sentence of your turn'));
   assert.ok(!/say the model text first/i.test(n), 'the old "model text first" order is gone');
-  assert.ok(n.endsWith('After a result, do not offer the four options again: work on the weakest word or sound with one more repeat, then ask: one more item, or move on to the summary?'));
+  assert.ok(n.endsWith('After a result, do not offer the four options again: work on the weakest word or sound with one more repeat, then ask: one more item, or move on to the summary? If the learner has not chosen an option after you have asked twice, do not ask a third time: say you will skip the practice today and move on to the summary (call advance_lesson).'));
   assert.ok(n.startsWith('Optional pronunciation practice. Offer the four options'), 'the rest of the note kept');
 });
 
