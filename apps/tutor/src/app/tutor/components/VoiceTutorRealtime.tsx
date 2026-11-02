@@ -11,7 +11,7 @@
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
 import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE } from '@/lib/tutor/orchestrator/flags';
-import { resolveMenuPick, menuPickNote, menuAskedIn, menuReplyIsPick, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP } from '@/lib/tutor/voice/menu-pick';
+import { resolveMenuPick, resolveMenuPickLoose, menuPickNote, menuAskedIn, menuReplyIsPick, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { emptyTurnFallbackLine } from '@/lib/tutor/voice/empty-turn-fallback';
 import { pendingAnswerVocabularyFor, countsAsNoiseCancel } from '@/lib/tutor/voice/pending-answer';
@@ -13018,7 +13018,7 @@ export function VoiceTutorRealtime({
           const mcCard = segmentCardStatement(mcPlan, mcSeg);
           const mcMenu = boardOffersChoices({ statement: mcCard });
           const mcLastTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
-          const mcPick = mcMenu && menuReplyIsPick(transcript, mcCard, mcLastTutor);
+          const mcPick = mcMenu && menuReplyIsPick(transcript, mcCard, mcLastTutor, recentTutorTurnsRef.current.slice(-4));
           if (mcPick) menuPickedSegsRef.current.add(mcSeg);
           const mcNext = nextSegmentId(mcPlan, mcSeg, !!workingLevelRef.current);
           if (mcNext && menuAskCapDecision({
@@ -13782,7 +13782,9 @@ export function VoiceTutorRealtime({
       // menu the last tutor turn read ("Um, the uh sentence.") — told, so the
       // options are not listed again.
       if (TUTOR_MENU_PICK_RESOLVE) {
-        const menuPick = resolveMenuPick(transcript, recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '');
+        const menuPick = resolveMenuPick(transcript, recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '')
+          // Task 33 fix round 1 (I-1): a Japanese / ordinal pick of a menu read in the part.
+          ?? (TUTOR_MENU_ASK_CAP ? resolveMenuPickLoose(transcript, [recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1], ...recentTutorTurnsRef.current.slice(-4, -1)]) : null);
         if (menuPick) {
           runTranscript = `${menuPickNote(menuPick)}\n\n${runTranscript}`;
           if (!opts?.prefetchOnly) onDebugEvent?.('menu_pick_resolved', `${menuPick.index} "${menuPick.text.slice(0, 40)}" ← "${transcript.slice(0, 40)}"`);

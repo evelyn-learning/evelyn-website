@@ -123,10 +123,77 @@ const PICK_NUMBER_RE = /\b[1-9]\b|[1-9１-９]\s*番|\b(?:one|two|three|four|fiv
 /** True ⇒ the reply picks (or tries to pick) an option: resolveMenuPick on
  *  the card or the last tutor turn, a number / option word, or "skip". A
  *  bare acknowledgement never is. Pure. */
-export function menuReplyIsPick(studentText: string | null | undefined, cardStatement: string | null | undefined, lastTutorText?: string | null): boolean {
+/**
+ * Task 33 fix round 1 (I-1): picks said in Japanese or as an ordinal resolve
+ * BEFORE the cap sees them — "単語でお願いします", "一文で", "文で", "自然に",
+ * "スキップ", "1番 / ２番 / 三番 / 二番目 / 四つ目", "number two", "the second
+ * one", "the sentence one". The option list comes from the card and the
+ * tutor's recent turns in the part: the "1) words" shape, and the Japanese
+ * "1番は単語、2番は一文…" / "1番の単語か…" shape the tutor reads aloud.
+ * Pure, generic (no option word in code).
+ */
+const KANJI_DIGIT: Record<string, number> = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9 };
+const digitOf = (c: string): number => KANJI_DIGIT[c] ?? Number(String.fromCharCode(c.charCodeAt(0) >= 0xff10 ? c.charCodeAt(0) - 0xfee0 : c.charCodeAt(0)));
+const JA_OPTION_RE = /([1-9１-９一二三四五六七八九])\s*番(?:目)?\s*(?:は|の|が|：|:)?\s*([^、。,，か]+?)\s*(?=です|か|、|。|,|，|$)/g;
+/** The "N番は X" options of a Japanese menu reading (≥ 2, else null). */
+export function parseJapaneseMenuOptions(text: string | null | undefined): MenuOption[] | null {
+  const out = new Map<number, string>();
+  for (const m of (text ?? '').matchAll(JA_OPTION_RE)) {
+    const n = digitOf(m[1]!);
+    const opt = m[2]!.trim();
+    if (n && opt && !out.has(n)) out.set(n, opt);
+  }
+  return out.size >= 2 ? [...out.entries()].sort((a, b) => a[0] - b[0]).map(([index, text]) => ({ index, text })) : null;
+}
+const JA_PICK_PARTICLES_RE = /(?:で|を|に|が|は)?(?:お願い(?:します|いたします)?|がいいです|にします|でいいです|をやりたい(?:です)?|を練習したい(?:です)?|練習(?:したい)?(?:です)?|したいです|します|ください|です)?[。.!！]*$/;
+const ORDINAL_NUM_RE = /^(?:number\s+)?(one|two|three|four|five|first|second|third|fourth|fifth|[1-9])(?:\s+one)?$/i;
+const JA_NUM_PICK_RE = /^([1-9１-９一二三四五六七八九])\s*(?:番(?:目)?|つ目)(?:の(?:もの|やつ))?/;
+export function resolveMenuPickLoose(studentText: string | null | undefined, sources: ReadonlyArray<string | null | undefined>): MenuOption | null {
+  const t = (studentText ?? '').trim();
+  if (!t || /^\s*\[/.test(t) || isBareAcknowledgement(t)) return null;
+  const srcs = sources.filter((x): x is string => typeof x === 'string' && x.trim() !== '');
+  for (const src of srcs) { const p = resolveMenuPick(t, src); if (p) return p; }
+  const optionsFrom = (): MenuOption[] | null => {
+    for (const src of srcs) { const o = parseMenuOptions(src) ?? parseJapaneseMenuOptions(src); if (o) return o; }
+    return null;
+  };
+  const byIndex = (n: number): MenuOption | null => {
+    const opts = optionsFrom();
+    return opts?.find((o) => o.index === n) ?? (n >= 1 && n <= 9 && !opts ? { index: n, text: '' } : null);
+  };
+  // English ordinal / "<option word> one": "the second one", "number two", "the sentence one"
+  const en = menuWordTokens(t.replace(PICK_FILLER_RE, ' ')).join(' ');
+  const om = ORDINAL_NUM_RE.exec(en);
+  if (om) {
+    const w = om[1]!.toLowerCase();
+    const n = /^[1-9]$/.test(w) ? Number(w) : MENU_NUMBER_WORDS[w];
+    if (n) return byIndex(n);
+  }
+  if (/\s+one$/i.test(en)) {
+    const stripped = en.replace(/\s+one$/i, '');
+    for (const src of srcs) { const p = resolveMenuPick(stripped, src); if (p) return p; }
+  }
+  // Japanese number: 1番 / ２番 / 三番 / 二番目 / 四つ目
+  const core = t.replace(/^(?:えっと|ええと|あの|じゃあ|では|じゃ)[、,\s]*/, '').trim();
+  const jm = JA_NUM_PICK_RE.exec(core);
+  if (jm) return byIndex(digitOf(jm[1]!));
+  // Japanese option noun: the reply's core (particles / politeness out) shares
+  // its text with exactly ONE option of a Japanese menu reading.
+  const noun = core.replace(JA_PICK_PARTICLES_RE, '').trim();
+  if (noun && /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(noun)) {
+    for (const src of srcs) {
+      const opts = parseJapaneseMenuOptions(src);
+      if (!opts) continue;
+      const hits = opts.filter((o) => o.text.includes(noun) || noun.includes(o.text));
+      if (hits.length === 1) return hits[0]!;
+    }
+  }
+  return null;
+}
+export function menuReplyIsPick(studentText: string | null | undefined, cardStatement: string | null | undefined, lastTutorText?: string | null, partTutorTurns?: ReadonlyArray<string | null | undefined>): boolean {
   const t = (studentText ?? '').trim();
   if (!t || /^\s*\[/.test(t) || isBareAcknowledgement(t)) return false;
-  if (resolveMenuPick(t, cardStatement) || resolveMenuPick(t, lastTutorText)) return true;
+  if (resolveMenuPickLoose(t, [cardStatement, lastTutorText, ...(partTutorTurns ?? [])])) return true;
   if (PICK_NUMBER_RE.test(t)) return true;
   const words = new Set(menuWordTokens(t).map(fold));
   return optionWords(cardStatement ?? '').some((ws) => ws.some((w) => words.has(fold(w))));

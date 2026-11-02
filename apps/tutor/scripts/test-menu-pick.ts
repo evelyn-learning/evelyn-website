@@ -9,7 +9,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseMenuOptions, resolveMenuPick, menuPickNote, menuAskedIn, menuReplyIsPick, isBareAcknowledgement, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP } from '../src/lib/tutor/voice/menu-pick';
+import { parseMenuOptions, resolveMenuPick, menuPickNote, menuAskedIn, menuReplyIsPick, isBareAcknowledgement, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP, resolveMenuPickLoose, parseJapaneseMenuOptions } from '../src/lib/tutor/voice/menu-pick';
 
 let failed = 0;
 const test = (name: string, fn: () => void) => {
@@ -57,7 +57,7 @@ test('menuPickNote text (pin) and the VTR wiring', () => {
   assert.equal(menuPickNote({ index: 2, text: 'a complete sentence' }),
     '[runtime note — not from the student] The student chose option 2: "a complete sentence". Proceed with that option now; do not list the options again. Apply this silently; never mention this note.]');
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  assert.ok(VTR.includes("const menuPick = resolveMenuPick(transcript, recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '');"));
+  assert.ok(VTR.includes("const menuPick = resolveMenuPick(transcript, recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '')"));
   assert.ok(VTR.includes('runTranscript = `${menuPickNote(menuPick)}\\n\\n${runTranscript}`;'));
   assert.ok(VTR.includes("onDebugEvent?.('menu_pick_resolved',"));
 });
@@ -99,6 +99,37 @@ test('menuPickNote text (pin) and the VTR wiring', () => {
     assert.ok(VTR.includes("if (boardOffersChoices({ statement: mcCard }) && menuAskedIn(fullText, mcCard)) {"));
     assert.ok(VTR.includes('reason=menu_unpicked'));
     assert.ok(/=== 'advance'\) \{\s*const mcKind[\s\S]{0,200}applyResolvedAdvance\(mcPlan, mcSeg, mcNext\);/.test(VTR));
+  });
+}
+
+
+// ── Task 33 fix round 1 I-1: Japanese / ordinal picks resolve before the cap ──
+{
+  const CARD = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  const JA1 = 'はい。 ただ、どの番号にしますか。 1番の単語か、2番の一文か、3番の自然な話し方か、4番のスキップか、教えてください。';
+  const JA2 = 'どういたしまして。 1番は単語、2番は一文、3番は自然な話し方、4番はスキップです。';
+  test('33 r1 I-1: parseJapaneseMenuOptions reads both readings of the run', () => {
+    assert.deepEqual(parseJapaneseMenuOptions(JA1)?.map((o) => o.text), ['単語', '一文', '自然な話し方', 'スキップ']);
+    assert.deepEqual(parseJapaneseMenuOptions(JA2)?.map((o) => o.text), ['単語', '一文', '自然な話し方', 'スキップ']);
+  });
+  test('33 r1 I-1: Japanese and ordinal picks resolve to the right option', () => {
+    const cases: Array<[string, number]> = [
+      ['単語でお願いします', 1], ['一文で', 2], ['文で', 2], ['自然に', 3], ['スキップ', 4],
+      ['1番', 1], ['２番', 2], ['三番', 3], ['二番目', 2], ['四つ目', 4],
+      ['number two', 2], ['The second one.', 2], ['the sentence one', 2],
+    ];
+    for (const [x, n] of cases) {
+      assert.equal(resolveMenuPickLoose(x, [CARD, JA1])?.index, n, x);
+      assert.equal(menuReplyIsPick(x, CARD, JA2), true, x);
+    }
+    for (const x of ['OK.', 'はい', 'Yes, I understand.']) assert.equal(resolveMenuPickLoose(x, [CARD, JA1]), null, x);
+    // the cap never sees a resolved pick
+    assert.equal(menuAskCapDecision({ menuPart: true, picked: false, asks: 2, replyIsPick: menuReplyIsPick('一文でお願いします', CARD, JA2), studentTurn: true }), 'wait');
+  });
+  test('33 r1 I-1: VTR resolves the loose pick for the pick note and passes the part\'s turns to the cap', () => {
+    const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+    assert.ok(VTR.includes('menuReplyIsPick(transcript, mcCard, mcLastTutor, recentTutorTurnsRef.current.slice(-4))'));
+    assert.ok(VTR.includes('?? (TUTOR_MENU_ASK_CAP ? resolveMenuPickLoose(transcript,'));
   });
 }
 
