@@ -142,7 +142,26 @@ export function announcedTurnNeedsContinuation(tutorText: string): boolean {
   // ("Take a look at the board, and tell me one thing you do at work.") ends
   // the turn too — the shared helper every continuation decider goes through.
   if (lastSentenceAsks(text)) return false;
+  // Task 30 §G (GDI run 17, 1160 s: "…Just tell me the number or the option
+  // name." got a no-ask continuation that re-listed the options).
+  if (endsWithImperativeReplyRequest(text)) return false;
   return true;
+}
+
+/** Task 30 §G: the last sentence is an imperative request for a reply —
+ *  it opens (after just / please / now / so) with tell me / say / answer /
+ *  let me know / choose / pick / give me / name / type / repeat / try, or it
+ *  ends "… please / for me" with one of those verbs in it. Pure. */
+const REPLY_VERB = '(?:tell me|say|answer|let me know|choose|pick|give me|name|type|repeat|try)';
+const IMPERATIVE_REPLY_LEAD_RE = new RegExp(`^(?:(?:just|please|now|so),?\\s+)?${REPLY_VERB}\\b`, 'i');
+const IMPERATIVE_REPLY_TAIL_RE = /\b(?:please|for me)[.!]?\s*$/i;
+const REPLY_VERB_RE = new RegExp(`\\b${REPLY_VERB}\\b`, 'i');
+export function endsWithImperativeReplyRequest(text: string | null | undefined): boolean {
+  const sentences = (text ?? '').trim().split(/(?<=[。！？.!?])\s*|\n+/).map((x) => x.trim()).filter(Boolean);
+  const last = (sentences[sentences.length - 1] ?? '').replace(/^["“'‘(]+/, '');
+  if (!last) return false;
+  if (IMPERATIVE_REPLY_LEAD_RE.test(last)) return true;
+  return IMPERATIVE_REPLY_TAIL_RE.test(last) && REPLY_VERB_RE.test(last);
 }
 
 /** Poll cadence while waiting for the announcing turn's audio to finish. */

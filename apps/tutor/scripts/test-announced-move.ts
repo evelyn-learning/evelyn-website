@@ -8,7 +8,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, endsWithRepeatAsk, continuationRepeatsSentence } from '../src/lib/tutor/lesson-plan/announced-move';
+import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, endsWithRepeatAsk, continuationRepeatsSentence, endsWithImperativeReplyRequest } from '../src/lib/tutor/lesson-plan/announced-move';
 import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, isFixedScriptContinueDirective, fixedScriptContinueDirective, FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE,
   FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { TRANSITION_ASK_REASON } from '../src/lib/tutor/lesson-plan/transition-ask';
@@ -339,6 +339,21 @@ test('29K2: a continuation sentence the continued turn already said is dropped (
   assert.equal(continuationRepeatsSentence('Anything at all here today.', ''), false);
   pin(VTR, /const continuedTurnText = isFixedScriptContinueDirective\(transcript\) \? \(recentTutorTurnsRef\.current\[recentTutorTurnsRef\.current\.length - 1\] \?\? ''\) : '';/);
   pin(VTR, /if \(continuedTurnText && continuationRepeatsSentence\(updatedSentence, continuedTurnText\)\) \{\s*onDebugEvent\?\.\('continuation_duplicate_dropped', updatedSentence\.slice\(0, 80\)\);\s*continue;/);
+});
+
+// Task 30 §G (GDI run 17, 1160 → 1167 s): an imperative request for a reply is an ask.
+test('30G: "Just tell me the number or the option name." ⇒ no continuation; a plain closing statement ⇒ continuation (unchanged)', () => {
+  const T1160 = "The question is which pronunciation practice you'd like: words, a complete sentence, speaking more naturally, or skipping ahead. Just tell me the number or the option name.";
+  const nask = (text: string) => noAskTurnNeedsContinuation({ text, fixedScript: true, runtimeTriggered: false, toolsSeen: [], closing: false, pronunciationArmed: false });
+  assert.equal(nask(T1160), false);
+  assert.equal(nask('Let me put the correct sentence on the board and move on.'), true);
+  assert.equal(endsWithImperativeReplyRequest(T1160), true);
+  assert.equal(endsWithImperativeReplyRequest('Good. Please choose one of the options.'), true);
+  assert.equal(endsWithImperativeReplyRequest('Good. Say the whole sentence for me.'), true);
+  assert.equal(endsWithImperativeReplyRequest('So, pick the one you like.'), true);
+  assert.equal(endsWithImperativeReplyRequest('Thank you, please.'), false, 'a "please" tail without a reply verb');
+  assert.equal(endsWithImperativeReplyRequest("That's correct past simple."), false);
+  assert.equal(endsWithImperativeReplyRequest(''), false);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
