@@ -980,3 +980,29 @@ export function markCorrectionNoteWorking(sentences: string[], answersCorrection
   const spoken = list.some((s, i) => !marks[i] && (s ?? '').trim() !== '' && !isMetaNarration(s));
   return spoken ? marks : none;
 }
+
+/**
+ * Task 30 §F1 (GDI run 17, 688 s SPOKEN: "Let's move on to the next part now.
+ * Let's go on to the next part."): two near-identical sentences back to back
+ * in one turn. True when `cur` has ≥ 3 content tokens and their content-token
+ * Jaccard with `prev` (the turn's preceding kept sentence) is ≥ 0.75, after
+ * folding go on / moving on / carry on / move on to one token and dropping
+ * now / then / next and a few function words. Pure, generic.
+ */
+const ADJ_DUP_STOP = new Set(['a', 'an', 'the', 'to', 'of', 'and', 'or', 'is', 'it', 'now', 'then', 'next']);
+function adjacentDuplicateTokens(s: string): string[] {
+  const t = (s ?? '').toLowerCase().replace(/[’]/g, "'")
+    .replace(/\b(?:go|move|moving|carry|going) on\b/g, ' moveon ');
+  return (t.match(/[\p{L}\p{N}]+(?:'[\p{L}]+)*/gu) ?? []).filter((w) => !ADJ_DUP_STOP.has(w));
+}
+export const ADJACENT_DUPLICATE_JACCARD = 0.75;
+export function isAdjacentDuplicate(prev: string | null | undefined, cur: string | null | undefined): boolean {
+  const b = adjacentDuplicateTokens(cur ?? '');
+  if (b.length < 3) return false;
+  const a = new Set(adjacentDuplicateTokens(prev ?? ''));
+  if (a.size === 0) return false;
+  const bs = new Set(b);
+  let inter = 0;
+  for (const x of bs) if (a.has(x)) inter += 1;
+  return inter / (a.size + bs.size - inter) >= ADJACENT_DUPLICATE_JACCARD;
+}

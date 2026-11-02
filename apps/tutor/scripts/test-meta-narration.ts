@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isAdjacentDuplicate } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -975,6 +975,17 @@ check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("
   check('30E2: the repeat_after_correct directive forbids explaining the judgement', REPEAT_AFTER_CORRECT_REASON.includes('Say that it is right and go on; do not explain how you judged it (no talk of stutters, repeats, matching the model, or what counts).'));
   const VTR30 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('30E1: VTR logs meta_narration_dropped_third_person_residue', VTR30.includes("onDebugEvent?.('meta_narration_dropped_third_person_residue',"));
+}
+
+// Task 30 §F1 (GDI run 17, 688 s): a near-copy of the sentence just before it.
+{
+  check('30F1: the 688 s pair ⇒ the second dropped', isAdjacentDuplicate("Let's move on to the next part now.", "Let's go on to the next part."));
+  check('30F1: "Good." / "Good job." ⇒ kept (under 3 content tokens)', !isAdjacentDuplicate('Good.', 'Good job.'));
+  check('30F1: "Say it again." / "Say it once more." ⇒ kept (the normaliser does not fold again / once more)', !isAdjacentDuplicate('Say it again.', 'Say it once more.'));
+  check('30F1: different content ⇒ kept', !isAdjacentDuplicate("Let's move on to the next part now.", 'Tell me one more thing about a past event.'));
+  check('30F1: no previous sentence ⇒ kept', !isAdjacentDuplicate('', "Let's go on to the next part."));
+  const VTRF = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('30F1: VTR drops it per sentence, after the continuation duplicate check', /continuation_duplicate_dropped[\s\S]{0,300}?if \(TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate\(adjacentPrevSentence, updatedSentence\)\) \{\s*onDebugEvent\?\.\('adjacent_duplicate_sentence_dropped',[\s\S]{0,200}?continue;\s*\}\s*adjacentPrevSentence = updatedSentence;/.test(VTRF));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

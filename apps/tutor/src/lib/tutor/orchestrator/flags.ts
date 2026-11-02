@@ -1106,3 +1106,8 @@ export const TUTOR_PENDING_ANSWER_EXEMPT = process.env.NEXT_PUBLIC_TUTOR_PENDING
  *  offer continuation rides TUTOR_TRANSITION_OFFER_SPOKEN. Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_RETRY_HEARD_NOTE=off. */
 export const TUTOR_RETRY_HEARD_NOTE = process.env.NEXT_PUBLIC_TUTOR_RETRY_HEARD_NOTE !== 'off';
+
+/** Task 30 §F1 (GDI run 17, 688 s): a spoken sentence that near-copies the
+ *  turn's preceding sentence (isAdjacentDuplicate) is dropped. Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_ADJACENT_DUPLICATE_DROP=off. */
+export const TUTOR_ADJACENT_DUPLICATE_DROP = process.env.NEXT_PUBLIC_TUTOR_ADJACENT_DUPLICATE_DROP !== 'off';

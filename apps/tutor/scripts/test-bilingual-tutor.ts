@@ -505,6 +505,9 @@ test('retry cap: every repeat-ask form from embed-1792254012923 is counted', () 
   assert.ok(retryCapNote(2).includes('twice'));
   assert.ok(retryCapNote(5).includes('5 times'));
   assert.equal(RETRY_CAP_NOTE, retryCapNote(2));
+  // Task 30 §F2 (GDI run 17, 688 s): the next QUESTION, never "the next part".
+  assert.equal(retryCapNote(2), "[runtime note — not from the student] You have already asked the student to repeat this sentence twice. Do not ask again. Accept their closest version warmly, say the correct sentence once, write it on the board, and go on to the next question in this turn (the lesson's parts advance on their own — do not announce a new part). Apply this silently; never mention this note.");
+  assert.ok(!retryCapNote(3).includes('next part of the lesson'));
   // Task 15 §B (GDI run 5): a negated ask ("no need to repeat it") is not a repeat-ask.
   const live = 'Your earlier sentence was right too, so there\'s no need to repeat it. Next, let\'s try one about a project you worked on.';
   assert.equal(isRetryAsk(live), false, live);

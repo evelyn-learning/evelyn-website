@@ -103,7 +103,9 @@ export function retryCapNote(timesAsked: number): string {
   return (
     `[runtime note — not from the student] You have already asked the student to repeat this sentence ${times}. ` +
     'Do not ask again. Accept their closest version warmly, say the correct sentence once, write it on the board, ' +
-    'and move to the next part of the lesson in this turn. Apply this silently; never mention this note.'
+    // Task 30 §F2 (GDI run 17, 688 s): "move to the next part" made the brain
+    // announce a new part while the pointer (rightly) stayed in this one.
+    'and go on to the next question in this turn (the lesson\'s parts advance on their own — do not announce a new part). Apply this silently; never mention this note.'
   );
 }
 

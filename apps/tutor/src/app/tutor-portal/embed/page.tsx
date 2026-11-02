@@ -345,6 +345,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'transition_offer_missing',
   // Task 30 §A1: an answer to the pending offer / menu kept past the self-voice lookback gates.
   'self_voice_exempt_pending_answer',
+  // Task 30 §F1: a spoken sentence that near-copied the one before it.
+  'adjacent_duplicate_sentence_dropped',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the
