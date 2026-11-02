@@ -1105,5 +1105,18 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   ]) check(`Q-1: "${dropped}" dropped`, isMetaNarration(dropped));
 }
 
+// Task 30 fix round 4 (Q-2): the ", so I'll …" tail is stripped only in the plan shape (anaphora only, no you / your, colon, quote, digit).
+{
+  for (const kept of [
+    'Nice work, so I\'ll ask you something harder: what do you do on weekends?',
+    'That gives x = 4, so I\'ll check it: 4 + 1 = 5.',
+    'Yes, so I\'ll ask you: what is your job?',
+    'Good, so I\'ll give you a hint: start with the verb.',
+    'Good, so I\'ll model it for you: I went to Osaka.',
+    'Great, so I\'ll note your answer: you work in sales.',
+  ]) check(`Q-2: "${kept}" unchanged`, stripNoteCitationClause(kept) === kept);
+  check('Q-2: the 852 s tail still stripped', stripNoteCitationClause("You said the same sentence as before, so I'll note that and ask again.") === 'You said the same sentence as before.');
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

@@ -572,13 +572,13 @@ export function isPlanShapeRemainder(rest: string, opts?: { noSecondPerson?: boo
 const LEARNER_NARRATION_RE = /^\s*(?:No\.\s*)?They (?:only|just) (?:said|repeated|answered|replied|gave)\b/i;
 const INTERNAL_NOTES_RE = /\b(?:those|these|the) notes (?:are|were) internal\b|\bnot from you\b/i;
 const ASK_AGAIN_LEAD_RE = /^\s*(?:Ask|Say|Try) (?:it )?again,? (?:simply|more simply|once more)[:,]\s*/i;
-const PLAN_TAIL_RE = /,?\s*\bso I['’]ll (?:note|ask|point|model|name|acknowledge|accept|try|check|give)\b[^.?!]*[.?!]?\s*$/i;
+const PLAN_TAIL_RE = /,?\s*\bso I['’]ll (?:note|ask|point|model|name|acknowledge|accept|try|check|give)\b([^.?!]*)[.?!]?\s*$/i;
 export function stripSpokenPlanLeadTail(sentence: string): string {
   let s = sentence ?? '';
   const lead = ASK_AGAIN_LEAD_RE.exec(s);
   if (lead && s.slice(lead[0].length).trim()) s = capitaliseFirst(s.slice(lead[0].length).trim());
   const tail = PLAN_TAIL_RE.exec(s);
-  if (tail && tail.index > 0) s = `${s.slice(0, tail.index).replace(/[,;:\s]+$/, '')}.`;
+  if (tail && tail.index > 0 && isPlanShapeRemainder(tail[1], { noSecondPerson: true })) s = `${s.slice(0, tail.index).replace(/[,;:\s]+$/, '')}.`;
   return s;
 }
 function isSpokenFirstPersonPlan(s: string, raw: string): boolean {
