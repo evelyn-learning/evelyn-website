@@ -8,6 +8,7 @@
  *   §B showSentence → a sentence block (emphasis indices like the live card);
  *      engine-only commands (scrollTo, removeItem(s) …) → no block; a truly
  *      unknown action → an "unknown" block (one grey line), never a card.
+ *   §C a plain handwrite prints its text with no "→ margin note" suffix.
  *
  * Run: cd apps/tutor && npx tsx scripts/test-pdf-tutor-session.ts
  */
@@ -19,7 +20,7 @@ import {
   hasCjk, inferSessionLanguages, labelCjkRun, pickPdfFont, CJK_FONT_FAMILY,
 } from '../src/lib/utils/export/pdf-cjk-font';
 import {
-  commandToPdfBlock, layoutSentenceTokens, sentenceSegments,
+  commandToPdfBlock, handwriteCaptionText, layoutSentenceTokens, sentenceSegments,
 } from '../src/lib/utils/export/pdf-session-blocks';
 
 let passed = 0;
@@ -104,6 +105,15 @@ console.log('\n§B command → block');
   check('wrap: whitespace never starts a line', lines.every((l) => l.length === 0 || l[0].text.trim() !== ''));
   const cjk = layoutSentenceTokens([{ text: 'あいうえおかきくけこさしすせそ', emphasis: false }], 10, measure, split);
   check('wrap: a long space-less CJK run is split', cjk.length === 2 && cjk[0][0].text.length === 10, JSON.stringify(cjk));
+}
+
+console.log('\n§C handwrite');
+{
+  const q = "What is one skill you'd like to improve in your English, and why is it important to you?";
+  check('plain handwrite (DB shape) → its text, no suffix', handwriteCaptionText({ action: 'handwrite', data: { text: q, id: 'handwrite-1' }, timestamp: 'x', sourceMessageIndex: 6 }) === q);
+  check('plain handwrite (live shape) → its text, no suffix', handwriteCaptionText({ action: 'handwrite', text: 'I have used Python for one year' }) === 'I have used Python for one year');
+  const src = readFileSync(join(__dirname, '..', 'src/lib/utils/export/pdf-tutor-session.ts'), 'utf8');
+  check('exporter source never appends a "margin note" suffix', !/`[^`]*margin note`/.test(src));
 }
 
 // ── End-to-end (jsPDF Node build) ──

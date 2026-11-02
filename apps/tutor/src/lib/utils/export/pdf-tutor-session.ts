@@ -14,7 +14,7 @@ import {
   mapNonLatin1Runs, registerCjkFont, resetPdfTextContext, setPdfTextContext, type PdfTextContext,
 } from './pdf-cjk-font';
 import {
-  commandToPdfBlock, estimateSentenceHeight, layoutSentenceTokens, type PdfBlock,
+  commandToPdfBlock, estimateSentenceHeight, handwriteCaptionText, layoutSentenceTokens, type PdfBlock,
 } from './pdf-session-blocks';
 
 interface TranscriptMessage {
@@ -1164,9 +1164,9 @@ function drawGeometryVisual(
 // a stamped note's TARGET item when the bake attempt there didn't succeed
 // (see the export loop's `unbakedNotes` block). Both need byte-identical
 // styling, so the paint logic is factored here; `displayText` arrives fully
-// formed (suffix decision lives in each caller — see the honesty rule in
-// the handwrite branch below) so this stays a pure paint routine.
-function drawNoteCaptionLine(pdf: jsPDF, displayText: string, colorHex: string, x: number, y: number, width: number): number {
+// formed (task 32 §C: no caller adds a suffix any more) so this stays a
+// pure paint routine; `fontStyle` 'italic' is the plain handwrite note.
+function drawNoteCaptionLine(pdf: jsPDF, displayText: string, colorHex: string, x: number, y: number, width: number, fontStyle: 'normal' | 'italic' = 'normal'): number {
   const safeColorHex = (typeof colorHex === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(colorHex)) ? colorHex : '#a16207';
   const parsedColor = ((): [number, number, number] => {
     const h = safeColorHex.replace('#', '');
@@ -1175,7 +1175,7 @@ function drawNoteCaptionLine(pdf: jsPDF, displayText: string, colorHex: string, 
       : [h.slice(0, 2), h.slice(2, 4), h.slice(4, 6)];
     return [parseInt(n[0], 16), parseInt(n[1], 16), parseInt(n[2], 16)];
   })();
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont('helvetica', fontStyle);
   pdf.setFontSize(10);
   // Tutor-authored note text (handwrite / link captions).
   const sanitized = sanitizeForPDF(displayText, { literalLineBreaks: true });
@@ -1389,20 +1389,13 @@ async function drawWhiteboardVisual(
     if (inkNotesEnabled() && (rc.__pdfNoteBaked || rc.__pdfNoteDeferred)) {
       return y;
     }
-    const text = String(cmd.text);
     const colorHex = typeof cmd.color === 'string' ? cmd.color : '#a16207';
-    // Suffix honesty (2026-07-11 user round): '→ margin note' asserts the
-    // note never had a target — true only when NO target stamp exists at
-    // all (this branch is only reached, with a stamp present, when the
-    // stamped target isn't in this export at all — see notesByTargetId's
-    // existence guard). A stamped-but-unresolved note is not that; no
-    // suffix. '→' (not the brief's literal '↳' — jsPDF's helvetica is
-    // WinAnsi-only and doesn't have that glyph) round-trips through
-    // sanitizeForPDF's LATIN_DIACRITIC_MAP to '->', so no raw non-Latin-1
-    // byte reaches the PDF text stream.
-    const hasTargetStamp = typeof rc.targetId === 'string' && rc.targetId && typeof rc.targetFeature === 'string' && rc.targetFeature;
-    const displayText = (inkNotesEnabled() && !hasTargetStamp) ? `${text} → margin note` : text;
-    return drawNoteCaptionLine(pdf, displayText, colorHex, x, y, width);
+    // Task 32 §C: no "→ margin note" suffix any more (it was added for
+    // maths sessions in the 2026-07-11 round). In a language lesson a
+    // handwrite carries the question or model sentence being asked, and
+    // the suffix read as a glitch; a plain note is just its text, drawn as
+    // an indented italic line with the colour bullet.
+    return drawNoteCaptionLine(pdf, handwriteCaptionText(cmd), colorHex, x, y, width, 'italic');
   }
 
   if (cmd.action === 'link' && (cmd.from || cmd.to)) {
@@ -2311,10 +2304,9 @@ async function exportTutorSessionPDFInner(
       // this item's action has no bake path at all) still needs its
       // content to survive somewhere — print it now, right after the item
       // it targeted (y is already resolved to this item's true bottom
-      // here, past the if/else above). No "→ margin note" suffix (spec:
-      // that phrase is reserved for notes with NO target stamp — see the
-      // honesty comment in the handwrite branch of drawWhiteboardVisual);
-      // this note DID have a real target, it just didn't render there.
+      // here, past the if/else above). No suffix (task 32 §C dropped the
+      // "→ margin note" suffix everywhere); this note DID have a real
+      // target, it just didn't render there.
       const unbakedNotes = itemNoteEntries.filter((n) => !bakedEntries.has(n));
       if (unbakedNotes.length > 0) {
         addPageIfNeeded(unbakedNotes.length * 8 + 2);
