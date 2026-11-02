@@ -133,18 +133,32 @@ export function estimateSentenceHeight(sentence: string, gloss?: string, label?:
 /**
  * Page-break decision before a new whiteboard page group (task 32 §D).
  * Before, every group started a new PDF page, so a two-card Part filled a
- * page with 80 % white. Now:
- *   - the group fits below the cursor → no break (heading + rule, continue);
- *   - it does not fit but fits on a fresh page → break (keep it together);
- *   - it is taller than a page anyway → break only if its first item would
- *     not fit below the cursor.
+ * page with 80 % white. Fix round 1: keeping a whole group together still
+ * left mostly blank sheets (run-18 replay, before Part 5), so the group
+ * breaks only when its heading plus FIRST item (`firstItemHeight`) does not
+ * fit below the cursor; later items paginate one by one (addPageIfNeeded).
  */
-export function shouldBreakBeforeGroup(p: { y: number; groupHeight: number; firstItemHeight: number; pageTop?: number; pageBottom?: number }): boolean {
-  const top = p.pageTop ?? 20;
+export function shouldBreakBeforeGroup(p: { y: number; firstItemHeight: number; pageBottom?: number }): boolean {
   const bottom = p.pageBottom ?? 272;
-  if (p.y + p.groupHeight <= bottom) return false;
-  if (p.groupHeight <= bottom - top) return true;
   return p.y + p.firstItemHeight > bottom;
+}
+
+/**
+ * One-line badge label: first line only, truncated with "..." to fit
+ * `maxWidth` (in the units `measure` returns). Fix round 1: an untitled
+ * problem's whole statement used to run past the right margin.
+ */
+export function fitBadgeLabel(text: string, maxWidth: number, measure: (t: string) => number): string {
+  const first = String(text ?? '').split(/\r?\n|\\n/)[0].replace(/\s+/g, ' ').trim();
+  if (measure(first) <= maxWidth) return first;
+  const ell = '...';
+  let lo = 0;
+  let hi = first.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (measure(first.slice(0, mid).trimEnd() + ell) <= maxWidth) lo = mid; else hi = mid - 1;
+  }
+  return lo > 0 ? first.slice(0, lo).trimEnd() + ell : ell;
 }
 
 /** One placed token of a laid-out sentence card. */

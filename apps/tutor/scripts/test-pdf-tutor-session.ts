@@ -9,9 +9,11 @@
  *      engine-only commands (scrollTo, removeItem(s) …) → no block; a truly
  *      unknown action → an "unknown" block (one grey line), never a card.
  *   §C a plain handwrite prints its text with no "→ margin note" suffix.
- *   §D page-break decision before a whiteboard page group: fits → no break;
- *      does not fit (but fits a fresh page) → break; taller than a page →
- *      break only when its first item would not fit.
+ *   §D page-break decision before a whiteboard page group (fix round 1):
+ *      break only when the heading + FIRST item do not fit below the cursor.
+ *   Fix round 1: badge labels are one line, truncated to the width; an
+ *      untitled problem's badge is "Problem", never its statement; a
+ *      Latin-only session never fetches the CJK font or installs the router.
  *
  * Run: cd apps/tutor && npx tsx scripts/test-pdf-tutor-session.ts
  */
@@ -24,7 +26,7 @@ import {
 } from '../src/lib/utils/export/pdf-cjk-font';
 import {
   commandToPdfBlock, estimateSentenceHeight, handwriteCaptionText, layoutSentenceTokens, pdfCommandId, sentenceSegments,
-  shouldBreakBeforeGroup,
+  shouldBreakBeforeGroup, fitBadgeLabel,
 } from '../src/lib/utils/export/pdf-session-blocks';
 
 let passed = 0;
@@ -122,16 +124,25 @@ console.log('\n§C handwrite');
 
 console.log('\n§D pagination');
 {
-  check('fits below the cursor → no break', !shouldBreakBeforeGroup({ y: 120, groupHeight: 80, firstItemHeight: 30 }));
-  check('exactly fits → no break', !shouldBreakBeforeGroup({ y: 192, groupHeight: 80, firstItemHeight: 30 }));
-  check('does not fit, fits a fresh page → break', shouldBreakBeforeGroup({ y: 200, groupHeight: 80, firstItemHeight: 30 }));
-  check('taller than a page, first item fits → no break', !shouldBreakBeforeGroup({ y: 150, groupHeight: 400, firstItemHeight: 40 }));
-  check('taller than a page, first item does not fit → break', shouldBreakBeforeGroup({ y: 250, groupHeight: 400, firstItemHeight: 40 }));
-  const two = estimateSentenceHeight('I worked with a customer from Canada last year.') + estimateSentenceHeight('I I want leave go go home.');
-  check('a two-card Part fits under a half-full page', !shouldBreakBeforeGroup({ y: 140, groupHeight: 7 + two + 16, firstItemHeight: 40 }), String(two));
+  check('heading + first item fit below the cursor → no break', !shouldBreakBeforeGroup({ y: 120, firstItemHeight: 30 }));
+  check('exactly fits → no break', !shouldBreakBeforeGroup({ y: 242, firstItemHeight: 30 }));
+  check('group taller than the remainder but first item fits → NO break (no blank sheet)', !shouldBreakBeforeGroup({ y: 107, firstItemHeight: 51 }));
+  check('first item does not fit → break', shouldBreakBeforeGroup({ y: 250, firstItemHeight: 40 }));
+  const one = 7 + estimateSentenceHeight('I worked with a customer from Canada last year.') + 14;
+  check('a sentence-card Part fits under a half-full page', !shouldBreakBeforeGroup({ y: 140, firstItemHeight: one }), String(one));
   check('gloss adds height', estimateSentenceHeight('I work in sales.', '営業をしていて、お客様に合う商品を選ぶお手伝いをしています。') > estimateSentenceHeight('I work in sales.'));
   check('command id read from either shape', pdfCommandId({ action: 'showSentence', data: { id: 'showSentence-3' }, timestamp: 'x', sourceMessageIndex: 1 }) === 'showSentence-3'
     && pdfCommandId({ action: 'showSentence', id: 'showSentence-4' }) === 'showSentence-4');
+}
+
+console.log('\nFix round 1: badge labels');
+{
+  const measure = (t: string) => t.length; // 1 unit per char
+  check('short label unchanged', fitBadgeLabel('Problem: Check', 40, measure) === 'Problem: Check');
+  const long = fitBadgeLabel('Handwrite: What is one skill you would like to improve in your English, and why?', 40, measure);
+  check('long label truncated to the width with "..."', long.length <= 40 && long.endsWith('...'), long);
+  check('multi-line label keeps its first line only', fitBadgeLabel('Problem: 1. Can you tell me\n2. Have you ever', 80, measure) === 'Problem: 1. Can you tell me');
+  check('literal backslash-n also ends the line', fitBadgeLabel('A\\nB', 80, measure) === 'A');
 }
 
 // ── End-to-end (jsPDF Node build) ──
@@ -181,6 +192,40 @@ async function main() {
   check('font fetch fails: PDF has no embedded CJK font', !/NotoSansJP/.test(noFont));
   check('font fetch fails: CJK printed as "[Japanese text]"', noFont.includes('[Japanese text]'));
   check('font fetch fails: no "??" run for the Japanese cells', !/\(\?\?/.test(noFont));
+  // Latin-only session (a maths lesson): the CJK font is never fetched, the
+  // router is never installed, and helvetica bold + italic (a handwrite
+  // note) are drawn as before.
+  {
+    const { exportTutorSessionPDF } = await import('../src/lib/utils/export/pdf-tutor-session');
+    const scratch = mkdtempSync(join(tmpdir(), 'pdf-tutor-session-latin-'));
+    const prevCwd = process.cwd();
+    const prevFetch = globalThis.fetch;
+    let fetches = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).fetch = async () => { fetches++; return new Response('nope', { status: 404 }); };
+    process.chdir(scratch);
+    let latin = '';
+    try {
+      await exportTutorSessionPDF(
+        [{ id: '1', timestamp: new Date(), role: 'tutor', text: 'Solve 2x + 3 = 7. θ is an angle.' }],
+        [
+          { action: 'showProblem', problem: { statement: 'Solve 2x + 3 = 7.\nShow your work.' } },
+          { action: 'handwrite', text: 'Subtract 3 from both sides' },
+        ],
+        'Linear equations', 'homework-help', 'Test Student', { subject: 'math', level: '8' },
+      );
+      latin = readFileSync(join(scratch, readdirSync(scratch).filter((f) => f.endsWith('.pdf'))[0]), 'latin1');
+    } finally {
+      process.chdir(prevCwd);
+      globalThis.fetch = prevFetch;
+      rmSync(scratch, { recursive: true, force: true });
+    }
+    check('Latin-only session: CJK font never fetched', fetches === 0, String(fetches));
+    check('Latin-only session: no CJK font in the PDF', !/NotoSansJP/.test(latin));
+    check('Latin-only session: helvetica bold still used', /Helvetica-Bold/.test(latin));
+    check('Latin-only session: helvetica italic still used (handwrite note)', /Helvetica-Oblique/.test(latin));
+    check('untitled problem badge is "Problem", not its statement', latin.includes('(Problem) Tj') && !latin.includes('(Problem: Solve'));
+  }
   const withFont = await exportRun18Like(true);
   check('font fetched: PDF embeds the NotoSansJP font', /NotoSansJP/.test(withFont));
   check('font fetched: no "[Japanese text]" label in the PDF', !withFont.includes('[Japanese text]'));

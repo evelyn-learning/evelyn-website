@@ -14,7 +14,7 @@ import {
   mapNonLatin1Runs, registerCjkFont, resetPdfTextContext, setPdfTextContext, type PdfTextContext,
 } from './pdf-cjk-font';
 import {
-  commandToPdfBlock, estimateSentenceHeight, handwriteCaptionText, layoutSentenceTokens, pdfCommandId,
+  commandToPdfBlock, estimateSentenceHeight, fitBadgeLabel, handwriteCaptionText, layoutSentenceTokens, pdfCommandId,
   shouldBreakBeforeGroup, type PdfBlock,
 } from './pdf-session-blocks';
 
@@ -1670,7 +1670,9 @@ function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
       return `Link: ${cmd.from || ''} → ${cmd.to || ''}`;
     case 'showProblem': {
       const prob = (cmd.problem || {}) as Record<string, unknown>;
-      return `Problem: ${prob.title || prob.statement || 'untitled'}`;
+      // Fix round 1 (task 32): never the statement — it is printed under
+      // the card, and on the one-line badge it ran past the margin.
+      return `Problem${typeof prob.title === 'string' && prob.title.trim() ? `: ${prob.title.trim()}` : ''}`;
     }
     case 'showSolution':
       return `Solution: ${Array.isArray(cmd.steps) ? `${cmd.steps.length} steps` : 'steps'}`;
@@ -2112,8 +2114,8 @@ async function exportTutorSessionPDFInner(
     // Track whiteboard page groups so each page (per the runtime's page model)
     // gets its own header — mirroring the on-screen pagination instead of a
     // flat item dump. Task 32 §D: a group starts a fresh PDF page only when
-    // it does not fit below the previous one (shouldBreakBeforeGroup); a
-    // two-card Part no longer fills a page with white.
+    // its heading + first item do not fit below the previous one
+    // (shouldBreakBeforeGroup); a two-card Part no longer fills a page with white.
     let pdfGroupTitle: string | undefined;
     let pdfGroupNum = 0;
     let pdfGroupStarted = false;
@@ -2137,7 +2139,9 @@ async function exportTutorSessionPDFInner(
       const kind = commandToPdfBlock(cmd, { linksEnabled: linksEnabled() }).kind;
       if (kind === 'unknown') return 6;
       return (cmd.action === 'showSentence') ? estimateCommandHeight(cmd) :
-        (cmd.action === 'handwrite' || cmd.action === 'link') ? 12 :
+        // A note caption wraps at ~90 chars per 4.4 mm line and does not
+        // paginate itself, so reserve its wrapped height.
+        (cmd.action === 'handwrite' || cmd.action === 'link') ? Math.ceil(String(cmd.text || cmd.label || '').length / 90 + 1) * 4.4 + 4 :
         (cmd.action === 'showEquation') ? 18 :
         (cmd.action === 'showSvgDiagram') ? 100 :
         (cmd.action === 'showGraph') ? 110 :
@@ -2148,10 +2152,10 @@ async function exportTutorSessionPDFInner(
         nativeDrawerActions.has(String(cmd.action)) ? 0 :
         125; // captured-SVG fallback reservation
     };
-    // Per-group height estimate (heading + each item's drawn height + badge
-    // and spacing) and the first item's reservation, for the break decision.
+    // Per-group reservation of the heading + FIRST item, for the break
+    // decision (fix round 1: later items paginate one by one).
     const GROUP_HEADING_H = 7;
-    const groupEstimates: Array<{ height: number; first: number }> = [];
+    const groupEstimates: Array<{ first: number }> = [];
     {
       let title: string | undefined;
       let started = false;
@@ -2162,9 +2166,8 @@ async function exportTutorSessionPDFInner(
         if (!started || t !== title) {
           started = true;
           title = t;
-          groupEstimates.push({ height: GROUP_HEADING_H, first: GROUP_HEADING_H + vh + 14 });
+          groupEstimates.push({ first: GROUP_HEADING_H + vh + 14 });
         }
-        groupEstimates[groupEstimates.length - 1].height += (vh > 0 ? vh : estimateCommandHeight(cmd)) + 8;
       }
     }
 
@@ -2180,8 +2183,8 @@ async function exportTutorSessionPDFInner(
         pdfGroupStarted = true;
         pdfGroupTitle = thisGroupTitle;
         pdfGroupNum += 1;
-        const est = groupEstimates[pdfGroupNum - 1] ?? { height: 0, first: 0 };
-        if (pdfGroupNum > 1 && shouldBreakBeforeGroup({ y, groupHeight: est.height, firstItemHeight: est.first })) {
+        const est = groupEstimates[pdfGroupNum - 1] ?? { first: 0 };
+        if (pdfGroupNum > 1 && shouldBreakBeforeGroup({ y, firstItemHeight: est.first })) {
           pdf.addPage(); y = 20;
         } else if (pdfGroupNum > 1) {
           y += 3;
@@ -2218,7 +2221,11 @@ async function exportTutorSessionPDFInner(
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(8);
       pdf.setTextColor(59, 130, 246);
-      pdf.text(sanitizeForPDF(desc, { literalLineBreaks: true }), margin + badgeW + 3, y);
+      // One line, truncated to the space right of the badge (fix round 1).
+      pdf.text(
+        fitBadgeLabel(sanitizeForPDF(desc, { literalLineBreaks: true }), contentWidth - badgeW - 3, (t) => pdf.getTextWidth(t)),
+        margin + badgeW + 3, y,
+      );
       y += 5;
 
       // Visual rendering — also bake in any scribble annotations targeting
