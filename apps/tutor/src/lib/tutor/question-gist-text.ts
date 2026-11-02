@@ -277,12 +277,31 @@ export function parseGistReply(raw: string): string | null {
  * gist is replaced by the turn's verbatim ask sentence. Pure.
  */
 const GIST_STOP = new Set(['a', 'an', 'the', 'to', 'of', 'in', 'on', 'at', 'for', 'and', 'or', 'is', 'are', 'it', 'you', 'your', 'i', 'do', 'does', 'what', 'how', 'can', 'could', 'would', 'with', 'about', 'that', 'this', 'one']);
-export const GIST_GROUNDED_MIN = 0.6;
+// Fix round 5 (R4-4, run r4 124 s: the gist "I want to improve my English
+// speaking skills?" for the ask "What is one skill you want to improve? Try:
+// "I want to improve..."" was 67 % grounded): 0.75, and a gist must keep the
+// ask's interrogative (a wh-word, a leading auxiliary, "can you" / "tell me")
+// when the ask had one — enforced for an answer-shaped (first-person) gist.
+export const GIST_GROUNDED_MIN = 0.75;
+const WH_RE = /\b(?:what|which|who|whom|whose|where|when|why|how)\b/i;
+const LEAD_AUX_RE = /^\W*(?:do|does|did|is|are|was|were|have|has|had|can|could|would|will|should|shall|may|might)\b/i;
+const ASK_PHRASE_RE = /\b(?:can you|could you|tell me)\b/i;
+const FIRST_PERSON_LEAD_RE = /^\W*(?:i|i['’]m|i['’]ve|my|we|our)\b/i;
+export function hasInterrogative(s: string | null | undefined): boolean {
+  const t = s ?? '';
+  return WH_RE.test(t) || LEAD_AUX_RE.test(t) || ASK_PHRASE_RE.test(t);
+}
 const gistWords = (s: string): string[] => (s.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
   .filter((w) => !GIST_STOP.has(w)).map((w) => (w.length > 3 ? w.replace(/(?<!s)s$/, '') : w));
 export function gistGrounded(gist: string | null | undefined, turnText: string | null | undefined): boolean {
   const g = gistWords(gist ?? '');
   if (g.length === 0) return true;
   const turn = new Set(gistWords(turnText ?? ''));
-  return g.filter((w) => turn.has(w)).length / g.length >= GIST_GROUNDED_MIN;
+  if (g.filter((w) => turn.has(w)).length / g.length < GIST_GROUNDED_MIN) return false;
+  const ask = lastQuestionSentence(turnText ?? '') ?? lastAskSentence(turnText ?? '');
+  // The interrogative rule rejects an ANSWER-shaped gist (led by I / my / we /
+  // our — the learner's reply, not the ask); a compressed noun-phrase gist
+  // ("One more sentence starting with …", "Another practice sentence …, or
+  // move on …?") stays grounded.
+  return !(ask && hasInterrogative(ask) && !hasInterrogative(gist) && FIRST_PERSON_LEAD_RE.test(gist ?? ''));
 }

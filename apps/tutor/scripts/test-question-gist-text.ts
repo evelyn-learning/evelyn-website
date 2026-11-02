@@ -244,6 +244,11 @@ check('", so you did well." is no ask', lastAskSentence('You finished early, so 
   check('S9: the 241 s gist (an invented example answer) ⇒ ungrounded', gistGrounded('I have worked on mastering Python programming for three year', T241), false);
   check('S9: a faithful gist ⇒ grounded', gistGrounded('One more sentence starting with "I have worked" about a skill or project', T241), true);
   check('S9: a paraphrased offer ⇒ grounded', gistGrounded('Another practice sentence on present perfect, or move on to past simple?', 'The present perfect part is done, and you used it well. Would you like one more practice sentence on it, or shall we move on to the past simple?'), true);
+  // Task 30 fix round 5 R4-4 (run r4 124 s)
+  const T124 = 'That\'s a clear reason, Haruto. Explaining products to foreign customers is a great goal. Now I\'d like to hear your answer to question 3 in full English. What is one skill you want to improve? Try: "I want to improve..." The question card is now on the board.';
+  check('R4-4: the 124 s gist (an answer, 67 % grounded) ⇒ ungrounded', gistGrounded('I want to improve my English speaking skills?', T124), false);
+  check('R4-4: an answer-shaped gist fully grounded but without the ask\'s interrogative ⇒ ungrounded', gistGrounded('I want to improve one skill in English?', T124), false);
+  check('R4-4: the ask kept as a question ⇒ grounded', gistGrounded('What skill do you want to improve in English?', T124), true);
   check('S9: the verbatim ask replaces it', verbatimQuestionPin(T241), `Can you say one more sentence, starting with "I have worked", about a skill or project you've been doing?`);
   const ts = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
   check('S9: TutorSession pins the verbatim ask for an ungrounded gist', ts.includes('if (gist && TUTOR_QPIN_GIST_GROUNDED && !gistGrounded(gist, entry.text)) {') && ts.includes("onDebugEvent?.('qpin_gist_ungrounded',"), true);
