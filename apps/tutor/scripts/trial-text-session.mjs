@@ -128,7 +128,7 @@ const VARIANTS = {
   beginner: { errors: 1.0, repeatErrorFirst: true, offers: ['One more please.', 'Move on.'], ambiguousYes: false, bargeTyped: false, slowTurn: true, askQuestion: false, postCloseMore: true, menu: 'skip', japanese: true, moveOnOrder: false, wrongDifference: true },
   polite: { errors: 0.2, repeatErrorFirst: false, offers: ['Another one, please.', "No, let's go on to the next part."], ambiguousYes: false, bargeTyped: true, slowTurn: false, askQuestion: false, postCloseMore: false, menu: 'number four', japanese: false, moveOnOrder: false, wrongDifference: false },
   // run 18: quiet — 20 s pause after every repeat ask (the silent-continue path); offers answered loosely ("Uh, yeah, one more. sentence.")
-  quiet: { errors: 0.5, repeatErrorFirst: true, offers: ['Uh, yeah, one more. sentence.', 'Yes.'], ambiguousYes: false, bargeTyped: false, slowTurn: false, askQuestion: false, postCloseMore: false, menu: 'Skip, please.', japanese: false, moveOnOrder: false, wrongDifference: false, silentAfterRepeat: true, finishEarly: true },
+  quiet: { errors: 0.5, repeatErrorFirst: true, offers: ['Uh, yeah, one more. sentence.', 'Yes.', 'Yes please, one more.', "OK, let's move on."], ambiguousYes: false, bargeTyped: false, slowTurn: false, askQuestion: false, postCloseMore: false, menu: 'Skip, please.', japanese: false, moveOnOrder: false, wrongDifference: false, silentAfterRepeat: true, finishEarly: true },
   // run 18: pron — picks the sentence drill; the clip is silence so the tutor must re-ask the SAME target; 20 s pauses after repeat asks
   pron: { errors: 0.4, repeatErrorFirst: false, offers: ['One more, please.', "Let's move on."], ambiguousYes: false, bargeTyped: false, slowTurn: false, askQuestion: false, postCloseMore: false, menu: 'A complete sentence, please.', japanese: false, moveOnOrder: false, wrongDifference: false, silentAfterRepeat: true, finishEarly: false },
 };
@@ -172,7 +172,7 @@ function decide(text) {
     if (V.postCloseMore && !state.postCloseDone) { state.postCloseDone = true; return { text: 'Can I have one more practice, please?', why: 'post-close more' }; }
     state.closed = true; return null;
   }
-  if ((t.match(MENU_RE) ?? []).length >= 3 || /\bindividual words\b.*\bcomplete sentence\b/i.test(t)) return { text: V.menu, why: 'menu' };
+  if ((t.match(MENU_RE) ?? []).length >= 3 || /\bindividual words\b.*\bcomplete sentence\b/i.test(t) || /\bwords\b.*\bsentence\b.*\b(?:naturally|natural)\b.*\bskip\b/i.test(t) || /単語.*一文.*スキップ/.test(t)) return { text: V.menu, why: 'menu' };
   if (OFFER_RE.test(last)) {
     if (V.ambiguousYes && !state.ambiguousDone) { state.ambiguousDone = true; return { text: 'Yes.', why: 'ambiguous yes' }; }
     const a = V.offers[Math.min(state.offers, V.offers.length - 1)]; state.offers += 1;
