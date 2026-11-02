@@ -61,7 +61,7 @@ export const QPIN_MAX_CHARS = 220;
  *  optional closing quote/bracket) followed by whitespace and a capital or
  *  an opening quote, or a newline — so `starting with "I have..."` stays
  *  one sentence. */
-function splitSentences(text: string): string[] {
+export function splitSentences(text: string): string[] {
   return text
     .split(/\n+|(?<=[.!?…。！？]["”’)]?)\s+(?=[A-Z"“'‘(])/)
     .map((x) => x.trim())

@@ -1060,6 +1060,14 @@ export const TUTOR_MOVE_ON_ORDER = process.env.NEXT_PUBLIC_TUTOR_MOVE_ON_ORDER !
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_REPEAT_ASK_TWO_TRIES=off. */
 export const TUTOR_REPEAT_ASK_TWO_TRIES = process.env.NEXT_PUBLIC_TUTOR_REPEAT_ASK_TWO_TRIES !== 'off';
 
+/** Task 29 §A (GDI run 16, 441–486 s / 672–734 s): a fixed-script offer
+ *  part's hold starts when the offer is SPOKEN (offerAsked), not when its
+ *  note is planted; a turn under a pending offer note that does not ask it
+ *  is killed once and retried (validator transition_offer_missing); a
+ *  declined spoken offer advances at the end of the next tutor turn.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_TRANSITION_OFFER_SPOKEN=off. */
+export const TUTOR_TRANSITION_OFFER_SPOKEN = process.env.NEXT_PUBLIC_TUTOR_TRANSITION_OFFER_SPOKEN !== 'off';
+
 /** Task 27 §G (GDI run 14, 1141 s): a microphone device change mid-session
  *  (devicechange, the shared track ended, or muted at the source > 3 s)
  *  re-acquires the shared capture on the current default input and swaps the

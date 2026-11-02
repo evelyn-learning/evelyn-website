@@ -12,6 +12,7 @@ import type { LessonPlan, Segment, SegmentTransition } from './types';
 import { withSilentClause } from '../voice/output-budget';
 import { isCorrectionTurn } from '../voice/correct-retry';
 import { boardOffersChoices } from '../voice/sentence-board';
+import { sentenceAsksStudent, splitSentences, stripMarkdownEmphasis } from '../question-gist-text';
 
 export function isFixedScriptPlan(plan: LessonPlan | null | undefined): boolean {
   return plan?.metadata?.fixedScript === true;
@@ -399,22 +400,76 @@ export function holdAutoAdvanceForOffer(offerMade: boolean, heldTurns: number): 
   return offerMade && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS;
 }
 /** What a DUE fixed-script advance does now. 'offer' ⇒ plant the offer note
- *  instead of advancing (an offer part, no offer made yet); 'hold-offer' ⇒
- *  the offer was made and its two turns are not spent; 'advance' ⇒ the
+ *  instead of advancing (an offer part, no offer made yet); 'await-offer' ⇒
+ *  the note is planted but no brain turn has SPOKEN the offer yet (Task 29
+ *  §A2: the hold starts at the spoken offer, not at the plant); 'hold-offer'
+ *  ⇒ the offer was spoken and its two turns are not spent; 'advance' ⇒ the
  *  ordinary advance path (its own pronunciation / ask holds included). An
  *  announced move (the brain's own) is never offered or held. One offer per
- *  segment (`offerMade`). */
+ *  segment (`offerMade`). `offerSpoken` absent ⇒ treated as spoken (the
+ *  pre-Task-29 behaviour). Task 29 §A4: the student declined the spoken
+ *  offer ("no", "that's enough", "skip", a move-on order) ⇒ 'advance' now. */
 export function fixedScriptTransitionDecision(input: {
   plan: LessonPlan | null | undefined;
   segmentId: string | null | undefined;
   reason: 'turns' | 'time' | 'announced';
   offerMade: boolean;
   offerHeldTurns: number;
-}): 'offer' | 'hold-offer' | 'advance' {
+  offerSpoken?: boolean;
+  offerDeclined?: boolean;
+}): 'offer' | 'await-offer' | 'hold-offer' | 'advance' {
   if (input.reason === 'announced') return 'advance';
   if (segmentTransitionKind(input.plan, input.segmentId) !== 'offer') return 'advance';
   if (!input.offerMade) return 'offer';
+  if (input.offerSpoken === false) return 'await-offer';
+  if (input.offerDeclined) return 'advance';
   return holdAutoAdvanceForOffer(true, input.offerHeldTurns) ? 'hold-offer' : 'advance';
+}
+
+/** Task 29 §A1 (GDI run 16, 441–486 s / 672–734 s): the offer note was
+ *  planted and the next turn never offered — the part ran out its hold and
+ *  advanced with the student never asked. True when some sentence of `text`
+ *  asks the student (sentenceAsksStudent) AND names MORE (one more / another
+ *  / more practice / again / once more / もう一…) AND a MOVE (move on / go on
+ *  / continue / next / 次 / 進). Pure, generic. */
+const OFFER_MORE_RE = /\b(?:one more|another|more practice|again|once more)\b|もう(?:一|ひと)/i;
+const OFFER_MOVE_RE = /\b(?:move on|moving on|go on|continue|next)\b|次|進/i;
+export function offerAsked(text: string | null | undefined): boolean {
+  const sentences = splitSentences(stripMarkdownEmphasis(text ?? ''));
+  return sentences.some((s) => OFFER_MORE_RE.test(s) && OFFER_MOVE_RE.test(s) && sentenceAsksStudent(s));
+}
+/** Task 29 §A4: the student's reply declines the spoken offer — "no",
+ *  "no thanks", "that's enough", "enough", "skip", "I'm fine / good", or a
+ *  move-on order ("let's move on", "next part"). A "no" that goes on to ask
+ *  for more ("no, one more please") is not a decline. Pure. */
+const OFFER_DECLINE_RE = /^(?:(?:uh+|um+|er|ah|oh|hmm+|ok(?:ay)?|well|so)[\s,.!]+)*(?:no(?:pe)?(?:\s*,?\s*thanks?(?: you)?)?|no need|that['’]?s (?:enough|ok(?:ay)?|fine|all)|enough|skip(?: it)?|i['’]m (?:fine|good|ok(?:ay)?)|(?:let['’]?s |let us |i(?:['’]d| would) like to |i want to |can we |please )?(?:move on|go on|continue|skip)(?: to (?:the )?(?:next(?: part| one)?|summary))?|(?:the )?next(?: part| one)?(?: please)?)(?=[\s,.!]*$|[\s,.!]+(?:please|thanks?|thank you|let['’]?s)\b)/i;
+const OFFER_WANTS_MORE_RE = /\b(?:one more|another|more practice|once more|again|yes|yeah|sure)\b/i;
+export function offerDeclined(studentText: string | null | undefined): boolean {
+  const t = (studentText ?? '').trim();
+  if (!t || /^\s*\[/.test(t)) return false;
+  if (OFFER_WANTS_MORE_RE.test(t)) return false;
+  return OFFER_DECLINE_RE.test(t);
+}
+/** Task 29 §A3: the brain turn produced while the offer note is pending
+ *  (planted, not spoken) that does not ask the offer is killed ONCE and
+ *  retried with fixedScriptOfferMissingReason. A turn that announces the
+ *  move or calls advance_lesson closed the part itself (Task 26 I-2b) and is
+ *  exempt; a turn after the one retry stands ('unmade'). */
+export function transitionOfferValidatorDecision(input: {
+  offerPending: boolean;
+  text: string | null | undefined;
+  announcedMove: boolean;
+  calledAdvance: boolean;
+  alreadyRetried: boolean;
+}): 'ok' | 'spoken' | 'kill' | 'unmade' {
+  if (!input.offerPending) return 'ok';
+  if (offerAsked(input.text)) return 'spoken';
+  if (input.announcedMove || input.calledAdvance) return 'ok';
+  return input.alreadyRetried ? 'unmade' : 'kill';
+}
+/** The retry directive of transition_offer_missing (shared silent clause). */
+export function fixedScriptOfferMissingReason(plan: LessonPlan | null | undefined, from: string, next: string): string {
+  return withSilentClause(`Reply to what the student just said in ONE sentence (answer a question or a correction first), then ask the student whether they want one more practice item on "${fixedScriptPartLabel(plan, from)}" or to move on to "${fixedScriptPartLabel(plan, next)}". End the turn with that question.`);
 }
 /** The FACT note planted (urgent) instead of the advance on an offer part. */
 export function fixedScriptOfferNote(plan: LessonPlan | null | undefined, from: string, next: string): string {

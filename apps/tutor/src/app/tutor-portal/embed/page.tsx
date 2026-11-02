@@ -335,6 +335,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'auto_new_page_skipped_empty_segment_page',
   // Task 24 §C: the transition ask was off the new part (killed once); the part page waits for the transition turn's end.
   'transition_ask_off_part', 'auto_newpage_on_advance_deferred_next_turn',
+  // Task 29 §A3: a turn under a pending offer note that did not ask the offer (killed once).
+  'transition_offer_missing',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

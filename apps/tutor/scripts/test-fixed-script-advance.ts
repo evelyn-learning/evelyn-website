@@ -31,6 +31,7 @@ import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_MORE_OF_PART_LEAD, fixedS
 import {
   segmentTransitionKind, fixedScriptPartLabel, fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause,
   holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer,
+  offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
@@ -172,7 +173,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 9600  /* Task 26: the offer branches; Task 27 §E2: the menu clause */);
+  const block = VTR.slice(auto, auto + 12600  /* Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer */);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
   pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{advanceReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
@@ -196,7 +197,7 @@ test('C: the pronunciation hold is capped at 3 consecutive turns; the 4th advanc
 });
 test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  pin(VTR.slice(auto, auto + 6500), /pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR.slice(auto, auto + 9500), /pendingRuntimeNoteUrgentRef\.current = true;/);
   // Task 14 §G: the tool path's level apply moved into applyWorkingLevelRef.
   const lv = VTR.indexOf("applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool')");
   assert.ok(lv > 0);
@@ -597,10 +598,10 @@ test('26A2: bridge part ⇒ advance (no hold) with the bridge clause in the lead
 });
 test('26A: VTR wiring — offer planted (urgent FACT) instead of the advance, held n/2, bridge clause on both advance leads (pins)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 12000);
-  pin(block, /const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS\s*\? fixedScriptTransitionDecision\(\{ plan: autoPlan, segmentId: segIdNow, reason: advanceReason, offerMade: transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\), offerHeldTurns: autoAdvanceOfferHeldRef\.current \}\)\s*: 'advance';/);
+  const block = VTR.slice(auto, auto + 15000);
+  pin(block, /const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS\s*\? fixedScriptTransitionDecision\(\{\s*plan: autoPlan, segmentId: segIdNow, reason: advanceReason,\s*offerMade: transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\),\s*offerHeldTurns: autoAdvanceOfferHeldRef\.current,/);
   // order: pronunciation hold → offer → offer hold → ask hold → advance
-  pin(block, /'fixed_script_auto_advance_held_pron'[^\n]*\n\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'hold-offer'\) \{\s*autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
+  pin(block, /'fixed_script_auto_advance_held_pron'[^\n]*\n\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'await-offer'\) \{[\s\S]*?\} else if \(autoNext && transition === 'hold-offer'\) \{\s*\/\/[^\n]*\n\s*if \(!offerSpokenThisTurn\) autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
   pin(block, /autoAdvanceAskHeldRef\.current = 0;\s*autoAdvanceOfferHeldRef\.current = 0;\s*const autoTurns = cur\.turns;/);
   pin(block, /: fixedScriptAutoAdvanceLead\(segIdNow, autoNext, autoKind\)\) \+[^\n]*\n\s*\/\/[^\n]*\n\s*\(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(autoPlan, segIdNow, autoNext\) : ''\) \+\s*\/\/[^\n]*\n\s*\(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(autoPlan, autoNext\)\) : ''\),\s*autoNext,/);
   pin(VTR, /fixedScriptAdvancedNote\(fixedScriptLevelAdvanceLead\(lvNext, lvKind\) \+ \(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(lvPlan, lvFrom, lvNext\) : ''\) \+ \(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(lvPlan, lvNext\)\) : ''\), lvNext\),/);
@@ -765,6 +766,66 @@ test('27E2: choice-menu card → the menu clause in the lead; a plain question c
   assert.equal(fixedScriptChoiceMenuClause(''), '');
   const lead = fixedScriptAutoAdvanceLead('open-conversation', 'pronunciation', 'try_yourself') + fixedScriptChoiceMenuClause(MENU);
   assert.ok(fixedScriptAdvancedNote(lead, 'pronunciation').includes('Nothing else is on the board yet. Reply to the student'));
+});
+
+// ── Task 29 §A: the offer is actually made ──────────────────────────────
+test('29A1: offerAsked — an ask naming one-more AND the move; a bare repeat ask or a statement is no offer', () => {
+  assert.equal(offerAsked('Great job. Would you like one more practice sentence on it, or move on to the past simple?'), true);
+  assert.equal(offerAsked('Nice work. Do you want one more practice sentence on it, or shall we move on to "Part B"?'), true);
+  assert.equal(offerAsked('Can you say that once more?'), false, 'repeat ask, no move');
+  assert.equal(offerAsked("Let's move on to the past simple."), false, 'no ask');
+  assert.equal(offerAsked('We can do another one or go on next time.'), false, 'statement');
+  assert.equal(offerAsked('もう一つ練習しますか、それとも次に進みますか？'), true);
+  assert.equal(offerAsked(''), false);
+});
+test('29A2: decision — planted-not-spoken ⇒ await-offer; spoken + held < 2 ⇒ hold-offer; spoken + 2 ⇒ advance', () => {
+  const d = (offerSpoken: boolean, offerHeldTurns: number, offerDeclined = false) =>
+    fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'turns', offerMade: true, offerHeldTurns, offerSpoken, offerDeclined });
+  assert.equal(d(false, 0), 'await-offer');
+  assert.equal(d(false, 5), 'await-offer', 'the hold has not started');
+  assert.equal(d(true, FIXED_SCRIPT_OFFER_HELD_AT_PLANT), 'hold-offer', 'the spoken turn is hold turn 1');
+  assert.equal(d(true, 2), 'advance');
+  // not made yet ⇒ offer; announced ⇒ advance; offerSpoken absent ⇒ pre-Task-29 behaviour
+  assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'turns', offerMade: false, offerHeldTurns: 0, offerSpoken: false }), 'offer');
+  assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'announced', offerMade: true, offerHeldTurns: 0, offerSpoken: false }), 'advance');
+  assert.equal(fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'turns', offerMade: true, offerHeldTurns: 1 }), 'hold-offer');
+});
+test('29A4: after the spoken offer — a decline / move-on order ⇒ advance at the next turn end; "one more / yes" ⇒ the 2-turn hold (one practice turn)', () => {
+  const d = (offerHeldTurns: number, student: string) =>
+    fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'turns', offerMade: true, offerHeldTurns, offerSpoken: true, offerDeclined: offerDeclined(student) });
+  for (const no of ['No.', 'No, thanks.', "That's enough.", 'Skip.', "Let's move on.", 'Um, no thank you.', 'Next part, please.', "I'm fine."]) {
+    assert.equal(offerDeclined(no), true, no);
+    assert.equal(d(1, no), 'advance', no);
+  }
+  for (const more of ['One more, please.', 'Yes.', 'Yes, one more.', 'No, one more please.', 'Sure, another one.']) {
+    assert.equal(offerDeclined(more), false, more);
+    assert.equal(d(1, more), 'hold-offer', more);
+  }
+  assert.equal(d(2, 'Yes.'), 'advance', 'the practice turn spent ⇒ advance');
+  assert.equal(offerDeclined('No, I think the answer is "have been".'), false, 'an answer, not a decline');
+  assert.equal(offerDeclined('[runtime: the student is silent]'), false);
+});
+test('29A3: validator decision — offer pending + no offer + not announced / no advance ⇒ kill once, then unmade', () => {
+  const base = { offerPending: true, text: 'Yes, you have presented at an international meeting.', announcedMove: false, calledAdvance: false, alreadyRetried: false };
+  assert.equal(transitionOfferValidatorDecision(base), 'kill');
+  assert.equal(transitionOfferValidatorDecision({ ...base, alreadyRetried: true }), 'unmade');
+  assert.equal(transitionOfferValidatorDecision({ ...base, announcedMove: true }), 'ok');
+  assert.equal(transitionOfferValidatorDecision({ ...base, calledAdvance: true }), 'ok');
+  assert.equal(transitionOfferValidatorDecision({ ...base, offerPending: false }), 'ok');
+  assert.equal(transitionOfferValidatorDecision({ ...base, text: 'Good. Would you like one more practice sentence, or move on to "Part B"?' }), 'spoken');
+  const reason = fixedScriptOfferMissingReason(tr, 'part-a', 'part-b');
+  assert.ok(reason.startsWith('Reply to what the student just said in ONE sentence (answer a question or a correction first), then ask the student whether they want one more practice item on "Part A" or to move on to "Part B". End the turn with that question.'));
+  assert.ok(reason.endsWith('Apply this silently; never mention this note.'));
+});
+test('29A: VTR wiring — validator kill + retry, spoken event, hold from the spoken offer, await branch (pins)', () => {
+  assert.ok(VTR.includes("rejectionsThisAttempt.push({ action: 'transition_offer_missing', reason: fixedScriptOfferMissingReason(toPlan, toSeg, toNext) });"));
+  assert.ok(VTR.includes("onDebugEvent?.('transition_offer_missing', `\"${attemptText.slice(0, 60)}\"`);"));
+  assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_unmade',"));
+  assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_spoken', `\"${offerSeg}\"`);"));
+  assert.ok(VTR.includes('if (!offerSpokenThisTurn) autoAdvanceOfferHeldRef.current += 1;'));
+  assert.ok(VTR.includes("} else if (autoNext && transition === 'await-offer') {"));
+  assert.ok(VTR.includes('offerDeclined: !offerSpokenThisTurn && offerDeclined(transcript),'));
+  assert.ok(readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8').includes("'transition_offer_missing',"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
