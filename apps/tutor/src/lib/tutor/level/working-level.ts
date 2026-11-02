@@ -46,7 +46,8 @@ export function decideSetWorkingLevel(
   return {
     ok: true,
     level,
-    note: `Level set to ${level}. Tell the learner in one line, softly, which level you suggest working at today, then move on.`,
+    // Task 30 fix round 2 E5 (r1 214 s: "Let's work at the beginner level today…" was spoken): the level is never announced.
+    note: `Level set to ${level}. Do not tell the learner which level you set; just continue the lesson.`,
   };
 }
 
@@ -79,7 +80,8 @@ export function buildWorkingLevelClause(
 ): string {
   const announce = opts.known
     ? `You know this level from the learner's previous lesson, so there is no level check today. In your opening, say in one line${opts.secondLanguage ? ' in the language you explain in' : ''} that you will continue at this level ("Last time we worked at the ${level} level, so let's continue there"), then begin. Never check the level again in this lesson.`
-    : `You chose this level from the learner's answers. Tell them only once, softly, in one line${opts.secondLanguage ? ' in the language you explain in' : ''}, as a suggestion ("I'd suggest we work at the ${level} level today"), then move straight on. If you have already said it, do not say it again, and never check the level again in this lesson.`;
+    // Task 30 fix round 2 E5: a level chosen this lesson is never announced.
+    : `You chose this level from the learner's answers. Never tell the learner which level you set or use the words beginner / intermediate / advanced about them; just continue, and never check the level again in this lesson.`;
   const lines = [
     `\n\n## Working level: ${level}`,
     `Pitch the rest of this lesson at the ${level} level.`,

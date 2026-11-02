@@ -22,7 +22,7 @@ import {
 } from '../src/lib/tutor/level/working-level';
 import { emptyProfile } from '../src/lib/tutor/student-profile/store';
 import { WHITEBOARD_TOOLS, SET_WORKING_LEVEL_TOOL, mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
-import { buildSystemPromptParts } from '../src/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPromptParts, buildBilingualClause } from '../src/lib/tutor/ai/system-prompt-builder';
 import { NON_RENDER_TOOL_NAMES } from '../src/lib/tutor/voice/rule8-client';
 import { isBoardContentTool } from '../src/lib/tutor/voice/question-anchor';
 
@@ -60,11 +60,11 @@ test('parseWorkingLevel rejects anything else (CEFR codes, non-strings)', () => 
 });
 
 // ── decideSetWorkingLevel (the handler's pure part) ──────────────────────
-test('first valid call sets the level and asks for one soft line', () => {
+test('first valid call sets the level; Task 30 fix round 2 E5: the level is never announced', () => {
   const d = decideSetWorkingLevel(null, 'Intermediate');
   assert.equal(d.ok, true);
   assert.equal(d.level, 'intermediate');
-  assert.match(d.note ?? '', /one line/i);
+  assert.equal(d.note, 'Level set to intermediate. Do not tell the learner which level you set; just continue the lesson.');
 });
 test('a second call is refused and the level is not changed', () => {
   const d = decideSetWorkingLevel('beginner', 'advanced');
@@ -116,12 +116,20 @@ test('beginner: explanations AND corrections in the second language; English for
   assert.match(c, /explanations[^.]*corrections[^.]*in Japanese/i);
   assert.match(c, /English only for the (target )?phrases/i);
 });
-test('just set: announce softly once, never re-test, no score or CEFR', () => {
+test('just set (Task 30 fix round 2 E5): never announced, never re-test, no score or CEFR', () => {
   const c = jaNew('beginner');
-  assert.match(c, /only once/i);
-  assert.match(c, /one (short )?line/i);
+  assert.match(c, /Never tell the learner which level you set or use the words beginner \/ intermediate \/ advanced about them; just continue/);
+  assert.doesNotMatch(c, /I'd suggest we work at/);
   assert.match(c, /never check the level again/i);
   assert.match(c, /CEFR/);
+});
+test('Task 30 fix round 2 E5: the bilingual clause and the tool description forbid announcing the level (language sessions only)', () => {
+  const clause = buildBilingualClause(['en', 'ja']) ?? '';
+  assert.ok(clause.includes('- When you set the working level (set_working_level), never tell the learner which level you set or use the words beginner / intermediate / advanced about them; just continue.'));
+  assert.equal(buildBilingualClause(['en']), null, 'an English-only session has no bilingual clause');
+  const tools = readFileSync(join(__dirname, '..', 'src/app/tutor/hooks/toolDefinitions.ts'), 'utf8');
+  assert.ok(tools.includes('In the same turn, just continue the lesson: never tell the learner which level you set or use the words beginner / intermediate / advanced about them.'));
+  assert.ok(!tools.includes("I\\'d suggest we work at"));
 });
 test('intermediate: conversation in English, corrections explained in the second language', () => {
   const c = jaNew('intermediate');
