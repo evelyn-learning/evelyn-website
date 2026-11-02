@@ -13,6 +13,9 @@ import {
   getPdfTextContext, hasCjk, inferSessionLanguages, installCjkFontRouter, loadCjkFontBase64,
   mapNonLatin1Runs, registerCjkFont, resetPdfTextContext, setPdfTextContext, type PdfTextContext,
 } from './pdf-cjk-font';
+import {
+  commandToPdfBlock, estimateSentenceHeight, layoutSentenceTokens, type PdfBlock,
+} from './pdf-session-blocks';
 
 interface TranscriptMessage {
   id: string;
@@ -1186,6 +1189,91 @@ function drawNoteCaptionLine(pdf: jsPDF, displayText: string, colorHex: string, 
   return y + wrappedLines * 4.4 + 2;
 }
 
+// Task 32 §B: native sentence card (the most common board item in a
+// language lesson). Mirrors the live SentenceCard: small grey label, the
+// sentence large with emphasised words bold + amber + underlined, the gloss
+// small and grey below. Drawn in jsPDF (vector, searchable, works without a
+// DOM); CJK in any part goes through the font router (§A).
+const SENTENCE_AMBER: [number, number, number] = [161, 98, 7]; // InkNotesOverlay AMBER #a16207
+function drawSentenceCard(
+  pdf: jsPDF, block: Extract<PdfBlock, { kind: 'sentence' }>,
+  x: number, yStart: number, width: number,
+): number {
+  const pad = 3;
+  const innerW = width - pad * 2;
+  const SENT_SIZE = 12;
+  const SENT_LH = 5.6;
+  const label = block.label ? sanitizeForPDF(block.label) : '';
+  const gloss = block.gloss ? sanitizeForPDF(block.gloss, { literalLineBreaks: true }) : '';
+  const segments = block.segments.map((sg) => ({ text: sanitizeForPDF(sg.text), emphasis: sg.emphasis }));
+
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(7.5);
+  const labelLines: string[] = label ? pdf.splitTextToSize(label, innerW) : [];
+  pdf.setFontSize(9);
+  const glossLines: string[] = gloss ? pdf.splitTextToSize(gloss, innerW) : [];
+  pdf.setFontSize(SENT_SIZE);
+  const measure = (t: string, emph: boolean) => { pdf.setFont('helvetica', emph ? 'bold' : 'normal'); return pdf.getTextWidth(t); };
+  const splitLong = (t: string, emph: boolean, w: number) => {
+    pdf.setFont('helvetica', emph ? 'bold' : 'normal');
+    const first = pdf.splitTextToSize(t, Math.max(w, innerW * 0.3)) as string[];
+    if (first.length <= 1) return first;
+    const rest = pdf.splitTextToSize(first.slice(1).join(''), innerW) as string[];
+    return [first[0], ...rest];
+  };
+  const lines = layoutSentenceTokens(segments, innerW, measure, splitLong);
+
+  const boxH = pad + labelLines.length * 3.4 + lines.length * SENT_LH + (glossLines.length ? 1 + glossLines.length * 4.2 : 0) + pad;
+  pdf.setFillColor(249, 250, 251);
+  pdf.setDrawColor(229, 231, 235);
+  pdf.roundedRect(x, yStart, width, boxH, 2, 2, 'FD');
+
+  let cy = yStart + pad;
+  if (labelLines.length) {
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(107, 114, 128);
+    for (const l of labelLines) { cy += 3.4; pdf.text(l, x + pad, cy - 0.8); }
+  }
+  pdf.setFontSize(SENT_SIZE);
+  for (const line of lines) {
+    cy += SENT_LH;
+    const baseY = cy - 1.4;
+    for (const tok of line) {
+      pdf.setFont('helvetica', tok.emphasis ? 'bold' : 'normal');
+      if (tok.emphasis) pdf.setTextColor(...SENTENCE_AMBER);
+      else pdf.setTextColor(17, 24, 39);
+      pdf.text(tok.text, x + pad + tok.x, baseY);
+      if (tok.emphasis) {
+        const w = pdf.getTextWidth(tok.text);
+        pdf.setDrawColor(...SENTENCE_AMBER);
+        pdf.setLineWidth(0.45);
+        pdf.line(x + pad + tok.x, baseY + 0.9, x + pad + tok.x + w, baseY + 0.9);
+        pdf.setLineWidth(0.2);
+      }
+    }
+  }
+  if (glossLines.length) {
+    cy += 1;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(107, 114, 128);
+    for (const l of glossLines) { cy += 4.2; pdf.text(l, x + pad, cy - 1); }
+  }
+  return yStart + boxH + 2;
+}
+
+// Task 32 §B: a truly unknown action (not a board render, not an engine-
+// only command) prints one grey line naming it — never the captured
+// renderer's "Unknown command type" card.
+function drawUnknownCommandNote(pdf: jsPDF, action: string, x: number, y: number): number {
+  pdf.setFont('helvetica', 'italic');
+  pdf.setFontSize(7.5);
+  pdf.setTextColor(156, 163, 175);
+  pdf.text(sanitizeForPDF(`Unknown board item: ${action}`), x, y + 3);
+  return y + 5;
+}
+
 // Draw a visual representation of a whiteboard command. Returns new y position.
 // scribbles is an optional list of annotation commands targeting THIS item
 // (their targetItemIndex matches the 1-indexed position on screen). When
@@ -1218,6 +1306,13 @@ async function drawWhiteboardVisual(
   const cmd: WhiteboardCommandData = (hasOnlyDbKeys && cmdData && typeof cmdData === 'object' && !Array.isArray(cmdData))
     ? { ...cmdData, action: rawCmd.action }
     : rawCmd;
+
+  // Task 32 §B: sentence cards draw natively; engine-only commands draw
+  // nothing; an unknown action gets one grey line.
+  const block = commandToPdfBlock(cmd, { linksEnabled: linksEnabled() });
+  if (block.kind === 'sentence') return drawSentenceCard(pdf, block, x, y, width);
+  if (block.kind === 'skip') return y;
+  if (block.kind === 'unknown') return drawUnknownCommandNote(pdf, block.action, x, y);
 
   if (cmd.action === 'showEquation' && cmd.latex) {
     // Try rendering the actual KaTeX output first (html2canvas → PNG).
@@ -1540,6 +1635,7 @@ function estimateCommandHeight(rawCmd: WhiteboardCommandData): number {
     return 90;
   }
   if (action === 'showEquation') return 35;
+  if (action === 'showSentence') return estimateSentenceHeight(String(cmd.sentence || ''), typeof cmd.gloss === 'string' ? cmd.gloss : undefined, typeof cmd.label === 'string' ? cmd.label : undefined);
   if (action === 'showProblem') return 30;
   if (action === 'handwrite') return 18;
   if (action === 'showTable') return 60;
@@ -1571,7 +1667,9 @@ function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
     case 'annotate':
       return `Note: ${cmd.text || ''}`;
     case 'showSentence':
-      return `Sentence: ${cmd.sentence || ''}${cmd.gloss ? ` (${cmd.gloss})` : ''}`;
+      // The card itself prints the sentence + gloss (task 32 §B); the badge
+      // names the item only, so the sentence is not printed twice.
+      return `Sentence${typeof cmd.label === 'string' && cmd.label.trim() ? `: ${cmd.label.trim()}` : ''}`;
     case 'handwrite':
       return `Handwrite: ${cmd.text || ''}`;
     case 'link':
@@ -1834,6 +1932,9 @@ async function exportTutorSessionPDFInner(
       return false;
     }
     if (META_PDF_ACTIONS.has(String(action))) return false;
+    // Task 32 §B: every engine-only command (scrollTo, removeItem(s),
+    // markSegmentComplete …) is skipped, not drawn as an unknown card.
+    if (commandToPdfBlock(cmd, { linksEnabled: linksEnabled() }).kind === 'skip') return false;
     // Drop renders rolled back by a killed attempt (matched on the
     // stamped command id collected in the pre-pass above).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2056,7 +2157,8 @@ async function exportTutorSessionPDFInner(
         'pipe-flow', 'fluid-flow', 'continuity', 'free-body',
         'vectors', 'velocity', 'vector-addition',
       ]);
-      const visualHeight = (cmd.action === 'showEquation') ? 18 :
+      const visualHeight = (cmd.action === 'showSentence') ? estimateCommandHeight(cmd) :
+        (cmd.action === 'showEquation') ? 18 :
         (cmd.action === 'showSvgDiagram') ? 100 :
         (cmd.action === 'showGraph') ? 110 :
         (cmd.action === 'showTable') ? Math.min(10 + ((cmd.rows as unknown[])?.length || 0) * 7, 80) :
@@ -2324,6 +2426,7 @@ async function exportTutorSessionPDFInner(
     if (msg.whiteboardCommands && msg.whiteboardCommands.length > 0) {
       for (const cmd of msg.whiteboardCommands) {
         if (META_PDF_BOOKKEEPING.has(String(cmd.action))) continue;
+        if (commandToPdfBlock(cmd, { linksEnabled: linksEnabled() }).kind === 'skip') continue;
         // Reserve enough room for the *actual* command type — graphs/
         // diagrams/circles need ~85mm, equations ~30mm. The prior
         // hard-coded 20mm reservation let the 2026-04-29 geometry
