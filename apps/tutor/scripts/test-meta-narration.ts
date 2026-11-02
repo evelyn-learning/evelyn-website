@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -744,7 +744,7 @@ check('§A a short colon tail is still citation', stripNoteCitationClause('The p
 {
   const vtr = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('§A VTR strips the note citation on every turn, before the nudge clause',
-    /if \(typeof ev\.text === 'string'\) \{[\s\S]{0,400}?const noteStripped = stripNoteCitationClause\(ev\.text, \{ personaName: personaNamesRef\.current \}\);/.test(vtr)
+    /if \(typeof ev\.text === 'string'\) \{[\s\S]{0,700}?const noteStripped = stripNoteCitationClause\(ev\.text, \{ personaName: personaNamesRef\.current, firstTutorTurn: recentTutorTurnsRef\.current\.length === 0 \}\);/.test(vtr)
     && vtr.indexOf('stripNoteCitationClause(ev.text') < vtr.indexOf('stripNudgePlanClause(ev.text)'));
   check('§A r1 VTR passes the persona name(s) to isMetaNarration', vtr.includes('personaName: personaNamesRef.current,')
     && vtr.includes('[teacherPersona.name, teacherFirstName(teacherPersona.name)]'));
@@ -1201,7 +1201,23 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('T-1: "Tanakaです。" kept without the persona', !isMetaNarration('Tanakaです。', { personaName: ['Ryota'], firstTutorTurn: false }));
   check('T-1: filterNarrationText keeps the first-turn intro', filterNarrationText('Ryotaです。 Let us begin.', FIRST) === 'Ryotaです。 Let us begin.');
   const vtr = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('T-1: VTR passes firstTutorTurn at both filter sites', (vtr.match(/firstTutorTurn: recentTutorTurnsRef\.current\.length === 0/g) ?? []).length === 2);
+  check('T-1: VTR passes firstTutorTurn at all three filter sites (A1 adds the stream note-citation strip)', (vtr.match(/firstTutorTurn: recentTutorTurnsRef\.current\.length === 0/g) ?? []).length === 3);
+}
+
+// Task 30 fix round 8 (A1, run r6-A): the persona's "<Name> here." merged into the next sentence (25-char boundary).
+{
+  const P = { personaName: 'Ryota', firstTutorTurn: false };
+  check('A1: 202 s "Ryota here. Let\'s keep going …" ⇒ lead stripped', stripNoteCitationClause("Ryota here. Let's keep going with the present perfect.", P) === "Let's keep going with the present perfect.");
+  check('A1: 278 s mid-turn chunk ⇒ lead stripped', stripNoteCitationClause('Ryota here. Your last sentence used the past simple, "I made," because it was a finished event.', P) === 'Your last sentence used the past simple, "I made," because it was a finished event.');
+  check('A1: 401 s "Ryota here, Haruto. Your last sentence …" ⇒ lead stripped', stripNoteCitationClause('Ryota here, Haruto. Your last sentence was a finished event.', P) === 'Your last sentence was a finished event.');
+  check('A1: "Ryota here, Haruto." alone ⇒ dropped', isMetaNarration('Ryota here, Haruto.', P));
+  check('A1: "Ryota here." alone ⇒ dropped', isMetaNarration('Ryota here.', P));
+  check('A1: first tutor turn ⇒ the intro lead kept', stripNoteCitationClause('Ryotaです。 Let us begin the lesson today.', { personaName: 'Ryota', firstTutorTurn: true }) === 'Ryotaです。 Let us begin the lesson today.');
+  check('A1: "Ryotaです。" lead stripped later', stripPersonaAnnounceLead('Ryotaです。 Let us continue with the next part.', 'Ryota', false) === 'Let us continue with the next part.');
+  check('A1: another name kept ("Tanaka here. How can I help you?")', stripNoteCitationClause('Tanaka here. How can I help you today?', P) === 'Tanaka here. How can I help you today?');
+  check('A1: filterNarrationText strips the merged lead', filterNarrationText("Ryota here. Let's keep going with the present perfect.", P) === "Let's keep going with the present perfect.");
+  const vtr = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('A1: VTR passes firstTutorTurn to the stream note-citation strip', vtr.includes('const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0 });'));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

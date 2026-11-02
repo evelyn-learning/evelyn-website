@@ -15899,7 +15899,9 @@ export function VoiceTutorRealtime({
                     if (isThirdPersonResidue(ev.text, { personaName: personaNamesRef.current })) {
                       onDebugEvent?.('meta_narration_dropped_third_person_residue', `"${ev.text.slice(0, 80)}"`);
                     }
-                    const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current });
+                    // Fix round 8 (A1): the persona's "<Name> here." lead is stripped here — the
+                    // stream merges it into the next sentence (≥ 25-char boundary).
+                    const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0 });
                     if (noteStripped && noteStripped !== ev.text) {
                       onDebugEvent?.('meta_narration_dropped_note_citation_clause', `"${ev.text.slice(0, 60)}" → "${noteStripped.slice(0, 60)}"`);
                       (ev as { text?: string }).text = noteStripped;

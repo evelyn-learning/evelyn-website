@@ -238,6 +238,27 @@ function isPersonaSelfAnnounce(s: string, personaName: string | readonly string[
   const names = (Array.isArray(personaName) ? personaName : [personaName]).map((n) => (n ?? '').trim()).filter((n) => n.length >= 2 && n.length <= 60);
   return names.some((n) => new RegExp(`^\\s*${escapeName(n)} here[.!]?\\s*$`, 'i').test(s));
 }
+/**
+ * Task 30 fix round 8 (A1, run r6-A 202 / 278 / 401 s, spoken: "Ryota here.
+ * Let's keep going …", "Ryota here, Haruto. Your last sentence …"). The
+ * stream's sentence boundary needs ≥ SENTENCE_MIN_LEN (25) characters, so a
+ * short "Ryota here." is MERGED with the sentence after it and never reaches
+ * the per-sentence filter alone — neither the persona rule nor the T-1
+ * bare-name rule saw a whole-sentence self-announce. The persona's own
+ * "<Name> here(, <Vocative>)." / "<Name>です。" LEAD is stripped and the rest
+ * kept (not in the session's first tutor turn). Pure.
+ */
+export function stripPersonaAnnounceLead(s: string, personaName: string | readonly string[] | null | undefined, firstTutorTurn?: boolean): string {
+  if (firstTutorTurn === true) return s;
+  const names = (Array.isArray(personaName) ? personaName : [personaName])
+    .map((n) => (n ?? '').trim()).filter((n) => n.length >= 2 && n.length <= 60)
+    .sort((a, b) => b.length - a.length);
+  for (const n of names) {
+    const m = new RegExp(`^\\s*${escapeName(n)}(?:\\s+here(?:,\\s*[\\p{Lu}][\\p{L}'’-]*)?[.!]|\\s*です。)\\s*`, 'iu').exec(s);
+    if (m && s.slice(m[0].length).trim()) return capitaliseFirst(s.slice(m[0].length));
+  }
+  return s;
+}
 // Task 22 §C (GDI run 10, 299 s SPOKEN): `Ryota explains: "I have worked at
 // Nagoya Corporation for three years" is the natural form when speaking.` — the
 // persona narrating itself in the third person. A sentence that OPENS with
@@ -339,7 +360,7 @@ function addressLearner(s: string): string {
   if (lead && out.slice(lead[0].length).trim()) out = capitaliseFirst(out.slice(lead[0].length));
   return out;
 }
-export interface NoteCitationOpts { /** the session persona's name(s) — full name and first name */ personaName?: string | readonly string[] | null }
+export interface NoteCitationOpts { /** the session persona's name(s) — full name and first name */ personaName?: string | readonly string[] | null; /** fix round 8 (A1): the session's first tutor turn — the persona may introduce itself */ firstTutorTurn?: boolean }
 /**
  * A sentence that cites a runtime note with the citation removed: unchanged
  * when there is none (or the continuation opens with a quote), the content
@@ -348,7 +369,7 @@ export interface NoteCitationOpts { /** the session persona's name(s) — full n
 export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpts): string {
   const raw = sentence ?? '';
   if (isPersonaSelfAnnounce(raw, opts?.personaName)) return '';
-  let s = addressLearner(stripPersonaLead(raw, opts?.personaName));
+  let s = addressLearner(stripPersonaLead(stripPersonaAnnounceLead(raw, opts?.personaName, opts?.firstTutorTurn), opts?.personaName));
   if (s !== raw && !s.trim()) return '';
   // Task 30 §E1: a rewrite that leaves the learner in the third person.
   if (isThirdPersonResidue(raw, opts)) return '';
@@ -571,7 +592,8 @@ export function isBundledNotesNarration(s: string): boolean {
  *  name (case-insensitive) and never in the session's first tutor turn (the
  *  persona's own introduction); any other bare name is a role-play model line
  *  ("Tanaka here.") and is kept. */
-const NAME_ANNOUNCE_RE = /^\s*([\p{L}][\p{L}'’-]*)(?:\s*です。|\s+here\.)\s*$/u;
+// Fix round 8 (A1): "<Name> here, <Vocative>." is the same self-announce.
+const NAME_ANNOUNCE_RE = /^\s*([\p{L}][\p{L}'’-]*)(?:\s*です。|\s+here(?:,\s*[\p{Lu}][\p{L}'’-]*)?[.!])\s*$/u;
 export function isBareNameAnnounce(s: string, opts?: { personaName?: string | readonly string[] | null; firstTutorTurn?: boolean }): boolean {
   if (opts?.firstTutorTurn) return false;
   const m = NAME_ANNOUNCE_RE.exec(s ?? '');
@@ -995,7 +1017,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
@@ -1243,7 +1265,7 @@ export function filterNarrationText(
   let prevDropped = false;
   for (const raw of parts) {
     let s = stripLeakedLabels(raw, opts?.personaName ?? null);
-    const cited = stripNoteCitationClause(s, { personaName: opts?.personaName });
+    const cited = stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn });
     if (cited && cited !== s) s = cited;
     if (!s.trim() || isMetaNarration(s, opts)) { prevDropped = true; continue; }
     if (prevDropped && isPlanContinuationSentence(s)) { prevDropped = false; continue; }
