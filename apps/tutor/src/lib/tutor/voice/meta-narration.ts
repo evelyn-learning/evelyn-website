@@ -242,6 +242,7 @@ export function stripNudgePlanClause(sentence: string): string {
 // quote ('… says the word "because" is useful') leaves the sentence as it is.
 const NOTE_CITING_OPENER_RE =
   /^\s*The (?:pace|level|lesson|plan|persona|runtime|system|teacher) (?:preference|note|pointer|setting|directive|guidance)s? (?:says?|tells?|asks?|wants?)\b/i;
+const NOTES_LEAD_RE = /^\s*(?:Those|These|The) (?:runtime )?(?:notes?|instructions?)\b[^:"“「]{0,100}:\s*/i;
 const STAY_ON_ONE_IDEA_RE = /\bI['’]ll stay on this one idea\b/i;
 const NOTE_CITATION_CONTINUATION_RE = /:\s+|\s(?=["“「])/g;
 const escapeName = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -400,6 +401,14 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   if (isCaptureNarration(s)) return '';
   const keepStripped = stripKeepInMindTail(s);
   if (keepStripped !== null) return keepStripped;
+  // Task 34 §B (bot run r11 1218 s: "Those notes are in English, so I'll keep
+  // my reply in Japanese: 目標の一文が…"): a lead about "those / these / the
+  // notes / instructions" before a colon goes; the rest stays.
+  const notesLead = NOTES_LEAD_RE.exec(s);
+  if (notesLead) {
+    const rest = s.slice(notesLead[0].length).trim();
+    return /[\p{L}\p{N}]/u.test(rest) ? capitaliseFirst(rest) : '';
+  }
   const m = NOTE_CITING_OPENER_RE.exec(s) ?? STAY_ON_ONE_IDEA_RE.exec(s);
   if (!m) return s;
   NOTE_CITATION_CONTINUATION_RE.lastIndex = m.index + m[0].length;
@@ -615,11 +624,14 @@ export const EXCHANGE_NARRATION_JA_RE = /^\s*(?:この|今の)(?:やり取り|�
  *  notes / blocks / bracketed text / "the text you sent" WITH a verdict on
  *  them (internal, meant for me, not your words / answer, set aside, ignore,
  *  pick up the lesson, mix-up). */
-const NOTES_MENTION_RE = /\bnotes?\b|\bblocks?\b|\bbracketed text\b|\bthe text you (?:just )?sent\b/i;
+// Task 34 §B (bot run r11, 1250 s: "Those notes are runtime instructions, so
+// let's keep going." was spoken): "instructions" is a mention too, and
+// "runtime instruction(s) / keep going / carry on / get back to / for me" a verdict.
+const NOTES_MENTION_RE = /\bnotes?\b|\bblocks?\b|\bbracketed text\b|\bthe text you (?:just )?sent\b|\binstructions?\b/i;
 // Task 31 §E (GDI run 18, 568 s, spoken: "I'll stop here for a moment; the
 // notes above are instructions for me, so let me just carry on with the
 // lesson."): instructions for me / carry on with the lesson / let me get on.
-const NOTES_VERDICT_RE = /\binternal\b|\bmeant for me\b|\bnot (?:your|the student['’]?s) (?:words|answer)\b|\bset (?:them|it) aside\b|\bignore (?:them|it)\b|\bpick up the lesson\b|\bmix-up\b|\binstructions for me\b|\bcarry on with the lesson\b|\bjust carry on\b|\blet me (?:just )?(?:carry|get) on\b/i;
+const NOTES_VERDICT_RE = /\binternal\b|\bmeant for me\b|\bnot (?:your|the student['’]?s) (?:words|answer)\b|\bset (?:them|it) aside\b|\bignore (?:them|it)\b|\bpick up the lesson\b|\bmix-up\b|\binstructions for me\b|\bcarry on with the lesson\b|\bjust carry on\b|\blet me (?:just )?(?:carry|get) on\b|\bruntime instructions?\b|\bkeep going\b|\bcarry on\b|\bget back to\b|\bfor me\b/i;
 export function isBundledNotesNarration(s: string): boolean {
   return NOTES_MENTION_RE.test(s) && NOTES_VERDICT_RE.test(s);
 }

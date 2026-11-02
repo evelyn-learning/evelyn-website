@@ -1367,5 +1367,17 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
     check(`33 r2 R10-3: kept — ${x}`, !isMetaNarration(x));
 }
 
+
+// Task 34 §B (bot run r11 1218 / 1231 / 1250 s): the bundled-notes verdicts.
+{
+  const gone = (x: string) => isMetaNarration(x) || stripNoteCitationClause(x) !== x;
+  for (const x of ["Those notes are in English, so I'll keep my reply in Japanese:", "Those notes are for me, so let's keep going.", "Those notes are runtime instructions, so let's keep going."])
+    check(`34B: dropped — ${x}`, gone(x));
+  for (const x of ["Let's keep going with the next question.", 'Your notes from the meeting were clear.'])
+    check(`34B: kept — ${x}`, !isMetaNarration(x) && stripNoteCitationClause(x) === x);
+  check('34B: the notes lead goes, the Japanese after the colon stays', stripNoteCitationClause("Those notes are in English, so I'll keep my reply in Japanese: 目標の一文が、まだ途中のようでしたね。") === '目標の一文が、まだ途中のようでしたね。');
+  check('34B: "Your notes: …" (the student\'s notes) is kept whole', stripNoteCitationClause('Your notes: the first point is clear.') === 'Your notes: the first point is clear.' && !isMetaNarration('Your notes: the first point is clear.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
