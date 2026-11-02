@@ -91,7 +91,7 @@ test('level check: all three questions on the card, Q1 first, skip flag, once-on
   assert.equal(q[0], '1. Can you tell me a little about your job? What do you do?');
   assert.match(q[1], /^2\. Have you ever worked with an international customer\?/);
   assert.match(q[2], /^3\. What is one skill you'd like to improve in your English/);
-  assert.match(s.teacherNote ?? '', /Ask these three questions in this order, one per turn; after the third answer, call set_working_level\(\{level\}\) in the same turn as your soft level line, then advance_lesson\(\{to:"next"\}\)\./);
+  assert.match(s.teacherNote ?? '', /Ask these three questions in this order, one per turn; after the third answer, call set_working_level\(\{level\}\) in the same turn as your soft focus line, then advance_lesson\(\{to:"next"\}\)\./);
   assert.equal(s.metadata?.skipWhenLevelKnown, true);
   const n = s.teacherNote ?? '';
   assert.match(n, /set_working_level/);
@@ -100,6 +100,11 @@ test('level check: all three questions on the card, Q1 first, skip flag, once-on
   assert.match(n, /skill you'd like to improve/);
   assert.match(lower(n), /no corrections/);
   assert.match(lower(n), /cefr/); // the "no CEFR, no score" rule is spelled out
+  // Task 30 fix round 4 (Q-9): the soft line names the focus, never the level (259e2dc1).
+  assert.ok(n.includes('never name a level'));
+  assert.ok(n.includes('soft focus line'));
+  assert.ok(n.includes('Do not ask grammar questions'));
+  assert.ok(!n.includes('suggest the level'));
 });
 
 test('fixed-script navigation: known level skips only the level check', () => {
