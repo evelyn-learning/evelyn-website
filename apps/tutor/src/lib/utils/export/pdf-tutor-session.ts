@@ -2417,7 +2417,9 @@ async function exportTutorSessionPDFInner(
     pdf.text(label, margin + 3, y);
 
     const ts = msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp);
-    const timeStr = ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // Task 32 §E: the viewer's local time (the export runs in their
+    // browser), labelled with its zone so 08:46 is not read as a guess.
+    const timeStr = ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(7);
     pdf.setTextColor(156, 163, 175);
