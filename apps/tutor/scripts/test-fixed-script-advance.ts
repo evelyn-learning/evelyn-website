@@ -1042,6 +1042,20 @@ test('31G: the close note carries "already covered" after an answered ask; uncha
   assert.ok(VTR.includes('pendingRuntimeNoteRef.current = fixedScriptCloseNote([...(answeredInPartRef.current.get(segIdNow) ?? []), ...cnThisTurn]);'));
   assert.ok(VTR.includes('const aqNew = answeredQuestionSentences(prevTutor, transcript);'));
 });
+// ── Task 31 fix round 1 B-1: ordinary practice turns are never the spoken offer ──
+test('31 r1 B-1: offerAsked needs an item offer AND a strict move alternative; a bare "next" is no move', () => {
+  for (const t of ["Let's try it again. What happened next?", 'Tell me another thing you did there. What happened next?',
+    'One more thing: you used have correctly. What will you do next week?', 'Good, one more example. Can you continue the story?',
+    'Once more, please. Then what did you do next?', 'Tell me one more thing — what did you do next?']) assert.equal(offerAsked(t), false, t);
+  const T34 = '「I have used ABC software for two years.」ですね、完璧です。 That\'s the present perfect for a tool you still use. Now, one more practice sentence: tell me one tool you have used at work, using "I have used…" Or should we move on to the past simple?';
+  const T36 = 'Okay, let\'s keep this short. Tell me one tool you have used at work, starting with "I have used…", or would you rather move on to "Past simple"?';
+  assert.equal(offerAsked(T34), true, 'turn 34 still an offer');
+  assert.equal(offerAsked(T36), true, 'turn 36 still an offer');
+  assert.equal(offerAsked('Would you like one more practice sentence, or shall we continue?'), true, '"or … continue"');
+  assert.equal(offerHeardFromAcceptance('I called the customer again.', 'What did you do next?'), false, 'a student "again" + a content "next?"');
+  assert.equal(offerHeardFromAcceptance('One more, please.', 'Good. What did you do next?'), false, 'no strict move question');
+  assert.equal(offerHeardFromAcceptance('Uh, yeah, one more. sentence.', T34), true);
+});
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 

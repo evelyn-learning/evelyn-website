@@ -471,31 +471,42 @@ export function offerWaitExpired(offerSpokenAtMs: number | null | undefined, now
  *  / more practice / again / once more / もう一…) AND a MOVE (move on / go on
  *  / continue / next / 次 / 進). Pure, generic. */
 const OFFER_MORE_RE = /\b(?:one more|another|more practice|again|once more)\b|もう(?:一|ひと)/i;
-const OFFER_MOVE_RE = /\b(?:move on|moving on|go on|continue|next)\b|次|進/i;
 // Task 31 §B (GDI run 18, 438 / 469 s): the offer spans two sentences — the
 // splitter breaks at an ellipsis / closing quote ("…using "I have used…" Or
-// should we move on …?"), and "one tool" names the item. The offer is judged
-// over a window of the last TWO sentences joined: MORE in one, MOVE in the
-// other, the ask on the window's last sentence. The "one <noun>" item shape
-// counts only with an "or" in the window (an alternative), never alone.
-const OFFER_ONE_ITEM_RE = /\bone (?:more|[a-z]+)\b/i;
+// should we move on …?"), and "one tool" names the item.
+// Fix round 1 (B-1: "Let's try it again. What happened next?" read as the
+// offer, so the offer was never asked): the ASKING sentence must hold the
+// alternative — an "or" / それとも and a STRICT move clause (move on / go on
+// to / continue to / the next part …, never a bare "next" or "continue the
+// story") — and the MORE side must be an item of the part: one more /
+// another + practice / question / sentence / item / example …, "more
+// practice", "one more?", もう一つ / 一回 / 一度 — in the asking sentence or
+// the one before it; or the "one <noun>" item shape inside the asking
+// sentence itself (turn 36).
+const OFFER_MORE_ITEM_RE = /\b(?:one more|another)\s+(?:[a-z]+\s+)?(?:practice|question|sentence|item|example|exercise|word|phrase|one|try|round)\b|\bmore practice\b|\bone more\s*[?？,]|もう(?:一|ひと)(?:つ|回|度)/i;
+const OFFER_STRICT_MOVE_RE = /\b(?:move on|moving on|go on to|carry on to|continue (?:to|with|on to)|(?:the )?next (?:part|section|topic|point|step|grammar point|lesson part))\b|\bor (?:shall we |should we |we can |to |would you (?:rather|like to) )?(?:go on|continue|carry on|stop)\b|次(?:に進|の(?:パート|部分|セクション|トピック))|進み|進む/i;
+const OFFER_ONE_ITEM_RE = /\bone [a-z]+\b/i;
 const OFFER_OR_RE = /\bor\b|それとも/i;
 export function offerAsked(text: string | null | undefined): boolean {
   const sentences = splitSentences(stripMarkdownEmphasis(text ?? ''));
   return sentences.some((s, i) => {
-    if (!sentenceAsksStudent(s)) return false;
-    const win = i > 0 ? `${sentences[i - 1]} ${s}` : s;
-    if (!OFFER_MOVE_RE.test(win)) return false;
-    return OFFER_MORE_RE.test(win) || (OFFER_ONE_ITEM_RE.test(win) && OFFER_OR_RE.test(win));
+    if (!sentenceAsksStudent(s) || !OFFER_STRICT_MOVE_RE.test(s) || !OFFER_OR_RE.test(s)) return false;
+    if (OFFER_MORE_ITEM_RE.test(s) || OFFER_ONE_ITEM_RE.test(s)) return true;
+    return i > 0 && OFFER_MORE_ITEM_RE.test(sentences[i - 1]!);
   });
 }
-/** Task 31 §B (belt and braces): the student's reply accepts the offer
- *  (offerAccepted) and the tutor's previous turn has a MOVE clause in a
- *  sentence with a question mark — the acceptance proves the offer was
- *  heard, whatever its wording. Pure. */
+/** Task 31 §B (belt and braces): the student's reply accepts the offer and
+ *  the tutor's previous turn asked a STRICT move question (fix round 1 B-1:
+ *  "What did you do next?" is none) — the acceptance proves the offer was
+ *  heard, whatever its wording. The acceptance must name the item (one more
+ *  / another / practice / もう一…) or be a bare yes; a student "again" ("I
+ *  called the customer again.") is no acceptance here. Pure. */
+const OFFER_HEARD_ACCEPT_RE = /\b(?:one more|another|more practice|practice)\b|もう(?:一|ひと)/i;
 export function offerHeardFromAcceptance(studentText: string | null | undefined, lastTutorText: string | null | undefined): boolean {
+  const t = (studentText ?? '').trim();
+  if (!OFFER_HEARD_ACCEPT_RE.test(t) && !isBareAffirmative(t)) return false;
   if (!offerAccepted(studentText, lastTutorText)) return false;
-  return splitSentences(stripMarkdownEmphasis(lastTutorText ?? '')).some((x) => /[?？]/.test(x) && OFFER_MOVE_RE.test(x));
+  return splitSentences(stripMarkdownEmphasis(lastTutorText ?? '')).some((x) => /[?？]/.test(x) && OFFER_STRICT_MOVE_RE.test(x));
 }
 /** Task 29 §A4: the student's reply declines the spoken offer — "no",
  *  "no thanks", "that's enough", "enough", "skip", "I'm fine / good", or a
