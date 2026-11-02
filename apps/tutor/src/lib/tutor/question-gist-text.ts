@@ -266,3 +266,23 @@ export function parseGistReply(raw: string): string | null {
   t = t.replace(/^.*\b(?:let me (?:rephrase|restate)|rephras\w+)\b[^:]*:\s*/i, '').trim();
   return t && t.length <= 200 ? t : null;
 }
+
+/**
+ * Task 30 fix round 1 S9 (smoke run 241 s: the ask "Can you say one more
+ * sentence, starting with "I have worked", about a skill or project you've
+ * been doing?" was pinned as "I have worked on mastering Python programming
+ * for three year…" — the gist model invented an example answer). A gist is
+ * grounded when ≥ 60 % of its content words appear in the tutor turn's text
+ * (lower-cased, simple plural folded, function words ignored); an ungrounded
+ * gist is replaced by the turn's verbatim ask sentence. Pure.
+ */
+const GIST_STOP = new Set(['a', 'an', 'the', 'to', 'of', 'in', 'on', 'at', 'for', 'and', 'or', 'is', 'are', 'it', 'you', 'your', 'i', 'do', 'does', 'what', 'how', 'can', 'could', 'would', 'with', 'about', 'that', 'this', 'one']);
+export const GIST_GROUNDED_MIN = 0.6;
+const gistWords = (s: string): string[] => (s.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
+  .filter((w) => !GIST_STOP.has(w)).map((w) => (w.length > 3 ? w.replace(/(?<!s)s$/, '') : w));
+export function gistGrounded(gist: string | null | undefined, turnText: string | null | undefined): boolean {
+  const g = gistWords(gist ?? '');
+  if (g.length === 0) return true;
+  const turn = new Set(gistWords(turnText ?? ''));
+  return g.filter((w) => turn.has(w)).length / g.length >= GIST_GROUNDED_MIN;
+}

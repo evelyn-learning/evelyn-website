@@ -57,8 +57,8 @@ import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { type SessionMode, textModeSecondsPerWord } from '@/lib/tutor/voice/resolve-session-mode';
-import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL, TUTOR_PAGE_TITLE_HEADER } from '@/lib/tutor/orchestrator/flags';
-import { lastQuestionSentence, lastAskSentence, stripMarkdownEmphasis, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn } from '@/lib/tutor/question-gist-text';
+import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL, TUTOR_PAGE_TITLE_HEADER, TUTOR_QPIN_GIST_GROUNDED } from '@/lib/tutor/orchestrator/flags';
+import { lastQuestionSentence, lastAskSentence, stripMarkdownEmphasis, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn, gistGrounded } from '@/lib/tutor/question-gist-text';
 import { sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
 import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
 import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/lib/tutor/qpin-behavior';
@@ -1454,7 +1454,13 @@ export default function TutorSession(props: TutorSessionProps) {
           onDebugEvent?.('qpin_drop', 'a host moment arrived during fetch');
           return;
         }
-        if (gist) {
+        // Task 30 fix round 1 S9: a gist not grounded in the turn (an invented
+        // example answer) is replaced by the turn's verbatim ask sentence.
+        if (gist && TUTOR_QPIN_GIST_GROUNDED && !gistGrounded(gist, entry.text)) {
+          const verbatim = verbatimQuestionPin(entry.text) ?? lastAskSentence(entry.text) ?? lastQuestionSentence(entry.text);
+          onDebugEvent?.('qpin_gist_ungrounded', `"${gist.slice(0, 60)}"${verbatim ? ` → "${verbatim.slice(0, 60)}"` : ' → dropped'}`);
+          if (verbatim) setQuestionPin({ turnId: entry.id, gist: verbatim });
+        } else if (gist) {
           setQuestionPin({ turnId: entry.id, gist });
           onDebugEvent?.('qpin_set', `"${gist.slice(0, 60)}"`);
         } else if (!askFallback('gist empty') && !verbatimFallback()) {

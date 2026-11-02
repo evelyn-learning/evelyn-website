@@ -1132,3 +1132,9 @@ export const TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT = process.env.NEXT_PUBLIC_TUTO
  *  card is built (normaliseDigitsToWords). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_LANGUAGE_DIGIT_WORDS=off. */
 export const TUTOR_LANGUAGE_DIGIT_WORDS = process.env.NEXT_PUBLIC_TUTOR_LANGUAGE_DIGIT_WORDS !== 'off';
+
+/** Task 30 fix round 1 S9 (smoke run 241 s): a Q-pin gist whose content words
+ *  are < 60 % found in the tutor turn (an invented example answer) is replaced
+ *  by the turn's verbatim ask sentence (gistGrounded). Client-side: default
+ *  ON; NEXT_PUBLIC_TUTOR_QPIN_GIST_GROUNDED=off. */
+export const TUTOR_QPIN_GIST_GROUNDED = process.env.NEXT_PUBLIC_TUTOR_QPIN_GIST_GROUNDED !== 'off';

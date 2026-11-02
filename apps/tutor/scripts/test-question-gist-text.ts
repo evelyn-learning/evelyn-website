@@ -11,7 +11,7 @@
  *
  * Run: npx tsx scripts/test-question-gist-text.ts
  */
-import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply, lastAskSentence, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn, capPinText, stripUnbalancedQuotes } from '../src/lib/tutor/question-gist-text';
+import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply, lastAskSentence, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn, capPinText, stripUnbalancedQuotes, gistGrounded } from '../src/lib/tutor/question-gist-text';
 import { transitionAskSentence } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -236,6 +236,17 @@ check('", so you did well." is no ask', lastAskSentence('You finished early, so 
   check('29F: a trailing opener is stripped', stripUnbalancedQuotes('Say this: “'), 'Say this:');
   check('29F: an inner quote is untouched', stripUnbalancedQuotes('Can you say "for our customers" again?'), 'Can you say "for our customers" again?');
   check('29F: an ask pin keeps its quote', lastAskSentence('Good. "Fine." Please say "I have worked here for five years."'), 'Please say "I have worked here for five years."');
+}
+
+// Task 30 fix round 1 S9 (smoke run 241 s): an invented gist is not pinned.
+{
+  const T241 = `Good, that's a clear sentence. Can you say one more sentence, starting with "I have worked", about a skill or project you've been doing?`;
+  check('S9: the 241 s gist (an invented example answer) ⇒ ungrounded', gistGrounded('I have worked on mastering Python programming for three year', T241), false);
+  check('S9: a faithful gist ⇒ grounded', gistGrounded('One more sentence starting with "I have worked" about a skill or project', T241), true);
+  check('S9: a paraphrased offer ⇒ grounded', gistGrounded('Another practice sentence on present perfect, or move on to past simple?', 'The present perfect part is done, and you used it well. Would you like one more practice sentence on it, or shall we move on to the past simple?'), true);
+  check('S9: the verbatim ask replaces it', verbatimQuestionPin(T241), `Can you say one more sentence, starting with "I have worked", about a skill or project you've been doing?`);
+  const ts = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
+  check('S9: TutorSession pins the verbatim ask for an ungrounded gist', ts.includes('if (gist && TUTOR_QPIN_GIST_GROUNDED && !gistGrounded(gist, entry.text)) {') && ts.includes("onDebugEvent?.('qpin_gist_ungrounded',"), true);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
