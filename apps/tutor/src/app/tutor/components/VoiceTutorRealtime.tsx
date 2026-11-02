@@ -9319,7 +9319,18 @@ export function VoiceTutorRealtime({
             getSegment(lessonPlanRef.current, cbSeg) as { requiredPhrases?: string[] } | undefined,
             [...(segmentNarrationRef.current.get(cbSeg) ?? []), ...turnNarrationRef.current, ...attemptStreamedSentencesRef.current],
           );
-          if (closeBeforeRequiredPhrasesDecision({ missing: cbMissing, alreadyRefused: closeBeforePhrasesRefusedSegRef.current === cbSeg }) === 'refuse') {
+          // Fix round 5 (S-2): never refused on the student's stop request,
+          // in the time-box wrap, or within 90 s of max_duration.
+          const cbStartedAt = voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current;
+          const cbElapsedMs = cbStartedAt != null ? Date.now() - cbStartedAt : 0;
+          const cbTimeBoxed = sessionModeRef.current === 'demo' || (sessionModeRef.current != null && maxDurationExplicit);
+          if (closeBeforeRequiredPhrasesDecision({
+            missing: cbMissing,
+            alreadyRefused: closeBeforePhrasesRefusedSegRef.current === cbSeg,
+            studentStopRequest: studentEndSignalRef.current || !!lastStudentVerificationRef.current?.isSessionEndSignal,
+            wrapPhase: wrapLineSpokenRef.current || (sessionWrapMinutes != null && cbTimeBoxed && Math.floor(cbElapsedMs / 60000) >= sessionWrapMinutes),
+            remainingMs: maxDurationExplicit && cbStartedAt != null ? sessionMaxMinutes * 60000 - cbElapsedMs : undefined,
+          }) === 'refuse') {
             closeBeforePhrasesRefusedSegRef.current = cbSeg;
             onDebugEvent?.('close_before_required_phrases', `"${cbSeg}" missing=[${cbMissing.join(', ')}]`);
             rejected.push({ action: 'close_before_required_phrases', reason: CLOSE_BEFORE_REQUIRED_PHRASES_REASON });

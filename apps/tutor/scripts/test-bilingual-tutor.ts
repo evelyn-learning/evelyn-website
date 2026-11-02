@@ -349,7 +349,7 @@ test('after the close: goodbyes/thanks are pleasantries; content and questions a
 test('lesson-closed state: set by closeSessionNotes, silences pleasantries, stands the idle nudge down', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("if (!opts?.silent && lessonClosedRef.current && decidePostCloseUtterance(transcript) === 'silence')"));
-  assert.ok(/cmd\.action === 'closeSessionNotes'\) \{[\s\S]{0,2200}lessonClosedRef\.current = true/.test(vtr));
+  assert.ok(/cmd\.action === 'closeSessionNotes'\) \{[\s\S]{0,3500}lessonClosedRef\.current = true/.test(vtr));
   assert.ok(vtr.includes('if (lessonClosedRef.current) return;'));
 });
 test('bare Japanese short answers survive the noise filter in a bilingual session', () => {

@@ -33,7 +33,7 @@ import {
   holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer,
   offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason,
   FIXED_SCRIPT_OFFER_MAX_WAIT_MS, offerWaitExpired,
-  offerAccepted, fixedScriptOfferAcceptedNote, FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON,
+  offerAccepted, fixedScriptOfferAcceptedNote, FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, CLOSE_REFUSAL_EXEMPT_REMAINING_MS,
   fixedScriptOfferContinueDirective, FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, attemptAsksStudent, offerReplantDue,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
@@ -968,6 +968,18 @@ test('R3-7a: close_session_notes with required phrases unsaid is refused once; t
   assert.ok(VTR.includes("onDebugEvent?.('close_before_required_phrases',"));
 });
 
+// ── Task 30 fix round 5 S-2: no close refusal on a stop request, in the wrap, or near max_duration ──
+test('S-2: the R3-7a refusal stands down for a stop request, the wrap phase and the last 90 s', () => {
+  const missing = ['one thing you did well'];
+  assert.equal(closeBeforeRequiredPhrasesDecision({ missing, alreadyRefused: false }), 'refuse');
+  assert.equal(closeBeforeRequiredPhrasesDecision({ missing, alreadyRefused: false, studentStopRequest: true }), 'allow', 'stop request');
+  assert.equal(closeBeforeRequiredPhrasesDecision({ missing, alreadyRefused: false, wrapPhase: true }), 'allow', 'wrap phase');
+  assert.equal(CLOSE_REFUSAL_EXEMPT_REMAINING_MS, 90_000);
+  assert.equal(closeBeforeRequiredPhrasesDecision({ missing, alreadyRefused: false, remainingMs: 90_000 }), 'allow', 'within 90 s');
+  assert.equal(closeBeforeRequiredPhrasesDecision({ missing, alreadyRefused: false, remainingMs: 91_000 }), 'refuse');
+  assert.ok(VTR.includes('studentStopRequest: studentEndSignalRef.current || !!lastStudentVerificationRef.current?.isSessionEndSignal,'));
+  assert.ok(VTR.includes('remainingMs: maxDurationExplicit && cbStartedAt != null ? sessionMaxMinutes * 60000 - cbElapsedMs : undefined,'));
+});
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 

@@ -611,7 +611,19 @@ export function missingRequiredPhrases(seg: { requiredPhrases?: string[] } | und
  *  still missing from what the tutor said in it is refused ONCE per part (kill
  *  + retry with CLOSE_BEFORE_REQUIRED_PHRASES_REASON); the second attempt is
  *  let through. Pure. */
-export function closeBeforeRequiredPhrasesDecision(input: { missing: readonly string[]; alreadyRefused: boolean }): 'refuse' | 'allow' {
+export const CLOSE_REFUSAL_EXEMPT_REMAINING_MS = 90_000;
+export function closeBeforeRequiredPhrasesDecision(input: {
+  missing: readonly string[];
+  alreadyRefused: boolean;
+  /** Fix round 5 (S-2): the student asked to stop / leave (the lesson-close end signal). */
+  studentStopRequest?: boolean;
+  /** Fix round 5 (S-2): the time-box wrap / last-minute phase is active. */
+  wrapPhase?: boolean;
+  /** Fix round 5 (S-2): ms left before max_duration (undefined = no cap). */
+  remainingMs?: number;
+}): 'refuse' | 'allow' {
+  if (input.studentStopRequest || input.wrapPhase) return 'allow';
+  if (typeof input.remainingMs === 'number' && input.remainingMs <= CLOSE_REFUSAL_EXEMPT_REMAINING_MS) return 'allow';
   return input.missing.length > 0 && !input.alreadyRefused ? 'refuse' : 'allow';
 }
 export const CLOSE_BEFORE_REQUIRED_PHRASES_REASON = withRetryStyle(
