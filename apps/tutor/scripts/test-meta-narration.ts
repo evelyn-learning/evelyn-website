@@ -1039,5 +1039,14 @@ check('S7: "Let me ask you about your job." ⇒ kept', !isMetaNarration('Let me 
   check('N-1: VTR resets the flag after one dropped continuation', /'meta_narration_dropped_plan_continuation', updatedSentence\.slice\(0, 80\)\);\s*\/\/[^\n]*\n\s*prevSentenceDroppedAsNarration = false;\s*continue;/.test(VN1));
 }
 
+// Task 30 fix round 2 (E2, r1 616 s): the learner's "earlier version" named in the third person.
+{
+  const S616 = 'Their earlier version was "I have work", and now they say "I have work for this company for five years", which still has "work" instead of "worked".';
+  check('E2: the 616 s sentence ⇒ rewritten, the "they" residue drops it whole', isThirdPersonResidue(S616) && stripNoteCitationClause(S616) === '' && isMetaNarration(S616));
+  check('E2: a residue-free rewrite keeps its content', stripNoteCitationClause('The student\'s latest attempt is "I have worked here for five years."') === 'Your latest attempt is "I have worked here for five years."');
+  check('E2: "They sell washing machines in Osaka." kept', !isMetaNarration('They sell washing machines in Osaka.') && !isThirdPersonResidue('They sell washing machines in Osaka.'));
+  check('E2: descriptive "Their reply was quick, so you won the contract." kept', !isMetaNarration('Their reply was quick, so you won the contract.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

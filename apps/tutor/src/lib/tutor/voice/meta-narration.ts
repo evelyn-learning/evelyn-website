@@ -297,7 +297,13 @@ function stripKeepInMindTail(s: string): string | null {
 // the noun is followed by is / has / sounds / reads / means / needs / works or
 // a quote; descriptive was / were / are ("Their reply was quick, so you won
 // the contract.") and "Their answer arrived by email." stay.
-const THIRD_PERSON_LEARNER_LEAD_RE = /^(\s*)(?:Their|The student['’]s|The learner['’]s) (sentence|answer|words|reply)\b(?=\s+(?:is|has|sounds|reads|means|needs|works)\b|\s*,\s*["“])/i;
+// Task 30 fix round 2 (E2, r1 616 s SPOKEN: `Their earlier version was "I
+// have work", and now they say "…", which still has "work" …`): an optional
+// ordinal / adjective (earlier, latest, last, previous, first, second, new,
+// own) and the nouns version / line / message / attempt / response / try; a
+// past "was / were" counts only before a quote (descriptive "Their reply was
+// quick" stays).
+const THIRD_PERSON_LEARNER_LEAD_RE = /^(\s*)(?:Their|The student['’]s|The learner['’]s) ((?:(?:earlier|latest|last|previous|first|second|new|own) )?(?:sentence|answer|words|reply|version|line|message|attempt|response|try))\b(?=\s+(?:is|has|sounds|reads|means|needs|works)\b|\s+(?:was|were)\s+["“]|\s*,\s*["“])/i;
 const BRING_BACK_TAIL_RE = /,?\s*\bso I['’]ll bring (?:that|it|this) back\b[^.!?]*[.!?]?\s*$/i;
 const QUESTION_LEAD_RE = /^\s*(?:The question I['’]m asking (?:you )?now is|(?:So|Now),? the question is)\s*:\s*/i;
 // Task 24 §A5 (GDI run 12, 1092 s / 1168 s SPOKEN: "The transcript shows only
@@ -561,7 +567,8 @@ export function isPlanContinuationSentence(sentence: string): boolean {
   return PLAN_VERB_LEAD_RE.test(s) || FIRST_PERSON_PLAN_RE.test(s);
 }
 /** Task 30 §E1: the learner still in the third person outside quotes. */
-const THIRD_PERSON_RESIDUE_RE = /\b(?:them|their|the student(?:['’]s)?|the learner(?:['’]s)?)\b/i;
+// Fix round 2 (E2): "they" too ("…, and now they say "…"").
+const THIRD_PERSON_RESIDUE_RE = /\b(?:they|them|their|the student(?:['’]s)?|the learner(?:['’]s)?)\b/i;
 /** Task 30 §E1: the citation rewrite (addressLearner) addressed the learner
  *  but the sentence still names them in the third person outside quotes —
  *  the whole sentence is the brain talking ABOUT the student: dropped. */
