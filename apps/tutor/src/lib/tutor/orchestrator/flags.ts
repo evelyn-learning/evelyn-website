@@ -1138,3 +1138,10 @@ export const TUTOR_LANGUAGE_DIGIT_WORDS = process.env.NEXT_PUBLIC_TUTOR_LANGUAGE
  *  by the turn's verbatim ask sentence (gistGrounded). Client-side: default
  *  ON; NEXT_PUBLIC_TUTOR_QPIN_GIST_GROUNDED=off. */
 export const TUTOR_QPIN_GIST_GROUNDED = process.env.NEXT_PUBLIC_TUTOR_QPIN_GIST_GROUNDED !== 'off';
+
+/** Task 30 fix round 2 E1 (r1 148 s): when every sentence of an attempt was
+ *  dropped as narration, the done-frame backfill of the turn text from the
+ *  server's unfiltered fullText goes through the same sentence filters
+ *  (filterNarrationText). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_NARRATION_BACKFILL_FILTER=off. */
+export const TUTOR_NARRATION_BACKFILL_FILTER = process.env.NEXT_PUBLIC_TUTOR_NARRATION_BACKFILL_FILTER !== 'off';

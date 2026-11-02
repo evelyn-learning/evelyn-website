@@ -1083,3 +1083,30 @@ export function isAdjacentDuplicate(prev: string | null | undefined, cur: string
   const b = cw.filter((w) => !ADJ_DUP_FILLER.has(w));
   return b.length > 0 && a.length === b.length && a.every((w, i) => w === b[i]);
 }
+
+/**
+ * Task 30 fix round 2 E1 (r1 148 s: both sentences of a turn were dropped as
+ * narration — "0 sentence(s)" — yet the bubble, the history and the judge
+ * got "The student's latest line is mostly my own sentence read back, so I
+ * should check what they actually said. I'll ask them …"). Mechanism: with
+ * every sentence dropped the local attemptText is '', and the done frame
+ * backfills it from the server's UNFILTERED fullText. The backfill now goes
+ * through the same per-sentence filters: the persona label is stripped, a
+ * note citation is stripped, and every meta-narration sentence is removed.
+ * Returns the surviving text ('' when nothing survives). Pure.
+ */
+export function filterNarrationText(
+  text: string | null | undefined,
+  opts?: { structural?: boolean; runtimeTriggered?: boolean; personaName?: string | readonly string[] | null },
+): string {
+  const parts = (text ?? '').split(/(?<=[.!?。！？])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
+  const kept: string[] = [];
+  for (const raw of parts) {
+    let s = stripLeakedLabels(raw, opts?.personaName ?? null);
+    const cited = stripNoteCitationClause(s, { personaName: opts?.personaName });
+    if (cited && cited !== s) s = cited;
+    if (!s.trim() || isMetaNarration(s, opts)) continue;
+    kept.push(s.trim());
+  }
+  return kept.join(' ');
+}

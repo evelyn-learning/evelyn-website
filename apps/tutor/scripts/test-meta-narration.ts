@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -1046,6 +1046,15 @@ check('S7: "Let me ask you about your job." ⇒ kept', !isMetaNarration('Let me 
   check('E2: a residue-free rewrite keeps its content', stripNoteCitationClause('The student\'s latest attempt is "I have worked here for five years."') === 'Your latest attempt is "I have worked here for five years."');
   check('E2: "They sell washing machines in Osaka." kept', !isMetaNarration('They sell washing machines in Osaka.') && !isThirdPersonResidue('They sell washing machines in Osaka.'));
   check('E2: descriptive "Their reply was quick, so you won the contract." kept', !isMetaNarration('Their reply was quick, so you won the contract.'));
+}
+
+// Task 30 fix round 2 E1 (r1 148 s): the done-frame backfill of an all-dropped attempt is filtered.
+{
+  const T148 = 'The student\'s latest line is mostly my own sentence read back, so I should check what they actually said. I\'ll ask them to try the full sentence again with "made" in it.';
+  check('E1: the 148 s backfill ⇒ nothing survives', filterNarrationText(T148) === '');
+  check('E1: real speech in the backfill survives', filterNarrationText('Ryota here. Good, that is right. Could you say it once more?', { personaName: ['Ryota'] }) === 'Good, that is right. Could you say it once more?');
+  const VE1 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('E1: VTR filters the done-frame backfill', VE1.includes('const filtered = filterNarrationText(doneBackfill,') && VE1.includes("attemptText = (voiceVerdictCut ? attemptText : ((attemptText || doneBackfill) ?? '')).trim();"));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
