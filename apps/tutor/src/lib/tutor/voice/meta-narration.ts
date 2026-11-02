@@ -455,7 +455,7 @@ export function stripLeakedLabels(sentence: string, personaNames?: string | read
 // the summary."). Whole-sentence drops. "I'll ask you …", "Let's put it on
 // the board.", "Here is the next question." are speech and survive.
 const DIRECTIVE_ECHO_RE =
-  /\bas the (?:session|lesson|notes?|instructions?|prompt|guidelines?) (?:asks?|says?|requires?|wants?|suggests?)\b|^\s*Keep it (?:brief|short)\b(?!\s*:)|\b(?:use|in) Japanese for the explanation\b/i;
+  /\bas the (?:session|lesson|notes?|instructions?|prompt|guidelines?) (?:asks?|says?|requires?|wants?|suggests?)\b|^\s*Keep it (?:brief|short)\b(?!\s*:(?![^.!?]*\bthen\b))|\b(?:use|in) Japanese for the explanation\b/i;
 // Task 27 §D1 (GDI run 14, 840–886 s): a continuation / retry turn SPOKE its
 // directive — "Hmm, I need to be careful: the last thing I said was a
 // correction, so …", "Confirm plainly and move on: the next question is about
@@ -1134,14 +1134,25 @@ function isLeakShape(s: string): boolean {
 // Jaccard ≥ 0.6 (directiveEchoOf). Quoted spans in the directive (the words
 // the tutor is meant to say) never count, and a sentence that asks or
 // addresses the student is never dropped by (c).
+// Fix round 1 (I-2): the imperative must be about the TUTOR's own behaviour —
+// a directive-vocabulary marker in the sentence (plainly / in ONE sentence /
+// keep it short / the student('s) / do not ask … again / runtime / note) and
+// no second person. "Answer part (a) first.", "Answer the first question.",
+// "Do not call it a square.", "Ask the question again in the past tense."
+// are teaching and survive. "Keep it short: one sentence." (no "then …" plan
+// after the colon) is advice to the student and survives.
 const TUTOR_DIRECTIVE_IMPERATIVE_RE =
-  /^\s*(?:(?:so|now|okay|ok|then|first),?\s+)?(?:ask (?:(?:the|that|this|my) )?(?:question |it )?(?:again|once more)\b|keep it (?:brief|short)\b(?!\s*:)|answer\b[^.!?:]{0,60}\bfirst\b|(?:reply|respond) in one sentence\b|(?:do not|don['’]t) (?:ask|re-?ask|offer|mention|narrate|call|praise|re-?teach|greet|repeat the (?:question|choice|offer))\b)/i;
+  /^\s*(?:(?:so|now|okay|ok|then|first),?\s+)?(?:ask|answer|reply|respond|keep|do not|don['’]t|restate|repeat|confirm|acknowledge|give)\b/i;
+const DIRECTIVE_MARKER_RE =
+  /\bplainly\b|\bin one sentence\b|\bkeep it (?:short|brief)\b|\bthe (?:student|learner)(?:['’]s)?\b|\b(?:do not|don['’]t) ask\b[^.!?]*\bagain\b|\bruntime\b|\bnotes?\b/i;
+const KEEP_IT_SHORT_ADVICE_RE = /^\s*Keep it (?:brief|short)\s*:(?![^.!?]*\bthen\b)/i;
 const DIRECTIVE_ADDRESSES_STUDENT_RE = /\b(?:you|your|yours|yourself|we|let['’]?s|let us|us|our)\b/i;
 const ASK_AGAIN_PLAINLY_RE = /^\s*I['’]?ll ask (?:it |that |the question )?again,? plainly\b/i;
 export function isTutorDirectiveImperative(sentence: string): boolean {
   const s = sentence ?? '';
   if (ASK_AGAIN_PLAINLY_RE.test(s)) return true;
-  return TUTOR_DIRECTIVE_IMPERATIVE_RE.test(s) && !DIRECTIVE_ADDRESSES_STUDENT_RE.test(s);
+  if (KEEP_IT_SHORT_ADVICE_RE.test(s)) return false;
+  return TUTOR_DIRECTIVE_IMPERATIVE_RE.test(s) && DIRECTIVE_MARKER_RE.test(s) && !DIRECTIVE_ADDRESSES_STUDENT_RE.test(s);
 }
 const DIRECTIVE_QUOTE_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
 const ECHO_STOPWORDS = new Set(['the', 'and', 'for', 'that', 'this', 'with', 'from', 'are', 'was', 'were', 'not', 'but', 'its', 'it’s', "it's", 'then', 'than', 'into', 'onto', 'any', 'all', 'has', 'have', 'had', 'one', 'been', 'will', 'would', 'should', 'can', 'could', 'also', 'just', 'only', 'very', 'what', 'when', 'which']);

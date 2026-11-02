@@ -1302,8 +1302,8 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   const ds = directiveSentencesOf(input, 'Yes, I understand.');
   check('33B: directive sentences come from the bracketed notes only (no student words)', ds.some((d) => d.startsWith('Restate the open question')) && !ds.some((d) => d.includes('I understand')), JSON.stringify(ds));
   check('33B: a sentence restating a bundled directive (Jaccard ≥ 0.6) is dropped',
-    isMetaNarration('Restate the open question plainly, in English and Japanese.', { directiveSentences: ds }));
-  check('33B: …but not without the directive', !isMetaNarration('Restate the open question plainly, in English and Japanese.'));
+    isMetaNarration('Restate the open question in English and in Japanese, briefly.', { directiveSentences: ds }));
+  check('33B: …but not without the directive', !isMetaNarration('Restate the open question in English and in Japanese, briefly.'));
   check('33B: a question to the student is never an echo', !isDirectiveEchoOf('Can you restate the open question plainly in English?', ds));
   const vf = '[validator feedback — not from the student] Your last turn emitted tool call(s) that the runtime structural validator rejected:\n[1] same_question_third_time: Give the answer to the open question in one sentence, then move to the next step.\nRe-emit the corrected tool call(s).\n\nFor reference: the student just said: "We went to Tokyo."';
   const vds = directiveSentencesOf(vf, 'We went to Tokyo.');
@@ -1326,6 +1326,15 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('33F: a runtime turn never', !isStudentEchoOpener('[idle nudge] Last month I made a presentation.', 'Last month I made a presentation.'));
   const VTR33F = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('33F: VTR drops it as the attempt\'s first sentence only', VTR33F.includes("if (TUTOR_ADJACENT_DUPLICATE_DROP && !adjacentPrevSentence && !/^\\s*\\[/.test(transcript) && isStudentEchoOpener(transcript, updatedSentence)) {"));
+}
+
+
+// Task 33 fix round 1 I-2: the imperative rule drops only tutor-directed shapes.
+{
+  for (const x of ['Answer part (a) first.', 'Answer the first question.', 'First, answer the first part.', 'Do not call it a square.', "Don't call it a homework.", 'Ask the question again in the past tense.', 'Now ask it again, using did.', "Don't mention the units twice.", 'Do not repeat the question word at the end.', 'Ask your colleague the question again.', 'Keep it short: one sentence.', 'Please answer in English.'])
+    check(`33 r1 I-2: teaching kept — ${x}`, !isMetaNarration(x));
+  for (const x of ['Ask the question again, plainly, in English and Japanese, and keep it short.', "I'll ask again, plainly.", 'Reply in ONE sentence and do not ask a new question.', "Answer the student's question first, then continue.", 'Do not ask the choice again.', 'Keep it short and simple this time.', 'Keep it short.', 'Keep it short: one sentence, then the question.'])
+    check(`33 r1 I-2: directive dropped — ${x}`, isMetaNarration(x));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
