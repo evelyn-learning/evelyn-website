@@ -17,6 +17,7 @@
  *
  * Pure module — no side effects, never throws.
  */
+import { ENGLISH_WORDS_BY_FREQUENCY } from './english-word-freq';
 
 // The phrase-start rule as it stood before the 2026-10-03 round: EVERY sentence
 // opening "The system …" / "The runtime …" is dropped. Used when
@@ -553,6 +554,29 @@ export const LEVEL_NOTE_NARRATION_RE = /\bI['’]ll (?:note|record|set|mark|save
 /** Task 30 fix round 4 R3-5b (run r3 858 s, spoken: 「このやり取りは、次の練習に
  *  進むところです。」 — the exchange narrated in Japanese). */
 export const EXCHANGE_NARRATION_JA_RE = /^\s*(?:この|今の)(?:やり取り|会話|セッション|ターン)は/;
+/** Task 30 fix round 5 R4-1 (run r4 1013 / 1048 / 1083 s, spoken: "Those
+ *  blocks in your message look like internal notes …, so I'll just pick up
+ *  the lesson." / "The text you just sent is a set of notes meant for me, …"
+ *  / "… the notes above are internal, not your words, so I'll ignore them."):
+ *  the runtime notes bundled into the student turn narrated. A mention of
+ *  notes / blocks / bracketed text / "the text you sent" WITH a verdict on
+ *  them (internal, meant for me, not your words / answer, set aside, ignore,
+ *  pick up the lesson, mix-up). */
+const NOTES_MENTION_RE = /\bnotes?\b|\bblocks?\b|\bbracketed text\b|\bthe text you (?:just )?sent\b/i;
+const NOTES_VERDICT_RE = /\binternal\b|\bmeant for me\b|\bnot (?:your|the student['’]?s) (?:words|answer)\b|\bset (?:them|it) aside\b|\bignore (?:them|it)\b|\bpick up the lesson\b|\bmix-up\b/i;
+export function isBundledNotesNarration(s: string): boolean {
+  return NOTES_MENTION_RE.test(s) && NOTES_VERDICT_RE.test(s);
+}
+/** R4-1: the tutor announcing its own name as a sentence ("Ryotaです。",
+ *  "Ryota here.") — a single capitalised token that is not an English word. */
+const NAME_ANNOUNCE_RE = /^\s*([A-Z][a-z]+)(?:です。|\s+here\.)\s*$/;
+let englishWordSet: Set<string> | null = null;
+export function isBareNameAnnounce(s: string): boolean {
+  const m = NAME_ANNOUNCE_RE.exec(s ?? '');
+  if (!m) return false;
+  englishWordSet ??= new Set(ENGLISH_WORDS_BY_FREQUENCY.split(' '));
+  return !englishWordSet.has(m[1]!.toLowerCase());
+}
 export const LESSON_CLOSED_NARRATION_RE = /\b(?:can['’]?t|cannot) (?:continue|go on with) the lesson\b|\b(?:lesson|session|class|it)(?:['’]s| (?:has|had|is|was))? already (?:closed|ended)\b/i;
 export const REDO_LEAD_RE = /^\s*Let me (?:ask|say|put|try) (?:that|it|this|again)[^.?!]{0,20}[.!]\s*$/i;
 /**
@@ -965,7 +989,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || isBundledNotesNarration(s) || isBareNameAnnounce(s) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

@@ -717,7 +717,8 @@ for (const t of [
 ]) check(`§A dropped on a student turn: "${t}"`, isMetaNarration(t) && stripNoteCitationClause(t) === '');
 // fix round 1: "<Name> here." only for the persona's own name
 check('§A r1 "Ryota here." dropped with personaName Ryota', isMetaNarration('Ryota here.', RYOTA) && stripNoteCitationClause('Ryota here.', RYOTA) === '');
-check('§A r1 "Ryota here." kept without a persona name (rule off)', !isMetaNarration('Ryota here.') && stripNoteCitationClause('Ryota here.') === 'Ryota here.');
+// Task 30 fix round 5 R4-1 overrides: a bare "<Name> here." (a non-word name) is dropped without a persona name too.
+check('§A r1 → R4-1: "Ryota here." dropped without a persona name', isMetaNarration('Ryota here.'));
 for (const t of ['Careful here!', 'Same here.', 'Five here.', 'Look here.', 'Exactly here.']) {
   check(`§A r1 kept with personaName Ryota: "${t}"`, !isMetaNarration(t, RYOTA) && stripNoteCitationClause(t, RYOTA) === t);
 }
@@ -1168,6 +1169,18 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('R4-2: "Level check is done, so I\'ll set the level now and move on." ⇒ dropped', isMetaNarration("Level check is done, so I'll set the level now and move on."));
   check('R4-2: "I\'ll mark the level on your card." ⇒ dropped', isMetaNarration("I'll mark the level on your card."));
   check('R4-2: "The level of this text is high." kept', !isMetaNarration('The level of this text is high.'));
+}
+
+// Task 30 fix round 5 R4-1 (run r4): the bundled runtime notes narrated; a bare name announce.
+{
+  for (const dropped of [
+    "Those blocks in your message look like internal notes rather than something you meant to say, so I'll just pick up the lesson.",
+    "The text you just sent is a set of notes meant for me, not your answer, so I'll set them aside.",
+    "I think there's a mix-up: the notes above are internal, not your words, so I'll ignore them.",
+    'Ryotaです。',
+    'Ryota here.',
+  ]) check(`R4-1: "${dropped}" dropped`, isMetaNarration(dropped));
+  for (const kept of ['Take notes during the meeting.', 'Look here.', 'Start here.', 'これはRyotaです。', 'The internal meeting is on Monday.', 'Keep your notes short and clear.']) check(`R4-1: "${kept}" kept`, !isMetaNarration(kept));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
