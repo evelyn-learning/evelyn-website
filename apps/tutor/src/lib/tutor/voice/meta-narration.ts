@@ -532,8 +532,8 @@ export function isNotePlanNarration(sentence: string): boolean {
  *      led by those verbs, with no second-person address (you / your /
  *      let's) — dropped wherever it stands;
  *  (b) isPlanContinuationSentence: the sentence right after a dropped
- *      narration sentence that opens with an adverb or one of those verbs
- *      and addresses no one — the plan goes on across sentences (the caller
+ *      narration sentence that opens with one of those verbs (fix round 2:
+ *      or is a first-person plan) and addresses no one — the plan goes on (the caller
  *      knows what was dropped).
  * "Point to the board and read the sentence." (no plan verb) and "Try
  * starting with "I have worked", and tell me about your work …" (addressed)
@@ -541,7 +541,6 @@ export function isNotePlanNarration(sentence: string): boolean {
  */
 const PLAN_VERB_LEAD_RE = /^(?:(?:\w+ly|then|first|now)\s+)?(?:point (?:that|this|it) out|model|ask for|name|acknowledge|accept|praise|note|confirm|keep|move on|redirect|steer)\b/i;
 const PLAN_ADDRESS_RE = /\b(?:you|your|yours|let['’]?s|let us)\b/i;
-const PLAN_ADVERB_LEAD_RE = /^\s*(?:\w+ly|then|first)\b/i;
 function planClauses(sentence: string): string[] {
   return sentence.replace(/[.!?]+\s*$/, '').split(/\s*,\s*(?:and\s+|then\s+)?|\s+and\s+(?:then\s+)?/i).map((c) => c.trim()).filter(Boolean);
 }
@@ -550,10 +549,16 @@ export function isImperativePlanSentence(sentence: string): boolean {
   if (!s.trim() || PLAN_ADDRESS_RE.test(s)) return false;
   return planClauses(s).filter((c) => PLAN_VERB_LEAD_RE.test(c)).length >= 2;
 }
+// Fix round 2 (N-1): an adverb lead alone ("Exactly, that is right.") is the
+// tutor's verdict, not a plan — a continuation is dropped only when it is
+// plan-verb led (the 334 s shape) or a FIRST-PERSON plan with a plan verb
+// ("So I'll gently ask again, in one short question, and give a starter from
+// the board.", "I'll point out that one word."), addressing no one.
+const FIRST_PERSON_PLAN_RE = /^(?:so,?\s+)?(?:I['’]ll|I will|let me)\b[^.?!]*?\b(?:ask|point|model|name|acknowledge|accept|praise|note|confirm|check|give|keep|redirect|steer|bring)\b/i;
 export function isPlanContinuationSentence(sentence: string): boolean {
   const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' ')).trim();
   if (!s || PLAN_ADDRESS_RE.test(s) || /[?？]/.test(s)) return false;
-  return PLAN_VERB_LEAD_RE.test(s) || PLAN_ADVERB_LEAD_RE.test(s);
+  return PLAN_VERB_LEAD_RE.test(s) || FIRST_PERSON_PLAN_RE.test(s);
 }
 /** Task 30 §E1: the learner still in the third person outside quotes. */
 const THIRD_PERSON_RESIDUE_RE = /\b(?:them|their|the student(?:['’]s)?|the learner(?:['’]s)?)\b/i;

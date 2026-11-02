@@ -1026,5 +1026,18 @@ check('S7: "Let me put it another way." ⇒ dropped', isMetaNarration('Let me pu
 check('S7: "Let me say that sentence for you: "I have worked here."" ⇒ kept', !isMetaNarration('Let me say that sentence for you: "I have worked here."'));
 check('S7: "Let me ask you about your job." ⇒ kept', !isMetaNarration('Let me ask you about your job.'));
 
+// Task 30 fix round 2 (N-1): an adverb lead alone is not a plan continuation; first-person plans are.
+{
+  for (const kept of ['Exactly, that is right.', 'Actually, that works.', 'Then the meeting started.', 'Usually we say it this way.']) {
+    check(`N-1: "${kept}" is not a plan continuation`, !isPlanContinuationSentence(kept));
+  }
+  check('N-1: the r1 1438 s sentence is a continuation', isPlanContinuationSentence("So I'll gently ask again, in one short question, and give a starter from the board."));
+  check('N-1: the r1 616 s "I\'ll point out that one word." is a continuation', isPlanContinuationSentence("I'll point out that one word."));
+  check('N-1: an addressed first-person line is not ("I\'ll give you a starter.")', !isPlanContinuationSentence("I'll give you a starter."));
+  check('N-1: the 334 s plan sentence still is', isPlanContinuationSentence('Gently point that out, model the pattern, and ask for one sentence starting with "I have worked".'));
+  const VN1 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('N-1: VTR resets the flag after one dropped continuation', /'meta_narration_dropped_plan_continuation', updatedSentence\.slice\(0, 80\)\);\s*\/\/[^\n]*\n\s*prevSentenceDroppedAsNarration = false;\s*continue;/.test(VN1));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

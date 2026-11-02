@@ -16923,6 +16923,8 @@ export function VoiceTutorRealtime({
                   // addresses no one is the same plan.
                   if (prevSentenceDroppedAsNarration && isPlanContinuationSentence(updatedSentence)) {
                     onDebugEvent?.('meta_narration_dropped_plan_continuation', updatedSentence.slice(0, 80));
+                    // Fix round 2 (N-1): one continuation per dropped sentence — no cascade.
+                    prevSentenceDroppedAsNarration = false;
                     continue;
                   }
                   prevSentenceDroppedAsNarration = false;
