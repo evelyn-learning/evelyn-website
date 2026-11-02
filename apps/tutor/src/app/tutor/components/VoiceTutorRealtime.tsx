@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_PRON_NO_SPEECH_AFTER_NUDGE } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, menuPickNote } from '@/lib/tutor/voice/menu-pick';
 import { pendingAnswerVocabularyFor, countsAsNoiseCancel } from '@/lib/tutor/voice/pending-answer';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
@@ -434,7 +434,7 @@ import {
 } from '@/lib/tutor/orchestrator/flags';
 import { withRetryPreamble, heardSentencesNote } from '@/lib/tutor/voice/retry-preamble';
 import {
-  ClipCapture, CLIP_MAX_MS, CLIP_SAMPLE_RATE, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_NO_SPEECH_TIMEOUT_MS,
+  ClipCapture, CLIP_MAX_MS, CLIP_SAMPLE_RATE, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_NO_SPEECH_TIMEOUT_MS, noSpeechTimerStart,
   PRONUNCIATION_NOTE_WAIT_MS, PRONUNCIATION_UNAVAILABLE_NOTE, PRONUNCIATION_ARM_MAX_MS, pronunciationNoteForBrain, pcm16ToBase64, clipPeakDbfs, CLIP_SILENT_DBFS,
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
@@ -1510,6 +1510,8 @@ export function VoiceTutorRealtime({
   // Armed while the tutor was still speaking: the 20 s window starts when
   // playback goes idle (effect next to speakingWindowsRef), not at the arm.
   const pronunciationTimerAwaitsIdleRef = useRef(false);
+  // Task 30 §I1: an idle nudge fired on the armed clip (the no-speech timer starts there).
+  const pronunciationNudgeFiredRef = useRef(false);
   // Absolute arm lifetime (PRONUNCIATION_ARM_MAX_MS from the arm, playback
   // state irrelevant): a stale arm never scores a later, unrelated turn.
   const pronunciationArmMaxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1627,6 +1629,10 @@ export function VoiceTutorRealtime({
       pronunciationTimerAwaitsIdleRef.current = false;
       plantPronunciationUnavailable('arm_expired_75s');
     }, PRONUNCIATION_ARM_MAX_MS);
+    // Task 30 §I1: the 40 s no-speech window waits for an idle nudge on the
+    // armed clip; until then only the 75 s arm lifetime bounds the arm.
+    pronunciationNudgeFiredRef.current = false;
+    if (TUTOR_PRON_NO_SPEECH_AFTER_NUDGE) return;
     // The model line is usually still playing: start the learner's 20 s
     // window when playback goes idle, so a long line does not eat it.
     if (productionStateRef.current === 'speaking') {
@@ -1640,6 +1646,7 @@ export function VoiceTutorRealtime({
     const capture = clipCaptureRef.current;
     pronunciationTimerAwaitsIdleRef.current = false;
     if (!capture?.isArmed()) return;
+    if (TUTOR_PRON_NO_SPEECH_AFTER_NUDGE && !noSpeechTimerStart({ armed: capture.isArmed(), nudgeFired: pronunciationNudgeFiredRef.current })) return;
     clearPronunciationNoSpeechTimer();
     pronunciationNoSpeechTimerRef.current = setTimeout(() => {
       pronunciationNoSpeechTimerRef.current = null;
@@ -25035,6 +25042,12 @@ export function VoiceTutorRealtime({
         return;
       }
       recordIdleNudgeFired(idleNudgeStateRef.current);
+      // Task 30 §I1: a nudge on an armed clip starts its 40 s no-speech window.
+      if (TUTOR_PRON_NO_SPEECH_AFTER_NUDGE && clipCaptureRef.current?.isArmed()) {
+        pronunciationNudgeFiredRef.current = true;
+        startPronunciationNoSpeechTimerRef.current();
+        onDebugEvent?.('pronunciation_no_speech_timer_started', 'after idle nudge');
+      }
       onDebugEvent?.(
         'idle_nudge_sent',
         `stretch=${idleNudgeStateRef.current.stretchCount} session=${idleNudgeStateRef.current.sessionCount}${nudgePlan?.ceilingHit ? ' ceiling=1' : ''}`,

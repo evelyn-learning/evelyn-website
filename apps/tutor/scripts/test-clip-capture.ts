@@ -15,7 +15,7 @@ import {
 } from '../src/lib/tutor/pronunciation/clip-capture';
 import { PRONUNCIATION_UNAVAILABLE_NOTE as SERVER_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
 import { ttsLanguageFor } from '../src/lib/tutor/voice/tts-language';
-import { withPronunciationCheckResult } from '../src/lib/tutor/pronunciation/clip-capture';
+import { withPronunciationCheckResult, noSpeechTimerStart, PRONUNCIATION_ARM_MAX_MS, CLIP_NO_SPEECH_TIMEOUT_MS } from '../src/lib/tutor/pronunciation/clip-capture';
 import { WHITEBOARD_TOOLS, REQUEST_PRONUNCIATION_CHECK_TOOL, mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
 import { NON_RENDER_TOOL_NAMES } from '../src/lib/tutor/voice/rule8-client';
 import { isBoardContentTool } from '../src/lib/tutor/voice/question-anchor';
@@ -425,6 +425,20 @@ test('debug events: the four exact names are emitted and persisted by the embed'
     assert.ok(e.includes(`'${name}'`), `embed persists ${name}`);
   }
   assert.match(e, /pronunciation=\{sessionOptions\.pronunciation\}/);
+});
+
+// Task 30 §I1 (GDI run 17, 1228 → 1286 s): the arm waits for the learner; the 40 s timer starts at a nudge.
+test('30I1: noSpeechTimerStart — only once an idle nudge fired on an armed clip; the 75 s arm lifetime is the cap', () => {
+  assert.equal(noSpeechTimerStart({ armed: true, nudgeFired: false }), false);
+  assert.equal(noSpeechTimerStart({ armed: true, nudgeFired: true }), true);
+  assert.equal(noSpeechTimerStart({ armed: false, nudgeFired: true }), false);
+  assert.equal(PRONUNCIATION_ARM_MAX_MS, 75000);
+  assert.equal(CLIP_NO_SPEECH_TIMEOUT_MS, 40000);
+  const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.ok(v.includes('pronunciationNudgeFiredRef.current = false;\n    if (TUTOR_PRON_NO_SPEECH_AFTER_NUDGE) return;'), 'the arm no longer starts the timer');
+  assert.ok(v.includes("if (TUTOR_PRON_NO_SPEECH_AFTER_NUDGE && !noSpeechTimerStart({ armed: capture.isArmed(), nudgeFired: pronunciationNudgeFiredRef.current })) return;"));
+  assert.ok(/if \(TUTOR_PRON_NO_SPEECH_AFTER_NUDGE && clipCaptureRef\.current\?\.isArmed\(\)\) \{\s*pronunciationNudgeFiredRef\.current = true;\s*startPronunciationNoSpeechTimerRef\.current\(\);/.test(v), 'the nudge starts it');
+  assert.ok(v.includes("plantPronunciationUnavailable('arm_expired_75s');"), 'the arm-max timer is kept');
 });
 
 void Promise.all(pending).then(() => {

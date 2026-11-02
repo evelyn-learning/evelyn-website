@@ -278,3 +278,16 @@ export function withPronunciationCheckResult(inner: ToolResultProvider | undefin
     return inner ? inner(name, args) : `${name} executed successfully.`;
   };
 }
+
+/**
+ * Task 30 §I1 (GDI run 17, 1228 → 1286 s): "Listen first, then repeat after
+ * me: …" armed the clip, the learner repeated 58 s later — after the 40 s
+ * no-speech timer (started when the model line finished) had disarmed it, so
+ * the sentence was never scored. While the learner has not spoken since the
+ * arm, the 40 s timer does not run: it starts only once an idle nudge has
+ * fired on the armed clip; PRONUNCIATION_ARM_MAX_MS (75 s from the arm)
+ * stays the hard cap. True ⇒ start the no-speech timer now.
+ */
+export function noSpeechTimerStart(input: { armed: boolean; nudgeFired: boolean }): boolean {
+  return input.armed && input.nudgeFired;
+}

@@ -1118,3 +1118,10 @@ export const TUTOR_ADJACENT_DUPLICATE_DROP = process.env.NEXT_PUBLIC_TUTOR_ADJAC
  *  the options are not listed again. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_MENU_PICK_RESOLVE=off. */
 export const TUTOR_MENU_PICK_RESOLVE = process.env.NEXT_PUBLIC_TUTOR_MENU_PICK_RESOLVE !== 'off';
+
+/** Task 30 §I1 (GDI run 17, 1228 → 1286 s): an armed pronunciation clip is not
+ *  disarmed by the 40 s no-speech timer while the learner has not spoken —
+ *  the timer starts only when an idle nudge fires on the armed clip; the 75 s
+ *  arm lifetime (PRONUNCIATION_ARM_MAX_MS) stays the hard cap. Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_PRON_NO_SPEECH_AFTER_NUDGE=off. */
+export const TUTOR_PRON_NO_SPEECH_AFTER_NUDGE = process.env.NEXT_PUBLIC_TUTOR_PRON_NO_SPEECH_AFTER_NUDGE !== 'off';
