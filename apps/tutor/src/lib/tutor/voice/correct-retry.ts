@@ -944,4 +944,5 @@ export function studentAnsweredAsk(pc: { verdict?: string | null; answers?: stri
   return true;
 }
 export const SAME_QUESTION_THIRD_TIME_REASON = withRetryStyle(
-  'You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item.');
+  // Fix round 4 (R3-2, run r3 372 s: "The question has come up three times now." was spoken).
+  'You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item. Do not say that the question was asked before.');

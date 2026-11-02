@@ -1136,5 +1136,12 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   for (const kept of ['Following the rule, we add -ed to regular verbs.', 'Your last answer used the past simple correctly.', 'Given the time, which tense fits best?', "I'll offer you two choices: one more sentence, or the next part."]) check(`R3-4: "${kept}" kept`, !isMetaNarration(kept));
 }
 
+// Task 30 fix round 4 R3-2 (run r3 372 s): the same-question retry is never narrated.
+{
+  check('R3-2: "The question has come up three times now." ⇒ dropped', isMetaNarration('The question has come up three times now.'));
+  check('R3-2: "This question has been asked a few times." ⇒ dropped', isMetaNarration('This question has been asked a few times.'));
+  check('R3-2: "The question has two parts." kept', !isMetaNarration('The question has two parts.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

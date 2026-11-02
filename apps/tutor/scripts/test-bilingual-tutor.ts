@@ -1822,7 +1822,7 @@ test('Task 30 fix round 3 R2-2a: same_question_third_time — the same ask a thi
   assert.equal(studentAnsweredAsk({ verdict: 'correct', answers: 'other_part' }), false);
   assert.equal(studentAnsweredAsk({ verdict: 'incorrect', answers: 'this_question' }), false);
   assert.equal(studentAnsweredAsk(null, 'OK.'), false);
-  assert.ok(SAME_QUESTION_THIRD_TIME_REASON.startsWith('You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item. Start directly with your reply'));
+  assert.ok(SAME_QUESTION_THIRD_TIME_REASON.startsWith('You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item. Do not say that the question was asked before. Start directly with your reply'));
   assert.ok(SAME_QUESTION_THIRD_TIME_REASON.endsWith('Apply this silently; never mention this note.'));
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: SAME_QUESTION_THIRD_TIME_REASON });"));
