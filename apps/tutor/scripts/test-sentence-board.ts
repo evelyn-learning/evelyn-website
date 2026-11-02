@@ -16,7 +16,7 @@ import {
   isCardCandidate, sentenceOnBoardPage, autoCardIdsOnCurrentPage,
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
-  levelCheckAnswerCard, levelCheckRecast, isQuotedFragment, acknowledgesOption, boardOffersChoices,
+  levelCheckAnswerCard, levelCheckRecast, hasStutter, isQuotedFragment, acknowledgesOption, boardOffersChoices,
   grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack, contrastAskPair, levelCheckOwnCardGate, sentenceCardIdOnCurrentPage,
 } from '../src/lib/tutor/voice/sentence-board';
 import { normaliseDigitsToWords } from '../src/lib/tutor/voice/digit-words';
@@ -1559,6 +1559,16 @@ test('R4-3 (fix round 5): same text on the page is never two cards — a glossed
   assert.ok(V.includes("if (dupAction === 'replace' && sameTextId) {"));
   assert.ok(V.includes('brainSentenceReplaceIdsRef.current.add(sameTextId);'));
   assert.ok(V.includes('? new Set([...autoSentenceCardIdsRef.current, ...brainSentenceReplaceIdsRef.current])'));
+});
+
+// ── Task 31 §H3 (GDI run 18, 119 s): a stuttered STT line is never a card ──
+test('31H3: "I I want leave go go home." → no card; grammatical doubles kept', () => {
+  assert.equal(hasStutter('I I want leave go go home.'), true);
+  assert.equal(cardableStudentSentence('I I want leave go go home.'), null);
+  assert.equal(levelCheckAnswerCard('I I want leave go go home.'), null);
+  assert.equal(hasStutter('I had had lunch before the meeting.'), false);
+  assert.equal(hasStutter('I think that that is right.'), false);
+  assert.equal(cardableStudentSentence('I work with customers from Canada.'), 'I work with customers from Canada.');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

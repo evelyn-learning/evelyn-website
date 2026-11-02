@@ -439,6 +439,14 @@ const CHECKED_MAX_CHARS = 195;
  *  words. Fix round 2 (m5): the lowercase-fragment / question guard runs
  *  before capitalising — only a word that followed a stripped filler is
  *  capitalised first (STT lowercases after "Um,"). */
+/** Task 31 §H3: a garbled STT line — the same word twice in a row ("I I",
+ *  "go go"), outside the grammatical doubles (had had, that that, very very …). */
+const STUTTER_OK = new Set(['had', 'that', 'very', 'so', 'really', 'bye', 'no', 'yes', 'ha', 'many', 'more', 'far', 'again', 'long']);
+export function hasStutter(text: string | null | undefined): boolean {
+  const w = ((text ?? '').toLowerCase().match(/[\p{L}\p{N}]+(?:['’][\p{L}]+)*/gu) ?? []);
+  for (let i = 1; i < w.length; i += 1) if (w[i] === w[i - 1] && !STUTTER_OK.has(w[i]!)) return true;
+  return false;
+}
 export function cardableStudentSentence(raw: string | null | undefined): string | null {
   let s = (raw ?? '').trim();
   if (s.length >= CHECKED_MAX_CHARS) return null;
@@ -453,6 +461,8 @@ export function cardableStudentSentence(raw: string | null | undefined): string 
   if (/[.!?]["”’)]?\s+\p{L}/u.test(s)) return null;
   if (stripped || /^i\b/.test(s)) s = s[0]!.toUpperCase() + s.slice(1);
   if (!isCardCandidate(s)) return null;
+  // Task 31 §H3 (GDI run 18, 119 s: "I I want leave go go home." went up as a card).
+  if (hasStutter(s)) return null;
   // Fix round 3 (m5): a question that lost its "?" ("Can you repeat the
   // question please") is not a model sentence.
   if ((AUX_QUESTION_OPENING_RE.test(s) || WH_QUESTION_OPENING_RE.test(s)) && !/[?？]["”’)]?$/.test(s)) return null;
