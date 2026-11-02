@@ -246,6 +246,10 @@ await ctx.addInitScript(() => {
     return res;
   };
 });
+// The session-audio recorder re-posts a growing buffer when the local upload
+// route fails (no /var/data on a laptop); the body then exceeds what Playwright's
+// pipe can carry. Answer those uploads with a stub so the recorder clears.
+await ctx.route('**/api/tutor/session-audio*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true,"stub":true}' }));
 const page = await ctx.newPage();
 const pollBrain = async () => {
   const b = await page.evaluate(() => { const t = window.__brain?.turns.splice(0) ?? []; return { inFlight: window.__brain?.inFlight ?? 0, turns: t }; }).catch(() => ({ inFlight: 0, turns: [] }));

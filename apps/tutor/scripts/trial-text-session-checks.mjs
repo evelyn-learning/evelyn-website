@@ -34,6 +34,7 @@ export function runChecks(dump) {
   for (const w of wb) {
     if (w.action === 'newPage') { cur = { title: w.data?.title ?? w.title ?? '', items: [], t: w.t }; pages.push(cur); continue; }
     if (!cur) continue;
+    if (w.action === 'removeItems') { const ids = new Set(w.data?.ids ?? w.ids ?? []); for (const p of pages) p.items = p.items.filter((it) => !ids.has(it.data?.id ?? it.id)); continue; }
     if (['showProblem', 'showSentence', 'handwrite', 'showTable', 'showText', 'showSteps'].includes(w.action)) cur.items.push(w);
   }
   const partPages = pages.filter((p) => /^Part \d/.test(p.title));
