@@ -105,6 +105,21 @@ export function withSilentClause(text: string): string {
   return `${body} ${SILENT_NOTE_CLAUSE}${closed ? ']' : ''}`;
 }
 
+/** Task 30 fix round 2 E7 (r1 533 s: "Okay, let's keep going." opened a
+ *  repeat_ask_third_version retry): every validator retry directive carries
+ *  this style clause, then the silent clause. */
+export const RETRY_STYLE_CLAUSE = 'Start directly with your reply — no opener such as Okay / Alright / Let\'s keep going / Sorry about that.';
+/** `text` + RETRY_STYLE_CLAUSE + SILENT_NOTE_CLAUSE (idempotent; a closing
+ *  "]" stays last). */
+export function withRetryStyle(text: string): string {
+  const t = (text ?? '').trimEnd();
+  const closed = t.endsWith(']');
+  let body = (closed ? t.slice(0, -1) : t).trimEnd();
+  if (body.endsWith(SILENT_NOTE_CLAUSE)) body = body.slice(0, -SILENT_NOTE_CLAUSE.length).trimEnd();
+  if (!body.includes(RETRY_STYLE_CLAUSE)) body = `${body} ${RETRY_STYLE_CLAUSE}`;
+  return withSilentClause(`${body}${closed ? ']' : ''}`);
+}
+
 export function outputBudgetNote(maxTokens: number): string {
   return (
     `[cadence note — not from the student] Hard limit this turn: your whole reply is cut off at about ${maxTokens} tokens of output ` +

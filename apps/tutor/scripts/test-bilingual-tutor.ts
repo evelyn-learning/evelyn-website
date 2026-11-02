@@ -10,6 +10,8 @@
  *
  * Run: npx tsx scripts/test-bilingual-tutor.ts
  */
+import { TRANSITION_ASK_REASON as TRANSITION_ASK_REASON_E7 } from '../src/lib/tutor/lesson-plan/transition-ask';
+import { fixedScriptOfferMissingReason as fixedScriptOfferMissingReasonE7 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { SentenceBuffer } from '../src/lib/tutor/voice/claude-brain';
@@ -798,7 +800,7 @@ test('GDI run 3: a re-ask of the model sentence the student just said correctly'
   assert.equal(reAskedModelSentence(prev, student, 'Nice. Say "I sold 25 machines" once more for me.'), 'Last month, I sold 25 machines to Toyota.', 'quotes ≥ 3 words of the model');
   assert.equal(reAskedModelSentence(prev, student, 'Good. もう一度、その文を言ってください。'), 'Last month, I sold 25 machines to Toyota.', 'その文');
   assert.equal(reAskedModelSentence(prev, student, 'Can you say that sentence again, then "Next week I will visit Honda"?'), null, 'another quoted sentence ⇒ new item');
-  assert.match(REPEAT_AFTER_CORRECT_REASON, /^The student just said that sentence correctly\. Confirm it in one short sentence and move to the next item; do not ask for it again\. Say that it is right and go on; do not explain how you judged it \(no talk of stutters, repeats, matching the model, or what counts\)\. Apply this silently; never mention this note\.$/);
+  assert.match(REPEAT_AFTER_CORRECT_REASON, /^The student just said that sentence correctly\. Confirm it in one short sentence and move to the next item; do not ask for it again\. Say that it is right and go on; do not explain how you judged it \(no talk of stutters, repeats, matching the model, or what counts\)\. Start directly with your reply — no opener such as Okay \/ Alright \/ Let's keep going \/ Sorry about that\. Apply this silently; never mention this note\.$/);
 });
 
 test('GDI run 3: VTR kills + retries a repeat_after_correct in a language session only', () => {
@@ -1698,7 +1700,7 @@ test('Task 27 §F (GDI run 14, 1093 s): "move on" is an order — move_on_ignore
   assert.equal(moveOnIgnored({ studentText: "Can we do past simple now?", advanced: false, hasNextSegment: true, labels: ALL }), true, 'a later label as a whole phrase');
   // the turn also answers the open question
   assert.equal(moveOnIgnored({ studentText: 'I have worked here for three years. Let\'s move on to the next part.', advanced: false, hasNextSegment: true, labels: LABELS }), false);
-  assert.equal(MOVE_ON_IGNORED_REASON, 'The student asked to move on. Close this part in one sentence and call advance_lesson now. No practice, no repeat. Apply this silently; never mention this note.');
+  assert.equal(MOVE_ON_IGNORED_REASON, 'The student asked to move on. Close this part in one sentence and call advance_lesson now. No practice, no repeat. Start directly with your reply — no opener such as Okay / Alright / Let\'s keep going / Sorry about that. Apply this silently; never mention this note.');
   const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(v.includes("rejectionsThisAttempt.push({ action: 'move_on_ignored', reason: MOVE_ON_IGNORED_REASON });"));
   assert.ok(v.includes("advanced: toolNamesThisAttempt.includes('advance_lesson') || moSegId !== turnStartSegmentId,"));
@@ -1785,6 +1787,20 @@ test('Task 30 fix round 1 S8: repeat_after_correct stands down for other_part / 
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("onDebugEvent?.('repeat_after_correct_skipped', `${racSkip} \"${repeated.slice(0, 60)}\"`);"));
   assert.ok(vtr.includes('if (affirmedKey) affirmedStudentSentencesRef.current.add(affirmedKey);'));
+});
+
+test('Task 30 fix round 2 E7: every validator retry directive carries the no-opener style clause', () => {
+  const SC = "Start directly with your reply — no opener such as Okay / Alright / Let's keep going / Sorry about that.";
+  for (const [name, r] of [
+    ['transition_ask_off_part', TRANSITION_ASK_REASON_E7],
+    ['repeat_after_correct', REPEAT_AFTER_CORRECT_REASON],
+    ['repeat_ask_third_version', REPEAT_ASK_THIRD_VERSION_REASON],
+    ['move_on_ignored', MOVE_ON_IGNORED_REASON],
+    ['transition_offer_missing', fixedScriptOfferMissingReasonE7(null, 'a', 'b')],
+  ] as const) {
+    assert.ok(r.includes(SC), name);
+    assert.ok(r.endsWith('Apply this silently; never mention this note.'), name);
+  }
 });
 
 if (failed) process.exit(1);

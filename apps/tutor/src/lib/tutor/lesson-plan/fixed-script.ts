@@ -9,7 +9,7 @@
  * never affected — every helper below returns the pre-existing answer.
  */
 import type { LessonPlan, Segment, SegmentTransition } from './types';
-import { withSilentClause } from '../voice/output-budget';
+import { withSilentClause, withRetryStyle } from '../voice/output-budget';
 import { isCorrectionTurn, expectedRepeatFor } from '../voice/correct-retry';
 import { boardOffersChoices } from '../voice/sentence-board';
 import { sentenceAsksStudent, splitSentences, stripMarkdownEmphasis } from '../question-gist-text';
@@ -546,7 +546,7 @@ export function fixedScriptOfferAcceptedNote(plan: LessonPlan | null | undefined
 }
 /** The retry directive of transition_offer_missing (shared silent clause). */
 export function fixedScriptOfferMissingReason(plan: LessonPlan | null | undefined, from: string, next: string): string {
-  return withSilentClause(`Reply to what the student just said in ONE sentence (answer a question or a correction first), then ask the student whether they want one more practice item on "${fixedScriptPartLabel(plan, from)}" or to move on to "${fixedScriptPartLabel(plan, next)}". End the turn with that question.`);
+  return withRetryStyle(`Reply to what the student just said in ONE sentence (answer a question or a correction first), then ask the student whether they want one more practice item on "${fixedScriptPartLabel(plan, from)}" or to move on to "${fixedScriptPartLabel(plan, next)}". End the turn with that question.`);
 }
 /** The FACT note planted (urgent) instead of the advance on an offer part. */
 export function fixedScriptOfferNote(plan: LessonPlan | null | undefined, from: string, next: string): string {

@@ -19,12 +19,12 @@
  * Pure. Generic: no topic words.
  */
 import { lastAskSentence, lastQuestionSentence, turnEndsWithAsk } from '../question-gist-text';
-import { withSilentClause } from '../voice/output-budget';
+import { withSilentClause, withRetryStyle } from '../voice/output-budget';
 import { boardOffersChoices } from '../voice/sentence-board';
 
 // Task 29 §M (GDI run 16, 749 s, Image 62): the retry opened with the move
 // and never answered the student's correction — answer first, then move.
-export const TRANSITION_ASK_REASON = withSilentClause(
+export const TRANSITION_ASK_REASON = withRetryStyle(
   "If the student just corrected you or asked something, answer that first in ONE sentence; the move comes after it. " +
   "The lesson has moved to the next part. Reply to the student's last answer in ONE sentence with no follow-up question about it, then present the new part's card and end with that part's own question.");
 

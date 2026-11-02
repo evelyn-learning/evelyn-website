@@ -20,7 +20,7 @@ import { isRetryAsk } from './retry-cap';
 import { extractQuotedSentences } from './sentence-board';
 import { FILLER_TOKENS, dropFillersAndRepeats } from './filler-repeats';
 import { normaliseNumberTokens } from './number-tokens';
-import { withSilentClause } from './output-budget';
+import { withSilentClause, withRetryStyle } from './output-budget';
 import { hasCorrectionCue } from './sentence-board';
 
 export { dropFillersAndRepeats };
@@ -170,7 +170,7 @@ export function repeatAskThirdVersion(input: {
   return isRepeatAskForThirdVersion(input.attemptText ?? '');
 }
 /** The directive the killed attempt's retry gets. */
-export const REPEAT_ASK_THIRD_VERSION_REASON = withSilentClause(
+export const REPEAT_ASK_THIRD_VERSION_REASON = withRetryStyle(
   'The student has already tried this sentence twice. Accept their attempt in one sentence (say the natural form once if you must), then continue with your next question. Do not ask them to say it again.');
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -663,7 +663,7 @@ export function reAskedModelSentence(prevTutorText: string, studentText: string,
 // Task 30 §E2 (GDI run 17, 1289 s SPOKEN: "The sentence matches the model, and
 // the stutter at the start is only a repeat, so the sentence itself is
 // right."): the retry narrated how it judged the sentence.
-export const REPEAT_AFTER_CORRECT_REASON = withSilentClause(
+export const REPEAT_AFTER_CORRECT_REASON = withRetryStyle(
   'The student just said that sentence correctly. Confirm it in one short sentence and move to the next item; do not ask for it again. Say that it is right and go on; do not explain how you judged it (no talk of stutters, repeats, matching the model, or what counts).');
 
 /**
@@ -876,5 +876,5 @@ export function moveOnIgnored(input: {
   return !answersBesidesMoveOn(input.studentText ?? '', span);
 }
 /** The directive the killed attempt's retry gets. */
-export const MOVE_ON_IGNORED_REASON = withSilentClause(
+export const MOVE_ON_IGNORED_REASON = withRetryStyle(
   'The student asked to move on. Close this part in one sentence and call advance_lesson now. No practice, no repeat.');
