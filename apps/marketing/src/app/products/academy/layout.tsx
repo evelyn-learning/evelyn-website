@@ -57,7 +57,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         contentPath="/videos/academy-tour-v3.mp4"
         thumbnailPath="/videos/academy-tour-v3-poster.jpg"
         pagePath="/products/academy"
-        uploadDate="2026-10-05"
+        uploadDate="2026-10-05T00:00:00+00:00"
         duration="PT62S"
       />
       <BreadcrumbJsonLd

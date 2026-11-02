@@ -307,7 +307,10 @@ interface VideoObjectJsonLdProps {
   thumbnailPath: string;
   /** Page the video is embedded on, site-relative. */
   pagePath: string;
-  uploadDate: string; // ISO date
+  /** ISO 8601 date-time WITH a timezone. A bare YYYY-MM-DD is widened to
+   *  midnight UTC: Search Console flags uploadDate without a timezone
+   *  ("Invalid datetime value", 2026-11-02). */
+  uploadDate: string;
   duration: string; // ISO 8601, e.g. PT55S
 }
 
@@ -328,7 +331,7 @@ export function VideoObjectJsonLd({
     thumbnailUrl: `${SITE_URL}${thumbnailPath}`,
     contentUrl: `${SITE_URL}${contentPath}`,
     embedUrl: `${SITE_URL}${pagePath}`,
-    uploadDate,
+    uploadDate: /^\d{4}-\d{2}-\d{2}$/.test(uploadDate) ? `${uploadDate}T00:00:00+00:00` : uploadDate,
     duration,
   };
 
