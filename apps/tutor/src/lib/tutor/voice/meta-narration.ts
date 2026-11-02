@@ -531,6 +531,18 @@ export const BOARD_SELF_INSTRUCTION_RE = /^\s*(?:please,? )?(?:show|put|display|
  *  state narrated after the close. "already closed / ended" only with the
  *  lesson / session / class / it as its subject — "The meeting had already
  *  ended." is a model sentence in a language lesson and stays. */
+/** Task 30 fix round 4 R3-4 (run r3 583 s, spoken: `Your last message is
+ *  "Yes." after I offered a choice. Given the earlier instruction to keep this
+ *  short and wait for their answer, I'll ask the choice once more.`):
+ *  (a) the learner's last message quoted back as a fact — dropped;
+ *  (b) a sentence that cites its instructions — "given / per / following /
+ *      as per the (earlier / previous / runtime / system) instruction / note
+ *      / rule / directive" — dropped. Deviation: only "the directive" goes
+ *      bare; instruction / note / rule need the modifier ("Following the
+ *      rule, we add -ed." and "Per the instructions, round to the nearest
+ *      tenth." are teaching). */
+export const LAST_MESSAGE_QUOTED_RE = /^\s*Your (?:last|latest|previous) (?:message|reply|answer|line) (?:is|was) ["“「]/i;
+export const INSTRUCTION_CITATION_RE = /\b(?:given|per|following|as per) the (?:(?:earlier|previous|runtime|system) (?:instruction|note|rule|directive)s?|directives?)\b/i;
 export const LESSON_CLOSED_NARRATION_RE = /\b(?:can['’]?t|cannot) (?:continue|go on with) the lesson\b|\b(?:lesson|session|class|it)(?:['’]s| (?:has|had|is|was))? already (?:closed|ended)\b/i;
 export const REDO_LEAD_RE = /^\s*Let me (?:ask|say|put|try) (?:that|it|this|again)[^.?!]{0,20}[.!]\s*$/i;
 /**
@@ -564,6 +576,8 @@ export const REDO_LEAD_RE = /^\s*Let me (?:ask|say|put|try) (?:that|it|this|agai
 const FIRST_PERSON_PLAN_HEAD_RE = /(?:^|[,;:]\s*|\bso,?\s+|\band\s+)(?:I['’]ll|I will|let me)\s+(?:just\s+|gently\s+|simply\s+|now\s+)?(?:ask|respond|point|model|name|accept|note|give a starter)\b/i;
 const PLAN_REMAINDER_WORDS = new Set([
   'that', 'it', 'this', 'out', 'again', 'simply', 'more', 'once', 'the', 'question', 'my', 'earlier', 'same', 'and', 'then', 'just', 'to', 'what', 'you', 'said', 'respond',
+  // R3-4 (run r3 583 s: "I'll ask the choice once more.")
+  'choice', 'offer', 'options',
   // the plan verbs themselves may repeat ("… note that and ask again")
   'ask', 'note', 'point', 'name', 'accept', 'model', 'acknowledge', 'check', 'try',
 ]);
@@ -929,7 +943,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
