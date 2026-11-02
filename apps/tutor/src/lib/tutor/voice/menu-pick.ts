@@ -145,7 +145,7 @@ export function parseJapaneseMenuOptions(text: string | null | undefined): MenuO
   }
   return out.size >= 2 ? [...out.entries()].sort((a, b) => a[0] - b[0]).map(([index, text]) => ({ index, text })) : null;
 }
-const JA_PICK_PARTICLES_RE = /(?:で|を|に|が|は)?(?:お願い(?:します|いたします)?|がいいです|にします|でいいです|をやりたい(?:です)?|を練習したい(?:です)?|練習(?:したい)?(?:です)?|したいです|します|ください|です)?[。.!！]*$/;
+const JA_PICK_PARTICLES_RE = /(?:で|を|に|が|は)?(?:お願い(?:します|いたします)?|がいいです|にします|でいいです|をやりたい(?:です)?|を練習したい(?:です)?|練習(?:したい)?(?:です)?|したいです|したい|します|ください|です)?[。.!！]*$/;
 const ORDINAL_NUM_RE = /^(?:number\s+)?(one|two|three|four|five|first|second|third|fourth|fifth|[1-9])(?:\s+one)?$/i;
 const JA_NUM_PICK_RE = /^([1-9１-９一二三四五六七八九])\s*(?:番(?:目)?|つ目)(?:の(?:もの|やつ))?/;
 export function resolveMenuPickLoose(studentText: string | null | undefined, sources: ReadonlyArray<string | null | undefined>): MenuOption | null {
@@ -186,10 +186,30 @@ export function resolveMenuPickLoose(studentText: string | null | undefined, sou
       if (!opts) continue;
       const hits = opts.filter((o) => o.text.includes(noun) || noun.includes(o.text));
       if (hits.length === 1) return hits[0]!;
+      // Fix round 2 (I-1): a shared stem — a 2-char Han / katakana run first,
+      // then a single kanji — with exactly ONE option ("自然に話す練習" →
+      // 自然な話し方, "文章を練習したい" → 一文). A few generic synonyms map
+      // first (センテンス → 文, 飛ばす / パス → スキップ).
+      const n2 = JA_SYNONYMS.reduce((acc, [re, to]) => acc.replace(re, to), noun);
+      for (const units of [bigramsOf, kanjiOf]) {
+        const mine = new Set(units(n2));
+        if (mine.size === 0) continue;
+        const stemHits = opts.filter((o) => units(o.text).some((u) => mine.has(u)));
+        if (stemHits.length === 1) return stemHits[0]!;
+        if (stemHits.length > 1) break;
+      }
     }
   }
   return null;
 }
+const JA_STEM_RUN_RE = /[\p{Script=Han}\p{Script=Katakana}ー]+/gu;
+function bigramsOf(s: string): string[] {
+  return (s.match(JA_STEM_RUN_RE) ?? []).flatMap((run) => (run.length < 2 ? [] : [...Array(run.length - 1).keys()].map((i) => run.slice(i, i + 2))));
+}
+function kanjiOf(s: string): string[] {
+  return [...s].filter((c) => /\p{Script=Han}/u.test(c));
+}
+const JA_SYNONYMS: ReadonlyArray<[RegExp, string]> = [[/センテンス/g, '文'], [/飛ば[さしすせそ]?|パス/g, 'スキップ']];
 export function menuReplyIsPick(studentText: string | null | undefined, cardStatement: string | null | undefined, lastTutorText?: string | null, partTutorTurns?: ReadonlyArray<string | null | undefined>): boolean {
   const t = (studentText ?? '').trim();
   if (!t || /^\s*\[/.test(t) || isBareAcknowledgement(t)) return false;

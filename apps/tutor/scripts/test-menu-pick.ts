@@ -133,5 +133,21 @@ test('menuPickNote text (pin) and the VTR wiring', () => {
   });
 }
 
+
+// ── Task 33 fix round 2 I-1: shared-stem Japanese picks ──
+{
+  const CARD = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  const JA2 = 'どういたしまして。 1番は単語、2番は一文、3番は自然な話し方、4番はスキップです。';
+  const JA3 = '1番は個々の単語、2番は完全な文、3番は自然な話し方、4番はスキップです。';
+  test('33 r2 I-1: a shared stem with exactly one option resolves', () => {
+    const cases: Array<[string, number]> = [['文章を練習したい', 2], ['自然に話す練習', 3], ['自然に話したい', 3], ['文章', 2], ['センテンス', 2], ['飛ばしてください', 4], ['単語', 1]];
+    for (const src of [JA2, JA3]) for (const [x, n] of cases) {
+      assert.equal(resolveMenuPickLoose(x, [CARD, src])?.index, n, `${x} / ${src.slice(0, 12)}`);
+      assert.equal(menuReplyIsPick(x, CARD, src), true, x);
+    }
+    for (const x of ['はい', 'わかりました', 'OK, thank you.']) assert.equal(resolveMenuPickLoose(x, [CARD, JA2]), null, x);
+  });
+}
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall menu-pick tests passed');
