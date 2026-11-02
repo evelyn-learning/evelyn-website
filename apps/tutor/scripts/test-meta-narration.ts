@@ -1073,5 +1073,16 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('P-2: flag off ⇒ the old backfill', doneTurnText({ attemptText: '', fullText: T148, streamSentences: 2, filter: false }) === T148);
 }
 
+// Task 30 fix round 3 (R2-1, run r2): first-person plans wherever they stand; plan leads / tails stripped.
+{
+  check('R2-1: 195 s "Those notes are internal, …" ⇒ dropped', isMetaNarration("Those notes are internal, so I'll just respond to what you said."));
+  check('R2-1: 172 s "I\'ll ask it again, more simply." ⇒ dropped', isMetaNarration("I'll ask it again, more simply."));
+  const S259 = 'No. They only said "OK, thank you" and repeated an earlier sentence, so I\'ll ask the question again, simply.';
+  check('R2-1: 259 s ⇒ dropped (learner narration), also after its plan tail is stripped', isMetaNarration(S259) && isMetaNarration(stripNoteCitationClause(S259)));
+  check('R2-1: 230 s plan lead stripped, the question kept', stripNoteCitationClause('Ask again, simply: if you have given a presentation many times, which tense would you use?') === 'If you have given a presentation many times, which tense would you use?');
+  check('R2-1: 852 s plan tail stripped, the head kept', stripNoteCitationClause("You said the same sentence as before, so I'll note that and ask again.") === 'You said the same sentence as before.');
+  for (const kept of ["I'll give you an example.", 'They said the price was too high.', 'Let me explain.']) check(`R2-1: "${kept}" kept`, !isMetaNarration(kept) && stripNoteCitationClause(kept) === kept);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

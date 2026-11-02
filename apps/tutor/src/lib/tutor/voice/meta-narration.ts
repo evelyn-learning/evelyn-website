@@ -348,10 +348,13 @@ export interface NoteCitationOpts { /** the session persona's name(s) — full n
 export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpts): string {
   const raw = sentence ?? '';
   if (isPersonaSelfAnnounce(raw, opts?.personaName)) return '';
-  const s = addressLearner(stripPersonaLead(raw, opts?.personaName));
+  let s = addressLearner(stripPersonaLead(raw, opts?.personaName));
   if (s !== raw && !s.trim()) return '';
   // Task 30 §E1: a rewrite that leaves the learner in the third person.
   if (isThirdPersonResidue(raw, opts)) return '';
+  // Task 30 fix round 3 (R2-1): a spoken plan lead / tail goes, the rest stays.
+  s = stripSpokenPlanLeadTail(s);
+  if (!s.trim()) return '';
   if (CLOSE_PART_NARRATION_RE.test(s)) return '';
   if (isCaptureNarration(s)) return '';
   const keepStripped = stripKeepInMindTail(s);
@@ -524,11 +527,48 @@ const JUDGING_NARRATION_RE = /\bthe (?:stutter|hesitation|repeat|filler)\b[^.!?;
  *  writes on the board in a voice lesson. "Look at the board." is kept. */
 export const BOARD_SELF_INSTRUCTION_RE = /^\s*(?:please,? )?(?:show|put|display|write) (?:this|that|it|this one|that one|the (?:card|question|sentence)) (?:up )?on the board[.!]?\s*$/i;
 export const REDO_LEAD_RE = /^\s*Let me (?:ask|say|put|try) (?:that|it|this|again)[^.?!]{0,20}[.!]\s*$/i;
+/**
+ * Task 30 fix round 3 (R2-1, run r2): first-person plans spoken wherever they
+ * stand.
+ *  (a) a main clause "I'll / I will / Let me / So I'll" + a plan verb (ask
+ *      it / the question / again / once more, respond, point, model, name,
+ *      accept, give a starter — NOT note / check / keep / acknowledge: older
+ *      pins keep "I'll check this in my head: …", "Let me check that.", "So
+ *      I'll keep going with …", "I'll note that x cannot be zero here." and a
+ *      student-turn "So I'll acknowledge briefly …") with no
+ *      second-person address — "I'll ask it again, more simply." — dropped;
+ *  (b) "(No.) They only / just said / repeated / answered / replied / gave …"
+ *      narrates the learner — dropped ("They said the price was too high." is
+ *      the student's story and stays);
+ *  (c) a mention of the notes being internal / "not from you" — dropped.
+ * Strips (stripSpokenPlanLeadTail, in stripNoteCitationClause): the lead
+ * "Ask / Say / Try (it) again, simply / more simply / once more:" goes and the
+ * question stays; the tail ", so I'll note / ask / point / model / name /
+ * acknowledge / accept / try / check / give …" goes and the head stays.
+ * "I'll give you an example." and "Let me explain." are kept. Pure, generic.
+ */
+const FIRST_PERSON_PLAN_CLAUSE_RE = /(?:^|[,;:]\s*|\bso,?\s+|\band\s+)(?:I['’]ll|I will|let me)\s+(?:just\s+|gently\s+|simply\s+|now\s+)?(?:ask (?:it |the question |that )?(?:again|once more)|ask it\b|ask the question|respond|point|model|name|accept|give a starter)\b/i;
+const LEARNER_NARRATION_RE = /^\s*(?:No\.\s*)?They (?:only|just) (?:said|repeated|answered|replied|gave)\b/i;
+const INTERNAL_NOTES_RE = /\b(?:those|these|the) notes (?:are|were) internal\b|\bnot from you\b/i;
+const ASK_AGAIN_LEAD_RE = /^\s*(?:Ask|Say|Try) (?:it )?again,? (?:simply|more simply|once more)[:,]\s*/i;
+const PLAN_TAIL_RE = /,?\s*\bso I['’]ll (?:note|ask|point|model|name|acknowledge|accept|try|check|give)\b[^.?!]*[.?!]?\s*$/i;
+export function stripSpokenPlanLeadTail(sentence: string): string {
+  let s = sentence ?? '';
+  const lead = ASK_AGAIN_LEAD_RE.exec(s);
+  if (lead && s.slice(lead[0].length).trim()) s = capitaliseFirst(s.slice(lead[0].length).trim());
+  const tail = PLAN_TAIL_RE.exec(s);
+  if (tail && tail.index > 0) s = `${s.slice(0, tail.index).replace(/[,;:\s]+$/, '')}.`;
+  return s;
+}
+function isSpokenFirstPersonPlan(s: string): boolean {
+  if (LEARNER_NARRATION_RE.test(s) || INTERNAL_NOTES_RE.test(s)) return true;
+  return FIRST_PERSON_PLAN_CLAUSE_RE.test(s) && !PLAN_ADDRESS_RE.test(s);
+}
 export function isNotePlanNarration(sentence: string): boolean {
   const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' '));
   return (NOTE_STATE_REASON_RE.test(s) && !NOTE_PLAN_ADDRESSES_RE.test(s)) || PLAN_ASK_THIRD_PERSON_RE.test(s) || PLAN_THIRD_PERSON_WANTS_RE.test(s)
     || NOTE_PLAN_CLAUSE_RE.test(s) || (NOTE_PLAN_SHOULD_RE.test(s) && STUDENT_OUTPUT_RE.test(s)) || JUDGING_NARRATION_RE.test(s)
-    || isImperativePlanSentence(s);
+    || isImperativePlanSentence(s) || isSpokenFirstPersonPlan(s);
 }
 /**
  * Task 30 fix round 1 S2 (smoke run 334 s SPOKEN: `Gently point that out,
