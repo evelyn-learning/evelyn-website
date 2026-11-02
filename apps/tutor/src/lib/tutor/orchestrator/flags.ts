@@ -1191,3 +1191,9 @@ export const TUTOR_EMPTY_TURN_REASK = process.env.NEXT_PUBLIC_TUTOR_EMPTY_TURN_R
  *  the part's entry note (choice menu when unread). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_BRAIN_ADVANCE_ENTRY_NOTE=off. */
 export const TUTOR_BRAIN_ADVANCE_ENTRY_NOTE = process.env.NEXT_PUBLIC_TUTOR_BRAIN_ADVANCE_ENTRY_NOTE !== 'off';
+
+/** Task 31 §F (GDI run 18, 979–1061 s): in a language lesson, after the
+ *  student answered the tutor's last two questions on the same point, the
+ *  next brain turn carries the check-in note (no third follow-up).
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_PROBE_CHECKIN=off. */
+export const TUTOR_PROBE_CHECKIN = process.env.NEXT_PUBLIC_TUTOR_PROBE_CHECKIN !== 'off';

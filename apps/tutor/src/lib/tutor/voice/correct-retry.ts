@@ -943,6 +943,41 @@ export function studentAnsweredAsk(pc: { verdict?: string | null; answers?: stri
   if (pc && (unanswered.has(pc.verdict ?? '') || unanswered.has(pc.answers ?? ''))) return false;
   return true;
 }
+// ─────────────────────────────────────────────────────────────────────────
+// Task 31 §F (GDI run 18, 979–1061 s: "Did the sweets help people decide to
+// donate?" asked three times in varying words after two answers).
+// Pedagogy rule 2 (check in after two questions in a row) + "a correct answer
+// ends the probe": in a language lesson, the tutor's last TWO turns both
+// asked a question ON THE SAME POINT and the student answered each (non-empty,
+// not a question, not a bare acknowledgement) ⇒ the next brain turn carries
+// PROBE_CHECKIN_NOTE. "Same point": the two asks share ≥ 2 content stems
+// (5-letter prefixes of words ≥ 3 letters outside the gist stopwords) —
+// without it every turn of a language lesson (each ends in a question) would
+// trip the note.
+// ─────────────────────────────────────────────────────────────────────────
+export const PROBE_CHECKIN_NOTE = withSilentClause(
+  '[runtime note — not from the student] The student has answered your last two questions. Do not ask a third follow-up on the same point: acknowledge, give your own one-line answer or summary of the point if needed, and move to the next step of the part.]');
+const PROBE_SAME_POINT_MIN_STEMS = 2;
+const probeStems = (s: string) => new Set((s.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
+  .filter((w) => w.length >= 3 && !GIST_STOPWORDS.has(w) && !['you', 'your', 'was', 'were', 'have', 'has', 'what', 'how', 'why', 'when', 'where', 'which', 'who', 'yes', 'just'].includes(w))
+  .map((w) => w.slice(0, 5)));
+export function probeAnswerCounts(answer: string | null | undefined): boolean {
+  const a = (answer ?? '').trim();
+  if (!a || /^\s*\[/.test(a) || /[?？]\s*$/.test(a)) return false;
+  return !isAcknowledgementOnly(a);
+}
+export function probeCheckinDue(exchanges: ReadonlyArray<{ tutorText: string | null | undefined; studentText: string | null | undefined }>): boolean {
+  if (exchanges.length < 2) return false;
+  const [e1, e2] = exchanges.slice(-2) as [typeof exchanges[number], typeof exchanges[number]];
+  const q1 = lastQuestionSentence(e1.tutorText ?? '') ?? '';
+  const q2 = lastQuestionSentence(e2.tutorText ?? '') ?? '';
+  if (!q1 || !q2) return false;
+  if (!probeAnswerCounts(e1.studentText) || !probeAnswerCounts(e2.studentText)) return false;
+  const a = probeStems(q1);
+  let shared = 0;
+  for (const w of probeStems(q2)) if (a.has(w)) shared += 1;
+  return shared >= PROBE_SAME_POINT_MIN_STEMS;
+}
 export const SAME_QUESTION_THIRD_TIME_REASON = withRetryStyle(
   // Fix round 4 (R3-2, run r3 372 s: "The question has come up three times now." was spoken).
   'You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item. Do not say that the question was asked before.');

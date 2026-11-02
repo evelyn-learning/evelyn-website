@@ -367,6 +367,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'empty_turn_fallback_reask',
   // Task 31 fix round 9 §D: the brain's own advance plants the part's entry note.
   'fixed_script_entry_note_planted',
+  // Task 31 fix round 9 §F: the two-answers check-in note.
+  'probe_checkin_note_planted',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

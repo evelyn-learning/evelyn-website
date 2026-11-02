@@ -52,7 +52,7 @@ import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/turn-cap';
 import { opensWithStockPraise, overusesStockPraiseOpener, PRAISE_OPENER_NOTE } from '../src/lib/tutor/voice/praise-variety';
-import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, sameQuestionThirdTime, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, cleanStudentSentence, dropFillersAndRepeats, precheckCorrectness } from '../src/lib/tutor/voice/correct-retry';
+import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedModelSentence, saidModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, sameQuestionThirdTime, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, cleanStudentSentence, dropFillersAndRepeats, precheckCorrectness, probeCheckinDue, PROBE_CHECKIN_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '../src/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
@@ -1883,6 +1883,25 @@ test('Task 30 fix round 4 Q-4: the rewrite replaces only the entry created in th
   assert.ok(vtr.includes('const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, spelled, turnStudentEntryId);'));
   assert.ok(vtr.includes('const turnStudentEntryId = studentEntryIdByTextRef.current.get(transcript) ?? null;'));
   assert.equal((vtr.match(/rememberStudentEntryId\(studentEntryIdByTextRef\.current, /g) ?? []).length, 2, 'voice-finalize + typed appends record their id');
+});
+
+test('Task 31 §F (GDI run 18, 979–1061 s): two answered questions on the same point ⇒ the check-in note', () => {
+  const T79 = 'Sweets, that\'s a fun idea. Let\'s check the words. You said "give sweets to people to get them to pay," which is clear. Did the sweets help people decide to donate?';
+  const T81 = '「people feel good when they receive sweets」ですね、わかりました。 Sweets made people feel happy, so it\'s a kind, friendly approach. Did the sweets actually help people decide to donate, yes or no?';
+  const T77 = 'Convincing people to donate is a real challenge. How did you approach that, and what worked?';
+  const a80 = 'Uh, people feel good when they receive sweets.';
+  const a82 = 'Uh, no, but they felt good and they listened to me.';
+  assert.equal(probeCheckinDue([{ tutorText: T79, studentText: a80 }, { tutorText: T81, studentText: a82 }]), true, 'two questions + two answers ⇒ note');
+  assert.equal(probeCheckinDue([{ tutorText: T79, studentText: a80 }, { tutorText: T81, studentText: 'Why do you ask?' }]), false, 'a student answer that is a question ⇒ no note');
+  assert.equal(probeCheckinDue([{ tutorText: T79, studentText: a80 }, { tutorText: T81, studentText: 'OK.' }]), false, 'a bare acknowledgement ⇒ no note');
+  assert.equal(probeCheckinDue([{ tutorText: T79, studentText: a80 }, { tutorText: 'Good. That is a kind idea.', studentText: a82 }]), false, 'no question in the second turn');
+  assert.equal(probeCheckinDue([{ tutorText: T77, studentText: 'I give sweets to people.' }, { tutorText: T79, studentText: a80 }]), false, 'different points ⇒ no note');
+  assert.equal(PROBE_CHECKIN_NOTE, '[runtime note — not from the student] The student has answered your last two questions. Do not ask a third follow-up on the same point: acknowledge, give your own one-line answer or summary of the point if needed, and move to the next step of the part. Apply this silently; never mention this note.]');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('if (TUTOR_PROBE_CHECKIN && languageSessionRef.current && !opts?.prefetchOnly && !/^\\s*\\[/.test(transcript)) {'));
+  assert.ok(vtr.includes('runTranscript = `${PROBE_CHECKIN_NOTE}\\n\\n${runTranscript}`;'));
+  assert.ok(vtr.includes('probeExchangesRef.current = [...probeExchangesRef.current.slice(-1), { tutorText: peTutor, studentText: transcript }];'));
+  assert.match(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8'), /export const TUTOR_PROBE_CHECKIN = process\.env\.NEXT_PUBLIC_TUTOR_PROBE_CHECKIN !== 'off';/);
 });
 
 if (failed) process.exit(1);
