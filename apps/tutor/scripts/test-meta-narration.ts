@@ -966,7 +966,8 @@ check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("
   for (const kept of ['Your sentence is correct, and it uses the present perfect.', "Let's move on to the past simple.", 'The sentence is right.', 'You should say it with the past simple.']) {
     check(`30E: "${kept}" kept`, !isMetaNarration(kept) && !isNotePlanNarration(kept));
   }
-  check('30E1: "so I should" ⇒ dropped', isNotePlanNarration('That answer is fine, so I should move on.'));
+  check('30E1: "so I should move on" ⇒ dropped', isNotePlanNarration('That answer is fine, so I should move on.'));
+  check('30E1: a teaching "so I should expect" ⇒ kept', !isNotePlanNarration("When charges are alike they're repelled, so I should expect them to move apart."));
   check('30E1: "I should just acknowledge" ⇒ dropped', isNotePlanNarration('I should just acknowledge it and continue.'));
   check('30E1: "the best next step is to" ⇒ dropped', isNotePlanNarration('The best next step is to ask one more question.'));
   const S1289 = 'The sentence matches the model, and the stutter at the start is only a repeat, so the sentence itself is right.';

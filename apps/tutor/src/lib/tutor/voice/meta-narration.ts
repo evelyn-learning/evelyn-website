@@ -482,13 +482,14 @@ const NOTE_PLAN_ADDRESSES_RE = /\b(?:let['’]?s|let us|we|you|your)\b/i;
 // the sentence I gave them, so the correct response here is to name what was
 // right and move on.`): a plan clause anywhere in a sentence — "the correct /
 // right / best / proper response / move / reply / thing / next step (here) is
-// to", "so I should", "I should (just / simply / now) name / note /
-// acknowledge / accept / confirm / move / correct" — is the brain reasoning
-// aloud, whoever it addresses. §E2 (1289 s SPOKEN: "The sentence matches the
+// to", "(so) I should (just / simply / now) name / note / acknowledge / accept
+// / confirm / move / correct" — is the brain reasoning aloud, whoever it
+// addresses. A bare "so I should" is not enough: "…they're repelled, so I
+// should expect them to move apart." is teaching (test-homework-small-guards). §E2 (1289 s SPOKEN: "The sentence matches the
 // model, and the stutter at the start is only a repeat, so the sentence
 // itself is right."): a stutter / hesitation / repeat / filler as the subject
 // of "is only / is just / doesn't count" narrates how the verdict was judged.
-const NOTE_PLAN_CLAUSE_RE = /\b(?:the|my) (?:correct|right|best|proper) (?:response|move|reply|thing|next step)(?: here)? is to\b|\bso I should\b|\bI should (?:just |simply |now )?(?:name|note|acknowledge|accept|confirm|move|correct)\b/i;
+const NOTE_PLAN_CLAUSE_RE = /\b(?:the|my) (?:correct|right|best|proper) (?:response|move|reply|thing|next step)(?: here)? is to\b|\bI should (?:just |simply |now )?(?:name|note|acknowledge|accept|confirm|move|correct)\b/i;
 const JUDGING_NARRATION_RE = /\bthe (?:stutter|hesitation|repeat|filler)\b[^.!?;]*?\b(?:is only|is just|doesn['’]t count|does not count)\b/i;
 export function isNotePlanNarration(sentence: string): boolean {
   const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' '));
