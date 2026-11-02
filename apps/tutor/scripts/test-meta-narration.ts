@@ -1132,7 +1132,7 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('R3-4b: "Given the earlier instruction …, I\'ll ask the choice once more." ⇒ dropped', isMetaNarration("Given the earlier instruction to keep this short and wait for their answer, I'll ask the choice once more."));
   check('R3-4b: "As per the system note, we move on." ⇒ dropped', isMetaNarration('As per the system note, we move on.'));
   check('R3-4c: "I\'ll ask the choice once more." ⇒ dropped', isMetaNarration("I'll ask the choice once more."));
-  check('R3-4c: "I\'ll name the options." ⇒ dropped', isMetaNarration("I'll name the options."));
+  check('R3-4c (fix round 5 S-1): "I\'ll name the options." ⇒ kept (no own-ask anaphora)', !isMetaNarration("I'll name the options."));
   for (const kept of ['Following the rule, we add -ed to regular verbs.', 'Your last answer used the past simple correctly.', 'Given the time, which tense fits best?', "I'll offer you two choices: one more sentence, or the next part."]) check(`R3-4: "${kept}" kept`, !isMetaNarration(kept));
 }
 
@@ -1155,6 +1155,12 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('R3-5b: 「このやり取りは、次の練習に進むところです。」 ⇒ dropped', isMetaNarration('このやり取りは、次の練習に進むところです。'));
   check('R3-5b: 「今のターンは確認です。」 ⇒ dropped', isMetaNarration('今のターンは確認です。'));
   check('R3-5b: 「この文は現在完了です。」 kept', !isMetaNarration('この文は現在完了です。'));
+}
+
+// Task 30 fix round 5 (S-1): second person after the plan verb keeps the sentence; a lone that / it object is an instruction.
+{
+  for (const kept of ["I'll ask you to try again.", 'Let me ask you this.', "I'll ask you again.", "I'll accept that.", 'Let me model that.', "I'll point to it.", 'Let me ask you to try that again.', "I'll ask you the question again.", 'Let me name that.', 'I will accept it.']) check(`S-1: "${kept}" kept`, !isMetaNarration(kept) && !isMetaNarration(kept, { structural: false }));
+  for (const dropped of ["I'll ask it again, more simply.", "I'll ask the question again, simply.", "I'll just respond to what you said.", "I'll note that and ask again.", "I'll point that out.", "I'll ask the choice once more."]) check(`S-1: "${dropped}" still dropped`, isMetaNarration(dropped));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

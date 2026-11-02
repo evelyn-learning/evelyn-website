@@ -610,10 +610,22 @@ export function stripSpokenPlanLeadTail(sentence: string): string {
   if (tail && tail.index > 0 && isPlanShapeRemainder(tail[1], { noSecondPerson: true })) s = `${s.slice(0, tail.index).replace(/[,;:\s]+$/, '')}.`;
   return s;
 }
+// Fix round 5 (S-1): the plan's anaphora must be about the tutor's OWN ask —
+// "I'll ask it again", "… the question …", "… the choice …", "I'll point that
+// out", "… and ask …" — or "respond to what you said". Any other second-person
+// word keeps the sentence ("I'll ask you to try again.", "Let me ask you
+// this."), and a lone that / it object is an instruction ("I'll accept that.",
+// "Let me model that.", "I'll point to it.").
+const PLAN_OWN_ASK_RE = /\b(?:again|once more|the question|the choice|that out|and ask)\b/i;
+const WHAT_YOU_SAID_RE = /\bwhat you said\b/i;
 function isSpokenFirstPersonPlan(s: string, raw: string): boolean {
   if (LEARNER_NARRATION_RE.test(s) || INTERNAL_NOTES_RE.test(s)) return true;
   const m = FIRST_PERSON_PLAN_HEAD_RE.exec(raw);
-  return !!m && isPlanShapeRemainder(raw.slice(m.index + m[0].length));
+  if (!m) return false;
+  const rest = raw.slice(m.index + m[0].length);
+  if (!isPlanShapeRemainder(rest)) return false;
+  if (/\b(?:you|your|yours)\b/i.test(rest.replace(WHAT_YOU_SAID_RE, ' '))) return false;
+  return PLAN_OWN_ASK_RE.test(rest) || WHAT_YOU_SAID_RE.test(rest);
 }
 export function isNotePlanNarration(sentence: string): boolean {
   const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' '));
