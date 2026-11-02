@@ -359,6 +359,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'close_before_required_phrases',
   // Task 30 fix round 4 R3-13: the next unasked numbered card question named on a student turn.
   'numbered_question_note_planted',
+  // Task 30 fix round 5 R4-3: a glossed brain card replaces a same-text brain card.
+  'show_sentence_brain_replace',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

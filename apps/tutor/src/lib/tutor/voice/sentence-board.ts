@@ -1777,7 +1777,9 @@ export function duplicateSentenceAction(input: {
   existingIsAuto?: boolean;
   /** Fix round 3 (P-1): the new card is the brain's and carries a gloss or emphasis. */
   newBrainCardAddsMarkup?: boolean;
-}): 'draw' | 'skip' | 'rehighlight' | 'reshow' {
+  /** Fix round 5 (R4-3): the new brain card carries a gloss the existing same-text card lacks. */
+  newBrainCardAddsGloss?: boolean;
+}): 'draw' | 'skip' | 'rehighlight' | 'reshow' | 'replace' {
   if (input.inThisBatch) return 'skip';
   // Task 30 fix round 2 E13 (r1 569 / 628 s: the auto correction card and the
   // brain's glossed card of the same sentence, both on the Part 4 page).
@@ -1787,6 +1789,10 @@ export function duplicateSentenceAction(input: {
   // skipped (an existing brain card, or nothing new to show).
   if (input.sameTextOnCurrentPage && !input.pronunciationModel) {
     if (input.existingIsAuto && input.newBrainCardAddsMarkup) return 'draw';
+    // Fix round 5 (R4-3): both brain cards, the new one adds a gloss — it
+    // REPLACES the existing card (the caller removes it when the new card
+    // paints). Same text on the page is never two cards.
+    if (!input.existingIsAuto && input.newBrainCardAddsGloss) return 'replace';
     return 'skip';
   }
   // Task 25 §D1 (GDI run 13, 1026–1044 s: the conversation answer, already on

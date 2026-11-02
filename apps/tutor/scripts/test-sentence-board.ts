@@ -1543,5 +1543,23 @@ test('P-1 (fix round 3): a glossed / emphasised brain card replaces the auto car
   assert.ok(V.includes("const newBrainCardAddsMarkup = !opts?.sentenceBoardAuto\n          && ((typeof c.gloss === 'string' && c.gloss.trim() !== '') || (Array.isArray(c.emphasis) && c.emphasis.length > 0));"));
 });
 
+test('R4-3 (fix round 5): same text on the page is never two cards — a glossed brain card replaces a brain card without a gloss', () => {
+  // run r4 whiteboard #17 (394 s) and #19 (447 s)
+  const c17 = { action: 'showSentence', sentence: 'I have worked with a customer from Germany for two years.', emphasis: ['worked', 'for'], id: 'showSentence-8' };
+  const c19 = { action: 'showSentence', sentence: 'I have worked with a customer from Germany for two years.', emphasis: ['have worked', 'a customer'], gloss: '「ドイツのお客様と2年間仕事をしています」— 現在完了で「今も続いている経験」を表します。', id: 'showSentence-9' };
+  const d = (existingIsAuto: boolean, newBrainCardAddsGloss: boolean) =>
+    duplicateSentenceAction({ page: null, currentPage: 4, pronunciationModel: false, sameTextOnCurrentPage: true, existingIsAuto, newBrainCardAddsMarkup: true, newBrainCardAddsGloss });
+  assert.equal(d(true, true), 'draw', '#17 an AUTO card (as in r4) ⇒ the P-1 replace path');
+  assert.equal(d(false, true), 'replace', '#17 a BRAIN card, #19 adds a gloss ⇒ replace');
+  assert.equal(d(false, false), 'skip', 'the existing brain card already has a gloss / the new one adds none ⇒ skip');
+  // the replace path removes #17 when #19 paints, once it is in the replaceable set
+  const ids = autoSentenceCardsToReplace([{ action: 'newPage' }, c17], new Set(['showSentence-8']), c19.sentence);
+  assert.deepEqual(ids, ['showSentence-8']);
+  const V = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(V.includes("if (dupAction === 'replace' && sameTextId) {"));
+  assert.ok(V.includes('brainSentenceReplaceIdsRef.current.add(sameTextId);'));
+  assert.ok(V.includes('? new Set([...autoSentenceCardIdsRef.current, ...brainSentenceReplaceIdsRef.current])'));
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

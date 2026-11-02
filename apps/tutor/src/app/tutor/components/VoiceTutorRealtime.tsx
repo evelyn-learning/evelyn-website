@@ -2521,6 +2521,8 @@ export function VoiceTutorRealtime({
   // show_sentence of the same sentence on the same page replaces its auto card
   // (GDI trial run 2: both stayed on the board).
   const autoSentenceCardIdsRef = useRef<Set<string>>(new Set());
+  // Task 30 fix round 5 (R4-3): brain sentence cards a same-text glossed brain card replaces (consumed by the replace path).
+  const brainSentenceReplaceIdsRef = useRef<Set<string>>(new Set());
   // Fixed-script advance guard (GDI trial run 2: the opening turn advanced past
   // the scripted overview before saying it). What counts as "said" for a
   // segment: every sentence spoken while the cursor was on it (any turn), plus
@@ -6988,8 +6990,19 @@ export function VoiceTutorRealtime({
         const existingIsAuto = !!sameTextId && autoSentenceCardIdsRef.current.has(sameTextId);
         const newBrainCardAddsMarkup = !opts?.sentenceBoardAuto
           && ((typeof c.gloss === 'string' && c.gloss.trim() !== '') || (Array.isArray(c.emphasis) && c.emphasis.length > 0));
-        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage, existingIsAuto, newBrainCardAddsMarkup });
+        // Fix round 5 (R4-3): a brain card adding a gloss the same-text brain card lacks replaces it.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sameTextCmd = sameTextId ? (log as any[]).find((x) => x?.id === sameTextId) : null;
+        const newBrainCardAddsGloss = !opts?.sentenceBoardAuto && typeof c.gloss === 'string' && c.gloss.trim() !== ''
+          && !(typeof sameTextCmd?.gloss === 'string' && sameTextCmd.gloss.trim() !== '');
+        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage, existingIsAuto, newBrainCardAddsMarkup, newBrainCardAddsGloss });
         if (dupAction === 'draw') { seenThisBatch.push(c); return true; }
+        if (dupAction === 'replace' && sameTextId) {
+          brainSentenceReplaceIdsRef.current.add(sameTextId);
+          onDebugEvent?.('show_sentence_brain_replace', `${sameTextId} → glossed card: "${c.sentence.slice(0, 60)}"`);
+          seenThisBatch.push(c);
+          return true;
+        }
         if (dupAction === 'reshow') {
           onDebugEvent?.('show_sentence_duplicate_reshown', `page ${page} → ${dupCurrentPage}: "${c.sentence.slice(0, 60)}"`);
           seenThisBatch.push(c);
@@ -11045,7 +11058,11 @@ export function VoiceTutorRealtime({
     // WHEN the brain's card paints (deferred-removals, keepPriorOnDrop), never
     // before — a kill that retracts the buffered replacement leaves it on the
     // board (dropRenderBuffer restores its bookkeeping).
-    if (TUTOR_SENTENCE_BOARD && !opts?.sentenceBoardAuto && autoSentenceCardIdsRef.current.size > 0) {
+    // Fix round 5 (R4-3): a same-text brain card marked for replacement leaves the same way.
+    const replaceableSentenceIds = brainSentenceReplaceIdsRef.current.size > 0
+      ? new Set([...autoSentenceCardIdsRef.current, ...brainSentenceReplaceIdsRef.current])
+      : autoSentenceCardIdsRef.current;
+    if (TUTOR_SENTENCE_BOARD && !opts?.sentenceBoardAuto && replaceableSentenceIds.size > 0) {
       const replaced: string[] = [];
       const immediate: string[] = [];
       const byReplacement = new Map<string, string[]>();
@@ -11053,7 +11070,7 @@ export function VoiceTutorRealtime({
         if (c.action !== 'showSentence' || typeof c.sentence !== 'string') return;
         const ids = autoSentenceCardsToReplace(
           [...whiteboardCommandsRef.current, ...processed.slice(0, i)] as unknown as Array<{ action: string } & Record<string, unknown>>,
-          autoSentenceCardIdsRef.current,
+          replaceableSentenceIds,
           c.sentence,
         );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -11108,6 +11125,8 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('sentence_board_auto_replaced', `${replaced.join(',')} → brain show_sentence`);
       }
     }
+    // Fix round 5 (R4-3): a replace mark lives for this batch only.
+    if (!opts?.sentenceBoardAuto) brainSentenceReplaceIdsRef.current.clear();
     dispatchVisualRef.current(processed, opts?.anchorSentence,
       bufferedSegmentBreak && movedBeforeBreak.size > 0
         ? {
