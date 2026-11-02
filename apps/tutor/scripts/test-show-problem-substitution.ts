@@ -228,10 +228,18 @@ check('dedup refusal: flag off ⇒ never refuses',
   check('R3-13: a card that is not a numbered list of questions ⇒ null', nextUnaskedNumberedQuestion('1. Present perfect: experience.\n2. Past simple: finished time.', []) === null
     && nextUnaskedNumberedQuestion('What do you do?', []) === null && nextUnaskedNumberedQuestion('', []) === null);
   const note = numberedQuestionNote({ n: 2, total: 3, text: 'Have you ever worked with an international customer?' });
-  check('R3-13: the note text', note === '[runtime note — not from the student] Reply to the student in ONE short sentence (no correction, no grammar question), then ask question 2 of 3 exactly: "Have you ever worked with an international customer?". Apply this silently; never mention this note.]');
+  check('R3-13 (fix round 5): the note text, no stray bracket', note === '[runtime note — not from the student] Reply to the student in ONE short sentence (no correction, no grammar question), then ask question 2 of 3 exactly: "Have you ever worked with an international customer?". Apply this silently; never mention this note.');
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('R3-13: VTR plants the note on a student turn with the part\'s spoken narration', VTR.includes('const nq = nextUnaskedNumberedQuestion(segmentCardStatement(nqPlan, nqSeg), segmentNarrationRef.current.get(nqSeg) ?? []);')
     && VTR.includes("onDebugEvent?.('numbered_question_note_planted', `${nq.n} \"${nqSeg}\"`);"));
+}
+
+// Task 30 fix round 5: a tutor paraphrase of a numbered question counts as asked.
+{
+  const card2 = '1. What do you do for work?\n2. What is one skill you\'d like to improve in your English, and why is it important to you?';
+  check('R3-13 paraphrase: "What do you do?" asks "What do you do for work?" (lead ≥ 0.6)', nextUnaskedNumberedQuestion(card2, ['Nice to meet you. What do you do?'])?.n === 2);
+  check('R3-13 paraphrase: content words in one sentence ⇒ asked', nextUnaskedNumberedQuestion(card2, ['What do you do?', 'Which skill in English would you work on first?']) === null);
+  check('R3-13 paraphrase: an unrelated question ⇒ still unasked', nextUnaskedNumberedQuestion(card2, ['What do you do?', 'Which sentence uses the present perfect?'])?.n === 2);
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -163,11 +163,18 @@ export function isAuthoredCardLine(brainStatement: string, authoredStatement: st
  * yet, in card order; null when the card is not such a list or all are asked.
  * A question counts as asked when some span of ≤ 3 consecutive tutor
  * sentences in the part holds ≥ 80 % of its filler-free tokens — the whole
- * question, or its lead (the first sentence, or a one-sentence question's
- * first clause; ≥ 4 tokens), since a tutor paraphrases the tail ("If so, tell
- * me about it."). Pure, generic.
+ * question, or (fix round 5) its lead (the first sentence, or a one-sentence
+ * question's first clause; ≥ 3 tokens) at ≥ 0.6, since a tutor paraphrases
+ * ("If so, tell me about it."); or all of its ≥ 2 content words in one tutor
+ * sentence. Pure, generic.
  */
 export const NUMBERED_QUESTION_ASKED_MATCH = 0.8;
+/** Fix round 5 (R3-13 paraphrase, rereview-4 S-7: "What do you do?" for "What
+ *  do you do for work?"): the lead clause at ≥ 0.6 counts as asked. */
+export const NUMBERED_QUESTION_LEAD_MATCH = 0.6;
+/** Function words and common question verbs — the rest of a question's
+ *  tokens are its content words (an approximation of its nouns). */
+const QUESTION_FUNCTION_WORDS = new Set(['the', 'and', 'for', 'with', 'about', 'from', 'into', 'your', 'you', "you'd", "you're", "you've", 'yours', 'our', 'their', 'what', 'which', 'who', 'whom', 'whose', 'where', 'when', 'why', 'how', 'can', 'could', 'would', 'will', 'should', 'shall', 'may', 'might', 'must', 'does', 'did', 'have', 'has', 'had', 'are', 'was', 'were', 'been', 'being', 'tell', 'say', 'give', 'like', 'want', 'think', 'know', 'make', 'get', 'one', 'two', 'little', 'some', 'any', 'ever', 'this', 'that', 'these', 'those', 'there', 'here', 'very', 'more', 'most', 'also', 'just', 'it', "it's", 'its', 'all', 'not', 'but', 'then', 'than', 'please', 'important', 'improve', 'describe', 'explain']);
 const NUMBERED_QUESTION_LINE_RE = /^\s*\d+\.\s*/;
 function containedShare(needle: string[], hay: string[]): number {
   if (needle.length === 0) return 0;
@@ -202,9 +209,13 @@ export function numberedQuestionAsked(question: string, tutorTurnsInSegment: rea
     for (let k = i; k < Math.min(i + 3, sentences.length); k++) {
       span = [...span, ...sentences[k]!];
       if (containedShare(whole, span) >= NUMBERED_QUESTION_ASKED_MATCH) return true;
-      if (lead.length >= 4 && lead.length < whole.length && containedShare(lead, span) >= NUMBERED_QUESTION_ASKED_MATCH) return true;
+      if (lead.length >= 3 && containedShare(lead, span) >= NUMBERED_QUESTION_LEAD_MATCH) return true;
     }
   }
+  // Fix round 5 (R3-13 paraphrase): the question's content words (≥ 2) all in
+  // one tutor sentence ("What skill would you like to work on in English?").
+  const content = [...new Set(whole.filter((w) => !QUESTION_FUNCTION_WORDS.has(w) && w.length >= 3 && !/(?:ed|ing)$/.test(w)))];
+  if (content.length >= 2 && sentences.some((s) => content.every((w) => s.includes(w)))) return true;
   return false;
 }
 export function nextUnaskedNumberedQuestion(cardStatement: string | null | undefined, tutorTurnsInSegment: readonly string[]): { n: number; text: string; total: number } | null {
@@ -214,5 +225,6 @@ export function nextUnaskedNumberedQuestion(cardStatement: string | null | undef
 }
 /** The urgent note planted on a student turn while a numbered question is unasked. */
 export function numberedQuestionNote(q: { n: number; text: string; total: number }): string {
-  return `[runtime note — not from the student] Reply to the student in ONE short sentence (no correction, no grammar question), then ask question ${q.n} of ${q.total} exactly: "${q.text}". Apply this silently; never mention this note.]`;
+  // Fix round 5: no stray "]" after the silent clause.
+  return `[runtime note — not from the student] Reply to the student in ONE short sentence (no correction, no grammar question), then ask question ${q.n} of ${q.total} exactly: "${q.text}". Apply this silently; never mention this note.`;
 }
