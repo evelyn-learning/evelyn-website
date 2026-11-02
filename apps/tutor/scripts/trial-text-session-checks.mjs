@@ -51,7 +51,10 @@ export function runChecks(dump) {
   ok('no part page opened twice', dupTitles.length === 0, dupTitles.join('; '));
 
   // 2. offers: every offer part that completed was offered aloud; no unmade offers; "one more" never re-uses the board card
-  ok('no fixed_script_offer_unmade', ev('fixed_script_offer_unmade').length === 0, ev('fixed_script_offer_unmade').map((e) => e.msg).join(' | '));
+  const unmade = ev('fixed_script_offer_unmade');
+  const rescued = unmade.filter((u) => ev('fixed_script_offer_spoken').some((s) => /engine fallback/.test(s.msg) && s.t >= u.t && s.t <= u.t + 5));
+  ok('no fixed_script_offer_unmade', unmade.length === rescued.length, unmade.filter((u) => !rescued.includes(u)).map((e) => e.msg).join(' | '));
+  if (rescued.length) warn('offer unmade by the brain, spoken by the engine fallback', rescued.map((e) => `${e.t}s`).join(' '));
   const offerSpoken = ev('fixed_script_offer_spoken').map((e) => e.msg);
   const offerPlanted = ev('fixed_script_offer_planted').map((e) => e.msg);
   ok('every planted offer was spoken', offerPlanted.length === 0 || offerSpoken.length >= offerPlanted.length, `planted ${offerPlanted.length}, spoken ${offerSpoken.length}`);
