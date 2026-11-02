@@ -681,9 +681,18 @@ export function stripLessonStateClause(s: string): string {
  *  - "I'm very glad you finally said …" → "I'm glad you said …" (1420 s). */
 const ANSWER_FIRST_LEAD_RE = /^\s*Let me answer your (?:last|previous) (?:point|question|message) first[:,]?\s*/i;
 const NOT_OVER_YET_RE = /\blesson\b(?=.*\b(?:over|finished|done)\b)(?=.*\byet\b)(?=.*\b(?:isn['’]t|is not|not|hasn['’]t|has not)\b)/i;
-const LAYOUT_ELEMENT = '(?:phrase|note|notes|sentence|text|word|words|english|japanese|translation|gloss|card|example)';
-const LAYOUT_SIZE_AFTER_RE = new RegExp(`\\b${LAYOUT_ELEMENT} (?:large|small|big|bigger|smaller|in large (?:print|letters|type))\\b`, 'i');
-const LAYOUT_DESCRIPTOR_RE = new RegExp(`\\b${LAYOUT_ELEMENT} (?:large|small|big|bigger|smaller|below|above|underneath|beneath|on top|at the (?:top|bottom)|on the (?:left|right))\\b`, 'gi');
+// Fix round 1 (I-2: "Read the sentence below, then the note above it." and
+// "The opposite of the word big is the word small." were dropped): only the
+// card's OWN presentation — a presentation frame (Here's / This is / this /
+// the card / "with the English / Japanese / phrase / note …"), a card element
+// (phrase / note / translation / gloss / text / English / Japanese) followed
+// by a size or position word, and never an imperative addressed to the
+// student (Read / Look at / Match …).
+const LAYOUT_ELEMENT = '(?:phrase|note|notes|translation|gloss|text|english|japanese)';
+const LAYOUT_DESCRIPTOR_RE = new RegExp(`\\b${LAYOUT_ELEMENT} (?:large|small|big|bigger|smaller|in (?:large|big|small) (?:print|letters|type|text)|below|above|underneath|beneath|on top|at the (?:top|bottom))\\b`, 'i');
+const LAYOUT_FRAME_RE = /^\s*(?:here['’]?s|here is|this is|this card|the card|on (?:this|the) card)\b|\bwith the (?:english|japanese|phrase|note|translation|text)\b/i;
+const LAYOUT_IMPERATIVE_RE = /^\s*(?:(?:now|so|please|okay|ok|first|then),?\s+)*(?:read|look|match|find|say|try|write|listen|check|compare|choose|use|copy|repeat|see)\b/i;
+const isCardLayoutNarration = (x: string) => !LAYOUT_IMPERATIVE_RE.test(x) && LAYOUT_FRAME_RE.test(x) && LAYOUT_DESCRIPTOR_RE.test(x);
 const CJK_GLOSS_RE = /^\s*In (?:Japanese|Chinese|Mandarin|Korean), the (?:word|phrase|sentence|expression) is\s*[「『"“]([^」』"”]+)[」』"”]/i;
 const CJK_CHAR_RE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
 const FINALLY_SAID_RE = /^(\s*I['’]m) (?:very |so )?glad you finally said\b/i;
@@ -696,7 +705,7 @@ export function stripRound9Narration(s: string): string {
     out = /^["“「]/.test(out) ? out : capitaliseFirst(out);
   }
   if (NOT_OVER_YET_RE.test(out)) return '';
-  if (LAYOUT_SIZE_AFTER_RE.test(out) || (out.match(LAYOUT_DESCRIPTOR_RE) ?? []).length >= 2) return '';
+  if (isCardLayoutNarration(out)) return '';
   const gloss = CJK_GLOSS_RE.exec(out);
   if (gloss && !CJK_CHAR_RE.test(gloss[1]!)) return '';
   out = out.replace(FINALLY_SAID_RE, '$1 glad you said');

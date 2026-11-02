@@ -1278,5 +1278,14 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('31H1: VTR drops it in the stream', VTR31.includes('if (TUTOR_ADJACENT_DUPLICATE_DROP && isRepeatThankAck(thankAckSpoken, updatedSentence)) {') && VTR31.includes('if (isThankAck(updatedSentence)) thankAckSpoken = true;'));
 }
 
+// Task 31 fix round 1 I-2: the layout rule drops only the card's own presentation.
+{
+  const keep = (x: string) => !isMetaNarration(x) && stripNoteCitationClause(x) === x;
+  for (const x of ['Read the sentence below, then the note above it.', 'The opposite of the word big is the word small.',
+    'Match the words below with the sentence above.', 'Look at the example below and the note on the right.']) check(`31 r1 I-2: kept — ${x}`, keep(x));
+  check('31 r1 I-2: the 164 s presentation narration still dropped', isMetaNarration("Here's the key idea, with the English phrase large and the Japanese note below."));
+  check('31 r1 I-2: "This card has the English phrase large …" dropped', isMetaNarration('This card shows the English phrase large and the Japanese translation below.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
