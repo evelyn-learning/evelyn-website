@@ -7,7 +7,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '../src/lib/tutor/lesson-plan/spoken-opener';
+import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead, proactiveOpenerAllowed, OPENER_PLAN_WAIT_MAX_MS } from '../src/lib/tutor/lesson-plan/spoken-opener';
 import { splitIntoSpokenSentences, matchSentenceBoundary } from '../src/lib/tutor/voice/sentence-spacing';
 import { SentenceBuffer } from '../src/lib/tutor/voice/claude-brain';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
@@ -91,6 +91,24 @@ test('VTR wiring: flag-gated, speaks each sentence through speakText, paints the
   // outline first, then the advance
   assert.ok(VTR.indexOf("(spoken opener)`);") < VTR.indexOf('applyResolvedAdvance(spokenOpenerPlan, spokenOpener.segmentId, next);'));
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_FIXED_SCRIPT_SPOKEN_OPENER = process\.env\.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_SPOKEN_OPENER !== 'off';/);
+});
+
+// ── Task 30 fix round 6 R5-1: the opener never runs without an expected plan ──
+test('R5-1: proactiveOpenerAllowed — wait for the expected plan (and a fixed script\'s prompt), bounded at 4 s', () => {
+  const base = { planExpected: true, planLoaded: false, fixedScript: false, promptReady: false, waitedMs: 0 };
+  assert.equal(OPENER_PLAN_WAIT_MAX_MS, 4000);
+  assert.equal(proactiveOpenerAllowed(base), false, 'r5: the tap before the plan landed ⇒ wait');
+  assert.equal(proactiveOpenerAllowed({ ...base, waitedMs: 3999 }), false);
+  assert.equal(proactiveOpenerAllowed({ ...base, waitedMs: 4000 }), true, 'bounded');
+  assert.equal(proactiveOpenerAllowed({ ...base, planLoaded: true, fixedScript: true, promptReady: false, waitedMs: 1000 }), false, 'fixed script, prompt not ready ⇒ wait');
+  assert.equal(proactiveOpenerAllowed({ ...base, planLoaded: true, fixedScript: true, promptReady: true, waitedMs: 1000 }), true, 'plan + prompt ⇒ the spoken opener runs');
+  assert.equal(proactiveOpenerAllowed({ ...base, planLoaded: true, fixedScript: false, waitedMs: 0 }), true, 'a non-fixed plan ⇒ now');
+  assert.equal(proactiveOpenerAllowed({ ...base, planExpected: false }), true, 'no plan id (free conversation) ⇒ now');
+  const VTR = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  pin(VTR, /const runStartOpener = \(\): void => \{\n\s+const spokenOpenerPlan = lessonPlanRef\.current;/);
+  pin(VTR, /planExpected: !!lessonPlanId && !resumeState,/);
+  pin(VTR, /onDebugEvent\?\.\('opener_waits_for_plan',/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_OPENER_WAITS_FOR_PLAN = process\.env\.NEXT_PUBLIC_TUTOR_OPENER_WAITS_FOR_PLAN !== 'off';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

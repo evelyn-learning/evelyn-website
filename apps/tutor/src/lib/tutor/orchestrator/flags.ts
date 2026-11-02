@@ -1173,3 +1173,10 @@ export const TUTOR_CLOSE_REQUIRED_PHRASES = process.env.NEXT_PUBLIC_TUTOR_CLOSE_
  *  an urgent note naming the next question not yet asked. Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_NUMBERED_QUESTION_NOTE=off. */
 export const TUTOR_NUMBERED_QUESTION_NOTE = process.env.NEXT_PUBLIC_TUTOR_NUMBERED_QUESTION_NOTE !== 'off';
+
+/** Task 30 fix round 6 R5-1 (run r5: the Start tap ran before the lesson plan
+ *  loaded and the free-conversation kickoff opened instead of the authored
+ *  script): the session opener waits (≤ 4 s) for an expected lesson plan and,
+ *  on a fixed script, for the spoken opener's prompt. Client-side: default
+ *  ON; NEXT_PUBLIC_TUTOR_OPENER_WAITS_FOR_PLAN=off. */
+export const TUTOR_OPENER_WAITS_FOR_PLAN = process.env.NEXT_PUBLIC_TUTOR_OPENER_WAITS_FOR_PLAN !== 'off';
