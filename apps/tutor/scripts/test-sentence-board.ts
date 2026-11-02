@@ -17,7 +17,7 @@ import {
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
   levelCheckAnswerCard, levelCheckRecast, isQuotedFragment, acknowledgesOption, boardOffersChoices,
-  grammarRecastCard, isTranslationQuote,
+  grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -342,7 +342,9 @@ test('C: VTR — a sentence-only batch neither sees nor consumes the topic-shift
   assert.ok(/const topicShiftPending = sentenceOnlyBatch \? null : topicShiftPendingRef\.current;/.test(VTR));
   // Task 23 §A2: the sentence-batch decision then goes through the empty-segment-page keep.
   assert.ok(/const rawPageDecision = keepSentenceBatchOnPage\(decidePageForBatch\(\{/.test(VTR));
-  assert.ok(/const pageDecision = keepBatchOnEmptySegmentPage\(rawPageDecision,/.test(VTR));
+  // Task 29 §D3: then the fixed-script part-page keep.
+  assert.ok(/const emptySegPageDecision = keepBatchOnEmptySegmentPage\(rawPageDecision,/.test(VTR));
+  assert.ok(/const pageDecision = keepTopicShiftOnSegmentPage\(emptySegPageDecision, \{/.test(VTR));
   assert.ok(/if \(!sentenceOnlyBatch\) topicShiftPendingRef\.current = null;/.test(VTR));
   // the deferred segment page flush runs AFTER the decision (so a sentence
   // batch with no page of its own opens the pending segment page first)
@@ -1362,6 +1364,20 @@ test('28A r1 I-1: echo / follow-up question built from the student\'s words → 
   assert.equal(levelCheckRecast("Thank you, that's clear. You sold 35 washing machines to a US customer. Now, question 2: what was one difficulty you had with that customer?", 'Um, I sell uh washing machine to customer from USA, 35 washing machine.'), true);
   // the 23B2 99 s line is a true recast ("machines", "a", "US" added) — its flipped expectation stands
   assert.equal(levelCheckRecast("Thank you. You sell washing machines to a US company, so that's useful experience. Now, question 3, please answer in English: What is one skill you'd like to improve in your English, and why is it important to you?", 'I sell washing machine to the USA customer for their company.'), true);
+});
+
+test('29G: a spacing variant is the same sentence — no second card (the existing dedup action)', () => {
+  const a = 'I created a PowerPoint presentation for a sales meeting last year.';
+  const b = 'I created a Power Point presentation for a sales meeting last year.';
+  assert.equal(sameSentence(a, b), true);
+  assert.equal(sameSentenceText(a, b), true);
+  assert.equal(sameSentence('I sold 3 machines.', 'I sold three machines!'), true, 'numbers normalised');
+  assert.equal(sameSentence(a, 'I created a PowerPoint deck for a sales meeting last year.'), false);
+  const log = [{ action: 'showSentence', id: 'showSentence-2', sentence: a }];
+  const page = sentenceOnBoardPage(log, b);
+  assert.equal(page, 1);
+  assert.equal(duplicateSentenceAction({ page, currentPage: 1, pronunciationModel: false, onCurrentPage: true }), 'skip');
+  assert.equal(sentenceOnCurrentPage(log, b), true);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

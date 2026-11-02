@@ -1476,8 +1476,19 @@ export function sentenceOnCurrentPage(commands: ReadonlyArray<{ action: string }
 /** Two sentence cards say the same sentence: one contains the other word for
  *  word (case, punctuation and spacing ignored) — "I am a sales manager at my
  *  company" and "I am a sales manager at my company." are one card. */
+// Task 29 §G (GDI run 16, 281 s, Image 59): "Power Point" vs "PowerPoint"
+// left two cards of one sentence — the letter strings with the spaces
+// removed (case, punctuation ignored, numbers normalised) match too.
+const squashSentence = (x: string) => norm(x ?? '').replace(/ /g, '');
+/** Task 29 §G: the token lists match, or the letter strings with the spaces
+ *  removed match ("Power Point" ≡ "PowerPoint"). */
+export function sameSentenceText(a: string, b: string): boolean {
+  const na = norm(a ?? '');
+  if (!na) return false;
+  return na === norm(b ?? '') || squashSentence(a) === squashSentence(b);
+}
 export function sameSentence(a: string, b: string): boolean {
-  return sentenceContains(a, b) || sentenceContains(b, a);
+  return sentenceContains(a, b) || sentenceContains(b, a) || sameSentenceText(a, b);
 }
 
 /** GDI trial run 2 (2026-10-29): an auto card and the brain's own
@@ -1521,7 +1532,7 @@ export function sentenceOnBoardPage(
     if (c.action === 'clear') { while (hits.length && hits[hits.length - 1] === page) hits.pop(); continue; }
     if (c.action !== 'showSentence' || typeof c.sentence !== 'string') continue;
     if (typeof c.id === 'string' && skipIds.has(c.id)) continue;
-    if (norm(c.sentence) === target) hits.push(page);
+    if (norm(c.sentence) === target || sameSentenceText(c.sentence, sentence)) hits.push(page);
   }
   return hits.length ? hits[0] : null;
 }
@@ -1557,7 +1568,7 @@ export function sentenceCardIdOnCurrentPage(commands: ReadonlyArray<{ action: st
   for (let i = commands.length - 1; i >= 0; i--) {
     const c = commands[i];
     if (c.action === 'newPage' || c.action === 'clear') return null;
-    if (c.action === 'showSentence' && typeof c.sentence === 'string' && typeof c.id === 'string' && norm(c.sentence) === target) return c.id;
+    if (c.action === 'showSentence' && typeof c.sentence === 'string' && typeof c.id === 'string' && (norm(c.sentence) === target || sameSentenceText(c.sentence, sentence))) return c.id;
   }
   return null;
 }
