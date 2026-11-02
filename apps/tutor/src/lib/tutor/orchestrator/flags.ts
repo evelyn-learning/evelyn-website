@@ -1222,3 +1222,9 @@ export const TUTOR_MENU_ASK_CAP = process.env.NEXT_PUBLIC_TUTOR_MENU_ASK_CAP !==
  *  right after that choice closes. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_STOP_REQUEST_CHOICE=off. */
 export const TUTOR_STOP_REQUEST_CHOICE = process.env.NEXT_PUBLIC_TUTOR_STOP_REQUEST_CHOICE !== 'off';
+
+/** Task 33 fix round 1 (R9-2, bot run r9 847–850 s): when the one
+ *  transition_offer_missing retry is still offer-less, the engine speaks
+ *  the offer itself as the turn's last sentence(s) and records it spoken.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_OFFER_ENGINE_FALLBACK=off. */
+export const TUTOR_OFFER_ENGINE_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_OFFER_ENGINE_FALLBACK !== 'off';

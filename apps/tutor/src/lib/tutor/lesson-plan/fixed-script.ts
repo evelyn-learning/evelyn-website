@@ -715,6 +715,23 @@ export function offerAcceptedReplantDue(input: { accepted: OfferAcceptState | nu
   // studentTurns < 0 ⇒ this very turn accepted (its own note rides it).
   return !!a && !a.itemAsked && a.studentTurns >= 0 && a.segId === input.currentSegId && input.studentTurn && offerReasked(input.lastTutorText);
 }
+/** Task 33 fix round 1 (R9-2, bot run r9 847–850 s: the transition_offer_
+ *  missing retry narrated instead of offering — fixed_script_offer_unmade —
+ *  and the part fell to the turn cap): when the one retry is still
+ *  offer-less, the ENGINE speaks the offer itself as the turn's last
+ *  sentence(s), composed from the offer note's labels; a Japanese line
+ *  follows when the session's tutor languages include Japanese. Pure. */
+export function fixedScriptEngineOfferLines(plan: LessonPlan | null | undefined, from: string, next: string, opts: { japanese: boolean }): string[] {
+  const a = fixedScriptPartLabel(plan, from);
+  const b = fixedScriptPartLabel(plan, next);
+  const lines = [`Would you like one more practice item on "${a}", or shall we move on to "${b}"?`];
+  if (opts.japanese) lines.push(`「${a}」をもう一つ練習しますか？それとも「${b}」に進みますか？`);
+  return lines;
+}
+/** R9-2: the validator's 'unmade' ⇒ the engine speaks the offer (flag on). */
+export function offerEngineFallbackDue(decision: string, flagOn: boolean): boolean {
+  return flagOn && decision === 'unmade';
+}
 /** The retry directive of transition_offer_missing (shared silent clause). */
 export function fixedScriptOfferMissingReason(plan: LessonPlan | null | undefined, from: string, next: string): string {
   return withRetryStyle(`Reply to what the student just said in ONE sentence (answer a question or a correction first), then ask the student whether they want one more practice item on "${fixedScriptPartLabel(plan, from)}" or to move on to "${fixedScriptPartLabel(plan, next)}". End the turn with that question.`);

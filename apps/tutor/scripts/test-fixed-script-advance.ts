@@ -48,7 +48,7 @@ import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboa
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
-import { FIXED_SCRIPT_STOP_DECLINED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -1185,6 +1185,26 @@ test('33 r1 I-1b: a question or a past report is never a stop request', () => {
   for (const t of ['終わりですか？', 'これで終わり?', 'おわりました', '終わりました。', 'Is it finished?', 'Are we done?']) assert.equal(isStopRequest(t), false, t);
   assert.equal(isStopRequest('Can we stop here?'), true, 'a modal request stays a request');
   assert.equal(isStopRequest('終わりにします'), true);
+});
+
+// ── Task 33 fix round 1 R9-2: the engine speaks the offer when the retry did not ──
+test('33 r1 R9-2: an offer-less retry ⇒ the engine speaks the composed offer (bilingual with ja)', () => {
+  const segs = fixed.segments.map((sg) => sg.id);
+  const lines = fixedScriptEngineOfferLines(fixed, segs[1]!, segs[2]!, { japanese: false });
+  assert.equal(lines.length, 1);
+  assert.match(lines[0]!, /^Would you like one more practice item on ".+", or shall we move on to ".+"\?$/);
+  assert.equal(offerAsked(lines[0]), true, 'the turn-end offer detector reads it as the offer');
+  const ja = fixedScriptEngineOfferLines(fixed, segs[1]!, segs[2]!, { japanese: true });
+  assert.equal(ja.length, 2);
+  assert.match(ja[1]!, /^「.+」をもう一つ練習しますか？それとも「.+」に進みますか？$/);
+  assert.equal(offerEngineFallbackDue('unmade', true), true);
+  assert.equal(offerEngineFallbackDue('unmade', false), false);
+  assert.equal(offerEngineFallbackDue('kill', true), false);
+  // the decision that leads there: a retry still without the offer
+  assert.equal(transitionOfferValidatorDecision({ offerPending: true, text: "The past simple part is almost done. Please answer in one sentence: what did you learn?", announcedMove: false, calledAdvance: false, alreadyRetried: true }), 'unmade');
+  pin(VTR, /for \(const line of engineOfferLines\) speakOnePart\(line\);/);
+  pin(VTR, /onDebugEvent\?\.\('fixed_script_offer_spoken', `"\$\{engineOfferSeg\}" \(engine fallback\)`\);/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_OFFER_ENGINE_FALLBACK = process\.env\.NEXT_PUBLIC_TUTOR_OFFER_ENGINE_FALLBACK !== 'off';/);
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
