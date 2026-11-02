@@ -84,12 +84,13 @@ const POOL = {
   how: ['By practicing every day.', 'I asked my manager for advice.'],
   who: ['My manager and two colleagues.'],
   where: ['In Osaka, at our head office.'],
-  generic: ['Yes, I think so.', 'I see. Yes.', 'That is right.', 'Yes, it was good experience.'],
+  generic: ['OK.', 'I see.', 'Yes, I understand.', 'OK, thank you.'],
   howLong: ['For three years.', 'I have worked in my current department for three years.'],
   department: ['I have worked in my current department for three years.'],
 };
 // "starting with "X"" scaffolds: X + a tail that fits
 const PREFIX_TAILS = [
+  [/^i (?:worked|met|talked|spoke) with/i, ['a customer from Germany two years ago.', 'our supplier in Vietnam last year.']],
   [/^i have worked/i, ['with a customer from Germany.', 'at my company for five years.', 'on the new website project for two months.']],
   [/^i have learned/i, ['how to negotiate with suppliers.']], [/^it has helped me/i, ['get a better price from suppliers.']],
   [/^i work/i, ['in the sales department of an electronics company.']], [/^i am preparing/i, ['a presentation for the sales meeting.']],
@@ -103,7 +104,7 @@ const PREFIX_TAILS = [
 const scaffold = (text) => {
   const m = text.match(/\b(?:start(?:ing)?|begin(?:ning)?) with\s+["“「]([^"”」]{2,40})["”」]/i);
   if (!m) return null;
-  const prefix = m[1].replace(/[.…]+$/, '').trim();
+  const prefix = m[1].trim().replace(/[.…\s]+$/, '').trim();
   for (const [re, tails] of PREFIX_TAILS) if (re.test(prefix)) return `${prefix} ${pick(tails)}`;
   return `${prefix} for my company last year.`;
 };
@@ -126,7 +127,13 @@ const VARIANTS = {
 const V = VARIANTS[variantName];
 if (!V) { console.error(`unknown variant ${variantName}; one of ${Object.keys(VARIANTS).join(', ')}`); process.exit(1); }
 
-const quoted = (t) => [...t.matchAll(/["“「]([^"”」]{12,})["”」]/g)].map((m) => m[1].trim());
+const quoted = (t) => {
+  const out = [];
+  for (const m of t.matchAll(/[“「]([^”」\n]{12,}?)[”」]/g)) out.push(m[1].trim());
+  const parts = t.split('"');
+  for (let i = 1; i < parts.length; i += 2) if (parts[i] && parts[i].trim().split(/\s+/).length >= 4) out.push(parts[i].trim());
+  return out;
+};
 const slip = (s) => {
   // one typical slip: drop an article, or strip "-ed" from one verb
   const a = s.replace(/\b(a|an|the) /i, '');
@@ -179,7 +186,7 @@ function decide(text) {
   if (V.askQuestion && !state.askedQuestion && state.student > 6 && /\?$/.test(last)) { state.askedQuestion = true; return { text: 'Sorry, what was the question?', why: 'ask question' }; }
   if (V.moveOnOrder && !state.moveOnDone && state.student > 14 && /\?$/.test(last)) { state.moveOnDone = true; return { text: "Let's move on to the next part now.", why: 'move-on order' }; }
   if (V.japanese && !state.japaneseDone && state.student > 3 && /\bwhy\b|\bwhen\b/i.test(last)) { state.japaneseDone = true; return { text: 'すみません、もう一度言ってください。', why: 'japanese' }; }
-  const L = (lastQ + ' ' + last).toLowerCase();
+  const L = lastQ.toLowerCase();
   const rules = [
     [/skill.*(improve|better)|improve/, 'improve'], [/international|foreign|overseas|abroad/, 'international'],
     [/what do you do|your job|about your work|about your job|where do you work|what is your job/, 'job'],
@@ -207,22 +214,40 @@ const say = (s) => { const line = `${new Date().toISOString().slice(11, 19)} ${s
 const browser = await chromium.launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${silentWav}`, '--autoplay-policy=no-user-gesture-required'] });
 const ctx = await browser.newContext({ permissions: ['microphone'], viewport: { width: 1000, height: 820 } });
 const turns = []; let inFlight = 0; let lastEnd = 0; let lastWords = 0;
-ctx.on('request', (r) => { if (r.url().includes('/api/tutor/brain/stream')) inFlight += 1; });
-ctx.on('requestfailed', (r) => { if (r.url().includes('/api/tutor/brain/stream')) inFlight = Math.max(0, inFlight - 1); });
-ctx.on('response', async (r) => {
-  if (!r.url().includes('/api/tutor/brain/stream')) return;
-  let text = ''; try { await r.finished(); text = await r.text(); } catch {}
-  inFlight = Math.max(0, inFlight - 1);
-  const sentences = []; const tools = [];
-  for (const line of text.split('\n')) {
-    if (!line.startsWith('data: ')) continue;
-    try { const ev = JSON.parse(line.slice(6)); if (ev.type === 'sentence' && ev.text) sentences.push(ev.text); if (ev.type === 'tool-call') tools.push(ev.name); } catch {}
-  }
-  turns.push({ t: Date.now(), sentences, tools });
-  lastEnd = Date.now(); lastWords = sentences.join(' ').split(/\s+/).filter(Boolean).length;
-  say(`TUTOR  ${sentences.join(' ').slice(0, 400)}${tools.length ? `   [tools: ${tools.join(',')}]` : ''}`);
+// Tee the brain stream inside the page (UTF-8 safe, no body buffering in Playwright):
+// window.__brain = { inFlight, turns: [{t, sentences, tools}] }
+await ctx.addInitScript(() => {
+  window.__brain = { inFlight: 0, turns: [] };
+  const orig = window.fetch;
+  window.fetch = async function (input, init) {
+    const url = typeof input === 'string' ? input : input?.url ?? '';
+    if (!url.includes('/api/tutor/brain/stream')) return orig.apply(this, arguments);
+    window.__brain.inFlight += 1;
+    let res;
+    try { res = await orig.apply(this, arguments); } catch (e) { window.__brain.inFlight -= 1; throw e; }
+    try {
+      const clone = res.clone();
+      (async () => {
+        const sentences = []; const tools = []; let buf = '';
+        try {
+          const reader = clone.body.getReader(); const dec = new TextDecoder('utf-8');
+          for (;;) { const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true });
+            let i; while ((i = buf.indexOf('\n\n')) >= 0) { const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+              for (const line of chunk.split('\n')) { if (!line.startsWith('data: ')) continue; try { const ev = JSON.parse(line.slice(6)); if (ev.type === 'sentence' && ev.text) sentences.push(ev.text); if (ev.type === 'tool-call') tools.push(ev.name); } catch {} } } }
+        } catch {}
+        window.__brain.inFlight = Math.max(0, window.__brain.inFlight - 1);
+        window.__brain.turns.push({ t: Date.now(), sentences, tools });
+      })();
+    } catch { window.__brain.inFlight = Math.max(0, window.__brain.inFlight - 1); }
+    return res;
+  };
 });
 const page = await ctx.newPage();
+const pollBrain = async () => {
+  const b = await page.evaluate(() => { const t = window.__brain?.turns.splice(0) ?? []; return { inFlight: window.__brain?.inFlight ?? 0, turns: t }; }).catch(() => ({ inFlight: 0, turns: [] }));
+  inFlight = b.inFlight;
+  for (const x of b.turns) { turns.push(x); lastEnd = Date.now(); lastWords = x.sentences.join(' ').split(/\s+/).filter(Boolean).length; say(`TUTOR  ${x.sentences.join(' ').slice(0, 400)}${x.tools.length ? `   [tools: ${x.tools.join(',')}]` : ''}`); }
+};
 page.on('pageerror', (e) => say(`PAGEERROR ${String(e).slice(0, 200)}`));
 await page.goto(embedUrl, { waitUntil: 'domcontentloaded' });
 say(`open ${embedUrl.slice(0, 60)}… student=${studentId} variant=${variantName} seed=${seed}`);
@@ -235,6 +260,7 @@ const estPlaybackMs = () => lastWords * 420 + 1500;
 async function waitQuiet(maxMs) {
   const end = Date.now() + maxMs;
   for (;;) {
+    await pollBrain();
     const quietFor = Date.now() - lastEnd;
     if (inFlight === 0 && lastEnd > 0 && quietFor >= estPlaybackMs() && quietFor >= 2500) return true;
     if (Date.now() > end) return false;
@@ -251,7 +277,7 @@ while (Date.now() - t0 < maxMin * 60000 && state.student < 80 && !state.closed) 
   const d = decide(text);
   if (!d) { say('CLOSE detected — waiting for the farewell to finish'); break; }
   if (smoke && state.offers >= 1 && d.why.startsWith('offer') === false && /offer/.test(log.slice(-3).join(' '))) { say('SMOKE: first offer answered — stopping'); break; }
-  let think = 3000 + rand() * 6000;
+  let think = 2000 + rand() * 3000;
   if (V.slowTurn && !state.slowDone && state.student > 5 && !d.why.startsWith('repeat')) { state.slowDone = true; think = 48000; say('(slow turn: 48 s silence)'); }
   if (state.bargeNext) { state.bargeNext = false; think = 0; say('(typed during playback)'); }
   await wait(think);
