@@ -1358,5 +1358,14 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
     check(`33 r1 R9-1: kept — ${x}`, !isMetaNarration(x) && stripNoteCitationClause(x) === x);
 }
 
+
+// Task 33 fix round 2 R10-3 (bot run r10 412 s): "<part> part is finished, so …".
+{
+  for (const x of ["The present perfect part is finished, so let's move on.", 'This part is done, so we can go on to the next one.', "The conversation part is almost done, so here's one more question."])
+    check(`33 r2 R10-3: dropped — ${x}`, isMetaNarration(x));
+  for (const x of ["Let's move on to the past simple.", "That's the end of this part.", 'The project is finished, so we can relax.'])
+    check(`33 r2 R10-3: kept — ${x}`, !isMetaNarration(x));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

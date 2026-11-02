@@ -1165,7 +1165,10 @@ const ASK_AGAIN_PLAINLY_RE = /^\s*I['’]?ll ask (?:it |that |the question )?aga
 // "Now let's move on to the past simple." / "Let's bring it back to your
 // sentence." are speech.
 const STEER_PLAN_RE = /^\s*(?:So|Then|Now),? I['’]?ll (?:gently )?(?:bring (?:it|that|us) back|move us on|move on|take us)\b[^:?]*$/i;
-const PART_STATE_PLAN_RE = /\b(?:part|section|segment|step)\s+is\s+(?:almost |nearly |now |already )?(?:done|finished|over|complete|completed)\b,?\s*(?:so|and) I['’]ll\b/i;
+// Fix round 2 (R10-3, bot run r10 412 s: "The present perfect part is
+// finished, so let's move on."): any "<part> part is done / finished /
+// complete / over / almost done, so …" is the plan state spoken.
+const PART_STATE_PLAN_RE = /\b(?:part|section|segment|step)\s+is\s+(?:almost |nearly |now |already )?(?:done|finished|over|complete|completed)\b,?\s*(?:so\b|and I['’]ll\b)/i;
 export function isSteeringPlanNarration(sentence: string): boolean {
   const s = sentence ?? '';
   return STEER_PLAN_RE.test(s) || PART_STATE_PLAN_RE.test(s);
