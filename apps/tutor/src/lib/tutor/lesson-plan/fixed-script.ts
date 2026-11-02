@@ -10,7 +10,7 @@
  */
 import type { LessonPlan, Segment, SegmentTransition } from './types';
 import { withSilentClause } from '../voice/output-budget';
-import { isCorrectionTurn } from '../voice/correct-retry';
+import { isCorrectionTurn, expectedRepeatFor } from '../voice/correct-retry';
 import { boardOffersChoices } from '../voice/sentence-board';
 import { sentenceAsksStudent, splitSentences, stripMarkdownEmphasis } from '../question-gist-text';
 
@@ -497,8 +497,27 @@ export function transitionOfferValidatorDecision(input: {
   if (input.alreadyRetried) return 'unmade';
   // Task 30 §D1 (GDI run 17, 746 s): a kill after heard sentences made the
   // retry repeat them — the attempt stands and the offer is asked by a
-  // silent continuation instead.
-  return (input.heardSentences ?? 0) >= 1 ? 'continue' : 'kill';
+  // silent continuation instead. Fix round 1 (I-3): only when the attempt
+  // asked the student NOTHING — a continuation after a question stacks a
+  // second question; there the kill + retry (with the §D2 heard note) stays.
+  return (input.heardSentences ?? 0) >= 1 && !attemptAsksStudent(input.text) ? 'continue' : 'kill';
+}
+/** Fix round 1 (I-3): some sentence of `text` asks the student — a "?", an
+ *  imperative / inner ask (sentenceAsksStudent) or a repeat ask (a line the
+ *  student is expected to say). Pure. */
+export function attemptAsksStudent(text: string | null | undefined): boolean {
+  const t = stripMarkdownEmphasis(text ?? '');
+  if (!t.trim()) return false;
+  if (splitSentences(t).some((x) => /[?？]/.test(x) || sentenceAsksStudent(x))) return true;
+  return expectedRepeatFor(t, null, null) !== null;
+}
+/** Fix round 1 (I-3, smoke run 507–543 s: the scheduled offer continuation
+ *  was dropped — "tutor still busy" — when the student answered first): on
+ *  a student turn while the part's offer is made but still unspoken, the
+ *  urgent offer note is re-planted for that turn, unless that turn already
+ *  carries it. Pure. */
+export function offerReplantDue(input: { offerMade: boolean; offerSpoken: boolean; studentTurn: boolean; noteAlreadyCarried: boolean }): boolean {
+  return input.offerMade && !input.offerSpoken && input.studentTurn && !input.noteAlreadyCarried;
 }
 /** Task 30 §D1: the offer continuation's directive (via 'offer'). */
 export const FIXED_SCRIPT_OFFER_CONTINUE_PREFIX = '[System note: Ask the student, in ONE sentence and nothing else, whether they want one more practice item on';

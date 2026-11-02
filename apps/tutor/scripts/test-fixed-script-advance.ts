@@ -34,7 +34,7 @@ import {
   offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason,
   FIXED_SCRIPT_OFFER_MAX_WAIT_MS, offerWaitExpired,
   offerAccepted, fixedScriptOfferAcceptedNote, FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS,
-  fixedScriptOfferContinueDirective, FIXED_SCRIPT_OFFER_CONTINUE_PREFIX,
+  fixedScriptOfferContinueDirective, FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, attemptAsksStudent, offerReplantDue,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
@@ -901,6 +901,13 @@ test('30D1: validator decision — heard ≥ 1 ⇒ continue; heard 0 ⇒ kill; a
   const d = (heardSentences: number, alreadyRetried = false) => transitionOfferValidatorDecision({
     offerPending: true, text: 'Met the suppliers from China, nice. "I met the suppliers from China" is correct.', announcedMove: false, calledAdvance: false, alreadyRetried, heardSentences,
   });
+  // fix round 1 (I-3): an attempt that asked the student something ⇒ kill + retry, never a stacked continuation
+  const dAsk = (text: string) => transitionOfferValidatorDecision({ offerPending: true, text, announcedMove: false, calledAdvance: false, alreadyRetried: false, heardSentences: 3 });
+  assert.equal(dAsk('Good, that is correct past simple. Tell me one more thing about a past event: what did you do on your last trip?'), 'kill');
+  assert.equal(dAsk('Nice. Please say it once more: "I met the suppliers from China."'), 'kill');
+  assert.equal(dAsk('Good, that is correct past simple for a finished trip.'), 'continue');
+  assert.equal(attemptAsksStudent('Tell me about your trip.'), true);
+  assert.equal(attemptAsksStudent('That is correct.'), false);
   assert.equal(d(3), 'continue');
   assert.equal(d(1), 'continue');
   assert.equal(d(0), 'kill');
@@ -922,6 +929,19 @@ test('30D1: VTR wiring — continue instead of kill, scheduled at turn end, the 
   assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_spoken', `\"${offerSeg}\" (continuation)`);"));
   // the offer continuation is scheduled before the no-ask check (which skips when a continuation is pending)
   assert.ok(VTR.indexOf("scheduleFixedScriptContinueRef.current(ocSeg, 'offer'") < VTR.indexOf("if (noaskSeg) scheduleFixedScriptContinueRef.current(noaskSeg, 'noask'"));
+});
+
+test('30 r1 I-3: offerReplantDue — made, unspoken, a student turn, not already carried ⇒ re-plant', () => {
+  const r = (o: Partial<{ offerMade: boolean; offerSpoken: boolean; studentTurn: boolean; noteAlreadyCarried: boolean }>) =>
+    offerReplantDue({ offerMade: true, offerSpoken: false, studentTurn: true, noteAlreadyCarried: false, ...o });
+  assert.equal(r({}), true);
+  assert.equal(r({ offerSpoken: true }), false);
+  assert.equal(r({ offerMade: false }), false);
+  assert.equal(r({ studentTurn: false }), false, 'a nudge / continuation turn');
+  assert.equal(r({ noteAlreadyCarried: true }), false, 'the planted note is delivered on this turn already');
+  assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_replanted', `\"${orSeg}\"`);"));
+  assert.ok(VTR.includes('runTranscript = `${orNote}\\n\\n${runTranscript}`;'));
+  assert.ok(VTR.includes("if (!opts?.prefetchOnly) offerContinueSegRef.current = '';"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

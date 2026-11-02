@@ -440,7 +440,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
+import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -12683,6 +12683,8 @@ export function VoiceTutorRealtime({
     }
     // Task 23 §A: a break from an earlier turn never pulls this turn's cards.
     segmentPageBreakRef.current = null;
+    // Task 30 fix round 1 (m-9): an offer continuation of an aborted turn is not carried.
+    if (!opts?.prefetchOnly) offerContinueSegRef.current = '';
     levelAdvanceThisTurnRef.current = '';
     levelAdvanceFromThisTurnRef.current = '';
     cardedStudentSentenceRef.current = new Set();
@@ -13483,6 +13485,26 @@ export function VoiceTutorRealtime({
           offerAcceptedRef.current = { segId: oaSeg, studentTurns: -1, at: Date.now() };
           runTranscript = `${fixedScriptOfferAcceptedNote(oaPlan, oaSeg, oaNext)}\n\n${runTranscript}`;
           onDebugEvent?.('fixed_script_offer_accepted', `"${oaSeg}" "${transcript.slice(0, 60)}"`);
+        }
+      }
+      // Task 30 fix round 1 (I-3): the part's offer is made but unspoken (its
+      // continuation was dropped, or the attempt asked something else) — the
+      // urgent offer note rides this student turn, so the offer is never lost.
+      if (TUTOR_TRANSITION_OFFER_SPOKEN && TUTOR_FIXED_SCRIPT_TRANSITIONS && !opts?.prefetchOnly) {
+        const orSeg = currentSegmentIdRef.current ?? '';
+        const orPlan = lessonPlanRef.current;
+        const orNext = orPlan && orSeg ? nextSegmentId(orPlan, orSeg, !!workingLevelRef.current) : null;
+        if (orSeg && orNext) {
+          const orNote = fixedScriptOfferNote(orPlan, orSeg, orNext);
+          if (offerReplantDue({
+            offerMade: transitionOfferMadeRef.current.has(orSeg),
+            offerSpoken: transitionOfferSpokenRef.current.has(orSeg),
+            studentTurn: !/^\s*\[/.test(transcript),
+            noteAlreadyCarried: runTranscript.includes(orNote) || (pendingRuntimeNoteRef.current ?? '').includes(orNote),
+          })) {
+            runTranscript = `${orNote}\n\n${runTranscript}`;
+            onDebugEvent?.('fixed_script_offer_replanted', `"${orSeg}"`);
+          }
         }
       }
       // Task 30 §H (GDI run 17, 1198 s): the student picked an option of the
