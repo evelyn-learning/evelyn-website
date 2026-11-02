@@ -220,7 +220,7 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { splitSentenceForTts, keptRestRemoved } from '@/lib/tutor/voice/tts-language';
-import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause } from '@/lib/tutor/voice/meta-narration';
+import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue } from '@/lib/tutor/voice/meta-narration';
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
@@ -15736,6 +15736,10 @@ export function VoiceTutorRealtime({
                   // keeps its content; an all-citation sentence is left whole
                   // here and dropped by isMetaNarration below.
                   if (typeof ev.text === 'string') {
+                    // Task 30 §E1: the rewrite addressed the learner but left them in the third person.
+                    if (isThirdPersonResidue(ev.text, { personaName: personaNamesRef.current })) {
+                      onDebugEvent?.('meta_narration_dropped_third_person_residue', `"${ev.text.slice(0, 80)}"`);
+                    }
                     const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current });
                     if (noteStripped && noteStripped !== ev.text) {
                       onDebugEvent?.('meta_narration_dropped_note_citation_clause', `"${ev.text.slice(0, 60)}" → "${noteStripped.slice(0, 60)}"`);

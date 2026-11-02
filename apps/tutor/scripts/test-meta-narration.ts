@@ -6,10 +6,10 @@
  * Usage: npx tsx scripts/test-meta-narration.ts  (npm run test:meta-narration)
  */
 import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice/idle-nudge';
-import { saysAlreadyAnswered } from '../src/lib/tutor/voice/correct-retry';
+import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -743,7 +743,7 @@ check('§A a short colon tail is still citation', stripNoteCitationClause('The p
 {
   const vtr = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('§A VTR strips the note citation on every turn, before the nudge clause',
-    /if \(typeof ev\.text === 'string'\) \{\s*const noteStripped = stripNoteCitationClause\(ev\.text, \{ personaName: personaNamesRef\.current \}\);/.test(vtr)
+    /if \(typeof ev\.text === 'string'\) \{[\s\S]{0,400}?const noteStripped = stripNoteCitationClause\(ev\.text, \{ personaName: personaNamesRef\.current \}\);/.test(vtr)
     && vtr.indexOf('stripNoteCitationClause(ev.text') < vtr.indexOf('stripNudgePlanClause(ev.text)'));
   check('§A r1 VTR passes the persona name(s) to isMetaNarration', vtr.includes('personaName: personaNamesRef.current,')
     && vtr.includes('[teacherPersona.name, teacherFirstName(teacherPersona.name)]'));
@@ -953,6 +953,29 @@ check("29B r2: single-quoted model kept", !isNotePlanNarration("A natural way to
 check("29B r2: … and not meta narration", !isMetaNarration("A natural way to say it is: 'I'll ask the customer if they need any help.'"));
 check("29B r2: an unquoted plan with apostrophes still dropped", isNotePlanNarration("I'll check if the student's ready, and I'll ask whether they want more."));
 check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("I'll ask whether they know 'ago'."));
+
+// Task 30 §E1 / §E2 (GDI run 17, 409 s / 1289 s): plan clauses, third-person residue, judging narration.
+{
+  const S409 = 'Your reply, "It has helped me present to my boss," is a repeat of the sentence I gave them, so the correct response here is to name what was right and move on.';
+  check('30E1: the 409 s sentence (as spoken) ⇒ dropped', isMetaNarration(S409) && isNotePlanNarration(S409));
+  const RAW409 = 'The student\'s reply, "It has helped me present to my boss," is a repeat of the sentence I gave them, so I will praise it.';
+  check('30E1: a rewritten citation still naming "them" ⇒ third-person residue, dropped', isThirdPersonResidue(RAW409) && stripNoteCitationClause(RAW409) === '' && isMetaNarration(RAW409));
+  check('30E1: a rewrite with no residue keeps its content', stripNoteCitationClause('Their sentence, "I met a customer," is correct.') === 'Your sentence, "I met a customer," is correct.' && !isThirdPersonResidue('Their sentence, "I met a customer," is correct.'));
+  check('30E1: "them" inside the quote is no residue', !isThirdPersonResidue('Their sentence, "I gave them sweets," is correct.'));
+  check('30E1: no rewrite ⇒ never residue ("Tell them about your project.")', !isThirdPersonResidue('Tell them about your project.') && !isMetaNarration('Tell them about your project.'));
+  for (const kept of ['Your sentence is correct, and it uses the present perfect.', "Let's move on to the past simple.", 'The sentence is right.', 'You should say it with the past simple.']) {
+    check(`30E: "${kept}" kept`, !isMetaNarration(kept) && !isNotePlanNarration(kept));
+  }
+  check('30E1: "so I should" ⇒ dropped', isNotePlanNarration('That answer is fine, so I should move on.'));
+  check('30E1: "I should just acknowledge" ⇒ dropped', isNotePlanNarration('I should just acknowledge it and continue.'));
+  check('30E1: "the best next step is to" ⇒ dropped', isNotePlanNarration('The best next step is to ask one more question.'));
+  const S1289 = 'The sentence matches the model, and the stutter at the start is only a repeat, so the sentence itself is right.';
+  check('30E2: the 1289 s sentence ⇒ dropped', isNotePlanNarration(S1289) && isMetaNarration(S1289));
+  check('30E2: "the hesitation doesn\'t count" ⇒ dropped', isNotePlanNarration("The hesitation doesn't count, so it's correct."));
+  check('30E2: the repeat_after_correct directive forbids explaining the judgement', REPEAT_AFTER_CORRECT_REASON.includes('Say that it is right and go on; do not explain how you judged it (no talk of stutters, repeats, matching the model, or what counts).'));
+  const VTR30 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('30E1: VTR logs meta_narration_dropped_third_person_residue', VTR30.includes("onDebugEvent?.('meta_narration_dropped_third_person_residue',"));
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

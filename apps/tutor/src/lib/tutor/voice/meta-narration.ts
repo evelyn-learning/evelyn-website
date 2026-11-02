@@ -344,6 +344,8 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   if (isPersonaSelfAnnounce(raw, opts?.personaName)) return '';
   const s = addressLearner(stripPersonaLead(raw, opts?.personaName));
   if (s !== raw && !s.trim()) return '';
+  // Task 30 §E1: a rewrite that leaves the learner in the third person.
+  if (isThirdPersonResidue(raw, opts)) return '';
   if (CLOSE_PART_NARRATION_RE.test(s)) return '';
   if (isCaptureNarration(s)) return '';
   const keepStripped = stripKeepInMindTail(s);
@@ -476,9 +478,34 @@ const NOTE_PLAN_QUOTE_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n
 const NOTE_PLAN_SINGLE_QUOTE_RE = /(^|[\s:])['‘]((?:[^'‘’\n]|['’](?=\p{L}))+?)['’](?=[\s.,!?;:]|$)/gu;
 const blankSingleQuoted = (s: string) => s.replace(NOTE_PLAN_SINGLE_QUOTE_RE, (m, lead: string, inner: string) => ((inner.match(/[\p{L}\p{N}]+/gu) ?? []).length >= 4 ? `${lead} ` : m));
 const NOTE_PLAN_ADDRESSES_RE = /\b(?:let['’]?s|let us|we|you|your)\b/i;
+// Task 30 §E1 (GDI run 17, 409 s SPOKEN: `Your reply, "…," is a repeat of
+// the sentence I gave them, so the correct response here is to name what was
+// right and move on.`): a plan clause anywhere in a sentence — "the correct /
+// right / best / proper response / move / reply / thing / next step (here) is
+// to", "so I should", "I should (just / simply / now) name / note /
+// acknowledge / accept / confirm / move / correct" — is the brain reasoning
+// aloud, whoever it addresses. §E2 (1289 s SPOKEN: "The sentence matches the
+// model, and the stutter at the start is only a repeat, so the sentence
+// itself is right."): a stutter / hesitation / repeat / filler as the subject
+// of "is only / is just / doesn't count" narrates how the verdict was judged.
+const NOTE_PLAN_CLAUSE_RE = /\b(?:the|my) (?:correct|right|best|proper) (?:response|move|reply|thing|next step)(?: here)? is to\b|\bso I should\b|\bI should (?:just |simply |now )?(?:name|note|acknowledge|accept|confirm|move|correct)\b/i;
+const JUDGING_NARRATION_RE = /\bthe (?:stutter|hesitation|repeat|filler)\b[^.!?;]*?\b(?:is only|is just|doesn['’]t count|does not count)\b/i;
 export function isNotePlanNarration(sentence: string): boolean {
   const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' '));
-  return (NOTE_STATE_REASON_RE.test(s) && !NOTE_PLAN_ADDRESSES_RE.test(s)) || PLAN_ASK_THIRD_PERSON_RE.test(s) || PLAN_THIRD_PERSON_WANTS_RE.test(s);
+  return (NOTE_STATE_REASON_RE.test(s) && !NOTE_PLAN_ADDRESSES_RE.test(s)) || PLAN_ASK_THIRD_PERSON_RE.test(s) || PLAN_THIRD_PERSON_WANTS_RE.test(s)
+    || NOTE_PLAN_CLAUSE_RE.test(s) || JUDGING_NARRATION_RE.test(s);
+}
+/** Task 30 §E1: the learner still in the third person outside quotes. */
+const THIRD_PERSON_RESIDUE_RE = /\b(?:them|their|the student(?:['’]s)?|the learner(?:['’]s)?)\b/i;
+/** Task 30 §E1: the citation rewrite (addressLearner) addressed the learner
+ *  but the sentence still names them in the third person outside quotes —
+ *  the whole sentence is the brain talking ABOUT the student: dropped. */
+export function isThirdPersonResidue(sentence: string, opts?: NoteCitationOpts): boolean {
+  const raw = sentence ?? '';
+  const base = stripPersonaLead(raw, opts?.personaName);
+  const rewritten = addressLearner(base);
+  if (rewritten === base) return false;
+  return THIRD_PERSON_RESIDUE_RE.test(blankSingleQuoted(rewritten.replace(NOTE_PLAN_QUOTE_RE, ' ')));
 }
 const THIRD_PERSON_PLAN_ANYWHERE_RE =
   /\bI(?:['’]ll| will) (?:ask|tell|have|get|let|help|guide|remind|prompt) (?:them|the student|the learner)\b/i;

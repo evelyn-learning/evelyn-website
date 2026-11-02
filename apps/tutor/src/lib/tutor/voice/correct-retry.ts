@@ -660,8 +660,11 @@ export function reAskedModelSentence(prevTutorText: string, studentText: string,
 }
 
 /** Language sessions: the validator rejection (kill + retry) for such a re-ask. */
+// Task 30 §E2 (GDI run 17, 1289 s SPOKEN: "The sentence matches the model, and
+// the stutter at the start is only a repeat, so the sentence itself is
+// right."): the retry narrated how it judged the sentence.
 export const REPEAT_AFTER_CORRECT_REASON = withSilentClause(
-  'The student just said that sentence correctly. Confirm it in one short sentence and move to the next item; do not ask for it again.');
+  'The student just said that sentence correctly. Confirm it in one short sentence and move to the next item; do not ask for it again. Say that it is right and go on; do not explain how you judged it (no talk of stutters, repeats, matching the model, or what counts).');
 
 export const OWN_SENTENCE_RETRY_NOTE =
   '[runtime note — not from the student] Your last turn asked the student to say a sentence they had JUST said, in those words. ' +
