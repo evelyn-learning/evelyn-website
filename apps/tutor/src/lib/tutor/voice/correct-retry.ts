@@ -1165,3 +1165,23 @@ export function reasksAsk(sentence: string | null | undefined, ask: string | nul
   const asks = /[?？]/.test(s) || ASK_LEAD_RE.test(s) || /(?:ください|ましょう|ませんか|ますか)[。]?\s*$/.test(s);
   return asks && sameAsk(s, ask);
 }
+
+/** Task 35 §B (bot run r14, 737 s: "Before we close, can you explain the
+ *  difference between …?" — answered at 715 s): a question sentence whose
+ *  content stems match an answered question of the part with Jaccard ≥ 0.6
+ *  re-asks it. Returns the matched question or null. Pure. */
+export const ANSWERED_REASK_JACCARD = 0.6;
+export function reasksAnsweredQuestion(sentence: string | null | undefined, answered: readonly string[] | null | undefined): string | null {
+  const s = sentence ?? '';
+  if (!/[?？]/.test(s) || !answered?.length) return null;
+  const x = reaskStems(turnAskGist(s) || s);
+  if (x.size === 0) return null;
+  for (const q of answered) {
+    const y = reaskStems(q);
+    if (y.size === 0) continue;
+    let inter = 0;
+    for (const w of x) if (y.has(w)) inter += 1;
+    if (inter / (x.size + y.size - inter) >= ANSWERED_REASK_JACCARD) return q;
+  }
+  return null;
+}

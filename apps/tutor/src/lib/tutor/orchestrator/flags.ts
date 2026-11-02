@@ -1244,3 +1244,10 @@ export const TUTOR_NO_ATTEMPT_MOVE_ON = process.env.NEXT_PUBLIC_TUTOR_NO_ATTEMPT
  *  applied again. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_KILL_REARM_ENTRY_NOTE=off. */
 export const TUTOR_KILL_REARM_ENTRY_NOTE = process.env.NEXT_PUBLIC_TUTOR_KILL_REARM_ENTRY_NOTE !== 'off';
+
+/** Task 35 §B (bot run r14, 693–737 s: the summary re-asked its answered
+ *  contrast question): in a fixed-script closing / recap part the questions
+ *  already asked and answered ride the required_phrase_missing retry
+ *  directive and a running note, and a sentence that re-asks one is dropped.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_ANSWERED_GUARD=off. */
+export const TUTOR_ANSWERED_GUARD = process.env.NEXT_PUBLIC_TUTOR_ANSWERED_GUARD !== 'off';

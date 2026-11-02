@@ -865,6 +865,36 @@ export function scriptMissingAdvanceReason(missing: readonly string[]): string {
   return `This part's script has not been said yet — it must include: ${missing.map((p) => `"${p}"`).join(', ')}. Say it in this turn; the lesson can move on in a later turn.`;
 }
 
+/** Task 35 §B (bot run r14, 693–737 s: the required_phrase_missing retry made
+ *  the summary restate itself and re-ask its contrast question, answered at
+ *  715 s): the retry directive names the part's questions the student has
+ *  already answered (newest last, ≤ 3) — say the missing point(s) only. */
+export function answeredQuestionsClause(answered: readonly string[] | null | undefined): string {
+  const qs = [...new Set((answered ?? []).map((q) => q.trim()).filter(Boolean))].slice(-3);
+  if (!qs.length) return '';
+  return ` The student has already answered: ${qs.map((q) => `"${q.replace(/"/g, "'")}"`).join('; ')} — do not ask it again; say the missing point(s) only.`;
+}
+export function requiredPhraseMissingReason(segId: string, missing: readonly string[], answered?: readonly string[] | null): string {
+  return withSilentClause(
+    `Your narration for segment "${segId}" is missing required phrase(s): ${missing.map((m) => `"${m}"`).join(', ')}. ` +
+    `This segment pins specific narrative parameters (target values, example inputs, etc.) that you must reference verbatim — substituting a different value mid-segment desynchronizes the lesson from the board/segment-card and the student's tracking. ` +
+    `Re-emit your response with each required phrase appearing at least once in the spoken narration.${answeredQuestionsClause(answered)}`);
+}
+/** Task 35 §B: the summary part's running note once one of its questions is
+ *  answered (planted on each student turn there). '' when none. */
+export function answeredInPartNote(answered: readonly string[] | null | undefined): string {
+  const qs = [...new Set((answered ?? []).map((q) => q.trim()).filter(Boolean))].slice(-3);
+  if (!qs.length) return '';
+  return withSilentClause(`[runtime note — not from the student] Already asked and answered in this part — do not ask again: ${qs.map((q) => `"${q.replace(/"/g, "'")}"`).join('; ')}.]`);
+}
+/** Task 35 §B: the part whose answered questions are guarded — the closing
+ *  (last non-extension) part or a recap part of a fixed script. Pure. */
+export function answeredGuardPart(plan: LessonPlan | null | undefined, segmentId: string | null | undefined): boolean {
+  if (!plan || !segmentId || !isFixedScriptPlan(plan)) return false;
+  const seg = plan.segments.find((s) => s.id === segmentId);
+  return !!seg && ((seg.kind ?? '').toLowerCase() === 'recap' || fixedScriptLastSegmentId(plan) === segmentId);
+}
+
 /** Task 18 §B (GDI run 6): the level check's first brain turn said
  *  "Question 1: Can you tell me a little about your job?" with no tool call —
  *  the authored card never went up. On a fixed-script plan the CLIENT puts the

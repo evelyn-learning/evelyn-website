@@ -48,6 +48,8 @@ import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboa
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
+import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
@@ -1263,6 +1265,29 @@ test('35 §A: the kill re-arm commits the advance: entry note planted, the retry
   const clears = VTR.match(/pendingEntryNoteRef\.current = null;/g) ?? [];
   assert.equal(clears.length, 1, 'cleared only where it is consumed');
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_KILL_REARM_ENTRY_NOTE = process\.env\.NEXT_PUBLIC_TUTOR_KILL_REARM_ENTRY_NOTE !== 'off';/);
+});
+
+// ── Task 35 §B: an answered summary question is never re-asked ──
+test('35 §B: the required_phrase_missing directive names the answered question; the running note; the drop', () => {
+  const Q = 'Can you explain the difference between "I have worked here for five years" and "I worked here five years ago"?';
+  const r = requiredPhraseMissingReason('summary', ['one thing you did well'], [Q]);
+  assert.match(r, /missing required phrase\(s\): "one thing you did well"/);
+  assert.ok(r.includes(`The student has already answered: "Can you explain the difference between 'I have worked here for five years' and 'I worked here five years ago'?" — do not ask it again; say the missing point(s) only.`), r);
+  assert.ok(!requiredPhraseMissingReason('summary', ['x'], []).includes('already answered'), 'nothing answered ⇒ the old directive');
+  assert.match(answeredInPartNote([Q]), /^\[runtime note — not from the student\] Already asked and answered in this part — do not ask again: "Can you explain/);
+  assert.equal(answeredInPartNote([]), '');
+  // the 737 s re-ask is dropped; a different question and a statement are kept
+  assert.equal(reasksAnsweredQuestion('Before we close, can you explain the difference between "I have worked here for five years" and "I worked here five years ago"?', [Q]), Q);
+  assert.equal(reasksAnsweredQuestion('Can you say one sentence about your own work, starting with "I have worked"?', [Q]), null);
+  assert.equal(reasksAnsweredQuestion('"I have worked here for five years" means you still work here.', [Q]), null);
+  // the guard is for the closing / recap part of a fixed script only
+  const segs = fixed.segments.map((sg) => sg.id);
+  assert.equal(answeredGuardPart(fixed, segs[segs.length - 1]!), true);
+  assert.equal(answeredGuardPart(fixed, segs[1]!), fixed.segments[1]!.kind === 'recap');
+  assert.equal(answeredGuardPart(null, 'x'), false);
+  pin(VTR, /const reason = requiredPhraseMissingReason\(segIdForPhrases, missing, TUTOR_ANSWERED_GUARD \? answeredInPartRef\.current\.get\(segIdForPhrases\) : null\);/);
+  pin(VTR, /const agHit = reasksAnsweredQuestion\(updatedSentence, answeredGuardQs\);\s*if \(agHit\) \{\s*onDebugEvent\?\.\('answered_question_reask_dropped'/);
+  pin(VTR, /onDebugEvent\?\.\('answered_in_part_note_planted'/);
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

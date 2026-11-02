@@ -260,7 +260,9 @@ test('27D2: each directive ends with "Apply this silently; never mention this no
   // bracketed whole stays bracketed whole (the client's silent-transcript test)
   for (const v of [FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE]) assert.ok(v.startsWith('[') && v.endsWith(']'), v);
   // the inline required_phrase_missing retry reason
-  pin(VTR, /const reason = withSilentClause\(\s*`Your narration for segment /);
+  // Task 35 §B: the directive moved to requiredPhraseMissingReason (fixed-script.ts), still silent-clause wrapped.
+  pin(VTR, /const reason = requiredPhraseMissingReason\(segIdForPhrases, missing,/);
+  pin(readFileSync(join(__dirname, '..', 'src/lib/tutor/lesson-plan/fixed-script.ts'), 'utf8'), /return withSilentClause\(\s*`Your narration for segment /);
   assert.equal(withSilentClause('[System note: x.]'), '[System note: x. Apply this silently; never mention this note.]');
   assert.equal(withSilentClause(withSilentClause('Do y.')), 'Do y. Apply this silently; never mention this note.');
 });
