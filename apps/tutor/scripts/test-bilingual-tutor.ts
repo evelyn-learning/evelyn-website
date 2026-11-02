@@ -57,7 +57,7 @@ import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, 
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
-import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk } from '../src/lib/tutor/voice/correct-retry';
+import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk, noAttemptBudgetTurns } from '../src/lib/tutor/voice/correct-retry';
 import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
 import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { ToolMarkupFilter, stripToolMarkup, hasToolMarkup } from '../src/lib/tutor/voice/tool-markup';
@@ -1972,14 +1972,13 @@ test('34 §A: two non-attempts in a row to the same ask ⇒ the note; an attempt
   const T89 = 'The goal was to... and then what? Let\'s finish the sentence. Please tell me the goal of your project, starting with "The goal was to…" and a verb, like "increase" or "reduce."';
   const T91 = 'The goal was to increase sales in Korea. Let\'s use your own project instead: what was the goal of your project? Start with "The goal was to…" and add a verb, like "reduce" or "improve."';
   const T95 = 'ご自分のプロジェクトの目標を、英語で一文にしてみましょう。 「The goal was to…」で始めて、動詞を一つ入れてください。';
-  for (const x of ['I see.', 'OK.', 'OK, thank you.', 'Yes, I understand.', 'はい', 'わかりました', 'Last month I made a presentation for a new product launch.']) assert.equal(isNonAttempt(x, T91), true, x);
-  for (const x of ['The goal was to reduce costs.', 'What is a goal?', 'My goal was more sales.']) assert.equal(isNonAttempt(x, T91), false, x);
-  assert.equal(isNonAttempt('We wanted more customers.', T91, { judgedCorrect: true }), false, 'judged correct is an attempt');
+  for (const x of ['I see.', 'OK.', 'OK, thank you.', 'Yes, I understand.', 'はい', 'わかりました', 'sorry?', 'Pardon?', 'What was the question?', 'もう一度お願いします']) assert.equal(isNonAttempt(x), true, x);
   assert.equal(sameAsk(T89, T91), true);
   assert.equal(sameAsk(T95, T95), true);
   assert.equal(sameAsk(T91, 'Did you go with your team, or alone?'), false);
   assert.equal(noAttemptStreak([{ tutorText: T89, studentText: 'Yes, I understand.' }, { tutorText: T91, studentText: 'I see.' }]), true);
   assert.equal(noAttemptStreak([{ tutorText: T89, studentText: 'The goal was to sell more.' }, { tutorText: T91, studentText: 'I see.' }]), false, 'one attempt in between');
+  assert.equal(noAttemptStreak([{ tutorText: T89, studentText: 'To reduce costs.' }, { tutorText: T91, studentText: 'Making customers happy.' }]), false, 'r1 I-3: no-overlap answers are attempts');
   assert.equal(noAttemptStreak([{ tutorText: T89, studentText: 'OK.' }, { tutorText: 'Did you go with your team, or alone?', studentText: 'OK.' }]), false, 'a different ask');
   assert.match(NO_ATTEMPT_MOVE_ON_NOTE, /The student has not attempted this twice\. Do not ask it again\. Say the model answer yourself in one sentence \(put it on the board with show_sentence\), then move to the next step of the part \(or advance_lesson if the part's steps are done\)\./);
 });
@@ -1993,8 +1992,28 @@ test('34 §A: a turn that still re-asks has the ask dropped; the model answer st
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('&& noAttemptStreak([naPrev, { tutorText: naLast, studentText: transcript }])) {'));
   assert.ok(vtr.includes("if (noAttemptPinned && (reasksAsk(updatedSentence, noAttemptPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {"));
-  assert.ok(vtr.includes('const autoBudgetTurns = noAttemptDropped && TUTOR_NO_ATTEMPT_MOVE_ON ? Math.max(cur.turns, 10_000) : cur.turns;') && vtr.includes('turns: autoBudgetTurns,'));
+  assert.ok(vtr.includes('turns: autoBudgetTurns,'));
   assert.match(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8'), /export const TUTOR_NO_ATTEMPT_MOVE_ON = process\.env\.NEXT_PUBLIC_TUTOR_NO_ATTEMPT_MOVE_ON !== 'off';/);
+});
+
+test('34 r1 I-3: a non-attempt is a positive list — content words, verbs and Japanese runs are attempts', () => {
+  for (const x of ['To reduce costs.', 'Making customers happy.', '売上を増やすことです', 'Yes, I did.', 'No, I did not.', 'Last month I made a presentation for a new product launch.', 'The goal was to reduce costs.', '目標は売上を増やすことです'])
+    assert.equal(isNonAttempt(x), false, x);
+  for (const x of ['OK.', 'I see.', 'OK, thank you.', 'はい', 'sorry?', 'Yes.', 'No.', 'Got it, thanks.', 'OK, thank you so much.', 'なるほど', 'はい、わかりました'])
+    assert.equal(isNonAttempt(x), true, x);
+});
+test('34 r1 I-2: no precheck parameter (dead) — the streak reads only the two exchanges', () => {
+  const src = readFileSync('src/lib/tutor/voice/correct-retry.ts', 'utf8');
+  assert.equal(/judgedCorrect/.test(src), false);
+});
+test('34 r1 I-4: the budget shortcut only for the part the re-ask belonged to', () => {
+  assert.equal(noAttemptBudgetTurns({ dropped: true, pinnedSegId: 'past-simple', segIdNow: 'past-simple', turns: 4 }), 10_000);
+  assert.equal(noAttemptBudgetTurns({ dropped: true, pinnedSegId: 'past-simple', segIdNow: 'open-conversation', turns: 0 }), 0, 'advanced during the turn: the new part is never skipped');
+  assert.equal(noAttemptBudgetTurns({ dropped: false, pinnedSegId: 'past-simple', segIdNow: 'past-simple', turns: 4 }), 4);
+  assert.equal(noAttemptBudgetTurns({ dropped: true, pinnedSegId: null, segIdNow: 'past-simple', turns: 4 }), 4);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('noAttemptSeg = currentSegmentIdRef.current;'));
+  assert.ok(vtr.includes('noAttemptBudgetTurns({ dropped: noAttemptDropped, pinnedSegId: noAttemptSeg, segIdNow, turns: cur.turns })'));
 });
 
 if (failed) process.exit(1);

@@ -1086,26 +1086,28 @@ export function sameQuestionMoveOnLine(tutorLanguages: readonly string[] | null 
 // ─────────────────────────────────────────────────────────────────────────
 export const NO_ATTEMPT_MOVE_ON_NOTE = withSilentClause(
   "[runtime note — not from the student] The student has not attempted this twice. Do not ask it again. Say the model answer yourself in one sentence (put it on the board with show_sentence), then move to the next step of the part (or advance_lesson if the part's steps are done).]");
-const NON_ATTEMPT_ACK_WORDS = new Set(['ok', 'okay', 'yes', 'yeah', 'yep', 'i', 'see', 'thank', 'thanks', 'you', 'sure', 'hmm', 'mm', 'uh', 'um', 'understand', 'got', 'it', 'right', 'alright', 'well', 'so', 'はい', 'うん', 'ええ', 'わかりました', '分かりました', 'ありがとうございます', 'ありがとう', 'なるほど']);
+// Fix round 1 (I-3) RULING: a non-attempt is a POSITIVE list — a bare
+// acknowledgement / filler / backchannel (≤ 3 words, "please" and a
+// trailing "so / very much" aside), or a clarification question. Anything
+// with a content word, a verb or a Japanese run longer than a backchannel
+// is an ATTEMPT ("To reduce costs.", "Making customers happy.",
+// "売上を増やすことです", "Yes, I did.").
+const NON_ATTEMPT_ACK_WORDS = new Set(['ok', 'okay', 'yes', 'yeah', 'yep', 'no', 'i', 'see', 'sure', 'right', 'alright', 'hmm', 'mm', 'uh', 'um', 'thank', 'thanks', 'you', 'got', 'it', 'understand']);
+const JA_BACKCHANNEL_RE = /^(?:(?:はい|うん|ええ|わかりました|分かりました|なるほど|ありがとう(?:ございます)?|そうですね)[、,。.!！\s]*){1,3}$/;
+const CLARIFY_RE = /^(?:sorry|what|pardon|excuse me|huh)\s*[?？]?$|\bwhat was the question\b|\b(?:can|could) you (?:repeat|say) (?:that|it)\b|^(?:sorry,?\s*)?(?:one more time|again)\s*(?:please)?\s*[?？]?$|もう(?:一|1|１)(?:度|回)|なんですか/i;
+export function isNonAttempt(reply: string | null | undefined): boolean {
+  const r = (reply ?? '').trim();
+  if (!r || /^\s*\[/.test(r)) return false;
+  if (CLARIFY_RE.test(r)) return true;
+  if (JA_BACKCHANNEL_RE.test(r)) return true;
+  const words = r.toLowerCase().replace(/\b(?:so|very) much\b/g, ' ').replace(/[.,!?。、！？…]+/g, ' ').split(/\s+/).filter((w) => w && w !== 'please');
+  return words.length > 0 && words.length <= 3 && words.every((w) => NON_ATTEMPT_ACK_WORDS.has(w));
+}
 const ASK_STOP = new Set([...GIST_STOPWORDS, 'what', 'did', 'does', 'you', 'your', 'there', 'that', 'this', 'how', 'why', 'when', 'where', 'which', 'who', 'was', 'were', 'have', 'has', 'about', 'please', 'tell', 'answer', 'question', 'sentence', 'one', 'now', 'again', 'start', 'starting', 'with', 'my', 'me', 'like', 'english', 'say', 'try', 'let', 'let’s', "let's", 'finish', 'example', 'for', 'own', 'add', 'verb', 'i', 'am', 'yes', 'no']);
 const askStems = (s: string) => new Set((s.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
   .filter((w) => w.length >= 3 && !ASK_STOP.has(w)).map((w) => w.slice(0, 5)));
 const QUOTE_SPAN_RE = /"([^"\n]{3,})"|“([^”\n]{3,})”|「([^」\n]{3,})」/g;
 const askQuotedSpans = (s: string) => [...(s ?? '').matchAll(QUOTE_SPAN_RE)].map((m) => (m[1] ?? m[2] ?? m[3] ?? '').replace(/[.…。\s]+$/, '').trim().toLowerCase()).filter(Boolean);
-/** The reply attempts nothing: a bare acknowledgement / filler, or a
- *  non-question sharing no content word with the ask (and not judged
- *  correct). Pure. */
-export function isNonAttempt(reply: string | null | undefined, ask: string | null | undefined, opts?: { judgedCorrect?: boolean }): boolean {
-  const r = (reply ?? '').trim();
-  if (!r || /^\s*\[/.test(r) || opts?.judgedCorrect) return false;
-  const words = r.toLowerCase().replace(/[.,!?。、！？…]+/g, ' ').split(/\s+/).filter(Boolean);
-  if (words.length > 0 && words.every((w) => NON_ATTEMPT_ACK_WORDS.has(w))) return true;
-  if (/[?？]\s*$/.test(r)) return false;
-  const a = askStems(`${ask ?? ''} ${askQuotedSpans(ask ?? '').join(' ')}`);
-  if (a.size === 0) return false;
-  for (const w of askStems(r)) if (a.has(w)) return false;
-  return true;
-}
 /** Two tutor turns ask the same thing: a shared quoted span (the starter
  *  "The goal was to…"), or ask-gist stems with Jaccard ≥ 0.5. Pure. */
 export function sameAsk(a: string | null | undefined, b: string | null | undefined): boolean {
@@ -1120,11 +1122,19 @@ export function sameAsk(a: string | null | undefined, b: string | null | undefin
 }
 /** The note is due: the last two exchanges asked the same thing and both
  *  replies were non-attempts. Pure. */
-export function noAttemptStreak(exchanges: ReadonlyArray<{ tutorText: string | null | undefined; studentText: string | null | undefined; judgedCorrect?: boolean }>): boolean {
+// Fix round 1 (I-2): no precheck parameter — a positive-list non-attempt
+// (an acknowledgement / clarification) is never a judged answer.
+export function noAttemptStreak(exchanges: ReadonlyArray<{ tutorText: string | null | undefined; studentText: string | null | undefined }>): boolean {
   if (exchanges.length < 2) return false;
   const [e1, e2] = exchanges.slice(-2) as [typeof exchanges[number], typeof exchanges[number]];
   if (!sameAsk(e1.tutorText, e2.tutorText)) return false;
-  return isNonAttempt(e1.studentText, e1.tutorText, { judgedCorrect: e1.judgedCorrect }) && isNonAttempt(e2.studentText, e2.tutorText, { judgedCorrect: e2.judgedCorrect });
+  return isNonAttempt(e1.studentText) && isNonAttempt(e2.studentText);
+}
+/** Fix round 1 (I-4): the budget shortcut applies only to the part the
+ *  re-asked ask belonged to (captured when the note was planted) — a part
+ *  the turn just moved into is never skipped. Pure. */
+export function noAttemptBudgetTurns(input: { dropped: boolean; pinnedSegId: string | null | undefined; segIdNow: string | null | undefined; turns: number }): number {
+  return input.dropped && !!input.pinnedSegId && input.pinnedSegId === input.segIdNow ? Math.max(input.turns, 10_000) : input.turns;
 }
 /** After the note, a sentence of the turn that asks the pinned ask again —
  *  a question / imperative ask with the same gist (retryReasksQuestion, or
