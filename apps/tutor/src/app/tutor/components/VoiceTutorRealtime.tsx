@@ -5370,6 +5370,8 @@ export function VoiceTutorRealtime({
   const answeredInPartRef = useRef<Map<string, string[]>>(new Map());
   // Task 31 §H2: parts whose numbered card's all-answered note was planted.
   const numberedAllAnsweredSegsRef = useRef<Set<string>>(new Set());
+  // Task 31 §D / fix round 1 B-2: the entry note after a brain advance (a plain note, not a FACT note).
+  const pendingEntryNoteRef = useRef<{ segId: string; note: string } | null>(null);
   /** 2026-10-18: tutor turns with a superlative this session — four make the praise note sticky. */
   const superlativeTurnsRef = useRef(0);
   /** 2026-10-18: the route confirmed it cached this session's opener — Start skips the bridge line. */
@@ -13545,6 +13547,17 @@ export function VoiceTutorRealtime({
       // the whole attempt loop (not per-sentence, not per-retry).
       const anchorSuspectThisTurn = pendingBoardAnchorNoteRef.current != null;
       // R2 E2: board-anchor corrective — same convention, own concern.
+      // Task 31 §D (fix round 1 B-2): the brain-advance entry note rides the next
+      // brain turn, whoever triggers it; plain delivery — it never marks a
+      // fixed-script FACT note (fixedScriptNoteDeliveredThisTurnRef stays as is).
+      if (pendingEntryNoteRef.current && !opts?.prefetchOnly) {
+        const en = pendingEntryNoteRef.current;
+        pendingEntryNoteRef.current = null;
+        if (en.segId === currentSegmentIdRef.current) {
+          runTranscript = `${en.note}\n\n${runTranscript}`;
+          onDebugEvent?.('fixed_script_entry_note_planted', `"${en.segId}" delivered with this turn`);
+        }
+      }
       if (pendingRetryCapNoteRef.current) {
         runTranscript = `${pendingRetryCapNoteRef.current}\n\n${runTranscript}`;
         pendingRetryCapNoteRef.current = null;
@@ -21674,15 +21687,13 @@ export function VoiceTutorRealtime({
         && isFixedScriptPlan(lessonPlanRef.current) && currentSegmentIdRef.current && currentSegmentIdRef.current !== turnStartSegmentId
         && !lessonClosedRef.current) {
         const enSeg = currentSegmentIdRef.current;
-        const enMerged = mergePendingRuntimeNote(
-          { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
-          turnStartSegmentId ?? '', enSeg,
-          fixedScriptBrainAdvanceEntryNote(lessonPlanRef.current, enSeg, segmentCardStatement(lessonPlanRef.current, enSeg), fullText),
-        );
-        pendingRuntimeNoteRef.current = enMerged.note;
-        pendingRuntimeNoteSegRef.current = enMerged.segId;
-        pendingRuntimeNoteUrgentRef.current = true;
-        runtimeNoteHeldTurnsRef.current = 0;
+        // Fix round 1 (B-2): its own slot, never the urgent FACT-note slot —
+        // a FACT delivery arms the transition-ask (off-part) kill on the
+        // next turn, and that turn is normally an in-part follow-up.
+        pendingEntryNoteRef.current = {
+          segId: enSeg,
+          note: fixedScriptBrainAdvanceEntryNote(lessonPlanRef.current, enSeg, segmentCardStatement(lessonPlanRef.current, enSeg), fullText),
+        };
         onDebugEvent?.('fixed_script_entry_note_planted', `"${enSeg}" (brain advance)`);
       }
       // Task 24 §B2 (GDI run 12, 352 s: "Let me put the correct sentence on

@@ -42,7 +42,7 @@ import {
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '../src/lib/tutor/lesson-plan/announced-move';
 import { turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
-import { askOffNewPart } from '../src/lib/tutor/lesson-plan/transition-ask';
+import { askOffNewPart, transitionAskCheckDue as transitionAskCheckDueR1 } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel, displayedSegmentId, displayedCompletedSegments } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
@@ -1025,8 +1025,10 @@ test('31D: the entry note after a brain advance — the menu when the advance tu
 test('31D: VTR — a brain advance plants the urgent entry note for the next turn (any trigger)', () => {
   assert.ok(VTR.includes("if (TUTOR_BRAIN_ADVANCE_ENTRY_NOTE && !opts?.prefetchOnly && totalToolNamesSeen.includes('advance_lesson')"));
   assert.ok(VTR.includes('fixedScriptBrainAdvanceEntryNote(lessonPlanRef.current, enSeg, segmentCardStatement(lessonPlanRef.current, enSeg), fullText),'));
-  const at = VTR.indexOf("onDebugEvent?.('fixed_script_entry_note_planted'");
-  assert.ok(at > 0 && VTR.slice(at - 400, at).includes('pendingRuntimeNoteUrgentRef.current = true;'));
+  // fix round 1 (B-2): a plain note in its own slot — never the urgent FACT slot (that arms the off-part kill)
+  const at = VTR.indexOf("onDebugEvent?.('fixed_script_entry_note_planted', `\"${enSeg}\" (brain advance)`);");
+  assert.ok(at > 0 && VTR.slice(at - 700, at).includes('pendingEntryNoteRef.current = {'));
+  assert.ok(!VTR.slice(at - 700, at).includes('pendingRuntimeNoteUrgentRef.current = true;'), 'not the urgent FACT note');
   assert.match(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_BRAIN_ADVANCE_ENTRY_NOTE = process\.env\.NEXT_PUBLIC_TUTOR_BRAIN_ADVANCE_ENTRY_NOTE !== 'off';/);
 });
 // ── Task 31 §G (GDI run 18, 1383–1464 s): the close note names what was asked and answered ──
@@ -1055,6 +1057,20 @@ test('31 r1 B-1: offerAsked needs an item offer AND a strict move alternative; a
   assert.equal(offerHeardFromAcceptance('I called the customer again.', 'What did you do next?'), false, 'a student "again" + a content "next?"');
   assert.equal(offerHeardFromAcceptance('One more, please.', 'Good. What did you do next?'), false, 'no strict move question');
   assert.equal(offerHeardFromAcceptance('Uh, yeah, one more. sentence.', T34), true);
+});
+// ── Task 31 fix round 1 B-2: the turn after a brain advance is not checked off-part ──
+test('31 r1 B-2: the entry note is delivered without marking a FACT note, so an in-part follow-up is not killed', () => {
+  const del = VTR.indexOf("onDebugEvent?.('fixed_script_entry_note_planted', `\"${en.segId}\" delivered with this turn`);");
+  assert.ok(del > 0, 'delivered at dispatch');
+  const block = VTR.slice(VTR.indexOf('if (pendingEntryNoteRef.current && !opts?.prefetchOnly) {'), del + 120);
+  assert.ok(!block.includes('fixedScriptNoteDeliveredThisTurnRef.current = true'), 'no FACT-delivery mark');
+  assert.ok(block.includes('runTranscript = `${en.note}\\n\\n${runTranscript}`;'));
+  // the off-part check runs only on a FACT-note turn or a turn that moved the pointer
+  const card = 'Did you attend any business events or exhibitions last year?';
+  const followUp = 'What did you learn about robotics there?';
+  assert.equal(askOffNewPart(followUp, card), true, 'the token rule alone would kill it');
+  assert.equal(transitionAskCheckDueR1({ factNoteDelivered: false, advancedThisTurn: false, fixedScript: true, card, everyAdvance: true }), false, 'next turn after a brain advance: no check');
+  assert.equal(transitionAskCheckDueR1({ factNoteDelivered: true, advancedThisTurn: false, fixedScript: true, card, everyAdvance: true }), true, 'a FACT delivery would have armed it');
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
