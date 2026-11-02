@@ -1074,3 +1074,67 @@ export function sameQuestionMoveOnLine(tutorLanguages: readonly string[] | null 
   const langs = (tutorLanguages ?? []).map((l) => l.toLowerCase());
   return langs.length > 0 && !langs.some((l) => l.startsWith('en')) && langs.some((l) => l.startsWith('ja')) ? '次に進みましょう。' : "Let's move on.";
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Task 34 §A (bot run r11, 1120–1290 s: "The goal was to…" asked eight times
+// while the student said "I see." / "OK." / "OK, thank you."). Pedagogy:
+// two tries, then teach and move on — and zero tries counts as two. In a
+// language lesson, when the student's last TWO replies are non-attempts to
+// the same ask, the next turn carries NO_ATTEMPT_MOVE_ON_NOTE; a turn that
+// still re-asks has the ask sentence dropped (reasksAsk) and the part's turn
+// budget counts as reached.
+// ─────────────────────────────────────────────────────────────────────────
+export const NO_ATTEMPT_MOVE_ON_NOTE = withSilentClause(
+  "[runtime note — not from the student] The student has not attempted this twice. Do not ask it again. Say the model answer yourself in one sentence (put it on the board with show_sentence), then move to the next step of the part (or advance_lesson if the part's steps are done).]");
+const NON_ATTEMPT_ACK_WORDS = new Set(['ok', 'okay', 'yes', 'yeah', 'yep', 'i', 'see', 'thank', 'thanks', 'you', 'sure', 'hmm', 'mm', 'uh', 'um', 'understand', 'got', 'it', 'right', 'alright', 'well', 'so', 'はい', 'うん', 'ええ', 'わかりました', '分かりました', 'ありがとうございます', 'ありがとう', 'なるほど']);
+const ASK_STOP = new Set([...GIST_STOPWORDS, 'what', 'did', 'does', 'you', 'your', 'there', 'that', 'this', 'how', 'why', 'when', 'where', 'which', 'who', 'was', 'were', 'have', 'has', 'about', 'please', 'tell', 'answer', 'question', 'sentence', 'one', 'now', 'again', 'start', 'starting', 'with', 'my', 'me', 'like', 'english', 'say', 'try', 'let', 'let’s', "let's", 'finish', 'example', 'for', 'own', 'add', 'verb', 'i', 'am', 'yes', 'no']);
+const askStems = (s: string) => new Set((s.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
+  .filter((w) => w.length >= 3 && !ASK_STOP.has(w)).map((w) => w.slice(0, 5)));
+const QUOTE_SPAN_RE = /"([^"\n]{3,})"|“([^”\n]{3,})”|「([^」\n]{3,})」/g;
+const askQuotedSpans = (s: string) => [...(s ?? '').matchAll(QUOTE_SPAN_RE)].map((m) => (m[1] ?? m[2] ?? m[3] ?? '').replace(/[.…。\s]+$/, '').trim().toLowerCase()).filter(Boolean);
+/** The reply attempts nothing: a bare acknowledgement / filler, or a
+ *  non-question sharing no content word with the ask (and not judged
+ *  correct). Pure. */
+export function isNonAttempt(reply: string | null | undefined, ask: string | null | undefined, opts?: { judgedCorrect?: boolean }): boolean {
+  const r = (reply ?? '').trim();
+  if (!r || /^\s*\[/.test(r) || opts?.judgedCorrect) return false;
+  const words = r.toLowerCase().replace(/[.,!?。、！？…]+/g, ' ').split(/\s+/).filter(Boolean);
+  if (words.length > 0 && words.every((w) => NON_ATTEMPT_ACK_WORDS.has(w))) return true;
+  if (/[?？]\s*$/.test(r)) return false;
+  const a = askStems(`${ask ?? ''} ${askQuotedSpans(ask ?? '').join(' ')}`);
+  if (a.size === 0) return false;
+  for (const w of askStems(r)) if (a.has(w)) return false;
+  return true;
+}
+/** Two tutor turns ask the same thing: a shared quoted span (the starter
+ *  "The goal was to…"), or ask-gist stems with Jaccard ≥ 0.5. Pure. */
+export function sameAsk(a: string | null | undefined, b: string | null | undefined): boolean {
+  const qa = new Set(askQuotedSpans(a ?? ''));
+  if (askQuotedSpans(b ?? '').some((q) => qa.has(q))) return true;
+  const x = askStems(turnAskGist(a ?? '') || (a ?? ''));
+  const y = askStems(turnAskGist(b ?? '') || (b ?? ''));
+  if (x.size === 0 || y.size === 0) return false;
+  let inter = 0;
+  for (const w of x) if (y.has(w)) inter += 1;
+  return inter / (x.size + y.size - inter) >= 0.5;
+}
+/** The note is due: the last two exchanges asked the same thing and both
+ *  replies were non-attempts. Pure. */
+export function noAttemptStreak(exchanges: ReadonlyArray<{ tutorText: string | null | undefined; studentText: string | null | undefined; judgedCorrect?: boolean }>): boolean {
+  if (exchanges.length < 2) return false;
+  const [e1, e2] = exchanges.slice(-2) as [typeof exchanges[number], typeof exchanges[number]];
+  if (!sameAsk(e1.tutorText, e2.tutorText)) return false;
+  return isNonAttempt(e1.studentText, e1.tutorText, { judgedCorrect: e1.judgedCorrect }) && isNonAttempt(e2.studentText, e2.tutorText, { judgedCorrect: e2.judgedCorrect });
+}
+/** After the note, a sentence of the turn that asks the pinned ask again —
+ *  a question / imperative ask with the same gist (retryReasksQuestion, or
+ *  stems Jaccard ≥ 0.5, or the same quoted starter). A model answer (no ask)
+ *  is kept. Pure. */
+const ASK_LEAD_RE = /^\s*(?:(?:now|so|ok(?:ay)?|then|again),?\s+)*(?:please|try|say|tell me|finish|start|make|complete|could you|can you|would you)\b/i;
+export function reasksAsk(sentence: string | null | undefined, ask: string | null | undefined): boolean {
+  const s = (sentence ?? '').trim();
+  if (!s || !ask) return false;
+  if (retryReasksQuestion(s, turnAskGist(ask) || ask)) return true;
+  const asks = /[?？]/.test(s) || ASK_LEAD_RE.test(s) || /(?:ください|ましょう|ませんか|ますか)[。]?\s*$/.test(s);
+  return asks && sameAsk(s, ask);
+}

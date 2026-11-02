@@ -1228,3 +1228,10 @@ export const TUTOR_STOP_REQUEST_CHOICE = process.env.NEXT_PUBLIC_TUTOR_STOP_REQU
  *  the offer itself as the turn's last sentence(s) and records it spoken.
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_OFFER_ENGINE_FALLBACK=off. */
 export const TUTOR_OFFER_ENGINE_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_OFFER_ENGINE_FALLBACK !== 'off';
+
+/** Task 34 §A (bot run r11, 1120–1290 s: the same ask eight times to "I
+ *  see." / "OK."): in a language lesson, two non-attempts in a row to the
+ *  same ask plant the model-answer-and-move-on note; a turn that still
+ *  re-asks has the ask dropped and the part's turn budget counts as reached.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_NO_ATTEMPT_MOVE_ON=off. */
+export const TUTOR_NO_ATTEMPT_MOVE_ON = process.env.NEXT_PUBLIC_TUTOR_NO_ATTEMPT_MOVE_ON !== 'off';

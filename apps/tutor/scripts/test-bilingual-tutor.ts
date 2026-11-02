@@ -57,6 +57,7 @@ import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, 
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk } from '../src/lib/tutor/voice/correct-retry';
 import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
 import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { ToolMarkupFilter, stripToolMarkup, hasToolMarkup } from '../src/lib/tutor/voice/tool-markup';
@@ -1955,7 +1956,7 @@ test('33 r1 R9-3: the personal retry never re-asks — the directive forbids it 
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('if (sqReason === SAME_QUESTION_THIRD_TIME_PERSONAL_REASON) sqPersonalPinned = sqAsk;'));
   assert.ok(vtr.includes("if (sqPersonalPinned && (retryReasksQuestion(updatedSentence, sqPersonalPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {"));
-  assert.ok(vtr.includes("if (!attemptKilled && sqPersonalPinned && attempt > 0 && turnNarrationRef.current.length === attemptNarrationStart) {"));
+  assert.ok(vtr.includes("if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped) && turnNarrationRef.current.length === attemptNarrationStart) {"));
 });
 
 test('33 r2 R9-3: paraphrases and statement-form re-asks of the pinned question are caught', () => {
@@ -1964,6 +1965,36 @@ test('33 r2 R9-3: paraphrases and statement-form re-asks of the pinned question 
     assert.equal(retryReasksQuestion(x, pinned), true, x);
   for (const x of ['What did you see there?', 'Did you go with your team?', 'You learned a lot at the trade show, I am sure.', 'Tell me about your weekend.', 'That is a good example.'])
     assert.equal(retryReasksQuestion(x, pinned), false, x);
+});
+
+// Task 34 §A (bot run r11, 1120–1290 s): two non-attempts to the same ask ⇒ model answer + move on.
+test('34 §A: two non-attempts in a row to the same ask ⇒ the note; an attempt in between ⇒ none', () => {
+  const T89 = 'The goal was to... and then what? Let\'s finish the sentence. Please tell me the goal of your project, starting with "The goal was to…" and a verb, like "increase" or "reduce."';
+  const T91 = 'The goal was to increase sales in Korea. Let\'s use your own project instead: what was the goal of your project? Start with "The goal was to…" and add a verb, like "reduce" or "improve."';
+  const T95 = 'ご自分のプロジェクトの目標を、英語で一文にしてみましょう。 「The goal was to…」で始めて、動詞を一つ入れてください。';
+  for (const x of ['I see.', 'OK.', 'OK, thank you.', 'Yes, I understand.', 'はい', 'わかりました', 'Last month I made a presentation for a new product launch.']) assert.equal(isNonAttempt(x, T91), true, x);
+  for (const x of ['The goal was to reduce costs.', 'What is a goal?', 'My goal was more sales.']) assert.equal(isNonAttempt(x, T91), false, x);
+  assert.equal(isNonAttempt('We wanted more customers.', T91, { judgedCorrect: true }), false, 'judged correct is an attempt');
+  assert.equal(sameAsk(T89, T91), true);
+  assert.equal(sameAsk(T95, T95), true);
+  assert.equal(sameAsk(T91, 'Did you go with your team, or alone?'), false);
+  assert.equal(noAttemptStreak([{ tutorText: T89, studentText: 'Yes, I understand.' }, { tutorText: T91, studentText: 'I see.' }]), true);
+  assert.equal(noAttemptStreak([{ tutorText: T89, studentText: 'The goal was to sell more.' }, { tutorText: T91, studentText: 'I see.' }]), false, 'one attempt in between');
+  assert.equal(noAttemptStreak([{ tutorText: T89, studentText: 'OK.' }, { tutorText: 'Did you go with your team, or alone?', studentText: 'OK.' }]), false, 'a different ask');
+  assert.match(NO_ATTEMPT_MOVE_ON_NOTE, /The student has not attempted this twice\. Do not ask it again\. Say the model answer yourself in one sentence \(put it on the board with show_sentence\), then move to the next step of the part \(or advance_lesson if the part's steps are done\)\./);
+});
+test('34 §A: a turn that still re-asks has the ask dropped; the model answer stays', () => {
+  const ask = 'Please finish it in English with a verb of your choice, for example "The goal was to reduce costs." Start with "The goal was to…".';
+  assert.equal(reasksAsk('Please finish it with a verb of your own, for example "The goal was to reduce costs."', ask), true);
+  assert.equal(reasksAsk('Could you tell me, in English, one goal of a project you know, starting with "The goal was to…"?', ask), true);
+  assert.equal(reasksAsk('「The goal was to…」の後に動詞を一つ入れて、一文で言ってみてください。', ask), true);
+  assert.equal(reasksAsk('The goal was to reduce costs.', ask), false, 'the model answer is kept');
+  assert.equal(reasksAsk("Now let's talk about your team.", ask), false);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('&& noAttemptStreak([naPrev, { tutorText: naLast, studentText: transcript }])) {'));
+  assert.ok(vtr.includes("if (noAttemptPinned && (reasksAsk(updatedSentence, noAttemptPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {"));
+  assert.ok(vtr.includes('turns: noAttemptDropped && TUTOR_NO_ATTEMPT_MOVE_ON ? Math.max(cur.turns, 10_000) : cur.turns,'));
+  assert.match(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8'), /export const TUTOR_NO_ATTEMPT_MOVE_ON = process\.env\.NEXT_PUBLIC_TUTOR_NO_ATTEMPT_MOVE_ON !== 'off';/);
 });
 
 if (failed) process.exit(1);
