@@ -1443,5 +1443,28 @@ test('29H r1 (I-4): reporting frames, modal frames, quotes; an unchanged echo is
   assert.equal(levelCheckRestatementCard('You worked with a customer from the USA, right.', S)?.sentence, 'I worked with a customer from the USA.');
 });
 
+test('29H r2 (N-1): a structural frame — a second "you" within a few tokens — takes the clause from it', () => {
+  const S = 'I work with customer from USA. I sold washing machine to him.';
+  for (const t of [
+    'You were saying you work with a customer from the USA.',
+    'You mean you work with a customer from the USA.',
+    'You say you work with a customer from the USA.',
+    'You explained: you work with a customer from the USA.',
+    'You said, you work with a customer from the USA.',
+  ]) {
+    const c = levelCheckRestatementCard(t, S);
+    assert.equal(c?.sentence, 'I work with a customer from the USA.', t);
+    assert.ok(!c!.emphasis.some((w) => /^(?:said|say|saying|mean|explained|were)$/i.test(w)), `${t} ${JSON.stringify(c!.emphasis)}`);
+  }
+  assert.equal(levelCheckRestatementCard('You told me you sold it.', S), null, 'clause under 4 words');
+  assert.equal(firstPersonWriteBack('You know, they like you.'), "I know, they like me.");
+});
+test('29H r2 (N-2): a modal the student said too is a restatement; otherwise rejected', () => {
+  assert.equal(levelCheckRestatementCard('You can speak English well at work.', 'I can speak English at work well.')?.sentence, 'I can speak English well at work.');
+  assert.equal(levelCheckRestatementCard('You want to improve your English for work.', 'I want to improve English for my work.')?.sentence, 'I want to improve my English for work.');
+  assert.equal(levelCheckRestatementCard('You have to call customers every day.', 'I have to call customer every day.')?.sentence, 'I have to call customers every day.');
+  assert.equal(levelCheckRestatementCard('You should say I worked with a customer from the USA.', 'I work with customer from USA. I sold washing machine to him.'), null);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
