@@ -22,6 +22,7 @@ import {
   QPIN_SIDE_PX,
   qpinAutoTopPx,
 } from '../src/lib/tutor/qpin-behavior';
+import { verbatimQuestionPin, stripQuestionLead } from '../src/lib/tutor/question-gist-text';
 
 let pass = 0;
 let fail = 0;
@@ -435,6 +436,18 @@ check('empty transcript → never clears', shouldClearQpinOnAnswer([], 'q1').cle
   check('29J1: the active problem is emptied and the host told', /const noteLessonClosed = \(source: string\) => \{\s*onDebugEvent\?\.\('lesson_closed', source\);\s*if \(!TUTOR_CLOSE_CLEARS_OPEN_QUESTION\) return;\s*currentProblemRef\.current = null;\s*onLessonClosedRef\.current\?\.\(source\);/.test(V), true);
   check('29J1: the host clears its pin (qpin_cleared_closed)', /onLessonClosed=\{\(source\) => \{\s*onDebugEvent\?\.\('qpin_cleared_closed',[^\n]*\n\s*setQuestionPin\(null\);/.test(S), true);
   check('29J1: the event is allowlisted', readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8').includes("'qpin_cleared_closed'"), true);
+}
+
+
+// Task 33 fix round 2 R10-2 (bot run r10 434 s): "The question is:" is never the gist.
+{
+  const T434 = 'Sorry, let me repeat it. The question is: "Did you attend any business events or exhibitions last year?" 去年、展示会やビジネスイベントに参加しましたか？ Please answer in one short sentence, and start with "I went to…" or "I didn\'t…".';
+  check('33 r2 R10-2: the verbatim pin is the quoted question', verbatimQuestionPin(T434), 'Did you attend any business events or exhibitions last year?');
+  check('33 r2 R10-2: a model gist with the lead loses it', stripQuestionLead('The question is: "Did you attend any business events last year?"'), 'Did you attend any business events last year?');
+  check('33 r2 R10-2: no quote — the rest of the sentence', stripQuestionLead('The question was: where did you go?'), 'where did you go?');
+  check('33 r2 R10-2: no lead — unchanged', stripQuestionLead('What is the question about?'), 'What is the question about?');
+  const TS = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
+  check('33 r2 R10-2: TutorSession strips the lead from the model gist', TS.includes("stripQuestionLead(stripMarkdownEmphasis(d.gist.trim()), entry.text)"), true);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

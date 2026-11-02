@@ -215,8 +215,35 @@ export function capPinText(text: string): string {
  *  instead (capped like an ask pin). null ⇒ no question sentence. */
 export function verbatimQuestionPin(text: string): string | null {
   const questions = stripMarkdownEmphasis(text ?? '').match(/[^.!?\n]{4,}\?/g);
-  const last = stripUnbalancedQuotes(questions?.[questions.length - 1] ?? '');
+  const raw = questions?.[questions.length - 1] ?? '';
+  const last = stripUnbalancedQuotes(stripQuestionLead(raw, text));
   return last ? capPinText(last) : null;
+}
+/** Task 33 fix round 2 (R10-2, bot run r10 434 s: the pin read "The question
+ *  is: …"): a "The question is: / the question was: / my question is:" lead
+ *  is not the question — the quoted span after it is (the full quote, read
+ *  from `context` when the match cut it), else the rest of the sentence.
+ *  Unchanged when there is no such lead. Pure. */
+const QUESTION_LEAD_RE = /^\s*(?:(?:so|ok(?:ay)?|now|sorry),?\s*)?(?:the|my|our) (?:question|next question|real question) (?:is|was)\s*:?\s*/i;
+export function stripQuestionLead(question: string, context?: string | null): string {
+  const q = question ?? '';
+  const m = QUESTION_LEAD_RE.exec(q);
+  if (!m) return q;
+  const rest = q.slice(m[0].length).trim();
+  const open = /^["“「]/.exec(rest);
+  if (open) {
+    const close = open[0] === '「' ? '」' : open[0] === '“' ? '”' : '"';
+    const inRest = rest.indexOf(close, 1);
+    if (inRest > 0) return rest.slice(1, inRest).trim();
+    const ctx = context ?? '';
+    const at = ctx.indexOf(rest.slice(1, Math.min(rest.length, 24)));
+    if (at >= 0) {
+      const end = ctx.indexOf(close, at);
+      if (end > at) return ctx.slice(at, end).trim();
+    }
+    return rest.slice(1).trim();
+  }
+  return rest;
 }
 
 /** Language sessions: the pin a tutor turn would carry, before any gist —
