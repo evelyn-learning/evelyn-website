@@ -1248,5 +1248,25 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('A5a: nothing addressed remains ⇒ dropped', isMetaNarration('The session is over, so I will stop here.'));
 }
 
+// Task 31 fix round 9 §E (GDI run 18): narration gaps.
+{
+  const keep = (x: string) => !isMetaNarration(x) && stripNoteCitationClause(x) === x;
+  const S568 = "I'll stop here for a moment; the notes above are instructions for me, so let me just carry on with the lesson.";
+  check('31E: 568 s notes narration ⇒ dropped', isMetaNarration(S568));
+  check('31E: 855 s "Let me answer your last point first:" lead stripped', stripNoteCitationClause('Let me answer your last point first: "I learned how to write good generic code" is a clear, natural sentence.') === '"I learned how to write good generic code" is a clear, natural sentence.');
+  check('31E: the lead with a plain rest ⇒ capitalised rest', stripNoteCitationClause('Let me answer your previous question first, yes, it is correct.') === 'Yes, it is correct.');
+  check('31E: 1094 s "The lesson isn\'t over yet, so let\'s finish …" ⇒ dropped', isMetaNarration("The lesson isn't over yet, so let's finish the last part properly."));
+  check('31E: 164 s card-layout narration ⇒ dropped', isMetaNarration("Here's the key idea, with the English phrase large and the Japanese note below."));
+  check('31E: "Take a moment to look at this card." kept', keep('Take a moment to look at this card.'));
+  check('31E: 1186 s non-Japanese "In Japanese, the word is" gloss ⇒ dropped', isMetaNarration('In Japanese, the word is 「responsibilities」.'));
+  check('31E: a real Japanese gloss kept', keep('In Japanese, the word is 「責任」.'));
+  check('31E: 1420 s "finally said" ⇒ "I\'m glad you said …"', stripNoteCitationClause("I'm very glad you finally said the sentence you'll use with your boss.") === "I'm glad you said the sentence you'll use with your boss." && !isMetaNarration("I'm very glad you finally said the sentence you'll use with your boss."));
+  check('31E: "Finally, say the whole sentence." kept', keep('Finally, say the whole sentence.'));
+  check('31E: "Your notes can go in the email." kept', keep('Your notes can go in the email.'));
+  check('31E: "We\'ll finish the lesson with a summary." kept', keep("We'll finish the lesson with a summary."));
+  check('31E: "Read the sentence below." kept (one position word)', keep('Read the sentence below.'));
+  check('31E: "We\'re not finished with this part yet, are you ready for one more?" kept', keep("We're not finished with this part yet, are you ready for one more?"));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

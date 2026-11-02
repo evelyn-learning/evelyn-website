@@ -393,6 +393,9 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   // Fix round 8 (A5): the lesson's state + the tutor's consequent plan goes.
   s = stripLessonStateClause(s);
   if (!s.trim()) return '';
+  // Task 31 §E: directive-echo lead, the refusal narrated, card layout, a non-CJK "In Japanese" gloss, "finally said".
+  s = stripRound9Narration(s);
+  if (!s.trim()) return '';
   if (CLOSE_PART_NARRATION_RE.test(s)) return '';
   if (isCaptureNarration(s)) return '';
   const keepStripped = stripKeepInMindTail(s);
@@ -613,7 +616,10 @@ export const EXCHANGE_NARRATION_JA_RE = /^\s*(?:この|今の)(?:やり取り|�
  *  them (internal, meant for me, not your words / answer, set aside, ignore,
  *  pick up the lesson, mix-up). */
 const NOTES_MENTION_RE = /\bnotes?\b|\bblocks?\b|\bbracketed text\b|\bthe text you (?:just )?sent\b/i;
-const NOTES_VERDICT_RE = /\binternal\b|\bmeant for me\b|\bnot (?:your|the student['’]?s) (?:words|answer)\b|\bset (?:them|it) aside\b|\bignore (?:them|it)\b|\bpick up the lesson\b|\bmix-up\b/i;
+// Task 31 §E (GDI run 18, 568 s, spoken: "I'll stop here for a moment; the
+// notes above are instructions for me, so let me just carry on with the
+// lesson."): instructions for me / carry on with the lesson / let me get on.
+const NOTES_VERDICT_RE = /\binternal\b|\bmeant for me\b|\bnot (?:your|the student['’]?s) (?:words|answer)\b|\bset (?:them|it) aside\b|\bignore (?:them|it)\b|\bpick up the lesson\b|\bmix-up\b|\binstructions for me\b|\bcarry on with the lesson\b|\bjust carry on\b|\blet me (?:just )?(?:carry|get) on\b/i;
 export function isBundledNotesNarration(s: string): boolean {
   return NOTES_MENTION_RE.test(s) && NOTES_VERDICT_RE.test(s);
 }
@@ -658,6 +664,43 @@ export function stripLessonStateClause(s: string): string {
     .replace(/^[\s,;:]*(?:(?:but|and|so|though)\b[\s,]*)?/i, '').replace(/\s+([,.!?])/g, '$1').trim();
   if (!rest || !/\b(?:you|your|please)\b/i.test(rest)) return '';
   return capitaliseFirst(rest);
+}
+/** Task 31 §E (GDI run 18). Pure; used by stripNoteCitationClause.
+ *  - "Let me answer your last point first:" — a directive-echo LEAD (the
+ *    retry directive says "answer a question or a correction first"): the
+ *    lead goes, the rest stays (855 s);
+ *  - "The lesson isn't over yet, so let's finish …" — the premature-farewell
+ *    refusal narrated: a sentence with "lesson" + over / finished / done +
+ *    "yet" and a negation is dropped (1094 s);
+ *  - card-layout narration — "with the English phrase large and the
+ *    Japanese note below": a size word right after a card element, or two
+ *    element + position / size descriptors, is dropped ("Take a moment to
+ *    look at this card." is a real instruction and stays) (164 s);
+ *  - "In Japanese, the word is 「responsibilities」." — a gloss in a CJK
+ *    language whose quoted content has no CJK character is dropped (1186 s);
+ *  - "I'm very glad you finally said …" → "I'm glad you said …" (1420 s). */
+const ANSWER_FIRST_LEAD_RE = /^\s*Let me answer your (?:last|previous) (?:point|question|message) first[:,]?\s*/i;
+const NOT_OVER_YET_RE = /\blesson\b(?=.*\b(?:over|finished|done)\b)(?=.*\byet\b)(?=.*\b(?:isn['’]t|is not|not|hasn['’]t|has not)\b)/i;
+const LAYOUT_ELEMENT = '(?:phrase|note|notes|sentence|text|word|words|english|japanese|translation|gloss|card|example)';
+const LAYOUT_SIZE_AFTER_RE = new RegExp(`\\b${LAYOUT_ELEMENT} (?:large|small|big|bigger|smaller|in large (?:print|letters|type))\\b`, 'i');
+const LAYOUT_DESCRIPTOR_RE = new RegExp(`\\b${LAYOUT_ELEMENT} (?:large|small|big|bigger|smaller|below|above|underneath|beneath|on top|at the (?:top|bottom)|on the (?:left|right))\\b`, 'gi');
+const CJK_GLOSS_RE = /^\s*In (?:Japanese|Chinese|Mandarin|Korean), the (?:word|phrase|sentence|expression) is\s*[「『"“]([^」』"”]+)[」』"”]/i;
+const CJK_CHAR_RE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+const FINALLY_SAID_RE = /^(\s*I['’]m) (?:very |so )?glad you finally said\b/i;
+export function stripRound9Narration(s: string): string {
+  let out = s ?? '';
+  const lead = ANSWER_FIRST_LEAD_RE.exec(out);
+  if (lead) {
+    out = out.slice(lead[0].length).trim();
+    if (!out) return '';
+    out = /^["“「]/.test(out) ? out : capitaliseFirst(out);
+  }
+  if (NOT_OVER_YET_RE.test(out)) return '';
+  if (LAYOUT_SIZE_AFTER_RE.test(out) || (out.match(LAYOUT_DESCRIPTOR_RE) ?? []).length >= 2) return '';
+  const gloss = CJK_GLOSS_RE.exec(out);
+  if (gloss && !CJK_CHAR_RE.test(gloss[1]!)) return '';
+  out = out.replace(FINALLY_SAID_RE, '$1 glad you said');
+  return out;
 }
 export const LESSON_CLOSED_NARRATION_RE = /\b(?:can['’]?t|cannot) (?:continue|go on with) the lesson\b|\b(?:lesson|session|class|it)(?:['’]s| (?:has|had|is|was))? already (?:closed|ended)\b/i;
 export const REDO_LEAD_RE = /^\s*Let me (?:ask|say|put|try) (?:that|it|this|again)[^.?!]{0,20}[.!]\s*$/i;
