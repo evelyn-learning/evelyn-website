@@ -1185,3 +1185,9 @@ export const TUTOR_OPENER_WAITS_FOR_PLAN = process.env.NEXT_PUBLIC_TUTOR_OPENER_
  *  language lesson with a pending ask re-asks it instead of "didn't come up
  *  with anything". Client-side: default ON; NEXT_PUBLIC_TUTOR_EMPTY_TURN_REASK=off. */
 export const TUTOR_EMPTY_TURN_REASK = process.env.NEXT_PUBLIC_TUTOR_EMPTY_TURN_REASK !== 'off';
+
+/** Task 31 §D (GDI run 18, 1118 s): after a brain turn that moved a
+ *  fixed-script pointer itself (advance_lesson), the next brain turn carries
+ *  the part's entry note (choice menu when unread). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_BRAIN_ADVANCE_ENTRY_NOTE=off. */
+export const TUTOR_BRAIN_ADVANCE_ENTRY_NOTE = process.env.NEXT_PUBLIC_TUTOR_BRAIN_ADVANCE_ENTRY_NOTE !== 'off';

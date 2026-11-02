@@ -35,6 +35,7 @@ import {
   FIXED_SCRIPT_OFFER_MAX_WAIT_MS, offerWaitExpired,
   offerAccepted, fixedScriptOfferAcceptedNote, FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, CLOSE_REFUSAL_EXEMPT_REMAINING_MS,
   fixedScriptOfferContinueDirective, FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, attemptAsksStudent, offerReplantDue, offerHeardFromAcceptance,
+  fixedScriptBrainAdvanceEntryNote, menuReadInTurn, FIXED_SCRIPT_ENTRY_MENU_CLAUSE,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
@@ -1005,6 +1006,28 @@ test('31B: an acceptance after a move-on question proves the offer was heard (VT
   assert.equal(offerHeardFromAcceptance("Let's move on.", T34), false, 'a decline');
   assert.ok(VTR.includes("&& offerHeardFromAcceptance(transcript, oaLastTutor)) {"));
   assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_spoken', `\"${oaSeg}\" (accepted)`);"));
+});
+// ── Task 31 §D (GDI run 18, 1118 s): the brain's own advance → the next turn carries the entry note ──
+test('31D: the entry note after a brain advance — the menu when the advance turn did not read it', () => {
+  const plan = JSON.parse(readFileSync(join(__dirname, '..', '..', '..', 'docs/whitelabel/gdi/plans/gdi-work-projects-v1.json'), 'utf8')) as LessonPlan;
+  const card = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  const T1118 = 'Pronunciation practice it is. 発音の練習ですね、わかりました。 Let\'s move on to it now. Which sentence will you say first?';
+  assert.equal(menuReadInTurn(card, T1118), false);
+  const note = fixedScriptBrainAdvanceEntryNote(plan, 'pronunciation', card, T1118);
+  assert.ok(note.startsWith('[runtime note — not from the student] Your last turn moved the lesson to "'), note);
+  assert.ok(note.includes(FIXED_SCRIPT_ENTRY_MENU_CLAUSE));
+  assert.ok(note.endsWith('Apply this silently; never mention this note.]'));
+  const read = 'Pronunciation it is. You can choose individual words, a complete sentence, speaking more naturally, or skip. Which one?';
+  assert.equal(menuReadInTurn(card, read), true);
+  assert.ok(!fixedScriptBrainAdvanceEntryNote(plan, 'pronunciation', card, read).includes(FIXED_SCRIPT_ENTRY_MENU_CLAUSE));
+  assert.ok(fixedScriptBrainAdvanceEntryNote(plan, 'past-simple', 'Did you attend any events last year?', 'Next part.').includes('continue that part from its notes'));
+});
+test('31D: VTR — a brain advance plants the urgent entry note for the next turn (any trigger)', () => {
+  assert.ok(VTR.includes("if (TUTOR_BRAIN_ADVANCE_ENTRY_NOTE && !opts?.prefetchOnly && totalToolNamesSeen.includes('advance_lesson')"));
+  assert.ok(VTR.includes('fixedScriptBrainAdvanceEntryNote(lessonPlanRef.current, enSeg, segmentCardStatement(lessonPlanRef.current, enSeg), fullText),'));
+  const at = VTR.indexOf("onDebugEvent?.('fixed_script_entry_note_planted'");
+  assert.ok(at > 0 && VTR.slice(at - 400, at).includes('pendingRuntimeNoteUrgentRef.current = true;'));
+  assert.match(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_BRAIN_ADVANCE_ENTRY_NOTE = process\.env\.NEXT_PUBLIC_TUTOR_BRAIN_ADVANCE_ENTRY_NOTE !== 'off';/);
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

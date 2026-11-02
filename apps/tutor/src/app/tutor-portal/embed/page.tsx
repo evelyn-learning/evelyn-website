@@ -365,6 +365,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'opener_waits_for_plan', 'opener_plan_wait_done', 'opener_stood_down_student_spoke',
   // Task 30 fix round 8 A4: the empty-turn fallback re-asked the pending question.
   'empty_turn_fallback_reask',
+  // Task 31 fix round 9 §D: the brain's own advance plants the part's entry note.
+  'fixed_script_entry_note_planted',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

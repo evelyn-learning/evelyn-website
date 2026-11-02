@@ -342,5 +342,11 @@ test('31C3: a handwritten sentence is the shown sentence (VTR)', () => {
   assert.ok(VTR.includes('if (hwSentence) turnShownSentenceRef.current = hwSentence;'));
 });
 
+test('31D: "Please listen, then repeat after me: responsibilities. Responsibilities." arms the word', () => {
+  assert.deepEqual(detectPronunciationTarget('No problem. Let\'s start with a word. Please listen, then repeat after me: responsibilities. Responsibilities.', T31), { referenceText: 'responsibilities', kind: 'word' });
+  assert.equal(colonTarget('Repeat after me: responsibilities, responsibilities.'), 'responsibilities', 'a trailing duplicate is stripped');
+  assert.equal(detectPronunciationTarget('Listen, then repeat after me: international.', T31)?.referenceText, 'international');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

@@ -605,6 +605,30 @@ export function fixedScriptChoiceMenuClause(card: { statement?: string; hasChoic
   return boardOffersChoices(problem) ? FIXED_SCRIPT_CHOICE_MENU_CLAUSE : '';
 }
 
+/** Task 31 §D (GDI run 18, 1118 s: the brain's own advance_lesson into the
+ *  pronunciation part asked "Which sentence will you say first?" — the part's
+ *  choice menu was never read, and no fixed-script note was ever delivered
+ *  for that part): after a brain turn that moved the pointer itself, the next
+ *  brain turn — whoever triggers it (the student, a continuation, a nudge) —
+ *  carries this urgent entry note. A choice-menu card the advance turn did
+ *  not read (menuReadInTurn) gets the menu instruction. Pure. */
+export const FIXED_SCRIPT_ENTRY_MENU_CLAUSE =
+  "Its card is a choice menu the student has not heard yet: read the choices from the card, ask the student to pick one, and wait for their choice. Nothing else.";
+export function fixedScriptBrainAdvanceEntryNote(plan: LessonPlan | null | undefined, to: string, cardStatement: string, advanceTurnText: string): string {
+  const menu = boardOffersChoices({ statement: cardStatement }) && !menuReadInTurn(cardStatement, advanceTurnText);
+  return withSilentClause(`[runtime note — not from the student] Your last turn moved the lesson to "${fixedScriptPartLabel(plan, to)}"; that part's notes apply from now on. ${menu ? FIXED_SCRIPT_ENTRY_MENU_CLAUSE : "Reply to the student's last words, then continue that part from its notes."}]`);
+}
+/** True ⇒ the turn named at least two of the card's numbered choices (a
+ *  content word of ≥ 4 letters of each). */
+export function menuReadInTurn(cardStatement: string, turnText: string): boolean {
+  const options = (cardStatement ?? '').split(/\b(?:[1-9]|[A-D])\)\s*/).slice(1);
+  const said = (turnText ?? '').toLowerCase();
+  const named = options.filter((o) => (o.toLowerCase().match(/[a-z]{4,}/g) ?? [])
+    .filter((w) => !['with', 'your', 'more', 'than', 'that', 'this', 'from', 'and', 'continue'].includes(w))
+    .some((w) => new RegExp(`\\b${w}\\b`).test(said)));
+  return named.length >= 2;
+}
+
 /** Task 22 §A (GDI run 10, 574 s / 882 s): a due auto-advance on a turn that
  *  ENDS with a question to the student flipped the page at turn end — the
  *  answer and its card landed on the NEXT part's page. Held like the
