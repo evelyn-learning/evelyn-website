@@ -948,5 +948,11 @@ for (const x of [
 }
 check('29B r1: the 693 s sentence still dropped', isMetaNarration("Since the past simple segment is complete, I'll close it in one sentence and ask whether they want one more practice sentence or to move on."));
 
+// Task 29 fix round 2 (N-3): a single-quoted model sentence is speech; apostrophes in words untouched.
+check("29B r2: single-quoted model kept", !isNotePlanNarration("A natural way to say it is: 'I'll ask the customer if they need any help.'"));
+check("29B r2: … and not meta narration", !isMetaNarration("A natural way to say it is: 'I'll ask the customer if they need any help.'"));
+check("29B r2: an unquoted plan with apostrophes still dropped", isNotePlanNarration("I'll check if the student's ready, and I'll ask whether they want more."));
+check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("I'll ask whether they know 'ago'."));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

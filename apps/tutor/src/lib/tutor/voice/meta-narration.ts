@@ -470,9 +470,14 @@ const PLAN_THIRD_PERSON_WANTS_RE = /\bI['’]ll\b[^.;]*\b(?:they|the student|the
 // addressed to the student is the spoken close ("Since this part is complete,
 // let's move on to …") — neither is dropped.
 const NOTE_PLAN_QUOTE_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
+// Fix round 2 (N-3): a single-quoted span of ≥ 4 words — the opening mark at
+// the start / after a space or colon, the closing one before punctuation or
+// the end; an apostrophe inside a word (I'll, customer's) is never a mark.
+const NOTE_PLAN_SINGLE_QUOTE_RE = /(^|[\s:])['‘]((?:[^'‘’\n]|['’](?=\p{L}))+?)['’](?=[\s.,!?;:]|$)/gu;
+const blankSingleQuoted = (s: string) => s.replace(NOTE_PLAN_SINGLE_QUOTE_RE, (m, lead: string, inner: string) => ((inner.match(/[\p{L}\p{N}]+/gu) ?? []).length >= 4 ? `${lead} ` : m));
 const NOTE_PLAN_ADDRESSES_RE = /\b(?:let['’]?s|let us|we|you|your)\b/i;
 export function isNotePlanNarration(sentence: string): boolean {
-  const s = (sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' ');
+  const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' '));
   return (NOTE_STATE_REASON_RE.test(s) && !NOTE_PLAN_ADDRESSES_RE.test(s)) || PLAN_ASK_THIRD_PERSON_RE.test(s) || PLAN_THIRD_PERSON_WANTS_RE.test(s);
 }
 const THIRD_PERSON_PLAN_ANYWHERE_RE =
