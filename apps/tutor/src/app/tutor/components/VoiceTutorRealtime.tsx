@@ -441,7 +441,7 @@ import { fixedScriptTransitionDecision, offerAsked, offerDeclined, transitionOff
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
-import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation } from '@/lib/tutor/lesson-plan/announced-move';
+import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -12633,6 +12633,8 @@ export function VoiceTutorRealtime({
     // Task 23 §G2: the note this turn carried — re-delivered on any retry.
     let pronunciationNoteThisTurn: string | null = null;
     const turnStartSegmentId = currentSegmentIdRef.current;
+    // Task 29 §K2: a fixed-script continuation turn never re-speaks a sentence of the turn it continues.
+    const continuedTurnText = isFixedScriptContinueDirective(transcript) ? (recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '') : '';
     const turnStartCompletedSegmentIds = new Set(completedSegmentIdsRef.current);
     // Task 28 §D: a student turn at the open repeat ask counts one attempt.
     if (!opts?.prefetchOnly && repeatAskTriesRef.current) {
@@ -16747,6 +16749,12 @@ export function VoiceTutorRealtime({
                   if (metaNarrationRe) {
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
                     onDebugEvent?.('meta_narration_dropped', updatedSentence.slice(0, 80));
+                    continue;
+                  }
+                  // Task 29 §K2 (GDI run 16, 479 s): the continuation re-spoke
+                  // the continued turn's first sentence — the student heard it twice.
+                  if (continuedTurnText && continuationRepeatsSentence(updatedSentence, continuedTurnText)) {
+                    onDebugEvent?.('continuation_duplicate_dropped', updatedSentence.slice(0, 80));
                     continue;
                   }
                   // The derivation that follows the announcement is ordinary

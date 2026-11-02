@@ -14,7 +14,9 @@
  */
 import type { LessonPlan, Segment } from './types';
 import { isFixedScriptPlan, nextSegmentId, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS } from './fixed-script';
-import { lastAskSentence, lastQuestionSentence, lastSentenceAsks } from '../question-gist-text';
+import { lastAskSentence, lastQuestionSentence, lastSentenceAsks, splitSentences, stripMarkdownEmphasis } from '../question-gist-text';
+import { expectedRepeatFor } from '../voice/correct-retry';
+import { sameSentence } from '../voice/sentence-board';
 
 /** A sentence that announces moving on (EN + JA). The keyword gate in
  *  announcedMoveTarget is required too — the phrase alone never moves. */
@@ -213,7 +215,34 @@ export function noAskTurnNeedsContinuation(input: {
 }): boolean {
   if (!input.fixedScript || input.runtimeTriggered || input.closing || input.pronunciationArmed) return false;
   if (input.toolsSeen.some((t) => NOASK_EXEMPT_TOOLS.has(t))) return false;
+  // Task 29 §K1: a turn ending on a repeat ask is an ask.
+  if (endsWithRepeatAsk(input.text)) return false;
   return announcedTurnNeedsContinuation(input.text);
+}
+
+/** Task 29 §K1 (GDI run 16, 467 → 479 s: the turn ended `Let's say it with
+ *  the present perfect: "I have presented at an international meeting."`, a
+ *  repeat ask; fixed_script_noask_continue fired and the next turn re-spoke
+ *  its first sentence): the last sentence is a quoted model sentence of ≥ 4
+ *  words introduced by say / repeat / try / read, or the turn names a line
+ *  the student is expected to say (expectedRepeatFor). */
+const REPEAT_ASK_TAIL_RE = /\b(?:say|repeat|try|read)\b[^"“「]*["“「]([^"”」]+)["”」]\s*[.!]?\s*$/i;
+export function endsWithRepeatAsk(text: string | null | undefined): boolean {
+  const t = (text ?? '').trim();
+  if (!t) return false;
+  const sentences = splitSentences(stripMarkdownEmphasis(t));
+  const m = REPEAT_ASK_TAIL_RE.exec(sentences[sentences.length - 1] ?? '');
+  if (m && (m[1]!.match(/[\p{L}\p{N}]+(?:['’][\p{L}]+)*/gu) ?? []).length >= 4) return true;
+  return expectedRepeatFor(t, null, null) !== null;
+}
+
+/** Task 29 §K2: a sentence of a continuation turn that says a sentence of the
+ *  turn it continues again (sameSentence; ≥ 4 words — a short "Yes." or
+ *  "Good." is never dropped) — the student would hear it twice. */
+export function continuationRepeatsSentence(sentence: string | null | undefined, continuedTurn: string | null | undefined): boolean {
+  const s = (sentence ?? '').trim();
+  if (!s || !continuedTurn || (s.match(/[\p{L}\p{N}]+/gu) ?? []).length < 4) return false;
+  return splitSentences(stripMarkdownEmphasis(continuedTurn)).some((x) => (x.match(/[\p{L}\p{N}]+/gu) ?? []).length >= 4 && sameSentence(x, s));
 }
 
 // ── Task 26 §B1: the forced close waits for the answer to its question ────

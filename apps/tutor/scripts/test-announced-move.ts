@@ -8,7 +8,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation } from '../src/lib/tutor/lesson-plan/announced-move';
+import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, endsWithRepeatAsk, continuationRepeatsSentence } from '../src/lib/tutor/lesson-plan/announced-move';
 import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, isFixedScriptContinueDirective, fixedScriptContinueDirective, FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE,
   FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { TRANSITION_ASK_REASON } from '../src/lib/tutor/lesson-plan/transition-ask';
@@ -115,7 +115,7 @@ test('B: VTR — only when the budget rule did not fire, flag on, no advance_les
   pin(VTR, /const announcedTarget = \(!autoReason \|\| offerPartDue\) && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts\?\.prefetchOnly\s*&& !totalToolNamesSeen\.includes\('advance_lesson'\)\s*\? announcedMoveTarget\(\{ tutorText: fullText, plan: autoPlan, currentSegmentId: segIdNow, levelKnown: !!workingLevelRef\.current \}\)/);
   pin(VTR, /const announcedNext = !!announcedTarget && !!autoPlan && announcedTarget === nextSegmentId\(autoPlan, segIdNow, !!workingLevelRef\.current\);\s*const advanceReason: 'turns' \| 'time' \| 'announced' \| null = \(offerPartDue && announcedNext \? 'announced' : autoReason\)\s*\?\? \(announcedNext \? 'announced' : null\);/);
   // the same advance path (pron hold, applyResolvedAdvance, FACT note) runs on advanceReason
-  pin(VTR, /if \(!advanceReason\) \{ autoAdvancePronHeldRef\.current = 0; autoAdvanceAskHeldRef\.current = 0; \}\n\s*if \(autoPlan && advanceReason\) \{/);
+  pin(VTR, /if \(!advanceReason\) \{ autoAdvancePronHeldRef\.current = 0; autoAdvanceAskHeldRef\.current = 0; \}\n[\s\S]{0,1800}?if \(autoPlan && advanceReason\) \{/);
   pin(VTR, /reason=\$\{advanceReason\} turns=/);
 });
 
@@ -318,6 +318,27 @@ test('28B r1 m-1: noun / interjection / negated readings are no ask; "let me kno
     assert.equal(sentenceAsksStudent(x), false, x);
   assert.equal(sentenceAsksStudent("Let me know when you're ready, and tell me one thing you did."), true);
   assert.equal(sentenceAsksStudent("Let me show you the card, and then I'll read it."), false);
+});
+
+// Task 29 §K (GDI run 16, 467 → 480 s): a repeat ask is an ask; a continuation never re-speaks the continued turn.
+test('29K1: the 467 s repeat-ask turn → no continuation; a statement turn → continue as today', () => {
+  const base = { fixedScript: true, runtimeTriggered: false, toolsSeen: [] as readonly string[], closing: false, pronunciationArmed: false };
+  const t467 = 'Yes, you have presented at an international meeting, and the past simple works well for that. Let\'s say it with the present perfect: "I have presented at an international meeting."';
+  assert.equal(endsWithRepeatAsk(t467), true);
+  assert.equal(noAskTurnNeedsContinuation({ ...base, text: t467 }), false);
+  assert.equal(noAskTurnNeedsContinuation({ ...base, text: 'Thank you, that is useful, so the level check is complete.' }), true);
+  assert.equal(noAskTurnNeedsContinuation({ ...base, text: 'Try this one: "I have worked here since 2020."' }), false);
+  assert.equal(endsWithRepeatAsk('The model is "I have worked here."'), false, 'no say / repeat / try / read');
+  assert.equal(endsWithRepeatAsk('Say "Yes, please."'), false, 'fewer than 4 words');
+});
+test('29K2: a continuation sentence the continued turn already said is dropped (VTR filter)', () => {
+  const prev = 'Yes, you have presented at an international meeting, and the past simple works well for that. Let\'s say it with the present perfect: "I have presented at an international meeting."';
+  assert.equal(continuationRepeatsSentence('Yes, you have presented at an international meeting, and the past simple works well for that.', prev), true);
+  assert.equal(continuationRepeatsSentence('Next, let\'s go back to our question on the board: have you worked for your current company for a long time?', prev), false);
+  assert.equal(continuationRepeatsSentence('Yes.', prev), false, 'short sentences are kept');
+  assert.equal(continuationRepeatsSentence('Anything at all here today.', ''), false);
+  pin(VTR, /const continuedTurnText = isFixedScriptContinueDirective\(transcript\) \? \(recentTutorTurnsRef\.current\[recentTutorTurnsRef\.current\.length - 1\] \?\? ''\) : '';/);
+  pin(VTR, /if \(continuedTurnText && continuationRepeatsSentence\(updatedSentence, continuedTurnText\)\) \{\s*onDebugEvent\?\.\('continuation_duplicate_dropped', updatedSentence\.slice\(0, 80\)\);\s*continue;/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
