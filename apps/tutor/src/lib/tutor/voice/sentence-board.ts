@@ -1166,6 +1166,19 @@ export function grammarRecastCard(tutorText: string, student: string | null | un
   return null;
 }
 
+/** Task 30 §J1: why the level check's own-answer card is skipped — 'no
+ *  verdict' (the check did not find it correct / partly correct) or
+ *  'request' (it asks something: opens with teach / tell / show / give /
+ *  help / explain, optionally after please / can you / could you, or ends
+ *  with "?"); null ⇒ carded. Pure. */
+const LEVEL_CHECK_REQUEST_RE = /^\s*(?:(?:please|can you|could you|would you)[\s,]+)?(?:teach|tell|show|give|help|explain)\b/i;
+export function levelCheckOwnCardGate(verdict: string | null | undefined, studentText: string | null | undefined): 'no verdict' | 'request' | null {
+  const t = (studentText ?? '').trim();
+  if (LEVEL_CHECK_REQUEST_RE.test(t) || /[?？]\s*$/.test(t)) return 'request';
+  if (verdict !== 'correct' && verdict !== 'partly_correct') return 'no verdict';
+  return null;
+}
+
 /**
  * Task 15 §A (GDI run 5): a quote that echoes a sentence the independent check
  * found CORRECT is a model sentence, not the run-3 wrong-words echo — so with
@@ -1193,6 +1206,10 @@ export function planSentenceBoard(input: {
   /** Task 23 §B2: the current part is the level check (segment metadata
    *  `skipWhenLevelKnown`) — every spoken answer goes on the board. */
   levelCheck?: boolean;
+  /** Task 30 §J1: this turn's precheck verdict for the level-check answer
+   *  (null = no verdict). Absent ⇒ the pre-Task-30 rule (carded whatever the
+   *  verdict). */
+  levelCheckVerdict?: string | null;
   /** Task 23 §E: the board's current problem offers choices (hasChoices, or
    *  ≥ 2 "1)" / "A)" markers in its statement — boardOffersChoices). */
   choiceMenu?: boolean;
@@ -1207,7 +1224,7 @@ export function planSentenceBoard(input: {
   onSuppressed?: (reason: 'corrected this turn', sentence: string) => void;
   /** Task 28 §A: told about each level-check sentence not carded because the
    *  tutor recast it and no correction card came of the recast. */
-  onLevelCheckSkipped?: (reason: 'recast without card', sentence: string) => void;
+  onLevelCheckSkipped?: (reason: 'recast without card' | 'no verdict' | 'request', sentence: string) => void;
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   const studentCorrect = input.studentCorrect === true;
@@ -1361,7 +1378,15 @@ export function planSentenceBoard(input: {
         classified.splice(k, 1);
       }
     }
-    const own = parts.length ? parts.join(' ') : null;
+    let own = parts.length ? parts.join(' ') : null;
+    // Task 30 §J1 (GDI run 17, 112 s: "Teach me how sell with smile." — a
+    // request, no verdict, no restatement — carded raw): the student's own
+    // answer is carded only when the check found it correct / partly correct
+    // and it is an answer, not a request.
+    if (own && input.levelCheckVerdict !== undefined) {
+      const gate = levelCheckOwnCardGate(input.levelCheckVerdict, input.studentLast);
+      if (gate) { input.onLevelCheckSkipped?.(gate, own); own = null; }
+    }
     if (own && !classified.some((c) => sameSentence(c.q.sentence, own))) {
       classified.push({ q: { sentence: own, kind: 'model', emphasis: [], source: 'levelcheck' }, len: norm(own).length, i: kept.length + 1, said: false, affirmed: false, introduced: false });
     }

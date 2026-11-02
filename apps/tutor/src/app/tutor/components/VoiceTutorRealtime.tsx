@@ -10,8 +10,9 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_PRON_NO_SPEECH_AFTER_NUDGE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_PRON_NO_SPEECH_AFTER_NUDGE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, menuPickNote } from '@/lib/tutor/voice/menu-pick';
+import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { pendingAnswerVocabularyFor, countsAsNoiseCancel } from '@/lib/tutor/voice/pending-answer';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
@@ -21711,6 +21712,8 @@ export function VoiceTutorRealtime({
             // ANSWERED in (the turn-start segment — the level-set advance
             // moves the pointer mid-turn) is the level check.
             levelCheck: lessonPlanRef.current?.segments.find((sg) => sg.id === turnStartSegmentId)?.metadata?.skipWhenLevelKnown === true,
+            // Task 30 §J1: the own-answer card needs a correct / partly-correct check.
+            ...(TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT ? { levelCheckVerdict: boardPc?.verdict ?? null } : {}),
             // Task 28 §A: a level-check sentence the tutor recast with no correction card of it.
             onLevelCheckSkipped: (reason, sentence) => onDebugEvent?.('sentence_board_levelcheck_skipped', `${reason} "${sentence.slice(0, 60)}"`),
             // Task 23 §E (GDI run 11, 1063 s): the board problem is a choice
@@ -23192,6 +23195,16 @@ export function VoiceTutorRealtime({
       stoppedTutor?: boolean;
     },
   ) => {
+    // Task 30 §J2 (GDI run 17, 299 s / 855 s): in a language lesson a
+    // standalone digit 0–12 is the recogniser's spelling, not the learner's —
+    // spelled out before the brain sees the transcript or a card is built.
+    if (TUTOR_LANGUAGE_DIGIT_WORDS && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
+      const spelled = normaliseDigitsToWords(transcript);
+      if (spelled !== transcript) {
+        onDebugEvent?.('language_digit_words', `"${transcript.slice(0, 60)}" → "${spelled.slice(0, 60)}"`);
+        transcript = spelled;
+      }
+    }
     // Task 16 §C: any dispatch other than the continuation itself (a student
     // turn, a nudge, a mark) starts its own turn — the scheduled
     // announced-move continuation stands down.

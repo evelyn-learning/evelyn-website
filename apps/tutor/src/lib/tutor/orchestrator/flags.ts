@@ -1125,3 +1125,16 @@ export const TUTOR_MENU_PICK_RESOLVE = process.env.NEXT_PUBLIC_TUTOR_MENU_PICK_R
  *  arm lifetime (PRONUNCIATION_ARM_MAX_MS) stays the hard cap. Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_PRON_NO_SPEECH_AFTER_NUDGE=off. */
 export const TUTOR_PRON_NO_SPEECH_AFTER_NUDGE = process.env.NEXT_PUBLIC_TUTOR_PRON_NO_SPEECH_AFTER_NUDGE !== 'off';
+
+/** Task 30 §J1 (GDI run 17, 112 s): the level check's card of the student's
+ *  own answer needs a correct / partly-correct precheck verdict and an answer
+ *  (not a request). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT=off. */
+export const TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT = process.env.NEXT_PUBLIC_TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT !== 'off';
+
+/** Task 30 §J2 (GDI run 17, 299 s / 855 s): in a language lesson a standalone
+ *  digit 0–12 in the student's transcript (the recogniser's spelling, not the
+ *  learner's) is spelled out before the brain sees it and before any student
+ *  card is built (normaliseDigitsToWords). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_LANGUAGE_DIGIT_WORDS=off. */
+export const TUTOR_LANGUAGE_DIGIT_WORDS = process.env.NEXT_PUBLIC_TUTOR_LANGUAGE_DIGIT_WORDS !== 'off';

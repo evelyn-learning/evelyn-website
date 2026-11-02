@@ -349,6 +349,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'adjacent_duplicate_sentence_dropped',
   // Task 30 §H: a student turn picked an option of the menu the tutor read.
   'menu_pick_resolved',
+  // Task 30 §J2: a standalone digit in a language-lesson transcript spelled out.
+  'language_digit_words',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

@@ -17,8 +17,9 @@ import {
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
   levelCheckAnswerCard, levelCheckRecast, isQuotedFragment, acknowledgesOption, boardOffersChoices,
-  grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack, contrastAskPair,
+  grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack, contrastAskPair, levelCheckOwnCardGate,
 } from '../src/lib/tutor/voice/sentence-board';
+import { normaliseDigitsToWords } from '../src/lib/tutor/voice/digit-words';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
 let failed = 0;
@@ -1465,6 +1466,56 @@ test('29H r2 (N-2): a modal the student said too is a restatement; otherwise rej
   assert.equal(levelCheckRestatementCard('You have to call customers every day.', 'I have to call customer every day.')?.sentence, 'I have to call customers every day.');
   assert.equal(levelCheckRestatementCard('You should say I worked with a customer from the USA.', 'I work with customer from USA. I sold washing machine to him.'), null);
 });
+
+// ── Task 30 §J1 / §J2 (GDI run 17, 112 s / 68 s; 299 s / 855 s) ──
+{
+  const base = { renderedThisTurn: false, studentCorrect: false, affirmFallback: false, checkedMedium: false };
+  const T112 = 'Sure, let\'s look at it together. You\'re asking about the sales project, so tell me, what was the project\'s goal? Start with "The goal was..."';
+  test('30J1: the 112 s request (no verdict, no restatement) ⇒ no card, skipped "request"', () => {
+    const skipped: string[] = [];
+    const cards = planSentenceBoard({ ...base, tutorText: T112, studentLast: 'Teach me how sell with smile.', levelCheck: true, levelCheckVerdict: null, onLevelCheckSkipped: (r) => skipped.push(r) });
+    assert.equal(cards.length, 0);
+    assert.deepEqual(skipped, ['request']);
+  });
+  test('30J1: no verdict ⇒ skipped "no verdict"; absent verdict input ⇒ the old rule', () => {
+    const skipped: string[] = [];
+    const S = 'I sell washing machine to the USA customer for their company.';
+    const T = 'Thank you. Now, question 3, please answer in English: What is one skill you would like to improve?';
+    assert.equal(planSentenceBoard({ ...base, tutorText: T, studentLast: S, levelCheck: true, levelCheckVerdict: null, onLevelCheckSkipped: (r) => skipped.push(r) }).length, 0);
+    assert.deepEqual(skipped, ['no verdict']);
+    assert.equal(planSentenceBoard({ ...base, tutorText: T, studentLast: S, levelCheck: true }).length, 1);
+    assert.equal(planSentenceBoard({ ...base, tutorText: T, studentLast: S, levelCheck: true, levelCheckVerdict: 'partly_correct' }).length, 1);
+  });
+  test('30J1: the 68 s inputs (verdict correct, restatement) ⇒ the card as before', () => {
+    const T66 = "Nice, that's clear. You sell washing machines at Nagoya Corporation. Could you tell me one recent sale or project you worked on?";
+    const S65 = 'I do sell washing machine at Nagoya Corporation.';
+    const before = planSentenceBoard({ ...base, tutorText: T66, studentLast: S65, levelCheck: true });
+    const now = planSentenceBoard({ ...base, tutorText: T66, studentLast: S65, levelCheck: true, levelCheckVerdict: 'correct' });
+    assert.ok(now.length >= 1);
+    assert.deepEqual(now, before);
+  });
+  test('30J1: levelCheckOwnCardGate', () => {
+    assert.equal(levelCheckOwnCardGate('correct', 'I work in sales.'), null);
+    assert.equal(levelCheckOwnCardGate('partly_correct', 'I work in sales.'), null);
+    assert.equal(levelCheckOwnCardGate('incorrect', 'I work in sales.'), 'no verdict');
+    assert.equal(levelCheckOwnCardGate('correct', 'Can you explain the question?'), 'request');
+    assert.equal(levelCheckOwnCardGate('correct', 'Please tell me again'), 'request');
+  });
+  test('30J2: normaliseDigitsToWords — the brief\'s pins', () => {
+    assert.equal(normaliseDigitsToWords('I have worked at Nagoya for 3 years'), 'I have worked at Nagoya for three years');
+    assert.equal(normaliseDigitsToWords('in 2024'), 'in 2024');
+    assert.equal(normaliseDigitsToWords('uh 6 months ago.'), 'uh six months ago.');
+    assert.equal(normaliseDigitsToWords('Option 2'), 'Option two');
+    for (const x of ['3.5 kilos', 'at 10:30', '50%', '1/2', '13 people', '$5']) assert.equal(normaliseDigitsToWords(x), x, x);
+    assert.equal(normaliseDigitsToWords('for 12 years'), 'for twelve years');
+  });
+  test('30J: VTR wiring — the verdict passed to the board; digits spelled at the dispatch entry, language lessons only', () => {
+    const V = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+    assert.ok(V.includes('...(TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT ? { levelCheckVerdict: boardPc?.verdict ?? null } : {}),'));
+    assert.ok(V.includes("if (TUTOR_LANGUAGE_DIGIT_WORDS && languageSessionRef.current && !/^\\s*\\[/.test(transcript)) {"));
+    assert.ok(V.includes("onDebugEvent?.('language_digit_words',"));
+  });
+}
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
