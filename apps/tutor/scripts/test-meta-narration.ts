@@ -1020,5 +1020,11 @@ check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("
   check('S2: VTR drops the continuation after a dropped narration sentence', /prevSentenceDroppedAsNarration = true;\s*continue;\s*\}[\s\S]{0,400}?if \(prevSentenceDroppedAsNarration && isPlanContinuationSentence\(updatedSentence\)\) \{\s*onDebugEvent\?\.\('meta_narration_dropped_plan_continuation'/.test(VS2));
 }
 
+// Task 30 fix round 1 S7 (smoke run 508 s): "Let me ask again simply." is dropped.
+check('S7: "Let me ask again simply." ⇒ dropped', isMetaNarration('Let me ask again simply.'));
+check('S7: "Let me put it another way." ⇒ dropped', isMetaNarration('Let me put it another way.'));
+check('S7: "Let me say that sentence for you: "I have worked here."" ⇒ kept', !isMetaNarration('Let me say that sentence for you: "I have worked here."'));
+check('S7: "Let me ask you about your job." ⇒ kept', !isMetaNarration('Let me ask you about your job.'));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
