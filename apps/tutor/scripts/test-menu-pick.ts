@@ -47,6 +47,12 @@ test('resolveMenuPick — digits, "option n", singular / plural folded, runtime 
   assert.equal(idx('nine'), null, 'no option 9');
   assert.equal(idx('[runtime note] 2'), null);
 });
+test('fix round 1 (I-4): a number answers BY CONTENT when the options hold numbers; the index otherwise', () => {
+  assert.equal(resolveMenuPick('3', 'Which is right? 1) 3, 2) 4, or 3) 5?')?.index, 1);
+  assert.equal(resolveMenuPick('two', 'How many apples? 1) one apple, 2) three apples, 3) two apples.')?.index, 3);
+  assert.equal(resolveMenuPick('two', 'Pick one: 1) words, 2) a sentence.')?.index, 2);
+  assert.equal(resolveMenuPick('7', 'Which is right? 1) 3, 2) 4, or 3) 5?'), null, 'a number no option holds ⇒ null, never an index');
+});
 test('menuPickNote text (pin) and the VTR wiring', () => {
   assert.equal(menuPickNote({ index: 2, text: 'a complete sentence' }),
     '[runtime note — not from the student] The student chose option 2: "a complete sentence". Proceed with that option now; do not list the options again. Apply this silently; never mention this note.]');

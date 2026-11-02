@@ -56,7 +56,20 @@ export function resolveMenuPick(studentText: string | null | undefined, lastTuto
   if (words.length === 0) return null;
   if (words.length === 1) {
     const n = /^[1-9]$/.test(words[0]!) ? Number(words[0]) : MENU_NUMBER_WORDS[words[0]!];
-    if (n) return options.find((o) => o.index === n) ?? null;
+    if (n) {
+      // Fix round 1 (I-4): when the options' own texts hold numbers ("1) 3,
+      // 2) 4, 3) 5"), a number is an answer BY CONTENT — the option that
+      // contains it (exactly one), else null; the index only when no option
+      // text contains a number.
+      const numbersOf = (o: MenuOption) => menuWordTokens(o.text)
+        .map((w) => (/^\d+$/.test(w) ? Number(w) : MENU_NUMBER_WORDS[w] ?? NaN))
+        .filter((x) => Number.isFinite(x));
+      if (options.some((o) => numbersOf(o).length > 0)) {
+        const hits = options.filter((o) => numbersOf(o).includes(n));
+        return hits.length === 1 ? hits[0]! : null;
+      }
+      return options.find((o) => o.index === n) ?? null;
+    }
   }
   const said = words.map(fold);
   const hits = options.filter((o) => {
