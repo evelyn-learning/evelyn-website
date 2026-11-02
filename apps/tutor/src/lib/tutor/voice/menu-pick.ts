@@ -191,12 +191,17 @@ export function resolveMenuPickLoose(studentText: string | null | undefined, sou
       // 自然な話し方, "文章を練習したい" → 一文). A few generic synonyms map
       // first (センテンス → 文, 飛ばす / パス → スキップ).
       const n2 = JA_SYNONYMS.reduce((acc, [re, to]) => acc.replace(re, to), noun);
-      for (const units of [bigramsOf, kanjiOf]) {
-        const mine = new Set(units(n2));
-        if (mine.size === 0) continue;
-        const stemHits = opts.filter((o) => units(o.text).some((u) => mine.has(u)));
+      // Task 34 §D: the synonym may make the core an option's substring
+      // ("文章" → 文 ⊂ 一文); stems are two characters only — a single shared
+      // kanji ("もう一度" / 一文, "話しても" / 話し方) is no pick.
+      if (n2 !== noun) {
+        const synHits = opts.filter((o) => o.text.includes(n2) || n2.includes(o.text));
+        if (synHits.length === 1) return synHits[0]!;
+      }
+      const mine = new Set(bigramsOf(n2));
+      if (mine.size > 0) {
+        const stemHits = opts.filter((o) => bigramsOf(o.text).some((u) => mine.has(u)));
         if (stemHits.length === 1) return stemHits[0]!;
-        if (stemHits.length > 1) break;
       }
     }
   }
@@ -206,10 +211,7 @@ const JA_STEM_RUN_RE = /[\p{Script=Han}\p{Script=Katakana}ー]+/gu;
 function bigramsOf(s: string): string[] {
   return (s.match(JA_STEM_RUN_RE) ?? []).flatMap((run) => (run.length < 2 ? [] : [...Array(run.length - 1).keys()].map((i) => run.slice(i, i + 2))));
 }
-function kanjiOf(s: string): string[] {
-  return [...s].filter((c) => /\p{Script=Han}/u.test(c));
-}
-const JA_SYNONYMS: ReadonlyArray<[RegExp, string]> = [[/センテンス/g, '文'], [/飛ば[さしすせそ]?|パス/g, 'スキップ']];
+const JA_SYNONYMS: ReadonlyArray<[RegExp, string]> = [[/センテンス|文章/g, '文'], [/飛ば[さしすせそ]?|パス/g, 'スキップ']];
 export function menuReplyIsPick(studentText: string | null | undefined, cardStatement: string | null | undefined, lastTutorText?: string | null, partTutorTurns?: ReadonlyArray<string | null | undefined>): boolean {
   const t = (studentText ?? '').trim();
   if (!t || /^\s*\[/.test(t) || isBareAcknowledgement(t)) return false;

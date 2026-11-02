@@ -149,5 +149,20 @@ test('menuPickNote text (pin) and the VTR wiring', () => {
   });
 }
 
+
+// ── Task 34 §D: two-character stems only ──
+{
+  const CARD = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  const JA2 = 'どういたしまして。 1番は単語、2番は一文、3番は自然な話し方、4番はスキップです。';
+  test('34 §D: a single shared kanji is no pick; the earlier Japanese picks still resolve', () => {
+    for (const x of ['もう一度お願いします', '話してもいいですか']) {
+      assert.equal(resolveMenuPickLoose(x, [CARD, JA2]), null, x);
+      assert.equal(menuReplyIsPick(x, CARD, JA2), false, x);
+    }
+    for (const [x, n] of [['単語で', 1], ['一文で', 2], ['文章を練習したい', 2], ['自然に話す練習', 3]] as Array<[string, number]>)
+      assert.equal(resolveMenuPickLoose(x, [CARD, JA2])?.index, n, x);
+  });
+}
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall menu-pick tests passed');
