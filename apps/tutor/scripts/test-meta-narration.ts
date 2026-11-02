@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead, isTutorDirectiveImperative, directiveSentencesOf, isDirectiveEchoOf, directiveSentencesForInput, isStudentEchoOpener } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
+import { planSentenceBoard } from '../src/lib/tutor/voice/sentence-board';
 
 let passed = 0;
 let failed = 0;
@@ -1325,7 +1326,15 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('33F: a short fragment kept', !isStudentEchoOpener(st, 'A new product launch.'));
   check('33F: a runtime turn never', !isStudentEchoOpener('[idle nudge] Last month I made a presentation.', 'Last month I made a presentation.'));
   const VTR33F = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('33F: VTR drops it as the attempt\'s first sentence only', VTR33F.includes("if (TUTOR_ADJACENT_DUPLICATE_DROP && !adjacentPrevSentence && !/^\\s*\\[/.test(transcript) && isStudentEchoOpener(transcript, updatedSentence)) {"));
+  check('33F r1 (I-4): VTR drops it as the attempt\'s first sentence only, in language lessons only', VTR33F.includes("if (TUTOR_ADJACENT_DUPLICATE_DROP && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !adjacentPrevSentence && !/^\\s*\\[/.test(transcript) && isStudentEchoOpener(transcript, updatedSentence)) {"));
+  // Fix round 1 (I-4): the sentence board plans from the KEPT text — with the echo dropped the student's sentence is still carded (the checked path reads studentLast).
+  {
+    const kept = 'Yes, "I made" is the right past simple form. That\'s a complete sentence, Haruto. What was the launch for? Try starting with "It was for…".';
+    const withEcho = planSentenceBoard({ tutorText: `I made a presentation for a new product launch. ${kept}`, studentLast: st, renderedThisTurn: false, studentCorrect: true, checkedSentence: st });
+    const dropped = planSentenceBoard({ tutorText: kept, studentLast: st, renderedThisTurn: false, studentCorrect: true, checkedSentence: st });
+    check('33F r1 (I-4): the student\'s sentence is carded with the echo dropped', dropped.length === 1 && dropped[0]!.sentence === st && JSON.stringify(dropped) === JSON.stringify(withEcho), JSON.stringify(dropped));
+    check('33F r1 (I-4): VTR plans the board from the kept text (fullText), not the dropped echo', /const cards = planSentenceBoard\(\{\s*tutorText: fullText,/.test(VTR33F));
+  }
 }
 
 

@@ -17190,7 +17190,9 @@ export function VoiceTutorRealtime({
                   prevSentenceDroppedAsNarration = false;
                   // Task 33 §F (GDI bot run r8, 1090 s): the turn's first sentence
                   // reads the student's sentence back — the board card shows it.
-                  if (TUTOR_ADJACENT_DUPLICATE_DROP && !adjacentPrevSentence && !/^\s*\[/.test(transcript) && isStudentEchoOpener(transcript, updatedSentence)) {
+                  // Fix round 1 (I-4): language lessons only (subject languages / fixed
+                  // script) — a maths tutor restating the student's answer keeps it.
+                  if (TUTOR_ADJACENT_DUPLICATE_DROP && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !adjacentPrevSentence && !/^\s*\[/.test(transcript) && isStudentEchoOpener(transcript, updatedSentence)) {
                     onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" (echo of the student's sentence)`);
                     continue;
                   }
