@@ -21634,14 +21634,15 @@ export function VoiceTutorRealtime({
         // (as the Skip button does) once the segment has run past its note by
         // two turns or past its minutes by half again, and tells the brain the
         // move as a fact.
+        // Task 34 §A: the re-ask after the no-attempt note was dropped — the
+        // part's turn budget counts as reached (it ends at this boundary).
+        const autoBudgetTurns = noAttemptDropped && TUTOR_NO_ATTEMPT_MOVE_ON ? Math.max(cur.turns, 10_000) : cur.turns;
         const autoPlan = lessonPlanRef.current;
         const autoReason = TUTOR_FIXED_SCRIPT_AUTO_ADVANCE && !homeworkSession && autoPlan
           ? fixedScriptAutoAdvanceReason({
             plan: autoPlan,
             segmentId: segIdNow,
-            // Task 34 §A: the re-ask after the no-attempt note was dropped — the
-            // part's turn budget counts as reached (it ends at this boundary).
-            turns: noAttemptDropped && TUTOR_NO_ATTEMPT_MOVE_ON ? Math.max(cur.turns, 10_000) : cur.turns,
+            turns: autoBudgetTurns,
             overlongTurns,
             elapsedMs: Date.now() - cur.startedAt,
             levelKnown: !!workingLevelRef.current,

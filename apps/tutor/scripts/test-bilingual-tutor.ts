@@ -1993,7 +1993,7 @@ test('34 §A: a turn that still re-asks has the ask dropped; the model answer st
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('&& noAttemptStreak([naPrev, { tutorText: naLast, studentText: transcript }])) {'));
   assert.ok(vtr.includes("if (noAttemptPinned && (reasksAsk(updatedSentence, noAttemptPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {"));
-  assert.ok(vtr.includes('turns: noAttemptDropped && TUTOR_NO_ATTEMPT_MOVE_ON ? Math.max(cur.turns, 10_000) : cur.turns,'));
+  assert.ok(vtr.includes('const autoBudgetTurns = noAttemptDropped && TUTOR_NO_ATTEMPT_MOVE_ON ? Math.max(cur.turns, 10_000) : cur.turns;') && vtr.includes('turns: autoBudgetTurns,'));
   assert.match(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8'), /export const TUTOR_NO_ATTEMPT_MOVE_ON = process\.env\.NEXT_PUBLIC_TUTOR_NO_ATTEMPT_MOVE_ON !== 'off';/);
 });
 
