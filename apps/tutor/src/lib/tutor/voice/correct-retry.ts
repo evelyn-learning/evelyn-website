@@ -1012,7 +1012,7 @@ export function isPersonalQuestion(question: string | null | undefined, studentR
   return (q.toLowerCase().match(/[\p{L}]+/gu) ?? []).some((w) => w.length >= 4 && !PERSONAL_STOP.has(w) && said.has(w));
 }
 export const SAME_QUESTION_THIRD_TIME_PERSONAL_REASON = withRetryStyle(
-  'This is a question about the student; there is no answer to give. Accept what they said in one sentence or let it go, and move to the next step. Never state facts about the student they did not say. Do not say that the question was asked before.');
+  'This is a question about the student; there is no answer to give. Accept what they said in one sentence or let it go, and move to the next step. Never state facts about the student they did not say. Do NOT ask that question again in any form. Do not say that the question was asked before.');
 /** The retry directive of same_question_third_time: the authored-answer
  *  version unless the pinned question is personal and the card holds no
  *  authored answer for it. Pure. */
@@ -1022,4 +1022,32 @@ export const SAME_QUESTION_THIRD_TIME_PERSONAL_REASON = withRetryStyle(
 export function sameQuestionThirdTimeReason(input: { question: string | null | undefined; authoredAnswer: boolean; studentRecent?: readonly string[] | null; languageLesson: boolean }): string {
   if (input.languageLesson && !input.authoredAnswer && isPersonalQuestion(input.question, input.studentRecent)) return SAME_QUESTION_THIRD_TIME_PERSONAL_REASON;
   return SAME_QUESTION_THIRD_TIME_REASON;
+}
+
+// Task 33 fix round 1 (R9-3, bot run r9 645–688 s: after the personal
+// directive the retry still asked "Now, please answer my question in one
+// sentence: What did you learn …?"). In the retry, a sentence whose ask has
+// the pinned question's gist (token Jaccard ≥ 0.6) is dropped by the engine,
+// and the starter hint right after it ("Start with "I learned…".") with it;
+// if nothing of the retry is left, the engine says SAME_QUESTION_MOVE_ON_LINE.
+export const RETRY_REASK_JACCARD = 0.6;
+export function retryReasksQuestion(sentence: string | null | undefined, pinnedQuestion: string | null | undefined): boolean {
+  const s = sentence ?? '';
+  const q = pinnedQuestion ?? '';
+  if (!s.trim() || !q.trim() || !/[?？]/.test(s)) return false;
+  const x = gistTokens(turnAskGist(s));
+  const y = gistTokens(q);
+  if (x.size === 0 || y.size === 0) return false;
+  let inter = 0;
+  for (const w of x) if (y.has(w)) inter += 1;
+  return inter / (x.size + y.size - inter) >= RETRY_REASK_JACCARD;
+}
+const STARTER_HINT_RE = /^\s*(?:(?:please|now|so),?\s+)?(?:try )?start(?:ing)? (?:with|your (?:answer|sentence) with)\b/i;
+export function isStarterHint(sentence: string | null | undefined): boolean {
+  return STARTER_HINT_RE.test(sentence ?? '');
+}
+/** The line the engine says when the whole retry was the dropped re-ask. */
+export function sameQuestionMoveOnLine(tutorLanguages: readonly string[] | null | undefined): string {
+  const langs = (tutorLanguages ?? []).map((l) => l.toLowerCase());
+  return langs.length > 0 && !langs.some((l) => l.startsWith('en')) && langs.some((l) => l.startsWith('ja')) ? '次に進みましょう。' : "Let's move on.";
 }

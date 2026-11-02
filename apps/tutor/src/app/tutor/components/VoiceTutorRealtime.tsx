@@ -232,7 +232,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -13440,6 +13440,8 @@ export function VoiceTutorRealtime({
       let repeatAfterCorrectRejected = false;
       // Task 30 fix round 3 R2-2a: same_question_third_time fired this turn (once).
       let sameQuestionRejected = false;
+      // Task 33 fix round 1 (R9-3): the personal question the retry must not ask again.
+      let sqPersonalPinned: string | null = null;
       // Task 20 §B1: one premature_farewell kill per turn.
       let prematureFarewellRejected = false;
       // Task 24 §C1: one transition_ask_off_part kill per turn.
@@ -14625,6 +14627,8 @@ export function VoiceTutorRealtime({
         let adjacentPrevSentence = '';
         // Task 31 §H1: a thank-you ack was spoken in this attempt.
         let thankAckSpoken = false;
+        // Task 33 fix round 1 (R9-3): the last sentence was a dropped re-ask.
+        let sqReaskDroppedPrev = false;
         // Task 30 fix round 3 (P-2): stream sentences this attempt (kept or dropped).
         let streamSentencesThisAttempt = 0;
         // Task 30 fix round 1 S2: the attempt's previous sentence was dropped as narration.
@@ -17191,6 +17195,14 @@ export function VoiceTutorRealtime({
                     continue;
                   }
                   prevSentenceDroppedAsNarration = false;
+                  // Task 33 fix round 1 (R9-3): the personal-question retry asks the
+                  // pinned question again — dropped, with its starter hint.
+                  if (sqPersonalPinned && (retryReasksQuestion(updatedSentence, sqPersonalPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
+                    sqReaskDroppedPrev = true;
+                    onDebugEvent?.('same_question_retry_ask_dropped', `"${updatedSentence.slice(0, 80)}"`);
+                    continue;
+                  }
+                  sqReaskDroppedPrev = false;
                   // Task 33 §F (GDI bot run r8, 1090 s): the turn's first sentence
                   // reads the student's sentence back — the board card shows it.
                   // Fix round 1 (I-4): language lessons only (subject languages / fixed
@@ -20086,7 +20098,9 @@ export function VoiceTutorRealtime({
             const sqAsk = turnAskGist(attemptText);
             const sqCard = currentProblemRef.current;
             const sqAuthored = !!sqCard?.expectedAnswer && !!sqCard.statement && askGistsSame(sqAsk, turnAskGist(sqCard.statement));
-            rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: sameQuestionThirdTimeReason({ question: sqAsk, authoredAnswer: sqAuthored, studentRecent: transcriptRef.current.filter((e) => e.role === 'student').slice(-6).map((e) => e.text), languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current) }) });
+            const sqReason = sameQuestionThirdTimeReason({ question: sqAsk, authoredAnswer: sqAuthored, studentRecent: transcriptRef.current.filter((e) => e.role === 'student').slice(-6).map((e) => e.text), languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current) });
+            if (sqReason === SAME_QUESTION_THIRD_TIME_PERSONAL_REASON) sqPersonalPinned = sqAsk;
+            rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: sqReason });
             await performKill();
             onDebugEvent?.('same_question_third_time', `"${turnAskGist(attemptText).slice(0, 80)}"`);
           } else if (sqDue) {
@@ -20822,6 +20836,14 @@ export function VoiceTutorRealtime({
         }
         engineOfferLines = null;
         engineOfferSeg = '';
+        // Task 33 fix round 1 (R9-3): the personal-question retry was nothing
+        // but the dropped re-ask — the engine moves on in one line.
+        if (!attemptKilled && sqPersonalPinned && attempt > 0 && turnNarrationRef.current.length === attemptNarrationStart) {
+          const moveOn = sameQuestionMoveOnLine(tutorLanguages);
+          speakOnePart(moveOn);
+          attemptText = `${attemptText} ${moveOn}`.trim();
+          onDebugEvent?.('same_question_retry_move_on', moveOn);
+        }
         if (!attemptKilled) {
           aggregatedFullText = aggregatedFullText
             ? `${aggregatedFullText} ${attemptText}`

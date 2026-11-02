@@ -57,7 +57,7 @@ import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, 
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
-import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON } from '../src/lib/tutor/voice/correct-retry';
+import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
 import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { ToolMarkupFilter, stripToolMarkup, hasToolMarkup } from '../src/lib/tutor/voice/tool-markup';
 import { languageTurnMaxTokens, outputBudgetNote, settleHeldTail, endsSentence, LANGUAGE_TURN_MAX_TOKENS_DEFAULT } from '../src/lib/tutor/voice/output-budget';
@@ -1829,7 +1829,8 @@ test('Task 30 fix round 3 R2-2a: same_question_third_time — the same ask a thi
   assert.ok(SAME_QUESTION_THIRD_TIME_REASON.startsWith('You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item. Do not say that the question was asked before. Start directly with your reply'));
   assert.ok(SAME_QUESTION_THIRD_TIME_REASON.endsWith('Apply this silently; never mention this note.'));
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: sameQuestionThirdTimeReason({ question: sqAsk, authoredAnswer: sqAuthored, studentRecent: transcriptRef.current.filter((e) => e.role === 'student').slice(-6).map((e) => e.text), languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current) }) });"));
+  assert.ok(vtr.includes("const sqReason = sameQuestionThirdTimeReason({ question: sqAsk, authoredAnswer: sqAuthored, studentRecent: transcriptRef.current.filter((e) => e.role === 'student').slice(-6).map((e) => e.text), languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current) });"));
+  assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: sqReason });"));
   assert.ok(vtr.includes("onDebugEvent?.('same_question_third_time_unmade',"));
 });
 
@@ -1933,6 +1934,24 @@ test('33 r1 I-3: personal-question directive is language-lesson only; maths ques
   }
   assert.equal(sameQuestionThirdTimeReason({ question: 'What did you see at the trade show?', authoredAnswer: false, languageLesson: false }), SAME_QUESTION_THIRD_TIME_REASON, 'outside a language lesson');
   assert.equal(readFileSync('src/lib/tutor/voice/correct-retry.ts', 'utf8').includes('present perfect|'), false, 'no topic words in code (M-4)');
+});
+
+test('33 r1 R9-3: the personal retry never re-asks — the directive forbids it and the engine drops a re-ask', () => {
+  assert.ok(SAME_QUESTION_THIRD_TIME_PERSONAL_REASON.includes('Do NOT ask that question again in any form.'));
+  const pinned = 'what did you learn at that trade show?';
+  assert.equal(retryReasksQuestion('Now, please answer my question in one sentence: What did you learn at that trade show?', pinned), true, 'the 688 s re-ask');
+  assert.equal(retryReasksQuestion('What did you learn at the trade show?', pinned), true, 'reworded');
+  assert.equal(retryReasksQuestion('Did you go there with your team?', pinned), false, 'a different question');
+  assert.equal(retryReasksQuestion('You went to a trade show in Tokyo, and that is a good example.', pinned), false, 'the acknowledgement');
+  assert.equal(isStarterHint('Start with "I learned…".'), true);
+  assert.equal(isStarterHint('Try starting with "I learned…".'), true);
+  assert.equal(isStarterHint('Good start.'), false);
+  assert.equal(sameQuestionMoveOnLine(['en', 'ja']), "Let's move on.");
+  assert.equal(sameQuestionMoveOnLine(['ja']), '次に進みましょう。');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('if (sqReason === SAME_QUESTION_THIRD_TIME_PERSONAL_REASON) sqPersonalPinned = sqAsk;'));
+  assert.ok(vtr.includes("if (sqPersonalPinned && (retryReasksQuestion(updatedSentence, sqPersonalPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {"));
+  assert.ok(vtr.includes("if (!attemptKilled && sqPersonalPinned && attempt > 0 && turnNarrationRef.current.length === attemptNarrationStart) {"));
 });
 
 if (failed) process.exit(1);
