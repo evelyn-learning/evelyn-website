@@ -190,11 +190,24 @@ function containedShare(needle: string[], hay: string[]): number {
 function splitTutorSentences(text: string): string[] {
   return (text ?? '').split(/(?<=[.?!。？！])\s*/u).map((s) => s.trim()).filter(Boolean);
 }
+// Fix round 5 (R4-2, run r4: the topic-intro card "1. We use simple
+// sentences … 2. Practice question: What do you do at work? Answer with one or
+// two sentences." got no note because line 1 is not a question): only the
+// numbered lines holding a question count (a "?" outside quotes, an optional
+// "Practice question:" label), and the planted text is the question
+// sentence(s) only.
+const PRACTICE_QUESTION_LABEL_RE = /^\s*(?:practice\s+)?question\s*[:：]\s*/i;
+const QUOTED_SPAN_RE = /["“][^"”]*["”]|'[^']*\?'|「[^」]*」/g;
 export function numberedCardQuestions(cardStatement: string | null | undefined): Array<{ n: number; text: string }> {
   const lines = (cardStatement ?? '').split(/\n+/).map((l) => l.trim()).filter(Boolean);
   const numbered = lines.filter((l) => NUMBERED_QUESTION_LINE_RE.test(l));
-  if (numbered.length < 2 || !numbered.every((l) => /[?？]/.test(l))) return [];
-  return numbered.map((l, i) => ({ n: i + 1, text: l.replace(NUMBERED_QUESTION_LINE_RE, '').trim() }));
+  if (numbered.length < 2) return [];
+  const questions = numbered
+    .map((l) => l.replace(NUMBERED_QUESTION_LINE_RE, '').replace(PRACTICE_QUESTION_LABEL_RE, '').trim())
+    .filter((l) => /[?？]/.test(l.replace(QUOTED_SPAN_RE, ' ')))
+    .map((l) => splitTutorSentences(l).filter((s) => /[?？]\s*$/.test(s)).join(' '))
+    .filter(Boolean);
+  return questions.map((text, i) => ({ n: i + 1, text }));
 }
 export function numberedQuestionAsked(question: string, tutorTurnsInSegment: readonly string[]): boolean {
   const whole = cardLineTokens(question);

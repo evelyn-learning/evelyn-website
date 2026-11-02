@@ -1163,5 +1163,12 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   for (const dropped of ["I'll ask it again, more simply.", "I'll ask the question again, simply.", "I'll just respond to what you said.", "I'll note that and ask again.", "I'll point that out.", "I'll ask the choice once more."]) check(`S-1: "${dropped}" still dropped`, isMetaNarration(dropped));
 }
 
+// Task 30 fix round 5 (R4-2, run r4 172 s): "I'll set the level now".
+{
+  check('R4-2: "Level check is done, so I\'ll set the level now and move on." ⇒ dropped', isMetaNarration("Level check is done, so I'll set the level now and move on."));
+  check('R4-2: "I\'ll mark the level on your card." ⇒ dropped', isMetaNarration("I'll mark the level on your card."));
+  check('R4-2: "The level of this text is high." kept', !isMetaNarration('The level of this text is high.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

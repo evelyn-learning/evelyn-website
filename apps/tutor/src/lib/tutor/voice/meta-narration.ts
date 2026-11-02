@@ -548,7 +548,8 @@ export const INSTRUCTION_CITATION_RE = /\b(?:given|per|following|as per) the (?:
 export const QUESTION_COUNT_NARRATION_RE = /^\s*(?:The|This|That) question has (?:come up|been asked) [^.]*times\b/i;
 /** Task 30 fix round 4 R3-3 (run r3 155 s, spoken: "Before that, I'll note
  *  your level so the lesson fits you." — the level tool is silent). */
-export const LEVEL_NOTE_NARRATION_RE = /\bI['’]ll (?:note|record|set|mark|save) your level\b/i;
+// Fix round 5 (R4-2, run r4 172 s: "Level check is done, so I'll set the level now and move on.").
+export const LEVEL_NOTE_NARRATION_RE = /\bI['’]ll (?:note|record|set|mark|save) (?:your |the )?level\b|\bset the level now\b/i;
 /** Task 30 fix round 4 R3-5b (run r3 858 s, spoken: 「このやり取りは、次の練習に
  *  進むところです。」 — the exchange narrated in Japanese). */
 export const EXCHANGE_NARRATION_JA_RE = /^\s*(?:この|今の)(?:やり取り|会話|セッション|ターン)は/;

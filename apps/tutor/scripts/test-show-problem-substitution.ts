@@ -230,7 +230,7 @@ check('dedup refusal: flag off ⇒ never refuses',
   const note = numberedQuestionNote({ n: 2, total: 3, text: 'Have you ever worked with an international customer?' });
   check('R3-13 (fix round 5): the note text, no stray bracket', note === '[runtime note — not from the student] Reply to the student in ONE short sentence (no correction, no grammar question), then ask question 2 of 3 exactly: "Have you ever worked with an international customer?". Apply this silently; never mention this note.');
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('R3-13: VTR plants the note on a student turn with the part\'s spoken narration', VTR.includes('const nq = nextUnaskedNumberedQuestion(segmentCardStatement(nqPlan, nqSeg), segmentNarrationRef.current.get(nqSeg) ?? []);')
+  check('R3-13: VTR plants the note on a student turn with the part\'s spoken narration', VTR.includes("const nq = nextUnaskedNumberedQuestion(authoredSegmentCard(nqPlan, nqSeg, workingLevelRef.current?.level ?? null)?.statement ?? '', segmentNarrationRef.current.get(nqSeg) ?? []);")
     && VTR.includes("onDebugEvent?.('numbered_question_note_planted', `${nq.n} \"${nqSeg}\"`);"));
 }
 
@@ -240,6 +240,18 @@ check('dedup refusal: flag off ⇒ never refuses',
   check('R3-13 paraphrase: "What do you do?" asks "What do you do for work?" (lead ≥ 0.6)', nextUnaskedNumberedQuestion(card2, ['Nice to meet you. What do you do?'])?.n === 2);
   check('R3-13 paraphrase: content words in one sentence ⇒ asked', nextUnaskedNumberedQuestion(card2, ['What do you do?', 'Which skill in English would you work on first?']) === null);
   check('R3-13 paraphrase: an unrelated question ⇒ still unasked', nextUnaskedNumberedQuestion(card2, ['What do you do?', 'Which sentence uses the present perfect?'])?.n === 2);
+}
+
+// Task 30 fix round 5 (R4-2, run r4): only the numbered lines holding a question count; the question sentence is planted.
+{
+  const intro = '1. We use simple sentences to talk about our job: I work in sales. / I help customers. / I work with international clients. / I joined my company three years ago.\n2. Practice question: What do you do at work? Answer with one or two sentences.';
+  const t173 = 'Level check is done. 日本語で説明します。 I work in sales. I help customers.';
+  const nq = nextUnaskedNumberedQuestion(intro, [t173]);
+  check('R4-2: topic-intro card ⇒ the note names "What do you do at work?"', nq?.n === 1 && nq.total === 1 && nq.text === 'What do you do at work?');
+  check('R4-2: asked ⇒ null', nextUnaskedNumberedQuestion(intro, [t173, 'Now, what do you do at work?']) === null);
+  check('R4-2: a quoted example question is not a card question', nextUnaskedNumberedQuestion('1. \'Have you ever been to Kyoto?\' asks about experience.\n2. "Did you go?" asks about a finished time.', []) === null);
+  const card = '1. Can you tell me a little about your job? What do you do?\n2. Have you ever worked with an international customer? If so, can you tell me about the experience?';
+  check('R4-2: the level-check card unchanged', nextUnaskedNumberedQuestion(card, [])?.text === 'Can you tell me a little about your job? What do you do?');
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

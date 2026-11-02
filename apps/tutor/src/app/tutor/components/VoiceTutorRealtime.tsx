@@ -13568,7 +13568,9 @@ export function VoiceTutorRealtime({
         const nqSeg = currentSegmentIdRef.current ?? '';
         const nqPlan = lessonPlanRef.current;
         if (nqSeg && nqPlan && isFixedScriptPlan(nqPlan)) {
-          const nq = nextUnaskedNumberedQuestion(segmentCardStatement(nqPlan, nqSeg), segmentNarrationRef.current.get(nqSeg) ?? []);
+          // Fix round 5 (R4-2): the part's authored card as the board shows it —
+          // a concept part's level-filtered key ideas too.
+          const nq = nextUnaskedNumberedQuestion(authoredSegmentCard(nqPlan, nqSeg, workingLevelRef.current?.level ?? null)?.statement ?? '', segmentNarrationRef.current.get(nqSeg) ?? []);
           if (nq) {
             runTranscript = `${numberedQuestionNote(nq)}\n\n${runTranscript}`;
             onDebugEvent?.('numbered_question_note_planted', `${nq.n} "${nqSeg}"`);
