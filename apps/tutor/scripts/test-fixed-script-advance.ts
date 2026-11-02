@@ -878,6 +878,14 @@ test('30B1: offerAccepted — one more / もう一回 accept; a move-on wins', (
   assert.equal(offerAccepted('Summary.'), false);
   assert.equal(offerAccepted('[runtime note] one more'), false);
 });
+// ── Task 30 fix round 4 R3-5: a bare affirmative accepts the offer ──────
+test('R3-5: offerAccepted — a bare "Yes." accepts; "Yes, let\'s move on." and "No." decline', () => {
+  assert.equal(offerAccepted('Yes.'), true);
+  assert.equal(offerAccepted("Yes, let's move on."), false);
+  assert.equal(offerAccepted('No.'), false);
+  for (const yes of ['Yeah', 'OK', 'Okay.', 'Sure!', 'Yep.', 'はい。', 'うん', 'Yes, please.', 'OK, sure.']) assert.equal(offerAccepted(yes), true, yes);
+  for (const no of ['Yes, next.', 'OK, I see what you mean.', 'I see.', 'Yes I think so too.']) assert.equal(offerAccepted(no), false, no);
+});
 test('30B1: the accepting turn and the next student turn hold; the turn after advances', () => {
   const d = (offerAcceptedStudentTurns: number | null, offerHeldTurns = 2) =>
     fixedScriptTransitionDecision({ plan: tr, segmentId: 'part-a', reason: 'turns', offerMade: true, offerHeldTurns, offerSpoken: true, offerDeclined: false, studentTurn: true, offerAcceptedStudentTurns });

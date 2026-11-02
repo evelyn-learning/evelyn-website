@@ -535,7 +535,18 @@ export function offerAccepted(studentText: string | null | undefined): boolean {
   const t = (studentText ?? '').trim();
   if (!t || /^\s*\[/.test(t)) return false;
   if (OFFER_ACCEPT_MOVE_RE.test(t)) return false;
-  return OFFER_MORE_RE.test(t) || /\bpractice\b/i.test(t);
+  return OFFER_MORE_RE.test(t) || /\bpractice\b/i.test(t) || isBareAffirmative(t);
+}
+/** Fix round 4 (R3-5, run r3 574–605 s / 837–858 s: a bare "Yes." to the
+ *  offer was re-asked twice, then taken as either answer): a bare
+ *  affirmative — yes / yeah / yep / sure / ok / okay / はい / うん, ≤ 2 words
+ *  ("please" may ride along), no move-word — ACCEPTS the offer (the offer
+ *  asks "one more, or move on?" and "yes" answers its first half). */
+const BARE_AFFIRMATIVE_WORDS = new Set(['yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'はい', 'うん']);
+export function isBareAffirmative(studentText: string | null | undefined): boolean {
+  const words = (studentText ?? '').toLowerCase().replace(/[.,!?。、！？…]+/g, ' ').split(/\s+/).filter(Boolean);
+  if (words.length === 0 || words.length > 2) return false;
+  return words.some((w) => BARE_AFFIRMATIVE_WORDS.has(w)) && words.every((w) => BARE_AFFIRMATIVE_WORDS.has(w) || w === 'please');
 }
 /** Task 30 §B1: student turns the accepted offer holds the advance for — the
  *  accepting turn (the new item is asked) and the answer (corrected). */
