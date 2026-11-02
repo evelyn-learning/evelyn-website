@@ -529,7 +529,7 @@ import { DEFERRED_REMOVAL_MAX_MS, deferRemoval, takeRemovalsForBatch, takeDroppe
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
 import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
-import { shouldSubstituteShowProblem, shouldAutoCardAfterOwnProblem, refuseSilentDedupDrop, isAuthoredCardLine, nextUnaskedNumberedQuestion, numberedQuestionNote } from '@/lib/tutor/orchestrator/show-problem-substitution';
+import { shouldSubstituteShowProblem, shouldAutoCardAfterOwnProblem, refuseSilentDedupDrop, isAuthoredCardLine, nextUnaskedNumberedQuestion, numberedQuestionNote, allNumberedQuestionsAnsweredNote } from '@/lib/tutor/orchestrator/show-problem-substitution';
 import { checkEquationRelations, syncRelationTrail, describeRelationCheck, claimedAnswerContradictsProblem, type RelationTrail } from '@/lib/tutor/voice/relation-step-check';
 import { formatWitness, extractProblemRelation } from '@/lib/tutor/voice/relation-sampling';
 import { decideRelationStepNote, settleRelationStepNote, recordRelationStepNoteDispatch, relationStepNoteExpired, type RelationStepNoteRecord } from '@/lib/tutor/voice/relation-step-note';
@@ -5368,6 +5368,8 @@ export function VoiceTutorRealtime({
   const answeredQuestionsRef = useRef<Set<string>>(new Set());
   // Task 31 §G: per part, the question sentences the student answered (for the close note).
   const answeredInPartRef = useRef<Map<string, string[]>>(new Map());
+  // Task 31 §H2: parts whose numbered card's all-answered note was planted.
+  const numberedAllAnsweredSegsRef = useRef<Set<string>>(new Set());
   /** 2026-10-18: tutor turns with a superlative this session — four make the praise note sticky. */
   const superlativeTurnsRef = useRef(0);
   /** 2026-10-18: the route confirmed it cached this session's opener — Start skips the bridge line. */
@@ -13626,10 +13628,19 @@ export function VoiceTutorRealtime({
         if (nqSeg && nqPlan && isFixedScriptPlan(nqPlan)) {
           // Fix round 5 (R4-2): the part's authored card as the board shows it —
           // a concept part's level-filtered key ideas too.
-          const nq = nextUnaskedNumberedQuestion(authoredSegmentCard(nqPlan, nqSeg, workingLevelRef.current?.level ?? null)?.statement ?? '', segmentNarrationRef.current.get(nqSeg) ?? []);
+          const nqCard = authoredSegmentCard(nqPlan, nqSeg, workingLevelRef.current?.level ?? null)?.statement ?? '';
+          const nq = nextUnaskedNumberedQuestion(nqCard, segmentNarrationRef.current.get(nqSeg) ?? []);
           if (nq) {
             runTranscript = `${numberedQuestionNote(nq)}\n\n${runTranscript}`;
             onDebugEvent?.('numbered_question_note_planted', `${nq.n} "${nqSeg}"`);
+          } else if (!numberedAllAnsweredSegsRef.current.has(nqSeg)) {
+            // Task 31 §H2: the answer to the last numbered question — no further question.
+            const allNote = allNumberedQuestionsAnsweredNote(nqCard, segmentNarrationRef.current.get(nqSeg) ?? []);
+            if (allNote) {
+              numberedAllAnsweredSegsRef.current.add(nqSeg);
+              runTranscript = `${allNote}\n\n${runTranscript}`;
+              onDebugEvent?.('numbered_question_note_planted', `all answered "${nqSeg}"`);
+            }
           }
         }
       }

@@ -236,6 +236,15 @@ export function nextUnaskedNumberedQuestion(cardStatement: string | null | undef
   for (const q of qs) if (!numberedQuestionAsked(q.text, tutorTurnsInSegment)) return { ...q, total: qs.length };
   return null;
 }
+/** Task 31 §H2 (GDI run 18, 99 s: a fourth level-check question after the
+ *  third was answered): every question of a numbered card of ≥ 2 questions
+ *  was asked ⇒ the note for the student turn that answers the last one (the
+ *  caller plants it once per part). null otherwise. */
+export function allNumberedQuestionsAnsweredNote(cardStatement: string | null | undefined, tutorTurnsInSegment: readonly string[]): string | null {
+  const qs = numberedCardQuestions(cardStatement);
+  if (qs.length < 2 || nextUnaskedNumberedQuestion(cardStatement, tutorTurnsInSegment) !== null) return null;
+  return `[runtime note — not from the student] All ${qs.length} questions on this part's card are answered — do not ask another. Reply to the answer in ONE short sentence, give the part's closing line from its notes, and advance. Apply this silently; never mention this note.`;
+}
 /** The urgent note planted on a student turn while a numbered question is unasked. */
 export function numberedQuestionNote(q: { n: number; text: string; total: number }): string {
   // Fix round 5: no stray "]" after the silent clause.

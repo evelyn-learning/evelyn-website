@@ -12,6 +12,7 @@ import {
   isAuthoredCardLine,
   nextUnaskedNumberedQuestion,
   numberedQuestionNote,
+  allNumberedQuestionsAnsweredNote,
 } from '../src/lib/tutor/orchestrator/show-problem-substitution';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -230,8 +231,16 @@ check('dedup refusal: flag off ⇒ never refuses',
   const note = numberedQuestionNote({ n: 2, total: 3, text: 'Have you ever worked with an international customer?' });
   check('R3-13 (fix round 5): the note text, no stray bracket', note === '[runtime note — not from the student] Reply to the student in ONE short sentence (no correction, no grammar question), then ask question 2 of 3 exactly: "Have you ever worked with an international customer?". Apply this silently; never mention this note.');
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('R3-13: VTR plants the note on a student turn with the part\'s spoken narration', VTR.includes("const nq = nextUnaskedNumberedQuestion(authoredSegmentCard(nqPlan, nqSeg, workingLevelRef.current?.level ?? null)?.statement ?? '', segmentNarrationRef.current.get(nqSeg) ?? []);")
+  check('R3-13: VTR plants the note on a student turn with the part\'s spoken narration', VTR.includes("const nqCard = authoredSegmentCard(nqPlan, nqSeg, workingLevelRef.current?.level ?? null)?.statement ?? '';")
+    && VTR.includes("const nq = nextUnaskedNumberedQuestion(nqCard, segmentNarrationRef.current.get(nqSeg) ?? []);")
     && VTR.includes("onDebugEvent?.('numbered_question_note_planted', `${nq.n} \"${nqSeg}\"`);"));
+  // Task 31 §H2 (GDI run 18, 99 s): all three asked ⇒ the all-answered note, once per part.
+  const all3 = [t63, t98, "Thanks. What is one skill you'd like to improve in your English, and why?"];
+  const allNote = allNumberedQuestionsAnsweredNote(card, all3);
+  check('31H2: all three asked ⇒ the all-answered note', allNote === "[runtime note — not from the student] All 3 questions on this part's card are answered — do not ask another. Reply to the answer in ONE short sentence, give the part's closing line from its notes, and advance. Apply this silently; never mention this note.");
+  check('31H2: a question still unasked ⇒ no all-answered note', allNumberedQuestionsAnsweredNote(card, [t63]) === null);
+  check('31H2: a one-question card ⇒ no all-answered note', allNumberedQuestionsAnsweredNote('1. What do you do at work?', ['What do you do at work?']) === null);
+  check('31H2: VTR plants it once per part', VTR.includes('} else if (!numberedAllAnsweredSegsRef.current.has(nqSeg)) {') && VTR.includes('numberedAllAnsweredSegsRef.current.add(nqSeg);'));
 }
 
 // Task 30 fix round 5: a tutor paraphrase of a numbered question counts as asked.
