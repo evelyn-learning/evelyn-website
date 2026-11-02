@@ -154,7 +154,10 @@ export function runChecks(dump) {
   // 10c. run 18: every part reached got its entry note (the pronunciation menu was never spoken)
   const noteSegs = new Set(ev('fixed_script_note_delivered').concat(ev('fixed_script_entry_note_planted')).map((e) => (e.msg.match(/(?:segment )?"([^"]+)"/) ?? [])[1]).filter(Boolean));
   const reached = (header?.lp?.completedSegmentIds ?? []).concat(header?.lp?.currentSegmentId ? [header.lp.currentSegmentId] : []).filter((s) => s && s !== 'overview');
-  const noNote = reached.filter((s) => !noteSegs.has(s));
+  const pageTitles = partPages.map((p) => norm(p.title));
+  const segHasPage = (seg) => { const w = norm(seg.replace(/-/g, ' ')).split(' ')[0]; return pageTitles.some((t) => t.includes(w)) || seg === 'summary'; };
+  // a skipped part (carry-over level check) is listed as completed but never had a page — no note expected
+  const noNote = reached.filter((s) => !noteSegs.has(s) && segHasPage(s));
   ok('every part reached got its entry note', noNote.length === 0, noNote.join(', '));
 
   // 10d. run 18: no offer re-planted (the spoken offer went unrecognised) and no probe loop (three tutor questions on one point, each answered)
