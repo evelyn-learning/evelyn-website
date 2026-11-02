@@ -1206,3 +1206,11 @@ export const TUTOR_PROBE_CHECKIN = process.env.NEXT_PUBLIC_TUTOR_PROBE_CHECKIN !
  *  bare "Yes" as one more item. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_OFFER_REASK_KILL=off. */
 export const TUTOR_OFFER_REASK_KILL = process.env.NEXT_PUBLIC_TUTOR_OFFER_REASK_KILL !== 'off';
+
+/** Task 33 §C (GDI bot run r8, 1153–1220 s: the pronunciation menu asked
+ *  seven times): in a fixed-script part whose card is a numbered choice
+ *  menu, after MENU_ASK_CAP (2) tutor turns asked the menu with no option
+ *  picked, the student's next non-pick reply moves the lesson on itself
+ *  (reason=menu_unpicked, "skipping the practice today"). Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_MENU_ASK_CAP=off. */
+export const TUTOR_MENU_ASK_CAP = process.env.NEXT_PUBLIC_TUTOR_MENU_ASK_CAP !== 'off';

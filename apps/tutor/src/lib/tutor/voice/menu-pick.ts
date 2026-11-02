@@ -83,3 +83,61 @@ export function resolveMenuPick(studentText: string | null | undefined, lastTuto
 export function menuPickNote(pick: MenuOption): string {
   return `[runtime note — not from the student] The student chose option ${pick.index}: "${pick.text}". Proceed with that option now; do not list the options again. Apply this silently; never mention this note.]`;
 }
+
+/**
+ * Task 33 §C (GDI bot run r8, 1153–1220 s: the pronunciation menu — "asked
+ * twice without a pick → skip to the summary" in the plan's note — was asked
+ * seven times, "どの番号にしますか" ×6). The engine enforces the cap: a menu
+ * part (its card offers numbered choices) counts the tutor turns that ask the
+ * menu while no option was picked; once MENU_ASK_CAP asks went unpicked, the
+ * student's next reply that is not a pick moves the lesson on itself
+ * (reason=menu_unpicked). A bare acknowledgement ("OK", "Yes", "OK, thank
+ * you", "I understand", はい) is never a pick. Pure, generic.
+ */
+export const MENU_ASK_CAP = 2;
+const MENU_NUMBER_ASK_RE = /\bwhich (?:number|option|one)\b|\b(?:tell me|say|give me|choose|pick)(?: me)? (?:the |a |one )?(?:number|option)\b|\bjust tell me the number\b|番号|何番|どれ(?:か|に)|選んで/i;
+const ASK_SHAPE_RE = /[?？]|(?:か|ください|下さい)[。.!！]?\s*$/;
+/** The card's option texts (`1) words, 2) …`), each one's content words (≥ 4 letters). */
+function optionWords(cardStatement: string): string[][] {
+  return (parseMenuOptions(cardStatement) ?? []).map((o) => menuWordTokens(o.text).filter((w) => w.length >= 4));
+}
+/** True ⇒ `turnText` asks the menu: a sentence that asks (a "?" / a
+ *  Japanese ask ending) and asks for a number / option, or the turn names ≥ 2
+ *  of the card's options and asks something. Pure. */
+export function menuAskedIn(turnText: string | null | undefined, cardStatement: string | null | undefined): boolean {
+  const t = (turnText ?? '').replace(/\s+/g, ' ').trim();
+  if (!t) return false;
+  const sentences = t.split(/(?<=[.!?。！？])\s*/).filter(Boolean);
+  if (sentences.some((s) => MENU_NUMBER_ASK_RE.test(s) && (ASK_SHAPE_RE.test(s) || /\b(?:tell me|choose|pick)\b/i.test(s)))) return true;
+  const words = new Set(menuWordTokens(t));
+  const named = optionWords(cardStatement ?? '').filter((ws) => ws.length > 0 && ws.some((w) => words.has(w))).length;
+  return named >= 2 && sentences.some((s) => ASK_SHAPE_RE.test(s));
+}
+const ACK_WORDS = new Set(['ok', 'okay', 'yes', 'yeah', 'yep', 'sure', 'alright', 'right', 'fine', 'thank', 'thanks', 'you', 'i', 'understand', 'see', 'got', 'it', 'um', 'uh', 'hmm', 'well', 'so', 'はい', 'うん', 'ええ', 'わかりました', '分かりました', 'ありがとうございます', 'ありがとう']);
+/** A bare acknowledgement — every word an ack word ("OK, thank you.", "Yes, I understand.", はい). Pure. */
+export function isBareAcknowledgement(studentText: string | null | undefined): boolean {
+  const words = (studentText ?? '').toLowerCase().replace(/[.,!?。、！？…]+/g, ' ').split(/\s+/).filter(Boolean);
+  return words.length > 0 && words.every((w) => ACK_WORDS.has(w));
+}
+const PICK_NUMBER_RE = /\b[1-9]\b|[1-9１-９]\s*番|\b(?:one|two|three|four|five|first|second|third|fourth|fifth)\b|[二三四]番(?!目)|\bskip\b|スキップ/i;
+/** True ⇒ the reply picks (or tries to pick) an option: resolveMenuPick on
+ *  the card or the last tutor turn, a number / option word, or "skip". A
+ *  bare acknowledgement never is. Pure. */
+export function menuReplyIsPick(studentText: string | null | undefined, cardStatement: string | null | undefined, lastTutorText?: string | null): boolean {
+  const t = (studentText ?? '').trim();
+  if (!t || /^\s*\[/.test(t) || isBareAcknowledgement(t)) return false;
+  if (resolveMenuPick(t, cardStatement) || resolveMenuPick(t, lastTutorText)) return true;
+  if (PICK_NUMBER_RE.test(t)) return true;
+  const words = new Set(menuWordTokens(t).map(fold));
+  return optionWords(cardStatement ?? '').some((ws) => ws.some((w) => words.has(fold(w))));
+}
+/** The decision on a student turn in a menu part: 'advance' once `asks`
+ *  unpicked menu asks reached the cap and this reply is no pick. Pure. */
+export function menuAskCapDecision(input: { menuPart: boolean; picked: boolean; asks: number; replyIsPick: boolean; studentTurn: boolean; cap?: number }): 'advance' | 'wait' {
+  if (!input.menuPart || input.picked || !input.studentTurn || input.replyIsPick) return 'wait';
+  return input.asks >= (input.cap ?? MENU_ASK_CAP) ? 'advance' : 'wait';
+}
+/** The advance lead (fixedScriptAdvancedNote) of a menu_unpicked advance. */
+export function menuUnpickedLead(from: string, next: string): string {
+  return `The student did not pick an option of the "${from}" menu after it was asked twice, so we are skipping the practice today, and the lesson pointer has ALREADY moved to "${next}". Say in one short sentence that we are skipping the practice today; do not list the options again.`;
+}
