@@ -93,13 +93,14 @@ export function runChecks(dump) {
   ok('no duplicate sentence card on a page', dupCards.length === 0, dupCards.join(' | ').slice(0, 300));
 
   // 6. Q-pin gists are real questions
-  const badPins = ev('qpin_set').concat(ev('qpin_set_verbatim'), ev('qpin_set_ask')).map((e) => (e.msg.match(/"([^"]*)/) ?? [])[1] ?? '').filter((g) => g !== undefined && (/^\s*["“]?\s*$/.test(g) || content(g).length < 2));
+  const gistOf = (msg) => { const m = msg.match(/"([\s\S]*)"\s*$/) ?? msg.match(/"([^"]*)/); return m ? m[1] : ''; };
+  const badPins = ev('qpin_set').concat(ev('qpin_set_verbatim'), ev('qpin_set_ask')).map((e) => gistOf(e.msg)).filter((g) => g !== undefined && (/^\s*["“]?\s*$/.test(g) || content(g).length < 2));
   ok('no stray / empty Q-pin', badPins.length === 0, badPins.map((g) => `"${g}"`).join(' | '));
 
   // 6b. Q-pin gists are grounded in the tutor's turn (no invented examples)
   const ungrounded = [];
   for (const e of ev('qpin_set')) {
-    const g = (e.msg.match(/"([^"]*)/) ?? [])[1] ?? ''; if (content(g).length < 4) continue;
+    const g = gistOf(e.msg); if (content(g).length < 4) continue;
     const turn = [...tutor].reverse().find((x) => x.t <= e.t + 1);
     if (!turn) continue;
     const tt = new Set(content(turn.text)); const cg = content(g); const hit = cg.filter((w) => tt.has(w)).length / cg.length;
