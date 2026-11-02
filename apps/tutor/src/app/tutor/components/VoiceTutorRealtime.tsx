@@ -19655,7 +19655,13 @@ export function VoiceTutorRealtime({
         // Task 27 §E1 (GDI run 14, 958 s): also on any turn that moved the
         // pointer (the brain's own advance_lesson) into a part whose card
         // asks something or offers choices.
-        if (!attemptKilled && !transitionAskRejected && attemptText
+        // Task 29 fix round 1 (I-1): the offer-note turn is a FACT-note turn
+        // whose pointer has NOT moved — its offer question is about the part
+        // being closed, never "off the new part". Skipped while that part's
+        // offer is pending / was planted, or when the attempt asks the offer.
+        const taOfferTurn = TUTOR_TRANSITION_OFFER_SPOKEN && currentSegmentIdRef.current === turnStartSegmentId
+          && (transitionOfferMadeRef.current.has(turnStartSegmentId ?? '') || offerAsked(attemptText));
+        if (!attemptKilled && !transitionAskRejected && attemptText && !taOfferTurn
           && (fixedScriptNoteDeliveredThisTurnRef.current || (TUTOR_TRANSITION_ASK_EVERY_ADVANCE && currentSegmentIdRef.current !== turnStartSegmentId))) {
           const taPlan = lessonPlanRef.current;
           const taSeg = taPlan?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
@@ -21064,6 +21070,14 @@ export function VoiceTutorRealtime({
             // turns in a row (a drill re-arming every turn), disarm and all.
             autoAdvancePronHeldRef.current += 1;
             onDebugEvent?.('fixed_script_auto_advance_held_pron', `"${segIdNow}" ${autoAdvancePronHeldRef.current}/${FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS}`);
+          } else if (autoNext && segIdNow && transition === 'offer' && TUTOR_TRANSITION_OFFER_SPOKEN && offerAsked(fullText)) {
+            // Task 29 fix round 1 (I-2): the brain offered on the very turn the
+            // budget came due — the offer is SPOKEN here (hold turn 1); no
+            // note is planted (it would make the next turn ask again).
+            transitionOfferMadeRef.current.add(segIdNow);
+            transitionOfferSpokenRef.current.add(segIdNow);
+            autoAdvanceOfferHeldRef.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;
+            onDebugEvent?.('fixed_script_offer_spoken', `"${segIdNow}" (on the budget turn)`);
           } else if (autoNext && segIdNow && transition === 'offer') {
             // The offer note replaces the advance (urgent FACT note, same
             // path as the advance note); a pending note about this part is

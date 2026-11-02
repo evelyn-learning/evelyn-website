@@ -38,6 +38,7 @@ import {
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '../src/lib/tutor/lesson-plan/announced-move';
 import { turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
+import { askOffNewPart } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel, displayedSegmentId, displayedCompletedSegments } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
@@ -601,7 +602,7 @@ test('26A: VTR wiring — offer planted (urgent FACT) instead of the advance, he
   const block = VTR.slice(auto, auto + 15000);
   pin(block, /const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS\s*\? fixedScriptTransitionDecision\(\{\s*plan: autoPlan, segmentId: segIdNow, reason: advanceReason,\s*offerMade: transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\),\s*offerHeldTurns: autoAdvanceOfferHeldRef\.current,/);
   // order: pronunciation hold → offer → offer hold → ask hold → advance
-  pin(block, /'fixed_script_auto_advance_held_pron'[^\n]*\n\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'await-offer'\) \{[\s\S]*?\} else if \(autoNext && transition === 'hold-offer'\) \{\s*\/\/[^\n]*\n\s*if \(!offerSpokenThisTurn\) autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
+  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]{0,900}?\} else if \(autoNext && segIdNow && transition === 'offer'\) \{\s*\/\/ The offer note replaces[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'await-offer'\) \{[\s\S]*?\} else if \(autoNext && transition === 'hold-offer'\) \{\s*\/\/[^\n]*\n\s*if \(!offerSpokenThisTurn\) autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
   pin(block, /autoAdvanceAskHeldRef\.current = 0;\s*autoAdvanceOfferHeldRef\.current = 0;\s*const autoTurns = cur\.turns;/);
   pin(block, /: fixedScriptAutoAdvanceLead\(segIdNow, autoNext, autoKind\)\) \+[^\n]*\n\s*\/\/[^\n]*\n\s*\(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(autoPlan, segIdNow, autoNext\) : ''\) \+\s*\/\/[^\n]*\n\s*\(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(autoPlan, autoNext\)\) : ''\),\s*autoNext,/);
   pin(VTR, /fixedScriptAdvancedNote\(fixedScriptLevelAdvanceLead\(lvNext, lvKind\) \+ \(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(lvPlan, lvFrom, lvNext\) : ''\) \+ \(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(lvPlan, lvNext\)\) : ''\), lvNext\),/);
@@ -826,6 +827,19 @@ test('29A: VTR wiring — validator kill + retry, spoken event, hold from the sp
   assert.ok(VTR.includes("} else if (autoNext && transition === 'await-offer') {"));
   assert.ok(VTR.includes('offerDeclined: !offerSpokenThisTurn && offerDeclined(transcript),'));
   assert.ok(readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8').includes("'transition_offer_missing',"));
+});
+
+test('29 r1 I-1: transition_ask_off_part skips the offer turn (pointer unchanged + offer planted, or the attempt offers)', () => {
+  const offer = 'Good. Would you like one more practice sentence on "Present perfect", or to move on to "Past simple"?';
+  // why: the canonical offer is "off" the old part's card by the token rule
+  assert.equal(askOffNewPart(offer, 'Have you worked for your current company for a long time?'), true);
+  assert.equal(offerAsked(offer), true);
+  assert.ok(VTR.includes("const taOfferTurn = TUTOR_TRANSITION_OFFER_SPOKEN && currentSegmentIdRef.current === turnStartSegmentId\n          && (transitionOfferMadeRef.current.has(turnStartSegmentId ?? '') || offerAsked(attemptText));"));
+  assert.ok(VTR.includes('if (!attemptKilled && !transitionAskRejected && attemptText && !taOfferTurn'));
+});
+test('29 r1 I-2: an offer on the budget turn itself is SPOKEN at once — no note planted', () => {
+  assert.equal(offerAsked('Nice. Would you like one more practice sentence, or move on to the past simple?'), true);
+  pin(VTR, /\} else if \(autoNext && segIdNow && transition === 'offer' && TUTOR_TRANSITION_OFFER_SPOKEN && offerAsked\(fullText\)\) \{[\s\S]{0,400}?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*transitionOfferSpokenRef\.current\.add\(segIdNow\);\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;\s*onDebugEvent\?\.\('fixed_script_offer_spoken', `"\$\{segIdNow\}" \(on the budget turn\)`\);\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
