@@ -1180,3 +1180,8 @@ export const TUTOR_NUMBERED_QUESTION_NOTE = process.env.NEXT_PUBLIC_TUTOR_NUMBER
  *  on a fixed script, for the spoken opener's prompt. Client-side: default
  *  ON; NEXT_PUBLIC_TUTOR_OPENER_WAITS_FOR_PLAN=off. */
 export const TUTOR_OPENER_WAITS_FOR_PLAN = process.env.NEXT_PUBLIC_TUTOR_OPENER_WAITS_FOR_PLAN !== 'off';
+
+/** Task 30 fix round 8 A4 (run r6-A 1197 s): an empty turn in a fixed-script /
+ *  language lesson with a pending ask re-asks it instead of "didn't come up
+ *  with anything". Client-side: default ON; NEXT_PUBLIC_TUTOR_EMPTY_TURN_REASK=off. */
+export const TUTOR_EMPTY_TURN_REASK = process.env.NEXT_PUBLIC_TUTOR_EMPTY_TURN_REASK !== 'off';

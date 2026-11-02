@@ -9,6 +9,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { emptyTurnFallbackLine, EMPTY_TURN_GENERIC_TYPED } from '../src/lib/tutor/voice/empty-turn-fallback';
 import {
   partitionQueueAtSentenceBoundary,
   shouldFinishInFlightSentence,
@@ -186,6 +187,17 @@ test('fix round 2 (N1): no empty-turn fallback after a skipped retry; heard text
   assert.ok(g > 0 && spoken > g && chat > g && spoken - g < 6000, `guard=${g} spoken=${spoken} chat=${chat}`);
   assert.match(vtr, /if \(res\.outcome === 'ended'\) \{\s*retrySkippedHeardText = heardTextThroughKept\(\s*turnNarrationRef\.current\.slice\(attemptNarrationStart\),\s*res\.keptSentence,/);
   assert.match(vtr, /if \(retrySkippedAfterKill && rejectionsThisAttempt\.length > 0\) \{\s*if \(retrySkippedHeardText\) \{\s*aggregatedFullText = /);
+});
+test('Task 30 fix round 8 A4: an empty turn re-asks the pending question in a language / fixed-script lesson', () => {
+  const ask = 'Have you worked for your current company for a long time?';
+  assert.deepEqual(emptyTurnFallbackLine({ pinGist: ask, languageLesson: true, bilingual: false }), { kind: 'reask', text: `Let me ask that again: ${ask}` });
+  assert.deepEqual(emptyTurnFallbackLine({ pinGist: ask, languageLesson: true, bilingual: true }), { kind: 'reask', text: `もう一度聞きますね。 ${ask}` });
+  assert.deepEqual(emptyTurnFallbackLine({ pinGist: '', languageLesson: true, bilingual: true }), { kind: 'generic', text: EMPTY_TURN_GENERIC_TYPED }, 'no pending ask ⇒ generic');
+  assert.deepEqual(emptyTurnFallbackLine({ pinGist: ask, languageLesson: false, bilingual: false }), { kind: 'generic', text: EMPTY_TURN_GENERIC_TYPED }, 'other lessons ⇒ generic');
+  assert.equal(EMPTY_TURN_GENERIC_TYPED, "Hmm, I didn't come up with anything for that — mind rephrasing?");
+  assert.ok(vtr.includes('if (TUTOR_EMPTY_TURN_REASK && efFallback.kind === \'reask\') {'));
+  assert.ok(vtr.includes('pinGist: turnAskGist(efPrevTutor),'));
+  assert.match(flags, /export const TUTOR_EMPTY_TURN_REASK = process\.env\.NEXT_PUBLIC_TUTOR_EMPTY_TURN_REASK !== 'off';/);
 });
 test('flag declared, default ON', () => {
   assert.match(flags, /export const TUTOR_KILL_SENTENCE_BOUNDARY = process\.env\.NEXT_PUBLIC_TUTOR_KILL_SENTENCE_BOUNDARY !== 'off';/);
