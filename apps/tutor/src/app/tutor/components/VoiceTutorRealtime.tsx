@@ -20081,7 +20081,7 @@ export function VoiceTutorRealtime({
             const sqAsk = turnAskGist(attemptText);
             const sqCard = currentProblemRef.current;
             const sqAuthored = !!sqCard?.expectedAnswer && !!sqCard.statement && askGistsSame(sqAsk, turnAskGist(sqCard.statement));
-            rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: sameQuestionThirdTimeReason({ question: sqAsk, authoredAnswer: sqAuthored, studentRecent: transcriptRef.current.filter((e) => e.role === 'student').slice(-6).map((e) => e.text) }) });
+            rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: sameQuestionThirdTimeReason({ question: sqAsk, authoredAnswer: sqAuthored, studentRecent: transcriptRef.current.filter((e) => e.role === 'student').slice(-6).map((e) => e.text), languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current) }) });
             await performKill();
             onDebugEvent?.('same_question_third_time', `"${turnAskGist(attemptText).slice(0, 80)}"`);
           } else if (sqDue) {

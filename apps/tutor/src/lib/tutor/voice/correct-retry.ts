@@ -997,14 +997,16 @@ export const SAME_QUESTION_THIRD_TIME_REASON = withRetryStyle(
 // sentence, form, mean, correct …) with no authored answer on the card has no
 // answer to give: the retry accepts what they said or lets it go. Pure.
 const PERSONAL_SECOND_PERSON_RE = /\b(?:you|your|yours|yourself)\b|あなた/i;
-const LANGUAGE_META_RE = /\b(?:tense|verb|verbs|word|words|sentence|sentences|phrase|form|forms|grammar|mean|means|meaning|correct|right|wrong|spell|spelling|pronounce|participle|past simple|present perfect|plural|singular|article|preposition|translate|english for|say it|difference)\b|文法|単語|意味|時制|形/i;
+const LANGUAGE_META_RE = /\b(?:tense|verb|verbs|word|words|sentence|sentences|phrase|form|forms|grammar|mean|means|meaning|correct|right|wrong|spell|spelling|pronounce|participle|plural|singular|article|preposition|translate|english for|say it|difference)\b|文法|単語|意味|時制|形/i;
 // Also personal: a question about something the student told ("What was the
 // trade show about?" after "I went to a trade show in Tokyo") — ≥ 1 content
 // word (≥ 4 letters) of the question is in the student's recent words.
 const PERSONAL_STOP = new Set(['what', 'when', 'where', 'which', 'about', 'there', 'that', 'this', 'with', 'from', 'have', 'were', 'your', 'they', 'them', 'then', 'just', 'like', 'some', 'more', 'last', 'year', 'time', 'make', 'made', 'tell', 'said', 'does', 'into']);
+// Fix round 1 (I-3): a quantity / maths shape is never personal.
+const MATHS_SHAPE_RE = /\d|=|\bhow (?:many|much)\b|\b(?:value|slope|area|equals?|answer|total|sum|solve|solution)\b/i;
 export function isPersonalQuestion(question: string | null | undefined, studentRecent?: readonly string[] | null): boolean {
   const q = question ?? '';
-  if (LANGUAGE_META_RE.test(q)) return false;
+  if (LANGUAGE_META_RE.test(q) || MATHS_SHAPE_RE.test(q)) return false;
   if (PERSONAL_SECOND_PERSON_RE.test(q)) return true;
   const said = new Set((studentRecent ?? []).flatMap((x) => (x ?? '').toLowerCase().match(/[\p{L}]+/gu) ?? []));
   return (q.toLowerCase().match(/[\p{L}]+/gu) ?? []).some((w) => w.length >= 4 && !PERSONAL_STOP.has(w) && said.has(w));
@@ -1014,7 +1016,10 @@ export const SAME_QUESTION_THIRD_TIME_PERSONAL_REASON = withRetryStyle(
 /** The retry directive of same_question_third_time: the authored-answer
  *  version unless the pinned question is personal and the card holds no
  *  authored answer for it. Pure. */
-export function sameQuestionThirdTimeReason(input: { question: string | null | undefined; authoredAnswer: boolean; studentRecent?: readonly string[] | null }): string {
-  if (!input.authoredAnswer && isPersonalQuestion(input.question, input.studentRecent)) return SAME_QUESTION_THIRD_TIME_PERSONAL_REASON;
+// Fix round 1 (I-3): LANGUAGE lessons only (subject 'languages' or a
+// fixed-script plan — the Task 31 I-4 predicate); a bilingual maths session
+// keeps the answer directive.
+export function sameQuestionThirdTimeReason(input: { question: string | null | undefined; authoredAnswer: boolean; studentRecent?: readonly string[] | null; languageLesson: boolean }): string {
+  if (input.languageLesson && !input.authoredAnswer && isPersonalQuestion(input.question, input.studentRecent)) return SAME_QUESTION_THIRD_TIME_PERSONAL_REASON;
   return SAME_QUESTION_THIRD_TIME_REASON;
 }
