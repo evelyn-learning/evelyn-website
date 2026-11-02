@@ -9,6 +9,10 @@ import type jsPDF from 'jspdf';
 import { inkNotesEnabled, linksEnabled } from '@/app/tutor/hooks/toolDefinitions';
 import { latexToReadable, mathifyDollarSpans } from './latex-readable';
 import { normalizeLiteralLineBreaks } from '@/lib/tutor/whiteboard/inline-math';
+import {
+  getPdfTextContext, hasCjk, inferSessionLanguages, installCjkFontRouter, loadCjkFontBase64,
+  mapNonLatin1Runs, registerCjkFont, resetPdfTextContext, setPdfTextContext, type PdfTextContext,
+} from './pdf-cjk-font';
 
 interface TranscriptMessage {
   id: string;
@@ -25,7 +29,10 @@ interface WhiteboardCommandData {
 }
 
 /** Exported for scripts/test-literal-line-breaks.ts. */
-export function sanitizeForPDF(text: string, opts: { literalLineBreaks?: boolean } = {}): string {
+// Task 32 §A: `textContext` overrides the per-export context (tests); the
+// exporter sets that context once per export (CJK font loaded? session
+// languages) — see pdf-cjk-font.ts.
+export function sanitizeForPDF(text: string, opts: { literalLineBreaks?: boolean; textContext?: PdfTextContext } = {}): string {
   // Round-24: transcript/board prose reaches the PDF with inline $…$ LaTeX
   // intact (live bubbles mathify via KaTeX since round 20; the PDF was the
   // last raw surface). Convert here — the single choke point every text
@@ -59,7 +66,10 @@ export function sanitizeForPDF(text: string, opts: { literalLineBreaks?: boolean
   }
   // Transliterate Greek, math symbols, etc. before stripping non-Latin-1
   s = s.replace(LATIN_DIACRITIC_REGEX, (ch) => LATIN_DIACRITIC_MAP[ch] || ch);
-  s = s.replace(/[^\x00-\xFF]/g, '?');
+  // CJK runs: kept when the CJK font is embedded (the font router draws
+  // them), bracket-labelled when it is not; every other non-Latin-1 char
+  // still becomes '?'.
+  s = mapNonLatin1Runs(s, opts.textContext ?? getPdfTextContext(), (run) => '?'.repeat(run.length));
   return s;
 }
 
@@ -206,7 +216,8 @@ const LATIN_DIACRITIC_REGEX = new RegExp(
 // Non-Latin scripts (Devanagari, Arabic, CJK) render as "?".
 // This function first transliterates Latin Extended and Cyrillic characters
 // to ASCII, then replaces remaining non-Latin runs with a bracketed note.
-function toWinAnsiSafe(text: string): string {
+/** Exported for scripts/test-pdf-tutor-session.ts. */
+export function toWinAnsiSafe(text: string, textContext?: PdfTextContext): string {
   // First, normalize common Unicode punctuation to ASCII equivalents
   let normalized = text;
   normalized = normalized.replace(/[\u2018\u2019\u201A]/g, "'");  // curly single quotes → '
@@ -230,19 +241,17 @@ function toWinAnsiSafe(text: string): string {
   normalized = normalized.replace(/([A-Za-z0-9])\u0304/g, '$1-bar');
   normalized = normalized.replace(/[\u0300-\u036F]/g, '');
 
-  // Match remaining runs of characters outside Latin-1 printable range (U+0020–U+00FF)
-  return normalized.replace(
-    /[^\u0000-\u00FF]+/g,
-    (match) => {
-      // Try to detect the script for a useful label
-      if (/[\u0900-\u097F]/.test(match)) return '[Hindi speech]';
-      if (/[\u0600-\u06FF]/.test(match)) return '[Arabic speech]';
-      if (/[\u4E00-\u9FFF]/.test(match)) return '[Chinese text]';
-      if (/[\u3040-\u30FF]/.test(match)) return '[Japanese text]';
-      if (/[\uAC00-\uD7AF]/.test(match)) return '[Korean text]';
-      return '[non-Latin text]';
-    }
-  );
+  // Match remaining runs of characters outside Latin-1 printable range (U+0020–U+00FF).
+  // Task 32 §A: CJK runs are handled first by mapNonLatin1Runs — kept when
+  // the CJK font is embedded, else labelled kana-first / by session
+  // language (a kanji-only 仕事 in a Japanese lesson is Japanese, not
+  // Chinese); the remaining scripts keep their labels.
+  return mapNonLatin1Runs(normalized, textContext ?? getPdfTextContext(), (match) => {
+    if (/[\u0900-\u097F]/.test(match)) return '[Hindi speech]';
+    if (/[\u0600-\u06FF]/.test(match)) return '[Arabic speech]';
+    if (/[\uAC00-\uD7AF]/.test(match)) return '[Korean text]';
+    return '[non-Latin text]';
+  });
 }
 
 // -- LaTeX -> readable text: moved to latex-readable.ts (round-24, pure module,
@@ -1636,7 +1645,27 @@ export async function exportTutorSessionPDF(
   topicName: string,
   sessionGoal: string,
   studentName?: string,
-  options?: { includeDebugData?: boolean; subject?: string; level?: string; productName?: string }
+  // `languages` (task 32 §A): the session's teaching languages when the
+  // caller knows them — labels CJK runs if the CJK font cannot load.
+  // Omitted, they are inferred from the content (kana => 'ja').
+  options?: { includeDebugData?: boolean; subject?: string; level?: string; productName?: string; languages?: string[] }
+): Promise<void> {
+  try {
+    await exportTutorSessionPDFInner(transcript, whiteboardCommands, topicName, sessionGoal, studentName, options);
+  } finally {
+    // The per-export text context (CJK font loaded? languages) must never
+    // leak into the next export or into another caller of sanitizeForPDF.
+    resetPdfTextContext();
+  }
+}
+
+async function exportTutorSessionPDFInner(
+  transcript: TranscriptMessage[],
+  whiteboardCommands: WhiteboardCommandData[],
+  topicName: string,
+  sessionGoal: string,
+  studentName: string | undefined,
+  options: { includeDebugData?: boolean; subject?: string; level?: string; productName?: string; languages?: string[] } | undefined,
 ): Promise<void> {
   const includeDebug = options?.includeDebugData ?? false;
   // GreenApple pilot (task 13, spec §8.5): a partner PDF must carry no
@@ -1646,6 +1675,33 @@ export async function exportTutorSessionPDF(
   const brandName = typeof options?.productName === 'string' && options.productName.trim() ? options.productName.trim() : 'Evelyn Learning';
   const { default: jsPDF } = await import('jspdf');
   const pdf = new jsPDF('p', 'mm', 'a4');
+
+  // Task 32 §A: embed Noto Sans JP only when the session carries CJK text
+  // (a Latin-only session never fetches the font), then route every CJK
+  // string through it. A failed fetch keeps the bracket-label fallback.
+  {
+    const allText = [
+      topicName,
+      ...transcript.map((m) => m.text),
+      JSON.stringify(whiteboardCommands),
+      ...transcript.map((m) => (m.whiteboardCommands ? JSON.stringify(m.whiteboardCommands) : '')),
+    ].join('\n');
+    let cjkFont = false;
+    if (hasCjk(allText)) {
+      const b64 = await loadCjkFontBase64();
+      if (b64) {
+        try {
+          registerCjkFont(pdf, b64);
+          installCjkFontRouter(pdf);
+          cjkFont = true;
+        } catch (err) {
+          console.warn('[pdf-tutor-session] CJK font registration failed, using bracket labels:', err);
+        }
+      }
+    }
+    setPdfTextContext({ cjkFont, languages: inferSessionLanguages(allText, options?.languages) });
+  }
+
   const pageWidth = pdf.internal.pageSize.getWidth();
   const margin = 18;
   const contentWidth = pageWidth - margin * 2;

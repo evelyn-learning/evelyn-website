@@ -58,6 +58,7 @@
     "test:recap-candidate": "npx tsx scripts/test-recap-candidate.ts",
     "test:embed-token": "npx tsx scripts/test-embed-token.ts",
     "test:pdf-session-branding": "npx tsx scripts/test-pdf-session-branding.ts",
+    "test:pdf-tutor-session": "npx tsx scripts/test-pdf-tutor-session.ts",
     "test:partner-token-secrets": "npx tsx scripts/test-partner-token-secrets.ts",
     "test:material-classify": "npx tsx scripts/test-material-classify.ts",
     "test:enumerate-problems": "npx tsx scripts/test-enumerate-problems.ts",
