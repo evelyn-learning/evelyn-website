@@ -258,3 +258,32 @@ export function segmentCardForFlush(input: {
   const title = segmentCardTitle(input.authored?.kind);
   return { action: 'showProblem', problem: { statement, format: 'free-response', ...(title ? { title } : {}) } };
 }
+
+/**
+ * Task 30 §C (GDI run 17, 1111–1114 s, Images 72/73): advanceLesson flushed
+ * the pronunciation page with its segment card into the render-sync buffer;
+ * the attempt was then killed (transition_ask_off_part) and the kill's
+ * retraction (render_sync_drop) took the page AND the card — the rest of the
+ * part ran on the previous part's page, and the retry's restatement path
+ * re-sent `reviseItems` for a card that never painted.
+ *
+ * A kill retraction never discards a segment-page break: when the buffer it
+ * drops holds the break (`segmentBreak`), the page is re-armed as deferred
+ * (`rearm`) and painted — with the authored card when the retry carries none
+ * (segmentCardForFlush) — at the retry turn's end. `keepIds` = the killed
+ * attempt's pending-revision ids that DID paint (a retracted id is never
+ * revised). `requeueCard` = the segment card was among the dropped renders.
+ */
+export function rearmAfterKill(input: {
+  droppedIds: readonly string[];
+  segmentBreak: boolean;
+  segmentCardId: string | null | undefined;
+  pendingRevisionIds?: readonly string[];
+}): { rearm: boolean; requeueCard: boolean; keepIds: string[] } {
+  const dropped = new Set(input.droppedIds);
+  return {
+    rearm: input.segmentBreak,
+    requeueCard: !!input.segmentCardId && dropped.has(input.segmentCardId),
+    keepIds: (input.pendingRevisionIds ?? []).filter((id) => !dropped.has(id)),
+  };
+}

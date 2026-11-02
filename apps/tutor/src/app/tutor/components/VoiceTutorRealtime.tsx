@@ -90,7 +90,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
@@ -6669,6 +6669,33 @@ export function VoiceTutorRealtime({
       }
     }
     const dropped = buf.length;
+    // Task 30 §C (GDI run 17, 1112 s): the retraction never discards a
+    // segment-page break — the page (and its authored card) is re-armed as
+    // deferred and paints at the retry turn's end; a retracted id is never
+    // revised (reviseItems) later.
+    const killBreak = segmentPageBreakRef.current;
+    const killBreakDropped = !!killBreak && buf.some((e) => e.processed.includes(killBreak.cmd));
+    const killCardStatement = killBreak ? authoredSegmentCard(lessonPlanRef.current, killBreak.segmentId)?.statement ?? '' : '';
+    let killCardId: string | null = null;
+    for (const entry of buf) for (const c of entry.processed) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cc = c as any;
+      if (killCardStatement && cc.action === 'showProblem' && typeof cc.id === 'string' && cc.problem?.statement === killCardStatement) killCardId = cc.id;
+    }
+    const rearm = rearmAfterKill({ droppedIds: ids, segmentBreak: killBreakDropped, segmentCardId: killCardId, pendingRevisionIds: [...pendingRevisionRef.current] });
+    if (pendingRevisionRef.current.size !== rearm.keepIds.length) pendingRevisionRef.current = new Set(rearm.keepIds);
+    if (rearm.rearm && killBreak && !pendingAdvanceNewPageRef.current) {
+      pendingAdvanceNewPageRef.current = { title: killBreak.title, segmentId: killBreak.segmentId, authored: true, afterTurn: true, cardOnFlush: true };
+      segmentPageBreakRef.current = null;
+      whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter((c) => c !== killBreak.cmd);
+      if (killBreak.priorPageId) {
+        catalogRef.current.setActivePage(killBreak.priorPageId);
+        const priorTitle = catalogRef.current.getPage(killBreak.priorPageId)?.title;
+        if (priorTitle) catalogRef.current.setCurrentPage(priorTitle);
+        catalogRef.current.gcEmptyPages();
+      }
+      onDebugEvent?.('advance_page_rearmed_after_kill', `${killBreak.segmentId}${rearm.requeueCard ? ' (card queued)' : ''}`);
+    }
     renderBufferRef.current = [];
     if (ids.length > 0) {
       // A dropped replacement still owes its prior's removal (the catalog

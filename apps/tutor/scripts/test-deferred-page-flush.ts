@@ -17,6 +17,7 @@ import {
   orderTurnEndDispatches,
   previousPageTarget,
   segmentCardForFlush,
+  rearmAfterKill,
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 import { keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
@@ -297,6 +298,21 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('30B2: VTR arms cardOnFlush on a budget advance', V7.includes("if (advanceReason !== 'announced') pendingAdvanceNewPageRef.current.cardOnFlush = true;"));
   ok('30B2: VTR adds the card at the in-batch flush after the break', V7.includes('processed = flushCard ? [segmentBreakCmd, flushCard as unknown as WhiteboardCommand, ...processed] : [segmentBreakCmd, ...processed];'));
   ok('30B2: VTR adds the card at the turn-end flush through the board path', /if \(deferred\.cardOnFlush\) \{[\s\S]{0,700}?void handleWhiteboardCommandRef\.current\?\.\(\[card as unknown as WhiteboardCommand\]\);\s*onDebugEvent\?\.\('auto_newpage_on_advance_card_added'/.test(V7));
+}
+
+// Task 30 §C (GDI run 17, 1112 s): a kill retraction re-arms the segment page; retracted ids are never revised.
+{
+  const r = rearmAfterKill({ droppedIds: ['showProblem-5'], segmentBreak: true, segmentCardId: 'showProblem-5', pendingRevisionIds: ['showProblem-5', 'showSentence-9'] });
+  ok('30C: the dropped break ⇒ rearm, card queued', r.rearm === true && r.requeueCard === true);
+  ok('30C: a retracted id is never kept for reviseItems', r.keepIds.length === 1 && r.keepIds[0] === 'showSentence-9');
+  const none = rearmAfterKill({ droppedIds: ['showSentence-3'], segmentBreak: false, segmentCardId: null, pendingRevisionIds: ['showSentence-3'] });
+  ok('30C: no break in the dropped buffer ⇒ no rearm', none.rearm === false && none.requeueCard === false && none.keepIds.length === 0);
+  const V8 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('30C: VTR dropRenderBuffer re-arms the page as deferred with its card', V8.includes("pendingAdvanceNewPageRef.current = { title: killBreak.title, segmentId: killBreak.segmentId, authored: true, afterTurn: true, cardOnFlush: true };")
+    && V8.includes("onDebugEvent?.('advance_page_rearmed_after_kill',"));
+  ok('30C: VTR prunes the retracted ids from the pending revisions', V8.includes('if (pendingRevisionRef.current.size !== rearm.keepIds.length) pendingRevisionRef.current = new Set(rearm.keepIds);'));
+  // ordering: the rearm runs before the buffer is cleared (it reads the dropped entries)
+  ok('30C: VTR rearm reads the buffer before clearing it', V8.indexOf('const killBreakDropped = ') > 0 && V8.indexOf('const killBreakDropped = ') < V8.indexOf("onDebugEvent?.('render_sync_drop',"));
 }
 
 console.log(`deferred-page-flush: ${n} cases passed`);
