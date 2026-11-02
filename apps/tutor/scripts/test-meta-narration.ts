@@ -1228,5 +1228,15 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('A2: "Let me put the sentence on the board." still dropped (unaddressed staging)', isMetaNarration('Let me put the sentence on the board.'));
 }
 
+// Task 30 fix round 8 (A3, run r6-A 128 s): the level-tool clause with an adverb, stripped inside a longer sentence.
+{
+  const S128 = 'This is the third question, so I\'ll now note your level and focus on making your answers more natural.';
+  check('A3: 128 s clause stripped, the student-addressed rest kept', stripNoteCitationClause(S128) === 'This is the third question, so I\'ll now focus on making your answers more natural.');
+  check('A3: the stripped sentence is not narration', !isMetaNarration(stripNoteCitationClause(S128)));
+  check('A3: "I\'ll now note your level." ⇒ dropped', isMetaNarration("I'll now note your level."));
+  check('A3: R4-2 "Level check is done, so I\'ll set the level now and move on." still dropped (nothing addressed remains)', isMetaNarration("Level check is done, so I'll set the level now and move on.") && stripNoteCitationClause("Level check is done, so I'll set the level now and move on.") === '');
+  check('A3: "Your level of English is clear from your answers." kept', !isMetaNarration('Your level of English is clear from your answers.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

@@ -387,6 +387,9 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   // Task 30 fix round 3 (R2-1): a spoken plan lead / tail goes, the rest stays.
   s = stripSpokenPlanLeadTail(s);
   if (!s.trim()) return '';
+  // Fix round 8 (A3): the level-tool clause goes; the rest stays when it addresses the student.
+  s = stripLevelNoteClause(s);
+  if (!s.trim()) return '';
   if (CLOSE_PART_NARRATION_RE.test(s)) return '';
   if (isCaptureNarration(s)) return '';
   const keepStripped = stripKeepInMindTail(s);
@@ -581,7 +584,20 @@ export const QUESTION_COUNT_NARRATION_RE = /^\s*(?:The|This|That) question has (
 /** Task 30 fix round 4 R3-3 (run r3 155 s, spoken: "Before that, I'll note
  *  your level so the lesson fits you." — the level tool is silent). */
 // Fix round 5 (R4-2, run r4 172 s: "Level check is done, so I'll set the level now and move on.").
-export const LEVEL_NOTE_NARRATION_RE = /\bI['’]ll (?:note|record|set|mark|save) (?:your |the )?level\b|\bset the level now\b/i;
+// Fix round 8 (A3, run r6-A 128 s: "…, so I'll now note your level and focus on …"): one optional adverb.
+export const LEVEL_NOTE_NARRATION_RE = /\bI['’]ll (?:\w+ )?(?:note|record|set|mark|save) (?:your |the )?level\b|\bset the level now\b/i;
+/** Fix round 8 (A3): the level-tool clause inside a longer sentence is
+ *  stripped ("I'll now note your level and focus on making your answers more
+ *  natural." → "I'll now focus on making your answers more natural."); the
+ *  sentence goes whole ('') when nothing addressed to the student remains. */
+const LEVEL_CLAUSE_RE = /(\bI['’]ll (?:\w+ )?)(?:note|record|set|mark|save) (?:your |the )?level(?: now)?,? and (?:then )?/i;
+export function stripLevelNoteClause(s: string): string {
+  if (!LEVEL_NOTE_NARRATION_RE.test(s)) return s;
+  const m = LEVEL_CLAUSE_RE.exec(s);
+  if (!m) return '';
+  const out = `${s.slice(0, m.index)}${m[1]}${s.slice(m.index + m[0].length)}`;
+  return /\b(?:you|your)\b/i.test(out) && !LEVEL_NOTE_NARRATION_RE.test(out) ? out : '';
+}
 /** Task 30 fix round 4 R3-5b (run r3 858 s, spoken: 「このやり取りは、次の練習に
  *  進むところです。」 — the exchange narrated in Japanese). */
 export const EXCHANGE_NARRATION_JA_RE = /^\s*(?:この|今の)(?:やり取り|会話|セッション|ターン)は/;
