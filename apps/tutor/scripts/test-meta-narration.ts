@@ -1238,5 +1238,15 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('A3: "Your level of English is clear from your answers." kept', !isMetaNarration('Your level of English is clear from your answers.'));
 }
 
+// Task 30 fix round 8 (A5, run r6-B): the lesson state + the tutor's plan, stripped.
+{
+  const S1333 = "The lesson is now closed, so I can't start another exercise, but please keep practicing these two grammar points at work.";
+  check('A5a: 1333 s ⇒ "Please keep practicing these two grammar points at work."', stripNoteCitationClause(S1333) === 'Please keep practicing these two grammar points at work.' && !isMetaNarration(stripNoteCitationClause(S1333)));
+  check('A5b: 1291 s "The lesson is complete, so I\'ll give the answer and wrap up." ⇒ dropped', stripNoteCitationClause("The lesson is complete, so I'll give the answer and wrap up.") === '' && isMetaNarration("The lesson is complete, so I'll give the answer and wrap up."));
+  check('A5b: a lead with content after ⇒ the content kept', stripNoteCitationClause("The part is done, so I'll move on. What did you do last weekend?") === 'What did you do last weekend?');
+  check('A5: "The meeting is over, so I\'ll write the summary." kept', !isMetaNarration("The meeting is over, so I'll write the summary.") && stripNoteCitationClause("The meeting is over, so I'll write the summary.") === "The meeting is over, so I'll write the summary.");
+  check('A5a: nothing addressed remains ⇒ dropped', isMetaNarration('The session is over, so I will stop here.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

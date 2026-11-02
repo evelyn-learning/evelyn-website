@@ -390,6 +390,9 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   // Fix round 8 (A3): the level-tool clause goes; the rest stays when it addresses the student.
   s = stripLevelNoteClause(s);
   if (!s.trim()) return '';
+  // Fix round 8 (A5): the lesson's state + the tutor's consequent plan goes.
+  s = stripLessonStateClause(s);
+  if (!s.trim()) return '';
   if (CLOSE_PART_NARRATION_RE.test(s)) return '';
   if (isCaptureNarration(s)) return '';
   const keepStripped = stripKeepInMindTail(s);
@@ -632,6 +635,30 @@ export function isBareNameAnnounce(s: string, opts?: { personaName?: string | re
  *  model, so a plain confirmation is right.") — the tutor judging its own
  *  reply aloud. */
 export const OWN_REPLY_JUDGING_RE = /\b(?:came|comes) after my model\b|\ba (?:plain|simple) confirmation is right\b/i;
+/** Task 30 fix round 8 (A5, run r6-B 1333 s / 1291 s, spoken: "The lesson is
+ *  now closed, so I can't start another exercise, but please keep practicing
+ *  these two grammar points at work." / "The lesson is complete, so I'll give
+ *  the answer and wrap up."): the lesson's state + the tutor's consequent plan.
+ *  (a) the clause "(the) lesson / session / class / part is (now / already)
+ *      closed / over / finished / complete / ended, so I can't / cannot /
+ *      won't / will / 'll …" is stripped; the rest is kept when it addresses
+ *      the student ("Please keep practicing …"), else the sentence goes;
+ *  (b) a lead "The lesson / part / session is complete / done / finished, so
+ *      I'll …[.?!]" is stripped (the whole sentence when nothing follows).
+ *  "The meeting is over, so I'll write the summary." (a model sentence) is
+ *  kept — the subject must be the lesson / session / class / part. Pure. */
+const LESSON_STATE_CLAUSE_RE = /\b(?:the )?(?:lesson|session|class|part) is (?:now |already )?(?:closed|over|finished|complete|ended)\b,? so I(?: (?:can['’]?t|cannot|won['’]?t|will)|['’]ll)\b[^,.;]*/i;
+const LESSON_STATE_LEAD_RE = /^\s*The (?:lesson|part|session) is (?:complete|done|finished), so I['’]ll\b[^.?!]*[.?!]\s*/i;
+export function stripLessonStateClause(s: string): string {
+  const lead = LESSON_STATE_LEAD_RE.exec(s);
+  if (lead) return capitaliseFirst(s.slice(lead[0].length).trim());
+  const m = LESSON_STATE_CLAUSE_RE.exec(s);
+  if (!m) return s;
+  const rest = `${s.slice(0, m.index)} ${s.slice(m.index + m[0].length)}`
+    .replace(/^[\s,;:]*(?:(?:but|and|so|though)\b[\s,]*)?/i, '').replace(/\s+([,.!?])/g, '$1').trim();
+  if (!rest || !/\b(?:you|your|please)\b/i.test(rest)) return '';
+  return capitaliseFirst(rest);
+}
 export const LESSON_CLOSED_NARRATION_RE = /\b(?:can['’]?t|cannot) (?:continue|go on with) the lesson\b|\b(?:lesson|session|class|it)(?:['’]s| (?:has|had|is|was))? already (?:closed|ended)\b/i;
 export const REDO_LEAD_RE = /^\s*Let me (?:ask|say|put|try) (?:that|it|this|again)[^.?!]{0,20}[.!]\s*$/i;
 /**
