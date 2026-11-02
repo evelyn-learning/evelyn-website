@@ -8,6 +8,8 @@ import { marked } from "marked";
 import { Clock, Calendar, Tag } from "lucide-react";
 import BackToBlog from "./BackToBlog";
 import { BlogPostingJsonLd } from "@/components/seo/JsonLd";
+import { ProductCta } from "@/components/blog/ProductCta";
+import { blogRobots, isCtaProduct } from "@/lib/blog/beacon-flags";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -67,6 +69,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: `/blog/${slug}`,
     },
+    robots: blogRobots(post),
     openGraph: {
       title: post.title,
       description: post.excerpt,
@@ -190,6 +193,9 @@ export default async function BlogPostPage({ params }: Props) {
                 ))}
               </div>
             )}
+
+            {/* Product CTA (Beacon flag) — after the article, before related posts */}
+            {isCtaProduct(post.ctaProduct) && <ProductCta product={post.ctaProduct} />}
           </div>
         </div>
       </section>
