@@ -153,6 +153,17 @@ const RUNTIME_NOTE_NARRATION_RE =
 // shows the error." is a real sentence) — only the plural or those/these.
 const BOARD_STAGING_NARRATION_RE =
   /\bruntime notes?\b|\b(?:those|these) system notes?\b|\bsystem notes\b|\bput (?:a|the|one) (?:quick )?(?:hook|card|sentence) on the board\b|^\s*(?:those|these|the) (?:runtime |system )?notes (?:are|were) (?:a mix|mixed|conflicting|unclear|confusing|contradictory)\b/i;
+/** Task 30 fix round 8 (A2, run r6-A 202 s: "I'll put the sentence on the
+ *  board for you." was dropped by the board-staging rule — a line the student
+ *  needs). A first-person board line (I'll / I will / I'm going to / Let me)
+ *  ADDRESSED to the learner (you / your) is kept. Deviation from the brief's
+ *  broader "any first-person subject": older pins keep dropping the unaddressed
+ *  staging "Let me put a quick hook on the board first." / "Let me put the
+ *  sentence on the board." (the auto card writes it). */
+const FIRST_PERSON_SUBJECT_RE = /^\s*(?:(?:ok(?:ay)?|so|now|right|alright),?\s+)?(?:I['’]ll|I will|I['’]m going to|let me)\b/i;
+export function isFirstPersonBoardOfferToLearner(s: string): boolean {
+  return FIRST_PERSON_SUBJECT_RE.test(s) && /\b(?:you|your)\b/i.test(s);
+}
 // Task 20 §C (GDI run 8, 2026-10-30): idle-nudge turns spoke the plan —
 // "The question was about the present perfect, so I'll ask the next
 // present-perfect question about their work.", "So I'll acknowledge briefly
@@ -1017,7 +1028,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || (BOARD_STAGING_NARRATION_RE.test(s) && !isFirstPersonBoardOfferToLearner(s)) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

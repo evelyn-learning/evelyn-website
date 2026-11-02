@@ -1220,5 +1220,13 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('A1: VTR passes firstTutorTurn to the stream note-citation strip', vtr.includes('const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0 });'));
 }
 
+// Task 30 fix round 8 (A2, run r6-A 202 s): a first-person board line addressed to the learner is kept.
+{
+  check('A2: "I\'ll put the sentence on the board for you." kept', !isMetaNarration("I'll put the sentence on the board for you."));
+  check('A2: "Let me put the sentence on the board for you to read." kept', !isMetaNarration('Let me put the sentence on the board for you to read.'));
+  check('A2: "Please show this one on the board." still dropped', isMetaNarration('Please show this one on the board.'));
+  check('A2: "Let me put the sentence on the board." still dropped (unaddressed staging)', isMetaNarration('Let me put the sentence on the board.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
