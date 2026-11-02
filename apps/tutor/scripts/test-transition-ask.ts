@@ -45,7 +45,9 @@ test('fix round 1 (I-2): short asks and the card\'s own question are on-part; 97
   assert.equal(askOffNewPart('Did the seminar take place last year or more recently?', CARD), true);
 });
 test('the retry reason, verbatim; VTR kills once per turn on the FACT-note turn', () => {
-  assert.equal(TRANSITION_ASK_REASON, "The lesson has moved to the next part. Reply to the student's last answer in ONE sentence with no follow-up question about it, then present the new part's card and end with that part's own question. Apply this silently; never mention this note.");
+  // Task 29 §M: the student's correction / question is answered first.
+  assert.ok(TRANSITION_ASK_REASON.startsWith('If the student just corrected you or asked something, answer that first in ONE sentence; the move comes after it. '));
+  assert.equal(TRANSITION_ASK_REASON, "If the student just corrected you or asked something, answer that first in ONE sentence; the move comes after it. The lesson has moved to the next part. Reply to the student's last answer in ONE sentence with no follow-up question about it, then present the new part's card and end with that part's own question. Apply this silently; never mention this note.");
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(v.includes("rejectionsThisAttempt.push({ action: 'transition_ask_off_part', reason: TRANSITION_ASK_REASON });"));
   assert.ok(v.includes('if (!attemptKilled && !transitionAskRejected && attemptText\n          && (fixedScriptNoteDeliveredThisTurnRef.current || (TUTOR_TRANSITION_ASK_EVERY_ADVANCE && currentSegmentIdRef.current !== turnStartSegmentId))) {'));
