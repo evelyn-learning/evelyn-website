@@ -356,7 +356,6 @@ test('30G: "Just tell me the number or the option name." ⇒ no continuation; a 
   assert.equal(endsWithImperativeReplyRequest(''), false);
 });
 
-if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 // ── Task 31 §A (GDI run 18): no silent continue after a repeat / listen ask ──
 test('31A: the run-18 say / listen asks → no no-ask continuation', () => {
   const base = { fixedScript: true, runtimeTriggered: false, toolsSeen: [] as string[], closing: false, pronunciationArmed: false };
@@ -388,4 +387,5 @@ test('31A2: VTR wiring — the no-ask guard sees the arm decided this turn', () 
   assert.ok(src.indexOf('turnPronTargetDetected = !!detectedAuto;') < src.indexOf('pronunciationArmed: !!clipCaptureRef.current?.isArmed() ||'), 'the arm runs before the no-ask check');
 });
 
+if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall announced-move tests passed');
