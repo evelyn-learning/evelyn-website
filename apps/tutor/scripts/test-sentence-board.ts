@@ -17,7 +17,7 @@ import {
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
   levelCheckAnswerCard, levelCheckRecast, isQuotedFragment, acknowledgesOption, boardOffersChoices,
-  grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack, contrastAskPair, levelCheckOwnCardGate,
+  grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack, contrastAskPair, levelCheckOwnCardGate, sentenceCardIdOnCurrentPage,
 } from '../src/lib/tutor/voice/sentence-board';
 import { normaliseDigitsToWords } from '../src/lib/tutor/voice/digit-words';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
@@ -1516,6 +1516,21 @@ test('29H r2 (N-2): a modal the student said too is a restatement; otherwise rej
     assert.ok(V.includes("onDebugEvent?.('language_digit_words',"));
   });
 }
+
+// ── Task 30 fix round 2 E13 (r1 569 / 628 s): one card per sentence text on a page ──
+test('E13: the same text on the current page (any kind / emphasis / gloss, auto card included) ⇒ skip', () => {
+  const S = 'I have worked for this company for five years.';
+  const log = [
+    { action: 'newPage', title: 'Part 4 · Present perfect' },
+    { action: 'showSentence', sentence: S, emphasis: ['worked'], id: 'showSentence-10' },
+  ];
+  assert.equal(sentenceCardIdOnCurrentPage(log, S), 'showSentence-10');
+  assert.equal(duplicateSentenceAction({ page: null, currentPage: 4, pronunciationModel: false, sameTextOnCurrentPage: !!sentenceCardIdOnCurrentPage(log, S) }), 'skip');
+  assert.equal(duplicateSentenceAction({ page: null, currentPage: 4, pronunciationModel: false, sameTextOnCurrentPage: false }), 'draw');
+  assert.equal(duplicateSentenceAction({ page: null, currentPage: 4, pronunciationModel: true, onCurrentPage: true, sameTextOnCurrentPage: true }), 'rehighlight', 'a pronunciation model is re-highlighted as before');
+  const V = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(V.includes('const sameTextOnCurrentPage = TUTOR_SENTENCE_SAME_TEXT_DEDUP && !dupPageOpening && !!sentenceCardIdOnCurrentPage(log, c.sentence);'));
+});
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

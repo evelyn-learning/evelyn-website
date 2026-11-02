@@ -1769,8 +1769,15 @@ export function duplicateSentenceAction(input: {
   advancedThisTurn?: boolean;
   /** Task 25 §D1: the card is the STUDENT's sentence (isStudentSentenceCard) */
   studentCard?: boolean;
+  /** Task 30 fix round 2 E13: a card with the same TEXT already stands on the
+   *  current page — whatever its kind (model / correction / checked), its
+   *  emphasis or gloss, and whether the client drew it (an auto card). */
+  sameTextOnCurrentPage?: boolean;
 }): 'draw' | 'skip' | 'rehighlight' | 'reshow' {
   if (input.inThisBatch) return 'skip';
+  // Task 30 fix round 2 E13 (r1 569 / 628 s: the auto correction card and the
+  // brain's glossed card of the same sentence, both on the Part 4 page).
+  if (input.sameTextOnCurrentPage && !input.pronunciationModel) return 'skip';
   // Task 25 §D1 (GDI run 13, 1026–1044 s: the conversation answer, already on
   // page 7, was re-drawn on the new pronunciation page under its menu card):
   // on the turn that opens a new part, the student's sentence card stays on

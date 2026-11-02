@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, menuPickNote } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { pendingAnswerVocabularyFor, countsAsNoiseCancel } from '@/lib/tutor/voice/pending-answer';
@@ -6972,7 +6972,9 @@ export function VoiceTutorRealtime({
         // Task 25 §D1: the part page opened this turn + the student's own sentence ⇒ it stays on the part it answered.
         const dupAdvancedThisTurn = dupPageOpening || segmentPageFlushedTurnRef.current === pageTurnRef.current;
         const dupStudentCard = (opts?.sentenceBoardAuto === true && opts.studentSentenceCard === true) || isStudentSentenceCard(c.sentence, sentenceStressRef.current.studentLast);
-        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard });
+        // Task 30 fix round 2 E13: the same text on the current page (auto cards included) — never a second card.
+        const sameTextOnCurrentPage = TUTOR_SENTENCE_SAME_TEXT_DEDUP && !dupPageOpening && !!sentenceCardIdOnCurrentPage(log, c.sentence);
+        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage });
         if (dupAction === 'draw') { seenThisBatch.push(c); return true; }
         if (dupAction === 'reshow') {
           onDebugEvent?.('show_sentence_duplicate_reshown', `page ${page} → ${dupCurrentPage}: "${c.sentence.slice(0, 60)}"`);
@@ -6998,7 +7000,7 @@ export function VoiceTutorRealtime({
           duplicateSentenceNotes.push(`show_sentence: already on the previous page — not drawn again on the new part's page; refer to it instead of writing it again.`);
           return false;
         }
-        onDebugEvent?.('show_sentence_duplicate_skipped', `page ${page}: "${c.sentence.slice(0, 60)}"`);
+        onDebugEvent?.('show_sentence_duplicate_skipped', `page ${page ?? dupCurrentPage}${sameTextOnCurrentPage && page === null ? ' (same text, current page)' : ''}: "${c.sentence.slice(0, 60)}"`);
         // A soft skip, not a rejection: a rejection kills and retries the
         // whole turn, and the sentence IS on the board.
         duplicateSentenceNotes.push(`show_sentence: already on the board (page ${page}) — not drawn again; refer to it instead of writing it again.`);

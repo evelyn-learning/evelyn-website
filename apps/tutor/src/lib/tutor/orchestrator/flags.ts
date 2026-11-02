@@ -1145,3 +1145,9 @@ export const TUTOR_QPIN_GIST_GROUNDED = process.env.NEXT_PUBLIC_TUTOR_QPIN_GIST_
  *  (filterNarrationText). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_NARRATION_BACKFILL_FILTER=off. */
 export const TUTOR_NARRATION_BACKFILL_FILTER = process.env.NEXT_PUBLIC_TUTOR_NARRATION_BACKFILL_FILTER !== 'off';
+
+/** Task 30 fix round 2 E13 (r1 569 / 628 s): a show_sentence whose text is
+ *  already a card on the current page — any kind, emphasis or gloss, the
+ *  client's auto cards included — is skipped, never drawn as a second card.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_SENTENCE_SAME_TEXT_DEDUP=off. */
+export const TUTOR_SENTENCE_SAME_TEXT_DEDUP = process.env.NEXT_PUBLIC_TUTOR_SENTENCE_SAME_TEXT_DEDUP !== 'off';
