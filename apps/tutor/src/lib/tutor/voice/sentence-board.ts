@@ -958,7 +958,9 @@ export function levelCheckRecast(tutorText: string | null | undefined, student: 
 // content words the student did not say.
 // ─────────────────────────────────────────────────────────────────────────
 const RESTATEMENT_SUBJECT_RE = /^(?:You['’]ve|You['’]re|You)\b/;
-const RESTATEMENT_COMMENT_TAIL_RE = /,\s*(?:(?:so|and|which)\s+)?(?:that['’]s|that is|it['’]s|it is|which is)\b[^.!?]*/i;
+const RESTATEMENT_FRAME_RE = /^You (?:said|told me|mentioned|explained|meant)(?: that)?\s+/i;
+const RESTATEMENT_MODAL_RE = /^You (?:can|could|should|might|may|would|must|need to|have to|want to)\b/i;
+const RESTATEMENT_COMMENT_TAIL_RE = /,\s*(?:(?:(?:so|and|which)\s+)?(?:that['’]s|that is|it['’]s|it is|which is)\b[^.!?]*|(?:right|correct)\s*(?=[.!?]?\s*$))/i;
 /** Write-back tokens and joiners never emphasised on a restatement card. */
 const RESTATEMENT_PLAIN_TOKENS = new Set(['i', 'my', 'me', 'mine', 'myself', 'am', "i'm", "i've", 'and', 'or', 'but', 'so']);
 /** A second-person sentence written back to the first person ("You worked …
@@ -988,8 +990,19 @@ export function levelCheckRestatementCard(tutorText: string | null | undefined, 
   if (content.length < GRAMMAR_RECAST_MIN_STUDENT_TOKENS) return null;
   const studentRaw = new Set(tokens(student ?? ''));
   for (const raw of (tutorText ?? '').split(/(?<=[.!?。！？])\s+/)) {
-    const sentence = raw.trim().replace(GRAMMAR_RECAST_LEAD_RE, '').trim();
+    // Fix round 1 (I-4): a reporting frame ("You said / told me / mentioned
+    // (that) you …") — the clause after it is the restatement; a modal /
+    // frame verb ("You can / should say …") or a quote is a model, not a
+    // restatement.
+    let sentence = raw.trim().replace(GRAMMAR_RECAST_LEAD_RE, '').trim();
+    const framed = RESTATEMENT_FRAME_RE.exec(sentence);
+    if (framed) {
+      const rest = sentence.slice(framed[0].length);
+      if (!/^you\b/i.test(rest)) continue;
+      sentence = `Y${rest.slice(1)}`;
+    }
     if (!sentence || CJK_RE.test(sentence) || !RESTATEMENT_SUBJECT_RE.test(sentence)) continue;
+    if (RESTATEMENT_MODAL_RE.test(sentence) || /["“「『]/.test(sentence)) continue;
     if (/[?？]["”’)\]]*\s*$/.test(sentence) || sentenceAsksStudent(sentence)) continue;
     if (tokens(sentence).length < 4) continue;
     const tContent = contentTokens(levelRecastToks(sentence));
@@ -998,6 +1011,7 @@ export function levelCheckRestatementCard(tutorText: string | null | undefined, 
     // a trailing comment on it is the tutor's, not the student's sentence
     // ("You sell washing machines to a US company, so that's useful experience.")
     let card = firstPersonWriteBack(sentence.replace(RESTATEMENT_COMMENT_TAIL_RE, ''));
+    if (/\bme me\b/i.test(card)) continue; // fix round 1 (I-4): never "me me"
     if (!/[.!]$/.test(card)) card = `${card}.`;
     const emphasis: string[] = [];
     const seen = new Set<string>();
@@ -1009,7 +1023,7 @@ export function levelCheckRestatementCard(tutorText: string | null | undefined, 
       emphasis.push(w);
       if (emphasis.length >= MAX_EMPHASIS) break;
     }
-    return { sentence: card, kind: 'correction', emphasis, source: 'levelcheck' };
+    return { sentence: card, kind: emphasis.length ? 'correction' : 'model', emphasis, source: 'levelcheck' };
   }
   return null;
 }

@@ -1316,7 +1316,7 @@ test('28A: the 94 s inputs → no card, sentence_board_levelcheck_skipped', () =
   assert.equal(levelCheckRecast(T94, S94), true);
   // a cut check sentence ("…customer from") carded as 'checked' is the student's words too → dropped
   const cut = planSentenceBoard({ tutorText: T94, studentLast: S94, renderedThisTurn: false, checkedMedium: true, checkedSentence: 'I sell washing machine to customer from ', levelCheck: true });
-  assert.ok(cut.every((c) => c.source !== 'checked' && c.kind === 'correction'), JSON.stringify(cut));
+  assert.deepEqual(cut.map((c) => [c.kind, c.source, c.sentence]), [['correction', 'levelcheck', 'I sold 35 washing machines to a US customer.']], JSON.stringify(cut));
 });
 test('28A: run-14 72 s (no recast) → the level-check card as today', () => {
   const S72 = 'Yes, I have worked with international customer.';
@@ -1425,6 +1425,22 @@ test('29I: a contrast ask cards BOTH quoted sentences, in spoken order', () => {
   assert.equal(contrastAskPair('"I have worked here for five years" means they still work here, and "I worked here five years ago" means they no longer do.'), null);
   assert.equal(contrastAskPair('You said "I like it a lot." and "I want more of it."'), null);
   assert.equal(contrastAskPair('What is the difference between "have" and "had"?'), null);
+});
+
+test('29H r1 (I-4): reporting frames, modal frames, quotes; an unchanged echo is a model card', () => {
+  const S = 'I work with customer from USA. I sold washing machine to him.';
+  assert.equal(levelCheckRestatementCard('You told me you work with a customer from the USA.', S)?.sentence, 'I work with a customer from the USA.');
+  assert.equal(levelCheckRestatementCard('You said you work with a customer from the USA and sold him a washing machine.', S)?.sentence, 'I work with a customer from the USA and sold him a washing machine.');
+  const m = levelCheckRestatementCard('You mentioned that you sold a washing machine to a customer from the USA.', S);
+  assert.equal(m?.sentence, 'I sold a washing machine to a customer from the USA.');
+  assert.ok(!m!.emphasis.includes('mentioned') && !m!.emphasis.includes('that'), JSON.stringify(m));
+  assert.equal(levelCheckRestatementCard('You should say I worked with a customer from the USA.', S), null, 'modal frame');
+  assert.equal(levelCheckRestatementCard('You can say "I worked with a customer from the USA and sold him a washing machine."', S), null, 'quoted text');
+  assert.equal(levelCheckRestatementCard('You said the customer was from the USA.', S), null, 'frame with no "you" clause');
+  // m-4: an echo with no change is a model card; a ", right." tag is not carded
+  const echo = levelCheckRestatementCard('You are a sales manager at Nagoya Corporation.', 'I am a sales manager at Nagoya Corporation.');
+  assert.deepEqual(echo && [echo.kind, echo.sentence], ['model', 'I am a sales manager at Nagoya Corporation.']);
+  assert.equal(levelCheckRestatementCard('You worked with a customer from the USA, right.', S)?.sentence, 'I worked with a customer from the USA.');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
