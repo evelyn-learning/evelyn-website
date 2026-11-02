@@ -13553,7 +13553,7 @@ export function VoiceTutorRealtime({
         const oaSeg = currentSegmentIdRef.current ?? '';
         const oaPlan = lessonPlanRef.current;
         const oaNext = oaPlan && oaSeg ? nextSegmentId(oaPlan, oaSeg, !!workingLevelRef.current) : null;
-        if (oaSeg && oaNext && transitionOfferSpokenRef.current.has(oaSeg) && offerAcceptedRef.current?.segId !== oaSeg && offerAccepted(transcript)) {
+        if (oaSeg && oaNext && transitionOfferSpokenRef.current.has(oaSeg) && offerAcceptedRef.current?.segId !== oaSeg && offerAccepted(transcript, recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? null)) {
           offerAcceptedRef.current = { segId: oaSeg, studentTurns: -1, at: Date.now() };
           runTranscript = `${fixedScriptOfferAcceptedNote(oaPlan, oaSeg, oaNext)}\n\n${runTranscript}`;
           onDebugEvent?.('fixed_script_offer_accepted', `"${oaSeg}" "${transcript.slice(0, 60)}"`);

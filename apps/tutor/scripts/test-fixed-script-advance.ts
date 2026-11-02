@@ -880,10 +880,16 @@ test('30B1: offerAccepted — one more / もう一回 accept; a move-on wins', (
 });
 // ── Task 30 fix round 4 R3-5: a bare affirmative accepts the offer ──────
 test('R3-5: offerAccepted — a bare "Yes." accepts; "Yes, let\'s move on." and "No." decline', () => {
-  assert.equal(offerAccepted('Yes.'), true);
-  assert.equal(offerAccepted("Yes, let's move on."), false);
-  assert.equal(offerAccepted('No.'), false);
-  for (const yes of ['Yeah', 'OK', 'Okay.', 'Sure!', 'Yep.', 'はい。', 'うん', 'Yes, please.', 'OK, sure.']) assert.equal(offerAccepted(yes), true, yes);
+  const OFFER = 'The present perfect part is complete. Would you like one more practice sentence on it, or shall we move on to the past simple?';
+  assert.equal(offerAccepted('Yes.', OFFER), true);
+  assert.equal(offerAccepted("Yes, let's move on.", OFFER), false);
+  assert.equal(offerAccepted('No.', OFFER), false);
+  for (const yes of ['Yeah', 'OK', 'Okay.', 'Sure!', 'Yep.', 'はい。', 'うん', 'Yes, please.', 'OK, sure.']) assert.equal(offerAccepted(yes, OFFER), true, yes);
+  // fix round 5 S-3: a bare "Yes" after a DIFFERENT question answers that question
+  assert.equal(offerAccepted('Yes.', 'Good. Is that clear?'), false);
+  assert.equal(offerAccepted('Yes.'), false, 'no previous tutor turn');
+  assert.equal(offerAccepted('Yes, one more practice.', 'Good. Is that clear?'), true, 'word-based accepts unchanged');
+  assert.ok(VTR.includes('offerAccepted(transcript, recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? null)'));
   for (const no of ['Yes, next.', 'OK, I see what you mean.', 'I see.', 'Yes I think so too.']) assert.equal(offerAccepted(no), false, no);
 });
 test('30B1: the accepting turn and the next student turn hold; the turn after advances', () => {

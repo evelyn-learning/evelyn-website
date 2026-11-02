@@ -531,11 +531,14 @@ export function fixedScriptOfferContinueDirective(plan: LessonPlan | null | unde
  *  yeah / sure / ok" with one, or "practice"; a move-word anywhere ("move on",
  *  "next", "skip", "continue", 次 / 進) is a decline and wins. Pure. */
 const OFFER_ACCEPT_MOVE_RE = /\b(?:move on|moving on|go on|next|skip|continue|summary)\b|次|進/i;
-export function offerAccepted(studentText: string | null | undefined): boolean {
+// Fix round 5 (S-3): the bare affirmative accepts only when the tutor's
+// immediately preceding turn asked the offer itself — a "Yes" after a
+// different question ("Is that clear?") answers that question.
+export function offerAccepted(studentText: string | null | undefined, lastTutorText?: string | null): boolean {
   const t = (studentText ?? '').trim();
   if (!t || /^\s*\[/.test(t)) return false;
   if (OFFER_ACCEPT_MOVE_RE.test(t)) return false;
-  return OFFER_MORE_RE.test(t) || /\bpractice\b/i.test(t) || isBareAffirmative(t);
+  return OFFER_MORE_RE.test(t) || /\bpractice\b/i.test(t) || (isBareAffirmative(t) && offerAsked(lastTutorText));
 }
 /** Fix round 4 (R3-5, run r3 574–605 s / 837–858 s: a bare "Yes." to the
  *  offer was re-asked twice, then taken as either answer): a bare
