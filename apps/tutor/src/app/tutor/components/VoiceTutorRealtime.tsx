@@ -13626,7 +13626,10 @@ export function VoiceTutorRealtime({
       // the next question not yet asked; nothing once all are asked.
       // Task 31 §F (GDI run 18, 979–1061 s): the student answered the tutor's
       // last two questions on the same point — no third follow-up.
-      if (TUTOR_PROBE_CHECKIN && languageSessionRef.current && !opts?.prefetchOnly && !/^\s*\[/.test(transcript)) {
+      // Fix round 1 (I-4): a LANGUAGE lesson — subject 'languages' (the judge's
+      // languageLesson predicate) or a fixed-script language plan — never a
+      // bilingual maths session (languageSessionRef also covers those).
+      if (TUTOR_PROBE_CHECKIN && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !opts?.prefetchOnly && !/^\s*\[/.test(transcript)) {
         const pcTurns = recentTutorTurnsRef.current;
         const pcPrev = probeExchangesRef.current[probeExchangesRef.current.length - 1];
         if (pcPrev && pcTurns.length >= 2 && pcPrev.tutorText === pcTurns[pcTurns.length - 2]

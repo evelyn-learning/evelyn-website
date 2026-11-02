@@ -1898,7 +1898,9 @@ test('Task 31 §F (GDI run 18, 979–1061 s): two answered questions on the same
   assert.equal(probeCheckinDue([{ tutorText: T77, studentText: 'I give sweets to people.' }, { tutorText: T79, studentText: a80 }]), false, 'different points ⇒ no note');
   assert.equal(PROBE_CHECKIN_NOTE, '[runtime note — not from the student] The student has answered your last two questions. Do not ask a third follow-up on the same point: acknowledge, give your own one-line answer or summary of the point if needed, and move to the next step of the part. Apply this silently; never mention this note.]');
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.ok(vtr.includes('if (TUTOR_PROBE_CHECKIN && languageSessionRef.current && !opts?.prefetchOnly && !/^\\s*\\[/.test(transcript)) {'));
+  // fix round 1 (I-4): a language lesson (subject or fixed-script plan), never languageSessionRef (bilingual maths)
+  assert.ok(vtr.includes("if (TUTOR_PROBE_CHECKIN && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !opts?.prefetchOnly && !/^\\s*\\[/.test(transcript)) {"));
+  assert.ok(!vtr.includes('if (TUTOR_PROBE_CHECKIN && languageSessionRef.current'), 'not gated on the bilingual-session ref');
   assert.ok(vtr.includes('runTranscript = `${PROBE_CHECKIN_NOTE}\\n\\n${runTranscript}`;'));
   assert.ok(vtr.includes('probeExchangesRef.current = [...probeExchangesRef.current.slice(-1), { tutorText: peTutor, studentText: transcript }];'));
   assert.match(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8'), /export const TUTOR_PROBE_CHECKIN = process\.env\.NEXT_PUBLIC_TUTOR_PROBE_CHECKIN !== 'off';/);
