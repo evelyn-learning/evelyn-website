@@ -92,6 +92,7 @@ const POOL = {
 };
 // "starting with "X"" scaffolds: X + a tail that fits
 const PREFIX_TAILS = [
+  [/^i am a$/i, ['sales manager at an electronics company.']], [/^i work as a$/i, ['sales manager.']],
   [/^i$/i, ['visited our factory in Vietnam last year.', 'made a presentation for a new product launch.']],
   [/^i (?:worked|met|talked|spoke) with/i, ['a customer from Germany two years ago.', 'our supplier in Vietnam last year.']],
   [/^i have worked/i, ['with a customer from Germany.', 'at my company for five years.', 'on the new website project for two months.']],
@@ -153,7 +154,7 @@ const fromPool = (key) => {
 };
 const OFFER_RE = /\b(?:one more|another|more practice|again|once more)\b[^.?!]*\b(?:move on|moving on|go on|continue|next)\b|\b(?:move on|go on|continue)\b[^.?!]*\b(?:one more|another|more practice)\b|もう一/i;
 const MENU_RE = /\b[1-4]\)/g;
-const CLOSE_RE = /\bthat'?s (?:all|our time)|\bsee you\b|お疲れ|\bgood-?bye\b|have a (?:good|nice|great) (?:day|evening|night)|\bsession is over\b|time is up|\bwell done today\b|finished for today/i;
+const CLOSE_RE = /\bthat'?s (?:all|it) for today|\bthat'?s our time|\bour time (?:is|has) (?:up|finished)|\bsee you\b|お疲れ|\bgood-?bye\b|have a (?:good|nice|great) (?:day|evening|night)|\bsession is over\b|time is up|\bwell done today\b|finished for today/i;
 const REPEAT_RE = /\b(?:repeat|say|try|read)\b[^.?!]*(?:after me|once more|again|that (?:sentence|one)|it (?:once more|again)|for me)|\bcould you (?:say|try)\b/i;
 
 function decide(text) {
