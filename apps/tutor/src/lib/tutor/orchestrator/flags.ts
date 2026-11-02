@@ -1214,3 +1214,11 @@ export const TUTOR_OFFER_REASK_KILL = process.env.NEXT_PUBLIC_TUTOR_OFFER_REASK_
  *  (reason=menu_unpicked, "skipping the practice today"). Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_MENU_ASK_CAP=off. */
 export const TUTOR_MENU_ASK_CAP = process.env.NEXT_PUBLIC_TUTOR_MENU_ASK_CAP !== 'off';
+
+/** Task 33 §E (GDI bot run r8, 578 s: "We can finish it." mid-part was
+ *  ignored): on a fixed-script lesson before its closing part, a stop
+ *  request makes the engine plant the recap + "the parts left, or stop
+ *  now?" choice itself (the refusal path's response, in every part); a stop
+ *  right after that choice closes. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_STOP_REQUEST_CHOICE=off. */
+export const TUTOR_STOP_REQUEST_CHOICE = process.env.NEXT_PUBLIC_TUTOR_STOP_REQUEST_CHOICE !== 'off';

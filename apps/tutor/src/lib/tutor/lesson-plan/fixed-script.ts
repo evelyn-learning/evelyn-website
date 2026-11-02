@@ -218,6 +218,42 @@ export function fixedScriptLastSegmentId(plan: LessonPlan): string | null {
 export const FIXED_SCRIPT_CLOSE_REFUSED_NOTE =
   '[runtime note — not from the student] The lesson is not over: the summary part has not been taught yet. Do not say goodbye or call close_session_notes; finish the current item in one sentence, then move on to the summary. Apply this silently; never mention this note.';
 
+/** Task 33 §E (GDI bot run r8, 578 s): a stop request mid-lesson gets the
+ *  refusal path's response in every part — a recap of what was covered and
+ *  the choice: finish with the parts left, or stop now. The parts left are
+ *  the non-extension segments after `current` (labels, in order). */
+export function fixedScriptRemainingPartLabels(plan: LessonPlan | null | undefined, current: string | null | undefined, levelKnown: boolean): string[] {
+  if (!plan || !current) return [];
+  const out: string[] = [];
+  let id: string | null = current;
+  for (let guard = 0; guard < plan.segments.length && id; guard++) {
+    id = nextSegmentId(plan, id, levelKnown);
+    if (!id) break;
+    const seg = plan.segments.find((s) => s.id === id);
+    if (seg && (seg.kind ?? '').toLowerCase() !== 'extension') out.push(fixedScriptPartLabel(plan, id));
+  }
+  return out;
+}
+export function fixedScriptStopRequestNote(remaining: readonly string[]): string {
+  const parts = remaining.length ? remaining.map((r) => `"${r}"`).join(' and ') : 'the summary';
+  return withSilentClause(`[runtime note — not from the student] The student asked to stop. Do not continue the current question. In ONE or two sentences say what you have covered so far, then ask whether they want to do ${parts} before we end, or stop now. Do not say goodbye and do not call close_session_notes in this turn.]`);
+}
+/** Task 33 §E: the student repeated the stop after the choice — close now. */
+export const FIXED_SCRIPT_STOP_CONFIRMED_NOTE = withSilentClause(
+  "[runtime note — not from the student] The student chose to stop. Close the lesson in THIS turn: one sentence on what they practised, one goodbye, and call close_session_notes.]");
+/** Task 33 §E: a fixed-script lesson before its closing part (the brain's
+ *  close would be refused there) and not closed. Pure. */
+export function fixedScriptMidLesson(plan: LessonPlan | null | undefined, segmentId: string | null | undefined, lessonClosed: boolean): boolean {
+  return !lessonClosed && !!plan && isFixedScriptPlan(plan) && !!segmentId && !fixedScriptCloseAllowed(plan, segmentId);
+}
+/** Task 33 §E: what a student turn does with a stop request. Mid-lesson
+ *  (fixed script, before the last part, not closed): the first request asks
+ *  the choice; a stop request right after the choice was asked closes. Pure. */
+export function stopRequestDecision(input: { stopRequest: boolean; midLesson: boolean; choicePending: boolean }): 'ask-choice' | 'close' | 'none' {
+  if (!input.stopRequest || !input.midLesson) return 'none';
+  return input.choicePending ? 'close' : 'ask-choice';
+}
+
 /** Validator rejection reason for an attempt that says goodbye too early. */
 export const PREMATURE_FAREWELL_REASON = withSilentClause(
   'The lesson is not over — the summary part has not been taught yet. Do not say goodbye, thank the student for the lesson or say 今日はここまで; continue the current part, or move on to the summary in one sentence.');

@@ -46,6 +46,8 @@ import { askOffNewPart, transitionAskCheckDue as transitionAskCheckDueR1 } from 
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel, displayedSegmentId, displayedCompletedSegments } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { isStopRequest } from '../src/lib/tutor/voice/lesson-close';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -187,7 +189,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
 // ── fix round 10-11 ──────────────────────────────────────────────────────
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 12500);
+  const block = VTR.slice(auto, auto + 11500);
   pin(block, /if \(autoNext && !offerMadeHere && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
   pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
@@ -203,7 +205,7 @@ test('C: the pronunciation hold is capped at 3 consecutive turns; the 4th advanc
 });
 test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  pin(VTR.slice(auto, auto + 12500), /pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR.slice(auto, auto + 11500), /pendingRuntimeNoteUrgentRef\.current = true;/);
   // Task 14 §G: the tool path's level apply moved into applyWorkingLevelRef.
   const lv = VTR.indexOf("applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool')");
   assert.ok(lv > 0);
@@ -519,7 +521,7 @@ test('22A: turnEndsWithAsk — the run-10 turns', () => {
 });
 test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 12500);
+  const block = VTR.slice(auto, auto + 11500);
   pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
   pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
 });
@@ -1133,6 +1135,37 @@ test('31 r1 B-2: the entry note is delivered without marking a FACT note, so an 
     pin(VTR, /offerAcceptedRef\.current\.itemAsked = true;/);
   });
 }
+
+// ── Task 33 §E: a stop request mid-lesson gets the finish-or-stop choice ──
+test('33 §E: isStopRequest — whole-utterance stop requests; lesson talk is none', () => {
+  for (const x of ['We can finish it.', "Let's finish.", "That's enough for today.", 'I want to stop.', 'Can we stop here?', 'OK, we can finish now.', '終わりにします', '終わり', "Let's stop here."]) assert.equal(isStopRequest(x), true, x);
+  for (const x of ['We can finish the report on Friday.', 'I usually stop working at six.', 'I finished the project last month.', "Let's finish with the summary.", 'Yes.', '[idle nudge]', '仕事の終わりに会議があります。']) assert.equal(isStopRequest(x), false, x);
+});
+test('33 §E: stopRequestDecision — first request asks the choice, the repeat closes; never in the closing part', () => {
+  assert.equal(stopRequestDecision({ stopRequest: true, midLesson: true, choicePending: false }), 'ask-choice');
+  assert.equal(stopRequestDecision({ stopRequest: true, midLesson: true, choicePending: true }), 'close');
+  assert.equal(stopRequestDecision({ stopRequest: true, midLesson: false, choicePending: false }), 'none');
+  assert.equal(stopRequestDecision({ stopRequest: false, midLesson: true, choicePending: true }), 'none');
+});
+test('33 §E: fixedScriptMidLesson + the note names the parts left', () => {
+  const segs = fixed.segments.map((sg) => sg.id);
+  const last = segs[segs.length - 1]!;
+  assert.equal(fixedScriptMidLesson(fixed, segs[1]!, false), true);
+  assert.equal(fixedScriptMidLesson(fixed, segs[1]!, true), false, 'closed');
+  assert.equal(fixedScriptMidLesson(fixed, last, false), false, 'the closing part');
+  assert.equal(fixedScriptMidLesson(null, segs[1]!, false), false);
+  const rem = fixedScriptRemainingPartLabels(fixed, segs[1]!, true);
+  assert.ok(rem.length >= 1);
+  const note = fixedScriptStopRequestNote(rem);
+  assert.match(note, /The student asked to stop\. Do not continue the current question\. In ONE or two sentences say what you have covered so far, then ask whether they want to do .+ before we end, or stop now\. Do not say goodbye and do not call close_session_notes in this turn\./);
+  assert.match(FIXED_SCRIPT_STOP_CONFIRMED_NOTE, /call close_session_notes/);
+});
+test('33 §E: VTR plants the choice note itself on the stop request', () => {
+  pin(VTR, /stopRequest: isStopRequest\(transcript\),/);
+  pin(VTR, /runTranscript = `\$\{fixedScriptStopRequestNote\(fixedScriptRemainingPartLabels\(/);
+  pin(VTR, /onDebugEvent\?\.\('stop_request_choice_planted'/);
+  pin(VTR, /runTranscript = `\$\{FIXED_SCRIPT_STOP_CONFIRMED_NOTE\}\\n\\n\$\{runTranscript\}`;/);
+});
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 

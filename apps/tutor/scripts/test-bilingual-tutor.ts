@@ -1307,7 +1307,9 @@ test('20B1 fix round 1 (I2): farewell words as lesson content are not a close', 
 });
 test('20B1 fix round 1 (I1): the student end signal is sticky and feeds the close guard', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.ok(vtr.includes('if (isStandaloneStopUtterance(t)) studentEndSignalRef.current = true;'));
+  // Task 33 §E: mid-lesson on a fixed script the first request asks the choice (no latch).
+  assert.ok(vtr.includes('if (isStandaloneStopUtterance(t) && !(TUTOR_STOP_REQUEST_CHOICE && !stopChoicePendingRef.current'));
+  assert.ok(vtr.includes('&& fixedScriptMidLesson(lessonPlanRef.current, currentSegmentIdRef.current, lessonClosedRef.current))) studentEndSignalRef.current = true;'));
   assert.ok(vtr.includes('{ studentEndSignal: studentEndSignalRef.current }'));
   assert.ok(!/studentEndSignalRef\.current = false/.test(vtr), 'never cleared');
 });

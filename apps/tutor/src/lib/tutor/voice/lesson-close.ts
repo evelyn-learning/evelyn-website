@@ -168,6 +168,27 @@ export function isStandaloneStopUtterance(studentText: string): boolean {
 }
 
 /**
+ * Task 33 §E (GDI bot run r8, 578 s: "We can finish it." mid-part was ignored
+ * and the probe went on): the student's stop request — a standalone stop
+ * utterance, or a short "we can / let's / can we / I want to / I'd like to /
+ * shall we finish · stop · end (it / here / now / the lesson / for today)",
+ * "that's enough (for today)", or a short 終わり… reply. Whole utterance
+ * only (≤ 8 words) — "We can finish the report on Friday." is lesson talk.
+ */
+const STOP_REQUEST_RE =
+  /^(?:(?:I think|maybe|so|ok(?:ay)?|well|um+|uh+)[,\s]+)*(?:we can|we could|can we|could we|shall we|let['’]?s|let us|I (?:want|would like|'d like|wanna) to|I want|I(?:'d| would) like to)\s+(?:finish|stop|end|quit|wrap up)(?:\s+(?:it|this|here|now|the lesson|the class|for today|today|for now))*\s*[.!?]?$/i;
+const ENOUGH_RE = /^(?:(?:ok(?:ay)?|well|so)[,\s]+)?that['’]?s (?:enough|all)(?: for (?:today|now))?\s*[.!]?$/i;
+export function isStopRequest(studentText: string | null | undefined): boolean {
+  const t = (studentText ?? '').trim();
+  if (!t || /^\s*\[/.test(t)) return false;
+  if (isStandaloneStopUtterance(t)) return true;
+  const core = t.replace(STOP_PAD_RE, '').trim();
+  if (core.split(/\s+/).length > 8) return false;
+  if (STOP_REQUEST_RE.test(core) || ENOUGH_RE.test(core)) return true;
+  return t.length <= 12 && /終わり|おわり/.test(t);
+}
+
+/**
  * The STUDENT's session-end signal in Japanese: 今日はここまで / 終わりにします /
  * さようなら / 失礼します / また次回. The English list lives in
  * VoiceTutorRealtime's sessionEndSignalRegex (word-bounded); Japanese has no
