@@ -92,7 +92,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
@@ -653,11 +653,25 @@ import {
   type StudentMarkEvent,
   type ResolvedMark,
 } from '@/lib/tutor/whiteboard/student-marks';
-/** Task 30 §B2: a segment's authored card (statement as the board shows it + truth kind), null = none. */
-function authoredSegmentCard(plan: LessonPlan | null | undefined, segId: string): { statement: string; kind: string | null } | null {
+/** Task 30 §B2: a segment's authored card (statement as the board shows it + truth kind), null = none.
+ *  Fix round 1 S4: the show_segment_card resolution's text cards too — a
+ *  concept part's key ideas (filtered to the working level) and a hook's
+ *  script; a recap (coverage-filtered at render) is left to the brain. */
+function authoredSegmentCard(plan: LessonPlan | null | undefined, segId: string, level?: WorkingLevel | null): { statement: string; kind: string | null; title?: string } | null {
   const sg = plan?.segments.find((x) => x.id === segId);
-  const truth = sg && plan ? getSegmentTruth(sg, plan.id) : null;
-  return truth?.problemText ? { statement: stripWbEmphasisText(truth.problemText), kind: truth.kind ?? null } : null;
+  if (!sg || !plan) return null;
+  const truth = getSegmentTruth(sg, plan.id);
+  if (truth?.problemText) return { statement: stripWbEmphasisText(truth.problemText), kind: truth.kind ?? null };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sx = sg as any;
+  if (sg.kind === 'concept' && Array.isArray(sx.keyIdeas) && sx.keyIdeas.length > 0) {
+    const ideas = filterKeyIdeasForLevel(sx.keyIdeas as string[], effectiveBoardLevel(level ?? undefined, plan));
+    if (ideas.length > 0) return { statement: stripWbEmphasisText(ideas.map((k: string, i: number) => `${i + 1}. ${k}`).join('\n')), kind: 'concept', title: 'Key ideas' };
+  }
+  if (sg.kind === 'hook' && typeof sx.script === 'string' && sx.script.length > 0) {
+    return { statement: stripWbEmphasisText(sx.script), kind: 'hook', title: 'Hook' };
+  }
+  return null;
 }
 /** Task 27 §E2: a segment's card statement as the board shows it ('' = none). */
 function segmentCardStatement(plan: LessonPlan | null | undefined, segId: string): string {
@@ -6290,11 +6304,13 @@ export function VoiceTutorRealtime({
     onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title} at turn end`);
     // Task 30 §B2: an auto-advanced part page never paints empty — its
     // authored card goes up with it (through the normal board path).
-    if (deferred.cardOnFlush) {
-      const authored = authoredSegmentCard(lessonPlanRef.current, deferred.segmentId);
+    // Fix round 1 S4: every authored part page (not only a budget advance's),
+    // and the new page is empty here, so nothing on it is the card.
+    if (deferred.cardOnFlush || deferred.authored === true) {
+      const authored = authoredSegmentCard(lessonPlanRef.current, deferred.segmentId, workingLevelRef.current?.level ?? null);
       const card = segmentCardForFlush({
         segmentId: deferred.segmentId,
-        batchHasSegmentCard: !!authored && problemStatementOnBoard(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, authored.statement),
+        batchHasSegmentCard: batchHasSegmentCard([], authored?.statement),
         authored,
       });
       if (card) {
@@ -9969,11 +9985,12 @@ export function VoiceTutorRealtime({
         const segmentBreakCmd = { action: 'newPage', title: pageTitle } as WhiteboardCommand;
         // Task 30 §B2: the auto-advanced part's authored card rides the
         // break when the batch carries no card of its own.
-        const flushAuthored = deferred.cardOnFlush ? authoredSegmentCard(lessonPlanRef.current, deferred.segmentId) : null;
+        // Fix round 1 S4: every authored part page; "has the card" = a
+        // showProblem of THIS segment's authored statement (batchHasSegmentCard).
+        const flushAuthored = deferred.cardOnFlush || deferred.authored === true ? authoredSegmentCard(lessonPlanRef.current, deferred.segmentId, workingLevelRef.current?.level ?? null) : null;
         const flushCard = flushAuthored ? segmentCardForFlush({
           segmentId: deferred.segmentId,
-          batchHasSegmentCard: processed.some((c) => c.action === 'showProblem')
-            || problemStatementOnBoard(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, flushAuthored.statement),
+          batchHasSegmentCard: batchHasSegmentCard(processed as unknown as Array<{ action: string } & Record<string, unknown>>, flushAuthored.statement),
           authored: flushAuthored,
         }) : null;
         processed = flushCard ? [segmentBreakCmd, flushCard as unknown as WhiteboardCommand, ...processed] : [segmentBreakCmd, ...processed];
@@ -12674,10 +12691,10 @@ export function VoiceTutorRealtime({
       pendingAdvanceNewPageRef.current.afterTurn = false;
       pendingAdvanceNewPageRef.current.flushAfterNextTurn = false;
     }
-    // Task 23 §A: a break from an earlier turn never pulls this turn's cards.
-    segmentPageBreakRef.current = null;
     // Task 30 fix round 1 (m-9): an offer continuation of an aborted turn is not carried.
     if (!opts?.prefetchOnly) offerContinueSegRef.current = '';
+    // Task 23 §A: a break from an earlier turn never pulls this turn's cards.
+    segmentPageBreakRef.current = null;
     levelAdvanceThisTurnRef.current = '';
     levelAdvanceFromThisTurnRef.current = '';
     cardedStudentSentenceRef.current = new Set();

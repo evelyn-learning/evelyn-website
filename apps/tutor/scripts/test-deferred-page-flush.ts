@@ -18,6 +18,7 @@ import {
   previousPageTarget,
   segmentCardForFlush,
   rearmAfterKill,
+  batchHasSegmentCard,
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 import { keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
@@ -295,9 +296,10 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('30B2: a segment with no authored card ⇒ null', segmentCardForFlush({ segmentId: 'overview', batchHasSegmentCard: false, authored: null }) === null
     && segmentCardForFlush({ segmentId: 'overview', batchHasSegmentCard: false, authored: { statement: '  ', kind: null } }) === null);
   const V7 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('30B2 r1: an authored title (concept "Key ideas") is kept', segmentCardForFlush({ segmentId: 'topic-intro', batchHasSegmentCard: false, authored: { statement: '1. We use simple sentences.', kind: 'concept', title: 'Key ideas' } })?.problem.title === 'Key ideas');
   ok('30B2: VTR arms cardOnFlush on a budget advance', V7.includes("if (advanceReason !== 'announced') pendingAdvanceNewPageRef.current.cardOnFlush = true;"));
   ok('30B2: VTR adds the card at the in-batch flush after the break', V7.includes('processed = flushCard ? [segmentBreakCmd, flushCard as unknown as WhiteboardCommand, ...processed] : [segmentBreakCmd, ...processed];'));
-  ok('30B2: VTR adds the card at the turn-end flush through the board path', /if \(deferred\.cardOnFlush\) \{[\s\S]{0,700}?void handleWhiteboardCommandRef\.current\?\.\(\[card as unknown as WhiteboardCommand\]\);\s*onDebugEvent\?\.\('auto_newpage_on_advance_card_added'/.test(V7));
+  ok('30B2: VTR adds the card at the turn-end flush through the board path', /if \(deferred\.cardOnFlush \|\| deferred\.authored === true\) \{[\s\S]{0,700}?void handleWhiteboardCommandRef\.current\?\.\(\[card as unknown as WhiteboardCommand\]\);\s*onDebugEvent\?\.\('auto_newpage_on_advance_card_added'/.test(V7));
 }
 
 // Task 30 §C (GDI run 17, 1112 s): a kill retraction re-arms the segment page; retracted ids are never revised.
@@ -315,6 +317,20 @@ ok('emptyPageIndexes: pointer-only page is empty',
     && V8.includes('const deferIds = retryRollbackTargets.filter((id) => !!id && !retractedRenderIdsRef.current.has(id));'));
   // ordering: the rearm runs before the buffer is cleared (it reads the dropped entries)
   ok('30C: VTR rearm reads the buffer before clearing it', V8.indexOf('const killBreakDropped = ') > 0 && V8.indexOf('const killBreakDropped = ') < V8.indexOf("onDebugEvent?.('render_sync_drop',"));
+}
+
+// Task 30 fix round 1 S4 (smoke run 167–197 s): "has the card" = the NEW segment's authored statement, nothing else.
+{
+  const st = 'Have you worked for your current company for a long time?';
+  ok('S4: the segment\'s own card in the batch ⇒ has it', batchHasSegmentCard([{ action: 'showProblem', problem: { statement: st } }], st));
+  ok('S4: spacing / case / article differences still match', batchHasSegmentCard([{ action: 'showProblem', problem: { statement: 'have you worked for your current company for a long time' } }], st));
+  ok('S4: another problem card (the stale old-part card) ⇒ does NOT count', !batchHasSegmentCard([{ action: 'showProblem', problem: { statement: 'Did you attend any business events last year?' } }], st));
+  ok('S4: an empty batch / a sentence card ⇒ no card', !batchHasSegmentCard([], st) && !batchHasSegmentCard([{ action: 'showSentence', sentence: st }], st));
+  ok('S4: no authored statement ⇒ false', !batchHasSegmentCard([{ action: 'showProblem', problem: { statement: st } }], ''));
+  const V9 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('S4: VTR resolves concept / hook text cards for the flush', V9.includes("return { statement: stripWbEmphasisText(ideas.map((k: string, i: number) => `${i + 1}. ${k}`).join('\\n')), kind: 'concept', title: 'Key ideas' };"));
+  ok('S4: VTR in-batch flush uses batchHasSegmentCard on every authored part page', V9.includes('const flushAuthored = deferred.cardOnFlush || deferred.authored === true ? authoredSegmentCard(lessonPlanRef.current, deferred.segmentId, workingLevelRef.current?.level ?? null) : null;')
+    && V9.includes('batchHasSegmentCard: batchHasSegmentCard(processed as unknown as Array<{ action: string } & Record<string, unknown>>, flushAuthored.statement),'));
 }
 
 console.log(`deferred-page-flush: ${n} cases passed`);

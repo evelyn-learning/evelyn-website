@@ -250,12 +250,12 @@ export function segmentCardTitle(kind: string | null | undefined): string | unde
 export function segmentCardForFlush(input: {
   segmentId: string;
   batchHasSegmentCard: boolean;
-  authored: { statement: string; kind?: string | null } | null | undefined;
+  authored: { statement: string; kind?: string | null; title?: string } | null | undefined;
 }): { action: 'showProblem'; problem: { statement: string; format: 'free-response'; title?: string } } | null {
   if (input.batchHasSegmentCard || !input.segmentId) return null;
   const statement = (input.authored?.statement ?? '').trim();
   if (!statement) return null;
-  const title = segmentCardTitle(input.authored?.kind);
+  const title = input.authored?.title ?? segmentCardTitle(input.authored?.kind);
   return { action: 'showProblem', problem: { statement, format: 'free-response', ...(title ? { title } : {}) } };
 }
 
@@ -286,4 +286,35 @@ export function rearmAfterKill(input: {
     requeueCard: !!input.segmentCardId && dropped.has(input.segmentCardId),
     keepIds: (input.pendingRevisionIds ?? []).filter((id) => !dropped.has(id)),
   };
+}
+
+/**
+ * Task 30 fix round 1 S4 (smoke run 167–197 s: "Part 3 · Your job" flushed
+ * at turn end with no card): "the batch already has the segment's card"
+ * means a showProblem whose statement matches the NEW segment's authored
+ * card — filler-free word Jaccard ≥ 0.9 — and nothing else (a stale or other
+ * problem card does not count). Pure.
+ */
+const CARD_WORD_RE = /[\p{L}\p{N}]+/gu;
+const CARD_STOP = new Set(['a', 'an', 'the', 'um', 'uh']);
+function cardWords(s: string): Set<string> {
+  return new Set((s.toLowerCase().match(CARD_WORD_RE) ?? []).filter((w) => !CARD_STOP.has(w)));
+}
+export const SEGMENT_CARD_MATCH = 0.9;
+export function batchHasSegmentCard(
+  batch: ReadonlyArray<{ action: string } & Record<string, unknown>>,
+  authoredStatement: string | null | undefined,
+): boolean {
+  const target = cardWords(authoredStatement ?? '');
+  if (target.size === 0) return false;
+  return batch.some((c) => {
+    if (c.action !== 'showProblem') return false;
+    const st = (c.problem as { statement?: unknown } | undefined)?.statement;
+    if (typeof st !== 'string') return false;
+    const w = cardWords(st);
+    let inter = 0;
+    for (const x of w) if (target.has(x)) inter += 1;
+    const union = w.size + target.size - inter;
+    return union > 0 && inter / union >= SEGMENT_CARD_MATCH;
+  });
 }
