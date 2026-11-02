@@ -48,7 +48,7 @@ import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboa
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
-import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -1233,6 +1233,21 @@ test('33 r2 R10-1: the engine fallback is skipped when the student already answe
   assert.equal(engineOfferFallbackAction('I have worked here for three years.', JA), 'speak');
   pin(VTR, /const efAction = \/\^\\s\*\\\[\/\.test\(transcript\) \? 'speak' : engineOfferFallbackAction\(transcript,/);
   pin(VTR, /if \(efAction === 'speak'\) \{\s*for \(const line of engineOfferLines\) speakOnePart\(line\);/);
+});
+
+// ── Task 34 fix round 2 R13-1: every non-auto advance plants the entry note ──
+test('34 r2 R13-1: a typed / skip / menu-cap advance plants the new part\'s entry note for the next brain turn', () => {
+  for (const via of ['typed', 'skip', 'menu_unpicked', 'brain'] as const) assert.equal(entryNoteDueAfterAdvance({ fixedScript: true, via, lessonClosed: false }), true, via);
+  assert.equal(entryNoteDueAfterAdvance({ fixedScript: true, via: 'auto', lessonClosed: false }), false, 'the auto advance FACT note carries the entry');
+  assert.equal(entryNoteDueAfterAdvance({ fixedScript: false, via: 'typed', lessonClosed: false }), false);
+  assert.equal(entryNoteDueAfterAdvance({ fixedScript: true, via: 'typed', lessonClosed: true }), false);
+  pin(VTR, /applyResolvedAdvance\(advPlan, advFrom, advTarget\);\s*plantAdvanceEntryNote\(advTarget, 'typed'\);/);
+  pin(VTR, /applyResolvedAdvance\(mcPlan, mcSeg, mcNext\);\s*plantAdvanceEntryNote\(mcNext, 'menu_unpicked'\);/);
+  pin(VTR, /plantAdvanceEntryNote\(skipNext, 'skip'\);/);
+  // the typed advance runs before this turn's note assembly, which consumes the pending entry note
+  const typedAt = VTR.indexOf("plantAdvanceEntryNote(advTarget, 'typed');");
+  const consumeAt = VTR.indexOf("onDebugEvent?.('fixed_script_entry_note_planted', `\"${en.segId}\" delivered with this turn`);");
+  assert.ok(typedAt > 0 && consumeAt > typedAt, 'typed advance → the next brain call carries the entry note');
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

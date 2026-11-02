@@ -791,6 +791,16 @@ export function fixedScriptBrainAdvanceEntryNote(plan: LessonPlan | null | undef
   const menu = boardOffersChoices({ statement: cardStatement }) && !menuReadInTurn(cardStatement, advanceTurnText);
   return withSilentClause(`[runtime note — not from the student] Your last turn moved the lesson to "${fixedScriptPartLabel(plan, to)}"; that part's notes apply from now on. ${menu ? FIXED_SCRIPT_ENTRY_MENU_CLAUSE : "Reply to the student's last words, then continue that part from its notes."}]`);
 }
+/** Task 34 fix round 2 (R13-1, bot run r13 480 s: a TYPED move-on order
+ *  advanced the part and the new part's entry note never came): every
+ *  advance that is not the client's own auto-advance (whose FACT note
+ *  carries the entry) plants the part's entry note for the next brain turn —
+ *  the brain's advance_lesson (Task 31 §D), a typed move-on, the Skip
+ *  button, the menu-cap advance. Pure. */
+export type FixedScriptAdvanceVia = 'auto' | 'brain' | 'typed' | 'skip' | 'menu_unpicked';
+export function entryNoteDueAfterAdvance(input: { fixedScript: boolean; via: FixedScriptAdvanceVia; lessonClosed: boolean }): boolean {
+  return input.fixedScript && !input.lessonClosed && input.via !== 'auto';
+}
 /** True ⇒ the turn named at least two of the card's numbered choices (a
  *  content word of ≥ 4 letters of each). */
 export function menuReadInTurn(cardStatement: string, turnText: string): boolean {
