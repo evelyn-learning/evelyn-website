@@ -1818,7 +1818,7 @@ test('Task 30 fix round 3 R2-2a: same_question_third_time — the same ask a thi
   assert.equal(studentAnsweredAsk({ verdict: 'correct', answers: 'this_question' }), true);
   assert.equal(studentAnsweredAsk({ verdict: 'correct', answers: 'other_part' }), false);
   assert.equal(studentAnsweredAsk({ verdict: 'incorrect', answers: 'this_question' }), false);
-  assert.equal(studentAnsweredAsk(null), false);
+  assert.equal(studentAnsweredAsk(null, 'OK.'), false);
   assert.ok(SAME_QUESTION_THIRD_TIME_REASON.startsWith('You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item. Start directly with your reply'));
   assert.ok(SAME_QUESTION_THIRD_TIME_REASON.endsWith('Apply this silently; never mention this note.'));
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
@@ -1838,6 +1838,29 @@ test('Task 30 fix round 3 R2-3: a real word is never split; a split rewrites the
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, split);'));
   assert.ok(vtr.includes('const replacedEntries = replaceLastStudentEntry(transcriptRef.current, transcript, spelled);'));
+});
+
+test('Task 30 fix round 4 Q-3: same_question_third_time needs the SAME question and an unanswered student turn', () => {
+  const g = (t: string) => turnAskGist(t);
+  // different questions with a shared stem (Jaccard 0.71) ⇒ no fire
+  assert.equal(sameQuestionThirdTime({ askGists: [g('Can you tell me about your last project?'), g('Can you tell me about your last holiday?'), g('Can you tell me about your last meeting?')], answered: [false, false] }), false);
+  // r2 147–437 s: "… past simple or present perfect?" ×3 with "OK, thank you." / "OK." / an off-topic sentence between ⇒ fires
+  const T230 = 'Ask again, simply: if you have given a presentation many times over your career, would you use the past simple or the present perfect? Just say which one you think, with a short reason.';
+  const T259 = 'If you have given a presentation many times over your career, would you use past simple or present perfect? Tell me which one, with a short reason.';
+  const okThanks = studentAnsweredAsk({ verdict: 'cannot_determine', answers: 'neither' }, 'OK, thank you.');
+  const ok = studentAnsweredAsk(null, 'OK.');
+  const iSee = studentAnsweredAsk({ verdict: 'cannot_determine', answers: 'open_question' }, 'I see.');
+  const offTopic = studentAnsweredAsk({ verdict: 'incorrect', answers: 'other_part' }, 'Last month I made a presentation for a new product launch.');
+  assert.deepEqual([okThanks, ok, iSee, offTopic], [false, false, false, false]);
+  assert.equal(sameQuestionThirdTime({ askGists: [g(T230), g(T259), g(T259)], answered: [okThanks, ok] }), true);
+  assert.equal(sameQuestionThirdTime({ askGists: [g(T259), g(T259), g(T259)], answered: [iSee, offTopic] }), true);
+  // same question ×3 with a 6-word cannot_determine reply between ⇒ answered ⇒ no fire
+  const sixWords = studentAnsweredAsk({ verdict: 'cannot_determine', answers: 'open_question' }, 'Because my customers are from overseas.');
+  assert.equal(sixWords, true);
+  assert.equal(sameQuestionThirdTime({ askGists: [g(T259), g(T259), g(T259)], answered: [ok, sixWords] }), false);
+  assert.equal(studentAnsweredAsk(null, 'I think it is the present perfect.'), true, 'missing verdict with ≥ 4 words ⇒ answered');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.equal((vtr.match(/studentAnsweredAsk\(verdictPrecheckRef\.current, transcript\)/g) ?? []).length, 2);
 });
 
 if (failed) process.exit(1);

@@ -19813,7 +19813,7 @@ export function VoiceTutorRealtime({
           const sqHist = studentAnsweredHistoryRef.current;
           const sqDue = sqTurns.length >= 2 && sqHist.length >= 1 && sameQuestionThirdTime({
             askGists: [turnAskGist(sqTurns[sqTurns.length - 2]), turnAskGist(sqTurns[sqTurns.length - 1]), turnAskGist(attemptText)],
-            answered: [sqHist[sqHist.length - 1]!, studentAnsweredAsk(verdictPrecheckRef.current)],
+            answered: [sqHist[sqHist.length - 1]!, studentAnsweredAsk(verdictPrecheckRef.current, transcript)],
           });
           if (sqDue && !sameQuestionRejected) {
             sameQuestionRejected = true;
@@ -21609,7 +21609,7 @@ export function VoiceTutorRealtime({
         }
         // Task 30 fix round 3 R2-2a: did this student turn answer the pending ask?
         if (!/^\s*\[/.test(transcript) && !opts?.prefetchOnly) {
-          studentAnsweredHistoryRef.current = [...studentAnsweredHistoryRef.current.slice(-2), studentAnsweredAsk(verdictPrecheckRef.current)];
+          studentAnsweredHistoryRef.current = [...studentAnsweredHistoryRef.current.slice(-2), studentAnsweredAsk(verdictPrecheckRef.current, transcript)];
         }
         // Task 30 fix round 1 S8: the lesson's checked-correct student sentences.
         if (!/^\s*\[/.test(transcript) && precheckCorrectness(verdictPrecheckRef.current?.verdict)) {

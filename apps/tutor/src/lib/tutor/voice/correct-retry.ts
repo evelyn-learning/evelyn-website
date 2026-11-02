@@ -891,14 +891,25 @@ export const MOVE_ON_IGNORED_REASON = withRetryStyle(
 /** The ask of a tutor turn: its last question sentence, else its last ask. */
 export function turnAskGist(text: string | null | undefined): string {
   const t = text ?? '';
-  return lastQuestionSentence(t) ?? lastAskSentence(t) ?? '';
+  const ask = lastQuestionSentence(t) ?? lastAskSentence(t) ?? '';
+  // Fix round 4 (Q-3): a lead before a colon ("Ask again, simply: …", "Here
+  // is the question: …") is not part of the question.
+  const colon = ask.lastIndexOf(':');
+  const after = colon >= 0 ? ask.slice(colon + 1).trim() : '';
+  return after.split(/\s+/).length >= 3 ? after : ask;
 }
 const GIST_STOPWORDS = new Set(['a', 'an', 'the', 'to', 'of', 'in', 'on', 'at', 'for', 'and', 'or', 'is', 'are', 'do', 'does', 'did', 'it', 'this', 'that', 'so', 'now', 'then', 'please', 'can', 'could', 'would', 'will', 'me', 'okay', 'ok']);
 function gistTokens(s: string): Set<string> {
   return new Set((s.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).filter((w) => !GIST_STOPWORDS.has(w)));
 }
-export const SAME_QUESTION_GIST_JACCARD = 0.7;
+// Fix round 4 (Q-3): the three asks must be the SAME question — normalised
+// gist equality or token Jaccard ≥ 0.9 ("Can you tell me about your last
+// project / holiday / meeting?" share a stem at 0.71 and are different).
+export const SAME_QUESTION_GIST_JACCARD = 0.9;
+const normGist = (s: string) => (s.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).join(' ');
 export function askGistsSame(a: string, b: string): boolean {
+  const na = normGist(a);
+  if (na && na === normGist(b)) return true;
   const x = gistTokens(a);
   const y = gistTokens(b);
   if (x.size === 0 || y.size === 0) return false;
@@ -915,11 +926,22 @@ export function sameQuestionThirdTime(input: { askGists: readonly [string, strin
   if (input.answered.some(Boolean)) return false;
   return askGistsSame(g3, g2) && askGistsSame(g3, g1);
 }
-/** The student turn answered the pending ask: the check found it correct /
- *  partly correct and about this question (not another part / neither). */
-export function studentAnsweredAsk(pc: { verdict?: string | null; answers?: string | null } | null | undefined): boolean {
-  if (!pc) return false;
-  return (pc.verdict === 'correct' || pc.verdict === 'partly_correct') && pc.answers !== 'other_part' && pc.answers !== 'neither';
+const ACK_WORDS = new Set(['ok', 'okay', 'yes', 'i', 'see', 'thank', 'thanks', 'you', 'sure', 'hmm', 'mm', 'uh', 'um']);
+/** ≤ 3 words of acknowledgement only ("OK.", "I see.", "OK, thank you."). */
+export function isAcknowledgementOnly(text: string | null | undefined): boolean {
+  const words = (text ?? '').toLowerCase().match(/[\p{L}\p{N}']+/gu) ?? [];
+  return words.length > 0 && words.length <= 3 && words.every((w) => ACK_WORDS.has(w));
+}
+/** The student turn answered the pending ask (fix round 4, Q-3): it is
+ *  UNANSWERED only when the check says incorrect / neither / other_part, or
+ *  the student said ≤ 3 words of acknowledgement; anything else — correct,
+ *  cannot_determine, no verdict — counts as answered (the validator stands
+ *  down). */
+export function studentAnsweredAsk(pc: { verdict?: string | null; answers?: string | null } | null | undefined, studentText?: string | null): boolean {
+  if (isAcknowledgementOnly(studentText)) return false;
+  const unanswered = new Set(['incorrect', 'neither', 'other_part']);
+  if (pc && (unanswered.has(pc.verdict ?? '') || unanswered.has(pc.answers ?? ''))) return false;
+  return true;
 }
 export const SAME_QUESTION_THIRD_TIME_REASON = withRetryStyle(
   'You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item.');
