@@ -15,7 +15,7 @@ import {
 } from '../src/lib/tutor/pronunciation/clip-capture';
 import { PRONUNCIATION_UNAVAILABLE_NOTE as SERVER_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
 import { ttsLanguageFor } from '../src/lib/tutor/voice/tts-language';
-import { withPronunciationCheckResult, noSpeechTimerStart, PRONUNCIATION_ARM_MAX_MS, CLIP_NO_SPEECH_TIMEOUT_MS } from '../src/lib/tutor/pronunciation/clip-capture';
+import { withPronunciationCheckResult, PRONUNCIATION_ARM_MAX_MS, CLIP_NO_SPEECH_TIMEOUT_MS } from '../src/lib/tutor/pronunciation/clip-capture';
 import { WHITEBOARD_TOOLS, REQUEST_PRONUNCIATION_CHECK_TOOL, mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
 import { NON_RENDER_TOOL_NAMES } from '../src/lib/tutor/voice/rule8-client';
 import { isBoardContentTool } from '../src/lib/tutor/voice/question-anchor';
@@ -31,15 +31,15 @@ const SR = 24000;
 const chunk = (n: number, v: number) => new Float32Array(n).fill(v);
 const make = () => new ClipCapture({ maxMs: 10000, sampleRate: 24000 });
 
-test('constants: 10 s max, 24 kHz, 40 s no-speech timeout (Task 23 §G3)', () => {
+test('constants: 10 s max, 24 kHz, 60 s no-speech timeout (Task 23 §G3 40 s; Task 30 fix round 1 60 s)', () => {
   assert.equal(CLIP_MAX_MS, 10000);
   assert.equal(CLIP_SAMPLE_RATE, 24000);
-  assert.equal(CLIP_NO_SPEECH_TIMEOUT_MS, 40000);
+  assert.equal(CLIP_NO_SPEECH_TIMEOUT_MS, 60000);
   assert.ok(CLIP_NO_SPEECH_TIMEOUT_MS < PRONUNCIATION_ARM_MAX_MS, 'below the arm lifetime');
 });
-test('Task 23 §G3: the reason is no_speech_40s; the idle nudge stands down while a clip is armed', () => {
+test('Task 23 §G3: the reason is no_speech_60s; the idle nudge stands down while a clip is armed', () => {
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  assert.ok(v.includes("plantPronunciationUnavailable('no_speech_40s');"));
+  assert.ok(v.includes("plantPronunciationUnavailable('no_speech_60s');"));
   assert.ok(!v.includes("'no_speech_20s'"));
   assert.match(v, /const pronClipArmed = !!clipCaptureRef\.current\?\.isArmed\(\);\s*const busy =\s*pronClipArmed \|\|/);
   assert.match(v, /hardBusy:\s*pronClipArmed \|\|/);
@@ -370,8 +370,9 @@ test('runtime (review r1): 20 s window starts at playback idle; the hold skips t
 test('runtime (final review #1a; Task 23 r1 m9): the arm has an absolute 75 s lifetime, then disarms + plants unavailable', () => {
   const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
   assert.equal(PRONUNCIATION_ARM_MAX_MS, 75000);
-  // outlasts the 40 s no-speech window plus a model line and a late answer
-  assert.ok(PRONUNCIATION_ARM_MAX_MS >= CLIP_NO_SPEECH_TIMEOUT_MS + 30000);
+  // Task 30 fix round 1 ruling: 75 s stays the hard cap over the 60 s
+  // no-speech window (a long model line can now reach the cap first).
+  assert.ok(PRONUNCIATION_ARM_MAX_MS >= CLIP_NO_SPEECH_TIMEOUT_MS + 15000);
   // Started at the arm itself, BEFORE the playback-state branch (so a tutor
   // still speaking does not defer it).
   const armIdx = v.indexOf('const armPronunciationCheck = ');
@@ -427,18 +428,14 @@ test('debug events: the four exact names are emitted and persisted by the embed'
   assert.match(e, /pronunciation=\{sessionOptions\.pronunciation\}/);
 });
 
-// Task 30 §I1 (GDI run 17, 1228 → 1286 s): the arm waits for the learner; the 40 s timer starts at a nudge.
-test('30I1: noSpeechTimerStart — only once an idle nudge fired on an armed clip; the 75 s arm lifetime is the cap', () => {
-  assert.equal(noSpeechTimerStart({ armed: true, nudgeFired: false }), false);
-  assert.equal(noSpeechTimerStart({ armed: true, nudgeFired: true }), true);
-  assert.equal(noSpeechTimerStart({ armed: false, nudgeFired: true }), false);
+// Task 30 fix round 1 (§I1 ruling): the inert nudge-started timer is gone; the no-speech window is 60 s (from the model line's end), the 75 s arm lifetime the cap.
+test('30I1 r1: CLIP_NO_SPEECH_TIMEOUT_MS = 60 000, started as before; PRONUNCIATION_ARM_MAX_MS = 75 000', () => {
+  assert.equal(CLIP_NO_SPEECH_TIMEOUT_MS, 60000);
   assert.equal(PRONUNCIATION_ARM_MAX_MS, 75000);
-  assert.equal(CLIP_NO_SPEECH_TIMEOUT_MS, 40000);
   const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
-  assert.ok(v.includes('pronunciationNudgeFiredRef.current = false;\n    if (TUTOR_PRON_NO_SPEECH_AFTER_NUDGE) return;'), 'the arm no longer starts the timer');
-  assert.ok(v.includes("if (TUTOR_PRON_NO_SPEECH_AFTER_NUDGE && !noSpeechTimerStart({ armed: capture.isArmed(), nudgeFired: pronunciationNudgeFiredRef.current })) return;"));
-  assert.ok(/if \(TUTOR_PRON_NO_SPEECH_AFTER_NUDGE && clipCaptureRef\.current\?\.isArmed\(\)\) \{\s*pronunciationNudgeFiredRef\.current = true;\s*startPronunciationNoSpeechTimerRef\.current\(\);/.test(v), 'the nudge starts it');
+  assert.ok(!v.includes('pronunciationNudgeFiredRef'), 'no nudge-started timer');
   assert.ok(v.includes("plantPronunciationUnavailable('arm_expired_75s');"), 'the arm-max timer is kept');
+  assert.ok(/if \(productionStateRef\.current === 'speaking'\) \{\s*pronunciationTimerAwaitsIdleRef\.current = true;\s*return;\s*\}\s*startPronunciationNoSpeechTimerRef\.current\(\);/.test(v), 'started at the arm (after the model line plays) as before');
 });
 
 void Promise.all(pending).then(() => {

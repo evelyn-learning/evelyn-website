@@ -514,7 +514,7 @@ const CEILING_MS = IDLE_NUDGE_FIRST_MS + IDLE_NUDGE_ONSET_MAX_DEFER_MS;
   check('29E2: … other directives are not nudges', !holdPronunciationNoteForNudge({ noSpeechNote: true, transcript: '[validator feedback — not from the student] x' }));
   const V = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8') as string;
   check('29E: VTR passes lastAskKind to the nudge', V.includes('...(TUTOR_IDLE_NUDGE_REPEAT_KIND ? { lastAskKind: nudgeLastAskKind } : {})'));
-  check('29E2: VTR holds the no-speech note off a nudge turn', V.includes("if (pronunciationResultNoteRef.current && !opts?.prefetchOnly && !holdNoSpeechNote) {") && V.includes("pronunciationNoSpeechNoteRef.current = reason === 'no_speech_40s';"));
+  check('29E2: VTR holds the no-speech note off a nudge turn', V.includes("if (pronunciationResultNoteRef.current && !opts?.prefetchOnly && !holdNoSpeechNote) {") && V.includes("pronunciationNoSpeechNoteRef.current = reason === 'no_speech_60s';"));
 }
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }

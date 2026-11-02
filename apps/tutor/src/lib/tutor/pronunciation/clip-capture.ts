@@ -39,7 +39,11 @@ export const CLIP_SAMPLE_RATE = 24000;
  *  "responsibilities" and the 20 s window had closed): 40 s, counted from the
  *  end of the model line; the idle nudge stands down while a clip is armed,
  *  and the arm's absolute lifetime (PRONUNCIATION_ARM_MAX_MS) still bounds it. */
-export const CLIP_NO_SPEECH_TIMEOUT_MS = 40000;
+// Task 30 fix round 1 (GDI run 17, 1228 → 1286 s: the learner repeated 58 s
+// after the model line and the 40 s window had closed): 60 s, still counted
+// from the end of the model line; PRONUNCIATION_ARM_MAX_MS (75 s from the
+// arm) stays the hard cap.
+export const CLIP_NO_SPEECH_TIMEOUT_MS = 60000;
 /** Absolute lifetime of one arm, from the arm, whatever the playback state:
  *  past it the runtime disarms and plants the unavailable note, so a stale
  *  arm can never score some later, unrelated turn. */
@@ -277,17 +281,4 @@ export function withPronunciationCheckResult(inner: ToolResultProvider | undefin
     }
     return inner ? inner(name, args) : `${name} executed successfully.`;
   };
-}
-
-/**
- * Task 30 §I1 (GDI run 17, 1228 → 1286 s): "Listen first, then repeat after
- * me: …" armed the clip, the learner repeated 58 s later — after the 40 s
- * no-speech timer (started when the model line finished) had disarmed it, so
- * the sentence was never scored. While the learner has not spoken since the
- * arm, the 40 s timer does not run: it starts only once an idle nudge has
- * fired on the armed clip; PRONUNCIATION_ARM_MAX_MS (75 s from the arm)
- * stays the hard cap. True ⇒ start the no-speech timer now.
- */
-export function noSpeechTimerStart(input: { armed: boolean; nudgeFired: boolean }): boolean {
-  return input.armed && input.nudgeFired;
 }
