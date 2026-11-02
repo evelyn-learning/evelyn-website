@@ -6,6 +6,7 @@ import {
   TargetMarket,
   ImageStyle,
 } from "@/types/blog-generator";
+import type { BeaconTopic } from "@/lib/beacon/topics";
 
 // Track what was used in recent generations to ensure variety
 export interface RecentGeneration {
@@ -36,6 +37,9 @@ export interface IAutoBlogSettings extends Document {
   totalGenerated: number;
   lastGeneratedAt?: Date;
   lastError?: string;
+  // Beacon topic queue (PUT /api/beacon/v1/topics). The generator writes about
+  // the first one next and pulls it only after the post saves.
+  beaconTopics?: BeaconTopic[];
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +52,15 @@ const RecentGenerationSchema = new Schema<RecentGeneration>(
     topic: { type: String, required: true },
     tone: { type: String, required: true },
     generatedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const BeaconTopicSchema = new Schema<BeaconTopic>(
+  {
+    topic: { type: String, required: true },
+    reason: { type: String, default: "" },
+    source: { type: String, enum: ["geo-lost", "product-query"], required: true },
   },
   { _id: false }
 );
@@ -72,6 +85,7 @@ const AutoBlogSettingsSchema = new Schema<IAutoBlogSettings>(
     totalGenerated: { type: Number, default: 0 },
     lastGeneratedAt: { type: Date },
     lastError: { type: String },
+    beaconTopics: { type: [BeaconTopicSchema], default: undefined },
   },
   {
     timestamps: true,
