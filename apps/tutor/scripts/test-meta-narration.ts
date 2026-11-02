@@ -919,7 +919,7 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   check('29B: the 693 s note-state + plan sentence dropped', isMetaNarration(narrated));
   for (const x of [
     'Because this part is done, I will move to the next one.',
-    "Now that the step was finished, let's try it.",
+    'Now that the step was finished, the note is done.',
     "I'll check if the student wants another one.",
     "I'll see whether they need a hint.",
     "Next I'll give an example, since they would like one.",
@@ -934,6 +934,19 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   // the board-staging line keeps its own handling (not this rule)
   check("29B: \"I'll put a sentence on the board\" is not this rule's", !isNotePlanNarration("I'll put a sentence on the board for you."));
 }
+
+// Task 29 fix round 1 (I-3): quoted model sentences and a spoken close addressed to the student are kept.
+for (const x of [
+  'A natural way to say it is: "I\'ll ask the customer if they need any help."',
+  '"I\'ll check if they want a discount." Can you say that?',
+  'Try this sentence: "When the project is done, I\'ll see if they need more support."',
+  "Since this part is complete, let's move on to the past simple.",
+  "Now that this part is done, let's move on to the conversation.",
+]) {
+  check(`29B r1: "${x}" not note narration`, !isNotePlanNarration(x));
+  check(`29B r1: "${x}" kept`, !isMetaNarration(x));
+}
+check('29B r1: the 693 s sentence still dropped', isMetaNarration("Since the past simple segment is complete, I'll close it in one sentence and ask whether they want one more practice sentence or to move on."));
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

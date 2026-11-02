@@ -465,9 +465,15 @@ const NOTE_STATE_REASON_RE = /\b(?:since|because|as|now that) (?:the|this|that) 
 const PLAN_ASK_THIRD_PERSON_RE = /\bI['’]ll\b[^.;]*\b(?:ask|check|see|find out) (?:whether|if) (?:they|the student|the learner)\b/i;
 const PLAN_THIRD_PERSON_WANTS_RE = /\bI['’]ll\b[^.;]*\b(?:they|the student|the learner) (?:want|wants|need|needs|would like)\b/i;
 /** Task 29 §B: the runtime note's state / plan spoken aloud (see above). */
+// Fix round 1 (I-3): a quoted model sentence is speech ("A natural way to say
+// it is: "I'll ask the customer if they need any help.""), and a state reason
+// addressed to the student is the spoken close ("Since this part is complete,
+// let's move on to …") — neither is dropped.
+const NOTE_PLAN_QUOTE_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
+const NOTE_PLAN_ADDRESSES_RE = /\b(?:let['’]?s|let us|we|you|your)\b/i;
 export function isNotePlanNarration(sentence: string): boolean {
-  const s = sentence ?? '';
-  return NOTE_STATE_REASON_RE.test(s) || PLAN_ASK_THIRD_PERSON_RE.test(s) || PLAN_THIRD_PERSON_WANTS_RE.test(s);
+  const s = (sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' ');
+  return (NOTE_STATE_REASON_RE.test(s) && !NOTE_PLAN_ADDRESSES_RE.test(s)) || PLAN_ASK_THIRD_PERSON_RE.test(s) || PLAN_THIRD_PERSON_WANTS_RE.test(s);
 }
 const THIRD_PERSON_PLAN_ANYWHERE_RE =
   /\bI(?:['’]ll| will) (?:ask|tell|have|get|let|help|guide|remind|prompt) (?:them|the student|the learner)\b/i;
