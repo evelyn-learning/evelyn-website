@@ -62,7 +62,10 @@ export function runChecks(dump) {
     const s = student[i];
     if (!/^\s*(?:one more|another one|more practice)/i.test(s.text)) continue;
     const reply = tutor.find((x) => x.i > s.i);
-    if (reply) ok(`"one more" at ${s.t}s got a new item`, !/question on the board|card on the board|look at the board/i.test(reply.text), reply.text.slice(0, 120));
+    if (reply) {
+      const newCard = wb.some((w) => ['handwrite', 'showProblem', 'showSentence'].includes(w.action) && w.t >= reply.t - 1 && w.t <= reply.t + 8);
+      ok(`"one more" at ${s.t}s got a new item`, newCard || !/question on the board|card on the board|look at the board/i.test(reply.text), reply.text.slice(0, 120));
+    }
   }
   // a silent advance: the part advanced while a planted offer had never been spoken
   const silentAdvance = ev('fixed_script_auto_advance').filter((e) => !/reason=announced/.test(e.msg));
@@ -172,7 +175,7 @@ export function runChecks(dump) {
   const closeReq = ev('fixed_script_close_requested')[0];
   if (closeReq) {
     const closeCall = events.find((e) => e.t >= closeReq.t && /closeSessionNotes|close_session_notes/.test(`${e.type} ${e.msg}`));
-    const between = tutor.filter((x) => x.t > closeReq.t && (!closeCall || x.t <= closeCall.t));
+    const between = tutor.filter((x) => x.t > closeReq.t && (!closeCall || x.t < closeCall.t - 2)); // the turn that carries the close call is the wrap itself
     ok('close note obeyed within two tutor turns', between.length <= 2, `${between.length} tutor turns after the close note${closeCall ? '' : ' and no close call'}`);
     const sumStart = ev('fixed_script_note_delivered').find((e) => /segment "summary"/.test(e.msg))?.t ?? closeReq.t - 120;
     const asked = [];
