@@ -1030,17 +1030,38 @@ export function sameQuestionThirdTimeReason(input: { question: string | null | u
 // the pinned question's gist (token Jaccard ≥ 0.6) is dropped by the engine,
 // and the starter hint right after it ("Start with "I learned…".") with it;
 // if nothing of the retry is left, the engine says SAME_QUESTION_MOVE_ON_LINE.
-export const RETRY_REASK_JACCARD = 0.6;
+export const RETRY_REASK_JACCARD = 0.5;
+// Fix round 2 (re-review minor): paraphrases count too — content stems
+// (5-letter prefixes of words ≥ 3 letters outside the stopwords) with
+// Jaccard ≥ 0.5; or a question with the same wh-word whose content stems all
+// belong to the pinned question ("What did you learn there?"); or a
+// statement-form ask ("Please tell me what you learned.") whose content
+// stems are all the pinned question's, or ≥ 2 of them.
+const REASK_STOP = new Set(['what', 'did', 'does', 'you', 'your', 'there', 'that', 'this', 'how', 'why', 'when', 'where', 'which', 'who', 'was', 'were', 'have', 'has', 'about', 'please', 'tell', 'answer', 'question', 'sentence', 'one', 'now', 'again', 'start', 'with', 'my', 'me', 'the', 'and', 'can', 'could', 'would', 'let', 'know', 'say', 'describe']);
+const reaskStems = (s: string) => new Set((s.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
+  .filter((w) => w.length >= 3 && !REASK_STOP.has(w) && !GIST_STOPWORDS.has(w)).map((w) => w.slice(0, 5)));
+const WH_RE = /\b(what|where|when|who|why|how|which)\b/i;
+const STATEMENT_ASK_RE = /^\s*(?:(?:now|so|okay|ok),?\s+)?(?:please,?\s+)?(?:tell me|let me know|say|describe)\b/i;
 export function retryReasksQuestion(sentence: string | null | undefined, pinnedQuestion: string | null | undefined): boolean {
   const s = sentence ?? '';
   const q = pinnedQuestion ?? '';
-  if (!s.trim() || !q.trim() || !/[?？]/.test(s)) return false;
-  const x = gistTokens(turnAskGist(s));
-  const y = gistTokens(q);
+  if (!s.trim() || !q.trim()) return false;
+  const isQuestion = /[?？]/.test(s);
+  const statementAsk = !isQuestion && STATEMENT_ASK_RE.test(s);
+  if (!isQuestion && !statementAsk) return false;
+  const gist = isQuestion ? turnAskGist(s) : s;
+  const x = reaskStems(gist);
+  const y = reaskStems(q);
   if (x.size === 0 || y.size === 0) return false;
   let inter = 0;
   for (const w of x) if (y.has(w)) inter += 1;
-  return inter / (x.size + y.size - inter) >= RETRY_REASK_JACCARD;
+  if (inter / (x.size + y.size - inter) >= RETRY_REASK_JACCARD) return true;
+  const subset = inter === x.size;
+  if (isQuestion) {
+    const a = WH_RE.exec(gist)?.[1]?.toLowerCase();
+    return !!a && a === WH_RE.exec(q)?.[1]?.toLowerCase() && subset;
+  }
+  return subset || inter >= 2;
 }
 const STARTER_HINT_RE = /^\s*(?:(?:please|now|so),?\s+)?(?:try )?start(?:ing)? (?:with|your (?:answer|sentence) with)\b/i;
 export function isStarterHint(sentence: string | null | undefined): boolean {

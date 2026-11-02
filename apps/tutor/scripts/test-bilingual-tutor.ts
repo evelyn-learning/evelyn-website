@@ -1954,4 +1954,12 @@ test('33 r1 R9-3: the personal retry never re-asks — the directive forbids it 
   assert.ok(vtr.includes("if (!attemptKilled && sqPersonalPinned && attempt > 0 && turnNarrationRef.current.length === attemptNarrationStart) {"));
 });
 
+test('33 r2 R9-3: paraphrases and statement-form re-asks of the pinned question are caught', () => {
+  const pinned = 'what did you learn at that trade show?';
+  for (const x of ['What did you learn there?', 'Please tell me what you learned.', 'Tell me what you learned at the trade show.', 'So what did you learn at the show?'])
+    assert.equal(retryReasksQuestion(x, pinned), true, x);
+  for (const x of ['What did you see there?', 'Did you go with your team?', 'You learned a lot at the trade show, I am sure.', 'Tell me about your weekend.', 'That is a good example.'])
+    assert.equal(retryReasksQuestion(x, pinned), false, x);
+});
+
 if (failed) process.exit(1);
