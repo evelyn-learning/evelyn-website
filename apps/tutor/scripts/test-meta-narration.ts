@@ -1118,5 +1118,13 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('Q-2: the 852 s tail still stripped', stripNoteCitationClause("You said the same sentence as before, so I'll note that and ask again.") === 'You said the same sentence as before.');
 }
 
+// Task 30 fix round 4 R3-7b: the lesson's closed state is never narrated.
+{
+  check('R3-7b: 1354 s "I\'m sorry, but I can\'t continue the lesson now, because it has already closed." ⇒ dropped', isMetaNarration("I'm sorry, but I can't continue the lesson now, because it has already closed."));
+  check('R3-7b: "The lesson has already ended." ⇒ dropped', isMetaNarration('The lesson has already ended.'));
+  check('R3-7b: "We cannot go on with the lesson today." ⇒ dropped', isMetaNarration('We cannot go on with the lesson today.'));
+  for (const kept of ['The meeting had already ended when I arrived.', 'The shop had already closed.', 'Thank you for practicing with me today, Haruto.']) check(`R3-7b: "${kept}" kept`, !isMetaNarration(kept));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

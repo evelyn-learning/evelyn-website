@@ -1159,3 +1159,10 @@ export const TUTOR_SENTENCE_SAME_TEXT_DEDUP = process.env.NEXT_PUBLIC_TUTOR_SENT
  *  same_question_third_time). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_SAME_QUESTION_THIRD_TIME=off. */
 export const TUTOR_SAME_QUESTION_THIRD_TIME = process.env.NEXT_PUBLIC_TUTOR_SAME_QUESTION_THIRD_TIME !== 'off';
+
+/** Task 30 fix round 4 R3-7 (run r3, 1314–1348 s: the summary closed before
+ *  its content was spoken): close_session_notes while the current part's
+ *  requiredPhrases are unsaid is refused once per part (validator
+ *  close_before_required_phrases). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_CLOSE_REQUIRED_PHRASES=off. */
+export const TUTOR_CLOSE_REQUIRED_PHRASES = process.env.NEXT_PUBLIC_TUTOR_CLOSE_REQUIRED_PHRASES !== 'off';

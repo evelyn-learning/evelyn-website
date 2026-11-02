@@ -284,6 +284,8 @@ export const POST_CLOSE_NOTE =
   '[runtime note — not from the student] The lesson is already closed and its closing notes are recorded. ' +
   'Do not call close_session_notes, mark_segment_complete or advance_lesson again, and do not start or resume an exercise. ' +
   'Answer what the student just asked in one or two sentences, in the language you have been using with them, and stop. ' +
+  // Task 30 fix round 4 R3-7b (run r3 1354 s: "I'm sorry, but I can't continue the lesson now, because it has already closed.").
+  'Reply with one warm goodbye line; never say the lesson is closed, ended, or that you cannot continue. ' +
   'Apply this silently; never mention this note.';
 
 /**

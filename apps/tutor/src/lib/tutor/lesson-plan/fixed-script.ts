@@ -605,6 +605,18 @@ export function missingRequiredPhrases(seg: { requiredPhrases?: string[] } | und
   return required.filter((p) => !haystack.includes(p.toLowerCase()));
 }
 
+/** Task 30 fix round 4 (R3-7a, run r3 1314–1348 s: the lesson was closed in
+ *  the summary before its points and question were spoken): a
+ *  close_session_notes call while the current part's requiredPhrases are
+ *  still missing from what the tutor said in it is refused ONCE per part (kill
+ *  + retry with CLOSE_BEFORE_REQUIRED_PHRASES_REASON); the second attempt is
+ *  let through. Pure. */
+export function closeBeforeRequiredPhrasesDecision(input: { missing: readonly string[]; alreadyRefused: boolean }): 'refuse' | 'allow' {
+  return input.missing.length > 0 && !input.alreadyRefused ? 'refuse' : 'allow';
+}
+export const CLOSE_BEFORE_REQUIRED_PHRASES_REASON = withRetryStyle(
+  "Give the summary's points and ask its question first; close only after the student has answered.");
+
 /** The refusal the brain gets for an advance off a script it has not said. */
 export function scriptMissingAdvanceReason(missing: readonly string[]): string {
   return `This part's script has not been said yet — it must include: ${missing.map((p) => `"${p}"`).join(', ')}. Say it in this turn; the lesson can move on in a later turn.`;

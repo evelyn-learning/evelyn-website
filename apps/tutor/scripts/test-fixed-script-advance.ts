@@ -33,7 +33,7 @@ import {
   holdAutoAdvanceForOffer, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer,
   offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason,
   FIXED_SCRIPT_OFFER_MAX_WAIT_MS, offerWaitExpired,
-  offerAccepted, fixedScriptOfferAcceptedNote, FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS,
+  offerAccepted, fixedScriptOfferAcceptedNote, FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON,
   fixedScriptOfferContinueDirective, FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, attemptAsksStudent, offerReplantDue,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
@@ -952,5 +952,22 @@ test('30 r1 I-3: offerReplantDue — made, unspoken, a student turn, not already
   assert.ok(VTR.includes("if (!opts?.prefetchOnly) offerContinueSegRef.current = '';"));
 });
 
+// ── Task 30 fix round 4 R3-7a: no close before the part's required phrases ──
+test('R3-7a: close_session_notes with required phrases unsaid is refused once; the second attempt is let through', () => {
+  const sumSeg = { requiredPhrases: ['one thing you did well'] };
+  const said = ['Present perfect for experience, like "I have worked here for five years."', 'Take a look at the summary card.'];
+  const missing = missingRequiredPhrases(sumSeg, said);
+  assert.deepEqual(missing, ['one thing you did well']);
+  assert.equal(closeBeforeRequiredPhrasesDecision({ missing, alreadyRefused: false }), 'refuse');
+  assert.equal(closeBeforeRequiredPhrasesDecision({ missing, alreadyRefused: true }), 'allow', 'second attempt let through');
+  assert.equal(closeBeforeRequiredPhrasesDecision({ missing: missingRequiredPhrases(sumSeg, [...said, 'Tell me one thing you did well today.']), alreadyRefused: false }), 'allow');
+  assert.equal(closeBeforeRequiredPhrasesDecision({ missing: missingRequiredPhrases({}, said), alreadyRefused: false }), 'allow', 'no required phrases');
+  assert.ok(CLOSE_BEFORE_REQUIRED_PHRASES_REASON.startsWith("Give the summary's points and ask its question first; close only after the student has answered."));
+  assert.ok(CLOSE_BEFORE_REQUIRED_PHRASES_REASON.endsWith('Apply this silently; never mention this note.'));
+  assert.ok(VTR.includes("rejected.push({ action: 'close_before_required_phrases', reason: CLOSE_BEFORE_REQUIRED_PHRASES_REASON });"));
+  assert.ok(VTR.includes("onDebugEvent?.('close_before_required_phrases',"));
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
+

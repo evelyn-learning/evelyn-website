@@ -349,7 +349,7 @@ test('after the close: goodbyes/thanks are pleasantries; content and questions a
 test('lesson-closed state: set by closeSessionNotes, silences pleasantries, stands the idle nudge down', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("if (!opts?.silent && lessonClosedRef.current && decidePostCloseUtterance(transcript) === 'silence')"));
-  assert.ok(/cmd\.action === 'closeSessionNotes'\) \{[\s\S]{0,900}lessonClosedRef\.current = true/.test(vtr));
+  assert.ok(/cmd\.action === 'closeSessionNotes'\) \{[\s\S]{0,2200}lessonClosedRef\.current = true/.test(vtr));
   assert.ok(vtr.includes('if (lessonClosedRef.current) return;'));
 });
 test('bare Japanese short answers survive the noise filter in a bilingual session', () => {
@@ -1008,6 +1008,9 @@ test('post-close gate: chatter and pleasantries are silenced; an explicit contin
   assert.equal(postCloseSilenceKind('Okay I will do that.'), 'chatter');
   assert.match(POST_CLOSE_NOTE, /close_session_notes/);
   assert.match(POST_CLOSE_NOTE, /one or two sentences/);
+  // Task 30 fix round 4 R3-7b
+  assert.ok(POST_CLOSE_NOTE.includes('Reply with one warm goodbye line; never say the lesson is closed, ended, or that you cannot continue.'));
+  assert.ok(POST_CLOSE_NOTE.endsWith('Apply this silently; never mention this note.'));
 });
 
 test('unreadable word: a run-together with a NAME ("toNagoya", "inNagoya") and a mid-sentence capitalised name are never flagged; one note per word', () => {
