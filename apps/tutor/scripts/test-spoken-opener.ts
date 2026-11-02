@@ -97,18 +97,30 @@ test('VTR wiring: flag-gated, speaks each sentence through speakText, paints the
 test('R5-1: proactiveOpenerAllowed — wait for the expected plan (and a fixed script\'s prompt), bounded at 4 s', () => {
   const base = { planExpected: true, planLoaded: false, fixedScript: false, promptReady: false, waitedMs: 0 };
   assert.equal(OPENER_PLAN_WAIT_MAX_MS, 4000);
-  assert.equal(proactiveOpenerAllowed(base), false, 'r5: the tap before the plan landed ⇒ wait');
-  assert.equal(proactiveOpenerAllowed({ ...base, waitedMs: 3999 }), false);
-  assert.equal(proactiveOpenerAllowed({ ...base, waitedMs: 4000 }), true, 'bounded');
-  assert.equal(proactiveOpenerAllowed({ ...base, planLoaded: true, fixedScript: true, promptReady: false, waitedMs: 1000 }), false, 'fixed script, prompt not ready ⇒ wait');
-  assert.equal(proactiveOpenerAllowed({ ...base, planLoaded: true, fixedScript: true, promptReady: true, waitedMs: 1000 }), true, 'plan + prompt ⇒ the spoken opener runs');
-  assert.equal(proactiveOpenerAllowed({ ...base, planLoaded: true, fixedScript: false, waitedMs: 0 }), true, 'a non-fixed plan ⇒ now');
-  assert.equal(proactiveOpenerAllowed({ ...base, planExpected: false }), true, 'no plan id (free conversation) ⇒ now');
+  assert.equal(proactiveOpenerAllowed(base), 'wait', 'r5: the tap before the plan landed ⇒ wait');
+  assert.equal(proactiveOpenerAllowed({ ...base, waitedMs: 3999 }), 'wait');
+  assert.equal(proactiveOpenerAllowed({ ...base, waitedMs: 4000 }), 'run', 'bounded');
+  assert.equal(proactiveOpenerAllowed({ ...base, planLoaded: true, fixedScript: true, promptReady: false, waitedMs: 1000 }), 'wait', 'fixed script, prompt not ready ⇒ wait');
+  assert.equal(proactiveOpenerAllowed({ ...base, planLoaded: true, fixedScript: true, promptReady: true, waitedMs: 1000 }), 'run', 'plan + prompt ⇒ the spoken opener runs');
+  assert.equal(proactiveOpenerAllowed({ ...base, planLoaded: true, fixedScript: false, waitedMs: 0 }), 'run', 'a non-fixed plan ⇒ now');
+  assert.equal(proactiveOpenerAllowed({ ...base, planExpected: false }), 'run', 'no plan id (free conversation) ⇒ now');
   const VTR = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
   pin(VTR, /const runStartOpener = \(\): void => \{\n\s+const spokenOpenerPlan = lessonPlanRef\.current;/);
   pin(VTR, /planExpected: !!lessonPlanId && !resumeState,/);
   pin(VTR, /onDebugEvent\?\.\('opener_waits_for_plan',/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_OPENER_WAITS_FOR_PLAN = process\.env\.NEXT_PUBLIC_TUTOR_OPENER_WAITS_FOR_PLAN !== 'off';/);
+});
+test('U-1 (fix round 7): a student turn during the wait makes the opener stand down; none ⇒ it runs when the wait ends', () => {
+  const loaded = { planExpected: true, planLoaded: true, fixedScript: true, promptReady: true, waitedMs: 1200 };
+  assert.equal(proactiveOpenerAllowed({ ...loaded, studentSpokeDuringWait: false }), 'run', 'plan arrived, nobody spoke ⇒ the opener runs');
+  assert.equal(proactiveOpenerAllowed({ ...loaded, studentSpokeDuringWait: true }), 'stand_down', 'plan arrived after the student spoke ⇒ stand down');
+  assert.equal(proactiveOpenerAllowed({ planExpected: true, planLoaded: false, fixedScript: false, promptReady: false, waitedMs: 4000, studentSpokeDuringWait: false }), 'run', 'timeout, nobody spoke ⇒ run');
+  assert.equal(proactiveOpenerAllowed({ planExpected: true, planLoaded: false, fixedScript: false, promptReady: false, waitedMs: 4000, studentSpokeDuringWait: true }), 'stand_down', 'timeout after the student spoke ⇒ stand down');
+  assert.equal(proactiveOpenerAllowed({ planExpected: true, planLoaded: false, fixedScript: false, promptReady: false, waitedMs: 500, studentSpokeDuringWait: true }), 'stand_down', 'still waiting, the student spoke ⇒ stand down now');
+  const VTR = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  pin(VTR, /studentSpokeDuringWait: studentDispatchCountRef\.current > openerWaitStudentTurns,/);
+  pin(VTR, /onDebugEvent\?\.\('opener_stood_down_student_spoke',/);
+  pin(VTR, /studentHasSpokenRef\.current = true;\n\s+\/\/ Task 30 fix round 7 \(U-1\)[^\n]*\n\s+studentDispatchCountRef\.current \+= 1;/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

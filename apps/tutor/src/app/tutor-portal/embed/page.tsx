@@ -362,7 +362,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // Task 30 fix round 5 R4-3: a glossed brain card replaces a same-text brain card.
   'show_sentence_brain_replace',
   // Task 30 fix round 6 R5-1: the Start opener waited for the lesson plan.
-  'opener_waits_for_plan', 'opener_plan_wait_done',
+  'opener_waits_for_plan', 'opener_plan_wait_done', 'opener_stood_down_student_spoke',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

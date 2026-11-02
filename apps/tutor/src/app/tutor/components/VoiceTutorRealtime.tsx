@@ -4265,6 +4265,8 @@ export function VoiceTutorRealtime({
   const affirmedStudentSentencesRef = useRef<Set<string>>(new Set());
   // Task 30 fix round 3 R2-2a: per real student turn, whether it answered the tutor's pending ask (last 3).
   const studentAnsweredHistoryRef = useRef<boolean[]>([]);
+  // Task 30 fix round 7 (U-1): count of real (non-silent) student turns dispatched to the brain.
+  const studentDispatchCountRef = useRef(0);
   // Task 30 fix round 4 (Q-4): the id of the student entry each finalized /
   // typed utterance appended, keyed by its text — the dispatch that carries
   // that text may rewrite only that entry (replaceLastStudentEntry).
@@ -23676,6 +23678,8 @@ export function VoiceTutorRealtime({
       resolveAwaitingDispatch();
       onListeningHintRef.current?.(null);
       studentHasSpokenRef.current = true;
+      // Task 30 fix round 7 (U-1): real student turns dispatched (the Start opener's wait reads it).
+      studentDispatchCountRef.current += 1;
     }
     // Bug 2 fix: production-WS dedupe after a Stage-2 cancel. If a
     // recent cancel armed the suppression slot AND this call did NOT
@@ -28971,20 +28975,29 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           }
         };
         const openerWaitStart = Date.now();
-        const openerGate = (): boolean => !TUTOR_OPENER_WAITS_FOR_PLAN || proactiveOpenerAllowed({
+        // Fix round 7 (U-1): a real student turn dispatched during the wait
+        // makes the opener stand down.
+        const openerWaitStudentTurns = studentDispatchCountRef.current;
+        const openerGate = (): 'run' | 'wait' | 'stand_down' => !TUTOR_OPENER_WAITS_FOR_PLAN ? 'run' : proactiveOpenerAllowed({
           planExpected: !!lessonPlanId && !resumeState,
           planLoaded: !!lessonPlanRef.current,
           fixedScript: !!lessonPlanRef.current && isFixedScriptPlan(lessonPlanRef.current),
           promptReady: fixedScriptPromptReady(),
           waitedMs: Date.now() - openerWaitStart,
+          studentSpokeDuringWait: studentDispatchCountRef.current > openerWaitStudentTurns,
         });
-        if (openerGate()) {
+        if (openerGate() === 'run') {
           runStartOpener();
         } else {
           onDebugEvent?.('opener_waits_for_plan', `plan=${!!lessonPlanRef.current} prompt=${fixedScriptPromptReady()}`);
           const pollOpener = (): void => {
             if (endingRef.current) return;
-            if (!openerGate()) { setTimeout(pollOpener, 200); return; }
+            const gate = openerGate();
+            if (gate === 'wait') { setTimeout(pollOpener, 200); return; }
+            if (gate === 'stand_down') {
+              onDebugEvent?.('opener_stood_down_student_spoke', `after ${Date.now() - openerWaitStart}ms plan=${!!lessonPlanRef.current} — the reply to their turn carries the opening directive`);
+              return;
+            }
             onDebugEvent?.('opener_plan_wait_done', `after ${Date.now() - openerWaitStart}ms plan=${!!lessonPlanRef.current}`);
             runStartOpener();
           };

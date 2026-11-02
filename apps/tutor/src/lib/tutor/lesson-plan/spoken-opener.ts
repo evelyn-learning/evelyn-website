@@ -72,9 +72,15 @@ export function proactiveOpenerAllowed(input: {
   /** the fixed-script spoken opener's prompt / profile is ready */
   promptReady: boolean;
   waitedMs: number;
-}): boolean {
-  if (input.waitedMs >= OPENER_PLAN_WAIT_MAX_MS) return true;
-  if (input.planExpected && !input.planLoaded) return false;
-  if (input.planLoaded && input.fixedScript && !input.promptReady) return false;
-  return true;
+  /** Fix round 7 (U-1): a real student turn was dispatched while the opener
+   *  waited — the opener stands down (it would talk over / after their turn);
+   *  the brain's reply to that turn carries the opening directive as any first
+   *  turn does. */
+  studentSpokeDuringWait?: boolean;
+}): 'run' | 'wait' | 'stand_down' {
+  if (input.studentSpokeDuringWait) return 'stand_down';
+  if (input.waitedMs >= OPENER_PLAN_WAIT_MAX_MS) return 'run';
+  if (input.planExpected && !input.planLoaded) return 'wait';
+  if (input.planLoaded && input.fixedScript && !input.promptReady) return 'wait';
+  return 'run';
 }
