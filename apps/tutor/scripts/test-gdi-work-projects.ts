@@ -230,5 +230,10 @@ test('29E3: the pronunciation note — every item new, instruction first / model
   assert.ok(n.startsWith('Optional pronunciation practice. Offer the four options'), 'the rest of the note kept');
 });
 
+test('Task 30 fix round 3 R2-2b: the level check asks only its three questions and teaches nothing', () => {
+  const n = seg('level-check').teacherNote ?? '';
+  assert.ok(n.endsWith('Ask only these three questions, one at a time; listen and assess silently. Do not ask grammar questions (which tense, which word shows the time) and do not teach here — corrections come later in the lesson.'));
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall gdi-work-projects tests passed');
