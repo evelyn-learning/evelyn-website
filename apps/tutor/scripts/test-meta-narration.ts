@@ -1183,5 +1183,12 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   for (const kept of ['Take notes during the meeting.', 'Look here.', 'Start here.', 'これはRyotaです。', 'The internal meeting is on Monday.', 'Keep your notes short and clear.']) check(`R4-1: "${kept}" kept`, !isMetaNarration(kept));
 }
 
+// Task 30 fix round 5 R4-6 (run r4 794 s): the tutor judging its own reply.
+{
+  check('R4-6: "this one came after my model, so a plain confirmation is right." ⇒ dropped', isMetaNarration('this one came after my model, so a plain confirmation is right.'));
+  check('R4-6: "A simple confirmation is right here." ⇒ dropped', isMetaNarration('A simple confirmation is right here.'));
+  check('R4-6: "Listen to my model, then say it." kept', !isMetaNarration('Listen to my model, then say it.'));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
