@@ -158,7 +158,7 @@ const fromPool = (key) => {
 };
 const OFFER_RE = /\b(?:one more|another|more practice|again|once more)\b[^.?!]*\b(?:move on|moving on|go on|continue|next)\b|\b(?:move on|go on|continue)\b[^.?!]*\b(?:one more|another|more practice)\b|もう一/i;
 const MENU_RE = /\b[1-4]\)/g;
-const CLOSE_RE = /\bthat'?s (?:all|it) for today|\bthat'?s our time|\bour time (?:is|has) (?:up|finished)|\bsee you\b|お疲れ|\bgood-?bye\b|have a (?:good|nice|great) (?:day|evening|night)|\bsession is over\b|time is up|\bwell done today\b|finished for today/i;
+const CLOSE_RE = /\bthank you for today'?s lesson|\bwrap up here\b|\bthat'?s (?:all|it) for today|\bthat'?s our time|\bour time (?:is|has) (?:up|finished)|\bsee you\b|お疲れ|\bgood-?bye\b|have a (?:good|nice|great) (?:day|evening|night)|\bsession is over\b|time is up|\bwell done today\b|finished for today/i;
 const REPEAT_RE = /\b(?:repeat|say|try|read)\b[^.?!]*(?:after me|once more|again|that (?:sentence|one)|it (?:once more|again)|for me)|\bcould you (?:say|try)\b/i;
 
 function decide(text) {
@@ -296,7 +296,8 @@ while (Date.now() - t0 < maxMin * 60000 && state.student < 80 && !state.closed) 
   if (V.finishEarly && !state.finishEarlyDone && state.student > 20 && /\?\s*$/.test(text.trim()) && !d.why.startsWith('offer')) { state.finishEarlyDone = true; d.text = 'We can finish it.'; d.why = 'finish early'; }
   if (state.bargeNext) { state.bargeNext = false; think = 0; say('(typed during playback)'); }
   await wait(think);
-  await input.click(); await input.fill(d.text); await input.press('Enter');
+  try { await input.click({ timeout: 8000 }); await input.fill(d.text); await input.press('Enter'); }
+  catch (e) { say(`input gone (${String(e.message).split('\n')[0].slice(0, 60)}) — treating as closed`); state.closed = true; break; }
   state.student += 1; sinceStudent = Date.now();
   say(`STUDENT(${d.why}) ${d.text}`);
   await wait(1500);
