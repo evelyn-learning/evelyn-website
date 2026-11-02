@@ -17,7 +17,7 @@ import {
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
   levelCheckAnswerCard, levelCheckRecast, isQuotedFragment, acknowledgesOption, boardOffersChoices,
-  grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction,
+  grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -990,9 +990,9 @@ test('21B r3: "remember" / "article" are cues only in a correcting frame', () =>
   });
   // Task 28 §A: T99 recasts S99 ("You sell washing machines to a US company") — the
   // uncorrected level-check card is no longer drawn under it (was one levelcheck card).
-  test('23B2 / 28A: 99 s level-check answer the tutor recast → no card', () => {
+  test('23B2 / 28A / 29H: 99 s level-check answer the tutor recast → no card of the raw words; the restatement card (first person) instead', () => {
     const cards = planSentenceBoard({ ...base, tutorText: T99, studentLast: S99, checkedSentence: S99, levelCheck: true });
-    assert.deepEqual(cards, [], JSON.stringify(cards));
+    assert.deepEqual(cards.map((c) => [c.kind, c.source, c.sentence]), [['correction', 'levelcheck', 'I sell washing machines to a US company.']], JSON.stringify(cards));
   });
   test('23B2: the same inputs outside the level check → no card', () => {
     assert.equal(planSentenceBoard({ ...base, tutorText: T81, studentLast: S81, checkedSentence: S81 }).length, 0);
@@ -1310,12 +1310,13 @@ test('28A: the 94 s inputs → no card, sentence_board_levelcheck_skipped', () =
   const T94 = "Thank you, that's clear. You sold 35 washing machines to a US customer. Now, question 2: what was one difficulty you had with that customer?";
   const skipped: string[] = [];
   const cards = planSentenceBoard({ tutorText: T94, studentLast: S94, renderedThisTurn: false, checkedMedium: true, checkedSentence: 'I sell washing machine to customer from USA, 35 washing machine.', levelCheck: true, onLevelCheckSkipped: (r, x) => skipped.push(`${r}: ${x}`) });
-  assert.deepEqual(cards, [], JSON.stringify(cards));
+  // Task 29 §H: the raw words stay off the board; the tutor's restatement, written back, goes up.
+  assert.deepEqual(cards.map((c) => [c.kind, c.source, c.sentence, c.emphasis]), [['correction', 'levelcheck', 'I sold 35 washing machines to a US customer.', ['sold', 'machines', 'US']]], JSON.stringify(cards));
   assert.deepEqual(skipped, ['recast without card: I sell washing machine to customer from USA, 35 washing machine.']);
   assert.equal(levelCheckRecast(T94, S94), true);
   // a cut check sentence ("…customer from") carded as 'checked' is the student's words too → dropped
   const cut = planSentenceBoard({ tutorText: T94, studentLast: S94, renderedThisTurn: false, checkedMedium: true, checkedSentence: 'I sell washing machine to customer from ', levelCheck: true });
-  assert.deepEqual(cut, [], JSON.stringify(cut));
+  assert.ok(cut.every((c) => c.source !== 'checked' && c.kind === 'correction'), JSON.stringify(cut));
 });
 test('28A: run-14 72 s (no recast) → the level-check card as today', () => {
   const S72 = 'Yes, I have worked with international customer.';
@@ -1378,6 +1379,35 @@ test('29G: a spacing variant is the same sentence — no second card (the existi
   assert.equal(page, 1);
   assert.equal(duplicateSentenceAction({ page, currentPage: 1, pronunciationModel: false, onCurrentPage: true }), 'skip');
   assert.equal(sentenceOnCurrentPage(log, b), true);
+});
+
+test('29H: the 109 s level-check pair → the tutor\'s restatement carded in the first person', () => {
+  const S = 'I work with customer from USA. I sold washing machine to him.';
+  const T = "Good, that's a clear answer. You worked with a customer from the USA and sold him a washing machine. Next, what was one challenge in that project?";
+  const card = levelCheckRestatementCard(T, S);
+  assert.deepEqual(card, { sentence: 'I worked with a customer from the USA and sold him a washing machine.', kind: 'correction', emphasis: ['worked'], source: 'levelcheck' });
+  const cards = planSentenceBoard({ tutorText: T, studentLast: S, renderedThisTurn: false, levelCheck: true });
+  assert.deepEqual(cards.map((c) => [c.kind, c.source, c.sentence]), [['correction', 'levelcheck', 'I worked with a customer from the USA and sold him a washing machine.']]);
+  // the student's own words are never carded (Task 28 §A stands)
+  assert.ok(!cards.some((c) => /customer from USA/.test(c.sentence)));
+});
+test('29H: no "you" subject, a question, or another part → no restatement card', () => {
+  const S128 = 'Uh, challenge was talk in English with customer.';
+  const T128 = "Thank you, that's a clear challenge. Speaking English with the customer is a real challenge for many people. Next, how did you manage that conversation? Did you use any particular phrases?";
+  assert.equal(levelCheckRestatementCard(T128, S128), null);
+  assert.equal(levelCheckRestatementCard('You worked with a customer from the USA and sold him a washing machine?', 'I work with customer from USA. I sold washing machine to him.'), null, 'a question');
+  assert.equal(levelCheckRestatementCard('Tell me: you worked with a customer from the USA.', 'I work with customer from USA.'), null, 'no You subject');
+  assert.equal(levelCheckRestatementCard('You did well.', 'I work with customer from USA.'), null, 'too little overlap');
+  // outside the level check planSentenceBoard never asks for it
+  const S = 'I work with customer from USA. I sold washing machine to him.';
+  const T = 'You worked with a customer from the USA and sold him a washing machine.';
+  assert.ok(planSentenceBoard({ tutorText: T, studentLast: S, renderedThisTurn: false }).every((c) => c.source !== 'levelcheck'));
+});
+test('29H: first-person write-back', () => {
+  assert.equal(firstPersonWriteBack("You're a sales manager at your company."), "I'm a sales manager at my company.");
+  assert.equal(firstPersonWriteBack('You are a sales manager.'), 'I am a sales manager.');
+  assert.equal(firstPersonWriteBack('You were in Tokyo, and you met them.'), 'I was in Tokyo, and I met them.');
+  assert.equal(firstPersonWriteBack("You've worked with them, so they know you."), "I've worked with them, so they know me.");
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

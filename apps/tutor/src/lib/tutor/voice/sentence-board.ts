@@ -946,6 +946,75 @@ export function levelCheckRecast(tutorText: string | null | undefined, student: 
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Task 29 §H (GDI run 16, 110 s: "You worked with a customer from the USA and
+// sold him a washing machine." after "I work with customer from USA. I sold
+// washing machine to him" — sentence_board_levelcheck_skipped, and no
+// level-check answer was carded all session). Task 28 §A keeps the student's
+// RAW words off the board; the tutor's corrected restatement goes up instead:
+// a second-person declarative (subject You / You've / You're, not an ask,
+// ≥ 4 words) sharing ≥ 50 % of the student's content tokens (pronoun map
+// I↔you, my↔your, me↔you, am↔are; numbers normalised) is carded WRITTEN BACK
+// to the first person, kind correction, source levelcheck, emphasis = its
+// content words the student did not say.
+// ─────────────────────────────────────────────────────────────────────────
+const RESTATEMENT_SUBJECT_RE = /^(?:You['’]ve|You['’]re|You)\b/;
+const RESTATEMENT_COMMENT_TAIL_RE = /,\s*(?:(?:so|and|which)\s+)?(?:that['’]s|that is|it['’]s|it is|which is)\b[^.!?]*/i;
+/** Write-back tokens and joiners never emphasised on a restatement card. */
+const RESTATEMENT_PLAIN_TOKENS = new Set(['i', 'my', 'me', 'mine', 'myself', 'am', "i'm", "i've", 'and', 'or', 'but', 'so']);
+/** A second-person sentence written back to the first person ("You worked …
+ *  your …" → "I worked … my …"; "You're" → "I'm"; "You've" → "I've"; "You
+ *  are / were" → "I am / was"; a later subject "you" (after and / but / so /
+ *  because / that / when / if / a comma) → "I", any other "you" → "me"). */
+export function firstPersonWriteBack(sentence: string): string {
+  let out = (sentence ?? '').trim()
+    .replace(/^You['’]re\b/, "I'm")
+    .replace(/^You['’]ve\b/, "I've")
+    .replace(/^You (are|were)\b/, (_m, v: string) => `I ${v === 'are' ? 'am' : 'was'}`)
+    .replace(/^You\b/, 'I');
+  out = out
+    .replace(/\byour\b/gi, (m) => (m[0] === 'Y' ? 'My' : 'my'))
+    .replace(/\byours\b/gi, 'mine')
+    .replace(/\byourself\b/gi, 'myself')
+    .replace(/\byou['’]re\b/gi, "I'm")
+    .replace(/\byou['’]ve\b/gi, "I've")
+    .replace(/((?:\b(?:and|but|so|because|that|when|if)|,)\s+)you (are|were)\b/gi, (_m, lead: string, v: string) => `${lead}I ${v.toLowerCase() === 'are' ? 'am' : 'was'}`)
+    .replace(/((?:\b(?:and|but|so|because|that|when|if)|,)\s+)you\b/gi, '$1I')
+    .replace(/\byou\b/gi, 'me');
+  return out;
+}
+export function levelCheckRestatementCard(tutorText: string | null | undefined, student: string | null | undefined): QuotedSentence | null {
+  const studentToks = levelRecastToks(student ?? '');
+  const content = [...new Set(contentTokens(studentToks))];
+  if (content.length < GRAMMAR_RECAST_MIN_STUDENT_TOKENS) return null;
+  const studentRaw = new Set(tokens(student ?? ''));
+  for (const raw of (tutorText ?? '').split(/(?<=[.!?。！？])\s+/)) {
+    const sentence = raw.trim().replace(GRAMMAR_RECAST_LEAD_RE, '').trim();
+    if (!sentence || CJK_RE.test(sentence) || !RESTATEMENT_SUBJECT_RE.test(sentence)) continue;
+    if (/[?？]["”’)\]]*\s*$/.test(sentence) || sentenceAsksStudent(sentence)) continue;
+    if (tokens(sentence).length < 4) continue;
+    const tContent = contentTokens(levelRecastToks(sentence));
+    const matched = content.filter((x) => tContent.some((u) => sameStem(x, u))).length;
+    if (matched / content.length < LEVELCHECK_RECAST_OVERLAP) continue;
+    // a trailing comment on it is the tutor's, not the student's sentence
+    // ("You sell washing machines to a US company, so that's useful experience.")
+    let card = firstPersonWriteBack(sentence.replace(RESTATEMENT_COMMENT_TAIL_RE, ''));
+    if (!/[.!]$/.test(card)) card = `${card}.`;
+    const emphasis: string[] = [];
+    const seen = new Set<string>();
+    for (const w of dropThousands(card).match(COMPOUND_RE) ?? []) {
+      const parts = wordToks(w);
+      const key = parts.join(' ');
+      if (seen.has(key) || parts.every((x) => studentRaw.has(x) || ARTICLE_TOKENS.has(x) || RESTATEMENT_PLAIN_TOKENS.has(x))) continue;
+      seen.add(key);
+      emphasis.push(w);
+      if (emphasis.length >= MAX_EMPHASIS) break;
+    }
+    return { sentence: card, kind: 'correction', emphasis, source: 'levelcheck' };
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Task 25 §C2 (GDI run 13, 828 s: `「同僚に相談しました」 is "I asked my
 // colleagues for help."` was carded as a correction of the student's
 // sentence): a quote that TRANSLATES a span of another script, or is named as
@@ -1256,6 +1325,11 @@ export function planSentenceBoard(input: {
       const kept = parts.filter((p) => !levelCheckRecast(input.tutorText, p));
       if (kept.length < parts.length) input.onLevelCheckSkipped?.('recast without card', parts.filter((p) => !kept.includes(p)).join(' '));
       parts = kept;
+      // Task 29 §H: the tutor's corrected restatement, written back to the first person.
+      const restated = levelCheckRestatementCard(input.tutorText, input.studentLast);
+      if (restated && !classified.some((c) => sameSentence(c.q.sentence, restated.sentence))) {
+        classified.push({ q: restated, len: norm(restated.sentence).length, i: kept.length, said: false, affirmed: false, introduced: false });
+      }
       // the check's sentence (a medium "correct") is the student's words too — same rule
       for (let k = classified.length - 1; k >= 0; k--) {
         const c = classified[k]!;
@@ -1291,6 +1365,8 @@ export function planSentenceBoard(input: {
   if (grammarRecast || correctedHere || correctedEarlier) {
     for (let k = classified.length - 1; k >= 0; k--) {
       const src = classified[k]!.q.source;
+      // Task 29 §H: a level-check restatement card is itself the correction.
+      if (classified[k]!.q.kind === 'correction') continue;
       if (src === 'checked' || src === 'levelcheck' || src === 'echo') {
         if (!grammarRecast) input.onSuppressed?.('corrected this turn', classified[k]!.q.sentence);
         classified.splice(k, 1);
