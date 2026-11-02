@@ -28466,7 +28466,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             const next = spokenOpener.next;
             if (!next || currentSegmentIdRef.current !== spokenOpener.segmentId) return;
             applyResolvedAdvance(spokenOpenerPlan, spokenOpener.segmentId, next);
-            if (pendingAdvanceNewPageRef.current?.segmentId === next) pendingAdvanceNewPageRef.current.afterTurn = true;
+            if (pendingAdvanceNewPageRef.current?.segmentId === next) {
+              pendingAdvanceNewPageRef.current.afterTurn = true;
+              // Task 29 §L (GDI run 16, 1 s): the part page (and the rail chip)
+              // move with the first question, at the end of the first brain turn.
+              if (advancePageFlushTiming({ askPending: false, holdSpent: false, reason: 'spoken_opener' }) === 'next-turn') {
+                pendingAdvanceNewPageRef.current.flushAfterNextTurn = true;
+                pendingAdvanceNewPageRef.current.carriedTurnStarted = false;
+                onDebugEvent?.('auto_newpage_on_advance_deferred_next_turn', `${next} (spoken opener)`);
+              }
+            }
             const nextKind = spokenOpenerPlan.segments.find((sg) => sg.id === next)?.kind ?? 'segment';
             pendingRuntimeNoteRef.current = fixedScriptAdvancedNote(spokenOpenerAdvanceLead(spokenOpener, next, nextKind), next);
             pendingRuntimeNoteSegRef.current = next;

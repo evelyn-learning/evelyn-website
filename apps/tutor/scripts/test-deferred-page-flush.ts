@@ -276,4 +276,12 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('29D2: VTR skips spoken-problem boarding on a measured pronunciation turn', /if \(TUTOR_SPOKEN_PROBLEM_BOARD && out\.length === 0 && pronunciationMeasuredThisTurn\) \{\s*onDebugEvent\?\.\('spoken_problem_skipped_pronunciation'/.test(V5));
 }
 
+// Task 29 §L (GDI run 16, 0–1 s): the spoken opener's advance flushes its page with the first question.
+{
+  ok("29L: reason 'spoken_opener' ⇒ next-turn", advancePageFlushTiming({ askPending: false, holdSpent: false, reason: 'spoken_opener' }) === 'next-turn');
+  ok('29L: other reasons unchanged', advancePageFlushTiming({ askPending: false, holdSpent: false, reason: 'turns' }) === 'turn-end' && advancePageFlushTiming({ askPending: true, holdSpent: true, reason: 'announced' }) === 'next-turn');
+  const V6 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('29L: VTR defers the spoken-opener page to the end of the first brain turn', /applyResolvedAdvance\(spokenOpenerPlan, spokenOpener\.segmentId, next\);\s*if \(pendingAdvanceNewPageRef\.current\?\.segmentId === next\) \{\s*pendingAdvanceNewPageRef\.current\.afterTurn = true;[\s\S]{0,300}?advancePageFlushTiming\(\{ askPending: false, holdSpent: false, reason: 'spoken_opener' \}\) === 'next-turn'\) \{\s*pendingAdvanceNewPageRef\.current\.flushAfterNextTurn = true;\s*pendingAdvanceNewPageRef\.current\.carriedTurnStarted = false;\s*onDebugEvent\?\.\('auto_newpage_on_advance_deferred_next_turn'/.test(V6));
+}
+
 console.log(`deferred-page-flush: ${n} cases passed`);

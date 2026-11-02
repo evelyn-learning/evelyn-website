@@ -126,7 +126,13 @@ export function flushDeferredPageAtTurnEnd(input: {
  * brain turn (the transition turn, whose sentence board cards the answer on
  * the part being left first); otherwise at this turn's end, as before.
  */
-export function advancePageFlushTiming(input: { askPending: boolean; holdSpent: boolean }): 'next-turn' | 'turn-end' {
+// Task 29 §L (GDI run 16, 0–1 s, Image 57): the spoken opener's advance into
+// the level check flushed the part page (and moved the rail chip) while the
+// overview table was on screen and the opener still speaking. Reason
+// 'spoken_opener' ⇒ the page waits for the end of the FIRST brain turn, which
+// asks the part's first question.
+export function advancePageFlushTiming(input: { askPending: boolean; holdSpent: boolean; reason?: 'turns' | 'time' | 'announced' | 'spoken_opener' }): 'next-turn' | 'turn-end' {
+  if (input.reason === 'spoken_opener') return 'next-turn';
   return input.askPending && input.holdSpent ? 'next-turn' : 'turn-end';
 }
 
