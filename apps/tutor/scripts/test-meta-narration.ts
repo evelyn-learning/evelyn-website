@@ -1084,5 +1084,26 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   for (const kept of ["I'll give you an example.", 'They said the price was too high.', 'Let me explain.']) check(`R2-1: "${kept}" kept`, !isMetaNarration(kept) && stripNoteCitationClause(kept) === kept);
 }
 
+// Task 30 fix round 4 (Q-1): rule (a) is the PLAN SHAPE only — content after the plan verb keeps the sentence.
+{
+  for (const kept of [
+    'Let me point out that the slope is negative.',
+    "I'll point to the second term.",
+    "I'll model the first step: subtract 3 from both sides.",
+    "I'll model the sentence first: I went to Osaka.",
+    'Let me name the angles: A, B and C.',
+    "I'll accept either form.",
+    'Let me respond to that: yes, it works.',
+    "I'll point out the common factor.",
+  ]) check(`Q-1: "${kept}" kept`, !isMetaNarration(kept) && !isMetaNarration(kept, { structural: false }));
+  for (const dropped of [
+    "I'll ask it again, more simply.",
+    "I'll ask the question again, simply.",
+    "I'll just respond to what you said.",
+    "I'll note that and ask again.",
+    "I'll point that out.",
+  ]) check(`Q-1: "${dropped}" dropped`, isMetaNarration(dropped));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

@@ -535,8 +535,9 @@ export const REDO_LEAD_RE = /^\s*Let me (?:ask|say|put|try) (?:that|it|this|agai
  *      accept, give a starter — NOT note / check / keep / acknowledge: older
  *      pins keep "I'll check this in my head: …", "Let me check that.", "So
  *      I'll keep going with …", "I'll note that x cannot be zero here." and a
- *      student-turn "So I'll acknowledge briefly …") with no
- *      second-person address — "I'll ask it again, more simply." — dropped;
+ *      student-turn "So I'll acknowledge briefly …") — "I'll ask it again,
+ *      more simply." — dropped; fix round 4 (Q-1): only when the rest of the
+ *      sentence is anaphora / adverbs (isPlanShapeRemainder);
  *  (b) "(No.) They only / just said / repeated / answered / replied / gave …"
  *      narrates the learner — dropped ("They said the price was too high." is
  *      the student's story and stays);
@@ -547,7 +548,27 @@ export const REDO_LEAD_RE = /^\s*Let me (?:ask|say|put|try) (?:that|it|this|agai
  * acknowledge / accept / try / check / give …" goes and the head stays.
  * "I'll give you an example." and "Let me explain." are kept. Pure, generic.
  */
-const FIRST_PERSON_PLAN_CLAUSE_RE = /(?:^|[,;:]\s*|\bso,?\s+|\band\s+)(?:I['’]ll|I will|let me)\s+(?:just\s+|gently\s+|simply\s+|now\s+)?(?:ask (?:it |the question |that )?(?:again|once more)|ask it\b|ask the question|respond|point|model|name|accept|give a starter)\b/i;
+// Fix round 4 (Q-1 / Q-2): the PLAN SHAPE only — after the plan verb the rest
+// of the sentence (or tail) is empty or only anaphora / adverbs / plan verbs
+// ("I'll ask it again, more simply.", "I'll note that and ask again.", "I'll
+// point that out.", "I'll just respond to what you said."); no colon, no
+// quote, no digit, no content word. "Let me point out that the slope is
+// negative.", "I'll model the first step: subtract 3 …", "I'll accept either
+// form." carry content and are kept.
+const FIRST_PERSON_PLAN_HEAD_RE = /(?:^|[,;:]\s*|\bso,?\s+|\band\s+)(?:I['’]ll|I will|let me)\s+(?:just\s+|gently\s+|simply\s+|now\s+)?(?:ask|respond|point|model|name|accept|note|give a starter)\b/i;
+const PLAN_REMAINDER_WORDS = new Set([
+  'that', 'it', 'this', 'out', 'again', 'simply', 'more', 'once', 'the', 'question', 'my', 'earlier', 'same', 'and', 'then', 'just', 'to', 'what', 'you', 'said', 'respond',
+  // the plan verbs themselves may repeat ("… note that and ask again")
+  'ask', 'note', 'point', 'name', 'accept', 'model', 'acknowledge', 'check', 'try',
+]);
+/** The rest after a plan verb is anaphora / adverbs only (Q-1 / Q-2). */
+export function isPlanShapeRemainder(rest: string, opts?: { noSecondPerson?: boolean }): boolean {
+  const r = rest ?? '';
+  if (/[:"“”「」『』'‘’]/.test(r.replace(/(\w)['’](\w)/g, '$1$2')) || /\d/.test(r)) return false;
+  const words = r.toLowerCase().replace(/[.!?。！？,;]+/g, ' ').split(/\s+/).filter(Boolean);
+  if (opts?.noSecondPerson && words.some((w) => w === 'you' || w === 'your' || w === 'yours')) return false;
+  return words.every((w) => PLAN_REMAINDER_WORDS.has(w));
+}
 const LEARNER_NARRATION_RE = /^\s*(?:No\.\s*)?They (?:only|just) (?:said|repeated|answered|replied|gave)\b/i;
 const INTERNAL_NOTES_RE = /\b(?:those|these|the) notes (?:are|were) internal\b|\bnot from you\b/i;
 const ASK_AGAIN_LEAD_RE = /^\s*(?:Ask|Say|Try) (?:it )?again,? (?:simply|more simply|once more)[:,]\s*/i;
@@ -560,15 +581,16 @@ export function stripSpokenPlanLeadTail(sentence: string): string {
   if (tail && tail.index > 0) s = `${s.slice(0, tail.index).replace(/[,;:\s]+$/, '')}.`;
   return s;
 }
-function isSpokenFirstPersonPlan(s: string): boolean {
+function isSpokenFirstPersonPlan(s: string, raw: string): boolean {
   if (LEARNER_NARRATION_RE.test(s) || INTERNAL_NOTES_RE.test(s)) return true;
-  return FIRST_PERSON_PLAN_CLAUSE_RE.test(s) && !PLAN_ADDRESS_RE.test(s);
+  const m = FIRST_PERSON_PLAN_HEAD_RE.exec(raw);
+  return !!m && isPlanShapeRemainder(raw.slice(m.index + m[0].length));
 }
 export function isNotePlanNarration(sentence: string): boolean {
   const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' '));
   return (NOTE_STATE_REASON_RE.test(s) && !NOTE_PLAN_ADDRESSES_RE.test(s)) || PLAN_ASK_THIRD_PERSON_RE.test(s) || PLAN_THIRD_PERSON_WANTS_RE.test(s)
     || NOTE_PLAN_CLAUSE_RE.test(s) || (NOTE_PLAN_SHOULD_RE.test(s) && STUDENT_OUTPUT_RE.test(s)) || JUDGING_NARRATION_RE.test(s)
-    || isImperativePlanSentence(s) || isSpokenFirstPersonPlan(s);
+    || isImperativePlanSentence(s) || isSpokenFirstPersonPlan(s, sentence ?? '');
 }
 /**
  * Task 30 fix round 1 S2 (smoke run 334 s SPOKEN: `Gently point that out,
