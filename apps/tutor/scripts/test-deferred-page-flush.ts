@@ -19,6 +19,7 @@ import {
   segmentCardForFlush,
   rearmAfterKill,
   batchHasSegmentCard,
+  advancePageAlreadyOpen,
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 import { keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
@@ -331,6 +332,17 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('S4: VTR resolves concept / hook text cards for the flush', V9.includes("return { statement: stripWbEmphasisText(ideas.map((k: string, i: number) => `${i + 1}. ${k}`).join('\\n')), kind: 'concept', title: 'Key ideas' };"));
   ok('S4: VTR in-batch flush uses batchHasSegmentCard on every authored part page', V9.includes('const flushAuthored = deferred.cardOnFlush || deferred.authored === true ? authoredSegmentCard(lessonPlanRef.current, deferred.segmentId, workingLevelRef.current?.level ?? null) : null;')
     && V9.includes('batchHasSegmentCard: batchHasSegmentCard(processed as unknown as Array<{ action: string } & Record<string, unknown>>, flushAuthored.statement),'));
+}
+
+// Task 30 fix round 1 S1 (smoke run 283–298 s): never two newPages for one segment in a turn.
+{
+  ok('S1: the segment\'s page already opened this turn ⇒ opened (skip)', advancePageAlreadyOpen({ next: 'present-perfect', openedThisTurn: 'present-perfect', pendingSegmentId: null }) === 'opened');
+  ok('S1: the same segment already pending (re-armed with its card) ⇒ pending (keep it)', advancePageAlreadyOpen({ next: 'present-perfect', openedThisTurn: null, pendingSegmentId: 'present-perfect' }) === 'pending');
+  ok('S1: a different segment ⇒ null (defer as before)', advancePageAlreadyOpen({ next: 'past-simple', openedThisTurn: 'present-perfect', pendingSegmentId: 'present-perfect' }) === null);
+  const V10 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('S1: VTR skips the deferral with auto_newpage_on_advance_dedup', /if \(pageDup\) \{\s*onDebugEvent\?\.\('auto_newpage_on_advance_dedup',[\s\S]{0,120}?\} else if \(!opts\?\.seamMode\) \{\s*pendingAdvanceNewPageRef\.current = \{ title: pageTitleStr/.test(V10));
+  ok('S1: both flush paths record the opened segment; the kill re-arm clears it', (V10.match(/segmentPageOpenedThisTurnRef\.current = \{ turn: pageTurnRef\.current, segId: deferred\.segmentId \};/g) ?? []).length === 2
+    && V10.includes('if (segmentPageOpenedThisTurnRef.current?.segId === killBreak.segmentId) segmentPageOpenedThisTurnRef.current = null;'));
 }
 
 console.log(`deferred-page-flush: ${n} cases passed`);

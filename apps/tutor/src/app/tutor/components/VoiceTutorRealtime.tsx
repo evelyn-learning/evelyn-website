@@ -92,7 +92,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
@@ -5148,6 +5148,8 @@ export function VoiceTutorRealtime({
   const pageTurnRef = useRef(0);
   /** Task 25 §D1/§D2: the pageTurnRef turn in which a deferred part page was last flushed by a batch (-1 = none). */
   const segmentPageFlushedTurnRef = useRef(-1);
+  // Task 30 fix round 1 S1: the segment whose page a flush opened, and in which turn.
+  const segmentPageOpenedThisTurnRef = useRef<{ turn: number; segId: string } | null>(null);
   // Distinct from newPageThisTurnRef: tracks whether the brain EMITTED
   // a new_page tool-call in the current turn, regardless of whether the
   // tutor-side same-context guard later stripped that command. Set on
@@ -6186,7 +6188,15 @@ export function VoiceTutorRealtime({
     // one turn late, splitting content that was actually continuous
     // (advance + what follows it, both this turn) across a page boundary
     // that lands a full turn downstream.
-    if (!opts?.seamMode) {
+    // Task 30 fix round 1 S1: one newPage per segment per turn.
+    const pageDup = !opts?.seamMode ? advancePageAlreadyOpen({
+      next,
+      openedThisTurn: segmentPageOpenedThisTurnRef.current?.turn === pageTurnRef.current ? segmentPageOpenedThisTurnRef.current.segId : null,
+      pendingSegmentId: pendingAdvanceNewPageRef.current?.segmentId ?? null,
+    }) : null;
+    if (pageDup) {
+      onDebugEvent?.('auto_newpage_on_advance_dedup', `${next}: page already ${pageDup} this turn`);
+    } else if (!opts?.seamMode) {
       pendingAdvanceNewPageRef.current = { title: pageTitleStr, segmentId: next, ...(authoredPartTitle ? { authored: true } : {}) };
       console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DEFERRED → "${next}" ("${pageTitleStr}")`);
       onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
@@ -6291,6 +6301,7 @@ export function VoiceTutorRealtime({
       bufferedRenders: renderBufferRef.current.length,
     }) || !deferred) return;
     pendingAdvanceNewPageRef.current = null;
+    segmentPageOpenedThisTurnRef.current = { turn: pageTurnRef.current, segId: deferred.segmentId };
     segmentPageIdRef.current = catalogRef.current.openPage({ title: deferred.title, segmentId: deferred.segmentId });
     catalogRef.current.setCurrentPage(deferred.title);
     // Fix round 1 (I5): painted AND recorded like any dispatched batch — the
@@ -6711,6 +6722,8 @@ export function VoiceTutorRealtime({
     if (pendingRevisionRef.current.size !== rearm.keepIds.length) pendingRevisionRef.current = new Set(rearm.keepIds);
     if (rearm.rearm && killBreak && !pendingAdvanceNewPageRef.current) {
       pendingAdvanceNewPageRef.current = { title: killBreak.title, segmentId: killBreak.segmentId, authored: true, afterTurn: true, cardOnFlush: true };
+      // Fix round 1 S1: the retracted page was never opened.
+      if (segmentPageOpenedThisTurnRef.current?.segId === killBreak.segmentId) segmentPageOpenedThisTurnRef.current = null;
       segmentPageBreakRef.current = null;
       whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter((c) => c !== killBreak.cmd);
       if (killBreak.priorPageId) {
@@ -10016,6 +10029,7 @@ export function VoiceTutorRealtime({
         if (droppedContinuationPage) catalogRef.current.gcEmptyPages();
         console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${pageTitle}")`);
         segmentPageFlushedTurnRef.current = pageTurnRef.current;
+        segmentPageOpenedThisTurnRef.current = { turn: pageTurnRef.current, segId: deferred.segmentId };
         onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${pageTitle}${orderedForBreak.moved.length > 0 ? ` after ${orderedForBreak.moved.length} student card(s)` : ''}`);
         if (titleDecision.retitled) {
           onDebugEvent?.('auto_newpage_retitled_from_render', `${deferred.segmentId}: "${deferred.title}" → "${pageTitle}"`);

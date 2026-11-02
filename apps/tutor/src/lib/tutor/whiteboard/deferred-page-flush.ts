@@ -318,3 +318,23 @@ export function batchHasSegmentCard(
     return union > 0 && inter / union >= SEGMENT_CARD_MATCH;
   });
 }
+
+/**
+ * Task 30 fix round 1 S1 (smoke run 283–298 s: after
+ * advance_page_rearmed_after_kill the retry's batch flushed the page, then
+ * the retry's own second advanceLesson re-deferred it — "Part 4 · Present
+ * perfect" opened TWICE, the second empty): never two newPages for one
+ * segment in a turn. An advance's page is skipped when this turn already
+ * opened that segment's page, or the same segment's page is already pending
+ * (the pending one — re-armed with its card — is kept). Pure.
+ */
+export function advancePageAlreadyOpen(input: {
+  next: string;
+  openedThisTurn: string | null | undefined;
+  pendingSegmentId: string | null | undefined;
+}): 'opened' | 'pending' | null {
+  if (!input.next) return null;
+  if (input.openedThisTurn === input.next) return 'opened';
+  if (input.pendingSegmentId === input.next) return 'pending';
+  return null;
+}
