@@ -5,7 +5,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION, pronunciationNoteForTurn, PRONUNCIATION_UNSCORED_NOTE, colonTarget, handwriteShownSentence } from '../src/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION, pronunciationNoteForTurn, PRONUNCIATION_UNSCORED_NOTE, colonTarget, handwriteShownSentence, looksLikeModelSentence } from '../src/lib/tutor/pronunciation/auto-arm';
 import { duplicateSentenceAction, currentBoardPage, sentenceCardIdOnCurrentPage, sentenceOnBoardPage } from '../src/lib/tutor/voice/sentence-board';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { isStrictRepeatAsk, saidModelSentence } from '../src/lib/tutor/voice/correct-retry';
@@ -346,6 +346,21 @@ test('31D: "Please listen, then repeat after me: responsibilities. Responsibilit
   assert.deepEqual(detectPronunciationTarget('No problem. Let\'s start with a word. Please listen, then repeat after me: responsibilities. Responsibilities.', T31), { referenceText: 'responsibilities', kind: 'word' });
   assert.equal(colonTarget('Repeat after me: responsibilities, responsibilities.'), 'responsibilities', 'a trailing duplicate is stripped');
   assert.equal(detectPronunciationTarget('Listen, then repeat after me: international.', T31)?.referenceText, 'international');
+});
+
+test('31 r1 I-3: a colon text that explains is never armed; the model sentences still are', () => {
+  assert.equal(detectPronunciationTarget('Try this: the stress is on the third syllable.', T31), null);
+  assert.equal(detectPronunciationTarget('Try this: the stress is on the third syllable. Say it slowly.', T31), null);
+  assert.equal(detectPronunciationTarget('The tricky part is one word: the th sound in three. Listen and repeat.', T31), null);
+  assert.equal(colonTarget('Repeat after me: you say it with the stress on BIL.'), null, 'second person');
+  assert.equal(colonTarget('Say it: it means you still work there.'), null, '"means"');
+  assert.equal(looksLikeModelSentence('I have worked with international customers for several years.'), true);
+  assert.equal(looksLikeModelSentence('the th sound in three'), false, 'no finite verb');
+  assert.equal(looksLikeModelSentence('I went there'), true);
+  // the run-18 positives are unchanged
+  assert.equal(detectPronunciationTarget('Your sentence didn\'t come through, so please repeat it: I have worked with international customers for several years.', T31)?.referenceText, S31);
+  assert.equal(detectPronunciationTarget('Next, let\'s try one sentence: I have worked with international customers for several years. Please listen, then repeat after me.', T31)?.referenceText, S31);
+  assert.equal(detectPronunciationTarget('Please listen, then repeat after me: responsibilities.', T31)?.referenceText, 'responsibilities');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

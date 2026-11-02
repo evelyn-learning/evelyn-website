@@ -118,7 +118,10 @@ const LISTEN_ASK_RE = /\blisten\b/i;
  *  after me / listen (and|then) repeat / say / repeat / try [it / this / one
  *  sentence …]) or an introduction (the / this / next / one sentence / word
  *  [is]) — then a colon and the text. */
-const COLON_ASK_LEAD_RE = /\b(?:repeat after me|listen,?\s+(?:and\s+|then\s+|and then\s+)?repeat(?: after me)?|(?:say|repeat|try)(?: it| this| that| (?:the|this|one|a) (?:whole |full |complete )?(?:sentence|word|phrase|line))?)\s*[:：]\s*(.+)$/i;
+// Fix round 1 (I-3: "Try this: the stress is on the third syllable." armed the
+// explanation): no bare try / try this lead — only repeat after me, listen
+// (and|then) repeat, say / repeat (it / this / the sentence …).
+const COLON_ASK_LEAD_RE = /\b(?:repeat after me|listen,?\s+(?:and\s+|then\s+|and then\s+)?repeat(?: after me)?|(?:say|repeat)(?: it| this| that| (?:the|this|one|a) (?:whole |full |complete )?(?:sentence|word|phrase|line))?)\s*[:：]\s*(.+)$/i;
 const COLON_INTRO_LEAD_RE = /\b(?:(?:the|this|next|one|a|our|first) (?:sentence|word|phrase|line)(?: is)?)\s*[:：]\s*(.+)$/i;
 const TURN_SENTENCES = (text: string) => (text ?? '').split(/(?<=[.!?。！？])\s+/).map((x) => x.trim()).filter(Boolean);
 function cleanColonTarget(raw: string): string | null {
@@ -128,7 +131,20 @@ function cleanColonTarget(raw: string): string | null {
   if (!words.length || words.length > 25) return null;
   // "responsibilities, responsibilities" — a trailing duplicate of the same word
   if (words.length === 2 && words[0] === words[1]) return t.split(/[\s,]+/)[0]!.trim();
-  return t;
+  if (words.length === 1) return t;
+  return looksLikeModelSentence(t) ? t : null;
+}
+/** Fix round 1 (I-3): a colon text of ≥ 2 words is a model to repeat only when
+ *  it has ≥ 3 words and a finite verb (an auxiliary / be / have, an -ed form,
+ *  or a pronoun subject + a word), and is not an explanation — no you / your,
+ *  no "the stress / sound / syllable … is", "means", "because". Pure. */
+const MODEL_EXPLANATION_RE = /\b(?:you|your|means|because)\b|\b(?:stress|sound|syllable|vowel|letter|intonation)s? (?:is|are|was|goes|falls)\b/i;
+const MODEL_FINITE_RE = /\b(?:am|is|are|was|were|have|has|had|do|does|did|will|would|can|could|should|must|may|might|shall)\b|\b[a-z]{3,}ed\b|^(?:i|we|they|he|she|it|my \w+|our \w+)\s+[a-z]+/i;
+export function looksLikeModelSentence(text: string): boolean {
+  const t = (text ?? '').trim();
+  if (norm(t).split(' ').filter(Boolean).length < 3) return false;
+  if (MODEL_EXPLANATION_RE.test(t)) return false;
+  return MODEL_FINITE_RE.test(t);
 }
 /** Task 31 §C2 / §D: the unquoted target of the turn's last ask, or null. In
  *  the last three sentences (latest first): a colon ask carries its target
