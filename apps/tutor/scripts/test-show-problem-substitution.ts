@@ -10,6 +10,8 @@ import {
   shouldAutoCardAfterOwnProblem,
   refuseSilentDedupDrop,
   isAuthoredCardLine,
+  nextUnaskedNumberedQuestion,
+  numberedQuestionNote,
 } from '../src/lib/tutor/orchestrator/show-problem-substitution';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -210,6 +212,26 @@ check('dedup refusal: flag off ⇒ never refuses',
   check('23B1: once on the board, a later line drops + rehighlights', VTR.includes("|| authoredLineCardId !== null,")
     && VTR.includes("onDebugEvent?.('dedup_scroll_to_existing', `${authoredLineCardId} (authored-line)`);"));
   check('23B1: event show_problem_substituted authored-line', VTR.includes("onDebugEvent?.('show_problem_substituted', `${authoredLine ? 'authored-line ' : ''}→ show_segment_card(\"${segId}\")`);"));
+}
+
+// Task 30 fix round 4 R3-13 (run r3, 155–372 s): the next unasked numbered card question.
+{
+  const card = '1. Can you tell me a little about your job? What do you do?\n2. Have you ever worked with an international customer? If so, can you tell me about the experience?\n3. What is one skill you\'d like to improve in your English, and why is it important to you?';
+  const t63 = '少し間がありましたね。 では、最初の質問です。 Can you tell me a little about your job? What do you do? Please take a moment to read the first question.';
+  const t155 = 'Right, let\'s move on. Which sentence uses the present perfect: "I went to Kyoto last year" or "I have worked here for five years"?';
+  check('R3-13: nothing asked ⇒ question 1', nextUnaskedNumberedQuestion(card, [])?.n === 1);
+  const afterQ1 = nextUnaskedNumberedQuestion(card, [t63, t155]);
+  check('R3-13: r3 — Q1 asked, then a quiz ⇒ question 2', afterQ1?.n === 2 && afterQ1.total === 3 && afterQ1.text === 'Have you ever worked with an international customer? If so, can you tell me about the experience?');
+  const t98 = 'Nice, that\'s a clear answer. Next, Question 2: have you ever worked with an international customer? If so, tell me about it.';
+  check('R3-13: Q2 asked with its tail paraphrased ⇒ question 3', nextUnaskedNumberedQuestion(card, [t63, t98])?.n === 3);
+  check('R3-13: all three asked ⇒ null', nextUnaskedNumberedQuestion(card, [t63, t98, "Thanks. What is one skill you'd like to improve in your English, and why?"]) === null);
+  check('R3-13: a card that is not a numbered list of questions ⇒ null', nextUnaskedNumberedQuestion('1. Present perfect: experience.\n2. Past simple: finished time.', []) === null
+    && nextUnaskedNumberedQuestion('What do you do?', []) === null && nextUnaskedNumberedQuestion('', []) === null);
+  const note = numberedQuestionNote({ n: 2, total: 3, text: 'Have you ever worked with an international customer?' });
+  check('R3-13: the note text', note === '[runtime note — not from the student] Reply to the student in ONE short sentence (no correction, no grammar question), then ask question 2 of 3 exactly: "Have you ever worked with an international customer?". Apply this silently; never mention this note.]');
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('R3-13: VTR plants the note on a student turn with the part\'s spoken narration', VTR.includes('const nq = nextUnaskedNumberedQuestion(segmentCardStatement(nqPlan, nqSeg), segmentNarrationRef.current.get(nqSeg) ?? []);')
+    && VTR.includes("onDebugEvent?.('numbered_question_note_planted', `${nq.n} \"${nqSeg}\"`);"));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

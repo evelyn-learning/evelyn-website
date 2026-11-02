@@ -357,6 +357,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'meta_narration_backfill_filtered', 'same_question_third_time', 'same_question_third_time_unmade',
   // Task 30 fix round 4 R3-7a: a close refused once while the part's required phrases are unsaid.
   'close_before_required_phrases',
+  // Task 30 fix round 4 R3-13: the next unasked numbered card question named on a student turn.
+  'numbered_question_note_planted',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

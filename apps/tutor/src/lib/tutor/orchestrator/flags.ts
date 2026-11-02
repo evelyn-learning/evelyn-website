@@ -1166,3 +1166,10 @@ export const TUTOR_SAME_QUESTION_THIRD_TIME = process.env.NEXT_PUBLIC_TUTOR_SAME
  *  close_before_required_phrases). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_CLOSE_REQUIRED_PHRASES=off. */
 export const TUTOR_CLOSE_REQUIRED_PHRASES = process.env.NEXT_PUBLIC_TUTOR_CLOSE_REQUIRED_PHRASES !== 'off';
+
+/** Task 30 fix round 4 R3-13 (run r3, 155–372 s: the level check asked one of
+ *  its three authored questions): in a fixed-script language part whose
+ *  authored card is a numbered list of questions, each student turn carries
+ *  an urgent note naming the next question not yet asked. Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_NUMBERED_QUESTION_NOTE=off. */
+export const TUTOR_NUMBERED_QUESTION_NOTE = process.env.NEXT_PUBLIC_TUTOR_NUMBERED_QUESTION_NOTE !== 'off';

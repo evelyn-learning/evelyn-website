@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, menuPickNote } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { pendingAnswerVocabularyFor, countsAsNoiseCancel } from '@/lib/tutor/voice/pending-answer';
@@ -528,7 +528,7 @@ import { DEFERRED_REMOVAL_MAX_MS, deferRemoval, takeRemovalsForBatch, takeDroppe
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
 import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
-import { shouldSubstituteShowProblem, shouldAutoCardAfterOwnProblem, refuseSilentDedupDrop, isAuthoredCardLine } from '@/lib/tutor/orchestrator/show-problem-substitution';
+import { shouldSubstituteShowProblem, shouldAutoCardAfterOwnProblem, refuseSilentDedupDrop, isAuthoredCardLine, nextUnaskedNumberedQuestion, numberedQuestionNote } from '@/lib/tutor/orchestrator/show-problem-substitution';
 import { checkEquationRelations, syncRelationTrail, describeRelationCheck, claimedAnswerContradictsProblem, type RelationTrail } from '@/lib/tutor/voice/relation-step-check';
 import { formatWitness, extractProblemRelation } from '@/lib/tutor/voice/relation-sampling';
 import { decideRelationStepNote, settleRelationStepNote, recordRelationStepNoteDispatch, relationStepNoteExpired, type RelationStepNoteRecord } from '@/lib/tutor/voice/relation-step-note';
@@ -13546,6 +13546,22 @@ export function VoiceTutorRealtime({
           offerAcceptedRef.current = { segId: oaSeg, studentTurns: -1, at: Date.now() };
           runTranscript = `${fixedScriptOfferAcceptedNote(oaPlan, oaSeg, oaNext)}\n\n${runTranscript}`;
           onDebugEvent?.('fixed_script_offer_accepted', `"${oaSeg}" "${transcript.slice(0, 60)}"`);
+        }
+      }
+      // Task 30 fix round 4 R3-13 (run r3, 155–372 s: the level check asked
+      // question 1 of its authored three, then quizzed, and never asked 2 and
+      // 3). In a fixed-script language part whose authored card is a numbered
+      // list of questions, every student turn carries an urgent note naming
+      // the next question not yet asked; nothing once all are asked.
+      if (TUTOR_NUMBERED_QUESTION_NOTE && languageSessionRef.current && !opts?.prefetchOnly && !/^\s*\[/.test(transcript)) {
+        const nqSeg = currentSegmentIdRef.current ?? '';
+        const nqPlan = lessonPlanRef.current;
+        if (nqSeg && nqPlan && isFixedScriptPlan(nqPlan)) {
+          const nq = nextUnaskedNumberedQuestion(segmentCardStatement(nqPlan, nqSeg), segmentNarrationRef.current.get(nqSeg) ?? []);
+          if (nq) {
+            runTranscript = `${numberedQuestionNote(nq)}\n\n${runTranscript}`;
+            onDebugEvent?.('numbered_question_note_planted', `${nq.n} "${nqSeg}"`);
+          }
         }
       }
       // Task 30 fix round 1 (I-3): the part's offer is made but unspoken (its

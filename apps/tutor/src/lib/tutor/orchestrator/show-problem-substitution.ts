@@ -153,3 +153,66 @@ export function isAuthoredCardLine(brainStatement: string, authoredStatement: st
   const bt = cardLineTokens(brain);
   return numbered.some((l) => cardLineMatch(bt, cardLineTokens(l)) >= AUTHORED_CARD_LINE_MATCH);
 }
+
+/**
+ * Task 30 fix round 4 R3-13 (run r3, 155–372 s: the level check asked
+ * question 1 of its authored three, then corrected and quizzed — "which
+ * sentence uses the present perfect …" ×4 — and never asked questions 2 and
+ * 3). For a part whose authored card is a numbered list of QUESTIONS (≥ 2
+ * `^\d+\.` lines, each with a "?"), the first one the tutor has not asked
+ * yet, in card order; null when the card is not such a list or all are asked.
+ * A question counts as asked when some span of ≤ 3 consecutive tutor
+ * sentences in the part holds ≥ 80 % of its filler-free tokens — the whole
+ * question, or its lead (the first sentence, or a one-sentence question's
+ * first clause; ≥ 4 tokens), since a tutor paraphrases the tail ("If so, tell
+ * me about it."). Pure, generic.
+ */
+export const NUMBERED_QUESTION_ASKED_MATCH = 0.8;
+const NUMBERED_QUESTION_LINE_RE = /^\s*\d+\.\s*/;
+function containedShare(needle: string[], hay: string[]): number {
+  if (needle.length === 0) return 0;
+  const left = new Map<string, number>();
+  for (const t of hay) left.set(t, (left.get(t) ?? 0) + 1);
+  let shared = 0;
+  for (const t of needle) {
+    const n = left.get(t) ?? 0;
+    if (n > 0) { shared++; left.set(t, n - 1); }
+  }
+  return shared / needle.length;
+}
+function splitTutorSentences(text: string): string[] {
+  return (text ?? '').split(/(?<=[.?!。？！])\s*/u).map((s) => s.trim()).filter(Boolean);
+}
+export function numberedCardQuestions(cardStatement: string | null | undefined): Array<{ n: number; text: string }> {
+  const lines = (cardStatement ?? '').split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const numbered = lines.filter((l) => NUMBERED_QUESTION_LINE_RE.test(l));
+  if (numbered.length < 2 || !numbered.every((l) => /[?？]/.test(l))) return [];
+  return numbered.map((l, i) => ({ n: i + 1, text: l.replace(NUMBERED_QUESTION_LINE_RE, '').trim() }));
+}
+export function numberedQuestionAsked(question: string, tutorTurnsInSegment: readonly string[]): boolean {
+  const whole = cardLineTokens(question);
+  // The lead: the first sentence; for a one-sentence question, its first
+  // clause (up to the first comma) — "What is one skill you'd like to improve
+  // in your English, and why?" asks question 3 with its tail paraphrased.
+  const first = splitTutorSentences(question)[0] ?? '';
+  const lead = cardLineTokens(first.length < question.trim().length ? first : first.split(/[,，、]/)[0] ?? '');
+  const sentences = tutorTurnsInSegment.flatMap((t) => splitTutorSentences(t)).map(cardLineTokens);
+  for (let i = 0; i < sentences.length; i++) {
+    let span: string[] = [];
+    for (let k = i; k < Math.min(i + 3, sentences.length); k++) {
+      span = [...span, ...sentences[k]!];
+      if (containedShare(whole, span) >= NUMBERED_QUESTION_ASKED_MATCH) return true;
+      if (lead.length >= 4 && lead.length < whole.length && containedShare(lead, span) >= NUMBERED_QUESTION_ASKED_MATCH) return true;
+    }
+  }
+  return false;
+}
+export function nextUnaskedNumberedQuestion(cardStatement: string | null | undefined, tutorTurnsInSegment: readonly string[]): { n: number; text: string; total: number } | null {
+  const qs = numberedCardQuestions(cardStatement);
+  for (const q of qs) if (!numberedQuestionAsked(q.text, tutorTurnsInSegment)) return { ...q, total: qs.length };
+  return null;
+}
+/** The urgent note planted on a student turn while a numbered question is unasked. */
+export function numberedQuestionNote(q: { n: number; text: string; total: number }): string {
+  return `[runtime note — not from the student] Reply to the student in ONE short sentence (no correction, no grammar question), then ask question ${q.n} of ${q.total} exactly: "${q.text}". Apply this silently; never mention this note.]`;
+}
