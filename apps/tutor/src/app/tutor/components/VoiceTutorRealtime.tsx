@@ -232,7 +232,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -20031,7 +20031,13 @@ export function VoiceTutorRealtime({
           });
           if (sqDue && !sameQuestionRejected) {
             sameQuestionRejected = true;
-            rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: SAME_QUESTION_THIRD_TIME_REASON });
+            // Task 33 §D: a question about the student with no authored answer
+            // (the card's expectedAnswer, for the card's own question) has no
+            // answer to give — the retry accepts or lets it go.
+            const sqAsk = turnAskGist(attemptText);
+            const sqCard = currentProblemRef.current;
+            const sqAuthored = !!sqCard?.expectedAnswer && !!sqCard.statement && askGistsSame(sqAsk, turnAskGist(sqCard.statement));
+            rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: sameQuestionThirdTimeReason({ question: sqAsk, authoredAnswer: sqAuthored, studentRecent: transcriptRef.current.filter((e) => e.role === 'student').slice(-6).map((e) => e.text) }) });
             await performKill();
             onDebugEvent?.('same_question_third_time', `"${turnAskGist(attemptText).slice(0, 80)}"`);
           } else if (sqDue) {

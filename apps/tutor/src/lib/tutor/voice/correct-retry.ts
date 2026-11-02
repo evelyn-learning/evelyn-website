@@ -989,3 +989,32 @@ export function probeCheckinDue(exchanges: ReadonlyArray<{ tutorText: string | n
 export const SAME_QUESTION_THIRD_TIME_REASON = withRetryStyle(
   // Fix round 4 (R3-2, run r3 372 s: "The question has come up three times now." was spoken).
   'You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item. Do not say that the question was asked before.');
+// Task 33 §D (GDI bot run r8, 715 s: "what was the trade show about?" asked
+// three times; the retry said "The trade show was about electronics, and
+// that's the answer I'm looking for." — a fact about the student invented by
+// the "give the answer yourself" directive). A question about the student
+// (second person — you / your — and no language word: tense, verb, word,
+// sentence, form, mean, correct …) with no authored answer on the card has no
+// answer to give: the retry accepts what they said or lets it go. Pure.
+const PERSONAL_SECOND_PERSON_RE = /\b(?:you|your|yours|yourself)\b|あなた/i;
+const LANGUAGE_META_RE = /\b(?:tense|verb|verbs|word|words|sentence|sentences|phrase|form|forms|grammar|mean|means|meaning|correct|right|wrong|spell|spelling|pronounce|participle|past simple|present perfect|plural|singular|article|preposition|translate|english for|say it|difference)\b|文法|単語|意味|時制|形/i;
+// Also personal: a question about something the student told ("What was the
+// trade show about?" after "I went to a trade show in Tokyo") — ≥ 1 content
+// word (≥ 4 letters) of the question is in the student's recent words.
+const PERSONAL_STOP = new Set(['what', 'when', 'where', 'which', 'about', 'there', 'that', 'this', 'with', 'from', 'have', 'were', 'your', 'they', 'them', 'then', 'just', 'like', 'some', 'more', 'last', 'year', 'time', 'make', 'made', 'tell', 'said', 'does', 'into']);
+export function isPersonalQuestion(question: string | null | undefined, studentRecent?: readonly string[] | null): boolean {
+  const q = question ?? '';
+  if (LANGUAGE_META_RE.test(q)) return false;
+  if (PERSONAL_SECOND_PERSON_RE.test(q)) return true;
+  const said = new Set((studentRecent ?? []).flatMap((x) => (x ?? '').toLowerCase().match(/[\p{L}]+/gu) ?? []));
+  return (q.toLowerCase().match(/[\p{L}]+/gu) ?? []).some((w) => w.length >= 4 && !PERSONAL_STOP.has(w) && said.has(w));
+}
+export const SAME_QUESTION_THIRD_TIME_PERSONAL_REASON = withRetryStyle(
+  'This is a question about the student; there is no answer to give. Accept what they said in one sentence or let it go, and move to the next step. Never state facts about the student they did not say. Do not say that the question was asked before.');
+/** The retry directive of same_question_third_time: the authored-answer
+ *  version unless the pinned question is personal and the card holds no
+ *  authored answer for it. Pure. */
+export function sameQuestionThirdTimeReason(input: { question: string | null | undefined; authoredAnswer: boolean; studentRecent?: readonly string[] | null }): string {
+  if (!input.authoredAnswer && isPersonalQuestion(input.question, input.studentRecent)) return SAME_QUESTION_THIRD_TIME_PERSONAL_REASON;
+  return SAME_QUESTION_THIRD_TIME_REASON;
+}

@@ -57,6 +57,7 @@ import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, 
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON } from '../src/lib/tutor/voice/correct-retry';
 import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { ToolMarkupFilter, stripToolMarkup, hasToolMarkup } from '../src/lib/tutor/voice/tool-markup';
 import { languageTurnMaxTokens, outputBudgetNote, settleHeldTail, endsSentence, LANGUAGE_TURN_MAX_TOKENS_DEFAULT } from '../src/lib/tutor/voice/output-budget';
@@ -1825,7 +1826,7 @@ test('Task 30 fix round 3 R2-2a: same_question_third_time — the same ask a thi
   assert.ok(SAME_QUESTION_THIRD_TIME_REASON.startsWith('You have asked this twice already. Give the answer yourself in one short sentence, then ask a DIFFERENT, easier question or move to the next item. Do not say that the question was asked before. Start directly with your reply'));
   assert.ok(SAME_QUESTION_THIRD_TIME_REASON.endsWith('Apply this silently; never mention this note.'));
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: SAME_QUESTION_THIRD_TIME_REASON });"));
+  assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'same_question_third_time', reason: sameQuestionThirdTimeReason({ question: sqAsk, authoredAnswer: sqAuthored, studentRecent: transcriptRef.current.filter((e) => e.role === 'student').slice(-6).map((e) => e.text) }) });"));
   assert.ok(vtr.includes("onDebugEvent?.('same_question_third_time_unmade',"));
 });
 
@@ -1904,6 +1905,22 @@ test('Task 31 §F (GDI run 18, 979–1061 s): two answered questions on the same
   assert.ok(vtr.includes('runTranscript = `${PROBE_CHECKIN_NOTE}\\n\\n${runTranscript}`;'));
   assert.ok(vtr.includes('probeExchangesRef.current = [...probeExchangesRef.current.slice(-1), { tutorText: peTutor, studentText: transcript }];'));
   assert.match(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8'), /export const TUTOR_PROBE_CHECKIN = process\.env\.NEXT_PUBLIC_TUTOR_PROBE_CHECKIN !== 'off';/);
+});
+
+// Task 33 §D (bot run r8, 715 s): a personal question has no answer to give.
+test('33 §D: same_question_third_time — personal question with no authored answer ⇒ accept / let go, never a fact', () => {
+  assert.equal(isPersonalQuestion('What was the trade show about?'), false, 'no second person and nothing the student told');
+  assert.equal(isPersonalQuestion('What was the trade show about?', ['Yes, I went to a trade show in Tokyo last year.']), true, 'the student told it');
+  assert.equal(sameQuestionThirdTimeReason({ question: 'What was the trade show about?', authoredAnswer: false, studentRecent: ['Yes, I went to a trade show in Tokyo last year.'] }), SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, 'the 715 s case');
+  assert.equal(isPersonalQuestion('What did you see at the trade show?'), true);
+  assert.equal(isPersonalQuestion('Did you go with your team, or alone?'), true);
+  assert.equal(isPersonalQuestion('Which tense would you use with "last year"?'), false, 'a language question has an answer');
+  assert.equal(sameQuestionThirdTimeReason({ question: 'What did you see at the trade show?', authoredAnswer: false }), SAME_QUESTION_THIRD_TIME_PERSONAL_REASON);
+  assert.equal(sameQuestionThirdTimeReason({ question: 'What did you see at the trade show?', authoredAnswer: true }), SAME_QUESTION_THIRD_TIME_REASON);
+  assert.equal(sameQuestionThirdTimeReason({ question: 'Which tense would you use with "last year"?', authoredAnswer: false }), SAME_QUESTION_THIRD_TIME_REASON);
+  assert.ok(SAME_QUESTION_THIRD_TIME_PERSONAL_REASON.startsWith('This is a question about the student; there is no answer to give. Accept what they said in one sentence or let it go, and move to the next step. Never state facts about the student they did not say.'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('const sqAuthored = !!sqCard?.expectedAnswer && !!sqCard.statement && askGistsSame(sqAsk, turnAskGist(sqCard.statement));'));
 });
 
 if (failed) process.exit(1);
