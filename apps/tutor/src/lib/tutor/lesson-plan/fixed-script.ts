@@ -249,10 +249,19 @@ export function fixedScriptMidLesson(plan: LessonPlan | null | undefined, segmen
 /** Task 33 §E: what a student turn does with a stop request. Mid-lesson
  *  (fixed script, before the last part, not closed): the first request asks
  *  the choice; a stop request right after the choice was asked closes. Pure. */
-export function stopRequestDecision(input: { stopRequest: boolean; midLesson: boolean; choicePending: boolean }): 'ask-choice' | 'close' | 'none' {
-  if (!input.stopRequest || !input.midLesson) return 'none';
-  return input.choicePending ? 'close' : 'ask-choice';
+// Fix round 1 (B-1): while the choice is pending only an EXPLICIT stop
+// closes; a finish-word reply ("Let's finish.") continues ('finish').
+export function stopRequestDecision(input: { stopRequest: boolean; midLesson: boolean; choicePending: boolean; explicitStop?: boolean; choosesFinish?: boolean }): 'ask-choice' | 'close' | 'finish' | 'none' {
+  if (!input.midLesson) return 'none';
+  if (input.choicePending) {
+    if (input.explicitStop) return 'close';
+    return input.choosesFinish || input.stopRequest ? 'finish' : 'none';
+  }
+  return input.stopRequest ? 'ask-choice' : 'none';
 }
+/** Fix round 1 (B-1): the student chose to finish the lesson's parts. */
+export const FIXED_SCRIPT_STOP_DECLINED_NOTE = withSilentClause(
+  "[runtime note — not from the student] The student wants to finish the lesson's remaining parts. Do not ask the choice again and do not say goodbye: continue the lesson now — finish the current item in one sentence if one is open, then go on with the next part.]");
 
 /** Validator rejection reason for an attempt that says goodbye too early. */
 export const PREMATURE_FAREWELL_REASON = withSilentClause(

@@ -47,7 +47,8 @@ import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptO
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
-import { isStopRequest } from '../src/lib/tutor/voice/lesson-close';
+import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
+import { FIXED_SCRIPT_STOP_DECLINED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -1143,7 +1144,8 @@ test('33 §E: isStopRequest — whole-utterance stop requests; lesson talk is no
 });
 test('33 §E: stopRequestDecision — first request asks the choice, the repeat closes; never in the closing part', () => {
   assert.equal(stopRequestDecision({ stopRequest: true, midLesson: true, choicePending: false }), 'ask-choice');
-  assert.equal(stopRequestDecision({ stopRequest: true, midLesson: true, choicePending: true }), 'close');
+  assert.equal(stopRequestDecision({ stopRequest: true, midLesson: true, choicePending: true, explicitStop: true }), 'close');
+  assert.equal(stopRequestDecision({ stopRequest: true, midLesson: true, choicePending: true, explicitStop: false, choosesFinish: true }), 'finish', 'B-1: "Let\'s finish." continues');
   assert.equal(stopRequestDecision({ stopRequest: true, midLesson: false, choicePending: false }), 'none');
   assert.equal(stopRequestDecision({ stopRequest: false, midLesson: true, choicePending: true }), 'none');
 });
@@ -1165,6 +1167,24 @@ test('33 §E: VTR plants the choice note itself on the stop request', () => {
   pin(VTR, /runTranscript = `\$\{fixedScriptStopRequestNote\(fixedScriptRemainingPartLabels\(/);
   pin(VTR, /onDebugEvent\?\.\('stop_request_choice_planted'/);
   pin(VTR, /runTranscript = `\$\{FIXED_SCRIPT_STOP_CONFIRMED_NOTE\}\\n\\n\$\{runTranscript\}`;/);
+});
+
+// ── Task 33 fix round 1 B-1 / I-1b ─────────────────────────────────────────
+test('33 r1 B-1: after the stop choice, a "finish" reply continues; only an explicit stop closes', () => {
+  const pending = (t: string) => stopRequestDecision({ stopRequest: isStopRequest(t), midLesson: true, choicePending: true, explicitStop: isExplicitStop(t), choosesFinish: choosesFinish(t) });
+  for (const t of ["Let's finish.", "I'd like to finish.", 'I want to finish it.', "Let's finish the lesson.", 'We can finish it.', 'The summary, please.']) assert.equal(pending(t), 'finish', t);
+  for (const t of ['Stop.', 'Stop for today.', 'No more.', 'End it here.', "Let's stop here.", 'やめます', '終わりにします', '今日はここまでにしましょう', "That's enough for today."]) assert.equal(pending(t), 'close', t);
+  for (const t of ["Let's finish.", 'I want to finish it.', 'We can finish it.']) assert.equal(isExplicitStop(t), false, t);
+  // outside the pending choice "finish" is still a stop REQUEST (plants the choice), never a close
+  const fresh = (t: string) => stopRequestDecision({ stopRequest: isStopRequest(t), midLesson: true, choicePending: false, explicitStop: isExplicitStop(t), choosesFinish: choosesFinish(t) });
+  for (const t of ["Let's finish.", 'We can finish it.', 'Stop.']) assert.equal(fresh(t), 'ask-choice', t);
+  assert.match(FIXED_SCRIPT_STOP_DECLINED_NOTE, /wants to finish the lesson's remaining parts\. Do not ask the choice again and do not say goodbye/);
+  pin(VTR, /\} else if \(srDecision === 'finish'\) \{\s*runTranscript = `\$\{FIXED_SCRIPT_STOP_DECLINED_NOTE\}/);
+});
+test('33 r1 I-1b: a question or a past report is never a stop request', () => {
+  for (const t of ['終わりですか？', 'これで終わり?', 'おわりました', '終わりました。', 'Is it finished?', 'Are we done?']) assert.equal(isStopRequest(t), false, t);
+  assert.equal(isStopRequest('Can we stop here?'), true, 'a modal request stays a request');
+  assert.equal(isStopRequest('終わりにします'), true);
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

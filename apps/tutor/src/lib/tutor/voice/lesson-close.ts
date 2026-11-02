@@ -178,14 +178,46 @@ export function isStandaloneStopUtterance(studentText: string): boolean {
 const STOP_REQUEST_RE =
   /^(?:(?:I think|maybe|so|ok(?:ay)?|well|um+|uh+)[,\s]+)*(?:we can|we could|can we|could we|shall we|let['’]?s|let us|I (?:want|would like|'d like|wanna) to|I want|I(?:'d| would) like to)\s+(?:finish|stop|end|quit|wrap up)(?:\s+(?:it|this|here|now|the lesson|the class|for today|today|for now))*\s*[.!?]?$/i;
 const ENOUGH_RE = /^(?:(?:ok(?:ay)?|well|so)[,\s]+)?that['’]?s (?:enough|all)(?: for (?:today|now))?\s*[.!]?$/i;
+// Fix round 1 (I-1b): a question is never a stop request ("終わりですか？",
+// "これで終わり?", "Is it finished?") — except the English request shapes
+// "can we / could we / shall we stop …?" — and a past report ("おわりました",
+// "終わりました": a practice item is done) is none either.
+const QUESTION_END_RE = /[?？]\s*$|(?:です|ます|でしょう)?か[。.]?\s*$/;
+const MODAL_REQUEST_RE = /^(?:(?:ok(?:ay)?|so|well)[,\s]+)?(?:can we|could we|shall we)\b/i;
+const JA_PAST_DONE_RE = /(?:終|お)わりました/;
 export function isStopRequest(studentText: string | null | undefined): boolean {
   const t = (studentText ?? '').trim();
   if (!t || /^\s*\[/.test(t)) return false;
-  if (isStandaloneStopUtterance(t)) return true;
   const core = t.replace(STOP_PAD_RE, '').trim();
+  if (QUESTION_END_RE.test(t) && !MODAL_REQUEST_RE.test(core)) return false;
+  if (JA_PAST_DONE_RE.test(t)) return false;
+  if (isStandaloneStopUtterance(t)) return true;
   if (core.split(/\s+/).length > 8) return false;
   if (STOP_REQUEST_RE.test(core) || ENOUGH_RE.test(core)) return true;
   return t.length <= 12 && /終わり|おわり/.test(t);
+}
+/**
+ * Task 33 fix round 1 (B-1): once the engine has asked the stop choice
+ * ("finish with <parts left>, or stop for today?"), "Let's finish." / "I'd
+ * like to finish." / "I want to finish it." mean CONTINUE to the finish.
+ * Only an EXPLICIT stop closes: stop (for today / here / now), no more, end
+ * (it) here, that's enough, bye, やめ…, 終わりにします, 今日はここまで. A
+ * "finish" word never is one. Pure.
+ */
+const EXPLICIT_STOP_RE =
+  /^(?:(?:no|ok(?:ay)?|yes|yeah|well|so|um+|uh+|please|i think)[,\s]+)*(?:(?:let['’]?s |let us |i (?:want|would like|'d like|wanna) to |we can |can we |i['’]d rather )?(?:stop|end(?: it)?|quit)(?: (?:here|now|for today|today|the lesson|please))*|no more(?: (?:today|for today|please))?|that['’]?s enough(?: for (?:today|now))?|(?:good)?bye|see you(?: (?:next time|later))?|stop,? please)[\s.!]*$/i;
+const FINISH_WORD_RE = /\b(?:finish|finishing|complete|go on|continue|carry on)\b|最後まで|続け/i;
+export function isExplicitStop(studentText: string | null | undefined): boolean {
+  const t = (studentText ?? '').trim();
+  if (!t || /^\s*\[/.test(t)) return false;
+  if (/やめ|今日はここまで|終わりにします|終わりにしましょう/.test(t)) return true;
+  if (FINISH_WORD_RE.test(t)) return false;
+  return EXPLICIT_STOP_RE.test(t.replace(/\s*(?:thanks?(?: you)?(?: (?:so|very) much)?)[.!]?\s*$/i, '').trim());
+}
+/** Fix round 1 (B-1): the reply to the stop choice picks the finish path. */
+export function choosesFinish(studentText: string | null | undefined): boolean {
+  const t = (studentText ?? '').trim();
+  return !!t && !isExplicitStop(t) && (FINISH_WORD_RE.test(t) || /\b(?:pronunciation|summary|yes|ok(?:ay)?|sure)\b/i.test(t));
 }
 
 /**

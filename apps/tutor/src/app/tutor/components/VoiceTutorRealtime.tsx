@@ -224,7 +224,7 @@ import {
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { splitSentenceForTts, keptRestRemoved } from '@/lib/tutor/voice/tts-language';
 import { isMetaNarration, directiveSentencesForInput, isStudentEchoOpener, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isThankAck, isRepeatThankAck, isPlanContinuationSentence, doneTurnText } from '@/lib/tutor/voice/meta-narration';
-import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance, isStopRequest } from '@/lib/tutor/voice/lesson-close';
+import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance, isStopRequest, isExplicitStop, choosesFinish } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish, replaceLastStudentEntry, rememberStudentEntryId } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
@@ -441,7 +441,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind, fixedScriptPartLabel, offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerReaskedMovedReason, offerAcceptedReplantDue, type OfferAcceptState, fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '@/lib/tutor/lesson-plan/fixed-script';
+import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind, fixedScriptPartLabel, offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerReaskedMovedReason, offerAcceptedReplantDue, type OfferAcceptState, fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE, FIXED_SCRIPT_STOP_DECLINED_NOTE } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -13258,8 +13258,11 @@ export function VoiceTutorRealtime({
         // stop working at six." is lesson talk, not a stop.
         // Task 33 §E: mid-lesson on a fixed script the FIRST stop request
         // gets the finish-or-stop choice (no latch); the repeat latches.
-        if (isStandaloneStopUtterance(t) && !(TUTOR_STOP_REQUEST_CHOICE && !stopChoicePendingRef.current
-          && fixedScriptMidLesson(lessonPlanRef.current, currentSegmentIdRef.current, lessonClosedRef.current))) studentEndSignalRef.current = true;
+        // Fix round 1 (B-1): mid-lesson, only an explicit stop while the choice
+        // is pending latches — never a "finish" word, never the first request.
+        if (isStandaloneStopUtterance(t) && !(TUTOR_STOP_REQUEST_CHOICE
+          && fixedScriptMidLesson(lessonPlanRef.current, currentSegmentIdRef.current, lessonClosedRef.current)
+          && !(stopChoicePendingRef.current && isExplicitStop(t)))) studentEndSignalRef.current = true;
         ledgerStudentTextRef.current = t;
         ledgerPriorTutorTextRef.current = String([...priorWithoutCurrent].reverse().find((m) => m.role === 'assistant')?.content ?? '');
         lastStudentVerificationRef.current = {
@@ -13695,6 +13698,8 @@ export function VoiceTutorRealtime({
           stopRequest: isStopRequest(transcript),
           midLesson: fixedScriptMidLesson(lessonPlanRef.current, currentSegmentIdRef.current, lessonClosedRef.current),
           choicePending: stopChoicePendingRef.current,
+          explicitStop: isExplicitStop(transcript),
+          choosesFinish: choosesFinish(transcript),
         });
         if (srDecision === 'ask-choice') {
           stopChoicePendingRef.current = true;
@@ -13706,6 +13711,9 @@ export function VoiceTutorRealtime({
             studentEndSignalRef.current = true;
             runTranscript = `${FIXED_SCRIPT_STOP_CONFIRMED_NOTE}\n\n${runTranscript}`;
             onDebugEvent?.('stop_request_confirmed', `"${currentSegmentIdRef.current ?? ''}" "${transcript.slice(0, 60)}"`);
+          } else if (srDecision === 'finish') {
+            runTranscript = `${FIXED_SCRIPT_STOP_DECLINED_NOTE}\n\n${runTranscript}`;
+            onDebugEvent?.('stop_request_finish_chosen', `"${currentSegmentIdRef.current ?? ''}" "${transcript.slice(0, 60)}"`);
           }
         }
       }
