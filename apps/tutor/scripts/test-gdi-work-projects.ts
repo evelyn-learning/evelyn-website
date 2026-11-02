@@ -158,7 +158,8 @@ test('pronunciation: targets in metadata, four options, measured-only feedback',
   assert.match(n, /if that tool is available in this session/);
   // Final review #3: the TTS voice is picked per sentence — a model line with
   // any Japanese in it would be voiced by the Japanese voice.
-  assert.ok(n.includes('Say the model text as its own sentence, English only — no Japanese in that sentence (the voice switches per sentence).'), n);
+  // Task 29 fix round 1 (I-5): instruction first, the model text as its own English-only LAST sentence.
+  assert.ok(n.includes('say the model text exactly, in English, as the LAST sentence of your turn — its own sentence, English only, no Japanese in it (the voice switches per sentence).'), n);
   for (const w of ['responsibilities', 'international', 'communicate', 'customers', 'developed']) assert.ok(n.includes(w), w);
 });
 
@@ -223,7 +224,8 @@ test('20B1: the brain may close only from the summary (or after the student aske
 test('29E3: the pronunciation note — every item new, instruction first / model text last, no menu after a result', () => {
   const n = seg('pronunciation').teacherNote ?? '';
   assert.ok(n.includes('Every item is NEW: never give a word or sentence the learner has already practised in this part; when the menu\'s items are used up, take a corrected sentence of the learner\'s from earlier in the lesson.'));
-  assert.ok(n.includes('Say the instruction first ("Listen, then repeat after me:") and the model text as the LAST sentence of your turn.'));
+  assert.ok(n.includes('For options 1 to 3: give the instruction first ("Listen, then repeat after me:"), then say the model text exactly, in English, as the LAST sentence of your turn'));
+  assert.ok(!/say the model text first/i.test(n), 'the old "model text first" order is gone');
   assert.ok(n.endsWith('After a result, do not offer the four options again: work on the weakest word or sound with one more repeat, then ask: one more item, or move on to the summary?'));
   assert.ok(n.startsWith('Optional pronunciation practice. Offer the four options'), 'the rest of the note kept');
 });
