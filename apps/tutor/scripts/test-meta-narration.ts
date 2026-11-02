@@ -1388,5 +1388,14 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
     check(`34 r1 I-1: dropped — ${x}`, isMetaNarration(x));
 }
 
+
+// Task 34 fix round 1 R12-1 (bot run r12 542 s): the board-write announcement.
+{
+  for (const x of ['Let me write the question on the board.', "I'll put the sentence on the board.", 'I will write a word on the board.'])
+    check(`34 r1 R12-1: dropped — ${x}`, isMetaNarration(x));
+  for (const x of ['Here is the question on the board: What is one project you have worked on this year?', 'Look at the board.', 'Let me write the question on the board, and you read it aloud.'])
+    check(`34 r1 R12-1: kept — ${x}`, !isMetaNarration(x));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

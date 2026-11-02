@@ -1187,9 +1187,14 @@ const STEER_PLAN_RE = /^\s*(?:So|Then|Now),? I['’]?ll (?:gently )?(?:bring (?:
 // finished, so let's move on."): any "<part> part is done / finished /
 // complete / over / almost done, so …" is the plan state spoken.
 const PART_STATE_PLAN_RE = /\b(?:part|section|segment|step)\s+is\s+(?:almost |nearly |now |already )?(?:done|finished|over|complete|completed)\b,?\s*(?:so\b|and I['’]ll\b)/i;
+// Task 34 fix round 1 (R12-1, bot run r12 542 s: "Let me write the question
+// on the board." before the handwrite that does it): a bare first-person
+// board-write announcement is narration of the tool's own action. "Here is
+// the question on the board: …" and "Look at the board." are speech.
+const BOARD_WRITE_PLAN_RE = /^\s*(?:(?:ok(?:ay)?|so|now),?\s+)?(?:Let me|I['’]ll|I will) (?:write|put) (?:the|this|that|a) (?:question|sentence|word|example)s? on the board\s*[.!]?\s*$/i;
 export function isSteeringPlanNarration(sentence: string): boolean {
   const s = sentence ?? '';
-  return STEER_PLAN_RE.test(s) || PART_STATE_PLAN_RE.test(s);
+  return STEER_PLAN_RE.test(s) || PART_STATE_PLAN_RE.test(s) || BOARD_WRITE_PLAN_RE.test(s);
 }
 export function isTutorDirectiveImperative(sentence: string): boolean {
   const s = sentence ?? '';
