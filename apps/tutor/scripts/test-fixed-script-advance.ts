@@ -34,6 +34,7 @@ import {
   offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason,
   FIXED_SCRIPT_OFFER_MAX_WAIT_MS, offerWaitExpired,
   offerAccepted, fixedScriptOfferAcceptedNote, FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS,
+  fixedScriptOfferContinueDirective, FIXED_SCRIPT_OFFER_CONTINUE_PREFIX,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
@@ -893,6 +894,34 @@ test('30B1: the accepted note (pin) and the VTR wiring', () => {
   assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_accepted',"));
   assert.ok(VTR.includes('if (offerAccept && !offerRuntimeTurn && !opts?.prefetchOnly) offerAccept.studentTurns += 1;'));
   assert.ok(VTR.includes('offerAcceptedStudentTurns: offerAccept ? offerAccept.studentTurns : null,'));
+});
+
+// ── Task 30 §D1: a missing offer after heard sentences ⇒ a continuation, not a kill ──
+test('30D1: validator decision — heard ≥ 1 ⇒ continue; heard 0 ⇒ kill; after the retry ⇒ unmade', () => {
+  const d = (heardSentences: number, alreadyRetried = false) => transitionOfferValidatorDecision({
+    offerPending: true, text: 'Met the suppliers from China, nice. "I met the suppliers from China" is correct.', announcedMove: false, calledAdvance: false, alreadyRetried, heardSentences,
+  });
+  assert.equal(d(3), 'continue');
+  assert.equal(d(1), 'continue');
+  assert.equal(d(0), 'kill');
+  assert.equal(d(3, true), 'unmade');
+  assert.equal(transitionOfferValidatorDecision({ offerPending: true, text: 'Would you like one more practice item, or shall we move on?', announcedMove: false, calledAdvance: false, alreadyRetried: false, heardSentences: 2 }), 'spoken');
+});
+test('30D1: the offer continuation directive (pin), recognised as a continuation; via offer', () => {
+  const dir = fixedScriptOfferContinueDirective(tr, 'part-a', 'part-b');
+  assert.equal(dir, '[System note: Ask the student, in ONE sentence and nothing else, whether they want one more practice item on "Part A" or to move on to "Part B". Apply this silently; never mention this note.]');
+  assert.ok(dir.startsWith(FIXED_SCRIPT_OFFER_CONTINUE_PREFIX));
+  assert.equal(isFixedScriptContinueDirective(dir), true);
+  assert.deepEqual(fixedScriptContinueDirective({ via: 'offer', plan: tr, from: 'part-a', next: 'part-b' }), { directive: dir, kind: 'offer' });
+});
+test('30D1: VTR wiring — continue instead of kill, scheduled at turn end, the continuation counts as spoken (pins)', () => {
+  assert.ok(VTR.includes('heardSentences: turnNarrationRef.current.length - attemptNarrationStart,'));
+  assert.ok(VTR.includes("if (toDecision === 'continue' && toNext) {"));
+  assert.ok(VTR.includes("scheduleFixedScriptContinueRef.current(ocSeg, 'offer', fixedScriptContinueDirective({ via: 'offer', plan: ocPlan, from: ocSeg, next: ocNext }));"));
+  assert.ok(VTR.includes("via === 'offer' ? 'fixed_script_offer_continue' :"));
+  assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_spoken', `\"${offerSeg}\" (continuation)`);"));
+  // the offer continuation is scheduled before the no-ask check (which skips when a continuation is pending)
+  assert.ok(VTR.indexOf("scheduleFixedScriptContinueRef.current(ocSeg, 'offer'") < VTR.indexOf("if (noaskSeg) scheduleFixedScriptContinueRef.current(noaskSeg, 'noask'"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

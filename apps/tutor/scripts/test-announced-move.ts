@@ -115,7 +115,7 @@ test('B: VTR — only when the budget rule did not fire, flag on, no advance_les
   pin(VTR, /const announcedTarget = \(!autoReason \|\| offerPartDue\) && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts\?\.prefetchOnly\s*&& !totalToolNamesSeen\.includes\('advance_lesson'\)\s*\? announcedMoveTarget\(\{ tutorText: fullText, plan: autoPlan, currentSegmentId: segIdNow, levelKnown: !!workingLevelRef\.current \}\)/);
   pin(VTR, /const announcedNext = !!announcedTarget && !!autoPlan && announcedTarget === nextSegmentId\(autoPlan, segIdNow, !!workingLevelRef\.current\);\s*const advanceReason: 'turns' \| 'time' \| 'announced' \| null = \(offerPartDue && announcedNext \? 'announced' : autoReason\)\s*\?\? \(announcedNext \? 'announced' : null\);/);
   // the same advance path (pron hold, applyResolvedAdvance, FACT note) runs on advanceReason
-  pin(VTR, /if \(!advanceReason\) \{ autoAdvancePronHeldRef\.current = 0; autoAdvanceAskHeldRef\.current = 0; \}\n[\s\S]{0,1800}?if \(autoPlan && advanceReason\) \{/);
+  pin(VTR, /if \(!advanceReason\) \{ autoAdvancePronHeldRef\.current = 0; autoAdvanceAskHeldRef\.current = 0; \}\n[\s\S]{0,2600}?if \(autoPlan && advanceReason\) \{/);
   pin(VTR, /reason=\$\{advanceReason\} turns=/);
 });
 
@@ -168,7 +168,7 @@ test('C: VTR — scheduled once per segment on an announced advance, dispatched 
   // Task 23 §C: the scheduler is shared with the level-set advance (event per path).
   // Task 27 §D3/§I: the directive comes from fixedScriptContinueDirective (the caller's choice, else the via's constant).
   pin(VTR, /const contChoice = cont \?\? fixedScriptContinueDirective\(\{ via \}\);/);
-  pin(VTR, /onDebugEvent\?\.\(via === 'level' \? 'fixed_script_level_continue' : via === 'noask' \? 'fixed_script_noask_continue' : 'fixed_script_announced_continue', `\$\{contChoice\.kind === 'correction' \|\| contChoice\.kind === 'bridge' \? `\$\{contChoice\.kind\} ` : ''\}"\$\{contTarget\}" waited=\$\{waitedMs\}ms`\);\s*void handleStudentTranscriptForBrainRef\.current\?\.\(contChoice\.directive, \{ silent: true, bypassPerceptionDedupe: true \}\);/);
+  pin(VTR, /onDebugEvent\?\.\(via === 'level' \? 'fixed_script_level_continue' : via === 'noask' \? 'fixed_script_noask_continue' : via === 'offer' \? 'fixed_script_offer_continue' : 'fixed_script_announced_continue', `\$\{contChoice\.kind === 'correction' \|\| contChoice\.kind === 'bridge' \? `\$\{contChoice\.kind\} ` : ''\}"\$\{contTarget\}" waited=\$\{waitedMs\}ms`\);\s*void handleStudentTranscriptForBrainRef\.current\?\.\(contChoice\.directive, \{ silent: true, bypassPerceptionDedupe: true \}\);/);
   pin(VTR, /announcedContinuedSegsRef\.current\.add\(autoNext\);\s*scheduleFixedScriptContinueRef\.current\(autoNext, 'announced'\);/);
   pin(VTR, /if \(announcedContinueTimerRef\.current && !isFixedScriptContinueDirective\(transcript\)\) \{\s*clearTimeout\(announcedContinueTimerRef\.current\);/);
   const unmount = VTR.indexOf('// Student marks + tutor reactions: clear armed idle-send timers on unmount.');
@@ -235,7 +235,7 @@ test('24B2: the 355 s statement turn (show_sentence only) → continue; advance 
 test('24B2: VTR — the turn end schedules the noask continuation on the shared scheduler; the directive does not cancel it', () => {
   pin(VTR, /if \(noaskSeg\) scheduleFixedScriptContinueRef\.current\(noaskSeg, 'noask', fixedScriptContinueDirective\(\{ via: 'noask', prevTutorText: fullText \}\)\);/);
   pin(VTR, /via === 'noask' \? 'fixed_script_noask_continue_dropped'/);
-  pin(VTR, /via === 'noask' \? 'fixed_script_noask_continue' : 'fixed_script_announced_continue'/);
+  pin(VTR, /via === 'noask' \? 'fixed_script_noask_continue' : via === 'offer' \? 'fixed_script_offer_continue' : 'fixed_script_announced_continue'/);
   pin(VTR, /announcedContinueTimerRef\.current && !isFixedScriptContinueDirective\(transcript\)\) \{/);
   for (const d of [FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE]) assert.ok(isFixedScriptContinueDirective(d));
   pin(VTR, /closing: lessonClosedRef\.current \|\| farewellSealedRef\.current \|\| fixedScriptCloseRef\.current != null,/);

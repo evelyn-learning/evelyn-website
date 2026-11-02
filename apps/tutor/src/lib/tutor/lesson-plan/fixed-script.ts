@@ -272,7 +272,7 @@ export const FIXED_SCRIPT_LEVEL_BRIDGE_PREFIX =
 export function fixedScriptLevelBridgeDirective(plan: LessonPlan | null | undefined, from: string, next: string): string {
   return withSilentClause(`${FIXED_SCRIPT_LEVEL_BRIDGE_PREFIX} say one sentence on what you learned about the student in "${fixedScriptPartLabel(plan, from)}", then start "${fixedScriptPartLabel(plan, next)}" with its first question or card.]`);
 }
-export type FixedScriptContinueVia = 'announced' | 'level' | 'noask';
+export type FixedScriptContinueVia = 'announced' | 'level' | 'noask' | 'offer';
 /** The silent continuation's directive (Task 16 §C / Task 23 §C / Task 24
  *  §B2), chosen by why it runs: `kind` names the variant for the event.
  *  level + a bridge part left (`from`) ⇒ the bridge wording; noask after a
@@ -284,7 +284,10 @@ export function fixedScriptContinueDirective(input: {
   plan?: LessonPlan | null;
   from?: string | null;
   next?: string | null;
-}): { directive: string; kind: 'announced' | 'level' | 'bridge' | 'noask' | 'correction' } {
+}): { directive: string; kind: 'announced' | 'level' | 'bridge' | 'noask' | 'correction' | 'offer' } {
+  if (input.via === 'offer' && input.from && input.next) {
+    return { directive: fixedScriptOfferContinueDirective(input.plan, input.from, input.next), kind: 'offer' };
+  }
   if (input.via === 'level') {
     if (input.from && input.next && segmentTransitionKind(input.plan, input.from) === 'bridge') {
       return { directive: fixedScriptLevelBridgeDirective(input.plan, input.from, input.next), kind: 'bridge' };
@@ -302,7 +305,8 @@ export function fixedScriptContinueDirective(input: {
 export function isFixedScriptContinueDirective(transcript: string | null | undefined): boolean {
   const t = transcript ?? '';
   return t === FIXED_SCRIPT_CONTINUE_DIRECTIVE || t === FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE || t === FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE
-    || t === FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE || t.startsWith(FIXED_SCRIPT_LEVEL_BRIDGE_PREFIX);
+    || t === FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE || t.startsWith(FIXED_SCRIPT_LEVEL_BRIDGE_PREFIX)
+    || t.startsWith(FIXED_SCRIPT_OFFER_CONTINUE_PREFIX);
 }
 /** GDI run 3: the client moved off the level check before the brain stored a
  *  level, so no level was ever kept. Leaving a `skipWhenLevelKnown` segment
@@ -484,11 +488,22 @@ export function transitionOfferValidatorDecision(input: {
   announcedMove: boolean;
   calledAdvance: boolean;
   alreadyRetried: boolean;
-}): 'ok' | 'spoken' | 'kill' | 'unmade' {
+  /** Task 30 §D1: sentences of this attempt the student already heard. */
+  heardSentences?: number;
+}): 'ok' | 'spoken' | 'continue' | 'kill' | 'unmade' {
   if (!input.offerPending) return 'ok';
   if (offerAsked(input.text)) return 'spoken';
   if (input.announcedMove || input.calledAdvance) return 'ok';
-  return input.alreadyRetried ? 'unmade' : 'kill';
+  if (input.alreadyRetried) return 'unmade';
+  // Task 30 §D1 (GDI run 17, 746 s): a kill after heard sentences made the
+  // retry repeat them — the attempt stands and the offer is asked by a
+  // silent continuation instead.
+  return (input.heardSentences ?? 0) >= 1 ? 'continue' : 'kill';
+}
+/** Task 30 §D1: the offer continuation's directive (via 'offer'). */
+export const FIXED_SCRIPT_OFFER_CONTINUE_PREFIX = '[System note: Ask the student, in ONE sentence and nothing else, whether they want one more practice item on';
+export function fixedScriptOfferContinueDirective(plan: LessonPlan | null | undefined, from: string, next: string): string {
+  return withSilentClause(`${FIXED_SCRIPT_OFFER_CONTINUE_PREFIX} "${fixedScriptPartLabel(plan, from)}" or to move on to "${fixedScriptPartLabel(plan, next)}".]`);
 }
 /** Task 30 §B1 (GDI run 17, 499–504 s: "Yes, one more practice." was answered
  *  with "Look at the question on the board" — the question answered at

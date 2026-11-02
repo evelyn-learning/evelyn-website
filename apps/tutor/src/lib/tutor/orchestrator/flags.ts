@@ -1099,3 +1099,10 @@ export const TUTOR_MIC_REACQUIRE = process.env.NEXT_PUBLIC_TUTOR_MIC_REACQUIRE !
  *  nag (countsAsNoiseCancel). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_PENDING_ANSWER_EXEMPT=off. */
 export const TUTOR_PENDING_ANSWER_EXEMPT = process.env.NEXT_PUBLIC_TUTOR_PENDING_ANSWER_EXEMPT !== 'off';
+
+/** Task 30 §D2 (GDI run 17, 746 s / 1112 s): a validator retry of an attempt
+ *  the student already heard part of is told those sentences (never say them
+ *  again, no "Okay, let's keep going" opener) — heardSentencesNote. §D1's
+ *  offer continuation rides TUTOR_TRANSITION_OFFER_SPOKEN. Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_RETRY_HEARD_NOTE=off. */
+export const TUTOR_RETRY_HEARD_NOTE = process.env.NEXT_PUBLIC_TUTOR_RETRY_HEARD_NOTE !== 'off';

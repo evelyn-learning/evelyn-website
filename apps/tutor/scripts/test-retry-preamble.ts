@@ -11,7 +11,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { RETRY_PREAMBLE, withRetryPreamble } from '../src/lib/tutor/voice/retry-preamble';
+import { RETRY_PREAMBLE, withRetryPreamble, heardSentencesNote } from '../src/lib/tutor/voice/retry-preamble';
 import { buildValidatorFeedback, VALIDATOR_FEEDBACK_PREFIX } from '../src/lib/tutor/orchestrator/validator-feedback';
 
 let failed = 0;
@@ -55,6 +55,20 @@ test('wired at the retry composition site, after buildValidatorFeedback, all rej
   const preAt = block.indexOf('runTranscript = withRetryPreamble(runTranscript)');
   assert.ok(fbAt > 0 && preAt > fbAt, `fb=${fbAt} pre=${preAt}`);
   assert.ok(/if \(TUTOR_RETRY_PREAMBLE && attemptKilled\) runTranscript = withRetryPreamble\(runTranscript\);/.test(block));
+});
+
+test('30D2: heardSentencesNote — 2 heard ⇒ both quoted; 0 ⇒ null; wired at the retry site', () => {
+  const note = heardSentencesNote(['Met the suppliers from China, nice.', '"I met the suppliers from China" is correct.']);
+  assert.ok(note && note.includes('Met the suppliers from China, nice.') && note.includes('"I met the suppliers from China" is correct.'));
+  assert.ok(note!.startsWith('[runtime note — not from the student] The student has already heard you say: "'));
+  assert.ok(note!.endsWith('Do not say them again or restate them; continue from there and never open with a filler such as "Okay" or "Let\'s keep going". Apply this silently; never mention this note.]'));
+  assert.equal(heardSentencesNote([]), null);
+  assert.equal(heardSentencesNote(['  ']), null);
+  const src = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(src.includes('const heardNote = heardSentencesNote(heardNow);'));
+  assert.ok(src.includes("onDebugEvent?.('brain_validator_retry_heard', `n=${heardNow.length}`);"));
+  const at = src.indexOf("'brain_validator_retry',");
+  assert.ok(at > 0 && src.indexOf('const heardNote = heardSentencesNote(heardNow);') > at, 'after the retry is composed');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
