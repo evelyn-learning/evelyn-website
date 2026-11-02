@@ -17,7 +17,7 @@ import {
   isSentenceStarter, isSaidQuote, numberWordToken, sameSentence, cardableStudentSentence, hasCorrectionCue, recastsStudentSentence,
   quoteAffirmed, isMetaOfferTurn, recastCorrectionCard, sentenceBoardBlockedByRenders,
   levelCheckAnswerCard, levelCheckRecast, isQuotedFragment, acknowledgesOption, boardOffersChoices,
-  grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack,
+  grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack, contrastAskPair,
 } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -1408,6 +1408,23 @@ test('29H: first-person write-back', () => {
   assert.equal(firstPersonWriteBack('You are a sales manager.'), 'I am a sales manager.');
   assert.equal(firstPersonWriteBack('You were in Tokyo, and you met them.'), 'I was in Tokyo, and I met them.');
   assert.equal(firstPersonWriteBack("You've worked with them, so they know you."), "I've worked with them, so they know me.");
+});
+
+test('29I: a contrast ask cards BOTH quoted sentences, in spoken order', () => {
+  const T = `Let's go through the summary together. Today you talked about your work, your responsibilities and your past experiences. One thing you did well was describing your project clearly, for example, "I was responsible for collecting donations for a climate change project." Now, here is my question. Can you explain the difference between these two sentences? "I have worked here for five years." and "I worked here five years ago." Take your time.`;
+  assert.deepEqual(contrastAskPair(T), ['I have worked here for five years.', 'I worked here five years ago.']);
+  const cards = planSentenceBoard({ tutorText: T, studentLast: "Yes, I'm ready.", renderedThisTurn: false, studentCorrect: true, checkedSentence: "Yes, I'm ready." });
+  const s = cards.map((c) => c.sentence);
+  assert.ok(s.includes('I have worked here for five years.') && s.includes('I worked here five years ago.'), JSON.stringify(s));
+  assert.ok(s.indexOf('I have worked here for five years.') < s.indexOf('I worked here five years ago.'), 'spoken order');
+  // one-sentence shape, an "or" joiner, "compare"
+  assert.deepEqual(contrastAskPair('Can you explain the difference between "I have worked here for five years" and "I worked here five years ago"?'), ['I have worked here for five years.', 'I worked here five years ago.']);
+  assert.deepEqual(contrastAskPair('Which is right: "She has lived in Osaka since 2020" or "She lived in Osaka since 2020"?'), ['She has lived in Osaka since 2020.', 'She lived in Osaka since 2020.']);
+  assert.ok(contrastAskPair('Compare these: "I have been to Tokyo twice." versus "I went to Tokyo twice."'));
+  // no lead / no joiner / short quotes ⇒ none
+  assert.equal(contrastAskPair('"I have worked here for five years" means they still work here, and "I worked here five years ago" means they no longer do.'), null);
+  assert.equal(contrastAskPair('You said "I like it a lot." and "I want more of it."'), null);
+  assert.equal(contrastAskPair('What is the difference between "have" and "had"?'), null);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

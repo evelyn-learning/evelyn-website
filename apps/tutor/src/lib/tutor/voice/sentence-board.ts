@@ -1381,7 +1381,59 @@ export function planSentenceBoard(input: {
     if (ka === 0 && a.len !== b.len) return b.len - a.len;
     return a.i - b.i;
   });
-  return classified.slice(0, SENTENCE_BOARD_MAX_PER_TURN).map((c) => c.q);
+  const out = classified.slice(0, SENTENCE_BOARD_MAX_PER_TURN).map((c) => c.q);
+  // Task 29 §I: a contrast ask's two sentences are carded both, in spoken
+  // order, whatever the per-turn cap took first.
+  const pair = contrastAskPair(input.tutorText);
+  if (!pair) return out;
+  const pairCards = pair.map((x) => classified.find((c) => sameSentence(c.q.sentence, x))?.q ?? { sentence: x, kind: 'model' as const, emphasis: [] });
+  return [...out.filter((c) => !pair.some((x) => sameSentence(c.sentence, x))), ...pairCards];
+}
+
+/** Task 29 §I (GDI run 16, 1305 s, Image 65): "Can you explain the difference
+ *  between these two sentences? "I have worked here for five years." and "I
+ *  worked here five years ago."" carded only the first (the per-turn cap of
+ *  two had taken an earlier quote). Two quoted model sentences (≥ 4 words
+ *  each) joined by and / or / versus / vs. / a comma, under a comparison lead
+ *  ("difference between", "compare", "which one / sentence", or an "or"
+ *  joiner) in the same sentence or the one before it, that sentence pair
+ *  asking the student ("?", an imperative ask, "Compare …") ⇒ both, in
+ *  spoken order. null otherwise. */
+const CONTRAST_JOIN_RE = /^\s*(?:,\s*)?(?:and|or|versus|vs\.?)\s*$|^\s*,\s*$/i;
+const CONTRAST_LEAD_RE = /\b(?:difference between|differences between|compare|comparing|which (?:one|sentence))\b/i;
+export function contrastAskPair(tutorText: string | null | undefined): [string, string] | null {
+  const t = tutorText ?? '';
+  const quotes = [...t.matchAll(QUOTE_RE)];
+  for (let k = 0; k + 1 < quotes.length; k++) {
+    const a = quotes[k]!, b = quotes[k + 1]!;
+    const aEnd = (a.index ?? 0) + a[0].length;
+    const between = t.slice(aEnd, b.index ?? 0);
+    if (!CONTRAST_JOIN_RE.test(between)) continue;
+    const ia = quoteInner(a).trim(), ib = quoteInner(b).trim();
+    if (tokens(ia).length < 4 || tokens(ib).length < 4 || CJK_RE.test(ia) || CJK_RE.test(ib)) continue;
+    // the lead: this sentence or the one before it
+    const head = t.slice(0, a.index ?? 0);
+    const bounds = [...head.matchAll(/[.!?。！？](?:["”’)]*)\s+/g)].map((m) => (m.index ?? 0) + m[0].length);
+    const from = bounds.length >= 2 ? bounds[bounds.length - 2]! : 0;
+    // …and it is an ask. Under a comparison lead: a "?" / an imperative ask
+    // ("Compare …") in that sentence or the one before. With only an "or"
+    // joiner: the pair's own sentence is a question ("Which is right: "…" or
+    // "…"?") — an "or" between two phrasings inside a correction ("should
+    // read "…" or "…".") is no contrast ask.
+    const bEnd = (b.index ?? 0) + b[0].length;
+    const tail = t.slice(bEnd);
+    const stop = tail.search(/[.!?。！？](?:["”’)]*)(?:\s|$)/);
+    const sentenceTail = stop >= 0 ? tail.slice(0, stop + 1) : tail;
+    const window = head.slice(from) + t.slice(a.index ?? 0, bEnd) + sentenceTail;
+    const led = CONTRAST_LEAD_RE.test(head.slice(from));
+    const asks = led
+      ? /[?？]/.test(window.replace(QUOTE_RE, '"…"')) || window.split(/(?<=[.!?])\s+/).some((x) => sentenceAsksStudent(x) || /^\s*(?:(?:now|so|next),?\s+)?(?:please\s+)?compare\b/i.test(x))
+      : /\bor\b/i.test(between) && (/^\s*[?？]/.test(sentenceTail) || /[?？]["”’]?\s*$/.test(b[0]));
+    if (!asks) continue;
+    const finish = (x: string) => (/[.!?]$/.test(x) ? x : `${x.replace(/,\s*$/, '')}.`);
+    return [finish(ia), finish(ib)];
+  }
+  return null;
 }
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
