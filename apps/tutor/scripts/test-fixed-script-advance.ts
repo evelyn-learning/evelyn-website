@@ -34,7 +34,7 @@ import {
   offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason,
   FIXED_SCRIPT_OFFER_MAX_WAIT_MS, offerWaitExpired,
   offerAccepted, fixedScriptOfferAcceptedNote, FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, CLOSE_REFUSAL_EXEMPT_REMAINING_MS,
-  fixedScriptOfferContinueDirective, FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, attemptAsksStudent, offerReplantDue,
+  fixedScriptOfferContinueDirective, FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, attemptAsksStudent, offerReplantDue, offerHeardFromAcceptance,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
@@ -985,6 +985,26 @@ test('S-2: the R3-7a refusal stands down for a stop request, the wrap phase and 
   assert.equal(closeBeforeRequiredPhrasesDecision({ missing, alreadyRefused: false, remainingMs: 91_000 }), 'refuse');
   assert.ok(VTR.includes('studentStopRequest: studentEndSignalRef.current || !!lastStudentVerificationRef.current?.isSessionEndSignal,'));
   assert.ok(VTR.includes('remainingMs: maxDurationExplicit && cbStartedAt != null ? sessionMaxMinutes * 60000 - cbElapsedMs : undefined,'));
+});
+// ── Task 31 §B (GDI run 18, 427–470 s): an offer spanning two sentences ──
+test('31B: offerAsked over a two-sentence window; the "one <noun>" item needs an "or"', () => {
+  const T34 = '「I have used ABC software for two years.」ですね、完璧です。 That\'s the present perfect for a tool you still use. Now, one more practice sentence: tell me one tool you have used at work, using "I have used…" Or should we move on to the past simple?';
+  const T36 = 'Okay, let\'s keep this short. Tell me one tool you have used at work, starting with "I have used…", or would you rather move on to "Past simple"?';
+  assert.equal(offerAsked(T34), true, 'turn 34');
+  assert.equal(offerAsked(T36), true, 'turn 36');
+  assert.equal(offerAsked('Now tell me one tool you use.'), false);
+  assert.equal(offerAsked('Tell me one thing you did there. What happened next?'), false, 'one-item without an "or"');
+  assert.equal(offerAsked('Good. Shall we move on?'), false, 'MOVE alone');
+  // the existing single-sentence shapes still hold
+  assert.equal(offerAsked('Great job. Would you like one more practice sentence on it, or move on to the past simple?'), true);
+});
+test('31B: an acceptance after a move-on question proves the offer was heard (VTR records it)', () => {
+  const T34 = 'Now, one more practice sentence: tell me one tool you have used at work, using "I have used…" Or should we move on to the past simple?';
+  assert.equal(offerHeardFromAcceptance('Uh, yeah, one more. sentence.', T34), true);
+  assert.equal(offerHeardFromAcceptance('One more, please.', 'Can you tell me one tool you use?'), false, 'no move clause with a "?"');
+  assert.equal(offerHeardFromAcceptance("Let's move on.", T34), false, 'a decline');
+  assert.ok(VTR.includes("&& offerHeardFromAcceptance(transcript, oaLastTutor)) {"));
+  assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_spoken', `\"${oaSeg}\" (accepted)`);"));
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

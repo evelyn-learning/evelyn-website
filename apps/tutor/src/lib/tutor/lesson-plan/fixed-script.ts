@@ -461,9 +461,30 @@ export function offerWaitExpired(offerSpokenAtMs: number | null | undefined, now
  *  / continue / next / 次 / 進). Pure, generic. */
 const OFFER_MORE_RE = /\b(?:one more|another|more practice|again|once more)\b|もう(?:一|ひと)/i;
 const OFFER_MOVE_RE = /\b(?:move on|moving on|go on|continue|next)\b|次|進/i;
+// Task 31 §B (GDI run 18, 438 / 469 s): the offer spans two sentences — the
+// splitter breaks at an ellipsis / closing quote ("…using "I have used…" Or
+// should we move on …?"), and "one tool" names the item. The offer is judged
+// over a window of the last TWO sentences joined: MORE in one, MOVE in the
+// other, the ask on the window's last sentence. The "one <noun>" item shape
+// counts only with an "or" in the window (an alternative), never alone.
+const OFFER_ONE_ITEM_RE = /\bone (?:more|[a-z]+)\b/i;
+const OFFER_OR_RE = /\bor\b|それとも/i;
 export function offerAsked(text: string | null | undefined): boolean {
   const sentences = splitSentences(stripMarkdownEmphasis(text ?? ''));
-  return sentences.some((s) => OFFER_MORE_RE.test(s) && OFFER_MOVE_RE.test(s) && sentenceAsksStudent(s));
+  return sentences.some((s, i) => {
+    if (!sentenceAsksStudent(s)) return false;
+    const win = i > 0 ? `${sentences[i - 1]} ${s}` : s;
+    if (!OFFER_MOVE_RE.test(win)) return false;
+    return OFFER_MORE_RE.test(win) || (OFFER_ONE_ITEM_RE.test(win) && OFFER_OR_RE.test(win));
+  });
+}
+/** Task 31 §B (belt and braces): the student's reply accepts the offer
+ *  (offerAccepted) and the tutor's previous turn has a MOVE clause in a
+ *  sentence with a question mark — the acceptance proves the offer was
+ *  heard, whatever its wording. Pure. */
+export function offerHeardFromAcceptance(studentText: string | null | undefined, lastTutorText: string | null | undefined): boolean {
+  if (!offerAccepted(studentText, lastTutorText)) return false;
+  return splitSentences(stripMarkdownEmphasis(lastTutorText ?? '')).some((x) => /[?？]/.test(x) && OFFER_MOVE_RE.test(x));
 }
 /** Task 29 §A4: the student's reply declines the spoken offer — "no",
  *  "no thanks", "that's enough", "enough", "skip", "I'm fine / good", or a
