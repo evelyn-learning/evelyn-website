@@ -120,12 +120,14 @@ function displayUnits(s: string): number {
   return n;
 }
 
-/** Height (mm) of a sentence card at a ~162 mm content width: ≈ 22 for
- *  label + one sentence line + padding, plus wrapped sentence/gloss lines. */
+/** Height (mm) of a drawn sentence card at a ~162 mm content width
+ *  (drawSentenceCard: 3 mm padding top and bottom, 5.6 mm per sentence
+ *  line, 3.4 mm label, 1 + 4.2 mm per gloss line, 2 mm gap after). With the
+ *  list's badge row (~8 mm) a one-line card costs ≈ 22 mm, plus gloss lines. */
 export function estimateSentenceHeight(sentence: string, gloss?: string, label?: string): number {
   const sentenceLines = Math.max(1, Math.ceil(displayUnits(sentence) / 60));
-  const glossLines = gloss ? Math.max(1, Math.ceil(displayUnits(gloss) / 95)) : 0;
-  return 16 + (label ? 3.5 : 0) + sentenceLines * 6 + glossLines * 4.2;
+  const glossLines = gloss ? Math.max(1, Math.ceil(displayUnits(gloss) / 90)) : 0;
+  return 8 + sentenceLines * 5.6 + (label ? 3.4 : 0) + (glossLines ? 1 + glossLines * 4.2 : 0) + 1;
 }
 
 /**

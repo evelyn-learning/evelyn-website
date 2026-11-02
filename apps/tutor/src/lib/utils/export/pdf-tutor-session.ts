@@ -14,7 +14,8 @@ import {
   mapNonLatin1Runs, registerCjkFont, resetPdfTextContext, setPdfTextContext, type PdfTextContext,
 } from './pdf-cjk-font';
 import {
-  commandToPdfBlock, estimateSentenceHeight, handwriteCaptionText, layoutSentenceTokens, type PdfBlock,
+  commandToPdfBlock, estimateSentenceHeight, handwriteCaptionText, layoutSentenceTokens, pdfCommandId,
+  shouldBreakBeforeGroup, type PdfBlock,
 } from './pdf-session-blocks';
 
 interface TranscriptMessage {
@@ -2109,48 +2110,34 @@ async function exportTutorSessionPDFInner(
     drawWrappedText('Whiteboard Content', margin, contentWidth, { size: 12, style: 'bold', color: [26, 32, 44], lineHeight: 8 });
 
     // Track whiteboard page groups so each page (per the runtime's page model)
-    // gets its own header + starts on a fresh PDF page — mirroring the on-
-    // screen pagination instead of a flat item dump.
+    // gets its own header — mirroring the on-screen pagination instead of a
+    // flat item dump. Task 32 §D: a group starts a fresh PDF page only when
+    // it does not fit below the previous one (shouldBreakBeforeGroup); a
+    // two-card Part no longer fills a page with white.
     let pdfGroupTitle: string | undefined;
     let pdfGroupNum = 0;
     let pdfGroupStarted = false;
 
-    for (let i = 0; i < dedupedCommands.length; i++) {
-      const cmd = dedupedCommands[i];
-
-      // New whiteboard page? Emit a page header (and a fresh PDF page for every
-      // group after the first) so the export reads page-by-page like the board.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const thisGroupTitle = (cmd as any).__pdfPageTitle as string | undefined;
-      if (!pdfGroupStarted || thisGroupTitle !== pdfGroupTitle) {
-        pdfGroupStarted = true;
-        pdfGroupTitle = thisGroupTitle;
-        pdfGroupNum += 1;
-        if (pdfGroupNum > 1) { pdf.addPage(); y = 20; }
-        else { y += 2; }
-        drawWrappedText(
-          `Page ${pdfGroupNum}: ${thisGroupTitle || 'Untitled'}`,
-          margin, contentWidth,
-          { size: 10, style: 'bold', color: [59, 130, 246], lineHeight: 7 },
-        );
-      }
-
-      // Check if this command has a visual renderer and estimate height.
-      // For actions with native drawers we know the shape; everything else
-      // falls through to the captured-SVG fallback which targets the
-      // shared 520×360 DIAGRAM_VIEWBOX (aspect ≈ 0.69) — at contentWidth
-      // ~170mm that's ~118mm tall, so we reserve 125mm to avoid a page
-      // break mid-SVG. If the captured SVG ends up smaller the remaining
-      // space is reclaimed by the next item.
-      const nativeDrawerActions = new Set([
-        'showEquation', 'showSvgDiagram', 'showGraph', 'showTable',
-        'showCode', 'showGeometry', 'showProblem',
-      ]);
-      const nativeDrawerDiagramTypes = new Set([
-        'pipe-flow', 'fluid-flow', 'continuity', 'free-body',
-        'vectors', 'velocity', 'vector-addition',
-      ]);
-      const visualHeight = (cmd.action === 'showSentence') ? estimateCommandHeight(cmd) :
+    // Space the walk below reserves before drawing item `cmd` (addPageIfNeeded).
+    // For actions with native drawers we know the shape; everything else
+    // falls through to the captured-SVG fallback which targets the
+    // shared 520×360 DIAGRAM_VIEWBOX (aspect ≈ 0.69) — at contentWidth
+    // ~170mm that's ~118mm tall, so we reserve 125mm to avoid a page
+    // break mid-SVG. If the captured SVG ends up smaller the remaining
+    // space is reclaimed by the next item.
+    const nativeDrawerActions = new Set([
+      'showEquation', 'showSvgDiagram', 'showGraph', 'showTable',
+      'showCode', 'showGeometry', 'showProblem',
+    ]);
+    const nativeDrawerDiagramTypes = new Set([
+      'pipe-flow', 'fluid-flow', 'continuity', 'free-body',
+      'vectors', 'velocity', 'vector-addition',
+    ]);
+    const visualHeightOf = (cmd: WhiteboardCommandData): number => {
+      const kind = commandToPdfBlock(cmd, { linksEnabled: linksEnabled() }).kind;
+      if (kind === 'unknown') return 6;
+      return (cmd.action === 'showSentence') ? estimateCommandHeight(cmd) :
+        (cmd.action === 'handwrite' || cmd.action === 'link') ? 12 :
         (cmd.action === 'showEquation') ? 18 :
         (cmd.action === 'showSvgDiagram') ? 100 :
         (cmd.action === 'showGraph') ? 110 :
@@ -2160,6 +2147,59 @@ async function exportTutorSessionPDFInner(
         (cmd.action === 'showDiagram' && nativeDrawerDiagramTypes.has(cmd.type as string)) ? 50 :
         nativeDrawerActions.has(String(cmd.action)) ? 0 :
         125; // captured-SVG fallback reservation
+    };
+    // Per-group height estimate (heading + each item's drawn height + badge
+    // and spacing) and the first item's reservation, for the break decision.
+    const GROUP_HEADING_H = 7;
+    const groupEstimates: Array<{ height: number; first: number }> = [];
+    {
+      let title: string | undefined;
+      let started = false;
+      for (const cmd of dedupedCommands) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const t = (cmd as any).__pdfPageTitle as string | undefined;
+        const vh = visualHeightOf(cmd);
+        if (!started || t !== title) {
+          started = true;
+          title = t;
+          groupEstimates.push({ height: GROUP_HEADING_H, first: GROUP_HEADING_H + vh + 14 });
+        }
+        groupEstimates[groupEstimates.length - 1].height += (vh > 0 ? vh : estimateCommandHeight(cmd)) + 8;
+      }
+    }
+
+    for (let i = 0; i < dedupedCommands.length; i++) {
+      const cmd = dedupedCommands[i];
+
+      // New whiteboard page? Emit a page header so the export reads
+      // page-by-page like the board; a fresh PDF page only when the group
+      // does not fit below the previous one (task 32 §D), else a thin rule.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const thisGroupTitle = (cmd as any).__pdfPageTitle as string | undefined;
+      if (!pdfGroupStarted || thisGroupTitle !== pdfGroupTitle) {
+        pdfGroupStarted = true;
+        pdfGroupTitle = thisGroupTitle;
+        pdfGroupNum += 1;
+        const est = groupEstimates[pdfGroupNum - 1] ?? { height: 0, first: 0 };
+        if (pdfGroupNum > 1 && shouldBreakBeforeGroup({ y, groupHeight: est.height, firstItemHeight: est.first })) {
+          pdf.addPage(); y = 20;
+        } else if (pdfGroupNum > 1) {
+          y += 3;
+          pdf.setDrawColor(191, 219, 254);
+          pdf.setLineWidth(0.3);
+          pdf.line(margin, y, pageWidth - margin, y);
+          pdf.setLineWidth(0.2);
+          y += 6;
+        } else { y += 2; }
+        drawWrappedText(
+          `Page ${pdfGroupNum}: ${thisGroupTitle || 'Untitled'}`,
+          margin, contentWidth,
+          { size: 10, style: 'bold', color: [59, 130, 246], lineHeight: 7 },
+        );
+      }
+
+      // Reserve this item's estimated height (visualHeightOf above).
+      const visualHeight = visualHeightOf(cmd);
 
       addPageIfNeeded(visualHeight + 14);
 
@@ -2357,6 +2397,9 @@ async function exportTutorSessionPDFInner(
   addPageIfNeeded(10);
   drawWrappedText('Conversation Transcript', margin, contentWidth, { size: 12, style: 'bold', color: [26, 32, 44], lineHeight: 8 });
 
+  // Task 32 §D: id of the last inline figure drawn in the transcript — a
+  // command re-attached to the next turn (same stamped id) is drawn once.
+  let lastInlineFigureId: string | undefined;
   for (const msg of transcript) {
     if (msg.role === 'system') continue;
     addPageIfNeeded(14);
@@ -2419,6 +2462,9 @@ async function exportTutorSessionPDFInner(
       for (const cmd of msg.whiteboardCommands) {
         if (META_PDF_BOOKKEEPING.has(String(cmd.action))) continue;
         if (commandToPdfBlock(cmd, { linksEnabled: linksEnabled() }).kind === 'skip') continue;
+        const inlineId = pdfCommandId(cmd);
+        if (inlineId && inlineId === lastInlineFigureId) continue;
+        lastInlineFigureId = inlineId;
         // Reserve enough room for the *actual* command type — graphs/
         // diagrams/circles need ~85mm, equations ~30mm. The prior
         // hard-coded 20mm reservation let the 2026-04-29 geometry

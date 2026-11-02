@@ -9,6 +9,9 @@
  *      engine-only commands (scrollTo, removeItem(s) …) → no block; a truly
  *      unknown action → an "unknown" block (one grey line), never a card.
  *   §C a plain handwrite prints its text with no "→ margin note" suffix.
+ *   §D page-break decision before a whiteboard page group: fits → no break;
+ *      does not fit (but fits a fresh page) → break; taller than a page →
+ *      break only when its first item would not fit.
  *
  * Run: cd apps/tutor && npx tsx scripts/test-pdf-tutor-session.ts
  */
@@ -20,7 +23,8 @@ import {
   hasCjk, inferSessionLanguages, labelCjkRun, pickPdfFont, CJK_FONT_FAMILY,
 } from '../src/lib/utils/export/pdf-cjk-font';
 import {
-  commandToPdfBlock, handwriteCaptionText, layoutSentenceTokens, sentenceSegments,
+  commandToPdfBlock, estimateSentenceHeight, handwriteCaptionText, layoutSentenceTokens, pdfCommandId, sentenceSegments,
+  shouldBreakBeforeGroup,
 } from '../src/lib/utils/export/pdf-session-blocks';
 
 let passed = 0;
@@ -114,6 +118,20 @@ console.log('\n§C handwrite');
   check('plain handwrite (live shape) → its text, no suffix', handwriteCaptionText({ action: 'handwrite', text: 'I have used Python for one year' }) === 'I have used Python for one year');
   const src = readFileSync(join(__dirname, '..', 'src/lib/utils/export/pdf-tutor-session.ts'), 'utf8');
   check('exporter source never appends a "margin note" suffix', !/`[^`]*margin note`/.test(src));
+}
+
+console.log('\n§D pagination');
+{
+  check('fits below the cursor → no break', !shouldBreakBeforeGroup({ y: 120, groupHeight: 80, firstItemHeight: 30 }));
+  check('exactly fits → no break', !shouldBreakBeforeGroup({ y: 192, groupHeight: 80, firstItemHeight: 30 }));
+  check('does not fit, fits a fresh page → break', shouldBreakBeforeGroup({ y: 200, groupHeight: 80, firstItemHeight: 30 }));
+  check('taller than a page, first item fits → no break', !shouldBreakBeforeGroup({ y: 150, groupHeight: 400, firstItemHeight: 40 }));
+  check('taller than a page, first item does not fit → break', shouldBreakBeforeGroup({ y: 250, groupHeight: 400, firstItemHeight: 40 }));
+  const two = estimateSentenceHeight('I worked with a customer from Canada last year.') + estimateSentenceHeight('I I want leave go go home.');
+  check('a two-card Part fits under a half-full page', !shouldBreakBeforeGroup({ y: 140, groupHeight: 7 + two + 16, firstItemHeight: 40 }), String(two));
+  check('gloss adds height', estimateSentenceHeight('I work in sales.', '営業をしていて、お客様に合う商品を選ぶお手伝いをしています。') > estimateSentenceHeight('I work in sales.'));
+  check('command id read from either shape', pdfCommandId({ action: 'showSentence', data: { id: 'showSentence-3' }, timestamp: 'x', sourceMessageIndex: 1 }) === 'showSentence-3'
+    && pdfCommandId({ action: 'showSentence', id: 'showSentence-4' }) === 'showSentence-4');
 }
 
 // ── End-to-end (jsPDF Node build) ──
