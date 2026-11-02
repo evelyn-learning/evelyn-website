@@ -455,7 +455,7 @@ export function stripLeakedLabels(sentence: string, personaNames?: string | read
 // the summary."). Whole-sentence drops. "I'll ask you …", "Let's put it on
 // the board.", "Here is the next question." are speech and survive.
 const DIRECTIVE_ECHO_RE =
-  /\bas the (?:session|lesson|notes?|instructions?|prompt|guidelines?) (?:asks?|says?|requires?|wants?|suggests?)\b|^\s*Keep it (?:brief|short)\b|\b(?:use|in) Japanese for the explanation\b/i;
+  /\bas the (?:session|lesson|notes?|instructions?|prompt|guidelines?) (?:asks?|says?|requires?|wants?|suggests?)\b|^\s*Keep it (?:brief|short)\b(?!\s*:)|\b(?:use|in) Japanese for the explanation\b/i;
 // Task 27 §D1 (GDI run 14, 840–886 s): a continuation / retry turn SPOKE its
 // directive — "Hmm, I need to be careful: the last thing I said was a
 // correction, so …", "Confirm plainly and move on: the next question is about
@@ -1117,12 +1117,92 @@ function isLeakShape(s: string): boolean {
     || isBareSelfCheckClaim(s);
 }
 
+
+// Task 33 §B (GDI bot run r8, 280 s / 579 s): the retry / clarify directive
+// spoken verbatim — "Ask the question again, plainly, in English and
+// Japanese, and keep it short." (the turn's FIRST sentence) and "I'll ask
+// again, plainly." Two whole-sentence drops:
+//   (a) a sentence that OPENS with an imperative addressed to the tutor from
+//       the directive vocabulary (ask the question again / keep it short /
+//       answer … first / reply in ONE sentence / do not ask · offer ·
+//       mention …) and addresses no student (no you / your / we / let's):
+//       "Ask your colleague the question again.", "Keep it short: one
+//       sentence.", "Please answer in English." are speech and survive;
+//   (b) "I'll ask (it / that / the question) again, plainly".
+// And (c), structural: a sentence whose content words overlap a sentence of
+// a runtime note / validator directive bundled into THIS turn's input with
+// Jaccard ≥ 0.6 (directiveEchoOf). Quoted spans in the directive (the words
+// the tutor is meant to say) never count, and a sentence that asks or
+// addresses the student is never dropped by (c).
+const TUTOR_DIRECTIVE_IMPERATIVE_RE =
+  /^\s*(?:(?:so|now|okay|ok|then|first),?\s+)?(?:ask (?:(?:the|that|this|my) )?(?:question |it )?(?:again|once more)\b|keep it (?:brief|short)\b(?!\s*:)|answer\b[^.!?:]{0,60}\bfirst\b|(?:reply|respond) in one sentence\b|(?:do not|don['’]t) (?:ask|re-?ask|offer|mention|narrate|call|praise|re-?teach|greet|repeat the (?:question|choice|offer))\b)/i;
+const DIRECTIVE_ADDRESSES_STUDENT_RE = /\b(?:you|your|yours|yourself|we|let['’]?s|let us|us|our)\b/i;
+const ASK_AGAIN_PLAINLY_RE = /^\s*I['’]?ll ask (?:it |that |the question )?again,? plainly\b/i;
+export function isTutorDirectiveImperative(sentence: string): boolean {
+  const s = sentence ?? '';
+  if (ASK_AGAIN_PLAINLY_RE.test(s)) return true;
+  return TUTOR_DIRECTIVE_IMPERATIVE_RE.test(s) && !DIRECTIVE_ADDRESSES_STUDENT_RE.test(s);
+}
+const DIRECTIVE_QUOTE_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
+const ECHO_STOPWORDS = new Set(['the', 'and', 'for', 'that', 'this', 'with', 'from', 'are', 'was', 'were', 'not', 'but', 'its', 'it’s', "it's", 'then', 'than', 'into', 'onto', 'any', 'all', 'has', 'have', 'had', 'one', 'been', 'will', 'would', 'should', 'can', 'could', 'also', 'just', 'only', 'very', 'what', 'when', 'which']);
+function echoWords(s: string): Set<string> {
+  const words = (s.toLowerCase().match(/[\p{L}\p{N}'’]+/gu) ?? []).filter((w) => w.length >= 3 && !ECHO_STOPWORDS.has(w));
+  return new Set(words);
+}
+/** Task 33 §B: the sentences of every runtime note / directive bundled into a
+ *  turn's input. The input is the notes joined by blank lines, the student's
+ *  words last; a chunk that opens with a bracketed label ("[runtime note —
+ *  not from the student] …", "[validator feedback — …] …") is a directive.
+ *  The label, the student's own words and quoted spans are removed. Pure. */
+export function directiveSentencesOf(input: string | null | undefined, studentText?: string | null): string[] {
+  let t = input ?? '';
+  const st = (studentText ?? '').trim();
+  if (st && !st.startsWith('[')) t = t.split(st).join(' ');
+  return t.split(/\n\s*\n/)
+    .filter((c) => /^\s*\[/.test(c))
+    .map((c) => c.replace(/^\s*\[[^\]\n]*\]\s*/, '').replace(/\[\d+\]\s*[\w-]+:\s*/g, ' ').replace(DIRECTIVE_QUOTE_RE, ' '))
+    .flatMap((c) => c.split(/(?<=[.!?。！？\]])\s+|\n+/))
+    .map((x) => x.replace(/^\[|\]$/g, '').trim())
+    .filter((x) => echoWords(x).size >= 3);
+}
+/** Task 33 §B: directiveSentencesOf with a one-entry memo (the call site
+ *  asks once per streamed sentence with the same turn input). */
+let directiveMemo: { input: string; student: string; out: string[] } | null = null;
+export function directiveSentencesForInput(input: string | null | undefined, studentText?: string | null): string[] {
+  const i = input ?? '';
+  const st = studentText ?? '';
+  if (directiveMemo && directiveMemo.input === i && directiveMemo.student === st) return directiveMemo.out;
+  const out = directiveSentencesOf(i, st);
+  directiveMemo = { input: i, student: st, out };
+  return out;
+}
+export const DIRECTIVE_ECHO_JACCARD = 0.6;
+/** Task 33 §B (c): the sentence restates a bundled directive sentence. Pure. */
+export function isDirectiveEchoOf(sentence: string, directiveSentences: readonly string[] | null | undefined): boolean {
+  if (!directiveSentences || directiveSentences.length === 0) return false;
+  const s = sentence ?? '';
+  if (/[?？]/.test(s) || DIRECTIVE_ADDRESSES_STUDENT_RE.test(s.replace(DIRECTIVE_QUOTE_RE, ' '))) return false;
+  const w = echoWords(s.replace(DIRECTIVE_QUOTE_RE, ' '));
+  if (w.size < 3) return false;
+  return directiveSentences.some((d) => {
+    const dw = echoWords(d);
+    let inter = 0;
+    for (const x of w) if (dw.has(x)) inter++;
+    const union = w.size + dw.size - inter;
+    return union > 0 && inter / union >= DIRECTIVE_ECHO_JACCARD;
+  });
+}
+function directiveEchoEnabled(): boolean {
+  try { return flagOn(process.env.NEXT_PUBLIC_TUTOR_DIRECTIVE_ECHO_DROP); } catch { return true; }
+}
+
 export function isMetaNarration(
   sentence: string,
-  opts?: { structural?: boolean; /** Task 20 fix round 1: the turn answers a runtime directive / nudge (transcript starts with "["), not the student */ runtimeTriggered?: boolean; /** Task 21 fix round 1: the persona's name(s) for the "<Name> here." rule */ personaName?: string | readonly string[] | null ; /** Task 30 fix round 6 (T-1): the session's first tutor turn — the persona may introduce itself */ firstTutorTurn?: boolean },
+  opts?: { structural?: boolean; /** Task 20 fix round 1: the turn answers a runtime directive / nudge (transcript starts with "["), not the student */ runtimeTriggered?: boolean; /** Task 21 fix round 1: the persona's name(s) for the "<Name> here." rule */ personaName?: string | readonly string[] | null ; /** Task 30 fix round 6 (T-1): the session's first tutor turn — the persona may introduce itself */ firstTutorTurn?: boolean; /** Task 33 §B: the sentences of the runtime notes / directive bundled into this turn's input (directiveSentencesOf) */ directiveSentences?: readonly string[] | null },
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
+  if (directiveEchoEnabled() && (isTutorDirectiveImperative(s) || isDirectiveEchoOf(s, opts?.directiveSentences))) return true;
   if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || (BOARD_STAGING_NARRATION_RE.test(s) && !isFirstPersonBoardOfferToLearner(s)) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;

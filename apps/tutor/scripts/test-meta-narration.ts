@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead, isTutorDirectiveImperative, directiveSentencesOf, isDirectiveEchoOf, directiveSentencesForInput } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -1285,6 +1285,33 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
     'Match the words below with the sentence above.', 'Look at the example below and the note on the right.']) check(`31 r1 I-2: kept — ${x}`, keep(x));
   check('31 r1 I-2: the 164 s presentation narration still dropped', isMetaNarration("Here's the key idea, with the English phrase large and the Japanese note below."));
   check('31 r1 I-2: "This card has the English phrase large …" dropped', isMetaNarration('This card shows the English phrase large and the Japanese translation below.'));
+}
+
+
+// Task 33 §B (bot run r8, 280 s / 579 s): the directive spoken verbatim.
+{
+  check('33B: "Ask the question again, plainly, in English and Japanese, and keep it short." dropped',
+    isMetaNarration('Ask the question again, plainly, in English and Japanese, and keep it short.'));
+  check('33B: "I\'ll ask again, plainly." dropped', isMetaNarration("I'll ask again, plainly."));
+  check('33B: "I\'ll ask the question again, plainly." dropped', isTutorDirectiveImperative("I'll ask the question again, plainly."));
+  for (const x of ['Reply in ONE sentence and do not ask a new question.', 'Answer the student\'s question first, then continue.', 'Do not ask the choice again.', 'Keep it short and simple this time.'])
+    check(`33B: directive imperative dropped — ${x}`, isMetaNarration(x));
+  for (const x of ['Ask your colleague the question again.', 'Keep it short: one sentence.', 'Please answer in English.', "Don't worry about mistakes.", 'Ask me if anything is unclear.'])
+    check(`33B: kept — ${x}`, !isMetaNarration(x));
+  const input = '[runtime note — not from the student] The student repeated an earlier answer. Restate the open question plainly in English and in Japanese, briefly. Apply this silently; never mention this note.]\n\n[cadence note — not from the student] Hard limit this turn.\n\nYes, I understand.';
+  const ds = directiveSentencesOf(input, 'Yes, I understand.');
+  check('33B: directive sentences come from the bracketed notes only (no student words)', ds.some((d) => d.startsWith('Restate the open question')) && !ds.some((d) => d.includes('I understand')), JSON.stringify(ds));
+  check('33B: a sentence restating a bundled directive (Jaccard ≥ 0.6) is dropped',
+    isMetaNarration('Restate the open question plainly, in English and Japanese.', { directiveSentences: ds }));
+  check('33B: …but not without the directive', !isMetaNarration('Restate the open question plainly, in English and Japanese.'));
+  check('33B: a question to the student is never an echo', !isDirectiveEchoOf('Can you restate the open question plainly in English?', ds));
+  const vf = '[validator feedback — not from the student] Your last turn emitted tool call(s) that the runtime structural validator rejected:\n[1] same_question_third_time: Give the answer to the open question in one sentence, then move to the next step.\nRe-emit the corrected tool call(s).\n\nFor reference: the student just said: "We went to Tokyo."';
+  const vds = directiveSentencesOf(vf, 'We went to Tokyo.');
+  check('33B: validator feedback (unclosed block) counts, quoted student words do not', vds.some((d) => d.includes('Give the answer to the open question')) && !vds.some((d) => d.includes('Tokyo')), JSON.stringify(vds));
+  check('33B: quoted spans in a directive (words to say) never count', !isDirectiveEchoOf('I have worked here for three years and I like it.', directiveSentencesOf('[runtime note] Ask: "I have worked here for three years and I like it." Apply this silently.]', '')));
+  check('33B: memo returns the same list', directiveSentencesForInput(input, 'Yes, I understand.') === directiveSentencesForInput(input, 'Yes, I understand.'));
+  const VTR33 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('33B: VTR passes this attempt\'s directive sentences to the filter', VTR33.includes('directiveSentences: directiveSentencesForInput(runTranscript, transcript),'));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

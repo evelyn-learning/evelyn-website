@@ -223,7 +223,7 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { splitSentenceForTts, keptRestRemoved } from '@/lib/tutor/voice/tts-language';
-import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isThankAck, isRepeatThankAck, isPlanContinuationSentence, doneTurnText } from '@/lib/tutor/voice/meta-narration';
+import { isMetaNarration, directiveSentencesForInput, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isThankAck, isRepeatThankAck, isPlanContinuationSentence, doneTurnText } from '@/lib/tutor/voice/meta-narration';
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish, replaceLastStudentEntry, rememberStudentEntryId } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
@@ -17090,6 +17090,8 @@ export function VoiceTutorRealtime({
                     personaName: personaNamesRef.current,
                     // Task 30 fix round 6 (T-1): the persona may introduce itself in the first tutor turn.
                     firstTutorTurn: recentTutorTurnsRef.current.length === 0,
+                    // Task 33 §B: the notes / directive bundled into this attempt's input.
+                    directiveSentences: directiveSentencesForInput(runTranscript, transcript),
                   });
                   if (metaNarrationRe) {
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
