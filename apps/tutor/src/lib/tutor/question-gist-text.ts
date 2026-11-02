@@ -49,9 +49,40 @@ export function stripMarkdownEmphasis(s: string): string {
  *  Returns null when there's no question or it's too long to pin whole. */
 export function lastQuestionSentence(text: string): string | null {
   const questions = stripMarkdownEmphasis(text).match(/[^.!?\n]{4,}\?/g);
-  const last = questions?.[questions.length - 1]?.trim();
+  const last = stripUnbalancedQuotes(questions?.[questions.length - 1] ?? '');
   if (!last || last.length > QPIN_MAX_CHARS) return null;
   return last;
+}
+
+/** Task 29 §F (GDI run 16, 608 s / 749 s): a question cut after a quoted
+ *  sentence kept that quote's closing mark at its start — `" Now, what was
+ *  …?`. Strips leading / trailing quote marks ("“”'‘’「」『』) that are
+ *  UNBALANCED in the text; a fully quoted sentence keeps its pair. */
+const PAIRED_QUOTES: ReadonlyArray<[string, string]> = [['“', '”'], ['‘', '’'], ['「', '」'], ['『', '』']];
+const SYMMETRIC_QUOTES = ['"', "'"];
+const countOf = (s: string, c: string) => s.split(c).length - 1;
+function edgeQuoteUnbalanced(s: string, c: string, atStart: boolean): boolean {
+  if (SYMMETRIC_QUOTES.includes(c)) return countOf(s, c) % 2 === 1;
+  for (const [open, close] of PAIRED_QUOTES) {
+    if (c !== open && c !== close) continue;
+    const opens = countOf(s, open);
+    const closes = countOf(s, close);
+    // a closer at the start / an opener at the end pairs with nothing there
+    if ((atStart && c === close) || (!atStart && c === open)) return true;
+    return c === open ? opens > closes : closes > opens;
+  }
+  return false;
+}
+export function stripUnbalancedQuotes(text: string): string {
+  let s = (text ?? '').trim();
+  for (let guard = 0; guard < 8 && s; guard++) {
+    const first = s[0];
+    const last = s[s.length - 1];
+    if ('"“”\'‘’「」『』'.includes(first) && edgeQuoteUnbalanced(s, first, true)) { s = s.slice(1).trim(); continue; }
+    if ('"“”\'‘’「」『』'.includes(last) && edgeQuoteUnbalanced(s, last, false)) { s = s.slice(0, -1).trim(); continue; }
+    break;
+  }
+  return s;
 }
 
 /** Longest text a pin shows whole (lastQuestionSentence's cap). */
@@ -103,7 +134,7 @@ export function lastAskSentence(text: string): string | null {
   for (let j = askIdx + 1; j < sentences.length; j++) {
     if (/[?？]["”’)]?\s*$/.test(sentences[j])) return null;
   }
-  return capPinText(askText);
+  return capPinText(stripUnbalancedQuotes(askText));
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -184,7 +215,7 @@ export function capPinText(text: string): string {
  *  instead (capped like an ask pin). null ⇒ no question sentence. */
 export function verbatimQuestionPin(text: string): string | null {
   const questions = stripMarkdownEmphasis(text ?? '').match(/[^.!?\n]{4,}\?/g);
-  const last = questions?.[questions.length - 1]?.trim();
+  const last = stripUnbalancedQuotes(questions?.[questions.length - 1] ?? '');
   return last ? capPinText(last) : null;
 }
 

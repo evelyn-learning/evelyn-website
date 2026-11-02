@@ -11,7 +11,8 @@
  *
  * Run: npx tsx scripts/test-question-gist-text.ts
  */
-import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply, lastAskSentence, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn, capPinText } from '../src/lib/tutor/question-gist-text';
+import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply, lastAskSentence, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn, capPinText, stripUnbalancedQuotes } from '../src/lib/tutor/question-gist-text';
+import { transitionAskSentence } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -219,6 +220,23 @@ check('"Repeat after me: …" leads', /^Repeat after me/.test(lastAskSentence('G
 check('m2: "Pick any number — say 5 — and double it." → not an ask', lastAskSentence('Pick any number — say 5 — and double it.'), null);
 check('m2: "Let\'s repeat the rule: say have plus the past participle." → not an inner ask', lastAskSentence("Let's repeat the rule: say have plus the past participle."), null);
 check('", so you did well." is no ask', lastAskSentence('You finished early, so you did well.'), null);
+
+// Task 29 §F (GDI run 16, 608 s / 749 s): no stray quote mark from the previous quoted sentence.
+{
+  const t608 = 'Good. The natural version is "I attended a robotics exhibition in Tokyo last month." Now, what was the most interesting thing you learned at that exhibition?';
+  const clean = 'Now, what was the most interesting thing you learned at that exhibition?';
+  check('29F: 608 s verbatim pin', verbatimQuestionPin(t608), clean);
+  check('29F: 608 s last question', lastQuestionSentence(t608), clean);
+  check('29F: 608 s language candidate', languagePinCandidate(t608), clean);
+  const t749 = 'You said "I met companies that sell robots." Can you say that sentence once more?';
+  check('29F: 749 s transition ask', transitionAskSentence(t749), 'Can you say that sentence once more?');
+  check('29F: a fully quoted sentence keeps its pair', stripUnbalancedQuotes('"I have worked here for five years."'), '"I have worked here for five years."');
+  check('29F: curly / Japanese pairs kept', stripUnbalancedQuotes('「次に進みますか？」'), '「次に進みますか？」');
+  check('29F: a leading closer is stripped', stripUnbalancedQuotes('” Now, which one?'), 'Now, which one?');
+  check('29F: a trailing opener is stripped', stripUnbalancedQuotes('Say this: “'), 'Say this:');
+  check('29F: an inner quote is untouched', stripUnbalancedQuotes('Can you say "for our customers" again?'), 'Can you say "for our customers" again?');
+  check('29F: an ask pin keeps its quote', lastAskSentence('Good. "Fine." Please say "I have worked here for five years."'), 'Please say "I have worked here for five years."');
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
