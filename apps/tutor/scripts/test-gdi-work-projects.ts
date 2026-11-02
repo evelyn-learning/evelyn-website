@@ -171,6 +171,8 @@ test('pronunciation: targets in metadata, four options, measured-only feedback',
 test('summary: "one thing you did well", check question, no stored-summary tool', () => {
   const s = seg('summary');
   assert.ok((s.requiredPhrases ?? []).map(lower).includes('one thing you did well'));
+  // bot run r15 (2026-11-02): the brain closed the summary in its first turn without the check question — the phrase gates the close
+  assert.ok((s.requiredPhrases ?? []).map(lower).includes('the difference between'));
   const n = s.teacherNote ?? '';
   assert.ok(n.includes('I have worked here for five years'));
   assert.ok(n.includes('I worked here five years ago'));

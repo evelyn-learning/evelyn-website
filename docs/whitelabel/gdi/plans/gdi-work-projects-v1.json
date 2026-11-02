@@ -31,8 +31,18 @@
       "goal": "Welcome and lesson overview",
       "script": "Hello, and welcome to your English lesson! Today we'll practice talking about your work and the projects you're involved in. You'll answer questions about your job, and we'll practice two grammar points: the present perfect for your experience, and the past simple for finished events at a specific time. You'll also practice follow-up questions to keep a conversation going, I'll correct your mistakes, explain them and give you a chance to try again, and near the end you can practice your pronunciation if you'd like.",
       "teacherNote": "Lesson overview before anything else. Say the script in warm, simple English; you may paraphrase, but keep the whole overview to six sentences or fewer and keep all five points: speaking about your job, the two grammar points, follow-up questions, feedback with a chance to try again, optional pronunciation. Always say the grammar names in English as 'present perfect' and 'past simple', even when you add Japanese. Ask no assessment question here. If the learner says they do not understand or replies in Japanese, give the outline again in two or three short Japanese sentences, keeping the grammar names in English. If the learner's level is not yet known, say just before the closing question that the short one-time level check comes next, so you can adjust the lesson for them; if it is already known, say instead that you'll continue at that level and move on, and never check the level again. If the level is already known and it is beginner, give the overview in short Japanese, keeping the grammar names in English. Pacing for the whole lesson: about 25 minutes; keep each part near its time, never end early, and always finish with the summary. Close the overview with exactly \"Are you ready?\" and nothing after it. NEVER ask about the learner's job or work in the overview: that is the level check's first question. When they say they are ready, advance to the next segment.",
-      "requiredPhrases": ["present perfect", "past simple"],
-      "metadata": { "label": "Overview", "labelLocalized": { "ja": "概要" }, "maxTurns": 2, "script": "Hello, and welcome to your English lesson! Today we'll practice talking about your work and the projects you're involved in. We'll practice two grammar points: the present perfect for your experience, and the past simple for finished events at a specific time. You'll also practice follow-up questions, I'll correct your mistakes and give you a chance to try again, and near the end you can practice your pronunciation if you like. 今日は、仕事について英語で話す練習をしましょう。 Are you ready?" },
+      "requiredPhrases": [
+        "present perfect",
+        "past simple"
+      ],
+      "metadata": {
+        "label": "Overview",
+        "labelLocalized": {
+          "ja": "概要"
+        },
+        "maxTurns": 2,
+        "script": "Hello, and welcome to your English lesson! Today we'll practice talking about your work and the projects you're involved in. We'll practice two grammar points: the present perfect for your experience, and the past simple for finished events at a specific time. You'll also practice follow-up questions, I'll correct your mistakes and give you a chance to try again, and near the end you can practice your pronunciation if you like. 今日は、仕事について英語で話す練習をしましょう。 Are you ready?"
+      },
       "estimatedMinutes": 2
     },
     {
@@ -41,7 +51,17 @@
       "question": "1. Can you tell me a little about your job? What do you do?\n2. Have you ever worked with an international customer? If so, can you tell me about the experience?\n3. What is one skill you'd like to improve in your English, and why is it important to you?",
       "commonErrors": [],
       "teacherNote": "One-time English level check: a short, friendly conversation, not a test. Introduce it in one or two sentences: please answer in English, don't worry about mistakes, I want to see what you can already do so the lesson is useful for you. Then ask exactly three questions, one at a time. Question 1: 'Can you tell me a little about your job? What do you do?' Question 2: 'Have you ever worked with an international customer? If so, can you tell me about the experience?' (if they have not, accept a new customer or a difficult project instead). Question 3: 'What is one skill you'd like to improve in your English, and why is it important to you?' After each answer: no corrections and no teaching in this segment, so they can show their natural ability; react in one short line to what they said, and ask at most ONE simple follow-up that fits the answer (a short answer like 'I work in sales. I sell machines.' gets an easy one: 'What kind of machines do you sell?'; connected sentences get a harder one: 'Can you tell me about a recent project you worked on and what your responsibilities were?'). Notice: whether they understand the question, how much help they need, grammar accuracy, vocabulary range, sentence length, and whether they can explain an experience and give a reason. If they answer in Japanese or say わかりません, reassure them in one Japanese sentence, ask the question again more simply once, and accept whatever they can say; that is evidence too (beginner). After the third answer (and its follow-up, if any), call set_working_level ONCE with level beginner, intermediate or advanced and one line of evidence. Beginner: short sentences, familiar words, needs help to understand or answer. Intermediate: connected sentences with grammar or vocabulary errors. Advanced: fluent, varied vocabulary, complex sentences. Then, in one soft line, say what you'll focus on today (for example making the grammar more accurate and the answers more natural) — never name a level — and move straight on to the topic. Never give a score, a CEFR level or a label like 'you are a beginner'; never call set_working_level twice, and never check the level again later in the lesson. Ask these three questions in this order, one per turn; after the third answer, call set_working_level({level}) in the same turn as your soft focus line, then advance_lesson({to:\"next\"}). Ask only these three questions, one at a time; listen and assess silently. Do not ask grammar questions (which tense, which word shows the time) and do not teach here — corrections come later in the lesson.",
-      "metadata": { "skipWhenLevelKnown": true, "label": "Level check", "labelLocalized": { "ja": "レベルチェック" }, "maxTurns": 5, "transition": { "kind": "bridge" } },
+      "metadata": {
+        "skipWhenLevelKnown": true,
+        "label": "Level check",
+        "labelLocalized": {
+          "ja": "レベルチェック"
+        },
+        "maxTurns": 5,
+        "transition": {
+          "kind": "bridge"
+        }
+      },
       "estimatedMinutes": 3
     },
     {
@@ -57,9 +77,20 @@
         "[advanced] Choose the tense that shows the timing and relevance of an event: 'I have worked with international customers for several years.' emphasises experience accumulated over time; 'I worked with a major international customer last year.' describes a completed experience in a specific past period.",
         "[advanced] Practice question: Could you describe your current responsibilities and explain how your role has developed over time?"
       ],
-      "suggestedTools": ["show_table"],
+      "suggestedTools": [
+        "show_table"
+      ],
       "teacherNote": "Teach ONLY the lines marked with the learner's working level; never read, show or mention the other two versions. If no working level was set, use the [intermediate] version. The segment card shows only the chosen version; if you add anything to the board, use only the chosen version's example sentences, for example a small show_table with the two tenses for intermediate and advanced. Beginner: explain in Japanese, say each English example as its own short sentence, and invite them to say one about themselves. Intermediate and advanced: introduce the contrast between the two example sentences briefly, as a preview; we practice it in the next activities. Then ask the practice question from the chosen version and move into conversation: acknowledge the answer, correct one important mistake if there is one (with a retry), and ask one follow-up based on what they said. About three minutes, then advance to the present perfect.",
-      "metadata": { "label": "Your job", "labelLocalized": { "ja": "仕事について" }, "maxTurns": 4, "transition": { "kind": "bridge" } },
+      "metadata": {
+        "label": "Your job",
+        "labelLocalized": {
+          "ja": "仕事について"
+        },
+        "maxTurns": 4,
+        "transition": {
+          "kind": "bridge"
+        }
+      },
       "estimatedMinutes": 3
     },
     {
@@ -72,7 +103,16 @@
         "have / has + past participle: work → have worked, learn → have learned, do → have done."
       ],
       "teacherNote": "Grammar point 1, the present perfect, taught through conversation, not drills. Open in one or two sentences: we use the present perfect (subject + have/has + past participle) for experience and achievements that started in the past and continue now, for example 'I have worked here for five years.' and 'She has completed several projects.' Then ask the question. Ask one question at a time, respond to the meaning of each answer, and follow up on what they actually said (for example 'What is one important skill you have learned at your company?' then 'How has it helped you at work?'). Correction pattern: Acknowledge → Correct → Explain → Practice → Continue. Example: learner says 'I work here for five years.' → 'Good! I understand what you mean. A more natural way to say this is: I have worked here for five years. We use have worked because you started working here in the past and you still work here now. Can you say the complete sentence?' After a correct retry, praise briefly and continue the conversation. Correct target-grammar and meaning errors, let the rest pass; one correction at a time. When they use the present perfect correctly, say so specifically. If they struggle: simpler questions, a sentence starter ('Try starting with: I have worked with…'), explain unfamiliar words, break a question into smaller parts. If they do well: ask for longer answers, reasons and comparisons, for example 'What challenges have you encountered when working with international customers, and how did you overcome them?' No fixed number of questions; meaningful practice at their level matters more. After about three good exchanges (about three and a half minutes), advance to the past simple.",
-      "metadata": { "label": "Present perfect", "labelLocalized": { "ja": "現在完了" }, "maxTurns": 8, "transition": { "kind": "offer" } },
+      "metadata": {
+        "label": "Present perfect",
+        "labelLocalized": {
+          "ja": "現在完了"
+        },
+        "maxTurns": 8,
+        "transition": {
+          "kind": "offer"
+        }
+      },
       "estimatedMinutes": 3.5
     },
     {
@@ -85,7 +125,16 @@
         "Past simple = subject + past-tense verb: attend → attended, meet → met, join → joined."
       ],
       "teacherNote": "Grammar point 2, the past simple, taught through conversation. Open in one or two sentences: we use the past simple (subject + past-tense verb) for completed events at a specific time in the past, for example 'I joined the company in 2022.' and 'We attended an international exhibition last month.' Key contrast with the present perfect: when there is a specific time word (yesterday, last month, last year, in 2022, ago), use the past simple. Then ask the question. Correction pattern: Acknowledge → Correct → Explain → Practice → Continue. Example: learner says 'I have attended an exhibition last year.' → 'Good answer! There's just one small grammar point. Because you're talking about a specific time in the past, last year, we use the past simple: I attended an exhibition last year. Can you say it again?' Then continue, for example 'When was the last time you met an important customer?' and 'What did you discuss with the customer?' A natural chain links the two grammar points: 'Have you ever worked with a customer from another country?' → 'Can you tell me a little about that experience?' → 'When did you first meet them?' → 'What did you discuss?' Correct target-grammar and meaning errors, let the rest pass; one correction at a time, and say so specifically when they use the past simple correctly. Use the learner's answers to develop the conversation rather than following these examples rigidly. Adapt as in the present perfect segment (simpler questions and sentence starters if they struggle; longer answers and reasons if they do well). After about three good exchanges, advance to the open conversation.",
-      "metadata": { "label": "Past simple", "labelLocalized": { "ja": "過去形" }, "maxTurns": 8, "transition": { "kind": "offer" } },
+      "metadata": {
+        "label": "Past simple",
+        "labelLocalized": {
+          "ja": "過去形"
+        },
+        "maxTurns": 8,
+        "transition": {
+          "kind": "offer"
+        }
+      },
       "estimatedMinutes": 3.5
     },
     {
@@ -94,7 +143,13 @@
       "advancedQuestion": "What is one project you've worked on that you're particularly proud of?",
       "hint": "Try starting with: 'I worked on a project to…'",
       "teacherNote": "Open conversation practice. This is a core part of the lesson, not optional: about five minutes. Now be a conversation partner more than a teacher, and let the learner steer within the theme of work. Introduce it in one or two sentences: 'You're doing well! Now let's have a more natural conversation about your work. I'll ask you questions, and you can ask me questions too. Try to use the grammar we've practiced, but don't worry about being perfect.' Then ask the question. On every turn: listen to the whole answer, pick up the useful information in it, respond naturally to that, correct only important errors, and ask a relevant follow-up (their role in the project, the biggest challenge, how they handled it, 'Have you worked on a similar project since then?'). At most two corrections in this segment, each with Acknowledge → Correct → Explain → Practice → Continue and a retry; for example 'I was responsible to communicate with our customers.' → 'A more natural way to say this is: I was responsible for communicating with our customers. After responsible for, we use a noun or a verb ending in -ing. Can you try that sentence again?' Allow the learner to change the subject within the topic of work. About halfway through, invite them: 'Now it's your turn to ask me a question about work experience.' If they ask about your own work, answer briefly and in character, from your persona's background (for example helping with customer service improvements and team training), then turn it back to them with a question such as 'What kind of project would you like to work on in the future?' If the learner asks how to say a word or sentence, model it (its own English-only sentence), call request_pronunciation_check if that tool is available, give ONE point, then return to the conversation exactly where you left it. Do not move on early; after about five minutes, advance to pronunciation.",
-      "metadata": { "label": "Conversation", "labelLocalized": { "ja": "会話" }, "maxTurns": 12 },
+      "metadata": {
+        "label": "Conversation",
+        "labelLocalized": {
+          "ja": "会話"
+        },
+        "maxTurns": 12
+      },
       "estimatedMinutes": 5
     },
     {
@@ -103,9 +158,21 @@
       "problem": "Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.",
       "responseFormat": "free",
       "teacherNote": "Optional pronunciation practice. Offer the four options as in the question and WAIT for the learner's choice. Option 1 (words): pick a word from this menu: responsibilities, international, communicate, customers, developed (start with responsibilities unless they ask for another). Option 2 (sentence): one of 'I have worked with international customers for several years.' or 'I was responsible for communicating with our customers.' Option 3 (speaking naturally): a complete sentence the learner said earlier in this lesson, in its corrected form, said clearly and naturally without rushing. For options 1 to 3: give the instruction first (\"Listen, then repeat after me:\"), then say the model text exactly, in English, as the LAST sentence of your turn — its own sentence, English only, no Japanese in it (the voice switches per sentence). Then, if that tool is available in this session, call request_pronunciation_check with referenceText set to that exact text and kind 'word', 'sentence' or 'natural'. From the result, give one or two targeted points only (for example the stressed syllable of a word, a sound marked in one word, or linking 'international customers' smoothly), explain them briefly (in Japanese for beginners), and ask for one more repeat. If the tool is not available or no measured result comes back, do not comment on sounds, stress or intonation as if you heard them: coach stress and linking from the model (for example 'In responsibilities the main stress is on the fourth syllable: re-spon-si-BIL-i-ties'), and say honestly that you can only check the words, not the sound itself. Never claim to hear a sound without a measured result. One or two items fit in about three minutes; then offer one more or move on. Option 4 (skip): say that's fine and advance to the summary. Every item is NEW: never give a word or sentence the learner has already practised in this part; when the menu's items are used up, take a corrected sentence of the learner's from earlier in the lesson. After a result, do not offer the four options again: work on the weakest word or sound with one more repeat, then ask: one more item, or move on to the summary? If the learner has not chosen an option after you have asked twice, do not ask a third time: say you will skip the practice today and move on to the summary (call advance_lesson).",
-      "metadata": { "label": "Pronunciation", "labelLocalized": { "ja": "発音" }, "maxTurns": 8, "optional": true,
+      "metadata": {
+        "label": "Pronunciation",
+        "labelLocalized": {
+          "ja": "発音"
+        },
+        "maxTurns": 8,
+        "optional": true,
         "pronunciation": {
-          "words": ["responsibilities", "international", "communicate", "customers", "developed"],
+          "words": [
+            "responsibilities",
+            "international",
+            "communicate",
+            "customers",
+            "developed"
+          ],
           "sentences": [
             "I have worked with international customers for several years.",
             "I was responsible for communicating with our customers."
@@ -122,8 +189,17 @@
         "Past simple: a completed event at a specific time (yesterday, last year, ago) — I attended an exhibition last year."
       ],
       "teacherNote": "Summary and feedback, about two minutes. Never skip it and never end the lesson before it; if time is short, shorten the earlier activities instead. In this order: (1) 'Great work today! Let's quickly review what we practiced.' Say they talked about their work, responsibilities and experiences, and name the two grammar points, each with a one-line meaning, using the learner's OWN sentences from this lesson as the examples (in their corrected form), not the textbook sentences; use the plan's examples only if they produced none. (2) Feedback based on what they actually said, not generic praise: say 'One thing you did well was…' (keep these words in English even when you explain in Japanese) with one specific strength, then one thing to improve, shown with their own sentence before and after the correction. (3) Ask the check question: 'Before we finish, can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago. Take your time; I'll help you if you need it.' Evaluate their answer and, if needed, explain briefly: the first means they started five years ago and still work here; the second means they worked here at a finished time in the past, five years ago. (4) Close warmly in one or two sentences: 'Well done! Thank you for today's lesson. Keep practicing these grammar points when you talk about your work. See you next time!' Ask no further question after the close.",
-      "requiredPhrases": ["one thing you did well"],
-      "metadata": { "label": "Summary", "labelLocalized": { "ja": "まとめ" }, "maxTurns": 4 },
+      "requiredPhrases": [
+        "one thing you did well",
+        "the difference between"
+      ],
+      "metadata": {
+        "label": "Summary",
+        "labelLocalized": {
+          "ja": "まとめ"
+        },
+        "maxTurns": 4
+      },
       "estimatedMinutes": 2
     }
   ],
