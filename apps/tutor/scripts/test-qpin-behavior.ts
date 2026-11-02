@@ -22,7 +22,7 @@ import {
   QPIN_SIDE_PX,
   qpinAutoTopPx,
 } from '../src/lib/tutor/qpin-behavior';
-import { verbatimQuestionPin, stripQuestionLead } from '../src/lib/tutor/question-gist-text';
+import { verbatimQuestionPin, stripQuestionLead, repairFragmentGist, isFragmentGist } from '../src/lib/tutor/question-gist-text';
 
 let pass = 0;
 let fail = 0;
@@ -448,6 +448,19 @@ check('empty transcript → never clears', shouldClearQpinOnAnswer([], 'q1').cle
   check('33 r2 R10-2: no lead — unchanged', stripQuestionLead('What is the question about?'), 'What is the question about?');
   const TS = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
   check('33 r2 R10-2: TutorSession strips the lead from the model gist', TS.includes("stripQuestionLead(stripMarkdownEmphasis(d.gist.trim()), entry.text)"), true);
+}
+
+
+// Task 34 §C (bot run r11 1120 s): a fragment gist falls back to the ask.
+{
+  const T1120 = 'The goal was to... and then what? Please finish the sentence in English. For example: "The goal was to increase sales in Korea."';
+  check('34C: "and then what?" → the ask + the stem', repairFragmentGist('and then what?', T1120), 'Please finish the sentence in English: The goal was to…');
+  check('34C: the verbatim fallback is repaired too', repairFragmentGist(verbatimQuestionPin(T1120), T1120), 'Please finish the sentence in English: The goal was to…');
+  check('34C: fragments', ['and then what?', 'and?', 'so?', 'then?', 'what then?'].map(isFragmentGist), [true, true, true, true, true]);
+  check('34C: real questions are untouched', repairFragmentGist('What did you do next?', T1120), 'What did you do next?');
+  check('34C: nothing to build from → the previous pin', repairFragmentGist('and?', 'And?', 'Where did you go last year?'), 'Where did you go last year?');
+  const TS = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
+  check('34C: TutorSession repairs the model gist, the verbatim and the error fallbacks', ['repairFragmentGist(stripQuestionLead(stripMarkdownEmphasis(d.gist.trim()), entry.text), entry.text, questionPin?.gist)', 'repairFragmentGist(verbatimQuestionPin(entry.text), entry.text, questionPin?.gist)', 'repairFragmentGist(stripQuestionLead(fallbackRaw, entry.text), entry.text, questionPin?.gist)'].every((x) => TS.includes(x)), true);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

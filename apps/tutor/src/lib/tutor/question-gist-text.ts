@@ -332,3 +332,33 @@ export function gistGrounded(gist: string | null | undefined, turnText: string |
   // move on …?") stays grounded.
   return !(ask && hasInterrogative(ask) && !hasInterrogative(gist) && FIRST_PERSON_LEAD_RE.test(gist ?? ''));
 }
+
+/** Task 34 §C (bot run r11 1120 s: "The goal was to... and then what? Please
+ *  finish the sentence in English." pinned "and then what?"): a gist that is
+ *  only a tag / continuation fragment ("and then what?", "and?", "so?",
+ *  "then?", "what then?") is no question. It falls back to the turn's ask
+ *  sentence + the stem before the fragment ("Please finish the sentence in
+ *  English: The goal was to..."), else the stem alone, else the previous pin.
+ *  Unchanged for any other gist. Pure. */
+const FRAGMENT_GIST_RE = /^\s*(?:(?:and|so|then|or|but|well)\s*,?\s*)*(?:(?:then|what|why|how|next)\s*)*(?:then)?\s*[?？]?\s*$/i;
+export function isFragmentGist(gist: string | null | undefined): boolean {
+  const g = (gist ?? '').trim();
+  return !!g && (g.match(/[\p{L}]+/gu) ?? []).length <= 3 && FRAGMENT_GIST_RE.test(g);
+}
+const FINISH_ASK_RE = /^\s*(?:(?:please|now|so|ok(?:ay)?),?\s+)*(?:finish|complete|say|tell me|try|answer|make|continue)\b/i;
+export function repairFragmentGist(gist: string | null | undefined, turnText: string, previousPin?: string | null): string | null {
+  const g = (gist ?? '').trim();
+  if (!isFragmentGist(g)) return g || null;
+  const text = stripMarkdownEmphasis(turnText ?? '');
+  const at = text.toLowerCase().lastIndexOf(g.toLowerCase().replace(/[?？]\s*$/, ''));
+  const before = at > 0 ? text.slice(0, at) : '';
+  const stemSentence = splitSentences(before.replace(/(?:\.{3}|…)\s*$/, '…')).pop() ?? '';
+  const stem = stemSentence.replace(/\s+$/, '').replace(/\.\.\.$/, '…').trim();
+  const after = at >= 0 ? text.slice(at + g.length) : text;
+  const ask = splitSentences(after).find((x) => FINISH_ASK_RE.test(x));
+  const stemOk = /[\p{L}]{2,}/u.test(stem) && !isFragmentGist(stem);
+  if (ask && stemOk) return capPinText(`${ask.trim().replace(/[.!。]\s*$/, '')}: ${stem}`);
+  if (stemOk) return capPinText(stem);
+  if (ask) return capPinText(ask.trim());
+  return previousPin?.trim() ? previousPin.trim() : null;
+}

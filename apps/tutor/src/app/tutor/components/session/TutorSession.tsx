@@ -58,7 +58,7 @@ import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { type SessionMode, textModeSecondsPerWord } from '@/lib/tutor/voice/resolve-session-mode';
 import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL, TUTOR_PAGE_TITLE_HEADER, TUTOR_QPIN_GIST_GROUNDED } from '@/lib/tutor/orchestrator/flags';
-import { lastQuestionSentence, lastAskSentence, stripMarkdownEmphasis, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn, gistGrounded, stripQuestionLead } from '@/lib/tutor/question-gist-text';
+import { lastQuestionSentence, lastAskSentence, stripMarkdownEmphasis, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn, gistGrounded, stripQuestionLead, repairFragmentGist } from '@/lib/tutor/question-gist-text';
 import { sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
 import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
 import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/lib/tutor/qpin-behavior';
@@ -1405,7 +1405,7 @@ export default function TutorSession(props: TutorSessionProps) {
     // more thing you sold, or a customer you helped?" was dropped).
     const verbatimFallback = (): boolean => {
       if (!languageSession) return false;
-      const q = verbatimQuestionPin(entry.text);
+      const q = repairFragmentGist(verbatimQuestionPin(entry.text), entry.text, questionPin?.gist);
       if (!q) return false;
       setQuestionPin({ turnId: entry.id, gist: q });
       onDebugEvent?.('qpin_set_verbatim', `"${q.slice(0, 60)}"`);
@@ -1436,7 +1436,8 @@ export default function TutorSession(props: TutorSessionProps) {
         // renders through InlineMathText, which only special-cases $...$
         // math, not *emphasis*).
         // Task 33 fix round 2 (R10-2): a "The question is:" lead is never the gist.
-        const gist = typeof d?.gist === 'string' ? stripQuestionLead(stripMarkdownEmphasis(d.gist.trim()), entry.text) : '';
+        // Task 34 §C: a tag / continuation fragment ("and then what?") is never the gist.
+        const gist = typeof d?.gist === 'string' ? (repairFragmentGist(stripQuestionLead(stripMarkdownEmphasis(d.gist.trim()), entry.text), entry.text, questionPin?.gist) ?? '') : '';
         // gist === '' means the model judged the turn's "?" conversational
         // plumbing (a repeat-request / mishear) — deliberately NO pin then.
         // R47 Task 3c (review fix): segment moved on since this fetch
@@ -1479,7 +1480,7 @@ export default function TutorSession(props: TutorSessionProps) {
           return;
         }
         const fallbackRaw = lastQuestionSentence(entry.text);
-        const fallback = fallbackRaw ? stripQuestionLead(fallbackRaw, entry.text) : fallbackRaw;
+        const fallback = fallbackRaw ? repairFragmentGist(stripQuestionLead(fallbackRaw, entry.text), entry.text, questionPin?.gist) : fallbackRaw;
         if (fallback) {
           setQuestionPin({ turnId: entry.id, gist: fallback });
           onDebugEvent?.('qpin_set', `fallback: "${fallback.slice(0, 60)}"`);
