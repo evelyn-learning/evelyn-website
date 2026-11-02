@@ -1315,7 +1315,16 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   // Task 19 §A3: all three exemptions admit an onset in the line's last
   // 500 ms, which the onset-during-playback gates (1.6, 1.7) read as overtalk.
   const playbackEndExempt = expectedRepeatHit || offeredOptionPick || answerEndHit;
-  if (selfVoiceScore >= SELF_VOICE_THRESHOLD && !playbackEndExempt) {
+  // Task 30 §A1: an answer made only of the pending offer / menu's words
+  // (isPendingAnswer). Fix round 1 (reviewer m-8: "One more." spoken during
+  // playback was still dropped by the containment gate): EVERY echo gate
+  // below — the score / containment gate (1), the speaking-state short gate
+  // (1.5), and 1.6 / 1.7 — stands down for it.
+  const pendingAnswerExempt = isPendingAnswer(text, input.pendingAnswerVocabulary);
+  let pendingAnswerStoodDown = false;
+  if (selfVoiceScore >= SELF_VOICE_THRESHOLD && !playbackEndExempt && pendingAnswerExempt) {
+    pendingAnswerStoodDown = true;
+  } else if (selfVoiceScore >= SELF_VOICE_THRESHOLD && !playbackEndExempt) {
     // Fix wave (2026-07-15, review finding 3): when the drop verdict was
     // reached ONLY via the phonetic pass (text score alone stayed under
     // threshold), say so distinctly in the reason string so the Stage-1 FP
@@ -1388,7 +1397,9 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     const echoOverlap = scoreSpeakingEchoOverlap(
       text, input.recentTtsScripts, input.speechStartedAt, input.now,
     );
-    if (echoOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {
+    if (echoOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD && pendingAnswerExempt) {
+      pendingAnswerStoodDown = true;
+    } else if (echoOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {
       return dropAsEcho({
         verdict: 'drop_self_voice',
         reason: `speaking-state short-utterance echo overlap ${echoOverlap.toFixed(2)} ≥ ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
@@ -1396,11 +1407,6 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       });
     }
   }
-
-  // Task 30 §A1: an answer made only of the pending offer / menu's words
-  // (isPendingAnswer) — gates 1.6 and 1.7 stand down for it.
-  const pendingAnswerExempt = isPendingAnswer(text, input.pendingAnswerVocabulary);
-  let pendingAnswerStoodDown = false;
 
   // 1.6. Onset-during-playback echo arriving after the state flipped
   // (round-6 opener-echo fix, 2026-07-28, portal-b3838f70). The 1.5 gate

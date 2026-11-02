@@ -1817,6 +1817,12 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('30A1: "Yes. one" with the pending vocabulary ⇒ NOT dropped (new_turn, pending_answer_exempt)', kept.verdict === 'new_turn' && /pending_answer_exempt/.test(kept.reason), `${kept.verdict} (${kept.reason})`);
   const echo = classifyHeuristic({ ...base, transcript: 'one more practice sentence on it or shall we', pendingAnswerVocabulary: vocab });
   check('30A1: "one more practice sentence on it or shall we" (8w) ⇒ still dropped', echo.verdict === 'drop_self_voice', `${echo.verdict} (${echo.reason})`);
+  {
+    const one = classifyHeuristic({ ...base, transcript: 'One more.', speechStartedAt: 2_002_500, pendingAnswerVocabulary: vocab });
+    check('30A1 r1 (m-8): "One more." during playback with the pending vocabulary ⇒ NOT dropped (containment stands down)', one.verdict !== 'drop_self_voice' && /pending_answer_exempt/.test(one.reason), `${one.verdict} (${one.reason})`);
+    const oneNull = classifyHeuristic({ ...base, transcript: 'One more.', speechStartedAt: 2_002_500, pendingAnswerVocabulary: null });
+    check('30A1 r1: the same without a vocabulary ⇒ dropped as before', oneNull.verdict === 'drop_self_voice', `${oneNull.verdict} (${oneNull.reason})`);
+  }
   check('30A1: isPendingAnswer — "Yes, one more practice." in; "sentence … shall" out',
     isPendingAnswer('Yes, one more practice.', vocab) && !isPendingAnswer('one more practice sentence on it or shall we', vocab));
   check('30A1: isPendingAnswer — Japanese もう一回 in; an empty / hesitation-only utterance out',
