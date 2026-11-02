@@ -969,8 +969,16 @@ check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("
   check('30E1: "so I should move on" ⇒ dropped', isNotePlanNarration('That answer is fine, so I should move on.'));
   check('30E1: a teaching "so I should expect" ⇒ kept', !isNotePlanNarration("When charges are alike they're repelled, so I should expect them to move apart."));
   check('30E1: "I should just acknowledge" ⇒ dropped', isNotePlanNarration('I should just acknowledge it and continue.'));
-  check('30E1: "the best next step is to" ⇒ dropped', isNotePlanNarration('The best next step is to ask one more question.'));
   const S1289 = 'The sentence matches the model, and the stutter at the start is only a repeat, so the sentence itself is right.';
+  for (const kept of [
+    'When a customer complains, the best response is to apologise first.',
+    'In a meeting, the correct reply is to thank them.',
+    'The right thing is to practise a little every day.',
+    'For example, I should move to a bigger office.',
+    'The filler "um" is only a habit.',
+  ]) check(`30E r1 (I-2): "${kept}" kept`, !isNotePlanNarration(kept) && !isMetaNarration(kept));
+  check('30E r1: "so the best next step is to" ⇒ dropped', isNotePlanNarration('That is fine, so the best next step is to ask one more question.'));
+  check('30E r1: "I should accept their answer" ⇒ dropped', isNotePlanNarration('I should accept their answer and continue.'));
   check('30E2: the 1289 s sentence ⇒ dropped', isNotePlanNarration(S1289) && isMetaNarration(S1289));
   check('30E2: "the hesitation doesn\'t count" ⇒ dropped', isNotePlanNarration("The hesitation doesn't count, so it's correct."));
   check('30E2: the repeat_after_correct directive forbids explaining the judgement', REPEAT_AFTER_CORRECT_REASON.includes('Say that it is right and go on; do not explain how you judged it (no talk of stutters, repeats, matching the model, or what counts).'));

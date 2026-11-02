@@ -489,12 +489,31 @@ const NOTE_PLAN_ADDRESSES_RE = /\b(?:let['’]?s|let us|we|you|your)\b/i;
 // model, and the stutter at the start is only a repeat, so the sentence
 // itself is right."): a stutter / hesitation / repeat / filler as the subject
 // of "is only / is just / doesn't count" narrates how the verdict was judged.
-const NOTE_PLAN_CLAUSE_RE = /\b(?:the|my) (?:correct|right|best|proper) (?:response|move|reply|thing|next step)(?: here)? is to\b|\bI should (?:just |simply |now )?(?:name|note|acknowledge|accept|confirm|move|correct)\b/i;
-const JUDGING_NARRATION_RE = /\bthe (?:stutter|hesitation|repeat|filler)\b[^.!?;]*?\b(?:is only|is just|doesn['’]t count|does not count)\b/i;
+// Fix round 1 (I-2): each pattern is tied to the self-narration shape —
+// ordinary advice ("When a customer complains, the best response is to
+// apologise first.", "For example, I should move to a bigger office.", "The
+// filler "um" is only a habit.") is teaching and kept.
+//  - "the/my correct|right|best|proper response|move|reply|thing|next step"
+//    needs "here", a leading "so", or a note verb after "is to";
+//  - "I should" needs "so I should" / "I should now|just|simply" + a note
+//    verb, or a note verb plus a mention of the student's reply / answer /
+//    sentence in the same sentence;
+//  - the judging subject needs the verdict in the same sentence ("so / and
+//    … right / correct / counts").
+const NOTE_VERB = '(?:name|note|acknowledge|accept|confirm|move on|correct|praise|say that it)';
+const NOTE_PLAN_CLAUSE_RE = new RegExp(
+  `\\b(?:the|my) (?:correct|right|best|proper) (?:response|move|reply|thing|next step) here is to\\b`
+  + `|\\bso,? (?:the|my) (?:correct|right|best|proper) (?:response|move|reply|thing|next step) is to\\b`
+  + `|\\b(?:the|my) (?:correct|right|best|proper) (?:response|move|reply|thing|next step) is to (?:just |simply )?${NOTE_VERB}\\b`
+  + `|\\bso,? I should (?:just |simply |now )?${NOTE_VERB}\\b`
+  + `|\\bI should (?:now|just|simply) ${NOTE_VERB}\\b`, 'i');
+const NOTE_PLAN_SHOULD_RE = new RegExp(`\\bI should ${NOTE_VERB}\\b`, 'i');
+const STUDENT_OUTPUT_RE = /\b(?:their|your|the student['’]s|the learner['’]s) (?:reply|answer|sentence|words)\b/i;
+const JUDGING_NARRATION_RE = /\bthe (?:stutter|hesitation|repeat|filler)\b[^.!?;]*?\b(?:is only|is just|doesn['’]t count|does not count)\b(?=[^.!?]*\b(?:so|and)\b[^.!?]*\b(?:right|correct|counts?)\b)/i;
 export function isNotePlanNarration(sentence: string): boolean {
   const s = blankSingleQuoted((sentence ?? '').replace(NOTE_PLAN_QUOTE_RE, ' '));
   return (NOTE_STATE_REASON_RE.test(s) && !NOTE_PLAN_ADDRESSES_RE.test(s)) || PLAN_ASK_THIRD_PERSON_RE.test(s) || PLAN_THIRD_PERSON_WANTS_RE.test(s)
-    || NOTE_PLAN_CLAUSE_RE.test(s) || JUDGING_NARRATION_RE.test(s);
+    || NOTE_PLAN_CLAUSE_RE.test(s) || (NOTE_PLAN_SHOULD_RE.test(s) && STUDENT_OUTPUT_RE.test(s)) || JUDGING_NARRATION_RE.test(s);
 }
 /** Task 30 §E1: the learner still in the third person outside quotes. */
 const THIRD_PERSON_RESIDUE_RE = /\b(?:them|their|the student(?:['’]s)?|the learner(?:['’]s)?)\b/i;
