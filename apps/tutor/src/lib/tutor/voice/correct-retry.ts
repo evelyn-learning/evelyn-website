@@ -1095,10 +1095,27 @@ export const NO_ATTEMPT_MOVE_ON_NOTE = withSilentClause(
 const NON_ATTEMPT_ACK_WORDS = new Set(['ok', 'okay', 'yes', 'yeah', 'yep', 'no', 'i', 'see', 'sure', 'right', 'alright', 'hmm', 'mm', 'uh', 'um', 'thank', 'thanks', 'you', 'got', 'it', 'understand']);
 const JA_BACKCHANNEL_RE = /^(?:(?:はい|うん|ええ|わかりました|分かりました|なるほど|ありがとう(?:ございます)?|そうですね)[、,。.!！\s]*){1,3}$/;
 const CLARIFY_RE = /^(?:sorry|what|pardon|excuse me|huh)\s*[?？]?$|\bwhat was the question\b|\b(?:can|could) you (?:repeat|say) (?:that|it)\b|^(?:sorry,?\s*)?(?:one more time|again)\s*(?:please)?\s*[?？]?$|もう(?:一|1|１)(?:度|回)|なんですか/i;
-export function isNonAttempt(reply: string | null | undefined): boolean {
+// Fix round 2 RULING: when the pinned ask is a yes/no question (an
+// auxiliary-led English question, or a Japanese question ending ますか /
+// ましたか / ですか with no wh-word), a bare yes / no / はい / いいえ / うん /
+// いえ answers it — an ATTEMPT. For any other ask it stays a non-attempt.
+const YES_NO_LEAD_RE = /^\s*(?:(?:so|now|ok(?:ay)?|then|and|well),?\s+)*(?:do|does|did|have|has|had|are|is|was|were|can|could|would|will|should)\b/i;
+const JA_YN_END_RE = /(?:ますか|ましたか|ですか)[。？?]?\s*$/;
+const JA_WH_RE = /何|なに|どこ|いつ|誰|だれ|どう|どの|どんな|なぜ|どれ|いくつ|どちら|どのくらい/;
+export function isYesNoAsk(ask: string | null | undefined): boolean {
+  const t = ask ?? '';
+  const q = lastQuestionSentence(t) ?? turnAskGist(t);
+  if (q && YES_NO_LEAD_RE.test(q)) return true;
+  const jaSentences = t.split(/(?<=[。！？?])\s*/).map((x) => x.trim()).filter(Boolean);
+  const ja = [...jaSentences].reverse().find((x) => /[?？]|か[。]?$/.test(x)) ?? '';
+  return JA_YN_END_RE.test(ja) && !JA_WH_RE.test(ja);
+}
+const YES_NO_WORD_RE = /^(?:yes|yeah|yep|no|nope|はい|いいえ|うん|いえ|ええ)$/i;
+export function isNonAttempt(reply: string | null | undefined, ask?: string | null): boolean {
   const r = (reply ?? '').trim();
   if (!r || /^\s*\[/.test(r)) return false;
   if (CLARIFY_RE.test(r)) return true;
+  if (ask && isYesNoAsk(ask) && r.toLowerCase().replace(/[.,!?。、！？…]+/g, ' ').split(/\s+/).some((w) => YES_NO_WORD_RE.test(w))) return false;
   if (JA_BACKCHANNEL_RE.test(r)) return true;
   const words = r.toLowerCase().replace(/\b(?:so|very) much\b/g, ' ').replace(/[.,!?。、！？…]+/g, ' ').split(/\s+/).filter((w) => w && w !== 'please');
   return words.length > 0 && words.length <= 3 && words.every((w) => NON_ATTEMPT_ACK_WORDS.has(w));
@@ -1128,7 +1145,7 @@ export function noAttemptStreak(exchanges: ReadonlyArray<{ tutorText: string | n
   if (exchanges.length < 2) return false;
   const [e1, e2] = exchanges.slice(-2) as [typeof exchanges[number], typeof exchanges[number]];
   if (!sameAsk(e1.tutorText, e2.tutorText)) return false;
-  return isNonAttempt(e1.studentText) && isNonAttempt(e2.studentText);
+  return isNonAttempt(e1.studentText, e1.tutorText) && isNonAttempt(e2.studentText, e2.tutorText);
 }
 /** Fix round 1 (I-4): the budget shortcut applies only to the part the
  *  re-asked ask belonged to (captured when the note was planted) — a part

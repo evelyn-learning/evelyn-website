@@ -57,7 +57,7 @@ import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, 
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
-import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk, noAttemptBudgetTurns } from '../src/lib/tutor/voice/correct-retry';
+import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk, noAttemptBudgetTurns, isYesNoAsk } from '../src/lib/tutor/voice/correct-retry';
 import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
 import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { ToolMarkupFilter, stripToolMarkup, hasToolMarkup } from '../src/lib/tutor/voice/tool-markup';
@@ -2014,6 +2014,18 @@ test('34 r1 I-4: the budget shortcut only for the part the re-ask belonged to', 
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('noAttemptSeg = currentSegmentIdRef.current;'));
   assert.ok(vtr.includes('noAttemptBudgetTurns({ dropped: noAttemptDropped, pinnedSegId: noAttemptSeg, segIdNow, turns: cur.turns })'));
+});
+
+test('34 r2: a bare yes / no answers a yes/no ask (an attempt); to any other ask it stays a non-attempt', () => {
+  const YN = 'Did you attend any events last year?';
+  const WH = 'What was the goal?';
+  for (const a of [YN, 'Have you ever worked abroad?', 'Now, can you tell me about it?', '去年、展示会に参加しましたか？', 'それは楽しかったですか。']) assert.equal(isYesNoAsk(a), true, a);
+  for (const a of [WH, 'Where did you go?', '目標は何でしたか？', 'Please finish the sentence.']) assert.equal(isYesNoAsk(a), false, a);
+  for (const x of ['No.', 'Yes.', 'はい', 'いいえ', 'うん']) assert.equal(isNonAttempt(x, YN), false, `${x} to a yes/no ask`);
+  for (const x of ['Yes.', 'No.', 'はい']) assert.equal(isNonAttempt(x, WH), true, `${x} to a wh ask`);
+  assert.equal(isNonAttempt('OK, thank you.', YN), true, 'an ack is still no answer');
+  assert.equal(noAttemptStreak([{ tutorText: YN, studentText: 'No.' }, { tutorText: YN, studentText: 'No.' }]), false);
+  assert.equal(noAttemptStreak([{ tutorText: WH, studentText: 'Yes.' }, { tutorText: WH, studentText: 'OK.' }]), true);
 });
 
 if (failed) process.exit(1);
