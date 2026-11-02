@@ -347,6 +347,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'self_voice_exempt_pending_answer',
   // Task 30 §F1: a spoken sentence that near-copied the one before it.
   'adjacent_duplicate_sentence_dropped',
+  // Task 30 §H: a student turn picked an option of the menu the tutor read.
+  'menu_pick_resolved',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

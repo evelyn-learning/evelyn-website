@@ -1111,3 +1111,10 @@ export const TUTOR_RETRY_HEARD_NOTE = process.env.NEXT_PUBLIC_TUTOR_RETRY_HEARD_
  *  turn's preceding sentence (isAdjacentDuplicate) is dropped. Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_ADJACENT_DUPLICATE_DROP=off. */
 export const TUTOR_ADJACENT_DUPLICATE_DROP = process.env.NEXT_PUBLIC_TUTOR_ADJACENT_DUPLICATE_DROP !== 'off';
+
+/** Task 30 §H (GDI run 17, 1198 s): a student turn that picks an option of the
+ *  numbered menu the last tutor turn read (resolveMenuPick: the digit / number
+ *  word, or words found in exactly one option) carries a note naming it, so
+ *  the options are not listed again. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_MENU_PICK_RESOLVE=off. */
+export const TUTOR_MENU_PICK_RESOLVE = process.env.NEXT_PUBLIC_TUTOR_MENU_PICK_RESOLVE !== 'off';
