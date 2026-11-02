@@ -451,6 +451,24 @@ export function isNudgeDirectiveEcho(sentence: string): boolean {
   if (ORDER_HAS_SUBJECT_RE.test(s)) return false;
   return ORDER_THEN_MOVE_ON_RE.test(s) || BARE_NEXT_ITEM_MOVE_RE.test(s);
 }
+// Task 29 §B (GDI run 16, 693 s, Image 61): the offer note narrated —
+// "Since the past simple segment is complete, I'll close it in one sentence
+// and ask whether they want one more practice sentence or to move on." Whole
+// sentence dropped when (a) it gives the part's state as a reason ("since /
+// because / as / now that the … segment / part / section / step / note is
+// complete / done / finished / over"), (b) a first-person plan to ask / check
+// whether the student (third person) …, or (c) a first-person plan next to
+// the student in the third person wanting / needing something. "I'll put a
+// sentence on the board" is left to its own rules; "They want to buy …" (no
+// plan) is speech.
+const NOTE_STATE_REASON_RE = /\b(?:since|because|as|now that) (?:the|this|that) [^.,;]*\b(?:segment|part|section|step|note) (?:is|was) (?:complete|completed|done|finished|over)\b/i;
+const PLAN_ASK_THIRD_PERSON_RE = /\bI['’]ll\b[^.;]*\b(?:ask|check|see|find out) (?:whether|if) (?:they|the student|the learner)\b/i;
+const PLAN_THIRD_PERSON_WANTS_RE = /\bI['’]ll\b[^.;]*\b(?:they|the student|the learner) (?:want|wants|need|needs|would like)\b/i;
+/** Task 29 §B: the runtime note's state / plan spoken aloud (see above). */
+export function isNotePlanNarration(sentence: string): boolean {
+  const s = sentence ?? '';
+  return NOTE_STATE_REASON_RE.test(s) || PLAN_ASK_THIRD_PERSON_RE.test(s) || PLAN_THIRD_PERSON_WANTS_RE.test(s);
+}
 const THIRD_PERSON_PLAN_ANYWHERE_RE =
   /\bI(?:['’]ll| will) (?:ask|tell|have|get|let|help|guide|remind|prompt) (?:them|the student|the learner)\b/i;
 const BOARD_ALREADY_NARRATION_RE =
@@ -729,7 +747,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || BOARD_STAGING_NARRATION_RE.test(s) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

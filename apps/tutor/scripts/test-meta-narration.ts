@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 
 let passed = 0;
@@ -911,6 +911,28 @@ check('m7 the run-10 sentence (quoted "our" is no address) still → \'\'',
   for (const x of ['Move on to the next step and divide both sides by 2.', 'Nice work, now move on to the next part of the problem.', 'Time to move on to the next question.', 'Perfect! Time to move on to the next question.',
     'Let us move on to the next part.', 'You can move on to the next question.', 'OK, I will move on to the next question.', "Let's move on to the next part."])
     check(`28C r1: "${x}" kept`, !isMetaNarration(x));
+}
+
+// Task 29 §B (GDI run 16, 693 s): the offer note narrated — whole sentence dropped.
+{
+  const narrated = "Since the past simple segment is complete, I'll close it in one sentence and ask whether they want one more practice sentence or to move on.";
+  check('29B: the 693 s note-state + plan sentence dropped', isMetaNarration(narrated));
+  for (const x of [
+    'Because this part is done, I will move to the next one.',
+    "Now that the step was finished, let's try it.",
+    "I'll check if the student wants another one.",
+    "I'll see whether they need a hint.",
+    "Next I'll give an example, since they would like one.",
+  ]) check(`29B: "${x}" dropped`, isMetaNarration(x) && isNotePlanNarration(x));
+  check("29B (c): I'll … they would like dropped", isMetaNarration("I'll give them an example they would like."));
+  for (const x of [
+    'The natural version would be "I met companies that could buy robots for Nagoya."',
+    'They want to buy robots.',
+    'Since you finished the first part, well done.',
+    "I'll ask you one more question.",
+  ]) check(`29B: "${x}" kept`, !isMetaNarration(x));
+  // the board-staging line keeps its own handling (not this rule)
+  check("29B: \"I'll put a sentence on the board\" is not this rule's", !isNotePlanNarration("I'll put a sentence on the board for you."));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
