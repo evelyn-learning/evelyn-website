@@ -231,7 +231,7 @@ function decide(text) {
     [/which country|what country|name of (?:a|the) (?:foreign )?country|country did you/, 'country'], [/what (?:was|is) the product|which product|product (?:was|is) it|about the product/, 'product'],
     [/what did you see|one thing you saw|saw there|caught your (?:eye|attention)/, 'saw'], [/talk(?:ed)? about|discuss/, 'talkedAbout'], [/customer (?:say|said)|did (?:the|your) customer/, 'customerSaid'],
     [/\bfirst,? (?:i|you)|first step|starting with "first/, 'firstStep'], [/\bthen,? (?:i|you)|next step|what did you do next|after that/, 'nextStep'], [/total|how much (?:money|did you)/, 'total'], [/with the money|the money after|donat/, 'moneyUse'],
-    [/confident|more natural|which sentence/, 'confident'], [/meeting/, 'meeting'], [/colleague|co-?worker|team member/, 'colleague'], [/hobby|free time|weekend/, 'hobby'],
+    [/confident|more natural|which sentence (?:do you|would you|feels)/, 'confident'], [/meeting/, 'meeting'], [/colleague|co-?worker|team member/, 'colleague'], [/hobby|free time|weekend/, 'hobby'],
     [/next time|in the future|will you (?:do|use)|your next email|use .* with your boss/, 'nextTime'], [/how many people|company size|big is your company/, 'companySize'], [/every day|daily|typical day|morning/, 'dailyTask'], [/email/, 'useEmail'],
     [/\bwhen\b/, 'when'], [/\bwhy\b/, 'why'], [/\bhow\b/, 'how'], [/\bwho\b/, 'who'], [/\bwhere\b/, 'where'],
   ];
