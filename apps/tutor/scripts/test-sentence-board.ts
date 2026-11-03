@@ -20,7 +20,7 @@ import {
   grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack, contrastAskPair, levelCheckOwnCardGate, sentenceCardIdOnCurrentPage,
 } from '../src/lib/tutor/voice/sentence-board';
 import { normaliseDigitsToWords } from '../src/lib/tutor/voice/digit-words';
-import { planSentenceBoard as planSentenceBoard38, isAckTransitionLine, cardContentWordCount, CARD_MIN_CONTENT_WORDS } from '../src/lib/tutor/voice/sentence-board';
+import { planSentenceBoard as planSentenceBoard38, isAckTransitionLine, cardContentWordCount, CARD_MIN_CONTENT_WORDS, wholeSentenceRecastCard, fragmentSpliceCorrectionCard, noteCorrectionCard } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
 let failed = 0;
@@ -1615,6 +1615,47 @@ test('38 r1 I-4: a quoted model line or a "Let\'s <verb> …" model verb phrase 
   assert.equal(isAckTransitionLine("Let's schedule a call for Monday."), false);
   assert.equal(isAckTransitionLine("Let's do one more on the past simple."), true);
   assert.equal(isAckTransitionLine('Okay, one more on the past simple.'), true);
+});
+
+// ── Task 39 §C (voice run 20, 869 s / 431 s): the full corrected sentence is carded ──
+test('39 §C1: the 869 s recast is carded as the FULL sentence, never the comma clause', () => {
+  const suppressed: string[] = [];
+  const t869 = 'The customer was happy, and he bought five machines from you. Good use of the past simple: "was" and "bought" both describe finished events.';
+  const s869 = 'Customer was happy and uh he buy five machines from me.';
+  const cards = planSentenceBoard38({ tutorText: t869, studentLast: s869, renderedThisTurn: false, onSuppressed: (_r, x) => suppressed.push(x) });
+  assert.deepEqual(cards.map((c) => c.sentence), ['The customer was happy, and he bought five machines from me.']);
+  assert.equal(cards[0]!.kind, 'correction');
+  assert.ok(cards[0]!.emphasis.includes('bought'), JSON.stringify(cards[0]!.emphasis));
+  assert.deepEqual(suppressed, []);
+  assert.equal(wholeSentenceRecastCard('Thank you for sharing that with me today.', s869), null, 'a comment is no recast');
+});
+test('39 §C1: a short recast of the student (≥ 3 restated words) is never suppressed as a short line', () => {
+  const cards = planSentenceBoard38({ tutorText: 'The owner was happy. What did you buy?', studentLast: 'Owner happy.', renderedThisTurn: false });
+  assert.ok(cards.length <= 1);
+  assert.deepEqual(planSentenceBoard38({ tutorText: 'Okay, one more on the past simple. What did you do?', studentLast: 'Yes, one more. practice.', renderedThisTurn: false }), [], 'the 38 §E ack line still gets no card');
+});
+test('39 §C2: a correction with no restatement is carded from the quoted fragment', () => {
+  const t431 = 'Electric car, I see. Your sentence has the right form: "I have given a presentation" is present perfect for an experience. The article should be "an electric car," because "electric" starts with a vowel sound. Next, can you tell me one thing you have done to prepare for a customer presentation?';
+  const s431 = 'The product in that presentation was a electric car.';
+  const cards = planSentenceBoard38({ tutorText: t431, studentLast: s431, renderedThisTurn: false, correctionMarked: true });
+  assert.deepEqual([cards[0]!.sentence, cards[0]!.kind, cards[0]!.emphasis.join('|')], ['The product in that presentation was an electric car.', 'correction', 'an']);
+  assert.deepEqual(planSentenceBoard38({ tutorText: t431, studentLast: s431, renderedThisTurn: false }).map((c) => c.sentence).includes('The product in that presentation was an electric car.'), false, 'not without a correction mark');
+  assert.equal(fragmentSpliceCorrectionCard('"of the presentation" is better', 'I have written all the pages of presentation.')?.sentence, 'I have written all the pages of the presentation.');
+  assert.equal(fragmentSpliceCorrectionCard('"the presentation" sounds right', 'I wrote pages of presentation to a customer.')?.sentence, 'I wrote pages of the presentation to a customer.', 'a 2-word fragment only inserts');
+  assert.equal(fragmentSpliceCorrectionCard('"last week" is a finished time', 'Last week I sell 20 washing machines.'), null, 'a quote of the student\'s own words is no correction');
+});
+test('39 §C2: a judge correction note with the corrected sentence → card from the note', () => {
+  const note = 'The student said "he buy five machines"; the past form is "he bought five machines from me".';
+  const s = 'Customer was happy and he buy five machines from me.';
+  assert.equal(noteCorrectionCard(note, s)?.sentence, 'Customer was happy and he bought five machines from me.');
+  const cards = planSentenceBoard38({ tutorText: 'Good use of the past simple. What happened next?', studentLast: s, renderedThisTurn: false, correctionNote: note });
+  assert.deepEqual(cards.map((c) => c.sentence), ['Customer was happy and he bought five machines from me.']);
+});
+
+test('39 §C2: VTR passes the correction mark and the judge note', () => {
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes("correctionNote: judgeNotePlantRef.current?.callSeq === brainCallSeqRef.current ? judgeNotePlantRef.current.note : null,"));
+  assert.ok(vtr.includes("correctionMarked: boardPc?.verdict === 'partly_correct' || boardPc?.verdict === 'incorrect'"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

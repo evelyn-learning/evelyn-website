@@ -22508,6 +22508,11 @@ export function VoiceTutorRealtime({
             } : {}),
             // Task 30 §J1: the own-answer card needs a correct / partly-correct check.
             ...(TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT ? { levelCheckVerdict: boardPc?.verdict ?? null } : {}),
+            // Task 39 §C2 (voice run 20, 431 s): the check / judge marked a correction —
+            // a turn with no full corrected sentence cards it from a quoted fragment / the note.
+            correctionMarked: boardPc?.verdict === 'partly_correct' || boardPc?.verdict === 'incorrect'
+              || judgeNotePlantRef.current?.callSeq === brainCallSeqRef.current,
+            correctionNote: judgeNotePlantRef.current?.callSeq === brainCallSeqRef.current ? judgeNotePlantRef.current.note : null,
             // Task 28 §A: a level-check sentence the tutor recast with no correction card of it.
             onLevelCheckSkipped: (reason, sentence) => onDebugEvent?.('sentence_board_levelcheck_skipped', `${reason} "${sentence.slice(0, 60)}"`),
             // Task 23 §E (GDI run 11, 1063 s): the board problem is a choice
