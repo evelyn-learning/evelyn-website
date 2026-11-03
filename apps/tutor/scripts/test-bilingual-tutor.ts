@@ -58,6 +58,7 @@ import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE,
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { probeReasks, isRepeatOrCorrectionAsk, pronounReask } from '../src/lib/tutor/voice/correct-retry';
+import { teachingLanguageFirstViolation, teachingLanguageFirstReason } from '../src/lib/tutor/voice/teaching-language-first';
 import { reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON, isStrictRepeatAsk as isStrictRepeatAsk38 } from '../src/lib/tutor/voice/correct-retry';
 import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk, noAttemptBudgetTurns, isYesNoAsk } from '../src/lib/tutor/voice/correct-retry';
 import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
@@ -2113,6 +2114,23 @@ test('38 §F: the 1037 s reordered recast of a checked-correct sentence is a rep
   assert.ok(vtr.includes("?? (TUTOR_REPEAT_AFTER_CORRECT_DROP ? reAskedRecastOfCorrect(transcript, attemptText, verdictPrecheckRef.current?.verdict) : null);"));
   assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'repeat_after_correct', reason: STARTER_ASK_ALREADY_MET_REASON });"));
   assert.match(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8'), /export const TUTOR_REPEAT_AFTER_CORRECT_DROP = process\.env\.NEXT_PUBLIC_TUTOR_REPEAT_AFTER_CORRECT_DROP !== 'off';/);
+});
+
+// Task 38 §H (voice run 19, 1187 s): an all-Japanese turn in an English-first lesson.
+test('38 §H: an all-Japanese turn after an English student turn is killed; a gloss after English is fine; a Japanese student turn is no trigger', () => {
+  const langs = ['en', 'ja'];
+  const student = 'I was responsible for communicating with our customers.';
+  const t1187 = '発音のチェック結果は100点中95点で、評価は「excellent」です。 どの単語も大きな問題はありませんでした。 もう一つ練習しますか、それともまとめに進みましょうか？';
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: student, attemptText: t1187 }), true);
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: student, attemptText: 'Your sentence scored 95 out of 100, which is excellent. 発音はとても良かったです。' }), false, 'English first, then a gloss');
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: '英語で話してもいいですか？', attemptText: t1187 }), false, 'the student spoke Japanese');
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: ['ja', 'en'], studentText: student, attemptText: t1187 }), false, 'a Japanese-first lesson');
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: '[runtime note] idle', attemptText: t1187 }), false, 'a runtime turn');
+  assert.ok(teachingLanguageFirstReason(langs).startsWith('Say it in English first; Japanese only as a short gloss.'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'teaching_language_first', reason: teachingLanguageFirstReason(tutorLanguages) });"));
+  assert.ok(vtr.includes('&& teachingLanguageFirstViolation({ tutorLanguages, studentText: transcript, attemptText })) {'));
+  assert.match(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8'), /export const TUTOR_TEACHING_LANGUAGE_FIRST = process\.env\.NEXT_PUBLIC_TUTOR_TEACHING_LANGUAGE_FIRST !== 'off';/);
 });
 
 if (failed) process.exit(1);

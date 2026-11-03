@@ -1300,3 +1300,11 @@ export const TUTOR_RECAP_CARD_ON_FLUSH = process.env.NEXT_PUBLIC_TUTOR_RECAP_CAR
  *  recap / closing part is dropped. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_NO_READINESS=off. */
 export const TUTOR_FIXED_SCRIPT_NO_READINESS = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_NO_READINESS !== 'off';
+
+/** Task 38 §H (voice run 19, 1187 s: an all-Japanese feedback turn in an
+ *  English-first lesson): in a language lesson with tutor_languages[0] =
+ *  'en', a tutor attempt with no English sentence after an English student
+ *  turn is killed and retried ("Say it in English first; Japanese only as a
+ *  short gloss."). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_TEACHING_LANGUAGE_FIRST=off. */
+export const TUTOR_TEACHING_LANGUAGE_FIRST = process.env.NEXT_PUBLIC_TUTOR_TEACHING_LANGUAGE_FIRST !== 'off';

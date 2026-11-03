@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP, TUTOR_RECAP_CARD_ON_FLUSH, TUTOR_FIXED_SCRIPT_NO_READINESS } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP, TUTOR_RECAP_CARD_ON_FLUSH, TUTOR_FIXED_SCRIPT_NO_READINESS, TUTOR_TEACHING_LANGUAGE_FIRST } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, resolveMenuPickLoose, loosePickAllowed, menuPickNote, menuAskedIn, menuReplyIsPick, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { emptyTurnFallbackLine, silentTurnFallbackLine, lastShowSentenceOf, SILENT_TURN_STATE_TOOLS } from '@/lib/tutor/voice/empty-turn-fallback';
@@ -253,6 +253,7 @@ import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-chec
 import { hasVerdictOpener, VERDICT_REPLANT_CLAUSE } from '@/lib/tutor/voice/verdict-preservation';
 import { detectHoldRequest, checkResume, SOFT_HOLD_CHECKIN_MS, WAIT_REQUEST_NOTE } from '@/lib/tutor/voice/student-hold';
 import { asksReadiness, READINESS_ASK_NOTE } from '@/lib/tutor/voice/readiness-ask';
+import { teachingLanguageFirstViolation, teachingLanguageFirstReason } from '@/lib/tutor/voice/teaching-language-first';
 import { claimsPronunciation, isPronunciationClaimSentence, PRONUNCIATION_CLAIM_NOTE } from '@/lib/tutor/voice/pronunciation-claim';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { checkFalsePraiseOpener, studentDisagreesWithVerified } from '@/lib/tutor/voice/false-praise-opener';
@@ -13517,6 +13518,8 @@ export function VoiceTutorRealtime({
         ? [...(answeredInPartRef.current.get(currentSegmentIdRef.current ?? '') ?? [])] : [];
       // Task 20 §B1: one premature_farewell kill per turn.
       let prematureFarewellRejected = false;
+      // Task 38 §H: one teaching-language-first kill per turn.
+      let teachingLanguageFirstRejected = false;
       // Task 24 §C1: one transition_ask_off_part kill per turn.
       let transitionAskRejected = false;
       // Task 25 §G: one repeat_ask_third_version kill per turn.
@@ -20223,6 +20226,17 @@ export function VoiceTutorRealtime({
             await performKill();
             onDebugEvent?.('repeat_after_correct', `starter already met "${starterMet.slice(0, 60)}"`);
           }
+        }
+
+        // Task 38 §H (voice run 19, 1187 s): an all-Japanese turn after the
+        // student spoke English, in an English-first language lesson — killed
+        // and retried "Say it in English first; Japanese only as a short gloss."
+        if (TUTOR_TEACHING_LANGUAGE_FIRST && !attemptKilled && !teachingLanguageFirstRejected && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)
+          && teachingLanguageFirstViolation({ tutorLanguages, studentText: transcript, attemptText })) {
+          teachingLanguageFirstRejected = true;
+          rejectionsThisAttempt.push({ action: 'teaching_language_first', reason: teachingLanguageFirstReason(tutorLanguages) });
+          await performKill();
+          onDebugEvent?.('teaching_language_first', `"${attemptText.slice(0, 80)}"`);
         }
 
         // Task 20 §B1 (GDI run 8, 1543 s): 「今日はここまでです。」… Goodbye! in

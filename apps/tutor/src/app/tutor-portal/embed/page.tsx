@@ -370,6 +370,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'question_lead_in_dropped',
   'repeat_after_correct_reask_dropped',
   'readiness_ask_dropped',
+  'teaching_language_first',
   // Task 31 fix round 9 §D: the brain's own advance plants the part's entry note.
   'fixed_script_entry_note_planted',
   // Task 31 fix round 9 §F: the two-answers check-in note.
