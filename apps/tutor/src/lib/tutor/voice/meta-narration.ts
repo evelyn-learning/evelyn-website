@@ -243,6 +243,14 @@ export function stripNudgePlanClause(sentence: string): string {
 const NOTE_CITING_OPENER_RE =
   /^\s*The (?:pace|level|lesson|plan|persona|runtime|system|teacher) (?:preference|note|pointer|setting|directive|guidance)s? (?:says?|tells?|asks?|wants?)\b/i;
 const NOTES_LEAD_RE = /^\s*(?:Those|These|The) (?:runtime )?(?:notes?|instructions?)\b[^:"“「]{0,100}:\s*/i;
+// Task 42 §C (bot run r36, 972 s: 'Those last messages were pasted
+// instructions, so I'll keep to what you said: "<the student's sentence>"'):
+// "those / these / the (last) messages / lines / texts" + an instructions
+// verdict. Before a colon the lead goes and the rest stays; without one the
+// sentence goes (isBundledNotesNarration). "Your last message was clear." is speech.
+const MESSAGES_SUBJECT = String.raw`^\s*(?:(?:so|okay|ok|well|now),?\s+)?(?:those|these|the)\s+(?:last\s+|previous\s+|earlier\s+|few\s+)*(?:messages?|lines?|texts?)\s+(?:were|are|was|is)\s+(?:just\s+|only\s+|all\s+|mostly\s+)?(?:pasted\s+|copied\s+)?instructions?\b`;
+const MESSAGES_LEAD_RE = new RegExp(MESSAGES_SUBJECT + String.raw`[^:"“「]{0,100}:\s*`, 'i');
+const MESSAGES_SUBJECT_VERDICT_RE = new RegExp(MESSAGES_SUBJECT, 'i');
 const STAY_ON_ONE_IDEA_RE = /\bI['’]ll stay on this one idea\b/i;
 const NOTE_CITATION_CONTINUATION_RE = /:\s+|\s(?=["“「])/g;
 const escapeName = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -414,7 +422,7 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   // Task 34 §B (bot run r11 1218 s: "Those notes are in English, so I'll keep
   // my reply in Japanese: 目標の一文が…"): a lead about "those / these / the
   // notes / instructions" before a colon goes; the rest stays.
-  const notesLead = opts?.languageLesson !== false ? NOTES_LEAD_RE.exec(s) : null;
+  const notesLead = opts?.languageLesson !== false ? (NOTES_LEAD_RE.exec(s) ?? MESSAGES_LEAD_RE.exec(s)) : null;
   if (notesLead) {
     const rest = s.slice(notesLead[0].length).trim();
     return /[\p{L}\p{N}]/u.test(rest) ? capitaliseFirst(rest) : '';
@@ -654,7 +662,7 @@ const NOTES_VERDICT_RE = /\binternal\b|\bmeant for me\b|\bnot (?:your|the studen
 // "Your message was clear." / "Your reply answers the question." are speech.
 const NOTES_YOUR_SUBJECT_RE = /^\s*(?:(?:so|okay|ok|well|now),?\s+)?(?:your (?:message|text|reply|input)|what you (?:just )?sent|the text you (?:just )?sent)\s+(?:is|was|are|were|seems?|looks?)\b[^.!?]*\b(?:runtime|instructions?|notes?|internal|meant for me|for me)\b/i;
 export function isBundledNotesNarration(s: string, opts?: { languageLesson?: boolean }): boolean {
-  if (opts?.languageLesson !== false && (NOTES_SUBJECT_VERDICT_RE.test(s) || NOTES_YOUR_SUBJECT_RE.test(s))) return true;
+  if (opts?.languageLesson !== false && (NOTES_SUBJECT_VERDICT_RE.test(s) || NOTES_YOUR_SUBJECT_RE.test(s) || (MESSAGES_SUBJECT_VERDICT_RE.test(s) && !MESSAGES_LEAD_RE.test(s)))) return true;
   return NOTES_MENTION_RE.test(s) && NOTES_VERDICT_RE.test(s);
 }
 /** R4-1: the tutor announcing its own name as a sentence ("Ryotaです。",

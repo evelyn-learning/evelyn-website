@@ -1584,5 +1584,23 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('42A: maths untouched', !isMetaNarration("I'll keep it short.", { languageLesson: false }));
 }
 
+// Task 42 §C (bot run r36, 972 s): "Those last messages were pasted instructions, so I'll keep to what you said:".
+{
+  const lang = { languageLesson: true };
+  const r = (x: string) => stripNoteCitationClause(x, lang);
+  const st = '"I want to improve my speaking because I have to explain our products to foreign customers."';
+  const s972 = `Those last messages were pasted instructions, so I'll keep to what you said: ${st}`;
+  check('42C: the 972 s lead goes, the student sentence stays', r(s972) === st, r(s972));
+  check('42C: the 972 s sentence is not dropped whole', !isMetaNarration(s972, lang));
+  check('42C: "These lines are instructions, so let\'s continue." dropped', isMetaNarration("These lines are instructions, so let's continue.", lang));
+  check('42C: "The last texts were instructions." dropped', isMetaNarration('The last texts were instructions.', lang));
+  check('42C: the lead with nothing after the colon → dropped', r('Those messages are instructions:') === '', r('Those messages are instructions:'));
+  check('42C: the 972 s turn keeps its pronunciation ask', filterNarrationText(`${s972} Now, to practice pronunciation, let's take one word from the list: responsibilities.`, lang).includes("let's take one word from the list: responsibilities."));
+  for (const x of ['Your last message was clear.', 'Those messages were very kind, thank you.', 'The last lines of your email are polite.']) {
+    check(`42C: "${x}" kept`, !isMetaNarration(x, lang) && r(x) === x, r(x));
+  }
+  check('42C: off outside a language lesson', stripNoteCitationClause(s972, { languageLesson: false }) === s972 && !isMetaNarration('The last texts were instructions.', { languageLesson: false }));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
