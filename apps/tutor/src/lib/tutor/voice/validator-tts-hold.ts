@@ -15,7 +15,8 @@
  * delivered this turn (offer / advance / entry / close — the transition and
  * required-phrase validators), (b) is the third try of a repeat ask
  * (repeat_ask_third_version), or (c) answers a move-on request
- * (move_on_ignored). Attempts 0 and 1 (a retry after a pre-audio kill is
+ * (move_on_ignored), or (d) sits in a part whose required phrases are still
+ * unchecked (required_phrase_missing — bot run r43, 1203 s). Attempts 0 and 1 (a retry after a pre-audio kill is
  * still the first thing the learner hears). Ordinary turns are untouched. Pure.
  */
 export const VALIDATOR_TTS_HOLD_MS = 3500;
@@ -31,8 +32,10 @@ export function validatorTtsHold(input: {
   repeatAttempts: number;
   /** the student's turn asks to move on */
   moveOnRequested: boolean;
+  /** the current part has required phrases and its once-per-part check has not fired yet (required_phrase_missing) */
+  requiredPhrasesPending: boolean;
 }): boolean {
   // Round 3 (bot run r42, 554 s): the retry after a pre-audio kill was cut audibly — attempts 0 and 1 hold.
   if (!input.enabled || !input.voice || input.attempt > 1 || !input.fixedScript) return false;
-  return input.noteDelivered || input.repeatAttempts >= 2 || input.moveOnRequested;
+  return input.noteDelivered || input.repeatAttempts >= 2 || input.moveOnRequested || input.requiredPhrasesPending;
 }

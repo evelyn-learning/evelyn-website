@@ -15287,6 +15287,7 @@ export function VoiceTutorRealtime({
           noteDelivered: fixedScriptNoteDeliveredThisTurnRef.current,
           repeatAttempts: repeatAskTriesRef.current?.segmentId === (turnStartSegmentId ?? '') ? (repeatAskTriesRef.current?.attempts ?? 0) : 0,
           moveOnRequested: !!moveOnRequestSpan(transcript),
+          requiredPhrasesPending: ((lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.requiredPhrases?.length ?? 0) > 0) && !segmentRequiredPhrasesCheckedRef.current.has(currentSegmentIdRef.current ?? ''),
         });
         if (validatorHold) onDebugEvent?.('validator_tts_hold_started', `attempt ${attempt}`);
         let syntheticTailDrained = false;

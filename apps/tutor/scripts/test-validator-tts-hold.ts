@@ -21,7 +21,10 @@ function test(name: string, fn: () => void) {
 const read = (p: string) => readFileSync(join(__dirname, '..', p), 'utf8');
 const pin = (src: string, re: RegExp) => assert.ok(re.test(src), `missing ${re}`);
 
-const base = { enabled: true, voice: true, attempt: 0, fixedScript: true, noteDelivered: false, repeatAttempts: 0, moveOnRequested: false };
+const base = { enabled: true, voice: true, attempt: 0, fixedScript: true, noteDelivered: false, repeatAttempts: 0, moveOnRequested: false, requiredPhrasesPending: false };
+test('F: a part whose required phrases are still unchecked holds (required_phrase_missing — bot run r43, 1203 s)', () => {
+  assert.equal(validatorTtsHold({ ...base, requiredPhrasesPending: true }), true);
+});
 test('F: a fixed-script voice turn that carries an urgent runtime note (offer / advance / entry / close) holds', () => {
   assert.equal(validatorTtsHold({ ...base, noteDelivered: true }), true);
 });
@@ -46,7 +49,7 @@ test('F: the hold is capped (bounded latency) — 3.5 s from the attempt start',
 });
 test('F: VTR wiring — prone turns gate until the validators pass; stream end keeps the gate; the success path opens it (pins)', () => {
   const VTR = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
-  pin(VTR, /const validatorHold = validatorTtsHold\(\{\s*enabled: TUTOR_VALIDATOR_TTS_HOLD,\s*voice: sessionMode !== 'text',\s*attempt,\s*fixedScript: isFixedScriptPlan\(lessonPlanRef\.current\),\s*noteDelivered: fixedScriptNoteDeliveredThisTurnRef\.current,\s*repeatAttempts: repeatAskTriesRef\.current\?\.segmentId === \(turnStartSegmentId \?\? ''\) \? \(repeatAskTriesRef\.current\?\.attempts \?\? 0\) : 0,\s*moveOnRequested: !!moveOnRequestSpan\(transcript\),\s*\}\);/);
+  pin(VTR, /const validatorHold = validatorTtsHold\(\{\s*enabled: TUTOR_VALIDATOR_TTS_HOLD,\s*voice: sessionMode !== 'text',\s*attempt,\s*fixedScript: isFixedScriptPlan\(lessonPlanRef\.current\),\s*noteDelivered: fixedScriptNoteDeliveredThisTurnRef\.current,\s*repeatAttempts: repeatAskTriesRef\.current\?\.segmentId === \(turnStartSegmentId \?\? ''\) \? \(repeatAskTriesRef\.current\?\.attempts \?\? 0\) : 0,\s*moveOnRequested: !!moveOnRequestSpan\(transcript\),\s*requiredPhrasesPending: \(\(lessonPlanRef\.current\?\.segments\.find\(\(sg\) => sg\.id === currentSegmentIdRef\.current\)\?\.requiredPhrases\?\.length \?\? 0\) > 0\) && !segmentRequiredPhrasesCheckedRef\.current\.has\(currentSegmentIdRef\.current \?\? ''\),\s*\}\);/);
   pin(VTR, /const gateTimer = setTimeout\(\(\) => \{\s*if \(validatorHold && gateState === 'gated'\) onDebugEvent\?\.\('validator_tts_hold_deadline', `\$\{pendingSentences\.length\} sentence\(s\) spoken before the validators`\);\s*openGate\(\);\s*\}, skipTurnMarkerPresent \? 3_600_000 : validatorHold \? VALIDATOR_TTS_HOLD_MS : 1000\);/);
   pin(VTR, /if \(!skipNoAdvanceAtStreamEnd\) \{\s*if \(validatorHold && gateState === 'gated'\) \{[\s\S]{0,300}?onDebugEvent\?\.\('validator_tts_hold_kept', `\$\{pendingSentences\.length\} sentence\(s\) wait for the validators`\);\s*\} else \{\s*openGate\(\);[\s\S]{0,700}?releaseVerdictHold\(\);\s*\}\s*\}/);
   pin(VTR, /if \(validatorHold && gateState === 'gated'\) onDebugEvent\?\.\('validator_tts_hold_released', `\$\{pendingSentences\.length\} sentence\(s\) after the validators`\);\s*openGate\(\);\s*releaseVerdictHold\(\);\s*break;/);
