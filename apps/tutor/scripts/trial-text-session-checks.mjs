@@ -196,6 +196,34 @@ export function runChecks(dump) {
     ok('no answered summary question re-asked', reAsked.length === 0, reAsked.join(' | ').slice(0, 300));
   }
 
+  // 10f. voice run 19 (embed-1793676043999): classes the text checks missed
+  const silentTurns = tutor.filter((x) => /^\(rendered: [a-z_]+\)\s*$/i.test(x.text.trim()) || x.text.trim() === '');
+  ok('no silent tutor turn (all sentences dropped)', silentTurns.length === 0, silentTurns.map((x) => `${x.t}s`).join(' '));
+  const prevPage = ev('student_card_on_previous_page');
+  ok('no student card routed to a previous page after an advance', prevPage.length === 0, prevPage.map((e) => `${e.t}s`).join(' '));
+  ok('no readiness ask on a fixed-script plan', ev('readiness_ask_note_planted').length === 0, ev('readiness_ask_note_planted').map((e) => `${e.t}s`).join(' '));
+  const abandoned = [];
+  for (const a of ev('fixed_script_auto_advance')) {
+    const turn = [...tutor].reverse().find((x) => x.t <= a.t + 1 && x.t >= a.t - 12);
+    const cont = ev('fixed_script_noask_continue').find((c) => c.t >= a.t && c.t <= a.t + 12);
+    if (turn && /\?\s*$/.test(turn.text.trim()) && cont && !student.some((s) => s.t > turn.t && s.t < cont.t)) abandoned.push(`${a.t}s "${turn.text.slice(-60)}"`);
+  }
+  ok('auto-advance never abandons an open question', abandoned.length === 0, abandoned.join(' | ').slice(0, 300));
+  const ackCards = wb.filter((w) => w.action === 'showSentence' && /^(?:okay|ok|sure|alright|great|good|right|now|next|let'?s)\b/i.test(String(w.data?.sentence ?? '')) && content(String(w.data?.sentence ?? '')).length <= 5);
+  ok('no acknowledgement line carded', ackCards.length === 0, ackCards.map((w) => `${w.t}s "${w.data?.sentence}"`).join(' | ').slice(0, 300));
+  const crossDup = [];
+  for (let k = 1; k < tutor.length; k++) {
+    if (student.some((s) => s.i > tutor[k - 1].i && s.i < tutor[k].i)) continue;
+    const a = tutor[k - 1].text.split(/(?<=[.?!。？！])\s+/).filter(Boolean).pop() ?? '';
+    const b = tutor[k].text.split(/(?<=[.?!。？！])\s+/).filter(Boolean)[0] ?? '';
+    if (content(a).length >= 3 && jaccard(content(a), content(b)) >= 0.6) crossDup.push(`${tutor[k - 1].t}s→${tutor[k].t}s "${a.slice(0, 50)}"`);
+  }
+  ok('no near-duplicate sentence across two consecutive tutor turns', crossDup.length === 0, crossDup.join(' | ').slice(0, 300));
+  const summaryPage = pages.find((p) => /Summary|まとめ/.test(p.title));
+  if (summaryPage) ok('summary page has its recap card', summaryPage.items.some((it) => it.action === 'showProblem'), summaryPage.items.length ? `${summaryPage.items.length} items, no showProblem` : 'EMPTY');
+  const jaOnly = tutor.filter((x, idx) => { const prevS = [...student].reverse().find((s) => s.i < x.i); return prevS && !/[\u3040-\u30FF\u4E00-\u9FFF]/.test(prevS.text) && /[\u3040-\u30FF\u4E00-\u9FFF]/.test(x.text) && !/[A-Za-z]{3,}/.test(x.text.replace(/\(rendered[^)]*\)/, '')); });
+  ok('no Japanese-only turn after an English student turn', jaOnly.length === 0, jaOnly.map((x) => `${x.t}s`).join(' '));
+
   // 11. counts worth a look
   const counts = ['brain_validator_retry', 'idle_nudge_sent', 'drop_self_voice', 'meta_narration_dropped', 'fixed_script_noask_continue', 'fixed_script_offer_continue', 'transition_ask_off_part', 'judge_kill_resume_diverged', 'menu_pick_resolved', 'adjacent_duplicate_sentence_dropped', 'typed_turn_superseded', 'render_dropped'];
   info(counts.map((c) => `${c}=${events.filter((e) => e.type === c || e.type.startsWith(c + '_')).length}`).join(' · '));
