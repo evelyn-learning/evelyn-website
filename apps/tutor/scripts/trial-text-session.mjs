@@ -285,9 +285,19 @@ async function waitQuiet(maxMs) {
   }
 }
 let sinceStudent = 0;
+// The authored opener is spoken by the client (no brain stream), so the tee never sees it:
+// answer its "Are you ready?" proactively, like a real student, instead of waiting for the idle nudge.
+{
+  const opened = await (async () => { const end = Date.now() + 12000; while (Date.now() < end) { const b = await page.evaluate(() => window.__brain?.turns.length ?? 0).catch(() => 0); if (b > 0) return true; await wait(500); } return false; })();
+  if (!opened) {
+    await wait(8000); // let the opener finish
+    const ready = pick(["Yes, I'm ready.", "Yes, let's start.", 'OK, ready.']);
+    try { await input.click({ timeout: 8000 }); await input.fill(ready); await input.press('Enter'); state.student += 1; sinceStudent = Date.now(); say(`STUDENT(ready, proactive) ${ready}`); } catch { say('input not ready for the proactive answer'); }
+  }
+}
 while (Date.now() - t0 < maxMin * 60000 && state.student < 80 && !state.closed) {
-  const quiet = await waitQuiet(110000);
-  if (!quiet) { say('no tutor activity for 110 s'); break; }
+  const quiet = await waitQuiet(150000);
+  if (!quiet) { say('no tutor activity for 150 s'); break; }
   const since = turns.filter((x) => x.t > sinceStudent);
   const text = since.map((x) => x.sentences.join(' ')).join(' ');
   if (!text.trim()) {
