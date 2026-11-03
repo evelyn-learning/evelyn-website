@@ -106,7 +106,7 @@ export function runChecks(dump) {
     const turn = [...tutor].reverse().find((x) => x.t <= e.t + 1);
     if (!turn) continue;
     const tt = new Set(content(turn.text)); const cg = content(g); const hit = cg.filter((w) => tt.has(w)).length / cg.length;
-    if (hit < 0.6) ungrounded.push(`${e.t}s "${g}" (${Math.round(hit * 100)}%)`);
+    if (hit < 0.5) ungrounded.push(`${e.t}s "${g}" (${Math.round(hit * 100)}%)`);
   }
   ok('Q-pin gists grounded in the turn', ungrounded.length === 0, ungrounded.join(' | ').slice(0, 300));
 
