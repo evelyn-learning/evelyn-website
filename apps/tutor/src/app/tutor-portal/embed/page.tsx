@@ -381,7 +381,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'non_answer_return_ask', 'lone_yes_choice_note_planted',
   'fixed_script_advance_refused_offer_first',
   // Task 40 §A: two answers=neither verdicts on the same ask.
-  'neither_streak_move_on_note_planted', 'neither_streak_reask_dropped',
+  'neither_streak_move_on_note_planted', 'neither_streak_reask_dropped', 'neither_streak_confirmed', 'move_on_no_ask_fallback',
   // Task 40 §C: the move-on note and the close note on one turn.
   'move_on_then_close_note',
   // Task 31 fix round 9 §D: the brain's own advance plants the part's entry note.

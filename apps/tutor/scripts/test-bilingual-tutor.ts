@@ -2188,7 +2188,7 @@ test('40 §A: two answers=neither verdicts on the same ask → the move-on note;
   const asks = [t417, t440, t468];
   assert.equal(cr.neitherStreakReasks('Could you tell me the name of a foreign country you visited for business?', asks), true, 'the 488 s candidate — reworded past the 36 §A subset rule');
   assert.equal(cr.probeReasks('Could you tell me the name of a foreign country you visited for business?', [t440, t468]), false, 'which the check-in drop missed');
-  assert.equal(cr.neitherStreakReasks('Which country was it?', asks), true, 'nothing new asked');
+  assert.equal(cr.neitherStreakReasks('Which country did you visit?', asks), true, 'the same ask');
   assert.equal(cr.neitherStreakReasks('For example: I have visited Germany for business.', asks), false, 'the model answer is kept');
   assert.equal(cr.neitherStreakReasks('The answer you gave is about a presentation last month, not a country.', asks), false);
   assert.equal(cr.neitherStreakReasks('Did you attend any business events or exhibitions last year?', asks), false, 'the next step is kept');
@@ -2197,9 +2197,45 @@ test('40 §A: two answers=neither verdicts on the same ask → the move-on note;
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("neitherExchangesRef.current = [...neitherExchangesRef.current.slice(-1), { tutorText: peTutor, neither: precheckSaysNeither(verdictPrecheckRef.current) }];"));
   assert.ok(vtr.includes("} else if (TUTOR_NEITHER_STREAK_MOVE_ON && naTurns.length >= 2) {"), 'inside the 34 §A language-lesson gate');
-  assert.ok(/neitherStreakAsks = \[\.\.\.neEx\.map\(\(e\) => e\.tutorText\), naLast\];[\s\S]{0,300}runTranscript = `\$\{NO_ATTEMPT_MOVE_ON_NOTE\}/.test(vtr), 'the Task 34 §A note is planted');
-  assert.ok(vtr.includes("if (neitherStreakAsks && !reasksAsk(updatedSentence, noAttemptPinned) && neitherStreakReasks(updatedSentence, neitherStreakAsks, { studentText: transcript })) {"));
-  assert.ok(vtr.includes('if (TUTOR_NON_ANSWER_RETURN_ASK && !attemptKilled && !noAttemptPinned) {'), 'no return ask after the move-on note');
+  assert.ok(vtr.includes("runTranscript = `${neState === 'confirmed' ? NO_ATTEMPT_MOVE_ON_NOTE : NEITHER_PENDING_MOVE_ON_NOTE}\\n\\n${runTranscript}`;"), 'the Task 34 §A note (or the conditional one) is planted');
+  assert.ok(vtr.includes("if (neitherStreakAsks && noAttemptPinned && !reasksAsk(updatedSentence, noAttemptPinned) && neitherStreakReasks(updatedSentence, neitherStreakAsks, { studentText: transcript })) {"));
   assert.ok(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8').includes("NEXT_PUBLIC_TUTOR_NEITHER_STREAK_MOVE_ON !== 'off'"));
 });
+// Task 40 fix round 1 (review I-1 / I-2).
+test('40 r1 I-1: the current reply\'s verdict decides — neither, neither, correct → no note; neither ×3 → note; pending → the conditional note', () => {
+  const t417 = 'Have you ever visited a foreign country for business? If so, which one?';
+  const t440 = 'Have you ever visited a foreign country for business? If so, which country did you visit?';
+  const t468 = 'Which country did you visit for business?';
+  const ex = [{ tutorText: t417, neither: true }, { tutorText: t440, neither: true }];
+  assert.equal(cr40.neitherStreakState(ex, t468, { answers: 'open_question', verdict: 'correct' }), null, 'neither, neither, correct → no note');
+  assert.equal(cr40.neitherStreakState(ex, t468, { answers: 'neither', verdict: 'correct' }), null, 'judged correct');
+  assert.equal(cr40.neitherStreakState(ex, t468, { answers: 'neither', verdict: 'cannot_determine' }), 'confirmed', 'neither ×3 → note');
+  assert.equal(cr40.neitherStreakState(ex, t468, null), 'pending', 'no verdict yet → the conditional note');
+  assert.equal(cr40.neitherStreakState([{ tutorText: t417, neither: true }, { tutorText: t440, neither: false }], t468, { answers: 'neither', verdict: 'cannot_determine' }), null);
+  assert.ok(cr40.NEITHER_PENDING_MOVE_ON_NOTE.includes('If this reply answers it, accept it and continue'));
+  assert.ok(cr40.NEITHER_PENDING_MOVE_ON_NOTE.indexOf('accept it') < cr40.NEITHER_PENDING_MOVE_ON_NOTE.indexOf('model answer'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('? neitherStreakState(neEx, naLast, verdictPrecheckRef.current) : null;'));
+  assert.ok(vtr.includes('if (neitherStreakAsks && neitherPending && !noAttemptPinned && precheckSaysNeither(verdictPrecheckRef.current)) {'), 'the pending drop waits for the verdict');
+});
+
+test('40 r1 I-2: only a re-ask of the same ask is dropped; same-topic next steps survive; a turn left with no ask gets the move-on line', () => {
+  const asks = ["Great, one more on the present perfect. Have you ever visited a foreign country for business? If so, which one?", 'Have you ever visited a foreign country for business? If so, which country did you visit?', 'Your last line is about a presentation last month, not the country question. 国の名前を教えてください。 Which country did you visit for business?'];
+  for (const keep of ['What did you do in that country?', 'Now, what did you do after the trade show?', 'Why did you visit that country?', 'Did you go there for business?', 'Did you visit a client there?', 'What was the business trip like?', 'Where did you go for business last year?', 'Which country was it?']) {
+    assert.equal(cr40.neitherStreakReasks(keep, asks), false, `kept: ${keep}`);
+  }
+  assert.equal(cr40.neitherStreakReasks('Could you tell me the name of a foreign country you visited for business?', asks), true, 'the 488 s re-ask');
+  assert.equal(cr40.neitherStreakReasks('国の名前を教えてください。', asks), true, 'the Japanese gloss re-ask');
+  const base = { moveOnActive: true, reaskDropped: true, keptAsks: false, alreadySpoken: false, killed: false };
+  assert.equal(cr40.moveOnNoAskFallbackDue(base), true, 'the only question was the re-ask → fallback appended');
+  assert.equal(cr40.moveOnNoAskFallbackDue({ ...base, keptAsks: true }), false, 'a next step was kept');
+  assert.equal(cr40.moveOnNoAskFallbackDue({ ...base, alreadySpoken: true }), false, 'the move-on line already spoken');
+  assert.equal(cr40.moveOnNoAskFallbackDue({ ...base, reaskDropped: false }), false);
+  assert.equal(cr40.moveOnNoAskFallbackDue({ ...base, moveOnActive: false }), false);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('if (TUTOR_NON_ANSWER_RETURN_ASK && !attemptKilled) {'), 'the R26-1 return ask is not suppressed');
+  assert.ok(vtr.includes("if (naLine && noAttemptPinned && (reasksAsk(naPending, noAttemptPinned) || (!!neitherStreakAsks && neitherStreakReasks(naPending, neitherStreakAsks)))) {"), 'a return ask that IS the re-ask becomes the move-on line');
+  assert.ok(vtr.includes('keptAsks: attemptAsksStudent(`${turnNarrationRef.current.join(\' \')} ${attemptText}`),'), 'a question earlier in the turn counts');
+});
+
 if (failed) process.exit(1);

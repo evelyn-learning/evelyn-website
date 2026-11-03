@@ -232,7 +232,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, moveOnRequestSpan, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness, isQuestionLeadIn, reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON, precheckSaysNeither, neitherStreak, neitherStreakReasks } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, moveOnRequestSpan, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness, isQuestionLeadIn, reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON, precheckSaysNeither, neitherStreakState, neitherStreakReasks, NEITHER_PENDING_MOVE_ON_NOTE, moveOnNoAskFallbackDue } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -13548,6 +13548,9 @@ export function VoiceTutorRealtime({
       // Task 40 §A: the asks two answers=neither verdicts were given to (this
       // turn drops any question about them).
       let neitherStreakAsks: string[] | null = null;
+      // Fix round 1 (I-1): the current reply's verdict was still pending when
+      // the conditional note was planted — the drop waits for answers=neither.
+      let neitherPending = false;
       // Task 35 §B: the closing / recap part's answered questions (guarded this turn).
       const answeredGuardQs: string[] = TUTOR_ANSWERED_GUARD && answeredGuardPart(lessonPlanRef.current, currentSegmentIdRef.current)
         ? [...(answeredInPartRef.current.get(currentSegmentIdRef.current ?? '') ?? [])] : [];
@@ -13885,17 +13888,24 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('no_attempt_move_on_note_planted', `"${turnAskGist(naLast).slice(0, 80)}" ← "${transcript.slice(0, 40)}"`);
         } else if (TUTOR_NEITHER_STREAK_MOVE_ON && naTurns.length >= 2) {
           // Task 40 §A (bot run r28, 439–488 s): two answers=neither verdicts in a
-          // row on the same ask count as two non-attempts — the same note, and
-          // this turn drops any question about that ask.
+          // row on the same ask, and the current reply is a non-answer too —
+          // the move-on note, and this turn drops a re-ask of that ask.
+          // Fix round 1 (I-1): the current reply's verdict decides — neither ⇒
+          // the note; pending ⇒ the conditional note (accept an answer, else
+          // the model answer) and the drop waits for the verdict; anything else
+          // (a correct answer) ⇒ nothing.
           const neEx = neitherExchangesRef.current;
-          if (neEx.length >= 2 && neEx[neEx.length - 1]!.tutorText === naTurns[naTurns.length - 2] && neitherStreak(neEx, naLast)) {
-            noAttemptPinned = naLast;
+          const neState = neEx.length >= 2 && neEx[neEx.length - 1]!.tutorText === naTurns[naTurns.length - 2]
+            ? neitherStreakState(neEx, naLast, verdictPrecheckRef.current) : null;
+          if (neState) {
             noAttemptSeg = currentSegmentIdRef.current;
             neitherStreakAsks = [...neEx.map((e) => e.tutorText), naLast];
+            if (neState === 'confirmed') noAttemptPinned = naLast;
+            else neitherPending = true;
             // The check-in note ("the student has answered …") contradicts this one.
             if (probeCheckinAsks) runTranscript = runTranscript.replace(`${PROBE_CHECKIN_NOTE}\n\n`, '');
-            runTranscript = `${NO_ATTEMPT_MOVE_ON_NOTE}\n\n${runTranscript}`;
-            onDebugEvent?.('neither_streak_move_on_note_planted', `"${turnAskGist(naLast).slice(0, 80)}" ← "${transcript.slice(0, 40)}"`);
+            runTranscript = `${neState === 'confirmed' ? NO_ATTEMPT_MOVE_ON_NOTE : NEITHER_PENDING_MOVE_ON_NOTE}\n\n${runTranscript}`;
+            onDebugEvent?.('neither_streak_move_on_note_planted', `${neState}: "${turnAskGist(naLast).slice(0, 80)}" ← "${transcript.slice(0, 40)}"`);
           }
         }
       }
@@ -17463,8 +17473,14 @@ export function VoiceTutorRealtime({
                   }
                   // Task 34 §A: after the no-attempt note the turn re-asks the same ask —
                   // dropped (with its starter); the part's turn budget then counts as reached.
-                  // Task 40 §A: after two answers=neither verdicts, ANY question about the same ask.
-                  if (neitherStreakAsks && !reasksAsk(updatedSentence, noAttemptPinned) && neitherStreakReasks(updatedSentence, neitherStreakAsks, { studentText: transcript })) {
+                  // Task 40 §A: after two answers=neither verdicts, a re-ask of the same ask.
+                  // Fix round 1 (I-1): with the verdict pending at plant time, only once
+                  // this reply's verdict says neither (then the 34 §A drop applies too).
+                  if (neitherStreakAsks && neitherPending && !noAttemptPinned && precheckSaysNeither(verdictPrecheckRef.current)) {
+                    noAttemptPinned = neitherStreakAsks[neitherStreakAsks.length - 1] ?? null;
+                    onDebugEvent?.('neither_streak_confirmed', `"${turnAskGist(noAttemptPinned).slice(0, 80)}"`);
+                  }
+                  if (neitherStreakAsks && noAttemptPinned && !reasksAsk(updatedSentence, noAttemptPinned) && neitherStreakReasks(updatedSentence, neitherStreakAsks, { studentText: transcript })) {
                     sqReaskDroppedPrev = true;
                     noAttemptDropped = true;
                     onDebugEvent?.('neither_streak_reask_dropped', `"${updatedSentence.slice(0, 80)}"`);
@@ -21228,8 +21244,11 @@ export function VoiceTutorRealtime({
         // Task 39 fix round 1 (R26-1, bot run r26 309 s): the student's turn was a
         // non-answer (a tangent / backchannel) and the reply asks nothing — the
         // engine returns to the lesson with the pending ask.
-        // Task 40 §A: never after the move-on note — the pending ask IS the dropped re-ask.
-        if (TUTOR_NON_ANSWER_RETURN_ASK && !attemptKilled && !noAttemptPinned) {
+        // Task 40 fix round 1 (I-2): after the move-on note the return ask is kept,
+        // unless its pending ask IS the dropped re-ask — then the engine's
+        // move-on line instead (the turn never ends silent).
+        let moveOnNoAskSpoken = false;
+        if (TUTOR_NON_ANSWER_RETURN_ASK && !attemptKilled) {
           const naPc = verdictPrecheckRef.current;
           const naCover = classifyCover(transcript);
           const naLine = nonAnswerReturnLine({
@@ -21242,7 +21261,14 @@ export function VoiceTutorRealtime({
             pinGist: pendingAskOf(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? ''),
             japanese: sessionAllowsNonLatin(tutorLanguages) && (tutorLanguages ?? []).some((l) => /^ja\b/i.test(l)),
           });
-          if (naLine) {
+          const naPending = pendingAskOf(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '');
+          if (naLine && noAttemptPinned && (reasksAsk(naPending, noAttemptPinned) || (!!neitherStreakAsks && neitherStreakReasks(naPending, neitherStreakAsks)))) {
+            const moveOnLine = sameQuestionMoveOnLine(tutorLanguages);
+            speakOnePart(moveOnLine);
+            attemptText = `${attemptText} ${moveOnLine}`.trim();
+            moveOnNoAskSpoken = true;
+            onDebugEvent?.('move_on_no_ask_fallback', `${moveOnLine} (instead of the return ask "${naPending.slice(0, 60)}")`);
+          } else if (naLine) {
             speakOnePart(naLine);
             attemptText = `${attemptText} ${naLine}`.trim();
             onDebugEvent?.('non_answer_return_ask', `"${naLine.slice(0, 80)}"`);
@@ -21256,6 +21282,21 @@ export function VoiceTutorRealtime({
           speakOnePart(moveOn);
           attemptText = `${attemptText} ${moveOn}`.trim();
           onDebugEvent?.('same_question_retry_move_on', moveOn);
+          moveOnNoAskSpoken = true;
+        }
+        // Task 40 fix round 1 (I-2): the move-on turn's re-ask was dropped and
+        // nothing kept in the turn asks — the engine's move-on line.
+        if (TUTOR_NEITHER_STREAK_MOVE_ON && moveOnNoAskFallbackDue({
+          moveOnActive: !!noAttemptPinned,
+          reaskDropped: noAttemptDropped,
+          keptAsks: attemptAsksStudent(`${turnNarrationRef.current.join(' ')} ${attemptText}`),
+          alreadySpoken: moveOnNoAskSpoken,
+          killed: attemptKilled,
+        })) {
+          const moveOn = sameQuestionMoveOnLine(tutorLanguages);
+          speakOnePart(moveOn);
+          attemptText = `${attemptText} ${moveOn}`.trim();
+          onDebugEvent?.('move_on_no_ask_fallback', moveOn);
         }
         if (!attemptKilled) {
           aggregatedFullText = aggregatedFullText

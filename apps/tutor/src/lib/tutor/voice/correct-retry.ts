@@ -1325,23 +1325,57 @@ export function neitherStreak(exchanges: ReadonlyArray<NeitherExchange>, lastTut
   if (!sameNeitherAsk(e1.tutorText, e2.tutorText)) return false;
   return !lastTutorTurn || lastTutorTurn === e2.tutorText || sameNeitherAsk(e2.tutorText, lastTutorTurn);
 }
-/** On the note's turn, a sentence asking the same thing as any of the
- *  streak's asks. A model answer (no ask) and a repeat / correction ask are
+// Fix round 1 (review I-1): the reply now being answered counts too. Its
+// verdict is usually still pending when the note is planted, so the state is
+// three-valued: 'confirmed' — the current reply was also answers=neither (a
+// third non-answer); 'pending' — no verdict yet (the conditional note); null —
+// no streak, or the current reply was judged anything else (a correct answer
+// resets it). Pure.
+export type NeitherStreakState = 'confirmed' | 'pending' | null;
+export function neitherStreakState(
+  exchanges: ReadonlyArray<NeitherExchange>,
+  lastTutorTurn: string | null | undefined,
+  currentPrecheck: { verdict?: string | null; answers?: string | null } | null | undefined,
+): NeitherStreakState {
+  if (!neitherStreak(exchanges, lastTutorTurn)) return null;
+  if (!currentPrecheck) return 'pending';
+  return precheckSaysNeither(currentPrecheck) ? 'confirmed' : null;
+}
+export const NEITHER_PENDING_MOVE_ON_NOTE = withSilentClause(
+  "[runtime note — not from the student] The student's last two replies did not answer this question. If this reply answers it, accept it and continue. If not, do not ask it again: say the model answer yourself in one sentence (put it on the board with show_sentence), then move to the next step of the part.]");
+/** Fix round 1 (review I-2): on the move-on turn, a sentence that re-asks the
+ *  SAME ask — content stems at Jaccard ≥ 0.5 with one of the ask's sentences
+ *  and ≥ 2 stems shared, or the Task 36 subset rule (subset + Jaccard ≥ 0.5)
+ *  with ≥ 2 stems shared. A same-topic next step built from one of the ask's
+ *  words ("What did you do in that country?") is kept; there is no
+ *  "asks nothing new" rule. A model answer and a repeat / correction ask are
  *  kept. Pure. */
+export const NEITHER_REASK_JACCARD = 0.5;
 export function neitherStreakReasks(sentence: string | null | undefined, asks: ReadonlyArray<string | null | undefined>, opts?: { studentText?: string | null }): boolean {
   const s = (sentence ?? '').trim();
   if (!s || !PROBE_ASK_SHAPE_RE.test(s)) return false;
   if (isRepeatOrCorrectionAsk(s, opts?.studentText)) return false;
-  // No Task 37 pronoun rule here: "what did you do with that customer?" is
-  // the next step, not the dropped ask.
   const ja = isJapaneseSentence(s);
   const mine = tokensFor(s);
   if (mine.size === 0) return false;
-  const others = asks.flatMap((a) => askSentencesOf(a)).filter((a) => isJapaneseSentence(a) === ja);
-  if (!others.length) return false;
-  if (others.some((a) => jaccardAtLeast(mine, tokensFor(a), NEITHER_SAME_ASK_JACCARD))) return true;
-  const union = new Set(others.flatMap((a) => [...tokensFor(a)]));
-  return [...mine].every((w) => union.has(w));
+  const myWh = ja ? undefined : WH_RE.exec(turnAskGist(s) || s)?.[1]?.toLowerCase();
+  return asks.flatMap((a) => askSentencesOf(a)).filter((a) => isJapaneseSentence(a) === ja).some((a) => {
+    // A different wh-word asks a different thing ("Why did you visit that
+    // country?" after "Which country did you visit?").
+    const askWh = ja ? undefined : WH_RE.exec(turnAskGist(a) || a)?.[1]?.toLowerCase();
+    if (myWh && askWh && myWh !== askWh) return false;
+    const y = tokensFor(a);
+    let inter = 0;
+    for (const w of mine) if (y.has(w)) inter += 1;
+    // ≥ 2 shared (a one-token Japanese ask: that token).
+    return inter >= Math.min(2, y.size) && (jaccardAtLeast(mine, y, NEITHER_REASK_JACCARD) || subsetJaccard(mine, y));
+  });
+}
+/** Fix round 1 (review I-2): the move-on turn ends asking nothing — the
+ *  engine's move-on line is appended (never a silent turn, never the
+ *  dropped re-ask). `alreadySpoken`: the move-on line was spoken already. Pure. */
+export function moveOnNoAskFallbackDue(input: { moveOnActive: boolean; reaskDropped: boolean; keptAsks: boolean; alreadySpoken: boolean; killed: boolean }): boolean {
+  return input.moveOnActive && input.reaskDropped && !input.keptAsks && !input.alreadySpoken && !input.killed;
 }
 
 /**
