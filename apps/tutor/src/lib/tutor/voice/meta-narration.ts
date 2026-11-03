@@ -668,6 +668,25 @@ export function isBareNameAnnounce(s: string, opts?: { personaName?: string | re
   const names = (Array.isArray(opts?.personaName) ? opts!.personaName : [opts?.personaName]).map((n) => (n ?? '').trim().toLowerCase()).filter(Boolean);
   return names.includes(m[1]!.toLowerCase());
 }
+/** Task 39 §A (voice run 20, 124 s, spoken: "Ryota should name what was right
+ *  and move on.") — a runtime note's instruction echoed with the session
+ *  persona as its subject. A sentence that OPENS with the persona / teacher
+ *  name + a modal or plan verb (should / will / can / could / must / would /
+ *  needs to / has to / wants to / is going to / 's going to) + a verb, with no
+ *  second-person address, is the tutor narrating its own instructions. Only
+ *  the persona's name (opts.personaName; off without one) — a role-play line
+ *  about another name ("Ryota should call the client." when the persona is
+ *  Ken) and "Ryota is my name, and you can ask me anything." are kept.
+ *  Language lessons only (the caller gates). Pure. */
+const PERSONA_SELF_DIRECTIVE_MODAL = "(?:\\s+(?:should|will|can|could|must|would|shall|needs? to|has to|wants? to|is going to|is about to|plans? to)|['’](?:s going to|ll))";
+export function isPersonaSelfDirective(s: string, personaName: string | readonly string[] | null | undefined): boolean {
+  const raw = s ?? '';
+  if (/\b(?:you|your|yours|yourself)\b/i.test(raw)) return false;
+  const names = (Array.isArray(personaName) ? personaName : [personaName])
+    .map((n) => (n ?? '').trim()).filter((n) => n.length >= 2 && n.length <= 60)
+    .sort((a, b) => b.length - a.length);
+  return names.some((n) => new RegExp(`^\\s*${escapeName(n)}${PERSONA_SELF_DIRECTIVE_MODAL}\\s+(?:now\\s+|then\\s+|just\\s+|also\\s+|first\\s+)?[a-z][a-z'’-]*\\b`, 'i').test(raw));
+}
 /** Task 30 fix round 5 R4-6 (run r4 794 s, spoken: "this one came after my
  *  model, so a plain confirmation is right.") — the tutor judging its own
  *  reply aloud. */
@@ -1316,7 +1335,7 @@ export function isMetaNarration(
   // Final review I-1: the Task 33–35 narration rules run in language lessons only.
   const languageLesson = opts?.languageLesson !== false;
   if (languageLesson && directiveEchoEnabled() && (isTutorDirectiveImperative(s) || isDirectiveEchoOf(s, opts?.directiveSentences) || isSteeringPlanNarration(s))) return true;
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || (BOARD_STAGING_NARRATION_RE.test(s) && !isFirstPersonBoardOfferToLearner(s)) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || LESSON_STATE_CONSEQUENCE_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s, { languageLesson }) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn, languageLesson }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || (BOARD_STAGING_NARRATION_RE.test(s) && !isFirstPersonBoardOfferToLearner(s)) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || LESSON_STATE_CONSEQUENCE_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s, { languageLesson }) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || (languageLesson && isPersonaSelfDirective(s, opts?.personaName)) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn, languageLesson }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

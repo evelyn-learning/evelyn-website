@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead, isTutorDirectiveImperative, directiveSentencesOf, isDirectiveEchoOf, directiveSentencesForInput, isStudentEchoOpener, stripRepeatedTurnOpener } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead, isTutorDirectiveImperative, directiveSentencesOf, isDirectiveEchoOf, directiveSentencesForInput, isStudentEchoOpener, stripRepeatedTurnOpener, isPersonaSelfDirective } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 import { planSentenceBoard } from '../src/lib/tutor/voice/sentence-board';
 
@@ -1472,6 +1472,18 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('38 r1 R24-2: maths untouched', !isMetaNarration('Stop: I need to respond to what you actually said.', { languageLesson: false }));
   check('38 r1 m-5: a short model sentence repeated as the next model is kept', stripRepeatedTurnOpener('I went home. Please say it.', 'I went home. Try once more.') === 'I went home. Try once more.');
   check('38 r1 m-5: "Good, Praveen." still goes', stripRepeatedTurnOpener('Good, Praveen. You said it well.', 'Good, Praveen.') === '');
+}
+
+// Task 39 §A (voice run 20, 124 s): the persona-name self-directive.
+{
+  const lang = { languageLesson: true, personaName: ['Ryota'] };
+  check('39A: "Ryota should name what was right and move on." dropped', isMetaNarration('Ryota should name what was right and move on.', lang));
+  check('39A: "Ryota will now ask one more question." dropped', isMetaNarration('Ryota will now ask one more question.', lang));
+  check("39A: \"Ryota's going to check the verb.\" dropped", isMetaNarration("Ryota's going to check the verb.", lang));
+  check('39A: "Ryota is my name, and you can ask me anything." kept', !isMetaNarration('Ryota is my name, and you can ask me anything.', lang));
+  check('39A: role-play "Ryota should call the client." kept when the persona is Ken', !isMetaNarration('Ryota should call the client.', { languageLesson: true, personaName: ['Ken'] }));
+  check('39A: second-person address is not a self-directive ("Ryota can help you with that.")', !isPersonaSelfDirective('Ryota can help you with that.', ['Ryota']));
+  check('39A: maths untouched', !isMetaNarration('Ryota should name what was right and move on.', { languageLesson: false, personaName: ['Ryota'] }));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
