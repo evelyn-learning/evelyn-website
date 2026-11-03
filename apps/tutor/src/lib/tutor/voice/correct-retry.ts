@@ -1312,17 +1312,28 @@ export function isQuestionLeadIn(sentence: string | null | undefined): boolean {
  * free) re-asks the student's own sentence. Returns the quote, or null. Pure.
  */
 const RECAST_SET_SKIP = new Set(['a', 'an', 'the', 'to', 'of', 'for']);
-function recastWordSet(text: string): Set<string> {
-  return new Set(cleanStudentSentence(text).split(' ').filter((w) => w && !RECAST_SET_SKIP.has(w)));
-}
+/** Fix round 1 (I-3): the quote re-asks the student's sentence only when it
+ *  ADDS no word — every quote word (articles and to / of / for included) is
+ *  one of the student's, as a multiset — and the student's leftover words are
+ *  only articles / to / of / for (a reorder that dropped "to"). A quote that
+ *  adds "a" / "the" / "to" is a correction ("I have good presentation" →
+ *  "I have a good presentation"). */
 export function reAskedRecastOfCorrect(studentText: string, attemptText: string, verdict: string | null | undefined): string | null {
   if (verdict !== 'correct' || !isStrictRepeatAsk(attemptText ?? '')) return null;
-  const said = recastWordSet(studentText);
-  if (said.size < 3) return null;
+  const said = cleanStudentSentence(studentText).split(' ').filter(Boolean);
+  if (said.filter((w) => !RECAST_SET_SKIP.has(w)).length < 3) return null;
   for (const q of quotedSpans(attemptText)) {
-    const qs = recastWordSet(q);
-    if (qs.size !== said.size) continue;
-    if ([...qs].every((w) => said.has(w))) return q;
+    const qw = cleanStudentSentence(q).split(' ').filter(Boolean);
+    if (qw.length < 3) continue;
+    const left = [...said];
+    let adds = false;
+    for (const w of qw) {
+      const k = left.indexOf(w);
+      if (k < 0) { adds = true; break; }
+      left.splice(k, 1);
+    }
+    if (adds) continue;
+    if (left.every((w) => RECAST_SET_SKIP.has(w))) return q;
   }
   return null;
 }
@@ -1338,7 +1349,9 @@ export function reAskedRecastOfCorrect(studentText: string, attemptText: string,
 const ONE_SENTENCE_STARTER_ASK_RE = /\b(?:say|tell me|put|give me)\b[^.!?]*\b(?:in|as) (?:one|a|the) (?:full |whole |complete |clean |single )?(?:english )?sentence\b[^?!]*?\bstart(?:ing)? with\s*["“]([^"”\n]+)["”]/i;
 export const STARTER_ASK_ALREADY_MET_REASON = withRetryStyle(
   'The student already said it as one English sentence starting with that phrase. Do not ask for it again and do not ask for a repeat; respond to what they said in one short sentence and go on with the next step.');
-export function starterAskAlreadyMet(studentText: string, attemptText: string): string | null {
+/** Fix round 1 (I-3): only after a CORRECT verdict on the student's sentence — no verdict, no kill. */
+export function starterAskAlreadyMet(studentText: string, attemptText: string, verdict?: string | null): string | null {
+  if (verdict !== 'correct') return null;
   const m = ONE_SENTENCE_STARTER_ASK_RE.exec(attemptText ?? '');
   if (!m) return null;
   const starter = latinSentence(m[1]!.replace(/(?:…|\.{2,})\s*$/, ''));

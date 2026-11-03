@@ -2102,8 +2102,8 @@ test('38 §F: the 1037 s reordered recast of a checked-correct sentence is a rep
   assert.equal(reAskedRecastOfCorrect('I solved it by giving sweets to people.', t1037, 'partly_correct'), null, 'only on a correct verdict');
   assert.equal(reAskedRecastOfCorrect('I solve it by give sweets to people.', 'Say it like this: "I solved it by giving people sweets." Can you say that once more?', 'correct'), null, 'changed words are a correction');
   const t1016 = 'Giving sweets to people as a thank-you for donating, that\'s a creative idea, Praveen. Could you say that in one English sentence, starting with "I solved it by..."?';
-  assert.equal(starterAskAlreadyMet('I solved it by giving people sweets so they can donate to the cause.', t1016), 'i solved it by');
-  assert.equal(starterAskAlreadyMet('Giving sweets.', t1016), null, 'not yet a sentence with the starter');
+  assert.equal(starterAskAlreadyMet('I solved it by giving people sweets so they can donate to the cause.', t1016, 'correct'), 'i solved it by');
+  assert.equal(starterAskAlreadyMet('Giving sweets.', t1016, 'correct'), null, 'not yet a sentence with the starter');
   assert.ok(STARTER_ASK_ALREADY_MET_REASON.includes('do not ask for a repeat'));
   assert.ok(REPEAT_AFTER_CORRECT_REASON.includes('Do not ask for a repeat.'));
   // the retry's repeat ask is dropped; its next step is kept
@@ -2142,6 +2142,18 @@ test('38 r1 I-1: the teaching-language-first kill is language-lesson only and st
   assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: 'I do not understand the second step.', attemptText: ja }), true);
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("if (TUTOR_TEACHING_LANGUAGE_FIRST && !attemptKilled && !teachingLanguageFirstRejected && attemptText && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !/^\\s*\\[/.test(transcript)"), 'gated on a language lesson, never languageSessionRef (bilingual maths)');
+});
+
+test('38 r1 I-3: no starter kill without a correct verdict; an article / preposition correction is never a recast re-ask', () => {
+  const ask = 'Good try — could you say that in one full sentence, starting with "I solved it by…"?';
+  assert.equal(starterAskAlreadyMet('I solved it by give people sweet for donate.', ask, 'incorrect'), null, 'incorrect');
+  assert.equal(starterAskAlreadyMet('I solved it by give people sweet for donate.', ask, 'partly_correct'), null, 'partly correct');
+  assert.equal(starterAskAlreadyMet('I solved it by giving people sweets so they can donate.', ask, null), null, 'no verdict → no kill');
+  assert.equal(reAskedRecastOfCorrect('I have good presentation skills.', 'Say it like this: "I have a good presentation skills." Can you say that once more?', 'correct'), null, 'adds "a" — a correction, KEPT');
+  assert.equal(reAskedRecastOfCorrect('I went office yesterday.', 'Say "I went to the office yesterday." once more.', 'correct'), null, 'adds "to the" — a correction, KEPT');
+  assert.equal(reAskedRecastOfCorrect('I solved it by giving sweets to people.', 'Now: "I solved it by giving people sweets." Can you say that once more?', 'correct'), 'I solved it by giving people sweets.', 'a pure reorder');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('starterAskAlreadyMet(transcript, attemptText, verdictPrecheckRef.current?.verdict) : null;'));
 });
 
 if (failed) process.exit(1);

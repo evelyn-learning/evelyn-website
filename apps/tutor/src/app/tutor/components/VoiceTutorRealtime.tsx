@@ -20209,7 +20209,7 @@ export function VoiceTutorRealtime({
               // Task 38 §F (voice run 19, 1037 s): a reordered recast of a sentence the check found correct.
               ?? (TUTOR_REPEAT_AFTER_CORRECT_DROP ? reAskedRecastOfCorrect(transcript, attemptText, verdictPrecheckRef.current?.verdict) : null);
           // Task 38 §F (voice run 19, 1016 s): "say that in one English sentence, starting with "X…"" after a sentence that starts with X.
-          const starterMet = !repeated && TUTOR_REPEAT_AFTER_CORRECT_DROP ? starterAskAlreadyMet(transcript, attemptText) : null;
+          const starterMet = !repeated && TUTOR_REPEAT_AFTER_CORRECT_DROP ? starterAskAlreadyMet(transcript, attemptText, verdictPrecheckRef.current?.verdict) : null;
           // Task 19 §C (GDI run 7, 1132 s): on a turn carrying a MEASURED
           // pronunciation note the re-ask is the coaching drill, not a
           // redundant retry — the kill's retry was told "confirm it" and never
