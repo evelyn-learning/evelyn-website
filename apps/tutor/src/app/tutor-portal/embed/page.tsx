@@ -292,6 +292,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'move_on_ignored',
   //   fixed-script lessons: the client moved / held the segment cursor, FACT note delivered:
   'fixed_script_',
+  'validator_tts_hold_',
   //   the dedup family (R49b's retry-context bug lived here):
   'dedup_',
   //   learner-model writes:

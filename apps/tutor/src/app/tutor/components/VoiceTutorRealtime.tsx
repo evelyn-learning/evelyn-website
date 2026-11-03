@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP, TUTOR_RECAP_CARD_ON_FLUSH, TUTOR_FIXED_SCRIPT_NO_READINESS, TUTOR_TEACHING_LANGUAGE_FIRST, TUTOR_CONVERSATION_ANSWER_CARDS, TUTOR_ANNOUNCED_OFFER_FIRST, TUTOR_CARD_ASK_ENGINE_FALLBACK, TUTOR_RETRY_ADVANCE_ALREADY_APPLIED, TUTOR_MENU_WRAP_UP_DROP, TUTOR_OFFER_ACCEPTED_ASK, TUTOR_NON_ANSWER_RETURN_ASK, TUTOR_JA_ANNOUNCED_MOVE, TUTOR_LONE_YES_ANY_CHOICE, TUTOR_NEITHER_STREAK_MOVE_ON, TUTOR_MOVE_ON_BEFORE_CLOSE, TUTOR_PART_TIME_CAP, TUTOR_CORRECT_REPLY_REASK_DROP, TUTOR_MENU_ENTRY_FALLBACK , TUTOR_RECAP_CORRECTION_CARDS_ONLY , TUTOR_PART_ANNOUNCE_DEDUPE , TUTOR_ANSWERED_CARD_REASK_DROP, TUTOR_CORRECTION_CARD_HOLDS_ADVANCE, TUTOR_CORRECTION_CARD_ON_NEW_PAGE, TUTOR_CORRECTION_REPLACES_MODEL_CARD } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP, TUTOR_RECAP_CARD_ON_FLUSH, TUTOR_FIXED_SCRIPT_NO_READINESS, TUTOR_TEACHING_LANGUAGE_FIRST, TUTOR_CONVERSATION_ANSWER_CARDS, TUTOR_ANNOUNCED_OFFER_FIRST, TUTOR_CARD_ASK_ENGINE_FALLBACK, TUTOR_RETRY_ADVANCE_ALREADY_APPLIED, TUTOR_MENU_WRAP_UP_DROP, TUTOR_OFFER_ACCEPTED_ASK, TUTOR_NON_ANSWER_RETURN_ASK, TUTOR_JA_ANNOUNCED_MOVE, TUTOR_LONE_YES_ANY_CHOICE, TUTOR_NEITHER_STREAK_MOVE_ON, TUTOR_MOVE_ON_BEFORE_CLOSE, TUTOR_PART_TIME_CAP, TUTOR_CORRECT_REPLY_REASK_DROP, TUTOR_MENU_ENTRY_FALLBACK , TUTOR_RECAP_CORRECTION_CARDS_ONLY , TUTOR_PART_ANNOUNCE_DEDUPE , TUTOR_ANSWERED_CARD_REASK_DROP, TUTOR_CORRECTION_CARD_HOLDS_ADVANCE, TUTOR_CORRECTION_CARD_ON_NEW_PAGE, TUTOR_CORRECTION_REPLACES_MODEL_CARD , TUTOR_VALIDATOR_TTS_HOLD } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, resolveMenuPickLoose, loosePickAllowed, menuPickNote, menuReplyIsPick, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { emptyTurnFallbackLine, silentTurnFallbackLine, lastShowSentenceOf, silentTurnFallbackDue, nonAnswerReturnLine, pendingAskOf } from '@/lib/tutor/voice/empty-turn-fallback';
@@ -444,6 +444,7 @@ import {
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind, fixedScriptPartLabel, offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerReaskedMovedReason, offerAcceptedReplantDue, type OfferAcceptState, fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE, FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance, type FixedScriptAdvanceVia, requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, postDueHoldDecision, readinessAskDropDue, wrapUpAfterMenuDropDue, appliedAdvanceMarkerAfterKill, brainAdvanceOfferFirstRefused, attemptAsksStudent, loneYesChoiceNoteDue, LONE_YES_CHOICE_NOTE, offerAcceptedNoAskDue, OFFER_ACCEPTED_NO_ASK_REASON, isBareMoveOn } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS, isFixedScriptCloseNote, moveOnThenCloseTranscript } from '@/lib/tutor/lesson-plan/fixed-script';
+import { validatorTtsHold, VALIDATOR_TTS_HOLD_MS } from '@/lib/tutor/voice/validator-tts-hold';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision, dedupePartAnnouncement, endsWithRepeatAsk, endsWithSayOrListenAsk } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
@@ -15274,6 +15275,20 @@ export function VoiceTutorRealtime({
         const ownProblemsPaintedThisAttempt: string[] = [];
         const attemptStartMs = Date.now();
         attemptStreamedSentencesRef.current = [];
+        // Task 43 §F (voice run 21): on a validator-prone turn the TTS gate
+        // below stays closed until the end-of-turn validators pass (capped at
+        // VALIDATOR_TTS_HOLD_MS), so a kill drops the text pre-audio instead
+        // of cutting sentences the learner already heard.
+        const validatorHold = validatorTtsHold({
+          enabled: TUTOR_VALIDATOR_TTS_HOLD,
+          voice: sessionMode !== 'text',
+          attempt,
+          fixedScript: isFixedScriptPlan(lessonPlanRef.current),
+          noteDelivered: fixedScriptNoteDeliveredThisTurnRef.current,
+          repeatAttempts: repeatAskTriesRef.current?.segmentId === (turnStartSegmentId ?? '') ? (repeatAskTriesRef.current?.attempts ?? 0) : 0,
+          moveOnRequested: !!moveOnRequestSpan(transcript),
+        });
+        if (validatorHold) onDebugEvent?.('validator_tts_hold_started', `attempt ${attempt}`);
         let syntheticTailDrained = false;
         // Stamped ids of every render this attempt actually dispatched.
         // If the attempt is killed, these are rolled back so no orphaned
@@ -15887,7 +15902,11 @@ export function VoiceTutorRealtime({
         // or stays shut so the Skip-KILL drops the turn silently. The
         // long value is just a cleared-anyway backstop against a hung
         // stream. All other turns keep the 1s first-tool grace.
-        const gateTimer = setTimeout(openGate, skipTurnMarkerPresent ? 3_600_000 : 1000);
+        // Task 43 §F: a validator-prone turn's gate waits for the validators (capped).
+        const gateTimer = setTimeout(() => {
+          if (validatorHold && gateState === 'gated') onDebugEvent?.('validator_tts_hold_deadline', `${pendingSentences.length} sentence(s) spoken before the validators`);
+          openGate();
+        }, skipTurnMarkerPresent ? 3_600_000 : validatorHold ? VALIDATOR_TTS_HOLD_MS : 1000);
 
         // Final-attempt kill suppression. When attempt ===
         // MAX_VALIDATOR_RETRIES, the retry budget is exhausted — a
@@ -19930,12 +19949,18 @@ export function VoiceTutorRealtime({
             (n) => n === 'advance_lesson' || n === 'generate_problem',
           );
         if (!skipNoAdvanceAtStreamEnd) {
-          openGate();
-          // Round-15 Issue 2: the stream is done — no further sentence can
-          // contradict the held verdict, so it's settled. Flush it (no-op
-          // when the hold already released via lookahead/cap, or when a
-          // kill dropped it via closeGate).
-          releaseVerdictHold();
+          if (validatorHold && gateState === 'gated') {
+            // Task 43 §F: the validators have not run yet — the gate (and the
+            // verdict hold behind it) opens on the success path below.
+            onDebugEvent?.('validator_tts_hold_kept', `${pendingSentences.length} sentence(s) wait for the validators`);
+          } else {
+            openGate();
+            // Round-15 Issue 2: the stream is done — no further sentence can
+            // contradict the held verdict, so it's settled. Flush it (no-op
+            // when the hold already released via lookahead/cap, or when a
+            // kill dropped it via closeGate).
+            releaseVerdictHold();
+          }
         }
 
         // Round-19 (2026-07-17): generation returned a problem but the brain
@@ -21647,6 +21672,10 @@ export function VoiceTutorRealtime({
               }
             }
           }
+          // Task 43 §F: the validators passed (or the budget is spent) — speak.
+          if (validatorHold && gateState === 'gated') onDebugEvent?.('validator_tts_hold_released', `${pendingSentences.length} sentence(s) after the validators`);
+          openGate();
+          releaseVerdictHold();
           break;
         }
 

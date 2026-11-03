@@ -1440,3 +1440,11 @@ export const TUTOR_CORRECTION_CARD_ON_NEW_PAGE = process.env.NEXT_PUBLIC_TUTOR_C
  *  the current page (as the brain's show_sentence does). Client-side: default
  *  ON; NEXT_PUBLIC_TUTOR_CORRECTION_REPLACES_MODEL_CARD=off. */
 export const TUTOR_CORRECTION_REPLACES_MODEL_CARD = process.env.NEXT_PUBLIC_TUTOR_CORRECTION_REPLACES_MODEL_CARD !== 'off';
+
+/** Task 43 §F (voice run 21, 441 / 624 / 874 / 1116 s): validator kills cut
+ *  sentences the learner had already heard — on validator-prone turns (an
+ *  urgent runtime note delivered, a third repeat try, a move-on request) the
+ *  attempt's TTS gate stays closed until the end-of-turn validators pass,
+ *  capped at 3.5 s (bounded latency; a kill then drops the text pre-audio).
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_VALIDATOR_TTS_HOLD=off. */
+export const TUTOR_VALIDATOR_TTS_HOLD = process.env.NEXT_PUBLIC_TUTOR_VALIDATOR_TTS_HOLD !== 'off';
