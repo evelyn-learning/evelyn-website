@@ -20914,6 +20914,10 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('fixed_script_offer_accepted', `"${engineOfferSeg}" (already, engine fallback skipped) "${transcript.slice(0, 60)}"`);
           }
           onDebugEvent?.('fixed_script_offer_spoken', `"${engineOfferSeg}" (engine fallback${efAction === 'speak' ? '' : `: student already ${efAction}`})`);
+        } else if (engineOfferLines && engineOfferSeg) {
+          // Final review M-2: the fallback could not speak (killed / the part
+          // moved) — the pre-fallback 'unmade' bookkeeping applies.
+          transitionOfferUnmadeRef.current = engineOfferSeg;
         }
         engineOfferLines = null;
         engineOfferSeg = '';

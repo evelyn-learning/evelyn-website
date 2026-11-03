@@ -1298,6 +1298,10 @@ test('final I-2: a maths required-phrase retry carries no "already answered" cla
   assert.ok(!r.includes('already answered'), r);
   pin(VTR, /turnStartSegmentId && \(subject === 'languages' \|\| isFixedScriptPlan\(lessonPlanRef\.current\)\)\) \{\s*const aqNew = answeredQuestionSentences\(prevTutor, transcript\);/);
 });
+
+test('final M-2: an engine offer that could not be spoken falls back to the unmade bookkeeping', () => {
+  pin(VTR, /\} else if \(engineOfferLines && engineOfferSeg\) \{[\s\S]{0,200}?transitionOfferUnmadeRef\.current = engineOfferSeg;\s*\}\s*engineOfferLines = null;/);
+});
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 
