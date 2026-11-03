@@ -6,6 +6,16 @@ const STOP = new Set(['the', 'a', 'an', 'to', 'of', 'and', 'is', 'it', 'that', '
 const content = (s) => norm(s).split(' ').filter((w) => w && !STOP.has(w));
 const jaccard = (a, b) => { const A = new Set(a), B = new Set(b); const inter = [...A].filter((x) => B.has(x)).length; return inter / (new Set([...A, ...B]).size || 1); };
 
+// Tangents the "wild" learner throws in (exported so the checks can recognise them in a dump).
+export const TANGENTS = {
+  offtopic: ['Do you like sushi?', "Let's talk about football instead.", 'Tell me a joke.', 'What is the weather like in Nagoya today?', 'My cat was sick this morning.', 'Can we do some math instead?', 'What do you think about the Prime Minister?'],
+  meta: ['Can you repeat that, please?', 'Slower, please.', "What does 'responsibility' mean?", 'Sorry, I did not understand the question.', 'Are you a robot?', 'How much longer is this lesson?', 'Can you say that in Japanese?'],
+  japanese: ['すみません、わかりません。', 'もう一度お願いします。', '今日は疲れています。'],
+  odd: ['Three.', 'Yes no maybe.', 'Hmm.', 'I I I think think the the project.', 'BANANA.'],
+  ramble: ['Well, actually, before I answer that, I should say that my company has many departments and my department is the biggest one and we have many customers in Japan and also some in Korea and Taiwan and last year we also started selling in Vietnam, which was very interesting for me because I had never been to Vietnam before.'],
+};
+export const TANGENT_SET = new Set(Object.values(TANGENTS).flat());
+
 export function parseDump(dump) {
   const lines = dump.split('\n');
   const header = (() => { try { return JSON.parse(lines[0]); } catch { return null; } })();
@@ -223,6 +233,36 @@ export function runChecks(dump) {
   if (summaryPage) ok('summary page has its recap card', summaryPage.items.some((it) => it.action === 'showProblem'), summaryPage.items.length ? `${summaryPage.items.length} items, no showProblem` : 'EMPTY');
   const jaOnly = tutor.filter((x, idx) => { const prevS = [...student].reverse().find((s) => s.i < x.i); return prevS && !/[\u3040-\u30FF\u4E00-\u9FFF]/.test(prevS.text) && /[\u3040-\u30FF\u4E00-\u9FFF]/.test(x.text) && !/[A-Za-z]{3,}/.test(x.text.replace(/\(rendered[^)]*\)/, '')); });
   ok('no Japanese-only turn after an English student turn', jaOnly.length === 0, jaOnly.map((x) => `${x.t}s`).join(' '));
+
+  // 10g. wild learner: after a tangent the tutor stays in bounds — answers briefly (≤ 3 sentences on it), returns to the lesson with a question,
+  //      and nothing advances / changes page because of the tangent
+  const tangents = student.filter((s) => TANGENT_SET.has(s.text.trim()));
+  if (tangents.length) {
+    const outOfBounds = [];
+    for (const tg of tangents) {
+      const reply = tutor.find((x) => x.i > tg.i); if (!reply) continue;
+      const ss = reply.text.split(/(?<=[.?!。？！])\s+/).filter(Boolean);
+      const asks = ss.some((x) => /[?？]\s*$/.test(x) || /\b(?:please|try|tell me|say|answer)\b/i.test(x));
+      if (ss.length > 6 || !asks) outOfBounds.push(`${tg.t}s "${tg.text.slice(0, 30)}" → ${ss.length} sentences${asks ? '' : ', no return question'}`);
+      const adv = events.find((e) => /^(?:fixed_script_auto_advance|typed_advance_app|fixed_script_menu_cap)/.test(e.type) && e.t >= tg.t && e.t <= tg.t + 6 && !/move on|next part/i.test(tg.text));
+      if (adv) outOfBounds.push(`${tg.t}s tangent caused an advance (${adv.type})`);
+      const closed = ev('lesson_closed').find((e) => e.t >= tg.t && e.t <= tg.t + 10);
+      if (closed) outOfBounds.push(`${tg.t}s tangent closed the lesson`);
+    }
+    ok(`tangents (${tangents.length}) kept in bounds`, outOfBounds.length === 0, outOfBounds.join(' | ').slice(0, 400));
+    const mathAnswered = tangents.filter((tg) => /math/i.test(tg.text)).some((tg) => { const r = tutor.find((x) => x.i > tg.i); return r && /\d+\s*[+×x*\-−]\s*\d+|equation|algebra/i.test(r.text); });
+    ok('no off-subject teaching after a tangent', !mathAnswered);
+  }
+  // 10h. page order: part pages appear in plan order and each advance paints its page within 20 s
+  const partNums = partPages.map((p) => Number((p.title.match(/Part (\d+)/) ?? [])[1])).filter(Boolean);
+  ok('part pages in plan order', partNums.every((n, i) => i === 0 || n > partNums[i - 1]), partNums.join(','));
+  const latePages = [];
+  for (const a of ev('fixed_script_auto_advance').concat(ev('typed_advance_app'))) {
+    const to = (a.msg.match(/→ "([^"]+)"/) ?? a.msg.match(/→ ([a-z-]+)/) ?? [])[1]; if (!to || to === 'summary') continue;
+    const pg = pages.find((p) => p.t >= a.t - 2 && p.t <= a.t + 20 && /^Part \d/.test(p.title));
+    if (!pg) latePages.push(`${a.t}s → ${to}`);
+  }
+  ok('every advance painted its page within 20 s', latePages.length === 0, latePages.join(' | '));
 
   // 11. counts worth a look
   const counts = ['brain_validator_retry', 'idle_nudge_sent', 'drop_self_voice', 'meta_narration_dropped', 'fixed_script_noask_continue', 'fixed_script_offer_continue', 'transition_ask_off_part', 'judge_kill_resume_diverged', 'menu_pick_resolved', 'adjacent_duplicate_sentence_dropped', 'typed_turn_superseded', 'render_dropped'];

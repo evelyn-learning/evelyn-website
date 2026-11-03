@@ -6,7 +6,7 @@
 // Usage (from apps/tutor):
 //   node scripts/trial-text-session.mjs --variant <name> [--student gdi-trial-bot-N] [--port 3019]
 //                                       [--max-min 32] [--out <dir>] [--smoke]
-// Variants (see VARIANTS): base, errors, impatient, lost, beginner, polite
+// Variants (see VARIANTS): base, errors, impatient, lost, beginner, polite, quiet, pron, straight, wild
 // --smoke: stop after the first offer is answered (~6 min).
 // Needs: a dev server on --port serving the worktree; the praveen link in
 // ~/.evelyn/partners/gdi-trial.links.local.txt (its token payload is reused
@@ -19,7 +19,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { runChecks } from './trial-text-session-checks.mjs';
+import { runChecks, TANGENTS } from './trial-text-session-checks.mjs';
 
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 const has = (k) => process.argv.includes(k);
@@ -130,6 +130,10 @@ const VARIANTS = {
   // run 18: quiet — 20 s pause after every repeat ask (the silent-continue path); offers answered loosely ("Uh, yeah, one more. sentence.")
   quiet: { errors: 0.5, repeatErrorFirst: true, offers: ['Uh, yeah, one more. sentence.', 'Yes.', 'Yes please, one more.', "OK, let's move on."], ambiguousYes: false, bargeTyped: false, slowTurn: false, askQuestion: false, postCloseMore: false, menu: 'Skip, please.', japanese: false, moveOnOrder: false, wrongDifference: false, silentAfterRepeat: true, finishEarly: true },
   // run 18: pron — picks the sentence drill; the clip is silence so the tutor must re-ask the SAME target; 20 s pauses after repeat asks
+  // straight: a model learner — clean answers, prompt-following, accepts offers once, skips pronunciation
+  straight: { errors: 0.0, repeatErrorFirst: false, offers: ['One more, please.', "Let's move on."], ambiguousYes: false, bargeTyped: false, slowTurn: false, askQuestion: false, postCloseMore: false, menu: '4', japanese: false, moveOnOrder: false, wrongDifference: false },
+  // wild: goes off in random directions — a tangent (off-topic / meta / Japanese / odd / ramble) replaces ~22 % of answers
+  wild: { errors: 0.5, repeatErrorFirst: false, offers: ['One more, please.', 'Yes.', "No, let's move on."], ambiguousYes: false, bargeTyped: false, slowTurn: false, askQuestion: false, postCloseMore: true, menu: 'a complete sentence', japanese: false, moveOnOrder: false, wrongDifference: false, wild: 0.22 },
   pron: { errors: 0.4, repeatErrorFirst: false, offers: ['One more, please.', "Let's move on."], ambiguousYes: false, bargeTyped: false, slowTurn: false, askQuestion: false, postCloseMore: false, menu: 'A complete sentence, please.', japanese: false, moveOnOrder: false, wrongDifference: false, silentAfterRepeat: true, finishEarly: false },
 };
 const V = VARIANTS[variantName];
@@ -298,6 +302,10 @@ while (Date.now() - t0 < maxMin * 60000 && state.student < 80 && !state.closed) 
   if (V.slowTurn && !state.slowDone && state.student > 5 && !d.why.startsWith('repeat')) { state.slowDone = true; think = 48000; say('(slow turn: 48 s silence)'); }
   if (V.silentAfterRepeat && (d.why.startsWith('repeat') || d.why === 'scaffold')) { think = 20000; say('(20 s pause before the repeat)'); }
   if (V.finishEarly && !state.finishEarlyDone && state.student > 20 && /\?\s*$/.test(text.trim()) && !d.why.startsWith('offer')) { state.finishEarlyDone = true; d.text = 'We can finish it.'; d.why = 'finish early'; }
+  if (V.wild && state.student > 1 && !d.why.startsWith('offer') && d.why !== 'menu' && d.why !== 'ready' && d.why !== 'difference' && rand() < V.wild) {
+    const kinds = Object.keys(TANGENTS); const kind = kinds[Math.floor(rand() * kinds.length)];
+    const pool = TANGENTS[kind]; d.text = pool[Math.floor(rand() * pool.length)]; d.why = `tangent:${kind}`;
+  }
   if (state.bargeNext) { state.bargeNext = false; think = 0; say('(typed during playback)'); }
   await wait(think);
   try { await input.click({ timeout: 8000 }); await input.fill(d.text); await input.press('Enter'); }
