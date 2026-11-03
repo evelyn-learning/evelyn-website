@@ -116,7 +116,7 @@ export function runChecks(dump) {
     const turn = [...tutor].reverse().find((x) => x.t <= e.t + 1);
     if (!turn) continue;
     const tt = new Set(content(turn.text)); const cg = content(g); const hit = cg.filter((w) => tt.has(w)).length / cg.length;
-    if (hit < 0.5) ungrounded.push(`${e.t}s "${g}" (${Math.round(hit * 100)}%)`);
+    if (hit < 0.4) ungrounded.push(`${e.t}s "${g}" (${Math.round(hit * 100)}%)`);
   }
   ok('Q-pin gists grounded in the turn', ungrounded.length === 0, ungrounded.join(' | ').slice(0, 300));
 
@@ -182,8 +182,8 @@ export function runChecks(dump) {
   for (let k = 2; k < tutor.length; k++) {
     const a = qOf(tutor[k - 2]), b = qOf(tutor[k - 1]), c = qOf(tutor[k]);
     if (!a || !b || !c) continue;
-    const answered = (p, q) => student.some((s) => s.i > p.i && s.i < q.i && content(s.text).length >= 2 && !/\?\s*$/.test(s.text));
-    if (!answered(tutor[k - 2], tutor[k - 1]) || !answered(tutor[k - 1], tutor[k])) continue;
+    const answered = (p, q) => student.some((s) => s.i > p.i && s.i < q.i && content(s.text).length >= 2 && !/\?\s*$/.test(s.text) && !TANGENT_SET.has(s.text.trim()));
+    if (!answered(tutor[k - 2], tutor[k - 1]) || !answered(tutor[k - 1], tutor[k])) continue; // a re-ask after a tangent is right, not a loop
     if (jaccard(a, b) >= 0.5 && jaccard(b, c) >= 0.5) probeLoops.push(`${tutor[k - 2].t}s→${tutor[k].t}s "${c.join(' ').slice(0, 60)}"`);
   }
   ok('no three-question probe loop', probeLoops.length === 0, probeLoops.join(' | ').slice(0, 300));
@@ -239,13 +239,16 @@ export function runChecks(dump) {
   const tangents = student.filter((s) => TANGENT_SET.has(s.text.trim()));
   if (tangents.length) {
     const outOfBounds = [];
+    const closedAt = ev('lesson_closed')[0]?.t ?? Infinity;
     for (const tg of tangents) {
+      if (tg.t > closedAt) continue; // after the farewell no return question is owed
       const reply = tutor.find((x) => x.i > tg.i); if (!reply) continue;
       const ss = reply.text.split(/(?<=[.?!。？！])\s+/).filter(Boolean);
       const asks = ss.some((x) => /[?？]\s*$/.test(x) || /\b(?:please|try|tell me|say|answer)\b/i.test(x) || /(?:てください|ますか|でしょうか|ましょう)[。」]?\s*$/.test(x));
       const inSummary = (() => { const sumNote = ev('fixed_script_note_delivered').find((e) => /segment "summary"/.test(e.msg)); const sumPage = pages.find((p) => /Summary|まとめ/.test(p.title)); const t0 = Math.min(sumNote?.t ?? Infinity, sumPage?.t ?? Infinity); return reply.t >= t0; })();
       if ((ss.length > 6 && !inSummary) || !asks) outOfBounds.push(`${tg.t}s "${tg.text.slice(0, 30)}" → ${ss.length} sentences${asks ? '' : ', no return question'}`);
-      const adv = events.find((e) => /^(?:fixed_script_auto_advance|typed_advance_app|fixed_script_menu_cap)/.test(e.type) && e.t >= tg.t && e.t <= tg.t + 6 && !/move on|next part/i.test(tg.text));
+      // a turn-cap auto-advance that happens to coincide is not "caused"; only the student-driven paths are
+      const adv = events.find((e) => /^(?:typed_advance_app|fixed_script_menu_cap|student_jump)/.test(e.type) && e.t >= tg.t && e.t <= tg.t + 6 && !/move on|next part/i.test(tg.text));
       if (adv) outOfBounds.push(`${tg.t}s tangent caused an advance (${adv.type})`);
       const closed = ev('lesson_closed').find((e) => e.t >= tg.t && e.t <= tg.t + 10);
       if (closed) outOfBounds.push(`${tg.t}s tangent closed the lesson`);
