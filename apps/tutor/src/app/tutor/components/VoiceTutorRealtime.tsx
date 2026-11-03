@@ -20241,7 +20241,7 @@ export function VoiceTutorRealtime({
         // Task 38 §H (voice run 19, 1187 s): an all-Japanese turn after the
         // student spoke English, in an English-first language lesson — killed
         // and retried "Say it in English first; Japanese only as a short gloss."
-        if (TUTOR_TEACHING_LANGUAGE_FIRST && !attemptKilled && !teachingLanguageFirstRejected && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)
+        if (TUTOR_TEACHING_LANGUAGE_FIRST && !attemptKilled && !teachingLanguageFirstRejected && attemptText && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !/^\s*\[/.test(transcript)
           && teachingLanguageFirstViolation({ tutorLanguages, studentText: transcript, attemptText })) {
           teachingLanguageFirstRejected = true;
           rejectionsThisAttempt.push({ action: 'teaching_language_first', reason: teachingLanguageFirstReason(tutorLanguages) });

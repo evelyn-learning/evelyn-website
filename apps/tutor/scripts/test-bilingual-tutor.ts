@@ -58,7 +58,7 @@ import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE,
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { probeReasks, isRepeatOrCorrectionAsk, pronounReask } from '../src/lib/tutor/voice/correct-retry';
-import { teachingLanguageFirstViolation, teachingLanguageFirstReason } from '../src/lib/tutor/voice/teaching-language-first';
+import { teachingLanguageFirstViolation, teachingLanguageFirstReason, asksForSecondLanguage } from '../src/lib/tutor/voice/teaching-language-first';
 import { reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON, isStrictRepeatAsk as isStrictRepeatAsk38 } from '../src/lib/tutor/voice/correct-retry';
 import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk, noAttemptBudgetTurns, isYesNoAsk } from '../src/lib/tutor/voice/correct-retry';
 import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
@@ -2131,6 +2131,17 @@ test('38 §H: an all-Japanese turn after an English student turn is killed; a gl
   assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'teaching_language_first', reason: teachingLanguageFirstReason(tutorLanguages) });"));
   assert.ok(vtr.includes('&& teachingLanguageFirstViolation({ tutorLanguages, studentText: transcript, attemptText })) {'));
   assert.match(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8'), /export const TUTOR_TEACHING_LANGUAGE_FIRST = process\.env\.NEXT_PUBLIC_TUTOR_TEACHING_LANGUAGE_FIRST !== 'off';/);
+});
+
+test('38 r1 I-1: the teaching-language-first kill is language-lesson only and stands down when the student asked for Japanese', () => {
+  const langs = ['en', 'ja'];
+  const ja = 'それは、まず両辺から3を引きます。 次に2で割ります。';
+  for (const st of ['Can you explain that in Japanese?', 'Japanese please.', 'Could you speak Japanese?', 'Japanese.', '日本語でお願いします。'])
+    assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: st, attemptText: ja }), false, st);
+  assert.equal(asksForSecondLanguage('I went to Japan last year.', langs), false);
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: 'I do not understand the second step.', attemptText: ja }), true);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("if (TUTOR_TEACHING_LANGUAGE_FIRST && !attemptKilled && !teachingLanguageFirstRejected && attemptText && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !/^\\s*\\[/.test(transcript)"), 'gated on a language lesson, never languageSessionRef (bilingual maths)');
 });
 
 if (failed) process.exit(1);

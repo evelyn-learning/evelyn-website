@@ -32,9 +32,24 @@ export function studentTurnIsEnglish(studentText: string | null | undefined): bo
 export function isEnglishSentence(sentence: string): boolean {
   return !CJK_RE.test(sentence) && latinWords(sentence) >= 2;
 }
+/** Fix round 1 (I-1): the language's own name for itself, for a request
+ *  written in that script (日本語で…). */
+const NATIVE_NAMES: Record<string, string> = { ja: '日本語', zh: '中文', ko: '한국어' };
+/** Fix round 1 (I-1): the student asked for the lesson's second language —
+ *  "Can you explain that in Japanese?", "Japanese please", "speak Japanese",
+ *  日本語で… . Pure. */
+export function asksForSecondLanguage(studentText: string | null | undefined, tutorLanguages: readonly string[] | null | undefined): boolean {
+  const code = (tutorLanguages ?? [])[1] ?? '';
+  const name = LANGUAGE_NAMES[code];
+  const t = studentText ?? '';
+  if (!name) return false;
+  if (NATIVE_NAMES[code] && t.includes(NATIVE_NAMES[code]!)) return true;
+  return new RegExp(String.raw`\b(?:in|into|use|using|speak|say it in|switch to)\s+${name}\b|\b${name},?\s+(?:please|is ok|is fine)\b|^\s*${name}[.!?]?\s*$`, 'i').test(t);
+}
 export function teachingLanguageFirstViolation(input: { tutorLanguages: readonly string[] | null | undefined; studentText: string | null | undefined; attemptText: string | null | undefined }): boolean {
   if ((input.tutorLanguages ?? [])[0] !== 'en') return false;
   if (!studentTurnIsEnglish(input.studentText)) return false;
+  if (asksForSecondLanguage(input.studentText, input.tutorLanguages)) return false;
   const text = (input.attemptText ?? '').trim();
   if (!text || !CJK_RE.test(text)) return false;
   return !sentencesOf(text).some(isEnglishSentence);
