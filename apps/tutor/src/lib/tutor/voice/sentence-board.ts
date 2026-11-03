@@ -1083,7 +1083,14 @@ export function firstPersonWriteBack(sentence: string): string | null {
     if (!role) return null;
     if (role === 'object') { out[i] = 'me'; continue; }
     out[i] = 'I';
-    if (next && (next.w === 'are' || next.w === 'were')) out[next.j] = next.w === 'are' ? 'am' : 'was';
+    // Final review day 3 fix round 3: be-form agreement — are → am, were → was,
+    // weren't → wasn't, aren't → I'm not; a be-form with no first-person mapping ⇒ no card.
+    const be = next?.w.replace(/’/g, "'");
+    if (next && be === 'are') out[next.j] = 'am';
+    else if (next && be === 'were') out[next.j] = 'was';
+    else if (next && be === "weren't") out[next.j] = "wasn't";
+    else if (next && be === "aren't") { out[i] = "I'm"; out[next.j] = 'not'; }
+    else if (be && /^(?:is|isn't|was|wasn't|am|ain't|be|been|being)$/.test(be)) return null;
   }
   const res = out.join('');
   return res ? res[0]!.toUpperCase() + res.slice(1) : res;

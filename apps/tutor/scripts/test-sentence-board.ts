@@ -1714,5 +1714,16 @@ test('final-3 r2: shapes the table cannot write back ⇒ no card; the correct ca
   assert.ok(cards.every((c) => !/If I ask me/.test(c.sentence)), JSON.stringify(cards));
 });
 
+test('final-3 r3: negative / contracted be-forms agree after the swap; an unmapped be-form ⇒ no card', () => {
+  assert.equal(firstPersonWriteBack("You weren't ready for the meeting."), "I wasn't ready for the meeting.");
+  assert.equal(firstPersonWriteBack("You aren't alone."), "I'm not alone.");
+  assert.equal(firstPersonWriteBack("You don't need a car."), "I don't need a car.");
+  assert.equal(firstPersonWriteBack("You haven't finished the report."), "I haven't finished the report.");
+  assert.equal(firstPersonWriteBack("You didn't call the customer."), "I didn't call the customer.");
+  assert.equal(firstPersonWriteBack("You can't come today."), "I can't come today.");
+  assert.equal(firstPersonWriteBack('You was late.'), null, 'no first-person mapping for "was" after you');
+  assert.equal(firstPersonWriteBack("You isn't ready."), null);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
