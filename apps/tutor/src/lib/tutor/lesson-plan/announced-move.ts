@@ -17,6 +17,7 @@ import { isFixedScriptPlan, nextSegmentId, fixedScriptCloseForced, FIXED_SCRIPT_
 import { lastAskSentence, lastQuestionSentence, lastSentenceAsks, splitSentences, stripMarkdownEmphasis, turnEndsWithAsk } from '../question-gist-text';
 import { expectedRepeatFor, isStrictRepeatAsk } from '../voice/correct-retry';
 import { sameSentence } from '../voice/sentence-board';
+import { TUTOR_JA_ANNOUNCED_MOVE } from '../orchestrator/flags';
 
 /** A sentence that announces moving on (EN + JA). The keyword gate in
  *  announcedMoveTarget is required too — the phrase alone never moves. */
@@ -118,10 +119,29 @@ export function announcedMoveTarget(input: {
     if (/[?？]/.test(core) || OFFER_LEAD_RE.test(core)) continue;
     if (!MOVE_PHRASE_RE.test(sentence) && !jaNextIsMove(sentence, nextKeys)) continue;
     if (!nextKeys.some((k) => sentenceHas(sentence, k))) continue;
-    if ([...otherOnly].some((k) => sentenceHas(sentence, k))) continue;
+    // Task 39 fix round 1 (R26-2, bot run r26 398 s: 「では、現在完了はここまでにして、
+    // 次は過去形に進みましょう。」 — the closed part's own name in the closing
+    // clause made it "another part's" sentence): the closing clause ("<part>は
+    // ここまでにして", "That's all for <part>,") is left out of that check.
+    const otherCheck = TUTOR_JA_ANNOUNCED_MOVE ? withoutClosingClause(sentence) : sentence;
+    if ([...otherOnly].some((k) => sentenceHas(otherCheck, k))) continue;
     return nextId;
   }
   return null;
+}
+
+/** Fix round 1 (R26-2): the sentence without a leading "this part is done"
+ *  clause — 「(では、)<X>はここまでにして、」 / 「<X>は終わりにして、」 / "That's all
+ *  (it) for <X>, …" / "We're done with <X>, …". Pure. */
+const JA_CLOSING_CLAUSE_RE = /^(?:(?:では|じゃあ|それでは|さて)[、,]?\s*)?[^、。,]{1,24}?は(?:ここまで|これで|おしまい|終わり)(?:にして|にしましょう|です|にします)[、,。]?\s*/;
+const EN_CLOSING_CLAUSE_RE = /^\s*(?:(?:okay|ok|so|good|great|alright),?\s+)?(?:that['’]s (?:all|it) for|we['’]re done with|we['’]ve finished|enough) (?:the |our )?[\p{L}\s'’-]{1,40}?[,;—–]\s*(?:so\s+|and\s+|now\s+)?/iu;
+export function withoutClosingClause(sentence: string): string {
+  const s = sentence ?? '';
+  const ja = JA_CLOSING_CLAUSE_RE.exec(s);
+  if (ja && s.slice(ja[0].length).trim()) return s.slice(ja[0].length);
+  const en = EN_CLOSING_CLAUSE_RE.exec(s);
+  if (en && s.slice(en[0].length).trim()) return s.slice(en[0].length);
+  return s;
 }
 
 // ── §C: continuation when the announcing turn asked nothing ──────────────

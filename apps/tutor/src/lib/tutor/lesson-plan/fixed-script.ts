@@ -1158,3 +1158,28 @@ export function appliedAdvanceMarkerAfterKill(input: { killed: boolean; currentS
   if (!cur || cur === (input.turnStartSegId ?? '')) return input.marker;
   return cur;
 }
+
+/** Task 39 fix round 1 (R26-2, bot run r26 398 s: on the present-perfect
+ *  offer part — offer planted, never asked — the brain announced the move in
+ *  Japanese AND called advance_lesson; the part advanced with no offer, since
+ *  a called advance is exempt from the offer validator). With
+ *  TUTOR_ANNOUNCED_OFFER_FIRST, the brain's own advance_lesson({to:"next"})
+ *  off a part whose offer is pending (made, not asked) is refused once per
+ *  student turn — unless this attempt asked the offer, the student declined /
+ *  ordered the move on, or the turn is runtime-triggered. The refusal's retry
+ *  is told to ask the offer (fixedScriptOfferMissingReason); the R24-1 kill +
+ *  engine offer then cover a retry that still does not. Pure. */
+export function brainAdvanceOfferFirstRefused(input: {
+  enabled: boolean;
+  fixedScript: boolean;
+  to: string;
+  offerPending: boolean;
+  offerAskedInAttempt: boolean;
+  studentMovedOn: boolean;
+  runtimeTurn: boolean;
+  alreadyRefusedThisTurn: boolean;
+}): boolean {
+  if (!input.enabled || !input.fixedScript || input.to !== 'next') return false;
+  if (!input.offerPending || input.offerAskedInAttempt || input.studentMovedOn || input.runtimeTurn || input.alreadyRefusedThisTurn) return false;
+  return true;
+}

@@ -52,7 +52,8 @@ import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, les
 import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
-import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence, offerAcceptedNoAskDue, isBareMoveOn, OFFER_ACCEPTED_NO_ASK_REASON, appliedAdvanceMarkerAfterKill } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence, offerAcceptedNoAskDue, isBareMoveOn, OFFER_ACCEPTED_NO_ASK_REASON, appliedAdvanceMarkerAfterKill, brainAdvanceOfferFirstRefused, transitionOfferValidatorDecision as tovd39 } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { announcedMoveTarget as amt39, withoutClosingClause } from '../src/lib/tutor/lesson-plan/announced-move';
 import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -1453,6 +1454,30 @@ test('39 r1 I-3: the applied-advance marker on every commit path', () => {
     assert.ok(vtr.includes(`if (TUTOR_RETRY_ADVANCE_ALREADY_APPLIED) inferredAdvanceThisTurnRef.current = ${at};`), at);
   }
   assert.ok(vtr.includes('inferredAdvanceThisTurnRef.current = appliedAdvanceMarkerAfterKill({ killed: attemptKilled, currentSegId: currentSegmentIdRef.current, turnStartSegId: turnStartSegmentId, marker: inferredAdvanceThisTurnRef.current });'));
+});
+
+// Task 39 fix round 1 (R26-2, bot run r26 398 s): a Japanese announced move on the offer part.
+test('39 r1 R26-2: 「…はここまでにして、次は…に進みましょう」 is an announced move; the brain\'s advance waits for the offer', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const t398 = '「I have worked for my company for ___ years.」の練習、ありがとうございます。 では、現在完了はここまでにして、次は過去形に進みましょう。';
+  assert.equal(amt39({ tutorText: t398, plan: gdi, currentSegmentId: 'present-perfect', levelKnown: true }), 'past-simple');
+  assert.equal(amt39({ tutorText: "That's all for the present perfect, so let's move on to the past simple.", plan: gdi, currentSegmentId: 'present-perfect', levelKnown: true }), 'past-simple');
+  assert.equal(amt39({ tutorText: '次は過去形で言ってみましょう。', plan: gdi, currentSegmentId: 'present-perfect', levelKnown: true }), null, 'a drill, not a move');
+  assert.equal(withoutClosingClause('では、現在完了はここまでにして、次は過去形に進みましょう。'), '次は過去形に進みましょう。');
+  // R24-1 then kills an announced move on the pending-offer part
+  assert.equal(tovd39({ offerPending: true, text: t398, announcedMove: true, calledAdvance: false, alreadyRetried: false, announcedOfferFirst: true, studentMovedOn: false }), 'kill');
+  const base = { enabled: true, fixedScript: true, to: 'next', offerPending: true, offerAskedInAttempt: false, studentMovedOn: false, runtimeTurn: false, alreadyRefusedThisTurn: false };
+  assert.equal(brainAdvanceOfferFirstRefused(base), true);
+  assert.equal(brainAdvanceOfferFirstRefused({ ...base, offerAskedInAttempt: true }), false);
+  assert.equal(brainAdvanceOfferFirstRefused({ ...base, studentMovedOn: true }), false);
+  assert.equal(brainAdvanceOfferFirstRefused({ ...base, offerPending: false }), false, 'a bridge part / offer already asked');
+  assert.equal(brainAdvanceOfferFirstRefused({ ...base, alreadyRefusedThisTurn: true }), false, 'once per student turn');
+  assert.equal(brainAdvanceOfferFirstRefused({ ...base, runtimeTurn: true }), false);
+  assert.equal(brainAdvanceOfferFirstRefused({ ...base, to: 'past-simple' }), false, 'an explicit target');
+  assert.equal(brainAdvanceOfferFirstRefused({ ...base, enabled: false }), false);
+  const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.ok(vtr.includes("rejected.push({ action: 'advance_lesson', reason: fixedScriptOfferMissingReason(plan, curSegId, next) });"));
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_JA_ANNOUNCED_MOVE = process\.env\.NEXT_PUBLIC_TUTOR_JA_ANNOUNCED_MOVE !== 'off';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
