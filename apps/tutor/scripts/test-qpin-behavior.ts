@@ -447,7 +447,7 @@ check('empty transcript → never clears', shouldClearQpinOnAnswer([], 'q1').cle
   check('33 r2 R10-2: no quote — the rest of the sentence', stripQuestionLead('The question was: where did you go?'), 'where did you go?');
   check('33 r2 R10-2: no lead — unchanged', stripQuestionLead('What is the question about?'), 'What is the question about?');
   const TS = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
-  check('33 r2 R10-2: TutorSession strips the lead from the model gist', TS.includes("stripQuestionLead(stripMarkdownEmphasis(d.gist.trim()), entry.text)"), true);
+  check('33 r2 R10-2: TutorSession strips the lead from the model gist (language sessions — final review M-4)', TS.includes("const gist = languageSession ? (repairFragmentGist(stripQuestionLead(rawGist, entry.text), entry.text, questionPin?.gist) ?? '') : rawGist;"), true);
 }
 
 
@@ -460,7 +460,7 @@ check('empty transcript → never clears', shouldClearQpinOnAnswer([], 'q1').cle
   check('34C: real questions are untouched', repairFragmentGist('What did you do next?', T1120), 'What did you do next?');
   check('34C: nothing to build from → the previous pin', repairFragmentGist('and?', 'And?', 'Where did you go last year?'), 'Where did you go last year?');
   const TS = readFileSync(join(__dirname, '..', 'src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
-  check('34C: TutorSession repairs the model gist, the verbatim and the error fallbacks', ['repairFragmentGist(stripQuestionLead(stripMarkdownEmphasis(d.gist.trim()), entry.text), entry.text, questionPin?.gist)', 'repairFragmentGist(verbatimQuestionPin(entry.text), entry.text, questionPin?.gist)', 'repairFragmentGist(stripQuestionLead(fallbackRaw, entry.text), entry.text, questionPin?.gist)'].every((x) => TS.includes(x)), true);
+  check('34C: TutorSession repairs the model gist, the verbatim and the error fallbacks', ['repairFragmentGist(stripQuestionLead(rawGist, entry.text), entry.text, questionPin?.gist)', 'repairFragmentGist(verbatimQuestionPin(entry.text), entry.text, questionPin?.gist)', 'fallbackRaw && languageSession ? repairFragmentGist(stripQuestionLead(fallbackRaw, entry.text), entry.text, questionPin?.gist)'].every((x) => TS.includes(x)), true);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

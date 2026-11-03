@@ -1437,7 +1437,9 @@ export default function TutorSession(props: TutorSessionProps) {
         // math, not *emphasis*).
         // Task 33 fix round 2 (R10-2): a "The question is:" lead is never the gist.
         // Task 34 §C: a tag / continuation fragment ("and then what?") is never the gist.
-        const gist = typeof d?.gist === 'string' ? (repairFragmentGist(stripQuestionLead(stripMarkdownEmphasis(d.gist.trim()), entry.text), entry.text, questionPin?.gist) ?? '') : '';
+        // Final review M-4: the repair is language-session only.
+        const rawGist = typeof d?.gist === 'string' ? stripMarkdownEmphasis(d.gist.trim()) : '';
+        const gist = languageSession ? (repairFragmentGist(stripQuestionLead(rawGist, entry.text), entry.text, questionPin?.gist) ?? '') : rawGist;
         // gist === '' means the model judged the turn's "?" conversational
         // plumbing (a repeat-request / mishear) — deliberately NO pin then.
         // R47 Task 3c (review fix): segment moved on since this fetch
@@ -1460,7 +1462,7 @@ export default function TutorSession(props: TutorSessionProps) {
         // example answer) is replaced by the turn's verbatim ask sentence.
         if (gist && TUTOR_QPIN_GIST_GROUNDED && !gistGrounded(gist, entry.text)) {
           const verbatimRaw = verbatimQuestionPin(entry.text) ?? lastAskSentence(entry.text) ?? lastQuestionSentence(entry.text);
-          const verbatim = verbatimRaw ? stripQuestionLead(verbatimRaw, entry.text) : verbatimRaw;
+          const verbatim = verbatimRaw && languageSession ? stripQuestionLead(verbatimRaw, entry.text) : verbatimRaw;
           onDebugEvent?.('qpin_gist_ungrounded', `"${gist.slice(0, 60)}"${verbatim ? ` → "${verbatim.slice(0, 60)}"` : ' → dropped'}`);
           if (verbatim) setQuestionPin({ turnId: entry.id, gist: verbatim });
         } else if (gist) {
@@ -1480,7 +1482,7 @@ export default function TutorSession(props: TutorSessionProps) {
           return;
         }
         const fallbackRaw = lastQuestionSentence(entry.text);
-        const fallback = fallbackRaw ? repairFragmentGist(stripQuestionLead(fallbackRaw, entry.text), entry.text, questionPin?.gist) : fallbackRaw;
+        const fallback = fallbackRaw && languageSession ? repairFragmentGist(stripQuestionLead(fallbackRaw, entry.text), entry.text, questionPin?.gist) : fallbackRaw;
         if (fallback) {
           setQuestionPin({ turnId: entry.id, gist: fallback });
           onDebugEvent?.('qpin_set', `fallback: "${fallback.slice(0, 60)}"`);
