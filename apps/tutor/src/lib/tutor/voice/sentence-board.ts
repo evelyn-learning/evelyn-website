@@ -1463,7 +1463,8 @@ export function planSentenceBoard(input: {
   // never a card, nor a short unquoted line.
   for (let k = classified.length - 1; k >= 0; k--) {
     const cs = classified[k]!.q.sentence;
-    if (isAckTransitionLine(cs) || (!quotedInText(input.tutorText, cs) && cardContentWordCount(cs) < CARD_MIN_CONTENT_WORDS)) {
+    // Fix round 1 (I-4): a QUOTED line is a model the tutor offers ("Let's schedule a call for Monday.") — never excluded.
+    if (!quotedInText(input.tutorText, cs) && (isAckTransitionLine(cs) || cardContentWordCount(cs) < CARD_MIN_CONTENT_WORDS)) {
       input.onSuppressed?.('acknowledgement / short line', cs);
       classified.splice(k, 1);
     }
@@ -1886,10 +1887,16 @@ function tokenEditDistance(a: readonly string[], b: readonly string[]): number {
  *  to learn. Pure. */
 const ACK_TRANSITION_LEAD_RE = /^\s*(?:okay|ok|sure|alright|all right|great|good|right|now|next|let['’]?s)\b/i;
 const MODEL_CLAUSE_RE = /\b(?:i|we|you|he|she|they|it|there|my|our|your|his|her|their|am|is|are|was|were|be|been|have|has|had|does|did|can|could|will|would|should|went|saw|made|got|took|came|gave|met|said|told|thought|felt|found|learned|learnt|worked)\b|\b\p{L}{3,}ed\b/iu;
+/** Fix round 1 (I-4): after "Let's", only a lesson-moving verb (do / go /
+ *  try / move / look / practise / continue / start / … ) is a transition;
+ *  any other verb ("Let's schedule a call for Monday.") is a model verb
+ *  phrase. */
+const LETS_TRANSITION_VERB_RE = /\blet['’]?s\s+(?!(?:do|go|try|move|look|practi[cs]e|continue|start|begin|hear|talk|have|keep|take|see|finish|review|work|turn|get|say|think|check|end|stop|switch|focus|come)\b)\p{L}+/iu;
 export function isAckTransitionLine(sentence: string | null | undefined): boolean {
   const s = (sentence ?? '').trim();
   const m = ACK_TRANSITION_LEAD_RE.exec(s);
   if (!m) return false;
+  if (LETS_TRANSITION_VERB_RE.test(s)) return false;
   // "Let's" itself is no subject — the clause after it decides.
   return !MODEL_CLAUSE_RE.test(s.slice(m[0].length));
 }

@@ -1606,5 +1606,14 @@ test('38 I3: in a conversation part an uncorrected answer is carded (checked); a
   assert.match(readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8'), /export const TUTOR_CONVERSATION_ANSWER_CARDS = process\.env\.NEXT_PUBLIC_TUTOR_CONVERSATION_ANSWER_CARDS !== 'off';/);
 });
 
+test('38 r1 I-4: a quoted model line or a "Let\'s <verb> …" model verb phrase is still carded; bare acks are not', () => {
+  const q = planSentenceBoard38({ tutorText: 'You can suggest it like this: "Let\'s schedule a call for Monday." Try it.', studentLast: 'We meet Monday?', renderedThisTurn: false });
+  assert.ok(q.some((c) => c.sentence === "Let's schedule a call for Monday."), JSON.stringify(q));
+  assert.ok(planSentenceBoard38({ tutorText: 'Say it like this: "Great idea, thanks for sharing." Your turn.', studentLast: 'Yes ok.', renderedThisTurn: false }).some((c) => c.sentence === 'Great idea, thanks for sharing.'), 'quoted ack-led model kept');
+  assert.equal(isAckTransitionLine("Let's schedule a call for Monday."), false);
+  assert.equal(isAckTransitionLine("Let's do one more on the past simple."), true);
+  assert.equal(isAckTransitionLine('Okay, one more on the past simple.'), true);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
