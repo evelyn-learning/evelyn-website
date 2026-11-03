@@ -1303,8 +1303,8 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   const ds = directiveSentencesOf(input, 'Yes, I understand.');
   check('33B: directive sentences come from the bracketed notes only (no student words)', ds.some((d) => d.startsWith('Restate the open question')) && !ds.some((d) => d.includes('I understand')), JSON.stringify(ds));
   check('33B: a sentence restating a bundled directive (Jaccard ≥ 0.6) is dropped',
-    isMetaNarration('Restate the open question in English and in Japanese, briefly.', { directiveSentences: ds }));
-  check('33B: …but not without the directive', !isMetaNarration('Restate the open question in English and in Japanese, briefly.'));
+    isMetaNarration('Restate the question in English and in Japanese, briefly.', { directiveSentences: ds }));
+  check('33B: …but not without the directive', !isMetaNarration('Restate the question in English and in Japanese, briefly.'));
   check('33B: a question to the student is never an echo', !isDirectiveEchoOf('Can you restate the open question plainly in English?', ds));
   const vf = '[validator feedback — not from the student] Your last turn emitted tool call(s) that the runtime structural validator rejected:\n[1] same_question_third_time: Give the answer to the open question in one sentence, then move to the next step.\nRe-emit the corrected tool call(s).\n\nFor reference: the student just said: "We went to Tokyo."';
   const vds = directiveSentencesOf(vf, 'We went to Tokyo.');
@@ -1421,6 +1421,18 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   for (const x of ['Your answer is a repeat of an earlier sentence, not the trade show answer I asked for.', "That's the same sentence you said before; I asked about the trade show.", 'You should ask your colleague again.', 'I will ask you one more question.', 'The question is: what did you learn there?'])
     check(`36 r2: kept — ${x}`, !isMetaNarration(x, lang) && stripNoteCitationClause(x, lang) === x);
   check('36 r2: maths sessions untouched (language gate)', !isMetaNarration('I will keep the answer as it is.', { languageLesson: false }) && isMetaNarration('I will keep the answer as it is.', lang));
+}
+
+
+// Task 37 §A (bot run r22, 544 / 452 / 188 s): three narration shapes.
+{
+  const lang = { languageLesson: true };
+  const gone = (x: string) => isMetaNarration(x, lang) || stripNoteCitationClause(x, lang) === '';
+  for (const x of ["Your message is mostly runtime instructions, so I'll respond to the simple request: moving on to the pronunciation part.", 'What you just sent is runtime notes, so let us carry on.', 'Let me put the options on the board.', "I'll show the menu on the board.", 'Let me advance.', 'I will update the level.', 'Acknowledge it briefly, then return to the open question.'])
+    check(`37A: dropped — ${x}`, gone(x));
+  for (const x of ['Your message was clear.', 'Your reply answers the question.', 'Let me show you an example.', "I'll put your sentence on the board, and you read it aloud.", "Acknowledge your colleague's email first, then return to the question."])
+    check(`37A: kept — ${x}`, !isMetaNarration(x, lang) && stripNoteCitationClause(x, lang) === x);
+  check('37A: maths sessions untouched', !isMetaNarration('Let me advance.', { languageLesson: false }));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

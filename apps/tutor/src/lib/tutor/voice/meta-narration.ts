@@ -637,8 +637,14 @@ const NOTES_SUBJECT_VERDICT_RE = /^\s*(?:(?:so|okay|ok|well|now),?\s+)?(?:(?:a f
 // notes above are instructions for me, so let me just carry on with the
 // lesson."): instructions for me / carry on with the lesson / let me get on.
 const NOTES_VERDICT_RE = /\binternal\b|\bmeant for me\b|\bnot (?:your|the student['’]?s) (?:words|answer)\b|\bset (?:them|it) aside\b|\bignore (?:them|it)\b|\bpick up the lesson\b|\bmix-up\b|\binstructions for me\b|\bcarry on with the lesson\b|\bjust carry on\b|\blet me (?:just )?(?:carry|get) on\b/i;
+// Task 37 §A1 (bot run r22, 544 s: "Your message is mostly runtime
+// instructions, so I'll respond to the simple request: …"): the citation
+// rewrite's second-person subjects (your message / text / reply / what you
+// sent / the text you sent) with a notes / instructions / runtime verdict.
+// "Your message was clear." / "Your reply answers the question." are speech.
+const NOTES_YOUR_SUBJECT_RE = /^\s*(?:(?:so|okay|ok|well|now),?\s+)?(?:your (?:message|text|reply|input)|what you (?:just )?sent|the text you (?:just )?sent)\s+(?:is|was|are|were|seems?|looks?)\b[^.!?]*\b(?:runtime|instructions?|notes?|internal|meant for me|for me)\b/i;
 export function isBundledNotesNarration(s: string, opts?: { languageLesson?: boolean }): boolean {
-  if (opts?.languageLesson !== false && NOTES_SUBJECT_VERDICT_RE.test(s)) return true;
+  if (opts?.languageLesson !== false && (NOTES_SUBJECT_VERDICT_RE.test(s) || NOTES_YOUR_SUBJECT_RE.test(s))) return true;
   return NOTES_MENTION_RE.test(s) && NOTES_VERDICT_RE.test(s);
 }
 /** R4-1: the tutor announcing its own name as a sentence ("Ryotaです。",
@@ -1172,7 +1178,7 @@ function isLeakShape(s: string): boolean {
 const TUTOR_DIRECTIVE_IMPERATIVE_RE =
   /^\s*(?:(?:so|now|okay|ok|then|first),?\s+)?(?:ask|answer|reply|respond|keep|do not|don['’]t|restate|repeat|confirm|acknowledge|give)\b/i;
 const DIRECTIVE_MARKER_RE =
-  /\bplainly\b|\bin one sentence\b|\bkeep it (?:short|brief)\b|\bthe (?:student|learner)(?:['’]s)?\b|\b(?:do not|don['’]t) ask\b[^.!?]*\bagain\b|\bruntime\b|\bnotes?\b/i;
+  /\bplainly\b|\bin one sentence\b|\bkeep it (?:short|brief)\b|\bthe (?:student|learner)(?:['’]s)?\b|\b(?:do not|don['’]t) ask\b[^.!?]*\bagain\b|\bruntime\b|\bnotes?\b|\backnowledge (?:it|that|this) briefly\b|\breturn to the open question\b|\bthe open question\b|\bkeep the reply short\b|\bthen ask\b/i;
 const KEEP_IT_SHORT_ADVICE_RE = /^\s*Keep it (?:brief|short)\s*:(?![^.!?]*\bthen\b)/i;
 const DIRECTIVE_ADDRESSES_STUDENT_RE = /\b(?:you|your|yours|yourself|we|let['’]?s|let us|us|our)\b/i;
 const ASK_AGAIN_PLAINLY_RE = /^\s*I['’]?ll ask (?:it |that |the question )?again,? plainly\b/i;
@@ -1191,7 +1197,9 @@ const PART_STATE_PLAN_RE = /\b(?:part|section|segment|step)\s+is\s+(?:almost |ne
 // on the board." before the handwrite that does it): a bare first-person
 // board-write announcement is narration of the tool's own action. "Here is
 // the question on the board: …" and "Look at the board." are speech.
-const BOARD_WRITE_PLAN_RE = /^\s*(?:(?:ok(?:ay)?|so|now),?\s+)?(?:Let me|I['’]ll|I will) (?:write|put) (?:the|this|that|a) (?:question|sentence|word|example)s? on the board\s*[.!]?\s*$/i;
+const BOARD_WRITE_PLAN_RE = /^\s*(?:(?:ok(?:ay)?|so|now),?\s+)?(?:Let me|I['’]ll|I will) (?:(?:write|put) (?:the|this|that|a) (?:question|sentence|word|example)s?|(?:put|write|show) (?:the )?(?:options|choices|menu|card|table)s?) on the board\s*[.!]?\s*$/i;
+// Task 37 §A2 (bot run r22, 452 s: "Let me advance."): a bare tool action.
+const TOOL_ACTION_PLAN_RE = /^\s*(?:(?:ok(?:ay)?|so|now),?\s+)?(?:Let me|I['’]ll|I will) (?:advance|call|trigger|mark|set|update)(?: the (?:lesson|part|level))?\s*[.!]?\s*$/i;
 // Task 36 fix round 2 (bot run r20, 667 s: "Your answer is a repeat of an
 // earlier sentence, not the trade show answer I asked for. The open question
 // is still the trade show lesson, so I should re-ask it, not praise it."):
@@ -1219,7 +1227,7 @@ export function isTutorPlanNarration(sentence: string): boolean {
 }
 export function isSteeringPlanNarration(sentence: string): boolean {
   const s = sentence ?? '';
-  return STEER_PLAN_RE.test(s) || PART_STATE_PLAN_RE.test(s) || BOARD_WRITE_PLAN_RE.test(s) || isTutorPlanNarration(s);
+  return STEER_PLAN_RE.test(s) || PART_STATE_PLAN_RE.test(s) || BOARD_WRITE_PLAN_RE.test(s) || TOOL_ACTION_PLAN_RE.test(s) || isTutorPlanNarration(s);
 }
 export function isTutorDirectiveImperative(sentence: string): boolean {
   const s = sentence ?? '';
