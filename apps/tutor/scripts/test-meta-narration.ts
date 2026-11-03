@@ -1571,5 +1571,18 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('41 r1: off outside a language lesson', stripNoteCitationClause(s543, { languageLesson: false }) === s543);
 }
 
+// Task 42 §A (Task 41 review M-3): the Task 36 fr2 modal self-plan rule now matches "I'll".
+{
+  const lang = { languageLesson: true };
+  check('42A: "So I\'ll re-ask it, not praise it." dropped', isMetaNarration("So I'll re-ask it, not praise it.", lang));
+  check('42A: "I\'ll keep it short." dropped', isMetaNarration("I'll keep it short.", lang));
+  check('42A: "So I will re-ask it, not praise it." still dropped', isMetaNarration('So I will re-ask it, not praise it.', lang));
+  check('42A: curly "I’ll keep it short." dropped', isMetaNarration('I’ll keep it short.', lang));
+  check('42A: "I\'ll ask you one more question." kept', !isMetaNarration("I'll ask you one more question.", lang));
+  check('42A: "I\'ll correct your sentence." kept (second person)', !isMetaNarration("I'll correct your sentence.", lang));
+  check('42A: "So I\'ll keep going with …: what …?" not dropped whole (I4 r2)', !isMetaNarration("So I'll keep going with the present perfect: what have you done this week?", lang));
+  check('42A: maths untouched', !isMetaNarration("I'll keep it short.", { languageLesson: false }));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

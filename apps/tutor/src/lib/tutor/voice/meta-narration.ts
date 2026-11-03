@@ -1342,7 +1342,8 @@ const TOOL_ACTION_PLAN_RE = /^\s*(?:(?:ok(?:ay)?|so|now),?\s+)?(?:Let me|I['’]
 // verdict that the student's reply repeats an earlier one / is not the
 // answer asked for. "I will ask you one more question.", "You should ask your
 // colleague again.", "The question is: what did you learn there?" are speech.
-const MODAL_PLAN_RE = /\b(?:so |therefore |then )?I (?:should|need to|must|will|['’]ll|ought to) (?:re-?ask|ask (?:it|that|the question) again|praise|correct|hold|keep|set (?:it|that) aside|move us|not (?:praise|accept))\b/i;
+// Task 42 §A (Task 41 review M-3): "I'll" has no space before the apostrophe.
+const MODAL_PLAN_RE = /\b(?:so |therefore |then )?I(?: (?:should|need to|must|will|ought to)|['’]ll) (?:re-?ask|ask (?:it|that|the question) again|praise|correct|hold|keep(?! going\b| on\b)|set (?:it|that) aside|move us|not (?:praise|accept))\b/i;
 const OPEN_QUESTION_STATE_RE = /^\s*(?:(?:so|but|and),?\s+)?(?:the|my) (?:open|pending|current|pinned) question (?:is|was) (?:still|now|the)\b/i;
 // Ruling (fix round 2): a repeat verdict ADDRESSED to the student ("Your
 // answer is a repeat of …") is feedback and stays; only the third-person
