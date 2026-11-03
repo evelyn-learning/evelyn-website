@@ -1722,6 +1722,15 @@ test('final-3 I-1: 2 pronunciation holds, then the offer: the offer-asked bounda
   assert.ok(VTR.indexOf('let offerItemAskedThisTurn = false;') < VTR.indexOf('const postDue = TUTOR_PART_TIME_CAP'), 'set before the cap decision');
 });
 
+test('final-3 M-3 / M-4: quoted student text never counts as the menu read; the arm wait is off with TUTOR_MENU_ASK_CAP', () => {
+  const card = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  const quoted = 'You said: "I practise individual words and a complete sentence when I am speaking."';
+  assert.equal(wrapUpAfterMenuDropDue({ enabled: true, fixedScript: true, card, spokenSoFar: quoted, sentence: "Let's wrap up for today." }), false, 'the quote is not the menu');
+  assert.equal(wrapUpAfterMenuDropDue({ enabled: true, fixedScript: true, card, spokenSoFar: 'You can practise individual words or a complete sentence.', sentence: "Let's wrap up for today." }), true, 'the menu in the tutor\'s words');
+  pin(VTR, /const pronMenuPending = TUTOR_MENU_ENTRY_FALLBACK && TUTOR_MENU_ASK_CAP && isFixedScriptPlan/);
+  assert.ok(read('src/lib/tutor/lesson-plan/transition-ask.ts').includes('if (menuPresentedIn(input.card, spoken)) return null;'));
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 

@@ -1213,7 +1213,8 @@ export function wrapUpAfterMenuDropDue(input: {
 }): boolean {
   if (!input.enabled || !input.fixedScript || !input.card) return false;
   if (!boardOffersChoices({ statement: input.card })) return false;
-  if (!menuReadInTurn(input.card, input.spokenSoFar)) return false;
+  // Final review day 3 M-4: the menu read in the tutor's own words (quoted student text never counts).
+  if (!menuReadInTurn(input.card, (input.spokenSoFar ?? '').replace(/"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g, ' '))) return false;
   return isWrapUpSentence(input.sentence);
 }
 

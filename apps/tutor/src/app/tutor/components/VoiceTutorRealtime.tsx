@@ -21957,7 +21957,8 @@ export function VoiceTutorRealtime({
         const pronPartEntry = turnStartSegmentId !== currentSegmentIdRef.current || segmentPageFlushedTurnRef.current === pageTurnRef.current;
         // Task 42 §D: on a choice-menu part the auto-arm waits for a pick (or the menu-ask cap).
         const pronMenuSeg = currentSegmentIdRef.current ?? '';
-        const pronMenuPending = TUTOR_MENU_ENTRY_FALLBACK && isFixedScriptPlan(lessonPlanRef.current) && menuPickPendingSuppressesArm({
+        // Final review day 3 M-3: the release reads the MENU_ASK_CAP counter — off with that flag.
+        const pronMenuPending = TUTOR_MENU_ENTRY_FALLBACK && TUTOR_MENU_ASK_CAP && isFixedScriptPlan(lessonPlanRef.current) && menuPickPendingSuppressesArm({
           menuPart: boardOffersChoices({ statement: segmentCardStatement(lessonPlanRef.current, pronMenuSeg) }),
           picked: menuPickedSegsRef.current.has(pronMenuSeg),
           menuAsks: menuAskCountRef.current.get(pronMenuSeg) ?? 0,

@@ -170,7 +170,8 @@ export function cardAskEngineFallbackLine(input: {
   // Fix round 1 (I-2): the retry (or the turn) already read the menu or asked
   // the card's question somewhere — never spoken twice.
   const spoken = `${input.turnSpoken ?? ''} ${input.text ?? ''}`;
-  if (menuReadInTurn(input.card, spoken)) return null;
+  // Final review day 3 M-4: the one menu detector (quoted student text never counts).
+  if (menuPresentedIn(input.card, spoken)) return null;
   if (cardQuestionSpoken(line, spoken)) return null;
   return line;
 }
