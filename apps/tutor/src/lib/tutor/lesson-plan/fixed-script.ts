@@ -797,10 +797,46 @@ export function fixedScriptBrainAdvanceEntryNote(plan: LessonPlan | null | undef
  *  carries the entry) plants the part's entry note for the next brain turn —
  *  the brain's advance_lesson (Task 31 §D), a typed move-on, the Skip
  *  button, the menu-cap advance. Pure. */
-export type FixedScriptAdvanceVia = 'auto' | 'brain' | 'typed' | 'skip' | 'menu_unpicked';
+export type FixedScriptAdvanceVia = 'auto' | 'brain' | 'typed' | 'skip' | 'menu_unpicked' | 'lesson_time';
 export function entryNoteDueAfterAdvance(input: { fixedScript: boolean; via: FixedScriptAdvanceVia; lessonClosed: boolean }): boolean {
   return input.fixedScript && !input.lessonClosed && input.via !== 'auto';
 }
+/** Task 36 §B (bot run r18: the 30-minute session cap hit the summary
+ *  unclosed — parts ran 317–355 s against 3.5–5 min plans): a plan-level
+ *  time guard for fixed scripts. Due when the lesson's elapsed time reaches
+ *  (plan minutes − closing part minutes − 1). Then, unless the current part
+ *  IS the closing part (never cut) or an optional part already in progress
+ *  (it runs on; its own next advance is the close), the engine moves to the
+ *  closing part. Plan minutes = the plan's estimatedMinutes, else the sum of
+ *  its segments' minutes. Pure. */
+export const LESSON_TIME_GUARD_MARGIN_MIN = 1;
+export function lessonTimeGuardDecision(input: {
+  plan: LessonPlan | null | undefined;
+  segmentId: string | null | undefined;
+  elapsedMs: number;
+  alreadyFired: boolean;
+}): { action: 'none' } | { action: 'advance'; to: string } {
+  const { plan, segmentId } = input;
+  if (!plan || !segmentId || !isFixedScriptPlan(plan) || input.alreadyFired) return { action: 'none' };
+  const closeId = fixedScriptLastSegmentId(plan);
+  if (!closeId || segmentId === closeId) return { action: 'none' };
+  const seg = plan.segments.find((x) => x.id === segmentId);
+  if (!seg || (seg.kind ?? '').toLowerCase() === 'recap') return { action: 'none' };
+  const minutes = (x: { estimatedMinutes?: number } | undefined) => (typeof x?.estimatedMinutes === 'number' && Number.isFinite(x.estimatedMinutes) ? x.estimatedMinutes : 0);
+  const total = minutes(plan as { estimatedMinutes?: number }) || plan.segments.reduce((n, x) => n + minutes(x), 0);
+  if (total <= 0) return { action: 'none' };
+  const closeMin = minutes(plan.segments.find((x) => x.id === closeId));
+  const dueMs = Math.max(0, total - closeMin - LESSON_TIME_GUARD_MARGIN_MIN) * 60_000;
+  if (input.elapsedMs < dueMs) return { action: 'none' };
+  // An optional part (metadata.optional) already in progress runs on.
+  if ((seg.metadata as { optional?: unknown } | undefined)?.optional === true) return { action: 'none' };
+  return { action: 'advance', to: closeId };
+}
+/** Task 36 §B: the advance lead of a time-guard move. */
+export function lessonTimeGuardLead(from: string, to: string): string {
+  return `Time is short — the "${from}" part ends here and the lesson pointer has ALREADY moved to "${to}" (any parts in between are skipped today). Keep the summary to its key points and close.`;
+}
+
 /** True ⇒ the turn named at least two of the card's numbered choices (a
  *  content word of ≥ 4 letters of each). */
 export function menuReadInTurn(cardStatement: string, turnText: string): boolean {

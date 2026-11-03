@@ -48,7 +48,7 @@ import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboa
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
-import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
@@ -1301,6 +1301,25 @@ test('final I-2: a maths required-phrase retry carries no "already answered" cla
 
 test('final M-2: an engine offer that could not be spoken falls back to the unmade bookkeeping', () => {
   pin(VTR, /\} else if \(engineOfferLines && engineOfferSeg\) \{[\s\S]{0,200}?transitionOfferUnmadeRef\.current = engineOfferSeg;\s*\}\s*engineOfferLines = null;/);
+});
+
+// ── Task 36 §B: the lesson-time guard reaches the summary before the cap ──
+test('36 §B: lessonTimeGuardDecision — elapsed vs plan minutes; the summary is never cut; an optional part in progress runs on', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const min = 60_000;
+  // plan 25 min − summary 2 − 1 ⇒ due at 22 min
+  assert.deepEqual(lessonTimeGuardDecision({ plan: gdi, segmentId: 'open-conversation', elapsedMs: 21.9 * min, alreadyFired: false }), { action: 'none' });
+  assert.deepEqual(lessonTimeGuardDecision({ plan: gdi, segmentId: 'open-conversation', elapsedMs: 22 * min, alreadyFired: false }), { action: 'advance', to: 'summary' }, 'skips the unstarted pronunciation part');
+  assert.deepEqual(lessonTimeGuardDecision({ plan: gdi, segmentId: 'past-simple', elapsedMs: 23 * min, alreadyFired: false }), { action: 'advance', to: 'summary' });
+  assert.deepEqual(lessonTimeGuardDecision({ plan: gdi, segmentId: 'pronunciation', elapsedMs: 24 * min, alreadyFired: false }), { action: 'none' }, 'optional part in progress: its next advance is the summary');
+  assert.deepEqual(lessonTimeGuardDecision({ plan: gdi, segmentId: 'summary', elapsedMs: 29 * min, alreadyFired: false }), { action: 'none' }, 'the summary is never cut');
+  assert.deepEqual(lessonTimeGuardDecision({ plan: gdi, segmentId: 'past-simple', elapsedMs: 23 * min, alreadyFired: true }), { action: 'none' }, 'once');
+  const notFixed = { ...gdi, metadata: {} } as typeof gdi;
+  assert.deepEqual(lessonTimeGuardDecision({ plan: notFixed, segmentId: 'past-simple', elapsedMs: 99 * min, alreadyFired: false }), { action: 'none' }, 'fixed scripts only');
+  assert.match(lessonTimeGuardLead('Conversation', 'Summary'), /^Time is short — .+ ALREADY moved to "Summary" .+ Keep the summary to its key points and close\.$/);
+  pin(VTR, /const tg = lessonTimeGuardDecision\(\{ plan: tgPlan, segmentId: tgSeg, elapsedMs:/);
+  pin(VTR, /applyResolvedAdvance\(tgPlan, tgSeg, tg\.to\);[\s\S]{0,200}plantAdvanceEntryNote\(tg\.to, 'lesson_time'\);/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_LESSON_TIME_GUARD = process\.env\.NEXT_PUBLIC_TUTOR_LESSON_TIME_GUARD !== 'off';/);
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

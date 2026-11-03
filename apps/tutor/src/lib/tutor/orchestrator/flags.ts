@@ -1257,3 +1257,11 @@ export const TUTOR_ANSWERED_GUARD = process.env.NEXT_PUBLIC_TUTOR_ANSWERED_GUARD
  *  (read there via flagOn, language lessons only). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_DIRECTIVE_ECHO_DROP=off. */
 export const TUTOR_DIRECTIVE_ECHO_DROP = process.env.NEXT_PUBLIC_TUTOR_DIRECTIVE_ECHO_DROP !== 'off';
+
+/** Task 36 §B (bot run r18: the session cap hit the summary unclosed): on a
+ *  fixed-script plan, once the lesson's elapsed time reaches (plan minutes −
+ *  closing part minutes − 1), the engine moves to the closing part on the
+ *  next student turn (an optional part in progress runs on; the closing part
+ *  itself is never cut). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_LESSON_TIME_GUARD=off. */
+export const TUTOR_LESSON_TIME_GUARD = process.env.NEXT_PUBLIC_TUTOR_LESSON_TIME_GUARD !== 'off';
