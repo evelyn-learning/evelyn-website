@@ -6,7 +6,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { askOffNewPart, transitionAskSentence, contentTokens, TRANSITION_ASK_REASON, transitionAskCheckDue, cardAsksOrOffersChoices } from '../src/lib/tutor/lesson-plan/transition-ask';
+import { askOffNewPart, transitionAskSentence, contentTokens, TRANSITION_ASK_REASON, transitionAskCheckDue, cardAsksOrOffersChoices, offCardAskStripped, cardAskLine, cardAskEngineFallbackLine } from '../src/lib/tutor/lesson-plan/transition-ask';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -92,6 +92,40 @@ test('Task 28 r1 m-2: an imperative on-part ask (now seen by turnEndsWithAsk) �
   assert.ok(off);
   assert.equal(askOffNewPart(off!, CARD), true);
 });
+
+// Task 39 §B (voice run 20, 166–172 s): the retry still asked the off-card quiz.
+{
+  const PP = 'Have you worked for your current company for a long time?';
+  const RETRY_Q = 'Now, which word would you add after "sold" to finish the sentence about the customer?';
+  test('39 §B: the retry\'s off-card question is dropped as it streams', () => {
+    assert.equal(offCardAskStripped(RETRY_Q, PP), '');
+    assert.equal(offCardAskStripped(`Good work. ${RETRY_Q}`, PP), 'Good work.');
+  });
+  test('39 §B: an on-card question and a statement are kept', () => {
+    assert.equal(offCardAskStripped('Have you worked for your current company for a long time?', PP), 'Have you worked for your current company for a long time?');
+    assert.equal(offCardAskStripped('Good, that is the present perfect.', PP), 'Good, that is the present perfect.');
+  });
+  test('39 §B: the retry left without the card question → the engine speaks it', () => {
+    assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: true, killed: false, text: 'Your answer was correct.', card: PP }), PP);
+    assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: true, killed: false, text: `Your answer was correct. ${RETRY_Q}`, card: PP }), PP);
+  });
+  test('39 §B: no fallback when the retry asked the card, on the first attempt, killed, or flag off', () => {
+    assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: true, killed: false, text: `Good. ${PP}`, card: PP }), null);
+    assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: false, killed: false, text: 'Good.', card: PP }), null);
+    assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: true, killed: true, text: 'Good.', card: PP }), null);
+    assert.equal(cardAskEngineFallbackLine({ enabled: false, retried: true, killed: false, text: 'Good.', card: PP }), null);
+  });
+  test('39 §B: a choice-menu card is spoken whole; a card with no question gives nothing', () => {
+    assert.equal(cardAskLine(CARD), CARD);
+    assert.equal(cardAskLine('We use the past simple for finished events.'), null);
+  });
+  test('39 §B: VTR wires the drop and the fallback', () => {
+    const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+    assert.ok(vtr.includes('const offCardStripped = offCardAskStripped(ev.text, transitionAskCard);'));
+    assert.ok(vtr.includes("onDebugEvent?.('transition_ask_engine_fallback'"));
+    assert.ok(vtr.includes('transitionAskCard = taCard;'));
+  });
+}
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall transition-ask tests passed');

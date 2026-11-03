@@ -117,3 +117,51 @@ export function transitionAskCheckDue(input: {
   if (input.factNoteDelivered) return true;
   return input.everyAdvance !== false && input.fixedScript && input.advancedThisTurn && cardAsksOrOffersChoices(input.card);
 }
+
+/**
+ * Task 39 §B (voice run 20, 166–172 s): the transition_ask_off_part retry
+ * STILL ended with the off-card quiz ("Now, which word would you add after
+ * "sold" to finish the sentence?"). On that retry the off-card question
+ * sentences are dropped as they stream (offCardAskStripped), and when the
+ * retry then ends without the new part's own question the engine speaks the
+ * authored card question itself (cardAskEngineFallbackLine) — the Task 33
+ * R9-2 engine-spoken-offer mechanism. Flag TUTOR_CARD_ASK_ENGINE_FALLBACK.
+ */
+const CHUNK_SPLIT_RE = /(?<=[.!?。！？])\s+/;
+/** The chunk without its question sentences that are off the new part's card
+ *  (askOffNewPart); unchanged when none is. */
+export function offCardAskStripped(chunk: string, card: string): string {
+  const raw = chunk ?? '';
+  if (!card || !/[?？]/.test(raw)) return raw;
+  const parts = raw.split(CHUNK_SPLIT_RE);
+  const kept = parts.filter((p) => !(/[?？]["”’)\]]*\s*$/.test(p) && askOffNewPart(p, card)));
+  return kept.length === parts.length ? raw : kept.join(' ').trim();
+}
+/** The card's own question to speak: its last question sentence, or the whole
+ *  statement for a choice menu; null when the card asks nothing. */
+export function cardAskLine(card: string | null | undefined): string | null {
+  const c = (card ?? '').trim();
+  if (!c) return null;
+  if (boardOffersChoices({ statement: c })) return c;
+  const q = lastQuestionSentence(c)?.trim();
+  return q ? q.replace(/^["“「]\s*/, '') : null;
+}
+/** The line the engine speaks at the end of a transition_ask_off_part retry
+ *  that still ends off the card (or with no ask at all); null otherwise. */
+export function cardAskEngineFallbackLine(input: {
+  enabled: boolean;
+  /** the turn's transition_ask_off_part kill already happened (this is its retry) */
+  retried: boolean;
+  killed: boolean;
+  /** the attempt's kept text */
+  text: string;
+  /** the new part's card statement */
+  card: string;
+}): string | null {
+  if (!input.enabled || !input.retried || input.killed || !input.card) return null;
+  const line = cardAskLine(input.card);
+  if (!line) return null;
+  const ask = transitionAskSentence(input.text);
+  if (ask && !askOffNewPart(ask, input.card)) return null;
+  return line;
+}

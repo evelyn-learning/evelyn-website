@@ -404,6 +404,9 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   // Task 31 §E: directive-echo lead, the refusal narrated, card layout, a non-CJK "In Japanese" gloss, "finally said".
   if (opts?.languageLesson !== false) s = stripRound9Narration(s);
   if (!s.trim()) return '';
+  // Task 39: tool / board / plan state narrated, sentence by sentence.
+  if (opts?.languageLesson !== false) s = stripStateNarrationSentences(s);
+  if (!s.trim()) return '';
   if (CLOSE_PART_NARRATION_RE.test(s)) return '';
   if (isCaptureNarration(s)) return '';
   const keepStripped = stripKeepInMindTail(s);
@@ -760,6 +763,52 @@ export function stripRound9Narration(s: string): string {
   if (gloss && !CJK_CHAR_RE.test(gloss[1]!)) return '';
   out = out.replace(FINALLY_SAID_RE, '$1 glad you said');
   return out;
+}
+/**
+ * Task 39 (voice run 20) — tool / board / plan state narrated in a language
+ * lesson, one sentence at a time inside a stream chunk (the stream merges a
+ * short sentence into the next one, so "Goodbye! The lesson is closed …" or
+ * "The card is on the board. Take a second to look at it." reach the filter
+ * as one chunk). Each rule drops a whole sentence or strips a clause; the
+ * rest of the chunk is kept. The caller gates on the language lesson. Pure.
+ *  §B (169 s): "…, so the next step is to <verb> …" (the clause goes when it
+ *      has no second person; a sentence that is only "The next step is to
+ *      <verb> …" goes); "The card is on the board."; "Take a second to look
+ *      at it."; "Let's look at the <part> card." — board state, no task.
+ *      "Look at the card and read the sentence aloud." is an instruction and
+ *      stays.
+ */
+type SentenceRule = (x: string) => string;
+const T39_SECOND_PERSON_RE = /\b(?:you|your|yours|yourself)\b/i;
+const NEXT_STEP_CLAUSE_RE = /,?\s*(?:and\s+)?so\s+(?:the|our)\s+next step is to\s+[a-z][^.!?]*([.!?]?)\s*$/i;
+const NEXT_STEP_SENTENCE_RE = /^\s*(?:(?:so|now|okay|ok|then|and),?\s+)?(?:the|our) next step is to\s+[a-z][^.!?]*[.!]?\s*$/i;
+const BOARD_STATE_LINE_RE = /^\s*(?:(?:now|so|okay|ok),?\s+)?(?:the|this|that|your|a) (?:new )?(?:card|sentence|question|menu|table|model)(?: card)? is (?:now )?(?:on|up on|showing on) the (?:board|screen)(?: now)?[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?take a (?:second|moment|minute|few seconds|little time) to look (?:at|over) (?:it|this|that|the (?:card|board|sentence|question|screen))[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?let['’]?s (?:look at|turn to|go to|open|see) the [\p{L}\s'’-]{1,40} card[.!]?\s*$/iu;
+const TASK39_SENTENCE_RULES: SentenceRule[] = [
+  (x) => {
+    if (BOARD_STATE_LINE_RE.test(x)) return '';
+    if (NEXT_STEP_SENTENCE_RE.test(x) && !T39_SECOND_PERSON_RE.test(x)) return '';
+    const m = NEXT_STEP_CLAUSE_RE.exec(x);
+    if (m && m.index > 0 && !T39_SECOND_PERSON_RE.test(m[0])) {
+      const head = x.slice(0, m.index).trim();
+      return /[\p{L}\p{N}]/u.test(head) ? `${head}${m[1] && m[1] !== '' ? m[1] : '.'}` : '';
+    }
+    return x;
+  },
+];
+const CHUNK_SENTENCE_SPLIT_RE = /(?<=[.!?。！？])\s+(?=["“「]?[\p{Lu}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])/u;
+export function stripStateNarrationSentences(chunk: string): string {
+  const raw = chunk ?? '';
+  const parts = raw.split(CHUNK_SENTENCE_SPLIT_RE);
+  let changed = false;
+  const kept: string[] = [];
+  for (const part of parts) {
+    let out = part;
+    for (const rule of TASK39_SENTENCE_RULES) { out = rule(out); if (!out) break; }
+    if (out !== part) changed = true;
+    if (out.trim()) kept.push(out.trim());
+  }
+  if (!changed) return raw;
+  return kept.join(' ');
 }
 export const LESSON_CLOSED_NARRATION_RE = /\b(?:can['’]?t|cannot) (?:continue|go on with) the lesson\b|\b(?:lesson|session|class|it)(?:['’]s| (?:has|had|is|was))? already (?:closed|ended)\b/i;
 // Task 38 §I1 (voice run 19, 1410 s: "The lesson is complete, so there's

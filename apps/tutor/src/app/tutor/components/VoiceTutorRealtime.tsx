@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP, TUTOR_RECAP_CARD_ON_FLUSH, TUTOR_FIXED_SCRIPT_NO_READINESS, TUTOR_TEACHING_LANGUAGE_FIRST, TUTOR_CONVERSATION_ANSWER_CARDS, TUTOR_ANNOUNCED_OFFER_FIRST } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP, TUTOR_RECAP_CARD_ON_FLUSH, TUTOR_FIXED_SCRIPT_NO_READINESS, TUTOR_TEACHING_LANGUAGE_FIRST, TUTOR_CONVERSATION_ANSWER_CARDS, TUTOR_ANNOUNCED_OFFER_FIRST, TUTOR_CARD_ASK_ENGINE_FALLBACK } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, resolveMenuPickLoose, loosePickAllowed, menuPickNote, menuAskedIn, menuReplyIsPick, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { emptyTurnFallbackLine, silentTurnFallbackLine, lastShowSentenceOf, silentTurnFallbackDue } from '@/lib/tutor/voice/empty-turn-fallback';
@@ -94,7 +94,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
 import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen } from '@/lib/tutor/whiteboard/deferred-page-flush';
-import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue } from '@/lib/tutor/lesson-plan/transition-ask';
+import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue, offCardAskStripped, cardAskEngineFallbackLine } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead, proactiveOpenerAllowed } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, handwriteShownSentence, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
@@ -13522,6 +13522,9 @@ export function VoiceTutorRealtime({
       let teachingLanguageFirstRejected = false;
       // Task 24 §C1: one transition_ask_off_part kill per turn.
       let transitionAskRejected = false;
+      // Task 39 §B: the new part's card (and its segment) that kill compared against.
+      let transitionAskCard = '';
+      let transitionAskCardSeg = '';
       // Task 25 §G: one repeat_ask_third_version kill per turn.
       let thirdVersionRejected = false;
       // Task 27 §F: once per turn — a move-on request the attempt did not act on.
@@ -16200,6 +16203,18 @@ export function VoiceTutorRealtime({
                     if (planStripped && planStripped !== ev.text) {
                       onDebugEvent?.('nudge_plan_clause_stripped', `"${ev.text.slice(0, 60)}" → "${planStripped.slice(0, 60)}"`);
                       (ev as { text?: string }).text = planStripped;
+                    }
+                  }
+                  // Task 39 §B (voice run 20, 169 s): the transition_ask_off_part
+                  // retry asks the off-card question again — it goes (the
+                  // engine speaks the card's own question at the attempt's end).
+                  if (TUTOR_CARD_ASK_ENGINE_FALLBACK && attempt > 0 && transitionAskRejected && transitionAskCard
+                    && typeof ev.text === 'string' && currentSegmentIdRef.current === transitionAskCardSeg) {
+                    const offCardStripped = offCardAskStripped(ev.text, transitionAskCard);
+                    if (offCardStripped !== ev.text) {
+                      onDebugEvent?.('transition_ask_off_card_dropped', `"${ev.text.slice(0, 80)}"`);
+                      if (!offCardStripped) { dropLeadInWithQuestion(); continue; }
+                      (ev as { text?: string }).text = offCardStripped;
                     }
                   }
                   const updatedSentence = (ev.text as string) || '';
@@ -20458,6 +20473,8 @@ export function VoiceTutorRealtime({
           const taAsk = taCard ? transitionAskSentence(attemptText) : null;
           if (taAsk && askOffNewPart(taAsk, taCard)) {
             transitionAskRejected = true;
+            transitionAskCard = taCard;
+            transitionAskCardSeg = currentSegmentIdRef.current ?? '';
             rejectionsThisAttempt.push({ action: 'transition_ask_off_part', reason: TRANSITION_ASK_REASON });
             await performKill();
             onDebugEvent?.('transition_ask_off_part', `"${taAsk.slice(0, 80)}" vs "${taCard.slice(0, 60)}…"`);
@@ -21068,6 +21085,23 @@ export function VoiceTutorRealtime({
         }
         engineOfferLines = null;
         engineOfferSeg = '';
+        // Task 39 §B (voice run 20, 169 s): the transition_ask_off_part retry
+        // still ends off the new part's card (or asks nothing) — the engine
+        // speaks the authored card question itself (the R9-2 mechanism).
+        if (currentSegmentIdRef.current === transitionAskCardSeg) {
+          const cardAsk = cardAskEngineFallbackLine({
+            enabled: TUTOR_CARD_ASK_ENGINE_FALLBACK,
+            retried: attempt > 0 && transitionAskRejected,
+            killed: attemptKilled,
+            text: attemptText,
+            card: transitionAskCard,
+          });
+          if (cardAsk) {
+            speakOnePart(cardAsk);
+            attemptText = `${attemptText} ${cardAsk}`.trim();
+            onDebugEvent?.('transition_ask_engine_fallback', `"${transitionAskCardSeg}" "${cardAsk.slice(0, 80)}"`);
+          }
+        }
         // Task 33 fix round 1 (R9-3): the personal-question retry was nothing
         // but the dropped re-ask — the engine moves on in one line.
         if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped || repeatAfterCorrectReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {

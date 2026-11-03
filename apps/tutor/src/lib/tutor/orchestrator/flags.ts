@@ -1322,3 +1322,10 @@ export const TUTOR_CONVERSATION_ANSWER_CARDS = process.env.NEXT_PUBLIC_TUTOR_CON
  *  asked, unless the student declined / ordered the move on. Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_ANNOUNCED_OFFER_FIRST=off. */
 export const TUTOR_ANNOUNCED_OFFER_FIRST = process.env.NEXT_PUBLIC_TUTOR_ANNOUNCED_OFFER_FIRST !== 'off';
+
+/** Task 39 §B (voice run 20, 166–172 s): the transition_ask_off_part retry
+ *  still asked the off-card quiz — on that retry off-card questions are
+ *  dropped and, when it ends without the part's own question, the engine
+ *  speaks the authored card question. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_CARD_ASK_ENGINE_FALLBACK=off. */
+export const TUTOR_CARD_ASK_ENGINE_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_CARD_ASK_ENGINE_FALLBACK !== 'off';

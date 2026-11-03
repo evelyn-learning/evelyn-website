@@ -371,6 +371,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'repeat_after_correct_reask_dropped',
   'readiness_ask_dropped',
   'teaching_language_first',
+  // Task 39 §B: the off-card retry question dropped; the engine's card question.
+  'transition_ask_off_card_dropped', 'transition_ask_engine_fallback',
   // Task 31 fix round 9 §D: the brain's own advance plants the part's entry note.
   'fixed_script_entry_note_planted',
   // Task 31 fix round 9 §F: the two-answers check-in note.

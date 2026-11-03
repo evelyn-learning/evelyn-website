@@ -1486,5 +1486,19 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('39A: maths untouched', !isMetaNarration('Ryota should name what was right and move on.', { languageLesson: false, personaName: ['Ryota'] }));
 }
 
+// Task 39 §B (voice run 20, 169 s): plan and board-state narration on the advance.
+{
+  const lang = { languageLesson: true };
+  check('39B: "…, so the next step is to build the full sentence." → head kept', stripNoteCitationClause('Your answer was correct, so the next step is to build the full sentence.', lang) === 'Your answer was correct.', stripNoteCitationClause('Your answer was correct, so the next step is to build the full sentence.', lang));
+  check('39B: "The next step is to build the full sentence." dropped', isMetaNarration('The next step is to build the full sentence.', lang));
+  check('39B: "The card is on the board." dropped', isMetaNarration('The card is on the board.', lang));
+  check('39B: "Take a second to look at it." dropped', isMetaNarration('Take a second to look at it.', lang));
+  check('39B: "Let\'s look at the present perfect card." dropped', isMetaNarration("Let's look at the present perfect card.", lang));
+  check('39B: merged chunk "The card is on the board. Take a second to look at it." dropped', isMetaNarration('The card is on the board. Take a second to look at it.', lang));
+  check('39B: "Look at the card and read the sentence aloud." kept', !isMetaNarration('Look at the card and read the sentence aloud.', lang));
+  check('39B: "The next step is to add your own detail." kept', !isMetaNarration('The next step is to add your own detail.', lang));
+  check('39B: maths untouched', !isMetaNarration("Let's look at the present perfect card.", { languageLesson: false }) && !isMetaNarration('Take a second to look at it.', { languageLesson: false }));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
