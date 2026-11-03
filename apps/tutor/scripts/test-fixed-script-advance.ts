@@ -52,7 +52,7 @@ import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, les
 import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
-import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -1399,6 +1399,25 @@ test('38 r1 R24-1: offer part + announced move → no advance, offer asked; brid
   pin(VTR, /announcedOfferFirst: TUTOR_ANNOUNCED_OFFER_FIRST,\s*studentMovedOn: offerDeclined\(transcript\) \|\| !!moveOnRequestSpan\(transcript\),/);
   pin(VTR, /announcedOfferFirst: TUTOR_ANNOUNCED_OFFER_FIRST,\s*offerSpokenThisTurn,\s*studentMovedOn: !offerRuntimeTurn && \(offerDeclined\(transcript\) \|\| !!moveOnRequestSpan\(transcript\)\),/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_ANNOUNCED_OFFER_FIRST = process\.env\.NEXT_PUBLIC_TUTOR_ANNOUNCED_OFFER_FIRST !== 'off';/);
+});
+
+// Task 39 §D (voice run 20, 1127 s): the entry menu AND a wrap-up in one retry.
+test('39 §D: after the entry menu was read, the wrap-up / stop-choice sentences are dropped', () => {
+  const card = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  const menuSpoken = "Let's start with the pronunciation practice. Here's the question on the board: would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.";
+  const base = { enabled: true, fixedScript: true, card, spokenSoFar: menuSpoken };
+  assert.equal(wrapUpAfterMenuDropDue({ ...base, sentence: 'Here are the points so far: you introduced your work, used the present perfect for experience, and used the past simple for finished events.' }), true);
+  assert.equal(wrapUpAfterMenuDropDue({ ...base, sentence: 'Would you like to continue, or stop for today?' }), true);
+  assert.equal(wrapUpAfterMenuDropDue({ ...base, sentence: 'However, the lesson has advanced to the summary, so I\'ll wrap up instead of running the pronunciation drill.' }), true);
+  assert.equal(wrapUpAfterMenuDropDue({ ...base, sentence: 'Which option would you like?' }), false, 'the menu ask stays');
+  assert.equal(wrapUpAfterMenuDropDue({ ...base, spokenSoFar: 'Good.', sentence: 'Would you like to continue, or stop for today?' }), false, 'no menu read yet');
+  assert.equal(wrapUpAfterMenuDropDue({ ...base, card: 'What did you do last week?', sentence: 'Would you like to continue, or stop for today?' }), false, 'not a menu part');
+  assert.equal(wrapUpAfterMenuDropDue({ ...base, enabled: false, sentence: 'Would you like to continue, or stop for today?' }), false);
+  assert.equal(isWrapUpSentence('I stopped at the shop for today\'s lunch.'), false);
+  const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.ok(vtr.includes("onDebugEvent?.('menu_wrap_up_dropped'"));
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_MENU_WRAP_UP_DROP = process\.env\.NEXT_PUBLIC_TUTOR_MENU_WRAP_UP_DROP !== 'off';/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_RETRY_ADVANCE_ALREADY_APPLIED = process\.env\.NEXT_PUBLIC_TUTOR_RETRY_ADVANCE_ALREADY_APPLIED !== 'off';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

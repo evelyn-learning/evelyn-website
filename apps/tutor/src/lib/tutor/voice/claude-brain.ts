@@ -687,6 +687,14 @@ export interface LessonPlanContext {
    *  instead of the generic stage word ("Now — Columbus's letter."
    *  instead of "Now — the worked example."). */
   currentSegmentRailLabel?: string;
+  /** Task 39 §D (voice run 20, 1126 s): the segment the pointer already moved
+   *  to earlier in THIS turn (a killed attempt's advance, committed by the
+   *  kill re-arm / a show_segment_card inference). The client treats the
+   *  retry's re-emitted advance_lesson({to:"next"}) as satisfied by it, so the
+   *  route's tool_result must say the lesson is already there — not resolve
+   *  "next" from it (it said "summary" and the retry wrapped the lesson up).
+   *  Absent ⇒ unchanged. */
+  advanceAppliedThisTurn?: string;
 }
 
 export interface BrainToolCall {

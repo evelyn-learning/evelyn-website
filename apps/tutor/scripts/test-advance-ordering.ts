@@ -23,6 +23,8 @@ import {
 import { loBoundaryBeat, buildAdvanceBeatNote } from '../src/lib/tutor/lesson-plan/rail-labels';
 import type { LessonPlan, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
 import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 let passed = 0;
 let failed = 0;
@@ -639,7 +641,28 @@ async function runAdvanceToolResultProviderChecks(): Promise<void> {
     isPriorSegment(plan, 'intro', 'lo-1-hook'));
 }
 
+// Task 39 §D (voice run 20, 1126 s): the retry's re-emitted advance_lesson({to:"next"})
+// after a kill that already moved the pointer — the route answers "already there".
+async function runAlreadyAppliedChecks(): Promise<void> {
+  const { makeToolResultProvider } = await import('../src/app/api/tutor/brain/stream/route');
+  const appliedCtx = { ...buildLessonPlanContext(genPlan, 'lo-1-try')!, advanceAppliedThisTurn: 'lo-1-try' };
+  const appliedProvider = makeToolResultProvider(appliedCtx, [], []);
+  const first = JSON.parse(await appliedProvider!('advance_lesson', { to: 'next' }));
+  check('39 §D: a re-emitted "next" after the applied move → already there, no further part',
+    first.ok === true && first.alreadyThere === true && first.advancedTo === 'lo-1-try' && String(first.instruction).includes('did not move it again'),
+    JSON.stringify(first));
+  const second = JSON.parse(await appliedProvider!('advance_lesson', { to: 'next' }));
+  check('39 §D: a second "next" in the same turn resolves normally', second.ok === true && second.advancedTo !== 'lo-1-try' && !second.alreadyThere, JSON.stringify(second));
+  const plainProvider = makeToolResultProvider(buildLessonPlanContext(genPlan, 'lo-1-try')!, [], []);
+  const plain = JSON.parse(await plainProvider!('advance_lesson', { to: 'next' }));
+  check('39 §D: without the field "next" resolves as before', plain.ok === true && plain.advancedTo !== 'lo-1-try' && !plain.alreadyThere, JSON.stringify(plain));
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('39 §D: VTR sends the applied move with the plan context',
+    vtr.includes('inferredAdvanceThisTurnRef.current === currentSegmentIdRef.current') && vtr.includes('{ advanceAppliedThisTurn: currentSegmentIdRef.current }'));
+}
+
 runAdvanceToolResultProviderChecks()
+  .then(() => runAlreadyAppliedChecks())
   .catch((err) => {
     failed++;
     console.log(`  ✗ makeToolResultProvider checks threw: ${(err as Error).message}`);

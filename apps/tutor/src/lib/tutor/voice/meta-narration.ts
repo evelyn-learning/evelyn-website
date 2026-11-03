@@ -783,7 +783,12 @@ const T39_SECOND_PERSON_RE = /\b(?:you|your|yours|yourself)\b/i;
 const NEXT_STEP_CLAUSE_RE = /,?\s*(?:and\s+)?so\s+(?:the|our)\s+next step is to\s+[a-z][^.!?]*([.!?]?)\s*$/i;
 const NEXT_STEP_SENTENCE_RE = /^\s*(?:(?:so|now|okay|ok|then|and),?\s+)?(?:the|our) next step is to\s+[a-z][^.!?]*[.!]?\s*$/i;
 const BOARD_STATE_LINE_RE = /^\s*(?:(?:now|so|okay|ok),?\s+)?(?:the|this|that|your|a) (?:new )?(?:card|sentence|question|menu|table|model)(?: card)? is (?:now )?(?:on|up on|showing on) the (?:board|screen)(?: now)?[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?take a (?:second|moment|minute|few seconds|little time) to look (?:at|over) (?:it|this|that|the (?:card|board|sentence|question|screen))[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?let['’]?s (?:look at|turn to|go to|open|see) the [\p{L}\s'’-]{1,40} card[.!]?\s*$/iu;
+/*  §D (1127 s): "I'll finish this part now and move to pronunciation.", "I've
+ *      moved past the conversation part.", "However, the lesson has advanced
+ *      to the summary, so I'll wrap up …" — the pointer narrated. */
+const PART_MOVE_NARRATION_RE = /^\s*(?:(?:okay|ok|so|now|right),?\s+)?I['’]ll (?:now |just )?(?:finish|close|end|wrap up|leave) (?:this|the) (?:[\p{L}-]+ )?(?:part|section)(?: now)?,? and (?:now )?(?:move|go|turn|head)(?: on)? to\b[^.!?]*[.!]?\s*$|^\s*(?:(?:okay|ok|so|now),?\s+)?I['’]ve (?:now |just |already )?(?:moved|gone|got) (?:past|on from|beyond|through) the [\p{L}\s'’-]{1,40} (?:part|section)[.!]?\s*$|^\s*(?:(?:however|but|so|and|now|okay),?\s+)?the lesson has (?:now |already |just )?(?:advanced|moved|gone|jumped)(?: on)? to (?:the )?[^,.!?]{1,40},?\s*so I['’]ll\b[^.!?]*[.!]?\s*$/iu;
 const TASK39_SENTENCE_RULES: SentenceRule[] = [
+  (x) => (PART_MOVE_NARRATION_RE.test(x) ? '' : x),
   (x) => {
     if (BOARD_STATE_LINE_RE.test(x)) return '';
     if (NEXT_STEP_SENTENCE_RE.test(x) && !T39_SECOND_PERSON_RE.test(x)) return '';

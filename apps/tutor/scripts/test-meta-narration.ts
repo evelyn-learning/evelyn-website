@@ -1500,5 +1500,15 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('39B: maths untouched', !isMetaNarration("Let's look at the present perfect card.", { languageLesson: false }) && !isMetaNarration('Take a second to look at it.', { languageLesson: false }));
 }
 
+// Task 39 §D (voice run 20, 1127 s): the pointer narrated.
+{
+  const lang = { languageLesson: true };
+  check('39D: "I\'ll finish this part now and move to pronunciation." dropped', isMetaNarration("I'll finish this part now and move to pronunciation.", lang));
+  check('39D: "I\'ve moved past the conversation part." dropped', isMetaNarration("I've moved past the conversation part.", lang));
+  check('39D: "However, the lesson has advanced to the summary, so I\'ll wrap up …" dropped', isMetaNarration("However, the lesson has advanced to the summary, so I'll wrap up instead of running the pronunciation drill.", lang));
+  check('39D: "I moved past the station on my way to work." kept', !isMetaNarration('I moved past the station on my way to work.', lang));
+  check('39D: maths untouched', !isMetaNarration("I've moved past the conversation part.", { languageLesson: false }));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

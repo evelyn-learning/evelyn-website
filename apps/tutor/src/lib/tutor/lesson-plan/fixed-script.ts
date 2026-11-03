@@ -1088,3 +1088,30 @@ export function problemCardIdOnBoard(
   }
   return found;
 }
+
+/** Task 39 §D (voice run 20, 1127 s: one retry turn read the pronunciation
+ *  part's entry menu AND then wrapped the lesson up — "Here are the points so
+ *  far: … Would you like to continue, or stop for today?"): once the current
+ *  part's choice menu has been spoken in the attempt, a wrap-up / stop-choice
+ *  sentence after it is dropped — the menu is the authored step. A wrap-up
+ *  sentence: a stop choice ("continue … or stop", "stop for today / now"), a
+ *  recap lead ("Here are the points so far", "To sum up", "Let's review what
+ *  we did today") or a wrap-up plan ("I'll wrap up …"). Pure, generic. */
+const WRAP_UP_SENTENCE_RE = /\b(?:continue|go on|keep going|carry on|do the summary)\b[^.!?]{0,60}\bor\b[^.!?]{0,30}\bstop\b|\bstop (?:for today|here|now)\b[^.!?]*[?？]|^\s*(?:(?:so|okay|now|ok),?\s+)?(?:here (?:are|is)|these are) (?:the |our |today['’]s )?(?:main |key )?points\b(?: (?:so far|from today|we covered))?|^\s*(?:(?:so|okay|now|ok),?\s+)?(?:to sum up|to wrap up|in summary|let['’]s (?:review|recap|sum up) (?:what|everything)\b)|\bI['’]ll (?:now |just )?wrap (?:things |the lesson |it )?up\b|\bwrap up (?:instead|the lesson|for today)\b/i;
+export function isWrapUpSentence(sentence: string | null | undefined): boolean {
+  return WRAP_UP_SENTENCE_RE.test(sentence ?? '');
+}
+export function wrapUpAfterMenuDropDue(input: {
+  enabled: boolean;
+  fixedScript: boolean;
+  /** the current part's card statement */
+  card: string | null | undefined;
+  /** the text this attempt has spoken so far (kept sentences) */
+  spokenSoFar: string;
+  sentence: string;
+}): boolean {
+  if (!input.enabled || !input.fixedScript || !input.card) return false;
+  if (!boardOffersChoices({ statement: input.card })) return false;
+  if (!menuReadInTurn(input.card, input.spokenSoFar)) return false;
+  return isWrapUpSentence(input.sentence);
+}

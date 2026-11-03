@@ -1329,3 +1329,17 @@ export const TUTOR_ANNOUNCED_OFFER_FIRST = process.env.NEXT_PUBLIC_TUTOR_ANNOUNC
  *  speaks the authored card question. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_CARD_ASK_ENGINE_FALLBACK=off. */
 export const TUTOR_CARD_ASK_ENGINE_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_CARD_ASK_ENGINE_FALLBACK !== 'off';
+
+/** Task 39 §D (voice run 20, 1126 s): a retry after a kill that already moved
+ *  the pointer re-emitted advance_lesson({to:"next"}); the client satisfied it
+ *  with the committed move but the route resolved "next" one part further
+ *  ("summary") and the retry wrapped the lesson up. The request now names the
+ *  applied move and the route answers "already there". Client-side: default
+ *  ON; NEXT_PUBLIC_TUTOR_RETRY_ADVANCE_ALREADY_APPLIED=off. */
+export const TUTOR_RETRY_ADVANCE_ALREADY_APPLIED = process.env.NEXT_PUBLIC_TUTOR_RETRY_ADVANCE_ALREADY_APPLIED !== 'off';
+
+/** Task 39 §D: a turn that spoke the part's entry menu drops the wrap-up /
+ *  stop-choice sentences after it (the menu is the authored step). Language
+ *  lessons (fixed script). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_MENU_WRAP_UP_DROP=off. */
+export const TUTOR_MENU_WRAP_UP_DROP = process.env.NEXT_PUBLIC_TUTOR_MENU_WRAP_UP_DROP !== 'off';

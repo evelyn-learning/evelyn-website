@@ -252,6 +252,19 @@ interface BrainStreamRequestBody {
   pacingTelemetry?: string[];
 }
 
+/** Task 39 §D (voice run 20, 1126 s): the advance_lesson tool_result for a
+ *  re-emitted "next" that the advance already applied this turn satisfies —
+ *  the lesson is at `segmentId`; nothing moved again. Pure. */
+function alreadyAdvancedResult(segmentId: string, kind: string | null): { ok: true; advancedTo: string; alreadyThere: true; segmentKind: string | null; instruction: string } {
+  return {
+    ok: true,
+    advancedTo: segmentId,
+    alreadyThere: true,
+    segmentKind: kind,
+    instruction: `The lesson is already at segment "${segmentId}" (kind: ${kind ?? 'unknown'}) — it moved there earlier in this turn, so this call did not move it again. Teach THIS segment from its notes; do not say the lesson moved to any other part, and do not wrap up. ${SEGMENT_INTRO_RULE}`,
+  };
+}
+
 /**
  * Build a toolResultProvider that resolves `generate_problem` against
  * the adaptive-pacing pipeline. All other tools fall through to the
@@ -301,6 +314,8 @@ export function makeToolResultProvider(
   // instance, not shared with anything outside it, and `ctx` itself is
   // never mutated.
   let liveSegmentId = ctx.currentSegmentId;
+  // Task 39 §D: one re-emitted "next" is answered by the advance already applied this turn.
+  let appliedAdvancePending = !!ctx.advanceAppliedThisTurn && ctx.advanceAppliedThisTurn === ctx.currentSegmentId;
   return async (name, args) => {
     // Incoherence-fix: advance_lesson failures (end-of-plan, unknown
     // segment id) must be reported back to the brain. Without this,
@@ -315,6 +330,14 @@ export function makeToolResultProvider(
     if (name === 'advance_lesson') {
       const to = String((args as { to?: unknown }).to ?? 'next');
       const segIdx = ctx.segmentIndex;
+      // Task 39 §D (voice run 20, 1126 s): the killed attempt already moved the
+      // pointer this turn and the client satisfies this re-emitted "next" with
+      // that move — the brain is told where it IS, never the part after it.
+      if (to === 'next' && appliedAdvancePending && liveSegmentId === ctx.advanceAppliedThisTurn) {
+        appliedAdvancePending = false;
+        const here = segIdx.find((s) => s.id === liveSegmentId);
+        return JSON.stringify(alreadyAdvancedResult(liveSegmentId, here?.kind ?? null));
+      }
       const curIdx = segIdx.findIndex((s) => s.id === liveSegmentId);
       const isOffTopic = (s: { offTopic?: boolean }) => s.offTopic === true;
       let resolvedSegmentId: string | null = null;
