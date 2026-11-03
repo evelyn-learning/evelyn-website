@@ -139,21 +139,38 @@ export function fixedScriptAutoAdvanceReason(input: AutoAdvanceInput): 'turns' |
   return segmentDueReason(input) ?? lessonScheduleDueReason(input);
 }
 
+/** Task 41 fix round 1 (review I-3, r32: present-perfect was due at 498 s
+ *  and advanced at 668 s after four hold turns): once a part is due, at most
+ *  FIXED_SCRIPT_POST_DUE_MAX_HOLDS boundaries are held — ask holds,
+ *  pronunciation holds and the offer's hold turns (the spoken offer, the
+ *  accepted item) all count; planting the offer is not a hold. From the
+ *  lesson-time guard's due point on (plan − closing part − 1 min) no hold
+ *  and no offer: the part advances at the boundary, so the closing part
+ *  starts by (plan total − its minutes). 'hold-ok' | 'capped' | 'deadline'. */
+export const FIXED_SCRIPT_POST_DUE_MAX_HOLDS = 2;
+export function postDueHoldDecision(input: { plan: LessonPlan | null | undefined; holds: number; lessonElapsedMs: number }): 'hold-ok' | 'capped' | 'deadline' {
+  const guardMs = input.plan && isFixedScriptPlan(input.plan) ? lessonTimeGuardDueMs(input.plan) : null;
+  if (guardMs !== null && input.lessonElapsedMs >= guardMs) return 'deadline';
+  return input.holds >= FIXED_SCRIPT_POST_DUE_MAX_HOLDS ? 'capped' : 'hold-ok';
+}
+
 /** Task 41 §A (bot run r32: open-conversation ran to 1328 s and the
  *  lesson-time guard skipped the pronunciation part): a part is also due
  *  when the lesson clock leaves too little time for the parts still to come.
  *  Due ⇔ lessonElapsed ≥ guardDue − (minutes of every part after this one,
  *  up to the closing part, optional parts included) and the part has run
  *  FIXED_SCRIPT_SCHEDULE_MIN_PART_MS. The guard then rarely fires. Never for
- *  the closing part (fixedScriptCloseReason does not call it) or an optional
- *  part in progress (the guard lets it run on, so does this). */
+ *  the closing part (fixedScriptCloseReason does not call it). */
 export const FIXED_SCRIPT_SCHEDULE_MIN_PART_MS = 60_000;
 function lessonScheduleDueReason(input: AutoAdvanceInput): 'time' | null {
   const { plan, segmentId, levelKnown, elapsedMs, lessonElapsedMs } = input;
   if (input.partTimeCap === false || typeof lessonElapsedMs !== 'number' || !plan || !segmentId) return null;
   if (elapsedMs < FIXED_SCRIPT_SCHEDULE_MIN_PART_MS) return null;
   const seg = plan.segments.find((x) => x.id === segmentId);
-  if (!seg || (seg.metadata as { optional?: unknown } | undefined)?.optional === true) return null;
+  // Fix round 1 (review I-3): an optional part is NOT exempt — it keeps its
+  // own minutes cap and is due by the guard point too, so the summary starts
+  // by (plan total − summary minutes).
+  if (!seg) return null;
   const guardMs = lessonTimeGuardDueMs(plan);
   const closeId = fixedScriptLastSegmentId(plan);
   if (guardMs === null || !closeId || segmentId === closeId) return null;

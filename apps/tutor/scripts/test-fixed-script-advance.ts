@@ -50,7 +50,7 @@ import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboa
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
-import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, lessonTimeGuardDueMs } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, lessonTimeGuardDueMs, postDueHoldDecision, FIXED_SCRIPT_POST_DUE_MAX_HOLDS, nextSegmentId as nextSegmentId41 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
@@ -189,7 +189,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 15000  /* Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer; Task 30 §A2: the wait cap; Task 41 §A: the part time cap inputs */);
+  const block = VTR.slice(auto, auto + 16500  /* Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer; Task 30 §A2: the wait cap; Task 41 §A: the part time cap inputs */);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
   pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{advanceReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
@@ -197,8 +197,8 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
 // ── fix round 10-11 ──────────────────────────────────────────────────────
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 13000);
-  pin(block, /if \(autoNext && !offerMadeHere && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
+  const block = VTR.slice(auto, auto + 14500 /* Task 41 r1: the post-due hold cap */);
+  pin(block, /if \(autoNext && !offerMadeHere && !holdCapped && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
   pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
 });
@@ -531,9 +531,9 @@ test('22A: turnEndsWithAsk — the run-10 turns', () => {
 });
 test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 12000 /* Task 41 §A: the part time cap inputs */);
+  const block = VTR.slice(auto, auto + 13500 /* Task 41 §A: the part time cap inputs; r1: the post-due hold cap */);
   pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
-  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
+  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
 });
 
 test('22D2: the budget advance lead acknowledges a "more of this part" request; the announced lead does not', () => {
@@ -616,10 +616,10 @@ test('26A2: bridge part ⇒ advance (no hold) with the bridge clause in the lead
 });
 test('26A: VTR wiring — offer planted (urgent FACT) instead of the advance, held n/2, bridge clause on both advance leads (pins)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 15000);
+  const block = VTR.slice(auto, auto + 16500 /* Task 41 r1 */);
   pin(block, /const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS\s*\? fixedScriptTransitionDecision\(\{\s*plan: autoPlan, segmentId: segIdNow, reason: advanceReason,\s*offerMade: transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\),\s*offerHeldTurns: autoAdvanceOfferHeldRef\.current,/);
   // order: pronunciation hold → offer → offer hold → ask hold → advance
-  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]{0,900}?\} else if \(autoNext && segIdNow && transition === 'offer'\) \{\s*\/\/ The offer note replaces[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'await-offer'\) \{[\s\S]*?\} else if \(autoNext && transition === 'hold-offer'\) \{\s*\/\/[^\n]*\n\s*if \(!offerSpokenThisTurn && !offerRuntimeTurn\) autoAdvanceOfferHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(/);
+  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]{0,900}?\} else if \(autoNext && segIdNow && transition === 'offer' && !deadlineAdvance\) \{\s*\/\/ The offer note replaces[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'await-offer' && !deadlineAdvance\) \{[\s\S]*?\} else if \(autoNext && transition === 'hold-offer' && !holdCapped\) \{\s*\/\/[^\n]*\n\s*if \(!offerSpokenThisTurn && !offerRuntimeTurn\) autoAdvanceOfferHeldRef\.current \+= 1;\s*if \(!offerRuntimeTurn\) autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(/);
   pin(block, /autoAdvanceAskHeldRef\.current = 0;\s*autoAdvanceOfferHeldRef\.current = 0;\s*const autoTurns = cur\.turns;/);
   pin(block, /: fixedScriptAutoAdvanceLead\(segIdNow, autoNext, autoKind\)\) \+[^\n]*\n\s*\/\/[^\n]*\n\s*\(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(autoPlan, segIdNow, autoNext\) : ''\) \+\s*\/\/[^\n]*\n\s*\(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(autoPlan, autoNext\)\) : ''\),\s*autoNext,/);
   pin(VTR, /fixedScriptAdvancedNote\(fixedScriptLevelAdvanceLead\(lvNext, lvKind\) \+ \(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(lvPlan, lvFrom, lvNext\) : ''\) \+ \(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(lvPlan, lvNext\)\) : ''\), lvNext\),/);
@@ -731,7 +731,7 @@ test('26 I-2b: a move announced on the budget turn of an offer part advances wit
 });
 
 test('26 m-1: the pronunciation hold does not stack on a made offer (pin)', () => {
-  pin(VTR, /const offerMadeHere = TUTOR_FIXED_SCRIPT_TRANSITIONS && transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\);\s*if \(autoNext && !offerMadeHere && holdAutoAdvanceForPronunciation\(/);
+  pin(VTR, /const offerMadeHere = TUTOR_FIXED_SCRIPT_TRANSITIONS && transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\);\s*if \(autoNext && !offerMadeHere && !holdCapped && holdAutoAdvanceForPronunciation\(/);
 });
 
 // Task 27 §I (Task 26 concern 2): leaving a bridge part, the level continuation carries the bridge, not "do not recap".
@@ -841,7 +841,7 @@ test('29A: VTR wiring — validator kill + retry, spoken event, hold from the sp
   assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_unmade',"));
   assert.ok(VTR.includes("onDebugEvent?.('fixed_script_offer_spoken', `\"${offerSeg}\"`);"));
   assert.ok(VTR.includes('if (!offerSpokenThisTurn && !offerRuntimeTurn) autoAdvanceOfferHeldRef.current += 1;'));
-  assert.ok(VTR.includes("} else if (autoNext && transition === 'await-offer') {"));
+  assert.ok(VTR.includes("} else if (autoNext && transition === 'await-offer' && !deadlineAdvance) {"));
   assert.ok(VTR.includes('offerDeclined: !offerSpokenThisTurn && offerDeclined(transcript),'));
   assert.ok(readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8').includes("'transition_offer_missing',"));
 });
@@ -856,7 +856,7 @@ test('29 r1 I-1: transition_ask_off_part skips the offer turn (pointer unchanged
 });
 test('29 r1 I-2: an offer on the budget turn itself is SPOKEN at once — no note planted', () => {
   assert.equal(offerAsked('Nice. Would you like one more practice sentence, or move on to the past simple?'), true);
-  pin(VTR, /\} else if \(autoNext && segIdNow && transition === 'offer' && TUTOR_TRANSITION_OFFER_SPOKEN && offerAsked\(fullText\)\) \{[\s\S]{0,400}?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*transitionOfferSpokenRef\.current\.add\(segIdNow\);\s*transitionOfferSpokenAtRef\.current\.set\(segIdNow, Date\.now\(\)\);\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;\s*onDebugEvent\?\.\('fixed_script_offer_spoken', `"\$\{segIdNow\}" \(on the budget turn\)`\);\s*\} else if \(autoNext && segIdNow && transition === 'offer'\) \{/);
+  pin(VTR, /\} else if \(autoNext && segIdNow && transition === 'offer' && !deadlineAdvance && TUTOR_TRANSITION_OFFER_SPOKEN && offerAsked\(fullText\)\) \{[\s\S]{0,400}?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*transitionOfferSpokenRef\.current\.add\(segIdNow\);\s*transitionOfferSpokenAtRef\.current\.set\(segIdNow, Date\.now\(\)\);\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;\s*onDebugEvent\?\.\('fixed_script_offer_spoken', `"\$\{segIdNow\}" \(on the budget turn\)`\);\s*\} else if \(autoNext && segIdNow && transition === 'offer' && !deadlineAdvance\) \{/);
 });
 
 // ── Task 30 §A2: the hold runs on student turns; a wait cap ─────────────
@@ -1551,7 +1551,7 @@ test('41 §A: held once → still due at the next boundary; the ask hold is 2 tu
   assert.equal(holdAutoAdvanceForPendingAsk(true, 2), false, 'third due boundary advances');
   assert.equal(FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, 2);
   pin(VTR, /if \(!advanceReason\) \{ autoAdvancePronHeldRef\.current = 0; autoAdvanceAskHeldRef\.current = 0; \}/);
-  pin(VTR, /\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;/);
+  pin(VTR, /\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;/);
 });
 test('41 §A: the lesson schedule — a part is due when only the later parts\' minutes are left before the guard (r32 open-conversation)', () => {
   const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
@@ -1567,10 +1567,11 @@ test('41 §A: the lesson schedule — a part is due when only the later parts\' 
   assert.equal(fixedScriptAutoAdvanceReason({ ...ps, elapsedMs: 100_000, lessonElapsedMs: 14 * min }), 'time');
   assert.equal(fixedScriptAutoAdvanceReason({ ...ps, elapsedMs: 59_000, lessonElapsedMs: 16 * min }), null, 'a part runs at least a minute');
   assert.equal(fixedScriptAutoAdvanceReason({ ...ps, elapsedMs: 100_000, lessonElapsedMs: 16 * min, partTimeCap: false }), null, 'flag off');
-  // the optional pronunciation part in progress runs on (as the guard lets it) — only its own cap (3 min × 1.5)
+  // fix round 1 (I-3): the optional pronunciation part is not exempt — its own cap (3 min × 1.5) and the guard point (22 min)
   const pr = { plan: gdi, segmentId: 'pronunciation', overlongTurns: 7, levelKnown: true, turns: 2 };
-  assert.equal(fixedScriptAutoAdvanceReason({ ...pr, elapsedMs: 100_000, lessonElapsedMs: 24 * min }), null);
-  assert.equal(fixedScriptAutoAdvanceReason({ ...pr, elapsedMs: 270_000, lessonElapsedMs: 24 * min }), 'time');
+  assert.equal(fixedScriptAutoAdvanceReason({ ...pr, elapsedMs: 100_000, lessonElapsedMs: 21.9 * min }), null);
+  assert.equal(fixedScriptAutoAdvanceReason({ ...pr, elapsedMs: 100_000, lessonElapsedMs: 22 * min }), 'time');
+  assert.equal(fixedScriptAutoAdvanceReason({ ...pr, elapsedMs: 270_000, lessonElapsedMs: 15 * min }), 'time');
   // no lesson clock ⇒ the part rule alone
   assert.equal(fixedScriptAutoAdvanceReason({ ...oc, elapsedMs: 159_000 }), null);
   pin(VTR, /partTimeCap: TUTOR_PART_TIME_CAP,\s*\.\.\.\(TUTOR_PART_TIME_CAP \? \{ lessonElapsedMs: Date\.now\(\) - \(voiceSessionStartedAtMsRef\.current \?\? sessionStartMsRef\.current\) \} : \{\}\),/);
@@ -1589,6 +1590,69 @@ test('41 §A: a guard move past pronunciation says, in one line, that the pronun
   assert.ok(lessonTimeGuardLead('Past simple', 'Summary', ['Conversation', 'Pronunciation']).includes('the "Conversation" and "Pronunciation" practice'));
   assert.ok(!lessonTimeGuardLead('Conversation', 'Summary').includes('Say ONCE'), 'nothing skipped ⇒ no line');
   pin(VTR, /lessonTimeGuardLead\(fixedScriptPartLabel\(tgPlan, tgSeg\), fixedScriptPartLabel\(tgPlan, tg\.to\),\s*TUTOR_PART_TIME_CAP \? lessonTimeGuardSkippedLabels\(tgPlan, tgSeg, tg\.to, !!workingLevelRef\.current\) : \[\]\), tg\.to\)/);
+});
+
+// ── Task 41 fix round 1 (review I-3): post-due holds capped at 2; none from the guard point; the r32 replay ──
+test('41 r1 I-3: postDueHoldDecision — 2 holds after due, then advance; from 22 min no hold and no offer', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const min = 60_000;
+  assert.equal(FIXED_SCRIPT_POST_DUE_MAX_HOLDS, 2);
+  assert.equal(postDueHoldDecision({ plan: gdi, holds: 0, lessonElapsedMs: 10 * min }), 'hold-ok');
+  assert.equal(postDueHoldDecision({ plan: gdi, holds: 1, lessonElapsedMs: 10 * min }), 'hold-ok');
+  assert.equal(postDueHoldDecision({ plan: gdi, holds: 2, lessonElapsedMs: 10 * min }), 'capped');
+  assert.equal(postDueHoldDecision({ plan: gdi, holds: 0, lessonElapsedMs: 22 * min }), 'deadline');
+  assert.equal(postDueHoldDecision({ plan: { ...gdi, metadata: {} } as typeof gdi, holds: 0, lessonElapsedMs: 99 * min }), 'hold-ok', 'not a fixed script: only the count');
+  // VTR: every hold kind counts; the offer plant / await / budget-turn offer stand down at the deadline
+  pin(VTR, /const postDue = TUTOR_PART_TIME_CAP && advanceReason !== 'announced' && !offerRuntimeTurn\s*\? postDueHoldDecision\(\{ plan: autoPlan, holds: autoAdvancePostDueHoldsRef\.current, lessonElapsedMs: Date\.now\(\) - \(voiceSessionStartedAtMsRef\.current \?\? sessionStartMsRef\.current\) \}\)/);
+  pin(VTR, /if \(autoNext && !offerMadeHere && !holdCapped && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]{0,900}?autoAdvancePronHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;/);
+  pin(VTR, /\} else if \(autoNext && transition === 'hold-offer' && !holdCapped\) \{[\s\S]{0,200}?if \(!offerRuntimeTurn\) autoAdvancePostDueHoldsRef\.current \+= 1;/);
+  pin(VTR, /\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;/);
+  pin(VTR, /transition === 'offer' && !deadlineAdvance\) \{/);
+  pin(VTR, /if \(st\.segId !== segIdNow\) autoAdvancePostDueHoldsRef\.current = 0;/);
+  pin(VTR, /if \(!advanceReason\) autoAdvancePostDueHoldsRef\.current = 0;/);
+});
+
+/** A replay of r32's pacing through the real due / transition / hold
+ *  functions: present-perfect entered at 206 s (as in r32), a tutor turn
+ *  every 30 s (r32: present-perfect 14 turns in 462 s), every turn ending
+ *  with an ask, every offer spoken on the next turn and accepted (the worst
+ *  case for holds). Returns each part's entry (s of lesson time). */
+function replayR32(cap: boolean): Record<string, number> {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const entries: Record<string, number> = { 'present-perfect': 206 };
+  let seg = 'present-perfect';
+  let start = 206;
+  let turns = 0; let holds = 0; let askHeld = 0; let offerMade = false; let offerSpoken = false; let offerHeld = 0;
+  for (let t = 206 + 30; t < 1800 && seg !== 'summary'; t += 30) {
+    turns += 1;
+    const reason = fixedScriptAutoAdvanceReason({ plan: gdi, segmentId: seg, turns, overlongTurns: overlongTurnThreshold(gdi, seg, 6), elapsedMs: (t - start) * 1000, levelKnown: true, ...(cap ? { lessonElapsedMs: t * 1000 } : { partTimeCap: false }) });
+    if (!reason) continue;
+    const pd = cap ? postDueHoldDecision({ plan: gdi, holds, lessonElapsedMs: t * 1000 }) : 'hold-ok';
+    const tr = fixedScriptTransitionDecision({ plan: gdi, segmentId: seg, reason, offerMade, offerHeldTurns: offerHeld, offerSpoken, offerAcceptedStudentTurns: offerSpoken ? Math.max(0, offerHeld - 1) : null });
+    let held = false;
+    if (tr === 'offer' && pd !== 'deadline') { offerMade = true; held = true; }
+    else if (tr === 'await-offer' && pd !== 'deadline') { offerSpoken = true; offerHeld = FIXED_SCRIPT_OFFER_HELD_AT_PLANT; holds += 1; held = true; }
+    else if (tr === 'hold-offer' && pd === 'hold-ok') { offerHeld += 1; holds += 1; held = true; }
+    else if (pd === 'hold-ok' && holdAutoAdvanceForPendingAsk(true, askHeld)) { askHeld += 1; holds += 1; held = true; }
+    if (held) continue;
+    const next = nextSegmentId41(gdi, seg, true)!;
+    seg = next; start = t; entries[seg] = t;
+    turns = 0; holds = 0; askHeld = 0; offerMade = false; offerSpoken = false; offerHeld = 0;
+  }
+  return entries;
+}
+test('41 r1 I-3: r32 replay — every part gets time, pronunciation is reached, the summary starts by 23 min', () => {
+  const e = replayR32(true);
+  console.log('       r32 replay (s):', JSON.stringify(e), 'pre-41:', JSON.stringify(replayR32(false)));
+  const min = 60;
+  assert.ok(e['past-simple']! < e['open-conversation']! && e['open-conversation']! < e['pronunciation']! && e['pronunciation']! < e['summary']!, JSON.stringify(e));
+  assert.ok(e['summary']! <= 23 * min, `summary starts at ${e['summary']} s: ${JSON.stringify(e)}`);
+  assert.ok(e['pronunciation']! - 0 <= 21 * min && e['summary']! - e['pronunciation']! >= 60, `pronunciation runs: ${JSON.stringify(e)}`);
+  // summary (2 min, maxTurns 4) closes by its 4 turns + 2 grace turns at the same pace — well before the 30-min cap
+  assert.ok(e['summary']! + 6 * 30 < 30 * min);
+  // without the cap (pre-Task-41 rules) the parts run on: the summary would start later
+  const old = replayR32(false);
+  assert.ok((old['summary'] ?? 9999) > e['summary']!, JSON.stringify(old));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
