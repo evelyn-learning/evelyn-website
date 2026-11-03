@@ -20058,7 +20058,8 @@ export function VoiceTutorRealtime({
               } else if (phraseAction === 'kill') {
                 // Task 27 fix round 1 (§D2): the retry directive ends with the shared silent clause.
                 // Task 35 §B: the part's answered questions ride the directive.
-                const reason = requiredPhraseMissingReason(segIdForPhrases, missing, TUTOR_ANSWERED_GUARD ? answeredInPartRef.current.get(segIdForPhrases) : null);
+                // Final review I-2: only in a fixed-script closing / recap part (answeredGuardPart).
+                const reason = requiredPhraseMissingReason(segIdForPhrases, missing, TUTOR_ANSWERED_GUARD && answeredGuardPart(planForPhrases, segIdForPhrases) ? answeredInPartRef.current.get(segIdForPhrases) : null);
                 rejectionsThisAttempt.push({ action: 'required_phrase_missing', reason });
                 await performKill();
                 console.warn(`[brain-orchestrator] requiredPhrases miss on segment "${segIdForPhrases}": missing=[${missing.join(', ')}]`);
@@ -22103,7 +22104,8 @@ export function VoiceTutorRealtime({
           // previous turn's (embed-1792350642171: re-asked eight turns later).
           recordAnsweredQuestions(answeredQuestionsRef.current, prevTutor, transcript);
           // Task 31 §G: the same, per part, verbatim.
-          if (!/^\s*\[/.test(transcript) && turnStartSegmentId) {
+          // Final review I-2: recorded in language lessons / fixed scripts only.
+          if (!/^\s*\[/.test(transcript) && turnStartSegmentId && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current))) {
             const aqNew = answeredQuestionSentences(prevTutor, transcript);
             if (aqNew.length) answeredInPartRef.current.set(turnStartSegmentId, [...(answeredInPartRef.current.get(turnStartSegmentId) ?? []), ...aqNew].slice(-6));
           }

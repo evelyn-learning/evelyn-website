@@ -1285,9 +1285,18 @@ test('35 §B: the required_phrase_missing directive names the answered question;
   assert.equal(answeredGuardPart(fixed, segs[segs.length - 1]!), true);
   assert.equal(answeredGuardPart(fixed, segs[1]!), fixed.segments[1]!.kind === 'recap');
   assert.equal(answeredGuardPart(null, 'x'), false);
-  pin(VTR, /const reason = requiredPhraseMissingReason\(segIdForPhrases, missing, TUTOR_ANSWERED_GUARD \? answeredInPartRef\.current\.get\(segIdForPhrases\) : null\);/);
+  pin(VTR, /const reason = requiredPhraseMissingReason\(segIdForPhrases, missing, TUTOR_ANSWERED_GUARD && answeredGuardPart\(planForPhrases, segIdForPhrases\) \? answeredInPartRef\.current\.get\(segIdForPhrases\) : null\);/);
   pin(VTR, /const agHit = reasksAnsweredQuestion\(updatedSentence, answeredGuardQs\);\s*if \(agHit\) \{\s*onDebugEvent\?\.\('answered_question_reask_dropped'/);
   pin(VTR, /onDebugEvent\?\.\('answered_in_part_note_planted'/);
+});
+
+test('final I-2: a maths required-phrase retry carries no "already answered" clause', () => {
+  const mathsPlan = parseLessonPlan({ ...RAW, id: 'test.maths', subject: 'math', metadata: {} });
+  const segs = mathsPlan.segments.map((sg) => sg.id);
+  assert.equal(answeredGuardPart(mathsPlan, segs[segs.length - 1]!), false, 'not a fixed script');
+  const r = requiredPhraseMissingReason('seg', ['value 6'], answeredGuardPart(mathsPlan, segs[segs.length - 1]!) ? ['What do you get when you divide both sides by 2?'] : null);
+  assert.ok(!r.includes('already answered'), r);
+  pin(VTR, /turnStartSegmentId && \(subject === 'languages' \|\| isFixedScriptPlan\(lessonPlanRef\.current\)\)\) \{\s*const aqNew = answeredQuestionSentences\(prevTutor, transcript\);/);
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
