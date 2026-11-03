@@ -1006,7 +1006,7 @@ check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("
   check('30F1: different content ⇒ kept', !isAdjacentDuplicate("Let's move on to the next part now.", 'Tell me one more thing about a past event.'));
   check('30F1: no previous sentence ⇒ kept', !isAdjacentDuplicate('', "Let's go on to the next part."));
   const VTRF = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('30F1: VTR drops it per sentence, after the continuation duplicate check', /continuation_duplicate_dropped[\s\S]{0,300}?if \(TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate\(adjacentPrevSentence, updatedSentence\)\) \{\s*onDebugEvent\?\.\('adjacent_duplicate_sentence_dropped',[\s\S]{0,200}?continue;\s*\}[\s\S]{0,2600}?adjacentPrevSentence = updatedSentence;/.test(VTRF)); // Task 38 §D / §I2: the lead-in hold and the repeated-opener strip sit before the assignment
+  check('30F1: VTR drops it per sentence, after the continuation duplicate check', /continuation_duplicate_dropped[\s\S]{0,300}?if \(TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate\(adjacentPrevSentence, updatedSentence\)\) \{\s*onDebugEvent\?\.\('adjacent_duplicate_sentence_dropped',[\s\S]{0,200}?continue;\s*\}[\s\S]{0,3400}?adjacentPrevSentence = updatedSentence;/.test(VTRF)); // Task 38 §D / §I2 / Task 43 §C: the lead-in hold, the repeated-opener strip and the part-announce dedupe sit before the assignment
 }
 
 // Task 30 fix round 1 S2 (smoke run 334 s): a spoken multi-clause plan; a plan that continues after a dropped narration.

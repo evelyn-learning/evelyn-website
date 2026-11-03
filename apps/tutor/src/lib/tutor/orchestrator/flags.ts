@@ -1409,3 +1409,9 @@ export const TUTOR_MENU_ENTRY_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_MENU_ENTR
  *  the recap card — the recap now cards corrections (and a contrast pair)
  *  only. Client-side: default ON; NEXT_PUBLIC_TUTOR_RECAP_CORRECTION_CARDS_ONLY=off. */
 export const TUTOR_RECAP_CORRECTION_CARDS_ONLY = process.env.NEXT_PUBLIC_TUTOR_RECAP_CORRECTION_CARDS_ONLY !== 'off';
+
+/** Task 43 §C (voice run 21, 143 s): the brain's transition and its bridge
+ *  clause announced the same part in consecutive sentences — the second is
+ *  dropped (bare) or keeps only its teaching (fixed scripts). Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_PART_ANNOUNCE_DEDUPE=off. */
+export const TUTOR_PART_ANNOUNCE_DEDUPE = process.env.NEXT_PUBLIC_TUTOR_PART_ANNOUNCE_DEDUPE !== 'off';

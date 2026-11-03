@@ -18,6 +18,7 @@ import { lastAskSentence, lastQuestionSentence, lastSentenceAsks, splitSentences
 import { expectedRepeatFor, isStrictRepeatAsk } from '../voice/correct-retry';
 import { sameSentence } from '../voice/sentence-board';
 import { TUTOR_JA_ANNOUNCED_MOVE } from '../orchestrator/flags';
+import { capitaliseFirst } from '../voice/meta-narration';
 
 /** A sentence that announces moving on (EN + JA). The keyword gate in
  *  announcedMoveTarget is required too — the phrase alone never moves. */
@@ -388,4 +389,61 @@ export function closeWrapPollDecision(input: {
   if (input.brainBusy || input.studentActive || input.suspended) return 'wait';
   if (input.quietMs >= FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS || input.elapsedMs >= FIXED_SCRIPT_CLOSE_WRAP_MAX_MS) return 'fire';
   return 'wait';
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Task 43 §C (voice run 21, 143 s): "Now let's move on to the present
+// perfect. Next, we'll practice the present perfect, which we use for
+// experience …" — the brain's own transition and the bridge clause named the
+// same part twice in consecutive sentences (the adjacent-duplicate rule's
+// Jaccard misses it). The first sentence is already spoken when the second
+// arrives, so the SECOND is the one that changes: a bare announcement is
+// dropped; one that carries teaching keeps the teaching without the second
+// announcement (", which <subject> <verb> …" → "The <part> is what <subject>
+// <verb> …"; ", which <verb> …" → "The <part> <verb> …"; ": <rest>" → "<Rest>").
+// A question, a sentence with no announcement cue, a different part, or a
+// shape with no safe rewrite is left alone (null). Fixed-script plans only.
+// ─────────────────────────────────────────────────────────────────────────
+const PART_ANNOUNCE_CUE_RE = /\b(?:move (?:on )?to|moving (?:on )?to|go on to|turn to|let['’]s (?:practi[sc]e|do|start|try|look at|work on|go to|move to)|we['’]ll (?:practi[sc]e|do|start|work on|look at|move to|go to)|we will (?:practi[sc]e|do|start)|next,? (?:we|let)|time for|now for|on to|next (?:is|up is|comes))\b/i;
+const escapeRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** The English labels a part is announced by (metadata.label, title). */
+function segmentEnglishLabels(seg: Segment): string[] {
+  const md = (seg.metadata ?? {}) as Record<string, unknown>;
+  const out: string[] = [];
+  if (typeof md.label === 'string') out.push(md.label);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const title = (seg as any).title;
+  if (typeof title === 'string') out.push(title);
+  return out.map((x) => x.trim().toLowerCase()).filter((x) => /^[a-z][a-z\s'’-]{1,40}$/.test(x) && !STOPWORDS.has(x));
+}
+function announcedPartLabel(sentence: string, plan: LessonPlan): { segId: string; label: string } | null {
+  if (!PART_ANNOUNCE_CUE_RE.test(sentence) || /[?？]/.test(sentence)) return null;
+  for (const seg of plan.segments) {
+    for (const label of segmentEnglishLabels(seg)) {
+      if (new RegExp(`\\b${escapeRe(label)}\\b`, 'i').test(sentence)) return { segId: seg.id, label };
+    }
+  }
+  return null;
+}
+export function dedupePartAnnouncement(prev: string | null | undefined, cur: string | null | undefined, plan: LessonPlan | null | undefined): string | null {
+  if (!plan || !isFixedScriptPlan(plan) || !prev || !cur) return null;
+  const a = announcedPartLabel(prev, plan);
+  if (!a) return null;
+  const b = announcedPartLabel(cur, plan);
+  if (!b || b.segId !== a.segId) return null;
+  const labelRe = escapeRe(b.label);
+  // ", which <we|you|they|I> <rest>" → "The <part> is what <subj> <rest>"
+  let m = new RegExp(`\\b(?:the |our |your )?${labelRe}\\s*,\\s*which\\s+(we|you|they|i)\\s+(.+)$`, 'i').exec(cur);
+  if (m) return `The ${b.label} is what ${m[1]!.toLowerCase() === 'i' ? 'I' : m[1]!.toLowerCase()} ${m[2]!.trim()}`;
+  // ", which <verb> …" → "The <part> <verb> …"
+  m = new RegExp(`\\b(?:the |our |your )?${labelRe}\\s*,\\s*which\\s+(.+)$`, 'i').exec(cur);
+  if (m) return `The ${b.label} ${m[1]!.trim()}`;
+  // ": <rest>" → "<Rest>"
+  m = new RegExp(`\\b(?:the |our |your )?${labelRe}\\s*:\\s*(.+)$`, 'i').exec(cur);
+  if (m && /[a-z]/i.test(m[1]!)) return capitaliseFirst(m[1]!.trim());
+  // bare: nothing but openers, the cue and the part name
+  const residue = cur.replace(new RegExp(`\\b(?:the |our |your )?${labelRe}\\b`, 'i'), ' ').replace(new RegExp(PART_ANNOUNCE_CUE_RE.source, 'gi'), ' ')
+    .replace(/\b(?:now|next|okay|ok|so|then|alright|first|good|great|well|and|we|you|i|will|let['’]s|practi[sc]e|do|start|try|look|work|go|move|moving|turn|on|to|at|for|time)\b|['’]ll\b/gi, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  if (!residue) return '';
+  return null;
 }

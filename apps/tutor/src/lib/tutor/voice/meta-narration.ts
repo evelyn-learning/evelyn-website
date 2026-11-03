@@ -201,7 +201,7 @@ function substantiveHead(head: string): boolean {
   const h = head.trim();
   return /[?？]/.test(h) || /\d/.test(h) || /[=+×÷]/.test(h) || /["“「‘]/.test(h) || (h.match(/[\p{L}\p{N}]+/gu) ?? []).length >= 6;
 }
-const capitaliseFirst = (x: string) => x.replace(/^(\s*["“「‘(]?)(\p{Ll})/u, (_m, a: string, b: string) => a + b.toUpperCase());
+export const capitaliseFirst = (x: string) => x.replace(/^(\s*["“「‘(]?)(\p{Ll})/u, (_m, a: string, b: string) => a + b.toUpperCase());
 /**
  * A runtime turn's sentence with its spoken plan clause removed: unchanged when
  * there is none, the content after the clause when there is some, '' when the

@@ -8,7 +8,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, endsWithRepeatAsk, endsWithSayOrListenAsk, continuationRepeatsSentence, endsWithImperativeReplyRequest, continuationEchoesLastSentence, CONTINUATION_LAST_SENTENCE_JACCARD } from '../src/lib/tutor/lesson-plan/announced-move';
+import { dedupePartAnnouncement, announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, endsWithRepeatAsk, endsWithSayOrListenAsk, continuationRepeatsSentence, endsWithImperativeReplyRequest, continuationEchoesLastSentence, CONTINUATION_LAST_SENTENCE_JACCARD } from '../src/lib/tutor/lesson-plan/announced-move';
 import { isQuestionLeadIn } from '../src/lib/tutor/voice/correct-retry';
 import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, isFixedScriptContinueDirective, fixedScriptContinueDirective, FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE,
   FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON } from '../src/lib/tutor/lesson-plan/fixed-script';
@@ -419,6 +419,30 @@ test('38 §D: VTR holds the lead-in, drops it with a dropped question / at strea
   assert.ok(src.includes('continuationEchoesLastSentence(updatedSentence, continuedTurnText, studentName ? [studentName] : [])'));
   const flags = readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8');
   assert.match(flags, /export const TUTOR_QUESTION_LEAD_IN_HOLD = process\.env\.NEXT_PUBLIC_TUTOR_QUESTION_LEAD_IN_HOLD !== 'off';/);
+});
+
+
+// ── Task 43 §C (voice run 21, 143 s): "Now let's move on to the present perfect. Next, we'll practice the present perfect, which we use …" ──
+test('43 §C: the second sentence announcing the SAME part is dropped when bare, rewritten when it carries teaching', () => {
+  const fixed = { id: 'p', segments: SEGMENTS, metadata: { fixedScript: true } } as unknown as LessonPlan;
+  const prev = "Now let's move on to the present perfect.";
+  assert.equal(dedupePartAnnouncement(prev, "Next, we'll practice the present perfect, which we use for experience that started in the past and continues now.", fixed),
+    'The present perfect is what we use for experience that started in the past and continues now.');
+  assert.equal(dedupePartAnnouncement(prev, "Now let's practice the present perfect.", fixed), '', 'bare ⇒ dropped');
+  assert.equal(dedupePartAnnouncement(prev, "Next, we'll practice the present perfect.", fixed), '', 'bare ⇒ dropped');
+  assert.equal(dedupePartAnnouncement("Let's move on to the past simple.", 'Now for the past simple: tell me about a finished event.', fixed), 'Tell me about a finished event.', 'colon continuation kept');
+  assert.equal(dedupePartAnnouncement("Let's move on to the past simple.", 'Next, we practise the past simple, which describes a finished action at a specific time.', fixed), 'The past simple describes a finished action at a specific time.');
+  assert.equal(dedupePartAnnouncement("Now let's close this project talk and move on to pronunciation.", 'Now for pronunciation: please read this sentence aloud.', fixed), 'Please read this sentence aloud.');
+  // unchanged (null): teaching without a cue, no announcement before, different parts, a question, not a fixed script
+  assert.equal(dedupePartAnnouncement("Let's move on to the past simple.", 'The past simple describes a finished action.', fixed), null);
+  assert.equal(dedupePartAnnouncement("Good, that's correct.", "Now let's move on to the past simple.", fixed), null);
+  assert.equal(dedupePartAnnouncement("Let's move on to the past simple.", "Now let's move on to pronunciation.", fixed), null);
+  assert.equal(dedupePartAnnouncement("Let's move on to the past simple.", 'Shall we practise the past simple, or do you want one more?', fixed), null);
+  assert.equal(dedupePartAnnouncement("Let's move on to the past simple.", "Now let's practise the past simple with a question.", fixed), null, 'a cue + part with its own content and no rewrite shape stays');
+  assert.equal(dedupePartAnnouncement(prev, "Next, we'll practice the present perfect, which we use for experience.", { id: 'm', segments: SEGMENTS, metadata: {} } as unknown as LessonPlan), null, 'not a fixed script');
+  const vtr = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes("const partDedupe = TUTOR_PART_ANNOUNCE_DEDUPE && adjacentPrevSentence && isFixedScriptPlan(lessonPlanRef.current) ? dedupePartAnnouncement(adjacentPrevSentence, updatedSentence, lessonPlanRef.current) : null;"), 'VTR wiring');
+  assert.match(readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8'), /export const TUTOR_PART_ANNOUNCE_DEDUPE = process\.env\.NEXT_PUBLIC_TUTOR_PART_ANNOUNCE_DEDUPE !== 'off';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
