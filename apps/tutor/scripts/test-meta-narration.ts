@@ -1510,5 +1510,18 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('39D: maths untouched', !isMetaNarration("I've moved past the conversation part.", { languageLesson: false }));
 }
 
+// Task 39 §F (voice run 20, 1186 s): close narration.
+{
+  const lang = { languageLesson: true };
+  const raw = 'Goodbye! The lesson is closed, and the session notes are saved.';
+  check('39F: "Goodbye! The lesson is closed, and the session notes are saved." → "Goodbye!"', stripNoteCitationClause(raw, lang) === 'Goodbye!', stripNoteCitationClause(raw, lang));
+  check('39F: "The lesson is closed." dropped', isMetaNarration('The lesson is closed.', lang));
+  check('39F: "The session notes are saved." dropped', isMetaNarration('The session notes are saved.', lang));
+  check('39F: "We practised a lot, and the session notes are saved." → clause stripped', stripNoteCitationClause('We practised a lot, and the session notes are saved.', lang) === 'We practised a lot.', stripNoteCitationClause('We practised a lot, and the session notes are saved.', lang));
+  check('39F: "Goodbye!" kept', !isMetaNarration('Goodbye!', lang));
+  check('39F: "The lesson is complete. Well done today!" kept', !isMetaNarration('The lesson is complete. Well done today!', lang));
+  check('39F: "The shop is closed on Sundays." kept', !isMetaNarration('The shop is closed on Sundays.', lang));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

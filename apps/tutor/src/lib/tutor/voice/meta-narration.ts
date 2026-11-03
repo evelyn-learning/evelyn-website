@@ -787,8 +787,15 @@ const BOARD_STATE_LINE_RE = /^\s*(?:(?:now|so|okay|ok),?\s+)?(?:the|this|that|yo
  *      moved past the conversation part.", "However, the lesson has advanced
  *      to the summary, so I'll wrap up …" — the pointer narrated. */
 const PART_MOVE_NARRATION_RE = /^\s*(?:(?:okay|ok|so|now|right),?\s+)?I['’]ll (?:now |just )?(?:finish|close|end|wrap up|leave) (?:this|the) (?:[\p{L}-]+ )?(?:part|section)(?: now)?,? and (?:now )?(?:move|go|turn|head)(?: on)? to\b[^.!?]*[.!]?\s*$|^\s*(?:(?:okay|ok|so|now),?\s+)?I['’]ve (?:now |just |already )?(?:moved|gone|got) (?:past|on from|beyond|through) the [\p{L}\s'’-]{1,40} (?:part|section)[.!]?\s*$|^\s*(?:(?:however|but|so|and|now|okay),?\s+)?the lesson has (?:now |already |just )?(?:advanced|moved|gone|jumped)(?: on)? to (?:the )?[^,.!?]{1,40},?\s*so I['’]ll\b[^.!?]*[.!]?\s*$/iu;
+/*  §F (1186 s): "Goodbye! The lesson is closed, and the session notes are
+ *      saved." — tool state: "The lesson / session is closed" (alone or
+ *      with the notes clause) and "the (session) notes are saved / stored"
+ *      go; "Goodbye!" stays. "The lesson is complete." is not touched. */
+const CLOSED_STATE_SENTENCE_RE = /^\s*(?:(?:and|so|now),?\s+)?(?:the|our|this|today['’]s) (?:lesson|session|class) (?:is|has been) (?:now )?closed(?:,?\s*and (?:the |your |my |all )?(?:session |lesson )?notes (?:are|have been|were) (?:saved|stored|recorded|written))?[.!]?\s*$|^\s*(?:(?:and|so|now),?\s+)?(?:the |your |my |all )?(?:session |lesson )?notes (?:are|have been|were) (?:now )?(?:saved|stored|recorded|written)(?: now)?[.!]?\s*$/i;
+const NOTES_SAVED_CLAUSE_RE = /,?\s*and (?:the |your |my |all )?(?:session |lesson )?notes (?:are|have been|were) (?:now )?(?:saved|stored|recorded|written)(?: now)?(?=[.!]?\s*$)/i;
 const TASK39_SENTENCE_RULES: SentenceRule[] = [
   (x) => (PART_MOVE_NARRATION_RE.test(x) ? '' : x),
+  (x) => (CLOSED_STATE_SENTENCE_RE.test(x) ? '' : x.replace(NOTES_SAVED_CLAUSE_RE, '')),
   (x) => {
     if (BOARD_STATE_LINE_RE.test(x)) return '';
     if (NEXT_STEP_SENTENCE_RE.test(x) && !T39_SECOND_PERSON_RE.test(x)) return '';
