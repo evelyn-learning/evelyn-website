@@ -330,22 +330,25 @@ export function runChecks(dump) {
   // I. one correction card per student sentence; no card that is an ordered fragment of another on the same page
   const isSubseq = (a, b) => { let j = 0; for (const w of b) if (w === a[j]) j++; return j === a.length; };
   const fragCards = [];
+  // bot run r42 (95 s): a level-check model card beside the student's longer answer is not the class — the FRAGMENT must be a correction card
+  const correctionTexts = new Set(ev('sentence_board_auto').filter((e) => /kind=correction/.test(e.msg)).map((e) => norm((e.msg.match(/"([^"]+)"/) ?? [])[1] ?? '')).filter(Boolean));
   const pronTargets = new Set(events.filter((x) => x.type === 'pronunciation_auto_armed' || x.type === 'pronunciation_armed').map((e) => norm((e.msg.match(/"([^"]+)"/) ?? [])[1] ?? '')).filter(Boolean));
   for (const p of pages.filter((p) => !/Summary|まとめ/.test(p.title))) {
     const cards = p.items.filter((it) => it.action === 'showSentence').map((it) => ({ t: it.t, text: cardText(it), toks: norm(cardText(it)).split(' ').filter(Boolean) })).filter((c) => !pronTargets.has(c.toks.join(' ')));
-    for (const a of cards) for (const b of cards) if (a !== b && a.toks.length >= 3 && a.toks.length < b.toks.length && isSubseq(a.toks, b.toks)) fragCards.push(`${p.title.slice(0, 12)} ${a.t}s "${a.text}" ⊂ "${b.text}"`);
+    for (const a of cards) for (const b of cards) if (a !== b && correctionTexts.has(a.toks.join(' ')) && a.toks.length >= 3 && a.toks.length < b.toks.length && isSubseq(a.toks, b.toks)) fragCards.push(`${p.title.slice(0, 12)} ${a.t}s "${a.text}" ⊂ "${b.text}"`);
   }
   const twoCorrections = []; { const byT = new Map(); for (const e of ev('sentence_board_auto').filter((e) => /kind=correction/.test(e.msg) && !/not placed/.test(e.msg))) byT.set(e.t, (byT.get(e.t) ?? 0) + 1); for (const [t, n] of byT) if (n >= 2) twoCorrections.push(`${t}s ×${n}`); }
   ok('one correction card per student sentence', fragCards.length === 0 && twoCorrections.length === 0, [...twoCorrections, ...fragCards].join(' | ').slice(0, 300));
   // J. a student-sentence card placed on the departing page while the same turn advanced the part
   const advanceTs = ev('fixed_script_auto_advance').filter((e) => !/topic-intro/.test(e.msg)).map((e) => e.t).concat(ev('fixed_script_entry_note_planted').filter((e) => /brain advance/.test(e.msg) && !/"topic-intro"/.test(e.msg)).map((e) => e.t));
   const departing = [];
-  for (const w of wb.filter((w) => w.action === 'showSentence')) {
+  // the rule (Task 43 §J) is about the CORRECTION of the student's last sentence; a model card of an uncorrected answer stays on its part's page by design (Task 27 §B)
+  for (const w of wb.filter((w) => w.action === 'showSentence' && correctionTexts.has(norm(cardText(w))))) {
     const adv = advanceTs.find((t) => w.t >= t - 2 && w.t <= t + 2); if (adv === undefined) continue;
     const nextPage = wb.find((p) => p.action === 'newPage' && p.t >= adv - 2 && /^Part \d/.test(p.data?.title ?? ''));
     if (nextPage && nextPage.i > w.i) departing.push(`${w.t}s "${cardText(w).slice(0, 40)}" (page at ${nextPage.t}s)`);
   }
-  ok('no student card left on the departing page by an advancing turn', departing.length === 0, departing.join(' | ').slice(0, 300));
+  ok('no correction card left on the departing page by an advancing turn', departing.length === 0, departing.join(' | ').slice(0, 300));
   // K. menu part: the menu is asked within 20 s of the pronunciation page paint
   const pronPage = pages.find((p) => /Pronunciation|発音/.test(p.title));
   if (pronPage) {

@@ -808,9 +808,13 @@ const NOTES_SAVED_CLAUSE_RE = /,?\s*and (?:the |your |my |all )?(?:session |less
 // earlier, so let's move on."): the answered-question note obeyed aloud —
 // the question's state + an optional move-on clause, no second person.
 const ALREADY_ANSWERED_RE = /^\s*(?:(?:so|okay|ok|now|well),?\s+)?(?:the|that|this) (?:question|one)(?: on the board)? (?:was|is|has|had)(?: already)?(?: been)? (?:already )?answered(?: earlier| before| already)?,?\s*(?:so\s+)?(?:let['’]s (?:move|go) on|we['’]ll move on|moving on|I['’]ll move on)?[.!]?\s*$/i;
+// Task 43 §H round 2 (bot run r42, 666 s: "Understood. Let's move on …"): a
+// bare one-word verdict ack sentence sounds robotic — it goes, the rest stands.
+const TERSE_ACK_SENTENCE_RE = /^\s*(?:noted|accepted|understood|acknowledged|confirmed)[.!]\s*$/i;
 const TASK39_SENTENCE_RULES: SentenceRule[] = [
   (x) => (PART_MOVE_NARRATION_RE.test(x) ? '' : x),
   (x) => (ALREADY_ANSWERED_RE.test(x) ? '' : x),
+  (x) => (TERSE_ACK_SENTENCE_RE.test(x) ? '' : x),
   (x) => (CLOSED_STATE_SENTENCE_RE.test(x) ? '' : x.replace(NOTES_SAVED_CLAUSE_RE, '')),
   (x) => {
     if (BOARD_STATE_LINE_RE.test(x)) return '';

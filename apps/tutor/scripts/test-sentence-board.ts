@@ -1729,7 +1729,7 @@ test('final-3 r3: negative / contracted be-forms agree after the swap; an unmapp
 
 // ── Task 43 (voice run 21, embed-1793719782028) — §B, §I, §M ──
 test('43 B: the student\'s readiness answer / acknowledgement is never a card (47 s: "Yes, I am ready." carded)', () => {
-  for (const ack of ['Yes, I am ready.', "Yes, I'm ready.", 'OK, let\'s start.', 'Okay.', 'Yes.', 'Sure, ready.', 'はい、大丈夫です。', 'I am ready.', 'Yes please.']) {
+  for (const ack of ['Yes, I am ready.', "Yes, I'm ready.", 'OK, let\'s start.', 'Okay.', 'Yes.', 'Sure, ready.', 'はい、大丈夫です。', 'I am ready.', 'Yes please.', 'No, let\'s move on.', 'No.', 'Move on, please.', 'Next.', 'Skip.', 'No thanks, let\'s continue.']) {
     assert.equal(cardableStudentSentence(ack), null, ack);
   }
   assert.equal(planSentenceBoard38({ tutorText: "Great, let's begin. What are your main responsibilities at work?", studentLast: 'Yes, I am ready.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'Yes, I am ready.' }).length, 0);

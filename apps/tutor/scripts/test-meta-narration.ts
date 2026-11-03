@@ -1631,6 +1631,12 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('43D: "That question has already been answered." dropped', isMetaNarration('That question has already been answered.', lang));
   check('43D: merged chunk keeps the rest', stripNoteCitationClause("The question was already answered earlier, so let's move on. Now, how long have you worked there?", lang) === 'Now, how long have you worked there?', stripNoteCitationClause("The question was already answered earlier, so let's move on. Now, how long have you worked there?", lang));
   check('43D: "You already answered that well, so let\'s go deeper." kept', !isMetaNarration("You already answered that well, so let's go deeper.", lang));
+  // §H round 2 (bot run r42, 666 s: "Understood. Let's move on to the last step…"): a one-word verdict ack sentence goes; the rest stands.
+  for (const ack of ['Noted.', 'Accepted.', 'Understood.', 'Acknowledged.', 'Confirmed.']) check(`43H: "${ack}" dropped`, isMetaNarration(ack, lang));
+  check('43H: chunk keeps the rest', stripNoteCitationClause("Understood. Let's move on to the last step, your feedback.", lang) === "Let's move on to the last step, your feedback.", stripNoteCitationClause("Understood. Let's move on to the last step, your feedback.", lang));
+  check('43H: "Understood, let\'s close the pronunciation part now." kept (not a bare ack)', !isMetaNarration("Understood, let's close the pronunciation part now.", lang));
+  check('43H: "I understood the question." kept', !isMetaNarration('I understood the question.', lang));
+  check('43H: maths untouched', !isMetaNarration('Noted.', { languageLesson: false }));
   check('43: maths untouched', !isMetaNarration("Let me close this part and move on to the summary.", { languageLesson: false }) && !isMetaNarration("Here's the full sentence on the board.", { languageLesson: false }));
 }
 

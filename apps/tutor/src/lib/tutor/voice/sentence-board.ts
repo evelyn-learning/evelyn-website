@@ -453,7 +453,8 @@ export function hasStutter(text: string | null | undefined): boolean {
  *  「はい」「大丈夫です」, alone or stacked, optionally "please" — is never a
  *  card. A real sentence that opens like one ("Yes, I am ready for the
  *  meeting…") is not matched: the whole line must be the ack. */
-const STUDENT_ACK_UNIT = String.raw`(?:yes|yeah|yep|ok|okay|sure|alright|all right|fine|of course|ready|please|got it|i(?:'m| am) ready|let(?:'s| us) (?:start|begin|go|do it)|はい|ええ|うん|わかりました|大丈夫(?:です)?|お願いします|オッケー)`;
+// Round 2 (bot run r42, 362 s: "No, let's move on." carded): declines and move-on replies are acks too.
+const STUDENT_ACK_UNIT = String.raw`(?:yes|yeah|yep|ok|okay|sure|alright|all right|fine|of course|ready|please|got it|thanks|no thanks|no|nope|not now|next|skip|continue|go on|move on|let(?:'s| us) (?:start|begin|go|do it|move on|continue|skip)|i(?:'m| am) ready|that(?:'s| is) all|はい|いいえ|ええ|うん|わかりました|大丈夫(?:です)?|お願いします|次へ|オッケー)`;
 const STUDENT_ACK_LINE_RE = new RegExp(String.raw`^\s*(?:${STUDENT_ACK_UNIT}[,.!、。]?\s*)+$`, 'i');
 export function isStudentAckLine(text: string | null | undefined): boolean {
   return STUDENT_ACK_LINE_RE.test((text ?? '').trim());

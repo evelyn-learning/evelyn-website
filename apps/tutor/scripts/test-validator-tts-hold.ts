@@ -35,7 +35,9 @@ test('F: a move-on request holds (move_on_ignored)', () => {
 test('F: an ordinary turn never holds; text sessions, retries, non-fixed plans and the flag off never hold', () => {
   assert.equal(validatorTtsHold(base), false);
   assert.equal(validatorTtsHold({ ...base, noteDelivered: true, voice: false }), false);
-  assert.equal(validatorTtsHold({ ...base, noteDelivered: true, attempt: 1 }), false);
+  // bot run r42 (554 s): the retry after a pre-audio kill was cut audibly — attempt 1 holds too; later attempts never
+  assert.equal(validatorTtsHold({ ...base, noteDelivered: true, attempt: 1 }), true);
+  assert.equal(validatorTtsHold({ ...base, noteDelivered: true, attempt: 2 }), false);
   assert.equal(validatorTtsHold({ ...base, noteDelivered: true, fixedScript: false }), false);
   assert.equal(validatorTtsHold({ ...base, noteDelivered: true, enabled: false }), false);
 });
