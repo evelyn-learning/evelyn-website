@@ -84,7 +84,7 @@ export function runChecks(dump) {
   info(`auto advances: ${silentAdvance.length} (${silentAdvance.map((e) => e.msg.replace(/"/g, '')).join('; ').slice(0, 300)})`);
 
   // 3. narrated notes / third-person learner / plan clauses in spoken text
-  const NARR = /\[(?:runtime|system) note|^(?:gently|briefly|then|now),? (?:point|model|name|acknowledge|accept|praise)\b|\bmodel the pattern\b|\band ask for one\b|^let me (?:ask|say) (?:that |it )?again simply|\bthe student(?:'s)?\b|\bthe learner(?:'s)?\b|\bI gave them\b|\bthe correct response\b|\bso I should\b|\bis only a repeat\b|\bbring (?:that|it) back\b|\brepeat of the sentence\b|\bruntime\b|\bvalidator\b|\bthe board already\b|\bthis note\b|\bnotes above\b|\binstructions for me\b|\bcarry on with the lesson\b|\banswer your last point first\b|\blesson isn'?t over yet\b|\bin japanese, the (?:word|phrase|sentence) is\b|\bfinally said\b|\bphrase large\b|\bnote below\b|\bmeasured result\b|\bdidn'?t come through\b|\bi'?ll go with\b/i;
+  const NARR = /\[(?:runtime|system) note|^(?:gently|briefly|then|now),? (?:point|model|name|acknowledge|accept|praise)\b|\bmodel the pattern\b|\band ask for one\b|^let me (?:ask|say) (?:that |it )?again simply|\bthe student(?:'s)?\b|\bthe learner(?:'s)?\b|\bI gave them\b|\bthe correct response\b|\bso I should\b|\bis only a repeat\b|\bbring (?:that|it) back\b|\brepeat of the sentence\b|\bruntime\b|\bvalidator\b|\bthe board already\b|\bthis note\b|\bnotes above\b|\binstructions for me\b|\bcarry on with the lesson\b|\banswer your last point first\b|\blesson isn'?t over yet\b|\bin japanese, the (?:word|phrase|sentence) is\b|\bfinally said\b|\bphrase large\b|\bnote below\b|\bmeasured result\b|\bdidn'?t come through\b|\bi'?ll go with\b|\b(?:was|has been|is) already answered\b|\balready answered (?:earlier|before)\b|\bhere'?s the (?:full |whole |complete )?sentence on the board\b|\btake a moment to look at the (?:sentence|board|card)\b|\b(?:let me|i'?ll) close this part\b/i;
   const narr = tutor.filter((x) => NARR.test(x.text));
   ok('no narrated notes in tutor speech', narr.length === 0, narr.map((x) => `${x.t}s "${x.text.slice(0, 100)}"`).join(' | '));
 
@@ -271,6 +271,103 @@ export function runChecks(dump) {
     if (!pg) latePages.push(`${a.t}s → ${to}`);
   }
   ok('every advance painted its page before the next one', latePages.length === 0, latePages.join(' | '));
+
+  // 10i. voice run 21 (embed-1793719782028, Praveen): visual / flow classes the text checks missed (handoff §4)
+  const SENT_SPLIT = /(?<=[.?!。？！])\s+/;
+  const sentencesOf = (t) => t.split(SENT_SPLIT).map((x) => x.trim()).filter(Boolean);
+  const cardText = (w) => String(w.data?.sentence ?? '');
+  // B. the student's readiness answer / acknowledgement is never a card
+  const READINESS = /^(?:(?:yes|yeah|yep|ok|okay|sure|alright|all right|fine|はい|ええ|うん)[,.!、。]?\s*)*(?:i(?:'m| am) ready|let'?s (?:start|begin|go|do it)|ready|(?:yes|yeah|yep|ok|okay|sure|alright|はい|わかりました|大丈夫です)|please)?[.!。]?$/i;
+  const readinessCards = wb.filter((w) => w.action === 'showSentence' && content(cardText(w)).length <= 4 && READINESS.test(cardText(w).trim()) && student.some((s) => Math.abs(s.t - w.t) <= 8 && norm(s.text) === norm(cardText(w))));
+  ok('no student readiness answer / acknowledgement carded', readinessCards.length === 0, readinessCards.map((w) => `${w.t}s "${cardText(w)}"`).join(' | ').slice(0, 300));
+  // C. two consecutive sentences in one turn that both announce the same part
+  const partNames = (() => {
+    const tbl = wb.find((w) => w.action === 'showTable' && Array.isArray(w.data?.rows));
+    const fromTable = tbl ? tbl.data.rows.map((r) => String(r[1] ?? '')).filter(Boolean) : [];
+    const fromPages = partPages.map((p) => (p.title.split('·')[1] ?? '').trim()).filter(Boolean);
+    return [...new Set([...fromTable, ...fromPages].map((n) => norm(n)).filter((n) => n && !/^(?:overview|summary|level check)$/.test(n)))];
+  })();
+  const ANNOUNCE = /\b(?:move (?:on )?to|moving (?:on )?to|go on to|turn to|let'?s (?:practi[sc]e|do|start|try|look at|work on|go to)|we'?ll (?:practi[sc]e|do|start|work on|look at|move)|we will (?:practi[sc]e|do|start)|next,? (?:we|let)|time for|now for|on to)\b/i;
+  const dupAnnounce = [];
+  for (const x of tutor) {
+    const ss = sentencesOf(x.text);
+    for (let k = 1; k < ss.length; k++) {
+      const a = norm(ss[k - 1]), b = norm(ss[k]);
+      const shared = partNames.find((n) => a.includes(n) && b.includes(n));
+      if (shared && ANNOUNCE.test(ss[k - 1]) && ANNOUNCE.test(ss[k]) && !/[?？]/.test(ss[k - 1] + ss[k])) dupAnnounce.push(`${x.t}s "${ss[k - 1].slice(0, 50)}" / "${ss[k].slice(0, 50)}"`);
+    }
+  }
+  ok('no part announced twice in consecutive sentences', dupAnnounce.length === 0, dupAnnounce.join(' | ').slice(0, 300));
+  // D. an answered question re-asked in ANY part (10e covers the summary; this covers everything before it)
+  {
+    const sumT = ev('fixed_script_note_delivered').find((e) => /segment "summary"/.test(e.msg))?.t ?? ev('fixed_script_entry_note_planted').find((e) => /"summary"/.test(e.msg))?.t ?? Infinity;
+    // the re-ask names the board question ("back to the question on the board: …"), the earlier ask got a substantive answer, and the tutor's reply to that answer affirmed it
+    const BOARD_REASK = /\b(?:back to|again|once more|return to)?[^.?!]*\b(?:question on the board|board question|question from the board)\b/i;
+    const AFFIRM = /\b(?:correct|right|good|great|nice|exactly|perfect|yes|well done|natural version)\b|そうですね|正しい|いいですね/i;
+    const asked = []; const reAsked = [];
+    for (const x of tutor.filter((y) => y.t < sumT)) {
+      const q = qOf(x); if (!q || q.length < 4) { continue; }
+      const prior = BOARD_REASK.test(x.text) ? asked.find((p) => jaccard(p.q, q) >= 0.6 && student.some((s) => s.i > p.i && s.i < x.i && content(s.text).length >= 3 && !/\?\s*$/.test(s.text) && !TANGENT_SET.has(s.text.trim()) && AFFIRM.test(tutor.find((r) => r.i > s.i)?.text ?? ''))) : null;
+      if (prior) reAsked.push(`${prior.t}s→${x.t}s "${q.join(' ').slice(0, 60)}"`);
+      asked.push({ q, i: x.i, t: x.t });
+    }
+    const engineSaw = ev('correct_retry_note_planted').filter((e) => /earlier answered question re-asked/.test(e.msg) && tutor.some((x) => Math.abs(x.t - e.t) <= 2 && /\?\s*$/.test(x.text.trim())));
+    for (const e of engineSaw) if (!reAsked.some((r) => r.includes(`→${e.t - 1}s`) || r.includes(`→${e.t}s`) || r.includes(`→${e.t + 1}s`))) reAsked.push(`${e.t}s engine detected the re-ask but the question still spoke`);
+    ok('no answered board question re-asked before the summary', reAsked.length === 0, reAsked.join(' | ').slice(0, 300));
+  }
+  // E. "<Persona> here:" lead in spoken text (the bare "Ryota here." sentence is already dropped; the lead form survived)
+  const persona = (ev('persona_resolved')[0]?.msg.match(/teacher=([a-z]+)/i) ?? [])[1] ?? '';
+  const LEAD = persona ? new RegExp(`(?:^|[.!?。」]\\s*)${persona} here[:,.]`, 'i') : /(?:^|[.!?。」]\s*)[A-Z][a-z]+ here:/;
+  const leads = tutor.filter((x) => LEAD.test(x.text));
+  ok('no "<persona> here:" lead in tutor speech', leads.length === 0, leads.map((x) => `${x.t}s`).join(' '));
+  // F. audible cuts: a validator kill after sentences already played
+  const audibleCuts = ev('judge_kill_snapshot').map((e) => ({ t: e.t, heard: Number((e.msg.match(/heard=(\d+)/) ?? [])[1] ?? 0) })).filter((c) => c.heard >= 1);
+  if (audibleCuts.length) warn(`audible cuts (validator kill after ${audibleCuts.reduce((n, c) => n + c.heard, 0)} heard sentences)`, `${audibleCuts.length}× at ${audibleCuts.map((c) => `${c.t}s(heard=${c.heard})`).join(' ')}`);
+  else info('audible cuts: 0');
+  // H. one-word verdict acks ("Noted." / "Accepted.") sound robotic
+  const terseAcks = tutor.filter((x) => /^(?:noted|accepted|acknowledged|understood|confirmed)[.!]\s/i.test(x.text.trim()));
+  ok('no one-word verdict ack ("Noted." / "Accepted.")', terseAcks.length === 0, terseAcks.map((x) => `${x.t}s "${x.text.slice(0, 30)}"`).join(' | '));
+  // I. one correction card per student sentence; no card that is an ordered fragment of another on the same page
+  const isSubseq = (a, b) => { let j = 0; for (const w of b) if (w === a[j]) j++; return j === a.length; };
+  const fragCards = [];
+  const pronTargets = new Set(events.filter((x) => x.type === 'pronunciation_auto_armed' || x.type === 'pronunciation_armed').map((e) => norm((e.msg.match(/"([^"]+)"/) ?? [])[1] ?? '')).filter(Boolean));
+  for (const p of pages.filter((p) => !/Summary|まとめ/.test(p.title))) {
+    const cards = p.items.filter((it) => it.action === 'showSentence').map((it) => ({ t: it.t, text: cardText(it), toks: norm(cardText(it)).split(' ').filter(Boolean) })).filter((c) => !pronTargets.has(c.toks.join(' ')));
+    for (const a of cards) for (const b of cards) if (a !== b && a.toks.length >= 3 && a.toks.length < b.toks.length && isSubseq(a.toks, b.toks)) fragCards.push(`${p.title.slice(0, 12)} ${a.t}s "${a.text}" ⊂ "${b.text}"`);
+  }
+  const twoCorrections = []; { const byT = new Map(); for (const e of ev('sentence_board_auto').filter((e) => /kind=correction/.test(e.msg) && !/not placed/.test(e.msg))) byT.set(e.t, (byT.get(e.t) ?? 0) + 1); for (const [t, n] of byT) if (n >= 2) twoCorrections.push(`${t}s ×${n}`); }
+  ok('one correction card per student sentence', fragCards.length === 0 && twoCorrections.length === 0, [...twoCorrections, ...fragCards].join(' | ').slice(0, 300));
+  // J. a student-sentence card placed on the departing page while the same turn advanced the part
+  const advanceTs = ev('fixed_script_auto_advance').filter((e) => !/topic-intro/.test(e.msg)).map((e) => e.t).concat(ev('fixed_script_entry_note_planted').filter((e) => /brain advance/.test(e.msg) && !/"topic-intro"/.test(e.msg)).map((e) => e.t));
+  const departing = [];
+  for (const w of wb.filter((w) => w.action === 'showSentence')) {
+    const adv = advanceTs.find((t) => w.t >= t - 2 && w.t <= t + 2); if (adv === undefined) continue;
+    const nextPage = wb.find((p) => p.action === 'newPage' && p.t >= adv - 2 && /^Part \d/.test(p.data?.title ?? ''));
+    if (nextPage && nextPage.i > w.i) departing.push(`${w.t}s "${cardText(w).slice(0, 40)}" (page at ${nextPage.t}s)`);
+  }
+  ok('no student card left on the departing page by an advancing turn', departing.length === 0, departing.join(' | ').slice(0, 300));
+  // K. menu part: the menu is asked within 20 s of the pronunciation page paint
+  const pronPage = pages.find((p) => /Pronunciation|発音/.test(p.title));
+  if (pronPage) {
+    const MENU_TEXT = /(?:individual words|complete sentence|speaking more naturally|skip and continue)[^.?!]*(?:individual words|complete sentence|speaking more naturally|skip and continue)|\b(?:1, 2, 3,? or 4|option[s]? 1)\b/i;
+    const firstMenu = ev('fixed_script_menu_asked').map((e) => e.t).concat(tutor.filter((x) => MENU_TEXT.test(x.text) && /[?？]/.test(x.text)).map((x) => x.t)).filter((t) => t >= pronPage.t - 20).sort((a, b) => a - b)[0];
+    const pronEntry = ev('fixed_script_entry_note_planted').filter((e) => /"pronunciation"/.test(e.msg)).map((e) => e.t)[0] ?? pronPage.t;
+    const skipped = ev('typed_advance_app').concat(ev('fixed_script_auto_advance')).some((e) => e.t >= pronEntry && e.t <= pronEntry + 25 && /summary/.test(e.msg));
+    ok('pronunciation menu asked within 20 s of the page', skipped || (firstMenu !== undefined && firstMenu - pronPage.t <= 20), firstMenu === undefined ? `page ${pronPage.t}s, menu never asked` : `page ${pronPage.t}s → menu ${firstMenu}s (${firstMenu - pronPage.t}s)`);
+  }
+  // M. summary page: no re-card of a sentence already carded earlier, and no re-card of the student's own earlier sentence
+  if (summaryPage) {
+    const earlier = new Set(wb.filter((w) => w.action === 'showSentence' && w.t < summaryPage.t).map((w) => norm(cardText(w))));
+    const stemmed = (t) => content(t).map(stem);
+    const reCards = [];
+    for (const it of summaryPage.items.filter((it) => it.action === 'showSentence')) {
+      const txt = cardText(it);
+      if (earlier.has(norm(txt))) { reCards.push(`${it.t}s "${txt}" (carded earlier)`); continue; }
+      const own = student.find((s) => s.t < summaryPage.t && content(s.text).length >= 3 && jaccard(stemmed(s.text), stemmed(txt)) >= 0.75);
+      if (own) reCards.push(`${it.t}s "${txt}" (student's ${own.t}s sentence)`);
+    }
+    ok('summary page re-cards nothing from earlier', reCards.length === 0, reCards.join(' | ').slice(0, 300));
+  }
 
   // 11. counts worth a look
   const counts = ['brain_validator_retry', 'idle_nudge_sent', 'drop_self_voice', 'meta_narration_dropped', 'fixed_script_noask_continue', 'fixed_script_offer_continue', 'transition_ask_off_part', 'judge_kill_resume_diverged', 'menu_pick_resolved', 'adjacent_duplicate_sentence_dropped', 'typed_turn_superseded', 'render_dropped'];
