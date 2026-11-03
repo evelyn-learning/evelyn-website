@@ -293,6 +293,34 @@ export function continuationRepeatsSentence(sentence: string | null | undefined,
   return splitSentences(stripMarkdownEmphasis(continuedTurn)).some((x) => (x.match(/[\p{L}\p{N}]+/gu) ?? []).length >= 4 && sameSentence(x, s));
 }
 
+/** Task 38 §D (voice run 19, 963 / 971 s: "Let's hear more about the
+ *  challenge itself." then, opening the no-ask continuation, "Let's hear more
+ *  about that challenge, Praveen."): the continuation's FIRST sentence that
+ *  restates the continued turn's LAST sentence — content words (≥ 3 letters,
+ *  stopwords, deictics and the given names out, ≥ 2 each side) with Jaccard
+ *  ≥ 0.7 — is dropped. Pure. */
+export const CONTINUATION_LAST_SENTENCE_JACCARD = 0.7;
+const CONT_ECHO_STOP = new Set(['the', 'that', 'this', 'these', 'those', 'itself', 'and', 'but', 'with', 'for', 'from', 'about', 'your', 'you', 'let', "let's", 'lets', 'now', 'okay', 'then', 'just', 'here', 'there', 'some', 'what', 'how', 'can', 'could', 'would', 'please', 'are', 'was', 'were', 'have', 'has', 'had', 'did', 'does']);
+function contEchoWords(s: string, names: ReadonlySet<string>): Set<string> {
+  return new Set((s.toLowerCase().match(/[\p{L}'’]+/gu) ?? [])
+    .map((w) => w.replace(/[’]/g, "'"))
+    .filter((w) => w.length >= 3 && !CONT_ECHO_STOP.has(w) && !names.has(w)));
+}
+export function continuationEchoesLastSentence(sentence: string | null | undefined, continuedTurn: string | null | undefined, names?: readonly string[] | null): boolean {
+  const s = (sentence ?? '').trim();
+  if (!s || !continuedTurn) return false;
+  const sentences = splitSentences(stripMarkdownEmphasis(continuedTurn));
+  const last = sentences[sentences.length - 1] ?? '';
+  if (!last) return false;
+  const nameSet = new Set((names ?? []).flatMap((n) => (n ?? '').toLowerCase().split(/\s+/)).filter(Boolean));
+  const a = contEchoWords(last, nameSet);
+  const b = contEchoWords(s, nameSet);
+  if (a.size < 2 || b.size < 2) return false;
+  let inter = 0;
+  for (const w of b) if (a.has(w)) inter += 1;
+  return inter / (a.size + b.size - inter) >= CONTINUATION_LAST_SENTENCE_JACCARD;
+}
+
 // ── Task 26 §B1: the forced close waits for the answer to its question ────
 
 /** What the forced-close check does after a tutor turn. 'none' ⇒ not due

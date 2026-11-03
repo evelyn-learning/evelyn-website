@@ -8,7 +8,8 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, endsWithRepeatAsk, endsWithSayOrListenAsk, continuationRepeatsSentence, endsWithImperativeReplyRequest } from '../src/lib/tutor/lesson-plan/announced-move';
+import { announcedMoveTarget, MOVE_PHRASE_RE, segmentKeywords, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_MIN_MS, ANNOUNCED_CONTINUE_MAX_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, endsWithRepeatAsk, endsWithSayOrListenAsk, continuationRepeatsSentence, endsWithImperativeReplyRequest, continuationEchoesLastSentence, CONTINUATION_LAST_SENTENCE_JACCARD } from '../src/lib/tutor/lesson-plan/announced-move';
+import { isQuestionLeadIn } from '../src/lib/tutor/voice/correct-retry';
 import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_CONTINUE_DIRECTIVE, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, isFixedScriptContinueDirective, fixedScriptContinueDirective, FIXED_SCRIPT_NOASK_CORRECTION_DIRECTIVE,
   FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, PREMATURE_FAREWELL_REASON } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { TRANSITION_ASK_REASON } from '../src/lib/tutor/lesson-plan/transition-ask';
@@ -387,6 +388,37 @@ test('31A2: VTR wiring — the no-ask guard sees the arm decided this turn', () 
   assert.ok(src.includes('turnPronTargetDetected = !!detectedAuto;'));
   assert.ok(src.includes('pronunciationArmed: !!clipCaptureRef.current?.isArmed() || pronunciationArmSeqRef.current !== pronunciationArmSeqAtTurnStart || turnPronTargetDetected,'));
   assert.ok(src.indexOf('turnPronTargetDetected = !!detectedAuto;') < src.indexOf('pronunciationArmed: !!clipCaptureRef.current?.isArmed() ||'), 'the arm runs before the no-ask check');
+});
+
+// ── Task 38 §D (voice run 19, 963 / 971 s): a lead-in kept after its question was dropped ──
+test('38 §D: question lead-ins are recognised; real sentences are not', () => {
+  for (const x of ["Let's hear more about the challenge itself.", "Now, let's talk more about your project.", "Here's a question:", "Here is one more question for you.", 'Now,', 'Okay.', 'Tell me about', 'So tell me more about:'])
+    assert.equal(isQuestionLeadIn(x), true, x);
+  for (const x of ['Tell me about your weekend.', "Let's hear more about it?", "Let's talk about the past simple.", 'Now, what did you do to solve it?', 'You collected money from people, and that was the core of your role.', 'Here\'s a question: "What did you do?"'])
+    assert.equal(isQuestionLeadIn(x), false, x);
+});
+test('38 §D: the continuation first sentence ≈ the continued turn LAST sentence is dropped (Jaccard ≥ 0.7)', () => {
+  assert.equal(CONTINUATION_LAST_SENTENCE_JACCARD, 0.7);
+  const prev = "You collected money from people, and that was the core of your role. Let's hear more about the challenge itself.";
+  assert.equal(continuationEchoesLastSentence("Let's hear more about that challenge, Praveen.", prev, ['Praveen']), true);
+  assert.equal(continuationEchoesLastSentence('What did you do to solve it?', prev, ['Praveen']), false);
+  // compared with the LAST sentence only
+  assert.equal(continuationEchoesLastSentence('You collected money from people for the project.', prev, ['Praveen']), false);
+  assert.equal(continuationEchoesLastSentence('', prev, null), false);
+});
+test('38 §D: VTR holds the lead-in, drops it with a dropped question / at stream end, merges it otherwise (pins)', () => {
+  const src = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(src.includes("if (!heldLeadIn && isQuestionLeadIn(updatedSentence)) {"));
+  assert.ok(src.includes("(ev as { text?: string }).text = `${heldLeadIn} ${(ev.text as string) || updatedSentence}`;"));
+  // every question-drop site drops the held lead-in
+  for (const ev of ['same_question_retry_ask_dropped', 'answered_question_reask_dropped', 'probe_reask_dropped', 'no_attempt_reask_dropped']) {
+    const at = src.indexOf(`onDebugEvent?.('${ev}'`);
+    assert.ok(at > 0 && src.slice(at, at + 200).includes('dropLeadInWithQuestion();'), ev);
+  }
+  assert.ok(src.includes("onDebugEvent?.('question_lead_in_dropped', `\"${heldLeadIn.slice(0, 60)}\" (nothing followed)`);"));
+  assert.ok(src.includes('continuationEchoesLastSentence(updatedSentence, continuedTurnText, studentName ? [studentName] : [])'));
+  const flags = readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8');
+  assert.match(flags, /export const TUTOR_QUESTION_LEAD_IN_HOLD = process\.env\.NEXT_PUBLIC_TUTOR_QUESTION_LEAD_IN_HOLD !== 'off';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -1272,3 +1272,11 @@ export const TUTOR_LESSON_TIME_GUARD = process.env.NEXT_PUBLIC_TUTOR_LESSON_TIME
  *  re-asks the pending question. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_SILENT_TURN_FALLBACK=off. */
 export const TUTOR_SILENT_TURN_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_SILENT_TURN_FALLBACK !== 'off';
+
+/** Task 38 §D (voice run 19, 963–971 s: a lead-in left behind by a dropped
+ *  question, then said again by the continuation): in a language /
+ *  fixed-script lesson a question lead-in is held one sentence (dropped with
+ *  its dropped question, or when nothing follows), and a continuation's first
+ *  sentence restating the continued turn's last sentence is dropped.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_QUESTION_LEAD_IN_HOLD=off. */
+export const TUTOR_QUESTION_LEAD_IN_HOLD = process.env.NEXT_PUBLIC_TUTOR_QUESTION_LEAD_IN_HOLD !== 'off';

@@ -1274,3 +1274,30 @@ export function probeReasks(sentence: string | null | undefined, previousAsks: R
   const mine = reaskStems(/[?？]/.test(s) ? (turnAskGist(s) || s) : s);
   return asks.filter((a) => !isJapaneseSentence(a)).some((a) => subsetJaccard(mine, reaskStems(turnAskGist(a) || a)));
 }
+
+/**
+ * Task 38 §D (voice run 19, 963 s: the check-in drop removed "How did you
+ * handle it?" and left "Let's hear more about the challenge itself." — the
+ * no-ask continuation then said the same lead again). A sentence that only
+ * introduces the question after it:
+ *   - "(Now / So / Okay,) let's hear / talk / find out / learn (a bit) more about …" (no "?");
+ *   - "Here's a question (for you)(:)" / "Here is my / one / the next / another question";
+ *   - a bare "Now," / "Next," / "So," / "Okay," (nothing after the comma);
+ *   - "Tell me (more) about" with no object (end or colon).
+ * The caller holds such a sentence one step: it is spoken with the next kept
+ * sentence, dropped with a dropped question, and dropped when nothing
+ * follows. Pure.
+ */
+const LEAD_IN_LEAD = String.raw`^\s*(?:(?:now|so|okay|ok|alright|all right|right|good|great),?\s+)*`;
+const LEAD_IN_SHAPES: readonly RegExp[] = [
+  new RegExp(LEAD_IN_LEAD + String.raw`let['’]?s (?:hear|talk|find out|learn|think|go) (?:a (?:bit|little) )?more about\b[^.!?。！？]*[.!:]?\s*$`, 'i'),
+  new RegExp(LEAD_IN_LEAD + String.raw`here['’]?s (?:a|my|one|the next|another|one more) question(?: for you)?\s*[.:!]?\s*$`, 'i'),
+  new RegExp(LEAD_IN_LEAD + String.raw`here is (?:a|my|one|the next|another|one more) question(?: for you)?\s*[.:!]?\s*$`, 'i'),
+  /^\s*(?:now|next|so|okay|ok|alright|then)\s*[,.:…]+\s*$/i,
+  new RegExp(LEAD_IN_LEAD + String.raw`tell me (?:a (?:bit|little) )?(?:more )?about\s*[.:]?\s*$`, 'i'),
+];
+export function isQuestionLeadIn(sentence: string | null | undefined): boolean {
+  const s = (sentence ?? '').trim();
+  if (!s || /[?？]/.test(s) || /["“「]/.test(s)) return false;
+  return LEAD_IN_SHAPES.some((re) => re.test(s));
+}

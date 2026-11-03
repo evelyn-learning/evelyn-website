@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, resolveMenuPickLoose, loosePickAllowed, menuPickNote, menuAskedIn, menuReplyIsPick, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { emptyTurnFallbackLine, silentTurnFallbackLine, lastShowSentenceOf, SILENT_TURN_STATE_TOOLS } from '@/lib/tutor/voice/empty-turn-fallback';
@@ -232,7 +232,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness, isQuestionLeadIn } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -445,7 +445,7 @@ import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, o
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
-import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence } from '@/lib/tutor/lesson-plan/announced-move';
+import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
  *  attributed to the bridge (not to the brain's first sentence). */
@@ -14717,6 +14717,14 @@ export function VoiceTutorRealtime({
         let thankAckSpoken = false;
         // Task 33 fix round 1 (R9-3): the last sentence was a dropped re-ask.
         let sqReaskDroppedPrev = false;
+        // Task 38 §D: a question lead-in held one step (spoken with the next
+        // kept sentence; dropped with a dropped question or when nothing follows).
+        let heldLeadIn = '';
+        const dropLeadInWithQuestion = (): void => {
+          if (!heldLeadIn) return;
+          onDebugEvent?.('question_lead_in_dropped', `"${heldLeadIn.slice(0, 60)}" (its question was dropped)`);
+          heldLeadIn = '';
+        };
         // Task 30 fix round 3 (P-2): stream sentences this attempt (kept or dropped).
         let streamSentencesThisAttempt = 0;
         // Task 30 fix round 1 S2: the attempt's previous sentence was dropped as narration.
@@ -17290,6 +17298,7 @@ export function VoiceTutorRealtime({
                   if (sqPersonalPinned && (retryReasksQuestion(updatedSentence, sqPersonalPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
                     sqReaskDroppedPrev = true;
                     onDebugEvent?.('same_question_retry_ask_dropped', `"${updatedSentence.slice(0, 80)}"`);
+                    dropLeadInWithQuestion();
                     continue;
                   }
                   // Task 35 §B (bot run r14, 737 s): the closing part re-asks a
@@ -17298,6 +17307,7 @@ export function VoiceTutorRealtime({
                     const agHit = reasksAnsweredQuestion(updatedSentence, answeredGuardQs);
                     if (agHit) {
                       onDebugEvent?.('answered_question_reask_dropped', `"${updatedSentence.slice(0, 80)}" ≈ "${agHit.slice(0, 60)}"`);
+                      dropLeadInWithQuestion();
                       continue;
                     }
                   }
@@ -17307,6 +17317,7 @@ export function VoiceTutorRealtime({
                     sqReaskDroppedPrev = true;
                     probeReaskDropped = true;
                     onDebugEvent?.('probe_reask_dropped', `"${updatedSentence.slice(0, 80)}"`);
+                    dropLeadInWithQuestion();
                     continue;
                   }
                   // Task 34 §A: after the no-attempt note the turn re-asks the same ask —
@@ -17315,6 +17326,7 @@ export function VoiceTutorRealtime({
                     sqReaskDroppedPrev = true;
                     noAttemptDropped = true;
                     onDebugEvent?.('no_attempt_reask_dropped', `"${updatedSentence.slice(0, 80)}"`);
+                    dropLeadInWithQuestion();
                     continue;
                   }
                   sqReaskDroppedPrev = false;
@@ -17332,6 +17344,13 @@ export function VoiceTutorRealtime({
                     onDebugEvent?.('continuation_duplicate_dropped', updatedSentence.slice(0, 80));
                     continue;
                   }
+                  // Task 38 §D (voice run 19, 971 s): the continuation's first
+                  // sentence restating the continued turn's LAST sentence.
+                  if (TUTOR_QUESTION_LEAD_IN_HOLD && continuedTurnText && !adjacentPrevSentence && !heldLeadIn
+                    && continuationEchoesLastSentence(updatedSentence, continuedTurnText, studentName ? [studentName] : [])) {
+                    onDebugEvent?.('continuation_duplicate_dropped', `${updatedSentence.slice(0, 80)} (≈ the continued turn's last sentence)`);
+                    continue;
+                  }
                   // Task 30 §F1 (GDI run 17, 688 s): a near-copy of the sentence just before it.
                   if (TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate(adjacentPrevSentence, updatedSentence)) {
                     onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" after "${adjacentPrevSentence.slice(0, 40)}"`);
@@ -17343,6 +17362,21 @@ export function VoiceTutorRealtime({
                     continue;
                   }
                   if (isThankAck(updatedSentence)) thankAckSpoken = true;
+                  // Task 38 §D (voice run 19, 963 s): a lead-in that only
+                  // introduces the next question waits for that question —
+                  // spoken with the next kept sentence (one chunk), dropped
+                  // with a dropped question or when nothing follows.
+                  if (TUTOR_QUESTION_LEAD_IN_HOLD && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current))) {
+                    if (!heldLeadIn && isQuestionLeadIn(updatedSentence)) {
+                      heldLeadIn = (ev.text as string) || updatedSentence;
+                      onDebugEvent?.('question_lead_in_held', heldLeadIn.slice(0, 60));
+                      continue;
+                    }
+                    if (heldLeadIn) {
+                      (ev as { text?: string }).text = `${heldLeadIn} ${(ev.text as string) || updatedSentence}`;
+                      heldLeadIn = '';
+                    }
+                  }
                   adjacentPrevSentence = updatedSentence;
                   // The derivation that follows the announcement is ordinary
                   // maths with no per-sentence signature — dropped by position
@@ -19570,6 +19604,11 @@ export function VoiceTutorRealtime({
                   // output-budget.ts: the cap cut a tool call; the brain finished it in one more call.
                   onDebugEvent?.('tool_call_continued', String((ev as { name?: string }).name ?? ''));
                 } else if (ev.type === 'done') {
+                  // Task 38 §D: a lead-in with nothing after it is never spoken.
+                  if (heldLeadIn) {
+                    onDebugEvent?.('question_lead_in_dropped', `"${heldLeadIn.slice(0, 60)}" (nothing followed)`);
+                    heldLeadIn = '';
+                  }
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   if (lastStopReason === 'max_tokens') maxTokensStopThisAttempt = true;
                   // `||` not `??`: a give-up done frame (stop=error) can carry
