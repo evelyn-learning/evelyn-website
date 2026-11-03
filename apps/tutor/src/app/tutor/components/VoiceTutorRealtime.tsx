@@ -17303,7 +17303,7 @@ export function VoiceTutorRealtime({
                   }
                   // Task 36 §A (bot run r18, 1037 s): the check-in turn asks the
                   // same thing a third time — the ask goes (with its starter).
-                  if (probeCheckinAsks && (probeReasks(updatedSentence, probeCheckinAsks) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
+                  if (probeCheckinAsks && (probeReasks(updatedSentence, probeCheckinAsks, { studentText: transcript }) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
                     sqReaskDroppedPrev = true;
                     probeReaskDropped = true;
                     onDebugEvent?.('probe_reask_dropped', `"${updatedSentence.slice(0, 80)}"`);

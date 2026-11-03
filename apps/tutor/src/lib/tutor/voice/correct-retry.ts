@@ -1195,19 +1195,66 @@ export function reasksAnsweredQuestion(sentence: string | null | undefined, answ
 // Jaccard ≥ 0.5), or a Japanese question sharing a 2-character Han /
 // katakana run with them ("その製品は何でしたか？"). Pure.
 // ─────────────────────────────────────────────────────────────────────────
-const PROBE_CJK_RUN_RE = /[\p{Script=Han}\p{Script=Katakana}ー]{2,}/gu;
-const probeBigrams = (s: string) => new Set((s.match(PROBE_CJK_RUN_RE) ?? []).flatMap((r) => [...Array(r.length - 1).keys()].map((i) => r.slice(i, i + 2))));
-export function probeReasks(sentence: string | null | undefined, previousAsks: ReadonlyArray<string | null | undefined>): boolean {
-  const s = (sentence ?? '').trim();
-  if (!s) return false;
-  const asks = previousAsks.filter((a): a is string => !!a && !!a.trim());
-  if (!asks.length) return false;
-  const questions = asks.flatMap((a) => a.split(/(?<=[?？])\s*/).map((x) => x.trim()).filter((x) => /[?？]\s*$/.test(x)));
-  if (/[A-Za-z]{3,}/.test(s) && questions.some((q) => /[A-Za-z]{3,}/.test(q) && retryReasksQuestion(s, q))) return true;
-  if (/[?？]\s*$|か[。]?\s*$/.test(s) && /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(s) && !/[A-Za-z]{3,}/.test(s)) {
-    const mine = probeBigrams(s);
-    const theirs = new Set(asks.flatMap((a) => [...probeBigrams(a)]));
-    for (const b of mine) if (theirs.has(b)) return true;
+// Fix round 1 (review IMPORTANT-1 + the r19 audit): the candidate is
+// compared ONLY with the two previous turns' ASK sentences — each turn's last
+// question, plus (in a bilingual turn) the other-script sentence right
+// before it, its gloss. A re-ask adds no new content: its content tokens are
+// a subset of one ask's AND their Jaccard is ≥ 0.5. English tokens = content
+// stems; Japanese tokens = the 2+ character runs between hiragana /
+// punctuation, wh-words and 質問-type meta words aside. A repeat / correction
+// ask ("say … once more", "repeat", "try … again", or a quote of the
+// student's own words or a corrected form) is never a probe re-ask.
+const PROBE_JA_STOP = new Set(['質問', '今日', '英語', '日本語', '一文', 'でし', 'です']);
+const jaTokens = (s: string) => new Set((s.split(/[\p{Script=Hiragana}\s、。，．・「」『』（）()?？!！:：,.…"“”]+/u) ?? [])
+  .map((x) => x.trim()).filter((x) => x.length >= 2 && /[\p{Script=Han}\p{Script=Katakana}]/u.test(x) && !PROBE_JA_STOP.has(x)));
+const isJapaneseSentence = (s: string) => /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(s) && !/[A-Za-z]{3,}/.test(s.replace(/["“「][^"”」]*["”」]/g, ' '));
+const PROBE_REPEAT_SHAPE_RE = /\b(?:once more|one more time|again)\b|\brepeat\b|もう一度|もう一回|もう1回/i;
+const PROBE_QUOTE_RE = /"([^"\n]{2,})"|“([^”\n]{2,})”|「([^」\n]{2,})」/g;
+function quotesStudent(sentence: string, studentText: string | null | undefined): boolean {
+  const st = (studentText ?? '').toLowerCase();
+  if (!st.trim()) return false;
+  const stWords = new Set(st.match(/[\p{L}\p{N}']+/gu) ?? []);
+  for (const m of sentence.matchAll(PROBE_QUOTE_RE)) {
+    const q = (m[1] ?? m[2] ?? m[3] ?? '').toLowerCase().replace(/[.,!?…]+$/g, '').trim();
+    if (!q) continue;
+    if (st.includes(q)) return true;
+    const qw = q.match(/[\p{L}\p{N}']+/gu) ?? [];
+    if (qw.length >= 2 && qw.filter((w) => stWords.has(w)).length / qw.length >= 0.6) return true;
   }
   return false;
+}
+/** The repeat / correction exemption of the probe drop (Task 31 repeat-ask shape). Pure. */
+export function isRepeatOrCorrectionAsk(sentence: string | null | undefined, studentText?: string | null): boolean {
+  const s = sentence ?? '';
+  return PROBE_REPEAT_SHAPE_RE.test(s) || quotesStudent(s, studentText);
+}
+const PROBE_ASK_SHAPE_RE = /[?？]\s*$|^\s*(?:(?:now|so|ok(?:ay)?|then),?\s+)*(?:please|try|say|tell me|answer|could you|can you|would you)\b|(?:ください|ましょう|ませんか|ますか|ですか|でしたか|ましたか)[。]?\s*$/i;
+function probeAskSentences(turn: string): string[] {
+  const parts = turn.split(/(?<=[.!?。！？])\s+/).map((x) => x.trim()).filter(Boolean);
+  let qi = -1;
+  for (let i = parts.length - 1; i >= 0; i--) if (/[?？]\s*$/.test(parts[i]!)) { qi = i; break; }
+  if (qi < 0) return [];
+  const out = [parts[qi]!];
+  const prev = parts[qi - 1];
+  if (prev && isJapaneseSentence(prev) !== isJapaneseSentence(parts[qi]!)) out.push(prev);
+  return out;
+}
+function subsetJaccard(x: Set<string>, y: Set<string>): boolean {
+  if (x.size === 0 || y.size === 0) return false;
+  let inter = 0;
+  for (const w of x) if (y.has(w)) inter += 1;
+  return inter === x.size && inter / (x.size + y.size - inter) >= 0.5;
+}
+export function probeReasks(sentence: string | null | undefined, previousAsks: ReadonlyArray<string | null | undefined>, opts?: { studentText?: string | null }): boolean {
+  const s = (sentence ?? '').trim();
+  if (!s || !PROBE_ASK_SHAPE_RE.test(s)) return false;
+  if (isRepeatOrCorrectionAsk(s, opts?.studentText)) return false;
+  const asks = previousAsks.filter((a): a is string => !!a && !!a.trim()).flatMap(probeAskSentences);
+  if (!asks.length) return false;
+  if (isJapaneseSentence(s)) {
+    const mine = jaTokens(s);
+    return asks.filter(isJapaneseSentence).some((a) => subsetJaccard(mine, jaTokens(a)));
+  }
+  const mine = reaskStems(/[?？]/.test(s) ? (turnAskGist(s) || s) : s);
+  return asks.filter((a) => !isJapaneseSentence(a)).some((a) => subsetJaccard(mine, reaskStems(turnAskGist(a) || a)));
 }

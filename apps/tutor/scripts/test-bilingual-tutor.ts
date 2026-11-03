@@ -57,7 +57,7 @@ import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, 
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
-import { probeReasks } from '../src/lib/tutor/voice/correct-retry';
+import { probeReasks, isRepeatOrCorrectionAsk } from '../src/lib/tutor/voice/correct-retry';
 import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk, noAttemptBudgetTurns, isYesNoAsk } from '../src/lib/tutor/voice/correct-retry';
 import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
 import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
@@ -2049,8 +2049,35 @@ test('36 §A: the probe check-in is enforced — the third ask is dropped (Engli
   assert.equal(probeReasks('Now, what did you learn from that project?', asks), false, 'a next-step question stays');
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("probeCheckinAsks = [pcPrev.tutorText, pcTurns[pcTurns.length - 1] ?? ''];"));
-  assert.ok(vtr.includes('if (probeCheckinAsks && (probeReasks(updatedSentence, probeCheckinAsks) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {'));
+  assert.ok(vtr.includes('if (probeCheckinAsks && (probeReasks(updatedSentence, probeCheckinAsks, { studentText: transcript }) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {'));
   assert.ok(readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8').includes("'probe_reask_dropped'"));
+});
+
+test('36 r1: probeReasks compares only with the previous ASK sentences, subset + Jaccard ≥ 0.5; repeat / correction asks are never re-asks', () => {
+  // review negatives
+  assert.equal(probeReasks('その製品はいつ発売されましたか？', ['どの製品のためでしたか？', 'どの製品のためでしたか？']), false, 'a Japanese next-step question is kept');
+  assert.equal(probeReasks('Now, which trade show was it, and what did you do there?', ['Did you attend any events last year?', 'Did you attend any events last year?']), false);
+  // r19 audit
+  const A339 = "Yes, that's right, and it's a complete sentence. You've used the present perfect for something that started in the past and continues now. Next, can you tell me one thing you have learned at your company?";
+  assert.equal(probeReasks('Please say the first part once more, "I have learned," with the right ending.', ['Have you ever worked with an international customer?', A339], { studentText: 'I have learn how to negotiate with suppliers.' }), false, '363 s correction ask is KEPT');
+  assert.equal(isRepeatOrCorrectionAsk('Please say the first part once more, "I have learned," with the right ending.', 'I have learn how to negotiate with suppliers.'), true);
+  const A572 = 'Yes, that\'s right. You went to a trade show last year, and "last year" is a finished time, so the past simple is correct. Now, which trade show was it, and what did you do there?';
+  const A595 = 'Yes, "I went to a trade show in Tokyo last year" is correct, and "last year" tells us it\'s a finished time. Now, which trade show was it, and what did you do there? Please answer with a full sentence.';
+  assert.equal(probeReasks('Now, which trade show was it, and what did you do there?', [A572, A595], { studentText: 'Yes, I went to a trade show in Tokyo last year.' }), true, '621 s: a correct drop');
+  const A641 = '「I went to a trade show in Tokyo last year.」は正しい過去形の文ですね。 Now, which trade show was it, and what did you see or do there? Please answer in one English sentence.';
+  const A661 = '「I went to a trade show in Tokyo last year.」ですね。 "last year" is a finished time, so the past simple is right. Now, which trade show was it, and what did you see or do there? Please answer in one English sentence.';
+  assert.equal(probeReasks('Please tell me one thing you saw or did at that trade show, in one English sentence.', [A641, A661], { studentText: 'Yes, I went to a trade show in Tokyo last year, as I said.' }), false, '686 s: narrows to a new item — kept');
+  const A861 = '「I worked on project to…」の "a" が抜けていますね。 Try saying the start once more: "I worked on a project to…". What was the goal of that project?';
+  const A878 = '「I worked on a project to…」の続きですね。 Good start. Now, could you finish the sentence? What was the goal of that project?';
+  assert.equal(probeReasks('Now, what was the goal of that project?', [A861, A878], { studentText: 'Last month I made a presentation for a new product launch.' }), true, '893 s (the event\'s text): a correct drop');
+  const A917 = "「Thank you」と言ってくれましたね。 It was good to hear your work, and you're finishing this part well. ここで会話の練習は一区切りです。 Shall we move on to pronunciation, or would you like one more question about your work first?";
+  const A938 = "わかりました、もう一問練習しましょう。 Please answer this question in English: What is one project you've worked on that you're particularly proud of?";
+  assert.equal(probeReasks("Please answer in English: what is one project you've worked on that you're particularly proud of?", [A917, A938], { studentText: 'One more practice.' }), true, '955 s: a correct drop');
+  // r18 positives stay
+  const T75 = '"The project was for…" のあとに続く文、とても良いですね。 "The project was successful because the customer was happy." と、理由まで言えています。 Could you tell me which product the project was for?';
+  const T77 = '「Last month」の文がまた出てきましたね。 今の質問は、そのプロジェクトがどの製品のためだったか、でした。 Which product was the project for?';
+  assert.equal(probeReasks('Which product was the project for?', [T75, T77]), true);
+  assert.equal(probeReasks('その製品は何でしたか？', [T75, T77]), true);
 });
 
 if (failed) process.exit(1);
