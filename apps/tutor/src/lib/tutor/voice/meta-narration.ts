@@ -336,7 +336,14 @@ function stripKeepInMindTail(s: string): string | null {
 // own) and the nouns version / line / message / attempt / response / try; a
 // past "was / were" counts only before a quote (descriptive "Their reply was
 // quick" stays).
-const THIRD_PERSON_LEARNER_LEAD_RE = /^(\s*)(?:Their|The student['’]s|The learner['’]s) ((?:(?:earlier|latest|last|previous|first|second|new|own) )?(?:sentence|answer|words|reply|version|line|message|attempt|response|try))\b(?=\s+(?:is|has|sounds|reads|means|needs|works)\b|\s+(?:was|were)\s+["“]|\s*,\s*["“])/i;
+// Task 38 §A (voice run 19, 523 s: "The student's sentence uses the present
+// perfect, "I have been," but "last year" …" fell to the third-person drop
+// and the turn went silent): the content verbs a correction opens with —
+// uses / shows / contains / includes / mixes / misses / lacks / starts /
+// begins / ends / puts / keeps / gets / answers / says / describes / gives /
+// follows / matches / fits — are addressed too ("Your sentence uses …"), the
+// correction content kept.
+const THIRD_PERSON_LEARNER_LEAD_RE = /^(\s*)(?:Their|The student['’]s|The learner['’]s) ((?:(?:earlier|latest|last|previous|first|second|new|own) )?(?:sentence|answer|words|reply|version|line|message|attempt|response|try))\b(?=\s+(?:is|has|sounds|reads|means|needs|works|uses|shows|contains|includes|mixes|misses|lacks|starts|begins|ends|puts|keeps|gets|answers|says|describes|gives|follows|matches|fits)\b|\s+(?:was|were)\s+["“]|\s*,\s*["“])/i;
 const BRING_BACK_TAIL_RE = /,?\s*\bso I['’]ll bring (?:that|it|this) back\b[^.!?]*[.!?]?\s*$/i;
 const QUESTION_LEAD_RE = /^\s*(?:The question I['’]m asking (?:you )?now is|(?:So|Now),? the question is)\s*:\s*/i;
 // Task 24 §A5 (GDI run 12, 1092 s / 1168 s SPOKEN: "The transcript shows only

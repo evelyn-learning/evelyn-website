@@ -17,3 +17,37 @@ export function emptyTurnFallbackLine(input: { pinGist: string | null | undefine
   }
   return { kind: 'generic', text: EMPTY_TURN_GENERIC_TYPED };
 }
+
+/**
+ * Task 38 §A (voice run 19, 522–530 s: the brain's whole reply was one
+ * third-person sentence the narration filter dropped; the turn rendered a
+ * show_sentence card and said NOTHING, and the student waited 50 s). A turn
+ * that ends with zero spoken sentences but with board tool calls is still a
+ * silent turn: in a language / fixed-script lesson the engine speaks. When
+ * the turn put a sentence card up, the card's sentence is said as the model
+ * ("Here's the natural version: … Please say it once more."); otherwise the
+ * pending ask is re-asked (the same line as the empty-turn fallback). null
+ * when neither exists, or outside language lessons. Pure.
+ */
+export function silentTurnFallbackLine(input: { cardSentence: string | null | undefined; pinGist: string | null | undefined; languageLesson: boolean; bilingual: boolean }): { kind: 'card' | 'reask'; text: string } | null {
+  if (!input.languageLesson) return null;
+  const card = (input.cardSentence ?? '').replace(/\s+/g, ' ').trim();
+  if (card && /[\p{L}]/u.test(card)) {
+    const punctuated = /[.!?。！？]["”」’]?$/u.test(card) ? card : `${card}.`;
+    return { kind: 'card', text: `Here's the natural version: ${punctuated} Please say it once more.` };
+  }
+  const line = emptyTurnFallbackLine({ pinGist: input.pinGist, languageLesson: true, bilingual: input.bilingual });
+  return line.kind === 'reask' ? { kind: 'reask', text: line.text } : null;
+}
+
+/** The last show_sentence card's sentence among a turn's tool calls. Pure. */
+export function lastShowSentenceOf(calls: ReadonlyArray<{ name: string; args: Record<string, unknown> }>): string | null {
+  for (let i = calls.length - 1; i >= 0; i--) {
+    const c = calls[i];
+    if ((c.name === 'show_sentence' || c.name === 'showSentence') && typeof c.args?.sentence === 'string' && c.args.sentence.trim()) return c.args.sentence.trim();
+  }
+  return null;
+}
+
+/** Task 38 §A: tools that own a turn's speech elsewhere (advance / close / hold) — a silent turn carrying one is not given the fallback. */
+export const SILENT_TURN_STATE_TOOLS: ReadonlySet<string> = new Set(['advance_lesson', 'mark_segment_complete', 'close_session_notes', 'hold_for_student', 'propose_plan_swap', 'generate_problem', 'end_session']);

@@ -1265,3 +1265,10 @@ export const TUTOR_DIRECTIVE_ECHO_DROP = process.env.NEXT_PUBLIC_TUTOR_DIRECTIVE
  *  itself is never cut). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_LESSON_TIME_GUARD=off. */
 export const TUTOR_LESSON_TIME_GUARD = process.env.NEXT_PUBLIC_TUTOR_LESSON_TIME_GUARD !== 'off';
+
+/** Task 38 §A (voice run 19, 522–530 s: a turn rendered a card and said
+ *  nothing): in a language / fixed-script lesson a turn with board tools but
+ *  zero spoken sentences speaks the card's sentence as the model, else
+ *  re-asks the pending question. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_SILENT_TURN_FALLBACK=off. */
+export const TUTOR_SILENT_TURN_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_SILENT_TURN_FALLBACK !== 'off';

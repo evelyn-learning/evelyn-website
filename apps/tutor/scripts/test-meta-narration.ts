@@ -1435,5 +1435,17 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('37A: maths sessions untouched', !isMetaNarration('Let me advance.', { languageLesson: false }));
 }
 
+// Task 38 §A (voice run 19, 523 s): the third-person correction is addressed, its content kept.
+{
+  const lang = { languageLesson: true };
+  const raw = `The student's sentence uses the present perfect, "I have been," but "last year" needs the past simple.`;
+  const want = `Your sentence uses the present perfect, "I have been," but "last year" needs the past simple.`;
+  check('38A: 523 s sentence rewritten to second person', stripNoteCitationClause(raw, lang) === want, stripNoteCitationClause(raw, lang));
+  check('38A: the rewrite is kept speech', !isMetaNarration(want, lang));
+  check('38A: no third-person residue', !isThirdPersonResidue(raw, lang));
+  check("38A: The learner's answer misses …", stripNoteCitationClause(`The learner's answer misses the article "the".`, lang) === `Your answer misses the article "the".`);
+  check('38A: descriptive "Their reply was quick" unchanged', stripNoteCitationClause('Their reply was quick, so you won the contract.', lang) === 'Their reply was quick, so you won the contract.');
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

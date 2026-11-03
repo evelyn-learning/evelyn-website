@@ -9,7 +9,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { emptyTurnFallbackLine, EMPTY_TURN_GENERIC_TYPED } from '../src/lib/tutor/voice/empty-turn-fallback';
+import { emptyTurnFallbackLine, EMPTY_TURN_GENERIC_TYPED, silentTurnFallbackLine, lastShowSentenceOf, SILENT_TURN_STATE_TOOLS } from '../src/lib/tutor/voice/empty-turn-fallback';
 import {
   partitionQueueAtSentenceBoundary,
   shouldFinishInFlightSentence,
@@ -187,6 +187,22 @@ test('fix round 2 (N1): no empty-turn fallback after a skipped retry; heard text
   assert.ok(g > 0 && spoken > g && chat > g && spoken - g < 6000, `guard=${g} spoken=${spoken} chat=${chat}`);
   assert.match(vtr, /if \(res\.outcome === 'ended'\) \{\s*retrySkippedHeardText = heardTextThroughKept\(\s*turnNarrationRef\.current\.slice\(attemptNarrationStart\),\s*res\.keptSentence,/);
   assert.match(vtr, /if \(retrySkippedAfterKill && rejectionsThisAttempt\.length > 0\) \{\s*if \(retrySkippedHeardText\) \{\s*aggregatedFullText = /);
+});
+test('Task 38 §A: a turn with a card but zero spoken sentences speaks (card as the model, else the re-ask)', () => {
+  const card = 'I went to the robotics exhibition in Tokyo last year.';
+  const calls = [{ name: 'show_sentence', args: { sentence: card, emphasis: ['went'] } }];
+  assert.equal(lastShowSentenceOf(calls), card);
+  assert.equal(lastShowSentenceOf([{ name: 'handwrite', args: { text: 'x' } }]), null);
+  assert.deepEqual(silentTurnFallbackLine({ cardSentence: card, pinGist: 'Can you say that once more?', languageLesson: true, bilingual: true }), { kind: 'card', text: `Here's the natural version: ${card} Please say it once more.` });
+  assert.deepEqual(silentTurnFallbackLine({ cardSentence: 'I went there', pinGist: null, languageLesson: true, bilingual: false })?.text, "Here's the natural version: I went there. Please say it once more.");
+  assert.deepEqual(silentTurnFallbackLine({ cardSentence: null, pinGist: 'Which exhibition did you go to?', languageLesson: true, bilingual: false }), { kind: 'reask', text: 'Let me ask that again: Which exhibition did you go to?' });
+  assert.equal(silentTurnFallbackLine({ cardSentence: null, pinGist: '', languageLesson: true, bilingual: false }), null, 'nothing to say ⇒ null');
+  assert.equal(silentTurnFallbackLine({ cardSentence: card, pinGist: 'x?', languageLesson: false, bilingual: false }), null, 'maths ⇒ off');
+  assert.ok(SILENT_TURN_STATE_TOOLS.has('advance_lesson') && !SILENT_TURN_STATE_TOOLS.has('show_sentence'));
+  assert.ok(vtr.includes("TUTOR_SILENT_TURN_FALLBACK && !fullText.trim() && totalToolNamesSeen.length > 0 && !retrySkippedAfterKill"));
+  assert.ok(vtr.includes('cardSentence: lastShowSentenceOf(turnToolCallsSeen),'));
+  assert.ok(vtr.includes("onDebugEvent?.('silent_turn_fallback',"));
+  assert.match(flags, /export const TUTOR_SILENT_TURN_FALLBACK = process\.env\.NEXT_PUBLIC_TUTOR_SILENT_TURN_FALLBACK !== 'off';/);
 });
 test('Task 30 fix round 8 A4: an empty turn re-asks the pending question in a language / fixed-script lesson', () => {
   const ask = 'Have you worked for your current company for a long time?';
