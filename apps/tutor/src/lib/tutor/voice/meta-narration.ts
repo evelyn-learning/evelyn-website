@@ -743,6 +743,11 @@ export function stripRound9Narration(s: string): string {
   return out;
 }
 export const LESSON_CLOSED_NARRATION_RE = /\b(?:can['’]?t|cannot) (?:continue|go on with) the lesson\b|\b(?:lesson|session|class|it)(?:['’]s| (?:has|had|is|was))? already (?:closed|ended)\b/i;
+// Task 38 §I1 (voice run 19, 1410 s: "The lesson is complete, so there's
+// nothing new to set up."): the lesson's closed state + a consequence about
+// what the tutor has to do ("so there's nothing (new / more / left) to …",
+// "so I don't need to …", "so no … is needed") is plan-state narration.
+export const LESSON_STATE_CONSEQUENCE_RE = /^\s*(?:the |this |our |today['’]s )?(?:lesson|session|class)(?:['’]s| is| has| was)? (?:now )?(?:complete|completed|over|finished|done|closed|ended)\b,?\s*so\s+(?:there['’]s|there is|there are)\s+(?:nothing|no(?:thing)? more|nothing left|no need)\b[^.!?]*[.!]?\s*$|^\s*(?:the |this |our |today['’]s )?(?:lesson|session|class)(?:['’]s| is| has| was)? (?:now )?(?:complete|completed|over|finished|done|closed|ended)\b,?\s*so\s+I (?:don['’]t|do not|won['’]t|will not) (?:need|have) to\b[^.!?]*[.!]?\s*$/i;
 export const REDO_LEAD_RE = /^\s*Let me (?:ask|say|put|try) (?:that|it|this|again)[^.?!]{0,20}[.!]\s*$/i;
 /**
  * Task 30 fix round 3 (R2-1, run r2): first-person plans spoken wherever they
@@ -1304,7 +1309,7 @@ export function isMetaNarration(
   // Final review I-1: the Task 33–35 narration rules run in language lessons only.
   const languageLesson = opts?.languageLesson !== false;
   if (languageLesson && directiveEchoEnabled() && (isTutorDirectiveImperative(s) || isDirectiveEchoOf(s, opts?.directiveSentences) || isSteeringPlanNarration(s))) return true;
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || (BOARD_STAGING_NARRATION_RE.test(s) && !isFirstPersonBoardOfferToLearner(s)) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s, { languageLesson }) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn, languageLesson }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || (BOARD_STAGING_NARRATION_RE.test(s) && !isFirstPersonBoardOfferToLearner(s)) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || LESSON_STATE_CONSEQUENCE_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s, { languageLesson }) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn, languageLesson }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
@@ -1616,4 +1621,29 @@ export function doneTurnText(input: {
   if (!input.filter) return full;
   if (input.streamSentences > 0) return '';
   return filterNarrationText(full, input.opts);
+}
+
+/** Task 38 §I2 (voice run 19, 51 s / 114 s: "Good, Praveen." opened two
+ *  turns in a row): a short opener (≤ 4 words, no "?", no quote) identical
+ *  — case, punctuation and spacing aside — to the previous tutor turn's
+ *  FIRST sentence is dropped from the second turn. The stream may merge the
+ *  opener with the sentence after it: then only the opener goes.
+ *  Returns the sentence without the repeated opener ('' = all of it), or
+ *  the sentence unchanged. Pure. */
+export const REPEATED_OPENER_MAX_WORDS = 4;
+function openerKey(s: string): string {
+  return (s ?? '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+}
+function firstSentenceOf(text: string): string {
+  return (text ?? '').trim().split(/(?<=[.!?。！？])\s+/)[0] ?? '';
+}
+export function stripRepeatedTurnOpener(prevTurn: string | null | undefined, sentence: string | null | undefined): string {
+  const s = (sentence ?? '').trim();
+  const head = firstSentenceOf(s);
+  if (!head || /[?？"“「]/.test(head)) return s;
+  const key = openerKey(head);
+  const n = key ? key.split(' ').length : 0;
+  if (n === 0 || n > REPEATED_OPENER_MAX_WORDS) return s;
+  if (openerKey(firstSentenceOf(prevTurn ?? '')) !== key) return s;
+  return s.slice(head.length).trim();
 }

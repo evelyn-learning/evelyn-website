@@ -1308,3 +1308,9 @@ export const TUTOR_FIXED_SCRIPT_NO_READINESS = process.env.NEXT_PUBLIC_TUTOR_FIX
  *  short gloss."). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_TEACHING_LANGUAGE_FIRST=off. */
 export const TUTOR_TEACHING_LANGUAGE_FIRST = process.env.NEXT_PUBLIC_TUTOR_TEACHING_LANGUAGE_FIRST !== 'off';
+
+/** Task 38 §I3 (voice run 19, 933 / 948 / 962 s): in a fixed script's
+ *  conversation (extension) part, a student answer the tutor does not
+ *  correct is carded as the student's own sentence (source 'checked').
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_CONVERSATION_ANSWER_CARDS=off. */
+export const TUTOR_CONVERSATION_ANSWER_CARDS = process.env.NEXT_PUBLIC_TUTOR_CONVERSATION_ANSWER_CARDS !== 'off';

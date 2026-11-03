@@ -9,7 +9,7 @@ import { IDLE_NUDGE_DIRECTIVE, idleNudgeDirective } from '../src/lib/tutor/voice
 import { saysAlreadyAnswered, REPEAT_AFTER_CORRECT_REASON } from '../src/lib/tutor/voice/correct-retry';
 import fs from 'node:fs';
 import path from 'node:path';
-import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead, isTutorDirectiveImperative, directiveSentencesOf, isDirectiveEchoOf, directiveSentencesForInput, isStudentEchoOpener } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead, isTutorDirectiveImperative, directiveSentencesOf, isDirectiveEchoOf, directiveSentencesForInput, isStudentEchoOpener, stripRepeatedTurnOpener } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 import { planSentenceBoard } from '../src/lib/tutor/voice/sentence-board';
 
@@ -1006,7 +1006,7 @@ check("29B r2: a short single-quoted word is not blanked", isNotePlanNarration("
   check('30F1: different content ⇒ kept', !isAdjacentDuplicate("Let's move on to the next part now.", 'Tell me one more thing about a past event.'));
   check('30F1: no previous sentence ⇒ kept', !isAdjacentDuplicate('', "Let's go on to the next part."));
   const VTRF = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('30F1: VTR drops it per sentence, after the continuation duplicate check', /continuation_duplicate_dropped[\s\S]{0,300}?if \(TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate\(adjacentPrevSentence, updatedSentence\)\) \{\s*onDebugEvent\?\.\('adjacent_duplicate_sentence_dropped',[\s\S]{0,200}?continue;\s*\}[\s\S]{0,1600}?adjacentPrevSentence = updatedSentence;/.test(VTRF)); // Task 38 §D: the lead-in hold sits before the assignment
+  check('30F1: VTR drops it per sentence, after the continuation duplicate check', /continuation_duplicate_dropped[\s\S]{0,300}?if \(TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate\(adjacentPrevSentence, updatedSentence\)\) \{\s*onDebugEvent\?\.\('adjacent_duplicate_sentence_dropped',[\s\S]{0,200}?continue;\s*\}[\s\S]{0,2600}?adjacentPrevSentence = updatedSentence;/.test(VTRF)); // Task 38 §D / §I2: the lead-in hold and the repeated-opener strip sit before the assignment
 }
 
 // Task 30 fix round 1 S2 (smoke run 334 s): a spoken multi-clause plan; a plan that continues after a dropped narration.
@@ -1445,6 +1445,22 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('38A: no third-person residue', !isThirdPersonResidue(raw, lang));
   check("38A: The learner's answer misses …", stripNoteCitationClause(`The learner's answer misses the article "the".`, lang) === `Your answer misses the article "the".`);
   check('38A: descriptive "Their reply was quick" unchanged', stripNoteCitationClause('Their reply was quick, so you won the contract.', lang) === 'Their reply was quick, so you won the contract.');
+}
+
+// Task 38 §I1 / §I2 (voice run 19, 1410 s; 51 / 114 s).
+{
+  const lang = { languageLesson: true };
+  check("38 I1: \"The lesson is complete, so there's nothing new to set up.\" dropped", isMetaNarration("The lesson is complete, so there's nothing new to set up.", lang));
+  check('38 I1: "The session is over, so I don\'t need to add anything." dropped', isMetaNarration("The session is over, so I don't need to add anything.", lang));
+  check('38 I1: "The lesson is complete. Well done today!" kept', !isMetaNarration('The lesson is complete. Well done today!', lang));
+  check('38 I1: "Thank you for your hard work today, Praveen." kept', !isMetaNarration('Thank you for your hard work today, Praveen.', lang));
+  const prev = 'Good, Praveen. You said you sell washing machines at Nagoya Corporation, and that is a clear answer.';
+  check('38 I2: the same "Good, Praveen." opener on the next turn is dropped', stripRepeatedTurnOpener(prev, 'Good, Praveen.') === '');
+  check('38 I2: merged with the next sentence, only the opener goes', stripRepeatedTurnOpener(prev, 'Good, Praveen. You said you help customers in Tokyo.') === 'You said you help customers in Tokyo.');
+  check('38 I2: a different opener is kept', stripRepeatedTurnOpener(prev, 'Nice, Praveen.') === 'Nice, Praveen.');
+  check('38 I2: a long first sentence is never an opener', stripRepeatedTurnOpener('You said you sell washing machines.', 'You said you sell washing machines.') === 'You said you sell washing machines.');
+  const VTR38 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('38 I2: VTR strips it from the first kept sentence (language lessons)', VTR38.includes("const roRest = stripRepeatedTurnOpener(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '', (ev.text as string) || updatedSentence);"));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

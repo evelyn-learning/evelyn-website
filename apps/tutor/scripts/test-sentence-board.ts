@@ -1591,5 +1591,20 @@ test('38 §E: the 794 s ack line gets no card; a model sentence still does', () 
   assert.equal(cardContentWordCount('You sell your machines to hospitals.'), 6);
 });
 
+// ── Task 38 §I3 (voice run 19, 933 / 948 / 962 s): conversation answers carded ──
+test('38 I3: in a conversation part an uncorrected answer is carded (checked); a corrected one / a wrong one / other parts are not', () => {
+  const t933 = 'The climate change donation collection project, Praveen. What was your role in that project, and what was the biggest challenge?';
+  const s933 = 'I am proud of the climate change donation collection project.';
+  assert.deepEqual(planSentenceBoard38({ tutorText: t933, studentLast: s933, renderedThisTurn: false, conversationPart: true, studentVerdict: null }), [{ sentence: s933, kind: 'model', emphasis: [], source: 'checked' }]);
+  assert.deepEqual(planSentenceBoard38({ tutorText: 'Collecting donations from people, so you handled the money side. What was the biggest challenge?', studentLast: 'Uh, my role was to collect money from people.', renderedThisTurn: false, conversationPart: true, studentVerdict: 'partly_correct' }).map((c) => c.sentence), ['My role was to collect money from people.']);
+  assert.deepEqual(planSentenceBoard38({ tutorText: t933, studentLast: s933, renderedThisTurn: false }), [], 'not a conversation part');
+  assert.deepEqual(planSentenceBoard38({ tutorText: t933, studentLast: s933, renderedThisTurn: false, conversationPart: true, studentVerdict: 'incorrect' }), [], 'the check found it wrong');
+  const corrected = planSentenceBoard38({ tutorText: 'A more natural way to say this is: "I was responsible for communicating with our customers." Can you try that sentence again?', studentLast: 'I was responsible to communicate with our customers.', renderedThisTurn: false, conversationPart: true, studentVerdict: 'partly_correct' });
+  assert.ok(corrected.every((c) => c.source !== 'checked'), 'a correction turn cards the correction only');
+  const vtr = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes("conversationPart: isFixedScriptPlan(lessonPlanRef.current) && lessonPlanRef.current?.segments.find((sg) => sg.id === turnStartSegmentId)?.kind === 'extension',"));
+  assert.match(readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8'), /export const TUTOR_CONVERSATION_ANSWER_CARDS = process\.env\.NEXT_PUBLIC_TUTOR_CONVERSATION_ANSWER_CARDS !== 'off';/);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

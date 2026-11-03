@@ -1223,6 +1223,11 @@ export function planSentenceBoard(input: {
   /** Task 23 §E: the board's current problem offers choices (hasChoices, or
    *  ≥ 2 "1)" / "A)" markers in its statement — boardOffersChoices). */
   choiceMenu?: boolean;
+  /** Task 38 §I3: the current part is a conversation part (a fixed script's
+   *  extension segment) — an uncorrected student answer is carded. */
+  conversationPart?: boolean;
+  /** Task 38 §I3: this turn's check verdict on the student's answer (null = none). */
+  studentVerdict?: string | null;
   /** Task 25 §C2: told about each quote skipped as a translation. */
   onQuoteSkipped?: (reason: 'translation', span: string) => void;
   /** Task 27 §A: the turn's record of student sentences already given a
@@ -1399,6 +1404,20 @@ export function planSentenceBoard(input: {
     }
     if (own && !classified.some((c) => sameSentence(c.q.sentence, own))) {
       classified.push({ q: { sentence: own, kind: 'model', emphasis: [], source: 'levelcheck' }, len: norm(own).length, i: kept.length + 1, said: false, affirmed: false, introduced: false });
+    }
+  }
+  // Task 38 §I3 (voice run 19, 933 / 948 / 962 s: in the conversation part
+  // only the corrected / repeated sentences were carded): in a conversation
+  // part, a student answer the tutor's reply does not correct (no correction
+  // card, cue or fix follow-up; the check did not find it wrong) is carded as
+  // the student's own sentence — source 'checked', once per answer.
+  if (input.conversationPart === true && input.studentLast && input.studentVerdict !== 'incorrect'
+    && !classified.some((c) => c.q.kind === 'correction')
+    && !hasCorrectionCue(input.tutorText) && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '') && !isMetaOfferTurn(input.prevTutorText)) {
+    const own = cardableStudentSentence(input.studentLast);
+    if (own && (own.match(/[A-Za-z]+/g) ?? []).length >= CHECKED_CARD_MIN_WORDS && !recastsStudentSentence(input.tutorText, own)
+      && !classified.some((c) => sameSentence(c.q.sentence, own))) {
+      classified.push({ q: { sentence: own, kind: 'model', emphasis: [], source: 'checked' }, len: norm(own).length, i: kept.length, said: false, affirmed: false, introduced: false });
     }
   }
   // Task 23 §E (GDI run 11, 1063 s: "Yes, practice pronunciation of a
