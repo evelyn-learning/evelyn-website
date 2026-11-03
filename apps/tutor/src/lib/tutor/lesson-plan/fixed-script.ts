@@ -806,11 +806,27 @@ export function recapAlreadyGiven(seg: Segment | null | undefined, text: string 
   if (!Array.isArray(items) || items.length === 0) return false;
   const t = (text ?? '').toLowerCase();
   if (!t.trim()) return false;
+  // Fix round 1 (I-5): the recap SHAPE — each point named WITH its meaning:
+  // after a mention of the head, in the same sentence (≤ 120 chars), at
+  // least two of the point's meaning words (its text after ":" up to the
+  // "—" example; 4-letter stems). Naming the points is not a recap.
   return items.every((it) => {
-    const head = String(it ?? '').split(/[(:—–]/)[0]!.trim().toLowerCase();
-    return head.length >= 3 && t.includes(head);
+    const item = String(it ?? '');
+    const head = item.split(/[(:—–]/)[0]!.trim().toLowerCase();
+    if (head.length < 3) return false;
+    const colon = item.indexOf(':');
+    const meaning = (colon >= 0 ? item.slice(colon + 1) : item.slice(head.length)).split(/[—–]/)[0]!.toLowerCase();
+    const stems = [...new Set((meaning.match(/\p{L}{4,}/gu) ?? []).filter((w) => !RECAP_MEANING_STOP.has(w)).map((w) => w.slice(0, 4)))];
+    if (stems.length < 2) return t.includes(head);
+    for (let at = t.indexOf(head); at >= 0; at = t.indexOf(head, at + 1)) {
+      const after = t.slice(at + head.length, at + head.length + 120).split(/[.!?。！？]/)[0]!;
+      const words = new Set((after.match(/\p{L}{4,}/gu) ?? []).map((w) => w.slice(0, 4)));
+      if (stems.filter((x) => words.has(x)).length >= 2) return true;
+    }
+    return false;
   });
 }
+const RECAP_MEANING_STOP = new Set(['that', 'this', 'with', 'from', 'into', 'have', 'been', 'when', 'what', 'which', 'they', 'them', 'their', 'there', 'than', 'then', 'about', 'specific']);
 /** Task 38 §G2 (voice run 19, 1222 / 1274 s: "Are you ready to close the
  *  lesson, or would you like to review anything first?" asked in the
  *  summary, and re-asked by the idle nudge): in a fixed-script plan's recap /

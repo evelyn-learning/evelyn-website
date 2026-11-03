@@ -1368,6 +1368,15 @@ test('38 §G: the recap card rides the flush; no readiness ask in the summary; a
   assert.ok(FIXED_SCRIPT_RECAP_GIVEN_CLAUSE.startsWith('The recap was already given in that turn — do not repeat it.'));
 });
 
+test('38 r1 I-5: recapAlreadyGiven needs each point WITH its meaning — naming the points is not a recap', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const summary = gdi!.segments.find((sg) => sg.id === 'summary');
+  assert.equal(recapAlreadyGiven(summary, "Good work on the past simple. Let's go to the summary of the present perfect and the past simple."), false, 'names only');
+  assert.equal(recapAlreadyGiven(summary, 'We practised the present perfect and the past simple today.'), false);
+  const t1222 = "Summary it is. Let's close the pronunciation part and move on to the summary now. Okay, we'll finish with a short summary now. Today you practiced the present perfect for experience that continues now, and the past simple for finished times like last year.";
+  assert.equal(recapAlreadyGiven(summary, t1222), true, 'the 1222 s recap turn');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 
