@@ -1676,5 +1676,28 @@ test('39 §C2: VTR passes the correction mark and the judge note', () => {
   assert.ok(!readFileSync(join(__dirname, '..', 'src/lib/tutor/voice/sentence-board.ts'), 'utf8').includes('fragmentSpliceCorrectionCard'), 'no splice path');
 });
 
+// ── Final review day 3 B-1: the first-person write-back maps through a table; an ambiguous "you" ⇒ no card ──
+test('final-3 B-1: write-back table — subject / object by the token before; ambiguous ⇒ null', () => {
+  assert.equal(firstPersonWriteBack('Last week you visited three customers in Osaka.'), 'Last week I visited three customers in Osaka.');
+  assert.equal(firstPersonWriteBack('In 2020 you started working at the company.'), 'In 2020 I started working at the company.');
+  assert.equal(firstPersonWriteBack('Your boss gave you the report.'), 'My boss gave me the report.');
+  assert.equal(firstPersonWriteBack('You are responsible for testing.'), 'I am responsible for testing.');
+  assert.equal(firstPersonWriteBack('Yesterday you were very busy at the fair.'), 'Yesterday I was very busy at the fair.');
+  assert.equal(firstPersonWriteBack("You'll call the customer yourself."), "I'll call the customer myself.");
+  assert.equal(firstPersonWriteBack('The customer bought five machines from you.'), 'The customer bought five machines from me.');
+  assert.equal(firstPersonWriteBack('The report is yours.'), 'The report is mine.');
+  // ambiguous: a "you" with no role cue, a second "you" in one clause, a role conflict
+  assert.equal(firstPersonWriteBack('The best part is you.'), null, 'no cue before and none after');
+  assert.equal(firstPersonWriteBack('Thank you for the answer.'), null, '"thank you" is not the student\'s words');
+  assert.equal(firstPersonWriteBack('The manager you met was kind.'), 'The manager I met was kind.', 'a verb after it ⇒ subject');
+  assert.equal(firstPersonWriteBack('You told you the answer.'), null, 'two "you" in one clause');
+  // the reviewer's planSentenceBoard repro: the card reads "Last week I visited …", never "me visited"
+  const cards = planSentenceBoard({ tutorText: 'Good try. Last week you visited three customers in Osaka. What did you sell?', studentLast: 'Last week I visit three customer in Osaka.', correctionMarked: true });
+  assert.ok(cards.every((c) => !/\bme (?:visited|started|were|went)\b/.test(c.sentence)), JSON.stringify(cards));
+  assert.deepEqual(cards.map((x) => x.sentence), ['Last week I visited three customers in Osaka.']);
+  const c2 = planSentenceBoard({ tutorText: 'Good try. In 2020 you started working at the company.', studentLast: 'In 2020 I start working at the company.', correctionMarked: true });
+  assert.deepEqual(c2.map((x) => x.sentence), ['In 2020 I started working at the company.']);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

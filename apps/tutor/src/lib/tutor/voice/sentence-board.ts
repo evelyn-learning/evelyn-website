@@ -983,26 +983,96 @@ const OBJECT_AS_SUBJECT_RE = /\bme (?:me|work|worked|am|was|were|have|had|do|did
 const RESTATEMENT_COMMENT_TAIL_RE = /,\s*(?:(?:(?:so|and|which)\s+)?(?:that['’]s|that is|it['’]s|it is|which is)\b[^.!?]*|(?:right|correct)\s*(?=[.!?]?\s*$))/i;
 /** Write-back tokens and joiners never emphasised on a restatement card. */
 const RESTATEMENT_PLAIN_TOKENS = new Set(['i', 'my', 'me', 'mine', 'myself', 'am', "i'm", "i've", 'and', 'or', 'but', 'so']);
-/** A second-person sentence written back to the first person ("You worked …
- *  your …" → "I worked … my …"; "You're" → "I'm"; "You've" → "I've"; "You
- *  are / were" → "I am / was"; a later subject "you" (after and / but / so /
- *  because / that / when / if / a comma) → "I", any other "you" → "me"). */
-export function firstPersonWriteBack(sentence: string): string {
-  let out = (sentence ?? '').trim()
-    .replace(/^You['’]re\b/, "I'm")
-    .replace(/^You['’]ve\b/, "I've")
-    .replace(/^You (are|were)\b/, (_m, v: string) => `I ${v === 'are' ? 'am' : 'was'}`)
-    .replace(/^You\b/, 'I');
-  out = out
-    .replace(/\byour\b/gi, (m) => (m[0] === 'Y' ? 'My' : 'my'))
-    .replace(/\byours\b/gi, 'mine')
-    .replace(/\byourself\b/gi, 'myself')
-    .replace(/\byou['’]re\b/gi, "I'm")
-    .replace(/\byou['’]ve\b/gi, "I've")
-    .replace(/((?:\b(?:and|but|so|because|that|when|if)|,)\s+)you (are|were)\b/gi, (_m, lead: string, v: string) => `${lead}I ${v.toLowerCase() === 'are' ? 'am' : 'was'}`)
-    .replace(/((?:\b(?:and|but|so|because|that|when|if)|,)\s+)you\b/gi, '$1I')
-    .replace(/\byou\b/gi, 'me');
-  return out;
+/** A second-person sentence written back to the first person through a
+ *  mapping table (final review day 3, B-1: the old rule turned "Last week you
+ *  visited …" into "Last week me visited …"). The table:
+ *    your → my, yours → mine, yourself → myself, you're → I'm, you've → I've,
+ *    you'd → I'd, you'll → I'll; a subject "you" → I (you are → I am, you
+ *    were → I was); an object "you" (after a verb or preposition) → me;
+ *    inverted are / were / do / did / have you → am / was / do / did / have I.
+ *  A "you" is a SUBJECT after the sentence start, a conjunction or a comma,
+ *  or when a verb follows it; an OBJECT after a preposition or a verb. When
+ *  the role cannot be decided (no cue, or the cues disagree), or a clause has
+ *  a second "you", the result is null — no card rather than a guessed one.
+ *  Pure. */
+const WB_CONJ = new Set(['and', 'but', 'so', 'because', 'that', 'when', 'if', 'while', 'although', 'though', 'where', 'or', 'then', 'now', 'once', 'whether', 'unless']);
+const WB_PREP_OR_CONJ = new Set(['after', 'before', 'since', 'until', 'as']);
+const WB_PREPS = new Set(['to', 'from', 'with', 'for', 'at', 'about', 'of', 'by', 'on', 'in', 'into', 'like', 'than', 'without', 'behind', 'near', 'toward', 'towards', 'around', 'between', 'among', 'against', 'beside', 'under', 'over', 'through', 'onto', 'upon', 'within']);
+const WB_OBJECT_VERBS = new Set(['give', 'gives', 'gave', 'given', 'tell', 'tells', 'told', 'ask', 'asks', 'show', 'shows', 'send', 'sends', 'sent', 'thank', 'help', 'helps', 'call', 'calls', 'see', 'sees', 'saw', 'seen', 'meet', 'meets', 'met', 'like', 'likes', 'love', 'loves', 'know', 'knows', 'knew', 'known', 'want', 'wants', 'need', 'needs', 'let', 'lets', 'make', 'makes', 'made', 'pay', 'pays', 'paid', 'teach', 'teaches', 'taught', 'invite', 'invites', 'contact', 'contacts', 'email', 'emails', 'visit', 'visits', 'hire', 'hires', 'trust', 'trusts', 'choose', 'chose', 'chosen', 'hear', 'hears', 'heard', 'understand', 'understood', 'remember', 'remembers', 'bring', 'brings', 'brought', 'offer', 'offers', 'sell', 'sells', 'sold', 'buy', 'buys', 'bought', 'got', 'get', 'gets', 'keep', 'keeps', 'kept', 'find', 'found', 'take', 'took', 'taken', 'join', 'joins', 'support', 'supports', 'promote', 'promoted', 'pick', 'picks']);
+const WB_INV_AUX: Record<string, string> = { are: 'am', were: 'was', do: 'do', did: 'did', have: 'have' };
+const WB_IRREGULAR_PAST = new Set(['went', 'met', 'sold', 'made', 'gave', 'told', 'saw', 'had', 'did', 'got', 'took', 'came', 'bought', 'sent', 'spent', 'wrote', 'found', 'knew', 'thought', 'spoke', 'ran', 'began', 'became', 'left', 'felt', 'kept', 'brought', 'built', 'taught', 'understood', 'led', 'held', 'paid', 'said', 'heard', 'chose', 'grew', 'drove', 'flew', 'won', 'lost', 'read', 'put', 'set', 'cut', 'let']);
+const WB_VERB_AFTER = new Set(['are', 'were', 'have', 'had', 'will', 'would', 'can', 'could', 'should', 'may', 'might', 'must', 'do', 'did', 'does', 'also', 'always', 'often', 'usually', 'never', 'just', 'really', 'still', 'already', 'only', 'sometimes', 'work', 'live', 'sell', 'manage', 'lead', 'use', 'need', 'want', 'like', 'go', 'make', 'help', 'talk', 'speak', 'visit', 'meet', 'say', 'explain', 'travel', 'handle', 'deal', 'started', 'start', 'joined', 'join', 'became']);
+const wbVerbLike = (w: string | undefined) => !!w && (WB_VERB_AFTER.has(w) || WB_IRREGULAR_PAST.has(w) || /^[a-z]{3,}ed$/.test(w));
+const wbObjectCue = (w: string) => WB_PREPS.has(w) || WB_OBJECT_VERBS.has(w) || /^[a-z]{3,}ed$/.test(w);
+export function firstPersonWriteBack(sentence: string): string | null {
+  const raw = (sentence ?? '').trim();
+  const parts = raw.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)?|[^A-Za-z0-9]+/g) ?? [];
+  const isWord = (x: string) => /^[A-Za-z0-9]/.test(x);
+  const out = [...parts];
+  // the previous / next word index, and whether a clause boundary separates them
+  const prevWord = (i: number): { w: string; j: number; boundary: boolean } | null => {
+    let boundary = false;
+    for (let j = i - 1; j >= 0; j--) {
+      if (isWord(parts[j]!)) return { w: parts[j]!.toLowerCase(), j, boundary };
+      if (/[,;:—–(]/.test(parts[j]!)) boundary = true;
+    }
+    return null;
+  };
+  const nextWord = (i: number): { w: string; j: number } | null => {
+    for (let j = i + 1; j < parts.length; j++) {
+      if (isWord(parts[j]!)) return { w: parts[j]!.toLowerCase(), j };
+      if (/[,;:.!?]/.test(parts[j]!)) return null;
+    }
+    return null;
+  };
+  let youInClause = 0;
+  for (let i = 0; i < parts.length; i++) {
+    const tok = parts[i]!;
+    if (!isWord(tok)) { if (/[,;:.!?—–]/.test(tok)) youInClause = 0; continue; }
+    const low = tok.toLowerCase().replace(/’/g, "'");
+    if (WB_CONJ.has(low)) youInClause = 0;
+    const cap = /^Y/.test(tok);
+    const fix = (x: string) => (cap && x !== 'I' && !x.startsWith('I') ? x[0]!.toUpperCase() + x.slice(1) : x);
+    if (low === 'your') { out[i] = fix('my'); continue; }
+    if (low === 'yours') { out[i] = fix('mine'); continue; }
+    if (low === 'yourself') { out[i] = fix('myself'); continue; }
+    if (low === 'yourselves') return null;
+    const contracted: Record<string, string> = { "you're": "I'm", "you've": "I've", "you'd": "I'd", "you'll": "I'll" };
+    if (contracted[low]) {
+      if (++youInClause > 1) return null;
+      out[i] = contracted[low]!;
+      continue;
+    }
+    if (low !== 'you') continue;
+    if (++youInClause > 1) return null;
+    const prev = prevWord(i);
+    const next = nextWord(i);
+    // inverted aux at the clause start: are / were / do / did / have you → am / was / do / did / have I
+    if (prev && !prev.boundary && WB_INV_AUX[prev.w]) {
+      const pp = prevWord(prev.j);
+      if (!pp || pp.boundary || WB_CONJ.has(pp.w) || /^(?:what|where|when|why|how|which|who)$/.test(pp.w)) {
+        const m = WB_INV_AUX[prev.w]!;
+        out[prev.j] = /^[A-Z]/.test(parts[prev.j]!) ? m[0]!.toUpperCase() + m.slice(1) : m;
+        out[i] = 'I';
+        continue;
+      }
+    }
+    if (prev && !prev.boundary && (prev.w === 'thank' || prev.w === 'see')) return null; // "thank you", "see you": formulae, not a restatement
+    let role: 'subject' | 'object' | null = null;
+    if (!prev || prev.boundary || WB_CONJ.has(prev.w)) role = 'subject';
+    else if (WB_PREP_OR_CONJ.has(prev.w)) role = wbVerbLike(next?.w) ? 'subject' : 'object';
+    else if (wbObjectCue(prev.w)) {
+      // a strong verb cue after it ("told you were …") disagrees ⇒ ambiguous
+      if (next && ['are', 'were', 'have', 'had', 'will', 'would', 'can', 'could', 'should', 'did', 'do'].includes(next.w)) return null;
+      role = 'object';
+    } else if (wbVerbLike(next?.w)) role = 'subject';
+    if (!role) return null;
+    if (role === 'object') { out[i] = 'me'; continue; }
+    out[i] = 'I';
+    if (next && (next.w === 'are' || next.w === 'were')) out[next.j] = next.w === 'are' ? 'am' : 'was';
+  }
+  const res = out.join('');
+  return res ? res[0]!.toUpperCase() + res.slice(1) : res;
 }
 export function levelCheckRestatementCard(tutorText: string | null | undefined, student: string | null | undefined): QuotedSentence | null {
   const studentToks = levelRecastToks(student ?? '');
@@ -1037,7 +1107,9 @@ export function levelCheckRestatementCard(tutorText: string | null | undefined, 
     if (matched / content.length < LEVELCHECK_RECAST_OVERLAP) continue;
     // a trailing comment on it is the tutor's, not the student's sentence
     // ("You sell washing machines to a US company, so that's useful experience.")
-    let card = firstPersonWriteBack(sentence.replace(RESTATEMENT_COMMENT_TAIL_RE, ''));
+    const written = firstPersonWriteBack(sentence.replace(RESTATEMENT_COMMENT_TAIL_RE, ''));
+    if (written === null) continue; // final review day 3 B-1: an ambiguous "you" ⇒ no card
+    let card = written;
     if (OBJECT_AS_SUBJECT_RE.test(card)) continue; // fix rounds 1–2 (I-4, N-1): never "me me" / "me work" 
     if (!/[.!]$/.test(card)) card = `${card}.`;
     const emphasis: string[] = [];
@@ -1208,7 +1280,12 @@ export function wholeSentenceRecastCard(sentence: string | null | undefined, stu
   if (!full || /["“”「」『』‘]/.test(full) || CJK_RE.test(full) || /[?？]["”’)]?\s*$/.test(full)) return null;
   if (AUX_QUESTION_OPENING_RE.test(full) || WH_QUESTION_OPENING_RE.test(full) || GRAMMAR_RECAST_FORM_RE.test(full)) return null;
   const st = student ?? '';
-  if (/\byou\b/i.test(full) && /\b(?:I|me|my|mine)\b/.test(st) && !/\byou\b/i.test(st)) full = firstPersonWriteBack(full);
+  if (/\byou\b/i.test(full) && /\b(?:I|me|my|mine)\b/.test(st) && !/\byou\b/i.test(st)) {
+    // final review day 3 B-1: through the mapping table; an ambiguous "you" ⇒ no card
+    const written = firstPersonWriteBack(full);
+    if (written === null) return null;
+    full = written;
+  }
   full = full[0]!.toUpperCase() + full.slice(1);
   if (!/[.!]$/.test(full)) full = `${full.replace(/[,;:]+$/, '')}.`;
   const studentRaw = dropFillersAndRepeats(tokens(st));
