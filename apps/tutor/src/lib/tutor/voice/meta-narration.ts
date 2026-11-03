@@ -1205,7 +1205,10 @@ const BOARD_WRITE_PLAN_RE = /^\s*(?:(?:ok(?:ay)?|so|now),?\s+)?(?:Let me|I['’]
 // colleague again.", "The question is: what did you learn there?" are speech.
 const MODAL_PLAN_RE = /\b(?:so |therefore |then )?I (?:should|need to|must|will|['’]ll|ought to) (?:re-?ask|ask (?:it|that|the question) again|praise|correct|hold|keep|set (?:it|that) aside|move us|not (?:praise|accept))\b/i;
 const OPEN_QUESTION_STATE_RE = /^\s*(?:(?:so|but|and),?\s+)?(?:the|my) (?:open|pending|current|pinned) question (?:is|was) (?:still|now|the)\b/i;
-const REPEAT_JUDGE_RE = /\b(?:answer|reply|sentence|message|words)\s+(?:is|was)\s+(?:just\s+)?(?:a\s+)?(?:repeat|repetition|copy)\s+of\b|\bnot the\b[^.!?]{0,40}\banswer I asked for\b/i;
+// Ruling (fix round 2): a repeat verdict ADDRESSED to the student ("Your
+// answer is a repeat of …") is feedback and stays; only the third-person
+// form ("The student's answer is a repeat …") is narration.
+const REPEAT_JUDGE_RE = /^\s*(?:the (?:student|learner)['’]s|their|his|her)\s+(?:latest |last |previous )?(?:answer|reply|sentence|message|words)\s+(?:is|was)\s+(?:just\s+)?(?:a\s+)?(?:repeat|repetition|copy)\s+of\b/i;
 const SECOND_PERSON_RE = /\b(?:you|your|yours|yourself)\b/i;
 const HAS_QUOTE_RE = /["“「][^"”」]{2,}["”」]/;
 export function isTutorPlanNarration(sentence: string): boolean {

@@ -1415,9 +1415,10 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
 // Task 36 fix round 2 (bot run r20, 667 s): the brain planning its own move.
 {
   const lang = { languageLesson: true };
-  for (const x of ['Your answer is a repeat of an earlier sentence, not the trade show answer I asked for.', 'The open question is still the trade show lesson, so I should re-ask it, not praise it.', "The student's answer is a repeat of an earlier sentence, not the trade show answer I asked for.", 'So I should re-ask it.', 'The open question is still the trade show lesson.'])
+  for (const x of ['The open question is still the trade show lesson, so I should re-ask it, not praise it.', "The student's answer is a repeat of an earlier sentence, not the trade show answer I asked for.", 'So I should re-ask it.', 'The open question is still the trade show lesson.'])
     check(`36 r2: dropped — ${x}`, isMetaNarration(x, lang) || stripNoteCitationClause(x, lang) === '');
-  for (const x of ['You should ask your colleague again.', 'I will ask you one more question.', 'The question is: what did you learn there?'])
+  // Ruling: a repeat verdict addressed to the student is feedback — kept.
+  for (const x of ['Your answer is a repeat of an earlier sentence, not the trade show answer I asked for.', "That's the same sentence you said before; I asked about the trade show.", 'You should ask your colleague again.', 'I will ask you one more question.', 'The question is: what did you learn there?'])
     check(`36 r2: kept — ${x}`, !isMetaNarration(x, lang) && stripNoteCitationClause(x, lang) === x);
   check('36 r2: maths sessions untouched (language gate)', !isMetaNarration('I will keep the answer as it is.', { languageLesson: false }) && isMetaNarration('I will keep the answer as it is.', lang));
 }
