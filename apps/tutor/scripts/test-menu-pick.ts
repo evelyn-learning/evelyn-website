@@ -9,7 +9,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseMenuOptions, resolveMenuPick, menuPickNote, menuAskedIn, menuReplyIsPick, isBareAcknowledgement, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP, resolveMenuPickLoose, parseJapaneseMenuOptions } from '../src/lib/tutor/voice/menu-pick';
+import { parseMenuOptions, resolveMenuPick, menuPickNote, menuAskedIn, menuReplyIsPick, isBareAcknowledgement, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP, resolveMenuPickLoose, parseJapaneseMenuOptions, loosePickAllowed } from '../src/lib/tutor/voice/menu-pick';
 
 let failed = 0;
 const test = (name: string, fn: () => void) => {
@@ -129,7 +129,6 @@ test('menuPickNote text (pin) and the VTR wiring', () => {
   test('33 r1 I-1: VTR resolves the loose pick for the pick note and passes the part\'s turns to the cap', () => {
     const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
     assert.ok(VTR.includes('menuReplyIsPick(transcript, mcCard, mcLastTutor, recentTutorTurnsRef.current.slice(-4))'));
-    assert.ok(VTR.includes('?? (TUTOR_MENU_ASK_CAP ? resolveMenuPickLoose(transcript,'));
   });
 }
 
@@ -163,6 +162,22 @@ test('menuPickNote text (pin) and the VTR wiring', () => {
       assert.equal(resolveMenuPickLoose(x, [CARD, JA2])?.index, n, x);
   });
 }
+
+
+// ── Final review B-1: a bare number is a pick only on a menu ──
+test('final B-1: maths "2" to "What is 7 minus 5?" → no pick / no note; the GDI menu "2" → pick', () => {
+  const MATHS = 'What is 7 minus 5?';
+  for (const x of ['2', 'Two.', 'four', 'first', 'the second one', 'number two', '3番'])
+    assert.equal(resolveMenuPickLoose(x, [MATHS]), null, x);
+  assert.equal(loosePickAllowed({ fixedScript: false, cardOffersChoices: false }), false, 'maths session: the loose resolver never runs');
+  assert.equal(loosePickAllowed({ fixedScript: true, cardOffersChoices: false }), false, 'a fixed-script part with no menu');
+  const CARD = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  assert.equal(loosePickAllowed({ fixedScript: true, cardOffersChoices: true }), true);
+  assert.equal(resolveMenuPickLoose('2', [CARD])?.index, 2);
+  assert.equal(resolveMenuPickLoose('Two.', ['Which one: words, a sentence, or skip?', CARD])?.index, 2);
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes('?? (TUTOR_MENU_ASK_CAP && loosePickAllowed({ fixedScript: isFixedScriptPlan(lessonPlanRef.current), cardOffersChoices: boardOffersChoices({ statement: segmentCardStatement(lessonPlanRef.current, currentSegmentIdRef.current ?? \'\') }) })'));
+});
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall menu-pick tests passed');

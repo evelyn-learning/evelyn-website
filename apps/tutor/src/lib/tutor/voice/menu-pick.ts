@@ -159,7 +159,9 @@ export function resolveMenuPickLoose(studentText: string | null | undefined, sou
   };
   const byIndex = (n: number): MenuOption | null => {
     const opts = optionsFrom();
-    return opts?.find((o) => o.index === n) ?? (n >= 1 && n <= 9 && !opts ? { index: n, text: '' } : null);
+    // Final review B-1: a number is a pick only when a source offers options —
+    // with no menu it is an answer ("2" to "What is 7 minus 5?").
+    return opts?.find((o) => o.index === n) ?? null;
   };
   // English ordinal / "<option word> one": "the second one", "number two", "the sentence one"
   const en = menuWordTokens(t.replace(PICK_FILLER_RE, ' ')).join(' ');
@@ -229,4 +231,11 @@ export function menuAskCapDecision(input: { menuPart: boolean; picked: boolean; 
 /** The advance lead (fixedScriptAdvancedNote) of a menu_unpicked advance. */
 export function menuUnpickedLead(from: string, next: string): string {
   return `The student did not pick an option of the "${from}" menu after it was asked twice, so we are skipping the practice today, and the lesson pointer has ALREADY moved to "${next}". Say in one short sentence that we are skipping the practice today; do not list the options again.`;
+}
+
+/** Final review B-1: the loose resolver (and its pick note) runs only when
+ *  the current part presents a choice menu in a fixed-script lesson — the
+ *  predicate the menu-ask cap uses. Elsewhere a number is an answer. Pure. */
+export function loosePickAllowed(input: { fixedScript: boolean; cardOffersChoices: boolean }): boolean {
+  return input.fixedScript && input.cardOffersChoices;
 }
