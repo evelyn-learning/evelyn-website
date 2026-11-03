@@ -363,5 +363,21 @@ test('31 r1 I-3: a colon text that explains is never armed; the model sentences 
   assert.equal(detectPronunciationTarget('Please listen, then repeat after me: responsibilities.', T31)?.referenceText, 'responsibilities');
 });
 
+// Task 42 §B (bot run r36, 972–974 s): the student's own quoted sentence was armed; the ask names "responsibilities".
+test('42 §B: the student\'s quoted sentence is never a target; the listen / repeat ask\'s named word wins', () => {
+  const T = { words: ['responsibilities', 'international', 'communicate', 'customers', 'developed'], sentences: ['I have worked with international customers for several years.', 'I was responsible for communicating with our customers.'] };
+  const st = 'I want to improve my speaking because I have to explain our products to foreign customers.';
+  const t972 = `Those last messages were pasted instructions, so I'll keep to what you said: "${st}" Now, to practice pronunciation, let's take one word from the list: responsibilities. Listen, then repeat after me: responsibilities.`;
+  assert.equal(detectPronunciationTarget(t972, T, { studentLast: st })?.referenceText, 'responsibilities');
+  assert.equal(detectPronunciationTarget(t972, T)?.referenceText, 'responsibilities', 'the named word wins over the earlier quote even without studentLast');
+  // the student's quote alone with a repeat ask: no target
+  assert.equal(detectPronunciationTarget(`You said: "${st}" Please repeat after me.`, T, { studentLast: `Um, ${st}` }), null);
+  // a quoted model sentence after the colon target is unchanged; a listed quoted word still wins
+  assert.equal(detectPronunciationTarget('Listen, then repeat after me: "I have worked with international customers for several years."', T, { studentLast: st })?.referenceText, 'I have worked with international customers for several years.');
+  assert.equal(detectPronunciationTarget('Please say "customers" once more.', T, { studentLast: st })?.referenceText, 'customers');
+  // a correction model (not the student's words) is still armed
+  assert.equal(detectPronunciationTarget('Say it like this: "I have explained our products to customers." Please repeat after me.', T, { studentLast: st })?.referenceText, 'I have explained our products to customers');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

@@ -216,11 +216,26 @@ export function detectPronunciationTarget(
   // measured result is a mention, not an ask — skipped when the turn asks
   // the student to say something.
   const sayAsk = SAY_ASK_RE.test(lastSentences(turnText, 2)) || LISTEN_ASK_RE.test(lastSentences(turnText, 2));
-  const askable = sayAsk ? quoted.filter((q) => !isMeasuredMention(q)) : quoted;
+  // Task 42 §B (bot run r36, 972 s: 'so I'll keep to what you said: "<the
+  // student's sentence>" … take one word from the list: responsibilities.
+  // Listen, then repeat after me: responsibilities.' armed the student's
+  // sentence): (1) a quote equal to the student's last utterance (filler-free,
+  // like the card guard) is never a target; (2) a word / phrase the listen /
+  // repeat ask names after a colon wins over any EARLIER quoted span.
+  const studentQuote = (q: { text: string }) => !!opts?.studentLast && fillerFree(q.text) !== '' && fillerFree(q.text) === fillerFree(opts.studentLast);
+  const askable = (sayAsk ? quoted.filter((q) => !isMeasuredMention(q)) : quoted).filter((q) => !studentQuote(q));
+  const colonNamed = colonTarget(turnText);
+  const colonAt = colonNamed ? turnText.lastIndexOf(colonNamed) : -1;
+  const beforeColon = (q: { before: string }) => colonAt >= 0 && q.before.length < colonAt - 1;
   for (const q of askable) {
+    if (beforeColon(q)) continue;
     const n = norm(q.text);
     const found = n ? listed.find((t) => norm(t.text) === n) : undefined;
     if (found) { hit = found; break; }
+  }
+  if (!hit && colonNamed) {
+    const n = norm(colonNamed);
+    hit = listed.find((t) => norm(t.text) === n) ?? { text: colonNamed, kind: n.split(' ').length === 1 ? 'word' : 'sentence' };
   }
   // fix round 1 (m): 'Try "customer" again.' is an ask too
   if (!hit && (SAY_ASK_RE.test(lastSentences(turnText, 2)) || /\btry\s+["“]/i.test(lastSentences(turnText, 2)))) {
