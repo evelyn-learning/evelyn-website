@@ -1192,9 +1192,31 @@ const PART_STATE_PLAN_RE = /\b(?:part|section|segment|step)\s+is\s+(?:almost |ne
 // board-write announcement is narration of the tool's own action. "Here is
 // the question on the board: …" and "Look at the board." are speech.
 const BOARD_WRITE_PLAN_RE = /^\s*(?:(?:ok(?:ay)?|so|now),?\s+)?(?:Let me|I['’]ll|I will) (?:write|put) (?:the|this|that|a) (?:question|sentence|word|example)s? on the board\s*[.!]?\s*$/i;
+// Task 36 fix round 2 (bot run r20, 667 s: "Your answer is a repeat of an
+// earlier sentence, not the trade show answer I asked for. The open question
+// is still the trade show lesson, so I should re-ask it, not praise it."):
+// (a) a first-person modal plan of a tutor action (re-ask / ask it again /
+// praise / correct / hold / keep / set aside / move us / not praise — a bare
+// "I will move on …" stays speech, Task 28 §C r1) with no
+// second-person address and no quote; (b) a statement of what the open /
+// pinned question is ("The open question is still …", no "?"); (c) a
+// verdict that the student's reply repeats an earlier one / is not the
+// answer asked for. "I will ask you one more question.", "You should ask your
+// colleague again.", "The question is: what did you learn there?" are speech.
+const MODAL_PLAN_RE = /\b(?:so |therefore |then )?I (?:should|need to|must|will|['’]ll|ought to) (?:re-?ask|ask (?:it|that|the question) again|praise|correct|hold|keep|set (?:it|that) aside|move us|not (?:praise|accept))\b/i;
+const OPEN_QUESTION_STATE_RE = /^\s*(?:(?:so|but|and),?\s+)?(?:the|my) (?:open|pending|current|pinned) question (?:is|was) (?:still|now|the)\b/i;
+const REPEAT_JUDGE_RE = /\b(?:answer|reply|sentence|message|words)\s+(?:is|was)\s+(?:just\s+)?(?:a\s+)?(?:repeat|repetition|copy)\s+of\b|\bnot the\b[^.!?]{0,40}\banswer I asked for\b/i;
+const SECOND_PERSON_RE = /\b(?:you|your|yours|yourself)\b/i;
+const HAS_QUOTE_RE = /["“「][^"”」]{2,}["”」]/;
+export function isTutorPlanNarration(sentence: string): boolean {
+  const s = sentence ?? '';
+  if (MODAL_PLAN_RE.test(s) && !SECOND_PERSON_RE.test(s) && !HAS_QUOTE_RE.test(s)) return true;
+  if (OPEN_QUESTION_STATE_RE.test(s) && !/[?？]/.test(s)) return true;
+  return REPEAT_JUDGE_RE.test(s) && !HAS_QUOTE_RE.test(s);
+}
 export function isSteeringPlanNarration(sentence: string): boolean {
   const s = sentence ?? '';
-  return STEER_PLAN_RE.test(s) || PART_STATE_PLAN_RE.test(s) || BOARD_WRITE_PLAN_RE.test(s);
+  return STEER_PLAN_RE.test(s) || PART_STATE_PLAN_RE.test(s) || BOARD_WRITE_PLAN_RE.test(s) || isTutorPlanNarration(s);
 }
 export function isTutorDirectiveImperative(sentence: string): boolean {
   const s = sentence ?? '';
