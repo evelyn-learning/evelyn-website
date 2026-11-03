@@ -14,7 +14,7 @@
  */
 import type { LessonPlan, Segment } from './types';
 import { isFixedScriptPlan, nextSegmentId, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS } from './fixed-script';
-import { lastAskSentence, lastQuestionSentence, lastSentenceAsks, splitSentences, stripMarkdownEmphasis } from '../question-gist-text';
+import { lastAskSentence, lastQuestionSentence, lastSentenceAsks, splitSentences, stripMarkdownEmphasis, turnEndsWithAsk } from '../question-gist-text';
 import { expectedRepeatFor, isStrictRepeatAsk } from '../voice/correct-retry';
 import { sameSentence } from '../voice/sentence-board';
 
@@ -136,6 +136,11 @@ export function announcedTurnNeedsContinuation(tutorText: string): boolean {
   const sentences = text.split(/(?<=[。！？.!?])\s*|\n+/).map((x) => x.trim()).filter(Boolean);
   const last = sentences[sentences.length - 1] ?? '';
   if (/[?？]/.test(last)) return false;
+  // Task 38 §C (voice run 19, 865 s: 'Now try one … sentence about it,
+  // starting with "I thought..." or "It was...".' — the split above cut at
+  // the quoted ellipses, so the ask was never the last sentence): the turn
+  // ending on an ask (turnEndsWithAsk, quote-aware split) is an open question.
+  if (turnEndsWithAsk(text)) return false;
   if (lastQuestionSentence(text)) return false;
   if (lastAskSentence(text)) return false;
   // Task 28 §B (GDI run 15, 150 s): an imperative ask in the last sentence

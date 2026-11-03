@@ -40,7 +40,7 @@ import {
 import {
   FIXED_SCRIPT_CLOSE_RECAP_GRACE_TURNS, FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_CLOSE_WRAP_SILENCE_MS, FIXED_SCRIPT_CLOSE_WRAP_MAX_MS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
-import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '../src/lib/tutor/lesson-plan/announced-move';
+import { fixedScriptCloseForcedAction, closeWrapPollDecision, noAskTurnNeedsContinuation, announcedTurnNeedsContinuation } from '../src/lib/tutor/lesson-plan/announced-move';
 import { turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
 import { askOffNewPart, transitionAskCheckDue as transitionAskCheckDueR1 } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel, displayedSegmentId, displayedCompletedSegments } from '../src/lib/tutor/lesson-plan/rail-labels';
@@ -508,10 +508,11 @@ test('B: VoiceTutorRealtime wires segment_card_auto (pin)', () => {
 });
 
 // ── Task 22 §A (GDI run 10, 574 s / 882 s) ───────────────────────────────
-test('22A: a due budget advance on a turn ending with an ask is held one turn', () => {
-  assert.equal(FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, 1);
+test('22A: a due budget advance on a turn ending with an ask is held (Task 38 §C: up to two turns)', () => {
+  assert.equal(FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, 2);
   assert.equal(holdAutoAdvanceForPendingAsk(true, 0), true);   // due + ends with ask + held 0 → hold
-  assert.equal(holdAutoAdvanceForPendingAsk(true, 1), false);  // held 1 → advance
+  assert.equal(holdAutoAdvanceForPendingAsk(true, 1), true);   // Task 38 §C: held 1 → hold again (2/2)
+  assert.equal(holdAutoAdvanceForPendingAsk(true, 2), false);  // held 2 → advance
   assert.equal(holdAutoAdvanceForPendingAsk(false, 0), false); // no ask → advance
 });
 test('22A: turnEndsWithAsk — the run-10 turns', () => {
@@ -1326,6 +1327,19 @@ test('36 r1 MINOR-1: a plan with no segment minutes is never time-guarded', () =
   const p = { ...fixed, estimatedMinutes: 5, segments: fixed.segments.map((sg) => ({ ...sg, estimatedMinutes: undefined })) } as unknown as LessonPlan;
   const segs = p.segments.map((sg) => sg.id);
   assert.deepEqual(lessonTimeGuardDecision({ plan: p, segmentId: segs[1]!, elapsedMs: 4 * 60_000, alreadyFired: false }), { action: 'none' });
+});
+// ── Task 38 §C (voice run 19, 854–877 s): the auto-advance abandoned an open question ──
+test('38 §C: the 865 s turn ends with an ask; the advance is held (2/2) and the noask continuation does not fire', () => {
+  const t865 = `The movie was good, and that's a complete answer. Now try one past simple sentence about it, starting with "I thought..." or "It was...".`;
+  assert.equal(turnEndsWithAsk(t865), true, 'a "Now try …" ask with no comma after the lead');
+  // the 854 s turn spent hold 1/2 — the 865 s ask is held again
+  assert.equal(holdAutoAdvanceForPendingAsk(turnEndsWithAsk(t865), 1), true);
+  assert.equal(announcedTurnNeedsContinuation(t865), false, 'quoted ellipses do not hide the ask');
+  assert.equal(noAskTurnNeedsContinuation({ text: t865, fixedScript: true, runtimeTriggered: false, toolsSeen: [], closing: false, pronunciationArmed: false }), false);
+  assert.equal(turnEndsWithAsk('Next try the second sentence on the card.'), true);
+  // still no ask
+  assert.equal(turnEndsWithAsk('Now the lesson moves on. That was a clear sentence.'), false);
+  assert.equal(noAskTurnNeedsContinuation({ text: 'Let me put the correct sentence on the board and move on.', fixedScript: true, runtimeTriggered: false, toolsSeen: [], closing: false, pronunciationArmed: false }), true);
 });
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

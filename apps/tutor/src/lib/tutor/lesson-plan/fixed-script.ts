@@ -857,7 +857,10 @@ export function menuReadInTurn(cardStatement: string, turnText: string): boolean
  *  pronunciation hold, but for one turn only (the answer is the very next
  *  student turn). The 'announced' reason is never held (the caller skips it:
  *  an announced move already skips questions — Task 19 §B). */
-export const FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS = 1;
+// Task 38 §C (voice run 19, 854–869 s: the one hold was spent on the
+// previous ask, the next turn asked again and the advance abandoned it): a
+// second hold is allowed.
+export const FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS = 2;
 /** True ⇒ hold this turn. `heldTurns` = consecutive turns already held for an ask. */
 export function holdAutoAdvanceForPendingAsk(endsWithAsk: boolean, heldTurns: number): boolean {
   return endsWithAsk && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS;

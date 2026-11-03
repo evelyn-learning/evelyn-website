@@ -102,7 +102,8 @@ export function splitSentences(text: string): string[] {
 // Task 20 §E1 (GDI run 8, 1418 s): read / repeat asks ("please read the
 // sentence "…" after me") are asks too.
 const ASK_PHRASE = String.raw`(?:tell me|please (?:say|tell|try|give|read|repeat)|try|say|read|repeat|could you|can you|give me|describe|finish|complete)\b`;
-const ASK_LEAD_RE = new RegExp(String.raw`^(?:(?:now|next|then|so),\s*)?` + ASK_PHRASE, 'i');
+// Task 38 §C (voice run 19, 865 s: "Now try one past simple sentence …" — no comma after the lead — was no ask): the lead's comma is optional.
+const ASK_LEAD_RE = new RegExp(String.raw`^(?:(?:now|next|then|so)(?:,\s*|\s+))?` + ASK_PHRASE, 'i');
 /** Task 20 §E1 (GDI run 8, 1302 s / 1418 s): an ask after a lead clause —
  *  "Now, you asked earlier about …, so please tell me one thing …", "Let's
  *  move on to the next part: please read the sentence …". The ask phrase
@@ -151,7 +152,7 @@ export function lastAskSentence(text: string): string | null {
 // call it) and by turnEndsWithAsk.
 // ─────────────────────────────────────────────────────────────────────────
 const IMPERATIVE_ASK_VERB = String.raw`(?:tell me|say|try|give me|describe|explain|show me|read|repeat|answer|choose|pick|name|list|make a sentence|use|finish|complete)\b`;
-const IMPERATIVE_ASK_LEAD = String.raw`(?:(?:now|next|then|first|so),\s*|take a look at the board,?\s*and\s+|look at the board,?\s*and\s+)*(?:please,?\s+)?`;
+const IMPERATIVE_ASK_LEAD = String.raw`(?:(?:now|next|then|first|so)(?:,\s*|\s+)|take a look at the board,?\s*and\s+|look at the board,?\s*and\s+)*(?:please,?\s+)?`;
 /** An imperative ask at a clause start: the sentence start, or after , ; : — –
  *  (optionally + and / so / then / now). */
 // Fix round 1 (m-1): a verb read as a noun or an interjection ("use of
