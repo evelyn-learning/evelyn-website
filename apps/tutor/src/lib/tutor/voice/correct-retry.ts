@@ -1245,10 +1245,26 @@ function subsetJaccard(x: Set<string>, y: Set<string>): boolean {
   for (const w of x) if (y.has(w)) inter += 1;
   return inter === x.size && inter / (x.size + y.size - inter) >= 0.5;
 }
+// Task 37 §B (bot run r22, 231 s: "…, so could you tell me that in two
+// sentences?" — "that" is the probe gist): on the check-in turn a question
+// whose asking clause (after the last ", so / and / but / then" or colon)
+// has ≤ 2 content words and a demonstrative / pronoun object (that / it /
+// this / the same / これ / それ) re-asks the probe. Pure.
+const PRONOUN_OBJECT_RE = /\b(?:that|it|this|the same)\b|これ|それ/i;
+export function pronounReask(sentence: string | null | undefined): boolean {
+  const s = (sentence ?? '').trim();
+  if (!/[?？]\s*$/.test(s)) return false;
+  const clauses = s.split(/,\s*(?:so|and|but|then)\s+|:\s*|、\s*(?:では|じゃあ|それで)?/i);
+  const ask = (clauses[clauses.length - 1] ?? s).trim();
+  if (!PRONOUN_OBJECT_RE.test(ask)) return false;
+  const content = /[A-Za-z]{3,}/.test(ask) ? reaskStems(ask) : jaTokens(ask);
+  return content.size <= 2;
+}
 export function probeReasks(sentence: string | null | undefined, previousAsks: ReadonlyArray<string | null | undefined>, opts?: { studentText?: string | null }): boolean {
   const s = (sentence ?? '').trim();
   if (!s || !PROBE_ASK_SHAPE_RE.test(s)) return false;
   if (isRepeatOrCorrectionAsk(s, opts?.studentText)) return false;
+  if (pronounReask(s)) return true;
   const asks = previousAsks.filter((a): a is string => !!a && !!a.trim()).flatMap(probeAskSentences);
   if (!asks.length) return false;
   if (isJapaneseSentence(s)) {

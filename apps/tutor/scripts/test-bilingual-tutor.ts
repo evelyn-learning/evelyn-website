@@ -57,7 +57,7 @@ import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, 
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
-import { probeReasks, isRepeatOrCorrectionAsk } from '../src/lib/tutor/voice/correct-retry';
+import { probeReasks, isRepeatOrCorrectionAsk, pronounReask } from '../src/lib/tutor/voice/correct-retry';
 import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk, noAttemptBudgetTurns, isYesNoAsk } from '../src/lib/tutor/voice/correct-retry';
 import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
 import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
@@ -2078,6 +2078,19 @@ test('36 r1: probeReasks compares only with the previous ASK sentences, subset +
   const T77 = '「Last month」の文がまた出てきましたね。 今の質問は、そのプロジェクトがどの製品のためだったか、でした。 Which product was the project for?';
   assert.equal(probeReasks('Which product was the project for?', [T75, T77]), true);
   assert.equal(probeReasks('その製品は何でしたか？', [T75, T77]), true);
+});
+
+test('37 §B: on the check-in turn a pronoun-object question with ≤ 2 content words is a re-ask', () => {
+  const asks = ['Thanks. Now, what are your main responsibilities at work?', 'Now, back to my question: what are your main responsibilities at work?'];
+  const T231 = 'But my question was about your main responsibilities at work, so could you tell me that in two sentences?';
+  assert.equal(pronounReask(T231), true);
+  assert.equal(probeReasks(T231, asks, { studentText: 'Last month I made a presentation for a new product launch.' }), true, 'the 231 s re-ask is dropped');
+  for (const x of ['Could you tell me that again?', 'それを英語で言えますか？']) assert.equal(pronounReask(x), true, x);
+  // a ≥ 3-content-word question that is not a subset re-ask stays on the check-in turn
+  assert.equal(probeReasks('Could you tell me which customers you visited last month?', asks), false);
+  assert.equal(pronounReask('What do you think?'), false, 'no pronoun object');
+  // a repeat / correction ask still wins
+  assert.equal(probeReasks('Could you say that once more, "I am responsible for sales"?', asks, { studentText: 'I responsible for sales.' }), false);
 });
 
 if (failed) process.exit(1);
