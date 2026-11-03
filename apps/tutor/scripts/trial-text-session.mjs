@@ -89,6 +89,24 @@ const POOL = {
   whichWords: ['Last month.', '"Last year" shows the time is finished.'],
   howLong: ['For three years.', 'I have worked in my current department for three years.'],
   department: ['I have worked in my current department for three years.'],
+  // straight answers for the follow-ups the tutor actually asks
+  country: ['I visit Germany for business last year.', 'I visited Germany for business last year.'],
+  product: ['The product is a new washing machine.', 'It was a new washing machine with a big drum.'],
+  saw: ['I saw a robot that could talk.', 'I saw many new battery products.'],
+  talkedAbout: ['We talk about the price and the delivery.', 'We talked about the price and the delivery date.'],
+  customerSaid: ['The customer say the price is good.', 'The customer said the price was good.'],
+  firstStep: ['First I make a plan with my team.', 'First, I made a plan with my team.'],
+  nextStep: ['Then I call the supplier.', 'Then I called the supplier.'],
+  total: ['It was about two hundred dollars.'],
+  moneyUse: ['We give the money to a charity.', 'We gave the money to a charity.'],
+  confident: ['I feel most confident with "I have worked at my company for five years."'],
+  meeting: ['I had a meeting with my boss yesterday.'],
+  colleague: ['Yes, I have worked with my colleague Tanaka on a website project.'],
+  hobby: ['I have been playing tennis for ten years.'],
+  nextTime: ['Next time I will prepare the slides earlier.'],
+  companySize: ['My company has about three hundred people.'],
+  dailyTask: ['I check emails and call customers every morning.'],
+  useEmail: ['I will use "I have worked" in my next email to my boss.'],
 };
 // "starting with "X"" scaffolds: X + a tail that fits
 const PREFIX_TAILS = [
@@ -210,6 +228,11 @@ function decide(text) {
     [/business trip|last trip|on your trip/, 'trip'], [/proud/, 'proud'], [/responsible|your role|what did you do in/, 'responsible'],
     [/challenge|difficult/, 'challenge'], [/result|outcome|how did it (end|go)|successful/, 'result'], [/feel|felt/, 'felt'],
     [/what did you learn|one thing you learned|lesson/, 'lesson'], [/what.*learn|learned at the|learn there/, 'learnedAt'],
+    [/which country|what country|name of (?:a|the) (?:foreign )?country|country did you/, 'country'], [/what (?:was|is) the product|which product|product (?:was|is) it|about the product/, 'product'],
+    [/what did you see|one thing you saw|saw there|caught your (?:eye|attention)/, 'saw'], [/talk(?:ed)? about|discuss/, 'talkedAbout'], [/customer (?:say|said)|did (?:the|your) customer/, 'customerSaid'],
+    [/\bfirst,? (?:i|you)|first step|starting with "first/, 'firstStep'], [/\bthen,? (?:i|you)|next step|what did you do next|after that/, 'nextStep'], [/total|how much (?:money|did you)/, 'total'], [/with the money|the money after|donat/, 'moneyUse'],
+    [/confident|more natural|which sentence/, 'confident'], [/meeting/, 'meeting'], [/colleague|co-?worker|team member/, 'colleague'], [/hobby|free time|weekend/, 'hobby'],
+    [/next time|in the future|will you (?:do|use)|your next email|use .* with your boss/, 'nextTime'], [/how many people|company size|big is your company/, 'companySize'], [/every day|daily|typical day|morning/, 'dailyTask'], [/email/, 'useEmail'],
     [/\bwhen\b/, 'when'], [/\bwhy\b/, 'why'], [/\bhow\b/, 'how'], [/\bwho\b/, 'who'], [/\bwhere\b/, 'where'],
   ];
   for (const [re, key] of rules) if (re.test(L)) {
@@ -217,7 +240,10 @@ function decide(text) {
     if (a && a !== state.lastAnswer) { state.lastAnswer = a; return { text: a, why: key }; }
     if (a) { const alt = POOL[key][POOL[key].length - 1] !== a ? POOL[key][POOL[key].length - 1] : `${a.replace(/\.$/, '')}, as I said.`; state.lastAnswer = alt; return { text: alt, why: `${key} (alt)` }; }
   }
-  if (/\?\s*$/.test(last)) return { text: fromPool('recent') ?? pick(POOL.generic), why: 'fallback-q' };
+  if (/\?\s*$/.test(last)) {
+    const fresh = ['I think it was a good experience for me.', 'It was last year, in the spring.', 'My boss helped me with it.', 'I did it with two colleagues from my team.', 'It took about three months.'];
+    return { text: V.errors < 0.1 ? pick(fresh) : (fromPool('recent') ?? pick(POOL.generic)), why: 'fallback-q' };
+  }
   return { text: pick(POOL.generic), why: 'fallback' };
 }
 
