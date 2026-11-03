@@ -1725,5 +1725,46 @@ test('final-3 r3: negative / contracted be-forms agree after the swap; an unmapp
   assert.equal(firstPersonWriteBack("You isn't ready."), null);
 });
 
+
+// ── Task 43 (voice run 21, embed-1793719782028) — §B, §I, §M ──
+test('43 B: the student\'s readiness answer / acknowledgement is never a card (47 s: "Yes, I am ready." carded)', () => {
+  for (const ack of ['Yes, I am ready.', "Yes, I'm ready.", 'OK, let\'s start.', 'Okay.', 'Yes.', 'Sure, ready.', 'はい、大丈夫です。', 'I am ready.', 'Yes please.']) {
+    assert.equal(cardableStudentSentence(ack), null, ack);
+  }
+  assert.equal(planSentenceBoard38({ tutorText: "Great, let's begin. What are your main responsibilities at work?", studentLast: 'Yes, I am ready.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'Yes, I am ready.' }).length, 0);
+  assert.equal(planSentenceBoard38({ tutorText: 'Good. What do you do there?', studentLast: 'Yes, I am ready.', renderedThisTurn: false, conversationPart: true, studentVerdict: 'correct' }).length, 0);
+  // a real sentence that opens like an ack is still a card
+  assert.equal(cardableStudentSentence('Yes, I am ready for the meeting with our customers.'), 'Yes, I am ready for the meeting with our customers.');
+  assert.equal(cardableStudentSentence('I am ready to present the new product next week.'), 'I am ready to present the new product next week.');
+});
+test('43 I: one correction card per student sentence — the quoted fragment gives way to the full recast (916 s: two correction cards)', () => {
+  const t915 = '"I could write an email to everyone" is a clear idea, and the purpose "to pay" works. The natural way to say it is: "I could write an email to remind everyone to pay." Can you say that sentence once more?';
+  const cards = planSentenceBoard38({ tutorText: t915, studentLast: 'Um, I could write email to everyone to pay.', renderedThisTurn: false, correctionMarked: true });
+  assert.deepEqual(cards.map((c) => c.sentence), ['I could write an email to remind everyone to pay.'], JSON.stringify(cards));
+  assert.equal(cards[0]!.kind, 'correction');
+  // two near-identical quoted corrections of one sentence (no fragment relation): the longest stays
+  const t2 = 'Say "I went to the gym last week." — the past simple. So the full sentence is "Last week, I went to the gym." Can you say it once more?';
+  const two = planSentenceBoard38({ tutorText: t2, studentLast: 'Last week I go to gym.', renderedThisTurn: false, correctionMarked: true }).filter((c) => c.kind === 'correction');
+  assert.equal(two.length, 1, JSON.stringify(two));
+  // the contrast pair is two MODEL sentences — untouched
+  const pair = planSentenceBoard38({ tutorText: 'Can you explain the difference between these two sentences? "I have worked here for five years." and "I worked here five years ago."', studentLast: 'Yes.', renderedThisTurn: false });
+  assert.equal(pair.length, 2);
+});
+test('43 M: in the recap part only corrections (and a contrast pair) card — the recap\'s quoted examples / the student\'s earlier sentences do not (image 92)', () => {
+  const t1148 = 'One thing you did well was building full sentences with your own work details, like "I collected donations from everyone." Here are the main points. We practised the present perfect for experience that continues now, like "I have worked with international customers for several years." We also practised the past simple for a finished event, like "I attended a robotics business exhibition in Tokyo last year."';
+  assert.deepEqual(planSentenceBoard38({ tutorText: t1148, studentLast: 'Yes, review main points.', renderedThisTurn: false, recapPart: true }), []);
+  const t1189 = 'わかりました。 今日はここまでにしましょう。 The present perfect, "I have worked here for five years," describes something that started in the past and still continues. You practised that and the past simple today, and you did very well.';
+  assert.deepEqual(planSentenceBoard38({ tutorText: t1189, studentLast: 'I would like to stop now.', renderedThisTurn: false, recapPart: true }), []);
+  // the same turn outside the recap still cards the model sentence (unchanged behaviour)
+  assert.ok(planSentenceBoard38({ tutorText: t1189, studentLast: 'I would like to stop now.', renderedThisTurn: false }).length >= 1);
+  // a contrast pair in the recap cards both; a correction in the recap cards
+  assert.equal(planSentenceBoard38({ tutorText: 'Can you explain the difference between these two sentences? "I have worked here for five years." and "I worked here five years ago."', studentLast: 'Yes.', renderedThisTurn: false, recapPart: true }).length, 2);
+  const corr = planSentenceBoard38({ tutorText: 'A more natural way to say this is: "I was responsible for communicating with our customers." Can you try that sentence again?', studentLast: 'I was responsible to communicate with our customers.', renderedThisTurn: false, recapPart: true, correctionMarked: true });
+  assert.equal(corr.length, 1); assert.equal(corr[0]!.kind, 'correction');
+  const vtr = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes('recapPart: TUTOR_RECAP_CORRECTION_CARDS_ONLY && answeredGuardPart(lessonPlanRef.current, turnStartSegmentId),'), 'VTR passes recapPart');
+  assert.match(readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8'), /export const TUTOR_RECAP_CORRECTION_CARDS_ONLY = process\.env\.NEXT_PUBLIC_TUTOR_RECAP_CORRECTION_CARDS_ONLY !== 'off';/);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

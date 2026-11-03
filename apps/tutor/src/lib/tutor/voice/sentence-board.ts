@@ -448,9 +448,26 @@ export function hasStutter(text: string | null | undefined): boolean {
   for (let i = 1; i < w.length; i += 1) if (w[i] === w[i - 1] && !STUTTER_OK.has(w[i]!)) return true;
   return false;
 }
+/** Task 43 §B (voice run 21, 47 s: "Yes, I am ready." carded): the student's
+ *  acknowledgement / readiness answer — ack words, "I'm ready", "let's start",
+ *  「はい」「大丈夫です」, alone or stacked, optionally "please" — is never a
+ *  card. A real sentence that opens like one ("Yes, I am ready for the
+ *  meeting…") is not matched: the whole line must be the ack. */
+const STUDENT_ACK_UNIT = String.raw`(?:yes|yeah|yep|ok|okay|sure|alright|all right|fine|of course|ready|please|got it|i(?:'m| am) ready|let(?:'s| us) (?:start|begin|go|do it)|はい|ええ|うん|わかりました|大丈夫(?:です)?|お願いします|オッケー)`;
+const STUDENT_ACK_LINE_RE = new RegExp(String.raw`^\s*(?:${STUDENT_ACK_UNIT}[,.!、。]?\s*)+$`, 'i');
+export function isStudentAckLine(text: string | null | undefined): boolean {
+  return STUDENT_ACK_LINE_RE.test((text ?? '').trim());
+}
+/** Task 43 §I: every word of `a` appears in `b` in the same order. */
+function isOrderedFragment(a: readonly string[], b: readonly string[]): boolean {
+  let j = 0;
+  for (const w of b) if (w === a[j]) j += 1;
+  return j === a.length;
+}
 export function cardableStudentSentence(raw: string | null | undefined): string | null {
   let s = (raw ?? '').trim();
   if (s.length >= CHECKED_MAX_CHARS) return null;
+  if (isStudentAckLine(s)) return null;
   const before = s;
   for (let prev = ''; prev !== s;) {
     prev = s;
@@ -1426,6 +1443,11 @@ export function planSentenceBoard(input: {
   conversationPart?: boolean;
   /** Task 38 §I3: this turn's check verdict on the student's answer (null = none). */
   studentVerdict?: string | null;
+  /** Task 43 §M (voice run 21, image 92): the current part is the recap —
+   *  the recap's quoted examples and the student's earlier sentences are not
+   *  re-carded under the summary card; corrections and a contrast pair still
+   *  card. */
+  recapPart?: boolean;
   /** Task 25 §C2: told about each quote skipped as a translation. */
   onQuoteSkipped?: (reason: 'translation', span: string) => void;
   /** Task 39 §C2: the check / judge marked the student's sentence for a
@@ -1655,6 +1677,27 @@ export function planSentenceBoard(input: {
   // it): ANY correction card of the student's sentence (quoted, recast,
   // grammar recast — here or in an earlier plan call of this turn) replaces
   // the model cards of that same sentence (checked / levelcheck / echo).
+  // Task 43 §I (voice run 21, 916 s: the full recast "I could write an email
+  // to remind everyone to pay." AND the quoted fragment "I could write an
+  // email to everyone", both kind=correction): one correction card per
+  // student sentence — a correction whose words are an ordered fragment of
+  // another correction gives way; two corrections of the same sentence (≥ 50 %
+  // of their words shared) keep the longer. Model cards (a contrast pair) are
+  // not touched.
+  for (let k = classified.length - 1; k >= 0; k--) {
+    const c = classified[k]!;
+    if (c.q.kind !== 'correction') continue;
+    const mine = norm(c.q.sentence).split(' ').filter(Boolean);
+    const other = classified.find((d, j) => j !== k && d.q.kind === 'correction' && (() => {
+      const theirs = norm(d.q.sentence).split(' ').filter(Boolean);
+      // the shorter gives way; equal length ⇒ the earlier-spoken gives way to the later ("the full sentence is …")
+      if (theirs.length < mine.length || (theirs.length === mine.length && j < k)) return false;
+      if (isOrderedFragment(mine, theirs)) return true;
+      const shared = mine.filter((w) => theirs.includes(w)).length;
+      return shared / new Set([...mine, ...theirs]).size >= 0.5;
+    })());
+    if (other) classified.splice(k, 1);
+  }
   const studentKey = input.studentLast ? norm(input.studentLast) : '';
   const correctedHere = classified.some((c) => c.q.kind === 'correction');
   const correctedEarlier = !!studentKey && input.cardedStudentSentence?.has(studentKey) === true;
@@ -1692,6 +1735,10 @@ export function planSentenceBoard(input: {
       input.onSuppressed?.('acknowledgement / short line', cs);
       classified.splice(k, 1);
     }
+  }
+  // Task 43 §M: the recap re-cards nothing but a correction (the pair below).
+  if (input.recapPart === true) {
+    for (let k = classified.length - 1; k >= 0; k--) if (classified[k]!.q.kind !== 'correction') classified.splice(k, 1);
   }
   const out = classified.slice(0, SENTENCE_BOARD_MAX_PER_TURN).map((c) => c.q);
   // Task 29 §I: a contrast ask's two sentences are carded both, in spoken

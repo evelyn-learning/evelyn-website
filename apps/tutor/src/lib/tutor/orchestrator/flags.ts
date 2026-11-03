@@ -1403,3 +1403,9 @@ export const TUTOR_CORRECT_REPLY_REASK_DROP = process.env.NEXT_PUBLIC_TUTOR_CORR
  *  pick (or the menu-ask cap). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_MENU_ENTRY_FALLBACK=off. */
 export const TUTOR_MENU_ENTRY_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_MENU_ENTRY_FALLBACK !== 'off';
+
+/** Task 43 §M (voice run 21, image 92): on the recap part the summary's
+ *  quoted examples and the student's own earlier sentences were carded under
+ *  the recap card — the recap now cards corrections (and a contrast pair)
+ *  only. Client-side: default ON; NEXT_PUBLIC_TUTOR_RECAP_CORRECTION_CARDS_ONLY=off. */
+export const TUTOR_RECAP_CORRECTION_CARDS_ONLY = process.env.NEXT_PUBLIC_TUTOR_RECAP_CORRECTION_CARDS_ONLY !== 'off';
