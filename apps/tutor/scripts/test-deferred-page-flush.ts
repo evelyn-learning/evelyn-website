@@ -244,6 +244,14 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('27B: a new model sentence of the new part follows the part card', orderTurnEndDispatches([showProblem, modelCard, studentCard], true).map((p) => p.kind).join(',') === 'student,segment,other');
   ok('27B: no page pending ⇒ the part card first, stream order otherwise', orderTurnEndDispatches([studentCard, showProblem, modelCard], false).map((p) => p.kind).join(',') === 'segment,student,other');
   ok('27B: nothing planned ⇒ nothing', orderTurnEndDispatches([], true).length === 0);
+  // Task 43 §J (voice run 21, 976 s): a CORRECTION of the student's last sentence on an advancing turn goes on the NEW page, under the part card
+  const correctionCard = { kind: 'correction', cmd: { action: 'showSentence', student: true } } as unknown as P;
+  ok('43J: page pending ⇒ student (model) cards, the part card, then the correction, then others', orderTurnEndDispatches([showProblem, correctionCard, modelCard, studentCard], true).map((p) => p.kind).join(',') === 'student,segment,correction,other');
+  ok('43J: no page pending ⇒ the part card first, stream order otherwise', orderTurnEndDispatches([correctionCard, showProblem, modelCard], false).map((p) => p.kind).join(',') === 'segment,correction,other');
+  const VTRJ = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  ok('43J: VTR plans a correction card as kind correction and marks the command', VTRJ.includes("kind: (TUTOR_CORRECTION_CARD_ON_NEW_PAGE && card.kind === 'correction' ? 'correction' : card.kind === 'correction' || !!card.source ? 'student' : 'other') as 'student' | 'correction' | 'other'") && VTRJ.includes("correctionCard: card.kind === 'correction' }"));
+  ok('43J: a correction card is not moved in front of the page break / to the previous page', VTRJ.includes("if (opts?.sentenceBoardAuto) return opts.studentSentenceCard === true && !(TUTOR_CORRECTION_CARD_ON_NEW_PAGE && opts.correctionCard === true);"));
+  ok('43J: flag', /export const TUTOR_CORRECTION_CARD_ON_NEW_PAGE = process\.env\.NEXT_PUBLIC_TUTOR_CORRECTION_CARD_ON_NEW_PAGE !== 'off';/.test(readFileSync(join(__dirname, '..', 'src/lib/tutor/orchestrator/flags.ts'), 'utf8')));
   // fallback: the part page already painted — the student card targets the page before the break
   const brk = { action: 'newPage', title: 'Part 5 · Past simple' };
   const cmds = [

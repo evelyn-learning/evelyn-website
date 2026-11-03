@@ -1415,3 +1415,28 @@ export const TUTOR_RECAP_CORRECTION_CARDS_ONLY = process.env.NEXT_PUBLIC_TUTOR_R
  *  dropped (bare) or keeps only its teaching (fixed scripts). Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_PART_ANNOUNCE_DEDUPE=off. */
 export const TUTOR_PART_ANNOUNCE_DEDUPE = process.env.NEXT_PUBLIC_TUTOR_PART_ANNOUNCE_DEDUPE !== 'off';
+
+/** Task 43 §D (voice run 21, 290 s): the part's authored card question,
+ *  already answered, was asked again ("Now let's go back to the question on
+ *  the board: …") — the re-ask is dropped in any part (the card question
+ *  only). Client-side: default ON; NEXT_PUBLIC_TUTOR_ANSWERED_CARD_REASK_DROP=off. */
+export const TUTOR_ANSWERED_CARD_REASK_DROP = process.env.NEXT_PUBLIC_TUTOR_ANSWERED_CARD_REASK_DROP !== 'off';
+
+/** Task 43 §G2 (voice run 21, 689 s): a budget advance on a turn that
+ *  corrected the student's sentence holds one boundary so the correction card
+ *  is seen before the page flips. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_CORRECTION_CARD_HOLDS_ADVANCE=off. */
+export const TUTOR_CORRECTION_CARD_HOLDS_ADVANCE = process.env.NEXT_PUBLIC_TUTOR_CORRECTION_CARD_HOLDS_ADVANCE !== 'off';
+
+/** Task 43 §J (voice run 21, 976 s): a correction card of the student's last
+ *  sentence on an advancing turn goes on the NEW page under the part card
+ *  (not in front of the break / on the previous page). Client-side: default
+ *  ON; NEXT_PUBLIC_TUTOR_CORRECTION_CARD_ON_NEW_PAGE=off. */
+export const TUTOR_CORRECTION_CARD_ON_NEW_PAGE = process.env.NEXT_PUBLIC_TUTOR_CORRECTION_CARD_ON_NEW_PAGE !== 'off';
+
+/** Task 43 §I (voice run 21, 961 / 976 s): the student's sentence carded as a
+ *  model one turn and its correction the next left two cards of one sentence
+ *  — a correction card replaces the auto model card of the same sentence on
+ *  the current page (as the brain's show_sentence does). Client-side: default
+ *  ON; NEXT_PUBLIC_TUTOR_CORRECTION_REPLACES_MODEL_CARD=off. */
+export const TUTOR_CORRECTION_REPLACES_MODEL_CARD = process.env.NEXT_PUBLIC_TUTOR_CORRECTION_REPLACES_MODEL_CARD !== 'off';

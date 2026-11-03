@@ -20,6 +20,7 @@ import {
   grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack, contrastAskPair, levelCheckOwnCardGate, sentenceCardIdOnCurrentPage,
 } from '../src/lib/tutor/voice/sentence-board';
 import { normaliseDigitsToWords } from '../src/lib/tutor/voice/digit-words';
+import { turnCorrectsStudentSentence } from '../src/lib/tutor/voice/sentence-board';
 import { planSentenceBoard as planSentenceBoard38, isAckTransitionLine, cardContentWordCount, CARD_MIN_CONTENT_WORDS, wholeSentenceRecastCard, noteCorrectionCard, judgeNoteCardSourceAllowed } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
@@ -202,7 +203,7 @@ test('A: the auto card goes through handleWhiteboardCommand with its anchor, nev
   const at = vtr.indexOf("'sentence_board_auto'");
   const block = vtr.slice(at - 2500, at + 200);
   // Task 23 §A: the call also says whether the card is the student's sentence.
-  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard \} : \{ sentenceBoardAuto: true, studentSentenceCard \}\)/.test(block), 'normal board path, marked as the auto card');
+  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard, correctionCard: card\.kind === 'correction' \} : \{ sentenceBoardAuto: true, studentSentenceCard, correctionCard: card\.kind === 'correction' \}\)/.test(block), 'normal board path, marked as the auto card (Task 43 §J: and whether it is the correction)');
   assert.ok(/autoSentenceCardIdsRef\.current\.add\(id\)/.test(vtr.slice(at - 2500, at + 600)), 'auto card ids remembered');
   assert.ok(/sentenceAnchorIndex\(turnNarrationRef\.current, card\.sentence\)/.test(block), 'anchored to its spoken sentence');
   assert.ok(!/onWhiteboardCommand\(\[cmd\]\)/.test(block), 'no raw opener-fallback paint');
@@ -1764,6 +1765,14 @@ test('43 M: in the recap part only corrections (and a contrast pair) card — th
   const vtr = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(vtr.includes('recapPart: TUTOR_RECAP_CORRECTION_CARDS_ONLY && answeredGuardPart(lessonPlanRef.current, turnStartSegmentId),'), 'VTR passes recapPart');
   assert.match(readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8'), /export const TUTOR_RECAP_CORRECTION_CARDS_ONLY = process\.env\.NEXT_PUBLIC_TUTOR_RECAP_CORRECTION_CARDS_ONLY !== 'off';/);
+});
+
+test('43 G2: turnCorrectsStudentSentence — the turn carries a correction card of the student\'s sentence', () => {
+  assert.equal(turnCorrectsStudentSentence('For the past simple, "I went to the gym" is the form we need, since "last week" is a finished time. Can you say that sentence once, starting with "Last week, I…"?', 'Last week I go to gym for work out.'), true);
+  assert.equal(turnCorrectsStudentSentence('"I could write an email to everyone" is a clear idea. The natural way to say it is: "I could write an email to remind everyone to pay." Can you say that sentence once more?', 'Um, I could write email to everyone to pay.'), true);
+  assert.equal(turnCorrectsStudentSentence('Good, that sentence came out clearly. Now, would you like to practice your pronunciation?', 'I told everyone about the event and its benefits.'), false);
+  assert.equal(turnCorrectsStudentSentence('Great, let\'s begin. What are your main responsibilities at work?', 'Yes, I am ready.'), false);
+  assert.equal(turnCorrectsStudentSentence('Anything.', null), false);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

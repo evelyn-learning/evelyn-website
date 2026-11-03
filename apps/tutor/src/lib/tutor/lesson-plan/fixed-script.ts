@@ -1036,6 +1036,16 @@ export const FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS = 2;
 export function holdAutoAdvanceForPendingAsk(endsWithAsk: boolean, heldTurns: number): boolean {
   return endsWithAsk && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS;
 }
+/** Task 43 §G2 (voice run 21, 689 s: the brain's correction card and the
+ *  part's page flip painted in one turn — the learner never saw the card): a
+ *  budget advance on a turn that corrected the student's sentence (an auto
+ *  correction card or the brain's own show_sentence) holds ONE boundary, so
+ *  the card stands on its page while the student reads it. 'announced' moves
+ *  are never held (the caller skips them). */
+export const FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS = 1;
+export function holdAutoAdvanceForCorrectionCard(correctedThisTurn: boolean, heldTurns: number): boolean {
+  return correctedThisTurn && heldTurns < FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS;
+}
 
 /** GDI trial run 2 (2026-10-29): the opening turn called
  *  advance_lesson({to:"next"}) before the scripted overview was ever said, so

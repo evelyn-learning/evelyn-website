@@ -176,7 +176,12 @@ export function orderStudentCardsBeforePageBreak<T extends { action: string }>(
  * page"). `kind` of each planned dispatch: 'segment' (the part card),
  * 'student' (a card of the student's sentence), 'other'.
  */
-export function orderTurnEndDispatches<T extends { kind: 'segment' | 'student' | 'other' }>(
+// Task 43 §J (voice run 21, 976 s): a CORRECTION of the student's last
+// sentence on an advancing turn was routed to the page being left while the
+// view moved on — the learner saw neither. 'correction' goes AFTER the part
+// card (under it, on the new page); a model card of the student's sentence
+// ('student') still stays on the page being left.
+export function orderTurnEndDispatches<T extends { kind: 'segment' | 'student' | 'correction' | 'other' }>(
   planned: readonly T[],
   pagePending: boolean,
 ): T[] {
@@ -186,6 +191,7 @@ export function orderTurnEndDispatches<T extends { kind: 'segment' | 'student' |
   return [
     ...planned.filter((p) => p.kind === 'student'),
     ...planned.filter((p) => p.kind === 'segment'),
+    ...planned.filter((p) => p.kind === 'correction'),
     ...planned.filter((p) => p.kind === 'other'),
   ];
 }

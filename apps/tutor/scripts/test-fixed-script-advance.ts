@@ -53,7 +53,8 @@ import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOT
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
 import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, lessonTimeGuardDueMs, postDueHoldDecision, FIXED_SCRIPT_POST_DUE_MAX_HOLDS, nextSegmentId as nextSegmentId41 } from '../src/lib/tutor/lesson-plan/fixed-script';
-import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
+import { reasksAnsweredQuestion, answeredCardQuestion } from '../src/lib/tutor/voice/correct-retry';
+import { holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence, offerAcceptedNoAskDue, isBareMoveOn, OFFER_ACCEPTED_NO_ASK_REASON, appliedAdvanceMarkerAfterKill, brainAdvanceOfferFirstRefused, transitionOfferValidatorDecision as tovd39, loneYesChoiceNoteDue, LONE_YES_CHOICE_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
@@ -191,7 +192,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 16500  /* Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer; Task 30 §A2: the wait cap; Task 41 §A: the part time cap inputs */);
+  const block = VTR.slice(auto, auto + 18000  /* Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer; Task 30 §A2: the wait cap; Task 41 §A: the part time cap inputs */);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
   pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{advanceReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
@@ -199,8 +200,8 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
 // ── fix round 10-11 ──────────────────────────────────────────────────────
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 14500 /* Task 41 r1: the post-due hold cap */);
-  pin(block, /if \(autoNext && !offerMadeHere && !holdCapped && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
+  const block = VTR.slice(auto, auto + 16000 /* Task 41 r1: the post-due hold cap */);
+  pin(block, /if \(autoNext && !offerMadeHere && !holdCapped && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvanceCorrectionHeldRef\.current = 0;\s*autoAdvancePronHeldRef\.current = 0;/);
   pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
 });
@@ -215,7 +216,7 @@ test('C: the pronunciation hold is capped at 3 consecutive turns; the 4th advanc
 });
 test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  pin(VTR.slice(auto, auto + 12500 /* final-3 I-1 */), /pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR.slice(auto, auto + 14000 /* final-3 I-1 */), /pendingRuntimeNoteUrgentRef\.current = true;/);
   // Task 14 §G: the tool path's level apply moved into applyWorkingLevelRef.
   const lv = VTR.indexOf("applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool')");
   assert.ok(lv > 0);
@@ -515,6 +516,39 @@ test('B: VoiceTutorRealtime wires segment_card_auto (pin)', () => {
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_SEGMENT_CARD_AUTO = process\.env\.NEXT_PUBLIC_TUTOR_SEGMENT_CARD_AUTO !== 'off';/);
 });
 
+// ── Task 43 (voice run 21, embed-1793719782028) §D / §G2 / §K ──
+test('43D: the part\'s answered card question is known, and a re-ask of it is dropped in ANY part (290 s: "Now let\'s go back to the question on the board: Have you worked …?")', () => {
+  const cardQ = 'Have you worked for your current company for a long time?';
+  assert.equal(answeredCardQuestion(cardQ, ['Now let\'s go back to the question on the board: Have you worked for your current company for a long time?']), cardQ);
+  assert.equal(answeredCardQuestion(cardQ, [cardQ]), cardQ);
+  assert.equal(answeredCardQuestion(cardQ, ['Can you say that sentence once more?', 'How has writing good emails helped you at work?']), null, 'other questions answered, not the card');
+  assert.equal(answeredCardQuestion(cardQ, []), null);
+  assert.equal(answeredCardQuestion('We explain responsibilities, experience and achievements: I work in sales.', ['What do you do?']), null, 'no question on the card');
+  assert.equal(answeredCardQuestion('1. Can you tell me a little about your job? What do you do?\n2. Have you ever worked with an international customer?', ['Have you ever worked with an international customer?']), 'Have you ever worked with an international customer?', 'a numbered card: the matching question');
+  // the drop itself reuses reasksAnsweredQuestion against [cardQ]
+  assert.equal(reasksAnsweredQuestion('Now let\'s go back to the question on the board: Have you worked for your current company for a long time?', [cardQ]), cardQ);
+  assert.equal(reasksAnsweredQuestion('Now, how long have you worked there?', [cardQ]), null, 'a NEW question stays');
+  pin(VTR, /const answeredCardQ: string \| null = TUTOR_ANSWERED_CARD_REASK_DROP && !answeredGuardQs\.length && isFixedScriptPlan\(lessonPlanRef\.current\) && currentSegmentIdRef\.current\s*\? answeredCardQuestion\(segmentCardStatement\(lessonPlanRef\.current, currentSegmentIdRef\.current\), answeredInPartRef\.current\.get\(currentSegmentIdRef\.current\) \?\? \[\]\) : null;/);
+  pin(VTR, /if \(answeredCardQ && reasksAnsweredQuestion\(updatedSentence, \[answeredCardQ\]\)\) \{\s*onDebugEvent\?\.\('answered_card_question_reask_dropped'/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_ANSWERED_CARD_REASK_DROP = process\.env\.NEXT_PUBLIC_TUTOR_ANSWERED_CARD_REASK_DROP !== 'off';/);
+});
+test('43G2: a budget advance on a turn that corrected the student\'s sentence holds ONE boundary so the card is seen (689 s: card + page flip in one turn)', () => {
+  assert.equal(FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS, 1);
+  assert.equal(holdAutoAdvanceForCorrectionCard(true, 0), true);
+  assert.equal(holdAutoAdvanceForCorrectionCard(true, 1), false);
+  assert.equal(holdAutoAdvanceForCorrectionCard(false, 0), false);
+  pin(VTR, /\} else if \(autoNext && !holdCapped && advanceReason !== 'announced' && TUTOR_CORRECTION_CARD_HOLDS_ADVANCE && holdAutoAdvanceForCorrectionCard\(correctedThisTurn, autoAdvanceCorrectionHeldRef\.current\)\) \{[\s\S]{0,400}?autoAdvanceCorrectionHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_correction'/);
+  pin(VTR, /const correctedThisTurn = sentenceBoardBlockedByRenders\(totalToolNamesSeen\) \|\| turnCorrectsStudentSentence\(fullText, sentenceStressRef\.current\.studentLast\);/);
+  pin(VTR, /autoAdvanceCorrectionHeldRef\.current = 0;\s*autoAdvancePronHeldRef\.current = 0;/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_CORRECTION_CARD_HOLDS_ADVANCE = process\.env\.NEXT_PUBLIC_TUTOR_CORRECTION_CARD_HOLDS_ADVANCE !== 'off';/);
+});
+test('43K: the turn that enters a choice-menu part without its menu gets the menu appended at THAT turn\'s end (973–1030 s: 57 s with no menu)', () => {
+  pin(VTR, /const menuEnteredNow = TUTOR_MENU_ENTRY_FALLBACK && !opts\?\.prefetchOnly && !attemptKilled && isFixedScriptPlan\(lessonPlanRef\.current\)\s*&& !!currentSegmentIdRef\.current && turnStartSegmentId !== currentSegmentIdRef\.current && !menuPickedSegsRef\.current\.has\(currentSegmentIdRef\.current\)\s*&& menuEntryFallbackSpokenRef\.current !== currentSegmentIdRef\.current;/);
+  pin(VTR, /onDebugEvent\?\.\('menu_entry_engine_fallback', `"\$\{meSeg\}" "\$\{menuEntryLine\.slice\(0, 80\)\}" \(at entry\)`\);/);
+  // the entering turn's own repeat / say ask does not block it (the part-entry arm is skipped anyway); a real question does
+  pin(VTR, /const meTurnAsks = turnEndsWithAsk\(meSpoken\) && !endsWithRepeatAsk\(meSpoken\) && !endsWithSayOrListenAsk\(meSpoken\);/);
+});
+
 // ── Task 22 §A (GDI run 10, 574 s / 882 s) ───────────────────────────────
 test('22A: a due budget advance on a turn ending with an ask is held (Task 38 §C: up to two turns)', () => {
   assert.equal(FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, 2);
@@ -533,9 +567,9 @@ test('22A: turnEndsWithAsk — the run-10 turns', () => {
 });
 test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 13500 /* Task 41 §A: the part time cap inputs; r1: the post-due hold cap */);
+  const block = VTR.slice(auto, auto + 15000 /* Task 41 §A: the part time cap inputs; r1: the post-due hold cap */);
   pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
-  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
+  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext && !holdCapped && advanceReason !== 'announced' && TUTOR_CORRECTION_CARD_HOLDS_ADVANCE[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvanceCorrectionHeldRef\.current = 0;\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
 });
 
 test('22D2: the budget advance lead acknowledges a "more of this part" request; the announced lead does not', () => {
@@ -618,7 +652,7 @@ test('26A2: bridge part ⇒ advance (no hold) with the bridge clause in the lead
 });
 test('26A: VTR wiring — offer planted (urgent FACT) instead of the advance, held n/2, bridge clause on both advance leads (pins)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 16500 /* Task 41 r1 */);
+  const block = VTR.slice(auto, auto + 18000 /* Task 41 r1 */);
   pin(block, /const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS\s*\? fixedScriptTransitionDecision\(\{\s*plan: autoPlan, segmentId: segIdNow, reason: advanceReason,\s*offerMade: transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\),\s*offerHeldTurns: autoAdvanceOfferHeldRef\.current,/);
   // order: pronunciation hold → offer → offer hold → ask hold → advance
   pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]{0,900}?\} else if \(autoNext && segIdNow && transition === 'offer' && !deadlineAdvance\) \{\s*\/\/ The offer note replaces[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'await-offer' && !deadlineAdvance\) \{[\s\S]*?\} else if \(autoNext && transition === 'hold-offer' && !holdCapped\) \{\s*\/\/[^\n]*\n\s*if \(!offerSpokenThisTurn && !offerRuntimeTurn\) autoAdvanceOfferHeldRef\.current \+= 1;\s*if \(!offerRuntimeTurn\) autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(/);

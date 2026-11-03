@@ -1555,3 +1555,20 @@ export function correctReplyReasks(sentence: string | null | undefined, askTurn:
   const askWh = WH_RE.exec(turnAskGist(askTurn) || askTurn)?.[1]?.toLowerCase();
   return !(myWh && askWh && myWh !== askWh);
 }
+
+/** Task 43 §D (voice run 21, 290 s: "Now let's go back to the question on the
+ *  board: Have you worked for your current company for a long time?" — asked
+ *  at 204 s, answered at 227 s, re-asked at 290 s): the part's authored card
+ *  question once it has been answered. The question sentences of the card
+ *  statement (a numbered card has several) are matched against the part's
+ *  answered questions with reasksAnsweredQuestion (stems, Jaccard ≥ 0.6);
+ *  the first match is returned, else null. The caller drops a later sentence
+ *  that re-asks it (reasksAnsweredQuestion(sentence, [cardQ])) in ANY part —
+ *  the card question only, so repeat / say asks and new questions stand. Pure. */
+export function answeredCardQuestion(cardStatement: string | null | undefined, answeredInPart: readonly string[] | null | undefined): string | null {
+  if (!cardStatement || !answeredInPart?.length) return null;
+  const questions = cardStatement.split(/(?<=[。！？.!?])\s+|\n+/).map((x) => x.replace(/^\s*(?:\d+[.)]|[-•*])\s*/, '').trim())
+    .filter((x) => /[?？]\s*$/.test(x) && (x.match(/[A-Za-z][A-Za-z']*/g) ?? []).length >= 3);
+  for (const q of questions) if (reasksAnsweredQuestion(q, answeredInPart)) return q;
+  return null;
+}

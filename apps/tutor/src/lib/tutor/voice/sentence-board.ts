@@ -2185,3 +2185,14 @@ function quotedInText(text: string | null | undefined, sentence: string): boolea
   for (const m of t.matchAll(/["“「『‘]([^"”」』’]+)["”」』’]/g)) if ((m[1] ?? '').includes(n)) return true;
   return false;
 }
+
+/** Task 43 §G2: this turn carries a correction card of the student's sentence
+ *  — a quoted span classified as a correction, or an unquoted / grammar /
+ *  full recast of it (the same sources planSentenceBoard cards from). False
+ *  with no student sentence. Pure. */
+export function turnCorrectsStudentSentence(tutorText: string | null | undefined, studentLast: string | null | undefined): boolean {
+  const t = tutorText ?? '';
+  if (!t.trim() || !studentLast?.trim()) return false;
+  if (extractQuotedSentences(t).some((q) => classifyQuotedSentence(q, studentLast).kind === 'correction')) return true;
+  return !!(recastCorrectionCard(t, studentLast) ?? grammarRecastCard(t, studentLast) ?? tutorRecastCorrectionCard(t, studentLast));
+}
