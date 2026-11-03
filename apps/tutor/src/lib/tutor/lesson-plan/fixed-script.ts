@@ -489,8 +489,26 @@ export function fixedScriptTransitionDecision(input: {
    *  FIXED_SCRIPT_OFFER_ACCEPTED_HOLD_TURNS ⇒ 'hold-offer' (the new item is
    *  asked, answered and corrected first). */
   offerAcceptedStudentTurns?: number | null;
+  /** Task 38 fix round 1 (R24-1): an announced move on an offer part waits
+   *  for the offer (absent ⇒ the Task 26 I-2b behaviour: it advances). */
+  announcedOfferFirst?: boolean;
+  /** R24-1: the offer was spoken on THIS turn (the retry / engine fallback). */
+  offerSpokenThisTurn?: boolean;
+  /** R24-1: the student declined the offer or ordered the move on this turn. */
+  studentMovedOn?: boolean;
 }): 'offer' | 'await-offer' | 'hold-offer' | 'advance' {
-  if (input.reason === 'announced') return 'advance';
+  // Task 38 fix round 1 (R24-1, bot run r24 472–509 s: "Let's move on to the
+  // past simple now." on the present-perfect offer part advanced with the
+  // offer never asked): on an offer part an announced move advances only
+  // after the offer was asked on an earlier turn, or when the student
+  // declined / ordered the move on.
+  if (input.reason === 'announced') {
+    if (!input.announcedOfferFirst || segmentTransitionKind(input.plan, input.segmentId) !== 'offer') return 'advance';
+    if (input.studentMovedOn || input.offerDeclined) return 'advance';
+    if (input.offerSpokenThisTurn) return 'hold-offer';
+    if (input.offerSpoken) return 'advance';
+    return input.offerMade ? 'await-offer' : 'offer';
+  }
   if (segmentTransitionKind(input.plan, input.segmentId) !== 'offer') return 'advance';
   if (!input.offerMade) return 'offer';
   if (input.offerSpoken === false) return 'await-offer';
@@ -589,10 +607,15 @@ export function transitionOfferValidatorDecision(input: {
   alreadyRetried: boolean;
   /** Task 30 §D1: sentences of this attempt the student already heard. */
   heardSentences?: number;
+  /** Task 38 fix round 1 (R24-1): an announced move is no exemption … */
+  announcedOfferFirst?: boolean;
+  /** … unless the student declined the offer / ordered the move on. */
+  studentMovedOn?: boolean;
 }): 'ok' | 'spoken' | 'continue' | 'kill' | 'unmade' {
   if (!input.offerPending) return 'ok';
   if (offerAsked(input.text)) return 'spoken';
-  if (input.announcedMove || input.calledAdvance) return 'ok';
+  if (input.calledAdvance) return 'ok';
+  if (input.announcedMove && (!input.announcedOfferFirst || input.studentMovedOn)) return 'ok';
   if (input.alreadyRetried) return 'unmade';
   // Task 30 §D1 (GDI run 17, 746 s): a kill after heard sentences made the
   // retry repeat them — the attempt stands and the offer is asked by a

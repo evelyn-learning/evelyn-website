@@ -194,7 +194,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
 // ── fix round 10-11 ──────────────────────────────────────────────────────
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 11500);
+  const block = VTR.slice(auto, auto + 13000);
   pin(block, /if \(autoNext && !offerMadeHere && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;/);
   pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
@@ -1375,6 +1375,30 @@ test('38 r1 I-5: recapAlreadyGiven needs each point WITH its meaning — naming 
   assert.equal(recapAlreadyGiven(summary, 'We practised the present perfect and the past simple today.'), false);
   const t1222 = "Summary it is. Let's close the pronunciation part and move on to the summary now. Okay, we'll finish with a short summary now. Today you practiced the present perfect for experience that continues now, and the past simple for finished times like last year.";
   assert.equal(recapAlreadyGiven(summary, t1222), true, 'the 1222 s recap turn');
+});
+
+// ── Task 38 fix round 1 R24-1 (bot run r24 472–509 s): an announced move on an offer part asks the offer first ──
+test('38 r1 R24-1: offer part + announced move → no advance, offer asked; bridge part + announced → advance as before', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const on = { announcedOfferFirst: true } as const;
+  // the r24 state: offer planted at 472 s, never spoken; 509 s announced the move
+  assert.equal(fixedScriptTransitionDecision({ plan: gdi, segmentId: 'present-perfect', reason: 'announced', offerMade: true, offerHeldTurns: 0, offerSpoken: false, ...on }), 'await-offer');
+  assert.equal(fixedScriptTransitionDecision({ plan: gdi, segmentId: 'present-perfect', reason: 'announced', offerMade: false, offerHeldTurns: 0, ...on }), 'offer');
+  assert.equal(fixedScriptTransitionDecision({ plan: gdi, segmentId: 'present-perfect', reason: 'announced', offerMade: true, offerHeldTurns: 1, offerSpoken: true, offerSpokenThisTurn: true, ...on }), 'hold-offer', 'the engine fallback spoke it this turn');
+  assert.equal(fixedScriptTransitionDecision({ plan: gdi, segmentId: 'present-perfect', reason: 'announced', offerMade: true, offerHeldTurns: 2, offerSpoken: true, ...on }), 'advance', 'asked on an earlier turn');
+  assert.equal(fixedScriptTransitionDecision({ plan: gdi, segmentId: 'present-perfect', reason: 'announced', offerMade: true, offerHeldTurns: 0, offerSpoken: false, studentMovedOn: true, ...on }), 'advance', 'a move-on order');
+  assert.equal(fixedScriptTransitionDecision({ plan: gdi, segmentId: 'topic-intro', reason: 'announced', offerMade: false, offerHeldTurns: 0, ...on }), 'advance', 'a bridge part');
+  assert.equal(fixedScriptTransitionDecision({ plan: gdi, segmentId: 'present-perfect', reason: 'announced', offerMade: false, offerHeldTurns: 0 }), 'advance', 'flag off ⇒ Task 26 I-2b');
+  // the validator: kill + retry, then the engine fallback
+  const t509 = 'Nice, "I have worked with a customer from Germany" is a clear present perfect sentence. Let\'s move on to the past simple now. Can you tell me about one event you attended last year, like a trade show or an exhibition?';
+  const v = (x: Partial<Parameters<typeof transitionOfferValidatorDecision>[0]>) => transitionOfferValidatorDecision({ offerPending: true, text: t509, announcedMove: true, calledAdvance: false, alreadyRetried: false, heardSentences: 0, announcedOfferFirst: true, ...x });
+  assert.equal(v({}), 'kill');
+  assert.equal(v({ alreadyRetried: true }), 'unmade', 'the retry still fails → engine fallback');
+  assert.equal(v({ studentMovedOn: true }), 'ok');
+  assert.equal(v({ announcedOfferFirst: false }), 'ok', 'flag off');
+  pin(VTR, /announcedOfferFirst: TUTOR_ANNOUNCED_OFFER_FIRST,\s*studentMovedOn: offerDeclined\(transcript\) \|\| !!moveOnRequestSpan\(transcript\),/);
+  pin(VTR, /announcedOfferFirst: TUTOR_ANNOUNCED_OFFER_FIRST,\s*offerSpokenThisTurn,\s*studentMovedOn: !offerRuntimeTurn && \(offerDeclined\(transcript\) \|\| !!moveOnRequestSpan\(transcript\)\),/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_ANNOUNCED_OFFER_FIRST = process\.env\.NEXT_PUBLIC_TUTOR_ANNOUNCED_OFFER_FIRST !== 'off';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

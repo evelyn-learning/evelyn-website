@@ -1314,3 +1314,11 @@ export const TUTOR_TEACHING_LANGUAGE_FIRST = process.env.NEXT_PUBLIC_TUTOR_TEACH
  *  correct is carded as the student's own sentence (source 'checked').
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_CONVERSATION_ANSWER_CARDS=off. */
 export const TUTOR_CONVERSATION_ANSWER_CARDS = process.env.NEXT_PUBLIC_TUTOR_CONVERSATION_ANSWER_CARDS !== 'off';
+
+/** Task 38 fix round 1 (R24-1, bot run r24 472–509 s: an announced move on
+ *  the offer part advanced with the offer never asked): on an offer part an
+ *  announced move is killed + retried like transition_offer_missing (engine
+ *  fallback after the one retry) and does not advance until the offer was
+ *  asked, unless the student declined / ordered the move on. Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_ANNOUNCED_OFFER_FIRST=off. */
+export const TUTOR_ANNOUNCED_OFFER_FIRST = process.env.NEXT_PUBLIC_TUTOR_ANNOUNCED_OFFER_FIRST !== 'off';
