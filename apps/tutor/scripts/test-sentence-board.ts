@@ -20,6 +20,7 @@ import {
   grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack, contrastAskPair, levelCheckOwnCardGate, sentenceCardIdOnCurrentPage,
 } from '../src/lib/tutor/voice/sentence-board';
 import { normaliseDigitsToWords } from '../src/lib/tutor/voice/digit-words';
+import { planSentenceBoard as planSentenceBoard38, isAckTransitionLine, cardContentWordCount, CARD_MIN_CONTENT_WORDS } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
 let failed = 0;
@@ -1569,6 +1570,25 @@ test('31H3: "I I want leave go go home." → no card; grammatical doubles kept',
   assert.equal(hasStutter('I had had lunch before the meeting.'), false);
   assert.equal(hasStutter('I think that that is right.'), false);
   assert.equal(cardableStudentSentence('I work with customers from Canada.'), 'I work with customers from Canada.');
+});
+
+// ── Task 38 §E (voice run 19, 794 s): an acknowledgement line is no card ──
+test('38 §E: the 794 s ack line gets no card; a model sentence still does', () => {
+  const suppressed: string[] = [];
+  const t794 = 'Okay, one more on the past simple. 「去年」を使って、英語で答えてください。 Please answer this in English: What did you do last weekend?';
+  assert.deepEqual(planSentenceBoard38({ tutorText: t794, studentLast: 'Yes, one more. practice.', renderedThisTurn: false, onSuppressed: (_r, x) => suppressed.push(x) }), []);
+  assert.deepEqual(suppressed, ['Okay, one more on the past simple.']);
+  assert.equal(isAckTransitionLine('Okay, one more on the past simple.'), true);
+  assert.equal(isAckTransitionLine("Let's do one more on the present perfect."), true);
+  assert.equal(isAckTransitionLine('Next, the conversation part.'), true);
+  assert.equal(isAckTransitionLine('I went to a trade show in Tokyo last year.'), false);
+  assert.equal(isAckTransitionLine('Good, I went to a trade show in Tokyo last year.'), false, 'an ack lead + a model clause stays');
+  assert.equal(isAckTransitionLine('Now the meeting was productive.'), false);
+  const cards = planSentenceBoard38({ tutorText: 'Close. The natural version is "I went to a trade show in Tokyo last year."', studentLast: 'I go to trade show in Tokyo last year.', renderedThisTurn: false });
+  assert.deepEqual(cards.map((c) => c.sentence), ['I went to a trade show in Tokyo last year.']);
+  assert.equal(CARD_MIN_CONTENT_WORDS, 4);
+  assert.equal(cardContentWordCount('Okay, one more.'), 2);
+  assert.equal(cardContentWordCount('You sell your machines to hospitals.'), 6);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

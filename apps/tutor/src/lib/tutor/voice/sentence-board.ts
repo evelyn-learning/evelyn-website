@@ -1231,7 +1231,7 @@ export function planSentenceBoard(input: {
   cardedStudentSentence?: Set<string>;
   /** Task 27 §A: told about each card of the student's sentence dropped
    *  because a correction of it was carded this turn. */
-  onSuppressed?: (reason: 'corrected this turn', sentence: string) => void;
+  onSuppressed?: (reason: 'corrected this turn' | 'acknowledgement / short line', sentence: string) => void;
   /** Task 28 §A: told about each level-check sentence not carded because the
    *  tutor recast it and no correction card came of the recast. */
   onLevelCheckSkipped?: (reason: 'recast without card' | 'no verdict' | 'request', sentence: string) => void;
@@ -1439,6 +1439,16 @@ export function planSentenceBoard(input: {
     if (ka === 0 && a.len !== b.len) return b.len - a.len;
     return a.i - b.i;
   });
+  // Task 38 §E (voice run 19, 794 s: "Okay, one more on the past simple."
+  // was carded as a grammar recast): an acknowledgement / transition line is
+  // never a card, nor a short unquoted line.
+  for (let k = classified.length - 1; k >= 0; k--) {
+    const cs = classified[k]!.q.sentence;
+    if (isAckTransitionLine(cs) || (!quotedInText(input.tutorText, cs) && cardContentWordCount(cs) < CARD_MIN_CONTENT_WORDS)) {
+      input.onSuppressed?.('acknowledgement / short line', cs);
+      classified.splice(k, 1);
+    }
+  }
   const out = classified.slice(0, SENTENCE_BOARD_MAX_PER_TURN).map((c) => c.q);
   // Task 29 §I: a contrast ask's two sentences are carded both, in spoken
   // order, whatever the per-turn cap took first.
@@ -1847,4 +1857,34 @@ function tokenEditDistance(a: readonly string[], b: readonly string[]): number {
     prev = cur;
   }
   return prev[b.length]!;
+}
+
+/** Task 38 §E (voice run 19, 794 s): a line that opens with an
+ *  acknowledgement / transition word (Okay / OK / Sure / Alright / Great /
+ *  Good / Right / Now / Next / Let's) and has no model clause — no subject
+ *  pronoun / possessive and no finite verb (be / have / do / modal, a common
+ *  irregular past, or an -ed form) — is talk ABOUT the lesson, not a sentence
+ *  to learn. Pure. */
+const ACK_TRANSITION_LEAD_RE = /^\s*(?:okay|ok|sure|alright|all right|great|good|right|now|next|let['’]?s)\b/i;
+const MODEL_CLAUSE_RE = /\b(?:i|we|you|he|she|they|it|there|my|our|your|his|her|their|am|is|are|was|were|be|been|have|has|had|does|did|can|could|will|would|should|went|saw|made|got|took|came|gave|met|said|told|thought|felt|found|learned|learnt|worked)\b|\b\p{L}{3,}ed\b/iu;
+export function isAckTransitionLine(sentence: string | null | undefined): boolean {
+  const s = (sentence ?? '').trim();
+  const m = ACK_TRANSITION_LEAD_RE.exec(s);
+  if (!m) return false;
+  // "Let's" itself is no subject — the clause after it decides.
+  return !MODEL_CLAUSE_RE.test(s.slice(m[0].length));
+}
+/** Task 38 §E: a card that is not quoted in the tutor's text needs ≥ 4
+ *  words once articles and acknowledgement / filler words are set aside. */
+export const CARD_MIN_CONTENT_WORDS = 4;
+const CARD_FUNCTION_WORDS = new Set(['a', 'an', 'the', 'okay', 'ok', 'yes', 'no', 'oh', 'ah', 'well', 'so', 'now', 'next', 'right', 'good', 'great', 'sure', 'alright', 'um', 'uh', 'er', 'erm', 'hmm']);
+export function cardContentWordCount(sentence: string | null | undefined): number {
+  return ((sentence ?? '').toLowerCase().match(/[\p{L}\p{N}]+(?:['’][\p{L}]+)*/gu) ?? []).filter((w) => !CARD_FUNCTION_WORDS.has(w)).length;
+}
+function quotedInText(text: string | null | undefined, sentence: string): boolean {
+  const t = (text ?? '').toLowerCase();
+  const n = sentence.toLowerCase().replace(/[.!?。！？]+$/, '').trim();
+  if (!n) return false;
+  for (const m of t.matchAll(/["“「『‘]([^"”」』’]+)["”」』’]/g)) if ((m[1] ?? '').includes(n)) return true;
+  return false;
 }
