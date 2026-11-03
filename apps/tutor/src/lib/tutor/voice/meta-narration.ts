@@ -901,10 +901,25 @@ export function stripSteerClause(sentence: string): string {
   const fixed = t.replace(/\.\u0000\s*(\p{Ll})?/gu, (_m, c?: string) => `. ${c ? c.toUpperCase() : ''}`).replace(/\u0000/g, '').trim();
   return capitaliseFirst(/[.!?。！？…]$/.test(fixed) ? fixed : `${fixed}.`);
 }
+// Task 41 fix round 1 (bot run r33, 543 s: 'You said "I see," so the
+// present perfect part is done.'): the R10-3 part state as a trailing
+// clause — ", so the <part> part is done / finished / complete / over." — is
+// stripped and the rest kept ('You said "I see."'); nothing left ⇒ ''.
+const PART_STATE_TAIL_RE = /,(["”]?)\s*so (?:the |this |that |our )?[^,.!?;:]{0,50}?\b(?:part|section|segment|step) is (?:now |already )?(?:done|finished|complete|completed|over)\s*[.!]?\s*$/i;
+export function stripPartStateTail(sentence: string): string {
+  const raw = sentence ?? '';
+  const m = PART_STATE_TAIL_RE.exec(raw);
+  if (!m) return raw;
+  const head = raw.slice(0, m.index).trim();
+  if (!/[\p{L}\p{N}]/u.test(head)) return '';
+  return m[1] ? `${head}.${m[1]}` : `${head.replace(/[,;:\s]+$/, '')}.`;
+}
 export function stripSpokenPlanLeadTail(sentence: string, opts?: { languageLesson?: boolean }): string {
   let s = sentence ?? '';
   if (opts?.languageLesson !== false) {
     s = stripSteerClause(s);
+    if (!s) return '';
+    s = stripPartStateTail(s);
     if (!s) return '';
   }
   const steer = opts?.languageLesson !== false ? STEER_LEAD_RE.exec(s) : null;

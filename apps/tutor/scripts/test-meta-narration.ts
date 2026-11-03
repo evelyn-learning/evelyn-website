@@ -1559,5 +1559,17 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('41C: maths untouched', !isMetaNarration("So I'll ask the question again, directly.", { languageLesson: false }) && !isMetaNarration(s580, { languageLesson: false }));
 }
 
+// Task 41 fix round 1 (bot run r33, 543 s): the R10-3 part state as a trailing clause.
+{
+  const lang = { languageLesson: true };
+  const r = (x: string) => stripNoteCitationClause(x, lang);
+  const s543 = 'You said "I see," so the present perfect part is done.';
+  check('41 r1: 543 s → \'You said "I see."\'', r(s543) === 'You said "I see."', r(s543));
+  check('41 r1: ", so this part is finished." stripped', r('Good work, so this part is finished.') === 'Good work.', r('Good work, so this part is finished.'));
+  check('41 r1: the 543 s turn keeps the offer question', filterNarrationText(`Let me go back to your last answer. ${s543} Would you like one more practice sentence on the present perfect, or shall we move on to the past simple?`, lang).includes('You said "I see." Would you like one more practice sentence'));
+  check('41 r1: "…, so the project is done." kept', r('The meeting ran late, so the project is done.') === 'The meeting ran late, so the project is done.');
+  check('41 r1: off outside a language lesson', stripNoteCitationClause(s543, { languageLesson: false }) === s543);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
