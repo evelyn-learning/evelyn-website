@@ -369,6 +369,13 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'fixed_script_entry_note_planted',
   // Task 31 fix round 9 §F: the two-answers check-in note.
   'probe_checkin_note_planted',
+  // Tasks 33–35 (final review I-3): the offer re-ask kill, the stop choice,
+  // the no-attempt move-on, the answered-question guard, the personal retry.
+  'offer_reasked_after_accept',
+  'stop_request_choice_planted', 'stop_request_confirmed', 'stop_request_finish_chosen',
+  'no_attempt_move_on_note_planted', 'no_attempt_reask_dropped',
+  'answered_in_part_note_planted', 'answered_question_reask_dropped',
+  'same_question_retry_ask_dropped', 'same_question_retry_move_on',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

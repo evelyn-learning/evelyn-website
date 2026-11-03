@@ -2028,4 +2028,13 @@ test('34 r2: a bare yes / no answers a yes/no ask (an attempt); to any other ask
   assert.equal(noAttemptStreak([{ tutorText: WH, studentText: 'Yes.' }, { tutorText: WH, studentText: 'OK.' }]), true);
 });
 
+test('final I-3: the Tasks 33–35 debug events reach the stored session (embed allowlist)', () => {
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  for (const name of ['offer_reasked_after_accept', 'stop_request_choice_planted', 'stop_request_confirmed', 'stop_request_finish_chosen', 'no_attempt_move_on_note_planted', 'no_attempt_reask_dropped', 'answered_in_part_note_planted', 'answered_question_reask_dropped', 'same_question_retry_ask_dropped', 'same_question_retry_move_on']) {
+    assert.ok(embed.includes(`'${name}'`), `allowlisted: ${name}`);
+    assert.ok(vtr.includes(`'${name}'`), `emitted: ${name}`);
+  }
+});
+
 if (failed) process.exit(1);
