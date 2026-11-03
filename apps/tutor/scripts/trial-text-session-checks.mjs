@@ -259,10 +259,12 @@ export function runChecks(dump) {
   const latePages = [];
   for (const a of ev('fixed_script_auto_advance').concat(ev('typed_advance_app'))) {
     const to = (a.msg.match(/→ "([^"]+)"/) ?? a.msg.match(/→ ([a-z-]+)/) ?? [])[1]; if (!to || to === 'summary') continue;
-    const pg = pages.find((p) => p.t >= a.t - 2 && p.t <= a.t + 20 && /^Part \d/.test(p.title));
+    // the page is deferred until the first brain turn of the new part flushes (by design) — it must exist before the NEXT advance, and within 120 s
+    const nextAdv = ev('fixed_script_auto_advance').concat(ev('typed_advance_app')).map((e) => e.t).filter((t) => t > a.t + 2).sort((x, y) => x - y)[0] ?? Infinity;
+    const pg = pages.find((p) => p.t >= a.t - 2 && p.t <= Math.min(a.t + 120, nextAdv + 2) && /^Part \d/.test(p.title));
     if (!pg) latePages.push(`${a.t}s → ${to}`);
   }
-  ok('every advance painted its page within 20 s', latePages.length === 0, latePages.join(' | '));
+  ok('every advance painted its page before the next one', latePages.length === 0, latePages.join(' | '));
 
   // 11. counts worth a look
   const counts = ['brain_validator_retry', 'idle_nudge_sent', 'drop_self_voice', 'meta_narration_dropped', 'fixed_script_noask_continue', 'fixed_script_offer_continue', 'transition_ask_off_part', 'judge_kill_resume_diverged', 'menu_pick_resolved', 'adjacent_duplicate_sentence_dropped', 'typed_turn_superseded', 'render_dropped'];
