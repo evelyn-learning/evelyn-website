@@ -344,3 +344,20 @@ export function advancePageAlreadyOpen(input: {
   if (input.pendingSegmentId === input.next) return 'pending';
   return null;
 }
+
+/** Task 44 R3 (voice run 22, 99 s: the brain re-painted the part's authored
+ *  card with a "[intermediate]" tag under the one the engine had painted 8 s
+ *  earlier): the authored card already stands on the CURRENT page (after the
+ *  last newPage / clear) — the same filler-free word match as
+ *  batchHasSegmentCard, so a tag or a re-flow does not defeat it. Pure. */
+export function authoredCardOnCurrentPage(
+  commands: ReadonlyArray<{ action: string } & Record<string, unknown>>,
+  authoredStatement: string | null | undefined,
+): boolean {
+  let start = 0;
+  for (let i = commands.length - 1; i >= 0; i--) {
+    const a = commands[i]!.action;
+    if (a === 'newPage' || a === 'clear') { start = i + 1; break; }
+  }
+  return batchHasSegmentCard(commands.slice(start), authoredStatement);
+}

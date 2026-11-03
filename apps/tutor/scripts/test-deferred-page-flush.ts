@@ -20,6 +20,7 @@ import {
   rearmAfterKill,
   batchHasSegmentCard,
   advancePageAlreadyOpen,
+  authoredCardOnCurrentPage,
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 import { keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
@@ -244,6 +245,14 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('27B: a new model sentence of the new part follows the part card', orderTurnEndDispatches([showProblem, modelCard, studentCard], true).map((p) => p.kind).join(',') === 'student,segment,other');
   ok('27B: no page pending ⇒ the part card first, stream order otherwise', orderTurnEndDispatches([studentCard, showProblem, modelCard], false).map((p) => p.kind).join(',') === 'segment,student,other');
   ok('27B: nothing planned ⇒ nothing', orderTurnEndDispatches([], true).length === 0);
+  // Task 44 R3 (voice run 22, 99 s): the brain re-painted the authored card with a "[intermediate]" tag under the one the engine had just painted
+  const AUTH = "1. We explain responsibilities, experience and achievements: I work in sales, and I help customers find the right products.\n2. 'I have worked with international customers for three years.' = experience continuing over a period of time.\n3. Practice question: What are your main responsibilities at work? Give a complete answer with at least two sentences.";
+  const pageWith = [{ action: 'newPage', title: 'Part 3' }, { action: 'showProblem', problem: { statement: AUTH } }, { action: 'showSentence', sentence: 'I work in sales.' }];
+  ok('44R3: the authored card stands on the current page', authoredCardOnCurrentPage(pageWith, AUTH) === true);
+  ok('44R3: a tagged re-paint of it still counts as the same card', authoredCardOnCurrentPage(pageWith, `[intermediate] ${AUTH.replace(/\n/g, ' ')}`) === true);
+  ok('44R3: on an earlier page ⇒ not on the current page', authoredCardOnCurrentPage([...pageWith, { action: 'newPage', title: 'Part 4' }, { action: 'showProblem', problem: { statement: 'Have you worked for your current company for a long time?' } }], AUTH) === false);
+  ok('44R3: a different problem card ⇒ false', authoredCardOnCurrentPage([{ action: 'newPage' }, { action: 'showProblem', problem: { statement: 'Did you attend any business events last year?' } }], AUTH) === false);
+  ok('44R3: VTR drops the brain\'s duplicate of the authored card', readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8').includes("onDebugEvent?.('authored_card_duplicate_dropped'") && /export const TUTOR_AUTHORED_CARD_DEDUPE = process\.env\.NEXT_PUBLIC_TUTOR_AUTHORED_CARD_DEDUPE !== 'off';/.test(readFileSync(join(__dirname, '..', 'src/lib/tutor/orchestrator/flags.ts'), 'utf8')));
   // Task 43 §J (voice run 21, 976 s): a CORRECTION of the student's last sentence on an advancing turn goes on the NEW page, under the part card
   const correctionCard = { kind: 'correction', cmd: { action: 'showSentence', student: true } } as unknown as P;
   ok('43J: page pending ⇒ student (model) cards, the part card, then the correction, then others', orderTurnEndDispatches([showProblem, correctionCard, modelCard, studentCard], true).map((p) => p.kind).join(',') === 'student,segment,correction,other');

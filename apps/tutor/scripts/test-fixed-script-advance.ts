@@ -54,7 +54,7 @@ import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, 
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
 import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, lessonTimeGuardDueMs, postDueHoldDecision, FIXED_SCRIPT_POST_DUE_MAX_HOLDS, nextSegmentId as nextSegmentId41 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { reasksAnsweredQuestion, answeredCardQuestion, reasksCardQuestion } from '../src/lib/tutor/voice/correct-retry';
-import { holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS, isProposalQuestion, heldAdvanceFiresNow } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence, offerAcceptedNoAskDue, isBareMoveOn, OFFER_ACCEPTED_NO_ASK_REASON, appliedAdvanceMarkerAfterKill, brainAdvanceOfferFirstRefused, transitionOfferValidatorDecision as tovd39, loneYesChoiceNoteDue, LONE_YES_CHOICE_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
@@ -558,6 +558,39 @@ test('43K: the turn that enters a choice-menu part without its menu gets the men
   pin(VTR, /const meTurnAsks = turnEndsWithAsk\(meSpoken\) && !endsWithRepeatAsk\(meSpoken\) && !endsWithSayOrListenAsk\(meSpoken\);/);
 });
 
+// ── Task 44 (voice run 22, embed-1793737430878) — the three rules ──
+test('44 R1: a due budget advance never moves the pointer while a question is open — it waits for the student\'s reply and fires at that turn\'s start', () => {
+  const held = { segId: 'present-perfect', next: 'past-simple', reason: 'turns' as const };
+  const base = { held, segmentId: 'present-perfect', silent: false, bracketed: false, prefetch: false, fixedScript: true };
+  assert.equal(heldAdvanceFiresNow(base), true);
+  assert.equal(heldAdvanceFiresNow({ ...base, silent: true }), false, 'a silent turn is no reply');
+  assert.equal(heldAdvanceFiresNow({ ...base, bracketed: true }), false, 'a runtime (idle-nudge) turn is no reply');
+  assert.equal(heldAdvanceFiresNow({ ...base, prefetch: true }), false);
+  assert.equal(heldAdvanceFiresNow({ ...base, segmentId: 'past-simple' }), false, 'the part already moved');
+  assert.equal(heldAdvanceFiresNow({ ...base, held: null }), false);
+  assert.equal(heldAdvanceFiresNow({ ...base, fixedScript: false }), false);
+  // the turn-end chain holds for ANY open ask (no cap, no post-due override) and records the held advance; the reply turn fires it
+  pin(VTR, /\} else if \(autoNext && askPending && TUTOR_ADVANCE_WAITS_FOR_REPLY\) \{[\s\S]{0,600}?heldAdvanceForAskRef\.current = \{ segId: segIdNow, next: autoNext, reason: advanceReason \};[\s\S]{0,300}?onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" until the reply \(\$\{advanceReason\}\)`\);/);
+  pin(VTR, /if \(heldAdvanceFiresNow\(\{ held: heldAdvanceForAskRef\.current, segmentId: currentSegmentIdRef\.current, silent, bracketed: isBracketed, prefetch: !!opts\?\.prefetchOnly, fixedScript: isFixedScriptPlan\(lessonPlanRef\.current\) \}\)\) \{/);
+  pin(VTR, /plantAdvanceEntryNote\(haNext, 'reply'\);/);
+  pin(VTR, /onDebugEvent\?\.\('fixed_script_auto_advance', `"\$\{haSeg\}" → "\$\{haNext\}" reason=\$\{ha\.reason\} \(on the reply\)`\);/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_ADVANCE_WAITS_FOR_REPLY = process\.env\.NEXT_PUBLIC_TUTOR_ADVANCE_WAITS_FOR_REPLY !== 'off';/);
+});
+test('44 R2: an offer / proposal ends the turn — a later ask in the same turn is dropped; the turn after an accepted offer never re-offers', () => {
+  for (const s of ['Shall we try one more past simple question?', 'Would you like one more practice sentence on it, or shall we move on to the past simple?', 'Do you want to try another one?', 'Shall we move on to the conversation?', 'もう一文練習しましょうか？']) assert.equal(isProposalQuestion(s), true, s);
+  for (const s of ['Tell me about the last business trip you took.', 'What did you learn there?', 'Can you say it once more?', 'Shall I help you with the email tomorrow?', 'Would you like a coffee at the meeting?']) assert.equal(isProposalQuestion(s), false, s);
+  pin(VTR, /let proposalSpokenThisTurn = false;/);
+  pin(VTR, /onDebugEvent\?\.\('proposal_trailing_ask_dropped'/);
+  pin(VTR, /onDebugEvent\?\.\('offer_reask_dropped'/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_OFFER_ENDS_TURN = process\.env\.NEXT_PUBLIC_TUTOR_OFFER_ENDS_TURN !== 'off';/);
+});
+test('44 R3: one authority per action — a resolved menu pick silences the transition-ask validator and the engine\'s menu fallback (pins)', () => {
+  pin(VTR, /const taMenuPicked = TUTOR_MENU_PICK_SINGLE_AUTHORITY && boardOffersChoices\(\{ statement: taCardText \}\) && menuPickedSegsRef\.current\.has\(currentSegmentIdRef\.current \?\? ''\);/);
+  pin(VTR, /if \(taAsk && !taMenuPicked && askOffNewPart\(taAsk, taCard\)\) \{/);
+  pin(VTR, /const cardAskPicked = TUTOR_MENU_PICK_SINGLE_AUTHORITY && menuPickedSegsRef\.current\.has\(transitionAskCardSeg\) && boardOffersChoices\(\{ statement: segmentCardStatement\(lessonPlanRef\.current, transitionAskCardSeg\) \}\);/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_MENU_PICK_SINGLE_AUTHORITY = process\.env\.NEXT_PUBLIC_TUTOR_MENU_PICK_SINGLE_AUTHORITY !== 'off';/);
+});
+
 // ── Task 22 §A (GDI run 10, 574 s / 882 s) ───────────────────────────────
 test('22A: a due budget advance on a turn ending with an ask is held (Task 38 §C: up to two turns)', () => {
   assert.equal(FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, 2);
@@ -661,10 +694,10 @@ test('26A2: bridge part ⇒ advance (no hold) with the bridge clause in the lead
 });
 test('26A: VTR wiring — offer planted (urgent FACT) instead of the advance, held n/2, bridge clause on both advance leads (pins)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 18000 /* Task 41 r1 */);
+  const block = VTR.slice(auto, auto + 20500 /* Task 41 r1; Task 44 R1 */);
   pin(block, /const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS\s*\? fixedScriptTransitionDecision\(\{\s*plan: autoPlan, segmentId: segIdNow, reason: advanceReason,\s*offerMade: transitionOfferMadeRef\.current\.has\(segIdNow \?\? ''\),\s*offerHeldTurns: autoAdvanceOfferHeldRef\.current,/);
   // order: pronunciation hold → offer → offer hold → ask hold → advance
-  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]{0,900}?\} else if \(autoNext && segIdNow && transition === 'offer' && !deadlineAdvance\) \{\s*\/\/ The offer note replaces[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'await-offer' && !deadlineAdvance\) \{[\s\S]*?\} else if \(autoNext && transition === 'hold-offer' && !holdCapped\) \{\s*\/\/[^\n]*\n\s*if \(!offerSpokenThisTurn && !offerRuntimeTurn\) autoAdvanceOfferHeldRef\.current \+= 1;\s*if \(!offerRuntimeTurn\) autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(/);
+  pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]{0,900}?\} else if \(autoNext && segIdNow && transition === 'offer' && !deadlineAdvance\) \{\s*\/\/ The offer note replaces[\s\S]*?transitionOfferMadeRef\.current\.add\(segIdNow\);\s*\/\/[^\n]*\n\s*autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;[\s\S]*?fixedScriptOfferNote\(autoPlan, segIdNow, autoNext\),\s*\);\s*pendingRuntimeNoteRef\.current = merged\.note;\s*pendingRuntimeNoteSegRef\.current = merged\.segId;\s*pendingRuntimeNoteUrgentRef\.current = true;\s*runtimeNoteHeldTurnsRef\.current = 0;\s*onDebugEvent\?\.\('fixed_script_offer_planted', `"\$\{segIdNow\}" → "\$\{autoNext\}"`\);\s*\} else if \(autoNext && transition === 'await-offer' && !deadlineAdvance\) \{[\s\S]*?\} else if \(autoNext && transition === 'hold-offer' && !holdCapped\) \{\s*\/\/[^\n]*\n\s*if \(!offerSpokenThisTurn && !offerRuntimeTurn\) autoAdvanceOfferHeldRef\.current \+= 1;\s*if \(!offerRuntimeTurn\) autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_offer_hold', `"\$\{segIdNow\}" \$\{autoAdvanceOfferHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS\}`\);\s*\} else if \(autoNext && askPending && TUTOR_ADVANCE_WAITS_FOR_REPLY\) \{[\s\S]*?\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(/);
   pin(block, /autoAdvanceAskHeldRef\.current = 0;\s*autoAdvanceOfferHeldRef\.current = 0;\s*const autoTurns = cur\.turns;/);
   pin(block, /: fixedScriptAutoAdvanceLead\(segIdNow, autoNext, autoKind\)\) \+[^\n]*\n\s*\/\/[^\n]*\n\s*\(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(autoPlan, segIdNow, autoNext\) : ''\) \+\s*\/\/[^\n]*\n\s*\(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(autoPlan, autoNext\)\) : ''\),\s*autoNext,/);
   pin(VTR, /fixedScriptAdvancedNote\(fixedScriptLevelAdvanceLead\(lvNext, lvKind\) \+ \(TUTOR_FIXED_SCRIPT_TRANSITIONS \? fixedScriptBridgeClause\(lvPlan, lvFrom, lvNext\) : ''\) \+ \(TUTOR_TRANSITION_ASK_EVERY_ADVANCE \? fixedScriptChoiceMenuClause\(segmentCardStatement\(lvPlan, lvNext\)\) : ''\), lvNext\),/);

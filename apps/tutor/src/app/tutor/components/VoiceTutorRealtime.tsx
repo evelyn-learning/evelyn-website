@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP, TUTOR_RECAP_CARD_ON_FLUSH, TUTOR_FIXED_SCRIPT_NO_READINESS, TUTOR_TEACHING_LANGUAGE_FIRST, TUTOR_CONVERSATION_ANSWER_CARDS, TUTOR_ANNOUNCED_OFFER_FIRST, TUTOR_CARD_ASK_ENGINE_FALLBACK, TUTOR_RETRY_ADVANCE_ALREADY_APPLIED, TUTOR_MENU_WRAP_UP_DROP, TUTOR_OFFER_ACCEPTED_ASK, TUTOR_NON_ANSWER_RETURN_ASK, TUTOR_JA_ANNOUNCED_MOVE, TUTOR_LONE_YES_ANY_CHOICE, TUTOR_NEITHER_STREAK_MOVE_ON, TUTOR_MOVE_ON_BEFORE_CLOSE, TUTOR_PART_TIME_CAP, TUTOR_CORRECT_REPLY_REASK_DROP, TUTOR_MENU_ENTRY_FALLBACK , TUTOR_RECAP_CORRECTION_CARDS_ONLY , TUTOR_PART_ANNOUNCE_DEDUPE , TUTOR_ANSWERED_CARD_REASK_DROP, TUTOR_CORRECTION_CARD_HOLDS_ADVANCE, TUTOR_CORRECTION_CARD_ON_NEW_PAGE, TUTOR_CORRECTION_REPLACES_MODEL_CARD , TUTOR_VALIDATOR_TTS_HOLD } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP, TUTOR_RECAP_CARD_ON_FLUSH, TUTOR_FIXED_SCRIPT_NO_READINESS, TUTOR_TEACHING_LANGUAGE_FIRST, TUTOR_CONVERSATION_ANSWER_CARDS, TUTOR_ANNOUNCED_OFFER_FIRST, TUTOR_CARD_ASK_ENGINE_FALLBACK, TUTOR_RETRY_ADVANCE_ALREADY_APPLIED, TUTOR_MENU_WRAP_UP_DROP, TUTOR_OFFER_ACCEPTED_ASK, TUTOR_NON_ANSWER_RETURN_ASK, TUTOR_JA_ANNOUNCED_MOVE, TUTOR_LONE_YES_ANY_CHOICE, TUTOR_NEITHER_STREAK_MOVE_ON, TUTOR_MOVE_ON_BEFORE_CLOSE, TUTOR_PART_TIME_CAP, TUTOR_CORRECT_REPLY_REASK_DROP, TUTOR_MENU_ENTRY_FALLBACK , TUTOR_RECAP_CORRECTION_CARDS_ONLY , TUTOR_PART_ANNOUNCE_DEDUPE , TUTOR_ANSWERED_CARD_REASK_DROP, TUTOR_CORRECTION_CARD_HOLDS_ADVANCE, TUTOR_CORRECTION_CARD_ON_NEW_PAGE, TUTOR_CORRECTION_REPLACES_MODEL_CARD , TUTOR_VALIDATOR_TTS_HOLD , TUTOR_ADVANCE_WAITS_FOR_REPLY, TUTOR_OFFER_ENDS_TURN, TUTOR_MENU_PICK_SINGLE_AUTHORITY, TUTOR_AUTHORED_CARD_DEDUPE } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, resolveMenuPickLoose, loosePickAllowed, menuPickNote, menuReplyIsPick, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { emptyTurnFallbackLine, silentTurnFallbackLine, lastShowSentenceOf, silentTurnFallbackDue, nonAnswerReturnLine, pendingAskOf } from '@/lib/tutor/voice/empty-turn-fallback';
@@ -93,7 +93,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen, authoredCardOnCurrentPage } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue, offCardAskStripped, cardAskEngineFallbackLine, menuPresentedIn, menuEntryFallbackLine, menuPickPendingSuppressesArm } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead, proactiveOpenerAllowed } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, handwriteShownSentence, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
@@ -443,7 +443,7 @@ import {
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind, fixedScriptPartLabel, offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerReaskedMovedReason, offerAcceptedReplantDue, type OfferAcceptState, fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE, FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance, type FixedScriptAdvanceVia, requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, postDueHoldDecision, readinessAskDropDue, wrapUpAfterMenuDropDue, appliedAdvanceMarkerAfterKill, brainAdvanceOfferFirstRefused, attemptAsksStudent, loneYesChoiceNoteDue, LONE_YES_CHOICE_NOTE, offerAcceptedNoAskDue, OFFER_ACCEPTED_NO_ASK_REASON, isBareMoveOn } from '@/lib/tutor/lesson-plan/fixed-script';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS, isFixedScriptCloseNote, moveOnThenCloseTranscript } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, isProposalQuestion, heldAdvanceFiresNow, holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS, isFixedScriptCloseNote, moveOnThenCloseTranscript } from '@/lib/tutor/lesson-plan/fixed-script';
 import { validatorTtsHold, VALIDATOR_TTS_HOLD_MS } from '@/lib/tutor/voice/validator-tts-hold';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision, dedupePartAnnouncement, endsWithRepeatAsk, endsWithSayOrListenAsk } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -486,7 +486,7 @@ import {
   TUTOR_TURN_SHAPE_GATE,
 } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
-import { lastQuestionSentence, turnEndsWithAsk } from '@/lib/tutor/question-gist-text';
+import { lastQuestionSentence, turnEndsWithAsk, sentenceAsksStudent } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback, shouldKillBareAssentPraise, bareAssentPraiseFeedback, ambiguousAssentKill, ambiguousAssentFeedback } from '@/lib/tutor/voice/nonanswer-praise';
 import {
@@ -4257,6 +4257,8 @@ export function VoiceTutorRealtime({
   const autoAdvanceAskHeldRef = useRef(0);
   /** Task 43 §G2: boundaries held because this turn corrected the student's sentence. */
   const autoAdvanceCorrectionHeldRef = useRef(0);
+  /** Task 44 R1: a due budget / time advance held because the turn ended with a question — fires at the start of the reply turn. */
+  const heldAdvanceForAskRef = useRef<{ segId: string | null; next: string; reason: string } | null>(null);
   /** Task 43 §F (final review I-5): parts whose unchecked required phrases already held one turn. */
   const requiredPhrasesHoldSegsRef = useRef<Set<string>>(new Set());
   // Task 26 §A: segments whose transition offer was planted (one per
@@ -7038,6 +7040,21 @@ export function VoiceTutorRealtime({
       const dupPronModel = opts?.pronunciationModel === true || (!opts?.sentenceBoardAuto && !!pronunciationTargetsOf(dupSeg?.metadata));
       const dupPageOpening = !!pendingAdvanceNewPageRef.current && !pendingAdvanceNewPageRef.current.afterTurn;
       const dupCurrentPage = currentBoardPage(log) + (dupPageOpening ? 1 : 0);
+      // Task 44 R3 (voice run 22, 99 s): the brain's own showProblem of the part's
+      // authored card (tagged "[intermediate]") while that card already stands on
+      // the current page — one card per authored problem.
+      if (TUTOR_AUTHORED_CARD_DEDUPE && !opts?.sentenceBoardAuto && isFixedScriptPlan(lessonPlanRef.current) && currentSegmentIdRef.current) {
+        const authoredNow = segmentCardStatement(lessonPlanRef.current, currentSegmentIdRef.current);
+        if (authoredNow) {
+          commands = commands.filter((cmd) => {
+            const c = cmd as unknown as { action: string; problem?: { statement?: unknown } } & Record<string, unknown>;
+            if (c.action !== 'showProblem' || typeof c.problem?.statement !== 'string') return true;
+            if (!batchHasSegmentCard([c as unknown as { action: string } & Record<string, unknown>], authoredNow) || !authoredCardOnCurrentPage(log, authoredNow)) return true;
+            onDebugEvent?.('authored_card_duplicate_dropped', `"${(c.problem.statement as string).slice(0, 60)}"`);
+            return false;
+          });
+        }
+      }
       commands = commands.filter((cmd) => {
         const c = cmd as unknown as { action: string; sentence?: unknown } & Record<string, unknown>;
         if (c.action !== 'showSentence' || typeof c.sentence !== 'string') return true;
@@ -13078,6 +13095,37 @@ export function VoiceTutorRealtime({
         }
       }
 
+      // Task 44 R1: a budget / time advance held for an open ask fires at the
+      // start of the student's reply turn — the brain is told as a FACT and
+      // closes the old ask in one sentence before the move (transition_ask).
+      if (heldAdvanceFiresNow({ held: heldAdvanceForAskRef.current, segmentId: currentSegmentIdRef.current, silent, bracketed: isBracketed, prefetch: !!opts?.prefetchOnly, fixedScript: isFixedScriptPlan(lessonPlanRef.current) })) {
+        const ha = heldAdvanceForAskRef.current!;
+        const haPlan = lessonPlanRef.current!;
+        const haSeg = ha.segId ?? '';
+        const haNext = ha.next;
+        heldAdvanceForAskRef.current = null;
+        autoAdvanceAskHeldRef.current = 0;
+        autoAdvancePostDueHoldsRef.current = 0;
+        applyResolvedAdvance(haPlan, haSeg, haNext);
+        if (TUTOR_RETRY_ADVANCE_ALREADY_APPLIED) inferredAdvanceThisTurnRef.current = haNext;
+        if (pendingAdvanceNewPageRef.current?.segmentId === haNext) pendingAdvanceNewPageRef.current.cardOnFlush = true;
+        plantAdvanceEntryNote(haNext, 'reply');
+        const haKind = haPlan.segments.find((sg) => sg.id === haNext)?.kind ?? 'segment';
+        const haMerged = mergePendingRuntimeNote(
+          { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
+          haSeg, haNext,
+          fixedScriptAdvancedNote(
+            (needsLevelCaptureLead(haPlan, haSeg, !!workingLevelRef.current) ? LEVEL_CAPTURE_LEAD : '')
+            + fixedScriptAutoAdvanceLead(haSeg, haNext, haKind)
+            + (TUTOR_FIXED_SCRIPT_TRANSITIONS ? fixedScriptBridgeClause(haPlan, haSeg, haNext) : '')
+            + (TUTOR_TRANSITION_ASK_EVERY_ADVANCE ? fixedScriptChoiceMenuClause(segmentCardStatement(haPlan, haNext)) : ''), haNext),
+        );
+        pendingRuntimeNoteRef.current = haMerged.note;
+        pendingRuntimeNoteSegRef.current = haMerged.segId;
+        pendingRuntimeNoteUrgentRef.current = true;
+        runtimeNoteHeldTurnsRef.current = 0;
+        onDebugEvent?.('fixed_script_auto_advance', `"${haSeg}" → "${haNext}" reason=${ha.reason} (on the reply)`);
+      }
       // Task 33 §C (GDI bot run r8, 1153–1220 s): the menu part's choice was
       // asked MENU_ASK_CAP times with no pick — this reply is no pick either,
       // so the engine moves the lesson on itself (the auto-advance path) and
@@ -14847,6 +14895,8 @@ export function VoiceTutorRealtime({
         let adjacentPrevSentence = '';
         // Task 31 §H1: a thank-you ack was spoken in this attempt.
         let thankAckSpoken = false;
+        // Task 44 R2: a proposal / offer sentence was kept this attempt — later asks go.
+        let proposalSpokenThisTurn = false;
         // Task 33 fix round 1 (R9-3): the last sentence was a dropped re-ask.
         let sqReaskDroppedPrev = false;
         // Task 38 §D: a question lead-in held one step (spoken with the next
@@ -17606,6 +17656,25 @@ export function VoiceTutorRealtime({
                     onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" (same part announced twice${partDedupe ? ` → "${partDedupe.slice(0, 40)}"` : ''})`);
                     if (!partDedupe) continue;
                     (ev as { text?: string }).text = partDedupe;
+                  }
+                  // Task 44 R2 (voice run 22, 580 s: "Shall we try one more past simple
+                  // question? Tell me about the last business trip you took."; 1059 s: the
+                  // accepted offer asked again): an offer ends the turn — a later ask in
+                  // the same turn goes; the turn after an acceptance never re-offers.
+                  if (TUTOR_OFFER_ENDS_TURN && isFixedScriptPlan(lessonPlanRef.current)) {
+                    const r2Text = (ev.text as string) || updatedSentence;
+                    if (isProposalQuestion(r2Text)) {
+                      // Task 39 §E's offerAcceptedThisTurn: the reply accepted the offer at this turn's start.
+                      if (offerAcceptedThisTurn) {
+                        onDebugEvent?.('offer_reask_dropped', `"${r2Text.slice(0, 80)}" (the student just accepted)`);
+                        dropLeadInWithQuestion();
+                        continue;
+                      }
+                      proposalSpokenThisTurn = true;
+                    } else if (proposalSpokenThisTurn && (sentenceAsksStudent(r2Text) || /[?？]\s*$/.test(r2Text.trim()))) {
+                      onDebugEvent?.('proposal_trailing_ask_dropped', `"${r2Text.slice(0, 80)}"`);
+                      continue;
+                    }
                   }
                   // Task 38 §I2 (voice run 19, 51 / 114 s): the same short opener
                   // ("Good, <Name>.") as the previous turn's first sentence.
@@ -20694,6 +20763,8 @@ export function VoiceTutorRealtime({
           const taSeg = taPlan?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
           const taTruth = taSeg && taPlan ? getSegmentTruth(taSeg, taPlan.id) : null;
           const taCardText = taTruth?.problemText ? stripWbEmphasisText(taTruth.problemText) : '';
+          // Task 44 R3 (voice run 22, 1153 s): the learner's menu pick is resolved — the brain's item ask IS on part.
+          const taMenuPicked = TUTOR_MENU_PICK_SINGLE_AUTHORITY && boardOffersChoices({ statement: taCardText }) && menuPickedSegsRef.current.has(currentSegmentIdRef.current ?? '');
           const taCard = transitionAskCheckDue({
             factNoteDelivered: fixedScriptNoteDeliveredThisTurnRef.current,
             advancedThisTurn: currentSegmentIdRef.current !== turnStartSegmentId,
@@ -20702,7 +20773,7 @@ export function VoiceTutorRealtime({
             everyAdvance: TUTOR_TRANSITION_ASK_EVERY_ADVANCE,
           }) ? taCardText : '';
           const taAsk = taCard ? transitionAskSentence(attemptText) : null;
-          if (taAsk && askOffNewPart(taAsk, taCard)) {
+          if (taAsk && !taMenuPicked && askOffNewPart(taAsk, taCard)) {
             transitionAskRejected = true;
             transitionAskCard = taCard;
             transitionAskCardSeg = currentSegmentIdRef.current ?? '';
@@ -21339,7 +21410,10 @@ export function VoiceTutorRealtime({
             // Fix round 1 (I-2): what the turn already said (the killed attempt's heard sentences too).
             turnSpoken: turnNarrationRef.current.join(' '),
           });
-          if (cardAsk) {
+          // Task 44 R3: a resolved menu pick silences the engine's menu line (one authority per action).
+          const cardAskPicked = TUTOR_MENU_PICK_SINGLE_AUTHORITY && menuPickedSegsRef.current.has(transitionAskCardSeg) && boardOffersChoices({ statement: segmentCardStatement(lessonPlanRef.current, transitionAskCardSeg) });
+          if (cardAsk && cardAskPicked) onDebugEvent?.('transition_ask_engine_fallback_skipped', `"${transitionAskCardSeg}" menu already picked`);
+          if (cardAsk && !cardAskPicked) {
             speakOnePart(cardAsk);
             attemptText = `${attemptText} ${cardAsk}`.trim();
             onDebugEvent?.('transition_ask_engine_fallback', `"${transitionAskCardSeg}" "${cardAsk.slice(0, 80)}"`);
@@ -22417,6 +22491,15 @@ export function VoiceTutorRealtime({
             if (!offerSpokenThisTurn && !offerRuntimeTurn) autoAdvanceOfferHeldRef.current += 1;
             if (!offerRuntimeTurn) autoAdvancePostDueHoldsRef.current += 1;
             onDebugEvent?.('fixed_script_offer_hold', `"${segIdNow}" ${autoAdvanceOfferHeldRef.current}/${FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS}`);
+          } else if (autoNext && askPending && TUTOR_ADVANCE_WAITS_FOR_REPLY) {
+            // Task 44 R1 (voice run 22, 473 / 1108 s): the pointer never moves
+            // while a question to the learner is open — no cap, no post-due
+            // override. The advance fires at the start of the student's reply
+            // turn (heldAdvanceFiresNow), where the brain closes the old ask
+            // in one sentence and moves (the FACT note).
+            heldAdvanceForAskRef.current = { segId: segIdNow, next: autoNext, reason: advanceReason };
+            autoAdvanceAskHeldRef.current += 1;
+            onDebugEvent?.('fixed_script_auto_advance_held_ask', `"${segIdNow}" until the reply (${advanceReason})`);
           } else if (autoNext && !holdCapped && holdAutoAdvanceForPendingAsk(askPending, autoAdvanceAskHeldRef.current)) {
             autoAdvanceAskHeldRef.current += 1;
             autoAdvancePostDueHoldsRef.current += 1;

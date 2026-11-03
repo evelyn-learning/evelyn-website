@@ -1448,3 +1448,27 @@ export const TUTOR_CORRECTION_REPLACES_MODEL_CARD = process.env.NEXT_PUBLIC_TUTO
  *  capped at 3.5 s (bounded latency; a kill then drops the text pre-audio).
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_VALIDATOR_TTS_HOLD=off. */
 export const TUTOR_VALIDATOR_TTS_HOLD = process.env.NEXT_PUBLIC_TUTOR_VALIDATOR_TTS_HOLD !== 'off';
+
+/** Task 44 R1 (voice run 22, 473 / 1108 s): a due budget / time advance on a
+ *  turn that ends with a question to the learner is held with no cap; it
+ *  fires at the start of the student's reply turn. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_ADVANCE_WAITS_FOR_REPLY=off restores the capped holds. */
+export const TUTOR_ADVANCE_WAITS_FOR_REPLY = process.env.NEXT_PUBLIC_TUTOR_ADVANCE_WAITS_FOR_REPLY !== 'off';
+
+/** Task 44 R2 (voice run 22, 580 / 1059 s): an offer or proposal ends the
+ *  turn — a later ask in the same turn is dropped before audio, and the turn
+ *  after an accepted offer never re-offers. Fixed scripts. Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_OFFER_ENDS_TURN=off. */
+export const TUTOR_OFFER_ENDS_TURN = process.env.NEXT_PUBLIC_TUTOR_OFFER_ENDS_TURN !== 'off';
+
+/** Task 44 R3 (voice run 22, 1153 s): one authority per action — once the
+ *  learner's menu pick is resolved, the transition-ask validator and the
+ *  engine's menu fallback stand down. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_MENU_PICK_SINGLE_AUTHORITY=off. */
+export const TUTOR_MENU_PICK_SINGLE_AUTHORITY = process.env.NEXT_PUBLIC_TUTOR_MENU_PICK_SINGLE_AUTHORITY !== 'off';
+
+/** Task 44 R3 (voice run 22, 99 s): the brain's own re-paint of the part's
+ *  authored card (tagged "[intermediate]") under the engine's card — dropped
+ *  when the authored card already stands on the current page. Fixed scripts.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_AUTHORED_CARD_DEDUPE=off. */
+export const TUTOR_AUTHORED_CARD_DEDUPE = process.env.NEXT_PUBLIC_TUTOR_AUTHORED_CARD_DEDUPE !== 'off';

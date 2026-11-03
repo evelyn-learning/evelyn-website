@@ -944,7 +944,7 @@ export function readinessAskDropDue(input: { plan: LessonPlan | null | undefined
  *  carries the entry) plants the part's entry note for the next brain turn —
  *  the brain's advance_lesson (Task 31 §D), a typed move-on, the Skip
  *  button, the menu-cap advance. Pure. */
-export type FixedScriptAdvanceVia = 'auto' | 'brain' | 'typed' | 'skip' | 'menu_unpicked' | 'lesson_time';
+export type FixedScriptAdvanceVia = 'auto' | 'brain' | 'typed' | 'skip' | 'menu_unpicked' | 'lesson_time' | 'reply';
 export function entryNoteDueAfterAdvance(input: { fixedScript: boolean; via: FixedScriptAdvanceVia; lessonClosed: boolean }): boolean {
   return input.fixedScript && !input.lessonClosed && input.via !== 'auto';
 }
@@ -1310,4 +1310,42 @@ export function loneYesChoiceNoteDue(input: { enabled: boolean; fixedScript: boo
   const t = (input.studentText ?? '').trim();
   if (!t || /^\s*\[/.test(t)) return false;
   return isBareAffirmative(t) && offerAsked(input.lastTutorText);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Task 44 (voice run 22, embed-1793737430878) — the three rules Praveen chose
+// over further shape patches.
+// ─────────────────────────────────────────────────────────────────────────
+/** R1 — the pointer never moves while a question to the learner is open.
+ *  A due budget / time advance on a turn that ends with an ask is HELD with
+ *  no cap and no post-due override (run 22, 473 s: the page flipped under
+ *  the answer; 1108 s: under the idle-nudge's re-ask). The held advance
+ *  fires at the START of the student's next real reply turn — the brain is
+ *  then told as a FACT and closes the old ask in one sentence before the
+ *  move (transition_ask). A silent / runtime (bracketed) / prefetch turn is
+ *  no reply; a part that already moved drops the hold. Pure. */
+export function heldAdvanceFiresNow(input: {
+  held: { segId: string | null; next: string } | null | undefined;
+  segmentId: string | null | undefined;
+  silent: boolean;
+  bracketed: boolean;
+  prefetch: boolean;
+  fixedScript: boolean;
+}): boolean {
+  if (!input.held || !input.fixedScript || input.silent || input.bracketed || input.prefetch) return false;
+  return !!input.segmentId && input.segmentId === input.held.segId;
+}
+/** R2 — an offer / proposal ends the turn. A sentence that proposes a choice
+ *  or a move to the learner ("Shall we try one more …?", "Would you like one
+ *  more …, or shall we move on?", "Do you want to try another one?", 「もう一文
+ *  練習しましょうか？」). Not a content question ("What did you learn there?"),
+ *  not a repeat ask ("Can you say it once more?"), not an offer about
+ *  something outside the lesson ("Would you like a coffee at the meeting?"). Pure. */
+const PROPOSAL_LEAD_RE = /^\s*(?:(?:okay|ok|so|now|good|great|alright|well|then),?\s+)?(?:shall we|would you like|do you want|want to|how about|are you ready|ready|can we|let['’]s)\b/i;
+const PROPOSAL_TOPIC_RE = /\b(?:one more|another|more practice|practi[sc]e|try|move on|go on|continue|next (?:part|section|step|one)|summary|conversation|pronunciation|past simple|present perfect|skip|stop|finish|wrap up|start|begin|sentence|question|item|word)\b/i;
+export function isProposalQuestion(sentence: string | null | undefined): boolean {
+  const t = (sentence ?? '').trim();
+  if (!/[?？]\s*$/.test(t)) return false;
+  if (/(?:ましょうか|ませんか|ますか)[？?]\s*$/.test(t) && /もう(?:一|ひと)|練習|次|進み|移り/.test(t)) return true;
+  return PROPOSAL_LEAD_RE.test(t) && PROPOSAL_TOPIC_RE.test(t);
 }
