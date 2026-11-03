@@ -22094,8 +22094,11 @@ export function VoiceTutorRealtime({
         }
         // Task 33 §A1: a delivered turn that asked something other than the
         // offer served the acceptance (the re-ask validator stands down).
+        // Final review day 3 (I-1): this boundary asked the accepted item — exempt from the post-due cap.
+        let offerItemAskedThisTurn = false;
         if (offerAcceptedRef.current && !offerAcceptedRef.current.itemAsked && !opts?.prefetchOnly && offerItemAskedIn(fullText)) {
           offerAcceptedRef.current.itemAsked = true;
+          offerItemAskedThisTurn = true;
           onDebugEvent?.('fixed_script_offer_item_asked', `"${offerAcceptedRef.current.segId}"`);
         }
         // Task 33 §C: a delivered turn in a menu part that asked the menu
@@ -22172,6 +22175,8 @@ export function VoiceTutorRealtime({
         // whose one transition_offer_missing retry still lacked the offer
         // (unmade) runs the hold as before (it is the offer turn).
         let offerSpokenThisTurn = false;
+        // Final review day 3 (I-1): the offer was asked on this boundary by any path (the unmade fallback too).
+        let offerAskedThisBoundary = false;
         const offerSeg = segIdNow ?? '';
         // Task 30 §A2: a nudge / nag / continuation / note-only turn (no student speech).
         const offerRuntimeTurn = /^\s*\[/.test(transcript);
@@ -22197,6 +22202,7 @@ export function VoiceTutorRealtime({
             transitionOfferSpokenRef.current.add(offerSeg);
             transitionOfferSpokenAtRef.current.set(offerSeg, Date.now());
             autoAdvanceOfferHeldRef.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;
+            offerAskedThisBoundary = true;
           }
         }
         if (transitionOfferUnmadeRef.current === offerSeg) transitionOfferUnmadeRef.current = '';
@@ -22237,7 +22243,8 @@ export function VoiceTutorRealtime({
           }
           // Task 41 fix round 1 (I-3): ≤ 2 held boundaries after due; none (and no offer) from the guard point on.
           const postDue = TUTOR_PART_TIME_CAP && advanceReason !== 'announced' && !offerRuntimeTurn
-            ? postDueHoldDecision({ plan: autoPlan, holds: autoAdvancePostDueHoldsRef.current, lessonElapsedMs: Date.now() - (voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current) })
+            ? postDueHoldDecision({ plan: autoPlan, holds: autoAdvancePostDueHoldsRef.current, lessonElapsedMs: Date.now() - (voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current), offerAnswerExempt: offerSpokenThisTurn || offerAskedThisBoundary || offerItemAskedThisTurn
+              || (TUTOR_TRANSITION_OFFER_SPOKEN && transition === 'offer' && offerAsked(fullText)) })
             : 'hold-ok';
           const holdCapped = postDue !== 'hold-ok';
           const deadlineAdvance = postDue === 'deadline';

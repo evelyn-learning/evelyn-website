@@ -215,7 +215,7 @@ test('C: the pronunciation hold is capped at 3 consecutive turns; the 4th advanc
 });
 test('B: FACT notes are urgent (never held) and delivery is logged', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  pin(VTR.slice(auto, auto + 11500), /pendingRuntimeNoteUrgentRef\.current = true;/);
+  pin(VTR.slice(auto, auto + 12500 /* final-3 I-1 */), /pendingRuntimeNoteUrgentRef\.current = true;/);
   // Task 14 §G: the tool path's level apply moved into applyWorkingLevelRef.
   const lv = VTR.indexOf("applyWorkingLevelRef.current(wl.level, wl.evidence ?? '', 'tool')");
   assert.ok(lv > 0);
@@ -1605,7 +1605,7 @@ test('41 r1 I-3: postDueHoldDecision — 2 holds after due, then advance; from 2
   assert.equal(postDueHoldDecision({ plan: gdi, holds: 0, lessonElapsedMs: 22 * min }), 'deadline');
   assert.equal(postDueHoldDecision({ plan: { ...gdi, metadata: {} } as typeof gdi, holds: 0, lessonElapsedMs: 99 * min }), 'hold-ok', 'not a fixed script: only the count');
   // VTR: every hold kind counts; the offer plant / await / budget-turn offer stand down at the deadline
-  pin(VTR, /const postDue = TUTOR_PART_TIME_CAP && advanceReason !== 'announced' && !offerRuntimeTurn\s*\? postDueHoldDecision\(\{ plan: autoPlan, holds: autoAdvancePostDueHoldsRef\.current, lessonElapsedMs: Date\.now\(\) - \(voiceSessionStartedAtMsRef\.current \?\? sessionStartMsRef\.current\) \}\)/);
+  pin(VTR, /const postDue = TUTOR_PART_TIME_CAP && advanceReason !== 'announced' && !offerRuntimeTurn\s*\? postDueHoldDecision\(\{ plan: autoPlan, holds: autoAdvancePostDueHoldsRef\.current, lessonElapsedMs: Date\.now\(\) - \(voiceSessionStartedAtMsRef\.current \?\? sessionStartMsRef\.current\), offerAnswerExempt: /);
   pin(VTR, /if \(autoNext && !offerMadeHere && !holdCapped && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]{0,900}?autoAdvancePronHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;/);
   pin(VTR, /\} else if \(autoNext && transition === 'hold-offer' && !holdCapped\) \{[\s\S]{0,200}?if \(!offerRuntimeTurn\) autoAdvancePostDueHoldsRef\.current \+= 1;/);
   pin(VTR, /\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;/);
@@ -1693,6 +1693,33 @@ test('42 §D: entering turn without the menu + next turn without it → the engi
   pin(VTR, /if \(menuPick && !opts\?\.prefetchOnly && currentSegmentIdRef\.current\) menuPickedSegsRef\.current\.add\(currentSegmentIdRef\.current\);/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_MENU_ENTRY_FALLBACK = process\.env\.NEXT_PUBLIC_TUTOR_MENU_ENTRY_FALLBACK !== 'off';/);
   assert.ok(read('src/app/tutor-portal/embed/page.tsx').includes("'menu_entry_engine_fallback',"));
+});
+
+// ── Final review day 3 I-1: an offer (or accepted item) asked on a capped boundary always gets its answer ──
+test('final-3 I-1: 2 pronunciation holds, then the offer: the offer-asked boundary does not advance; "Yes." → the one-more note, no advance note', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const min = 60_000;
+  const seg = 'present-perfect';
+  // holds = 2 (two pronunciation holds before the offer): the plant boundary is not a hold
+  assert.equal(postDueHoldDecision({ plan: gdi, holds: 2, lessonElapsedMs: 9 * min }), 'capped');
+  assert.equal(fixedScriptTransitionDecision({ plan: gdi, segmentId: seg, reason: 'turns', offerMade: false, offerHeldTurns: 0 }), 'offer', 'the plant');
+  // the next turn asks "One more word, or shall we move on?" — the offer-asked boundary is exempt once
+  const offerTurn = 'Good. Would you like one more practice sentence on the present perfect, or shall we move on to the past simple?';
+  assert.equal(offerAsked(offerTurn), true);
+  assert.equal(postDueHoldDecision({ plan: gdi, holds: 2, lessonElapsedMs: 9 * min, offerAnswerExempt: true }), 'hold-ok', 'capped, but the offer was asked here');
+  assert.equal(postDueHoldDecision({ plan: gdi, holds: 0, lessonElapsedMs: 23 * min, offerAnswerExempt: true }), 'hold-ok', 'past the guard point too');
+  assert.equal(fixedScriptTransitionDecision({ plan: gdi, segmentId: seg, reason: 'turns', offerMade: true, offerHeldTurns: FIXED_SCRIPT_OFFER_HELD_AT_PLANT, offerSpoken: true, studentTurn: true }), 'hold-offer', '⇒ no advance on the offer boundary');
+  // the student's "Yes." is still in the offer part: the one-more note, not the advance note
+  assert.equal(offerAccepted('Yes.', offerTurn), true);
+  assert.match(fixedScriptOfferAcceptedNote(gdi, seg, 'past-simple'), /one more|ONE more/i);
+  // the item-asked boundary is exempt once; the next boundary (holds spent) advances
+  assert.equal(postDueHoldDecision({ plan: gdi, holds: 3, lessonElapsedMs: 9.5 * min, offerAnswerExempt: true }), 'hold-ok', 'the accepted item was asked here');
+  assert.equal(postDueHoldDecision({ plan: gdi, holds: 4, lessonElapsedMs: 10 * min }), 'capped', 'the item was answered: advance');
+  // VTR: every offer-asked path and the item-asked boundary feed the exemption
+  pin(VTR, /offerAnswerExempt: offerSpokenThisTurn \|\| offerAskedThisBoundary \|\| offerItemAskedThisTurn\s*\|\| \(TUTOR_TRANSITION_OFFER_SPOKEN && transition === 'offer' && offerAsked\(fullText\)\) \}\)/);
+  pin(VTR, /autoAdvanceOfferHeldRef\.current = FIXED_SCRIPT_OFFER_HELD_AT_PLANT;\s*offerAskedThisBoundary = true;/);
+  pin(VTR, /offerAcceptedRef\.current\.itemAsked = true;\s*offerItemAskedThisTurn = true;/);
+  assert.ok(VTR.indexOf('let offerItemAskedThisTurn = false;') < VTR.indexOf('const postDue = TUTOR_PART_TIME_CAP'), 'set before the cap decision');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

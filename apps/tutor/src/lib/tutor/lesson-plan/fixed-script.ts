@@ -148,7 +148,13 @@ export function fixedScriptAutoAdvanceReason(input: AutoAdvanceInput): 'turns' |
  *  and no offer: the part advances at the boundary, so the closing part
  *  starts by (plan total − its minutes). 'hold-ok' | 'capped' | 'deadline'. */
 export const FIXED_SCRIPT_POST_DUE_MAX_HOLDS = 2;
-export function postDueHoldDecision(input: { plan: LessonPlan | null | undefined; holds: number; lessonElapsedMs: number }): 'hold-ok' | 'capped' | 'deadline' {
+// Final review day 3 (I-1): the boundary of the turn that just ASKED the
+// offer (brain, engine fallback or continuation) or the accepted item is
+// exempt — that ask always gets its student answer before the advance, even
+// with the holds spent or past the guard point (once each: the flag is true
+// on that boundary only).
+export function postDueHoldDecision(input: { plan: LessonPlan | null | undefined; holds: number; lessonElapsedMs: number; offerAnswerExempt?: boolean }): 'hold-ok' | 'capped' | 'deadline' {
+  if (input.offerAnswerExempt) return 'hold-ok';
   const guardMs = input.plan && isFixedScriptPlan(input.plan) ? lessonTimeGuardDueMs(input.plan) : null;
   if (guardMs !== null && input.lessonElapsedMs >= guardMs) return 'deadline';
   return input.holds >= FIXED_SCRIPT_POST_DUE_MAX_HOLDS ? 'capped' : 'hold-ok';
