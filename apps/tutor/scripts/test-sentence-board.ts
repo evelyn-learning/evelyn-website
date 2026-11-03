@@ -1409,8 +1409,8 @@ test('29H: no "you" subject, a question, or another part → no restatement card
 test('29H: first-person write-back', () => {
   assert.equal(firstPersonWriteBack("You're a sales manager at your company."), "I'm a sales manager at my company.");
   assert.equal(firstPersonWriteBack('You are a sales manager.'), 'I am a sales manager.');
-  assert.equal(firstPersonWriteBack('You were in Tokyo, and you met them.'), 'I was in Tokyo, and I met them.');
-  assert.equal(firstPersonWriteBack("You've worked with them, so they know you."), "I've worked with them, so they know me.");
+  assert.equal(firstPersonWriteBack('You were in Tokyo, and you met them.'), null, 'final-3 r2: two "you" ⇒ no card');
+  assert.equal(firstPersonWriteBack("You've worked with them, so they know you."), null, 'final-3 r2: two "you" ⇒ no card');
 });
 
 test('29I: a contrast ask cards BOTH quoted sentences, in spoken order', () => {
@@ -1460,7 +1460,7 @@ test('29H r2 (N-1): a structural frame — a second "you" within a few tokens �
     assert.ok(!c!.emphasis.some((w) => /^(?:said|say|saying|mean|explained|were)$/i.test(w)), `${t} ${JSON.stringify(c!.emphasis)}`);
   }
   assert.equal(levelCheckRestatementCard('You told me you sold it.', S), null, 'clause under 4 words');
-  assert.equal(firstPersonWriteBack('You know, they like you.'), "I know, they like me.");
+  assert.equal(firstPersonWriteBack('You know, they like you.'), null, 'final-3 r2: two "you" ⇒ no card');
 });
 test('29H r2 (N-2): a modal the student said too is a restatement; otherwise rejected', () => {
   assert.equal(levelCheckRestatementCard('You can speak English well at work.', 'I can speak English at work well.')?.sentence, 'I can speak English well at work.');
@@ -1697,6 +1697,21 @@ test('final-3 B-1: write-back table — subject / object by the token before; am
   assert.deepEqual(cards.map((x) => x.sentence), ['Last week I visited three customers in Osaka.']);
   const c2 = planSentenceBoard({ tutorText: 'Good try. In 2020 you started working at the company.', studentLast: 'In 2020 I start working at the company.', correctionMarked: true });
   assert.deepEqual(c2.map((x) => x.sentence), ['In 2020 I started working at the company.']);
+});
+
+test('final-3 r2: shapes the table cannot write back ⇒ no card; the correct cases unchanged', () => {
+  for (const x of ['If you ask me, you should call them.', 'You and your team launched the product.', 'Your team and you launched the product.', 'I will call you tomorrow.', 'We met you at the station.', 'You, too, were late.']) {
+    assert.equal(firstPersonWriteBack(x), null, x);
+  }
+  assert.equal(firstPersonWriteBack('Last week you visited three customers in Osaka.'), 'Last week I visited three customers in Osaka.');
+  assert.equal(firstPersonWriteBack('Your boss gave you the report.'), 'My boss gave me the report.');
+  assert.equal(firstPersonWriteBack('You are responsible for testing.'), 'I am responsible for testing.');
+  assert.equal(firstPersonWriteBack("You'll present it on Monday."), "I'll present it on Monday.");
+  assert.equal(firstPersonWriteBack('The customer thanked you for your help.'), 'The customer thanked me for my help.');
+  assert.equal(firstPersonWriteBack('The meeting ended, and you went home.'), 'The meeting ended, and I went home.', 'a clause conjunction is not a coordinated subject');
+  // the planSentenceBoard path: no card for the two-subject sentence
+  const cards = planSentenceBoard({ tutorText: 'Good. If you ask me, you should call them.', studentLast: 'If I ask me, I should call them.', correctionMarked: true });
+  assert.ok(cards.every((c) => !/If I ask me/.test(c.sentence)), JSON.stringify(cards));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

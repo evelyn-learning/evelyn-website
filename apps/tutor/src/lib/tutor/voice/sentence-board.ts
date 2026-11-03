@@ -1004,8 +1004,22 @@ const WB_IRREGULAR_PAST = new Set(['went', 'met', 'sold', 'made', 'gave', 'told'
 const WB_VERB_AFTER = new Set(['are', 'were', 'have', 'had', 'will', 'would', 'can', 'could', 'should', 'may', 'might', 'must', 'do', 'did', 'does', 'also', 'always', 'often', 'usually', 'never', 'just', 'really', 'still', 'already', 'only', 'sometimes', 'work', 'live', 'sell', 'manage', 'lead', 'use', 'need', 'want', 'like', 'go', 'make', 'help', 'talk', 'speak', 'visit', 'meet', 'say', 'explain', 'travel', 'handle', 'deal', 'started', 'start', 'joined', 'join', 'became']);
 const wbVerbLike = (w: string | undefined) => !!w && (WB_VERB_AFTER.has(w) || WB_IRREGULAR_PAST.has(w) || /^[a-z]{3,}ed$/.test(w));
 const wbObjectCue = (w: string) => WB_PREPS.has(w) || WB_OBJECT_VERBS.has(w) || /^[a-z]{3,}ed$/.test(w);
+// Final review day 3, fix round 2: shapes the table cannot write back safely ⇒ null.
+const WB_FIRST_PERSON_RE = /\bI(?:['’](?:m|ll|ve|d))?\b|\b(?:me|my|mine|myself|we|we['’](?:re|ve|ll|d)|our|ours|ourselves)\b|\b(?:Me|My|Mine|We|Our|Us|us)\b/;
+const WB_COORDINATED_RE = /\byou\s+(?:and|or)\b|\b(?:your\s+)?[A-Za-z]+\s+(?:and|or)\s+you\b(?!['’])/i;
+const WB_YOU_COMMA_RE = /\byou\s*,/i;
 export function firstPersonWriteBack(sentence: string): string | null {
   const raw = (sentence ?? '').trim();
+  // (1) two or more "you" pronouns (you / you're / you've / you'd / you'll) anywhere
+  //     ("If you ask me, you should call them."); possessives (your / yours /
+  //     yourself) map one-to-one and do not count.
+  if ((raw.match(/\byou(?:['’](?:re|ve|d|ll))?\b/gi) ?? []).length >= 2) return null;
+  // (2) a coordinated subject with you ("You and your team …", "Your team and you …")
+  if (WB_COORDINATED_RE.test(raw)) return null;
+  // (3) the sentence already speaks in the first person ("I will call you tomorrow.")
+  if (WB_FIRST_PERSON_RE.test(raw.replace(/\b(?:We|Our|Ours|My|Me|Mine)\b/g, (m) => m.toLowerCase()))) return null;
+  // (4) a comma parenthetical after the pronoun ("You, too, were late.")
+  if (WB_YOU_COMMA_RE.test(raw)) return null;
   const parts = raw.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)?|[^A-Za-z0-9]+/g) ?? [];
   const isWord = (x: string) => /^[A-Za-z0-9]/.test(x);
   const out = [...parts];
