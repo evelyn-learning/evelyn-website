@@ -1760,7 +1760,7 @@ test('Task 28 §D (GDI run 15, 444–518 s): no repeat ask after two failed trie
   // the target word alone is an attempt
   assert.equal(said(one, 'presentations')?.attempts, 2);
   assert.deepEqual(repeatAskTargetOf('What did you do next?'), null);
-  assert.ok(REPEAT_ASK_AFTER_TWO_TRIES_REASON.startsWith('The student has tried this twice. Say the correct form once yourself, accept their effort in one sentence, and continue with the next question. Do not ask them to say it again.'));
+  assert.ok(REPEAT_ASK_AFTER_TWO_TRIES_REASON.startsWith('The student has tried this twice. Say the correct form once yourself, accept their effort in one short natural sentence (never a one-word verdict such as "Accepted." or "Noted."), and continue with the next question. Do not ask them to say it again.'));
   const v = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(v.includes("rejectionsThisAttempt.push({ action: 'repeat_ask_after_two_tries', reason: REPEAT_ASK_AFTER_TWO_TRIES_REASON });"));
   assert.ok(v.includes("repeatAskAfterTwoTries({ tries: repeatAskTriesRef.current, attemptText, segmentId: turnStartSegmentId ?? '' })"));

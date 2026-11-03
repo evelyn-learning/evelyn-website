@@ -274,7 +274,10 @@ export function stripPersonaAnnounceLead(s: string, personaName: string | readon
     .map((n) => (n ?? '').trim()).filter((n) => n.length >= 2 && n.length <= 60)
     .sort((a, b) => b.length - a.length);
   for (const n of names) {
-    const m = new RegExp(`^\\s*${escapeName(n)}(?:\\s+here(?:,\\s*[\\p{Lu}][\\p{L}'’-]*)?[.!]|\\s*です。)\\s*`, 'iu').exec(s);
+    // Task 43 §E (voice run 21, 335 / 384 / 656 / 739 s): the lead also comes
+    // as "<Name> here: …" / "<Name> here, <lowercase continuation>" — a colon
+    // or comma lead; the vocative form ("here, Haruto.") is tried first.
+    const m = new RegExp(`^\\s*${escapeName(n)}(?:\\s+here(?:,\\s*[\\p{Lu}][\\p{L}'’-]*)?[.!]|\\s+here[:,](?=\\s+\\S)|\\s*です。)\\s*`, 'iu').exec(s);
     if (m && s.slice(m[0].length).trim()) return capitaliseFirst(s.slice(m[0].length));
   }
   return s;
@@ -790,19 +793,24 @@ type SentenceRule = (x: string) => string;
 const T39_SECOND_PERSON_RE = /\b(?:you|your|yours|yourself)\b/i;
 const NEXT_STEP_CLAUSE_RE = /,?\s*(?:and\s+)?so\s+(?:the|our)\s+next step is to\s+[a-z][^.!?]*([.!?]?)\s*$/i;
 const NEXT_STEP_SENTENCE_RE = /^\s*(?:(?:so|now|okay|ok|then|and),?\s+)?(?:the|our) next step is to\s+[a-z][^.!?]*[.!]?\s*$/i;
-const BOARD_STATE_LINE_RE = /^\s*(?:(?:now|so|okay|ok),?\s+)?(?:the|this|that|your|a) (?:new )?(?:card|sentence|question|menu|table|model)(?: card)? is (?:now )?(?:on|up on|showing on) the (?:board|screen)(?: now)?[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?take a (?:second|moment|minute|few seconds|little time) to look (?:at|over) (?:it|this|that|the (?:card|board|sentence|question|screen))[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?let['’]?s (?:look at|turn to|go to|open|see) the [\p{L}\s'’-]{1,40} card[.!]?\s*$/iu;
+const BOARD_STATE_LINE_RE = /^\s*(?:(?:now|so|okay|ok),?\s+)?(?:the|this|that|your|a) (?:new )?(?:card|sentence|question|menu|table|model)(?: card)? is (?:now )?(?:on|up on|showing on) the (?:board|screen)(?: now)?[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?take a (?:second|moment|minute|few seconds|little time) to look (?:at|over) (?:it|this|that|the (?:card|board|sentence|question|screen)(?: on the (?:board|screen))?)[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?here(?:['’]s| is) (?:the|your|this) (?:full |whole |complete |corrected |new |final )?(?:sentence|card|model|answer)(?: again)? (?:on|up on) the (?:board|screen)[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?let['’]?s (?:look at|turn to|go to|open|see) the [\p{L}\s'’-]{1,40} card[.!]?\s*$/iu;
 /*  §D (1127 s): "I'll finish this part now and move to pronunciation.", "I've
  *      moved past the conversation part.", "However, the lesson has advanced
  *      to the summary, so I'll wrap up …" — the pointer narrated. */
-const PART_MOVE_NARRATION_RE = /^\s*(?:(?:okay|ok|so|now|right),?\s+)?I['’]ll (?:now |just )?(?:finish|close|end|wrap up|leave) (?:this|the) (?:[\p{L}-]+ )?(?:part|section)(?: now)?,? and (?:now )?(?:move|go|turn|head)(?: on)? to\b[^.!?]*[.!]?\s*$|^\s*(?:(?:okay|ok|so|now),?\s+)?I['’]ve (?:now |just |already )?(?:moved|gone|got) (?:past|on from|beyond|through) the [\p{L}\s'’-]{1,40} (?:part|section)[.!]?\s*$|^\s*(?:(?:however|but|so|and|now|okay),?\s+)?the lesson has (?:now |already |just )?(?:advanced|moved|gone|jumped)(?: on)? to (?:the )?[^,.!?]{1,40},?\s*so I['’]ll\b[^.!?]*[.!]?\s*$/iu;
+const PART_MOVE_NARRATION_RE = /^\s*(?:(?:okay|ok|so|now|right),?\s+)?(?:I['’]ll|I will|Let me) (?:now |just )?(?:finish|close|end|wrap up|leave) (?:this|the) (?:[\p{L}-]+ )?(?:part|section)(?: now)?(?:,? and (?:now )?(?:move|go|turn|head)(?: on)? to\b[^.!?]*)?[.!]?\s*$|^\s*(?:(?:okay|ok|so|now),?\s+)?I['’]ve (?:now |just |already )?(?:moved|gone|got) (?:past|on from|beyond|through) the [\p{L}\s'’-]{1,40} (?:part|section)[.!]?\s*$|^\s*(?:(?:however|but|so|and|now|okay),?\s+)?the lesson has (?:now |already |just )?(?:advanced|moved|gone|jumped)(?: on)? to (?:the )?[^,.!?]{1,40},?\s*so I['’]ll\b[^.!?]*[.!]?\s*$/iu;
 /*  §F (1186 s): "Goodbye! The lesson is closed, and the session notes are
  *      saved." — tool state: "The lesson / session is closed" (alone or
  *      with the notes clause) and "the (session) notes are saved / stored"
  *      go; "Goodbye!" stays. "The lesson is complete." is not touched. */
 const CLOSED_STATE_SENTENCE_RE = /^\s*(?:(?:and|so|now),?\s+)?(?:the|our|this|today['’]s) (?:lesson|session|class) (?:is|has been) (?:now )?closed(?:,?\s*and (?:the |your |my |all )?(?:session |lesson )?notes (?:are|have been|were) (?:saved|stored|recorded|written))?[.!]?\s*$|^\s*(?:(?:and|so|now),?\s+)?(?:the |your |my |all )?(?:session |lesson )?notes (?:are|have been|were) (?:now )?(?:saved|stored|recorded|written)(?: now)?[.!]?\s*$/i;
 const NOTES_SAVED_CLAUSE_RE = /,?\s*and (?:the |your |my |all )?(?:session |lesson )?notes (?:are|have been|were) (?:now )?(?:saved|stored|recorded|written)(?: now)?(?=[.!]?\s*$)/i;
+// Task 43 §D (voice run 21, 335 s: "The question was already answered
+// earlier, so let's move on."): the answered-question note obeyed aloud —
+// the question's state + an optional move-on clause, no second person.
+const ALREADY_ANSWERED_RE = /^\s*(?:(?:so|okay|ok|now|well),?\s+)?(?:the|that|this) (?:question|one)(?: on the board)? (?:was|is|has|had)(?: already)?(?: been)? (?:already )?answered(?: earlier| before| already)?,?\s*(?:so\s+)?(?:let['’]s (?:move|go) on|we['’]ll move on|moving on|I['’]ll move on)?[.!]?\s*$/i;
 const TASK39_SENTENCE_RULES: SentenceRule[] = [
   (x) => (PART_MOVE_NARRATION_RE.test(x) ? '' : x),
+  (x) => (ALREADY_ANSWERED_RE.test(x) ? '' : x),
   (x) => (CLOSED_STATE_SENTENCE_RE.test(x) ? '' : x.replace(NOTES_SAVED_CLAUSE_RE, '')),
   (x) => {
     if (BOARD_STATE_LINE_RE.test(x)) return '';

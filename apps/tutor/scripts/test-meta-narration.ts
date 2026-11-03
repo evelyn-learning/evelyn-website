@@ -1602,5 +1602,37 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('42C: off outside a language lesson', stripNoteCitationClause(s972, { languageLesson: false }) === s972 && !isMetaNarration('The last texts were instructions.', { languageLesson: false }));
 }
 
+
+// Task 43 (voice run 21, embed-1793719782028) — §E, §G1, §L, §D narration shapes.
+{
+  const lang = { languageLesson: true };
+  const R = { personaName: ['Ryota'] };
+  // §E (335 / 384 / 656 / 739 s): the "<Persona> here:" lead survived T-1 (only "here." / "here, Voc." were stripped).
+  check('43E: "Ryota here: think about a project…" → lead stripped', stripNoteCitationClause('Ryota here: think about a project you have worked on.', R) === 'Think about a project you have worked on.', stripNoteCitationClause('Ryota here: think about a project you have worked on.', R));
+  check('43E: "Ryota here: take your time." → "Take your time."', stripNoteCitationClause('Ryota here: take your time.', R) === 'Take your time.');
+  check('43E: "Ryota here, what did you do at work last week?" → lead stripped', stripNoteCitationClause('Ryota here, what did you do at work last week?', R) === 'What did you do at work last week?', stripNoteCitationClause('Ryota here, what did you do at work last week?', R));
+  check('43E: filterNarrationText mid-chunk lead', filterNarrationText('Okay, one more past simple question. Ryota here: what did you do at work last week?', R) === 'Okay, one more past simple question. What did you do at work last week?', filterNarrationText('Okay, one more past simple question. Ryota here: what did you do at work last week?', R));
+  check('43E: vocative form unchanged', stripNoteCitationClause('Ryota here, Haruto. Your last sentence is good.', R) === 'Your last sentence is good.');
+  check('43E: other names untouched', stripNoteCitationClause('Ken here: take your time.', R) === 'Ken here: take your time.');
+  check('43E: "Start here: write your name." kept', stripNoteCitationClause('Start here: write your name.', R) === 'Start here: write your name.');
+  // §G1 (689 s): board-state lines.
+  check('43G: "Here\'s the full sentence on the board." dropped', isMetaNarration("Here's the full sentence on the board.", lang));
+  check('43G: "Take a moment to look at the sentence on the board." dropped', isMetaNarration('Take a moment to look at the sentence on the board.', lang));
+  check('43G: merged chunk drops both, keeps the rest', stripNoteCitationClause("Here's the full sentence on the board. Take a moment to look at the sentence on the board. Now let's move on to a conversation about your work.", lang) === "Now let's move on to a conversation about your work.", stripNoteCitationClause("Here's the full sentence on the board. Take a moment to look at the sentence on the board. Now let's move on to a conversation about your work.", lang));
+  check('43G: "Here is the question on the board: what did you do?" kept', !isMetaNarration('Here is the question on the board: what did you do?', lang));
+  check('43G: "Look at the sentence on the board and read it aloud." kept', !isMetaNarration('Look at the sentence on the board and read it aloud.', lang));
+  // §L (1116 s): the close narrated with "Let me".
+  check('43L: "Let me close this part and move on to the summary." dropped', isMetaNarration('Let me close this part and move on to the summary.', lang));
+  check('43L: "I\'ll close this part." dropped', isMetaNarration("I'll close this part.", lang));
+  check('43L: "Let me close this part now." dropped', isMetaNarration('Let me close this part now.', lang));
+  check('43L: "Let me close the window." kept', !isMetaNarration('Let me close the window.', lang));
+  // §D (335 s): the answered-question note obeyed aloud.
+  check('43D: "The question was already answered earlier, so let\'s move on." dropped', isMetaNarration("The question was already answered earlier, so let's move on.", lang));
+  check('43D: "That question has already been answered." dropped', isMetaNarration('That question has already been answered.', lang));
+  check('43D: merged chunk keeps the rest', stripNoteCitationClause("The question was already answered earlier, so let's move on. Now, how long have you worked there?", lang) === 'Now, how long have you worked there?', stripNoteCitationClause("The question was already answered earlier, so let's move on. Now, how long have you worked there?", lang));
+  check('43D: "You already answered that well, so let\'s go deeper." kept', !isMetaNarration("You already answered that well, so let's go deeper.", lang));
+  check('43: maths untouched', !isMetaNarration("Let me close this part and move on to the summary.", { languageLesson: false }) && !isMetaNarration("Here's the full sentence on the board.", { languageLesson: false }));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

@@ -290,7 +290,7 @@ export function repeatAskAfterTwoTries(input: { tries: RepeatAskTries | null; at
 }
 /** The directive the killed attempt's retry gets. */
 export const REPEAT_ASK_AFTER_TWO_TRIES_REASON = withSilentClause(
-  'The student has tried this twice. Say the correct form once yourself, accept their effort in one sentence, and continue with the next question. Do not ask them to say it again.');
+  'The student has tried this twice. Say the correct form once yourself, accept their effort in one short natural sentence (never a one-word verdict such as "Accepted." or "Noted."), and continue with the next question. Do not ask them to say it again.');
 
 /** Task 27 §D3: a tutor turn that CORRECTS the student — a quoted model
  *  sentence (3+ words) with a correction cue ("should be", "so it's", "the

@@ -32,7 +32,9 @@ export const TRANSITION_ASK_REASON = withRetryStyle(
   // Task 38 §B (voice run 19, 433 s: "Your sentence about the … project is
   // correct" praised a reply that did not answer the question asked): an
   // off-topic reply gets a brief acknowledgement, never praise.
-  "If that answer did not answer the question you asked, do not praise it or call it correct; acknowledge it briefly (\"Noted.\") and go straight to the new part.");
+  // Task 43 §H (voice run 21, 441 / 874 s: "Noted." / "Accepted."): the
+  // example ack is a natural short line, never a one-word verdict.
+  "If that answer did not answer the question you asked, do not praise it or call it correct; acknowledge it in one short natural sentence (for example \"Thanks, got it.\" — never a one-word verdict such as \"Noted.\" or \"Accepted.\") and go straight to the new part.");
 
 const STOPWORDS = new Set([
   'the', 'and', 'but', 'for', 'nor', 'yet', 'not', 'are', 'was', 'were', 'has', 'have', 'had', 'been', 'being',
