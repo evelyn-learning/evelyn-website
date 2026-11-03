@@ -9,7 +9,9 @@
  *
  * Run: npx tsx scripts/test-view-follow.ts
  */
-import { shouldFollowNewRender, trailingNavSuppressesFollow } from '../src/lib/tutor/whiteboard/view-follow';
+import { shouldFollowNewRender, trailingNavSuppressesFollow, pageTargetedCardHoldsView, isPageTargetedSentence } from '../src/lib/tutor/whiteboard/view-follow';
+import fs from 'node:fs';
+import path from 'node:path';
 
 let failures = 0;
 function check(name: string, actual: boolean, expected: boolean) {
@@ -154,6 +156,21 @@ check(
   trailingNavSuppressesFollow(['goToPage']),
   true,
 );
+
+// Task 38 §B (voice run 19, 437 s): the student's card routed to the page
+// before the painted part page never pulls the viewer back.
+{
+  const card = { action: 'showSentence', sentence: 'I have been working on a project for two months.', targetPageTitle: 'Part 4', targetPageIndex: 2, id: 'showSentence-9' };
+  check('38B: a page-targeted showSentence is recognised', isPageTargetedSentence(card), true);
+  check('38B: a plain showSentence is not page-targeted', isPageTargetedSentence({ action: 'showSentence', sentence: 'x' }), false);
+  check('38B: card → previous page while viewing the new part page → hold the view', pageTargetedCardHoldsView({ pageTargeted: true, targetIndex: 2, currentIndex: 3 }), true);
+  check('38B: card on the current page → no hold (nothing to follow)', pageTargetedCardHoldsView({ pageTargeted: true, targetIndex: 3, currentIndex: 3 }), false);
+  check('38B: an ordinary render on an earlier page keeps the old rule', pageTargetedCardHoldsView({ pageTargeted: false, targetIndex: 2, currentIndex: 3 }), false);
+  const canvas = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx'), 'utf8');
+  check('38B: the canvas view-follow consults the hold before following', canvas.includes('if (pageTargetedCardHoldsView({ pageTargeted: isPageTargetedSentence(c as any), targetIndex: target, currentIndex: currentIndexRef.current })) break;'), true);
+  const vtr = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('38B: the routing decision still sends the student card to the previous page', vtr.includes("onDebugEvent?.('student_card_on_previous_page',"), true);
+}
 
 if (failures > 0) {
   console.error(`\n${failures} failure(s)`);

@@ -104,7 +104,7 @@ import { useDrawOn, drawOnEnabled } from './useDrawOn';
 import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
 import { InkNotesOverlay, AMBER } from './InkNotesOverlay';
 import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
-import { shouldFollowNewRender, trailingNavSuppressesFollow } from '@/lib/tutor/whiteboard/view-follow';
+import { shouldFollowNewRender, trailingNavSuppressesFollow, pageTargetedCardHoldsView, isPageTargetedSentence } from '@/lib/tutor/whiteboard/view-follow';
 import { INK_NOTE_DRAG } from '@/lib/tutor/orchestrator/flags';
 import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 
@@ -907,6 +907,10 @@ export function WhiteboardCanvas({
         }
       }
       if (target < 0) target = pages.length - 1; // fallback: newest page
+      // Task 38 §B: a student card routed to an earlier page stays there in
+      // place — the viewer keeps the new part's page (no follow, no badge).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (pageTargetedCardHoldsView({ pageTargeted: isPageTargetedSentence(c as any), targetIndex: target, currentIndex: currentIndexRef.current })) break;
       if (target >= 0) {
         const cur = currentIndexRef.current;
         const follow = chrome === 'replay'

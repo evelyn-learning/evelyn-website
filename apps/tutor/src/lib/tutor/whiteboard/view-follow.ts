@@ -110,3 +110,27 @@ export function trailingNavSuppressesFollow(
   }
   return lastNav >= 0 && lastNav > lastRender;
 }
+
+/**
+ * Task 38 §B (voice run 19, 430–437 s): the advance painted the new part's
+ * page, then the student's sentence card was routed to the PREVIOUS page
+ * (`student_card_on_previous_page`, Task 27 §B) — and view-follow chased it
+ * back, so the board showed the old part while the rail and the tutor were
+ * on the new one. A page-targeted sentence card (targetPageTitle /
+ * targetPageIndex) that lands on a page BEFORE the one being viewed is
+ * catalogued there in place: it never pulls the view back and raises no
+ * badge. Pure.
+ */
+export function pageTargetedCardHoldsView(args: {
+  /** the command is a showSentence carrying targetPageTitle / targetPageIndex */
+  pageTargeted: boolean;
+  targetIndex: number;
+  currentIndex: number;
+}): boolean {
+  return args.pageTargeted && args.targetIndex >= 0 && args.targetIndex < args.currentIndex;
+}
+
+/** True for a showSentence relocated by a page target (Task 27 §B). Pure. */
+export function isPageTargetedSentence(c: { action: string } & Record<string, unknown>): boolean {
+  return c.action === 'showSentence' && (c.targetPageTitle !== undefined || c.targetPageIndex !== undefined);
+}

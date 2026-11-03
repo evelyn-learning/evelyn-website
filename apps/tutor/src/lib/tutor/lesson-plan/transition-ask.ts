@@ -26,7 +26,11 @@ import { boardOffersChoices } from '../voice/sentence-board';
 // and never answered the student's correction — answer first, then move.
 export const TRANSITION_ASK_REASON = withRetryStyle(
   "If the student just corrected you or asked something, answer that first in ONE sentence; the move comes after it. " +
-  "The lesson has moved to the next part. Reply to the student's last answer in ONE sentence with no follow-up question about it, then present the new part's card and end with that part's own question.");
+  "The lesson has moved to the next part. Reply to the student's last answer in ONE sentence with no follow-up question about it, then present the new part's card and end with that part's own question. " +
+  // Task 38 §B (voice run 19, 433 s: "Your sentence about the … project is
+  // correct" praised a reply that did not answer the question asked): an
+  // off-topic reply gets a brief acknowledgement, never praise.
+  "If that answer did not answer the question you asked, do not praise it or call it correct; acknowledge it briefly (\"Noted.\") and go straight to the new part.");
 
 const STOPWORDS = new Set([
   'the', 'and', 'but', 'for', 'nor', 'yet', 'not', 'are', 'was', 'were', 'has', 'have', 'had', 'been', 'being',
