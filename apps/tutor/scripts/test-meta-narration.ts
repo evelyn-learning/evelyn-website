@@ -1542,5 +1542,22 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('40B: off outside a language lesson', stripNoteCitationClause(s468, { languageLesson: false }) === s468);
 }
 
+// Task 41 §C (bot runs r30 580 s / r31 1136 s): self-plan re-ask announcements; the offer in indirect speech.
+{
+  const lang = { languageLesson: true };
+  const s580 = 'Once you\'ve given that, I\'ll check whether you\'d like one more practice item on "Past simple" or to move on to "Conversation".';
+  for (const x of ["So I'll ask the question again, directly.", "Let me ask it again, directly.", "I'll ask it again.", "Then I will ask you again, directly.", "I'll ask that again plainly.", "Let me ask the question again once more."]) {
+    check(`41C: "${x}" dropped`, isMetaNarration(x, lang));
+  }
+  check('41C: the 580 s indirect offer dropped', isMetaNarration(s580, lang));
+  check('41C: "After that we can decide whether you want one more item or move on." dropped', isMetaNarration('After that we can decide whether you want one more item or move on.', lang));
+  check('41C: "I\'ll ask if you would like one more practice sentence." dropped', isMetaNarration("I'll ask if you would like one more practice sentence.", lang));
+  check('41C: the 580 s turn keeps its question', filterNarrationText(`Your last answer was about asking your manager, but I asked how much better the price became, so that's the part to answer now. ${s580} How much better was the price after your negotiation?`, lang).includes('How much better was the price after your negotiation?'));
+  for (const x of ["I'll ask you one more question.", 'Let me ask you about your weekend.', "I'll ask you again." /* S-1 */, 'Would you like one more practice item on "Past simple", or shall we move on to "Conversation"?', "I'll check your sentence now.", 'You can ask your manager again tomorrow.']) {
+    check(`41C: "${x}" kept`, !isMetaNarration(x, lang));
+  }
+  check('41C: maths untouched', !isMetaNarration("So I'll ask the question again, directly.", { languageLesson: false }) && !isMetaNarration(s580, { languageLesson: false }));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

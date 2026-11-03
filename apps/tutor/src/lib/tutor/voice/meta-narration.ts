@@ -1341,8 +1341,23 @@ const HAS_QUOTE_RE = /["“「][^"”」]{2,}["”」]/;
 // no-second-person guard let it through. "I need to hear what you said once
 // more, please." is a request and stays.
 const RESPOND_TO_SAID_PLAN_RE = /^\s*(?:stop[:,.!]?\s*)?I (?:need|have|must|should) to (?:respond|reply|answer|address|react) (?:to )?what you (?:actually |just |really )?(?:said|meant|wrote|asked)\b[^.!?]*[.!]?\s*$/i;
+// Task 41 §C (bot run r31, 1136 s: "So I'll ask the question again,
+// directly."): a bare self-plan re-ask announcement (the question follows or
+// was dropped). "I'll ask you one more question." (a new item) and "Let me
+// ask you about your weekend." are speech.
+// Task 30 fix round 5 (S-1) keeps a bare "I'll ask you (the question)
+// again." (addressed): the "you" forms drop only with the manner tail.
+const SELF_PLAN_REASK_RE = /^\s*(?:(?:so|then|now|okay|ok),?\s+)?(?:I['’]?ll|let me|I will) ask (?:(?:it|that|the question) again(?:,? (?:directly|plainly|once more|more simply))?|you(?: (?:it|that|the question))? again,? (?:directly|plainly|once more|more simply))\s*[.!]?\s*$/i;
+// Task 41 §C (bot run r30, 580 s: "Once you've given that, I'll check
+// whether you'd like one more practice item on … or to move on to …"): the
+// transition offer reported in indirect speech — the engine's offer asks it
+// directly. A direct question ("Would you like one more …?") is speech.
+const INDIRECT_OFFER_RE = /\b(?:I['’]?ll|I will|let me|we['’]?ll|we will|we can) (?:check|ask|see|decide|find out) (?:whether|if) you(?:['’]d| would| want| wish)(?: like)? (?:to (?:do |try |have )?)?(?:one more|another|a further)\b/i;
+const INDIRECT_OFFER_AFTER_RE = /^\s*(?:after that|then|once you['’]ve [^,]+,)\s*,?\s*(?:we|I) (?:can|will|['’]ll) (?:decide|see|check|choose) (?:whether|if)\b/i;
 export function isTutorPlanNarration(sentence: string): boolean {
   const s = sentence ?? '';
+  if (SELF_PLAN_REASK_RE.test(s)) return true;
+  if (!/[?？]/.test(s) && (INDIRECT_OFFER_RE.test(s) || INDIRECT_OFFER_AFTER_RE.test(s))) return true;
   if (MODAL_PLAN_RE.test(s) && !SECOND_PERSON_RE.test(s) && !HAS_QUOTE_RE.test(s)) return true;
   if (OPEN_QUESTION_STATE_RE.test(s) && !/[?？]/.test(s)) return true;
   if (RESPOND_TO_SAID_PLAN_RE.test(s)) return true;
