@@ -1115,3 +1115,32 @@ export function wrapUpAfterMenuDropDue(input: {
   if (!menuReadInTurn(input.card, input.spokenSoFar)) return false;
   return isWrapUpSentence(input.sentence);
 }
+
+/** Task 39 §E (voice run 20, 788–794 s: "one more practice sentence." →
+ *  "Let's do one more on the past simple. Let's move on." — no item, and a
+ *  contradiction): on the turn the offer was accepted, an attempt that asks
+ *  nothing is killed once and retried with OFFER_ACCEPTED_NO_ASK_REASON; a
+ *  bare "Let's move on." on that turn is dropped (and the engine's R9-3
+ *  move-on line is not spoken). Pure. */
+export const OFFER_ACCEPTED_NO_ASK_REASON = withRetryStyle(
+  'The student chose ONE more practice item. Ask ONE new practice question on this point now (spoken in full, written with handwrite) — one you have not asked before. Do not say you are moving on.');
+export function offerAcceptedNoAskDue(input: {
+  enabled: boolean;
+  accepted: OfferAcceptState | null | undefined;
+  /** the acceptance was recorded at this turn's start */
+  acceptedThisTurn: boolean;
+  currentSegId: string | null | undefined;
+  /** the attempt's kept text */
+  text: string | null | undefined;
+  alreadyRetried: boolean;
+  runtimeTurn: boolean;
+}): boolean {
+  const a = input.accepted;
+  if (!input.enabled || !a || !input.acceptedThisTurn || a.itemAsked || input.alreadyRetried || input.runtimeTurn) return false;
+  if (!input.currentSegId || a.segId !== input.currentSegId) return false;
+  return !attemptAsksStudent(input.text);
+}
+const BARE_MOVE_ON_RE = /^\s*(?:(?:okay|ok|so|now|alright|all right|right|good|great),?\s+)?let['’]?s (?:move on|keep going|go on)(?: now)?[.!]?\s*$/i;
+export function isBareMoveOn(sentence: string | null | undefined): boolean {
+  return BARE_MOVE_ON_RE.test(sentence ?? '');
+}

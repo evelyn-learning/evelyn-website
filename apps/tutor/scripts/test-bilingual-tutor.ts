@@ -1959,7 +1959,8 @@ test('33 r1 R9-3: the personal retry never re-asks — the directive forbids it 
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('if (sqReason === SAME_QUESTION_THIRD_TIME_PERSONAL_REASON) sqPersonalPinned = sqAsk;'));
   assert.ok(vtr.includes("if (sqPersonalPinned && (retryReasksQuestion(updatedSentence, sqPersonalPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {"));
-  assert.ok(vtr.includes("if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped || repeatAfterCorrectReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {"));
+  // Task 39 §E: not on the offer-accepted turn.
+  assert.ok(vtr.includes("if (!attemptKilled && !(TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn) && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped || repeatAfterCorrectReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {"));
 });
 
 test('33 r2 R9-3: paraphrases and statement-form re-asks of the pinned question are caught', () => {

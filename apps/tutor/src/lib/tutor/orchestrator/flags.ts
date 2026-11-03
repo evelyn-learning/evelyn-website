@@ -1343,3 +1343,9 @@ export const TUTOR_RETRY_ADVANCE_ALREADY_APPLIED = process.env.NEXT_PUBLIC_TUTOR
  *  lessons (fixed script). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_MENU_WRAP_UP_DROP=off. */
 export const TUTOR_MENU_WRAP_UP_DROP = process.env.NEXT_PUBLIC_TUTOR_MENU_WRAP_UP_DROP !== 'off';
+
+/** Task 39 §E (voice run 20, 788–794 s): the offer-accepted turn asked no
+ *  item ("Let's do one more … Let's move on.") — killed + retried with the
+ *  ask-one-new-item order; a bare "Let's move on." that turn is dropped.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_OFFER_ACCEPTED_ASK=off. */
+export const TUTOR_OFFER_ACCEPTED_ASK = process.env.NEXT_PUBLIC_TUTOR_OFFER_ACCEPTED_ASK !== 'off';

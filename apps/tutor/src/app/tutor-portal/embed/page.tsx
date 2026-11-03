@@ -375,6 +375,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'transition_ask_off_card_dropped', 'transition_ask_engine_fallback',
   // Task 39 §D: a wrap-up / stop choice after the part's entry menu.
   'menu_wrap_up_dropped',
+  // Task 39 §E: the offer-accepted turn asked nothing / said "Let's move on.".
+  'offer_accepted_no_ask', 'offer_accepted_move_on_dropped',
   // Task 31 fix round 9 §D: the brain's own advance plants the part's entry note.
   'fixed_script_entry_note_planted',
   // Task 31 fix round 9 §F: the two-answers check-in note.

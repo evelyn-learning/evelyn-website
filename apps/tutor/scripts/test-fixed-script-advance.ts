@@ -52,7 +52,7 @@ import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, les
 import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
-import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence, offerAcceptedNoAskDue, isBareMoveOn, OFFER_ACCEPTED_NO_ASK_REASON } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -1418,6 +1418,27 @@ test('39 §D: after the entry menu was read, the wrap-up / stop-choice sentences
   assert.ok(vtr.includes("onDebugEvent?.('menu_wrap_up_dropped'"));
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_MENU_WRAP_UP_DROP = process\.env\.NEXT_PUBLIC_TUTOR_MENU_WRAP_UP_DROP !== 'off';/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_RETRY_ADVANCE_ALREADY_APPLIED = process\.env\.NEXT_PUBLIC_TUTOR_RETRY_ADVANCE_ALREADY_APPLIED !== 'off';/);
+});
+
+// Task 39 §E (voice run 20, 788–794 s): the offer-accepted turn asked nothing.
+test('39 §E: the accepted-offer turn with no ask is killed + retried; "Let\'s move on." is dropped', () => {
+  const accepted = { segId: 'past-simple', studentTurns: -1, at: 0 };
+  const base = { enabled: true, accepted, acceptedThisTurn: true, currentSegId: 'past-simple', alreadyRetried: false, runtimeTurn: false };
+  assert.equal(offerAcceptedNoAskDue({ ...base, text: "Let's do one more on the past simple. Let's move on." }), true);
+  assert.equal(offerAcceptedNoAskDue({ ...base, text: "Let's do one more on the past simple. When did you last meet a customer in person?" }), false, 'an item asked');
+  assert.equal(offerAcceptedNoAskDue({ ...base, acceptedThisTurn: false, text: 'Good.' }), false, 'a later turn');
+  assert.equal(offerAcceptedNoAskDue({ ...base, alreadyRetried: true, text: 'Good.' }), false, 'once per turn');
+  assert.equal(offerAcceptedNoAskDue({ ...base, runtimeTurn: true, text: 'Good.' }), false);
+  assert.equal(offerAcceptedNoAskDue({ ...base, currentSegId: 'open-conversation', text: 'Good.' }), false, 'the part moved');
+  assert.equal(offerAcceptedNoAskDue({ ...base, enabled: false, text: 'Good.' }), false);
+  assert.ok(OFFER_ACCEPTED_NO_ASK_REASON.includes('Ask ONE new practice question'));
+  assert.equal(isBareMoveOn("Let's move on."), true);
+  assert.equal(isBareMoveOn("Let's move on to the conversation part."), false);
+  const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'offer_accepted_no_ask', reason: OFFER_ACCEPTED_NO_ASK_REASON });"));
+  assert.ok(vtr.includes('!(TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn) && ((sqPersonalPinned'), 'no R9-3 move-on line that turn');
+  assert.ok(vtr.includes("TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn && isBareMoveOn(updatedSentence)"));
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_OFFER_ACCEPTED_ASK = process\.env\.NEXT_PUBLIC_TUTOR_OFFER_ACCEPTED_ASK !== 'off';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
