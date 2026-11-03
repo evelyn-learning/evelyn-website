@@ -9,7 +9,9 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { emptyTurnFallbackLine, EMPTY_TURN_GENERIC_TYPED, silentTurnFallbackLine, lastShowSentenceOf, SILENT_TURN_STATE_TOOLS, silentTurnFallbackDue } from '../src/lib/tutor/voice/empty-turn-fallback';
+import { emptyTurnFallbackLine, EMPTY_TURN_GENERIC_TYPED, silentTurnFallbackLine, lastShowSentenceOf, SILENT_TURN_STATE_TOOLS, silentTurnFallbackDue, nonAnswerReturnLine, pendingAskOf } from '../src/lib/tutor/voice/empty-turn-fallback';
+import { noAskTurnNeedsContinuation } from '../src/lib/tutor/lesson-plan/announced-move';
+import { turnAskGist } from '../src/lib/tutor/voice/correct-retry';
 import {
   partitionQueueAtSentenceBoundary,
   shouldFinishInFlightSentence,
@@ -278,6 +280,30 @@ async function drainCases() {
     try { await fn(); console.log(`  ok  ${name}`); } catch (e) { failed++; console.log(`  FAIL ${name}\n       ${(e as Error).message}`); }
   }
 }
+
+// Task 39 fix round 1 (R26-1, bot run r26 309 s): a non-answer turn's reply that asks nothing.
+test('39 r1 R26-1: after the tangent the engine returns to the lesson with the pending ask', () => {
+  const prev = 'Hmm, that\'s a question about politics, which is outside what we\'re working on today. Let\'s stay with English and your work. Please finish this sentence about your job: "I have worked..."';
+  const kept = 'お疲れさまです。 今日は、現在完了で経験を話す練習ができましたね。';
+  const gist = pendingAskOf(prev);
+  assert.equal(turnAskGist(prev), '', 'the gist helper misses the quoted-starter ask');
+  assert.ok(gist, 'the pending ask');
+  const base = { languageLesson: true, studentNonAnswer: true, runtimeTurn: false, closing: false, keptText: kept, keptAsks: false, pinGist: gist, japanese: true };
+  assert.equal(nonAnswerReturnLine(base), `では、レッスンに戻りましょう。 ${gist}`);
+  assert.equal(nonAnswerReturnLine({ ...base, japanese: false }), `Let's get back to the lesson. ${gist}`);
+  assert.equal(nonAnswerReturnLine({ ...base, keptAsks: true }), null, 'the reply already asks');
+  assert.equal(nonAnswerReturnLine({ ...base, studentNonAnswer: false }), null, 'an answer');
+  assert.equal(nonAnswerReturnLine({ ...base, languageLesson: false }), null, 'maths');
+  assert.equal(nonAnswerReturnLine({ ...base, runtimeTurn: true }), null);
+  assert.equal(nonAnswerReturnLine({ ...base, closing: true }), null);
+  assert.equal(nonAnswerReturnLine({ ...base, keptText: '' }), null, 'the silent / empty fallbacks own an empty turn');
+  // Why the no-ask continuation did not cover it: it WAS due (a Japanese ね-ending
+  // is no ask) — scheduled, then cancelled when the learner answered first.
+  assert.equal(noAskTurnNeedsContinuation({ text: kept, fixedScript: true, runtimeTriggered: false, toolsSeen: ['close_session_notes'], closing: false, pronunciationArmed: false }), true);
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes("studentNonAnswer: naPc?.answers === 'neither' || (naCover.kind === 'silent' && naCover.reason === 'backchannel'),"));
+  assert.ok(vtr.includes("onDebugEvent?.('non_answer_return_ask'"));
+});
 
 void drainCases().then(() => {
   if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

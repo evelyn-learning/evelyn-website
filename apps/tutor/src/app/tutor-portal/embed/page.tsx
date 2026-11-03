@@ -377,6 +377,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'menu_wrap_up_dropped',
   // Task 39 §E: the offer-accepted turn asked nothing / said "Let's move on.".
   'offer_accepted_no_ask', 'offer_accepted_move_on_dropped',
+  // Task 39 fix round 1: R26-1 return ask; R26-3 lone yes to a brain-made choice.
+  'non_answer_return_ask', 'lone_yes_choice_note_planted',
   // Task 31 fix round 9 §D: the brain's own advance plants the part's entry note.
   'fixed_script_entry_note_planted',
   // Task 31 fix round 9 §F: the two-answers check-in note.

@@ -1,3 +1,5 @@
+import { turnAskGist } from './correct-retry';
+import { sentenceAsksStudent } from '../question-gist-text';
 /**
  * Task 30 fix round 8 (A4, run r6-A 1197 s: after the backfill filter dropped
  * every sentence of a turn — `meta_narration_backfill_filtered … → ""` — the
@@ -64,4 +66,46 @@ export function silentTurnFallbackDue(input: { languageLesson: boolean; transcri
   if (!input.languageLesson || /^\s*\[/.test(input.transcript ?? '') || input.pronunciationArmed || input.retrySkipped) return false;
   if ((input.keptText ?? '').trim() || input.toolsSeen.length === 0) return false;
   return !input.toolsSeen.some((n) => SILENT_TURN_STATE_TOOLS.has(n));
+}
+
+/**
+ * Task 39 fix round 1 (R26-1, bot run r26 309 s: after the tangent
+ * 「今日は疲れています。」 the tutor said only 「お疲れさまです。 今日は、現在完了で
+ * 経験を話す練習ができましたね。」 — no return to the lesson, the student left with
+ * nothing to answer). When the student's turn was a non-answer (the check
+ * said it answers neither question, or it was a backchannel) and the kept
+ * text asks nothing, the engine appends the pending ask (the last tutor
+ * turn's ask gist) — the engine-spoken offer's mechanism. A Japanese lead
+ * when the session teaches in Japanese too; the ask itself as it was asked.
+ * Language lessons only; never on a runtime turn, a closing turn, or when
+ * the kept text is empty (the silent / empty-turn fallbacks own that). Pure.
+ */
+export function nonAnswerReturnLine(input: {
+  languageLesson: boolean;
+  studentNonAnswer: boolean;
+  runtimeTurn: boolean;
+  closing: boolean;
+  keptText: string;
+  /** the kept text already asks / instructs (attemptAsksStudent) */
+  keptAsks: boolean;
+  pinGist: string | null | undefined;
+  japanese: boolean;
+}): string | null {
+  if (!input.languageLesson || !input.studentNonAnswer || input.runtimeTurn || input.closing) return null;
+  if (!(input.keptText ?? '').trim() || input.keptAsks) return null;
+  const ask = (input.pinGist ?? '').trim();
+  if (!ask) return null;
+  if ((input.keptText ?? '').includes(ask)) return null;
+  return input.japanese ? `では、レッスンに戻りましょう。 ${ask}` : `Let's get back to the lesson. ${ask}`;
+}
+/** Fix round 1 (R26-1): the pending ask of the last tutor turn — its ask gist
+ *  (turnAskGist), else its last sentence that asks the student (an
+ *  imperative with a quoted starter, 'Please finish this sentence about your
+ *  job: "I have worked..."', which the gist helpers miss at the ellipsis). */
+export function pendingAskOf(prevTutor: string | null | undefined): string {
+  const gist = turnAskGist(prevTutor);
+  if (gist) return gist;
+  const parts = (prevTutor ?? '').split(/(?<=[.!?。！？]["”」’]?)\s+/).map((x) => x.trim()).filter(Boolean);
+  for (let i = parts.length - 1; i >= 0; i--) if (sentenceAsksStudent(parts[i]!)) return parts[i]!;
+  return '';
 }

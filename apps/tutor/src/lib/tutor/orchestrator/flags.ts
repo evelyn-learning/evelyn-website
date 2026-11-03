@@ -1356,3 +1356,18 @@ export const TUTOR_OFFER_ACCEPTED_ASK = process.env.NEXT_PUBLIC_TUTOR_OFFER_ACCE
  *  judge note (never a fragment splice). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_FULL_RECAST_CARD=off. */
 export const TUTOR_FULL_RECAST_CARD = process.env.NEXT_PUBLIC_TUTOR_FULL_RECAST_CARD !== 'off';
+
+/** Task 39 fix round 1 (R26-1): after a non-answer student turn, a reply that
+ *  asks nothing gets the pending ask appended by the engine. Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_NON_ANSWER_RETURN_ASK=off. */
+export const TUTOR_NON_ANSWER_RETURN_ASK = process.env.NEXT_PUBLIC_TUTOR_NON_ANSWER_RETURN_ASK !== 'off';
+
+/** Task 39 fix round 1 (R26-2): the announced-move detector reads Japanese
+ *  move shapes (次は…に進みましょう / ここまでにして …). Client-side: default
+ *  ON; NEXT_PUBLIC_TUTOR_JA_ANNOUNCED_MOVE=off. */
+export const TUTOR_JA_ANNOUNCED_MOVE = process.env.NEXT_PUBLIC_TUTOR_JA_ANNOUNCED_MOVE !== 'off';
+
+/** Task 39 fix round 1 (R26-3): a lone "Yes." to ANY "one more X, or move on?"
+ *  choice the last tutor turn asked (planted or brain-made) = one more.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_LONE_YES_ANY_CHOICE=off. */
+export const TUTOR_LONE_YES_ANY_CHOICE = process.env.NEXT_PUBLIC_TUTOR_LONE_YES_ANY_CHOICE !== 'off';
