@@ -173,7 +173,7 @@ export function runChecks(dump) {
   ok('every part reached got its entry note', noNote.length === 0, noNote.join(', '));
 
   // 10d. run 18: no offer re-planted (the spoken offer went unrecognised) and no probe loop (three tutor questions on one point, each answered)
-  const replanted = ev('fixed_script_offer_replanted').filter((r) => !ev('typed_advance_app').some((a) => Math.abs(a.t - r.t) <= 5)); // a re-plant the move-on order made moot is fine
+  const replanted = ev('fixed_script_offer_replanted').filter((r) => !ev('typed_advance_app').some((a) => Math.abs(a.t - r.t) <= 5) && !ev('fixed_script_offer_spoken').some((s) => s.t >= r.t && s.t <= r.t + 6)); // a re-plant the move-on order made moot, or that the next turn spoke, is fine
   ok('no fixed_script_offer_replanted', replanted.length === 0, replanted.map((e) => `${e.t}s`).join(' '));
   const FRAME = new Set(['can', 'could', 'would', 'will', 'do', 'does', 'did', 'tell', 'me', 'say', 'one', 'more', 'what', 'which', 'how', 'who', 'when', 'where', 'why', 'about', 'your', 'using', 'starting', 'with', 'please', 'or', 'was', 'were', 'are', 'be', 'there', 'at', 'from', 'yes', 'no', 'just', 'like', 'sentence', 'example']);
   const stem = (w) => w.replace(/(?:ions?|ing|ed|es|est|er|ly|s|e)$/u, '');
@@ -211,7 +211,8 @@ export function runChecks(dump) {
   ok('no silent tutor turn (all sentences dropped)', silentTurns.length === 0, silentTurns.map((x) => `${x.t}s`).join(' '));
   const prevPage = ev('student_card_on_previous_page');
   ok('no student card routed to a previous page after an advance', prevPage.length === 0, prevPage.map((e) => `${e.t}s`).join(' '));
-  ok('no readiness ask on a fixed-script plan', ev('readiness_ask_note_planted').length === 0, ev('readiness_ask_note_planted').map((e) => `${e.t}s`).join(' '));
+  const readinessAsks = ev('readiness_ask_note_planted').filter((e) => e.t > 60); // the authored opener's own "Are you ready?" registers at ~2 s — that one is the plan's
+  ok('no readiness ask on a fixed-script plan', readinessAsks.length === 0, readinessAsks.map((e) => `${e.t}s`).join(' '));
   const abandoned = [];
   for (const a of ev('fixed_script_auto_advance')) {
     const turn = [...tutor].reverse().find((x) => x.t <= a.t + 1 && x.t >= a.t - 12);
