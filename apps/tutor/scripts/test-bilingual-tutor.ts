@@ -1961,7 +1961,7 @@ test('33 r1 R9-3: the personal retry never re-asks — the directive forbids it 
   assert.ok(vtr.includes('if (sqReason === SAME_QUESTION_THIRD_TIME_PERSONAL_REASON) sqPersonalPinned = sqAsk;'));
   assert.ok(vtr.includes("if (sqPersonalPinned && (retryReasksQuestion(updatedSentence, sqPersonalPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {"));
   // Task 39 §E: not on the offer-accepted turn.
-  assert.ok(vtr.includes("if (!attemptKilled && !(TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn) && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped || repeatAfterCorrectReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {"));
+  assert.ok(vtr.includes("if (!attemptKilled && !(TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn) && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped || repeatAfterCorrectReaskDropped || correctReaskDropped /* Task 41 §B */) && turnNarrationRef.current.length === attemptNarrationStart) {".replace(' /* Task 41 §B */', '')));
 });
 
 test('33 r2 R9-3: paraphrases and statement-form re-asks of the pinned question are caught', () => {
@@ -2236,6 +2236,43 @@ test('40 r1 I-2: only a re-ask of the same ask is dropped; same-topic next steps
   assert.ok(vtr.includes('if (TUTOR_NON_ANSWER_RETURN_ASK && !attemptKilled) {'), 'the R26-1 return ask is not suppressed');
   assert.ok(vtr.includes("if (naLine && noAttemptPinned && (reasksAsk(naPending, noAttemptPinned) || (!!neitherStreakAsks && neitherStreakReasks(naPending, neitherStreakAsks)))) {"), 'a return ask that IS the re-ask becomes the move-on line');
   assert.ok(vtr.includes('keptAsks: attemptAsksStudent(`${turnNarrationRef.current.join(\' \')} ${attemptText}`),'), 'a question earlier in the turn counts');
+});
+
+// Task 41 §B (bot run r31, 1092–1136 s): verdict=correct and the same ask re-asked twice.
+test('41 §B: a judge-correct (or partly_correct with the offered item) reply — the re-ask of the same ask is dropped, the acknowledgement kept', () => {
+  const t1092 = `「I see.」と言ってくださいましたね。 Let's finish the sentence together: "I worked on a project to…" and then add a verb such as "reduce" or "improve." Which verb would you like to use?`;
+  const s1109 = 'I want to improve my speaking because I have to explain our products to foreign customers.';
+  const t1111 = `Speaking to foreign customers about your products is a clear and useful goal, Haruto. The open question is still the verb: which verb would you like to finish "I worked on a project to…" with, such as reduce, improve or launch?`;
+  const s1135 = 'I want to improve my speaking because I have to explain our products to foreign customers, as I said.';
+  const pc1111 = { answers: 'open_question', verdict: 'correct', confidence: 'medium' };
+  const pc1137 = { answers: 'open_question', verdict: 'partly_correct', confidence: 'medium' };
+  // 1111 s: correct ⇒ the ack stays, the re-ask goes
+  assert.equal(cr40.replyAnsweredAsk(pc1111, t1092, s1109), true);
+  assert.equal(cr40.correctReplyReasks('Speaking to foreign customers about your products is a clear and useful goal, Haruto.', t1092, s1109), false, 'the acknowledgement');
+  assert.equal(cr40.correctReplyReasks('The open question is still the verb: which verb would you like to finish "I worked on a project to…" with, such as reduce, improve or launch?', t1092, s1109), true, 'the 1111 s re-ask');
+  // 1136 s: partly_correct, "improve" (an offered item) is in the reply
+  assert.deepEqual(cr40.askOfferedItems(t1111), ['reduce', 'improve', 'launch']);
+  assert.deepEqual(cr40.askOfferedItems(t1092), ['reduce', 'improve']);
+  assert.equal(cr40.replyAnsweredAsk(pc1137, t1111, s1135), true);
+  assert.equal(cr40.correctReplyReasks('Which verb would you like to finish "I worked on a project to…" with: reduce, improve, or launch?', t1111, s1135), true, 'the 1136 s re-ask');
+  assert.equal(cr40.correctReplyReasks('Your message is about improving speaking, not a verb for "I worked on a project to…".', t1111, s1135), false);
+  // partly_correct without an offered item, incorrect, neither, other_part, low confidence ⇒ no drop
+  assert.equal(cr40.replyAnsweredAsk(pc1137, t1111, 'I want to get better at speaking.'), false);
+  assert.equal(cr40.replyAnsweredAsk({ ...pc1111, verdict: 'incorrect' }, t1092, s1109), false);
+  assert.equal(cr40.replyAnsweredAsk({ ...pc1111, answers: 'neither' }, t1092, s1109), false);
+  assert.equal(cr40.replyAnsweredAsk({ ...pc1111, answers: 'other_part' }, t1092, s1109), false);
+  assert.equal(cr40.replyAnsweredAsk({ ...pc1111, confidence: 'low' }, t1092, s1109), false);
+  assert.equal(cr40.replyAnsweredAsk(null, t1092, s1109), false);
+  // next steps, a new item and a repeat / correction ask are kept
+  for (const keep of ['What did you improve in that project?', 'Did you finish that project on time?', 'Which other project are you proud of?', 'Please say it again: "I worked on a project to improve our sales."', 'Now try one more sentence about your team.']) {
+    assert.equal(cr40.correctReplyReasks(keep, t1111, s1135), false, `kept: ${keep}`);
+  }
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("const correctReaskAsk: string | null = TUTOR_CORRECT_REPLY_REASK_DROP && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current))"), 'language lessons, flag');
+  assert.ok(vtr.includes('if (correctReaskAsk && replyAnsweredAsk(verdictPrecheckRef.current, correctReaskAsk, transcript)'), 'the current reply\'s verdict, read per sentence');
+  assert.ok(vtr.includes('|| noAttemptDropped || probeReaskDropped || repeatAfterCorrectReaskDropped || correctReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {'), 'nothing left ⇒ the engine\'s move-on line');
+  assert.ok(readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8').includes("'correct_reply_reask_dropped',"));
+  assert.ok(/export const TUTOR_CORRECT_REPLY_REASK_DROP = process\.env\.NEXT_PUBLIC_TUTOR_CORRECT_REPLY_REASK_DROP !== 'off';/.test(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8')));
 });
 
 if (failed) process.exit(1);

@@ -1390,3 +1390,9 @@ export const TUTOR_MOVE_ON_BEFORE_CLOSE = process.env.NEXT_PUBLIC_TUTOR_MOVE_ON_
  *  guard. The guard's skip names the skipped parts once. Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_PART_TIME_CAP=off. */
 export const TUTOR_PART_TIME_CAP = process.env.NEXT_PUBLIC_TUTOR_PART_TIME_CAP !== 'off';
+
+/** Task 41 §B (bot run r31, 1111 / 1136 s): the precheck said the reply was
+ *  correct and the brain re-asked the same ask — the re-ask is dropped, the
+ *  acknowledgement kept (language lessons). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_CORRECT_REPLY_REASK_DROP=off. */
+export const TUTOR_CORRECT_REPLY_REASK_DROP = process.env.NEXT_PUBLIC_TUTOR_CORRECT_REPLY_REASK_DROP !== 'off';

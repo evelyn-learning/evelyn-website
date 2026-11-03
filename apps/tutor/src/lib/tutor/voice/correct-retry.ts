@@ -1464,3 +1464,54 @@ export function starterAskAlreadyMet(studentText: string, attemptText: string, v
   if (!said.startsWith(`${starter} `) || said.split(' ').filter(Boolean).length < n + 3) return null;
   return starter;
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Task 41 §B (bot run r31, 1092–1136 s: the judge said verdict=correct
+// ("improve") and the brain asked "which verb would you like to finish
+// "I worked on a project to…" with?" twice more). In a language lesson, when
+// the CURRENT reply's precheck is correct — or partly_correct and the reply
+// contains one of the items the ask offered — a sentence of the turn that
+// re-asks the ask the student just answered (the Task 34 / 36 matchers:
+// reasksAsk, probeReasks) is dropped; the acknowledgement is kept. A repeat /
+// correction ask is kept. Generalises the repeat-after-correct family. Pure.
+// ─────────────────────────────────────────────────────────────────────────
+const ITEM_LIST_RE = /^.*(?:\bsuch as\b|\bfor example\b|\be\.g\.,?|:)\s+([^?？.!。:]+?)\s*[?？.!。]?\s*$/i;
+/** The items an ask offers the student: short quoted spans (≤ 3 words) and
+ *  the "such as A, B or C" / ": A, B, or C" list at the end of a sentence. */
+export function askOfferedItems(askTurn: string | null | undefined): string[] {
+  const out = new Set<string>();
+  for (const m of (askTurn ?? '').matchAll(/"([^"\n]{2,40})"|“([^”\n]{2,40})”/g)) {
+    const span = (m[1] ?? m[2] ?? '').replace(/[.…,!?]+$/, '').trim().toLowerCase();
+    if (span && span.split(/\s+/).length <= 3) out.add(span);
+  }
+  for (const sentence of (askTurn ?? '').split(/(?<=[.!?。！？])\s+/)) {
+    const list = ITEM_LIST_RE.exec(sentence)?.[1];
+    if (!list || !/,|\bor\b/i.test(list)) continue;
+    for (const item of list.split(/\s*,\s*(?:or\s+)?|\s+or\s+/i)) {
+      const it = item.replace(/["“”]/g, '').replace(/[.…,!?]+$/, '').trim().toLowerCase();
+      if (it && it.split(/\s+/).length <= 3) out.add(it);
+    }
+  }
+  return [...out];
+}
+export function askedItemPresent(askTurn: string | null | undefined, studentText: string | null | undefined): boolean {
+  const st = ` ${(studentText ?? '').toLowerCase().replace(/[^\p{L}\p{N}' ]+/gu, ' ').replace(/\s+/g, ' ')} `;
+  return askOfferedItems(askTurn).some((it) => st.includes(` ${it.replace(/[^\p{L}\p{N}' ]+/gu, ' ').replace(/\s+/g, ' ').trim()} `));
+}
+/** The current reply answered the ask: verdict correct, or partly_correct
+ *  with an offered item present (answers open_question / overall_problem,
+ *  confidence not low). */
+export function replyAnsweredAsk(pc: { verdict?: string | null; answers?: string | null; confidence?: string | null } | null | undefined, askTurn: string | null | undefined, studentText: string | null | undefined): boolean {
+  if (!pc || pc.confidence === 'low') return false;
+  if (pc.answers === 'neither' || pc.answers === 'other_part') return false;
+  if (pc.verdict === 'correct') return true;
+  return pc.verdict === 'partly_correct' && askedItemPresent(askTurn, studentText);
+}
+export function correctReplyReasks(sentence: string | null | undefined, askTurn: string | null | undefined, studentText?: string | null): boolean {
+  const s = (sentence ?? '').trim();
+  if (!s || !askTurn || !askTurn.trim()) return false;
+  if (isRepeatOrCorrectionAsk(s, studentText)) return false;
+  // The Task 37 pronoun rule belongs to the check-in turn ("What did you
+  // improve in that project?" after a correct answer is the next step).
+  return reasksAsk(s, askTurn) || (!pronounReask(s) && probeReasks(s, [askTurn], { studentText }));
+}
