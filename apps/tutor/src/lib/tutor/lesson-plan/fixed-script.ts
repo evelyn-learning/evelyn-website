@@ -1341,7 +1341,7 @@ export function heldAdvanceFiresNow(input: {
  *  練習しましょうか？」). Not a content question ("What did you learn there?"),
  *  not a repeat ask ("Can you say it once more?"), not an offer about
  *  something outside the lesson ("Would you like a coffee at the meeting?"). Pure. */
-const PROPOSAL_LEAD_RE = /^\s*(?:(?:okay|ok|so|now|good|great|alright|well|then),?\s+)?(?:shall we|would you like|do you want|want to|how about|are you ready|ready|can we|let['’]s)\b/i;
+const PROPOSAL_LEAD_RE = /^\s*(?:(?:okay|ok|so|now|good|great|alright|well|then),?\s+)?(?:shall we|would you like|do you want|want to|how about|are you ready|ready|can we)\b/i;
 const PROPOSAL_TOPIC_RE = /\b(?:one more|another|more practice|practi[sc]e|try|move on|go on|continue|next (?:part|section|step|one)|summary|conversation|pronunciation|past simple|present perfect|skip|stop|finish|wrap up|start|begin|sentence|question|item|word)\b/i;
 export function isProposalQuestion(sentence: string | null | undefined): boolean {
   const t = (sentence ?? '').trim();

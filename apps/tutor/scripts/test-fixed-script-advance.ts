@@ -578,7 +578,8 @@ test('44 R1: a due budget advance never moves the pointer while a question is op
 });
 test('44 R2: an offer / proposal ends the turn — a later ask in the same turn is dropped; the turn after an accepted offer never re-offers', () => {
   for (const s of ['Shall we try one more past simple question?', 'Would you like one more practice sentence on it, or shall we move on to the past simple?', 'Do you want to try another one?', 'Shall we move on to the conversation?', 'もう一文練習しましょうか？']) assert.equal(isProposalQuestion(s), true, s);
-  for (const s of ['Tell me about the last business trip you took.', 'What did you learn there?', 'Can you say it once more?', 'Shall I help you with the email tomorrow?', 'Would you like a coffee at the meeting?']) assert.equal(isProposalQuestion(s), false, s);
+  // bot runs r43 / r45 (349 / 729 s): a "Let's …" content ask ("Let's make it a full sentence: How long …?") is not a proposal — a following ask must stay
+  for (const s of ['Tell me about the last business trip you took.', 'What did you learn there?', 'Can you say it once more?', 'Shall I help you with the email tomorrow?', 'Would you like a coffee at the meeting?', "Let's make it a full sentence: How long have you worked there?", "Let's stay on the one question: what happened at the trade show?"]) assert.equal(isProposalQuestion(s), false, s);
   pin(VTR, /let proposalSpokenThisTurn = false;/);
   pin(VTR, /onDebugEvent\?\.\('proposal_trailing_ask_dropped'/);
   pin(VTR, /onDebugEvent\?\.\('offer_reask_dropped'/);

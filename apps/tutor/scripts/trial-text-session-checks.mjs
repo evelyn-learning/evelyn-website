@@ -372,6 +372,48 @@ export function runChecks(dump) {
     ok('summary page re-cards nothing from earlier', reCards.length === 0, reCards.join(' | ').slice(0, 300));
   }
 
+  // 10j. voice run 22 (embed-1793737430878, Praveen) — the three rules (Task 44)
+  const PROPOSAL = /^\s*(?:(?:okay|ok|so|now|good|great|alright|well|then),?\s+)?(?:shall we|would you like|do you want|want to|how about|are you ready|ready|can we)\b[^.!?]*\b(?:one more|another|more practice|practi[sc]e|try|move on|go on|continue|next (?:part|section|step|one)|summary|conversation|pronunciation|past simple|present perfect|skip|stop|finish|wrap up|start|begin|sentence|question|item|word)\b[^.!?]*[?？]\s*$/i;
+  const ASKS = (x) => /[?？]\s*$/.test(x.trim()) || /^\s*(?:please\b|tell me\b|say\b|try\b|give me\b|describe\b|repeat\b|listen\b)/i.test(x);
+  // R1: the pointer moved at the end of a turn that left a question open (not an advance fired on the reply)
+  const underOpenAsk = [];
+  for (const e of ev('fixed_script_auto_advance').filter((e) => !/\(on the reply\)|reason=(?:spoken_opener|announced|menu_unpicked)/.test(e.msg))) {
+    const turn = [...tutor].reverse().find((x) => x.t <= e.t + 1 && x.t >= e.t - 15);
+    if (!turn) continue;
+    const replied = student.some((s) => s.t > turn.t && s.t <= e.t);
+    if (!replied && /[?？]\s*$/.test(turn.text.trim())) underOpenAsk.push(`${e.t}s ${e.msg.replace(/"/g, '').slice(0, 50)} after "${turn.text.slice(-50)}"`);
+  }
+  ok('R1: the pointer never moves while a question is open', underOpenAsk.length === 0, underOpenAsk.join(' | ').slice(0, 300));
+  // R2: an offer / proposal ends the turn; no re-offer right after an acceptance
+  const offerThenAsk = [];
+  const reOffer = [];
+  for (let k = 0; k < tutor.length; k++) {
+    const ss = sentencesOf(tutor[k].text);
+    const pi = ss.findIndex((x) => PROPOSAL.test(x));
+    if (pi >= 0 && ss.slice(pi + 1).some((x) => ASKS(x) && !PROPOSAL.test(x))) offerThenAsk.push(`${tutor[k].t}s "${ss[pi].slice(0, 40)}" → "${ss.slice(pi + 1).find((x) => ASKS(x)).slice(0, 40)}"`);
+    if (k > 0) {
+      const prevS = [...student].reverse().find((s) => s.i < tutor[k].i && s.i > tutor[k - 1].i);
+      const prevProposed = sentencesOf(tutor[k - 1].text).some((x) => PROPOSAL.test(x));
+      if (prevS && prevProposed && /^\s*(?:yes|yeah|ok|okay|sure|one more|another|more practice|please)\b/i.test(prevS.text) && ss.some((x) => PROPOSAL.test(x))) reOffer.push(`${tutor[k].t}s after "${prevS.text.slice(0, 30)}"`);
+    }
+  }
+  ok('R2: an offer ends the turn (no ask after it)', offerThenAsk.length === 0, offerThenAsk.join(' | ').slice(0, 300));
+  ok('R2: no re-offer on the turn after an acceptance', reOffer.length === 0, reOffer.join(' | ').slice(0, 300));
+  // R3: one authority per action — no duplicate authored card on a page; no engine menu line after a resolved pick
+  const cardWordsOf = (st) => new Set(norm(st).split(' ').filter((w) => w && !['a', 'an', 'the', 'um', 'uh'].includes(w)));
+  const dupProblems = [];
+  for (const p of pages) {
+    const probs = p.items.filter((it) => it.action === 'showProblem').map((it) => cardWordsOf(String(it.data?.problem?.statement ?? '')));
+    for (let i = 0; i < probs.length; i++) for (let j = i + 1; j < probs.length; j++) {
+      const A = probs[i], B = probs[j]; if (A.size < 8) continue;
+      let inter = 0; for (const w of A) if (B.has(w)) inter++;
+      if (inter / (A.size + B.size - inter) >= 0.9) dupProblems.push(`${p.title.slice(0, 14)}`);
+    }
+  }
+  ok('R3: no duplicate authored card on a page', dupProblems.length === 0, dupProblems.join(' | '));
+  const menuAfterPick = ev('menu_pick_resolved').flatMap((pk) => events.filter((e) => /^(?:transition_ask_engine_fallback|menu_entry_engine_fallback)$/.test(e.type) && e.t >= pk.t && e.t <= pk.t + 12).map((e) => `${pk.t}s pick → ${e.type} ${e.t}s`));
+  ok('R3: no engine menu line after a resolved pick', menuAfterPick.length === 0, menuAfterPick.join(' | '));
+
   // 11. counts worth a look
   const counts = ['brain_validator_retry', 'idle_nudge_sent', 'drop_self_voice', 'meta_narration_dropped', 'fixed_script_noask_continue', 'fixed_script_offer_continue', 'transition_ask_off_part', 'judge_kill_resume_diverged', 'menu_pick_resolved', 'adjacent_duplicate_sentence_dropped', 'typed_turn_superseded', 'render_dropped'];
   info(counts.map((c) => `${c}=${events.filter((e) => e.type === c || e.type.startsWith(c + '_')).length}`).join(' · '));
