@@ -57,7 +57,9 @@ export function runChecks(dump) {
   if (rescued.length) warn('offer unmade by the brain, spoken by the engine fallback', rescued.map((e) => `${e.t}s`).join(' '));
   const offerSpoken = ev('fixed_script_offer_spoken').map((e) => e.msg);
   const offerPlanted = ev('fixed_script_offer_planted').map((e) => e.msg);
-  ok('every planted offer was spoken', offerPlanted.length === 0 || offerSpoken.length >= offerPlanted.length, `planted ${offerPlanted.length}, spoken ${offerSpoken.length}`);
+  // a planted offer the student pre-empted with a move-on order (typed advance) needs no spoken offer
+  const preempted = ev('fixed_script_offer_planted').filter((p) => ev('typed_advance_app').some((a) => a.t >= p.t && a.t <= p.t + 90) && !offerSpoken.some((s) => s.includes((p.msg.match(/"([^"]+)"/) ?? [])[1] ?? '\u0000'))).length;
+  ok('every planted offer was spoken', offerPlanted.length === 0 || offerSpoken.length + preempted >= offerPlanted.length, `planted ${offerPlanted.length}, spoken ${offerSpoken.length}, pre-empted by a move-on order ${preempted}`);
   for (let i = 0; i < student.length; i++) {
     const s = student[i];
     if (!/^\s*(?:one more|another one|more practice)/i.test(s.text)) continue;

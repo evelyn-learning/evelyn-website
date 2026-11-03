@@ -158,7 +158,7 @@ const fromPool = (key) => {
 };
 const OFFER_RE = /\b(?:one more|another|more practice|again|once more)\b[^.?!]*\b(?:move on|moving on|go on|continue|next)\b|\b(?:move on|go on|continue)\b[^.?!]*\b(?:one more|another|more practice)\b|もう一/i;
 const MENU_RE = /\b[1-4]\)/g;
-const CLOSE_RE = /\bthank you for today'?s lesson|\bwrap up here\b|\bthat'?s (?:all|it) for today|\bthat'?s our time|\bour time (?:is|has) (?:up|finished)|\bsee you\b|お疲れ|\bgood-?bye\b|have a (?:good|nice|great) (?:day|evening|night)|\bsession is over\b|time is up|\bwell done today\b|finished for today/i;
+const CLOSE_RE = /\bthank you for today'?s lesson|\bthank you for your hard work today|レッスンは(?:これで|ここで)?終わり|今日のレッスンは終わり|\bwrap up here\b|\bthat'?s (?:all|it) for today|\bthat'?s our time|\bour time (?:is|has) (?:up|finished)|\bsee you\b|お疲れ|\bgood-?bye\b|have a (?:good|nice|great) (?:day|evening|night)|\bsession is over\b|time is up|\bwell done today\b|finished for today/i;
 const REPEAT_RE = /\b(?:repeat|say|try|read)\b[^.?!]*(?:after me|once more|again|that (?:sentence|one)|it (?:once more|again)|for me)|\bcould you (?:say|try)\b/i;
 
 function decide(text) {
@@ -286,7 +286,11 @@ while (Date.now() - t0 < maxMin * 60000 && state.student < 80 && !state.closed) 
   if (!quiet) { say('no tutor activity for 110 s'); break; }
   const since = turns.filter((x) => x.t > sinceStudent);
   const text = since.map((x) => x.sentences.join(' ')).join(' ');
-  if (!text.trim()) { await wait(3000); continue; }
+  if (!text.trim()) {
+    // dead page: the session ended server-side (pool / cap / auto-end) without a farewell we recognised
+    if (sinceStudent && Date.now() - sinceStudent > 240000) { say('no tutor turn for 4 min after the last student turn — treating as ended'); state.closed = true; break; }
+    await wait(3000); continue;
+  }
   const d = decide(text);
   if (!d) { say('CLOSE detected — waiting for the farewell to finish'); break; }
   if (smoke && state.offers >= 1 && d.why.startsWith('offer') === false && /offer/.test(log.slice(-3).join(' '))) { say('SMOKE: first offer answered — stopping'); break; }
