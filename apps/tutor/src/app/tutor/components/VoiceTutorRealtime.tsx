@@ -232,7 +232,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -13468,6 +13468,10 @@ export function VoiceTutorRealtime({
       let noAttemptDropped = false;
       // Fix round 1 (I-4): the part the pinned ask belonged to.
       let noAttemptSeg: string | null = null;
+      // Task 36 §A: the two asks the probe check-in note answers for (this turn
+      // must not ask them again), and whether a re-ask was dropped.
+      let probeCheckinAsks: string[] | null = null;
+      let probeReaskDropped = false;
       // Task 35 §B: the closing / recap part's answered questions (guarded this turn).
       const answeredGuardQs: string[] = TUTOR_ANSWERED_GUARD && answeredGuardPart(lessonPlanRef.current, currentSegmentIdRef.current)
         ? [...(answeredInPartRef.current.get(currentSegmentIdRef.current ?? '') ?? [])] : [];
@@ -13767,6 +13771,7 @@ export function VoiceTutorRealtime({
         if (pcPrev && pcTurns.length >= 2 && pcPrev.tutorText === pcTurns[pcTurns.length - 2]
           && probeCheckinDue([pcPrev, { tutorText: pcTurns[pcTurns.length - 1] ?? '', studentText: transcript }])) {
           runTranscript = `${PROBE_CHECKIN_NOTE}\n\n${runTranscript}`;
+          probeCheckinAsks = [pcPrev.tutorText, pcTurns[pcTurns.length - 1] ?? ''];
           onDebugEvent?.('probe_checkin_note_planted', `"${turnAskGist(pcTurns[pcTurns.length - 1]).slice(0, 80)}"`);
         }
       }
@@ -17266,6 +17271,14 @@ export function VoiceTutorRealtime({
                       onDebugEvent?.('answered_question_reask_dropped', `"${updatedSentence.slice(0, 80)}" ≈ "${agHit.slice(0, 60)}"`);
                       continue;
                     }
+                  }
+                  // Task 36 §A (bot run r18, 1037 s): the check-in turn asks the
+                  // same thing a third time — the ask goes (with its starter).
+                  if (probeCheckinAsks && (probeReasks(updatedSentence, probeCheckinAsks) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
+                    sqReaskDroppedPrev = true;
+                    probeReaskDropped = true;
+                    onDebugEvent?.('probe_reask_dropped', `"${updatedSentence.slice(0, 80)}"`);
+                    continue;
                   }
                   // Task 34 §A: after the no-attempt note the turn re-asks the same ask —
                   // dropped (with its starter); the part's turn budget then counts as reached.
@@ -20923,7 +20936,7 @@ export function VoiceTutorRealtime({
         engineOfferSeg = '';
         // Task 33 fix round 1 (R9-3): the personal-question retry was nothing
         // but the dropped re-ask — the engine moves on in one line.
-        if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped) && turnNarrationRef.current.length === attemptNarrationStart) {
+        if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {
           const moveOn = sameQuestionMoveOnLine(tutorLanguages);
           speakOnePart(moveOn);
           attemptText = `${attemptText} ${moveOn}`.trim();

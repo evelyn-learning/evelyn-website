@@ -376,6 +376,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'no_attempt_move_on_note_planted', 'no_attempt_reask_dropped',
   'answered_in_part_note_planted', 'answered_question_reask_dropped',
   'same_question_retry_ask_dropped', 'same_question_retry_move_on',
+  // Task 36 §A: the check-in turn's re-ask dropped.
+  'probe_reask_dropped',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the

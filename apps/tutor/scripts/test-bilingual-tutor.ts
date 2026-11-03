@@ -57,6 +57,7 @@ import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, 
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { probeReasks } from '../src/lib/tutor/voice/correct-retry';
 import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk, noAttemptBudgetTurns, isYesNoAsk } from '../src/lib/tutor/voice/correct-retry';
 import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
 import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
@@ -1956,7 +1957,7 @@ test('33 r1 R9-3: the personal retry never re-asks — the directive forbids it 
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('if (sqReason === SAME_QUESTION_THIRD_TIME_PERSONAL_REASON) sqPersonalPinned = sqAsk;'));
   assert.ok(vtr.includes("if (sqPersonalPinned && (retryReasksQuestion(updatedSentence, sqPersonalPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {"));
-  assert.ok(vtr.includes("if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped) && turnNarrationRef.current.length === attemptNarrationStart) {"));
+  assert.ok(vtr.includes("if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {"));
 });
 
 test('33 r2 R9-3: paraphrases and statement-form re-asks of the pinned question are caught', () => {
@@ -2035,6 +2036,21 @@ test('final I-3: the Tasks 33–35 debug events reach the stored session (embed 
     assert.ok(embed.includes(`'${name}'`), `allowlisted: ${name}`);
     assert.ok(vtr.includes(`'${name}'`), `emitted: ${name}`);
   }
+});
+
+test('36 §A: the probe check-in is enforced — the third ask is dropped (English and Japanese), the acknowledgement stays', () => {
+  const T75 = '"The project was for…" のあとに続く文、とても良いですね。 "The project was successful because the customer was happy." と、理由まで言えています。 Could you tell me which product the project was for?';
+  const T77 = '「Last month」の文がまた出てきましたね。 今の質問は、そのプロジェクトがどの製品のためだったか、でした。 Which product was the project for?';
+  const asks = [T75, T77];
+  assert.equal(probeReasks('Which product was the project for?', asks), true, 'the 1037 s English re-ask');
+  assert.equal(probeReasks('その製品は何でしたか？', asks), true, 'the 1037 s Japanese re-ask');
+  assert.equal(probeReasks('「Last month」の文がまた出てきましたね。', asks), false, 'the acknowledgement stays');
+  assert.equal(probeReasks('The project was for our new tablet.', asks), false, 'a model answer stays');
+  assert.equal(probeReasks('Now, what did you learn from that project?', asks), false, 'a next-step question stays');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("probeCheckinAsks = [pcPrev.tutorText, pcTurns[pcTurns.length - 1] ?? ''];"));
+  assert.ok(vtr.includes('if (probeCheckinAsks && (probeReasks(updatedSentence, probeCheckinAsks) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {'));
+  assert.ok(readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8').includes("'probe_reask_dropped'"));
 });
 
 if (failed) process.exit(1);

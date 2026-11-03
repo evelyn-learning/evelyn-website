@@ -1185,3 +1185,29 @@ export function reasksAnsweredQuestion(sentence: string | null | undefined, answ
   }
   return null;
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Task 36 §A (bot run r18, 1008–1037 s: "Which product was the project
+// for?" asked a third time on the turn that carried the probe check-in
+// note). The note is enforced: on that turn a sentence asking the same thing
+// as either of the two previous asks is dropped — an English question / ask
+// whose content stems match one of their questions (retryReasksQuestion,
+// Jaccard ≥ 0.5), or a Japanese question sharing a 2-character Han /
+// katakana run with them ("その製品は何でしたか？"). Pure.
+// ─────────────────────────────────────────────────────────────────────────
+const PROBE_CJK_RUN_RE = /[\p{Script=Han}\p{Script=Katakana}ー]{2,}/gu;
+const probeBigrams = (s: string) => new Set((s.match(PROBE_CJK_RUN_RE) ?? []).flatMap((r) => [...Array(r.length - 1).keys()].map((i) => r.slice(i, i + 2))));
+export function probeReasks(sentence: string | null | undefined, previousAsks: ReadonlyArray<string | null | undefined>): boolean {
+  const s = (sentence ?? '').trim();
+  if (!s) return false;
+  const asks = previousAsks.filter((a): a is string => !!a && !!a.trim());
+  if (!asks.length) return false;
+  const questions = asks.flatMap((a) => a.split(/(?<=[?？])\s*/).map((x) => x.trim()).filter((x) => /[?？]\s*$/.test(x)));
+  if (/[A-Za-z]{3,}/.test(s) && questions.some((q) => /[A-Za-z]{3,}/.test(q) && retryReasksQuestion(s, q))) return true;
+  if (/[?？]\s*$|か[。]?\s*$/.test(s) && /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(s) && !/[A-Za-z]{3,}/.test(s)) {
+    const mine = probeBigrams(s);
+    const theirs = new Set(asks.flatMap((a) => [...probeBigrams(a)]));
+    for (const b of mine) if (theirs.has(b)) return true;
+  }
+  return false;
+}
