@@ -1231,10 +1231,17 @@ const OPEN_QUESTION_STATE_RE = /^\s*(?:(?:so|but|and),?\s+)?(?:the|my) (?:open|p
 const REPEAT_JUDGE_RE = /^\s*(?:the (?:student|learner)['’]s|their|his|her)\s+(?:latest |last |previous )?(?:answer|reply|sentence|message|words)\s+(?:is|was)\s+(?:just\s+)?(?:a\s+)?(?:repeat|repetition|copy)\s+of\b/i;
 const SECOND_PERSON_RE = /\b(?:you|your|yours|yourself)\b/i;
 const HAS_QUOTE_RE = /["“「][^"”」]{2,}["”」]/;
+// Task 38 fix round 1 (R24-2, bot run r24 470 s: "Stop: I need to respond
+// to what you actually said."): the retry directive echoed as a self-plan —
+// it addresses "you" only inside "what you said", so the modal-plan rule's
+// no-second-person guard let it through. "I need to hear what you said once
+// more, please." is a request and stays.
+const RESPOND_TO_SAID_PLAN_RE = /^\s*(?:stop[:,.!]?\s*)?I (?:need|have|must|should) to (?:respond|reply|answer|address|react) (?:to )?what you (?:actually |just |really )?(?:said|meant|wrote|asked)\b[^.!?]*[.!]?\s*$/i;
 export function isTutorPlanNarration(sentence: string): boolean {
   const s = sentence ?? '';
   if (MODAL_PLAN_RE.test(s) && !SECOND_PERSON_RE.test(s) && !HAS_QUOTE_RE.test(s)) return true;
   if (OPEN_QUESTION_STATE_RE.test(s) && !/[?？]/.test(s)) return true;
+  if (RESPOND_TO_SAID_PLAN_RE.test(s)) return true;
   return REPEAT_JUDGE_RE.test(s) && !HAS_QUOTE_RE.test(s);
 }
 export function isSteeringPlanNarration(sentence: string): boolean {
@@ -1631,6 +1638,7 @@ export function doneTurnText(input: {
  *  Returns the sentence without the repeated opener ('' = all of it), or
  *  the sentence unchanged. Pure. */
 export const REPEATED_OPENER_MAX_WORDS = 4;
+const REPEATED_OPENER_ACK_RE = /^\s*(?:good|great|nice|okay|ok|alright|all right|right|sure|well done|excellent|perfect|yes|thanks|thank you)\b/i;
 function openerKey(s: string): string {
   return (s ?? '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -1645,5 +1653,9 @@ export function stripRepeatedTurnOpener(prevTurn: string | null | undefined, sen
   const n = key ? key.split(' ').length : 0;
   if (n === 0 || n > REPEATED_OPENER_MAX_WORDS) return s;
   if (openerKey(firstSentenceOf(prevTurn ?? '')) !== key) return s;
+  // Fix round 1 (m-5): only an acknowledgement opener (an ack word, or a
+  // short "<word>, <Name>." address) — a short model sentence ("I went
+  // home.") repeated as the next turn's model is kept.
+  if (!REPEATED_OPENER_ACK_RE.test(head) && !/^\s*\p{L}+[,!]\s*\p{Lu}\p{L}*[.!]?\s*$/u.test(head)) return s;
   return s.slice(head.length).trim();
 }

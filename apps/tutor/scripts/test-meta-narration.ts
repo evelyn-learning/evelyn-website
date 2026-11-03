@@ -1463,5 +1463,16 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('38 I2: VTR strips it from the first kept sentence (language lessons)', VTR38.includes("const roRest = stripRepeatedTurnOpener(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '', (ev.text as string) || updatedSentence);"));
 }
 
+// Task 38 fix round 1 (R24-2 and m-5).
+{
+  const lang = { languageLesson: true };
+  check('38 r1 R24-2: "Stop: I need to respond to what you actually said." dropped', isMetaNarration('Stop: I need to respond to what you actually said.', lang));
+  check('38 r1 R24-2: "I have to answer what you just asked." dropped', isMetaNarration('I have to answer what you just asked.', lang));
+  check('38 r1 R24-2: "I need to hear what you said once more, please." kept', !isMetaNarration('I need to hear what you said once more, please.', lang));
+  check('38 r1 R24-2: maths untouched', !isMetaNarration('Stop: I need to respond to what you actually said.', { languageLesson: false }));
+  check('38 r1 m-5: a short model sentence repeated as the next model is kept', stripRepeatedTurnOpener('I went home. Please say it.', 'I went home. Try once more.') === 'I went home. Try once more.');
+  check('38 r1 m-5: "Good, Praveen." still goes', stripRepeatedTurnOpener('Good, Praveen. You said it well.', 'Good, Praveen.') === '');
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
