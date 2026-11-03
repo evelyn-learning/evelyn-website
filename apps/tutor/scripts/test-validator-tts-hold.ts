@@ -48,6 +48,11 @@ test('F: VTR wiring — prone turns gate until the validators pass; stream end k
   pin(VTR, /const gateTimer = setTimeout\(\(\) => \{\s*if \(validatorHold && gateState === 'gated'\) onDebugEvent\?\.\('validator_tts_hold_deadline', `\$\{pendingSentences\.length\} sentence\(s\) spoken before the validators`\);\s*openGate\(\);\s*\}, skipTurnMarkerPresent \? 3_600_000 : validatorHold \? VALIDATOR_TTS_HOLD_MS : 1000\);/);
   pin(VTR, /if \(!skipNoAdvanceAtStreamEnd\) \{\s*if \(validatorHold && gateState === 'gated'\) \{[\s\S]{0,300}?onDebugEvent\?\.\('validator_tts_hold_kept', `\$\{pendingSentences\.length\} sentence\(s\) wait for the validators`\);\s*\} else \{\s*openGate\(\);[\s\S]{0,700}?releaseVerdictHold\(\);\s*\}\s*\}/);
   pin(VTR, /if \(validatorHold && gateState === 'gated'\) onDebugEvent\?\.\('validator_tts_hold_released', `\$\{pendingSentences\.length\} sentence\(s\) after the validators`\);\s*openGate\(\);\s*releaseVerdictHold\(\);\s*break;/);
+  // bot run r41 (heard=1 at the 137 / 617 / 1009 s kills): the fast opener and the rolling hold's lookahead / cap / engage flushes bypassed the gate
+  pin(VTR, /gateState === 'gated' &&\s*\/\/[^\n]*\n\s*!validatorHold &&\s*isSafeOpener\(trimmedSentence\)/);
+  pin(VTR, /if \(pendingSentences\.length > 0 && !validatorHold\) flushPending\(\);\s*pendingSentences\.push\(sentenceForSpeech\);/);
+  pin(VTR, /if \(gateState === 'gated' && pendingSentences\.length > 0 && !validatorHold\) flushPending\(\);\s*\}, VALIDATE_BEFORE_SPEAK_CAP_MS\);/);
+  pin(VTR, /if \(!validatorHold\) flushPending\(\);\s*vbsRolling = true;/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_VALIDATOR_TTS_HOLD = process\.env\.NEXT_PUBLIC_TUTOR_VALIDATOR_TTS_HOLD !== 'off';/);
   pin(read('src/app/tutor-portal/embed/page.tsx'), /'validator_tts_hold_'/);
 });

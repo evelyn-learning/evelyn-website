@@ -15828,7 +15828,8 @@ export function VoiceTutorRealtime({
           clearVbsCap();
           vbsCapTimer = setTimeout(() => {
             vbsCapTimer = null;
-            if (gateState === 'gated' && pendingSentences.length > 0) flushPending();
+            // Task 43 §F: a validator-prone turn's pending sentences wait for the gate (its own cap).
+            if (gateState === 'gated' && pendingSentences.length > 0 && !validatorHold) flushPending();
           }, VALIDATE_BEFORE_SPEAK_CAP_MS);
         };
         // v2 divergence-substitute: drop the held narration WITHOUT closing
@@ -17915,6 +17916,8 @@ export function VoiceTutorRealtime({
                       !skipTurnMarkerPresent &&
                       totalSentenceCount === 1 &&
                       gateState === 'gated' &&
+                      // Task 43 §F: on a validator-prone turn the opener waits with the rest (bot run r41: heard=1 at the kills).
+                      !validatorHold &&
                       isSafeOpener(trimmedSentence) &&
                       !isVerdictOpener(trimmedSentence);
                     if (fastOpenerEligible) {
@@ -17956,7 +17959,7 @@ export function VoiceTutorRealtime({
                         // stutter, Console7). A rejecting tool still drops
                         // this single held sentence via closeGate; the cap
                         // flushes it if no successor/tool arrives.
-                        if (pendingSentences.length > 0) flushPending();
+                        if (pendingSentences.length > 0 && !validatorHold) flushPending();
                         pendingSentences.push(sentenceForSpeech);
                         armVbsCap();
                       } else {
@@ -19700,7 +19703,7 @@ export function VoiceTutorRealtime({
                           console.log('[brain-orchestrator] validate-before-speak: rolling-hold engaged (later sentences buffer until their tool verdict)');
                           onDebugEvent?.('vbs_rolling_engaged', `tool=${name}`);
                         }
-                        flushPending();
+                        if (!validatorHold) flushPending();
                         vbsRolling = true;
                       } else {
                         // Legacy: open fully — every later sentence streams
