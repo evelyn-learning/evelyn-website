@@ -1349,3 +1349,10 @@ export const TUTOR_MENU_WRAP_UP_DROP = process.env.NEXT_PUBLIC_TUTOR_MENU_WRAP_U
  *  ask-one-new-item order; a bare "Let's move on." that turn is dropped.
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_OFFER_ACCEPTED_ASK=off. */
 export const TUTOR_OFFER_ACCEPTED_ASK = process.env.NEXT_PUBLIC_TUTOR_OFFER_ACCEPTED_ASK !== 'off';
+
+/** Task 39 §C + fix round 1 (M-1): the full recast sentence card (never its
+ *  comma clause), the short-line exemption for corrections / restatements,
+ *  and the correction card from a spoken full recast or a correction-kind
+ *  judge note (never a fragment splice). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_FULL_RECAST_CARD=off. */
+export const TUTOR_FULL_RECAST_CARD = process.env.NEXT_PUBLIC_TUTOR_FULL_RECAST_CARD !== 'off';

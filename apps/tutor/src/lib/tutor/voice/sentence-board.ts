@@ -18,6 +18,7 @@ import { dropFillersAndRepeats } from './filler-repeats';
 import { isRetryAsk } from './retry-cap';
 import { normaliseNumberTokens } from './number-tokens';
 import { sentenceAsksStudent } from '../question-gist-text';
+import { TUTOR_FULL_RECAST_CARD } from '../orchestrator/flags';
 
 /** 'echo' (GDI run 3): the tutor quoting the student's own words back (often
  *  the wrong ones) — never a card, unless the check found the student's
@@ -34,7 +35,7 @@ export interface QuotedSentence {
    *  full sentence:" colon that repeat the student's words;
    *  'levelcheck' = (Task 23 §B2) the student's own answer in a level-check
    *  part, carded whatever the verdict. */
-  source?: 'echo' | 'checked' | 'affirmed' | 'introduced' | 'levelcheck' | 'grammar-recast' | 'spliced';
+  source?: 'echo' | 'checked' | 'affirmed' | 'introduced' | 'levelcheck' | 'grammar-recast' | 'note';
   /** Task 21 fix round 1 (m, B2): word positions (0-based, words as the card
    *  splits them) that carry the emphasis — only the edited position is
    *  marked, not every copy of the word. */
@@ -792,7 +793,7 @@ export function recastCorrectionCard(tutorText: string, student: string | null |
       // Task 39 §C (voice run 20, 869 s): the comma clause is the HEAD of a
       // whole-sentence recast ("The customer was happy, and he bought five
       // machines from you.") — the full recast sentence is the card.
-      if (card && TUTOR_FULL_RECAST_CARD_ON) {
+      if (card && TUTOR_FULL_RECAST_CARD) {
         const whole = wholeSentenceRecastCard(raw, student);
         if (whole) return whole;
       }
@@ -1194,7 +1195,6 @@ export function grammarRecastCard(tutorText: string, student: string | null | un
  * the student spoke in the first person; emphasis = the words the student
  * did not say. Pure.
  */
-const TUTOR_FULL_RECAST_CARD_ON = process.env.NEXT_PUBLIC_TUTOR_FULL_RECAST_CARD !== 'off';
 export const RECAST_RESTATED_MIN = 3;
 /** How many of the student's content words the sentence restates (same stem). */
 export function restatedStudentWords(sentence: string | null | undefined, student: string | null | undefined): number {
@@ -1231,68 +1231,49 @@ export function wholeSentenceRecastCard(sentence: string | null | undefined, stu
   return { sentence: full, kind: 'correction', emphasis, emphasisAt };
 }
 /**
- * Task 39 §C (voice run 20, 431 s: 'The article should be "an electric car,"'
- * after "The product in that presentation was a electric car." — no full
- * corrected sentence was ever said, nothing carded): a quoted correction
- * FRAGMENT that is one edit from a run of the student's words is spliced into
- * the student's sentence — the corrected sentence is the card, the changed
- * word marked. A 2-word fragment may only insert a word ("the presentation"
- * into "of presentation"); a longer one needs ≥ 2 words in common. Pure.
+ * Task 39 §C2 + fix round 1 (B-1 / I-1): a correction with no corrected
+ * sentence on the board. NEVER a splice of a quoted fragment into the
+ * student's words (it wrote "Yesterday I went go to the office …", "I met
+ * many customers the trade fair."). The card comes only from
+ *  (a) a full sentence the tutor spoke that clearly recasts the student's
+ *      (wholeSentenceRecastCard: ≥ 3 of the student's content words, in
+ *      place) — tutorRecastCorrectionCard; or
+ *  (b) a judge correction note whose kind is a correction (see
+ *      judgeNoteCardSourceAllowed) that quotes a COMPLETE corrected sentence
+ *      the tutor did not say itself (a quote of the tutor's own text is the
+ *      flagged claim) — noteCorrectionCard.
+ * Neither ⇒ no card. Pure.
  */
-const SPLICE_WORD_RE = /[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu;
-function spliceEdit(win: readonly string[], frag: readonly string[]): { at: number; kind: 'sub' | 'ins' | 'del' } | null {
-  let i = 0;
-  while (i < win.length && i < frag.length && win[i] === frag[i]) i++;
-  const eq = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((x, k) => x === b[k]);
-  if (win.length === frag.length) return i < win.length && eq(win.slice(i + 1), frag.slice(i + 1)) ? { at: i, kind: 'sub' } : null;
-  if (frag.length === win.length + 1) return eq(win.slice(i), frag.slice(i + 1)) ? { at: i, kind: 'ins' } : null;
-  if (win.length === frag.length + 1) return eq(win.slice(i + 1), frag.slice(i)) ? { at: -1, kind: 'del' } : null;
-  return null;
-}
-export function fragmentSpliceCorrectionCard(text: string | null | undefined, student: string | null | undefined): QuotedSentence | null {
-  const base = cardableStudentSentence(student);
-  if (!base || CJK_RE.test(base)) return null;
-  const words = [...base.matchAll(SPLICE_WORD_RE)];
-  const lw = words.map((m) => m[0].toLowerCase().replace(/’/g, "'"));
-  for (const m of (text ?? '').matchAll(QUOTE_RE)) {
-    const inner = quoteInner(m).trim().replace(/[.,!?;:]+$/, '');
-    if (!inner || CJK_RE.test(inner)) continue;
-    const fw = inner.match(SPLICE_WORD_RE) ?? [];
-    if (fw.length < 2 || fw.length >= lw.length) continue;
-    const fl = fw.map((w) => w.toLowerCase().replace(/’/g, "'"));
-    // the student's own words quoted back are no correction
-    if (` ${lw.join(' ')} `.includes(` ${fl.join(' ')} `)) continue;
-    const sizes = fl.length === 2 ? [1] : [fl.length, fl.length - 1, fl.length + 1];
-    for (const n of sizes) {
-      for (let i = 0; i + n <= lw.length; i++) {
-        const win = lw.slice(i, i + n);
-        const e = spliceEdit(win, fl);
-        if (!e || (fl.length === 2 && e.kind !== 'ins')) continue;
-        const common = Math.min(win.length, fl.length) - (e.kind === 'sub' ? 1 : 0);
-        if (fl.length > 2 && common < 2) continue;
-        const start = words[i]!.index!;
-        const last = words[i + n - 1]!;
-        const end = last.index! + last[0].length;
-        let out = `${base.slice(0, start)}${inner}${base.slice(end)}`.replace(/\s+/g, ' ').trim();
-        if (start === 0) out = out[0]!.toUpperCase() + out.slice(1);
-        if (!/[.!?]["”’)]?$/.test(out)) out = `${out}.`;
-        if (!isCardCandidate(out)) continue;
-        const marked = e.kind === 'del' ? [] : [fw[e.at]!];
-        return { sentence: out, kind: 'correction', emphasis: marked, source: 'spliced' };
-      }
-    }
+export function tutorRecastCorrectionCard(tutorText: string | null | undefined, student: string | null | undefined): QuotedSentence | null {
+  for (const raw of (tutorText ?? '').split(/(?<=[.!?。！？])\s+/)) {
+    const whole = wholeSentenceRecastCard(raw, student);
+    if (whole) return whole;
   }
   return null;
 }
-/** Task 39 §C2: the corrected form from a correction note (the judge's note
- *  text): a quoted whole-sentence recast of the student's sentence, else a
- *  quoted fragment spliced into it; null otherwise. Pure. */
-export function noteCorrectionCard(note: string | null | undefined, student: string | null | undefined): QuotedSentence | null {
+const NOTE_SENTENCE_MIN_WORDS = 4;
+export function noteCorrectionCard(note: string | null | undefined, student: string | null | undefined, tutorText?: string | null): QuotedSentence | null {
+  const tutorNorm = ` ${norm(tutorText ?? '')} `;
   for (const m of (note ?? '').matchAll(QUOTE_RE)) {
-    const whole = wholeSentenceRecastCard(quoteInner(m), student);
-    if (whole) return { ...whole, source: 'spliced' };
+    const inner = quoteInner(m).trim();
+    if ((inner.match(TOKEN_RE) ?? []).length < NOTE_SENTENCE_MIN_WORDS) continue;
+    // a complete sentence: opens with a capital (or "I") and is not a clause tail
+    if (!/^["“]?[\p{Lu}]/u.test(inner)) continue;
+    const n = norm(inner);
+    if (n && tutorNorm.includes(` ${n} `)) continue; // the tutor's own (flagged) claim
+    const whole = wholeSentenceRecastCard(inner, student);
+    if (whole) return { ...whole, source: 'note' };
   }
-  return fragmentSpliceCorrectionCard(note, student);
+  return null;
+}
+/** Fix round 1 (I-1): only a judge note about a correction may supply the
+ *  card — a structured 'neutral' plan whose issues are all tone_or_wording /
+ *  other. Never retraction (the student was right), false_praise (it quotes
+ *  the claim judged wrong), legacy (unstructured), grounding / maths. Pure. */
+export function judgeNoteCardSourceAllowed(mode: string | null | undefined, issueKinds: readonly (string | null | undefined)[] | null | undefined): boolean {
+  if (mode !== 'neutral') return false;
+  const kinds = issueKinds ?? [];
+  return kinds.length > 0 && kinds.every((k) => k === 'tone_or_wording' || k === 'other');
 }
 
 /** Task 30 §J1: why the level check's own-answer card is skipped — 'no
@@ -1433,14 +1414,14 @@ export function planSentenceBoard(input: {
       grammarRecast = true;
     }
   }
-  // Task 39 §C2 (voice run 20, 431 s): a correction with no full corrected
-  // sentence — the quoted fragment spliced into the student's sentence, else
-  // the corrected form from the judge's note.
-  if (!classified.some((c) => c.q.kind === 'correction') && input.studentLast
+  // Task 39 §C2 + fix round 1 (B-1): a correction with no corrected card —
+  // a full recast sentence the tutor spoke, else a complete corrected
+  // sentence quoted in a correction-kind judge note. Never a splice.
+  if (TUTOR_FULL_RECAST_CARD && !classified.some((c) => c.q.kind === 'correction') && input.studentLast
     && (input.correctionMarked === true || !!input.correctionNote)) {
-    const spliced = fragmentSpliceCorrectionCard(input.tutorText, input.studentLast) ?? noteCorrectionCard(input.correctionNote, input.studentLast);
-    if (spliced && !classified.some((c) => sameSentence(c.q.sentence, spliced.sentence))) {
-      classified.push({ q: spliced, len: norm(spliced.sentence).length, i: -1, said: false, affirmed: false, introduced: false });
+    const corrected = tutorRecastCorrectionCard(input.tutorText, input.studentLast) ?? noteCorrectionCard(input.correctionNote, input.studentLast, input.tutorText);
+    if (corrected && !classified.some((c) => sameSentence(c.q.sentence, corrected.sentence))) {
+      classified.push({ q: corrected, len: norm(corrected.sentence).length, i: -1, said: false, affirmed: false, introduced: false });
     }
   }
   // Task 21 §B4 (GDI run 9, 693 s: correct at MEDIUM confidence, the tutor
@@ -1607,8 +1588,8 @@ export function planSentenceBoard(input: {
     // Task 39 §C (voice run 20, 869 s): the short-line rule never drops a
     // recast / correction of the student's sentence (other than the
     // grammar-recast guess) nor a line restating ≥ 3 of the student's words.
-    const restates = classified[k]!.q.kind === 'correction' && classified[k]!.q.source !== 'grammar-recast'
-      || restatedStudentWords(cs, input.studentLast) >= RECAST_RESTATED_MIN;
+    const restates = TUTOR_FULL_RECAST_CARD && (classified[k]!.q.kind === 'correction' && classified[k]!.q.source !== 'grammar-recast'
+      || restatedStudentWords(cs, input.studentLast) >= RECAST_RESTATED_MIN);
     if (!quotedInText(input.tutorText, cs) && (isAckTransitionLine(cs) || (!restates && cardContentWordCount(cs) < CARD_MIN_CONTENT_WORDS))) {
       input.onSuppressed?.('acknowledgement / short line', cs);
       classified.splice(k, 1);

@@ -20,7 +20,7 @@ import {
   grammarRecastCard, isTranslationQuote, sameSentenceText, duplicateSentenceAction, levelCheckRestatementCard, firstPersonWriteBack, contrastAskPair, levelCheckOwnCardGate, sentenceCardIdOnCurrentPage,
 } from '../src/lib/tutor/voice/sentence-board';
 import { normaliseDigitsToWords } from '../src/lib/tutor/voice/digit-words';
-import { planSentenceBoard as planSentenceBoard38, isAckTransitionLine, cardContentWordCount, CARD_MIN_CONTENT_WORDS, wholeSentenceRecastCard, fragmentSpliceCorrectionCard, noteCorrectionCard } from '../src/lib/tutor/voice/sentence-board';
+import { planSentenceBoard as planSentenceBoard38, isAckTransitionLine, cardContentWordCount, CARD_MIN_CONTENT_WORDS, wholeSentenceRecastCard, noteCorrectionCard, judgeNoteCardSourceAllowed } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 
 let failed = 0;
@@ -467,7 +467,8 @@ test('A fix round 1 (I2): a turn that corrects the student plans no echo / check
 test('A: VTR passes the check to planSentenceBoard and tags the event source', () => {
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   const at = VTR.indexOf('const boardStudentCorrect = ');
-  const block = VTR.slice(at, at + 1200);
+  // Task 39 r1 I-1: the board's correction-note lines sit between (window widened).
+  const block = VTR.slice(at, at + 1800);
   assert.ok(/const boardStudentCorrect = precheckDecides\(boardPc\) && boardPc\.verdict === 'correct' && boardPc\.answers !== 'other_part' && boardPc\.answers !== 'neither'/.test(block));
   assert.ok(block.includes('studentCorrect: boardStudentCorrect,'));
   assert.ok(block.includes('checkedSentence: boardPc?.proposed ?? null'));
@@ -1629,33 +1630,50 @@ test('39 §C1: the 869 s recast is carded as the FULL sentence, never the comma 
   assert.deepEqual(suppressed, []);
   assert.equal(wholeSentenceRecastCard('Thank you for sharing that with me today.', s869), null, 'a comment is no recast');
 });
-test('39 §C1: a short recast of the student (≥ 3 restated words) is never suppressed as a short line', () => {
-  const cards = planSentenceBoard38({ tutorText: 'The owner was happy. What did you buy?', studentLast: 'Owner happy.', renderedThisTurn: false });
-  assert.ok(cards.length <= 1);
+test('39 §C1 (fix round 1 M-2): a short one-edit recast is carded, not suppressed as a short line', () => {
+  const suppressed: string[] = [];
+  const cards = planSentenceBoard38({ tutorText: 'The customer was happy. What did he buy?', studentLast: 'Customer was happy.', renderedThisTurn: false, onSuppressed: (_r, x) => suppressed.push(x) });
+  assert.deepEqual(cards.map((c) => [c.sentence, c.kind]), [['The customer was happy.', 'correction']]);
+  assert.deepEqual(suppressed, []);
   assert.deepEqual(planSentenceBoard38({ tutorText: 'Okay, one more on the past simple. What did you do?', studentLast: 'Yes, one more. practice.', renderedThisTurn: false }), [], 'the 38 §E ack line still gets no card');
 });
-test('39 §C2: a correction with no restatement is carded from the quoted fragment', () => {
-  const t431 = 'Electric car, I see. Your sentence has the right form: "I have given a presentation" is present perfect for an experience. The article should be "an electric car," because "electric" starts with a vowel sound. Next, can you tell me one thing you have done to prepare for a customer presentation?';
-  const s431 = 'The product in that presentation was a electric car.';
-  const cards = planSentenceBoard38({ tutorText: t431, studentLast: s431, renderedThisTurn: false, correctionMarked: true });
-  assert.deepEqual([cards[0]!.sentence, cards[0]!.kind, cards[0]!.emphasis.join('|')], ['The product in that presentation was an electric car.', 'correction', 'an']);
-  assert.deepEqual(planSentenceBoard38({ tutorText: t431, studentLast: s431, renderedThisTurn: false }).map((c) => c.sentence).includes('The product in that presentation was an electric car.'), false, 'not without a correction mark');
-  assert.equal(fragmentSpliceCorrectionCard('"of the presentation" is better', 'I have written all the pages of presentation.')?.sentence, 'I have written all the pages of the presentation.');
-  assert.equal(fragmentSpliceCorrectionCard('"the presentation" sounds right', 'I wrote pages of presentation to a customer.')?.sentence, 'I wrote pages of the presentation to a customer.', 'a 2-word fragment only inserts');
-  assert.equal(fragmentSpliceCorrectionCard('"last week" is a finished time', 'Last week I sell 20 washing machines.'), null, 'a quote of the student\'s own words is no correction');
+test('39 r1 B-1: a quoted fragment is never spliced into the student\'s sentence — no card rather than wrong English', () => {
+  const cases: Array<[string, string]> = [
+    ['Yesterday I go to the office and I meet my boss.', 'For the past we say "I went". What did you do there?'],
+    ['I met many customers at trade fair.', 'Nice. What did you do at "the trade fair"?'],
+    ['A customer called me and a customer was angry.', 'We say "the customer" here. Why was he angry?'],
+  ];
+  for (const [student, tutor] of cases) {
+    const cards = planSentenceBoard38({ tutorText: tutor, studentLast: student, renderedThisTurn: false, correctionMarked: true });
+    assert.deepEqual(cards.filter((c) => c.kind === 'correction'), [], `${student} → ${JSON.stringify(cards)}`);
+  }
+  const t431 = 'Electric car, I see. The article should be "an electric car," because "electric" starts with a vowel sound. Next, can you tell me one thing you have done to prepare for a customer presentation?';
+  assert.deepEqual(planSentenceBoard38({ tutorText: t431, studentLast: 'The product in that presentation was a electric car.', renderedThisTurn: false, correctionMarked: true }).filter((c) => c.kind === 'correction'), [], '431 s: no full corrected sentence was said → no card');
 });
-test('39 §C2: a judge correction note with the corrected sentence → card from the note', () => {
-  const note = 'The student said "he buy five machines"; the past form is "he bought five machines from me".';
+test('39 r1 B-1: a full recast the tutor spoke is the card on a correction turn', () => {
+  const cards = planSentenceBoard38({ tutorText: 'Right, the customer was happy, and he bought five machines from you. Good.', studentLast: 'Customer was happy and he buy five machines from me.', renderedThisTurn: false, correctionMarked: true });
+  assert.deepEqual(cards.map((c) => c.sentence), ['The customer was happy, and he bought five machines from me.']);
+});
+test('39 r1 I-1: only a correction-kind judge note that quotes a complete corrected sentence is a card source', () => {
   const s = 'Customer was happy and he buy five machines from me.';
-  assert.equal(noteCorrectionCard(note, s)?.sentence, 'Customer was happy and he bought five machines from me.');
-  const cards = planSentenceBoard38({ tutorText: 'Good use of the past simple. What happened next?', studentLast: s, renderedThisTurn: false, correctionNote: note });
-  assert.deepEqual(cards.map((c) => c.sentence), ['Customer was happy and he bought five machines from me.']);
+  const note = 'The tutor praised the verb, but the student\'s sentence needs the past form: "The customer was happy and he bought five machines from me."';
+  assert.equal(noteCorrectionCard(note, s)?.sentence, 'The customer was happy and he bought five machines from me.');
+  assert.deepEqual(planSentenceBoard38({ tutorText: 'Good use of the past simple. What happened next?', studentLast: s, renderedThisTurn: false, correctionNote: note }).map((c) => c.sentence), ['The customer was happy and he bought five machines from me.']);
+  assert.equal(noteCorrectionCard('the past form is "he bought five machines"', s), null, 'a fragment is no complete sentence');
+  assert.equal(noteCorrectionCard('"Yes, he goes to the office every day" was praised.', 'He go to the office every day yesterday.', 'Yes, he goes to the office every day. Nice.'), null, "the tutor's own (flagged) claim is never the card");
+  assert.equal(judgeNoteCardSourceAllowed('false_praise', ['false_praise']), false, 'a false_praise note → no card');
+  assert.equal(judgeNoteCardSourceAllowed('retraction', ['false_denial']), false);
+  assert.equal(judgeNoteCardSourceAllowed('legacy', []), false);
+  assert.equal(judgeNoteCardSourceAllowed('neutral', ['grounding']), false);
+  assert.equal(judgeNoteCardSourceAllowed('neutral', ['tone_or_wording']), true);
 });
-
 test('39 §C2: VTR passes the correction mark and the judge note', () => {
   const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  assert.ok(vtr.includes("correctionNote: judgeNotePlantRef.current?.callSeq === brainCallSeqRef.current ? judgeNotePlantRef.current.note : null,"));
-  assert.ok(vtr.includes("correctionMarked: boardPc?.verdict === 'partly_correct' || boardPc?.verdict === 'incorrect'"));
+  assert.ok(vtr.includes('&& judgeNoteCardSourceAllowed(boardNotePlant.kind, boardNotePlant.issueKinds) ? boardNotePlant.note : null;'));
+  assert.ok(vtr.includes('correctionNote: boardCorrectionNote,'));
+  assert.ok(vtr.includes("issueKinds: noteworthyAdvisoryIssues.map((i) => readJudgeIssueFields(i).issueKind)"));
+  assert.ok(readFileSync(join(__dirname, '..', 'src/lib/tutor/orchestrator/flags.ts'), 'utf8').includes("export const TUTOR_FULL_RECAST_CARD = process.env.NEXT_PUBLIC_TUTOR_FULL_RECAST_CARD !== 'off';"));
+  assert.ok(!readFileSync(join(__dirname, '..', 'src/lib/tutor/voice/sentence-board.ts'), 'utf8').includes('fragmentSpliceCorrectionCard'), 'no splice path');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

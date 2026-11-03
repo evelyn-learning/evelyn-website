@@ -17,7 +17,7 @@ import { emptyTurnFallbackLine, silentTurnFallbackLine, lastShowSentenceOf, sile
 import { pendingAnswerVocabularyFor, countsAsNoiseCancel } from '@/lib/tutor/voice/pending-answer';
 import { shouldFinishInFlightSentence, resumeTailAfterBoundary, shouldSkipRetryAfterKill, heardTextThroughKept } from '@/lib/tutor/voice/speech-queue-boundary';
 import type { ClearSpeechQueueOptions, ClearSpeechQueueResult } from '../hooks/useOpenAIRealtime';
-import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor } from '@/lib/tutor/voice/sentence-board';
+import { planSentenceBoard, composeSpokenText, sentenceOnCurrentPage, sentenceAnchorIndex, autoSentenceCardsToReplace, sentenceOnBoardPage, autoCardIdsOnCurrentPage, currentBoardPage, sentenceCardIdOnCurrentPage, duplicateSentenceAction, sentenceBoardBlockedByRenders, isStudentSentenceCard, boardOffersChoices, autoCardAnchor, judgeNoteCardSourceAllowed } from '@/lib/tutor/voice/sentence-board';
 import { WRAP_LINE, goodbyeLine, decideWrapLine } from '@/lib/tutor/voice/timebox-lines';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
@@ -473,7 +473,7 @@ import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
 // Verdict/counting round (2026-10-04): praise-then-exclusion, the judge's
 // structured verdict, short answers, questions/self-reports.
 import { decidePraiseExclusion, buildPraiseExclusionNote, isPraiseExclusionNote, shouldPlantPraiseExclusionNote, praiseExclusionNoteExpired, type PraiseExclusionNoteRecord } from '@/lib/tutor/voice/praise-exclusion';
-import { decideJudgeIssue, planJudgeNote, buildPlannedJudgeNote, isSuppressibleDenial, describeJudgeIssueDecision, readJudgeTurnContext, describePrecheckDisagreement, formatJudgeAnswerCheck, judgeNoteMootByCorrectionCard } from '@/lib/tutor/voice/judge-issue-decision';
+import { decideJudgeIssue, planJudgeNote, buildPlannedJudgeNote, isSuppressibleDenial, describeJudgeIssueDecision, readJudgeTurnContext, describePrecheckDisagreement, formatJudgeAnswerCheck, judgeNoteMootByCorrectionCard, readJudgeIssueFields } from '@/lib/tutor/voice/judge-issue-decision';
 import { studentTurnShape, isHedgedValueAnswer } from '@/lib/tutor/orchestrator/student-turn-shape';
 import {
   TUTOR_PRAISE_EXCLUSION_KILL,
@@ -5462,7 +5462,7 @@ export function VoiceTutorRealtime({
   // planted it, and the brain call whose sentence board placed a correction
   // card of the student's sentence (-1 = none) — a false_praise note is moot
   // when the same call carried the correction (judgeNoteMootByCorrectionCard).
-  const judgeNotePlantRef = useRef<{ note: string; kind: string; callSeq: number } | null>(null);
+  const judgeNotePlantRef = useRef<{ note: string; kind: string; callSeq: number; /** Task 39 fix round 1 (I-1) */ issueKinds?: (string | undefined)[] } | null>(null);
   const correctionCardCallSeqRef = useRef(-1);
   // 2026-10-03: text of the last DETERMINISTIC note planted in the slot above
   // (relation-step witness note; answer-dispute note decided by exact
@@ -20981,7 +20981,7 @@ export function VoiceTutorRealtime({
                       onDebugEvent?.('judge_correction_note_dropped', 'turn carried the correction');
                     } else if (advisoryCorrectionNote) {
                       pendingJudgeCorrectionNoteRef.current = advisoryCorrectionNote;
-                      judgeNotePlantRef.current = { note: advisoryCorrectionNote, kind: advisoryNotePlan?.mode ?? '', callSeq: brainCallSeqRef.current };
+                      judgeNotePlantRef.current = { note: advisoryCorrectionNote, kind: advisoryNotePlan?.mode ?? '', callSeq: brainCallSeqRef.current, issueKinds: noteworthyAdvisoryIssues.map((i) => readJudgeIssueFields(i).issueKind) };
                       armCorrectionNoteDeadline();   // R50 T3
                       onDebugEvent?.('judge_correction_note_planted', `advisory: ${noteworthyAdvisoryIssues[0].claim.slice(0, 60)}`);
                     }
@@ -22523,6 +22523,10 @@ export function VoiceTutorRealtime({
           // the checked sentence unquoted) is a model sentence and gets a card.
           const boardPc = verdictPrecheckRef.current;
           const boardStudentCorrect = precheckDecides(boardPc) && boardPc.verdict === 'correct' && boardPc.answers !== 'other_part' && boardPc.answers !== 'neither';
+          // Task 39 fix round 1 (I-1): this call's judge note, when its kind is a correction.
+          const boardNotePlant = judgeNotePlantRef.current;
+          const boardCorrectionNote = boardNotePlant && boardNotePlant.callSeq === brainCallSeqRef.current
+            && judgeNoteCardSourceAllowed(boardNotePlant.kind, boardNotePlant.issueKinds) ? boardNotePlant.note : null;
           const cards = planSentenceBoard({
             tutorText: fullText,
             // Task 25 §C2: a quote that translates another script's span is no card.
@@ -22559,9 +22563,10 @@ export function VoiceTutorRealtime({
             ...(TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT ? { levelCheckVerdict: boardPc?.verdict ?? null } : {}),
             // Task 39 §C2 (voice run 20, 431 s): the check / judge marked a correction —
             // a turn with no full corrected sentence cards it from a quoted fragment / the note.
+            // Fix round 1 (I-1): only a correction-kind judge note is a card source.
             correctionMarked: boardPc?.verdict === 'partly_correct' || boardPc?.verdict === 'incorrect'
-              || judgeNotePlantRef.current?.callSeq === brainCallSeqRef.current,
-            correctionNote: judgeNotePlantRef.current?.callSeq === brainCallSeqRef.current ? judgeNotePlantRef.current.note : null,
+              || boardCorrectionNote !== null,
+            correctionNote: boardCorrectionNote,
             // Task 28 §A: a level-check sentence the tutor recast with no correction card of it.
             onLevelCheckSkipped: (reason, sentence) => onDebugEvent?.('sentence_board_levelcheck_skipped', `${reason} "${sentence.slice(0, 60)}"`),
             // Task 23 §E (GDI run 11, 1063 s): the board problem is a choice
