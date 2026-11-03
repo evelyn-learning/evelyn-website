@@ -1411,7 +1411,11 @@ export function planSentenceBoard(input: {
   // part, a student answer the tutor's reply does not correct (no correction
   // card, cue or fix follow-up; the check did not find it wrong) is carded as
   // the student's own sentence — source 'checked', once per answer.
-  if (input.conversationPart === true && input.studentLast && input.studentVerdict !== 'incorrect'
+  // Fix round 1 (I-6): only an answer the check marks CORRECT, or — the
+  // check silent — one the tutor's reply affirms; a partly_correct answer
+  // is carded only in its corrected form (the correction card).
+  if (input.conversationPart === true && input.studentLast
+    && (input.studentVerdict === 'correct' || ((input.studentVerdict ?? null) === null && turnAffirmsStudent(input.tutorText ?? '')))
     && !classified.some((c) => c.q.kind === 'correction')
     && !hasCorrectionCue(input.tutorText) && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '') && !isMetaOfferTurn(input.prevTutorText)) {
     const own = cardableStudentSentence(input.studentLast);

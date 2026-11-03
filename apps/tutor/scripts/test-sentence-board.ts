@@ -1592,11 +1592,13 @@ test('38 §E: the 794 s ack line gets no card; a model sentence still does', () 
 });
 
 // ── Task 38 §I3 (voice run 19, 933 / 948 / 962 s): conversation answers carded ──
-test('38 I3: in a conversation part an uncorrected answer is carded (checked); a corrected one / a wrong one / other parts are not', () => {
+test('38 I3 (fix round 1 I-6): in a conversation part a CORRECT (or silently checked and affirmed) answer is carded; partly_correct / wrong / other parts are not', () => {
   const t933 = 'The climate change donation collection project, Praveen. What was your role in that project, and what was the biggest challenge?';
   const s933 = 'I am proud of the climate change donation collection project.';
-  assert.deepEqual(planSentenceBoard38({ tutorText: t933, studentLast: s933, renderedThisTurn: false, conversationPart: true, studentVerdict: null }), [{ sentence: s933, kind: 'model', emphasis: [], source: 'checked' }]);
-  assert.deepEqual(planSentenceBoard38({ tutorText: 'Collecting donations from people, so you handled the money side. What was the biggest challenge?', studentLast: 'Uh, my role was to collect money from people.', renderedThisTurn: false, conversationPart: true, studentVerdict: 'partly_correct' }).map((c) => c.sentence), ['My role was to collect money from people.']);
+  assert.deepEqual(planSentenceBoard38({ tutorText: t933, studentLast: s933, renderedThisTurn: false, conversationPart: true, studentVerdict: 'correct' }), [{ sentence: s933, kind: 'model', emphasis: [], source: 'checked' }]);
+  assert.deepEqual(planSentenceBoard38({ tutorText: 'That is a clear sentence. What was your role?', studentLast: s933, renderedThisTurn: false, conversationPart: true, studentVerdict: null }).map((c) => c.sentence), [s933], 'check silent + the tutor affirms');
+  assert.deepEqual(planSentenceBoard38({ tutorText: t933, studentLast: s933, renderedThisTurn: false, conversationPart: true, studentVerdict: null }), [], 'check silent, no affirmation');
+  assert.deepEqual(planSentenceBoard38({ tutorText: 'Osaka sounds fun. What did you do there?', studentLast: 'I have went to Osaka last month.', renderedThisTurn: false, conversationPart: true, studentVerdict: 'partly_correct' }), [], 'a partly_correct answer is never a model card');
   assert.deepEqual(planSentenceBoard38({ tutorText: t933, studentLast: s933, renderedThisTurn: false }), [], 'not a conversation part');
   assert.deepEqual(planSentenceBoard38({ tutorText: t933, studentLast: s933, renderedThisTurn: false, conversationPart: true, studentVerdict: 'incorrect' }), [], 'the check found it wrong');
   const corrected = planSentenceBoard38({ tutorText: 'A more natural way to say this is: "I was responsible for communicating with our customers." Can you try that sentence again?', studentLast: 'I was responsible to communicate with our customers.', renderedThisTurn: false, conversationPart: true, studentVerdict: 'partly_correct' });
