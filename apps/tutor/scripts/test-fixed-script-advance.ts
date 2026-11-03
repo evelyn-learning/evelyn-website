@@ -27,6 +27,8 @@ import {
   fixedScriptCloseReason, fixedScriptCloseForced, FIXED_SCRIPT_CLOSE_NOTE, FIXED_SCRIPT_CLOSE_GRACE_TURNS,
   segmentNeedsAutoCard, problemStatementOnBoard, PROBLEM_CARD_TOOLS,
 } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptCloseNote, moveOnThenCloseTranscript, MOVE_ON_THEN_CLOSE_NOTE, fixedScriptCloseNote, FIXED_SCRIPT_CLOSE_NOTE as FS_CLOSE_NOTE_40 } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { NO_ATTEMPT_MOVE_ON_NOTE as NA_NOTE_40 } from '../src/lib/tutor/voice/correct-retry';
 import { fixedScriptAnnouncedAdvanceLead, FIXED_SCRIPT_MORE_OF_PART_LEAD, fixedScriptContinueDirective, FIXED_SCRIPT_LEVEL_CONTINUE_DIRECTIVE, isFixedScriptContinueDirective, fixedScriptChoiceMenuClause, FIXED_SCRIPT_CHOICE_MENU_CLAUSE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import {
   segmentTransitionKind, fixedScriptPartLabel, fixedScriptTransitionDecision, fixedScriptOfferNote, fixedScriptBridgeClause,
@@ -1494,6 +1496,29 @@ test('39 r1 R26-3: "Yes." to any "one more X, or move on?" choice = one more', (
   const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
   assert.ok(vtr.includes('acceptanceHandled: offerAcceptedThisTurn || !!offerAcceptedFirstNote,'));
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_LONE_YES_ANY_CHOICE = process\.env\.NEXT_PUBLIC_TUTOR_LONE_YES_ANY_CHOICE !== 'off';/);
+});
+
+// Task 40 §C (bot run r28, 1230 s): the move-on note and the close note on one turn.
+test('40 §C: move-on + close on one turn → the model answer first, then the close', () => {
+  const close = fixedScriptCloseNote(['Can you tell me the difference between "I have worked here for five years" and "I worked here five years ago"?']);
+  assert.equal(isFixedScriptCloseNote(close), true, 'the answered-questions variant');
+  assert.equal(isFixedScriptCloseNote(FS_CLOSE_NOTE_40), true);
+  assert.equal(isFixedScriptCloseNote(`[runtime note] other.\n\n${FS_CLOSE_NOTE_40}`), true, 'merged with another note');
+  assert.equal(isFixedScriptCloseNote(NA_NOTE_40), false);
+  assert.equal(isFixedScriptCloseNote(null), false);
+  const before = `${NA_NOTE_40}\n\nLast month I made a presentation for a new product launch.`;
+  const out = moveOnThenCloseTranscript(before, close);
+  assert.ok(!out.includes(NA_NOTE_40), 'the "move to the next step" note is replaced');
+  const iModel = out.indexOf(MOVE_ON_THEN_CLOSE_NOTE);
+  const iClose = out.indexOf(close);
+  const iStudent = out.indexOf('Last month I made a presentation');
+  assert.ok(iModel === 0 && iClose > iModel && iStudent > iClose, 'model answer, then close, then the student');
+  assert.ok(MOVE_ON_THEN_CLOSE_NOTE.indexOf('model answer') < MOVE_ON_THEN_CLOSE_NOTE.indexOf('close_session_notes'), 'the model answer clause comes first');
+  assert.ok(MOVE_ON_THEN_CLOSE_NOTE.includes('Do not ask it again'));
+  const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.ok(vtr.includes('if (TUTOR_MOVE_ON_BEFORE_CLOSE && noAttemptPinned && isFixedScriptCloseNote(deliveredRuntimeNote)) {'));
+  assert.ok(vtr.indexOf('noAttemptPinned = naLast;') < vtr.indexOf('const deliveredRuntimeNote = overlongNoteForTurn('), 'the move-on note is planted before the runtime note is delivered');
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_MOVE_ON_BEFORE_CLOSE = process\.env\.NEXT_PUBLIC_TUTOR_MOVE_ON_BEFORE_CLOSE !== 'off';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -10,7 +10,7 @@
  */
 import type { LessonPlan, Segment, SegmentTransition } from './types';
 import { withSilentClause, withRetryStyle } from '../voice/output-budget';
-import { isCorrectionTurn, expectedRepeatFor } from '../voice/correct-retry';
+import { isCorrectionTurn, expectedRepeatFor, NO_ATTEMPT_MOVE_ON_NOTE } from '../voice/correct-retry';
 import { boardOffersChoices } from '../voice/sentence-board';
 import { sentenceAsksStudent, splitSentences, stripMarkdownEmphasis } from '../question-gist-text';
 
@@ -158,6 +158,23 @@ export function fixedScriptCloseNote(answeredInPart: readonly string[] | null | 
   if (!qs.length) return FIXED_SCRIPT_CLOSE_NOTE;
   const clause = ` Already covered in this part — asked and answered, do not ask again: ${qs.map((q) => `"${q.replace(/"/g, "'")}"`).join('; ')}.`;
   return FIXED_SCRIPT_CLOSE_NOTE.replace(' Apply this silently; never mention this note.]', `${clause} Apply this silently; never mention this note.]`);
+}
+// Task 40 §C (bot run r28, 1230 s: the summary turn after a non-answer was
+// "Haruto, the presentation sentence again, so let's stay on the question."
+// — no model answer — and the engine then forced the close). When the
+// no-attempt / neither move-on note and the close note land on the same
+// turn, the move-on note's "move to the next step" would fight the close:
+// both are replaced by MOVE_ON_THEN_CLOSE_NOTE first (the model answer,
+// then the close), with the close note right after it. Pure.
+const CLOSE_NOTE_HEAD = FIXED_SCRIPT_CLOSE_NOTE.slice(0, FIXED_SCRIPT_CLOSE_NOTE.indexOf(' If the student'));
+export function isFixedScriptCloseNote(note: string | null | undefined): boolean {
+  return !!note && note.includes(CLOSE_NOTE_HEAD);
+}
+export const MOVE_ON_THEN_CLOSE_NOTE = withSilentClause(
+  "[runtime note — not from the student] The student has not answered your question twice. Do not ask it again. FIRST say the model answer yourself in one sentence (put it on the board with show_sentence). THEN close the lesson as the next note says: the closing summary and close_session_notes, with no new question.]");
+export function moveOnThenCloseTranscript(runTranscript: string, closeNote: string): string {
+  const rest = runTranscript.replace(`${NO_ATTEMPT_MOVE_ON_NOTE}\n\n`, '').replace(NO_ATTEMPT_MOVE_ON_NOTE, '').trim();
+  return `${MOVE_ON_THEN_CLOSE_NOTE}\n\n${closeNote}\n\n${rest}`;
 }
 /** Tutor turns after the close note without close_session_notes before the
  *  client closes the lesson itself. */

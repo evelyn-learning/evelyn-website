@@ -1377,3 +1377,8 @@ export const TUTOR_LONE_YES_ANY_CHOICE = process.env.NEXT_PUBLIC_TUTOR_LONE_YES_
  *  it dropped that turn. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_NEITHER_STREAK_MOVE_ON=off. */
 export const TUTOR_NEITHER_STREAK_MOVE_ON = process.env.NEXT_PUBLIC_TUTOR_NEITHER_STREAK_MOVE_ON !== 'off';
+
+/** Task 40 §C (bot run r28, 1230 s): the move-on note and the close note on
+ *  the same turn — the model answer first, then the close. Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_MOVE_ON_BEFORE_CLOSE=off. */
+export const TUTOR_MOVE_ON_BEFORE_CLOSE = process.env.NEXT_PUBLIC_TUTOR_MOVE_ON_BEFORE_CLOSE !== 'off';
