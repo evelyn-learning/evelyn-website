@@ -1144,3 +1144,17 @@ const BARE_MOVE_ON_RE = /^\s*(?:(?:okay|ok|so|now|alright|all right|right|good|g
 export function isBareMoveOn(sentence: string | null | undefined): boolean {
   return BARE_MOVE_ON_RE.test(sentence ?? '');
 }
+
+/** Task 39 fix round 1 (I-3): the "advance already applied this turn" marker
+ *  (VTR inferredAdvanceThisTurnRef) after a killed attempt — the pointer moved
+ *  this turn (the brain's own advance_lesson in the killed attempt) and no
+ *  marker was set (the kill re-arm did not catch it: the page break was not
+ *  in the dropped buffer) ⇒ the moved-to segment; otherwise unchanged. The
+ *  retry's re-emitted advance_lesson({to:"next"}) is then satisfied by it,
+ *  client and route alike. Pure. */
+export function appliedAdvanceMarkerAfterKill(input: { killed: boolean; currentSegId: string | null | undefined; turnStartSegId: string | null | undefined; marker: string }): string {
+  if (input.marker || !input.killed) return input.marker;
+  const cur = input.currentSegId ?? '';
+  if (!cur || cur === (input.turnStartSegId ?? '')) return input.marker;
+  return cur;
+}

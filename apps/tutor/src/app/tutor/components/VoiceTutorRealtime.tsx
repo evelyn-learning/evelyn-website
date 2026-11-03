@@ -442,7 +442,7 @@ import {
   type PronunciationClip,
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
-import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind, fixedScriptPartLabel, offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerReaskedMovedReason, offerAcceptedReplantDue, type OfferAcceptState, fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE, FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance, type FixedScriptAdvanceVia, requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, readinessAskDropDue, wrapUpAfterMenuDropDue, offerAcceptedNoAskDue, OFFER_ACCEPTED_NO_ASK_REASON, isBareMoveOn } from '@/lib/tutor/lesson-plan/fixed-script';
+import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind, fixedScriptPartLabel, offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerReaskedMovedReason, offerAcceptedReplantDue, type OfferAcceptState, fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE, FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance, type FixedScriptAdvanceVia, requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, readinessAskDropDue, wrapUpAfterMenuDropDue, appliedAdvanceMarkerAfterKill, offerAcceptedNoAskDue, OFFER_ACCEPTED_NO_ASK_REASON, isBareMoveOn } from '@/lib/tutor/lesson-plan/fixed-script';
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS } from '@/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -12969,6 +12969,8 @@ export function VoiceTutorRealtime({
               && getSegment(skipPlan, skipFromSegId)?.kind !== 'recap';
             if (skipLeavesHomework) onDebugEvent?.('advance_homework_guard', `skip button — "${skipFromSegId}" left incomplete, cursor → "${skipNext}"`);
             applyResolvedAdvance(skipPlan, skipFromSegId, skipNext, skipLeavesHomework ? { leaveIncomplete: skipFromSegId } : undefined);
+            // Task 39 fix round 1 (I-3): a re-emitted advance_lesson({to:"next"}) this turn is satisfied by this move.
+            if (TUTOR_RETRY_ADVANCE_ALREADY_APPLIED) inferredAdvanceThisTurnRef.current = skipNext;
             plantAdvanceEntryNote(skipNext, 'skip');
             // Replace the action-INSTRUCTION marker with a state FACT.
             // Still bracketed ⇒ TranscriptView strips it from the visible
@@ -13021,6 +13023,8 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('typed_advance_already_here', `"${advFrom}" named="${advanceRequest.named}"`);
           } else if (advTarget && advTarget !== advFrom) {
             applyResolvedAdvance(advPlan, advFrom, advTarget);
+            // Task 39 fix round 1 (I-3): a re-emitted advance_lesson({to:"next"}) this turn is satisfied by this move.
+            if (TUTOR_RETRY_ADVANCE_ALREADY_APPLIED) inferredAdvanceThisTurnRef.current = advTarget;
             plantAdvanceEntryNote(advTarget, 'typed');
             const advSeg = getSegment(advPlan, advTarget);
             const advLo = advPlan.los?.find((lo) => advTarget.startsWith(`${lo.id}-`));
@@ -13057,6 +13061,8 @@ export function VoiceTutorRealtime({
           }) === 'advance') {
             const mcKind = mcPlan.segments.find((sg) => sg.id === mcNext)?.kind ?? 'segment';
             applyResolvedAdvance(mcPlan, mcSeg, mcNext);
+            // Task 39 fix round 1 (I-3): a re-emitted advance_lesson({to:"next"}) this turn is satisfied by this move.
+            if (TUTOR_RETRY_ADVANCE_ALREADY_APPLIED) inferredAdvanceThisTurnRef.current = mcNext;
             plantAdvanceEntryNote(mcNext, 'menu_unpicked');
             if (pendingAdvanceNewPageRef.current?.segmentId === mcNext) pendingAdvanceNewPageRef.current.cardOnFlush = true;
             const mcMerged = mergePendingRuntimeNote(
@@ -13086,6 +13092,8 @@ export function VoiceTutorRealtime({
         if (tg.action === 'advance' && tgPlan && tgSeg) {
           lessonTimeGuardFiredRef.current = true;
           applyResolvedAdvance(tgPlan, tgSeg, tg.to);
+          // Task 39 fix round 1 (I-3): a re-emitted advance_lesson({to:"next"}) this turn is satisfied by this move.
+          if (TUTOR_RETRY_ADVANCE_ALREADY_APPLIED) inferredAdvanceThisTurnRef.current = tg.to;
           if (pendingAdvanceNewPageRef.current?.segmentId === tg.to) pendingAdvanceNewPageRef.current.cardOnFlush = true;
           plantAdvanceEntryNote(tg.to, 'lesson_time');
           const tgMerged = mergePendingRuntimeNote(
@@ -21445,6 +21453,12 @@ export function VoiceTutorRealtime({
         // words, or the runtime marker): on a retry this message IS the
         // brain's <student_said>, and without their words in it a retry
         // answered "I don't know" with "Yes — that's exactly the idea".
+        // Task 39 fix round 1 (I-3): the killed attempt's own advance_lesson moved the
+        // pointer and the kill re-arm did not mark it — the retry's re-emitted
+        // "next" is satisfied by that move (client absorb + route "already there").
+        if (TUTOR_RETRY_ADVANCE_ALREADY_APPLIED) {
+          inferredAdvanceThisTurnRef.current = appliedAdvanceMarkerAfterKill({ killed: attemptKilled, currentSegId: currentSegmentIdRef.current, turnStartSegId: turnStartSegmentId, marker: inferredAdvanceThisTurnRef.current });
+        }
         runTranscript = buildValidatorFeedback({
           rejections: rejectionsThisAttempt,
           attemptKilled,
@@ -21644,6 +21658,8 @@ export function VoiceTutorRealtime({
           const jumpPlan = lessonPlanRef.current;
           if (jumpPlan.segments.some((s) => s.id === pendingJump.segId) && currentSegmentIdRef.current !== pendingJump.segId) {
             applyResolvedAdvance(jumpPlan, currentSegmentIdRef.current, pendingJump.segId, { seamMode: true });
+            // Task 39 fix round 1 (I-3): a re-emitted advance_lesson({to:"next"}) this turn is satisfied by this move.
+            if (TUTOR_RETRY_ADVANCE_ALREADY_APPLIED) inferredAdvanceThisTurnRef.current = pendingJump.segId;
             onDebugEvent?.('agenda_jump_inferred', `${pendingJump.label} → ${pendingJump.segId}`);
           }
         }

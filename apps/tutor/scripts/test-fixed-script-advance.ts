@@ -52,7 +52,7 @@ import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, les
 import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
-import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence, offerAcceptedNoAskDue, isBareMoveOn, OFFER_ACCEPTED_NO_ASK_REASON } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence, offerAcceptedNoAskDue, isBareMoveOn, OFFER_ACCEPTED_NO_ASK_REASON, appliedAdvanceMarkerAfterKill } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
@@ -1246,8 +1246,9 @@ test('34 r2 R13-1: a typed / skip / menu-cap advance plants the new part\'s entr
   assert.equal(entryNoteDueAfterAdvance({ fixedScript: true, via: 'auto', lessonClosed: false }), false, 'the auto advance FACT note carries the entry');
   assert.equal(entryNoteDueAfterAdvance({ fixedScript: false, via: 'typed', lessonClosed: false }), false);
   assert.equal(entryNoteDueAfterAdvance({ fixedScript: true, via: 'typed', lessonClosed: true }), false);
-  pin(VTR, /applyResolvedAdvance\(advPlan, advFrom, advTarget\);\s*plantAdvanceEntryNote\(advTarget, 'typed'\);/);
-  pin(VTR, /applyResolvedAdvance\(mcPlan, mcSeg, mcNext\);\s*plantAdvanceEntryNote\(mcNext, 'menu_unpicked'\);/);
+  // Task 39 fix round 1 (I-3): the applied-advance marker sits between (window widened).
+  pin(VTR, /applyResolvedAdvance\(advPlan, advFrom, advTarget\);[\s\S]{0,260}plantAdvanceEntryNote\(advTarget, 'typed'\);/);
+  pin(VTR, /applyResolvedAdvance\(mcPlan, mcSeg, mcNext\);[\s\S]{0,260}plantAdvanceEntryNote\(mcNext, 'menu_unpicked'\);/);
   pin(VTR, /plantAdvanceEntryNote\(skipNext, 'skip'\);/);
   // the typed advance runs before this turn's note assembly, which consumes the pending entry note
   const typedAt = VTR.indexOf("plantAdvanceEntryNote(advTarget, 'typed');");
@@ -1321,7 +1322,7 @@ test('36 §B: lessonTimeGuardDecision — elapsed vs plan minutes; the summary i
   assert.deepEqual(lessonTimeGuardDecision({ plan: notFixed, segmentId: 'past-simple', elapsedMs: 99 * min, alreadyFired: false }), { action: 'none' }, 'fixed scripts only');
   assert.match(lessonTimeGuardLead('Conversation', 'Summary'), /^Time is short — .+ ALREADY moved to "Summary" .+ Keep the summary to its key points and close\.$/);
   pin(VTR, /const tg = lessonTimeGuardDecision\(\{ plan: tgPlan, segmentId: tgSeg, elapsedMs:/);
-  pin(VTR, /applyResolvedAdvance\(tgPlan, tgSeg, tg\.to\);[\s\S]{0,200}plantAdvanceEntryNote\(tg\.to, 'lesson_time'\);/);
+  pin(VTR, /applyResolvedAdvance\(tgPlan, tgSeg, tg\.to\);[\s\S]{0,460}plantAdvanceEntryNote\(tg\.to, 'lesson_time'\);/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_LESSON_TIME_GUARD = process\.env\.NEXT_PUBLIC_TUTOR_LESSON_TIME_GUARD !== 'off';/);
 });
 
@@ -1439,6 +1440,19 @@ test('39 §E: the accepted-offer turn with no ask is killed + retried; "Let\'s m
   assert.ok(vtr.includes('!(TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn) && ((sqPersonalPinned'), 'no R9-3 move-on line that turn');
   assert.ok(vtr.includes("TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn && isBareMoveOn(updatedSentence)"));
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_OFFER_ACCEPTED_ASK = process\.env\.NEXT_PUBLIC_TUTOR_OFFER_ACCEPTED_ASK !== 'off';/);
+});
+
+// Task 39 fix round 1 (I-3): every advance-commit path marks "advance already applied this turn".
+test('39 r1 I-3: the applied-advance marker on every commit path', () => {
+  assert.equal(appliedAdvanceMarkerAfterKill({ killed: true, currentSegId: 'pronunciation', turnStartSegId: 'open-conversation', marker: '' }), 'pronunciation', 'the killed attempt moved the pointer, not re-armed');
+  assert.equal(appliedAdvanceMarkerAfterKill({ killed: true, currentSegId: 'open-conversation', turnStartSegId: 'open-conversation', marker: '' }), '', 'no move');
+  assert.equal(appliedAdvanceMarkerAfterKill({ killed: false, currentSegId: 'pronunciation', turnStartSegId: 'open-conversation', marker: '' }), '', 'not killed');
+  assert.equal(appliedAdvanceMarkerAfterKill({ killed: true, currentSegId: 'pronunciation', turnStartSegId: 'open-conversation', marker: 'pronunciation' }), 'pronunciation', 'kept');
+  const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  for (const at of ['skipNext', 'advTarget', 'mcNext', 'tg.to', 'pendingJump.segId']) {
+    assert.ok(vtr.includes(`if (TUTOR_RETRY_ADVANCE_ALREADY_APPLIED) inferredAdvanceThisTurnRef.current = ${at};`), at);
+  }
+  assert.ok(vtr.includes('inferredAdvanceThisTurnRef.current = appliedAdvanceMarkerAfterKill({ killed: attemptKilled, currentSegId: currentSegmentIdRef.current, turnStartSegId: turnStartSegmentId, marker: inferredAdvanceThisTurnRef.current });'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
