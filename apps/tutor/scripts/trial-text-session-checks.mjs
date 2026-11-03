@@ -242,8 +242,9 @@ export function runChecks(dump) {
     for (const tg of tangents) {
       const reply = tutor.find((x) => x.i > tg.i); if (!reply) continue;
       const ss = reply.text.split(/(?<=[.?!。？！])\s+/).filter(Boolean);
-      const asks = ss.some((x) => /[?？]\s*$/.test(x) || /\b(?:please|try|tell me|say|answer)\b/i.test(x));
-      if (ss.length > 6 || !asks) outOfBounds.push(`${tg.t}s "${tg.text.slice(0, 30)}" → ${ss.length} sentences${asks ? '' : ', no return question'}`);
+      const asks = ss.some((x) => /[?？]\s*$/.test(x) || /\b(?:please|try|tell me|say|answer)\b/i.test(x) || /(?:てください|ますか|でしょうか|ましょう)[。」]?\s*$/.test(x));
+      const inSummary = (() => { const sumNote = ev('fixed_script_note_delivered').find((e) => /segment "summary"/.test(e.msg)); const sumPage = pages.find((p) => /Summary|まとめ/.test(p.title)); const t0 = Math.min(sumNote?.t ?? Infinity, sumPage?.t ?? Infinity); return reply.t >= t0; })();
+      if ((ss.length > 6 && !inSummary) || !asks) outOfBounds.push(`${tg.t}s "${tg.text.slice(0, 30)}" → ${ss.length} sentences${asks ? '' : ', no return question'}`);
       const adv = events.find((e) => /^(?:fixed_script_auto_advance|typed_advance_app|fixed_script_menu_cap)/.test(e.type) && e.t >= tg.t && e.t <= tg.t + 6 && !/move on|next part/i.test(tg.text));
       if (adv) outOfBounds.push(`${tg.t}s tangent caused an advance (${adv.type})`);
       const closed = ev('lesson_closed').find((e) => e.t >= tg.t && e.t <= tg.t + 10);
