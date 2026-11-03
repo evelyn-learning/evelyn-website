@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Activity, Database, HardDrive, Server, Cpu, RefreshCw, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Activity, Database, HardDrive, Server, Cpu, RefreshCw, CheckCircle2, AlertTriangle, XCircle, ChevronDown } from 'lucide-react';
+import { MemoryPanel, DiskPanel, useBreakdown } from './HealthBreakdown';
 
 interface HealthData {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -15,7 +16,11 @@ interface HealthData {
     used: number;
     total: number;
     percentage: number;
+    available?: number;
+    swapUsed?: number;
+    swapTotal?: number;
   };
+  load?: number[];
   disk: {
     used: number;
     total: number;
@@ -34,6 +39,16 @@ export function HealthStatus() {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [openMemory, setOpenMemory] = useState(false);
+  const [openDisk, setOpenDisk] = useState(false);
+  const breakdown = useBreakdown();
+
+  // The breakdown is one scan shared by both panels; fetch it the first time either opens.
+  const openPanel = (which: 'memory' | 'disk') => {
+    const next = which === 'memory' ? !openMemory : !openDisk;
+    (which === 'memory' ? setOpenMemory : setOpenDisk)(next);
+    if (next && !breakdown.data && !breakdown.loading) breakdown.load(false);
+  };
 
   const fetchHealth = async () => {
     setIsLoading(true);
@@ -168,58 +183,72 @@ export function HealthStatus() {
             </span>
           </div>
 
-          {/* Memory */}
+          {/* Memory — click to expand per-process breakdown */}
           <div className="px-3 py-2 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm text-gray-600 flex items-center gap-2">
-                <Cpu className="w-4 h-4" />
-                Memory
-              </span>
-              <span className="text-sm text-gray-700">
-                {formatSize(health.memory.used)} / {formatSize(health.memory.total)}
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full ${
-                  health.memory.percentage > 90
-                    ? 'bg-red-500'
-                    : health.memory.percentage > 70
-                    ? 'bg-yellow-500'
-                    : 'bg-green-500'
-                }`}
-                style={{ width: `${health.memory.percentage}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Disk Space */}
-          {health.disk && health.disk.total > 0 && (
-            <div className="px-3 py-2 bg-gray-50 rounded-lg">
+            <button onClick={() => openPanel('memory')} className="w-full text-left" aria-expanded={openMemory} title="Show what is using memory">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm text-gray-600 flex items-center gap-2">
-                  <HardDrive className="w-4 h-4" />
-                  Disk Space
+                  <Cpu className="w-4 h-4" />
+                  Memory
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${openMemory ? 'rotate-180' : ''}`} />
                 </span>
                 <span className="text-sm text-gray-700">
-                  {formatSize(health.disk.used)} / {formatSize(health.disk.total)}
+                  {formatSize(health.memory.used)} / {formatSize(health.memory.total)}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full ${
-                    health.disk.percentage > 90
+                    health.memory.percentage > 90
                       ? 'bg-red-500'
-                      : health.disk.percentage > 80
+                      : health.memory.percentage > 70
                       ? 'bg-yellow-500'
                       : 'bg-green-500'
                   }`}
-                  style={{ width: `${health.disk.percentage}%` }}
+                  style={{ width: `${health.memory.percentage}%` }}
                 />
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {formatSize(health.disk.available)} available
-              </div>
+              {health.memory.available !== undefined && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {formatSize(health.memory.available)} available
+                  {health.memory.swapTotal ? ` · swap ${formatSize(health.memory.swapUsed ?? 0)} / ${formatSize(health.memory.swapTotal)}` : ''}
+                </div>
+              )}
+            </button>
+            {openMemory && <MemoryPanel data={breakdown.data} loading={breakdown.loading} error={breakdown.error} onReload={breakdown.load} />}
+          </div>
+
+          {/* Disk Space — click to expand grouped usage */}
+          {health.disk && health.disk.total > 0 && (
+            <div className="px-3 py-2 bg-gray-50 rounded-lg">
+              <button onClick={() => openPanel('disk')} className="w-full text-left" aria-expanded={openDisk} title="Show what is using disk space">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-gray-600 flex items-center gap-2">
+                    <HardDrive className="w-4 h-4" />
+                    Disk Space
+                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${openDisk ? 'rotate-180' : ''}`} />
+                  </span>
+                  <span className="text-sm text-gray-700">
+                    {formatSize(health.disk.used)} / {formatSize(health.disk.total)}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${
+                      health.disk.percentage > 90
+                        ? 'bg-red-500'
+                        : health.disk.percentage > 80
+                        ? 'bg-yellow-500'
+                        : 'bg-green-500'
+                    }`}
+                    style={{ width: `${health.disk.percentage}%` }}
+                  />
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {formatSize(health.disk.available)} available
+                </div>
+              </button>
+              {openDisk && <DiskPanel data={breakdown.data} loading={breakdown.loading} error={breakdown.error} onReload={breakdown.load} />}
             </div>
           )}
 
@@ -230,11 +259,16 @@ export function HealthStatus() {
                 <Server className="w-4 h-4" />
                 Server
               </span>
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-gray-700 text-right">
                 {health.server.hostname}
                 <span className="text-xs text-gray-500 ml-2">
                   ({health.server.platform}, {health.server.cpuCores} cores)
                 </span>
+                {health.load && (
+                  <span className="block text-xs text-gray-500" title="Load average 1 / 5 / 15 min">
+                    load {health.load.map((l) => l.toFixed(2)).join(' / ')}
+                  </span>
+                )}
               </span>
             </div>
           )}
