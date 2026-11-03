@@ -180,7 +180,7 @@ const fromPool = (key) => {
 };
 const OFFER_RE = /\b(?:one more|another|more practice|again|once more)\b[^.?!]*\b(?:move on|moving on|go on|continue|next)\b|\b(?:move on|go on|continue)\b[^.?!]*\b(?:one more|another|more practice)\b|もう一/i;
 const MENU_RE = /\b[1-4]\)/g;
-const CLOSE_RE = /\bthank you for today'?s lesson|\bthank you for your hard work today|レッスンは(?:これで|ここで)?終わり|今日のレッスンは終わり|\bwrap up here\b|\bthat'?s (?:all|it) for today|\bthat'?s our time|\bour time (?:is|has) (?:up|finished)|\bsee you (?:next|soon|again|later|tomorrow)|\bsee you[.!]|お疲れ|\bgood-?bye\b|have a (?:good|nice|great) (?:day|evening|night)|\bsession is over\b|time is up|\bwell done today\b|finished for today/i;
+const CLOSE_RE = /\bthank you for today'?s lesson|\bthank you for your hard work today|レッスンは(?:これで|ここで)?終わり|今日のレッスンは終わり|\bwrap up here\b|\bthat'?s (?:all|it) for today|\bthat'?s our time|\bour time (?:is|has) (?:up|finished)|\bsee you (?:next|soon|again|later|tomorrow)|\bsee you[.!]|お疲れ(?:様|さま)でした|\bgood-?bye\b|have a (?:good|nice|great) (?:day|evening|night)|\bsession is over\b|time is up|\bwell done today\b|finished for today/i;
 const REPEAT_RE = /\b(?:repeat|say|try|read)\b[^.?!]*(?:after me|once more|again|that (?:sentence|one)|it (?:once more|again)|for me)|\bcould you (?:say|try)\b/i;
 
 function decide(text) {
