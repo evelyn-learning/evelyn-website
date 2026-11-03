@@ -1,5 +1,12 @@
 # GDI trial lesson — day-4 handoff (written 2026-11-03 ~16:30Z after Praveen's voice run 21)
 
+> **Day-4 state (written 2026-11-03 ~19:59Z, Fable session):** Task 43 B–M + F are BUILT on `gdi-trial-lesson` (HEAD `2388ae92`, 12 commits since ffd0dc06; gate 277/279 baseline, tsc clean; NOT pushed, NOT deployed — :3009 still 58765b31). The nine harness checks (§4) are in `apps/tutor/scripts/trial-text-session-checks.mjs`; run 21 scores 10 FAIL / 1 WARN on them. Bot runs on the dev server: r41 straight 0 FAIL · r42 wild 3 FAIL (fixed) · r43 pron 0 FAIL · r44 second-visit 3 FAIL (fixed) · r45 straight = clean-streak run 1 on the final line (result in the ledger). A fresh-context whole-branch review (fable) found C-1 + I-2…I-6; all fixed in `2388ae92`; minors 7/9/10/11 deferred (see the ledger 20:xx). Day-4 spend ≈ $12 of ≈ $60.
+>
+> **Decisions still Praveen's:** A (returning learner: spoken "I remember your level" line and/or a "skipped" rail chip — not built), F (built DEFAULT ON — the hold adds up to ~2.5 s before the first audio on transition / offer / third-repeat / move-on / first required-phrase turns; `NEXT_PUBLIC_TUTOR_VALIDATOR_TTS_HOLD=off` to drop it), N (Japanese-first pronunciation score line — unchanged, note only).
+> **New flags (all default ON, `!== 'off'`):** TUTOR_RECAP_CORRECTION_CARDS_ONLY (M), TUTOR_PART_ANNOUNCE_DEDUPE (C), TUTOR_ANSWERED_CARD_REASK_DROP (D), TUTOR_CORRECTION_CARD_HOLDS_ADVANCE (G2), TUTOR_CORRECTION_CARD_ON_NEW_PAGE (J), TUTOR_CORRECTION_REPLACES_MODEL_CARD (I), TUTOR_VALIDATOR_TTS_HOLD (F). H/E/G1/L/D-narration/B are core sentence-board / meta-narration rules under the existing gates (language lessons / fixed scripts).
+> **Residual (not fixed):** a kill on a turn where the BRAIN advanced mid-turn (not prone at attempt start — r44 101 s) still cuts audibly; the voice-verdict cut on a closing turn can leave a question after the close tool (r43 1275 s, late-verdict class); the harness probe-loop check counts a bot's off-target answers as answers (r44 518–561 s).
+> **Next:** Praveen's voice run → his "deploy" → §1 deploy steps (merge origin/main first) → tester links + TESTER-GUIDE → Josh's reply-6 by Fri 11-06.
+
 > **For the next session:** READ THIS FIRST, then the ledger. Resume with superpowers:subagent-driven-development on Task 43 below. Do not re-run earlier tasks (31–42 are complete and approved; see the ledger).
 
 ## 1. Where things stand
