@@ -29,10 +29,13 @@ export function emptyTurnFallbackLine(input: { pinGist: string | null | undefine
  * pending ask is re-asked (the same line as the empty-turn fallback). null
  * when neither exists, or outside language lessons. Pure.
  */
-export function silentTurnFallbackLine(input: { cardSentence: string | null | undefined; pinGist: string | null | undefined; languageLesson: boolean; bilingual: boolean }): { kind: 'card' | 'reask'; text: string } | null {
+export function silentTurnFallbackLine(input: { cardSentence: string | null | undefined; pinGist: string | null | undefined; languageLesson: boolean; bilingual: boolean; studentText?: string | null }): { kind: 'card' | 'reask'; text: string } | null {
   if (!input.languageLesson) return null;
   const card = (input.cardSentence ?? '').replace(/\s+/g, ' ').trim();
-  if (card && /[\p{L}]/u.test(card)) {
+  // Fix round 1 (m-2): a card of the student's own sentence is no "natural version" to repeat.
+  const ownKey = (x: string) => x.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  const isOwn = !!input.studentText && ownKey(card) === ownKey(input.studentText);
+  if (card && !isOwn && /[\p{L}]/u.test(card)) {
     const punctuated = /[.!?。！？]["”」’]?$/u.test(card) ? card : `${card}.`;
     return { kind: 'card', text: `Here's the natural version: ${punctuated} Please say it once more.` };
   }
@@ -50,4 +53,15 @@ export function lastShowSentenceOf(calls: ReadonlyArray<{ name: string; args: Re
 }
 
 /** Task 38 §A: tools that own a turn's speech elsewhere (advance / close / hold) — a silent turn carrying one is not given the fallback. */
-export const SILENT_TURN_STATE_TOOLS: ReadonlySet<string> = new Set(['advance_lesson', 'mark_segment_complete', 'close_session_notes', 'hold_for_student', 'propose_plan_swap', 'generate_problem', 'end_session']);
+// Fix round 1 (I-2): request_pronunciation_check (the clip is arming), set_working_level (the level-set advance has its own continuation) and resume_lesson are silent by purpose too.
+export const SILENT_TURN_STATE_TOOLS: ReadonlySet<string> = new Set(['advance_lesson', 'mark_segment_complete', 'close_session_notes', 'hold_for_student', 'propose_plan_swap', 'generate_problem', 'end_session', 'request_pronunciation_check', 'set_working_level', 'resume_lesson']);
+/** Fix round 1 (I-2): when the silent-turn fallback is due — a LANGUAGE
+ *  lesson (subject languages / fixed-script plan; never a bilingual maths
+ *  session), a student turn (not a runtime "[" turn), no pronunciation clip
+ *  armed, kept text empty, tools ran and none of them is silent by purpose.
+ *  Pure. */
+export function silentTurnFallbackDue(input: { languageLesson: boolean; transcript: string; keptText: string; toolsSeen: readonly string[]; retrySkipped: boolean; pronunciationArmed: boolean }): boolean {
+  if (!input.languageLesson || /^\s*\[/.test(input.transcript ?? '') || input.pronunciationArmed || input.retrySkipped) return false;
+  if ((input.keptText ?? '').trim() || input.toolsSeen.length === 0) return false;
+  return !input.toolsSeen.some((n) => SILENT_TURN_STATE_TOOLS.has(n));
+}

@@ -9,7 +9,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { emptyTurnFallbackLine, EMPTY_TURN_GENERIC_TYPED, silentTurnFallbackLine, lastShowSentenceOf, SILENT_TURN_STATE_TOOLS } from '../src/lib/tutor/voice/empty-turn-fallback';
+import { emptyTurnFallbackLine, EMPTY_TURN_GENERIC_TYPED, silentTurnFallbackLine, lastShowSentenceOf, SILENT_TURN_STATE_TOOLS, silentTurnFallbackDue } from '../src/lib/tutor/voice/empty-turn-fallback';
 import {
   partitionQueueAtSentenceBoundary,
   shouldFinishInFlightSentence,
@@ -199,10 +199,25 @@ test('Task 38 §A: a turn with a card but zero spoken sentences speaks (card as 
   assert.equal(silentTurnFallbackLine({ cardSentence: null, pinGist: '', languageLesson: true, bilingual: false }), null, 'nothing to say ⇒ null');
   assert.equal(silentTurnFallbackLine({ cardSentence: card, pinGist: 'x?', languageLesson: false, bilingual: false }), null, 'maths ⇒ off');
   assert.ok(SILENT_TURN_STATE_TOOLS.has('advance_lesson') && !SILENT_TURN_STATE_TOOLS.has('show_sentence'));
-  assert.ok(vtr.includes("TUTOR_SILENT_TURN_FALLBACK && !fullText.trim() && totalToolNamesSeen.length > 0 && !retrySkippedAfterKill"));
+  assert.ok(vtr.includes("TUTOR_SILENT_TURN_FALLBACK && silentTurnFallbackDue({"));
   assert.ok(vtr.includes('cardSentence: lastShowSentenceOf(turnToolCallsSeen),'));
   assert.ok(vtr.includes("onDebugEvent?.('silent_turn_fallback',"));
   assert.match(flags, /export const TUTOR_SILENT_TURN_FALLBACK = process\.env\.NEXT_PUBLIC_TUTOR_SILENT_TURN_FALLBACK !== 'off';/);
+});
+test('Task 38 r1 I-2: the silent-turn fallback — language lessons only; never on a silent-by-purpose tool, a runtime turn or an armed clip', () => {
+  const base = { languageLesson: true, transcript: 'I have been to the robotics exhibition in Tokyo last year.', keptText: '', toolsSeen: ['show_sentence'], retrySkipped: false, pronunciationArmed: false };
+  assert.equal(silentTurnFallbackDue(base), true, 'GDI all-dropped text turn with a card → fallback');
+  assert.equal(silentTurnFallbackDue({ ...base, languageLesson: false, toolsSeen: ['show_function_graph'] }), false, 'maths (bilingual or not) tool-only turn → none');
+  for (const t of ['request_pronunciation_check', 'set_working_level', 'resume_lesson', 'advance_lesson'])
+    assert.equal(silentTurnFallbackDue({ ...base, toolsSeen: ['show_sentence', t] }), false, t);
+  assert.equal(silentTurnFallbackDue({ ...base, transcript: '[runtime note] continue' }), false, 'a runtime turn');
+  assert.equal(silentTurnFallbackDue({ ...base, pronunciationArmed: true }), false, 'a clip armed');
+  assert.equal(silentTurnFallbackDue({ ...base, keptText: 'Close.' }), false, 'something was said');
+  // m-2: a card of the student's own sentence is no "natural version"
+  const own = 'I went to the robotics exhibition last year.';
+  assert.deepEqual(silentTurnFallbackLine({ cardSentence: own, pinGist: 'Which exhibition did you go to?', languageLesson: true, bilingual: false, studentText: 'I went to the robotics exhibition last year' }), { kind: 'reask', text: 'Let me ask that again: Which exhibition did you go to?' });
+  assert.ok(vtr.includes("languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current),\n          transcript, keptText: fullText, toolsSeen: totalToolNamesSeen, retrySkipped: !!retrySkippedAfterKill,"));
+  assert.ok(vtr.includes("bilingual: sessionAllowsNonLatin(tutorLanguages) && (tutorLanguages ?? [])[0] !== 'en',"));
 });
 test('Task 30 fix round 8 A4: an empty turn re-asks the pending question in a language / fixed-script lesson', () => {
   const ask = 'Have you worked for your current company for a long time?';
