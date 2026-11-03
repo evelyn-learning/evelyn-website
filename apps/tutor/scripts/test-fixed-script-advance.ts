@@ -50,7 +50,7 @@ import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboa
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
-import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, lessonTimeGuardDueMs } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
@@ -189,7 +189,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 14500  /* Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer; Task 30 §A2: the wait cap */);
+  const block = VTR.slice(auto, auto + 15000  /* Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer; Task 30 §A2: the wait cap; Task 41 §A: the part time cap inputs */);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
   pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{advanceReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
@@ -316,8 +316,9 @@ test('A: maxTurns 2 → null at 1, turns at 2', () => {
   assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 1 }), null);
   assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 2 }), 'turns');
 });
-test('A: a segment with maxTurns ignores the 1.5× time rule', () => {
-  assert.equal(fixedScriptAutoAdvanceReason({ plan: mt, segmentId: 'overview', turns: 1, overlongTurns: 1, elapsedMs: 10 * 60_000, levelKnown: false }), null);
+test('A: a segment with maxTurns ignores the 1.5× time rule (partTimeCap off — Task 41 §A made it apply by default)', () => {
+  assert.equal(fixedScriptAutoAdvanceReason({ plan: mt, segmentId: 'overview', turns: 1, overlongTurns: 1, elapsedMs: 10 * 60_000, levelKnown: false, partTimeCap: false }), null);
+  assert.equal(fixedScriptAutoAdvanceReason({ plan: mt, segmentId: 'overview', turns: 1, overlongTurns: 1, elapsedMs: 10 * 60_000, levelKnown: false }), 'time');
 });
 test('A: a segment without maxTurns keeps the old rules', () => {
   const b = { plan: mt, segmentId: 'topic-intro', overlongTurns: 6, levelKnown: false };
@@ -530,7 +531,7 @@ test('22A: turnEndsWithAsk — the run-10 turns', () => {
 });
 test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 11500);
+  const block = VTR.slice(auto, auto + 12000 /* Task 41 §A: the part time cap inputs */);
   pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
   pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext\) \{\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
 });
@@ -1519,6 +1520,75 @@ test('40 §C: move-on + close on one turn → the model answer first, then the c
   assert.ok(vtr.includes('if (TUTOR_MOVE_ON_BEFORE_CLOSE && noAttemptPinned && isFixedScriptCloseNote(deliveredRuntimeNote)) {'));
   assert.ok(vtr.indexOf('noAttemptPinned = naLast;') < vtr.indexOf('const deliveredRuntimeNote = overlongNoteForTurn('), 'the move-on note is planted before the runtime note is delivered');
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_MOVE_ON_BEFORE_CLOSE = process\.env\.NEXT_PUBLIC_TUTOR_MOVE_ON_BEFORE_CLOSE !== 'off';/);
+});
+
+// ── Task 41 §A (bot run r32): the per-part time cap never fired — every GDI part carries maxTurns ──
+test('41 §A: an authored-budget part is due by time at minutes × 1.5 (present-perfect 3.5 min → 315 s), turns first', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const b = { plan: gdi, segmentId: 'present-perfect', overlongTurns: overlongTurnThreshold(gdi, 'present-perfect', 6), levelKnown: true };
+  assert.equal(segmentMaxTurns(gdi, 'present-perfect'), 8);
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 3, elapsedMs: 314_000 }), null);
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 3, elapsedMs: 315_000 }), 'time', 'due by time, turns not over');
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 0, elapsedMs: 400_000 }), 'time', 'due by time with no turns at all');
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 8, elapsedMs: 10_000 }), 'turns');
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 8, elapsedMs: 400_000 }), 'turns', 'turns are checked first');
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 3, elapsedMs: 400_000, partTimeCap: false }), null, 'flag off: the old rule');
+  // open-conversation (5 min) → 450 s; the 2-minute floor for a short part
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, segmentId: 'open-conversation', overlongTurns: 11, turns: 4, elapsedMs: 450_000 }), 'time');
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, segmentId: 'overview', overlongTurns: 1, turns: 1, elapsedMs: 179_000, levelKnown: false }), null);
+  // the close stays the close: the summary's time due is a close, never an advance
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, segmentId: 'summary', overlongTurns: 3, turns: 1, elapsedMs: 999_000 }), null);
+  assert.equal(fixedScriptCloseReason({ ...b, segmentId: 'summary', overlongTurns: 3, turns: 1, elapsedMs: 180_000 }), 'time');
+});
+test('41 §A: held once → still due at the next boundary; the ask hold is 2 turns max and only an un-due boundary resets it', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const b = { plan: gdi, segmentId: 'present-perfect', overlongTurns: 7, levelKnown: true };
+  // boundary 1 at 320 s ends with an ask: due, held (1/2); boundary 2 at 345 s: still due
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 5, elapsedMs: 320_000 }), 'time');
+  assert.equal(holdAutoAdvanceForPendingAsk(true, 0), true);
+  assert.equal(fixedScriptAutoAdvanceReason({ ...b, turns: 6, elapsedMs: 345_000 }), 'time', 'the hold does not reset the due state');
+  assert.equal(holdAutoAdvanceForPendingAsk(true, 1), true);
+  assert.equal(holdAutoAdvanceForPendingAsk(true, 2), false, 'third due boundary advances');
+  assert.equal(FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, 2);
+  pin(VTR, /if \(!advanceReason\) \{ autoAdvancePronHeldRef\.current = 0; autoAdvanceAskHeldRef\.current = 0; \}/);
+  pin(VTR, /\} else if \(autoNext && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;/);
+});
+test('41 §A: the lesson schedule — a part is due when only the later parts\' minutes are left before the guard (r32 open-conversation)', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const min = 60_000;
+  assert.equal(lessonTimeGuardDueMs(gdi), 22 * min);
+  const oc = { plan: gdi, segmentId: 'open-conversation', overlongTurns: 11, levelKnown: true, turns: 4 };
+  // guard 22 min − pronunciation 3 ⇒ 19 min of lesson time (r32: OC entered 981 s, ran to the guard at 1328 s)
+  assert.equal(fixedScriptAutoAdvanceReason({ ...oc, elapsedMs: 158_000, lessonElapsedMs: 19 * min - 1 }), null);
+  assert.equal(fixedScriptAutoAdvanceReason({ ...oc, elapsedMs: 159_000, lessonElapsedMs: 19 * min }), 'time');
+  // past-simple: OC 5 + pronunciation 3 after it ⇒ 14 min
+  const ps = { plan: gdi, segmentId: 'past-simple', overlongTurns: 7, levelKnown: true, turns: 3 };
+  assert.equal(fixedScriptAutoAdvanceReason({ ...ps, elapsedMs: 100_000, lessonElapsedMs: 13.9 * min }), null);
+  assert.equal(fixedScriptAutoAdvanceReason({ ...ps, elapsedMs: 100_000, lessonElapsedMs: 14 * min }), 'time');
+  assert.equal(fixedScriptAutoAdvanceReason({ ...ps, elapsedMs: 59_000, lessonElapsedMs: 16 * min }), null, 'a part runs at least a minute');
+  assert.equal(fixedScriptAutoAdvanceReason({ ...ps, elapsedMs: 100_000, lessonElapsedMs: 16 * min, partTimeCap: false }), null, 'flag off');
+  // the optional pronunciation part in progress runs on (as the guard lets it) — only its own cap (3 min × 1.5)
+  const pr = { plan: gdi, segmentId: 'pronunciation', overlongTurns: 7, levelKnown: true, turns: 2 };
+  assert.equal(fixedScriptAutoAdvanceReason({ ...pr, elapsedMs: 100_000, lessonElapsedMs: 24 * min }), null);
+  assert.equal(fixedScriptAutoAdvanceReason({ ...pr, elapsedMs: 270_000, lessonElapsedMs: 24 * min }), 'time');
+  // no lesson clock ⇒ the part rule alone
+  assert.equal(fixedScriptAutoAdvanceReason({ ...oc, elapsedMs: 159_000 }), null);
+  pin(VTR, /partTimeCap: TUTOR_PART_TIME_CAP,\s*\.\.\.\(TUTOR_PART_TIME_CAP \? \{ lessonElapsedMs: Date\.now\(\) - \(voiceSessionStartedAtMsRef\.current \?\? sessionStartMsRef\.current\) \} : \{\}\),/);
+  // the guard and the schedule read the same clock
+  pin(VTR, /const tgStart = voiceSessionStartedAtMsRef\.current \?\? sessionStartMsRef\.current;/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_PART_TIME_CAP = process\.env\.NEXT_PUBLIC_TUTOR_PART_TIME_CAP !== 'off';/);
+});
+test('41 §A: a guard move past pronunciation says, in one line, that the pronunciation practice is skipped for time (once)', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  assert.deepEqual(lessonTimeGuardSkippedLabels(gdi, 'open-conversation', 'summary', true), ['Pronunciation']);
+  assert.deepEqual(lessonTimeGuardSkippedLabels(gdi, 'past-simple', 'summary', true), ['Conversation', 'Pronunciation']);
+  assert.deepEqual(lessonTimeGuardSkippedLabels(gdi, 'pronunciation', 'summary', true), []);
+  const lead = lessonTimeGuardLead('Conversation', 'Summary', ['Pronunciation']);
+  assert.ok(lead.includes('Say ONCE, in one short sentence, that the "Pronunciation" practice is skipped today for time (never repeat it).'), lead);
+  assert.match(lead, /^Time is short — .+ ALREADY moved to "Summary" .+ Keep the summary to its key points and close\.$/);
+  assert.ok(lessonTimeGuardLead('Past simple', 'Summary', ['Conversation', 'Pronunciation']).includes('the "Conversation" and "Pronunciation" practice'));
+  assert.ok(!lessonTimeGuardLead('Conversation', 'Summary').includes('Say ONCE'), 'nothing skipped ⇒ no line');
+  pin(VTR, /lessonTimeGuardLead\(fixedScriptPartLabel\(tgPlan, tgSeg\), fixedScriptPartLabel\(tgPlan, tg\.to\),\s*TUTOR_PART_TIME_CAP \? lessonTimeGuardSkippedLabels\(tgPlan, tgSeg, tg\.to, !!workingLevelRef\.current\) : \[\]\), tg\.to\)/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -1382,3 +1382,11 @@ export const TUTOR_NEITHER_STREAK_MOVE_ON = process.env.NEXT_PUBLIC_TUTOR_NEITHE
  *  the same turn — the model answer first, then the close. Client-side:
  *  default ON; NEXT_PUBLIC_TUTOR_MOVE_ON_BEFORE_CLOSE=off. */
 export const TUTOR_MOVE_ON_BEFORE_CLOSE = process.env.NEXT_PUBLIC_TUTOR_MOVE_ON_BEFORE_CLOSE !== 'off';
+
+/** Task 41 §A (bot run r32: present-perfect ran 462 s for 3.5 min; the
+ *  lesson-time guard skipped pronunciation): a fixed-script part with an
+ *  authored turn budget is also due at its minutes × 1.5, and any part is due
+ *  when the lesson clock leaves only the later parts' minutes before the
+ *  guard. The guard's skip names the skipped parts once. Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_PART_TIME_CAP=off. */
+export const TUTOR_PART_TIME_CAP = process.env.NEXT_PUBLIC_TUTOR_PART_TIME_CAP !== 'off';

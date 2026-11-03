@@ -116,6 +116,13 @@ export interface AutoAdvanceInput {
   elapsedMs: number;
   /** the learner's working level is known (level-check segments are skipped) */
   levelKnown: boolean;
+  /** Task 41 §A: false ⇒ the pre-Task-41 rule (an authored turn budget
+   *  replaces the time rule). Absent ⇒ true (TUTOR_PART_TIME_CAP, default ON). */
+  partTimeCap?: boolean;
+  /** Task 41 §A: ms since the lesson started (the lesson-time guard's clock).
+   *  Present ⇒ the lesson schedule rule applies (auto-advance only, never
+   *  the close). */
+  lessonElapsedMs?: number;
 }
 export const FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS = 2;
 export const FIXED_SCRIPT_AUTO_ADVANCE_TIME_FACTOR = 1.5;
@@ -129,7 +136,32 @@ export function fixedScriptAutoAdvanceReason(input: AutoAdvanceInput): 'turns' |
   const { plan, segmentId, levelKnown } = input;
   if (!plan || !segmentId || !isFixedScriptPlan(plan)) return null;
   if (nextSegmentId(plan, segmentId, levelKnown) === null) return null;
-  return segmentDueReason(input);
+  return segmentDueReason(input) ?? lessonScheduleDueReason(input);
+}
+
+/** Task 41 §A (bot run r32: open-conversation ran to 1328 s and the
+ *  lesson-time guard skipped the pronunciation part): a part is also due
+ *  when the lesson clock leaves too little time for the parts still to come.
+ *  Due ⇔ lessonElapsed ≥ guardDue − (minutes of every part after this one,
+ *  up to the closing part, optional parts included) and the part has run
+ *  FIXED_SCRIPT_SCHEDULE_MIN_PART_MS. The guard then rarely fires. Never for
+ *  the closing part (fixedScriptCloseReason does not call it) or an optional
+ *  part in progress (the guard lets it run on, so does this). */
+export const FIXED_SCRIPT_SCHEDULE_MIN_PART_MS = 60_000;
+function lessonScheduleDueReason(input: AutoAdvanceInput): 'time' | null {
+  const { plan, segmentId, levelKnown, elapsedMs, lessonElapsedMs } = input;
+  if (input.partTimeCap === false || typeof lessonElapsedMs !== 'number' || !plan || !segmentId) return null;
+  if (elapsedMs < FIXED_SCRIPT_SCHEDULE_MIN_PART_MS) return null;
+  const seg = plan.segments.find((x) => x.id === segmentId);
+  if (!seg || (seg.metadata as { optional?: unknown } | undefined)?.optional === true) return null;
+  const guardMs = lessonTimeGuardDueMs(plan);
+  const closeId = fixedScriptLastSegmentId(plan);
+  if (guardMs === null || !closeId || segmentId === closeId) return null;
+  let restMin = 0;
+  for (let id = nextSegmentId(plan, segmentId, levelKnown); id && id !== closeId; id = nextSegmentId(plan, id, levelKnown)) {
+    restMin += planMinutes(plan.segments.find((x) => x.id === id));
+  }
+  return lessonElapsedMs >= guardMs - restMin * 60_000 ? 'time' : null;
 }
 
 /** Task 14 §H (GDI run 4: the summary looped 7 minutes — the last segment
@@ -289,10 +321,15 @@ function segmentDueReason(input: AutoAdvanceInput): 'turns' | 'time' | null {
   if (!plan || !segmentId) return null;
   const seg = plan.segments.find((s) => s.id === segmentId);
   if (!seg) return null;
-  // An authored turn budget replaces both the +2 margin and the time rule.
+  // An authored turn budget replaces the +2 margin. Task 41 §A (bot run
+  // r32: present-perfect ran 462 s for a 3.5-minute part — every GDI part
+  // carries maxTurns, so the time rule was never evaluated): the time rule
+  // applies to it too, unless partTimeCap === false (the old rule).
   const maxTurns = segmentMaxTurns(plan, segmentId);
-  if (maxTurns !== undefined) return turns >= maxTurns ? 'turns' : null;
-  if (turns >= overlongTurns + FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS) return 'turns';
+  if (maxTurns !== undefined) {
+    if (turns >= maxTurns) return 'turns';
+    if (input.partTimeCap === false) return null;
+  } else if (turns >= overlongTurns + FIXED_SCRIPT_AUTO_ADVANCE_EXTRA_TURNS) return 'turns';
   const mins = seg.estimatedMinutes;
   if (typeof mins !== 'number' || !Number.isFinite(mins) || mins <= 0) return null;
   const dueMs = Math.max(FIXED_SCRIPT_AUTO_ADVANCE_MIN_MS, mins * 60_000 * FIXED_SCRIPT_AUTO_ADVANCE_TIME_FACTOR);
@@ -909,22 +946,46 @@ export function lessonTimeGuardDecision(input: {
   if (!closeId || segmentId === closeId) return { action: 'none' };
   const seg = plan.segments.find((x) => x.id === segmentId);
   if (!seg || (seg.kind ?? '').toLowerCase() === 'recap') return { action: 'none' };
-  const minutes = (x: { estimatedMinutes?: number } | undefined) => (typeof x?.estimatedMinutes === 'number' && Number.isFinite(x.estimatedMinutes) ? x.estimatedMinutes : 0);
-  // Fix round 1 (review MINOR-1): the guard uses the segments' minutes —
-  // a plan none of whose segments carries minutes is never guarded.
-  if (!plan.segments.some((x) => minutes(x) > 0)) return { action: 'none' };
-  const total = minutes(plan as { estimatedMinutes?: number }) || plan.segments.reduce((n, x) => n + minutes(x), 0);
-  if (total <= 0) return { action: 'none' };
-  const closeMin = minutes(plan.segments.find((x) => x.id === closeId));
-  const dueMs = Math.max(0, total - closeMin - LESSON_TIME_GUARD_MARGIN_MIN) * 60_000;
+  const dueMs = lessonTimeGuardDueMs(plan);
+  if (dueMs === null) return { action: 'none' };
   if (input.elapsedMs < dueMs) return { action: 'none' };
   // An optional part (metadata.optional) already in progress runs on.
   if ((seg.metadata as { optional?: unknown } | undefined)?.optional === true) return { action: 'none' };
   return { action: 'advance', to: closeId };
 }
+function planMinutes(x: { estimatedMinutes?: number } | undefined): number {
+  return typeof x?.estimatedMinutes === 'number' && Number.isFinite(x.estimatedMinutes) ? x.estimatedMinutes : 0;
+}
+/** The lesson-time guard's due point (ms of lesson time): plan minutes −
+ *  closing part minutes − LESSON_TIME_GUARD_MARGIN_MIN. null ⇒ not guarded
+ *  (no segment carries minutes — fix round 1 MINOR-1 — or no closing part). */
+export function lessonTimeGuardDueMs(plan: LessonPlan): number | null {
+  const closeId = fixedScriptLastSegmentId(plan);
+  if (!closeId || !plan.segments.some((x) => planMinutes(x) > 0)) return null;
+  const total = planMinutes(plan as { estimatedMinutes?: number }) || plan.segments.reduce((n, x) => n + planMinutes(x), 0);
+  if (total <= 0) return null;
+  const closeMin = planMinutes(plan.segments.find((x) => x.id === closeId));
+  return Math.max(0, total - closeMin - LESSON_TIME_GUARD_MARGIN_MIN) * 60_000;
+}
 /** Task 36 §B: the advance lead of a time-guard move. */
-export function lessonTimeGuardLead(from: string, to: string): string {
-  return `Time is short — the "${from}" part ends here and the lesson pointer has ALREADY moved to "${to}" (any parts in between are skipped today). Keep the summary to its key points and close.`;
+export function lessonTimeGuardLead(from: string, to: string, skipped: readonly string[] = []): string {
+  // Task 41 §A: the parts the move skips are named, in one line, said once.
+  const names = skipped.map((x) => `"${x}"`);
+  const list = names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  const skipLine = names.length
+    ? ` Say ONCE, in one short sentence, that the ${list} practice is skipped today for time (never repeat it).`
+    : '';
+  return `Time is short — the "${from}" part ends here and the lesson pointer has ALREADY moved to "${to}" (any parts in between are skipped today).${skipLine} Keep the summary to its key points and close.`;
+}
+/** Task 41 §A: the labels of the parts a lesson-time move from → to skips
+ *  (strictly between them, in order). */
+export function lessonTimeGuardSkippedLabels(plan: LessonPlan | null | undefined, from: string, to: string, levelKnown: boolean): string[] {
+  if (!plan) return [];
+  const out: string[] = [];
+  for (let id = nextSegmentId(plan, from, levelKnown), n = 0; id && id !== to && n < plan.segments.length; id = nextSegmentId(plan, id, levelKnown), n++) {
+    out.push(fixedScriptPartLabel(plan, id));
+  }
+  return out;
 }
 
 /** True ⇒ the turn named at least two of the card's numbered choices (a
