@@ -881,8 +881,32 @@ const PLAN_TAIL_RE = /,?\s*\bso I['’]ll (?:note|ask|point|model|name|acknowled
 // back: which country did you visit …?"): a first-person steering lead
 // before a colon is stripped and the question kept; nothing after it ⇒ ''.
 const STEER_LEAD_RE = /^\s*(?:So|Then|Now),? I['’]?ll (?:gently )?(?:bring (?:it|that|us) back|move us on|move on to|take us to)[^:]*:\s*/i;
+// Task 40 §B (bot run r28, 468 s / 775 s: "Your last line is about a
+// presentation last month, not the country question, so I'll gently bring it
+// back."): the steering clause anywhere in a sentence — ", so I'll (gently)
+// bring it / that / us / you back (to …)", "steer us / you back (to …)",
+// "return to the / my question" — is removed and the rest kept; a clause
+// before a colon leaves the question after it as its own sentence; nothing
+// left ⇒ ''. "Let's bring it back to your sentence." / "I'll bring you a new
+// example next time." are speech.
+const STEER_CLAUSE_RE = /,?\s*\bso I['’]?ll (?:gently )?(?:bring (?:it|that|us|you) back(?: to [^.!?:;,]*)?|steer (?:us|you) back(?: to [^.!?:;,]*)?|return to (?:the|my) question)(?=\s*(?:[.!?:;,…]|$))\s*([:;,]?)/gi;
+export function stripSteerClause(sentence: string): string {
+  const raw = sentence ?? '';
+  if (!STEER_CLAUSE_RE.test(raw)) return raw;
+  STEER_CLAUSE_RE.lastIndex = 0;
+  const COLON_MARK = '\u0000';
+  const out = raw.replace(STEER_CLAUSE_RE, (_m, punct: string) => (punct === ':' ? `.${COLON_MARK} ` : punct === ',' || punct === ';' ? ', ' : ''));
+  const t = out.replace(/\s{2,}/g, ' ').replace(/\s+([.!?,])/g, '$1').replace(/^[\s,;:.]+/, '').replace(/[,;\s]+$/, '').trim();
+  if (!/[\p{L}\p{N}]/u.test(t)) return '';
+  const fixed = t.replace(/\.\u0000\s*(\p{Ll})?/gu, (_m, c?: string) => `. ${c ? c.toUpperCase() : ''}`).replace(/\u0000/g, '').trim();
+  return capitaliseFirst(/[.!?。！？…]$/.test(fixed) ? fixed : `${fixed}.`);
+}
 export function stripSpokenPlanLeadTail(sentence: string, opts?: { languageLesson?: boolean }): string {
   let s = sentence ?? '';
+  if (opts?.languageLesson !== false) {
+    s = stripSteerClause(s);
+    if (!s) return '';
+  }
   const steer = opts?.languageLesson !== false ? STEER_LEAD_RE.exec(s) : null;
   if (steer) {
     const rest = s.slice(steer[0].length).trim();

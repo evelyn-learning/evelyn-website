@@ -1523,5 +1523,24 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('39F: "The shop is closed on Sundays." kept', !isMetaNarration('The shop is closed on Sundays.', lang));
 }
 
+// Task 40 §B (bot run r28, 468 s / 775 s): "…, so I'll gently bring it back." mid-sentence.
+{
+  const lang = { languageLesson: true };
+  const s468 = "Your last line is about a presentation last month, not the country question, so I'll gently bring it back.";
+  const s775 = "Your message is a repeat of an earlier sentence, so I'll gently bring it back.";
+  const r = (x: string) => stripNoteCitationClause(x, lang);
+  check('40B: 468 s clause stripped, the rest kept', r(s468) === 'Your last line is about a presentation last month, not the country question.', r(s468));
+  check('40B: 775 s clause stripped, the rest kept', r(s775) === 'Your message is a repeat of an earlier sentence.', r(s775));
+  check('40B: "…, so I\'ll bring us back to the question: what …?" → the question its own sentence', r("That's a different story, so I'll bring us back to the question: what did you build?") === "That's a different story. What did you build?", r("That's a different story, so I'll bring us back to the question: what did you build?"));
+  check('40B: "…, so I\'ll steer you back." stripped', r('That is a new topic, so I\'ll steer you back.') === 'That is a new topic.', r('That is a new topic, so I\'ll steer you back.'));
+  check('40B: "…, so I\'ll return to the question, and …" → the rest kept', r("Nice, so I'll return to the question, and you can try again.") === 'Nice, and you can try again.', r("Nice, so I'll return to the question, and you can try again."));
+  check('40B: the clause alone → dropped', r("So I'll gently bring it back.") === '', r("So I'll gently bring it back."));
+  check('40B: the R9-1 lead still keeps the question', r("So I'll gently bring it back: which country did you visit for business?") === 'Which country did you visit for business?', r("So I'll gently bring it back: which country did you visit for business?"));
+  check('40B: "Let\'s bring it back to your sentence." kept', r("Let's bring it back to your sentence.") === "Let's bring it back to your sentence.");
+  check('40B: "I\'ll bring you a new example next time." kept', r("I'll bring you a new example next time.") === "I'll bring you a new example next time.");
+  check('40B: "…, so I\'ll bring you back a souvenir." kept', r("That was fun, so I'll bring you back a souvenir.") === "That was fun, so I'll bring you back a souvenir.");
+  check('40B: off outside a language lesson', stripNoteCitationClause(s468, { languageLesson: false }) === s468);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
