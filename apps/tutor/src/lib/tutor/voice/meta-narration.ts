@@ -793,7 +793,7 @@ type SentenceRule = (x: string) => string;
 const T39_SECOND_PERSON_RE = /\b(?:you|your|yours|yourself)\b/i;
 const NEXT_STEP_CLAUSE_RE = /,?\s*(?:and\s+)?so\s+(?:the|our)\s+next step is to\s+[a-z][^.!?]*([.!?]?)\s*$/i;
 const NEXT_STEP_SENTENCE_RE = /^\s*(?:(?:so|now|okay|ok|then|and),?\s+)?(?:the|our) next step is to\s+[a-z][^.!?]*[.!]?\s*$/i;
-const BOARD_STATE_LINE_RE = /^\s*(?:(?:now|so|okay|ok),?\s+)?(?:the|this|that|your|a) (?:new )?(?:card|sentence|question|menu|table|model)(?: card)? is (?:now )?(?:on|up on|showing on) the (?:board|screen)(?: now)?[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?take a (?:second|moment|minute|few seconds|little time) to look (?:at|over) (?:it|this|that|the (?:card|board|sentence|question|screen)(?: on the (?:board|screen))?)[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?here(?:['’]s| is) (?:the|your|this) (?:full |whole |complete |corrected |new |final )?(?:sentence|card|model|answer)(?: again)? (?:on|up on) the (?:board|screen)[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?let['’]?s (?:look at|turn to|go to|open|see) the [\p{L}\s'’-]{1,40} card[.!]?\s*$/iu;
+const BOARD_STATE_LINE_RE = /^\s*(?:(?:now|so|okay|ok),?\s+)?(?:the|this|that|your|a) (?:new )?(?:card|sentence|question|menu|table|model)(?: card)? is (?:now )?(?:on|up on|showing on) the (?:board|screen)(?: now)?[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?(?:please\s+)?take a (?:second|moment|minute|few seconds|little time) to look (?:at|over) (?:it|this|that|the (?:card|board|sentence|question|screen)(?: on the (?:board|screen))?)[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?here(?:['’]s| is) (?:the|your|this) (?:full |whole |complete |corrected |new |final )?(?:sentence|card|model|answer)(?: again)? (?:on|up on) the (?:board|screen)[.!]?\s*$|^\s*(?:(?:now|so|okay|ok),?\s+)?let['’]?s (?:look at|turn to|go to|open|see) the [\p{L}\s'’-]{1,40} card[.!]?\s*$/iu;
 /*  §D (1127 s): "I'll finish this part now and move to pronunciation.", "I've
  *      moved past the conversation part.", "However, the lesson has advanced
  *      to the summary, so I'll wrap up …" — the pointer narrated. */
@@ -811,10 +811,16 @@ const ALREADY_ANSWERED_RE = /^\s*(?:(?:so|okay|ok|now|well),?\s+)?(?:the|that|th
 // Task 43 §H round 2 (bot run r42, 666 s: "Understood. Let's move on …"): a
 // bare one-word verdict ack sentence sounds robotic — it goes, the rest stands.
 const TERSE_ACK_SENTENCE_RE = /^\s*(?:noted|accepted|understood|acknowledged|confirmed)[.!]\s*$/i;
+// Bot run r44 (561 s: 'Respond warmly: "…" was already said, so ask about the
+// trade show specifically.'): a directive verb lead with a colon, carrying its
+// plan ("so / then ask …", "already said") — the note echoed. "Respond to the
+// email by Friday." (no colon) and "Please answer in one full sentence: …" stay.
+const DIRECTIVE_ECHO_PLAN_RE = /^\s*(?:respond|reply|answer|acknowledge|praise|accept|confirm|react)(?:\s+[\p{L}'’-]+){0,2}:\s[\s\S]*(?:\b(?:so|then|and) (?:ask|re-?ask|move|continue|go|point|model)\b|\balready (?:said|answered|given)\b)/iu;
 const TASK39_SENTENCE_RULES: SentenceRule[] = [
   (x) => (PART_MOVE_NARRATION_RE.test(x) ? '' : x),
   (x) => (ALREADY_ANSWERED_RE.test(x) ? '' : x),
   (x) => (TERSE_ACK_SENTENCE_RE.test(x) ? '' : x),
+  (x) => (DIRECTIVE_ECHO_PLAN_RE.test(x) ? '' : x),
   (x) => (CLOSED_STATE_SENTENCE_RE.test(x) ? '' : x.replace(NOTES_SAVED_CLAUSE_RE, '')),
   (x) => {
     if (BOARD_STATE_LINE_RE.test(x)) return '';

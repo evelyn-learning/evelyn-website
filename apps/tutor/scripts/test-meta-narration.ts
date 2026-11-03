@@ -1637,6 +1637,13 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('43H: "Understood, let\'s close the pronunciation part now." kept (not a bare ack)', !isMetaNarration("Understood, let's close the pronunciation part now.", lang));
   check('43H: "I understood the question." kept', !isMetaNarration('I understood the question.', lang));
   check('43H: maths untouched', !isMetaNarration('Noted.', { languageLesson: false }));
+  // bot run r44 (56 s): "Please take a moment to look at the card." survived (the "please" lead); (561 s): a directive echoed with its plan
+  check('43G r44: "Please take a moment to look at the card." dropped', isMetaNarration('Please take a moment to look at the card.', lang));
+  check('43G r44: chunk keeps the question', stripNoteCitationClause('Please take a moment to look at the card. Now, can you add one more sentence about what you do at work?', lang) === 'Now, can you add one more sentence about what you do at work?');
+  check('43 r44: "Respond warmly: … was already said, so ask about the trade show specifically." dropped', isMetaNarration('Respond warmly: "I have learned how to negotiate with suppliers" was already said, so ask about the trade show specifically.', lang));
+  check('43 r44: "Answer briefly, then ask one question." dropped', isMetaNarration('Answer briefly, then ask one question.', lang));
+  check('43 r44: "Respond to the email by Friday." kept', !isMetaNarration('Respond to the email by Friday.', lang));
+  check('43 r44: "Please answer in one full sentence: what did you learn?" kept', !isMetaNarration('Please answer in one full sentence: what did you learn?', lang));
   check('43: maths untouched', !isMetaNarration("Let me close this part and move on to the summary.", { languageLesson: false }) && !isMetaNarration("Here's the full sentence on the board.", { languageLesson: false }));
 }
 

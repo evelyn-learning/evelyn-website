@@ -232,7 +232,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, moveOnRequestSpan, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, answeredCardQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness, isQuestionLeadIn, reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON, precheckSaysNeither, neitherStreakState, neitherStreakReasks, NEITHER_PENDING_MOVE_ON_NOTE, moveOnNoAskFallbackDue, replyAnsweredAsk, correctReplyReasks } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, moveOnRequestSpan, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, answeredCardQuestion, reasksCardQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness, isQuestionLeadIn, reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON, precheckSaysNeither, neitherStreakState, neitherStreakReasks, NEITHER_PENDING_MOVE_ON_NOTE, moveOnNoAskFallbackDue, replyAnsweredAsk, correctReplyReasks } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -4257,6 +4257,8 @@ export function VoiceTutorRealtime({
   const autoAdvanceAskHeldRef = useRef(0);
   /** Task 43 §G2: boundaries held because this turn corrected the student's sentence. */
   const autoAdvanceCorrectionHeldRef = useRef(0);
+  /** Task 43 §F (final review I-5): parts whose unchecked required phrases already held one turn. */
+  const requiredPhrasesHoldSegsRef = useRef<Set<string>>(new Set());
   // Task 26 §A: segments whose transition offer was planted (one per
   // segment), and the turns a due advance has waited since the offer.
   const transitionOfferMadeRef = useRef<Set<string>>(new Set());
@@ -15279,6 +15281,9 @@ export function VoiceTutorRealtime({
         // below stays closed until the end-of-turn validators pass (capped at
         // VALIDATOR_TTS_HOLD_MS), so a kill drops the text pre-audio instead
         // of cutting sentences the learner already heard.
+        // Final review I-5: the required-phrases reason holds ONE turn per part (short summary turns never mark the check).
+        const rpPendingHold = ((lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.requiredPhrases?.length ?? 0) > 0)
+          && !segmentRequiredPhrasesCheckedRef.current.has(currentSegmentIdRef.current ?? '') && !requiredPhrasesHoldSegsRef.current.has(currentSegmentIdRef.current ?? '');
         const validatorHold = validatorTtsHold({
           enabled: TUTOR_VALIDATOR_TTS_HOLD,
           voice: sessionMode !== 'text',
@@ -15287,9 +15292,20 @@ export function VoiceTutorRealtime({
           noteDelivered: fixedScriptNoteDeliveredThisTurnRef.current,
           repeatAttempts: repeatAskTriesRef.current?.segmentId === (turnStartSegmentId ?? '') ? (repeatAskTriesRef.current?.attempts ?? 0) : 0,
           moveOnRequested: !!moveOnRequestSpan(transcript),
-          requiredPhrasesPending: ((lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.requiredPhrases?.length ?? 0) > 0) && !segmentRequiredPhrasesCheckedRef.current.has(currentSegmentIdRef.current ?? ''),
+          requiredPhrasesPending: rpPendingHold,
         });
+        if (rpPendingHold && validatorHold) requiredPhrasesHoldSegsRef.current.add(currentSegmentIdRef.current ?? '');
         if (validatorHold) onDebugEvent?.('validator_tts_hold_started', `attempt ${attempt}`);
+        // Final review I-3: the cap has its own timer — the gate timer below is
+        // cleared by the first render tool, so without this the hold ran to the
+        // stream end plus the judge round trip. Guarded by the gate state, so a
+        // kill (gate closed) or an earlier open makes it a no-op.
+        const validatorHoldTimer = validatorHold ? setTimeout(() => {
+          if (gateState !== 'gated') return;
+          onDebugEvent?.('validator_tts_hold_deadline', `${pendingSentences.length} sentence(s) spoken before the validators`);
+          openGate();
+          releaseVerdictHold();
+        }, VALIDATOR_TTS_HOLD_MS) : null;
         let syntheticTailDrained = false;
         // Stamped ids of every render this attempt actually dispatched.
         // If the attempt is killed, these are rolled back so no orphaned
@@ -17474,7 +17490,7 @@ export function VoiceTutorRealtime({
                     }
                   }
                   // Task 43 §D: the part's answered card question re-asked (any part).
-                  if (answeredCardQ && reasksAnsweredQuestion(updatedSentence, [answeredCardQ])) {
+                  if (answeredCardQ && reasksCardQuestion(updatedSentence, answeredCardQ)) {
                     onDebugEvent?.('answered_card_question_reask_dropped', `"${updatedSentence.slice(0, 80)}" ≈ "${answeredCardQ.slice(0, 60)}"`);
                     dropLeadInWithQuestion();
                     continue;
@@ -21277,6 +21293,16 @@ export function VoiceTutorRealtime({
         // student didn't hear them and Claude shouldn't pretend it did.
         // Task 33 fix round 1 (R9-2): the engine's own offer closes the
         // standing attempt — spoken, part of the turn text, recorded spoken.
+        // Task 43 §F (final review C-1 / I-2): every kill-capable validator has
+        // run — the held gate opens HERE, before the engine appends its lines
+        // (offer / card ask / menu / move-on) so they follow the body, and
+        // before the continuation decision (whose "delivered" is then true).
+        if (validatorHold && gateState === 'gated' && !attemptKilled) {
+          onDebugEvent?.('validator_tts_hold_released', `${pendingSentences.length} sentence(s) after the validators`);
+          openGate();
+          releaseVerdictHold();
+        }
+        if (validatorHoldTimer) clearTimeout(validatorHoldTimer);
         if (!attemptKilled && engineOfferLines && engineOfferSeg && currentSegmentIdRef.current === engineOfferSeg) {
           // Fix round 2 (R10-1): the student's turn already answered the offer —
           // recorded spoken and answered, never asked again.
@@ -22134,6 +22160,7 @@ export function VoiceTutorRealtime({
         const st = turnsInSegmentRef.current;
         if (st.segId !== segIdNow) { turnsInSegmentRef.current = { segId: segIdNow, turns: 0, noted: false, startedAt: Date.now() }; autoAdvanceOfferHeldRef.current = 0; }
         if (st.segId !== segIdNow) autoAdvancePostDueHoldsRef.current = 0;
+        if (st.segId !== segIdNow) autoAdvanceCorrectionHeldRef.current = 0;
         const cur = turnsInSegmentRef.current;
         cur.turns += 1;
         const segNow = lessonPlanRef.current?.segments.find((sg) => sg.id === segIdNow);
@@ -22260,6 +22287,7 @@ export function VoiceTutorRealtime({
         const advanceReason: 'turns' | 'time' | 'announced' | null = (offerPartDue && announcedNext ? 'announced' : autoReason)
           ?? (announcedNext ? 'announced' : null);
         if (!advanceReason) { autoAdvancePronHeldRef.current = 0; autoAdvanceAskHeldRef.current = 0; }
+        if (!advanceReason) autoAdvanceCorrectionHeldRef.current = 0; // Task 43 §G2 (final review I-6)
         if (!advanceReason) autoAdvancePostDueHoldsRef.current = 0;
         // Task 29 §A2: the offer hold starts when the offer is SPOKEN — the
         // turn that spoke it is hold turn 1 (no hold increment on it). A turn

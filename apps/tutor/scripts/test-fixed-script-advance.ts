@@ -53,7 +53,7 @@ import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOT
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
 import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, lessonTimeGuardDueMs, postDueHoldDecision, FIXED_SCRIPT_POST_DUE_MAX_HOLDS, nextSegmentId as nextSegmentId41 } from '../src/lib/tutor/lesson-plan/fixed-script';
-import { reasksAnsweredQuestion, answeredCardQuestion } from '../src/lib/tutor/voice/correct-retry';
+import { reasksAnsweredQuestion, answeredCardQuestion, reasksCardQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
@@ -529,7 +529,13 @@ test('43D: the part\'s answered card question is known, and a re-ask of it is dr
   assert.equal(reasksAnsweredQuestion('Now let\'s go back to the question on the board: Have you worked for your current company for a long time?', [cardQ]), cardQ);
   assert.equal(reasksAnsweredQuestion('Now, how long have you worked there?', [cardQ]), null, 'a NEW question stays');
   pin(VTR, /const answeredCardQ: string \| null = TUTOR_ANSWERED_CARD_REASK_DROP && !answeredGuardQs\.length && isFixedScriptPlan\(lessonPlanRef\.current\) && currentSegmentIdRef\.current\s*\? answeredCardQuestion\(segmentCardStatement\(lessonPlanRef\.current, currentSegmentIdRef\.current\), answeredInPartRef\.current\.get\(currentSegmentIdRef\.current\) \?\? \[\]\) : null;/);
-  pin(VTR, /if \(answeredCardQ && reasksAnsweredQuestion\(updatedSentence, \[answeredCardQ\]\)\) \{\s*onDebugEvent\?\.\('answered_card_question_reask_dropped'/);
+  // final review I-4: a genuine follow-up on the card's topic shares most stems — the drop needs a re-ask cue
+  assert.equal(reasksCardQuestion('Now let\'s go back to the question on the board: Have you worked for your current company for a long time?', cardQ), true);
+  assert.equal(reasksCardQuestion('Let me ask the board question again: have you worked for your current company for a long time?', cardQ), true);
+  assert.equal(reasksCardQuestion('How long have you worked for your current company?', cardQ), false, 'a different question (duration), no cue');
+  assert.equal(reasksCardQuestion('Have you worked for your current company for a long time?', cardQ), false, 'the bare question with no re-ask cue stands (the engine note handles it)');
+  assert.equal(reasksCardQuestion('Can you tell me more about your main responsibilities at work?', 'What are your main responsibilities at work?'), false);
+  pin(VTR, /if \(answeredCardQ && reasksCardQuestion\(updatedSentence, answeredCardQ\)\) \{\s*onDebugEvent\?\.\('answered_card_question_reask_dropped'/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_ANSWERED_CARD_REASK_DROP = process\.env\.NEXT_PUBLIC_TUTOR_ANSWERED_CARD_REASK_DROP !== 'off';/);
 });
 test('43G2: a budget advance on a turn that corrected the student\'s sentence holds ONE boundary so the card is seen (689 s: card + page flip in one turn)', () => {
@@ -540,6 +546,9 @@ test('43G2: a budget advance on a turn that corrected the student\'s sentence ho
   pin(VTR, /\} else if \(autoNext && !holdCapped && advanceReason !== 'announced' && TUTOR_CORRECTION_CARD_HOLDS_ADVANCE && holdAutoAdvanceForCorrectionCard\(correctedThisTurn, autoAdvanceCorrectionHeldRef\.current\)\) \{[\s\S]{0,400}?autoAdvanceCorrectionHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_correction'/);
   pin(VTR, /const correctedThisTurn = sentenceBoardBlockedByRenders\(totalToolNamesSeen\) \|\| turnCorrectsStudentSentence\(fullText, sentenceStressRef\.current\.studentLast\);/);
   pin(VTR, /autoAdvanceCorrectionHeldRef\.current = 0;\s*autoAdvancePronHeldRef\.current = 0;/);
+  // final review I-6: the counter resets with the others when no advance is due and on a segment change
+  pin(VTR, /if \(!advanceReason\) autoAdvanceCorrectionHeldRef\.current = 0;/);
+  pin(VTR, /if \(st\.segId !== segIdNow\) autoAdvanceCorrectionHeldRef\.current = 0;/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_CORRECTION_CARD_HOLDS_ADVANCE = process\.env\.NEXT_PUBLIC_TUTOR_CORRECTION_CARD_HOLDS_ADVANCE !== 'off';/);
 });
 test('43K: the turn that enters a choice-menu part without its menu gets the menu appended at THAT turn\'s end (973–1030 s: 57 s with no menu)', () => {

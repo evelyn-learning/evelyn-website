@@ -325,7 +325,7 @@ export function runChecks(dump) {
   if (audibleCuts.length) warn(`audible cuts (validator kill after ${audibleCuts.reduce((n, c) => n + c.heard, 0)} heard sentences)`, `${audibleCuts.length}× at ${audibleCuts.map((c) => `${c.t}s(heard=${c.heard})`).join(' ')}`);
   else info('audible cuts: 0');
   // H. one-word verdict acks ("Noted." / "Accepted.") sound robotic
-  const terseAcks = tutor.filter((x) => /^(?:noted|accepted|acknowledged|understood|confirmed)[.!]\s/i.test(x.text.trim()));
+  const terseAcks = tutor.filter((x) => /^(?:noted|accepted|acknowledged|understood|confirmed)[.!](?:\s|$)/i.test(x.text.trim()));
   ok('no one-word verdict ack ("Noted." / "Accepted.")', terseAcks.length === 0, terseAcks.map((x) => `${x.t}s "${x.text.slice(0, 30)}"`).join(' | '));
   // I. one correction card per student sentence; no card that is an ordered fragment of another on the same page
   const isSubseq = (a, b) => { let j = 0; for (const w of b) if (w === a[j]) j++; return j === a.length; };

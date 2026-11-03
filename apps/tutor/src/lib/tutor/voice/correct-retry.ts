@@ -1572,3 +1572,14 @@ export function answeredCardQuestion(cardStatement: string | null | undefined, a
   for (const q of questions) if (reasksAnsweredQuestion(q, answeredInPart)) return q;
   return null;
 }
+
+/** Final review I-4 (Task 43 §D): a genuine follow-up on the card's topic
+ *  ("How long have you worked for your current company?") shares most stems
+ *  with the card question — the drop needs a RE-ASK cue in the sentence
+ *  ("the question on the board", "back to the question", "again", "once
+ *  more", "the same question") besides the stem match. Pure. */
+export const CARD_REASK_CUE_RE = /\b(?:question on the board|board question|board'?s question|back to (?:the|our|that|this) question|(?:the )?same question|(?:ask|asking)(?: you| it| that)? again|once more|one more time|もう一度|同じ質問)\b/i;
+export function reasksCardQuestion(sentence: string | null | undefined, cardQuestion: string | null | undefined): boolean {
+  if (!sentence || !cardQuestion) return false;
+  return CARD_REASK_CUE_RE.test(sentence) && reasksAnsweredQuestion(sentence, [cardQuestion]) !== null;
+}

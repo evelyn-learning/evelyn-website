@@ -440,6 +440,13 @@ test('43 §C: the second sentence announcing the SAME part is dropped when bare,
   assert.equal(dedupePartAnnouncement("Let's move on to the past simple.", 'Shall we practise the past simple, or do you want one more?', fixed), null);
   assert.equal(dedupePartAnnouncement("Let's move on to the past simple.", "Now let's practise the past simple with a question.", fixed), null, 'a cue + part with its own content and no rewrite shape stays');
   assert.equal(dedupePartAnnouncement(prev, "Next, we'll practice the present perfect, which we use for experience.", { id: 'm', segments: SEGMENTS, metadata: {} } as unknown as LessonPlan), null, 'not a fixed script');
+  // bot run r44 (886 s): the short bare announcement arrived merged with the sentence after it (the stream merges sentences under 25 chars)
+  assert.equal(dedupePartAnnouncement("Let's finish this part, and then we'll move on to pronunciation.", 'Now for pronunciation. Please take a look at the card, then say the sentence after me: "The project finished on time."', fixed),
+    'Please take a look at the card, then say the sentence after me: "The project finished on time."');
+  assert.equal(dedupePartAnnouncement("Good, that is clear. Let's move on to the past simple.", "Now let's practice the past simple. Did you attend any events last year?", fixed), 'Did you attend any events last year?', 'prev is a chunk too: its last sentence announces');
+  // final review minor 8: a label that starts with a determiner / possessive ("Your job") gets no "The <label> …" rewrite
+  assert.equal(dedupePartAnnouncement("Let's move on to your job.", "Let's start with your job, which is the next part.", fixed), null);
+  assert.equal(dedupePartAnnouncement("Let's move on to your job.", "Now let's start with your job.", fixed), '', 'bare still drops');
   const vtr = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(vtr.includes("const partDedupe = TUTOR_PART_ANNOUNCE_DEDUPE && adjacentPrevSentence && isFixedScriptPlan(lessonPlanRef.current) ? dedupePartAnnouncement(adjacentPrevSentence, updatedSentence, lessonPlanRef.current) : null;"), 'VTR wiring');
   assert.match(readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8'), /export const TUTOR_PART_ANNOUNCE_DEDUPE = process\.env\.NEXT_PUBLIC_TUTOR_PART_ANNOUNCE_DEDUPE !== 'off';/);

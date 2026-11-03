@@ -427,23 +427,36 @@ function announcedPartLabel(sentence: string, plan: LessonPlan): { segId: string
 }
 export function dedupePartAnnouncement(prev: string | null | undefined, cur: string | null | undefined, plan: LessonPlan | null | undefined): string | null {
   if (!plan || !isFixedScriptPlan(plan) || !prev || !cur) return null;
-  const a = announcedPartLabel(prev, plan);
+  // Bot run r44 (886 s): the stream merges a sentence under 25 characters
+  // with the next one, so the bare "Now for pronunciation." arrived as the
+  // first sentence of a chunk — the rule reads the previous chunk's LAST
+  // sentence and the current chunk's FIRST, and keeps the rest of the chunk.
+  const prevLast = splitSentences(prev).filter(Boolean).pop() ?? prev;
+  const curParts = splitSentences(cur).filter(Boolean);
+  if (curParts.length > 1) {
+    const first = dedupePartAnnouncement(prevLast, curParts[0]!, plan);
+    if (first === null) return null;
+    return [first, ...curParts.slice(1)].filter(Boolean).join(' ');
+  }
+  const a = announcedPartLabel(prevLast, plan);
   if (!a) return null;
   const b = announcedPartLabel(cur, plan);
   if (!b || b.segId !== a.segId) return null;
   const labelRe = escapeRe(b.label);
+  // Final review minor 8: "The your job is …" — a label that opens with a determiner / possessive gets no "The <label>" rewrite.
+  const labelTakesThe = !/^(?:your|our|my|the|a|an|this|that|his|her|their)\b/i.test(b.label);
   // ", which <we|you|they|I> <rest>" → "The <part> is what <subj> <rest>"
   let m = new RegExp(`\\b(?:the |our |your )?${labelRe}\\s*,\\s*which\\s+(we|you|they|i)\\s+(.+)$`, 'i').exec(cur);
-  if (m) return `The ${b.label} is what ${m[1]!.toLowerCase() === 'i' ? 'I' : m[1]!.toLowerCase()} ${m[2]!.trim()}`;
+  if (m) return labelTakesThe ? `The ${b.label} is what ${m[1]!.toLowerCase() === 'i' ? 'I' : m[1]!.toLowerCase()} ${m[2]!.trim()}` : null;
   // ", which <verb> …" → "The <part> <verb> …"
   m = new RegExp(`\\b(?:the |our |your )?${labelRe}\\s*,\\s*which\\s+(.+)$`, 'i').exec(cur);
-  if (m) return `The ${b.label} ${m[1]!.trim()}`;
+  if (m) return labelTakesThe ? `The ${b.label} ${m[1]!.trim()}` : null;
   // ": <rest>" → "<Rest>"
   m = new RegExp(`\\b(?:the |our |your )?${labelRe}\\s*:\\s*(.+)$`, 'i').exec(cur);
   if (m && /[a-z]/i.test(m[1]!)) return capitaliseFirst(m[1]!.trim());
   // bare: nothing but openers, the cue and the part name
   const residue = cur.replace(new RegExp(`\\b(?:the |our |your )?${labelRe}\\b`, 'i'), ' ').replace(new RegExp(PART_ANNOUNCE_CUE_RE.source, 'gi'), ' ')
-    .replace(/\b(?:now|next|okay|ok|so|then|alright|first|good|great|well|and|we|you|i|will|let['’]s|practi[sc]e|do|start|try|look|work|go|move|moving|turn|on|to|at|for|time)\b|['’]ll\b/gi, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    .replace(/\b(?:now|next|okay|ok|so|then|alright|first|good|great|well|and|we|you|i|will|let['’]s|practi[sc]e|do|start|try|look|work|go|move|moving|turn|on|to|at|for|with|about|time)\b|['’]ll\b/gi, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
   if (!residue) return '';
   return null;
 }
