@@ -21143,6 +21143,8 @@ export function VoiceTutorRealtime({
             killed: attemptKilled,
             text: attemptText,
             card: transitionAskCard,
+            // Fix round 1 (I-2): what the turn already said (the killed attempt's heard sentences too).
+            turnSpoken: turnNarrationRef.current.join(' '),
           });
           if (cardAsk) {
             speakOnePart(cardAsk);

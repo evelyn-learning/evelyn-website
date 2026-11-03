@@ -127,5 +127,17 @@ test('Task 28 r1 m-2: an imperative on-part ask (now seen by turnEndsWithAsk) â†
   });
 }
 
+// Task 39 fix round 1 (I-2): the retry already read the menu / asked the card question.
+test('39 r1 I-2: a retry that read the menu and ended "Take your time choosing." â†’ nothing appended', () => {
+  const retry = "Let's start the pronunciation practice. Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue. Take your time choosing.";
+  assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: true, killed: false, text: retry, card: CARD }), null);
+  assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: true, killed: false, text: 'Take your time choosing.', card: CARD, turnSpoken: retry }), null, 'read earlier in the turn');
+  const PP = 'Have you worked for your current company for a long time?';
+  assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: true, killed: false, text: 'Have you worked for your current company for a long time? Take a moment.', card: PP }), null, 'the card question asked mid-retry');
+  assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: true, killed: false, text: 'Good answer.', card: PP, turnSpoken: 'Now, which word would you add after "sold"?' }), PP, 'an off-card question earlier does not count');
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes("turnSpoken: turnNarrationRef.current.join(' '),"));
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall transition-ask tests passed');

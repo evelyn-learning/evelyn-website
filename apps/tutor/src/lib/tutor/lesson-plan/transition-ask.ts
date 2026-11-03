@@ -21,6 +21,7 @@
 import { lastAskSentence, lastQuestionSentence, turnEndsWithAsk } from '../question-gist-text';
 import { withSilentClause, withRetryStyle } from '../voice/output-budget';
 import { boardOffersChoices } from '../voice/sentence-board';
+import { menuReadInTurn } from './fixed-script';
 
 // Task 29 §M (GDI run 16, 749 s, Image 62): the retry opened with the move
 // and never answered the student's correction — answer first, then move.
@@ -157,11 +158,24 @@ export function cardAskEngineFallbackLine(input: {
   text: string;
   /** the new part's card statement */
   card: string;
+  /** Fix round 1 (I-2): everything spoken this turn so far (earlier attempts' heard text included) */
+  turnSpoken?: string;
 }): string | null {
   if (!input.enabled || !input.retried || input.killed || !input.card) return null;
   const line = cardAskLine(input.card);
   if (!line) return null;
   const ask = transitionAskSentence(input.text);
   if (ask && !askOffNewPart(ask, input.card)) return null;
+  // Fix round 1 (I-2): the retry (or the turn) already read the menu or asked
+  // the card's question somewhere — never spoken twice.
+  const spoken = `${input.turnSpoken ?? ''} ${input.text ?? ''}`;
+  if (menuReadInTurn(input.card, spoken)) return null;
+  if (cardQuestionSpoken(line, spoken)) return null;
   return line;
+}
+/** Fix round 1 (I-2): a question sentence of `spoken` that is on the card
+ *  (askOffNewPart false, ≥ 2 content tokens). */
+function cardQuestionSpoken(cardLine: string, spoken: string): boolean {
+  const qs = (spoken ?? '').match(/[^.!?。！？\n]{4,}[?？]/g) ?? [];
+  return qs.some((q) => contentTokens(q).length >= 2 && !askOffNewPart(q, cardLine));
 }
