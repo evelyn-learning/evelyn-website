@@ -1280,3 +1280,11 @@ export const TUTOR_SILENT_TURN_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_SILENT_T
  *  sentence restating the continued turn's last sentence is dropped.
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_QUESTION_LEAD_IN_HOLD=off. */
 export const TUTOR_QUESTION_LEAD_IN_HOLD = process.env.NEXT_PUBLIC_TUTOR_QUESTION_LEAD_IN_HOLD !== 'off';
+
+/** Task 38 §F (voice run 19, 1016–1037 s: repeats demanded after correct
+ *  sentences): a reordered recast of a checked-correct sentence and a
+ *  "say it in one sentence starting with X" ask already met are killed
+ *  (repeat_after_correct), and the retry's repeat asks are dropped (the
+ *  move-on line covers an empty retry). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_REPEAT_AFTER_CORRECT_DROP=off. */
+export const TUTOR_REPEAT_AFTER_CORRECT_DROP = process.env.NEXT_PUBLIC_TUTOR_REPEAT_AFTER_CORRECT_DROP !== 'off';

@@ -58,6 +58,7 @@ import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE,
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { probeReasks, isRepeatOrCorrectionAsk, pronounReask } from '../src/lib/tutor/voice/correct-retry';
+import { reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON, isStrictRepeatAsk as isStrictRepeatAsk38 } from '../src/lib/tutor/voice/correct-retry';
 import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk, noAttemptBudgetTurns, isYesNoAsk } from '../src/lib/tutor/voice/correct-retry';
 import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
 import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
@@ -804,7 +805,7 @@ test('GDI run 3: a re-ask of the model sentence the student just said correctly'
   assert.equal(reAskedModelSentence(prev, student, 'Nice. Say "I sold 25 machines" once more for me.'), 'Last month, I sold 25 machines to Toyota.', 'quotes ≥ 3 words of the model');
   assert.equal(reAskedModelSentence(prev, student, 'Good. もう一度、その文を言ってください。'), 'Last month, I sold 25 machines to Toyota.', 'その文');
   assert.equal(reAskedModelSentence(prev, student, 'Can you say that sentence again, then "Next week I will visit Honda"?'), null, 'another quoted sentence ⇒ new item');
-  assert.match(REPEAT_AFTER_CORRECT_REASON, /^The student just said that sentence correctly\. Confirm it in one short sentence and move to the next item; do not ask for it again\. Say that it is right and go on; do not explain how you judged it \(no talk of stutters, repeats, matching the model, or what counts\)\. Start directly with your reply — no opener such as Okay \/ Alright \/ Let's keep going \/ Sorry about that\. Apply this silently; never mention this note\.$/);
+  assert.match(REPEAT_AFTER_CORRECT_REASON, /^The student just said that sentence correctly\. Confirm it in one short sentence and move to the next item; do not ask for it again\. Do not ask for a repeat\. Say that it is right and go on; do not explain how you judged it \(no talk of stutters, repeats, matching the model, or what counts\)\. Start directly with your reply — no opener such as Okay \/ Alright \/ Let's keep going \/ Sorry about that\. Apply this silently; never mention this note\.$/);
 });
 
 test('GDI run 3: VTR kills + retries a repeat_after_correct in a language session only', () => {
@@ -818,7 +819,7 @@ test('GDI run 3: VTR kills + retries a repeat_after_correct in a language sessio
 test('Task 19 §C (GDI run 7): a turn carrying a measured pronunciation note is not killed for repeat_after_correct', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   // the measured case is checked BEFORE the kill branch and never reaches it
-  assert.match(vtr, /if \(repeated && pronunciationMeasuredThisTurn\) \{\s*repeatAfterCorrectRejected = true;\s*onDebugEvent\?\.\('repeat_after_correct_allowed', 'measured'\);\s*\} else if \(repeated && racSkip\) \{[\s\S]{0,200}?\} else if \(repeated\) \{\s*repeatAfterCorrectRejected = true;\s*rejectionsThisAttempt\.push\(\{ action: 'repeat_after_correct'/);
+  assert.match(vtr, /if \(repeated && pronunciationMeasuredThisTurn\) \{\s*repeatAfterCorrectRejected = true;\s*onDebugEvent\?\.\('repeat_after_correct_allowed', 'measured'\);\s*\} else if \(repeated && racSkip\) \{[\s\S]{0,200}?\} else if \(repeated\) \{\s*repeatAfterCorrectRejected = true;\s*repeatAfterCorrectKilled = true;\s*rejectionsThisAttempt\.push\(\{ action: 'repeat_after_correct'/);
   // the flag is set only from the consumed measured note
   assert.match(vtr, /runTranscript = `\$\{pronunciationResultNoteRef\.current\}\\n\\n\$\{runTranscript\}`;\s*pronunciationMeasuredThisTurn = pronunciationMeasuredRef\.current;/);
 });
@@ -1957,7 +1958,7 @@ test('33 r1 R9-3: the personal retry never re-asks — the directive forbids it 
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('if (sqReason === SAME_QUESTION_THIRD_TIME_PERSONAL_REASON) sqPersonalPinned = sqAsk;'));
   assert.ok(vtr.includes("if (sqPersonalPinned && (retryReasksQuestion(updatedSentence, sqPersonalPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {"));
-  assert.ok(vtr.includes("if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {"));
+  assert.ok(vtr.includes("if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped || repeatAfterCorrectReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {"));
 });
 
 test('33 r2 R9-3: paraphrases and statement-form re-asks of the pinned question are caught', () => {
@@ -2091,6 +2092,27 @@ test('37 §B: on the check-in turn a pronoun-object question with ≤ 2 content 
   assert.equal(pronounReask('What do you think?'), false, 'no pronoun object');
   // a repeat / correction ask still wins
   assert.equal(probeReasks('Could you say that once more, "I am responsible for sales"?', asks, { studentText: 'I responsible for sales.' }), false);
+});
+
+// Task 38 §F (voice run 19, 1016–1037 s): repeats demanded after correct sentences.
+test('38 §F: the 1037 s reordered recast of a checked-correct sentence is a repeat_after_correct; the 1016 s starter ask was already met', () => {
+  const t1037 = 'Sweets as a thank-you for donors, so people felt good giving money. Now let\'s try the full sentence with "by" plus the -ing form: "I solved it by giving people sweets." Can you say that once more?';
+  assert.equal(reAskedRecastOfCorrect('I solved it by giving sweets to people.', t1037, 'correct'), 'I solved it by giving people sweets.');
+  assert.equal(reAskedRecastOfCorrect('I solved it by giving sweets to people.', t1037, 'partly_correct'), null, 'only on a correct verdict');
+  assert.equal(reAskedRecastOfCorrect('I solve it by give sweets to people.', 'Say it like this: "I solved it by giving people sweets." Can you say that once more?', 'correct'), null, 'changed words are a correction');
+  const t1016 = 'Giving sweets to people as a thank-you for donating, that\'s a creative idea, Praveen. Could you say that in one English sentence, starting with "I solved it by..."?';
+  assert.equal(starterAskAlreadyMet('I solved it by giving people sweets so they can donate to the cause.', t1016), 'i solved it by');
+  assert.equal(starterAskAlreadyMet('Giving sweets.', t1016), null, 'not yet a sentence with the starter');
+  assert.ok(STARTER_ASK_ALREADY_MET_REASON.includes('do not ask for a repeat'));
+  assert.ok(REPEAT_AFTER_CORRECT_REASON.includes('Do not ask for a repeat.'));
+  // the retry's repeat ask is dropped; its next step is kept
+  assert.equal(isStrictRepeatAsk38('Can you say that once more?'), true);
+  assert.equal(isStrictRepeatAsk38("Let's take the next step: what was the result of giving people sweets?"), false);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('if (TUTOR_REPEAT_AFTER_CORRECT_DROP && attempt > 0 && repeatAfterCorrectKilled && isStrictRepeatAsk(updatedSentence)) {'));
+  assert.ok(vtr.includes("?? (TUTOR_REPEAT_AFTER_CORRECT_DROP ? reAskedRecastOfCorrect(transcript, attemptText, verdictPrecheckRef.current?.verdict) : null);"));
+  assert.ok(vtr.includes("rejectionsThisAttempt.push({ action: 'repeat_after_correct', reason: STARTER_ASK_ALREADY_MET_REASON });"));
+  assert.match(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8'), /export const TUTOR_REPEAT_AFTER_CORRECT_DROP = process\.env\.NEXT_PUBLIC_TUTOR_REPEAT_AFTER_CORRECT_DROP !== 'off';/);
 });
 
 if (failed) process.exit(1);

@@ -665,7 +665,7 @@ export function reAskedModelSentence(prevTutorText: string, studentText: string,
 // the stutter at the start is only a repeat, so the sentence itself is
 // right."): the retry narrated how it judged the sentence.
 export const REPEAT_AFTER_CORRECT_REASON = withRetryStyle(
-  'The student just said that sentence correctly. Confirm it in one short sentence and move to the next item; do not ask for it again. Say that it is right and go on; do not explain how you judged it (no talk of stutters, repeats, matching the model, or what counts).');
+  'The student just said that sentence correctly. Confirm it in one short sentence and move to the next item; do not ask for it again. Do not ask for a repeat. Say that it is right and go on; do not explain how you judged it (no talk of stutters, repeats, matching the model, or what counts).');
 
 /**
  * Task 30 fix round 1 S8 (smoke run 467–475 s): the student said, a third
@@ -1300,4 +1300,51 @@ export function isQuestionLeadIn(sentence: string | null | undefined): boolean {
   const s = (sentence ?? '').trim();
   if (!s || /[?？]/.test(s) || /["“「]/.test(s)) return false;
   return LEAD_IN_SHAPES.some((re) => re.test(s));
+}
+
+/**
+ * Task 38 §F (voice run 19, 1037 s: the check found "I solved it by giving
+ * sweets to people." correct and the tutor asked for a reordered recast —
+ * 'Now let's try the full sentence …: "I solved it by giving people
+ * sweets." Can you say that once more?'). With a CORRECT verdict, an attempt
+ * that asks for a repeat (isStrictRepeatAsk) of a quoted sentence made of
+ * the same words as the student's (articles and to / of / for out; order
+ * free) re-asks the student's own sentence. Returns the quote, or null. Pure.
+ */
+const RECAST_SET_SKIP = new Set(['a', 'an', 'the', 'to', 'of', 'for']);
+function recastWordSet(text: string): Set<string> {
+  return new Set(cleanStudentSentence(text).split(' ').filter((w) => w && !RECAST_SET_SKIP.has(w)));
+}
+export function reAskedRecastOfCorrect(studentText: string, attemptText: string, verdict: string | null | undefined): string | null {
+  if (verdict !== 'correct' || !isStrictRepeatAsk(attemptText ?? '')) return null;
+  const said = recastWordSet(studentText);
+  if (said.size < 3) return null;
+  for (const q of quotedSpans(attemptText)) {
+    const qs = recastWordSet(q);
+    if (qs.size !== said.size) continue;
+    if ([...qs].every((w) => said.has(w))) return q;
+  }
+  return null;
+}
+
+/**
+ * Task 38 §F (voice run 19, 1016 s: "I solved it by giving people sweets so
+ * they can donate to the cause." → 'Could you say that in one English
+ * sentence, starting with "I solved it by..."?'). An ask to say it in one /
+ * a (full / English) sentence starting with "<starter>" when the student's
+ * turn already IS an English sentence opening with that starter (≥ 3 words
+ * after it). Returns the starter, or null. Pure.
+ */
+const ONE_SENTENCE_STARTER_ASK_RE = /\b(?:say|tell me|put|give me)\b[^.!?]*\b(?:in|as) (?:one|a|the) (?:full |whole |complete |clean |single )?(?:english )?sentence\b[^?!]*?\bstart(?:ing)? with\s*["“]([^"”\n]+)["”]/i;
+export const STARTER_ASK_ALREADY_MET_REASON = withRetryStyle(
+  'The student already said it as one English sentence starting with that phrase. Do not ask for it again and do not ask for a repeat; respond to what they said in one short sentence and go on with the next step.');
+export function starterAskAlreadyMet(studentText: string, attemptText: string): string | null {
+  const m = ONE_SENTENCE_STARTER_ASK_RE.exec(attemptText ?? '');
+  if (!m) return null;
+  const starter = latinSentence(m[1]!.replace(/(?:…|\.{2,})\s*$/, ''));
+  const n = starter.split(' ').filter(Boolean).length;
+  if (n < 2) return null;
+  const said = cleanStudentSentence(studentText);
+  if (!said.startsWith(`${starter} `) || said.split(' ').filter(Boolean).length < n + 3) return null;
+  return starter;
 }

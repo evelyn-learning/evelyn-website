@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, resolveMenuPickLoose, loosePickAllowed, menuPickNote, menuAskedIn, menuReplyIsPick, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { emptyTurnFallbackLine, silentTurnFallbackLine, lastShowSentenceOf, SILENT_TURN_STATE_TOOLS } from '@/lib/tutor/voice/empty-turn-fallback';
@@ -232,7 +232,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness, isQuestionLeadIn } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness, isQuestionLeadIn, reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -13487,6 +13487,9 @@ export function VoiceTutorRealtime({
       let judgeRetriesUsed = 0;
       // correct-retry.ts (GDI run 3): one repeat_after_correct kill per turn.
       let repeatAfterCorrectRejected = false;
+      // Task 38 §F: a repeat_after_correct / starter-already-met kill ran this turn — the retry's repeat asks are dropped.
+      let repeatAfterCorrectKilled = false;
+      let repeatAfterCorrectReaskDropped = false;
       // Task 30 fix round 3 R2-2a: same_question_third_time fired this turn (once).
       let sameQuestionRejected = false;
       // Task 33 fix round 1 (R9-3): the personal question the retry must not ask again.
@@ -17320,6 +17323,16 @@ export function VoiceTutorRealtime({
                     dropLeadInWithQuestion();
                     continue;
                   }
+                  // Task 38 §F (voice run 19, 1037 s): after a repeat_after_correct
+                  // kill the retry's repeat ask is dropped (R9-3 style); the
+                  // move-on line covers a retry left with nothing else.
+                  if (TUTOR_REPEAT_AFTER_CORRECT_DROP && attempt > 0 && repeatAfterCorrectKilled && isStrictRepeatAsk(updatedSentence)) {
+                    sqReaskDroppedPrev = true;
+                    repeatAfterCorrectReaskDropped = true;
+                    onDebugEvent?.('repeat_after_correct_reask_dropped', `"${updatedSentence.slice(0, 80)}"`);
+                    dropLeadInWithQuestion();
+                    continue;
+                  }
                   // Task 34 §A: after the no-attempt note the turn re-asks the same ask —
                   // dropped (with its starter); the part's turn budget then counts as reached.
                   if (noAttemptPinned && (reasksAsk(updatedSentence, noAttemptPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
@@ -20164,7 +20177,11 @@ export function VoiceTutorRealtime({
           const prevTutorForRepeat = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
           const repeated = reAskedOwnSentence(transcript, attemptText, { studentCorrect: precheckCorrectness(verdictPrecheckRef.current?.verdict) })
             ? transcript
-            : reAskedModelSentence(prevTutorForRepeat, transcript, attemptText);
+            : reAskedModelSentence(prevTutorForRepeat, transcript, attemptText)
+              // Task 38 §F (voice run 19, 1037 s): a reordered recast of a sentence the check found correct.
+              ?? (TUTOR_REPEAT_AFTER_CORRECT_DROP ? reAskedRecastOfCorrect(transcript, attemptText, verdictPrecheckRef.current?.verdict) : null);
+          // Task 38 §F (voice run 19, 1016 s): "say that in one English sentence, starting with "X…"" after a sentence that starts with X.
+          const starterMet = !repeated && TUTOR_REPEAT_AFTER_CORRECT_DROP ? starterAskAlreadyMet(transcript, attemptText) : null;
           // Task 19 §C (GDI run 7, 1132 s): on a turn carrying a MEASURED
           // pronunciation note the re-ask is the coaching drill, not a
           // redundant retry — the kill's retry was told "confirm it" and never
@@ -20180,9 +20197,16 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('repeat_after_correct_skipped', `${racSkip} "${repeated.slice(0, 60)}"`);
           } else if (repeated) {
             repeatAfterCorrectRejected = true;
+            repeatAfterCorrectKilled = true;
             rejectionsThisAttempt.push({ action: 'repeat_after_correct', reason: REPEAT_AFTER_CORRECT_REASON });
             await performKill();
             onDebugEvent?.('repeat_after_correct', `"${repeated.slice(0, 60)}"`);
+          } else if (starterMet && !pronunciationMeasuredThisTurn) {
+            repeatAfterCorrectRejected = true;
+            repeatAfterCorrectKilled = true;
+            rejectionsThisAttempt.push({ action: 'repeat_after_correct', reason: STARTER_ASK_ALREADY_MET_REASON });
+            await performKill();
+            onDebugEvent?.('repeat_after_correct', `starter already met "${starterMet.slice(0, 60)}"`);
           }
         }
 
@@ -21004,7 +21028,7 @@ export function VoiceTutorRealtime({
         engineOfferSeg = '';
         // Task 33 fix round 1 (R9-3): the personal-question retry was nothing
         // but the dropped re-ask — the engine moves on in one line.
-        if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {
+        if (!attemptKilled && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped || repeatAfterCorrectReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {
           const moveOn = sameQuestionMoveOnLine(tutorLanguages);
           speakOnePart(moveOn);
           attemptText = `${attemptText} ${moveOn}`.trim();
