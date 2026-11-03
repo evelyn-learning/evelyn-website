@@ -372,7 +372,7 @@ function addressLearner(s: string): string {
   if (lead && out.slice(lead[0].length).trim()) out = capitaliseFirst(out.slice(lead[0].length));
   return out;
 }
-export interface NoteCitationOpts { /** the session persona's name(s) — full name and first name */ personaName?: string | readonly string[] | null; /** fix round 8 (A1): the session's first tutor turn — the persona may introduce itself */ firstTutorTurn?: boolean }
+export interface NoteCitationOpts { /** the session persona's name(s) — full name and first name */ personaName?: string | readonly string[] | null; /** fix round 8 (A1): the session's first tutor turn — the persona may introduce itself */ firstTutorTurn?: boolean; /** Final review I-1: a language lesson (subject languages / fixed-script plan) — the language-lesson narration rules apply; false ⇒ off (maths and other tenants); absent ⇒ on */ languageLesson?: boolean }
 /**
  * A sentence that cites a runtime note with the citation removed: unchanged
  * when there is none (or the continuation opens with a quote), the content
@@ -386,7 +386,7 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   // Task 30 §E1: a rewrite that leaves the learner in the third person.
   if (isThirdPersonResidue(raw, opts)) return '';
   // Task 30 fix round 3 (R2-1): a spoken plan lead / tail goes, the rest stays.
-  s = stripSpokenPlanLeadTail(s);
+  s = stripSpokenPlanLeadTail(s, { languageLesson: opts?.languageLesson !== false });
   if (!s.trim()) return '';
   // Fix round 8 (A3): the level-tool clause goes; the rest stays when it addresses the student.
   s = stripLevelNoteClause(s);
@@ -395,7 +395,7 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   s = stripLessonStateClause(s);
   if (!s.trim()) return '';
   // Task 31 §E: directive-echo lead, the refusal narrated, card layout, a non-CJK "In Japanese" gloss, "finally said".
-  s = stripRound9Narration(s);
+  if (opts?.languageLesson !== false) s = stripRound9Narration(s);
   if (!s.trim()) return '';
   if (CLOSE_PART_NARRATION_RE.test(s)) return '';
   if (isCaptureNarration(s)) return '';
@@ -404,7 +404,7 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   // Task 34 §B (bot run r11 1218 s: "Those notes are in English, so I'll keep
   // my reply in Japanese: 目標の一文が…"): a lead about "those / these / the
   // notes / instructions" before a colon goes; the rest stays.
-  const notesLead = NOTES_LEAD_RE.exec(s);
+  const notesLead = opts?.languageLesson !== false ? NOTES_LEAD_RE.exec(s) : null;
   if (notesLead) {
     const rest = s.slice(notesLead[0].length).trim();
     return /[\p{L}\p{N}]/u.test(rest) ? capitaliseFirst(rest) : '';
@@ -637,8 +637,8 @@ const NOTES_SUBJECT_VERDICT_RE = /^\s*(?:(?:so|okay|ok|well|now),?\s+)?(?:(?:a f
 // notes above are instructions for me, so let me just carry on with the
 // lesson."): instructions for me / carry on with the lesson / let me get on.
 const NOTES_VERDICT_RE = /\binternal\b|\bmeant for me\b|\bnot (?:your|the student['’]?s) (?:words|answer)\b|\bset (?:them|it) aside\b|\bignore (?:them|it)\b|\bpick up the lesson\b|\bmix-up\b|\binstructions for me\b|\bcarry on with the lesson\b|\bjust carry on\b|\blet me (?:just )?(?:carry|get) on\b/i;
-export function isBundledNotesNarration(s: string): boolean {
-  if (NOTES_SUBJECT_VERDICT_RE.test(s)) return true;
+export function isBundledNotesNarration(s: string, opts?: { languageLesson?: boolean }): boolean {
+  if (opts?.languageLesson !== false && NOTES_SUBJECT_VERDICT_RE.test(s)) return true;
   return NOTES_MENTION_RE.test(s) && NOTES_VERDICT_RE.test(s);
 }
 /** R4-1: the tutor announcing its own name as a sentence ("Ryotaです。",
@@ -783,9 +783,9 @@ const PLAN_TAIL_RE = /,?\s*\bso I['’]ll (?:note|ask|point|model|name|acknowled
 // back: which country did you visit …?"): a first-person steering lead
 // before a colon is stripped and the question kept; nothing after it ⇒ ''.
 const STEER_LEAD_RE = /^\s*(?:So|Then|Now),? I['’]?ll (?:gently )?(?:bring (?:it|that|us) back|move us on|move on to|take us to)[^:]*:\s*/i;
-export function stripSpokenPlanLeadTail(sentence: string): string {
+export function stripSpokenPlanLeadTail(sentence: string, opts?: { languageLesson?: boolean }): string {
   let s = sentence ?? '';
-  const steer = STEER_LEAD_RE.exec(s);
+  const steer = opts?.languageLesson !== false ? STEER_LEAD_RE.exec(s) : null;
   if (steer) {
     const rest = s.slice(steer[0].length).trim();
     if (!/[\p{L}\p{N}]/u.test(rest)) return '';
@@ -1257,12 +1257,14 @@ function directiveEchoEnabled(): boolean {
 
 export function isMetaNarration(
   sentence: string,
-  opts?: { structural?: boolean; /** Task 20 fix round 1: the turn answers a runtime directive / nudge (transcript starts with "["), not the student */ runtimeTriggered?: boolean; /** Task 21 fix round 1: the persona's name(s) for the "<Name> here." rule */ personaName?: string | readonly string[] | null ; /** Task 30 fix round 6 (T-1): the session's first tutor turn — the persona may introduce itself */ firstTutorTurn?: boolean; /** Task 33 §B: the sentences of the runtime notes / directive bundled into this turn's input (directiveSentencesOf) */ directiveSentences?: readonly string[] | null },
+  opts?: { structural?: boolean; /** Task 20 fix round 1: the turn answers a runtime directive / nudge (transcript starts with "["), not the student */ runtimeTriggered?: boolean; /** Task 21 fix round 1: the persona's name(s) for the "<Name> here." rule */ personaName?: string | readonly string[] | null ; /** Task 30 fix round 6 (T-1): the session's first tutor turn — the persona may introduce itself */ firstTutorTurn?: boolean; /** Task 33 §B: the sentences of the runtime notes / directive bundled into this turn's input (directiveSentencesOf) */ directiveSentences?: readonly string[] | null; /** Final review I-1: false ⇒ the language-lesson rules are off (absent ⇒ on) */ languageLesson?: boolean },
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if (directiveEchoEnabled() && (isTutorDirectiveImperative(s) || isDirectiveEchoOf(s, opts?.directiveSentences) || isSteeringPlanNarration(s))) return true;
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || (BOARD_STAGING_NARRATION_RE.test(s) && !isFirstPersonBoardOfferToLearner(s)) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
+  // Final review I-1: the Task 33–35 narration rules run in language lessons only.
+  const languageLesson = opts?.languageLesson !== false;
+  if (languageLesson && directiveEchoEnabled() && (isTutorDirectiveImperative(s) || isDirectiveEchoOf(s, opts?.directiveSentences) || isSteeringPlanNarration(s))) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s) || RUNTIME_NOTE_NARRATION_RE.test(s) || (BOARD_STAGING_NARRATION_RE.test(s) && !isFirstPersonBoardOfferToLearner(s)) || DIRECTIVE_ECHO_RE.test(s) || DIRECTIVE_ECHO_NOTE_RE.test(s) || THIRD_PERSON_PLAN_ANYWHERE_RE.test(s) || BOARD_ALREADY_NARRATION_RE.test(s) || CONTINUATION_NARRATION_RE.test(s) || isNudgeDirectiveEcho(s) || isNotePlanNarration(s) || REDO_LEAD_RE.test(s) || BOARD_SELF_INSTRUCTION_RE.test(s) || LESSON_CLOSED_NARRATION_RE.test(s) || OWN_REPLY_JUDGING_RE.test(s) || isBundledNotesNarration(s, { languageLesson }) || isBareNameAnnounce(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn }) || EXCHANGE_NARRATION_JA_RE.test(s) || LEVEL_NOTE_NARRATION_RE.test(s) || QUESTION_COUNT_NARRATION_RE.test(s) || LAST_MESSAGE_QUOTED_RE.test(s) || INSTRUCTION_CITATION_RE.test(s) || (s.trim() !== '' && stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn, languageLesson }) === '') || (opts?.runtimeTriggered === true && s.trim() !== '' && stripNudgePlanClause(s) === '')) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
@@ -1536,7 +1538,7 @@ export function isStudentEchoOpener(studentText: string | null | undefined, cur:
  */
 export function filterNarrationText(
   text: string | null | undefined,
-  opts?: { structural?: boolean; runtimeTriggered?: boolean; personaName?: string | readonly string[] | null; firstTutorTurn?: boolean },
+  opts?: { structural?: boolean; runtimeTriggered?: boolean; personaName?: string | readonly string[] | null; firstTutorTurn?: boolean; languageLesson?: boolean },
 ): string {
   const parts = (text ?? '').split(/(?<=[.!?。！？])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
   const kept: string[] = [];
@@ -1544,7 +1546,7 @@ export function filterNarrationText(
   let prevDropped = false;
   for (const raw of parts) {
     let s = stripLeakedLabels(raw, opts?.personaName ?? null);
-    const cited = stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn });
+    const cited = stripNoteCitationClause(s, { personaName: opts?.personaName, firstTutorTurn: opts?.firstTutorTurn, languageLesson: opts?.languageLesson });
     if (cited && cited !== s) s = cited;
     if (!s.trim() || isMetaNarration(s, opts)) { prevDropped = true; continue; }
     if (prevDropped && isPlanContinuationSentence(s)) { prevDropped = false; continue; }
@@ -1567,7 +1569,7 @@ export function doneTurnText(input: {
   fullText: string | null | undefined;
   streamSentences: number;
   filter: boolean;
-  opts?: { structural?: boolean; runtimeTriggered?: boolean; personaName?: string | readonly string[] | null; firstTutorTurn?: boolean };
+  opts?: { structural?: boolean; runtimeTriggered?: boolean; personaName?: string | readonly string[] | null; firstTutorTurn?: boolean; languageLesson?: boolean };
 }): string {
   if (input.attemptText) return input.attemptText.trim();
   const full = (input.fullText ?? '').trim();

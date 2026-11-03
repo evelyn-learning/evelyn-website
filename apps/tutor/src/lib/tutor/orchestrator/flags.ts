@@ -1251,3 +1251,9 @@ export const TUTOR_KILL_REARM_ENTRY_NOTE = process.env.NEXT_PUBLIC_TUTOR_KILL_RE
  *  directive and a running note, and a sentence that re-asks one is dropped.
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_ANSWERED_GUARD=off. */
 export const TUTOR_ANSWERED_GUARD = process.env.NEXT_PUBLIC_TUTOR_ANSWERED_GUARD !== 'off';
+
+/** Task 33 §B (registered in the final review): the directive-echo /
+ *  steering / part-state / board-write narration drops in meta-narration.ts
+ *  (read there via flagOn, language lessons only). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_DIRECTIVE_ECHO_DROP=off. */
+export const TUTOR_DIRECTIVE_ECHO_DROP = process.env.NEXT_PUBLIC_TUTOR_DIRECTIVE_ECHO_DROP !== 'off';

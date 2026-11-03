@@ -16128,7 +16128,7 @@ export function VoiceTutorRealtime({
                     }
                     // Fix round 8 (A1): the persona's "<Name> here." lead is stripped here — the
                     // stream merges it into the next sentence (≥ 25-char boundary).
-                    const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0 });
+                    const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0, languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current) });
                     if (noteStripped && noteStripped !== ev.text) {
                       onDebugEvent?.('meta_narration_dropped_note_citation_clause', `"${ev.text.slice(0, 60)}" → "${noteStripped.slice(0, 60)}"`);
                       (ev as { text?: string }).text = noteStripped;
@@ -17229,6 +17229,8 @@ export function VoiceTutorRealtime({
                     personaName: personaNamesRef.current,
                     // Task 30 fix round 6 (T-1): the persona may introduce itself in the first tutor turn.
                     firstTutorTurn: recentTutorTurnsRef.current.length === 0,
+                    // Final review I-1: today's language-lesson narration rules only there.
+                    languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current),
                     // Task 33 §B: the notes / directive bundled into this attempt's input.
                     directiveSentences: directiveSentencesForInput(runTranscript, transcript),
                   });
@@ -19558,7 +19560,7 @@ export function VoiceTutorRealtime({
                     const doneFull = (ev.fullText as string) ?? '';
                     const doneText = doneTurnText({
                       attemptText, fullText: doneFull, streamSentences: streamSentencesThisAttempt, filter: TUTOR_NARRATION_BACKFILL_FILTER,
-                      opts: { structural: TUTOR_META_NARRATION_STRUCTURAL, runtimeTriggered: /^\s*\[/.test(transcript), personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0 },
+                      opts: { structural: TUTOR_META_NARRATION_STRUCTURAL, runtimeTriggered: /^\s*\[/.test(transcript), personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0, languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current) },
                     });
                     if (!attemptText && doneFull.trim() && doneText !== doneFull.trim()) onDebugEvent?.('meta_narration_backfill_filtered', `${streamSentencesThisAttempt > 0 ? `${streamSentencesThisAttempt} stream sentence(s) all dropped — no backfill` : 'no stream sentence'}: "${doneFull.slice(0, 60)}" → "${doneText.slice(0, 60)}"`);
                     attemptText = doneText;

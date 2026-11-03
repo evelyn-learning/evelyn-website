@@ -745,7 +745,7 @@ check('§A a short colon tail is still citation', stripNoteCitationClause('The p
 {
   const vtr = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('§A VTR strips the note citation on every turn, before the nudge clause',
-    /if \(typeof ev\.text === 'string'\) \{[\s\S]{0,700}?const noteStripped = stripNoteCitationClause\(ev\.text, \{ personaName: personaNamesRef\.current, firstTutorTurn: recentTutorTurnsRef\.current\.length === 0 \}\);/.test(vtr)
+    /if \(typeof ev\.text === 'string'\) \{[\s\S]{0,700}?const noteStripped = stripNoteCitationClause\(ev\.text, \{ personaName: personaNamesRef\.current, firstTutorTurn: recentTutorTurnsRef\.current\.length === 0, languageLesson: subject === 'languages' \|\| isFixedScriptPlan\(lessonPlanRef\.current\) \}\);/.test(vtr)
     && vtr.indexOf('stripNoteCitationClause(ev.text') < vtr.indexOf('stripNudgePlanClause(ev.text)'));
   check('§A r1 VTR passes the persona name(s) to isMetaNarration', vtr.includes('personaName: personaNamesRef.current,')
     && vtr.includes('[teacherPersona.name, teacherFirstName(teacherPersona.name)]'));
@@ -1218,7 +1218,7 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('A1: another name kept ("Tanaka here. How can I help you?")', stripNoteCitationClause('Tanaka here. How can I help you today?', P) === 'Tanaka here. How can I help you today?');
   check('A1: filterNarrationText strips the merged lead', filterNarrationText("Ryota here. Let's keep going with the present perfect.", P) === "Let's keep going with the present perfect.");
   const vtr = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('A1: VTR passes firstTutorTurn to the stream note-citation strip', vtr.includes('const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0 });'));
+  check('A1: VTR passes firstTutorTurn to the stream note-citation strip', vtr.includes("const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0, languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current) });"));
 }
 
 // Task 30 fix round 8 (A2, run r6-A 202 s): a first-person board line addressed to the learner is kept.
@@ -1395,6 +1395,20 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
     check(`34 r1 R12-1: dropped — ${x}`, isMetaNarration(x));
   for (const x of ['Here is the question on the board: What is one project you have worked on this year?', 'Look at the board.', 'Let me write the question on the board, and you read it aloud.'])
     check(`34 r1 R12-1: kept — ${x}`, !isMetaNarration(x));
+}
+
+
+// Final review I-1: today's narration rules run in language lessons only.
+{
+  const maths = { languageLesson: false };
+  for (const x of ['The first step is done, so now we divide both sides by 3.', 'This part is finished, so the area is 24 square centimetres.', 'Now I\'ll move on to the next problem.', 'Give the answer in one sentence.', 'Answer in one sentence.', 'Do not forget the note about negative numbers.', 'Let me put the example on the board.', 'The instructions are meant to help with part b.', "Here's the graph with the note below the axis."])
+    check(`final I-1: kept in a maths session — ${x}`, !isMetaNarration(x, maths) && stripNoteCitationClause(x, maths) === x);
+  for (const x of ["The present perfect part is finished, so let's move on.", 'Ask the question again, plainly, in English and Japanese, and keep it short.', "Now I'll move us on to the pronunciation practice.", 'Let me write the question on the board.', "Those notes are runtime instructions, so let's keep going."])
+    check(`final I-1: still dropped in a language session — ${x}`, isMetaNarration(x, { languageLesson: true }));
+  check('final I-1: the steering lead strip is language-only', stripNoteCitationClause("So I'll gently bring it back: which one?", maths) === "So I'll gently bring it back: which one?" && stripNoteCitationClause("So I'll gently bring it back: which one?", { languageLesson: true }) === 'Which one?');
+  check('final I-1: filterNarrationText passes the gate', filterNarrationText('The first step is done, so now we divide both sides by 3.', maths) === 'The first step is done, so now we divide both sides by 3.');
+  const VTRI1 = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  check('final I-1: VTR passes languageLesson to isMetaNarration and the done-frame backfill', VTRI1.includes("languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current),\n                    // Task 33 §B") && VTRI1.includes("firstTutorTurn: recentTutorTurnsRef.current.length === 0, languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current) },"));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
