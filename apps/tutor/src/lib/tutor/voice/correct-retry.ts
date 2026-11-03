@@ -1275,6 +1275,75 @@ export function probeReasks(sentence: string | null | undefined, previousAsks: R
   return asks.filter((a) => !isJapaneseSentence(a)).some((a) => subsetJaccard(mine, reaskStems(turnAskGist(a) || a)));
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Task 40 §A (bot run r28, 439–488 s: the country question asked three times
+// while the student said the same unrelated sentence; the precheck said
+// answers=neither at 442 s and 469 s, and the 488 s ask was reworded enough
+// to pass the Task 36 §A subset rule). In a language lesson, two consecutive
+// precheck verdicts of answers=neither on the same ask count as two
+// non-attempts: the next turn carries NO_ATTEMPT_MOVE_ON_NOTE, and on that
+// turn ANY question about the same ask is dropped — content stems (or
+// Japanese 2+ character runs) with Jaccard ≥ 0.4 against one of the asks'
+// question sentences, or a question whose content is all inside the asks'
+// (it asks nothing new). Wording-independent. Pure.
+// ─────────────────────────────────────────────────────────────────────────
+export const NEITHER_SAME_ASK_JACCARD = 0.4;
+/** The precheck said the reply answered none of the targets (and did not
+ *  judge it correct). */
+export function precheckSaysNeither(pc: { verdict?: string | null; answers?: string | null } | null | undefined): boolean {
+  return !!pc && pc.answers === 'neither' && pc.verdict !== 'correct';
+}
+function askSentencesOf(turn: string | null | undefined): string[] {
+  return (turn ?? '').split(/(?<=[.!?。！？])\s+/).map((x) => x.trim()).filter((x) => x && PROBE_ASK_SHAPE_RE.test(x) && !isStarterHint(x));
+}
+function tokensFor(s: string): Set<string> {
+  return isJapaneseSentence(s) ? jaTokens(s) : reaskStems(/[?？]/.test(s) ? (turnAskGist(s) || s) : s);
+}
+function jaccardAtLeast(x: Set<string>, y: Set<string>, min: number): boolean {
+  if (x.size === 0 || y.size === 0) return false;
+  let inter = 0;
+  for (const w of x) if (y.has(w)) inter += 1;
+  return inter / (x.size + y.size - inter) >= min;
+}
+/** Two tutor turns ask the same thing: Task 34 sameAsk, or any pair of their
+ *  ask sentences (same script) at stems Jaccard ≥ 0.4. Pure. */
+export function sameNeitherAsk(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (sameAsk(a, b)) return true;
+  const xa = askSentencesOf(a);
+  const xb = askSentencesOf(b);
+  return xa.some((p) => xb.some((q) => isJapaneseSentence(p) === isJapaneseSentence(q) && jaccardAtLeast(tokensFor(p), tokensFor(q), NEITHER_SAME_ASK_JACCARD)));
+}
+export interface NeitherExchange { tutorText: string; neither: boolean }
+/** The note is due on this turn: the last two judged exchanges were both
+ *  answers=neither to the same ask, and the turn the student is now
+ *  answering still asks it. A judged answer in between (any other verdict)
+ *  breaks the streak. Pure. */
+export function neitherStreak(exchanges: ReadonlyArray<NeitherExchange>, lastTutorTurn: string | null | undefined): boolean {
+  if (exchanges.length < 2) return false;
+  const [e1, e2] = exchanges.slice(-2) as [NeitherExchange, NeitherExchange];
+  if (!e1.neither || !e2.neither) return false;
+  if (!sameNeitherAsk(e1.tutorText, e2.tutorText)) return false;
+  return !lastTutorTurn || lastTutorTurn === e2.tutorText || sameNeitherAsk(e2.tutorText, lastTutorTurn);
+}
+/** On the note's turn, a sentence asking the same thing as any of the
+ *  streak's asks. A model answer (no ask) and a repeat / correction ask are
+ *  kept. Pure. */
+export function neitherStreakReasks(sentence: string | null | undefined, asks: ReadonlyArray<string | null | undefined>, opts?: { studentText?: string | null }): boolean {
+  const s = (sentence ?? '').trim();
+  if (!s || !PROBE_ASK_SHAPE_RE.test(s)) return false;
+  if (isRepeatOrCorrectionAsk(s, opts?.studentText)) return false;
+  // No Task 37 pronoun rule here: "what did you do with that customer?" is
+  // the next step, not the dropped ask.
+  const ja = isJapaneseSentence(s);
+  const mine = tokensFor(s);
+  if (mine.size === 0) return false;
+  const others = asks.flatMap((a) => askSentencesOf(a)).filter((a) => isJapaneseSentence(a) === ja);
+  if (!others.length) return false;
+  if (others.some((a) => jaccardAtLeast(mine, tokensFor(a), NEITHER_SAME_ASK_JACCARD))) return true;
+  const union = new Set(others.flatMap((a) => [...tokensFor(a)]));
+  return [...mine].every((w) => union.has(w));
+}
+
 /**
  * Task 38 §D (voice run 19, 963 s: the check-in drop removed "How did you
  * handle it?" and left "Let's hear more about the challenge itself." — the

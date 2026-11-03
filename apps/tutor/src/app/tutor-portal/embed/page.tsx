@@ -380,6 +380,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // Task 39 fix round 1: R26-1 return ask; R26-3 lone yes to a brain-made choice.
   'non_answer_return_ask', 'lone_yes_choice_note_planted',
   'fixed_script_advance_refused_offer_first',
+  // Task 40 §A: two answers=neither verdicts on the same ask.
+  'neither_streak_move_on_note_planted', 'neither_streak_reask_dropped',
   // Task 31 fix round 9 §D: the brain's own advance plants the part's entry note.
   'fixed_script_entry_note_planted',
   // Task 31 fix round 9 §F: the two-answers check-in note.

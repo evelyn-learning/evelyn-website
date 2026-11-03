@@ -1371,3 +1371,9 @@ export const TUTOR_JA_ANNOUNCED_MOVE = process.env.NEXT_PUBLIC_TUTOR_JA_ANNOUNCE
  *  choice the last tutor turn asked (planted or brain-made) = one more.
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_LONE_YES_ANY_CHOICE=off. */
 export const TUTOR_LONE_YES_ANY_CHOICE = process.env.NEXT_PUBLIC_TUTOR_LONE_YES_ANY_CHOICE !== 'off';
+
+/** Task 40 §A (bot run r28, 439–488 s): two answers=neither verdicts in a row
+ *  on the same ask = two non-attempts — the move-on note, and any re-ask of
+ *  it dropped that turn. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_NEITHER_STREAK_MOVE_ON=off. */
+export const TUTOR_NEITHER_STREAK_MOVE_ON = process.env.NEXT_PUBLIC_TUTOR_NEITHER_STREAK_MOVE_ON !== 'off';

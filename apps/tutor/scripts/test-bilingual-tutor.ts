@@ -60,6 +60,7 @@ import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from
 import { probeReasks, isRepeatOrCorrectionAsk, pronounReask } from '../src/lib/tutor/voice/correct-retry';
 import { teachingLanguageFirstViolation, teachingLanguageFirstReason, asksForSecondLanguage } from '../src/lib/tutor/voice/teaching-language-first';
 import { reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON, isStrictRepeatAsk as isStrictRepeatAsk38 } from '../src/lib/tutor/voice/correct-retry';
+import * as cr40 from '../src/lib/tutor/voice/correct-retry';
 import { NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, isNonAttempt, sameAsk, reasksAsk, noAttemptBudgetTurns, isYesNoAsk } from '../src/lib/tutor/voice/correct-retry';
 import { sameQuestionThirdTimeReason, isPersonalQuestion, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine } from '../src/lib/tutor/voice/correct-retry';
 import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
@@ -2168,4 +2169,37 @@ test('39 r1 R26-3: an all-Japanese turn after a one-word English answer is kille
   assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: 'Yes.', attemptText: `Okay, one more word. ${ja}` }), false, 'English first, then a gloss');
 });
 
+// Task 40 §A (bot run r28, 439–488 s): two answers=neither verdicts on the same ask.
+test('40 §A: two answers=neither verdicts on the same ask → the move-on note; the 488 s re-ask is dropped; a verdict in between resets', () => {
+  const cr = cr40;
+  const t417 = "Great, one more on the present perfect. Here's a new question for you, and I'll write it on the board. Have you ever visited a foreign country for business? If so, which one?";
+  const t440 = 'Have you ever visited a foreign country for business? If so, which country did you visit?';
+  const t468 = 'Your last line is about a presentation last month, not the country question. 国の名前を教えてください。 Which country did you visit for business?';
+  assert.equal(cr.precheckSaysNeither({ answers: 'neither', verdict: 'cannot_determine' }), true);
+  assert.equal(cr.precheckSaysNeither({ answers: 'neither', verdict: 'correct' }), false, 'judged correct');
+  assert.equal(cr.precheckSaysNeither({ answers: 'open_question', verdict: 'incorrect' }), false);
+  assert.equal(cr.precheckSaysNeither(null), false, 'no verdict');
+  assert.equal(cr.sameNeitherAsk(t417, t440), true, '"If so, which one?" — the earlier question sentence carries the ask');
+  assert.equal(cr.neitherStreak([{ tutorText: t417, neither: true }, { tutorText: t440, neither: true }], t468), true, '442 s + 469 s → the 487 s turn');
+  assert.equal(cr.neitherStreak([{ tutorText: t417, neither: true }, { tutorText: t440, neither: false }], t468), false, 'a judged answer in between resets');
+  assert.equal(cr.neitherStreak([{ tutorText: t417, neither: false }, { tutorText: t440, neither: true }], t468), false, 'only one neither');
+  assert.equal(cr.neitherStreak([{ tutorText: t417, neither: true }, { tutorText: 'What did you build with the customer from Germany?', neither: true }], null), false, 'different asks');
+  assert.equal(cr.neitherStreak([{ tutorText: t417, neither: true }, { tutorText: t440, neither: true }], 'Did you attend any business events or exhibitions last year?'), false, 'the last turn already moved on');
+  const asks = [t417, t440, t468];
+  assert.equal(cr.neitherStreakReasks('Could you tell me the name of a foreign country you visited for business?', asks), true, 'the 488 s candidate — reworded past the 36 §A subset rule');
+  assert.equal(cr.probeReasks('Could you tell me the name of a foreign country you visited for business?', [t440, t468]), false, 'which the check-in drop missed');
+  assert.equal(cr.neitherStreakReasks('Which country was it?', asks), true, 'nothing new asked');
+  assert.equal(cr.neitherStreakReasks('For example: I have visited Germany for business.', asks), false, 'the model answer is kept');
+  assert.equal(cr.neitherStreakReasks('The answer you gave is about a presentation last month, not a country.', asks), false);
+  assert.equal(cr.neitherStreakReasks('Did you attend any business events or exhibitions last year?', asks), false, 'the next step is kept');
+  assert.equal(cr.neitherStreakReasks('Now, what did you do with that customer?', asks), false, 'no pronoun rule');
+  assert.equal(cr.neitherStreakReasks('Could you say "I have visited Germany" once more?', asks), false, 'a repeat ask');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("neitherExchangesRef.current = [...neitherExchangesRef.current.slice(-1), { tutorText: peTutor, neither: precheckSaysNeither(verdictPrecheckRef.current) }];"));
+  assert.ok(vtr.includes("} else if (TUTOR_NEITHER_STREAK_MOVE_ON && naTurns.length >= 2) {"), 'inside the 34 §A language-lesson gate');
+  assert.ok(/neitherStreakAsks = \[\.\.\.neEx\.map\(\(e\) => e\.tutorText\), naLast\];[\s\S]{0,300}runTranscript = `\$\{NO_ATTEMPT_MOVE_ON_NOTE\}/.test(vtr), 'the Task 34 §A note is planted');
+  assert.ok(vtr.includes("if (neitherStreakAsks && !reasksAsk(updatedSentence, noAttemptPinned) && neitherStreakReasks(updatedSentence, neitherStreakAsks, { studentText: transcript })) {"));
+  assert.ok(vtr.includes('if (TUTOR_NON_ANSWER_RETURN_ASK && !attemptKilled && !noAttemptPinned) {'), 'no return ask after the move-on note');
+  assert.ok(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8').includes("NEXT_PUBLIC_TUTOR_NEITHER_STREAK_MOVE_ON !== 'off'"));
+});
 if (failed) process.exit(1);
