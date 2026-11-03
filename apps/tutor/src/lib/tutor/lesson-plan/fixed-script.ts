@@ -1183,3 +1183,19 @@ export function brainAdvanceOfferFirstRefused(input: {
   if (!input.offerPending || input.offerAskedInAttempt || input.studentMovedOn || input.runtimeTurn || input.alreadyRefusedThisTurn) return false;
   return true;
 }
+
+/** Task 39 fix round 1 (R26-3, bot run r26 1032–1048 s: "…would you like one
+ *  more word, or shall we move on to the summary?" → "Yes." → 「「はい」だけでは、
+ *  どちらか分かりません。」): the lone-yes rule (Task 33 §A3 — a bare yes takes
+ *  the choice's first half, one more) covers ANY "one more X, or move on?"
+ *  choice the last tutor turn asked (offerAsked), planted or brain-made, when
+ *  no planted-offer acceptance handled it. The urgent note orders the one
+ *  more item, never "which do you mean?". Pure. */
+export const LONE_YES_CHOICE_NOTE = withSilentClause(
+  "[runtime note — not from the student] The student answered your \"one more, or move on?\" question with yes — that means ONE more of the same kind. Do not ask which one they mean and do not ask the choice again. Give ONE new item now (spoken in full; written with handwrite when it is a question).]");
+export function loneYesChoiceNoteDue(input: { enabled: boolean; fixedScript: boolean; studentText: string | null | undefined; lastTutorText: string | null | undefined; acceptanceHandled: boolean }): boolean {
+  if (!input.enabled || !input.fixedScript || input.acceptanceHandled) return false;
+  const t = (input.studentText ?? '').trim();
+  if (!t || /^\s*\[/.test(t)) return false;
+  return isBareAffirmative(t) && offerAsked(input.lastTutorText);
+}

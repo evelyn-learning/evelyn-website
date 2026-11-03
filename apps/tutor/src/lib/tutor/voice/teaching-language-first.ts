@@ -23,10 +23,17 @@ function latinWords(s: string): number {
 function sentencesOf(text: string): string[] {
   return (text ?? '').split(/(?<=[。！？.!?])\s*|\n+/).map((x) => x.trim()).filter(Boolean);
 }
-/** The student's turn is English: ≥ 2 Latin words and no CJK. */
+/** The student's turn is English: no CJK and ≥ 2 Latin words — or, Task 39
+ *  fix round 1 (R26-3, bot run r26 1047 s: "Yes." got an all-Japanese
+ *  clarification and no kill), a one-word English answer (yes / no / okay /
+ *  sure / …; a romaji "hai" is not one). */
+const ONE_WORD_ENGLISH_ANSWERS = new Set(['yes', 'yeah', 'yep', 'no', 'nope', 'ok', 'okay', 'sure', 'right', 'fine', 'thanks', 'please', 'great', 'good', 'correct', 'exactly', 'maybe']);
 export function studentTurnIsEnglish(studentText: string | null | undefined): boolean {
   const s = (studentText ?? '').trim();
-  return !!s && !/^\s*\[/.test(s) && !CJK_RE.test(s) && latinWords(s) >= 2;
+  if (!s || /^\s*\[/.test(s) || CJK_RE.test(s)) return false;
+  const words = s.match(LATIN_WORD_RE) ?? [];
+  if (words.length >= 2) return true;
+  return words.length === 1 && ONE_WORD_ENGLISH_ANSWERS.has(words[0]!.toLowerCase());
 }
 /** A sentence of the teaching language (English): no CJK, ≥ 2 Latin words. */
 export function isEnglishSentence(sentence: string): boolean {

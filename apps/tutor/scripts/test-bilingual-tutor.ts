@@ -2157,4 +2157,15 @@ test('38 r1 I-3: no starter kill without a correct verdict; an article / preposi
   assert.ok(vtr.includes('starterAskAlreadyMet(transcript, attemptText, verdictPrecheckRef.current?.verdict) : null;'));
 });
 
+// Task 39 fix round 1 (R26-3, bot run r26 1047 s): "Yes." → an all-Japanese clarification.
+test('39 r1 R26-3: an all-Japanese turn after a one-word English answer is killed (English first)', () => {
+  const langs = ['en', 'ja'];
+  const ja = '「はい」だけでは、どちらか分かりません。 もう一つ単語を練習しますか、それとも今日のまとめに進みますか？';
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: 'Yes.', attemptText: ja }), true);
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: 'OK.', attemptText: ja }), true);
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: 'Hai.', attemptText: ja }), false, 'a romaji word is not English');
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: 'はい。', attemptText: ja }), false, 'a Japanese student turn');
+  assert.equal(teachingLanguageFirstViolation({ tutorLanguages: langs, studentText: 'Yes.', attemptText: `Okay, one more word. ${ja}` }), false, 'English first, then a gloss');
+});
+
 if (failed) process.exit(1);

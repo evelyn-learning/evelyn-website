@@ -52,7 +52,7 @@ import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, les
 import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
-import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence, offerAcceptedNoAskDue, isBareMoveOn, OFFER_ACCEPTED_NO_ASK_REASON, appliedAdvanceMarkerAfterKill, brainAdvanceOfferFirstRefused, transitionOfferValidatorDecision as tovd39 } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE, wrapUpAfterMenuDropDue, isWrapUpSentence, offerAcceptedNoAskDue, isBareMoveOn, OFFER_ACCEPTED_NO_ASK_REASON, appliedAdvanceMarkerAfterKill, brainAdvanceOfferFirstRefused, transitionOfferValidatorDecision as tovd39, loneYesChoiceNoteDue, LONE_YES_CHOICE_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { announcedMoveTarget as amt39, withoutClosingClause } from '../src/lib/tutor/lesson-plan/announced-move';
 import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
@@ -1478,6 +1478,22 @@ test('39 r1 R26-2: 「…はここまでにして、次は…に進みましょ�
   const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
   assert.ok(vtr.includes("rejected.push({ action: 'advance_lesson', reason: fixedScriptOfferMissingReason(plan, curSegId, next) });"));
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_JA_ANNOUNCED_MOVE = process\.env\.NEXT_PUBLIC_TUTOR_JA_ANNOUNCED_MOVE !== 'off';/);
+});
+
+// Task 39 fix round 1 (R26-3, bot run r26 1032–1048 s): a lone yes to a brain-made choice.
+test('39 r1 R26-3: "Yes." to any "one more X, or move on?" choice = one more', () => {
+  const t1032 = '「responsibilities」ですね、いいですね。 The main stress is on the fourth syllable: re-spon-si-BIL-i-ties. Now, would you like one more word, or shall we move on to the summary?';
+  const base = { enabled: true, fixedScript: true, studentText: 'Yes.', lastTutorText: t1032, acceptanceHandled: false };
+  assert.equal(loneYesChoiceNoteDue(base), true);
+  assert.equal(loneYesChoiceNoteDue({ ...base, studentText: 'はい' }), true);
+  assert.equal(loneYesChoiceNoteDue({ ...base, acceptanceHandled: true }), false, 'a planted-offer acceptance already handled it');
+  assert.equal(loneYesChoiceNoteDue({ ...base, studentText: "No, let's move on." }), false);
+  assert.equal(loneYesChoiceNoteDue({ ...base, lastTutorText: 'What did you do last week?' }), false, 'no choice asked');
+  assert.equal(loneYesChoiceNoteDue({ ...base, enabled: false }), false);
+  assert.ok(LONE_YES_CHOICE_NOTE.includes('Do not ask which one they mean'));
+  const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert.ok(vtr.includes('acceptanceHandled: offerAcceptedThisTurn || !!offerAcceptedFirstNote,'));
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_LONE_YES_ANY_CHOICE = process\.env\.NEXT_PUBLIC_TUTOR_LONE_YES_ANY_CHOICE !== 'off';/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
