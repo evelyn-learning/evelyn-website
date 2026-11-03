@@ -207,7 +207,8 @@ export function runChecks(dump) {
   }
 
   // 10f. voice run 19 (embed-1793676043999): classes the text checks missed
-  const silentTurns = tutor.filter((x) => /^\(rendered: [a-z_]+\)\s*$/i.test(x.text.trim()) || x.text.trim() === '');
+  // a "(rendered: …)" entry is silent only when no spoken tutor entry sits within 2 s before it (the silent-turn fallback logs its line as a separate entry)
+  const silentTurns = tutor.filter((x, i) => (/^\(rendered: [a-z_]+\)\s*$/i.test(x.text.trim()) || x.text.trim() === '') && !tutor.some((y) => y !== x && y.t >= x.t - 2 && y.t <= x.t && !/^\(rendered:/.test(y.text.trim()) && y.text.trim() !== ''));
   ok('no silent tutor turn (all sentences dropped)', silentTurns.length === 0, silentTurns.map((x) => `${x.t}s`).join(' '));
   const prevPage = ev('student_card_on_previous_page');
   ok('no student card routed to a previous page after an advance', prevPage.length === 0, prevPage.map((e) => `${e.t}s`).join(' '));
