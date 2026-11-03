@@ -1288,3 +1288,15 @@ export const TUTOR_QUESTION_LEAD_IN_HOLD = process.env.NEXT_PUBLIC_TUTOR_QUESTIO
  *  move-on line covers an empty retry). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_REPEAT_AFTER_CORRECT_DROP=off. */
 export const TUTOR_REPEAT_AFTER_CORRECT_DROP = process.env.NEXT_PUBLIC_TUTOR_REPEAT_AFTER_CORRECT_DROP !== 'off';
+
+/** Task 38 §G1 (voice run 19, 1227 s: the summary page flushed empty): on a
+ *  curated fixed-script plan a recap part's page carries its authored Recap
+ *  card (the mustRemember list) when it flushes without one. Client-side:
+ *  default ON; NEXT_PUBLIC_TUTOR_RECAP_CARD_ON_FLUSH=off. */
+export const TUTOR_RECAP_CARD_ON_FLUSH = process.env.NEXT_PUBLIC_TUTOR_RECAP_CARD_ON_FLUSH !== 'off';
+
+/** Task 38 §G2 (voice run 19, 1222 / 1274 s: "Are you ready to close the
+ *  lesson …?" in the summary): a readiness question in a fixed script's
+ *  recap / closing part is dropped. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_NO_READINESS=off. */
+export const TUTOR_FIXED_SCRIPT_NO_READINESS = process.env.NEXT_PUBLIC_TUTOR_FIXED_SCRIPT_NO_READINESS !== 'off';

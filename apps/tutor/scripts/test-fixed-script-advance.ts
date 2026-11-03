@@ -52,6 +52,8 @@ import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, les
 import { reasksAnsweredQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
+import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 
 let failed = 0;
@@ -1341,6 +1343,31 @@ test('38 §C: the 865 s turn ends with an ask; the advance is held (2/2) and the
   assert.equal(turnEndsWithAsk('Now the lesson moves on. That was a clear sentence.'), false);
   assert.equal(noAskTurnNeedsContinuation({ text: 'Let me put the correct sentence on the board and move on.', fixedScript: true, runtimeTriggered: false, toolsSeen: [], closing: false, pronunciationArmed: false }), true);
 });
+// ── Task 38 §G (voice run 19, 1219–1300 s): the summary entered without its card; readiness ask; recap twice ──
+test('38 §G: the recap card rides the flush; no readiness ask in the summary; a recap already spoken is not repeated', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  // G1: authoredSegmentCard gives the curated recap its card (VTR, flag-gated)
+  pin(VTR, /if \(TUTOR_RECAP_CARD_ON_FLUSH && sg\.kind === 'recap' && isFixedScriptPlan\(plan\) && !isGeneratedPlan\(plan\)\s*&& Array\.isArray\(sx\.mustRemember\) && sx\.mustRemember\.length > 0\) \{\s*return \{ statement: stripWbEmphasisText\(\(sx\.mustRemember as string\[\]\)\.map\(\(k\) => `• \$\{k\}`\)\.join\('\\n'\)\), kind: 'recap', title: 'Recap' \};/);
+  // … and the turn-end flush (the 1227 s path) adds the authored card of an authored part page
+  pin(VTR, /if \(deferred\.cardOnFlush \|\| deferred\.authored === true\) \{\s*const authored = authoredSegmentCard\(/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_RECAP_CARD_ON_FLUSH = process\.env\.NEXT_PUBLIC_TUTOR_RECAP_CARD_ON_FLUSH !== 'off';/);
+  // G2: the readiness ask
+  const ask = 'Are you ready to close the lesson, or would you like to review anything first?';
+  assert.equal(readinessAskDropDue({ plan: gdi, segmentId: 'summary', sentence: ask, asksReadiness }), true);
+  assert.equal(readinessAskDropDue({ plan: gdi, segmentId: 'overview', sentence: 'Are you ready?', asksReadiness }), false, "the opener's scripted readiness question stays");
+  assert.equal(readinessAskDropDue({ plan: gdi, segmentId: 'summary', sentence: 'Before we finish, can you explain the difference between these two sentences?', asksReadiness }), false, 'the check question stays');
+  assert.equal(readinessAskDropDue({ plan: null, segmentId: 'summary', sentence: ask, asksReadiness }), false);
+  pin(VTR, /if \(TUTOR_FIXED_SCRIPT_NO_READINESS && readinessAskDropDue\(\{ plan: lessonPlanRef\.current, segmentId: currentSegmentIdRef\.current, sentence: updatedSentence, asksReadiness \}\)\) \{\s*onDebugEvent\?\.\('readiness_ask_dropped'/);
+  // G3: the recap was spoken by the advancing turn
+  const t1222 = "Summary it is. Let's close the pronunciation part and move on to the summary now. Okay, we'll finish with a short summary now. Today you practiced the present perfect for experience that continues now, and the past simple for finished times like last year.";
+  const summary = gdi!.segments.find((sg) => sg.id === 'summary');
+  assert.equal(recapAlreadyGiven(summary, t1222), true);
+  assert.equal(recapAlreadyGiven(summary, "Summary it is. Let's move on to the summary now."), false);
+  assert.ok(fixedScriptBrainAdvanceEntryNote(gdi, 'summary', '', t1222).includes(FIXED_SCRIPT_RECAP_GIVEN_CLAUSE));
+  assert.ok(!fixedScriptBrainAdvanceEntryNote(gdi, 'summary', '', 'Summary it is.').includes(FIXED_SCRIPT_RECAP_GIVEN_CLAUSE));
+  assert.ok(FIXED_SCRIPT_RECAP_GIVEN_CLAUSE.startsWith('The recap was already given in that turn — do not repeat it.'));
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 

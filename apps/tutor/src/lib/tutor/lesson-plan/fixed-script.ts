@@ -789,7 +789,38 @@ export const FIXED_SCRIPT_ENTRY_MENU_CLAUSE =
   "Its card is a choice menu the student has not heard yet: read the choices from the card, ask the student to pick one, and wait for their choice. Nothing else.";
 export function fixedScriptBrainAdvanceEntryNote(plan: LessonPlan | null | undefined, to: string, cardStatement: string, advanceTurnText: string): string {
   const menu = boardOffersChoices({ statement: cardStatement }) && !menuReadInTurn(cardStatement, advanceTurnText);
-  return withSilentClause(`[runtime note — not from the student] Your last turn moved the lesson to "${fixedScriptPartLabel(plan, to)}"; that part's notes apply from now on. ${menu ? FIXED_SCRIPT_ENTRY_MENU_CLAUSE : "Reply to the student's last words, then continue that part from its notes."}]`);
+  // Task 38 §G3: a recap the advancing turn already spoke is not given twice.
+  const recapGiven = !menu && recapAlreadyGiven(plan?.segments.find((sg) => sg.id === to), advanceTurnText);
+  return withSilentClause(`[runtime note — not from the student] Your last turn moved the lesson to "${fixedScriptPartLabel(plan, to)}"; that part's notes apply from now on. ${menu ? FIXED_SCRIPT_ENTRY_MENU_CLAUSE : recapGiven ? FIXED_SCRIPT_RECAP_GIVEN_CLAUSE : "Reply to the student's last words, then continue that part from its notes."}]`);
+}
+/** Task 38 §G3 (voice run 19, 1222 / 1296 s: the advancing turn spoke the
+ *  recap, then the summary's next turn spoke it again): a recap part whose
+ *  every mustRemember point (its head — the text before "(" / ":" / "—")
+ *  was named in the given text has had its recap. Pure. */
+export const FIXED_SCRIPT_RECAP_GIVEN_CLAUSE =
+  "The recap was already given in that turn — do not repeat it. Reply to the student's last words, then go on to the part's next step (its feedback and check question).";
+export function recapAlreadyGiven(seg: Segment | null | undefined, text: string | null | undefined): boolean {
+  if (!seg || seg.kind !== 'recap') return false;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const items = (seg as any).mustRemember as unknown;
+  if (!Array.isArray(items) || items.length === 0) return false;
+  const t = (text ?? '').toLowerCase();
+  if (!t.trim()) return false;
+  return items.every((it) => {
+    const head = String(it ?? '').split(/[(:—–]/)[0]!.trim().toLowerCase();
+    return head.length >= 3 && t.includes(head);
+  });
+}
+/** Task 38 §G2 (voice run 19, 1222 / 1274 s: "Are you ready to close the
+ *  lesson, or would you like to review anything first?" asked in the
+ *  summary, and re-asked by the idle nudge): in a fixed-script plan's recap /
+ *  closing part a readiness question is dropped — the part has its own
+ *  script and check question. Pure. */
+export function readinessAskDropDue(input: { plan: LessonPlan | null | undefined; segmentId: string | null | undefined; sentence: string; asksReadiness: (s: string) => boolean }): boolean {
+  if (!isFixedScriptPlan(input.plan) || !input.segmentId || !input.plan) return false;
+  const seg = input.plan.segments.find((sg) => sg.id === input.segmentId);
+  const closing = seg?.kind === 'recap' || fixedScriptLastSegmentId(input.plan) === input.segmentId;
+  return closing && /[?？]/.test(input.sentence ?? '') && input.asksReadiness(input.sentence ?? '');
 }
 /** Task 34 fix round 2 (R13-1, bot run r13 480 s: a TYPED move-on order
  *  advanced the part and the new part's entry note never came): every
