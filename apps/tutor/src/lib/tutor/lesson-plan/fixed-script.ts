@@ -823,6 +823,9 @@ export function lessonTimeGuardDecision(input: {
   const seg = plan.segments.find((x) => x.id === segmentId);
   if (!seg || (seg.kind ?? '').toLowerCase() === 'recap') return { action: 'none' };
   const minutes = (x: { estimatedMinutes?: number } | undefined) => (typeof x?.estimatedMinutes === 'number' && Number.isFinite(x.estimatedMinutes) ? x.estimatedMinutes : 0);
+  // Fix round 1 (review MINOR-1): the guard uses the segments' minutes —
+  // a plan none of whose segments carries minutes is never guarded.
+  if (!plan.segments.some((x) => minutes(x) > 0)) return { action: 'none' };
   const total = minutes(plan as { estimatedMinutes?: number }) || plan.segments.reduce((n, x) => n + minutes(x), 0);
   if (total <= 0) return { action: 'none' };
   const closeMin = minutes(plan.segments.find((x) => x.id === closeId));

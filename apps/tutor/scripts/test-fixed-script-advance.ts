@@ -1321,6 +1321,12 @@ test('36 §B: lessonTimeGuardDecision — elapsed vs plan minutes; the summary i
   pin(VTR, /applyResolvedAdvance\(tgPlan, tgSeg, tg\.to\);[\s\S]{0,200}plantAdvanceEntryNote\(tg\.to, 'lesson_time'\);/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_LESSON_TIME_GUARD = process\.env\.NEXT_PUBLIC_TUTOR_LESSON_TIME_GUARD !== 'off';/);
 });
+
+test('36 r1 MINOR-1: a plan with no segment minutes is never time-guarded', () => {
+  const p = { ...fixed, estimatedMinutes: 5, segments: fixed.segments.map((sg) => ({ ...sg, estimatedMinutes: undefined })) } as unknown as LessonPlan;
+  const segs = p.segments.map((sg) => sg.id);
+  assert.deepEqual(lessonTimeGuardDecision({ plan: p, segmentId: segs[1]!, elapsedMs: 4 * 60_000, alreadyFired: false }), { action: 'none' });
+});
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 
