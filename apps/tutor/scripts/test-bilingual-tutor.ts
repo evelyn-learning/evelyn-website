@@ -2275,4 +2275,26 @@ test('41 Â§B: a judge-correct (or partly_correct with the offered item) reply â€
   assert.ok(/export const TUTOR_CORRECT_REPLY_REASK_DROP = process\.env\.NEXT_PUBLIC_TUTOR_CORRECT_REPLY_REASK_DROP !== 'off';/.test(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8')));
 });
 
+// Task 41 fix round 1 (review I-1 / I-2).
+test('41 r1 I-1: a next practice item on the same frame is not a re-ask', () => {
+  const ask1 = 'Make a sentence that starts with "I have worked on" and tell me about one project.';
+  const st1 = 'I have worked on a sales app for two years.';
+  const pc = { answers: 'open_question', verdict: 'correct', confidence: 'medium' };
+  assert.equal(cr40.replyAnsweredAsk(pc, ask1, st1), true);
+  assert.equal(cr40.correctReplyReasks('Tell me about one more project you have worked on.', ask1, st1), false, 'one more');
+  assert.equal(cr40.correctReplyReasks('Which other project have you worked on recently?', 'Which project have you worked on recently?', 'I have worked on a sales app.'), false, 'other');
+  assert.equal(cr40.correctReplyReasks('Which project have you worked on recently?', 'Which project have you worked on recently?', 'I have worked on a sales app.'), true, 'the same ask again');
+  assert.equal(cr40.correctReplyReasks('Which project have you worked on recently for your team?', 'Which project have you worked on recently?', 'x'), false, 'a new content stem');
+});
+test('41 r1 I-2: only a choice the ask sentence presents is an offered item; a praise / correction quote is not', () => {
+  const askL = 'Good, "launched" is the past simple. When did you launch it?';
+  const pcP = { answers: 'open_question', verdict: 'partly_correct', confidence: 'medium' };
+  assert.deepEqual(cr40.askOfferedItems(askL), []);
+  assert.equal(cr40.replyAnsweredAsk(pcP, askL, 'I launched it.'), false, 'the "when" re-ask stays');
+  const askF = 'What have you worked on this year? For example: a report, a launch, or a training.';
+  assert.equal(cr40.replyAnsweredAsk(pcP, askF, 'I working on a launch last year.'), false, 'a list after the question is not the ask sentence');
+  assert.deepEqual(cr40.askOfferedItems('Which word fits: "have worked" or "worked"?'), ['have worked', 'worked']);
+  assert.deepEqual(cr40.askOfferedItems('Pick one: 1) a report 2) a launch 3) a training'), ['a report', 'a launch', 'a training']);
+});
+
 if (failed) process.exit(1);

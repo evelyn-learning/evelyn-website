@@ -1476,22 +1476,32 @@ export function starterAskAlreadyMet(studentText: string, attemptText: string, v
 // correction ask is kept. Generalises the repeat-after-correct family. Pure.
 // ─────────────────────────────────────────────────────────────────────────
 const ITEM_LIST_RE = /^.*(?:\bsuch as\b|\bfor example\b|\be\.g\.,?|:)\s+([^?？.!。:]+?)\s*[?？.!。]?\s*$/i;
-/** The items an ask offers the student: short quoted spans (≤ 3 words) and
- *  the "such as A, B or C" / ": A, B, or C" list at the end of a sentence. */
+// Fix round 1 (I-2): a quoted "A" (, "B") or "C" choice in the sentence.
+const QUOTED_CHOICE_RE = /(?:"[^"\n]{1,40}"|“[^”\n]{1,40}”)(?:\s*,\s*(?:"[^"\n]{1,40}"|“[^”\n]{1,40}”))*\s*,?\s*\bor\s+(?:"[^"\n]{1,40}"|“[^”\n]{1,40}”)/g;
+const NUMBERED_OPTION_RE = /(?:^|\s)(?:[1-9]|[A-D])\)\s*([^)]+?)(?=\s+(?:[1-9]|[A-D])\)|[.?!]?\s*$)/g;
+const cleanItem = (x: string) => x.replace(/["“”]/g, '').replace(/[.…,!?;:]+$/, '').trim().toLowerCase();
+function choiceItemsOf(sentence: string): string[] {
+  const out: string[] = [];
+  for (const m of sentence.matchAll(QUOTED_CHOICE_RE)) {
+    for (const q of m[0].matchAll(/"([^"\n]{1,40})"|“([^”\n]{1,40})”/g)) out.push(cleanItem(q[1] ?? q[2] ?? ''));
+  }
+  const list = ITEM_LIST_RE.exec(sentence)?.[1];
+  if (list && /,|\bor\b/i.test(list)) out.push(...list.split(/\s*,\s*(?:or\s+)?|\s+or\s+/i).map(cleanItem));
+  for (const m of sentence.matchAll(NUMBERED_OPTION_RE)) out.push(cleanItem(m[1] ?? ''));
+  return out.filter((it) => it && it.split(/\s+/).length <= 3);
+}
+/** The items an ask offers the student as a CHOICE (fix round 1, I-2): a
+ *  quoted "A" or "B" list, a "such as / for example / : A, B or C" list or
+ *  numbered options — in the ask's question sentence or the sentence right
+ *  before it. A lone quoted span (praise / correction: Good, "launched" is …)
+ *  is never an offer. */
 export function askOfferedItems(askTurn: string | null | undefined): string[] {
+  const parts = (askTurn ?? '').split(/(?<=[.!?。！？])\s+(?=[^a-z])/).map((x) => x.trim()).filter(Boolean);
+  let qi = -1;
+  for (let i = parts.length - 1; i >= 0; i--) if (/[?？]/.test(parts[i]!)) { qi = i; break; }
+  if (qi < 0) qi = parts.length - 1;
   const out = new Set<string>();
-  for (const m of (askTurn ?? '').matchAll(/"([^"\n]{2,40})"|“([^”\n]{2,40})”/g)) {
-    const span = (m[1] ?? m[2] ?? '').replace(/[.…,!?]+$/, '').trim().toLowerCase();
-    if (span && span.split(/\s+/).length <= 3) out.add(span);
-  }
-  for (const sentence of (askTurn ?? '').split(/(?<=[.!?。！？])\s+/)) {
-    const list = ITEM_LIST_RE.exec(sentence)?.[1];
-    if (!list || !/,|\bor\b/i.test(list)) continue;
-    for (const item of list.split(/\s*,\s*(?:or\s+)?|\s+or\s+/i)) {
-      const it = item.replace(/["“”]/g, '').replace(/[.…,!?]+$/, '').trim().toLowerCase();
-      if (it && it.split(/\s+/).length <= 3) out.add(it);
-    }
-  }
+  for (const sentence of [parts[qi - 1], parts[qi]]) if (sentence) for (const it of choiceItemsOf(sentence)) out.add(it);
   return [...out];
 }
 export function askedItemPresent(askTurn: string | null | undefined, studentText: string | null | undefined): boolean {
@@ -1507,11 +1517,41 @@ export function replyAnsweredAsk(pc: { verdict?: string | null; answers?: string
   if (pc.verdict === 'correct') return true;
   return pc.verdict === 'partly_correct' && askedItemPresent(askTurn, studentText);
 }
+// Fix round 1 (I-1): a next practice item on the same frame ("Tell me about
+// one more project you have worked on.", "Which other project …?") is not a
+// re-ask — a new-item marker keeps the sentence.
+const NEW_ITEM_MARKER_RE = /\b(?:another|other|one more|a different|a new|next|also|else)\b/i;
+/** A sentence of the turn re-asks the ask the student just answered: an ask
+ *  shape, no new-item marker, not a repeat / correction ask, and the Task 36
+ *  subset rule against the whole ask turn — ≥ 2 shared content stems and no
+ *  content stem the ask turn lacks (the offered choice list itself is not
+ *  content) — with the same wh-word when both have one. Pure. */
 export function correctReplyReasks(sentence: string | null | undefined, askTurn: string | null | undefined, studentText?: string | null): boolean {
   const s = (sentence ?? '').trim();
   if (!s || !askTurn || !askTurn.trim()) return false;
+  if (!PROBE_ASK_SHAPE_RE.test(s) || NEW_ITEM_MARKER_RE.test(s)) return false;
   if (isRepeatOrCorrectionAsk(s, studentText)) return false;
-  // The Task 37 pronoun rule belongs to the check-in turn ("What did you
-  // improve in that project?" after a correct answer is the next step).
-  return reasksAsk(s, askTurn) || (!pronounReask(s) && probeReasks(s, [askTurn], { studentText }));
+  if (isJapaneseSentence(s)) {
+    const mine = jaTokens(s);
+    const theirs = jaTokens(askTurn);
+    let inter = 0;
+    for (const w of mine) if (theirs.has(w)) inter += 1;
+    return inter >= 2 && inter === mine.size;
+  }
+  const gist = /[?？]/.test(s) ? (turnAskGist(s) || s) : s;
+  const list = ITEM_LIST_RE.exec(gist);
+  let core = gist;
+  if (list && list[1] && /,|\bor\b/i.test(list[1])) {
+    const at = list.index + list[0].lastIndexOf(list[1]);
+    core = gist.slice(0, at) + gist.slice(at + list[1].length);
+  }
+  const mine = reaskStems(core);
+  const theirs = reaskStems(askTurn);
+  if (mine.size < 2) return false;
+  let inter = 0;
+  for (const w of mine) if (theirs.has(w)) inter += 1;
+  if (inter < 2 || inter !== mine.size) return false;
+  const myWh = WH_RE.exec(gist)?.[1]?.toLowerCase();
+  const askWh = WH_RE.exec(turnAskGist(askTurn) || askTurn)?.[1]?.toLowerCase();
+  return !(myWh && askWh && myWh !== askWh);
 }
