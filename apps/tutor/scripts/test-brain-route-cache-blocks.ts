@@ -25,9 +25,15 @@ function sse(event: string, data: unknown): string {
 
 function fakeAnthropic(captured: Captured[]): Promise<http.Server> {
   const server = http.createServer((req, res) => {
-    let body = '';
-    req.on('data', (c) => { body += c; });
+    // Task 39 fix round 1 (gate): collect raw Buffers and decode ONCE — a
+    // `body += chunk` per chunk splits a multi-byte character ("—") at a
+    // chunk boundary into U+FFFD, so the captured text differed from the
+    // sent one whenever a boundary landed inside one (a flake that any
+    // prompt-length change can move).
+    const chunks: Buffer[] = [];
+    req.on('data', (c: Buffer) => { chunks.push(c); });
     req.on('end', () => {
+      const body = Buffer.concat(chunks).toString('utf8');
       captured.push(JSON.parse(body) as Captured);
       res.writeHead(200, { 'content-type': 'text/event-stream' });
       res.write(sse('message_start', { type: 'message_start', message: { id: 'msg_test', type: 'message', role: 'assistant', model: 'fake', content: [], stop_reason: null, stop_sequence: null, usage: { input_tokens: 10, output_tokens: 1 } } }));
