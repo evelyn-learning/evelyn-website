@@ -283,9 +283,9 @@ export function detectPronunciationTarget(
  */
 export function autoArmTargetForTurn(
   detected: PronunciationAutoTarget | null | undefined,
-  opts: { partEntry: boolean },
+  opts: { partEntry: boolean; /** Task 42 §D: a menu part with no pick resolved yet (menuPickPendingSuppressesArm) */ menuPending?: boolean },
 ): PronunciationAutoTarget | null {
-  if (opts.partEntry) return null;
+  if (opts.partEntry || opts.menuPending) return null;
   return detected ?? null;
 }
 

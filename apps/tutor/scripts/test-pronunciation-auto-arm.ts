@@ -312,7 +312,7 @@ test('25D2: no automatic arm on the turn that enters the part', () => {
   assert.equal(autoArmTargetForTurn(t, { partEntry: false }), t);
   assert.equal(autoArmTargetForTurn(null, { partEntry: false }), null);
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  assert.ok(VTR.includes('const auto = autoArmTargetForTurn(detectedAuto, { partEntry: pronPartEntry });'));
+  assert.ok(VTR.includes('const auto = autoArmTargetForTurn(detectedAuto, { partEntry: pronPartEntry, menuPending: pronMenuPending });'), 'Task 42 §D adds menuPending');
   assert.ok(VTR.includes("onDebugEvent?.('pronunciation_auto_arm_skipped', `part entry:"));
 });
 

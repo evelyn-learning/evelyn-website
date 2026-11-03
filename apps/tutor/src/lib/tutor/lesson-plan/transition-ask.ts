@@ -179,3 +179,45 @@ function cardQuestionSpoken(cardLine: string, spoken: string): boolean {
   const qs = (spoken ?? '').match(/[^.!?。！？\n]{4,}[?？]/g) ?? [];
   return qs.some((q) => contentTokens(q).length >= 2 && !askOffNewPart(q, cardLine));
 }
+
+/**
+ * Task 42 §D (bot run r36, 941–972 s): the brain advanced into the
+ * pronunciation part inside its own turn ("Let's move on to the pronunciation
+ * practice now. Please read this sentence aloud: …") and the next turn went
+ * straight to a word — the authored choice menu was never presented (the
+ * loose menuAskedIn counted "sentence" + "speaking" inside the quoted student
+ * sentence). On a part whose card is a choice menu, when neither the entering
+ * turn nor the first turn after it presents the menu, the engine appends the
+ * authored menu (cardAskLine) to that first turn; and the pronunciation
+ * auto-arm stays off until a pick is resolved or the menu-ask cap is reached.
+ */
+const QUOTED_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
+/** The turn names at least two of the card's choices outside quoted spans. */
+export function menuPresentedIn(card: string | null | undefined, turnText: string | null | undefined): boolean {
+  const c = card ?? '';
+  if (!c || !boardOffersChoices({ statement: c })) return false;
+  return menuReadInTurn(c, (turnText ?? '').replace(QUOTED_RE, ' '));
+}
+export function menuEntryFallbackLine(input: {
+  enabled: boolean;
+  /** the part the menu belongs to is current and was entered on the previous turn */
+  pendingForThisPart: boolean;
+  /** the entering turn presented the menu */
+  enteringPresented: boolean;
+  picked: boolean;
+  killed: boolean;
+  card: string | null | undefined;
+  /** everything spoken this turn so far, this attempt's kept text included */
+  turnSpoken: string;
+}): string | null {
+  if (!input.enabled || !input.pendingForThisPart || input.enteringPresented || input.picked || input.killed) return null;
+  const card = input.card ?? '';
+  if (!boardOffersChoices({ statement: card })) return null;
+  if (menuPresentedIn(card, input.turnSpoken)) return null;
+  return cardAskLine(card);
+}
+/** The pronunciation auto-arm waits on a menu part until a pick resolves or
+ *  the menu was asked `cap` times. */
+export function menuPickPendingSuppressesArm(input: { menuPart: boolean; picked: boolean; menuAsks: number; cap: number }): boolean {
+  return input.menuPart && !input.picked && input.menuAsks < input.cap;
+}

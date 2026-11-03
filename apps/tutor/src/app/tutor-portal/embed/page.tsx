@@ -386,6 +386,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'move_on_then_close_note',
   // Task 41 §B: a judge-correct reply's ask re-asked.
   'correct_reply_reask_dropped',
+  // Task 42 §D: the menu part's authored menu appended by the engine.
+  'menu_entry_engine_fallback',
   // Task 31 fix round 9 §D: the brain's own advance plants the part's entry note.
   'fixed_script_entry_note_planted',
   // Task 31 fix round 9 §F: the two-answers check-in note.

@@ -10,7 +10,7 @@
 
 import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { demoTopicChoiceLine, demoTopicCardCommand, demoTopicChoiceDirective } from '@/lib/tutor/voice/demo-topic-choice-opener';
-import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP, TUTOR_RECAP_CARD_ON_FLUSH, TUTOR_FIXED_SCRIPT_NO_READINESS, TUTOR_TEACHING_LANGUAGE_FIRST, TUTOR_CONVERSATION_ANSWER_CARDS, TUTOR_ANNOUNCED_OFFER_FIRST, TUTOR_CARD_ASK_ENGINE_FALLBACK, TUTOR_RETRY_ADVANCE_ALREADY_APPLIED, TUTOR_MENU_WRAP_UP_DROP, TUTOR_OFFER_ACCEPTED_ASK, TUTOR_NON_ANSWER_RETURN_ASK, TUTOR_JA_ANNOUNCED_MOVE, TUTOR_LONE_YES_ANY_CHOICE, TUTOR_NEITHER_STREAK_MOVE_ON, TUTOR_MOVE_ON_BEFORE_CLOSE, TUTOR_PART_TIME_CAP, TUTOR_CORRECT_REPLY_REASK_DROP } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_DEMO_TOPIC_CHOICE, TUTOR_ACK_OPENER_STRIP, TUTOR_TIMEBOX_FAREWELL, TUTOR_SENTENCE_BOARD, TUTOR_SPOKEN_EMPHASIS_CAPS, TUTOR_FIXED_SCRIPT_CLOSE_GUARD, TUTOR_FIXED_SCRIPT_ADVANCE_GUARD, TUTOR_FIXED_SCRIPT_SPOKEN_OPENER, TUTOR_WORKING_LEVEL_ESTIMATE, TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE, TUTOR_FIXED_SCRIPT_TRANSITIONS, TUTOR_FIXED_SCRIPT_CLOSE_WRAP, TUTOR_KILL_SENTENCE_BOUNDARY, TUTOR_SEGMENT_CARD_AUTO, TUTOR_BOARD_READ_ALOUD_HOLD, TUTOR_CLIP_FROM_PERCEPTION, TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE, TUTOR_RAIL_FOLLOWS_PAGE, TUTOR_TRANSITION_ASK_EVERY_ADVANCE, TUTOR_MOVE_ON_ORDER, TUTOR_MIC_REACQUIRE, TUTOR_REPEAT_ASK_TWO_TRIES, TUTOR_TRANSITION_OFFER_SPOKEN, TUTOR_IDLE_NUDGE_REPEAT_KIND, TUTOR_CLOSE_CLEARS_OPEN_QUESTION, TUTOR_PENDING_ANSWER_EXEMPT, TUTOR_RETRY_HEARD_NOTE, TUTOR_ADJACENT_DUPLICATE_DROP, TUTOR_MENU_PICK_RESOLVE, TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT, TUTOR_LANGUAGE_DIGIT_WORDS, TUTOR_NARRATION_BACKFILL_FILTER, TUTOR_SENTENCE_SAME_TEXT_DEDUP, TUTOR_SAME_QUESTION_THIRD_TIME, TUTOR_CLOSE_REQUIRED_PHRASES, TUTOR_NUMBERED_QUESTION_NOTE, TUTOR_OPENER_WAITS_FOR_PLAN, TUTOR_EMPTY_TURN_REASK, TUTOR_BRAIN_ADVANCE_ENTRY_NOTE, TUTOR_PROBE_CHECKIN, TUTOR_OFFER_REASK_KILL, TUTOR_MENU_ASK_CAP, TUTOR_STOP_REQUEST_CHOICE, TUTOR_OFFER_ENGINE_FALLBACK, TUTOR_NO_ATTEMPT_MOVE_ON, TUTOR_KILL_REARM_ENTRY_NOTE, TUTOR_ANSWERED_GUARD, TUTOR_LESSON_TIME_GUARD, TUTOR_SILENT_TURN_FALLBACK, TUTOR_QUESTION_LEAD_IN_HOLD, TUTOR_REPEAT_AFTER_CORRECT_DROP, TUTOR_RECAP_CARD_ON_FLUSH, TUTOR_FIXED_SCRIPT_NO_READINESS, TUTOR_TEACHING_LANGUAGE_FIRST, TUTOR_CONVERSATION_ANSWER_CARDS, TUTOR_ANNOUNCED_OFFER_FIRST, TUTOR_CARD_ASK_ENGINE_FALLBACK, TUTOR_RETRY_ADVANCE_ALREADY_APPLIED, TUTOR_MENU_WRAP_UP_DROP, TUTOR_OFFER_ACCEPTED_ASK, TUTOR_NON_ANSWER_RETURN_ASK, TUTOR_JA_ANNOUNCED_MOVE, TUTOR_LONE_YES_ANY_CHOICE, TUTOR_NEITHER_STREAK_MOVE_ON, TUTOR_MOVE_ON_BEFORE_CLOSE, TUTOR_PART_TIME_CAP, TUTOR_CORRECT_REPLY_REASK_DROP, TUTOR_MENU_ENTRY_FALLBACK } from '@/lib/tutor/orchestrator/flags';
 import { resolveMenuPick, resolveMenuPickLoose, loosePickAllowed, menuPickNote, menuAskedIn, menuReplyIsPick, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP } from '@/lib/tutor/voice/menu-pick';
 import { normaliseDigitsToWords } from '@/lib/tutor/voice/digit-words';
 import { emptyTurnFallbackLine, silentTurnFallbackLine, lastShowSentenceOf, silentTurnFallbackDue, nonAnswerReturnLine, pendingAskOf } from '@/lib/tutor/voice/empty-turn-fallback';
@@ -94,7 +94,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
 import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen } from '@/lib/tutor/whiteboard/deferred-page-flush';
-import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue, offCardAskStripped, cardAskEngineFallbackLine } from '@/lib/tutor/lesson-plan/transition-ask';
+import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue, offCardAskStripped, cardAskEngineFallbackLine, menuPresentedIn, menuEntryFallbackLine, menuPickPendingSuppressesArm } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead, proactiveOpenerAllowed } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, handwriteShownSentence, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
@@ -4274,6 +4274,8 @@ export function VoiceTutorRealtime({
   // option picked, and the parts where an option was picked.
   const menuAskCountRef = useRef<Map<string, number>>(new Map());
   const menuPickedSegsRef = useRef<Set<string>>(new Set());
+  /** Task 42 §D: a choice-menu part entered on the last turn, and whether that turn presented the menu. */
+  const menuEntryPendingRef = useRef<{ segId: string; enteringPresented: boolean } | null>(null);
   // Task 33 §E: the stop-or-finish choice was asked on the last student turn.
   const stopChoicePendingRef = useRef(false);
   // Task 36 §B: the lesson-time guard has moved the lesson to its close.
@@ -13981,6 +13983,8 @@ export function VoiceTutorRealtime({
             ? resolveMenuPickLoose(transcript, [recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1], segmentCardStatement(lessonPlanRef.current, currentSegmentIdRef.current ?? ''), ...recentTutorTurnsRef.current.slice(-4, -1)]) : null);
         if (menuPick) {
           runTranscript = `${menuPickNote(menuPick)}\n\n${runTranscript}`;
+          // Task 42 §D: a resolved pick ends the menu's wait (auto-arm, menu fallback).
+          if (menuPick && !opts?.prefetchOnly && currentSegmentIdRef.current) menuPickedSegsRef.current.add(currentSegmentIdRef.current);
           if (!opts?.prefetchOnly) onDebugEvent?.('menu_pick_resolved', `${menuPick.index} "${menuPick.text.slice(0, 40)}" ← "${transcript.slice(0, 40)}"`);
         }
       }
@@ -21260,6 +21264,28 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('transition_ask_engine_fallback', `"${transitionAskCardSeg}" "${cardAsk.slice(0, 80)}"`);
           }
         }
+        // Task 42 §D (bot run r36, 941–972 s): the menu part was entered last turn
+        // without its menu, and this turn has not presented it — the engine
+        // appends the authored menu (once; the first turn after the entry only).
+        if (menuEntryPendingRef.current && !opts?.prefetchOnly && !attemptKilled) {
+          const mePending = menuEntryPendingRef.current;
+          const meSeg = currentSegmentIdRef.current ?? '';
+          const menuEntryLine = menuEntryFallbackLine({
+            enabled: TUTOR_MENU_ENTRY_FALLBACK,
+            pendingForThisPart: mePending.segId === meSeg,
+            enteringPresented: mePending.enteringPresented,
+            picked: menuPickedSegsRef.current.has(meSeg),
+            killed: attemptKilled,
+            card: segmentCardStatement(lessonPlanRef.current, meSeg),
+            turnSpoken: `${turnNarrationRef.current.join(' ')} ${attemptText}`,
+          });
+          menuEntryPendingRef.current = null;
+          if (menuEntryLine) {
+            speakOnePart(menuEntryLine);
+            attemptText = `${attemptText} ${menuEntryLine}`.trim();
+            onDebugEvent?.('menu_entry_engine_fallback', `"${meSeg}" "${menuEntryLine.slice(0, 80)}"`);
+          }
+        }
         // Task 39 fix round 1 (R26-1, bot run r26 309 s): the student's turn was a
         // non-answer (a tangent / backchannel) and the reply asks nothing — the
         // engine returns to the lesson with the pending ask.
@@ -21929,7 +21955,15 @@ export function VoiceTutorRealtime({
         // Task 25 §D2: the turn that enters the part (the segment changed this
         // turn, or its page opened this turn) offers the menu — no auto arm.
         const pronPartEntry = turnStartSegmentId !== currentSegmentIdRef.current || segmentPageFlushedTurnRef.current === pageTurnRef.current;
-        const auto = autoArmTargetForTurn(detectedAuto, { partEntry: pronPartEntry });
+        // Task 42 §D: on a choice-menu part the auto-arm waits for a pick (or the menu-ask cap).
+        const pronMenuSeg = currentSegmentIdRef.current ?? '';
+        const pronMenuPending = TUTOR_MENU_ENTRY_FALLBACK && isFixedScriptPlan(lessonPlanRef.current) && menuPickPendingSuppressesArm({
+          menuPart: boardOffersChoices({ statement: segmentCardStatement(lessonPlanRef.current, pronMenuSeg) }),
+          picked: menuPickedSegsRef.current.has(pronMenuSeg),
+          menuAsks: menuAskCountRef.current.get(pronMenuSeg) ?? 0,
+          cap: MENU_ASK_CAP,
+        });
+        const auto = autoArmTargetForTurn(detectedAuto, { partEntry: pronPartEntry, menuPending: pronMenuPending });
         turnPronTargetDetected = !!detectedAuto;
         if (detectedAuto && !auto) onDebugEvent?.('pronunciation_auto_arm_skipped', `part entry: "${detectedAuto.referenceText.slice(0, 60)}"`);
         if (auto?.source === 'card') {
@@ -22073,6 +22107,14 @@ export function VoiceTutorRealtime({
             const mcAsks = (menuAskCountRef.current.get(segIdNow) ?? 0) + 1;
             menuAskCountRef.current.set(segIdNow, mcAsks);
             onDebugEvent?.('fixed_script_menu_asked', `"${segIdNow}" ${mcAsks}/${MENU_ASK_CAP}`);
+          }
+        }
+        // Task 42 §D: this turn entered a choice-menu part — the next turn checks the menu was presented.
+        if (TUTOR_MENU_ENTRY_FALLBACK && lessonPlanRef.current && segIdNow && !opts?.prefetchOnly && isFixedScriptPlan(lessonPlanRef.current)
+          && turnStartSegmentId !== segIdNow && currentSegmentIdRef.current === segIdNow && !menuPickedSegsRef.current.has(segIdNow)) {
+          const meCard = segmentCardStatement(lessonPlanRef.current, segIdNow);
+          if (boardOffersChoices({ statement: meCard })) {
+            menuEntryPendingRef.current = { segId: segIdNow, enteringPresented: menuPresentedIn(meCard, fullText) };
           }
         }
         // GDI trial live run 1 (2026-10-29): the brain never called

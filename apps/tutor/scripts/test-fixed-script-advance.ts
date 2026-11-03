@@ -45,6 +45,8 @@ import {
 import { fixedScriptCloseForcedAction, closeWrapPollDecision, noAskTurnNeedsContinuation, announcedTurnNeedsContinuation } from '../src/lib/tutor/lesson-plan/announced-move';
 import { turnEndsWithAsk } from '../src/lib/tutor/question-gist-text';
 import { askOffNewPart, transitionAskCheckDue as transitionAskCheckDueR1 } from '../src/lib/tutor/lesson-plan/transition-ask';
+import { menuPresentedIn as menuPresentedIn42, menuEntryFallbackLine as menuEntryFallbackLine42, menuPickPendingSuppressesArm as menuPickPendingSuppressesArm42 } from '../src/lib/tutor/lesson-plan/transition-ask';
+import { autoArmTargetForTurn as autoArmTargetForTurn42 } from '../src/lib/tutor/pronunciation/auto-arm';
 import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptOutlineTable, authoredSegmentLabel, displayedSegmentId, displayedCompletedSegments } from '../src/lib/tutor/lesson-plan/rail-labels';
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
@@ -1653,6 +1655,44 @@ test('41 r1 I-3: r32 replay — every part gets time, pronunciation is reached, 
   // without the cap (pre-Task-41 rules) the parts run on: the summary would start later
   const old = replayR32(false);
   assert.ok((old['summary'] ?? 9999) > e['summary']!, JSON.stringify(old));
+});
+
+// ── Task 42 §D (bot run r36, 941–972 s): the pronunciation part entered without its menu ──
+const segmentCardStatement42 = (plan: LessonPlan, id: string): string => String((plan.segments.find((x) => x.id === id) as unknown as { problem?: string } | undefined)?.problem ?? '');
+test('42 §D: entering turn without the menu + next turn without it → the engine appends the authored menu; the auto-arm waits for a pick', () => {
+  const gdi = parseLessonPlan(JSON.parse(read('../../docs/whitelabel/gdi/plans/gdi-work-projects-v1.json')));
+  const card = segmentCardStatement42(gdi, 'pronunciation');
+  assert.ok(/1\) individual words/.test(card), card);
+  const st = 'I want to improve my speaking because I have to explain our products to foreign customers.';
+  const t941 = `「I want to improve my speaking」ですね、はい。 Your sentence is clear and natural. Let's move on to the pronunciation practice now. Please read this sentence aloud: "${st}" Which word do you think is the hardest to say?`;
+  const t972 = `ご自分の言葉で、理由まで話せていましたね。 "${st}" Now, to practice pronunciation, let's take one word from the list: responsibilities. Listen, then repeat after me: responsibilities.`;
+  const t999 = 'Would you like to practice pronunciation? Pick 1 for words, 2 for a sentence, or 3 for speaking naturally.';
+  assert.equal(menuPresentedIn42(card, t941), false, 'the 941 s entering turn');
+  assert.equal(menuPresentedIn42(card, t972), false, 'the 972 s turn');
+  assert.equal(menuPresentedIn42(card, t999), true);
+  const base = { enabled: true, pendingForThisPart: true, enteringPresented: false, picked: false, killed: false, card, turnSpoken: t972 };
+  assert.equal(menuEntryFallbackLine42(base), card, 'the authored menu is appended');
+  assert.equal(menuEntryFallbackLine42({ ...base, enteringPresented: true }), null, 'the entering turn presented it');
+  assert.equal(menuEntryFallbackLine42({ ...base, turnSpoken: `${t972} ${t999}` }), null, 'this turn presented it');
+  assert.equal(menuEntryFallbackLine42({ ...base, picked: true }), null, 'already picked');
+  assert.equal(menuEntryFallbackLine42({ ...base, killed: true }), null);
+  assert.equal(menuEntryFallbackLine42({ ...base, pendingForThisPart: false }), null);
+  assert.equal(menuEntryFallbackLine42({ ...base, card: segmentCardStatement42(gdi, 'past-simple') }), null, 'not a menu part');
+  assert.equal(menuEntryFallbackLine42({ ...base, enabled: false }), null);
+  // the auto-arm: suppressed before a pick (until the cap), on a menu part only
+  assert.equal(menuPickPendingSuppressesArm42({ menuPart: true, picked: false, menuAsks: 0, cap: 2 }), true);
+  assert.equal(menuPickPendingSuppressesArm42({ menuPart: true, picked: true, menuAsks: 0, cap: 2 }), false);
+  assert.equal(menuPickPendingSuppressesArm42({ menuPart: true, picked: false, menuAsks: 2, cap: 2 }), false, 'the cap');
+  assert.equal(menuPickPendingSuppressesArm42({ menuPart: false, picked: false, menuAsks: 0, cap: 2 }), false);
+  assert.equal(autoArmTargetForTurn42({ referenceText: 'responsibilities', kind: 'word' }, { partEntry: false, menuPending: true }), null);
+  assert.equal(autoArmTargetForTurn42({ referenceText: 'responsibilities', kind: 'word' }, { partEntry: false, menuPending: false })?.referenceText, 'responsibilities');
+  // VTR wiring
+  pin(VTR, /const auto = autoArmTargetForTurn\(detectedAuto, \{ partEntry: pronPartEntry, menuPending: pronMenuPending \}\);/);
+  pin(VTR, /const menuEntryLine = menuEntryFallbackLine\(\{\s*enabled: TUTOR_MENU_ENTRY_FALLBACK,/);
+  pin(VTR, /menuEntryPendingRef\.current = \{ segId: segIdNow, enteringPresented: menuPresentedIn\(meCard, fullText\) \};/);
+  pin(VTR, /if \(menuPick && !opts\?\.prefetchOnly && currentSegmentIdRef\.current\) menuPickedSegsRef\.current\.add\(currentSegmentIdRef\.current\);/);
+  pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_MENU_ENTRY_FALLBACK = process\.env\.NEXT_PUBLIC_TUTOR_MENU_ENTRY_FALLBACK !== 'off';/);
+  assert.ok(read('src/app/tutor-portal/embed/page.tsx').includes("'menu_entry_engine_fallback',"));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -1396,3 +1396,10 @@ export const TUTOR_PART_TIME_CAP = process.env.NEXT_PUBLIC_TUTOR_PART_TIME_CAP !
  *  acknowledgement kept (language lessons). Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_CORRECT_REPLY_REASK_DROP=off. */
 export const TUTOR_CORRECT_REPLY_REASK_DROP = process.env.NEXT_PUBLIC_TUTOR_CORRECT_REPLY_REASK_DROP !== 'off';
+
+/** Task 42 §D (bot run r36, 941–972 s): a choice-menu part entered with no
+ *  menu presented on the entering turn or the turn after — the engine appends
+ *  the authored menu to that turn, and the pronunciation auto-arm waits for a
+ *  pick (or the menu-ask cap). Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_MENU_ENTRY_FALLBACK=off. */
+export const TUTOR_MENU_ENTRY_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_MENU_ENTRY_FALLBACK !== 'off';
