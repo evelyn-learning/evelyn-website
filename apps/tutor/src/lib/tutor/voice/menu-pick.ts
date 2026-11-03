@@ -104,11 +104,20 @@ function optionWords(cardStatement: string): string[][] {
 /** True ⇒ `turnText` asks the menu: a sentence that asks (a "?" / a
  *  Japanese ask ending) and asks for a number / option, or the turn names ≥ 2
  *  of the card's options and asks something. Pure. */
+/** Task 42 fix round 1: the numbered-ask clause alone ("Just tell me the
+ *  number.", "どの番号にしますか。") — the strict menu detector
+ *  (transition-ask.ts menuPresentedIn) runs it on quote-stripped text. Pure. */
+export function menuNumberAskedIn(turnText: string | null | undefined): boolean {
+  const t = (turnText ?? '').replace(/\s+/g, ' ').trim();
+  if (!t) return false;
+  const sentences = t.split(/(?<=[.!?。！？])\s*/).filter(Boolean);
+  return sentences.some((s) => MENU_NUMBER_ASK_RE.test(s) && (ASK_SHAPE_RE.test(s) || /\b(?:tell me|choose|pick)\b/i.test(s)));
+}
 export function menuAskedIn(turnText: string | null | undefined, cardStatement: string | null | undefined): boolean {
   const t = (turnText ?? '').replace(/\s+/g, ' ').trim();
   if (!t) return false;
   const sentences = t.split(/(?<=[.!?。！？])\s*/).filter(Boolean);
-  if (sentences.some((s) => MENU_NUMBER_ASK_RE.test(s) && (ASK_SHAPE_RE.test(s) || /\b(?:tell me|choose|pick)\b/i.test(s)))) return true;
+  if (menuNumberAskedIn(t)) return true;
   const words = new Set(menuWordTokens(t));
   const named = optionWords(cardStatement ?? '').filter((ws) => ws.length > 0 && ws.some((w) => words.has(w))).length;
   return named >= 2 && sentences.some((s) => ASK_SHAPE_RE.test(s));

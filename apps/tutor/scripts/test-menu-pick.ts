@@ -9,6 +9,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { menuPresentedIn as menuPresentedIn42r1 } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { parseMenuOptions, resolveMenuPick, menuPickNote, menuAskedIn, menuReplyIsPick, isBareAcknowledgement, menuAskCapDecision, menuUnpickedLead, MENU_ASK_CAP, resolveMenuPickLoose, parseJapaneseMenuOptions, loosePickAllowed } from '../src/lib/tutor/voice/menu-pick';
 
 let failed = 0;
@@ -96,7 +97,7 @@ test('menuPickNote text (pin) and the VTR wiring', () => {
   });
   test('33 §C: VTR counts the asks at turn end and advances on the student turn (reason=menu_unpicked)', () => {
     const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-    assert.ok(VTR.includes("if (boardOffersChoices({ statement: mcCard }) && menuAskedIn(fullText, mcCard)) {"));
+    assert.ok(VTR.includes("if (boardOffersChoices({ statement: mcCard }) && menuPresentedIn(mcCard, fullText)) {"), 'Task 42 r1: the strict detector');
     assert.ok(VTR.includes('reason=menu_unpicked'));
     assert.ok(/=== 'advance'\) \{\s*const mcKind[\s\S]{0,200}applyResolvedAdvance\(mcPlan, mcSeg, mcNext\);/.test(VTR));
   });
@@ -177,6 +178,36 @@ test('final B-1: maths "2" to "What is 7 minus 5?" → no pick / no note; the GD
   assert.equal(resolveMenuPickLoose('Two.', ['Which one: words, a sentence, or skip?', CARD])?.index, 2);
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(VTR.includes('?? (TUTOR_MENU_ASK_CAP && loosePickAllowed({ fixedScript: isFixedScriptPlan(lessonPlanRef.current), cardOffersChoices: boardOffersChoices({ statement: segmentCardStatement(lessonPlanRef.current, currentSegmentIdRef.current ?? \'\') }) })'));
+});
+
+const ASKS42 = [
+  'わかりました。 Then let\'s move to the next part, pronunciation. Would you like to practice words, a sentence, speaking more naturally, or skip? Just tell me the number.',
+  'はい。 ただ、どの番号にしますか。 1番の単語か、2番の一文か、3番の自然な話し方か、4番のスキップか、教えてください。',
+  'どういたしまして、ハルトさん。 まだ番号を決めていないので、もう一度選んでください。 1番は単語、2番は一文、3番は自然な話し方、4番はスキップです。',
+];
+// ── Task 42 fix round 1 (review I-1): ONE strict menu detector for the cap counter, the arm release and the entry fallback ──
+test('42 r1 I-1: quoted student text never counts as a menu ask; real menu turns do; two real asks + a non-pick ⇒ cap advance', () => {
+  const CARD = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  const st = 'I want to improve my speaking because I have to explain our products to foreign customers.';
+  const t941 = `「I want to improve my speaking」ですね、はい。 Your sentence is clear and natural. Let's move on to the pronunciation practice now. Please read this sentence aloud: "${st}" Which word do you think is the hardest to say?`;
+  const t972 = `ご自分の言葉で、理由まで話せていましたね。 "${st}" Now, to practice pronunciation, let's take one word from the list: responsibilities. Listen, then repeat after me: responsibilities.`;
+  const quotedOnly = `You said: "I practise individual words and a complete sentence when I am speaking." Is that right?`;
+  assert.equal(menuAskedIn(t941, CARD), true, 'the loose detector counted the r36 entering turn (the bug)');
+  for (const t of [t941, t972, quotedOnly]) assert.equal(menuPresentedIn42r1(CARD, t), false, t.slice(0, 60));
+  const t999 = 'Would you like to practice pronunciation? Pick 1 for words, 2 for a sentence, or 3 for speaking naturally.';
+  for (const t of [t999, ...ASKS42]) assert.equal(menuPresentedIn42r1(CARD, t), true, t.slice(0, 60));
+  // the counter over two real menu turns, then a non-pick reply ⇒ advance (as before); quoted-only turns add nothing
+  const turns = [t941, t999, t972, ASKS42[0]];
+  const asks = turns.filter((t) => menuPresentedIn42r1(CARD, t)).length;
+  assert.equal(asks, 2);
+  assert.equal(menuAskCapDecision({ menuPart: true, picked: false, asks, replyIsPick: false, studentTurn: true }), 'advance');
+  assert.equal(menuAskCapDecision({ menuPart: true, picked: false, asks: [t941, t972, t999].filter((t) => menuPresentedIn42r1(CARD, t)).length, replyIsPick: false, studentTurn: true }), 'wait', 'one real ask: the student gets a second');
+  // one detector everywhere: the counter feeds the arm release; the entry fallback uses the same function
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes('menuAsks: menuAskCountRef.current.get(pronMenuSeg) ?? 0,'), 'the arm release reads the strict counter');
+  assert.ok(VTR.includes('enteringPresented: menuPresentedIn(meCard, fullText)'));
+  assert.ok(!/menuAskedIn\(/.test(VTR), 'the loose detector is no longer used in VTR');
+  assert.ok(readFileSync(join(__dirname, '..', 'src/lib/tutor/lesson-plan/transition-ask.ts'), 'utf8').includes('return menuReadInTurn(c, own) || menuNumberAskedIn(own);'));
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

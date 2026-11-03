@@ -22,6 +22,7 @@ import { lastAskSentence, lastQuestionSentence, turnEndsWithAsk } from '../quest
 import { withSilentClause, withRetryStyle } from '../voice/output-budget';
 import { boardOffersChoices } from '../voice/sentence-board';
 import { menuReadInTurn } from './fixed-script';
+import { menuNumberAskedIn } from '../voice/menu-pick';
 
 // Task 29 §M (GDI run 16, 749 s, Image 62): the retry opened with the move
 // and never answered the student's correction — answer first, then move.
@@ -192,11 +193,16 @@ function cardQuestionSpoken(cardLine: string, spoken: string): boolean {
  * auto-arm stays off until a pick is resolved or the menu-ask cap is reached.
  */
 const QUOTED_RE = /"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
-/** The turn names at least two of the card's choices outside quoted spans. */
+/** The tutor presented the card's menu in its own words: at least two of the
+ *  card's choices named, or a numbered-choice ask ("Just tell me the number.",
+ *  "どの番号にしますか。") — both outside quoted spans (quoted student text
+ *  never counts). Task 42 fix round 1: the ONE menu detector for the
+ *  MENU_ASK_CAP counter, the auto-arm release and the entry fallback. */
 export function menuPresentedIn(card: string | null | undefined, turnText: string | null | undefined): boolean {
   const c = card ?? '';
   if (!c || !boardOffersChoices({ statement: c })) return false;
-  return menuReadInTurn(c, (turnText ?? '').replace(QUOTED_RE, ' '));
+  const own = (turnText ?? '').replace(QUOTED_RE, ' ');
+  return menuReadInTurn(c, own) || menuNumberAskedIn(own);
 }
 export function menuEntryFallbackLine(input: {
   enabled: boolean;
