@@ -116,7 +116,7 @@ test('B: VTR — only when the budget rule did not fire, flag on, no advance_les
   pin(VTR, /const announcedTarget = \(!autoReason \|\| offerPartDue\) && TUTOR_FIXED_SCRIPT_ANNOUNCED_ADVANCE && !homeworkSession && autoPlan && !opts\?\.prefetchOnly\s*&& !totalToolNamesSeen\.includes\('advance_lesson'\)\s*\? announcedMoveTarget\(\{ tutorText: fullText, plan: autoPlan, currentSegmentId: segIdNow, levelKnown: !!workingLevelRef\.current \}\)/);
   pin(VTR, /const announcedNext = !!announcedTarget && !!autoPlan && announcedTarget === nextSegmentId\(autoPlan, segIdNow, !!workingLevelRef\.current\);\s*const advanceReason: 'turns' \| 'time' \| 'announced' \| null = \(offerPartDue && announcedNext \? 'announced' : autoReason\)\s*\?\? \(announcedNext \? 'announced' : null\);/);
   // the same advance path (pron hold, applyResolvedAdvance, FACT note) runs on advanceReason
-  pin(VTR, /if \(!advanceReason\) \{ autoAdvancePronHeldRef\.current = 0; autoAdvanceAskHeldRef\.current = 0; \}\n[\s\S]{0,2600}?if \(autoPlan && advanceReason\) \{/);
+  pin(VTR, /if \(!advanceReason\) \{ autoAdvancePronHeldRef\.current = 0; autoAdvanceAskHeldRef\.current = 0; \}\n[\s\S]{0,3200}?if \(autoPlan && advanceReason\) \{/);
   pin(VTR, /reason=\$\{advanceReason\} turns=/);
 });
 
