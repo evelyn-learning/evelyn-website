@@ -197,6 +197,10 @@ test('emitter — reorders, holds, flushes', () => {
   assert.deepEqual(em2.flush(), []);
 });
 
+test('instructions explain turn_state and nudge', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('turn_state') && TYPED_TURN_INSTRUCTIONS.includes('nudge'));
+});
+
 
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');
