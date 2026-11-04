@@ -6409,33 +6409,41 @@ export function VoiceTutorRealtime({
   };
   const handleWhiteboardCommandRef = useRef<((commands: WhiteboardCommand[]) => Promise<WhiteboardCommandResult>) | null>(null);
   /** Fix wave 5 round 1/2 (I2, H1): true while a typed move's held page must still wait for its last say sentence. */
-  const typedPageTurnHoldBlocks = (deferred: { segmentId: string } | null, why: string): boolean => {
+  const typedPageTurnHoldBlocks = (deferred: { segmentId: string } | null, why: string): 'none' | 'wait' | 'released' | 'released_no_audio' => {
     const tHold = typedPageTurnHoldRef.current;
-    if (!tHold) return false;
-    if (deferred?.segmentId !== tHold.segmentId) { typedPageTurnHoldRef.current = null; return false; } // the page went another way
+    if (!tHold) return 'none';
+    if (deferred?.segmentId !== tHold.segmentId) { typedPageTurnHoldRef.current = null; return 'none'; } // the page went another way
     // H1 (fix round 2): stream ended + audio drained releases a hold whose anchored sentence never played.
-    const tRelease = typedPageTurnHoldRelease({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why, streamEnded: !brainBusyRef.current });
+    // H2 (fix round 3): a text session (no speech — the render-sync text-mode signal) releases at the stream's end.
+    const tRelease = typedPageTurnHoldRelease({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why, streamEnded: !brainBusyRef.current, noAudio: textSessionRef.current });
     if (!tRelease) {
       onDebugEvent?.('typed_turn_page_turn_waits', `${why}: say sentence ${tHold.lastSentence} not finished (started ${ttsPlaybackStartedCountRef.current})`);
-      return true;
+      return 'wait';
     }
-    if (tRelease === 'fallback') onDebugEvent?.('typed_turn_page_turn_fallback', `${why}: say sentence ${tHold.lastSentence} never finished (started ${ttsPlaybackStartedCountRef.current}) — page turns at the turn end`);
+    if (tRelease !== 'anchored') {
+      const fbReason = tRelease === 'no_audio' ? 'no_audio' : 'drained';
+      onDebugEvent?.('typed_turn_page_turn_fallback', `reason=${fbReason} ${why}: say sentence ${tHold.lastSentence} never finished (started ${ttsPlaybackStartedCountRef.current}) — page turns at the turn end`);
+    }
     typedPageTurnHoldRef.current = null;
-    return false;
+    return tRelease === 'no_audio' ? 'released_no_audio' : 'released';
   };
   const typedPageTurnHoldBlocksRef = useRef(typedPageTurnHoldBlocks);
   typedPageTurnHoldBlocksRef.current = typedPageTurnHoldBlocks;
   const flushDeferredPageAtTurnEndNow = useCallback((why: string) => {
     const deferred = pendingAdvanceNewPageRef.current;
-    if (typedPageTurnHoldBlocksRef.current(deferred, why)) return;
+    const holdGate = typedPageTurnHoldBlocksRef.current(deferred, why);
+    if (holdGate === 'wait') return;
     // Task 45 §4: with the validator TTS hold the brain goes idle before the
     // audio starts — the page would flip ahead of the whole turn. A turn that
     // says the move leaves the break to its anchored batch (or to audio drained).
-    if (deferred && TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan(lessonPlanRef.current)) {
-      const tsIdx = transitionSentenceIndex(turnNarrationRef.current.slice(attemptNarrationStartRef.current), { fallbackToFirstAsk: true });
-      if (tsIdx !== null && ttsPlaybackStartedCountRef.current <= tsIdx) {
-        onDebugEvent?.('auto_newpage_on_advance_flush_waits', `transition sentence ${tsIdx} not yet spoken (${why})`);
-        return;
+    // H2 (fix round 3): a no-audio release (text mode) has no spoken transition to wait for.
+    if (holdGate !== 'released_no_audio') {
+      if (deferred && TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan(lessonPlanRef.current)) {
+        const tsIdx = transitionSentenceIndex(turnNarrationRef.current.slice(attemptNarrationStartRef.current), { fallbackToFirstAsk: true });
+        if (tsIdx !== null && ttsPlaybackStartedCountRef.current <= tsIdx) {
+          onDebugEvent?.('auto_newpage_on_advance_flush_waits', `transition sentence ${tsIdx} not yet spoken (${why})`);
+          return;
+        }
       }
     }
     if (!flushDeferredPageAtTurnEnd({

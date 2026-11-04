@@ -408,8 +408,16 @@ test('H1 (fix wave 5 round 2): a turn-end fallback releases the hold when the an
   // the boolean wrapper is unchanged for the anchored cases
   assert.equal(typedPageTurnHoldDone({ lastSentence: 4, started: 4, why: 'audio drained' }), false);
   // VTR wiring
-  assert.ok(VTR.includes('const tRelease = typedPageTurnHoldRelease({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why, streamEnded: !brainBusyRef.current });'), 'the flush passes the stream state');
-  assert.ok(VTR.includes("if (tRelease === 'fallback') onDebugEvent?.('typed_turn_page_turn_fallback',"), 'fallback debug event');
+  // round 3 pin moves (H2): the call also passes noAudio; the fallback event now carries reason=drained|no_audio
+  assert.ok(VTR.includes('const tRelease = typedPageTurnHoldRelease({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why, streamEnded: !brainBusyRef.current, noAudio: textSessionRef.current });'), 'the flush passes the stream state');
+  assert.ok(VTR.includes("if (tRelease !== 'anchored') {") && VTR.includes("onDebugEvent?.('typed_turn_page_turn_fallback', `reason=${fbReason}"), 'fallback debug event');
+});
+
+test('H2 (fix wave 5 round 3): text mode releases the held page at stream end, past the transition-sentence wait', () => {
+  assert.ok(VTR.includes("const fbReason = tRelease === 'no_audio' ? 'no_audio' : 'drained';"), 'reason no_audio vs drained');
+  assert.ok(VTR.includes("onDebugEvent?.('typed_turn_page_turn_fallback', `reason=${fbReason} ${why}:"), 'fallback debug event with the reason');
+  assert.ok(VTR.includes("if (holdGate === 'wait') return;"), 'the flush waits on the hold');
+  assert.ok(/if \(holdGate !== 'released_no_audio'\) \{\s*if \(deferred && TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan\(lessonPlanRef\.current\)\) \{/.test(VTR), 'a no-audio release skips the spoken-transition wait (nothing is spoken)');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

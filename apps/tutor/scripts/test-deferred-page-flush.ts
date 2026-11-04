@@ -26,6 +26,7 @@ import { keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage, type PageDeci
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
 import { transitionSentenceIndex as transitionSentenceIndex45 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 import { authoredCardParaphrase as authoredCardParaphrase46 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
+import { typedPageTurnHoldRelease as holdRelease } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 
 let n = 0;
 const ok = (name: string, cond: boolean) => { assert.ok(cond, name); n++; };
@@ -422,6 +423,24 @@ ok('emptyPageIndexes: pointer-only page is empty',
   assert.match(vtr46, /const cardAfterBreak = transitionAnchor !== null && narrationAnchor !== undefined && narrationAnchor - attemptNarrationStartRef\.current >= transitionAnchor;/);
   assert.match(vtr46, /render_sync_stall_rearmed/);
   n += 8;
+}
+
+{
+  // H2 (fix wave 5 round 3, bot r64 75 s): a TEXT session plays no audio — the held page turn releases at stream end
+  const r64 = { lastSentence: 6, started: 1 };
+  assert.equal(holdRelease({ ...r64, why: 'brain idle', streamEnded: true, noAudio: true }), 'no_audio', 'r64 75 s: text mode, stream ended → released');
+  assert.equal(holdRelease({ ...r64, why: 'speech ended', streamEnded: true, noAudio: true }), 'no_audio');
+  assert.equal(holdRelease({ ...r64, why: 'brain idle', streamEnded: false, noAudio: true }), null, 'still streaming');
+  // audio pending (voice): not released until the drain
+  assert.equal(holdRelease({ ...r64, why: 'brain idle', streamEnded: true, noAudio: false }), null);
+  assert.equal(holdRelease({ ...r64, why: 'speech ended', streamEnded: true, noAudio: false }), null);
+  assert.equal(holdRelease({ ...r64, why: 'audio drained', streamEnded: true, noAudio: false }), 'fallback');
+  assert.equal(holdRelease({ ...r64, why: 'audio drained', streamEnded: true }), 'fallback', 'noAudio defaults to false');
+  // the anchored release wins whatever the mode
+  assert.equal(holdRelease({ lastSentence: 1, started: 3, why: 'brain idle', streamEnded: true, noAudio: true }), 'anchored');
+  const vtrH2 = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtrH2.includes('streamEnded: !brainBusyRef.current, noAudio: textSessionRef.current });'), 'VTR: text mode = no audio (the render-sync text-mode signal)');
+  n += 9;
 }
 console.log(`deferred-page-flush: ${n} cases passed`);
 

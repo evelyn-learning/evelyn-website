@@ -450,7 +450,11 @@ export function typedPageTurnHoldDone(input: { lastSentence: number; started: nu
  *  dropped a duplicate say sentence, or a sentence never played), so once the brain stream has ended and the turn's
  *  audio drained the hold is released anyway ('fallback'). Never on "speech ended": that edge also fires between
  *  sentences after the stream ended (the stream ends long before the narration does). */
-export function typedPageTurnHoldRelease(input: { lastSentence: number; started: number; why: string; streamEnded: boolean }): 'anchored' | 'fallback' | null {
+export function typedPageTurnHoldRelease(input: { lastSentence: number; started: number; why: string; streamEnded: boolean; /** H2: the session plays no audio (text mode) */ noAudio?: boolean }): 'anchored' | 'fallback' | 'no_audio' | null {
   if (typedPageTurnHoldDone(input)) return 'anchored';
-  return input.streamEnded && input.why === 'audio drained' ? 'fallback' : null;
+  if (!input.streamEnded) return null;
+  // H2 (fix round 3, bot r64 75 s): a text session never drains audio and never advances the narration counter —
+  // with nothing to wait for, the stream's end is the turn's end.
+  if (input.noAudio) return 'no_audio';
+  return input.why === 'audio drained' ? 'fallback' : null;
 }
