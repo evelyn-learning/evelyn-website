@@ -337,8 +337,9 @@ test('thinking cue wiring: claim → TutorSession → runtime + stage; head cove
   const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   const ts = readFileSync('src/app/tutor/components/session/TutorSession.tsx', 'utf8');
-  // 2026-10-29: the claim defaults ON for every tenant (resolveThinkingCueClaim).
-  assert.ok(embed.includes('TUTOR_THINKING_CUE && resolveThinkingCueClaim(config.thinking_cue)') && embed.includes('thinkingCue={thinkingCue}'));
+  // 2026-10-29: the claim defaults ON for every tenant (resolveThinkingCueClaim);
+  // 2026-11-02: an absent claim falls back to the partner row (GameClass off).
+  assert.ok(embed.includes('TUTOR_THINKING_CUE && resolveThinkingCueClaim(config.thinking_cue, sessionOptions.thinkingCue)') && embed.includes('thinkingCue={thinkingCue}'));
   assert.ok(ts.includes('thinkingCue={thinkingCue}') && ts.includes('thinkingCueText={stageNotice ?? thinkingCueText}') /* Task 27 §G: the mic notice shares the slot */);
   assert.ok(vtr.includes("onDebugEvent?.('thinking_cue_ack_skipped'"));
   assert.ok(vtr.includes('cueStudentTurnAccepted();\n      await callBrainOnce(transcript, opts);') || vtr.includes('cueStudentTurnAccepted();'));

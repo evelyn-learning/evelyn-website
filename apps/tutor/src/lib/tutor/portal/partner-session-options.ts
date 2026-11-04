@@ -41,6 +41,11 @@ export interface PartnerSessionOptions {
    *  2026-10-28). Default off for every partner; the
    *  TUTOR_PRONUNCIATION_ASSESS flag is the global kill switch. */
   pronunciation: boolean;
+  /** The thinking cue (chime + on-stage "Thinking…" label) while the tutor
+   *  prepares a reply (lib/tutor/voice/thinking-cue.ts). Default: on
+   *  (decision 2026-10-29); an explicit `thinking_cue` token claim still wins
+   *  either way. With the cue off, the spoken ack fillers come back. */
+  thinkingCue: boolean;
 }
 
 /** Partner rows — applied when present. A partner absent from this table
@@ -62,7 +67,9 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   evelyntutor: { openerPrefetch: false },
   kanzoo: { openerPrefetch: false },
   greenapple: { openerPrefetch: false },
-  gameclass: { openerPrefetch: false },
+  // Skyler 2026-11-02: the chime distracts in their video lessons and the
+  // label sits half under their chat box. Cue off; their ack fillers return.
+  gameclass: { openerPrefetch: false, thinkingCue: false },
   globalead: { openerPrefetch: false },
 };
 
@@ -77,6 +84,7 @@ export function defaultPartnerSessionOptions(tutorLanguages: string[] | undefine
     lessonCloseAutoEnd: true,
     levelCheck: false,
     pronunciation: false,
+    thinkingCue: true,
   };
 }
 
@@ -89,5 +97,6 @@ export function resolvePartnerSessionOptions(session: PartnerSessionLike | null 
     lessonCloseAutoEnd: row?.lessonCloseAutoEnd ?? base.lessonCloseAutoEnd,
     levelCheck: row?.levelCheck ?? base.levelCheck,
     pronunciation: row?.pronunciation ?? base.pronunciation,
+    thinkingCue: row?.thinkingCue ?? base.thinkingCue,
   };
 }

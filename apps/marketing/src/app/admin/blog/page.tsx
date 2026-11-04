@@ -6,18 +6,27 @@ import { connectDB } from "@core/db";
 import { BlogPost } from "@/models";
 import { Plus, Edit, Trash2, Eye, ArrowLeft } from "lucide-react";
 import { DeleteButton } from "./DeleteButton";
+import { BeaconActions } from "./BeaconActions";
 
-async function getPosts() {
+async function getPosts(hiddenOnly: boolean) {
   await connectDB();
-  const posts = await BlogPost.find().sort({ createdAt: -1 }).lean();
+  const posts = await BlogPost.find(hiddenOnly ? { noindex: true } : {})
+    .sort({ createdAt: -1 })
+    .lean();
   return JSON.parse(JSON.stringify(posts));
 }
 
-export default async function AdminBlogPage() {
+export default async function AdminBlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/admin/login");
 
-  const posts = await getPosts();
+  const { filter } = await searchParams;
+  const hiddenOnly = filter === "hidden";
+  const posts = await getPosts(hiddenOnly);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -42,6 +51,20 @@ export default async function AdminBlogPage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-4 flex gap-2 text-sm">
+          <Link
+            href="/admin/blog"
+            className={`rounded-full px-3 py-1 ${!hiddenOnly ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+          >
+            All posts
+          </Link>
+          <Link
+            href="/admin/blog?filter=hidden"
+            className={`rounded-full px-3 py-1 ${hiddenOnly ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+          >
+            Hidden by Beacon
+          </Link>
+        </div>
         <div className="rounded-xl bg-white shadow">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -68,7 +91,9 @@ export default async function AdminBlogPage() {
                 {posts.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                      No blog posts yet. Create your first post!
+                      {hiddenOnly
+                        ? "No posts are hidden from search."
+                        : "No blog posts yet. Create your first post!"}
                     </td>
                   </tr>
                 ) : (
@@ -92,12 +117,38 @@ export default async function AdminBlogPage() {
                         >
                           {post.status}
                         </span>
+                        {post.noindex && (
+                          <span
+                            className="ml-2 inline-flex rounded-full bg-gray-200 px-2 py-1 text-xs font-semibold text-gray-700"
+                            title={post.noindexReason || "Hidden from search by Beacon"}
+                          >
+                            noindex
+                          </span>
+                        )}
+                        {post.ctaProduct && (
+                          <span className="ml-2 inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800">
+                            CTA: {post.ctaProduct}
+                          </span>
+                        )}
+                        {post.beaconLocked && (
+                          <span
+                            className="ml-2 inline-flex rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800"
+                            title="Restored by a human — Beacon will not touch this post"
+                          >
+                            locked
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {new Date(post.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <BeaconActions
+                            id={post._id}
+                            noindex={post.noindex}
+                            ctaProduct={post.ctaProduct}
+                          />
                           <Link
                             href={`/blog/${post.slug}`}
                             target="_blank"

@@ -35,6 +35,9 @@
     "test:crm-archive": "npx tsx src/lib/crm/csv.test.ts && npx tsx src/lib/crm/linkedin-archive.test.ts",
     "test:crm": "npm run test:crm-models && npm run test:crm-core && npm run test:crm-suppression && npm run test:crm-console && npm run test:crm-upsert-smoke && npm run test:crm-contact && npm run test:crm-gmail && npm run test:crm-gmail-classify && npm run test:crm-gmail-ingest && npm run test:crm-linkedin && npm run test:crm-archive",
     "crm:backfill-contacts": "npx tsx scripts/crm-backfill-contact-submissions.ts",
-    "crm:migrate-round2": "npx tsx scripts/crm-migrate-round2.ts"
+    "crm:migrate-round2": "npx tsx scripts/crm-migrate-round2.ts",
+    "test:beacon-blog": "npx tsx src/lib/blog/beacon-flags.test.ts",
+    "test:beacon-ingest": "npx tsx src/lib/beacon/ingest.test.ts",
+    "test:vps-breakdown": "npx tsx src/lib/ops/vps-breakdown.test.ts"
   }
 }

@@ -17,6 +17,7 @@ import {
   GeneratedBlogPost,
 } from "@/types/blog-generator";
 import { getAIContext, KNOWLEDGE_BASE } from "./knowledge-base";
+import { nextBeaconTopic } from "@/lib/beacon/topics";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -107,7 +108,8 @@ async function getRecentTopics(limit: number = 20): Promise<string[]> {
 
 // Use AI to decide the best parameters for the next blog post
 async function decideParameters(
-  settings: IAutoBlogSettings
+  settings: IAutoBlogSettings,
+  beaconTopic: { topic: string; reason: string } | null = null
 ): Promise<AutoBlogParameters> {
   const recentGenerations = settings.recentGenerations || [];
   const recentTopics = await getRecentTopics(20);
@@ -156,7 +158,11 @@ Recent tones used: ${recentTonesUsed.join(", ") || "none"}
 ## Topics Already Covered (DO NOT repeat these or similar topics)
 ${recentTopics.slice(0, 15).map((t) => `- ${t}`).join("\n") || "No recent topics"}
 
-## Your Task
+${beaconTopic ? `## Assigned Topic
+Write about exactly this topic: ${beaconTopic.topic}. Why it matters to buyers: ${beaconTopic.reason}.
+Keep the "topic" field to this subject; choose the other parameters to fit it.
+
+` : ""}## Your Task
 Decide the parameters for the next blog post. Consider:
 1. VARIETY: Choose different category, market, and tone from recent ones when possible
 2. RELEVANCE: Pick a timely, valuable topic for the education industry
@@ -291,7 +297,10 @@ export async function generateAutoBlogPost(): Promise<{
 
     // Step 1: AI decides parameters
     console.log("[Auto Blog] AI deciding parameters...");
-    const params = await decideParameters(settings);
+    // Beacon-assigned buyer topics go first (queue set via /api/beacon/v1/topics).
+    const beaconTopic = nextBeaconTopic(settings);
+    if (beaconTopic) console.log("[Auto Blog] Using Beacon topic:", beaconTopic.topic);
+    const params = await decideParameters(settings, beaconTopic);
     console.log(`[Auto Blog] Parameters decided:`, {
       topic: params.topic,
       category: params.category,
@@ -384,6 +393,15 @@ export async function generateAutoBlogPost(): Promise<{
       });
 
       console.log("[Auto Blog] Draft saved:", slug);
+    }
+
+    // The post saved — only now drop the Beacon topic from the queue. $pull by
+    // value (not shift) so a queue Beacon replaced mid-generation is untouched.
+    if (beaconTopic) {
+      await AutoBlogSettings.updateOne(
+        { _id: settings._id },
+        { $pull: { beaconTopics: { topic: beaconTopic.topic } } }
+      );
     }
 
     // Step 5: Record this generation

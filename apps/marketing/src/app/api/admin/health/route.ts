@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import os from 'os';
+import { readFile } from 'fs/promises';
 
 const execAsync = promisify(exec);
 
@@ -21,7 +22,11 @@ interface HealthStatus {
     used: number;
     total: number;
     percentage: number;
+    available?: number;
+    swapUsed?: number;
+    swapTotal?: number;
   };
+  load?: number[];
   disk: {
     used: number;
     total: number;
@@ -66,6 +71,7 @@ export async function GET() {
       cpuCores: os.cpus().length,
     },
     environment: process.env.NODE_ENV || 'development',
+    load: os.loadavg(),
   };
 
   // Check database connection
@@ -98,6 +104,19 @@ export async function GET() {
       total: Math.round(totalMem / 1024 / 1024), // MB
       percentage: Math.round((usedMem / totalMem) * 100),
     };
+
+    // Linux: MemAvailable is what the kernel can actually hand out (page cache
+    // is reclaimable), which is the number an operator wants next to "used".
+    try {
+      const meminfo = await readFile('/proc/meminfo', 'utf8');
+      const kb = (key: string) => Number(meminfo.match(new RegExp(`^${key}:\\s+(\\d+)`, 'm'))?.[1] ?? NaN);
+      const avail = kb('MemAvailable'), swapTotal = kb('SwapTotal'), swapFree = kb('SwapFree');
+      if (!Number.isNaN(avail)) health.memory.available = Math.round(avail / 1024);
+      if (!Number.isNaN(swapTotal)) {
+        health.memory.swapTotal = Math.round(swapTotal / 1024);
+        health.memory.swapUsed = Math.round((swapTotal - (Number.isNaN(swapFree) ? 0 : swapFree)) / 1024);
+      }
+    } catch { /* not linux */ }
 
     // Flag if memory usage is high
     if (health.memory.percentage > 90) {
