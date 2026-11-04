@@ -321,7 +321,9 @@ export function turnStateLine(ctx: AllowedNextContext): string {
       ? [['corrections_left', String(Math.max(0, TYPED_CONVERSATION_CORRECTIONS - (state.correctionsInPart?.[segId] ?? 0)))] as [string, string]] : []),
     ['level_known', yn(ctx.levelKnown)],
     // X1: every numbered question of this part has been answered (level check) — the row allows only the move.
-    ...(ctx.partQuestionsAnswered && typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'level_check' ? [['questions_done', 'yes'] as [string, string]] : []),
+    // F4.2: only when the row allows the move (a nudge / engine-move row does not).
+    ...(ctx.partQuestionsAnswered && typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'level_check' && allowedNextFor(ctx).includes('move')
+      ? [['questions_done', 'yes'] as [string, string]] : []),
     ...(moveNeedsAnswerFor(ctx) ? [['move_needs_answer', 'yes'] as [string, string]] : []),
   ];
   // V3: the recap's step, and on its first turn the plan's required phrases (the review turn must say them).
@@ -331,7 +333,7 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     const first = !state.recapReviewed?.[segId];
     attrs.push(['recap_step', first ? 'review_feedback_check' : 'close']);
     const phrases = (segmentOf(ctx.plan, segId)?.requiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim());
-    const missing = ctx.missingRequiredPhrases;
+    const missing = ctx.missingRequiredPhrases ? missingPhrasesFor(ctx) : undefined;
     if (missing) { if (missing.length) attrs.push(['required_phrases', missing.join('|')]); }
     else if (first && phrases.length) attrs.push(['required_phrases', phrases.join('|')]);
   }
@@ -352,8 +354,12 @@ export function turnStateLine(ctx: AllowedNextContext): string {
 /** X2: the phrases the server's close gate checks — the client's missing list (max 8, each ≤ 120 chars); none on the
  *  student's stop / move-on request (the prose close guard never refuses then either). */
 function closeRequiredPhrases(ctx: AllowedNextContext): string[] {
-  if (ctx.studentMovedOn) return [];
-  return (ctx.missingRequiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim() && p.length <= 120).slice(0, 8);
+  return ctx.studentMovedOn ? [] : missingPhrasesFor(ctx);
+}
+/** F4.3: the client's missing list filtered once — non-empty strings, at most 8, each cut to 120 chars — for both
+ *  turn_state's required_phrases and the request's requiredPhrases (the route's shape limits). Pure. */
+function missingPhrasesFor(ctx: AllowedNextContext): string[] {
+  return (ctx.missingRequiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim()).slice(0, 8).map((p) => p.slice(0, 120));
 }
 
 export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
@@ -402,7 +408,10 @@ const ANSWER_STOP = new Set(['the', 'a', 'an', 'to', 'of', 'and', 'is', 'it', 't
  *  X1b: no Japanese-script clause — "すみません、わかりません。" is no answer; a Japanese reply counts only through the
  *  brain's verdict. */
 export function answerShaped(text: string): boolean {
-  const s = String(text ?? '');
+  const s = String(text ?? '').trim();
+  // F4.1: a question back or a request ("Sorry, …", "Can you say it again?") is no answer.
+  if (/\?\s*$/.test(s)) return false;
+  if (/^[^\p{L}]*(?:sorry|can|could|what|how|please|pardon|excuse)\b/iu.test(s)) return false;
   const words = s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').split(/\s+/).filter((w) => w && !ANSWER_STOP.has(w));
   return words.length >= 4;
 }

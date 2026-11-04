@@ -423,6 +423,18 @@ async function main() {
       assert.equal(r.requests.length, 1);
       assert.ok(sentencesOf(r.events).some((x) => x.includes('Haruto')));
     });
+    // F4.5: any spoken field before next counts (ack / support_ja / correction.explain)
+    for (const [where, over] of [
+      ['support_ja', { support_ja: 'One thing you did well was your examples. よくできました。' }],
+      ['ack', { ack: 'One thing you did well was your examples.' }],
+      ['correction.explain', { verdict: 'partly_correct', correction: { student: 'I work here five years', corrected: 'I have worked here for five years.', emphasis: ['have worked'], explain: 'One thing you did well was the time phrase; add have.' } }],
+    ] as const) {
+      await test(`X2/F4.5: the phrase spoken in ${where} ⇒ one request`, async () => {
+        const r = await run({ ...baseInput, typedTurn: recapTurn }, [chunkedTextScript(JSON.stringify({ ...OK, ...over, next: BARE }), 3)]);
+        assert.equal(r.requests.length, 1);
+        assert.ok(sentencesOf(r.events).some((x) => x.includes('Haruto')));
+      });
+    }
     await test('X2: a close without requiredPhrases (non-recap) ⇒ unchanged, one request', async () => {
       const r = await run({ ...baseInput, typedTurn: { state: '<turn_state part="plain"/>', allowedNext: ['close'], recap: false } }, [chunkedTextScript(JSON.stringify({ ...OK, next: BARE }), 3)]);
       assert.equal(r.requests.length, 1);

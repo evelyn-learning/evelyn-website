@@ -394,7 +394,7 @@ export function typedTurnRetryMessage(input: {
     : reason === 'illegal_kind'
     ? `Your "next" was refused "${refused.kind}": that kind is not allowed on this turn (allowed: ${allowedNext.join(', ')}). Choose next.kind from the allowed set only.`
       // X3 (fix wave 3, r61b 71 s / 147 s): the retry spoke the refused move inside a question turn.
-      + (refused.kind === 'move' || refused.kind === 'close' ? ' Do not announce a move, do not say this part is finished, and do not name the next part — stay in this part and ask its question.' : '')
+      + (refused.kind === 'move' || refused.kind === 'close' ? ' Do not announce a move, do not say this part is finished, and do not name the next part — stay in this part and choose from the allowed kinds.' : '')
     : `Your "next" was refused "${refused.kind}" because next.say ran to ${englishSentenceCount(refused.say)} English sentences (Japanese sentences do not count). next.say is at most ${budget} sentences. Keep next.kind within the allowed set (allowed: ${allowedNext.join(', ')}).`;
   const said = [
     `ack: ${JSON.stringify(alreadySaid.ack)}`,

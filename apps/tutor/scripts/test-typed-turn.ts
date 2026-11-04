@@ -374,7 +374,7 @@ test('X2 (fix wave 3): the recap close carries every required phrase; the retry 
 });
 
 test('X3 (fix wave 3): a refused move / close is never spoken as a move (r61b 71 s, 147 s)', () => {
-  const STAY = 'Do not announce a move, do not say this part is finished, and do not name the next part — stay in this part and ask its question.';
+  const STAY = 'Do not announce a move, do not say this part is finished, and do not name the next part — stay in this part and choose from the allowed kinds.';
   const ALREADY = { ack: 'Good.', verdict: 'correct' as const, verdict_say: 'Nice.', board: '', correction: null, support_ja: '' };
   for (const kind of ['move', 'close'] as const) {
     const m = typedTurnRetryMessage({ reason: 'illegal_kind', refused: { kind, say: "Let's move on to your work.", item: '', level: '' }, allowedNext: ['question'], alreadySaid: ALREADY, budget: 3 });

@@ -652,6 +652,10 @@ test('X1: level check with every numbered question answered (partQuestionsAnswer
   // without the tracker: unchanged rows
   assert.deepEqual(allowedNextFor(ctx('level-check', { studentReplied: true, state: ask('question') })), ['question']);
   assert.ok(!turnStateLine(ctx('level-check', { state: ask('question') })).includes('questions_done'), 'absent when not done');
+  // F4.2: only when move is allowed (a nudge turn's row is question / wait)
+  const nudged = ctx('level-check', { partQuestionsAnswered: true, nudge: true, state: ask('question') });
+  assert.deepEqual(allowedNextFor(nudged), ['question', 'wait']);
+  assert.ok(!turnStateLine(nudged).includes('questions_done'), turnStateLine(nudged));
   assert.deepEqual(allowedNextFor(ctx('level-check', { studentReplied: true, state: { ...ask('question'), answersInPart: { 'level-check': 2 } } })), ['question', 'move']);
   // F1: moveNeedsAnswer only in the ['question','move'] cell
   const lc = (n: number, over: Partial<AllowedNextContext> = {}) => ctx('level-check', { studentReplied: true, state: { ...ask('question'), answersInPart: { 'level-check': n } }, ...over });
@@ -674,6 +678,12 @@ test('X1/X1b: answerShaped — ≥ 4 English content words; a Japanese reply nev
   assert.equal(answerShaped('すみません、わかりません。'), false);
   assert.equal(answerShaped('営業部で働いています。'), false);
   assert.equal(answerShaped('はい。'), false);
+  // F4.1: a question back / a request is no answer
+  assert.equal(answerShaped("Sorry, I don't understand what you mean."), false);
+  assert.equal(answerShaped('Can you say it again more slowly?'), false);
+  assert.equal(answerShaped('Can we move on to the next part please?'), false);
+  assert.equal(answerShaped('I was responsible for testing the new website, right?'), false, 'ends with ?');
+  assert.equal(answerShaped('Excuse me, I did not catch the question.'), false);
 });
 test('X1: applyTypedTurn counts verdict none + an answer-shaped reply as an answer; "OK." is not', () => {
   const t = { ack: 'Thanks.', verdict: 'none' as const, verdict_say: '', board: '', correction: null, support_ja: '', next: nx({ kind: 'question' }) };
@@ -704,6 +714,16 @@ test('X2: the request carries requiredPhrases (the missing list) for the server 
   assert.equal(typedTurnRequestFor(ctx('summary', { lastPart: true, state: closeStep })).requiredPhrases, undefined);
   // the prose close guard never refuses on the student's stop request; neither does the typed gate
   assert.equal(typedTurnRequestFor(ctx('summary', { lastPart: true, studentMovedOn: true, missingRequiredPhrases: ['one thing you did well'], state: closeStep })).requiredPhrases, undefined);
+  // F4.3: one filtered list for both — ≤ 8 entries, an over-long entry truncated to 120 chars (not dropped)
+  const long = 'a'.repeat(150);
+  const many = [long, ...Array.from({ length: 9 }, (_, i) => `phrase ${i}`)];
+  const cl = ctx('summary', { lastPart: true, missingRequiredPhrases: many, state: closeStep });
+  const req = typedTurnRequestFor(cl).requiredPhrases ?? [];
+  assert.equal(req.length, 8);
+  assert.equal(req[0], 'a'.repeat(120));
+  const line = turnStateLine(cl);
+  const listed = (line.match(/required_phrases="([^"]*)"/) ?? [])[1] ?? '';
+  assert.deepEqual(listed.split('|'), req, line);
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
