@@ -315,6 +315,9 @@ test('V5 (fix wave 2): a typed correction feeds the pronunciation items after th
   assert.ok(/const typedItemsFor = \(segId: string\): readonly string\[\] => \{[\s\S]{0,600}return md\.pronunciation \? typedPronunciationItems\(authored, typedCorrectedSentencesRef\.current\) : authored;/.test(VTR), 'typedItemsFor appends them on a pronunciation part only');
   assert.ok(/typedTurnStateRef\.current = createTypedTurnState\(\);\s*typedCorrectedSentencesRef\.current = \[\];/.test(VTR), 'plan-scoped like the typed state');
 });
+test('V6 (fix wave 2): the typed request carries the held working level (next_card key ideas filtered as the board)', () => {
+  assert.ok(/const buildAllowedNextContext = \(\): AllowedNextContext => \{[\s\S]{0,6000}workingLevel: workingLevelRef\.current\?\.level \?\? null,/.test(VTR), 'workingLevel in the context');
+});
 test('W3: the turn-start typed snapshot is taken on a typed turn only (prose path inert)', () => {
   assert.ok(VTR.includes('const typedTurnStateAtTurnStart: TypedTurnState | null = typedTurnActive ? structuredClone(typedTurnStateRef.current) : null;'), 'guarded snapshot');
   assert.equal((VTR.match(/structuredClone\(typedTurnStateRef\.current\)/g) ?? []).length, 1, 'no other per-turn clone');

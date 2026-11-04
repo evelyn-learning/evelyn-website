@@ -15184,6 +15184,8 @@ export function VoiceTutorRealtime({
             nudge: !!opts?.silent && isIdleNudgeDirective(transcript),
             items: typedItemsFor(typedFromSeg),
             lessonElapsedMs: typedLessonElapsedMs,
+            // V6: next_card's key ideas are filtered to the held level, as the board shows them.
+            workingLevel: workingLevelRef.current?.level ?? null,
             // W2: the pointer already moved this turn (no second move / close).
             engineMoved: !!typedEngineMove,
           };

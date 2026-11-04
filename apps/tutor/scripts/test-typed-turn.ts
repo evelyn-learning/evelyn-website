@@ -354,5 +354,11 @@ test('V2: verdict semantics per part kind + the conversation corrections budget'
   assert.ok(g && g.verdict === 'partly_correct' && g.correction && g.next.kind === 'retry' && g.board === '', 'partly_correct + correction + retry');
 });
 
+test('V6: a move into a key-ideas card previews its examples, then asks its practice question (3 sentences)', () => {
+  const move = TYPED_TURN_INSTRUCTIONS.split('WHEN next.kind IS move')[1].split('\n\n')[0];
+  assert.ok(move.includes('When `next_card` lists key ideas or example sentences (not a question or a numbered menu), `say` is: the bridge sentence, ONE sentence that names the card\'s example(s) as a preview, then the card\'s practice question.'), move);
+  assert.equal(typedSayBudgetFor('move', false), 3);
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

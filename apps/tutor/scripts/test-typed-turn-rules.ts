@@ -536,5 +536,20 @@ test('V4: level check with studentAnswerCount 2 → question/retry; 3 → move',
   assert.deepEqual(allowedNextFor(ctx('level-check', { state: ask('question'), studentAnswerCount: 3 })), ['move']);
 });
 
+// ---- Fix wave 2 V6: a move into a key-ideas part sees the card it previews ----
+test('V6: next_card carries a concept part\'s key ideas (level-filtered, as the board shows them) when it has no question card', () => {
+  const lc = turnStateLine(ctx('level-check', { state: ask('question'), studentAnswerCount: 3 }));
+  assert.ok(lc.includes('next_part="Your job"'), lc);
+  const card = (lc.match(/next_card="([^"]*)"/) ?? [])[1] ?? '';
+  // no level yet on a fixed-script plan → the intermediate version (effectiveBoardLevel), never the other levels
+  assert.ok(/^1\. We explain responsibilities/.test(card), card);
+  assert.ok(card.includes('Practice question: What are your main responsibilities at work?'), card);
+  assert.ok(!card.includes('[beginner]') && !card.includes('What do you do at work?'), card);
+  const adv = turnStateLine(ctx('level-check', { state: ask('question'), studentAnswerCount: 3, workingLevel: 'advanced' }));
+  assert.ok(/next_card="[^"]*Could you describe your current responsibilities/.test(adv), adv);
+  // a question card is unchanged
+  assert.ok(/next_card="Have you worked for your current company for a long time\?"/.test(turnStateLine(ctx('topic-intro', { studentMovedOn: true }))));
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

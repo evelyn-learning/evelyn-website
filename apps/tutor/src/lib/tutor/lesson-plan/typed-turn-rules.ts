@@ -9,6 +9,7 @@ import {
   postDueHoldDecision, segmentMaxTurns, segmentTransitionKind,
 } from './fixed-script';
 import { getSegmentTruth } from './context';
+import { effectiveBoardLevel, filterKeyIdeasForLevel, type WorkingLevel } from '../level/working-level';
 import { cardAskLine } from './transition-ask';
 import { boardOffersChoices } from '../voice/sentence-board';
 import {
@@ -25,6 +26,15 @@ function segmentOf(plan: LessonPlan, segId: string): Segment | undefined {
 /** The card statement of a segment (same choice as the client's segmentCardStatement, minus whiteboard emphasis stripping). */
 function cardStatement(plan: LessonPlan, segId: string): string {
   return getSegmentTruth(segmentOf(plan, segId), plan.id)?.problemText ?? '';
+}
+
+/** V6 (fix wave 2): a concept part's Key ideas card as the board shows it (level-filtered, numbered) — next_card's
+ *  text when the part has no question card, so a move can preview its examples and ask its practice question. */
+function keyIdeasCard(plan: LessonPlan, segId: string, level: WorkingLevel | null | undefined): string {
+  const seg = segmentOf(plan, segId) as (Segment & { keyIdeas?: unknown }) | undefined;
+  if (!seg || seg.kind !== 'concept' || !Array.isArray(seg.keyIdeas)) return '';
+  const ideas = filterKeyIdeasForLevel(seg.keyIdeas.filter((k): k is string => typeof k === 'string'), effectiveBoardLevel(level ?? null, plan));
+  return ideas.map((k, i) => `${i + 1}. ${k}`).join('\n');
 }
 
 export function typedPartKind(plan: LessonPlan, segId: string, _levelKnown: boolean): TypedPartKind {
@@ -93,6 +103,8 @@ export interface AllowedNextContext {
   items: readonly string[];
   /** ms since the lesson started (the lesson-time guard's clock; postDueHoldDecision's deadline). */
   lessonElapsedMs: number;
+  /** V6: the held working level (null / absent = none yet) — filters next_card's key ideas as the board does. */
+  workingLevel?: WorkingLevel | null;
   /** W2: the engine moved the pointer before this brain call (Skip, typed objective jump, lesson-time guard):
    *  segId is the part it entered, and no second move / close is allowed this turn. */
   engineMoved?: boolean;
@@ -270,7 +282,8 @@ export function turnStateLine(ctx: AllowedNextContext): string {
   if (allowed.includes('move') || allowed.includes('close') || allowed.includes('offer')) {
     const to = nextSegmentId(ctx.plan, segId, ctx.levelKnown);
     attrs.push(['next_part', to ? fixedScriptPartLabel(ctx.plan, to) : '(end)']);
-    if (to) attrs.push(['next_card', cardStatement(ctx.plan, to).slice(0, 300)]);
+    // V6: a key-ideas part has no question card — its card (examples + practice question) instead, with more room.
+    if (to) attrs.push(['next_card', cardStatement(ctx.plan, to).slice(0, 300) || keyIdeasCard(ctx.plan, to, ctx.workingLevel).slice(0, 700)]);
   }
   return `<turn_state ${attrs.map(([k, v]) => `${k}="${esc(v)}"`).join(' ')}/>`;
 }
