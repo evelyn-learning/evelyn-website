@@ -343,6 +343,8 @@ test('V2: verdict semantics per part kind + the conversation corrections budget'
   assert.ok(I.includes('In a part that teaches a grammar point (`part` is bridge, offer_part or plain), a reply with an error in the target grammar, a missing verb, a missing article/plural that changes the form, or a fragment where a sentence was asked is `partly_correct` with a correction.'), 'grammar-part rule');
   assert.ok(I.includes('In conversation parts small slips may pass as `correct`, but an error in the lesson\'s target grammar is corrected while `corrections_left` is above 0.'), 'conversation rule');
   assert.ok(I.includes('In the level check nothing is corrected.'), 'level check');
+  // R4/M6: the level check's verdict, explicitly
+  assert.ok(I.includes('There every real answer is `correct` with `correction` null, errors or not (a non-answer is still `none`).'), 'level-check verdict');
   assert.ok(!/In conversation and level-check parts an acceptable answer/.test(I), 'the old Ruling-9 sentence is gone');
   assert.ok(/corrections_left \(conversation parts only\)/.test(I), 'glossary entry');
   // the correct EXAMPLE sits in a conversation part with a non-target slip; a grammar-part EXAMPLE shows partly_correct + retry

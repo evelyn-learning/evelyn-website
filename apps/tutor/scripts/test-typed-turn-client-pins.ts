@@ -319,7 +319,8 @@ test('V5 (fix wave 2): a typed correction feeds the pronunciation items after th
   assert.ok(/typedTurnStateRef\.current = createTypedTurnState\(\);\s*typedCorrectedSentencesRef\.current = \[\];/.test(VTR), 'plan-scoped like the typed state');
 });
 test('V6 (fix wave 2): the typed request carries the held working level (next_card key ideas filtered as the board)', () => {
-  assert.ok(/const buildAllowedNextContext = \(\): AllowedNextContext => \{[\s\S]{0,6000}workingLevel: workingLevelRef\.current\?\.level \?\? null,/.test(VTR), 'workingLevel in the context');
+  // R4/M7: pinned inside buildAllowedNextContext's return literal (between lessonElapsedMs and engineMoved)
+  assert.ok(/lessonElapsedMs: typedLessonElapsedMs,\n\s*\/\/ V6:[^\n]*\n\s*workingLevel: workingLevelRef\.current\?\.level \?\? null,\n\s*\/\/ W2:[^\n]*\n\s*engineMoved: !!typedEngineMove,\n\s*\};/.test(VTR), 'workingLevel in the context');
 });
 test('W3: the turn-start typed snapshot is taken on a typed turn only (prose path inert)', () => {
   assert.ok(VTR.includes('const typedTurnStateAtTurnStart: TypedTurnState | null = typedTurnActive ? structuredClone(typedTurnStateRef.current) : null;'), 'guarded snapshot');

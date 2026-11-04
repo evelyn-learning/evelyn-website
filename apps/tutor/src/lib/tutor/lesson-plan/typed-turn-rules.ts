@@ -11,7 +11,7 @@ import {
 import { getSegmentTruth } from './context';
 import { effectiveBoardLevel, filterKeyIdeasForLevel, type WorkingLevel } from '../level/working-level';
 import { cardAskLine } from './transition-ask';
-import { boardOffersChoices } from '../voice/sentence-board';
+import { boardOffersChoices, cardableStudentSentence } from '../voice/sentence-board';
 import {
   englishSentenceCount, typedSayBudgetFor,
   type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedTurn, type TypedTurnRequest, type TypedVerdict,
@@ -26,6 +26,23 @@ function segmentOf(plan: LessonPlan, segId: string): Segment | undefined {
 /** The card statement of a segment (same choice as the client's segmentCardStatement, minus whiteboard emphasis stripping). */
 function cardStatement(plan: LessonPlan, segId: string): string {
   return getSegmentTruth(segmentOf(plan, segId), plan.id)?.problemText ?? '';
+}
+
+/** R4/M3: a card cut to `max` chars by whole lines — the first line(s) kept, the LAST non-empty line (a key-ideas
+ *  card's practice question) always kept, middle lines dropped first. Pure. */
+export function capCardText(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const lines = text.split('\n').filter((l) => l.trim());
+  const last = lines.pop() ?? '';
+  if (last.length >= max) return last.slice(0, max);
+  const head: string[] = [];
+  let used = last.length;
+  for (const l of lines) {
+    if (used + l.length + 1 > max) break;
+    head.push(l); used += l.length + 1;
+  }
+  if (!head.length && lines.length) head.push(lines[0].slice(0, Math.max(0, max - last.length - 1)));
+  return [...head, last].filter((l) => l).join('\n');
 }
 
 /** V6 (fix wave 2): a concept part's Key ideas card as the board shows it (level-filtered, numbered) — next_card's
@@ -309,7 +326,7 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     const to = nextSegmentId(ctx.plan, segId, ctx.levelKnown);
     attrs.push(['next_part', to ? fixedScriptPartLabel(ctx.plan, to) : '(end)']);
     // V6: a key-ideas part has no question card — its card (examples + practice question) instead, with more room.
-    if (to) attrs.push(['next_card', cardStatement(ctx.plan, to).slice(0, 300) || keyIdeasCard(ctx.plan, to, ctx.workingLevel).slice(0, 700)]);
+    if (to) attrs.push(['next_card', cardStatement(ctx.plan, to).slice(0, 300) || capCardText(keyIdeasCard(ctx.plan, to, ctx.workingLevel), 700)]);
   }
   return `<turn_state ${attrs.map(([k, v]) => `${k}="${esc(v)}"`).join(' ')}/>`;
 }
@@ -400,8 +417,9 @@ export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): T
   // V1 (fix wave 2): the model card is the brain's `board` sentence, never the raw transcript (the r-Praveen voice run
   // boarded 11 of 24 student sentences with their errors). verdict_say carries no effect.
   if (ev.field === 'board') {
-    const sentence = ev.value.trim();
-    return sentence && ctx.state.pendingVerdict === 'correct' ? [{ kind: 'model_card', sentence }] : [];
+    // R4/M1: the board sentence passes the same card guard the prose cards use (a bare "Yes." / two words is no card).
+    const sentence = ctx.state.pendingVerdict === 'correct' ? cardableStudentSentence(ev.value.trim()) : null;
+    return sentence ? [{ kind: 'model_card', sentence }] : [];
   }
   if (ev.field === 'correction') {
     const c = ev.value;

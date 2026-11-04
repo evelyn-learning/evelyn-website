@@ -10,7 +10,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
   allowedNextFor, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
-  sayWithinBudget, sharesCardWords, enterPartState, typedPronunciationItems, moveNeedsAnswerFor, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
+  sayWithinBudget, sharesCardWords, enterPartState, typedPronunciationItems, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
 import { TYPED_TURN_INSTRUCTIONS, type TypedNext, type TypedTurn } from '../src/lib/tutor/voice/typed-turn';
@@ -603,6 +603,29 @@ test('R2: items exhausted with the last item open — retry once, then offer / m
   assert.deepEqual(row(1, true), ['move']);
   // an open ask other than item: no retry
   assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: ['a'], state: { ...base, ...ask('offer') } })), ['offer']);
+});
+
+// ---- Fix round 1 R4 ----
+test('R4/M1: the board sentence passes the card guard — a bare "Yes." or a two-word board is no card', () => {
+  const ok = applyField(createTypedTurnState(), { field: 'verdict', value: 'correct' });
+  assert.deepEqual(effectsForField({ field: 'board', value: 'Yes.' }, fctx('present-perfect', { state: ok })), []);
+  assert.deepEqual(effectsForField({ field: 'board', value: 'I work.' }, fctx('present-perfect', { state: ok })), []);
+  assert.deepEqual(effectsForField({ field: 'board', value: 'I sell washing machines to customers.' }, fctx('present-perfect', { state: ok })),
+    [{ kind: 'model_card', sentence: 'I sell washing machines to customers.' }]);
+});
+test('R4/M3: capCardText keeps the first line(s) and always the last (practice question) line, dropping middle lines first', () => {
+  const lines = ['1. ' + 'a'.repeat(220), '2. ' + 'b'.repeat(220), '3. ' + 'c'.repeat(220), '4. ' + 'd'.repeat(220), '5. Practice question: What do you do at work?'];
+  const card = lines.join('\n');
+  assert.ok(card.length > 900);
+  const out = capCardText(card, 700);
+  assert.ok(out.length <= 700, String(out.length));
+  assert.ok(out.startsWith(lines[0]), 'first line kept');
+  assert.ok(out.endsWith(lines[4]), 'last line kept');
+  assert.ok(!out.includes('d'.repeat(50)), 'a middle line dropped');
+  assert.equal(capCardText('short\ncard', 700), 'short\ncard');
+  // a first line longer than the cap alone: cut, last line still kept
+  const huge = capCardText('x'.repeat(1000) + '\nQ?', 100);
+  assert.ok(huge.length <= 100 && huge.endsWith('\nQ?'), huge);
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
