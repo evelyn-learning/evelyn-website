@@ -262,7 +262,12 @@ export class TypedTurnReader {
   }
 }
 
-/** Reorders closure-order events into TYPED_FIELD_ORDER: a field is released only once every earlier one has been. */
+/**
+ * Reorders closure-order events into TYPED_FIELD_ORDER: a field is released only once every earlier one has been.
+ * CONTRACT: the reader never emits a field that fails validation (e.g. unknown verdict), so later fields stay held
+ * behind the gap. The caller MUST call flush() at end of stream, and when the object completes with a gap, to
+ * release whatever is still held (in order).
+ */
 export class OrderedFieldEmitter {
   private held: Partial<Record<TypedField, TypedFieldValue>> = {};
   private nextIdx = 0;

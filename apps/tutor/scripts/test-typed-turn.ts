@@ -106,7 +106,7 @@ test('reader — 1-char deltas, all fields in order', () => {
   const text = JSON.stringify(FULL);
   const r = new TypedTurnReader(); const evs: any[] = []; let pushes = 0;
   for (const ch of text) { assert.equal(ch.length >= 1, true); evs.push(...r.push(ch)); pushes++; }
-  assert.ok(pushes >= text.length - 5);
+  assert.equal(pushes, [...text].length);
   assert.deepEqual(evs.map(e => e.field), ORDER);
   assert.equal(evs[0].value, 'Thanks, Praveen.');
   assert.deepEqual(evs[3].value.emphasis, ['presentations']);
@@ -129,6 +129,25 @@ test('reader — braces, colons and commas inside strings', () => {
   assert.deepEqual(evs.map(e => e.field), ORDER);
   assert.equal(evs[0].value, 'a { b } : "c", [d]');
   assert.equal(evs[2].value, '}{:');
+});
+
+test('reader — literal \\uXXXX escapes split across 1-char deltas', () => {
+  const text = '{"ack":"A","support_ja":"\\u3053\\u3093\\u306b\\u3061\\u306f","verdict_say":"q\\u0022x"}';
+  assert.ok(text.includes('\\u3053'));
+  const { evs } = feedAll(text);
+  assert.equal(evs.find(e => e.field === 'support_ja').value, 'こんにちは');
+  assert.equal(evs.find(e => e.field === 'verdict_say').value, 'q"x');
+});
+
+test('emitter — invalid mid-stream field holds later ones until flush()', () => {
+  const t = JSON.stringify({ ack: 'A', verdict: 'bogus', verdict_say: 'V', correction: null, support_ja: '', next: FULL.next });
+  const { evs, r } = feedAll(t);
+  assert.deepEqual(evs.map(e => e.field), ['ack', 'verdict_say', 'correction', 'support_ja', 'next']);
+  assert.equal(r.complete, true);
+  const em = new OrderedFieldEmitter(); const out: string[] = [];
+  for (const e of evs) out.push(...em.push(e).map(x => x.field));
+  assert.deepEqual(out, ['ack']);
+  assert.deepEqual(em.flush().map(x => x.field), ['verdict_say', 'correction', 'support_ja', 'next']);
 });
 
 test('reader — pretty-printed equals compact', () => {
