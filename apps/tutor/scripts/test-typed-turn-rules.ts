@@ -10,7 +10,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
   allowedNextFor, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
-  sayWithinBudget, sharesCardWords, enterPartState, answerShaped, typedPronunciationItems, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
+  sayWithinBudget, sharesCardWords, enterPartState, answerShaped, typedTurnSpokenText, typedPronunciationItems, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
 import { TYPED_TURN_INSTRUCTIONS, type TypedNext, type TypedTurn } from '../src/lib/tutor/voice/typed-turn';
@@ -724,6 +724,15 @@ test('X2: the request carries requiredPhrases (the missing list) for the server 
   const line = turnStateLine(cl);
   const listed = (line.match(/required_phrases="([^"]*)"/) ?? [])[1] ?? '';
   assert.deepEqual(listed.split('|'), req, line);
+});
+
+// ---- Fix wave 4 Y1: the typed close's phrase guard sees the turn's own text (r62 829–833 s) ----
+test('Y1: typedTurnSpokenText — released fields + next.say, in speaking order, empties dropped', () => {
+  const next = nx({ kind: 'close', say: 'One thing you did well was explaining your work clearly. See you!' });
+  assert.deepEqual(typedTurnSpokenText({ ack: 'Right.', verdict_say: 'That is it.', correction: { student: 'a', corrected: 'b', emphasis: [], explain: 'Use have.' }, support_ja: 'よくできました。' }, next),
+    ['Right.', 'That is it.', 'Use have.', 'よくできました。', next.say]);
+  assert.deepEqual(typedTurnSpokenText({ ack: '', verdict_say: '  ', correction: null }, next), [next.say]);
+  assert.deepEqual(typedTurnSpokenText({}, undefined), []);
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

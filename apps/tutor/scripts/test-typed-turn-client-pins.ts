@@ -343,5 +343,13 @@ test('X2 (fix wave 3): the missing required phrases (the close guard\'s own call
   assert.ok(/missingRequiredPhrases: missingRequiredPhrases\(\s*getSegment\(tPlan, typedFromSeg\) as \{ requiredPhrases\?: string\[\] \} \| undefined,\s*\[\.\.\.\(segmentNarrationRef\.current\.get\(typedFromSeg\) \?\? \[\]\), \.\.\.turnNarrationRef\.current, \.\.\.attemptStreamedSentencesRef\.current\],\s*\),/.test(VTR), 'missingRequiredPhrases in buildAllowedNextContext');
 });
 
+test('Y1 (fix wave 4): the typed close\'s phrase guard includes the typed turn\'s text (next.say not yet narrated)', () => {
+  assert.ok(/const typedClosePendingTextRef = useRef<string\[\] \| null>\(null\);/.test(VTR), 'the ref');
+  assert.ok(/case 'close': \{\s*const cmd = mapFunctionCallToCommand\('close_session_notes', \{\}\);[^\n]*\n[^\n]*\n\s*typedClosePendingTextRef\.current = typedTurnSpokenText\(typedFieldsSeen as Partial<TypedTurn>, typedFieldsSeen\.next as TypedNext \| undefined\);\s*try \{\s*if \(cmd\) await handleWhiteboardCommand\(\[cmd\]\);\s*\} finally \{ typedClosePendingTextRef\.current = null; \}/.test(VTR), 'set around the typed close command only');
+  assert.ok(/const cbSpoken = \[\.\.\.\(segmentNarrationRef\.current\.get\(cbSeg\) \?\? \[\]\), \.\.\.turnNarrationRef\.current, \.\.\.attemptStreamedSentencesRef\.current\];/.test(VTR), 'spoken text as before');
+  assert.ok(/const cbMissing = missingRequiredPhrases\(cbSegDef, typedClosePendingTextRef\.current \? \[\.\.\.cbSpoken, \.\.\.typedClosePendingTextRef\.current\] : cbSpoken\);/.test(VTR), 'the guard reads the pending typed text');
+  assert.ok(VTR.includes("onDebugEvent?.('typed_turn_close_phrases_in_say',"), 'debug event');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');

@@ -454,7 +454,7 @@ import { retryAskTurn } from '@/lib/tutor/voice/sentence-board';
 import { TUTOR_TYPED_TURN } from '@/lib/tutor/orchestrator/flags';
 import { correctionEmphasis } from '@/lib/tutor/voice/sentence-board';
 import { sentenceCount, englishSentenceCount, type TypedTurnRequest, type TypedTurn, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind } from '@/lib/tutor/voice/typed-turn';
-import { createTypedTurnState, typedTurnRequestFor, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, typedPronunciationItems, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
+import { createTypedTurnState, typedTurnRequestFor, typedTurnSpokenText, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, typedPronunciationItems, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
 import { isIdleNudgeDirective } from '@/lib/tutor/voice/idle-nudge';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
 
@@ -5433,6 +5433,9 @@ export function VoiceTutorRealtime({
   // X1 (fix wave 3): the part whose numbered questions were all answered (the tracker below) — the typed level check
   // moves on it. Keyed on the part: any other part (after an advance) reads false. Plan-scoped.
   const typedPartQuestionsAnsweredRef = useRef<string | null>(null);
+  // Y1 (fix wave 4, r62 833 s): while the typed `close` effect runs its closeSessionNotes command, the typed turn's
+  // own text (released fields + next.say, not yet narrated) — the close-phrase guard reads it. null otherwise (prose).
+  const typedClosePendingTextRef = useRef<string[] | null>(null);
   // Task 31 §D / fix round 1 B-2: the entry note after a brain advance (a plain note, not a FACT note).
   const pendingEntryNoteRef = useRef<{ segId: string; note: string } | null>(null);
   // Task 34 fix round 2 (R13-1): a non-auto advance plants the new part's
@@ -9513,10 +9516,14 @@ export function VoiceTutorRealtime({
         // attempt is let through.
         if (TUTOR_CLOSE_REQUIRED_PHRASES && !lessonClosedRef.current && lessonPlanRef.current && currentSegmentIdRef.current) {
           const cbSeg = currentSegmentIdRef.current;
-          const cbMissing = missingRequiredPhrases(
-            getSegment(lessonPlanRef.current, cbSeg) as { requiredPhrases?: string[] } | undefined,
-            [...(segmentNarrationRef.current.get(cbSeg) ?? []), ...turnNarrationRef.current, ...attemptStreamedSentencesRef.current],
-          );
+          const cbSegDef = getSegment(lessonPlanRef.current, cbSeg) as { requiredPhrases?: string[] } | undefined;
+          const cbSpoken = [...(segmentNarrationRef.current.get(cbSeg) ?? []), ...turnNarrationRef.current, ...attemptStreamedSentencesRef.current];
+          // Y1 (fix wave 4): a typed close fires before its next.say is narrated — that pending text counts too.
+          const cbMissing = missingRequiredPhrases(cbSegDef, typedClosePendingTextRef.current ? [...cbSpoken, ...typedClosePendingTextRef.current] : cbSpoken);
+          if (typedClosePendingTextRef.current && !cbMissing.length) {
+            const cbUnsaid = missingRequiredPhrases(cbSegDef, cbSpoken);
+            if (cbUnsaid.length) onDebugEvent?.('typed_turn_close_phrases_in_say', `"${cbSeg}" [${cbUnsaid.join(', ')}]`);
+          }
           // Fix round 5 (S-2): never refused on the student's stop request,
           // in the time-box wrap, or within 90 s of max_duration.
           const cbStartedAt = voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current;
@@ -15300,7 +15307,11 @@ export function VoiceTutorRealtime({
               }
               case 'close': {
                 const cmd = mapFunctionCallToCommand('close_session_notes', {});
-                if (cmd) await handleWhiteboardCommand([cmd]);
+                // Y1 (fix wave 4): the guard sees this turn's text, next.say included (not yet narrated).
+                typedClosePendingTextRef.current = typedTurnSpokenText(typedFieldsSeen as Partial<TypedTurn>, typedFieldsSeen.next as TypedNext | undefined);
+                try {
+                  if (cmd) await handleWhiteboardCommand([cmd]);
+                } finally { typedClosePendingTextRef.current = null; }
                 onDebugEvent?.('typed_turn_effect', 'close');
                 break;
               }

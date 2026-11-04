@@ -401,6 +401,16 @@ export interface FieldEffectContext {
   nudge: boolean;
 }
 
+/** Y1 (fix wave 4, r62 829–833 s): the typed turn's spoken text in speaking order — ack, verdict_say, correction
+ *  explain, support_ja, then next.say — empties dropped. The typed close effect fires when `next` closes, BEFORE
+ *  next.say is narrated, so the client's close-phrase guard reads this as the turn's pending text. Pure. */
+export function typedTurnSpokenText(
+  fields: Partial<Pick<TypedTurn, 'ack' | 'verdict_say' | 'correction' | 'support_ja'>>, next: TypedNext | null | undefined,
+): string[] {
+  return [fields.ack, fields.verdict_say, fields.correction?.explain, fields.support_ja, next?.say]
+    .filter((x): x is string => typeof x === 'string' && x.trim() !== '');
+}
+
 /** X1: words that carry no answer content ("Yes, I'm ready.", "OK, thank you.", "Sorry, can you say that again?"). */
 const ANSWER_STOP = new Set(['the', 'a', 'an', 'to', 'of', 'and', 'is', 'it', 'that', 'this', 'in', 'on', 'for', 'i', 'you', 'we', 'yes', 'no', 'ok', 'okay', 'thank', 'thanks', 'please', 'sorry']);
 /** X1 (fix wave 3): the reply looks like an attempt at an answer — ≥ 4 content words (lower-cased, punctuation stripped,
