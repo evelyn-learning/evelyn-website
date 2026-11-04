@@ -33,6 +33,9 @@ export interface TypedTurnRequest {
   /** X2 (fix wave 3): the part's required phrases not yet said — a `close` that does not contain each one (this turn's
    *  spoken fields + next.say) is refused once; the retry is taken as it comes. */
   requiredPhrases?: string[];
+  /** A (fix wave 6, p3 1118–1141 s): the student's last utterance was English (studentSpokeEnglish) — a turn whose
+   *  spoken text has no English sentence is refused once (english_missing). */
+  studentEnglish?: boolean;
 }
 
 export const TYPED_SAY_BUDGET = 3;
@@ -137,7 +140,7 @@ ${TYPED_NEXT_KINDS.map((k) => `- ${k}: ${TYPED_KIND_MEANING[k]}`).join('\n')}
   next.kind outside allowed_next is rejected and costs the student a second wait; choose from the listed kinds only.
 
 THE TURN BLOCK
-The engine sends <turn_state .../> with every turn. Its attributes: part = the kind of lesson part; label = the part's name; turn = typed turns spoken in this part over its maximum; open_ask = what is currently asked of the student (none, retry, question, offer, menu, item); open_ask_text = the words of that ask; offer_made / offer_accepted = whether the one-more-or-move-on offer was made and taken; menu_picked = the menu option chosen, or none; items_practised / items_left = pronunciation sentences already spoken and still to come, separated by | (after an item's result, work on the weakest word with one more repeat (\`retry\`) before the next item or the offer); last_item = whether the final item was already announced; budget_due = whether the part's time or turn budget is spent; post_due (only when budget_due is yes) = turns already spent in this part after its budget ran out; last_turn="yes" (only then) = this part's extra turns are used up: write the move to the next part now when move is allowed (the engine allows nothing else once they are spent); correction_open = whether a correction is still waiting for the student to repeat it; corrections_left (conversation parts only) = how many more corrections this part allows; at 0 let target-grammar slips pass as "correct"; level_known = whether the student's level is already recorded; move_needs_answer="yes" (only then) = \`move\` only if this reply was a real answer (verdict ≠ none); a non-answer → \`question\`; questions_done="yes" (only then) = every numbered question of this part has been answered — move now; recap_step (recap part only) = the step of the summary, explained below; required_phrases (recap part only) = phrases you have not said yet in this part — your closing turn must contain each one verbatim; answered (only when non-empty) = the card questions of this part the student has already answered, separated by | (it fills from correct and partly_correct verdicts only, so an answer marked none leaves its question unanswered); next_part / next_card (only when a move, close or offer is allowed) = the label and the opening card text of the part a move would enter, or next_part="(end)" on the last part. When nudge="yes" the student has been silent: "ack" carries one patient sentence, and "next" repeats the open ask or waits.
+The engine sends <turn_state .../> with every turn. Its attributes: part = the kind of lesson part; label = the part's name; turn = typed turns spoken in this part over its maximum; open_ask = what is currently asked of the student (none, retry, question, offer, menu, item); open_ask_text = the words of that ask; offer_made / offer_accepted = whether the one-more-or-move-on offer was made and taken; menu_picked = the menu option chosen, or none; items_practised / items_left = pronunciation sentences already spoken and still to come, separated by | (after an item's result, work on the weakest word with one more repeat (\`retry\`) before the next item or the offer); last_item = whether the final item was already announced; budget_due = whether the part's time or turn budget is spent; post_due (only when budget_due is yes) = turns already spent in this part after its budget ran out; last_turn="yes" (only then) = this part's extra turns are used up: write the move to the next part now when move is allowed (the engine allows nothing else once they are spent); correction_open = whether a correction is still waiting for the student to repeat it; corrections_left (conversation parts only) = how many more corrections this part allows; at 0 let target-grammar slips pass as "correct"; level_known = whether the student's level is already recorded; move_needs_answer="yes" (only then) = \`move\` only if this reply was a real answer (verdict ≠ none); a non-answer → \`question\`; questions_done="yes" (only then) = every numbered question of this part has been answered — move now; recap_step (recap part only) = the step of the summary, explained below; required_phrases (recap part only) = phrases you have not said yet in this part — your closing turn must contain each one verbatim; answered (only when non-empty) = the card questions of this part the student has already answered, separated by | (it fills from correct and partly_correct verdicts only, so an answer marked none leaves its question unanswered); next_part / next_card (only when a move, close or offer is allowed) = the label and the opening card text of the part a move would enter, or next_part="(end)" on the last part; offer_repeat="allowed" (only then) = the offer was made and the student's reply did not choose — answer what they said and make the offer once more (\`offer\`), or \`move\`. When nudge="yes" the student has been silent: "ack" carries one patient sentence, and "next" repeats the open ask or waits.
 
 THE RECAP PART
 - \`recap_step=review_feedback_check\`: \`next.say\` reviews what was practised using the student's OWN corrected sentences from this lesson (the card's examples only when they produced none), gives one specific strength and one thing to improve, and asks the part's check question; use every phrase in \`required_phrases\` verbatim.
@@ -189,6 +192,13 @@ export function englishSentenceCount(text: string): number {
   // an English terminator followed by Japanese is not split by splitSentences (it wants a capital next): split it here
   const parts = sentences(text).flatMap((x) => x.split(/(?<=[.!?])\s+(?=[\u3040-\u30ff\u4e00-\u9fff「『])/));
   return parts.filter((x) => !isJapaneseSentence(x)).length;
+}
+
+/** A (fix wave 6): an English utterance — at least 3 ASCII words and no Japanese script. Pure. */
+export function studentSpokeEnglish(text: string): boolean {
+  const s = String(text ?? '');
+  if (/[\u3040-\u30ff\u4e00-\u9fff]/.test(s)) return false;
+  return (s.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g) ?? []).length >= 3;
 }
 
 export function truncateToSentences(text: string, max: number): string {
@@ -400,7 +410,7 @@ export function correctionChangesNothing(studentText: string, correction: TypedT
   return kept.join(' ') === fixed.join(' ');
 }
 
-export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase';
+export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase' | 'english_missing';
 
 /**
  * The one regeneration request for a refused `next` (spec §4.2, §4.8 "splice"):
@@ -420,7 +430,9 @@ export function typedTurnRetryMessage(input: {
   correctionNoChange?: boolean;
 }): string {
   const { reason, refused, allowedNext, alreadySaid, budget, itemNotListed, missingPhrases, correctionNoChange } = input;
-  const why = reason === 'illegal_kind' && correctionNoChange
+  const why = reason === 'english_missing'
+    ? `Your "next" was refused "${refused.kind}" (english_missing): the student spoke English, and this turn had no English sentence. Every turn to an English-speaking student contains at least one English sentence. Say the same thing in English in next.say; Japanese may follow as support (allowed: ${allowedNext.join(', ')}).`
+    : reason === 'illegal_kind' && correctionNoChange
     ? `Your "next" was refused "${refused.kind}" (correction_no_change): the student's sentence already has that form; no correction, no retry — ask the next question or offer (allowed: ${allowedNext.filter((k) => k !== 'retry').join(', ')}).`
     : reason === 'missing_required_phrase'
     ? `Your "next" was refused "${refused.kind}" (missing_required_phrase): the close must contain every required phrase verbatim, and this turn did not say ${(missingPhrases ?? []).map((x) => JSON.stringify(x)).join(', ')}. Write the close again with each of these phrases, word for word, in next.say before the goodbye (allowed: ${allowedNext.join(', ')}).`

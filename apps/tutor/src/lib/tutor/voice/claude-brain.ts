@@ -3058,6 +3058,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     const said = typedPhraseKey([...typedSaidBeforeNext, next.say].join(' '));
     return required.filter((p) => typedPhraseKey(p) && !said.includes(typedPhraseKey(p)));
   };
+  /** A (fix wave 6, p3 1121 s): this turn's spoken text before `next` with support_ja left out (it is exempt) —
+   *  with next.say, a turn to an English-speaking student must hold one English sentence. */
+  const typedSpokenNoSupport: string[] = [];
+  const typedEnglishMissing = (next: TypedNext): boolean => !!input.typedTurn?.studentEnglish
+    && englishSentenceCount([...typedSpokenNoSupport, next.say].join(' ')) === 0;
   /** G1: sentences already yielded this typed turn (retry calls are the same turn); the prose duplicate filters stand down on typed. */
   const typedSpoken = new Set<string>();
   /** Z1 (fix wave 5, p2.txt 310 s / 501 s): the student's own words (the runtime notes `studentTranscript` may carry
@@ -3131,6 +3136,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) || itemNotListed || retryOnNoChange ? 'illegal_kind'
             : moveOnNonAnswer ? 'move_needs_answer'
             : missingPhrases.length ? 'missing_required_phrase'
+            // A (fix wave 6): the student spoke English and nothing in this turn is English — refused before speech.
+            : typedEnglishMissing(ev.value) ? 'english_missing'
             : englishSentenceCount(ev.value.say) > sayBudgetOf(ev.value.kind) ? 'say_over_budget' : null;
           if (reason) {
             typedRetryNeed = {
@@ -3150,6 +3157,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     }
     yield { type: 'typed-field', field: ev.field, value, ...(retried ? { retried: true } : {}) };
     if (ev.field !== 'next' && speech.trim()) typedSaidBeforeNext.push(speech);
+    if (ev.field !== 'next' && ev.field !== 'support_ja' && speech.trim()) typedSpokenNoSupport.push(speech);
     if (!speech.trim()) return;
     // Scrub + boundary only: the prose guards are written for free text.
     const buf = new SentenceBuffer();

@@ -270,12 +270,15 @@ function acceptTypedTurn(raw: unknown): TypedTurnRequest | undefined {
     && (t.moveNeedsAnswer === undefined || typeof t.moveNeedsAnswer === 'boolean')
     // X2: optional requiredPhrases — the part's required phrases not yet said (a close lacking one is refused once).
     && (t.requiredPhrases === undefined || (Array.isArray(t.requiredPhrases) && t.requiredPhrases.length <= 8 && t.requiredPhrases.every((x) => typeof x === 'string' && x.length <= 120)))
+    // A (fix wave 6): optional studentEnglish (the student's last utterance was English — a JA-only turn is refused once).
+    && (t.studentEnglish === undefined || typeof t.studentEnglish === 'boolean')
   ) {
     return {
       state: t.state, allowedNext: t.allowedNext, recap: t.recap === true, ...(t.nudge === true ? { nudge: true } : {}),
       ...(t.itemsLeft?.length ? { itemsLeft: t.itemsLeft } : {}),
       ...(t.moveNeedsAnswer === true ? { moveNeedsAnswer: true } : {}),
       ...(t.requiredPhrases?.length ? { requiredPhrases: t.requiredPhrases } : {}),
+      ...(t.studentEnglish === true ? { studentEnglish: true } : {}),
     };
   }
   console.warn('typed_turn_body_rejected');

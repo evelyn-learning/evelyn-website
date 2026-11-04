@@ -420,5 +420,9 @@ test('H2 (fix wave 5 round 3): text mode releases the held page at stream end, p
   assert.ok(/if \(holdGate !== 'released_no_audio'\) \{\s*if \(deferred && TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan\(lessonPlanRef\.current\)\) \{/.test(VTR), 'a no-audio release skips the spoken-transition wait (nothing is spoken)');
 });
 
+test('A (fix wave 6): VTR sends studentEnglish from the student\'s own words', () => {
+  assert.ok(VTR.includes("studentEnglish: studentSpokeEnglish(typedStudentText ?? ''),"), 'studentEnglish in the allowed-next context');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');

@@ -78,10 +78,30 @@ test('V5: items exhausted → offer first (once), then move', () => {
   const ms = { menuState: { pronunciation: { asked: 1, picked: '2' } } };
   assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: [], state: ms })), ['offer']);
   const made = { ...ms, offerState: { pronunciation: { made: true, accepted: false, served: false } } };
-  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: [], state: { ...made, ...ask('offer') } })), ['move']);
+  // A (fix wave 6) pin moved: a made, not-taken offer may be repeated once — ['move'] → ['move', 'offer']
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: [], state: { ...made, ...ask('offer') } })), ['move', 'offer']);
   const accepted = { ...ms, offerState: { pronunciation: { made: true, accepted: true, served: false } } };
   assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: ['a'], state: { ...accepted, practisedItems: { pronunciation: ['a'] } } })), ['move']);
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('after an item\'s result, work on the weakest word with one more repeat (`retry`) before the next item or the offer'));
+});
+test('A (fix wave 6): the pronunciation offer repeats once for a reply that did not choose, then only move', () => {
+  const ms = { menuState: { pronunciation: { asked: 1, picked: '2' } } };
+  const at = (count: number, accepted = false) => ctx('pronunciation', { items: [], state: { ...ms, ...ask('offer'), offerState: { pronunciation: { made: true, accepted, served: false, count } } } });
+  assert.deepEqual(allowedNextFor(at(1)), ['move', 'offer']);
+  assert.deepEqual(allowedNextFor(at(2)), ['move']);
+  assert.deepEqual(allowedNextFor(at(1, true)), ['move'], 'a taken offer is not repeated');
+  assert.ok(turnStateLine(at(1)).includes('offer_repeat="allowed"'), turnStateLine(at(1)));
+  assert.ok(!turnStateLine(at(2)).includes('offer_repeat'), turnStateLine(at(2)));
+  // the reducer counts offers: the first sets count 1, the second count 2
+  const offerT: TypedTurn = { ack: '', verdict: 'none', verdict_say: '', board: '', correction: null, support_ja: '', next: { kind: 'offer', say: 'One more, or move on?', item: '', level: '' } };
+  const s1 = applyTypedTurn({ ...createTypedTurnState(), ...ms }, offerT, fctx('pronunciation'), null);
+  assert.equal(s1.offerState.pronunciation.count, 1);
+  const s2 = applyTypedTurn(s1, offerT, fctx('pronunciation'), null);
+  assert.equal(s2.offerState.pronunciation.count, 2);
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('offer_repeat="allowed" (only then)'));
+  // the request carries studentEnglish only when set
+  assert.equal(typedTurnRequestFor({ ...at(1), studentEnglish: true }).studentEnglish, true);
+  assert.equal('studentEnglish' in typedTurnRequestFor(at(1)), false);
 });
 test('V5: typedPronunciationItems — authored items, then the learner\'s corrected sentences (newest first, deduped, max 4, full sentences)', () => {
   const authored = ['I have worked here for years.', 'I was responsible for sales.'];

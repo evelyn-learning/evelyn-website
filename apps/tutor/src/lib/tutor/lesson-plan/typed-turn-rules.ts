@@ -73,7 +73,8 @@ export interface TypedTurnState {
   openAsk: { kind: 'retry' | 'question' | 'offer' | 'menu' | 'item' | 'none'; text: string; cardQuestion?: string };
   correctionOpen: { student: string; corrected: string } | null;
   practisedItems: Record<string, string[]>;
-  offerState: Record<string, { made: boolean; accepted: boolean; served: boolean }>;
+  /** A (fix wave 6): `count` = offers made in the part (absent on a made offer = 1); a second offer is allowed once. */
+  offerState: Record<string, { made: boolean; accepted: boolean; served: boolean; count?: number }>;
   menuState: Record<string, { asked: number; picked: string | null }>;
   answeredCards: Record<string, string[]>;
   lastItemAnnounced: Record<string, boolean>;
@@ -137,6 +138,20 @@ export interface AllowedNextContext {
    *  missingRequiredPhrases). Present ⇒ the recap's turn_state lists them on EVERY turn while any is missing, and the
    *  request carries them for the server's close gate. Absent ⇒ the plan's list on the review turn only (V3). */
   missingRequiredPhrases?: string[];
+  /** A (fix wave 6): the student's last utterance was English (studentSpokeEnglish) — the request's studentEnglish. */
+  studentEnglish?: boolean;
+}
+
+/** A (fix wave 6): offers made in a part (a made offer without a count is the first). */
+const TYPED_OFFER_MAX = 2;
+function offerCount(o: { made: boolean; count?: number } | undefined): number {
+  return o ? (o.count ?? (o.made ? 1 : 0)) : 0;
+}
+/** A (fix wave 6, p3 1121–1141 s): the pronunciation offer was made, the reply did not take it, and a second offer is
+ *  still allowed — the exit row carries `offer` beside `move` ("Can you say it in English?" re-offers, never moves). */
+function offerRepeatAllowed(state: TypedTurnState, segId: string): boolean {
+  const o = state.offerState[segId];
+  return !!o?.made && !o.accepted && offerCount(o) < TYPED_OFFER_MAX;
 }
 
 /** W2: the state on entering `to` by an engine move — the old part's open ask and correction are gone. Pure. */
@@ -242,8 +257,10 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
       // R2 (fix round 1): the LAST item's result is in (open ask item, not yet repeated) — the weakest-word repeat
       // is still allowed beside the offer / move (the plan: one more repeat on the weakest word after a result).
       if (itemsLeft(ctx).length === 0) {
-        const exit: TypedNextKind = state.offerState[segId]?.made ? 'move' : 'offer';
-        return ask === 'item' && state.retriesInARow === 0 ? ['retry', exit] : [exit];
+        // A (fix wave 6): after the first offer, one more offer is allowed for a reply that did not choose.
+        const exit: TypedNextKind[] = !state.offerState[segId]?.made ? ['offer']
+          : offerRepeatAllowed(state, segId) ? ['move', 'offer'] : ['move'];
+        return ask === 'item' && state.retriesInARow === 0 ? ['retry', ...exit] : exit;
       }
       const row: TypedNextKind[] = ['item', 'retry', 'offer', 'move'];
       // retry = "the same sentence again": only meaningful while an item is the open ask
@@ -325,6 +342,9 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     ...(ctx.partQuestionsAnswered && typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'level_check' && allowedNextFor(ctx).includes('move')
       ? [['questions_done', 'yes'] as [string, string]] : []),
     ...(moveNeedsAnswerFor(ctx) ? [['move_needs_answer', 'yes'] as [string, string]] : []),
+    // A (fix wave 6): the made offer may be repeated once (the reply did not choose).
+    ...(typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'pronunciation' && offerRepeatAllowed(state, segId) && allowedNextFor(ctx).includes('offer')
+      ? [['offer_repeat', 'allowed'] as [string, string]] : []),
   ];
   // V3: the recap's step, and on its first turn the plan's required phrases (the review turn must say them).
   // X2 (fix wave 3, r61b 745 s): with the client's missing list, the phrases still unsaid ride EVERY recap turn
@@ -375,6 +395,8 @@ export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
     ...(left.length ? { itemsLeft: left.slice(0, 8) } : {}),
     // X2: a `close` lacking one of these is refused once by the server (the retry names them).
     ...(requiredPhrases.length ? { requiredPhrases } : {}),
+    // A (fix wave 6): the server refuses a turn with no English sentence to an English-speaking student (one retry).
+    ...(ctx.studentEnglish ? { studentEnglish: true } : {}),
   };
 }
 
@@ -574,7 +596,7 @@ export function applyTypedTurn(
 
   const offerState = { ...state.offerState };
   const o = offerState[seg] ?? { made: false, accepted: false, served: false };
-  if (next.kind === 'offer') offerState[seg] = { ...o, made: true };
+  if (next.kind === 'offer') offerState[seg] = { ...o, made: true, count: offerCount(o) + 1 };
   else if (next.kind === 'question' && servesOffer(state, seg)) offerState[seg] = { ...o, served: true };
 
   let openAsk = state.openAsk;

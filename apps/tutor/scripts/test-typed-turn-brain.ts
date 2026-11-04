@@ -441,6 +441,44 @@ async function main() {
     });
   }
 
+  {
+    // A (fix wave 6, p3 1118–1141 s): a Japanese-only turn to an English-speaking student is refused before speech.
+    const offerTurn = { state: '<turn_state part="pronunciation"/>', allowedNext: ['move', 'offer'], recap: false, studentEnglish: true };
+    const JA = { ...TURN, ack: 'ありがとうございます。', verdict: 'correct', verdict_say: 'そうです、その文で大丈夫です。', correction: null, support_ja: '',
+      next: { kind: 'offer', say: 'もう一つ練習しますか、それともまとめに進みますか？', item: '', level: '' } };
+    const EN_NEXT = { kind: 'offer', say: 'Would you like one more practice, or shall we move on to the summary?', item: '', level: '' };
+    const studentEn = { ...baseInput, studentMessage: 'The CEO said the robots were very good and that they could make washing machines easily.' };
+    await test('A: a JA-only turn after an English student turn ⇒ refused (english_missing), two requests, the retry\'s English spoken once', async () => {
+      const r = await run({ ...studentEn, typedTurn: offerTurn }, [chunkedTextScript(JSON.stringify(JA), 3), chunkedTextScript(JSON.stringify({ ...JA, next: EN_NEXT }), 2)]);
+      assert.equal(r.requests.length, 2);
+      const u = String(r.requests[1].messages[r.requests[1].messages.length - 1].content);
+      assert.ok(u.includes('english_missing') && /at least one English sentence/.test(u) && /in English/.test(u), u);
+      const said = sentencesOf(r.events);
+      assert.ok(!said.some((x) => x.includes('もう一つ')), 'the refused JA offer is never spoken');
+      assert.equal(said.filter((x) => x.includes('one more practice')).length, 1, said.join(' | '));
+      assert.equal(turnEv(r.events).retryReason, 'english_missing');
+    });
+    await test('A: a bilingual turn (one English sentence) ⇒ one request', async () => {
+      const r = await run({ ...studentEn, typedTurn: offerTurn }, [chunkedTextScript(JSON.stringify({ ...JA, verdict_say: 'Yes, that sentence is fine. そうです。' }), 3)]);
+      assert.equal(r.requests.length, 1);
+    });
+    await test('A: English only in support_ja does not count (support_ja is exempt) ⇒ refused', async () => {
+      const r = await run({ ...studentEn, typedTurn: offerTurn }, [chunkedTextScript(JSON.stringify({ ...JA, support_ja: 'That is fine.' }), 3), chunkedTextScript(JSON.stringify({ ...JA, next: EN_NEXT }), 2)]);
+      assert.equal(r.requests.length, 2);
+    });
+    await test('A: a JA-only turn after a JAPANESE student turn (no studentEnglish) ⇒ one request', async () => {
+      const r = await run({ ...baseInput, studentMessage: '日本語で説明してください。', typedTurn: { ...offerTurn, studentEnglish: undefined } }, [chunkedTextScript(JSON.stringify(JA), 3)]);
+      assert.equal(r.requests.length, 1);
+      assert.ok(sentencesOf(r.events).some((x) => x.includes('もう一つ')));
+    });
+    await test('A: studentSpokeEnglish — ≥ 3 ASCII words, no Japanese script', () => {
+      assert.equal(tt.studentSpokeEnglish('Can you say in English?'), true);
+      assert.equal(tt.studentSpokeEnglish('OK thanks'), false);
+      assert.equal(tt.studentSpokeEnglish('英語で say it please'), false);
+      assert.equal(tt.studentSpokeEnglish('日本語で説明してください。'), false);
+    });
+  }
+
   console.log('fallbacks (Task 6)');
   await test('400 output_config.format rejected ⇒ typed-turn-fallback format_rejected, then the prose call with tools', async () => {
     const reject: Script = { events: [], final: { content: [], stop_reason: 'end_turn' }, error: { status: 400, message: 'output_config.format is not supported' } };
@@ -640,6 +678,9 @@ async function main() {
     // X2: optional requiredPhrases (strings ≤ 120 chars, at most 8), passed through when non-empty
     assert.ok(routeSrc.includes("&& (t.requiredPhrases === undefined || (Array.isArray(t.requiredPhrases) && t.requiredPhrases.length <= 8 && t.requiredPhrases.every((x) => typeof x === 'string' && x.length <= 120)))"), 'requiredPhrases shape check');
     assert.ok(routeSrc.includes('...(t.requiredPhrases?.length ? { requiredPhrases: t.requiredPhrases } : {}),'), 'requiredPhrases passed through');
+    // A (fix wave 6): optional boolean studentEnglish, passed through only when true
+    assert.ok(routeSrc.includes("&& (t.studentEnglish === undefined || typeof t.studentEnglish === 'boolean')"), 'studentEnglish shape check');
+    assert.ok(routeSrc.includes('...(t.studentEnglish === true ? { studentEnglish: true } : {}),'), 'studentEnglish passed through');
   });
   const brainSrc = fs.readFileSync(path.join(__dirname, '../src/lib/tutor/voice/claude-brain.ts'), 'utf8');
   await test('brain: answer_check on typed carries the advisory line; provider fallback wired', () => {
