@@ -12,6 +12,7 @@ import type { LessonPlan, Segment, SegmentTransition } from './types';
 import { withSilentClause, withRetryStyle } from '../voice/output-budget';
 import { isCorrectionTurn, expectedRepeatFor, NO_ATTEMPT_MOVE_ON_NOTE } from '../voice/correct-retry';
 import { boardOffersChoices } from '../voice/sentence-board';
+import { segmentCardTitle } from '../whiteboard/deferred-page-flush';
 import { sentenceAsksStudent, splitSentences, stripMarkdownEmphasis } from '../question-gist-text';
 
 export function isFixedScriptPlan(plan: LessonPlan | null | undefined): boolean {
@@ -1128,6 +1129,13 @@ export function answeredGuardPart(plan: LessonPlan | null | undefined, segmentId
  *  overview, concept, conversation-with-no-question and summary parts have
  *  none); no problem card rendered this turn; the card is not on the board
  *  already; the segment is not completed. */
+/** Task 18 §B + typed turn (Task 7 review I-3): the part's authored card as the client paints it —
+ *  the stream-end auto card (runSegmentCard) and the typed `advance` effect build it here. `title`
+ *  stays present (undefined for a kind with no label), as the inline literal had it. Pure. */
+export function segmentCardCommand(statement: string, kind: string | null | undefined): { action: 'showProblem'; problem: { statement: string; format: 'free-response'; title: string | undefined } } {
+  return { action: 'showProblem', problem: { statement, format: 'free-response', title: segmentCardTitle(kind) } };
+}
+
 export function segmentNeedsAutoCard(input: {
   fixedScript: boolean;
   openingTurn: boolean;

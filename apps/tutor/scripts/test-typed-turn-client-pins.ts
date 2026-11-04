@@ -11,6 +11,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { correctionEmphasis } from '../src/lib/tutor/voice/sentence-board';
+import { segmentCardCommand } from '../src/lib/tutor/lesson-plan/fixed-script';
 
 let failed = 0;
 const test = (name: string, fn: () => void) => {
@@ -39,7 +40,7 @@ test('VTR debug events', () => {
 });
 test('runTypedEffect: advance breaks the page, correction / item use their card flags', () => {
   assert.ok(/(?:kind === 'advance'|case 'advance':)[\s\S]{0,2500}pageBreakOnTransition: true/.test(VTR), 'advance → pageBreakOnTransition');
-  assert.ok(/case 'advance':[\s\S]{0,400}applyResolvedAdvance\(/.test(VTR), 'advance → applyResolvedAdvance');
+  assert.ok(/case 'advance':[\s\S]{0,900}applyResolvedAdvance\(/.test(VTR), 'advance → applyResolvedAdvance');
   assert.ok(/case 'set_level':[\s\S]{0,200}mapFunctionCallToCommand\('set_working_level'/.test(VTR), 'set_level → set_working_level');
   assert.ok(/case 'close':[\s\S]{0,200}mapFunctionCallToCommand\('close_session_notes'/.test(VTR), 'close → close_session_notes');
   assert.ok(/case 'arm_item':[\s\S]{0,200}armPronunciationCheckRef\.current\(e\.text, 'typed'\)/.test(VTR), 'arm_item arms the clip');
@@ -63,6 +64,33 @@ test('correctionEmphasis: positions of the field\'s words in the corrected sente
   assert.deepEqual(correctionEmphasis('I went there yesterday.', ['went']), { emphasis: ['went'], emphasisAt: [1] });
   assert.deepEqual(correctionEmphasis('I have a dog and a cat.', ['a cat']), { emphasis: ['a', 'cat'], emphasisAt: [5, 6] });
   assert.deepEqual(correctionEmphasis('She goes to school.', ['nope']), { emphasis: [], emphasisAt: [] });
+});
+test('review C-1: one student turn advances at most once; the typed state is per-turn', () => {
+  assert.ok(VTR.includes('const typedFromSeg = turnStartSegmentId ?? \'\';'), 'FROM part captured once per student turn');
+  assert.ok(/const typedTurnStateAtTurnStart: TypedTurnState = structuredClone\(typedTurnStateRef\.current\);[\s\S]{0,400}for \(let attempt = 0; attempt <= attemptCap; attempt\+\+\)/.test(VTR), 'snapshot before the attempt loop');
+  assert.ok(VTR.includes('if (typedTurnActive && attempt > 0) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);'), 'restored on every attempt > 0');
+  assert.ok(/case 'advance':[\s\S]{0,300}if \(typedMovedThisTurn\) \{[\s\S]{0,120}onDebugEvent\?\.\('typed_turn_advance_blocked', `\$\{e\.from\}→\$\{e\.to\}`\);\s*break;/.test(VTR), 'second advance blocked');
+  assert.ok(/typedMovedThisTurn = typedMoved;/.test(VTR), 'the latch is set by the advance');
+});
+test('review I-1: a card effect that was not placed says so', () => {
+  assert.ok(/const typedCardPlacement = [\s\S]{0,200}not placed\$\{res\?\.rejected\?\.length/.test(VTR), 'placement helper');
+  for (const k of ['model_card', 'correction_card']) assert.ok(VTR.includes(`onDebugEvent?.('typed_turn_effect', \`${k}\${typedCardPlacement(res)}\`);`), k);
+  assert.ok(/'typed_turn_effect', `arm_item "\$\{e\.text\.slice\(0, 80\)\}"\$\{typedCardPlacement\(res\)\}`/.test(VTR), 'arm_item');
+});
+test('review I-2: the client never invents a next kind', () => {
+  assert.ok(VTR.includes('let fallbackKind: TypedNextKind | undefined = tt.nextFallback;'), 'fallback kind = the server\'s only');
+  assert.ok(!/typedReq\?\.allowedNext\[0\]/.test(VTR), 'no allowedNext[0] invention');
+  assert.ok(VTR.includes("next: seenNext ?? { kind: 'wait', say: '', item: '', level: '' },"), 'synth next = wait');
+  assert.ok(VTR.includes("onDebugEvent?.('typed_turn_fallback', 'next=none spoken=false');"), 'next=none logged');
+});
+test('review I-3: one authored-card command builder for runSegmentCard and the typed advance', () => {
+  assert.equal((VTR.match(/segmentCardCommand\(/g) ?? []).length, 2, 'both call sites');
+  assert.ok(VTR.includes('const cmd = segmentCardCommand(acStatement, acTruth?.kind) as unknown as WhiteboardCommand;'), 'runSegmentCard');
+  assert.ok(VTR.includes('const cmd = segmentCardCommand(toStatement, toTruth?.kind) as unknown as WhiteboardCommand;'), 'typed advance');
+  assert.ok(!VTR.includes("title: acKind === 'try_yourself'") && !VTR.includes("title: toKind === 'try_yourself'"), 'no inline copies');
+  assert.deepEqual(segmentCardCommand('Q?', 'try_yourself'), { action: 'showProblem', problem: { statement: 'Q?', format: 'free-response', title: 'Try Yourself' } });
+  const plain = segmentCardCommand('Q?', 'concept');
+  assert.ok('title' in plain.problem && plain.problem.title === undefined, 'title key present, undefined (as the inline literal)');
 });
 test('embed persists typed_turn* debug events', () => {
   const m = EMBED.match(/const EMBED_DEBUG_EVENT_PREFIXES = \[([\s\S]*?)\n\];/);

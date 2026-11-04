@@ -445,7 +445,7 @@ import {
 } from '@/lib/tutor/pronunciation/clip-capture';
 import { decideSetWorkingLevel, effectiveBoardLevel, filterKeyIdeasForLevel, parseWorkingLevel, WORKING_LEVELS, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, offerHeardFromAcceptance, offerReplantDue, fixedScriptTransitionDecision, offerWaitExpired, offerAccepted, fixedScriptOfferAcceptedNote, offerAsked, offerDeclined, transitionOfferValidatorDecision, fixedScriptOfferMissingReason, fixedScriptChoiceMenuClause, fixedScriptOfferNote, fixedScriptBridgeClause, FIXED_SCRIPT_AUTO_ADVANCE_MAX_OFFER_HELD_TURNS, FIXED_SCRIPT_OFFER_HELD_AT_PLANT, overlongNoteYieldsToOffer, segmentTransitionKind, fixedScriptPartLabel, offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerReaskedMovedReason, offerAcceptedReplantDue, type OfferAcceptState, fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE, FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance, type FixedScriptAdvanceVia, requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, postDueHoldDecision, readinessAskDropDue, wrapUpAfterMenuDropDue, appliedAdvanceMarkerAfterKill, brainAdvanceOfferFirstRefused, attemptAsksStudent, loneYesChoiceNoteDue, LONE_YES_CHOICE_NOTE, offerAcceptedNoAskDue, OFFER_ACCEPTED_NO_ASK_REASON, isBareMoveOn } from '@/lib/tutor/lesson-plan/fixed-script';
-import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, isProposalQuestion, heldAdvanceFiresNow, holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS, isFixedScriptCloseNote, moveOnThenCloseTranscript } from '@/lib/tutor/lesson-plan/fixed-script';
+import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, isProposalQuestion, heldAdvanceFiresNow, holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, segmentCardCommand, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS, isFixedScriptCloseNote, moveOnThenCloseTranscript } from '@/lib/tutor/lesson-plan/fixed-script';
 import { validatorTtsHold, VALIDATOR_TTS_HOLD_MS } from '@/lib/tutor/voice/validator-tts-hold';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision, dedupePartAnnouncement, endsWithRepeatAsk, endsWithSayOrListenAsk } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS, isVerdictEchoSentence, judgeNoteStaleForPart, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, FIXED_SCRIPT_HELD_ADVANCE_MAX_RETRY_WAITS, lastItemNoteDue, fixedScriptLastItemNote } from '@/lib/tutor/lesson-plan/fixed-script';
@@ -14739,6 +14739,11 @@ export function VoiceTutorRealtime({
       let typedTurnActive = false;
       // Typed turn (Task 7): a `close` fallback — the forced-close path runs once the stream has ended.
       let typedForceClose = false;
+      // Typed turn (Task 7 review C-1): one student turn may run several attempts (kill retry,
+      // continuation). The typed state is restored to its turn-start snapshot on every attempt > 0,
+      // and the advance runs at most once per turn.
+      const typedTurnStateAtTurnStart: TypedTurnState = structuredClone(typedTurnStateRef.current);
+      let typedMovedThisTurn: { from: string; to: string } | null = null;
       for (let attempt = 0; attempt <= attemptCap; attempt++) {
         // This attempt continues a turn that stopped early (turn-shape.ts): it
         // is NEW content, not a correction of a killed/rejected attempt.
@@ -15070,8 +15075,10 @@ export function VoiceTutorRealtime({
         // runs each field's effects (cards, advance, item arm, level, close)
         // itself, through the same paths the prose turn's tools take.
         typedTurnActive = TUTOR_TYPED_TURN && isFixedScriptPlan(lessonPlanRef.current) && !opts?.prefetchOnly && !openingTurnPendingRef.current;
-        // applyTypedTurn's contract: the FROM part — current when the attempt started, also after a move.
-        const typedFromSeg = currentSegmentIdRef.current ?? '';
+        if (typedTurnActive && attempt > 0) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);
+        // applyTypedTurn's contract: the FROM part — the part the student answered in, captured once
+        // per student turn (an earlier attempt's advance has already moved the pointer).
+        const typedFromSeg = turnStartSegmentId ?? '';
         const typedStudentText = /^\s*\[/.test(transcript) ? '' : transcript;
         const typedLastTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
         const typedJapanese = (tutorLanguages ?? []).some((l) => /^ja\b/i.test(l));
@@ -15137,6 +15144,9 @@ export function VoiceTutorRealtime({
         let typedMoved: { from: string; to: string } | null = null;
         // Every typed-field value received this attempt (a cut object is synthesized from them).
         const typedFieldsSeen: Partial<Record<TypedField, TypedFieldValue['value']>> = {};
+        // '' when the card was placed; ' not placed (<reasons>)' otherwise (as sentence_board_auto logs it).
+        const typedCardPlacement = (res: WhiteboardCommandResult | void | undefined): string => (res?.assignedIds?.[0]
+          ? '' : ` not placed${res?.rejected?.length ? ` (${res.rejected.map((r) => r.reason).join('; ').slice(0, 80)})` : ''}`);
         const runTypedEffect = async (e: TypedEffect, anchorSentence: number): Promise<void> => {
           const tPlan = lessonPlanRef.current;
           try {
@@ -15145,7 +15155,7 @@ export function VoiceTutorRealtime({
                 // verdict correct: the student's own sentence, anchored to verdict_say.
                 const res = await handleWhiteboardCommand([{ action: 'showSentence', sentence: e.sentence } as WhiteboardCommand], { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true });
                 for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
-                onDebugEvent?.('typed_turn_effect', 'model_card');
+                onDebugEvent?.('typed_turn_effect', `model_card${typedCardPlacement(res)}`);
                 break;
               }
               case 'correction_card': {
@@ -15160,14 +15170,21 @@ export function VoiceTutorRealtime({
                 const res = await handleWhiteboardCommand([cmd], { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, correctionCard: true, holdDeferredPage: true });
                 for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
                 if (res?.assignedIds?.[0]) correctionCardCallSeqRef.current = brainCallSeqRef.current;
-                onDebugEvent?.('typed_turn_effect', 'correction_card');
+                onDebugEvent?.('typed_turn_effect', `correction_card${typedCardPlacement(res)}`);
                 break;
               }
               case 'advance': {
                 if (!tPlan) break;
+                // Review C-1: an earlier attempt of this student turn already advanced — never a second move.
+                if (typedMovedThisTurn) {
+                  typedMoved = typedMovedThisTurn;
+                  onDebugEvent?.('typed_turn_advance_blocked', `${e.from}→${e.to}`);
+                  break;
+                }
                 // A level set by this same `next` may already have moved the pointer (levelSetAdvanceTarget).
                 if (currentSegmentIdRef.current !== e.to) applyResolvedAdvance(tPlan, e.from, e.to);
                 typedMoved = { from: e.from, to: e.to };
+                typedMovedThisTurn = typedMoved;
                 onDebugEvent?.('typed_turn_effect', `advance ${e.from}→${e.to}`);
                 // The bridge clause is a brain instruction: no engine speech (no stock sentences).
                 if (e.bridgeMissing) onDebugEvent?.('typed_turn_bridge_missing', `${e.from}→${e.to}`);
@@ -15178,19 +15195,7 @@ export function VoiceTutorRealtime({
                 const toStatement = toTruth?.problemText ? stripWbEmphasisText(toTruth.problemText) : '';
                 if (toStatement && !problemStatementOnBoard(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, toStatement)) {
                   catalogRef.current.setCurrentSegment(e.to);
-                  const toKind = toTruth?.kind;
-                  const cmd = {
-                    action: 'showProblem',
-                    problem: {
-                      statement: toStatement,
-                      format: 'free-response',
-                      title: toKind === 'try_yourself' ? 'Try Yourself'
-                        : toKind === 'worked_example' ? 'Worked Example'
-                        : toKind === 'misconception_check' ? 'Check'
-                        : toKind === 'extension' ? 'Extension'
-                        : undefined,
-                    },
-                  } as unknown as WhiteboardCommand;
+                  const cmd = segmentCardCommand(toStatement, toTruth?.kind) as unknown as WhiteboardCommand;
                   const res = await handleWhiteboardCommand([cmd], { anchorSentence, pageBreakOnTransition: true });
                   onDebugEvent?.('segment_card_auto', `${e.to}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'} "${toStatement.slice(0, 50)}" (typed)`);
                 }
@@ -15200,7 +15205,7 @@ export function VoiceTutorRealtime({
                 armPronunciationCheckRef.current(e.text, 'typed');
                 const res = await handleWhiteboardCommand([{ action: 'showSentence', sentence: e.text } as WhiteboardCommand], { anchorSentence, sentenceBoardAuto: true, pronunciationModel: true });
                 for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
-                onDebugEvent?.('typed_turn_effect', `arm_item "${e.text.slice(0, 80)}"`);
+                onDebugEvent?.('typed_turn_effect', `arm_item "${e.text.slice(0, 80)}"${typedCardPlacement(res)}`);
                 break;
               }
               case 'set_level': {
@@ -20263,9 +20268,11 @@ export function VoiceTutorRealtime({
                   if (typedTurnActive && lessonPlanRef.current) {
                     const tt = ev as unknown as { turn: TypedTurn | null; retries?: number; nextFallback?: TypedNextKind; retryReason?: string; retryDisagreed?: boolean };
                     const seenNext = typedFieldsSeen.next as TypedNext | undefined;
-                    // No usable `next` was voiced: the engine continues with its own line for this kind.
-                    // (turn null, no nextFallback and no `next` received ⇒ the first allowed kind.)
-                    let fallbackKind: TypedNextKind | undefined = tt.nextFallback ?? (!tt.turn && !seenNext ? typedReq?.allowedNext[0] : undefined);
+                    // No usable `next` was voiced: the engine continues with its own line for the SERVER's kind.
+                    // The client never invents one — a null turn with no nextFallback and no `next` seen is
+                    // recorded (next = wait: openAsk unchanged) and nothing is spoken; silence is the idle nudge's job.
+                    let fallbackKind: TypedNextKind | undefined = tt.nextFallback;
+                    const typedNoNext = !tt.turn && !tt.nextFallback && !seenNext;
                     let fallbackLine: string | null = null;
                     let fallbackNext: TypedNext | null = null;
                     if (fallbackKind === 'move' && !nextSegmentId(lessonPlanRef.current, typedFromSeg, !!workingLevelRef.current)) fallbackKind = 'close';
@@ -20295,7 +20302,7 @@ export function VoiceTutorRealtime({
                       verdict_say: str(typedFieldsSeen.verdict_say),
                       correction: (typedFieldsSeen.correction as TypedTurn['correction'] | undefined) ?? null,
                       support_ja: str(typedFieldsSeen.support_ja),
-                      next: seenNext ?? { kind: fallbackKind ?? 'wait', say: '', item: '', level: '' },
+                      next: seenNext ?? { kind: 'wait', say: '', item: '', level: '' },
                     };
                     const turn: TypedTurn = fallbackNext ? { ...base, next: fallbackNext } : base;
                     typedTurnStateRef.current = applyTypedTurn(typedTurnStateRef.current, turn, buildFieldEffectContext(), typedMoved);
@@ -20305,6 +20312,7 @@ export function VoiceTutorRealtime({
                     }
                     onDebugEvent?.('typed_turn', `verdict=${turn.verdict} next=${turn.next.kind} ack=${sentenceCount(turn.ack)} say=${sentenceCount(turn.next.say)} correction=${turn.correction ? 'yes' : 'no'} retries=${tt.retries ?? 0}${tt.retryReason ? ' reason=' + tt.retryReason : ''}${synth ? ' synth=yes' : ''}`);
                     if (fallbackKind) onDebugEvent?.('typed_turn_fallback', `next=${fallbackKind} spoken=${!!fallbackLine}`);
+                    else if (typedNoNext) onDebugEvent?.('typed_turn_fallback', 'next=none spoken=false');
                   }
                 } else if (ev.type === 'typed-turn-fallback') {
                   // Typed turn (Task 7): telemetry. format_rejected / provider ⇒ this attempt ran as prose,
@@ -23375,19 +23383,7 @@ export function VoiceTutorRealtime({
             completed: completedSegmentIdsRef.current.has(acSegId),
           })) {
             catalogRef.current.setCurrentSegment(acSegId);
-            const acKind = acTruth?.kind;
-            const cmd = {
-              action: 'showProblem',
-              problem: {
-                statement: acStatement,
-                format: 'free-response',
-                title: acKind === 'try_yourself' ? 'Try Yourself'
-                  : acKind === 'worked_example' ? 'Worked Example'
-                  : acKind === 'misconception_check' ? 'Check'
-                  : acKind === 'extension' ? 'Extension'
-                  : undefined,
-              },
-            } as unknown as WhiteboardCommand;
+            const cmd = segmentCardCommand(acStatement, acTruth?.kind) as unknown as WhiteboardCommand;
             const runSegmentCard = async () => {
               try {
                 const res = await handleWhiteboardCommand([cmd], { anchorSentence: transitionAnchor ?? 0, ...(transitionAnchor !== null ? { pageBreakOnTransition: true } : {}) });
