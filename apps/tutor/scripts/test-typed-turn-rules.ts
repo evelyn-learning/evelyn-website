@@ -141,6 +141,20 @@ test('turnStateLine escaping, items_left, turn n/max', () => {
   assert.ok(line.startsWith('<turn_state ') && line.endsWith('/>'));
 });
 
+test('turnStateLine next_part / next_card on a move turn only (F1)', () => {
+  const pp = turnStateLine(ctx('present-perfect', { budgetDue: true }));
+  assert.ok(pp.includes('next_part="Past simple"'), pp);
+  assert.ok(/next_card="[^"]*Did you attend/.test(pp), pp);
+  const oc = turnStateLine(ctx('open-conversation', { studentMovedOn: true }));
+  assert.ok(oc.includes('next_part="Pronunciation"'), oc);
+  assert.ok(/next_card="[^"]*1\) individual words/.test(oc), oc);
+  const sm = turnStateLine(ctx('summary', { studentMovedOn: true, lastPart: true }));
+  assert.ok(sm.includes('next_part="(end)"'), sm);
+  const plain = turnStateLine(ctx('present-perfect'));
+  assert.ok(!plain.includes('next_part') && !plain.includes('next_card'), plain);
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('next_card') && TYPED_TURN_INSTRUCTIONS.includes('next_part'));
+});
+
 test('typedTurnRequestFor', () => {
   const r = typedTurnRequestFor(ctx('summary', { nudge: true }));
   assert.equal(r.recap, true);

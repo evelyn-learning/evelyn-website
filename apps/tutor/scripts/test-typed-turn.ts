@@ -222,6 +222,9 @@ test('retry message — say over budget restates the budget number', () => {
   assert.ok(/at most 3 sentences/.test(m), m);
   assert.ok(m.includes('ALREADY SPOKEN'));
 });
+test('instructions — move rule reads next_card, menu read out (F1)', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('next_card') && TYPED_TURN_INSTRUCTIONS.includes('numbered menu'));
+});
 test('isStructuredOutputRejection lives here and is re-exported unchanged by grade-free-response', () => {
   assert.equal(isStructuredOutputRejection({ status: 400, message: 'output_config.format is not supported' }), true);
   assert.equal(isStructuredOutputRejection({ status: 400, message: 'prompt is too long' }), false);

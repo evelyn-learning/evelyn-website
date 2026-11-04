@@ -156,6 +156,13 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     ['correction_open', yn(!!state.correctionOpen)],
     ['level_known', yn(ctx.levelKnown)],
   ];
+  // F1: a move turn opens the NEXT part, (an offer names it too) so the brain must see that part's label and opening card.
+  const allowed = allowedNextFor(ctx);
+  if (allowed.includes('move') || allowed.includes('close') || allowed.includes('offer')) {
+    const to = nextSegmentId(ctx.plan, segId, ctx.levelKnown);
+    attrs.push(['next_part', to ? fixedScriptPartLabel(ctx.plan, to) : '(end)']);
+    if (to) attrs.push(['next_card', cardStatement(ctx.plan, to).slice(0, 300)]);
+  }
   return `<turn_state ${attrs.map(([k, v]) => `${k}="${esc(v)}"`).join(' ')}/>`;
 }
 
