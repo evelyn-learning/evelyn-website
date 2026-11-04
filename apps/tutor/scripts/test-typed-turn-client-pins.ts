@@ -339,5 +339,9 @@ test('X1 (fix wave 3): the numbered-question tracker\'s all-answered state reach
   assert.ok(/typedCorrectedSentencesRef\.current = \[\];\s*typedPartQuestionsAnsweredRef\.current = null;/.test(VTR), 'plan-scoped like the typed state');
 });
 
+test('X2 (fix wave 3): the missing required phrases (the close guard\'s own call) reach the rules', () => {
+  assert.ok(/missingRequiredPhrases: missingRequiredPhrases\(\s*getSegment\(tPlan, typedFromSeg\) as \{ requiredPhrases\?: string\[\] \} \| undefined,\s*\[\.\.\.\(segmentNarrationRef\.current\.get\(typedFromSeg\) \?\? \[\]\), \.\.\.turnNarrationRef\.current, \.\.\.attemptStreamedSentencesRef\.current\],\s*\),/.test(VTR), 'missingRequiredPhrases in buildAllowedNextContext');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');

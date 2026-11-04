@@ -675,5 +675,27 @@ test('X1: applyTypedTurn counts verdict none + an answer-shaped reply as an answ
   assert.equal(b.answersInPart['level-check'] ?? 0, 0);
 });
 
+// ---- Fix wave 3 X2: the recap carries the MISSING required phrases on every turn (r61b 745 s) ----
+test('X2: required_phrases lists the missing phrases on every recap turn while any is missing; omitted when none', () => {
+  const closeStep = { ...ask('question'), turnsInPart: { summary: 1 }, recapReviewed: { summary: true } };
+  const c1 = ctx('summary', { lastPart: true, missingRequiredPhrases: ['one thing you did well'], state: closeStep });
+  assert.ok(turnStateLine(c1).includes('recap_step="close"') && turnStateLine(c1).includes('required_phrases="one thing you did well"'), turnStateLine(c1));
+  const c0 = ctx('summary', { lastPart: true, missingRequiredPhrases: ['one thing you did well', 'the difference between'], state: ask('question') });
+  assert.ok(turnStateLine(c0).includes('required_phrases="one thing you did well|the difference between"'), turnStateLine(c0));
+  assert.ok(!turnStateLine(ctx('summary', { lastPart: true, missingRequiredPhrases: [], state: ask('question') })).includes('required_phrases'), 'none missing → omitted (review step)');
+  assert.ok(!turnStateLine(ctx('summary', { lastPart: true, missingRequiredPhrases: [], state: closeStep })).includes('required_phrases'), 'none missing → omitted (close step)');
+  // not on other parts
+  assert.ok(!turnStateLine(ctx('overview', { missingRequiredPhrases: ['x'] })).includes('required_phrases'));
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('required_phrases (recap part only) = phrases you have not said yet in this part — your closing turn must contain each one verbatim'), 'glossary');
+});
+test('X2: the request carries requiredPhrases (the missing list) for the server close gate; absent when none or on a stop request', () => {
+  const closeStep = { ...ask('question'), recapReviewed: { summary: true } };
+  assert.deepEqual(typedTurnRequestFor(ctx('summary', { lastPart: true, missingRequiredPhrases: ['one thing you did well'], state: closeStep })).requiredPhrases, ['one thing you did well']);
+  assert.equal(typedTurnRequestFor(ctx('summary', { lastPart: true, missingRequiredPhrases: [], state: closeStep })).requiredPhrases, undefined);
+  assert.equal(typedTurnRequestFor(ctx('summary', { lastPart: true, state: closeStep })).requiredPhrases, undefined);
+  // the prose close guard never refuses on the student's stop request; neither does the typed gate
+  assert.equal(typedTurnRequestFor(ctx('summary', { lastPart: true, studentMovedOn: true, missingRequiredPhrases: ['one thing you did well'], state: closeStep })).requiredPhrases, undefined);
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

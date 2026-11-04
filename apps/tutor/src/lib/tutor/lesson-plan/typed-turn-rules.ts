@@ -133,6 +133,10 @@ export interface AllowedNextContext {
   /** X1 (fix wave 3): the client's numbered-question tracker has seen every numbered question of THIS part answered
    *  (r61b 70 s: the tracker knew, the brain's `none` verdicts kept answersInPart at 0 and the move was refused). */
   partQuestionsAnswered: boolean;
+  /** X2 (fix wave 3): the current part's requiredPhrases not yet said (the client's close-guard call,
+   *  missingRequiredPhrases). Present ⇒ the recap's turn_state lists them on EVERY turn while any is missing, and the
+   *  request carries them for the server's close gate. Absent ⇒ the plan's list on the review turn only (V3). */
+  missingRequiredPhrases?: string[];
 }
 
 /** W2: the state on entering `to` by an engine move — the old part's open ask and correction are gone. Pure. */
@@ -319,11 +323,15 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     ...(moveNeedsAnswerFor(ctx) ? [['move_needs_answer', 'yes'] as [string, string]] : []),
   ];
   // V3: the recap's step, and on its first turn the plan's required phrases (the review turn must say them).
+  // X2 (fix wave 3, r61b 745 s): with the client's missing list, the phrases still unsaid ride EVERY recap turn
+  // (the close must carry them); none missing ⇒ omitted.
   if (typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'recap') {
     const first = !state.recapReviewed?.[segId];
     attrs.push(['recap_step', first ? 'review_feedback_check' : 'close']);
     const phrases = (segmentOf(ctx.plan, segId)?.requiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim());
-    if (first && phrases.length) attrs.push(['required_phrases', phrases.join('|')]);
+    const missing = ctx.missingRequiredPhrases;
+    if (missing) { if (missing.length) attrs.push(['required_phrases', missing.join('|')]); }
+    else if (first && phrases.length) attrs.push(['required_phrases', phrases.join('|')]);
   }
   // G2: the card questions the student already answered on this part (the brain re-asked one in r55).
   const answered = (state.answeredCards[segId] ?? []).slice(0, 4).map((q) => q.slice(0, 120));
@@ -339,8 +347,16 @@ export function turnStateLine(ctx: AllowedNextContext): string {
   return `<turn_state ${attrs.map(([k, v]) => `${k}="${esc(v)}"`).join(' ')}/>`;
 }
 
+/** X2: the phrases the server's close gate checks — the client's missing list (max 8, each ≤ 120 chars); none on the
+ *  student's stop / move-on request (the prose close guard never refuses then either). */
+function closeRequiredPhrases(ctx: AllowedNextContext): string[] {
+  if (ctx.studentMovedOn) return [];
+  return (ctx.missingRequiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim() && p.length <= 120).slice(0, 8);
+}
+
 export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
   const left = itemsLeftFor(ctx);
+  const requiredPhrases = closeRequiredPhrases(ctx);
   return {
     state: turnStateLine(ctx),
     allowedNext: allowedNextFor(ctx),
@@ -349,6 +365,8 @@ export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
     ...(moveNeedsAnswerFor(ctx) ? { moveNeedsAnswer: true } : {}),
     // W6: the server refuses an item outside this list before it is spoken (one retry); absent on a part without items.
     ...(left.length ? { itemsLeft: left.slice(0, 8) } : {}),
+    // X2: a `close` lacking one of these is refused once by the server (the retry names them).
+    ...(requiredPhrases.length ? { requiredPhrases } : {}),
   };
 }
 

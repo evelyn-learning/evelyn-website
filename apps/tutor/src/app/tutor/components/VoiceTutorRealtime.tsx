@@ -15193,6 +15193,12 @@ export function VoiceTutorRealtime({
             items: typedItemsFor(typedFromSeg),
             // X1 (fix wave 3): every numbered question of this part answered (the tracker) — the level check moves.
             partQuestionsAnswered: typedPartQuestionsAnsweredRef.current === typedFromSeg,
+            // X2 (fix wave 3): the part's required phrases still unsaid — the close guard's own call (turn_state lists
+            // them on every recap turn; the server refuses a close lacking one, once).
+            missingRequiredPhrases: missingRequiredPhrases(
+              getSegment(tPlan, typedFromSeg) as { requiredPhrases?: string[] } | undefined,
+              [...(segmentNarrationRef.current.get(typedFromSeg) ?? []), ...turnNarrationRef.current, ...attemptStreamedSentencesRef.current],
+            ),
             lessonElapsedMs: typedLessonElapsedMs,
             // V6: next_card's key ideas are filtered to the held level, as the board shows them.
             workingLevel: workingLevelRef.current?.level ?? null,

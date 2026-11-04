@@ -394,6 +394,41 @@ async function main() {
     });
   }
 
+  {
+    // X2 (fix wave 3): a recap close without a required phrase is refused once (r61b 745 s "Well done today…")
+    const recapTurn = { state: '<turn_state part="recap" recap_step="close" required_phrases="one thing you did well"/>', allowedNext: ['close'], recap: true, requiredPhrases: ['one thing you did well'] };
+    const BARE = { kind: 'close', say: 'Well done today, Haruto. See you next time!', item: '', level: '' };
+    const WITH = { kind: 'close', say: 'One thing you did well was   your clear examples. Well done today, see you next time!', item: '', level: '' };
+    const OK = { ...TURN, verdict: 'correct', verdict_say: 'Right, that is the core idea.', correction: null, support_ja: '' };
+    await test('X2: close lacking a required phrase ⇒ refused before speech, two requests, the retry\'s say spoken once', async () => {
+      const r = await run({ ...baseInput, typedTurn: recapTurn }, [chunkedTextScript(JSON.stringify({ ...OK, next: BARE }), 3), chunkedTextScript(JSON.stringify({ ...OK, next: WITH }), 2)]);
+      assert.equal(r.requests.length, 2);
+      const u = String(r.requests[1].messages[r.requests[1].messages.length - 1].content);
+      assert.ok(u.includes('missing_required_phrase') && u.includes('"one thing you did well"'), u);
+      const said = sentencesOf(r.events);
+      assert.ok(!said.some((x) => x.includes('Haruto')), 'the refused close is never spoken');
+      assert.equal(said.filter((x) => /One thing you did well/.test(x)).length, 1, said.join(' | '));
+      const t = turnEv(r.events);
+      assert.equal(t.retryReason, 'missing_required_phrase');
+      assert.deepEqual(t.turn?.next, WITH);
+    });
+    await test('X2: the retry still lacks the phrase ⇒ taken anyway (the render guard stays the last line)', async () => {
+      const r = await run({ ...baseInput, typedTurn: recapTurn }, [chunkedTextScript(JSON.stringify({ ...OK, next: BARE }), 3), chunkedTextScript(JSON.stringify({ ...OK, next: BARE }), 2)]);
+      assert.equal(r.requests.length, 2);
+      assert.deepEqual(turnEv(r.events).turn?.next, BARE);
+      assert.equal(sentencesOf(r.events).filter((x) => x.includes('Haruto')).length, 1);
+    });
+    await test('X2: the phrase already in verdict_say (case / whitespace differ) ⇒ one request', async () => {
+      const r = await run({ ...baseInput, typedTurn: recapTurn }, [chunkedTextScript(JSON.stringify({ ...OK, verdict_say: 'Right. ONE thing  you did well was your examples.', next: BARE }), 3)]);
+      assert.equal(r.requests.length, 1);
+      assert.ok(sentencesOf(r.events).some((x) => x.includes('Haruto')));
+    });
+    await test('X2: a close without requiredPhrases (non-recap) ⇒ unchanged, one request', async () => {
+      const r = await run({ ...baseInput, typedTurn: { state: '<turn_state part="plain"/>', allowedNext: ['close'], recap: false } }, [chunkedTextScript(JSON.stringify({ ...OK, next: BARE }), 3)]);
+      assert.equal(r.requests.length, 1);
+    });
+  }
+
   console.log('fallbacks (Task 6)');
   await test('400 output_config.format rejected ⇒ typed-turn-fallback format_rejected, then the prose call with tools', async () => {
     const reject: Script = { events: [], final: { content: [], stop_reason: 'end_turn' }, error: { status: 400, message: 'output_config.format is not supported' } };
@@ -523,6 +558,9 @@ async function main() {
     // R3: optional boolean moveNeedsAnswer, passed through only when true
     assert.ok(routeSrc.includes("&& (t.moveNeedsAnswer === undefined || typeof t.moveNeedsAnswer === 'boolean')"), 'moveNeedsAnswer shape check');
     assert.ok(routeSrc.includes('...(t.moveNeedsAnswer === true ? { moveNeedsAnswer: true } : {}),'), 'moveNeedsAnswer passed through');
+    // X2: optional requiredPhrases (strings ≤ 120 chars, at most 8), passed through when non-empty
+    assert.ok(routeSrc.includes("&& (t.requiredPhrases === undefined || (Array.isArray(t.requiredPhrases) && t.requiredPhrases.length <= 8 && t.requiredPhrases.every((x) => typeof x === 'string' && x.length <= 120)))"), 'requiredPhrases shape check');
+    assert.ok(routeSrc.includes('...(t.requiredPhrases?.length ? { requiredPhrases: t.requiredPhrases } : {}),'), 'requiredPhrases passed through');
   });
   const brainSrc = fs.readFileSync(path.join(__dirname, '../src/lib/tutor/voice/claude-brain.ts'), 'utf8');
   await test('brain: answer_check on typed carries the advisory line; provider fallback wired', () => {

@@ -268,11 +268,14 @@ function acceptTypedTurn(raw: unknown): TypedTurnRequest | undefined {
     && (t.itemsLeft === undefined || (Array.isArray(t.itemsLeft) && t.itemsLeft.length <= 8 && t.itemsLeft.every((x) => typeof x === 'string')))
     // R3: optional moveNeedsAnswer (the level check's third reply may move only when it is an answer).
     && (t.moveNeedsAnswer === undefined || typeof t.moveNeedsAnswer === 'boolean')
+    // X2: optional requiredPhrases — the part's required phrases not yet said (a close lacking one is refused once).
+    && (t.requiredPhrases === undefined || (Array.isArray(t.requiredPhrases) && t.requiredPhrases.length <= 8 && t.requiredPhrases.every((x) => typeof x === 'string' && x.length <= 120)))
   ) {
     return {
       state: t.state, allowedNext: t.allowedNext, recap: t.recap === true, ...(t.nudge === true ? { nudge: true } : {}),
       ...(t.itemsLeft?.length ? { itemsLeft: t.itemsLeft } : {}),
       ...(t.moveNeedsAnswer === true ? { moveNeedsAnswer: true } : {}),
+      ...(t.requiredPhrases?.length ? { requiredPhrases: t.requiredPhrases } : {}),
     };
   }
   console.warn('typed_turn_body_rejected');

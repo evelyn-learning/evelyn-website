@@ -3033,7 +3033,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   let messages: Anthropic.MessageParam[] = typedMessages ?? proseMessages;
   // Turn-scoped: a refused first `next` waiting for its one retry (spec §4.2,
   // §4.8), and the kind the client falls back to when no usable `next` was voiced.
-  let typedRetryNeed: { reason: TypedRetryReason; refused: TypedNext; itemNotListed?: string[] } | null = null;
+  let typedRetryNeed: { reason: TypedRetryReason; refused: TypedNext; itemNotListed?: string[]; missingPhrases?: string[] } | null = null;
   let typedNextFallback: TypedNextKind | undefined;
   let typedNextVoiced = false;
   /** Gate for `next`: legal kinds pass; anything else is held back. */
@@ -3045,6 +3045,16 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   /** R7 (fix round 2): an absent verdict (invalid, never released) counts as a non-answer too. */
   const typedMoveOnNonAnswer = (kind: TypedNextKind): boolean => !!input.typedTurn?.moveNeedsAnswer && kind === 'move'
     && (typedVerdictSeen === null || typedVerdictSeen === 'none');
+  /** X2 (fix wave 3): this turn's spoken field text before `next` (ack, verdict_say, correction explain, support_ja). */
+  const typedSaidBeforeNext: string[] = [];
+  const typedPhraseKey = (s: string): string => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  /** X2: the required phrases a `close` would leave unsaid this turn (case-insensitive, whitespace-normalised). */
+  const typedCloseMissingPhrases = (next: TypedNext): string[] => {
+    const required = next.kind === 'close' ? input.typedTurn?.requiredPhrases ?? [] : [];
+    if (!required.length) return [];
+    const said = typedPhraseKey([...typedSaidBeforeNext, next.say].join(' '));
+    return required.filter((p) => typedPhraseKey(p) && !said.includes(typedPhraseKey(p)));
+  };
   /** G1: sentences already yielded this typed turn (retry calls are the same turn); the prose duplicate filters stand down on typed. */
   const typedSpoken = new Set<string>();
   /** Prose fallback mid-turn: the frame the typed request left out comes back. */
@@ -3077,11 +3087,18 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             && !itemsLeft.some((x) => x.trim() === ev.value.item.trim());
           // R3 (fix round 1): the level check's third reply may move only when it was an answer (verdict ≠ none).
           const moveOnNonAnswer = typedMoveOnNonAnswer(ev.value.kind);
+          // X2 (fix wave 3, r61b 745 s): a close that leaves a required phrase unsaid is refused before speech (one retry).
+          const missingPhrases = typedCloseMissingPhrases(ev.value);
           const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) || itemNotListed ? 'illegal_kind'
             : moveOnNonAnswer ? 'move_needs_answer'
+            : missingPhrases.length ? 'missing_required_phrase'
             : englishSentenceCount(ev.value.say) > sayBudgetOf(ev.value.kind) ? 'say_over_budget' : null;
           if (reason) {
-            typedRetryNeed = { reason, refused: ev.value, ...(itemNotListed && typedNextAllowed(ev.value.kind) ? { itemNotListed: itemsLeft } : {}) };
+            typedRetryNeed = {
+              reason, refused: ev.value,
+              ...(itemNotListed && typedNextAllowed(ev.value.kind) ? { itemNotListed: itemsLeft } : {}),
+              ...(reason === 'missing_required_phrase' ? { missingPhrases } : {}),
+            };
             console.warn(`[typed-turn] next refused (${reason}${typedRetryNeed.itemNotListed ? ' item_not_listed' : ''}): kind=${ev.value.kind} sentences=${englishSentenceCount(ev.value.say)} allowed_next=${input.typedTurn!.allowedNext.join(',')} — retrying once`);
             return;
           }
@@ -3092,6 +3109,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       case 'verdict': typedVerdictSeen = ev.value; break;
     }
     yield { type: 'typed-field', field: ev.field, value, ...(retried ? { retried: true } : {}) };
+    if (ev.field !== 'next' && speech.trim()) typedSaidBeforeNext.push(speech);
     if (!speech.trim()) return;
     // Scrub + boundary only: the prose guards are written for free text.
     const buf = new SentenceBuffer();
@@ -3229,7 +3247,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     /** The one retry call (spec §4.8 splice): same typed params, the first
      *  object as the assistant turn, the retry message as the user turn. Read
      *  whole — no thinking re-issue machinery, no failover to prose. */
-    async function typedRetryCall(first: TypedTurn, need: { reason: TypedRetryReason; refused: TypedNext; itemNotListed?: string[] }): Promise<TypedTurnReader | null> {
+    async function typedRetryCall(first: TypedTurn, need: { reason: TypedRetryReason; refused: TypedNext; itemNotListed?: string[]; missingPhrases?: string[] }): Promise<TypedTurnReader | null> {
       const retryMessages: Anthropic.MessageParam[] = [
         ...messages,
         { role: 'assistant', content: typedReader.text },
@@ -3240,6 +3258,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             alreadySaid: { ack: first.ack, verdict: first.verdict, verdict_say: first.verdict_say, board: first.board, correction: first.correction, support_ja: first.support_ja },
             budget: sayBudgetOf(need.refused.kind),
             ...(need.itemNotListed ? { itemNotListed: need.itemNotListed } : {}),
+            ...(need.missingPhrases ? { missingPhrases: need.missingPhrases } : {}),
           }),
         },
       ];
