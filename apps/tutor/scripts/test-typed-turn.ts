@@ -143,9 +143,9 @@ test('V3: the recap glossary, the recap verdict rule and the budget sentence', (
   assert.ok(I.includes('(7 when recap is "yes" in the turn block'), 'field line');
 });
 
-test('flags — TUTOR_TYPED_TURN is opt-in', () => {
+test('flags — TUTOR_TYPED_TURN is default ON (off only with NEXT_PUBLIC_TUTOR_TYPED_TURN=off)', () => {
   const src = readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8');
-  assert.match(src, /export const TUTOR_TYPED_TURN = process\.env\.NEXT_PUBLIC_TUTOR_TYPED_TURN === 'on';/);
+  assert.match(src, /export const TUTOR_TYPED_TURN = process\.env\.NEXT_PUBLIC_TUTOR_TYPED_TURN !== 'off';/);
 });
 
 // ---- Task 2: incremental field reader ----
