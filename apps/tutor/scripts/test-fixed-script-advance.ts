@@ -1827,6 +1827,17 @@ test('45 §2a: the prompt\'s off-topic rule exempts a question the tutor itself 
   assert.ok(spb.indexOf('personal questions, what AI you are), redirect immediately') < spb.indexOf('A question you asked the student to ask you'), 'right after the redirect rule');
 });
 
+
+test('45 review: I-3 the shared-words proof reads the previous turn\'s last ask only and needs half the card\'s content words; M-4 an introduced model line is no verdict echo', () => {
+  const twoPart = 'Have you ever worked with an international customer? If so, can you tell me about the experience?';
+  // the tutor read the card, then asked an easier first half — a 4-word correct answer must not close the whole card
+  assert.equal(cardAnsweredInSubstance45({ cardStatement: twoPart, hints: [], tutorQuestion: 'Here is the question on the board: have you ever worked with an international customer? If so, tell me about the experience. First, what do you do?', studentAnswer: 'I work in sales now.' }), false);
+  assert.equal(cardAnsweredInSubstance45({ cardStatement: 'Have you worked for your current company for a long time?', hints: [], tutorQuestion: 'Let me put the card up. So, have you worked for your company for a long time, Praveen?', studentAnswer: 'Yes, I have worked there for four years.' }), true, 'the last ask is the paraphrase');
+  assert.equal(isVerdictEchoSentence('Next sentence: "That\'s right, I agree with the plan."'), false);
+  assert.equal(isVerdictEchoSentence('Listen: "Your answer is correct and clear."'), false);
+  assert.equal(isVerdictEchoSentence('Your answer is correct and clear.'), true);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 
@@ -1867,6 +1878,7 @@ test('45 §1: the judge correction note is scoped to its part — none planted i
   pin(VTR, /const judgeNoteLevelCheck = TUTOR_JUDGE_NOTE_PART_SCOPED && isFixedScriptPlan\(lessonPlanRef\.current\)\s*&& lessonPlanRef\.current\?\.segments\.find\(\(sg\) => sg\.id === turnStartSegmentId\)\?\.metadata\?\.skipWhenLevelKnown === true;/);
   pin(VTR, /onDebugEvent\?\.\('judge_correction_note_skipped', `level check · advisory: /);
   // stale at consumption and at the deadline
-  pin(VTR, /if \(pendingJudgeCorrectionNoteRef\.current && TUTOR_JUDGE_NOTE_PART_SCOPED && judgeNoteStaleForPart\(\{ plantedSegId: judgeNotePlantRef\.current\?\.segId \?\? null, currentSegId: currentSegmentIdRef\.current, fixedScript: isFixedScriptPlan\(lessonPlanRef\.current\) \}\)\) \{/);
+  // review I-1: the plant record must be THIS note's (other planters leave an older record behind)
+  assert.equal((VTR.match(/if \(pendingJudgeCorrectionNoteRef\.current && TUTOR_JUDGE_NOTE_PART_SCOPED && judgeNotePlantRef\.current\?\.note === pendingJudgeCorrectionNoteRef\.current\s*&& judgeNoteStaleForPart\(\{ plantedSegId: judgeNotePlantRef\.current\?\.segId \?\? null, currentSegId: currentSegmentIdRef\.current, fixedScript: isFixedScriptPlan\(lessonPlanRef\.current\) \}\)\) \{/g) ?? []).length, 2, 'stale check at the reply and at the deadline, both guarded by the note identity');
   pin(VTR, /onDebugEvent\?\.\('judge_correction_note_dropped', `stale part: planted in "\$\{judgeNotePlantRef\.current\?\.segId\}", pointer at "\$\{currentSegmentIdRef\.current\}" \(\$\{judgeNoteStaleWhere\}\)`\);/);
 });

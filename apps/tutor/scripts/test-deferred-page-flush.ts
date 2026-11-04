@@ -375,17 +375,37 @@ ok('emptyPageIndexes: pointer-only page is empty',
   assert.equal(transitionSentenceIndex45([]), null);
   const vtr = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   // the engine: student / correction cards hold the page (paint on the old page at their own sentence); the part card's batch carries the break, anchored to the transition sentence
-  assert.match(vtr, /const transitionAnchor = TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && !!pendingAdvanceNewPageRef\.current && isFixedScriptPlan\(lessonPlanRef\.current\)\s*\? transitionSentenceIndex\(turnNarrationRef\.current\) : null;/);
+  assert.match(vtr, /const transitionAnchor = TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && !!pendingAdvanceNewPageRef\.current && isFixedScriptPlan\(lessonPlanRef\.current\)\s*\? transitionSentenceIndex\(turnNarrationRef\.current\.slice\(attemptNarrationStartRef\.current\), \{ fallbackToFirstAsk: true \}\) : null;/);
   assert.match(vtr, /const autoCardOfLeftPart = opts\?\.sentenceBoardAuto === true && \(pendingAdvanceNewPageRef\.current\.afterTurn === true \|\| opts\?\.holdDeferredPage === true\);/);
   assert.match(vtr, /handleWhiteboardCommand\(\[cmd\], \{ anchorSentence: transitionAnchor \?\? 0, \.\.\.\(transitionAnchor !== null \? \{ pageBreakOnTransition: true \} : \{\}\) \}\)/);
   assert.match(vtr, /holdDeferredPage: transitionAnchor !== null/);
   // §6: with the break anchored, a correction card goes BEFORE the break (on the old page) again
   assert.match(vtr, /kind: \(TUTOR_CORRECTION_CARD_ON_NEW_PAGE && transitionAnchor === null && card\.kind === 'correction' \? 'correction' :/);
   assert.match(vtr, /\$\{opts\?\.pageBreakOnTransition \? ` \(on the transition sentence \$\{opts\.anchorSentence\}\)` : ''\}/);
-  assert.match(vtr, /if \(TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan\(lessonPlanRef\.current\)\) \{\s*const tsIdx = transitionSentenceIndex\(turnNarrationRef\.current\);\s*if \(tsIdx !== null && ttsPlaybackStartedCountRef\.current <= tsIdx\) \{/);
+  assert.match(vtr, /if \(TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan\(lessonPlanRef\.current\)\) \{\s*const tsIdx = transitionSentenceIndex\(turnNarrationRef\.current\.slice\(attemptNarrationStartRef\.current\), \{ fallbackToFirstAsk: true \}\);\s*if \(tsIdx !== null && ttsPlaybackStartedCountRef\.current <= tsIdx\) \{/);
   n += 12;
 }
 
+{ // 45 review: M-2 a part label alone is no move; M-1 the index is attempt-relative (narration accumulates across kills, playback counters reset)
+  assert.equal(transitionSentenceIndex45(['The next step is to add -ed to the verb.', 'Can you try?']), null);
+  assert.equal(transitionSentenceIndex45(['Good.', 'Part 2 of your sentence needs "for".', 'Say it again.']), null);
+  assert.equal(transitionSentenceIndex45(['Now, the next part is the past simple.', 'Did you attend any events?']), 0);
+  assert.equal(transitionSentenceIndex45(['Thanks.', 'Next, the last part: the summary.']), 1);
+  const vtrR = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.match(vtrR, /\? transitionSentenceIndex\(turnNarrationRef\.current\.slice\(attemptNarrationStartRef\.current\), \{ fallbackToFirstAsk: true \}\) : null;/);
+  assert.match(vtrR, /const tsIdx = transitionSentenceIndex\(turnNarrationRef\.current\.slice\(attemptNarrationStartRef\.current\), \{ fallbackToFirstAsk: true \}\);/);
+  assert.match(vtrR, /attemptNarrationStartRef\.current = attemptNarrationStart;/);
+  n += 7;
+}
+{ // bot r47 408 s: no move phrase at all — with a page pending the first ask after the verdict is the move
+  const t408 = ['「Last month I made a presentation for a new product launch.」は、過去の具体的な時間の出来事ですね。', 'Good — "made" is the past simple, since "last month" is a finished time.', 'Now, please answer in English: Did you attend any business events or exhibitions last year?'];
+  assert.equal(transitionSentenceIndex45(t408), null, 'no fallback: nothing');
+  assert.equal(transitionSentenceIndex45(t408, { fallbackToFirstAsk: true }), 2);
+  assert.equal(transitionSentenceIndex45(['Did you attend any events last year?'], { fallbackToFirstAsk: true }), null, 'a question first: nothing to hold for');
+  assert.equal(transitionSentenceIndex45(['Good.', "Let's move on to the past simple.", 'Did you attend any events last year?'], { fallbackToFirstAsk: true }), 1, 'the move phrase wins');
+  assert.equal(transitionSentenceIndex45(['Good, that is clear.', 'Here is the menu.'], { fallbackToFirstAsk: true }), null, 'no ask: no fallback');
+  n += 5;
+}
 console.log(`deferred-page-flush: ${n} cases passed`);
 
 

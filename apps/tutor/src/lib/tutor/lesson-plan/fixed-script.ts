@@ -1374,6 +1374,8 @@ export function isVerdictEchoSentence(sentence: string | null | undefined): bool
   const s = (sentence ?? '').trim();
   if (!s || /[?？]["”」]?\s*$/.test(s)) return false;
   if (SAY_OR_REPEAT_ASK_RE.test(s)) return false;
+  // review M-4: an introduced model line ('Next sentence: "That's right, I agree."') is content, not a verdict.
+  if (/^(?:next sentence|next one|listen|here is|here's|repeat after me|try this)\b/i.test(s)) return false;
   return VERDICT_ECHO_SUBJECT_RE.test(s) && VERDICT_ECHO_AFFIRM_RE.test(s);
 }
 

@@ -2266,10 +2266,13 @@ export function elicitedWordFix(
 /** Task 45 §3b: the retry turn AFFIRMS — a verdict word in a non-question
  *  sentence ("is a clear past simple sentence", "is the right past form",
  *  "exactly right", 「正しいです」) — turnAffirmsStudent's shapes included. */
-const RETRY_AFFIRM_RE = /\b(?:correct|right|clear|good|great|exactly|natural|perfect|well done|nicely said|well said)\b|正しい|ですね|いいですね|完璧|その通り/i;
+const RETRY_AFFIRM_RE = /\b(?:correct|right|clear|good|great|exactly|natural|(?<!present |past |future )perfect|well done|nicely said|well said)\b|正しい|ですね|いいですね|完璧|その通り/i;
 export function retryAffirmation(tutorText: string | null | undefined): boolean {
   const t = tutorText ?? '';
   if (!t) return false;
+  // review M-3: "Good try, but …" / "That's clear. However, …" affirms nothing.
+  const parts = t.split(/(?<=[.!?。！？])\s+/);
+  if (parts.some((x) => /\b(?:but|however|though|although)\b|でも|しかし|ただ/i.test(x))) return false;
   if (turnAffirmsStudent(t)) return true;
-  return t.split(/(?<=[.!?。！？])\s+/).some((x) => !/[?？]["”」]?\s*$/.test(x.trim()) && RETRY_AFFIRM_RE.test(x));
+  return parts.some((x) => !/[?？]["”」]?\s*$/.test(x.trim()) && RETRY_AFFIRM_RE.test(x));
 }

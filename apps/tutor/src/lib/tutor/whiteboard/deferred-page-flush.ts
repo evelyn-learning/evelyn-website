@@ -372,12 +372,28 @@ const PART_MOVE_LEAD_RE = /\b(?:let['’]s|we['’]ll|we will|now we|now let['�
 const PART_MOVE_VERB_RE = /\b(?:move on|move to|moving on|go on to|turn to|start (?:the|our|with the|part)|begin (?:the|our|part)|finish with|wrap up with|look at the next|do the next)\b/i;
 const PART_LABEL_RE = /\b(?:the )?(?:next|last|final) (?:part|section|step|stage|topic)\b|\bpart \d\b/i;
 const JA_PART_MOVE_RE = /次は|次に|に移りましょう|に進みましょう|最後に|まとめに|まとめましょう/;
-export function transitionSentenceIndex(sentences: ReadonlyArray<string>): number | null {
+export function transitionSentenceIndex(sentences: ReadonlyArray<string>, opts?: {
+  /** bot r47 408 s: the reply turn closed the old ask and asked the new part's question with no
+   *  move phrase at all — with a page pending, the first ASK after a non-ask sentence is the move
+   *  (the verdict plays on the old page; the new part's question turns it). */
+  fallbackToFirstAsk?: boolean;
+}): number | null {
+  const isAsk = (x: string) => /[?？]["”」]?\s*$/.test(x.trim());
   for (let i = 0; i < sentences.length; i++) {
     const s = (sentences[i] ?? '').trim();
     if (!s || /[?？]["”」]?\s*$/.test(s)) continue;
-    if (JA_PART_MOVE_RE.test(s) || PART_LABEL_RE.test(s)) return i;
+    // review M-2: a part label alone ("The next step is to add -ed.") is no move — it needs a discourse lead.
+    if (JA_PART_MOVE_RE.test(s) || (PART_LABEL_RE.test(s) && /^(?:now|next|then|okay|ok|so|alright|great|good|well|right|finally|lastly),?\s/i.test(s))) return i;
     if (PART_MOVE_LEAD_RE.test(s) && PART_MOVE_VERB_RE.test(s)) return i;
+  }
+  if (opts?.fallbackToFirstAsk) {
+    let sawStatement = false;
+    for (let i = 0; i < sentences.length; i++) {
+      const s = (sentences[i] ?? '').trim();
+      if (!s) continue;
+      if (isAsk(s)) { if (sawStatement) return i; return null; }
+      sawStatement = true;
+    }
   }
   return null;
 }

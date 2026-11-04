@@ -25,6 +25,7 @@ import { planSentenceBoard as planSentenceBoard38, isAckTransitionLine, cardCont
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
 import { elicitedWordFix as elicitedWordFix45, planSentenceBoard as planSentenceBoard45 } from '../src/lib/tutor/voice/sentence-board';
 import { lastStudentSentenceCardOnPage as lastStudentSentenceCardOnPage45 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
+import { retryAffirmation as retryAffirmation45 } from '../src/lib/tutor/voice/sentence-board';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -1811,6 +1812,15 @@ test('45 §3b: after a retry ask, the affirmed retry is carded whatever the prec
   const vtr45 = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(vtr45.includes('retryCard: TUTOR_RETRY_CARD,'), 'VTR passes retryCard');
   assert.match(vtr45, /lastStudentCard: TUTOR_RETRY_CARD \? lastStudentSentenceCardOnPage\(whiteboardCommandsRef\.current as unknown as Array<\{ action: string \} & Record<string, unknown>>\) : null,/);
+});
+
+
+test('45 review: M-3 a "good try, but …" turn is no affirmation of the retry', () => {
+  assert.equal(retryAffirmation45('Good try, but the verb needs the past form here.'), false);
+  assert.equal(retryAffirmation45('That\'s clear. However, we need "for" before the time.'), false);
+  assert.equal(retryAffirmation45('Good, "We discussed business at the conference" is a clear past simple sentence.'), true);
+  const prev = 'Could you say the sentence in the past simple, starting with "We discussed…"?';
+  assert.equal(planSentenceBoard45({ tutorText: 'Good try, but the verb needs the past form: say it once more.', studentLast: 'We discuss business at the conference.', renderedThisTurn: false, prevTutorText: prev, correctionMarked: true, retryCard: true }).some((c) => c.kind === 'model'), false);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

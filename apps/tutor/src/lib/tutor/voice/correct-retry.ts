@@ -1613,8 +1613,13 @@ export function cardAnsweredInSubstance(input: {
     const starter = normAnswer(m[1]!);
     if (starter && a.startsWith(starter)) return true;
   }
+  // review I-3: the previous turn's LAST ask sentence(s) only (a card read aloud
+  // before an easier question shares words trivially), and at least half the
+  // card's content words.
   const cw = substanceWords(card);
+  const asks = (input.tutorQuestion ?? '').split(/(?<=[.!?。！？])\s+/).filter((x) => /[?？]["”」]?\s*$/.test(x.trim()));
+  const lastAsk = asks.length ? asks[asks.length - 1]! : '';
   let shared = 0;
-  for (const w of substanceWords(input.tutorQuestion ?? '')) if (cw.has(w)) shared += 1;
-  return shared >= 3;
+  for (const w of substanceWords(lastAsk)) if (cw.has(w)) shared += 1;
+  return shared >= Math.max(3, Math.ceil(cw.size / 2));
 }

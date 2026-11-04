@@ -401,5 +401,13 @@ test('45 §7a: a pronunciation item already practised in this part is a repeat �
   assert.match(vtr, /pronunciationRepeatProne: /);
 });
 
+
+test('45 review: I-2 the repeat check reads the practised list snapshotted at attempt start (the turn\'s own tool arm is not "already practised"); M-5 the re-ask exemption is a say/try/repeat … again, not any "again"', () => {
+  const vtr = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.match(vtr, /const attemptPractisedPron = \[\.\.\.\(pronunciationPractisedRef\.current\.get\(currentSegmentIdRef\.current \?\? ''\) \?\? \[\]\)\];/);
+  assert.match(vtr, /const prPractisedAll = attemptPractisedPron;/);
+  assert.match(vtr, /const prReask = \/\\b\(\?:say\|try\|repeat\)\\b\[\^\.!\?\]\*\\bagain\\b\|\\bonce more\\b\|\\bone more time\\b\|もう一度\/i\.test\(attemptText\);/);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

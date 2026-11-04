@@ -1634,6 +1634,8 @@ export function VoiceTutorRealtime({
   // Read by the mic tap and the speech-stop callback (both memoised elsewhere).
   const sendPronunciationClipRef = useRef(sendPronunciationClip);
   sendPronunciationClipRef.current = sendPronunciationClip;
+  /** Task 45 §4 review M-1: where the current attempt's narration starts (the array accumulates across kills; playback counters reset). */
+  const attemptNarrationStartRef = useRef<number>(0);
   /** Task 45 §7a: every reference text armed in each part (pronunciation_item_repeated). */
   const pronunciationPractisedRef = useRef<Map<string, string[]>>(new Map());
   const armPronunciationCheck = (referenceText: string, kind: string) => {
@@ -5555,7 +5557,8 @@ export function VoiceTutorRealtime({
       // Task 45 §1 (voice run 23, 98 s → 118 s): a note planted in a part the
       // pointer has left is dropped unspent — read against a different question
       // the brain retracted a "Good." that was never about it.
-      if (pendingJudgeCorrectionNoteRef.current && TUTOR_JUDGE_NOTE_PART_SCOPED && judgeNoteStaleForPart({ plantedSegId: judgeNotePlantRef.current?.segId ?? null, currentSegId: currentSegmentIdRef.current, fixedScript: isFixedScriptPlan(lessonPlanRef.current) })) {
+      if (pendingJudgeCorrectionNoteRef.current && TUTOR_JUDGE_NOTE_PART_SCOPED && judgeNotePlantRef.current?.note === pendingJudgeCorrectionNoteRef.current
+        && judgeNoteStaleForPart({ plantedSegId: judgeNotePlantRef.current?.segId ?? null, currentSegId: currentSegmentIdRef.current, fixedScript: isFixedScriptPlan(lessonPlanRef.current) })) {
         const judgeNoteStaleWhere = 'at the deadline';
         onDebugEvent?.('judge_correction_note_dropped', `stale part: planted in "${judgeNotePlantRef.current?.segId}", pointer at "${currentSegmentIdRef.current}" (${judgeNoteStaleWhere})`);
         pendingJudgeCorrectionNoteRef.current = null;
@@ -6385,7 +6388,7 @@ export function VoiceTutorRealtime({
     // audio starts — the page would flip ahead of the whole turn. A turn that
     // says the move leaves the break to its anchored batch (or to audio drained).
     if (TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan(lessonPlanRef.current)) {
-      const tsIdx = transitionSentenceIndex(turnNarrationRef.current);
+      const tsIdx = transitionSentenceIndex(turnNarrationRef.current.slice(attemptNarrationStartRef.current), { fallbackToFirstAsk: true });
       if (tsIdx !== null && ttsPlaybackStartedCountRef.current <= tsIdx) {
         onDebugEvent?.('auto_newpage_on_advance_flush_waits', `transition sentence ${tsIdx} not yet spoken (${why})`);
         return;
@@ -14259,7 +14262,8 @@ export function VoiceTutorRealtime({
       // Task 45 §1 (voice run 23, 98 s → 118 s): a note planted in a part the
       // pointer has left is dropped unspent — read against a different question
       // the brain retracted a "Good." that was never about it.
-      if (pendingJudgeCorrectionNoteRef.current && TUTOR_JUDGE_NOTE_PART_SCOPED && judgeNoteStaleForPart({ plantedSegId: judgeNotePlantRef.current?.segId ?? null, currentSegId: currentSegmentIdRef.current, fixedScript: isFixedScriptPlan(lessonPlanRef.current) })) {
+      if (pendingJudgeCorrectionNoteRef.current && TUTOR_JUDGE_NOTE_PART_SCOPED && judgeNotePlantRef.current?.note === pendingJudgeCorrectionNoteRef.current
+        && judgeNoteStaleForPart({ plantedSegId: judgeNotePlantRef.current?.segId ?? null, currentSegId: currentSegmentIdRef.current, fixedScript: isFixedScriptPlan(lessonPlanRef.current) })) {
         const judgeNoteStaleWhere = 'at the reply';
         onDebugEvent?.('judge_correction_note_dropped', `stale part: planted in "${judgeNotePlantRef.current?.segId}", pointer at "${currentSegmentIdRef.current}" (${judgeNoteStaleWhere})`);
         pendingJudgeCorrectionNoteRef.current = null;
@@ -14949,6 +14953,9 @@ export function VoiceTutorRealtime({
         // Task 17 fix round 2: where this attempt's dispatched sentences
         // start in turnNarrationRef (heardTextThroughKept).
         const attemptNarrationStart = turnNarrationRef.current.length;
+        attemptNarrationStartRef.current = attemptNarrationStart;
+        // Task 45 §7a review I-2: the turn's own tool arm (handled mid-stream) is not "already practised".
+        const attemptPractisedPron = [...(pronunciationPractisedRef.current.get(currentSegmentIdRef.current ?? '') ?? [])];
         // Task 30 §F1: the attempt's last sentence that passed the per-sentence filters.
         let adjacentPrevSentence = '';
         // Task 31 §H1: a thank-you ack was spoken in this attempt.
@@ -20735,8 +20742,8 @@ export function VoiceTutorRealtime({
         if (TUTOR_PRON_ITEM_REPEAT_KILL && !attemptKilled && attemptText && !pronRepeatRejected && isFixedScriptPlan(lessonPlanRef.current)) {
           const prSeg = currentSegmentIdRef.current ?? '';
           const prTargets = pronunciationTargetsOf(lessonPlanRef.current?.segments.find((sg) => sg.id === prSeg)?.metadata);
-          const prPractisedAll = pronunciationPractisedRef.current.get(prSeg) ?? [];
-          const prReask = /\bonce more\b|\bagain\b|\bone more time\b|もう一度/i.test(attemptText);
+          const prPractisedAll = attemptPractisedPron;
+          const prReask = /\b(?:say|try|repeat)\b[^.!?]*\bagain\b|\bonce more\b|\bone more time\b|もう一度/i.test(attemptText);
           const prPractised = prReask && prPractisedAll.length ? prPractisedAll.slice(0, -1) : prPractisedAll;
           const pronRepeat = prTargets && prPractised.length
             ? pronunciationItemRepeat({ turnText: attemptText, targets: prTargets, practised: prPractised, shownSentence: turnShownSentenceRef.current, studentLast: sentenceStressRef.current.studentLast })
@@ -23025,8 +23032,8 @@ export function VoiceTutorRealtime({
         // page at their own sentence; the part card's batch carries the break,
         // anchored to the transition sentence (render-sync).
         const transitionAnchor = TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && !!pendingAdvanceNewPageRef.current && isFixedScriptPlan(lessonPlanRef.current)
-          ? transitionSentenceIndex(turnNarrationRef.current) : null;
-        if (transitionAnchor !== null) onDebugEvent?.('page_break_anchored', `sentence ${transitionAnchor}: "${(turnNarrationRef.current[transitionAnchor] ?? '').slice(0, 60)}"`);
+          ? transitionSentenceIndex(turnNarrationRef.current.slice(attemptNarrationStartRef.current), { fallbackToFirstAsk: true }) : null;
+        if (transitionAnchor !== null) onDebugEvent?.('page_break_anchored', `sentence ${transitionAnchor}: "${(turnNarrationRef.current[attemptNarrationStartRef.current + transitionAnchor] ?? '').slice(0, 60)}"`);
         if (TUTOR_SEGMENT_CARD_AUTO && !opts?.prefetchOnly && totalSentenceCount > 0) {
           const acPlan = lessonPlanRef.current;
           const acSegId = currentSegmentIdRef.current ?? '';

@@ -449,7 +449,8 @@ export function runChecks(dump) {
   ok('45 §2b: the card question is not asked twice in its part after an answer', reaskedCard.length === 0, reaskedCard.join(' | ').slice(0, 300) + (cardReasks ? ` (${cardReasks} dropped by the engine)` : ''));
   // §3: after a retry ask + reply, the affirming turn cards the student's sentence (any card containing the reply's content)
   const RETRY_ASK = /\b(?:say|try|repeat)\b[^.!?。]*\b(?:again|once more|one more time|(?:the|that|this|your) (?:whole |full |complete )?sentence)\b|もう一度/i;
-  const AFFIRM = /\b(?:correct|right|clear|good|great|exactly|natural|perfect|well done)\b|正しい|ですね/i;
+  const AFFIRM = /\b(?:correct|right|clear|good|great|exactly|natural|(?<!present |past )perfect|well done)\b|正しい|ですね/i;
+  const BUT = /\b(?:but|however|though|although)\b|でも|しかし/i;
   const CORR_CUE = /\b(?:should be|not quite|almost|instead of|we say|let['’]s fix|small fix|one fix|missing)\b/i;
   const CHOICE_Q = /\bis it\s+["“「][^"”」]+["”」]\s+or\s+["“「][^"”」]+["”」]/i;
   const uncardedRetry = [];
@@ -459,7 +460,7 @@ export function runChecks(dump) {
     if (!reply) continue;
     const oneWordPick = CHOICE_Q.test(prevT.text) && content(reply.text).length <= 2;
     if (!(RETRY_ASK.test(prevT.text) || oneWordPick)) continue;
-    if (!AFFIRM.test(tutor[k].text) || CORR_CUE.test(tutor[k].text)) continue;
+    if (!AFFIRM.test(tutor[k].text) || CORR_CUE.test(tutor[k].text) || BUT.test(tutor[k].text)) continue;
     // "on the board" = any sentence card up to 25 s after the affirming turn (an earlier card of the same sentence counts)
     const cards = wb.filter((w) => /showSentence|handwrite/.test(w.action) && w.t <= tutor[k].t + 25).map((w) => String(w.data?.sentence ?? w.data?.text ?? ''));
     if (oneWordPick) {
