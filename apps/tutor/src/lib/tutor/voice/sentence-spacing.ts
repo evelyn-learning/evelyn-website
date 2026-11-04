@@ -205,6 +205,17 @@ const JAPANESE_SCRIPT_RE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han
  *  brackets/quotes) or an English terminator directly before Japanese text. */
 const JAPANESE_BOUNDARY_RE =
   /^([\s\S]+?(?:[。！？][」』）)"”]*|[.!?](?=\s*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}])))(\s*)/u;
+/** B (fix wave 6, p3 654 s "Good, you met Mr." — the ack was cut at the honorific): the typed turn's ONE rule for a
+ *  period that does not end a sentence, judged on the text before it (ending in the period) and the text after.
+ *  Mr. Mrs. Ms. Dr. Prof. St. Jr. Sr. vs. e.g. i.e. etc.; "No." before a digit ("No. 5"); a single capital initial
+ *  before a capitalised word ("J. Smith" — "A. B. C." stays three). Used by the typed sentence splitter
+ *  (typed-turn.ts `sentences`, the budgets) and the typed stream (SentenceBuffer({ typed: true })); prose never. */
+export function typedNonTerminalPeriod(before: string, after: string): boolean {
+  if (/(?:^|[\s("“'‘])(?:Mr|Mrs|Ms|Dr|Prof|St|Jr|Sr|vs|etc|e\.g|i\.e)\.$/i.test(before)) return true;
+  if (/(?:^|[\s("“'‘])No\.$/i.test(before) && /^\s*\d/.test(after)) return true;
+  return /(?:^|[\s("“'‘])[A-Z]\.$/.test(before) && /^\s+[A-Z][a-z]/.test(after);
+}
+
 /** Shortest English sentence the boundary accepts (abbreviations and numbers
  *  are typically shorter; false positives would voice a fragment). */
 export const SENTENCE_MIN_LEN = 25;
@@ -220,12 +231,14 @@ export const SENTENCE_MIN_LEN = 25;
  * Japanese sentence and an English one never share a chunk — only when the
  * buffer holds Japanese script (English-only text splits exactly as before).
  */
-export function matchSentenceBoundary(buf: string): RegExpMatchArray | null {
+export function matchSentenceBoundary(buf: string, opts?: { typed?: boolean }): RegExpMatchArray | null {
   let minLen = SENTENCE_MIN_LEN;
   let m: RegExpMatchArray | null = null;
   while (true) {
     m = buf.match(new RegExp(`^([\\s\\S]{${minLen},}?[.!?])(\\s+)`));
-    if (!m || !ABBREV_TAIL_RE.test(m[1])) break;
+    // B (fix wave 6): the typed turn also holds St. / No. + digit / a single initial (typedNonTerminalPeriod);
+    // without opts.typed the prose boundary is unchanged.
+    if (!m || !(ABBREV_TAIL_RE.test(m[1]) || (opts?.typed && typedNonTerminalPeriod(m[1], buf.slice(m[1].length))))) break;
     minLen = m[1].length + 1;
   }
   if (JAPANESE_SCRIPT_RE.test(buf)) {

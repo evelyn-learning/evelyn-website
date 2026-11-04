@@ -6,6 +6,7 @@
  * budgets and the parser. Design: docs/superpowers/specs/2026-11-04-typed-turn-design.md.
  */
 import { splitSentences } from '@/lib/tutor/question-gist-text';
+import { typedNonTerminalPeriod } from './sentence-spacing';
 
 export type TypedNextKind = 'retry' | 'question' | 'offer' | 'menu' | 'item' | 'move' | 'close' | 'wait';
 export const TYPED_NEXT_KINDS: readonly TypedNextKind[] = ['retry', 'question', 'offer', 'menu', 'item', 'move', 'close', 'wait'];
@@ -125,7 +126,7 @@ FIELDS, in speaking order
 - "ack": a short natural reaction to what the student just said. One sentence at most. "" when nothing fits.
 - "verdict": your judgment of the student's reply as an answer to the open ask. \`correct\`: the reply answers the open ask and is acceptable as said. In a part that teaches a grammar point (\`part\` is bridge, offer_part or plain), a reply with an error in the target grammar, a missing verb, a missing article/plural that changes the form, or a fragment where a sentence was asked is \`partly_correct\` with a correction. In conversation parts small slips may pass as \`correct\`, but an error in the lesson's target grammar is corrected while \`corrections_left\` is above 0. In the level check nothing is corrected. There every real answer is \`correct\` with \`correction\` null, errors or not (a non-answer is still \`none\`). In the recap part a reply that names a sentence, a grammar point or an answer to the check question is \`correct\` or \`partly_correct\`, never \`none\`. A slip you let pass is "correct" with "correction" null; an acceptable answer is never "none". "partly_correct": answered, but with an error you correct (fill "correction"). "incorrect": answered wrongly. \`none\` ONLY when the reply is not an attempt at the open ask: silence, a greeting, 'OK' / 'thank you', 'I don't understand', a request to repeat or slow down, a question to you, an aside, a request to move on, or a reply in Japanese only. A reply that attempts the question in English is never \`none\`, in any part, even when you will not correct it. With "none", leave "verdict_say" empty and "correction" null, and answer what they said through "ack" and "next".
 - "verdict_say": the spoken verdict, at most 2 sentences. "" when verdict is "none".
-- "board": when verdict is \`correct\` and the reply is a complete sentence worth keeping, that sentence in its clean written form (capitalised, punctuated, fillers removed, no transcription slips); \`""\` when the reply is a fragment, a bare yes/no, a menu pick, or when a correction is given. The engine shows \`board\` on the whiteboard exactly as written; it never shows the raw transcript. Not spoken. When \`next.kind\` is \`move\`, leave \`board\` empty — the part is ending and a card placed now is gone in a sentence.
+- "board": when verdict is \`correct\` and the reply is a complete sentence worth keeping, that sentence in its clean written form (capitalised, punctuated, fillers removed, no transcription slips); \`""\` when the reply is a fragment, a bare yes/no, a menu pick, or when a correction is given. The engine shows \`board\` on the whiteboard exactly as written; it never shows the raw transcript. Not spoken. When \`next.kind\` is \`move\` right after the student's answer, judge that answer first (\`verdict\`, \`verdict_say\`, a \`correction\` and \`board\` when it had a slip), then \`next.say\` = one bridge sentence + the new part's opening ask.
 - "correction": only when the student's sentence is wrong. "student" is their sentence verbatim. "corrected" is the full model sentence, not a fragment. "emphasis" lists the words that changed, as they appear in "corrected". "explain" is the reason in at most 2 sentences. Otherwise null.
 - "support_ja": an extra optional slot of Japanese support, at most 2 sentences. "" unless a short Japanese gloss helps this student.
 - "next": what happens next.
@@ -173,8 +174,16 @@ export function typedTurnStateBlock(req: TypedTurnRequest): string {
 
 // splitSentences only breaks Japanese terminators before whitespace + a capital,
 // so 「こんにちは。元気ですか？」 stays one piece; split those here as well.
+// B (fix wave 6): a piece ending in an abbreviation ("Mr.", "Dr.", "J.") is joined to the next (typedNonTerminalPeriod).
 export function sentences(text: string): string[] {
-  return splitSentences(text ?? '').flatMap((s) => s.split(/(?<=[。！？])\s*/)).filter(Boolean);
+  const pieces = splitSentences(text ?? '').flatMap((s) => s.split(/(?<=[。！？])\s*/)).filter(Boolean);
+  const out: string[] = [];
+  for (const p of pieces) {
+    const prev = out[out.length - 1];
+    if (prev !== undefined && typedNonTerminalPeriod(prev, ` ${p}`)) out[out.length - 1] = `${prev} ${p}`;
+    else out.push(p);
+  }
+  return out;
 }
 
 export function sentenceCount(text: string): number {

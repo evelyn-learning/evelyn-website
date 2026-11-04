@@ -424,11 +424,26 @@ test('Z1 (fix wave 5): a retry refused for correction_no_change names the reason
   assert.ok(m.includes('verdict: "correct"') && m.includes('correction: null'), m);
 });
 
-test('Z2 (fix wave 5): a move turn leaves board empty (p2.txt 926 s)', () => {
-  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('When `next.kind` is `move`, leave `board` empty — the part is ending and a card placed now is gone in a sentence.'), 'instruction');
+// B (fix wave 6, p3 654 s) pin moved: Z2's "leave board empty on a move" is REMOVED by the brief — a move right after
+// an answer judges it first (verdict, verdict_say, correction + board) — the fix wave 5 page hold keeps the card up.
+test('B (fix wave 6): a move right after an answer judges it first, then bridges (replaces Z2 "leave board empty")', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes("When `next.kind` is `move` right after the student's answer, judge that answer first (`verdict`, `verdict_say`, a `correction` and `board` when it had a slip), then `next.say` = one bridge sentence + the new part's opening ask."), 'instruction');
+  assert.ok(!TYPED_TURN_INSTRUCTIONS.includes('leave `board` empty'), 'the Z2 sentence is gone');
   const i = TYPED_TURN_INSTRUCTIONS.indexOf('- "board":');
   const j = TYPED_TURN_INSTRUCTIONS.indexOf('- "correction":');
-  assert.ok(i >= 0 && j > i && TYPED_TURN_INSTRUCTIONS.slice(i, j).includes('leave `board` empty'), 'inside the board rule');
+  assert.ok(i >= 0 && j > i && TYPED_TURN_INSTRUCTIONS.slice(i, j).includes('judge that answer first'), 'inside the board rule');
+});
+
+test('B (fix wave 6): Mr. / Dr. / St. / No. 5 / a single initial are not sentence ends on the typed path', () => {
+  assert.equal(sentenceCount('Good, you met Mr. Kenji last month.'), 1);
+  assert.equal(truncateToSentences('Good, you met Mr. Kenji last month.', 1), 'Good, you met Mr. Kenji last month.');
+  assert.equal(sentenceCount('I spoke to Dr. Sato. She agreed.'), 2);
+  for (const t of ['Mrs. Tanaka called.', 'Ms. Ito agreed.', 'Prof. Mori spoke.', 'We met on Main St. Station.', 'Taro Jr. Smith came.', 'Japan vs. Korea was fun.', 'Fruit, e.g. Apples are good.', 'Food, i.e. Rice is fine.', 'TVs, fridges, etc. Many things.', 'Go to No. 5 now.', 'I emailed J. Smith today.']) {
+    assert.equal(sentenceCount(t), 1, t);
+  }
+  assert.equal(sentenceCount('No. That is wrong.'), 2, 'No. before a word ends a sentence');
+  assert.equal(sentenceCount('A. B. C.'), 3, 'bare initials in a row stay separate');
+  assert.equal(englishSentenceCount('Good, you met Mr. Kenji last month. Next, tell me about your work.'), 2);
 });
 
 test('Z1 round 1: leading yes / so / well / okay are dropped before comparing', () => {

@@ -879,6 +879,9 @@ export type BrainStreamEvent =
  */
 export class SentenceBuffer {
   private buf = '';
+  /** B (fix wave 6): the typed turn's buffer also holds St. / No. + digit / a single initial (typedNonTerminalPeriod);
+   *  the prose buffer (no option) splits as before. */
+  constructor(private readonly opts?: { typed?: boolean }) {}
   /** Abbreviation tails whose period must NOT end a sentence (live
    *  2026-07-09: "…, Ms." honorific) — ABBREV_TAIL_RE, applied inside
    *  matchSentenceBoundary (sentence-spacing.ts). */
@@ -919,7 +922,7 @@ export class SentenceBuffer {
       // The boundary rule lives in sentence-spacing.ts (matchSentenceBoundary)
       // so the client's spoken opener script splits exactly as the brain's
       // stream does (Task 14 §A).
-      const m = matchSentenceBoundary(this.buf);
+      const m = matchSentenceBoundary(this.buf, this.opts);
       if (!m) break;
       // Stage-direction leak defense (live 2026-07-30): "(waiting for
       // the student's answer)" must never reach TTS or the transcript.
@@ -3160,7 +3163,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     if (ev.field !== 'next' && ev.field !== 'support_ja' && speech.trim()) typedSpokenNoSupport.push(speech);
     if (!speech.trim()) return;
     // Scrub + boundary only: the prose guards are written for free text.
-    const buf = new SentenceBuffer();
+    const buf = new SentenceBuffer({ typed: true });
     const sentences = buf.push(speech);
     const rest = buf.flush();
     if (rest) sentences.push(rest);

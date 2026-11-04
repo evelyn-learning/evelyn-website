@@ -479,6 +479,22 @@ async function main() {
     });
   }
 
+  await test('B (fix wave 6, p3 654 s): the ack "Good, you met Mr. Kenji last month." streams as ONE sentence, not cut at "Mr."', async () => {
+    const T = { ...TURN, ack: 'Good, you met Mr. Kenji last month.', verdict: 'correct', verdict_say: 'That is right, you spoke with J. Smith at the fair. Good.', correction: null, support_ja: '' };
+    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify(T), 3)]);
+    const said = sentencesOf(r.events);
+    assert.equal(said[0], 'Good, you met Mr. Kenji last month.', said.join(' | '));
+    assert.ok(said.includes('That is right, you spoke with J. Smith at the fair.'), said.join(' | '));
+    assert.ok(said.includes('Good.'), said.join(' | '));
+    assert.equal(turnEv(r.events).turn?.ack, 'Good, you met Mr. Kenji last month.');
+  });
+  await test('B: the prose SentenceBuffer is unchanged (no option) — a single initial still splits there', () => {
+    const b = new brain.SentenceBuffer();
+    assert.deepEqual([...b.push('That is right, you spoke with J. Smith at the fair. '), b.flush()], ['That is right, you spoke with J.', 'Smith at the fair.']);
+    const t = new brain.SentenceBuffer({ typed: true });
+    assert.deepEqual([...t.push('That is right, you spoke with J. Smith at the fair. '), t.flush()], ['That is right, you spoke with J. Smith at the fair.', null]);
+  });
+
   console.log('fallbacks (Task 6)');
   await test('400 output_config.format rejected ⇒ typed-turn-fallback format_rejected, then the prose call with tools', async () => {
     const reject: Script = { events: [], final: { content: [], stop_reason: 'end_turn' }, error: { status: 400, message: 'output_config.format is not supported' } };
