@@ -599,6 +599,15 @@ async function main() {
       assert.ok(said.includes(TURN.verdict_say) && said.includes(TURN.correction.explain) && said.includes(NOOP.next.say), said.join(' | '));
       assert.ok(!r.events.some((e) => e.type === 'typed-correction-no-change'));
     });
+    await test('Z1 round 1: a no-change correction then a cut object ⇒ the fallback is never retry', async () => {
+      const json = JSON.stringify(NOOP);
+      const cut = json.slice(0, json.indexOf('"next"') + 20);
+      const r = await run(zin, [chunkedTextScript(cut, 3, 'max_tokens')]);
+      assert.equal(turnEv(r.events).nextFallback, 'question');
+      const u = await run(zin, [chunkedTextScript(json.replace('"next":{"kind":"retry"', '"next":{"kind":"retry","bogus":') + 'x', 3)]);
+      const t = turnEv(u.events);
+      assert.notEqual(t.nextFallback, 'retry', JSON.stringify(t));
+    });
     await test('Z1: runtime notes in front of the transcript are not the student\'s words (no studentMessage)', async () => {
       const r = await run({ ...baseInput, typedTurn: ztt, studentTranscript: `[correction note: x]\n\n${CANVA}` }, [chunkedTextScript(JSON.stringify({ ...NOOP, next: ASK }), 3)]);
       assert.equal(turnEv(r.events).turn?.verdict, 'correct');

@@ -151,8 +151,13 @@ console.log('\nZ3 (fix wave 5): nested commands are unwrapped for every caller')
   // the live-page shape the brief names: content under `data`, live-only keys beside it
   const live = { action: 'showSentence', data: { sentence: 'I work in sales.', gloss: '私は営業です。' }, id: 'x', page: 2, anchorSentence: 1 };
   const flatLive = normalizePdfCommand(live);
-  check('live-shaped: unwrapped to the flat card, live-only keys dropped',
-    JSON.stringify(flatLive) === JSON.stringify({ sentence: 'I work in sales.', gloss: '私は営業です。', action: 'showSentence' }), JSON.stringify(flatLive));
+  // round 1 pin move: the top-level id is now kept (the exporter dedupes by it); page / anchorSentence still dropped
+  check('live-shaped: unwrapped to the flat card, live-only keys dropped (id kept)',
+    JSON.stringify(flatLive) === JSON.stringify({ sentence: 'I work in sales.', gloss: '私は営業です。', action: 'showSentence', id: 'x' }), JSON.stringify(flatLive));
+  const withId = normalizePdfCommand({ action: 'showSentence', data: { sentence: 'I work in sales.' }, id: 'showSentence-7', page: 2 });
+  check('round 1: a top-level id is kept (the exporter dedupes by id)', (withId as { id?: string }).id === 'showSentence-7' && !('page' in withId), JSON.stringify(withId));
+  const dataId = normalizePdfCommand({ action: 'showSentence', data: { sentence: 'x', id: 'inner' }, id: 'outer' });
+  check('round 1: the top-level id wins over a data id', (dataId as { id?: string }).id === 'outer', JSON.stringify(dataId));
   check('live-shaped: describeWhiteboardCommand gives a sentence line, not "Command: showSentence"',
     describeWhiteboardCommand(live) === 'Sentence', describeWhiteboardCommand(live));
   const block = commandToPdfBlock(live);

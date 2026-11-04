@@ -14,8 +14,8 @@ export interface PdfCommand {
 const FLAT_DATA_CONTENT_KEY: Readonly<Record<string, string>> = { showGraph: 'type' };
 
 /** Z3 (fix wave 5): a command's fields nested under `data` — the DB shape ({action, data, timestamp,
- *  sourceMessageIndex}) and any shape carrying extra live-only keys beside `data` (id, page, anchorSentence …) —
- *  are flattened: `data` is the source of truth, the extra keys are dropped, timestamp / sourceMessageIndex kept.
+ *  sourceMessageIndex}) and any shape carrying extra live-only keys beside `data` (page, anchorSentence …) —
+ *  are flattened: `data` is the source of truth, the extra keys are dropped, id / timestamp / sourceMessageIndex kept.
  *  The former rule unwrapped only when every key was a DB key, so a nested command with one more key reached the
  *  exporter un-flattened ("Command: showSentence", an empty card). No `data` object (already flat): unchanged. */
 export function normalizePdfCommand(rawCmd: PdfCommand): PdfCommand {
@@ -26,6 +26,8 @@ export function normalizePdfCommand(rawCmd: PdfCommand): PdfCommand {
   return {
     ...(cmdData as Record<string, unknown>),
     action: rawCmd.action,
+    // fix round 1: a top-level id is kept (the exporter dedupes and anchors figures by it)
+    ...(rawCmd.id !== undefined && rawCmd.id !== null && rawCmd.id !== '' ? { id: rawCmd.id } : {}),
     ...(rawCmd.timestamp ? { timestamp: rawCmd.timestamp } : {}),
     ...(rawCmd.sourceMessageIndex != null ? { sourceMessageIndex: rawCmd.sourceMessageIndex } : {}),
   };

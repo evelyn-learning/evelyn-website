@@ -431,5 +431,12 @@ test('Z2 (fix wave 5): a move turn leaves board empty (p2.txt 926 s)', () => {
   assert.ok(i >= 0 && j > i && TYPED_TURN_INSTRUCTIONS.slice(i, j).includes('leave `board` empty'), 'inside the board rule');
 });
 
+test('Z1 round 1: leading yes / so / well / okay are dropped before comparing', () => {
+  const c = (corrected: string) => ({ student: '', corrected, emphasis: ['presentations'], explain: 'x' });
+  for (const lead of ['Yes,', 'yes', 'So', 'Well,', 'Okay,', 'OK,']) {
+    assert.equal(correctionChangesNothing(`${lead} I use Canva to prepare presentations.`, c('I use Canva to prepare presentations.')), true, lead);
+  }
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

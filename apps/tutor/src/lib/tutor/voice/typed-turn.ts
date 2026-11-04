@@ -367,7 +367,7 @@ export function isStructuredOutputRejection(err: unknown): boolean {
   return e?.status === 400 && /output_config|output_format|json_schema|\bschema\b|\bformat\b|structured output/i.test(String(e?.message ?? ''));
 }
 
-const CORRECTION_LEADING_FILLERS = new Set(['uh', 'um', 'so', 'yes', 'no', 'well']);
+const CORRECTION_LEADING_FILLERS = new Set(['uh', 'um', 'so', 'yes', 'no', 'well', 'okay', 'ok']);
 const CORRECTION_HESITATIONS = new Set(['uh', 'um', 'er', 'erm', 'ah', 'hmm']);
 /** Words of a sentence: lower-case, punctuation stripped (an inner apostrophe kept), whitespace collapsed. */
 function correctionWords(text: string): string[] {
@@ -378,7 +378,7 @@ function correctionWords(text: string): string[] {
 /**
  * Z1 (fix wave 5, p2.txt 310 s / 501 s): true when a correction changes nothing in what the student said —
  * the brain marked a correct sentence partly_correct and armed a retry of the same sentence.
- * (1) the corrected sentence, normalised, equals the student's words (leading uh/um/so/yes/no/well dropped);
+ * (1) the corrected sentence, normalised, equals the student's words (leading uh/um/so/yes/no/well/okay/ok dropped);
  * (2) the fix is already there: TypedCorrection has no explicit from→to pair, so the pair is read from the words —
  *     every `emphasis` word (the "to") occurs in the student's words at least as often as in the corrected sentence,
  *     the student says nothing the corrected sentence drops (no "from" left; hesitations uh/um aside), and the

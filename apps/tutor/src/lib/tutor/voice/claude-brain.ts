@@ -3332,7 +3332,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     /** Typed: the call ended — cut / unparseable / the one retry, then the whole object. */
     async function* settleTyped(stopReason: string | null | undefined): AsyncGenerator<BrainStreamEvent> {
       if (!typedFinished) yield* finishTypedBlock();
-      const fallbackKind = input.typedTurn!.allowedNext[0];
+      // Z1 round 1: after a dropped no-change correction no fallback is a retry (the first allowed kind that is not one).
+      const fallbackKind = typedCorrectionNoChange
+        ? input.typedTurn!.allowedNext.find((k) => k !== 'retry') ?? input.typedTurn!.allowedNext[0]
+        : input.typedTurn!.allowedNext[0];
       if ((stopReason === 'max_tokens' || stopReason === 'refusal') && !typedReader.complete) {
         // Cut mid-object: what was voiced stands; no second call.
         console.warn(`[typed-turn] object cut (stop=${stopReason}) after ${typedReader.text.length} chars — fallback ${fallbackKind}`);
@@ -3371,7 +3374,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         && !(typedCorrectionNoChange && retryNext.kind === 'retry');
       // Z1: after a no-change correction the fallback is never the retry (the first allowed kind that is not one).
       const retryFallback: TypedNextKind = need.reason === 'move_needs_answer' ? 'question'
-        : need.correctionNoChange ? input.typedTurn!.allowedNext.find((k) => k !== 'retry') ?? fallbackKind : fallbackKind;
+        : fallbackKind;
       console.warn(`[typed-turn] typed_turn_retry reason=${need.reason} result=${legal ? retryNext!.kind : 'fallback ' + retryFallback}`);
       if (legal) yield* emitTypedField({ field: 'next', value: retryNext! }, true);
       else typedNextFallback = retryFallback;
