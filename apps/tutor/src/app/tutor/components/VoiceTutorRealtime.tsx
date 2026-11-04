@@ -14730,8 +14730,10 @@ export function VoiceTutorRealtime({
       const turnMaxTokens = languageTurnMaxTokens({
         languageLesson: sessionAllowsNonLatin(tutorLanguages),
         voice: sessionMode !== 'text',
+        // Task 8 (smoke r51, 244 s: a typed object cut at max_tokens=220): a typed turn is one JSON object whose
+        // `next.say` is never cut — the language cap does not apply (sentence budgets are prompt-stated).
         needsHeadroom: headroom.needsHeadroom,
-        cap: TUTOR_LANGUAGE_TURN_MAX_TOKENS,
+        cap: typedTurnActive ? null : TUTOR_LANGUAGE_TURN_MAX_TOKENS,
       });
       if ((headroom.reason === 'recap' || headroom.reason === 'required-phrases') && sessionAllowsNonLatin(tutorLanguages) && sessionMode !== 'text' && TUTOR_LANGUAGE_TURN_MAX_TOKENS !== null) {
         onDebugEvent?.('output_budget_headroom', headroom.reason);

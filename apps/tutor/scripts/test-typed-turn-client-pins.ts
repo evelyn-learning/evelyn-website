@@ -207,5 +207,11 @@ test('Task 8: a typed set_level plants no level-advance note (the typed move car
   assert.ok(/const typedTurnActive = opts\?\.typedTurn === true;\s*if \(!typedTurnActive\) \{\s*const lvKind = [\s\S]{0,700}fixedScriptLevelAdvanceLead\(lvNext, lvKind\)[\s\S]{0,900}levelAdvanceThisTurnRef\.current = lvNext;\s*levelAdvanceFromThisTurnRef\.current = lvFrom;\s*\} else \{\s*onDebugEvent\?\.\('typed_turn_level_advance'/.test(VTR), 'level-advance FACT note + continuation only off typed');
 });
 
+test('Task 8 smoke fix: the language output cap never applies to a typed turn (the object is never cut)', () => {
+  const at = VTR.indexOf('const turnMaxTokens = languageTurnMaxTokens({');
+  assert.ok(at > 0 && at > VTR.indexOf('let typedTurnActive = TUTOR_TYPED_TURN'), 'typedTurnActive known before the cap');
+  assert.ok(/cap: typedTurnActive \? null : TUTOR_LANGUAGE_TURN_MAX_TOKENS,/.test(VTR.slice(at, at + 600)), 'no cap on typed (cap null = off)');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');
