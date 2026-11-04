@@ -134,6 +134,26 @@ export function itemsLeftFor(ctx: AllowedNextContext): string[] {
   return itemsLeft(ctx);
 }
 
+/** V5 (fix wave 2): learner sentences that refill a pronunciation part, at most this many. */
+export const TYPED_REFILL_MAX = 4;
+const refillKey = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+/** V5: a pronunciation part's items — the authored ones, then the learner's corrected sentences from this session
+ *  (`corrected` newest first; de-duplicated, full sentences only, at most TYPED_REFILL_MAX) — the plan's "when the
+ *  menu's items are used up, take a corrected sentence of the learner's". Pure. */
+export function typedPronunciationItems(authored: readonly string[], corrected: readonly string[]): string[] {
+  const seen = new Set(authored.map(refillKey));
+  const extra: string[] = [];
+  for (const raw of corrected) {
+    const s = (raw ?? '').trim();
+    const full = /^[A-Z]/.test(s) && /[.!?]["”’)]?$/.test(s) && (s.match(/[A-Za-z']+/g) ?? []).length >= 3;
+    if (!full || seen.has(refillKey(s))) continue;
+    seen.add(refillKey(s));
+    extra.push(s);
+    if (extra.length >= TYPED_REFILL_MAX) break;
+  }
+  return [...authored, ...extra];
+}
+
 function itemsLeft(ctx: AllowedNextContext): string[] {
   const done = ctx.state.practisedItems[ctx.segId] ?? [];
   return ctx.items.filter((i) => !done.includes(i));
@@ -167,7 +187,9 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
     const ms = state.menuState[segId] ?? { asked: 0, picked: null };
     if (!ms.picked && !ctx.menuPick) return ms.asked >= 2 ? ['move'] : ['menu'];
     if (kind === 'pronunciation') {
-      if (itemsLeft(ctx).length === 0) return ['offer', 'move'];
+      // V5 (fix wave 2): items used up → the one-more-or-move-on offer first (once), then the move
+      // (the voice run moved straight to the summary after the last authored sentence).
+      if (itemsLeft(ctx).length === 0) return state.offerState[segId]?.made ? ['move'] : ['offer'];
       const row: TypedNextKind[] = ['item', 'retry', 'offer', 'move'];
       // retry = "the same sentence again": only meaningful while an item is the open ask
       return ask === 'item' ? row : row.filter((k) => k !== 'retry');

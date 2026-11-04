@@ -10,7 +10,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
   allowedNextFor, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
-  sayWithinBudget, sharesCardWords, enterPartState, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
+  sayWithinBudget, sharesCardWords, enterPartState, typedPronunciationItems, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
 import { TYPED_TURN_INSTRUCTIONS, type TypedNext, type TypedTurn } from '../src/lib/tutor/voice/typed-turn';
@@ -74,6 +74,24 @@ test('retry chain', () => {
   assert.ok(!allowedNextFor(ctx('open-conversation', { state: { ...ask('retry'), retriesInARow: 0 } })).includes('move'));
 });
 
+test('V5: items exhausted → offer first (once), then move', () => {
+  const ms = { menuState: { pronunciation: { asked: 1, picked: '2' } } };
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: [], state: ms })), ['offer']);
+  const made = { ...ms, offerState: { pronunciation: { made: true, accepted: false, served: false } } };
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: [], state: { ...made, ...ask('offer') } })), ['move']);
+  const accepted = { ...ms, offerState: { pronunciation: { made: true, accepted: true, served: false } } };
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: ['a'], state: { ...accepted, practisedItems: { pronunciation: ['a'] } } })), ['move']);
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('after an item\'s result, work on the weakest word with one more repeat (`retry`) before the next item or the offer'));
+});
+test('V5: typedPronunciationItems — authored items, then the learner\'s corrected sentences (newest first, deduped, max 4, full sentences)', () => {
+  const authored = ['I have worked here for years.', 'I was responsible for sales.'];
+  const corrected = ['They felt happy and donated.', 'I have worked here for years.', 'sales', 'I sell washing machines to customers.', 'They felt happy and donated.', 'We met five clients.', 'I visited Osaka last year.', 'I called the team yesterday.'];
+  assert.deepEqual(typedPronunciationItems(authored, corrected), [
+    ...authored, 'They felt happy and donated.', 'I sell washing machines to customers.', 'We met five clients.', 'I visited Osaka last year.',
+  ]);
+  assert.deepEqual(typedPronunciationItems(authored, []), authored);
+  assert.deepEqual(typedPronunciationItems([], ['no capital here.', 'Two words.', 'Fine sentence without stop']), []);
+});
 test('menu / pronunciation', () => {
   const ms = (asked: number, picked: string | null) => ({ menuState: { pronunciation: { asked, picked } } });
   assert.deepEqual(allowedNextFor(ctx('pronunciation', { state: ms(0, null) })), ['menu']);
@@ -82,7 +100,7 @@ test('menu / pronunciation', () => {
   const some = allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), ...ask('item'), practisedItems: { pronunciation: ['a'] } } }));
   assert.deepEqual(sorted(some), ['item', 'move', 'offer', 'retry']);
   assert.ok(!allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), ...ask('none'), practisedItems: { pronunciation: ['a'] } } })).includes('retry'));
-  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), practisedItems: { pronunciation: ['a', 'b'] } } })), ['offer', 'move']);
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), practisedItems: { pronunciation: ['a', 'b'] } } })), ['offer']);
   for (const k of ['question', 'offer', 'menu', 'retry'] as const) {
     assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), ...ask(k), practisedItems: { pronunciation: ['a'] } } })), ['item', 'offer', 'move'], k);
   }
@@ -370,7 +388,7 @@ test('H1: a resolved menu pick persists, so the menu is never re-asked after an 
   assert.ok(!a2.includes('menu') && a2.includes('item'));
   assert.ok(turnStateLine(c2).includes('menu_picked="a complete sentence"'));
   const s2 = applyTypedTurn(s1, { ...turn, next: { ...turn.next, item: sentences[1] } }, fctx('pronunciation', { items: sentences, state: s1 }), null);
-  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: sentences, state: s2 })), ['offer', 'move']);
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: sentences, state: s2 })), ['offer']);
   // no pick this turn -> picked stays null
   const s3 = applyTypedTurn(createTypedTurnState(), { ...turn, next: { kind: 'menu', say: 'x', item: '', level: '' } }, fctx('pronunciation', { items: sentences }), null);
   assert.equal(s3.menuState.pronunciation.picked, null);

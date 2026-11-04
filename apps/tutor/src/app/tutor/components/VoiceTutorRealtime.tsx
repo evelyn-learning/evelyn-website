@@ -454,7 +454,7 @@ import { retryAskTurn } from '@/lib/tutor/voice/sentence-board';
 import { TUTOR_TYPED_TURN } from '@/lib/tutor/orchestrator/flags';
 import { correctionEmphasis } from '@/lib/tutor/voice/sentence-board';
 import { sentenceCount, englishSentenceCount, type TypedTurnRequest, type TypedTurn, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind } from '@/lib/tutor/voice/typed-turn';
-import { createTypedTurnState, typedTurnRequestFor, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
+import { createTypedTurnState, typedTurnRequestFor, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, typedPronunciationItems, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
 import { isIdleNudgeDirective } from '@/lib/tutor/voice/idle-nudge';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
 
@@ -1648,6 +1648,9 @@ export function VoiceTutorRealtime({
   const pronunciationPractisedRef = useRef<Map<string, string[]>>(new Map());
   /** Typed turn (Task 7): the lesson state the engine keeps because it spoke it (typed-turn-rules.ts). Reset per plan. */
   const typedTurnStateRef = useRef<TypedTurnState>(createTypedTurnState());
+  /** V5 (fix wave 2): the learner's corrected sentences of this lesson (typed correction cards), newest first —
+   *  they refill the pronunciation part's items after the authored ones. Typed path only. */
+  const typedCorrectedSentencesRef = useRef<string[]>([]);
   const armPronunciationCheck = (referenceText: string, kind: string) => {
     const capture = clipCaptureRef.current;
     if (!capture) return;
@@ -12378,6 +12381,7 @@ export function VoiceTutorRealtime({
     servedProblemStatementsRef.current = new Set();
     // Typed turn (Task 7): the typed lesson state is plan-scoped.
     typedTurnStateRef.current = createTypedTurnState();
+    typedCorrectedSentencesRef.current = [];
     // realtime-2: a new plan must be re-injected into the RT-2 session.
     lessonPlanV2InjectedRef.current = false;
     planLoadSettledIdRef.current = null;
@@ -15115,7 +15119,9 @@ export function VoiceTutorRealtime({
         const typedItemsFor = (segId: string): readonly string[] => {
           const md = (lessonPlanRef.current?.segments.find((sg) => sg.id === segId)?.metadata ?? {}) as { pronunciation?: { sentences?: unknown } };
           const sentences = md.pronunciation?.sentences;
-          return Array.isArray(sentences) ? sentences.filter((x): x is string => typeof x === 'string' && x.trim().length > 0) : [];
+          const authored = Array.isArray(sentences) ? sentences.filter((x): x is string => typeof x === 'string' && x.trim().length > 0) : [];
+          // V5: then the learner's corrected sentences of this lesson (the plan: "when the menu's items are used up, take a corrected sentence of the learner's").
+          return md.pronunciation ? typedPronunciationItems(authored, typedCorrectedSentencesRef.current) : authored;
         };
         // W1: set by buildAllowedNextContext (once per attempt, before the brain call); read by buildFieldEffectContext.
         let typedBudgetDueThisTurn = false;
@@ -15227,6 +15233,8 @@ export function VoiceTutorRealtime({
                 break;
               }
               case 'correction_card': {
+                // V5: remembered (newest first) for the pronunciation refill.
+                if (e.corrected.trim()) typedCorrectedSentencesRef.current = [e.corrected.trim(), ...typedCorrectedSentencesRef.current.filter((x) => x !== e.corrected.trim())].slice(0, 12);
                 // emphasis from the field; emphasisAt = the word positions the SentenceCard marks.
                 const emph = correctionEmphasis(e.corrected, e.emphasis);
                 const cmd = {
