@@ -326,5 +326,22 @@ test('W7: every spoken turn carries an English sentence; Japanese supports, neve
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('Every turn you speak contains at least one English sentence (in `verdict_say` or `next.say`); Japanese supports, it never replaces.'));
 });
 
+test('V2: verdict semantics per part kind + the conversation corrections budget', () => {
+  const I = TYPED_TURN_INSTRUCTIONS;
+  assert.ok(I.includes('`correct`: the reply answers the open ask and is acceptable as said.'), 'correct defined');
+  assert.ok(I.includes('In a part that teaches a grammar point (`part` is bridge, offer_part or plain), a reply with an error in the target grammar, a missing verb, a missing article/plural that changes the form, or a fragment where a sentence was asked is `partly_correct` with a correction.'), 'grammar-part rule');
+  assert.ok(I.includes('In conversation parts small slips may pass as `correct`, but an error in the lesson\'s target grammar is corrected while `corrections_left` is above 0.'), 'conversation rule');
+  assert.ok(I.includes('In the level check nothing is corrected.'), 'level check');
+  assert.ok(!/In conversation and level-check parts an acceptable answer/.test(I), 'the old Ruling-9 sentence is gone');
+  assert.ok(/corrections_left \(conversation parts only\)/.test(I), 'glossary entry');
+  // the correct EXAMPLE sits in a conversation part with a non-target slip; a grammar-part EXAMPLE shows partly_correct + retry
+  const exHeads = I.split('\n').filter((l) => l.startsWith('EXAMPLE'));
+  assert.ok(exHeads.some((h) => /verdict correct/.test(h) && /conversation part/.test(h) && /not the target grammar/.test(h)), exHeads.join('\n'));
+  const grammarAt = I.split('\n').findIndex((l) => l.startsWith('EXAMPLE') && /grammar part/.test(l));
+  assert.ok(grammarAt >= 0, 'grammar-part example');
+  const g = parseTypedTurn(I.split('\n')[grammarAt + 1]);
+  assert.ok(g && g.verdict === 'partly_correct' && g.correction && g.next.kind === 'retry' && g.board === '', 'partly_correct + correction + retry');
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

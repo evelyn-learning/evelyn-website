@@ -53,6 +53,8 @@ export interface TypedTurnState {
   turnsInPart: Record<string, number>;
   /** W1: typed turns answered in a part while its budget was due (the prose post-due hold count). */
   postDueTurns: Record<string, number>;
+  /** V2 (fix wave 2): corrections given per part (keyed by the FROM part); the conversation budget is advisory. */
+  correctionsInPart: Record<string, number>;
   retriesInARow: number;
   pendingVerdict: TypedVerdict | null;
 }
@@ -68,10 +70,14 @@ export function createTypedTurnState(): TypedTurnState {
     lastItemAnnounced: {},
     turnsInPart: {},
     postDueTurns: {},
+    correctionsInPart: {},
     retriesInARow: 0,
     pendingVerdict: null,
   };
 }
+
+/** V2: corrections a conversation part allows (advisory for the brain; the engine does not refuse a third). */
+export const TYPED_CONVERSATION_CORRECTIONS = 2;
 
 export interface AllowedNextContext {
   plan: LessonPlan; segId: string; levelKnown: boolean; state: TypedTurnState;
@@ -216,6 +222,9 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     ...(ctx.budgetDue && ((state.postDueTurns?.[segId] ?? 0) + 1 >= FIXED_SCRIPT_POST_DUE_MAX_HOLDS || postDueState(ctx) === 'deadline')
       ? [['last_turn', 'yes'] as [string, string]] : []),
     ['correction_open', yn(!!state.correctionOpen)],
+    // V2: the conversation part's corrections budget (2 per part)
+    ...(typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'conversation'
+      ? [['corrections_left', String(Math.max(0, TYPED_CONVERSATION_CORRECTIONS - (state.correctionsInPart?.[segId] ?? 0)))] as [string, string]] : []),
     ['level_known', yn(ctx.levelKnown)],
   ];
   // G2: the card questions the student already answered on this part (the brain re-asked one in r55).
@@ -375,6 +384,9 @@ export function applyTypedTurn(
   if (ctx.budgetDue) postDueTurns[seg] = (postDueTurns[seg] ?? 0) + 1;
   if (moved) postDueTurns[moved.to] = 0;
 
+  const correctionsInPart = { ...(state.correctionsInPart ?? {}) };
+  if (turn.correction) correctionsInPart[seg] = (correctionsInPart[seg] ?? 0) + 1;
+
   const answeredCards = { ...state.answeredCards };
   if ((turn.verdict === 'correct' || turn.verdict === 'partly_correct') && state.openAsk.cardQuestion) {
     const key = moved?.from ?? seg;
@@ -414,7 +426,7 @@ export function applyTypedTurn(
     openAsk,
     correctionOpen: turn.correction ? { student: turn.correction.student, corrected: turn.correction.corrected }
       : turn.verdict === 'correct' ? null : state.correctionOpen,
-    practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart, postDueTurns,
+    practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart, postDueTurns, correctionsInPart,
     retriesInARow: next.kind === 'retry' ? state.retriesInARow + 1 : 0,
     pendingVerdict: null,
   };

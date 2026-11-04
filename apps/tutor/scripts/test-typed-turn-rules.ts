@@ -461,5 +461,30 @@ test('W6: itemsLeftFor = items minus practised; items_left and the request carry
   assert.equal(typedTurnRequestFor(ctx('past-simple')).itemsLeft, undefined, 'absent on a part without items');
 });
 
+// ---- Fix wave 2 V2: the conversation corrections budget ----
+test('V2: correctionsInPart counts corrections in the FROM part; a move does not reset it', () => {
+  const corr = { student: 'they feel happy and they donate', corrected: 'They felt happy and they donated.', emphasis: ['felt', 'donated'], explain: 'Past.' };
+  const t = (correction: typeof corr | null, kind: 'question' | 'move' = 'question') => ({ ack: '', verdict: (correction ? 'partly_correct' : 'correct') as 'partly_correct' | 'correct', verdict_say: 'x', board: '', correction, support_ja: '', next: { kind, say: 'Next?', item: '', level: '' as const } });
+  assert.deepEqual(createTypedTurnState().correctionsInPart, {});
+  const s1 = applyTypedTurn(createTypedTurnState(), t(corr), fctx('open-conversation'), null);
+  assert.equal(s1.correctionsInPart['open-conversation'], 1);
+  const s2 = applyTypedTurn(s1, t(null), fctx('open-conversation', { state: s1 }), null);
+  assert.equal(s2.correctionsInPart['open-conversation'], 1, 'no correction: unchanged');
+  const s3 = applyTypedTurn(s2, t(corr, 'move'), fctx('open-conversation', { state: s2 }), { from: 'open-conversation', to: 'pronunciation' });
+  assert.equal(s3.correctionsInPart['open-conversation'], 2, 'counted in the part it was given in');
+  assert.equal(s3.correctionsInPart.pronunciation, undefined);
+});
+test('V2: turnStateLine corrections_left on conversation parts only (2 − used, floor 0)', () => {
+  const oc = turnStateLine(ctx('open-conversation', { state: ask('question') }));
+  assert.ok(oc.includes('corrections_left="2"'), oc);
+  assert.ok(turnStateLine(ctx('open-conversation', { state: { ...ask('question'), correctionsInPart: { 'open-conversation': 1 } } })).includes('corrections_left="1"'));
+  assert.ok(turnStateLine(ctx('open-conversation', { state: { ...ask('question'), correctionsInPart: { 'open-conversation': 5 } } })).includes('corrections_left="0"'));
+  const pp = turnStateLine(ctx('present-perfect', { state: ask('question') }));
+  assert.ok(!pp.includes('corrections_left'), pp);
+  assert.ok(!turnStateLine(ctx('level-check')).includes('corrections_left'));
+  // advisory only: a third correction is not refused by the allowed set
+  assert.deepEqual(sorted(allowedNextFor(ctx('open-conversation', { state: { ...ask('question'), correctionsInPart: { 'open-conversation': 2 } } }))), ['question', 'retry']);
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');
