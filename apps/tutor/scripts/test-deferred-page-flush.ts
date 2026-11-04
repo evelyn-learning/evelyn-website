@@ -382,7 +382,7 @@ ok('emptyPageIndexes: pointer-only page is empty',
   // §6: with the break anchored, a correction card goes BEFORE the break (on the old page) again
   assert.match(vtr, /kind: \(TUTOR_CORRECTION_CARD_ON_NEW_PAGE && transitionAnchor === null && card\.kind === 'correction' \? 'correction' :/);
   assert.match(vtr, /\$\{opts\?\.pageBreakOnTransition \? ` \(on the transition sentence \$\{opts\.anchorSentence\}\)` : ''\}/);
-  assert.match(vtr, /if \(TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan\(lessonPlanRef\.current\)\) \{\s*const tsIdx = transitionSentenceIndex\(turnNarrationRef\.current\.slice\(attemptNarrationStartRef\.current\), \{ fallbackToFirstAsk: true \}\);\s*if \(tsIdx !== null && ttsPlaybackStartedCountRef\.current <= tsIdx\) \{/);
+  assert.match(vtr, /if \(deferred && TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan\(lessonPlanRef\.current\)\) \{\s*const tsIdx = transitionSentenceIndex\(turnNarrationRef\.current\.slice\(attemptNarrationStartRef\.current\), \{ fallbackToFirstAsk: true \}\);\s*if \(tsIdx !== null && ttsPlaybackStartedCountRef\.current <= tsIdx\) \{/);
   n += 12;
 }
 

@@ -6387,7 +6387,7 @@ export function VoiceTutorRealtime({
     // Task 45 §4: with the validator TTS hold the brain goes idle before the
     // audio starts — the page would flip ahead of the whole turn. A turn that
     // says the move leaves the break to its anchored batch (or to audio drained).
-    if (TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan(lessonPlanRef.current)) {
+    if (deferred && TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan(lessonPlanRef.current)) {
       const tsIdx = transitionSentenceIndex(turnNarrationRef.current.slice(attemptNarrationStartRef.current), { fallbackToFirstAsk: true });
       if (tsIdx !== null && ttsPlaybackStartedCountRef.current <= tsIdx) {
         onDebugEvent?.('auto_newpage_on_advance_flush_waits', `transition sentence ${tsIdx} not yet spoken (${why})`);
