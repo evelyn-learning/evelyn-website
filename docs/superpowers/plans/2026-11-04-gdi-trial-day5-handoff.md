@@ -35,9 +35,10 @@ curl -s -o /dev/null -w '%{http_code}\n' http://localhost:3019/tutor-portal/embe
 # fresh new-learner link for Praveen (secret file; writes the links file; the 'praveen' row is his)
 cd $W && PARTNER_SECRET="$(cat ~/.evelyn/partners/gdi-demo.secret)" node docs/whitelabel/gdi/demo/mint-demo-links.js trial --local > ~/.evelyn/partners/gdi-trial.links.local.txt
 awk -F'\t' '$1=="praveen"{print $2}' ~/.evelyn/partners/gdi-trial.links.local.txt
-# dump a session (prod tunnel :2710, READ ONLY) — by sessionId or by studentId (latest)
+# dump a session (prod tunnel :2710, READ ONLY) — set ONE of SID / STU, the sed writes the query
+SID=""; STU="gdi-trial-bot-r50"
 cat > $S/dump.js <<'JS'
-const q = process.env.SID ? {sessionId: process.env.SID} : {studentId: process.env.STU};
+const q = __QUERY__;
 const d = db.tutorsessions.find(q).sort({createdAt:-1}).limit(1).toArray()[0]; if (!d) { print("NOT FOUND"); quit(1); }
 const t0 = new Date(d.createdAt || d.startedAt).getTime(); const rel = (ts) => ts ? (Math.round((new Date(ts).getTime()-t0)/1000)+"s").padStart(6) : "     ?";
 print(JSON.stringify({sessionId:d.sessionId, studentId:d.studentId, createdAt:d.createdAt, endedAt:d.endedAt, turns:(d.transcript||[]).length, events:(d.debugEvents||[]).length, wb:(d.whiteboardCommands||[]).length, lp:d.lessonProgress}));
@@ -45,7 +46,8 @@ print("=== TRANSCRIPT"); (d.transcript||[]).forEach((t,i)=>print(`${rel(t.timest
 print("=== WHITEBOARD"); (d.whiteboardCommands||[]).forEach((w,i)=>print(`${rel(w.timestamp)} ${String(i).padStart(3)} ${JSON.stringify(w).slice(0,3000)}`));
 print("=== EVENTS"); (d.debugEvents||[]).forEach((e)=>print(`${rel(e.timestamp)} ${e.type}: ${String(e.message).slice(0,600)}`));
 JS
-STU=gdi-trial-bot-r50 mongosh --quiet --eval "process={env:{STU:'gdi-trial-bot-r50'}}" mongodb://127.0.0.1:2710/evelyn --file $S/dump.js > $S/r50.txt   # (mongosh has no process.env: edit the query line instead if needed)
+if [ -n "$SID" ]; then sed -i '' "s/__QUERY__/{sessionId:\"$SID\"}/" $S/dump.js; else sed -i '' "s/__QUERY__/{studentId:\"$STU\"}/" $S/dump.js; fi
+mongosh --quiet mongodb://127.0.0.1:2710/evelyn --file $S/dump.js > $S/r50.txt
 # harness checks on a dump
 cd $W/apps/tutor && node -e "import('./scripts/trial-text-session-checks.mjs').then(m=>{const r=m.runChecks(require('fs').readFileSync('$S/r50.txt','utf8'));console.log(r.lines.filter(l=>/^(FAIL|WARN)/.test(l)).join('\n'));console.log('PASS',r.passes,'FAIL',r.fails,'WARN',r.warns)})"
 # bot run (≈ $3, 20–25 min; variants straight | wild | pron | base | errors | impatient | lost | beginner | polite | quiet)
