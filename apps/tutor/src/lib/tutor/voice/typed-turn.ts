@@ -158,3 +158,132 @@ export function parseTypedTurn(json: string): TypedTurn | null {
     next: { kind: n.kind, say: n.say, item: n.item, level: n.level },
   };
 }
+
+// ---- Incremental field reader (streamed JSON) ----
+
+export type TypedFieldValue =
+  | { field: 'ack' | 'verdict_say' | 'support_ja'; value: string }
+  | { field: 'verdict'; value: TypedVerdict }
+  | { field: 'correction'; value: TypedCorrection | null }
+  | { field: 'next'; value: TypedNext };
+
+/** Loose per-field validation of a closed top-level value; undefined = reject (ignored). */
+function coerceField(field: TypedField, v: any): TypedFieldValue | undefined {
+  switch (field) {
+    case 'ack': case 'verdict_say': case 'support_ja':
+      return isStr(v) ? { field, value: v } : undefined;
+    case 'verdict':
+      return VERDICTS.includes(v) ? { field, value: v } : undefined;
+    case 'correction':
+      if (v === null) return { field, value: null };
+      if (!v || typeof v !== 'object' || !isStr(v.student) || !isStr(v.corrected) || !isStr(v.explain)) return undefined;
+      return { field, value: { student: v.student, corrected: v.corrected, explain: v.explain,
+        emphasis: Array.isArray(v.emphasis) ? v.emphasis.filter(isStr) : [] } };
+    case 'next':
+      if (!v || typeof v !== 'object' || !isStr(v.say) || !TYPED_NEXT_KINDS.includes(v.kind)) return undefined;
+      return { field, value: { kind: v.kind, say: v.say, item: isStr(v.item) ? v.item : '',
+        level: LEVELS.includes(v.level) ? v.level : '' } };
+  }
+}
+
+/** Tokenizes the streamed object and reports each top-level field the moment its value closes. */
+export class TypedTurnReader {
+  readonly closed: Partial<Record<TypedField, TypedFieldValue>> = {};
+  complete = false;
+  text = '';
+  private pos = 0;
+  private depth = 0;
+  private inStr = false;
+  private esc = false;
+  private strStart = 0;
+  private strIsKey = false;
+  private key: string | null = null;
+  private valueStart = -1;
+
+  push(delta: string): TypedFieldValue[] {
+    this.text += delta;
+    const out: TypedFieldValue[] = [];
+    const t = this.text;
+    for (; this.pos < t.length; this.pos++) {
+      const c = t[this.pos];
+      if (this.complete) break;
+      if (this.inStr) {
+        if (this.esc) { this.esc = false; continue; }
+        if (c === '\\') { this.esc = true; continue; }
+        if (c !== '"') continue;
+        this.inStr = false;
+        if (this.depth !== 1) continue;
+        if (this.strIsKey) {
+          try { this.key = JSON.parse(t.slice(this.strStart, this.pos + 1)); } catch { this.key = ''; }
+        } else {
+          this.closeValue(this.pos + 1, out);
+        }
+        continue;
+      }
+      if (c === '"') {
+        this.inStr = true; this.strStart = this.pos;
+        if (this.depth === 1) {
+          this.strIsKey = this.key === null;
+          if (!this.strIsKey) this.valueStart = this.pos;
+        }
+      } else if (c === '{' || c === '[') {
+        this.depth++;
+        if (this.depth === 2 && this.key !== null) this.valueStart = this.pos;
+      } else if (c === '}' || c === ']') {
+        this.depth--;
+        if (this.depth === 1) this.closeValue(this.pos + 1, out);
+        else if (this.depth === 0) {
+          if (this.valueStart >= 0) this.closeValue(this.pos, out);
+          this.complete = true;
+        }
+      } else if (c === ',') {
+        if (this.depth === 1 && this.valueStart >= 0) this.closeValue(this.pos, out);
+        else if (this.depth === 1) this.key = null;
+      } else if (this.depth === 1 && this.key !== null && this.valueStart < 0 && !/\s|:/.test(c)) {
+        this.valueStart = this.pos; // literal: null / true / false / number
+      }
+    }
+    return out;
+  }
+
+  private closeValue(end: number, out: TypedFieldValue[]): void {
+    const key = this.key;
+    const raw = this.text.slice(this.valueStart, end).trim();
+    this.key = null; this.valueStart = -1;
+    if (key === null || !TYPED_FIELD_ORDER.includes(key as TypedField)) return;
+    const field = key as TypedField;
+    if (this.closed[field]) return;
+    let v: unknown;
+    try { v = JSON.parse(raw); } catch { return; }
+    const ev = coerceField(field, v);
+    if (!ev) return;
+    (this.closed as Record<string, TypedFieldValue>)[field] = ev;
+    out.push(ev);
+  }
+}
+
+/** Reorders closure-order events into TYPED_FIELD_ORDER: a field is released only once every earlier one has been. */
+export class OrderedFieldEmitter {
+  private held: Partial<Record<TypedField, TypedFieldValue>> = {};
+  private nextIdx = 0;
+
+  push(ev: TypedFieldValue): TypedFieldValue[] {
+    this.held[ev.field] = ev;
+    const out: TypedFieldValue[] = [];
+    while (this.nextIdx < TYPED_FIELD_ORDER.length) {
+      const f = TYPED_FIELD_ORDER[this.nextIdx];
+      const h = this.held[f];
+      if (!h) break;
+      out.push(h); delete this.held[f]; this.nextIdx++;
+    }
+    return out;
+  }
+
+  /** Whatever is still held, in order (used on truncation). */
+  flush(): TypedFieldValue[] {
+    const out = TYPED_FIELD_ORDER.map(f => this.held[f]).filter((x): x is TypedFieldValue => !!x);
+    this.held = {};
+    this.nextIdx = TYPED_FIELD_ORDER.length;
+    return out;
+  }
+}
