@@ -2,6 +2,20 @@
 
 > **READ THIS FIRST**, then the ledger (`<worktree>/.superpowers/sdd/2026-10-28-gdi-trial-lesson/progress.md`), then the design doc. Do not re-run Tasks 31–46 (complete, see the ledger).
 
+## ★ OVERNIGHT 11-04 — TYPED TURN BUILT (DRAFT block, finalized when the bot series ends; read this before §0)
+
+**Where things stand (as of ~10:05Z):** the typed turn is built on `gdi-trial-lesson` behind the opt-in flag `TUTOR_TYPED_TURN` (`NEXT_PUBLIC_TUTOR_TYPED_TURN=on`; OFF by default, prose path byte-identical when off). Plan `docs/superpowers/plans/2026-11-04-typed-turn.md`, Tasks 1–8 complete + reviewed, Task 9 (harness + bot series) in progress; HEAD see `git log -1` (e7b7858a at draft time), NOT pushed, NOT deployed (:3009 still 58765b31). Ledger: `.superpowers/sdd/2026-11-04-typed-turn/progress.md`; run log: `…/task-9-runs.md`; dumps in the session scratchpad `…/d660ae27-…/scratchpad/bot/`.
+
+**What the typed turn is, in one paragraph:** on a fixed-script plan the client sends `typedTurn {state, allowedNext, recap}`; the server asks Haiku for one JSON object (`ack / verdict / verdict_say / correction / support_ja / next{kind,say,item,level}`) via structured output with no tools, streams each field as it closes (`typed-field` events) and its sentences in composition order, refuses an illegal `next.kind` or an over-budget `next.say` with ONE server-side retry (splice: only `next` is taken), and the client composes speech, places cards from fields, turns the page on the move sentence and keeps state (`typedTurnStateRef`) from what it spoke. Prose validators, kills, holds, heuristic inferences and engine lines all stand down on a typed attempt. Debug events `typed_turn*`; harness block 10m (TT1–TT9).
+
+**Bot series so far (dev :3019, flag on in the PROCESS env, never in .env.local):** r51 smokes → r52 straight (TT clean; found: move into the menu part blind to the next card; 7 retries) → engine fix 1 → r55 straight (dup sentence across fields; answered card re-asked; menu unnumbered) → engine fix 2 → **r56 straight CLEAN (0 retries)** → r57 wild running → r58 pron next. Spend ≈ $12 of the $100 ceiling; pool reset authorized.
+
+**Decisions I made on your behalf (check these):** (1) the illegal-`next` retry is a second SDK call inside `streamBrainTurn`, not a client re-POST (you approved at 04:1xZ); (2) the `next.say` budget counts ENGLISH sentences only — Japanese exempt (spec §4.1 deviation); menu/recap budget 5; (3) `turn_state` carries `next_part`/`next_card` when a move is allowed and `answered="…"` for answered cards; (4) all per-sentence drop filters stand down on typed except label-stripping and the katakana hygiene drop; (5) the client never invents a `next` — on a cut/unparseable object with no `next` it stays quiet and the idle nudge takes over; (6) runtime notes keep planting (advisory), kills never fire on typed.
+
+**Observed trade-offs to decide on:** first audio ≈ 1.3 s median vs ≈ 1.0 s on prose (the JSON prefix + ack field); the straight bot's repeat-answer loop (tutor re-asks the same question up to 6×) is the prose-era "neither streak → move on" mechanism the typed path dropped — a `same_answer_streak` attribute is the typed-era fix, not built; menus are sometimes read without numbers (WARN TT9, pick still resolves).
+
+**Your morning:** (a) fresh new-learner link — mint per §3 (I will leave one in the final version of this block); (b) voice run on :3019 (flag on there) — the typed path is in text AND voice; (c) say "deploy" only for the Task 46 build to :3009 for Josh (Friday) — the typed turn ships to :3009 only after your run + Task 10 (default ON).
+
 ## 0. Praveen's instruction for this session
 
 "Budget Approved. Lets work on this in a fresh session." — **"this" = the typed turn**, design at
