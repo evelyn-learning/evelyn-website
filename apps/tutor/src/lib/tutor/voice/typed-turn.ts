@@ -295,3 +295,44 @@ export class OrderedFieldEmitter {
     return out;
   }
 }
+
+/**
+ * Is this error the endpoint refusing the STRUCTURED-OUTPUT parameter?
+ * Only a 400 whose message names it (output_config / format / schema). The
+ * first version treated ANY 400 this way — an over-long prompt or a malformed
+ * request silently switched the grader to prompt-only JSON.
+ */
+export function isStructuredOutputRejection(err: unknown): boolean {
+  const e = err as { status?: number; message?: string } | null;
+  return e?.status === 400 && /output_config|output_format|json_schema|\bschema\b|\bformat\b|structured output/i.test(String(e?.message ?? ''));
+}
+
+export type TypedRetryReason = 'illegal_kind' | 'say_over_budget';
+
+/**
+ * The one regeneration request for a refused `next` (spec §4.2, §4.8 "splice"):
+ * the first object's spoken fields stand, only `next` is read from the reply.
+ */
+export function typedTurnRetryMessage(input: {
+  reason: TypedRetryReason;
+  refused: TypedNext;
+  allowedNext: TypedNextKind[];
+  alreadySaid: Pick<TypedTurn, 'ack' | 'verdict' | 'verdict_say' | 'correction' | 'support_ja'>;
+  budget: number;
+}): string {
+  const { reason, refused, allowedNext, alreadySaid, budget } = input;
+  const why = reason === 'illegal_kind'
+    ? `Your "next" was refused "${refused.kind}": that kind is not allowed on this turn (allowed: ${allowedNext.join(', ')}). Choose next.kind from the allowed set only.`
+    : `Your "next" was refused "${refused.kind}" because next.say ran to ${sentenceCount(refused.say)} sentences. next.say is at most ${budget} sentences. Keep next.kind within the allowed set (allowed: ${allowedNext.join(', ')}).`;
+  const said = [
+    `ack: ${JSON.stringify(alreadySaid.ack)}`,
+    `verdict: ${JSON.stringify(alreadySaid.verdict)}`,
+    `verdict_say: ${JSON.stringify(alreadySaid.verdict_say)}`,
+    `correction: ${JSON.stringify(alreadySaid.correction)}`,
+    `support_ja: ${JSON.stringify(alreadySaid.support_ja)}`,
+  ].join('\n');
+  return `[typed turn retry — not from the student]\n${why}\n\n` +
+    `These fields were ALREADY SPOKEN to the student. Return them unchanged:\n${said}\n\n` +
+    `Only "next" is read from this reply. Reply with the whole JSON object again, with a new "next" ` +
+    `that does not repeat what was already said.`;
+}

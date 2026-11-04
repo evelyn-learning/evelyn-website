@@ -19,7 +19,7 @@ delete process.env.TUTOR_TEXT_THINKING_EFFORT;
 
 type Req = Record<string, unknown> & { messages: Array<{ role: string; content: unknown }> };
 type Ev = Record<string, unknown>;
-interface Script { events: Ev[]; final: { content: unknown[]; stop_reason: string } }
+interface Script { events: Ev[]; final: { content: unknown[]; stop_reason: string }; /** Rejects the first read (an HTTP error before any event). */ error?: unknown }
 
 const usage = { input_tokens: 10, output_tokens: 20, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
 
@@ -78,6 +78,7 @@ async function main() {
         let i = 0;
         return {
           async next() {
+            if (script.error) throw script.error;
             if (i >= script.events.length) return { done: true as const, value: undefined };
             return { done: false as const, value: script.events[i++] };
           },
@@ -182,21 +183,165 @@ async function main() {
     assert.equal(firstSentence.text, 'Good try.');
     assert.deepEqual(seq(r.events), EXPECTED);
   });
-  await test("illegal next.kind 'offer' ⇒ no next field/sentences, typed-turn.nextFallback = allowedNext[0]", async () => {
-    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: { kind: 'offer', say: 'One more, or shall we move on?', item: '', level: '' } }), 3)]);
-    assert.deepEqual(seq(r.events), EXPECTED.filter((x, i) => !(x === 'typed-field next' || (i === 10))));
-    assert.ok(!r.events.some((e) => e.type === 'sentence' && String(e.text).includes('move on')));
-    const t = r.events.find((e) => e.type === 'typed-turn') as { nextFallback?: string };
-    assert.equal(t.nextFallback, 'retry');
+  console.log('retry (Task 6)');
+  const OFFER = { kind: 'offer', say: 'One more, or shall we move on?', item: '', level: '' };
+  const RETRY_NEXT = { kind: 'question', say: 'What did you do last weekend?', item: '', level: '' };
+  type TT = { turn: { next: { kind: string; say: string; item: string; level: string } } | null; retries: number; nextFallback?: string; retryReason?: string; retryDisagreed?: boolean };
+  const turnEv = (events: Array<Record<string, unknown>>) => events.find((e) => e.type === 'typed-turn') as unknown as TT;
+  const sentencesOf = (events: Array<Record<string, unknown>>) => events.filter((e) => e.type === 'sentence').map((e) => String(e.text));
+  {
+    const first = JSON.stringify({ ...TURN, next: OFFER });
+    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(first, 3), chunkedTextScript(JSON.stringify({ ...TURN, next: RETRY_NEXT }), 2)]);
+    await test("illegal next.kind 'offer' ⇒ one retry call; its legal next is spoken once with retried: true", () => {
+      assert.equal(r.requests.length, 2, 'exactly one extra SDK call');
+      const nexts = r.events.filter((e) => e.type === 'typed-field' && e.field === 'next');
+      assert.equal(nexts.length, 1);
+      assert.equal(nexts[0].retried, true);
+      assert.deepEqual(nexts[0].value, RETRY_NEXT);
+      assert.deepEqual(seq(r.events), EXPECTED);
+      const said = sentencesOf(r.events);
+      assert.equal(said[said.length - 1], RETRY_NEXT.say);
+      assert.ok(!said.some((x) => x.includes('move on')), 'the refused next is never spoken');
+      assert.equal(said.filter((x) => x === TURN.ack).length, 1, 'ack spoken once');
+    });
+    await test('typed-turn: retries 1, retryReason illegal_kind, turn.next is the retry\'s next', () => {
+      const t = turnEv(r.events);
+      assert.equal(t.retries, 1);
+      assert.equal(t.retryReason, 'illegal_kind');
+      assert.equal(t.nextFallback, undefined);
+      assert.deepEqual(t.turn?.next, RETRY_NEXT);
+      assert.equal(t.retryDisagreed, undefined);
+    });
+    await test('retry request: same typed params, messages end [assistant first JSON, user retry message]', () => {
+      const req = r.requests[1] as Req & { output_config?: { format?: { type: string } } };
+      assert.ok(!('tools' in req));
+      assert.equal(req.output_config?.format?.type, 'json_schema');
+      assert.deepEqual(req.messages.slice(0, -2), r.requests[0].messages);
+      const [a, u] = req.messages.slice(-2);
+      assert.equal(a.role, 'assistant');
+      assert.equal(a.content, first);
+      assert.equal(u.role, 'user');
+      assert.ok(String(u.content).startsWith('[typed turn retry — not from the student]'));
+      assert.ok(String(u.content).includes('refused "offer"'));
+      assert.ok(String(u.content).includes('allowed: retry, question'));
+    });
+  }
+  await test('retry object with a different verdict ⇒ ignored, typed-turn.retryDisagreed', async () => {
+    const r = await run({ ...baseInput, typedTurn }, [
+      chunkedTextScript(JSON.stringify({ ...TURN, next: OFFER }), 3),
+      chunkedTextScript(JSON.stringify({ ...TURN, verdict: 'correct', correction: null, next: RETRY_NEXT }), 2),
+    ]);
+    const t = turnEv(r.events);
+    assert.equal(t.retryDisagreed, true);
+    assert.equal(r.events.filter((e) => e.type === 'typed-field' && e.field === 'verdict').length, 1);
+    assert.equal((t.turn as unknown as { verdict: string }).verdict, 'incorrect');
   });
-  await test('unparseable object ⇒ typed-turn-fallback unparseable, then typed-turn null', async () => {
-    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript('{"ack":"Good try.","verdict":"incorrect"', 2, 'max_tokens')]);
+  await test('both illegal ⇒ no next sentences, nextFallback = allowedNext[0], retries 1, turn.next carries no refused line', async () => {
+    const r = await run({ ...baseInput, typedTurn }, [
+      chunkedTextScript(JSON.stringify({ ...TURN, next: OFFER }), 3),
+      chunkedTextScript(JSON.stringify({ ...TURN, next: { ...OFFER, say: 'Shall we move on now?' } }), 2),
+    ]);
+    assert.equal(r.requests.length, 2);
+    assert.ok(!r.events.some((e) => e.type === 'typed-field' && e.field === 'next'));
+    assert.ok(!sentencesOf(r.events).some((x) => x.includes('move on')));
+    const t = turnEv(r.events);
+    assert.equal(t.nextFallback, 'retry');
+    assert.equal(t.retries, 1);
+    assert.deepEqual(t.turn?.next, { kind: 'retry', say: '', item: '', level: '' });
+  });
+  const FOUR = 'Good. Now the next one. Think about last weekend. What did you do?';
+  await test('next.say of 4 sentences on a non-recap part ⇒ retry (say_over_budget), the short retry is spoken', async () => {
+    const r = await run({ ...baseInput, typedTurn }, [
+      chunkedTextScript(JSON.stringify({ ...TURN, next: { ...RETRY_NEXT, say: FOUR } }), 3),
+      chunkedTextScript(JSON.stringify({ ...TURN, next: RETRY_NEXT }), 2),
+    ]);
+    assert.equal(r.requests.length, 2);
+    const t = turnEv(r.events);
+    assert.equal(t.retryReason, 'say_over_budget');
+    assert.equal(t.retries, 1);
+    assert.ok(String(r.requests[1].messages[r.requests[1].messages.length - 1].content).includes('at most 3 sentences'));
+    assert.ok(!sentencesOf(r.events).join(' ').includes('Think about last weekend.'));
+    assert.equal(sentencesOf(r.events).pop(), RETRY_NEXT.say);
+  });
+  await test('retry still over budget ⇒ spoken as is (spec §4.8), no third call', async () => {
+    const r = await run({ ...baseInput, typedTurn }, [
+      chunkedTextScript(JSON.stringify({ ...TURN, next: { ...RETRY_NEXT, say: FOUR } }), 3),
+      chunkedTextScript(JSON.stringify({ ...TURN, next: { ...RETRY_NEXT, say: FOUR } }), 2),
+    ]);
+    assert.equal(r.requests.length, 2);
+    assert.equal(sentencesOf(r.events).join(' ').split('Think about last weekend.').length - 1, 1);
+    assert.equal(turnEv(r.events).nextFallback, undefined);
+  });
+  await test('next.say of 4 sentences with recap: true ⇒ no retry, spoken', async () => {
+    const r = await run({ ...baseInput, typedTurn: { ...typedTurn, recap: true } }, [
+      chunkedTextScript(JSON.stringify({ ...TURN, next: { ...RETRY_NEXT, say: FOUR } }), 3),
+    ]);
+    assert.equal(r.requests.length, 1);
+    assert.equal(turnEv(r.events).retries, 0);
+    assert.ok(sentencesOf(r.events).join(' ').includes('Think about last weekend.'));
+  });
+
+  console.log('fallbacks (Task 6)');
+  await test('400 output_config.format rejected ⇒ typed-turn-fallback format_rejected, then the prose call with tools', async () => {
+    const reject: Script = { events: [], final: { content: [], stop_reason: 'end_turn' }, error: { status: 400, message: 'output_config.format is not supported' } };
+    const r = await run({ ...baseInput, typedTurn }, [reject, chunkedTextScript('Nearly. Say it again please.', 1)]);
+    assert.equal(r.requests.length, 2);
+    const fb = r.events.find((e) => e.type === 'typed-turn-fallback') as { reason: string };
+    assert.equal(fb?.reason, 'format_rejected');
+    const prose = r.requests[1] as Req & { output_config?: unknown };
+    assert.ok(Array.isArray(prose.tools) && (prose.tools as unknown[]).length > 0);
+    assert.ok(!('output_config' in prose));
+    assert.ok(!lastUserText(prose).includes('<typed_turn'));
+    assert.equal(sentencesOf(r.events).join(' '), 'Nearly. Say it again please.');
+    assert.ok(!r.events.some((e) => e.type === 'typed-turn' || e.type === 'typed-field'));
+  });
+  await test('a 400 that is not a format rejection is not swallowed', async () => {
+    const reject: Script = { events: [], final: { content: [], stop_reason: 'end_turn' }, error: { status: 400, message: 'prompt is too long' } };
+    await assert.rejects(run({ ...baseInput, typedTurn }, [reject, chunkedTextScript('x', 1)]));
+  });
+  await test('truncated object + max_tokens ⇒ fallback cut, typed-turn null with nextFallback, ack not repeated, no second call', async () => {
+    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript('{"ack":"Good try.","verdict":"incorrect","verdict_say":"Nearly the', 2, 'max_tokens')]);
+    assert.equal(r.requests.length, 1);
+    const fb = r.events.filter((e) => e.type === 'typed-turn-fallback').map((e) => e.reason);
+    assert.deepEqual(fb, ['cut']);
+    const t = turnEv(r.events);
+    assert.equal(t.turn, null);
+    assert.equal(t.retries, 0);
+    assert.equal(t.nextFallback, 'retry');
+    assert.deepEqual(sentencesOf(r.events), ['Good try.']);
+    assert.ok(r.events.findIndex((e) => e.type === 'typed-turn') > r.events.findIndex((e) => e.type === 'typed-turn-fallback'));
+  });
+  await test('cut after an early-closed next was voiced ⇒ no nextFallback on top of it', async () => {
+    const text = '{"next":' + JSON.stringify(TURN.next) + ',"ack":"Good try.","verdict":"incorrect","verdict_say":"Nearly the';
+    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(text, 2, 'max_tokens')]);
+    assert.ok(sentencesOf(r.events).join(' ').includes(TURN.next.say));
+    const t = turnEv(r.events);
+    assert.equal(t.turn, null);
+    assert.equal(t.nextFallback, undefined);
+  });
+  await test('complete but invalid object ⇒ typed-turn-fallback unparseable, then typed-turn null', async () => {
+    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript('{"ack":"Good try.","verdict":"bogus","next":{}}', 2)]);
     const i = r.events.findIndex((e) => e.type === 'typed-turn-fallback');
     assert.ok(i >= 0);
     assert.equal((r.events[i] as { reason: string }).reason, 'unparseable');
     const t = r.events.find((e) => e.type === 'typed-turn') as { turn: unknown };
     assert.equal(t.turn, null);
     assert.ok(r.events.findIndex((e) => e.type === 'typed-turn') > i);
+  });
+  await test('two text blocks ⇒ exactly one typed-turn', async () => {
+    const one = chunkedTextScript(JSON.stringify(TURN), 2);
+    const second = [
+      { type: 'content_block_start', index: 1, content_block: { type: 'text', text: '' } },
+      { type: 'content_block_delta', index: 1, delta: { type: 'text_delta', text: ' ' } },
+      { type: 'content_block_stop', index: 1 },
+    ];
+    const ix = one.events.findIndex((e) => e.type === 'message_delta');
+    const r = await run({ ...baseInput, typedTurn }, [{ ...one, events: [...one.events.slice(0, ix), ...second, ...one.events.slice(ix)] }]);
+    assert.equal(r.events.filter((e) => e.type === 'typed-turn').length, 1);
+  });
+  await test('textWorkThenMatch on a typed turn ⇒ no work-then-match frame', async () => {
+    const r = await run({ ...baseInput, typedTurn, textWorkThenMatch: true }, [chunkedTextScript(JSON.stringify(TURN), 2)]);
+    assert.ok(!r.events.some((e) => e.type === 'work-then-match'));
   });
 
   console.log('prose regression pin');

@@ -26,6 +26,7 @@ import type {
 import type Anthropic from '@anthropic-ai/sdk';
 import { parseJsonObjectsWithSource, replyHead } from '../ai/model-json';
 import { gradeNumericAnswer } from './numeric-answer-rule';
+import { isStructuredOutputRejection } from '../voice/typed-turn';
 
 /**
  * The grade result. `undetermined` is ADDITIVE to the v1 contract shape (the
@@ -238,16 +239,8 @@ export function resetStructuredOutputState(): void {
   structuredOutputRejectedAt = null;
 }
 
-/**
- * Is this error the endpoint refusing the STRUCTURED-OUTPUT parameter?
- * Only a 400 whose message names it (output_config / format / schema). The
- * first version treated ANY 400 this way — an over-long prompt or a malformed
- * request silently switched the grader to prompt-only JSON.
- */
-export function isStructuredOutputRejection(err: unknown): boolean {
-  const e = err as { status?: number; message?: string } | null;
-  return e?.status === 400 && /output_config|output_format|json_schema|\bschema\b|\bformat\b|structured output/i.test(String(e?.message ?? ''));
-}
+// Moved to voice/typed-turn.ts (the typed tutor turn uses it too); re-exported here for existing callers.
+export { isStructuredOutputRejection };
 
 /** The slice of the SDK the grader's call uses (tests pass a fake). */
 export interface GraderModelClient {

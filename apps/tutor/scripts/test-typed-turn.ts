@@ -10,8 +10,9 @@ import { join } from 'node:path';
 import {
   TYPED_TURN_SCHEMA, TYPED_NEXT_KINDS, TYPED_TURN_INSTRUCTIONS, typedTurnStateBlock,
   truncateToSentences, sentenceCount, parseTypedTurn, TYPED_FIELD_ORDER,
-  TypedTurnReader, OrderedFieldEmitter,
+  TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection,
 } from '../src/lib/tutor/voice/typed-turn';
+import { isStructuredOutputRejection as gradeIsStructuredOutputRejection } from '../src/lib/tutor/portal/grade-free-response';
 
 let failed = 0;
 const test = (name: string, fn: () => void) => {
@@ -201,6 +202,30 @@ test('instructions explain turn_state and nudge', () => {
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('turn_state') && TYPED_TURN_INSTRUCTIONS.includes('nudge'));
 });
 
+
+// ---- Task 6: retry message + structured-output rejection predicate ----
+const ALREADY = { ack: 'Good try.', verdict: 'incorrect' as const, verdict_say: 'Nearly there.', correction: null, support_ja: '' };
+test('retry message — illegal kind: refused kind, allowed set, ALREADY SPOKEN, the ack text, only next is read', () => {
+  const m = typedTurnRetryMessage({ reason: 'illegal_kind', refused: { kind: 'offer', say: 'One more, or move on?', item: '', level: '' },
+    allowedNext: ['retry', 'question'], alreadySaid: ALREADY, budget: 3 });
+  assert.ok(m.startsWith('[typed turn retry — not from the student]'), m.slice(0, 60));
+  assert.ok(m.includes('refused "offer"'), 'names the refused kind');
+  assert.ok(m.includes('allowed: retry, question'), 'names the allowed set');
+  assert.ok(m.includes('ALREADY SPOKEN'));
+  assert.ok(m.includes('Good try.') && m.includes('Nearly there.'), 'lists the spoken fields');
+  assert.ok(/only .?next.? is read/i.test(m), 'says only next is read');
+});
+test('retry message — say over budget restates the budget number', () => {
+  const m = typedTurnRetryMessage({ reason: 'say_over_budget', refused: { kind: 'question', say: 'A. B. C. D.', item: '', level: '' },
+    allowedNext: ['retry', 'question'], alreadySaid: ALREADY, budget: 3 });
+  assert.ok(/at most 3 sentences/.test(m), m);
+  assert.ok(m.includes('ALREADY SPOKEN'));
+});
+test('isStructuredOutputRejection lives here and is re-exported unchanged by grade-free-response', () => {
+  assert.equal(isStructuredOutputRejection({ status: 400, message: 'output_config.format is not supported' }), true);
+  assert.equal(isStructuredOutputRejection({ status: 400, message: 'prompt is too long' }), false);
+  assert.equal(gradeIsStructuredOutputRejection, isStructuredOutputRejection);
+});
 
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');
