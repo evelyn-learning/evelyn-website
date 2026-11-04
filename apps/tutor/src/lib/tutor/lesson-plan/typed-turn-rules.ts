@@ -8,8 +8,15 @@ import {
   fixedScriptPartLabel, segmentMaxTurns, segmentTransitionKind,
 } from './fixed-script';
 import { getSegmentTruth } from './context';
-import { boardOffersChoices } from '../voice/sentence-board';
-import type { TypedNextKind, TypedTurnRequest, TypedVerdict } from '../voice/typed-turn';
+import {
+  fixedScriptBridgeClause, fixedScriptEngineOfferLines, nextSegmentId,
+} from './fixed-script';
+import { cardAskLine } from './transition-ask';
+import { boardOffersChoices, cardableStudentSentence } from '../voice/sentence-board';
+import {
+  sentenceCount, TYPED_SAY_BUDGET, TYPED_SAY_BUDGET_RECAP,
+  type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedTurn, type TypedTurnRequest, type TypedVerdict,
+} from '../voice/typed-turn';
 
 export type TypedPartKind = 'level_check' | 'bridge' | 'offer_part' | 'conversation' | 'menu' | 'pronunciation' | 'recap' | 'plain';
 
@@ -162,4 +169,180 @@ export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
     recap: typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) === 'recap',
     nudge: ctx.nudge,
   };
+}
+
+// ---- Field effects, state reducer, engine fallback lines ----
+
+export type TypedEffect =
+  | { kind: 'model_card'; sentence: string }
+  | { kind: 'correction_card'; student: string; corrected: string; emphasis: string[] }
+  | { kind: 'advance'; from: string; to: string; bridgeMissing: boolean }
+  | { kind: 'arm_item'; text: string }
+  | { kind: 'set_level'; level: 'beginner' | 'intermediate' | 'advanced' }
+  | { kind: 'close' }
+  | { kind: 'menu_asked' } | { kind: 'offer_made' } | { kind: 'offer_served' }
+  | { kind: 'open_ask'; ask: TypedTurnState['openAsk'] };
+
+export interface FieldEffectContext {
+  plan: LessonPlan; segId: string; levelKnown: boolean; state: TypedTurnState;
+  studentLast: string; cardStatement: string | null; items: readonly string[];
+}
+
+const CARD_WORD_STOP = new Set(['the', 'and', 'you', 'your', 'for', 'are', 'was', 'were', 'have', 'has', 'had', 'did', 'does', 'with', 'that', 'this', 'what', 'who', 'how', 'any', 'can', 'will', 'would', 'about', 'there', 'their', 'from', 'but', 'not']);
+function contentWords(s: string): Set<string> {
+  return new Set((s.toLowerCase().match(/[a-z']{3,}/g) ?? []).filter((w) => !CARD_WORD_STOP.has(w)));
+}
+/** True when `say` shares at least 3 content words with the card statement. */
+export function sharesCardWords(say: string, card: string): boolean {
+  const c = contentWords(card);
+  let n = 0;
+  for (const w of contentWords(say)) if (c.has(w)) n++;
+  return n >= 3;
+}
+
+/** First plan item not yet practised in this part. */
+export function nextItemFor(ctx: FieldEffectContext): string | null {
+  const done = ctx.state.practisedItems[ctx.segId] ?? [];
+  return ctx.items.find((i) => !done.includes(i)) ?? null;
+}
+
+/** The item a `next` of kind item arms: its own text if listed and unpractised, else the next listed one. */
+function resolveItem(next: TypedNext, ctx: FieldEffectContext): string | null {
+  const text = (next.item ?? '').trim();
+  const done = ctx.state.practisedItems[ctx.segId] ?? [];
+  const listed = ctx.items.find((i) => i.trim() === text);
+  if (listed && !done.includes(listed)) return listed;
+  return nextItemFor(ctx);
+}
+
+/** Records the verdict, which closes before verdict_say. */
+export function applyField(state: TypedTurnState, ev: TypedFieldValue): TypedTurnState {
+  return ev.field === 'verdict' ? { ...state, pendingVerdict: ev.value } : state;
+}
+
+function openAskFor(next: TypedNext, ctx: FieldEffectContext, newPartId: string | null): TypedTurnState['openAsk'] {
+  // move: the new part's card; question: this part's card
+  const card = next.kind === 'move' && newPartId ? cardStatement(ctx.plan, newPartId)
+    : next.kind === 'question' ? (ctx.cardStatement ?? '') : '';
+  const ask: TypedTurnState['openAsk'] = { kind: next.kind === 'move' ? 'question' : (next.kind as TypedTurnState['openAsk']['kind']), text: next.say };
+  if (card && sharesCardWords(next.say, card)) ask.cardQuestion = card;
+  return ask;
+}
+
+/** Effects to run when one field closes (cards anchor to the sentence about to be spoken). Pure. */
+export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): TypedEffect[] {
+  if (ev.field === 'verdict_say') {
+    if (ctx.state.pendingVerdict !== 'correct') return [];
+    // cardableStudentSentence strips "um/well/so," but not a spoken "yes,": a lowercase rest is no card candidate.
+    const sentence = cardableStudentSentence(ctx.studentLast.replace(/^\s*(?:yes|yeah|yep|yup)\s*[,.]\s*(?=\S+\s+\S)/i, ''));
+    return sentence ? [{ kind: 'model_card', sentence }] : [];
+  }
+  if (ev.field === 'correction') {
+    const c = ev.value;
+    return c ? [{ kind: 'correction_card', student: c.student, corrected: c.corrected, emphasis: c.emphasis }] : [];
+  }
+  if (ev.field !== 'next') return [];
+  const next = ev.value;
+  const out: TypedEffect[] = [];
+  if (next.level) out.push({ kind: 'set_level', level: next.level });
+  if (next.kind === 'wait') return out;
+  if (next.kind === 'close') return [...out, { kind: 'close' }];
+  let newPart: string | null = null;
+  switch (next.kind) {
+    case 'item': {
+      const text = resolveItem(next, ctx);
+      if (text) out.push({ kind: 'arm_item', text });
+      break;
+    }
+    case 'move': {
+      newPart = nextSegmentId(ctx.plan, ctx.segId, ctx.levelKnown);
+      if (!newPart) return [...out, { kind: 'close' }];
+      const bridgeMissing = fixedScriptBridgeClause(ctx.plan, ctx.segId, newPart) !== ''
+        && !/\b(learned|told me|you said|about you)\b|について/i.test(next.say);
+      out.push({ kind: 'advance', from: ctx.segId, to: newPart, bridgeMissing });
+      break;
+    }
+    case 'menu': out.push({ kind: 'menu_asked' }); break;
+    case 'offer': out.push({ kind: 'offer_made' }); break;
+    case 'question': {
+      const o = ctx.state.offerState[ctx.segId];
+      if (o && o.accepted && !o.served) out.push({ kind: 'offer_served' });
+      break;
+    }
+    default: break;
+  }
+  out.push({ kind: 'open_ask', ask: openAskFor(next, ctx, newPart) });
+  return out;
+}
+
+/** The state after the whole turn was spoken. Pure. */
+export function applyTypedTurn(
+  state: TypedTurnState, turn: TypedTurn, ctx: FieldEffectContext, moved: { from: string; to: string } | null,
+): TypedTurnState {
+  const seg = ctx.segId;
+  const next = turn.next;
+  const turnsInPart = { ...state.turnsInPart };
+  if (moved) turnsInPart[moved.to] = 0;
+  else turnsInPart[seg] = (turnsInPart[seg] ?? 0) + 1;
+
+  const answeredCards = { ...state.answeredCards };
+  if (turn.verdict === 'correct' && state.openAsk.cardQuestion) {
+    const cur = answeredCards[seg] ?? [];
+    if (!cur.includes(state.openAsk.cardQuestion)) answeredCards[seg] = [...cur, state.openAsk.cardQuestion];
+  }
+
+  const practisedItems = { ...state.practisedItems };
+  const lastItemAnnounced = { ...state.lastItemAnnounced };
+  if (next.kind === 'item') {
+    const item = resolveItem(next, ctx);
+    if (item) {
+      practisedItems[seg] = [...(practisedItems[seg] ?? []), item];
+      if (ctx.items.every((i) => practisedItems[seg].includes(i))) lastItemAnnounced[seg] = true;
+    }
+  }
+
+  const menuState = { ...state.menuState };
+  if (next.kind === 'menu') {
+    const m = menuState[seg] ?? { asked: 0, picked: null };
+    menuState[seg] = { ...m, asked: m.asked + 1 };
+  }
+
+  const offerState = { ...state.offerState };
+  const o = offerState[seg] ?? { made: false, accepted: false, served: false };
+  if (next.kind === 'offer') offerState[seg] = { ...o, made: true };
+  else if (next.kind === 'question' && o.accepted && !o.served) offerState[seg] = { ...o, served: true };
+
+  let openAsk = state.openAsk;
+  if (next.kind === 'close') openAsk = { kind: 'none', text: '' };
+  else if (next.kind !== 'wait') openAsk = openAskFor(next, ctx, moved ? moved.to : null);
+
+  return {
+    ...state,
+    openAsk,
+    correctionOpen: turn.correction ? { student: turn.correction.student, corrected: turn.correction.corrected }
+      : turn.verdict === 'correct' ? null : state.correctionOpen,
+    practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart,
+    retriesInARow: next.kind === 'retry' ? state.retriesInARow + 1 : 0,
+    pendingVerdict: null,
+  };
+}
+
+/** The engine's own line for a refused / missing `next`. null for 'wait' and 'close'. */
+export function engineLineFor(kind: TypedNextKind, ctx: FieldEffectContext & { japanese: boolean }): string | null {
+  const card = ctx.cardStatement ?? cardStatement(ctx.plan, ctx.segId);
+  switch (kind) {
+    case 'retry': return ctx.state.openAsk.text || null;
+    case 'question': case 'move': return cardAskLine(card);
+    case 'menu': return card || null;
+    case 'offer': {
+      const to = nextSegmentId(ctx.plan, ctx.segId, ctx.levelKnown);
+      return to ? fixedScriptEngineOfferLines(ctx.plan, ctx.segId, to, { japanese: ctx.japanese }).join(' ') : null;
+    }
+    case 'item': return nextItemFor(ctx);
+    default: return null;
+  }
+}
+
+export function sayWithinBudget(next: TypedNext, recap: boolean): boolean {
+  return sentenceCount(next.say) <= (recap ? TYPED_SAY_BUDGET_RECAP : TYPED_SAY_BUDGET);
 }
