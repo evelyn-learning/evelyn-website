@@ -319,7 +319,8 @@ test('isStructuredOutputRejection lives here and is re-exported unchanged by gra
 
 test('H2: verdicts are defined operationally; none only for a non-answer; answered glossary', () => {
   // fix wave 3 F2: pin moved — the merged single `none` rule (X4 + the old list) replaced 'ONLY when the reply is not an answer'
-  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('`none` ONLY when the reply is not an attempt at the open ask:'));
+  // F2b: pin moved again — the full merged list (a question to you / an aside / a request to move on restored)
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes("`none` ONLY when the reply is not an attempt at the open ask: silence, a greeting, 'OK' / 'thank you', 'I don't understand', a request to repeat or slow down, a question to you, an aside, a request to move on, or a reply in Japanese only."));
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('acceptable answer'));
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('fills from correct and partly_correct'));
 });
@@ -389,7 +390,7 @@ test('X3 (fix wave 3): a refused move / close is never spoken as a move (r61b 71
 
 test('X4 + F2 (fix wave 3): ONE `none` rule — non-attempts only', () => {
   const I = TYPED_TURN_INSTRUCTIONS;
-  const RULE = "`none` ONLY when the reply is not an attempt at the open ask: silence, a greeting, 'OK' / 'thank you', 'I don't understand', a request to repeat or slow down, or a reply in Japanese only. A reply that attempts the question in English is never `none`, in any part, even when you will not correct it.";
+  const RULE = "`none` ONLY when the reply is not an attempt at the open ask: silence, a greeting, 'OK' / 'thank you', 'I don't understand', a request to repeat or slow down, a question to you, an aside, a request to move on, or a reply in Japanese only. A reply that attempts the question in English is never `none`, in any part, even when you will not correct it.";
   assert.equal(I.split(RULE).length - 1, 1, 'the merged rule, once');
   assert.ok(!I.includes('ONLY when the reply is not an answer at all'), 'old list merged away');
   assert.ok(!I.includes('Never use "none" for a reply that answers the ask'), 'duplicate sentence removed');
