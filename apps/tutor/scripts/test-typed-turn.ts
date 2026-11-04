@@ -266,5 +266,11 @@ test('isStructuredOutputRejection lives here and is re-exported unchanged by gra
   assert.equal(gradeIsStructuredOutputRejection, isStructuredOutputRejection);
 });
 
+test('H2: verdicts are defined operationally; none only for a non-answer; answered glossary', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('ONLY when the reply is not an answer'));
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('acceptable answer'));
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('fills from correct and partly_correct'));
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

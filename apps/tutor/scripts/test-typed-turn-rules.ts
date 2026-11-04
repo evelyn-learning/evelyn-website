@@ -360,5 +360,14 @@ test('H1: a resolved menu pick persists, so the menu is never re-asked after an 
   assert.equal(s3.menuState.pronunciation.picked, null);
 });
 
+test('H2: a partly_correct answer fills answeredCards like a correct one; none and incorrect do not', () => {
+  const st = { ...createTypedTurnState(), openAsk: { kind: 'question' as const, text: 'x', cardQuestion: 'Can you tell me a little about your job?' } };
+  const mk = (verdict: 'correct' | 'partly_correct' | 'incorrect' | 'none') => applyTypedTurn(st, { ack: '', verdict, verdict_say: '', correction: null, support_ja: '', next: { kind: 'question', say: 'Next?', item: '', level: '' } }, fctx('present-perfect', { state: st }), null);
+  assert.deepEqual(mk('correct').answeredCards['present-perfect'], ['Can you tell me a little about your job?']);
+  assert.deepEqual(mk('partly_correct').answeredCards['present-perfect'], ['Can you tell me a little about your job?']);
+  assert.equal(mk('incorrect').answeredCards['present-perfect'], undefined);
+  assert.equal(mk('none').answeredCards['present-perfect'], undefined);
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

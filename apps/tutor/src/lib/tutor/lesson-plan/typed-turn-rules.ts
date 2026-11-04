@@ -306,7 +306,7 @@ export function applyTypedTurn(
   else turnsInPart[seg] = (turnsInPart[seg] ?? 0) + 1;
 
   const answeredCards = { ...state.answeredCards };
-  if (turn.verdict === 'correct' && state.openAsk.cardQuestion) {
+  if ((turn.verdict === 'correct' || turn.verdict === 'partly_correct') && state.openAsk.cardQuestion) {
     const key = moved?.from ?? seg;
     const cur = answeredCards[key] ?? [];
     if (!cur.includes(state.openAsk.cardQuestion)) answeredCards[key] = [...cur, state.openAsk.cardQuestion];
