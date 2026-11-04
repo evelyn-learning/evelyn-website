@@ -10,7 +10,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
   allowedNextFor, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
-  sayWithinBudget, sharesCardWords, enterPartState, typedPronunciationItems, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
+  sayWithinBudget, sharesCardWords, enterPartState, answerShaped, typedPronunciationItems, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
 import { TYPED_TURN_INSTRUCTIONS, type TypedNext, type TypedTurn } from '../src/lib/tutor/voice/typed-turn';
@@ -32,7 +32,7 @@ function ctx(segId: string, over: Partial<AllowedNextContext> & { state?: Partia
   return {
     plan, segId, levelKnown: false, state: { ...createTypedTurnState(), ...(state ?? {}) },
     budgetDue: false, lastPart: false, studentMovedOn: false, menuPick: null,
-    studentReplied: false, nudge: false, items: [], lessonElapsedMs: 0, ...rest,
+    studentReplied: false, nudge: false, items: [], lessonElapsedMs: 0, partQuestionsAnswered: false, ...rest,
   };
 }
 const sorted = (a: string[]) => [...a].sort();
@@ -641,6 +641,38 @@ test('R4/M3: capCardText keeps the first line(s) and always the last (practice q
   // a first line longer than the cap alone: cut, last line still kept
   const huge = capCardText('x'.repeat(1000) + '\nQ?', 100);
   assert.ok(huge.length <= 100 && huge.endsWith('\nQ?'), huge);
+});
+
+// ---- Fix wave 3 X1: the level check honours the engine's question tracker and answer-shaped replies (r61b 34–147 s) ----
+test('X1: level check with every numbered question answered (partQuestionsAnswered) moves at committed 0', () => {
+  const c = ctx('level-check', { partQuestionsAnswered: true, studentReplied: true, state: ask('question') });
+  assert.deepEqual(allowedNextFor(c), ['move']);
+  assert.ok(turnStateLine(c).includes('questions_done="yes"'), turnStateLine(c));
+  assert.ok(!moveNeedsAnswerFor(c), 'no move_needs_answer gate on the tracker\'s move');
+  // without the tracker: unchanged rows
+  assert.deepEqual(allowedNextFor(ctx('level-check', { studentReplied: true, state: ask('question') })), ['question']);
+  assert.ok(!turnStateLine(ctx('level-check', { state: ask('question') })).includes('questions_done'), 'absent when not done');
+  assert.deepEqual(allowedNextFor(ctx('level-check', { studentReplied: true, state: { ...ask('question'), answersInPart: { 'level-check': 2 } } })), ['question', 'move']);
+  // other parts ignore the flag
+  assert.deepEqual(sorted(allowedNextFor(ctx('open-conversation', { partQuestionsAnswered: true, state: ask('question') }))), ['question', 'retry']);
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('questions_done="yes" (only then) = every numbered question of this part has been answered — move now'), 'glossary');
+});
+test('X1: answerShaped — ≥ 4 content words or ≥ 8 Japanese-script characters', () => {
+  assert.equal(answerShaped("Yes, I'm ready."), false);
+  assert.equal(answerShaped('OK, thank you.'), false);
+  assert.equal(answerShaped('Sorry, can you say that again?'), false);
+  assert.equal(answerShaped('I work in the sales department of an electronics company in Osaka.'), true);
+  assert.equal(answerShaped(''), false);
+  assert.equal(answerShaped('営業部で働いています。'), true);
+  assert.equal(answerShaped('はい。'), false);
+});
+test('X1: applyTypedTurn counts verdict none + an answer-shaped reply as an answer; "OK." is not', () => {
+  const t = { ack: 'Thanks.', verdict: 'none' as const, verdict_say: '', board: '', correction: null, support_ja: '', next: nx({ kind: 'question' }) };
+  const s0 = { ...createTypedTurnState(), openAsk: { kind: 'question' as const, text: 'x' } };
+  const a = applyTypedTurn(s0, t, fctx('level-check', { state: s0, studentLast: 'I work in the sales department of an electronics company in Osaka.' }), null);
+  assert.equal(a.answersInPart['level-check'], 1);
+  const b = applyTypedTurn(s0, t, fctx('level-check', { state: s0, studentLast: 'OK.' }), null);
+  assert.equal(b.answersInPart['level-check'] ?? 0, 0);
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

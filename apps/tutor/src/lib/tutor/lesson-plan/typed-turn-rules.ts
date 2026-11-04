@@ -130,6 +130,9 @@ export interface AllowedNextContext {
   /** W2: the engine moved the pointer before this brain call (Skip, typed objective jump, lesson-time guard):
    *  segId is the part it entered, and no second move / close is allowed this turn. */
   engineMoved?: boolean;
+  /** X1 (fix wave 3): the client's numbered-question tracker has seen every numbered question of THIS part answered
+   *  (r61b 70 s: the tracker knew, the brain's `none` verdicts kept answersInPart at 0 and the move was refused). */
+  partQuestionsAnswered: boolean;
 }
 
 /** W2: the state on entering `to` by an engine move — the old part's open ask and correction are gone. Pure. */
@@ -220,7 +223,8 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   // may move only if it is a real answer (moveNeedsAnswerFor — the server refuses a move on verdict none).
   if (kind === 'level_check') {
     const committed = state.answersInPart?.[segId] ?? 0;
-    if (committed >= 3) return ['move'];
+    // X1: the engine's own tracker (every numbered question answered) moves, whatever the verdicts were.
+    if (ctx.partQuestionsAnswered || committed >= 3) return ['move'];
     // R5: question first — allowedNext[0] is the cut / unparseable fallback (re-ask, never move).
     return committed === 2 && ctx.studentReplied ? ['question', 'move'] : ['question'];
   }
@@ -310,6 +314,8 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     ...(typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'conversation'
       ? [['corrections_left', String(Math.max(0, TYPED_CONVERSATION_CORRECTIONS - (state.correctionsInPart?.[segId] ?? 0)))] as [string, string]] : []),
     ['level_known', yn(ctx.levelKnown)],
+    // X1: every numbered question of this part has been answered (level check) — the row allows only the move.
+    ...(ctx.partQuestionsAnswered && typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'level_check' ? [['questions_done', 'yes'] as [string, string]] : []),
     ...(moveNeedsAnswerFor(ctx) ? [['move_needs_answer', 'yes'] as [string, string]] : []),
   ];
   // V3: the recap's step, and on its first turn the plan's required phrases (the review turn must say them).
@@ -367,6 +373,19 @@ export interface FieldEffectContext {
   budgetDue: boolean;
   /** R6 (fix round 2): the same nudge flag the turn's AllowedNextContext carried (a nudge re-ask is no recap review). */
   nudge: boolean;
+}
+
+/** X1: words that carry no answer content ("Yes, I'm ready.", "OK, thank you.", "Sorry, can you say that again?"). */
+const ANSWER_STOP = new Set(['the', 'a', 'an', 'to', 'of', 'and', 'is', 'it', 'that', 'this', 'in', 'on', 'for', 'i', 'you', 'we', 'yes', 'no', 'ok', 'okay', 'thank', 'thanks', 'please', 'sorry']);
+/** X1 (fix wave 3): the reply looks like an attempt at an answer — ≥ 4 content words (lower-cased, punctuation stripped,
+ *  ANSWER_STOP removed) or ≥ 8 Japanese-script characters. The engine's backstop for a brain `none` on a real answer
+ *  (r61b 34 s / 51 s). Pure. */
+export function answerShaped(text: string): boolean {
+  const s = String(text ?? '');
+  const ja = s.match(/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/g) ?? [];
+  if (ja.length >= 8) return true;
+  const words = s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').split(/\s+/).filter((w) => w && !ANSWER_STOP.has(w));
+  return words.length >= 4;
 }
 
 const CARD_WORD_STOP = new Set(['the', 'and', 'you', 'your', 'for', 'are', 'was', 'were', 'have', 'has', 'had', 'did', 'does', 'with', 'that', 'this', 'what', 'who', 'how', 'any', 'can', 'will', 'would', 'about', 'there', 'their', 'from', 'but', 'not']);
@@ -484,7 +503,8 @@ export function applyTypedTurn(
   const correctionsInPart = { ...(state.correctionsInPart ?? {}) };
   if (turn.correction) correctionsInPart[seg] = (correctionsInPart[seg] ?? 0) + 1;
   const answersInPart = { ...(state.answersInPart ?? {}) };
-  if (turn.verdict !== 'none') answersInPart[seg] = (answersInPart[seg] ?? 0) + 1;
+  // X1: a `none` on an answer-shaped reply still counts (the brain judged real answers none in r61b).
+  if (turn.verdict !== 'none' || answerShaped(ctx.studentLast)) answersInPart[seg] = (answersInPart[seg] ?? 0) + 1;
   if (moved) answersInPart[moved.to] = 0;
   const recapReviewed = { ...(state.recapReviewed ?? {}) };
   if (next.kind === 'question' && !ctx.nudge && typedPartKind(ctx.plan, seg, ctx.levelKnown) === 'recap') recapReviewed[seg] = true;

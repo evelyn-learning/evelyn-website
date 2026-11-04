@@ -332,5 +332,12 @@ test('W3: the turn-start typed snapshot is taken on a typed turn only (prose pat
   assert.ok(VTR.includes('if (typedTurnActive && attempt > 0 && typedTurnStateAtTurnStart) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);'), 'restore reads the guarded snapshot');
 });
 
+test('X1 (fix wave 3): the numbered-question tracker\'s all-answered state reaches the rules (partQuestionsAnswered)', () => {
+  assert.ok(/const typedPartQuestionsAnsweredRef = useRef<string \| null>\(null\);/.test(VTR), 'the ref (the part id whose numbered questions are all answered)');
+  assert.ok(/numberedAllAnsweredSegsRef\.current\.add\(nqSeg\);\s*typedPartQuestionsAnsweredRef\.current = nqSeg;/.test(VTR), 'set where the tracker logs all answered');
+  assert.ok(VTR.includes('partQuestionsAnswered: typedPartQuestionsAnsweredRef.current === typedFromSeg,'), 'keyed on the part (a new part reads false)');
+  assert.ok(/typedCorrectedSentencesRef\.current = \[\];\s*typedPartQuestionsAnsweredRef\.current = null;/.test(VTR), 'plan-scoped like the typed state');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');

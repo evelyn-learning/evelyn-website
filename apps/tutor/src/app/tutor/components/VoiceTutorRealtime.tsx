@@ -5430,6 +5430,9 @@ export function VoiceTutorRealtime({
   const answeredInPartRef = useRef<Map<string, string[]>>(new Map());
   // Task 31 §H2: parts whose numbered card's all-answered note was planted.
   const numberedAllAnsweredSegsRef = useRef<Set<string>>(new Set());
+  // X1 (fix wave 3): the part whose numbered questions were all answered (the tracker below) — the typed level check
+  // moves on it. Keyed on the part: any other part (after an advance) reads false. Plan-scoped.
+  const typedPartQuestionsAnsweredRef = useRef<string | null>(null);
   // Task 31 §D / fix round 1 B-2: the entry note after a brain advance (a plain note, not a FACT note).
   const pendingEntryNoteRef = useRef<{ segId: string; note: string } | null>(null);
   // Task 34 fix round 2 (R13-1): a non-auto advance plants the new part's
@@ -12382,6 +12385,7 @@ export function VoiceTutorRealtime({
     // Typed turn (Task 7): the typed lesson state is plan-scoped.
     typedTurnStateRef.current = createTypedTurnState();
     typedCorrectedSentencesRef.current = [];
+    typedPartQuestionsAnsweredRef.current = null;
     // realtime-2: a new plan must be re-injected into the RT-2 session.
     lessonPlanV2InjectedRef.current = false;
     planLoadSettledIdRef.current = null;
@@ -14130,6 +14134,7 @@ export function VoiceTutorRealtime({
             const allNote = allNumberedQuestionsAnsweredNote(nqCard, segmentNarrationRef.current.get(nqSeg) ?? []);
             if (allNote) {
               numberedAllAnsweredSegsRef.current.add(nqSeg);
+              typedPartQuestionsAnsweredRef.current = nqSeg;
               runTranscript = `${allNote}\n\n${runTranscript}`;
               onDebugEvent?.('numbered_question_note_planted', `all answered "${nqSeg}"`);
             }
@@ -15186,6 +15191,8 @@ export function VoiceTutorRealtime({
             studentReplied: Boolean(typedStudentText),
             nudge: typedNudgeThisTurn,
             items: typedItemsFor(typedFromSeg),
+            // X1 (fix wave 3): every numbered question of this part answered (the tracker) — the level check moves.
+            partQuestionsAnswered: typedPartQuestionsAnsweredRef.current === typedFromSeg,
             lessonElapsedMs: typedLessonElapsedMs,
             // V6: next_card's key ideas are filtered to the held level, as the board shows them.
             workingLevel: workingLevelRef.current?.level ?? null,
