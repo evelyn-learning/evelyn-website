@@ -67,7 +67,7 @@ test('correctionEmphasis: positions of the field\'s words in the corrected sente
   assert.deepEqual(correctionEmphasis('She goes to school.', ['nope']), { emphasis: [], emphasisAt: [] });
 });
 test('review C-1: one student turn advances at most once; the typed state is per-turn', () => {
-  assert.ok(VTR.includes('const typedFromSeg = turnStartSegmentId ?? \'\';'), 'FROM part captured once per student turn');
+  assert.ok(VTR.includes('const typedFromSeg = typedEngineMove?.to ?? turnStartSegmentId ?? \'\';'), 'FROM part captured once per student turn (post lesson-time guard)');
   assert.ok(/const typedTurnStateAtTurnStart: TypedTurnState = structuredClone\(typedTurnStateRef\.current\);[\s\S]{0,400}for \(let attempt = 0; attempt <= attemptCap; attempt\+\+\)/.test(VTR), 'snapshot before the attempt loop');
   assert.ok(VTR.includes('if (typedTurnActive && attempt > 0) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);'), 'restored on every attempt > 0');
   assert.ok(/case 'advance':[\s\S]{0,300}if \(typedMovedThisTurn\) \{[\s\S]{0,120}onDebugEvent\?\.\('typed_turn_advance_blocked', `\$\{e\.from\}→\$\{e\.to\}`\);\s*break;/.test(VTR), 'second advance blocked');
@@ -216,6 +216,61 @@ test('Task 8 smoke fix: the language output cap never applies to a typed turn (t
 test('Task 8 smoke fix: no prose auto card on advance and no rule-8 client repair on a typed turn', () => {
   assert.ok(VTR.includes('if (!typedTurnActive && TUTOR_AUTO_SEGMENT_CARD && plan && adv && adv.atMs >= attemptStartMs'), 'auto_card_on_advance');
   assert.ok(/if \(\n\s*!typedTurnActive &&\n\s*TUTOR_CLIENT_RULE8_REPAIR &&\n\s*shouldClientRequestRepair\(\{/.test(VTR), 'rule8 client repair');
+});
+
+// ── Task 8 fix round 1 ──────────────────────────────────────────────────────
+test('fix round 1 (I-1): every per-sentence drop / rewrite filter stands down on typed, except labels + katakana', () => {
+  const guardedIfs = [
+    "if (!typedTurnActive) if (TUTOR_ACK_OPENER_STRIP && isFirstSentenceOfTurn && ackSpokenThisTurnRef.current) {",
+    "if (!typedTurnActive) if (shouldDropBareRecheck({",
+    "if (!typedTurnActive) if (isFirstSentenceOfTurn && hasPriorTutorTurn) {",
+    "if (!typedTurnActive) if (typeof ev.text === 'string' && /^\\s*\\[/.test(transcript)) {",
+    "if (!typedTurnActive) if (isPrematureCloseLine(updatedSentence, {",
+    "if (!typedTurnActive) if (isPronunciationClaimSentence(updatedSentence,",
+    "if (!typedTurnActive) if (sqPersonalPinned && (retryReasksQuestion(",
+    "if (!typedTurnActive) if (answeredGuardQs.length) {",
+    "if (!typedTurnActive) if (noaskEchoLeading && TUTOR_NOASK_VERDICT_ECHO_DROP",
+    "if (!typedTurnActive) if (answeredCardQ && reasksCardQuestion(updatedSentence, answeredCardQ)) {",
+    "if (!typedTurnActive) if (probeCheckinAsks && (probeReasks(",
+    "if (!typedTurnActive) if (TUTOR_FIXED_SCRIPT_NO_READINESS && readinessAskDropDue({",
+    "if (!typedTurnActive) if (TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn && isBareMoveOn(updatedSentence)) {",
+    "if (!typedTurnActive) if (TUTOR_MENU_WRAP_UP_DROP && isFixedScriptPlan(lessonPlanRef.current)) {",
+    "if (!typedTurnActive) if (TUTOR_REPEAT_AFTER_CORRECT_DROP && attempt > 0 && repeatAfterCorrectKilled",
+    "if (!typedTurnActive) if (neitherStreakAsks && noAttemptPinned && !reasksAsk(updatedSentence, noAttemptPinned)",
+    "if (!typedTurnActive) if (noAttemptPinned && (reasksAsk(updatedSentence, noAttemptPinned)",
+    "if (!typedTurnActive) if (correctReaskAsk && replyAnsweredAsk(",
+    "&& !adjacentPrevSentence && !/^\\s*\\[/.test(transcript) && isStudentEchoOpener(",
+    "if (!typedTurnActive) if (continuedTurnText && continuationRepeatsSentence(updatedSentence, continuedTurnText)) {",
+    "if (!typedTurnActive) if (TUTOR_QUESTION_LEAD_IN_HOLD && continuedTurnText && !adjacentPrevSentence && !heldLeadIn",
+    "if (!typedTurnActive) if (TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate(adjacentPrevSentence, updatedSentence)) {",
+    "if (!typedTurnActive) if (partDedupe !== null) {",
+    "if (!typedTurnActive) if (TUTOR_ADJACENT_DUPLICATE_DROP && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !adjacentPrevSentence && !/^\\s*\\[/.test(transcript)) {",
+    "if (!typedTurnActive) if (TUTOR_ADJACENT_DUPLICATE_DROP && isRepeatThankAck(thankAckSpoken, updatedSentence)) {",
+    "if (!typedTurnActive) if (TUTOR_QUESTION_LEAD_IN_HOLD && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current))) {",
+    "const correctionWorking = typedTurnActive || correctionWorkingRestoredFrame",
+    "if (!typedTurnActive) if (streakClaim.action !== 'pass') {",
+    "if (!typedTurnActive) if ((!assignedPracticeRef.current || homeworkPointerSpokenRef.current) && isHomeworkAnnouncement(updatedSentence)) {",
+    "if (!typedTurnActive) if (stepRefMatch) {",
+    "if (!typedTurnActive) if (matchesBridge && lastBridgePhraseRef.current === sentenceNorm) {",
+    "if (!typedTurnActive) if (matchesDisclaimer && lastDisclaimerPhraseRef.current === sentenceNorm) {",
+    "if (!typedTurnActive) if (fullOpeningDirectiveThisAttempt && attemptSentences.length === 0 && !attemptKilled) {",
+    "if (!typedTurnActive) if (wordCount >= 4 && sentencesSpokenThisTurn.has(dedupNorm) && !resumeArmed) {",
+  ];
+  for (const g of guardedIfs) assert.ok(VTR.includes(g), g);
+  assert.ok(/if \(\n\s*!typedTurnActive &&\n\s*isStockPraiseOpenerOnly\(updatedSentence\) &&/.test(VTR), 'stock opener');
+  // kept on typed: TTS / rendering hygiene
+  assert.ok(/if \(typeof ev\.text === 'string'\) \{\s*const unlabelled = stripLeakedLabels\(ev\.text/.test(VTR), 'stripLeakedLabels kept');
+  assert.ok(/if \(sessionAllowsNonLatin\(tutorLanguages\)\) \{\s*if \(hasDottedKatakanaReading\(updatedSentence\)\) \{/.test(VTR), 'katakana drop kept');
+});
+test('fix round 1 (I-2): the menu-ask-cap pre-turn advance stands down; the lesson-time guard plans and latches the typed turn', () => {
+  assert.ok(VTR.includes('if (!typedTurnActive && mcNext && menuAskCapDecision({'), 'menu-ask cap: one authority');
+  const decl = VTR.indexOf('let typedEngineMove: { from: string; to: string } | null = null;');
+  const guard = VTR.indexOf('if (TUTOR_LESSON_TIME_GUARD && !silent');
+  assert.ok(decl > 0 && decl < guard, 'declared before the guard');
+  assert.ok(/reason=lesson_time [^\n]*\n\s*if \(typedTurnActive\) typedEngineMove = \{ from: tgSeg, to: tg\.to \};/.test(VTR), 'the guard records its move on typed');
+  assert.ok(VTR.includes('let typedMovedThisTurn: { from: string; to: string } | null = typedEngineMove;'), 'latched: a brain move is blocked (typed_turn_advance_blocked)');
+  assert.ok(VTR.includes("const typedFromSeg = typedEngineMove?.to ?? turnStartSegmentId ?? '';"), 'the request plans the post-guard part');
+  assert.ok(/if \(typedMovedThisTurn\) \{\s*typedMoved = typedMovedThisTurn;\s*onDebugEvent\?\.\('typed_turn_advance_blocked'/.test(VTR), 'blocked branch reads the latch');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

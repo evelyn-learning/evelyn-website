@@ -13180,6 +13180,9 @@ export function VoiceTutorRealtime({
       // Typed turn (Task 7/8): turn-scope from here on; re-set per attempt in the loop below and read by
       // every prose mechanism that stands down on a typed attempt (Task 8).
       let typedTurnActive = TUTOR_TYPED_TURN && isFixedScriptPlan(lessonPlanRef.current) && !opts?.prefetchOnly && !openingTurnPendingRef.current;
+      // Task 8 fix round 1 (I-2): a pre-turn ENGINE move on a typed turn (the lesson-time guard) — the typed
+      // request plans the part it moved to, and a brain `move` this turn is blocked (one advance per turn).
+      let typedEngineMove: { from: string; to: string } | null = null;
       const haLastTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? null;
       const haOfferAccepted = TUTOR_HELD_ADVANCE_WAITS_FOR_OFFER_ITEM && !silent && !isBracketed && !opts?.prefetchOnly
         && offerAsked(haLastTutor) && offerAccepted(transcript, haLastTutor);
@@ -13241,7 +13244,8 @@ export function VoiceTutorRealtime({
           const mcPick = mcMenu && menuReplyIsPick(transcript, mcCard, mcLastTutor, recentTutorTurnsRef.current.slice(-4));
           if (mcPick) menuPickedSegsRef.current.add(mcSeg);
           const mcNext = nextSegmentId(mcPlan, mcSeg, !!workingLevelRef.current);
-          if (mcNext && menuAskCapDecision({
+          // Task 8 fix round 1 (I-2): on a typed turn the allowed set already yields ['move'] at asked >= 2 — one authority.
+          if (!typedTurnActive && mcNext && menuAskCapDecision({
             menuPart: mcMenu, picked: menuPickedSegsRef.current.has(mcSeg), asks: menuAskCountRef.current.get(mcSeg) ?? 0,
             replyIsPick: mcPick, studentTurn: true, cap: MENU_ASK_CAP,
           }) === 'advance') {
@@ -13293,6 +13297,7 @@ export function VoiceTutorRealtime({
           pendingRuntimeNoteUrgentRef.current = true;
           runtimeNoteHeldTurnsRef.current = 0;
           onDebugEvent?.('fixed_script_auto_advance', `"${tgSeg}" → "${tg.to}" reason=lesson_time elapsed=${tgStart != null ? Math.round((Date.now() - tgStart) / 1000) : 0}s`);
+          if (typedTurnActive) typedEngineMove = { from: tgSeg, to: tg.to };
         }
       }
 
@@ -14755,7 +14760,7 @@ export function VoiceTutorRealtime({
       // continuation). The typed state is restored to its turn-start snapshot on every attempt > 0,
       // and the advance runs at most once per turn.
       const typedTurnStateAtTurnStart: TypedTurnState = structuredClone(typedTurnStateRef.current);
-      let typedMovedThisTurn: { from: string; to: string } | null = null;
+      let typedMovedThisTurn: { from: string; to: string } | null = typedEngineMove;
       for (let attempt = 0; attempt <= attemptCap; attempt++) {
         // This attempt continues a turn that stopped early (turn-shape.ts): it
         // is NEW content, not a correction of a killed/rejected attempt.
@@ -15093,7 +15098,7 @@ export function VoiceTutorRealtime({
         if (typedTurnActive && attempt > 0) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);
         // applyTypedTurn's contract: the FROM part — the part the student answered in, captured once
         // per student turn (an earlier attempt's advance has already moved the pointer).
-        const typedFromSeg = turnStartSegmentId ?? '';
+        const typedFromSeg = typedEngineMove?.to ?? turnStartSegmentId ?? '';
         const typedStudentText = /^\s*\[/.test(transcript) ? '' : transcript;
         const typedLastTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
         const typedJapanese = (tutorLanguages ?? []).some((l) => /^ja\b/i.test(l));
@@ -16646,7 +16651,10 @@ export function VoiceTutorRealtime({
                   // Demo-polish (2026-10-29): the ack already said "Hmm, let me
                   // see." — the brain's own "Okay, …" on top of it reads as a
                   // stutter. First sentence only, fillers only (opener-filler.ts).
-                  if (TUTOR_ACK_OPENER_STRIP && isFirstSentenceOfTurn && ackSpokenThisTurnRef.current) {
+                  // Task 8 fix round 1: on a typed attempt EVERY per-sentence drop / rewrite filter stands down
+                  // (the fields are the turn; a typed offer is its `next`, so the allowed set ends the turn) except
+                  // stripLeakedLabels and the katakana reading drop (TTS hygiene).
+                  if (!typedTurnActive) if (TUTOR_ACK_OPENER_STRIP && isFirstSentenceOfTurn && ackSpokenThisTurnRef.current) {
                     const r = stripOpenerFiller(sentence);
                     if (r.removed) {
                       sentence = r.text;
@@ -16667,7 +16675,7 @@ export function VoiceTutorRealtime({
                   const correctionWorkingRestoredFrame = (ev as { synthetic?: unknown }).synthetic === 'correction_working_restored';
                   // 2026-10-06c: never on a turn whose verdict opener was stripped —
                   // what is left is the reply's working on the student's answer.
-                  if (shouldDropBareRecheck({
+                  if (!typedTurnActive) if (shouldDropBareRecheck({
                     sentence,
                     isFirstSentenceOfTurn,
                     correctionNoteThisTurn,
@@ -16679,7 +16687,7 @@ export function VoiceTutorRealtime({
                     onDebugEvent?.('correction_recheck_dropped', sentence.slice(0, 80));
                     continue;
                   }
-                  if (isFirstSentenceOfTurn && hasPriorTutorTurn) {
+                  if (!typedTurnActive) if (isFirstSentenceOfTurn && hasPriorTutorTurn) {
                     // \b after the greeting word so "Heyo" / "Hilarious" /
                     // "Howdoyou" don't get falsely stripped as "Hey" / "Hi" /
                     // "Howdy" + leftover. The word boundary requires a
@@ -16733,7 +16741,7 @@ export function VoiceTutorRealtime({
                   // I'll keep going with fractions: what is 1/2 + 1/4?" → "What is
                   // 1/2 + 1/4?"). A sentence that is all plan is left whole here
                   // and dropped by isMetaNarration below.
-                  if (typeof ev.text === 'string' && /^\s*\[/.test(transcript)) {
+                  if (!typedTurnActive) if (typeof ev.text === 'string' && /^\s*\[/.test(transcript)) {
                     const planStripped = stripNudgePlanClause(ev.text);
                     if (planStripped && planStripped !== ev.text) {
                       onDebugEvent?.('nudge_plan_clause_stripped', `"${ev.text.slice(0, 60)}" → "${planStripped.slice(0, 60)}"`);
@@ -16763,7 +16771,7 @@ export function VoiceTutorRealtime({
                   // is acted on below, after the meta check.
                   // A frame the tracker handed back (released / restored) is
                   // not asked again — it would be withheld a second time.
-                  const correctionWorking = correctionWorkingRestoredFrame
+                  const correctionWorking = typedTurnActive || correctionWorkingRestoredFrame
                     ? false
                     : correctionWorkingTracker.isWorking(updatedSentence, correctionNoteThisTurn);
                   if (!correctionWorkingRestoredFrame && !correctionWorking && !attemptKilled) {
@@ -17800,7 +17808,7 @@ export function VoiceTutorRealtime({
                     // mid-lesson. Kept once the plan is in its closing stretch, when
                     // the session clock says wrap, after the student's end signal, or
                     // once the lesson is closed.
-                    if (isPrematureCloseLine(updatedSentence, {
+                    if (!typedTurnActive) if (isPrematureCloseLine(updatedSentence, {
                       lessonClosed: lessonClosedRef.current,
                       studentEndSignal: !!lastStudentVerificationRef.current?.isSessionEndSignal,
                       closingStretch: wrapByTime || inClosingStretch(lessonPlanRef.current, currentSegmentIdRef.current),
@@ -17812,13 +17820,14 @@ export function VoiceTutorRealtime({
                     }
                     // pronunciation-claim.ts (embed-1792363895174): 「発音は少し違って…」
                     // from a transcript. The sentence is dropped and the note follows.
-                    if (isPronunciationClaimSentence(updatedSentence, transcript, pronunciationMeasuredThisTurn ? { measured: true } : undefined)) {
+                    if (!typedTurnActive) if (isPronunciationClaimSentence(updatedSentence, transcript, pronunciationMeasuredThisTurn ? { measured: true } : undefined)) {
                       console.warn('[brain-orchestrator] dropped pronunciation claim sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
                       onDebugEvent?.('pronunciation_claim_dropped', updatedSentence.slice(0, 80));
                       pendingPronunciationNoteRef.current = PRONUNCIATION_CLAIM_NOTE;
                       continue;
                     }
                     if (
+                      !typedTurnActive &&
                       isStockPraiseOpenerOnly(updatedSentence) &&
                       praiseNoteIsSticky({ plants: praiseVarietyPlantsRef.current, superlativeTurns: superlativeTurnsRef.current, languageLesson: true })
                     ) {
@@ -17860,7 +17869,7 @@ export function VoiceTutorRealtime({
                   prevSentenceDroppedAsNarration = false;
                   // Task 33 fix round 1 (R9-3): the personal-question retry asks the
                   // pinned question again — dropped, with its starter hint.
-                  if (sqPersonalPinned && (retryReasksQuestion(updatedSentence, sqPersonalPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
+                  if (!typedTurnActive) if (sqPersonalPinned && (retryReasksQuestion(updatedSentence, sqPersonalPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
                     sqReaskDroppedPrev = true;
                     onDebugEvent?.('same_question_retry_ask_dropped', `"${updatedSentence.slice(0, 80)}"`);
                     dropLeadInWithQuestion();
@@ -17868,7 +17877,7 @@ export function VoiceTutorRealtime({
                   }
                   // Task 35 §B (bot run r14, 737 s): the closing part re-asks a
                   // question the student already answered — dropped.
-                  if (answeredGuardQs.length) {
+                  if (!typedTurnActive) if (answeredGuardQs.length) {
                     const agHit = reasksAnsweredQuestion(updatedSentence, answeredGuardQs);
                     if (agHit) {
                       onDebugEvent?.('answered_question_reask_dropped', `"${updatedSentence.slice(0, 80)}" ≈ "${agHit.slice(0, 60)}"`);
@@ -17877,21 +17886,21 @@ export function VoiceTutorRealtime({
                     }
                   }
                   // Task 45 §5: a no-ask continuation's leading verdict echo.
-                  if (noaskEchoLeading && TUTOR_NOASK_VERDICT_ECHO_DROP && isNoaskContinueTurn && isVerdictEchoSentence(updatedSentence)) {
+                  if (!typedTurnActive) if (noaskEchoLeading && TUTOR_NOASK_VERDICT_ECHO_DROP && isNoaskContinueTurn && isVerdictEchoSentence(updatedSentence)) {
                     console.warn('[brain-orchestrator] dropped no-ask continuation verdict echo:', JSON.stringify(updatedSentence.slice(0, 100)));
                     onDebugEvent?.('noask_continue_verdict_echo_dropped', `"${updatedSentence.slice(0, 80)}"`);
                     continue;
                   }
                   noaskEchoLeading = false;
                   // Task 43 §D: the part's answered card question re-asked (any part).
-                  if (answeredCardQ && reasksCardQuestion(updatedSentence, answeredCardQ)) {
+                  if (!typedTurnActive) if (answeredCardQ && reasksCardQuestion(updatedSentence, answeredCardQ)) {
                     onDebugEvent?.('answered_card_question_reask_dropped', `"${updatedSentence.slice(0, 80)}" ≈ "${answeredCardQ.slice(0, 60)}"`);
                     dropLeadInWithQuestion();
                     continue;
                   }
                   // Task 36 §A (bot run r18, 1037 s): the check-in turn asks the
                   // same thing a third time — the ask goes (with its starter).
-                  if (probeCheckinAsks && (probeReasks(updatedSentence, probeCheckinAsks, { studentText: transcript }) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
+                  if (!typedTurnActive) if (probeCheckinAsks && (probeReasks(updatedSentence, probeCheckinAsks, { studentText: transcript }) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
                     sqReaskDroppedPrev = true;
                     probeReaskDropped = true;
                     onDebugEvent?.('probe_reask_dropped', `"${updatedSentence.slice(0, 80)}"`);
@@ -17900,21 +17909,21 @@ export function VoiceTutorRealtime({
                   }
                   // Task 38 §G2 (voice run 19, 1222 / 1274 s): no readiness question
                   // in a fixed script's recap / closing part.
-                  if (TUTOR_FIXED_SCRIPT_NO_READINESS && readinessAskDropDue({ plan: lessonPlanRef.current, segmentId: currentSegmentIdRef.current, sentence: updatedSentence, asksReadiness })) {
+                  if (!typedTurnActive) if (TUTOR_FIXED_SCRIPT_NO_READINESS && readinessAskDropDue({ plan: lessonPlanRef.current, segmentId: currentSegmentIdRef.current, sentence: updatedSentence, asksReadiness })) {
                     onDebugEvent?.('readiness_ask_dropped', `"${updatedSentence.slice(0, 80)}" in "${currentSegmentIdRef.current}"`);
                     dropLeadInWithQuestion();
                     continue;
                   }
                   // Task 39 §E (voice run 20, 789 s): "Let's move on." on the turn the
                   // student accepted one more item contradicts the acceptance.
-                  if (TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn && isBareMoveOn(updatedSentence)) {
+                  if (!typedTurnActive) if (TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn && isBareMoveOn(updatedSentence)) {
                     onDebugEvent?.('offer_accepted_move_on_dropped', `"${updatedSentence.slice(0, 80)}"`);
                     continue;
                   }
                   // Task 39 §D (voice run 20, 1127 s): the part's entry menu was read in
                   // this attempt — a wrap-up / stop choice after it is dropped (the menu
                   // is the authored step).
-                  if (TUTOR_MENU_WRAP_UP_DROP && isFixedScriptPlan(lessonPlanRef.current)) {
+                  if (!typedTurnActive) if (TUTOR_MENU_WRAP_UP_DROP && isFixedScriptPlan(lessonPlanRef.current)) {
                     const wuPlan = lessonPlanRef.current;
                     const wuSeg = wuPlan?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
                     const wuCard = wuSeg && wuPlan ? stripWbEmphasisText(getSegmentTruth(wuSeg, wuPlan.id)?.problemText ?? '') : '';
@@ -17927,7 +17936,7 @@ export function VoiceTutorRealtime({
                   // Task 38 §F (voice run 19, 1037 s): after a repeat_after_correct
                   // kill the retry's repeat ask is dropped (R9-3 style); the
                   // move-on line covers a retry left with nothing else.
-                  if (TUTOR_REPEAT_AFTER_CORRECT_DROP && attempt > 0 && repeatAfterCorrectKilled && isStrictRepeatAsk(updatedSentence)) {
+                  if (!typedTurnActive) if (TUTOR_REPEAT_AFTER_CORRECT_DROP && attempt > 0 && repeatAfterCorrectKilled && isStrictRepeatAsk(updatedSentence)) {
                     sqReaskDroppedPrev = true;
                     repeatAfterCorrectReaskDropped = true;
                     onDebugEvent?.('repeat_after_correct_reask_dropped', `"${updatedSentence.slice(0, 80)}"`);
@@ -17943,14 +17952,14 @@ export function VoiceTutorRealtime({
                     noAttemptPinned = neitherStreakAsks[neitherStreakAsks.length - 1] ?? null;
                     onDebugEvent?.('neither_streak_confirmed', `"${turnAskGist(noAttemptPinned).slice(0, 80)}"`);
                   }
-                  if (neitherStreakAsks && noAttemptPinned && !reasksAsk(updatedSentence, noAttemptPinned) && neitherStreakReasks(updatedSentence, neitherStreakAsks, { studentText: transcript })) {
+                  if (!typedTurnActive) if (neitherStreakAsks && noAttemptPinned && !reasksAsk(updatedSentence, noAttemptPinned) && neitherStreakReasks(updatedSentence, neitherStreakAsks, { studentText: transcript })) {
                     sqReaskDroppedPrev = true;
                     noAttemptDropped = true;
                     onDebugEvent?.('neither_streak_reask_dropped', `"${updatedSentence.slice(0, 80)}"`);
                     dropLeadInWithQuestion();
                     continue;
                   }
-                  if (noAttemptPinned && (reasksAsk(updatedSentence, noAttemptPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
+                  if (!typedTurnActive) if (noAttemptPinned && (reasksAsk(updatedSentence, noAttemptPinned) || (sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
                     sqReaskDroppedPrev = true;
                     noAttemptDropped = true;
                     onDebugEvent?.('no_attempt_reask_dropped', `"${updatedSentence.slice(0, 80)}"`);
@@ -17958,7 +17967,7 @@ export function VoiceTutorRealtime({
                     continue;
                   }
                   // Task 41 §B: this reply answered the ask — a re-ask of it goes (the ack stays).
-                  if (correctReaskAsk && replyAnsweredAsk(verdictPrecheckRef.current, correctReaskAsk, transcript)
+                  if (!typedTurnActive) if (correctReaskAsk && replyAnsweredAsk(verdictPrecheckRef.current, correctReaskAsk, transcript)
                     && (correctReplyReasks(updatedSentence, correctReaskAsk, transcript) || (correctReaskDropped && sqReaskDroppedPrev && isStarterHint(updatedSentence)))) {
                     sqReaskDroppedPrev = true;
                     correctReaskDropped = true;
@@ -17971,32 +17980,32 @@ export function VoiceTutorRealtime({
                   // reads the student's sentence back — the board card shows it.
                   // Fix round 1 (I-4): language lessons only (subject languages / fixed
                   // script) — a maths tutor restating the student's answer keeps it.
-                  if (TUTOR_ADJACENT_DUPLICATE_DROP && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !adjacentPrevSentence && !/^\s*\[/.test(transcript) && isStudentEchoOpener(transcript, updatedSentence)) {
+                  if (!typedTurnActive) if (TUTOR_ADJACENT_DUPLICATE_DROP && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !adjacentPrevSentence && !/^\s*\[/.test(transcript) && isStudentEchoOpener(transcript, updatedSentence)) {
                     onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" (echo of the student's sentence)`);
                     continue;
                   }
                   // Task 29 §K2 (GDI run 16, 479 s): the continuation re-spoke
                   // the continued turn's first sentence — the student heard it twice.
-                  if (continuedTurnText && continuationRepeatsSentence(updatedSentence, continuedTurnText)) {
+                  if (!typedTurnActive) if (continuedTurnText && continuationRepeatsSentence(updatedSentence, continuedTurnText)) {
                     onDebugEvent?.('continuation_duplicate_dropped', updatedSentence.slice(0, 80));
                     continue;
                   }
                   // Task 38 §D (voice run 19, 971 s): the continuation's first
                   // sentence restating the continued turn's LAST sentence.
-                  if (TUTOR_QUESTION_LEAD_IN_HOLD && continuedTurnText && !adjacentPrevSentence && !heldLeadIn
+                  if (!typedTurnActive) if (TUTOR_QUESTION_LEAD_IN_HOLD && continuedTurnText && !adjacentPrevSentence && !heldLeadIn
                     && continuationEchoesLastSentence(updatedSentence, continuedTurnText, studentName ? [studentName] : [])) {
                     onDebugEvent?.('continuation_duplicate_dropped', `${updatedSentence.slice(0, 80)} (≈ the continued turn's last sentence)`);
                     continue;
                   }
                   // Task 30 §F1 (GDI run 17, 688 s): a near-copy of the sentence just before it.
-                  if (TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate(adjacentPrevSentence, updatedSentence)) {
+                  if (!typedTurnActive) if (TUTOR_ADJACENT_DUPLICATE_DROP && isAdjacentDuplicate(adjacentPrevSentence, updatedSentence)) {
                     onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" after "${adjacentPrevSentence.slice(0, 40)}"`);
                     continue;
                   }
                   // Task 43 §C (voice run 21, 143 s): the sentence before announced the
                   // same part — a bare second announcement goes; one with teaching keeps it.
                   const partDedupe = TUTOR_PART_ANNOUNCE_DEDUPE && adjacentPrevSentence && isFixedScriptPlan(lessonPlanRef.current) ? dedupePartAnnouncement(adjacentPrevSentence, updatedSentence, lessonPlanRef.current) : null;
-                  if (partDedupe !== null) {
+                  if (!typedTurnActive) if (partDedupe !== null) {
                     onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" (same part announced twice${partDedupe ? ` → "${partDedupe.slice(0, 40)}"` : ''})`);
                     if (!partDedupe) continue;
                     (ev as { text?: string }).text = partDedupe;
@@ -18005,7 +18014,6 @@ export function VoiceTutorRealtime({
                   // question? Tell me about the last business trip you took."; 1059 s: the
                   // accepted offer asked again): an offer ends the turn — a later ask in
                   // the same turn goes; the turn after an acceptance never re-offers.
-                  // Task 8: a typed turn's offer is its `next` — the allowed set ends the turn.
                   if (!typedTurnActive && TUTOR_OFFER_ENDS_TURN && isFixedScriptPlan(lessonPlanRef.current)) {
                     const r2Text = (ev.text as string) || updatedSentence;
                     if (isProposalQuestion(r2Text)) {
@@ -18023,7 +18031,7 @@ export function VoiceTutorRealtime({
                   }
                   // Task 38 §I2 (voice run 19, 51 / 114 s): the same short opener
                   // ("Good, <Name>.") as the previous turn's first sentence.
-                  if (TUTOR_ADJACENT_DUPLICATE_DROP && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !adjacentPrevSentence && !/^\s*\[/.test(transcript)) {
+                  if (!typedTurnActive) if (TUTOR_ADJACENT_DUPLICATE_DROP && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !adjacentPrevSentence && !/^\s*\[/.test(transcript)) {
                     const roRest = stripRepeatedTurnOpener(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '', (ev.text as string) || updatedSentence);
                     if (roRest !== ((ev.text as string) || updatedSentence).trim()) {
                       onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" (same opener as the previous turn)`);
@@ -18032,7 +18040,7 @@ export function VoiceTutorRealtime({
                     }
                   }
                   // Task 31 §H1 (GDI run 18, 71 s): a second ack-only thank-you in one turn.
-                  if (TUTOR_ADJACENT_DUPLICATE_DROP && isRepeatThankAck(thankAckSpoken, updatedSentence)) {
+                  if (!typedTurnActive) if (TUTOR_ADJACENT_DUPLICATE_DROP && isRepeatThankAck(thankAckSpoken, updatedSentence)) {
                     onDebugEvent?.('adjacent_duplicate_sentence_dropped', `"${updatedSentence.slice(0, 60)}" (second thank-you ack)`);
                     continue;
                   }
@@ -18041,7 +18049,7 @@ export function VoiceTutorRealtime({
                   // introduces the next question waits for that question —
                   // spoken with the next kept sentence (one chunk), dropped
                   // with a dropped question or when nothing follows.
-                  if (TUTOR_QUESTION_LEAD_IN_HOLD && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current))) {
+                  if (!typedTurnActive) if (TUTOR_QUESTION_LEAD_IN_HOLD && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current))) {
                     if (!heldLeadIn && isQuestionLeadIn(updatedSentence)) {
                       heldLeadIn = (ev.text as string) || updatedSentence;
                       onDebugEvent?.('question_lead_in_held', heldLeadIn.slice(0, 60));
@@ -18079,7 +18087,7 @@ export function VoiceTutorRealtime({
                     wrongThisSession: streakClaimLedgerRef.current.credited > 0 ? streakClaimLedgerRef.current.wrong : null,
                     answersCredited: streakClaimLedgerRef.current.credited > 0 ? streakClaimLedgerRef.current.credited : null,
                   });
-                  if (streakClaim.action !== 'pass') {
+                  if (!typedTurnActive) if (streakClaim.action !== 'pass') {
                     const streakClaimDetail = `claimed=${streakClaim.claimed.join('/') || 'perfect'} tracked=${studentStreakRef.current.count} wrong=${streakClaimLedgerRef.current.wrong} reason=${streakClaim.action === 'drop' ? streakClaim.reason : `${streakClaim.mismatch}:${streakClaim.reason}`} "${updatedSentence.slice(0, 60)}"`;
                     if (streakClaim.action === 'drop') {
                       console.warn('[brain-orchestrator] dropped false streak claim:', streakClaimDetail);
@@ -18097,7 +18105,7 @@ export function VoiceTutorRealtime({
                   // drop: nothing is assigned, OR the runtime already spoke
                   // the pointer itself (the model repeating it would tell
                   // the student the same thing twice).
-                  if ((!assignedPracticeRef.current || homeworkPointerSpokenRef.current) && isHomeworkAnnouncement(updatedSentence)) {
+                  if (!typedTurnActive) if ((!assignedPracticeRef.current || homeworkPointerSpokenRef.current) && isHomeworkAnnouncement(updatedSentence)) {
                     console.warn('[brain-orchestrator] dropped homework announcement (nothing assigned, or the runtime already announced it):', JSON.stringify(updatedSentence.slice(0, 100)));
                     onDebugEvent?.('homework_announce_dropped', updatedSentence.slice(0, 80));
                     continue;
@@ -18112,7 +18120,7 @@ export function VoiceTutorRealtime({
                   // recover. Generic regex; no subject content.
                   const stepRefRe = /\bstep\s+(?:(\d+)|one|two|three|four|five|six|seven|eight|nine)\b/i;
                   const stepRefMatch = stepRefRe.exec(updatedSentence);
-                  if (stepRefMatch) {
+                  if (!typedTurnActive) if (stepRefMatch) {
                     const wordToNum: Record<string, number> = {
                       one: 1, two: 2, three: 3, four: 4, five: 5,
                       six: 6, seven: 7, eight: 8, nine: 9,
@@ -18162,7 +18170,7 @@ export function VoiceTutorRealtime({
                     .test(updatedSentence.trim());
                   const matchesDisclaimer = /^(off the top of my head|quick one i'?ll cook up|let me sketch a fresh|improvising|made one up on the spot)/i
                     .test(updatedSentence.trim());
-                  if (matchesBridge && lastBridgePhraseRef.current === sentenceNorm) {
+                  if (!typedTurnActive) if (matchesBridge && lastBridgePhraseRef.current === sentenceNorm) {
                     // Pick a different one from the pool.
                     const alternatives = bridgePool.filter((p) => p.toLowerCase().replace(/\s+/g, ' ') !== sentenceNorm);
                     const swap = alternatives[Math.floor(Math.random() * alternatives.length)];
@@ -18173,7 +18181,7 @@ export function VoiceTutorRealtime({
                   } else if (matchesBridge) {
                     lastBridgePhraseRef.current = sentenceNorm;
                   }
-                  if (matchesDisclaimer && lastDisclaimerPhraseRef.current === sentenceNorm) {
+                  if (!typedTurnActive) if (matchesDisclaimer && lastDisclaimerPhraseRef.current === sentenceNorm) {
                     const alternatives = disclaimerPool.filter((p) => p.toLowerCase().replace(/\s+/g, ' ') !== sentenceNorm);
                     const swap = alternatives[Math.floor(Math.random() * alternatives.length)];
                     console.log(`[brain-orchestrator] disclaimer repeat — swapping "${updatedSentence.slice(0, 50)}…" → "${swap}"`);
@@ -18190,7 +18198,7 @@ export function VoiceTutorRealtime({
                   // exception to the runway rule is ignored by the model, and the
                   // bridge line already greeted. See voice/first-turn-runway.ts.
                   let finalSentence = finalSentenceRaw;
-                  if (fullOpeningDirectiveThisAttempt && attemptSentences.length === 0 && !attemptKilled) {
+                  if (!typedTurnActive) if (fullOpeningDirectiveThisAttempt && attemptSentences.length === 0 && !attemptKilled) {
                     const stripped = stripFirstTurnRunway(finalSentenceRaw);
                     if (stripped === '') {
                       onDebugEvent?.('first_turn_runway_dropped', finalSentenceRaw.slice(0, 80));
@@ -18222,7 +18230,7 @@ export function VoiceTutorRealtime({
                   // hold/decision instead: a restatement suppresses this retry's
                   // audio (the snapshot supplies it) and a correction speaks
                   // live — neither double-speaks, so the dedup adds no value here.
-                  if (wordCount >= 4 && sentencesSpokenThisTurn.has(dedupNorm) && !resumeArmed) {
+                  if (!typedTurnActive) if (wordCount >= 4 && sentencesSpokenThisTurn.has(dedupNorm) && !resumeArmed) {
                     console.log('[brain-orchestrator] dropped duplicate sentence:', JSON.stringify(updatedSentence.slice(0, 80)));
                     onDebugEvent?.('duplicate_sentence_dropped', updatedSentence.slice(0, 80));
                     continue;
