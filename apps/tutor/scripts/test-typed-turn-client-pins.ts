@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { correctionEmphasis } from '../src/lib/tutor/voice/sentence-board';
 import { segmentCardCommand } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { validatorTtsHold } from '../src/lib/tutor/voice/validator-tts-hold';
 
 let failed = 0;
 const test = (name: string, fn: () => void) => {
@@ -96,6 +97,114 @@ test('embed persists typed_turn* debug events', () => {
   const m = EMBED.match(/const EMBED_DEBUG_EVENT_PREFIXES = \[([\s\S]*?)\n\];/);
   assert.ok(m, 'prefix list found');
   assert.ok(m![1].includes("'typed_turn'"), "'typed_turn' prefix");
+});
+
+// ── Task 8: prose mechanisms stand down on a typed attempt ──────────────────
+// Brief form: an `if (!typedTurnActive …` line, then the anchor within a window.
+// Where the anchor's own line is pinned word-for-word by an older test, the
+// guard is a nested `if (!typedTurnActive) if (<pinned>)` on that line, or sits
+// on an inner line (Task 7 decision 4) — each pin below names its form.
+const guardThen = (anchor: string, window = 300): boolean =>
+  new RegExp(`if \\(!typedTurnActive\\b[^\\n]*\\n[\\s\\S]{0,${window}}${anchor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(VTR);
+// The `if (` head (at `indent`) of the block holding VTR[idx], up to its `) {`.
+const headOf = (idx: number, indent: string): string => {
+  const head = VTR.lastIndexOf(`\n${indent}if (`, idx);
+  return VTR.slice(head, VTR.indexOf(') {\n', head) + 3);
+};
+test('Task 8: typedTurnActive is turn-scope from the pre-turn held-advance fire on', () => {
+  const decl = VTR.indexOf('let typedTurnActive = TUTOR_TYPED_TURN && isFixedScriptPlan(lessonPlanRef.current) && !opts?.prefetchOnly && !openingTurnPendingRef.current;');
+  assert.ok(decl > 0, 'hoisted declaration');
+  assert.ok(decl < VTR.indexOf('heldAdvanceFiresNow({ held:'), 'declared before the held-advance fire');
+  assert.ok(!VTR.includes('let typedTurnActive = false;'), 'no second declaration');
+  assert.ok(VTR.includes('if (!typedTurnActive) if (heldAdvanceFiresNow({ held: heldAdvanceForAskRef.current,'), 'held-advance fire skipped (nested: the pinned line stays)');
+});
+test('Task 8: one attempt — attemptCap 0, performKill never kills, no continuation', () => {
+  assert.ok(/typedTurnActive = TUTOR_TYPED_TURN [^\n]*;\n(?:\s*\/\/[^\n]*\n)*\s*if \(typedTurnActive\) attemptCap = 0;/.test(VTR), 'attemptCap = 0 right after the gate');
+  assert.ok(/const performKill = async \(\): Promise<void> => \{\s*(?:\/\/[^\n]*\n\s*)*if \(typedTurnActive\) \{\s*onDebugEvent\?\.\('typed_turn_kill_skipped'[^\n]*\n\s*return;\s*\}\s*if \(attempt === attemptCap\)/.test(VTR), 'performKill returns first on typed');
+  assert.ok(VTR.includes('if (!typedTurnActive && !attemptKilled && rejectionsThisAttempt.length === 0) {'), 'turn-shape continuation skipped');
+  assert.ok(VTR.includes('if (!typedTurnActive && !attemptKilled && rejectionsThisAttempt.length === 0 && emptySegmentCardThisAttempt) {'), 'empty-card continuation skipped');
+});
+test('Task 8: holds — validator TTS hold off, VoiceVerdictGate disabled, verdict hold off; gateTimer keeps 1000 ms', () => {
+  assert.ok(/pronunciationRepeatProne: [\s\S]{0,400}?typed: typedTurnActive,\s*\}\);/.test(VTR), 'validatorTtsHold({ … typed })');
+  const base = { enabled: true, voice: true, attempt: 0, fixedScript: true, noteDelivered: true, repeatAttempts: 0, moveOnRequested: false, requiredPhrasesPending: true };
+  assert.equal(validatorTtsHold(base), true);
+  assert.equal(validatorTtsHold({ ...base, typed: true }), false, 'typed never holds');
+  assert.equal(validatorTtsHold({ ...base, typed: false }), true);
+  assert.ok(/const voiceGateWanted = TUTOR_VOICE_VERDICT_HOLD && sessionMode !== 'text' && attempt === 0 && !typedTurnActive\n[\s\S]{0,700}new VoiceVerdictGate\(\{\s*enabled: voiceGateWanted/.test(VTR), 'VoiceVerdictGate enabled only off typed');
+  assert.ok(VTR.includes('if (attempt === 0 && !typedTurnActive) {\n            // Voice answer judging: the gate decides first (see voiceGate).'), 'round-15 verdict hold off on typed');
+  assert.ok(VTR.includes('}, skipTurnMarkerPresent ? 3_600_000 : validatorHold ? VALIDATOR_TTS_HOLD_MS : 1000);'), 'gateTimer default (validatorHold is false on typed)');
+});
+test('Task 8: per-sentence filters skipped on typed (stripLeakedLabels kept)', () => {
+  // inner line: the outer `if (typeof ev.text === 'string') {` is pinned (test-meta-narration §A "on every turn")
+  assert.ok(/const noteStripped = stripNoteCitationClause\(ev\.text, [^\n]*\n\s*\/\/[^\n]*\n\s*if \(!typedTurnActive && noteStripped && noteStripped !== ev\.text\) \{/.test(VTR), 'note-citation strip');
+  assert.ok(/if \(!typedTurnActive && TUTOR_CARD_ASK_ENGINE_FALLBACK && attempt > 0 && transitionAskRejected[\s\S]{0,200}offCardAskStripped\(ev\.text/.test(VTR), 'off-card ask strip');
+  assert.ok(VTR.includes('const metaNarrationRe = !typedTurnActive && isMetaNarration(updatedSentence, {'), 'isMetaNarration drop');
+  assert.ok(VTR.includes('if (!typedTurnActive && TUTOR_OFFER_ENDS_TURN && isFixedScriptPlan(lessonPlanRef.current)) {'), 'offer-ends-turn');
+  assert.ok(/if \(typeof ev\.text === 'string'\) \{\s*const unlabelled = stripLeakedLabels\(ev\.text/.test(VTR), 'stripLeakedLabels unguarded');
+});
+test('Task 8: every in-stream kill validator is skipped on typed', () => {
+  const from = VTR.indexOf('const selfCorrectionRe = ');
+  const to = VTR.indexOf('const metaNarrationRe = ');
+  assert.ok(from > 0 && to > from);
+  let n = 0;
+  for (let i = VTR.indexOf('await performKill();', from); i > 0 && i < to; i = VTR.indexOf('await performKill();', i + 1)) {
+    n++;
+    const head = headOf(i, ' '.repeat(18));
+    const ok = /!typedTurnActive/.test(head) || (/if \(ambiguousKill\)/.test(head) && /const ambiguousKill = !typedTurnActive && /.test(VTR));
+    assert.ok(ok, `unguarded kill: ${head.slice(0, 120)}`);
+  }
+  assert.ok(n >= 20, `kill sites seen: ${n}`);
+});
+test('Task 8: end-of-attempt validators (rule8 … transition_ask_off_part) skipped on typed; teaching_language_first advisory', () => {
+  const from = VTR.indexOf('// RULE8 coherence check');
+  const to = VTR.indexOf('// Judge LLM groundedness check');
+  const tlf = VTR.indexOf("rejectionsThisAttempt.push({ action: 'teaching_language_first'");
+  let n = 0;
+  for (let i = VTR.indexOf('await performKill();', from); i > 0 && i < to; i = VTR.indexOf('await performKill();', i + 1)) {
+    if (i > tlf && i - tlf < 200) continue; // the advisory branch's else
+    n++;
+    const head = headOf(i, ' '.repeat(8));
+    assert.ok(/!typedTurnActive/.test(head), `unguarded kill: ${head.slice(0, 140)}`);
+  }
+  assert.ok(n >= 15, `kill sites seen: ${n}`);
+  for (const a of ['requiredPhraseMissAction(', 'transitionAskCheckDue({', 'fixedScriptEngineOfferLines(']) {
+    assert.ok(/!typedTurnActive/.test(headOf(VTR.indexOf(a, from), ' '.repeat(8))), `${a} inside a guarded block`);
+  }
+  assert.ok(/teachingLanguageFirstRejected = true;\s*if \(typedTurnActive\) \{\s*\/\/[^\n]*\n\s*pendingLanguageDriftNoteRef\.current = `\[runtime note — not from the student\] [^`]*\$\{teachingLanguageFirstReason\(tutorLanguages\)\}`;\s*onDebugEvent\?\.\('typed_turn_language_note', [^\n]*\n\s*\} else \{\s*rejectionsThisAttempt\.push\(\{ action: 'teaching_language_first'[^\n]*\n\s*await performKill\(\);/.test(VTR), 'TLF: note + typed_turn_language_note, kill only on prose');
+});
+test('Task 8: the judge runs and never kills; on typed a kill-class flag plants judgeNotePlantRef', () => {
+  const from = VTR.indexOf('if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && attemptText && attemptText.trim().length > 0) {');
+  const to = VTR.indexOf('// #4 safety backstop', from);
+  assert.ok(from > 0 && to > from, 'judge block');
+  assert.ok(!VTR.slice(from, to).includes('performKill('), 'no performKill in the judge block');
+  assert.ok(/onDebugEvent\?\.\('judge_correction_note_planted', killIssues\[0\]\.claim\.slice\(0, 60\)\);\s*(?:\/\/[^\n]*\n\s*)*if \(typedTurnActive\) judgeNotePlantRef\.current = \{ note: correctionNote, /.test(VTR), 'typed kill-class note is part-scoped');
+});
+test('Task 8: engine lines — only the typed nextFallback speaks', () => {
+  assert.ok(VTR.includes('if (!typedTurnActive && currentSegmentIdRef.current === transitionAskCardSeg) {'), 'card-ask fallback');
+  assert.ok(guardThen('menuEntryFallbackLine(', 400), 'menu entry (at entry)');
+  assert.ok(VTR.includes('if (!typedTurnActive && menuEnteredNow) {'), 'menu entry at entry: guard');
+  assert.ok(VTR.includes('if (!typedTurnActive && menuEntryPendingRef.current && !opts?.prefetchOnly && !attemptKilled) {'), 'menu entry (next turn)');
+  assert.ok(VTR.includes('const naLine = typedTurnActive ? null : nonAnswerReturnLine({'), 'non-answer return ask');
+  assert.ok(VTR.includes('if (!typedTurnActive) if (!attemptKilled && !(TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn)'), 'same-question move-on line');
+  assert.ok(VTR.includes('if (!typedTurnActive && TUTOR_NEITHER_STREAK_MOVE_ON && moveOnNoAskFallbackDue({'), 'neither-streak move-on line');
+});
+test('Task 8: post-turn — pronunciation auto-arm, menu counter, budget planting and answered-in-substance skipped on typed', () => {
+  assert.ok(/if \(!typedTurnActive\) if \(pronunciationActive && !opts\?\.prefetchOnly && !totalToolNamesSeen\.includes\('request_pronunciation_check'\)\) \{[\s\S]{0,2000}autoArmTargetForTurn\(/.test(VTR), 'pronunciation auto-arm / re-arm');
+  assert.ok(VTR.includes('if (!typedTurnActive && TUTOR_MENU_ASK_CAP && lessonPlanRef.current && segIdNow'), 'menu-ask counter (menu_asked counts on typed)');
+  assert.ok(/if \(TUTOR_SEGMENT_OVERLONG_NOTE && !homeworkSession && !cur\.noted && cur\.turns >= overlongTurns && !typedTurnActive /.test(VTR), 'overlong note');
+  assert.ok(VTR.includes('if (!typedTurnActive && TUTOR_LAST_ITEM_NOTE && autoReason === null'), 'last-item note');
+  const act = VTR.indexOf('if (!typedTurnActive) if (autoPlan && advanceReason) {');
+  assert.ok(act > 0, 'auto-advance / offer plant / R1 hold (nested: the pinned line stays)');
+  const planted = VTR.indexOf("onDebugEvent?.('fixed_script_offer_planted'", act);
+  assert.ok(planted > act && planted < VTR.indexOf('if (fixedScriptCloseRef.current && !lessonClosedRef.current) {', act), 'the offer plant is inside the guarded branch');
+  assert.ok(/if \(typedTurnActive && closeAction === 'wrap-turn'\) \{\s*\/\/[^\n]*\n(?:\s*\/\/[^\n]*\n)*\s*fc\.wrapRun = true;\s*onDebugEvent\?\.\('typed_turn_close_wrap_skipped'[^\n]*\n\s*\} else if \(closeAction === 'wrap-turn'\) \{/.test(VTR), 'wrap directive not planted on typed');
+  assert.ok(/if \(typedTurnActive\) \{\s*(?:\/\/[^\n]*\n\s*)*if \(nextSegmentId\(autoPlan, segIdNow, !!workingLevelRef\.current\) === null\) \{\s*fixedScriptCloseRef\.current = \{ segId: segIdNow, turnsSince: 0 \};\s*onDebugEvent\?\.\('typed_turn_close_backstop_armed'[^\n]*\n\s*\}\s*\} else if \(closeReason\) \{/.test(VTR), 'close-summary note not planted on typed; the forced close counts from the first typed turn on the last part');
+  assert.ok(VTR.includes('if (!typedTurnActive) if (TUTOR_CARD_ANSWERED_IN_SUBSTANCE && isFixedScriptPlan(lessonPlanRef.current)'), 'answered-in-substance (nested)');
+  assert.ok(/if \(typedTurnActive\) \{\s*(?:\/\/[^\n]*\n\s*)*const tyAnswered = typedTurnStateRef\.current\.answeredCards\[turnStartSegmentId\] \?\? \[\];[\s\S]{0,400}answeredInPartRef\.current\.set\(turnStartSegmentId, /.test(VTR), 'answeredCards mirrored into answeredInPartRef');
+});
+test('Task 8: a typed set_level plants no level-advance note (the typed move carries the bridge)', () => {
+  assert.ok(VTR.includes("if (cmd) await handleWhiteboardCommand([cmd], { typedTurn: true });\n                onDebugEvent?.('typed_turn_effect', `set_level ${e.level}`);"), 'set_level effect marks the batch typed');
+  assert.ok(/const typedTurnActive = opts\?\.typedTurn === true;\s*if \(!typedTurnActive\) \{\s*const lvKind = [\s\S]{0,700}fixedScriptLevelAdvanceLead\(lvNext, lvKind\)[\s\S]{0,900}levelAdvanceThisTurnRef\.current = lvNext;\s*levelAdvanceFromThisTurnRef\.current = lvFrom;\s*\} else \{\s*onDebugEvent\?\.\('typed_turn_level_advance'/.test(VTR), 'level-advance FACT note + continuation only off typed');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

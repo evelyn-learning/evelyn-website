@@ -36,7 +36,10 @@ export function validatorTtsHold(input: {
   requiredPhrasesPending: boolean;
   /** Task 45 §7a: the pronunciation part with ≥ 1 item practised (pronunciation_item_repeated) */
   pronunciationRepeatProne?: boolean;
+  /** Typed turn (Task 8): a typed attempt streams its speech — `next` is gated server-side, no validator kills. */
+  typed?: boolean;
 }): boolean {
+  if (input.typed === true) return false;
   // Round 3 (bot run r42, 554 s): the retry after a pre-audio kill was cut audibly — attempts 0 and 1 hold.
   if (!input.enabled || !input.voice || input.attempt > 1 || !input.fixedScript) return false;
   return input.noteDelivered || input.repeatAttempts >= 2 || input.moveOnRequested || input.requiredPhrasesPending || input.pronunciationRepeatProne === true;

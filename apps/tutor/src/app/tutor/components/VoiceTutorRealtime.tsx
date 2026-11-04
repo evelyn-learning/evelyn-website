@@ -6955,7 +6955,7 @@ export function VoiceTutorRealtime({
   // arrives AFTER the turn's `done`, so the live TTS dispatch count no
   // longer describes its introducing sentence — the server tells us which
   // 1-based sentence spoke the content and the render buffers against THAT.
-  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean; /** Task 21 §D3: the client's pronunciation-target card (a model to repeat) */ pronunciationModel?: boolean; /** Task 43 §J: the auto card is a CORRECTION of the student's sentence — on an advancing turn it goes on the new page */ correctionCard?: boolean; /** Task 45 §4: this auto card paints on the page being left — the pending part page waits for the transition-anchored batch */ holdDeferredPage?: boolean; /** Task 45 §4: this batch carries the part page break, anchored to the transition sentence */ pageBreakOnTransition?: boolean; /** Task 23 §A: the auto card is the STUDENT's sentence (echo / correction / checked / affirmed / recast) */ studentSentenceCard?: boolean }): Promise<WhiteboardCommandResult> => {
+  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean; /** Task 21 §D3: the client's pronunciation-target card (a model to repeat) */ pronunciationModel?: boolean; /** Task 43 §J: the auto card is a CORRECTION of the student's sentence — on an advancing turn it goes on the new page */ correctionCard?: boolean; /** Task 45 §4: this auto card paints on the page being left — the pending part page waits for the transition-anchored batch */ holdDeferredPage?: boolean; /** Task 45 §4: this batch carries the part page break, anchored to the transition sentence */ pageBreakOnTransition?: boolean; /** Task 23 §A: the auto card is the STUDENT's sentence (echo / correction / checked / affirmed / recast) */ studentSentenceCard?: boolean; /** Task 8: a typed turn's field effect (set_level plants no level-advance note) */ typedTurn?: boolean }): Promise<WhiteboardCommandResult> => {
     turnHadToolCallRef.current = true;
     // Structured entry log — gives us the shape of every batch arriving
     // at the handler (from Realtime function_call, from text-parse, or
@@ -8680,19 +8680,25 @@ export function VoiceTutorRealtime({
           if (lvPlan && lvFrom && lvNext) {
             applyResolvedAdvance(lvPlan, lvFrom, lvNext);
             inferredAdvanceThisTurnRef.current = lvNext;
-            const lvKind = lvPlan.segments.find((sg) => sg.id === lvNext)?.kind ?? 'segment';
-            const merged = mergePendingRuntimeNote(
-              { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
-              lvFrom, lvNext,
-              fixedScriptAdvancedNote(fixedScriptLevelAdvanceLead(lvNext, lvKind) + (TUTOR_FIXED_SCRIPT_TRANSITIONS ? fixedScriptBridgeClause(lvPlan, lvFrom, lvNext) : '') + (TUTOR_TRANSITION_ASK_EVERY_ADVANCE ? fixedScriptChoiceMenuClause(segmentCardStatement(lvPlan, lvNext)) : ''), lvNext),
-            );
-            pendingRuntimeNoteRef.current = merged.note;
-            pendingRuntimeNoteSegRef.current = merged.segId;
-            pendingRuntimeNoteUrgentRef.current = true;
-            runtimeNoteHeldTurnsRef.current = 0;
-            onDebugEvent?.('fixed_script_level_advance', `"${lvFrom}" → "${lvNext}"`);
-            levelAdvanceThisTurnRef.current = lvNext;
-            levelAdvanceFromThisTurnRef.current = lvFrom;
+            // Task 8: typed ⇒ the pointer only (the typed `move` carries the bridge).
+            const typedTurnActive = opts?.typedTurn === true;
+            if (!typedTurnActive) {
+              const lvKind = lvPlan.segments.find((sg) => sg.id === lvNext)?.kind ?? 'segment';
+              const merged = mergePendingRuntimeNote(
+                { note: pendingRuntimeNoteRef.current, segId: pendingRuntimeNoteSegRef.current },
+                lvFrom, lvNext,
+                fixedScriptAdvancedNote(fixedScriptLevelAdvanceLead(lvNext, lvKind) + (TUTOR_FIXED_SCRIPT_TRANSITIONS ? fixedScriptBridgeClause(lvPlan, lvFrom, lvNext) : '') + (TUTOR_TRANSITION_ASK_EVERY_ADVANCE ? fixedScriptChoiceMenuClause(segmentCardStatement(lvPlan, lvNext)) : ''), lvNext),
+              );
+              pendingRuntimeNoteRef.current = merged.note;
+              pendingRuntimeNoteSegRef.current = merged.segId;
+              pendingRuntimeNoteUrgentRef.current = true;
+              runtimeNoteHeldTurnsRef.current = 0;
+              onDebugEvent?.('fixed_script_level_advance', `"${lvFrom}" → "${lvNext}"`);
+              levelAdvanceThisTurnRef.current = lvNext;
+              levelAdvanceFromThisTurnRef.current = lvFrom;
+            } else {
+              onDebugEvent?.('typed_turn_level_advance', `"${lvFrom}" → "${lvNext}" (no note)`);
+            }
           }
         } else {
           onDebugEvent?.('working_level_refused', `requested=${String(wl.level).slice(0, 20)} current=${workingLevelRef.current?.level ?? 'none'}`);
@@ -13171,12 +13177,16 @@ export function VoiceTutorRealtime({
       // Task 45 §7b (voice run 23, 1240 s): a reply that ACCEPTS the tutor's
       // "one more …, or move on?" offer serves the item first — the held
       // advance waits one more ask → answer cycle (capped per part).
+      // Typed turn (Task 7/8): turn-scope from here on; re-set per attempt in the loop below and read by
+      // every prose mechanism that stands down on a typed attempt (Task 8).
+      let typedTurnActive = TUTOR_TYPED_TURN && isFixedScriptPlan(lessonPlanRef.current) && !opts?.prefetchOnly && !openingTurnPendingRef.current;
       const haLastTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? null;
       const haOfferAccepted = TUTOR_HELD_ADVANCE_WAITS_FOR_OFFER_ITEM && !silent && !isBracketed && !opts?.prefetchOnly
         && offerAsked(haLastTutor) && offerAccepted(transcript, haLastTutor);
       // Task 46 §2 (voice run 24, 723 s): a reply to a correction / retry ask gets its verdict first.
       const haRetryReply = TUTOR_HELD_ADVANCE_WAITS_FOR_RETRY_REPLY && !silent && !isBracketed && !opts?.prefetchOnly && (retryAskTurn(haLastTutor) || isCorrectionTurn(haLastTutor));
-      if (heldAdvanceFiresNow({ held: heldAdvanceForAskRef.current, segmentId: currentSegmentIdRef.current, silent, bracketed: isBracketed, prefetch: !!opts?.prefetchOnly, fixedScript: isFixedScriptPlan(lessonPlanRef.current),
+      // Task 8: no held advance exists on the typed path (the budget block's hold is skipped there).
+      if (!typedTurnActive) if (heldAdvanceFiresNow({ held: heldAdvanceForAskRef.current, segmentId: currentSegmentIdRef.current, silent, bracketed: isBracketed, prefetch: !!opts?.prefetchOnly, fixedScript: isFixedScriptPlan(lessonPlanRef.current),
         offerAcceptedReply: haOfferAccepted, offerWaits: heldAdvanceOfferWaitsRef.current.get(currentSegmentIdRef.current ?? '') ?? 0,
         retryReply: haRetryReply, retryWaits: heldAdvanceRetryWaitsRef.current.get(currentSegmentIdRef.current ?? '') ?? 0 })) {
         const ha = heldAdvanceForAskRef.current!;
@@ -14735,8 +14745,8 @@ export function VoiceTutorRealtime({
       if (sessionAllowsNonLatin(tutorLanguages) && runTranscript !== transcript && /^\s*\[/.test(runTranscript)) {
         runTranscript = `${LANGUAGE_KEEP_NOTE}\n\n${runTranscript}`;
       }
-      // Typed turn (Task 7): set per attempt below; read by the post-turn card blocks (skipped on a typed turn).
-      let typedTurnActive = false;
+      // Typed turn (Task 7): `typedTurnActive` (declared above) is set per attempt below; read by the post-turn
+      // card blocks (skipped on a typed turn).
       // Typed turn (Task 7): a `close` fallback — the forced-close path runs once the stream has ended.
       let typedForceClose = false;
       // Typed turn (Task 7 review C-1): one student turn may run several attempts (kill retry,
@@ -15075,6 +15085,9 @@ export function VoiceTutorRealtime({
         // runs each field's effects (cards, advance, item arm, level, close)
         // itself, through the same paths the prose turn's tools take.
         typedTurnActive = TUTOR_TYPED_TURN && isFixedScriptPlan(lessonPlanRef.current) && !opts?.prefetchOnly && !openingTurnPendingRef.current;
+        // Task 8: a typed turn is ONE attempt — no validator retry, no continuation (a kill / retry would
+        // re-enter this loop with the turn's fields already applied). A brain error keeps its own fallback.
+        if (typedTurnActive) attemptCap = 0;
         if (typedTurnActive && attempt > 0) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);
         // applyTypedTurn's contract: the FROM part — the part the student answered in, captured once
         // per student turn (an earlier attempt's advance has already moved the pointer).
@@ -15210,7 +15223,7 @@ export function VoiceTutorRealtime({
               }
               case 'set_level': {
                 const cmd = mapFunctionCallToCommand('set_working_level', { level: e.level });
-                if (cmd) await handleWhiteboardCommand([cmd]);
+                if (cmd) await handleWhiteboardCommand([cmd], { typedTurn: true });
                 onDebugEvent?.('typed_turn_effect', `set_level ${e.level}`);
                 break;
               }
@@ -15652,6 +15665,8 @@ export function VoiceTutorRealtime({
           // Task 45 §7a: the pronunciation part after its first item (pronunciation_item_repeated).
           pronunciationRepeatProne: TUTOR_PRON_ITEM_REPEAT_KILL && (pronunciationPractisedRef.current.get(currentSegmentIdRef.current ?? '')?.length ?? 0) > 0
             && !!pronunciationTargetsOf(lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.metadata),
+          // Task 8: a typed attempt streams its speech (`next` is gated server-side).
+          typed: typedTurnActive,
         });
         if (rpPendingHold && validatorHold) requiredPhrasesHoldSegsRef.current.add(currentSegmentIdRef.current ?? '');
         if (validatorHold) onDebugEvent?.('validator_tts_hold_started', `attempt ${attempt}`);
@@ -15947,7 +15962,8 @@ export function VoiceTutorRealtime({
         // (the retry hand-off below) with the checked fact. Audio already
         // playing is NOT cut (this is not performKill). First attempt of a
         // voice turn only; inert unless the server sends its frames.
-        const voiceGateWanted = TUTOR_VOICE_VERDICT_HOLD && sessionMode !== 'text' && attempt === 0
+        // Task 8: not on a typed attempt (the verdict is its own field; nothing is cut).
+        const voiceGateWanted = TUTOR_VOICE_VERDICT_HOLD && sessionMode !== 'text' && attempt === 0 && !typedTurnActive
           && voiceHoldAppliesTo(classifyTurnShape(transcript ?? '', String([...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '')), transcript ?? '');
         // Task 23 §G1 (GDI run 11, 1098 s): a measured pronunciation turn's
         // score is the verdict — the hold / cut stands down.
@@ -16119,7 +16135,9 @@ export function VoiceTutorRealtime({
           // state block above). Intercepting HERE covers every dispatch
           // route uniformly: the gated flush (flushPending), the rolling
           // 1-deep hold release, and direct gate-open emissions.
-          if (attempt === 0) {
+          // Task 8: no verdict hold on a typed attempt — no in-stream kill follows it, and held
+          // sentences would put the field anchors behind the narration.
+          if (attempt === 0 && !typedTurnActive) {
             // Voice answer judging: the gate decides first (see voiceGate).
             const voiceEmit = voiceGate.onEmit(s);
             if (voiceEmit.action === 'drop') return;
@@ -16297,6 +16315,11 @@ export function VoiceTutorRealtime({
         // The helper is also idempotent across multi-kill within a
         // single attempt.
         const performKill = async (): Promise<void> => {
+          // Task 8: never on a typed attempt (the schema + allowed set replace the validators).
+          if (typedTurnActive) {
+            onDebugEvent?.('typed_turn_kill_skipped', rejectionsThisAttempt[rejectionsThisAttempt.length - 1]?.action ?? '');
+            return;
+          }
           if (attempt === attemptCap) {
             console.warn(`[brain-orchestrator] kill suppressed on final attempt (${attempt}/${attemptCap}) — audio plays through; rejection logged but no bridge.`);
             onDebugEvent?.('kill_suppressed_final_attempt', `attempt=${attempt}/${attemptCap}`);
@@ -16696,7 +16719,8 @@ export function VoiceTutorRealtime({
                     // Fix round 8 (A1): the persona's "<Name> here." lead is stripped here — the
                     // stream merges it into the next sentence (≥ 25-char boundary).
                     const noteStripped = stripNoteCitationClause(ev.text, { personaName: personaNamesRef.current, firstTutorTurn: recentTutorTurnsRef.current.length === 0, languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current) });
-                    if (noteStripped && noteStripped !== ev.text) {
+                    // Task 8: not on a typed attempt (the schema has no slot for a cited note).
+                    if (!typedTurnActive && noteStripped && noteStripped !== ev.text) {
                       onDebugEvent?.('meta_narration_dropped_note_citation_clause', `"${ev.text.slice(0, 60)}" → "${noteStripped.slice(0, 60)}"`);
                       (ev as { text?: string }).text = noteStripped;
                     }
@@ -16716,7 +16740,7 @@ export function VoiceTutorRealtime({
                   // Task 39 §B (voice run 20, 169 s): the transition_ask_off_part
                   // retry asks the off-card question again — it goes (the
                   // engine speaks the card's own question at the attempt's end).
-                  if (TUTOR_CARD_ASK_ENGINE_FALLBACK && attempt > 0 && transitionAskRejected && transitionAskCard
+                  if (!typedTurnActive && TUTOR_CARD_ASK_ENGINE_FALLBACK && attempt > 0 && transitionAskRejected && transitionAskCard
                     && typeof ev.text === 'string' && currentSegmentIdRef.current === transitionAskCardSeg) {
                     const offCardStripped = offCardAskStripped(ev.text, transitionAskCard);
                     if (offCardStripped !== ev.text) {
@@ -16836,7 +16860,7 @@ export function VoiceTutorRealtime({
                   // corrections, not confused walkbacks.
                   // A continuation is new content, not a correction — a walk-back
                   // inside it is the same failure as on a first attempt.
-                  if (!attemptKilled && freshContentAttempt && judgeRetriesUsed < MAX_JUDGE_RETRIES && selfCorrectionHit) {
+                  if (!typedTurnActive && !attemptKilled && freshContentAttempt && judgeRetriesUsed < MAX_JUDGE_RETRIES && selfCorrectionHit) {
                     const reason = buildSelfCorrectionRetryReason({
                       sentence: updatedSentence,
                       studentUtterance: transcript ?? '',
@@ -16860,7 +16884,7 @@ export function VoiceTutorRealtime({
                   // (a retry that re-asserts false arithmetic is just as
                   // wrong; a retry ACKNOWLEDGING the error states TRUE
                   // arithmetic and passes), capped by judgeRetriesUsed.
-                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                  if (!typedTurnActive && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
                     const arith = checkArithmeticClaims(updatedSentence, {
                       normalizeSpokenWords: TUTOR_SPOKEN_NUMBER_GUARDS,
                     });
@@ -16921,7 +16945,7 @@ export function VoiceTutorRealtime({
                   // entry is consumed BEFORE the kill so the crediting
                   // retry's own "your earlier answer X was correct" line
                   // cannot re-fire the guard.
-                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && deniedAnswersRef.current.length > 0) {
+                  if (!typedTurnActive && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && deniedAnswersRef.current.length > 0) {
                     const rev = checkDeniedAnswerReversal({
                       sentence: updatedSentence,
                       denied: deniedAnswersRef.current,
@@ -16955,7 +16979,7 @@ export function VoiceTutorRealtime({
                   // the asked linear simplification from the PRIOR tutor
                   // turn and the student's utterance — pure algebra, no
                   // LLM, no false-positive class — so it may kill.
-                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                  if (!typedTurnActive && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
                     const priorTutorTurn =
                       [...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '';
                     const simp = checkSimplificationVerdict({
@@ -17002,7 +17026,7 @@ export function VoiceTutorRealtime({
                   // sentence has streamed in — mirrors the nonAnswerPraise
                   // accumulation pattern below. Pure phrase-match, no LLM,
                   // no false-positive class — so it may kill.
-                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                  if (!typedTurnActive && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
                     const praiseContradictionTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
                     // Spec §D.3: the student's utterance scopes the widened
                     // bare-praise branch to the SAME claim (a denial naming a
@@ -17113,7 +17137,7 @@ export function VoiceTutorRealtime({
                   // VERIFIED expected answer — never the student's utterance,
                   // so praised intermediate steps stay safe. Per-sentence,
                   // like praise-contradiction above.
-                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && TUTOR_FALSE_ASSERTION_KILL) {
+                  if (!typedTurnActive && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && TUTOR_FALSE_ASSERTION_KILL) {
                     // Live MCQ choices, same construction as the praise-echo
                     // and inverse-verdict sites below. Without them, an MCQ
                     // card whose verified answer is the letter "C" made every
@@ -17231,7 +17255,7 @@ export function VoiceTutorRealtime({
                   // session's equations is killed and re-asked against the board.
                   // (Also on a continuation attempt: it checks the tutor's posed
                   // sub-step against the board, not a verdict on the student.)
-                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && freshContentAttempt && currentProblemRef.current?.statement) {
+                  if (!typedTurnActive && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && freshContentAttempt && currentProblemRef.current?.statement) {
                     const ungrounded = findUngroundedComputation(updatedSentence, [
                       currentProblemRef.current.statement,
                       transcript ?? '',
@@ -17259,7 +17283,7 @@ export function VoiceTutorRealtime({
                   // authored answer's class.
                   // Also on a continuation attempt (a fact check of the tutor's own
                   // sentence against the authored answer).
-                  if (TUTOR_AUTHORED_ENDING_GUARD && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && freshContentAttempt) {
+                  if (!typedTurnActive && TUTOR_AUTHORED_ENDING_GUARD && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && freshContentAttempt) {
                     const seg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
                     // Withdrawn segment (answer-key audit): getSegmentTruth drops
                     // the stored key → authoredAnswer undefined → guard inert.
@@ -17278,7 +17302,7 @@ export function VoiceTutorRealtime({
                       continue;
                     }
                   }
-                  if (TUTOR_FALSE_PRAISE_OPENER && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText && attempt === 0) {
+                  if (!typedTurnActive && TUTOR_FALSE_PRAISE_OPENER && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText && attempt === 0) {
                     const fp = checkFalsePraiseOpener({
                       sentence: updatedSentence,
                       studentUtterance: transcript,
@@ -17342,7 +17366,7 @@ export function VoiceTutorRealtime({
                   // praise-contradiction above compares the tutor against ITSELF; this
                   // compares the affirmation against the STUDENT. Tri-state comparator:
                   // 'unknown' never fires, so hedges/prose can't kill. Pure, no LLM.
-                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                  if (!typedTurnActive && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
                     const praiseEchoTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
                     // Fold-in (round-3 review minor): mirror the mcqChoices site below
                     // (checks `choiceLetters?.length`, not just `hasChoices`) — an empty
@@ -17382,7 +17406,7 @@ export function VoiceTutorRealtime({
                   // a mid-turn rhetorical aside ("Not quite the same thing happens when...")
                   // could match the denial pattern and kill an otherwise-good turn that never
                   // denied the student's actual answer at all.
-                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText) {
+                  if (!typedTurnActive && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText) {
                     const inv = checkInverseVerdict({
                       sentence: updatedSentence,
                       studentUtterance: transcript,
@@ -17484,7 +17508,7 @@ export function VoiceTutorRealtime({
                   // actually right" patterns are typically the brain
                   // re-grounding after a judge KILL, not a confused
                   // mid-utterance flip.
-                  if (!attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && contradictionInversionRe.test(updatedSentence)) {
+                  if (!typedTurnActive && !attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && contradictionInversionRe.test(updatedSentence)) {
                     const reason =
                       `Your sentence contradicts itself: "${updatedSentence.slice(0, 160)}". ` +
                       `You started by saying the answer was wrong, then immediately said it was correct. ` +
@@ -17514,7 +17538,7 @@ export function VoiceTutorRealtime({
                   // the retry's settled judgment is the only thing the
                   // student hears — no more "Not qu—" audio chop.
                   const crossSentenceInversionRe = /\b(?:not\s+(?:quite|exactly|really|right|correct)|that'?s?\s+(?:not|wrong)|nope|wrong)\b[\s\S]{0,160}?\b(?:actually\s+(?:correct|right)|you(?:'re|\s+are|\s+were)\s+(?:actually\s+)?(?:correct|right)|that'?s\s+(?:actually\s+)?(?:correct|right|exactly\s+it|it)\b|you\s+(?:got|had)\s+it\b|(?:is|was)\s+actually\s+(?:right|correct)|spot\s+on\b|bingo\b)/i;
-                  if (!attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && verdictHoldActive
+                  if (!typedTurnActive && !attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && verdictHoldActive
                       && crossSentenceInversionRe.test(`${verdictHeldText} ${updatedSentence}`)) {
                     const reason =
                       `Your response contradicts itself across sentences: you opened with "${verdictHeldText.slice(0, 100)}" and then said "${updatedSentence.slice(0, 120)}". ` +
@@ -17543,7 +17567,7 @@ export function VoiceTutorRealtime({
                   // excludes yes / no by design; this is its narrow complement
                   // (nonanswer-praise.ts) and uses the same kill-and-retry path.
                   const bareAssentPriorTutorTurn = String([...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '');
-                  if (!attemptKilled && freshContentAttempt && judgeRetriesUsed < MAX_JUDGE_RETRIES && shouldKillBareAssentPraise(transcript, nonAnswerTextSoFar, bareAssentPriorTutorTurn)) {
+                  if (!typedTurnActive && !attemptKilled && freshContentAttempt && judgeRetriesUsed < MAX_JUDGE_RETRIES && shouldKillBareAssentPraise(transcript, nonAnswerTextSoFar, bareAssentPriorTutorTurn)) {
                     rejectionsThisAttempt.push({ action: 'bare_assent_praise', reason: bareAssentPraiseFeedback(transcript, bareAssentPriorTutorTurn) });
                     judgeRetriesUsed++;
                     await performKill();
@@ -17557,7 +17581,7 @@ export function VoiceTutorRealtime({
                   // session closed), and a wh-question asked after a readiness
                   // question in the same turn ("Ready…? How would you write…?" →
                   // "yes" → "Right — the complete solution is…").
-                  const ambiguousKill = !attemptKilled && freshContentAttempt && judgeRetriesUsed < MAX_JUDGE_RETRIES
+                  const ambiguousKill = !typedTurnActive && !attemptKilled && freshContentAttempt && judgeRetriesUsed < MAX_JUDGE_RETRIES
                     ? ambiguousAssentKill(transcript, nonAnswerTextSoFar, bareAssentPriorTutorTurn) : null;
                   if (ambiguousKill) {
                     rejectionsThisAttempt.push({ action: 'bare_assent_praise', reason: ambiguousAssentFeedback(ambiguousKill, transcript, bareAssentPriorTutorTurn) });
@@ -17573,7 +17597,7 @@ export function VoiceTutorRealtime({
                   // smaller step was open), a wrong one affirmed, or a message that
                   // answers nothing affirmed. Killed before display, retried once
                   // per turn. Inert without a pre-check (voice; flag off).
-                  if (!attemptKilled && attempt === 0 && !attemptText && !verdictPrecheckKillUsedRef.current && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                  if (!typedTurnActive && !attemptKilled && attempt === 0 && !attemptText && !verdictPrecheckKillUsedRef.current && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
                     const pcKill = precheckOpenerContradiction(verdictPrecheckRef.current, updatedSentence, { enabled: TUTOR_PRECHECK_VERDICT_KILL });
                     if (pcKill && verdictPrecheckRef.current) {
                       verdictPrecheckKillUsedRef.current = true;
@@ -17593,7 +17617,7 @@ export function VoiceTutorRealtime({
                   // once per turn with the fact. Voice is NOT covered here: the
                   // only pre-audio cut is the verdict gate, which is bound to
                   // the pre-check; in voice the facts ride the request instead.
-                  if (!attemptKilled && TUTOR_SPOKEN_REGION_CHECK && sessionMode === 'text' && turnInequalityFacts
+                  if (!typedTurnActive && !attemptKilled && TUTOR_SPOKEN_REGION_CHECK && sessionMode === 'text' && turnInequalityFacts
                       && !spokenRegionKillUsed && judgeRetriesUsed < MAX_JUDGE_RETRIES && attempt < attemptCap) {
                     // The graph this reply itself paints may be the one whose
                     // colours the sentence names: read the board again.
@@ -17616,7 +17640,7 @@ export function VoiceTutorRealtime({
                   // real trigger, and praise + a revealed value to a non-answer is
                   // wrong wherever in the turn it lands (a runtime marker such as
                   // "[start lesson]" never classifies as a non-answer ⇒ inert).
-                  if (!attemptKilled && freshContentAttempt && judgeRetriesUsed < MAX_JUDGE_RETRIES && shouldKillNonAnswerPraise(transcript, nonAnswerTextSoFar)) {
+                  if (!typedTurnActive && !attemptKilled && freshContentAttempt && judgeRetriesUsed < MAX_JUDGE_RETRIES && shouldKillNonAnswerPraise(transcript, nonAnswerTextSoFar)) {
                     rejectionsThisAttempt.push({ action: 'nonanswer_praise', reason: nonAnswerPraiseFeedback(transcript) });
                     judgeRetriesUsed++;
                     await performKill();
@@ -17640,7 +17664,7 @@ export function VoiceTutorRealtime({
                   // opener), not on plain consent to an offer, and never in voice.
                   const openerBackstopFrame = typeof (ev as { synthetic?: unknown }).synthetic === 'string'
                     && String((ev as { synthetic?: unknown }).synthetic).startsWith('verdict_opener_');
-                  if (!attemptKilled && TUTOR_TEXT_OPENER_BACKSTOP && sessionMode === 'text' && workThenMatchTurnRef.current
+                  if (!typedTurnActive && !attemptKilled && TUTOR_TEXT_OPENER_BACKSTOP && sessionMode === 'text' && workThenMatchTurnRef.current
                       && !isContinuationAttempt && !attemptText && !openerBackstopDone && !openerBackstopFrame) {
                     if (openerBackstopShape === undefined) openerBackstopShape = classifyTurnShape(transcript, bareAssentPriorTutorTurn);
                     if (!backstopAppliesTo(openerBackstopShape, verdictPrecheckRef.current)) {
@@ -17705,7 +17729,7 @@ export function VoiceTutorRealtime({
                   // on the FULL accumulated text-so-far, same textSoFar
                   // pattern as the nonAnswerPraise / praiseContradiction
                   // checks above.
-                  if (!attemptKilled) {
+                  if (!typedTurnActive && !attemptKilled) {
                     const cardCheckTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
                     if (checkCardNarrationMismatch(cardCheckTextSoFar)) {
                       await performKill();
@@ -17720,7 +17744,7 @@ export function VoiceTutorRealtime({
                   // below.) Uses the per-sentence array (not the joined
                   // attemptText string) so the pure checker can scan each
                   // sentence's inline math independently.
-                  if (!attemptKilled) {
+                  if (!typedTurnActive && !attemptKilled) {
                     const spokenSentencesSoFar = [...attemptSentences, updatedSentence];
                     if (checkSpokenCardMismatchLocal(spokenSentencesSoFar)) {
                       await performKill();
@@ -17799,7 +17823,8 @@ export function VoiceTutorRealtime({
                       continue;
                     }
                   }
-                  const metaNarrationRe = isMetaNarration(updatedSentence, {
+                  // Task 8: no meta-narration drop on a typed attempt (the fields are the turn's only text).
+                  const metaNarrationRe = !typedTurnActive && isMetaNarration(updatedSentence, {
                     structural: TUTOR_META_NARRATION_STRUCTURAL,
                     // Task 20 fix round 1 (I4): the nudge plan shapes only on a
                     // runtime-triggered turn (idle nudge / directive), never a student's.
@@ -17977,7 +18002,8 @@ export function VoiceTutorRealtime({
                   // question? Tell me about the last business trip you took."; 1059 s: the
                   // accepted offer asked again): an offer ends the turn — a later ask in
                   // the same turn goes; the turn after an acceptance never re-offers.
-                  if (TUTOR_OFFER_ENDS_TURN && isFixedScriptPlan(lessonPlanRef.current)) {
+                  // Task 8: a typed turn's offer is its `next` — the allowed set ends the turn.
+                  if (!typedTurnActive && TUTOR_OFFER_ENDS_TURN && isFixedScriptPlan(lessonPlanRef.current)) {
                     const r2Text = (ev.text as string) || updatedSentence;
                     if (isProposalQuestion(r2Text)) {
                       // Task 39 §E's offerAcceptedThisTurn: the reply accepted the offer at this turn's start.
@@ -20493,6 +20519,7 @@ export function VoiceTutorRealtime({
         // promise. Suppressed once attemptKilled is set so we don't
         // double-stack RULE8 on top of a structural rejection.
         if (
+          !typedTurnActive &&
           !attemptKilled &&
           rule8RetriesUsed < MAX_RULE8_RETRIES &&
           attemptText &&
@@ -20525,7 +20552,7 @@ export function VoiceTutorRealtime({
         // the brain "Skip needs advance" — it just retried with
         // show_problem carrying the identical statement. Detect this
         // structural omission directly.
-        if (!attemptKilled) {
+        if (!typedTurnActive && !attemptKilled) {
           // Source the Skip marker from THIS turn's actual student input
           // (`transcript`, the callBrainOnce arg) — NOT the last pushed
           // 'student' transcript entry. Bracketed synthetic turns
@@ -20662,7 +20689,7 @@ export function VoiceTutorRealtime({
         // Limited to try_yourself segments — worked_example
         // intentionally walks through the solution, so show_equation
         // alongside the problem there is correct.
-        if (!attemptKilled) {
+        if (!typedTurnActive && !attemptKilled) {
           const planForRule18 = lessonPlanRef.current;
           const segIdForRule18 = currentSegmentIdRef.current;
           if (planForRule18 && segIdForRule18) {
@@ -20797,7 +20824,9 @@ export function VoiceTutorRealtime({
         // letting the anchor slide). Threshold of 3 sentences avoids
         // false-firing on a brief connector turn that legitimately
         // delays the example.
-        if (!attemptKilled) {
+        // Task 8: the end-of-attempt kill validators (from here to transition_ask_off_part) stand down on a
+        // typed attempt — the schema + allowed set make them unreachable; teaching_language_first is advisory.
+        if (!typedTurnActive && !attemptKilled) {
           const planForPhrases = lessonPlanRef.current;
           const segIdForPhrases = currentSegmentIdRef.current;
           // 2026-05-15 (#3): suppress the check on a turn that
@@ -20883,7 +20912,7 @@ export function VoiceTutorRealtime({
         // note-for-next-turn path came a turn too late — the learner had
         // already heard the re-ask. Kill + retry, the same path as
         // required_phrase_missing; once per turn. Other sessions keep the note.
-        if (!attemptKilled && !repeatAfterCorrectRejected && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
+        if (!typedTurnActive && !attemptKilled && !repeatAfterCorrectRejected && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
           const prevTutorForRepeat = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
           const repeated = reAskedOwnSentence(transcript, attemptText, { studentCorrect: precheckCorrectness(verdictPrecheckRef.current?.verdict) })
             ? transcript
@@ -20926,16 +20955,22 @@ export function VoiceTutorRealtime({
         if (TUTOR_TEACHING_LANGUAGE_FIRST && !attemptKilled && !teachingLanguageFirstRejected && attemptText && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current)) && !/^\s*\[/.test(transcript)
           && teachingLanguageFirstViolation({ tutorLanguages, studentText: transcript, attemptText })) {
           teachingLanguageFirstRejected = true;
-          rejectionsThisAttempt.push({ action: 'teaching_language_first', reason: teachingLanguageFirstReason(tutorLanguages) });
-          await performKill();
-          onDebugEvent?.('teaching_language_first', `"${attemptText.slice(0, 80)}"`);
+          if (typedTurnActive) {
+            // Task 8: advisory on a typed attempt — the turn stands; the next turn carries the language note.
+            pendingLanguageDriftNoteRef.current = `[runtime note — not from the student] Your last turn had no English sentence. ${teachingLanguageFirstReason(tutorLanguages)}`;
+            onDebugEvent?.('typed_turn_language_note', `"${attemptText.slice(0, 80)}"`);
+          } else {
+            rejectionsThisAttempt.push({ action: 'teaching_language_first', reason: teachingLanguageFirstReason(tutorLanguages) });
+            await performKill();
+            onDebugEvent?.('teaching_language_first', `"${attemptText.slice(0, 80)}"`);
+          }
         }
 
         // Task 20 §B1 (GDI run 8, 1543 s): 「今日はここまでです。」… Goodbye! in
         // the pronunciation part of a fixed script — the summary never ran.
         // The farewell is killed + retried (validator path, once per turn) the
         // same way repeat_after_correct kills.
-        if (!attemptKilled && !prematureFarewellRejected && attemptText && !lessonClosedRef.current && !/^\s*\[/.test(transcript) && !fixedScriptCloseOk()) {
+        if (!typedTurnActive && !attemptKilled && !prematureFarewellRejected && attemptText && !lessonClosedRef.current && !/^\s*\[/.test(transcript) && !fixedScriptCloseOk()) {
           const farewell = prematureFarewellLine(attemptText);
           if (farewell) {
             prematureFarewellRejected = true;
@@ -20950,7 +20985,7 @@ export function VoiceTutorRealtime({
         // asks for it again — kill + retry once, whatever the verdict: say the
         // correct form once, accept the effort, continue. The §G pronunciation
         // drill exemption applies.
-        if (TUTOR_REPEAT_ASK_TWO_TRIES && !attemptKilled && !twoTriesRejected && attemptText && languageSessionRef.current
+        if (!typedTurnActive && TUTOR_REPEAT_ASK_TWO_TRIES && !attemptKilled && !twoTriesRejected && attemptText && languageSessionRef.current
           && !pronunciationMeasuredThisTurn
           && !pronunciationTargetsOf(lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.metadata)
           && repeatAskAfterTwoTries({ tries: repeatAskTriesRef.current, attemptText, segmentId: turnStartSegmentId ?? '' })) {
@@ -20965,7 +21000,7 @@ export function VoiceTutorRealtime({
         // a THIRD version — kill + retry once: accept, then move on. A
         // pronunciation drill (a measured note this turn, or a part that lists
         // pronunciation targets) repeats by design and is left alone.
-        if (!attemptKilled && !thirdVersionRejected && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)
+        if (!typedTurnActive && !attemptKilled && !thirdVersionRejected && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)
           && !pronunciationMeasuredThisTurn
           && !pronunciationTargetsOf(lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.metadata)) {
           const tvPrev = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
@@ -20981,7 +21016,7 @@ export function VoiceTutorRealtime({
         // third time with no answer in between — kill once; the retry gives
         // the answer and asks something different. A retry that still asks
         // it stands (sameQuestionRejected — no second kill).
-        if (TUTOR_SAME_QUESTION_THIRD_TIME && !attemptKilled && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
+        if (!typedTurnActive && TUTOR_SAME_QUESTION_THIRD_TIME && !attemptKilled && attemptText && languageSessionRef.current && !/^\s*\[/.test(transcript)) {
           const sqTurns = recentTutorTurnsRef.current;
           const sqHist = studentAnsweredHistoryRef.current;
           const sqDue = sqTurns.length >= 2 && sqHist.length >= 1 && sameQuestionThirdTime({
@@ -21011,7 +21046,7 @@ export function VoiceTutorRealtime({
         // order — on a fixed-script lesson a student turn that asks to move on
         // must be met by an advance (advance_lesson, or the pointer moved);
         // otherwise kill + retry once: close the part, call advance_lesson.
-        if (TUTOR_MOVE_ON_ORDER && !attemptKilled && !moveOnRejected && attemptText && !/^\s*\[/.test(transcript)) {
+        if (!typedTurnActive) if (TUTOR_MOVE_ON_ORDER && !attemptKilled && !moveOnRejected && attemptText && !/^\s*\[/.test(transcript)) {
           const moPlan = lessonPlanRef.current;
           const moSegId = currentSegmentIdRef.current ?? '';
           if (moPlan && isFixedScriptPlan(moPlan) && moSegId) {
@@ -21048,7 +21083,7 @@ export function VoiceTutorRealtime({
         // already practised in this part — retried pre-audio with the practised
         // list. A re-ask of the CURRENT item ("once more") is the plan's own
         // coaching and exempt (the last armed item is left out then).
-        if (TUTOR_PRON_ITEM_REPEAT_KILL && !attemptKilled && attemptText && !pronRepeatRejected && isFixedScriptPlan(lessonPlanRef.current)) {
+        if (!typedTurnActive && TUTOR_PRON_ITEM_REPEAT_KILL && !attemptKilled && attemptText && !pronRepeatRejected && isFixedScriptPlan(lessonPlanRef.current)) {
           const prSeg = currentSegmentIdRef.current ?? '';
           const prTargets = pronunciationTargetsOf(lessonPlanRef.current?.segments.find((sg) => sg.id === prSeg)?.metadata);
           const prPractisedAll = attemptPractisedPron;
@@ -21064,7 +21099,7 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('pronunciation_item_repeated', `"${pronRepeat.repeated.slice(0, 60)}" heard=${turnNarrationRef.current.length - attemptNarrationStart}`);
           }
         }
-        if (TUTOR_TRANSITION_OFFER_SPOKEN && TUTOR_FIXED_SCRIPT_TRANSITIONS && !attemptKilled && attemptText && !/^\s*\[/.test(transcript)) {
+        if (!typedTurnActive && TUTOR_TRANSITION_OFFER_SPOKEN && TUTOR_FIXED_SCRIPT_TRANSITIONS && !attemptKilled && attemptText && !/^\s*\[/.test(transcript)) {
           const toSeg = currentSegmentIdRef.current ?? '';
           const toPlan = lessonPlanRef.current;
           const toNext = toPlan && toSeg ? nextSegmentId(toPlan, toSeg, !!workingLevelRef.current) : null;
@@ -21108,7 +21143,7 @@ export function VoiceTutorRealtime({
         // its new item is still unasked — a turn that asks the choice again
         // (or "which do you mean?") is killed once and retried with the order
         // to ask the new item. Also right after the lesson left that part.
-        if (TUTOR_OFFER_REASK_KILL && !attemptKilled && attemptText && !/^\s*\[/.test(transcript)) {
+        if (!typedTurnActive && TUTOR_OFFER_REASK_KILL && !attemptKilled && attemptText && !/^\s*\[/.test(transcript)) {
           const orkSeg = currentSegmentIdRef.current ?? '';
           const orkPlan = lessonPlanRef.current;
           const orkAcc = offerAcceptedRef.current;
@@ -21132,7 +21167,7 @@ export function VoiceTutorRealtime({
         // Task 39 §E (voice run 20, 788–794 s): the offer-accepted turn asked
         // no new item ("Let's do one more on the past simple. Let's move on.")
         // — killed once and retried with the ask-one-new-item order.
-        if (!attemptKilled && offerAcceptedNoAskDue({
+        if (!typedTurnActive && !attemptKilled && offerAcceptedNoAskDue({
           enabled: TUTOR_OFFER_ACCEPTED_ASK,
           accepted: offerAcceptedRef.current,
           acceptedThisTurn: offerAcceptedThisTurn,
@@ -21162,7 +21197,7 @@ export function VoiceTutorRealtime({
         // offer is pending / was planted, or when the attempt asks the offer.
         const taOfferTurn = TUTOR_TRANSITION_OFFER_SPOKEN && currentSegmentIdRef.current === turnStartSegmentId
           && (transitionOfferMadeRef.current.has(turnStartSegmentId ?? '') || offerAsked(attemptText));
-        if (!attemptKilled && !transitionAskRejected && attemptText && !taOfferTurn
+        if (!typedTurnActive) if (!attemptKilled && !transitionAskRejected && attemptText && !taOfferTurn
           && (fixedScriptNoteDeliveredThisTurnRef.current || (TUTOR_TRANSITION_ASK_EVERY_ADVANCE && currentSegmentIdRef.current !== turnStartSegmentId))) {
           const taPlan = lessonPlanRef.current;
           const taSeg = taPlan?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
@@ -21709,6 +21744,8 @@ export function VoiceTutorRealtime({
                     pendingJudgeCorrectionNoteRef.current = correctionNote;
                     armCorrectionNoteDeadline();   // R50 T3
                     onDebugEvent?.('judge_correction_note_planted', killIssues[0].claim.slice(0, 60));
+                    // Task 8: on a typed attempt the kill-class note is part-scoped like the advisory one.
+                    if (typedTurnActive) judgeNotePlantRef.current = { note: correctionNote, kind: killNotePlan?.mode ?? '', callSeq: brainCallSeqRef.current, issueKinds: killIssues.map((i) => readJudgeIssueFields(i).issueKind), segId: turnStartSegmentId ?? null };
                   }
                   // Round-7 Fix D: detect re-assertion loops. Tokenize
                   // each new claim into structural tokens (multi-digit
@@ -21811,7 +21848,8 @@ export function VoiceTutorRealtime({
         // Task 39 §B (voice run 20, 169 s): the transition_ask_off_part retry
         // still ends off the new part's card (or asks nothing) — the engine
         // speaks the authored card question itself (the R9-2 mechanism).
-        if (currentSegmentIdRef.current === transitionAskCardSeg) {
+        // Task 8: the engine lines below stand down on a typed attempt (the typed nextFallback is the only engine speaker).
+        if (!typedTurnActive && currentSegmentIdRef.current === transitionAskCardSeg) {
           const cardAsk = cardAskEngineFallbackLine({
             enabled: TUTOR_CARD_ASK_ENGINE_FALLBACK,
             retried: attempt > 0 && transitionAskRejected,
@@ -21839,7 +21877,7 @@ export function VoiceTutorRealtime({
         const menuEnteredNow = TUTOR_MENU_ENTRY_FALLBACK && !opts?.prefetchOnly && !attemptKilled && isFixedScriptPlan(lessonPlanRef.current)
           && !!currentSegmentIdRef.current && turnStartSegmentId !== currentSegmentIdRef.current && !menuPickedSegsRef.current.has(currentSegmentIdRef.current)
           && menuEntryFallbackSpokenRef.current !== currentSegmentIdRef.current;
-        if (menuEnteredNow) {
+        if (!typedTurnActive && menuEnteredNow) {
           const meSeg = currentSegmentIdRef.current ?? '';
           const meCard = segmentCardStatement(lessonPlanRef.current, meSeg);
           const meSpoken = `${turnNarrationRef.current.join(' ')} ${attemptText}`.trim();
@@ -21863,7 +21901,7 @@ export function VoiceTutorRealtime({
         // Task 42 §D (bot run r36, 941–972 s): the menu part was entered last turn
         // without its menu, and this turn has not presented it — the engine
         // appends the authored menu (once; the first turn after the entry only).
-        if (menuEntryPendingRef.current && !opts?.prefetchOnly && !attemptKilled) {
+        if (!typedTurnActive && menuEntryPendingRef.current && !opts?.prefetchOnly && !attemptKilled) {
           const mePending = menuEntryPendingRef.current;
           const meSeg = currentSegmentIdRef.current ?? '';
           const menuEntryLine = menuEntryFallbackLine({
@@ -21892,7 +21930,7 @@ export function VoiceTutorRealtime({
         if (TUTOR_NON_ANSWER_RETURN_ASK && !attemptKilled) {
           const naPc = verdictPrecheckRef.current;
           const naCover = classifyCover(transcript);
-          const naLine = nonAnswerReturnLine({
+          const naLine = typedTurnActive ? null : nonAnswerReturnLine({
             languageLesson: subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current),
             studentNonAnswer: naPc?.answers === 'neither' || (naCover.kind === 'silent' && naCover.reason === 'backchannel'),
             runtimeTurn: /^\s*\[/.test(transcript),
@@ -21918,7 +21956,7 @@ export function VoiceTutorRealtime({
         // Task 33 fix round 1 (R9-3): the personal-question retry was nothing
         // but the dropped re-ask — the engine moves on in one line.
         // Task 39 §E: never on the offer-accepted turn — "Let's move on." contradicts the acceptance.
-        if (!attemptKilled && !(TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn) && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped || repeatAfterCorrectReaskDropped || correctReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {
+        if (!typedTurnActive) if (!attemptKilled && !(TUTOR_OFFER_ACCEPTED_ASK && offerAcceptedThisTurn) && ((sqPersonalPinned && attempt > 0) || noAttemptDropped || probeReaskDropped || repeatAfterCorrectReaskDropped || correctReaskDropped) && turnNarrationRef.current.length === attemptNarrationStart) {
           const moveOn = sameQuestionMoveOnLine(tutorLanguages);
           speakOnePart(moveOn);
           attemptText = `${attemptText} ${moveOn}`.trim();
@@ -21927,7 +21965,7 @@ export function VoiceTutorRealtime({
         }
         // Task 40 fix round 1 (I-2): the move-on turn's re-ask was dropped and
         // nothing kept in the turn asks — the engine's move-on line.
-        if (TUTOR_NEITHER_STREAK_MOVE_ON && moveOnNoAskFallbackDue({
+        if (!typedTurnActive && TUTOR_NEITHER_STREAK_MOVE_ON && moveOnNoAskFallbackDue({
           moveOnActive: !!noAttemptPinned,
           reaskDropped: noAttemptDropped,
           keptAsks: attemptAsksStudent(`${turnNarrationRef.current.join(' ')} ${attemptText}`),
@@ -21972,7 +22010,7 @@ export function VoiceTutorRealtime({
         // channel): the feedback says what was heard, to carry on from there,
         // and to end by handing the floor over. No kill — the speech was
         // delivered and stays. One continuation per turn, small session cap.
-        if (!attemptKilled && rejectionsThisAttempt.length === 0) {
+        if (!typedTurnActive && !attemptKilled && rejectionsThisAttempt.length === 0) {
           const isOpeningTurnNow = TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current;
           const boardFallbackOnlyNow = openerFallbackOnlyRef.current;
           if (isOpeningTurnNow || boardFallbackOnlyNow) {
@@ -22053,7 +22091,7 @@ export function VoiceTutorRealtime({
         // per session), its own reason text. Never stacked on the opening /
         // fallback-board continuation above (that one already pushed its
         // rejection, so the length check stands this down).
-        if (!attemptKilled && rejectionsThisAttempt.length === 0 && emptySegmentCardThisAttempt) {
+        if (!typedTurnActive && !attemptKilled && rejectionsThisAttempt.length === 0 && emptySegmentCardThisAttempt) {
           const emptyCardSegId: string = emptySegmentCardThisAttempt;
           const demoWrapPhaseNow =
             sessionWrapMinutes != null &&
@@ -22554,7 +22592,8 @@ export function VoiceTutorRealtime({
       // Task 31 §A2: the target this turn's text asks the student to say (also
       // when the part-entry rule skips the arm) — the no-ask check below sees it.
       let turnPronTargetDetected = false;
-      if (pronunciationActive && !opts?.prefetchOnly && !totalToolNamesSeen.includes('request_pronunciation_check')) {
+      // Task 8: no auto-arm / re-arm after a typed turn — its `arm_item` effect is the only arm source.
+      if (!typedTurnActive) if (pronunciationActive && !opts?.prefetchOnly && !totalToolNamesSeen.includes('request_pronunciation_check')) {
         const pronSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
         const pronTargets = pronunciationTargetsOf(pronSeg?.metadata);
         // Task 21 §D1: the sentence this turn's show_sentence put up is the
@@ -22681,7 +22720,7 @@ export function VoiceTutorRealtime({
           cur.noted = true;
           onDebugEvent?.('segment_overlong_note_skipped_offer', `${segIdNow} after ${cur.turns} turns — the part's offer replaces it`);
         }
-        if (TUTOR_SEGMENT_OVERLONG_NOTE && !homeworkSession && !cur.noted && cur.turns >= overlongTurns && (kindNow === 'hook' || kindNow === 'concept' || (sessionAllowsNonLatin(tutorLanguages) && kindNow !== 'recap'))) {
+        if (TUTOR_SEGMENT_OVERLONG_NOTE && !homeworkSession && !cur.noted && cur.turns >= overlongTurns && !typedTurnActive && (kindNow === 'hook' || kindNow === 'concept' || (sessionAllowsNonLatin(tutorLanguages) && kindNow !== 'recap'))) {
           cur.noted = true;
           const plan = lessonPlanRef.current;
           const idx = plan ? plan.segments.findIndex((sg) => sg.id === segIdNow) : -1;
@@ -22713,7 +22752,8 @@ export function VoiceTutorRealtime({
         }
         // Task 33 §C: a delivered turn in a menu part that asked the menu
         // while no option was picked counts toward MENU_ASK_CAP.
-        if (TUTOR_MENU_ASK_CAP && lessonPlanRef.current && segIdNow && !opts?.prefetchOnly && isFixedScriptPlan(lessonPlanRef.current) && !menuPickedSegsRef.current.has(segIdNow)
+        // Task 8: a typed turn counts its menu ask through the `menu_asked` effect.
+        if (!typedTurnActive && TUTOR_MENU_ASK_CAP && lessonPlanRef.current && segIdNow && !opts?.prefetchOnly && isFixedScriptPlan(lessonPlanRef.current) && !menuPickedSegsRef.current.has(segIdNow)
           && currentSegmentIdRef.current === segIdNow) {
           const mcCard = segmentCardStatement(lessonPlanRef.current, segIdNow);
           // Task 42 fix round 1 (review I-1): the strict detector — option words inside quoted student text never count.
@@ -22758,7 +22798,7 @@ export function VoiceTutorRealtime({
           : null;
         // Task 46 §2 (soft transitions): the part's budget is due at the NEXT
         // boundary — the brain says the coming ask is the part's last item.
-        if (TUTOR_LAST_ITEM_NOTE && autoReason === null && autoPlan && !homeworkSession && !pendingRuntimeNoteRef.current && !lastItemNoteSegsRef.current.has(segIdNow)
+        if (!typedTurnActive && TUTOR_LAST_ITEM_NOTE && autoReason === null && autoPlan && !homeworkSession && !pendingRuntimeNoteRef.current && !lastItemNoteSegsRef.current.has(segIdNow)
           && lastItemNoteDue({ plan: autoPlan, segmentId: segIdNow, turns: autoBudgetTurns, overlongTurns, elapsedMs: Date.now() - cur.startedAt, levelKnown: !!workingLevelRef.current })) {
           lastItemNoteSegsRef.current.add(segIdNow);
           pendingRuntimeNoteRef.current = fixedScriptLastItemNote(autoPlan, segIdNow);
@@ -22828,7 +22868,9 @@ export function VoiceTutorRealtime({
           }
         }
         if (transitionOfferUnmadeRef.current === offerSeg) transitionOfferUnmadeRef.current = '';
-        if (autoPlan && advanceReason) {
+        // Task 8: on a typed turn the budget only feeds the allowed set (budgetDue) — no auto advance,
+        // offer plant or R1 hold here; the typed `next` moves the pointer.
+        if (!typedTurnActive) if (autoPlan && advanceReason) {
           const autoNext = nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current);
           const pronArmed = !!clipCaptureRef.current?.isArmed();
           // Task 43 §G2: this turn corrected the student's sentence (an auto correction card or the brain's own show_sentence).
@@ -23026,7 +23068,12 @@ export function VoiceTutorRealtime({
             tutorText: fullText,
             wrapRun: !TUTOR_FIXED_SCRIPT_CLOSE_WRAP || fc.wrapRun === true,
           });
-          if (closeAction === 'wrap-turn') {
+          if (typedTurnActive && closeAction === 'wrap-turn') {
+            // Task 8: no wrap directive on a typed turn (its allowed set already offers `close`) — the
+            // student answers the open ask, and the next due turn forces the close.
+            fc.wrapRun = true;
+            onDebugEvent?.('typed_turn_close_wrap_skipped', `"${fc.segId}" turnsSince=${fc.turnsSince}`);
+          } else if (closeAction === 'wrap-turn') {
             fc.wrapRun = true;
             pendingRuntimeNoteRef.current = pendingRuntimeNoteRef.current
               ? `${pendingRuntimeNoteRef.current}\n\n${FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE}`
@@ -23056,7 +23103,14 @@ export function VoiceTutorRealtime({
             elapsedMs: Date.now() - cur.startedAt,
             levelKnown: !!workingLevelRef.current,
           });
-          if (closeReason) {
+          if (typedTurnActive) {
+            // Task 8: the close summary is the typed path's `close` (allowedNext on the recap part) — no
+            // close note; the forced close (the backstop) counts from the first typed turn on the last part.
+            if (nextSegmentId(autoPlan, segIdNow, !!workingLevelRef.current) === null) {
+              fixedScriptCloseRef.current = { segId: segIdNow, turnsSince: 0 };
+              onDebugEvent?.('typed_turn_close_backstop_armed', `"${segIdNow}"`);
+            }
+          } else if (closeReason) {
             fixedScriptCloseRef.current = { segId: segIdNow, turnsSince: 0 };
             // Task 31 §G: + the answer this very turn replied to (recorded further down otherwise).
             const cnThisTurn = !/^\s*\[/.test(transcript) ? answeredQuestionSentences(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '', transcript) : [];
@@ -23225,7 +23279,8 @@ export function VoiceTutorRealtime({
             // in substance — the tutor's paraphrase of it answered correctly.
             const aqPc = verdictPrecheckRef.current;
             const aqSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === turnStartSegmentId);
-            if (TUTOR_CARD_ANSWERED_IN_SUBSTANCE && isFixedScriptPlan(lessonPlanRef.current) && aqPc && aqPc.verdict === 'correct' && aqPc.answers === 'open_question' && aqSeg) {
+            // Task 8: on a typed turn the reducer's answeredCards replaces the heuristic (mirrored below).
+            if (!typedTurnActive) if (TUTOR_CARD_ANSWERED_IN_SUBSTANCE && isFixedScriptPlan(lessonPlanRef.current) && aqPc && aqPc.verdict === 'correct' && aqPc.answers === 'open_question' && aqSeg) {
               const aqCard = segmentCardStatement(lessonPlanRef.current, turnStartSegmentId);
               const aqAnswered = answeredInPartRef.current.get(turnStartSegmentId) ?? [];
               if (aqCard && !answeredCardQuestion(aqCard, aqAnswered)
@@ -23233,6 +23288,13 @@ export function VoiceTutorRealtime({
                 answeredInPartRef.current.set(turnStartSegmentId, [...aqAnswered, aqCard].slice(-6));
                 onDebugEvent?.('card_question_answered_in_substance', `"${aqCard.slice(0, 60)}" ← "${transcript.slice(0, 50)}"`);
               }
+            }
+            if (typedTurnActive) {
+              // Task 8: the reducer's answered card questions (keyed by the from-part) feed the close note.
+              const tyAnswered = typedTurnStateRef.current.answeredCards[turnStartSegmentId] ?? [];
+              const tyHave = answeredInPartRef.current.get(turnStartSegmentId) ?? [];
+              const tyNew = tyAnswered.filter((q) => !tyHave.includes(q));
+              if (tyNew.length) answeredInPartRef.current.set(turnStartSegmentId, [...tyHave, ...tyNew].slice(-6));
             }
           }
           const reaskedEarlier = reAskedEarlierQuestion(answeredQuestionsRef.current, prevTutor, fullText);
