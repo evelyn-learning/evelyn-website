@@ -384,5 +384,9 @@ test('X3 (fix wave 3): a refused move / close is never spoken as a move (r61b 71
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('When `move` is not in `allowed_next`, never say the part is over or name the next part; the engine turns the page, not your words.'), 'instructions');
 });
 
+test('X4 (fix wave 3): `none` is for non-attempts only (r61b 34 s / 51 s: real level-check answers judged none)', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes("`none` only when the reply is not an attempt at the open ask — a greeting, 'OK', 'I don't understand', a request to repeat, or silence. A reply that attempts the question is never `none`, in any part, even when you will not correct it."));
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');
