@@ -243,7 +243,7 @@ const turnOf = (over: Partial<TypedTurn> & { next?: Partial<TypedNext> }): Typed
 });
 test('applyTypedTurn: move resets, openAsk, pendingVerdict cleared', () => {
   const st = { ...createTypedTurnState(), pendingVerdict: 'correct' as const, turnsInPart: { 'present-perfect': 3, 'past-simple': 5 } };
-  const out = applyTypedTurn(st, turnOf({ next: { kind: 'move', say: 'Did you attend events?' } }), fctx('past-simple', { state: st }), { from: 'present-perfect', to: 'past-simple' });
+  const out = applyTypedTurn(st, turnOf({ next: { kind: 'move', say: 'Did you attend events?' } }), fctx('present-perfect', { state: st }), { from: 'present-perfect', to: 'past-simple' });
   assert.equal(out.turnsInPart['past-simple'], 0);
   assert.equal(out.turnsInPart['present-perfect'], 3);
   assert.equal(out.openAsk.kind, 'question');
@@ -273,6 +273,18 @@ test('applyTypedTurn: item, retry, menu, offer, served, answeredCards', () => {
   const asked = { ...createTypedTurnState(), openAsk: { kind: 'question' as const, text: 'Q?', cardQuestion: 'CARD Q' } };
   const ac = applyTypedTurn(asked, turnOf({ verdict: 'correct', next: { kind: 'question', say: 'Another?' } }), fctx('present-perfect', { state: asked }), null);
   assert.deepEqual(ac.answeredCards['present-perfect'], ['CARD Q']);
+});
+test('applyTypedTurn: move from the last part closes (no open ask)', () => {
+  const st = { ...createTypedTurnState(), openAsk: { kind: 'question' as const, text: 'Q?' } };
+  const out = applyTypedTurn(st, turnOf({ next: { kind: 'move', say: 'Bye.' } }), fctx('summary', { state: st }), null);
+  assert.equal(out.openAsk.kind, 'none');
+});
+test('applyTypedTurn: move credits the answered card to the FROM part', () => {
+  const st = { ...createTypedTurnState(), openAsk: { kind: 'question' as const, text: 'Q?', cardQuestion: 'CARD Q' } };
+  const out = applyTypedTurn(st, turnOf({ verdict: 'correct', next: { kind: 'move', say: 'Did you attend events?' } }),
+    fctx('present-perfect', { state: st }), { from: 'present-perfect', to: 'past-simple' });
+  assert.deepEqual(out.answeredCards['present-perfect'], ['CARD Q']);
+  assert.equal(out.answeredCards['past-simple'], undefined);
 });
 test('engineLineFor', () => {
   const base = { ...fctx('present-perfect'), japanese: false };

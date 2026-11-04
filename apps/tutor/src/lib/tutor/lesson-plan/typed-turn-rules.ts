@@ -5,12 +5,9 @@
  */
 import type { LessonPlan, Segment } from './types';
 import {
-  fixedScriptPartLabel, segmentMaxTurns, segmentTransitionKind,
+  fixedScriptBridgeClause, fixedScriptEngineOfferLines, fixedScriptPartLabel, nextSegmentId, segmentMaxTurns, segmentTransitionKind,
 } from './fixed-script';
 import { getSegmentTruth } from './context';
-import {
-  fixedScriptBridgeClause, fixedScriptEngineOfferLines, nextSegmentId,
-} from './fixed-script';
 import { cardAskLine } from './transition-ask';
 import { boardOffersChoices, cardableStudentSentence } from '../voice/sentence-board';
 import {
@@ -215,6 +212,12 @@ function resolveItem(next: TypedNext, ctx: FieldEffectContext): string | null {
   return nextItemFor(ctx);
 }
 
+/** A question served on an accepted-but-not-yet-served offer. */
+function servesOffer(state: TypedTurnState, segId: string): boolean {
+  const o = state.offerState[segId];
+  return !!o && o.accepted && !o.served;
+}
+
 /** Records the verdict, which closes before verdict_say. */
 export function applyField(state: TypedTurnState, ev: TypedFieldValue): TypedTurnState {
   return ev.field === 'verdict' ? { ...state, pendingVerdict: ev.value } : state;
@@ -265,8 +268,7 @@ export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): T
     case 'menu': out.push({ kind: 'menu_asked' }); break;
     case 'offer': out.push({ kind: 'offer_made' }); break;
     case 'question': {
-      const o = ctx.state.offerState[ctx.segId];
-      if (o && o.accepted && !o.served) out.push({ kind: 'offer_served' });
+      if (servesOffer(ctx.state, ctx.segId)) out.push({ kind: 'offer_served' });
       break;
     }
     default: break;
@@ -275,20 +277,27 @@ export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): T
   return out;
 }
 
-/** The state after the whole turn was spoken. Pure. */
+/**
+ * The state after the whole turn was spoken. Pure.
+ * Contract: ctx.segId is the part the brain was answering in (the FROM part, also after a move);
+ * `moved.to` is the new part. A `move` with no next part (moved null) is a close.
+ */
 export function applyTypedTurn(
   state: TypedTurnState, turn: TypedTurn, ctx: FieldEffectContext, moved: { from: string; to: string } | null,
 ): TypedTurnState {
   const seg = ctx.segId;
   const next = turn.next;
+  const closing = next.kind === 'close'
+    || (next.kind === 'move' && !moved && nextSegmentId(ctx.plan, seg, ctx.levelKnown) === null);
   const turnsInPart = { ...state.turnsInPart };
   if (moved) turnsInPart[moved.to] = 0;
   else turnsInPart[seg] = (turnsInPart[seg] ?? 0) + 1;
 
   const answeredCards = { ...state.answeredCards };
   if (turn.verdict === 'correct' && state.openAsk.cardQuestion) {
-    const cur = answeredCards[seg] ?? [];
-    if (!cur.includes(state.openAsk.cardQuestion)) answeredCards[seg] = [...cur, state.openAsk.cardQuestion];
+    const key = moved?.from ?? seg;
+    const cur = answeredCards[key] ?? [];
+    if (!cur.includes(state.openAsk.cardQuestion)) answeredCards[key] = [...cur, state.openAsk.cardQuestion];
   }
 
   const practisedItems = { ...state.practisedItems };
@@ -310,10 +319,10 @@ export function applyTypedTurn(
   const offerState = { ...state.offerState };
   const o = offerState[seg] ?? { made: false, accepted: false, served: false };
   if (next.kind === 'offer') offerState[seg] = { ...o, made: true };
-  else if (next.kind === 'question' && o.accepted && !o.served) offerState[seg] = { ...o, served: true };
+  else if (next.kind === 'question' && servesOffer(state, seg)) offerState[seg] = { ...o, served: true };
 
   let openAsk = state.openAsk;
-  if (next.kind === 'close') openAsk = { kind: 'none', text: '' };
+  if (closing) openAsk = { kind: 'none', text: '' };
   else if (next.kind !== 'wait') openAsk = openAskFor(next, ctx, moved ? moved.to : null);
 
   return {
