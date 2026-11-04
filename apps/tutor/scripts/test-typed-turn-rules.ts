@@ -10,7 +10,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
   allowedNextFor, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
-  sayWithinBudget, sharesCardWords, enterPartState, typedPronunciationItems, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
+  sayWithinBudget, sharesCardWords, enterPartState, typedPronunciationItems, moveNeedsAnswerFor, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
 import { TYPED_TURN_INSTRUCTIONS, type TypedNext, type TypedTurn } from '../src/lib/tutor/voice/typed-turn';
@@ -32,7 +32,7 @@ function ctx(segId: string, over: Partial<AllowedNextContext> & { state?: Partia
   return {
     plan, segId, levelKnown: false, state: { ...createTypedTurnState(), ...(state ?? {}) },
     budgetDue: false, lastPart: false, studentMovedOn: false, menuPick: null,
-    studentAnswerCount: 0, nudge: false, items: [], lessonElapsedMs: 0, ...rest,
+    studentReplied: false, nudge: false, items: [], lessonElapsedMs: 0, ...rest,
   };
 }
 const sorted = (a: string[]) => [...a].sort();
@@ -46,9 +46,9 @@ test('typedPartKind for the 8 GDI segments', () => {
   for (const [id, k] of Object.entries(want)) assert.equal(typedPartKind(plan, id, false), k, id);
 });
 
-test('level check: question/retry, then move at the third answer', () => {
-  assert.deepEqual(sorted(allowedNextFor(ctx('level-check', { state: ask('question'), studentAnswerCount: 0 }))), ['question', 'retry']);
-  assert.deepEqual(allowedNextFor(ctx('level-check', { state: ask('question'), studentAnswerCount: 3 })), ['move']);
+test('level check: question, then move at the third answer (R3: committed answers)', () => {
+  assert.deepEqual(allowedNextFor(ctx('level-check', { state: ask('question'), studentReplied: true })), ['question']);
+  assert.deepEqual(allowedNextFor(ctx('level-check', { state: { ...ask('question'), answersInPart: { 'level-check': 3 } } })), ['move']);
 });
 
 test('level known: topic-intro is ordinary and the line says level_known="yes"', () => {
@@ -154,8 +154,8 @@ test('every state in a grid yields a non-empty set', () => {
       for (const o of [{ made: false, accepted: false, served: false }, { made: true, accepted: false, served: false }, { made: true, accepted: true, served: false }, { made: true, accepted: true, served: true }])
         for (const its of [[], ['a']]) {
           const c = ctx(p.id, {
-            budgetDue: b, studentMovedOn: m, nudge: nu, lastPart: last, studentAnswerCount: ans, items: its,
-            state: { ...ask(k), retriesInARow: rr, offerState: { [p.id]: o }, menuState: { [p.id]: { asked, picked } } },
+            budgetDue: b, studentMovedOn: m, nudge: nu, lastPart: last, studentReplied: ans > 0, items: its,
+            state: { ...ask(k), answersInPart: { [p.id]: ans }, retriesInARow: rr, offerState: { [p.id]: o }, menuState: { [p.id]: { asked, picked } } },
           });
           const r = allowedNextFor(c); n++;
           assert.ok(r.length > 0, JSON.stringify({ p: p.id, k, b, m, nu, last, picked, asked, ans, rr, o, its }));
@@ -534,21 +534,36 @@ test('V4: answersInPart counts non-none verdicts in the FROM part; a move resets
   assert.equal(s4.answersInPart['topic-intro'], 0);
   assert.equal(enterPartState({ ...s3, answersInPart: { 'past-simple': 2 } }, 'past-simple').answersInPart['past-simple'], 0);
 });
-test('V4: level check with studentAnswerCount 2 → question/retry; 3 → move', () => {
-  assert.deepEqual(sorted(allowedNextFor(ctx('level-check', { state: ask('question'), studentAnswerCount: 2 }))), ['question', 'retry']);
-  assert.deepEqual(allowedNextFor(ctx('level-check', { state: ask('question'), studentAnswerCount: 3 })), ['move']);
+test('R3: level check — committed answers decide; the third reply may move only if it is a real answer', () => {
+  const lc = (committed: number, replied: boolean) => ctx('level-check', { studentReplied: replied, state: { ...ask('question'), answersInPart: { 'level-check': committed } } });
+  assert.deepEqual(allowedNextFor(lc(1, true)), ['question']);
+  assert.equal(moveNeedsAnswerFor(lc(1, true)), false);
+  assert.deepEqual(allowedNextFor(lc(2, false)), ['question']);
+  assert.deepEqual(allowedNextFor(lc(2, true)), ['move', 'question']);
+  assert.equal(moveNeedsAnswerFor(lc(2, true)), true);
+  assert.ok(turnStateLine(lc(2, true)).includes('move_needs_answer="yes"'), turnStateLine(lc(2, true)));
+  assert.equal(typedTurnRequestFor(lc(2, true)).moveNeedsAnswer, true);
+  assert.deepEqual(allowedNextFor(lc(3, true)), ['move']);
+  assert.equal(moveNeedsAnswerFor(lc(3, true)), false);
+  for (const c of [lc(1, true), lc(3, true), lc(2, false)]) {
+    assert.ok(!turnStateLine(c).includes('move_needs_answer'));
+    assert.equal(typedTurnRequestFor(c).moveNeedsAnswer, undefined);
+  }
+  assert.equal(moveNeedsAnswerFor(ctx('past-simple', { studentReplied: true, state: { ...ask('question'), answersInPart: { 'past-simple': 2 } } })), false);
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('move_needs_answer'));
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('`move` only if this reply was a real answer (verdict ≠ none); a non-answer → `question`'));
 });
 
 // ---- Fix wave 2 V6: a move into a key-ideas part sees the card it previews ----
 test('V6: next_card carries a concept part\'s key ideas (level-filtered, as the board shows them) when it has no question card', () => {
-  const lc = turnStateLine(ctx('level-check', { state: ask('question'), studentAnswerCount: 3 }));
+  const lc = turnStateLine(ctx('level-check', { state: { ...ask('question'), answersInPart: { 'level-check': 3 } } }));
   assert.ok(lc.includes('next_part="Your job"'), lc);
   const card = (lc.match(/next_card="([^"]*)"/) ?? [])[1] ?? '';
   // no level yet on a fixed-script plan → the intermediate version (effectiveBoardLevel), never the other levels
   assert.ok(/^1\. We explain responsibilities/.test(card), card);
   assert.ok(card.includes('Practice question: What are your main responsibilities at work?'), card);
   assert.ok(!card.includes('[beginner]') && !card.includes('What do you do at work?'), card);
-  const adv = turnStateLine(ctx('level-check', { state: ask('question'), studentAnswerCount: 3, workingLevel: 'advanced' }));
+  const adv = turnStateLine(ctx('level-check', { state: { ...ask('question'), answersInPart: { 'level-check': 3 } }, workingLevel: 'advanced' }));
   assert.ok(/next_card="[^"]*Could you describe your current responsibilities/.test(adv), adv);
   // a question card is unchanged
   assert.ok(/next_card="Have you worked for your current company for a long time\?"/.test(turnStateLine(ctx('topic-intro', { studentMovedOn: true }))));

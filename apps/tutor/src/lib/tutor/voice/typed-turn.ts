@@ -28,6 +28,8 @@ export interface TypedTurnRequest {
   state: string; allowedNext: TypedNextKind[]; recap: boolean; nudge?: boolean;
   /** W6: the pronunciation items still to practise in this part (verbatim); a `next` item outside it is refused. */
   itemsLeft?: string[];
+  /** R3: a `move` this turn needs a real answer — the server refuses move on verdict none (one retry). */
+  moveNeedsAnswer?: boolean;
 }
 
 export const TYPED_SAY_BUDGET = 3;
@@ -132,7 +134,7 @@ ${TYPED_NEXT_KINDS.map((k) => `- ${k}: ${TYPED_KIND_MEANING[k]}`).join('\n')}
   next.kind outside allowed_next is rejected and costs the student a second wait; choose from the listed kinds only.
 
 THE TURN BLOCK
-The engine sends <turn_state .../> with every turn. Its attributes: part = the kind of lesson part; label = the part's name; turn = typed turns spoken in this part over its maximum; open_ask = what is currently asked of the student (none, retry, question, offer, menu, item); open_ask_text = the words of that ask; offer_made / offer_accepted = whether the one-more-or-move-on offer was made and taken; menu_picked = the menu option chosen, or none; items_practised / items_left = pronunciation sentences already spoken and still to come, separated by | (after an item's result, work on the weakest word with one more repeat (\`retry\`) before the next item or the offer); last_item = whether the final item was already announced; budget_due = whether the part's time or turn budget is spent; post_due (only when budget_due is yes) = turns already spent in this part after its budget ran out; last_turn="yes" (only then) = this part's extra turns are used up: write the move to the next part now when move is allowed (the engine allows nothing else once they are spent); correction_open = whether a correction is still waiting for the student to repeat it; corrections_left (conversation parts only) = how many more corrections this part allows; at 0 let target-grammar slips pass as "correct"; level_known = whether the student's level is already recorded; recap_step / required_phrases (recap part only) = the step of the summary and the phrases it must contain, explained below; answered (only when non-empty) = the card questions of this part the student has already answered, separated by | (it fills from correct and partly_correct verdicts only, so an answer marked none leaves its question unanswered); next_part / next_card (only when a move, close or offer is allowed) = the label and the opening card text of the part a move would enter, or next_part="(end)" on the last part. When nudge="yes" the student has been silent: "ack" carries one patient sentence, and "next" repeats the open ask or waits.
+The engine sends <turn_state .../> with every turn. Its attributes: part = the kind of lesson part; label = the part's name; turn = typed turns spoken in this part over its maximum; open_ask = what is currently asked of the student (none, retry, question, offer, menu, item); open_ask_text = the words of that ask; offer_made / offer_accepted = whether the one-more-or-move-on offer was made and taken; menu_picked = the menu option chosen, or none; items_practised / items_left = pronunciation sentences already spoken and still to come, separated by | (after an item's result, work on the weakest word with one more repeat (\`retry\`) before the next item or the offer); last_item = whether the final item was already announced; budget_due = whether the part's time or turn budget is spent; post_due (only when budget_due is yes) = turns already spent in this part after its budget ran out; last_turn="yes" (only then) = this part's extra turns are used up: write the move to the next part now when move is allowed (the engine allows nothing else once they are spent); correction_open = whether a correction is still waiting for the student to repeat it; corrections_left (conversation parts only) = how many more corrections this part allows; at 0 let target-grammar slips pass as "correct"; level_known = whether the student's level is already recorded; move_needs_answer="yes" (only then) = \`move\` only if this reply was a real answer (verdict ≠ none); a non-answer → \`question\`; recap_step / required_phrases (recap part only) = the step of the summary and the phrases it must contain, explained below; answered (only when non-empty) = the card questions of this part the student has already answered, separated by | (it fills from correct and partly_correct verdicts only, so an answer marked none leaves its question unanswered); next_part / next_card (only when a move, close or offer is allowed) = the label and the opening card text of the part a move would enter, or next_part="(end)" on the last part. When nudge="yes" the student has been silent: "ack" carries one patient sentence, and "next" repeats the open ask or waits.
 
 THE RECAP PART
 - \`recap_step=review_feedback_check\`: \`next.say\` reviews what was practised using the student's OWN corrected sentences from this lesson (the card's examples only when they produced none), gives one specific strength and one thing to improve, and asks the part's check question; use every phrase in \`required_phrases\` verbatim.
@@ -359,7 +361,7 @@ export function isStructuredOutputRejection(err: unknown): boolean {
   return e?.status === 400 && /output_config|output_format|json_schema|\bschema\b|\bformat\b|structured output/i.test(String(e?.message ?? ''));
 }
 
-export type TypedRetryReason = 'illegal_kind' | 'say_over_budget';
+export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer';
 
 /**
  * The one regeneration request for a refused `next` (spec §4.2, §4.8 "splice"):
@@ -375,7 +377,9 @@ export function typedTurnRetryMessage(input: {
   itemNotListed?: string[];
 }): string {
   const { reason, refused, allowedNext, alreadySaid, budget, itemNotListed } = input;
-  const why = reason === 'illegal_kind' && itemNotListed
+  const why = reason === 'move_needs_answer'
+    ? `Your "next" was refused "${refused.kind}" (move_needs_answer): the student's reply was not an answer (verdict "none"), so this part cannot move on yet. Ask this part's question again with next.kind "question" (allowed: ${allowedNext.join(', ')}).`
+    : reason === 'illegal_kind' && itemNotListed
     ? `Your "next" was refused "${refused.kind}" (item_not_listed): next.item ${JSON.stringify(refused.item)} is not one of the sentences still to practise. next.item must be one of these, copied verbatim: ${itemNotListed.map((x) => JSON.stringify(x)).join(' | ')}. Keep next.kind within the allowed set (allowed: ${allowedNext.join(', ')}).`
     : reason === 'illegal_kind'
     ? `Your "next" was refused "${refused.kind}": that kind is not allowed on this turn (allowed: ${allowedNext.join(', ')}). Choose next.kind from the allowed set only.`

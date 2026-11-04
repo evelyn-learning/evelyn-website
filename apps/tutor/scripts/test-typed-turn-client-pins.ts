@@ -306,8 +306,11 @@ test('W2: pre-turn engine moves are latched, enter the part, paint once, block a
 });
 
 test('V4 (fix wave 2): the level check counts answers (non-none verdicts) + the reply now, not turns', () => {
-  assert.ok(VTR.includes('studentAnswerCount: (state.answersInPart[typedFromSeg] ?? 0) + (typedStudentText ? 1 : 0),'), 'answersInPart count');
-  assert.ok(!/studentAnswerCount: \(state\.turnsInPart\[/.test(VTR), 'the turn count is gone');
+  // R3 (fix round 1): the rules read the committed answersInPart; the client says only whether a reply came
+  assert.ok(VTR.includes('studentReplied: Boolean(typedStudentText),'), 'studentReplied');
+  assert.ok(!/studentAnswerCount:/.test(VTR), 'no turn / answer count from the client');
+  // moveNeedsAnswer rides in the request typedTurnRequestFor builds from that context
+  assert.ok(VTR.includes('typedTurnRequestFor(buildAllowedNextContext())'), 'request from the rules helper');
 });
 test('V5 (fix wave 2): a typed correction feeds the pronunciation items after the authored ones', () => {
   assert.ok(/const typedCorrectedSentencesRef = useRef<string\[\]>\(\[\]\);/.test(VTR), 'the ref');

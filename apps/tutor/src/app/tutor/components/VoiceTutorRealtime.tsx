@@ -15178,9 +15178,9 @@ export function VoiceTutorRealtime({
             // W2: the later parts' labels, as the prose move-on order passes them ("Let's do past simple.").
             studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText, laterPartLabels(tPlan, typedFromSeg)) || typedStopDecision === 'finish'),
             menuPick: typedMenuPickText,
-            // The reply being answered now counts (the level check moves on the third answer's turn).
-            // V4 (fix wave 2): earlier replies count only when judged an answer (verdict ≠ none), not every turn.
-            studentAnswerCount: (state.answersInPart[typedFromSeg] ?? 0) + (typedStudentText ? 1 : 0),
+            // R3 (fix round 1): the rules count committed answers (answersInPart, verdict ≠ none); the client says only
+            // whether a reply came this turn (the level check's third reply may move — the server refuses it on verdict none).
+            studentReplied: Boolean(typedStudentText),
             nudge: !!opts?.silent && isIdleNudgeDirective(transcript),
             items: typedItemsFor(typedFromSeg),
             lessonElapsedMs: typedLessonElapsedMs,

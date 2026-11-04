@@ -3040,6 +3040,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const typedNextAllowed = (kind: TypedNextKind): boolean => !!input.typedTurn?.allowedNext.includes(kind);
   /** The budget for one `next` (a menu gets the longer one), the shared rule. */
   const sayBudgetOf = (kind: TypedNextKind): number => typedSayBudgetFor(kind, !!input.typedTurn?.recap);
+  /** R3: the streamed verdict of this turn (released before `next`), for the moveNeedsAnswer gate. */
+  let typedVerdictSeen: TypedTurn['verdict'] | null = null;
+  const typedMoveOnNonAnswer = (kind: TypedNextKind): boolean => !!input.typedTurn?.moveNeedsAnswer && kind === 'move' && typedVerdictSeen === 'none';
   /** G1: sentences already yielded this typed turn (retry calls are the same turn); the prose duplicate filters stand down on typed. */
   const typedSpoken = new Set<string>();
   /** Prose fallback mid-turn: the frame the typed request left out comes back. */
@@ -3070,7 +3073,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           const itemsLeft = input.typedTurn?.itemsLeft ?? [];
           const itemNotListed = ev.value.kind === 'item' && itemsLeft.length > 0
             && !itemsLeft.some((x) => x.trim() === ev.value.item.trim());
+          // R3 (fix round 1): the level check's third reply may move only when it was an answer (verdict ≠ none).
+          const moveOnNonAnswer = typedMoveOnNonAnswer(ev.value.kind);
           const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) || itemNotListed ? 'illegal_kind'
+            : moveOnNonAnswer ? 'move_needs_answer'
             : englishSentenceCount(ev.value.say) > sayBudgetOf(ev.value.kind) ? 'say_over_budget' : null;
           if (reason) {
             typedRetryNeed = { reason, refused: ev.value, ...(itemNotListed && typedNextAllowed(ev.value.kind) ? { itemNotListed: itemsLeft } : {}) };
@@ -3081,7 +3087,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         speech = ev.value.say;
         typedNextVoiced = true;
         break;
-      case 'verdict': break;
+      case 'verdict': typedVerdictSeen = ev.value; break;
     }
     yield { type: 'typed-field', field: ev.field, value, ...(retried ? { retried: true } : {}) };
     if (!speech.trim()) return;
@@ -3294,17 +3300,19 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         (rc !== undefined && !sameTypedCorrection(rc.value as TypedTurn['correction'], turn.correction))
       );
       if (retryDisagreed) console.warn('[typed-turn] typed_turn_retry_disagreed: the retry\'s verdict/correction differ — ignored');
-      const legal = !!retryNext && typedNextAllowed(retryNext.kind);
-      console.warn(`[typed-turn] typed_turn_retry reason=${need.reason} result=${legal ? retryNext!.kind : 'fallback ' + fallbackKind}`);
+      // R3: a retry that moves again on a non-answer is not legal either; its fallback is the question, never the move.
+      const legal = !!retryNext && typedNextAllowed(retryNext.kind) && !typedMoveOnNonAnswer(retryNext.kind);
+      const retryFallback: TypedNextKind = need.reason === 'move_needs_answer' ? 'question' : fallbackKind;
+      console.warn(`[typed-turn] typed_turn_retry reason=${need.reason} result=${legal ? retryNext!.kind : 'fallback ' + retryFallback}`);
       if (legal) yield* emitTypedField({ field: 'next', value: retryNext! }, true);
-      else typedNextFallback = fallbackKind;
+      else typedNextFallback = retryFallback;
       yield {
         type: 'typed-turn',
         // The refused line never reaches the client's record.
-        turn: { ...budgeted, next: legal ? retryNext! : { kind: fallbackKind, say: '', item: '', level: '' } },
+        turn: { ...budgeted, next: legal ? retryNext! : { kind: retryFallback, say: '', item: '', level: '' } },
         retries: 1,
         retryReason: need.reason,
-        ...(legal ? {} : { nextFallback: fallbackKind }),
+        ...(legal ? {} : { nextFallback: retryFallback }),
         ...(retryDisagreed ? { retryDisagreed: true } : {}),
       };
     }

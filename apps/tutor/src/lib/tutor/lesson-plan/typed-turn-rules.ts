@@ -65,7 +65,7 @@ export interface TypedTurnState {
   postDueTurns: Record<string, number>;
   /** V2 (fix wave 2): corrections given per part (keyed by the FROM part); the conversation budget is advisory. */
   correctionsInPart: Record<string, number>;
-  /** V4 (fix wave 2): replies judged as answers (verdict ≠ none) per part — the level check's studentAnswerCount. */
+  /** V4 (fix wave 2): replies judged as answers (verdict ≠ none) per part — the level check's committed answers (R3). */
   answersInPart: Record<string, number>;
   /** R1 (fix round 1): the recap's review question was delivered (a `question` turn on the recap part) — a nudge /
    *  wait turn does not consume the review step. */
@@ -102,7 +102,8 @@ export interface AllowedNextContext {
   lastPart: boolean;
   studentMovedOn: boolean;
   menuPick: string | null;
-  studentAnswerCount: number;
+  /** R3 (fix round 1): the student said something this turn (the level check's third reply may move — if it is an answer). */
+  studentReplied: boolean;
   nudge: boolean;
   items: readonly string[];
   /** ms since the lesson started (the lesson-time guard's clock; postDueHoldDecision's deadline). */
@@ -197,7 +198,13 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   if (ctx.nudge) return [ask === 'none' ? 'question' : ask, 'wait'];
   if (ctx.studentMovedOn) return [moveOrClose];
 
-  if (kind === 'level_check') return ctx.studentAnswerCount >= 3 ? ['move'] : withRetry(['question', 'retry']);
+  // R3 (fix round 1): committed answers (earlier replies with verdict ≠ none) decide; with two committed, the reply now
+  // may move only if it is a real answer (moveNeedsAnswerFor — the server refuses a move on verdict none).
+  if (kind === 'level_check') {
+    const committed = state.answersInPart?.[segId] ?? 0;
+    if (committed >= 3) return ['move'];
+    return committed === 2 && ctx.studentReplied ? ['move', 'question'] : ['question'];
+  }
 
   if (kind === 'menu' || kind === 'pronunciation') {
     const ms = state.menuState[segId] ?? { asked: 0, picked: null };
@@ -244,6 +251,14 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   return withRetry(['question', 'retry']);
 }
 
+/** R3: true only in the level check's "two committed answers + a reply now" cell — a `move` there needs verdict ≠ none.
+ *  Same preconditions as allowedNextFor (a nudge / move-on / engine move row wins). Pure. */
+export function moveNeedsAnswerFor(ctx: AllowedNextContext): boolean {
+  if (typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) !== 'level_check') return false;
+  if (ctx.nudge || ctx.studentMovedOn || ctx.engineMoved || !ctx.studentReplied) return false;
+  return (ctx.state.answersInPart?.[ctx.segId] ?? 0) === 2 && allowedNextFor(ctx).includes('move');
+}
+
 function esc(s: string): string {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -276,6 +291,7 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     ...(typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'conversation'
       ? [['corrections_left', String(Math.max(0, TYPED_CONVERSATION_CORRECTIONS - (state.correctionsInPart?.[segId] ?? 0)))] as [string, string]] : []),
     ['level_known', yn(ctx.levelKnown)],
+    ...(moveNeedsAnswerFor(ctx) ? [['move_needs_answer', 'yes'] as [string, string]] : []),
   ];
   // V3: the recap's step, and on its first turn the plan's required phrases (the review turn must say them).
   if (typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'recap') {
@@ -305,6 +321,7 @@ export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
     allowedNext: allowedNextFor(ctx),
     recap: typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) === 'recap',
     nudge: ctx.nudge,
+    ...(moveNeedsAnswerFor(ctx) ? { moveNeedsAnswer: true } : {}),
     // W6: the server refuses an item outside this list before it is spoken (one retry); absent on a part without items.
     ...(left.length ? { itemsLeft: left.slice(0, 8) } : {}),
   };

@@ -266,10 +266,13 @@ function acceptTypedTurn(raw: unknown): TypedTurnRequest | undefined {
     && t.allowedNext.length > 0 && t.allowedNext.every((k) => TYPED_NEXT_KINDS.includes(k))
     // W6: optional itemsLeft — the pronunciation items still to practise (strings only, at most 8).
     && (t.itemsLeft === undefined || (Array.isArray(t.itemsLeft) && t.itemsLeft.length <= 8 && t.itemsLeft.every((x) => typeof x === 'string')))
+    // R3: optional moveNeedsAnswer (the level check's third reply may move only when it is an answer).
+    && (t.moveNeedsAnswer === undefined || typeof t.moveNeedsAnswer === 'boolean')
   ) {
     return {
       state: t.state, allowedNext: t.allowedNext, recap: t.recap === true, ...(t.nudge === true ? { nudge: true } : {}),
       ...(t.itemsLeft?.length ? { itemsLeft: t.itemsLeft } : {}),
+      ...(t.moveNeedsAnswer === true ? { moveNeedsAnswer: true } : {}),
     };
   }
   console.warn('typed_turn_body_rejected');

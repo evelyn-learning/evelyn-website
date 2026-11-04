@@ -345,6 +345,42 @@ async function main() {
     assert.ok(String(over8.requests[1].messages[over8.requests[1].messages.length - 1].content).includes('at most 7 sentences'));
   });
 
+  {
+    // R3 (fix round 1): the level check's third reply may move only when it was a real answer
+    const lcTurn = { state: '<turn_state part="level_check" open_ask="question" move_needs_answer="yes"/>', allowedNext: ['move', 'question'], recap: false, moveNeedsAnswer: true };
+    const MOVE = { kind: 'move', say: 'Thank you. Now let us talk about your week. What did you do on Monday?', item: '', level: 'intermediate' };
+    const ASK = { kind: 'question', say: 'What is one skill you would like to improve?', item: '', level: '' };
+    const NONE = { ...TURN, verdict: 'none', verdict_say: '', correction: null, support_ja: '' };
+    await test('R3: verdict none + move + moveNeedsAnswer ⇒ refused before speech; the retry\'s question is spoken once', async () => {
+      const r = await run({ ...baseInput, typedTurn: lcTurn }, [chunkedTextScript(JSON.stringify({ ...NONE, next: MOVE }), 3), chunkedTextScript(JSON.stringify({ ...NONE, next: ASK }), 2)]);
+      assert.equal(r.requests.length, 2);
+      const u = String(r.requests[1].messages[r.requests[1].messages.length - 1].content);
+      assert.ok(u.includes('move_needs_answer') && /not an answer/.test(u), u);
+      const said = sentencesOf(r.events);
+      assert.ok(!said.some((x) => x.includes('Monday')), 'the refused move is never spoken');
+      assert.equal(said.filter((x) => x === ASK.say).length, 1);
+      const t = turnEv(r.events);
+      assert.equal(t.retryReason, 'move_needs_answer');
+      assert.deepEqual(t.turn?.next, ASK);
+    });
+    await test('R3: the retry moves again on a non-answer ⇒ fallback question, never move', async () => {
+      const r = await run({ ...baseInput, typedTurn: lcTurn }, [chunkedTextScript(JSON.stringify({ ...NONE, next: MOVE }), 3), chunkedTextScript(JSON.stringify({ ...NONE, next: MOVE }), 2)]);
+      const t = turnEv(r.events);
+      assert.equal(t.nextFallback, 'question');
+      assert.ok(!sentencesOf(r.events).some((x) => x.includes('Monday')));
+    });
+    await test('R3: verdict correct + move + moveNeedsAnswer ⇒ one call, the move is spoken', async () => {
+      const r = await run({ ...baseInput, typedTurn: lcTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, verdict: 'correct', correction: null, next: MOVE }), 3)]);
+      assert.equal(r.requests.length, 1);
+      assert.ok(sentencesOf(r.events).some((x) => x.includes('Monday')));
+    });
+    await test('R3: without moveNeedsAnswer a none + move is not refused', async () => {
+      const { moveNeedsAnswer: _m, ...plain } = lcTurn;
+      const r = await run({ ...baseInput, typedTurn: plain }, [chunkedTextScript(JSON.stringify({ ...NONE, next: MOVE }), 3)]);
+      assert.equal(r.requests.length, 1);
+    });
+  }
+
   console.log('fallbacks (Task 6)');
   await test('400 output_config.format rejected ⇒ typed-turn-fallback format_rejected, then the prose call with tools', async () => {
     const reject: Script = { events: [], final: { content: [], stop_reason: 'end_turn' }, error: { status: 400, message: 'output_config.format is not supported' } };
@@ -471,6 +507,9 @@ async function main() {
     // W6: the optional itemsLeft array (strings only, at most 8)
     assert.match(routeSrc, /itemsLeft/);
     assert.ok(routeSrc.includes('t.itemsLeft.length <= 8 && t.itemsLeft.every((x) => typeof x === \'string\')'), 'itemsLeft shape check');
+    // R3: optional boolean moveNeedsAnswer, passed through only when true
+    assert.ok(routeSrc.includes("&& (t.moveNeedsAnswer === undefined || typeof t.moveNeedsAnswer === 'boolean')"), 'moveNeedsAnswer shape check');
+    assert.ok(routeSrc.includes('...(t.moveNeedsAnswer === true ? { moveNeedsAnswer: true } : {}),'), 'moveNeedsAnswer passed through');
   });
   const brainSrc = fs.readFileSync(path.join(__dirname, '../src/lib/tutor/voice/claude-brain.ts'), 'utf8');
   await test('brain: answer_check on typed carries the advisory line; provider fallback wired', () => {
