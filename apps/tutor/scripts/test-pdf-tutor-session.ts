@@ -20,13 +20,13 @@
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { sanitizeForPDF, toWinAnsiSafe } from '../src/lib/utils/export/pdf-tutor-session';
+import { sanitizeForPDF, toWinAnsiSafe, describeWhiteboardCommand, pdfSessionText, normalizeSessionForPdf } from '../src/lib/utils/export/pdf-tutor-session';
 import {
   hasCjk, inferSessionLanguages, labelCjkRun, pickPdfFont, CJK_FONT_FAMILY,
 } from '../src/lib/utils/export/pdf-cjk-font';
 import {
   commandToPdfBlock, estimateSentenceHeight, handwriteCaptionText, layoutSentenceTokens, pdfCommandId, sentenceSegments,
-  shouldBreakBeforeGroup, fitBadgeLabel,
+  shouldBreakBeforeGroup, fitBadgeLabel, normalizePdfCommand,
 } from '../src/lib/utils/export/pdf-session-blocks';
 
 let passed = 0;
@@ -146,6 +146,41 @@ console.log('\nFix round 1: badge labels');
 }
 
 // ── End-to-end (jsPDF Node build) ──
+console.log('\nZ3 (fix wave 5): nested commands are unwrapped for every caller');
+{
+  // the live-page shape the brief names: content under `data`, live-only keys beside it
+  const live = { action: 'showSentence', data: { sentence: 'I work in sales.', gloss: '私は営業です。' }, id: 'x', page: 2, anchorSentence: 1 };
+  const flatLive = normalizePdfCommand(live);
+  check('live-shaped: unwrapped to the flat card, live-only keys dropped',
+    JSON.stringify(flatLive) === JSON.stringify({ sentence: 'I work in sales.', gloss: '私は営業です。', action: 'showSentence' }), JSON.stringify(flatLive));
+  check('live-shaped: describeWhiteboardCommand gives a sentence line, not "Command: showSentence"',
+    describeWhiteboardCommand(live) === 'Sentence', describeWhiteboardCommand(live));
+  const block = commandToPdfBlock(live);
+  check('live-shaped: commandToPdfBlock draws the sentence card (not skip / unknown)', block.kind === 'sentence' && (block as { gloss?: string }).gloss === '私は営業です。', JSON.stringify(block).slice(0, 120));
+  const db = { action: 'showSentence', data: { sentence: 'I work in sales.' }, timestamp: '2026-11-04T20:20:00Z', sourceMessageIndex: 3 };
+  check('DB-shaped: still unwrapped, timestamp + sourceMessageIndex kept',
+    JSON.stringify(normalizePdfCommand(db)) === JSON.stringify({ sentence: 'I work in sales.', action: 'showSentence', timestamp: '2026-11-04T20:20:00Z', sourceMessageIndex: 3 }), JSON.stringify(normalizePdfCommand(db)));
+  const flat = { action: 'showSentence', sentence: 'I work in sales.', emphasis: ['work'], id: 'y' };
+  check('already flat: returned unchanged (same object)', normalizePdfCommand(flat) === flat);
+  const graph = { action: 'showGraph', type: 'line', data: { title: 'Sales', points: [] } };
+  check('flat showGraph (its own `data` field): left alone', normalizePdfCommand(graph) === graph);
+  const dbGraph = { action: 'showGraph', data: { type: 'line', data: { title: 'Sales' } } };
+  check('DB-shaped showGraph: unwrapped', (normalizePdfCommand(dbGraph) as { type?: string }).type === 'line');
+  check('a stats array `data` is not a nested command', normalizePdfCommand({ action: 'showStats', type: 'histogram', data: [1, 2] }).data !== undefined);
+  // the exporter's entry normalises the top-level list AND each transcript entry's commands before the language text is built
+  const session = normalizeSessionForPdf(
+    [{ id: '1', timestamp: new Date(), role: 'tutor', text: 'Say it.', whiteboardCommands: [live as never] }],
+    [live as never, { action: 'newPage', data: { title: 'Part 5 · Past simple · 過去形' }, id: 'p' } as never],
+  );
+  check('normalizeSessionForPdf: top-level + transcript commands flattened',
+    (session.whiteboardCommands[0] as { sentence?: string }).sentence === 'I work in sales.'
+    && (session.transcript[0].whiteboardCommands?.[0] as { sentence?: string }).sentence === 'I work in sales.'
+    && (session.whiteboardCommands[1] as { title?: string }).title === 'Part 5 · Past simple · 過去形');
+  const text = pdfSessionText('Work projects', session.transcript, session.whiteboardCommands);
+  check('pdfSessionText: the card gloss and the part title (ja) count for the language / font decision',
+    text.includes('私は営業です。') && text.includes('過去形') && hasCjk(text) && inferSessionLanguages(text).includes('ja'));
+}
+
 async function exportRun18Like(fontAvailable: boolean): Promise<string> {
   const { exportTutorSessionPDF } = await import('../src/lib/utils/export/pdf-tutor-session');
   const scratch = mkdtempSync(join(tmpdir(), 'pdf-tutor-session-test-'));

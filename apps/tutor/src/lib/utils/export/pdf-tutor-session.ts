@@ -15,10 +15,10 @@ import {
 } from './pdf-cjk-font';
 import {
   commandToPdfBlock, estimateSentenceHeight, fitBadgeLabel, handwriteCaptionText, layoutSentenceTokens, pdfCommandId,
-  shouldBreakBeforeGroup, type PdfBlock,
+  normalizePdfCommand, shouldBreakBeforeGroup, type PdfBlock, type PdfCommand,
 } from './pdf-session-blocks';
 
-interface TranscriptMessage {
+export interface TranscriptMessage {
   id: string;
   timestamp: Date;
   role: 'student' | 'tutor' | 'system';
@@ -27,7 +27,7 @@ interface TranscriptMessage {
   pedagogicalIntent?: string;
 }
 
-interface WhiteboardCommandData {
+export interface WhiteboardCommandData {
   action: string;
   [key: string]: unknown;
 }
@@ -1638,7 +1638,7 @@ function estimateCommandHeight(rawCmd: WhiteboardCommandData): number {
   return 40;
 }
 
-function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
+export function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
   // Normalize DB format (nested data) to flat format
   const cmdData = rawCmd.data as Record<string, unknown> | undefined;
   const dbOnlyKeys = new Set(['action', 'data', 'timestamp', 'sourceMessageIndex']);
@@ -1733,6 +1733,27 @@ function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
   }
 }
 
+/** Z3 (fix wave 5): the top-level command list AND each transcript entry's commands, flattened (normalizePdfCommand). */
+export function normalizeSessionForPdf(
+  transcript: TranscriptMessage[], whiteboardCommands: WhiteboardCommandData[],
+): { transcript: TranscriptMessage[]; whiteboardCommands: WhiteboardCommandData[] } {
+  const norm = (c: WhiteboardCommandData): WhiteboardCommandData => (c && typeof c === 'object' ? normalizePdfCommand(c as PdfCommand) as WhiteboardCommandData : c);
+  return {
+    whiteboardCommands: (whiteboardCommands ?? []).map(norm),
+    transcript: (transcript ?? []).map((m) => (m.whiteboardCommands ? { ...m, whiteboardCommands: m.whiteboardCommands.map(norm) } : m)),
+  };
+}
+
+/** The session's text for the CJK-font / language decision — read from the NORMALISED commands (Z3). */
+export function pdfSessionText(topicName: string, transcript: TranscriptMessage[], whiteboardCommands: WhiteboardCommandData[]): string {
+  return [
+    topicName,
+    ...transcript.map((m) => m.text),
+    JSON.stringify(whiteboardCommands),
+    ...transcript.map((m) => (m.whiteboardCommands ? JSON.stringify(m.whiteboardCommands) : '')),
+  ].join('\n');
+}
+
 export async function exportTutorSessionPDF(
   transcript: TranscriptMessage[],
   whiteboardCommands: WhiteboardCommandData[],
@@ -1745,7 +1766,9 @@ export async function exportTutorSessionPDF(
   options?: { includeDebugData?: boolean; subject?: string; level?: string; productName?: string; languages?: string[] }
 ): Promise<void> {
   try {
-    await exportTutorSessionPDFInner(transcript, whiteboardCommands, topicName, sessionGoal, studentName, options);
+    // Z3 (fix wave 5): one normalisation for every caller (live page, replay, admin) before anything reads a command.
+    const session = normalizeSessionForPdf(transcript, whiteboardCommands);
+    await exportTutorSessionPDFInner(session.transcript, session.whiteboardCommands, topicName, sessionGoal, studentName, options);
   } finally {
     // The per-export text context (CJK font loaded? languages) must never
     // leak into the next export or into another caller of sanitizeForPDF.
@@ -1774,12 +1797,7 @@ async function exportTutorSessionPDFInner(
   // (a Latin-only session never fetches the font), then route every CJK
   // string through it. A failed fetch keeps the bracket-label fallback.
   {
-    const allText = [
-      topicName,
-      ...transcript.map((m) => m.text),
-      JSON.stringify(whiteboardCommands),
-      ...transcript.map((m) => (m.whiteboardCommands ? JSON.stringify(m.whiteboardCommands) : '')),
-    ].join('\n');
+    const allText = pdfSessionText(topicName, transcript, whiteboardCommands);
     let cjkFont = false;
     if (hasCjk(allText)) {
       const b64 = await loadCjkFontBase64();

@@ -9,15 +9,26 @@ export interface PdfCommand {
   [key: string]: unknown;
 }
 
-/** DB format nests a command's fields under `data` ({action, data, timestamp,
- *  sourceMessageIndex}); live format has them flat. Flatten the DB shape. */
+/** Actions whose own FLAT shape carries a `data` object (showGraph: `{ action, type, data: GraphData }`): a nested
+ *  command of these is recognised by its content key (`type`) being absent at the top level. */
+const FLAT_DATA_CONTENT_KEY: Readonly<Record<string, string>> = { showGraph: 'type' };
+
+/** Z3 (fix wave 5): a command's fields nested under `data` — the DB shape ({action, data, timestamp,
+ *  sourceMessageIndex}) and any shape carrying extra live-only keys beside `data` (id, page, anchorSentence …) —
+ *  are flattened: `data` is the source of truth, the extra keys are dropped, timestamp / sourceMessageIndex kept.
+ *  The former rule unwrapped only when every key was a DB key, so a nested command with one more key reached the
+ *  exporter un-flattened ("Command: showSentence", an empty card). No `data` object (already flat): unchanged. */
 export function normalizePdfCommand(rawCmd: PdfCommand): PdfCommand {
-  const cmdData = rawCmd.data as Record<string, unknown> | undefined;
-  const dbOnlyKeys = new Set(['action', 'data', 'timestamp', 'sourceMessageIndex']);
-  const hasOnlyDbKeys = Object.keys(rawCmd).every((k) => dbOnlyKeys.has(k));
-  return (hasOnlyDbKeys && cmdData && typeof cmdData === 'object' && !Array.isArray(cmdData))
-    ? { ...cmdData, action: rawCmd.action }
-    : rawCmd;
+  const cmdData = rawCmd.data;
+  if (typeof rawCmd.action !== 'string' || !cmdData || typeof cmdData !== 'object' || Array.isArray(cmdData)) return rawCmd;
+  const contentKey = FLAT_DATA_CONTENT_KEY[rawCmd.action];
+  if (contentKey && rawCmd[contentKey] !== undefined) return rawCmd;
+  return {
+    ...(cmdData as Record<string, unknown>),
+    action: rawCmd.action,
+    ...(rawCmd.timestamp ? { timestamp: rawCmd.timestamp } : {}),
+    ...(rawCmd.sourceMessageIndex != null ? { sourceMessageIndex: rawCmd.sourceMessageIndex } : {}),
+  };
 }
 
 /** Engine-side commands with no board render of their own: navigation,
