@@ -143,6 +143,7 @@ export function enterPartState(state: TypedTurnState, to: string): TypedTurnStat
     turnsInPart: { ...state.turnsInPart, [to]: 0 },
     postDueTurns: { ...(state.postDueTurns ?? {}), [to]: 0 },
     answersInPart: { ...(state.answersInPart ?? {}), [to]: 0 },
+    recapReviewed: { ...(state.recapReviewed ?? {}), [to]: false },
   };
 }
 
@@ -364,6 +365,8 @@ export interface FieldEffectContext {
   menuPick: string | null;
   /** W1: the same budgetDue the turn's AllowedNextContext carried (counts a post-due turn). */
   budgetDue: boolean;
+  /** R6 (fix round 2): the same nudge flag the turn's AllowedNextContext carried (a nudge re-ask is no recap review). */
+  nudge: boolean;
 }
 
 const CARD_WORD_STOP = new Set(['the', 'and', 'you', 'your', 'for', 'are', 'was', 'were', 'have', 'has', 'had', 'did', 'does', 'with', 'that', 'this', 'what', 'who', 'how', 'any', 'can', 'will', 'would', 'about', 'there', 'their', 'from', 'but', 'not']);
@@ -484,7 +487,7 @@ export function applyTypedTurn(
   if (turn.verdict !== 'none') answersInPart[seg] = (answersInPart[seg] ?? 0) + 1;
   if (moved) answersInPart[moved.to] = 0;
   const recapReviewed = { ...(state.recapReviewed ?? {}) };
-  if (next.kind === 'question' && typedPartKind(ctx.plan, seg, ctx.levelKnown) === 'recap') recapReviewed[seg] = true;
+  if (next.kind === 'question' && !ctx.nudge && typedPartKind(ctx.plan, seg, ctx.levelKnown) === 'recap') recapReviewed[seg] = true;
 
   const answeredCards = { ...state.answeredCards };
   if ((turn.verdict === 'correct' || turn.verdict === 'partly_correct') && state.openAsk.cardQuestion) {

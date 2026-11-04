@@ -15125,6 +15125,8 @@ export function VoiceTutorRealtime({
         };
         // W1: set by buildAllowedNextContext (once per attempt, before the brain call); read by buildFieldEffectContext.
         let typedBudgetDueThisTurn = false;
+        // R6 (fix round 2): one nudge flag for both contexts (a nudge turn never marks the summary reviewed).
+        const typedNudgeThisTurn = !!opts?.silent && isIdleNudgeDirective(transcript);
         const buildFieldEffectContext = (): FieldEffectContext => ({
           plan: lessonPlanRef.current!,
           segId: typedFromSeg,
@@ -15136,6 +15138,7 @@ export function VoiceTutorRealtime({
           menuPick: typedMenuPickText,
           // W1: the budgetDue this turn's AllowedNextContext carried (applyTypedTurn counts a post-due turn).
           budgetDue: typedBudgetDueThisTurn,
+          nudge: typedNudgeThisTurn,
         });
         const buildAllowedNextContext = (): AllowedNextContext => {
           const tPlan = lessonPlanRef.current!;
@@ -15181,7 +15184,7 @@ export function VoiceTutorRealtime({
             // R3 (fix round 1): the rules count committed answers (answersInPart, verdict ≠ none); the client says only
             // whether a reply came this turn (the level check's third reply may move — the server refuses it on verdict none).
             studentReplied: Boolean(typedStudentText),
-            nudge: !!opts?.silent && isIdleNudgeDirective(transcript),
+            nudge: typedNudgeThisTurn,
             items: typedItemsFor(typedFromSeg),
             lessonElapsedMs: typedLessonElapsedMs,
             // V6: next_card's key ideas are filtered to the held level, as the board shows them.

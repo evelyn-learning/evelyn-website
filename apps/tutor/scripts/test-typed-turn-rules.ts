@@ -150,7 +150,7 @@ test('every state in a grid yields a non-empty set', () => {
   const bools = [false, true];
   let n = 0;
   for (const p of plan.segments) for (const k of kinds) for (const b of bools) for (const m of bools) for (const nu of bools)
-    for (const last of bools) for (const picked of [null, 'x']) for (const asked of [0, 2]) for (const ans of [0, 3]) for (const rr of [0, 2])
+    for (const last of bools) for (const picked of [null, 'x']) for (const asked of [0, 2]) for (const ans of [0, 2, 3]) for (const rr of [0, 2])
       for (const o of [{ made: false, accepted: false, served: false }, { made: true, accepted: false, served: false }, { made: true, accepted: true, served: false }, { made: true, accepted: true, served: true }])
         for (const its of [[], ['a']]) {
           const c = ctx(p.id, {
@@ -222,7 +222,7 @@ function fctx(segId: string, over: Partial<FieldEffectContext> & { state?: Parti
   return {
     plan, segId, levelKnown: false, state: { ...createTypedTurnState(), ...(state ?? {}) }, studentLast: '',
     cardStatement: getSegmentTruth(plan.segments.find((s) => s.id === segId), plan.id)?.problemText ?? null,
-    items: [], menuPick: null, budgetDue: false, ...rest,
+    items: [], menuPick: null, budgetDue: false, nudge: false, ...rest,
   };
 }
 const nx = (over: Partial<TypedNext>): TypedNext => ({ kind: 'question', say: 'Say.', item: '', level: '', ...over });
@@ -589,6 +589,15 @@ test('R1: a nudge turn at the start of the summary leaves the review step; a del
   assert.equal(s2.recapReviewed.summary, true);
   assert.deepEqual(allowedNextFor(ctx('summary', { state: s2 })), ['close']);
   assert.ok(turnStateLine(ctx('summary', { state: s2 })).includes('recap_step="close"'));
+  // R6: a nudge turn that re-asks with kind question is no review either
+  const sn = applyTypedTurn(s0, tt('question'), fctx('summary', { state: s0, nudge: true }), null);
+  assert.equal(sn.recapReviewed.summary, undefined, 'nudge question: not reviewed');
+  const cn = ctx('summary', { state: sn });
+  assert.deepEqual(allowedNextFor(cn), ['question']);
+  assert.ok(turnStateLine(cn).includes('required_phrases="one thing you did well|the difference between"'));
+  // R6: entering the summary by an engine move clears a stale review mark
+  assert.equal(enterPartState({ ...s2 }, 'summary').recapReviewed.summary, false);
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: enterPartState(s2, 'summary') })), ['question']);
   // a question on another part sets nothing
   const s3 = applyTypedTurn(createTypedTurnState(), tt('question'), fctx('past-simple'), null);
   assert.deepEqual(s3.recapReviewed, {});
