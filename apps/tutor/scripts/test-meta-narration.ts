@@ -12,6 +12,7 @@ import path from 'node:path';
 import { isMetaNarration, markCorrectionNoteWorking, createCorrectionWorkingTracker, stripNudgePlanClause, stripNoteCitationClause, stripLeakedLabels, isNotePlanNarration, isThirdPersonResidue, isThankAck, isRepeatThankAck, isAdjacentDuplicate, isImperativePlanSentence, isPlanContinuationSentence, filterNarrationText, doneTurnText, stripPersonaAnnounceLead, isTutorDirectiveImperative, directiveSentencesOf, isDirectiveEchoOf, directiveSentencesForInput, isStudentEchoOpener, stripRepeatedTurnOpener, isPersonaSelfDirective } from '../src/lib/tutor/voice/meta-narration';
 import { isBareArithmeticRecheck } from '../src/lib/tutor/voice/arithmetic-recheck';
 import { planSentenceBoard } from '../src/lib/tutor/voice/sentence-board';
+import { isNudgeStateNarration as isNudgeStateNarration46 } from '../src/lib/tutor/voice/meta-narration';
 
 let passed = 0;
 let failed = 0;
@@ -1645,6 +1646,18 @@ check('E4: "Read the question on the board." kept', !isMetaNarration('Read the q
   check('43 r44: "Respond to the email by Friday." kept', !isMetaNarration('Respond to the email by Friday.', lang));
   check('43 r44: "Please answer in one full sentence: what did you learn?" kept', !isMetaNarration('Please answer in one full sentence: what did you learn?', lang));
   check('43: maths untouched', !isMetaNarration("Let me close this part and move on to the summary.", { languageLesson: false }) && !isMetaNarration("Here's the full sentence on the board.", { languageLesson: false }));
+}
+
+
+{ // 46 §5: a sentence narrating the idle-nudge note is dropped, never rewritten (run 24, 1413 s)
+  check('46 §5: "Your reply is a placeholder rather than an answer." is nudge-state narration', isNudgeStateNarration46('Your reply is a placeholder rather than an answer.'));
+  check('46 §5: third person too', isNudgeStateNarration46("The student's reply is a placeholder rather than an answer."));
+  check('46 §5: "Silence means they\'re still thinking."', isNudgeStateNarration46("Silence means they're still thinking."));
+  check('46 §5: "The earlier turn asked: …"', isNudgeStateNarration46('The earlier turn asked: which sentence would you say about Nagoya Corporation today?'));
+  check('46 §5: "Take your time." kept', !isNudgeStateNarration46('Take your time.'));
+  check('46 §5: the question itself kept', !isNudgeStateNarration46('Which sentence would you say about Nagoya Corporation today?'));
+  check('46 §5: stripNoteCitationClause drops it whole', stripNoteCitationClause("The student's reply is a placeholder rather than an answer.", { languageLesson: true }) === '');
+  check('46 §5: stripNoteCitationClause drops the silence line', stripNoteCitationClause("Silence means they're still thinking.", { languageLesson: true }) === '');
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

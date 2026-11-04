@@ -1474,6 +1474,11 @@ export function planSentenceBoard(input: {
   retryCard?: boolean;
   /** Task 45 §3a: the last sentence card on the current page (the student's). */
   lastStudentCard?: string | null;
+  /** Task 46 §3 (voice run 24, 73 s / 919 s): the student's own sentence is
+   *  carded only when the tutor's turn CONFIRMS it (tutorConfirmsStudentSentence)
+   *  — the precheck's verdict alone never cards it; the level check cards no
+   *  unconfirmed answer. */
+  confirmedOnly?: boolean;
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
   // Task 45 §3a (374 s: "presentations or presentation?" → "presentations." —
@@ -1491,7 +1496,8 @@ export function planSentenceBoard(input: {
   const retryAffirmed = input.retryCard === true && input.studentCorrect !== true && !!input.studentLast
     && retryAskTurn(input.prevTutorText) && retryAffirmation(input.tutorText)
     && !hasCorrectionCue(input.tutorText) && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '');
-  const studentCorrect = input.studentCorrect === true || retryAffirmed;
+  const tutorConfirms = input.confirmedOnly !== true || tutorConfirmsStudentSentence(input.tutorText);
+  const studentCorrect = (input.studentCorrect === true && tutorConfirms) || retryAffirmed;
   const checkedSentenceIn = input.checkedSentence ?? (retryAffirmed ? input.studentLast : null);
   const affirmFallback = !studentCorrect && input.affirmFallback === true && !hasCorrectionCue(input.tutorText) && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '');
   const spans = [
@@ -1662,6 +1668,8 @@ export function planSentenceBoard(input: {
       const gate = levelCheckOwnCardGate(input.levelCheckVerdict, input.studentLast);
       if (gate) { input.onLevelCheckSkipped?.(gate, own); own = null; }
     }
+    // Task 46 §3: the level check cards no answer the tutor did not confirm.
+    if (own && input.confirmedOnly === true && !tutorConfirms) { input.onLevelCheckSkipped?.('no verdict', own); own = null; }
     if (own && !classified.some((c) => sameSentence(c.q.sentence, own))) {
       classified.push({ q: { sentence: own, kind: 'model', emphasis: [], source: 'levelcheck' }, len: norm(own).length, i: kept.length + 1, said: false, affirmed: false, introduced: false });
     }
@@ -2275,4 +2283,22 @@ export function retryAffirmation(tutorText: string | null | undefined): boolean 
   if (parts.some((x) => /\b(?:but|however|though|although)\b|でも|しかし|ただ/i.test(x))) return false;
   if (turnAffirmsStudent(t)) return true;
   return parts.some((x) => !/[?？]["”」]?\s*$/.test(x.trim()) && RETRY_AFFIRM_RE.test(x));
+}
+
+/** Task 46 §3 (voice run 24, 73 s "Yes, with American customer good
+ *  experience.", 919 s "Management skill is I need to learn." — both carded on
+ *  the precheck's say-so while the tutor confirmed neither): the tutor's own
+ *  turn confirms the student's sentence — turnAffirmsStudent's praise shapes,
+ *  or a verdict word in a non-question sentence (correct / right / clear /
+ *  exactly / natural / perfect / well done, 正しい / 完璧 / よくできました /
+ *  その通り). A restatement marker (ですね) alone is not a verdict, and a "but"
+ *  turn confirms nothing. Pure. */
+const CONFIRM_RE = /\b(?:correct|right|clear|exactly|natural|(?<!present |past |future )perfect|well done|nicely said|well said|good sentence|clear sentence)\b|正しい|完璧|よくできました|その通り|合っています/i;
+export function tutorConfirmsStudentSentence(tutorText: string | null | undefined): boolean {
+  const t = tutorText ?? '';
+  if (!t) return false;
+  const parts = t.split(/(?<=[.!?。！？])\s+/);
+  if (parts.some((x) => /\b(?:but|however|though|although)\b|でも|しかし|ただ/i.test(x))) return false;
+  if (turnAffirmsStudent(t)) return true;
+  return parts.some((x) => !/[?？]["”」]?\s*$/.test(x.trim()) && CONFIRM_RE.test(x));
 }

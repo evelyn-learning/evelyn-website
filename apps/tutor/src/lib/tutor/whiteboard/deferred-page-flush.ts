@@ -181,17 +181,20 @@ export function orderStudentCardsBeforePageBreak<T extends { action: string }>(
 // view moved on — the learner saw neither. 'correction' goes AFTER the part
 // card (under it, on the new page); a model card of the student's sentence
 // ('student') still stays on the page being left.
-export function orderTurnEndDispatches<T extends { kind: 'segment' | 'student' | 'correction' | 'other' }>(
+export function orderTurnEndDispatches<T extends { kind: 'segment' | 'student' | 'correction' | 'after' | 'other' }>(
   planned: readonly T[],
   pagePending: boolean,
 ): T[] {
   if (!pagePending) {
     return [...planned.filter((p) => p.kind === 'segment'), ...planned.filter((p) => p.kind !== 'segment')];
   }
+  // Task 46 §4: a card the tutor quotes AFTER the transition sentence belongs to
+  // the new page — it follows the part card (which carries the break).
   return [
     ...planned.filter((p) => p.kind === 'student'),
     ...planned.filter((p) => p.kind === 'segment'),
     ...planned.filter((p) => p.kind === 'correction'),
+    ...planned.filter((p) => p.kind === 'after'),
     ...planned.filter((p) => p.kind === 'other'),
   ];
 }
@@ -413,4 +416,16 @@ export function lastStudentSentenceCardOnPage(
     }
   }
   return null;
+}
+
+/** Task 46 §1 (voice run 24, 102 s): the brain's own showProblem on a part's
+ *  ENTRY turn that paraphrases the authored card already up — word overlap
+ *  ≥ AUTHORED_PARAPHRASE_MATCH (the exact-duplicate rule needs 0.9; a
+ *  paraphrase sits well below it, a new practice question well below this). */
+export const AUTHORED_PARAPHRASE_MATCH = 0.4;
+export function authoredCardParaphrase(statement: string | null | undefined, authoredStatement: string | null | undefined): boolean {
+  const a = cardWords(statement ?? ''); const b = cardWords(authoredStatement ?? '');
+  if (a.size < 6 || b.size < 6) return false;
+  let inter = 0; for (const x of a) if (b.has(x)) inter += 1;
+  return inter / (a.size + b.size - inter) >= AUTHORED_PARAPHRASE_MATCH;
 }

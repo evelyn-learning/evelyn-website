@@ -297,6 +297,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   //   question answered in substance, the part page break anchored to the transition
   //   sentence (and the brain-idle flush waiting for it), a repeated pronunciation item:
   'noask_continue_verdict_echo_dropped', 'card_question_answered_in_substance', 'page_break_anchored', 'auto_newpage_on_advance_flush_waits', 'pronunciation_item_repeated',
+  //   Task 46 (voice run 24): the paraphrased re-paint dropped, the stall timer re-armed while speaking:
+  'authored_card_paraphrase_dropped', 'render_sync_stall_rearmed',
   //   the dedup family (R49b's retry-context bug lived here):
   'dedup_',
   //   learner-model writes:

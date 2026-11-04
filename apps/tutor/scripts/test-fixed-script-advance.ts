@@ -63,6 +63,8 @@ import { announcedMoveTarget as amt39, withoutClosingClause } from '../src/lib/t
 import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { cardAnsweredInSubstance as cardAnsweredInSubstance45 } from '../src/lib/tutor/voice/correct-retry';
+import { FIXED_SCRIPT_HELD_ADVANCE_MAX_RETRY_WAITS, lastItemNoteDue, fixedScriptLastItemNote } from '../src/lib/tutor/lesson-plan/fixed-script';
+import { reasksAnsweredQuestion as reasksAnsweredQuestion46 } from '../src/lib/tutor/voice/correct-retry';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -194,7 +196,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
   const at = VTR.indexOf("'segment_overlong_note_planted'");
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({', at);
   assert.ok(at > 0 && auto > at, 'auto-advance must follow the overlong note');
-  const block = VTR.slice(auto, auto + 18000  /* Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer; Task 30 §A2: the wait cap; Task 41 §A: the part time cap inputs */);
+  const block = VTR.slice(auto, auto + 19500  /* Task 46: the last-item note; Task 26: the offer branches; Task 27 §E2: the menu clause; Task 29 §A2: the spoken offer; Task 30 §A2: the wait cap; Task 41 §A: the part time cap inputs */);
   pin(block, /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\)/);
   pin(block, /pendingRuntimeNoteSegRef\.current = merged\.segId/);
   pin(block, /'fixed_script_auto_advance', `"\$\{segIdNow\}" → "\$\{autoNext\}" reason=\$\{advanceReason\} turns=\$\{autoTurns\} elapsed=\$\{autoElapsedS\}s`/);
@@ -202,7 +204,7 @@ test('auto-advance wired after the overlong note, through applyResolvedAdvance',
 // ── fix round 10-11 ──────────────────────────────────────────────────────
 test('A: auto-advance held while a pronunciation clip is armed', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 16000 /* Task 41 r1: the post-due hold cap */);
+  const block = VTR.slice(auto, auto + 17500 /* Task 46: the last-item note; Task 41 r1: the post-due hold cap */);
   pin(block, /if \(autoNext && !offerMadeHere && !holdCapped && holdAutoAdvanceForPronunciation\(pronArmed, autoAdvancePronHeldRef\.current\)\) \{[\s\S]*?autoAdvancePronHeldRef\.current \+= 1;[\s\S]*?'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvanceCorrectionHeldRef\.current = 0;\s*autoAdvancePronHeldRef\.current = 0;/);
   pin(block, /const pronArmed = !!clipCaptureRef\.current\?\.isArmed\(\);/);
   assert.ok(block.indexOf('isArmed()') < block.indexOf('applyResolvedAdvance(autoPlan'), 'hold check precedes the advance');
@@ -612,7 +614,7 @@ test('22A: turnEndsWithAsk — the run-10 turns', () => {
 });
 test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
-  const block = VTR.slice(auto, auto + 15000 /* Task 41 §A: the part time cap inputs; r1: the post-due hold cap */);
+  const block = VTR.slice(auto, auto + 16500 /* Task 46: the last-item note; Task 41 §A: the part time cap inputs; r1: the post-due hold cap */);
   pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
   pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext && !holdCapped && advanceReason !== 'announced' && TUTOR_CORRECTION_CARD_HOLDS_ADVANCE[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvanceCorrectionHeldRef\.current = 0;\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
 });
@@ -1836,6 +1838,33 @@ test('45 review: I-3 the shared-words proof reads the previous turn\'s last ask 
   assert.equal(isVerdictEchoSentence('Next sentence: "That\'s right, I agree with the plan."'), false);
   assert.equal(isVerdictEchoSentence('Listen: "Your answer is correct and clear."'), false);
   assert.equal(isVerdictEchoSentence('Your answer is correct and clear.'), true);
+});
+
+
+test('46 §2: a held advance does not fire on a reply to a correction / retry ask (run 24, 723 s: the move landed on the retry); the last item of a part is announced one turn early', () => {
+  const held = { segId: 'past-simple', next: 'open-conversation', reason: 'turns' as const };
+  const base = { held, segmentId: 'past-simple', silent: false, bracketed: false, prefetch: false, fixedScript: true };
+  assert.equal(heldAdvanceFiresNow({ ...base, retryReply: true, retryWaits: 0 }), false, 'the verdict on the retry comes first');
+  assert.equal(heldAdvanceFiresNow({ ...base, retryReply: true, retryWaits: FIXED_SCRIPT_HELD_ADVANCE_MAX_RETRY_WAITS }), true, 'capped');
+  assert.equal(heldAdvanceFiresNow({ ...base, retryReply: false }), true);
+  assert.equal(FIXED_SCRIPT_HELD_ADVANCE_MAX_RETRY_WAITS, 1);
+  const plan = { id: 'p', metadata: { fixedScript: true }, segments: [{ id: 'a', kind: 'try_yourself', metadata: { maxTurns: 4 } }, { id: 'b', kind: 'try_yourself' }] } as never;
+  assert.equal(lastItemNoteDue({ plan, segmentId: 'a', turns: 2, overlongTurns: 99, elapsedMs: 0, levelKnown: true }), false, 'two turns left: nothing');
+  assert.equal(lastItemNoteDue({ plan, segmentId: 'a', turns: 3, overlongTurns: 99, elapsedMs: 0, levelKnown: true }), true, 'the next turn is due: this ask is the last item');
+  assert.equal(lastItemNoteDue({ plan, segmentId: 'a', turns: 4, overlongTurns: 99, elapsedMs: 0, levelKnown: true }), false, 'already due: the advance path owns it');
+  assert.match(fixedScriptLastItemNote(plan, 'a'), /LAST item/);
+  assert.match(fixedScriptLastItemNote(plan, 'a'), /never mention this note/i);
+  pin(VTR, /const haRetryReply = TUTOR_HELD_ADVANCE_WAITS_FOR_RETRY_REPLY && !silent && !isBracketed && !opts\?\.prefetchOnly && \(retryAskTurn\(haLastTutor\) \|\| isCorrectionTurn\(haLastTutor\)\);/);
+  pin(VTR, /retryReply: haRetryReply, retryWaits: heldAdvanceRetryWaitsRef\.current\.get\(currentSegmentIdRef\.current \?\? ''\) \?\? 0/);
+  pin(VTR, /onDebugEvent\?\.\('fixed_script_auto_advance_held_retry_reply', /);
+  pin(VTR, /onDebugEvent\?\.\('fixed_script_last_item_note_planted', /);
+});
+
+
+test('46 §5b: a new question that quotes the same two sentences is not a re-ask of the answered one (run 24, 1413 s)', () => {
+  const answered = ['Can you tell me the difference between "I have worked here for five years" and "I worked here five years ago"?'];
+  assert.equal(reasksAnsweredQuestion46('Which sentence fits Nagoya Corporation today: "I have worked here for five years" or "I worked here five years ago"?', answered), null);
+  assert.ok(reasksAnsweredQuestion46('So, can you tell me the difference between "I have worked here for five years" and "I worked here five years ago"?', answered), 'the same question again is still a re-ask');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

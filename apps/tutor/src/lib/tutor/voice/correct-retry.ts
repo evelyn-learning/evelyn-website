@@ -1174,9 +1174,26 @@ export const ANSWERED_REASK_JACCARD = 0.6;
 export function reasksAnsweredQuestion(sentence: string | null | undefined, answered: readonly string[] | null | undefined): string | null {
   const s = sentence ?? '';
   if (!/[?？]/.test(s) || !answered?.length) return null;
+  // Task 46 §5b (voice run 24, 1413 s): two different questions about the SAME
+  // quoted sentences share their stems through the quotes — when both sides
+  // quote, the words outside the quotes decide.
+  const unquote = (t: string) => t.replace(/["“「][^"”」]*["”」]/g, ' ');
+  const sQuotes = /["“「][^"”」]*["”」]/.test(s);
   const x = reaskStems(turnAskGist(s) || s);
   if (x.size === 0) return null;
   for (const q of answered) {
+    if (sQuotes && /["“「][^"”」]*["”」]/.test(q)) {
+      const quoteSet = (t: string) => [...t.matchAll(/["“「]([^"”」]*)["”」]/g)].map((m) => m[1]!.toLowerCase().replace(/\s+/g, ' ').trim()).sort().join('|');
+      if (quoteSet(s) === quoteSet(q)) {
+        // the same quoted sentences: the words OUTSIDE the quotes decide
+        const xs = reaskStems(unquote(s)); const ys = reaskStems(unquote(q));
+        if (xs.size >= 2) {
+          let i2 = 0; for (const w of xs) if (ys.has(w)) i2 += 1;
+          if (i2 / xs.size >= 0.5) return q;
+          continue;
+        }
+      }
+    }
     const y = reaskStems(q);
     if (y.size === 0) continue;
     let inter = 0;

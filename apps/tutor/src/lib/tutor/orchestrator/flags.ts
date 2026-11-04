@@ -1517,3 +1517,29 @@ export const TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE = process.env.NEXT_PUBLIC_T
  *  Fixed scripts with pronunciation targets. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_PRON_ITEM_REPEAT_KILL=off. */
 export const TUTOR_PRON_ITEM_REPEAT_KILL = process.env.NEXT_PUBLIC_TUTOR_PRON_ITEM_REPEAT_KILL !== 'off';
+
+// ── Task 46 (voice run 24, embed-1793756782461) ─────────────────────────────
+/** Task 46 §1 (102 s): on a part's entry turn the brain's paraphrased re-paint
+ *  of the authored card (word overlap ≥ 0.4) is dropped. Fixed scripts.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_AUTHORED_CARD_PARAPHRASE_DEDUPE=off. */
+export const TUTOR_AUTHORED_CARD_PARAPHRASE_DEDUPE = process.env.NEXT_PUBLIC_TUTOR_AUTHORED_CARD_PARAPHRASE_DEDUPE !== 'off';
+/** Task 46 §2 (723 s): a held budget / time advance does not fire on a reply
+ *  to a correction / retry ask — the verdict on the retry comes first, the
+ *  next reply moves (one wait per part). Fixed scripts. Client-side: default
+ *  ON; NEXT_PUBLIC_TUTOR_HELD_ADVANCE_WAITS_FOR_RETRY_REPLY=off. */
+export const TUTOR_HELD_ADVANCE_WAITS_FOR_RETRY_REPLY = process.env.NEXT_PUBLIC_TUTOR_HELD_ADVANCE_WAITS_FOR_RETRY_REPLY !== 'off';
+/** Task 46 §2 (soft transitions): one turn before a part's turn budget is
+ *  due, the brain is told the next ask is the part's last item, to say so in a
+ *  few words. Fixed scripts. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_LAST_ITEM_NOTE=off. */
+export const TUTOR_LAST_ITEM_NOTE = process.env.NEXT_PUBLIC_TUTOR_LAST_ITEM_NOTE !== 'off';
+/** Task 46 §3 (73 s / 919 s): a student sentence goes on the board only when
+ *  the tutor's own turn confirms it (or a correction card replaces it) — the
+ *  precheck's verdict alone never cards a sentence; the level check cards no
+ *  unconfirmed answer. Language lessons. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_CARD_NEEDS_TUTOR_CONFIRMATION=off. */
+export const TUTOR_CARD_NEEDS_TUTOR_CONFIRMATION = process.env.NEXT_PUBLIC_TUTOR_CARD_NEEDS_TUTOR_CONFIRMATION !== 'off';
+/** Task 46 §4 (1211 s): the render stall timer does not release anchored
+ *  cards while the tutor is still speaking — a long sentence is not a stall.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_RENDER_STALL_WAITS_WHILE_SPEAKING=off. */
+export const TUTOR_RENDER_STALL_WAITS_WHILE_SPEAKING = process.env.NEXT_PUBLIC_TUTOR_RENDER_STALL_WAITS_WHILE_SPEAKING !== 'off';

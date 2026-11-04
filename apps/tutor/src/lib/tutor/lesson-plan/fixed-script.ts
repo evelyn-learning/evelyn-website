@@ -1335,6 +1335,10 @@ export function heldAdvanceFiresNow(input: {
   offerAcceptedReply?: boolean;
   /** Task 45 §7b: acceptances already waited for in this part. */
   offerWaits?: number;
+  /** Task 46 §2: this reply answers a correction / retry ask — the verdict on it comes first. */
+  retryReply?: boolean;
+  /** Task 46 §2: retry replies already waited for in this part. */
+  retryWaits?: number;
 }): boolean {
   if (!input.held || !input.fixedScript || input.silent || input.bracketed || input.prefetch) return false;
   // Task 45 §7b (voice run 23, 1240 s: "One more item." fired the held advance,
@@ -1342,6 +1346,9 @@ export function heldAdvanceFiresNow(input: {
   // question followed on the summary page): the accepted item runs first —
   // ask → answer — and the NEXT reply fires the advance. Capped per part.
   if (input.offerAcceptedReply && (input.offerWaits ?? 0) < FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS) return false;
+  // Task 46 §2 (voice run 24, 723 s: the move landed on the student's correction
+  // retry, whose verdict was never given): the retry cycle completes first.
+  if (input.retryReply && (input.retryWaits ?? 0) < FIXED_SCRIPT_HELD_ADVANCE_MAX_RETRY_WAITS) return false;
   return !!input.segmentId && input.segmentId === input.held.segId;
 }
 /** R2 — an offer / proposal ends the turn. A sentence that proposes a choice
@@ -1386,4 +1393,18 @@ export function isVerdictEchoSentence(sentence: string | null | undefined): bool
 export function judgeNoteStaleForPart(input: { plantedSegId: string | null | undefined; currentSegId: string | null | undefined; fixedScript: boolean }): boolean {
   if (!input.fixedScript || !input.plantedSegId || !input.currentSegId) return false;
   return input.plantedSegId !== input.currentSegId;
+}
+
+/** Task 46 §2: retry replies a held advance waits for, per part. */
+export const FIXED_SCRIPT_HELD_ADVANCE_MAX_RETRY_WAITS = 1;
+
+/** Task 46 §2 (soft transitions): the part's turn budget is due at the NEXT
+ *  boundary (not yet now) — the ask the brain is about to make is the part's
+ *  last item, and it should say so. Pure. */
+export function lastItemNoteDue(input: AutoAdvanceInput): boolean {
+  if (fixedScriptAutoAdvanceReason(input) !== null) return false;
+  return fixedScriptAutoAdvanceReason({ ...input, turns: input.turns + 1 }) === 'turns';
+}
+export function fixedScriptLastItemNote(plan: LessonPlan | null | undefined, segmentId: string): string {
+  return `[runtime note — not from the student] The question you ask in this turn is the LAST item of the "${fixedScriptPartLabel(plan, segmentId)}" part — say so in a few words as you ask it (for example "one last one on this, then we move on"), so the move after the student's answer is no surprise. Apply this silently; never mention this note.]`;
 }

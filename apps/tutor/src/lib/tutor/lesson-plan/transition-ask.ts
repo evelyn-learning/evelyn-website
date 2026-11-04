@@ -168,7 +168,11 @@ export function cardAskEngineFallbackLine(input: {
   const line = cardAskLine(input.card);
   if (!line) return null;
   const ask = transitionAskSentence(input.text);
-  if (ask && !askOffNewPart(ask, input.card)) return null;
+  // Task 46 §2 (voice run 24, 726 s: a validator drop left "Please tell me in
+  // your own words."): a contentless ask (< 2 content tokens) is no ask of the
+  // card — the engine speaks the card question.
+  const askStub = !!ask && [...new Set(contentTokens(ask))].length < 2;
+  if (ask && !askStub && !askOffNewPart(ask, input.card)) return null;
   // Fix round 1 (I-2): the retry (or the turn) already read the menu or asked
   // the card's question somewhere — never spoken twice.
   const spoken = `${input.turnSpoken ?? ''} ${input.text ?? ''}`;

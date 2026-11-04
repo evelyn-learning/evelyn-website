@@ -25,6 +25,7 @@ import {
 import { keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
 import { transitionSentenceIndex as transitionSentenceIndex45 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
+import { authoredCardParaphrase as authoredCardParaphrase46 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 
 let n = 0;
 const ok = (name: string, cond: boolean) => { assert.ok(cond, name); n++; };
@@ -259,7 +260,7 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('43J: page pending ⇒ student (model) cards, the part card, then the correction, then others', orderTurnEndDispatches([showProblem, correctionCard, modelCard, studentCard], true).map((p) => p.kind).join(',') === 'student,segment,correction,other');
   ok('43J: no page pending ⇒ the part card first, stream order otherwise', orderTurnEndDispatches([correctionCard, showProblem, modelCard], false).map((p) => p.kind).join(',') === 'segment,correction,other');
   const VTRJ = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  ok('43J: VTR plans a correction card as kind correction and marks the command', VTRJ.includes("kind: (TUTOR_CORRECTION_CARD_ON_NEW_PAGE && transitionAnchor === null && card.kind === 'correction' ? 'correction' : card.kind === 'correction' || !!card.source ? 'student' : 'other') as 'student' | 'correction' | 'other'") && VTRJ.includes("correctionCard: card.kind === 'correction', holdDeferredPage: transitionAnchor !== null }"));
+  ok('43J: VTR plans a correction card as kind correction and marks the command', VTRJ.includes("? 'after' : TUTOR_CORRECTION_CARD_ON_NEW_PAGE && transitionAnchor === null && card.kind === 'correction' ? 'correction' : card.kind === 'correction' || !!card.source ? 'student' : 'other') as 'student' | 'correction' | 'after' | 'other'") && VTRJ.includes("correctionCard: card.kind === 'correction', holdDeferredPage: transitionAnchor !== null && !cardAfterBreak }"));
   ok('43J: a correction card is not moved in front of the page break / to the previous page', VTRJ.includes("if (opts?.sentenceBoardAuto) return opts.studentSentenceCard === true && !(TUTOR_CORRECTION_CARD_ON_NEW_PAGE && opts.correctionCard === true);"));
   ok('43J: flag', /export const TUTOR_CORRECTION_CARD_ON_NEW_PAGE = process\.env\.NEXT_PUBLIC_TUTOR_CORRECTION_CARD_ON_NEW_PAGE !== 'off';/.test(readFileSync(join(__dirname, '..', 'src/lib/tutor/orchestrator/flags.ts'), 'utf8')));
   // fallback: the part page already painted — the student card targets the page before the break
@@ -276,7 +277,7 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('27B: no break in the log / nothing before it ⇒ null', previousPageTarget(cmds, { action: 'newPage' }) === null && previousPageTarget([brk], brk) === null);
   const V = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   ok('27B: VTR defers the turn-end part card while a part page is pending', V.includes('if (pendingAdvanceNewPageRef.current && TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE) deferredSegmentCardRun = runSegmentCard;'));
-  ok('27B: VTR orders the turn-end dispatches and runs them in order', /const turnEndPlanned = orderTurnEndDispatches\(\[[\s\S]{0,520}\], !!deferredSegmentCardRun\);[\s\S]{0,600}for \(const planned of turnEndPlanned\) await planned\.run\(\);/.test(V));
+  ok('27B: VTR orders the turn-end dispatches and runs them in order', /const turnEndPlanned = orderTurnEndDispatches\(\[[\s\S]{0,1000}\], !!deferredSegmentCardRun\);[\s\S]{0,600}for \(const planned of turnEndPlanned\) await planned\.run\(\);/.test(V));
   ok('27B: VTR runs a waiting part card when no sentence board ran', V.includes('if (deferredSegmentCardRun) await (deferredSegmentCardRun as () => Promise<void>)();'));
   ok('27B: VTR fallback — painted break ⇒ previous page target + event', V.includes("const paintedSegmentBreak = !bufferedSegmentBreak && !pendingAdvanceNewPageRef.current ? segmentPageBreakRef.current : null;") && V.includes("onDebugEvent?.('student_card_on_previous_page', "));
   const C = readFileSync(join(__dirname, '..', 'src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx'), 'utf8');
@@ -380,7 +381,7 @@ ok('emptyPageIndexes: pointer-only page is empty',
   assert.match(vtr, /handleWhiteboardCommand\(\[cmd\], \{ anchorSentence: transitionAnchor \?\? 0, \.\.\.\(transitionAnchor !== null \? \{ pageBreakOnTransition: true \} : \{\}\) \}\)/);
   assert.match(vtr, /holdDeferredPage: transitionAnchor !== null/);
   // §6: with the break anchored, a correction card goes BEFORE the break (on the old page) again
-  assert.match(vtr, /kind: \(TUTOR_CORRECTION_CARD_ON_NEW_PAGE && transitionAnchor === null && card\.kind === 'correction' \? 'correction' :/);
+  assert.match(vtr, /\? 'after' : TUTOR_CORRECTION_CARD_ON_NEW_PAGE && transitionAnchor === null && card\.kind === 'correction' \? 'correction' :/);
   assert.match(vtr, /\$\{opts\?\.pageBreakOnTransition \? ` \(on the transition sentence \$\{opts\.anchorSentence\}\)` : ''\}/);
   assert.match(vtr, /if \(deferred && TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan\(lessonPlanRef\.current\)\) \{\s*const tsIdx = transitionSentenceIndex\(turnNarrationRef\.current\.slice\(attemptNarrationStartRef\.current\), \{ fallbackToFirstAsk: true \}\);\s*if \(tsIdx !== null && ttsPlaybackStartedCountRef\.current <= tsIdx\) \{/);
   n += 12;
@@ -405,6 +406,22 @@ ok('emptyPageIndexes: pointer-only page is empty',
   assert.equal(transitionSentenceIndex45(['Good.', "Let's move on to the past simple.", 'Did you attend any events last year?'], { fallbackToFirstAsk: true }), 1, 'the move phrase wins');
   assert.equal(transitionSentenceIndex45(['Good, that is clear.', 'Here is the menu.'], { fallbackToFirstAsk: true }), null, 'no ask: no fallback');
   n += 5;
+}
+{ // Task 46 §1 (voice run 24, 102 s): the brain's paraphrased re-paint of the part's authored card on the entry turn
+  const authored = "1. We explain responsibilities, experience and achievements: I work in sales, and I help customers find the right products.\n2. 'I have worked with international customers for three years.' = experience continuing over a period of time. 'I worked with an international customer yesterday.' = a completed activity at a specific time in the past.\n3. Practice question: What are your main responsibilities at work? Give a complete answer with at least two sentences.";
+  const brain = 'We explain responsibilities, experience and achievements. Example: I work in sales, and I help customers find the right products. Compare: "I have worked with international customers for three years." (experience continuing over time) and "I worked with an international customer yesterday." (a completed activity at a specific time). Practice question: What are your main responsibilities at work? Give a complete answer with at least two sentences.';
+  assert.equal(authoredCardParaphrase46(brain, authored), true);
+  assert.equal(authoredCardParaphrase46('Have you ever given a presentation to a large group of people? If so, tell me about it.', 'Have you worked for your current company for a long time?'), false, 'a new practice question is no paraphrase');
+  assert.equal(authoredCardParaphrase46('', authored), false);
+  // 'after' cards (quoted after the transition sentence) go after the part card
+  const planned = [{ kind: 'after' as const, id: 'a' }, { kind: 'student' as const, id: 's' }, { kind: 'segment' as const, id: 'g' }, { kind: 'other' as const, id: 'o' }];
+  assert.deepEqual(orderTurnEndDispatches(planned, true).map((x) => x.id), ['s', 'g', 'a', 'o']);
+  assert.deepEqual(orderTurnEndDispatches(planned, false).map((x) => x.id), ['g', 'a', 's', 'o']);
+  const vtr46 = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.match(vtr46, /onDebugEvent\?\.\('authored_card_paraphrase_dropped', /);
+  assert.match(vtr46, /const cardAfterBreak = transitionAnchor !== null && narrationAnchor !== undefined && narrationAnchor - attemptNarrationStartRef\.current >= transitionAnchor;/);
+  assert.match(vtr46, /render_sync_stall_rearmed/);
+  n += 8;
 }
 console.log(`deferred-page-flush: ${n} cases passed`);
 

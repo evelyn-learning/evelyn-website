@@ -401,6 +401,10 @@ export function stripNoteCitationClause(sentence: string, opts?: NoteCitationOpt
   if (isPersonaSelfAnnounce(raw, opts?.personaName)) return '';
   let s = addressLearner(stripPersonaLead(stripPersonaAnnounceLead(raw, opts?.personaName, opts?.firstTutorTurn), opts?.personaName));
   if (s !== raw && !s.trim()) return '';
+  // Task 46 §5 (voice run 24, 1413 s): the idle-nudge note narrated ("The
+  // student's reply is a placeholder rather than an answer." → was rewritten to
+  // "Your reply …" and spoken) — dropped whole, never rewritten.
+  if (isNudgeStateNarration(raw) || isNudgeStateNarration(s)) return '';
   // Task 30 §E1: a rewrite that leaves the learner in the third person.
   if (isThirdPersonResidue(raw, opts)) return '';
   // Task 30 fix round 3 (R2-1): a spoken plan lead / tail goes, the rest stays.
@@ -1819,4 +1823,12 @@ export function stripRepeatedTurnOpener(prevTurn: string | null | undefined, sen
   // home.") repeated as the next turn's model is kept.
   if (!REPEATED_OPENER_ACK_RE.test(head) && !/^\s*\p{L}+[,!]\s*\p{Lu}\p{L}*[.!]?\s*$/u.test(head)) return s;
   return s.slice(head.length).trim();
+}
+
+/** Task 46 §5: a sentence that narrates the learner's silence / reply state
+ *  from a runtime note — "Your reply is a placeholder rather than an answer.",
+ *  "Silence means they're still thinking.", "The earlier turn asked: …". Pure. */
+const NUDGE_STATE_NARRATION_RE = /\b(?:your|the student['’]s|their) (?:reply|response|answer) (?:is|was) (?:a |an )?(?:placeholder|filler|not (?:really )?an answer|no answer)\b|\bsilence means\b|\b(?:they|you)(?:['’]re| are) still thinking\b|\bthe (?:earlier|previous|last) turn asked\b|\bnothing to acknowledge\b|\bstill outstanding\b/i;
+export function isNudgeStateNarration(sentence: string | null | undefined): boolean {
+  return NUDGE_STATE_NARRATION_RE.test(sentence ?? '');
 }

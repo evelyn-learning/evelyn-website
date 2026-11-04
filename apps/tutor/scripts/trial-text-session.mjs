@@ -365,7 +365,7 @@ print(JSON.stringify({sessionId:d.sessionId, studentId:d.studentId, createdAt:d.
 print("=== TRANSCRIPT");
 (d.transcript||[]).forEach((t,i)=>print(\`\${rel(t.timestamp)} \${String(i).padStart(3)} \${t.role}: \${t.text}\`));
 print("=== WHITEBOARD");
-(d.whiteboardCommands||[]).forEach((w,i)=>print(\`\${rel(w.timestamp)} \${String(i).padStart(3)} \${JSON.stringify(w).slice(0,400)}\`));
+(d.whiteboardCommands||[]).forEach((w,i)=>print(\`\${rel(w.timestamp)} \${String(i).padStart(3)} \${JSON.stringify(w).slice(0,3000)}\`));
 print("=== EVENTS");
 (d.debugEvents||[]).forEach((e)=>print(\`\${rel(e.timestamp)} \${e.type}: \${String(e.message).slice(0,500)}\`));
 `);

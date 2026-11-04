@@ -26,6 +26,7 @@ import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/w
 import { elicitedWordFix as elicitedWordFix45, planSentenceBoard as planSentenceBoard45 } from '../src/lib/tutor/voice/sentence-board';
 import { lastStudentSentenceCardOnPage as lastStudentSentenceCardOnPage45 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 import { retryAffirmation as retryAffirmation45 } from '../src/lib/tutor/voice/sentence-board';
+import { tutorConfirmsStudentSentence as tutorConfirms46 } from '../src/lib/tutor/voice/sentence-board';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -204,9 +205,9 @@ test('A: anchor = the spoken sentence that says the card (1-based), head fallbac
 test('A: the auto card goes through handleWhiteboardCommand with its anchor, never a raw paint', () => {
   const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   const at = vtr.indexOf("'sentence_board_auto'");
-  const block = vtr.slice(at - 2500, at + 200);
+  const block = vtr.slice(at - 3200, at + 200); // Task 46 §4: the cardAfterBreak line
   // Task 23 §A: the call also says whether the card is the student's sentence.
-  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard, correctionCard: card\.kind === 'correction', holdDeferredPage: transitionAnchor !== null \} : \{ sentenceBoardAuto: true, studentSentenceCard, correctionCard: card\.kind === 'correction' , holdDeferredPage: transitionAnchor !== null \}\)/.test(block), 'normal board path, marked as the auto card (Task 43 §J: and whether it is the correction)');
+  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard, correctionCard: card\.kind === 'correction', holdDeferredPage: transitionAnchor !== null && !cardAfterBreak \} : \{ sentenceBoardAuto: true, studentSentenceCard, correctionCard: card\.kind === 'correction' , holdDeferredPage: transitionAnchor !== null && !cardAfterBreak \}\)/.test(block), 'normal board path, marked as the auto card (Task 43 §J: and whether it is the correction)');
   assert.ok(/autoSentenceCardIdsRef\.current\.add\(id\)/.test(vtr.slice(at - 2500, at + 600)), 'auto card ids remembered');
   assert.ok(/sentenceAnchorIndex\(turnNarrationRef\.current, card\.sentence\)/.test(block), 'anchored to its spoken sentence');
   assert.ok(!/onWhiteboardCommand\(\[cmd\]\)/.test(block), 'no raw opener-fallback paint');
@@ -1821,6 +1822,26 @@ test('45 review: M-3 a "good try, but …" turn is no affirmation of the retry',
   assert.equal(retryAffirmation45('Good, "We discussed business at the conference" is a clear past simple sentence.'), true);
   const prev = 'Could you say the sentence in the past simple, starting with "We discussed…"?';
   assert.equal(planSentenceBoard45({ tutorText: 'Good try, but the verb needs the past form: say it once more.', studentLast: 'We discuss business at the conference.', renderedThisTurn: false, prevTutorText: prev, correctionMarked: true, retryCard: true }).some((c) => c.kind === 'model'), false);
+});
+
+
+test('46 §3: a student sentence is carded only when the tutor confirms it — never on the precheck alone (run 24, 73 s / 919 s)', () => {
+  assert.equal(tutorConfirms46('Now, the last question: What is one skill you\'d like to improve in your English, and why is it important to you?'), false);
+  assert.equal(tutorConfirms46('「management skill」ですね、いいところに気づきました。 Which management skill specifically? Try a sentence starting with "I need to learn…".'), false, 'a restatement marker plus a request for a better sentence is no confirmation');
+  assert.equal(tutorConfirms46('Yes, "I went to the seminar room" is clear now.'), true);
+  assert.equal(tutorConfirms46('「I attended the conference.」は正しいですね。'), true);
+  assert.equal(tutorConfirms46('Good try, but the verb needs the past form.'), false);
+  // level check: the raw answer is not carded without confirmation / a correct verdict
+  const lc = planSentenceBoard45({ tutorText: 'Now, the last question: What is one skill you\'d like to improve in your English, and why is it important to you?', studentLast: 'Yes, with American customer good experience.', renderedThisTurn: false, levelCheck: true, levelCheckVerdict: 'partly_correct', confirmedOnly: true });
+  assert.deepEqual(lc, []);
+  // conversation part: the precheck said correct, the tutor asked for a better sentence — no card
+  const conv = planSentenceBoard45({ tutorText: '「management skill」ですね、いいところに気づきました。 Which management skill specifically? Try a sentence starting with "I need to learn…".', studentLast: 'Um, management skill is uh, I need to learn.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'Management skill is I need to learn.', confirmedOnly: true });
+  assert.deepEqual(conv, []);
+  // the same with the tutor confirming: carded
+  const ok46 = planSentenceBoard45({ tutorText: 'Yes, that is a clear sentence about your goal.', studentLast: 'I need to learn how to talk to my juniors.', renderedThisTurn: false, studentCorrect: true, checkedSentence: 'I need to learn how to talk to my juniors.', confirmedOnly: true });
+  assert.equal(ok46.length, 1);
+  const vtr46 = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr46.includes('confirmedOnly: TUTOR_CARD_NEEDS_TUTOR_CONFIRMATION,'), 'VTR passes confirmedOnly');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

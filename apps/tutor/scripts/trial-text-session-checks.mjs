@@ -430,6 +430,7 @@ export function runChecks(dump) {
     const prevS = [...student].reverse().find((s) => s.i < tutor[k].i && s.i > tutor[k - 1].i);
     if (!prevS || !/[?？]\s*$/.test(prevS.text.trim())) continue;
     if (!/\bask me\b|\bask (?:one|a|your) question\b|質問してみて|質問して/i.test(tutor[k - 1].text)) continue;
+    if (/\b(?:personal details|where I live|my age|my family|my address|my phone)\b/i.test(tutor[k].text)) continue; // run 24, 862 s: "where do you live?" is rightly declined
     if (/\brather keep the focus\b|\bfocus on (?:your|our) (?:English|learning|practice)\b|\bget back to our practice\b|\bI['’]m your AI tutor\b/i.test(tutor[k].text)) deflected.push(`${tutor[k].t}s "${tutor[k].text.slice(0, 60)}"`);
   }
   ok('45 §2a: a question the tutor invited is answered, not deflected', deflected.length === 0, deflected.join(' | ').slice(0, 300));
@@ -476,7 +477,8 @@ export function runChecks(dump) {
   }
   ok('45 §3: the affirmed retry / elicited fix is on the board', uncardedRetry.length === 0, uncardedRetry.join(' | ').slice(0, 300));
   // §4 / §6: an advancing turn's student cards paint before the part page turns, and the page break waits for the transition sentence
-  const breakBeforeCard = ev('sentence_board_auto').filter((e) => ev('auto_newpage_on_advance_flushed').some((f) => f.t <= e.t && f.t >= e.t - 2 && !/at turn end/.test(f.msg)) && !/anchor=start/.test(e.msg) && /kind=correction/.test(e.msg)).map((e) => `${e.t}s ${e.msg.slice(0, 50)}`);
+  const evIdx = (e) => events.indexOf(e);
+  const breakBeforeCard = ev('sentence_board_auto').filter((e) => /kind=correction/.test(e.msg) && !/anchor=start/.test(e.msg) && ev('auto_newpage_on_advance_flushed').some((f) => f.t >= e.t - 2 && f.t <= e.t && evIdx(f) < evIdx(e) && !/at turn end/.test(f.msg))).map((e) => `${e.t}s ${e.msg.slice(0, 50)}`);
   ok('45 §6: no correction card after the part page break in the same turn', breakBeforeCard.length === 0, breakBeforeCard.join(' | ').slice(0, 300));
   const unanchored = ev('auto_newpage_on_advance_flushed').filter((f) => /after \d+ student card/.test(f.msg) && !/on the transition sentence/.test(f.msg) && ev('page_break_anchored').some((a) => Math.abs(a.t - f.t) <= 2)).map((f) => `${f.t}s ${f.msg.slice(0, 50)}`);
   ok('45 §4: a student card and the part page break never share an unanchored batch', unanchored.length === 0, unanchored.join(' | ').slice(0, 300));
@@ -504,6 +506,51 @@ export function runChecks(dump) {
     return offer && accepts ? [`${e.t}s after "${st.text.slice(0, 30)}"`] : [];
   });
   ok('45 §7b: the pointer never moves on a reply that accepts an offer', movedOnAcceptance.length === 0, movedOnAcceptance.join(' | ').slice(0, 300));
+
+  // 10l. voice run 24 (embed-1793756782461, Praveen) — Task 46
+  // §1: no second problem card on a part page that paraphrases the first (the brain's re-paint of the authored card)
+  const paraDup = [];
+  for (const p of pages) {
+    const probs = p.items.filter((it) => it.action === 'showProblem');
+    if (probs.length < 2) continue;
+    const A = cardWordsOf(String(probs[0].data?.problem?.statement ?? '')), B = cardWordsOf(String(probs[1].data?.problem?.statement ?? ''));
+    if (A.size < 6 || B.size < 6) continue;
+    let inter = 0; for (const w of A) if (B.has(w)) inter++;
+    if (inter / (A.size + B.size - inter) >= 0.4 && (probs[1].t - p.t) <= 30) paraDup.push(`${p.title.slice(0, 14)} @${probs[1].t}s`);
+  }
+  ok('46 §1: no paraphrased re-paint of the part card on its entry', paraDup.length === 0, paraDup.join(' | '));
+  // §2: a move turn is never a stub (≤ 1 sentence, no question) — and the pointer never moves on a reply to a retry ask
+  const stubMoves = ev('auto_newpage_on_advance_flushed').flatMap((f) => {
+    const turn = [...tutor].reverse().find((x) => x.t <= f.t + 1 && x.t >= f.t - 6);
+    if (!turn) return [];
+    const ss = sentencesOf(turn.text);
+    // the level-set bridge (one sentence, then the silent continuation asks) is no stub
+    if (ev('fixed_script_level_continue').some((c) => c.t >= f.t - 2 && c.t <= f.t + 8) || ev('fixed_script_level_advance').some((c) => c.t >= f.t - 8 && c.t <= f.t + 1)) return [];
+    return ss.length <= 1 && !/[?？]\s*$/.test(turn.text.trim()) ? [`${turn.t}s "${turn.text.slice(0, 50)}"`] : [];
+  });
+  ok('46 §2: a move turn is never a one-line stub', stubMoves.length === 0, stubMoves.join(' | ').slice(0, 300));
+  const RETRY_PREV = /\b(?:say|try|repeat)\b[^.!?。]*\b(?:again|once more|one more time|(?:the|that|this|your) (?:whole |full |complete )?sentence)\b|もう一度/i;
+  const movedOnRetry = ev('fixed_script_auto_advance').filter((e) => /\(on the reply\)/.test(e.msg)).flatMap((e) => {
+    const st = [...student].reverse().find((s) => s.t <= e.t + 1 && s.t >= e.t - 6);
+    const prevT = st ? [...tutor].reverse().find((x) => x.i < st.i) : null;
+    return st && prevT && RETRY_PREV.test(prevT.text) ? [`${e.t}s after "${st.text.slice(0, 30)}"`] : [];
+  });
+  ok('46 §2: the pointer never moves on a reply to a retry ask', movedOnRetry.length === 0, movedOnRetry.join(' | ').slice(0, 300));
+  // §3: cannot judge grammar here — the engine event tells us a card went up on the precheck alone
+  // §4: a card the tutor quoted after the move sentence is never held on the page being left
+  const afterHeld = ev('page_break_anchored').flatMap((a) => {
+    const idx = Number((a.msg.match(/sentence (\d+)/) ?? [])[1]);
+    return ev('auto_newpage_on_advance_held_for_auto_card').filter((h) => Math.abs(h.t - a.t) <= 2).filter((h) => {
+      const card = ev('sentence_board_auto').find((c) => Math.abs(c.t - h.t) <= 1 && evIdx(c) > evIdx(h));
+      const an = Number((card?.msg.match(/anchor=(\d+)/) ?? [])[1]);
+      return Number.isFinite(an) && Number.isFinite(idx) && an >= idx;
+    }).map((h) => `${h.t}s`);
+  });
+  ok('46 §4: a card quoted after the move sentence is not held on the old page', afterHeld.length === 0, afterHeld.join(' | ').slice(0, 300));
+  // §5: no runtime-note narration about the learner's silence / reply state
+  const NUDGE_NARR = /\b(?:your|the student['’]s|their) (?:reply|response|answer) (?:is|was) (?:a |an )?(?:placeholder|filler|not (?:really )?an answer)\b|\bsilence means\b|\bstill thinking\b|\bthe (?:earlier|previous|last) turn asked\b/i;
+  const nudgeNarr = tutor.filter((x) => NUDGE_NARR.test(x.text)).map((x) => `${x.t}s "${x.text.slice(0, 60)}"`);
+  ok('46 §5: no narration of the idle-nudge note', nudgeNarr.length === 0, nudgeNarr.join(' | ').slice(0, 300));
 
   // 11. counts worth a look
   const counts = ['brain_validator_retry', 'idle_nudge_sent', 'drop_self_voice', 'meta_narration_dropped', 'fixed_script_noask_continue', 'fixed_script_offer_continue', 'transition_ask_off_part', 'judge_kill_resume_diverged', 'menu_pick_resolved', 'adjacent_duplicate_sentence_dropped', 'typed_turn_superseded', 'render_dropped'];

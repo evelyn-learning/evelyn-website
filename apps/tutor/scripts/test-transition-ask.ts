@@ -139,5 +139,14 @@ test('39 r1 I-2: a retry that read the menu and ended "Take your time choosing."
   assert.ok(vtr.includes("turnSpoken: turnNarrationRef.current.join(' '),"));
 });
 
+
+test('46 §2 stub: the transition retry left a contentless ask ("Please tell me in your own words.") — the engine speaks the card question', () => {
+  const card = "What is one project you've worked on that you're particularly proud of?";
+  const line = cardAskEngineFallbackLine({ enabled: true, retried: true, killed: false, text: 'Please tell me in your own words.', card, turnSpoken: '' });
+  assert.ok(line && /one project you've worked on/.test(line), `got ${line}`);
+  assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: true, killed: false, text: "Good. What is one project you've worked on that you're particularly proud of?", card, turnSpoken: '' }), null, 'the card question was asked');
+  assert.equal(cardAskEngineFallbackLine({ enabled: true, retried: true, killed: false, text: 'Could you tell me about one project you are proud of at work?', card, turnSpoken: '' }), null, 'an on-part ask with content stands');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall transition-ask tests passed');
