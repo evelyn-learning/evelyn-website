@@ -377,6 +377,15 @@ async function main() {
     await test('R5: a cut object in the moveNeedsAnswer cell falls back to question (allowedNext[0]), never move', async () => {
       const r = await run({ ...baseInput, typedTurn: lcTurn }, [chunkedTextScript('{"ack":"Good try.","verdict":"none","verdict_say":"","board":"","correction":null,"support_ja":"","next":{"kind":"mo', 2, 'max_tokens')]);
       assert.equal(turnEv(r.events).nextFallback, 'question');
+      // R7: nothing of a move is emitted or spoken (the fallback's line is the client's engineLineFor('question'))
+      assert.ok(!r.events.some((e) => e.type === 'typed-field' && e.field === 'next'), 'no next field');
+      assert.deepEqual(sentencesOf(r.events), ['Good try.'], 'only the ack is spoken');
+    });
+    await test('R7: an ABSENT verdict (invalid, never released) + move + moveNeedsAnswer ⇒ the move is refused, never spoken', async () => {
+      const r = await run({ ...baseInput, typedTurn: lcTurn }, [chunkedTextScript(JSON.stringify({ ...NONE, verdict: 'bogus', next: MOVE }), 3), chunkedTextScript(JSON.stringify({ ...NONE, next: ASK }), 2)]);
+      assert.ok(!r.events.some((e) => e.type === 'typed-field' && e.field === 'verdict'), 'verdict never released');
+      assert.ok(!sentencesOf(r.events).some((x) => x.includes('Monday')), 'the move is never spoken');
+      assert.ok(!r.events.some((e) => e.type === 'typed-field' && e.field === 'next' && (e.value as { kind: string }).kind === 'move'));
     });
     await test('R3: without moveNeedsAnswer a none + move is not refused', async () => {
       const { moveNeedsAnswer: _m, ...plain } = lcTurn;

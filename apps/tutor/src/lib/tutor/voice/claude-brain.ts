@@ -3042,7 +3042,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const sayBudgetOf = (kind: TypedNextKind): number => typedSayBudgetFor(kind, !!input.typedTurn?.recap);
   /** R3: the streamed verdict of this turn (released before `next`), for the moveNeedsAnswer gate. */
   let typedVerdictSeen: TypedTurn['verdict'] | null = null;
-  const typedMoveOnNonAnswer = (kind: TypedNextKind): boolean => !!input.typedTurn?.moveNeedsAnswer && kind === 'move' && typedVerdictSeen === 'none';
+  /** R7 (fix round 2): an absent verdict (invalid, never released) counts as a non-answer too. */
+  const typedMoveOnNonAnswer = (kind: TypedNextKind): boolean => !!input.typedTurn?.moveNeedsAnswer && kind === 'move'
+    && (typedVerdictSeen === null || typedVerdictSeen === 'none');
   /** G1: sentences already yielded this typed turn (retry calls are the same turn); the prose duplicate filters stand down on typed. */
   const typedSpoken = new Set<string>();
   /** Prose fallback mid-turn: the frame the typed request left out comes back. */

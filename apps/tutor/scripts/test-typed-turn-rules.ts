@@ -551,6 +551,10 @@ test('R3: level check — committed answers decide; the third reply may move onl
     assert.ok(!turnStateLine(c).includes('move_needs_answer'));
     assert.equal(typedTurnRequestFor(c).moveNeedsAnswer, undefined);
   }
+  // R7: the cut / unparseable fallback in that cell is allowedNext[0] = question, spoken by the client as the part's card ask
+  const fb = engineLineFor(typedTurnRequestFor(lc(2, true)).allowedNext[0], { ...fctx('level-check'), japanese: false });
+  assert.equal(fb, cardAskLine(getSegmentTruth(plan.segments.find((s) => s.id === 'level-check'), plan.id)?.problemText ?? ''));
+  assert.ok(fb && fb.trim().length > 0, 'a spoken re-ask');
   assert.equal(moveNeedsAnswerFor(ctx('past-simple', { studentReplied: true, state: { ...ask('question'), answersInPart: { 'past-simple': 2 } } })), false);
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('move_needs_answer'));
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('`move` only if this reply was a real answer (verdict ≠ none); a non-answer → `question`'));
