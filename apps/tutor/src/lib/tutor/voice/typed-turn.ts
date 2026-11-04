@@ -133,8 +133,8 @@ Japanese is allowed in any field under the lesson's teaching-language rules. sup
 EXAMPLE, a correction turn (student said "I go there yesterday" to a past-tense ask; allowed_next includes retry)
 {"ack":"Good try.","verdict":"incorrect","verdict_say":"Nearly there. Yesterday is in the past, so the verb changes.","correction":{"student":"I go there yesterday","corrected":"I went there yesterday.","emphasis":["went"],"explain":"Use the past form went for something that already happened."},"support_ja":"","next":{"kind":"retry","say":"Can you say the whole sentence once more?","item":"","level":""}}
 
-EXAMPLE, verdict correct (conversation part; open ask "Can you tell me a little about your job?"; the student said "I work in sales at a small company.")
-{"ack":"Nice, sales sounds busy.","verdict":"correct","verdict_say":"That is a clear answer.","correction":null,"support_ja":"","next":{"kind":"question","say":"What do you enjoy most about it?","item":"","level":""}}
+EXAMPLE, verdict correct (conversation part; open ask "What did you do last weekend?"; the student said "I visit my friend and we cook dinner." The small slip is left uncorrected)
+{"ack":"That sounds like a nice weekend.","verdict":"correct","verdict_say":"That is a clear answer.","correction":null,"support_ja":"","next":{"kind":"question","say":"What did you cook together?","item":"","level":""}}
 
 EXAMPLE, verdict none (student asked "What does yesterday mean?" while a sentence was open)
 {"ack":"Good question.","verdict":"none","verdict_say":"","correction":null,"support_ja":"yesterday は「昨日」という意味です。","next":{"kind":"retry","say":"Yesterday means the day before today. Now try the sentence once more.","item":"","level":""}}`;
