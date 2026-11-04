@@ -51,6 +51,7 @@ import { isSkippedForKnownLevel } from '@/lib/tutor/lesson-plan/fixed-script';
 import { searchImage } from '@/lib/tutor/image-search';
 import { classifyBrainError, decideBrainRetry, withInactivityTimeout } from '@/lib/tutor/voice/brain-retry';
 import { textThinkingEnabled } from '@/lib/tutor/voice/text-thinking';
+import { TYPED_NEXT_KINDS, type TypedTurnRequest } from '@/lib/tutor/voice/typed-turn';
 import { textTurnShapeEnabled } from '@/lib/tutor/voice/turn-shape-signal';
 import { textVerdictPrecheckEnabled } from '@/lib/tutor/voice/verdict-precheck';
 import { textWorkThenMatchEnabled } from '@/lib/tutor/voice/work-then-match';
@@ -250,6 +251,24 @@ interface BrainStreamRequestBody {
    *  reliably, so the client mirrors every pacing event into this
    *  buffer at emit time and we drain it here. */
   pacingTelemetry?: string[];
+  /** Typed turn (./typed-turn.ts): the client's per-turn state for a
+   *  fixed-script language lesson. Present ⇒ the brain returns one JSON
+   *  object (no tools). Shape-checked below; a bad shape is dropped. */
+  typedTurn?: TypedTurnRequest;
+}
+
+/** The typed-turn request as sent, or undefined (dropped + logged) on a bad shape. */
+function acceptTypedTurn(raw: unknown): TypedTurnRequest | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  const t = raw as Partial<TypedTurnRequest>;
+  if (
+    typeof t === 'object' && typeof t.state === 'string' && Array.isArray(t.allowedNext)
+    && t.allowedNext.length > 0 && t.allowedNext.every((k) => TYPED_NEXT_KINDS.includes(k))
+  ) {
+    return { state: t.state, allowedNext: t.allowedNext, recap: t.recap === true, ...(t.nudge === true ? { nudge: true } : {}) };
+  }
+  console.warn('typed_turn_body_rejected');
+  return undefined;
 }
 
 /** Task 39 §D (voice run 20, 1126 s): the advance_lesson tool_result for a
@@ -968,6 +987,7 @@ export async function POST(req: NextRequest) {
       if (recapWrap) console.log('[recap] recap_wrap attached');
       if (recapReply) console.log(`[recap] recap_offer_reply attached reply=${recapReply}`);
 
+      const typedTurn = acceptTypedTurn(body.typedTurn);
       // Task X10: the turn input is pure, byte-stable data (no per-attempt
       // mutation), so the SAME object is safely reused on every retry.
       const turnInput = {
@@ -1111,6 +1131,8 @@ export async function POST(req: NextRequest) {
               ? withPronunciationCheckResult(withLevel)
               : withLevel;
           })(),
+          // Typed turn: passed straight through (the brain ignores `tools` on it).
+          ...(typedTurn ? { typedTurn } : {}),
       };
 
       // Task X10 — bounded whole-turn retry. Wraps the generator so a turn
@@ -1140,7 +1162,7 @@ export async function POST(req: NextRequest) {
           // far is this frame is still safely retryable.
           // (The verdict pre-check frame is the same kind of frame: it is sent
           // before any sentence and commits nothing to the student.)
-          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match' || ev.type === 'verdict-precheck-pending' || ev.type === 'verdict-precheck-none' || ev.type === 'answer-reveal' || ev.type === 'homework-keyed-verdict' || ev.type === 'homework-problem-done') {
+          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match' || ev.type === 'verdict-precheck-pending' || ev.type === 'verdict-precheck-none' || ev.type === 'answer-reveal' || ev.type === 'homework-keyed-verdict' || ev.type === 'homework-problem-done' || ev.type === 'typed-turn-fallback') {
             sendTelemetry(ev);
             if (clientGone) break;
             continue;

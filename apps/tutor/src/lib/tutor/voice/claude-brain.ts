@@ -75,6 +75,7 @@ import {
 import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
 import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
+import { OrderedFieldEmitter, parseTypedTurn, truncateToSentences, TypedTurnReader, typedTurnStateBlock, TYPED_ACK_BUDGET, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNextKind, type TypedTurn, type TypedTurnRequest } from './typed-turn';
 
 /** Does the streamed tool input parse as JSON? Partial JSON (a tool call
  *  the output cap cut in half) does not. */
@@ -598,6 +599,11 @@ export interface BrainTurnInput {
    *  corrected, and the homework ledger is rendered and fed by the check.
    *  Absent/false ⇒ request, blocks and events exactly as before. */
   noRevealLedger?: boolean;
+  /** Typed turn (./typed-turn.ts; fixed-script language lessons): the brain
+   *  returns ONE JSON object (structured output, no tools) instead of prose.
+   *  Set by the client; the route passes it through after a shape check.
+   *  Absent ⇒ request, blocks and events exactly as before. */
+  typedTurn?: TypedTurnRequest;
   /** Test/measurement seam for the pre-check (model call, timeout, model). */
   verdictPrecheckDeps?: VerdictPrecheckDeps & { onResult?: (r: VerdictPrecheckResult | null, ms: number) => void; /** Test seam (prose-answer-match.ts). */ proseAnswerMatch?: ProseAnswerMatchFn };
   /** Optional async resolver for tool_result content. Default behavior
@@ -814,6 +820,20 @@ export type BrainStreamEvent =
   /** 2026-10-18 (output-budget.ts): the cap cut a tool call in half; the
    *  brain re-issued once at the normal cap to finish it. Telemetry only. */
   | { type: 'tool-call-continued'; name: string }
+  /** Typed turn (./typed-turn.ts): one field of the JSON object, released in
+   *  composition order (ack → verdict → verdict_say → correction →
+   *  support_ja → next) with its sentence budget applied. Speech fields are
+   *  followed by their `sentence` events. `next` is released only whole and
+   *  only when its kind is allowed. */
+  | { type: 'typed-field'; field: TypedField; value: TypedFieldValue['value']; retried?: boolean }
+  /** Typed turn: the whole object once its text block ends (null = did not
+   *  parse). `nextFallback`: the model's `next` was not allowed, nothing of it
+   *  was voiced, and the client continues with this kind instead. */
+  | { type: 'typed-turn'; turn: TypedTurn | null; retries: number; nextFallback?: TypedNextKind; retryReason?: 'illegal_kind' | 'say_over_budget' }
+  /** Typed turn: the typed path could not be used or did not deliver
+   *  (`provider`: the serving target is not native Anthropic, so the turn ran
+   *  as prose). */
+  | { type: 'typed-turn-fallback'; reason: 'format_rejected' | 'provider' | 'cut' | 'unparseable' }
   /** Terminal event. Includes cumulative metadata for telemetry. */
   | {
       type: 'done';
@@ -2331,6 +2351,30 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
  * iteration N before iteration N+1; loop boundaries are invisible to
  * the consumer.
  */
+/** Typed turn budgets without their own constant in ./typed-turn.ts (2 sentences each). */
+const TYPED_EXPLAIN_BUDGET = 2;
+const TYPED_SUPPORT_JA_BUDGET = 2;
+const TYPED_ANSWER_CHECK_ADVISORY = '(advisory: your own "verdict" field decides)';
+
+/** The parsed object with the same sentence budgets the field frames carry. */
+function budgetTypedTurn(turn: TypedTurn): TypedTurn {
+  return {
+    ...turn,
+    ack: truncateToSentences(turn.ack, TYPED_ACK_BUDGET),
+    verdict_say: truncateToSentences(turn.verdict_say, TYPED_VERDICT_SAY_BUDGET),
+    correction: turn.correction ? { ...turn.correction, explain: truncateToSentences(turn.correction.explain, TYPED_EXPLAIN_BUDGET) } : null,
+    support_ja: truncateToSentences(turn.support_ja, TYPED_SUPPORT_JA_BUDGET),
+  };
+}
+
+/** The pre-check's block on a typed turn: the same finding, one advisory line added. */
+function typedAnswerCheckBlock(block: string): string {
+  if (!block) return '';
+  const end = block.lastIndexOf('</answer_check>');
+  if (end < 0) return `${block.replace(/\s+$/, '')}\n${TYPED_ANSWER_CHECK_ADVISORY}\n\n`;
+  return `${block.slice(0, end)}${TYPED_ANSWER_CHECK_ADVISORY}\n${block.slice(end)}`;
+}
+
 export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<BrainStreamEvent, void, void> {
   const whiteboardSummary = buildWhiteboardSummary(input.whiteboardSnapshot, {
     pages: input.whiteboardPages,
@@ -2906,7 +2950,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     console.log(`[verdict-precheck] voice (parallel) ${ms} ms · ${summary}${pub ? ' (not sent)' : ''}`);
     return { type: 'verdict-precheck-none', ms };
   };
-  const userContent =
+  const userContentHead =
     // Recap directives lead the message (live probes 2026-09-05: buried
     // after seven other blocks, the offer lost to the stuck rule 3 turns in
     // a row). Position is the cheapest lever on directive compliance.
@@ -2933,19 +2977,85 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     problemFactsBlock +
-    textThinkingBlock +
+    textThinkingBlock;
+  const studentLanguageBlock = input.textLanguageNote === true ? formatStudentLanguageBlock(studentSaid) : '';
+  const studentSaidBlock = `<student_said>\n${input.studentTranscript}\n</student_said>`;
+  const userContent =
+    userContentHead +
     turnShapeBlock +
     problemLedgerBlock +
     problemLettersBlock +
-    (input.textLanguageNote === true ? formatStudentLanguageBlock(studentSaid) : '') +
+    studentLanguageBlock +
     answerCheckBlock +
     verdictGuardBlock +
-    `<student_said>\n${input.studentTranscript}\n</student_said>`;
+    studentSaidBlock;
 
-  let messages: Anthropic.MessageParam[] = buildBrainMessages(
+  const proseMessages: Anthropic.MessageParam[] = buildBrainMessages(
     input.conversationHistory,
     userContent,
   );
+  // Typed turn (./typed-turn.ts): one JSON object, no tools. The judging
+  // frames written for prose (turn_shape, work-then-match, verdict_guard) are
+  // left out — the object's own `verdict` field is the judgement; the
+  // pre-check's finding stays, as advice. The state block sits right above
+  // the student's words. `typed` falls to false for the rest of the turn when
+  // the serving target cannot take structured output (provider fallback).
+  let typed = !!input.typedTurn;
+  const typedMessages: Anthropic.MessageParam[] | null = input.typedTurn
+    ? buildBrainMessages(
+        input.conversationHistory,
+        userContentHead +
+        problemLedgerBlock +
+        problemLettersBlock +
+        studentLanguageBlock +
+        typedAnswerCheckBlock(answerCheckBlock) +
+        typedTurnStateBlock(input.typedTurn) + '\n\n' +
+        studentSaidBlock,
+      )
+    : null;
+  let messages: Anthropic.MessageParam[] = typedMessages ?? proseMessages;
+  // Set once per turn: `next` was not allowed (Task 6 retries here instead).
+  let typedNextFallback: TypedNextKind | undefined;
+  /** Gate for `next`: legal kinds pass; anything else is held back. */
+  const typedNextAllowed = (kind: TypedNextKind): boolean => !!input.typedTurn?.allowedNext.includes(kind);
+  /** One released field: budget, its frame, then its speech as sentences. */
+  function* emitTypedField(ev: TypedFieldValue): Generator<BrainStreamEvent> {
+    let value: TypedFieldValue['value'] = ev.value;
+    let speech = '';
+    switch (ev.field) {
+      case 'ack': value = speech = truncateToSentences(ev.value, TYPED_ACK_BUDGET); break;
+      case 'verdict_say': value = speech = truncateToSentences(ev.value, TYPED_VERDICT_SAY_BUDGET); break;
+      case 'support_ja': value = speech = truncateToSentences(ev.value, TYPED_SUPPORT_JA_BUDGET); break;
+      case 'correction':
+        if (ev.value) {
+          const correction = { ...ev.value, explain: truncateToSentences(ev.value.explain, TYPED_EXPLAIN_BUDGET) };
+          value = correction;
+          speech = correction.explain;
+        }
+        break;
+      case 'next':
+        if (!typedNextAllowed(ev.value.kind)) {
+          typedNextFallback = input.typedTurn!.allowedNext[0];
+          console.warn(`[typed-turn] next.kind=${ev.value.kind} not in allowed_next=${input.typedTurn!.allowedNext.join(',')} — fallback ${typedNextFallback}`);
+          return;
+        }
+        speech = ev.value.say;
+        break;
+      case 'verdict': break;
+    }
+    yield { type: 'typed-field', field: ev.field, value };
+    if (!speech.trim()) return;
+    // Scrub + boundary only: the prose guards are written for free text.
+    const buf = new SentenceBuffer();
+    const sentences = buf.push(speech);
+    const rest = buf.flush();
+    if (rest) sentences.push(rest);
+    for (const text of sentences) {
+      if (accumulatedText && !/\s$/.test(accumulatedText)) accumulatedText += ' ';
+      accumulatedText += text;
+      yield { type: 'sentence', text };
+    }
+  }
 
   let accumulatedText = '';
   const accumulatedToolCalls: BrainToolCall[] = [];
@@ -2983,20 +3093,72 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     let thinkingAnnounced = false;
     let deadlineHit = false;
     let unaskedThinkingHit = false;
+    // Typed turn: a fresh reader + emitter per SDK call (a thinking re-issue
+    // starts the object over).
+    const typedReader = new TypedTurnReader();
+    const typedOrdered = new OrderedFieldEmitter();
+    let typedTextOpen = false;
+    let typedFinished = false;
+    let typedRawChars = 0;
 
-    const opened = await openBrainStream((target) => paramsForTarget(target, {
-      model: input.model ?? BRAIN_MODEL_ID,
-      // Voice / thinking off: `max_tokens` + `thinking: disabled`, as before.
-      // Text thinking: adaptive thinking + effort, with the cap raised so
-      // reasoning never has to fit inside the reply's budget.
-      ...brainThinkingParams(thinkingOn, capOverride ?? input.maxTokens ?? DEFAULT_MAX_TOKENS, thinkingEffortOverride),
-      // 1-hour TTL on every block: survives student pauses > 5 min, and the
-      // core block must outlive the gap between sessions (shared entry).
-      system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),
-      tools: toAnthropicTools(input.tools),
-      messages,
-    }), input.model, input.allowFallback !== false);
+    const opened = await openBrainStream((target) => {
+      const thinkingParams = brainThinkingParams(thinkingOn, capOverride ?? input.maxTokens ?? DEFAULT_MAX_TOKENS, thinkingEffortOverride);
+      if (typed && target.native) {
+        // Typed: no tools; structured output rides in output_config beside
+        // the thinking effort; the instructions go in the session tail so
+        // the cached core block stays byte-identical.
+        return paramsForTarget(target, {
+          model: input.model ?? BRAIN_MODEL_ID,
+          max_tokens: thinkingParams.max_tokens,
+          thinking: thinkingParams.thinking,
+          output_config: {
+            ...('output_config' in thinkingParams ? thinkingParams.output_config : {}),
+            format: { type: 'json_schema' as const, schema: TYPED_TURN_SCHEMA },
+          },
+          system: buildSystemBlocks(input.systemPrompt + '\n\n' + TYPED_TURN_INSTRUCTIONS, input.systemPromptCore),
+          messages,
+        });
+      }
+      return paramsForTarget(target, {
+        model: input.model ?? BRAIN_MODEL_ID,
+        // Voice / thinking off: `max_tokens` + `thinking: disabled`, as before.
+        // Text thinking: adaptive thinking + effort, with the cap raised so
+        // reasoning never has to fit inside the reply's budget.
+        ...thinkingParams,
+        // 1-hour TTL on every block: survives student pauses > 5 min, and the
+        // core block must outlive the gap between sessions (shared entry).
+        system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),
+        tools: toAnthropicTools(input.tools),
+        // A typed turn served by a non-native target runs as prose.
+        messages: typed ? proseMessages : messages,
+      });
+    }, input.model, input.allowFallback !== false);
     totalUsage.model = opened.target.model;
+    if (typed && !opened.target.native) {
+      // stripAnthropicOnlyParams would drop output_config (the schema), so
+      // this target got the prose request; the rest of the turn is prose.
+      console.warn(`[typed-turn] served by non-native ${opened.target.model} — prose for this turn`);
+      yield { type: 'typed-turn-fallback', reason: 'provider' };
+      typed = false;
+      messages = proseMessages;
+    }
+    /** Typed: the text block ended — release what is held, then the whole object. */
+    function* finishTyped(): Generator<BrainStreamEvent> {
+      typedTextOpen = false;
+      typedFinished = true;
+      for (const out of typedOrdered.flush()) yield* emitTypedField(out);
+      const turn = parseTypedTurn(typedReader.text);
+      if (!turn) {
+        console.warn(`[typed-turn] object did not parse: ${JSON.stringify(typedReader.text.slice(0, 200))}`);
+        yield { type: 'typed-turn-fallback', reason: 'unparseable' };
+      }
+      yield {
+        type: 'typed-turn',
+        turn: turn ? budgetTypedTurn(turn) : null,
+        retries: 0,
+        ...(typedNextFallback ? { nextFallback: typedNextFallback } : {}),
+      };
+    }
 
     const streamIter = opened.events[Symbol.asyncIterator]();
     // Voice parallel pre-check: the stream read that is in flight while the
@@ -3048,6 +3210,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           yield* guardedSentence(heldTail);
           heldTail = null;
         }
+        if (typed && event.content_block.type === 'text') typedTextOpen = true;
         if (event.content_block.type === 'tool_use') {
           shownThisIter = true;
           currentToolUse = {
@@ -3074,7 +3237,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           yield { type: 'thinking' };
         }
       } else if (event.type === 'content_block_delta') {
-        if (event.delta.type === 'text_delta') {
+        if (event.delta.type === 'text_delta' && typed) {
+          // Typed: the JSON never reaches speech; released fields do.
+          shownThisIter = true;
+          typedRawChars += event.delta.text.length;
+          for (const closed of typedReader.push(event.delta.text)) {
+            for (const out of typedOrdered.push(closed)) yield* emitTypedField(out);
+          }
+        } else if (event.delta.type === 'text_delta') {
           shownThisIter = true;
           if (speechMuted) {
             mutedChars += event.delta.text.length;
@@ -3087,6 +3257,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         } else if (event.delta.type === 'input_json_delta' && currentToolUse) {
           currentToolUse.rawJson += event.delta.partial_json;
         }
+      } else if (event.type === 'content_block_stop' && typed) {
+        // Typed: no tools, no held tail — only the text block's end matters.
+        if (typedTextOpen) yield* finishTyped();
       } else if (event.type === 'content_block_stop') {
         // Flush any buffered text before dispatching a tool call from the
         // same response — keeps the audio→visual ordering correct (the
@@ -3215,6 +3388,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       continue;
     }
 
+    // Typed: a text block the stream never closed still ends the object.
+    if (typed && !typedFinished && typedReader.text) yield* finishTyped();
+
     // Stream finished. Pull final metadata + assistant content for the
     // next agent-loop iteration.
     const finalMessage = await opened.finalMessage();
@@ -3290,7 +3466,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     if (thinkingStarved({
       thinkingOn,
       stopReason: finalMessage.stop_reason,
-      textChars: accumulatedText.length - textCharsBeforeIter,
+      textChars: accumulatedText.length - textCharsBeforeIter + typedRawChars,
       toolCalls: newToolUseBlocks.length,
     })) {
       // Reasoning consumed the whole token cap: a thinking block and nothing
@@ -3305,7 +3481,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     if (
       !emptyCapRetried &&
       finalMessage.stop_reason === 'max_tokens' &&
-      accumulatedText.length - textCharsBeforeIter === 0 &&
+      accumulatedText.length - textCharsBeforeIter + typedRawChars === 0 &&
       newToolUseBlocks.length === 0
     ) {
       emptyCapRetried = true;
@@ -3393,7 +3569,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // DID write a lead-in, put something on the board and ended its response
   // (no tool round trip) without asking anything — "Here it is on the
   // board." and silence. Its follow-up call asks the question only.
-  const thinRescue = lastFinalMessage
+  const thinRescue = lastFinalMessage && !typed
     ? decideThinToolTurnRescue({
         enabled: TUTOR_THIN_TOOL_TURN_RESCUE,
         text: reveal.forwarded.join(' '),
@@ -3403,7 +3579,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         muted: reveal.muted,
       })
     : null;
-  const zeroTextRescue = !accumulatedText.trim() && accumulatedToolCalls.length > 0 && !!lastFinalMessage;
+  const zeroTextRescue = !typed && !accumulatedText.trim() && accumulatedToolCalls.length > 0 && !!lastFinalMessage;
   if ((zeroTextRescue || thinRescue?.rescue) && lastFinalMessage) {
     if (zeroTextRescue) console.warn(`[brain.stream] OPTION-A rescue: ${accumulatedToolCalls.length} tools emitted with zero narration — invoking rescue call`);
     else console.warn(`[brain.stream] THIN-TURN rescue (${thinRescue?.reason}): ${accumulatedToolCalls.length} tool(s), no question, stop=${lastStopReason} — invoking follow-up call`);

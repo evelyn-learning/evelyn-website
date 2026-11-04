@@ -185,7 +185,10 @@ test('server: every sentence and tool call goes through the guard; the frame car
   const gen = brain.slice(brain.indexOf('export async function* streamBrainTurn'));
   const raw = (gen.match(/yield \{ type: 'sentence'/g) ?? []).length;
   // 2026-10-20: + the fixed "still open" line after a dropped set-finished claim (homework-ledger.ts claimsSetFinished).
-  assert.equal(raw, 4, 'only the guard itself yields sentences (the passed sentence, the fixed tail, the fixed confirmation after a withheld denial, and the open-problems line after a dropped set-finished claim)');
+  // 2026-11-04: + the typed-turn field speech (emitTypedField; a typed turn is a fixed-script language lesson —
+  // structured JSON fields, no withheld whole answer — scrubbed by SentenceBuffer, not the prose guard).
+  assert.equal(raw, 5, 'only the guard itself yields sentences (the passed sentence, the fixed tail, the fixed confirmation after a withheld denial, the open-problems line after a dropped set-finished claim, and the typed-turn field speech)');
+  assert.ok(/function\* emitTypedField[\s\S]*?yield \{ type: 'sentence', text \};/.test(gen), 'the bare sentence yield lives in emitTypedField');
   assert.match(gen, /yield\* guardedSentence\(/);
   assert.match(gen, /boardRevealsWithheldAnswer\(/);
   assert.match(gen, /type: 'answer-reveal', where: /);
