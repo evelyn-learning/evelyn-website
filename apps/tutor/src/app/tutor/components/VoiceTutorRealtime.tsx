@@ -16520,7 +16520,8 @@ export function VoiceTutorRealtime({
             const plan = lessonPlanRef.current;
             const adv = lastAdvanceRef.current;
             const normWs = (t: string) => t.replace(/\s+/g, ' ').trim();
-            if (TUTOR_AUTO_SEGMENT_CARD && plan && adv && adv.atMs >= attemptStartMs
+            // Task 8 (smoke r51, 84 s / 211 s): the typed `advance` effect paints the part card itself.
+            if (!typedTurnActive && TUTOR_AUTO_SEGMENT_CARD && plan && adv && adv.atMs >= attemptStartMs
                 && !segmentCardsRenderedThisAttempt.includes(adv.segId)
                 && !completedSegmentIdsRef.current.has(adv.segId)) {
               const seg = plan.segments.find((sg) => sg.id === adv.segId);
@@ -24273,7 +24274,10 @@ export function VoiceTutorRealtime({
       // repairs ourselves. Fire-and-forget: turn finalize below must not
       // wait on Haiku; late ink beats no ink, but ink from a PREVIOUS turn
       // must never land mid-next-turn (pageTurn staleness guard).
+      // Task 8 (smoke r51, 213 s): not after a typed turn — its cards come from its fields, and a typed
+      // advance card is not counted as painted here (requested ink landed on the new part).
       if (
+        !typedTurnActive &&
         TUTOR_CLIENT_RULE8_REPAIR &&
         shouldClientRequestRepair({
           serverToolCount: countBoardRenderTools(totalToolNamesSeen),

@@ -213,5 +213,10 @@ test('Task 8 smoke fix: the language output cap never applies to a typed turn (t
   assert.ok(/cap: typedTurnActive \? null : TUTOR_LANGUAGE_TURN_MAX_TOKENS,/.test(VTR.slice(at, at + 600)), 'no cap on typed (cap null = off)');
 });
 
+test('Task 8 smoke fix: no prose auto card on advance and no rule-8 client repair on a typed turn', () => {
+  assert.ok(VTR.includes('if (!typedTurnActive && TUTOR_AUTO_SEGMENT_CARD && plan && adv && adv.atMs >= attemptStartMs'), 'auto_card_on_advance');
+  assert.ok(/if \(\n\s*!typedTurnActive &&\n\s*TUTOR_CLIENT_RULE8_REPAIR &&\n\s*shouldClientRequestRepair\(\{/.test(VTR), 'rule8 client repair');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');
