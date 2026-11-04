@@ -31,7 +31,7 @@ function ctx(segId: string, over: Partial<AllowedNextContext> & { state?: Partia
   return {
     plan, segId, levelKnown: false, state: { ...createTypedTurnState(), ...(state ?? {}) },
     budgetDue: false, lastPart: false, studentMovedOn: false, menuPick: null,
-    studentAnswerCount: 0, nudge: false, items: [], ...rest,
+    studentAnswerCount: 0, nudge: false, items: [], lessonElapsedMs: 0, ...rest,
   };
 }
 const sorted = (a: string[]) => [...a].sort();
@@ -188,7 +188,7 @@ function fctx(segId: string, over: Partial<FieldEffectContext> & { state?: Parti
   return {
     plan, segId, levelKnown: false, state: { ...createTypedTurnState(), ...(state ?? {}) }, studentLast: '',
     cardStatement: getSegmentTruth(plan.segments.find((s) => s.id === segId), plan.id)?.problemText ?? null,
-    items: [], menuPick: null, ...rest,
+    items: [], menuPick: null, budgetDue: false, ...rest,
   };
 }
 const nx = (over: Partial<TypedNext>): TypedNext => ({ kind: 'question', say: 'Say.', item: '', level: '', ...over });
@@ -367,6 +367,51 @@ test('H2: a partly_correct answer fills answeredCards like a correct one; none a
   assert.deepEqual(mk('partly_correct').answeredCards['present-perfect'], ['Can you tell me a little about your job?']);
   assert.equal(mk('incorrect').answeredCards['present-perfect'], undefined);
   assert.equal(mk('none').answeredCards['present-perfect'], undefined);
+});
+
+// ---- Final fix wave W1: the post-due turn cap on the typed path ----
+test('W1: open-conversation, open question, budget due — post-due 0/1 hold, 2 forces the move', () => {
+  const pd = (n: number) => ({ ...ask('question'), postDueTurns: { 'open-conversation': n } });
+  assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, state: pd(0) })), ['question', 'move']);
+  assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, state: pd(1) })), ['question', 'move']);
+  assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, state: pd(2) })), ['move']);
+  // an open retry ask is capped too
+  assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, state: { ...pd(2), openAsk: { kind: 'retry', text: 'x' } } })), ['move']);
+  // not due: the counter is ignored
+  assert.deepEqual(sorted(allowedNextFor(ctx('open-conversation', { state: pd(5) }))), ['question', 'retry']);
+});
+test('W1: the last part (summary) capped -> close; an offer part with the offer not made -> offer', () => {
+  assert.deepEqual(allowedNextFor(ctx('summary', { budgetDue: true, lastPart: true, state: { ...ask('question'), postDueTurns: { summary: 2 } } })), ['close']);
+  assert.deepEqual(allowedNextFor(ctx('present-perfect', { budgetDue: true, state: { ...ask('question'), postDueTurns: { 'present-perfect': 2 } } })), ['offer']);
+});
+test('W1: past the lesson-time guard point (deadline) -> move even with no hold spent', () => {
+  const late = 60 * 60 * 1000;
+  assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, lessonElapsedMs: late, state: ask('question') })), ['move']);
+});
+test('W1: turnStateLine post_due / last_turn', () => {
+  const pd = (n: number) => ({ ...ask('question'), postDueTurns: { 'open-conversation': n } });
+  const two = turnStateLine(ctx('open-conversation', { budgetDue: true, state: pd(2) }));
+  assert.ok(two.includes('post_due="2"') && two.includes('last_turn="yes"'), two);
+  const one = turnStateLine(ctx('open-conversation', { budgetDue: true, state: pd(1) }));
+  assert.ok(one.includes('post_due="1"') && one.includes('last_turn="yes"'), one);
+  const zero = turnStateLine(ctx('open-conversation', { budgetDue: true, state: pd(0) }));
+  assert.ok(zero.includes('post_due="0"') && !zero.includes('last_turn='), zero);
+  const notDue = turnStateLine(ctx('open-conversation', { state: pd(0) }));
+  assert.ok(!notDue.includes('post_due=') && !notDue.includes('last_turn='), notDue);
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('post_due') && TYPED_TURN_INSTRUCTIONS.includes('last_turn'));
+});
+test('W1: applyTypedTurn counts post-due turns in the answered part; a move resets the new part', () => {
+  const t = { ack: '', verdict: 'none' as const, verdict_say: '', correction: null, support_ja: '', next: { kind: 'question' as const, say: 'Next?', item: '', level: '' as const } };
+  const s1 = applyTypedTurn(createTypedTurnState(), t, fctx('open-conversation', { budgetDue: true }), null);
+  assert.equal(s1.postDueTurns['open-conversation'], 1);
+  const s2 = applyTypedTurn(s1, t, fctx('open-conversation', { budgetDue: true, state: s1 }), null);
+  assert.equal(s2.postDueTurns['open-conversation'], 2);
+  const s3 = applyTypedTurn(s2, t, fctx('open-conversation', { budgetDue: false, state: s2 }), null);
+  assert.equal(s3.postDueTurns['open-conversation'], 2, 'not due: unchanged');
+  const mv = { ...t, next: { kind: 'move' as const, say: 'On.', item: '', level: '' as const } };
+  const s4 = applyTypedTurn({ ...s2, postDueTurns: { ...s2.postDueTurns, pronunciation: 3 } }, mv, fctx('open-conversation', { budgetDue: true, state: s2 }), { from: 'open-conversation', to: 'pronunciation' });
+  assert.equal(s4.postDueTurns.pronunciation, 0);
+  assert.equal(createTypedTurnState().postDueTurns && Object.keys(createTypedTurnState().postDueTurns).length, 0);
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

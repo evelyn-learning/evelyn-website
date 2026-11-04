@@ -5,7 +5,8 @@
  */
 import type { LessonPlan, Segment } from './types';
 import {
-  fixedScriptBridgeClause, fixedScriptEngineOfferLines, fixedScriptPartLabel, nextSegmentId, segmentMaxTurns, segmentTransitionKind,
+  FIXED_SCRIPT_POST_DUE_MAX_HOLDS, fixedScriptBridgeClause, fixedScriptEngineOfferLines, fixedScriptPartLabel, nextSegmentId,
+  postDueHoldDecision, segmentMaxTurns, segmentTransitionKind,
 } from './fixed-script';
 import { getSegmentTruth } from './context';
 import { cardAskLine } from './transition-ask';
@@ -50,6 +51,8 @@ export interface TypedTurnState {
   answeredCards: Record<string, string[]>;
   lastItemAnnounced: Record<string, boolean>;
   turnsInPart: Record<string, number>;
+  /** W1: typed turns answered in a part while its budget was due (the prose post-due hold count). */
+  postDueTurns: Record<string, number>;
   retriesInARow: number;
   pendingVerdict: TypedVerdict | null;
 }
@@ -64,6 +67,7 @@ export function createTypedTurnState(): TypedTurnState {
     answeredCards: {},
     lastItemAnnounced: {},
     turnsInPart: {},
+    postDueTurns: {},
     retriesInARow: 0,
     pendingVerdict: null,
   };
@@ -78,6 +82,13 @@ export interface AllowedNextContext {
   studentAnswerCount: number;
   nudge: boolean;
   items: readonly string[];
+  /** ms since the lesson started (the lesson-time guard's clock; postDueHoldDecision's deadline). */
+  lessonElapsedMs: number;
+}
+
+/** W1: the prose post-due cap on the typed path: 'hold-ok' | 'capped' | 'deadline' (only meaningful when budgetDue). */
+function postDueState(ctx: AllowedNextContext): 'hold-ok' | 'capped' | 'deadline' {
+  return postDueHoldDecision({ plan: ctx.plan, holds: ctx.state.postDueTurns?.[ctx.segId] ?? 0, lessonElapsedMs: ctx.lessonElapsedMs });
 }
 
 function itemsLeft(ctx: AllowedNextContext): string[] {
@@ -112,11 +123,15 @@ export function allowedNextFor(ctx: AllowedNextContext): TypedNextKind[] {
 
   if (kind === 'offer_part') {
     const o = state.offerState[segId] ?? { made: false, accepted: false, served: false };
-    if (ctx.budgetDue && !o.made) return ['offer'];
+    // W1: from the lesson-time guard point on no offer (postDueHoldDecision 'deadline'): the part moves.
+    if (ctx.budgetDue && !o.made) return postDueState(ctx) === 'deadline' ? [moveOrClose] : ['offer'];
     if (o.made && !o.accepted && ask === 'offer') return ['move', 'question'];
     if (o.accepted && !o.served) return ['question'];
     if (o.accepted && o.served && ctx.budgetDue) return ['move'];
   }
+
+  // W1: the part's post-due holds are spent (or the lesson deadline passed) — the move, whatever is open.
+  if (ctx.budgetDue && postDueState(ctx) !== 'hold-ok') return [moveOrClose];
 
   if (ask === 'retry') {
     const extra: TypedNextKind[] = ctx.budgetDue ? ['move'] : [];
@@ -153,6 +168,10 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     ['items_left', itemsLeft(ctx).join('|')],
     ['last_item', yn(!!state.lastItemAnnounced[segId])],
     ['budget_due', yn(ctx.budgetDue)],
+    // W1: post-due turns spent in this part; last_turn = this part's holds are used up (or about to be)
+    ...(ctx.budgetDue ? [['post_due', String(state.postDueTurns?.[segId] ?? 0)] as [string, string]] : []),
+    ...(ctx.budgetDue && ((state.postDueTurns?.[segId] ?? 0) + 1 >= FIXED_SCRIPT_POST_DUE_MAX_HOLDS || postDueState(ctx) === 'deadline')
+      ? [['last_turn', 'yes'] as [string, string]] : []),
     ['correction_open', yn(!!state.correctionOpen)],
     ['level_known', yn(ctx.levelKnown)],
   ];
@@ -195,6 +214,8 @@ export interface FieldEffectContext {
   studentLast: string; cardStatement: string | null; items: readonly string[];
   /** This turn's resolved menu pick text (same value as AllowedNextContext.menuPick), or null. */
   menuPick: string | null;
+  /** W1: the same budgetDue the turn's AllowedNextContext carried (counts a post-due turn). */
+  budgetDue: boolean;
 }
 
 const CARD_WORD_STOP = new Set(['the', 'and', 'you', 'your', 'for', 'are', 'was', 'were', 'have', 'has', 'had', 'did', 'does', 'with', 'that', 'this', 'what', 'who', 'how', 'any', 'can', 'will', 'would', 'about', 'there', 'their', 'from', 'but', 'not']);
@@ -304,6 +325,9 @@ export function applyTypedTurn(
   const turnsInPart = { ...state.turnsInPart };
   if (moved) turnsInPart[moved.to] = 0;
   else turnsInPart[seg] = (turnsInPart[seg] ?? 0) + 1;
+  const postDueTurns = { ...(state.postDueTurns ?? {}) };
+  if (ctx.budgetDue) postDueTurns[seg] = (postDueTurns[seg] ?? 0) + 1;
+  if (moved) postDueTurns[moved.to] = 0;
 
   const answeredCards = { ...state.answeredCards };
   if ((turn.verdict === 'correct' || turn.verdict === 'partly_correct') && state.openAsk.cardQuestion) {
@@ -344,7 +368,7 @@ export function applyTypedTurn(
     openAsk,
     correctionOpen: turn.correction ? { student: turn.correction.student, corrected: turn.correction.corrected }
       : turn.verdict === 'correct' ? null : state.correctionOpen,
-    practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart,
+    practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart, postDueTurns,
     retriesInARow: next.kind === 'retry' ? state.retriesInARow + 1 : 0,
     pendingVerdict: null,
   };

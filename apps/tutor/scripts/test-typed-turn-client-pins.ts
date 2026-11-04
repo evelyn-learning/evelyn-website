@@ -273,5 +273,14 @@ test('fix round 1 (I-2): the menu-ask-cap pre-turn advance stands down; the less
   assert.ok(/if \(typedMovedThisTurn\) \{\s*typedMoved = typedMovedThisTurn;\s*onDebugEvent\?\.\('typed_turn_advance_blocked'/.test(VTR), 'blocked branch reads the latch');
 });
 
+test('W1: typed budget input honours the prose gate + no-attempt rule; budgetDue / lessonElapsedMs reach the rules', () => {
+  assert.ok(VTR.includes('const typedBudgetTurns = TUTOR_NO_ATTEMPT_MOVE_ON ? noAttemptBudgetTurns({ dropped: noAttemptDropped, pinnedSegId: noAttemptSeg, segIdNow: typedFromSeg, turns: typedTurnsRaw }) : typedTurnsRaw;'), 'no-attempt budget turns');
+  assert.ok(VTR.includes('const budgetDue = TUTOR_FIXED_SCRIPT_AUTO_ADVANCE && !typedHomeworkSession && fixedScriptAutoAdvanceReason(typedBudgetInput) !== null;'), 'auto-advance gate');
+  assert.ok(VTR.includes('turns: typedBudgetTurns,'), 'turns from the no-attempt rule');
+  assert.ok(VTR.includes('typedBudgetDueThisTurn = budgetDue;'), 'budgetDue latched for the field context');
+  assert.ok(VTR.includes('budgetDue: typedBudgetDueThisTurn,'), 'FieldEffectContext.budgetDue');
+  assert.ok(VTR.includes('lessonElapsedMs: typedLessonElapsedMs,'), 'AllowedNextContext.lessonElapsedMs');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');

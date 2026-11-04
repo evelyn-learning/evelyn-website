@@ -15107,6 +15107,8 @@ export function VoiceTutorRealtime({
           const sentences = md.pronunciation?.sentences;
           return Array.isArray(sentences) ? sentences.filter((x): x is string => typeof x === 'string' && x.trim().length > 0) : [];
         };
+        // W1: set by buildAllowedNextContext (once per attempt, before the brain call); read by buildFieldEffectContext.
+        let typedBudgetDueThisTurn = false;
         const buildFieldEffectContext = (): FieldEffectContext => ({
           plan: lessonPlanRef.current!,
           segId: typedFromSeg,
@@ -15116,6 +15118,8 @@ export function VoiceTutorRealtime({
           cardStatement: segmentCardStatement(lessonPlanRef.current, typedFromSeg) || null,
           items: typedItemsFor(typedFromSeg),
           menuPick: typedMenuPickText,
+          // W1: the budgetDue this turn's AllowedNextContext carried (applyTypedTurn counts a post-due turn).
+          budgetDue: typedBudgetDueThisTurn,
         });
         const buildAllowedNextContext = (): AllowedNextContext => {
           const tPlan = lessonPlanRef.current!;
@@ -15130,17 +15134,23 @@ export function VoiceTutorRealtime({
           // budget_due: the auto-advance rule's own inputs, as this turn's boundary will read them (turns + 1).
           const cur = turnsInSegmentRef.current;
           const curOwn = cur.segId === typedFromSeg;
+          // W1 (Task 7 minor): the prose boundary's gate and its no-attempt budget rule, same inputs.
+          const typedTurnsRaw = (curOwn ? cur.turns : 0) + 1;
+          const typedBudgetTurns = TUTOR_NO_ATTEMPT_MOVE_ON ? noAttemptBudgetTurns({ dropped: noAttemptDropped, pinnedSegId: noAttemptSeg, segIdNow: typedFromSeg, turns: typedTurnsRaw }) : typedTurnsRaw;
+          const typedLessonElapsedMs = Date.now() - (voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current);
+          const typedHomeworkSession = (homeworkProblemsRef.current?.length ?? 0) > 0 || homeworkProblemRef.current != null;
           const typedBudgetInput: Parameters<typeof fixedScriptAutoAdvanceReason>[0] = {
             plan: tPlan,
             segmentId: typedFromSeg,
-            turns: (curOwn ? cur.turns : 0) + 1,
+            turns: typedBudgetTurns,
             overlongTurns: overlongTurnThreshold(tPlan, typedFromSeg, SEGMENT_OVERLONG_NOTE_TURNS),
             elapsedMs: curOwn ? Date.now() - cur.startedAt : 0,
             levelKnown,
             partTimeCap: TUTOR_PART_TIME_CAP,
-            ...(TUTOR_PART_TIME_CAP ? { lessonElapsedMs: Date.now() - (voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current) } : {}),
+            ...(TUTOR_PART_TIME_CAP ? { lessonElapsedMs: typedLessonElapsedMs } : {}),
           };
-          const budgetDue = fixedScriptAutoAdvanceReason(typedBudgetInput) !== null;
+          const budgetDue = TUTOR_FIXED_SCRIPT_AUTO_ADVANCE && !typedHomeworkSession && fixedScriptAutoAdvanceReason(typedBudgetInput) !== null;
+          typedBudgetDueThisTurn = budgetDue;
           const state = typedTurnStateRef.current;
           return {
             plan: tPlan,
@@ -15155,6 +15165,7 @@ export function VoiceTutorRealtime({
             studentAnswerCount: (state.turnsInPart[typedFromSeg] ?? 0) + (typedStudentText ? 1 : 0),
             nudge: !!opts?.silent && isIdleNudgeDirective(transcript),
             items: typedItemsFor(typedFromSeg),
+            lessonElapsedMs: typedLessonElapsedMs,
           };
         };
         const typedReq: TypedTurnRequest | undefined = typedTurnActive ? typedTurnRequestFor(buildAllowedNextContext()) : undefined;
