@@ -93,7 +93,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen, authoredCardOnCurrentPage, transitionSentenceIndex, lastStudentSentenceCardOnPage, authoredCardParaphrase, typedMoveLastSentence, typedPageTurnHoldDone } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen, authoredCardOnCurrentPage, transitionSentenceIndex, lastStudentSentenceCardOnPage, authoredCardParaphrase, typedMoveLastSentence, typedPageTurnHoldRelease } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue, offCardAskStripped, cardAskEngineFallbackLine, menuPresentedIn, menuEntryFallbackLine, menuPickPendingSuppressesArm } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead, proactiveOpenerAllowed } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, handwriteShownSentence, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation, pronunciationItemRepeat } from '@/lib/tutor/pronunciation/auto-arm';
@@ -6408,17 +6408,26 @@ export function VoiceTutorRealtime({
     }
   };
   const handleWhiteboardCommandRef = useRef<((commands: WhiteboardCommand[]) => Promise<WhiteboardCommandResult>) | null>(null);
+  /** Fix wave 5 round 1/2 (I2, H1): true while a typed move's held page must still wait for its last say sentence. */
+  const typedPageTurnHoldBlocks = (deferred: { segmentId: string } | null, why: string): boolean => {
+    const tHold = typedPageTurnHoldRef.current;
+    if (!tHold) return false;
+    if (deferred?.segmentId !== tHold.segmentId) { typedPageTurnHoldRef.current = null; return false; } // the page went another way
+    // H1 (fix round 2): stream ended + audio drained releases a hold whose anchored sentence never played.
+    const tRelease = typedPageTurnHoldRelease({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why, streamEnded: !brainBusyRef.current });
+    if (!tRelease) {
+      onDebugEvent?.('typed_turn_page_turn_waits', `${why}: say sentence ${tHold.lastSentence} not finished (started ${ttsPlaybackStartedCountRef.current})`);
+      return true;
+    }
+    if (tRelease === 'fallback') onDebugEvent?.('typed_turn_page_turn_fallback', `${why}: say sentence ${tHold.lastSentence} never finished (started ${ttsPlaybackStartedCountRef.current}) — page turns at the turn end`);
+    typedPageTurnHoldRef.current = null;
+    return false;
+  };
+  const typedPageTurnHoldBlocksRef = useRef(typedPageTurnHoldBlocks);
+  typedPageTurnHoldBlocksRef.current = typedPageTurnHoldBlocks;
   const flushDeferredPageAtTurnEndNow = useCallback((why: string) => {
     const deferred = pendingAdvanceNewPageRef.current;
-    const tHold = typedPageTurnHoldRef.current;
-    if (tHold && deferred?.segmentId !== tHold.segmentId) typedPageTurnHoldRef.current = null; // the page went another way
-    else if (tHold) {
-      if (!typedPageTurnHoldDone({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why })) {
-        onDebugEvent?.('typed_turn_page_turn_waits', `${why}: say sentence ${tHold.lastSentence} not finished (started ${ttsPlaybackStartedCountRef.current})`);
-        return;
-      }
-      typedPageTurnHoldRef.current = null;
-    }
+    if (typedPageTurnHoldBlocksRef.current(deferred, why)) return;
     // Task 45 §4: with the validator TTS hold the brain goes idle before the
     // audio starts — the page would flip ahead of the whole turn. A turn that
     // says the move leaves the break to its anchored batch (or to audio drained).

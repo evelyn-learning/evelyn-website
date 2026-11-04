@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { correctionEmphasis } from '../src/lib/tutor/voice/sentence-board';
 import { segmentCardCommand } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { validatorTtsHold } from '../src/lib/tutor/voice/validator-tts-hold';
-import { typedMoveLastSentence, typedPageTurnHoldDone } from '../src/lib/tutor/whiteboard/deferred-page-flush';
+import { typedMoveLastSentence, typedPageTurnHoldDone, typedPageTurnHoldRelease } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 
 let failed = 0;
 const test = (name: string, fn: () => void) => {
@@ -386,10 +386,30 @@ test('G1 I2 (fix wave 5 round 1): the held page turn waits for the LAST next.say
   // VTR wiring
   assert.ok(/const typedPageTurnHoldRef = useRef<\{ segmentId: string; lastSentence: number \} \| null>\(null\);/.test(VTR), 'the hold ref');
   assert.ok(VTR.includes('typedPageTurnHoldRef.current = { segmentId: e.to, lastSentence: typedMoveLastSentence(anchorSentence, (typedFieldsSeen.next as TypedNext | undefined)?.say ?? \'\') };'), 'anchored like paintTypedPartEntry: the next field\'s narration index + the say\'s sentences');
-  assert.ok(VTR.includes('if (!typedPageTurnHoldDone({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why })) {'), 'the turn-end flush consults the hold');
+  // round 2 pin move (H1): the flush consults the hold through typedPageTurnHoldRelease (the same anchored rule + the turn-end fallback)
+  assert.ok(VTR.includes('if (!tRelease) {') && VTR.includes('typedPageTurnHoldRelease({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why,'), 'the turn-end flush consults the hold');
   assert.ok(VTR.includes("onDebugEvent?.('typed_turn_page_turn_on_interrupt',"), 'interrupt debug event');
   assert.equal((VTR.match(/releaseTypedPageTurnHoldOnInterrupt\(\);/g) ?? []).length, 2, 'both kill sites release the hold');
   assert.ok(/ttsPlaybackStartedCountRef\.current = 0;\s*typedPageTurnHoldRef\.current = null;/.test(VTR), 'cleared with the playback counter (turn start / retry)');
+});
+
+test('H1 (fix wave 5 round 2): a turn-end fallback releases the hold when the anchored sentence never plays', () => {
+  // a dropped duplicate say sentence: lastSentence one too high, the stream ended, the audio drained → released (fallback)
+  assert.equal(typedPageTurnHoldRelease({ lastSentence: 5, started: 5, why: 'audio drained', streamEnded: true }), 'fallback');
+  assert.equal(typedPageTurnHoldRelease({ lastSentence: 5, started: 0, why: 'audio drained', streamEnded: true }), 'fallback', 'no playback at all');
+  // the anchored release still reads as anchored
+  assert.equal(typedPageTurnHoldRelease({ lastSentence: 4, started: 5, why: 'audio drained', streamEnded: true }), 'anchored');
+  assert.equal(typedPageTurnHoldRelease({ lastSentence: 4, started: 6, why: 'speech ended', streamEnded: true }), 'anchored');
+  assert.equal(typedPageTurnHoldRelease({ lastSentence: 4, started: 0, why: 'interrupt', streamEnded: false }), 'anchored');
+  // no fallback while the stream runs, and never on "speech ended" (it fires between sentences after the stream ended too)
+  assert.equal(typedPageTurnHoldRelease({ lastSentence: 5, started: 5, why: 'audio drained', streamEnded: false }), null);
+  assert.equal(typedPageTurnHoldRelease({ lastSentence: 5, started: 4, why: 'speech ended', streamEnded: true }), null, 'a gap between sentences');
+  assert.equal(typedPageTurnHoldRelease({ lastSentence: 5, started: 5, why: 'brain idle', streamEnded: true }), null);
+  // the boolean wrapper is unchanged for the anchored cases
+  assert.equal(typedPageTurnHoldDone({ lastSentence: 4, started: 4, why: 'audio drained' }), false);
+  // VTR wiring
+  assert.ok(VTR.includes('const tRelease = typedPageTurnHoldRelease({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why, streamEnded: !brainBusyRef.current });'), 'the flush passes the stream state');
+  assert.ok(VTR.includes("if (tRelease === 'fallback') onDebugEvent?.('typed_turn_page_turn_fallback',"), 'fallback debug event');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

@@ -446,3 +446,11 @@ export function typedPageTurnHoldDone(input: { lastSentence: number; started: nu
   if (input.started >= input.lastSentence + 2) return true;
   return input.why === 'audio drained' && input.started >= input.lastSentence + 1;
 }
+/** Fix round 2 (H1): the same decision with a turn-end fallback. `lastSentence` can sit one too high (the server
+ *  dropped a duplicate say sentence, or a sentence never played), so once the brain stream has ended and the turn's
+ *  audio drained the hold is released anyway ('fallback'). Never on "speech ended": that edge also fires between
+ *  sentences after the stream ended (the stream ends long before the narration does). */
+export function typedPageTurnHoldRelease(input: { lastSentence: number; started: number; why: string; streamEnded: boolean }): 'anchored' | 'fallback' | null {
+  if (typedPageTurnHoldDone(input)) return 'anchored';
+  return input.streamEnded && input.why === 'audio drained' ? 'fallback' : null;
+}
