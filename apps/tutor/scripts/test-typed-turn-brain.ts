@@ -347,7 +347,7 @@ async function main() {
 
   {
     // R3 (fix round 1): the level check's third reply may move only when it was a real answer
-    const lcTurn = { state: '<turn_state part="level_check" open_ask="question" move_needs_answer="yes"/>', allowedNext: ['move', 'question'], recap: false, moveNeedsAnswer: true };
+    const lcTurn = { state: '<turn_state part="level_check" open_ask="question" move_needs_answer="yes"/>', allowedNext: ['question', 'move'], recap: false, moveNeedsAnswer: true };
     const MOVE = { kind: 'move', say: 'Thank you. Now let us talk about your week. What did you do on Monday?', item: '', level: 'intermediate' };
     const ASK = { kind: 'question', say: 'What is one skill you would like to improve?', item: '', level: '' };
     const NONE = { ...TURN, verdict: 'none', verdict_say: '', correction: null, support_ja: '' };
@@ -373,6 +373,10 @@ async function main() {
       const r = await run({ ...baseInput, typedTurn: lcTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, verdict: 'correct', correction: null, next: MOVE }), 3)]);
       assert.equal(r.requests.length, 1);
       assert.ok(sentencesOf(r.events).some((x) => x.includes('Monday')));
+    });
+    await test('R5: a cut object in the moveNeedsAnswer cell falls back to question (allowedNext[0]), never move', async () => {
+      const r = await run({ ...baseInput, typedTurn: lcTurn }, [chunkedTextScript('{"ack":"Good try.","verdict":"none","verdict_say":"","board":"","correction":null,"support_ja":"","next":{"kind":"mo', 2, 'max_tokens')]);
+      assert.equal(turnEv(r.events).nextFallback, 'question');
     });
     await test('R3: without moveNeedsAnswer a none + move is not refused', async () => {
       const { moveNeedsAnswer: _m, ...plain } = lcTurn;

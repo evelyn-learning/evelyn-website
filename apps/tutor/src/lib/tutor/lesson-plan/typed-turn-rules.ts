@@ -220,7 +220,8 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   if (kind === 'level_check') {
     const committed = state.answersInPart?.[segId] ?? 0;
     if (committed >= 3) return ['move'];
-    return committed === 2 && ctx.studentReplied ? ['move', 'question'] : ['question'];
+    // R5: question first — allowedNext[0] is the cut / unparseable fallback (re-ask, never move).
+    return committed === 2 && ctx.studentReplied ? ['question', 'move'] : ['question'];
   }
 
   if (kind === 'menu' || kind === 'pronunciation') {

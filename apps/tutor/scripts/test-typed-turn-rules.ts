@@ -539,7 +539,9 @@ test('R3: level check — committed answers decide; the third reply may move onl
   assert.deepEqual(allowedNextFor(lc(1, true)), ['question']);
   assert.equal(moveNeedsAnswerFor(lc(1, true)), false);
   assert.deepEqual(allowedNextFor(lc(2, false)), ['question']);
-  assert.deepEqual(allowedNextFor(lc(2, true)), ['move', 'question']);
+  // R5: question first — allowedNext[0] is the cut / unparseable fallback, which must re-ask, never move
+  assert.deepEqual(allowedNextFor(lc(2, true)), ['question', 'move']);
+  assert.equal(typedTurnRequestFor(lc(2, true)).allowedNext[0], 'question');
   assert.equal(moveNeedsAnswerFor(lc(2, true)), true);
   assert.ok(turnStateLine(lc(2, true)).includes('move_needs_answer="yes"'), turnStateLine(lc(2, true)));
   assert.equal(typedTurnRequestFor(lc(2, true)).moveNeedsAnswer, true);
