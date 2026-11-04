@@ -282,5 +282,9 @@ test('W6: retry message — item_not_listed names the listed items verbatim', ()
   assert.ok(m.includes('ALREADY SPOKEN'));
 });
 
+test('W7: every spoken turn carries an English sentence; Japanese supports, never replaces (r60 1008 s)', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('Every turn you speak contains at least one English sentence (in `verdict_say` or `next.say`); Japanese supports, it never replaces.'));
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');
