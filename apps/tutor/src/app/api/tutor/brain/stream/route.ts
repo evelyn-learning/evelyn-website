@@ -1173,7 +1173,7 @@ export async function POST(req: NextRequest) {
           // far is this frame is still safely retryable.
           // (The verdict pre-check frame is the same kind of frame: it is sent
           // before any sentence and commits nothing to the student.)
-          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match' || ev.type === 'verdict-precheck-pending' || ev.type === 'verdict-precheck-none' || ev.type === 'answer-reveal' || ev.type === 'homework-keyed-verdict' || ev.type === 'homework-problem-done' || ev.type === 'typed-turn-fallback') {
+          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match' || ev.type === 'verdict-precheck-pending' || ev.type === 'verdict-precheck-none' || ev.type === 'answer-reveal' || ev.type === 'homework-keyed-verdict' || ev.type === 'homework-problem-done' || ev.type === 'typed-turn-fallback' || ev.type === 'typed-correction-no-change') {
             sendTelemetry(ev);
             if (clientGone) break;
             continue;

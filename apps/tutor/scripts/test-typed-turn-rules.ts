@@ -735,5 +735,19 @@ test('Y1: typedTurnSpokenText — released fields + next.say, in speaking order,
   assert.deepEqual(typedTurnSpokenText({}, undefined), []);
 });
 
+// ---- Fix wave 5 Z1: a correction that changes nothing reaches the client as a correct turn (p2.txt 310 s / 501 s) ----
+test('Z1: the released no-change turn (verdict correct, correction null) arms no card, opens no correction, counts none', () => {
+  const open = { ...createTypedTurnState(), correctionOpen: { student: 'I learn robot companies come from China.', corrected: 'I learned that robot companies come from China.' } };
+  const st = applyField(open, { field: 'verdict', value: 'correct' });
+  assert.deepEqual(effectsForField({ field: 'correction', value: null }, fctx('past-simple', { state: st })), [], 'no correction card');
+  assert.deepEqual(effectsForField({ field: 'verdict_say', value: '' }, fctx('past-simple', { state: st })), []);
+  const q = effectsForField(nextEv({ kind: 'question', say: 'What was the most interesting robot you saw?' }), fctx('past-simple', { state: st }));
+  assert.ok(!kinds(q).includes('correction_card') && !kinds(q).includes('arm_item'), kinds(q).join(','));
+  const out = applyTypedTurn(st, turnOf({ verdict: 'correct', verdict_say: '', correction: null, next: nx({ kind: 'question', say: 'What was the most interesting robot you saw?' }) }), fctx('past-simple', { state: st }), null);
+  assert.equal(out.correctionOpen, null, 'the earlier correction is closed by the correct repeat');
+  assert.equal((out.correctionsInPart ?? {})['past-simple'] ?? 0, 0, 'a dropped correction is not counted');
+  assert.equal(out.openAsk.kind, 'question');
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

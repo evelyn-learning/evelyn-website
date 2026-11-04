@@ -20429,6 +20429,10 @@ export function VoiceTutorRealtime({
                     if (fallbackKind) onDebugEvent?.('typed_turn_fallback', `next=${fallbackKind} spoken=${!!fallbackLine}`);
                     else if (typedNoNext) onDebugEvent?.('typed_turn_fallback', 'next=none spoken=false');
                   }
+                } else if ((ev as { type?: string }).type === 'typed-correction-no-change') {
+                  // Z1 (fix wave 5): the server dropped a correction equal to the student's words (verdict → correct).
+                  const nc = ev as unknown as { student?: unknown; corrected?: unknown };
+                  if (typedTurnActive) onDebugEvent?.('typed_turn_correction_no_change', `"${String(nc.corrected ?? '').slice(0, 80)}"`);
                 } else if (ev.type === 'typed-turn-fallback') {
                   // Typed turn (Task 7): telemetry. format_rejected / provider ⇒ this attempt ran as prose,
                   // so the prose post-turn card blocks run for it.

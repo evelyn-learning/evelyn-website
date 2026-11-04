@@ -351,5 +351,12 @@ test('Y1 (fix wave 4): the typed close\'s phrase guard includes the typed turn\'
   assert.ok(VTR.includes("onDebugEvent?.('typed_turn_close_phrases_in_say',"), 'debug event');
 });
 
+test('Z1 (fix wave 5): the server\'s no-change frame is forwarded as telemetry and logged as a debug event', () => {
+  const ROUTE = readFileSync(join(__dirname, '../src/app/api/tutor/brain/stream/route.ts'), 'utf8');
+  assert.ok(ROUTE.includes("|| ev.type === 'typed-turn-fallback' || ev.type === 'typed-correction-no-change') {"), 'route: telemetry, not egress');
+  assert.ok(VTR.includes("(ev as { type?: string }).type === 'typed-correction-no-change'"), 'VTR handles the frame');
+  assert.ok(VTR.includes("onDebugEvent?.('typed_turn_correction_no_change',"), 'debug event');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');

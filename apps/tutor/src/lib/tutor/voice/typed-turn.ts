@@ -367,6 +367,39 @@ export function isStructuredOutputRejection(err: unknown): boolean {
   return e?.status === 400 && /output_config|output_format|json_schema|\bschema\b|\bformat\b|structured output/i.test(String(e?.message ?? ''));
 }
 
+const CORRECTION_LEADING_FILLERS = new Set(['uh', 'um', 'so', 'yes', 'no', 'well']);
+const CORRECTION_HESITATIONS = new Set(['uh', 'um', 'er', 'erm', 'ah', 'hmm']);
+/** Words of a sentence: lower-case, punctuation stripped (an inner apostrophe kept), whitespace collapsed. */
+function correctionWords(text: string): string[] {
+  return (text ?? '').toLowerCase().replace(/[’‘]/g, "'").replace(/[^\p{L}\p{N}'\s]+/gu, ' ').replace(/(^|\s)'+|'+(\s|$)/g, ' ')
+    .split(/\s+/).filter(Boolean);
+}
+
+/**
+ * Z1 (fix wave 5, p2.txt 310 s / 501 s): true when a correction changes nothing in what the student said —
+ * the brain marked a correct sentence partly_correct and armed a retry of the same sentence.
+ * (1) the corrected sentence, normalised, equals the student's words (leading uh/um/so/yes/no/well dropped);
+ * (2) the fix is already there: TypedCorrection has no explicit from→to pair, so the pair is read from the words —
+ *     every `emphasis` word (the "to") occurs in the student's words at least as often as in the corrected sentence,
+ *     the student says nothing the corrected sentence drops (no "from" left; hesitations uh/um aside), and the
+ *     corrected words appear in the same order. Word order, a missing second article, a wrong form → false.
+ */
+export function correctionChangesNothing(studentText: string, correction: TypedTurn['correction']): boolean {
+  if (!correction) return false;
+  const fixed = correctionWords(correction.corrected);
+  if (!fixed.length) return false;
+  const said = correctionWords(studentText);
+  while (said.length && CORRECTION_LEADING_FILLERS.has(said[0])) said.shift();
+  if (!said.length) return false;
+  if (said.join(' ') === fixed.join(' ')) return true;
+  const emphasis = correction.emphasis.flatMap(correctionWords);
+  if (!emphasis.length) return false;
+  const count = (xs: string[], w: string) => xs.filter((x) => x === w).length;
+  if (!emphasis.every((w) => count(said, w) >= count(fixed, w))) return false;
+  const kept = said.filter((w) => !CORRECTION_HESITATIONS.has(w));
+  return kept.join(' ') === fixed.join(' ');
+}
+
 export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase';
 
 /**
@@ -383,9 +416,13 @@ export function typedTurnRetryMessage(input: {
   itemNotListed?: string[];
   /** X2: a `close` refused because these required phrases were not said (verbatim, as the plan lists them). */
   missingPhrases?: string[];
+  /** Z1: a `retry` refused because the correction changed nothing (dropped before speech; verdict now correct). */
+  correctionNoChange?: boolean;
 }): string {
-  const { reason, refused, allowedNext, alreadySaid, budget, itemNotListed, missingPhrases } = input;
-  const why = reason === 'missing_required_phrase'
+  const { reason, refused, allowedNext, alreadySaid, budget, itemNotListed, missingPhrases, correctionNoChange } = input;
+  const why = reason === 'illegal_kind' && correctionNoChange
+    ? `Your "next" was refused "${refused.kind}" (correction_no_change): the student's sentence already has that form; no correction, no retry — ask the next question or offer (allowed: ${allowedNext.filter((k) => k !== 'retry').join(', ')}).`
+    : reason === 'missing_required_phrase'
     ? `Your "next" was refused "${refused.kind}" (missing_required_phrase): the close must contain every required phrase verbatim, and this turn did not say ${(missingPhrases ?? []).map((x) => JSON.stringify(x)).join(', ')}. Write the close again with each of these phrases, word for word, in next.say before the goodbye (allowed: ${allowedNext.join(', ')}).`
     : reason === 'move_needs_answer'
     ? `Your "next" was refused "${refused.kind}" (move_needs_answer): the student's reply was not an answer (verdict "none"), so this part cannot move on yet. Ask this part's question again with next.kind "question" (allowed: ${allowedNext.join(', ')}).`

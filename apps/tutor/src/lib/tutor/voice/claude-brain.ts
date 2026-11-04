@@ -75,7 +75,7 @@ import {
 import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
 import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
-import { isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, typedSayBudgetFor, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
+import { correctionChangesNothing, isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, typedSayBudgetFor, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
 
 /** Does the streamed tool input parse as JSON? Partial JSON (a tool call
  *  the output cap cut in half) does not. */
@@ -840,6 +840,9 @@ export type BrainStreamEvent =
    *  before any event, so the turn ran as prose; `cut`: max_tokens / refusal
    *  ended the object early; `unparseable`: complete but invalid object). */
   | { type: 'typed-turn-fallback'; reason: 'format_rejected' | 'provider' | 'cut' | 'unparseable' }
+  /** Z1 (fix wave 5): the brain's correction equals what the student said — dropped before speech
+   *  (verdict → correct, verdict_say → "", correction → null; a `retry` next is refused). Telemetry only. */
+  | { type: 'typed-correction-no-change'; student: string; corrected: string }
   /** Terminal event. Includes cumulative metadata for telemetry. */
   | {
       type: 'done';
@@ -3033,7 +3036,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   let messages: Anthropic.MessageParam[] = typedMessages ?? proseMessages;
   // Turn-scoped: a refused first `next` waiting for its one retry (spec §4.2,
   // §4.8), and the kind the client falls back to when no usable `next` was voiced.
-  let typedRetryNeed: { reason: TypedRetryReason; refused: TypedNext; itemNotListed?: string[]; missingPhrases?: string[] } | null = null;
+  let typedRetryNeed: { reason: TypedRetryReason; refused: TypedNext; itemNotListed?: string[]; missingPhrases?: string[]; correctionNoChange?: boolean } | null = null;
   let typedNextFallback: TypedNextKind | undefined;
   let typedNextVoiced = false;
   /** Gate for `next`: legal kinds pass; anything else is held back. */
@@ -3057,6 +3060,40 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   };
   /** G1: sentences already yielded this typed turn (retry calls are the same turn); the prose duplicate filters stand down on typed. */
   const typedSpoken = new Set<string>();
+  /** Z1 (fix wave 5, p2.txt 310 s / 501 s): the student's own words (the runtime notes `studentTranscript` may carry
+   *  in front of them left out) — a correction that equals them changes nothing. */
+  const typedStudentWords = input.studentMessage?.trim()
+    || (input.studentTranscript ?? '').split(/\n\s*\n/).map((x) => x.trim()).filter((x) => x && !x.startsWith('[')).pop() || '';
+  /** Z1: a partly_correct / incorrect verdict holds verdict, verdict_say and board until the correction closes, so a
+   *  correction that changes nothing is dropped before any of its speech (one decision per turn). */
+  let typedHeldForCorrection: TypedFieldValue[] | null = null;
+  let typedCorrectionNoChange = false;
+  const TYPED_AFTER_CORRECTION: readonly TypedField[] = ['support_ja', 'next'];
+  /** Z1: release one ordered field through the correction hold, then emitTypedField. */
+  function* releaseTypedField(ev: TypedFieldValue): Generator<BrainStreamEvent> {
+    if (ev.field === 'verdict' && (ev.value === 'partly_correct' || ev.value === 'incorrect')) { typedHeldForCorrection = [ev]; return; }
+    if (typedHeldForCorrection && (ev.field === 'verdict_say' || ev.field === 'board')) { typedHeldForCorrection.push(ev); return; }
+    if (typedHeldForCorrection && (ev.field === 'correction' || TYPED_AFTER_CORRECTION.includes(ev.field))) {
+      const held = typedHeldForCorrection;
+      typedHeldForCorrection = null;
+      const noChange = ev.field === 'correction' && !!ev.value && correctionChangesNothing(typedStudentWords, ev.value);
+      if (noChange && ev.field === 'correction' && ev.value) {
+        typedCorrectionNoChange = true;
+        console.warn(`[typed-turn] typed_turn_correction_no_change: "${ev.value.corrected.slice(0, 80)}" = the student's words — correction dropped, verdict correct`);
+        yield { type: 'typed-correction-no-change', student: typedStudentWords.slice(0, 200), corrected: ev.value.corrected.slice(0, 200) };
+      }
+      for (const h of held) {
+        if (noChange && h.field === 'verdict') yield* emitTypedField({ field: 'verdict', value: 'correct' });
+        else if (noChange && h.field === 'verdict_say') yield* emitTypedField({ field: 'verdict_say', value: '' });
+        else yield* emitTypedField(h);
+      }
+      yield* emitTypedField(noChange ? { field: 'correction', value: null } : ev);
+      return;
+    }
+    yield* emitTypedField(ev);
+  }
+  /** Z1: the parsed object as it was released (a dropped no-change correction is not in the record). */
+  const typedAsReleased = (t: TypedTurn): TypedTurn => (typedCorrectionNoChange ? { ...t, verdict: 'correct', verdict_say: '', correction: null } : t);
   /** Prose fallback mid-turn: the frame the typed request left out comes back. */
   const typedProseFrames = (): BrainStreamEvent[] => (workThenMatch ? [{ type: 'work-then-match' }] : []);
   /** One released field: budget, its frame, then its speech as sentences.
@@ -3089,7 +3126,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           const moveOnNonAnswer = typedMoveOnNonAnswer(ev.value.kind);
           // X2 (fix wave 3, r61b 745 s): a close that leaves a required phrase unsaid is refused before speech (one retry).
           const missingPhrases = typedCloseMissingPhrases(ev.value);
-          const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) || itemNotListed ? 'illegal_kind'
+          // Z1 (fix wave 5): the correction changed nothing (dropped above) — no retry of a correct sentence.
+          const retryOnNoChange = typedCorrectionNoChange && ev.value.kind === 'retry';
+          const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) || itemNotListed || retryOnNoChange ? 'illegal_kind'
             : moveOnNonAnswer ? 'move_needs_answer'
             : missingPhrases.length ? 'missing_required_phrase'
             : englishSentenceCount(ev.value.say) > sayBudgetOf(ev.value.kind) ? 'say_over_budget' : null;
@@ -3098,8 +3137,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
               reason, refused: ev.value,
               ...(itemNotListed && typedNextAllowed(ev.value.kind) ? { itemNotListed: itemsLeft } : {}),
               ...(reason === 'missing_required_phrase' ? { missingPhrases } : {}),
+              ...(retryOnNoChange ? { correctionNoChange: true } : {}),
             };
-            console.warn(`[typed-turn] next refused (${reason}${typedRetryNeed.itemNotListed ? ' item_not_listed' : ''}): kind=${ev.value.kind} sentences=${englishSentenceCount(ev.value.say)} allowed_next=${input.typedTurn!.allowedNext.join(',')} — retrying once`);
+            console.warn(`[typed-turn] next refused (${reason}${typedRetryNeed.itemNotListed ? ' item_not_listed' : ''}${retryOnNoChange ? ' correction_no_change' : ''}): kind=${ev.value.kind} sentences=${englishSentenceCount(ev.value.say)} allowed_next=${input.typedTurn!.allowedNext.join(',')} — retrying once`);
             return;
           }
         }
@@ -3242,12 +3282,16 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     function* finishTypedBlock(): Generator<BrainStreamEvent> {
       typedTextOpen = false;
       typedFinished = true;
-      for (const out of typedOrdered.flush()) yield* emitTypedField(out);
+      for (const out of typedOrdered.flush()) yield* releaseTypedField(out);
+      // Z1: a hold the object never resolved (no correction closed) is released as written.
+      const stillHeld = typedHeldForCorrection as TypedFieldValue[] | null;
+      typedHeldForCorrection = null;
+      for (const h of stillHeld ?? []) yield* emitTypedField(h);
     }
     /** The one retry call (spec §4.8 splice): same typed params, the first
      *  object as the assistant turn, the retry message as the user turn. Read
      *  whole — no thinking re-issue machinery, no failover to prose. */
-    async function typedRetryCall(first: TypedTurn, need: { reason: TypedRetryReason; refused: TypedNext; itemNotListed?: string[]; missingPhrases?: string[] }): Promise<TypedTurnReader | null> {
+    async function typedRetryCall(first: TypedTurn, need: { reason: TypedRetryReason; refused: TypedNext; itemNotListed?: string[]; missingPhrases?: string[]; correctionNoChange?: boolean }): Promise<TypedTurnReader | null> {
       const retryMessages: Anthropic.MessageParam[] = [
         ...messages,
         { role: 'assistant', content: typedReader.text },
@@ -3259,6 +3303,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             budget: sayBudgetOf(need.refused.kind),
             ...(need.itemNotListed ? { itemNotListed: need.itemNotListed } : {}),
             ...(need.missingPhrases ? { missingPhrases: need.missingPhrases } : {}),
+            ...(need.correctionNoChange ? { correctionNoChange: true } : {}),
           }),
         },
       ];
@@ -3306,24 +3351,27 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         yield { type: 'typed-turn', turn: null, retries: 0, ...(typedNextFallback ? { nextFallback: typedNextFallback } : {}) };
         return;
       }
-      const budgeted = budgetTypedTurn(turn);
+      const budgeted = budgetTypedTurn(typedAsReleased(turn));
       const need = typedRetryNeed;
       if (!need) {
         yield { type: 'typed-turn', turn: budgeted, retries: 0 };
         return;
       }
       typedRetryNeed = null;
-      const retryReader = await typedRetryCall(turn, need);
+      const retryReader = await typedRetryCall(typedAsReleased(turn), need);
       const retryNext = retryReader?.closed.next?.field === 'next' ? retryReader.closed.next.value : null;
       const rv = retryReader?.closed.verdict, rc = retryReader?.closed.correction;
       const retryDisagreed = !!retryReader && (
-        (rv !== undefined && rv.value !== turn.verdict) ||
-        (rc !== undefined && !sameTypedCorrection(rc.value as TypedTurn['correction'], turn.correction))
+        (rv !== undefined && rv.value !== typedAsReleased(turn).verdict) ||
+        (rc !== undefined && !sameTypedCorrection(rc.value as TypedTurn['correction'], typedAsReleased(turn).correction))
       );
       if (retryDisagreed) console.warn('[typed-turn] typed_turn_retry_disagreed: the retry\'s verdict/correction differ — ignored');
       // R3: a retry that moves again on a non-answer is not legal either; its fallback is the question, never the move.
-      const legal = !!retryNext && typedNextAllowed(retryNext.kind) && !typedMoveOnNonAnswer(retryNext.kind);
-      const retryFallback: TypedNextKind = need.reason === 'move_needs_answer' ? 'question' : fallbackKind;
+      const legal = !!retryNext && typedNextAllowed(retryNext.kind) && !typedMoveOnNonAnswer(retryNext.kind)
+        && !(typedCorrectionNoChange && retryNext.kind === 'retry');
+      // Z1: after a no-change correction the fallback is never the retry (the first allowed kind that is not one).
+      const retryFallback: TypedNextKind = need.reason === 'move_needs_answer' ? 'question'
+        : need.correctionNoChange ? input.typedTurn!.allowedNext.find((k) => k !== 'retry') ?? fallbackKind : fallbackKind;
       console.warn(`[typed-turn] typed_turn_retry reason=${need.reason} result=${legal ? retryNext!.kind : 'fallback ' + retryFallback}`);
       if (legal) yield* emitTypedField({ field: 'next', value: retryNext! }, true);
       else typedNextFallback = retryFallback;
@@ -3420,7 +3468,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           shownThisIter = true;
           typedRawChars += event.delta.text.length;
           for (const closed of typedReader.push(event.delta.text)) {
-            for (const out of typedOrdered.push(closed)) yield* emitTypedField(out);
+            for (const out of typedOrdered.push(closed)) yield* releaseTypedField(out);
           }
         } else if (event.delta.type === 'text_delta') {
           shownThisIter = true;

@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import {
   TYPED_TURN_SCHEMA, TYPED_NEXT_KINDS, TYPED_TURN_INSTRUCTIONS, typedTurnStateBlock, TYPED_KIND_MEANING, typedSayBudgetFor,
   truncateToSentences, sentenceCount, englishSentenceCount, parseTypedTurn, TYPED_FIELD_ORDER,
-  TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection,
+  TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection, correctionChangesNothing,
 } from '../src/lib/tutor/voice/typed-turn';
 import { isStructuredOutputRejection as gradeIsStructuredOutputRejection } from '../src/lib/tutor/portal/grade-free-response';
 
@@ -395,6 +395,33 @@ test('X4 + F2 (fix wave 3): ONE `none` rule — non-attempts only', () => {
   assert.ok(!I.includes('ONLY when the reply is not an answer at all'), 'old list merged away');
   assert.ok(!I.includes('Never use "none" for a reply that answers the ask'), 'duplicate sentence removed');
   assert.ok(!I.includes("`none` only when the reply is not an attempt at the open ask — a greeting"), 'X4 sentence merged away');
+});
+
+test('Z1 (fix wave 5): correctionChangesNothing — a correction equal to what the student said changes nothing', () => {
+  const c = (student: string, corrected: string, emphasis: string[]) => ({ student, corrected, emphasis, explain: 'x' });
+  // p2.txt 310 s / 501 s: the student's sentence was already the corrected one
+  const canva = 'I use Canva to prepare presentations with pictures and graphics.';
+  assert.equal(correctionChangesNothing(canva, c(canva, 'I use Canva to prepare presentations with pictures and graphics.', ['presentations'])), true, '310 s');
+  const robots = 'I learned that robot companies come from China.';
+  assert.equal(correctionChangesNothing(robots, c(robots, 'I learned that robot companies come from China.', ['learned', 'that'])), true, '501 s');
+  // normalisation: case, punctuation, whitespace, a leading filler in the student text
+  assert.equal(correctionChangesNothing('uh, so I learned that robot companies  come from china', c('', robots, ['learned'])), true, 'leading fillers + case + punctuation');
+  // the fix is already there: every changed word present (as often as the model needs it), nothing the model drops, same order
+  assert.equal(correctionChangesNothing('I learned um that robot companies come from China', c('', robots, ['learned'])), true, 'mid-sentence hesitation only');
+  // a real correction stays
+  assert.equal(correctionChangesNothing('I go there yesterday', c('I go there yesterday', 'I went there yesterday.', ['went'])), false, 'go → went');
+  assert.equal(correctionChangesNothing('I saw a robot and dog', c('', 'I saw a robot and a dog.', ['a'])), false, 'a missing second "a" (count-aware)');
+  assert.equal(correctionChangesNothing('I yesterday went there', c('', 'I went there yesterday.', ['went', 'yesterday'])), false, 'word order is a change');
+  assert.equal(correctionChangesNothing('I use Canva to prepare presentation', c('', 'I use Canva to prepare presentations.', ['presentations'])), false, 'plural');
+  assert.equal(correctionChangesNothing('anything', null), false, 'no correction');
+  assert.equal(correctionChangesNothing('', c('', '', [])), false, 'empty texts never match');
+});
+
+test('Z1 (fix wave 5): a retry refused for correction_no_change names the reason and the next step', () => {
+  const m = typedTurnRetryMessage({ reason: 'illegal_kind', correctionNoChange: true, refused: { kind: 'retry', say: 'Can you say the whole sentence once more?', item: '', level: '' }, allowedNext: ['retry', 'question', 'offer'], alreadySaid: { ack: 'Nice.', verdict: 'correct', verdict_say: '', board: '', correction: null, support_ja: '' }, budget: 3 });
+  assert.ok(m.includes('(correction_no_change)'), m);
+  assert.ok(m.includes("the student's sentence already has that form; no correction, no retry — ask the next question or offer"), m);
+  assert.ok(m.includes('verdict: "correct"') && m.includes('correction: null'), m);
 });
 
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }

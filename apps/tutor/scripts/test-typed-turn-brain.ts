@@ -547,6 +547,64 @@ async function main() {
     assert.ok(!r.events.some((e) => e.type === 'work-then-match'));
   });
 
+  {
+    // Z1 (fix wave 5, p2.txt 310 s): a correction equal to the student's words is dropped before speech, retry refused
+    const CANVA = 'I use Canva to prepare presentations with pictures and graphics.';
+    const ztt = { state: '<turn_state part="bridge" open_ask="retry" correction_open="yes"/>', allowedNext: ['retry', 'question', 'offer'], recap: false };
+    const zin = { ...baseInput, typedTurn: ztt, studentTranscript: CANVA, studentMessage: CANVA };
+    const NOOP = {
+      ack: 'Canva with pictures and graphics, that sounds nice.', verdict: 'partly_correct',
+      verdict_say: 'Nearly there. After the verb use, you need the word for, so it is to prepare presentations.', board: '',
+      correction: { student: CANVA, corrected: CANVA, emphasis: ['presentations'], explain: 'That sentence is already correct, so no change is needed here.' },
+      support_ja: '', next: { kind: 'retry', say: 'Can you say the whole sentence once more?', item: '', level: '' },
+    };
+    const ASK = { kind: 'question', say: 'What is one presentation you have prepared recently for your boss?', item: '', level: '' };
+    await test('Z1: no-change correction ⇒ verdict correct, no verdict_say / explain spoken, retry refused, the retry\'s question spoken once', async () => {
+      const r = await run(zin, [chunkedTextScript(JSON.stringify(NOOP), 4), chunkedTextScript(JSON.stringify({ ...NOOP, verdict: 'correct', verdict_say: '', correction: null, next: ASK }), 2)]);
+      assert.equal(r.requests.length, 2, 'one retry');
+      const said = sentencesOf(r.events);
+      assert.deepEqual(said, [NOOP.ack, ASK.say], said.join(' | '));
+      const vf = r.events.find((e) => e.type === 'typed-field' && e.field === 'verdict');
+      assert.equal(vf?.value, 'correct');
+      const cf = r.events.find((e) => e.type === 'typed-field' && e.field === 'correction');
+      assert.equal(cf?.value, null);
+      assert.ok(r.events.some((e) => e.type === 'typed-correction-no-change'), 'telemetry frame');
+      assert.ok(!r.events.some((e) => e.type === 'typed-field' && e.field === 'next' && (e.value as { kind: string }).kind === 'retry'), 'the retry is never released');
+      const u = String(r.requests[1].messages[r.requests[1].messages.length - 1].content);
+      assert.ok(u.includes('(correction_no_change)') && u.includes("the student's sentence already has that form; no correction, no retry — ask the next question or offer"), u);
+      assert.ok(u.includes('verdict: "correct"') && u.includes('correction: null') && u.includes('verdict_say: ""'), 'already-said fields are the released ones');
+      const t = turnEv(r.events);
+      assert.equal(t.retryReason, 'illegal_kind');
+      assert.equal(t.turn?.verdict, 'correct');
+      assert.equal(t.turn?.correction, null);
+      assert.deepEqual(t.turn?.next, ASK);
+      assert.ok(!t.retryDisagreed, 'the retry echoing the released fields agrees');
+    });
+    await test('Z1: the retry asks for a retry again ⇒ fallback is the first allowed kind that is not retry', async () => {
+      const r = await run(zin, [chunkedTextScript(JSON.stringify(NOOP), 3), chunkedTextScript(JSON.stringify(NOOP), 2)]);
+      const t = turnEv(r.events);
+      assert.equal(t.nextFallback, 'question');
+      assert.ok(!sentencesOf(r.events).some((x) => x.includes('once more')));
+    });
+    await test('Z1: no-change correction + a question next ⇒ one call, question spoken, verdict correct', async () => {
+      const r = await run(zin, [chunkedTextScript(JSON.stringify({ ...NOOP, next: ASK }), 3)]);
+      assert.equal(r.requests.length, 1);
+      assert.deepEqual(sentencesOf(r.events), [NOOP.ack, ASK.say]);
+      assert.equal(turnEv(r.events).turn?.verdict, 'correct');
+    });
+    await test('Z1: a real correction (go → went) is spoken and its retry stands', async () => {
+      const r = await run({ ...baseInput, typedTurn: ztt }, [chunkedTextScript(JSON.stringify({ ...TURN, verdict: 'partly_correct', next: { ...NOOP.next } }), 3)]);
+      assert.equal(r.requests.length, 1);
+      const said = sentencesOf(r.events);
+      assert.ok(said.includes(TURN.verdict_say) && said.includes(TURN.correction.explain) && said.includes(NOOP.next.say), said.join(' | '));
+      assert.ok(!r.events.some((e) => e.type === 'typed-correction-no-change'));
+    });
+    await test('Z1: runtime notes in front of the transcript are not the student\'s words (no studentMessage)', async () => {
+      const r = await run({ ...baseInput, typedTurn: ztt, studentTranscript: `[correction note: x]\n\n${CANVA}` }, [chunkedTextScript(JSON.stringify({ ...NOOP, next: ASK }), 3)]);
+      assert.equal(turnEv(r.events).turn?.verdict, 'correct');
+    });
+  }
+
   console.log('prose regression pin');
   await test('no typedTurn ⇒ tools present, no output_config/format, same keys', async () => {
     const r = await run(baseInput, [chunkedTextScript('Nearly. Say it again please.', 1)]);
