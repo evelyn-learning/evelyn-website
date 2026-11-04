@@ -414,6 +414,96 @@ export function runChecks(dump) {
   const menuAfterPick = ev('menu_pick_resolved').flatMap((pk) => events.filter((e) => /^(?:transition_ask_engine_fallback|menu_entry_engine_fallback)$/.test(e.type) && e.t >= pk.t && e.t <= pk.t + 12).map((e) => `${pk.t}s pick → ${e.type} ${e.t}s`));
   ok('R3: no engine menu line after a resolved pick', menuAfterPick.length === 0, menuAfterPick.join(' | '));
 
+  // 10k. voice run 23 (embed-1793747507104, Praveen) — Task 45
+  // §1: no retraction of an earlier verdict ("I should not have said Good"); no judge note planted during the level check
+  const retractions = tutor.filter((x) => /\bI should not have said\b|\bwas not a correct answer to my question\b|\bI was wrong to say\b/i.test(x.text)).map((x) => `${x.t}s "${x.text.slice(0, 60)}"`);
+  ok('45 §1: no retraction of an earlier verdict', retractions.length === 0, retractions.join(' | ').slice(0, 300));
+  const lcPage = pages.find((p) => /level check|レベルチェック/i.test(p.title));
+  const lcAdv = ev('fixed_script_level_advance')[0]?.t ?? ev('fixed_script_auto_advance').find((e) => /"level-check"/.test(e.msg))?.t ?? null;
+  const lcStart = lcPage ? lcPage.t : null;
+  // the judge runs after the level-set advance within the same turn: + 10 s
+  const lcNotes = lcAdv !== null && lcStart !== null ? ev('judge_correction_note_planted').filter((e) => e.t >= lcStart && e.t <= lcAdv + 10) : [];
+  ok('45 §1: no judge correction note planted in the level check', lcNotes.length === 0, lcNotes.map((e) => `${e.t}s ${e.msg.slice(0, 50)}`).join(' | '));
+  // §2a: a question the tutor invited is answered, not deflected
+  const deflected = [];
+  for (let k = 1; k < tutor.length; k++) {
+    const prevS = [...student].reverse().find((s) => s.i < tutor[k].i && s.i > tutor[k - 1].i);
+    if (!prevS || !/[?？]\s*$/.test(prevS.text.trim())) continue;
+    if (!/\bask me\b|\bask (?:one|a|your) question\b|質問してみて|質問して/i.test(tutor[k - 1].text)) continue;
+    if (/\brather keep the focus\b|\bfocus on (?:your|our) (?:English|learning|practice)\b|\bget back to our practice\b|\bI['’]m your AI tutor\b/i.test(tutor[k].text)) deflected.push(`${tutor[k].t}s "${tutor[k].text.slice(0, 60)}"`);
+  }
+  ok('45 §2a: a question the tutor invited is answered, not deflected', deflected.length === 0, deflected.join(' | ').slice(0, 300));
+  // §2b: the card question is not asked again after the student answered its paraphrase correctly in that part
+  const cardReasks = ev('answered_card_question_reask_dropped').length;
+  const cardQ = (pg) => String(pg.items.find((it) => it.action === 'showProblem')?.data?.problem?.statement ?? '');
+  const reaskedCard = [];
+  for (const pg of pages) {
+    const q = cardQ(pg); if (!q || !/[?？]\s*$/.test(q.trim()) || /\d\)/.test(q)) continue;
+    const qc = content(q);
+    const asks = tutor.filter((x) => pg.t0 !== undefined && x.t >= pg.t0 && (pg.t1 === undefined || x.t <= pg.t1) && sentencesOf(x.text).some((sn) => /[?？]\s*$/.test(sn.trim()) && jaccard(content(sn), qc) >= 0.6));
+    if (asks.length >= 2) {
+      const firstAnswered = student.some((st) => st.t > asks[0].t && st.t < asks[1].t && content(st.text).length >= 4);
+      if (firstAnswered) reaskedCard.push(`${asks[1].t}s "${q.slice(0, 40)}"`);
+    }
+  }
+  ok('45 §2b: the card question is not asked twice in its part after an answer', reaskedCard.length === 0, reaskedCard.join(' | ').slice(0, 300) + (cardReasks ? ` (${cardReasks} dropped by the engine)` : ''));
+  // §3: after a retry ask + reply, the affirming turn cards the student's sentence (any card containing the reply's content)
+  const RETRY_ASK = /\b(?:say|try|repeat)\b[^.!?。]*\b(?:again|once more|one more time|(?:the|that|this|your) (?:whole |full |complete )?sentence)\b|もう一度/i;
+  const AFFIRM = /\b(?:correct|right|clear|good|great|exactly|natural|perfect|well done)\b|正しい|ですね/i;
+  const CORR_CUE = /\b(?:should be|not quite|almost|instead of|we say|let['’]s fix|small fix|one fix|missing)\b/i;
+  const CHOICE_Q = /\bis it\s+["“「][^"”」]+["”」]\s+or\s+["“「][^"”」]+["”」]/i;
+  const uncardedRetry = [];
+  for (let k = 1; k < tutor.length; k++) {
+    const prevT = tutor[k - 1];
+    const reply = [...student].reverse().find((s) => s.i < tutor[k].i && s.i > prevT.i);
+    if (!reply) continue;
+    const oneWordPick = CHOICE_Q.test(prevT.text) && content(reply.text).length <= 2;
+    if (!(RETRY_ASK.test(prevT.text) || oneWordPick)) continue;
+    if (!AFFIRM.test(tutor[k].text) || CORR_CUE.test(tutor[k].text)) continue;
+    // "on the board" = any sentence card up to 25 s after the affirming turn (an earlier card of the same sentence counts)
+    const cards = wb.filter((w) => /showSentence|handwrite/.test(w.action) && w.t <= tutor[k].t + 25).map((w) => String(w.data?.sentence ?? w.data?.text ?? ''));
+    if (oneWordPick) {
+      const rc = content(reply.text);
+      if (!rc.length) continue;
+      if (!cards.some((c) => rc.every((wd) => norm(c).split(' ').includes(wd)))) uncardedRetry.push(`${tutor[k].t}s "${reply.text.slice(0, 40)}"`);
+      continue;
+    }
+    const replySentences = sentencesOf(reply.text).map((x) => content(x)).filter((x) => x.length >= 4);
+    if (!replySentences.length) continue;
+    const carded = replySentences.every((rc) => cards.some((c) => jaccard(content(c), rc) >= 0.5 || (content(c).length >= 2 && rc.join(' ').includes(content(c).join(' ')))));
+    if (!carded) uncardedRetry.push(`${tutor[k].t}s "${reply.text.slice(0, 40)}"`);
+  }
+  ok('45 §3: the affirmed retry / elicited fix is on the board', uncardedRetry.length === 0, uncardedRetry.join(' | ').slice(0, 300));
+  // §4 / §6: an advancing turn's student cards paint before the part page turns, and the page break waits for the transition sentence
+  const breakBeforeCard = ev('sentence_board_auto').filter((e) => ev('auto_newpage_on_advance_flushed').some((f) => f.t <= e.t && f.t >= e.t - 2 && !/at turn end/.test(f.msg)) && !/anchor=start/.test(e.msg) && /kind=correction/.test(e.msg)).map((e) => `${e.t}s ${e.msg.slice(0, 50)}`);
+  ok('45 §6: no correction card after the part page break in the same turn', breakBeforeCard.length === 0, breakBeforeCard.join(' | ').slice(0, 300));
+  const unanchored = ev('auto_newpage_on_advance_flushed').filter((f) => /after \d+ student card/.test(f.msg) && !/on the transition sentence/.test(f.msg) && ev('page_break_anchored').some((a) => Math.abs(a.t - f.t) <= 2)).map((f) => `${f.t}s ${f.msg.slice(0, 50)}`);
+  ok('45 §4: a student card and the part page break never share an unanchored batch', unanchored.length === 0, unanchored.join(' | ').slice(0, 300));
+  // §5: a no-ask continuation never re-speaks the verdict
+  const ECHO = /\b(?:your|that|this|the)\s+(?:sentence|answer|reply)\b[^.!?]*\b(?:is|was|sounds|works|fits)\s+(?:also\s+|very\s+)?(?:correct|right|clear|good|fine|great|natural|perfect|well)\b|\byou said it well\b|\bwell (?:said|done)\b/i;
+  const echoed = ev('fixed_script_noask_continue').flatMap((c) => tutor.filter((x) => x.t >= c.t && x.t <= c.t + 8).filter((x) => ECHO.test(sentencesOf(x.text)[0] ?? '')).map((x) => `${x.t}s "${x.text.slice(0, 60)}"`));
+  ok('45 §5: the no-ask continuation does not re-speak the verdict', echoed.length === 0, echoed.join(' | ').slice(0, 300));
+  // §7a: no pronunciation item armed twice in a part (a "once more" re-arm of the current item excepted)
+  const armed = ev('pronunciation_armed');
+  const repeats = [];
+  for (let i = 1; i < armed.length; i++) {
+    const txt = (m) => norm(m.replace(/^\S+\s+/, ''));
+    const cur = txt(armed[i].msg);
+    const earlier = armed.slice(0, i - 1).map((a) => txt(a.msg));
+    if (earlier.includes(cur) && cur !== txt(armed[i - 1].msg)) repeats.push(`${armed[i].t}s "${cur.slice(0, 40)}"`);
+  }
+  ok('45 §7a: no pronunciation item given again in a part', repeats.length === 0, repeats.join(' | ').slice(0, 300));
+  // §7b: the pointer never moves on a reply that accepts the current part's offer
+  const movedOnAcceptance = ev('fixed_script_auto_advance').filter((e) => /\(on the reply\)/.test(e.msg)).flatMap((e) => {
+    const st = [...student].reverse().find((s) => s.t <= e.t + 1 && s.t >= e.t - 6);
+    const prevT = st ? [...tutor].reverse().find((x) => x.i < st.i) : null;
+    if (!st || !prevT) return [];
+    const offer = sentencesOf(prevT.text).some((x) => /[?？]\s*$/.test(x.trim()) && /\b(?:one more|another|more practice)\b|もう(?:一|ひと)/i.test(x) && /\b(?:or|move on|summary|next)\b|次|まとめ/i.test(x));
+    const accepts = /\b(?:one more|another|more practice|practice|yes|yeah|sure|ok|okay|please)\b|もう(?:一|ひと)|はい/i.test(st.text) && !/\b(?:move on|next|skip|summary|stop|finish)\b|次|進/i.test(st.text);
+    return offer && accepts ? [`${e.t}s after "${st.text.slice(0, 30)}"`] : [];
+  });
+  ok('45 §7b: the pointer never moves on a reply that accepts an offer', movedOnAcceptance.length === 0, movedOnAcceptance.join(' | ').slice(0, 300));
+
   // 11. counts worth a look
   const counts = ['brain_validator_retry', 'idle_nudge_sent', 'drop_self_voice', 'meta_narration_dropped', 'fixed_script_noask_continue', 'fixed_script_offer_continue', 'transition_ask_off_part', 'judge_kill_resume_diverged', 'menu_pick_resolved', 'adjacent_duplicate_sentence_dropped', 'typed_turn_superseded', 'render_dropped'];
   info(counts.map((c) => `${c}=${events.filter((e) => e.type === c || e.type.startsWith(c + '_')).length}`).join(' · '));

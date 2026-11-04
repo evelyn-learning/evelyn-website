@@ -34,8 +34,10 @@ export function validatorTtsHold(input: {
   moveOnRequested: boolean;
   /** the current part has required phrases and its once-per-part check has not fired yet (required_phrase_missing) */
   requiredPhrasesPending: boolean;
+  /** Task 45 §7a: the pronunciation part with ≥ 1 item practised (pronunciation_item_repeated) */
+  pronunciationRepeatProne?: boolean;
 }): boolean {
   // Round 3 (bot run r42, 554 s): the retry after a pre-audio kill was cut audibly — attempts 0 and 1 hold.
   if (!input.enabled || !input.voice || input.attempt > 1 || !input.fixedScript) return false;
-  return input.noteDelivered || input.repeatAttempts >= 2 || input.moveOnRequested || input.requiredPhrasesPending;
+  return input.noteDelivered || input.repeatAttempts >= 2 || input.moveOnRequested || input.requiredPhrasesPending || input.pronunciationRepeatProne === true;
 }

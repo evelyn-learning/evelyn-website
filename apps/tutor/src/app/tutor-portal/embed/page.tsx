@@ -293,6 +293,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   //   fixed-script lessons: the client moved / held the segment cursor, FACT note delivered:
   'fixed_script_',
   'validator_tts_hold_',
+  //   Task 45 (voice run 23): the no-ask continuation's verdict echo dropped, the card
+  //   question answered in substance, the part page break anchored to the transition
+  //   sentence (and the brain-idle flush waiting for it), a repeated pronunciation item:
+  'noask_continue_verdict_echo_dropped', 'card_question_answered_in_substance', 'page_break_anchored', 'auto_newpage_on_advance_flush_waits', 'pronunciation_item_repeated',
   //   the dedup family (R49b's retry-context bug lived here):
   'dedup_',
   //   learner-model writes:

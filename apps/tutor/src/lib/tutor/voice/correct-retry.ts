@@ -1583,3 +1583,38 @@ export function reasksCardQuestion(sentence: string | null | undefined, cardQues
   if (!sentence || !cardQuestion) return false;
   return CARD_REASK_CUE_RE.test(sentence) && reasksAnsweredQuestion(sentence, [cardQuestion]) !== null;
 }
+
+/** Task 45 §2b (voice run 23, 180 s → 203 s): the part's authored card
+ *  question was answered in SUBSTANCE — the tutor asked a paraphrase of it,
+ *  the student's answer was checked correct — so the Task 43 §D re-ask drop
+ *  sees the card as answered. Two proofs: the card's hint starter ("Try
+ *  starting with: 'I have worked…'") opens the answer, or the paraphrase
+ *  shares ≥ 3 content words with the card. A menu card, a non-question card,
+ *  or an answer under 4 words never counts. Pure. */
+const CARD_STARTER_HINT_RE = /(?:start(?:ing)?|begin(?:ning)?)\s+with:?\s*['"“‘]?\s*([^'"”’…]+?)\s*(?:\.\.\.|…)?['"”’]?\s*$/i;
+const SUBSTANCE_STOP = new Set(['the', 'you', 'your', 'for', 'with', 'and', 'can', 'could', 'one', 'about', 'please', 'tell', 'say', 'make', 'sentence', 'sentences', 'question', 'answer', 'using', 'plus', 'since', 'how', 'what', 'ever', 'yes', 'have', 'has', 'had', 'did', 'does', 'are', 'was', 'were', 'this', 'that', 'there', 'here', 'now', 'then', 'me', 'us', 'any', 'some']);
+const substanceWords = (t: string) => new Set((t.toLowerCase().match(/[a-z][a-z'’]*/g) ?? []).filter((w) => w.length >= 3 && !SUBSTANCE_STOP.has(w)));
+const normAnswer = (t: string) => (t.toLowerCase().match(/[a-z][a-z'’]*/g) ?? []).filter((w) => !/^(?:uh+|um+|er+|ah+|hmm+|mm+)$/.test(w)).join(' ');
+export function cardAnsweredInSubstance(input: {
+  cardStatement: string | null | undefined;
+  hints: ReadonlyArray<string> | null | undefined;
+  tutorQuestion: string | null | undefined;
+  studentAnswer: string | null | undefined;
+}): boolean {
+  const card = (input.cardStatement ?? '').trim();
+  const ans = (input.studentAnswer ?? '').trim();
+  if (!card || !ans || !/[?？]\s*$/.test(card)) return false;
+  if (/\b\d\)|\b[A-Da-d]\)|\byou can choose\b/i.test(card)) return false;
+  if ((ans.match(/[A-Za-z][A-Za-z'’]*/g) ?? []).length < 4) return false;
+  const a = normAnswer(ans);
+  for (const h of input.hints ?? []) {
+    const m = CARD_STARTER_HINT_RE.exec(h);
+    if (!m) continue;
+    const starter = normAnswer(m[1]!);
+    if (starter && a.startsWith(starter)) return true;
+  }
+  const cw = substanceWords(card);
+  let shared = 0;
+  for (const w of substanceWords(input.tutorQuestion ?? '')) if (cw.has(w)) shared += 1;
+  return shared >= 3;
+}

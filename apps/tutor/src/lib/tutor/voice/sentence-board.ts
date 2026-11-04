@@ -1468,9 +1468,31 @@ export function planSentenceBoard(input: {
   /** Task 28 §A: told about each level-check sentence not carded because the
    *  tutor recast it and no correction card came of the recast. */
   onLevelCheckSkipped?: (reason: 'recast without card' | 'no verdict' | 'request', sentence: string) => void;
+  /** Task 45 §3 (voice run 23): after a retry ask the affirmed retry is carded
+   *  whatever the check said, and an elicited one-word fix repaints the
+   *  student's card (`lastStudentCard`). */
+  retryCard?: boolean;
+  /** Task 45 §3a: the last sentence card on the current page (the student's). */
+  lastStudentCard?: string | null;
 }): QuotedSentence[] {
   if (input.renderedThisTurn) return [];
-  const studentCorrect = input.studentCorrect === true;
+  // Task 45 §3a (374 s: "presentations or presentation?" → "presentations." —
+  // nothing carded): the one-word pick the tutor confirmed repaints the card.
+  if (input.retryCard === true) {
+    const fix = elicitedWordFix(input.prevTutorText, input.studentLast, input.lastStudentCard, input.tutorText);
+    if (fix) {
+      if (input.lastStudentCard) input.cardedStudentSentence?.add(norm(input.lastStudentCard));
+      return [{ sentence: fix.sentence, kind: 'correction', emphasis: fix.emphasis }];
+    }
+  }
+  // Task 45 §3b (646 s: the precheck's partly_correct blocked the affirmed
+  // retry "We discussed business at the conference."): a retry the tutor
+  // affirms with no correction cue is the student's correct sentence.
+  const retryAffirmed = input.retryCard === true && input.studentCorrect !== true && !!input.studentLast
+    && retryAskTurn(input.prevTutorText) && retryAffirmation(input.tutorText)
+    && !hasCorrectionCue(input.tutorText) && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '');
+  const studentCorrect = input.studentCorrect === true || retryAffirmed;
+  const checkedSentenceIn = input.checkedSentence ?? (retryAffirmed ? input.studentLast : null);
   const affirmFallback = !studentCorrect && input.affirmFallback === true && !hasCorrectionCue(input.tutorText) && !FIX_FOLLOW_UP_RE.test(input.tutorText ?? '');
   const spans = [
     // Task 23 §D3: a quoted starter / fragment is never a card.
@@ -1538,7 +1560,7 @@ export function planSentenceBoard(input: {
   // Task 39 §C2 + fix round 1 (B-1): a correction with no corrected card —
   // a full recast sentence the tutor spoke, else a complete corrected
   // sentence quoted in a correction-kind judge note. Never a splice.
-  if (TUTOR_FULL_RECAST_CARD && !classified.some((c) => c.q.kind === 'correction') && input.studentLast
+  if (TUTOR_FULL_RECAST_CARD && !classified.some((c) => c.q.kind === 'correction') && input.studentLast && !retryAffirmed
     && (input.correctionMarked === true || !!input.correctionNote)) {
     const corrected = tutorRecastCorrectionCard(input.tutorText, input.studentLast) ?? noteCorrectionCard(input.correctionNote, input.studentLast, input.tutorText);
     if (corrected && !classified.some((c) => sameSentence(c.q.sentence, corrected.sentence))) {
@@ -1564,8 +1586,8 @@ export function planSentenceBoard(input: {
   // Task 21 §B3 (GDI run 9, 626 s: `"Lots of health benefits" is exactly
   // right` carded the 4-word fragment): a quoted fragment of the checked
   // sentence gives way to the whole sentence, the fragment marked.
-  if (promote && input.checkedSentence && !hasCorrectionCue(input.tutorText) && !isMetaOfferTurn(input.prevTutorText)) {
-    const checked = cardableStudentSentence(input.checkedSentence);
+  if (promote && checkedSentenceIn && !hasCorrectionCue(input.tutorText) && !isMetaOfferTurn(input.prevTutorText)) {
+    const checked = cardableStudentSentence(checkedSentenceIn);
     const frag = checked && !recastsStudentSentence(input.tutorText, checked) ? fragmentOfChecked(input.tutorText, checked) : null;
     if (checked && frag) {
       for (let k = classified.length - 1; k >= 0; k--) {
@@ -1579,8 +1601,8 @@ export function planSentenceBoard(input: {
   // the slogan was the challenge…") and nothing was carded for six minutes.
   // A correct student sentence goes on the board whether or not the tutor
   // repeats it — no sentenceContains requirement.
-  if ((promote || mediumChecked) && input.checkedSentence && !hasCorrectionCue(input.tutorText) && !isMetaOfferTurn(input.prevTutorText)) {
-    const checked = cardableStudentSentence(input.checkedSentence);
+  if ((promote || mediumChecked) && checkedSentenceIn && !hasCorrectionCue(input.tutorText) && !isMetaOfferTurn(input.prevTutorText)) {
+    const checked = cardableStudentSentence(checkedSentenceIn);
     if (checked && !recastsStudentSentence(input.tutorText, checked)
       && !classified.some((c) => sameSentence(c.q.sentence, checked))) {
       classified.push({ q: { sentence: checked, kind: 'model', emphasis: [], source: 'checked' }, len: norm(checked).length, i: kept.length, said: false, affirmed: false, introduced: false });
@@ -2196,4 +2218,58 @@ export function turnCorrectsStudentSentence(tutorText: string | null | undefined
   if (!t.trim() || !studentLast?.trim()) return false;
   if (extractQuotedSentences(t).some((q) => classifyQuotedSentence(q, studentLast).kind === 'correction')) return true;
   return !!(recastCorrectionCard(t, studentLast) ?? grammarRecastCard(t, studentLast) ?? tutorRecastCorrectionCard(t, studentLast));
+}
+
+/** Task 45 §3b: the previous tutor turn asked for a RETRY of the student's
+ *  sentence — "say / try / repeat … again / once more / the (whole) sentence",
+ *  a retry-cap ask, もう一度. Pure. */
+const RETRY_ASK_TURN_RE = /\b(?:say|try|repeat)\b[^.!?。]*\b(?:again|once more|one more time|(?:the|that|this|your) (?:whole |full |complete )?sentence)\b|もう一度/i;
+export function retryAskTurn(prevTutorText: string | null | undefined): boolean {
+  const t = prevTutorText ?? '';
+  if (!t) return false;
+  return isRetryAsk(t) || RETRY_ASK_TURN_RE.test(t);
+}
+
+/** Task 45 §3a (voice run 23, 350–374 s): the tutor asked a CHOICE between two
+ *  forms — 'is it "presentations" or "presentation" here?' — the student
+ *  picked one in ≤ 3 words, the tutor confirmed it, and the student's card on
+ *  the page carries the OTHER form: the card repainted with the pick, the
+ *  pick emphasised. Null unless every piece is there. Pure. */
+const CHOICE_Q_RE = /\bis it\s+["“「]([^"”」]+)["”」]\s+or\s+["“「]([^"”」]+)["”」]/i;
+const PICK_CONFIRM_RE = /\b(?:yes|right|correct|exactly|that['’]s it|well done|good)\b|正解|ですね|その通り|合って/i;
+
+export function elicitedWordFix(
+  prevTutorText: string | null | undefined,
+  studentReply: string | null | undefined,
+  cardSentence: string | null | undefined,
+  tutorText: string | null | undefined,
+): { sentence: string; emphasis: string[] } | null {
+  if (!prevTutorText || !studentReply || !cardSentence) return null;
+  const m = CHOICE_Q_RE.exec(prevTutorText);
+  if (!m) return null;
+  const alts = [m[1]!.trim(), m[2]!.trim()].filter(Boolean);
+  if (alts.length !== 2 || alts[0]!.toLowerCase() === alts[1]!.toLowerCase()) return null;
+  const reply = studentReply.toLowerCase().replace(/[.,!?。、！？"“”「」'’]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!reply || reply.split(' ').length > 3) return null;
+  const pick = alts.find((a) => reply === a.toLowerCase() || reply.endsWith(` ${a.toLowerCase()}`));
+  if (!pick) return null;
+  const other = alts.find((a) => a !== pick)!;
+  const otherRe = new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRe(other)}(?=$|[^\\p{L}\\p{N}])`, 'iu');
+  const pickRe = new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRe(pick)}(?=$|[^\\p{L}\\p{N}])`, 'iu');
+  if (!otherRe.test(cardSentence) || pickRe.test(cardSentence)) return null;
+  const t = tutorText ?? '';
+  const quotesPick = new RegExp(`["“「]\\s*${escapeRe(pick)}\\s*["”」]`, 'i').test(t);
+  if (!(quotesPick || PICK_CONFIRM_RE.test(t)) || hasCorrectionCue(t)) return null;
+  return { sentence: cardSentence.replace(otherRe, `$1${pick}`), emphasis: [pick] };
+}
+
+/** Task 45 §3b: the retry turn AFFIRMS — a verdict word in a non-question
+ *  sentence ("is a clear past simple sentence", "is the right past form",
+ *  "exactly right", 「正しいです」) — turnAffirmsStudent's shapes included. */
+const RETRY_AFFIRM_RE = /\b(?:correct|right|clear|good|great|exactly|natural|perfect|well done|nicely said|well said)\b|正しい|ですね|いいですね|完璧|その通り/i;
+export function retryAffirmation(tutorText: string | null | undefined): boolean {
+  const t = tutorText ?? '';
+  if (!t) return false;
+  if (turnAffirmsStudent(t)) return true;
+  return t.split(/(?<=[.!?。！？])\s+/).some((x) => !/[?？]["”」]?\s*$/.test(x.trim()) && RETRY_AFFIRM_RE.test(x));
 }

@@ -24,6 +24,7 @@ import {
 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 import { keepBatchOnEmptySegmentPage, keepTopicShiftOnSegmentPage, type PageDecision } from '../src/lib/tutor/whiteboard/page-grouping';
 import { isStudentSentenceCard } from '../src/lib/tutor/voice/sentence-board';
+import { transitionSentenceIndex as transitionSentenceIndex45 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 
 let n = 0;
 const ok = (name: string, cond: boolean) => { assert.ok(cond, name); n++; };
@@ -93,7 +94,7 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('not authored ⇒ deferred dropped (unchanged)', decideDeferredPageFlush({ enabled: true, batch: BATCH, deferredIsAuthored: false }).action === 'drop-deferred');
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   ok('VTR passes deferredIsAuthored from the pending page', /deferredIsAuthored: pendingAdvanceNewPageRef\.current\.authored === true/.test(VTR));
-  ok('VTR: a post-turn auto card never flushes the part page', /const autoCardOfLeftPart = opts\?\.sentenceBoardAuto === true && pendingAdvanceNewPageRef\.current\.afterTurn === true;/.test(VTR)
+  ok('VTR: a post-turn auto card never flushes the part page', /const autoCardOfLeftPart = opts\?\.sentenceBoardAuto === true && \(pendingAdvanceNewPageRef\.current\.afterTurn === true \|\| opts\?\.holdDeferredPage === true\);/.test(VTR)
     && /const hasFreshTeaching = !autoCardOfLeftPart && /.test(VTR));
   ok('VTR: the auto-advance marks its pending page afterTurn', /applyResolvedAdvance\(autoPlan, segIdNow, autoNext\);\s*if \(pendingAdvanceNewPageRef\.current\?\.segmentId === autoNext\) \{\s*pendingAdvanceNewPageRef\.current\.afterTurn = true;/.test(VTR));
   // Fix round 1 (review I-1): afterTurn is scoped to the advancing turn —
@@ -258,7 +259,7 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('43J: page pending ⇒ student (model) cards, the part card, then the correction, then others', orderTurnEndDispatches([showProblem, correctionCard, modelCard, studentCard], true).map((p) => p.kind).join(',') === 'student,segment,correction,other');
   ok('43J: no page pending ⇒ the part card first, stream order otherwise', orderTurnEndDispatches([correctionCard, showProblem, modelCard], false).map((p) => p.kind).join(',') === 'segment,correction,other');
   const VTRJ = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  ok('43J: VTR plans a correction card as kind correction and marks the command', VTRJ.includes("kind: (TUTOR_CORRECTION_CARD_ON_NEW_PAGE && card.kind === 'correction' ? 'correction' : card.kind === 'correction' || !!card.source ? 'student' : 'other') as 'student' | 'correction' | 'other'") && VTRJ.includes("correctionCard: card.kind === 'correction' }"));
+  ok('43J: VTR plans a correction card as kind correction and marks the command', VTRJ.includes("kind: (TUTOR_CORRECTION_CARD_ON_NEW_PAGE && transitionAnchor === null && card.kind === 'correction' ? 'correction' : card.kind === 'correction' || !!card.source ? 'student' : 'other') as 'student' | 'correction' | 'other'") && VTRJ.includes("correctionCard: card.kind === 'correction', holdDeferredPage: transitionAnchor !== null }"));
   ok('43J: a correction card is not moved in front of the page break / to the previous page', VTRJ.includes("if (opts?.sentenceBoardAuto) return opts.studentSentenceCard === true && !(TUTOR_CORRECTION_CARD_ON_NEW_PAGE && opts.correctionCard === true);"));
   ok('43J: flag', /export const TUTOR_CORRECTION_CARD_ON_NEW_PAGE = process\.env\.NEXT_PUBLIC_TUTOR_CORRECTION_CARD_ON_NEW_PAGE !== 'off';/.test(readFileSync(join(__dirname, '..', 'src/lib/tutor/orchestrator/flags.ts'), 'utf8')));
   // fallback: the part page already painted — the student card targets the page before the break
@@ -275,7 +276,7 @@ ok('emptyPageIndexes: pointer-only page is empty',
   ok('27B: no break in the log / nothing before it ⇒ null', previousPageTarget(cmds, { action: 'newPage' }) === null && previousPageTarget([brk], brk) === null);
   const V = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   ok('27B: VTR defers the turn-end part card while a part page is pending', V.includes('if (pendingAdvanceNewPageRef.current && TUTOR_STUDENT_CARDS_BEFORE_PART_PAGE) deferredSegmentCardRun = runSegmentCard;'));
-  ok('27B: VTR orders the turn-end dispatches and runs them in order', /const turnEndPlanned = orderTurnEndDispatches\(\[[\s\S]{0,400}\], !!deferredSegmentCardRun\);[\s\S]{0,600}for \(const planned of turnEndPlanned\) await planned\.run\(\);/.test(V));
+  ok('27B: VTR orders the turn-end dispatches and runs them in order', /const turnEndPlanned = orderTurnEndDispatches\(\[[\s\S]{0,520}\], !!deferredSegmentCardRun\);[\s\S]{0,600}for \(const planned of turnEndPlanned\) await planned\.run\(\);/.test(V));
   ok('27B: VTR runs a waiting part card when no sentence board ran', V.includes('if (deferredSegmentCardRun) await (deferredSegmentCardRun as () => Promise<void>)();'));
   ok('27B: VTR fallback — painted break ⇒ previous page target + event', V.includes("const paintedSegmentBreak = !bufferedSegmentBreak && !pendingAdvanceNewPageRef.current ? segmentPageBreakRef.current : null;") && V.includes("onDebugEvent?.('student_card_on_previous_page', "));
   const C = readFileSync(join(__dirname, '..', 'src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx'), 'utf8');
@@ -362,4 +363,29 @@ ok('emptyPageIndexes: pointer-only page is empty',
     && V10.includes('if (segmentPageOpenedThisTurnRef.current?.segId === killBreak.segmentId) segmentPageOpenedThisTurnRef.current = null;'));
 }
 
+// ── Task 45 §4 / §6 (voice run 23, embed-1793747507104) ──
+{ // 45 §4: the transition sentence of an advancing turn — the page break is anchored to it (721 s: card + page break in one batch while the verdict was still speaking)
+  assert.equal(transitionSentenceIndex45(['Yes, "I went to the seminar room" is clear now, with no "um" or "uh."', "Let's move on to our conversation about your work.", "I'd like to hear about a project you're proud of.", 'Could you tell me one project you\'ve worked on?']), 1);
+  assert.equal(transitionSentenceIndex45(['Good, that\'s a clear request.', '"I said, please make a donation to our cause" works well.', "Let's move on to pronunciation.", 'Would you like to practice: one, individual words; two, a complete sentence?']), 2);
+  assert.equal(transitionSentenceIndex45(['Thanks, Praveen.', 'Now, the next part is the past simple.', 'Did you attend any business events last year?']), 1);
+  assert.equal(transitionSentenceIndex45(['では、次は発音の練習に移りましょう。', 'Would you like to practice your pronunciation?']), 0);
+  assert.equal(transitionSentenceIndex45(['Let\'s finish with the summary.', 'We practised two grammar points.']), 0);
+  assert.equal(transitionSentenceIndex45(['Yes, "presentations" is right.', 'Would you like one more practice sentence, or shall we move on to the past simple?']), null, 'an offer asks about moving — it is no move');
+  assert.equal(transitionSentenceIndex45(['Let\'s try one more.', 'What did you do on your last business trip?']), null);
+  assert.equal(transitionSentenceIndex45([]), null);
+  const vtr = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  // the engine: student / correction cards hold the page (paint on the old page at their own sentence); the part card's batch carries the break, anchored to the transition sentence
+  assert.match(vtr, /const transitionAnchor = TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && !!pendingAdvanceNewPageRef\.current && isFixedScriptPlan\(lessonPlanRef\.current\)\s*\? transitionSentenceIndex\(turnNarrationRef\.current\) : null;/);
+  assert.match(vtr, /const autoCardOfLeftPart = opts\?\.sentenceBoardAuto === true && \(pendingAdvanceNewPageRef\.current\.afterTurn === true \|\| opts\?\.holdDeferredPage === true\);/);
+  assert.match(vtr, /handleWhiteboardCommand\(\[cmd\], \{ anchorSentence: transitionAnchor \?\? 0, \.\.\.\(transitionAnchor !== null \? \{ pageBreakOnTransition: true \} : \{\}\) \}\)/);
+  assert.match(vtr, /holdDeferredPage: transitionAnchor !== null/);
+  // §6: with the break anchored, a correction card goes BEFORE the break (on the old page) again
+  assert.match(vtr, /kind: \(TUTOR_CORRECTION_CARD_ON_NEW_PAGE && transitionAnchor === null && card\.kind === 'correction' \? 'correction' :/);
+  assert.match(vtr, /\$\{opts\?\.pageBreakOnTransition \? ` \(on the transition sentence \$\{opts\.anchorSentence\}\)` : ''\}/);
+  assert.match(vtr, /if \(TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan\(lessonPlanRef\.current\)\) \{\s*const tsIdx = transitionSentenceIndex\(turnNarrationRef\.current\);\s*if \(tsIdx !== null && ttsPlaybackStartedCountRef\.current <= tsIdx\) \{/);
+  n += 12;
+}
+
 console.log(`deferred-page-flush: ${n} cases passed`);
+
+

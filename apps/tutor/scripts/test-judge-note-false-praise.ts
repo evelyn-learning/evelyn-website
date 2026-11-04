@@ -295,7 +295,8 @@ test('Task 24 §F (GDI run 12, 269 s): a false_praise note is moot when the turn
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   // plant time, the sentence board's correction card, and the deadline all consult it
   assert.equal((v.match(/judgeNoteMootByCorrectionCard\(\{/g) ?? []).length, 3);
-  assert.equal((v.match(/onDebugEvent\?\.\('judge_correction_note_dropped', /g) ?? []).length, 3);
+  // Task 45 §1: + the two part-scope drops (at the reply, at the deadline)
+  assert.equal((v.match(/onDebugEvent\?\.\('judge_correction_note_dropped', /g) ?? []).length, 5);
   assert.ok(readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8').includes("'judge_correction_note_dropped'"));
 });
 

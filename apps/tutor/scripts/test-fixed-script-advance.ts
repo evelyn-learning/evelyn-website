@@ -54,6 +54,7 @@ import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, 
 import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
 import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, lessonTimeGuardDueMs, postDueHoldDecision, FIXED_SCRIPT_POST_DUE_MAX_HOLDS, nextSegmentId as nextSegmentId41 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { reasksAnsweredQuestion, answeredCardQuestion, reasksCardQuestion } from '../src/lib/tutor/voice/correct-retry';
+import { FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS, isVerdictEchoSentence, judgeNoteStaleForPart } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS, isProposalQuestion, heldAdvanceFiresNow } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { FIXED_SCRIPT_STOP_DECLINED_NOTE, fixedScriptEngineOfferLines, offerEngineFallbackDue, engineOfferFallbackAction, entryNoteDueAfterAdvance } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
@@ -61,6 +62,7 @@ import { recapAlreadyGiven, readinessAskDropDue, FIXED_SCRIPT_RECAP_GIVEN_CLAUSE
 import { announcedMoveTarget as amt39, withoutClosingClause } from '../src/lib/tutor/lesson-plan/announced-move';
 import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
+import { cardAnsweredInSubstance as cardAnsweredInSubstance45 } from '../src/lib/tutor/voice/correct-retry';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -510,7 +512,7 @@ test('B: VoiceTutorRealtime wires segment_card_auto (pin)', () => {
   pin(VTR, /renderedProblemThisTurn: totalToolNamesSeen\.some\(\(n\) => PROBLEM_CARD_TOOLS\.has\(n\)\)/);
   pin(VTR, /alreadyOnBoard: problemStatementOnBoard\(whiteboardCommandsRef\.current/);
   pin(VTR, /catalogRef\.current\.setCurrentSegment\(acSegId\);/);
-  pin(VTR, /await handleWhiteboardCommand\(\[cmd\], \{ anchorSentence: 0 \}\);\n\s*onDebugEvent\?\.\('segment_card_auto'/);
+  pin(VTR, /await handleWhiteboardCommand\(\[cmd\], \{ anchorSentence: transitionAnchor \?\? 0, \.\.\.\(transitionAnchor !== null \? \{ pageBreakOnTransition: true \} : \{\}\) \}\);\n\s*onDebugEvent\?\.\('segment_card_auto'/);
   // before the sentence board, so the part's card leads its page
   assert.ok(VTR.indexOf("onDebugEvent?.('segment_card_auto'") < VTR.indexOf("onDebugEvent?.('sentence_board_auto'"));
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_SEGMENT_CARD_AUTO = process\.env\.NEXT_PUBLIC_TUTOR_SEGMENT_CARD_AUTO !== 'off';/);
@@ -571,7 +573,7 @@ test('44 R1: a due budget advance never moves the pointer while a question is op
   assert.equal(heldAdvanceFiresNow({ ...base, fixedScript: false }), false);
   // the turn-end chain holds for ANY open ask (no cap, no post-due override) and records the held advance; the reply turn fires it
   pin(VTR, /\} else if \(autoNext && askPending && TUTOR_ADVANCE_WAITS_FOR_REPLY\) \{[\s\S]{0,600}?heldAdvanceForAskRef\.current = \{ segId: segIdNow, next: autoNext, reason: advanceReason \};[\s\S]{0,300}?onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" until the reply \(\$\{advanceReason\}\)`\);/);
-  pin(VTR, /if \(heldAdvanceFiresNow\(\{ held: heldAdvanceForAskRef\.current, segmentId: currentSegmentIdRef\.current, silent, bracketed: isBracketed, prefetch: !!opts\?\.prefetchOnly, fixedScript: isFixedScriptPlan\(lessonPlanRef\.current\) \}\)\) \{/);
+  pin(VTR, /if \(heldAdvanceFiresNow\(\{ held: heldAdvanceForAskRef\.current, segmentId: currentSegmentIdRef\.current, silent, bracketed: isBracketed, prefetch: !!opts\?\.prefetchOnly, fixedScript: isFixedScriptPlan\(lessonPlanRef\.current\),\s*offerAcceptedReply: haOfferAccepted, offerWaits: [^}]*\}\)\) \{/);
   pin(VTR, /plantAdvanceEntryNote\(haNext, 'reply'\);/);
   pin(VTR, /onDebugEvent\?\.\('fixed_script_auto_advance', `"\$\{haSeg\}" → "\$\{haNext\}" reason=\$\{ha\.reason\} \(on the reply\)`\);/);
   pin(read('src/lib/tutor/orchestrator/flags.ts'), /export const TUTOR_ADVANCE_WAITS_FOR_REPLY = process\.env\.NEXT_PUBLIC_TUTOR_ADVANCE_WAITS_FOR_REPLY !== 'off';/);
@@ -1808,6 +1810,63 @@ test('final-3 M-3 / M-4: quoted student text never counts as the menu read; the 
   assert.ok(read('src/lib/tutor/lesson-plan/transition-ask.ts').includes('if (menuPresentedIn(input.card, spoken)) return null;'));
 });
 
+
+test('45 §2b: the card question counts as answered when the student answered the tutor\'s paraphrase of it correctly (180 s: the paraphrase was answered, 203 s: the card re-asked)', () => {
+  const card = 'Have you worked for your current company for a long time?';
+  const hints = ["Try starting with: 'I have worked…'", 'have / has + past participle: work → have worked.'];
+  assert.equal(cardAnsweredInSubstance45({ cardStatement: card, hints, tutorQuestion: 'Using "I have worked" plus "for" or "since," can you make one sentence about how long you have worked at Nagoya Corporation?', studentAnswer: 'I have worked uh for four years at Nagoya Corporation.' }), true, 'the hint starter satisfied');
+  assert.equal(cardAnsweredInSubstance45({ cardStatement: card, hints, tutorQuestion: 'What is one important skill you have learned at your company?', studentAnswer: 'I have learned how to create presentations for my boss.' }), false, 'a different question in the part');
+  assert.equal(cardAnsweredInSubstance45({ cardStatement: card, hints: [], tutorQuestion: 'So, have you worked for your company for a long time, Praveen?', studentAnswer: 'Yes, I have worked there for four years.' }), true, 'a close paraphrase shares the content words');
+  assert.equal(cardAnsweredInSubstance45({ cardStatement: card, hints, tutorQuestion: 'Using "I have worked", can you make one sentence about how long you have worked there?', studentAnswer: 'Yes.' }), false, 'a bare yes is no answer');
+  assert.equal(cardAnsweredInSubstance45({ cardStatement: 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence.', hints: [], tutorQuestion: 'Would you like to practice pronunciation?', studentAnswer: 'I have worked with customers for a long time now.' }), false, 'a menu card is never "answered in substance"');
+  pin(VTR, /if \(TUTOR_CARD_ANSWERED_IN_SUBSTANCE && isFixedScriptPlan\(lessonPlanRef\.current\) && aqPc && aqPc\.verdict === 'correct' && aqPc\.answers === 'open_question'[\s\S]{0,700}?onDebugEvent\?\.\('card_question_answered_in_substance', /);
+});
+test('45 §2a: the prompt\'s off-topic rule exempts a question the tutor itself invited (203 s: "Ask me one question…" → "I\'d rather keep the focus on your English today")', () => {
+  const spb = read('src/lib/tutor/ai/system-prompt-builder.ts');
+  assert.ok(spb.includes('A question you asked the student to ask you (question practice) is not off-topic: answer it in one short sentence, then continue.'), 'the exemption sits in the Content Boundaries rule');
+  assert.ok(spb.indexOf('personal questions, what AI you are), redirect immediately') < spb.indexOf('A question you asked the student to ask you'), 'right after the redirect rule');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
 
+
+// ── Task 45 (voice run 23, embed-1793747507104) ──
+test('45 §7b: a held advance does not fire on a reply that ACCEPTS the current part\'s offer — the accepted item runs first (1240 s: "One more item." moved the pointer to the summary)', () => {
+  const held = { segId: 'pronunciation', next: 'summary', reason: 'turns' as const };
+  const base = { held, segmentId: 'pronunciation', silent: false, bracketed: false, prefetch: false, fixedScript: true };
+  assert.equal(heldAdvanceFiresNow({ ...base, offerAcceptedReply: true, offerWaits: 0 }), false, 'the acceptance is served first');
+  assert.equal(heldAdvanceFiresNow({ ...base, offerAcceptedReply: true, offerWaits: 1 }), false, 'a second acceptance is still served');
+  assert.equal(heldAdvanceFiresNow({ ...base, offerAcceptedReply: true, offerWaits: FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS }), true, 'the cap: the third acceptance no longer holds');
+  assert.equal(heldAdvanceFiresNow({ ...base, offerAcceptedReply: false, offerWaits: 0 }), true, 'a plain reply fires it');
+  assert.equal(FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS, 2);
+  // the engine computes the acceptance from the previous tutor turn's offer + the reply, counts waits per part, and logs the hold
+  pin(VTR, /const haOfferAccepted = TUTOR_HELD_ADVANCE_WAITS_FOR_OFFER_ITEM && !silent && !isBracketed && !opts\?\.prefetchOnly\s*&& offerAsked\(haLastTutor\) && offerAccepted\(transcript, haLastTutor\);/);
+  pin(VTR, /offerAcceptedReply: haOfferAccepted, offerWaits: heldAdvanceOfferWaitsRef\.current\.get\(currentSegmentIdRef\.current \?\? ''\) \?\? 0/);
+  pin(VTR, /onDebugEvent\?\.\('fixed_script_auto_advance_held_offer_item', /);
+});
+test('45 §5: a verdict-echo sentence — the no-ask continuation re-speaking the verdict it was told not to repeat (865–876 s)', () => {
+  assert.equal(isVerdictEchoSentence('Your sentence is correct, and "for six months" fits well.'), true);
+  assert.equal(isVerdictEchoSentence('You said it well: "I have been collecting donations for six months" is correct.'), true);
+  assert.equal(isVerdictEchoSentence('That\'s right, "I went to the seminar room" is clear.'), true);
+  assert.equal(isVerdictEchoSentence('Good, that sentence works.'), true);
+  assert.equal(isVerdictEchoSentence('「I attended the conference.」は正しいですね。'), true);
+  assert.equal(isVerdictEchoSentence('Now let\'s go a bit deeper into your project.'), false);
+  assert.equal(isVerdictEchoSentence('What was the biggest challenge you faced while collecting donations?'), false);
+  assert.equal(isVerdictEchoSentence('Here is the next question: how long have you worked there?'), false);
+  assert.equal(isVerdictEchoSentence('Please say "I have worked here for five years" once more.'), false, 'a say ask quoting a sentence is no verdict');
+  // the engine drops LEADING echo sentences of a no-ask continuation turn only
+  pin(VTR, /if \(noaskEchoLeading && TUTOR_NOASK_VERDICT_ECHO_DROP && isNoaskContinueTurn && isVerdictEchoSentence\(updatedSentence\)\) \{[\s\S]{0,300}?onDebugEvent\?\.\('noask_continue_verdict_echo_dropped', /);
+  pin(VTR, /const isNoaskContinueTurn = transcript === FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE;/);
+});
+test('45 §1: the judge correction note is scoped to its part — none planted in the level check, and one planted in a part the pointer has left is dropped unspent (98 s plant, 118 s volunteered into the next part)', () => {
+  assert.equal(judgeNoteStaleForPart({ plantedSegId: 'level-check', currentSegId: 'topic-intro', fixedScript: true }), true);
+  assert.equal(judgeNoteStaleForPart({ plantedSegId: 'topic-intro', currentSegId: 'topic-intro', fixedScript: true }), false);
+  assert.equal(judgeNoteStaleForPart({ plantedSegId: null, currentSegId: 'topic-intro', fixedScript: true }), false, 'an unscoped note (older plant) is never stale');
+  assert.equal(judgeNoteStaleForPart({ plantedSegId: 'a', currentSegId: 'b', fixedScript: false }), false, 'free lessons keep the session-wide note');
+  pin(VTR, /const judgeNoteLevelCheck = TUTOR_JUDGE_NOTE_PART_SCOPED && isFixedScriptPlan\(lessonPlanRef\.current\)\s*&& lessonPlanRef\.current\?\.segments\.find\(\(sg\) => sg\.id === turnStartSegmentId\)\?\.metadata\?\.skipWhenLevelKnown === true;/);
+  pin(VTR, /onDebugEvent\?\.\('judge_correction_note_skipped', `level check · advisory: /);
+  // stale at consumption and at the deadline
+  pin(VTR, /if \(pendingJudgeCorrectionNoteRef\.current && TUTOR_JUDGE_NOTE_PART_SCOPED && judgeNoteStaleForPart\(\{ plantedSegId: judgeNotePlantRef\.current\?\.segId \?\? null, currentSegId: currentSegmentIdRef\.current, fixedScript: isFixedScriptPlan\(lessonPlanRef\.current\) \}\)\) \{/);
+  pin(VTR, /onDebugEvent\?\.\('judge_correction_note_dropped', `stale part: planted in "\$\{judgeNotePlantRef\.current\?\.segId\}", pointer at "\$\{currentSegmentIdRef\.current\}" \(\$\{judgeNoteStaleWhere\}\)`\);/);
+});

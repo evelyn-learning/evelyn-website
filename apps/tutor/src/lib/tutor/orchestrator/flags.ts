@@ -1472,3 +1472,48 @@ export const TUTOR_MENU_PICK_SINGLE_AUTHORITY = process.env.NEXT_PUBLIC_TUTOR_ME
  *  when the authored card already stands on the current page. Fixed scripts.
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_AUTHORED_CARD_DEDUPE=off. */
 export const TUTOR_AUTHORED_CARD_DEDUPE = process.env.NEXT_PUBLIC_TUTOR_AUTHORED_CARD_DEDUPE !== 'off';
+
+// ── Task 45 (voice run 23, embed-1793747507104) ─────────────────────────────
+/** Task 45 §7b (1240 s): a held budget / time advance does not fire on a reply
+ *  that ACCEPTS the tutor's "one more …, or move on?" offer — the accepted
+ *  item runs (ask → answer) and the next reply fires it; at most
+ *  FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS acceptances per part. Fixed
+ *  scripts. Client-side: default ON; NEXT_PUBLIC_TUTOR_HELD_ADVANCE_WAITS_FOR_OFFER_ITEM=off. */
+export const TUTOR_HELD_ADVANCE_WAITS_FOR_OFFER_ITEM = process.env.NEXT_PUBLIC_TUTOR_HELD_ADVANCE_WAITS_FOR_OFFER_ITEM !== 'off';
+/** Task 45 §5 (865–876 s): the no-ask continuation turn re-spoke the verdict
+ *  ("Your sentence is correct, and "for six months" fits well.") before its
+ *  question — its leading verdict-echo sentences are dropped before audio.
+ *  Fixed scripts. Client-side: default ON; NEXT_PUBLIC_TUTOR_NOASK_VERDICT_ECHO_DROP=off. */
+export const TUTOR_NOASK_VERDICT_ECHO_DROP = process.env.NEXT_PUBLIC_TUTOR_NOASK_VERDICT_ECHO_DROP !== 'off';
+/** Task 45 §1 (98–120 s): the judge's advisory correction note is scoped to
+ *  the part it was planted in — never planted in the level check (its
+ *  answers are not graded), and dropped unspent when the pointer has left
+ *  that part (the 20 s timeout volunteered it into the next part, where the
+ *  brain retracted a "Good." against the wrong question). Fixed scripts.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_JUDGE_NOTE_PART_SCOPED=off. */
+export const TUTOR_JUDGE_NOTE_PART_SCOPED = process.env.NEXT_PUBLIC_TUTOR_JUDGE_NOTE_PART_SCOPED !== 'off';
+/** Task 45 §2b (180–235 s): the part's authored card question counts as
+ *  answered when the student answered the tutor's paraphrase of it correctly
+ *  (the card's hint starter satisfied, or the paraphrase shares the card's
+ *  content words) — so the Task 43 §D re-ask drop sees it. Fixed scripts.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_CARD_ANSWERED_IN_SUBSTANCE=off. */
+export const TUTOR_CARD_ANSWERED_IN_SUBSTANCE = process.env.NEXT_PUBLIC_TUTOR_CARD_ANSWERED_IN_SUBSTANCE !== 'off';
+/** Task 45 §3 (374 s / 646 s): after a correction cycle the affirmed retry
+ *  goes on the board whatever the precheck said, and a one-word fix the
+ *  tutor elicited ("presentations or presentation?" → "presentations")
+ *  repaints the student's card with the substitution. Language lessons.
+ *  Client-side: default ON; NEXT_PUBLIC_TUTOR_RETRY_CARD=off. */
+export const TUTOR_RETRY_CARD = process.env.NEXT_PUBLIC_TUTOR_RETRY_CARD !== 'off';
+/** Task 45 §4/§6 (721 s / 1010 s): on an advancing turn the part page turns
+ *  when the tutor SAYS the move ("Let's move on to …"), not when the brain
+ *  stream ends — the turn's student / correction cards paint on the old page
+ *  at their own sentence and stay visible through the verdict; the page
+ *  break and the new part's card are anchored to the transition sentence.
+ *  Fixed scripts. Client-side: default ON; NEXT_PUBLIC_TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE=off. */
+export const TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE = process.env.NEXT_PUBLIC_TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE !== 'off';
+/** Task 45 §7a (1158 s): a pronunciation item the learner already practised
+ *  in this part is never given again — the turn is retried pre-audio with
+ *  the practised list (the plan's "every item is NEW" rule, engine-held).
+ *  Fixed scripts with pronunciation targets. Client-side: default ON;
+ *  NEXT_PUBLIC_TUTOR_PRON_ITEM_REPEAT_KILL=off. */
+export const TUTOR_PRON_ITEM_REPEAT_KILL = process.env.NEXT_PUBLIC_TUTOR_PRON_ITEM_REPEAT_KILL !== 'off';

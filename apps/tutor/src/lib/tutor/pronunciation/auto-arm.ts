@@ -410,3 +410,34 @@ export function pronunciationNoteForTurn(input: { note: string; measured: boolea
   if (!input.measured && input.saidTarget) return PRONUNCIATION_UNSCORED_NOTE;
   return input.note;
 }
+
+/** Task 45 §7a (voice run 23, 1158 s: "one more item" re-gave the first
+ *  sentence; the board only re-highlighted it): the item this turn asks the
+ *  learner to say was already practised in this part. The plan's "every item
+ *  is NEW" rule, engine-held: the turn is retried with the practised list and
+ *  the unpractised listed items (or, all spent, the plan's own fallback — a
+ *  sentence the learner said earlier in this lesson). Only a turn that asks
+ *  to say / listen counts (a measured mention is no ask). Pure. */
+export function pronunciationItemRepeat(input: {
+  turnText: string;
+  targets: PronunciationTargets;
+  practised: ReadonlyArray<string>;
+  shownSentence?: string | null;
+  studentLast?: string | null;
+}): { repeated: string; reason: string } | null {
+  if (!input.practised.length) return null;
+  const tail = lastSentences(input.turnText, 2);
+  if (!SAY_ASK_RE.test(tail) && !LISTEN_ASK_RE.test(tail)) return null;
+  const det = detectPronunciationTarget(input.turnText, input.targets, { shownSentence: input.shownSentence, studentLast: input.studentLast });
+  if (!det) return null;
+  const hit = input.practised.find((p) => normTarget(p) === normTarget(det.referenceText));
+  if (!hit) return null;
+  const listed = [...input.targets.words, ...input.targets.sentences];
+  const remaining = listed.filter((t) => !input.practised.some((p) => normTarget(p) === normTarget(t)));
+  const reason = `The learner already practised "${hit}" in this part. Every pronunciation item is NEW — never a word or sentence already practised (already practised: ${input.practised.map((p) => `"${p}"`).join(', ')}). `
+    + (remaining.length
+      ? `Give one of these instead: ${remaining.map((t) => `"${t}"`).join(', ')}. `
+      : 'Every listed item is spent: use a complete sentence the learner said earlier in this lesson, in its corrected form. ')
+    + 'Give the instruction, then the new item exactly, as the last sentence of your turn.';
+  return { repeated: hit, reason };
+}

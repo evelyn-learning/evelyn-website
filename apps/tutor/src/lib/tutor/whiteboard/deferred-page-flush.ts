@@ -361,3 +361,40 @@ export function authoredCardOnCurrentPage(
   }
   return batchHasSegmentCard(commands.slice(start), authoredStatement);
 }
+
+/** Task 45 §4 (voice run 23, 721 s / 1010 s): the sentence of an advancing
+ *  turn that SAYS the move — "Let's move on to our conversation…", "Now, the
+ *  next part is the past simple.", 「次は発音の練習に移りましょう。」 — the
+ *  part page turns as it starts playing, not when the brain stream ends.
+ *  An ask (ends with "?") is never the move: "shall we move on?" is an
+ *  offer. Returns the 0-based index into the turn's narration, or null. Pure. */
+const PART_MOVE_LEAD_RE = /\b(?:let['’]s|we['’]ll|we will|now we|now let['’]s|time to|it['’]s time to|ready to|we can now|next,? (?:we|let['’]s))\b/i;
+const PART_MOVE_VERB_RE = /\b(?:move on|move to|moving on|go on to|turn to|start (?:the|our|with the|part)|begin (?:the|our|part)|finish with|wrap up with|look at the next|do the next)\b/i;
+const PART_LABEL_RE = /\b(?:the )?(?:next|last|final) (?:part|section|step|stage|topic)\b|\bpart \d\b/i;
+const JA_PART_MOVE_RE = /次は|次に|に移りましょう|に進みましょう|最後に|まとめに|まとめましょう/;
+export function transitionSentenceIndex(sentences: ReadonlyArray<string>): number | null {
+  for (let i = 0; i < sentences.length; i++) {
+    const s = (sentences[i] ?? '').trim();
+    if (!s || /[?？]["”」]?\s*$/.test(s)) continue;
+    if (JA_PART_MOVE_RE.test(s) || PART_LABEL_RE.test(s)) return i;
+    if (PART_MOVE_LEAD_RE.test(s) && PART_MOVE_VERB_RE.test(s)) return i;
+  }
+  return null;
+}
+
+/** Task 45 §3a: the last sentence card on the current page (after the last
+ *  newPage / clear), either command shape — the student's card a one-word
+ *  fix repaints. Pure. */
+export function lastStudentSentenceCardOnPage(
+  commands: ReadonlyArray<{ action: string } & Record<string, unknown>>,
+): string | null {
+  for (let i = commands.length - 1; i >= 0; i--) {
+    const c = commands[i]!;
+    if (c.action === 'newPage' || c.action === 'clear') return null;
+    if (c.action === 'showSentence') {
+      const s = (c as { sentence?: unknown }).sentence ?? (c.data as { sentence?: unknown } | undefined)?.sentence;
+      if (typeof s === 'string' && s.trim()) return s.trim();
+    }
+  }
+  return null;
+}

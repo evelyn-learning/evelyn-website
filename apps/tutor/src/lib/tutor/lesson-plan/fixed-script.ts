@@ -1331,8 +1331,17 @@ export function heldAdvanceFiresNow(input: {
   bracketed: boolean;
   prefetch: boolean;
   fixedScript: boolean;
+  /** Task 45 §7b: this reply ACCEPTS the tutor's "one more …, or move on?" offer. */
+  offerAcceptedReply?: boolean;
+  /** Task 45 §7b: acceptances already waited for in this part. */
+  offerWaits?: number;
 }): boolean {
   if (!input.held || !input.fixedScript || input.silent || input.bracketed || input.prefetch) return false;
+  // Task 45 §7b (voice run 23, 1240 s: "One more item." fired the held advance,
+  // the acceptance was logged against the summary's close offer and a grammar
+  // question followed on the summary page): the accepted item runs first —
+  // ask → answer — and the NEXT reply fires the advance. Capped per part.
+  if (input.offerAcceptedReply && (input.offerWaits ?? 0) < FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS) return false;
   return !!input.segmentId && input.segmentId === input.held.segId;
 }
 /** R2 — an offer / proposal ends the turn. A sentence that proposes a choice
@@ -1348,4 +1357,31 @@ export function isProposalQuestion(sentence: string | null | undefined): boolean
   if (!/[?？]\s*$/.test(t)) return false;
   if (/(?:ましょうか|ませんか|ますか)[？?]\s*$/.test(t) && /もう(?:一|ひと)|練習|次|進み|移り/.test(t)) return true;
   return PROPOSAL_LEAD_RE.test(t) && PROPOSAL_TOPIC_RE.test(t);
+}
+
+/** Task 45 §7b: acceptances of "one more …?" a held advance waits for, per part. */
+export const FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS = 2;
+
+/** Task 45 §5 (voice run 23, 865–876 s): a sentence that re-speaks a verdict
+ *  — "Your sentence is correct, and "for six months" fits well." — the shape
+ *  the no-ask continuation produced although its directive said "do not
+ *  evaluate, praise or confirm anything; do not repeat". An ask (ends with
+ *  "?") or a say / repeat instruction is never a verdict echo. Pure. */
+const VERDICT_ECHO_SUBJECT_RE = /\b(?:your|that|this|the)\s+(?:sentence|answer|reply|version)\b|\byou said (?:it|that)\b|\bwell (?:said|done)\b|\bthat['’]s (?:correct|right|exactly it)\b|["“「][^"”」]{6,}["”」]/i;
+const VERDICT_ECHO_AFFIRM_RE = /\b(?:is|was|sounds|works|fits)\s+(?:also\s+|now\s+|very\s+|exactly\s+|just\s+)?(?:correct|right|clear|good|fine|great|natural|perfect|well|exactly right)\b|\bfits (?:well|the|here)\b|\bworks (?:well|here)\b|\bworks[.!]?\s*$|\bis correct\b|\bwell (?:said|done)\b|\byou said it well\b|\bthat['’]s (?:correct|right)\b|正しい|合っています|よくできました|いいですね|完璧/i;
+const SAY_OR_REPEAT_ASK_RE = /\b(?:please\s+)?(?:say|repeat|try|read)\b[^.!?]*(?:once more|again|after me|one more time)|もう一度/i;
+export function isVerdictEchoSentence(sentence: string | null | undefined): boolean {
+  const s = (sentence ?? '').trim();
+  if (!s || /[?？]["”」]?\s*$/.test(s)) return false;
+  if (SAY_OR_REPEAT_ASK_RE.test(s)) return false;
+  return VERDICT_ECHO_SUBJECT_RE.test(s) && VERDICT_ECHO_AFFIRM_RE.test(s);
+}
+
+/** Task 45 §1 (voice run 23, 98 s → 118 s): a judge correction note planted
+ *  in one part of a fixed script is stale once the pointer has left that
+ *  part — volunteered or consumed there, the brain reads it against a
+ *  different question. An unscoped plant (no segId) is never stale. Pure. */
+export function judgeNoteStaleForPart(input: { plantedSegId: string | null | undefined; currentSegId: string | null | undefined; fixedScript: boolean }): boolean {
+  if (!input.fixedScript || !input.plantedSegId || !input.currentSegId) return false;
+  return input.plantedSegId !== input.currentSegId;
 }

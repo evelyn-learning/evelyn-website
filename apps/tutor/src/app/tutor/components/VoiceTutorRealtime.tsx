@@ -93,10 +93,10 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen, authoredCardOnCurrentPage } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen, authoredCardOnCurrentPage, transitionSentenceIndex, lastStudentSentenceCardOnPage } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue, offCardAskStripped, cardAskEngineFallbackLine, menuPresentedIn, menuEntryFallbackLine, menuPickPendingSuppressesArm } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead, proactiveOpenerAllowed } from '@/lib/tutor/lesson-plan/spoken-opener';
-import { detectPronunciationTarget, handwriteShownSentence, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation } from '@/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, handwriteShownSentence, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation, pronunciationItemRepeat } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
 import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
 import {
@@ -232,7 +232,7 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
-import { moveOnIgnored, moveOnRequestSpan, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, answeredCardQuestion, reasksCardQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness, isQuestionLeadIn, reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON, precheckSaysNeither, neitherStreakState, neitherStreakReasks, NEITHER_PENDING_MOVE_ON_NOTE, moveOnNoAskFallbackDue, replyAnsweredAsk, correctReplyReasks } from '@/lib/tutor/voice/correct-retry';
+import { moveOnIgnored, moveOnRequestSpan, MOVE_ON_IGNORED_REASON, repeatAskAfterTwoTries, repeatAskTriesAfterStudentTurn, repeatAskTriesAfterTutorTurn, REPEAT_ASK_AFTER_TWO_TRIES_REASON, type RepeatAskTries, reAskedCheckedCorrect, repeatAskThirdVersion, REPEAT_ASK_THIRD_VERSION_REASON, CORRECT_RETRY_NOTE, reAskedOwnSentence, reAskedModelSentence, REPEAT_AFTER_CORRECT_REASON, repeatAfterCorrectStandDown, cleanStudentSentence, sameQuestionThirdTime, probeCheckinDue, PROBE_CHECKIN_NOTE, probeReasks, turnAskGist, studentAnsweredAsk, SAME_QUESTION_THIRD_TIME_REASON, sameQuestionThirdTimeReason, askGistsSame, SAME_QUESTION_THIRD_TIME_PERSONAL_REASON, retryReasksQuestion, isStarterHint, sameQuestionMoveOnLine, NO_ATTEMPT_MOVE_ON_NOTE, noAttemptStreak, reasksAsk, noAttemptBudgetTurns, reasksAnsweredQuestion, answeredCardQuestion, reasksCardQuestion, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, answeredQuestionSentences, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE, expectedRepeatFor, isStrictRepeatAsk, isBoardReadAloud, asksToReadAloud, saidModelSentence, precheckCorrectness, isQuestionLeadIn, reAskedRecastOfCorrect, starterAskAlreadyMet, STARTER_ASK_ALREADY_MET_REASON, precheckSaysNeither, neitherStreakState, neitherStreakReasks, NEITHER_PENDING_MOVE_ON_NOTE, moveOnNoAskFallbackDue, replyAnsweredAsk, correctReplyReasks, cardAnsweredInSubstance } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote, needsHeadroomFor, requiredPhraseMissAction, withSilentClause } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
@@ -434,6 +434,7 @@ import {
   TUTOR_RETRY_PREAMBLE,
   TUTOR_FIXED_SCRIPT_OUTLINE,
   TUTOR_SELF_VOICE_ANSWER_END,
+  TUTOR_HELD_ADVANCE_WAITS_FOR_OFFER_ITEM, TUTOR_NOASK_VERDICT_ECHO_DROP, TUTOR_JUDGE_NOTE_PART_SCOPED, TUTOR_CARD_ANSWERED_IN_SUBSTANCE, TUTOR_RETRY_CARD, TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE, TUTOR_PRON_ITEM_REPEAT_KILL,
 } from '@/lib/tutor/orchestrator/flags';
 import { withRetryPreamble, heardSentencesNote } from '@/lib/tutor/voice/retry-preamble';
 import {
@@ -446,7 +447,7 @@ import { FIXED_SCRIPT_OFFER_CONTINUE_PREFIX, fixedScriptBrainAdvanceEntryNote, o
 import { isFixedScriptPlan, shouldRotatePlanContent, initialSegmentId, nextSegmentId, markSkippedSegments, overlongTurnThreshold, fixedScriptAutoAdvanceReason, fixedScriptAdvancedNote, fixedScriptAutoAdvanceLead, fixedScriptLevelAdvanceLead, mergePendingRuntimeNote, levelSetAdvanceTarget, holdAutoAdvanceForPronunciation, FIXED_SCRIPT_AUTO_ADVANCE_MAX_HELD_TURNS, holdAutoAdvanceForPendingAsk, isProposalQuestion, heldAdvanceFiresNow, holdAutoAdvanceForCorrectionCard, FIXED_SCRIPT_AUTO_ADVANCE_MAX_CORRECTION_HELD_TURNS, FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS, missingRequiredPhrases, scriptMissingAdvanceReason, needsLevelCaptureLead, LEVEL_CAPTURE_LEAD, FIXED_SCRIPT_LEVEL_MISSING_REASON, fixedScriptCloseReason, FIXED_SCRIPT_CLOSE_NOTE, fixedScriptCloseNote, fixedScriptCloseAllowed, fixedScriptLastSegmentId, FIXED_SCRIPT_CLOSE_REFUSED_NOTE, closeBeforeRequiredPhrasesDecision, CLOSE_BEFORE_REQUIRED_PHRASES_REASON, PREMATURE_FAREWELL_REASON, fixedScriptAnnouncedAdvanceLead, fixedScriptContinueDirective, isFixedScriptContinueDirective, segmentNeedsAutoCard, problemStatementOnBoard, problemCardIdOnBoard, PROBLEM_CARD_TOOLS, isFixedScriptCloseNote, moveOnThenCloseTranscript } from '@/lib/tutor/lesson-plan/fixed-script';
 import { validatorTtsHold, VALIDATOR_TTS_HOLD_MS } from '@/lib/tutor/voice/validator-tts-hold';
 import { fixedScriptCloseForcedAction, closeWrapPollDecision, dedupePartAnnouncement, endsWithRepeatAsk, endsWithSayOrListenAsk } from '@/lib/tutor/lesson-plan/announced-move';
-import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
+import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS, isVerdictEchoSentence, judgeNoteStaleForPart, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE } from '@/lib/tutor/lesson-plan/fixed-script';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -1633,6 +1634,8 @@ export function VoiceTutorRealtime({
   // Read by the mic tap and the speech-stop callback (both memoised elsewhere).
   const sendPronunciationClipRef = useRef(sendPronunciationClip);
   sendPronunciationClipRef.current = sendPronunciationClip;
+  /** Task 45 §7a: every reference text armed in each part (pronunciation_item_repeated). */
+  const pronunciationPractisedRef = useRef<Map<string, string[]>>(new Map());
   const armPronunciationCheck = (referenceText: string, kind: string) => {
     const capture = clipCaptureRef.current;
     if (!capture) return;
@@ -1642,6 +1645,9 @@ export function VoiceTutorRealtime({
     // Task 18 §C: every arm (tool, auto, re-arm) is the target a later
     // "say it once more" re-arms.
     lastPronunciationTargetRef.current = { referenceText, kind, segId: currentSegmentIdRef.current ?? '' };
+    // Task 45 §7a: the part's practised items (a re-arm of the same item repeats here, by design).
+    const practisedSeg = currentSegmentIdRef.current ?? '';
+    pronunciationPractisedRef.current.set(practisedSeg, [...(pronunciationPractisedRef.current.get(practisedSeg) ?? []), referenceText]);
     onDebugEvent?.('pronunciation_armed', `${kind} "${referenceText.slice(0, 80)}"`);
     clearPronunciationNoSpeechTimer();
     clearPronunciationArmMaxTimer();
@@ -4259,6 +4265,8 @@ export function VoiceTutorRealtime({
   const autoAdvanceCorrectionHeldRef = useRef(0);
   /** Task 44 R1: a due budget / time advance held because the turn ended with a question — fires at the start of the reply turn. */
   const heldAdvanceForAskRef = useRef<{ segId: string | null; next: string; reason: string } | null>(null);
+  /** Task 45 §7b: acceptances of "one more …?" the held advance waited for, per part. */
+  const heldAdvanceOfferWaitsRef = useRef<Map<string, number>>(new Map());
   /** Task 43 §F (final review I-5): parts whose unchecked required phrases already held one turn. */
   const requiredPhrasesHoldSegsRef = useRef<Set<string>>(new Set());
   // Task 26 §A: segments whose transition offer was planted (one per
@@ -5480,7 +5488,7 @@ export function VoiceTutorRealtime({
   // when the same call carried the correction (judgeNoteMootByCorrectionCard).
   // Task 39 fix round 1 (R26-2): the student turn whose brain advance was refused offer-first.
   const offerFirstAdvanceRefusedForRef = useRef<string | null>(null);
-  const judgeNotePlantRef = useRef<{ note: string; kind: string; callSeq: number; /** Task 39 fix round 1 (I-1) */ issueKinds?: (string | undefined)[] } | null>(null);
+  const judgeNotePlantRef = useRef<{ note: string; kind: string; callSeq: number; /** Task 39 fix round 1 (I-1) */ issueKinds?: (string | undefined)[]; /** Task 45 §1: the part the note was planted in */ segId?: string | null } | null>(null);
   const correctionCardCallSeqRef = useRef(-1);
   // 2026-10-03: text of the last DETERMINISTIC note planted in the slot above
   // (relation-step witness note; answer-dispute note decided by exact
@@ -5544,6 +5552,17 @@ export function VoiceTutorRealtime({
         correctionNoteTimerRef.current = setTimeout(fire, CORRECTION_NOTE_TIMEOUT_MS);
         return;
       }
+      // Task 45 §1 (voice run 23, 98 s → 118 s): a note planted in a part the
+      // pointer has left is dropped unspent — read against a different question
+      // the brain retracted a "Good." that was never about it.
+      if (pendingJudgeCorrectionNoteRef.current && TUTOR_JUDGE_NOTE_PART_SCOPED && judgeNoteStaleForPart({ plantedSegId: judgeNotePlantRef.current?.segId ?? null, currentSegId: currentSegmentIdRef.current, fixedScript: isFixedScriptPlan(lessonPlanRef.current) })) {
+        const judgeNoteStaleWhere = 'at the deadline';
+        onDebugEvent?.('judge_correction_note_dropped', `stale part: planted in "${judgeNotePlantRef.current?.segId}", pointer at "${currentSegmentIdRef.current}" (${judgeNoteStaleWhere})`);
+        pendingJudgeCorrectionNoteRef.current = null;
+        judgeNotePlantRef.current = null;
+        if (correctionNoteTimerRef.current) { clearTimeout(correctionNoteTimerRef.current); correctionNoteTimerRef.current = null; }
+      }
+      if (!pendingJudgeCorrectionNoteRef.current) return;
       // Live check 6 (portal-63ee9f2c, 07:07:13Z): the tutor had just asked
       // the misconception question and the student was reading; the deadline
       // fired, the brain took the note as its turn and ANSWERED ITS OWN
@@ -6362,6 +6381,16 @@ export function VoiceTutorRealtime({
   const handleWhiteboardCommandRef = useRef<((commands: WhiteboardCommand[]) => Promise<WhiteboardCommandResult>) | null>(null);
   const flushDeferredPageAtTurnEndNow = useCallback((why: string) => {
     const deferred = pendingAdvanceNewPageRef.current;
+    // Task 45 §4: with the validator TTS hold the brain goes idle before the
+    // audio starts — the page would flip ahead of the whole turn. A turn that
+    // says the move leaves the break to its anchored batch (or to audio drained).
+    if (TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && why === 'brain idle' && isFixedScriptPlan(lessonPlanRef.current)) {
+      const tsIdx = transitionSentenceIndex(turnNarrationRef.current);
+      if (tsIdx !== null && ttsPlaybackStartedCountRef.current <= tsIdx) {
+        onDebugEvent?.('auto_newpage_on_advance_flush_waits', `transition sentence ${tsIdx} not yet spoken (${why})`);
+        return;
+      }
+    }
     if (!flushDeferredPageAtTurnEnd({
       pending: deferred,
       brainBusy: brainBusyRef.current,
@@ -6902,7 +6931,7 @@ export function VoiceTutorRealtime({
   // arrives AFTER the turn's `done`, so the live TTS dispatch count no
   // longer describes its introducing sentence — the server tells us which
   // 1-based sentence spoke the content and the render buffers against THAT.
-  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean; /** Task 21 §D3: the client's pronunciation-target card (a model to repeat) */ pronunciationModel?: boolean; /** Task 43 §J: the auto card is a CORRECTION of the student's sentence — on an advancing turn it goes on the new page */ correctionCard?: boolean; /** Task 23 §A: the auto card is the STUDENT's sentence (echo / correction / checked / affirmed / recast) */ studentSentenceCard?: boolean }): Promise<WhiteboardCommandResult> => {
+  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean; /** Task 21 §D3: the client's pronunciation-target card (a model to repeat) */ pronunciationModel?: boolean; /** Task 43 §J: the auto card is a CORRECTION of the student's sentence — on an advancing turn it goes on the new page */ correctionCard?: boolean; /** Task 45 §4: this auto card paints on the page being left — the pending part page waits for the transition-anchored batch */ holdDeferredPage?: boolean; /** Task 45 §4: this batch carries the part page break, anchored to the transition sentence */ pageBreakOnTransition?: boolean; /** Task 23 §A: the auto card is the STUDENT's sentence (echo / correction / checked / affirmed / recast) */ studentSentenceCard?: boolean }): Promise<WhiteboardCommandResult> => {
     turnHadToolCallRef.current = true;
     // Structured entry log — gives us the shape of every batch arriving
     // at the handler (from Realtime function_call, from text-parse, or
@@ -10097,7 +10126,7 @@ export function VoiceTutorRealtime({
       // Task 14 §K: an auto sentence card of the turn that just ENDED (the
       // client advanced after it) belongs to the part being left — it stays
       // on that page and the segment page waits for the new part's content.
-      const autoCardOfLeftPart = opts?.sentenceBoardAuto === true && pendingAdvanceNewPageRef.current.afterTurn === true;
+      const autoCardOfLeftPart = opts?.sentenceBoardAuto === true && (pendingAdvanceNewPageRef.current.afterTurn === true || opts?.holdDeferredPage === true);
       const hasFreshTeaching = !autoCardOfLeftPart && processed.some((cmd) => {
         const a = String(cmd.action);
         if (!isTeachingRenderAction(a) && a !== 'showSegmentCard') return false;
@@ -10194,7 +10223,7 @@ export function VoiceTutorRealtime({
         console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${pageTitle}")`);
         segmentPageFlushedTurnRef.current = pageTurnRef.current;
         segmentPageOpenedThisTurnRef.current = { turn: pageTurnRef.current, segId: deferred.segmentId };
-        onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${pageTitle}${orderedForBreak.moved.length > 0 ? ` after ${orderedForBreak.moved.length} student card(s)` : ''}`);
+        onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${pageTitle}${orderedForBreak.moved.length > 0 ? ` after ${orderedForBreak.moved.length} student card(s)` : ''}${opts?.pageBreakOnTransition ? ` (on the transition sentence ${opts.anchorSentence})` : ''}`);
         if (titleDecision.retitled) {
           onDebugEvent?.('auto_newpage_retitled_from_render', `${deferred.segmentId}: "${deferred.title}" → "${pageTitle}"`);
         }
@@ -13098,7 +13127,14 @@ export function VoiceTutorRealtime({
       // Task 44 R1: a budget / time advance held for an open ask fires at the
       // start of the student's reply turn — the brain is told as a FACT and
       // closes the old ask in one sentence before the move (transition_ask).
-      if (heldAdvanceFiresNow({ held: heldAdvanceForAskRef.current, segmentId: currentSegmentIdRef.current, silent, bracketed: isBracketed, prefetch: !!opts?.prefetchOnly, fixedScript: isFixedScriptPlan(lessonPlanRef.current) })) {
+      // Task 45 §7b (voice run 23, 1240 s): a reply that ACCEPTS the tutor's
+      // "one more …, or move on?" offer serves the item first — the held
+      // advance waits one more ask → answer cycle (capped per part).
+      const haLastTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? null;
+      const haOfferAccepted = TUTOR_HELD_ADVANCE_WAITS_FOR_OFFER_ITEM && !silent && !isBracketed && !opts?.prefetchOnly
+        && offerAsked(haLastTutor) && offerAccepted(transcript, haLastTutor);
+      if (heldAdvanceFiresNow({ held: heldAdvanceForAskRef.current, segmentId: currentSegmentIdRef.current, silent, bracketed: isBracketed, prefetch: !!opts?.prefetchOnly, fixedScript: isFixedScriptPlan(lessonPlanRef.current),
+        offerAcceptedReply: haOfferAccepted, offerWaits: heldAdvanceOfferWaitsRef.current.get(currentSegmentIdRef.current ?? '') ?? 0 })) {
         const ha = heldAdvanceForAskRef.current!;
         const haPlan = lessonPlanRef.current!;
         const haSeg = ha.segId ?? '';
@@ -13125,6 +13161,11 @@ export function VoiceTutorRealtime({
         pendingRuntimeNoteUrgentRef.current = true;
         runtimeNoteHeldTurnsRef.current = 0;
         onDebugEvent?.('fixed_script_auto_advance', `"${haSeg}" → "${haNext}" reason=${ha.reason} (on the reply)`);
+      } else if (haOfferAccepted && heldAdvanceForAskRef.current && heldAdvanceForAskRef.current.segId === currentSegmentIdRef.current) {
+        const haSegW = currentSegmentIdRef.current ?? '';
+        const haWaits = (heldAdvanceOfferWaitsRef.current.get(haSegW) ?? 0) + 1;
+        heldAdvanceOfferWaitsRef.current.set(haSegW, haWaits);
+        onDebugEvent?.('fixed_script_auto_advance_held_offer_item', `"${haSegW}" → "${heldAdvanceForAskRef.current.next}" waits for the accepted item ${haWaits}/${FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS} · "${transcript.slice(0, 40)}"`);
       }
       // Task 33 §C (GDI bot run r8, 1153–1220 s): the menu part's choice was
       // asked MENU_ASK_CAP times with no pick — this reply is no pick either,
@@ -13627,6 +13668,11 @@ export function VoiceTutorRealtime({
       // once answered, is not re-asked in ANY part — the card question only
       // (repeat / say asks and new questions stand); the recap guard above
       // already covers the closing part.
+      // Task 45 §5 (voice run 23, 865–876 s): the no-ask continuation turn's
+      // leading verdict-echo sentences are dropped (the directive already says
+      // "do not confirm; do not repeat" — the engine holds it).
+      const isNoaskContinueTurn = transcript === FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE;
+      let noaskEchoLeading = true;
       const answeredCardQ: string | null = TUTOR_ANSWERED_CARD_REASK_DROP && !answeredGuardQs.length && isFixedScriptPlan(lessonPlanRef.current) && currentSegmentIdRef.current
         ? answeredCardQuestion(segmentCardStatement(lessonPlanRef.current, currentSegmentIdRef.current), answeredInPartRef.current.get(currentSegmentIdRef.current) ?? []) : null;
       // Task 20 §B1: one premature_farewell kill per turn.
@@ -13646,6 +13692,8 @@ export function VoiceTutorRealtime({
       let twoTriesRejected = false;
       // Task 29 §A3: once per turn — a turn under a pending offer note that never offered.
       let offerMissingRejected = false;
+      // Task 45 §7a: the repeated-item retry runs once per turn.
+      let pronRepeatRejected = false;
       // Task 33 §A1: offer_reasked_after_accept retried once per turn.
       let offerReaskRejected = false;
       // Task 39 §E: offer_accepted_no_ask retried once per turn.
@@ -14208,6 +14256,16 @@ export function VoiceTutorRealtime({
       // hold it for the next REAL student-turn response instead.
       brainCallSeqRef.current += 1;   // one per brain call; read by the praise-exclusion note's expiry
       expireStaleRelationStepNote();
+      // Task 45 §1 (voice run 23, 98 s → 118 s): a note planted in a part the
+      // pointer has left is dropped unspent — read against a different question
+      // the brain retracted a "Good." that was never about it.
+      if (pendingJudgeCorrectionNoteRef.current && TUTOR_JUDGE_NOTE_PART_SCOPED && judgeNoteStaleForPart({ plantedSegId: judgeNotePlantRef.current?.segId ?? null, currentSegId: currentSegmentIdRef.current, fixedScript: isFixedScriptPlan(lessonPlanRef.current) })) {
+        const judgeNoteStaleWhere = 'at the reply';
+        onDebugEvent?.('judge_correction_note_dropped', `stale part: planted in "${judgeNotePlantRef.current?.segId}", pointer at "${currentSegmentIdRef.current}" (${judgeNoteStaleWhere})`);
+        pendingJudgeCorrectionNoteRef.current = null;
+        judgeNotePlantRef.current = null;
+        if (correctionNoteTimerRef.current) { clearTimeout(correctionNoteTimerRef.current); correctionNoteTimerRef.current = null; }
+      }
       if (pendingJudgeCorrectionNoteRef.current && shouldConsumeJudgeCorrectionNote(transcript)) {
         runTranscript = `${pendingJudgeCorrectionNoteRef.current}\n\n${runTranscript}`;
         pendingJudgeCorrectionNoteRef.current = null;
@@ -15327,6 +15385,7 @@ export function VoiceTutorRealtime({
         const ownProblemsPaintedThisAttempt: string[] = [];
         const attemptStartMs = Date.now();
         attemptStreamedSentencesRef.current = [];
+        noaskEchoLeading = true;
         // Task 43 §F (voice run 21): on a validator-prone turn the TTS gate
         // below stays closed until the end-of-turn validators pass (capped at
         // VALIDATOR_TTS_HOLD_MS), so a kill drops the text pre-audio instead
@@ -15343,6 +15402,9 @@ export function VoiceTutorRealtime({
           repeatAttempts: repeatAskTriesRef.current?.segmentId === (turnStartSegmentId ?? '') ? (repeatAskTriesRef.current?.attempts ?? 0) : 0,
           moveOnRequested: !!moveOnRequestSpan(transcript),
           requiredPhrasesPending: rpPendingHold,
+          // Task 45 §7a: the pronunciation part after its first item (pronunciation_item_repeated).
+          pronunciationRepeatProne: TUTOR_PRON_ITEM_REPEAT_KILL && (pronunciationPractisedRef.current.get(currentSegmentIdRef.current ?? '')?.length ?? 0) > 0
+            && !!pronunciationTargetsOf(lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.metadata),
         });
         if (rpPendingHold && validatorHold) requiredPhrasesHoldSegsRef.current.add(currentSegmentIdRef.current ?? '');
         if (validatorHold) onDebugEvent?.('validator_tts_hold_started', `attempt ${attempt}`);
@@ -17539,6 +17601,13 @@ export function VoiceTutorRealtime({
                       continue;
                     }
                   }
+                  // Task 45 §5: a no-ask continuation's leading verdict echo.
+                  if (noaskEchoLeading && TUTOR_NOASK_VERDICT_ECHO_DROP && isNoaskContinueTurn && isVerdictEchoSentence(updatedSentence)) {
+                    console.warn('[brain-orchestrator] dropped no-ask continuation verdict echo:', JSON.stringify(updatedSentence.slice(0, 100)));
+                    onDebugEvent?.('noask_continue_verdict_echo_dropped', `"${updatedSentence.slice(0, 80)}"`);
+                    continue;
+                  }
+                  noaskEchoLeading = false;
                   // Task 43 §D: the part's answered card question re-asked (any part).
                   if (answeredCardQ && reasksCardQuestion(updatedSentence, answeredCardQ)) {
                     onDebugEvent?.('answered_card_question_reask_dropped', `"${updatedSentence.slice(0, 80)}" ≈ "${answeredCardQ.slice(0, 60)}"`);
@@ -20659,6 +20728,26 @@ export function VoiceTutorRealtime({
         // offer directive; a retry still without it stands (offer unmade, the
         // hold then runs as before). An announced move or advance_lesson
         // closed the part itself and is exempt.
+        // Task 45 §7a (voice run 23, 1158 s): a pronunciation item the learner
+        // already practised in this part — retried pre-audio with the practised
+        // list. A re-ask of the CURRENT item ("once more") is the plan's own
+        // coaching and exempt (the last armed item is left out then).
+        if (TUTOR_PRON_ITEM_REPEAT_KILL && !attemptKilled && attemptText && !pronRepeatRejected && isFixedScriptPlan(lessonPlanRef.current)) {
+          const prSeg = currentSegmentIdRef.current ?? '';
+          const prTargets = pronunciationTargetsOf(lessonPlanRef.current?.segments.find((sg) => sg.id === prSeg)?.metadata);
+          const prPractisedAll = pronunciationPractisedRef.current.get(prSeg) ?? [];
+          const prReask = /\bonce more\b|\bagain\b|\bone more time\b|もう一度/i.test(attemptText);
+          const prPractised = prReask && prPractisedAll.length ? prPractisedAll.slice(0, -1) : prPractisedAll;
+          const pronRepeat = prTargets && prPractised.length
+            ? pronunciationItemRepeat({ turnText: attemptText, targets: prTargets, practised: prPractised, shownSentence: turnShownSentenceRef.current, studentLast: sentenceStressRef.current.studentLast })
+            : null;
+          if (pronRepeat) {
+            pronRepeatRejected = true;
+            rejectionsThisAttempt.push({ action: 'pronunciation_item_repeated', reason: pronRepeat.reason });
+            await performKill();
+            onDebugEvent?.('pronunciation_item_repeated', `"${pronRepeat.repeated.slice(0, 60)}" heard=${turnNarrationRef.current.length - attemptNarrationStart}`);
+          }
+        }
         if (TUTOR_TRANSITION_OFFER_SPOKEN && TUTOR_FIXED_SCRIPT_TRANSITIONS && !attemptKilled && attemptText && !/^\s*\[/.test(transcript)) {
           const toSeg = currentSegmentIdRef.current ?? '';
           const toPlan = lessonPlanRef.current;
@@ -21227,7 +21316,13 @@ export function VoiceTutorRealtime({
                       pendingNote: pendingJudgeCorrectionNoteRef.current,
                       deterministicNote: deterministicCorrectionNoteRef.current,
                     });
-                    if (advisoryCorrectionNote && !advisoryPlant.plant) {
+                    // Task 45 §1 (voice run 23, 98 s): the level check's answers are not
+                    // graded (the board skips them too) — no advisory note from it.
+                    const judgeNoteLevelCheck = TUTOR_JUDGE_NOTE_PART_SCOPED && isFixedScriptPlan(lessonPlanRef.current)
+                      && lessonPlanRef.current?.segments.find((sg) => sg.id === turnStartSegmentId)?.metadata?.skipWhenLevelKnown === true;
+                    if (advisoryCorrectionNote && judgeNoteLevelCheck) {
+                      onDebugEvent?.('judge_correction_note_skipped', `level check · advisory: ${noteworthyAdvisoryIssues[0].claim.slice(0, 60)}`);
+                    } else if (advisoryCorrectionNote && !advisoryPlant.plant) {
                       skippedJudgeNoteRef.current = advisoryCorrectionNote;
                       onDebugEvent?.('judge_correction_note_skipped', `${advisoryPlant.reason} · advisory: ${noteworthyAdvisoryIssues[0].claim.slice(0, 60)}`);
                     } else if (advisoryCorrectionNote && judgeNoteMootByCorrectionCard({ noteKind: advisoryNotePlan?.mode ?? '', turnCorrectionCard: correctionCardCallSeqRef.current === brainCallSeqRef.current })) {
@@ -21235,7 +21330,7 @@ export function VoiceTutorRealtime({
                       onDebugEvent?.('judge_correction_note_dropped', 'turn carried the correction');
                     } else if (advisoryCorrectionNote) {
                       pendingJudgeCorrectionNoteRef.current = advisoryCorrectionNote;
-                      judgeNotePlantRef.current = { note: advisoryCorrectionNote, kind: advisoryNotePlan?.mode ?? '', callSeq: brainCallSeqRef.current, issueKinds: noteworthyAdvisoryIssues.map((i) => readJudgeIssueFields(i).issueKind) };
+                      judgeNotePlantRef.current = { note: advisoryCorrectionNote, kind: advisoryNotePlan?.mode ?? '', callSeq: brainCallSeqRef.current, issueKinds: noteworthyAdvisoryIssues.map((i) => readJudgeIssueFields(i).issueKind), segId: turnStartSegmentId ?? null };
                       armCorrectionNoteDeadline();   // R50 T3
                       onDebugEvent?.('judge_correction_note_planted', `advisory: ${noteworthyAdvisoryIssues[0].claim.slice(0, 60)}`);
                     }
@@ -22791,6 +22886,19 @@ export function VoiceTutorRealtime({
           if (!/^\s*\[/.test(transcript) && turnStartSegmentId && (subject === 'languages' || isFixedScriptPlan(lessonPlanRef.current))) {
             const aqNew = answeredQuestionSentences(prevTutor, transcript);
             if (aqNew.length) answeredInPartRef.current.set(turnStartSegmentId, [...(answeredInPartRef.current.get(turnStartSegmentId) ?? []), ...aqNew].slice(-6));
+            // Task 45 §2b (voice run 23, 180 s → 203 s): the card question answered
+            // in substance — the tutor's paraphrase of it answered correctly.
+            const aqPc = verdictPrecheckRef.current;
+            const aqSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === turnStartSegmentId);
+            if (TUTOR_CARD_ANSWERED_IN_SUBSTANCE && isFixedScriptPlan(lessonPlanRef.current) && aqPc && aqPc.verdict === 'correct' && aqPc.answers === 'open_question' && aqSeg) {
+              const aqCard = segmentCardStatement(lessonPlanRef.current, turnStartSegmentId);
+              const aqAnswered = answeredInPartRef.current.get(turnStartSegmentId) ?? [];
+              if (aqCard && !answeredCardQuestion(aqCard, aqAnswered)
+                && cardAnsweredInSubstance({ cardStatement: aqCard, hints: (aqSeg as { hints?: string[] }).hints ?? [], tutorQuestion: prevTutor, studentAnswer: transcript })) {
+                answeredInPartRef.current.set(turnStartSegmentId, [...aqAnswered, aqCard].slice(-6));
+                onDebugEvent?.('card_question_answered_in_substance', `"${aqCard.slice(0, 60)}" ← "${transcript.slice(0, 50)}"`);
+              }
+            }
           }
           const reaskedEarlier = reAskedEarlierQuestion(answeredQuestionsRef.current, prevTutor, fullText);
           if (reaskedEarlier && !pendingCorrectRetryNoteRef.current) {
@@ -22912,6 +23020,13 @@ export function VoiceTutorRealtime({
         // Task 27 §B (GDI run 14, 493 s): with a part page pending, the part
         // card waits for the turn's student cards (orderTurnEndDispatches).
         let deferredSegmentCardRun: (() => Promise<void>) | null = null;
+        // Task 45 §4 (voice run 23, 721 s / 1010 s): the page turns when the tutor
+        // SAYS the move — the turn's student / correction cards paint on the old
+        // page at their own sentence; the part card's batch carries the break,
+        // anchored to the transition sentence (render-sync).
+        const transitionAnchor = TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && !!pendingAdvanceNewPageRef.current && isFixedScriptPlan(lessonPlanRef.current)
+          ? transitionSentenceIndex(turnNarrationRef.current) : null;
+        if (transitionAnchor !== null) onDebugEvent?.('page_break_anchored', `sentence ${transitionAnchor}: "${(turnNarrationRef.current[transitionAnchor] ?? '').slice(0, 60)}"`);
         if (TUTOR_SEGMENT_CARD_AUTO && !opts?.prefetchOnly && totalSentenceCount > 0) {
           const acPlan = lessonPlanRef.current;
           const acSegId = currentSegmentIdRef.current ?? '';
@@ -22945,7 +23060,7 @@ export function VoiceTutorRealtime({
             } as unknown as WhiteboardCommand;
             const runSegmentCard = async () => {
               try {
-                const res = await handleWhiteboardCommand([cmd], { anchorSentence: 0 });
+                const res = await handleWhiteboardCommand([cmd], { anchorSentence: transitionAnchor ?? 0, ...(transitionAnchor !== null ? { pageBreakOnTransition: true } : {}) });
                 onDebugEvent?.('segment_card_auto', `${acSegId}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'} "${acStatement.slice(0, 50)}"`);
               } catch { /* the turn stands without the card */ }
             };
@@ -23006,6 +23121,9 @@ export function VoiceTutorRealtime({
             } : {}),
             // Task 43 §M (voice run 21, image 92): the recap part cards corrections only.
             recapPart: TUTOR_RECAP_CORRECTION_CARDS_ONLY && answeredGuardPart(lessonPlanRef.current, turnStartSegmentId),
+            // Task 45 §3 (voice run 23, 374 s / 646 s): the affirmed retry is carded; an elicited one-word fix repaints the student's card.
+            retryCard: TUTOR_RETRY_CARD,
+            lastStudentCard: TUTOR_RETRY_CARD ? lastStudentSentenceCardOnPage(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>) : null,
             // Task 30 §J1: the own-answer card needs a correct / partly-correct check.
             ...(TUTOR_LEVEL_CHECK_CARD_NEEDS_VERDICT ? { levelCheckVerdict: boardPc?.verdict ?? null } : {}),
             // Task 39 §C2 (voice run 20, 431 s): the check / judge marked a correction —
@@ -23045,7 +23163,7 @@ export function VoiceTutorRealtime({
             // spoke paints as the reply starts, not after its last sentence.
             const anchor = autoCardAnchor(narrationAnchor, studentSentenceCard);
             const anchorLabel = narrationAnchor === undefined && anchor === 0 ? 'start' : String(anchor ?? 'live');
-            const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard, correctionCard: card.kind === 'correction' } : { sentenceBoardAuto: true, studentSentenceCard, correctionCard: card.kind === 'correction' });
+            const res = await handleWhiteboardCommand([cmd], anchor !== undefined ? { anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard, correctionCard: card.kind === 'correction', holdDeferredPage: transitionAnchor !== null } : { sentenceBoardAuto: true, studentSentenceCard, correctionCard: card.kind === 'correction' , holdDeferredPage: transitionAnchor !== null });
             const placedId = res?.assignedIds?.[0];
             for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
             // Task 24 §F (GDI run 12, 269 s): this brain call corrected the
@@ -23069,7 +23187,7 @@ export function VoiceTutorRealtime({
           // part page), then any other card; no page pending ⇒ stream order.
           const turnEndPlanned = orderTurnEndDispatches([
             ...(deferredSegmentCardRun ? [{ kind: 'segment' as const, run: deferredSegmentCardRun }] : []),
-            ...cards.map((card) => ({ kind: (TUTOR_CORRECTION_CARD_ON_NEW_PAGE && card.kind === 'correction' ? 'correction' : card.kind === 'correction' || !!card.source ? 'student' : 'other') as 'student' | 'correction' | 'other', run: () => dispatchBoardCard(card) })),
+            ...cards.map((card) => ({ kind: (TUTOR_CORRECTION_CARD_ON_NEW_PAGE && transitionAnchor === null && card.kind === 'correction' ? 'correction' : card.kind === 'correction' || !!card.source ? 'student' : 'other') as 'student' | 'correction' | 'other', run: () => dispatchBoardCard(card) })),
           ], !!deferredSegmentCardRun);
           deferredSegmentCardRun = null;
           if (turnEndPlanned.length > 1 && turnEndPlanned[0]!.kind === 'student' && turnEndPlanned.some((p) => p.kind === 'segment')) {

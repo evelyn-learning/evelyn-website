@@ -23,6 +23,8 @@ import { normaliseDigitsToWords } from '../src/lib/tutor/voice/digit-words';
 import { turnCorrectsStudentSentence } from '../src/lib/tutor/voice/sentence-board';
 import { planSentenceBoard as planSentenceBoard38, isAckTransitionLine, cardContentWordCount, CARD_MIN_CONTENT_WORDS, wholeSentenceRecastCard, noteCorrectionCard, judgeNoteCardSourceAllowed } from '../src/lib/tutor/voice/sentence-board';
 import { isSentenceOnlyBatch, keepSentenceBatchOnPage } from '../src/lib/tutor/whiteboard/page-grouping';
+import { elicitedWordFix as elicitedWordFix45, planSentenceBoard as planSentenceBoard45 } from '../src/lib/tutor/voice/sentence-board';
+import { lastStudentSentenceCardOnPage as lastStudentSentenceCardOnPage45 } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -203,7 +205,7 @@ test('A: the auto card goes through handleWhiteboardCommand with its anchor, nev
   const at = vtr.indexOf("'sentence_board_auto'");
   const block = vtr.slice(at - 2500, at + 200);
   // Task 23 §A: the call also says whether the card is the student's sentence.
-  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard, correctionCard: card\.kind === 'correction' \} : \{ sentenceBoardAuto: true, studentSentenceCard, correctionCard: card\.kind === 'correction' \}\)/.test(block), 'normal board path, marked as the auto card (Task 43 §J: and whether it is the correction)');
+  assert.ok(/await handleWhiteboardCommand\(\[cmd\], anchor !== undefined \? \{ anchorSentence: anchor, sentenceBoardAuto: true, studentSentenceCard, correctionCard: card\.kind === 'correction', holdDeferredPage: transitionAnchor !== null \} : \{ sentenceBoardAuto: true, studentSentenceCard, correctionCard: card\.kind === 'correction' , holdDeferredPage: transitionAnchor !== null \}\)/.test(block), 'normal board path, marked as the auto card (Task 43 §J: and whether it is the correction)');
   assert.ok(/autoSentenceCardIdsRef\.current\.add\(id\)/.test(vtr.slice(at - 2500, at + 600)), 'auto card ids remembered');
   assert.ok(/sentenceAnchorIndex\(turnNarrationRef\.current, card\.sentence\)/.test(block), 'anchored to its spoken sentence');
   assert.ok(!/onWhiteboardCommand\(\[cmd\]\)/.test(block), 'no raw opener-fallback paint');
@@ -1773,6 +1775,42 @@ test('43 G2: turnCorrectsStudentSentence — the turn carries a correction card 
   assert.equal(turnCorrectsStudentSentence('Good, that sentence came out clearly. Now, would you like to practice your pronunciation?', 'I told everyone about the event and its benefits.'), false);
   assert.equal(turnCorrectsStudentSentence('Great, let\'s begin. What are your main responsibilities at work?', 'Yes, I am ready.'), false);
   assert.equal(turnCorrectsStudentSentence('Anything.', null), false);
+});
+
+
+// ── Task 45 §3 (voice run 23, embed-1793747507104) ──
+test('45 §3a: an elicited one-word fix repaints the student\'s card with the substitution (374 s: "presentations or presentation?" → "presentations." — no card)', () => {
+  const prev = 'Let\'s polish one word: is it "presentations" or "presentation" here? Which one do you think fits?';
+  const card = 'I have learned how to create good presentation for my boss.';
+  const verdict = 'Yes, "presentations" is right, because you make more than one presentation for your boss. Would you like one more practice sentence on the present perfect, or shall we move on to the past simple?';
+  assert.deepEqual(elicitedWordFix45(prev, 'presentations.', card, verdict), { sentence: 'I have learned how to create good presentations for my boss.', emphasis: ['presentations'] });
+  assert.equal(elicitedWordFix45(prev, 'presentation.', card, 'Not quite — "presentations" is the plural we need here.'), null, 'the alternative already on the card is no fix');
+  assert.equal(elicitedWordFix45(prev, 'I think presentations because I make many of them for my boss.', card, verdict), null, 'a full-sentence reply is not a one-word pick');
+  assert.equal(elicitedWordFix45('Could you say that sentence again?', 'presentations.', card, verdict), null, 'no choice question — no fix');
+  assert.equal(elicitedWordFix45(prev, 'presentations.', null, verdict), null, 'no student card on the page');
+  assert.equal(elicitedWordFix45(prev, 'presentations.', card, 'Hmm, think again: you make many of them.'), null, 'the tutor did not confirm the pick');
+  // through the planner: the fix is the turn's correction card
+  const cards = planSentenceBoard45({ tutorText: verdict, studentLast: 'presentations.', renderedThisTurn: false, prevTutorText: prev, retryCard: true, lastStudentCard: card });
+  assert.equal(cards.length, 1); assert.equal(cards[0]!.kind, 'correction'); assert.equal(cards[0]!.sentence, 'I have learned how to create good presentations for my boss.'); assert.deepEqual(cards[0]!.emphasis, ['presentations']);
+  assert.deepEqual(planSentenceBoard45({ tutorText: verdict, studentLast: 'presentations.', renderedThisTurn: false, prevTutorText: prev, lastStudentCard: card }), [], 'flag off (retryCard absent): unchanged');
+});
+test('45 §3b: after a retry ask, the affirmed retry is carded whatever the precheck said (646 s: precheck partly_correct blocked "We discussed business at the conference.")', () => {
+  const prev = 'Good. "We discussed business" is a clear answer. Could you say the sentence in the past simple, starting with "We discussed…"?';
+  const tutor = 'Good, "We discussed business at the conference" is a clear past simple sentence, and "discussed" is the right past form. Do you want one more practice sentence on the past simple, or shall we move on to the conversation?';
+  const base = { tutorText: tutor, studentLast: 'We discussed business at the conference.', renderedThisTurn: false, prevTutorText: prev, correctionMarked: true, studentCorrect: false };
+  assert.deepEqual(planSentenceBoard45(base), [], 'before: the wrong precheck verdict left nothing to card');
+  const cards = planSentenceBoard45({ ...base, retryCard: true });
+  assert.equal(cards.length, 1); assert.equal(cards[0]!.kind, 'model'); assert.equal(cards[0]!.sentence.replace(/\.$/, ''), 'We discussed business at the conference');
+  // a retry the tutor corrects AGAIN is not affirmed
+  assert.equal(planSentenceBoard45({ ...base, retryCard: true, tutorText: 'Almost — "discussed" should be followed by the topic: "We discussed the business plan at the conference." Say it once more.' }).some((c) => c.kind === 'model' && c.sentence === 'We discussed business at the conference.'), false);
+  // the previous turn was no retry ask — the ordinary rules apply
+  assert.deepEqual(planSentenceBoard45({ ...base, retryCard: true, prevTutorText: 'What did you discuss with him?' }), []);
+  // the last student sentence card on the current page (both command shapes)
+  assert.equal(lastStudentSentenceCardOnPage45([{ action: 'newPage' }, { action: 'showSentence', sentence: 'A b c.' }, { action: 'showSentence', data: { sentence: 'B c d.' } }]), 'B c d.');
+  assert.equal(lastStudentSentenceCardOnPage45([{ action: 'showSentence', sentence: 'A b c.' }, { action: 'newPage' }]), null);
+  const vtr45 = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr45.includes('retryCard: TUTOR_RETRY_CARD,'), 'VTR passes retryCard');
+  assert.match(vtr45, /lastStudentCard: TUTOR_RETRY_CARD \? lastStudentSentenceCardOnPage\(whiteboardCommandsRef\.current as unknown as Array<\{ action: string \} & Record<string, unknown>>\) : null,/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

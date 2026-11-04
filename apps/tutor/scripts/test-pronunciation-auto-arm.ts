@@ -9,6 +9,7 @@ import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf
 import { duplicateSentenceAction, currentBoardPage, sentenceCardIdOnCurrentPage, sentenceOnBoardPage } from '../src/lib/tutor/voice/sentence-board';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { isStrictRepeatAsk, saidModelSentence } from '../src/lib/tutor/voice/correct-retry';
+import { pronunciationItemRepeat as pronunciationItemRepeat45 } from '../src/lib/tutor/pronunciation/auto-arm';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -377,6 +378,27 @@ test('42 §B: the student\'s quoted sentence is never a target; the listen / rep
   assert.equal(detectPronunciationTarget('Please say "customers" once more.', T, { studentLast: st })?.referenceText, 'customers');
   // a correction model (not the student's words) is still armed
   assert.equal(detectPronunciationTarget('Say it like this: "I have explained our products to customers." Please repeat after me.', T, { studentLast: st })?.referenceText, 'I have explained our products to customers');
+});
+
+
+// ── Task 45 §7a (voice run 23, 1158 s) ──
+test('45 §7a: a pronunciation item already practised in this part is a repeat — the turn is retried with the practised list', () => {
+  const targets = { words: ['responsibilities', 'international'], sentences: ['I have worked with international customers for several years.', 'I was responsible for communicating with our customers.'] };
+  const practised = ['I have worked with international customers for several years.', 'I was responsible for communicating with our customers.'];
+  const r = pronunciationItemRepeat45({ turnText: 'はい、もう一つ練習しましょう。 Here is one more: "I have worked with international customers for several years." Please listen, then repeat after me.', targets, practised: practised.slice(0, 1) });
+  assert.ok(r); assert.equal(r!.repeated, 'I have worked with international customers for several years.');
+  assert.match(r!.reason, /already practised/i); assert.match(r!.reason, /I have worked with international customers/); assert.match(r!.reason, /I was responsible for communicating/);
+  assert.equal(pronunciationItemRepeat45({ turnText: 'Listen, then repeat after me: "I was responsible for communicating with our customers."', targets, practised: practised.slice(0, 1) }), null, 'a new item');
+  assert.equal(pronunciationItemRepeat45({ turnText: 'Here is one more: "I have worked with international customers for several years." Please listen, then repeat after me.', targets, practised: [] }), null, 'nothing practised yet');
+  assert.equal(pronunciationItemRepeat45({ turnText: 'Your pronunciation of "international" scored 95. Would you like one more item, or shall we move on to the summary?', targets, practised: ['international'] }), null, 'a measured mention is no ask');
+  // every listed item spent: the reason says so instead of listing remaining ones
+  const all = pronunciationItemRepeat45({ turnText: 'Here is one more: "I have worked with international customers for several years." Please listen, then repeat after me.', targets, practised: [...practised, 'responsibilities', 'international'] });
+  assert.ok(all); assert.match(all!.reason, /a sentence the learner said earlier in this lesson|earlier in this lesson/i);
+  const vtr = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.match(vtr, /pronunciationPractisedRef\.current\.set\(practisedSeg, \[\.\.\.\(pronunciationPractisedRef\.current\.get\(practisedSeg\) \?\? \[\]\), referenceText\]\);/);
+  assert.match(vtr, /rejectionsThisAttempt\.push\(\{ action: 'pronunciation_item_repeated', reason: pronRepeat\.reason \}\);/);
+  assert.match(vtr, /onDebugEvent\?\.\('pronunciation_item_repeated', /);
+  assert.match(vtr, /pronunciationRepeatProne: /);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
