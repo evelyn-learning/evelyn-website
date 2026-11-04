@@ -30,6 +30,10 @@ export const TYPED_SAY_BUDGET_RECAP = 5;
 export function normalizeSpoken(text: string): string {
   return (text ?? '').toLowerCase().replace(/[\s"'`“”‘’「」『』.,!?;:。、！？…\-—()（）]/g, '');
 }
+/** The English-sentence budget of a next.say: a recap and a menu (4 choices + its lead) get 5. One rule for engine and rules. */
+export function typedSayBudgetFor(kind: TypedNextKind, recap: boolean): number {
+  return recap || kind === 'menu' ? TYPED_SAY_BUDGET_RECAP : TYPED_SAY_BUDGET;
+}
 export const TYPED_ACK_BUDGET = 1;
 export const TYPED_VERDICT_SAY_BUDGET = 2;
 
@@ -77,7 +81,7 @@ export const TYPED_KIND_MEANING: Record<TypedNextKind, string> = {
   retry: 'ask for the same sentence once more.',
   question: 'ask a new question on this part.',
   offer: 'the one-more-or-move-on proposal.',
-  menu: "read the part's choice menu.",
+  menu: "read the part's choice menu WITH its numbers (\"1) …, 2) …, 3) …, 4) …\") so the student can answer with a number; five sentences at most.",
   item: 'give the next pronunciation sentence from the plan, with next.item set verbatim.',
   move: "one bridge sentence, then the next part's first ask or menu, three sentences at most.",
   close: 'the farewell after the summary.',
@@ -121,7 +125,7 @@ The engine sends <turn_state .../> with every turn. Its attributes: part = the k
 Never ask again a question listed in \`answered\`. When the student stalls or gives a non-answer twice, ask a DIFFERENT question on this part (or \`move\` when allowed), never the same one.
 
 WHEN next.kind IS move
-"say" is: one bridge sentence (what you learned in the part you are leaving, when next_part follows a bridge part) + the new part's opening ask taken from next_card: its first question verbatim, or, when next_card is a numbered menu, the menu read out (all numbered choices). Never invent a sentence to repeat, never start an item inside a move.
+"say" is: one bridge sentence (what you learned in the part you are leaving, when next_part follows a bridge part) + the new part's opening ask taken from next_card: its first question verbatim, or, when next_card is a numbered menu, the menu read out WITH its numbers ("1) …, 2) …, 3) …, 4) …", all choices) so the student can answer with a number. Never invent a sentence to repeat, never start an item inside a move.
 
 LANGUAGE
 Japanese is allowed in any field under the lesson's teaching-language rules. support_ja is an extra slot, not a replacement for the English fields. Keep to the budgets: ack 1 sentence, verdict_say 2, explain 2, support_ja 2, next.say 3 (5 on a recap). The next.say budget counts English sentences; Japanese sentences in next.say do not count.

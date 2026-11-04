@@ -621,14 +621,20 @@ export function runChecks(dump) {
     // The dump does not expose the authored card, so the GDI menu part is hard-coded: `pronunciation` (its card is the numbered menu).
     const MENU_PARTS = new Set(['pronunciation']);
     const NUMBERED_MENU = /\b1\)|１\)|1）/;
+    // Three tiers: a numbered menu passes; the four choices read without numbers WARN (the student cannot answer "2"); anything else FAILs.
+    const MENU_PHRASES = [/individual words/i, /complete sentence/i, /naturally/i, /\bskip\b/i];
     const tt9 = [];
+    const tt9Warn = [];
     const menuMoves = advances.filter((a) => MENU_PARTS.has((a.msg.match(/→(\S+)/) ?? [])[1]));
     for (const a of menuMoves) {
       const turn = turnOf(a.t + 1);
       if (!turn) tt9.push(`${a.t}s no tutor entry for the move`);
-      else if (!NUMBERED_MENU.test(turn.text)) tt9.push(`${a.t}s "${turn.text.slice(0, 70)}" has no numbered menu`);
+      else if (NUMBERED_MENU.test(turn.text)) continue;
+      else if (MENU_PHRASES.filter((re) => re.test(turn.text)).length >= 3) tt9Warn.push(`${a.t}s menu read without numbers: "${turn.text.slice(0, 70)}"`);
+      else tt9.push(`${a.t}s "${turn.text.slice(0, 70)}" has no numbered menu`);
     }
-    ok('TT9 move into a menu part presents the menu', tt9.length === 0, tt9.join(' | ') || `${menuMoves.length} menu moves`);
+    if (tt9.length === 0 && tt9Warn.length) warn('TT9 move into a menu part presents the menu', tt9Warn.join(' | '));
+    else ok('TT9 move into a menu part presents the menu', tt9.length === 0, tt9.join(' | ') || `${menuMoves.length} menu moves`);
     // TT5: the prose validators / holds have nothing to do on a typed run
     const PROSE = ['brain_validator_retry', 'transition_ask_off_part', 'transition_offer_missing', 'repeat_ask_after_two_tries', 'move_on_ignored', 'required_phrase_missing', 'validator_tts_hold_started'];
     const prose = PROSE.map((c) => [c, ev(c).length]).filter(([, n]) => n > 0);

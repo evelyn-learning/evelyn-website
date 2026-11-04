@@ -274,6 +274,12 @@ async function main() {
     const sj = r.events.find((e) => e.type === 'typed-field' && e.field === 'support_ja') as { value: string };
     assert.ok(sj.value.includes(dup), 'the field value is not edited');
   });
+  await test('G3: a menu say of 4 EN sentences on a non-recap part ⇒ NO retry', async () => {
+    const MENU = { kind: 'menu', say: 'Good work. Now pronunciation. Which would you like? Say a number. 1) Individual words. 2) A complete sentence. 3) Naturally.', item: '', level: '' };
+    const r = await run({ ...baseInput, typedTurn: { ...typedTurn, allowedNext: ['menu', 'wait'] } }, [chunkedTextScript(JSON.stringify({ ...TURN, next: MENU }), 3)]);
+    assert.equal(r.requests.length, 1);
+    assert.equal(turnEv(r.events).retries, 0);
+  });
   const BILINGUAL = 'Good. Next one. What did you do? では次です。 発音の練習です。';
   await test('F2: next.say of 3 EN + 2 JA sentences on a non-recap part ⇒ NO retry', async () => {
     const r = await run({ ...baseInput, typedTurn }, [

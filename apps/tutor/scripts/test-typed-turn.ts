@@ -8,7 +8,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  TYPED_TURN_SCHEMA, TYPED_NEXT_KINDS, TYPED_TURN_INSTRUCTIONS, typedTurnStateBlock, TYPED_KIND_MEANING,
+  TYPED_TURN_SCHEMA, TYPED_NEXT_KINDS, TYPED_TURN_INSTRUCTIONS, typedTurnStateBlock, TYPED_KIND_MEANING, typedSayBudgetFor,
   truncateToSentences, sentenceCount, englishSentenceCount, parseTypedTurn, TYPED_FIELD_ORDER,
   TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection,
 } from '../src/lib/tutor/voice/typed-turn';
@@ -100,6 +100,15 @@ test('G2: instructions explain answered and forbid re-asking', () => {
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('answered'));
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('DIFFERENT question'));
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('Never ask again a question listed in `answered`'));
+});
+
+test('G3: menu and move say the choices WITH their numbers; budget helper', () => {
+  assert.ok(TYPED_KIND_MEANING.menu.includes('1)'));
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('1)'));
+  assert.ok(/WITH its numbers/.test(TYPED_TURN_INSTRUCTIONS.split('WHEN next.kind IS move')[1]));
+  assert.equal(typedSayBudgetFor('menu', false), 5);
+  assert.equal(typedSayBudgetFor('question', true), 5);
+  assert.equal(typedSayBudgetFor('question', false), 3);
 });
 
 test('flags — TUTOR_TYPED_TURN is opt-in', () => {

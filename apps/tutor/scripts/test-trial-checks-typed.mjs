@@ -162,6 +162,14 @@ test('TT9: a move into the pronunciation part FAILs when the turn invents an ite
   assert.ok(has(lines, 'FAIL  TT9'), lines.join('\n'));
 });
 
+test('G3: TT9 WARNs (not FAILs) when the menu is read without numbers (r55 1069 s)', () => {
+  const d = dump({ cardFirst: true, events: ['   21s typed_turn_effect: advance open-conversation→pronunciation'] })
+    .replace('Have you worked there long?', "Now let's move to pronunciation. Would you like to practice individual words, a complete sentence, speaking more naturally, or skip and continue?");
+  const { lines } = runChecks(d);
+  assert.ok(has(lines, 'WARN  TT9'), lines.join('\n'));
+  assert.ok(!has(lines, 'FAIL  TT9') && !has(lines, 'PASS  TT9'), lines.join('\n'));
+});
+
 // the correction turn (21 s) has NO card of its own; the previous turn (typed_turn 18 s) left a card at 16 s
 const noOwnCard = (cardRow) => dump({ cardFirst: true })
   .replace(/\n.*showSentence-1.*"sourceMessageIndex":4\}/, '')

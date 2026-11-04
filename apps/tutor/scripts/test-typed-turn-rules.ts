@@ -331,6 +331,10 @@ test('sayWithinBudget', () => {
   assert.equal(sayWithinBudget(nx({ say: 'A. B. C. D.' }), false), false);
   assert.equal(sayWithinBudget(nx({ say: 'A. B. C. D.' }), true), true);
   assert.equal(sayWithinBudget(nx({ say: 'A. B. C.' }), false), true);
+  // G3: a menu may run to 5 English sentences (4 choices + lead); a question may not
+  assert.equal(sayWithinBudget(nx({ kind: 'menu', say: 'Pick one. Words. Sentence. Naturally.' }), false), true);
+  assert.equal(sayWithinBudget(nx({ kind: 'question', say: 'Pick one. Words. Sentence. Naturally.' }), false), false);
+  assert.equal(sayWithinBudget(nx({ kind: 'menu', say: 'A. B. C. D. E. F.' }), false), false);
   // F2: Japanese sentences do not count against the budget
   assert.equal(sayWithinBudget(nx({ say: 'Good. では次です。 Let us move. 発音です。 Ready?' }), false), true);
   assert.equal(sayWithinBudget(nx({ say: 'A. B. C. D.' }), false), false);

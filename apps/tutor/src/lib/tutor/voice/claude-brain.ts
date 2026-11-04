@@ -75,7 +75,7 @@ import {
 import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
 import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
-import { isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, TYPED_SAY_BUDGET, TYPED_SAY_BUDGET_RECAP, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
+import { isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, typedSayBudgetFor, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
 
 /** Does the streamed tool input parse as JSON? Partial JSON (a tool call
  *  the output cap cut in half) does not. */
@@ -3035,7 +3035,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   let typedNextVoiced = false;
   /** Gate for `next`: legal kinds pass; anything else is held back. */
   const typedNextAllowed = (kind: TypedNextKind): boolean => !!input.typedTurn?.allowedNext.includes(kind);
-  const typedSayBudget = input.typedTurn?.recap ? TYPED_SAY_BUDGET_RECAP : TYPED_SAY_BUDGET;
+  /** The budget for one `next` (a menu gets the longer one), the shared rule. */
+  const sayBudgetOf = (kind: TypedNextKind): number => typedSayBudgetFor(kind, !!input.typedTurn?.recap);
   /** G1: sentences already yielded this typed turn (retry calls are the same turn); the prose duplicate filters stand down on typed. */
   const typedSpoken = new Set<string>();
   /** Prose fallback mid-turn: the frame the typed request left out comes back. */
@@ -3061,7 +3062,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         if (!retried) {
           // Refused: nothing of it is voiced; the call's end runs the one retry.
           const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) ? 'illegal_kind'
-            : englishSentenceCount(ev.value.say) > typedSayBudget ? 'say_over_budget' : null;
+            : englishSentenceCount(ev.value.say) > sayBudgetOf(ev.value.kind) ? 'say_over_budget' : null;
           if (reason) {
             typedRetryNeed = { reason, refused: ev.value };
             console.warn(`[typed-turn] next refused (${reason}): kind=${ev.value.kind} sentences=${englishSentenceCount(ev.value.say)} allowed_next=${input.typedTurn!.allowedNext.join(',')} — retrying once`);
@@ -3220,7 +3221,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           content: typedTurnRetryMessage({
             reason: need.reason, refused: need.refused, allowedNext: input.typedTurn!.allowedNext,
             alreadySaid: { ack: first.ack, verdict: first.verdict, verdict_say: first.verdict_say, correction: first.correction, support_ja: first.support_ja },
-            budget: typedSayBudget,
+            budget: sayBudgetOf(need.refused.kind),
           }),
         },
       ];
