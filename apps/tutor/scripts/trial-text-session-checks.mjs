@@ -701,21 +701,42 @@ export function runChecks(dump) {
       if (m) tt12.push(`${turn.t}s next=${field(e, 'next')} "${m[0]}"`);
     }
     ok('TT12 no move language in a non-move turn', tt12.length === 0, tt12.join(' | ') || `${tt12Checked} non-move turns`);
-    // TT13 (fix wave 5 Z2): a move turn does not board (p2.txt 926 s: the brain's `board` card painted, then the move turned
-    // the page one sentence later). Same turn = the effects fall between the same two typed_turn events (the turn's own
-    // typed_turn closes it); an engine move "(engine)" runs before the brain call and is not the brain's move.
+    // TT13 (fix wave 5 Z2, H3 round 3): a boarded move turn turns its page in-turn. The brain boarding on a move is
+    // advisory ("leave board empty"); the engine holds the page turn (Z2). The check measures what the student sees:
+    // for each brain move whose turn placed a model_card (same turn = between the same two typed_turn events; a
+    // "not placed" card was never boarded; an engine move "(engine)" is not the brain's), PASS when
+    // typed_turn_page_turn_held_for_card was logged and the page flush for the `to` part came before the next
+    // student entry; WARN when the fallback released it; FAIL when no hold was logged, or the flush came at/after the
+    // next student turn (bot r64 75 s → 109 s), or never.
     const tt13 = [];
+    const tt13Warn = [];
     let tt13Moves = 0;
+    let tt13Boarded = 0;
     for (const a of advances.filter((x) => !/\(engine\)/.test(x.msg))) {
       tt13Moves++;
       const ai = events.indexOf(a);
       const prevTyped = [...typed].reverse().find((e) => events.indexOf(e) < ai);
       const lo = prevTyped ? events.indexOf(prevTyped) : -1;
       const card = events.find((x, xi) => xi > lo && xi < ai && x.type === 'typed_turn_effect' && /^model_card\b/.test(x.msg) && !/\bnot placed\b/.test(x.msg));
-      // round 1 (I1): a card the board refused ("not placed") was never boarded
-      if (card) tt13.push(`${a.t}s ${a.msg.replace(/^advance /, '')} after model_card at ${card.t}s`);
+      if (!card) continue;
+      tt13Boarded++;
+      const m = a.msg.match(/^advance (\S+)→(\S+)/) ?? [];
+      const what = `${a.t}s ${m[1]}→${m[2]}`;
+      const ownTyped = typed.find((e) => events.indexOf(e) > ai);
+      const hi = ownTyped ? events.indexOf(ownTyped) : events.length;
+      const held = events.some((x, xi) => xi > lo && xi <= hi && x.type === 'typed_turn_page_turn_held_for_card' && x.msg.startsWith(`${m[1]}→${m[2]}`));
+      if (!held) { tt13.push(`${what}: model_card at ${card.t}s, no hold logged`); continue; }
+      const flushIdx = events.findIndex((x, xi) => xi > ai && x.type === 'auto_newpage_on_advance_flushed' && x.msg.startsWith(`${m[2]}:`));
+      if (flushIdx < 0) { tt13.push(`${what}: held, no flush`); continue; }
+      const flush = events[flushIdx];
+      const nextStudent = student.find((x) => x.t > a.t);
+      if (nextStudent && flush.t >= nextStudent.t) { tt13.push(`${what}: late flush ${flush.t}s (next student turn ${nextStudent.t}s)`); continue; }
+      const fb = events.find((x, xi) => xi > ai && xi <= flushIdx && x.type === 'typed_turn_page_turn_fallback');
+      if (fb) tt13Warn.push(`${what}: released by the fallback (${fb.msg.slice(0, 40)}) at ${fb.t}s`);
     }
-    ok('TT13 a move turn does not board', tt13.length === 0, tt13.join(' | ') || `${tt13Moves} brain moves`);
+    const tt13Label = 'TT13 a boarded move turn turns its page in-turn';
+    if (tt13.length === 0 && tt13Warn.length) warn(tt13Label, tt13Warn.join(' | '));
+    else ok(tt13Label, tt13.length === 0, [...tt13, ...tt13Warn].join(' | ') || `${tt13Moves} brain moves, ${tt13Boarded} boarded`);
     // TT5: the prose validators / holds have nothing to do on a typed run
     const PROSE = ['brain_validator_retry', 'transition_ask_off_part', 'transition_offer_missing', 'repeat_ask_after_two_tries', 'move_on_ignored', 'required_phrase_missing', 'validator_tts_hold_started'];
     const prose = PROSE.map((c) => [c, ev(c).length]).filter(([, n]) => n > 0);

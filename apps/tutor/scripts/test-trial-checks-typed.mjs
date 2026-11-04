@@ -296,7 +296,8 @@ test('TT13 passes when the move turn boards nothing (the fixture move turn has a
 test('TT13 FAILs when a model_card and a brain advance share a turn, with the timestamp', () => {
   const d = dump().replace('   21s typed_turn_effect: correction_card', '   21s typed_turn_effect: model_card');
   const line = tt13(d);
-  assert.ok(/^FAIL  TT13/.test(line) && /21s topic-intro→present-perfect after model_card at 21s/.test(line), line);
+  // round 3 pin move (H3): the FAIL now names the student-visible cause — no hold was logged for the boarded move
+  assert.ok(/^FAIL  TT13/.test(line) && /21s topic-intro→present-perfect: model_card at 21s, no hold logged/.test(line), line);
 });
 test('TT13: a model card of the PREVIOUS turn, or an engine move, does not count', () => {
   const prev = dump().replace('   11s typed_turn_field: next', '   11s typed_turn_effect: model_card\n   11s typed_turn_field: next');
@@ -310,6 +311,31 @@ test('TT13 (round 1 I1): a "model_card not placed" is not a boarded card', () =>
   const d = dump().replace('   21s typed_turn_effect: correction_card', '   21s typed_turn_effect: model_card not placed (duplicate)');
   const line = tt13(d);
   assert.ok(/^PASS  TT13/.test(line), line);
+});
+
+// H3 (fix wave 5 round 3): TT13 judges the page turn the student sees, not the brain's board choice
+const boarded = (extra = '', flushT = 21) => dump().replace('   21s typed_turn_effect: correction_card', '   21s typed_turn_effect: model_card')
+  .replace('   21s typed_turn_effect: advance topic-intro→present-perfect', `   21s typed_turn_effect: advance topic-intro→present-perfect\n   21s typed_turn_page_turn_held_for_card: topic-intro→present-perfect: page + card after say sentence 3${extra}`)
+  .replace('   21s auto_newpage_on_advance_flushed: present-perfect: Part 4 · Present perfect · 現在完了 (on the transition sentence 3)', `   ${flushT}s auto_newpage_on_advance_flushed: present-perfect: Part 4 · Present perfect · 現在完了 at turn end`);
+const withNextStudent = (d) => d.replace('=== WHITEBOARD', '   40s   5 student: Yes, I have.\n=== WHITEBOARD');
+test('TT13 PASS: a boarded move whose page was held and turned before the next student turn', () => {
+  const line = tt13(withNextStudent(boarded('', 25)));
+  assert.ok(/^PASS  TT13/.test(line), line);
+});
+test('TT13 WARN: the hold was released by the fallback', () => {
+  const line = tt13(withNextStudent(boarded('\n   25s typed_turn_page_turn_fallback: reason=drained audio drained: say sentence 3 never finished', 25)));
+  assert.ok(/^WARN  TT13/.test(line) && /21s topic-intro→present-perfect/.test(line) && /fallback/.test(line), line);
+});
+test('TT13 FAIL: a boarded move with no hold logged', () => {
+  const d = withNextStudent(boarded('', 25)).replace(/\n   21s typed_turn_page_turn_held_for_card:[^\n]*/, '');
+  const line = tt13(d);
+  assert.ok(/^FAIL  TT13/.test(line) && /no hold logged/.test(line), line);
+});
+test('TT13 FAIL: the page turned at/after the next student turn (bot r64 109 s)', () => {
+  const line = tt13(withNextStudent(boarded('', 40)));
+  assert.ok(/^FAIL  TT13/.test(line) && /late flush 40s/.test(line), line);
+  const never = tt13(withNextStudent(boarded('', 21)).replace(/\n   21s auto_newpage_on_advance_flushed:[^\n]*/, ''));
+  assert.ok(/^FAIL  TT13/.test(never) && /no flush/.test(never), never);
 });
 
 console.log(`${n} passed`);
