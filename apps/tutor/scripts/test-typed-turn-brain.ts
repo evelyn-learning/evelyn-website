@@ -495,6 +495,24 @@ async function main() {
     assert.deepEqual([...t.push('That is right, you spoke with J. Smith at the fair. '), t.flush()], ['That is right, you spoke with J. Smith at the fair.', null]);
   });
 
+  {
+    // D (fix wave 6, p3 1171 s): the recap's review question boards its two sentences
+    const OK = { ...TURN, verdict: 'none', verdict_say: '', correction: null, support_ja: '', next: { kind: 'question', say: 'What is the difference between these two sentences?', item: '', level: '' } };
+    const recapTurn = { state: '<turn_state part="recap" recap_step="review_feedback_check"/>', allowedNext: ['question'], recap: true };
+    for (const board of ['I have worked here for five years. | I worked here five years ago.', 'I have worked here for five years. I worked here five years ago.']) {
+      await test(`D: a recap board of two sentences is not truncated (${board.includes('|') ? 'pipe' : 'no pipe'})`, async () => {
+        const r = await run({ ...baseInput, typedTurn: recapTurn }, [chunkedTextScript(JSON.stringify({ ...OK, board }), 3)]);
+        const f = r.events.find((e) => e.type === 'typed-field' && e.field === 'board');
+        assert.equal(f?.value, board);
+        assert.equal(turnEv(r.events).turn?.board, board);
+      });
+    }
+    await test('D: a non-recap board of two sentences is still cut to one', async () => {
+      const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify({ ...OK, verdict: 'correct', board: 'I have worked here for five years. I worked here five years ago.' }), 3)]);
+      assert.equal(r.events.find((e) => e.type === 'typed-field' && e.field === 'board')?.value, 'I have worked here for five years.');
+    });
+  }
+
   console.log('fallbacks (Task 6)');
   await test('400 output_config.format rejected ⇒ typed-turn-fallback format_rejected, then the prose call with tools', async () => {
     const reject: Script = { events: [], final: { content: [], stop_reason: 'end_turn' }, error: { status: 400, message: 'output_config.format is not supported' } };

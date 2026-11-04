@@ -2366,17 +2366,18 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
 /** Typed turn budgets without their own constant in ./typed-turn.ts (2 sentences each). */
 const TYPED_EXPLAIN_BUDGET = 2;
 const TYPED_SUPPORT_JA_BUDGET = 2;
-/** V1: the board field is one written sentence. */
+/** V1: the board field is one written sentence. D (fix wave 6): two on the recap (the review question's contrast pair). */
 const TYPED_BOARD_BUDGET = 1;
+const TYPED_BOARD_BUDGET_RECAP = 2;
 const TYPED_ANSWER_CHECK_ADVISORY = '(advisory: your own "verdict" field decides)';
 
 /** The parsed object with the same sentence budgets the field frames carry. */
-function budgetTypedTurn(turn: TypedTurn): TypedTurn {
+function budgetTypedTurn(turn: TypedTurn, recap = false): TypedTurn {
   return {
     ...turn,
     ack: truncateToSentences(turn.ack, TYPED_ACK_BUDGET),
     verdict_say: truncateToSentences(turn.verdict_say, TYPED_VERDICT_SAY_BUDGET),
-    board: truncateToSentences(turn.board, TYPED_BOARD_BUDGET),
+    board: truncateToSentences(turn.board, recap ? TYPED_BOARD_BUDGET_RECAP : TYPED_BOARD_BUDGET),
     correction: turn.correction ? { ...turn.correction, explain: truncateToSentences(turn.correction.explain, TYPED_EXPLAIN_BUDGET) } : null,
     support_ja: truncateToSentences(turn.support_ja, TYPED_SUPPORT_JA_BUDGET),
   };
@@ -3113,8 +3114,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     switch (ev.field) {
       case 'ack': value = speech = truncateToSentences(ev.value, TYPED_ACK_BUDGET); break;
       case 'verdict_say': value = speech = truncateToSentences(ev.value, TYPED_VERDICT_SAY_BUDGET); break;
-      // V1: the board sentence is painted, never spoken; one sentence.
-      case 'board': value = truncateToSentences(ev.value, TYPED_BOARD_BUDGET); break;
+      // V1: the board sentence is painted, never spoken; one sentence (D: two on the recap — "A. | B.").
+      case 'board': value = truncateToSentences(ev.value, input.typedTurn?.recap ? TYPED_BOARD_BUDGET_RECAP : TYPED_BOARD_BUDGET); break;
       case 'support_ja': value = speech = truncateToSentences(ev.value, TYPED_SUPPORT_JA_BUDGET); break;
       case 'correction':
         if (ev.value) {
@@ -3365,7 +3366,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         yield { type: 'typed-turn', turn: null, retries: 0, ...(typedNextFallback ? { nextFallback: typedNextFallback } : {}) };
         return;
       }
-      const budgeted = budgetTypedTurn(typedAsReleased(turn));
+      const budgeted = budgetTypedTurn(typedAsReleased(turn), !!input.typedTurn?.recap);
       const need = typedRetryNeed;
       if (!need) {
         yield { type: 'typed-turn', turn: budgeted, retries: 0 };

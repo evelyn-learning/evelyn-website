@@ -520,6 +520,13 @@ export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): T
   // V1 (fix wave 2): the model card is the brain's `board` sentence, never the raw transcript (the r-Praveen voice run
   // boarded 11 of 24 student sentences with their errors). verdict_say carries no effect.
   if (ev.field === 'board') {
+    // D (fix wave 6, p3 1171 s): on the recap the review question's two contrasted sentences ride one board, "A. | B." —
+    // up to two cards, in order, no emphasis, whatever the verdict (they are the question, not a judged reply).
+    // Elsewhere a " | " board is one sentence, as before.
+    if (ev.value.includes(' | ') && typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) === 'recap') {
+      return ev.value.split(' | ').slice(0, 2).map((x) => cardableStudentSentence(x.trim()))
+        .filter((x): x is string => !!x).map((sentence) => ({ kind: 'model_card' as const, sentence }));
+    }
     // R4/M1: the board sentence passes the same card guard the prose cards use (a bare "Yes." / two words is no card).
     const sentence = ctx.state.pendingVerdict === 'correct' ? cardableStudentSentence(ev.value.trim()) : null;
     if (!sentence) return [];

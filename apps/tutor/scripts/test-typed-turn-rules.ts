@@ -258,6 +258,21 @@ test('applyField records verdict; V1: board with verdict correct -> one model_ca
   // C (fix wave 6) pin moved: the model card now carries the words the student did not say (machine → machines, customer → customers)
   assert.deepEqual(e, [{ kind: 'model_card', sentence: 'I sell washing machines to customers.', emphasis: ['machines', 'customers'], emphasisAt: [3, 5] }]);
 });
+test('D (fix wave 6, p3 1171 s): the recap board "A. | B." paints the two contrasted sentences in order; elsewhere one card', () => {
+  const pair = 'I have worked here for five years. | I worked here five years ago.';
+  for (const v of ['correct', 'none'] as const) {
+    const st = applyField(createTypedTurnState(), { field: 'verdict', value: v });
+    assert.deepEqual(effectsForField({ field: 'board', value: pair }, fctx('summary', { state: st, studentLast: 'Yes, ready.' })),
+      [{ kind: 'model_card', sentence: 'I have worked here for five years.' }, { kind: 'model_card', sentence: 'I worked here five years ago.' }], v);
+  }
+  const ok = applyField(createTypedTurnState(), { field: 'verdict', value: 'correct' });
+  const one = effectsForField({ field: 'board', value: pair }, fctx('open-conversation', { state: ok }));
+  assert.ok(one.length <= 1 && one.every((e) => e.kind === 'model_card' && !('emphasis' in e)), JSON.stringify(one));
+  assert.ok(!one.some((e) => e.kind === 'model_card' && e.sentence === 'I have worked here for five years.'), 'not split outside the recap');
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes("On the review question, put the two sentences you contrast in `board`, separated by ' | ', so the student sees them while you ask."));
+  const r0 = TYPED_TURN_INSTRUCTIONS.indexOf('THE RECAP PART'), r1 = TYPED_TURN_INSTRUCTIONS.indexOf("separated by ' | '");
+  assert.ok(r0 >= 0 && r1 > r0 && !TYPED_TURN_INSTRUCTIONS.slice(r0, r1).includes('\n\n'), 'inside THE RECAP PART block');
+});
 test('C (fix wave 6, p3 473 s): boardEmphasis underlines what the model sentence changed', () => {
   assert.deepEqual(boardEmphasis('Uh, to talk to uh vendors uh from robotics companies in China.', 'I learned to talk with vendors from robotics companies in China.'),
     { emphasis: ['I', 'learned', 'with'], emphasisAt: [0, 1, 4] });

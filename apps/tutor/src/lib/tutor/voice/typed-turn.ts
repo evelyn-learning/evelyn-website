@@ -147,6 +147,7 @@ THE RECAP PART
 - \`recap_step=review_feedback_check\`: \`next.say\` reviews what was practised using the student's OWN corrected sentences from this lesson (the card's examples only when they produced none), gives one specific strength and one thing to improve, and asks the part's check question; use every phrase in \`required_phrases\` verbatim.
 - \`recap_step=close\`: \`next.kind\` is \`close\`; \`verdict_say\` evaluates their check answer, \`next.say\` explains briefly if needed and closes warmly; ask nothing after the close.
 - Your closing turn contains every phrase in \`required_phrases\` verbatim before the goodbye.
+- On the review question, put the two sentences you contrast in \`board\`, separated by ' | ', so the student sees them while you ask.
 
 When \`move\` is not in \`allowed_next\`, never say the part is over and never announce a move; the engine turns the page, not your words. An \`offer\` turn names the next part as the choice ('…or shall we move on to <next_part>?') — that is not a move.
 
