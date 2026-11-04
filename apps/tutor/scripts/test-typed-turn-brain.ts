@@ -373,6 +373,36 @@ async function main() {
     assert.equal(t.turn, null);
     assert.equal(t.nextFallback, undefined);
   });
+  {
+    const LEFT = ['I was responsible for communicating with our customers.', 'We finished the project last month.'];
+    const itemTurn = { state: '<turn_state part="pronunciation" open_ask="item"/>', allowedNext: ['item', 'offer', 'move'], recap: false, itemsLeft: LEFT };
+    const unlisted = { kind: 'item', say: 'Now say: I have worked with international customers for several years.', item: 'I have worked with international customers for several years.', level: '' };
+    const listed = { kind: 'item', say: `Next one: ${LEFT[0]}`, item: LEFT[0], level: '' };
+    const r = await run({ ...baseInput, typedTurn: itemTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: unlisted }), 3), chunkedTextScript(JSON.stringify({ ...TURN, next: listed }), 2)]);
+    await test('W6: an item not in itemsLeft is refused before speech; the retry lists the items; its listed item is spoken once', () => {
+      assert.equal(r.requests.length, 2, 'one retry call');
+      const u = r.requests[1].messages[r.requests[1].messages.length - 1];
+      assert.ok(String(u.content).includes('item_not_listed'), String(u.content));
+      for (const x of LEFT) assert.ok(String(u.content).includes(`"${x}"`), x);
+      const said = sentencesOf(r.events);
+      assert.ok(!said.some((x) => x.includes('international customers')), 'the unlisted item is never spoken');
+      assert.equal(said.filter((x) => x.includes(LEFT[0])).length, 1, 'the listed item spoken once');
+      const t = turnEv(r.events);
+      assert.equal(t.retries, 1);
+      assert.equal(t.retryReason, 'illegal_kind');
+      assert.deepEqual(t.turn?.next, listed);
+    });
+    await test('W6: a listed item (whitespace aside) passes with no retry', async () => {
+      const r2 = await run({ ...baseInput, typedTurn: itemTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: { ...listed, item: ` ${LEFT[1]} ` } }), 2)]);
+      assert.equal(r2.requests.length, 1);
+      assert.equal(turnEv(r2.events).retries, 0);
+    });
+    await test('W6: no itemsLeft in the request ⇒ no item gate', async () => {
+      const { itemsLeft: _drop, ...noLeft } = itemTurn;
+      const r3 = await run({ ...baseInput, typedTurn: noLeft }, [chunkedTextScript(JSON.stringify({ ...TURN, next: unlisted }), 2)]);
+      assert.equal(r3.requests.length, 1);
+    });
+  }
   await test('two text blocks ⇒ exactly one typed-turn', async () => {
     const one = chunkedTextScript(JSON.stringify(TURN), 2);
     const second = [
@@ -406,6 +436,9 @@ async function main() {
     assert.match(routeSrc, /typedTurn\?: TypedTurnRequest/);
     assert.match(routeSrc, /TYPED_NEXT_KINDS/);
     assert.match(routeSrc, /typed_turn_body_rejected/);
+    // W6: the optional itemsLeft array (strings only, at most 8)
+    assert.match(routeSrc, /itemsLeft/);
+    assert.ok(routeSrc.includes('t.itemsLeft.length <= 8 && t.itemsLeft.every((x) => typeof x === \'string\')'), 'itemsLeft shape check');
   });
   const brainSrc = fs.readFileSync(path.join(__dirname, '../src/lib/tutor/voice/claude-brain.ts'), 'utf8');
   await test('brain: answer_check on typed carries the advisory line; provider fallback wired', () => {

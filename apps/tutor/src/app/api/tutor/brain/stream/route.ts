@@ -264,8 +264,13 @@ function acceptTypedTurn(raw: unknown): TypedTurnRequest | undefined {
   if (
     typeof t === 'object' && typeof t.state === 'string' && Array.isArray(t.allowedNext)
     && t.allowedNext.length > 0 && t.allowedNext.every((k) => TYPED_NEXT_KINDS.includes(k))
+    // W6: optional itemsLeft — the pronunciation items still to practise (strings only, at most 8).
+    && (t.itemsLeft === undefined || (Array.isArray(t.itemsLeft) && t.itemsLeft.length <= 8 && t.itemsLeft.every((x) => typeof x === 'string')))
   ) {
-    return { state: t.state, allowedNext: t.allowedNext, recap: t.recap === true, ...(t.nudge === true ? { nudge: true } : {}) };
+    return {
+      state: t.state, allowedNext: t.allowedNext, recap: t.recap === true, ...(t.nudge === true ? { nudge: true } : {}),
+      ...(t.itemsLeft?.length ? { itemsLeft: t.itemsLeft } : {}),
+    };
   }
   console.warn('typed_turn_body_rejected');
   return undefined;

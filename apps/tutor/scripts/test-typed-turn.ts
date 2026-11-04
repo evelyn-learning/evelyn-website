@@ -272,5 +272,15 @@ test('H2: verdicts are defined operationally; none only for a non-answer; answer
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('fills from correct and partly_correct'));
 });
 
+test('W6: retry message — item_not_listed names the listed items verbatim', () => {
+  const left = ['I was responsible for communicating with our customers.', 'We finished the project last month.'];
+  const m = typedTurnRetryMessage({ reason: 'illegal_kind', refused: { kind: 'item', say: 'Say this.', item: 'I have worked here.', level: '' },
+    allowedNext: ['item', 'offer', 'move'], alreadySaid: ALREADY, budget: 3, itemNotListed: left });
+  assert.ok(m.includes('item_not_listed'), m);
+  for (const x of left) assert.ok(m.includes(`"${x}"`), x);
+  assert.ok(m.includes('allowed: item, offer, move'));
+  assert.ok(m.includes('ALREADY SPOKEN'));
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

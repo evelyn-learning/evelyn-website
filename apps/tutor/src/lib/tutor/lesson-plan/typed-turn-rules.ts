@@ -119,6 +119,11 @@ function postDueState(ctx: AllowedNextContext): 'hold-ok' | 'capped' | 'deadline
   return postDueHoldDecision({ plan: ctx.plan, holds: ctx.state.postDueTurns?.[ctx.segId] ?? 0, lessonElapsedMs: ctx.lessonElapsedMs });
 }
 
+/** W6: the plan items of this part not yet practised — turn_state's items_left and the request's itemsLeft. Pure. */
+export function itemsLeftFor(ctx: AllowedNextContext): string[] {
+  return itemsLeft(ctx);
+}
+
 function itemsLeft(ctx: AllowedNextContext): string[] {
   const done = ctx.state.practisedItems[ctx.segId] ?? [];
   return ctx.items.filter((i) => !done.includes(i));
@@ -203,7 +208,7 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     ['offer_accepted', yn(o.accepted)],
     ['menu_picked', state.menuState[segId]?.picked || ctx.menuPick || 'none'],
     ['items_practised', (state.practisedItems[segId] ?? []).join('|')],
-    ['items_left', itemsLeft(ctx).join('|')],
+    ['items_left', itemsLeftFor(ctx).join('|')],
     ['last_item', yn(!!state.lastItemAnnounced[segId])],
     ['budget_due', yn(ctx.budgetDue)],
     // W1: post-due turns spent in this part; last_turn = this part's holds are used up (or about to be)
@@ -227,11 +232,14 @@ export function turnStateLine(ctx: AllowedNextContext): string {
 }
 
 export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
+  const left = itemsLeftFor(ctx);
   return {
     state: turnStateLine(ctx),
     allowedNext: allowedNextFor(ctx),
     recap: typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) === 'recap',
     nudge: ctx.nudge,
+    // W6: the server refuses an item outside this list before it is spoken (one retry); absent on a part without items.
+    ...(left.length ? { itemsLeft: left.slice(0, 8) } : {}),
   };
 }
 

@@ -3030,7 +3030,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   let messages: Anthropic.MessageParam[] = typedMessages ?? proseMessages;
   // Turn-scoped: a refused first `next` waiting for its one retry (spec §4.2,
   // §4.8), and the kind the client falls back to when no usable `next` was voiced.
-  let typedRetryNeed: { reason: TypedRetryReason; refused: TypedNext } | null = null;
+  let typedRetryNeed: { reason: TypedRetryReason; refused: TypedNext; itemNotListed?: string[] } | null = null;
   let typedNextFallback: TypedNextKind | undefined;
   let typedNextVoiced = false;
   /** Gate for `next`: legal kinds pass; anything else is held back. */
@@ -3061,11 +3061,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       case 'next':
         if (!retried) {
           // Refused: nothing of it is voiced; the call's end runs the one retry.
-          const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) ? 'illegal_kind'
+          // W6 (r60 945 s): an item the client did not list (repeated / invented) is refused before speech too.
+          const itemsLeft = input.typedTurn?.itemsLeft ?? [];
+          const itemNotListed = ev.value.kind === 'item' && itemsLeft.length > 0
+            && !itemsLeft.some((x) => x.trim() === ev.value.item.trim());
+          const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) || itemNotListed ? 'illegal_kind'
             : englishSentenceCount(ev.value.say) > sayBudgetOf(ev.value.kind) ? 'say_over_budget' : null;
           if (reason) {
-            typedRetryNeed = { reason, refused: ev.value };
-            console.warn(`[typed-turn] next refused (${reason}): kind=${ev.value.kind} sentences=${englishSentenceCount(ev.value.say)} allowed_next=${input.typedTurn!.allowedNext.join(',')} — retrying once`);
+            typedRetryNeed = { reason, refused: ev.value, ...(itemNotListed && typedNextAllowed(ev.value.kind) ? { itemNotListed: itemsLeft } : {}) };
+            console.warn(`[typed-turn] next refused (${reason}${typedRetryNeed.itemNotListed ? ' item_not_listed' : ''}): kind=${ev.value.kind} sentences=${englishSentenceCount(ev.value.say)} allowed_next=${input.typedTurn!.allowedNext.join(',')} — retrying once`);
             return;
           }
         }
@@ -3212,7 +3216,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     /** The one retry call (spec §4.8 splice): same typed params, the first
      *  object as the assistant turn, the retry message as the user turn. Read
      *  whole — no thinking re-issue machinery, no failover to prose. */
-    async function typedRetryCall(first: TypedTurn, need: { reason: TypedRetryReason; refused: TypedNext }): Promise<TypedTurnReader | null> {
+    async function typedRetryCall(first: TypedTurn, need: { reason: TypedRetryReason; refused: TypedNext; itemNotListed?: string[] }): Promise<TypedTurnReader | null> {
       const retryMessages: Anthropic.MessageParam[] = [
         ...messages,
         { role: 'assistant', content: typedReader.text },
@@ -3222,6 +3226,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             reason: need.reason, refused: need.refused, allowedNext: input.typedTurn!.allowedNext,
             alreadySaid: { ack: first.ack, verdict: first.verdict, verdict_say: first.verdict_say, correction: first.correction, support_ja: first.support_ja },
             budget: sayBudgetOf(need.refused.kind),
+            ...(need.itemNotListed ? { itemNotListed: need.itemNotListed } : {}),
           }),
         },
       ];

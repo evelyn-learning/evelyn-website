@@ -22,7 +22,11 @@ export type TypedField = 'ack' | 'verdict' | 'verdict_say' | 'correction' | 'sup
 export const TYPED_FIELD_ORDER: readonly TypedField[] = ['ack', 'verdict', 'verdict_say', 'correction', 'support_ja', 'next'];
 
 /** What the client sends in the request body. `state` is the <turn_state …/> line. */
-export interface TypedTurnRequest { state: string; allowedNext: TypedNextKind[]; recap: boolean; nudge?: boolean }
+export interface TypedTurnRequest {
+  state: string; allowedNext: TypedNextKind[]; recap: boolean; nudge?: boolean;
+  /** W6: the pronunciation items still to practise in this part (verbatim); a `next` item outside it is refused. */
+  itemsLeft?: string[];
+}
 
 export const TYPED_SAY_BUDGET = 3;
 export const TYPED_SAY_BUDGET_RECAP = 5;
@@ -355,9 +359,13 @@ export function typedTurnRetryMessage(input: {
   allowedNext: TypedNextKind[];
   alreadySaid: Pick<TypedTurn, 'ack' | 'verdict' | 'verdict_say' | 'correction' | 'support_ja'>;
   budget: number;
+  /** W6: an `item` refused because next.item is not one of these (the items still to practise). */
+  itemNotListed?: string[];
 }): string {
-  const { reason, refused, allowedNext, alreadySaid, budget } = input;
-  const why = reason === 'illegal_kind'
+  const { reason, refused, allowedNext, alreadySaid, budget, itemNotListed } = input;
+  const why = reason === 'illegal_kind' && itemNotListed
+    ? `Your "next" was refused "${refused.kind}" (item_not_listed): next.item ${JSON.stringify(refused.item)} is not one of the sentences still to practise. next.item must be one of these, copied verbatim: ${itemNotListed.map((x) => JSON.stringify(x)).join(' | ')}. Keep next.kind within the allowed set (allowed: ${allowedNext.join(', ')}).`
+    : reason === 'illegal_kind'
     ? `Your "next" was refused "${refused.kind}": that kind is not allowed on this turn (allowed: ${allowedNext.join(', ')}). Choose next.kind from the allowed set only.`
     : `Your "next" was refused "${refused.kind}" because next.say ran to ${englishSentenceCount(refused.say)} English sentences (Japanese sentences do not count). next.say is at most ${budget} sentences. Keep next.kind within the allowed set (allowed: ${allowedNext.join(', ')}).`;
   const said = [

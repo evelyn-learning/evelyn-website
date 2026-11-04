@@ -10,7 +10,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
   allowedNextFor, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
-  sayWithinBudget, sharesCardWords, enterPartState, laterPartLabels, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
+  sayWithinBudget, sharesCardWords, enterPartState, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
 import { TYPED_TURN_INSTRUCTIONS, type TypedNext, type TypedTurn } from '../src/lib/tutor/voice/typed-turn';
@@ -448,6 +448,15 @@ test('W2: laterPartLabels feed moveOnRequestSpan as the prose move-on order does
   assert.ok(!labels.includes('Present perfect'), 'only later parts');
   assert.ok(moveOnRequestSpan('Can we go to past simple?', labels));
   assert.equal(moveOnRequestSpan('Can we go to past simple?'), null, 'without labels the span misses');
+});
+
+// ---- Final fix wave W6: the items still to practise go to the server ----
+test('W6: itemsLeftFor = items minus practised; items_left and the request carry the same list', () => {
+  const c = ctx('pronunciation', { items: ITEMS, state: { practisedItems: { pronunciation: [ITEMS[0]] }, menuState: { pronunciation: { asked: 1, picked: '2' } } } });
+  assert.deepEqual(itemsLeftFor(c), [ITEMS[1]]);
+  assert.ok(turnStateLine(c).includes(`items_left="${ITEMS[1]}"`));
+  assert.deepEqual(typedTurnRequestFor(c).itemsLeft, [ITEMS[1]]);
+  assert.equal(typedTurnRequestFor(ctx('past-simple')).itemsLeft, undefined, 'absent on a part without items');
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
