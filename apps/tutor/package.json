@@ -424,6 +424,7 @@
     "test:partner-session-options": "npx tsx scripts/test-partner-session-options.ts",
     "test:working-level": "npx tsx scripts/test-working-level.ts",
     "test:fixed-script": "npx tsx scripts/test-fixed-script.ts",
+    "test:typed-turn": "npx tsx scripts/test-typed-turn.ts",
     "test:announced-move": "npx tsx scripts/test-announced-move.ts",
     "test:validator-tts-hold": "npx tsx scripts/test-validator-tts-hold.ts",
     "test:menu-pick": "npx tsx scripts/test-menu-pick.ts",

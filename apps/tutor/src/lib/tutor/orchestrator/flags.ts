@@ -1533,6 +1533,12 @@ export const TUTOR_HELD_ADVANCE_WAITS_FOR_RETRY_REPLY = process.env.NEXT_PUBLIC_
  *  few words. Fixed scripts. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_LAST_ITEM_NOTE=off. */
 export const TUTOR_LAST_ITEM_NOTE = process.env.NEXT_PUBLIC_TUTOR_LAST_ITEM_NOTE !== 'off';
+/** Typed turn: on fixed-script language lessons the brain returns one JSON
+ *  object per turn (ack / verdict / verdict_say / correction / support_ja /
+ *  next) and the engine composes speech and cards from the fields. Opt-in
+ *  until the bot series is clean (plan Task 10 flips it to `!== 'off'`).
+ *  Client-side: NEXT_PUBLIC_TUTOR_TYPED_TURN=on. */
+export const TUTOR_TYPED_TURN = process.env.NEXT_PUBLIC_TUTOR_TYPED_TURN === 'on';
 /** Task 46 §3 (73 s / 919 s): a student sentence goes on the board only when
  *  the tutor's own turn confirms it (or a correction card replaces it) — the
  *  precheck's verdict alone never cards a sentence; the level check cards no
