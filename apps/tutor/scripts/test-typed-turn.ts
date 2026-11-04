@@ -318,7 +318,8 @@ test('isStructuredOutputRejection lives here and is re-exported unchanged by gra
 });
 
 test('H2: verdicts are defined operationally; none only for a non-answer; answered glossary', () => {
-  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('ONLY when the reply is not an answer'));
+  // fix wave 3 F2: pin moved — the merged single `none` rule (X4 + the old list) replaced 'ONLY when the reply is not an answer'
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('`none` ONLY when the reply is not an attempt at the open ask:'));
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('acceptable answer'));
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('fills from correct and partly_correct'));
 });
@@ -381,11 +382,18 @@ test('X3 (fix wave 3): a refused move / close is never spoken as a move (r61b 71
   }
   const q = typedTurnRetryMessage({ reason: 'illegal_kind', refused: { kind: 'offer', say: 'One more?', item: '', level: '' }, allowedNext: ['question'], alreadySaid: ALREADY, budget: 3 });
   assert.ok(!q.includes(STAY), 'only a refused move / close');
-  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('When `move` is not in `allowed_next`, never say the part is over or name the next part; the engine turns the page, not your words.'), 'instructions');
+  // F3: the offer names the next part as a choice — not forbidden
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes("When `move` is not in `allowed_next`, never say the part is over and never announce a move; the engine turns the page, not your words. An `offer` turn names the next part as the choice ('…or shall we move on to <next_part>?') — that is not a move."), 'instructions');
+  assert.ok(!TYPED_TURN_INSTRUCTIONS.includes('never say the part is over or name the next part'), 'old X3(b) wording gone');
 });
 
-test('X4 (fix wave 3): `none` is for non-attempts only (r61b 34 s / 51 s: real level-check answers judged none)', () => {
-  assert.ok(TYPED_TURN_INSTRUCTIONS.includes("`none` only when the reply is not an attempt at the open ask — a greeting, 'OK', 'I don't understand', a request to repeat, or silence. A reply that attempts the question is never `none`, in any part, even when you will not correct it."));
+test('X4 + F2 (fix wave 3): ONE `none` rule — non-attempts only', () => {
+  const I = TYPED_TURN_INSTRUCTIONS;
+  const RULE = "`none` ONLY when the reply is not an attempt at the open ask: silence, a greeting, 'OK' / 'thank you', 'I don't understand', a request to repeat or slow down, or a reply in Japanese only. A reply that attempts the question in English is never `none`, in any part, even when you will not correct it.";
+  assert.equal(I.split(RULE).length - 1, 1, 'the merged rule, once');
+  assert.ok(!I.includes('ONLY when the reply is not an answer at all'), 'old list merged away');
+  assert.ok(!I.includes('Never use "none" for a reply that answers the ask'), 'duplicate sentence removed');
+  assert.ok(!I.includes("`none` only when the reply is not an attempt at the open ask — a greeting"), 'X4 sentence merged away');
 });
 
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }

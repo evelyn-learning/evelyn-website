@@ -283,6 +283,8 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
 export function moveNeedsAnswerFor(ctx: AllowedNextContext): boolean {
   if (typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) !== 'level_check') return false;
   if (ctx.nudge || ctx.studentMovedOn || ctx.engineMoved || !ctx.studentReplied) return false;
+  // F1 (fix wave 3 round 1): the tracker's ['move'] row is no answer-gated cell.
+  if (ctx.partQuestionsAnswered) return false;
   return (ctx.state.answersInPart?.[ctx.segId] ?? 0) === 2 && allowedNextFor(ctx).includes('move');
 }
 

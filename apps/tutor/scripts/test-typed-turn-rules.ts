@@ -653,6 +653,14 @@ test('X1: level check with every numbered question answered (partQuestionsAnswer
   assert.deepEqual(allowedNextFor(ctx('level-check', { studentReplied: true, state: ask('question') })), ['question']);
   assert.ok(!turnStateLine(ctx('level-check', { state: ask('question') })).includes('questions_done'), 'absent when not done');
   assert.deepEqual(allowedNextFor(ctx('level-check', { studentReplied: true, state: { ...ask('question'), answersInPart: { 'level-check': 2 } } })), ['question', 'move']);
+  // F1: moveNeedsAnswer only in the ['question','move'] cell
+  const lc = (n: number, over: Partial<AllowedNextContext> = {}) => ctx('level-check', { studentReplied: true, state: { ...ask('question'), answersInPart: { 'level-check': n } }, ...over });
+  assert.equal(moveNeedsAnswerFor(lc(0, { partQuestionsAnswered: true })), false, 'tracker move, committed 0');
+  assert.equal(moveNeedsAnswerFor(lc(2, { partQuestionsAnswered: true })), false, 'tracker move, committed 2');
+  assert.deepEqual(allowedNextFor(lc(2, { partQuestionsAnswered: true })), ['move']);
+  assert.ok(!typedTurnRequestFor(lc(2, { partQuestionsAnswered: true })).moveNeedsAnswer, 'no request flag on the tracker move');
+  assert.equal(moveNeedsAnswerFor(lc(3)), false, 'committed 3');
+  assert.equal(moveNeedsAnswerFor(lc(2)), true, 'committed 2 + replied');
   // other parts ignore the flag
   assert.deepEqual(sorted(allowedNextFor(ctx('open-conversation', { partQuestionsAnswered: true, state: ask('question') }))), ['question', 'retry']);
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('questions_done="yes" (only then) = every numbered question of this part has been answered — move now'), 'glossary');
