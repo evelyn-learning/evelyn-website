@@ -78,6 +78,11 @@ test('menu / pronunciation', () => {
   assert.deepEqual(sorted(some), ['item', 'move', 'offer', 'retry']);
   assert.ok(!allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), ...ask('none'), practisedItems: { pronunciation: ['a'] } } })).includes('retry'));
   assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), practisedItems: { pronunciation: ['a', 'b'] } } })), ['offer', 'move']);
+  for (const k of ['question', 'offer', 'menu', 'retry'] as const) {
+    assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), ...ask(k), practisedItems: { pronunciation: ['a'] } } })), ['item', 'offer', 'move'], k);
+  }
+  assert.ok(allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), ...ask('item') } })).includes('retry'));
+
   assert.ok(allowedNextFor(ctx('pronunciation', { items, menuPick: '2' })).includes('item'));
 });
 

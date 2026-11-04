@@ -99,7 +99,10 @@ export function allowedNextFor(ctx: AllowedNextContext): TypedNextKind[] {
     const ms = state.menuState[segId] ?? { asked: 0, picked: null };
     if (!ms.picked && !ctx.menuPick) return ms.asked >= 2 ? ['move'] : ['menu'];
     if (kind === 'pronunciation') {
-      return itemsLeft(ctx).length > 0 ? withRetry(['item', 'retry', 'offer', 'move'].map((k) => k as TypedNextKind)) : ['offer', 'move'];
+      if (itemsLeft(ctx).length === 0) return ['offer', 'move'];
+      const row: TypedNextKind[] = ['item', 'retry', 'offer', 'move'];
+      // retry = "the same sentence again": only meaningful while an item is the open ask
+      return ask === 'item' ? row : row.filter((k) => k !== 'retry');
     }
   }
 
