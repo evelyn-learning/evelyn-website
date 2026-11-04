@@ -390,7 +390,8 @@ test('H1: a resolved menu pick persists, so the menu is never re-asked after an 
   assert.ok(!a2.includes('menu') && a2.includes('item'));
   assert.ok(turnStateLine(c2).includes('menu_picked="a complete sentence"'));
   const s2 = applyTypedTurn(s1, { ...turn, next: { ...turn.next, item: sentences[1] } }, fctx('pronunciation', { items: sentences, state: s1 }), null);
-  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: sentences, state: s2 })), ['offer']);
+  // R2: the last item's result is in (open ask item, no retry yet) → one weakest-word repeat or the offer
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: sentences, state: s2 })), ['retry', 'offer']);
   // no pick this turn -> picked stays null
   const s3 = applyTypedTurn(createTypedTurnState(), { ...turn, next: { kind: 'menu', say: 'x', item: '', level: '' } }, fctx('pronunciation', { items: sentences }), null);
   assert.equal(s3.menuState.pronunciation.picked, null);
@@ -574,6 +575,19 @@ test('R1: a nudge turn at the start of the summary leaves the review step; a del
   // a question on another part sets nothing
   const s3 = applyTypedTurn(createTypedTurnState(), tt('question'), fctx('past-simple'), null);
   assert.deepEqual(s3.recapReviewed, {});
+});
+
+// ---- Fix round 1 R2: the weakest-word repeat on the LAST item ----
+test('R2: items exhausted with the last item open — retry once, then offer / move', () => {
+  const base = { menuState: { pronunciation: { asked: 1, picked: '2' } }, practisedItems: { pronunciation: ['a'] } };
+  const made = { pronunciation: { made: true, accepted: true, served: false } };
+  const row = (retries: number, offerMade: boolean) => allowedNextFor(ctx('pronunciation', { items: ['a'], state: { ...base, ...ask('item'), retriesInARow: retries, ...(offerMade ? { offerState: made } : {}) } }));
+  assert.deepEqual(row(0, false), ['retry', 'offer']);
+  assert.deepEqual(row(0, true), ['retry', 'move']);
+  assert.deepEqual(row(1, false), ['offer']);
+  assert.deepEqual(row(1, true), ['move']);
+  // an open ask other than item: no retry
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: ['a'], state: { ...base, ...ask('offer') } })), ['offer']);
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

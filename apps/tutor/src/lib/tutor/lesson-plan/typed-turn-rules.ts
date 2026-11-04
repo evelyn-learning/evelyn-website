@@ -205,7 +205,12 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
     if (kind === 'pronunciation') {
       // V5 (fix wave 2): items used up → the one-more-or-move-on offer first (once), then the move
       // (the voice run moved straight to the summary after the last authored sentence).
-      if (itemsLeft(ctx).length === 0) return state.offerState[segId]?.made ? ['move'] : ['offer'];
+      // R2 (fix round 1): the LAST item's result is in (open ask item, not yet repeated) — the weakest-word repeat
+      // is still allowed beside the offer / move (the plan: one more repeat on the weakest word after a result).
+      if (itemsLeft(ctx).length === 0) {
+        const exit: TypedNextKind = state.offerState[segId]?.made ? 'move' : 'offer';
+        return ask === 'item' && state.retriesInARow === 0 ? ['retry', exit] : [exit];
+      }
       const row: TypedNextKind[] = ['item', 'retry', 'offer', 'move'];
       // retry = "the same sentence again": only meaningful while an item is the open ask
       return ask === 'item' ? row : row.filter((k) => k !== 'retry');
