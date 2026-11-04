@@ -13,6 +13,7 @@ import { join } from 'node:path';
 import { correctionEmphasis } from '../src/lib/tutor/voice/sentence-board';
 import { segmentCardCommand } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { validatorTtsHold } from '../src/lib/tutor/voice/validator-tts-hold';
+import { typedMoveLastSentence, typedPageTurnHoldDone } from '../src/lib/tutor/whiteboard/deferred-page-flush';
 
 let failed = 0;
 const test = (name: string, fn: () => void) => {
@@ -368,6 +369,27 @@ test('Z2 (fix wave 5): a move in a turn that boarded a model card turns the page
   // the turn-end flush it relies on opens the page and adds the authored card for a cardOnFlush page
   assert.ok(VTR.includes("onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title} at turn end`);"), 'turn-end flush');
   assert.ok(VTR.includes('if (deferred.cardOnFlush || deferred.authored === true) {'), 'card on flush');
+});
+
+test('G1 I2 (fix wave 5 round 1): the held page turn waits for the LAST next.say sentence to finish, not "speech ended"', () => {
+  // pure: the last sentence index of a move say anchored at sentence 3 (two sentences → 4); an empty say → the anchor
+  assert.equal(typedMoveLastSentence(3, 'That is clear. Now let us practise pronunciation?'), 4);
+  assert.equal(typedMoveLastSentence(3, ''), 3);
+  // done once the sentence AFTER the last has started, or the audio drained with the last one started
+  assert.equal(typedPageTurnHoldDone({ lastSentence: 4, started: 4, why: 'speech ended' }), false, 'a gap between sentences 3 and 4');
+  assert.equal(typedPageTurnHoldDone({ lastSentence: 4, started: 5, why: 'speech ended' }), false, 'the last sentence is still playing');
+  assert.equal(typedPageTurnHoldDone({ lastSentence: 4, started: 5, why: 'brain idle' }), false);
+  assert.equal(typedPageTurnHoldDone({ lastSentence: 4, started: 5, why: 'audio drained' }), true, 'drained after the last sentence');
+  assert.equal(typedPageTurnHoldDone({ lastSentence: 4, started: 4, why: 'audio drained' }), false, 'drained before the last sentence started');
+  assert.equal(typedPageTurnHoldDone({ lastSentence: 4, started: 6, why: 'speech ended' }), true, 'a later sentence started');
+  assert.equal(typedPageTurnHoldDone({ lastSentence: 4, started: 0, why: 'interrupt' }), true, 'an interruption turns the page');
+  // VTR wiring
+  assert.ok(/const typedPageTurnHoldRef = useRef<\{ segmentId: string; lastSentence: number \} \| null>\(null\);/.test(VTR), 'the hold ref');
+  assert.ok(VTR.includes('typedPageTurnHoldRef.current = { segmentId: e.to, lastSentence: typedMoveLastSentence(anchorSentence, (typedFieldsSeen.next as TypedNext | undefined)?.say ?? \'\') };'), 'anchored like paintTypedPartEntry: the next field\'s narration index + the say\'s sentences');
+  assert.ok(VTR.includes('if (!typedPageTurnHoldDone({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why })) {'), 'the turn-end flush consults the hold');
+  assert.ok(VTR.includes("onDebugEvent?.('typed_turn_page_turn_on_interrupt',"), 'interrupt debug event');
+  assert.equal((VTR.match(/releaseTypedPageTurnHoldOnInterrupt\(\);/g) ?? []).length, 2, 'both kill sites release the hold');
+  assert.ok(/ttsPlaybackStartedCountRef\.current = 0;\s*typedPageTurnHoldRef\.current = null;/.test(VTR), 'cleared with the playback counter (turn start / retry)');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

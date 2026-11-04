@@ -1,3 +1,4 @@
+import { sentenceCount as typedSentenceCount } from '@/lib/tutor/voice/typed-turn';
 // src/lib/tutor/whiteboard/deferred-page-flush.ts
 /**
  * Should the deferred segment-advance newPage be prepended to this batch?
@@ -428,4 +429,20 @@ export function authoredCardParaphrase(statement: string | null | undefined, aut
   if (a.size < 6 || b.size < 6) return false;
   let inter = 0; for (const x of a) if (b.has(x)) inter += 1;
   return inter / (a.size + b.size - inter) >= AUTHORED_PARAPHRASE_MATCH;
+}
+
+/**
+ * Fix wave 5 round 1 (I2): a typed move whose turn boarded a model card holds its page turn until the LAST
+ * sentence of `next.say` has finished (the "speech ended" edge also fires in the gap between two sentences).
+ * The last sentence's narration index: the `next` field's anchor (its first sentence) + the say's sentences − 1.
+ */
+export function typedMoveLastSentence(anchorSentence: number, say: string): number {
+  return anchorSentence + Math.max(1, typedSentenceCount(say)) - 1;
+}
+/** Is the held page turn free to flush? `started` = sentences started this attempt. Done when a sentence after
+ *  the last one has started, when the audio drained with the last one started, or on an interruption. */
+export function typedPageTurnHoldDone(input: { lastSentence: number; started: number; why: string }): boolean {
+  if (input.why === 'interrupt') return true;
+  if (input.started >= input.lastSentence + 2) return true;
+  return input.why === 'audio drained' && input.started >= input.lastSentence + 1;
 }

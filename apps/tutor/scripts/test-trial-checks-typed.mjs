@@ -306,4 +306,10 @@ test('TT13: a model card of the PREVIOUS turn, or an engine move, does not count
   assert.ok(/^PASS  TT13/.test(tt13(eng)), tt13(eng));
 });
 
+test('TT13 (round 1 I1): a "model_card not placed" is not a boarded card', () => {
+  const d = dump().replace('   21s typed_turn_effect: correction_card', '   21s typed_turn_effect: model_card not placed (duplicate)');
+  const line = tt13(d);
+  assert.ok(/^PASS  TT13/.test(line), line);
+});
+
 console.log(`${n} passed`);

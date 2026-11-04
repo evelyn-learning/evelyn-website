@@ -93,7 +93,7 @@ import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
 // Board/flow round (2026-10-04).
 import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
 import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
-import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen, authoredCardOnCurrentPage, transitionSentenceIndex, lastStudentSentenceCardOnPage, authoredCardParaphrase } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen, authoredCardOnCurrentPage, transitionSentenceIndex, lastStudentSentenceCardOnPage, authoredCardParaphrase, typedMoveLastSentence, typedPageTurnHoldDone } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue, offCardAskStripped, cardAskEngineFallbackLine, menuPresentedIn, menuEntryFallbackLine, menuPickPendingSuppressesArm } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead, proactiveOpenerAllowed } from '@/lib/tutor/lesson-plan/spoken-opener';
 import { detectPronunciationTarget, handwriteShownSentence, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation, pronunciationItemRepeat } from '@/lib/tutor/pronunciation/auto-arm';
@@ -2706,6 +2706,9 @@ export function VoiceTutorRealtime({
   // renders degrade gracefully to cap-based flush.
   const ttsDispatchedCountRef = useRef(0);
   const ttsPlaybackStartedCountRef = useRef(0);
+  // Fix wave 5 round 1 (I2): a typed move that boarded a card turns its page only after the LAST next.say sentence
+  // (narration index, same coordinate as ttsPlaybackStartedCountRef); cleared with that counter and on interruption.
+  const typedPageTurnHoldRef = useRef<{ segmentId: string; lastSentence: number } | null>(null);
   // Phase-0 instrumentation (humanlike-latency plan): per-turn latency ledger.
   // Created lazily at eager_end/turn.end, emitted + nulled at brain_turn end.
   // Marks use Date.now() — must stay consistent within a turn (never mix with
@@ -6407,6 +6410,15 @@ export function VoiceTutorRealtime({
   const handleWhiteboardCommandRef = useRef<((commands: WhiteboardCommand[]) => Promise<WhiteboardCommandResult>) | null>(null);
   const flushDeferredPageAtTurnEndNow = useCallback((why: string) => {
     const deferred = pendingAdvanceNewPageRef.current;
+    const tHold = typedPageTurnHoldRef.current;
+    if (tHold && deferred?.segmentId !== tHold.segmentId) typedPageTurnHoldRef.current = null; // the page went another way
+    else if (tHold) {
+      if (!typedPageTurnHoldDone({ lastSentence: tHold.lastSentence, started: ttsPlaybackStartedCountRef.current, why })) {
+        onDebugEvent?.('typed_turn_page_turn_waits', `${why}: say sentence ${tHold.lastSentence} not finished (started ${ttsPlaybackStartedCountRef.current})`);
+        return;
+      }
+      typedPageTurnHoldRef.current = null;
+    }
     // Task 45 §4: with the validator TTS hold the brain goes idle before the
     // audio starts — the page would flip ahead of the whole turn. A turn that
     // says the move leaves the break to its anchored batch (or to audio drained).
@@ -6460,6 +6472,14 @@ export function VoiceTutorRealtime({
   }, [onWhiteboardCommand, onDebugEvent]);
   const flushDeferredPageAtTurnEndRef = useRef(flushDeferredPageAtTurnEndNow);
   flushDeferredPageAtTurnEndRef.current = flushDeferredPageAtTurnEndNow;
+  /** Fix wave 5 round 1 (I2): the student cut the move's say short — the held page turns now (or at speech end). */
+  const releaseTypedPageTurnHoldOnInterrupt = (): void => {
+    const hold = typedPageTurnHoldRef.current;
+    if (!hold) return;
+    onDebugEvent?.('typed_turn_page_turn_on_interrupt', `${hold.segmentId}: say sentence ${hold.lastSentence} not reached (started ${ttsPlaybackStartedCountRef.current})`);
+    flushDeferredPageAtTurnEndRef.current('interrupt');
+    typedPageTurnHoldRef.current = null;
+  };
 
   // (Re)arm the shared stall timer. Called on each buffer-add and each
   // playback-progress event; only fires after RENDER_SYNC_STALL_MS of NO
@@ -12949,6 +12969,7 @@ export function VoiceTutorRealtime({
     flushAllRenderBuffer();
     ttsDispatchedCountRef.current = 0;
     ttsPlaybackStartedCountRef.current = 0;
+    typedPageTurnHoldRef.current = null;
     lastWordPosRef.current = null; // Task 3.2: stale word clock must not satisfy fresh anchors
     renderBufferPausedRef.current = false;
     renderSyncActiveRef.current = true;
@@ -15248,6 +15269,13 @@ export function VoiceTutorRealtime({
           typedEngineMovePainted = true;
           try { await paintTypedPartEntry(typedEngineMove.from, typedEngineMove.to, anchorSentence, true); } catch (err) { console.warn('[typed-turn] engine move paint failed:', err); }
         };
+        /** Z2 + fix round 1 (I2): the part page + its card flush at the turn end, after the LAST next.say sentence. */
+        const holdTypedPageTurnForCard = (heldPage: NonNullable<typeof pendingAdvanceNewPageRef.current>, e: { from: string; to: string }, anchorSentence: number): void => {
+          pendingAdvanceNewPageRef.current = { ...heldPage, afterTurn: true, cardOnFlush: true };
+          typedPageTurnHoldRef.current = { segmentId: e.to, lastSentence: typedMoveLastSentence(anchorSentence, (typedFieldsSeen.next as TypedNext | undefined)?.say ?? '') };
+          onDebugEvent?.('typed_turn_effect', `advance ${e.from}→${e.to}`);
+          onDebugEvent?.('typed_turn_page_turn_held_for_card', `${e.from}→${e.to}: page + card after say sentence ${typedPageTurnHoldRef.current.lastSentence}`);
+        };
         const runTypedEffect = async (e: TypedEffect, anchorSentence: number): Promise<void> => {
           const tPlan = lessonPlanRef.current;
           try {
@@ -15292,9 +15320,7 @@ export function VoiceTutorRealtime({
                 // Z2 (p2.txt 926 s): a model card boarded this turn ⇒ page + new card at the turn end (cardOnFlush).
                 const heldPage = pendingAdvanceNewPageRef.current;
                 if (typedModelCardPlaced && heldPage && heldPage.segmentId === e.to && heldPage.authored === true) {
-                  pendingAdvanceNewPageRef.current = { ...heldPage, afterTurn: true, cardOnFlush: true };
-                  onDebugEvent?.('typed_turn_effect', `advance ${e.from}→${e.to}`);
-                  onDebugEvent?.('typed_turn_page_turn_held_for_card', `${e.from}→${e.to}: page + card at turn end`);
+                  holdTypedPageTurnForCard(heldPage, e, anchorSentence);
                 } else {
                   // The new part's card + page break, anchored to the first next.say sentence.
                   await paintTypedPartEntry(e.from, e.to, anchorSentence, false);
@@ -16435,6 +16461,7 @@ export function VoiceTutorRealtime({
           // retry re-anchors against its own fresh audio.
           ttsDispatchedCountRef.current = 0;
           ttsPlaybackStartedCountRef.current = 0;
+          typedPageTurnHoldRef.current = null;
           lastWordPosRef.current = null; // Task 3.2: clock resets with the counts
           // Judge-kill Stage 3.1: capture the unplayed TTS tail BEFORE the
           // bridge's clearSpeechQueue drains it, so a restatement retry can
@@ -27418,6 +27445,7 @@ export function VoiceTutorRealtime({
       cancelStormRef.current.recordCancel(Date.now());
       speechKilledAtRef.current = Date.now();
       cancelResumeLesson('turn_killed'); // a killed turn's resume request dies with it
+      releaseTypedPageTurnHoldOnInterrupt();
       // Render↔speech sync: PAUSE the render buffer before clearSpeechQueue's
       // drain so the cancel doesn't flush buffered renders — the verdict
       // decides drop (abort/re-fire) vs flush-all (resume/deliver).
@@ -28661,6 +28689,7 @@ export function VoiceTutorRealtime({
         cancelStormRef.current.recordCancel(Date.now());
         speechKilledAtRef.current = Date.now();
         cancelResumeLesson('turn_killed'); // a killed turn's resume request dies with it
+        releaseTypedPageTurnHoldOnInterrupt();
         // Render↔speech sync: PAUSE the buffer before the drain (see
         // retro-cancel) — verdict decides drop vs flush-all.
         renderBufferPausedRef.current = true;

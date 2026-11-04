@@ -711,8 +711,9 @@ export function runChecks(dump) {
       const ai = events.indexOf(a);
       const prevTyped = [...typed].reverse().find((e) => events.indexOf(e) < ai);
       const lo = prevTyped ? events.indexOf(prevTyped) : -1;
-      const card = events.find((x, xi) => xi > lo && xi < ai && x.type === 'typed_turn_effect' && /^model_card\b/.test(x.msg));
-      if (card) tt13.push(`${a.t}s ${a.msg.replace(/^advance /, '')} after model_card at ${card.t}s${/not placed/.test(card.msg) ? ' (not placed)' : ''}`);
+      const card = events.find((x, xi) => xi > lo && xi < ai && x.type === 'typed_turn_effect' && /^model_card\b/.test(x.msg) && !/\bnot placed\b/.test(x.msg));
+      // round 1 (I1): a card the board refused ("not placed") was never boarded
+      if (card) tt13.push(`${a.t}s ${a.msg.replace(/^advance /, '')} after model_card at ${card.t}s`);
     }
     ok('TT13 a move turn does not board', tt13.length === 0, tt13.join(' | ') || `${tt13Moves} brain moves`);
     // TT5: the prose validators / holds have nothing to do on a typed run
