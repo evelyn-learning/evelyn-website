@@ -67,6 +67,9 @@ export interface TypedTurnState {
   correctionsInPart: Record<string, number>;
   /** V4 (fix wave 2): replies judged as answers (verdict ≠ none) per part — the level check's studentAnswerCount. */
   answersInPart: Record<string, number>;
+  /** R1 (fix round 1): the recap's review question was delivered (a `question` turn on the recap part) — a nudge /
+   *  wait turn does not consume the review step. */
+  recapReviewed: Record<string, boolean>;
   retriesInARow: number;
   pendingVerdict: TypedVerdict | null;
 }
@@ -84,6 +87,7 @@ export function createTypedTurnState(): TypedTurnState {
     postDueTurns: {},
     correctionsInPart: {},
     answersInPart: {},
+    recapReviewed: {},
     retriesInARow: 0,
     pendingVerdict: null,
   };
@@ -227,7 +231,8 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
 
   // V3 (fix wave 2): the summary is engine-driven — review + feedback + check question, then the close (the brain
   // never picked close when it was offered beside question; a question object costs one retry, then the close fallback).
-  if (kind === 'recap') return (state.turnsInPart[segId] ?? 0) >= 1 ? ['close'] : ['question'];
+  // R1: keyed on the delivered review, not on turns (a nudge / wait turn at the start must not skip it).
+  if (kind === 'recap') return state.recapReviewed?.[segId] ? ['close'] : ['question'];
 
   if (ctx.budgetDue) return askOpen ? ['question', 'move'] : [moveOrClose];
 
@@ -269,7 +274,7 @@ export function turnStateLine(ctx: AllowedNextContext): string {
   ];
   // V3: the recap's step, and on its first turn the plan's required phrases (the review turn must say them).
   if (typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'recap') {
-    const first = (state.turnsInPart[segId] ?? 0) === 0;
+    const first = !state.recapReviewed?.[segId];
     attrs.push(['recap_step', first ? 'review_feedback_check' : 'close']);
     const phrases = (segmentOf(ctx.plan, segId)?.requiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim());
     if (first && phrases.length) attrs.push(['required_phrases', phrases.join('|')]);
@@ -437,6 +442,8 @@ export function applyTypedTurn(
   const answersInPart = { ...(state.answersInPart ?? {}) };
   if (turn.verdict !== 'none') answersInPart[seg] = (answersInPart[seg] ?? 0) + 1;
   if (moved) answersInPart[moved.to] = 0;
+  const recapReviewed = { ...(state.recapReviewed ?? {}) };
+  if (next.kind === 'question' && typedPartKind(ctx.plan, seg, ctx.levelKnown) === 'recap') recapReviewed[seg] = true;
 
   const answeredCards = { ...state.answeredCards };
   if ((turn.verdict === 'correct' || turn.verdict === 'partly_correct') && state.openAsk.cardQuestion) {
@@ -477,7 +484,7 @@ export function applyTypedTurn(
     openAsk,
     correctionOpen: turn.correction ? { student: turn.correction.student, corrected: turn.correction.corrected }
       : turn.verdict === 'correct' ? null : state.correctionOpen,
-    practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart, postDueTurns, correctionsInPart, answersInPart,
+    practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart, postDueTurns, correctionsInPart, answersInPart, recapReviewed,
     retriesInARow: next.kind === 'retry' ? state.retriesInARow + 1 : 0,
     pendingVerdict: null,
   };

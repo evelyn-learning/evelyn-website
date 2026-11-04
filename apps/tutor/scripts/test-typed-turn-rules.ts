@@ -119,17 +119,19 @@ test('nudge', () => {
   assert.deepEqual(allowedNextFor(ctx('past-simple', { nudge: true })), ['question', 'wait']);
 });
 
-test('recap order (V3: question on the first recap turn, then close only)', () => {
+test('recap order (V3 / R1: question until the review was delivered, then close only)', () => {
   assert.deepEqual(allowedNextFor(ctx('summary')), ['question']);
   assert.deepEqual(allowedNextFor(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 0 } } })), ['question']);
-  assert.deepEqual(allowedNextFor(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 1 } } })), ['close']);
-  assert.deepEqual(allowedNextFor(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 3 } } })), ['close']);
+  // R1: turns alone do not end the review step
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 2 } } })), ['question']);
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 1 }, recapReviewed: { summary: true } } })), ['close']);
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 3 }, recapReviewed: { summary: true } } })), ['close']);
 });
 test('V3: turnStateLine recap_step + required_phrases on the summary', () => {
   const t0 = turnStateLine(ctx('summary', { state: ask('question') }));
   assert.ok(t0.includes('recap_step="review_feedback_check"'), t0);
   assert.ok(t0.includes('required_phrases="one thing you did well|the difference between"'), t0);
-  const t1 = turnStateLine(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 1 } } }));
+  const t1 = turnStateLine(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 1 }, recapReviewed: { summary: true } } }));
   assert.ok(t1.includes('recap_step="close"'), t1);
   assert.ok(!t1.includes('required_phrases'), t1);
   const pp = turnStateLine(ctx('present-perfect'));
@@ -549,6 +551,29 @@ test('V6: next_card carries a concept part\'s key ideas (level-filtered, as the 
   assert.ok(/next_card="[^"]*Could you describe your current responsibilities/.test(adv), adv);
   // a question card is unchanged
   assert.ok(/next_card="Have you worked for your current company for a long time\?"/.test(turnStateLine(ctx('topic-intro', { studentMovedOn: true }))));
+});
+
+// ---- Fix round 1 R1: a nudge / wait turn does not consume the summary's review step ----
+test('R1: a nudge turn at the start of the summary leaves the review step; a delivered question turn ends it', () => {
+  const tt = (kind: 'wait' | 'question') => ({ ack: 'Take your time.', verdict: 'none' as const, verdict_say: '', board: '', correction: null, support_ja: '', next: { kind, say: kind === 'wait' ? '' : 'Here is what we practised. One thing you did well was… What is the difference between these two sentences?', item: '', level: '' as const } });
+  const s0 = { ...createTypedTurnState(), openAsk: { kind: 'question' as const, text: 'x' } };
+  assert.deepEqual(createTypedTurnState().recapReviewed, {});
+  // the nudge row still wins while silent
+  assert.deepEqual(allowedNextFor(ctx('summary', { nudge: true, state: s0 })), ['question', 'wait']);
+  const s1 = applyTypedTurn(s0, tt('wait'), fctx('summary', { state: s0 }), null);
+  assert.equal(s1.turnsInPart.summary, 1, 'the wait turn counts as a turn');
+  assert.equal(s1.recapReviewed.summary, undefined);
+  const c = ctx('summary', { state: s1 });
+  assert.deepEqual(allowedNextFor(c), ['question']);
+  assert.ok(turnStateLine(c).includes('recap_step="review_feedback_check"') && turnStateLine(c).includes('required_phrases="one thing you did well|the difference between"'));
+  // a delivered question is the review
+  const s2 = applyTypedTurn(s0, tt('question'), fctx('summary', { state: s0 }), null);
+  assert.equal(s2.recapReviewed.summary, true);
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: s2 })), ['close']);
+  assert.ok(turnStateLine(ctx('summary', { state: s2 })).includes('recap_step="close"'));
+  // a question on another part sets nothing
+  const s3 = applyTypedTurn(createTypedTurnState(), tt('question'), fctx('past-simple'), null);
+  assert.deepEqual(s3.recapReviewed, {});
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
