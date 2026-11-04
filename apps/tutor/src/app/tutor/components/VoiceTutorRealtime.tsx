@@ -14768,7 +14768,8 @@ export function VoiceTutorRealtime({
       if (typedTurnActive && typedEngineMove) typedTurnStateRef.current = enterPartState(typedTurnStateRef.current, typedEngineMove.to);
       // W2: the engine move's card + page break, painted once per student turn (at its first typed field).
       let typedEngineMovePainted = false;
-      const typedTurnStateAtTurnStart: TypedTurnState = structuredClone(typedTurnStateRef.current);
+      // W3: taken on a typed turn only — the prose path does no per-turn clone (the restore below requires typedTurnActive).
+      const typedTurnStateAtTurnStart: TypedTurnState | null = typedTurnActive ? structuredClone(typedTurnStateRef.current) : null;
       let typedMovedThisTurn: { from: string; to: string } | null = typedEngineMove;
       for (let attempt = 0; attempt <= attemptCap; attempt++) {
         // This attempt continues a turn that stopped early (turn-shape.ts): it
@@ -15104,7 +15105,7 @@ export function VoiceTutorRealtime({
         // Task 8: a typed turn is ONE attempt — no validator retry, no continuation (a kill / retry would
         // re-enter this loop with the turn's fields already applied). A brain error keeps its own fallback.
         if (typedTurnActive) attemptCap = 0;
-        if (typedTurnActive && attempt > 0) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);
+        if (typedTurnActive && attempt > 0 && typedTurnStateAtTurnStart) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);
         // applyTypedTurn's contract: the FROM part — the part the student answered in, captured once
         // per student turn (an earlier attempt's advance has already moved the pointer).
         const typedFromSeg = typedEngineMove?.to ?? turnStartSegmentId ?? '';

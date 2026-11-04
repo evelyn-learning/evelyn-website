@@ -70,8 +70,9 @@ test('correctionEmphasis: positions of the field\'s words in the corrected sente
 });
 test('review C-1: one student turn advances at most once; the typed state is per-turn', () => {
   assert.ok(VTR.includes('const typedFromSeg = typedEngineMove?.to ?? turnStartSegmentId ?? \'\';'), 'FROM part captured once per student turn (post lesson-time guard)');
-  assert.ok(/const typedTurnStateAtTurnStart: TypedTurnState = structuredClone\(typedTurnStateRef\.current\);[\s\S]{0,400}for \(let attempt = 0; attempt <= attemptCap; attempt\+\+\)/.test(VTR), 'snapshot before the attempt loop');
-  assert.ok(VTR.includes('if (typedTurnActive && attempt > 0) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);'), 'restored on every attempt > 0');
+  // W3: the snapshot is typed-only (null on prose); the restore checks it.
+  assert.ok(/const typedTurnStateAtTurnStart: TypedTurnState \| null = typedTurnActive \? structuredClone\(typedTurnStateRef\.current\) : null;[\s\S]{0,400}for \(let attempt = 0; attempt <= attemptCap; attempt\+\+\)/.test(VTR), 'snapshot before the attempt loop');
+  assert.ok(VTR.includes('if (typedTurnActive && attempt > 0 && typedTurnStateAtTurnStart) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);'), 'restored on every attempt > 0');
   assert.ok(/case 'advance':[\s\S]{0,300}if \(typedMovedThisTurn\) \{[\s\S]{0,120}onDebugEvent\?\.\('typed_turn_advance_blocked', `\$\{e\.from\}→\$\{e\.to\}`\);\s*break;/.test(VTR), 'second advance blocked');
   assert.ok(/typedMovedThisTurn = typedMoved;/.test(VTR), 'the latch is set by the advance');
 });
@@ -302,6 +303,12 @@ test('W2: pre-turn engine moves are latched, enter the part, paint once, block a
   assert.ok(/typedFieldAnchor = \{ field: tf\.field, narrationIndex: [^\n]+\n\s*await paintTypedEngineMove\(typedFieldAnchor\.narrationIndex\);/.test(VTR), 'painted at the first typed-field');
   assert.ok(/retryDisagreed\?: boolean \};\n\s*await paintTypedEngineMove\(/.test(VTR), 'or at the turn end');
   assert.ok(VTR.includes("studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText, laterPartLabels(tPlan, typedFromSeg)) || typedStopDecision === 'finish'),"), 'later-part labels');
+});
+
+test('W3: the turn-start typed snapshot is taken on a typed turn only (prose path inert)', () => {
+  assert.ok(VTR.includes('const typedTurnStateAtTurnStart: TypedTurnState | null = typedTurnActive ? structuredClone(typedTurnStateRef.current) : null;'), 'guarded snapshot');
+  assert.equal((VTR.match(/structuredClone\(typedTurnStateRef\.current\)/g) ?? []).length, 1, 'no other per-turn clone');
+  assert.ok(VTR.includes('if (typedTurnActive && attempt > 0 && typedTurnStateAtTurnStart) typedTurnStateRef.current = structuredClone(typedTurnStateAtTurnStart);'), 'restore reads the guarded snapshot');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
