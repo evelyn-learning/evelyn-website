@@ -657,13 +657,14 @@ test('X1: level check with every numbered question answered (partQuestionsAnswer
   assert.deepEqual(sorted(allowedNextFor(ctx('open-conversation', { partQuestionsAnswered: true, state: ask('question') }))), ['question', 'retry']);
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('questions_done="yes" (only then) = every numbered question of this part has been answered — move now'), 'glossary');
 });
-test('X1: answerShaped — ≥ 4 content words or ≥ 8 Japanese-script characters', () => {
+test('X1/X1b: answerShaped — ≥ 4 English content words; a Japanese reply never counts (the brain\'s verdict decides)', () => {
   assert.equal(answerShaped("Yes, I'm ready."), false);
   assert.equal(answerShaped('OK, thank you.'), false);
   assert.equal(answerShaped('Sorry, can you say that again?'), false);
   assert.equal(answerShaped('I work in the sales department of an electronics company in Osaka.'), true);
   assert.equal(answerShaped(''), false);
-  assert.equal(answerShaped('営業部で働いています。'), true);
+  assert.equal(answerShaped('すみません、わかりません。'), false);
+  assert.equal(answerShaped('営業部で働いています。'), false);
   assert.equal(answerShaped('はい。'), false);
 });
 test('X1: applyTypedTurn counts verdict none + an answer-shaped reply as an answer; "OK." is not', () => {

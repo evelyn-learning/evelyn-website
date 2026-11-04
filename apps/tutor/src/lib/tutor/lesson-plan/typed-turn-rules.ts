@@ -396,12 +396,11 @@ export interface FieldEffectContext {
 /** X1: words that carry no answer content ("Yes, I'm ready.", "OK, thank you.", "Sorry, can you say that again?"). */
 const ANSWER_STOP = new Set(['the', 'a', 'an', 'to', 'of', 'and', 'is', 'it', 'that', 'this', 'in', 'on', 'for', 'i', 'you', 'we', 'yes', 'no', 'ok', 'okay', 'thank', 'thanks', 'please', 'sorry']);
 /** X1 (fix wave 3): the reply looks like an attempt at an answer — ≥ 4 content words (lower-cased, punctuation stripped,
- *  ANSWER_STOP removed) or ≥ 8 Japanese-script characters. The engine's backstop for a brain `none` on a real answer
- *  (r61b 34 s / 51 s). Pure. */
+ *  ANSWER_STOP removed). The engine's backstop for a brain `none` on a real answer (r61b 34 s / 51 s). Pure.
+ *  X1b: no Japanese-script clause — "すみません、わかりません。" is no answer; a Japanese reply counts only through the
+ *  brain's verdict. */
 export function answerShaped(text: string): boolean {
   const s = String(text ?? '');
-  const ja = s.match(/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/g) ?? [];
-  if (ja.length >= 8) return true;
   const words = s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').split(/\s+/).filter((w) => w && !ANSWER_STOP.has(w));
   return words.length >= 4;
 }
