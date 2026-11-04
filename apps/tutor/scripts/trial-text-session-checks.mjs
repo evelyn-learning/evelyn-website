@@ -701,6 +701,20 @@ export function runChecks(dump) {
       if (m) tt12.push(`${turn.t}s next=${field(e, 'next')} "${m[0]}"`);
     }
     ok('TT12 no move language in a non-move turn', tt12.length === 0, tt12.join(' | ') || `${tt12Checked} non-move turns`);
+    // TT13 (fix wave 5 Z2): a move turn does not board (p2.txt 926 s: the brain's `board` card painted, then the move turned
+    // the page one sentence later). Same turn = the effects fall between the same two typed_turn events (the turn's own
+    // typed_turn closes it); an engine move "(engine)" runs before the brain call and is not the brain's move.
+    const tt13 = [];
+    let tt13Moves = 0;
+    for (const a of advances.filter((x) => !/\(engine\)/.test(x.msg))) {
+      tt13Moves++;
+      const ai = events.indexOf(a);
+      const prevTyped = [...typed].reverse().find((e) => events.indexOf(e) < ai);
+      const lo = prevTyped ? events.indexOf(prevTyped) : -1;
+      const card = events.find((x, xi) => xi > lo && xi < ai && x.type === 'typed_turn_effect' && /^model_card\b/.test(x.msg));
+      if (card) tt13.push(`${a.t}s ${a.msg.replace(/^advance /, '')} after model_card at ${card.t}s${/not placed/.test(card.msg) ? ' (not placed)' : ''}`);
+    }
+    ok('TT13 a move turn does not board', tt13.length === 0, tt13.join(' | ') || `${tt13Moves} brain moves`);
     // TT5: the prose validators / holds have nothing to do on a typed run
     const PROSE = ['brain_validator_retry', 'transition_ask_off_part', 'transition_offer_missing', 'repeat_ask_after_two_tries', 'move_on_ignored', 'required_phrase_missing', 'validator_tts_hold_started'];
     const prose = PROSE.map((c) => [c, ev(c).length]).filter(([, n]) => n > 0);

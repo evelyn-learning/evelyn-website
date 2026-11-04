@@ -424,5 +424,12 @@ test('Z1 (fix wave 5): a retry refused for correction_no_change names the reason
   assert.ok(m.includes('verdict: "correct"') && m.includes('correction: null'), m);
 });
 
+test('Z2 (fix wave 5): a move turn leaves board empty (p2.txt 926 s)', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('When `next.kind` is `move`, leave `board` empty — the part is ending and a card placed now is gone in a sentence.'), 'instruction');
+  const i = TYPED_TURN_INSTRUCTIONS.indexOf('- "board":');
+  const j = TYPED_TURN_INSTRUCTIONS.indexOf('- "correction":');
+  assert.ok(i >= 0 && j > i && TYPED_TURN_INSTRUCTIONS.slice(i, j).includes('leave `board` empty'), 'inside the board rule');
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

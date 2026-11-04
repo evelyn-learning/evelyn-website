@@ -358,5 +358,17 @@ test('Z1 (fix wave 5): the server\'s no-change frame is forwarded as telemetry a
   assert.ok(VTR.includes("onDebugEvent?.('typed_turn_correction_no_change',"), 'debug event');
 });
 
+test('Z2 (fix wave 5): a move in a turn that boarded a model card turns the page at the turn end (p2.txt 926 s)', () => {
+  assert.ok(VTR.includes('let typedModelCardPlaced = false;'), 'per-attempt flag');
+  assert.ok(/if \(res\?\.assignedIds\?\.\[0\]\) typedModelCardPlaced = true;\s*onDebugEvent\?\.\('typed_turn_effect', `model_card\$\{typedCardPlacement\(res\)\}`\);/.test(VTR), 'set only when the model card was placed');
+  assert.ok(VTR.includes('if (typedModelCardPlaced && heldPage && heldPage.segmentId === e.to && heldPage.authored === true) {'), 'the hold condition');
+  assert.ok(VTR.includes('pendingAdvanceNewPageRef.current = { ...heldPage, afterTurn: true, cardOnFlush: true };'), 'the turn-end flush carries page + card');
+  assert.ok(VTR.includes("onDebugEvent?.('typed_turn_page_turn_held_for_card',"), 'debug event');
+  assert.ok(/\} else \{\s*\/\/ The new part's card \+ page break, anchored to the first next\.say sentence\.\s*await paintTypedPartEntry\(e\.from, e\.to, anchorSentence, false\);\s*\}/.test(VTR), 'no card this turn: unchanged');
+  // the turn-end flush it relies on opens the page and adds the authored card for a cardOnFlush page
+  assert.ok(VTR.includes("onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title} at turn end`);"), 'turn-end flush');
+  assert.ok(VTR.includes('if (deferred.cardOnFlush || deferred.authored === true) {'), 'card on flush');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');

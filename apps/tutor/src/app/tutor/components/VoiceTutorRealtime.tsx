@@ -15219,6 +15219,8 @@ export function VoiceTutorRealtime({
         let typedFieldAnchor: { field: TypedField; narrationIndex: number } | null = null;
         // The advance a field ran this attempt (applyTypedTurn's `moved`).
         let typedMoved: { from: string; to: string } | null = null;
+        // Z2 (fix wave 5): a model_card this attempt placed — a move in the same turn holds its page turn to the turn end.
+        let typedModelCardPlaced = false;
         // Every typed-field value received this attempt (a cut object is synthesized from them).
         const typedFieldsSeen: Partial<Record<TypedField, TypedFieldValue['value']>> = {};
         // '' when the card was placed; ' not placed (<reasons>)' otherwise (as sentence_board_auto logs it).
@@ -15254,6 +15256,7 @@ export function VoiceTutorRealtime({
                 // verdict correct: the brain's `board` sentence (V1 — never the raw transcript), anchored to the next spoken sentence.
                 const res = await handleWhiteboardCommand([{ action: 'showSentence', sentence: e.sentence } as WhiteboardCommand], { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true });
                 for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
+                if (res?.assignedIds?.[0]) typedModelCardPlaced = true;
                 onDebugEvent?.('typed_turn_effect', `model_card${typedCardPlacement(res)}`);
                 break;
               }
@@ -15286,8 +15289,16 @@ export function VoiceTutorRealtime({
                 if (currentSegmentIdRef.current !== e.to) applyResolvedAdvance(tPlan, e.from, e.to);
                 typedMoved = { from: e.from, to: e.to };
                 typedMovedThisTurn = typedMoved;
-                // The new part's card + page break, anchored to the first next.say sentence.
-                await paintTypedPartEntry(e.from, e.to, anchorSentence, false);
+                // Z2 (p2.txt 926 s): a model card boarded this turn ⇒ page + new card at the turn end (cardOnFlush).
+                const heldPage = pendingAdvanceNewPageRef.current;
+                if (typedModelCardPlaced && heldPage && heldPage.segmentId === e.to && heldPage.authored === true) {
+                  pendingAdvanceNewPageRef.current = { ...heldPage, afterTurn: true, cardOnFlush: true };
+                  onDebugEvent?.('typed_turn_effect', `advance ${e.from}→${e.to}`);
+                  onDebugEvent?.('typed_turn_page_turn_held_for_card', `${e.from}→${e.to}: page + card at turn end`);
+                } else {
+                  // The new part's card + page break, anchored to the first next.say sentence.
+                  await paintTypedPartEntry(e.from, e.to, anchorSentence, false);
+                }
                 // The bridge clause is a brain instruction: no engine speech (no stock sentences).
                 if (e.bridgeMissing) onDebugEvent?.('typed_turn_bridge_missing', `${e.from}→${e.to}`);
                 break;

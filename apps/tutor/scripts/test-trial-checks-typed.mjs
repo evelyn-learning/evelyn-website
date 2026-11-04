@@ -287,4 +287,23 @@ test('TT12 FAILs on move language in a question turn, with the timestamp', () =>
   assert.ok(/^FAIL  TT12/.test(ja) && /11s/.test(ja), ja);
 });
 
+// Z2 (fix wave 5): TT13 a move turn does not board (p2.txt 926 s)
+const tt13 = (d) => runChecks(d).lines.find((l) => / TT13 /.test(l)) ?? '';
+test('TT13 passes when the move turn boards nothing (the fixture move turn has a correction card only)', () => {
+  const line = tt13(dump());
+  assert.ok(/^PASS  TT13/.test(line) && /1 brain moves/.test(line), line);
+});
+test('TT13 FAILs when a model_card and a brain advance share a turn, with the timestamp', () => {
+  const d = dump().replace('   21s typed_turn_effect: correction_card', '   21s typed_turn_effect: model_card');
+  const line = tt13(d);
+  assert.ok(/^FAIL  TT13/.test(line) && /21s topic-intro→present-perfect after model_card at 21s/.test(line), line);
+});
+test('TT13: a model card of the PREVIOUS turn, or an engine move, does not count', () => {
+  const prev = dump().replace('   11s typed_turn_field: next', '   11s typed_turn_effect: model_card\n   11s typed_turn_field: next');
+  assert.ok(/^PASS  TT13/.test(tt13(prev)), tt13(prev));
+  const eng = dump().replace('   21s typed_turn_effect: correction_card', '   21s typed_turn_effect: model_card')
+    .replace('advance topic-intro→present-perfect', 'advance topic-intro→present-perfect (engine)');
+  assert.ok(/^PASS  TT13/.test(tt13(eng)), tt13(eng));
+});
+
 console.log(`${n} passed`);
