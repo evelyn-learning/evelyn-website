@@ -188,7 +188,7 @@ function fctx(segId: string, over: Partial<FieldEffectContext> & { state?: Parti
   return {
     plan, segId, levelKnown: false, state: { ...createTypedTurnState(), ...(state ?? {}) }, studentLast: '',
     cardStatement: getSegmentTruth(plan.segments.find((s) => s.id === segId), plan.id)?.problemText ?? null,
-    items: [], ...rest,
+    items: [], menuPick: null, ...rest,
   };
 }
 const nx = (over: Partial<TypedNext>): TypedNext => ({ kind: 'question', say: 'Say.', item: '', level: '', ...over });
@@ -338,6 +338,26 @@ test('sayWithinBudget', () => {
   // F2: Japanese sentences do not count against the budget
   assert.equal(sayWithinBudget(nx({ say: 'Good. では次です。 Let us move. 発音です。 Ready?' }), false), true);
   assert.equal(sayWithinBudget(nx({ say: 'A. B. C. D.' }), false), false);
+});
+
+test('H1: a resolved menu pick persists, so the menu is never re-asked after an item', () => {
+  const sentences = ((plan.segments.find((s) => s.id === 'pronunciation')?.metadata as { pronunciation: { sentences: string[] } }).pronunciation.sentences);
+  assert.equal(sentences.length, 2);
+  const pick = 'a complete sentence';
+  const a1 = allowedNextFor(ctx('pronunciation', { items: sentences, menuPick: pick }));
+  assert.ok(a1.includes('item') && !a1.includes('menu'));
+  const turn = { ack: '', verdict: 'none' as const, verdict_say: '', correction: null, support_ja: '', next: { kind: 'item' as const, say: '', item: sentences[0], level: '' } };
+  const s1 = applyTypedTurn(createTypedTurnState(), turn, fctx('pronunciation', { items: sentences, menuPick: pick }), null);
+  assert.equal(s1.menuState.pronunciation.picked, pick);
+  const c2 = ctx('pronunciation', { items: sentences, menuPick: null, state: s1 });
+  const a2 = allowedNextFor(c2);
+  assert.ok(!a2.includes('menu') && a2.includes('item'));
+  assert.ok(turnStateLine(c2).includes('menu_picked="a complete sentence"'));
+  const s2 = applyTypedTurn(s1, { ...turn, next: { ...turn.next, item: sentences[1] } }, fctx('pronunciation', { items: sentences, state: s1 }), null);
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: sentences, state: s2 })), ['offer', 'move']);
+  // no pick this turn -> picked stays null
+  const s3 = applyTypedTurn(createTypedTurnState(), { ...turn, next: { kind: 'menu', say: 'x', item: '', level: '' } }, fctx('pronunciation', { items: sentences }), null);
+  assert.equal(s3.menuState.pronunciation.picked, null);
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

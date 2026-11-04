@@ -193,6 +193,8 @@ export type TypedEffect =
 export interface FieldEffectContext {
   plan: LessonPlan; segId: string; levelKnown: boolean; state: TypedTurnState;
   studentLast: string; cardStatement: string | null; items: readonly string[];
+  /** This turn's resolved menu pick text (same value as AllowedNextContext.menuPick), or null. */
+  menuPick: string | null;
 }
 
 const CARD_WORD_STOP = new Set(['the', 'and', 'you', 'your', 'for', 'are', 'was', 'were', 'have', 'has', 'had', 'did', 'does', 'with', 'that', 'this', 'what', 'who', 'how', 'any', 'can', 'will', 'would', 'about', 'there', 'their', 'from', 'but', 'not']);
@@ -325,6 +327,8 @@ export function applyTypedTurn(
     const m = menuState[seg] ?? { asked: 0, picked: null };
     menuState[seg] = { ...m, asked: m.asked + 1 };
   }
+  // A pick resolved this turn is persisted: later turns see it in state, so the menu is never re-asked after an item.
+  if (ctx.menuPick) menuState[seg] = { ...(menuState[seg] ?? { asked: 0, picked: null }), picked: ctx.menuPick };
 
   const offerState = { ...state.offerState };
   const o = offerState[seg] ?? { made: false, accepted: false, served: false };

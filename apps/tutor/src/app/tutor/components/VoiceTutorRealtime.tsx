@@ -15115,6 +15115,7 @@ export function VoiceTutorRealtime({
           studentLast: typedStudentText,
           cardStatement: segmentCardStatement(lessonPlanRef.current, typedFromSeg) || null,
           items: typedItemsFor(typedFromSeg),
+          menuPick: typedMenuPickText,
         });
         const buildAllowedNextContext = (): AllowedNextContext => {
           const tPlan = lessonPlanRef.current!;
