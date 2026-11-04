@@ -16,10 +16,12 @@ const LEVELS: readonly TypedLevel[] = ['', 'beginner', 'intermediate', 'advanced
 
 export interface TypedCorrection { student: string; corrected: string; emphasis: string[]; explain: string }
 export interface TypedNext { kind: TypedNextKind; say: string; item: string; level: TypedLevel }
-export interface TypedTurn { ack: string; verdict: TypedVerdict; verdict_say: string; correction: TypedCorrection | null; support_ja: string; next: TypedNext }
-export type TypedField = 'ack' | 'verdict' | 'verdict_say' | 'correction' | 'support_ja' | 'next';
+/** V1 (fix wave 2): `board` is the brain's clean written form of a correct reply — the only sentence the
+ *  engine boards for a correct verdict (it never boards the raw transcript). Not spoken. */
+export interface TypedTurn { ack: string; verdict: TypedVerdict; verdict_say: string; board: string; correction: TypedCorrection | null; support_ja: string; next: TypedNext }
+export type TypedField = 'ack' | 'verdict' | 'verdict_say' | 'board' | 'correction' | 'support_ja' | 'next';
 /** The order the engine speaks / paints the fields in. */
-export const TYPED_FIELD_ORDER: readonly TypedField[] = ['ack', 'verdict', 'verdict_say', 'correction', 'support_ja', 'next'];
+export const TYPED_FIELD_ORDER: readonly TypedField[] = ['ack', 'verdict', 'verdict_say', 'board', 'correction', 'support_ja', 'next'];
 
 /** What the client sends in the request body. `state` is the <turn_state …/> line. */
 export interface TypedTurnRequest {
@@ -45,11 +47,12 @@ export const TYPED_VERDICT_SAY_BUDGET = 2;
 export const TYPED_TURN_SCHEMA: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
-  required: ['ack', 'verdict', 'verdict_say', 'correction', 'support_ja', 'next'],
+  required: ['ack', 'verdict', 'verdict_say', 'board', 'correction', 'support_ja', 'next'],
   properties: {
     ack: { type: 'string' },
     verdict: { type: 'string', enum: [...VERDICTS] },
     verdict_say: { type: 'string' },
+    board: { type: 'string' },
     correction: {
       anyOf: [
         {
@@ -99,6 +102,7 @@ Reply with ONE JSON object and nothing else: no prose before or after, no code f
   "ack": string,
   "verdict": "correct" | "partly_correct" | "incorrect" | "none",
   "verdict_say": string,
+  "board": string,
   "correction": { "student": string, "corrected": string, "emphasis": string[], "explain": string } | null,
   "support_ja": string,
   "next": { "kind": string, "say": string, "item": string, "level": "" | "beginner" | "intermediate" | "advanced" }
@@ -110,6 +114,7 @@ FIELDS, in speaking order
 - "ack": a short natural reaction to what the student just said. One sentence at most. "" when nothing fits.
 - "verdict": your judgment of the student's reply as an answer to the open ask. "correct": the student answered the open ask acceptably (content and grammar). In conversation and level-check parts an acceptable answer in understandable English is "correct" even with small slips you do not correct; leave "correction" null. "partly_correct": answered, but with an error you correct (fill "correction"). "incorrect": answered wrongly. "none": ONLY when the reply is not an answer at all: a question to you, "OK" or "yes" alone, an aside, a request to move on, silence, or a reply in Japanese only. Never use "none" for a reply that answers the ask, however simple. With "none", leave "verdict_say" empty and "correction" null, and answer what they said through "ack" and "next".
 - "verdict_say": the spoken verdict, at most 2 sentences. "" when verdict is "none".
+- "board": when verdict is \`correct\` and the reply is a complete sentence worth keeping, that sentence in its clean written form (capitalised, punctuated, fillers removed, no transcription slips); \`""\` when the reply is a fragment, a bare yes/no, a menu pick, or when a correction is given. The engine shows \`board\` on the whiteboard exactly as written; it never shows the raw transcript. Not spoken.
 - "correction": only when the student's sentence is wrong. "student" is their sentence verbatim. "corrected" is the full model sentence, not a fragment. "emphasis" lists the words that changed, as they appear in "corrected". "explain" is the reason in at most 2 sentences. Otherwise null.
 - "support_ja": an extra optional slot of Japanese support, at most 2 sentences. "" unless a short Japanese gloss helps this student.
 - "next": what happens next.
@@ -135,13 +140,13 @@ LANGUAGE
 Japanese is allowed in any field under the lesson's teaching-language rules. support_ja is an extra slot, not a replacement for the English fields. Every turn you speak contains at least one English sentence (in \`verdict_say\` or \`next.say\`); Japanese supports, it never replaces. Keep to the budgets: ack 1 sentence, verdict_say 2, explain 2, support_ja 2, next.say 3 (5 on a recap). The next.say budget counts English sentences; Japanese sentences in next.say do not count.
 
 EXAMPLE, a correction turn (student said "I go there yesterday" to a past-tense ask; allowed_next includes retry)
-{"ack":"Good try.","verdict":"incorrect","verdict_say":"Nearly there. Yesterday is in the past, so the verb changes.","correction":{"student":"I go there yesterday","corrected":"I went there yesterday.","emphasis":["went"],"explain":"Use the past form went for something that already happened."},"support_ja":"","next":{"kind":"retry","say":"Can you say the whole sentence once more?","item":"","level":""}}
+{"ack":"Good try.","verdict":"incorrect","verdict_say":"Nearly there. Yesterday is in the past, so the verb changes.","board":"","correction":{"student":"I go there yesterday","corrected":"I went there yesterday.","emphasis":["went"],"explain":"Use the past form went for something that already happened."},"support_ja":"","next":{"kind":"retry","say":"Can you say the whole sentence once more?","item":"","level":""}}
 
 EXAMPLE, verdict correct (conversation part; open ask "What did you do last weekend?"; the student said "I cooked dinner with friend and we watched film." The small slip is left uncorrected)
-{"ack":"That sounds like a nice weekend.","verdict":"correct","verdict_say":"That is a clear answer.","correction":null,"support_ja":"","next":{"kind":"question","say":"What did you cook together?","item":"","level":""}}
+{"ack":"That sounds like a nice weekend.","verdict":"correct","verdict_say":"That is a clear answer.","board":"I cooked dinner with a friend and we watched a film.","correction":null,"support_ja":"","next":{"kind":"question","say":"What did you cook together?","item":"","level":""}}
 
 EXAMPLE, verdict none (student asked "What does yesterday mean?" while a sentence was open)
-{"ack":"Good question.","verdict":"none","verdict_say":"","correction":null,"support_ja":"yesterday は「昨日」という意味です。","next":{"kind":"retry","say":"Yesterday means the day before today. Now try the sentence once more.","item":"","level":""}}`;
+{"ack":"Good question.","verdict":"none","verdict_say":"","board":"","correction":null,"support_ja":"yesterday は「昨日」という意味です。","next":{"kind":"retry","say":"Yesterday means the day before today. Now try the sentence once more.","item":"","level":""}}`;
 
 export function typedTurnStateBlock(req: TypedTurnRequest): string {
   const allowedLine = `allowed_next: ${req.allowedNext.map((k) => `${k} — ${TYPED_KIND_MEANING[k].replace(/\.$/, '')}`).join('; ')}`;
@@ -184,7 +189,7 @@ export function parseTypedTurn(json: string): TypedTurn | null {
   let o: any;
   try { o = JSON.parse(json); } catch { return null; }
   if (!o || typeof o !== 'object') return null;
-  if (!isStr(o.ack) || !isStr(o.verdict_say) || !isStr(o.support_ja)) return null;
+  if (!isStr(o.ack) || !isStr(o.verdict_say) || !isStr(o.board) || !isStr(o.support_ja)) return null;
   if (!VERDICTS.includes(o.verdict)) return null;
   const c = o.correction;
   if (c !== null) {
@@ -195,7 +200,7 @@ export function parseTypedTurn(json: string): TypedTurn | null {
   if (!n || typeof n !== 'object' || !isStr(n.say) || !isStr(n.item)) return null;
   if (!TYPED_NEXT_KINDS.includes(n.kind) || !LEVELS.includes(n.level)) return null;
   return {
-    ack: o.ack, verdict: o.verdict, verdict_say: o.verdict_say,
+    ack: o.ack, verdict: o.verdict, verdict_say: o.verdict_say, board: o.board,
     correction: c === null ? null : { student: c.student, corrected: c.corrected, emphasis: c.emphasis, explain: c.explain },
     support_ja: o.support_ja,
     next: { kind: n.kind, say: n.say, item: n.item, level: n.level },
@@ -205,7 +210,7 @@ export function parseTypedTurn(json: string): TypedTurn | null {
 // ---- Incremental field reader (streamed JSON) ----
 
 export type TypedFieldValue =
-  | { field: 'ack' | 'verdict_say' | 'support_ja'; value: string }
+  | { field: 'ack' | 'verdict_say' | 'board' | 'support_ja'; value: string }
   | { field: 'verdict'; value: TypedVerdict }
   | { field: 'correction'; value: TypedCorrection | null }
   | { field: 'next'; value: TypedNext };
@@ -213,7 +218,7 @@ export type TypedFieldValue =
 /** Loose per-field validation of a closed top-level value; undefined = reject (ignored). */
 function coerceField(field: TypedField, v: any): TypedFieldValue | undefined {
   switch (field) {
-    case 'ack': case 'verdict_say': case 'support_ja':
+    case 'ack': case 'verdict_say': case 'board': case 'support_ja':
       return isStr(v) ? { field, value: v } : undefined;
     case 'verdict':
       return VERDICTS.includes(v) ? { field, value: v } : undefined;
@@ -357,7 +362,7 @@ export function typedTurnRetryMessage(input: {
   reason: TypedRetryReason;
   refused: TypedNext;
   allowedNext: TypedNextKind[];
-  alreadySaid: Pick<TypedTurn, 'ack' | 'verdict' | 'verdict_say' | 'correction' | 'support_ja'>;
+  alreadySaid: Pick<TypedTurn, 'ack' | 'verdict' | 'verdict_say' | 'board' | 'correction' | 'support_ja'>;
   budget: number;
   /** W6: an `item` refused because next.item is not one of these (the items still to practise). */
   itemNotListed?: string[];
@@ -372,6 +377,7 @@ export function typedTurnRetryMessage(input: {
     `ack: ${JSON.stringify(alreadySaid.ack)}`,
     `verdict: ${JSON.stringify(alreadySaid.verdict)}`,
     `verdict_say: ${JSON.stringify(alreadySaid.verdict_say)}`,
+    `board: ${JSON.stringify(alreadySaid.board)}`,
     `correction: ${JSON.stringify(alreadySaid.correction)}`,
     `support_ja: ${JSON.stringify(alreadySaid.support_ja)}`,
   ].join('\n');

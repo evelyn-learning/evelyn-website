@@ -10,7 +10,7 @@ import {
 } from './fixed-script';
 import { getSegmentTruth } from './context';
 import { cardAskLine } from './transition-ask';
-import { boardOffersChoices, cardableStudentSentence } from '../voice/sentence-board';
+import { boardOffersChoices } from '../voice/sentence-board';
 import {
   englishSentenceCount, typedSayBudgetFor,
   type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedTurn, type TypedTurnRequest, type TypedVerdict,
@@ -313,11 +313,11 @@ function openAskFor(next: TypedNext, ctx: FieldEffectContext, newPartId: string 
 
 /** Effects to run when one field closes (cards anchor to the sentence about to be spoken). Pure. */
 export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): TypedEffect[] {
-  if (ev.field === 'verdict_say') {
-    if (ctx.state.pendingVerdict !== 'correct') return [];
-    // cardableStudentSentence strips "um/well/so," but not a spoken "yes,": a lowercase rest is no card candidate.
-    const sentence = cardableStudentSentence(ctx.studentLast.replace(/^\s*(?:yes|yeah|yep|yup)\s*[,.]\s*(?=\S+\s+\S)/i, ''));
-    return sentence ? [{ kind: 'model_card', sentence }] : [];
+  // V1 (fix wave 2): the model card is the brain's `board` sentence, never the raw transcript (the r-Praveen voice run
+  // boarded 11 of 24 student sentences with their errors). verdict_say carries no effect.
+  if (ev.field === 'board') {
+    const sentence = ev.value.trim();
+    return sentence && ctx.state.pendingVerdict === 'correct' ? [{ kind: 'model_card', sentence }] : [];
   }
   if (ev.field === 'correction') {
     const c = ev.value;

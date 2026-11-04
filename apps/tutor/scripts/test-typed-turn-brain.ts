@@ -47,13 +47,14 @@ const TURN = {
   ack: 'Good try.',
   verdict: 'incorrect',
   verdict_say: 'Nearly there, the verb changes.',
+  board: '',
   correction: { student: 'I go there yesterday', corrected: 'I went there yesterday.', emphasis: ['went'], explain: 'Use the past form went here.' },
   support_ja: '昨日は過去のことです。',
   next: { kind: 'question', say: 'Can you say the whole sentence once more?', item: '', level: '' },
 };
 
 const EXPECTED = [
-  'typed-field ack', 'sentence', 'typed-field verdict', 'typed-field verdict_say', 'sentence',
+  'typed-field ack', 'sentence', 'typed-field verdict', 'typed-field verdict_say', 'sentence', 'typed-field board',
   'typed-field correction', 'sentence', 'typed-field support_ja', 'sentence', 'typed-field next', 'sentence',
   'typed-turn', 'done',
 ];
@@ -171,9 +172,24 @@ async function main() {
 
   console.log('streamed shapes');
   await test('pretty-printed JSON with scrambled key order ⇒ identical sequence', async () => {
-    const scrambled = { next: TURN.next, support_ja: TURN.support_ja, correction: TURN.correction, verdict_say: TURN.verdict_say, verdict: TURN.verdict, ack: TURN.ack };
+    const scrambled = { next: TURN.next, support_ja: TURN.support_ja, correction: TURN.correction, board: TURN.board, verdict_say: TURN.verdict_say, verdict: TURN.verdict, ack: TURN.ack };
     const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify(scrambled, null, 2), 3)]);
     assert.deepEqual(seq(r.events), EXPECTED);
+  });
+  await test('V1: TYPED_TURN_SCHEMA.required contains board', () => {
+    assert.ok((tt.TYPED_TURN_SCHEMA as { required: string[] }).required.includes('board'));
+  });
+  await test('V1: a correct turn with board ⇒ typed-field board (one sentence, never spoken) right after verdict_say', async () => {
+    const CORRECT = { ...TURN, verdict: 'correct', verdict_say: 'That is right.', correction: null,
+      board: 'I sell washing machines to customers. And I like it.', next: { ...TURN.next, say: 'What do you sell most?' } };
+    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify(CORRECT), 3)]);
+    const s = seq(r.events);
+    assert.equal(s[s.indexOf('typed-field verdict_say') + 2], 'typed-field board', s.join(' | '));
+    const b = r.events.find((e) => e.type === 'typed-field' && e.field === 'board') as { value: string };
+    assert.equal(b.value, 'I sell washing machines to customers.');
+    assert.ok(!r.events.some((e) => e.type === 'sentence' && String(e.text).includes('washing machines')), 'board is not speech');
+    const t = r.events.find((e) => e.type === 'typed-turn') as { turn: { board: string } };
+    assert.equal(t.turn.board, 'I sell washing machines to customers.');
   });
   await test('ack of three sentences ⇒ first sentence only (field value and speech)', async () => {
     const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, ack: 'Good try. You were really close there. Keep going with it.' }), 3)]);

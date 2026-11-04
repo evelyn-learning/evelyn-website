@@ -15219,7 +15219,7 @@ export function VoiceTutorRealtime({
           try {
             switch (e.kind) {
               case 'model_card': {
-                // verdict correct: the student's own sentence, anchored to verdict_say.
+                // verdict correct: the brain's `board` sentence (V1 — never the raw transcript), anchored to the next spoken sentence.
                 const res = await handleWhiteboardCommand([{ action: 'showSentence', sentence: e.sentence } as WhiteboardCommand], { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true });
                 for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
                 onDebugEvent?.('typed_turn_effect', `model_card${typedCardPlacement(res)}`);
@@ -20376,6 +20376,7 @@ export function VoiceTutorRealtime({
                       ack: str(typedFieldsSeen.ack),
                       verdict: (typedFieldsSeen.verdict as TypedTurn['verdict'] | undefined) ?? 'none',
                       verdict_say: str(typedFieldsSeen.verdict_say),
+                      board: str(typedFieldsSeen.board),
                       correction: (typedFieldsSeen.correction as TypedTurn['correction'] | undefined) ?? null,
                       support_ja: str(typedFieldsSeen.support_ja),
                       next: seenNext ?? { kind: 'wait', say: '', item: '', level: '' },
@@ -23515,7 +23516,7 @@ export function VoiceTutorRealtime({
         // render-sync anchors the card to the sentence that says it, and the
         // catalog lists it in <whiteboard_state> (the brain sees it and does
         // not duplicate it). Never on the opening turn; never twice on one page.
-        // Typed turn (Task 7): skipped — model / correction cards came from the verdict_say / correction fields.
+        // Typed turn (Task 7): skipped — model / correction cards came from the board / correction fields.
         if (!typedTurnActive && TUTOR_SENTENCE_BOARD && languageSessionRef.current && !openingTurnPendingRef.current) {
           // Task 15 §A (GDI run 5): this turn's independent check found the
           // student's sentence correct ⇒ the tutor quoting it back (or saying

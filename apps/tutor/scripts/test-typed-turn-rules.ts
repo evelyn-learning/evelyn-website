@@ -196,21 +196,23 @@ const nx = (over: Partial<TypedNext>): TypedNext => ({ kind: 'question', say: 'S
 const nextEv = (over: Partial<TypedNext>) => ({ field: 'next' as const, value: nx(over) });
 const kinds = (e: { kind: string }[]) => e.map((x) => x.kind);
 
-test('applyField records verdict; verdict_say with correct + cardable sentence -> model_card', () => {
+test('applyField records verdict; V1: board with verdict correct -> one model_card with the brain\'s sentence', () => {
   const s0 = createTypedTurnState();
   const s1 = applyField(s0, { field: 'verdict', value: 'correct' });
   assert.equal(s1.pendingVerdict, 'correct');
   assert.equal(s0.pendingVerdict, null);
-  const e = effectsForField({ field: 'verdict_say', value: 'Good.' }, fctx('present-perfect', { state: s1, studentLast: 'yes, I have worked here for five years' }));
-  assert.equal(e.length, 1);
-  assert.equal(e[0].kind, 'model_card');
-  assert.ok((e[0] as { sentence: string }).sentence.includes('I have worked here for five years'));
+  const e = effectsForField({ field: 'board', value: ' I sell washing machines to customers. ' }, fctx('present-perfect', { state: s1, studentLast: 'um I sell washing machine to customer' }));
+  assert.deepEqual(e, [{ kind: 'model_card', sentence: 'I sell washing machines to customers.' }]);
 });
-test('no model_card for verdict none or a bare yes', () => {
-  const none = applyField(createTypedTurnState(), { field: 'verdict', value: 'none' });
-  assert.deepEqual(effectsForField({ field: 'verdict_say', value: '' }, fctx('present-perfect', { state: none, studentLast: 'I have worked here for five years' })), []);
+test('V1: no model_card for an empty board, a non-correct verdict, or verdict_say alone (the raw transcript is never boarded)', () => {
   const ok = applyField(createTypedTurnState(), { field: 'verdict', value: 'correct' });
-  assert.deepEqual(effectsForField({ field: 'verdict_say', value: 'Good.' }, fctx('present-perfect', { state: ok, studentLast: 'yes' })), []);
+  assert.deepEqual(effectsForField({ field: 'board', value: '' }, fctx('present-perfect', { state: ok, studentLast: 'I have worked here for five years' })), []);
+  assert.deepEqual(effectsForField({ field: 'board', value: '   ' }, fctx('present-perfect', { state: ok })), []);
+  assert.deepEqual(effectsForField({ field: 'verdict_say', value: 'Good.' }, fctx('present-perfect', { state: ok, studentLast: 'I have worked here for five years' })), []);
+  const partly = applyField(createTypedTurnState(), { field: 'verdict', value: 'partly_correct' });
+  assert.deepEqual(effectsForField({ field: 'board', value: 'I have worked here for five years.' }, fctx('present-perfect', { state: partly })), []);
+  const none = applyField(createTypedTurnState(), { field: 'verdict', value: 'none' });
+  assert.deepEqual(effectsForField({ field: 'board', value: 'I have worked here for five years.' }, fctx('present-perfect', { state: none })), []);
 });
 test('correction -> correction_card', () => {
   const e = effectsForField({ field: 'correction', value: { student: 'I make presentation', corrected: 'I make presentations.', emphasis: ['presentations'], explain: 'x' } }, fctx('present-perfect'));

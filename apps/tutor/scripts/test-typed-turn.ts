@@ -29,7 +29,7 @@ const walk = (n: Node, visit: (n: Node) => void) => {
 };
 
 const VALID = {
-  ack: 'Nice try.', verdict: 'incorrect', verdict_say: 'Close, one small change.',
+  ack: 'Nice try.', verdict: 'incorrect', verdict_say: 'Close, one small change.', board: '',
   correction: { student: 'I go there yesterday', corrected: 'I went there yesterday.', emphasis: ['went'], explain: 'Past tense.' },
   support_ja: '', next: { kind: 'retry', say: 'Say it once more.', item: '', level: '' },
 };
@@ -48,7 +48,28 @@ test('schema — strict shape: additionalProperties false, all keys required, no
   assert.deepEqual(props.next.properties.level.enum, ['', 'beginner', 'intermediate', 'advanced']);
   const any = props.correction.anyOf as Node[];
   assert.ok(any.some((b) => b.type === 'object') && any.some((b) => b.type === 'null' && Object.keys(b).length === 1));
-  assert.deepEqual([...TYPED_FIELD_ORDER], ['ack', 'verdict', 'verdict_say', 'correction', 'support_ja', 'next']);
+  assert.deepEqual([...TYPED_FIELD_ORDER], ['ack', 'verdict', 'verdict_say', 'board', 'correction', 'support_ja', 'next']);
+  // V1: the board sentence is a required string field
+  assert.ok((TYPED_TURN_SCHEMA as Node).required.includes('board'));
+  assert.deepEqual(props.board, { type: 'string' });
+});
+
+test('V1: parseTypedTurn carries board and rejects an object without it', () => {
+  const withBoard = { ...VALID, verdict: 'correct', correction: null, board: 'I sell washing machines to customers.' };
+  assert.equal(parseTypedTurn(JSON.stringify(withBoard))?.board, 'I sell washing machines to customers.');
+  const { board: _b, ...noBoard } = VALID;
+  assert.equal(parseTypedTurn(JSON.stringify(noBoard)), null);
+  assert.equal(parseTypedTurn(JSON.stringify({ ...VALID, board: 3 })), null);
+});
+
+test('V1: instructions define board (clean written form; "" for fragments / corrections; never the raw transcript)', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('"board": string'), 'object shape');
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('when verdict is `correct` and the reply is a complete sentence worth keeping, that sentence in its clean written form (capitalised, punctuated, fillers removed, no transcription slips)'));
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('The engine shows `board` on the whiteboard exactly as written; it never shows the raw transcript.'));
+  // every EXAMPLE object parses (board present)
+  const examples = TYPED_TURN_INSTRUCTIONS.split('\n').filter((l) => l.startsWith('{"ack"'));
+  assert.ok(examples.length >= 3, `${examples.length} examples`);
+  for (const ex of examples) assert.ok(parseTypedTurn(ex), ex.slice(0, 80));
 });
 
 test('parseTypedTurn — accepts a full object; rejects bad verdict, missing next.say, bad kind', () => {
@@ -118,11 +139,11 @@ test('flags — TUTOR_TYPED_TURN is opt-in', () => {
 
 // ---- Task 2: incremental field reader ----
 const FULL = {
-  ack: 'Thanks, Praveen.', verdict: 'partly_correct', verdict_say: 'Close; one word is off.',
+  ack: 'Thanks, Praveen.', verdict: 'partly_correct', verdict_say: 'Close; one word is off.', board: '',
   correction: { student: 'I like presentation', corrected: 'I like presentations', emphasis: ['presentations'], explain: 'Plural.' },
   support_ja: '複数形です。', next: { kind: 'question', say: 'What do you present?', item: '', level: '' },
 };
-const ORDER = ['ack', 'verdict', 'verdict_say', 'correction', 'support_ja', 'next'];
+const ORDER = ['ack', 'verdict', 'verdict_say', 'board', 'correction', 'support_ja', 'next'];
 const feedAll = (text: string, size = 1) => {
   const r = new TypedTurnReader(); const evs: any[] = [];
   for (let i = 0; i < text.length; i += size) evs.push(...r.push(text.slice(i, i + size)));
@@ -136,8 +157,8 @@ test('reader — 1-char deltas, all fields in order', () => {
   assert.equal(pushes, [...text].length);
   assert.deepEqual(evs.map(e => e.field), ORDER);
   assert.equal(evs[0].value, 'Thanks, Praveen.');
-  assert.deepEqual(evs[3].value.emphasis, ['presentations']);
-  assert.equal(evs[5].value.kind, 'question');
+  assert.deepEqual(evs[4].value.emphasis, ['presentations']);
+  assert.equal(evs[6].value.kind, 'question');
   assert.equal(r.complete, true);
   assert.equal(r.text, text);
   assert.ok(parseTypedTurn(r.text));
@@ -208,7 +229,7 @@ test('reader — correction/next coerced loosely', () => {
 });
 
 test('emitter — reorders, holds, flushes', () => {
-  const t = JSON.stringify({ next: FULL.next, ack: 'A', verdict: 'correct', verdict_say: 'V', support_ja: '', correction: null });
+  const t = JSON.stringify({ next: FULL.next, ack: 'A', verdict: 'correct', verdict_say: 'V', support_ja: '', correction: null, board: '' });
   const { evs } = feedAll(t);
   assert.equal(evs[0].field, 'next');
   const em = new OrderedFieldEmitter(); const out: string[] = [];
@@ -224,13 +245,32 @@ test('emitter — reorders, holds, flushes', () => {
   assert.deepEqual(em2.flush(), []);
 });
 
+test('V1: a board that closes before verdict_say is held until verdict_say is released', () => {
+  const t = JSON.stringify({ ack: 'A', verdict: 'correct', board: 'I sell washing machines to customers.', verdict_say: 'V', correction: null, support_ja: '', next: FULL.next });
+  const { evs } = feedAll(t);
+  assert.equal(evs.find((e) => e.field === 'board').value, 'I sell washing machines to customers.');
+  const em = new OrderedFieldEmitter(); const got: string[][] = [];
+  for (const e of evs) got.push(em.push(e).map((x) => x.field));
+  const boardAt = evs.findIndex((e) => e.field === 'board');
+  assert.deepEqual(got[boardAt], [], 'board held');
+  const vsAt = evs.findIndex((e) => e.field === 'verdict_say');
+  assert.deepEqual(got[vsAt], ['verdict_say', 'board'], 'released with verdict_say, in order');
+  assert.deepEqual(got.flat(), ORDER);
+});
+
+test('V1: the retry message lists board among the fields already given', () => {
+  const m = typedTurnRetryMessage({ reason: 'illegal_kind', refused: { kind: 'offer', say: 'x', item: '', level: '' },
+    allowedNext: ['retry', 'question'], alreadySaid: { ack: 'A.', verdict: 'correct', verdict_say: 'Good.', board: 'I went there yesterday.', correction: null, support_ja: '' }, budget: 3 });
+  assert.ok(m.includes('board: "I went there yesterday."'), m);
+});
+
 test('instructions explain turn_state and nudge', () => {
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('turn_state') && TYPED_TURN_INSTRUCTIONS.includes('nudge'));
 });
 
 
 // ---- Task 6: retry message + structured-output rejection predicate ----
-const ALREADY = { ack: 'Good try.', verdict: 'incorrect' as const, verdict_say: 'Nearly there.', correction: null, support_ja: '' };
+const ALREADY = { ack: 'Good try.', verdict: 'incorrect' as const, verdict_say: 'Nearly there.', board: '', correction: null, support_ja: '' };
 test('retry message — illegal kind: refused kind, allowed set, ALREADY SPOKEN, the ack text, only next is read', () => {
   const m = typedTurnRetryMessage({ reason: 'illegal_kind', refused: { kind: 'offer', say: 'One more, or move on?', item: '', level: '' },
     allowedNext: ['retry', 'question'], alreadySaid: ALREADY, budget: 3 });
