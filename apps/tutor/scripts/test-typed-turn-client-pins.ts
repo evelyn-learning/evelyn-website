@@ -40,7 +40,9 @@ test('VTR debug events', () => {
   assert.ok(/verdict=\$\{[^}]+\} next=\$\{[^}]+\} ack=\$\{[^}]+\} say=\$\{[^}]+\} correction=\$\{[^}]+\} retries=\$\{/.test(VTR), 'typed_turn message format');
 });
 test('runTypedEffect: advance breaks the page, correction / item use their card flags', () => {
-  assert.ok(/(?:kind === 'advance'|case 'advance':)[\s\S]{0,2500}pageBreakOnTransition: true/.test(VTR), 'advance → pageBreakOnTransition');
+  // W2: the card + page break moved into paintTypedPartEntry (shared with the latched engine move); same strength.
+  assert.ok(/case 'advance':[\s\S]{0,1500}await paintTypedPartEntry\(e\.from, e\.to, anchorSentence, false\);/.test(VTR), 'advance → paintTypedPartEntry');
+  assert.ok(/const paintTypedPartEntry = async[\s\S]{0,1800}segmentCardCommand\(toStatement[\s\S]{0,200}pageBreakOnTransition: true/.test(VTR), 'paintTypedPartEntry → pageBreakOnTransition');
   assert.ok(/case 'advance':[\s\S]{0,900}applyResolvedAdvance\(/.test(VTR), 'advance → applyResolvedAdvance');
   assert.ok(/case 'set_level':[\s\S]{0,200}mapFunctionCallToCommand\('set_working_level'/.test(VTR), 'set_level → set_working_level');
   assert.ok(/case 'close':[\s\S]{0,200}mapFunctionCallToCommand\('close_session_notes'/.test(VTR), 'close → close_session_notes');
@@ -280,6 +282,26 @@ test('W1: typed budget input honours the prose gate + no-attempt rule; budgetDue
   assert.ok(VTR.includes('typedBudgetDueThisTurn = budgetDue;'), 'budgetDue latched for the field context');
   assert.ok(VTR.includes('budgetDue: typedBudgetDueThisTurn,'), 'FieldEffectContext.budgetDue');
   assert.ok(VTR.includes('lessonElapsedMs: typedLessonElapsedMs,'), 'AllowedNextContext.lessonElapsedMs');
+});
+
+test('W2: pre-turn engine moves are latched, enter the part, paint once, block a second move; move-on labels', () => {
+  const latch = VTR.indexOf("if (typedTurnActive && !typedEngineMove && currentSegmentIdRef.current && currentSegmentIdRef.current !== turnStartSegmentId) {");
+  const skip = VTR.indexOf("if (TUTOR_SKIP_DETERMINISTIC && /\\[Skip-button-clicked/i.test(transcript)) {");
+  const jump = VTR.indexOf("if (TUTOR_TYPED_ADVANCE && !silent && !isBracketed) {");
+  const guard = VTR.indexOf('if (TUTOR_LESSON_TIME_GUARD && !silent');
+  const snap = VTR.indexOf('const typedTurnStateAtTurnStart');
+  const build = VTR.indexOf('const buildAllowedNextContext = ');
+  assert.ok(latch > 0 && skip > 0 && jump > 0 && guard > 0, 'anchors present');
+  assert.ok(latch > skip && latch > jump && latch > guard, 'latched after every pre-turn mechanism');
+  assert.ok(latch < snap && snap < build, 'before the turn-start snapshot and the request');
+  assert.ok(VTR.includes("typedEngineMove = { from: turnStartSegmentId ?? '', to: currentSegmentIdRef.current };"), 'latch value');
+  assert.ok(VTR.includes('if (typedTurnActive && typedEngineMove) typedTurnStateRef.current = enterPartState(typedTurnStateRef.current, typedEngineMove.to);'), 'enterPartState');
+  assert.ok(VTR.includes('engineMoved: !!typedEngineMove,'), 'AllowedNextContext.engineMoved');
+  assert.ok(/onDebugEvent\?\.\('typed_turn_effect', `advance \$\{from\}→\$\{to\}\$\{engine \? ' \(engine\)' : ''\}`\);/.test(VTR), 'advance log in the paint');
+  assert.ok(/if \(!typedEngineMove \|\| typedEngineMovePainted\) return;\s*typedEngineMovePainted = true;/.test(VTR), 'painted once per turn');
+  assert.ok(/typedFieldAnchor = \{ field: tf\.field, narrationIndex: [^\n]+\n\s*await paintTypedEngineMove\(typedFieldAnchor\.narrationIndex\);/.test(VTR), 'painted at the first typed-field');
+  assert.ok(/retryDisagreed\?: boolean \};\n\s*await paintTypedEngineMove\(/.test(VTR), 'or at the turn end');
+  assert.ok(VTR.includes("studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText, laterPartLabels(tPlan, typedFromSeg)) || typedStopDecision === 'finish'),"), 'later-part labels');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

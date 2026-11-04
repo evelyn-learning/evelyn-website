@@ -454,7 +454,7 @@ import { retryAskTurn } from '@/lib/tutor/voice/sentence-board';
 import { TUTOR_TYPED_TURN } from '@/lib/tutor/orchestrator/flags';
 import { correctionEmphasis } from '@/lib/tutor/voice/sentence-board';
 import { sentenceCount, englishSentenceCount, type TypedTurnRequest, type TypedTurn, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind } from '@/lib/tutor/voice/typed-turn';
-import { createTypedTurnState, typedTurnRequestFor, applyField, effectsForField, applyTypedTurn, engineLineFor, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
+import { createTypedTurnState, typedTurnRequestFor, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
 import { isIdleNudgeDirective } from '@/lib/tutor/voice/idle-nudge';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
 
@@ -14759,6 +14759,15 @@ export function VoiceTutorRealtime({
       // Typed turn (Task 7 review C-1): one student turn may run several attempts (kill retry,
       // continuation). The typed state is restored to its turn-start snapshot on every attempt > 0,
       // and the advance runs at most once per turn.
+      // W2: every pre-turn ENGINE move (Skip button, typed objective jump, lesson-time guard) is latched for the
+      // typed turn: the request plans the part entered, the old part's open ask / correction are gone, and a
+      // brain move this turn is blocked.
+      if (typedTurnActive && !typedEngineMove && currentSegmentIdRef.current && currentSegmentIdRef.current !== turnStartSegmentId) {
+        typedEngineMove = { from: turnStartSegmentId ?? '', to: currentSegmentIdRef.current };
+      }
+      if (typedTurnActive && typedEngineMove) typedTurnStateRef.current = enterPartState(typedTurnStateRef.current, typedEngineMove.to);
+      // W2: the engine move's card + page break, painted once per student turn (at its first typed field).
+      let typedEngineMovePainted = false;
       const typedTurnStateAtTurnStart: TypedTurnState = structuredClone(typedTurnStateRef.current);
       let typedMovedThisTurn: { from: string; to: string } | null = typedEngineMove;
       for (let attempt = 0; attempt <= attemptCap; attempt++) {
@@ -15159,13 +15168,16 @@ export function VoiceTutorRealtime({
             state,
             budgetDue,
             lastPart: nextSegmentId(tPlan, typedFromSeg, levelKnown) === null,
-            studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText) || typedStopDecision === 'finish'),
+            // W2: the later parts' labels, as the prose move-on order passes them ("Let's do past simple.").
+            studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText, laterPartLabels(tPlan, typedFromSeg)) || typedStopDecision === 'finish'),
             menuPick: typedMenuPickText,
             // The reply being answered now counts (the level check moves on the third answer's turn).
             studentAnswerCount: (state.turnsInPart[typedFromSeg] ?? 0) + (typedStudentText ? 1 : 0),
             nudge: !!opts?.silent && isIdleNudgeDirective(transcript),
             items: typedItemsFor(typedFromSeg),
             lessonElapsedMs: typedLessonElapsedMs,
+            // W2: the pointer already moved this turn (no second move / close).
+            engineMoved: !!typedEngineMove,
           };
         };
         const typedReq: TypedTurnRequest | undefined = typedTurnActive ? typedTurnRequestFor(buildAllowedNextContext()) : undefined;
@@ -15179,6 +15191,28 @@ export function VoiceTutorRealtime({
         // '' when the card was placed; ' not placed (<reasons>)' otherwise (as sentence_board_auto logs it).
         const typedCardPlacement = (res: WhiteboardCommandResult | void | undefined): string => (res?.assignedIds?.[0]
           ? '' : ` not placed${res?.rejected?.length ? ` (${res.rejected.map((r) => r.reason).join('; ').slice(0, 80)})` : ''}`);
+        // W2: entering a part (a brain `move`, or an engine move latched before the call): the advance log and the
+        // new part's authored card, as runSegmentCard paints it, carrying the page break — anchored to `anchorSentence`.
+        const paintTypedPartEntry = async (from: string, to: string, anchorSentence: number, engine: boolean): Promise<void> => {
+          const tPlan = lessonPlanRef.current;
+          if (!tPlan) return;
+          onDebugEvent?.('typed_turn_effect', `advance ${from}→${to}${engine ? ' (engine)' : ''}`);
+          const toSeg = tPlan.segments.find((sg) => sg.id === to);
+          const toTruth = toSeg ? getSegmentTruth(toSeg, tPlan.id) : null;
+          const toStatement = toTruth?.problemText ? stripWbEmphasisText(toTruth.problemText) : '';
+          if (toStatement && !problemStatementOnBoard(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, toStatement)) {
+            catalogRef.current.setCurrentSegment(to);
+            const cmd = segmentCardCommand(toStatement, toTruth?.kind) as unknown as WhiteboardCommand;
+            const res = await handleWhiteboardCommand([cmd], { anchorSentence, pageBreakOnTransition: true });
+            onDebugEvent?.('segment_card_auto', `${to}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'} "${toStatement.slice(0, 50)}" (typed)`);
+          }
+        };
+        /** W2: paint a latched engine move once per student turn (first typed field, or the turn end when none came). */
+        const paintTypedEngineMove = async (anchorSentence: number): Promise<void> => {
+          if (!typedEngineMove || typedEngineMovePainted) return;
+          typedEngineMovePainted = true;
+          try { await paintTypedPartEntry(typedEngineMove.from, typedEngineMove.to, anchorSentence, true); } catch (err) { console.warn('[typed-turn] engine move paint failed:', err); }
+        };
         const runTypedEffect = async (e: TypedEffect, anchorSentence: number): Promise<void> => {
           const tPlan = lessonPlanRef.current;
           try {
@@ -15217,20 +15251,10 @@ export function VoiceTutorRealtime({
                 if (currentSegmentIdRef.current !== e.to) applyResolvedAdvance(tPlan, e.from, e.to);
                 typedMoved = { from: e.from, to: e.to };
                 typedMovedThisTurn = typedMoved;
-                onDebugEvent?.('typed_turn_effect', `advance ${e.from}→${e.to}`);
+                // The new part's card + page break, anchored to the first next.say sentence.
+                await paintTypedPartEntry(e.from, e.to, anchorSentence, false);
                 // The bridge clause is a brain instruction: no engine speech (no stock sentences).
                 if (e.bridgeMissing) onDebugEvent?.('typed_turn_bridge_missing', `${e.from}→${e.to}`);
-                // The new part's authored card, as runSegmentCard paints it, carrying the page break —
-                // anchored to the first next.say sentence.
-                const toSeg = tPlan.segments.find((sg) => sg.id === e.to);
-                const toTruth = toSeg ? getSegmentTruth(toSeg, tPlan.id) : null;
-                const toStatement = toTruth?.problemText ? stripWbEmphasisText(toTruth.problemText) : '';
-                if (toStatement && !problemStatementOnBoard(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, toStatement)) {
-                  catalogRef.current.setCurrentSegment(e.to);
-                  const cmd = segmentCardCommand(toStatement, toTruth?.kind) as unknown as WhiteboardCommand;
-                  const res = await handleWhiteboardCommand([cmd], { anchorSentence, pageBreakOnTransition: true });
-                  onDebugEvent?.('segment_card_auto', `${e.to}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'} "${toStatement.slice(0, 50)}" (typed)`);
-                }
                 break;
               }
               case 'arm_item': {
@@ -20307,6 +20331,7 @@ export function VoiceTutorRealtime({
                     const tf = ev as unknown as { field: TypedField; value: TypedFieldValue['value']; retried?: boolean };
                     const fv = { field: tf.field, value: tf.value } as TypedFieldValue;
                     typedFieldAnchor = { field: tf.field, narrationIndex: turnNarrationRef.current.length - attemptNarrationStartRef.current };
+                    await paintTypedEngineMove(typedFieldAnchor.narrationIndex);
                     typedFieldsSeen[tf.field] = tf.value;
                     typedTurnStateRef.current = applyField(typedTurnStateRef.current, fv);
                     onDebugEvent?.('typed_turn_field', `${tf.field}${tf.retried ? ' retried' : ''}`);
@@ -20316,6 +20341,7 @@ export function VoiceTutorRealtime({
                   // Typed turn (Task 7): the whole object (null = cut / unparseable after what was voiced).
                   if (typedTurnActive && lessonPlanRef.current) {
                     const tt = ev as unknown as { turn: TypedTurn | null; retries?: number; nextFallback?: TypedNextKind; retryReason?: string; retryDisagreed?: boolean };
+                    await paintTypedEngineMove(turnNarrationRef.current.length - attemptNarrationStartRef.current);
                     const seenNext = typedFieldsSeen.next as TypedNext | undefined;
                     // No usable `next` was voiced: the engine continues with its own line for the SERVER's kind.
                     // The client never invents one — a null turn with no nextFallback and no `next` seen is

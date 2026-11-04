@@ -10,13 +10,14 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
   allowedNextFor, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
-  sayWithinBudget, sharesCardWords, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
+  sayWithinBudget, sharesCardWords, enterPartState, laterPartLabels, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
 import { TYPED_TURN_INSTRUCTIONS, type TypedNext, type TypedTurn } from '../src/lib/tutor/voice/typed-turn';
 import { cardAskLine } from '../src/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptEngineOfferLines } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { getSegmentTruth } from '../src/lib/tutor/lesson-plan/context';
+import { moveOnRequestSpan } from '../src/lib/tutor/voice/correct-retry';
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -412,6 +413,41 @@ test('W1: applyTypedTurn counts post-due turns in the answered part; a move rese
   const s4 = applyTypedTurn({ ...s2, postDueTurns: { ...s2.postDueTurns, pronunciation: 3 } }, mv, fctx('open-conversation', { budgetDue: true, state: s2 }), { from: 'open-conversation', to: 'pronunciation' });
   assert.equal(s4.postDueTurns.pronunciation, 0);
   assert.equal(createTypedTurnState().postDueTurns && Object.keys(createTypedTurnState().postDueTurns).length, 0);
+});
+
+// ---- Final fix wave W2: engine-side pre-turn moves ----
+test('W2: enterPartState clears the old part\'s open ask and correction; pure', () => {
+  const st = { ...createTypedTurnState(), openAsk: { kind: 'retry' as const, text: 'Say it again.' }, correctionOpen: { student: 'a', corrected: 'b' }, retriesInARow: 2,
+    turnsInPart: { 'past-simple': 4 }, postDueTurns: { 'past-simple': 1 } };
+  const e = enterPartState(st, 'past-simple');
+  assert.deepEqual(e.openAsk, { kind: 'none', text: '' });
+  assert.equal(e.correctionOpen, null);
+  assert.equal(e.retriesInARow, 0);
+  assert.equal(e.turnsInPart['past-simple'], 0);
+  assert.equal(e.postDueTurns['past-simple'], 0);
+  assert.equal(st.openAsk.kind, 'retry', 'input untouched');
+});
+test('W2: engineMoved — no second move / close; the new part\'s entry row instead', () => {
+  const fresh = (seg: string, over: Partial<AllowedNextContext> = {}) => ctx(seg, { engineMoved: true, state: enterPartState(createTypedTurnState(), seg), ...over });
+  assert.deepEqual(allowedNextFor(fresh('past-simple')), ['question']);
+  assert.deepEqual(allowedNextFor(fresh('pronunciation')), ['menu']);
+  // the student asked to move on in the same turn the engine moved: the move already happened
+  assert.deepEqual(allowedNextFor(fresh('past-simple', { studentMovedOn: true })), ['question']);
+  assert.deepEqual(allowedNextFor(fresh('pronunciation', { studentMovedOn: true })), ['menu']);
+  // a due budget with an open ask: move is dropped, the rest stays
+  assert.deepEqual(allowedNextFor(fresh('open-conversation', { budgetDue: true, state: ask('question') })), ['question']);
+  // the closing part entered by the engine: no close on the entry turn
+  assert.ok(!allowedNextFor(fresh('summary', { lastPart: true })).includes('close'));
+  // without engineMoved nothing changes
+  assert.deepEqual(allowedNextFor(ctx('past-simple', { studentMovedOn: true })), ['move']);
+});
+test('W2: laterPartLabels feed moveOnRequestSpan as the prose move-on order does', () => {
+  const labels = laterPartLabels(plan, 'present-perfect');
+  assert.ok(labels.includes('Past simple') && labels.includes('Summary'), labels.join('|'));
+  assert.ok(!labels.includes('Conversation'), 'extension parts excluded (as the prose site)');
+  assert.ok(!labels.includes('Present perfect'), 'only later parts');
+  assert.ok(moveOnRequestSpan('Can we go to past simple?', labels));
+  assert.equal(moveOnRequestSpan('Can we go to past simple?'), null, 'without labels the span misses');
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

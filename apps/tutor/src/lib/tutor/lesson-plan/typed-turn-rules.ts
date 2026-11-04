@@ -84,6 +84,34 @@ export interface AllowedNextContext {
   items: readonly string[];
   /** ms since the lesson started (the lesson-time guard's clock; postDueHoldDecision's deadline). */
   lessonElapsedMs: number;
+  /** W2: the engine moved the pointer before this brain call (Skip, typed objective jump, lesson-time guard):
+   *  segId is the part it entered, and no second move / close is allowed this turn. */
+  engineMoved?: boolean;
+}
+
+/** W2: the state on entering `to` by an engine move — the old part's open ask and correction are gone. Pure. */
+export function enterPartState(state: TypedTurnState, to: string): TypedTurnState {
+  return {
+    ...state,
+    openAsk: { kind: 'none', text: '' },
+    correctionOpen: null,
+    retriesInARow: 0,
+    pendingVerdict: null,
+    turnsInPart: { ...state.turnsInPart, [to]: 0 },
+    postDueTurns: { ...(state.postDueTurns ?? {}), [to]: 0 },
+  };
+}
+
+/** W2: the labels (any language) of the parts after `segId`, extension parts excluded — the prose move-on order's
+ *  list (VTR TUTOR_MOVE_ON_ORDER block), for moveOnRequestSpan. Pure. */
+export function laterPartLabels(plan: LessonPlan, segId: string): string[] {
+  const idx = plan.segments.findIndex((sg) => sg.id === segId);
+  const later = idx >= 0 ? plan.segments.slice(idx + 1).filter((sg) => (sg.kind ?? '').toLowerCase() !== 'extension') : [];
+  return later.flatMap((sg) => {
+    const md = (sg.metadata ?? {}) as Record<string, unknown>;
+    const loc = md.labelLocalized && typeof md.labelLocalized === 'object' ? Object.values(md.labelLocalized as Record<string, unknown>) : [];
+    return [md.label, ...loc].filter((x): x is string => typeof x === 'string' && x.trim() !== '');
+  });
 }
 
 /** W1: the prose post-due cap on the typed path: 'hold-ok' | 'capped' | 'deadline' (only meaningful when budgetDue). */
@@ -96,8 +124,18 @@ function itemsLeft(ctx: AllowedNextContext): string[] {
   return ctx.items.filter((i) => !done.includes(i));
 }
 
-/** First matching row of the allowed-set table wins; every row is non-empty. */
+/** First matching row of the allowed-set table wins; every row is non-empty.
+ *  W2: after an engine move this turn, move / close are removed; an empty result is the new part's entry row. */
 export function allowedNextFor(ctx: AllowedNextContext): TypedNextKind[] {
+  const row = allowedNextRow(ctx);
+  if (!ctx.engineMoved) return row;
+  const rest = row.filter((k) => k !== 'move' && k !== 'close');
+  if (rest.length) return rest;
+  const kind = typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown);
+  return kind === 'menu' || kind === 'pronunciation' ? ['menu'] : ['question'];
+}
+
+function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   const { state, segId } = ctx;
   const ask = state.openAsk.kind;
   const askOpen = ask !== 'none';
