@@ -189,4 +189,32 @@ test('TT2 fallback: a showSentence without emphasis inside the window is not a c
   assert.ok(has(lines, 'FAIL  TT2'), lines.join('\n'));
 });
 
+// W5: TT10 part overrun (the post-due cap dead on the typed path, r55–r57 open-conversation 33/27/32 turns)
+const tt10Dump = (convTurns, { engine = false } = {}) => {
+  const ev = ['   30s typed_turn_effect: advance present-perfect→past-simple', '   30s typed_turn: verdict=none next=move ack=1 say=2 correction=no retries=0'];
+  for (let i = 0; i < 3; i++) ev.push(`   ${40 + i}s typed_turn: verdict=correct next=question ack=1 say=1 correction=no retries=0`);
+  ev.push(`   50s typed_turn_effect: advance past-simple→open-conversation${engine ? ' (engine)' : ''}`);
+  if (!engine) ev.push('   50s typed_turn: verdict=none next=move ack=1 say=2 correction=no retries=0');
+  for (let i = 0; i < convTurns; i++) ev.push(`   ${60 + i}s typed_turn: verdict=correct next=question ack=1 say=1 correction=no retries=0`);
+  ev.push('  200s typed_turn_effect: advance open-conversation→pronunciation', '  200s typed_turn: verdict=none next=move ack=1 say=3 correction=no retries=0');
+  return dump({ events: ev });
+};
+const tt10 = (d) => runChecks(d).lines.find((l) => / TT10 /.test(l)) ?? '';
+test('TT10 passes when every part stays within maxTurns + 2 (open-conversation 14 = 12 + 2)', () => {
+  // the move turn counts in the part it leaves: 13 questions + the move = 14
+  const line = tt10(tt10Dump(13));
+  assert.ok(/^PASS  TT10/.test(line), line);
+  assert.ok(/open-conversation 14\/12/.test(line), line);
+});
+test('TT10 FAILs on a part overrun (open-conversation 33/12, r55)', () => {
+  const line = tt10(tt10Dump(32));
+  assert.ok(/^FAIL  TT10/.test(line), line);
+  assert.ok(/open-conversation 33\/12/.test(line), line);
+});
+test('TT10: an engine move\'s turn counts in the part it entered', () => {
+  // past-simple: 3 questions (an engine advance has no move turn of its own); open-conversation: 13 + the move out = 14
+  const line = tt10(tt10Dump(13, { engine: true }));
+  assert.ok(/past-simple 3\/8/.test(line) && /open-conversation 14\/12/.test(line), line);
+});
+
 console.log(`${n} passed`);

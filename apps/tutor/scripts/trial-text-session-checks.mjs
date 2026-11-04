@@ -635,6 +635,33 @@ export function runChecks(dump) {
     }
     if (tt9.length === 0 && tt9Warn.length) warn('TT9 move into a menu part presents the menu', tt9Warn.join(' | '));
     else ok('TT9 move into a menu part presents the menu', tt9.length === 0, tt9.join(' | ') || `${menuMoves.length} menu moves`);
+    // TT10 (final fix wave W5): no part runs past its turn budget + 2 (r55–r57: open-conversation 33/27/32 typed turns, maxTurns 12 —
+    // the post-due cap was dead on the typed path). A brain move's turn counts in the part it LEAVES (it answered there);
+    // an engine move ("(engine)", before the brain call) has no move turn: the next turn is the new part's.
+    // The table mirrors docs/whitelabel/gdi/plans/gdi-work-projects-v1.json (metadata.maxTurns); parts not listed are not checked.
+    const GDI_MAX_TURNS = { overview: 2, 'level-check': 5, 'topic-intro': 4, 'present-perfect': 8, 'past-simple': 8, 'open-conversation': 12, pronunciation: 8, summary: 4 };
+    const advIdx = advances.map((a) => {
+      const m = a.msg.match(/^advance (\S+)→(\S+)/) ?? [];
+      return { i: events.indexOf(a), from: m[1], to: m[2], engine: /\(engine\)/.test(a.msg) };
+    }).filter((a) => a.from && a.to);
+    const partTurns = new Map();
+    if (advIdx.length) {
+      const order = [advIdx[0].from, ...advIdx.map((a) => a.to)];
+      for (const p of order) if (!partTurns.has(p)) partTurns.set(p, 0);
+      const credited = new Set();
+      for (const e of typed) {
+        const ti = events.indexOf(e);
+        let k = 0;
+        while (k < advIdx.length && advIdx[k].i < ti) k++;
+        let part = k === 0 ? advIdx[0].from : advIdx[k - 1].to;
+        if (k > 0 && !advIdx[k - 1].engine && !credited.has(k - 1)) { credited.add(k - 1); part = advIdx[k - 1].from; }
+        partTurns.set(part, (partTurns.get(part) ?? 0) + 1);
+      }
+      const rows = [...partTurns].filter(([p]) => GDI_MAX_TURNS[p] !== undefined);
+      const over = rows.filter(([p, n]) => n > GDI_MAX_TURNS[p] + 2);
+      const fmt = ([p, n]) => `${p} ${n}/${GDI_MAX_TURNS[p]}`;
+      ok('TT10 part turns ≤ maxTurns + 2', over.length === 0, over.length ? `over: ${over.map(fmt).join(' · ')} (all: ${rows.map(fmt).join(' · ')})` : rows.map(fmt).join(' · '));
+    } else info('TT10 part turns: no advances');
     // TT5: the prose validators / holds have nothing to do on a typed run
     const PROSE = ['brain_validator_retry', 'transition_ask_off_part', 'transition_offer_missing', 'repeat_ask_after_two_tries', 'move_on_ignored', 'required_phrase_missing', 'validator_tts_hold_started'];
     const prose = PROSE.map((c) => [c, ev(c).length]).filter(([, n]) => n > 0);
