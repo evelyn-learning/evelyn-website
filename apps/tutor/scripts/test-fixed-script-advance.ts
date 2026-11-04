@@ -615,7 +615,7 @@ test('22A: turnEndsWithAsk — the run-10 turns', () => {
 test('22A: VTR holds a due non-announced advance on an ask (pin)', () => {
   const auto = VTR.indexOf('fixedScriptAutoAdvanceReason({');
   const block = VTR.slice(auto, auto + 16500 /* Task 46: the last-item note; Task 41 §A: the part time cap inputs; r1: the post-due hold cap */);
-  pin(block, /const askPending = advanceReason !== 'announced' && turnEndsWithAsk\(fullText\);/);
+  pin(block, /const askPending = advanceReason !== 'announced' && \(turnEndsWithAsk\(fullText\) \|\| offerAsked\(fullText\)\);/); // Task 46 (r49 369 s): an offer ending in an instruction is an open ask
   pin(block, /'fixed_script_auto_advance_held_pron'[\s\S]*?\} else if \(autoNext && !holdCapped && holdAutoAdvanceForPendingAsk\(askPending, autoAdvanceAskHeldRef\.current\)\) \{\s*autoAdvanceAskHeldRef\.current \+= 1;\s*autoAdvancePostDueHoldsRef\.current \+= 1;\s*onDebugEvent\?\.\('fixed_script_auto_advance_held_ask', `"\$\{segIdNow\}" \$\{autoAdvanceAskHeldRef\.current\}\/\$\{FIXED_SCRIPT_AUTO_ADVANCE_MAX_ASK_HELD_TURNS\}`\);\s*\} else if \(autoNext && !holdCapped && advanceReason !== 'announced' && TUTOR_CORRECTION_CARD_HOLDS_ADVANCE[\s\S]*?\} else if \(autoNext\) \{\s*autoAdvanceCorrectionHeldRef\.current = 0;\s*autoAdvancePronHeldRef\.current = 0;\s*autoAdvanceAskHeldRef\.current = 0;/);
 });
 

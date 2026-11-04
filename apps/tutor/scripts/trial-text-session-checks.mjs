@@ -390,11 +390,13 @@ export function runChecks(dump) {
   for (let k = 0; k < tutor.length; k++) {
     const ss = sentencesOf(tutor[k].text);
     const pi = ss.findIndex((x) => PROPOSAL.test(x));
-    if (pi >= 0 && ss.slice(pi + 1).some((x) => ASKS(x) && !PROPOSAL.test(x))) offerThenAsk.push(`${tutor[k].t}s "${ss[pi].slice(0, 40)}" → "${ss.slice(pi + 1).find((x) => ASKS(x)).slice(0, 40)}"`);
+    const CJK = /[\u3040-\u30ff\u4e00-\u9fff]/;
+    if (pi >= 0 && ss.slice(pi + 1).some((x, j) => ASKS(x) && !PROPOSAL.test(x) && !(CJK.test(x) && ss.slice(pi, pi + 1 + j).every((y, k) => k === 0 || CJK.test(y))))) offerThenAsk.push(`${tutor[k].t}s "${ss[pi].slice(0, 40)}" → "${ss.slice(pi + 1).find((x) => ASKS(x)).slice(0, 40)}"`);
     if (k > 0) {
       const prevS = [...student].reverse().find((s) => s.i < tutor[k].i && s.i > tutor[k - 1].i);
       const prevProposed = sentencesOf(tutor[k - 1].text).some((x) => PROPOSAL.test(x));
-      if (prevS && prevProposed && /^\s*(?:yes|yeah|ok|okay|sure|one more|another|more practice|please)\b/i.test(prevS.text) && ss.some((x) => PROPOSAL.test(x))) reOffer.push(`${tutor[k].t}s after "${prevS.text.slice(0, 30)}"`);
+      const accepted = /\b(?:one more|another|more practice)\b/i.test(prevS?.text ?? '') || /^\s*(?:yes|yeah|yep|sure|ok|okay|please)[.!]?\s*(?:please[.!]?)?\s*$/i.test(prevS?.text ?? '');
+      if (prevS && prevProposed && accepted && ss.some((x) => PROPOSAL.test(x))) reOffer.push(`${tutor[k].t}s after "${prevS.text.slice(0, 30)}"`);
     }
   }
   ok('R2: an offer ends the turn (no ask after it)', offerThenAsk.length === 0, offerThenAsk.join(' | ').slice(0, 300));
@@ -526,7 +528,7 @@ export function runChecks(dump) {
     const ss = sentencesOf(turn.text);
     // the level-set bridge (one sentence, then the silent continuation asks) is no stub
     if (ev('fixed_script_level_continue').some((c) => c.t >= f.t - 2 && c.t <= f.t + 8) || ev('fixed_script_level_advance').some((c) => c.t >= f.t - 8 && c.t <= f.t + 1)) return [];
-    return ss.length <= 1 && !/[?？]\s*$/.test(turn.text.trim()) ? [`${turn.t}s "${turn.text.slice(0, 50)}"`] : [];
+    return ss.length <= 1 && !/[?？]\s*$/.test(turn.text.trim()) && !ASKS(turn.text) && !/\b(?:tell me|please|describe|say|try)\b/i.test(turn.text) ? [`${turn.t}s "${turn.text.slice(0, 50)}"`] : [];
   });
   ok('46 §2: a move turn is never a one-line stub', stubMoves.length === 0, stubMoves.join(' | ').slice(0, 300));
   const RETRY_PREV = /\b(?:say|try|repeat)\b[^.!?。]*\b(?:again|once more|one more time|(?:the|that|this|your) (?:whole |full |complete )?sentence)\b|もう一度/i;

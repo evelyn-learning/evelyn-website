@@ -1768,6 +1768,9 @@ test('43 M: in the recap part only corrections (and a contrast pair) card — th
   assert.equal(corr.length, 1); assert.equal(corr[0]!.kind, 'correction');
   const vtr = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(vtr.includes('recapPart: TUTOR_RECAP_CORRECTION_CARDS_ONLY && answeredGuardPart(lessonPlanRef.current, turnStartSegmentId),'), 'VTR passes recapPart');
+  // Task 46 (bot r49, 795 s): the brain's own show_sentence of the student's earlier sentence is skipped in the recap too
+  assert.match(vtr, /if \(TUTOR_RECAP_CORRECTION_CARDS_ONLY && !opts\?\.sentenceBoardAuto && page !== null && page !== dupCurrentPage && dupStudentCard\s*&& answeredGuardPart\(lessonPlanRef\.current, currentSegmentIdRef\.current\)\) \{/);
+  assert.match(vtr, /recap: the student's earlier sentence stays on its part page/);
   assert.match(readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8'), /export const TUTOR_RECAP_CORRECTION_CARDS_ONLY = process\.env\.NEXT_PUBLIC_TUTOR_RECAP_CORRECTION_CARDS_ONLY !== 'off';/);
 });
 

@@ -7131,6 +7131,16 @@ export function VoiceTutorRealtime({
         const sameTextCmd = sameTextId ? (log as any[]).find((x) => x?.id === sameTextId) : null;
         const newBrainCardAddsGloss = !opts?.sentenceBoardAuto && typeof c.gloss === 'string' && c.gloss.trim() !== ''
           && !(typeof sameTextCmd?.gloss === 'string' && sameTextCmd.gloss.trim() !== '');
+        // Task 46 (bot r49, 795 s): in the recap part the brain re-painted the student's earlier
+        // sentences from their part pages — the recap re-cards nothing from earlier (Task 43 §M for
+        // the brain's own show_sentence too); the earlier card is scrolled to instead.
+        if (TUTOR_RECAP_CORRECTION_CARDS_ONLY && !opts?.sentenceBoardAuto && page !== null && page !== dupCurrentPage && dupStudentCard
+          && answeredGuardPart(lessonPlanRef.current, currentSegmentIdRef.current)) {
+          if (existingId) onWhiteboardCommand([{ action: 'scrollTo', target: 'item', targetId: existingId, pulse: true } as unknown as WhiteboardCommand]);
+          onDebugEvent?.('show_sentence_duplicate_skipped', `recap: the student's earlier sentence stays on its part page (page ${page}): "${c.sentence.slice(0, 60)}"`);
+          duplicateSentenceNotes.push(`show_sentence: the student's sentence is already on an earlier page — in the recap, refer to it instead of writing it again.`);
+          return false;
+        }
         const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage, existingIsAuto, newBrainCardAddsMarkup, newBrainCardAddsGloss });
         if (dupAction === 'draw') { seenThisBatch.push(c); return true; }
         if (dupAction === 'replace' && sameTextId) {
@@ -22547,7 +22557,8 @@ export function VoiceTutorRealtime({
           // time — never 'announced') on a turn that ENDS with an ask flipped
           // the page at turn end, so the student's answer and its card landed
           // on the next part. Hold one turn; the advance fires on the reply.
-          const askPending = advanceReason !== 'announced' && turnEndsWithAsk(fullText);
+          // Task 46 (bot r49, 369 s): an offer whose last sentence is an instruction ('Just say "one more" or "move on."') is an open ask too.
+          const askPending = advanceReason !== 'announced' && (turnEndsWithAsk(fullText) || offerAsked(fullText));
           // Task 26 §A (GDI run 13, 475 s): an offer part's budget asks the
           // student first — one more practice sentence, or the move on.
           const transition = TUTOR_FIXED_SCRIPT_TRANSITIONS
