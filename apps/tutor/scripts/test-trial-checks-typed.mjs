@@ -217,4 +217,49 @@ test('TT10: an engine move\'s turn counts in the part it entered', () => {
   assert.ok(/past-simple 3\/8/.test(line) && /open-conversation 14\/12/.test(line), line);
 });
 
+// V3 (fix wave 2): TT11 the summary closes itself (voice run embed-1793805528967: three question turns, then the backstop)
+const tt11Dump = ({ phrases = true, close = true, backstop = null, reach = true } = {}) => [
+  JSON.stringify({ sessionId: 'fixture', lp: { currentSegmentId: 'summary', completedSegmentIds: ['overview'] } }),
+  '=== TRANSCRIPT',
+  '    1s   0 tutor: Hello, welcome! こんにちは。 Let us practise pronunciation.',
+  '   10s   1 student: Number two.',
+  '   11s   2 tutor: Great work. Now the summary. Which sentence from today are you happy with?',
+  '   20s   3 student: I have worked with customers for five years.',
+  `   21s   4 tutor: Great work today! You practised two grammar points. ${phrases ? 'One thing you did well was' : 'You did well with'} your clear examples. ${phrases ? 'Can you explain the difference between' : 'Can you compare'} these two sentences?`,
+  '   30s   5 student: The first one is still now, the second one is finished.',
+  `   31s   6 tutor: Exactly right. Well done, see you next time!`,
+  '=== WHITEBOARD',
+  wbRow(1, 0, { action: 'newPage', data: { title: 'Talking About Work' } }),
+  '=== EVENTS',
+  '    1s typed_turn: verdict=none next=menu ack=1 say=3 correction=no retries=0',
+  '    1s brain_turn: Brain 2000ms · 0 tool call(s) · 2 sentence(s)',
+  ...(reach ? ['   11s typed_turn_effect: advance pronunciation→summary'] : []),
+  '   11s typed_turn: verdict=correct next=move ack=1 say=2 correction=no retries=0',
+  '   11s brain_turn: Brain 2000ms · 0 tool call(s) · 2 sentence(s)',
+  '   21s typed_turn: verdict=correct next=question ack=1 say=6 correction=no retries=0',
+  '   21s brain_turn: Brain 2000ms · 0 tool call(s) · 6 sentence(s)',
+  `   31s typed_turn: verdict=correct next=${close ? 'close' : 'question'} ack=1 say=2 correction=no retries=0`,
+  '   31s brain_turn: Brain 2000ms · 0 tool call(s) · 2 sentence(s)',
+  ...(backstop ? [`   33s fixed_script_close_forced: "summary" — ${backstop}`] : []),
+].join('\n');
+const tt11 = (d) => runChecks(d).lines.find((l) => / TT11 /.test(l)) ?? '';
+test('TT11 passes: review turn has both required phrases, a typed close, no backstop', () => {
+  const line = tt11(tt11Dump());
+  assert.ok(/^PASS  TT11/.test(line), line);
+});
+test('TT11 FAILs when the backstop fired (no close_session_notes / typed turn close fallback)', () => {
+  assert.ok(/^FAIL  TT11/.test(tt11(tt11Dump({ backstop: '3 tutor turns after the close note, no close_session_notes' }))));
+  assert.ok(/^FAIL  TT11/.test(tt11(tt11Dump({ backstop: 'typed turn close fallback' }))));
+});
+test('TT11 FAILs when a required phrase is missing, or no typed turn in the summary has next=close', () => {
+  const p = tt11(tt11Dump({ phrases: false }));
+  assert.ok(/^FAIL  TT11/.test(p) && /one thing you did well/.test(p) && /the difference between/.test(p), p);
+  const c = tt11(tt11Dump({ close: false }));
+  assert.ok(/^FAIL  TT11/.test(c) && /no next=close/.test(c), c);
+});
+test('TT11 is INFO when the run never reached the summary', () => {
+  const line = tt11(tt11Dump({ reach: false }));
+  assert.ok(/^INFO  TT11/.test(line), line);
+});
+
 console.log(`${n} passed`);

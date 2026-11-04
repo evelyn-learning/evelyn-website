@@ -187,7 +187,9 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
     return state.retriesInARow >= 2 ? ['question', ...extra] : ['retry', 'question', ...extra];
   }
 
-  if (kind === 'recap') return (state.turnsInPart[segId] ?? 0) >= 1 ? ['close', 'question'] : ['question', 'close'];
+  // V3 (fix wave 2): the summary is engine-driven — review + feedback + check question, then the close (the brain
+  // never picked close when it was offered beside question; a question object costs one retry, then the close fallback).
+  if (kind === 'recap') return (state.turnsInPart[segId] ?? 0) >= 1 ? ['close'] : ['question'];
 
   if (ctx.budgetDue) return askOpen ? ['question', 'move'] : [moveOrClose];
 
@@ -227,6 +229,13 @@ export function turnStateLine(ctx: AllowedNextContext): string {
       ? [['corrections_left', String(Math.max(0, TYPED_CONVERSATION_CORRECTIONS - (state.correctionsInPart?.[segId] ?? 0)))] as [string, string]] : []),
     ['level_known', yn(ctx.levelKnown)],
   ];
+  // V3: the recap's step, and on its first turn the plan's required phrases (the review turn must say them).
+  if (typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'recap') {
+    const first = (state.turnsInPart[segId] ?? 0) === 0;
+    attrs.push(['recap_step', first ? 'review_feedback_check' : 'close']);
+    const phrases = (segmentOf(ctx.plan, segId)?.requiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim());
+    if (first && phrases.length) attrs.push(['required_phrases', phrases.join('|')]);
+  }
   // G2: the card questions the student already answered on this part (the brain re-asked one in r55).
   const answered = (state.answeredCards[segId] ?? []).slice(0, 4).map((q) => q.slice(0, 120));
   if (answered.length) attrs.push(['answered', answered.join('|')]);

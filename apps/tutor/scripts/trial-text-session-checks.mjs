@@ -662,6 +662,28 @@ export function runChecks(dump) {
       const fmt = ([p, n]) => `${p} ${n}/${GDI_MAX_TURNS[p]}`;
       ok('TT10 part turns ≤ maxTurns + 2', over.length === 0, over.length ? `over: ${over.map(fmt).join(' · ')} (all: ${rows.map(fmt).join(' · ')})` : rows.map(fmt).join(' · '));
     } else info('TT10 part turns: no advances');
+    // TT11 (fix wave 2 V3): the summary closes itself — the review turn says the plan's required phrases, a typed turn in
+    // the last part picks next=close, and the forced-close backstop never fires (voice run embed-1793805528967: three
+    // question turns in the summary, then "no close_session_notes" ended the lesson on the fixed time-box line).
+    // The phrases mirror the GDI summary segment's `requiredPhrases` (docs/whitelabel/gdi/plans/gdi-work-projects-v1.json).
+    const GDI_SUMMARY_PHRASES = ['one thing you did well', 'the difference between'];
+    const sumAdv = [...advances].reverse().find((a) => /→summary\b/.test(a.msg));
+    if (!sumAdv) info('TT11 summary closes itself: summary not reached');
+    else {
+      const sumIdx = events.indexOf(sumAdv);
+      const moveTurn = turnOf(sumAdv.t + 1);
+      const sumTutor = tutor.filter((x) => (moveTurn ? x.i >= moveTurn.i : x.t >= sumAdv.t));
+      const sumText = sumTutor.map((x) => x.text).join(' ').toLowerCase();
+      const missing = GDI_SUMMARY_PHRASES.filter((p) => !sumText.includes(p));
+      const closed = typed.some((e) => events.indexOf(e) > sumIdx && field(e, 'next') === 'close');
+      const backstop = ev('fixed_script_close_forced').filter((e) => /no close_session_notes|typed turn close fallback/.test(e.msg));
+      const why = [
+        ...backstop.map((e) => `${e.t}s backstop: ${e.msg.slice(0, 80)}`),
+        ...(missing.length ? [`missing ${missing.map((p) => `"${p}"`).join(', ')}`] : []),
+        ...(closed ? [] : ['no next=close in the summary']),
+      ];
+      ok('TT11 summary closes itself', why.length === 0, why.join(' | ') || `${sumTutor.length} summary turns, typed close`);
+    }
     // TT5: the prose validators / holds have nothing to do on a typed run
     const PROSE = ['brain_validator_retry', 'transition_ask_off_part', 'transition_offer_missing', 'repeat_ask_after_two_tries', 'move_on_ignored', 'required_phrase_missing', 'validator_tts_hold_started'];
     const prose = PROSE.map((c) => [c, ev(c).length]).filter(([, n]) => n > 0);

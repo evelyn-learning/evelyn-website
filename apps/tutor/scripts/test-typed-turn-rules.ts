@@ -101,9 +101,22 @@ test('nudge', () => {
   assert.deepEqual(allowedNextFor(ctx('past-simple', { nudge: true })), ['question', 'wait']);
 });
 
-test('recap order', () => {
-  assert.deepEqual(allowedNextFor(ctx('summary')), ['question', 'close']);
-  assert.deepEqual(allowedNextFor(ctx('summary', { state: { turnsInPart: { summary: 1 } } })), ['close', 'question']);
+test('recap order (V3: question on the first recap turn, then close only)', () => {
+  assert.deepEqual(allowedNextFor(ctx('summary')), ['question']);
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 0 } } })), ['question']);
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 1 } } })), ['close']);
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 3 } } })), ['close']);
+});
+test('V3: turnStateLine recap_step + required_phrases on the summary', () => {
+  const t0 = turnStateLine(ctx('summary', { state: ask('question') }));
+  assert.ok(t0.includes('recap_step="review_feedback_check"'), t0);
+  assert.ok(t0.includes('required_phrases="one thing you did well|the difference between"'), t0);
+  const t1 = turnStateLine(ctx('summary', { state: { ...ask('question'), turnsInPart: { summary: 1 } } }));
+  assert.ok(t1.includes('recap_step="close"'), t1);
+  assert.ok(!t1.includes('required_phrases'), t1);
+  const pp = turnStateLine(ctx('present-perfect'));
+  assert.ok(!pp.includes('recap_step') && !pp.includes('required_phrases'), pp);
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('`recap_step=review_feedback_check`') && TYPED_TURN_INSTRUCTIONS.includes('`recap_step=close`'));
 });
 
 test('budget due', () => {

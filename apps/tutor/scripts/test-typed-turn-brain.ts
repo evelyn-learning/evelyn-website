@@ -329,6 +329,22 @@ async function main() {
     assert.ok(sentencesOf(r.events).join(' ').includes('Think about last weekend.'));
   });
 
+  const SIX = 'You talked about your work today. You used the present perfect well. One thing you did well was your clear answers. Try to add the past form next time. Here is the check. What is the difference between these two sentences?';
+  const EIGHT = `${SIX} Take your time. I will help you.`;
+  await test('V3: a recap next.say of 6 English sentences ⇒ no retry; 8 ⇒ retry (budget 7)', async () => {
+    const recapTurn = { ...typedTurn, recap: true };
+    const ok6 = await run({ ...baseInput, typedTurn: recapTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: { ...RETRY_NEXT, say: SIX } }), 3)]);
+    assert.equal(ok6.requests.length, 1);
+    assert.equal(turnEv(ok6.events).retries, 0);
+    const over8 = await run({ ...baseInput, typedTurn: recapTurn }, [
+      chunkedTextScript(JSON.stringify({ ...TURN, next: { ...RETRY_NEXT, say: EIGHT } }), 3),
+      chunkedTextScript(JSON.stringify({ ...TURN, next: { ...RETRY_NEXT, say: SIX } }), 2),
+    ]);
+    assert.equal(over8.requests.length, 2);
+    assert.equal(turnEv(over8.events).retryReason, 'say_over_budget');
+    assert.ok(String(over8.requests[1].messages[over8.requests[1].messages.length - 1].content).includes('at most 7 sentences'));
+  });
+
   console.log('fallbacks (Task 6)');
   await test('400 output_config.format rejected ⇒ typed-turn-fallback format_rejected, then the prose call with tools', async () => {
     const reject: Script = { events: [], final: { content: [], stop_reason: 'end_turn' }, error: { status: 400, message: 'output_config.format is not supported' } };

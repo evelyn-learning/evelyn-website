@@ -128,8 +128,19 @@ test('G3: menu and move say the choices WITH their numbers; budget helper', () =
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('1)'));
   assert.ok(/WITH its numbers/.test(TYPED_TURN_INSTRUCTIONS.split('WHEN next.kind IS move')[1]));
   assert.equal(typedSayBudgetFor('menu', false), 5);
-  assert.equal(typedSayBudgetFor('question', true), 5);
+  // V3 (fix wave 2): a recap's review + feedback + check turn needs 2+2+2 English sentences (spec §4.1 said 5)
+  assert.equal(typedSayBudgetFor('question', true), 7);
+  assert.equal(typedSayBudgetFor('close', true), 7);
   assert.equal(typedSayBudgetFor('question', false), 3);
+});
+
+test('V3: the recap glossary, the recap verdict rule and the budget sentence', () => {
+  const I = TYPED_TURN_INSTRUCTIONS;
+  assert.ok(I.includes('`recap_step=review_feedback_check`: `next.say` reviews what was practised using the student\'s OWN corrected sentences from this lesson (the card\'s examples only when they produced none), gives one specific strength and one thing to improve, and asks the part\'s check question; use every phrase in `required_phrases` verbatim.'));
+  assert.ok(I.includes('`recap_step=close`: `next.kind` is `close`; `verdict_say` evaluates their check answer, `next.say` explains briefly if needed and closes warmly; ask nothing after the close.'));
+  assert.ok(I.includes('In the recap part a reply that names a sentence, a grammar point or an answer to the check question is `correct` or `partly_correct`, never `none`.'));
+  assert.ok(I.includes('next.say 3 (5 for a menu, 7 on a recap)'), 'budget sentence');
+  assert.ok(I.includes('(7 when recap is "yes" in the turn block'), 'field line');
 });
 
 test('flags — TUTOR_TYPED_TURN is opt-in', () => {
