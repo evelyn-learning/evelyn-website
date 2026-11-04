@@ -30,6 +30,8 @@ His one unanswered brainstorming question ("what would make you wince?") stands 
 
 ```
 W=/Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-trial-lesson; S=<your scratchpad>
+# dev server for the typed turn: the flag goes in the PROCESS env, never in .env.local (a symlink the deploy scripts read)
+# cd $W/apps/tutor && NEXT_PUBLIC_TUTOR_TYPED_TURN=on nohup node $W/node_modules/.bin/next dev --turbopack -p 3019 > $S/local-3019.log 2>&1 &
 # dev server up?
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:3019/tutor-portal/embed
 # fresh new-learner link for Praveen (secret file; writes the links file; the 'praveen' row is his)
@@ -52,6 +54,7 @@ mongosh --quiet mongodb://127.0.0.1:2710/evelyn --file $S/dump.js > $S/r50.txt
 cd $W/apps/tutor && node -e "import('./scripts/trial-text-session-checks.mjs').then(m=>{const r=m.runChecks(require('fs').readFileSync('$S/r50.txt','utf8'));console.log(r.lines.filter(l=>/^(FAIL|WARN)/.test(l)).join('\n'));console.log('PASS',r.passes,'FAIL',r.fails,'WARN',r.warns)})"
 # bot run (≈ $3, 20–25 min; variants straight | wild | pron | base | errors | impatient | lost | beginner | polite | quiet)
 cd $W/apps/tutor && nohup node scripts/trial-text-session.mjs --variant straight --student gdi-trial-bot-rNN --port 3019 --out $S/bot > $S/bot/rNN.out 2>&1 &
+# typed run: block 10m prints TT1–TT8 (clean = 0 FAIL on TT1–TT6, spec §4.8); fixture test: npm run test:trial-checks-typed
 # gate + types
 cd $W/apps/tutor && npm run test:changed && npx tsc --noEmit -p tsconfig.json
 ```

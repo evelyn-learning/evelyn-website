@@ -37,6 +37,7 @@ export function runChecks(dump) {
   const tutor = transcript.filter((x) => x.role === 'tutor');
   const student = transcript.filter((x) => x.role === 'student');
   const ev = (type) => events.filter((e) => e.type === type);
+  const typedRun = ev('typed_turn').length > 0; // typed turn (2026-11-04): the brain answers with one object per turn
   info(`turns ${transcript.length} (tutor ${tutor.length}, student ${student.length}) · events ${events.length} · wb ${wb.length} · completed ${JSON.stringify(header?.lp?.completedSegmentIds ?? [])} · current ${header?.lp?.currentSegmentId}`);
 
   // 1. pages: every completed segment after the overview has its own page, and that page's first item is a card
@@ -170,7 +171,9 @@ export function runChecks(dump) {
   const segHasPage = (seg) => { const w = norm(seg.replace(/-/g, ' ')).split(' ')[0]; return pageTitles.some((t) => t.includes(w)) || seg === 'summary'; };
   // a skipped part (carry-over level check) is listed as completed but never had a page — no note expected
   const noNote = reached.filter((s) => !noteSegs.has(s) && segHasPage(s));
-  ok('every part reached got its entry note', noNote.length === 0, noNote.join(', '));
+  // a typed run plants no entry note: the typed move carries the bridge (Task 9 carry-in 1)
+  if (typedRun) info(`every part reached got its entry note — skipped (typed run: the move carries the bridge; ${noNote.length} parts without a note)`);
+  else ok('every part reached got its entry note', noNote.length === 0, noNote.join(', '));
 
   // 10d. run 18: no offer re-planted (the spoken offer went unrecognised) and no probe loop (three tutor questions on one point, each answered)
   const replanted = ev('fixed_script_offer_replanted').filter((r) => !ev('typed_advance_app').some((a) => Math.abs(a.t - r.t) <= 5) && !ev('fixed_script_offer_spoken').some((s) => s.t >= r.t && s.t <= r.t + 6)); // a re-plant the move-on order made moot, or that the next turn spoke, is fine
@@ -213,7 +216,9 @@ export function runChecks(dump) {
   const prevPage = ev('student_card_on_previous_page');
   ok('no student card routed to a previous page after an advance', prevPage.length === 0, prevPage.map((e) => `${e.t}s`).join(' '));
   const readinessAsks = ev('readiness_ask_note_planted').filter((e) => e.t > 60); // the authored opener's own "Are you ready?" registers at ~2 s — that one is the plan's
-  ok('no readiness ask on a fixed-script plan', readinessAsks.length === 0, readinessAsks.map((e) => `${e.t}s`).join(' '));
+  // a typed move's `say` ending "Are you ready?" is a prompt-quality matter, not an engine path (Task 9 carry-in 2)
+  if (typedRun && readinessAsks.length) warn('no readiness ask on a fixed-script plan', `typed run: ${readinessAsks.map((e) => `${e.t}s`).join(' ')}`);
+  else ok('no readiness ask on a fixed-script plan', readinessAsks.length === 0, readinessAsks.map((e) => `${e.t}s`).join(' '));
   const abandoned = [];
   for (const a of ev('fixed_script_auto_advance')) {
     const turn = [...tutor].reverse().find((x) => x.t <= a.t + 1 && x.t >= a.t - 12);
@@ -554,8 +559,81 @@ export function runChecks(dump) {
   const nudgeNarr = tutor.filter((x) => NUDGE_NARR.test(x.text)).map((x) => `${x.t}s "${x.text.slice(0, 60)}"`);
   ok('46 §5: no narration of the idle-nudge note', nudgeNarr.length === 0, nudgeNarr.join(' | ').slice(0, 300));
 
+  // 10m. typed turn (2026-11-04 spec §4.8, Task 9) — skipped with one INFO line when the run has no typed_turn events
+  if (!typedRun) info('typed turn: off (no typed_turn events)');
+  else {
+    const typed = ev('typed_turn');
+    const field = (e, k) => (e.msg.match(new RegExp(`\\b${k}=(\\S+)`)) ?? [])[1];
+    // the tutor transcript entry a turn-end event belongs to (the entry starts when the turn's first sentence speaks)
+    const turnOf = (t) => [...tutor].reverse().find((x) => x.t <= t + 1 && x.t >= t - 20);
+    // whiteboard rows of one turn: the render carries sourceMessageIndex = the tutor entry's index; a row without it falls back to a time window
+    const rowsOfTurn = (turn, t, lo, hi) => wb.filter((w) => (w.sourceMessageIndex !== undefined && turn ? w.sourceMessageIndex === turn.i : w.t >= t + lo && w.t <= t + hi));
+    // TT1: one typed object per brain turn (a format_rejected / provider fallback ran that attempt as prose)
+    const proseFallbacks = ev('typed_turn_fallback').filter((e) => /reason=(?:format_rejected|provider)\b/.test(e.msg)).length;
+    const brainTurns = ev('brain_turn').length;
+    ok('TT1 one next per turn', typed.length === brainTurns - proseFallbacks, `typed_turn ${typed.length} · brain_turn ${brainTurns} · prose fallbacks ${proseFallbacks}`);
+    // TT2: a correction field ⇒ its card on the board before any page break of the same turn
+    const tt2 = [];
+    let tt2Dup = 0;
+    for (let k = 0; k < typed.length; k++) {
+      const e = typed[k];
+      if (field(e, 'correction') !== 'yes') continue;
+      const prevT = k > 0 ? typed[k - 1].t : -Infinity;
+      const prevIdx = k > 0 ? events.indexOf(typed[k - 1]) : -1;
+      const eff = events.filter((x, xi) => x.type === 'typed_turn_effect' && /^correction_card/.test(x.msg) && xi > prevIdx && xi < events.indexOf(e) && x.t >= prevT).pop();
+      if (eff && /not placed/.test(eff.msg)) {
+        // a correction already on the page (the duplicate guard skipped it) is on the board before the break
+        if (ev('show_sentence_duplicate_skipped').some((d) => Math.abs(d.t - eff.t) <= 1)) { tt2Dup++; continue; }
+        tt2.push(`${e.t}s card not placed${(eff.msg.match(/\((.*)\)/) ?? [])[0] ? ' ' + eff.msg.match(/\((.*)\)/)[0] : ''}`); continue;
+      }
+      const turn = turnOf(e.t);
+      const rows = rowsOfTurn(turn, e.t, -8, 4);
+      const cardRow = rows.find((w) => w.action === 'showSentence' && Array.isArray(w.data?.emphasis) && w.data.emphasis.length) ?? rows.find((w) => w.action === 'showSentence' && eff);
+      if (!cardRow) { tt2.push(`${e.t}s no correction card${eff ? ' row' : ' (no correction_card effect)'}`); continue; }
+      const pageRow = rows.find((w) => w.action === 'newPage');
+      if (pageRow && pageRow.i < cardRow.i) tt2.push(`${e.t}s card wb#${cardRow.i} after newPage wb#${pageRow.i}`);
+    }
+    ok('TT2 correction field ⇒ correction card before any newPage of the same turn', tt2.length === 0, (tt2.join(' | ') || `${typed.filter((e) => field(e, 'correction') === 'yes').length} corrections`) + (tt2Dup ? ` (${tt2Dup} already on the page)` : ''));
+    // TT3: no pronunciation item given twice in a run
+    const items = ev('typed_turn_effect').filter((e) => /^arm_item /.test(e.msg)).map((e) => ({ t: e.t, k: norm((e.msg.match(/"(.*)"/) ?? [])[1] ?? '') }));
+    const repeatedItems = items.filter((x, i) => x.k && items.findIndex((y) => y.k === x.k) < i);
+    ok('TT3 no item repeated', repeatedItems.length === 0, repeatedItems.map((x) => `${x.t}s "${x.k.slice(0, 40)}"`).join(' | ') || `${items.length} items`);
+    // TT4: a move ⇒ the page breaks on the same turn (the row may paint later, when its anchor sentence speaks)
+    const tt4 = [];
+    const advances = ev('typed_turn_effect').filter((e) => /^advance /.test(e.msg));
+    for (const a of advances) {
+      const turn = turnOf(a.t + 1);
+      const sameTurn = wb.some((w) => w.action === 'newPage' && (w.sourceMessageIndex !== undefined && turn ? w.sourceMessageIndex === turn.i : w.t >= a.t - 2 && w.t <= a.t + 6));
+      const flushed = events.some((f) => /^auto_newpage_on_advance_flushed$/.test(f.type) && f.t >= a.t - 2 && f.t <= a.t + 6);
+      if (!sameTurn && !flushed) tt4.push(`${a.t}s ${a.msg.replace(/^advance /, '')}`);
+    }
+    ok('TT4 move ⇒ page break on the same turn', tt4.length === 0, tt4.join(' | ') || `${advances.length} advances`);
+    // TT5: the prose validators / holds have nothing to do on a typed run
+    const PROSE = ['brain_validator_retry', 'transition_ask_off_part', 'transition_offer_missing', 'repeat_ask_after_two_tries', 'move_on_ignored', 'required_phrase_missing', 'validator_tts_hold_started'];
+    const prose = PROSE.map((c) => [c, ev(c).length]).filter(([, n]) => n > 0);
+    ok('TT5 prose classes silent', prose.length === 0, prose.map(([c, n]) => `${c}=${n}`).join(' · '));
+    // TT6: no fallbacks; the schema retries stay rare
+    const fb = ev('typed_turn_fallback');
+    ok('TT6 fallbacks', fb.length === 0, fb.map((e) => `${e.t}s ${e.msg}`).join(' | ').slice(0, 300));
+    const retrySum = typed.reduce((n, e) => n + Number(field(e, 'retries') ?? 0), 0);
+    if (retrySum > 2) warn('TT6 typed retries', `${retrySum} retries (${typed.filter((e) => Number(field(e, 'retries') ?? 0) > 0).map((e) => `${e.t}s${field(e, 'reason') ? ' ' + field(e, 'reason') : ''}`).join(' ')})`);
+    else info(`TT6 typed retries: ${retrySum}`);
+    // TT7: next.say within 3 sentences outside the recap (summary) part
+    const sumAt = advances.find((a) => /→summary\b/.test(a.msg))?.t ?? Infinity;
+    const longSay = typed.filter((e) => e.t < sumAt && Number(field(e, 'say') ?? 0) > 3);
+    if (longSay.length) warn('TT7 budgets: next.say over 3 sentences outside the recap', longSay.map((e) => `${e.t}s say=${field(e, 'say')}`).join(' '));
+    else info('TT7 budgets: next.say ≤ 3 outside the recap');
+    // TT8: Japanese is present early (anti-goal: thinner Japanese)
+    const jaEarly = tutor.slice(0, 3).some((x) => /[぀-ヿ一-鿿]/.test(x.text));
+    if (!jaEarly) warn('TT8 Japanese present', 'no Japanese in the first 3 tutor turns');
+    else info('TT8 Japanese present in the first 3 tutor turns');
+    const misc = ['typed_turn_advance_blocked', 'typed_turn_bridge_missing', 'typed_turn_language_note', 'typed_turn_nudge', 'typed_turn_kill_skipped'].map((c) => `${c}=${ev(c).length}`).join(' · ');
+    const kinds = {}; for (const e of typed) { const k = field(e, 'next') ?? '?'; kinds[k] = (kinds[k] ?? 0) + 1; }
+    info(`typed: ${typed.length} turns (next ${Object.entries(kinds).map(([k, n]) => `${k}=${n}`).join(' ')}) · ${misc}`);
+  }
+
   // 11. counts worth a look
-  const counts = ['brain_validator_retry', 'idle_nudge_sent', 'drop_self_voice', 'meta_narration_dropped', 'fixed_script_noask_continue', 'fixed_script_offer_continue', 'transition_ask_off_part', 'judge_kill_resume_diverged', 'menu_pick_resolved', 'adjacent_duplicate_sentence_dropped', 'typed_turn_superseded', 'render_dropped'];
+  const counts = ['brain_validator_retry', 'idle_nudge_sent', 'drop_self_voice', 'meta_narration_dropped', 'fixed_script_noask_continue', 'fixed_script_offer_continue', 'transition_ask_off_part', 'judge_kill_resume_diverged', 'menu_pick_resolved', 'adjacent_duplicate_sentence_dropped', 'typed_turn_superseded', 'render_dropped', 'typed_turn'];
   info(counts.map((c) => `${c}=${events.filter((e) => e.type === c || e.type.startsWith(c + '_')).length}`).join(' · '));
   const retries = ev('brain_validator_retry').map((e) => e.msg.slice(0, 60));
   if (retries.length) info(`retries: ${retries.join(' | ')}`);

@@ -102,6 +102,7 @@ Meaning of each next.kind
 - menu: read the part's choice menu.
 - item: give the next pronunciation sentence from the plan, with next.item set verbatim.
 - move: one bridge sentence, then the next part's first ask or menu, three sentences at most.
+  A move's "say" ends with the new part's FIRST QUESTION (or its menu), never a readiness check like "Are you ready?" or "Shall we start?".
 - close: the farewell after the summary.
 - wait: nothing is asked; the student is reading. Keep "say" very short.
 

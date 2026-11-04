@@ -80,6 +80,7 @@ test('TYPED_TURN_INSTRUCTIONS — covers fields and rules, no tools', () => {
   for (const w of ['"ack"', '"verdict_say"', '"support_ja"', '"next"', 'allowed_next', 'none', 'Japanese']) {
     assert.ok(TYPED_TURN_INSTRUCTIONS.includes(w), w);
   }
+  assert.ok(/move's "say" ends with the new part's FIRST QUESTION[^\n]*never a readiness check/.test(TYPED_TURN_INSTRUCTIONS), 'move ends on the first question, not a readiness check');
   assert.ok(!TYPED_TURN_INSTRUCTIONS.includes('show_sentence'));
   assert.ok(!TYPED_TURN_INSTRUCTIONS.includes('advance_lesson'));
   assert.ok(TYPED_TURN_INSTRUCTIONS.split('\n').length < 120);
