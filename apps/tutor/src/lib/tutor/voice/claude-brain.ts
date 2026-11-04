@@ -75,7 +75,7 @@ import {
 import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
 import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
-import { isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, TYPED_SAY_BUDGET, TYPED_SAY_BUDGET_RECAP, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
+import { isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, TYPED_SAY_BUDGET, TYPED_SAY_BUDGET_RECAP, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
 
 /** Does the streamed tool input parse as JSON? Partial JSON (a tool call
  *  the output cap cut in half) does not. */
@@ -3036,6 +3036,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   /** Gate for `next`: legal kinds pass; anything else is held back. */
   const typedNextAllowed = (kind: TypedNextKind): boolean => !!input.typedTurn?.allowedNext.includes(kind);
   const typedSayBudget = input.typedTurn?.recap ? TYPED_SAY_BUDGET_RECAP : TYPED_SAY_BUDGET;
+  /** G1: sentences already yielded this typed turn (retry calls are the same turn); the prose duplicate filters stand down on typed. */
+  const typedSpoken = new Set<string>();
   /** Prose fallback mid-turn: the frame the typed request left out comes back. */
   const typedProseFrames = (): BrainStreamEvent[] => (workThenMatch ? [{ type: 'work-then-match' }] : []);
   /** One released field: budget, its frame, then its speech as sentences.
@@ -3078,7 +3080,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     const sentences = buf.push(speech);
     const rest = buf.flush();
     if (rest) sentences.push(rest);
-    for (const text of sentences) {
+    for (const chunk of sentences) {
+      // G1: a sentence already spoken this turn is skipped (the field value above is untouched).
+      const kept = typedSentences(chunk).filter((piece) => {
+        const key = normalizeSpoken(piece);
+        if (!key) return true;
+        if (typedSpoken.has(key)) { console.warn(`[typed-turn] duplicate sentence dropped (${ev.field}): "${piece.slice(0, 80)}"`); return false; }
+        typedSpoken.add(key);
+        return true;
+      });
+      if (!kept.length) continue;
+      const text = kept.length === typedSentences(chunk).length ? chunk : kept.join(' ');
       if (accumulatedText && !/\s$/.test(accumulatedText)) accumulatedText += ' ';
       accumulatedText += text;
       yield { type: 'sentence', text };

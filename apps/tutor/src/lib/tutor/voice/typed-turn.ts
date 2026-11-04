@@ -26,6 +26,10 @@ export interface TypedTurnRequest { state: string; allowedNext: TypedNextKind[];
 
 export const TYPED_SAY_BUDGET = 3;
 export const TYPED_SAY_BUDGET_RECAP = 5;
+/** A sentence reduced to what is heard: lowercase, no punctuation / quotes / whitespace (G1 duplicate check). */
+export function normalizeSpoken(text: string): string {
+  return (text ?? '').toLowerCase().replace(/[\s"'`“”‘’「」『』.,!?;:。、！？…\-—()（）]/g, '');
+}
 export const TYPED_ACK_BUDGET = 1;
 export const TYPED_VERDICT_SAY_BUDGET = 2;
 
@@ -133,7 +137,7 @@ export function typedTurnStateBlock(req: TypedTurnRequest): string {
 
 // splitSentences only breaks Japanese terminators before whitespace + a capital,
 // so 「こんにちは。元気ですか？」 stays one piece; split those here as well.
-function sentences(text: string): string[] {
+export function sentences(text: string): string[] {
   return splitSentences(text ?? '').flatMap((s) => s.split(/(?<=[。！？])\s*/)).filter(Boolean);
 }
 

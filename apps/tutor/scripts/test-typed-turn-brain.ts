@@ -263,6 +263,17 @@ async function main() {
     assert.ok(!sentencesOf(r.events).join(' ').includes('Think about last weekend.'));
     assert.equal(sentencesOf(r.events).pop(), RETRY_NEXT.say);
   });
+  await test('G1: a sentence in verdict_say AND support_ja is spoken once; a different sentence is not dropped', async () => {
+    const dup = 'Now tell me what you did at the trade show.';
+    const obj = { ...TURN, verdict_say: `Yes, you did. ${dup}`, support_ja: `「そうでしたね」という意味です。 ${dup}`, next: { ...RETRY_NEXT, say: 'Try a full sentence.' } };
+    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify(obj), 3)]);
+    const said = sentencesOf(r.events);
+    assert.equal(said.join(' ').split(dup).length - 1, 1, said.join(' | '));
+    assert.ok(said.join(' ').includes('Yes, you did.'), said.join(' | '));
+    assert.ok(said.includes('Try a full sentence.'), said.join(' | '));
+    const sj = r.events.find((e) => e.type === 'typed-field' && e.field === 'support_ja') as { value: string };
+    assert.ok(sj.value.includes(dup), 'the field value is not edited');
+  });
   const BILINGUAL = 'Good. Next one. What did you do? では次です。 発音の練習です。';
   await test('F2: next.say of 3 EN + 2 JA sentences on a non-recap part ⇒ NO retry', async () => {
     const r = await run({ ...baseInput, typedTurn }, [
