@@ -684,6 +684,23 @@ export function runChecks(dump) {
       ];
       ok('TT11 summary closes itself', why.length === 0, why.join(' | ') || `${sumTutor.length} summary turns, typed close`);
     }
+    // TT12 (fix wave 3 X3): no move language in a non-move turn (r61b 71 s / 147 s: "このレベルチェックはここまでです。
+    // Let's move on to your work." spoken with next=question — the student heard a part change the engine never made).
+    const MOVE_TALK = /let'?s move (on )?to|move on to the|次に進みましょう|ここまでです|次の練習に進みましょう/i;
+    const tt12 = [];
+    const tt12Seen = new Set();
+    let tt12Checked = 0;
+    for (const e of typed) {
+      if (!/^(?:question|retry|offer|menu|item|wait)$/.test(field(e, 'next') ?? '')) continue;
+      const turn = turnOf(e.t);
+      if (!turn || tt12Seen.has(turn.i)) continue;
+      tt12Seen.add(turn.i);
+      tt12Checked++;
+      // an offer's own choice ("…, or shall we move on to the past simple?") names the next part by design
+      const m = (field(e, 'next') === 'offer' ? turn.text.replace(/\bor\b[^.?!。？]*\?/gi, '') : turn.text).match(MOVE_TALK);
+      if (m) tt12.push(`${turn.t}s next=${field(e, 'next')} "${m[0]}"`);
+    }
+    ok('TT12 no move language in a non-move turn', tt12.length === 0, tt12.join(' | ') || `${tt12Checked} non-move turns`);
     // TT5: the prose validators / holds have nothing to do on a typed run
     const PROSE = ['brain_validator_retry', 'transition_ask_off_part', 'transition_offer_missing', 'repeat_ask_after_two_tries', 'move_on_ignored', 'required_phrase_missing', 'validator_tts_hold_started'];
     const prose = PROSE.map((c) => [c, ev(c).length]).filter(([, n]) => n > 0);

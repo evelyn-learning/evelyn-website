@@ -262,4 +262,29 @@ test('TT11 is INFO when the run never reached the summary', () => {
   assert.ok(/^INFO  TT11/.test(line), line);
 });
 
+// X3 (fix wave 3): TT12 no move language in a non-move turn (r61b 71 s / 147 s: "このレベルチェックはここまでです。 Let's move on to your work." with next=question)
+const tt12Dump = ({ moveWords = false, kind = 'question' } = {}) => dump({ events: [] }).replace(
+  '   21s   4 tutor: Nearly. We say I work in sales. Now the present perfect. Have you worked there long?',
+  `   21s   4 tutor: Nearly. We say I work in sales. ${moveWords ? "このパートはここまでです。 Let's move on to your work." : 'Good.'} Have you worked there long?`,
+).replace('   21s typed_turn: verdict=incorrect next=move', `   21s typed_turn: verdict=incorrect next=${kind}`);
+const tt12 = (d) => runChecks(d).lines.find((l) => / TT12 /.test(l)) ?? '';
+test('TT12 passes when no non-move turn speaks move language (a move turn may)', () => {
+  assert.ok(/^PASS  TT12/.test(tt12(tt12Dump())), tt12(tt12Dump()));
+  const mv = tt12(tt12Dump({ moveWords: true, kind: 'move' }));
+  assert.ok(/^PASS  TT12/.test(mv), mv);
+});
+test('TT12: an offer\'s own "or … move on to …?" choice passes; move language outside it in an offer FAILs (r61b 391 s / 553 s)', () => {
+  const offer = (text) => tt12(tt12Dump({ kind: 'offer' }).replace('Nearly. We say I work in sales. Good. Have you worked there long?', text));
+  const ok1 = offer('OK. Would you like one more question like this, or shall we move on to the past simple?');
+  assert.ok(/^PASS  TT12/.test(ok1), ok1);
+  const bad = offer("このパートはここまでです。 Would you like one more question, or shall we move on to the past simple?");
+  assert.ok(/^FAIL  TT12/.test(bad) && /next=offer/.test(bad), bad);
+});
+test('TT12 FAILs on move language in a question turn, with the timestamp', () => {
+  const line = tt12(tt12Dump({ moveWords: true }));
+  assert.ok(/^FAIL  TT12/.test(line) && /21s/.test(line), line);
+  const ja = tt12(dump({ events: [] }).replace('Great. What is your job?', 'では、次に進みましょう。 What is your job?'));
+  assert.ok(/^FAIL  TT12/.test(ja) && /11s/.test(ja), ja);
+});
+
 console.log(`${n} passed`);

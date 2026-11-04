@@ -372,5 +372,17 @@ test('X2 (fix wave 3): the recap close carries every required phrase; the retry 
   assert.ok(m.includes('ALREADY SPOKEN'));
 });
 
+test('X3 (fix wave 3): a refused move / close is never spoken as a move (r61b 71 s, 147 s)', () => {
+  const STAY = 'Do not announce a move, do not say this part is finished, and do not name the next part — stay in this part and ask its question.';
+  const ALREADY = { ack: 'Good.', verdict: 'correct' as const, verdict_say: 'Nice.', board: '', correction: null, support_ja: '' };
+  for (const kind of ['move', 'close'] as const) {
+    const m = typedTurnRetryMessage({ reason: 'illegal_kind', refused: { kind, say: "Let's move on to your work.", item: '', level: '' }, allowedNext: ['question'], alreadySaid: ALREADY, budget: 3 });
+    assert.ok(m.includes(STAY), `${kind}: ${m}`);
+  }
+  const q = typedTurnRetryMessage({ reason: 'illegal_kind', refused: { kind: 'offer', say: 'One more?', item: '', level: '' }, allowedNext: ['question'], alreadySaid: ALREADY, budget: 3 });
+  assert.ok(!q.includes(STAY), 'only a refused move / close');
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('When `move` is not in `allowed_next`, never say the part is over or name the next part; the engine turns the page, not your words.'), 'instructions');
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

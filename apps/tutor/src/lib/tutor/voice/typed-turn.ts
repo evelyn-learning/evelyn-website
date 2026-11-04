@@ -144,6 +144,8 @@ THE RECAP PART
 - \`recap_step=close\`: \`next.kind\` is \`close\`; \`verdict_say\` evaluates their check answer, \`next.say\` explains briefly if needed and closes warmly; ask nothing after the close.
 - Your closing turn contains every phrase in \`required_phrases\` verbatim before the goodbye.
 
+When \`move\` is not in \`allowed_next\`, never say the part is over or name the next part; the engine turns the page, not your words.
+
 Never ask again a question listed in \`answered\`. When the student stalls or gives a non-answer twice, ask a DIFFERENT question on this part (or \`move\` when allowed), never the same one.
 
 WHEN next.kind IS move
@@ -391,6 +393,8 @@ export function typedTurnRetryMessage(input: {
     ? `Your "next" was refused "${refused.kind}" (item_not_listed): next.item ${JSON.stringify(refused.item)} is not one of the sentences still to practise. next.item must be one of these, copied verbatim: ${itemNotListed.map((x) => JSON.stringify(x)).join(' | ')}. Keep next.kind within the allowed set (allowed: ${allowedNext.join(', ')}).`
     : reason === 'illegal_kind'
     ? `Your "next" was refused "${refused.kind}": that kind is not allowed on this turn (allowed: ${allowedNext.join(', ')}). Choose next.kind from the allowed set only.`
+      // X3 (fix wave 3, r61b 71 s / 147 s): the retry spoke the refused move inside a question turn.
+      + (refused.kind === 'move' || refused.kind === 'close' ? ' Do not announce a move, do not say this part is finished, and do not name the next part — stay in this part and ask its question.' : '')
     : `Your "next" was refused "${refused.kind}" because next.say ran to ${englishSentenceCount(refused.say)} English sentences (Japanese sentences do not count). next.say is at most ${budget} sentences. Keep next.kind within the allowed set (allowed: ${allowedNext.join(', ')}).`;
   const said = [
     `ack: ${JSON.stringify(alreadySaid.ack)}`,
