@@ -360,6 +360,19 @@ async function main() {
     assert.equal(t.turn, null);
     assert.ok(r.events.findIndex((e) => e.type === 'typed-turn') > i);
   });
+  await test('W4: complete but invalid object with no usable next ⇒ typed-turn null with nextFallback = allowedNext[0]', async () => {
+    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript('{"ack":"Good try.","verdict":"bogus","next":{}}', 2)]);
+    assert.equal(r.requests.length, 1, 'no retry call');
+    const t = r.events.find((e) => e.type === 'typed-turn') as { turn: unknown; nextFallback?: string };
+    assert.equal(t.turn, null);
+    assert.equal(t.nextFallback, 'retry');
+  });
+  await test('W4: invalid object whose legal next was voiced ⇒ no nextFallback on top of it', async () => {
+    const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, verdict: 'bogus' }), 2)]);
+    const t = r.events.find((e) => e.type === 'typed-turn') as { turn: unknown; nextFallback?: string };
+    assert.equal(t.turn, null);
+    assert.equal(t.nextFallback, undefined);
+  });
   await test('two text blocks ⇒ exactly one typed-turn', async () => {
     const one = chunkedTextScript(JSON.stringify(TURN), 2);
     const second = [

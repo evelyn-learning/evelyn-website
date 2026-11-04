@@ -3263,8 +3263,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       if (!turn) {
         console.warn(`[typed-turn] object did not parse: ${JSON.stringify(typedReader.text.slice(0, 200))}`);
         yield { type: 'typed-turn-fallback', reason: 'unparseable' };
-        // A refused `next` with no parsed object to splice: no retry.
-        if (typedRetryNeed && !typedNextVoiced) typedNextFallback = fallbackKind;
+        // A refused `next` with no parsed object to splice: no retry. W4: as on the cut path, any turn that
+        // voiced no usable `next` (refused, or never closed valid) gets the engine's fallback ask.
+        if (!typedNextVoiced) typedNextFallback = fallbackKind;
         yield { type: 'typed-turn', turn: null, retries: 0, ...(typedNextFallback ? { nextFallback: typedNextFallback } : {}) };
         return;
       }
