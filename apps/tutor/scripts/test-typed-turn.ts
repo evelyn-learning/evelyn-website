@@ -453,5 +453,13 @@ test('Z1 round 1: leading yes / so / well / okay are dropped before comparing', 
   }
 });
 
+test('E (fix wave 6, p3 362 s): a reply that restates one of the question\'s options is an answer, inside the verdict rule', () => {
+  const rule = "A reply that restates one of the question's own options — even as an imperative or a fragment ('Ask them to repeat the words') — is an answer, never a request.";
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes(rule), 'instruction');
+  const i = TYPED_TURN_INSTRUCTIONS.indexOf('- "verdict":');
+  const j = TYPED_TURN_INSTRUCTIONS.indexOf('- "verdict_say":');
+  assert.ok(i >= 0 && j > i && TYPED_TURN_INSTRUCTIONS.slice(i, j).includes(rule), 'inside the verdict rule');
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');
