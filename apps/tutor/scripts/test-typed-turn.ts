@@ -8,7 +8,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  TYPED_TURN_SCHEMA, TYPED_NEXT_KINDS, TYPED_TURN_INSTRUCTIONS, typedTurnStateBlock,
+  TYPED_TURN_SCHEMA, TYPED_NEXT_KINDS, TYPED_TURN_INSTRUCTIONS, typedTurnStateBlock, TYPED_KIND_MEANING,
   truncateToSentences, sentenceCount, englishSentenceCount, parseTypedTurn, TYPED_FIELD_ORDER,
   TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection,
 } from '../src/lib/tutor/voice/typed-turn';
@@ -74,6 +74,16 @@ test('typedTurnStateBlock — attributes and the state line', () => {
   assert.match(b, /recap="no"/);
   assert.match(b, /nudge="no"/);
   assert.ok(b.includes('<turn_state part="x"/>'));
+});
+
+test('typedTurnStateBlock — allowed_next line lists only the allowed kinds with meanings (F3)', () => {
+  const b = typedTurnStateBlock({ state: '<turn_state part="x"/>', allowedNext: ['retry', 'question'], recap: false });
+  const line = b.split('\n').find((l) => l.startsWith('allowed_next:')) ?? '';
+  assert.equal(line, `allowed_next: retry — ${TYPED_KIND_MEANING.retry.replace(/\.$/, '')}; question — ${TYPED_KIND_MEANING.question.replace(/\.$/, '')}`);
+  for (const k of TYPED_NEXT_KINDS.filter((x) => x !== 'retry' && x !== 'question')) assert.ok(!new RegExp(`\\b${k} —`).test(line), k);
+  assert.ok(b.indexOf('<turn_state') < b.indexOf('allowed_next:'));
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('rejected and costs the student a second wait'));
+  for (const k of TYPED_NEXT_KINDS) assert.ok(TYPED_TURN_INSTRUCTIONS.includes(`- ${k}: ${TYPED_KIND_MEANING[k]}`), k);
 });
 
 test('TYPED_TURN_INSTRUCTIONS — covers fields and rules, no tools', () => {

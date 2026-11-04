@@ -69,6 +69,17 @@ export const TYPED_TURN_SCHEMA: Record<string, unknown> = {
   },
 };
 
+export const TYPED_KIND_MEANING: Record<TypedNextKind, string> = {
+  retry: 'ask for the same sentence once more.',
+  question: 'ask a new question on this part.',
+  offer: 'the one-more-or-move-on proposal.',
+  menu: "read the part's choice menu.",
+  item: 'give the next pronunciation sentence from the plan, with next.item set verbatim.',
+  move: "one bridge sentence, then the next part's first ask or menu, three sentences at most.",
+  close: 'the farewell after the summary.',
+  wait: 'nothing is asked; the student is reading. Keep "say" very short.',
+};
+
 export const TYPED_TURN_INSTRUCTIONS = `TYPED TURN — OUTPUT FORMAT FOR THIS LESSON
 Reply with ONE JSON object and nothing else: no prose before or after, no code fence, no tool markup, no stage directions, no "[note]" citations. The engine speaks and paints the fields in the order listed below, so write each field to be heard in that order. All your usual tutor persona and teaching-language rules still apply inside the fields.
 
@@ -96,15 +107,9 @@ FIELDS, in speaking order
   - "level": only on the level-check close, the level you judge. Otherwise "".
 
 Meaning of each next.kind
-- retry: ask for the same sentence once more.
-- question: ask a new question on this part.
-- offer: the one-more-or-move-on proposal.
-- menu: read the part's choice menu.
-- item: give the next pronunciation sentence from the plan, with next.item set verbatim.
-- move: one bridge sentence, then the next part's first ask or menu, three sentences at most.
+${TYPED_NEXT_KINDS.map((k) => `- ${k}: ${TYPED_KIND_MEANING[k]}`).join('\n')}
   A move's "say" ends with the new part's FIRST QUESTION (or its menu), never a readiness check like "Are you ready?" or "Shall we start?".
-- close: the farewell after the summary.
-- wait: nothing is asked; the student is reading. Keep "say" very short.
+  next.kind outside allowed_next is rejected and costs the student a second wait; choose from the listed kinds only.
 
 THE TURN BLOCK
 The engine sends <turn_state .../> with every turn. Its attributes: part = the kind of lesson part; label = the part's name; turn = typed turns spoken in this part over its maximum; open_ask = what is currently asked of the student (none, retry, question, offer, menu, item); open_ask_text = the words of that ask; offer_made / offer_accepted = whether the one-more-or-move-on offer was made and taken; menu_picked = the menu option chosen, or none; items_practised / items_left = pronunciation sentences already spoken and still to come, separated by |; last_item = whether the final item was already announced; budget_due = whether the part's time or turn budget is spent; correction_open = whether a correction is still waiting for the student to repeat it; level_known = whether the student's level is already recorded; next_part / next_card (only when a move, close or offer is allowed) = the label and the opening card text of the part a move would enter, or next_part="(end)" on the last part. When nudge="yes" the student has been silent: "ack" carries one patient sentence, and "next" repeats the open ask or waits.
@@ -122,7 +127,8 @@ EXAMPLE, verdict none (student asked "What does yesterday mean?" while a sentenc
 {"ack":"Good question.","verdict":"none","verdict_say":"","correction":null,"support_ja":"yesterday は「昨日」という意味です。","next":{"kind":"retry","say":"Yesterday means the day before today. Now try the sentence once more.","item":"","level":""}}`;
 
 export function typedTurnStateBlock(req: TypedTurnRequest): string {
-  return `<typed_turn allowed_next="${req.allowedNext.join(',')}" recap="${req.recap ? 'yes' : 'no'}" nudge="${req.nudge ? 'yes' : 'no'}">\n${req.state}\n</typed_turn>`;
+  const allowedLine = `allowed_next: ${req.allowedNext.map((k) => `${k} — ${TYPED_KIND_MEANING[k].replace(/\.$/, '')}`).join('; ')}`;
+  return `<typed_turn allowed_next="${req.allowedNext.join(',')}" recap="${req.recap ? 'yes' : 'no'}" nudge="${req.nudge ? 'yes' : 'no'}">\n${req.state}\n${allowedLine}\n</typed_turn>`;
 }
 
 // splitSentences only breaks Japanese terminators before whitespace + a capital,
