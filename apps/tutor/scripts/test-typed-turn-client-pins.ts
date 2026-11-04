@@ -305,6 +305,10 @@ test('W2: pre-turn engine moves are latched, enter the part, paint once, block a
   assert.ok(VTR.includes("studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText, laterPartLabels(tPlan, typedFromSeg)) || typedStopDecision === 'finish'),"), 'later-part labels');
 });
 
+test('V4 (fix wave 2): the level check counts answers (non-none verdicts) + the reply now, not turns', () => {
+  assert.ok(VTR.includes('studentAnswerCount: (state.answersInPart[typedFromSeg] ?? 0) + (typedStudentText ? 1 : 0),'), 'answersInPart count');
+  assert.ok(!/studentAnswerCount: \(state\.turnsInPart\[/.test(VTR), 'the turn count is gone');
+});
 test('W3: the turn-start typed snapshot is taken on a typed turn only (prose path inert)', () => {
   assert.ok(VTR.includes('const typedTurnStateAtTurnStart: TypedTurnState | null = typedTurnActive ? structuredClone(typedTurnStateRef.current) : null;'), 'guarded snapshot');
   assert.equal((VTR.match(/structuredClone\(typedTurnStateRef\.current\)/g) ?? []).length, 1, 'no other per-turn clone');

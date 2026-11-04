@@ -15173,7 +15173,8 @@ export function VoiceTutorRealtime({
             studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText, laterPartLabels(tPlan, typedFromSeg)) || typedStopDecision === 'finish'),
             menuPick: typedMenuPickText,
             // The reply being answered now counts (the level check moves on the third answer's turn).
-            studentAnswerCount: (state.turnsInPart[typedFromSeg] ?? 0) + (typedStudentText ? 1 : 0),
+            // V4 (fix wave 2): earlier replies count only when judged an answer (verdict ≠ none), not every turn.
+            studentAnswerCount: (state.answersInPart[typedFromSeg] ?? 0) + (typedStudentText ? 1 : 0),
             nudge: !!opts?.silent && isIdleNudgeDirective(transcript),
             items: typedItemsFor(typedFromSeg),
             lessonElapsedMs: typedLessonElapsedMs,

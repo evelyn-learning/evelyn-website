@@ -499,5 +499,24 @@ test('V2: turnStateLine corrections_left on conversation parts only (2 − used,
   assert.deepEqual(sorted(allowedNextFor(ctx('open-conversation', { state: { ...ask('question'), correctionsInPart: { 'open-conversation': 2 } } }))), ['question', 'retry']);
 });
 
+// ---- Fix wave 2 V4: the level check counts answers, not turns ----
+test('V4: answersInPart counts non-none verdicts in the FROM part; a move resets the new part', () => {
+  const t = (verdict: 'none' | 'correct', kind: 'question' | 'move' = 'question') => ({ ack: '', verdict, verdict_say: '', board: '', correction: null, support_ja: '', next: { kind, say: 'Next?', item: '', level: '' as const } });
+  assert.deepEqual(createTypedTurnState().answersInPart, {});
+  const s1 = applyTypedTurn(createTypedTurnState(), t('none'), fctx('level-check'), null);
+  const s2 = applyTypedTurn(s1, t('correct'), fctx('level-check', { state: s1 }), null);
+  const s3 = applyTypedTurn(s2, t('correct'), fctx('level-check', { state: s2 }), null);
+  assert.equal(s3.answersInPart['level-check'], 2);
+  assert.equal(s3.turnsInPart['level-check'], 3, 'turns still count every turn');
+  const s4 = applyTypedTurn({ ...s3, answersInPart: { ...s3.answersInPart, 'topic-intro': 4 } }, t('correct', 'move'), fctx('level-check', { state: s3 }), { from: 'level-check', to: 'topic-intro' });
+  assert.equal(s4.answersInPart['level-check'], 3);
+  assert.equal(s4.answersInPart['topic-intro'], 0);
+  assert.equal(enterPartState({ ...s3, answersInPart: { 'past-simple': 2 } }, 'past-simple').answersInPart['past-simple'], 0);
+});
+test('V4: level check with studentAnswerCount 2 → question/retry; 3 → move', () => {
+  assert.deepEqual(sorted(allowedNextFor(ctx('level-check', { state: ask('question'), studentAnswerCount: 2 }))), ['question', 'retry']);
+  assert.deepEqual(allowedNextFor(ctx('level-check', { state: ask('question'), studentAnswerCount: 3 })), ['move']);
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

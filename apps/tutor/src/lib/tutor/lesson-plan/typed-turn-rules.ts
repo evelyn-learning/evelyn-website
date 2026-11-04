@@ -55,6 +55,8 @@ export interface TypedTurnState {
   postDueTurns: Record<string, number>;
   /** V2 (fix wave 2): corrections given per part (keyed by the FROM part); the conversation budget is advisory. */
   correctionsInPart: Record<string, number>;
+  /** V4 (fix wave 2): replies judged as answers (verdict ≠ none) per part — the level check's studentAnswerCount. */
+  answersInPart: Record<string, number>;
   retriesInARow: number;
   pendingVerdict: TypedVerdict | null;
 }
@@ -71,6 +73,7 @@ export function createTypedTurnState(): TypedTurnState {
     turnsInPart: {},
     postDueTurns: {},
     correctionsInPart: {},
+    answersInPart: {},
     retriesInARow: 0,
     pendingVerdict: null,
   };
@@ -105,6 +108,7 @@ export function enterPartState(state: TypedTurnState, to: string): TypedTurnStat
     pendingVerdict: null,
     turnsInPart: { ...state.turnsInPart, [to]: 0 },
     postDueTurns: { ...(state.postDueTurns ?? {}), [to]: 0 },
+    answersInPart: { ...(state.answersInPart ?? {}), [to]: 0 },
   };
 }
 
@@ -395,6 +399,9 @@ export function applyTypedTurn(
 
   const correctionsInPart = { ...(state.correctionsInPart ?? {}) };
   if (turn.correction) correctionsInPart[seg] = (correctionsInPart[seg] ?? 0) + 1;
+  const answersInPart = { ...(state.answersInPart ?? {}) };
+  if (turn.verdict !== 'none') answersInPart[seg] = (answersInPart[seg] ?? 0) + 1;
+  if (moved) answersInPart[moved.to] = 0;
 
   const answeredCards = { ...state.answeredCards };
   if ((turn.verdict === 'correct' || turn.verdict === 'partly_correct') && state.openAsk.cardQuestion) {
@@ -435,7 +442,7 @@ export function applyTypedTurn(
     openAsk,
     correctionOpen: turn.correction ? { student: turn.correction.student, corrected: turn.correction.corrected }
       : turn.verdict === 'correct' ? null : state.correctionOpen,
-    practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart, postDueTurns, correctionsInPart,
+    practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart, postDueTurns, correctionsInPart, answersInPart,
     retriesInARow: next.kind === 'retry' ? state.retriesInARow + 1 : 0,
     pendingVerdict: null,
   };
