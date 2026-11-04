@@ -155,6 +155,17 @@ test('turnStateLine next_part / next_card on a move turn only (F1)', () => {
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('next_card') && TYPED_TURN_INSTRUCTIONS.includes('next_part'));
 });
 
+test('G2: turnStateLine lists answered card questions (escaped, cut, max 4); absent when empty', () => {
+  const none = turnStateLine(ctx('present-perfect'));
+  assert.ok(!none.includes('answered='), none);
+  const two = turnStateLine(ctx('present-perfect', { state: { answeredCards: { 'present-perfect': ['What is one project <you> are proud of?', 'Have you "ever" travelled?'] } } }));
+  assert.ok(two.includes('answered="What is one project &lt;you&gt; are proud of?|Have you &quot;ever&quot; travelled?"'), two);
+  const many = turnStateLine(ctx('present-perfect', { state: { answeredCards: { 'present-perfect': ['q1', 'q2', 'q3', 'q4', 'q5', 'x'.repeat(200)] } } }));
+  assert.ok(many.includes('answered="q1|q2|q3|q4"'), many);
+  const long = turnStateLine(ctx('present-perfect', { state: { answeredCards: { 'present-perfect': ['x'.repeat(200)] } } }));
+  assert.ok(long.includes(`answered="${'x'.repeat(120)}"`), long);
+});
+
 test('typedTurnRequestFor', () => {
   const r = typedTurnRequestFor(ctx('summary', { nudge: true }));
   assert.equal(r.recap, true);

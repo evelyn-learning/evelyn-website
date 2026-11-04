@@ -156,6 +156,9 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     ['correction_open', yn(!!state.correctionOpen)],
     ['level_known', yn(ctx.levelKnown)],
   ];
+  // G2: the card questions the student already answered on this part (the brain re-asked one in r55).
+  const answered = (state.answeredCards[segId] ?? []).slice(0, 4).map((q) => q.slice(0, 120));
+  if (answered.length) attrs.push(['answered', answered.join('|')]);
   // F1: a move turn opens the NEXT part, (an offer names it too) so the brain must see that part's label and opening card.
   const allowed = allowedNextFor(ctx);
   if (allowed.includes('move') || allowed.includes('close') || allowed.includes('offer')) {

@@ -96,6 +96,12 @@ test('TYPED_TURN_INSTRUCTIONS — covers fields and rules, no tools', () => {
   assert.ok(TYPED_TURN_INSTRUCTIONS.split('\n').length < 120);
 });
 
+test('G2: instructions explain answered and forbid re-asking', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('answered'));
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('DIFFERENT question'));
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('Never ask again a question listed in `answered`'));
+});
+
 test('flags — TUTOR_TYPED_TURN is opt-in', () => {
   const src = readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8');
   assert.match(src, /export const TUTOR_TYPED_TURN = process\.env\.NEXT_PUBLIC_TUTOR_TYPED_TURN === 'on';/);
