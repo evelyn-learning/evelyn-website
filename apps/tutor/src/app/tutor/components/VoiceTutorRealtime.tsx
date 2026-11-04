@@ -453,7 +453,7 @@ import { retryAskTurn } from '@/lib/tutor/voice/sentence-board';
 // Typed turn (Task 7, docs/superpowers/specs/2026-11-04-typed-turn-design.md): the client half.
 import { TUTOR_TYPED_TURN } from '@/lib/tutor/orchestrator/flags';
 import { correctionEmphasis } from '@/lib/tutor/voice/sentence-board';
-import { sentenceCount, type TypedTurnRequest, type TypedTurn, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind } from '@/lib/tutor/voice/typed-turn';
+import { sentenceCount, englishSentenceCount, type TypedTurnRequest, type TypedTurn, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind } from '@/lib/tutor/voice/typed-turn';
 import { createTypedTurnState, typedTurnRequestFor, applyField, effectsForField, applyTypedTurn, engineLineFor, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
 import { isIdleNudgeDirective } from '@/lib/tutor/voice/idle-nudge';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
@@ -20347,7 +20347,7 @@ export function VoiceTutorRealtime({
                       speakOnePart(fallbackLine);
                       attemptText = `${attemptText} ${fallbackLine}`.trim();
                     }
-                    onDebugEvent?.('typed_turn', `verdict=${turn.verdict} next=${turn.next.kind} ack=${sentenceCount(turn.ack)} say=${sentenceCount(turn.next.say)} correction=${turn.correction ? 'yes' : 'no'} retries=${tt.retries ?? 0}${tt.retryReason ? ' reason=' + tt.retryReason : ''}${synth ? ' synth=yes' : ''}`);
+                    onDebugEvent?.('typed_turn', `verdict=${turn.verdict} next=${turn.next.kind} ack=${sentenceCount(turn.ack)} say=${englishSentenceCount(turn.next.say)} correction=${turn.correction ? 'yes' : 'no'} retries=${tt.retries ?? 0}${tt.retryReason ? ' reason=' + tt.retryReason : ''}${synth ? ' synth=yes' : ''}`);
                     if (fallbackKind) onDebugEvent?.('typed_turn_fallback', `next=${fallbackKind} spoken=${!!fallbackLine}`);
                     else if (typedNoNext) onDebugEvent?.('typed_turn_fallback', 'next=none spoken=false');
                   }

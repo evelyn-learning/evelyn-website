@@ -75,7 +75,7 @@ import {
 import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
 import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
-import { isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, sentenceCount, englishSentenceCount, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, TYPED_SAY_BUDGET, TYPED_SAY_BUDGET_RECAP, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
+import { isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, TYPED_SAY_BUDGET, TYPED_SAY_BUDGET_RECAP, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
 
 /** Does the streamed tool input parse as JSON? Partial JSON (a tool call
  *  the output cap cut in half) does not. */

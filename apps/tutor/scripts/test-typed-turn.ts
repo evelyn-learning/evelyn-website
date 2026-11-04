@@ -237,7 +237,10 @@ test('englishSentenceCount — Japanese sentences are exempt (F2)', () => {
   assert.equal(englishSentenceCount('Good. では次です。 Next one. 発音の練習です。 What did you do?'), 3);
   assert.equal(englishSentenceCount('One. Two. Three.'), 3);
   assert.equal(englishSentenceCount('はい。次です。'), 0);
-  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('Japanese support sentences do not count'));
+  assert.equal(englishSentenceCount('「去年」は特定の過去なので過去形の went を使います。'), 0);
+  assert.equal(englishSentenceCount('「I went there yesterday.」と言ってください。'), 0);
+  assert.equal(englishSentenceCount('Good. 「去年」は特定の過去なので過去形の went を使います。 Say it again.'), 2);
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('The next.say budget counts English sentences; Japanese sentences in next.say do not count.'));
 });
 test('instructions — move rule reads next_card, menu read out (F1)', () => {
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('next_card') && TYPED_TURN_INSTRUCTIONS.includes('numbered menu'));
