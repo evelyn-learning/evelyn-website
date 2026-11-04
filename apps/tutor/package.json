@@ -427,6 +427,7 @@
     "test:typed-turn": "npx tsx scripts/test-typed-turn.ts",
     "test:typed-turn-rules": "npx tsx scripts/test-typed-turn-rules.ts",
     "test:typed-turn-brain": "npx tsx scripts/test-typed-turn-brain.ts",
+    "test:typed-turn-client-pins": "npx tsx scripts/test-typed-turn-client-pins.ts",
     "test:announced-move": "npx tsx scripts/test-announced-move.ts",
     "test:validator-tts-hold": "npx tsx scripts/test-validator-tts-hold.ts",
     "test:menu-pick": "npx tsx scripts/test-menu-pick.ts",

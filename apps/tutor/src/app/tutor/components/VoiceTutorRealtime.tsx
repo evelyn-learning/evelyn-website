@@ -450,6 +450,12 @@ import { validatorTtsHold, VALIDATOR_TTS_HOLD_MS } from '@/lib/tutor/voice/valid
 import { fixedScriptCloseForcedAction, closeWrapPollDecision, dedupePartAnnouncement, endsWithRepeatAsk, endsWithSayOrListenAsk } from '@/lib/tutor/lesson-plan/announced-move';
 import { FIXED_SCRIPT_CLOSE_WRAP_DIRECTIVE, FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS, isVerdictEchoSentence, judgeNoteStaleForPart, FIXED_SCRIPT_NOASK_CONTINUE_DIRECTIVE, FIXED_SCRIPT_HELD_ADVANCE_MAX_RETRY_WAITS, lastItemNoteDue, fixedScriptLastItemNote } from '@/lib/tutor/lesson-plan/fixed-script';
 import { retryAskTurn } from '@/lib/tutor/voice/sentence-board';
+// Typed turn (Task 7, docs/superpowers/specs/2026-11-04-typed-turn-design.md): the client half.
+import { TUTOR_TYPED_TURN } from '@/lib/tutor/orchestrator/flags';
+import { correctionEmphasis } from '@/lib/tutor/voice/sentence-board';
+import { sentenceCount, type TypedTurnRequest, type TypedTurn, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind } from '@/lib/tutor/voice/typed-turn';
+import { createTypedTurnState, typedTurnRequestFor, applyField, effectsForField, applyTypedTurn, engineLineFor, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
+import { isIdleNudgeDirective } from '@/lib/tutor/voice/idle-nudge';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -1640,6 +1646,8 @@ export function VoiceTutorRealtime({
   const attemptNarrationStartRef = useRef<number>(0);
   /** Task 45 §7a: every reference text armed in each part (pronunciation_item_repeated). */
   const pronunciationPractisedRef = useRef<Map<string, string[]>>(new Map());
+  /** Typed turn (Task 7): the lesson state the engine keeps because it spoke it (typed-turn-rules.ts). Reset per plan. */
+  const typedTurnStateRef = useRef<TypedTurnState>(createTypedTurnState());
   const armPronunciationCheck = (referenceText: string, kind: string) => {
     const capture = clipCaptureRef.current;
     if (!capture) return;
@@ -12362,6 +12370,8 @@ export function VoiceTutorRealtime({
     // text served under the old plan (freestyle plans reuse content), and a
     // stale entry would wrongly kill its first render.
     servedProblemStatementsRef.current = new Set();
+    // Typed turn (Task 7): the typed lesson state is plan-scoped.
+    typedTurnStateRef.current = createTypedTurnState();
     // realtime-2: a new plan must be re-injected into the RT-2 session.
     lessonPlanV2InjectedRef.current = false;
     planLoadSettledIdRef.current = null;
@@ -13935,6 +13945,9 @@ export function VoiceTutorRealtime({
       // Task 30 §B1 (GDI run 17, 499–504 s): the student accepted the spoken
       // offer ("Yes, one more practice.") — ONE new item, not the question
       // already on the board, then the move on without a second offer.
+      // Typed turn (Task 7): this turn's pre-brain stop decision and menu pick, read by buildAllowedNextContext.
+      let typedStopDecision: string | null = null;
+      let typedMenuPickText: string | null = null;
       let offerAcceptedFirstNote: string | null = null;
       // Task 39 §E: the offer was accepted at this turn's start.
       let offerAcceptedThisTurn = false;
@@ -14001,6 +14014,7 @@ export function VoiceTutorRealtime({
           explicitStop: isExplicitStop(transcript),
           choosesFinish: choosesFinish(transcript),
         });
+        typedStopDecision = srDecision;
         if (srDecision === 'ask-choice') {
           stopChoicePendingRef.current = true;
           runTranscript = `${fixedScriptStopRequestNote(fixedScriptRemainingPartLabels(lessonPlanRef.current, currentSegmentIdRef.current, !!workingLevelRef.current))}\n\n${runTranscript}`;
@@ -14133,6 +14147,7 @@ export function VoiceTutorRealtime({
           ?? (TUTOR_MENU_ASK_CAP && loosePickAllowed({ fixedScript: isFixedScriptPlan(lessonPlanRef.current), cardOffersChoices: boardOffersChoices({ statement: segmentCardStatement(lessonPlanRef.current, currentSegmentIdRef.current ?? '') }) })
             ? resolveMenuPickLoose(transcript, [recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1], segmentCardStatement(lessonPlanRef.current, currentSegmentIdRef.current ?? ''), ...recentTutorTurnsRef.current.slice(-4, -1)]) : null);
         if (menuPick) {
+          typedMenuPickText = menuPick.text;
           runTranscript = `${menuPickNote(menuPick)}\n\n${runTranscript}`;
           // Task 42 §D: a resolved pick ends the menu's wait (auto-arm, menu fallback).
           if (menuPick && !opts?.prefetchOnly && currentSegmentIdRef.current) menuPickedSegsRef.current.add(currentSegmentIdRef.current);
@@ -14720,6 +14735,10 @@ export function VoiceTutorRealtime({
       if (sessionAllowsNonLatin(tutorLanguages) && runTranscript !== transcript && /^\s*\[/.test(runTranscript)) {
         runTranscript = `${LANGUAGE_KEEP_NOTE}\n\n${runTranscript}`;
       }
+      // Typed turn (Task 7): set per attempt below; read by the post-turn card blocks (skipped on a typed turn).
+      let typedTurnActive = false;
+      // Typed turn (Task 7): a `close` fallback — the forced-close path runs once the stream has ended.
+      let typedForceClose = false;
       for (let attempt = 0; attempt <= attemptCap; attempt++) {
         // This attempt continues a turn that stopped early (turn-shape.ts): it
         // is NEW content, not a correction of a killed/rejected attempt.
@@ -15043,12 +15062,191 @@ export function VoiceTutorRealtime({
             whiteboardCommandsRef.current,
           )
           : null;
+        // ── Typed turn (Task 7, docs/superpowers/specs/2026-11-04-typed-turn-design.md) ──
+        // A fixed-script lesson's student turn asks the brain for ONE JSON
+        // object (typed-turn.ts). The server releases its fields in speaking
+        // order as `typed-field` events (each speech field followed by its
+        // `sentence` events) and the whole object as `typed-turn`; the engine
+        // runs each field's effects (cards, advance, item arm, level, close)
+        // itself, through the same paths the prose turn's tools take.
+        typedTurnActive = TUTOR_TYPED_TURN && isFixedScriptPlan(lessonPlanRef.current) && !opts?.prefetchOnly && !openingTurnPendingRef.current;
+        // applyTypedTurn's contract: the FROM part — current when the attempt started, also after a move.
+        const typedFromSeg = currentSegmentIdRef.current ?? '';
+        const typedStudentText = /^\s*\[/.test(transcript) ? '' : transcript;
+        const typedLastTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
+        const typedJapanese = (tutorLanguages ?? []).some((l) => /^ja\b/i.test(l));
+        const typedItemsFor = (segId: string): readonly string[] => {
+          const md = (lessonPlanRef.current?.segments.find((sg) => sg.id === segId)?.metadata ?? {}) as { pronunciation?: { sentences?: unknown } };
+          const sentences = md.pronunciation?.sentences;
+          return Array.isArray(sentences) ? sentences.filter((x): x is string => typeof x === 'string' && x.trim().length > 0) : [];
+        };
+        const buildFieldEffectContext = (): FieldEffectContext => ({
+          plan: lessonPlanRef.current!,
+          segId: typedFromSeg,
+          levelKnown: !!workingLevelRef.current,
+          state: typedTurnStateRef.current,
+          studentLast: typedStudentText,
+          cardStatement: segmentCardStatement(lessonPlanRef.current, typedFromSeg) || null,
+          items: typedItemsFor(typedFromSeg),
+        });
+        const buildAllowedNextContext = (): AllowedNextContext => {
+          const tPlan = lessonPlanRef.current!;
+          const levelKnown = !!workingLevelRef.current;
+          // The reducer never sets offerState.accepted: the student's reply to an open offer decides it here.
+          const before = typedTurnStateRef.current;
+          if (before.openAsk.kind === 'offer' && typedStudentText) {
+            const o = before.offerState[typedFromSeg] ?? { made: true, accepted: false, served: false };
+            const accepted = !offerDeclined(typedStudentText) && offerAccepted(typedStudentText, typedLastTutor);
+            if (accepted !== o.accepted) typedTurnStateRef.current = { ...before, offerState: { ...before.offerState, [typedFromSeg]: { ...o, accepted } } };
+          }
+          // budget_due: the auto-advance rule's own inputs, as this turn's boundary will read them (turns + 1).
+          const cur = turnsInSegmentRef.current;
+          const curOwn = cur.segId === typedFromSeg;
+          const typedBudgetInput: Parameters<typeof fixedScriptAutoAdvanceReason>[0] = {
+            plan: tPlan,
+            segmentId: typedFromSeg,
+            turns: (curOwn ? cur.turns : 0) + 1,
+            overlongTurns: overlongTurnThreshold(tPlan, typedFromSeg, SEGMENT_OVERLONG_NOTE_TURNS),
+            elapsedMs: curOwn ? Date.now() - cur.startedAt : 0,
+            levelKnown,
+            partTimeCap: TUTOR_PART_TIME_CAP,
+            ...(TUTOR_PART_TIME_CAP ? { lessonElapsedMs: Date.now() - (voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current) } : {}),
+          };
+          const budgetDue = fixedScriptAutoAdvanceReason(typedBudgetInput) !== null;
+          const state = typedTurnStateRef.current;
+          return {
+            plan: tPlan,
+            segId: typedFromSeg,
+            levelKnown,
+            state,
+            budgetDue,
+            lastPart: nextSegmentId(tPlan, typedFromSeg, levelKnown) === null,
+            studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText) || typedStopDecision === 'finish'),
+            menuPick: typedMenuPickText,
+            // The reply being answered now counts (the level check moves on the third answer's turn).
+            studentAnswerCount: (state.turnsInPart[typedFromSeg] ?? 0) + (typedStudentText ? 1 : 0),
+            nudge: !!opts?.silent && isIdleNudgeDirective(transcript),
+            items: typedItemsFor(typedFromSeg),
+          };
+        };
+        const typedReq: TypedTurnRequest | undefined = typedTurnActive ? typedTurnRequestFor(buildAllowedNextContext()) : undefined;
+        if (typedReq?.nudge) onDebugEvent?.('typed_turn_nudge', `open_ask=${typedTurnStateRef.current.openAsk.kind} allowed=${typedReq.allowedNext.join(',')}`);
+        // Set on each typed-field event: where that field's sentences start in this attempt's narration.
+        let typedFieldAnchor: { field: TypedField; narrationIndex: number } | null = null;
+        // The advance a field ran this attempt (applyTypedTurn's `moved`).
+        let typedMoved: { from: string; to: string } | null = null;
+        // Every typed-field value received this attempt (a cut object is synthesized from them).
+        const typedFieldsSeen: Partial<Record<TypedField, TypedFieldValue['value']>> = {};
+        const runTypedEffect = async (e: TypedEffect, anchorSentence: number): Promise<void> => {
+          const tPlan = lessonPlanRef.current;
+          try {
+            switch (e.kind) {
+              case 'model_card': {
+                // verdict correct: the student's own sentence, anchored to verdict_say.
+                const res = await handleWhiteboardCommand([{ action: 'showSentence', sentence: e.sentence } as WhiteboardCommand], { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true });
+                for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
+                onDebugEvent?.('typed_turn_effect', 'model_card');
+                break;
+              }
+              case 'correction_card': {
+                // emphasis from the field; emphasisAt = the word positions the SentenceCard marks.
+                const emph = correctionEmphasis(e.corrected, e.emphasis);
+                const cmd = {
+                  action: 'showSentence',
+                  sentence: e.corrected,
+                  ...(emph.emphasis.length ? { emphasis: emph.emphasis } : {}),
+                  ...(emph.emphasisAt.length ? { emphasisAt: emph.emphasisAt } : {}),
+                } as WhiteboardCommand;
+                const res = await handleWhiteboardCommand([cmd], { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, correctionCard: true, holdDeferredPage: true });
+                for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
+                if (res?.assignedIds?.[0]) correctionCardCallSeqRef.current = brainCallSeqRef.current;
+                onDebugEvent?.('typed_turn_effect', 'correction_card');
+                break;
+              }
+              case 'advance': {
+                if (!tPlan) break;
+                // A level set by this same `next` may already have moved the pointer (levelSetAdvanceTarget).
+                if (currentSegmentIdRef.current !== e.to) applyResolvedAdvance(tPlan, e.from, e.to);
+                typedMoved = { from: e.from, to: e.to };
+                onDebugEvent?.('typed_turn_effect', `advance ${e.from}→${e.to}`);
+                // The bridge clause is a brain instruction: no engine speech (no stock sentences).
+                if (e.bridgeMissing) onDebugEvent?.('typed_turn_bridge_missing', `${e.from}→${e.to}`);
+                // The new part's authored card, as runSegmentCard paints it, carrying the page break —
+                // anchored to the first next.say sentence.
+                const toSeg = tPlan.segments.find((sg) => sg.id === e.to);
+                const toTruth = toSeg ? getSegmentTruth(toSeg, tPlan.id) : null;
+                const toStatement = toTruth?.problemText ? stripWbEmphasisText(toTruth.problemText) : '';
+                if (toStatement && !problemStatementOnBoard(whiteboardCommandsRef.current as unknown as Array<{ action: string } & Record<string, unknown>>, toStatement)) {
+                  catalogRef.current.setCurrentSegment(e.to);
+                  const toKind = toTruth?.kind;
+                  const cmd = {
+                    action: 'showProblem',
+                    problem: {
+                      statement: toStatement,
+                      format: 'free-response',
+                      title: toKind === 'try_yourself' ? 'Try Yourself'
+                        : toKind === 'worked_example' ? 'Worked Example'
+                        : toKind === 'misconception_check' ? 'Check'
+                        : toKind === 'extension' ? 'Extension'
+                        : undefined,
+                    },
+                  } as unknown as WhiteboardCommand;
+                  const res = await handleWhiteboardCommand([cmd], { anchorSentence, pageBreakOnTransition: true });
+                  onDebugEvent?.('segment_card_auto', `${e.to}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'} "${toStatement.slice(0, 50)}" (typed)`);
+                }
+                break;
+              }
+              case 'arm_item': {
+                armPronunciationCheckRef.current(e.text, 'typed');
+                const res = await handleWhiteboardCommand([{ action: 'showSentence', sentence: e.text } as WhiteboardCommand], { anchorSentence, sentenceBoardAuto: true, pronunciationModel: true });
+                for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
+                onDebugEvent?.('typed_turn_effect', `arm_item "${e.text.slice(0, 80)}"`);
+                break;
+              }
+              case 'set_level': {
+                const cmd = mapFunctionCallToCommand('set_working_level', { level: e.level });
+                if (cmd) await handleWhiteboardCommand([cmd]);
+                onDebugEvent?.('typed_turn_effect', `set_level ${e.level}`);
+                break;
+              }
+              case 'close': {
+                const cmd = mapFunctionCallToCommand('close_session_notes', {});
+                if (cmd) await handleWhiteboardCommand([cmd]);
+                onDebugEvent?.('typed_turn_effect', 'close');
+                break;
+              }
+              case 'menu_asked': {
+                menuAskCountRef.current.set(typedFromSeg, (menuAskCountRef.current.get(typedFromSeg) ?? 0) + 1);
+                break;
+              }
+              case 'offer_made': {
+                transitionOfferMadeRef.current.add(typedFromSeg);
+                transitionOfferSpokenRef.current.add(typedFromSeg);
+                transitionOfferSpokenAtRef.current.set(typedFromSeg, Date.now());
+                break;
+              }
+              case 'offer_served': {
+                if (offerAcceptedRef.current?.segId === typedFromSeg) offerAcceptedRef.current.itemAsked = true;
+                break;
+              }
+              case 'open_ask': {
+                // Recorded by the reducer with the whole turn (applyTypedTurn): it reads the ask being
+                // ANSWERED (openAsk.cardQuestion → answeredCards) before replacing it, so not mirrored early.
+                break;
+              }
+            }
+          } catch (err) {
+            console.warn('[typed-turn] effect failed:', e.kind, err);
+          }
+        };
         const input = {
             // Same bytes as before, cut at the core/session boundary (falls
             // back to the single `systemPrompt` field if the cut is invalid).
             ...splitPromptForWire(claudeSystemPromptRef.current, claudeSystemPromptCoreRef.current),
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
+            // Typed turn (Task 7): the per-turn state block + allowed next kinds; absent ⇒ prose turn, body unchanged.
+            ...(typedReq ? { typedTurn: typedReq } : {}),
             ...(turnMaxTokens !== undefined ? { maxTokens: turnMaxTokens } : {}),
             // Opener prefetch (2026-10-18): the session id keys the route's
             // opener cache. Sent on the opener's first attempt only — a retry
@@ -20048,6 +20246,72 @@ export function VoiceTutorRealtime({
                 } else if (ev.type === 'tool-call-continued') {
                   // output-budget.ts: the cap cut a tool call; the brain finished it in one more call.
                   onDebugEvent?.('tool_call_continued', String((ev as { name?: string }).name ?? ''));
+                } else if (ev.type === 'typed-field') {
+                  // Typed turn (Task 7): one field closed. Its sentences follow as `sentence` events,
+                  // so the anchor is the narration count NOW (the field's first sentence).
+                  if (typedTurnActive) {
+                    const tf = ev as unknown as { field: TypedField; value: TypedFieldValue['value']; retried?: boolean };
+                    const fv = { field: tf.field, value: tf.value } as TypedFieldValue;
+                    typedFieldAnchor = { field: tf.field, narrationIndex: turnNarrationRef.current.length - attemptNarrationStartRef.current };
+                    typedFieldsSeen[tf.field] = tf.value;
+                    typedTurnStateRef.current = applyField(typedTurnStateRef.current, fv);
+                    onDebugEvent?.('typed_turn_field', `${tf.field}${tf.retried ? ' retried' : ''}`);
+                    for (const e of effectsForField(fv, buildFieldEffectContext())) await runTypedEffect(e, typedFieldAnchor.narrationIndex);
+                  }
+                } else if (ev.type === 'typed-turn') {
+                  // Typed turn (Task 7): the whole object (null = cut / unparseable after what was voiced).
+                  if (typedTurnActive && lessonPlanRef.current) {
+                    const tt = ev as unknown as { turn: TypedTurn | null; retries?: number; nextFallback?: TypedNextKind; retryReason?: string; retryDisagreed?: boolean };
+                    const seenNext = typedFieldsSeen.next as TypedNext | undefined;
+                    // No usable `next` was voiced: the engine continues with its own line for this kind.
+                    // (turn null, no nextFallback and no `next` received ⇒ the first allowed kind.)
+                    let fallbackKind: TypedNextKind | undefined = tt.nextFallback ?? (!tt.turn && !seenNext ? typedReq?.allowedNext[0] : undefined);
+                    let fallbackLine: string | null = null;
+                    let fallbackNext: TypedNext | null = null;
+                    if (fallbackKind === 'move' && !nextSegmentId(lessonPlanRef.current, typedFromSeg, !!workingLevelRef.current)) fallbackKind = 'close';
+                    if (fallbackKind && fallbackKind !== 'close') {
+                      const fbCtx = buildFieldEffectContext();
+                      if (fallbackKind === 'move') {
+                        const fbTo = nextSegmentId(lessonPlanRef.current, typedFromSeg, !!workingLevelRef.current)!;
+                        fallbackLine = engineLineFor('move', { ...fbCtx, segId: fbTo, cardStatement: segmentCardStatement(lessonPlanRef.current, fbTo) || null, japanese: typedJapanese });
+                      } else {
+                        fallbackLine = engineLineFor(fallbackKind, { ...fbCtx, japanese: typedJapanese });
+                      }
+                      fallbackNext = { kind: fallbackKind, say: fallbackLine ?? '', item: fallbackKind === 'item' ? (fallbackLine ?? '') : '', level: '' };
+                      // The kind's own effects (move ⇒ the advance, item ⇒ the arm + model card, menu / offer bookkeeping),
+                      // anchored to the engine line about to be spoken.
+                      const fbAnchor = turnNarrationRef.current.length - attemptNarrationStartRef.current;
+                      for (const e of effectsForField({ field: 'next', value: fallbackNext }, fbCtx)) await runTypedEffect(e, fbAnchor);
+                    } else if (fallbackKind === 'close') {
+                      // The existing forced-close path runs after the stream (fixedScriptCloseForcedAction's 'force').
+                      typedForceClose = true;
+                      fallbackNext = { kind: 'close', say: '', item: '', level: '' };
+                    }
+                    const synth = !tt.turn;
+                    const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+                    const base: TypedTurn = tt.turn ?? {
+                      ack: str(typedFieldsSeen.ack),
+                      verdict: (typedFieldsSeen.verdict as TypedTurn['verdict'] | undefined) ?? 'none',
+                      verdict_say: str(typedFieldsSeen.verdict_say),
+                      correction: (typedFieldsSeen.correction as TypedTurn['correction'] | undefined) ?? null,
+                      support_ja: str(typedFieldsSeen.support_ja),
+                      next: seenNext ?? { kind: fallbackKind ?? 'wait', say: '', item: '', level: '' },
+                    };
+                    const turn: TypedTurn = fallbackNext ? { ...base, next: fallbackNext } : base;
+                    typedTurnStateRef.current = applyTypedTurn(typedTurnStateRef.current, turn, buildFieldEffectContext(), typedMoved);
+                    if (fallbackLine) {
+                      speakOnePart(fallbackLine);
+                      attemptText = `${attemptText} ${fallbackLine}`.trim();
+                    }
+                    onDebugEvent?.('typed_turn', `verdict=${turn.verdict} next=${turn.next.kind} ack=${sentenceCount(turn.ack)} say=${sentenceCount(turn.next.say)} correction=${turn.correction ? 'yes' : 'no'} retries=${tt.retries ?? 0}${tt.retryReason ? ' reason=' + tt.retryReason : ''}${synth ? ' synth=yes' : ''}`);
+                    if (fallbackKind) onDebugEvent?.('typed_turn_fallback', `next=${fallbackKind} spoken=${!!fallbackLine}`);
+                  }
+                } else if (ev.type === 'typed-turn-fallback') {
+                  // Typed turn (Task 7): telemetry. format_rejected / provider ⇒ this attempt ran as prose,
+                  // so the prose post-turn card blocks run for it.
+                  const tfReason = String((ev as { reason?: unknown }).reason ?? '');
+                  onDebugEvent?.('typed_turn_fallback', `reason=${tfReason}`);
+                  if (tfReason === 'format_rejected' || tfReason === 'provider') typedTurnActive = false;
                 } else if (ev.type === 'done') {
                   // Task 38 §D: a lead-in with nothing after it is never spoken.
                   if (heldLeadIn) {
@@ -22072,6 +22336,14 @@ export function VoiceTutorRealtime({
 
       const ms = Date.now() - t0;
       const fullText = aggregatedFullText.trim();
+      // Typed turn (Task 7): no usable `next` and the fallback kind is close — the forced-close
+      // path (as fixedScriptCloseForcedAction's 'force': seal, fixed goodbye, graceful end).
+      if (typedForceClose && !lessonClosedRef.current && !opts?.prefetchOnly) {
+        lessonClosedRef.current = true;
+        onDebugEvent?.('fixed_script_close_forced', `"${currentSegmentIdRef.current ?? ''}" — typed turn close fallback`);
+        noteLessonClosed('typed-turn close fallback');
+        void endSessionNowRef.current({ farewell: goodbyeLine(studentName) });
+      }
       // ── Ledger: deferred soft stuck cue, vetoed by a correct verdict ──
       {
         const pendingStuck = pendingStuckCueRef.current;
@@ -23081,7 +23353,9 @@ export function VoiceTutorRealtime({
         // anchored to the transition sentence (render-sync).
         const transitionAnchor = TUTOR_PAGE_BREAK_ON_TRANSITION_SENTENCE && !!pendingAdvanceNewPageRef.current && isFixedScriptPlan(lessonPlanRef.current)
           ? transitionSentenceIndex(turnNarrationRef.current.slice(attemptNarrationStartRef.current), { fallbackToFirstAsk: true }) : null;
-        if (transitionAnchor !== null) onDebugEvent?.('page_break_anchored', `sentence ${transitionAnchor}: "${(turnNarrationRef.current[attemptNarrationStartRef.current + transitionAnchor] ?? '').slice(0, 60)}"`);
+        // Typed turn (Task 7): the advance effect anchored the page break to next.say itself; the
+        // transition anchor feeds only the two card blocks below (both skipped on a typed turn) and this log.
+        if (!typedTurnActive && transitionAnchor !== null) onDebugEvent?.('page_break_anchored', `sentence ${transitionAnchor}: "${(turnNarrationRef.current[attemptNarrationStartRef.current + transitionAnchor] ?? '').slice(0, 60)}"`);
         if (TUTOR_SEGMENT_CARD_AUTO && !opts?.prefetchOnly && totalSentenceCount > 0) {
           const acPlan = lessonPlanRef.current;
           const acSegId = currentSegmentIdRef.current ?? '';
@@ -23089,7 +23363,8 @@ export function VoiceTutorRealtime({
           const acTruth = acSeg && acPlan ? getSegmentTruth(acSeg, acPlan.id) : null;
           const acStatement = acTruth?.problemText ? stripWbEmphasisText(acTruth.problemText) : '';
           const acCounter = turnsInSegmentRef.current;
-          if (acPlan && acSeg && segmentNeedsAutoCard({
+          // Typed turn (Task 7): skipped — the part card came from the `next` field (advance effect).
+          if (!typedTurnActive && acPlan && acSeg && segmentNeedsAutoCard({
             fixedScript: isFixedScriptPlan(acPlan),
             openingTurn: openingTurnPendingRef.current,
             counterForSegment: acCounter.segId === acSegId,
@@ -23132,7 +23407,8 @@ export function VoiceTutorRealtime({
         // render-sync anchors the card to the sentence that says it, and the
         // catalog lists it in <whiteboard_state> (the brain sees it and does
         // not duplicate it). Never on the opening turn; never twice on one page.
-        if (TUTOR_SENTENCE_BOARD && languageSessionRef.current && !openingTurnPendingRef.current) {
+        // Typed turn (Task 7): skipped — model / correction cards came from the verdict_say / correction fields.
+        if (!typedTurnActive && TUTOR_SENTENCE_BOARD && languageSessionRef.current && !openingTurnPendingRef.current) {
           // Task 15 §A (GDI run 5): this turn's independent check found the
           // student's sentence correct ⇒ the tutor quoting it back (or saying
           // the checked sentence unquoted) is a model sentence and gets a card.

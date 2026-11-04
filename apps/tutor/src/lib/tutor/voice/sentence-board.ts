@@ -2302,3 +2302,27 @@ export function tutorConfirmsStudentSentence(tutorText: string | null | undefine
   if (turnAffirmsStudent(t)) return true;
   return parts.some((x) => !/[?？]["”」]?\s*$/.test(x.trim()) && CONFIRM_RE.test(x));
 }
+
+/**
+ * Typed turn (Task 7): the brain's `correction.emphasis` (words as they appear
+ * in `corrected`, possibly multi-word) as the SentenceCard marks them — single
+ * words plus their word positions in the sentence (each position once, in
+ * order). An emphasis entry not found in the sentence is dropped. Pure.
+ */
+export function correctionEmphasis(sentence: string, emphasis: readonly string[]): { emphasis: string[]; emphasisAt: number[] } {
+  const norm = (w: string) => w.toLowerCase().replace(/’/g, "'");
+  const words = (sentence ?? '').match(TOKEN_RE) ?? [];
+  const used = new Set<number>();
+  for (const e of emphasis ?? []) {
+    const toks = (String(e ?? '').match(TOKEN_RE) ?? []).map(norm);
+    if (!toks.length) continue;
+    for (let k = 0; k + toks.length <= words.length; k++) {
+      if (toks.every((t, j) => !used.has(k + j) && norm(words[k + j]!) === t)) {
+        toks.forEach((_, j) => used.add(k + j));
+        break;
+      }
+    }
+  }
+  const emphasisAt = [...used].sort((a, b) => a - b);
+  return { emphasis: [...new Set(emphasisAt.map((k) => words[k]!))], emphasisAt };
+}

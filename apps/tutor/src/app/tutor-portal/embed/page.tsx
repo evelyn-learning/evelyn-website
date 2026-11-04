@@ -76,6 +76,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // mid-lesson close drop and the prompted-repeat note — embed-1792367246990
   // ran blind on all three because this list ate them.
   'premature_close', 'tool_call_continued', 'thin_turn_rescue', 'prompted_repeat',
+  // Typed turn (2026-11-04, Task 7): typed_turn / typed_turn_field / typed_turn_effect /
+  // typed_turn_fallback / typed_turn_bridge_missing / typed_turn_nudge — the bot harness reads them.
+  'typed_turn',
   'perception_', 'ink_', 'error', 'MicSilentWarning', 'mic_',
   'brain_watchdog', 'dispatch_', 'production_ws_', 'session_mint',
   'try_alone',
