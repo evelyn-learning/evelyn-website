@@ -147,4 +147,38 @@ test('no typed_turn events → one INFO line, no TT checks; the entry-note check
   assert.ok(lines.some((l) => /^(?:PASS|FAIL)  every part reached got its entry note/.test(l)));
 });
 
+// ---- Task 9 fix round 1 (F4 + re-review) ----
+test('TT9: a move into the pronunciation part passes when the same turn carries the numbered menu', () => {
+  const d = dump({ cardFirst: true, events: ['   21s typed_turn_effect: advance open-conversation→pronunciation'] })
+    .replace('Have you worked there long?', 'Would you like to practise? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip.');
+  const { lines } = runChecks(d);
+  assert.ok(has(lines, 'PASS  TT9'), lines.join('\n'));
+});
+
+test('TT9: a move into the pronunciation part FAILs when the turn invents an item instead of the menu', () => {
+  const d = dump({ cardFirst: true, events: ['   21s typed_turn_effect: advance open-conversation→pronunciation'] })
+    .replace('Have you worked there long?', 'Here is the first sentence: I have worked here for three years. Please repeat it after me.');
+  const { lines } = runChecks(d);
+  assert.ok(has(lines, 'FAIL  TT9'), lines.join('\n'));
+});
+
+// the correction turn (21 s) has NO card of its own; the previous turn (typed_turn 18 s) left a card at 16 s
+const noOwnCard = (cardRow) => dump({ cardFirst: true })
+  .replace(/\n.*showSentence-1.*"sourceMessageIndex":4\}/, '')
+  .replace('\n   22s   5 {', `\n${cardRow}\n   22s   5 {`)
+  .replace('   21s typed_turn_effect: correction_card', '   18s typed_turn: verdict=none next=question ack=1 say=1 correction=no retries=0\n   18s brain_turn: Brain 2000ms · 0 tool call(s) · 2 sentence(s)\n   21s typed_turn_effect: correction_card');
+
+test('TT2 fallback: a previous turn\'s card 5 s earlier does not mask a correction turn with no card of its own', () => {
+  const d = noOwnCard(wbRow(16, 3, { action: 'showSentence', data: { sentence: 'I work in sales.', emphasis: ['work'] } }));
+  assert.ok(!/showSentence-1/.test(d), 'fixture: the turn\'s own card removed');
+  const { lines } = runChecks(d);
+  assert.ok(has(lines, 'FAIL  TT2'), lines.join('\n'));
+});
+
+test('TT2 fallback: a showSentence without emphasis inside the window is not a correction card', () => {
+  const d = noOwnCard(wbRow(23, 3, { action: 'showSentence', data: { sentence: 'Have you worked there long?' } }));
+  const { lines } = runChecks(d);
+  assert.ok(has(lines, 'FAIL  TT2'), lines.join('\n'));
+});
+
 console.log(`${n} passed`);

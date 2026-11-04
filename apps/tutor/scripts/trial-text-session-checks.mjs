@@ -569,7 +569,7 @@ export function runChecks(dump) {
     // the tutor transcript entry a turn-end event belongs to (the entry starts when the turn's first sentence speaks)
     const turnOf = (t) => [...tutor].reverse().find((x) => x.t <= t + 3 && x.t >= t - 20);
     // whiteboard rows of one turn: the render carries sourceMessageIndex = the tutor entry's index; a row without it falls back to a time window
-    const rowsOfTurn = (turn, t, lo, hi) => wb.filter((w) => (w.sourceMessageIndex !== undefined && turn ? w.sourceMessageIndex === turn.i : w.t >= t + lo && w.t <= t + hi));
+    const rowsOfTurn = (turn, t, lo, hi, after = -Infinity) => wb.filter((w) => (w.sourceMessageIndex !== undefined && turn ? w.sourceMessageIndex === turn.i : w.t >= t + lo && w.t <= t + hi && w.t > after));
     // TT1: one typed object per brain turn (a format_rejected / provider fallback ran that attempt as prose)
     const proseFallbacks = ev('typed_turn_fallback').filter((e) => /reason=(?:format_rejected|provider)\b/.test(e.msg)).length;
     const brainTurns = ev('brain_turn').length;
@@ -589,11 +589,14 @@ export function runChecks(dump) {
         tt2.push(`${e.t}s card not placed${(eff.msg.match(/\((.*)\)/) ?? [])[0] ? ' ' + eff.msg.match(/\((.*)\)/)[0] : ''}`); continue;
       }
       const turn = turnOf(e.t);
-      const findCard = (rs) => rs.find((w) => w.action === 'showSentence' && Array.isArray(w.data?.emphasis) && w.data.emphasis.length) ?? rs.find((w) => w.action === 'showSentence' && eff);
-      let rows = rowsOfTurn(turn, e.t, -8, 4);
+      // a correction card always carries emphasis; a bare showSentence in the window is some other card
+      const findCard = (rs) => rs.find((w) => w.action === 'showSentence' && Array.isArray(w.data?.emphasis) && w.data.emphasis.length);
+      // the fallback window never reaches back past the previous typed_turn (its card is that turn's, not this one's)
+      const lo = Math.max(prevT, e.t - 8);
+      let rows = rowsOfTurn(turn, e.t, lo - e.t, 4, prevT);
       let cardRow = findCard(rows);
       // the index join found nothing (turnOf is heuristic and may resolve the previous turn): try the time window before failing
-      if (!cardRow) { rows = wb.filter((w) => w.t >= e.t - 8 && w.t <= e.t + 4); cardRow = findCard(rows); }
+      if (!cardRow) { rows = wb.filter((w) => w.t > lo && w.t <= e.t + 4); cardRow = findCard(rows); }
       if (!cardRow) { tt2.push(`${e.t}s no correction card${eff ? ' row' : ' (no correction_card effect)'}`); continue; }
       const pageRow = rows.find((w) => w.action === 'newPage');
       if (pageRow && pageRow.i < cardRow.i) tt2.push(`${e.t}s card wb#${cardRow.i} after newPage wb#${pageRow.i}`);
@@ -614,6 +617,18 @@ export function runChecks(dump) {
       if (!sameTurn && !flushed) tt4.push(`${a.t}s ${a.msg.replace(/^advance /, '')}`);
     }
     ok('TT4 move ⇒ page break on the same turn', tt4.length === 0, tt4.join(' | ') || `${advances.length} advances`);
+    // TT9: a move into a menu part presents the menu on the same turn (r52 1073 s: the brain invented an item inside the move).
+    // The dump does not expose the authored card, so the GDI menu part is hard-coded: `pronunciation` (its card is the numbered menu).
+    const MENU_PARTS = new Set(['pronunciation']);
+    const NUMBERED_MENU = /\b1\)|１\)|1）/;
+    const tt9 = [];
+    const menuMoves = advances.filter((a) => MENU_PARTS.has((a.msg.match(/→(\S+)/) ?? [])[1]));
+    for (const a of menuMoves) {
+      const turn = turnOf(a.t + 1);
+      if (!turn) tt9.push(`${a.t}s no tutor entry for the move`);
+      else if (!NUMBERED_MENU.test(turn.text)) tt9.push(`${a.t}s "${turn.text.slice(0, 70)}" has no numbered menu`);
+    }
+    ok('TT9 move into a menu part presents the menu', tt9.length === 0, tt9.join(' | ') || `${menuMoves.length} menu moves`);
     // TT5: the prose validators / holds have nothing to do on a typed run
     const PROSE = ['brain_validator_retry', 'transition_ask_off_part', 'transition_offer_missing', 'repeat_ask_after_two_tries', 'move_on_ignored', 'required_phrase_missing', 'validator_tts_hold_started'];
     const prose = PROSE.map((c) => [c, ev(c).length]).filter(([, n]) => n > 0);
