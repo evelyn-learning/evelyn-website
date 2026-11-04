@@ -113,7 +113,7 @@ WHEN next.kind IS move
 "say" is: one bridge sentence (what you learned in the part you are leaving, when next_part follows a bridge part) + the new part's opening ask taken from next_card: its first question verbatim, or, when next_card is a numbered menu, the menu read out (all numbered choices). Never invent a sentence to repeat, never start an item inside a move.
 
 LANGUAGE
-Japanese is allowed in any field under the lesson's teaching-language rules. support_ja is an extra slot, not a replacement for the English fields. Keep to the budgets: ack 1 sentence, verdict_say 2, explain 2, support_ja 2, next.say 3 (5 on a recap).
+Japanese is allowed in any field under the lesson's teaching-language rules. support_ja is an extra slot, not a replacement for the English fields. Keep to the budgets: ack 1 sentence, verdict_say 2, explain 2, support_ja 2, next.say 3 (5 on a recap). These budgets count English sentences; Japanese support sentences do not count.
 
 EXAMPLE, a correction turn (student said "I go there yesterday" to a past-tense ask; allowed_next includes retry)
 {"ack":"Good try.","verdict":"incorrect","verdict_say":"Nearly there. Yesterday is in the past, so the verb changes.","correction":{"student":"I go there yesterday","corrected":"I went there yesterday.","emphasis":["went"],"explain":"Use the past form went for something that already happened."},"support_ja":"","next":{"kind":"retry","say":"Can you say the whole sentence once more?","item":"","level":""}}
@@ -133,6 +133,13 @@ function sentences(text: string): string[] {
 
 export function sentenceCount(text: string): number {
   return sentences(text).length;
+}
+
+/** Sentences that are not Japanese: kana/kanji present and under 3 ASCII letters. The next.say budget counts these only. */
+export function englishSentenceCount(text: string): number {
+  // an English terminator followed by Japanese is not split by splitSentences (it wants a capital next): split it here
+  const parts = sentences(text).flatMap((x) => x.split(/(?<=[.!?])\s+(?=[\u3040-\u30ff\u4e00-\u9fff])/));
+  return parts.filter((x) => !(/[\u3040-\u30ff\u4e00-\u9fff]/.test(x) && (x.match(/[A-Za-z]/g) ?? []).length < 3)).length;
 }
 
 export function truncateToSentences(text: string, max: number): string {
@@ -327,7 +334,7 @@ export function typedTurnRetryMessage(input: {
   const { reason, refused, allowedNext, alreadySaid, budget } = input;
   const why = reason === 'illegal_kind'
     ? `Your "next" was refused "${refused.kind}": that kind is not allowed on this turn (allowed: ${allowedNext.join(', ')}). Choose next.kind from the allowed set only.`
-    : `Your "next" was refused "${refused.kind}" because next.say ran to ${sentenceCount(refused.say)} sentences. next.say is at most ${budget} sentences. Keep next.kind within the allowed set (allowed: ${allowedNext.join(', ')}).`;
+    : `Your "next" was refused "${refused.kind}" because next.say ran to ${englishSentenceCount(refused.say)} English sentences (Japanese sentences do not count). next.say is at most ${budget} sentences. Keep next.kind within the allowed set (allowed: ${allowedNext.join(', ')}).`;
   const said = [
     `ack: ${JSON.stringify(alreadySaid.ack)}`,
     `verdict: ${JSON.stringify(alreadySaid.verdict)}`,

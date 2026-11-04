@@ -75,7 +75,7 @@ import {
 import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
 import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
-import { isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, sentenceCount, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, TYPED_SAY_BUDGET, TYPED_SAY_BUDGET_RECAP, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
+import { isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, sentenceCount, englishSentenceCount, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, TYPED_SAY_BUDGET, TYPED_SAY_BUDGET_RECAP, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
 
 /** Does the streamed tool input parse as JSON? Partial JSON (a tool call
  *  the output cap cut in half) does not. */
@@ -3059,10 +3059,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         if (!retried) {
           // Refused: nothing of it is voiced; the call's end runs the one retry.
           const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) ? 'illegal_kind'
-            : sentenceCount(ev.value.say) > typedSayBudget ? 'say_over_budget' : null;
+            : englishSentenceCount(ev.value.say) > typedSayBudget ? 'say_over_budget' : null;
           if (reason) {
             typedRetryNeed = { reason, refused: ev.value };
-            console.warn(`[typed-turn] next refused (${reason}): kind=${ev.value.kind} sentences=${sentenceCount(ev.value.say)} allowed_next=${input.typedTurn!.allowedNext.join(',')} — retrying once`);
+            console.warn(`[typed-turn] next refused (${reason}): kind=${ev.value.kind} sentences=${englishSentenceCount(ev.value.say)} allowed_next=${input.typedTurn!.allowedNext.join(',')} — retrying once`);
             return;
           }
         }

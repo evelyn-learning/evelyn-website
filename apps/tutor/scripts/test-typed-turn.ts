@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   TYPED_TURN_SCHEMA, TYPED_NEXT_KINDS, TYPED_TURN_INSTRUCTIONS, typedTurnStateBlock,
-  truncateToSentences, sentenceCount, parseTypedTurn, TYPED_FIELD_ORDER,
+  truncateToSentences, sentenceCount, englishSentenceCount, parseTypedTurn, TYPED_FIELD_ORDER,
   TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection,
 } from '../src/lib/tutor/voice/typed-turn';
 import { isStructuredOutputRejection as gradeIsStructuredOutputRejection } from '../src/lib/tutor/portal/grade-free-response';
@@ -219,8 +219,15 @@ test('retry message — illegal kind: refused kind, allowed set, ALREADY SPOKEN,
 test('retry message — say over budget restates the budget number', () => {
   const m = typedTurnRetryMessage({ reason: 'say_over_budget', refused: { kind: 'question', say: 'A. B. C. D.', item: '', level: '' },
     allowedNext: ['retry', 'question'], alreadySaid: ALREADY, budget: 3 });
-  assert.ok(/at most 3 sentences/.test(m), m);
+  assert.ok(/at most 3 sentences/.test(m) && /English sentences/.test(m), m);
   assert.ok(m.includes('ALREADY SPOKEN'));
+});
+test('englishSentenceCount — Japanese sentences are exempt (F2)', () => {
+  assert.equal(englishSentenceCount('はい。 Let us go. 次です。 Ready?'), 2);
+  assert.equal(englishSentenceCount('Good. では次です。 Next one. 発音の練習です。 What did you do?'), 3);
+  assert.equal(englishSentenceCount('One. Two. Three.'), 3);
+  assert.equal(englishSentenceCount('はい。次です。'), 0);
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('Japanese support sentences do not count'));
 });
 test('instructions — move rule reads next_card, menu read out (F1)', () => {
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('next_card') && TYPED_TURN_INSTRUCTIONS.includes('numbered menu'));

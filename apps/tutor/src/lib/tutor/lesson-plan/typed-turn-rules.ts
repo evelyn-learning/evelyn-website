@@ -11,7 +11,7 @@ import { getSegmentTruth } from './context';
 import { cardAskLine } from './transition-ask';
 import { boardOffersChoices, cardableStudentSentence } from '../voice/sentence-board';
 import {
-  sentenceCount, TYPED_SAY_BUDGET, TYPED_SAY_BUDGET_RECAP,
+  englishSentenceCount, TYPED_SAY_BUDGET, TYPED_SAY_BUDGET_RECAP,
   type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedTurn, type TypedTurnRequest, type TypedVerdict,
 } from '../voice/typed-turn';
 
@@ -360,5 +360,5 @@ export function engineLineFor(kind: TypedNextKind, ctx: FieldEffectContext & { j
 }
 
 export function sayWithinBudget(next: TypedNext, recap: boolean): boolean {
-  return sentenceCount(next.say) <= (recap ? TYPED_SAY_BUDGET_RECAP : TYPED_SAY_BUDGET);
+  return englishSentenceCount(next.say) <= (recap ? TYPED_SAY_BUDGET_RECAP : TYPED_SAY_BUDGET);
 }

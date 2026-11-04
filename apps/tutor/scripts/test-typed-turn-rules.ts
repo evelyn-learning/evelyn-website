@@ -320,6 +320,9 @@ test('sayWithinBudget', () => {
   assert.equal(sayWithinBudget(nx({ say: 'A. B. C. D.' }), false), false);
   assert.equal(sayWithinBudget(nx({ say: 'A. B. C. D.' }), true), true);
   assert.equal(sayWithinBudget(nx({ say: 'A. B. C.' }), false), true);
+  // F2: Japanese sentences do not count against the budget
+  assert.equal(sayWithinBudget(nx({ say: 'Good. では次です。 Let us move. 発音です。 Ready?' }), false), true);
+  assert.equal(sayWithinBudget(nx({ say: 'A. B. C. D.' }), false), false);
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

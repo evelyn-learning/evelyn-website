@@ -263,6 +263,21 @@ async function main() {
     assert.ok(!sentencesOf(r.events).join(' ').includes('Think about last weekend.'));
     assert.equal(sentencesOf(r.events).pop(), RETRY_NEXT.say);
   });
+  const BILINGUAL = 'Good. Next one. What did you do? では次です。 発音の練習です。';
+  await test('F2: next.say of 3 EN + 2 JA sentences on a non-recap part ⇒ NO retry', async () => {
+    const r = await run({ ...baseInput, typedTurn }, [
+      chunkedTextScript(JSON.stringify({ ...TURN, next: { ...RETRY_NEXT, say: BILINGUAL } }), 3),
+    ]);
+    assert.equal(r.requests.length, 1);
+    assert.equal(turnEv(r.events).retries, 0);
+  });
+  await test('F2: 4 EN sentences ⇒ retry (two requests)', async () => {
+    const r = await run({ ...baseInput, typedTurn }, [
+      chunkedTextScript(JSON.stringify({ ...TURN, next: { ...RETRY_NEXT, say: FOUR } }), 3),
+      chunkedTextScript(JSON.stringify({ ...TURN, next: RETRY_NEXT }), 2),
+    ]);
+    assert.equal(r.requests.length, 2);
+  });
   await test('retry still over budget ⇒ spoken as is (spec §4.8), no third call', async () => {
     const r = await run({ ...baseInput, typedTurn }, [
       chunkedTextScript(JSON.stringify({ ...TURN, next: { ...RETRY_NEXT, say: FOUR } }), 3),
