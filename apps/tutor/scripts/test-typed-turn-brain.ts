@@ -480,19 +480,24 @@ async function main() {
   }
 
   await test('B (fix wave 6, p3 654 s): the ack "Good, you met Mr. Kenji last month." streams as ONE sentence, not cut at "Mr."', async () => {
-    const T = { ...TURN, ack: 'Good, you met Mr. Kenji last month.', verdict: 'correct', verdict_say: 'That is right, you spoke with J. Smith at the fair. Good.', correction: null, support_ja: '' };
+    // Fix round 1 (F1) pin moved: the streamed abbreviation case is St. (the single-initial rule was dropped)
+    const T = { ...TURN, ack: 'Good, you met Mr. Kenji last month.', verdict: 'correct', verdict_say: 'That is right, you met St. Mary at the fair. Good.', correction: null, support_ja: '' };
     const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify(T), 3)]);
     const said = sentencesOf(r.events);
     assert.equal(said[0], 'Good, you met Mr. Kenji last month.', said.join(' | '));
-    assert.ok(said.includes('That is right, you spoke with J. Smith at the fair.'), said.join(' | '));
+    assert.ok(said.includes('That is right, you met St. Mary at the fair.'), said.join(' | '));
     assert.ok(said.includes('Good.'), said.join(' | '));
     assert.equal(turnEv(r.events).turn?.ack, 'Good, you met Mr. Kenji last month.');
   });
-  await test('B: the prose SentenceBuffer is unchanged (no option) — a single initial still splits there', () => {
+  // Fix round 1 (F1) pin moved: the typed/prose pair uses "St." (prose ABBREV_TAIL_RE excludes St; the typed rule holds it)
+  // and the typed buffer now splits "plan B. Then" (the single-initial rule merged real sentences).
+  await test('B: the prose SentenceBuffer is unchanged (no option) — "St." still splits there; typed holds it', () => {
     const b = new brain.SentenceBuffer();
-    assert.deepEqual([...b.push('That is right, you spoke with J. Smith at the fair. '), b.flush()], ['That is right, you spoke with J.', 'Smith at the fair.']);
+    assert.deepEqual([...b.push('That is right, you met St. Mary at the fair. '), b.flush()], ['That is right, you met St.', 'Mary at the fair.']);
     const t = new brain.SentenceBuffer({ typed: true });
-    assert.deepEqual([...t.push('That is right, you spoke with J. Smith at the fair. '), t.flush()], ['That is right, you spoke with J. Smith at the fair.', null]);
+    assert.deepEqual([...t.push('That is right, you met St. Mary at the fair. '), t.flush()], ['That is right, you met St. Mary at the fair.', null]);
+    const t2 = new brain.SentenceBuffer({ typed: true });
+    assert.deepEqual([...t2.push('Okay, so you can choose plan B. Then we start the next part. '), t2.flush()], ['Okay, so you can choose plan B.', 'Then we start the next part.', null]);
   });
 
   {

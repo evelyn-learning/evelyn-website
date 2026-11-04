@@ -207,13 +207,13 @@ const JAPANESE_BOUNDARY_RE =
   /^([\s\S]+?(?:[。！？][」』）)"”]*|[.!?](?=\s*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}])))(\s*)/u;
 /** B (fix wave 6, p3 654 s "Good, you met Mr." — the ack was cut at the honorific): the typed turn's ONE rule for a
  *  period that does not end a sentence, judged on the text before it (ending in the period) and the text after.
- *  Mr. Mrs. Ms. Dr. Prof. St. Jr. Sr. vs. e.g. i.e. etc.; "No." before a digit ("No. 5"); a single capital initial
- *  before a capitalised word ("J. Smith" — "A. B. C." stays three). Used by the typed sentence splitter
+ *  Mr. Mrs. Ms. Dr. Prof. St. Jr. Sr. vs. e.g. i.e.; "No." before a digit ("No. 5"). Fix round 1 (F1): no "etc." and
+ *  no single capital initial — they merged real sentences ("…, etc. Then we left.", "plan B. Then…", "Neither do I.
+ *  Let…", "vitamin C. It helps."). Used by the typed sentence splitter
  *  (typed-turn.ts `sentences`, the budgets) and the typed stream (SentenceBuffer({ typed: true })); prose never. */
 export function typedNonTerminalPeriod(before: string, after: string): boolean {
-  if (/(?:^|[\s("“'‘])(?:Mr|Mrs|Ms|Dr|Prof|St|Jr|Sr|vs|etc|e\.g|i\.e)\.$/i.test(before)) return true;
-  if (/(?:^|[\s("“'‘])No\.$/i.test(before) && /^\s*\d/.test(after)) return true;
-  return /(?:^|[\s("“'‘])[A-Z]\.$/.test(before) && /^\s+[A-Z][a-z]/.test(after);
+  if (/(?:^|[\s("“'‘])(?:Mr|Mrs|Ms|Dr|Prof|St|Jr|Sr|vs|e\.g|i\.e)\.$/i.test(before)) return true;
+  return /(?:^|[\s("“'‘])No\.$/i.test(before) && /^\s*\d/.test(after);
 }
 
 /** Shortest English sentence the boundary accepts (abbreviations and numbers
@@ -236,7 +236,7 @@ export function matchSentenceBoundary(buf: string, opts?: { typed?: boolean }): 
   let m: RegExpMatchArray | null = null;
   while (true) {
     m = buf.match(new RegExp(`^([\\s\\S]{${minLen},}?[.!?])(\\s+)`));
-    // B (fix wave 6): the typed turn also holds St. / No. + digit / a single initial (typedNonTerminalPeriod);
+    // B (fix wave 6): the typed turn also holds St. / No. + digit (typedNonTerminalPeriod);
     // without opts.typed the prose boundary is unchanged.
     if (!m || !(ABBREV_TAIL_RE.test(m[1]) || (opts?.typed && typedNonTerminalPeriod(m[1], buf.slice(m[1].length))))) break;
     minLen = m[1].length + 1;

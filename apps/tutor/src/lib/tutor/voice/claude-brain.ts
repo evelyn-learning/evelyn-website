@@ -879,7 +879,7 @@ export type BrainStreamEvent =
  */
 export class SentenceBuffer {
   private buf = '';
-  /** B (fix wave 6): the typed turn's buffer also holds St. / No. + digit / a single initial (typedNonTerminalPeriod);
+  /** B (fix wave 6): the typed turn's buffer also holds St. / No. + digit (typedNonTerminalPeriod);
    *  the prose buffer (no option) splits as before. */
   constructor(private readonly opts?: { typed?: boolean }) {}
   /** Abbreviation tails whose period must NOT end a sentence (live

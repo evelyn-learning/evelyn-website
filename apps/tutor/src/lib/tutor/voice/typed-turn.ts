@@ -175,7 +175,7 @@ export function typedTurnStateBlock(req: TypedTurnRequest): string {
 
 // splitSentences only breaks Japanese terminators before whitespace + a capital,
 // so 「こんにちは。元気ですか？」 stays one piece; split those here as well.
-// B (fix wave 6): a piece ending in an abbreviation ("Mr.", "Dr.", "J.") is joined to the next (typedNonTerminalPeriod).
+// B (fix wave 6): a piece ending in an abbreviation ("Mr.", "Dr.", "No." + digit) is joined to the next (typedNonTerminalPeriod).
 export function sentences(text: string): string[] {
   const pieces = splitSentences(text ?? '').flatMap((s) => s.split(/(?<=[。！？])\s*/)).filter(Boolean);
   const out: string[] = [];

@@ -434,12 +434,17 @@ test('B (fix wave 6): a move right after an answer judges it first, then bridges
   assert.ok(i >= 0 && j > i && TYPED_TURN_INSTRUCTIONS.slice(i, j).includes('judge that answer first'), 'inside the board rule');
 });
 
-test('B (fix wave 6): Mr. / Dr. / St. / No. 5 / a single initial are not sentence ends on the typed path', () => {
+test('B (fix wave 6): Mr. / Dr. / St. / No. 5 are not sentence ends on the typed path; etc. / a single initial are (F1)', () => {
   assert.equal(sentenceCount('Good, you met Mr. Kenji last month.'), 1);
   assert.equal(truncateToSentences('Good, you met Mr. Kenji last month.', 1), 'Good, you met Mr. Kenji last month.');
   assert.equal(sentenceCount('I spoke to Dr. Sato. She agreed.'), 2);
-  for (const t of ['Mrs. Tanaka called.', 'Ms. Ito agreed.', 'Prof. Mori spoke.', 'We met on Main St. Station.', 'Taro Jr. Smith came.', 'Japan vs. Korea was fun.', 'Fruit, e.g. Apples are good.', 'Food, i.e. Rice is fine.', 'TVs, fridges, etc. Many things.', 'Go to No. 5 now.', 'I emailed J. Smith today.']) {
+  for (const t of ['Mrs. Tanaka called.', 'Ms. Ito agreed.', 'Prof. Mori spoke.', 'We met on Main St. Station.', 'Taro Jr. Smith came.', 'Japan vs. Korea was fun.', 'Fruit, e.g. Apples are good.', 'Food, i.e. Rice is fine.', 'Go to No. 5 now.']) {
     assert.equal(sentenceCount(t), 1, t);
+  }
+  // Fix round 1 (F1) pins moved: "etc." and the single capital initial are sentence ends again — the rules merged real
+  // sentences (review). 'TVs, fridges, etc. Many things.' and 'I emailed J. Smith today.' were 1, now 2.
+  for (const t of ['We sold TVs, fridges, etc. Then we left.', 'You can choose plan B. Then we start.', 'Neither do I. Let us try again.', 'Take vitamin C. It helps.', 'TVs, fridges, etc. Many things.', 'I emailed J. Smith today.']) {
+    assert.equal(sentenceCount(t), 2, t);
   }
   assert.equal(sentenceCount('No. That is wrong.'), 2, 'No. before a word ends a sentence');
   assert.equal(sentenceCount('A. B. C.'), 3, 'bare initials in a row stay separate');
