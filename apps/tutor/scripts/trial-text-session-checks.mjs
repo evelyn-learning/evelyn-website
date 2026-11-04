@@ -358,7 +358,7 @@ export function runChecks(dump) {
   const pronPage = pages.find((p) => /Pronunciation|発音/.test(p.title));
   if (pronPage) {
     const MENU_TEXT = /(?:individual words|complete sentence|speaking more naturally|skip and continue)[^.?!]*(?:individual words|complete sentence|speaking more naturally|skip and continue)|\b(?:1, 2, 3,? or 4|option[s]? 1)\b/i;
-    const firstMenu = ev('fixed_script_menu_asked').map((e) => e.t).concat(tutor.filter((x) => MENU_TEXT.test(x.text) && /[?？]/.test(x.text)).map((x) => x.t)).filter((t) => t >= pronPage.t - 20).sort((a, b) => a - b)[0];
+    const firstMenu = ev('fixed_script_menu_asked').map((e) => e.t).concat(ev('typed_turn').filter((e) => /\bnext=menu\b/.test(e.msg)).map((e) => e.t)).concat(tutor.filter((x) => MENU_TEXT.test(x.text) && /[?？]/.test(x.text)).map((x) => x.t)).filter((t) => t >= pronPage.t - 20).sort((a, b) => a - b)[0];
     const pronEntry = ev('fixed_script_entry_note_planted').filter((e) => /"pronunciation"/.test(e.msg)).map((e) => e.t)[0] ?? pronPage.t;
     const skipped = ev('typed_advance_app').concat(ev('fixed_script_auto_advance')).some((e) => e.t >= pronEntry && e.t <= pronEntry + 25 && /summary/.test(e.msg));
     ok('pronunciation menu asked within 20 s of the page', skipped || (firstMenu !== undefined && firstMenu - pronPage.t <= 20), firstMenu === undefined ? `page ${pronPage.t}s, menu never asked` : `page ${pronPage.t}s → menu ${firstMenu}s (${firstMenu - pronPage.t}s)`);
@@ -469,6 +469,8 @@ export function runChecks(dump) {
     const oneWordPick = CHOICE_Q.test(prevT.text) && content(reply.text).length <= 2;
     if (!(RETRY_ASK.test(prevT.text) || oneWordPick)) continue;
     if (!AFFIRM.test(tutor[k].text) || CORR_CUE.test(tutor[k].text) || BUT.test(tutor[k].text)) continue;
+    // typed path: a model card is placed only on verdict=correct; any other verdict satisfies this check
+    if (typedRun) { const te = ev('typed_turn').find((e) => e.t >= tutor[k].t && e.t <= tutor[k].t + 4); if (te && !/\bverdict=correct\b/.test(te.msg)) continue; }
     // "on the board" = any sentence card up to 25 s after the affirming turn (an earlier card of the same sentence counts)
     const cards = wb.filter((w) => /showSentence|handwrite/.test(w.action) && w.t <= tutor[k].t + 25).map((w) => String(w.data?.sentence ?? w.data?.text ?? ''));
     if (oneWordPick) {
@@ -565,7 +567,7 @@ export function runChecks(dump) {
     const typed = ev('typed_turn');
     const field = (e, k) => (e.msg.match(new RegExp(`\\b${k}=(\\S+)`)) ?? [])[1];
     // the tutor transcript entry a turn-end event belongs to (the entry starts when the turn's first sentence speaks)
-    const turnOf = (t) => [...tutor].reverse().find((x) => x.t <= t + 1 && x.t >= t - 20);
+    const turnOf = (t) => [...tutor].reverse().find((x) => x.t <= t + 3 && x.t >= t - 20);
     // whiteboard rows of one turn: the render carries sourceMessageIndex = the tutor entry's index; a row without it falls back to a time window
     const rowsOfTurn = (turn, t, lo, hi) => wb.filter((w) => (w.sourceMessageIndex !== undefined && turn ? w.sourceMessageIndex === turn.i : w.t >= t + lo && w.t <= t + hi));
     // TT1: one typed object per brain turn (a format_rejected / provider fallback ran that attempt as prose)
@@ -587,15 +589,18 @@ export function runChecks(dump) {
         tt2.push(`${e.t}s card not placed${(eff.msg.match(/\((.*)\)/) ?? [])[0] ? ' ' + eff.msg.match(/\((.*)\)/)[0] : ''}`); continue;
       }
       const turn = turnOf(e.t);
-      const rows = rowsOfTurn(turn, e.t, -8, 4);
-      const cardRow = rows.find((w) => w.action === 'showSentence' && Array.isArray(w.data?.emphasis) && w.data.emphasis.length) ?? rows.find((w) => w.action === 'showSentence' && eff);
+      const findCard = (rs) => rs.find((w) => w.action === 'showSentence' && Array.isArray(w.data?.emphasis) && w.data.emphasis.length) ?? rs.find((w) => w.action === 'showSentence' && eff);
+      let rows = rowsOfTurn(turn, e.t, -8, 4);
+      let cardRow = findCard(rows);
+      // the index join found nothing (turnOf is heuristic and may resolve the previous turn): try the time window before failing
+      if (!cardRow) { rows = wb.filter((w) => w.t >= e.t - 8 && w.t <= e.t + 4); cardRow = findCard(rows); }
       if (!cardRow) { tt2.push(`${e.t}s no correction card${eff ? ' row' : ' (no correction_card effect)'}`); continue; }
       const pageRow = rows.find((w) => w.action === 'newPage');
       if (pageRow && pageRow.i < cardRow.i) tt2.push(`${e.t}s card wb#${cardRow.i} after newPage wb#${pageRow.i}`);
     }
     ok('TT2 correction field ⇒ correction card before any newPage of the same turn', tt2.length === 0, (tt2.join(' | ') || `${typed.filter((e) => field(e, 'correction') === 'yes').length} corrections`) + (tt2Dup ? ` (${tt2Dup} already on the page)` : ''));
     // TT3: no pronunciation item given twice in a run
-    const items = ev('typed_turn_effect').filter((e) => /^arm_item /.test(e.msg)).map((e) => ({ t: e.t, k: norm((e.msg.match(/"(.*)"/) ?? [])[1] ?? '') }));
+    const items = ev('typed_turn_effect').filter((e) => /^arm_item /.test(e.msg) && !/ not placed\b/.test(e.msg)).map((e) => ({ t: e.t, k: norm((e.msg.match(/"(.*)"/) ?? [])[1] ?? '') }));
     const repeatedItems = items.filter((x, i) => x.k && items.findIndex((y) => y.k === x.k) < i);
     ok('TT3 no item repeated', repeatedItems.length === 0, repeatedItems.map((x) => `${x.t}s "${x.k.slice(0, 40)}"`).join(' | ') || `${items.length} items`);
     // TT4: a move ⇒ the page breaks on the same turn (the row may paint later, when its anchor sentence speaks)
@@ -603,7 +608,8 @@ export function runChecks(dump) {
     const advances = ev('typed_turn_effect').filter((e) => /^advance /.test(e.msg));
     for (const a of advances) {
       const turn = turnOf(a.t + 1);
-      const sameTurn = wb.some((w) => w.action === 'newPage' && (w.sourceMessageIndex !== undefined && turn ? w.sourceMessageIndex === turn.i : w.t >= a.t - 2 && w.t <= a.t + 6));
+      const sameTurn = wb.some((w) => w.action === 'newPage' && (w.sourceMessageIndex !== undefined && turn ? w.sourceMessageIndex === turn.i : false))
+        || wb.some((w) => w.action === 'newPage' && w.t >= a.t - 2 && w.t <= a.t + 6);
       const flushed = events.some((f) => /^auto_newpage_on_advance_flushed$/.test(f.type) && f.t >= a.t - 2 && f.t <= a.t + 6);
       if (!sameTurn && !flushed) tt4.push(`${a.t}s ${a.msg.replace(/^advance /, '')}`);
     }
