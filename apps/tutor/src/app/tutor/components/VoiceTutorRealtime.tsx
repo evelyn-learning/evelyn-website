@@ -15301,7 +15301,14 @@ export function VoiceTutorRealtime({
             switch (e.kind) {
               case 'model_card': {
                 // verdict correct: the brain's `board` sentence (V1 — never the raw transcript), anchored to the next spoken sentence.
-                const res = await handleWhiteboardCommand([{ action: 'showSentence', sentence: e.sentence } as WhiteboardCommand], { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true });
+                // C (fix wave 6): the words the student did not say are underlined, as the correction card passes them.
+                const modelCmd = {
+                  action: 'showSentence',
+                  sentence: e.sentence,
+                  ...(e.emphasis?.length ? { emphasis: e.emphasis } : {}),
+                  ...(e.emphasisAt?.length ? { emphasisAt: e.emphasisAt } : {}),
+                } as WhiteboardCommand;
+                const res = await handleWhiteboardCommand([modelCmd], { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true });
                 for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
                 if (res?.assignedIds?.[0]) typedModelCardPlaced = true;
                 onDebugEvent?.('typed_turn_effect', `model_card${typedCardPlacement(res)}`);

@@ -10,7 +10,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
   allowedNextFor, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
-  sayWithinBudget, sharesCardWords, enterPartState, answerShaped, typedTurnSpokenText, typedPronunciationItems, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
+  sayWithinBudget, sharesCardWords, enterPartState, boardEmphasis, answerShaped, typedTurnSpokenText, typedPronunciationItems, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
 import { TYPED_TURN_INSTRUCTIONS, type TypedNext, type TypedTurn } from '../src/lib/tutor/voice/typed-turn';
@@ -255,7 +255,19 @@ test('applyField records verdict; V1: board with verdict correct -> one model_ca
   assert.equal(s1.pendingVerdict, 'correct');
   assert.equal(s0.pendingVerdict, null);
   const e = effectsForField({ field: 'board', value: ' I sell washing machines to customers. ' }, fctx('present-perfect', { state: s1, studentLast: 'um I sell washing machine to customer' }));
-  assert.deepEqual(e, [{ kind: 'model_card', sentence: 'I sell washing machines to customers.' }]);
+  // C (fix wave 6) pin moved: the model card now carries the words the student did not say (machine → machines, customer → customers)
+  assert.deepEqual(e, [{ kind: 'model_card', sentence: 'I sell washing machines to customers.', emphasis: ['machines', 'customers'], emphasisAt: [3, 5] }]);
+});
+test('C (fix wave 6, p3 473 s): boardEmphasis underlines what the model sentence changed', () => {
+  assert.deepEqual(boardEmphasis('Uh, to talk to uh vendors uh from robotics companies in China.', 'I learned to talk with vendors from robotics companies in China.'),
+    { emphasis: ['I', 'learned', 'with'], emphasisAt: [0, 1, 4] });
+  assert.deepEqual(boardEmphasis('I sell washing machines to customers.', 'I sell washing machines to customers.'), { emphasis: [], emphasisAt: [] });
+  assert.deepEqual(boardEmphasis('i sell washing machines to customers', 'I sell washing machines to customers.'), { emphasis: [], emphasisAt: [] }, 'case / punctuation aside');
+  assert.deepEqual(boardEmphasis('', 'I sell washing machines to customers.'), { emphasis: [], emphasisAt: [] }, 'no student words: nothing to compare');
+  assert.deepEqual(boardEmphasis('I go there', 'Um, I went there.'), { emphasis: ['went'], emphasisAt: [2] }, 'a filler is never underlined');
+  const ok = applyField(createTypedTurnState(), { field: 'verdict', value: 'correct' });
+  assert.deepEqual(effectsForField({ field: 'board', value: 'I learned to talk with vendors from robotics companies in China.' }, fctx('open-conversation', { state: ok, studentLast: 'Uh, to talk to uh vendors uh from robotics companies in China.' })),
+    [{ kind: 'model_card', sentence: 'I learned to talk with vendors from robotics companies in China.', emphasis: ['I', 'learned', 'with'], emphasisAt: [0, 1, 4] }]);
 });
 test('V1: no model_card for an empty board, a non-correct verdict, or verdict_say alone (the raw transcript is never boarded)', () => {
   const ok = applyField(createTypedTurnState(), { field: 'verdict', value: 'correct' });

@@ -403,7 +403,8 @@ export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
 // ---- Field effects, state reducer, engine fallback lines ----
 
 export type TypedEffect =
-  | { kind: 'model_card'; sentence: string }
+  /** C (fix wave 6): emphasis / emphasisAt = the board words the student did not say (boardEmphasis); absent when none. */
+  | { kind: 'model_card'; sentence: string; emphasis?: string[]; emphasisAt?: number[] }
   | { kind: 'correction_card'; student: string; corrected: string; emphasis: string[] }
   | { kind: 'advance'; from: string; to: string; bridgeMissing: boolean }
   | { kind: 'arm_item'; text: string }
@@ -495,6 +496,25 @@ function openAskFor(next: TypedNext, ctx: FieldEffectContext, newPartId: string 
   return ask;
 }
 
+/** C (fix wave 6): the SentenceCard's word tokens (sentence-board.ts TOKEN_RE) — emphasisAt indexes these. */
+const BOARD_TOKEN_RE = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
+const BOARD_FILLERS = new Set(['uh', 'um', 'er', 'erm', 'ah', 'hmm']);
+const boardNorm = (w: string): string => w.toLowerCase().replace(/’/g, "'");
+/**
+ * C (fix wave 6, p3 473–481 s: a model card with no underline): the words of `board` (as the SentenceCard tokenises it;
+ * word index) whose normalised form (lower-case, punctuation stripped) does not occur among the student's words —
+ * what the model sentence changed. Fillers never; empty when the board equals the student text or the student said
+ * nothing. Pure.
+ */
+export function boardEmphasis(studentText: string, board: string): { emphasis: string[]; emphasisAt: number[] } {
+  const said = (String(studentText ?? '').match(BOARD_TOKEN_RE) ?? []).map(boardNorm);
+  const words = String(board ?? '').match(BOARD_TOKEN_RE) ?? [];
+  if (!said.length || said.join(' ') === words.map(boardNorm).join(' ')) return { emphasis: [], emphasisAt: [] };
+  const saidSet = new Set(said);
+  const emphasisAt = words.flatMap((w, i) => (BOARD_FILLERS.has(boardNorm(w)) || saidSet.has(boardNorm(w)) ? [] : [i]));
+  return { emphasis: emphasisAt.map((i) => words[i]!), emphasisAt };
+}
+
 /** Effects to run when one field closes (cards anchor to the sentence about to be spoken). Pure. */
 export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): TypedEffect[] {
   // V1 (fix wave 2): the model card is the brain's `board` sentence, never the raw transcript (the r-Praveen voice run
@@ -502,7 +522,10 @@ export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): T
   if (ev.field === 'board') {
     // R4/M1: the board sentence passes the same card guard the prose cards use (a bare "Yes." / two words is no card).
     const sentence = ctx.state.pendingVerdict === 'correct' ? cardableStudentSentence(ev.value.trim()) : null;
-    return sentence ? [{ kind: 'model_card', sentence }] : [];
+    if (!sentence) return [];
+    // C (fix wave 6): the words the model sentence changed are underlined, as on a correction card.
+    const emph = boardEmphasis(ctx.studentLast, sentence);
+    return [{ kind: 'model_card', sentence, ...(emph.emphasisAt.length ? { emphasis: emph.emphasis, emphasisAt: emph.emphasisAt } : {}) }];
   }
   if (ev.field === 'correction') {
     const c = ev.value;

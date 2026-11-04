@@ -424,5 +424,9 @@ test('A (fix wave 6): VTR sends studentEnglish from the student\'s own words', (
   assert.ok(VTR.includes("studentEnglish: studentSpokeEnglish(typedStudentText ?? ''),"), 'studentEnglish in the allowed-next context');
 });
 
+test('C (fix wave 6): the model card passes emphasis / emphasisAt to showSentence as the correction card does', () => {
+  assert.ok(/case 'model_card': \{[\s\S]{0,600}const modelCmd = \{\s*action: 'showSentence',\s*sentence: e\.sentence,\s*\.\.\.\(e\.emphasis\?\.length \? \{ emphasis: e\.emphasis \} : \{\}\),\s*\.\.\.\(e\.emphasisAt\?\.length \? \{ emphasisAt: e\.emphasisAt \} : \{\}\),\s*\} as WhiteboardCommand;\s*const res = await handleWhiteboardCommand\(\[modelCmd\]/.test(VTR), 'model card command carries the emphasis');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');
