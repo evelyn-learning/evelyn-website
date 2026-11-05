@@ -1,3 +1,4 @@
+import type { TypedTurnState } from '../lesson-plan/typed-turn-rules';
 /**
  * Pronunciation auto-arm (Task 14 §F, GDI run 4: in the pronunciation part
  * the brain never called request_pronunciation_check — no clip was ever
@@ -403,6 +404,11 @@ export interface ConsumedPronunciationNote {
   measured: boolean;
   notAttempted: boolean;
   noSpeech: boolean;
+  /** Review F2: the typed-turn state as the consuming call saw it (the cancelled call may have reduced it already —
+   *  a stage-3 cancel after the stream closed) and the part it was in; the re-plant restores the state when the part
+   *  is unchanged, so the re-dispatch sees exactly what the cancelled call saw (W9-B3's forced repeat included). */
+  typedState: TypedTurnState | null;
+  segId: string;
 }
 
 /** W10-3c: the cut-clip note was consumed by the first brain call at 1049 s; perception then judged the student's next

@@ -689,7 +689,9 @@ export function applyTypedTurn(
 
   let openAsk = state.openAsk;
   if (closing) openAsk = { kind: 'none', text: '' };
-  else if (next.kind !== 'wait') openAsk = openAskFor(next, ctx, moved ? moved.to : null);
+  // W10-3b review (F1): a nudge re-asks the open ask; it is no new ask (the item stays open, so a cut clip after the nudge
+  // still gets W9-B3's forced repeat). A nudge on no open ask records what it asked.
+  else if (next.kind !== 'wait' && !(ctx.nudge && state.openAsk.kind !== 'none')) openAsk = openAskFor(next, ctx, moved ? moved.to : null);
 
   return {
     ...state,
@@ -697,7 +699,8 @@ export function applyTypedTurn(
     correctionOpen: turn.correction ? { student: turn.correction.student, corrected: turn.correction.corrected }
       : turn.verdict === 'correct' ? null : state.correctionOpen,
     practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart, postDueTurns, correctionsInPart, answersInPart, recapReviewed,
-    retriesInARow: next.kind === 'retry' ? state.retriesInARow + 1 : 0,
+    // F1: a nudge retry is not one of the learner's retries (the budget counts attempts, not patience).
+    retriesInARow: next.kind === 'retry' ? (ctx.nudge ? state.retriesInARow : state.retriesInARow + 1) : 0,
     pendingVerdict: null,
   };
 }

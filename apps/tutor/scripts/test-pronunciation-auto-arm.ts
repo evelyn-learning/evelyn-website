@@ -278,7 +278,7 @@ test('23G2: any retry of a measured turn re-delivers the note with the score ins
 test('W10-3c (fix wave 10, run 6 1049–1055 s): an unmeasured note consumed by a turn that perception then re-dispatches is re-planted', () => {
   const consumed: ConsumedPronunciationNote = {
     transcript: 'I attended the exhibition', note: '[note] cut', raw: { note: 'cut', referenceText: 'I attended the exhibition in Beijing last year.' },
-    measured: false, notAttempted: false, noSpeech: false,
+    measured: false, notAttempted: false, noSpeech: false, typedState: null, segId: 'pronunciation',
   };
   // the MERGE / FRESH / RESTORE re-dispatch of that turn gets the note back (pronunciationRepeatDue holds on the new call)
   assert.deepEqual(pronunciationNoteReplant({ consumed, cancelledTranscript: 'I attended the exhibition', pendingNote: null }), consumed);
@@ -290,12 +290,17 @@ test('W10-3c (fix wave 10, run 6 1049–1055 s): an unmeasured note consumed by 
   assert.equal(pronunciationNoteReplant({ consumed: null, cancelledTranscript: 'I attended the exhibition', pendingNote: null }), null);
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   // the consumption site records what it consumed (before the refs are cleared)
-  assert.ok(/pronunciationNoteConsumedRef\.current = \{\s*transcript,\s*note: pronunciationResultNoteRef\.current,\s*raw: pronunciationRawNoteRef\.current,\s*measured: pronunciationMeasuredRef\.current,\s*notAttempted: pronunciationNotAttemptedRef\.current,\s*noSpeech: pronunciationNoSpeechNoteRef\.current,\s*\};[\s\S]{0,2000}pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;/.test(v), 'consumption recorded');
+  assert.ok(/pronunciationNoteConsumedRef\.current = \{\s*transcript,\s*note: pronunciationResultNoteRef\.current,\s*raw: pronunciationRawNoteRef\.current,\s*measured: pronunciationMeasuredRef\.current,\s*notAttempted: pronunciationNotAttemptedRef\.current,\s*noSpeech: pronunciationNoSpeechNoteRef\.current,\s*typedState: typedTurnStateRef\.current,\s*segId: currentSegmentIdRef\.current,\s*\};[\s\S]{0,2000}pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;/.test(v), 'consumption recorded');
   // every re-dispatch inside applyPerceptionVerdict re-plants first
   const at = v.indexOf('const applyPerceptionVerdict = useCallback((');
   const body = v.slice(at, v.indexOf('}, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer', at));
   assert.ok(body.includes('const replant = pronunciationNoteReplant({ consumed: pronunciationNoteConsumedRef.current, cancelledTranscript: checkpoint.originalTranscript, pendingNote: pronunciationResultNoteRef.current });'), 'replant helper');
   assert.ok(body.includes("onDebugEvent?.('pronunciation_note_replanted',"), 'debug event');
+  // review F3: a note-less student turn clears the record (an older record must not match a later turn with the same words)
+  assert.ok(/pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;[\s\S]{0,400}\} else if \(!opts\?\.prefetchOnly && !holdNoSpeechNote\) \{[\s\S]{0,400}pronunciationNoteConsumedRef\.current = null;/.test(v), 'note-less turn clears the consumed record');
+  // review F2: the record carries the typed state as the cancelled call saw it; the re-plant restores it when the part is unchanged
+  assert.ok(/noSpeech: pronunciationNoSpeechNoteRef\.current,\s*typedState: typedTurnStateRef\.current,\s*segId: currentSegmentIdRef\.current,\s*\};/.test(v), 'typed state snapshot in the record');
+  assert.ok(body.includes("if (replant.typedState && replant.segId === currentSegmentIdRef.current) typedTurnStateRef.current = structuredClone(replant.typedState);"), 'typed state restored on re-plant');
   const dispatches = body.match(/void handleStudentTranscriptForBrain\(/g) ?? [];
   const guarded = body.match(/replantConsumedPronunciationNote\(\);\s*void handleStudentTranscriptForBrain\(/g) ?? [];
   assert.ok(dispatches.length >= 3 && guarded.length === dispatches.length, `${guarded.length}/${dispatches.length} re-dispatches re-plant`);

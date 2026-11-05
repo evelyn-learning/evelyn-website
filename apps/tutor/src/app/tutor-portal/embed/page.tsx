@@ -117,6 +117,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'pronunciation_start_ignored_tutor_speaking', 'pronunciation_hold_skipped', 'pronunciation_disarmed_segment_advance',
   // Task 24 §A1 / §A4: which tap fed the clip; the not-attempted note rewritten as unscored.
   'pronunciation_tap', 'pronunciation_note_rewritten',
+  // Fix waves 9–10 (W9-B3 rearm, 23 §G2 redelivery, W10-3c re-plant): the next trial dump must show them.
+  'pronunciation_rearmed', 'pronunciation_note_redelivered', 'pronunciation_note_replanted',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued

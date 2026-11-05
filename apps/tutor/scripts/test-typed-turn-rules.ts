@@ -488,6 +488,26 @@ test('W10-3b (fix wave 10, run 6 987 s): a nudge on an open pronunciation item r
   assert.deepEqual(allowedNextFor(ctx('past-simple', { nudge: true, state: ask('question') })), ['question', 'wait']);
 });
 
+test('W10-3b review (F1): a nudge retry neither burns the retry budget nor replaces the open item — the forced repeat still fires after it', () => {
+  const ms = { menuState: { pronunciation: { asked: 1, picked: 'a complete sentence' } } };
+  const items = ['a', 'b'];
+  const s0: TypedTurnState = { ...createTypedTurnState(), ...ms, openAsk: { kind: 'item', text: 'Listen, then repeat: a' }, practisedItems: { pronunciation: ['a'] } };
+  const nudge = { ack: 'Take your time.', verdict: 'none' as const, verdict_say: '', correction: null, support_ja: '', next: { kind: 'retry' as const, say: 'Once more: a', item: '', level: '' } };
+  const s1 = applyTypedTurn(s0, nudge, fctx('pronunciation', { items, nudge: true, state: s0 }), null);
+  assert.equal(s1.retriesInARow, 0, 'a nudge is no retry of the learner\'s');
+  assert.deepEqual(s1.openAsk, s0.openAsk, 'the item stays the open ask');
+  // the learner then gives a cut clip: W9-B3's forced repeat row holds
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, state: s1, pronunciationRepeatDue: true })), ['retry']);
+  // a real retry still counts and becomes the open ask
+  const s2 = applyTypedTurn(s0, nudge, fctx('pronunciation', { items, nudge: false, state: s0 }), null);
+  assert.equal(s2.retriesInARow, 1);
+  assert.equal(s2.openAsk.kind, 'retry');
+  // a nudge on no open ask still records the question it asked
+  const q = { ...nudge, next: { kind: 'question' as const, say: 'What do you sell?', item: '', level: '' } };
+  const s3 = applyTypedTurn(createTypedTurnState(), q, fctx('past-simple', { nudge: true }), null);
+  assert.equal(s3.openAsk.kind, 'question');
+});
+
 test('H1: a resolved menu pick persists, so the menu is never re-asked after an item', () => {
   const sentences = ((plan.segments.find((s) => s.id === 'pronunciation')?.metadata as { pronunciation: { sentences: string[] } }).pronunciation.sentences);
   assert.equal(sentences.length, 2);

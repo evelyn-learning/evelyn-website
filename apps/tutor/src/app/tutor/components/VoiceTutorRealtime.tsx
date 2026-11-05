@@ -13945,6 +13945,8 @@ export function VoiceTutorRealtime({
           measured: pronunciationMeasuredRef.current,
           notAttempted: pronunciationNotAttemptedRef.current,
           noSpeech: pronunciationNoSpeechNoteRef.current,
+          typedState: typedTurnStateRef.current,
+          segId: currentSegmentIdRef.current,
         };
         pronunciationNoSpeechNoteRef.current = false;
         // Task 24 §A4 (GDI run 12, 1092 s): nothing was scored but the turn's
@@ -13971,6 +13973,10 @@ export function VoiceTutorRealtime({
         pronunciationNoteThisTurn = pronunciationResultNoteRef.current;
         pronunciationResultNoteRef.current = null;
         pronunciationMeasuredRef.current = false;
+      } else if (!opts?.prefetchOnly && !holdNoSpeechNote) {
+        // W10-3c review (F3): a note-less student turn ends the record — an older consumed note must never match a later
+        // turn that happens to repeat the same words (pronunciation practice makes that likely).
+        pronunciationNoteConsumedRef.current = null;
       }
       // Task 20 §F2 (GDI run 8, 1416 s: "can you repeat where I was wrong?"
       // after a not-attempted clip got "Your sentence was right too"): in the
@@ -26150,6 +26156,9 @@ export function VoiceTutorRealtime({
       pronunciationMeasuredRef.current = replant.measured;
       pronunciationNotAttemptedRef.current = replant.notAttempted;
       pronunciationNoSpeechNoteRef.current = replant.noSpeech;
+      // F2: the cancelled call may have reduced the typed state (stage-3 cancel after its stream closed) — the re-dispatch
+      // starts from what that call saw; a part change since (an advance) keeps the current state.
+      if (replant.typedState && replant.segId === currentSegmentIdRef.current) typedTurnStateRef.current = structuredClone(replant.typedState);
       onDebugEvent?.('pronunciation_note_replanted', `re-dispatch · ${replant.note.slice(0, 120)}`);
     };
     // R47 Task 2 (review round: identity-race fix). The pacing-credit
