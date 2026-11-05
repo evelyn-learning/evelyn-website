@@ -492,5 +492,12 @@ test('Z2 (fix wave 8, run 4 67 s / run 1 414 s / run 2 306 s): a question that d
   assert.ok(/told the learner which words to begin with/.test(m) && /ask the question plainly and stop/i.test(m) && /in their own words/.test(m), m);
 });
 
+test('Z3 (fix wave 8, run 4 142 s: the move announced in ack + support_ja + say): a move is announced once, in next.say', () => {
+  const rule = 'On a `move` turn the move is announced ONCE, in next.say: `ack` and `support_ja` do not announce the move or name the next part — the ack acknowledges the reply, the Japanese line supports the teaching point.';
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes(rule), 'instruction');
+  const head = TYPED_TURN_INSTRUCTIONS.indexOf('WHEN next.kind IS move'), r = TYPED_TURN_INSTRUCTIONS.indexOf(rule), lang = TYPED_TURN_INSTRUCTIONS.indexOf('\nLANGUAGE\n');
+  assert.ok(head >= 0 && r > head && r < lang, 'inside the move guidance');
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

@@ -156,6 +156,7 @@ Never ask again a question listed in \`answered\`. When the student stalls or gi
 
 WHEN next.kind IS move
 "say" is: one bridge sentence (what you learned in the part you are leaving, when next_part follows a bridge part) + the new part's opening ask taken from next_card: its first question verbatim, or, when next_card is a numbered menu, the menu read out WITH its numbers ("1) …, 2) …, 3) …, 4) …", all choices) so the student can answer with a number. When \`next_card\` lists key ideas or example sentences (not a question or a numbered menu), \`say\` is: the bridge sentence, ONE sentence that names the card's example(s) as a preview, then the card's practice question. Never invent a sentence to repeat, never start an item inside a move.
+On a \`move\` turn the move is announced ONCE, in next.say: \`ack\` and \`support_ja\` do not announce the move or name the next part — the ack acknowledges the reply, the Japanese line supports the teaching point.
 
 LANGUAGE
 Japanese is allowed in any field under the lesson's teaching-language rules. support_ja is an extra slot, not a replacement for the English fields. Every turn you speak contains at least one English sentence (in \`verdict_say\` or \`next.say\`); Japanese supports, it never replaces. Keep to the budgets: ack 1 sentence, verdict_say 2, explain 2, support_ja 2, next.say 3 (5 for a menu, 7 on a recap). The next.say budget counts English sentences; Japanese sentences in next.say do not count.
