@@ -394,6 +394,34 @@ export function pronunciationNoteForRetry(input: {
   return input.attemptCut ? `${input.note.trim()}\n${PRONUNCIATION_RETRY_INSTRUCTION}` : input.note.trim();
 }
 
+/** W10-3c (fix wave 10, GDI run 6 1049–1055 s): what a brain turn consumed when it took the planted pronunciation note
+ *  (the refs are cleared at consumption), with the student transcript of that turn. */
+export interface ConsumedPronunciationNote {
+  transcript: string;
+  note: string;
+  raw: { note: string; referenceText: string } | null;
+  measured: boolean;
+  notAttempted: boolean;
+  noSpeech: boolean;
+}
+
+/** W10-3c: the cut-clip note was consumed by the first brain call at 1049 s; perception then judged the student's next
+ *  words a continuation and re-dispatched the turn (MERGE) — the fresh call had no note, `pronunciationRepeatDue` was
+ *  false, and the part moved to the summary. The record to re-plant before a perception re-dispatch (RESTORE / MERGE /
+ *  FRESH) of the cancelled turn: the consumed note when it belongs to that turn (same transcript), measured nothing
+ *  (a measured note's score may already have been spoken; the in-turn retry path re-delivers it) and no newer note is
+ *  pending. Pure. */
+export function pronunciationNoteReplant(input: {
+  consumed: ConsumedPronunciationNote | null | undefined;
+  cancelledTranscript: string;
+  pendingNote: string | null | undefined;
+}): ConsumedPronunciationNote | null {
+  const c = input.consumed;
+  if (!c || c.measured || input.pendingNote) return null;
+  if (c.transcript !== input.cancelledTranscript) return null;
+  return c;
+}
+
 /** Task 24 §A4 (GDI run 12, 1092 s: the clip was silent, the recogniser heard
  *  the sentence word-perfect, and the tutor read "not attempted" aloud as
  *  "the transcript shows…"): the note the brain reads when nothing was

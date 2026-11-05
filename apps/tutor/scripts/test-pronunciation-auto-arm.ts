@@ -5,7 +5,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION, pronunciationNoteForTurn, PRONUNCIATION_UNSCORED_NOTE, colonTarget, handwriteShownSentence, looksLikeModelSentence } from '../src/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION, pronunciationNoteForTurn, PRONUNCIATION_UNSCORED_NOTE, pronunciationNoteReplant, type ConsumedPronunciationNote, colonTarget, handwriteShownSentence, looksLikeModelSentence } from '../src/lib/tutor/pronunciation/auto-arm';
 import { duplicateSentenceAction, currentBoardPage, sentenceCardIdOnCurrentPage, sentenceOnBoardPage } from '../src/lib/tutor/voice/sentence-board';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { isStrictRepeatAsk, saidModelSentence } from '../src/lib/tutor/voice/correct-retry';
@@ -273,6 +273,32 @@ test('23G2: any retry of a measured turn re-delivers the note with the score ins
   assert.ok(block.includes('const retryNote = pronunciationNoteForRetry({ measuredThisTurn: pronunciationMeasuredThisTurn, note: pronunciationNoteThisTurn, attemptCut: attemptKilled || voiceVerdictCut !== null });'));
   assert.ok(block.includes("onDebugEvent?.('pronunciation_note_redelivered', `${rejectionsThisAttempt.map((r) => r.action).join(',') || 'retry'}:"));
   assert.ok(v.includes('pronunciationNoteThisTurn = pronunciationResultNoteRef.current;'));
+});
+
+test('W10-3c (fix wave 10, run 6 1049–1055 s): an unmeasured note consumed by a turn that perception then re-dispatches is re-planted', () => {
+  const consumed: ConsumedPronunciationNote = {
+    transcript: 'I attended the exhibition', note: '[note] cut', raw: { note: 'cut', referenceText: 'I attended the exhibition in Beijing last year.' },
+    measured: false, notAttempted: false, noSpeech: false,
+  };
+  // the MERGE / FRESH / RESTORE re-dispatch of that turn gets the note back (pronunciationRepeatDue holds on the new call)
+  assert.deepEqual(pronunciationNoteReplant({ consumed, cancelledTranscript: 'I attended the exhibition', pendingNote: null }), consumed);
+  // a measured note is not re-planted (its score may already have been spoken; the in-turn retry path re-delivers it)
+  assert.equal(pronunciationNoteReplant({ consumed: { ...consumed, measured: true }, cancelledTranscript: 'I attended the exhibition', pendingNote: null }), null);
+  // another turn's note, a note already pending, or nothing consumed ⇒ nothing
+  assert.equal(pronunciationNoteReplant({ consumed, cancelledTranscript: 'something else', pendingNote: null }), null);
+  assert.equal(pronunciationNoteReplant({ consumed, cancelledTranscript: 'I attended the exhibition', pendingNote: '[note] newer' }), null);
+  assert.equal(pronunciationNoteReplant({ consumed: null, cancelledTranscript: 'I attended the exhibition', pendingNote: null }), null);
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  // the consumption site records what it consumed (before the refs are cleared)
+  assert.ok(/pronunciationNoteConsumedRef\.current = \{\s*transcript,\s*note: pronunciationResultNoteRef\.current,\s*raw: pronunciationRawNoteRef\.current,\s*measured: pronunciationMeasuredRef\.current,\s*notAttempted: pronunciationNotAttemptedRef\.current,\s*noSpeech: pronunciationNoSpeechNoteRef\.current,\s*\};[\s\S]{0,2000}pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;/.test(v), 'consumption recorded');
+  // every re-dispatch inside applyPerceptionVerdict re-plants first
+  const at = v.indexOf('const applyPerceptionVerdict = useCallback((');
+  const body = v.slice(at, v.indexOf('}, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer', at));
+  assert.ok(body.includes('const replant = pronunciationNoteReplant({ consumed: pronunciationNoteConsumedRef.current, cancelledTranscript: checkpoint.originalTranscript, pendingNote: pronunciationResultNoteRef.current });'), 'replant helper');
+  assert.ok(body.includes("onDebugEvent?.('pronunciation_note_replanted',"), 'debug event');
+  const dispatches = body.match(/void handleStudentTranscriptForBrain\(/g) ?? [];
+  const guarded = body.match(/replantConsumedPronunciationNote\(\);\s*void handleStudentTranscriptForBrain\(/g) ?? [];
+  assert.ok(dispatches.length >= 3 && guarded.length === dispatches.length, `${guarded.length}/${dispatches.length} re-dispatches re-plant`);
 });
 
 test('Task 24 §A4: 1092 s — not attempted, the transcript is the target ⇒ the unscored note', () => {

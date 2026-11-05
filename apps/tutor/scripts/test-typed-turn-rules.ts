@@ -143,9 +143,11 @@ test('menu / pronunciation', () => {
   assert.deepEqual(sorted(some), ['item', 'move', 'offer', 'retry']);
   assert.ok(!allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), ...ask('none'), practisedItems: { pronunciation: ['a'] } } })).includes('retry'));
   assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), practisedItems: { pronunciation: ['a', 'b'] } } })), ['offer']);
-  for (const k of ['question', 'offer', 'menu', 'retry'] as const) {
+  for (const k of ['question', 'offer', 'menu'] as const) {
     assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), ...ask(k), practisedItems: { pronunciation: ['a'] } } })), ['item', 'offer', 'move'], k);
   }
+  // W10-3a: an open retry of the last item keeps `retry` (the item stays the subject) — see the W10-3a test
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), ...ask('retry'), practisedItems: { pronunciation: ['a'] } } })), ['item', 'retry', 'offer', 'move']);
   assert.ok(allowedNextFor(ctx('pronunciation', { items, state: { ...ms(1, '2'), ...ask('item') } })).includes('retry'));
 
   assert.ok(allowedNextFor(ctx('pronunciation', { items, menuPick: '2' })).includes('item'));
@@ -455,6 +457,35 @@ test('sayWithinBudget', () => {
   // F2: Japanese sentences do not count against the budget
   assert.equal(sayWithinBudget(nx({ say: 'Good. では次です。 Let us move. 発音です。 Ready?' }), false), true);
   assert.equal(sayWithinBudget(nx({ say: 'A. B. C. D.' }), false), false);
+});
+
+test('W10-3a (fix wave 10, run 6 914 s): a retry stays allowed while the last item is still the subject (open ask retry, < 2 retries)', () => {
+  const ms = { menuState: { pronunciation: { asked: 1, picked: 'a complete sentence' } } };
+  const items = ['a', 'b'];
+  // "Can you please talk in English?" after the weakest-word repeat: the brain re-asks the SAME sentence (retry), not a new item
+  const r1 = allowedNextFor(ctx('pronunciation', { items, state: { ...ms, ...ask('retry'), retriesInARow: 1, practisedItems: { pronunciation: ['a'] } } }));
+  assert.deepEqual(sorted(r1), ['item', 'move', 'offer', 'retry']);
+  // two retries in a row: the subject moves on
+  const r2 = allowedNextFor(ctx('pronunciation', { items, state: { ...ms, ...ask('retry'), retriesInARow: 2, practisedItems: { pronunciation: ['a'] } } }));
+  assert.deepEqual(sorted(r2), ['item', 'move', 'offer']);
+  // items used up: the repeat still rides beside the exit
+  const r3 = allowedNextFor(ctx('pronunciation', { items, state: { ...ms, ...ask('retry'), retriesInARow: 1, practisedItems: { pronunciation: ['a', 'b'] } } }));
+  assert.deepEqual(r3, ['retry', 'offer']);
+  // the retry re-arms the last practised item's clip (W9-B3 rearm_item), also when the open ask is already a retry
+  const e = effectsForField(nextEv({ kind: 'retry', say: 'Once more: a' }), fctx('pronunciation', { items, state: { ...ms, ...ask('retry'), practisedItems: { pronunciation: ['a'] } } }));
+  assert.deepEqual(e.filter((x) => x.kind === 'rearm_item'), [{ kind: 'rearm_item', text: 'a' }]);
+});
+
+test('W10-3b (fix wave 10, run 6 987 s): a nudge on an open pronunciation item re-asks the SAME item (retry), never a new one', () => {
+  const ms = { menuState: { pronunciation: { asked: 1, picked: 'a complete sentence' } } };
+  const items = ['a', 'b'];
+  const c = ctx('pronunciation', { nudge: true, items, state: { ...ms, ...ask('item'), practisedItems: { pronunciation: ['a'] } } });
+  assert.deepEqual(allowedNextFor(c), ['retry', 'wait']);
+  const e = effectsForField(nextEv({ kind: 'retry', say: 'Take your time. a' }), fctx('pronunciation', { nudge: true, items, state: { ...ms, ...ask('item'), practisedItems: { pronunciation: ['a'] } } }));
+  assert.deepEqual(e.filter((x) => x.kind === 'rearm_item'), [{ kind: 'rearm_item', text: 'a' }]);
+  // an open retry ask nudges as before; a non-pronunciation open ask is untouched
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { nudge: true, items, state: { ...ms, ...ask('retry'), practisedItems: { pronunciation: ['a'] } } })), ['retry', 'wait']);
+  assert.deepEqual(allowedNextFor(ctx('past-simple', { nudge: true, state: ask('question') })), ['question', 'wait']);
 });
 
 test('H1: a resolved menu pick persists, so the menu is never re-asked after an item', () => {

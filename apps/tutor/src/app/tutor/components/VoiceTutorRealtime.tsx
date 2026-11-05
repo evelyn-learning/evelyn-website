@@ -96,7 +96,7 @@ import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-reject
 import { decideDeferredPageFlush, flushDeferredPageAtTurnEnd, orderStudentCardsBeforePageBreak, advancePageFlushTiming, orderTurnEndDispatches, previousPageTarget, segmentCardForFlush, rearmAfterKill, batchHasSegmentCard, advancePageAlreadyOpen, authoredCardOnCurrentPage, transitionSentenceIndex, lastStudentSentenceCardOnPage, authoredCardParaphrase, typedMoveLastSentence, typedPageTurnHoldRelease } from '@/lib/tutor/whiteboard/deferred-page-flush';
 import { askOffNewPart, transitionAskSentence, TRANSITION_ASK_REASON, transitionAskCheckDue, offCardAskStripped, cardAskEngineFallbackLine, menuPresentedIn, menuEntryFallbackLine, menuPickPendingSuppressesArm } from '@/lib/tutor/lesson-plan/transition-ask';
 import { fixedScriptSpokenOpener, spokenOpenerAdvanceLead, proactiveOpenerAllowed } from '@/lib/tutor/lesson-plan/spoken-opener';
-import { detectPronunciationTarget, handwriteShownSentence, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, type LastPronunciationTarget, type LastMeasuredPronunciation, pronunciationItemRepeat } from '@/lib/tutor/pronunciation/auto-arm';
+import { detectPronunciationTarget, handwriteShownSentence, autoArmTargetForTurn, pronunciationTargetsOf, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, pronunciationNoteForTurn, pronunciationNoteReplant, type ConsumedPronunciationNote, type LastPronunciationTarget, type LastMeasuredPronunciation, pronunciationItemRepeat } from '@/lib/tutor/pronunciation/auto-arm';
 import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
 import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
 import {
@@ -1565,6 +1565,8 @@ export function VoiceTutorRealtime({
   // sentence it was about, so the turn that carries it can rewrite it when
   // the learner's words matched but nothing was scored.
   const pronunciationRawNoteRef = useRef<{ note: string; referenceText: string } | null>(null);
+  /** W10-3c (fix wave 10, run 6 1049 s): the note the last brain turn consumed — re-planted when perception re-dispatches that turn. */
+  const pronunciationNoteConsumedRef = useRef<ConsumedPronunciationNote | null>(null);
   const plantPronunciationNote = (note: string, measured: boolean) => {
     pronunciationResultNoteRef.current = pronunciationNoteForBrain(note);
     pronunciationRawNoteRef.current = { note, referenceText: lastPronunciationClipRef.current?.text ?? lastPronunciationTargetRef.current?.referenceText ?? '' };
@@ -13934,6 +13936,16 @@ export function VoiceTutorRealtime({
         && TUTOR_IDLE_NUDGE_REPEAT_KIND && holdPronunciationNoteForNudge({ noSpeechNote: pronunciationNoSpeechNoteRef.current, transcript });
       if (holdNoSpeechNote) onDebugEvent?.('pronunciation_note_held_for_nudge', 'no_speech_60s');
       if (pronunciationResultNoteRef.current && !opts?.prefetchOnly && !holdNoSpeechNote) {
+        // W10-3c: remember what this turn consumes, so a perception re-dispatch of it (MERGE / FRESH / RESTORE) gets
+        // the unmeasured note back instead of a note-less call that may move on.
+        pronunciationNoteConsumedRef.current = {
+          transcript,
+          note: pronunciationResultNoteRef.current,
+          raw: pronunciationRawNoteRef.current,
+          measured: pronunciationMeasuredRef.current,
+          notAttempted: pronunciationNotAttemptedRef.current,
+          noSpeech: pronunciationNoSpeechNoteRef.current,
+        };
         pronunciationNoSpeechNoteRef.current = false;
         // Task 24 §A4 (GDI run 12, 1092 s): nothing was scored but the turn's
         // transcript is the target ⇒ the unscored note (confirm, ask once
@@ -26127,6 +26139,19 @@ export function VoiceTutorRealtime({
     const checkpoint = perceptionInterruptCheckpointRef.current;
     if (!checkpoint) return;
     perceptionInterruptCheckpointRef.current = null;
+    // W10-3c (fix wave 10, run 6 1049–1055 s): the cancelled turn consumed the pronunciation note (a cut clip); the
+    // re-dispatch below is a fresh brain call — give it the note back, or the part moves on without the repeat.
+    const replantConsumedPronunciationNote = () => {
+      const replant = pronunciationNoteReplant({ consumed: pronunciationNoteConsumedRef.current, cancelledTranscript: checkpoint.originalTranscript, pendingNote: pronunciationResultNoteRef.current });
+      if (!replant) return;
+      pronunciationNoteConsumedRef.current = null;
+      pronunciationResultNoteRef.current = replant.note;
+      pronunciationRawNoteRef.current = replant.raw;
+      pronunciationMeasuredRef.current = replant.measured;
+      pronunciationNotAttemptedRef.current = replant.notAttempted;
+      pronunciationNoSpeechNoteRef.current = replant.noSpeech;
+      onDebugEvent?.('pronunciation_note_replanted', `re-dispatch · ${replant.note.slice(0, 120)}`);
+    };
     // R47 Task 2 (review round: identity-race fix). The pacing-credit
     // record this checkpoint may discard was already claimed off
     // lastStreakChangeRef AT CONSTRUCTION TIME (claimSupersededStreakFor
@@ -26301,6 +26326,7 @@ export function VoiceTutorRealtime({
           // same mid-utterance bare-drop guard as RESTORE/MERGE/FRESH — same
           // bug class. queueOnMidUtterance (+ its drain-guarantee timer,
           // Finding 1) makes queuing here safe instead of silently dropping.
+          replantConsumedPronunciationNote();
           void handleStudentTranscriptForBrain(checkpoint.originalTranscript, {
             ...(checkpoint.originalOpts || {}),
             bypassPerceptionDedupe: true,
@@ -26381,6 +26407,7 @@ export function VoiceTutorRealtime({
       // — the checkpoint is already consumed by this verdict, so a bare
       // drop here would lose the RESTORE outright with nothing to recover
       // it (unbounded silence).
+      replantConsumedPronunciationNote();
       void handleStudentTranscriptForBrain(checkpoint.originalTranscript, {
         ...(checkpoint.originalOpts || {}),
         bypassPerceptionDedupe: true,
@@ -26456,6 +26483,7 @@ export function VoiceTutorRealtime({
       revertSupersededStreak('continuation-merge');
       dropRenderBuffer(); // render↔speech sync: new merged turn redraws
       // R32 (H1): queue rather than drop if MERGE lands mid-utterance.
+      replantConsumedPronunciationNote();
       void handleStudentTranscriptForBrain(freshText, {
         bypassPerceptionDedupe: true,
         queueOnMidUtterance: true,
@@ -26478,6 +26506,7 @@ export function VoiceTutorRealtime({
     revertSupersededStreak('fresh');
     dropRenderBuffer(); // render↔speech sync: fresh turn redraws
     // R32 (H1): queue rather than drop if FRESH lands mid-utterance.
+    replantConsumedPronunciationNote();
     void handleStudentTranscriptForBrain(fresh, {
       bypassPerceptionDedupe: true,
       queueOnMidUtterance: true,

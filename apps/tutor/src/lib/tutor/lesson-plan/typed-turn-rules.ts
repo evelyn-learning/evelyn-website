@@ -261,7 +261,9 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   const moveOrClose: TypedNextKind = ctx.lastPart ? 'close' : 'move';
   const withRetry = (arr: TypedNextKind[]): TypedNextKind[] => (askOpen ? arr : arr.filter((k) => k !== 'retry'));
 
-  if (ctx.nudge) return [ask === 'none' ? 'question' : ask, 'wait'];
+  // W10-3b (fix wave 10, run 6 987 s): a nudge on an open pronunciation item re-asks the SAME item (`retry` re-arms its
+  // clip) — the `item` row let the nudge start another unpractised sentence.
+  if (ctx.nudge) return [ask === 'none' ? 'question' : ask === 'item' ? 'retry' : ask, 'wait'];
   if (ctx.studentMovedOn) return [moveOrClose];
 
   // R3 (fix round 1): committed answers (earlier replies with verdict ≠ none) decide; with two committed, the reply now
@@ -284,15 +286,19 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
       // (the voice run moved straight to the summary after the last authored sentence).
       // R2 (fix round 1): the LAST item's result is in (open ask item, not yet repeated) — the weakest-word repeat
       // is still allowed beside the offer / move (the plan: one more repeat on the weakest word after a result).
+      // W10-3a (fix wave 10, run 6 914 s "Can you please talk in English?" → a NEW sentence): the last item stays the
+      // subject through its retries — `retry` is allowed while an item is the open ask, or a retry of it is and fewer
+      // than two were made in a row (the retry chain's own cap).
+      const lastItemOpen = ask === 'item' || (ask === 'retry' && state.retriesInARow < 2);
       if (itemsLeft(ctx).length === 0) {
         // A (fix wave 6): after the first offer, one more offer is allowed for a reply that did not choose.
         const exit: TypedNextKind[] = !state.offerState[segId]?.made ? ['offer']
           : offerRepeatAllowed(state, segId) ? ['move', 'offer'] : ['move'];
-        return ask === 'item' && state.retriesInARow === 0 ? ['retry', ...exit] : exit;
+        return (ask === 'item' && state.retriesInARow === 0) || (ask === 'retry' && state.retriesInARow < 2) ? ['retry', ...exit] : exit;
       }
       const row: TypedNextKind[] = ['item', 'retry', 'offer', 'move'];
-      // retry = "the same sentence again": only meaningful while an item is the open ask
-      return ask === 'item' ? row : row.filter((k) => k !== 'retry');
+      // retry = "the same sentence again": only meaningful while the last item is still the subject
+      return lastItemOpen ? row : row.filter((k) => k !== 'retry');
     }
   }
 
@@ -599,7 +605,8 @@ export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): T
       // W9-B3: the same sentence again, measured again — the last practised item of this part.
       const practised = ctx.state.practisedItems[ctx.segId] ?? [];
       const last = practised[practised.length - 1];
-      if (ctx.state.openAsk.kind === 'item' && last && typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) === 'pronunciation') out.push({ kind: 'rearm_item', text: last });
+      // W10-3a: also when the open ask is already a retry of that item (the item stays the subject through its retries).
+      if ((ctx.state.openAsk.kind === 'item' || ctx.state.openAsk.kind === 'retry') && last && typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) === 'pronunciation') out.push({ kind: 'rearm_item', text: last });
       break;
     }
     case 'move': {
