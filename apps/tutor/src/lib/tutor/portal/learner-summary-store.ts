@@ -205,7 +205,7 @@ export function mongoSummaryStoreDeps(): SummaryStoreDeps {
       const { getModelClient, prepareParams } = await import('../ai/model-registry');
       const { client, model } = getModelClient('judge');
       return callGraderJson(client as unknown as GraderModelClient, model, system, user, schema, {
-        prepare: (params) => prepareParams('judge', { ...params, temperature: 0.2, max_tokens: 1200 }),
+        prepare: (params) => prepareParams('judge', { ...params, temperature: 0.2, max_tokens: 2000 }),
       });
     },
     model: resolveModel('judge').model,

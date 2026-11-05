@@ -69,7 +69,7 @@ const reply = (n: number) => ({ level_evidence_en: 'a', level_evidence_ja: 'あ'
 check('2 recs rejected', validateModelReply(reply(2)) === null);
 check('4 recs accepted', validateModelReply(reply(4)) !== null);
 check('empty string rejected', validateModelReply({ ...reply(4), grammar_en: '' }) === null);
-check('long string rejected', validateModelReply({ ...reply(4), grammar_en: 'x'.repeat(401) }) === null);
+check('long string clipped (ruling 11-05: clip, never reject)', (validateModelReply({ ...reply(4), grammar_en: 'x'.repeat(401) })?.grammar_en.length ?? 999) <= 400);
 check('non-object rejected', validateModelReply(null) === null);
 const now = new Date('2026-11-05T00:00:00Z');
 const sNone = assembleSummary(f2, validateModelReply(reply(4)), { model: 'm', turnCount: 3, now });
@@ -89,6 +89,15 @@ async function gen(fn: (n: number) => Record<string, unknown>) {
 }
 const g1 = await gen((n) => (n === 1 ? {} : reply(4)));
 check('retry then ok', g1.r.ok && g1.users.length === 2 && g1.users[1].includes('not valid JSON'));
+{
+  const { validateModelReply, clipField, renderSummaryPrompt } = await import('../src/lib/tutor/portal/learner-summary');
+  const long = Array.from({ length: 12 }, (_, i) => `Sentence number ${i} says something useful about the lesson and its grammar points.`).join(' ');
+  const ok = (ja: string) => ({ level_evidence_en: long, level_evidence_ja: ja, grammar_en: long, grammar_ja: ja, pronunciation_comment_en: 'Fine.', pronunciation_comment_ja: ja, recommendations: [{ en: long, ja }, { en: 'b', ja }, { en: 'c', ja }] });
+  const v = validateModelReply(ok('はい。'), { supportLanguage: 'ja', levelSource: 'session' });
+  check('over-long field is clipped, not rejected', !!v && long.length > 400 && v.level_evidence_en.length <= 400 && v.recommendations[0].en.length <= 400);
+  check('clip ends at a sentence boundary', !!v && /\.$/.test(v.level_evidence_en) && clipField('short') === 'short');
+  check('prompt caps field length generically', renderSummaryPrompt(f3).system.includes('at most two sentences'));
+}
 const g2 = await gen(() => ({}));
 check('fails after two', !g2.r.ok && g2.users.length === 2);
 

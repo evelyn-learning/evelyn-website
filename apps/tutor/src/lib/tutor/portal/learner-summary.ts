@@ -193,7 +193,7 @@ export function renderSummaryPrompt(facts: SessionFacts): { system: string; user
     ? `Each \`_ja\` field is the support-language line: one short sentence in ${supportLanguageName(facts.supportLanguage)} carrying the same point as its English field.`
     : 'Leave every `_ja` field as an empty string.';
   const system =
-    `You write the learner-facing summary of one lesson from the facts given. Never invent scores, levels or corrections; comment only on what the facts show. English first. ${support} Reply with only the JSON object.`;
+    `You write the learner-facing summary of one lesson from the facts given. Never invent scores, levels or corrections; comment only on what the facts show. English first. Keep every field short: at most two sentences. ${support} Reply with only the JSON object.`;
   const levelAsk = facts.level.source === 'session'
     ? 'level_evidence_en, level_evidence_ja (why this level, from the facts)'
     : 'level_evidence_en, level_evidence_ja (empty strings: the level is not described in this summary)';
@@ -217,10 +217,17 @@ export function renderSummaryPrompt(facts: SessionFacts): { system: string; user
 }
 
 function okStr(v: unknown): v is string {
-  return typeof v === 'string' && v.trim().length > 0 && v.length <= MAX_FIELD;
+  return typeof v === 'string' && v.trim().length > 0;
 }
 function okStrOrEmpty(v: unknown): v is string {
-  return typeof v === 'string' && v.length <= MAX_FIELD;
+  return typeof v === 'string';
+}
+/** An over-long field is clipped at the last sentence end inside the cap, never rejected: one verbose field must not cost the whole summary. */
+export function clipField(v: string): string {
+  if (v.length <= MAX_FIELD) return v;
+  const head = v.slice(0, MAX_FIELD);
+  const cut = Math.max(head.lastIndexOf('. '), head.lastIndexOf('。'), head.lastIndexOf('! '), head.lastIndexOf('? '));
+  return cut > MAX_FIELD / 3 ? head.slice(0, cut + 1).trimEnd() : `${head.slice(0, MAX_FIELD - 1).trimEnd()}…`;
 }
 
 /**
@@ -248,11 +255,12 @@ export function validateModelReply(
     if (!o || !okStr(o.en) || !ja(o.ja)) return null;
     out.push({ en: o.en as string, ja: o.ja as string });
   }
+  const c = (v: unknown) => clipField(v as string);
   return {
-    level_evidence_en: r.level_evidence_en as string, level_evidence_ja: r.level_evidence_ja as string,
-    grammar_en: r.grammar_en as string, grammar_ja: r.grammar_ja as string,
-    pronunciation_comment_en: r.pronunciation_comment_en as string, pronunciation_comment_ja: r.pronunciation_comment_ja as string,
-    recommendations: out,
+    level_evidence_en: c(r.level_evidence_en), level_evidence_ja: c(r.level_evidence_ja),
+    grammar_en: c(r.grammar_en), grammar_ja: c(r.grammar_ja),
+    pronunciation_comment_en: c(r.pronunciation_comment_en), pronunciation_comment_ja: c(r.pronunciation_comment_ja),
+    recommendations: out.map((x) => ({ en: c(x.en), ja: c(x.ja) })),
   };
 }
 
@@ -289,6 +297,14 @@ export function assembleSummary(
   };
 }
 
+/** One log line describing a rejected reply: keys, string lengths, recommendation count — no learner text. */
+function describeReply(raw: unknown): string {
+  if (!raw || typeof raw !== 'object') return `type=${raw === null ? 'null' : typeof raw}`;
+  const r = raw as Record<string, unknown>;
+  const parts = Object.entries(r).map(([k, v]) => Array.isArray(v) ? `${k}[${v.length}]` : typeof v === 'string' ? `${k}:${v.length}` : `${k}:${typeof v}`);
+  return parts.join(' ');
+}
+
 export async function generateLearnerSummary(
   facts: SessionFacts,
   deps: { callJson: (system: string, user: string, schema: ReplySchema) => Promise<Record<string, unknown>>; model: string; turnCount: number; now?: Date },
@@ -298,9 +314,11 @@ export async function generateLearnerSummary(
   let lastError = 'invalid reply';
   for (const u of [user, retryUser]) {
     try {
-      const valid = validateModelReply(await deps.callJson(system, u, LEARNER_SUMMARY_SCHEMA), { supportLanguage: facts.supportLanguage, levelSource: facts.level.source });
+      const raw = await deps.callJson(system, u, LEARNER_SUMMARY_SCHEMA);
+      const valid = validateModelReply(raw, { supportLanguage: facts.supportLanguage, levelSource: facts.level.source });
       if (valid) return { ok: true, summary: assembleSummary(facts, valid, { model: deps.model, turnCount: deps.turnCount, now: deps.now }) };
       lastError = 'invalid reply';
+      console.warn(`[learner-summary] invalid reply: ${describeReply(raw)}`);
     } catch (e) {
       lastError = e instanceof Error ? e.message : String(e);
     }
