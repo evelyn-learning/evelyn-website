@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
   // above it.
   turbopack: { root: path.join(__dirname, "..", "..") },
   transpilePackages: ['@evelyn/core'],
+  // Fix wave 8 Z4: the build stamp (UTC, to the minute) printed in the session PDF footer, evaluated at build time.
+  env: { NEXT_PUBLIC_BUILD_STAMP: new Date().toISOString().slice(0, 16) },
   // @rdkit/rdkit loads RDKit_minimal.wasm from its own directory (__dirname).
   // Bundled, that path is rewritten to "/ROOT/node_modules/@rdkit/rdkit/dist/"
   // and the wasm is never found in a production build — /api/tutor/validate
