@@ -2,7 +2,7 @@
  * Learner summary store (GDI learner home, task 2): claim rule + orchestrator via
  * in-memory fakes. Run: cd apps/tutor && npx tsx scripts/test-learner-summary-store.ts
  */
-import { claimDecision, claimVersion, runSummaryForSession, summaryStateOf, type SummaryStoreDeps } from '../src/lib/tutor/portal/learner-summary-store';
+import { claimDecision, claimVersion, claimUpdatePipeline, runSummaryForSession, summaryStateOf, type SummaryStoreDeps } from '../src/lib/tutor/portal/learner-summary-store';
 
 let passed = 0;
 let failed = 0;
@@ -11,6 +11,7 @@ function check(name: string, cond: boolean, detail?: string) {
   else { failed++; console.log(`  FAIL ${name}${detail ? `  — ${detail}` : ''}`); }
 }
 
+const eq2 = (a: unknown[], b: unknown[]) => JSON.stringify(a) === JSON.stringify(b);
 const now = new Date('2026-11-05T10:00:00Z');
 const ago = (s: number) => new Date(now.getTime() - s * 1000);
 const L = (status: 'pending' | 'ready' | 'failed', turnCount: number, s: number, version = 1) => ({ status, turnCount, version, updatedAt: ago(s) });
@@ -24,6 +25,11 @@ const r23 = L('ready', 20, 999, 2);
 check('ready 20 -> 23 => claimed, version+1', claimDecision(r23, 23, now) === 'claimed' && claimVersion(r23) === 3);
 check('failed -> claimed', claimDecision(L('failed', 20, 5), 20, now) === 'claimed');
 check('pending reclaim keeps version', claimVersion(L('pending', 20, 130, 2)) === 2);
+
+const pl = claimUpdatePipeline(20, now);
+const sub = (pl[0].$set as any).learnerSummary;
+check('pipeline replaces whole sub-doc, no summary/error', pl.length === 1 && !('summary' in sub) && !('error' in sub)
+  && eq2(Object.keys(sub).sort(), ['status', 'turnCount', 'updatedAt', 'version']) && sub.status === 'pending');
 
 const readySummary: any = { version: 1, turn_count: 6 };
 check('summaryStateOf absent', summaryStateOf(undefined).status === 'none');

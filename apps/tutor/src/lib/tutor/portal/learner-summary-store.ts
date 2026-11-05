@@ -9,6 +9,7 @@ import {
   buildSessionFacts, generateLearnerSummary,
   type LearnerSummaryV1, type SessionFactsInput,
 } from './learner-summary';
+import { resolveModel } from '../ai/model-registry';
 import { callGraderJson, type GraderModelClient, type ReplySchema } from './grade-free-response';
 
 export type SummaryState = { status: 'none' | 'pending' | 'ready' | 'failed'; summary?: LearnerSummaryV1; error?: string; version?: number };
@@ -48,6 +49,25 @@ export function claimDecision(prev: Stored | undefined | null, turnCount: number
 /** Version written by a claim: 1 first, +1 only when re-claiming a ready summary. */
 export function claimVersion(prev: Stored | undefined | null): number {
   return (prev?.version ?? 0) + (prev?.status === 'ready' ? 1 : 0) || 1;
+}
+
+/** The claim's pipeline update: REPLACES the whole sub-document (no summary/error carried over). */
+export function claimUpdatePipeline(turnCount: number, now: Date) {
+  return [{
+    $set: {
+      learnerSummary: {
+        status: 'pending', turnCount, updatedAt: now,
+        // claimVersion in aggregation form: 1 first, +1 only from a ready summary.
+        version: {
+          $add: [
+            { $ifNull: ['$learnerSummary.version', 0] },
+            { $cond: [{ $eq: ['$learnerSummary.status', 'ready'] }, 1, 0] },
+            { $cond: [{ $gt: [{ $ifNull: ['$learnerSummary.version', 0] }, 0] }, 0, 1] },
+          ],
+        },
+      },
+    },
+  }];
 }
 
 export function summaryStateOf(s: Stored | undefined | null): SummaryState {
@@ -97,21 +117,7 @@ export function mongoSummaryStoreDeps(): SummaryStoreDeps {
           { 'learnerSummary.status': 'ready', 'learnerSummary.turnCount': { $lte: turnCount - RESUME_TURNS } },
         ],
       };
-      // Version: 1 first, +1 only from a ready summary (pipeline update keeps it atomic).
-      const update = [{
-        $set: {
-          learnerSummary: {
-            status: 'pending', turnCount, updatedAt: now,
-            version: {
-              $add: [
-                { $ifNull: ['$learnerSummary.version', 0] },
-                { $cond: [{ $eq: ['$learnerSummary.status', 'ready'] }, 1, 0] },
-                { $cond: [{ $ifNull: ['$learnerSummary.version', false] }, 0, 1] },
-              ],
-            },
-          },
-        },
-      }];
+      const update = claimUpdatePipeline(turnCount, now);
       const won = await TutorSession.findOneAndUpdate(filter, update, { new: false, timestamps: false }).select('_id').lean();
       if (won) return 'claimed';
       const cur = await TutorSession.findOne({ sessionId }).select('learnerSummary').lean() as { learnerSummary?: Stored } | null;
@@ -137,10 +143,10 @@ export function mongoSummaryStoreDeps(): SummaryStoreDeps {
       const { getModelClient, prepareParams } = await import('../ai/model-registry');
       const { client, model } = getModelClient('judge');
       return callGraderJson(client as unknown as GraderModelClient, model, system, user, schema, {
-        prepare: (params) => prepareParams('judge', params),
+        prepare: (params) => prepareParams('judge', { ...params, temperature: 0.2, max_tokens: 1200 }),
       });
     },
-    model: 'judge',
+    model: resolveModel('judge').model,
     now: () => new Date(),
   };
 }
@@ -152,7 +158,7 @@ function activeDeps(): SummaryStoreDeps { return testDeps ?? mongoSummaryStoreDe
 export async function listLearnerSessions(partnerId: string, studentId: string, limit = 20): Promise<LearnerSessionRow[]> {
   await connectDB();
   const docs = await TutorSession.find({ sourcePartnerId: partnerId, studentId, 'transcript.3': { $exists: true } })
-    .sort({ startedAt: -1 }).limit(limit).lean();
+    .select('-debugEvents -tokenUsage -attemptSpans -poolCharges').sort({ startedAt: -1 }).limit(limit).lean();
   return (docs as unknown as Array<Record<string, any>>).map((d) => {
     const summary = summaryStateOf(d.learnerSummary);
     return {
