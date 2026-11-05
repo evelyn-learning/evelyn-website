@@ -772,6 +772,15 @@ export function runChecks(dump) {
     const jaEarly = tutor.slice(0, 3).some((x) => /[぀-ヿ一-鿿]/.test(x.text));
     if (!jaEarly) warn('TT8 Japanese present', 'no Japanese in the first 3 tutor turns');
     else info('TT8 Japanese present in the first 3 tutor turns');
+    // TT15 (fix wave 9, run 5 997 s): in the summary part the check question is a `question` turn answered before the
+    // close, and no close is the first turn to say a required phrase (typed_turn_close_phrases_in_say).
+    const sumTyped = typed.filter((e) => e.t >= sumAt);
+    const sumCloseIdx = sumTyped.findIndex((e) => field(e, 'next') === 'close');
+    if (sumAt !== Infinity && sumCloseIdx >= 0) {
+      const askedFirst = sumTyped.slice(0, sumCloseIdx).some((e) => field(e, 'next') === 'question');
+      const inSay = ev('typed_turn_close_phrases_in_say');
+      ok('TT15 recap check question asked before the close', askedFirst && inSay.length === 0, `${askedFirst ? 'question turn before the close' : 'no question turn before the close'}${inSay.length ? ` · close_phrases_in_say ${inSay.map((e) => `${e.t}s`).join(' ')}` : ''}`);
+    } else info('TT15 recap check question: no summary close in this run');
     const misc = ['typed_turn_advance_blocked', 'typed_turn_bridge_missing', 'typed_turn_language_note', 'typed_turn_nudge', 'typed_turn_kill_skipped'].map((c) => `${c}=${ev(c).length}`).join(' · ');
     const kinds = {}; for (const e of typed) { const k = field(e, 'next') ?? '?'; kinds[k] = (kinds[k] ?? 0) + 1; }
     info(`typed: ${typed.length} turns (next ${Object.entries(kinds).map(([k, n]) => `${k}=${n}`).join(' ')}) · ${misc}`);

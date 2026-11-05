@@ -294,7 +294,9 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   // V3 (fix wave 2): the summary is engine-driven — review + feedback + check question, then the close (the brain
   // never picked close when it was offered beside question; a question object costs one retry, then the close fallback).
   // R1: keyed on the delivered review, not on turns (a nudge / wait turn at the start must not skip it).
-  if (kind === 'recap') return state.recapReviewed?.[segId] ? ['close'] : ['question'];
+  // W9-C (fix wave 9, run 5 997 s): with required phrases still unsaid after the review, `question` stays beside the
+  // close so the server can refuse a close that would introduce one (the check question is asked, then answered).
+  if (kind === 'recap') return state.recapReviewed?.[segId] ? (missingPhrasesFor(ctx).length ? ['close', 'question'] : ['close']) : ['question'];
 
   // W9-A (fix wave 9, run 5 101 s): the first post-due turn keeps `retry` so a correction gets its repeat (the server
   // refuses a move / question beside a correction while retry is allowed); from post_due 1 the part must move.

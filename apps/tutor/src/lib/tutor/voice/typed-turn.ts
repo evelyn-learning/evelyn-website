@@ -147,7 +147,7 @@ The engine sends <turn_state .../> with every turn. Its attributes: part = the k
 THE RECAP PART
 - \`recap_step=review_feedback_check\`: \`next.say\` reviews what was practised using the student's OWN corrected sentences from this lesson (the card's examples only when they produced none), gives one specific strength and one thing to improve, and asks the part's check question; use every phrase in \`required_phrases\` verbatim.
 - \`recap_step=close\`: \`next.kind\` is \`close\`; \`verdict_say\` evaluates their check answer, \`next.say\` explains briefly if needed and closes warmly; ask nothing after the close.
-- Your closing turn contains every phrase in \`required_phrases\` verbatim before the goodbye.
+- A close never introduces a required phrase: every phrase in \`required_phrases\` is said on the review turn (feedback) or asked as a \`question\` and answered before the close; a close that would be the first turn to say one is refused, and the check question is asked instead.
 - On the review question, put the two sentences you contrast in \`board\`, separated by ' | ', so the student sees them while you ask.
 
 When \`move\` is not in \`allowed_next\`, never say the part is over and never announce a move; the engine turns the page, not your words. An \`offer\` turn names the next part as the choice ('…or shall we move on to <next_part>?') — that is not a move.
@@ -422,7 +422,7 @@ export function correctionChangesNothing(studentText: string, correction: TypedT
   return kept.join(' ') === fixed.join(' ');
 }
 
-export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase' | 'english_missing' | 'question_dictates_opening' | 'correction_needs_retry';
+export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase' | 'english_missing' | 'question_dictates_opening' | 'correction_needs_retry' | 'check_question_unasked';
 
 /** Z2 (fix wave 8, run 4 67 s "Try starting with: I want to…"): a question / offer / menu that tells the learner
  *  which words to begin with. A `retry` is never checked — "starting with: …" is its normal scaffold. */
@@ -453,7 +453,10 @@ export function typedTurnRetryMessage(input: {
   correctionNoChange?: boolean;
 }): string {
   const { reason, refused, allowedNext, alreadySaid, budget, itemNotListed, missingPhrases, correctionNoChange } = input;
-  const why = reason === 'correction_needs_retry'
+  const why = reason === 'check_question_unasked'
+    // W9-C (fix wave 9, run 5 997 s): the close wrote the unasked check question in as a statement.
+    ? `Your "next" was refused "${refused.kind}" (check_question_unasked): the required phrase${(missingPhrases ?? []).length === 1 ? '' : 's'} ${(missingPhrases ?? []).map((x) => JSON.stringify(x)).join(', ')} ${(missingPhrases ?? []).length === 1 ? 'was' : 'were'} not said in an earlier turn of this part, and a close may not be the first turn to say ${(missingPhrases ?? []).length === 1 ? 'it' : 'them'}. Ask now with next.kind "question": one sentence that uses the phrase, plus the two example sentences when it is the check question (next.say at most ${budget} sentences); the close comes next turn, after the student's answer (allowed: ${allowedNext.join(', ')}).`
+    : reason === 'correction_needs_retry'
     // W9-A (fix wave 9, run 5 101 s): a correction and a move / question in one turn — the learner never said the corrected sentence.
     ? `Your "next" was refused "${refused.kind}" (correction_needs_retry): this turn corrected the student's sentence, so next.kind is "retry" — ask them to say the corrected sentence once (next.say: one short sentence, then the corrected sentence). The ${refused.kind === 'move' || refused.kind === 'close' ? 'move' : 'next question'} comes next turn, after that repeat is judged (allowed: ${allowedNext.join(', ')}).`
     : reason === 'question_dictates_opening'
@@ -463,7 +466,8 @@ export function typedTurnRetryMessage(input: {
     : reason === 'illegal_kind' && correctionNoChange
     ? `Your "next" was refused "${refused.kind}" (correction_no_change): the student's sentence already has that form; no correction, no retry — ask the next question or offer (allowed: ${allowedNext.filter((k) => k !== 'retry').join(', ')}).`
     : reason === 'missing_required_phrase'
-    ? `Your "next" was refused "${refused.kind}" (missing_required_phrase): the close must contain every required phrase verbatim, and this turn did not say ${(missingPhrases ?? []).map((x) => JSON.stringify(x)).join(', ')}. Write the close again with each of these phrases, word for word, in next.say before the goodbye (allowed: ${allowedNext.join(', ')}).`
+    // W9-C: no longer "write the close again with each" — the phrase goes in the right place.
+    ? `Your "next" was refused "${refused.kind}" (missing_required_phrase): this turn did not say ${(missingPhrases ?? []).map((x) => JSON.stringify(x)).join(', ')}. Say each missing phrase in the right place: a feedback phrase in next.say before the goodbye; a check question asked as a "question" turn when "question" is allowed (allowed: ${allowedNext.join(', ')}).`
     : reason === 'move_needs_answer'
     ? `Your "next" was refused "${refused.kind}" (move_needs_answer): the student's reply was not an answer (verdict "none"), so this part cannot move on yet. Ask this part's question again with next.kind "question" (allowed: ${allowedNext.join(', ')}).`
     : reason === 'illegal_kind' && itemNotListed

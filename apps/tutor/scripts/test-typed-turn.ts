@@ -365,12 +365,13 @@ test('V6: a move into a key-ideas card previews its examples, then asks its prac
 });
 
 test('X2 (fix wave 3): the recap close carries every required phrase; the retry for a close without one names them', () => {
-  assert.ok(TYPED_TURN_INSTRUCTIONS.split('THE RECAP PART')[1].split('\n\n')[0].includes('Your closing turn contains every phrase in `required_phrases` verbatim before the goodbye.'), 'recap block');
+  // W9-C (fix wave 9): the close never introduces a required phrase — it is said on the review turn or asked as a question first.
+  assert.ok(TYPED_TURN_INSTRUCTIONS.split('THE RECAP PART')[1].split('\n\n')[0].includes('A close never introduces a required phrase'), 'recap block');
   const m = typedTurnRetryMessage({ reason: 'missing_required_phrase', refused: { kind: 'close', say: 'Well done today. See you!', item: '', level: '' },
     allowedNext: ['close'], alreadySaid: { ack: 'Right.', verdict: 'correct', verdict_say: 'That is it.', board: '', correction: null, support_ja: '' }, budget: 7,
     missingPhrases: ['one thing you did well'] });
   assert.ok(m.includes('missing_required_phrase') && m.includes('"one thing you did well"'), m);
-  assert.ok(/the close must contain/i.test(m), m);
+  assert.ok(/right place/i.test(m) && !/write the close again/i.test(m), m);
   assert.ok(m.includes('ALREADY SPOKEN'));
 });
 
@@ -517,6 +518,13 @@ test('W9-A (fix wave 9, run 5 101 s): a correction is always followed by `retry`
 test('W9-B3 (fix wave 9): the prompt names repeat_due and forbids "I cannot hear"', () => {
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('repeat_due="yes"'), 'repeat_due documented');
   assert.ok(/never say (?:that )?you cannot hear/i.test(TYPED_TURN_INSTRUCTIONS), 'the forbidden line');
+});
+
+test('W9-C (fix wave 9, run 5 997 s): check_question_unasked retry text — ask it as a question now, the close comes next turn', () => {
+  const ALREADY = { ack: 'Right.', verdict: 'correct' as const, verdict_say: 'That is it.', board: '', correction: null, support_ja: '' };
+  const m = typedTurnRetryMessage({ reason: 'check_question_unasked', refused: { kind: 'close', say: 'Before we finish, the difference between A and B is time. Bye!', item: '', level: '' }, allowedNext: ['close', 'question'], alreadySaid: ALREADY, budget: 7, missingPhrases: ['the difference between'] });
+  assert.ok(m.includes('(check_question_unasked)') && m.includes('"the difference between"') && m.includes('"question"') && /next turn/.test(m), m);
+  assert.ok(m.includes('ALREADY SPOKEN'));
 });
 
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }

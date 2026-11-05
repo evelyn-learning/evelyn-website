@@ -489,6 +489,47 @@ async function main() {
   }
 
   {
+    // W9-C (fix wave 9, run 5 997 s): the close stuffed the unasked check question in as a statement; the learner was never asked.
+    const recapQ = { state: '<turn_state part="recap" recap_step="close" required_phrases="the difference between"/>', allowedNext: ['close', 'question'], recap: true, requiredPhrases: ['the difference between'] };
+    const OK = { ...TURN, verdict: 'correct', verdict_say: 'Right, that is the core idea.', correction: null, support_ja: '' };
+    const STUFFED = { kind: 'close', say: 'Before we finish, the difference between the two sentences is that the first still continues. Well done, Haruto, see you next time!', item: '', level: '' };
+    const BARE = { kind: 'close', say: 'Well done today, Haruto. See you next time!', item: '', level: '' };
+    const ASK = { kind: 'question', say: 'Before we finish, can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago.', item: '', level: '' };
+    await test('W9-C: a close that introduces a required phrase while question is allowed ⇒ refused (check_question_unasked); the retry\'s question is spoken once', async () => {
+      const r = await run({ ...baseInput, typedTurn: recapQ }, [chunkedTextScript(JSON.stringify({ ...OK, next: STUFFED }), 3), chunkedTextScript(JSON.stringify({ ...OK, next: ASK }), 2)]);
+      assert.equal(r.requests.length, 2);
+      const u = String(r.requests[1].messages[r.requests[1].messages.length - 1].content);
+      assert.ok(u.includes('check_question_unasked') && u.includes('"the difference between"') && /"question"/.test(u), u);
+      const said = sentencesOf(r.events);
+      assert.ok(!said.some((x) => x.includes('Haruto')), 'the refused close is never spoken');
+      assert.equal(said.filter((x) => x.includes('can you explain the difference between')).length, 1, said.join(' | '));
+      const t = turnEv(r.events);
+      assert.equal(t.retryReason, 'check_question_unasked');
+      assert.deepEqual(t.turn?.next, ASK);
+    });
+    await test('W9-C: a close lacking the phrase altogether ⇒ the same refusal (ask it; never write it into the close)', async () => {
+      const r = await run({ ...baseInput, typedTurn: recapQ }, [chunkedTextScript(JSON.stringify({ ...OK, next: BARE }), 3), chunkedTextScript(JSON.stringify({ ...OK, next: ASK }), 2)]);
+      assert.equal(turnEv(r.events).retryReason, 'check_question_unasked');
+    });
+    await test('W9-C: the retry closes again ⇒ fallback question, no close emitted or spoken', async () => {
+      const r = await run({ ...baseInput, typedTurn: recapQ }, [chunkedTextScript(JSON.stringify({ ...OK, next: STUFFED }), 3), chunkedTextScript(JSON.stringify({ ...OK, next: STUFFED }), 2)]);
+      assert.equal(turnEv(r.events).nextFallback, 'question');
+      assert.ok(!sentencesOf(r.events).some((x) => x.includes('Haruto')));
+      assert.ok(!r.events.some((e) => e.type === 'typed-field' && e.field === 'next' && (e.value as { kind: string }).kind === 'close'));
+    });
+    await test('W9-C: the phrase spoken before next (verdict_say, after the answer) ⇒ one request, the close stands', async () => {
+      const r = await run({ ...baseInput, typedTurn: recapQ }, [chunkedTextScript(JSON.stringify({ ...OK, verdict_say: 'Right: the difference between them is the time.', next: BARE }), 3)]);
+      assert.equal(r.requests.length, 1);
+      assert.ok(sentencesOf(r.events).some((x) => x.includes('Haruto')));
+    });
+    await test('W9-C: question not allowed (post-due) ⇒ the X2 path (missing_required_phrase); the stuffed retry is taken', async () => {
+      const r = await run({ ...baseInput, typedTurn: { ...recapQ, allowedNext: ['close'] } }, [chunkedTextScript(JSON.stringify({ ...OK, next: BARE }), 3), chunkedTextScript(JSON.stringify({ ...OK, next: STUFFED }), 2)]);
+      assert.equal(turnEv(r.events).retryReason, 'missing_required_phrase');
+      assert.deepEqual(turnEv(r.events).turn?.next, STUFFED);
+    });
+  }
+
+  {
     // A (fix wave 6, p3 1118–1141 s): a Japanese-only turn to an English-speaking student is refused before speech.
     const offerTurn = { state: '<turn_state part="pronunciation"/>', allowedNext: ['move', 'offer'], recap: false, studentEnglish: true };
     const JA = { ...TURN, ack: 'ありがとうございます。', verdict: 'correct', verdict_say: 'そうです、その文で大丈夫です。', correction: null, support_ja: '',

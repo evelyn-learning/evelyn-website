@@ -3067,6 +3067,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     const said = typedPhraseKey([...typedSaidBeforeNext, next.say].join(' '));
     return required.filter((p) => typedPhraseKey(p) && !said.includes(typedPhraseKey(p)));
   };
+  /** W9-C (fix wave 9, run 5 997 s): the required phrases a `close` would be the FIRST turn to say (not in this turn's
+   *  spoken fields before `next`; the client lists only phrases no earlier turn narrated) — while `question` is allowed,
+   *  the close is refused and the phrase is asked as a question instead of written into the goodbye. */
+  const typedCloseIntroducesPhrases = (next: TypedNext): string[] => {
+    const required = next.kind === 'close' && typedNextAllowed('question') ? input.typedTurn?.requiredPhrases ?? [] : [];
+    if (!required.length) return [];
+    const said = typedPhraseKey(typedSaidBeforeNext.join(' '));
+    return required.filter((p) => typedPhraseKey(p) && !said.includes(typedPhraseKey(p)));
+  };
   /** A (fix wave 6, p3 1121 s): this turn's spoken text before `next` with support_ja left out (it is exempt) —
    *  with next.say, a turn to an English-speaking student must hold one English sentence. */
   const typedSpokenNoSupport: string[] = [];
@@ -3139,14 +3148,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             && !itemsLeft.some((x) => x.trim() === ev.value.item.trim());
           // R3 (fix round 1): the level check's third reply may move only when it was an answer (verdict ≠ none).
           const moveOnNonAnswer = typedMoveOnNonAnswer(ev.value.kind);
+          // W9-C (fix wave 9): a close that would be the first turn to say a required phrase (question allowed) is refused.
+          const introducedPhrases = typedCloseIntroducesPhrases(ev.value);
           // X2 (fix wave 3, r61b 745 s): a close that leaves a required phrase unsaid is refused before speech (one retry).
-          const missingPhrases = typedCloseMissingPhrases(ev.value);
+          const missingPhrases = introducedPhrases.length ? [] : typedCloseMissingPhrases(ev.value);
           // Z1 (fix wave 5): the correction changed nothing (dropped above) — no retry of a correct sentence.
           const retryOnNoChange = typedCorrectionNoChange && ev.value.kind === 'retry';
           const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) || itemNotListed || retryOnNoChange ? 'illegal_kind'
             : moveOnNonAnswer ? 'move_needs_answer'
             // W9-A (fix wave 9): a corrected sentence gets its retry before any move / question.
             : typedCorrectionNeedsRetry(ev.value.kind) ? 'correction_needs_retry'
+            : introducedPhrases.length ? 'check_question_unasked'
             : missingPhrases.length ? 'missing_required_phrase'
             // A (fix wave 6): the student spoke English and nothing in this turn is English — refused before speech.
             : typedEnglishMissing(ev.value) ? 'english_missing'
@@ -3158,6 +3170,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
               reason, refused: ev.value,
               ...(itemNotListed && typedNextAllowed(ev.value.kind) ? { itemNotListed: itemsLeft } : {}),
               ...(reason === 'missing_required_phrase' ? { missingPhrases } : {}),
+              ...(reason === 'check_question_unasked' ? { missingPhrases: introducedPhrases } : {}),
               ...(retryOnNoChange ? { correctionNoChange: true } : {}),
             };
             console.warn(`[typed-turn] next refused (${reason}${typedRetryNeed.itemNotListed ? ' item_not_listed' : ''}${retryOnNoChange ? ' correction_no_change' : ''}): kind=${ev.value.kind} sentences=${englishSentenceCount(ev.value.say)} allowed_next=${input.typedTurn!.allowedNext.join(',')} — retrying once`);
@@ -3395,10 +3408,13 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       const legal = !!retryNext && typedNextAllowed(retryNext.kind) && !typedMoveOnNonAnswer(retryNext.kind)
         && !(typedCorrectionNoChange && retryNext.kind === 'retry')
         // W9-A: the retry's `next` after a correction must be the retry itself.
-        && !(need.reason === 'correction_needs_retry' && typedCorrectionNeedsRetry(retryNext.kind));
+        && !(need.reason === 'correction_needs_retry' && typedCorrectionNeedsRetry(retryNext.kind))
+        // W9-C: a retry that closes again would still be the first to say the phrase (the spoken fields are spliced).
+        && !(need.reason === 'check_question_unasked' && retryNext.kind === 'close');
       // Z1: after a no-change correction the fallback is never the retry (the first allowed kind that is not one).
       const retryFallback: TypedNextKind = need.reason === 'move_needs_answer' ? 'question'
         : need.reason === 'correction_needs_retry' ? 'retry'
+        : need.reason === 'check_question_unasked' ? 'question'
         : fallbackKind;
       console.warn(`[typed-turn] typed_turn_retry reason=${need.reason} result=${legal ? retryNext!.kind : 'fallback ' + retryFallback}`);
       if (legal) yield* emitTypedField({ field: 'next', value: retryNext! }, true);

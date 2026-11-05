@@ -874,5 +874,16 @@ test('W9-B3: a typed `retry` on an open pronunciation item re-arms that item (re
   assert.equal(out.retriesInARow, 1);
 });
 
+test('W9-C (fix wave 9, run 5 997 s): a reviewed recap with required phrases still unsaid allows question beside close; none missing ⇒ close only; post-due capped ⇒ close only', () => {
+  const reviewed = { ...ask('question'), turnsInPart: { summary: 1 }, recapReviewed: { summary: true } };
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: reviewed, missingRequiredPhrases: ['the difference between'] })), ['close', 'question']);
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: reviewed, missingRequiredPhrases: [] })), ['close']);
+  assert.deepEqual(allowedNextFor(ctx('summary', { state: reviewed })), ['close']);
+  assert.deepEqual(allowedNextFor(ctx('summary', { lastPart: true, budgetDue: true, state: { ...reviewed, postDueTurns: { summary: 2 } }, missingRequiredPhrases: ['the difference between'] })), ['close']);
+  const req = typedTurnRequestFor(ctx('summary', { state: reviewed, missingRequiredPhrases: ['the difference between'] }));
+  assert.deepEqual(req.allowedNext, ['close', 'question']);
+  assert.deepEqual(req.requiredPhrases, ['the difference between']);
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

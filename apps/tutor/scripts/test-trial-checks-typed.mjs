@@ -62,6 +62,19 @@ test('TT3 fails on a repeated pronunciation item; TT5 fails on a prose-class eve
   assert.ok(has(lines, 'FAIL  TT5'), lines.join('\n'));
 });
 
+test('TT15 (fix wave 9): the summary close needs a question turn before it and no close_phrases_in_say', () => {
+  const sum = (extra = []) => ['   60s typed_turn_effect: advance open-conversation→summary', '   60s typed_turn: verdict=none next=move ack=1 say=2 correction=no retries=0', '   60s brain_turn: Brain 2000ms · 0 tool call(s) · 3 sentence(s)', ...extra];
+  const ask = ['   70s typed_turn: verdict=none next=question ack=1 say=5 correction=no retries=0', '   70s brain_turn: Brain 2000ms · 0 tool call(s) · 6 sentence(s)'];
+  const close = ['   90s typed_turn: verdict=correct next=close ack=1 say=2 correction=no retries=0', '   90s brain_turn: Brain 2000ms · 0 tool call(s) · 3 sentence(s)'];
+  const good = runChecks(dump({ events: sum([...ask, ...close]) })).lines;
+  assert.ok(has(good, 'PASS  TT15'), good.join('\n'));
+  const noAsk = runChecks(dump({ events: sum(close) })).lines;
+  assert.ok(has(noAsk, 'FAIL  TT15'), noAsk.join('\n'));
+  const stuffed = runChecks(dump({ events: sum([...ask, '   90s typed_turn_close_phrases_in_say: "summary" [the difference between]', ...close]) })).lines;
+  assert.ok(has(stuffed, 'FAIL  TT15'), stuffed.join('\n'));
+  assert.ok(!has(runChecks(dump()).lines, 'FAIL  TT15') && !has(runChecks(dump()).lines, 'PASS  TT15'), 'no summary close ⇒ TT15 is an INFO line');
+});
+
 test('TT2: a correction card skipped as a duplicate of a card already on the page passes', () => {
   const d = dump({ cardFirst: true }).replace('typed_turn_effect: correction_card', 'typed_turn_effect: correction_card not placed\n   21s show_sentence_duplicate_skipped: page 3: "I work in sales."').replace(/\n.*"showSentence".*\n/, '\n');
   const { lines } = runChecks(d);
