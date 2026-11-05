@@ -55,6 +55,22 @@ test('source: session-usage route charges the pool per sitting and answers pool 
   assert.ok(src.includes('partner_pool_untrusted_body'), 'logs a skipped body-only charge');
 });
 
+test('source: session-usage takes studentId/sourcePartnerId from the verified token', () => {
+  const src = readFileSync(join(__dirname, '../src/app/api/tutor/session-usage/route.ts'), 'utf8');
+  assert.ok(/[sS]tudentId = auth\.payload\.student_id/.test(src), 'studentId assigned from auth.payload.student_id');
+  assert.ok(/PartnerId = auth\.payload\.partner_id/.test(src), 'partner assigned from auth.payload.partner_id');
+  assert.ok(src.includes('[session-usage] identity from token'), 'logs the override once');
+  assert.ok(/updateFields\.studentId = identityStudentId/.test(src), 'update uses the token-derived studentId');
+  assert.ok(/setOnInsertFields\.sourcePartnerId = identityPartnerId/.test(src), 'insert uses the token-derived partner');
+});
+
+test('source: a completed save fires the learner summary, never awaited', () => {
+  const src = readFileSync(join(__dirname, '../src/app/api/tutor/session-usage/route.ts'), 'utf8');
+  assert.ok(/if \(body\.status === ['"]completed['"][^\n]*\)\s*\{?\s*void runSummaryForSession\(/.test(src), 'void runSummaryForSession( guarded by body.status === completed');
+  assert.ok(src.indexOf('void runSummaryForSession(') > src.indexOf('TutorSession.findOneAndUpdate('), 'after the update');
+  assert.ok(src.indexOf('void runSummaryForSession(') < src.indexOf('return NextResponse.json({\n      success: true'), 'before the response');
+});
+
 test('source: embed basePayload carries attemptEngagedAt from sessionEngagedAtRef', () => {
   const src = readFileSync(join(__dirname, '../src/app/tutor-portal/embed/page.tsx'), 'utf8');
   const i = src.indexOf('const basePayload = {');

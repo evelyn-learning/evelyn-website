@@ -153,7 +153,9 @@ export function mongoSummaryStoreDeps(): SummaryStoreDeps {
 
 let testDeps: SummaryStoreDeps | null = null;
 export function __setLearnerSummaryDepsForTests(deps: SummaryStoreDeps | null): void { testDeps = deps; }
-function activeDeps(): SummaryStoreDeps { return testDeps ?? mongoSummaryStoreDeps(); }
+/** The deps in force: the test seam when set, else Mongo. */
+export function activeSummaryStoreDeps(): SummaryStoreDeps { return testDeps ?? mongoSummaryStoreDeps(); }
+const activeDeps = activeSummaryStoreDeps;
 
 export async function listLearnerSessions(partnerId: string, studentId: string, limit = 20): Promise<LearnerSessionRow[]> {
   await connectDB();

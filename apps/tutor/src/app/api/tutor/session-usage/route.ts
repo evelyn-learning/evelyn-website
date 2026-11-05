@@ -20,6 +20,10 @@ import { sendPoolAlert } from "@/lib/tutor/portal/partner-pool-alerts";
 import { PartnerModel } from "@/models/Partner";
 import { buildAttemptSpanWrite, durationBehindSpans, planAttemptSave, sessionActiveSeconds, type AttemptSavePlan } from "@/lib/tutor/recordings/active-seconds";
 import { clientTotalsMax, usageTotalsBehind } from "@/lib/tutor/ai/usage-totals";import { homeworkSolvedFromDebugEvents } from '@/lib/tutor/lesson-plan/homework-ledger';
+import { runSummaryForSession } from '@/lib/tutor/portal/learner-summary-store';
+
+// Logged once per process: the first save whose identity came from the token.
+let identityFromTokenLogged = false;
 
 
 /**
@@ -136,6 +140,13 @@ export async function POST(req: NextRequest) {
     // charge (the body's sourcePartnerId is a fallback). Captured from the
     // studentId auth below, or verified once more below when that didn't run.
     let tokenPartnerId: string | null = null;
+    // Identity written to the row (GDI learner home, task 4): when the request
+    // carries a verified embed token, studentId/sourcePartnerId come from the
+    // token, not the body — the learner home scopes every lookup on them.
+    let identityStudentId: string | undefined =
+      body.studentId && typeof body.studentId === "string" ? body.studentId.slice(0, 200) : undefined;
+    let identityPartnerId: string | undefined =
+      body.sourcePartnerId && typeof body.sourcePartnerId === "string" ? body.sourcePartnerId.slice(0, 200) : undefined;
     if (body.studentId) {
       const auth = await checkEmbedAuthAsync({
         token,
@@ -146,6 +157,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "unauthorized", reason: auth.reason }, { status: 401 });
       }
       tokenPartnerId = auth.payload?.partner_id ?? null;
+      if (auth.payload) {
+        if (typeof auth.payload.student_id === "string" && auth.payload.student_id) identityStudentId = auth.payload.student_id.slice(0, 200);
+        if (typeof auth.payload.partner_id === "string" && auth.payload.partner_id) identityPartnerId = auth.payload.partner_id.slice(0, 200);
+        if (!identityFromTokenLogged) {
+          identityFromTokenLogged = true;
+          console.log("[session-usage] identity from token", `partner=${identityPartnerId}`, sessionId);
+        }
+      }
     }
 
     if (!checkRateLimit(sessionId)) {
@@ -196,17 +215,16 @@ export async function POST(req: NextRequest) {
     if (body.source) setOnInsertFields.source = body.source;
     // Unauthenticated endpoint → clamp these free-text identity strings (they
     // render in the admin UI and feed distinct() filter chips).
-    if (body.sourcePartnerId && typeof body.sourcePartnerId === 'string')
-      setOnInsertFields.sourcePartnerId = body.sourcePartnerId.slice(0, 200);
+    if (identityPartnerId) setOnInsertFields.sourcePartnerId = identityPartnerId;
     if (body.sourceHost && typeof body.sourceHost === 'string')
       setOnInsertFields.sourceHost = body.sourceHost.slice(0, 200);
 
     // Fields that can be updated on every upsert
     if (body.studentName !== undefined)
       updateFields.studentName = body.studentName;
-    // A2: stable partner student id (unauthenticated endpoint → clamp).
-    if (body.studentId && typeof body.studentId === 'string')
-      updateFields.studentId = body.studentId.slice(0, 200);
+    // A2: stable partner student id (unauthenticated endpoint → clamp; the
+    // token's student_id when one was verified above).
+    if (identityStudentId) updateFields.studentId = identityStudentId;
     if (body.voiceEngine !== undefined)
       updateFields.voiceEngine = body.voiceEngine;
     if (body.endedAt !== undefined) updateFields.endedAt = body.endedAt;
@@ -457,6 +475,12 @@ export async function POST(req: NextRequest) {
       // Answer from the document as written, not from the pre-write read:
       // the figures then include whatever another mount saved in between.
       attemptPlan = planAttemptSave({ existing: session, attemptStartMs: attemptStart.getTime(), attemptDurationSec: attemptDuration });
+    }
+
+    // Learner home (task 4): a completed save starts the learner summary.
+    // Fire-and-forget — the claim makes it run once; it never blocks the save.
+    if (body.status === "completed" && session) {
+      void runSummaryForSession(sessionId).catch((e) => console.warn("[learner-summary] completed hook failed", e));
     }
 
     // 2026-10-19 (GAC live test, portal-413c1189): the row read "abandoned"

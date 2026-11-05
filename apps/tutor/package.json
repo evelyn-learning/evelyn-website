@@ -61,6 +61,7 @@
     "test:replay-token": "npx tsx scripts/test-replay-token.ts",
     "test:learner-summary": "npx tsx scripts/test-learner-summary.ts",
     "test:learner-summary-store": "npx tsx scripts/test-learner-summary-store.ts",
+    "test:learner-summary-route": "npx tsx scripts/test-learner-summary-route.ts",
     "test:pdf-tutor-session": "npx tsx scripts/test-pdf-tutor-session.ts",
     "test:partner-token-secrets": "npx tsx scripts/test-partner-token-secrets.ts",
     "test:material-classify": "npx tsx scripts/test-material-classify.ts",
