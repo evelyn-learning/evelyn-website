@@ -404,6 +404,8 @@ export interface ConsumedPronunciationNote {
   measured: boolean;
   notAttempted: boolean;
   noSpeech: boolean;
+  /** W11-A: the consumed measured note scored low (the forced coached repeat). */
+  lowScore: boolean;
   /** Review F2: the typed-turn state as the consuming call saw it (the cancelled call may have reduced it already —
    *  a stage-3 cancel after the stream closed) and the part it was in; the re-plant restores the state when the part
    *  is unchanged, so the re-dispatch sees exactly what the cancelled call saw (W9-B3's forced repeat included). */

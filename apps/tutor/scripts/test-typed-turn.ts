@@ -520,6 +520,12 @@ test('W9-B3 (fix wave 9): the prompt names repeat_due and forbids "I cannot hear
   assert.ok(/never say (?:that )?you cannot hear/i.test(TYPED_TURN_INSTRUCTIONS), 'the forbidden line');
 });
 
+test('W11 (wave 11): the prompt documents repeat_due="low_score" and language_request', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('repeat_due="low_score"'), 'low_score documented');
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('language_request='), 'language_request documented');
+  assert.ok(/language_request=[^\n]{0,500}previous turn/i.test(TYPED_TURN_INSTRUCTIONS), 'restate the previous turn in that language');
+});
+
 test('W9-C (fix wave 9, run 5 997 s): check_question_unasked retry text — ask it as a question now, the close comes next turn', () => {
   const ALREADY = { ack: 'Right.', verdict: 'correct' as const, verdict_say: 'That is it.', board: '', correction: null, support_ja: '' };
   const m = typedTurnRetryMessage({ reason: 'check_question_unasked', refused: { kind: 'close', say: 'Before we finish, the difference between A and B is time. Bye!', item: '', level: '' }, allowedNext: ['close', 'question'], alreadySaid: ALREADY, budget: 7, missingPhrases: ['the difference between'] });

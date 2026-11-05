@@ -508,6 +508,60 @@ test('W10-3b review (F1): a nudge retry neither burns the retry budget nor repla
   assert.equal(s3.openAsk.kind, 'question');
 });
 
+test('W11-A (wave 11, run 7 153 s "developed" 16/100): a LOW measured score forces one repeat of the open item; turn_state says repeat_due="low_score"', () => {
+  const ms = { menuState: { pronunciation: { asked: 1, picked: 'Individual words' } } };
+  const words = ['responsibilities', 'developed'];
+  const st = { ...ms, ...ask('item'), practisedItems: { pronunciation: ['responsibilities', 'developed'] } };
+  // items used up (the run-7 shape): the exit row would be [retry, offer] — the low score makes it retry alone
+  const low = ctx('pronunciation', { items: words, state: st, pronunciationLowScore: true, studentReplied: true });
+  assert.deepEqual(allowedNextFor(low), ['retry']);
+  assert.ok(turnStateLine(low).includes('repeat_due="low_score"'), turnStateLine(low));
+  // items left: the same
+  const mid = ctx('pronunciation', { items: words, state: { ...ms, ...ask('item'), practisedItems: { pronunciation: ['responsibilities'] } }, pronunciationLowScore: true, studentReplied: true });
+  assert.deepEqual(allowedNextFor(mid), ['retry']);
+  // once per item: after that repeat (retriesInARow 1) a second low score does not force again
+  assert.ok(!turnStateLine(ctx('pronunciation', { items: words, state: { ...st, ...ask('retry'), retriesInARow: 1 }, pronunciationLowScore: true })).includes('repeat_due'));
+  assert.ok(allowedNextFor(ctx('pronunciation', { items: words, state: { ...st, ...ask('retry'), retriesInARow: 1 }, pronunciationLowScore: true })).length > 1);
+  // a good score: the ordinary row, no repeat_due
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: words, state: st })), ['retry', 'offer']);
+  assert.ok(!turnStateLine(ctx('pronunciation', { items: words, state: st })).includes('repeat_due'));
+  // the unmeasured flag still says yes
+  assert.ok(turnStateLine(ctx('pronunciation', { items: words, state: st, pronunciationRepeatDue: true })).includes('repeat_due="yes"'));
+});
+
+test('W11-B (wave 11, run 7 187 s "Can you please talk in English?"): a language request re-asks the open ask in that language — never the exit row — and counts nothing', () => {
+  const ms = { menuState: { pronunciation: { asked: 1, picked: 'Individual words' } } };
+  const words = ['responsibilities', 'developed'];
+  // the run-7 state: items used up, offer made twice ⇒ the exit row is [move] alone
+  const st = { ...ms, ...ask('offer', 'One more word, or the summary?'), practisedItems: { pronunciation: words }, offerState: { pronunciation: { made: true, accepted: false, served: false, count: 2 } } };
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: words, state: st, studentReplied: true })), ['move']);
+  const c = ctx('pronunciation', { items: words, state: st, studentReplied: true, languageRequest: 'English' });
+  assert.deepEqual(allowedNextFor(c), ['offer']);
+  assert.ok(turnStateLine(c).includes('language_request="English"'), turnStateLine(c));
+  // other open asks re-ask the same kind; an open item is a retry (re-arm); none ⇒ question
+  assert.deepEqual(allowedNextFor(ctx('open-conversation', { state: ask('question'), languageRequest: 'English' })), ['question']);
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: words, state: { ...ms, ...ask('item') }, languageRequest: 'English' })), ['retry']);
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: words, state: { ...ms, ...ask('retry'), retriesInARow: 2 }, languageRequest: 'English' })), ['retry']);
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { state: { menuState: { pronunciation: { asked: 1, picked: null } } }, languageRequest: 'English' })), ['menu']);
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: words, state: ms, languageRequest: 'English' })), ['question']); // picked, nothing open ⇒ a question
+  assert.deepEqual(allowedNextFor(ctx('past-simple', { languageRequest: 'English' })), ['question']);
+  // the reducer: the re-asked offer is not a third offer, the open ask stays, retries are not counted
+  const turn = { ack: 'Of course.', verdict: 'none' as const, verdict_say: '', correction: null, support_ja: '', next: { kind: 'offer' as const, say: 'Your score was 16 out of 100. One more word, or the summary?', item: '', level: '' } };
+  const s0: TypedTurnState = { ...createTypedTurnState(), ...st };
+  const s1 = applyTypedTurn(s0, turn, fctx('pronunciation', { items: words, state: s0, languageRequest: 'English' }), null);
+  assert.equal(s1.offerState.pronunciation.count, 2);
+  assert.deepEqual(s1.openAsk, s0.openAsk);
+  const m0: TypedTurnState = { ...createTypedTurnState(), ...ms, openAsk: { kind: 'menu', text: 'x' } };
+  const m1 = applyTypedTurn(m0, { ...turn, next: { ...turn.next, kind: 'menu' } }, fctx('pronunciation', { items: words, state: m0, languageRequest: 'English' }), null);
+  assert.equal(m1.menuState.pronunciation.asked, 1);
+  const r0: TypedTurnState = { ...createTypedTurnState(), ...ms, openAsk: { kind: 'retry', text: 'x' }, retriesInARow: 1 };
+  const r1 = applyTypedTurn(r0, { ...turn, next: { ...turn.next, kind: 'retry' } }, fctx('pronunciation', { items: words, state: r0, languageRequest: 'English' }), null);
+  assert.equal(r1.retriesInARow, 1);
+  // the request rides the typed request
+  assert.equal(typedTurnRequestFor(c).languageRequest, 'English');
+  assert.equal(typedTurnRequestFor(ctx('pronunciation', { items: words, state: st })).languageRequest, undefined);
+});
+
 test('H1: a resolved menu pick persists, so the menu is never re-asked after an item', () => {
   const sentences = ((plan.segments.find((s) => s.id === 'pronunciation')?.metadata as { pronunciation: { sentences: string[] } }).pronunciation.sentences);
   assert.equal(sentences.length, 2);

@@ -143,6 +143,14 @@ export interface AllowedNextContext {
   /** W9-B3 (fix wave 9, run 5 859–927 s): this turn carries a pronunciation note that measured nothing (cut / unavailable /
    *  unscored) — while an item is the open ask and it has not been retried yet, the only allowed `next` is `retry`. */
   pronunciationRepeatDue?: boolean;
+  /** W11-A (wave 11, run 7 153 s "developed" 16/100 → next word): this turn's MEASURED note is low (a word or the overall
+   *  below PRONUNCIATION_LOW_SCORE) — while the item is the open ask and not yet repeated, the only allowed `next` is
+   *  `retry` (one coached repeat), as W9-B3 does for an unmeasured clip. */
+  pronunciationLowScore?: boolean;
+  /** W11-B (wave 11, run 7 187 s "Can you please talk in English?" → the exit row [move] forced the summary): the student
+   *  asked to be spoken to in this session language (its English name, e.g. "English") — this turn re-asks the open ask
+   *  in that language; the exit / budget rows wait one turn. */
+  languageRequest?: string | null;
 }
 
 /** A (fix wave 6): offers made in a part (a made offer without a count is the first). */
@@ -264,6 +272,11 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   // W10-3b (fix wave 10, run 6 987 s): a nudge on an open pronunciation item re-asks the SAME item (`retry` re-arms its
   // clip) — the `item` row let the nudge start another unpractised sentence.
   if (ctx.nudge) return [ask === 'none' ? 'question' : ask === 'item' ? 'retry' : ask, 'wait'];
+  // W11-B: a language request re-asks the open ask in that language (an item is re-armed by `retry`); nothing else.
+  if (ctx.languageRequest) {
+    const menuOpen = (kind === 'menu' || kind === 'pronunciation') && !(state.menuState[segId]?.picked || ctx.menuPick);
+    return [ask === 'none' ? (menuOpen ? 'menu' : 'question') : ask === 'item' ? 'retry' : ask];
+  }
   if (ctx.studentMovedOn) return [moveOrClose];
 
   // R3 (fix round 1): committed answers (earlier replies with verdict ≠ none) decide; with two committed, the reply now
@@ -281,7 +294,7 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
     if (!ms.picked && !ctx.menuPick) return ms.asked >= 2 ? ['move'] : ['menu'];
     if (kind === 'pronunciation') {
       // W9-B3: the clip of the open item measured nothing — one engine-enforced repeat before anything else.
-      if (ctx.pronunciationRepeatDue && ask === 'item' && state.retriesInARow === 0) return ['retry'];
+      if ((ctx.pronunciationRepeatDue || ctx.pronunciationLowScore) && ask === 'item' && state.retriesInARow === 0) return ['retry'];
       // V5 (fix wave 2): items used up → the one-more-or-move-on offer first (once), then the move
       // (the voice run moved straight to the summary after the last authored sentence).
       // R2 (fix round 1): the LAST item's result is in (open ask item, not yet repeated) — the weakest-word repeat
@@ -385,7 +398,12 @@ export function turnStateLine(ctx: AllowedNextContext): string {
       ? [['offer_repeat', 'allowed'] as [string, string]] : []),
     // W9-B3: the open item's recording measured nothing — this turn is its one more repeat.
     ...(ctx.pronunciationRepeatDue && typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'pronunciation' && allowedNextFor(ctx).length === 1 && allowedNextFor(ctx)[0] === 'retry'
-      ? [['repeat_due', 'yes'] as [string, string]] : []),
+      ? [['repeat_due', 'yes'] as [string, string]]
+      // W11-A: a low measured score — this turn is its one coached repeat.
+      : ctx.pronunciationLowScore && typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'pronunciation' && allowedNextFor(ctx).length === 1 && allowedNextFor(ctx)[0] === 'retry'
+        ? [['repeat_due', 'low_score'] as [string, string]] : []),
+    // W11-B: the student asked for this language — restate the previous turn in it, then re-ask.
+    ...(ctx.languageRequest ? [['language_request', ctx.languageRequest] as [string, string]] : []),
   ];
   // V3: the recap's step, and on its first turn the plan's required phrases (the review turn must say them).
   // X2 (fix wave 3, r61b 745 s): with the client's missing list, the phrases still unsaid ride EVERY recap turn
@@ -438,6 +456,8 @@ export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
     ...(requiredPhrases.length ? { requiredPhrases } : {}),
     // A (fix wave 6): the server refuses a turn with no English sentence to an English-speaking student (one retry).
     ...(ctx.studentEnglish ? { studentEnglish: true } : {}),
+    // W11-B: the language the student asked for (its English name), for the server's retry text.
+    ...(ctx.languageRequest ? { languageRequest: ctx.languageRequest } : {}),
   };
 }
 
@@ -465,6 +485,8 @@ export interface FieldEffectContext {
   budgetDue: boolean;
   /** R6 (fix round 2): the same nudge flag the turn's AllowedNextContext carried (a nudge re-ask is no recap review). */
   nudge: boolean;
+  /** W11-B: the same languageRequest the turn's AllowedNextContext carried — a re-ask in that language counts nothing. */
+  languageRequest?: string | null;
 }
 
 /** Y1 (fix wave 4, r62 829–833 s): the typed turn's spoken text in speaking order — ack, verdict_say, correction
@@ -674,8 +696,10 @@ export function applyTypedTurn(
     }
   }
 
+  // W11-B: a language-request re-ask is the same ask again — no second menu ask, no extra offer, no retry counted.
+  const reAsk = !!ctx.languageRequest;
   const menuState = { ...state.menuState };
-  if (next.kind === 'menu') {
+  if (next.kind === 'menu' && !reAsk) {
     const m = menuState[seg] ?? { asked: 0, picked: null };
     menuState[seg] = { ...m, asked: m.asked + 1 };
   }
@@ -684,14 +708,14 @@ export function applyTypedTurn(
 
   const offerState = { ...state.offerState };
   const o = offerState[seg] ?? { made: false, accepted: false, served: false };
-  if (next.kind === 'offer') offerState[seg] = { ...o, made: true, count: offerCount(o) + 1 };
+  if (next.kind === 'offer' && !reAsk) offerState[seg] = { ...o, made: true, count: offerCount(o) + 1 };
   else if (next.kind === 'question' && servesOffer(state, seg)) offerState[seg] = { ...o, served: true };
 
   let openAsk = state.openAsk;
   if (closing) openAsk = { kind: 'none', text: '' };
   // W10-3b review (F1): a nudge re-asks the open ask; it is no new ask (the item stays open, so a cut clip after the nudge
   // still gets W9-B3's forced repeat). A nudge on no open ask records what it asked.
-  else if (next.kind !== 'wait' && !(ctx.nudge && state.openAsk.kind !== 'none')) openAsk = openAskFor(next, ctx, moved ? moved.to : null);
+  else if (next.kind !== 'wait' && !((ctx.nudge || reAsk) && state.openAsk.kind !== 'none')) openAsk = openAskFor(next, ctx, moved ? moved.to : null);
 
   return {
     ...state,
@@ -700,7 +724,7 @@ export function applyTypedTurn(
       : turn.verdict === 'correct' ? null : state.correctionOpen,
     practisedItems, offerState, menuState, answeredCards, lastItemAnnounced, turnsInPart, postDueTurns, correctionsInPart, answersInPart, recapReviewed,
     // F1: a nudge retry is not one of the learner's retries (the budget counts attempts, not patience).
-    retriesInARow: next.kind === 'retry' ? (ctx.nudge ? state.retriesInARow : state.retriesInARow + 1) : 0,
+    retriesInARow: next.kind === 'retry' ? (ctx.nudge || reAsk ? state.retriesInARow : state.retriesInARow + 1) : 0,
     pendingVerdict: null,
   };
 }

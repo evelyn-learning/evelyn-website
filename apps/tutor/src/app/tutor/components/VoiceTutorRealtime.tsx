@@ -229,6 +229,8 @@ import { splitRunTogetherEnglish, replaceLastStudentEntry, rememberStudentEntryI
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
+import { languageRequestIn, languageRequestNoteFirst, languageRequestNote, languageNameOf } from '@/lib/tutor/voice/language-request';
+import { pronunciationLowScore, PRONUNCIATION_LOW_SCORE } from '@/lib/tutor/pronunciation/assessor';
 import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
@@ -1538,6 +1540,8 @@ export function VoiceTutorRealtime({
   // Consumed together where the other per-turn notes are.
   const pronunciationResultNoteRef = useRef<string | null>(null);
   const pronunciationMeasuredRef = useRef(false);
+  /** W11-A (wave 11): the planted measured note is LOW (pronunciationLowScore) — the typed rules force one coached repeat. */
+  const pronunciationLowScoreRef = useRef(false);
   // The assessment in flight; a brain turn waits for it (bounded) so the
   // result rides the turn that answers the learner's repeat.
   const pronunciationPendingRef = useRef<Promise<void> | null>(null);
@@ -1567,8 +1571,9 @@ export function VoiceTutorRealtime({
   const pronunciationRawNoteRef = useRef<{ note: string; referenceText: string } | null>(null);
   /** W10-3c (fix wave 10, run 6 1049 s): the note the last brain turn consumed — re-planted when perception re-dispatches that turn. */
   const pronunciationNoteConsumedRef = useRef<ConsumedPronunciationNote | null>(null);
-  const plantPronunciationNote = (note: string, measured: boolean) => {
+  const plantPronunciationNote = (note: string, measured: boolean, lowScore = false) => {
     pronunciationResultNoteRef.current = pronunciationNoteForBrain(note);
+    pronunciationLowScoreRef.current = measured && lowScore;
     pronunciationRawNoteRef.current = { note, referenceText: lastPronunciationClipRef.current?.text ?? lastPronunciationTargetRef.current?.referenceText ?? '' };
     pronunciationMeasuredRef.current = measured;
     pronunciationNotAttemptedRef.current = false;
@@ -1617,7 +1622,7 @@ export function VoiceTutorRealtime({
           signal: ctrl.signal,
         });
         if (!res.ok) { plantPronunciationUnavailable(`http_${res.status}`); return; }
-        const data = (await res.json()) as { status?: string; reason?: string; note?: unknown; measured?: unknown; result?: { words?: Array<{ word?: unknown; errorType?: unknown }> } | null };
+        const data = (await res.json()) as { status?: string; reason?: string; note?: unknown; measured?: unknown; result?: { overall?: unknown; words?: Array<{ word?: unknown; score?: unknown; errorType?: unknown }> } | null };
         // Task 18 §C: a not-attempted answer says what the vendor heard (a
         // missed clip — nothing recognised — reads apart from a wrong one).
         if (data.status === 'ok' && typeof data.note === 'string' && data.note.trim()) {
@@ -1625,7 +1630,7 @@ export function VoiceTutorRealtime({
           // not-attempted note): plant it, but the claim guard stays shut.
           const measured = data.measured === true;
           if (!measured) onDebugEvent?.('pronunciation_unavailable', `not_attempted ${notAttemptedDetail(data.result)}`);
-          plantPronunciationNote(data.note, measured);
+          plantPronunciationNote(data.note, measured, measured && pronunciationLowScore(data.result, PRONUNCIATION_LOW_SCORE));
           if (!measured) pronunciationNotAttemptedRef.current = true;
         } else {
           plantPronunciationUnavailable(typeof data.reason === 'string' ? data.reason : 'bad_response');
@@ -5417,6 +5422,8 @@ export function VoiceTutorRealtime({
   // Voice-only mode (voice-only.ts): set once the student says they cannot
   // see the screen; never cleared for the rest of the session.
   const voiceOnlyRef = useRef(false);
+  /** W11-B (wave 11): the language the student asked to be spoken to in (code), sticky for the session. */
+  const explanationLanguageRef = useRef<string | null>(null);
   // English-reply check (english-reply.ts): did the last tutor turn ask the
   // student to produce English? Read when the next student turn arrives.
   const askedForEnglishRef = useRef(false);
@@ -13057,6 +13064,8 @@ export function VoiceTutorRealtime({
     let pronunciationMeasuredThisTurn = false;
     // Task 23 §G2: the note this turn carried — re-delivered on any retry.
     let pronunciationNoteThisTurn: string | null = null;
+    // W11-A: the note this turn carried scored low — the typed rules force one coached repeat.
+    let pronunciationLowScoreThisTurn = false;
     const turnStartSegmentId = currentSegmentIdRef.current;
     // Task 29 §K2: a fixed-script continuation turn never re-speaks a sentence of the turn it continues.
     const continuedTurnText = isFixedScriptContinueDirective(transcript) ? (recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '') : '';
@@ -13945,6 +13954,7 @@ export function VoiceTutorRealtime({
           measured: pronunciationMeasuredRef.current,
           notAttempted: pronunciationNotAttemptedRef.current,
           noSpeech: pronunciationNoSpeechNoteRef.current,
+          lowScore: pronunciationLowScoreRef.current,
           typedState: typedTurnStateRef.current,
           segId: currentSegmentIdRef.current,
         };
@@ -13970,6 +13980,8 @@ export function VoiceTutorRealtime({
         pronunciationRawNoteRef.current = null;
         runTranscript = `${pronunciationResultNoteRef.current}\n\n${runTranscript}`;
         pronunciationMeasuredThisTurn = pronunciationMeasuredRef.current;
+        pronunciationLowScoreThisTurn = pronunciationLowScoreRef.current;
+        pronunciationLowScoreRef.current = false;
         pronunciationNoteThisTurn = pronunciationResultNoteRef.current;
         pronunciationResultNoteRef.current = null;
         pronunciationMeasuredRef.current = false;
@@ -14283,6 +14295,17 @@ export function VoiceTutorRealtime({
           if (menuPick && !opts?.prefetchOnly && currentSegmentIdRef.current) menuPickedSegsRef.current.add(currentSegmentIdRef.current);
           if (!opts?.prefetchOnly) onDebugEvent?.('menu_pick_resolved', `${menuPick.index} "${menuPick.text.slice(0, 40)}" ← "${transcript.slice(0, 40)}"`);
         }
+      }
+      // W11-B (wave 11, run 7 187 s): "Can you please talk in English?" — a request to be spoken to in a session
+      // language is a "say that again in <language>" request: this turn restates the previous tutor turn in it and
+      // re-asks; the preference sticks (language-request.ts). Typed turns read it as languageRequest (no exit row).
+      const languageRequestThisTurn = !opts?.prefetchOnly && !/^\s*\[/.test(transcript) ? languageRequestIn(transcript, tutorLanguages ?? []) : null;
+      if (languageRequestThisTurn) {
+        explanationLanguageRef.current = languageRequestThisTurn;
+        runTranscript = `${languageRequestNoteFirst(languageRequestThisTurn, recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '')}\n\n${runTranscript}`;
+        onDebugEvent?.('language_request', `${languageRequestThisTurn} ← "${transcript.slice(0, 60)}"`);
+      } else if (explanationLanguageRef.current && !opts?.prefetchOnly) {
+        runTranscript = `${languageRequestNote(explanationLanguageRef.current)}\n\n${runTranscript}`;
       }
       // Voice-only (voice-only.ts): sticky from the turn the student says they
       // cannot see the screen; re-stated with every later turn.
@@ -15240,6 +15263,8 @@ export function VoiceTutorRealtime({
         let typedBudgetDueThisTurn = false;
         // R6 (fix round 2): one nudge flag for both contexts (a nudge turn never marks the summary reviewed).
         const typedNudgeThisTurn = !!opts?.silent && isIdleNudgeDirective(transcript);
+        // W11-B: this turn's language request (English name), computed with the language-request note above.
+        const typedLanguageRequestThisTurn = languageRequestThisTurn ? languageNameOf(languageRequestThisTurn) : null;
         const buildFieldEffectContext = (): FieldEffectContext => ({
           plan: lessonPlanRef.current!,
           segId: typedFromSeg,
@@ -15252,6 +15277,7 @@ export function VoiceTutorRealtime({
           // W1: the budgetDue this turn's AllowedNextContext carried (applyTypedTurn counts a post-due turn).
           budgetDue: typedBudgetDueThisTurn,
           nudge: typedNudgeThisTurn,
+          languageRequest: typedLanguageRequestThisTurn,
         });
         const buildAllowedNextContext = (): AllowedNextContext => {
           const tPlan = lessonPlanRef.current!;
@@ -15312,6 +15338,10 @@ export function VoiceTutorRealtime({
             // W9-B3 (fix wave 9, run 5 859–927 s): this turn's pronunciation note measured nothing — the engine allows only
             // the retry of the open item (once), so the sentence is recorded again instead of waved through.
             pronunciationRepeatDue: !!pronunciationNoteThisTurn && !pronunciationMeasuredThisTurn,
+            // W11-A (wave 11, run 7 153 s): a low measured score — one coached repeat before anything else.
+            pronunciationLowScore: pronunciationLowScoreThisTurn,
+            // W11-B (wave 11, run 7 187 s): the student asked for a language — re-ask the open ask in it, no exit row.
+            languageRequest: typedLanguageRequestThisTurn,
             lessonElapsedMs: typedLessonElapsedMs,
             // V6: next_card's key ideas are filtered to the held level, as the board shows them.
             workingLevel: workingLevelRef.current?.level ?? null,
@@ -26156,6 +26186,7 @@ export function VoiceTutorRealtime({
       pronunciationMeasuredRef.current = replant.measured;
       pronunciationNotAttemptedRef.current = replant.notAttempted;
       pronunciationNoSpeechNoteRef.current = replant.noSpeech;
+      pronunciationLowScoreRef.current = replant.lowScore;
       // F2: the cancelled call may have reduced the typed state (stage-3 cancel after its stream closed) — the re-dispatch
       // starts from what that call saw; a part change since (an advance) keeps the current state.
       if (replant.typedState && replant.segId === currentSegmentIdRef.current) typedTurnStateRef.current = structuredClone(replant.typedState);

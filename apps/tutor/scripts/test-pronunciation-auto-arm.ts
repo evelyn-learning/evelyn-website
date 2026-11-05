@@ -5,6 +5,7 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pronunciationLowScore, PRONUNCIATION_LOW_SCORE } from '../src/lib/tutor/pronunciation/assessor';
 import { detectPronunciationTarget, autoArmTargetForTurn, pronunciationTargetsOf, syllablePatternFor, shouldRearmPronunciation, notAttemptedDetail, measuredPronunciationRedelivery, isStudentQuestion, voiceVerdictHoldStandsDown, pronunciationNoteForRetry, PRONUNCIATION_RETRY_INSTRUCTION, pronunciationNoteForTurn, PRONUNCIATION_UNSCORED_NOTE, pronunciationNoteReplant, type ConsumedPronunciationNote, colonTarget, handwriteShownSentence, looksLikeModelSentence } from '../src/lib/tutor/pronunciation/auto-arm';
 import { duplicateSentenceAction, currentBoardPage, sentenceCardIdOnCurrentPage, sentenceOnBoardPage } from '../src/lib/tutor/voice/sentence-board';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
@@ -278,7 +279,7 @@ test('23G2: any retry of a measured turn re-delivers the note with the score ins
 test('W10-3c (fix wave 10, run 6 1049–1055 s): an unmeasured note consumed by a turn that perception then re-dispatches is re-planted', () => {
   const consumed: ConsumedPronunciationNote = {
     transcript: 'I attended the exhibition', note: '[note] cut', raw: { note: 'cut', referenceText: 'I attended the exhibition in Beijing last year.' },
-    measured: false, notAttempted: false, noSpeech: false, typedState: null, segId: 'pronunciation',
+    measured: false, notAttempted: false, noSpeech: false, lowScore: false, typedState: null, segId: 'pronunciation',
   };
   // the MERGE / FRESH / RESTORE re-dispatch of that turn gets the note back (pronunciationRepeatDue holds on the new call)
   assert.deepEqual(pronunciationNoteReplant({ consumed, cancelledTranscript: 'I attended the exhibition', pendingNote: null }), consumed);
@@ -290,7 +291,7 @@ test('W10-3c (fix wave 10, run 6 1049–1055 s): an unmeasured note consumed by 
   assert.equal(pronunciationNoteReplant({ consumed: null, cancelledTranscript: 'I attended the exhibition', pendingNote: null }), null);
   const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   // the consumption site records what it consumed (before the refs are cleared)
-  assert.ok(/pronunciationNoteConsumedRef\.current = \{\s*transcript,\s*note: pronunciationResultNoteRef\.current,\s*raw: pronunciationRawNoteRef\.current,\s*measured: pronunciationMeasuredRef\.current,\s*notAttempted: pronunciationNotAttemptedRef\.current,\s*noSpeech: pronunciationNoSpeechNoteRef\.current,\s*typedState: typedTurnStateRef\.current,\s*segId: currentSegmentIdRef\.current,\s*\};[\s\S]{0,2000}pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;/.test(v), 'consumption recorded');
+  assert.ok(/pronunciationNoteConsumedRef\.current = \{\s*transcript,\s*note: pronunciationResultNoteRef\.current,\s*raw: pronunciationRawNoteRef\.current,\s*measured: pronunciationMeasuredRef\.current,\s*notAttempted: pronunciationNotAttemptedRef\.current,\s*noSpeech: pronunciationNoSpeechNoteRef\.current,\s*lowScore: pronunciationLowScoreRef\.current,\s*typedState: typedTurnStateRef\.current,\s*segId: currentSegmentIdRef\.current,\s*\};[\s\S]{0,2000}pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;/.test(v), 'consumption recorded');
   // every re-dispatch inside applyPerceptionVerdict re-plants first
   const at = v.indexOf('const applyPerceptionVerdict = useCallback((');
   const body = v.slice(at, v.indexOf('}, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer', at));
@@ -299,11 +300,28 @@ test('W10-3c (fix wave 10, run 6 1049–1055 s): an unmeasured note consumed by 
   // review F3: a note-less student turn clears the record (an older record must not match a later turn with the same words)
   assert.ok(/pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;[\s\S]{0,400}\} else if \(!opts\?\.prefetchOnly && !holdNoSpeechNote\) \{[\s\S]{0,400}pronunciationNoteConsumedRef\.current = null;/.test(v), 'note-less turn clears the consumed record');
   // review F2: the record carries the typed state as the cancelled call saw it; the re-plant restores it when the part is unchanged
-  assert.ok(/noSpeech: pronunciationNoSpeechNoteRef\.current,\s*typedState: typedTurnStateRef\.current,\s*segId: currentSegmentIdRef\.current,\s*\};/.test(v), 'typed state snapshot in the record');
+  assert.ok(/noSpeech: pronunciationNoSpeechNoteRef\.current,\s*lowScore: pronunciationLowScoreRef\.current,\s*typedState: typedTurnStateRef\.current,\s*segId: currentSegmentIdRef\.current,\s*\};/.test(v), 'typed state snapshot in the record');
   assert.ok(body.includes("if (replant.typedState && replant.segId === currentSegmentIdRef.current) typedTurnStateRef.current = structuredClone(replant.typedState);"), 'typed state restored on re-plant');
   const dispatches = body.match(/void handleStudentTranscriptForBrain\(/g) ?? [];
   const guarded = body.match(/replantConsumedPronunciationNote\(\);\s*void handleStudentTranscriptForBrain\(/g) ?? [];
   assert.ok(dispatches.length >= 3 && guarded.length === dispatches.length, `${guarded.length}/${dispatches.length} re-dispatches re-plant`);
+});
+
+test('W11-A (wave 11, run 7): pronunciationLowScore — a word or the overall below the cutoff (60) ⇒ the engine forces one repeat', () => {
+  assert.equal(PRONUNCIATION_LOW_SCORE, 60);
+  const w = (score: number, errorType = 'none') => ({ word: 'x', score, errorType });
+  assert.equal(pronunciationLowScore({ overall: 16, words: [w(41)] }, PRONUNCIATION_LOW_SCORE), true);       // developed
+  assert.equal(pronunciationLowScore({ overall: 79, words: [w(65)] }, PRONUNCIATION_LOW_SCORE), false);      // communicate: /k/ 38 but the word is 65
+  assert.equal(pronunciationLowScore({ overall: 81, words: [w(67)] }, PRONUNCIATION_LOW_SCORE), false);      // customers
+  assert.equal(pronunciationLowScore({ overall: 72, words: [w(90), w(55)] }, PRONUNCIATION_LOW_SCORE), true); // one word under 60 in a sentence
+  assert.equal(pronunciationLowScore({ overall: 72, words: [w(90), w(10, 'insertion')] }, PRONUNCIATION_LOW_SCORE), false); // insertions never
+  assert.equal(pronunciationLowScore({ overall: 60, words: [w(60)] }, PRONUNCIATION_LOW_SCORE), false);      // the cutoff itself is not low
+  assert.equal(pronunciationLowScore(null, PRONUNCIATION_LOW_SCORE), false);
+  const v = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(v.includes("plantPronunciationNote(data.note, measured, measured && pronunciationLowScore(data.result, PRONUNCIATION_LOW_SCORE));"), 'planted with the flag');
+  assert.ok(v.includes('pronunciationLowScoreThisTurn = pronunciationLowScoreRef.current;'), 'consumed per turn');
+  assert.ok(v.includes('pronunciationLowScore: pronunciationLowScoreThisTurn,'), 'passed to the typed rules');
+  assert.ok(v.includes('pronunciationLowScoreRef.current = replant.lowScore;'), 're-planted');
 });
 
 test('Task 24 §A4: 1092 s — not attempted, the transcript is the target ⇒ the unscored note', () => {

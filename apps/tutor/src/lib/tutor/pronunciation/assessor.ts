@@ -114,6 +114,22 @@ const round = (n: number) => Math.round(n);
 export const PRONUNCIATION_SCORE_EXCELLENT = 90;
 export const PRONUNCIATION_SCORE_GOOD = 75;
 /** The closing order of every MEASURED note: say the score, then the weak items. */
+/** W11-A (wave 11, GDI run 7: "developed" 16/100, weakest sound /ɛ/ 0 → the tutor named the sound and moved to the offer;
+ *  no repeat in five items): the cutoff below which a measured result forces ONE coached repeat of the item — a word score
+ *  (insertions excluded) or the overall below it. */
+export const PRONUNCIATION_LOW_SCORE = 60;
+
+/** W11-A: true when the measured result has the overall, or any reference word, below `cutoff`. Tolerant of the route's
+ *  loosely typed `result`. Pure. */
+export function pronunciationLowScore(
+  result: { overall?: unknown; words?: Array<{ score?: unknown; errorType?: unknown }> } | null | undefined, cutoff: number,
+): boolean {
+  if (!result) return false;
+  if (typeof result.overall === 'number' && result.overall < cutoff) return true;
+  const words = Array.isArray(result.words) ? result.words : [];
+  return words.some((w) => w && w.errorType !== 'insertion' && typeof w.score === 'number' && w.score < cutoff);
+}
+
 export function pronunciationScoreOrder(overall: number): string {
   return `Tell the student the overall score as "${round(overall)} out of 100" in one short clause (in the explanation language), then the weak items; a score of ${PRONUNCIATION_SCORE_EXCELLENT} or more is "excellent", ${PRONUNCIATION_SCORE_GOOD}–${PRONUNCIATION_SCORE_EXCELLENT - 1} "good", below ${PRONUNCIATION_SCORE_GOOD} "needs work" — say which.`;
 }
