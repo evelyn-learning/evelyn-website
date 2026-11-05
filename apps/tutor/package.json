@@ -60,6 +60,7 @@
     "test:pdf-session-branding": "npx tsx scripts/test-pdf-session-branding.ts",
     "test:replay-token": "npx tsx scripts/test-replay-token.ts",
     "test:learner-summary": "npx tsx scripts/test-learner-summary.ts",
+    "test:learner-home": "npx tsx scripts/test-learner-home.ts",
     "test:learner-summary-store": "npx tsx scripts/test-learner-summary-store.ts",
     "test:learner-summary-route": "npx tsx scripts/test-learner-summary-route.ts",
     "test:pdf-tutor-session": "npx tsx scripts/test-pdf-tutor-session.ts",
