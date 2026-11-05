@@ -324,6 +324,12 @@ test('Y2 (fix wave 7, session 3): a pending named-part jump resolves before the 
   assert.ok(/if \(typedPendingJump\.segId === nextSegmentId\(jumpPlan, jumpFrom, !!workingLevelRef\.current\)\) \{\s*typedJumpToNext = true;\s*\} else \{/.test(block), 'the immediate next part: the brain moves (pointer untouched, ref kept)');
   assert.ok(/\} else \{\s*applyResolvedAdvance\(jumpPlan, jumpFrom, typedPendingJump\.segId\);\s*pendingStudentJumpRef\.current = null;\s*onDebugEvent\?\.\('typed_advance_app', `"\$\{jumpFrom\}" → "\$\{typedPendingJump\.segId\}" \(student jump "\$\{typedPendingJump\.label\}"\)`\);/.test(block), 'a jump over parts: applied now (no seamMode), ref cleared, logged');
   assert.ok(!block.includes('seamMode'), 'not seamMode');
+  // Fix round 1 M1: only when no pre-turn move happened (Skip, objective jump, lesson-time guard) — one advance per turn
+  assert.ok(block.includes('&& currentSegmentIdRef.current === turnStartSegmentId'), 'no jump after another pre-turn move');
+  // Fix round 1 M3: a backward target (an earlier part) is not excluded — it takes the apply branch, and
+  // applyResolvedAdvance auto-completes only on a forward move (nothing is marked complete going back)
+  assert.ok(!/findIndex|targetIdx|outgoingIdx/.test(block), 'the pre-turn block does not filter by direction');
+  assert.ok(VTR.includes('if (outgoingIdx >= 0 && targetIdx > outgoingIdx) {'), 'applyResolvedAdvance auto-marks forward only');
   // levelKnown copied from buildAllowedNextContext
   assert.ok(VTR.includes('const levelKnown = !!workingLevelRef.current;'), 'buildAllowedNextContext levelKnown source');
   // the seam stands down on a typed turn

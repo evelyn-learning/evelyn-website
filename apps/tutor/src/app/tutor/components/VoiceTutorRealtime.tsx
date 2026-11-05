@@ -14824,7 +14824,11 @@ export function VoiceTutorRealtime({
       // gentle verdict + card + "let's move to…" + page turn); a jump over parts is applied now, like the Skip button,
       // so the latch below latches it and the new part's card + page paint at the first typed field.
       const typedPendingJump = typedTurnActive && !typedEngineMove ? pendingStudentJumpRef.current : null;
+      // Fix round 1 M1: only when no pre-turn move ran this turn (Skip button, typed objective jump, lesson-time guard) —
+      // after one, the pending jump is left to the seam's typed stand-down (one advance per turn). A backward target
+      // takes the apply branch (applyResolvedAdvance marks nothing complete going back; the latch re-enters the part).
       if (typedPendingJump && lessonPlanRef.current && currentSegmentIdRef.current
+        && currentSegmentIdRef.current === turnStartSegmentId
         && typedPendingJump.segId !== currentSegmentIdRef.current
         && lessonPlanRef.current.segments.some((s) => s.id === typedPendingJump.segId)
         && !(Date.now() - typedPendingJump.atMs > 90_000)) {

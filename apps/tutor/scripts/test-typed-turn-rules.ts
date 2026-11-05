@@ -555,6 +555,21 @@ test('Y2: an explicit request on an offer part with the offer not made wins → 
   assert.deepEqual(allowedNextFor(ctx('present-perfect', { studentMovedOn: true })), ['move']);
 });
 
+test('Fix round 1 M3: a backward student jump (past-simple → present-perfect) re-enters the earlier part fresh', () => {
+  const before: TypedTurnState = { ...createTypedTurnState(), openAsk: { kind: 'question', text: 'x' }, pendingVerdict: 'correct',
+    turnsInPart: { 'present-perfect': 9, 'past-simple': 3 }, answersInPart: { 'present-perfect': 4, 'past-simple': 2 },
+    postDueTurns: { 'present-perfect': 2 }, recapReviewed: {} };
+  const back = enterPartState(before, 'present-perfect');
+  assert.equal(back.turnsInPart['present-perfect'], 0);
+  assert.equal(back.answersInPart?.['present-perfect'], 0);
+  assert.equal(back.postDueTurns?.['present-perfect'], 0);
+  assert.equal(back.answersInPart?.['past-simple'], 2, 'the part left keeps its counts');
+  assert.equal(back.openAsk.kind, 'none');
+  // the latch sets engineMoved: no second move this turn, the earlier part's entry row
+  const row = allowedNextFor(ctx('present-perfect', { engineMoved: true, state: back }));
+  assert.ok(!row.includes('move') && !row.includes('close'), row.join(','));
+});
+
 // ---- Final fix wave W6: the items still to practise go to the server ----
 test('W6: itemsLeftFor = items minus practised; items_left and the request carry the same list', () => {
   const c = ctx('pronunciation', { items: ITEMS, state: { practisedItems: { pronunciation: [ITEMS[0]] }, menuState: { pronunciation: { asked: 1, picked: '2' } } } });
