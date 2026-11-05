@@ -72,7 +72,7 @@ export const PRONUNCIATION_NOTE_WAIT_MS = 4000;
  *  in scripts/test-clip-capture.ts) — kept here so the client never imports
  *  the server's vendor clients. Planted on fetch failure / 404 / 429 / no clip. */
 export const PRONUNCIATION_UNAVAILABLE_NOTE =
-  'No measured result: coach stress and linking from your model; do not describe sounds.';
+  'No measured result: the recording of this sentence could not be measured. Say so in one short sentence (never say you cannot hear), ask for one more repeat and say the sentence again as the last sentence of your turn; coach stress and linking from your model only; do not describe sounds.';
 
 /** The planted note as the brain sees it, in the runtime-note convention
  *  ("[… — not from the student]") the other per-turn notes use. */

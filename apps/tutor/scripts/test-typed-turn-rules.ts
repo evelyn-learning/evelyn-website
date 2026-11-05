@@ -842,5 +842,37 @@ test('W9-A (fix wave 9, run 5 101 s): the first post-due turn keeps `retry` besi
   assert.deepEqual(allowedNextFor(ctx('topic-intro', { budgetDue: false, state: pd(0) })), ['question', 'retry'], 'before the budget: unchanged');
 });
 
+test('W9-B3 (fix wave 9, run 5 859–927 s): an unmeasured clip note ⇒ this turn allows only `retry` of the open item (once); turn_state says repeat_due', () => {
+  const items = ['I have worked with international customers for several years.', 'I was responsible for communicating with our customers.'];
+  const st = { ...ask('item', 'Listen, then repeat: I have worked with international customers for several years.'), menuState: { pronunciation: { asked: 1, picked: '2' } }, practisedItems: { pronunciation: [items[0]] } };
+  const due = ctx('pronunciation', { items, pronunciationRepeatDue: true, state: st });
+  assert.deepEqual(allowedNextFor(due), ['retry']);
+  assert.ok(turnStateLine(due).includes('repeat_due="yes"'), turnStateLine(due));
+  assert.deepEqual(typedTurnRequestFor(due).allowedNext, ['retry']);
+  // once: after the retry (retriesInARow 1) the normal rows return
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, pronunciationRepeatDue: true, state: { ...st, retriesInARow: 1 } })), ['item', 'retry', 'offer', 'move']);
+  // no open item (the menu is still open): nothing to repeat
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, pronunciationRepeatDue: true, state: { ...ask('menu'), menuState: { pronunciation: { asked: 1, picked: null } } } })), ['menu']);
+  // without the flag: unchanged
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, state: st })), ['item', 'retry', 'offer', 'move']);
+  assert.ok(!turnStateLine(ctx('pronunciation', { items, state: st })).includes('repeat_due'));
+  // the student's move request still wins
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items, pronunciationRepeatDue: true, studentMovedOn: true, state: st })), ['move']);
+});
+
+test('W9-B3: a typed `retry` on an open pronunciation item re-arms that item (rearm_item) — the typed path skips the prose auto-arm', () => {
+  const items = ['I have worked with international customers for several years.', 'I was responsible for communicating with our customers.'];
+  const st = { ...ask('item', 'Listen, then repeat.'), practisedItems: { pronunciation: [items[0]] } };
+  const e = effectsForField(nextEv({ kind: 'retry', say: 'Once more, please.' }), fctx('pronunciation', { items, state: st }));
+  assert.deepEqual(e, [{ kind: 'rearm_item', text: items[0] }, { kind: 'open_ask', ask: { kind: 'retry', text: 'Once more, please.' } }]);
+  // not on a question ask, not outside the pronunciation part
+  assert.ok(!kinds(effectsForField(nextEv({ kind: 'retry', say: 'Again.' }), fctx('pronunciation', { items, state: ask('question') }))).includes('rearm_item'));
+  assert.ok(!kinds(effectsForField(nextEv({ kind: 'retry', say: 'Again.' }), fctx('present-perfect', { state: ask('item') }))).includes('rearm_item'));
+  // a retry does not count the item as practised twice
+  const out = applyTypedTurn({ ...createTypedTurnState(), ...st }, turnOf({ verdict: 'none', verdict_say: '', correction: null, next: nx({ kind: 'retry', say: 'Once more.' }) }), fctx('pronunciation', { items, state: st }), null);
+  assert.deepEqual(out.practisedItems.pronunciation, [items[0]]);
+  assert.equal(out.retriesInARow, 1);
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

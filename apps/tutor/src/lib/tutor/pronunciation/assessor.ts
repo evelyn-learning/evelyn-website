@@ -60,14 +60,17 @@ export async function assessPronunciation(
   }
 }
 
+// W9-B3 (fix wave 9, run 5 925 s 「音そのものは私には聞こえません」): both unmeasured notes tell the brain the recording
+// failed, never the learner — and that it must never say it cannot hear. The engine allows only `retry` on the turn
+// that carries one (typed-turn-rules pronunciationRepeatDue).
 export const PRONUNCIATION_UNAVAILABLE_NOTE =
-  'No measured result: coach stress and linking from your model; do not describe sounds.';
+  'No measured result: the recording of this sentence could not be measured. Say so in one short sentence (never say you cannot hear), ask for one more repeat and say the sentence again as the last sentence of your turn; coach stress and linking from your model only; do not describe sounds.';
 
 /** An 'ok' vendor result for a turn in which the learner did not say the
  *  target (silence, a question, another sentence): most reference words come
  *  back as omissions. Nothing was measured, so the claim guard stays shut. */
 export const PRONUNCIATION_NOT_ATTEMPTED_NOTE =
-  'The learner did not say the target text; nothing was measured. Ask them to repeat it, or coach from your model.';
+  'The recording of this sentence was cut short and could not be measured (fewer than three quarters of its words came through). Say so in one short sentence (never say you cannot hear or that the learner did not say it), ask for one more repeat and say the sentence again as the last sentence of your turn; do not describe sounds.';
 
 /** Below this Azure CompletenessScore the turn was not an attempt. */
 export const MIN_COMPLETENESS = 50;

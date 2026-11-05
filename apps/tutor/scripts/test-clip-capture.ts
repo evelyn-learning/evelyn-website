@@ -280,7 +280,7 @@ test('pcm16ToBase64: little-endian bytes', () => {
 
 test('client unavailable note === the server\'s exact sentence', () => {
   assert.equal(PRONUNCIATION_UNAVAILABLE_NOTE, SERVER_UNAVAILABLE_NOTE);
-  assert.equal(PRONUNCIATION_UNAVAILABLE_NOTE, 'No measured result: coach stress and linking from your model; do not describe sounds.');
+  assert.equal(PRONUNCIATION_UNAVAILABLE_NOTE, 'No measured result: the recording of this sentence could not be measured. Say so in one short sentence (never say you cannot hear), ask for one more repeat and say the sentence again as the last sentence of your turn; coach stress and linking from your model only; do not describe sounds.'); // W9-B3
 });
 
 test('planted note uses the runtime-note convention and carries the route note verbatim', () => {

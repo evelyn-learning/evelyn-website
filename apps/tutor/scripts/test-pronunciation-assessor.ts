@@ -137,7 +137,7 @@ const REF = 'We went to the countryside.';
     assert.ok(words(note) <= 80, `${words(note)} words`);
   });
   await test('unavailable ⇒ the exact sentence, for every reason', () => {
-    assert.equal(PRONUNCIATION_UNAVAILABLE_NOTE, 'No measured result: coach stress and linking from your model; do not describe sounds.');
+    assert.equal(PRONUNCIATION_UNAVAILABLE_NOTE, 'No measured result: the recording of this sentence could not be measured. Say so in one short sentence (never say you cannot hear), ask for one more repeat and say the sentence again as the last sentence of your turn; coach stress and linking from your model only; do not describe sounds.'); // W9-B3
     for (const reason of ['no_vendor', 'no_key', 'clip_too_short', 'clip_too_long', 'vendor_error'] as const) {
       assert.equal(formatPronunciationNote({ status: 'unavailable', reason }, REF), PRONUNCIATION_UNAVAILABLE_NOTE);
     }
@@ -153,7 +153,8 @@ const REF = 'We went to the countryside.';
     const r = { status: 'ok' as const, result: mk(['omission', 'omission', 'none', 'none']) };
     assert.equal(isMeasuredResult(r), false);
     assert.equal(formatPronunciationNote(r, 'a b c d'), PRONUNCIATION_NOT_ATTEMPTED_NOTE);
-    assert.equal(PRONUNCIATION_NOT_ATTEMPTED_NOTE, 'The learner did not say the target text; nothing was measured. Ask them to repeat it, or coach from your model.');
+    assert.equal(PRONUNCIATION_NOT_ATTEMPTED_NOTE, 'The recording of this sentence was cut short and could not be measured (fewer than three quarters of its words came through). Say so in one short sentence (never say you cannot hear or that the learner did not say it), ask for one more repeat and say the sentence again as the last sentence of your turn; do not describe sounds.'); // W9-B3
+    for (const note of [PRONUNCIATION_NOT_ATTEMPTED_NOTE, PRONUNCIATION_UNAVAILABLE_NOTE]) assert.ok(/never say you cannot hear/.test(note) && /one more repeat/.test(note), note);
   });
   await test('every word omitted ⇒ not measured', () => {
     assert.equal(isMeasuredResult({ status: 'ok', result: mk(['omission', 'omission', 'omission']) }), false);

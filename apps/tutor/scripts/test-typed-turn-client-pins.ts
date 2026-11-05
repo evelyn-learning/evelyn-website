@@ -478,5 +478,11 @@ test('C (fix wave 6): the model card passes emphasis / emphasisAt to showSentenc
   assert.ok(/case 'model_card': \{[\s\S]{0,600}const modelCmd = \{\s*action: 'showSentence',\s*sentence: e\.sentence,\s*\.\.\.\(e\.emphasis\?\.length \? \{ emphasis: e\.emphasis \} : \{\}\),\s*\.\.\.\(e\.emphasisAt\?\.length \? \{ emphasisAt: e\.emphasisAt \} : \{\}\),\s*\} as WhiteboardCommand;\s*const res = await handleWhiteboardCommand\(\[modelCmd\]/.test(VTR), 'model card command carries the emphasis');
 });
 
+test('W9-B3 (fix wave 9): the client passes pronunciationRepeatDue from this turn\'s unmeasured note and arms the item again on rearm_item', () => {
+  assert.ok(/pronunciationRepeatDue: !!pronunciationNoteThisTurn && !pronunciationMeasuredThisTurn,/.test(VTR), 'pronunciationRepeatDue from the planted note');
+  assert.ok(/case 'rearm_item': \{\s*armPronunciationCheckRef\.current\(e\.text, 'typed-retry'\);/.test(VTR), 'rearm_item arms the item');
+  assert.ok(/onDebugEvent\?\.\('pronunciation_rearmed', `typed-retry "\$\{e\.text\.slice\(0, 80\)\}"`\)/.test(VTR), 'pronunciation_rearmed event');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');

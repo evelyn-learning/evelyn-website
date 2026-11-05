@@ -140,6 +140,9 @@ export interface AllowedNextContext {
   missingRequiredPhrases?: string[];
   /** A (fix wave 6): the student's last utterance was English (studentSpokeEnglish) — the request's studentEnglish. */
   studentEnglish?: boolean;
+  /** W9-B3 (fix wave 9, run 5 859–927 s): this turn carries a pronunciation note that measured nothing (cut / unavailable /
+   *  unscored) — while an item is the open ask and it has not been retried yet, the only allowed `next` is `retry`. */
+  pronunciationRepeatDue?: boolean;
 }
 
 /** A (fix wave 6): offers made in a part (a made offer without a count is the first). */
@@ -253,6 +256,8 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
     const ms = state.menuState[segId] ?? { asked: 0, picked: null };
     if (!ms.picked && !ctx.menuPick) return ms.asked >= 2 ? ['move'] : ['menu'];
     if (kind === 'pronunciation') {
+      // W9-B3: the clip of the open item measured nothing — one engine-enforced repeat before anything else.
+      if (ctx.pronunciationRepeatDue && ask === 'item' && state.retriesInARow === 0) return ['retry'];
       // V5 (fix wave 2): items used up → the one-more-or-move-on offer first (once), then the move
       // (the voice run moved straight to the summary after the last authored sentence).
       // R2 (fix round 1): the LAST item's result is in (open ask item, not yet repeated) — the weakest-word repeat
@@ -348,6 +353,9 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     // A (fix wave 6): the made offer may be repeated once (the reply did not choose).
     ...(typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'pronunciation' && offerRepeatAllowed(state, segId) && allowedNextFor(ctx).includes('offer')
       ? [['offer_repeat', 'allowed'] as [string, string]] : []),
+    // W9-B3: the open item's recording measured nothing — this turn is its one more repeat.
+    ...(ctx.pronunciationRepeatDue && typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'pronunciation' && allowedNextFor(ctx).length === 1 && allowedNextFor(ctx)[0] === 'retry'
+      ? [['repeat_due', 'yes'] as [string, string]] : []),
   ];
   // V3: the recap's step, and on its first turn the plan's required phrases (the review turn must say them).
   // X2 (fix wave 3, r61b 745 s): with the client's missing list, the phrases still unsaid ride EVERY recap turn
@@ -411,6 +419,8 @@ export type TypedEffect =
   | { kind: 'correction_card'; student: string; corrected: string; emphasis: string[] }
   | { kind: 'advance'; from: string; to: string; bridgeMissing: boolean }
   | { kind: 'arm_item'; text: string }
+  /** W9-B3: a typed `retry` of the open pronunciation item arms its clip again (the typed path runs no prose auto-arm). */
+  | { kind: 'rearm_item'; text: string }
   | { kind: 'set_level'; level: 'beginner' | 'intermediate' | 'advanced' }
   | { kind: 'close' }
   | { kind: 'menu_asked' } | { kind: 'offer_made' } | { kind: 'offer_served' }
@@ -559,6 +569,13 @@ export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): T
     case 'item': {
       const text = resolveItem(next, ctx);
       if (text) out.push({ kind: 'arm_item', text });
+      break;
+    }
+    case 'retry': {
+      // W9-B3: the same sentence again, measured again — the last practised item of this part.
+      const practised = ctx.state.practisedItems[ctx.segId] ?? [];
+      const last = practised[practised.length - 1];
+      if (ctx.state.openAsk.kind === 'item' && last && typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) === 'pronunciation') out.push({ kind: 'rearm_item', text: last });
       break;
     }
     case 'move': {

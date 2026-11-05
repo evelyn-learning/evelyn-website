@@ -514,5 +514,10 @@ test('W9-A (fix wave 9, run 5 101 s): a correction is always followed by `retry`
   assert.ok(m.includes('ALREADY SPOKEN'));
 });
 
+test('W9-B3 (fix wave 9): the prompt names repeat_due and forbids "I cannot hear"', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('repeat_due="yes"'), 'repeat_due documented');
+  assert.ok(/never say (?:that )?you cannot hear/i.test(TYPED_TURN_INSTRUCTIONS), 'the forbidden line');
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

@@ -15279,6 +15279,9 @@ export function VoiceTutorRealtime({
             ),
             // A (fix wave 6): an English reply — the server refuses a turn with no English sentence (one retry).
             studentEnglish: studentSpokeEnglish(typedStudentText ?? ''),
+            // W9-B3 (fix wave 9, run 5 859–927 s): this turn's pronunciation note measured nothing — the engine allows only
+            // the retry of the open item (once), so the sentence is recorded again instead of waved through.
+            pronunciationRepeatDue: !!pronunciationNoteThisTurn && !pronunciationMeasuredThisTurn,
             lessonElapsedMs: typedLessonElapsedMs,
             // V6: next_card's key ideas are filtered to the held level, as the board shows them.
             workingLevel: workingLevelRef.current?.level ?? null,
@@ -15386,6 +15389,11 @@ export function VoiceTutorRealtime({
                 }
                 // The bridge clause is a brain instruction: no engine speech (no stock sentences).
                 if (e.bridgeMissing) onDebugEvent?.('typed_turn_bridge_missing', `${e.from}→${e.to}`);
+                break;
+              }
+              case 'rearm_item': {
+                armPronunciationCheckRef.current(e.text, 'typed-retry');
+                onDebugEvent?.('pronunciation_rearmed', `typed-retry "${e.text.slice(0, 80)}"`);
                 break;
               }
               case 'arm_item': {

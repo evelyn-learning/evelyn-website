@@ -277,17 +277,17 @@ test('23G2: any retry of a measured turn re-delivers the note with the score ins
 
 test('Task 24 §A4: 1092 s — not attempted, the transcript is the target ⇒ the unscored note', () => {
   const ref = 'I have worked with international customers for several years.';
-  const NA = 'The learner did not say the target text; nothing was measured. Ask them to repeat it, or coach from your model.';
+  const NA = 'The recording of this sentence was cut short and could not be measured (fewer than three quarters of its words came through). Say so in one short sentence (never say you cannot hear or that the learner did not say it), ask for one more repeat and say the sentence again as the last sentence of your turn; do not describe sounds.';
   const said = saidModelSentence(ref, 'I have worked with international customers for several years.');
   assert.equal(said, true);
   assert.equal(pronunciationNoteForTurn({ note: NA, measured: false, notAttempted: true, saidTarget: said }), PRONUNCIATION_UNSCORED_NOTE);
   assert.equal(PRONUNCIATION_UNSCORED_NOTE, 'The learner said the sentence (the words matched) but the recording could not be scored this time. Confirm the sentence in one short sentence and ask them to say it once more so you can listen. Do not mention recordings, transcripts, captures, checks or scores.');
   // a silent clip (unavailable note) with the target said ⇒ the same rewrite
-  assert.equal(pronunciationNoteForTurn({ note: 'No measured result: coach stress and linking from your model; do not describe sounds.', measured: false, notAttempted: false, saidTarget: true }), PRONUNCIATION_UNSCORED_NOTE);
+  assert.equal(pronunciationNoteForTurn({ note: 'No measured result: the recording of this sentence could not be measured. Say so in one short sentence (never say you cannot hear), ask for one more repeat and say the sentence again as the last sentence of your turn; coach stress and linking from your model only; do not describe sounds.', measured: false, notAttempted: false, saidTarget: true }), PRONUNCIATION_UNSCORED_NOTE);
 });
 test('Task 24 §A4: a not-attempted clip whose transcript is NOT the target ⇒ the note unchanged; measured ⇒ unchanged', () => {
   const ref = 'I have worked with international customers for several years.';
-  const NA = 'The learner did not say the target text; nothing was measured. Ask them to repeat it, or coach from your model.';
+  const NA = 'The recording of this sentence was cut short and could not be measured (fewer than three quarters of its words came through). Say so in one short sentence (never say you cannot hear or that the learner did not say it), ask for one more repeat and say the sentence again as the last sentence of your turn; do not describe sounds.';
   const said = saidModelSentence(ref, 'Um, could you say it again?');
   assert.equal(said, false);
   assert.equal(pronunciationNoteForTurn({ note: NA, measured: false, notAttempted: true, saidTarget: said }), NA);
