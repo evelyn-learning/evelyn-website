@@ -23,11 +23,15 @@ function check(name: string, cond: boolean, detail?: string) {
 }
 
 const SECRET = 'route-test-secret';
+const SECRET2 = 'route-test-secret-p2';
+let partnerLookups: string[] = [];
 __setPartnerTokenSecretDepsForTests({
   async getPartner(id) {
-    if (id !== 'p1') return null;
+    partnerLookups.push(id);
+    const secret = id === 'p1' ? SECRET : id === 'p2' ? SECRET2 : null;
+    if (!secret) return null;
     const r: PartnerRecord = {
-      partnerId: id, kind: 'partner', status: 'active', secrets: [SECRET],
+      partnerId: id, kind: 'partner', status: 'active', secrets: [secret],
       allowedEndpoints: ['/api/portal/v1/'], limits: { rpm: 600, burst: 60, dailyQuota: null }, flagOverrides: {},
     };
     return r;
@@ -40,6 +44,7 @@ const tok = (claims: Record<string, unknown>) => signEmbedToken({ partner_id: 'p
 const tokA = tok({ student_id: 'A' });
 const tokB = tok({ student_id: 'B' });
 const tokNone = tok({});
+const tokP2A = signEmbedToken({ partner_id: 'p2', exp, student_id: 'A' }, SECRET2);
 
 const goodReply = {
   level_evidence_en: 'Evidence line here', level_evidence_ja: '根拠です', grammar_en: 'Grammar is steady', grammar_ja: '文法は安定',
@@ -47,12 +52,12 @@ const goodReply = {
   recommendations: [1, 2, 3].map((n) => ({ en: `Practise item ${n}`, ja: `練習 ${n}` })),
 };
 
-function mkDeps() {
+function mkDeps(sourcePartnerId = 'p1') {
   const calls = { claim: 0, model: 0 };
   const session: any = {
     sessionId: 's1', subject: 'English', topic: 'Meetings', duration: 600, hasAudio: true,
     transcript: Array.from({ length: 6 }, (_, i) => ({ role: i % 2 ? 'tutor' : 'student', text: `turn ${i}` })),
-    debugEvents: [], studentId: 'A', sourcePartnerId: 'p1',
+    debugEvents: [], studentId: 'A', sourcePartnerId,
   };
   const deps: SummaryStoreDeps = {
     async loadSession(id) { return id === 's1' ? session : null; },
@@ -105,6 +110,29 @@ const post = (body: Record<string, unknown>, token?: string) => POST(new Request
     const p = await post({ sessionId: 's1' }, tokB);
     check('POST other student -> 403', p.status === 403, String(p.status));
     check('claim never called for another student', calls.claim === 0, String(calls.claim));
+  }
+  {
+    // Another partner's token, same student id + session id: 403, no claim, no replay token minted.
+    const { deps, calls } = mkDeps();
+    __setLearnerSummaryDepsForTests(deps);
+    const r = await get('sessionId=s1', tokP2A);
+    check('GET p2 token on a p1 session -> 403', r.status === 403, String(r.status));
+    partnerLookups = [];
+    const p = await post({ sessionId: 's1' }, tokP2A);
+    check('POST p2 token on a p1 session -> 403', p.status === 403, String(p.status));
+    check('p2 token: claim never called', calls.claim === 0, String(calls.claim));
+    check('p2 token: signer never reached (only the verify lookup)', partnerLookups.length === 1 && partnerLookups[0] === 'p2', JSON.stringify(partnerLookups));
+  }
+  {
+    // A p1 token on a session owned by p2 (same student id): 403.
+    const { deps, calls } = mkDeps('p2');
+    __setLearnerSummaryDepsForTests(deps);
+    partnerLookups = [];
+    const r = await get('sessionId=s1', tokA);
+    check('GET p1 token on a p2 session -> 403', r.status === 403, String(r.status));
+    const p = await post({ sessionId: 's1' }, tokA);
+    check('POST p1 token on a p2 session -> 403', p.status === 403 && calls.claim === 0, `${p.status} claim=${calls.claim}`);
+    check('p1 token on p2 session: signer never reached', partnerLookups.every((x) => x === 'p1') && partnerLookups.length === 2, JSON.stringify(partnerLookups));
   }
   {
     const { deps } = mkDeps();

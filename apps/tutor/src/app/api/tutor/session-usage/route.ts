@@ -21,6 +21,7 @@ import { PartnerModel } from "@/models/Partner";
 import { buildAttemptSpanWrite, durationBehindSpans, planAttemptSave, sessionActiveSeconds, type AttemptSavePlan } from "@/lib/tutor/recordings/active-seconds";
 import { clientTotalsMax, usageTotalsBehind } from "@/lib/tutor/ai/usage-totals";import { homeworkSolvedFromDebugEvents } from '@/lib/tutor/lesson-plan/homework-ledger';
 import { runSummaryForSession } from '@/lib/tutor/portal/learner-summary-store';
+import { TUTOR_LEARNER_SUMMARY } from '@/lib/tutor/orchestrator/flags';
 
 // Logged once per process: the first save whose identity came from the token.
 let identityFromTokenLogged = false;
@@ -147,6 +148,9 @@ export async function POST(req: NextRequest) {
       body.studentId && typeof body.studentId === "string" ? body.studentId.slice(0, 200) : undefined;
     let identityPartnerId: string | undefined =
       body.sourcePartnerId && typeof body.sourcePartnerId === "string" ? body.sourcePartnerId.slice(0, 200) : undefined;
+    // The verified token's owner (only when a token was verified): a session
+    // already owned by another student/partner is never written by this caller.
+    let tokenOwner: { studentId?: string; partnerId?: string } | null = null;
     if (body.studentId) {
       const auth = await checkEmbedAuthAsync({
         token,
@@ -160,6 +164,10 @@ export async function POST(req: NextRequest) {
       if (auth.payload) {
         if (typeof auth.payload.student_id === "string" && auth.payload.student_id) identityStudentId = auth.payload.student_id.slice(0, 200);
         if (typeof auth.payload.partner_id === "string" && auth.payload.partner_id) identityPartnerId = auth.payload.partner_id.slice(0, 200);
+        tokenOwner = {
+          studentId: typeof auth.payload.student_id === "string" && auth.payload.student_id ? auth.payload.student_id.slice(0, 200) : undefined,
+          partnerId: typeof auth.payload.partner_id === "string" && auth.payload.partner_id ? auth.payload.partner_id.slice(0, 200) : undefined,
+        };
         if (!identityFromTokenLogged) {
           identityFromTokenLogged = true;
           console.log("[session-usage] identity from token", `partner=${identityPartnerId}`, sessionId);
@@ -186,13 +194,27 @@ export async function POST(req: NextRequest) {
     // serving both, rather than two against an identical filter.
     // It also carries what the cumulative-duration arithmetic below needs
     // (startedAt / duration / attemptSpans — small fields).
-    type ExistingDoc = { createdAt?: Date; startedAt?: Date; duration?: number; attemptSpans?: unknown } | null;
+    type ExistingDoc = {
+      createdAt?: Date; startedAt?: Date; duration?: number; attemptSpans?: unknown;
+      studentId?: string; sourcePartnerId?: string;
+    } | null;
     const readExisting = () =>
       TutorSession.findOne(
         { sessionId },
-        { createdAt: 1, startedAt: 1, duration: 1, attemptSpans: 1 },
+        { createdAt: 1, startedAt: 1, duration: 1, attemptSpans: 1, studentId: 1, sourcePartnerId: 1 },
       ).lean<ExistingDoc>();
+    // Owner check (learner home review C1): with a verified token, a stored
+    // studentId/sourcePartnerId that differs from the token's is a takeover
+    // of someone else's (guessed) sessionId — refuse it.
+    const ownerMismatch = (doc: ExistingDoc) =>
+      !!tokenOwner && !!doc && (
+        (!!doc.studentId && !!tokenOwner.studentId && doc.studentId !== tokenOwner.studentId) ||
+        (!!doc.sourcePartnerId && !!tokenOwner.partnerId && doc.sourcePartnerId !== tokenOwner.partnerId)
+      );
+    const ownerForbidden = () =>
+      NextResponse.json({ error: "forbidden", reason: "session_owner_mismatch" }, { status: 403 });
     const existingDoc: ExistingDoc = await readExisting();
+    if (ownerMismatch(existingDoc)) return ownerForbidden();
     const isNewSession = !existingDoc;
     const clientIp = isNewSession ? extractClientIp(req.headers) : undefined;
     if (clientIp) setOnInsertFields.clientIp = clientIp.slice(0, 100);
@@ -404,10 +426,21 @@ export async function POST(req: NextRequest) {
     const MAX_GUARDED_TRIES = 3;
     let attemptPlan: AttemptSavePlan | null = null;
     let session: {
-      sessionId: string; startedAt?: Date; duration?: number; attemptSpans?: unknown;
+      sessionId: string; studentId?: string; sourcePartnerId?: string; transcript?: unknown[]; startedAt?: Date; duration?: number; attemptSpans?: unknown;
       tokenUsage?: unknown; voiceEngine?: unknown; totalInputTokens?: unknown; totalOutputTokens?: unknown; estimatedCost?: unknown;
     } | null = null;
     let spanWritten = false;
+    // Same owner, in the write itself, so a race between the read above and
+    // this write cannot land on another owner's row (a miss re-reads below).
+    const ownerFilter: Record<string, unknown> = tokenOwner
+      ? {
+          $and: [
+            ...(tokenOwner.studentId ? [{ $or: [{ studentId: { $exists: false } }, { studentId: null }, { studentId: tokenOwner.studentId }] }] : []),
+            ...(tokenOwner.partnerId ? [{ $or: [{ sourcePartnerId: { $exists: false } }, { sourcePartnerId: null }, { sourcePartnerId: tokenOwner.partnerId }] }] : []),
+          ],
+        }
+      : {};
+    if (Array.isArray(ownerFilter.$and) && ownerFilter.$and.length === 0) delete ownerFilter.$and;
     for (let tryNo = 0; !session; tryNo++) {
       // After MAX_GUARDED_TRIES misses, save everything EXCEPT the span and
       // `duration` (unguarded upsert, cannot miss): the transcript and the
@@ -416,6 +449,7 @@ export async function POST(req: NextRequest) {
       // save (~30 s) records both.
       const lastResort = tryNo >= MAX_GUARDED_TRIES;
       const current: ExistingDoc = tryNo === 0 ? existingDoc : await readExisting();
+      if (ownerMismatch(current)) return ownerForbidden();
       attemptPlan = attemptStartValid && attemptStart
         ? planAttemptSave({ existing: current, attemptStartMs: attemptStart.getTime(), attemptDurationSec: attemptDuration })
         : null;
@@ -439,7 +473,7 @@ export async function POST(req: NextRequest) {
 
       try {
         session = await TutorSession.findOneAndUpdate(
-          { sessionId, ...(spanWrite?.filter ?? {}) },
+          { sessionId, ...(spanWrite?.filter ?? {}), ...ownerFilter },
           op,
           { upsert: spanWrite ? spanWrite.upsert : true, new: true, runValidators: true },
         );
@@ -479,7 +513,10 @@ export async function POST(req: NextRequest) {
 
     // Learner home (task 4): a completed save starts the learner summary.
     // Fire-and-forget — the claim makes it run once; it never blocks the save.
-    if (body.status === "completed" && session) {
+    // Only for a partner learner's row with a real lesson (>= 4 turns, the
+    // learner home's listing rule), and never when TUTOR_LEARNER_SUMMARY=off.
+    if (body.status === "completed" && session && TUTOR_LEARNER_SUMMARY && session.studentId && session.sourcePartnerId
+      && (session.transcript?.length ?? 0) >= 4) {
       void runSummaryForSession(sessionId).catch((e) => console.warn("[learner-summary] completed hook failed", e));
     }
 

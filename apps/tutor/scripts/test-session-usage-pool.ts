@@ -66,7 +66,26 @@ test('source: session-usage takes studentId/sourcePartnerId from the verified to
 
 test('source: a completed save fires the learner summary, never awaited', () => {
   const src = readFileSync(join(__dirname, '../src/app/api/tutor/session-usage/route.ts'), 'utf8');
-  assert.ok(/if \(body\.status === ['"]completed['"][^\n]*\)\s*\{?\s*void runSummaryForSession\(/.test(src), 'void runSummaryForSession( guarded by body.status === completed');
+  assert.ok(/if \(body\.status === ['"]completed['"][^{]*\)\s*\{\s*void runSummaryForSession\(/.test(src), 'void runSummaryForSession( guarded by body.status === completed');
+  const guard = src.slice(src.indexOf('if (body.status === "completed" && session'), src.indexOf('void runSummaryForSession('));
+  assert.ok(guard.includes('TUTOR_LEARNER_SUMMARY'), 'kill switch guards the hook');
+  assert.ok(guard.includes('session.studentId') && guard.includes('session.sourcePartnerId'), 'partner learner rows only');
+  assert.ok(/session\.transcript\?\.length \?\? 0\) >= 4/.test(guard), 'at least 4 transcript turns');
+});
+
+test('source: TUTOR_LEARNER_SUMMARY kill switch defaults ON', () => {
+  const src = readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8');
+  assert.ok(src.includes("export const TUTOR_LEARNER_SUMMARY = process.env.TUTOR_LEARNER_SUMMARY !== 'off';"), 'flag default ON');
+});
+
+test('source: a verified token cannot write another owner\'s session', () => {
+  const src = readFileSync(join(__dirname, '../src/app/api/tutor/session-usage/route.ts'), 'utf8');
+  assert.ok(src.includes('reason: "session_owner_mismatch" }, { status: 403 }'), '403 session_owner_mismatch');
+  assert.ok(/studentId: 1, sourcePartnerId: 1/.test(src), 'pre-read loads the owner');
+  assert.ok((src.match(/if \(ownerMismatch\(/g) ?? []).length >= 2, 'owner checked on the first read and every re-read');
+  assert.ok(/\{ \$or: \[\{ studentId: \{ \$exists: false \} \}, \{ studentId: null \}, \{ studentId: tokenOwner\.studentId \}\] \}/.test(src), 'student owner filter');
+  assert.ok(/\{ \$or: \[\{ sourcePartnerId: \{ \$exists: false \} \}, \{ sourcePartnerId: null \}, \{ sourcePartnerId: tokenOwner\.partnerId \}\] \}/.test(src), 'partner owner filter');
+  assert.ok(src.includes('{ sessionId, ...(spanWrite?.filter ?? {}), ...ownerFilter }'), 'owner filter in the findOneAndUpdate');
   assert.ok(src.indexOf('void runSummaryForSession(') > src.indexOf('TutorSession.findOneAndUpdate('), 'after the update');
   assert.ok(src.indexOf('void runSummaryForSession(') < src.indexOf('return NextResponse.json({\n      success: true'), 'before the response');
 });

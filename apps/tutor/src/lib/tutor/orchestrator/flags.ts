@@ -1550,3 +1550,6 @@ export const TUTOR_CARD_NEEDS_TUTOR_CONFIRMATION = process.env.NEXT_PUBLIC_TUTOR
  *  cards while the tutor is still speaking — a long sentence is not a stall.
  *  Client-side: default ON; NEXT_PUBLIC_TUTOR_RENDER_STALL_WAITS_WHILE_SPEAKING=off. */
 export const TUTOR_RENDER_STALL_WAITS_WHILE_SPEAKING = process.env.NEXT_PUBLIC_TUTOR_RENDER_STALL_WAITS_WHILE_SPEAKING !== 'off';
+
+/** Learner home: kill switch for the learner-summary generation on a completed save (server-only; default ON). */
+export const TUTOR_LEARNER_SUMMARY = process.env.TUTOR_LEARNER_SUMMARY !== 'off';
