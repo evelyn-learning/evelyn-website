@@ -1,5 +1,16 @@
 # GDI trial — Praveen's PROD run 5 (11-05) → fix wave 9 handoff
 
+> **★ WAVE 9 BUILT 11-05 (this worktree, branch `gdi-trial-lesson`, commits `2f243b91`…`55a6ee83`).** All of A, B1–B4, C below are
+> implemented engine-generically with pins; a fresh-context review ran and its Important findings were fixed in `55a6ee83`
+> (close gate ignores the close turn's own fields; the cut last word is never a weak word; the summary counts distinct armed
+> sentences; `PRONUNCIATION_NOTE_WAIT_MS` 4 → 6 s). Gate: `test:changed` 291/293 (2 known baseline), `test:all` pass except
+> the same 2, `tsc` clean. New reasons: `correction_needs_retry`, `check_question_unasked`; new turn_state attr `repeat_due`;
+> new typed effect `rearm_item`; new check TT15. Deferred minors (reviewer): the unavailable note now asks for a repeat on
+> vendor-down / no-speech classes too (prose path unbounded for other pronunciation tenants); double-refusal fallback `retry`
+> speaks the previous question; recap allowed order `[close, question]` lets a cut object close with the check unasked.
+> Deploy: `./deploy-tutor-demo.sh` from this worktree on Praveen's word (given 11-05: "make the fixes and deploy"); then his
+> live run on the "praveen" home link → observations → wave 10. `wt.sh finish` still NOT run (branch not on main).
+
 Session `embed-1793905969232`, student `gdi-trial-praveen-to0684` (the "praveen" home link), 19:12:53–19:30:20 UTC (17.5 min),
 78 turns, build `3vktQDLiQmsPo0zzaT_H7` = `gdi-trial-lesson` 7b6dbc30 (docs 1f8b2282). Work in THIS worktree
 (`/Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-trial-lesson`, branch `gdi-trial-lesson`, not merged to main; `wt.sh finish`
