@@ -370,7 +370,8 @@ test('V4 (fix wave 2): the level check counts answers (non-none verdicts) + the 
 test('V5 (fix wave 2): a typed correction feeds the pronunciation items after the authored ones', () => {
   assert.ok(/const typedCorrectedSentencesRef = useRef<string\[\]>\(\[\]\);/.test(VTR), 'the ref');
   assert.ok(/case 'correction_card': \{[\s\S]{0,400}typedCorrectedSentencesRef\.current = \[e\.corrected\.trim\(\), \.\.\.typedCorrectedSentencesRef\.current/.test(VTR), 'filled by the correction_card effect, newest first');
-  assert.ok(/const typedItemsFor = \(segId: string\): readonly string\[\] => \{[\s\S]{0,600}return md\.pronunciation \? typedPronunciationItems\(authored, typedCorrectedSentencesRef\.current\) : authored;/.test(VTR), 'typedItemsFor appends them on a pronunciation part only');
+  // W10-1 (fix wave 10): the list follows the menu pick (this turn's, else the persisted one) — words / sentences / the learner's own.
+  assert.ok(/const typedItemsFor = \(segId: string\): readonly string\[\] => \{[\s\S]{0,900}const pick = typedMenuPickText \?\? typedTurnStateRef\.current\.menuState\[segId\]\?\.picked \?\? null;[\s\S]{0,400}typedPronunciationItemsFor\(md\.pronunciation, pick, typedCorrectedSentencesRef\.current\)/.test(VTR), 'typedItemsFor follows the menu pick');
   assert.ok(/typedTurnStateRef\.current = createTypedTurnState\(\);\s*typedCorrectedSentencesRef\.current = \[\];/.test(VTR), 'plan-scoped like the typed state');
 });
 test('V6 (fix wave 2): the typed request carries the held working level (next_card key ideas filtered as the board)', () => {

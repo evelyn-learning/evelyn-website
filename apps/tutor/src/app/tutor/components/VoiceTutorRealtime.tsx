@@ -454,7 +454,7 @@ import { retryAskTurn } from '@/lib/tutor/voice/sentence-board';
 import { TUTOR_TYPED_TURN } from '@/lib/tutor/orchestrator/flags';
 import { correctionEmphasis } from '@/lib/tutor/voice/sentence-board';
 import { sentenceCount, englishSentenceCount, studentSpokeEnglish, type TypedTurnRequest, type TypedTurn, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind } from '@/lib/tutor/voice/typed-turn';
-import { createTypedTurnState, typedTurnRequestFor, typedTurnSpokenText, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, typedPronunciationItems, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
+import { createTypedTurnState, typedTurnRequestFor, typedTurnSpokenText, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, typedPronunciationItemsFor, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
 import { isIdleNudgeDirective } from '@/lib/tutor/voice/idle-nudge';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
 
@@ -15200,11 +15200,13 @@ export function VoiceTutorRealtime({
         const typedLastTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
         const typedJapanese = (tutorLanguages ?? []).some((l) => /^ja\b/i.test(l));
         const typedItemsFor = (segId: string): readonly string[] => {
-          const md = (lessonPlanRef.current?.segments.find((sg) => sg.id === segId)?.metadata ?? {}) as { pronunciation?: { sentences?: unknown } };
-          const sentences = md.pronunciation?.sentences;
-          const authored = Array.isArray(sentences) ? sentences.filter((x): x is string => typeof x === 'string' && x.trim().length > 0) : [];
-          // V5: then the learner's corrected sentences of this lesson (the plan: "when the menu's items are used up, take a corrected sentence of the learner's").
-          return md.pronunciation ? typedPronunciationItems(authored, typedCorrectedSentencesRef.current) : authored;
+          const md = (lessonPlanRef.current?.segments.find((sg) => sg.id === segId)?.metadata ?? {}) as { pronunciation?: { words?: unknown; sentences?: unknown } };
+          if (!md.pronunciation) return [];
+          // W10-1 (fix wave 10, run 6 796 s): the list follows the menu pick — this turn's resolved pick, else the one the
+          // reducer persisted — so pick 1 lists the WORDS (the brain's item is listed, armed and boarded as spoken).
+          const pick = typedMenuPickText ?? typedTurnStateRef.current.menuState[segId]?.picked ?? null;
+          // V5: the learner's corrected sentences of this lesson refill the sentences (the plan: "when the menu's items are used up, take a corrected sentence of the learner's").
+          return typedPronunciationItemsFor(md.pronunciation, pick, typedCorrectedSentencesRef.current);
         };
         // W1: set by buildAllowedNextContext (once per attempt, before the brain call); read by buildFieldEffectContext.
         let typedBudgetDueThisTurn = false;

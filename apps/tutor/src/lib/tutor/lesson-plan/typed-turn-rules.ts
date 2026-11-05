@@ -215,6 +215,28 @@ export function typedPronunciationItems(authored: readonly string[], corrected: 
   return [...authored, ...extra];
 }
 
+/** W10-1 (fix wave 10, run 6 796 s: pick 1 "individual words" armed and boarded a SENTENCE — the list held
+ *  `pronunciation.sentences` only, so the brain's `item="responsibilities"` was unlisted and resolveItem fell back to the
+ *  first sentence; the clip was scored against it): the part's items FOLLOW the menu pick. A pick naming words ⇒
+ *  `pronunciation.words`; a sentence ⇒ the authored sentences refilled by the learner's corrected ones (V5); speaking
+ *  naturally ⇒ the learner's corrected sentences (none yet ⇒ the authored sentences); no pick / any other pick ⇒ the
+ *  sentences + refill, as before. The pick is matched by its option words, not its position (the card's order is the
+ *  author's). Pure. */
+export function typedPronunciationItemsFor(
+  pron: { words?: unknown; sentences?: unknown } | null | undefined, pick: string | null | undefined, corrected: readonly string[],
+): string[] {
+  const strs = (x: unknown): string[] => (Array.isArray(x) ? x.filter((v): v is string => typeof v === 'string' && v.trim().length > 0) : []);
+  const words = strs(pron?.words);
+  const sentences = strs(pron?.sentences);
+  const p = (pick ?? '').toLowerCase();
+  if (/\bwords?\b|単語/.test(p) && words.length) return words;
+  if (/natural|自然/.test(p)) {
+    const own = typedPronunciationItems([], corrected);
+    return own.length ? own : sentences;
+  }
+  return typedPronunciationItems(sentences, corrected);
+}
+
 function itemsLeft(ctx: AllowedNextContext): string[] {
   const done = ctx.state.practisedItems[ctx.segId] ?? [];
   return ctx.items.filter((i) => !done.includes(i));

@@ -10,7 +10,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
   allowedNextFor, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
-  sayWithinBudget, sharesCardWords, enterPartState, boardEmphasis, answerShaped, typedTurnSpokenText, typedPronunciationItems, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
+  sayWithinBudget, sharesCardWords, enterPartState, boardEmphasis, answerShaped, typedTurnSpokenText, typedPronunciationItems, typedPronunciationItemsFor, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
 import { TYPED_TURN_INSTRUCTIONS, type TypedNext, type TypedTurn } from '../src/lib/tutor/voice/typed-turn';
@@ -112,6 +112,28 @@ test('V5: typedPronunciationItems — authored items, then the learner\'s correc
   assert.deepEqual(typedPronunciationItems(authored, []), authored);
   assert.deepEqual(typedPronunciationItems([], ['no capital here.', 'Two words.', 'Fine sentence without stop']), []);
 });
+test('W10-1 (fix wave 10, run 6 796 s): the item list follows the menu pick — words / sentences / the learner\'s own', () => {
+  const pron = (plan.segments.find((s) => s.id === 'pronunciation')?.metadata as { pronunciation: { words: string[]; sentences: string[] } }).pronunciation;
+  const corrected = ['I visited Osaka last year.', 'sales', 'We met five clients.'];
+  // pick 1 — the words, so the brain's next.item="responsibilities" is listed, armed and boarded (not the first sentence)
+  assert.deepEqual(typedPronunciationItemsFor(pron, 'individual words', corrected), pron.words);
+  assert.ok(typedPronunciationItemsFor(pron, 'individual words', corrected).includes('responsibilities'));
+  // pick 2 — the authored sentences, refilled by the learner's corrected sentences (V5)
+  assert.deepEqual(typedPronunciationItemsFor(pron, 'a complete sentence', corrected), [...pron.sentences, 'I visited Osaka last year.', 'We met five clients.']);
+  // pick 3 — the learner's own corrected sentences only; none yet ⇒ the authored sentences
+  assert.deepEqual(typedPronunciationItemsFor(pron, 'speaking more naturally', corrected), ['I visited Osaka last year.', 'We met five clients.']);
+  assert.deepEqual(typedPronunciationItemsFor(pron, 'speaking more naturally', []), pron.sentences);
+  // no pick yet / an unrecognised pick ⇒ today's list (sentences + refill)
+  assert.deepEqual(typedPronunciationItemsFor(pron, null, corrected), typedPronunciationItems(pron.sentences, corrected));
+  assert.deepEqual(typedPronunciationItemsFor(pron, 'skip and continue', corrected), typedPronunciationItems(pron.sentences, corrected));
+  // a plan without words: pick 1 falls back to the sentences
+  assert.deepEqual(typedPronunciationItemsFor({ sentences: pron.sentences }, 'individual words', []), pron.sentences);
+  // the W6 list and itemsLeft follow: with pick 1 the words are the items left
+  const c = ctx('pronunciation', { items: typedPronunciationItemsFor(pron, 'individual words', []), menuPick: 'individual words' });
+  assert.deepEqual(itemsLeftFor(c), pron.words);
+  assert.ok(allowedNextFor(c).includes('item'));
+});
+
 test('menu / pronunciation', () => {
   const ms = (asked: number, picked: string | null) => ({ menuState: { pronunciation: { asked, picked } } });
   assert.deepEqual(allowedNextFor(ctx('pronunciation', { state: ms(0, null) })), ['menu']);
