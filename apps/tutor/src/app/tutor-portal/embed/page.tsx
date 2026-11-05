@@ -1208,6 +1208,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       sourceHost: getEmbeddingHost(),
       studentName: studentName || undefined,
       studentId: config?.student_id || undefined,
+      // Learner summary: [1] is the support language of the summary lines.
+      ...(tutorLanguages?.length ? { tutorLanguages } : {}),
       startedAt: sessionStartRef.current.toISOString(),
       // Partner minute pool: the moment the tutor engaged in THIS sitting
       // (start tap / evelyn:start). The server charges wall clock from here.
@@ -1331,7 +1333,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       }).catch(() => {});
       commitDebugEvents();   // the second fetch carries the events
     }
-  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands, embedToken, notePriorActive]);
+  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands, embedToken, notePriorActive, tutorLanguages]);
 
   // Session-quality A1 (2026-07-08): accumulate per-attempt claude-brain
   // token usage so the TutorSession record stops reading 0 tokens / $0 for

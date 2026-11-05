@@ -22,6 +22,7 @@ import { buildAttemptSpanWrite, durationBehindSpans, planAttemptSave, sessionAct
 import { clientTotalsMax, usageTotalsBehind } from "@/lib/tutor/ai/usage-totals";import { homeworkSolvedFromDebugEvents } from '@/lib/tutor/lesson-plan/homework-ledger';
 import { runSummaryForSession } from '@/lib/tutor/portal/learner-summary-store';
 import { TUTOR_LEARNER_SUMMARY } from '@/lib/tutor/orchestrator/flags';
+import { isLearnerSummarySubject, sanitizeTutorLanguages } from '@/lib/tutor/portal/learner-summary';
 
 // Logged once per process: the first save whose identity came from the token.
 let identityFromTokenLogged = false;
@@ -249,6 +250,10 @@ export async function POST(req: NextRequest) {
     if (identityStudentId) updateFields.studentId = identityStudentId;
     if (body.voiceEngine !== undefined)
       updateFields.voiceEngine = body.voiceEngine;
+    // Learner summary: the session's tutor languages ([1] = support language).
+    // Lesson configuration, not identity.
+    const tutorLanguages = sanitizeTutorLanguages(body.tutorLanguages);
+    if (tutorLanguages) updateFields.tutorLanguages = tutorLanguages;
     if (body.endedAt !== undefined) updateFields.endedAt = body.endedAt;
     // `duration` = the session's cumulative ACTIVE seconds (2026-10-03).
     // Each page mount ("attempt") measures `body.duration` from its OWN
@@ -426,7 +431,7 @@ export async function POST(req: NextRequest) {
     const MAX_GUARDED_TRIES = 3;
     let attemptPlan: AttemptSavePlan | null = null;
     let session: {
-      sessionId: string; studentId?: string; sourcePartnerId?: string; transcript?: unknown[]; startedAt?: Date; duration?: number; attemptSpans?: unknown;
+      sessionId: string; studentId?: string; sourcePartnerId?: string; subject?: string; transcript?: unknown[]; startedAt?: Date; duration?: number; attemptSpans?: unknown;
       tokenUsage?: unknown; voiceEngine?: unknown; totalInputTokens?: unknown; totalOutputTokens?: unknown; estimatedCost?: unknown;
     } | null = null;
     let spanWritten = false;
@@ -514,9 +519,10 @@ export async function POST(req: NextRequest) {
     // Learner home (task 4): a completed save starts the learner summary.
     // Fire-and-forget — the claim makes it run once; it never blocks the save.
     // Only for a partner learner's row with a real lesson (>= 4 turns, the
-    // learner home's listing rule), and never when TUTOR_LEARNER_SUMMARY=off.
+    // learner home's listing rule), only for language lessons, and never when
+    // TUTOR_LEARNER_SUMMARY=off (runSummaryForSession re-checks all of these).
     if (body.status === "completed" && session && TUTOR_LEARNER_SUMMARY && session.studentId && session.sourcePartnerId
-      && (session.transcript?.length ?? 0) >= 4) {
+      && isLearnerSummarySubject(session.subject) && (session.transcript?.length ?? 0) >= 4) {
       void runSummaryForSession(sessionId).catch((e) => console.warn("[learner-summary] completed hook failed", e));
     }
 

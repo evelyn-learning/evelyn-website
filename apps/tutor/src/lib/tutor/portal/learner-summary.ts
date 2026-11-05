@@ -1,12 +1,13 @@
 /**
  * Learner summary (GDI learner home): a stored tutor session → facts, a generic
- * prompt, and a validated EN/JA summary. Pure: the model call is injected
+ * prompt, and a validated English summary with optional support-language lines. Pure: the model call is injected
  * (Task 2 wires callGraderJson). Numbers, levels and corrections always come
  * from the session, never from the model.
  */
 import type { ReplySchema } from './grade-free-response';
 import type { WorkingLevel } from '../level/working-level';
 
+// v1 field names keep the `_ja` suffix: each `*_ja` field is the support-language line.
 export type LearnerSummaryV1 = {
   version: 1; generated_at: string; model: string; turn_count: number;
   level: { value: WorkingLevel | null; source: 'session' | 'profile' | 'none'; evidence_en: string; evidence_ja: string };
@@ -24,6 +25,8 @@ export type SessionFacts = {
   corrections: LearnerSummaryV1['assessment']['corrections'];
   pronunciation: LearnerSummaryV1['assessment']['pronunciation']['practised'];
   transcriptExcerpt: string;
+  /** BCP-47 code of the support language (the session's tutorLanguages[1]), or null. */
+  supportLanguage: string | null;
 };
 
 export type SessionFactsInput = {
@@ -31,6 +34,7 @@ export type SessionFactsInput = {
   transcript: Array<{ role: string; text: string; whiteboardCommands?: Array<Record<string, unknown>> }>;
   debugEvents?: Array<{ type: string; message: string }>;
   lessonProgress?: { completedSegmentIds?: string[] };
+  tutorLanguages?: string[];
 };
 
 type ModelReply = {
@@ -44,8 +48,43 @@ const MAX_TURN_CHARS = 160;
 const MAX_FIELD = 400;
 const NOT_PRACTISED_EN = 'Pronunciation was not practised in this lesson.';
 const NOT_PRACTISED_JA = '今回のレッスンでは発音の練習は行いませんでした。';
-const PROFILE_EVIDENCE_EN = 'Level set in an earlier lesson';
-const PROFILE_EVIDENCE_JA = '以前のレッスンで設定されたレベルです。';
+const LEVEL_NONE_EN = 'Level not set in this lesson.';
+const LEVEL_NONE_JA = 'このレッスンではレベルを設定していません。';
+
+/** Summaries are generated only for language lessons (the session's `subject`). */
+export const LEARNER_SUMMARY_SUBJECT = 'languages';
+export function isLearnerSummarySubject(subject: unknown): boolean {
+  return subject === LEARNER_SUMMARY_SUBJECT;
+}
+
+/** The session's tutor languages as sent by the embed save: 1-4 short BCP-47-like codes, else undefined. */
+export function sanitizeTutorLanguages(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > 4) return undefined;
+  const ok = raw.every((v) => typeof v === 'string' && /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(v) && v.length <= 20);
+  return ok ? (raw as string[]).slice() : undefined;
+}
+
+/** Display name of a support-language code: 'ja' -> Japanese, 'en' -> English, else the code as-is. */
+export function supportLanguageName(code: string): string {
+  return code === 'ja' ? 'Japanese' : code === 'en' ? 'English' : code;
+}
+
+/** A fixed-text support-language line exists only for Japanese; other support languages get ''. */
+function fixedSupportLine(supportLanguage: string | null, ja: string): string {
+  return supportLanguage === 'ja' ? ja : '';
+}
+
+function isoDay(ms: number): string | null {
+  const d = new Date(ms);
+  return Number.isFinite(d.getTime()) ? d.toISOString().slice(0, 10) : null;
+}
+
+function profileEvidence(setAt: number, supportLanguage: string | null): { en: string; ja: string } {
+  const day = isoDay(setAt);
+  return day
+    ? { en: `Level set in your lesson on ${day}.`, ja: fixedSupportLine(supportLanguage, `${day}のレッスンで設定されたレベルです。`) }
+    : { en: 'Level set in an earlier lesson.', ja: fixedSupportLine(supportLanguage, '以前のレッスンで設定されたレベルです。') };
+}
 
 const LEVELS = ['beginner', 'intermediate', 'advanced'] as const;
 
@@ -98,11 +137,16 @@ export function buildSessionFacts(
   profileLevel: { level: WorkingLevel; setAt: number } | null,
 ): SessionFacts {
   const events = input.debugEvents ?? [];
+  const langs = Array.isArray(input.tutorLanguages) ? input.tutorLanguages : [];
+  const supportLanguage = typeof langs[1] === 'string' && langs[1].trim() ? langs[1].trim() : null;
   let level: SessionFacts['level'] = { value: null, source: 'none', evidence_en: '', evidence_ja: '' };
   const lvEvent = [...events].reverse().find((e) => e.type === 'working_level_set');
   const parsed = lvEvent ? parseWorkingLevelEvent(lvEvent.message) : null;
   if (parsed) level = { value: parsed.level, source: 'session', evidence_en: parsed.evidence, evidence_ja: '' };
-  else if (profileLevel) level = { value: profileLevel.level, source: 'profile', evidence_en: PROFILE_EVIDENCE_EN, evidence_ja: PROFILE_EVIDENCE_JA };
+  else if (profileLevel) {
+    const ev = profileEvidence(profileLevel.setAt, supportLanguage);
+    level = { value: profileLevel.level, source: 'profile', evidence_en: ev.en, evidence_ja: ev.ja };
+  }
 
   const pronunciation: SessionFacts['pronunciation'] = [];
   for (const e of events) {
@@ -124,6 +168,7 @@ export function buildSessionFacts(
     corrections: correctionsFromTranscript(input.transcript ?? []),
     pronunciation,
     transcriptExcerpt,
+    supportLanguage,
   };
 }
 
@@ -144,8 +189,14 @@ export const LEARNER_SUMMARY_SCHEMA: ReplySchema = {
 };
 
 export function renderSummaryPrompt(facts: SessionFacts): { system: string; user: string } {
+  const support = facts.supportLanguage
+    ? `Each \`_ja\` field is the support-language line: one short sentence in ${supportLanguageName(facts.supportLanguage)} carrying the same point as its English field.`
+    : 'Leave every `_ja` field as an empty string.';
   const system =
-    'You write the learner-facing summary of one language lesson from the facts given. Never invent scores, levels or corrections; comment only on what the facts show. English first; each `_ja` field is one short polite Japanese sentence carrying the same point. Reply with only the JSON object.';
+    `You write the learner-facing summary of one lesson from the facts given. Never invent scores, levels or corrections; comment only on what the facts show. English first. ${support} Reply with only the JSON object.`;
+  const levelAsk = facts.level.source === 'session'
+    ? 'level_evidence_en, level_evidence_ja (why this level, from the facts)'
+    : 'level_evidence_en, level_evidence_ja (empty strings: the level is not described in this summary)';
   const lines = [
     `Lesson: ${facts.lessonTitle || '(untitled)'}`,
     `Duration: ${facts.durationMin} min`,
@@ -160,7 +211,7 @@ export function renderSummaryPrompt(facts: SessionFacts): { system: string; user
     'Transcript excerpt:',
     facts.transcriptExcerpt || '(empty)',
     '',
-    'Reply with JSON fields: level_evidence_en, level_evidence_ja (why this level, from the facts), grammar_en, grammar_ja (one observation on the learner\'s grammar), pronunciation_comment_en, pronunciation_comment_ja (on the measured scores only; say it was not practised if none), recommendations (3 to 5 objects {en, ja}: concrete next steps).',
+    `Reply with JSON fields: ${levelAsk}, grammar_en, grammar_ja (one observation on the learner\'s grammar), pronunciation_comment_en, pronunciation_comment_ja (on the measured scores only; say it was not practised if none), recommendations (3 to 5 objects {en, ja}: concrete next steps).`,
   ];
   return { system, user: lines.join('\n') };
 }
@@ -168,19 +219,33 @@ export function renderSummaryPrompt(facts: SessionFacts): { system: string; user
 function okStr(v: unknown): v is string {
   return typeof v === 'string' && v.trim().length > 0 && v.length <= MAX_FIELD;
 }
+function okStrOrEmpty(v: unknown): v is string {
+  return typeof v === 'string' && v.length <= MAX_FIELD;
+}
 
-export function validateModelReply(reply: unknown): ModelReply | null {
+/**
+ * `opts.supportLanguage`: when set, every `_ja` line must be non-empty; when
+ * absent/null, `_ja` lines may be empty. `opts.levelSource`: level evidence is
+ * required only for a session-set level (other sources use fixed text).
+ */
+export function validateModelReply(
+  reply: unknown,
+  opts: { supportLanguage?: string | null; levelSource?: SessionFacts['level']['source'] } = {},
+): ModelReply | null {
   if (!reply || typeof reply !== 'object' || Array.isArray(reply)) return null;
   const r = reply as Record<string, unknown>;
-  for (const k of ['level_evidence_en', 'level_evidence_ja', 'grammar_en', 'grammar_ja', 'pronunciation_comment_en', 'pronunciation_comment_ja']) {
-    if (!okStr(r[k])) return null;
-  }
+  const ja = opts.supportLanguage ? okStr : okStrOrEmpty;
+  const levelEn = opts.levelSource && opts.levelSource !== 'session' ? okStrOrEmpty : okStr;
+  const levelJa = opts.levelSource && opts.levelSource !== 'session' ? okStrOrEmpty : ja;
+  if (!levelEn(r.level_evidence_en) || !levelJa(r.level_evidence_ja)) return null;
+  for (const k of ['grammar_en', 'pronunciation_comment_en']) if (!okStr(r[k])) return null;
+  for (const k of ['grammar_ja', 'pronunciation_comment_ja']) if (!ja(r[k])) return null;
   const recs = r.recommendations;
   if (!Array.isArray(recs) || recs.length < 3 || recs.length > 5) return null;
   const out: Array<{ en: string; ja: string }> = [];
   for (const x of recs) {
     const o = x as Record<string, unknown> | null;
-    if (!o || !okStr(o.en) || !okStr(o.ja)) return null;
+    if (!o || !okStr(o.en) || !ja(o.ja)) return null;
     out.push({ en: o.en as string, ja: o.ja as string });
   }
   return {
@@ -198,10 +263,13 @@ export function assembleSummary(
 ): LearnerSummaryV1 {
   if (!reply) throw new Error('assembleSummary: reply is not valid');
   const practised = facts.pronunciation.length > 0;
+  const sl = facts.supportLanguage;
+  // No support language: every support-language line is empty, whatever the model wrote.
+  const j = (s: string) => (sl ? s : '');
   const level = { ...facts.level };
-  if (level.source === 'session') { level.evidence_en = reply.level_evidence_en; level.evidence_ja = reply.level_evidence_ja; }
-  else if (level.source === 'profile') { level.evidence_en = PROFILE_EVIDENCE_EN; level.evidence_ja = PROFILE_EVIDENCE_JA; }
-  else { level.evidence_en = reply.level_evidence_en; level.evidence_ja = reply.level_evidence_ja; }
+  if (level.source === 'session') { level.evidence_en = reply.level_evidence_en; level.evidence_ja = j(reply.level_evidence_ja); }
+  else if (level.source === 'profile') { /* fixed, dated text from buildSessionFacts */ }
+  else { level.evidence_en = LEVEL_NONE_EN; level.evidence_ja = fixedSupportLine(sl, LEVEL_NONE_JA); }
   return {
     version: 1,
     generated_at: (meta.now ?? new Date()).toISOString(),
@@ -209,15 +277,15 @@ export function assembleSummary(
     turn_count: meta.turnCount,
     level,
     assessment: {
-      grammar_en: reply.grammar_en, grammar_ja: reply.grammar_ja,
+      grammar_en: reply.grammar_en, grammar_ja: j(reply.grammar_ja),
       corrections: facts.corrections.map((c) => ({ ...c })),
       pronunciation: {
         practised: facts.pronunciation.map((p) => ({ ...p, weak: [...p.weak] })),
         comment_en: practised ? reply.pronunciation_comment_en : NOT_PRACTISED_EN,
-        comment_ja: practised ? reply.pronunciation_comment_ja : NOT_PRACTISED_JA,
+        comment_ja: practised ? j(reply.pronunciation_comment_ja) : fixedSupportLine(sl, NOT_PRACTISED_JA),
       },
     },
-    recommendations: reply.recommendations.map((x) => ({ ...x })),
+    recommendations: reply.recommendations.map((x) => ({ en: x.en, ja: j(x.ja) })),
   };
 }
 
@@ -230,7 +298,7 @@ export async function generateLearnerSummary(
   let lastError = 'invalid reply';
   for (const u of [user, retryUser]) {
     try {
-      const valid = validateModelReply(await deps.callJson(system, u, LEARNER_SUMMARY_SCHEMA));
+      const valid = validateModelReply(await deps.callJson(system, u, LEARNER_SUMMARY_SCHEMA), { supportLanguage: facts.supportLanguage, levelSource: facts.level.source });
       if (valid) return { ok: true, summary: assembleSummary(facts, valid, { model: deps.model, turnCount: deps.turnCount, now: deps.now }) };
       lastError = 'invalid reply';
     } catch (e) {

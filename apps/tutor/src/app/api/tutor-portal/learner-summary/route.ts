@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyEmbedTokenAsync, type EmbedTokenPayload } from '@/lib/tutor/portal/embed-token';
 import {
-  activeSummaryStoreDeps, runSummaryForSession, summaryStateOf, type SummaryState, type SummaryStoreDeps,
+  activeSummaryStoreDeps, isSummaryRefusal, runSummaryForSession, summaryRefusal, summaryStateOf,
+  type SummaryRefusal, type SummaryState, type SummaryStoreDeps,
 } from '@/lib/tutor/portal/learner-summary-store';
 import { signReplayToken, replayUrl, type ReplayTokenPayload } from '@/lib/tutor/portal/replay-token';
 
@@ -17,8 +18,22 @@ import { signReplayToken, replayUrl, type ReplayTokenPayload } from '@/lib/tutor
  * GET reads the current state. POST runs `runSummaryForSession` and waits up
  * to 20 s; on timeout it answers the current state while generation continues.
  * Response: `{ state, replayUrl, hasAudio }`.
+ *
+ * After scoping, both verbs refuse with 403 when the session gets no summary:
+ * `learner_summary_disabled` (TUTOR_LEARNER_SUMMARY=off), `learner_summary_unsupported`
+ * (not a `languages` lesson), `session_too_short` (< 4 turns). The end panel
+ * falls back to the plain "Session Complete" card on 401/403.
  */
 const POST_WAIT_MS = 20_000;
+
+const REFUSAL_ERROR: Record<SummaryRefusal, string> = {
+  disabled: 'learner_summary_disabled',
+  unsupported: 'learner_summary_unsupported',
+  too_short: 'session_too_short',
+};
+function refuse(r: SummaryRefusal) {
+  return NextResponse.json({ error: REFUSAL_ERROR[r] }, { status: 403 });
+}
 
 type Loaded = NonNullable<Awaited<ReturnType<SummaryStoreDeps['loadSession']>>>;
 type Scoped =
@@ -79,6 +94,8 @@ export async function GET(req: NextRequest) {
   const token = req.headers.get('x-embed-token') ?? u.searchParams.get('token');
   const s = await scope(token, u.searchParams.get('sessionId'));
   if (!s.ok) return s.res;
+  const refusal = summaryRefusal(s.session);
+  if (refusal) return refuse(refusal);
   return respond(req, s, summaryStateOf(s.session.learnerSummary));
 }
 
@@ -93,6 +110,8 @@ export async function POST(req: NextRequest) {
   const token = req.headers.get('x-embed-token') ?? (typeof body.embedToken === 'string' ? body.embedToken : null);
   const s = await scope(token, body.sessionId);
   if (!s.ok) return s.res;
+  const refusal = summaryRefusal(s.session);
+  if (refusal) return refuse(refusal);
 
   const sessionId = s.session.sessionId;
   const run = runSummaryForSession(sessionId, s.deps);
@@ -101,7 +120,9 @@ export async function POST(req: NextRequest) {
   const timeout = new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), POST_WAIT_MS); });
   let state: SummaryState | null;
   try {
-    state = await Promise.race([run, timeout]);
+    const r = await Promise.race([run, timeout]);
+    if (r && isSummaryRefusal(r)) return refuse(r.status);
+    state = r;
   } catch {
     state = null;
   } finally {

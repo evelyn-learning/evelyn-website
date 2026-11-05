@@ -10,6 +10,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chargePartnerFor } from '../src/lib/tutor/portal/partner-pool';
+import { sanitizeTutorLanguages } from '../src/lib/tutor/portal/learner-summary';
 
 let passed = 0;
 let failed = 0;
@@ -71,6 +72,34 @@ test('source: a completed save fires the learner summary, never awaited', () => 
   assert.ok(guard.includes('TUTOR_LEARNER_SUMMARY'), 'kill switch guards the hook');
   assert.ok(guard.includes('session.studentId') && guard.includes('session.sourcePartnerId'), 'partner learner rows only');
   assert.ok(/session\.transcript\?\.length \?\? 0\) >= 4/.test(guard), 'at least 4 transcript turns');
+});
+
+test('source: the completed hook runs only for language lessons (I2)', () => {
+  const src = readFileSync(join(__dirname, '../src/app/api/tutor/session-usage/route.ts'), 'utf8');
+  const guard = src.slice(src.indexOf('if (body.status === "completed" && session'), src.indexOf('void runSummaryForSession('));
+  assert.ok(guard.includes('isLearnerSummarySubject(session.subject)'), 'subject pre-check in the hook guard');
+});
+
+test('sanitizeTutorLanguages keeps short language codes only (I2)', () => {
+  assert.deepEqual(sanitizeTutorLanguages(['en', 'ja']), ['en', 'ja']);
+  assert.deepEqual(sanitizeTutorLanguages(['en', 'pt-BR']), ['en', 'pt-BR']);
+  assert.equal(sanitizeTutorLanguages('en,ja'), undefined);
+  assert.equal(sanitizeTutorLanguages([]), undefined);
+  assert.equal(sanitizeTutorLanguages(['en', '<script>']), undefined);
+  assert.equal(sanitizeTutorLanguages(['en', 'ja', 'ko', 'zh', 'fr']), undefined);
+});
+
+test('source: the save route stores tutorLanguages outside the identity logic (I2)', () => {
+  const src = readFileSync(join(__dirname, '../src/app/api/tutor/session-usage/route.ts'), 'utf8');
+  assert.ok(/const tutorLanguages = sanitizeTutorLanguages\(body\.tutorLanguages\);\s*if \(tutorLanguages\) updateFields\.tutorLanguages = tutorLanguages;/.test(src), 'updateFields.tutorLanguages from the sanitized body');
+  const model = readFileSync(join(__dirname, '../src/models/TutorSession.ts'), 'utf8');
+  assert.ok(/tutorLanguages\?: string\[\];/.test(model) && /tutorLanguages: \{ type: \[String\], default: undefined \}/.test(model), 'additive model field');
+});
+
+test('source: the embed save body carries tutorLanguages (I2)', () => {
+  const src = readFileSync(join(__dirname, '../src/app/tutor-portal/embed/page.tsx'), 'utf8');
+  const base = src.slice(src.indexOf('const basePayload = {'), src.indexOf('const newDebugEvents'));
+  assert.ok(/\.\.\.\(tutorLanguages\?\.length \? \{ tutorLanguages \} : \{\}\)/.test(base), 'basePayload spreads tutorLanguages');
 });
 
 test('source: TUTOR_LEARNER_SUMMARY kill switch defaults ON', () => {

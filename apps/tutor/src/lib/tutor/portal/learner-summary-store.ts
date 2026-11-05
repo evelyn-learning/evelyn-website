@@ -6,17 +6,44 @@
 import connectDB from '@core/db';
 import { TutorSession, type ITutorSession } from '@/models/TutorSession';
 import {
-  buildSessionFacts, generateLearnerSummary,
+  buildSessionFacts, generateLearnerSummary, isLearnerSummarySubject,
   type LearnerSummaryV1, type SessionFactsInput,
 } from './learner-summary';
 import { resolveModel } from '../ai/model-registry';
 import { callGraderJson, type GraderModelClient, type ReplySchema } from './grade-free-response';
 
 export type SummaryState = { status: 'none' | 'pending' | 'ready' | 'failed'; summary?: LearnerSummaryV1; error?: string; version?: number };
+/** Why a session gets no summary at all (no claim, no model call). */
+export type SummaryRefusal = 'disabled' | 'unsupported' | 'too_short';
+export type SummaryRunResult = SummaryState | { status: SummaryRefusal };
+
+/** Minimum transcript turns for a summary (the learner home's listing rule). */
+export const MIN_SUMMARY_TURNS = 4;
+
+/** Kill switch, read at call time: TUTOR_LEARNER_SUMMARY=off stops every entry point (default ON). */
+export function learnerSummaryEnabled(): boolean {
+  return process.env.TUTOR_LEARNER_SUMMARY !== 'off';
+}
+
+/**
+ * The refusal for a loaded session, or null when it may be summarised.
+ * Order: kill switch, then subject (language lessons only), then length.
+ */
+export function summaryRefusal(session: { subject?: string; transcript?: unknown[] } | null | undefined): SummaryRefusal | null {
+  if (!learnerSummaryEnabled()) return 'disabled';
+  if (!session) return null;
+  if (!isLearnerSummarySubject(session.subject)) return 'unsupported';
+  if ((session.transcript?.length ?? 0) < MIN_SUMMARY_TURNS) return 'too_short';
+  return null;
+}
+
+export function isSummaryRefusal(r: SummaryRunResult): r is { status: SummaryRefusal } {
+  return r.status === 'disabled' || r.status === 'unsupported' || r.status === 'too_short';
+}
 
 export type LearnerSessionRow = {
   sessionId: string; startedAt: string; endedAt?: string; durationSec: number; status: string; turnCount: number;
-  hasAudio: boolean; subject?: string; topic?: string; level?: string; studentName?: string;
+  hasAudio: boolean; subject?: string; topic?: string; level?: string; studentName?: string; updatedAt?: string;
   summary: SummaryState; transcript: unknown[]; whiteboardCommands: unknown[]; sessionGoal?: string;
 };
 
@@ -24,6 +51,8 @@ type Stored = ITutorSession['learnerSummary'];
 export type ClaimDecision = 'claimed' | 'busy' | 'ready';
 
 export const PENDING_STALE_MS = 120_000;
+/** A failed summary is not re-claimed until it is this old (Retry cooldown). */
+export const FAILED_RETRY_COOLDOWN_MS = 60_000;
 export const RESUME_TURNS = 3;
 
 export interface SummaryStoreDeps {
@@ -39,7 +68,9 @@ export interface SummaryStoreDeps {
 /** The claim rule, pure. `prev` is the stored learnerSummary (or absent). */
 export function claimDecision(prev: Stored | undefined | null, turnCount: number, now: Date): ClaimDecision {
   if (!prev) return 'claimed';
-  if (prev.status === 'failed') return 'claimed';
+  if (prev.status === 'failed') {
+    return now.getTime() - new Date(prev.updatedAt).getTime() >= FAILED_RETRY_COOLDOWN_MS ? 'claimed' : 'busy';
+  }
   if (prev.status === 'pending') {
     return now.getTime() - new Date(prev.updatedAt).getTime() > PENDING_STALE_MS ? 'claimed' : 'busy';
   }
@@ -51,20 +82,30 @@ export function claimVersion(prev: Stored | undefined | null): number {
   return (prev?.version ?? 0) + (prev?.status === 'ready' ? 1 : 0) || 1;
 }
 
-/** The claim's pipeline update: REPLACES the whole sub-document (no summary/error carried over). */
+/**
+ * The claim's pipeline update: replaces the sub-document but carries the
+ * previous `summary` over (shown while regenerating, and kept readable if the
+ * regeneration fails). `error` is dropped. A missing summary stays missing.
+ */
 export function claimUpdatePipeline(turnCount: number, now: Date) {
+  // One $mergeObjects expression, not a nested object literal: a pipeline
+  // $set with an object literal MERGES into an existing embedded document
+  // (it would keep the old `error`); an expression result replaces it.
   return [{
     $set: {
       learnerSummary: {
-        status: 'pending', turnCount, updatedAt: now,
-        // claimVersion in aggregation form: 1 first, +1 only from a ready summary.
-        version: {
-          $add: [
-            { $ifNull: ['$learnerSummary.version', 0] },
-            { $cond: [{ $eq: ['$learnerSummary.status', 'ready'] }, 1, 0] },
-            { $cond: [{ $gt: [{ $ifNull: ['$learnerSummary.version', 0] }, 0] }, 0, 1] },
-          ],
-        },
+        $mergeObjects: [{
+          status: 'pending', turnCount, updatedAt: now,
+          summary: '$learnerSummary.summary',
+          // claimVersion in aggregation form: 1 first, +1 only from a ready summary.
+          version: {
+            $add: [
+              { $ifNull: ['$learnerSummary.version', 0] },
+              { $cond: [{ $eq: ['$learnerSummary.status', 'ready'] }, 1, 0] },
+              { $cond: [{ $gt: [{ $ifNull: ['$learnerSummary.version', 0] }, 0] }, 0, 1] },
+            ],
+          },
+        }],
       },
     },
   }];
@@ -78,9 +119,12 @@ export function summaryStateOf(s: Stored | undefined | null): SummaryState {
   return out;
 }
 
-export async function runSummaryForSession(sessionId: string, deps: SummaryStoreDeps = activeDeps()): Promise<SummaryState> {
+export async function runSummaryForSession(sessionId: string, deps: SummaryStoreDeps = activeDeps()): Promise<SummaryRunResult> {
+  if (!learnerSummaryEnabled()) return { status: 'disabled' };
   const session = await deps.loadSession(sessionId);
   if (!session) return { status: 'none' };
+  const refusal = summaryRefusal(session);
+  if (refusal) return { status: refusal };
   const turnCount = session.transcript.length;
   const decision = await deps.claim(sessionId, turnCount, deps.now());
   if (decision !== 'claimed') return summaryStateOf(session.learnerSummary);
@@ -112,7 +156,7 @@ export function mongoSummaryStoreDeps(): SummaryStoreDeps {
         $or: [
           { learnerSummary: { $exists: false } },
           { learnerSummary: null },
-          { 'learnerSummary.status': 'failed' },
+          { 'learnerSummary.status': 'failed', 'learnerSummary.updatedAt': { $lte: new Date(now.getTime() - FAILED_RETRY_COOLDOWN_MS) } },
           { 'learnerSummary.status': 'pending', 'learnerSummary.updatedAt': { $lt: stale } },
           { 'learnerSummary.status': 'ready', 'learnerSummary.turnCount': { $lte: turnCount - RESUME_TURNS } },
         ],
@@ -173,6 +217,7 @@ export async function listLearnerSessions(partnerId: string, studentId: string, 
       hasAudio: !!d.hasAudio,
       subject: d.subject, topic: d.topic,
       level: summary.summary?.level.value ?? undefined,
+      updatedAt: d.updatedAt ? new Date(d.updatedAt).toISOString() : undefined,
       studentName: d.studentName,
       summary,
       transcript: d.transcript,

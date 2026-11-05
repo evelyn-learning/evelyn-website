@@ -52,12 +52,12 @@ const goodReply = {
   recommendations: [1, 2, 3].map((n) => ({ en: `Practise item ${n}`, ja: `練習 ${n}` })),
 };
 
-function mkDeps(sourcePartnerId = 'p1') {
+function mkDeps(sourcePartnerId = 'p1', over: Record<string, unknown> = {}) {
   const calls = { claim: 0, model: 0 };
   const session: any = {
-    sessionId: 's1', subject: 'English', topic: 'Meetings', duration: 600, hasAudio: true,
+    sessionId: 's1', subject: 'languages', topic: 'Meetings', duration: 600, hasAudio: true,
     transcript: Array.from({ length: 6 }, (_, i) => ({ role: i % 2 ? 'tutor' : 'student', text: `turn ${i}` })),
-    debugEvents: [], studentId: 'A', sourcePartnerId,
+    debugEvents: [], studentId: 'A', sourcePartnerId, ...over,
   };
   const deps: SummaryStoreDeps = {
     async loadSession(id) { return id === 's1' ? session : null; },
@@ -161,6 +161,42 @@ const post = (body: Record<string, unknown>, token?: string) => POST(new Request
     check('POST body embedToken accepted', rb.status === 200, String(rb.status));
     const nf = await post({ sessionId: 'nope' }, tokA);
     check('POST unknown session -> 404', nf.status === 404, String(nf.status));
+  }
+  {
+    // I1: kill switch off -> 403 learner_summary_disabled on both verbs, no claim, no model call.
+    const { deps, calls } = mkDeps();
+    __setLearnerSummaryDepsForTests(deps);
+    process.env.TUTOR_LEARNER_SUMMARY = 'off';
+    const g = await get('sessionId=s1', tokA);
+    const gj: any = await g.json();
+    const p = await post({ sessionId: 's1' }, tokA);
+    const pj: any = await p.json();
+    delete process.env.TUTOR_LEARNER_SUMMARY;
+    check('flag off: GET 403 learner_summary_disabled', g.status === 403 && gj.error === 'learner_summary_disabled', `${g.status} ${JSON.stringify(gj)}`);
+    check('flag off: POST 403 learner_summary_disabled', p.status === 403 && pj.error === 'learner_summary_disabled', `${p.status} ${JSON.stringify(pj)}`);
+    check('flag off: no claim, no model call', calls.claim === 0 && calls.model === 0, JSON.stringify(calls));
+    const bad = await get('sessionId=s1', 'not.a.token');
+    check('flag on again: auth still first (bad token 401)', bad.status === 401, String(bad.status));
+  }
+  {
+    // I2: a non-language session -> 403 learner_summary_unsupported, no claim.
+    const { deps, calls } = mkDeps('p1', { subject: 'math' });
+    __setLearnerSummaryDepsForTests(deps);
+    const g = await get('sessionId=s1', tokA);
+    const p = await post({ sessionId: 's1' }, tokA);
+    const pj: any = await p.json();
+    check('subject math: GET 403 unsupported', g.status === 403 && (await g.json()).error === 'learner_summary_unsupported', String(g.status));
+    check('subject math: POST 403 unsupported', p.status === 403 && pj.error === 'learner_summary_unsupported' && calls.claim === 0 && calls.model === 0, `${p.status} ${JSON.stringify(pj)} ${JSON.stringify(calls)}`);
+  }
+  {
+    // M6: fewer than 4 turns -> 403 session_too_short, no claim.
+    const { deps, calls } = mkDeps('p1', { transcript: [{ role: 'student', text: 'hi' }, { role: 'tutor', text: 'hello' }, { role: 'student', text: 'bye' }] });
+    __setLearnerSummaryDepsForTests(deps);
+    const p = await post({ sessionId: 's1' }, tokA);
+    const pj: any = await p.json();
+    check('3 turns: POST 403 session_too_short, no claim', p.status === 403 && pj.error === 'session_too_short' && calls.claim === 0 && calls.model === 0, `${p.status} ${JSON.stringify(pj)}`);
+    const g = await get('sessionId=s1', tokA);
+    check('3 turns: GET 403 session_too_short', g.status === 403 && (await g.json()).error === 'session_too_short', String(g.status));
   }
   __setLearnerSummaryDepsForTests(null);
   __setPartnerTokenSecretDepsForTests(null);

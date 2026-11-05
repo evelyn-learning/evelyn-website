@@ -50,6 +50,8 @@ export interface ITutorSession extends Document {
   studentEmail?: string;
   /** A2: partner's stable student id from the embed token (name fallback). */
   studentId?: string;
+  /** Embed lesson's tutor languages (e.g. ['en','ja']); [1] = the summary's support language. */
+  tutorLanguages?: string[];
   subject: string;
   topic: string;
   level: string;
@@ -396,6 +398,7 @@ const TutorSessionSchema = new Schema<ITutorSession>(
       ),
       default: undefined,
     },
+    tutorLanguages: { type: [String], default: undefined },
     learnerSummary: {
       type: new Schema(
         {

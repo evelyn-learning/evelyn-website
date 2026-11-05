@@ -7,6 +7,7 @@ import assert from 'node:assert';
 import {
   parseWorkingLevelEvent, parsePronunciationNote, correctionsFromTranscript, buildSessionFacts,
   validateModelReply, assembleSummary, generateLearnerSummary, renderSummaryPrompt, LEARNER_SUMMARY_SCHEMA,
+  supportLanguageName, isLearnerSummarySubject,
   type SessionFacts,
 } from '../src/lib/tutor/portal/learner-summary';
 
@@ -50,7 +51,7 @@ check('corrections dedupe', correctionsFromTranscript([...tr, ...tr]).length ===
 // §D facts
 const base = { subject: 'English', topic: 'Intro', duration: 600, transcript: tr };
 const f1 = buildSessionFacts(base, { level: 'intermediate', setAt: Date.UTC(2026, 10, 1) });
-check('profile level', f1.level.source === 'profile' && f1.level.value === 'intermediate' && f1.level.evidence_en.includes('earlier lesson'));
+check('profile level (M7: dated)', f1.level.source === 'profile' && f1.level.value === 'intermediate' && f1.level.evidence_en.includes('set in your lesson on 2026-11-01'), f1.level.evidence_en);
 const f2 = buildSessionFacts(base, null);
 check('no level', f2.level.source === 'none' && f2.level.value === null);
 check('no pronunciation events', eq(f2.pronunciation, []));
@@ -77,7 +78,7 @@ check('assemble copies corrections', eq(sNone.assessment.corrections, f2.correct
 const sSes = assembleSummary(f3, validateModelReply(reply(4)), { model: 'm', turnCount: 3, now });
 check('assemble practised uses model comment', sSes.assessment.pronunciation.comment_en === 'Great' && sSes.level.evidence_en === 'a');
 const sProf = assembleSummary(f1, validateModelReply(reply(4)), { model: 'm', turnCount: 3, now });
-check('profile evidence fixed', sProf.level.evidence_en.includes('earlier lesson') && sProf.level.evidence_en !== 'a');
+check('profile evidence fixed (M7: dated)', sProf.level.evidence_en.includes('set in your lesson on 2026-11-01') && sProf.level.evidence_en !== 'a', sProf.level.evidence_en);
 
 // §F generator
 async function main() {
@@ -96,6 +97,37 @@ const p = renderSummaryPrompt(f3);
 check('system generic', !p.system.includes('GDI') && !p.system.includes('Work projects'));
 check('user has facts', p.user.includes('94') && p.user.includes('I work as a sales manager in Nagoya.'));
 check('schema required all', LEARNER_SUMMARY_SCHEMA.required.length === 7 && LEARNER_SUMMARY_SCHEMA.additionalProperties === false);
+
+
+// §H I2 — language gate + support language from tutorLanguages[1]
+check('subject gate: languages only', isLearnerSummarySubject('languages') && !isLearnerSummarySubject('math') && !isLearnerSummarySubject(undefined));
+check('language names', supportLanguageName('ja') === 'Japanese' && supportLanguageName('en') === 'English' && supportLanguageName('pt-BR') === 'pt-BR');
+const fJa = buildSessionFacts({ ...base, tutorLanguages: ['en', 'ja'] }, null);
+const fEn = buildSessionFacts({ ...base, tutorLanguages: ['en'] }, null);
+const fNoLang = buildSessionFacts(base, null);
+check('facts: support language = tutorLanguages[1]', fJa.supportLanguage === 'ja' && fEn.supportLanguage === null && fNoLang.supportLanguage === null);
+const pJa = renderSummaryPrompt(fJa);
+const pEn = renderSummaryPrompt(fEn);
+check('prompt [en,ja] names Japanese', /Japanese/.test(pJa.system + pJa.user), pJa.system);
+check('prompt [en] says leave _ja empty, no Japanese', /_ja[^.]*empty string/.test(pEn.system) && !/Japanese/.test(pEn.system + pEn.user), pEn.system);
+check('prompt has no "language lesson" / partner wording', !/language lesson|GDI|Japan/.test(pEn.system));
+const emptyJa = { level_evidence_en: 'a', level_evidence_ja: '', grammar_en: 'g', grammar_ja: '', pronunciation_comment_en: 'c', pronunciation_comment_ja: '', recommendations: [1, 2, 3].map((n) => ({ en: `Do ${n}`, ja: '' })) };
+check('validate accepts empty _ja', validateModelReply(emptyJa) !== null);
+check('validate with support language requires _ja', validateModelReply(emptyJa, { supportLanguage: 'ja', levelSource: 'session' }) === null);
+const sEn = assembleSummary(fEn, validateModelReply(reply(3)), { model: 'm', turnCount: 4, now });
+check('no support language: every _ja blank', sEn.level.evidence_ja === '' && sEn.assessment.grammar_ja === '' && sEn.assessment.pronunciation.comment_ja === '' && sEn.recommendations.every((r) => r.ja === ''), JSON.stringify(sEn));
+const sJa = assembleSummary(fJa, validateModelReply(reply(3)), { model: 'm', turnCount: 4, now });
+check('Japanese support: not-practised JA line kept', sJa.assessment.pronunciation.comment_ja === '今回のレッスンでは発音の練習は行いませんでした。' && sJa.assessment.grammar_ja === 'ぶ');
+
+// §I M8 — level none: no "why this level", fixed text
+check('prompt (none) does not ask why this level', !/why this level/.test(renderSummaryPrompt(fEn).user));
+check('prompt (session) still asks why this level', /why this level/.test(renderSummaryPrompt(f3).user));
+check('validate (none) accepts empty level evidence', validateModelReply({ ...emptyJa, level_evidence_en: '' }, { supportLanguage: null, levelSource: 'none' }) !== null);
+check('validate (session) rejects empty level evidence', validateModelReply({ ...emptyJa, level_evidence_en: '' }, { supportLanguage: null, levelSource: 'session' }) === null);
+check('assemble (none) fixed EN text, empty JA without Japanese', sEn.level.evidence_en === 'Level not set in this lesson.' && sEn.level.evidence_ja === '');
+check('assemble (none) JA line with Japanese', sJa.level.evidence_en === 'Level not set in this lesson.' && sJa.level.evidence_ja === 'このレッスンではレベルを設定していません。');
+const fProfJa = buildSessionFacts({ ...base, tutorLanguages: ['en', 'ja'] }, { level: 'beginner', setAt: Date.UTC(2026, 10, 1) });
+check('profile JA line dated with Japanese', fProfJa.level.evidence_ja.includes('2026-11-01') && f1.level.evidence_ja === '', fProfJa.level.evidence_ja);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
