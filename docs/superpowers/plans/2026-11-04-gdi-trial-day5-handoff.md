@@ -11,7 +11,7 @@ Per-learner "Your lessons" home for the GDI testers (spec `docs/superpowers/spec
 - Pool: DONE 11-05 (Praveen: "set the pool to 300 remaining") — `scripts/ops/partner-pool.sh set gdi-demo 786` → cap 786, used 485.3, remaining 300.7.
 - Email draft (placeholders `{{tester-1}}`..`{{tester-4}}`, `{{josh}}`, `{{james}}`): `docs/whitelabel/gdi/email-testers-2026-11-05.md`.
 - Deploy order: `npm run test:all` (baseline failures only) -> `./deploy-tutor-demo.sh` from the worktree -> verify BUILD_ID -> open one home link in Chrome (a tester with a past session shows the summary) -> pool -> mint -> fill and send the email.
-- DEPLOY STATUS: not deployed
+- DEPLOY STATUS: DEPLOYED :3009 11-05 (build `3vktQDLiQmsPo0zzaT_H7` = 7b6dbc30; first cut `sW-nq-RIeFVsiMQh8dn47` = ffa8bf1f showed 2 of 3 summaries failed → validator clipped-not-rejected fix 7b6dbc30). Home links minted to `~/.evelyn/partners/gdi-trial.links.home.prod.txt` (tester-1..4, josh, praveen, james, praveen-run4); email filled at `~/.evelyn/partners/gdi-email-testers-2026-11-05.filled.md` — NOT SENT. Branch pushed; `wt.sh finish` NOT run; :3007/:3008 untouched.
 
 ## ★★★ FIX WAVE 8 11-04 22:37 PST — DEPLOYED :3009 build `W3vDNyfWetw71Y_FTi9YK` (code 54639676, HEAD fee46707) after Praveen's PROD run 4 (embed-1793855133648, 72P/1F; dump `scratchpad/praveen/p7.txt`)
 
