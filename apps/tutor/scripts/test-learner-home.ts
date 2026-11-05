@@ -65,6 +65,7 @@ check('panel POSTs then GETs', /setTimeout\(\(\) => start\(1\), FIRST_POST_DELAY
 check('panel POSTs without a pre-delay', /const FIRST_POST_DELAY_MS = 0;/.test(panelSrc));
 check('embed renders the panel only after the final save settled', /finalSaveSettled \?\s*\(\s*<LessonSummaryPanel/.test(endBranch));
 check('embed final save sets finalSaveSettled in finally', /Promise\.resolve\(saveSession\(endIntent === 'discard' \? 'abandoned' : 'completed'\)\)\s*\.finally\(\(\) => setFinalSaveSettled\(true\)\)/.test(embedSrc));
+check('embed final save has a 15 s settle fallback', /setTimeout\(\(\) => setFinalSaveSettled\(true\), FINAL_SAVE_SETTLE_MS\)/.test(embedSrc) && /const FINAL_SAVE_SETTLE_MS = 15_000;/.test(embedSrc));
 check('saveSession returns the completed fetches', /return Promise\.allSettled\(\[/.test(embedSrc));
 check('panel back link only for return=home', /get\('return'\) === 'home'|showHomeLink/.test(panelSrc) && /return/.test(embedSrc.slice(embedSrc.indexOf('  if (sessionEnded) {\n    return ('), embedSrc.indexOf('  if (sessionEnded) {\n    return (') + 1600)) && /\/tutor-portal\/home\?token=/.test(panelSrc + embedSrc));
 check('panel falls back to Session Complete on 401/403', /401|403/.test(panelSrc) && /Session Complete/.test(panelSrc));

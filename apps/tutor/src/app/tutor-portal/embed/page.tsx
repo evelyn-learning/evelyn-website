@@ -711,6 +711,8 @@ function mapEngine(_engine?: string): InternalEngine {
 /** How long a token-less embed inside a host frame waits for the host to
  *  reload it (evelyn:embed_needs_token) before showing the token error. */
 const EMBED_NEEDS_TOKEN_WAIT_MS = 4000;
+/** End screen: show the summary panel even if the final save never settles. */
+const FINAL_SAVE_SETTLE_MS = 15_000;
 
 function EmbedSession() {
   const searchParams = useSearchParams();
@@ -1499,6 +1501,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     // portal's abort.
     Promise.resolve(saveSession(endIntent === 'discard' ? 'abandoned' : 'completed'))
       .finally(() => setFinalSaveSettled(true));
+    // A stalled keepalive save must not hold the end screen on its spinner:
+    // the summary panel copes with a not-yet-saved row (it retries its POST).
+    setTimeout(() => setFinalSaveSettled(true), FINAL_SAVE_SETTLE_MS);
     setSessionEnded(true);
     // `duration` = total ACTIVE seconds across the session: this mount's own
     // clock plus the earlier sittings of a resumed session (server-computed,
