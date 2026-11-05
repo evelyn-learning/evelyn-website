@@ -89,6 +89,12 @@ check('W9-B4: assemble practised-unmeasured JA', sArmed.assessment.pronunciation
 check('W9-B4: practised list stays empty', sArmed.assessment.pronunciation.practised.length === 0);
 const fOne = buildSessionFacts({ ...base, debugEvents: [{ type: 'pronunciation_armed', message: 'tool "x"' }] }, null);
 check('W9-B4: one armed, no support language', assembleSummary(fOne, validateModelReply(reply(4)), { model: 'm', turnCount: 3, now }).assessment.pronunciation.comment_en === 'One sentence was practised; no score could be measured this time.');
+const fRearm = buildSessionFacts({ ...base, debugEvents: [
+  { type: 'pronunciation_armed', message: `typed "${S}"` },
+  { type: 'pronunciation_armed', message: `typed-retry "${S}"` },
+  { type: 'pronunciation_armed', message: 'tool "Second one."' },
+] }, null);
+check('W9-B4 (review F3): a re-arm of the same sentence is not a second sentence', fRearm.pronunciationArmed === 2, String(fRearm.pronunciationArmed));
 check('W9-B4: no arms ⇒ not practised (unchanged)', f2.pronunciationArmed === 0 && sNone.assessment.pronunciation.comment_en === 'Pronunciation was not practised in this lesson.');
 check('assemble copies corrections', eq(sNone.assessment.corrections, f2.corrections) && sNone.version === 1 && sNone.generated_at === now.toISOString());
 const sSes = assembleSummary(f3, validateModelReply(reply(4)), { model: 'm', turnCount: 3, now });

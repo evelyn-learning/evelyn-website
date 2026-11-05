@@ -66,7 +66,9 @@ export const CLIP_PRE_ROLL_MS = 600;
 export const CLIP_MIN_MS = 400;
 /** How long a brain turn waits for an assessment already in flight before
  *  it goes without the note (the note then rides the turn after). */
-export const PRONUNCIATION_NOTE_WAIT_MS = 4000;
+// Review F6 (fix wave 9): 15 s clips upload ~1 MB and the vendor took 2.3–2.5 s for 9.4 s clips in run 5 — 4 s could
+// miss the note, and a late unmeasured note would force the retry of the NEXT item.
+export const PRONUNCIATION_NOTE_WAIT_MS = 6000;
 
 /** Same sentence as assessor.ts PRONUNCIATION_UNAVAILABLE_NOTE (pinned equal
  *  in scripts/test-clip-capture.ts) — kept here so the client never imports

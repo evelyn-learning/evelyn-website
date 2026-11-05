@@ -10,7 +10,7 @@
  */
 import { strict as assert } from 'node:assert';
 import {
-  ClipCapture, CLIP_MAX_MS, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_SAMPLE_RATE, CLIP_NO_SPEECH_TIMEOUT_MS, PRONUNCIATION_ARM_MAX_MS,
+  ClipCapture, CLIP_MAX_MS, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_SAMPLE_RATE, CLIP_NO_SPEECH_TIMEOUT_MS, PRONUNCIATION_ARM_MAX_MS, PRONUNCIATION_NOTE_WAIT_MS,
   float32ToPcm16, pcm16ToBase64, PRONUNCIATION_UNAVAILABLE_NOTE, pronunciationNoteForBrain, clipPeakDbfs, CLIP_SILENT_DBFS,
 } from '../src/lib/tutor/pronunciation/clip-capture';
 import { PRONUNCIATION_UNAVAILABLE_NOTE as SERVER_UNAVAILABLE_NOTE, MAX_CLIP_SECONDS } from '../src/lib/tutor/pronunciation/assessor';
@@ -38,6 +38,8 @@ test('constants: 15 s max (W9-B1: run 5 cut both 9-word clips at 9.4 s), 24 kHz,
   assert.ok(CLIP_MAX_MS / 1000 <= MAX_CLIP_SECONDS, 'clip max within the assessor clip_too_long cap');
   assert.ok((CLIP_MAX_MS / 1000) * CLIP_SAMPLE_RATE * 2 <= MAX_AUDIO_BYTES, 'clip max within the route audio cap');
   assert.ok(CLIP_PRE_ROLL_MS < CLIP_MAX_MS);
+  // review F6: a 15 s clip's assessment (upload + ~2.5 s vendor) must land before the brain turn gives up on the note
+  assert.equal(PRONUNCIATION_NOTE_WAIT_MS, 6000);
   assert.equal(CLIP_SAMPLE_RATE, 24000);
   assert.equal(CLIP_NO_SPEECH_TIMEOUT_MS, 60000);
   assert.ok(CLIP_NO_SPEECH_TIMEOUT_MS < PRONUNCIATION_ARM_MAX_MS, 'below the arm lifetime');

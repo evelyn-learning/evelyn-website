@@ -161,9 +161,10 @@ export function buildSessionFacts(
   }
 
   const pronunciation: SessionFacts['pronunciation'] = [];
-  let pronunciationArmed = 0;
+  // Review F3: distinct sentences — a re-arm of the same text (the forced retry) is not a second sentence.
+  const armedTexts = new Set<string>();
   for (const e of events) {
-    if (e.type === 'pronunciation_armed') { pronunciationArmed++; continue; }
+    if (e.type === 'pronunciation_armed') { armedTexts.add((/"(.*)"\s*$/.exec(e.message) ?? [])[1] ?? e.message); continue; }
     if (e.type !== 'pronunciation_note_planted') continue;
     const p = parsePronunciationNote(e.message);
     if (p) pronunciation.push(p);
@@ -181,7 +182,7 @@ export function buildSessionFacts(
     level,
     corrections: correctionsFromTranscript(input.transcript ?? []),
     pronunciation,
-    pronunciationArmed,
+    pronunciationArmed: armedTexts.size,
     transcriptExcerpt,
     supportLanguage,
   };

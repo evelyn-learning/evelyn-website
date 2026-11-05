@@ -174,8 +174,9 @@ const REF = 'We went to the countryside.';
     assert.equal(isMeasuredResult(r), true);
     const note = formatPronunciationNote(r, 'I have worked with international customers for several years.');
     assert.notEqual(note, PRONUNCIATION_NOT_ATTEMPTED_NOTE);
-    assert.ok(note.includes('"w8" omitted'), note);
-    assert.ok(/recording (?:was cut|ended) before "w8"/.test(note) && /do not count/.test(note), note);
+    // review F2: the cut word is named in the cut sentence only — never as a weak word (it would reach the learner summary)
+    assert.ok(!note.includes('"w8" omitted') && note.includes('No word below 70.'), note);
+    assert.ok(/recording (?:was cut|ended) before "w8"/.test(note) && /do not count/.test(note) && /score counts the missing word/.test(note), note);
     assert.ok(note.indexOf('Feed back only on these measured items.') < note.indexOf('recording'), 'the cut sentence rides after the measured items, outside the weak list');
     assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'omission'], 38) }), true, '7/8 present, completeness 38');
   });

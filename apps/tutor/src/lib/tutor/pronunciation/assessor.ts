@@ -103,7 +103,7 @@ export function cutOffSentence(r: PronunciationAssessment): string {
   if (r.status !== 'ok') return '';
   const refWords = r.result.words.filter((w) => w.errorType !== 'insertion');
   const last = refWords[refWords.length - 1];
-  return last && last.errorType === 'omission' ? `The recording was cut before "${last.word}"; do not count that word against the learner.` : '';
+  return last && last.errorType === 'omission' ? `The recording was cut before "${last.word}"; the score counts the missing word, so do not count it against the learner.` : '';
 }
 
 const MAX_REF_WORDS = 12;
@@ -131,7 +131,12 @@ export function formatPronunciationNote(r: PronunciationAssessment, referenceTex
   const ref = refWords.length > MAX_REF_WORDS ? `${refWords.slice(0, MAX_REF_WORDS).join(' ')}…` : refWords.join(' ');
   const parts = [`Measured pronunciation of "${ref}": overall ${round(res.overall)}/100.`];
 
+  const cut = cutOffSentence(r);
+  // Review F2: the cut last word is named in the cut sentence only — never as a weak word (parsePronunciationNote would
+  // carry it to the learner's summary as a weak word).
+  const cutWord = cut ? res.words.filter((w) => w.errorType !== 'insertion').slice(-1)[0] : undefined;
   const weak = res.words
+    .filter((w) => w !== cutWord)
     .filter((w) => w.score < WORD_FLAG_SCORE || w.errorType === 'omission')
     .sort((a, b) => a.score - b.score)
     .slice(0, 2)
@@ -146,7 +151,6 @@ export function formatPronunciationNote(r: PronunciationAssessment, referenceTex
   parts.push(weak.length ? `Weakest: ${weak.join('; ')}.` : `No word below ${WORD_FLAG_SCORE}.`);
   if (typeof res.prosody === 'number') parts.push(`Prosody ${round(res.prosody)}/100.`);
   parts.push('Feed back only on these measured items.');
-  const cut = cutOffSentence(r);
   if (cut) parts.push(cut);
   parts.push(pronunciationScoreOrder(res.overall));
   return parts.join(' ');

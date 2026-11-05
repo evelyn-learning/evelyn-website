@@ -517,8 +517,14 @@ async function main() {
       assert.ok(!sentencesOf(r.events).some((x) => x.includes('Haruto')));
       assert.ok(!r.events.some((e) => e.type === 'typed-field' && e.field === 'next' && (e.value as { kind: string }).kind === 'close'));
     });
-    await test('W9-C: the phrase spoken before next (verdict_say, after the answer) ⇒ one request, the close stands', async () => {
-      const r = await run({ ...baseInput, typedTurn: recapQ }, [chunkedTextScript(JSON.stringify({ ...OK, verdict_say: 'Right: the difference between them is the time.', next: BARE }), 3)]);
+    await test('W9-C (review F1): the phrase first said in this turn\'s verdict_say is still the close introducing it ⇒ refused', async () => {
+      const r = await run({ ...baseInput, typedTurn: recapQ }, [chunkedTextScript(JSON.stringify({ ...OK, verdict_say: 'Right: the difference between them is the time.', next: BARE }), 3), chunkedTextScript(JSON.stringify({ ...OK, next: ASK }), 2)]);
+      assert.equal(r.requests.length, 2);
+      assert.equal(turnEv(r.events).retryReason, 'check_question_unasked');
+      assert.ok(!sentencesOf(r.events).some((x) => x.includes('Haruto')));
+    });
+    await test('W9-C: no required phrase left (the client lists none) ⇒ the close stands, one request', async () => {
+      const r = await run({ ...baseInput, typedTurn: { ...recapQ, requiredPhrases: undefined } }, [chunkedTextScript(JSON.stringify({ ...OK, next: BARE }), 3)]);
       assert.equal(r.requests.length, 1);
       assert.ok(sentencesOf(r.events).some((x) => x.includes('Haruto')));
     });

@@ -3070,12 +3070,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   /** W9-C (fix wave 9, run 5 997 s): the required phrases a `close` would be the FIRST turn to say (not in this turn's
    *  spoken fields before `next`; the client lists only phrases no earlier turn narrated) — while `question` is allowed,
    *  the close is refused and the phrase is asked as a question instead of written into the goodbye. */
-  const typedCloseIntroducesPhrases = (next: TypedNext): string[] => {
-    const required = next.kind === 'close' && typedNextAllowed('question') ? input.typedTurn?.requiredPhrases ?? [] : [];
-    if (!required.length) return [];
-    const said = typedPhraseKey(typedSaidBeforeNext.join(' '));
-    return required.filter((p) => typedPhraseKey(p) && !said.includes(typedPhraseKey(p)));
-  };
+  // Review F1: a phrase first said in THIS turn's ack / verdict_say is still the close introducing it (the run-5 defect one
+  // field to the left), so this turn's own spoken fields do not excuse the close; the list is already "never narrated".
+  const typedCloseIntroducesPhrases = (next: TypedNext): string[] =>
+    (next.kind === 'close' && typedNextAllowed('question') ? input.typedTurn?.requiredPhrases ?? [] : []).filter((p) => typedPhraseKey(p));
   /** A (fix wave 6, p3 1121 s): this turn's spoken text before `next` with support_ja left out (it is exempt) —
    *  with next.say, a turn to an English-speaking student must hold one English sentence. */
   const typedSpokenNoSupport: string[] = [];
