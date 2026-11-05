@@ -16,6 +16,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { getPartnerSecret } from './auth';
 import { resolvePartnerTokenSecrets } from './partner-token-secrets';
+import { signEmbedToken } from './embed-token';
 
 export interface ReplayTokenPayload {
   mode: 'replay';
@@ -140,4 +141,36 @@ export async function verifyReplayTokenAsync(
   if (!('pending' in step)) return step;
   const secrets = await resolvePartnerTokenSecrets(step.pending.partnerId);
   return finishReplayVerification(step.pending, secrets, nowMs);
+}
+
+/**
+ * Server-side signer: mints a replay token for a learner's own session.
+ * Signs with the partner's first live secret; null when the partner has none.
+ */
+export async function signReplayToken(
+  p: {
+    partner_id: string;
+    student_id: string;
+    session_id: string;
+    branding?: ReplayTokenPayload['branding'];
+    ttlSec?: number;
+  },
+  now: number = Date.now(),
+): Promise<string | null> {
+  const secrets = await resolvePartnerTokenSecrets(p.partner_id);
+  if (secrets.length === 0) return null;
+  const payload: Record<string, unknown> = {
+    mode: 'replay',
+    partner_id: p.partner_id,
+    student_id: p.student_id,
+    session_id: p.session_id,
+    exp: Math.floor(now / 1000) + (p.ttlSec ?? 30 * 86400),
+  };
+  if (p.branding) payload.branding = p.branding;
+  return signEmbedToken(payload, secrets[0]);
+}
+
+/** The token is base64url already, so it is not re-encoded. */
+export function replayUrl(token: string, origin: string): string {
+  return `${origin.replace(/\/+$/, '')}/tutor-portal/replay?token=${token}`;
 }
