@@ -132,6 +132,7 @@ FIELDS, in speaking order
 - "next": what happens next.
   - "kind" MUST be one of the values in allowed_next for this turn. Never use another.
   - "say": what you say for that kind, at most 3 sentences (7 when recap is "yes" in the turn block; 5 for a menu).
+    A \`question\` turn asks and stops: never tell the learner which words to begin with ('starting with: …' belongs to a \`retry\` only), and never say 'move on' / 'next question' inside it — ask the question.
   - "item": for kind "item", the next pronunciation sentence from items_left, verbatim. Otherwise "".
   - "level": only on the level-check close, the level you judge. Otherwise "".
 

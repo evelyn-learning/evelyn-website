@@ -737,6 +737,22 @@ export function runChecks(dump) {
     const tt13Label = 'TT13 a boarded move turn turns its page in-turn';
     if (tt13.length === 0 && tt13Warn.length) warn(tt13Label, tt13Warn.join(' | '));
     else ok(tt13Label, tt13.length === 0, [...tt13, ...tt13Warn].join(' | ') || `${tt13Moves} brain moves, ${tt13Boarded} boarded`);
+    // TT14 (fix wave 7 Y4, session 1 414 s: "Please answer with a full sentence starting with Have you ever."): a question
+    // turn asks and stops — it never dictates the learner's opening words ('starting with: …' belongs to a retry).
+    const OPENING_WORDS = /\bstarting with\b/i;
+    const tt14 = [];
+    const tt14Seen = new Set();
+    let tt14Checked = 0;
+    for (const e of typed) {
+      if (field(e, 'next') !== 'question') continue;
+      const turn = turnOf(e.t);
+      if (!turn || tt14Seen.has(turn.i)) continue;
+      tt14Seen.add(turn.i);
+      tt14Checked++;
+      const m = turn.text.match(OPENING_WORDS);
+      if (m) tt14.push(`${turn.t}s next=question "${turn.text.slice(Math.max(0, m.index - 30), m.index + 40)}"`);
+    }
+    ok('TT14 a question turn does not dictate opening words', tt14.length === 0, tt14.join(' | ') || `${tt14Checked} question turns`);
     // TT5: the prose validators / holds have nothing to do on a typed run
     const PROSE = ['brain_validator_retry', 'transition_ask_off_part', 'transition_offer_missing', 'repeat_ask_after_two_tries', 'move_on_ignored', 'required_phrase_missing', 'validator_tts_hold_started'];
     const prose = PROSE.map((c) => [c, ev(c).length]).filter(([, n]) => n > 0);

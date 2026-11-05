@@ -287,6 +287,20 @@ test('TT12 FAILs on move language in a question turn, with the timestamp', () =>
   assert.ok(/^FAIL  TT12/.test(ja) && /11s/.test(ja), ja);
 });
 
+// Y4 (fix wave 7, session 1 414 s): TT14 a question turn does not dictate opening words
+const tt14 = (d) => runChecks(d).lines.find((l) => / TT14 /.test(l)) ?? '';
+const tt14Dump = (text, kind = 'question') => tt12Dump({ kind }).replace('Nearly. We say I work in sales. Good. Have you worked there long?', text);
+test('TT14 passes when no question turn says "starting with" (a retry may)', () => {
+  const line = tt14(tt14Dump('Nearly. We say I work in sales. Have you worked there long?'));
+  assert.ok(/^PASS  TT14/.test(line), line);
+  const retry = tt14(tt14Dump('Nearly. Please say it again, starting with: I have worked.', 'retry'));
+  assert.ok(/^PASS  TT14/.test(retry), retry);
+});
+test('TT14 FAILs when a next=question turn dictates the opening words, with the timestamp', () => {
+  const line = tt14(tt14Dump('Good. Please answer with a full sentence starting with Have you ever.'));
+  assert.ok(/^FAIL  TT14/.test(line) && /21s/.test(line) && /starting with/i.test(line), line);
+});
+
 // Z2 (fix wave 5): TT13 a move turn does not board (p2.txt 926 s)
 const tt13 = (d) => runChecks(d).lines.find((l) => / TT13 /.test(l)) ?? '';
 test('TT13 passes when the move turn boards nothing (the fixture move turn has a correction card only)', () => {

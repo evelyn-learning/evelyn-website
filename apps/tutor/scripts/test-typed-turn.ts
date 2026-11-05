@@ -466,5 +466,12 @@ test('E (fix wave 6, p3 362 s): a reply that restates one of the question\'s opt
   assert.ok(i >= 0 && j > i && TYPED_TURN_INSTRUCTIONS.slice(i, j).includes(rule), 'inside the verdict rule');
 });
 
+test('Y4 (fix wave 7, sessions 1/2: 414 s "starting with Have you ever", 157 s "move on to a new question"): a question turn asks and stops', () => {
+  const rule = "A `question` turn asks and stops: never tell the learner which words to begin with ('starting with: …' belongs to a `retry` only), and never say 'move on' / 'next question' inside it — ask the question.";
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes(rule), 'instruction');
+  const say = TYPED_TURN_INSTRUCTIONS.indexOf('  - "say": what you say for that kind'), r = TYPED_TURN_INSTRUCTIONS.indexOf(rule), item = TYPED_TURN_INSTRUCTIONS.indexOf('  - "item": for kind "item"');
+  assert.ok(say >= 0 && r > say && r < item, 'inside the next.say guidance');
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');
