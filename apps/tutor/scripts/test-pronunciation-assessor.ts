@@ -163,9 +163,30 @@ const REF = 'We went to the countryside.';
     assert.equal(isMeasuredResult(r), true);
     assert.notEqual(formatPronunciationNote(r, 'a b c'), PRONUNCIATION_NOT_ATTEMPTED_NOTE);
   });
-  await test('Azure completeness < 50 ⇒ not measured even with few omissions', () => {
-    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none'], 40) }), false);
-    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none'], 50) }), true);
+  await test('Azure completeness < 50 ⇒ not measured when more than a quarter of the words are missing (W9-B2: ≥ 75 % present overrides it)', () => {
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'omission', 'none', 'omission', 'none', 'none'], 40) }), false, '4/6 present, completeness 40');
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'omission', 'none', 'omission', 'none', 'none'], 50) }), true, '4/6 present, completeness 50');
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none'], 40) }), true, 'every word present: measured whatever the completeness');
+  });
+  await test('W9-B2 (fix wave 9, run 5 859–927 s): 8/9 words heard with completeness 44 ⇒ measured; the omitted last word is weak and the note says the recording was cut', () => {
+    const r = { status: 'ok' as const, result: mk(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'omission'], 44) };
+    assert.equal(isMeasuredResult(r), true);
+    const note = formatPronunciationNote(r, 'I have worked with international customers for several years.');
+    assert.notEqual(note, PRONUNCIATION_NOT_ATTEMPTED_NOTE);
+    assert.ok(note.includes('"w8" omitted'), note);
+    assert.ok(/recording (?:was cut|ended) before "w8"/.test(note) && /do not count/.test(note), note);
+    assert.ok(note.indexOf('Feed back only on these measured items.') < note.indexOf('recording'), 'the cut sentence rides after the measured items, outside the weak list');
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'omission'], 38) }), true, '7/8 present, completeness 38');
+  });
+  await test('W9-B2: exactly 75 % present ⇒ measured; below it the completeness floor and the half rule stand', () => {
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none', 'none', 'omission'], 30) }), true, '3/4');
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none', 'omission', 'omission'], 30) }), false, '2/4, completeness 30');
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none', 'omission', 'omission'], 60) }), false, '2/4: half omitted');
+    assert.equal(isMeasuredResult({ status: 'ok', result: mk(['none', 'none', 'none', 'omission', 'omission'], 60) }), true, '3/5, completeness 60');
+  });
+  await test('W9-B2: an omission that is not the last word carries no cut sentence', () => {
+    const note = formatPronunciationNote({ status: 'ok', result: mk(['none', 'omission', 'none', 'none'], 80) }, 'a b c d');
+    assert.ok(note.includes('"w1" omitted') && !/recording/.test(note), note);
   });
   await test('no words at all ⇒ not measured; unavailable ⇒ not measured', () => {
     assert.equal(isMeasuredResult({ status: 'ok', result: mk([]) }), false);

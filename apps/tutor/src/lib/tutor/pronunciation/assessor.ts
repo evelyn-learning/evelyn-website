@@ -72,19 +72,35 @@ export const PRONUNCIATION_NOT_ATTEMPTED_NOTE =
 /** Below this Azure CompletenessScore the turn was not an attempt. */
 export const MIN_COMPLETENESS = 50;
 
+/** W9-B2 (fix wave 9, run 5 859–927 s): with at least this share of the reference words heard the turn WAS an
+ *  attempt, whatever the vendor's completeness says (both run-5 clips were cut before the last word: 8/9 and 7/8
+ *  heard, completeness 44 / 38 → "not attempted" → the tutor said it could not hear the sounds). */
+export const MEASURED_PRESENT_SHARE = 0.75;
+
 /**
  * Whether the assessment measured an ATTEMPT at the reference text: status ok
- * AND fewer than half the reference words omitted AND (when the vendor gave
- * one) completeness ≥ MIN_COMPLETENESS. Insertions are not reference words.
+ * AND (≥ MEASURED_PRESENT_SHARE of the reference words heard, OR fewer than half
+ * omitted with (when the vendor gave one) completeness ≥ MIN_COMPLETENESS).
+ * Insertions are not reference words.
  */
 export function isMeasuredResult(r: PronunciationAssessment): boolean {
   if (r.status !== 'ok') return false;
   const res = r.result;
-  if (typeof res.completeness === 'number' && res.completeness < MIN_COMPLETENESS) return false;
   const refWords = res.words.filter((w) => w.errorType !== 'insertion');
   if (refWords.length === 0) return false;
   const omitted = refWords.filter((w) => w.errorType === 'omission').length;
+  if ((refWords.length - omitted) >= refWords.length * MEASURED_PRESENT_SHARE) return true;
+  if (typeof res.completeness === 'number' && res.completeness < MIN_COMPLETENESS) return false;
   return omitted * 2 < refWords.length;
+}
+
+/** W9-B2: the LAST reference word was omitted — the clip ended before it (a cut recording, not a skipped word).
+ *  The sentence the measured note carries so the brain does not blame the learner for it. */
+export function cutOffSentence(r: PronunciationAssessment): string {
+  if (r.status !== 'ok') return '';
+  const refWords = r.result.words.filter((w) => w.errorType !== 'insertion');
+  const last = refWords[refWords.length - 1];
+  return last && last.errorType === 'omission' ? `The recording was cut before "${last.word}"; do not count that word against the learner.` : '';
 }
 
 const MAX_REF_WORDS = 12;
@@ -127,6 +143,8 @@ export function formatPronunciationNote(r: PronunciationAssessment, referenceTex
   parts.push(weak.length ? `Weakest: ${weak.join('; ')}.` : `No word below ${WORD_FLAG_SCORE}.`);
   if (typeof res.prosody === 'number') parts.push(`Prosody ${round(res.prosody)}/100.`);
   parts.push('Feed back only on these measured items.');
+  const cut = cutOffSentence(r);
+  if (cut) parts.push(cut);
   parts.push(pronunciationScoreOrder(res.overall));
   return parts.join(' ');
 }
