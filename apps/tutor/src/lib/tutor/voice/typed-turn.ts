@@ -426,7 +426,9 @@ export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_
 
 /** Z2 (fix wave 8, run 4 67 s "Try starting with: I want to…"): a question / offer / menu that tells the learner
  *  which words to begin with. A `retry` is never checked — "starting with: …" is its normal scaffold. */
-const DICTATES_OPENING_RE = /\b(?:start|starting|begin|beginning)\s+with\b\s*:?/i;
+// Fix round 1 I2: "start with:" + a capital, or "start with" + a quote — never a bare "start with" ("Which part would you
+// like to start with?") nor a numbered-menu colon ("begin with: 1, 2 or 3?").
+const DICTATES_OPENING_RE = /\b(?:[Ss]tart|[Ss]tarting|[Bb]egin|[Bb]eginning)\s+with\s*(?::\s*(?=[A-Z])|["'‘“])/;
 const DICTATES_FULL_SENTENCE_RE = /\b(?:please\s+)?(?:answer|reply|respond)\s+(?:with\s+)?(?:a\s+)?(?:full|complete)\s+sentence\s+(?:starting|beginning)\s+with\b/i;
 export function typedQuestionDictatesOpening(next: TypedNext): boolean {
   if (next.kind !== 'question' && next.kind !== 'offer' && next.kind !== 'menu') return false;

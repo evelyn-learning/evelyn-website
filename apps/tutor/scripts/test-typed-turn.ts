@@ -481,7 +481,12 @@ test('Z2 (fix wave 8, run 4 67 s / run 1 414 s / run 2 306 s): a question that d
     "What did you learn there? Please answer in one full sentence, starting with 'I learned…'.",
   ]) assert.equal(typedQuestionDictatesOpening(n('question', say)), true, say);
   assert.equal(typedQuestionDictatesOpening(n('offer', 'Shall we practise more? Begin with: Yes, please.')), true, 'offer');
-  assert.equal(typedQuestionDictatesOpening(n('menu', 'Pick one, starting with the number.')), true, 'menu');
+  // Fix round 1 I2: the tight form — "start with:" + a capital, or "start with" + a quote; ordinary menu / offer wording passes
+  assert.equal(typedQuestionDictatesOpening(n('question', 'Now try this: tell me how long you have worked there. Start with: I have worked…')), true, 'run-4 retry-style question');
+  assert.equal(typedQuestionDictatesOpening(n('question', 'Which part would you like to start with?')), false, 'start with ?');
+  assert.equal(typedQuestionDictatesOpening(n('menu', 'Which one would you like to begin with: 1, 2 or 3?')), false, 'numbered-menu colon');
+  assert.equal(typedQuestionDictatesOpening(n('offer', 'Shall we start with the past simple or the present perfect?')), false, 'offer naming parts');
+  assert.equal(typedQuestionDictatesOpening(n('menu', 'Pick one, starting with the number.')), false, 'menu (round 1: no colon / quote ⇒ not dictating)');
   assert.equal(typedQuestionDictatesOpening(n('question', 'Please reply with a complete sentence beginning with I.')), true, 'full-sentence form');
   assert.equal(typedQuestionDictatesOpening(n('retry', 'Can you say the whole sentence once more, starting with: I have worked…')), false, 'a retry scaffold is never refused');
   assert.equal(typedQuestionDictatesOpening(n('question', 'What did you learn at the exhibition? Please answer in one full sentence.')), false, 'a plain question');

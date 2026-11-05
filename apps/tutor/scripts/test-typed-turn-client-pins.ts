@@ -347,12 +347,18 @@ test('Z1 (fix wave 8, run 4 51 s): the pre-turn student jump runs before every n
   const latch = VTR.indexOf("if (typedTurnActive && !typedEngineMove && currentSegmentIdRef.current && currentSegmentIdRef.current !== turnStartSegmentId) {");
   assert.ok(pre > 0 && unresolved > 0 && numbered > 0 && answered > 0 && guard > 0 && latch > 0, 'anchors present');
   assert.ok(pre > unresolved, 'after the typed objective jump');
+  // Fix round 1 I1: after the lesson-time guard too (one advance per turn: a guard move leaves the jump to the seam)
+  const guardLatch = VTR.indexOf('if (typedTurnActive) typedEngineMove = { from: tgSeg, to: tg.to };');
+  assert.ok(guardLatch > guard && pre > guardLatch, 'after the lesson-time guard block');
   assert.ok(pre < numbered && pre < answered, 'before the numbered-question and answered-in-part planters');
-  assert.ok(pre < guard && pre < latch, 'before the lesson-time guard and the W2 latch');
+  assert.ok(pre < latch, 'before the W2 latch');
   assert.equal((VTR.match(/const typedPendingJump = /g) ?? []).length, 1, 'one pre-turn jump block');
   const tta = VTR.indexOf('let typedTurnActive = TUTOR_TYPED_TURN');
   const decl = VTR.indexOf('let typedJumpToNext = false;');
   assert.ok(tta > 0 && tta < pre && decl > 0 && decl < pre, 'typedTurnActive + typedJumpToNext declared above the block');
+});
+test('Z1 round 1 (review M1): a brain-written next-part move carries no old-part numbered-question note', () => {
+  assert.ok(VTR.includes("if (TUTOR_NUMBERED_QUESTION_NOTE && languageSessionRef.current && !opts?.prefetchOnly && !/^\\s*\\[/.test(transcript) && !typedJumpToNext) {"), 'planter skips on typedJumpToNext');
 });
 test('V4 (fix wave 2): the level check counts answers (non-none verdicts) + the reply now, not turns', () => {
   // R3 (fix round 1): the rules read the committed answersInPart; the client says only whether a reply came
