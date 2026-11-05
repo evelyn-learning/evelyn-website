@@ -53,7 +53,6 @@ export default async function LearnerHomePage({ searchParams }: HomePageProps) {
   }
 
   const rows = await listLearnerSessions(payload.partner_id, student_id);
-  const now = Date.now();
   const origin = await requestOrigin();
   const b = payload.branding;
   const branding = b && typeof b === 'object' && !Array.isArray(b) ? (b as ReplayTokenPayload['branding'] & { primary_color?: string }) : undefined;
@@ -63,9 +62,8 @@ export default async function LearnerHomePage({ searchParams }: HomePageProps) {
 
   const cards: Array<{ row: LearnerSessionRow; replayUrl: string | null }> = [];
   for (const row of rows) {
-    const updatedAt = (row as { summaryUpdatedAt?: string }).summaryUpdatedAt;
     let shown = row;
-    if (needsSummaryRun(row.summary, now, updatedAt)) {
+    if (needsSummaryRun(row.summary)) {
       void runSummaryForSession(row.sessionId).catch((e) => console.warn('[learner-home] summary run failed', row.sessionId, (e as Error)?.message));
       shown = { ...row, summary: { status: 'pending' } };
     }
@@ -114,6 +112,7 @@ export default async function LearnerHomePage({ searchParams }: HomePageProps) {
             row={row}
             replayUrl={url}
             token={token}
+            productName={typeof branding?.product_name === 'string' ? branding.product_name : undefined}
             pollUrl={`/api/tutor-portal/learner-summary?sessionId=${encodeURIComponent(row.sessionId)}&token=${encodeURIComponent(token)}`}
           />
         ))}

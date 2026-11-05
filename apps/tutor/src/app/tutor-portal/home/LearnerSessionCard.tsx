@@ -1,12 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import ExportSessionPDFButton from '@/components/session/ExportSessionPDFButton';
 import type { LearnerSessionRow, SummaryState } from '@/lib/tutor/portal/learner-summary-store';
-import { rowLabel, levelBadge } from './home-rows';
-
-const POLL_MS = 3000;
-const POLL_MAX_MS = 60_000;
+import { LocalTime } from '@/components/session/LocalTime';
+import { rowLabel, levelBadge, nextPollDelayMs } from './home-rows';
 
 function Bi({ en, ja }: { en: string; ja: string }) {
   return (
@@ -32,35 +30,41 @@ function formatDuration(sec: number): string {
 }
 
 export default function LearnerSessionCard(
-  { row, replayUrl, token, pollUrl }: { row: LearnerSessionRow; replayUrl: string | null; token: string; pollUrl: string },
+  { row, replayUrl, token, pollUrl, productName }: { row: LearnerSessionRow; replayUrl: string | null; token: string; pollUrl: string; productName?: string },
 ) {
   const [state, setState] = useState<SummaryState>(row.summary);
   const [open, setOpen] = useState(false);
   const [retrying, setRetrying] = useState(false);
-  const startedPoll = useRef(false);
   const label = rowLabel(row);
   const badge = levelBadge(state);
   const s = state.status === 'ready' ? state.summary : undefined;
 
   useEffect(() => {
-    if (state.status !== 'pending' || startedPoll.current) return;
-    startedPoll.current = true;
+    if (state.status !== 'pending') return;
     const t0 = Date.now();
     let stop = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => {
+      const delay = nextPollDelayMs(Date.now() - t0);
+      if (delay === null) {
+        setState({ status: 'failed', error: 'Summary is taking longer than expected' });
+        return;
+      }
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(tick, delay);
+    };
     const tick = async () => {
       if (stop) return;
       try {
         const r = await fetch(pollUrl, { cache: 'no-store' });
-        if (r.ok) {
-          const j = await r.json();
-          if (j?.state && j.state.status !== 'pending' && j.state.status !== 'none') { setState(j.state); return; }
-        }
+        const j = r.ok ? await r.json() : null;
+        if (stop) return;
+        if (j?.state && j.state.status !== 'pending' && j.state.status !== 'none') { setState(j.state); return; }
       } catch { /* keep polling */ }
-      if (Date.now() - t0 >= POLL_MAX_MS) { startedPoll.current = false; return; }
-      setTimeout(tick, POLL_MS);
+      if (!stop) schedule();
     };
-    const id = setTimeout(tick, POLL_MS);
-    return () => { stop = true; clearTimeout(id); };
+    schedule();
+    return () => { stop = true; if (timer) clearTimeout(timer); };
   }, [state.status, pollUrl]);
 
   async function retry() {
@@ -86,7 +90,7 @@ export default function LearnerSessionCard(
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 className="text-base font-semibold text-gray-900">{label.title}</h2>
-          <p className="text-xs text-gray-500">{label.when} · {formatDuration(row.durationSec)}</p>
+          <p className="text-xs text-gray-500"><LocalTime iso={label.when} kind="datetime" /> · {formatDuration(row.durationSec)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${label.status === 'Completed' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
@@ -160,6 +164,7 @@ export default function LearnerSessionCard(
           level={row.level}
           sessionGoal={row.sessionGoal}
           studentName={row.studentName}
+          productName={productName}
         />
       </div>
     </section>
