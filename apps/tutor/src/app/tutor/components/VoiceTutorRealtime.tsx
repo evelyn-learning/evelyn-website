@@ -13236,6 +13236,8 @@ export function VoiceTutorRealtime({
       // Task 8 fix round 1 (I-2): a pre-turn ENGINE move on a typed turn (the lesson-time guard) — the typed
       // request plans the part it moved to, and a brain `move` this turn is blocked (one advance per turn).
       let typedEngineMove: { from: string; to: string } | null = null;
+      // Fix wave 7 Y2: the student's pending named-part request targets the immediate next part — the brain moves.
+      let typedJumpToNext = false;
       const haLastTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? null;
       const haOfferAccepted = TUTOR_HELD_ADVANCE_WAITS_FOR_OFFER_ITEM && !silent && !isBracketed && !opts?.prefetchOnly
         && offerAsked(haLastTutor) && offerAccepted(transcript, haLastTutor);
@@ -14816,6 +14818,26 @@ export function VoiceTutorRealtime({
       // W2: every pre-turn ENGINE move (Skip button, typed objective jump, lesson-time guard) is latched for the
       // typed turn: the request plans the part entered, the old part's open ask / correction are gone, and a
       // brain move this turn is blocked.
+      // Fix wave 7 Y2 (session 3: the page stayed on Part 4 for the whole lesson): a named-part request pended by the
+      // transcript handler (agenda_jump_pending) is resolved BEFORE the brain call on a typed turn — the seam's
+      // after-the-turn apply painted nothing. The immediate next part is the brain's own move (studentMovedOn: the
+      // gentle verdict + card + "let's move to…" + page turn); a jump over parts is applied now, like the Skip button,
+      // so the latch below latches it and the new part's card + page paint at the first typed field.
+      const typedPendingJump = typedTurnActive && !typedEngineMove ? pendingStudentJumpRef.current : null;
+      if (typedPendingJump && lessonPlanRef.current && currentSegmentIdRef.current
+        && typedPendingJump.segId !== currentSegmentIdRef.current
+        && lessonPlanRef.current.segments.some((s) => s.id === typedPendingJump.segId)
+        && !(Date.now() - typedPendingJump.atMs > 90_000)) {
+        const jumpPlan = lessonPlanRef.current;
+        const jumpFrom = currentSegmentIdRef.current;
+        if (typedPendingJump.segId === nextSegmentId(jumpPlan, jumpFrom, !!workingLevelRef.current)) {
+          typedJumpToNext = true;
+        } else {
+          applyResolvedAdvance(jumpPlan, jumpFrom, typedPendingJump.segId);
+          pendingStudentJumpRef.current = null;
+          onDebugEvent?.('typed_advance_app', `"${jumpFrom}" → "${typedPendingJump.segId}" (student jump "${typedPendingJump.label}")`);
+        }
+      }
       if (typedTurnActive && !typedEngineMove && currentSegmentIdRef.current && currentSegmentIdRef.current !== turnStartSegmentId) {
         typedEngineMove = { from: turnStartSegmentId ?? '', to: currentSegmentIdRef.current };
       }
@@ -15229,7 +15251,7 @@ export function VoiceTutorRealtime({
             budgetDue,
             lastPart: nextSegmentId(tPlan, typedFromSeg, levelKnown) === null,
             // W2: the later parts' labels, as the prose move-on order passes them ("Let's do past simple.").
-            studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText, laterPartLabels(tPlan, typedFromSeg)) || typedStopDecision === 'finish'),
+            studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText, laterPartLabels(tPlan, typedFromSeg)) || typedStopDecision === 'finish' || typedJumpToNext),
             menuPick: typedMenuPickText,
             // R3 (fix round 1): the rules count committed answers (answersInPart, verdict ≠ none); the client says only
             // whether a reply came this turn (the level check's third reply may move — the server refuses it on verdict none).
@@ -22628,7 +22650,11 @@ export function VoiceTutorRealtime({
       // swap was possible. The apply itself stays conditioned on the
       // plan being present; only the clear is hoisted.
       if (pendingJump) pendingStudentJumpRef.current = null;
-      if (pendingJump && lessonPlanRef.current) {
+      // Fix wave 7 Y2: a typed turn's pointer moves only through the typed `advance` effect or the pre-turn
+      // mechanisms (the student jump is resolved before the brain call) — the seam never applies it there.
+      if (pendingJump && typedTurnActive) {
+        onDebugEvent?.('agenda_jump_typed_stand_down', `${pendingJump.label} → ${pendingJump.segId}`);
+      } else if (pendingJump && lessonPlanRef.current) {
         if (Date.now() - pendingJump.atMs > 90_000) {
           onDebugEvent?.('agenda_jump_stale', `${pendingJump.label} → ${pendingJump.segId} (${Date.now() - pendingJump.atMs}ms old)`);
         } else {

@@ -307,7 +307,27 @@ test('W2: pre-turn engine moves are latched, enter the part, paint once, block a
   assert.ok(/if \(!typedEngineMove \|\| typedEngineMovePainted\) return;\s*typedEngineMovePainted = true;/.test(VTR), 'painted once per turn');
   assert.ok(/typedFieldAnchor = \{ field: tf\.field, narrationIndex: [^\n]+\n\s*await paintTypedEngineMove\(typedFieldAnchor\.narrationIndex\);/.test(VTR), 'painted at the first typed-field');
   assert.ok(/retryDisagreed\?: boolean \};\n\s*await paintTypedEngineMove\(/.test(VTR), 'or at the turn end');
-  assert.ok(VTR.includes("studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText, laterPartLabels(tPlan, typedFromSeg)) || typedStopDecision === 'finish'),"), 'later-part labels');
+  assert.ok(VTR.includes("studentMovedOn: !!typedStudentText && (!!moveOnRequestSpan(typedStudentText, laterPartLabels(tPlan, typedFromSeg)) || typedStopDecision === 'finish' || typedJumpToNext),"), 'later-part labels (+ Y2 jump to the next part)');
+});
+
+test('Y2 (fix wave 7, session 3): a pending named-part jump resolves before the brain call on a typed turn', () => {
+  const decl = VTR.indexOf('let typedJumpToNext = false;');
+  const engineDecl = VTR.indexOf('let typedEngineMove: { from: string; to: string } | null = null;');
+  assert.ok(decl > 0 && engineDecl > 0 && decl > engineDecl && decl - engineDecl < 400, 'typedJumpToNext declared next to typedEngineMove');
+  const pre = VTR.indexOf('const typedPendingJump = typedTurnActive && !typedEngineMove ? pendingStudentJumpRef.current : null;');
+  const latch = VTR.indexOf("if (typedTurnActive && !typedEngineMove && currentSegmentIdRef.current && currentSegmentIdRef.current !== turnStartSegmentId) {");
+  assert.ok(pre > 0 && latch > pre && latch - pre < 1600, 'pre-turn jump right before the W2 latch');
+  const block = VTR.slice(pre, latch);
+  assert.ok(block.includes('!(Date.now() - typedPendingJump.atMs > 90_000)'), 'the seam\'s 90 s stale rule');
+  assert.ok(block.includes('lessonPlanRef.current.segments.some((s) => s.id === typedPendingJump.segId)'), 'target is a segment of the plan');
+  assert.ok(block.includes('typedPendingJump.segId !== currentSegmentIdRef.current'), 'target differs from the pointer');
+  assert.ok(/if \(typedPendingJump\.segId === nextSegmentId\(jumpPlan, jumpFrom, !!workingLevelRef\.current\)\) \{\s*typedJumpToNext = true;\s*\} else \{/.test(block), 'the immediate next part: the brain moves (pointer untouched, ref kept)');
+  assert.ok(/\} else \{\s*applyResolvedAdvance\(jumpPlan, jumpFrom, typedPendingJump\.segId\);\s*pendingStudentJumpRef\.current = null;\s*onDebugEvent\?\.\('typed_advance_app', `"\$\{jumpFrom\}" → "\$\{typedPendingJump\.segId\}" \(student jump "\$\{typedPendingJump\.label\}"\)`\);/.test(block), 'a jump over parts: applied now (no seamMode), ref cleared, logged');
+  assert.ok(!block.includes('seamMode'), 'not seamMode');
+  // levelKnown copied from buildAllowedNextContext
+  assert.ok(VTR.includes('const levelKnown = !!workingLevelRef.current;'), 'buildAllowedNextContext levelKnown source');
+  // the seam stands down on a typed turn
+  assert.ok(/if \(pendingJump && typedTurnActive\) \{\s*onDebugEvent\?\.\('agenda_jump_typed_stand_down', `\$\{pendingJump\.label\} → \$\{pendingJump\.segId\}`\);\s*\} else if \(pendingJump && lessonPlanRef\.current\) \{/.test(VTR), 'seam: typed stand-down, ref already cleared');
 });
 
 test('V4 (fix wave 2): the level check counts answers (non-none verdicts) + the reply now, not turns', () => {

@@ -538,6 +538,11 @@ test('Y1: laterPartLabels(plan, past-simple) names the Conversation part', () =>
   assert.ok(labels.includes('Conversation') && labels.includes('会話'), labels.join('|'));
 });
 
+test('Y2: an explicit request on an offer part with the offer not made wins → [move]', () => {
+  assert.deepEqual(allowedNextFor(ctx('present-perfect', { studentMovedOn: true, state: ask('question') })), ['move']);
+  assert.deepEqual(allowedNextFor(ctx('present-perfect', { studentMovedOn: true })), ['move']);
+});
+
 // ---- Final fix wave W6: the items still to practise go to the server ----
 test('W6: itemsLeftFor = items minus practised; items_left and the request carry the same list', () => {
   const c = ctx('pronunciation', { items: ITEMS, state: { practisedItems: { pronunciation: [ITEMS[0]] }, menuState: { pronunciation: { asked: 1, picked: '2' } } } });
