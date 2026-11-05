@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import type { LearnerSummaryV1 } from "@/lib/tutor/portal/learner-summary";
 
 export interface ITokenUsage {
   operation: string;
@@ -114,6 +115,15 @@ export interface ITutorSession extends Document {
     currentSegmentId: string;
     completedSegmentIds: string[];
     updatedAt: Date;
+  };
+  // GDI learner home: stored EN/JA summary, written once via an atomic claim.
+  learnerSummary?: {
+    status: 'pending' | 'ready' | 'failed';
+    summary?: LearnerSummaryV1;
+    turnCount: number;
+    version: number;
+    updatedAt: Date;
+    error?: string;
   };
 }
 
@@ -386,6 +396,20 @@ const TutorSessionSchema = new Schema<ITutorSession>(
       ),
       default: undefined,
     },
+    learnerSummary: {
+      type: new Schema(
+        {
+          status: { type: String, enum: ['pending', 'ready', 'failed'], required: true },
+          summary: { type: Schema.Types.Mixed },
+          turnCount: { type: Number, required: true },
+          version: { type: Number, required: true },
+          updatedAt: { type: Date, default: Date.now },
+          error: { type: String },
+        },
+        { _id: false }
+      ),
+      default: undefined,
+    },
   },
   {
     timestamps: true,
@@ -395,6 +419,8 @@ const TutorSessionSchema = new Schema<ITutorSession>(
 // Query indexes
 TutorSessionSchema.index({ status: 1, startedAt: -1 });
 TutorSessionSchema.index({ subject: 1, topic: 1 });
+// Learner home: one learner's sessions, newest first.
+TutorSessionSchema.index({ sourcePartnerId: 1, studentId: 1, startedAt: -1 });
 // Demo gate (2026-08-29): makes "N demos from this IP, when" queryable —
 // clientIp was captured from day one but never indexed, so the abuse
 // baseline had to be computed by collection scan.
