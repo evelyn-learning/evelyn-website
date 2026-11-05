@@ -21,7 +21,8 @@ type Props = {
 };
 
 const API = '/api/tutor-portal/learner-summary';
-const FIRST_POST_DELAY_MS = 1500;
+// The embed page mounts this panel only after the completed save settled.
+const FIRST_POST_DELAY_MS = 0;
 
 /** End-of-lesson screen: summary (POST once, then poll GET), replay, PDF, back-to-home. */
 export default function LessonSummaryPanel(p: Props) {
@@ -56,7 +57,7 @@ export default function LessonSummaryPanel(p: Props) {
       } catch { /* keep polling */ }
       if (stop) return;
       const d = panelPollDelayMs(Date.now() - t0);
-      if (d === null) { setState({ status: 'failed', error: 'Summary is taking longer than expected' }); return; }
+      if (d === null) { setState((prev) => ({ ...prev, status: 'failed', error: 'Summary is taking longer than expected' })); return; }
       timer = setTimeout(poll, d);
     };
     const start = async (attempt: number) => {
@@ -82,7 +83,7 @@ export default function LessonSummaryPanel(p: Props) {
       if (d !== null) { timer = setTimeout(() => start(attempt + 1), d); return; }
       timer = setTimeout(poll, panelPollDelayMs(0) ?? 2000);
     };
-    setState({ status: 'pending' });
+    setState((prev) => ({ ...prev, status: 'pending' }));
     // Immediate GET: replayUrl / hasAudio for the buttons while the summary is pending.
     fetch(getUrl, { method: 'GET', headers, cache: 'no-store' })
       .then(async (r) => {
@@ -91,7 +92,7 @@ export default function LessonSummaryPanel(p: Props) {
         if (r.ok) { const j = await r.json(); if (!stop) apply(j); }
       })
       .catch(() => { /* buttons stay as they are */ });
-    // The completed save is fire-and-forget: give it a moment to land.
+    // The completed save has settled before this panel mounts (embed page), so POST at once.
     timer = setTimeout(() => start(1), FIRST_POST_DELAY_MS);
     return () => { stop = true; if (timer) clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,10 +117,12 @@ export default function LessonSummaryPanel(p: Props) {
         <h1 className="text-xl font-bold text-gray-900">Lesson complete</h1>
       </div>
       <section className="space-y-3 rounded-xl bg-white p-4 shadow-sm">
-        {state.status === 'pending' && <p className="text-sm text-gray-500">Preparing your summary…</p>}
+        {state.status === 'pending' && <p className="text-sm text-gray-500">{state.summary ? 'Updating your summary…' : 'Preparing your summary…'}</p>}
         {state.status === 'failed' && (
           <p className="text-sm text-gray-600">
-            {state.error === 'Summary is taking longer than expected' ? `${state.error} — ` : 'Summary not available — '}
+            {state.error === 'Summary is taking longer than expected'
+              ? `${state.error} — `
+              : state.summary ? 'Could not update this summary — ' : 'Summary not available — '}
             <button
               type="button"
               className="font-medium underline"
@@ -129,7 +132,7 @@ export default function LessonSummaryPanel(p: Props) {
             </button>
           </p>
         )}
-        {state.status === 'ready' && state.summary && <SummaryBody summary={state.summary} />}
+        {state.summary && <SummaryBody summary={state.summary} />}
         <div className="flex flex-wrap items-center gap-2">
           {replayUrl && (
             <a href={replayUrl} target="_blank" rel="noopener" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700">

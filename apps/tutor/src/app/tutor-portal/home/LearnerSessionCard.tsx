@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import ExportSessionPDFButton from '@/components/session/ExportSessionPDFButton';
 import type { LearnerSessionRow, SummaryState } from '@/lib/tutor/portal/learner-summary-store';
 import { LocalTime } from '@/components/session/LocalTime';
-import { rowLabel, levelBadge, nextPollDelayMs } from './home-rows';
+import { rowLabel, levelBadge, nextPollDelayMs, cardShouldPoll } from './home-rows';
 import SummaryBody from './SummaryBody';
 
 function formatDuration(sec: number): string {
@@ -13,23 +13,31 @@ function formatDuration(sec: number): string {
 }
 
 export default function LearnerSessionCard(
-  { row, replayUrl, token, pollUrl, productName }: { row: LearnerSessionRow; replayUrl: string | null; token: string; pollUrl: string; productName?: string },
+  { row, replayUrl, token, pollUrl, productName, summaryDisabled = false, nowMs }: {
+    row: LearnerSessionRow; replayUrl: string | null; token: string; pollUrl: string; productName?: string;
+    /** TUTOR_LEARNER_SUMMARY=off: a static line, no polling, no Retry (Replay/PDF stay). */
+    summaryDisabled?: boolean;
+    /** Server render time, so the "In progress" label matches on hydration. */
+    nowMs: number;
+  },
 ) {
   const [state, setState] = useState<SummaryState>(row.summary);
   const [retrying, setRetrying] = useState(false);
-  const label = rowLabel(row);
-  const badge = levelBadge(state);
-  const s = state.status === 'ready' ? state.summary : undefined;
+  const [expired, setExpired] = useState(false);
+  const label = rowLabel(row, nowMs);
+  const badge = summaryDisabled ? null : levelBadge(state);
+  // Any stored summary is shown: kept while regenerating and after a failed regeneration.
+  const s = summaryDisabled ? undefined : state.summary;
 
   useEffect(() => {
-    if (state.status !== 'pending') return;
+    if (!cardShouldPoll(state, { summaryDisabled, expired })) return;
     const t0 = Date.now();
     let stop = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = () => {
       const delay = nextPollDelayMs(Date.now() - t0);
       if (delay === null) {
-        setState({ status: 'failed', error: 'Summary is taking longer than expected' });
+        setState((prev) => ({ ...prev, status: 'failed', error: 'Summary is taking longer than expected' }));
         return;
       }
       if (timer) clearTimeout(timer);
@@ -39,6 +47,8 @@ export default function LearnerSessionCard(
       if (stop) return;
       try {
         const r = await fetch(pollUrl, { cache: 'no-store' });
+        if (stop) return;
+        if (r.status === 401 || r.status === 403) { setExpired(true); return; }
         const j = r.ok ? await r.json() : null;
         if (stop) return;
         if (j?.state && j.state.status !== 'pending' && j.state.status !== 'none') { setState(j.state); return; }
@@ -47,21 +57,23 @@ export default function LearnerSessionCard(
     };
     schedule();
     return () => { stop = true; if (timer) clearTimeout(timer); };
-  }, [state.status, pollUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.status, pollUrl, summaryDisabled, expired]);
 
   async function retry() {
     setRetrying(true);
-    setState({ status: 'pending' });
+    setState((prev) => ({ ...prev, status: 'pending' }));
     try {
       const r = await fetch('/api/tutor-portal/learner-summary', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-embed-token': token },
         body: JSON.stringify({ sessionId: row.sessionId }),
       });
+      if (r.status === 401 || r.status === 403) { setExpired(true); return; }
       const j = await r.json();
-      setState(j?.state ?? { status: 'failed' });
+      setState((prev) => j?.state ?? { ...prev, status: 'failed' });
     } catch {
-      setState({ status: 'failed' });
+      setState((prev) => ({ ...prev, status: 'failed' }));
     } finally {
       setRetrying(false);
     }
@@ -86,13 +98,24 @@ export default function LearnerSessionCard(
         </div>
       </div>
 
-      {state.status === 'pending' && <p className="text-sm text-gray-500">Preparing your summary…</p>}
-      {state.status === 'none' && <p className="text-sm text-gray-500">Preparing your summary…</p>}
-      {state.status === 'failed' && (
-        <p className="text-sm text-gray-600">
-          Summary not available —{' '}
-          <button type="button" onClick={retry} disabled={retrying} className="font-medium underline disabled:opacity-50">Retry</button>
-        </p>
+      {summaryDisabled ? (
+        <p className="text-sm text-gray-500">Summary not available</p>
+      ) : expired ? (
+        <p className="text-sm text-gray-600">This link has expired. Ask for a new one.</p>
+      ) : label.status === 'In progress' && state.status === 'none' ? (
+        <p className="text-sm text-gray-500">Your summary will be ready after the lesson ends.</p>
+      ) : (
+        <>
+          {(state.status === 'pending' || state.status === 'none') && (
+            <p className="text-sm text-gray-500">{s ? 'Updating your summary…' : 'Preparing your summary…'}</p>
+          )}
+          {state.status === 'failed' && (
+            <p className="text-sm text-gray-600">
+              {s ? 'Could not update this summary — ' : 'Summary not available — '}
+              <button type="button" onClick={retry} disabled={retrying} className="font-medium underline disabled:opacity-50">Retry</button>
+            </p>
+          )}
+        </>
       )}
 
       {s && <SummaryBody summary={s} />}

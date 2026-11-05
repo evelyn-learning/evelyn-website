@@ -1,15 +1,19 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { verifyEmbedTokenAsync } from '@/lib/tutor/portal/embed-token';
-import { listLearnerSessions, runSummaryForSession, type LearnerSessionRow } from '@/lib/tutor/portal/learner-summary-store';
+import { learnerSummaryEnabled, listLearnerSessions, runSummaryForSession, type LearnerSessionRow } from '@/lib/tutor/portal/learner-summary-store';
+import { isLearnerSummarySubject } from '@/lib/tutor/portal/learner-summary';
 import { signReplayToken, replayUrl, type ReplayTokenPayload } from '@/lib/tutor/portal/replay-token';
 import { partnerFrameMetadata } from '@/lib/tutor/portal/partner-frame-metadata';
 import LearnerSessionCard from './LearnerSessionCard';
-import { startLessonUrl, needsSummaryRun } from './home-rows';
+import { startLessonUrl, shouldRunSummary } from './home-rows';
 
 /**
  * Learner home: "Your lessons" — the learner's finished sessions with summary,
  * replay and PDF. Scoped by the embed token's partner_id AND student_id.
+ * Only language lessons are listed (summaries exist only for them); a lesson
+ * still running elsewhere is "In progress" and not summarised; with
+ * TUTOR_LEARNER_SUMMARY=off the cards show no summary and nothing generates.
  */
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +56,10 @@ export default async function LearnerHomePage({ searchParams }: HomePageProps) {
     return <Refusal message="This link does not identify a learner, so lessons cannot be shown." />;
   }
 
-  const rows = await listLearnerSessions(payload.partner_id, student_id);
+  // Summaries are generated only for language lessons: other subjects are not listed.
+  const rows = (await listLearnerSessions(payload.partner_id, student_id)).filter((r) => isLearnerSummarySubject(r.subject));
+  const summaryDisabled = !learnerSummaryEnabled();
+  const now = Date.now();
   const origin = await requestOrigin();
   const b = payload.branding;
   const branding = b && typeof b === 'object' && !Array.isArray(b) ? (b as ReplayTokenPayload['branding'] & { primary_color?: string }) : undefined;
@@ -63,7 +70,7 @@ export default async function LearnerHomePage({ searchParams }: HomePageProps) {
   const cards: Array<{ row: LearnerSessionRow; replayUrl: string | null }> = [];
   for (const row of rows) {
     let shown = row;
-    if (needsSummaryRun(row.summary)) {
+    if (shouldRunSummary(row, now, { summaryDisabled })) {
       void runSummaryForSession(row.sessionId).catch((e) => console.warn('[learner-home] summary run failed', row.sessionId, (e as Error)?.message));
       shown = { ...row, summary: { status: 'pending' } };
     }
@@ -113,6 +120,8 @@ export default async function LearnerHomePage({ searchParams }: HomePageProps) {
             replayUrl={url}
             token={token}
             productName={typeof branding?.product_name === 'string' ? branding.product_name : undefined}
+            summaryDisabled={summaryDisabled}
+            nowMs={now}
             pollUrl={`/api/tutor-portal/learner-summary?sessionId=${encodeURIComponent(row.sessionId)}&token=${encodeURIComponent(token)}`}
           />
         ))}

@@ -17,6 +17,7 @@ import { resolveOpenScope } from '@/lib/tutor/portal/demo-topic-choice';
 import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import LessonSummaryPanel from './LessonSummaryPanel';
+import { toStoredWhiteboardCommands } from './stored-whiteboard';
 import { Loader2 } from 'lucide-react';
 import { buildDisplayName } from '@/lib/tutor/topic-taxonomy';
 import { lookupModelRate, rateForPrompt } from '@/lib/tutor/ai/model-rates';
@@ -904,6 +905,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const resumeSeedGuardRef = useRef(createSeedGuard());
   const [error, setError] = useState<string | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
+  // The completed (final) save's request has settled (resolved or failed):
+  // the summary panel mounts only then, so its POST never races the save.
+  const [finalSaveSettled, setFinalSaveSettled] = useState(false);
   // Task 10 (tutor-e2e, text-only mode): mirrors TutorSession's internal
   // brain-busy signal (onBrainBusyChange) so the dev-only __tutorTestState
   // hook below can expose it — the e2e harness's waitForTurn() polls this to
@@ -1174,7 +1178,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // 'backgrounded' (2026-10-19, GAC live test): the tab was hidden. The data
   // goes by beacon, as on unload, but the session is still live — a student
   // switching tabs, or staff opening the admin view beside it, is not an end.
-  const saveSession = useCallback((status: 'active' | 'completed' | 'abandoned' | 'backgrounded') => {
+  // Returns a promise only for the `completed` save (settles when its fetches
+  // settle — the end-of-lesson summary panel waits on it); otherwise undefined.
+  const saveSession = useCallback((status: 'active' | 'completed' | 'abandoned' | 'backgrounded'): Promise<unknown> | undefined => {
     const now = new Date();
     // Active time only (spec v1.2 §5): standing by and a prewarmed frame's
     // wait are not session time.
@@ -1250,18 +1256,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         })),
       } : {}),
       ...(whiteboardCommands.length > 0 ? {
-        whiteboardCommands: whiteboardCommands.map(({ cmd, capturedAt, sourceMessageIndex }) => ({
-          action: cmd.action,
-          data: { ...cmd, action: undefined },
-          // Capture time, NOT save time (`now`): the replay reconstructs WB
-          // timing from these stamps, and same-stamped arrays break it for
-          // paused-and-resumed sessions (2026-07-15 replay fix).
-          timestamp: capturedAt,
-          // 2026-08-07: command↔message anchor, parity with /tutor. Omitted
-          // (not -1) when unknown so legacy consumers see the same absence
-          // shape as pre-fix rows.
-          ...(typeof sourceMessageIndex === 'number' && sourceMessageIndex >= 0 ? { sourceMessageIndex } : {}),
-        })),
+        // Stored shape {action, data, timestamp: capture time, sourceMessageIndex?}
+        // — one mapping shared with the end-of-lesson PDF (stored-whiteboard.ts).
+        whiteboardCommands: toStoredWhiteboardCommands(whiteboardCommands),
       } : {}),
       // Delta-append allowlisted debug events. The high-water mark is NOT
       // advanced here — see commitDebugEvents() below.
@@ -1312,26 +1309,28 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     // 2026-07-13) — but keepalive bodies share sendBeacon's ~64KB quota, so
     // an oversized payload goes as slim-keepalive + full best-effort fetch.
     if (new Blob([body]).size <= 60_000) {
-      fetch('/api/tutor/session-usage', {
+      const full = fetch('/api/tutor/session-usage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body,
         keepalive: true,
       }).catch(() => {});
       commitDebugEvents();   // issued WITH the events
+      return Promise.allSettled([full]);
     } else {
-      fetch('/api/tutor/session-usage', {
+      const slim = fetch('/api/tutor/session-usage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body: JSON.stringify(basePayload),
         keepalive: true,
       }).catch(() => {});
-      fetch('/api/tutor/session-usage', {
+      const full = fetch('/api/tutor/session-usage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body,
       }).catch(() => {});
       commitDebugEvents();   // the second fetch carries the events
+      return Promise.allSettled([slim, full]);
     }
   }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands, embedToken, notePriorActive, tutorLanguages]);
 
@@ -1498,7 +1497,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     // A deliberate discard (round-4 item 5) is an abandonment, not a
     // completion — keep the engine's own record consistent with the
     // portal's abort.
-    saveSession(endIntent === 'discard' ? 'abandoned' : 'completed');
+    Promise.resolve(saveSession(endIntent === 'discard' ? 'abandoned' : 'completed'))
+      .finally(() => setFinalSaveSettled(true));
     setSessionEnded(true);
     // `duration` = total ACTIVE seconds across the session: this mount's own
     // clock plus the earlier sittings of a resumed session (server-computed,
@@ -2324,12 +2324,12 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   if (sessionEnded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50" style={brandStyle}>
-        {config.partner_id ? (
+        {config.partner_id && config.subject === 'languages' ? (finalSaveSettled ? (
           <LessonSummaryPanel
             sessionId={sessionId}
             token={embedToken}
             transcript={transcript}
-            whiteboardCommands={whiteboardCommands.map((x) => x.cmd)}
+            whiteboardCommands={toStoredWhiteboardCommands(whiteboardCommands)}
             studentName={studentName || undefined}
             subject={subject}
             topic={topic}
@@ -2339,6 +2339,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
             showHomeLink={searchParams.get('return') === 'home'}
           />
         ) : (
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" aria-label="Saving your lesson" />
+        )) : (
         <div className="max-w-md text-center p-8">
           <div className="mb-4 text-4xl">&#10003;</div>
           <h1 className="mb-2 text-xl font-bold text-gray-900">Session Complete</h1>
