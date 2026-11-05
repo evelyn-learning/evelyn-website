@@ -15,6 +15,11 @@ export function panelPollDelayMs(elapsedMs: number): number | null {
   return elapsedMs < 30_000 ? 2000 : 10_000;
 }
 
+/** Delay before re-POSTing after a 404/5xx/network error: 3 s for attempts 1-5, then null. */
+export function postRetryDelayMs(attempt: number): number | null {
+  return attempt >= 1 && attempt <= 5 ? 3000 : null;
+}
+
 export function startLessonUrl(token: string): string {
   return `/tutor-portal/embed?token=${encodeURIComponent(token)}&return=home`;
 }
