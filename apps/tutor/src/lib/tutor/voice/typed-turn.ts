@@ -421,7 +421,16 @@ export function correctionChangesNothing(studentText: string, correction: TypedT
   return kept.join(' ') === fixed.join(' ');
 }
 
-export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase' | 'english_missing';
+export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase' | 'english_missing' | 'question_dictates_opening';
+
+/** Z2 (fix wave 8, run 4 67 s "Try starting with: I want to…"): a question / offer / menu that tells the learner
+ *  which words to begin with. A `retry` is never checked — "starting with: …" is its normal scaffold. */
+const DICTATES_OPENING_RE = /\b(?:start|starting|begin|beginning)\s+with\b\s*:?/i;
+const DICTATES_FULL_SENTENCE_RE = /\b(?:please\s+)?(?:answer|reply|respond)\s+(?:with\s+)?(?:a\s+)?(?:full|complete)\s+sentence\s+(?:starting|beginning)\s+with\b/i;
+export function typedQuestionDictatesOpening(next: TypedNext): boolean {
+  if (next.kind !== 'question' && next.kind !== 'offer' && next.kind !== 'menu') return false;
+  return DICTATES_OPENING_RE.test(next.say) || DICTATES_FULL_SENTENCE_RE.test(next.say);
+}
 
 /**
  * The one regeneration request for a refused `next` (spec §4.2, §4.8 "splice"):
@@ -441,7 +450,9 @@ export function typedTurnRetryMessage(input: {
   correctionNoChange?: boolean;
 }): string {
   const { reason, refused, allowedNext, alreadySaid, budget, itemNotListed, missingPhrases, correctionNoChange } = input;
-  const why = reason === 'english_missing'
+  const why = reason === 'question_dictates_opening'
+    ? `Your "next" was refused "${refused.kind}" (question_dictates_opening): the question told the learner which words to begin with. Ask the question plainly and stop; the learner answers in their own words (allowed: ${allowedNext.join(', ')}).`
+    : reason === 'english_missing'
     ? `Your "next" was refused "${refused.kind}" (english_missing): the student spoke English, and this turn had no English sentence. Every turn to an English-speaking student contains at least one English sentence. Say the same thing in English in next.say; Japanese may follow as support (allowed: ${allowedNext.join(', ')}).`
     : reason === 'illegal_kind' && correctionNoChange
     ? `Your "next" was refused "${refused.kind}" (correction_no_change): the student's sentence already has that form; no correction, no retry — ask the next question or offer (allowed: ${allowedNext.filter((k) => k !== 'retry').join(', ')}).`

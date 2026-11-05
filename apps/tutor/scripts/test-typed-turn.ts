@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import {
   TYPED_TURN_SCHEMA, TYPED_NEXT_KINDS, TYPED_TURN_INSTRUCTIONS, typedTurnStateBlock, TYPED_KIND_MEANING, typedSayBudgetFor,
   truncateToSentences, sentenceCount, englishSentenceCount, parseTypedTurn, TYPED_FIELD_ORDER,
-  TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection, correctionChangesNothing,
+  TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection, correctionChangesNothing, typedQuestionDictatesOpening,
 } from '../src/lib/tutor/voice/typed-turn';
 import { isStructuredOutputRejection as gradeIsStructuredOutputRejection } from '../src/lib/tutor/portal/grade-free-response';
 
@@ -471,6 +471,25 @@ test('Y4 (fix wave 7, sessions 1/2: 414 s "starting with Have you ever", 157 s "
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes(rule), 'instruction');
   const say = TYPED_TURN_INSTRUCTIONS.indexOf('  - "say": what you say for that kind'), r = TYPED_TURN_INSTRUCTIONS.indexOf(rule), item = TYPED_TURN_INSTRUCTIONS.indexOf('  - "item": for kind "item"');
   assert.ok(say >= 0 && r > say && r < item, 'inside the next.say guidance');
+});
+
+test('Z2 (fix wave 8, run 4 67 s / run 1 414 s / run 2 306 s): a question that dictates the opening words is refused', () => {
+  const n = (kind: string, say: string) => ({ kind, say, item: '', level: '' }) as Parameters<typeof typedQuestionDictatesOpening>[0];
+  for (const say of [
+    'Now tell me one reason it matters to your work at Nagoya Corporation. Try starting with: I want to…',
+    "Sure, one more. Have you ever visited a customer's office outside Japan? Please answer with a full sentence starting with Have you ever.",
+    "What did you learn there? Please answer in one full sentence, starting with 'I learned…'.",
+  ]) assert.equal(typedQuestionDictatesOpening(n('question', say)), true, say);
+  assert.equal(typedQuestionDictatesOpening(n('offer', 'Shall we practise more? Begin with: Yes, please.')), true, 'offer');
+  assert.equal(typedQuestionDictatesOpening(n('menu', 'Pick one, starting with the number.')), true, 'menu');
+  assert.equal(typedQuestionDictatesOpening(n('question', 'Please reply with a complete sentence beginning with I.')), true, 'full-sentence form');
+  assert.equal(typedQuestionDictatesOpening(n('retry', 'Can you say the whole sentence once more, starting with: I have worked…')), false, 'a retry scaffold is never refused');
+  assert.equal(typedQuestionDictatesOpening(n('question', 'What did you learn at the exhibition? Please answer in one full sentence.')), false, 'a plain question');
+  assert.equal(typedQuestionDictatesOpening(n('move', "Let's start with the past simple.")), false, 'a move is not checked');
+  const m = typedTurnRetryMessage({ reason: 'question_dictates_opening', refused: n('question', 'Try starting with: I want to…'), allowedNext: ['question', 'retry'],
+    alreadySaid: { ack: '', verdict: 'correct', verdict_say: '', board: '', correction: null, support_ja: '' }, budget: 3 });
+  assert.ok(m.includes('(question_dictates_opening)'), 'names the reason');
+  assert.ok(/told the learner which words to begin with/.test(m) && /ask the question plainly and stop/i.test(m) && /in their own words/.test(m), m);
 });
 
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }

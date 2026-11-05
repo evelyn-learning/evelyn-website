@@ -75,7 +75,7 @@ import {
 import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
 import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
-import { correctionChangesNothing, isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, typedSayBudgetFor, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
+import { correctionChangesNothing, isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedQuestionDictatesOpening, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, typedSayBudgetFor, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
 
 /** Does the streamed tool input parse as JSON? Partial JSON (a tool call
  *  the output cap cut in half) does not. */
@@ -3142,6 +3142,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             : missingPhrases.length ? 'missing_required_phrase'
             // A (fix wave 6): the student spoke English and nothing in this turn is English — refused before speech.
             : typedEnglishMissing(ev.value) ? 'english_missing'
+            // Z2 (fix wave 8, run 4 67 s): a question / offer / menu that dictates the learner's opening words.
+            : typedQuestionDictatesOpening(ev.value) ? 'question_dictates_opening'
             : englishSentenceCount(ev.value.say) > sayBudgetOf(ev.value.kind) ? 'say_over_budget' : null;
           if (reason) {
             typedRetryNeed = {

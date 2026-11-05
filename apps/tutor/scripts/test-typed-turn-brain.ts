@@ -479,6 +479,29 @@ async function main() {
     });
   }
 
+  {
+    // Z2 (fix wave 8, run 4 67 s): a question that dictates the opening words is refused before speech (one retry).
+    const DICT = { ...TURN, verdict: 'correct', verdict_say: 'That is a clear goal.', correction: null, support_ja: '',
+      next: { kind: 'question', say: 'Now tell me one reason it matters to your work. Try starting with: I want to…', item: '', level: '' } };
+    const PLAIN = { kind: 'question', say: 'Now tell me one reason it matters to your work.', item: '', level: '' };
+    await test('Z2: a question with "Try starting with: I want to…" ⇒ refused (question_dictates_opening), the retry\'s question spoken once', async () => {
+      const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify(DICT), 3), chunkedTextScript(JSON.stringify({ ...DICT, next: PLAIN }), 2)]);
+      assert.equal(r.requests.length, 2);
+      const u = String(r.requests[1].messages[r.requests[1].messages.length - 1].content);
+      assert.ok(u.includes('question_dictates_opening') && /which words to begin with/.test(u), u);
+      const said = sentencesOf(r.events);
+      assert.ok(!said.some((x) => /starting with/i.test(x)), 'the refused question is never spoken');
+      assert.equal(said.filter((x) => x.includes('one reason it matters')).length, 1, said.join(' | '));
+      assert.equal(turnEv(r.events).retryReason, 'question_dictates_opening');
+    });
+    await test('Z2: a retry with "starting with:" passes untouched ⇒ one request', async () => {
+      const R = { ...TURN, next: { kind: 'retry', say: 'Can you say the whole sentence once more, starting with: I went…', item: '', level: '' } };
+      const r = await run({ ...baseInput, typedTurn }, [chunkedTextScript(JSON.stringify(R), 3)]);
+      assert.equal(r.requests.length, 1);
+      assert.ok(sentencesOf(r.events).some((x) => x.includes('starting with: I went')), sentencesOf(r.events).join(' | '));
+    });
+  }
+
   await test('B (fix wave 6, p3 654 s): the ack "Good, you met Mr. Kenji last month." streams as ONE sentence, not cut at "Mr."', async () => {
     // Fix round 1 (F1) pin moved: the streamed abbreviation case is St. (the single-initial rule was dropped)
     const T = { ...TURN, ack: 'Good, you met Mr. Kenji last month.', verdict: 'correct', verdict_say: 'That is right, you met St. Mary at the fair. Good.', correction: null, support_ja: '' };
