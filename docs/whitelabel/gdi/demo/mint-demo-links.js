@@ -8,6 +8,8 @@
 //     Josh + Praveen get FRESH ids each mint (level check can be re-seen on request).
 //   - tester links carry no student_name (the tutor would say a placeholder as a name).
 //   - ttl defaults to 720 h for `trial`; no is_trial / wrap_at_minutes claims.
+//   - `--home` prints /tutor-portal/home links; `--from FILE` re-signs the links in FILE
+//     (same claims, fresh iat/exp) instead of generating rows; `--add james` appends a james row.
 //
 // Minute pool (PROD WRITES — Praveen runs these, NOT this script), before the trial starts:
 //   scripts/ops/partner-pool.sh set gdi-demo 300
@@ -26,9 +28,12 @@ const testersIdx = process.argv.indexOf('--testers');
 const testers = testersIdx > 0 ? Number(process.argv[testersIdx + 1]) : 4;
 if (isTrial && !(Number.isInteger(testers) && testers >= 0 && testers <= 50)) { console.error('--testers must be an integer 0-50'); process.exit(1); }
 // --local: links for run-local.sh (http://localhost:3019) instead of the demo engine.
+// --home: the learner-home page (/tutor-portal/home) instead of the embed page; same token payload.
+const PAGE = process.argv.includes('--home') ? 'home' : 'embed';
 const EMBED = process.argv.includes('--local')
-  ? `http://localhost:${process.env.PORT || 3019}/tutor-portal/embed`
-  : 'https://tutor-demo.evelynlearning.com/tutor-portal/embed';
+  ? `http://localhost:${process.env.PORT || 3019}/tutor-portal/${PAGE}`
+  : `https://tutor-demo.evelynlearning.com/tutor-portal/${PAGE}`;
+const flagVal = (f) => { const i = process.argv.indexOf(f); return i > 0 ? process.argv[i + 1] : undefined; };
 const LESSONS = [
   { key: 'starter', plan: 'gdi.demo.english.experiences.starter.v1', teacher: 'ryota', rate: 0.75, level: 'Adult beginner (A1)', topic: 'Experiences — Starter', student: 'gdi-demo-beginner' },
   { key: 'advanced', plan: 'gdi.demo.english.experiences.advanced.v1', teacher: 'jameson', rate: 0.85, level: 'Adult advanced (A2–B1)', topic: 'Experiences — Talking About the Past', student: 'gdi-demo-advanced' },
@@ -54,9 +59,24 @@ if (isTrial) {
   });
   const fresh = now.toString(36);
   const rows = [];
-  for (let n = 1; n <= testers; n++) rows.push([`tester-${n}`, trialClaims(`gdi-trial-${n}`)]);
-  rows.push(['josh', trialClaims(`gdi-trial-josh-${fresh}`, 'Josh')]);
-  rows.push(['praveen', trialClaims(`gdi-trial-praveen-${fresh}`, 'Praveen')]);
+  const fromFile = flagVal('--from');
+  if (fromFile) {
+    // Re-sign each existing link's payload (same student_id/claims) with fresh iat/exp.
+    const lines = require('fs').readFileSync(fromFile, 'utf8').split('\n').filter((l) => l.trim());
+    for (const line of lines) {
+      const [label, url] = line.split('\t');
+      const token = new URL(url).searchParams.get('token');
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'));
+      delete payload.iat; delete payload.exp;
+      rows.push([label, { ...payload, iat: now, exp: now + Math.round(ttlHours * 3600) }]);
+    }
+  } else {
+    for (let n = 1; n <= testers; n++) rows.push([`tester-${n}`, trialClaims(`gdi-trial-${n}`)]);
+    rows.push(['josh', trialClaims(`gdi-trial-josh-${fresh}`, 'Josh')]);
+    rows.push(['praveen', trialClaims(`gdi-trial-praveen-${fresh}`, 'Praveen')]);
+  }
+  // --add james: a named row minted like josh (fresh id, so the level check is seen once).
+  if (flagVal('--add') === 'james') rows.push(['james', trialClaims(`gdi-trial-james-${fresh}`, 'James')]);
   for (const [label, payload] of rows) console.log(`${label}\t${EMBED}?token=${signEmbedToken(payload, secret)}`);
   return;
 }

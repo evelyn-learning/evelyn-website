@@ -2,6 +2,16 @@
 
 > **READ THIS FIRST**, then the ledger (`<worktree>/.superpowers/sdd/2026-10-28-gdi-trial-lesson/progress.md`), then the design doc. Do not re-run Tasks 31–46 (complete, see the ledger).
 
+## ★★★ LEARNER HOME 11-05 (built, NOT yet deployed — see status line)
+
+Per-learner "Your lessons" home for the GDI testers (spec `docs/superpowers/specs/2026-11-05-gdi-learner-home-design.md`, plan `docs/superpowers/plans/2026-11-05-gdi-learner-home.md`, branch `gdi-trial-lesson`). Built: `/tutor-portal/home?token=<embed token>` (lesson list with summary, replay, PDF); stored `learnerSummary` per session; end-of-lesson summary panel on the embed page (replay, PDF, back-to-home); the summary route; replay-token signing; owner check on the save route. Kill switch: `TUTOR_LEARNER_SUMMARY=off`.
+- Mint home links (re-signs the existing prod links, same student ids, fresh iat/exp; adds james; nothing committed):
+  `PARTNER_SECRET="$(cat ~/.evelyn/partners/gdi-demo.secret)" node docs/whitelabel/gdi/demo/mint-demo-links.js trial --home --from ~/.evelyn/partners/gdi-trial.links.prod.txt --add james > ~/.evelyn/partners/gdi-trial.links.home.prod.txt`
+- Pool (PROD write, Praveen): `scripts/ops/partner-pool.sh set gdi-demo <used + 300>` BEFORE the email, so the five share a fresh 300 minutes.
+- Email draft (placeholders `{{tester-1}}`..`{{tester-4}}`, `{{josh}}`, `{{james}}`): `docs/whitelabel/gdi/email-testers-2026-11-05.md`.
+- Deploy order: `npm run test:all` (baseline failures only) -> `./deploy-tutor-demo.sh` from the worktree -> verify BUILD_ID -> open one home link in Chrome (a tester with a past session shows the summary) -> pool -> mint -> fill and send the email.
+- DEPLOY STATUS: not deployed
+
 ## ★★★ FIX WAVE 8 11-04 22:37 PST — DEPLOYED :3009 build `W3vDNyfWetw71Y_FTi9YK` (code 54639676, HEAD fee46707) after Praveen's PROD run 4 (embed-1793855133648, 72P/1F; dump `scratchpad/praveen/p7.txt`)
 
 Run 4: all five named-part requests turned the page (level-check→present-perfect was an over-parts jump via `typed_advance_app`; the rest brain-written moves); no retries. Findings → fixes (Z1–Z4 66cd681f→e9a7d813 + fix round 54639676; review 2 Important/5 Minor, re-review clean, test:all 435/437):

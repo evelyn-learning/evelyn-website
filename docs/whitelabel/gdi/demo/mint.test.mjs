@@ -55,4 +55,39 @@ assert.notEqual(again[5], ids[5]);
 assert.equal(run(['trial', '--testers', '2']).length, 4, '--testers 2');
 // Existing lessons untouched.
 assert.deepEqual(run([]).map((l) => l.label), ['starter', 'advanced', 'meeting']);
+
+// --home / --from / --add (learner home links).
+const home = run(['trial', '--home', '--testers', '2']);
+assert.ok(home.every((l) => l.url.startsWith('https://tutor-demo.evelynlearning.com/tutor-portal/home?token=')), '--home path');
+{
+  const { writeFileSync, mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const sign = (payload) => {
+    const enc = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+    const h = enc({ alg: 'HS256', typ: 'JWT' }); const p = enc(payload);
+    return `${h}.${p}.${createHmac('sha256', SECRET).update(`${h}.${p}`).digest('base64url')}`;
+  };
+  const oldIat = Math.floor(Date.now() / 1000) - 7 * 86400;
+  const fx = [
+    ['tester-1', { partner_id: 'gdi-demo', student_id: 'gdi-trial-1', topic: 'Work projects', custom: 'keep-me', iat: oldIat, exp: oldIat + 720 * 3600 }],
+    ['josh', { partner_id: 'gdi-demo', student_id: 'gdi-trial-josh-abc', student_name: 'Josh', iat: oldIat, exp: oldIat + 720 * 3600 }],
+  ];
+  const file = path.join(mkdtempSync(path.join(tmpdir(), 'mint-')), 'links.txt');
+  writeFileSync(file, fx.map(([l, c]) => `${l}\thttps://tutor-demo.evelynlearning.com/tutor-portal/embed?token=${sign(c)}`).join('\n') + '\n');
+  const out = run(['trial', '--home', '--from', file, '--add', 'james']);
+  assert.deepEqual(out.map((l) => l.label), ['tester-1', 'josh', 'james'], '--from replaces generated rows; --add appends james');
+  assert.ok(out.every((l) => l.url.includes('/tutor-portal/home?token=')));
+  const oc = out.map((l) => decode(l.url));
+  assert.equal(oc[0].student_id, 'gdi-trial-1');
+  assert.equal(oc[0].custom, 'keep-me', 'claims kept');
+  assert.equal(oc[1].student_name, 'Josh');
+  assert.ok(oc[0].exp > fx[0][1].exp, 'exp bumped');
+  assert.ok(oc[0].iat > oldIat, 'iat refreshed');
+  assert.equal(oc[0].exp - oc[0].iat, 720 * 3600);
+  assert.match(oc[2].student_id, /^gdi-trial-james-.+/);
+  assert.equal(oc[2].student_name, 'James');
+  assert.equal(oc[2].curriculum_module, 'gdi.trial.english.work-projects.v1');
+  const plain = run(['trial', '--testers', '1', '--add', 'james']);
+  assert.deepEqual(plain.map((l) => l.label), ['tester-1', 'josh', 'praveen', 'james'], '--add alone appends');
+}
 console.log('mint.test.mjs: all assertions passed');
