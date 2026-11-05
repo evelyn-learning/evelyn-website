@@ -1,5 +1,20 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
+> **STATUS 11-05 (later): WAVE 10 BUILT on `gdi-trial-lesson`, NOT deployed.** Commits 5f9365ff (items follow the menu pick),
+> 28b43f8b (pending-answer vocabulary from the numbered card), e9bfdfaa (retry/nudge rows + consumed-note re-plant),
+> + the review fix pass (nudge retry not counted and keeps the item open; consumed record clears on a note-less turn and
+> carries the typed state the cancelled call saw; pronunciation_rearmed / _note_redelivered / _note_replanted now persisted
+> for embed dumps). Gate: `test:all` 440/442 (the 2 known baseline failures), `tsc` clean. Fresh review: 0 Critical, 3
+> Important (all fixed), 5 Minor deferred (see the SDD ledger lines in the commit message of the fix pass / this doc's
+> "Deferred" below). NEXT: `./deploy-tutor-demo.sh` from this worktree on Praveen's word → run 7 on the "praveen" home link →
+> dump → check `pronunciation_armed` names the WORD after pick 1, option barge-ins during the menu read survive
+> (`self_voice_exempt_pending_answer`), "say it in English" re-asks the same sentence, a nudge re-arms the same item,
+> `pronunciation_note_replanted` after a stage-3 cancel.
+>
+> Deferred minors: correction-retry re-arm (rearm_item on an open retry assumes the item), loose re-pick mid-part flips the
+> list (pre-existing false pick; one-turn delay only), Japanese pick keywords 単語/自然 only, Skip-marker turn skips the
+> re-plant match, no pin for the one-word card. The 773 s unnumbered menu read (TT9) stays a brain-wording WARN — harmless now.
+
 Session `embed-1793912673549`, student `gdi-trial-praveen-to0684`, 21:04:39–21:24:23 UTC (19.7 min), 79 turns, 1320 events,
 build `Ip6w572mwJkelIwMui35u` (= `gdi-trial-lesson` 4946486d, wave 9). Dump: `scratchpad/praveen/p9.txt` of THIS session
 (`/private/tmp/claude-501/-Users-luke-Dev-evelynlearning/b3202479-a1e4-4b85-8840-ff7bd3b4bca0/scratchpad/praveen/`; recipe
