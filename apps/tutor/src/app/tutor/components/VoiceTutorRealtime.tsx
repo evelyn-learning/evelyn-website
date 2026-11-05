@@ -4311,6 +4311,16 @@ export function VoiceTutorRealtime({
   // option picked, and the parts where an option was picked.
   const menuAskCountRef = useRef<Map<string, number>>(new Map());
   const menuPickedSegsRef = useRef<Set<string>>(new Set());
+  /** W10-2 (fix wave 10, run 6 782 / 786 s): the choice card of the current part while its pick is unresolved — the
+   *  pending-answer exemption's menu when the brain read the options without numbers (the say parses as no menu). */
+  const pendingMenuCardFor = (): string | null => {
+    const seg = currentSegmentIdRef.current;
+    if (!TUTOR_MENU_PICK_RESOLVE || !seg || menuPickedSegsRef.current.has(seg)) return null;
+    const card = segmentCardStatement(lessonPlanRef.current, seg);
+    return card && boardOffersChoices({ statement: card }) ? card : null;
+  };
+  const pendingMenuCardRef = useRef(pendingMenuCardFor);
+  pendingMenuCardRef.current = pendingMenuCardFor;
   /** Task 42 §D: a choice-menu part entered on the last turn, and whether that turn presented the menu. */
   const menuEntryPendingRef = useRef<{ segId: string; enteringPresented: boolean } | null>(null);
   /** Task 43 §K: the part whose menu the engine appended on its entering turn. */
@@ -26217,7 +26227,7 @@ export function VoiceTutorRealtime({
       // Task 30 §A3: a self-voice drop of an answer to the pending offer /
       // menu is not noise (countsAsNoiseCancel).
       const noisePendingVocab = TUTOR_PENDING_ANSWER_EXEMPT
-        ? pendingAnswerVocabularyFor(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '')
+        ? pendingAnswerVocabularyFor(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '', pendingMenuCardRef.current())
         : null;
       const noiseCounts = countsAsNoiseCancel(verdict, cleanPerceptionText, noisePendingVocab);
       if (!noiseCounts) onDebugEvent?.('noise_nag_skip_pending_answer', `"${cleanPerceptionText.slice(0, 60)}"`);
@@ -28230,8 +28240,9 @@ export function VoiceTutorRealtime({
           expectedRepeat,
           answerEndExemption: TUTOR_SELF_VOICE_ANSWER_END,
           // Task 30 §A1: an answer to the pending offer / menu is made of its words.
+          // W10-2: with the open part's choice card — the say may have read the options without numbers.
           pendingAnswerVocabulary: TUTOR_PENDING_ANSWER_EXEMPT
-            ? pendingAnswerVocabularyFor(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '')
+            ? pendingAnswerVocabularyFor(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '', pendingMenuCardRef.current())
             : null,
         });
         const ttsBufLen = recentTtsScripts.length;

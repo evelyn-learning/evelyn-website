@@ -1835,8 +1835,21 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('30A3: a long self-voice drop while pending counts', countsAsNoiseCancel('drop_self_voice', 'one more practice sentence on it or shall we', vocab) === true);
   check('30A3: no pending answer ⇒ counts as before', countsAsNoiseCancel('drop_self_voice', 'Yes. one', null) === true);
   check('30A3: noise / filler always count; new_turn never', countsAsNoiseCancel('noise', '', vocab) && countsAsNoiseCancel('filler', 'um', vocab) && !countsAsNoiseCancel('new_turn', 'Yes', vocab));
+  // W10-2 (fix wave 10, run 6 782 / 786 s): the brain read the menu WITHOUT numbers ("…individual words, a complete
+  // sentence, speaking more naturally, or skip and continue? Please choose 1, 2, 3, or 4.") ⇒ no vocabulary from the say ⇒
+  // "complete sentence" / "two" barge-ins dropped as echo. The numbered CARD supplies the option words.
+  const SAY_782 = 'Would you like to practice individual words, a complete sentence, speaking more naturally, or skip and continue? Please choose 1, 2, 3, or 4.';
+  const CARD = 'Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.';
+  check('W10-2: the unnumbered spoken menu alone ⇒ no vocabulary (as before)', pendingAnswerVocabularyFor(SAY_782) === null);
+  const fromCard = pendingAnswerVocabularyFor(SAY_782, CARD);
+  check('W10-2: with the numbered card ⇒ the option words join', !!fromCard && fromCard.includes('complete') && fromCard.includes('individual') && fromCard.includes('naturally') && fromCard.includes('two'));
+  check('W10-2: a prose card is no menu ⇒ still null', pendingAnswerVocabularyFor(SAY_782, 'Tell me about your job.') === null && pendingAnswerVocabularyFor(SAY_782, null) === null);
+  check('W10-2: a numbered say keeps its own options (the card is a fallback)', (pendingAnswerVocabularyFor('Choose: 1) tea, 2) coffee.', CARD) ?? []).includes('coffee') && !(pendingAnswerVocabularyFor('Choose: 1) tea, 2) coffee.', CARD) ?? []).includes('naturally'));
+  check('W10-2: "complete sentence" / "two" during the menu read ⇒ pending answers', isPendingAnswer('complete sentence', fromCard) && isPendingAnswer('number two', fromCard));
   const VTR30 = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('30A VTR: the classifier gets the pending vocabulary of the last tutor turn', VTR30.includes('pendingAnswerVocabulary: TUTOR_PENDING_ANSWER_EXEMPT\n            ? pendingAnswerVocabularyFor(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? \'\')'));
+  check('30A VTR: the classifier gets the pending vocabulary of the last tutor turn, with the open menu card (W10-2)', VTR30.includes('pendingAnswerVocabulary: TUTOR_PENDING_ANSWER_EXEMPT\n            ? pendingAnswerVocabularyFor(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? \'\', pendingMenuCardRef.current())'));
+  check('W10-2 VTR: the noise nag reads the same vocabulary', VTR30.includes("? pendingAnswerVocabularyFor(recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '', pendingMenuCardRef.current())\n        : null;\n      const noiseCounts"));
+  check('W10-2 VTR: the menu card is the current part\'s choice card until its pick is resolved', /const pendingMenuCardFor = \(\): string \| null => \{[\s\S]{0,700}menuPickedSegsRef\.current\.has\([\s\S]{0,300}boardOffersChoices\(\{ statement: card \}\)/.test(VTR30));
   check('30A3 VTR: the noise nag counts through countsAsNoiseCancel', VTR30.includes('if (TUTOR_NOISE_NAG && noiseCounts && recordReactionEvent(noiseReactionStateRef.current, NOISE_INTERRUPTION_REACTION, Date.now())) {')
     && VTR30.includes("onDebugEvent?.('noise_nag_skip_pending_answer',"));
 }

@@ -29,11 +29,16 @@ export const PENDING_ANSWER_WORDS: readonly string[] = [
 
 /** Non-null when `lastTutorText` asked the offer (offerAsked) or holds a
  *  numbered menu (≥ 2 "n)" markers): the generic answer words, plus — for a
- *  menu — every word of each option's text. */
-export function pendingAnswerVocabularyFor(lastTutorText: string | null | undefined): string[] | null {
+ *  menu — every word of each option's text.
+ *  W10-2 (fix wave 10, GDI run 6 782 / 786 s): the brain read the menu WITHOUT
+ *  its numbers, so the say held no menu and the option-word barge-ins
+ *  ("complete sentence", "two") were dropped as echo. `menuCard` — the open
+ *  part's choice card, passed by the caller while its pick is unresolved —
+ *  supplies the numbered options when the say has none. */
+export function pendingAnswerVocabularyFor(lastTutorText: string | null | undefined, menuCard?: string | null): string[] | null {
   const text = lastTutorText ?? '';
   if (!text.trim()) return null;
-  const menu = parseMenuOptions(text);
+  const menu = parseMenuOptions(text) ?? parseMenuOptions(menuCard ?? '');
   if (!menu && !offerAsked(text)) return null;
   const words = new Set<string>(PENDING_ANSWER_WORDS);
   for (const o of menu ?? []) for (const w of menuWordTokens(o.text)) words.add(w);
