@@ -316,8 +316,10 @@ test('Y2 (fix wave 7, session 3): a pending named-part jump resolves before the 
   assert.ok(decl > 0 && engineDecl > 0 && decl > engineDecl && decl - engineDecl < 400, 'typedJumpToNext declared next to typedEngineMove');
   const pre = VTR.indexOf('const typedPendingJump = typedTurnActive && !typedEngineMove ? pendingStudentJumpRef.current : null;');
   const latch = VTR.indexOf("if (typedTurnActive && !typedEngineMove && currentSegmentIdRef.current && currentSegmentIdRef.current !== turnStartSegmentId) {");
-  assert.ok(pre > 0 && latch > pre && latch - pre < 1600, 'pre-turn jump right before the W2 latch');
-  const block = VTR.slice(pre, latch);
+  // Fix wave 8 Z1: the block moved up (before the note planters); it still runs before the W2 latch.
+  const blockEnd = VTR.indexOf('// Fix wave 8 Z1: end of the pre-turn student jump.');
+  assert.ok(pre > 0 && latch > pre && blockEnd > pre && blockEnd - pre < 1600, 'pre-turn jump block bounded, before the W2 latch');
+  const block = VTR.slice(pre, blockEnd);
   assert.ok(block.includes('!(Date.now() - typedPendingJump.atMs > 90_000)'), 'the seam\'s 90 s stale rule');
   assert.ok(block.includes('lessonPlanRef.current.segments.some((s) => s.id === typedPendingJump.segId)'), 'target is a segment of the plan');
   assert.ok(block.includes('typedPendingJump.segId !== currentSegmentIdRef.current'), 'target differs from the pointer');
@@ -336,6 +338,22 @@ test('Y2 (fix wave 7, session 3): a pending named-part jump resolves before the 
   assert.ok(/if \(pendingJump && typedTurnActive\) \{\s*onDebugEvent\?\.\('agenda_jump_typed_stand_down', `\$\{pendingJump\.label\} → \$\{pendingJump\.segId\}`\);\s*\} else if \(pendingJump && lessonPlanRef\.current\) \{/.test(VTR), 'seam: typed stand-down, ref already cleared');
 });
 
+test('Z1 (fix wave 8, run 4 51 s): the pre-turn student jump runs before every note planter', () => {
+  const pre = VTR.indexOf('const typedPendingJump = typedTurnActive && !typedEngineMove ? pendingStudentJumpRef.current : null;');
+  const unresolved = VTR.indexOf("onDebugEvent?.('typed_advance_unresolved'");
+  const numbered = VTR.indexOf("onDebugEvent?.('numbered_question_note_planted'");
+  const answered = VTR.indexOf("onDebugEvent?.('answered_in_part_note_planted'");
+  const guard = VTR.indexOf('if (TUTOR_LESSON_TIME_GUARD && !silent');
+  const latch = VTR.indexOf("if (typedTurnActive && !typedEngineMove && currentSegmentIdRef.current && currentSegmentIdRef.current !== turnStartSegmentId) {");
+  assert.ok(pre > 0 && unresolved > 0 && numbered > 0 && answered > 0 && guard > 0 && latch > 0, 'anchors present');
+  assert.ok(pre > unresolved, 'after the typed objective jump');
+  assert.ok(pre < numbered && pre < answered, 'before the numbered-question and answered-in-part planters');
+  assert.ok(pre < guard && pre < latch, 'before the lesson-time guard and the W2 latch');
+  assert.equal((VTR.match(/const typedPendingJump = /g) ?? []).length, 1, 'one pre-turn jump block');
+  const tta = VTR.indexOf('let typedTurnActive = TUTOR_TYPED_TURN');
+  const decl = VTR.indexOf('let typedJumpToNext = false;');
+  assert.ok(tta > 0 && tta < pre && decl > 0 && decl < pre, 'typedTurnActive + typedJumpToNext declared above the block');
+});
 test('V4 (fix wave 2): the level check counts answers (non-none verdicts) + the reply now, not turns', () => {
   // R3 (fix round 1): the rules read the committed answersInPart; the client says only whether a reply came
   assert.ok(VTR.includes('studentReplied: Boolean(typedStudentText),'), 'studentReplied');
