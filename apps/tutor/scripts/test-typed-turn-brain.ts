@@ -50,7 +50,8 @@ const TURN = {
   board: '',
   correction: { student: 'I go there yesterday', corrected: 'I went there yesterday.', emphasis: ['went'], explain: 'Use the past form went here.' },
   support_ja: '昨日は過去のことです。',
-  next: { kind: 'question', say: 'Can you say the whole sentence once more?', item: '', level: '' },
+  // W9-A (fix wave 9): a correction is always followed by `retry` — the base fixture's ask is that retry.
+  next: { kind: 'retry', say: 'Can you say the whole sentence once more?', item: '', level: '' },
 };
 
 const EXPECTED = [
@@ -156,9 +157,9 @@ async function main() {
   await test('event sequence in composition order', () => {
     assert.deepEqual(seq(full.events), EXPECTED);
   });
-  await test('typed-turn carries the parsed turn (next.kind question, retries 0)', () => {
+  await test('typed-turn carries the parsed turn (next.kind retry, retries 0)', () => {
     const t = full.events.find((e) => e.type === 'typed-turn') as { turn: { next: { kind: string } }; retries: number; nextFallback?: string };
-    assert.equal(t.turn.next.kind, 'question');
+    assert.equal(t.turn.next.kind, 'retry');
     assert.equal(t.retries, 0);
     assert.equal(t.nextFallback, undefined);
   });
@@ -201,7 +202,8 @@ async function main() {
   });
   console.log('retry (Task 6)');
   const OFFER = { kind: 'offer', say: 'One more, or shall we move on?', item: '', level: '' };
-  const RETRY_NEXT = { kind: 'question', say: 'What did you do last weekend?', item: '', level: '' };
+  // W9-A: the legal next after the fixture's correction is a retry (a question beside a correction is refused).
+  const RETRY_NEXT = { kind: 'retry', say: 'Say it once more: I went there yesterday.', item: '', level: '' };
   type TT = { turn: { next: { kind: string; say: string; item: string; level: string } } | null; retries: number; nextFallback?: string; retryReason?: string; retryDisagreed?: boolean };
   const turnEv = (events: Array<Record<string, unknown>>) => events.find((e) => e.type === 'typed-turn') as unknown as TT;
   const sentencesOf = (events: Array<Record<string, unknown>>) => events.filter((e) => e.type === 'sentence').map((e) => String(e.text));
@@ -437,6 +439,51 @@ async function main() {
     }
     await test('X2: a close without requiredPhrases (non-recap) ⇒ unchanged, one request', async () => {
       const r = await run({ ...baseInput, typedTurn: { state: '<turn_state part="plain"/>', allowedNext: ['close'], recap: false } }, [chunkedTextScript(JSON.stringify({ ...OK, next: BARE }), 3)]);
+      assert.equal(r.requests.length, 1);
+    });
+  }
+
+  {
+    // W9-A (fix wave 9, run 5 101 s): a correction and a move in the same turn — the learner never said the corrected sentence.
+    const bridgeTurn = { state: '<turn_state part="bridge" open_ask="question" budget_due="yes" post_due="0"/>', allowedNext: ['question', 'retry', 'move'], recap: false };
+    const CORR = { ...TURN, verdict: 'partly_correct', correction: { student: 'I uh tell manager to help', corrected: 'I tell my manager to help.', emphasis: ['my'], explain: 'Add my before manager.' } };
+    const MOVE = { kind: 'move', say: 'Good, now the present perfect. Have you worked for your current company for a long time?', item: '', level: '' };
+    const RETRY = { kind: 'retry', say: 'Say the corrected sentence once: I tell my manager to help.', item: '', level: '' };
+    await test('W9-A: correction + move with retry allowed ⇒ refused before speech (correction_needs_retry); the retry\'s retry spoken once', async () => {
+      const r = await run({ ...baseInput, typedTurn: bridgeTurn }, [chunkedTextScript(JSON.stringify({ ...CORR, next: MOVE }), 3), chunkedTextScript(JSON.stringify({ ...CORR, next: RETRY }), 2)]);
+      assert.equal(r.requests.length, 2);
+      const u = String(r.requests[1].messages[r.requests[1].messages.length - 1].content);
+      assert.ok(u.includes('correction_needs_retry') && /corrected/.test(u), u);
+      const said = sentencesOf(r.events);
+      assert.ok(!said.some((x) => x.includes('present perfect')), 'the refused move is never spoken');
+      assert.equal(said.filter((x) => x === RETRY.say).length, 1, said.join(' | '));
+      const t = turnEv(r.events);
+      assert.equal(t.retryReason, 'correction_needs_retry');
+      assert.deepEqual(t.turn?.next, RETRY);
+    });
+    await test('W9-A: the retry moves again ⇒ fallback retry, the move never spoken', async () => {
+      const r = await run({ ...baseInput, typedTurn: bridgeTurn }, [chunkedTextScript(JSON.stringify({ ...CORR, next: MOVE }), 3), chunkedTextScript(JSON.stringify({ ...CORR, next: MOVE }), 2)]);
+      assert.equal(turnEv(r.events).nextFallback, 'retry');
+      assert.ok(!sentencesOf(r.events).some((x) => x.includes('present perfect')));
+    });
+    await test('W9-A: correction + question with retry allowed ⇒ refused too (the retry comes first)', async () => {
+      const Q = { kind: 'question', say: 'What else do you do at work?', item: '', level: '' };
+      const r = await run({ ...baseInput, typedTurn: bridgeTurn }, [chunkedTextScript(JSON.stringify({ ...CORR, next: Q }), 3), chunkedTextScript(JSON.stringify({ ...CORR, next: RETRY }), 2)]);
+      assert.equal(r.requests.length, 2);
+      assert.equal(turnEv(r.events).retryReason, 'correction_needs_retry');
+    });
+    await test('W9-A: retry not allowed (post_due ≥ 1 / move request / level check rows) ⇒ correction + move is not refused', async () => {
+      const r = await run({ ...baseInput, typedTurn: { ...bridgeTurn, allowedNext: ['question', 'move'] } }, [chunkedTextScript(JSON.stringify({ ...CORR, next: MOVE }), 3)]);
+      assert.equal(r.requests.length, 1);
+      assert.ok(sentencesOf(r.events).some((x) => x.includes('present perfect')));
+    });
+    await test('W9-A: no correction ⇒ a move with retry allowed is not refused', async () => {
+      const r = await run({ ...baseInput, typedTurn: bridgeTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, verdict: 'correct', correction: null, next: MOVE }), 3)]);
+      assert.equal(r.requests.length, 1);
+    });
+    await test('W9-A: a dropped no-change correction does not force a retry', async () => {
+      const same = { ...CORR, correction: { ...CORR.correction, student: 'I went there yesterday', corrected: 'I went there yesterday.', emphasis: ['went'] }, next: MOVE };
+      const r = await run({ ...baseInput, studentMessage: 'I went there yesterday', typedTurn: bridgeTurn }, [chunkedTextScript(JSON.stringify(same), 3)]);
       assert.equal(r.requests.length, 1);
     });
   }

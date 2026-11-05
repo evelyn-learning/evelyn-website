@@ -427,7 +427,8 @@ test('Z1 (fix wave 5): a retry refused for correction_no_change names the reason
 // B (fix wave 6, p3 654 s) pin moved: Z2's "leave board empty on a move" is REMOVED by the brief — a move right after
 // an answer judges it first (verdict, verdict_say, correction + board) — the fix wave 5 page hold keeps the card up.
 test('B (fix wave 6): a move right after an answer judges it first, then bridges (replaces Z2 "leave board empty")', () => {
-  assert.ok(TYPED_TURN_INSTRUCTIONS.includes("When `next.kind` is `move` right after the student's answer, judge that answer first (`verdict`, `verdict_say`, a `correction` and `board` when it had a slip), then `next.say` = one bridge sentence + the new part's opening ask."), 'instruction');
+  // W9-A (fix wave 9): the same-turn correction + move allowance is gone — a correction is always followed by `retry`.
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes("When `next.kind` is `move` right after the student's answer, judge that answer first (`verdict`, `verdict_say`, `board` when it was clean), then `next.say` = one bridge sentence + the new part's opening ask."), 'instruction');
   assert.ok(!TYPED_TURN_INSTRUCTIONS.includes('leave `board` empty'), 'the Z2 sentence is gone');
   const i = TYPED_TURN_INSTRUCTIONS.indexOf('- "board":');
   const j = TYPED_TURN_INSTRUCTIONS.indexOf('- "correction":');
@@ -502,6 +503,15 @@ test('Z3 (fix wave 8, run 4 142 s: the move announced in ack + support_ja + say)
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes(rule), 'instruction');
   const head = TYPED_TURN_INSTRUCTIONS.indexOf('WHEN next.kind IS move'), r = TYPED_TURN_INSTRUCTIONS.indexOf(rule), lang = TYPED_TURN_INSTRUCTIONS.indexOf('\nLANGUAGE\n');
   assert.ok(head >= 0 && r > head && r < lang, 'inside the move guidance');
+});
+
+test('W9-A (fix wave 9, run 5 101 s): a correction is always followed by `retry`; the retry message for correction_needs_retry', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('A correction is always followed by `retry`'), 'prompt rule');
+  assert.ok(!TYPED_TURN_INSTRUCTIONS.includes('a `correction` and `board` when it had a slip'), 'the old same-turn correction+move allowance is gone');
+  const m = typedTurnRetryMessage({ reason: 'correction_needs_retry', refused: { kind: 'move', say: 'Now part 4.', item: '', level: '' }, allowedNext: ['question', 'retry', 'move'],
+    alreadySaid: { ack: 'Nice.', verdict: 'partly_correct', verdict_say: 'Almost.', board: '', correction: { student: 'I tell manager', corrected: 'I tell my manager.', emphasis: ['my'], explain: 'Add my.' }, support_ja: '' }, budget: 3 });
+  assert.ok(m.includes('(correction_needs_retry)') && m.includes('"retry"') && /next turn/.test(m), m);
+  assert.ok(m.includes('ALREADY SPOKEN'));
 });
 
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }

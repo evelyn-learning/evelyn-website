@@ -291,7 +291,9 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   // R1: keyed on the delivered review, not on turns (a nudge / wait turn at the start must not skip it).
   if (kind === 'recap') return state.recapReviewed?.[segId] ? ['close'] : ['question'];
 
-  if (ctx.budgetDue) return askOpen ? ['question', 'move'] : [moveOrClose];
+  // W9-A (fix wave 9, run 5 101 s): the first post-due turn keeps `retry` so a correction gets its repeat (the server
+  // refuses a move / question beside a correction while retry is allowed); from post_due 1 the part must move.
+  if (ctx.budgetDue) return askOpen ? ((state.postDueTurns?.[segId] ?? 0) === 0 ? ['question', 'retry', 'move'] : ['question', 'move']) : [moveOrClose];
 
   return withRetry(['question', 'retry']);
 }

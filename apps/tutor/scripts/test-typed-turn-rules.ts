@@ -162,7 +162,7 @@ test('V3: turnStateLine recap_step + required_phrases on the summary', () => {
 test('budget due', () => {
   assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true })), ['move']);
   assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, lastPart: true })), ['close']);
-  assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, state: ask('question') })), ['question', 'move']);
+  assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, state: ask('question') })), ['question', 'retry', 'move']); // W9-A: retry on the first post-due turn
 });
 
 test('every state in a grid yields a non-empty set', () => {
@@ -468,7 +468,7 @@ test('H2: a partly_correct answer fills answeredCards like a correct one; none a
 // ---- Final fix wave W1: the post-due turn cap on the typed path ----
 test('W1: open-conversation, open question, budget due — post-due 0/1 hold, 2 forces the move', () => {
   const pd = (n: number) => ({ ...ask('question'), postDueTurns: { 'open-conversation': n } });
-  assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, state: pd(0) })), ['question', 'move']);
+  assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, state: pd(0) })), ['question', 'retry', 'move']); // W9-A
   assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, state: pd(1) })), ['question', 'move']);
   assert.deepEqual(allowedNextFor(ctx('open-conversation', { budgetDue: true, state: pd(2) })), ['move']);
   // an open retry ask is capped too
@@ -530,7 +530,7 @@ test('W2: engineMoved — no second move / close; the new part\'s entry row inst
   assert.deepEqual(allowedNextFor(fresh('past-simple', { studentMovedOn: true })), ['question']);
   assert.deepEqual(allowedNextFor(fresh('pronunciation', { studentMovedOn: true })), ['menu']);
   // a due budget with an open ask: move is dropped, the rest stays
-  assert.deepEqual(allowedNextFor(fresh('open-conversation', { budgetDue: true, state: ask('question') })), ['question']);
+  assert.deepEqual(allowedNextFor(fresh('open-conversation', { budgetDue: true, state: ask('question') })), ['question', 'retry']); // W9-A: the first post-due turn keeps retry
   // the closing part entered by the engine: no close on the entry turn
   assert.ok(!allowedNextFor(fresh('summary', { lastPart: true })).includes('close'));
   // without engineMoved nothing changes
@@ -831,6 +831,15 @@ test('Z1: the released no-change turn (verdict correct, correction null) arms no
   assert.equal(out.correctionOpen, null, 'the earlier correction is closed by the correct repeat');
   assert.equal((out.correctionsInPart ?? {})['past-simple'] ?? 0, 0, 'a dropped correction is not counted');
   assert.equal(out.openAsk.kind, 'question');
+});
+
+test('W9-A (fix wave 9, run 5 101 s): the first post-due turn keeps `retry` beside question/move so a correction gets its retry; from post_due 1 it is gone', () => {
+  const pd = (n: number) => ({ ...ask('question'), postDueTurns: { 'topic-intro': n } });
+  assert.deepEqual(allowedNextFor(ctx('topic-intro', { budgetDue: true, state: pd(0) })), ['question', 'retry', 'move']);
+  assert.deepEqual(allowedNextFor(ctx('topic-intro', { budgetDue: true, state: pd(1) })), ['question', 'move']);
+  assert.deepEqual(allowedNextFor(ctx('topic-intro', { budgetDue: true, studentMovedOn: true, state: pd(0) })), ['move'], 'a move request wins');
+  assert.deepEqual(allowedNextFor(ctx('topic-intro', { budgetDue: true, state: { ...pd(0), openAsk: { kind: 'none', text: '' } } })), ['move'], 'no open ask: nothing to retry');
+  assert.deepEqual(allowedNextFor(ctx('topic-intro', { budgetDue: false, state: pd(0) })), ['question', 'retry'], 'before the budget: unchanged');
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

@@ -3049,6 +3049,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const sayBudgetOf = (kind: TypedNextKind): number => typedSayBudgetFor(kind, !!input.typedTurn?.recap);
   /** R3: the streamed verdict of this turn (released before `next`), for the moveNeedsAnswer gate. */
   let typedVerdictSeen: TypedTurn['verdict'] | null = null;
+  /** W9-A (fix wave 9, run 5 101 s): a correction was released this turn (not dropped as no-change) — while `retry` is
+   *  allowed, `next` must be that retry (the learner says the corrected sentence once); the move / question waits a turn.
+   *  The rules keep `retry` out of the rows where the move must go on (student move request, post_due ≥ 1, level check). */
+  let typedCorrectionReleased = false;
+  const typedCorrectionNeedsRetry = (kind: TypedNextKind): boolean => typedCorrectionReleased && kind !== 'retry' && kind !== 'wait' && typedNextAllowed('retry');
   /** R7 (fix round 2): an absent verdict (invalid, never released) counts as a non-answer too. */
   const typedMoveOnNonAnswer = (kind: TypedNextKind): boolean => !!input.typedTurn?.moveNeedsAnswer && kind === 'move'
     && (typedVerdictSeen === null || typedVerdictSeen === 'none');
@@ -3122,6 +3127,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           const correction = { ...ev.value, explain: truncateToSentences(ev.value.explain, TYPED_EXPLAIN_BUDGET) };
           value = correction;
           speech = correction.explain;
+          typedCorrectionReleased = true;
         }
         break;
       case 'next':
@@ -3139,6 +3145,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           const retryOnNoChange = typedCorrectionNoChange && ev.value.kind === 'retry';
           const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) || itemNotListed || retryOnNoChange ? 'illegal_kind'
             : moveOnNonAnswer ? 'move_needs_answer'
+            // W9-A (fix wave 9): a corrected sentence gets its retry before any move / question.
+            : typedCorrectionNeedsRetry(ev.value.kind) ? 'correction_needs_retry'
             : missingPhrases.length ? 'missing_required_phrase'
             // A (fix wave 6): the student spoke English and nothing in this turn is English — refused before speech.
             : typedEnglishMissing(ev.value) ? 'english_missing'
@@ -3385,9 +3393,12 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       if (retryDisagreed) console.warn('[typed-turn] typed_turn_retry_disagreed: the retry\'s verdict/correction differ — ignored');
       // R3: a retry that moves again on a non-answer is not legal either; its fallback is the question, never the move.
       const legal = !!retryNext && typedNextAllowed(retryNext.kind) && !typedMoveOnNonAnswer(retryNext.kind)
-        && !(typedCorrectionNoChange && retryNext.kind === 'retry');
+        && !(typedCorrectionNoChange && retryNext.kind === 'retry')
+        // W9-A: the retry's `next` after a correction must be the retry itself.
+        && !(need.reason === 'correction_needs_retry' && typedCorrectionNeedsRetry(retryNext.kind));
       // Z1: after a no-change correction the fallback is never the retry (the first allowed kind that is not one).
       const retryFallback: TypedNextKind = need.reason === 'move_needs_answer' ? 'question'
+        : need.reason === 'correction_needs_retry' ? 'retry'
         : fallbackKind;
       console.warn(`[typed-turn] typed_turn_retry reason=${need.reason} result=${legal ? retryNext!.kind : 'fallback ' + retryFallback}`);
       if (legal) yield* emitTypedField({ field: 'next', value: retryNext! }, true);
