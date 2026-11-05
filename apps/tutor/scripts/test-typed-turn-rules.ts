@@ -273,6 +273,18 @@ test('D (fix wave 6, p3 1171 s): the recap board "A. | B." paints the two contra
   const r0 = TYPED_TURN_INSTRUCTIONS.indexOf('THE RECAP PART'), r1 = TYPED_TURN_INSTRUCTIONS.indexOf("separated by ' | '");
   assert.ok(r0 >= 0 && r1 > r0 && !TYPED_TURN_INSTRUCTIONS.slice(r0, r1).includes('\n\n'), 'inside THE RECAP PART block');
 });
+test('Y3 (fix wave 7, session 3 797 s): a recap board without " | " still cards its sentences when the verdict is not correct', () => {
+  const none = applyField(createTypedTurnState(), { field: 'verdict', value: 'none' });
+  const two = 'I have worked here for five years. I worked here five years ago.';
+  assert.deepEqual(effectsForField({ field: 'board', value: two }, fctx('summary', { state: none, studentLast: 'Yes, ready.' })),
+    [{ kind: 'model_card', sentence: 'I have worked here for five years.' }, { kind: 'model_card', sentence: 'I worked here five years ago.' }]);
+  assert.deepEqual(effectsForField({ field: 'board', value: 'I have worked here for five years.' }, fctx('summary', { state: none, studentLast: 'Yes, ready.' })),
+    [{ kind: 'model_card', sentence: 'I have worked here for five years.' }], 'one sentence → one card');
+  assert.deepEqual(effectsForField({ field: 'board', value: two }, fctx('summary', { studentLast: 'Yes, ready.' })),
+    [{ kind: 'model_card', sentence: 'I have worked here for five years.' }, { kind: 'model_card', sentence: 'I worked here five years ago.' }], 'no verdict yet (null) → cards too');
+  assert.deepEqual(effectsForField({ field: 'board', value: two }, fctx('open-conversation', { state: none })), [], 'outside the recap: unchanged');
+  assert.deepEqual(effectsForField({ field: 'board', value: 'I have worked here for five years. I worked here five years ago. I like it.' }, fctx('summary', { state: none })).length, 2, 'at most two');
+});
 test('C (fix wave 6, p3 473 s): boardEmphasis underlines what the model sentence changed', () => {
   assert.deepEqual(boardEmphasis('Uh, to talk to uh vendors uh from robotics companies in China.', 'I learned to talk with vendors from robotics companies in China.'),
     { emphasis: ['I', 'learned', 'with'], emphasisAt: [0, 1, 4] });

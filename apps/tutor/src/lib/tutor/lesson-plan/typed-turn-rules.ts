@@ -13,7 +13,7 @@ import { effectiveBoardLevel, filterKeyIdeasForLevel, type WorkingLevel } from '
 import { cardAskLine } from './transition-ask';
 import { boardOffersChoices, cardableStudentSentence } from '../voice/sentence-board';
 import {
-  englishSentenceCount, typedSayBudgetFor,
+  englishSentenceCount, typedSayBudgetFor, sentences as typedSentences,
   type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedTurn, type TypedTurnRequest, type TypedVerdict,
 } from '../voice/typed-turn';
 
@@ -527,6 +527,13 @@ export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): T
     if (ev.value.includes(' | ') && typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) === 'recap') {
       return ev.value.split(' | ').slice(0, 2).map((x) => cardableStudentSentence(x.trim()))
         .filter((x): x is string => !!x).map((sentence) => ({ kind: 'model_card' as const, sentence }));
+    }
+    // Y3 (fix wave 7, session 3 797 s; p3 1171 s): the brain wrote the two sentences without the separator and a
+    // verdict-none question turn dropped the board silently. On the recap, with no correct verdict pending, the board's
+    // sentences (the typed splitter) card the first two cardable ones, in order, no emphasis.
+    if (ctx.state.pendingVerdict !== 'correct' && typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) === 'recap') {
+      return typedSentences(ev.value.trim()).map((x) => cardableStudentSentence(x.trim()))
+        .filter((x): x is string => !!x).slice(0, 2).map((sentence) => ({ kind: 'model_card' as const, sentence }));
     }
     // R4/M1: the board sentence passes the same card guard the prose cards use (a bare "Yes." / two words is no card).
     const sentence = ctx.state.pendingVerdict === 'correct' ? cardableStudentSentence(ev.value.trim()) : null;
