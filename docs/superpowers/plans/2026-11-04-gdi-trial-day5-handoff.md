@@ -2,6 +2,16 @@
 
 > **READ THIS FIRST**, then the ledger (`<worktree>/.superpowers/sdd/2026-10-28-gdi-trial-lesson/progress.md`), then the design doc. Do not re-run Tasks 31–46 (complete, see the ledger).
 
+## ★★★ FIX WAVE 8 11-04 22:37 PST — DEPLOYED :3009 build `W3vDNyfWetw71Y_FTi9YK` (code 54639676, HEAD fee46707) after Praveen's PROD run 4 (embed-1793855133648, 72P/1F; dump `scratchpad/praveen/p7.txt`)
+
+Run 4: all five named-part requests turned the page (level-check→present-perfect was an over-parts jump via `typed_advance_app`; the rest brain-written moves); no retries. Findings → fixes (Z1–Z4 66cd681f→e9a7d813 + fix round 54639676; review 2 Important/5 Minor, re-review clean, test:all 435/437):
+- Z1 the level check's Q3 was asked on the present-perfect page after the jump (51–53 s) — the pre-turn student-jump block ran AFTER the numbered-question note planter; now it sits right after the lesson-time guard, before every planter (one move per turn kept); the planter also skips on `typedJumpToNext`.
+- Z2 "Try starting with: I want to…" in a question turn (67 s) — server gate `question_dictates_opening` (question/offer/menu; tight pattern: "start(ing)/begin(ning) with" + colon/quote/capital, or "full sentence starting with"); retries untouched.
+- Z3 a move announced three times in one turn (142 s) — instruction: the move is announced once, in `next.say`.
+- Z4 the PDF footer carries `build <NEXT_PUBLIC_BUILD_STAMP>` (next.config env, build time) so a stale-tab export is self-evident. **PDF verdict:** run-4's broken file was NOT from the deployed exporter — the prod replay export of runs 3 and 4 and a dev live text-session export (student gdi-trial-pdfprobe-1) all rendered correctly in Praveen's own Chrome; deployed chunk logic verified current; cause = a long-lived tab running old chunks (Praveen to say which page; hard-reload it).
+- Pool: `partner-pool.sh add gdi-demo 600` → cap 1200 (used 485, remaining ~715) at Praveen's request.
+- OPEN: re-ask gate (3× in run 3); probe/pacing rules; menu_not_numbered; M4 carried notes on an over-parts jump (parked). NEXT PROJECT (approved 11-04 ~22:40 PST): per-learner tester home — `docs/superpowers/specs/2026-11-05-gdi-learner-home-design.md`.
+
 ## ★★★ FIX WAVE 7 11-04 evening (after Praveen's three PROD voice runs on H8o9hPK9IbZ9Z7BLpRRvg) — DEPLOY STATUS: see the line at the end of this block
 
 **The three prod runs (student gdi-trial-praveen-to0684, dumps `scratchpad/praveen/p4–p6.txt`):** embed-1793842698269 (12 min, break) 0 FAIL; embed-1793844655621 (30 min, phone call) 2 FAIL; embed-1793847884730 (15 min, full) 4 FAIL / 6 retries. His observations → causes → fixes (5 commits c41149d8→b9e15604 on 76899680; task review Approved 0 Important / 10 Minor, fix round 1 (M1 one-advance-per-turn + M3 backward-jump test), scoped re-review; rulings M2/M5/M6/M7/M10 in the ledger):
