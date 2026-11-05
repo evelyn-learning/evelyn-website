@@ -74,6 +74,22 @@ check('non-object rejected', validateModelReply(null) === null);
 const now = new Date('2026-11-05T00:00:00Z');
 const sNone = assembleSummary(f2, validateModelReply(reply(4)), { model: 'm', turnCount: 3, now });
 check('assemble not practised', sNone.assessment.pronunciation.comment_en === 'Pronunciation was not practised in this lesson.' && sNone.assessment.pronunciation.practised.length === 0);
+// W9-B4 (fix wave 9, run 5): two sentences armed, nothing measured ⇒ "practised, no score" — not "not practised"
+const fArmed = buildSessionFacts({ ...base, tutorLanguages: ['en', 'ja'], debugEvents: [
+  { type: 'pronunciation_armed', message: `typed "${S}"` },
+  { type: 'pronunciation_note_planted', message: 'unavailable · The recording of this sentence was cut short' },
+  { type: 'pronunciation_armed', message: 'typed "I was responsible for communicating with our customers."' },
+  { type: 'pronunciation_note_planted', message: 'unavailable · The recording of this sentence was cut short' },
+] }, null);
+check('W9-B4: armed count from events, nothing measured', fArmed.pronunciationArmed === 2 && fArmed.pronunciation.length === 0);
+check('W9-B4: prompt says practised but unmeasured', renderSummaryPrompt(fArmed).user.includes('- none measured (2 sentences practised, no score could be measured)'));
+const sArmed = assembleSummary(fArmed, validateModelReply(reply(4), { supportLanguage: 'ja' }), { model: 'm', turnCount: 3, now });
+check('W9-B4: assemble practised-unmeasured EN', sArmed.assessment.pronunciation.comment_en === 'Two sentences were practised; no score could be measured this time.', sArmed.assessment.pronunciation.comment_en);
+check('W9-B4: assemble practised-unmeasured JA', sArmed.assessment.pronunciation.comment_ja === '2つの文を練習しましたが、今回はスコアを測定できませんでした。', sArmed.assessment.pronunciation.comment_ja);
+check('W9-B4: practised list stays empty', sArmed.assessment.pronunciation.practised.length === 0);
+const fOne = buildSessionFacts({ ...base, debugEvents: [{ type: 'pronunciation_armed', message: 'tool "x"' }] }, null);
+check('W9-B4: one armed, no support language', assembleSummary(fOne, validateModelReply(reply(4)), { model: 'm', turnCount: 3, now }).assessment.pronunciation.comment_en === 'One sentence was practised; no score could be measured this time.');
+check('W9-B4: no arms ⇒ not practised (unchanged)', f2.pronunciationArmed === 0 && sNone.assessment.pronunciation.comment_en === 'Pronunciation was not practised in this lesson.');
 check('assemble copies corrections', eq(sNone.assessment.corrections, f2.corrections) && sNone.version === 1 && sNone.generated_at === now.toISOString());
 const sSes = assembleSummary(f3, validateModelReply(reply(4)), { model: 'm', turnCount: 3, now });
 check('assemble practised uses model comment', sSes.assessment.pronunciation.comment_en === 'Great' && sSes.level.evidence_en === 'a');

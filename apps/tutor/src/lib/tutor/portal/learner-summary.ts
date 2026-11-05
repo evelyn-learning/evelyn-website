@@ -24,6 +24,9 @@ export type SessionFacts = {
   level: LearnerSummaryV1['level'];
   corrections: LearnerSummaryV1['assessment']['corrections'];
   pronunciation: LearnerSummaryV1['assessment']['pronunciation']['practised'];
+  /** W9-B4 (fix wave 9, run 5): sentences armed for a pronunciation check (pronunciation_armed events) — practised even
+   *  when no clip could be measured, so the summary never says "not practised" after a cut recording. */
+  pronunciationArmed: number;
   transcriptExcerpt: string;
   /** BCP-47 code of the support language (the session's tutorLanguages[1]), or null. */
   supportLanguage: string | null;
@@ -48,6 +51,15 @@ const MAX_TURN_CHARS = 160;
 const MAX_FIELD = 400;
 const NOT_PRACTISED_EN = 'Pronunciation was not practised in this lesson.';
 const NOT_PRACTISED_JA = '今回のレッスンでは発音の練習は行いませんでした。';
+/** W9-B4: practised (armed) but nothing measured — a fixed line, never the model's guess. */
+const COUNT_WORDS = ['', 'One', 'Two', 'Three', 'Four', 'Five'];
+function practisedUnmeasuredEn(n: number): string {
+  const count = COUNT_WORDS[n] ?? String(n);
+  return `${count} sentence${n === 1 ? ' was' : 's were'} practised; no score could be measured this time.`;
+}
+function practisedUnmeasuredJa(n: number): string {
+  return `${n}つの文を練習しましたが、今回はスコアを測定できませんでした。`;
+}
 const LEVEL_NONE_EN = 'Level not set in this lesson.';
 const LEVEL_NONE_JA = 'このレッスンではレベルを設定していません。';
 
@@ -149,7 +161,9 @@ export function buildSessionFacts(
   }
 
   const pronunciation: SessionFacts['pronunciation'] = [];
+  let pronunciationArmed = 0;
   for (const e of events) {
+    if (e.type === 'pronunciation_armed') { pronunciationArmed++; continue; }
     if (e.type !== 'pronunciation_note_planted') continue;
     const p = parsePronunciationNote(e.message);
     if (p) pronunciation.push(p);
@@ -167,6 +181,7 @@ export function buildSessionFacts(
     level,
     corrections: correctionsFromTranscript(input.transcript ?? []),
     pronunciation,
+    pronunciationArmed,
     transcriptExcerpt,
     supportLanguage,
   };
@@ -207,11 +222,13 @@ export function renderSummaryPrompt(facts: SessionFacts): { system: string; user
     'Pronunciation measured:',
     ...(facts.pronunciation.length
       ? facts.pronunciation.map((p) => `- "${p.sentence}" overall ${p.overall}/100, prosody ${p.prosody ?? 'n/a'}${p.weak.length ? `, weak words: ${p.weak.join(', ')}` : ', no weak words'}`)
-      : ['- none (not practised)']),
+      : facts.pronunciationArmed > 0
+        ? [`- none measured (${facts.pronunciationArmed} sentence${facts.pronunciationArmed === 1 ? '' : 's'} practised, no score could be measured)`]
+        : ['- none (not practised)']),
     'Transcript excerpt:',
     facts.transcriptExcerpt || '(empty)',
     '',
-    `Reply with JSON fields: ${levelAsk}, grammar_en, grammar_ja (one observation on the learner\'s grammar), pronunciation_comment_en, pronunciation_comment_ja (on the measured scores only; say it was not practised if none), recommendations (3 to 5 objects {en, ja}: concrete next steps).`,
+    `Reply with JSON fields: ${levelAsk}, grammar_en, grammar_ja (one observation on the learner\'s grammar), pronunciation_comment_en, pronunciation_comment_ja (on the measured scores only; with none measured, one short sentence that says so), recommendations (3 to 5 objects {en, ja}: concrete next steps).`,
   ];
   return { system, user: lines.join('\n') };
 }
@@ -289,8 +306,9 @@ export function assembleSummary(
       corrections: facts.corrections.map((c) => ({ ...c })),
       pronunciation: {
         practised: facts.pronunciation.map((p) => ({ ...p, weak: [...p.weak] })),
-        comment_en: practised ? reply.pronunciation_comment_en : NOT_PRACTISED_EN,
-        comment_ja: practised ? j(reply.pronunciation_comment_ja) : fixedSupportLine(sl, NOT_PRACTISED_JA),
+        // W9-B4: armed but unmeasured ⇒ the fixed "practised, no score" line (the model's comment is used only for measured scores).
+        comment_en: practised ? reply.pronunciation_comment_en : facts.pronunciationArmed > 0 ? practisedUnmeasuredEn(facts.pronunciationArmed) : NOT_PRACTISED_EN,
+        comment_ja: practised ? j(reply.pronunciation_comment_ja) : fixedSupportLine(sl, facts.pronunciationArmed > 0 ? practisedUnmeasuredJa(facts.pronunciationArmed) : NOT_PRACTISED_JA),
       },
     },
     recommendations: reply.recommendations.map((x) => ({ en: x.en, ja: j(x.ja) })),
