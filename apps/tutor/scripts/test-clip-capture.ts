@@ -13,7 +13,8 @@ import {
   ClipCapture, CLIP_MAX_MS, CLIP_PRE_ROLL_MS, CLIP_MIN_MS, CLIP_SAMPLE_RATE, CLIP_NO_SPEECH_TIMEOUT_MS, PRONUNCIATION_ARM_MAX_MS,
   float32ToPcm16, pcm16ToBase64, PRONUNCIATION_UNAVAILABLE_NOTE, pronunciationNoteForBrain, clipPeakDbfs, CLIP_SILENT_DBFS,
 } from '../src/lib/tutor/pronunciation/clip-capture';
-import { PRONUNCIATION_UNAVAILABLE_NOTE as SERVER_UNAVAILABLE_NOTE } from '../src/lib/tutor/pronunciation/assessor';
+import { PRONUNCIATION_UNAVAILABLE_NOTE as SERVER_UNAVAILABLE_NOTE, MAX_CLIP_SECONDS } from '../src/lib/tutor/pronunciation/assessor';
+import { MAX_AUDIO_BYTES } from '../src/lib/tutor/pronunciation/assess-request';
 import { ttsLanguageFor } from '../src/lib/tutor/voice/tts-language';
 import { withPronunciationCheckResult, PRONUNCIATION_ARM_MAX_MS, CLIP_NO_SPEECH_TIMEOUT_MS } from '../src/lib/tutor/pronunciation/clip-capture';
 import { WHITEBOARD_TOOLS, REQUEST_PRONUNCIATION_CHECK_TOOL, mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
@@ -31,8 +32,12 @@ const SR = 24000;
 const chunk = (n: number, v: number) => new Float32Array(n).fill(v);
 const make = () => new ClipCapture({ maxMs: 10000, sampleRate: 24000 });
 
-test('constants: 10 s max, 24 kHz, 60 s no-speech timeout (Task 23 §G3 40 s; Task 30 fix round 1 60 s)', () => {
-  assert.equal(CLIP_MAX_MS, 10000);
+test('constants: 15 s max (W9-B1: run 5 cut both 9-word clips at 9.4 s), 24 kHz, 60 s no-speech timeout (Task 23 §G3 40 s; Task 30 fix round 1 60 s)', () => {
+  assert.equal(CLIP_MAX_MS, 15000);
+  // the max clip (pre-roll included) still fits the server: MAX_CLIP_SECONDS and the route's audio cap
+  assert.ok(CLIP_MAX_MS / 1000 <= MAX_CLIP_SECONDS, 'clip max within the assessor clip_too_long cap');
+  assert.ok((CLIP_MAX_MS / 1000) * CLIP_SAMPLE_RATE * 2 <= MAX_AUDIO_BYTES, 'clip max within the route audio cap');
+  assert.ok(CLIP_PRE_ROLL_MS < CLIP_MAX_MS);
   assert.equal(CLIP_SAMPLE_RATE, 24000);
   assert.equal(CLIP_NO_SPEECH_TIMEOUT_MS, 60000);
   assert.ok(CLIP_NO_SPEECH_TIMEOUT_MS < PRONUNCIATION_ARM_MAX_MS, 'below the arm lifetime');

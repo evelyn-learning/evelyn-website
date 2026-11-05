@@ -31,7 +31,12 @@
  * Pure: no React, no DOM, no env.
  */
 
-export const CLIP_MAX_MS = 10000;
+// W9-B1 (fix wave 9, run 5 859–927 s): both 9-word sentence clips were cut at
+// exactly 9.4 s (10 s − pre-roll) before the last word, so the vendor's
+// completeness fell below the attempt floor. 15 s = the server's
+// MAX_CLIP_SECONDS; the speech stop (turn.eager_end) still ends a clip first —
+// the max is a backstop only (pinned in scripts/test-clip-capture.ts).
+export const CLIP_MAX_MS = 15000;
 export const CLIP_SAMPLE_RATE = 24000;
 /** Armed with nothing buffered this long ⇒ the runtime disarms and plants
  *  the unavailable note, so the tutor never waits on a clip that never came.
