@@ -16,6 +16,7 @@
 import { resolveOpenScope } from '@/lib/tutor/portal/demo-topic-choice';
 import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import LessonSummaryPanel from './LessonSummaryPanel';
 import { Loader2 } from 'lucide-react';
 import { buildDisplayName } from '@/lib/tutor/topic-taxonomy';
 import { lookupModelRate, rateForPrompt } from '@/lib/tutor/ai/model-rates';
@@ -2321,6 +2322,21 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   if (sessionEnded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50" style={brandStyle}>
+        {config.partner_id ? (
+          <LessonSummaryPanel
+            sessionId={sessionId}
+            token={embedToken}
+            transcript={transcript}
+            whiteboardCommands={whiteboardCommands.map((x) => x.cmd)}
+            studentName={studentName || undefined}
+            subject={subject}
+            topic={topic}
+            level={level}
+            sessionGoal={sessionGoal}
+            productName={config.branding?.product_name}
+            showHomeLink={searchParams.get('return') === 'home'}
+          />
+        ) : (
         <div className="max-w-md text-center p-8">
           <div className="mb-4 text-4xl">&#10003;</div>
           <h1 className="mb-2 text-xl font-bold text-gray-900">Session Complete</h1>
@@ -2328,6 +2344,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
             {transcript.length} messages exchanged, {whiteboardCommands.length} visuals generated.
           </p>
         </div>
+        )}
       </div>
     );
   }
