@@ -13,7 +13,7 @@
 
 Open after wave 7: re-ask gate (item 4); probe/pacing rules (10-30); `menu_not_numbered` gate; M5/M6 recap-card edges. Prod replay link for run 3: `scratchpad/praveen/replay-link-prod-s3.txt`.
 
-**DEPLOY STATUS:** pending (gate running) — this line is replaced once :3009 is redeployed.
+**DEPLOY STATUS:** DEPLOYED to :3009 20:36 PST 11-04 (build `Zf6QyXQbE0E7Dn8ah8yAn`, HEAD b9e15604 + this doc; origin/main 6778cf46 already merged; test:all 435/437 baseline-only); :3007/:3008 untouched; branch pushed; `wt.sh finish` NOT run. Praveen's next prod run: student `gdi-trial-praveen-to0i2x` (`scratchpad/praveen/prod-link-wave7.txt`; full set in `scratchpad/praveen/prod-links-wave7.txt`).
 
 ## ★★ FIX WAVES 2–6 + FLAG DEFAULT ON 11-04 (after your three voice runs) — HEAD e3949c4c (origin/main merged), DEPLOYED to :3009 16:18 PST (build H8o9hPK9IbZ9Z7BLpRRvg), :3007/:3008 untouched (read this first)
 
