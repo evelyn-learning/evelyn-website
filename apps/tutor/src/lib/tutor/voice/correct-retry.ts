@@ -818,9 +818,10 @@ export const ALREADY_ANSWERED_NOTE =
 //      I want to / please) or the start of the turn + move on / go on / skip /
 //      continue / wrap up, optionally + "to the next part / to the summary /
 //      to the end", ending the phrase;
-//  (b) a request lead or the start of the turn + go to / start / do + "the
-//      next part / the summary / the end" or a later part's LABEL as a whole
-//      phrase, ending the phrase;
+//  (b) a request lead or the start of the turn + go to / go on to / move to /
+//      move on to / switch to / jump to / skip to / start / do + "the next
+//      part / topic / section, the summary, the end" or a later part's LABEL
+//      as a whole phrase, ending the phrase (fix wave 7 Y1);
 //  (c) the whole turn is "skip", "next part", "move on" or "summary".
 // "next" alone, "next one / sentence / question / item" and a bare do /
 // start inside a sentence never match ("Let's do the next sentence." is the
@@ -829,7 +830,9 @@ const MOVE_ON_LEAD = String.raw`(?:let'?s|let us|can we|could we|shall we|i(?:'d
 const MOVE_ON_FILLER_LEAD = String.raw`^(?:(?:uh+|um+|umm|uhm|er|erm|ah|hmm+|oh|ok(?:ay)?|yes|yeah|yep|so|well|and|then|alright|right)[\s,.!]*)*`;
 const MOVE_ON_END = String.raw`(?:\s+(?:now|please|then))?(?=\s*(?:[.!?,;]|$))`;
 const MOVE_ON_VERB_TAIL = String.raw`(?:move on|go on|skip|continue|wrap[- ]?up)(?:\s+to\s+(?:the\s+)?(?:next part|summary|end))?`;
-const MOVE_ON_FIXED_TARGET = String.raw`(?:the\s+next\s+part|(?:the\s+)?summary|the\s+end)`;
+const MOVE_ON_FIXED_TARGET = String.raw`(?:the\s+next\s+(?:part|topic|section)|(?:the\s+)?summary|the\s+end)`;
+/** Fix wave 7 Y1 (session 3, 297/421/556 s): "Can we move to past simple now?" was no request. Branch (b)'s verbs. */
+const MOVE_ON_TARGET_VERB = String.raw`(?:go to|go on to|move to|move on to|switch to|jump to|skip to|start|do)`;
 const MOVE_ON_WHOLE_TURN_RE = /^(?:skip|next part|move on|summary)$/;
 const MOVE_ON_FILLERS = new Set(['uh', 'um', 'umm', 'uhm', 'er', 'erm', 'ah', 'hmm', 'oh', 'ok', 'okay', 'yes', 'yeah', 'yep', 'so', 'well', 'please', 'now', 'then', 'and', 'alright', 'right']);
 const escapeMoveOnRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -850,7 +853,7 @@ export function moveOnRequestSpan(studentText: string | null | undefined, labels
     .map((l) => (l ?? '').toLowerCase().trim())
     .filter((l) => l && !/[぀-ヿ㐀-鿿]/.test(l))
     .map((l) => String.raw`(?:the\s+)?${escapeMoveOnRe(l).replace(/\s+/g, String.raw`\s+`)}`)];
-  const b = t.match(leadOrStart(String.raw`(?:go to|start|do)\s+(?:${targets.join('|')})`));
+  const b = t.match(leadOrStart(String.raw`${MOVE_ON_TARGET_VERB}\s+(?:${targets.join('|')})`));
   if (b) return b[0].trim();
   const bare = t.replace(/[^\p{L}\p{N}' ]+/gu, ' ').split(/\s+/).filter((w) => w && !MOVE_ON_FILLERS.has(w)).join(' ');
   if (MOVE_ON_WHOLE_TURN_RE.test(bare)) return bare;

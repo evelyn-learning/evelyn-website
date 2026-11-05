@@ -169,11 +169,12 @@ export function enterPartState(state: TypedTurnState, to: string): TypedTurnStat
   };
 }
 
-/** W2: the labels (any language) of the parts after `segId`, extension parts excluded — the prose move-on order's
- *  list (VTR TUTOR_MOVE_ON_ORDER block), for moveOnRequestSpan. Pure. */
+/** W2: the labels (any language) of the parts after `segId`, extension parts INCLUDED (fix wave 7 Y1) — the list is for
+ *  matching a named request with moveOnRequestSpan ("Can we move to conversation?"), not the move-on order
+ *  announcement, and nextSegmentId does move into an extension part. Pure. */
 export function laterPartLabels(plan: LessonPlan, segId: string): string[] {
   const idx = plan.segments.findIndex((sg) => sg.id === segId);
-  const later = idx >= 0 ? plan.segments.slice(idx + 1).filter((sg) => (sg.kind ?? '').toLowerCase() !== 'extension') : [];
+  const later = idx >= 0 ? plan.segments.slice(idx + 1) : [];
   return later.flatMap((sg) => {
     const md = (sg.metadata ?? {}) as Record<string, unknown>;
     const loc = md.labelLocalized && typeof md.labelLocalized === 'object' ? Object.values(md.labelLocalized as Record<string, unknown>) : [];

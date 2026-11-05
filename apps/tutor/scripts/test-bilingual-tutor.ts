@@ -2298,4 +2298,16 @@ test('41 r1 I-2: only a choice the ask sentence presents is an offered item; a p
   assert.deepEqual(cr40.askOfferedItems('Pick one: 1) a report 2) a launch 3) a training'), ['a report', 'a launch', 'a training']);
 });
 
+test('Fix wave 7 Y1 (session 3, 297/421/556 s): move to / switch to / jump to + a later label, and the next topic/section', () => {
+  // the GDI plan's later-part labels from present-perfect (laterPartLabels, extension parts included)
+  const GDI = ['Past simple', '過去形', 'Conversation', '会話', 'Pronunciation', '発音', 'Summary', 'まとめ'];
+  for (const x of ['Can we move to past simple now?', 'Can we move to the next topic?', 'Can we switch to the past simple?', 'Can we go to past simple?',
+    "Let's jump to conversation.", 'Can we skip to the next section?', "Let's move on to pronunciation."]) {
+    assert.ok(moveOnRequestSpan(x, GDI), x);
+  }
+  for (const x of ["Let's do the next sentence.", 'I do conversation at work.', 'Next.', "Let's do the next one.", 'Can we move to the next one?', 'I moved to Tokyo last year.', 'I switch to English at work.']) {
+    assert.equal(moveOnRequestSpan(x, GDI), null, x);
+  }
+});
+
 if (failed) process.exit(1);

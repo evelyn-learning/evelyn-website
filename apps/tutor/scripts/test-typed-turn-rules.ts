@@ -524,13 +524,18 @@ test('W2: engineMoved — no second move / close; the new part\'s entry row inst
   // without engineMoved nothing changes
   assert.deepEqual(allowedNextFor(ctx('past-simple', { studentMovedOn: true })), ['move']);
 });
-test('W2: laterPartLabels feed moveOnRequestSpan as the prose move-on order does', () => {
+test('W2/Y1: laterPartLabels feed moveOnRequestSpan as the prose move-on order does', () => {
   const labels = laterPartLabels(plan, 'present-perfect');
   assert.ok(labels.includes('Past simple') && labels.includes('Summary'), labels.join('|'));
-  assert.ok(!labels.includes('Conversation'), 'extension parts excluded (as the prose site)');
+  assert.ok(labels.includes('Conversation') && labels.includes('会話'), 'Y1: extension parts included (a named request may target them)');
   assert.ok(!labels.includes('Present perfect'), 'only later parts');
   assert.ok(moveOnRequestSpan('Can we go to past simple?', labels));
   assert.equal(moveOnRequestSpan('Can we go to past simple?'), null, 'without labels the span misses');
+});
+
+test('Y1: laterPartLabels(plan, past-simple) names the Conversation part', () => {
+  const labels = laterPartLabels(plan, 'past-simple');
+  assert.ok(labels.includes('Conversation') && labels.includes('会話'), labels.join('|'));
 });
 
 // ---- Final fix wave W6: the items still to practise go to the server ----
