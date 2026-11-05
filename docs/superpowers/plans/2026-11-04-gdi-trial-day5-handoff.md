@@ -5,9 +5,10 @@
 ## ★★★ LEARNER HOME 11-05 (built, NOT yet deployed — see status line)
 
 Per-learner "Your lessons" home for the GDI testers (spec `docs/superpowers/specs/2026-11-05-gdi-learner-home-design.md`, plan `docs/superpowers/plans/2026-11-05-gdi-learner-home.md`, branch `gdi-trial-lesson`). Built: `/tutor-portal/home?token=<embed token>` (lesson list with summary, replay, PDF); stored `learnerSummary` per session; end-of-lesson summary panel on the embed page (replay, PDF, back-to-home); the summary route; replay-token signing; owner check on the save route. Kill switch: `TUTOR_LEARNER_SUMMARY=off`.
+- Summaries only for `subject === 'languages'` sessions; support language = tutorLanguages[1]; kill switch TUTOR_LEARNER_SUMMARY=off covers hook + route + home.
 - Mint home links (re-signs the existing prod links, same student ids, fresh iat/exp; adds james; nothing committed):
   `PARTNER_SECRET="$(cat ~/.evelyn/partners/gdi-demo.secret)" node docs/whitelabel/gdi/demo/mint-demo-links.js trial --home --from ~/.evelyn/partners/gdi-trial.links.prod.txt --add james > ~/.evelyn/partners/gdi-trial.links.home.prod.txt`
-- Pool (PROD write, Praveen): `scripts/ops/partner-pool.sh set gdi-demo <used + 300>` BEFORE the email, so the five share a fresh 300 minutes.
+- Pool: DONE 11-05 (Praveen: "set the pool to 300 remaining") — `scripts/ops/partner-pool.sh set gdi-demo 786` → cap 786, used 485.3, remaining 300.7.
 - Email draft (placeholders `{{tester-1}}`..`{{tester-4}}`, `{{josh}}`, `{{james}}`): `docs/whitelabel/gdi/email-testers-2026-11-05.md`.
 - Deploy order: `npm run test:all` (baseline failures only) -> `./deploy-tutor-demo.sh` from the worktree -> verify BUILD_ID -> open one home link in Chrome (a tester with a past session shows the summary) -> pool -> mint -> fill and send the email.
 - DEPLOY STATUS: not deployed
