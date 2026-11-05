@@ -105,6 +105,7 @@ check('active + recent = in progress', isInProgress(live, t) && rowLabel(live, t
 check('active + 36 min old = ended early', !isInProgress(stale, t) && rowLabel(stale, t).status === 'Ended early');
 check('completed is never in progress', !isInProgress(row({ updatedAt: new Date(t).toISOString() }), t));
 check('in progress: no summary run', !shouldRunSummary(live, t, { summaryDisabled: false }) && shouldRunSummary(stale, t, { summaryDisabled: false }));
+check('home passes the token tutor_languages as fallback', /const fallbackTutorLanguages = tokenTutorLanguages\(payload\.tutor_languages\);/.test(src) && /runSummaryForSession\(row\.sessionId, undefined, \{ fallbackTutorLanguages \}\)/.test(src));
 check('home uses shouldRunSummary', /shouldRunSummary\(row, now, \{ summaryDisabled \}\)/.test(src));
 
 // M16: the card stops on 401/403 and says the link expired.

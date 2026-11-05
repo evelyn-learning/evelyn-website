@@ -153,6 +153,19 @@ const mkSession = () => ({
     const st = await runSummaryForSession('s1', deps);
     check('failed 10s ago: no model call', calls.model === 0 && st.status === 'failed', JSON.stringify(st));
   }
+  {
+    // Fix round 2: a session saved before tutorLanguages existed uses the token's languages.
+    const systems: string[] = [];
+    const run = async (opts?: { fallbackTutorLanguages?: string[] }) => {
+      const { deps } = mkDeps(mkSession(), [goodReply]);
+      deps.callJson = async (system) => { systems.push(system); return goodReply; };
+      return runSummaryForSession('s1', deps, opts);
+    };
+    const withFb = await run({ fallbackTutorLanguages: ['en', 'ja'] });
+    check('fallback [en,ja]: prompt names Japanese, JA lines kept', /Japanese/.test(systems[0] ?? '') && (withFb as any).summary?.assessment.grammar_ja === '文法は安定', systems[0]);
+    const noFb = await run();
+    check('no fallback: empty _ja', !/Japanese/.test(systems[1] ?? '') && (noFb as any).summary?.assessment.grammar_ja === '', JSON.stringify(noFb).slice(0, 200));
+  }
   console.log(`\n${passed} passed, ${failed} failed`);
   process.exit(failed ? 1 : 0);
 })();

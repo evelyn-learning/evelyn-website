@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyEmbedTokenAsync, type EmbedTokenPayload } from '@/lib/tutor/portal/embed-token';
 import {
-  activeSummaryStoreDeps, isSummaryRefusal, runSummaryForSession, summaryRefusal, summaryStateOf,
+  activeSummaryStoreDeps, isSummaryRefusal, runSummaryForSession, summaryRefusal, summaryStateOf, tokenTutorLanguages,
   type SummaryRefusal, type SummaryState, type SummaryStoreDeps,
 } from '@/lib/tutor/portal/learner-summary-store';
 import { signReplayToken, replayUrl, type ReplayTokenPayload } from '@/lib/tutor/portal/replay-token';
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
   if (refusal) return refuse(refusal);
 
   const sessionId = s.session.sessionId;
-  const run = runSummaryForSession(sessionId, s.deps);
+  const run = runSummaryForSession(sessionId, s.deps, { fallbackTutorLanguages: tokenTutorLanguages(s.payload.tutor_languages) });
   run.catch((e) => console.warn('[learner-summary] generate failed', sessionId, (e as Error)?.message));
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), POST_WAIT_MS); });

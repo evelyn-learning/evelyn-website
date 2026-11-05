@@ -198,6 +198,24 @@ const post = (body: Record<string, unknown>, token?: string) => POST(new Request
     const g = await get('sessionId=s1', tokA);
     check('3 turns: GET 403 session_too_short', g.status === 403 && (await g.json()).error === 'session_too_short', String(g.status));
   }
+  {
+    // Fix round 2: the token's tutor_languages reach the run (session row has none).
+    for (const [label, langs] of [['comma string', 'en,ja'], ['array', ['en', 'ja']]] as const) {
+      const { deps } = mkDeps();
+      let system = '';
+      deps.callJson = async (sys) => { system = sys; return goodReply; };
+      __setLearnerSummaryDepsForTests(deps);
+      const r = await post({ sessionId: 's1' }, tok({ student_id: 'A', tutor_languages: langs }));
+      const j: any = await r.json();
+      check(`token tutor_languages (${label}) reach the run`, r.status === 200 && /Japanese/.test(system) && j.state?.summary?.assessment.grammar_ja === '文法は安定', `${r.status} ${system.slice(0, 120)}`);
+    }
+    const { deps } = mkDeps();
+    let system = '';
+    deps.callJson = async (sys) => { system = sys; return goodReply; };
+    __setLearnerSummaryDepsForTests(deps);
+    await post({ sessionId: 's1' }, tokA);
+    check('no token tutor_languages: no support language', system !== '' && !/Japanese/.test(system));
+  }
   __setLearnerSummaryDepsForTests(null);
   __setPartnerTokenSecretDepsForTests(null);
   console.log(`\n${passed} passed, ${failed} failed`);

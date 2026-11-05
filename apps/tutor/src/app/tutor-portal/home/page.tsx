@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { verifyEmbedTokenAsync } from '@/lib/tutor/portal/embed-token';
-import { learnerSummaryEnabled, listLearnerSessions, runSummaryForSession, type LearnerSessionRow } from '@/lib/tutor/portal/learner-summary-store';
+import { learnerSummaryEnabled, listLearnerSessions, runSummaryForSession, tokenTutorLanguages, type LearnerSessionRow } from '@/lib/tutor/portal/learner-summary-store';
 import { isLearnerSummarySubject } from '@/lib/tutor/portal/learner-summary';
 import { signReplayToken, replayUrl, type ReplayTokenPayload } from '@/lib/tutor/portal/replay-token';
 import { partnerFrameMetadata } from '@/lib/tutor/portal/partner-frame-metadata';
@@ -60,6 +60,7 @@ export default async function LearnerHomePage({ searchParams }: HomePageProps) {
   const rows = (await listLearnerSessions(payload.partner_id, student_id)).filter((r) => isLearnerSummarySubject(r.subject));
   const summaryDisabled = !learnerSummaryEnabled();
   const now = Date.now();
+  const fallbackTutorLanguages = tokenTutorLanguages(payload.tutor_languages);
   const origin = await requestOrigin();
   const b = payload.branding;
   const branding = b && typeof b === 'object' && !Array.isArray(b) ? (b as ReplayTokenPayload['branding'] & { primary_color?: string }) : undefined;
@@ -71,7 +72,7 @@ export default async function LearnerHomePage({ searchParams }: HomePageProps) {
   for (const row of rows) {
     let shown = row;
     if (shouldRunSummary(row, now, { summaryDisabled })) {
-      void runSummaryForSession(row.sessionId).catch((e) => console.warn('[learner-home] summary run failed', row.sessionId, (e as Error)?.message));
+      void runSummaryForSession(row.sessionId, undefined, { fallbackTutorLanguages }).catch((e) => console.warn('[learner-home] summary run failed', row.sessionId, (e as Error)?.message));
       shown = { ...row, summary: { status: 'pending' } };
     }
     let url: string | null = null;

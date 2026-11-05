@@ -10,6 +10,7 @@ import {
   type LearnerSummaryV1, type SessionFactsInput,
 } from './learner-summary';
 import { resolveModel } from '../ai/model-registry';
+import { parseTutorLanguages } from '../voice/tts-language';
 import { callGraderJson, type GraderModelClient, type ReplySchema } from './grade-free-response';
 
 export type SummaryState = { status: 'none' | 'pending' | 'ready' | 'failed'; summary?: LearnerSummaryV1; error?: string; version?: number };
@@ -119,7 +120,22 @@ export function summaryStateOf(s: Stored | undefined | null): SummaryState {
   return out;
 }
 
-export async function runSummaryForSession(sessionId: string, deps: SummaryStoreDeps = activeDeps()): Promise<SummaryRunResult> {
+/** The verified token's `tutor_languages` claim (array or comma string) as a fallback list, or undefined. */
+export function tokenTutorLanguages(claim: unknown): string[] | undefined {
+  const parsed = parseTutorLanguages(claim);
+  return parsed ? [...parsed] : undefined;
+}
+
+export type RunSummaryOptions = {
+  /** For rows saved before `tutorLanguages` was stored: the token's languages (route + home pass them; the save hook does not). */
+  fallbackTutorLanguages?: string[];
+};
+
+export async function runSummaryForSession(
+  sessionId: string,
+  deps: SummaryStoreDeps = activeDeps(),
+  opts: RunSummaryOptions = {},
+): Promise<SummaryRunResult> {
   if (!learnerSummaryEnabled()) return { status: 'disabled' };
   const session = await deps.loadSession(sessionId);
   if (!session) return { status: 'none' };
@@ -134,7 +150,9 @@ export async function runSummaryForSession(sessionId: string, deps: SummaryStore
     if (session.sourcePartnerId && session.studentId) level = await deps.profileLevel(session.sourcePartnerId, session.studentId);
   } catch { level = null; }
 
-  const facts = buildSessionFacts(session, level);
+  // Support language = session.tutorLanguages[1] ?? fallback[1].
+  const tutorLanguages = session.tutorLanguages?.[1] ? session.tutorLanguages : opts.fallbackTutorLanguages ?? session.tutorLanguages;
+  const facts = buildSessionFacts({ ...session, tutorLanguages }, level);
   const result = await generateLearnerSummary(facts, { callJson: deps.callJson, model: deps.model, turnCount, now: deps.now() });
   await deps.store(sessionId, result, deps.now());
   const fresh = await deps.loadSession(sessionId);
