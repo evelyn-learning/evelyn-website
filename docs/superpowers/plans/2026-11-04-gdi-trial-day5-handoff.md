@@ -2,6 +2,13 @@
 
 > **READ THIS FIRST**, then the ledger (`<worktree>/.superpowers/sdd/2026-10-28-gdi-trial-lesson/progress.md`), then the design doc. Do not re-run Tasks 31–46 (complete, see the ledger).
 
+## ★★★★ RUN 5 11-05 19:12Z (embed-1793905969232, "praveen" link, build 3vktQDLiQmsPo0zzaT_H7) → FIX WAVE 9 NOT STARTED
+
+Praveen ran the deployed learner-home build; end panel + home summary worked (ready 0.3 s after the save). Three defects, root-caused with code pointers and fixes in
+`docs/superpowers/plans/2026-11-05-gdi-trial-run5-handoff.md` (READ IT FIRST for wave 9): A correction+move in one turn (prompt allows it, no gate); B pronunciation clips
+capped at 9.4 s → vendor completeness 44/38 < 50 → "not attempted" → tutor said it cannot hear sounds, summary says "not practised"; C `requiredPhrases` let the close
+STATE the check question instead of asking it. Email still NOT SENT.
+
 ## ★★★ LEARNER HOME 11-05 (built, NOT yet deployed — see status line)
 
 Per-learner "Your lessons" home for the GDI testers (spec `docs/superpowers/specs/2026-11-05-gdi-learner-home-design.md`, plan `docs/superpowers/plans/2026-11-05-gdi-learner-home.md`, branch `gdi-trial-lesson`). Built: `/tutor-portal/home?token=<embed token>` (lesson list with summary, replay, PDF); stored `learnerSummary` per session; end-of-lesson summary panel on the embed page (replay, PDF, back-to-home); the summary route; replay-token signing; owner check on the save route. Kill switch: `TUTOR_LEARNER_SUMMARY=off`.
