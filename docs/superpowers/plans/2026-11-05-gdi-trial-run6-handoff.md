@@ -1,12 +1,12 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
-> **STATUS 11-05 (later): WAVE 10 BUILT on `gdi-trial-lesson`, NOT deployed.** Commits 5f9365ff (items follow the menu pick),
+> **STATUS 11-05 15:02 PST: WAVE 10 DEPLOYED to :3009** — build `ZvEYlFjmHglZHYMe3eD6a` (worktree HEAD ff417710, code 37b8d1cf; deploy 84 s; embed/home 200; :3007/:3008 untouched). Built on `gdi-trial-lesson`: Commits 5f9365ff (items follow the menu pick),
 > 28b43f8b (pending-answer vocabulary from the numbered card), e9bfdfaa (retry/nudge rows + consumed-note re-plant),
 > + the review fix pass (nudge retry not counted and keeps the item open; consumed record clears on a note-less turn and
 > carries the typed state the cancelled call saw; pronunciation_rearmed / _note_redelivered / _note_replanted now persisted
 > for embed dumps). Gate: `test:all` 440/442 (the 2 known baseline failures), `tsc` clean. Fresh review: 0 Critical, 3
 > Important (all fixed), 5 Minor deferred (see the SDD ledger lines in the commit message of the fix pass / this doc's
-> "Deferred" below). NEXT: `./deploy-tutor-demo.sh` from this worktree on Praveen's word → run 7 on the "praveen" home link →
+> "Deferred" below). NEXT: Praveen's run 7 on the "praveen" home link →
 > dump → check `pronunciation_armed` names the WORD after pick 1, option barge-ins during the menu read survive
 > (`self_voice_exempt_pending_answer`), "say it in English" re-asks the same sentence, a nudge re-arms the same item,
 > `pronunciation_note_replanted` after a stage-3 cancel.
