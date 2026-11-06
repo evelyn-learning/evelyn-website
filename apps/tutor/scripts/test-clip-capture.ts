@@ -360,10 +360,10 @@ test('runtime: gate, request field only when active, RT-2 site, learner mic tap,
 
 test('runtime: note planted for the next turn; measured opens BOTH claim-guard sites for that turn only', () => {
   const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
-  assert.match(v, /pronunciationMeasuredThisTurn = pronunciationMeasuredRef\.current;\s*(?:\/\/[^\n]*\n\s*)?pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;\s*pronunciationResultNoteRef\.current = null;\s*pronunciationMeasuredRef\.current = false;/);
+  assert.match(v, /pronunciationMeasuredThisTurn = pronunciationMeasuredRef\.current;\s*(?:pronunciationLowScoreThisTurn = pronunciationLowScoreRef\.current;\s*pronunciationLowScoreRef\.current = false;\s*)?(?:\/\/[^\n]*\n\s*)?pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;\s*pronunciationResultNoteRef\.current = null;\s*pronunciationMeasuredRef\.current = false;/);
   assert.match(v, /isPronunciationClaimSentence\(updatedSentence, transcript, pronunciationMeasuredThisTurn \? \{ measured: true \} : undefined\)/);
   assert.match(v, /claimsPronunciation\(fullText, transcript, pronunciationMeasuredThisTurn \? \{ measured: true \} : undefined\)/);
-  assert.match(v, /data\.status === 'ok' && typeof data\.note === 'string'[\s\S]{0,400}plantPronunciationNote\(data\.note, measured\)/);
+  assert.match(v, /data\.status === 'ok' && typeof data\.note === 'string'[\s\S]{0,400}plantPronunciationNote\(data\.note, measured(?:, measured && pronunciationLowScore\(data\.result, PRONUNCIATION_LOW_SCORE\))?\)/);
   assert.match(v, /PRONUNCIATION_NOTE_WAIT_MS/);
 });
 
@@ -403,7 +403,7 @@ test('runtime (final review #1b): a segment change disarms the capture', () => {
 
 test('runtime (final review #1c): an ok-but-not-measured route answer keeps the claim guard shut', () => {
   const v = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
-  assert.match(v, /const measured = data\.measured === true;[\s\S]{0,200}plantPronunciationNote\(data\.note, measured\);/);
+  assert.match(v, /const measured = data\.measured === true;[\s\S]{0,200}plantPronunciationNote\(data\.note, measured(?:, measured && pronunciationLowScore\(data\.result, PRONUNCIATION_LOW_SCORE\))?\);/);
   assert.ok(!v.includes('plantPronunciationNote(data.note, true)'), 'no unconditional measured plant');
 });
 

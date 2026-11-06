@@ -3046,7 +3046,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   /** Gate for `next`: legal kinds pass; anything else is held back. */
   const typedNextAllowed = (kind: TypedNextKind): boolean => !!input.typedTurn?.allowedNext.includes(kind);
   /** The budget for one `next` (a menu gets the longer one), the shared rule. */
-  const sayBudgetOf = (kind: TypedNextKind): number => typedSayBudgetFor(kind, !!input.typedTurn?.recap);
+  const sayBudgetOf = (kind: TypedNextKind): number => typedSayBudgetFor(kind, !!input.typedTurn?.recap, !!input.typedTurn?.languageRequest);
   /** R3: the streamed verdict of this turn (released before `next`), for the moveNeedsAnswer gate. */
   let typedVerdictSeen: TypedTurn['verdict'] | null = null;
   /** W9-A (fix wave 9, run 5 101 s): a correction was released this turn (not dropped as no-change) — while `retry` is

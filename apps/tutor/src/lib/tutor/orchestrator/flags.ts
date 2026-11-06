@@ -1118,6 +1118,10 @@ export const TUTOR_ADJACENT_DUPLICATE_DROP = process.env.NEXT_PUBLIC_TUTOR_ADJAC
  *  the options are not listed again. Client-side: default ON;
  *  NEXT_PUBLIC_TUTOR_MENU_PICK_RESOLVE=off. */
 export const TUTOR_MENU_PICK_RESOLVE = process.env.NEXT_PUBLIC_TUTOR_MENU_PICK_RESOLVE !== 'off';
+/** Wave 11 (GDI run 7, 187 s "Can you please talk in English?"): a request to be spoken to in a session language restates
+ *  the previous turn in it, re-asks the open ask and sticks for the session (language-request.ts). Client-side: default
+ *  ON; NEXT_PUBLIC_TUTOR_LANGUAGE_REQUEST=off. */
+export const TUTOR_LANGUAGE_REQUEST = process.env.NEXT_PUBLIC_TUTOR_LANGUAGE_REQUEST !== 'off';
 
 
 /** Task 30 §J1 (GDI run 17, 112 s): the level check's card of the student's

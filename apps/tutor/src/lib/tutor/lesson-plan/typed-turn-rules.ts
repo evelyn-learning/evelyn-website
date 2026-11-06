@@ -294,7 +294,9 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
     if (!ms.picked && !ctx.menuPick) return ms.asked >= 2 ? ['move'] : ['menu'];
     if (kind === 'pronunciation') {
       // W9-B3: the clip of the open item measured nothing — one engine-enforced repeat before anything else.
-      if ((ctx.pronunciationRepeatDue || ctx.pronunciationLowScore) && ask === 'item' && state.retriesInARow === 0) return ['retry'];
+      // W11-A review i3: the low-score repeat yields once the part's post-due holds are spent (the budget rows win).
+      const lowScoreForce = !!ctx.pronunciationLowScore && (!ctx.budgetDue || postDueState(ctx) === 'hold-ok');
+      if ((ctx.pronunciationRepeatDue || lowScoreForce) && ask === 'item' && state.retriesInARow === 0) return ['retry'];
       // V5 (fix wave 2): items used up → the one-more-or-move-on offer first (once), then the move
       // (the voice run moved straight to the summary after the last authored sentence).
       // R2 (fix round 1): the LAST item's result is in (open ask item, not yet repeated) — the weakest-word repeat
@@ -745,6 +747,6 @@ export function engineLineFor(kind: TypedNextKind, ctx: FieldEffectContext & { j
   }
 }
 
-export function sayWithinBudget(next: TypedNext, recap: boolean): boolean {
-  return englishSentenceCount(next.say) <= typedSayBudgetFor(next.kind, recap);
+export function sayWithinBudget(next: TypedNext, recap: boolean, languageRequest = false): boolean {
+  return englishSentenceCount(next.say) <= typedSayBudgetFor(next.kind, recap, languageRequest);
 }

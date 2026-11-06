@@ -21,6 +21,17 @@ test('requests for English', () => {
     assert.equal(languageRequestIn(t, L), 'en', t);
   }
 });
+test('review (wave 11): realistic ASR shapes — a clause-level request still counts', () => {
+  for (const t of ["I don't understand, English please", 'Sorry, in English?', 'Um, can you talk in English please?', 'Please, English.', 'Can you speak English?']) assert.equal(languageRequestIn(t, L), 'en', t);
+  for (const t of ['すみません、日本語で', 'えっと、日本語でお願いします']) assert.equal(languageRequestIn(t, L), 'ja', t);
+});
+test('review (wave 11, Critical): the learner\'s QUESTIONS about English are not requests to be spoken to in English', () => {
+  for (const t of ['How do you say it in English?', 'How do you say おはよう in English?', 'What is this in English?', 'Could you repeat the English word?', 'Can you teach me English words for business?',
+    'Please explain the difference in English and Japanese.', 'Please correct my English.', 'Please talk about English.', 'English?', '英語で言うと何ですか', 'Can you say the Japanese word in English?',
+    'I usually speak English with customers.', 'Do you speak English?', 'Which is correct in English?']) {
+    assert.equal(languageRequestIn(t, L), null, t);
+  }
+});
 test('requests for Japanese', () => {
   for (const t of ['Can you explain in Japanese?', '日本語で言ってください', 'Japanese, please.', '日本語でお願いします。']) assert.equal(languageRequestIn(t, L), 'ja', t);
 });
@@ -40,15 +51,22 @@ test('the first note carries the previous turn and the order to restate it; the 
   const prev = 'Good question, and I\'ll give you the scores. 発音のスコアは100点満点で16点でした。 Would you like one more word, or shall we move on to the summary?';
   const n = languageRequestNoteFirst('en', prev);
   assert.ok(n.startsWith('[') && /English/.test(n) && /previous turn/i.test(n) && n.includes('16点') && /from now on/i.test(n), n);
-  assert.ok(n.length < 900);
-  assert.ok(languageRequestNoteFirst('en', 'x'.repeat(2000)).length < 900, 'previous turn capped');
+  assert.ok(n.length < 1300);
+  assert.ok(languageRequestNoteFirst('en', 'x'.repeat(2000)).length < 1300 && languageRequestNoteFirst('en', 'x'.repeat(2000)).includes('x'.repeat(700)), 'previous turn capped at 700');
   const sticky = languageRequestNote('en');
-  assert.ok(sticky === LANGUAGE_REQUEST_NOTE('English') && /English/.test(sticky) && sticky.length < 220, sticky);
+  assert.ok(sticky.startsWith(LANGUAGE_REQUEST_NOTE('English').slice(0, 60)) && /English/.test(sticky) && sticky.length < 220, sticky);
   assert.ok(/日本語|Japanese/.test(languageRequestNote('ja')));
+  // review m7: after an English request the Japanese support line stays empty
+  assert.ok(/support_ja/.test(languageRequestNote('en')) && /support_ja/.test(languageRequestNoteFirst('en', 'x')), 'support_ja told to stay empty');
+  assert.ok(!/support_ja/.test(languageRequestNote('ja')));
 });
 test('VTR: detected per student turn, sticky ref, first note then the sticky one; typed contexts carry it', () => {
   const v = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   assert.ok(v.includes('const explanationLanguageRef = useRef<string | null>(null);'), 'sticky ref');
+  // review m9: kill switch (default ON)
+  const flags = readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8');
+  assert.ok(flags.includes("export const TUTOR_LANGUAGE_REQUEST = process.env.NEXT_PUBLIC_TUTOR_LANGUAGE_REQUEST !== 'off';"), 'flag defined, default ON');
+  assert.ok(/const languageRequestThisTurn = TUTOR_LANGUAGE_REQUEST && /.test(v), 'detection gated by the flag');
   assert.ok(/const languageRequestThisTurn = [^;]*languageRequestIn\(transcript, tutorLanguages[^;]*;/.test(v), 'detected from the student transcript');
   assert.ok(v.includes("onDebugEvent?.('language_request',"), 'debug event');
   assert.ok(v.includes('languageRequestNoteFirst(languageRequestThisTurn,'), 'first note with the previous tutor turn');

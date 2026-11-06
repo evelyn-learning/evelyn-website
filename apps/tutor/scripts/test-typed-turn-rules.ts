@@ -527,6 +527,11 @@ test('W11-A (wave 11, run 7 153 s "developed" 16/100): a LOW measured score forc
   assert.ok(!turnStateLine(ctx('pronunciation', { items: words, state: st })).includes('repeat_due'));
   // the unmeasured flag still says yes
   assert.ok(turnStateLine(ctx('pronunciation', { items: words, state: st, pronunciationRepeatDue: true })).includes('repeat_due="yes"'));
+  // review i3: pacing — the low-score force yields once the part's post-due holds are spent (budget rows win); a first post-due turn still forces
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { items: words, state: st, pronunciationLowScore: true, budgetDue: true })), ['retry']);
+  const spent = ctx('pronunciation', { items: words, state: { ...st, postDueTurns: { pronunciation: 99 } }, pronunciationLowScore: true, budgetDue: true });
+  assert.ok(!allowedNextFor(spent).includes('retry') || allowedNextFor(spent).length > 1, allowedNextFor(spent).join(','));
+  assert.ok(!turnStateLine(spent).includes('repeat_due'));
 });
 
 test('W11-B (wave 11, run 7 187 s "Can you please talk in English?"): a language request re-asks the open ask in that language — never the exit row — and counts nothing', () => {
@@ -557,6 +562,9 @@ test('W11-B (wave 11, run 7 187 s "Can you please talk in English?"): a language
   const r0: TypedTurnState = { ...createTypedTurnState(), ...ms, openAsk: { kind: 'retry', text: 'x' }, retriesInARow: 1 };
   const r1 = applyTypedTurn(r0, { ...turn, next: { ...turn.next, kind: 'retry' } }, fctx('pronunciation', { items: words, state: r0, languageRequest: 'English' }), null);
   assert.equal(r1.retriesInARow, 1);
+  // review i4: the restate + re-ask gets one more English sentence (4, not 3)
+  assert.ok(sayWithinBudget({ kind: 'offer', say: 'Your score was 16 out of 100. The weak sound was the first vowel. Say it slowly. One more word, or the summary?', item: '', level: '' }, false, true));
+  assert.ok(!sayWithinBudget({ kind: 'offer', say: 'Your score was 16 out of 100. The weak sound was the first vowel. Say it slowly. One more word, or the summary?', item: '', level: '' }, false));
   // the request rides the typed request
   assert.equal(typedTurnRequestFor(c).languageRequest, 'English');
   assert.equal(typedTurnRequestFor(ctx('pronunciation', { items: words, state: st })).languageRequest, undefined);

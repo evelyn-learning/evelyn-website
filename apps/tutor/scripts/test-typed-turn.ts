@@ -524,6 +524,13 @@ test('W11 (wave 11): the prompt documents repeat_due="low_score" and language_re
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('repeat_due="low_score"'), 'low_score documented');
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('language_request='), 'language_request documented');
   assert.ok(/language_request=[^\n]{0,500}previous turn/i.test(TYPED_TURN_INSTRUCTIONS), 'restate the previous turn in that language');
+  // review i4: the say budget on that turn is 4 (restate ≤ 2 + the re-ask), and the prompt says so
+  assert.equal(typedSayBudgetFor('offer', false, true), 4);
+  assert.equal(typedSayBudgetFor('menu', false, true), 5);
+  assert.equal(typedSayBudgetFor('offer', false), 3);
+  assert.ok(/language_request=[^\n]{0,700}four sentences/i.test(TYPED_TURN_INSTRUCTIONS), 'budget named');
+  const brain = readFileSync(join(__dirname, '../src/lib/tutor/voice/claude-brain.ts'), 'utf8');
+  assert.ok(brain.includes('const sayBudgetOf = (kind: TypedNextKind): number => typedSayBudgetFor(kind, !!input.typedTurn?.recap, !!input.typedTurn?.languageRequest);'), 'server budget honours the request');
 });
 
 test('W9-C (fix wave 9, run 5 997 s): check_question_unasked retry text — ask it as a question now, the close comes next turn', () => {
