@@ -14304,6 +14304,18 @@ export function VoiceTutorRealtime({
           if (menuPick && !opts?.prefetchOnly && currentSegmentIdRef.current) menuPickedSegsRef.current.add(currentSegmentIdRef.current);
           if (!opts?.prefetchOnly) onDebugEvent?.('menu_pick_resolved', `${menuPick.index} "${menuPick.text.slice(0, 40)}" ← "${transcript.slice(0, 40)}"`);
         }
+        // W15-B (wave 15, run 12 46 s): the utterance that resolved a pick was not an attempt at the armed item — the clip it
+        // closed was scored against that item ("not attempted" / a stray low score) and says nothing about the student. Drop
+        // its note from this turn (repeat_due / low_score stand down with it; the rules give the pick its own row).
+        if (menuPick && pronunciationNoteThisTurn) {
+          runTranscript = runTranscript.replace(`${pronunciationNoteThisTurn}\n\n`, '');
+          if (!opts?.prefetchOnly) onDebugEvent?.('pronunciation_note_dropped_menu_pick', `"${menuPick.text.slice(0, 40)}" ← ${pronunciationNoteThisTurn.slice(0, 80)}`);
+          pronunciationNoteThisTurn = null;
+          pronunciationMeasuredThisTurn = false;
+          pronunciationLowScoreThisTurn = false;
+          // a measurement of the pick utterance must not come back as "where was I wrong"
+          if (lastMeasuredPronunciationRef.current && Date.now() - lastMeasuredPronunciationRef.current.at < 15000) lastMeasuredPronunciationRef.current = null;
+        }
       }
       // W11-B (wave 11, run 7 187 s): "Can you please talk in English?" — a request to be spoken to in a session
       // language is a "say that again in <language>" request: this turn restates the previous tutor turn in it and

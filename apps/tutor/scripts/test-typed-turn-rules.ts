@@ -1074,5 +1074,22 @@ test('W13-C (run 9 585 s "which of these four sentences" with none on the board)
   assert.ok(long.includes(`learner_sentences="${'x'.repeat(120)}"`), 'cut to 120');
 });
 
+// ---- Wave 15 W15-A (run 12 46 s "Actually, um, complete sentence." while "responsibilities" was armed): the pick utterance
+// was clipped as the word's attempt (not attempted ⇒ repeat_due), and the forced `retry` row re-armed the OLD word under a
+// NEW sentence — every later sentence was scored against "responsibilities" (13, 6/100). A pick this turn owns the row:
+// `item` from the new list (or `move`), never `retry`, whatever the clip said.
+test('W15-A: a menu pick this turn ⇒ [item, move] — no retry, the repeat-due / low-score forced rows yield', () => {
+  const SENTS = ['I have worked with international customers for several years.', 'I was responsible for communicating with our customers.'];
+  const st = { ...ask('item', 'responsibilities'), menuState: { pronunciation: { asked: 1, picked: 'individual words' } }, practisedItems: { pronunciation: ['responsibilities'] }, turnsInPart: { pronunciation: 2 } };
+  const base = { studentReplied: true, menuPick: 'a complete sentence', items: SENTS, state: st };
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { ...base, pronunciationRepeatDue: true })), ['item', 'move']);
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { ...base, pronunciationLowScore: true })), ['item', 'move']);
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', base)), ['item', 'move']);
+  // no items under the pick (skip and continue) ⇒ move only
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { ...base, items: [], menuPick: 'skip and continue', pronunciationRepeatDue: true })), ['move']);
+  // without a pick the W9-B3 forced repeat still holds
+  assert.deepEqual(allowedNextFor(ctx('pronunciation', { studentReplied: true, items: ['responsibilities', 'international'], state: st, pronunciationRepeatDue: true })), ['retry']);
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

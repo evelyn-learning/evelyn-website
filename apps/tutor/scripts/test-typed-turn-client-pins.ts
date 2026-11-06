@@ -498,5 +498,12 @@ test('W13-C (wave 13, run 9 585 s): the learner sentences ref collects model + c
   assert.ok(VTR.includes('recapBoard: opts?.recapBoard === true'), 'duplicate rule sees recapBoard');
 });
 
+test('W15-B (wave 15, run 12 46 s): the utterance that resolved a menu pick is not a pronunciation attempt — its clip note is dropped', () => {
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes("onDebugEvent?.('pronunciation_note_dropped_menu_pick'"), 'event');
+  assert.ok(VTR.includes('runTranscript = runTranscript.replace(`${pronunciationNoteThisTurn}\\n\\n`, \'\');'), 'note stripped from the brain input');
+  assert.ok(VTR.includes('pronunciationNoteThisTurn = null;\n          pronunciationMeasuredThisTurn = false;\n          pronunciationLowScoreThisTurn = false;'), 'repeat_due / low_score stand down');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');

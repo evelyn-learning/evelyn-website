@@ -297,6 +297,11 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
     const ms = state.menuState[segId] ?? { asked: 0, picked: null };
     if (!ms.picked && !ctx.menuPick) return ms.asked >= 2 ? ['move'] : ['menu'];
     if (kind === 'pronunciation') {
+      // W15-A (wave 15, run 12 46 s "Actually, um, complete sentence." while a word was armed): the pick utterance closed the
+      // word's clip (not attempted ⇒ repeat_due) and the forced `retry` re-armed the OLD word under the NEW sentence the
+      // brain spoke — every later sentence was scored against it. A pick this turn owns the row: `item` from the picked
+      // list (or `move` when it has none), never `retry`; the clip rows below do not apply to a pick.
+      if (ctx.menuPick) return itemsLeft(ctx).length === 0 ? ['move'] : ['item', 'move'];
       // W9-B3: the clip of the open item measured nothing — one engine-enforced repeat before anything else.
       // W11-A review i3: the low-score repeat yields once the part's post-due holds are spent (the budget rows win).
       const lowScoreForce = !!ctx.pronunciationLowScore && (!ctx.budgetDue || postDueState(ctx) === 'hold-ok');
