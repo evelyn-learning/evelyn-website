@@ -139,7 +139,7 @@ FIELDS, in speaking order
   - "kind" MUST be one of the values in allowed_next for this turn. Never use another.
   - "say": what you say for that kind, at most 3 sentences (7 when recap is "yes" in the turn block; 5 for a menu).
     A \`question\` turn asks and stops: never tell the learner which words to begin with ('starting with: …' belongs to a \`retry\` only), and never say 'move on' / 'next question' inside it — ask the question.
-  - "item": for kind "item", the next pronunciation sentence from items_left, verbatim. Otherwise "".
+  - "item": for kind "item", the next pronunciation sentence from items_left, verbatim; next.say reads that same sentence after "Listen, then repeat after me:" (never another one). Otherwise "".
   - "level": only on the level-check close, the level you judge. Otherwise "".
 
 Meaning of each next.kind
@@ -430,7 +430,7 @@ export function correctionChangesNothing(studentText: string, correction: TypedT
   return kept.join(' ') === fixed.join(' ');
 }
 
-export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase' | 'english_missing' | 'question_dictates_opening' | 'correction_needs_retry' | 'check_question_unasked' | 'move_reads_as_item';
+export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase' | 'english_missing' | 'question_dictates_opening' | 'correction_needs_retry' | 'check_question_unasked' | 'move_reads_as_item' | 'item_say_mismatch';
 
 /** Z2 (fix wave 8, run 4 67 s "Try starting with: I want to…"): a question / offer / menu that tells the learner
  *  which words to begin with. A `retry` is never checked — "starting with: …" is its normal scaffold. */
@@ -449,6 +449,20 @@ export function typedQuestionDictatesOpening(next: TypedNext): boolean {
 const ITEM_ASK_RE = /\b(?:repeat after me|listen,? then|listen and repeat|say (?:it|that|this|the (?:whole |full |complete )?sentence|the word)(?: once more| again| one more time)?|once more|one more time)\b/i;
 export function typedMoveReadsAsItem(next: TypedNext): boolean {
   return next.kind === 'move' && ITEM_ASK_RE.test(next.say);
+}
+
+/** W16-B (wave 16, run 13 82 s): after item_not_listed the brain copied a listed item into next.item but kept reading the
+ *  refused sentence in next.say — the recorder scored every repeat against next.item while the student repeated what they
+ *  heard (three "cut off" rounds). The English after the say's last colon must be next.item (case, punctuation and any
+ *  Japanese around it ignored); a say without a colon is not checked. */
+const normItemWords = (s: string) => s.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim();
+export function typedItemSayMismatch(next: TypedNext): boolean {
+  if (next.kind !== 'item' || !next.item.trim()) return false;
+  const m = /[:：]\s*([^:：]+?)\s*$/.exec(next.say);
+  if (!m) return false;
+  const tail = normItemWords(m[1]!), item = normItemWords(next.item);
+  if (!tail || !item || !/[a-z]/.test(tail)) return false;
+  return !tail.includes(item) && !item.includes(tail);
 }
 
 /**
@@ -472,6 +486,8 @@ export function typedTurnRetryMessage(input: {
   const why = reason === 'check_question_unasked'
     // W9-C (fix wave 9, run 5 997 s): the close wrote the unasked check question in as a statement.
     ? `Your "next" was refused "${refused.kind}" (check_question_unasked): the required phrase${(missingPhrases ?? []).length === 1 ? '' : 's'} ${(missingPhrases ?? []).map((x) => JSON.stringify(x)).join(', ')} ${(missingPhrases ?? []).length === 1 ? 'was' : 'were'} not said in an earlier turn of this part, and a close may not be the first turn to say ${(missingPhrases ?? []).length === 1 ? 'it' : 'them'}. Ask now with next.kind "question": one sentence that uses the phrase, plus the two example sentences when it is the check question (next.say at most ${budget} sentences); the close comes next turn, after the student's answer (allowed: ${allowedNext.join(', ')}).`
+    : reason === 'item_say_mismatch'
+    ? `Your "next" was refused "${refused.kind}" (item_say_mismatch): next.say reads a different sentence after the colon than next.item ${JSON.stringify(refused.item)}. The student repeats what they hear and the recorder scores next.item, so they must be the same sentence: read next.item itself after "Listen, then repeat after me:" (next.item stays one of the items still to practise, copied verbatim).`
     : reason === 'move_reads_as_item'
     // W14-B (wave 14, run 11 229 s): the move's say asked for a repeat — the page turned while the student was told to repeat.
     ? `Your "next" was refused "${refused.kind}" (move_reads_as_item): next.say asks the student to repeat or say a sentence, which is a pronunciation item turn, not a move. Use next.kind "item" with next.item copied from the items still to practise (or "retry" for the open item) and keep that sentence in next.say; a move says goodbye to this part and asks the next part's opening question only (allowed: ${allowedNext.join(', ')}).`

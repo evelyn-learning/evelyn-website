@@ -40,7 +40,7 @@ const MENU_NUMBER_WORDS: Record<string, number> = { one: 1, two: 2, three: 3, fo
 // are not option words. A request lead / tail is a filler too: can|could|shall we, do, try, switch|move|go to, now, instead.
 // W14-A (wave 14, run 11 228 s): "Okay, sorry, can we do speaking more naturally?" — discourse fillers too (okay, sorry, yes,
 // sure, well, actually, I think / prefer / want).
-const PICK_FILLER_RE = /\b(?:um+|uh+|er+|ah+|hmm+|the|a|an|please|i['’]d like(?: to)?|i would like(?: to)?|let['’]?s|option|number|(?:can|could|shall) we|do|try|(?:switch|move|go) to|now|instead|okay|ok|sorry|yes|yeah|sure|well|actually|i think|i (?:would )?prefer|i want(?: to)?)\b/gi;
+const PICK_FILLER_RE = /\b(?:um+|uh+|er+|ah+|oh+|hm+|mm+|the|a|an|please|i['’]d like(?: to)?|i would like(?: to)?|let['’]?s|option|number|(?:can|could|shall) we|do|try|(?:switch|move|go) to|now|instead|okay|ok|sorry|yes|yeah|sure|well|actually|i think|i (?:would )?prefer|i want(?: to)?)\b/gi;
 const OPTION_STOP = new Set(['a', 'an', 'the', 'and', 'or', 'to', 'of']);
 const fold = (w: string) => (w.length > 3 ? w.replace(/(?<!s)s$/, '') : w);
 /**

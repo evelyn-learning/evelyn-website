@@ -232,6 +232,13 @@ test('W13-A (wave 13, run 9 336 s): a Japanese menu read ends each option at 、
   assert.deepEqual(parseMenuOptions('1) words, 2) a sentence! Which one would you like?'), [{ index: 1, text: 'words' }, { index: 2, text: 'a sentence' }]);
 });
 
+test('W16-A (wave 16, run 13 80 s): "Oh, uh, sorry, can we do a speaking more naturally?" — "oh" / "hm" / "mm" are fillers too', () => {
+  const idx = (s: string) => resolveMenuPick(s, MENU)?.index ?? null;
+  assert.equal(idx('Oh, uh, sorry, can we do a speaking more naturally?'), 3);
+  assert.equal(idx('Oh, individual words.'), 1);
+  assert.equal(idx('Hm, the sentence.'), 2);
+  assert.equal(idx('Mm, skip.'), 4);
+});
 test('W14-A (wave 14, run 11 228 s): "Okay, sorry, can we do speaking more naturally?" — discourse fillers (okay, sorry, yes, sure, actually, I think / prefer / want) are stripped', () => {
   const idx = (s: string) => resolveMenuPick(s, MENU)?.index ?? null;
   assert.equal(idx('Okay, sorry, can we do speaking more naturally?'), 3);

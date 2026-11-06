@@ -456,7 +456,7 @@ import { retryAskTurn } from '@/lib/tutor/voice/sentence-board';
 import { TUTOR_TYPED_TURN } from '@/lib/tutor/orchestrator/flags';
 import { correctionEmphasis } from '@/lib/tutor/voice/sentence-board';
 import { sentenceCount, englishSentenceCount, studentSpokeEnglish, type TypedTurnRequest, type TypedTurn, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind } from '@/lib/tutor/voice/typed-turn';
-import { createTypedTurnState, typedTurnRequestFor, typedTurnSpokenText, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, typedPronunciationItemsFor, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
+import { createTypedTurnState, restoreTypedStateKeepingPicks, typedTurnRequestFor, typedTurnSpokenText, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, typedPronunciationItemsFor, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
 import { isIdleNudgeDirective } from '@/lib/tutor/voice/idle-nudge';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
 
@@ -26226,7 +26226,7 @@ export function VoiceTutorRealtime({
       pronunciationLowScoreRef.current = replant.lowScore;
       // F2: the cancelled call may have reduced the typed state (stage-3 cancel after its stream closed) — the re-dispatch
       // starts from what that call saw; a part change since (an advance) keeps the current state.
-      if (replant.typedState && replant.segId === currentSegmentIdRef.current) typedTurnStateRef.current = structuredClone(replant.typedState);
+      if (replant.typedState && replant.segId === currentSegmentIdRef.current) typedTurnStateRef.current = restoreTypedStateKeepingPicks(replant.typedState, typedTurnStateRef.current);
       onDebugEvent?.('pronunciation_note_replanted', `re-dispatch · ${replant.note.slice(0, 120)}`);
     };
     // R47 Task 2 (review round: identity-race fix). The pacing-credit

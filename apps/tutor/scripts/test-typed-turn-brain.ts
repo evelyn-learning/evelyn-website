@@ -734,7 +734,7 @@ async function main() {
       assert.deepEqual(t.turn?.next, listed);
     });
     await test('W6: a listed item (whitespace aside) passes with no retry', async () => {
-      const r2 = await run({ ...baseInput, typedTurn: itemTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: { ...listed, item: ` ${LEFT[1]} ` } }), 2)]);
+      const r2 = await run({ ...baseInput, typedTurn: itemTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: { ...listed, say: `Next one: ${LEFT[1]}`, item: ` ${LEFT[1]} ` } }), 2)]);
       assert.equal(r2.requests.length, 1);
       assert.equal(turnEv(r2.events).retries, 0);
     });
@@ -761,6 +761,24 @@ async function main() {
       const r5 = await run({ ...baseInput, typedTurn: itemTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: moveItem }), 3), chunkedTextScript(JSON.stringify({ ...TURN, next: moveItem }), 2)]);
       assert.equal(turnEv(r5.events).nextFallback, 'item');
       assert.ok(!r5.events.some((e) => e.type === 'typed-field' && e.field === 'next' && (e.value as { kind: string }).kind === 'move'));
+    });
+    // W16-B (wave 16, run 13 82 s): after item_not_listed the brain copied a listed item but kept reading the refused sentence —
+    // the recorder scored every repeat against the item while the student repeated the sentence they heard.
+    const mismatch = { kind: 'item', say: `Sure, naturally this time. Listen, then repeat after me: I have worked with international customers for several years.`, item: LEFT[0], level: '' };
+    const matched = { kind: 'item', say: `Listen, then repeat after me: ${LEFT[0]}`, item: LEFT[0], level: '' };
+    await test('W16-B: an item whose say reads another sentence is refused (item_say_mismatch); the matched retry is spoken once', async () => {
+      const r7 = await run({ ...baseInput, typedTurn: itemTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: mismatch }), 3), chunkedTextScript(JSON.stringify({ ...TURN, next: matched }), 2)]);
+      assert.equal(r7.requests.length, 2);
+      assert.ok(String(r7.requests[1].messages[r7.requests[1].messages.length - 1].content).includes('item_say_mismatch'));
+      const said = sentencesOf(r7.events);
+      assert.ok(!said.some((x) => x.includes('international customers')), 'the refused say is never spoken');
+      assert.equal(said.filter((x) => x.includes(LEFT[0])).length, 1);
+      assert.equal(turnEv(r7.events).retryReason, 'item_say_mismatch');
+    });
+    await test('W16-B: the retry still mismatches ⇒ fallback item, nothing of it spoken', async () => {
+      const r8 = await run({ ...baseInput, typedTurn: itemTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: mismatch }), 3), chunkedTextScript(JSON.stringify({ ...TURN, next: mismatch }), 2)]);
+      assert.equal(turnEv(r8.events).nextFallback, 'item');
+      assert.ok(!sentencesOf(r8.events).some((x) => x.includes('international customers')));
     });
     await test('W14-B: no itemsLeft (not a pronunciation part with items) ⇒ a move saying "listen" is not checked', async () => {
       const { itemsLeft: _d2, ...noLeft2 } = itemTurn;

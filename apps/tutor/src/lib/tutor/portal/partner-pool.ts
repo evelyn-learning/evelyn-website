@@ -101,6 +101,15 @@ export function effectiveCapSec(input: { tokenMaxSec?: number; sessionMaxSec: nu
   return Math.max(0, Math.min(tokenMax, input.sessionMaxSec, input.remainingSec));
 }
 
+/** W16-E (GDI, Josh 11-05 "limit each demo to 20 min or so"): a pooled sitting whose token carries no time box takes one
+ *  from the pool's effective cap — the wrap line two minutes before, the hard stop at the cap (what a timed demo does). */
+export type PoolTimeBox = { maxMinutes: number; wrapMinutes: number };
+export function poolTimeBox(input: { tokenExplicit: boolean; pooled: boolean; capSec: number }): PoolTimeBox | null {
+  if (input.tokenExplicit || !input.pooled || !(input.capSec > 0)) return null;
+  const maxMinutes = Math.max(1, Math.floor(input.capSec / 60));
+  return { maxMinutes, wrapMinutes: Math.max(1, maxMinutes - 2) };
+}
+
 export function startDecision(
   snap: PoolSnapshot,
 ): { start: true; capSec?: number; idleEndSec?: number } | { start: false; reason: 'minutes_exhausted' } {

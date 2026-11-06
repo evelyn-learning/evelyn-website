@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
-  allowedNextFor, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
+  allowedNextFor, restoreTypedStateKeepingPicks, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
   sayWithinBudget, sharesCardWords, enterPartState, boardEmphasis, answerShaped, typedTurnSpokenText, typedPronunciationItems, typedPronunciationItemsFor, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
@@ -1089,6 +1089,20 @@ test('W15-A: a menu pick this turn ⇒ [item, move] — no retry, the repeat-due
   assert.deepEqual(allowedNextFor(ctx('pronunciation', { ...base, items: [], menuPick: 'skip and continue', pronunciationRepeatDue: true })), ['move']);
   // without a pick the W9-B3 forced repeat still holds
   assert.deepEqual(allowedNextFor(ctx('pronunciation', { studentReplied: true, items: ['responsibilities', 'international'], state: st, pronunciationRepeatDue: true })), ['retry']);
+});
+
+// ---- Wave 16 W16-C (run 13 80 s): the perception re-dispatch restored the typed state the cancelled call saw — and with it the
+// menu pick stored by the turn in between ("a complete sentence" → back to "individual words"), so the item list was the words
+// again and the brain's sentence was refused. The student's picks are the student's own facts: a restore keeps them.
+test('W16-C: restoreTypedStateKeepingPicks takes the snapshot but keeps the current menuState', () => {
+  const snap = { ...createTypedTurnState(), ...ask('item', 'responsibilities'), menuState: { pronunciation: { asked: 1, picked: 'individual words' } }, practisedItems: { pronunciation: ['responsibilities'] } };
+  const cur = { ...createTypedTurnState(), ...ask('item', 'I have worked with international customers for several years.'), menuState: { pronunciation: { asked: 1, picked: 'a complete sentence' } }, practisedItems: { pronunciation: ['responsibilities', 'I have worked with international customers for several years.'] } };
+  const r = restoreTypedStateKeepingPicks(snap, cur);
+  assert.equal(r.menuState.pronunciation?.picked, 'a complete sentence');
+  assert.equal(r.openAsk.text, 'responsibilities', 'everything else is the snapshot');
+  assert.deepEqual(r.practisedItems.pronunciation, ['responsibilities']);
+  assert.notEqual(r, snap, 'a copy');
+  assert.equal(restoreTypedStateKeepingPicks(snap, createTypedTurnState()).menuState.pronunciation?.picked, 'individual words', 'no current pick ⇒ snapshot as is');
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

@@ -16,6 +16,7 @@ import {
   clampEngagedAt,
   clockPoolSeconds,
   effectiveCapSec,
+  poolTimeBox,
   poolFlagOn,
   poolView,
   sittingCharge,
@@ -140,6 +141,18 @@ test('poolFlagOn: default ON, only "off" disables', () => {
   assert.equal(poolFlagOn(undefined), true);
   assert.equal(poolFlagOn('off'), false);
   assert.equal(poolFlagOn('on'), true);
+});
+
+// W16-E (GDI, Josh 11-05: "limit each demo to 20 min or so"): a pooled sitting with no token time box takes its time box
+// from the pool's effective cap — the wrap line at cap − 2 and the hard stop at the cap, the same way a timed demo does.
+test('poolTimeBox: pool cap ⇒ {maxMinutes, wrapMinutes}; a token time box or an unpooled sitting ⇒ null', () => {
+  assert.deepEqual(poolTimeBox({ tokenExplicit: false, pooled: true, capSec: 1200 }), { maxMinutes: 20, wrapMinutes: 18 });
+  assert.deepEqual(poolTimeBox({ tokenExplicit: false, pooled: true, capSec: 1799 }), { maxMinutes: 29, wrapMinutes: 27 }, 'whole minutes, floor');
+  assert.deepEqual(poolTimeBox({ tokenExplicit: false, pooled: true, capSec: 150 }), { maxMinutes: 2, wrapMinutes: 1 }, 'wrap never under 1');
+  assert.deepEqual(poolTimeBox({ tokenExplicit: false, pooled: true, capSec: 30 }), { maxMinutes: 1, wrapMinutes: 1 }, 'max never under 1');
+  assert.equal(poolTimeBox({ tokenExplicit: true, pooled: true, capSec: 1200 }), null, 'the token time box wins');
+  assert.equal(poolTimeBox({ tokenExplicit: false, pooled: false, capSec: 1200 }), null);
+  assert.equal(poolTimeBox({ tokenExplicit: false, pooled: true, capSec: 0 }), null, 'nothing to time-box');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

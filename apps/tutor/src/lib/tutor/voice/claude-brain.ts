@@ -75,7 +75,7 @@ import {
 import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
 import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
-import { correctionChangesNothing, isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedQuestionDictatesOpening, typedMoveReadsAsItem, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, typedSayBudgetFor, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
+import { correctionChangesNothing, isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedQuestionDictatesOpening, typedMoveReadsAsItem, typedItemSayMismatch, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, typedSayBudgetFor, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
 
 /** Does the streamed tool input parse as JSON? Partial JSON (a tool call
  *  the output cap cut in half) does not. */
@@ -3159,6 +3159,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             : moveOnNonAnswer ? 'move_needs_answer'
             // W14-B (wave 14, run 11 229 s): a move whose say asks for a repeat, in a part with items — an item turn in disguise.
             : typedMoveReadsAsItem(ev.value) && (input.typedTurn?.itemsLeft?.length ?? 0) > 0 ? 'move_reads_as_item'
+            // W16-B (wave 16, run 13 82 s): an item whose say reads another sentence — the student would repeat the wrong one.
+            : typedItemSayMismatch(ev.value) ? 'item_say_mismatch'
             // W9-A (fix wave 9): a corrected sentence gets its retry before any move / question.
             : typedCorrectionNeedsRetry(ev.value.kind) ? 'correction_needs_retry'
             : introducedPhrases.length ? 'check_question_unasked'
@@ -3413,12 +3415,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         // W9-A: the retry's `next` after a correction must be the retry itself.
         && !(need.reason === 'correction_needs_retry' && typedCorrectionNeedsRetry(retryNext.kind))
         // W9-C: a retry that closes again would still be the first to say the phrase (the spoken fields are spliced).
-        && !(need.reason === 'check_question_unasked' && retryNext.kind === 'close');
+        && !(need.reason === 'check_question_unasked' && retryNext.kind === 'close')
+        // W16-B: a retry that still reads another sentence than its item is not legal either (fallback: the engine's item line).
+        && !(need.reason === 'item_say_mismatch' && typedItemSayMismatch(retryNext));
       // W14-B: the retry may not move either (a move that reads as an item, or any move — the student was asked to repeat).
       const legalAfterMoveItem = legal && !(need.reason === 'move_reads_as_item' && retryNext!.kind === 'move');
       // Z1: after a no-change correction the fallback is never the retry (the first allowed kind that is not one).
       const retryFallback: TypedNextKind = need.reason === 'move_needs_answer' ? 'question'
         : need.reason === 'move_reads_as_item' ? (typedNextAllowed('retry') && input.typedTurn?.state.includes('open_ask="retry"') ? 'retry' : typedNextAllowed('item') ? 'item' : typedNextAllowed('retry') ? 'retry' : fallbackKind)
+        : need.reason === 'item_say_mismatch' ? (typedNextAllowed('item') ? 'item' : fallbackKind)
         : need.reason === 'correction_needs_retry' ? 'retry'
         : need.reason === 'check_question_unasked' ? 'question'
         : fallbackKind;

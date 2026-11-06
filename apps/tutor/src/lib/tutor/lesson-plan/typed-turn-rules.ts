@@ -781,3 +781,12 @@ export function engineLineFor(kind: TypedNextKind, ctx: FieldEffectContext & { j
 export function sayWithinBudget(next: TypedNext, recap: boolean, languageRequest = false): boolean {
   return englishSentenceCount(next.say) <= typedSayBudgetFor(next.kind, recap, languageRequest);
 }
+
+/** W16-C (wave 16, run 13 80 s): a perception re-dispatch restores the typed state the cancelled call saw (W10-3c F2) — and
+ *  wiped the menu pick the turn in between had stored ("a complete sentence" → "individual words" again), so the item list
+ *  was the words and the brain's sentence was refused. The student's picks are the student's own facts: the restore takes
+ *  the snapshot and keeps every pick the current state holds (per part; current wins). */
+export function restoreTypedStateKeepingPicks(snapshot: TypedTurnState, current: TypedTurnState): TypedTurnState {
+  const s = structuredClone(snapshot);
+  return { ...s, menuState: { ...s.menuState, ...structuredClone(current.menuState) } };
+}

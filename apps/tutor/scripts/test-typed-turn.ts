@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import {
   TYPED_TURN_SCHEMA, TYPED_NEXT_KINDS, TYPED_TURN_INSTRUCTIONS, typedTurnStateBlock, TYPED_KIND_MEANING, typedSayBudgetFor,
   truncateToSentences, sentenceCount, englishSentenceCount, parseTypedTurn, TYPED_FIELD_ORDER,
-  TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection, correctionChangesNothing, typedQuestionDictatesOpening, typedMoveReadsAsItem,
+  TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection, correctionChangesNothing, typedQuestionDictatesOpening, typedMoveReadsAsItem, typedItemSayMismatch,
 } from '../src/lib/tutor/voice/typed-turn';
 import { isStructuredOutputRejection as gradeIsStructuredOutputRejection } from '../src/lib/tutor/portal/grade-free-response';
 
@@ -548,6 +548,19 @@ test('W13 (wave 13, run 9): prompt — level-check board whatever the verdict; l
   assert.ok(TYPED_TURN_INSTRUCTIONS.split('THE RECAP PART')[1].split('\n\n')[0].includes('`learner_sentences` are already on the board when the recap opens'), 'recap block');
 });
 
+test('W16-B (wave 16, run 13 82 s): an `item` whose say reads a different sentence after the colon than next.item is refused (item_say_mismatch)', () => {
+  const n = (item: string, say: string) => ({ kind: 'item', say, item, level: '' }) as Parameters<typeof typedItemSayMismatch>[0];
+  assert.equal(typedItemSayMismatch(n('international', 'もちろんです。 Listen, then repeat after me: I was responsible for communicating with our customers.')), true);
+  assert.equal(typedItemSayMismatch(n('I was responsible for communicating with our customers.', 'Listen, then repeat after me: I was responsible for communicating with our customers.')), false);
+  assert.equal(typedItemSayMismatch(n('responsibilities', 'Listen, then repeat after me: responsibilities.')), false, 'punctuation / case ignored');
+  assert.equal(typedItemSayMismatch(n('I have worked here for five years.', 'Listen, then repeat after me: I have worked here for five years. 頑張ってください。')), false, 'Japanese after the sentence is ignored');
+  assert.equal(typedItemSayMismatch(n('international', 'Good. Now the next word, international.')), false, 'no colon ⇒ not checked');
+  assert.equal(typedItemSayMismatch(n('international', 'Next: 「international」です。')), false, 'quoted item in Japanese is the item');
+  assert.equal(typedItemSayMismatch({ kind: 'retry', say: 'Once more: I was responsible.', item: 'international', level: '' } as Parameters<typeof typedItemSayMismatch>[0]), false, 'only item turns');
+  const m = typedTurnRetryMessage({ reason: 'item_say_mismatch', refused: n('international', 'Listen, then repeat after me: I was responsible for communicating with our customers.'), allowedNext: ['item', 'move'],
+    alreadySaid: { ack: '', verdict: 'none', verdict_say: '', board: '', correction: null, support_ja: '' }, budget: 3 });
+  assert.ok(m.includes('(item_say_mismatch)') && m.includes('"international"') && /next\.item/.test(m), m);
+});
 test('W14-B (wave 14, run 11 229 s): a `move` whose say asks for a repeat is an item turn in disguise — refused (move_reads_as_item)', () => {
   const n = (kind: string, say: string) => ({ kind, say, item: '', level: '' }) as Parameters<typeof typedMoveReadsAsItem>[0];
   assert.equal(typedMoveReadsAsItem(n('move', 'Of course, we can switch. Here is a sentence from earlier, said naturally: I was responsible for communicating with our customers. Listen, then repeat after me.')), true);

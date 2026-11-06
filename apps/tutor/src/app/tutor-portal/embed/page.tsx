@@ -54,7 +54,7 @@ import {
 } from '@/lib/tutor/portal/host-lesson';
 import { LESSON_CACHE_MAX_CHARS, lessonCacheKey, parseLessonTimeline, renderLessonNow, timelineStats, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
 import { HOST_START_VIDEO_WAIT_MS, PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, shouldAwaitVideoState, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
-import { POOL_BLOCKED_LINE, POOL_GOODBYE_LINE, clockPoolSeconds, effectiveCapSec, poolSnapshotFromWire, startDecision, type PoolSnapshot } from '@/lib/tutor/portal/partner-pool';
+import { POOL_BLOCKED_LINE, POOL_GOODBYE_LINE, clockPoolSeconds, effectiveCapSec, poolSnapshotFromWire, poolTimeBox, startDecision, type PoolSnapshot, type PoolTimeBox } from '@/lib/tutor/portal/partner-pool';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -119,7 +119,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'pronunciation_tap', 'pronunciation_note_rewritten',
   // Fix waves 9–10 (W9-B3 rearm, 23 §G2 redelivery, W10-3c re-plant): the next trial dump must show them.
   'pronunciation_rearmed', 'pronunciation_note_redelivered', 'pronunciation_note_replanted',
-  'recap_sentences_boarded',
+  'recap_sentences_boarded', 'pronunciation_note_dropped_menu_pick',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued
@@ -992,6 +992,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // evelyn:session_ended the same way hostEndReasonRef does.
   const poolSnapshotRef = useRef<PoolSnapshot | null>(null);
   const poolCapSecRef = useRef<number | null>(null);
+  // W16-E: the pool cap as the sitting's time box (wrap line at cap − 2, hard stop at the cap) when the token has none.
+  const [poolTimeBoxState, setPoolTimeBoxState] = useState<PoolTimeBox | null>(null);
   const poolEndReasonRef = useRef<'time_limit' | 'minutes_exhausted' | null>(null);
   const poolIdleEndSecRef = useRef<number | null>(null);
   const latchPoolCap = () => {
@@ -1657,6 +1659,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       poolSnapshotRef.current = snap;
       if (snap.pooled) {
         poolIdleEndSecRef.current = snap.idleEndSec;
+        setPoolTimeBoxState(poolTimeBox({ tokenExplicit: maxDurationExplicit, pooled: true, capSec: effectiveCapSec({ sessionMaxSec: snap.sessionMaxSec, remainingSec: snap.remainingSec }) }));
         addDebugEvent('partner_pool_snapshot', `remaining=${snap.remainingSec} cap=${snap.capSec} session_max=${snap.sessionMaxSec} exhausted=${snap.exhausted}`);
       } else if (j?.error === 'unavailable') {
         addDebugEvent('partner_pool_unavailable', 'read=unavailable');
@@ -1669,7 +1672,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     } finally {
       if (timer) clearTimeout(timer);
     }
-  }, [embedToken, addDebugEvent]);
+  }, [embedToken, addDebugEvent, maxDurationExplicit]);
   // Mount read, repeated every 60 s until the session engages, so a pool that
   // empties while the frame sits prewarmed shows the "used up" overlay before
   // the student's tap (the tap itself never passes runHostStart).
@@ -2435,9 +2438,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         pronunciation={sessionOptions.pronunciation}
         speechRate={speechRate}
         thinkingCue={thinkingCue}
-        sessionMaxMinutes={maxDuration}
-        sessionWrapMinutes={wrapAtMinutes}
-        maxDurationExplicit={maxDurationExplicit}
+        sessionMaxMinutes={poolTimeBoxState?.maxMinutes ?? maxDuration}
+        sessionWrapMinutes={wrapAtMinutes ?? poolTimeBoxState?.wrapMinutes}
+        maxDurationExplicit={maxDurationExplicit || poolTimeBoxState !== null}
         socialMemory={config.social_memory}
         progressDigest={config.progress_digest}
         lastOpener={config.last_opener}

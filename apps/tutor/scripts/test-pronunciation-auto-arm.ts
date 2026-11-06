@@ -301,7 +301,7 @@ test('W10-3c (fix wave 10, run 6 1049–1055 s): an unmeasured note consumed by 
   assert.ok(/pronunciationNoteThisTurn = pronunciationResultNoteRef\.current;[\s\S]{0,400}\} else if \(!opts\?\.prefetchOnly && !holdNoSpeechNote\) \{[\s\S]{0,400}pronunciationNoteConsumedRef\.current = null;/.test(v), 'note-less turn clears the consumed record');
   // review F2: the record carries the typed state as the cancelled call saw it; the re-plant restores it when the part is unchanged
   assert.ok(/noSpeech: pronunciationNoSpeechNoteRef\.current,\s*lowScore: pronunciationLowScoreRef\.current,\s*typedState: typedTurnStateRef\.current,\s*segId: currentSegmentIdRef\.current,\s*\};/.test(v), 'typed state snapshot in the record');
-  assert.ok(body.includes("if (replant.typedState && replant.segId === currentSegmentIdRef.current) typedTurnStateRef.current = structuredClone(replant.typedState);"), 'typed state restored on re-plant');
+  assert.ok(body.includes("if (replant.typedState && replant.segId === currentSegmentIdRef.current) typedTurnStateRef.current = restoreTypedStateKeepingPicks(replant.typedState, typedTurnStateRef.current);"), 'typed state restored on re-plant, the student\'s picks kept (W16-C)');
   const dispatches = body.match(/void handleStudentTranscriptForBrain\(/g) ?? [];
   const guarded = body.match(/replantConsumedPronunciationNote\(\);\s*void handleStudentTranscriptForBrain\(/g) ?? [];
   assert.ok(dispatches.length >= 3 && guarded.length === dispatches.length, `${guarded.length}/${dispatches.length} re-dispatches re-plant`);
