@@ -1,5 +1,18 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
+> **STATUS 11-05 22:11 PST: WAVE 15 DEPLOYED to :3009** — build `9nZ9rbgMJEEAUSH3I3clB` (worktree 609540f2; tutor/embed 200,
+> :3007/:3008 untouched). Josh's email was SENT; he replied: he and the CEO start Monday, then their Japanese staff; asks whether
+> each demo can be limited to ~20 min (pool `session-max` is 30, plan 25 min — decision pending). Praveen's RUN 12
+> (embed-1793939925660, 3.2 min, overview → straight to pronunciation; dump `scratchpad/praveen/p15.txt`): 46 s "Actually, um,
+> complete sentence." while "responsibilities" was armed → the pick utterance closed the WORD's clip ("not attempted" ⇒
+> repeat_due) → the forced `retry` row re-armed the old word while the brain spoke a new sentence + "the recording was cut
+> off" → the next two sentence repeats were scored against "responsibilities" (13, 6/100), the first sentence never carded.
+> W15-A (rules): a menuPick this turn ⇒ pronunciation row [item, move] (or [move]), never retry; the repeat-due / low-score
+> forced rows yield. W15-B (client): a resolved pick drops this turn's pronunciation note (`pronunciation_note_dropped_menu_pick`),
+> repeat_due / low_score stand down, a <15 s-old measurement is not kept for "where was I wrong". Gate test:changed 292/294
+> (baseline), tsc clean. praveen-4 NOT wiped (one 3-min session). NEXT: 20-min decision (session-max 20 + plan minutes
+> 25→18?) → tester dumps from Monday.
+
 > **STATUS 11-05 20:37 PST: WAVE 14 DEPLOYED to :3009** — build `KmWyk6c6goLonxs3zP1Uc` (worktree 7781e475; tutor/embed 200,
 > :3007/:3008 untouched). Praveen's RUN 11 on the wave-13 fix (embed-1793938266974, 5.6 min; dump `scratchpad/praveen/p14.txt`):
 > 228 s "Okay, sorry, can we do speaking more naturally?" → NO pick ("okay"/"sorry" not option words) → the brain answered
