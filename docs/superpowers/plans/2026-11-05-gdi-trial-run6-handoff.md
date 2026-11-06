@@ -1,5 +1,20 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
+> **STATUS 11-06 12:15 PST: WAVE 17 DEPLOYED to :3009** — build `ZVZ43q-dFz2qbxIRkB68t` (worktree fe5732bd; tutor/embed 200,
+> :3007/:3008 untouched). Praveen's RUN 14 (embed-1793992648820, 18.3 min, fresh praveen-4, "session was good" + 2 issues;
+> dump `scratchpad/praveen/p17.txt`): (1) chip "14:15 / 30:00" — `docs/whitelabel/gdi/demo/mint-demo-links.js` mints every
+> GDI link with `max_duration_minutes: 30`, so W16-E's poolTimeBox stood down (token box wins) → wrap line at 28, pool cap
+> would have ended it at 20 with no 18-min line. W17-C: `poolTimeBox({ tokenMaxMinutes, pooled, capSec })` — the TIGHTER box
+> wins (30 vs cap 20 ⇒ 20/18), embed prefers the pool wrap when the pool box applies. (2) 1035 s "No, I would just like to
+> go" → check question asked (no review); 1050 s "Actually give me, can you give me the summary key points?" → W12-B
+> `checkAnswered` counted the request as the answer → row [close] → brain read the key points + "see you next time" at
+> 17.5 min, check unanswered, nothing boarded (`render_sync_empty_batch`), lesson_closed_auto_end 45 s later (18.3 min; the
+> 18-min line / 20-min stop were never reached). W17-A: `requestShaped()` + ctx.studentRequest → `checkPendingFor` → row
+> [question], recap_step="check_pending" (answer the request with the student's sentences, board the two in `board`, re-ask
+> the check verbatim); a stop / move-on order still closes. Gate test:changed 294/296 (baseline), tsc clean. NOT exercised live
+> yet: the 18-min wrap line + 20-min stop (run 14 closed at 17.5). praveen-4 holds run 14 (profile intermediate) — wipe on
+> request (backup recipe as before). NEXT: Praveen's run 15 → dump → confirm chip 20:00, wrap at 18, stop at 20.
+
 > **STATUS 11-05 22:51 PST: WAVE 16 DEPLOYED to :3009** — build `B60bOUecx2yzUXRage74H` (worktree d1d098d2; tutor/embed 200,
 > :3007/:3008 untouched). PROD WRITE (Praveen's decision): `partner-pool.sh session-max gdi-demo 20` (was 30; cap 882, 287 min
 > left). The 20-min demo = W16-E: a pooled sitting with no token time box takes the pool's effective cap as its time box —
