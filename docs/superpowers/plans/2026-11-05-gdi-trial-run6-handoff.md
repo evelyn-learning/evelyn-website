@@ -1,5 +1,23 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
+> **STATUS 11-05 18:08 PST: WAVE 12 DEPLOYED to :3009** — build `HtW1s3ZEk7RvOcDtKya6x` (worktree 0940f37c; embed/tutor 200,
+> :3007/:3008 untouched). From Praveen's RUN 8 on wave 11 (embed-1793928704314, 7.6 min, 38 turns; dump
+> `scratchpad/praveen/p11.txt` of session c95fc473): wave 11 HELD — 25/100 and 10/100 words each got the coached repeat
+> (`pronunciation_rearmed` 168 s / 251 s); no language request this run. His two points: (A) 282 s "Let's do a complete
+> sentence now." mid-way through the words → no pick resolved (resolveMenuPick wants every non-filler word inside ONE option;
+> "do" / "now" were not fillers) → the brain's sentence item was refused (`illegal_kind` item_not_listed) and the retry armed
+> the next WORD "customers" → W12-A: request leads/tails are fillers (can|could|shall we, do, try, switch|move|go to, now,
+> instead), so the loose re-pick against the part's card flips the list to the sentences; `menu_picked` names this turn's pick
+> first. (B) 399 s he answered the check question correctly, the brain closed, W9-C refused it (`check_question_unasked`:
+> "one thing you did well" still unsaid while `question` was allowed) and the retry re-asked the answered check → W12-B:
+> `checkAnsweredFor` (recap, open ask = question holding a required phrase, student replied, no nudge) ⇒ row `['close']`
+> only + request `checkAnswered` (server's W9-C stands down; X2 still makes the close carry the feedback phrase) + prompt line.
+> Also seen, not raised: 352 s "customers" 16/100 after two retries in a row → no third repeat (retry-chain cap 2, by design);
+> the exported session PDF shows Japanese as "??????" and showSentence cards as "Unknown command type" (font route is 200 on
+> :3009 — exporter path not traced). Gate: test:all 441/443 (baseline), tsc clean. NEXT: Praveen runs praveen-4 once (whole
+> sequence) before sending the demo to Josh → dump → check `menu_pick_resolved` on a mid-part "complete sentence" request and
+> a sentence armed; no second check question after a correct answer (close carries "one thing you did well").
+
 > **STATUS 11-05 16:25 PST: WAVE 11 DEPLOYED to :3009** — build `kJmDelL9OkvaSsy7rMvFu` (worktree 2ae65463 + review fix e139301e;
 > 76 s deploy, embed/home 200, :3007/:3008 untouched). From Praveen's RUN 7 on wave 10 (embed-1793919909341, 5.5 min: wave 10
 > held — pick 1 armed the WORDS, menu barge-ins exempt): (A) scores 84/85/79/81/16 and the brain never had him repeat a word
