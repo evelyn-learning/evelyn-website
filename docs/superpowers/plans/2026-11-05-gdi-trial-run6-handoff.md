@@ -1,5 +1,19 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
+> **STATUS 11-05 22:51 PST: WAVE 16 DEPLOYED to :3009** — build `B60bOUecx2yzUXRage74H` (worktree d1d098d2; tutor/embed 200,
+> :3007/:3008 untouched). PROD WRITE (Praveen's decision): `partner-pool.sh session-max gdi-demo 20` (was 30; cap 882, 287 min
+> left). The 20-min demo = W16-E: a pooled sitting with no token time box takes the pool's effective cap as its time box —
+> WRAP_LINE ("about two minutes left") at cap − 2 = 18 min, hard stop + goodbye at 20; plan minutes unchanged (25) as Praveen
+> asked. Praveen's RUN 13 (embed-1793945865569, 4.2 min; dump `scratchpad/praveen/p16.txt`): 65 s pick "complete sentence" OK
+> (W15 held — no "cut off" line); 76 s barge-in → 80 s "Oh, uh, sorry, can we do a speaking more naturally?" NOT a pick ("oh"
+> not a filler) + the W10-3c re-dispatch RESTORED the typed state the cancelled call saw → pick reverted to "individual words"
+> → items = words → brain's sentence refused item_not_listed → retry copied "international" into next.item but kept reading
+> the sentence → three repeats scored against the word ("cut off" ×2, 21/100) = "stuck". W16-A fillers oh/hm/mm; W16-B
+> `typedItemSayMismatch` ⇒ refusal `item_say_mismatch` (fallback: engine item line); W16-C `restoreTypedStateKeepingPicks`;
+> W16-E pool time box; W15-B event in the debug stream. Gate test:changed 294/296 (baseline), tsc clean. Josh REPLY DRAFTED
+> docs/whitelabel/gdi/email-josh-reply-2026-11-05.md (20-min stop, level check once, session ID for feedback). Minor gap
+> noted: "skip and continue" verbatim is not a pick (bare "skip" / "four" are). NEXT: Praveen sends the reply; Monday tester dumps.
+
 > **STATUS 11-05 22:11 PST: WAVE 15 DEPLOYED to :3009** — build `9nZ9rbgMJEEAUSH3I3clB` (worktree 609540f2; tutor/embed 200,
 > :3007/:3008 untouched). Josh's email was SENT; he replied: he and the CEO start Monday, then their Japanese staff; asks whether
 > each demo can be limited to ~20 min (pool `session-max` is 30, plan 25 min — decision pending). Praveen's RUN 12
