@@ -456,7 +456,7 @@ import { retryAskTurn } from '@/lib/tutor/voice/sentence-board';
 import { TUTOR_TYPED_TURN } from '@/lib/tutor/orchestrator/flags';
 import { correctionEmphasis } from '@/lib/tutor/voice/sentence-board';
 import { sentenceCount, englishSentenceCount, studentSpokeEnglish, type TypedTurnRequest, type TypedTurn, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind } from '@/lib/tutor/voice/typed-turn';
-import { createTypedTurnState, restoreTypedStateKeepingPicks, typedTurnRequestFor, typedTurnSpokenText, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, typedPronunciationItemsFor, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
+import { createTypedTurnState, restoreTypedStateKeepingPicks, requestShaped, typedTurnRequestFor, typedTurnSpokenText, applyField, effectsForField, applyTypedTurn, engineLineFor, enterPartState, laterPartLabels, typedPronunciationItemsFor, type TypedTurnState, type AllowedNextContext, type FieldEffectContext, type TypedEffect } from '@/lib/tutor/lesson-plan/typed-turn-rules';
 import { isIdleNudgeDirective } from '@/lib/tutor/voice/idle-nudge';
 import { announcedMoveTarget, announcedTurnNeedsContinuation, announcedContinueDecision, ANNOUNCED_CONTINUE_POLL_MS, levelAdvanceNeedsContinuation, noAskTurnNeedsContinuation, continuationRepeatsSentence, continuationEchoesLastSentence } from '@/lib/tutor/lesson-plan/announced-move';
 
@@ -15344,6 +15344,8 @@ export function VoiceTutorRealtime({
             // R3 (fix round 1): the rules count committed answers (answersInPart, verdict ≠ none); the client says only
             // whether a reply came this turn (the level check's third reply may move — the server refuses it on verdict none).
             studentReplied: Boolean(typedStudentText),
+            // W17-A (wave 17, run 14 1050 s): a question back / a request is no answer — the recap's check stays open.
+            studentRequest: !!typedStudentText && requestShaped(typedStudentText),
             nudge: typedNudgeThisTurn,
             items: typedItemsFor(typedFromSeg),
             // X1 (fix wave 3): every numbered question of this part answered (the tracker) — the level check moves.

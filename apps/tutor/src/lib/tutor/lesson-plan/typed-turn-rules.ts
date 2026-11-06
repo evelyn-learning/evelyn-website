@@ -155,6 +155,10 @@ export interface AllowedNextContext {
    *  this lesson (model + correction cards, oldest first) — the client boards them when the recap opens; the recap's
    *  turn_state lists them (≤ 4 × 120) so the review refers to what is on the board. */
   learnerSentences?: readonly string[];
+  /** W17-A (wave 17, run 14 1050 s "can you give me the summary key points?"): the student's reply this turn is a question
+   *  back or a request (requestShaped), not an answer — the recap's check question stays open: the row is [question]
+   *  (answer what they asked, then re-ask the check), and checkAnswered does not ride. */
+  studentRequest?: boolean;
 }
 
 /** A (fix wave 6): offers made in a part (a made offer without a count is the first). */
@@ -350,6 +354,8 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   // close so the server can refuse a close that would introduce one (the check question is asked, then answered).
   // W12-B (wave 12, run 8 399 s): the check question answered ⇒ close only — the remaining phrase is feedback for the close;
   // with `question` beside it the server's W9-C refusal sent the brain back to ask the answered check again.
+  // W17-A (wave 17, run 14 1050 s): a request while the check question is open — answer it, re-ask the check; no close.
+  if (kind === 'recap' && checkPendingFor(ctx)) return ['question'];
   if (kind === 'recap') return state.recapReviewed?.[segId] ? (missingPhrasesFor(ctx).length && !checkAnsweredFor(ctx) ? ['close', 'question'] : ['close']) : ['question'];
 
   // W9-A (fix wave 9, run 5 101 s): the first post-due turn keeps `retry` so a correction gets its repeat (the server
@@ -424,7 +430,7 @@ export function turnStateLine(ctx: AllowedNextContext): string {
   // (the close must carry them); none missing ⇒ omitted.
   if (typedPartKind(ctx.plan, segId, ctx.levelKnown) === 'recap') {
     const first = !state.recapReviewed?.[segId];
-    attrs.push(['recap_step', first ? 'review_feedback_check' : 'close']);
+    attrs.push(['recap_step', first ? 'review_feedback_check' : checkPendingFor(ctx) ? 'check_pending' : 'close']);
     const phrases = (segmentOf(ctx.plan, segId)?.requiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim());
     const missing = ctx.missingRequiredPhrases ? missingPhrasesFor(ctx) : undefined;
     if (missing) { if (missing.length) attrs.push(['required_phrases', missing.join('|')]); }
@@ -461,11 +467,22 @@ function missingPhrasesFor(ctx: AllowedNextContext): string[] {
  *  check question) and the student replied this turn (no nudge) — the check is answered; the close may say the remaining
  *  feedback phrases itself (the server's W9-C refusal stands down; X2 still makes the close carry them). Pure. */
 export function checkAnsweredFor(ctx: AllowedNextContext): boolean {
-  if (typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) !== 'recap' || ctx.nudge || !ctx.studentReplied) return false;
+  // W17-A: a question back / a request is no answer (run 14: it collapsed the row to [close] with the check unanswered).
+  if (ctx.studentRequest) return false;
+  return checkQuestionOpenFor(ctx) && !ctx.nudge && !!ctx.studentReplied;
+}
+/** The recap's open ask is its check question (a question holding one of the part's required phrases). Pure. */
+function checkQuestionOpenFor(ctx: AllowedNextContext): boolean {
+  if (typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) !== 'recap') return false;
   if (ctx.state.openAsk.kind !== 'question') return false;
   const asked = ctx.state.openAsk.text.toLowerCase();
   const phrases = (segmentOf(ctx.plan, ctx.segId)?.requiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim());
   return phrases.some((p) => asked.includes(p.toLowerCase()));
+}
+/** W17-A: the check question is open and this turn's reply is a request, not an answer (and not a stop / move-on order,
+ *  not a nudge): the brain answers it and asks the check again — `question` only; recap_step="check_pending". Pure. */
+export function checkPendingFor(ctx: AllowedNextContext): boolean {
+  return !!ctx.studentRequest && !!ctx.studentReplied && !ctx.nudge && !ctx.studentMovedOn && !!ctx.state.recapReviewed?.[ctx.segId] && checkQuestionOpenFor(ctx);
 }
 
 export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
@@ -541,6 +558,16 @@ export function answerShaped(text: string): boolean {
   if (/^[^\p{L}]*(?:sorry|can|could|what|how|please|pardon|excuse)\b/iu.test(s)) return false;
   const words = s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').split(/\s+/).filter((w) => w && !ANSWER_STOP.has(w));
   return words.length >= 4;
+}
+
+/** W17-A (wave 17, run 14 1050 s): the reply is a question back or a request — the F4.1 half of answerShaped on its own
+ *  ("Actually give me, can you give me the summary key points?", "Why is it not have helped?"). An answer that happens to
+ *  be short is NOT a request (the ≥ 4-word test stays out of this). Pure. */
+export function requestShaped(text: string): boolean {
+  const s = String(text ?? '').trim();
+  if (!s) return false;
+  if (/\?\s*$/.test(s)) return true;
+  return /^[^\p{L}]*(?:sorry|can|could|what|how|why|please|pardon|excuse)\b/iu.test(s);
 }
 
 const CARD_WORD_STOP = new Set(['the', 'and', 'you', 'your', 'for', 'are', 'was', 'were', 'have', 'has', 'had', 'did', 'does', 'with', 'that', 'this', 'what', 'who', 'how', 'any', 'can', 'will', 'would', 'about', 'there', 'their', 'from', 'but', 'not']);

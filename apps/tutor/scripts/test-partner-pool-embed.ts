@@ -97,9 +97,11 @@ test('ops: scripts/ops/partner-pool.sh + .js exist, parse, and cover show/set/ad
 
 test('W16-E: the pool cap drives the time box (wrap line + hard stop) when the token has none', () => {
   assert.ok(embed.includes('const [poolTimeBoxState, setPoolTimeBoxState] = useState<PoolTimeBox | null>(null);'), 'state');
-  assert.ok(embed.includes("setPoolTimeBoxState(poolTimeBox({ tokenExplicit: maxDurationExplicit, pooled: true, capSec: effectiveCapSec({ sessionMaxSec: snap.sessionMaxSec, remainingSec: snap.remainingSec }) }));"), 'set from the snapshot');
+  // W17-C: the token's box rides in (null when the token has none) — the tighter box wins.
+  assert.ok(embed.includes("setPoolTimeBoxState(poolTimeBox({ tokenMaxMinutes: maxDurationExplicit ? maxDuration : null, pooled: true, capSec: effectiveCapSec({ sessionMaxSec: snap.sessionMaxSec, remainingSec: snap.remainingSec }) }));"), 'set from the snapshot');
+  assert.ok(embed.includes('}, [embedToken, addDebugEvent, maxDurationExplicit, maxDuration]);'), 'snapshot callback deps');
   assert.ok(embed.includes('sessionMaxMinutes={poolTimeBoxState?.maxMinutes ?? maxDuration}'), 'max minutes prop');
-  assert.ok(embed.includes('sessionWrapMinutes={wrapAtMinutes ?? poolTimeBoxState?.wrapMinutes}'), 'wrap minutes prop');
+  assert.ok(embed.includes('sessionWrapMinutes={poolTimeBoxState?.wrapMinutes ?? wrapAtMinutes}'), 'wrap minutes prop (W17-C: the pool box, when it applies, is the tighter one)');
   assert.ok(embed.includes('maxDurationExplicit={maxDurationExplicit || poolTimeBoxState !== null}'), 'time-boxed flag');
   assert.ok(embed.includes("'pronunciation_note_dropped_menu_pick'"), 'W15-B event reaches the debug stream');
 });

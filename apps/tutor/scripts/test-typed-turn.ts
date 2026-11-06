@@ -573,5 +573,11 @@ test('W14-B (wave 14, run 11 229 s): a `move` whose say asks for a repeat is an 
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('A `move` never asks the student to repeat or say a sentence'), 'prompt line');
 });
 
+test('W17-A: the recap prompt names recap_step=check_pending (answer the request, re-ask the check, board the two sentences)', () => {
+  const I = TYPED_TURN_INSTRUCTIONS;
+  assert.ok(I.includes('`recap_step=check_pending`: the check question is open and the student\'s reply was a question or a request, not an answer: `next.kind` is `question`; `next.say` answers what they asked (the key points, if asked, with the student\'s OWN corrected sentences as the examples), then asks the check question again, verbatim, as its last sentence; never close on this turn.'), 'check_pending line');
+  assert.ok(I.includes("On the review question and on a `check_pending` turn that gives the key points, put the two sentences you contrast in `board`, separated by ' | ', so the student sees them while you speak."), 'board line');
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

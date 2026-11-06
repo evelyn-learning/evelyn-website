@@ -101,12 +101,16 @@ export function effectiveCapSec(input: { tokenMaxSec?: number; sessionMaxSec: nu
   return Math.max(0, Math.min(tokenMax, input.sessionMaxSec, input.remainingSec));
 }
 
-/** W16-E (GDI, Josh 11-05 "limit each demo to 20 min or so"): a pooled sitting whose token carries no time box takes one
- *  from the pool's effective cap — the wrap line two minutes before, the hard stop at the cap (what a timed demo does). */
+/** W16-E (GDI, Josh 11-05 "limit each demo to 20 min or so"): a pooled sitting takes its time box from the pool's effective
+ *  cap — the wrap line two minutes before, the hard stop at the cap (what a timed demo does).
+ *  W17-C (run 14, embed-1793992648820 "14:15 / 30:00"): the GDI links carry max_duration_minutes 30, so the token box stood
+ *  and the wrap line sat at 28 while the pool ended the sitting at 20. The TIGHTER box wins: a token box at or under the
+ *  pool cap stands (null here), a looser one yields to the pool's. tokenMaxMinutes null = the token has no time box. */
 export type PoolTimeBox = { maxMinutes: number; wrapMinutes: number };
-export function poolTimeBox(input: { tokenExplicit: boolean; pooled: boolean; capSec: number }): PoolTimeBox | null {
-  if (input.tokenExplicit || !input.pooled || !(input.capSec > 0)) return null;
+export function poolTimeBox(input: { tokenMaxMinutes: number | null; pooled: boolean; capSec: number }): PoolTimeBox | null {
+  if (!input.pooled || !(input.capSec > 0)) return null;
   const maxMinutes = Math.max(1, Math.floor(input.capSec / 60));
+  if (input.tokenMaxMinutes !== null && Number.isFinite(input.tokenMaxMinutes) && input.tokenMaxMinutes <= maxMinutes) return null;
   return { maxMinutes, wrapMinutes: Math.max(1, maxMinutes - 2) };
 }
 

@@ -993,6 +993,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const poolSnapshotRef = useRef<PoolSnapshot | null>(null);
   const poolCapSecRef = useRef<number | null>(null);
   // W16-E: the pool cap as the sitting's time box (wrap line at cap − 2, hard stop at the cap) when the token has none.
+  // W17-C: ...or when the token's box is looser than the pool cap (the GDI links say 30; the pool says 20) — the tighter wins.
   const [poolTimeBoxState, setPoolTimeBoxState] = useState<PoolTimeBox | null>(null);
   const poolEndReasonRef = useRef<'time_limit' | 'minutes_exhausted' | null>(null);
   const poolIdleEndSecRef = useRef<number | null>(null);
@@ -1659,7 +1660,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       poolSnapshotRef.current = snap;
       if (snap.pooled) {
         poolIdleEndSecRef.current = snap.idleEndSec;
-        setPoolTimeBoxState(poolTimeBox({ tokenExplicit: maxDurationExplicit, pooled: true, capSec: effectiveCapSec({ sessionMaxSec: snap.sessionMaxSec, remainingSec: snap.remainingSec }) }));
+        setPoolTimeBoxState(poolTimeBox({ tokenMaxMinutes: maxDurationExplicit ? maxDuration : null, pooled: true, capSec: effectiveCapSec({ sessionMaxSec: snap.sessionMaxSec, remainingSec: snap.remainingSec }) }));
         addDebugEvent('partner_pool_snapshot', `remaining=${snap.remainingSec} cap=${snap.capSec} session_max=${snap.sessionMaxSec} exhausted=${snap.exhausted}`);
       } else if (j?.error === 'unavailable') {
         addDebugEvent('partner_pool_unavailable', 'read=unavailable');
@@ -1672,7 +1673,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     } finally {
       if (timer) clearTimeout(timer);
     }
-  }, [embedToken, addDebugEvent, maxDurationExplicit]);
+  }, [embedToken, addDebugEvent, maxDurationExplicit, maxDuration]);
   // Mount read, repeated every 60 s until the session engages, so a pool that
   // empties while the frame sits prewarmed shows the "used up" overlay before
   // the student's tap (the tap itself never passes runHostStart).
@@ -2439,7 +2440,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         speechRate={speechRate}
         thinkingCue={thinkingCue}
         sessionMaxMinutes={poolTimeBoxState?.maxMinutes ?? maxDuration}
-        sessionWrapMinutes={wrapAtMinutes ?? poolTimeBoxState?.wrapMinutes}
+        sessionWrapMinutes={poolTimeBoxState?.wrapMinutes ?? wrapAtMinutes}
         maxDurationExplicit={maxDurationExplicit || poolTimeBoxState !== null}
         socialMemory={config.social_memory}
         progressDigest={config.progress_digest}

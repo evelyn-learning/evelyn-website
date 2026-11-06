@@ -10,7 +10,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import {
   allowedNextFor, restoreTypedStateKeepingPicks, applyField, applyTypedTurn, createTypedTurnState, effectsForField, engineLineFor, nextItemFor,
-  sayWithinBudget, sharesCardWords, enterPartState, boardEmphasis, answerShaped, typedTurnSpokenText, typedPronunciationItems, typedPronunciationItemsFor, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
+  sayWithinBudget, sharesCardWords, enterPartState, boardEmphasis, answerShaped, requestShaped, typedTurnSpokenText, typedPronunciationItems, typedPronunciationItemsFor, moveNeedsAnswerFor, capCardText, laterPartLabels, itemsLeftFor, type FieldEffectContext, turnStateLine, typedPartKind, typedTurnRequestFor,
   type AllowedNextContext, type TypedTurnState,
 } from '../src/lib/tutor/lesson-plan/typed-turn-rules';
 import { TYPED_TURN_INSTRUCTIONS, type TypedNext, type TypedTurn } from '../src/lib/tutor/voice/typed-turn';
@@ -293,7 +293,7 @@ test('D (fix wave 6, p3 1171 s): the recap board "A. | B." paints the two contra
   const one = effectsForField({ field: 'board', value: pair }, fctx('open-conversation', { state: ok }));
   assert.ok(one.length <= 1 && one.every((e) => e.kind === 'model_card' && !('emphasis' in e)), JSON.stringify(one));
   assert.ok(!one.some((e) => e.kind === 'model_card' && e.sentence === 'I have worked here for five years.'), 'not split outside the recap');
-  assert.ok(TYPED_TURN_INSTRUCTIONS.includes("On the review question, put the two sentences you contrast in `board`, separated by ' | ', so the student sees them while you ask."));
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes("On the review question and on a `check_pending` turn that gives the key points, put the two sentences you contrast in `board`, separated by ' | ', so the student sees them while you speak."));
   const r0 = TYPED_TURN_INSTRUCTIONS.indexOf('THE RECAP PART'), r1 = TYPED_TURN_INSTRUCTIONS.indexOf("separated by ' | '");
   assert.ok(r0 >= 0 && r1 > r0 && !TYPED_TURN_INSTRUCTIONS.slice(r0, r1).includes('\n\n'), 'inside THE RECAP PART block');
 });
@@ -1103,6 +1103,34 @@ test('W16-C: restoreTypedStateKeepingPicks takes the snapshot but keeps the curr
   assert.deepEqual(r.practisedItems.pronunciation, ['responsibilities']);
   assert.notEqual(r, snap, 'a copy');
   assert.equal(restoreTypedStateKeepingPicks(snap, createTypedTurnState()).menuState.pronunciation?.picked, 'individual words', 'no current pick ⇒ snapshot as is');
+});
+
+// ---- Wave 17 W17-A (run 14, embed-1793992648820 1050 s): "can you give me the summary key points?" while the check question
+// was open counted as its answer — the row fell to [close], the brain gave the key points and said goodbye at 17.5 min with
+// the check unanswered. A question / request is no answer: the check stays open, the row is [question] (answer, then re-ask).
+test('W17-A: requestShaped — a question back or a request, never an answer', () => {
+  for (const q of ['Actually give me, can you give me the summary key points?', 'Why is it not have helped?', 'Sorry, once more please.', 'Can you say that in English, please?', 'What does it mean?', 'How do I say it?', 'Please explain the key points']) assert.equal(requestShaped(q), true, q);
+  for (const a of ['The first one means I still work there.', 'I have worked here for five years means it continues.', 'Actually, I worked there five years ago.', 'The second is finished.', 'Yes.', '']) assert.equal(requestShaped(a), false, a);
+});
+test('W17-A: a request while the check question is open keeps the check open — row [question], recap_step="check_pending", no checkAnswered', () => {
+  const CHECK = 'Before we finish, can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago.';
+  const step = { ...ask('question'), openAsk: { kind: 'question' as const, text: CHECK }, turnsInPart: { summary: 1 }, recapReviewed: { summary: true } };
+  const base = { lastPart: true, studentReplied: true, missingRequiredPhrases: ['one thing you did well'], state: step };
+  const req = ctx('summary', { ...base, studentRequest: true });
+  assert.deepEqual(allowedNextFor(req), ['question']);
+  assert.equal(typedTurnRequestFor(req).checkAnswered, undefined, 'a request is no answer');
+  assert.deepEqual(typedTurnRequestFor(req).allowedNext, ['question']);
+  assert.ok(turnStateLine(req).includes('recap_step="check_pending"'), turnStateLine(req));
+  // no phrases missing: still [question] — the check is unanswered
+  assert.deepEqual(allowedNextFor(ctx('summary', { ...base, studentRequest: true, missingRequiredPhrases: [] })), ['question']);
+  // an answer (W12-B) ⇒ [close] as before; a stop request ⇒ close stays; a nudge is no request; review question open ⇒ as before
+  assert.deepEqual(allowedNextFor(ctx('summary', { ...base, studentRequest: false })), ['close']);
+  assert.ok(turnStateLine(ctx('summary', { ...base, studentRequest: false })).includes('recap_step="close"'));
+  assert.ok(allowedNextFor(ctx('summary', { ...base, studentRequest: true, studentMovedOn: true })).includes('close'), 'stop request keeps close');
+  assert.ok(!turnStateLine(ctx('summary', { ...base, studentRequest: true, nudge: true, studentReplied: false })).includes('check_pending'), 'a nudge is no request (the nudge row stands)');
+  const REVIEW = { ...step, openAsk: { kind: 'question' as const, text: 'Which sentence did you practise today that you are most proud of?' } };
+  assert.deepEqual(sorted(allowedNextFor(ctx('summary', { ...base, studentRequest: true, state: REVIEW }))), ['close', 'question'], 'the review question open: W9-C row stands');
+  assert.ok(turnStateLine(ctx('summary', { ...base, studentRequest: true, state: REVIEW })).includes('recap_step="close"'));
 });
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
