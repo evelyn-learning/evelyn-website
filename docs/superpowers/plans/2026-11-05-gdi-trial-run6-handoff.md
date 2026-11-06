@@ -1,5 +1,24 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
+> **STATUS 11-05 18:56 PST: WAVE 13 DEPLOYED to :3009** — build `d7H7EITA4bi3U4uBbcaE3` (worktree 65f2106c; tutor/embed 200,
+> :3007/:3008 untouched). From Praveen's RUN 9 on wave 12 (embed-1793931842191, 11.5 min, 49 turns, fresh praveen-4 account;
+> dump `scratchpad/praveen/p12.txt` of session c95fc473): wave 12 HELD at the close (the close carried "one thing you did
+> well", no second check question; W12-A not exercised). His three points: (1) level check boarded ONE corrected sentence
+> (3rd answer, verdict correct) then moved — the brain judged answers 1–2 "none" (no corrections there) and the board is
+> carded on a correct verdict only → W13-B: on a level_check part the board is carded whatever the verdict (emphasis = words
+> not said) + prompt: `board` = the clean corrected form of EVERY level-check answer, written only; (2) 336 s pick "Uh, one."
+> → `menu_pick_resolved: 4 "練習を飛ばして次に進む。 どれにしますか？ Which one would yo…"` — the Japanese read's option 4 ran into
+> the trailing question (MENU_OPTION_RE ended options at ASCII , ; . ? only) so "one" sat inside option 4 and the I-4
+> number-content rule picked 4 → items followed to the sentences while the brain said "Responsibilities" → W13-A: options
+> end at 、；。！？ too; (3) 585 s move into the summary asked "which of these four sentences…" with none boarded → W13-C:
+> `typedLearnerSentencesRef` (placed model + correction cards, newest first, max 12) → boarded oldest-first ≤ 4 on recap
+> entry (`recap_sentences_boarded`, persisted) + turn_state `learner_sentences` + recap prompt line. Gate: test:all 441/443
+> (baseline), tsc clean. The run-9 PDF (exported on :3009) renders Japanese + sentence cards with the build stamp — the
+> earlier bad PDF was the :3007 main build. praveen-4 session + profile deleted again (backup `scratchpad/praveen/backup-to0i2x-run9.json`).
+> NEXT: Praveen's run 10 on praveen-4 → dump → level check: 3 sentence cards before the move; pick "one" on a Japanese
+> read → `menu_pick_resolved: 1` + a WORD armed; `recap_sentences_boarded` on the summary page; W12-A mid-part "complete
+> sentence" still unverified live.
+
 > **STATUS 11-05 18:08 PST: WAVE 12 DEPLOYED to :3009** — build `HtW1s3ZEk7RvOcDtKya6x` (worktree 0940f37c; embed/tutor 200,
 > :3007/:3008 untouched). From Praveen's RUN 8 on wave 11 (embed-1793928704314, 7.6 min, 38 turns; dump
 > `scratchpad/praveen/p11.txt` of session c95fc473): wave 11 HELD — 25/100 and 10/100 words each got the coached repeat
