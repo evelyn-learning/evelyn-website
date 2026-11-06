@@ -13,8 +13,11 @@
 > `checkAnsweredFor` (recap, open ask = question holding a required phrase, student replied, no nudge) ⇒ row `['close']`
 > only + request `checkAnswered` (server's W9-C stands down; X2 still makes the close carry the feedback phrase) + prompt line.
 > Also seen, not raised: 352 s "customers" 16/100 after two retries in a row → no third repeat (retry-chain cap 2, by design);
-> the exported session PDF shows Japanese as "??????" and showSentence cards as "Unknown command type" (font route is 200 on
-> :3009 — exporter path not traced). Gate: test:all 441/443 (baseline), tsc clean. NEXT: Praveen runs praveen-4 once (whole
+> the exported session PDF showed Japanese as "??????" and showSentence cards as "Unknown command type" — TRACED 18:40: that
+> PDF came from the :3007 PROD build (main 6778cf46): its footer has no build stamp (every branch build prints one, Z4), and
+> main has NO showSentence (85fffd2a) and NO CJK font / sentence-card exporter (task 32 §A–E, Z3) — all branch-only, already
+> live on :3009. Export from the :3009 learner home link / lesson summary panel is correct; :3007's admin export stays wrong
+> until the branch reaches main (wt.sh finish = 600+ commits → Praveen's call; or cherry-pick 85fffd2a + the 9 PDF commits). Gate: test:all 441/443 (baseline), tsc clean. NEXT: Praveen runs praveen-4 once (whole
 > sequence) before sending the demo to Josh → dump → check `menu_pick_resolved` on a mid-part "complete sentence" request and
 > a sentence armed; no second check question after a correct answer (close carries "one thing you did well").
 
