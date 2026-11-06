@@ -7028,7 +7028,7 @@ export function VoiceTutorRealtime({
   // arrives AFTER the turn's `done`, so the live TTS dispatch count no
   // longer describes its introducing sentence — the server tells us which
   // 1-based sentence spoke the content and the render buffers against THAT.
-  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean; /** Task 21 §D3: the client's pronunciation-target card (a model to repeat) */ pronunciationModel?: boolean; /** Task 43 §J: the auto card is a CORRECTION of the student's sentence — on an advancing turn it goes on the new page */ correctionCard?: boolean; /** Task 45 §4: this auto card paints on the page being left — the pending part page waits for the transition-anchored batch */ holdDeferredPage?: boolean; /** Task 45 §4: this batch carries the part page break, anchored to the transition sentence */ pageBreakOnTransition?: boolean; /** Task 23 §A: the auto card is the STUDENT's sentence (echo / correction / checked / affirmed / recast) */ studentSentenceCard?: boolean; /** Task 8: a typed turn's field effect (set_level plants no level-advance note) */ typedTurn?: boolean }): Promise<WhiteboardCommandResult> => {
+  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number; /** the client's own sentence card (sentence_board_auto) */ sentenceBoardAuto?: boolean; /** Task 21 §D3: the client's pronunciation-target card (a model to repeat) */ pronunciationModel?: boolean; /** Task 43 §J: the auto card is a CORRECTION of the student's sentence — on an advancing turn it goes on the new page */ correctionCard?: boolean; /** Task 45 §4: this auto card paints on the page being left — the pending part page waits for the transition-anchored batch */ holdDeferredPage?: boolean; /** Task 45 §4: this batch carries the part page break, anchored to the transition sentence */ pageBreakOnTransition?: boolean; /** Task 23 §A: the auto card is the STUDENT's sentence (echo / correction / checked / affirmed / recast) */ studentSentenceCard?: boolean; /** Task 8: a typed turn's field effect (set_level plants no level-advance note) */ typedTurn?: boolean; /** W13-C fix: the recap's learner-sentence cards — re-shown on the recap page although they stand on their part pages */ recapBoard?: boolean }): Promise<WhiteboardCommandResult> => {
     turnHadToolCallRef.current = true;
     // Structured entry log — gives us the shape of every batch arriving
     // at the handler (from Realtime function_call, from text-parse, or
@@ -7222,7 +7222,7 @@ export function VoiceTutorRealtime({
           duplicateSentenceNotes.push(`show_sentence: the student's sentence is already on an earlier page — in the recap, refer to it instead of writing it again.`);
           return false;
         }
-        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage, existingIsAuto, newBrainCardAddsMarkup, newBrainCardAddsGloss });
+        const dupAction = duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage, existingIsAuto, newBrainCardAddsMarkup, newBrainCardAddsGloss, recapBoard: opts?.recapBoard === true });
         if (dupAction === 'draw') { seenThisBatch.push(c); return true; }
         if (dupAction === 'replace' && sameTextId) {
           brainSentenceReplaceIdsRef.current.add(sameTextId);
@@ -15394,7 +15394,7 @@ export function VoiceTutorRealtime({
             const learner = typedLearnerSentencesForRecap();
             if (learner.length) {
               const cmds = learner.map((sentence) => ({ action: 'showSentence', sentence }) as unknown as WhiteboardCommand);
-              const res = await handleWhiteboardCommand(cmds, { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true });
+              const res = await handleWhiteboardCommand(cmds, { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true, recapBoard: true });
               for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
               onDebugEvent?.('recap_sentences_boarded', `${res?.assignedIds?.length ?? 0}/${learner.length}: ${learner.map((x) => x.slice(0, 30)).join(' | ')}`);
             }

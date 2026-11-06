@@ -493,6 +493,9 @@ test('W13-C (wave 13, run 9 585 s): the learner sentences ref collects model + c
   assert.ok(VTR.includes('rememberLearnerSentence(e.corrected);'), 'correction card remembered');
   assert.ok(VTR.includes("onDebugEvent?.('recap_sentences_boarded'"), 'boarded on recap entry');
   assert.ok(VTR.includes('learnerSentences: typedLearnerSentencesForRecap()'), 'allowed context');
+  // run 10 536 s: the four cards were skipped by the part-page duplicate rule — the recap board passes recapBoard through.
+  assert.ok(VTR.includes('{ anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true, recapBoard: true }'), 'recap cards carry recapBoard');
+  assert.ok(VTR.includes('recapBoard: opts?.recapBoard === true'), 'duplicate rule sees recapBoard');
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

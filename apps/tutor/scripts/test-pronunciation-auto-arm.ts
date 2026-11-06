@@ -166,7 +166,7 @@ test('21D1/D3: VTR wiring — card source, per-turn reset, pronunciation-model c
   assert.ok(VTR.includes('turnShownSentenceRef.current = null;'));
   assert.ok(VTR.includes('if (!opts?.sentenceBoardAuto) turnShownSentenceRef.current = c.sentence;'));
   assert.ok(VTR.includes('sentenceBoardAuto: true, pronunciationModel: true }'));
-  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage, existingIsAuto, newBrainCardAddsMarkup, newBrainCardAddsGloss })'));
+  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage, existingIsAuto, newBrainCardAddsMarkup, newBrainCardAddsGloss, recapBoard: opts?.recapBoard === true })'));
   assert.ok(VTR.includes("'show_sentence_duplicate_rehighlighted'") && VTR.includes("'show_sentence_duplicate_reshown'"));
   assert.ok(VTR.includes("target: 'item', targetId: existingId, pulse: true"));
   const embed = readFileSync(join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8');
@@ -205,7 +205,7 @@ test('21D r1 I3: a card on the CURRENT page ⇒ rehighlight even when the senten
   // only on page 1 ⇒ reshow
   assert.equal(duplicateSentenceAction({ page: 1, currentPage: 3, pronunciationModel: true, onCurrentPage: false }), 'reshow');
   const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage, existingIsAuto, newBrainCardAddsMarkup, newBrainCardAddsGloss })'));
+  assert.ok(VTR.includes('duplicateSentenceAction({ page, currentPage: dupCurrentPage, pronunciationModel: dupPronModel, onCurrentPage: !!existingId, inThisBatch, advancedThisTurn: dupAdvancedThisTurn, studentCard: dupStudentCard, sameTextOnCurrentPage, existingIsAuto, newBrainCardAddsMarkup, newBrainCardAddsGloss, recapBoard: opts?.recapBoard === true })'));
 });
 test('21D r1 m: a same-batch duplicate is drawn once', () => {
   assert.equal(duplicateSentenceAction({ page: 1, currentPage: 1, pronunciationModel: true, onCurrentPage: false, inThisBatch: true }), 'skip');

@@ -1847,5 +1847,14 @@ test('46 §3: a student sentence is carded only when the tutor confirms it — n
   assert.ok(vtr46.includes('confirmedOnly: TUTOR_CARD_NEEDS_TUTOR_CONFIRMATION,'), 'VTR passes confirmedOnly');
 });
 
+test('W13-C fix (run 10 536 s): a recapBoard card re-shows the learner\'s earlier sentence on the recap page; never twice on one page / batch', () => {
+  const base = { page: 4, currentPage: 8, pronunciationModel: false, advancedThisTurn: true, studentCard: true };
+  assert.equal(duplicateSentenceAction({ ...base, recapBoard: true }), 'reshow');
+  assert.equal(duplicateSentenceAction({ ...base }), 'skip', 'without the flag the part-page rule stands');
+  assert.equal(duplicateSentenceAction({ ...base, recapBoard: true, sameTextOnCurrentPage: true }), 'skip');
+  assert.equal(duplicateSentenceAction({ ...base, recapBoard: true, inThisBatch: true }), 'skip');
+  assert.equal(duplicateSentenceAction({ page: null, currentPage: 8, pronunciationModel: false, recapBoard: true }), 'draw', 'not on the board yet');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

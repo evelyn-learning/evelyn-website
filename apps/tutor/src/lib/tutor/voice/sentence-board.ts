@@ -2121,6 +2121,9 @@ export function duplicateSentenceAction(input: {
   newBrainCardAddsMarkup?: boolean;
   /** Fix round 5 (R4-3): the new brain card carries a gloss the existing same-text card lacks. */
   newBrainCardAddsGloss?: boolean;
+  /** W13-C fix (wave 13, run 10 536 s): the recap page re-shows the learner's own sentences from their part pages — the
+   *  part-page rule (Task 25 §D1) and the earlier-page skip stand down; the same text on the recap page / batch still once. */
+  recapBoard?: boolean;
 }): 'draw' | 'skip' | 'rehighlight' | 'reshow' | 'replace' {
   if (input.inThisBatch) return 'skip';
   // Task 30 fix round 2 E13 (r1 569 / 628 s: the auto correction card and the
@@ -2141,6 +2144,8 @@ export function duplicateSentenceAction(input: {
   // page 7, was re-drawn on the new pronunciation page under its menu card):
   // on the turn that opens a new part, the student's sentence card stays on
   // the part it answered.
+  // W13-C fix: the recap board re-shows the learner's sentence on the recap page (not on the board yet ⇒ draw).
+  if (input.recapBoard) return input.page === null ? 'draw' : 'reshow';
   if (input.page !== null && input.advancedThisTurn === true && input.studentCard === true) return 'skip';
   // Fix round 1 (I3): the CURRENT page first — a model also standing on an
   // earlier page is re-highlighted here, never drawn a second time here.
