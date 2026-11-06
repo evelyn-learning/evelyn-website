@@ -210,5 +210,15 @@ test('42 r1 I-1: quoted student text never counts as a menu ask; real menu turns
   assert.ok(readFileSync(join(__dirname, '..', 'src/lib/tutor/lesson-plan/transition-ask.ts'), 'utf8').includes('return menuReadInTurn(c, own) || menuNumberAskedIn(own);'));
 });
 
+test('W12-A (wave 12, run 8 282 s): a mid-part request lead is a filler — "Let\'s do a complete sentence now." picks option 2', () => {
+  const idx = (s: string) => resolveMenuPick(s, MENU)?.index ?? null;
+  assert.equal(idx("Let's do a complete sentence now."), 2);
+  assert.equal(idx('Can we try sentences?'), 2);
+  assert.equal(idx('Now switch to individual words.'), 1);
+  assert.equal(idx('Could we do the natural speaking one instead?'), null, '"one" / "speaking" mismatch stays null here (the loose resolver handles "<option> one")');
+  assert.equal(idx("I don't want to do a sentence."), null, 'a refusal is no pick');
+  assert.equal(idx('Try again.'), null);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall menu-pick tests passed');

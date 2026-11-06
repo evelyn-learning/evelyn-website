@@ -39,6 +39,9 @@ export interface TypedTurnRequest {
   studentEnglish?: boolean;
   /** W11-B: the language the student asked to be spoken to in (English name), when this turn is that re-ask. */
   languageRequest?: string;
+  /** W12-B (wave 12, run 8 399 s): the recap's open question holds a required phrase (the check question) and the student
+   *  replied this turn — the close may now say the remaining (feedback) phrases itself; W9-C's refusal stands down. */
+  checkAnswered?: boolean;
 }
 
 export const TYPED_SAY_BUDGET = 3;
@@ -150,7 +153,7 @@ The engine sends <turn_state .../> with every turn. Its attributes: part = the k
 THE RECAP PART
 - \`recap_step=review_feedback_check\`: \`next.say\` reviews what was practised using the student's OWN corrected sentences from this lesson (the card's examples only when they produced none), gives one specific strength and one thing to improve, and asks the part's check question; use every phrase in \`required_phrases\` verbatim.
 - \`recap_step=close\`: \`next.kind\` is \`close\`; \`verdict_say\` evaluates their check answer, \`next.say\` explains briefly if needed and closes warmly; ask nothing after the close.
-- A close never introduces a required phrase: every phrase in \`required_phrases\` is said on the review turn (feedback) or asked as a \`question\` and answered before the close; a close that would be the first turn to say one is refused, and the check question is asked instead.
+- A close never introduces a required phrase: every phrase in \`required_phrases\` is said on the review turn (feedback) or asked as a \`question\` and answered before the close; a close that would be the first turn to say one is refused, and the check question is asked instead; once the check question has been asked and answered, the close says every remaining phrase itself (a feedback phrase before the goodbye), never asking the check again.
 - On the review question, put the two sentences you contrast in \`board\`, separated by ' | ', so the student sees them while you ask.
 
 When \`move\` is not in \`allowed_next\`, never say the part is over and never announce a move; the engine turns the page, not your words. An \`offer\` turn names the next part as the choice ('…or shall we move on to <next_part>?') — that is not a move.

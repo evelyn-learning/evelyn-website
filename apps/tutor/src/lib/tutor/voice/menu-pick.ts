@@ -33,7 +33,9 @@ export function menuWordTokens(text: string): string[] {
 }
 
 const MENU_NUMBER_WORDS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, first: 1, second: 2, third: 3, fourth: 4, fifth: 5 };
-const PICK_FILLER_RE = /\b(?:um+|uh+|er+|ah+|hmm+|the|a|an|please|i['’]d like(?: to)?|i would like(?: to)?|let['’]?s|option|number)\b/gi;
+// W12-A (wave 12, run 8 282 s): "Let's do a complete sentence now." mid-way through the words was no pick — "do" / "now"
+// are not option words. A request lead / tail is a filler too: can|could|shall we, do, try, switch|move|go to, now, instead.
+const PICK_FILLER_RE = /\b(?:um+|uh+|er+|ah+|hmm+|the|a|an|please|i['’]d like(?: to)?|i would like(?: to)?|let['’]?s|option|number|(?:can|could|shall) we|do|try|(?:switch|move|go) to|now|instead)\b/gi;
 const OPTION_STOP = new Set(['a', 'an', 'the', 'and', 'or', 'to', 'of']);
 const fold = (w: string) => (w.length > 3 ? w.replace(/(?<!s)s$/, '') : w);
 /**

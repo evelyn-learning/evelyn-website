@@ -339,7 +339,9 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   // R1: keyed on the delivered review, not on turns (a nudge / wait turn at the start must not skip it).
   // W9-C (fix wave 9, run 5 997 s): with required phrases still unsaid after the review, `question` stays beside the
   // close so the server can refuse a close that would introduce one (the check question is asked, then answered).
-  if (kind === 'recap') return state.recapReviewed?.[segId] ? (missingPhrasesFor(ctx).length ? ['close', 'question'] : ['close']) : ['question'];
+  // W12-B (wave 12, run 8 399 s): the check question answered ⇒ close only — the remaining phrase is feedback for the close;
+  // with `question` beside it the server's W9-C refusal sent the brain back to ask the answered check again.
+  if (kind === 'recap') return state.recapReviewed?.[segId] ? (missingPhrasesFor(ctx).length && !checkAnsweredFor(ctx) ? ['close', 'question'] : ['close']) : ['question'];
 
   // W9-A (fix wave 9, run 5 101 s): the first post-due turn keeps `retry` so a correction gets its repeat (the server
   // refuses a move / question beside a correction while retry is allowed); from post_due 1 the part must move.
@@ -376,7 +378,8 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     ['open_ask_text', state.openAsk.text],
     ['offer_made', yn(o.made)],
     ['offer_accepted', yn(o.accepted)],
-    ['menu_picked', state.menuState[segId]?.picked || ctx.menuPick || 'none'],
+    // W12-A (wave 12, run 8 282 s): this turn's pick first — a mid-part re-pick (words → a complete sentence) names the new list.
+    ['menu_picked', ctx.menuPick || state.menuState[segId]?.picked || 'none'],
     ['items_practised', (state.practisedItems[segId] ?? []).join('|')],
     ['items_left', itemsLeftFor(ctx).join('|')],
     ['last_item', yn(!!state.lastItemAnnounced[segId])],
@@ -443,6 +446,17 @@ function missingPhrasesFor(ctx: AllowedNextContext): string[] {
   return (ctx.missingRequiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim()).slice(0, 8).map((p) => p.slice(0, 120));
 }
 
+/** W12-B (wave 12, run 8 399 s): the recap's open ask is a question that holds one of the part's required phrases (the
+ *  check question) and the student replied this turn (no nudge) — the check is answered; the close may say the remaining
+ *  feedback phrases itself (the server's W9-C refusal stands down; X2 still makes the close carry them). Pure. */
+export function checkAnsweredFor(ctx: AllowedNextContext): boolean {
+  if (typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) !== 'recap' || ctx.nudge || !ctx.studentReplied) return false;
+  if (ctx.state.openAsk.kind !== 'question') return false;
+  const asked = ctx.state.openAsk.text.toLowerCase();
+  const phrases = (segmentOf(ctx.plan, ctx.segId)?.requiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim());
+  return phrases.some((p) => asked.includes(p.toLowerCase()));
+}
+
 export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
   const left = itemsLeftFor(ctx);
   const requiredPhrases = closeRequiredPhrases(ctx);
@@ -456,6 +470,8 @@ export function typedTurnRequestFor(ctx: AllowedNextContext): TypedTurnRequest {
     ...(left.length ? { itemsLeft: left.slice(0, 8) } : {}),
     // X2: a `close` lacking one of these is refused once by the server (the retry names them).
     ...(requiredPhrases.length ? { requiredPhrases } : {}),
+    // W12-B: the check question answered this turn — the close may say the remaining feedback phrase.
+    ...(requiredPhrases.length && checkAnsweredFor(ctx) ? { checkAnswered: true } : {}),
     // A (fix wave 6): the server refuses a turn with no English sentence to an English-speaking student (one retry).
     ...(ctx.studentEnglish ? { studentEnglish: true } : {}),
     // W11-B: the language the student asked for (its English name), for the server's retry text.

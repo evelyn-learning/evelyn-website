@@ -1020,5 +1020,38 @@ test('W9-C (fix wave 9, run 5 997 s): a reviewed recap with required phrases sti
   assert.deepEqual(req.requiredPhrases, ['the difference between']);
 });
 
+// ---- Wave 12 W12-B (run 8 399 s): the check question answered ⇒ the close may say the remaining feedback phrase ----
+test('W12-B: checkAnswered rides the request when the open recap question holds a required phrase and the student replied', () => {
+  const CHECK = 'Before we finish, can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago.';
+  const REVIEW = 'Which sentence did you practise today that you are most proud of?';
+  const step = (text: string) => ({ ...ask('question'), openAsk: { kind: 'question' as const, text }, turnsInPart: { summary: 1 }, recapReviewed: { summary: true } });
+  const base = { lastPart: true, studentReplied: true, missingRequiredPhrases: ['one thing you did well'] };
+  assert.equal(typedTurnRequestFor(ctx('summary', { ...base, state: step(CHECK) })).checkAnswered, true);
+  assert.deepEqual(typedTurnRequestFor(ctx('summary', { ...base, state: step(CHECK) })).requiredPhrases, ['one thing you did well'], 'the missing feedback phrase still rides (X2 makes the close say it)');
+  assert.equal(typedTurnRequestFor(ctx('summary', { ...base, state: step(REVIEW) })).checkAnswered, undefined, 'the review question answered: the check is still unasked (W9-C stands)');
+  assert.equal(typedTurnRequestFor(ctx('summary', { ...base, studentReplied: false, state: step(CHECK) })).checkAnswered, undefined, 'no reply this turn');
+  assert.equal(typedTurnRequestFor(ctx('summary', { ...base, nudge: true, state: step(CHECK) })).checkAnswered, undefined, 'a nudge is no answer');
+  assert.equal(typedTurnRequestFor(ctx('summary', { ...base, state: { ...step(CHECK), openAsk: { kind: 'none' as const, text: '' } } })).checkAnswered, undefined, 'no open ask');
+  assert.equal(typedTurnRequestFor(ctx('open-conversation', { ...base, state: step(CHECK) })).checkAnswered, undefined, 'recap parts only');
+  // the row: check answered ⇒ close only (the W9-C refusal cannot fire); review answered ⇒ close + question as before
+  assert.deepEqual(allowedNextFor(ctx('summary', { ...base, state: step(CHECK) })), ['close']);
+  assert.deepEqual(sorted(allowedNextFor(ctx('summary', { ...base, state: step(REVIEW) }))), ['close', 'question']);
+  assert.deepEqual(typedTurnRequestFor(ctx('summary', { ...base, state: step(CHECK) })).allowedNext, ['close']);
+});
+
+// ---- Wave 12 W12-A (run 8 282 s): a second pick mid-part switches the item list (words → sentences) ----
+test('W12-A: a mid-part re-pick rides the request — items_left are the new list, `item` allowed, the reducer stores the new pick', () => {
+  const SENTS = ['I have worked with international customers for several years.', 'I was responsible for communicating with our customers.'];
+  const st = { ...ask('item', 'communicate'), menuState: { pronunciation: { asked: 1, picked: 'individual words' } }, practisedItems: { pronunciation: ['responsibilities', 'international'] }, turnsInPart: { pronunciation: 4 } };
+  const c = ctx('pronunciation', { studentReplied: true, menuPick: 'a complete sentence', items: SENTS, state: st });
+  assert.deepEqual(typedTurnRequestFor(c).itemsLeft, SENTS);
+  assert.ok(allowedNextFor(c).includes('item'), allowedNextFor(c).join(','));
+  assert.ok(turnStateLine(c).includes('menu_picked="a complete sentence"'), turnStateLine(c));
+  const t = { ack: 'Sure.', verdict: 'none' as const, verdict_say: '', board: '', correction: null, support_ja: '', next: nx({ kind: 'item', item: SENTS[0]!, say: 'Listen, then repeat: I have worked with international customers for several years.' }) };
+  const s1 = applyTypedTurn(c.state, t, fctx('pronunciation', { state: c.state, menuPick: 'a complete sentence', items: SENTS, studentLast: "Let's do a complete sentence now." }), null);
+  assert.equal(s1.menuState.pronunciation?.picked, 'a complete sentence');
+  assert.equal(typedPronunciationItemsFor({ words: ['responsibilities'], sentences: SENTS }, 'a complete sentence', [])[0], SENTS[0]);
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

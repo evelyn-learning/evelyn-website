@@ -533,6 +533,25 @@ async function main() {
       assert.equal(turnEv(r.events).retryReason, 'missing_required_phrase');
       assert.deepEqual(turnEv(r.events).turn?.next, STUFFED);
     });
+    // W12-B (wave 12, run 8 399 s): the student answered the check question; "one thing you did well" was still unsaid and
+    // the W9-C refusal made the brain ask the check AGAIN. With checkAnswered the close may say the feedback phrase itself.
+    const recapDone = { ...recapQ, state: '<turn_state part="recap" recap_step="close" required_phrases="one thing you did well"/>', requiredPhrases: ['one thing you did well'], checkAnswered: true };
+    const FEEDBACK_CLOSE = { kind: 'close', say: 'One thing you did well today was using the present perfect for experience. Well done, Haruto, see you next time!', item: '', level: '' };
+    await test('W12-B: check answered ⇒ a close that says the remaining feedback phrase stands (one request, spoken)', async () => {
+      const r = await run({ ...baseInput, typedTurn: recapDone }, [chunkedTextScript(JSON.stringify({ ...OK, next: FEEDBACK_CLOSE }), 3)]);
+      assert.equal(r.requests.length, 1);
+      assert.equal(turnEv(r.events).retryReason, undefined);
+      assert.ok(sentencesOf(r.events).some((x) => x.includes('Haruto')), 'the close is spoken');
+    });
+    await test('W12-B: check answered, close lacks the feedback phrase ⇒ X2 (missing_required_phrase), never check_question_unasked', async () => {
+      const r = await run({ ...baseInput, typedTurn: recapDone }, [chunkedTextScript(JSON.stringify({ ...OK, next: BARE }), 3), chunkedTextScript(JSON.stringify({ ...OK, next: FEEDBACK_CLOSE }), 2)]);
+      assert.equal(turnEv(r.events).retryReason, 'missing_required_phrase');
+      assert.deepEqual(turnEv(r.events).turn?.next, FEEDBACK_CLOSE);
+    });
+    await test('W12-B: check NOT answered (flag absent) ⇒ W9-C still refuses the close that introduces the phrase', async () => {
+      const r = await run({ ...baseInput, typedTurn: { ...recapDone, checkAnswered: undefined } }, [chunkedTextScript(JSON.stringify({ ...OK, next: FEEDBACK_CLOSE }), 3), chunkedTextScript(JSON.stringify({ ...OK, next: ASK }), 2)]);
+      assert.equal(turnEv(r.events).retryReason, 'check_question_unasked');
+    });
   }
 
   {

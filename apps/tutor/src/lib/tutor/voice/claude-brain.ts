@@ -3072,8 +3072,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
    *  the close is refused and the phrase is asked as a question instead of written into the goodbye. */
   // Review F1: a phrase first said in THIS turn's ack / verdict_say is still the close introducing it (the run-5 defect one
   // field to the left), so this turn's own spoken fields do not excuse the close; the list is already "never narrated".
+  // W12-B (wave 12, run 8 399 s): the student just answered the check question (the client's checkAnswered) — what is left
+  // is feedback ("one thing you did well"); the close says it (X2 still refuses a close without it). Refusing here made the
+  // brain ask the already-answered check a second time.
   const typedCloseIntroducesPhrases = (next: TypedNext): string[] =>
-    (next.kind === 'close' && typedNextAllowed('question') ? input.typedTurn?.requiredPhrases ?? [] : []).filter((p) => typedPhraseKey(p));
+    (next.kind === 'close' && typedNextAllowed('question') && !input.typedTurn?.checkAnswered ? input.typedTurn?.requiredPhrases ?? [] : []).filter((p) => typedPhraseKey(p));
   /** A (fix wave 6, p3 1121 s): this turn's spoken text before `next` with support_ja left out (it is exempt) —
    *  with next.say, a turn to an English-speaking student must hold one English sentence. */
   const typedSpokenNoSupport: string[] = [];

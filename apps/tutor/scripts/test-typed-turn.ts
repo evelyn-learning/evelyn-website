@@ -367,6 +367,8 @@ test('V6: a move into a key-ideas card previews its examples, then asks its prac
 test('X2 (fix wave 3): the recap close carries every required phrase; the retry for a close without one names them', () => {
   // W9-C (fix wave 9): the close never introduces a required phrase — it is said on the review turn or asked as a question first.
   assert.ok(TYPED_TURN_INSTRUCTIONS.split('THE RECAP PART')[1].split('\n\n')[0].includes('A close never introduces a required phrase'), 'recap block');
+  // W12-B (wave 12, run 8 399 s): once the check question is answered, the remaining feedback phrases go in the close.
+  assert.ok(TYPED_TURN_INSTRUCTIONS.split('THE RECAP PART')[1].split('\n\n')[0].includes('once the check question has been asked and answered, the close says every remaining phrase itself (a feedback phrase before the goodbye)'), 'recap block: feedback phrase in the close after the check');
   const m = typedTurnRetryMessage({ reason: 'missing_required_phrase', refused: { kind: 'close', say: 'Well done today. See you!', item: '', level: '' },
     allowedNext: ['close'], alreadySaid: { ack: 'Right.', verdict: 'correct', verdict_say: 'That is it.', board: '', correction: null, support_ja: '' }, budget: 7,
     missingPhrases: ['one thing you did well'] });
