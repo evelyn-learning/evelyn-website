@@ -75,7 +75,7 @@ import {
 import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
 import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
-import { correctionChangesNothing, isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedQuestionDictatesOpening, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, typedSayBudgetFor, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
+import { correctionChangesNothing, isStructuredOutputRejection, OrderedFieldEmitter, parseTypedTurn, englishSentenceCount, normalizeSpoken, sentences as typedSentences, truncateToSentences, TypedTurnReader, typedQuestionDictatesOpening, typedMoveReadsAsItem, typedTurnRetryMessage, typedTurnStateBlock, TYPED_ACK_BUDGET, typedSayBudgetFor, TYPED_TURN_INSTRUCTIONS, TYPED_TURN_SCHEMA, TYPED_VERDICT_SAY_BUDGET, type TypedField, type TypedFieldValue, type TypedNext, type TypedNextKind, type TypedRetryReason, type TypedTurn, type TypedTurnRequest } from './typed-turn';
 
 /** Does the streamed tool input parse as JSON? Partial JSON (a tool call
  *  the output cap cut in half) does not. */
@@ -3157,6 +3157,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           const retryOnNoChange = typedCorrectionNoChange && ev.value.kind === 'retry';
           const reason: TypedRetryReason | null = !typedNextAllowed(ev.value.kind) || itemNotListed || retryOnNoChange ? 'illegal_kind'
             : moveOnNonAnswer ? 'move_needs_answer'
+            // W14-B (wave 14, run 11 229 s): a move whose say asks for a repeat, in a part with items — an item turn in disguise.
+            : typedMoveReadsAsItem(ev.value) && (input.typedTurn?.itemsLeft?.length ?? 0) > 0 ? 'move_reads_as_item'
             // W9-A (fix wave 9): a corrected sentence gets its retry before any move / question.
             : typedCorrectionNeedsRetry(ev.value.kind) ? 'correction_needs_retry'
             : introducedPhrases.length ? 'check_question_unasked'
@@ -3412,21 +3414,24 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         && !(need.reason === 'correction_needs_retry' && typedCorrectionNeedsRetry(retryNext.kind))
         // W9-C: a retry that closes again would still be the first to say the phrase (the spoken fields are spliced).
         && !(need.reason === 'check_question_unasked' && retryNext.kind === 'close');
+      // W14-B: the retry may not move either (a move that reads as an item, or any move — the student was asked to repeat).
+      const legalAfterMoveItem = legal && !(need.reason === 'move_reads_as_item' && retryNext!.kind === 'move');
       // Z1: after a no-change correction the fallback is never the retry (the first allowed kind that is not one).
       const retryFallback: TypedNextKind = need.reason === 'move_needs_answer' ? 'question'
+        : need.reason === 'move_reads_as_item' ? (typedNextAllowed('retry') && input.typedTurn?.state.includes('open_ask="retry"') ? 'retry' : typedNextAllowed('item') ? 'item' : typedNextAllowed('retry') ? 'retry' : fallbackKind)
         : need.reason === 'correction_needs_retry' ? 'retry'
         : need.reason === 'check_question_unasked' ? 'question'
         : fallbackKind;
-      console.warn(`[typed-turn] typed_turn_retry reason=${need.reason} result=${legal ? retryNext!.kind : 'fallback ' + retryFallback}`);
-      if (legal) yield* emitTypedField({ field: 'next', value: retryNext! }, true);
+      console.warn(`[typed-turn] typed_turn_retry reason=${need.reason} result=${legalAfterMoveItem ? retryNext!.kind : 'fallback ' + retryFallback}`);
+      if (legalAfterMoveItem) yield* emitTypedField({ field: 'next', value: retryNext! }, true);
       else typedNextFallback = retryFallback;
       yield {
         type: 'typed-turn',
         // The refused line never reaches the client's record.
-        turn: { ...budgeted, next: legal ? retryNext! : { kind: retryFallback, say: '', item: '', level: '' } },
+        turn: { ...budgeted, next: legalAfterMoveItem ? retryNext! : { kind: retryFallback, say: '', item: '', level: '' } },
         retries: 1,
         retryReason: need.reason,
-        ...(legal ? {} : { nextFallback: retryFallback }),
+        ...(legalAfterMoveItem ? {} : { nextFallback: retryFallback }),
         ...(retryDisagreed ? { retryDisagreed: true } : {}),
       };
     }

@@ -232,5 +232,14 @@ test('W13-A (wave 13, run 9 336 s): a Japanese menu read ends each option at 、
   assert.deepEqual(parseMenuOptions('1) words, 2) a sentence! Which one would you like?'), [{ index: 1, text: 'words' }, { index: 2, text: 'a sentence' }]);
 });
 
+test('W14-A (wave 14, run 11 228 s): "Okay, sorry, can we do speaking more naturally?" — discourse fillers (okay, sorry, yes, sure, actually, I think / prefer / want) are stripped', () => {
+  const idx = (s: string) => resolveMenuPick(s, MENU)?.index ?? null;
+  assert.equal(idx('Okay, sorry, can we do speaking more naturally?'), 3);
+  assert.equal(idx('Yes, the sentence please.'), 2);
+  assert.equal(idx('Actually, individual words.'), 1);
+  assert.equal(idx('I think I prefer a complete sentence.'), 2);
+  assert.equal(idx("Sorry, I don't understand."), null);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall menu-pick tests passed');

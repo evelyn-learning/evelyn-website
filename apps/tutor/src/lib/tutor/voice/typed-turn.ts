@@ -162,6 +162,7 @@ When \`move\` is not in \`allowed_next\`, never say the part is over and never a
 Never ask again a question listed in \`answered\`. When the student stalls or gives a non-answer twice, ask a DIFFERENT question on this part (or \`move\` when allowed), never the same one.
 
 WHEN next.kind IS move
+A \`move\` never asks the student to repeat or say a sentence (that is \`item\` or \`retry\`): its say closes this part in one bridge sentence and asks the next part's opening question.
 "say" is: one bridge sentence (what you learned in the part you are leaving, when next_part follows a bridge part) + the new part's opening ask taken from next_card: its first question verbatim, or, when next_card is a numbered menu, the menu read out WITH its numbers ("1) …, 2) …, 3) …, 4) …", all choices) so the student can answer with a number. When \`next_card\` lists key ideas or example sentences (not a question or a numbered menu), \`say\` is: the bridge sentence, ONE sentence that names the card's example(s) as a preview, then the card's practice question. Never invent a sentence to repeat, never start an item inside a move.
 On a \`move\` turn the move is announced ONCE, in next.say: \`ack\` and \`support_ja\` do not announce the move or name the next part — the ack acknowledges the reply, the Japanese line supports the teaching point.
 
@@ -429,7 +430,7 @@ export function correctionChangesNothing(studentText: string, correction: TypedT
   return kept.join(' ') === fixed.join(' ');
 }
 
-export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase' | 'english_missing' | 'question_dictates_opening' | 'correction_needs_retry' | 'check_question_unasked';
+export type TypedRetryReason = 'illegal_kind' | 'say_over_budget' | 'move_needs_answer' | 'missing_required_phrase' | 'english_missing' | 'question_dictates_opening' | 'correction_needs_retry' | 'check_question_unasked' | 'move_reads_as_item';
 
 /** Z2 (fix wave 8, run 4 67 s "Try starting with: I want to…"): a question / offer / menu that tells the learner
  *  which words to begin with. A `retry` is never checked — "starting with: …" is its normal scaffold. */
@@ -440,6 +441,14 @@ const DICTATES_FULL_SENTENCE_RE = /\b(?:please\s+)?(?:answer|reply|respond)\s+(?
 export function typedQuestionDictatesOpening(next: TypedNext): boolean {
   if (next.kind !== 'question' && next.kind !== 'offer' && next.kind !== 'menu') return false;
   return DICTATES_OPENING_RE.test(next.say) || DICTATES_FULL_SENTENCE_RE.test(next.say);
+}
+
+/** W14-B (wave 14, run 11 229 s): "can we do speaking more naturally?" → the brain's `next` was kind "move" with a say that
+ *  asked for a repeat ("Here is a sentence … Listen, then repeat after me.") — the engine turned the page to the summary
+ *  while the student was told to repeat. A move whose say asks for a repeat is an item turn in disguise. Pure. */
+const ITEM_ASK_RE = /\b(?:repeat after me|listen,? then|listen and repeat|say (?:it|that|this|the (?:whole |full |complete )?sentence|the word)(?: once more| again| one more time)?|once more|one more time)\b/i;
+export function typedMoveReadsAsItem(next: TypedNext): boolean {
+  return next.kind === 'move' && ITEM_ASK_RE.test(next.say);
 }
 
 /**
@@ -463,6 +472,9 @@ export function typedTurnRetryMessage(input: {
   const why = reason === 'check_question_unasked'
     // W9-C (fix wave 9, run 5 997 s): the close wrote the unasked check question in as a statement.
     ? `Your "next" was refused "${refused.kind}" (check_question_unasked): the required phrase${(missingPhrases ?? []).length === 1 ? '' : 's'} ${(missingPhrases ?? []).map((x) => JSON.stringify(x)).join(', ')} ${(missingPhrases ?? []).length === 1 ? 'was' : 'were'} not said in an earlier turn of this part, and a close may not be the first turn to say ${(missingPhrases ?? []).length === 1 ? 'it' : 'them'}. Ask now with next.kind "question": one sentence that uses the phrase, plus the two example sentences when it is the check question (next.say at most ${budget} sentences); the close comes next turn, after the student's answer (allowed: ${allowedNext.join(', ')}).`
+    : reason === 'move_reads_as_item'
+    // W14-B (wave 14, run 11 229 s): the move's say asked for a repeat — the page turned while the student was told to repeat.
+    ? `Your "next" was refused "${refused.kind}" (move_reads_as_item): next.say asks the student to repeat or say a sentence, which is a pronunciation item turn, not a move. Use next.kind "item" with next.item copied from the items still to practise (or "retry" for the open item) and keep that sentence in next.say; a move says goodbye to this part and asks the next part's opening question only (allowed: ${allowedNext.join(', ')}).`
     : reason === 'correction_needs_retry'
     // W9-A (fix wave 9, run 5 101 s): a correction and a move / question in one turn — the learner never said the corrected sentence.
     ? `Your "next" was refused "${refused.kind}" (correction_needs_retry): this turn corrected the student's sentence, so next.kind is "retry" — ask them to say the corrected sentence once (next.say: one short sentence, then the corrected sentence). The ${refused.kind === 'move' || refused.kind === 'close' ? 'move' : 'next question'} comes next turn, after that repeat is judged (allowed: ${allowedNext.join(', ')}).`

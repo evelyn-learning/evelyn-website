@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import {
   TYPED_TURN_SCHEMA, TYPED_NEXT_KINDS, TYPED_TURN_INSTRUCTIONS, typedTurnStateBlock, TYPED_KIND_MEANING, typedSayBudgetFor,
   truncateToSentences, sentenceCount, englishSentenceCount, parseTypedTurn, TYPED_FIELD_ORDER,
-  TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection, correctionChangesNothing, typedQuestionDictatesOpening,
+  TypedTurnReader, OrderedFieldEmitter, typedTurnRetryMessage, isStructuredOutputRejection, correctionChangesNothing, typedQuestionDictatesOpening, typedMoveReadsAsItem,
 } from '../src/lib/tutor/voice/typed-turn';
 import { isStructuredOutputRejection as gradeIsStructuredOutputRejection } from '../src/lib/tutor/portal/grade-free-response';
 
@@ -546,6 +546,18 @@ test('W13 (wave 13, run 9): prompt — level-check board whatever the verdict; l
   assert.ok(TYPED_TURN_INSTRUCTIONS.includes('In the level check (part=level_check), `board` is the clean corrected form of EVERY answer, whatever the verdict'), 'board line');
   assert.ok(/learner_sentences = the student's own corrected sentences of this lesson/.test(TYPED_TURN_INSTRUCTIONS), 'glossary');
   assert.ok(TYPED_TURN_INSTRUCTIONS.split('THE RECAP PART')[1].split('\n\n')[0].includes('`learner_sentences` are already on the board when the recap opens'), 'recap block');
+});
+
+test('W14-B (wave 14, run 11 229 s): a `move` whose say asks for a repeat is an item turn in disguise — refused (move_reads_as_item)', () => {
+  const n = (kind: string, say: string) => ({ kind, say, item: '', level: '' }) as Parameters<typeof typedMoveReadsAsItem>[0];
+  assert.equal(typedMoveReadsAsItem(n('move', 'Of course, we can switch. Here is a sentence from earlier, said naturally: I was responsible for communicating with our customers. Listen, then repeat after me.')), true);
+  assert.equal(typedMoveReadsAsItem(n('move', 'Say it once more: I have worked here for five years.')), true);
+  assert.equal(typedMoveReadsAsItem(n('move', "Great, let's move to the summary. Which of your sentences will you use most at work?")), false);
+  assert.equal(typedMoveReadsAsItem(n('item', 'Listen, then repeat after me: international.')), false, 'only a move is checked');
+  const m = typedTurnRetryMessage({ reason: 'move_reads_as_item', refused: n('move', 'Listen, then repeat after me.'), allowedNext: ['item', 'retry', 'offer', 'move'],
+    alreadySaid: { ack: '', verdict: 'none', verdict_say: '', board: '', correction: null, support_ja: '' }, budget: 3 });
+  assert.ok(m.includes('(move_reads_as_item)') && /next\.kind "item"/.test(m) && /"retry"/.test(m) && /copied from/.test(m), m);
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('A `move` never asks the student to repeat or say a sentence'), 'prompt line');
 });
 
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }

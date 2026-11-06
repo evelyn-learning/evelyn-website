@@ -743,6 +743,30 @@ async function main() {
       const r3 = await run({ ...baseInput, typedTurn: noLeft }, [chunkedTextScript(JSON.stringify({ ...TURN, next: unlisted }), 2)]);
       assert.equal(r3.requests.length, 1);
     });
+    // W14-B (wave 14, run 11 229 s): "can we do speaking more naturally?" → the brain answered with kind "move" and a say that
+    // asked for a repeat — the engine turned the page to the summary while the student was told to repeat a sentence.
+    const moveItem = { kind: 'move', say: 'Of course, we can switch. Here is a sentence from earlier, said naturally: I was responsible for communicating with our customers. Listen, then repeat after me.', item: '', level: '' };
+    await test('W14-B: a move that reads as an item is refused (move_reads_as_item); the retry\'s listed item is spoken once', async () => {
+      const r4 = await run({ ...baseInput, typedTurn: itemTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: moveItem }), 3), chunkedTextScript(JSON.stringify({ ...TURN, next: listed }), 2)]);
+      assert.equal(r4.requests.length, 2);
+      assert.ok(String(r4.requests[1].messages[r4.requests[1].messages.length - 1].content).includes('move_reads_as_item'));
+      const said = sentencesOf(r4.events);
+      assert.ok(!said.some((x) => x.includes('said naturally')), 'the refused move is never spoken');
+      assert.equal(said.filter((x) => x.includes(LEFT[0])).length, 1);
+      const t = turnEv(r4.events);
+      assert.equal(t.retryReason, 'move_reads_as_item');
+      assert.deepEqual(t.turn?.next, listed);
+    });
+    await test('W14-B: the retry moves again ⇒ fallback item, no move emitted', async () => {
+      const r5 = await run({ ...baseInput, typedTurn: itemTurn }, [chunkedTextScript(JSON.stringify({ ...TURN, next: moveItem }), 3), chunkedTextScript(JSON.stringify({ ...TURN, next: moveItem }), 2)]);
+      assert.equal(turnEv(r5.events).nextFallback, 'item');
+      assert.ok(!r5.events.some((e) => e.type === 'typed-field' && e.field === 'next' && (e.value as { kind: string }).kind === 'move'));
+    });
+    await test('W14-B: no itemsLeft (not a pronunciation part with items) ⇒ a move saying "listen" is not checked', async () => {
+      const { itemsLeft: _d2, ...noLeft2 } = itemTurn;
+      const r6 = await run({ ...baseInput, typedTurn: noLeft2 }, [chunkedTextScript(JSON.stringify({ ...TURN, next: moveItem }), 2)]);
+      assert.equal(r6.requests.length, 1);
+    });
   }
   await test('two text blocks ⇒ exactly one typed-turn', async () => {
     const one = chunkedTextScript(JSON.stringify(TURN), 2);
