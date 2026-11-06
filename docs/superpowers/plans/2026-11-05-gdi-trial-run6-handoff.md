@@ -1,5 +1,17 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
+> **STATUS 11-05 20:37 PST: WAVE 14 DEPLOYED to :3009** — build `KmWyk6c6goLonxs3zP1Uc` (worktree 7781e475; tutor/embed 200,
+> :3007/:3008 untouched). Praveen's RUN 11 on the wave-13 fix (embed-1793938266974, 5.6 min; dump `scratchpad/praveen/p14.txt`):
+> 228 s "Okay, sorry, can we do speaking more naturally?" → NO pick ("okay"/"sorry" not option words) → the brain answered
+> kind "move" with a say that read a sentence + "Listen, then repeat after me" → the engine advanced to the summary (recap
+> cards 2/2 painted there — the W13-C fix works) while the student was told to repeat; "repeat the question" then re-read the
+> summary's check question (the open ask). W14-A: discourse fillers (okay, ok, sorry, yes, yeah, sure, well, actually, I
+> think / prefer / want) stripped in resolveMenuPick → option 3 → the learner's corrected sentences. W14-B:
+> `typedMoveReadsAsItem` (move + repeat-ask wording, in a part with itemsLeft) ⇒ server refusal `move_reads_as_item`; the
+> retry must be item / retry (a second move ⇒ fallback retry / item); prompt: a move never asks for a repeat. Gate: test:all
+> 441/443 (baseline), tsc clean. praveen-4 wiped again (backup `scratchpad/praveen/backup-to0i2x-run11.json`). NEXT:
+> Praveen's final test → he sends the Josh email (draft docs/whitelabel/gdi/email-josh-2026-11-05.md) → tester dumps.
+
 > **STATUS 11-05 19:47 PST: WAVE 13 FIX DEPLOYED to :3009** — build `dlxTq-Guboj8_NfaeBygk` (worktree ad6edea0; tutor/embed 200,
 > :3007/:3008 untouched). Praveen's RUN 10 on wave 13 (embed-1793933941303, 9.9 min, fresh praveen-4; dump
 > `scratchpad/praveen/p13.txt`): W12-A verified live (501 s "complete sentence." mid-part → `menu_pick_resolved: 2` + the
