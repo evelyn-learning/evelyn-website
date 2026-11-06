@@ -1,5 +1,16 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
+> **RUN 15 VERIFIED 11-06 12:50 PST (on wave 17 `ZVZ43q-dFz2qbxIRkB68t`)** — embed-1793996910010, 20.0 min, fresh praveen-4,
+> Praveen: "went quite well, no issues; tutor stuck a few seconds once, recovered". Dump `scratchpad/praveen/p18.txt`; PDF
+> `~/Downloads/Tutor_Session_Work_projects_2026-11-06 (4).pdf` (14 pp, cards + Recap + wrap line in the transcript, fine).
+> TIME BOX LIVE: `wrap_line_spoken` at 1086 s (18:06), student "Can we go to the summary now?" 1153 s → summary review
+> question, "I would like to wrap up" 1172 s → stop request → brain close + "See you next time" 1178 s; post-close chatter
+> silenced ×3 (1184–1197 s: "can you give me the key ideas of the summary?", "Is the session over?"); `partner_pool_cap_end`
+> at 1200.4 s ended it (its farewell = a second goodbye 22 s after the brain's). The stall = 88 s brain_turn 15.5 s
+> (first sentence 11.2 s, Haiku latency spike on level-check Q2; thinking chime covered it) — not a bug. No code change.
+> Minor (not fixed): after the brain's close, a request for the summary is silenced until the auto-end / cap — a
+> post-close "summary please" could re-open the recap. praveen-4 holds run 15 (wipe on request).
+
 > **STATUS 11-06 12:15 PST: WAVE 17 DEPLOYED to :3009** — build `ZVZ43q-dFz2qbxIRkB68t` (worktree fe5732bd; tutor/embed 200,
 > :3007/:3008 untouched). Praveen's RUN 14 (embed-1793992648820, 18.3 min, fresh praveen-4, "session was good" + 2 issues;
 > dump `scratchpad/praveen/p17.txt`): (1) chip "14:15 / 30:00" — `docs/whitelabel/gdi/demo/mint-demo-links.js` mints every
