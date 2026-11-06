@@ -220,5 +220,17 @@ test('W12-A (wave 12, run 8 282 s): a mid-part request lead is a filler — "Let
   assert.equal(idx('Try again.'), null);
 });
 
+test('W13-A (wave 13, run 9 336 s): a Japanese menu read ends each option at 、 / 。 — the trailing "Which one would you like?" no longer glues "one" onto option 4', () => {
+  const JA_READ = '発音の練習ですね。 次の4つから選んでください。 1) 単語を練習する、2) 一つの文を練習する、3) もっと自然に話す、4) 練習を飛ばして次に進む。 どれにしますか？ Which one would you like? Say the number.';
+  assert.deepEqual(parseMenuOptions(JA_READ), [
+    { index: 1, text: '単語を練習する' }, { index: 2, text: '一つの文を練習する' }, { index: 3, text: 'もっと自然に話す' }, { index: 4, text: '練習を飛ばして次に進む' },
+  ]);
+  assert.equal(resolveMenuPick('Uh, one.', JA_READ)?.index, 1);
+  assert.equal(resolveMenuPick('four', JA_READ)?.index, 4);
+  assert.equal(resolveMenuPick('2', JA_READ)?.text, '一つの文を練習する');
+  // an English read with a trailing question keeps its options clean too
+  assert.deepEqual(parseMenuOptions('1) words, 2) a sentence! Which one would you like?'), [{ index: 1, text: 'words' }, { index: 2, text: 'a sentence' }]);
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall menu-pick tests passed');

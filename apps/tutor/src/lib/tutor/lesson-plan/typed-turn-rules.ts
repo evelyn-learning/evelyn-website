@@ -151,6 +151,10 @@ export interface AllowedNextContext {
    *  asked to be spoken to in this session language (its English name, e.g. "English") — this turn re-asks the open ask
    *  in that language; the exit / budget rows wait one turn. */
   languageRequest?: string | null;
+  /** W13-C (wave 13, run 9 585 s "which of these four sentences" with none on the board): the learner's own sentences of
+   *  this lesson (model + correction cards, oldest first) — the client boards them when the recap opens; the recap's
+   *  turn_state lists them (≤ 4 × 120) so the review refers to what is on the board. */
+  learnerSentences?: readonly string[];
 }
 
 /** A (fix wave 6): offers made in a part (a made offer without a count is the first). */
@@ -419,7 +423,9 @@ export function turnStateLine(ctx: AllowedNextContext): string {
     const phrases = (segmentOf(ctx.plan, segId)?.requiredPhrases ?? []).filter((p) => typeof p === 'string' && p.trim());
     const missing = ctx.missingRequiredPhrases ? missingPhrasesFor(ctx) : undefined;
     if (missing) { if (missing.length) attrs.push(['required_phrases', missing.join('|')]); }
-    else if (first && phrases.length) attrs.push(['required_phrases', phrases.join('|')]);
+    else if (first && phrases.length) attrs.push(['required_phrases', phrases.join('|')]);    // W13-C: the learner's sentences on the board (the client painted them on entry).
+    const learner = (ctx.learnerSentences ?? []).filter((x) => typeof x === 'string' && x.trim()).slice(0, 4).map((x) => x.trim().slice(0, 120));
+    if (learner.length) attrs.push(['learner_sentences', learner.join('|')]);
   }
   // G2: the card questions the student already answered on this part (the brain re-asked one in r55).
   const answered = (state.answeredCards[segId] ?? []).slice(0, 4).map((q) => q.slice(0, 120));
@@ -617,8 +623,12 @@ export function effectsForField(ev: TypedFieldValue, ctx: FieldEffectContext): T
       return typedSentences(ev.value.trim()).map((x) => cardableStudentSentence(x.trim()))
         .filter((x): x is string => !!x).slice(0, 2).map((sentence) => ({ kind: 'model_card' as const, sentence }));
     }
+    // W13-B (wave 13, run 9 50–108 s): the level check corrects nothing aloud, but each answer's clean written form is
+    // carded whatever the verdict (the brain's `board`; the words the student did not say underlined) — one answer was
+    // boarded (verdict correct) and the other two were not, then the part moved.
+    const levelCheck = typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown) === 'level_check';
     // R4/M1: the board sentence passes the same card guard the prose cards use (a bare "Yes." / two words is no card).
-    const sentence = ctx.state.pendingVerdict === 'correct' ? cardableStudentSentence(ev.value.trim()) : null;
+    const sentence = ctx.state.pendingVerdict === 'correct' || levelCheck ? cardableStudentSentence(ev.value.trim()) : null;
     if (!sentence) return [];
     // C (fix wave 6): the words the model sentence changed are underlined, as on a correction card.
     const emph = boardEmphasis(ctx.studentLast, sentence);

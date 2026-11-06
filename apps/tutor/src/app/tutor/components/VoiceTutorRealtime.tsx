@@ -1658,6 +1658,14 @@ export function VoiceTutorRealtime({
   /** V5 (fix wave 2): the learner's corrected sentences of this lesson (typed correction cards), newest first —
    *  they refill the pronunciation part's items after the authored ones. Typed path only. */
   const typedCorrectedSentencesRef = useRef<string[]>([]);
+  /** W13-C (wave 13, run 9 585 s): every learner sentence carded this lesson (model + correction cards), newest first,
+   *  max 12 — boarded (oldest first, ≤ 4) when the recap opens and listed in its turn_state as learner_sentences. */
+  const typedLearnerSentencesRef = useRef<string[]>([]);
+  const rememberLearnerSentence = (sentence: string): void => {
+    const t = sentence.trim();
+    if (t) typedLearnerSentencesRef.current = [t, ...typedLearnerSentencesRef.current.filter((x) => x !== t)].slice(0, 12);
+  };
+  const typedLearnerSentencesForRecap = (): string[] => typedLearnerSentencesRef.current.slice(0, 4).reverse();
   const armPronunciationCheck = (referenceText: string, kind: string) => {
     const capture = clipCaptureRef.current;
     if (!capture) return;
@@ -12449,6 +12457,7 @@ export function VoiceTutorRealtime({
     typedTurnStateRef.current = createTypedTurnState();
     typedCorrectedSentencesRef.current = [];
     typedPartQuestionsAnsweredRef.current = null;
+    typedLearnerSentencesRef.current = [];
     // realtime-2: a new plan must be re-injected into the RT-2 session.
     lessonPlanV2InjectedRef.current = false;
     planLoadSettledIdRef.current = null;
@@ -15342,6 +15351,8 @@ export function VoiceTutorRealtime({
             pronunciationLowScore: pronunciationLowScoreThisTurn,
             // W11-B (wave 11, run 7 187 s): the student asked for a language — re-ask the open ask in it, no exit row.
             languageRequest: typedLanguageRequestThisTurn,
+            // W13-C: the learner's sentences on the recap board (turn_state learner_sentences).
+            learnerSentences: typedLearnerSentencesForRecap(),
             lessonElapsedMs: typedLessonElapsedMs,
             // V6: next_card's key ideas are filtered to the held level, as the board shows them.
             workingLevel: workingLevelRef.current?.level ?? null,
@@ -15377,6 +15388,17 @@ export function VoiceTutorRealtime({
             const res = await handleWhiteboardCommand([cmd], { anchorSentence, pageBreakOnTransition: true });
             onDebugEvent?.('segment_card_auto', `${to}${res?.assignedIds?.[0] ? ` id=${res.assignedIds[0]}` : ' not placed'} "${toStatement.slice(0, 50)}" (typed)`);
           }
+          // W13-C (wave 13, run 9 585 s): the recap reviews the learner's OWN sentences — they go on its page as it opens
+          // (oldest first, ≤ 4), so "these sentences" has a referent; turn_state lists the same ones (learner_sentences).
+          if (toSeg?.kind === 'recap') {
+            const learner = typedLearnerSentencesForRecap();
+            if (learner.length) {
+              const cmds = learner.map((sentence) => ({ action: 'showSentence', sentence }) as unknown as WhiteboardCommand);
+              const res = await handleWhiteboardCommand(cmds, { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true });
+              for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
+              onDebugEvent?.('recap_sentences_boarded', `${res?.assignedIds?.length ?? 0}/${learner.length}: ${learner.map((x) => x.slice(0, 30)).join(' | ')}`);
+            }
+          }
         };
         /** W2: paint a latched engine move once per student turn (first typed field, or the turn end when none came). */
         const paintTypedEngineMove = async (anchorSentence: number): Promise<void> => {
@@ -15406,6 +15428,8 @@ export function VoiceTutorRealtime({
                 } as WhiteboardCommand;
                 const res = await handleWhiteboardCommand([modelCmd], { anchorSentence, sentenceBoardAuto: true, studentSentenceCard: true, holdDeferredPage: true });
                 for (const id of res?.assignedIds ?? []) autoSentenceCardIdsRef.current.add(id);
+                // W13-C: a placed model card is one of the learner's sentences (the recap boards them).
+                if (res?.assignedIds?.[0]) rememberLearnerSentence(e.sentence);
                 if (res?.assignedIds?.[0]) typedModelCardPlaced = true;
                 onDebugEvent?.('typed_turn_effect', `model_card${typedCardPlacement(res)}`);
                 break;
@@ -15413,6 +15437,7 @@ export function VoiceTutorRealtime({
               case 'correction_card': {
                 // V5: remembered (newest first) for the pronunciation refill.
                 if (e.corrected.trim()) typedCorrectedSentencesRef.current = [e.corrected.trim(), ...typedCorrectedSentencesRef.current.filter((x) => x !== e.corrected.trim())].slice(0, 12);
+                rememberLearnerSentence(e.corrected);
                 // emphasis from the field; emphasisAt = the word positions the SentenceCard marks.
                 const emph = correctionEmphasis(e.corrected, e.emphasis);
                 const cmd = {

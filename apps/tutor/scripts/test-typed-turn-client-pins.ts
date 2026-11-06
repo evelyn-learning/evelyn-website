@@ -485,5 +485,15 @@ test('W9-B3 (fix wave 9): the client passes pronunciationRepeatDue from this tur
   assert.ok(/onDebugEvent\?\.\('pronunciation_rearmed', `typed-retry "\$\{e\.text\.slice\(0, 80\)\}"`\)/.test(VTR), 'pronunciation_rearmed event');
 });
 
+test('W13-C (wave 13, run 9 585 s): the learner sentences ref collects model + correction cards, is boarded on recap entry, and rides the allowed context', () => {
+  const VTR = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(VTR.includes('const typedLearnerSentencesRef = useRef<string[]>([]);'), 'ref');
+  assert.ok(VTR.includes('const rememberLearnerSentence = (sentence: string): void =>'), 'helper');
+  assert.ok(VTR.includes('if (res?.assignedIds?.[0]) rememberLearnerSentence(e.sentence);'), 'model card remembered when placed');
+  assert.ok(VTR.includes('rememberLearnerSentence(e.corrected);'), 'correction card remembered');
+  assert.ok(VTR.includes("onDebugEvent?.('recap_sentences_boarded'"), 'boarded on recap entry');
+  assert.ok(VTR.includes('learnerSentences: typedLearnerSentencesForRecap()'), 'allowed context');
+});
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall typed-turn client pins passed');

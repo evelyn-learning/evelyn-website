@@ -542,5 +542,11 @@ test('W9-C (fix wave 9, run 5 997 s): check_question_unasked retry text — ask 
   assert.ok(m.includes('ALREADY SPOKEN'));
 });
 
+test('W13 (wave 13, run 9): prompt — level-check board whatever the verdict; learner_sentences glossary + recap review from the board', () => {
+  assert.ok(TYPED_TURN_INSTRUCTIONS.includes('In the level check (part=level_check), `board` is the clean corrected form of EVERY answer, whatever the verdict'), 'board line');
+  assert.ok(/learner_sentences = the student's own corrected sentences of this lesson/.test(TYPED_TURN_INSTRUCTIONS), 'glossary');
+  assert.ok(TYPED_TURN_INSTRUCTIONS.split('THE RECAP PART')[1].split('\n\n')[0].includes('`learner_sentences` are already on the board when the recap opens'), 'recap block');
+});
+
 if (failed) { console.log(`\n${failed} typed-turn test(s) FAILED`); process.exit(1); }
 console.log('\nall typed-turn tests passed');

@@ -1053,5 +1053,26 @@ test('W12-A: a mid-part re-pick rides the request — items_left are the new lis
   assert.equal(typedPronunciationItemsFor({ words: ['responsibilities'], sentences: SENTS }, 'a complete sentence', [])[0], SENTS[0]);
 });
 
+// ---- Wave 13 (run 9) ----
+test('W13-B (run 9 50–108 s): on the level check the board is carded whatever the verdict — the written corrected form of each answer', () => {
+  const ev = { field: 'board' as const, value: 'I am a sales manager at Nagoya Corporation.' };
+  const none = effectsForField(ev, fctx('level-check', { state: { pendingVerdict: 'none' }, studentLast: 'Uh, I sales manager Nagoya Corporation.' }));
+  assert.equal(none.length, 1); assert.equal(none[0]!.kind, 'model_card');
+  assert.ok(none[0]!.kind === 'model_card' && none[0]!.emphasis?.includes('am') && none[0]!.emphasis?.includes('at'), JSON.stringify(none));
+  assert.equal(effectsForField(ev, fctx('level-check', { state: { pendingVerdict: null }, studentLast: 'x' })).length, 1, 'no verdict field yet');
+  assert.equal(effectsForField(ev, fctx('level-check', { state: { pendingVerdict: 'partly_correct' }, studentLast: 'x' })).length, 1);
+  assert.deepEqual(effectsForField({ field: 'board', value: 'Yes.' }, fctx('level-check', { state: { pendingVerdict: 'none' }, studentLast: 'yes' })), [], 'a bare yes is no card');
+  assert.deepEqual(effectsForField(ev, fctx('topic-intro', { state: { pendingVerdict: 'none' }, studentLast: 'x' })), [], 'other parts: verdict none still drops the board');
+});
+test('W13-C (run 9 585 s "which of these four sentences" with none on the board): learner_sentences rides turn_state on the recap only, ≤ 4 × 120', () => {
+  const L = ['I help customers choose the best washing machine.', 'I have worked for Nagoya for five years.', 'I attended a robotics exhibition in Canada two months ago.', 'I show my customers the latest models.', 'Fifth sentence.'];
+  const line = turnStateLine(ctx('summary', { lastPart: true, learnerSentences: L, state: ask('question') }));
+  assert.ok(line.includes(`learner_sentences="${L.slice(0, 4).join('|')}"`), line);
+  assert.ok(!turnStateLine(ctx('open-conversation', { learnerSentences: L, state: ask('question') })).includes('learner_sentences'), 'recap only');
+  assert.ok(!turnStateLine(ctx('summary', { lastPart: true, learnerSentences: [], state: ask('question') })).includes('learner_sentences'), 'none ⇒ omitted');
+  const long = turnStateLine(ctx('summary', { lastPart: true, learnerSentences: ['x'.repeat(200)], state: ask('question') }));
+  assert.ok(long.includes(`learner_sentences="${'x'.repeat(120)}"`), 'cut to 120');
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

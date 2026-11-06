@@ -13,7 +13,10 @@
 
 export interface MenuOption { index: number; text: string }
 
-const MENU_OPTION_RE = /\b([1-9])\)\s*([^,;.?]+?)(?=,?\s*(?:or\s+)?\b[1-9]\)|[.?]|$)/g;
+// W13-A (wave 13, run 9 336 s): a Japanese read ("1) 単語を練習する、2) …、4) 練習を飛ばして次に進む。 どれにしますか？ Which one would
+// you like?") ran option 4 into the trailing question, so its text held "one" and the I-4 number-content rule made "Uh, one."
+// pick 4 (skip). Fullwidth separators and terminators (、；。！？) end an option too.
+const MENU_OPTION_RE = /\b([1-9])\)\s*([^,;.?!、；。！？]+?)(?=[,、]?\s*(?:or\s+)?\b[1-9]\)|[.?!。！？]|$)/g;
 
 /** The numbered options of `text` (≥ 2, else null), in order. */
 export function parseMenuOptions(text: string | null | undefined): MenuOption[] | null {
