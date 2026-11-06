@@ -1,5 +1,19 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
+> **STATUS 11-05 19:47 PST: WAVE 13 FIX DEPLOYED to :3009** — build `dlxTq-Guboj8_NfaeBygk` (worktree ad6edea0; tutor/embed 200,
+> :3007/:3008 untouched). Praveen's RUN 10 on wave 13 (embed-1793933941303, 9.9 min, fresh praveen-4; dump
+> `scratchpad/praveen/p13.txt`): W12-A verified live (501 s "complete sentence." mid-part → `menu_pick_resolved: 2` + the
+> sentence armed), pick "One." → word, close carried the feedback phrase. DEFECT: `recap_sentences_boarded: 0/4` — every
+> card refused by Task 25 §D1 ("student card stays on the part it answered") + the earlier-page skip → `recapBoard` option on
+> handleWhiteboardCommand → duplicateSentenceAction returns reshow (draw when absent; once per page / batch); two auto-arm
+> source pins updated for the new trailing argument. Minor, deferred: the close turn at 575 s wrote no board when asked to
+> write the two sentences (brain left `board` empty on a close); the level check boarded 1 of 3 answers (brain gave verdict
+> none + empty board on Q1–Q2 despite the W13-B prompt line). Gate: test:all 441/443 (baseline), tsc clean. Links: all six
+> tester home links (josh, james, tester-1..4 in ~/.evelyn/partners/gdi-trial.links.home.prod.txt) return 200 with the Start
+> button, exp ≈29 d, no prior sessions / profiles. Pool: `partner-pool.sh set gdi-demo 882` → 300 min remaining (used 582
+> kept). Email draft (laptop-only): docs/whitelabel/gdi/email-josh-2026-11-05.md. NEXT: Praveen's final test → he sends
+> the email to Josh → tester sessions → dumps.
+
 > **STATUS 11-05 18:56 PST: WAVE 13 DEPLOYED to :3009** — build `d7H7EITA4bi3U4uBbcaE3` (worktree 65f2106c; tutor/embed 200,
 > :3007/:3008 untouched). From Praveen's RUN 9 on wave 12 (embed-1793931842191, 11.5 min, 49 turns, fresh praveen-4 account;
 > dump `scratchpad/praveen/p12.txt` of session c95fc473): wave 12 HELD at the close (the close carried "one thing you did
