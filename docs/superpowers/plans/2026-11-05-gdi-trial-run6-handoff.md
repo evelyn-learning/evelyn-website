@@ -1,5 +1,22 @@
 # GDI trial — Praveen's PROD run 6 (11-05, on wave 9) → fix wave 10 handoff
 
+> **STATUS 11-05 16:25 PST: WAVE 11 DEPLOYED to :3009** — build `kJmDelL9OkvaSsy7rMvFu` (worktree 2ae65463 + review fix e139301e;
+> 76 s deploy, embed/home 200, :3007/:3008 untouched). From Praveen's RUN 7 on wave 10 (embed-1793919909341, 5.5 min: wave 10
+> held — pick 1 armed the WORDS, menu barge-ins exempt): (A) scores 84/85/79/81/16 and the brain never had him repeat a word
+> → `PRONUNCIATION_LOW_SCORE = 60` (`pronunciationLowScore`: a word or the overall below 60) ⇒ typed row `['retry']` once per
+> item, `repeat_due="low_score"` (yields when the part's post-due holds are spent); (B) 187 s "Can you please talk in English?"
+> → the exit row was `[move]` alone (items used up, offer made twice) → new `language-request.ts`: a clause-based detector
+> (`languageRequestIn`; "How do you say it in English?" and other QUESTIONS about English never fire), the first note carries the
+> previous tutor turn (≤700 chars) with the order to restate it in that language then re-ask, a sticky preference note on every
+> later turn (+ "Leave support_ja empty" for English), typed row = re-ask of the open ask only (none ⇒ menu/question, item ⇒
+> retry), the reducer counts nothing on that turn (no 3rd offer, no menu ask, no retry, open ask kept), say budget 4 on that turn
+> (client+server via `TypedTurnRequest.languageRequest`), kill switch `NEXT_PUBLIC_TUTOR_LANGUAGE_REQUEST=off`. Gate: test:all
+> 441/443 (baseline), tsc clean; fresh review (fable): 1 Critical (detector false positives) + 3 Important fixed; deferred
+> minors: "move on, in English please" re-asks before moving (one turn); "Can you say that in Japanese?" may be a translation
+> request (now excluded with the verb-object rule); recentTutorTurnsRef after a perception-cancelled turn not traced.
+> NEXT: Praveen's run 8 → dump → check `repeat_due="low_score"` fires on a <60 word and the word is re-armed; `language_request`
+> event + the restated explanation in English; no false fire on "how do you say … in English?".
+
 > **STATUS 11-05 15:02 PST: WAVE 10 DEPLOYED to :3009** — build `ZvEYlFjmHglZHYMe3eD6a` (worktree HEAD ff417710, code 37b8d1cf; deploy 84 s; embed/home 200; :3007/:3008 untouched). Built on `gdi-trial-lesson`: Commits 5f9365ff (items follow the menu pick),
 > 28b43f8b (pending-answer vocabulary from the numbered card), e9bfdfaa (retry/nudge rows + consumed-note re-plant),
 > + the review fix pass (nudge retry not counted and keeps the item open; consumed record clears on a note-less turn and
