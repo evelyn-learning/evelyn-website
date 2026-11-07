@@ -1,6 +1,16 @@
 /**
  * Phase 3(c) — gap-targeted practice retrieval (item → LO).
  *
+ * RESPONSE FORMATS (v1.23.0): an optional `formats` on the request narrows
+ * what is served to items whose `practiceFormatOf` is listed (an item with no
+ * `responseFormat` counts as 'free'; a 'drawn' item never matches). The
+ * filter runs on the retrieval pool AFTER every other gate and BEFORE the
+ * shortfall is computed, so a short pool of the right kind is topped up (or
+ * reported short) honestly. Generation runs only when `formats` includes
+ * 'mcq' or 'numeric' (all the generator can make) and a generated item
+ * outside the list is never served. Anchors stay unfiltered: an anchor is a
+ * template, never itself served. Omitted `formats` = every format, as before.
+ *
  * RETRIEVAL, not generation (the brain-gen Layer 2 stays stubbed). A scope
  * resolves to a union of:
  *   - plan try-yourself problems whose plan `los[]` includes the LO code, and
@@ -836,7 +846,11 @@ export async function retrievePractice(
   // has already been served, BEFORE slicing to count, so a fresh item fills
   // the freed slot instead of a repeat crowding it out.
   const excludeSet = req.excludeIds?.length ? new Set(req.excludeIds) : null;
-  const available = excludeSet ? ordered.filter((it) => !excludeSet.has(it.id)) : ordered;
+  const notExcluded = excludeSet ? ordered.filter((it) => !excludeSet.has(it.id)) : ordered;
+  // v1.23.0 `formats`: keep only the kinds asked for, before the shortfall.
+  const formatSet = req.formats?.length ? new Set<string>(req.formats) : null;
+  const wantsFormat = (it: PracticeItem) => !formatSet || formatSet.has(practiceFormatOf(it));
+  const available = formatSet ? notExcluded.filter(wantsFormat) : notExcluded;
 
   // Shortfall vs. what was asked for, computed BEFORE slicing — how many more
   // items the retrieval pool alone couldn't supply. A thin pool degrades to
@@ -873,7 +887,10 @@ export async function retrievePractice(
   // PRACTICE_GEN_AUDITED_ONLY_PARTNERS: the same for a caller restricted to
   // audited generated items — a freshly generated item is not on the list.
   const genDisabledForCaller = practiceGenDisabledForPartner(who?.partnerId) || auditedOnlyForPartner(who?.partnerId);
-  if (shortfall > 0 && 'loId' in req.scope && !essayNode && !genDisabledForCaller) {
+  // The generator makes only mcq and numeric items: a written-only request
+  // (frq/free) must never spend a generation.
+  const formatsAllowGeneration = !formatSet || formatSet.has('mcq') || formatSet.has('numeric');
+  if (shortfall > 0 && 'loId' in req.scope && !essayNode && !genDisabledForCaller && formatsAllowGeneration) {
     const loId = req.scope.loId;
     // Topic tag derived ENGINE-SIDE from the LO's owning plan — never the
     // portal's `courseId`, which is a Mongo ObjectId hex on the real wire,
@@ -950,13 +967,22 @@ export async function retrievePractice(
   const generatedDeduped = generated.filter(
     (it) => !availableIds.has(it.id) && !(excludeSet?.has(it.id) ?? false) && !isWithdrawnItem(it.id)
       // Audited-only caller: holds for any injected generator too.
-      && servableToPartner(it.id, who?.partnerId),
+      && servableToPartner(it.id, who?.partnerId)
+      && wantsFormat(it),
   );
   const combined = [...spread, ...generatedDeduped];
 
   const items = combined.slice(0, req.count);
   if (items.length > 0 || req.count <= 0) return { items };
   return { items, emptyReason: practiceEmptyReason(genOutcome) };
+}
+
+/** The response format an item is served as; a missing one counts as 'free'
+ *  (v1.23.0 `formats` filter). */
+export function practiceFormatOf(
+  item: Pick<PracticeItem, 'responseFormat'>,
+): 'mcq' | 'numeric' | 'frq' | 'free' | 'drawn' {
+  return item.responseFormat ?? 'free';
 }
 
 /** See `PracticeEmptyReason`. `outcome` is null when generation was never
