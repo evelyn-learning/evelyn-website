@@ -51,7 +51,7 @@ import { buildRailModel, secondTutorLanguage, fixedScriptPartTitle, fixedScriptO
 import { extractCommandTitle, catalogItemTitle } from '../src/lib/tutor/whiteboard/catalog';
 import { offerReasked, closeOfferAccepted, FIXED_SCRIPT_CLOSE_OFFER_ACCEPTED_NOTE, offerItemAskedIn, offerReaskValidatorDecision, OFFER_REASKED_AFTER_ACCEPT_REASON, offerAcceptedReplantDue } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { fixedScriptMidLesson, stopRequestDecision, fixedScriptStopRequestNote, fixedScriptRemainingPartLabels, FIXED_SCRIPT_STOP_CONFIRMED_NOTE } from '../src/lib/tutor/lesson-plan/fixed-script';
-import { isStopRequest, isExplicitStop, choosesFinish } from '../src/lib/tutor/voice/lesson-close';
+import { isStopRequest, isExplicitStop, choosesFinish, isFirmStop } from '../src/lib/tutor/voice/lesson-close';
 import { requiredPhraseMissingReason, answeredInPartNote, answeredGuardPart, lessonTimeGuardDecision, lessonTimeGuardLead, lessonTimeGuardSkippedLabels, lessonTimeGuardDueMs, postDueHoldDecision, FIXED_SCRIPT_POST_DUE_MAX_HOLDS, nextSegmentId as nextSegmentId41 } from '../src/lib/tutor/lesson-plan/fixed-script';
 import { reasksAnsweredQuestion, answeredCardQuestion, reasksCardQuestion } from '../src/lib/tutor/voice/correct-retry';
 import { FIXED_SCRIPT_HELD_ADVANCE_MAX_OFFER_WAITS, isVerdictEchoSentence, judgeNoteStaleForPart } from '../src/lib/tutor/lesson-plan/fixed-script';
@@ -1865,6 +1865,30 @@ test('46 §5b: a new question that quotes the same two sentences is not a re-ask
   const answered = ['Can you tell me the difference between "I have worked here for five years" and "I worked here five years ago"?'];
   assert.equal(reasksAnsweredQuestion46('Which sentence fits Nagoya Corporation today: "I have worked here for five years" or "I worked here five years ago"?', answered), null);
   assert.ok(reasksAnsweredQuestion46('So, can you tell me the difference between "I have worked here for five years" and "I worked here five years ago"?', answered), 'the same question again is still a re-ask');
+});
+
+// ── W18 (GDI 11-09): Josh embed-1794204711914 387 s + Praveen embed-1794186480072 310–345 s — the tutor kept teaching ──
+test('W18: the live stop utterances are firm stops and close mid-lesson at once', () => {
+  const live = ['Okay, please stop. I would like to end the session for now.', 'Can we finish the session? I have to go somewhere.',
+    'I want to finish the session, please. I have to go.', 'Please end it.', 'I have to go.', 'Sorry, I need to leave now.',
+    "Let's end the lesson here.", 'Could we stop the session now?', "Let's stop here.", 'Can we stop here?', 'Stop for today.', "That's enough for today."];
+  const fresh = (t: string) => stopRequestDecision({ stopRequest: isStopRequest(t), midLesson: true, choicePending: false, explicitStop: isExplicitStop(t), choosesFinish: choosesFinish(t), firmStop: isFirmStop(t) });
+  for (const t of live) { assert.equal(isFirmStop(t), true, t); assert.equal(isStopRequest(t), true, t); assert.equal(fresh(t), 'close', t); }
+  // soft requests keep the finish-or-stop choice; a bare stop / please-stop may be a barge-in on the tutor's speech
+  for (const t of ['We can finish it.', "Let's finish.", 'Stop.', 'Please stop.', 'Stop, please.']) {
+    assert.equal(isFirmStop(t), false, t); assert.equal(fresh(t), 'ask-choice', t);
+  }
+  // lesson talk stays lesson talk
+  for (const t of ['We can finish the report on Friday.', 'I have to go to Osaka next week.', 'I usually stop working at six.', 'I finished the session with the client yesterday.',
+    'My manager had to end the meeting early.', 'I need to leave the office at six.', 'I went to the robotics exhibition in Tokyo.', 'Can we continue from this point next time?', 'Bye.']) {
+    assert.equal(isFirmStop(t), false, t);
+  }
+  for (const t of ['We can finish the report on Friday.', 'I have to go to Osaka next week.', 'I went to the robotics exhibition in Tokyo.', 'Can we continue from this point next time?']) assert.equal(isStopRequest(t), false, t);
+  // outside a fixed-script mid-lesson part the decision stays none (the closing part closes on its own row)
+  assert.equal(stopRequestDecision({ stopRequest: true, midLesson: false, choicePending: false, firmStop: true }), 'none');
+  pin(VTR, /firmStop: isFirmStop\(transcript\),/);
+  pin(VTR, /studentStop: typedStopDecision === 'close',/);
+  pin(VTR, /if \(\(isStandaloneStopUtterance\(t\) \|\| isFirmStop\(t\)\) && !\(TUTOR_STOP_REQUEST_CHOICE/);
 });
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

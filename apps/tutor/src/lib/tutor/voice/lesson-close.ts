@@ -185,15 +185,58 @@ const ENOUGH_RE = /^(?:(?:ok(?:ay)?|well|so)[,\s]+)?that['’]?s (?:enough|all)(
 const QUESTION_END_RE = /[?？]\s*$|(?:です|ます|でしょう)?か[。.]?\s*$/;
 const MODAL_REQUEST_RE = /^(?:(?:ok(?:ay)?|so|well)[,\s]+)?(?:can we|could we|shall we)\b/i;
 const JA_PAST_DONE_RE = /(?:終|お)わりました/;
-export function isStopRequest(studentText: string | null | undefined): boolean {
+/**
+ * W18 (GDI 11-09: Josh embed-1794204711914 387 s "Okay, please stop. I would
+ * like to end the session for now."; Praveen embed-1794186480072 310 s "Can we
+ * finish the session? I have to go somewhere.", 343 s "I want to finish the
+ * session, please. I have to go.", 345 s "Please end it."): none matched the
+ * whole-utterance shapes above (a second sentence, "the session", "please"),
+ * so the stop never reached the engine and the tutor kept teaching. A FIRM
+ * stop is one SENTENCE of the utterance that is an explicit stop, a request to
+ * stop / end / finish the SESSION, a "please stop / end it", or a leaving line
+ * ("I have to go"). The session / leaving words make it unambiguous, so it
+ * closes at once (no finish-or-stop choice). Whole sentences only: "We can
+ * finish the report on Friday." / "I have to go to Osaka next week." are
+ * lesson talk.
+ */
+const FIRM_PAD = String.raw`(?:(?:sorry|ok(?:ay)?|so|well|um+|uh+|yes|yeah|no|please|actually|i think|maybe)[,\s]+)*`;
+const SESSION_STOP_RE = new RegExp(String.raw`^${FIRM_PAD}(?:(?:can|could) (?:we|you|i)|shall we|let['’]?s|let us|i (?:want|would like|'d like|wanna|need) to|i want|we (?:can|could|should|need to))?\s*(?:please\s+)?(?:finish|stop|end|quit|close|wrap up)\s+(?:the|this|our|today['’]?s)\s+(?:session|lesson|class)(?:\s+(?:now|here|for now|for today|today|early|please))*[\s,]*(?:please)?\s*[.!?]?$`, 'i');
+// "please end it" is firm; a bare "please stop" / "stop, please" can be a barge-in on the tutor's speech — a stop
+// REQUEST only (the choice), firm when another sentence of the utterance is.
+const PLEASE_END_RE = new RegExp(String.raw`^${FIRM_PAD}(?:please\s+end(?: (?:it|this))?|end (?:it|this),?\s+please)(?:\s+(?:here|now|for now|for today))*\s*[.!?]?$`, 'i');
+const PLEASE_STOP_RE = new RegExp(String.raw`^${FIRM_PAD}(?:please\s+stop|stop,?\s+please)(?:\s+(?:here|now|for now|for today))*\s*[.!?]?$`, 'i');
+const LEAVING_RE = new RegExp(String.raw`^${FIRM_PAD}(?:i|we)\s+(?:have to|need to|must|'ve got to|have got to|gotta|got to)\s+(?:go|leave|run)(?:\s+(?:now|soon|somewhere|already|right now|sorry))*\s*[.!]?$`, 'i');
+function utteranceSentences(t: string): string[] {
+  return t.split(/(?<=[.!?？。])\s*/).map((s) => s.trim()).filter(Boolean);
+}
+export function isFirmStop(studentText: string | null | undefined): boolean {
   const t = (studentText ?? '').trim();
   if (!t || /^\s*\[/.test(t)) return false;
+  if (t.split(/\s+/).length > 30) return false;
+  const sentences = utteranceSentences(t);
+  // an explicit stop sentence of 2+ words ("Let's stop here.", "Stop for today.") — never a bare "Stop." / "Bye."
+  const explicitLong = (s: string) => isExplicitStop(s) && s.replace(/[^\p{L}\s'’]/gu, ' ').replace(/\b(?:please|ok(?:ay)?|yes|yeah|no|well|so|um+|uh+|thanks?|thank you)\b/gi, ' ').trim().split(/\s+/).length >= 2
+    && !/^(?:(?:good)?bye|see you)/i.test(s.replace(STOP_PAD_RE, '').trim());
+  if (sentences.some((s) => SESSION_STOP_RE.test(s) || PLEASE_END_RE.test(s) || LEAVING_RE.test(s) || explicitLong(s))) return true;
+  // "Okay, please stop. I would like to …": a please-stop beside another stop-shaped sentence
+  return sentences.length > 1 && sentences.some((s) => PLEASE_STOP_RE.test(s)) && sentences.some((s) => !PLEASE_STOP_RE.test(s) && isStopRequestCore(s));
+}
+/** The soft stop request (a please-stop included) — whole utterance, no firm check. */
+function isStopRequestCore(studentText: string): boolean {
+  const t = studentText.trim();
+  if (PLEASE_STOP_RE.test(t)) return true;
   const core = t.replace(STOP_PAD_RE, '').trim();
   if (QUESTION_END_RE.test(t) && !MODAL_REQUEST_RE.test(core)) return false;
   if (JA_PAST_DONE_RE.test(t)) return false;
   if (isStandaloneStopUtterance(t)) return true;
   if (core.split(/\s+/).length > 8) return false;
-  if (STOP_REQUEST_RE.test(core) || ENOUGH_RE.test(core)) return true;
+  return STOP_REQUEST_RE.test(core) || ENOUGH_RE.test(core);
+}
+export function isStopRequest(studentText: string | null | undefined): boolean {
+  const t = (studentText ?? '').trim();
+  if (!t || /^\s*\[/.test(t)) return false;
+  if (isFirmStop(t) || isStopRequestCore(t)) return true;
+  if (QUESTION_END_RE.test(t) || JA_PAST_DONE_RE.test(t)) return false;
   return t.length <= 12 && /終わり|おわり/.test(t);
 }
 /**

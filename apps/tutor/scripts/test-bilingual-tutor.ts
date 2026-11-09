@@ -1315,8 +1315,8 @@ test('20B1 fix round 1 (I1): the student end signal is sticky and feeds the clos
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   // Task 33 §E: mid-lesson on a fixed script the first request asks the choice (no latch).
   // Fix round 1 (B-1): only an explicit stop while the choice is pending latches.
-  assert.ok(vtr.includes('if (isStandaloneStopUtterance(t) && !(TUTOR_STOP_REQUEST_CHOICE'));
-  assert.ok(vtr.includes('&& !(stopChoicePendingRef.current && isExplicitStop(t)))) studentEndSignalRef.current = true;'));
+  assert.ok(vtr.includes('if ((isStandaloneStopUtterance(t) || isFirmStop(t)) && !(TUTOR_STOP_REQUEST_CHOICE'));
+  assert.ok(vtr.includes('&& !(stopChoicePendingRef.current && isExplicitStop(t)) && !isFirmStop(t))) studentEndSignalRef.current = true;'));
   assert.ok(vtr.includes('{ studentEndSignal: studentEndSignalRef.current }'));
   assert.ok(!/studentEndSignalRef\.current = false/.test(vtr), 'never cleared');
 });

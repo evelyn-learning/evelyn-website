@@ -159,6 +159,10 @@ export interface AllowedNextContext {
    *  back or a request (requestShaped), not an answer — the recap's check question stays open: the row is [question]
    *  (answer what they asked, then re-ask the check), and checkAnswered does not ride. */
   studentRequest?: boolean;
+  /** W18 (GDI 11-09, Josh embed-1794204711914 387 s / Praveen embed-1794186480072 310–345 s): the student's stop this
+   *  turn closes the lesson (stopRequestDecision 'close') — the row is [close] in any part (mid-lesson the brain's close
+   *  was refused illegal_kind and it asked one more question instead). */
+  studentStop?: boolean;
 }
 
 /** A (fix wave 6): offers made in a part (a made offer without a count is the first). */
@@ -262,7 +266,7 @@ function itemsLeft(ctx: AllowedNextContext): string[] {
  *  W2: after an engine move this turn, move / close are removed; an empty result is the new part's entry row. */
 export function allowedNextFor(ctx: AllowedNextContext): TypedNextKind[] {
   const row = allowedNextRow(ctx);
-  if (!ctx.engineMoved) return row;
+  if (!ctx.engineMoved || ctx.studentStop) return row;
   const rest = row.filter((k) => k !== 'move' && k !== 'close');
   if (rest.length) return rest;
   const kind = typedPartKind(ctx.plan, ctx.segId, ctx.levelKnown);
@@ -277,6 +281,7 @@ function allowedNextRow(ctx: AllowedNextContext): TypedNextKind[] {
   const moveOrClose: TypedNextKind = ctx.lastPart ? 'close' : 'move';
   const withRetry = (arr: TypedNextKind[]): TypedNextKind[] => (askOpen ? arr : arr.filter((k) => k !== 'retry'));
 
+  if (ctx.studentStop) return ['close'];
   // W10-3b (fix wave 10, run 6 987 s): a nudge on an open pronunciation item re-asks the SAME item (`retry` re-arms its
   // clip) — the `item` row let the nudge start another unpractised sentence.
   if (ctx.nudge) return [ask === 'none' ? 'question' : ask === 'item' ? 'retry' : ask, 'wait'];
@@ -455,7 +460,7 @@ export function turnStateLine(ctx: AllowedNextContext): string {
 /** X2: the phrases the server's close gate checks — the client's missing list (max 8, each ≤ 120 chars); none on the
  *  student's stop / move-on request (the prose close guard never refuses then either). */
 function closeRequiredPhrases(ctx: AllowedNextContext): string[] {
-  return ctx.studentMovedOn ? [] : missingPhrasesFor(ctx);
+  return ctx.studentMovedOn || ctx.studentStop ? [] : missingPhrasesFor(ctx);
 }
 /** F4.3: the client's missing list filtered once — non-empty strings, at most 8, each cut to 120 chars — for both
  *  turn_state's required_phrases and the request's requiredPhrases (the route's shape limits). Pure. */

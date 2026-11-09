@@ -286,7 +286,7 @@ test('W1: typed budget input honours the prose gate + no-attempt rule; budgetDue
   // R6 (fix round 2): one nudge flag for both contexts — a nudge turn never marks the summary reviewed
   assert.ok(VTR.includes('const typedNudgeThisTurn = !!opts?.silent && isIdleNudgeDirective(transcript);'), 'nudge computed once');
   assert.ok(/const buildFieldEffectContext = \(\): FieldEffectContext => \(\{[\s\S]{0,900}nudge: typedNudgeThisTurn,\n\s*languageRequest: typedLanguageRequestThisTurn,\n\s*\}\);/.test(VTR), 'FieldEffectContext.nudge');
-  assert.ok(/studentReplied: Boolean\(typedStudentText\),\n(?:\s*\/\/[^\n]*\n)?\s*studentRequest: !!typedStudentText && requestShaped\(typedStudentText\),\n\s*nudge: typedNudgeThisTurn,\n\s*items: typedItemsFor\(typedFromSeg\),/.test(VTR), 'AllowedNextContext.nudge');
+  assert.ok(/studentReplied: Boolean\(typedStudentText\),\n(?:\s*\/\/[^\n]*\n)?\s*studentRequest: !!typedStudentText && requestShaped\(typedStudentText\),\n(?:\s*\/\/[^\n]*\n)?\s*studentStop: typedStopDecision === 'close',\n\s*nudge: typedNudgeThisTurn,\n\s*items: typedItemsFor\(typedFromSeg\),/.test(VTR), 'AllowedNextContext.nudge');
   assert.ok(VTR.includes('lessonElapsedMs: typedLessonElapsedMs,'), 'AllowedNextContext.lessonElapsedMs');
 });
 

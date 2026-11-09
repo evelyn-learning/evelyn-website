@@ -324,8 +324,11 @@ export function fixedScriptMidLesson(plan: LessonPlan | null | undefined, segmen
  *  the choice; a stop request right after the choice was asked closes. Pure. */
 // Fix round 1 (B-1): while the choice is pending only an EXPLICIT stop
 // closes; a finish-word reply ("Let's finish.") continues ('finish').
-export function stopRequestDecision(input: { stopRequest: boolean; midLesson: boolean; choicePending: boolean; explicitStop?: boolean; choosesFinish?: boolean }): 'ask-choice' | 'close' | 'finish' | 'none' {
+// W18 (GDI 11-09, Josh + Praveen): a FIRM stop (isFirmStop — "please stop", "end the session", "I have to go") closes at
+// once; the choice is only for a soft "we can finish it".
+export function stopRequestDecision(input: { stopRequest: boolean; midLesson: boolean; choicePending: boolean; explicitStop?: boolean; choosesFinish?: boolean; firmStop?: boolean }): 'ask-choice' | 'close' | 'finish' | 'none' {
   if (!input.midLesson) return 'none';
+  if (input.firmStop) return 'close';
   if (input.choicePending) {
     if (input.explicitStop) return 'close';
     return input.choosesFinish || input.stopRequest ? 'finish' : 'none';

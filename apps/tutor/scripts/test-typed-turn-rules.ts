@@ -1133,5 +1133,16 @@ test('W17-A: a request while the check question is open keeps the check open —
   assert.ok(turnStateLine(ctx('summary', { ...base, studentRequest: true, state: REVIEW })).includes('recap_step="close"'));
 });
 
+// ── W18 (GDI 11-09): the student's stop closes in any part ──
+test('W18: studentStop ⇒ [close] in a mid-lesson part, after an engine move too; no required phrases', () => {
+  assert.deepEqual(allowedNextFor(ctx('present-perfect', { studentReplied: true, studentStop: true })), ['close']);
+  assert.deepEqual(allowedNextFor(ctx('past-simple', { studentReplied: true, studentStop: true, engineMoved: true })), ['close']);
+  assert.deepEqual(allowedNextFor(ctx('level-check', { studentReplied: true, studentStop: true })), ['close']);
+  const req = typedTurnRequestFor(ctx('summary', { lastPart: true, studentReplied: true, studentStop: true, missingRequiredPhrases: ['one thing you did well'] }));
+  assert.deepEqual(req.allowedNext, ['close']);
+  assert.equal(req.requiredPhrases, undefined, 'a stop is never refused for unsaid phrases');
+  assert.ok(!allowedNextFor(ctx('present-perfect', { studentReplied: true })).includes('close'), 'without the stop, no close mid-lesson');
+});
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nall ok');

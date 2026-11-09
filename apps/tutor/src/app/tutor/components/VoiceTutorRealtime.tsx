@@ -224,7 +224,7 @@ import {
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { splitSentenceForTts, keptRestRemoved } from '@/lib/tutor/voice/tts-language';
 import { isMetaNarration, directiveSentencesForInput, isStudentEchoOpener, createCorrectionWorkingTracker, stripLeakedLabels, stripNudgePlanClause, stripNoteCitationClause, isThirdPersonResidue, isAdjacentDuplicate, isThankAck, isRepeatThankAck, isPlanContinuationSentence, doneTurnText, stripRepeatedTurnOpener } from '@/lib/tutor/voice/meta-narration';
-import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance, isStopRequest, isExplicitStop, choosesFinish } from '@/lib/tutor/voice/lesson-close';
+import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE, prematureFarewellLine, reopensAfterClose, isStandaloneStopUtterance, isStopRequest, isExplicitStop, choosesFinish, isFirmStop } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish, replaceLastStudentEntry, rememberStudentEntryId } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
@@ -13633,9 +13633,10 @@ export function VoiceTutorRealtime({
         // gets the finish-or-stop choice (no latch); the repeat latches.
         // Fix round 1 (B-1): mid-lesson, only an explicit stop while the choice
         // is pending latches — never a "finish" word, never the first request.
-        if (isStandaloneStopUtterance(t) && !(TUTOR_STOP_REQUEST_CHOICE
+        // W18 (GDI 11-09): a firm stop ("please stop … end the session", "I have to go") latches too.
+        if ((isStandaloneStopUtterance(t) || isFirmStop(t)) && !(TUTOR_STOP_REQUEST_CHOICE
           && fixedScriptMidLesson(lessonPlanRef.current, currentSegmentIdRef.current, lessonClosedRef.current)
-          && !(stopChoicePendingRef.current && isExplicitStop(t)))) studentEndSignalRef.current = true;
+          && !(stopChoicePendingRef.current && isExplicitStop(t)) && !isFirmStop(t))) studentEndSignalRef.current = true;
         ledgerStudentTextRef.current = t;
         ledgerPriorTutorTextRef.current = String([...priorWithoutCurrent].reverse().find((m) => m.role === 'assistant')?.content ?? '');
         lastStudentVerificationRef.current = {
@@ -14162,6 +14163,7 @@ export function VoiceTutorRealtime({
           choicePending: stopChoicePendingRef.current,
           explicitStop: isExplicitStop(transcript),
           choosesFinish: choosesFinish(transcript),
+          firmStop: isFirmStop(transcript),
         });
         typedStopDecision = srDecision;
         if (srDecision === 'ask-choice') {
@@ -15346,6 +15348,8 @@ export function VoiceTutorRealtime({
             studentReplied: Boolean(typedStudentText),
             // W17-A (wave 17, run 14 1050 s): a question back / a request is no answer — the recap's check stays open.
             studentRequest: !!typedStudentText && requestShaped(typedStudentText),
+            // W18 (GDI 11-09): the student's confirmed / firm stop — the only allowed next is close (any part).
+            studentStop: typedStopDecision === 'close',
             nudge: typedNudgeThisTurn,
             items: typedItemsFor(typedFromSeg),
             // X1 (fix wave 3): every numbered question of this part answered (the tracker) — the level check moves.
