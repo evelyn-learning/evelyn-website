@@ -6,6 +6,7 @@
  * items. DB failures degrade gracefully (empty bank → plan-only results).
  */
 
+import { rubricFromPointedKey } from './key-rubric';
 import connectDB from '@core/db';
 import { ProblemBank, type IProblemBank } from '@/models/ProblemBank';
 import { SEED_PLANS, findStoredPlansByLoId, getLessonPlan } from '@/lib/tutor/lesson-plan/store';
@@ -321,7 +322,10 @@ export async function resolveGradeItem(
     if (!seg) return null;
     return {
       itemId,
-      rubric: seg.rubric,
+      // No rubric, but a key written part by part with its points: grade each
+      // part (key-rubric.ts). Practice grading only — a scored quiz resolves
+      // its keys elsewhere, so an FRQ there still weighs 1 point.
+      rubric: seg.rubric?.parts.length ? seg.rubric : rubricFromPointedKey(seg.expectedAnswer) ?? seg.rubric,
       expectedAnswer: seg.expectedAnswer,
       problemText: seg.problem,
       modelResponse: seg.modelResponse,
@@ -337,7 +341,7 @@ export async function resolveGradeItem(
     itemId,
     expectedAnswer: b.answer,
     problemText: b.problemText,
-    rubric: undefined,
+    rubric: rubricFromPointedKey(b.answer) ?? undefined,
     modelResponse: undefined,
     passageText: resolvePassageText(b.passageId),
   };

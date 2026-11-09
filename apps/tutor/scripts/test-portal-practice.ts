@@ -7,6 +7,7 @@
 
 import assert from 'node:assert';
 import {
+  practiceFormatOf,
   retrievePractice,
   type PracticeSources,
   type PlanLite,
@@ -350,6 +351,51 @@ await test('generate-on-exhaustion: kill-switch off (env unset) -> genSources ne
   await retrievePractice(loReq({ count: 5 }), new FakeSources([planWithTopic], [bankItem]), gen);
   assert.equal(gen.reserveCalls.length, 0);
   assert.equal(gen.generateCalls, 0);
+});
+
+// v1.23.0 `formats`: the engine returns only the kinds asked for.
+await test('formats: written-only request returns just the untyped + frq plan items', async () => {
+  const r = await retrievePractice(loReq({ formats: ['frq', 'free'] }), new FakeSources([planWithLo], [bankItem]));
+  assert.deepStrictEqual(r.items.map((i) => i.id), ['ty-1', 'ty-2']);
+});
+
+await test('formats: mcq-only request returns just the bank mcq item', async () => {
+  const r = await retrievePractice(loReq({ formats: ['mcq'] }), new FakeSources([planWithLo], [bankItem]));
+  assert.deepStrictEqual(r.items.map((i) => i.id), ['openstax.stats.0042']);
+});
+
+await test('formats: no formats field -> identical to the baseline', async () => {
+  const withUndef = await retrievePractice(loReq({ formats: undefined }), new FakeSources([planWithLo], [bankItem]));
+  const baseline = await retrievePractice(loReq(), new FakeSources([planWithLo], [bankItem]));
+  assert.deepStrictEqual(withUndef.items, baseline.items);
+  assert.strictEqual(practiceFormatOf({}), 'free');
+  assert.strictEqual(practiceFormatOf({ responseFormat: 'drawn' }), 'drawn');
+});
+
+await test('formats: written-only request with a short pool never generates', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const gen = new FakeGenSources(2, [{ gen: numericGen('Fresh', '9'), hash: 'wr1' }]);
+  const r = await retrievePractice(loReq({ count: 5, formats: ['frq'] }), new FakeSources([planWithTopic], [bankItem]), gen);
+  assert.equal(gen.generateCalls, 0);
+  assert.equal(gen.reserveCalls.length, 0);
+  assert.deepStrictEqual(r.items, []);
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('formats: numeric request generates, and a generated mcq is not served', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const mcqGen: GenPayload = { problemText: 'Pick one', finalAnswer: 'A', responseFormat: 'mcq', choices: ['A', 'B', 'C', 'D'] } as GenPayload;
+  const gen = new FakeGenSources(2, [
+    { gen: mcqGen, hash: 'm1' },
+    { gen: numericGen('Fresh numeric', '9'), hash: 'n1' },
+  ]);
+  const r = await retrievePractice(loReq({ count: 5, formats: ['numeric'] }), new FakeSources([planWithTopic], [bankItem]), gen);
+  assert.ok(gen.generateCalls > 0, 'generator ran');
+  const ids = r.items.map((i) => i.id);
+  assert.ok(ids.includes(`practice-gen.${LO}.n1`), 'generated numeric served');
+  assert.ok(!ids.includes(`practice-gen.${LO}.m1`), 'generated mcq not served');
+  assert.ok(!ids.includes(bankItem.id), 'bank mcq not served');
+  delete process.env.PRACTICE_GEN;
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);
