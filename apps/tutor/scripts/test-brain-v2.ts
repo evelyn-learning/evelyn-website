@@ -146,6 +146,11 @@ async function main() {
   const tail4 = r4.state.history.slice(-2);
   check('a tool call in a reply that stopped for another reason still gets its result stored', tail4[0].role === 'assistant' && tail4[1].role === 'user' && JSON.stringify(tail4[1].content).includes('"tool_use_id":"t8"'), tail4.map((m) => m.role));
 
+  console.log('cancelling');
+  const ac = new AbortController(); let gotSignal: AbortSignal | undefined;
+  await runV2Turn({ session, state: r1.state, studentSaid: 'x', signal: ac.signal, callModel: async (_p, _t, sig) => { gotSignal = sig; return msg([{ type: 'text', text: 'ok' }], 'end_turn'); } });
+  check('the caller\'s cancel signal reaches the model call', gotSignal === ac.signal);
+
   console.log('failure');
   let threw = false;
   try { await runV2Turn({ session, state: r2.state, studentSaid: 'x', callModel: async () => { throw new Error('boom'); } }); } catch { threw = true; }

@@ -67,10 +67,11 @@ export async function POST(req: NextRequest) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const send = (event: Record<string, unknown>) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+      // A client that has gone (interrupted turn, closed tab) is not an error: stop writing, stop the model.
+      const send = (event: Record<string, unknown>) => { if (req.signal.aborted) return; try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`)); } catch { /* stream already closed */ } };
       try {
         const r = await runV2Turn({
-          session, state, studentSaid,
+          session, state, studentSaid, signal: req.signal,
           ...(silenceSeconds ? { facts: { silenceSeconds } } : {}),
           onText: (delta) => send({ type: 'text', delta }),
           onToolCall: (call) => send({ type: 'tool-call', ...call }),
@@ -78,10 +79,11 @@ export async function POST(req: NextRequest) {
         console.log(`[brain-v2] student="${(studentSaid ?? '(none)').slice(0, 80)}" → tools=[${r.toolCalls.map((t) => t.name).join(', ') || '(none)'}] · calls=${r.modelCalls} · first=${r.firstTextMs}ms total=${r.totalMs}ms · in=${r.usage.inputTokens} out=${r.usage.outputTokens} cr=${r.usage.cacheReadTokens} cc=${r.usage.cacheCreationTokens}`);
         send({ type: 'done', spoken: r.spoken, state: r.state, usage: r.usage, firstTextMs: r.firstTextMs, totalMs: r.totalMs });
       } catch (err) {
+        if (req.signal.aborted) { console.log('[brain-v2] turn cancelled by the client'); return; }
         console.error('[brain-v2] error:', err);
         send({ type: 'error', message: err instanceof Error ? err.message : 'Unknown error' });
       } finally {
-        controller.close();
+        try { controller.close(); } catch { /* already closed */ }
       }
     },
   });

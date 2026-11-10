@@ -39,7 +39,7 @@ export const V2_DEFAULT_EFFORT: 'low' | 'medium' | 'high' =
 const GAP_STATUSES: GapStatus[] = ['found', 'explained', 'done_with_help', 'done_alone'];
 const CACHE = { type: 'ephemeral' as const, ttl: '1h' as const };
 
-export type V2ModelCall = (params: Anthropic.MessageCreateParamsNonStreaming, onText?: (delta: string) => void) => Promise<Anthropic.Message>;
+export type V2ModelCall = (params: Anthropic.MessageCreateParamsNonStreaming, onText?: (delta: string) => void, signal?: AbortSignal) => Promise<Anthropic.Message>;
 export type V2BoardPort = (board: V2Board, id: string, name: string, args: Record<string, unknown>) => V2BoardOutcome;
 
 export interface V2TurnInput {
@@ -55,6 +55,8 @@ export interface V2TurnInput {
   onText?: (delta: string) => void;
   /** Called as each tool call is settled, in order, before the turn returns. */
   onToolCall?: (call: V2ToolCall) => void;
+  /** Cancels the model call: the student talked over the tutor, or the page went away. */
+  signal?: AbortSignal;
 }
 
 export function v2SessionPart(session: V2Session): string {
@@ -75,9 +77,9 @@ export function v2StudentBlock(studentSaid: string | null, state: V2State, silen
   return silenceSeconds ? '[The student has not replied.]' : '[The student sent nothing.]';
 }
 
-const defaultModelCall: V2ModelCall = async (params, onText) => {
+const defaultModelCall: V2ModelCall = async (params, onText, signal) => {
   const { client, model } = getModelClient('brain');
-  const stream = client.messages.stream({ ...params, model: params.model || model });
+  const stream = client.messages.stream({ ...params, model: params.model || model }, signal ? { signal } : undefined);
   if (onText) stream.on('text', (delta) => onText(delta));
   return stream.finalMessage();
 };
@@ -185,7 +187,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     const response = await callModel(params, (delta) => {
       if (firstTextMs === null && delta.trim()) firstTextMs = Date.now() - t0;
       input.onText?.(delta);
-    });
+    }, input.signal);
     modelCalls += 1;
     if (response.model) usage.model = response.model;
     usage.inputTokens += response.usage.input_tokens;
