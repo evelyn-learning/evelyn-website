@@ -42,3 +42,32 @@ export function anchorSentenceFinal(sayWith: string | undefined, sentences: stri
   sentences.forEach((s, i) => { const words = new Set(norm(s)); const hits = want.filter((w) => words.has(w)).length; if (hits > bestHits) { best = i; bestHits = hits; } });
   return best >= 0 ? best : sentences.length - 1;
 }
+
+/** Words that carry what a board item or a sentence is about: names of functions and words of four letters
+ *  or more, with spoken and written forms of the same thing made equal ("sine"/"\\sin", "limit"/"\\lim"). */
+const SAME: Record<string, string> = { sine: 'sin', cosine: 'cos', tangent: 'tan', limit: 'lim', limits: 'lim', log: 'ln', logarithm: 'ln', natural: 'ln', infinity: 'infty', infinite: 'infty', derivative: 'deriv', derivatives: 'deriv', differentiate: 'deriv', differentiated: 'deriv', differentiating: 'deriv', frac: '', left: '', right: '', text: '', begin: '', aligned: '', quad: '', cdot: '', cdots: '', displaystyle: '' };
+const MATHS_NAME = new Set(['sin', 'cos', 'tan', 'lim', 'ln', 'exp', 'infty', 'sqrt', 'deriv']);
+function about(s: string): Set<string> {
+  const out = new Set<string>();
+  for (const raw of norm(s.replace(/∞/g, ' infty ').replace(/([A-Za-z])['′](?![A-Za-z])/g, '$1 deriv '))) {
+    const w = raw in SAME ? SAME[raw] : raw;
+    if (w && (MATHS_NAME.has(w) || (w.length >= 4 && !STOP.has(w) && !/^\d+$/.test(w)))) out.add(w);
+  }
+  return out;
+}
+
+/** Which sentence an inline board item appears with. The model writes the words about something and then
+ *  its block, so the item belongs to the stretch of speech since the previous block (`segStart` up to the
+ *  last sentence so far). A problem appears with the sentence that poses it, the last one before it. An
+ *  equation or note appears with the first sentence of the stretch that is about it, so the student sees
+ *  the working while it is being said, not after (Praveen, embed-1794347950566); when no sentence shares
+ *  a word with it, the last one. */
+export function inlineSentenceIndex(toolName: string, content: string, sentences: string[], segStart: number): number {
+  const last = sentences.length - 1;
+  if (last < 0) return 0;
+  const from = Math.min(Math.max(0, segStart), last);
+  if (toolName === 'show_problem') return last;
+  const item = about(content);
+  if (item.size) for (let i = from; i <= last; i++) { for (const w of about(sentences[i])) if (item.has(w)) return i; }
+  return last;
+}

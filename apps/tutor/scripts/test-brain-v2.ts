@@ -1,6 +1,6 @@
 import { BoardInlineStream, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { applyToModelBoard, boardMisfit, taskOnly } from '../src/lib/tutor/v2/board';
-import { anchorSentenceFinal, anchorSentenceIndex } from '../src/lib/tutor/v2/board-timing';
+import { anchorSentenceFinal, anchorSentenceIndex, inlineSentenceIndex } from '../src/lib/tutor/v2/board-timing';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths } from '../src/lib/tutor/v2/spoken-maths';
 import { renderFacts } from '../src/lib/tutor/v2/facts';
@@ -189,6 +189,16 @@ async function main() {
     check('the stream says once that a block has begun, before the block', ev === 'tobt', ev);
     const sk = new SentenceStream(); sk.push('One. ');
     check('the sentence cutter knows whether more words have begun', !sk.hasPending() && (sk.push('Tw'), sk.hasPending()));
+  }
+  {
+    const a = ['That\'s right, 2.', 'You differentiated the top and got 2 cos 2x over 1, and substituting 0 gives 2.', 'Next, a case where you may need the rule twice.'];
+    check('working appears with the first sentence that is about it, not the last', inlineSentenceIndex('show_equation', 'Student\'s working — \\lim_{x\\to 0}\\frac{\\sin 2x}{x} = \\lim_{x\\to 0}\\frac{2\\cos 2x}{1} = 2', a, 0) === 1);
+    check('a problem appears with the sentence that poses it', inlineSentenceIndex('show_problem', 'Find $\\lim_{x\\to\\infty} \\frac{x^2}{e^x}$.', a, 0) === 2);
+    const b = ['Yes, the limit is 0.', 'As x grows, e to the x grows without bound.', 'That means the original limit is 0.'];
+    check('"limit" in speech matches \\lim on the board', inlineSentenceIndex('show_equation', 'Result — \\lim_{x\\to\\infty} \\frac{x^2}{e^x} = 0', b, 0) === 0);
+    const c = ['Yes, 0 over 0.', 'That is an awkward spot.', 'The rule says you can replace the ratio with the ratio of the derivatives.', 'Try it now.'];
+    check('a note waits for the sentence that is about it; nothing earlier than its own stretch', inlineSentenceIndex('annotate', 'The rule: if the form is 0/0, take the derivatives of top and bottom.', c, 0) === 2 && inlineSentenceIndex('annotate', 'The rule: derivatives of top and bottom.', c, 3) === 3);
+    check('an item no sentence is about goes with the last one', inlineSentenceIndex('show_equation', 'a^2 + b^2 = c^2', c, 0) === 3);
   }
   check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just begun/.test(first[0].text));
   check('the last history message carries a cache mark', !!beforeTail[beforeTail.length - 1].cache_control);
