@@ -31,6 +31,7 @@ export interface V2TurnRequest {
   signal?: AbortSignal;
   onText?: (delta: string) => void;
   onToolCall?: (call: V2ToolCall) => void;
+  onBoardOpen?: () => void;
   fetchImpl?: typeof fetch;
 }
 
@@ -57,6 +58,7 @@ export async function streamV2Turn(req: V2TurnRequest): Promise<V2TurnDone> {
       if (!line.startsWith('data: ')) continue;
       const ev = JSON.parse(line.slice(6)) as { type: string } & Record<string, unknown>;
       if (ev.type === 'text' && typeof ev.delta === 'string') req.onText?.(ev.delta);
+      else if (ev.type === 'board-open') req.onBoardOpen?.();
       else if (ev.type === 'tool-call') req.onToolCall?.(ev as unknown as V2ToolCall);
       else if (ev.type === 'done') done = ev as unknown as V2TurnDone;
       else if (ev.type === 'error') throw new Error(typeof ev.message === 'string' ? ev.message : 'tutor turn failed');

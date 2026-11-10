@@ -1398,6 +1398,7 @@ export default function TutorSession(props: TutorSessionProps) {
     // v2 often asks through an instruction with no "?".
     const v2Pin = brainVersion === 'v2';
     if (v2Pin && pinFetchedTurnRef.current !== entry.id) setQuestionPin((prev) => (prev && prev.turnId !== entry.id ? null : prev));
+    if (v2Pin && entry.askOnBoard) { pinFetchedTurnRef.current = entry.id; return; }
     if (!entry.text.includes('?') && !v2Pin) {
       if (!languageSession || pinFetchedTurnRef.current === entry.id) return;
       if (askFallback('no question')) pinFetchedTurnRef.current = entry.id;

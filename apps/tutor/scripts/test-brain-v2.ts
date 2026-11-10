@@ -1,5 +1,5 @@
 import { BoardInlineStream, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
-import { boardMisfit } from '../src/lib/tutor/v2/board';
+import { applyToModelBoard, boardMisfit, taskOnly } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex } from '../src/lib/tutor/v2/board-timing';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths } from '../src/lib/tutor/v2/spoken-maths';
@@ -171,8 +171,24 @@ async function main() {
     check('a block that cannot be painted is reported in the next turn\'s facts', /annotate|note/.test((rb.state.boardProblems ?? []).join(' ')) && /not painted in your last reply/.test(renderFacts(session, rb.state, { nowMs: 1_000_000 })));
     const parts = new BoardInlineStream();
     const got = [...parts.push('a <boa'), ...parts.push('rd note>x</bo'), ...parts.push('ard> b <b'), ...parts.flush()];
-    check('a block split across stream pieces is still lifted out; a lone "<b" is text', got.map((x) => ('text' in x ? x.text : `[${x.block.kind}]`)).join('') === 'a [note] b <b', got);
+    check('a block split across stream pieces is still lifted out; a lone "<b" is text', got.map((x) => ('text' in x ? x.text : 'block' in x ? `[${x.block.kind}]` : '')).join('') === 'a [note] b <b', got);
     check('stripping removes an unfinished block too', stripBoardBlocks('Good. <board equation>x</board> Next <board note>cut off') === 'Good. Next');
+  }
+  {
+    const bd = newV2State(1).board;
+    applyToModelBoard(bd, 'a', 'show_equation', { latex: '\\ln y = x \\ln x' });
+    check('the same line under a label is not painted twice', !applyToModelBoard(bd, 'b', 'show_equation', { latex: '\\ln y = x\\ln x', label: 'log step' }).painted);
+    applyToModelBoard(bd, 'c', 'annotate', { text: 'Recap: the rule says $\\lim f/g = \\lim f\'/g\'$ when the form is 0/0. Check the form every time.' });
+    check('a note already contained in one on the board is not painted again', !applyToModelBoard(bd, 'd', 'annotate', { text: 'The rule says $\\lim f/g = \\lim f\'/g\'$ when the form is 0/0. Check the form every time.' }).painted);
+    check('a longer line of working that extends an earlier one is painted', applyToModelBoard(bd, 'e', 'show_equation', { latex: '\\ln y = x \\ln x = \\frac{\\ln x}{1/x} \\to 0, \\text{ so } y \\to 1' }).painted);
+    const t1 = taskOnly('Compute $\\lim_{x\\to 0^+}(\\frac{1}{x}-\\frac{1}{\\sin x})$. Rewrite it as one fraction, then check the form before you apply the rule.');
+    check('a problem card keeps the task and drops the how-to-begin sentence', t1.statement === 'Compute $\\lim_{x\\to 0^+}(\\frac{1}{x}-\\frac{1}{\\sin x})$.' && t1.cut.length === 1, t1);
+    check('parts, questions and answer-format lines stay', ['A student gets 2. (a) Why is this wrong? (b) What is the correct value?', 'Add $\\frac{1}{2}+\\frac{1}{3}$. Write your answer in simplest form.', 'Maria eats half of 3/4 of a pizza. How much of the whole did she eat?'].every((x) => taskOnly(x).cut.length === 0));
+    const op = new BoardInlineStream();
+    const ev = [...op.push('Here it is. <board equa'), ...op.push('tion>x'), ...op.push('</board> ok')].map((x) => ('text' in x ? 't' : 'block' in x ? 'b' : 'o')).join('');
+    check('the stream says once that a block has begun, before the block', ev === 'tobt', ev);
+    const sk = new SentenceStream(); sk.push('One. ');
+    check('the sentence cutter knows whether more words have begun', !sk.hasPending() && (sk.push('Tw'), sk.hasPending()));
   }
   check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just begun/.test(first[0].text));
   check('the last history message carries a cache mark', !!beforeTail[beforeTail.length - 1].cache_control);

@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
           session, state, studentSaid, signal: req.signal,
           ...(silenceSeconds ? { facts: { silenceSeconds } } : {}),
           onText: (delta) => send({ type: 'text', delta }),
+          onBoardOpen: () => send({ type: 'board-open' }),
           onToolCall: (call) => send({ type: 'tool-call', ...call }),
         });
         console.log(`[brain-v2] student="${(studentSaid ?? '(none)').slice(0, 80)}" → tools=[${r.toolCalls.map((t) => t.name).join(', ') || '(none)'}] · calls=${r.modelCalls} · first=${r.firstTextMs}ms total=${r.totalMs}ms · in=${r.usage.inputTokens} out=${r.usage.outputTokens} cr=${r.usage.cacheReadTokens} cc=${r.usage.cacheCreationTokens}`);

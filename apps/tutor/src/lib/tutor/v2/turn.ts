@@ -18,7 +18,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { applyToModelBoard, boardMisfit, summariseBoardCall } from './board';
+import { applyToModelBoard, boardMisfit, summariseBoardCall, taskOnly } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths } from './spoken-maths';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
@@ -52,6 +52,8 @@ export interface V2TurnInput {
   facts?: Omit<V2TurnFacts, 'nowMs'>;
   nowMs?: number;
   effort?: 'low' | 'medium' | 'high';
+  /** An inline board block has begun; its board call follows when it is complete. */
+  onBoardOpen?: () => void;
   /** The board pass after a spoken reply that says mathematics (default on). */
   boardPass?: boolean;
   callModel?: V2ModelCall;
@@ -186,6 +188,8 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   /** Run one tool call: validate it, apply it, tell the client, and return its result for the model. */
   const settle = (block: Anthropic.ToolUseBlock, boardOnly = false, inline = false): Anthropic.ToolResultBlockParam => {
     const { [SAY_WITH]: sayWithRaw, ...args } = (block.input ?? {}) as Record<string, unknown>;
+    // A problem card states the task; how-to-begin sentences are cut from it (board.ts taskOnly).
+    if (block.name === 'show_problem' && typeof args.statement === 'string') args.statement = taskOnly(args.statement).statement;
     const sayWith = typeof sayWithRaw === 'string' && sayWithRaw.trim() ? sayWithRaw.trim() : undefined;
     let outcome: string;
     if (V2_CONTROL_TOOL_NAMES.has(block.name)) {
@@ -231,6 +235,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     const inline = new BoardInlineStream();
     const take = (parts: InlinePart[]) => {
       for (const part of parts) {
+        if ('opening' in part) { input.onBoardOpen?.(); continue; }
         if ('block' in part) { settleInline(part.block); continue; }
         if (firstTextMs === null && part.text.trim()) firstTextMs = Date.now() - t0;
         input.onText?.(part.text);

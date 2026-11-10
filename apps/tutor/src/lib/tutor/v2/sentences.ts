@@ -13,6 +13,9 @@ const ABBREVIATIONS = /(?:\b(?:e\.g|i\.e|vs|etc|approx|Mr|Mrs|Ms|Dr|St|No|Fig|Eq
 export class SentenceStream {
   private buf = '';
 
+  /** Words of the next sentence have begun to arrive. */
+  hasPending(): boolean { return /\S/.test(this.buf); }
+
   /** Add streamed text; returns the sentences it completed, in order. */
   push(delta: string): string[] {
     this.buf += delta;

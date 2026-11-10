@@ -47,6 +47,9 @@ export interface V2TurnsConfig {
 }
 
 const CLOSE_READ_MS = 4000;
+/** How long a finished sentence waits to learn what follows it; and how long it waits for a board block that has begun. */
+const KEEP_BRIEF_MS = 250;
+const KEEP_FOR_BLOCK_MS = 2500;
 const UNREACHABLE = "I couldn't reach the tutor just now. Please send that again.";
 
 export interface V2Turns {
@@ -98,11 +101,11 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const tutorId = `tutor-${stamp}`;
     publish();
     // The tutor's entry appears with its first words: the session save refuses an entry with no text.
-    const setTutor = (text: string, streaming: boolean) => {
+    const setTutor = (text: string, streaming: boolean, askOnBoard = false) => {
       if (!text) return;
       transcriptRef.current = transcriptRef.current.some((e) => e.id === tutorId)
-        ? transcriptRef.current.map((e) => (e.id === tutorId ? { ...e, text, streaming } : e))
-        : [...transcriptRef.current, { id: tutorId, timestamp: new Date(), role: 'tutor', text, streaming }];
+        ? transcriptRef.current.map((e) => (e.id === tutorId ? { ...e, text, streaming, ...(askOnBoard ? { askOnBoard } : {}) } : e))
+        : [...transcriptRef.current, { id: tutorId, timestamp: new Date(), role: 'tutor', text, streaming, ...(askOnBoard ? { askOnBoard } : {}) }];
       publish();
     };
     const session: V2ClientSession = {
@@ -114,6 +117,17 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const sentences = new SentenceStream();
     // A sentence that names a tool is never spoken (tool-talk.ts).
     const speak = (list: string[]) => { if (!abort.signal.aborted) for (const s of list) if (!mentionsTool(s)) p.current.onSentence?.(s); };
+    // Voice: the newest finished sentence is kept back for a moment, until what follows it is known. If a board
+    // block follows, the sentence goes to the voice only once the block has arrived, so the item is ready to
+    // appear as the sentence starts and not a second into it ("the problem showed up at the end of the
+    // sentence", embed-1794345628228). Earlier sentences are already playing, so this rarely costs a pause.
+    let kept: string | null = null; let keptTimer: ReturnType<typeof setTimeout> | null = null;
+    const letGo = () => { if (keptTimer) { clearTimeout(keptTimer); keptTimer = null; } if (kept !== null) { const s = kept; kept = null; speak([s]); } };
+    const keep = (s: string, ms: number) => { letGo(); kept = s; keptTimer = setTimeout(letGo, ms); };
+    const sayAll = (list: string[]) => {
+      if (p.current.mode !== 'voice' || !list.length) { speak(list); return; }
+      letGo(); speak(list.slice(0, -1)); keep(list[list.length - 1], KEEP_BRIEF_MS);
+    };
     let text = '';
     const settled: V2ToolCall[] = [];
     try {
@@ -123,22 +137,29 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         onText: (delta) => {
           // Typed sessions: once the reply is appearing, the shell's "Thinking…" state is over.
           if (!text && p.current.mode === 'text') p.current.onTutorBusy?.(false);
-          text += delta; setTutor(text, true); speak(sentences.push(delta));
+          text += delta; setTutor(text, true);
+          const finished = sentences.push(delta);
+          // More words have come: nothing but speech follows the kept sentence.
+          if (kept !== null && (finished.length || sentences.hasPending())) letGo();
+          sayAll(finished);
+          if (kept !== null && sentences.hasPending()) letGo();
         },
+        // A board block is arriving: keep the sentence until it is here (bounded: a block that never completes must not mute the tutor).
+        onBoardOpen: () => { if (kept !== null) { const s = kept; kept = null; keep(s, KEEP_FOR_BLOCK_MS); } },
         onToolCall: (call) => {
           settled.push(call);
           p.current.onDebugEvent?.('tool_call', `${call.name} → ${call.outcome}${call.sayWith ? ` · with "${call.sayWith}"` : ''}${call.inline ? ' · inline' : ''}`);
           if (!paintsOnBoard(call, V2_CONTROL_TOOL_NAMES)) return;
           const cmd = mapFunctionCallToCommand(call.name, call.args as Record<string, unknown>);
           // The words written before and after a tool call are separate paragraphs.
-          speak(sentences.flush());
+          letGo(); speak(sentences.flush());
           if (cmd) { const paint = () => p.current.onWhiteboardCommand([cmd]); if (p.current.holdBoard) p.current.holdBoard(call, paint); else paint(); }
           if (text && !/\n\n$/.test(text)) text += '\n\n';
         },
       });
-      speak(sentences.flush());
+      letGo(); speak(sentences.flush());
       stateRef.current = done.state;
-      setTutor(done.spoken || text.trim(), false);
+      setTutor(done.spoken || text.trim(), false, settled.some((c) => c.name === 'show_problem' && /^painted/.test(c.outcome)));
       p.current.onBrainUsage?.(done.usage);
       p.current.onDebugEvent?.('brain_turn', `Brain ${done.totalMs}ms · first_sentence=${done.firstTextMs ?? done.totalMs}ms · in=${done.usage.inputTokens} out=${done.usage.outputTokens} cr=${done.usage.cacheReadTokens} cc=${done.usage.cacheCreationTokens} · v2`);
       if (done.state.closed) {

@@ -17,7 +17,8 @@
  */
 export type InlineKind = 'equation' | 'note' | 'problem';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
-export type InlinePart = { text: string } | { block: InlineBlock };
+/** `opening`: a block has begun and its content is still arriving (the client holds the sentence before it). */
+export type InlinePart = { text: string } | { block: InlineBlock } | { opening: true };
 
 const OPEN = '<board';
 const CLOSE = '</board>';
@@ -52,6 +53,7 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
 /** Splits streamed text into words and blocks, holding back anything that may be the start of a block. */
 export class BoardInlineStream {
   private buf = '';
+  private announced = false;
 
   push(delta: string): InlinePart[] {
     this.buf += delta;
@@ -78,7 +80,8 @@ export class BoardInlineStream {
       }
       if (open > 0) { out.push({ text: this.buf.slice(0, open) }); this.buf = this.buf.slice(open); }
       const close = this.buf.indexOf(CLOSE);
-      if (close < 0) { if (final) this.buf = ''; return out; }
+      if (close < 0) { if (final) this.buf = ''; else if (!this.announced) { this.announced = true; out.push({ opening: true }); } return out; }
+      this.announced = false;
       const raw = this.buf.slice(0, close + CLOSE.length);
       this.buf = this.buf.slice(close + CLOSE.length);
       const block = parseBlock(raw);

@@ -62,6 +62,10 @@ export interface TranscriptEntry {
    *  finalization (which produced visible flicker before 2026-04-29). */
   streaming?: boolean;
 
+  /** Tutor brain v2: this reply put a problem card on the board. The card is the ask, so no question pin is
+   *  made for the turn (a pin written from the words alone named a different limit, embed-1794345628228). */
+  askOnBoard?: boolean;
+
   /** When true, this entry exists ONLY for the brain's conversation
    *  history (next-turn input). The chat UI MUST NOT render it. Used
    *  for the "(rendered: tool, tool, …)" placeholder we append for

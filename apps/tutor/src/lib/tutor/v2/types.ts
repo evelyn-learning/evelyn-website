@@ -24,7 +24,7 @@ export interface V2Session {
   plan?: LessonPlan;
 }
 
-export interface V2BoardItem { id: string; tool: string; summary: string }
+export interface V2BoardItem { id: string; tool: string; summary: string; /** The content alone, normalised, for spotting repeats (board.ts). */ core?: string }
 export interface V2BoardPage { title: string; items: V2BoardItem[] }
 export interface V2Board { pages: V2BoardPage[]; current: number }
 
