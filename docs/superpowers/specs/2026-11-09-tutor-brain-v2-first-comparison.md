@@ -275,7 +275,7 @@ effort + gap tracker with none of them.
 
 # Where v2 stands after the night
 
-| Student | v1 (browser) | v2 base (browser, 2 sessions) | v2 base (offline, 6–9 sessions, later stricter reviews) |
+| Student | v1 (browser) | v2 base (browser, 2 sessions) | v2 base (offline; 3 sessions for the adult, 6–9 for the others; later, stricter reviews) |
 |---|---|---|---|
 | Competent adult | 2–3 | 7–8 | 7–8 |
 | Struggling 17-year-old | 3–4 | 6–7 | 5.5–6 |
