@@ -7,7 +7,7 @@
  * calls to the whiteboard; the next state kept for the following turn. It
  * holds no audio and no lesson policy.
  */
-import { useCallback, useRef, useState, type MutableRefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import { mapFunctionCallToCommand } from '@/app/tutor/hooks/toolDefinitions';
 import type { TranscriptEntry } from '@/lib/tutor/types';
@@ -163,21 +163,40 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     }
   }, []);
 
+  // The time box is a hard stop, as it is in v1: partner minute pools and demo limits depend on a
+  // session not running past it. The tutor is told the time every turn and closes by itself well
+  // before this in the normal case; this is the backstop.
+  const hardStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const armHardStop = useCallback(() => {
+    const minutes = p.current.sessionMaxMinutes;
+    if (!minutes || hardStopRef.current) return;
+    hardStopRef.current = setTimeout(() => {
+      if (endingRef.current) return;
+      endingRef.current = true;
+      abortRef.current?.abort();
+      p.current.onCut?.();
+      p.current.onDebugEvent?.('time_limit_v2', `${minutes} min`);
+      p.current.onEndSession?.('time_limit');
+    }, minutes * 60000);
+  }, []);
+  useEffect(() => () => { if (hardStopRef.current) clearTimeout(hardStopRef.current); }, []);
+
   const open = useCallback(() => {
     if (openedRef.current) return;
     openedRef.current = true;
+    armHardStop();
     p.current.onSessionStarted?.();
     p.current.onDebugEvent?.('start_v2', `tutor opens (${p.current.mode})`);
     void runTurn(null);
-  }, [runTurn]);
+  }, [runTurn, armHardStop]);
 
   const send = useCallback((raw: string) => {
     const text = raw.trim();
     // Bracketed strings are v1 runtime markers ("[start lesson]"); v2 has no use for them.
     if (!text || /^\[/.test(text)) return;
-    if (!openedRef.current) { openedRef.current = true; p.current.onSessionStarted?.(); }
+    if (!openedRef.current) { openedRef.current = true; p.current.onSessionStarted?.(); armHardStop(); }
     void runTurn(text);
-  }, [runTurn]);
+  }, [runTurn, armHardStop]);
 
   const nudge = useCallback((silenceSeconds: number) => { if (openedRef.current && !busyRef.current) void runTurn(null, silenceSeconds); }, [runTurn]);
   const abort = useCallback(() => { abortRef.current?.abort(); }, []);

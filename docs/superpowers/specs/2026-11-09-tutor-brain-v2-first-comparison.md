@@ -154,3 +154,40 @@ blind and together by two independent reviewers.
 
 Decision: v2 runs at medium effort by default. A gap tracker (a `track_gap` tool whose list is
 shown back in the facts every turn) is being tested at medium effort against this arm.
+
+---
+
+# Fifth review — the gap tracker (medium effort in both arms)
+
+`track_gap` lets the tutor record a gap and how far it has been worked on; the list is shown back
+in the facts every turn. Three runs per arm per fixture, all six of a fixture scored blind and
+together by two independent reviewers.
+
+| Fixture | Arm | Reviewer 1 | Reviewer 2 | Mean |
+|---|---|---|---|---|
+| Struggling 17-year-old | no tracker | 3, 4, 5 | 3, 4, 4.5 | 3.9 |
+| | **with tracker** | 6, 5, 6 | 6, 5, 6.5 | **5.8** |
+| Grade 6 | no tracker | 4, 7, 5 | 4, 8, 5 | 5.5 |
+| | **with tracker** | 7, 6, 8 | 7, 6, 8 | **7.0** |
+
+- Both reviewers put the arms in the same order on both fixtures and agreed to within a point on
+  every session.
+- Struggling student: all three tracker sessions deliberately came back to a gap with a fresh
+  problem of the same kind and waited for a solo success ("try a similar one with no help"); none
+  of the no-tracker sessions did. In the tracker sessions she ended doing the chain rule or the
+  ln x derivative alone in 4 of 6 gap-instances the reviewers counted, against incidental recall
+  only without it.
+- Grade 6: the tracker sessions withdrew the three-fraction problem when he balked and went back
+  to whole two-fraction sums (3–4 unaided additions each); two of the three no-tracker sessions
+  pushed him through it by step-feeding (0–1 unaided).
+- These reviewers scored the no-tracker medium sessions about two points lower than the previous
+  pair did (5.5 against 7.5 for the same grade 6 transcripts). Scores compare within a review, not
+  across reviews.
+- Still short of a good human tutor for the struggling student (best 6.5): the return happened for
+  one gap per session, the ln x derivative was told and never deliberately practised in most, and
+  nobody asked her to say back what "indeterminate" means. Tracker sessions still raced on to
+  1^∞ forms after closing one gap.
+- At low effort the tutor barely used the tracker (recorded in 0–2 turns a session); at medium it
+  used it in 2–4.
+
+Decision: the gap tracker stays.
