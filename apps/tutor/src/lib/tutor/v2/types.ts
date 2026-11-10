@@ -41,6 +41,8 @@ export interface V2State {
   board: V2Board;
   /** How many of the tutor's replies in a row have painted nothing on the board. Optional: older states have none. */
   repliesSinceBoard?: number;
+  /** Board blocks of the last reply that were not painted, and why. Shown once in the next turn's facts. */
+  boardProblems?: string[];
   startedAtMs: number;
   closed: boolean;
   closeSummary?: string;
@@ -50,6 +52,8 @@ export interface V2ToolCall {
   id: string; name: string; args: Record<string, unknown>; outcome: string;
   /** Board calls: the opening words of the sentence this item appears with (tools.ts SAY_WITH). */
   sayWith?: string;
+  /** Written inline in the reply (board-inline.ts): it belongs with the words that follow it. */
+  inline?: boolean;
 }
 
 export interface V2TurnResult {

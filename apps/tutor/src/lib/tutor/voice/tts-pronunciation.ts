@@ -2296,6 +2296,13 @@ export function speakTypedMaths(text: string): string {
   // f'(a) → f prime of a; f''(x) → f double prime of x; a bare f' → f prime.
   t = t.replace(/(?<![A-Za-z])([A-Za-z])(''?|′′?)\(([A-Za-z0-9]{1,3})\)/g, (_m, f: string, p: string, a: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'} of ${a}`);
   t = t.replace(/(?<![A-Za-z])([f-hF-Hy])(''?|′′?)(?![A-Za-z'’(])/g, (_m, f: string, p: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'}`);
+  // eˣ, xⁿ: a raised letter ("e true", embed-1794342128162). 3! is a factorial. A typed "lim" is "the limit of",
+  // and a middle dot is a product.
+  const SUPL: Record<string, string> = { 'ˣ': 'x', 'ʸ': 'y', 'ⁿ': 'n', 'ᵗ': 't', 'ᵏ': 'k', 'ⁱ': 'i' };
+  t = t.replace(/([A-Za-z0-9)])([ˣʸⁿᵗᵏⁱ])/g, (_m, b: string, l: string) => `${b} to the ${SUPL[l]}`);
+  // (Inside $…$ the span rules further down own the factorial; a dot between units, "N·m", is not a product.)
+  if (!t.includes('$')) t = t.replace(/(\d+|(?<![A-Za-z])[nk])!(?=[\s,.;:)+\-−/]|$)/g, '$1 factorial');
+  t = t.replace(/(?<![A-Za-z\\])lim(?=\s+[A-Za-z0-9(])/g, 'the limit of').replace(/((?<![A-Za-z])[xyzt]|\d|\))\s*·\s*(?=[A-Za-z0-9(])/g, '$1 times ');
   // ∞⁰, ∞^0, 1^∞: a power the voice has no word for.
   t = t.replace(/(∞|\binfinity)\s*([⁰¹²³⁴-⁹])/gi, (_m, _i: string, d: string) => `infinity to the power ${SUP[d]}`);
   t = t.replace(/(∞|\binfinity)\s*\^\s*(\d+)/gi, 'infinity to the power $2').replace(/\^\s*\(?(∞|infinity\b)\)?/gi, ' to the power infinity');

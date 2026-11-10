@@ -1,3 +1,4 @@
+import { BoardInlineStream, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { boardMisfit } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex } from '../src/lib/tutor/v2/board-timing';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
@@ -124,14 +125,13 @@ async function main() {
     const voice: V2Session = { ...session, mode: 'voice' };
     const pass = stub([
       msg([{ type: 'text', text: 'Not quite. The derivative of x sin x is sin x plus x cos x, by the product rule. Fix the bottom.' }], 'end_turn'),
-      msg([{ type: 'text', text: 'I should write that.' }, { type: 'tool_use', id: 'b1', name: 'show_equation', input: { latex: '(x\\sin x)\' = \\sin x + x\\cos x', say_with: 'The derivative of x sin x' } }, { type: 'tool_use', id: 'b2', name: 'end_lesson', input: { summary: 'x' } }], 'tool_use'),
+      msg([{ type: 'text', text: 'I should write that. <board equation with="The derivative of x sin x" label="Product rule">(x\\sin x)\' = \\sin x + x\\cos x</board> <board problem>Now try $x\\cos x$.</board>' }, { type: 'tool_use', id: 'b2', name: 'end_lesson', input: { because: 'student_asked', summary: 'x' } }], 'tool_use'),
     ]);
     const rp = await runV2Turn({ session: voice, state: newV2State(1_000_000), studentSaid: 'cos x minus 1 over x cos x minus sin x', callModel: pass.call });
-    const hist = rp.state.history as Array<{ role: string; content: Array<{ type: string; name?: string }> }>;
-    check('the board pass adds the board call to a reply that only spoke the mathematics', rp.modelCalls === 2 && rp.toolCalls[0]?.name === 'show_equation' && rp.toolCalls[0].sayWith === 'The derivative of x sin x' && /^painted/.test(rp.toolCalls[0].outcome));
-    check('its words are not spoken, and it cannot end the lesson', !/I should write/.test(rp.spoken) && !rp.state.closed && rp.toolCalls.length === 1);
-    check('the stored reply reads as words then board call, with results after', hist[1].role === 'assistant' && hist[1].content.map((b) => b.type).join(',') === 'text,tool_use' && hist[2].role === 'user' && hist[2].content.every((b) => b.type === 'tool_result'));
-    check('the board check itself is never stored', !JSON.stringify(rp.state.history).includes('board check'));
+    const hist = rp.state.history as Array<{ role: string; content: Array<{ type: string; text?: string }> }>;
+    check('the board pass adds the board item to a reply that only spoke the mathematics', rp.modelCalls === 2 && rp.toolCalls.length === 1 && rp.toolCalls[0].name === 'show_equation' && rp.toolCalls[0].sayWith === 'The derivative of x sin x' && /^painted/.test(rp.toolCalls[0].outcome), rp.toolCalls);
+    check('its words are not spoken; it cannot end the lesson or pose a problem', !/I should write/.test(rp.spoken) && !rp.state.closed);
+    check('the block is stored inside the reply, after its sentence, without the with attribute', hist.length === 2 && /by the product rule\. <board equation label="Product rule">[^<]+<\/board> Fix the bottom\.$/.test(hist[1].content[0].text ?? ''), hist[1].content[0].text);
     const none = stub([msg([{ type: 'text', text: 'Not quite. The derivative of x sin x is sin x plus x cos x, by the product rule.' }], 'end_turn'), msg([{ type: 'text', text: 'nothing' }], 'end_turn')]);
     const rn = await runV2Turn({ session: voice, state: newV2State(1_000_000), studentSaid: 'x', callModel: none.call });
     check('a board pass that finds nothing missing changes nothing', rn.toolCalls.length === 0 && !/nothing/.test(rn.spoken) && (rn.state.history as unknown[]).length === 2);
@@ -149,6 +149,30 @@ async function main() {
     const late = stub([msg([{ type: 'text', text: 'Time is nearly up. Well done.' }, { type: 'tool_use', id: 'z2', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 's' } }], 'tool_use')]);
     const rl = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 22 * 60000, callModel: late.call });
     check('near the end of the time it can', rl.state.closed);
+  }
+  {
+    // A stub that streams its text in small pieces, as the API does.
+    const streaming = (text: string, extra: unknown[] = [], stop = 'end_turn') => {
+      const seen: unknown[] = [];
+      const call: V2ModelCall = async (params, onText) => { seen.push(params); for (let i = 0; i < text.length; i += 7) onText?.(text.slice(i, i + 7)); return msg([{ type: 'text', text }, ...extra], stop); };
+      return { call, seen };
+    };
+    const reply = 'Yes, that works. <board equation label="Your series">\\frac{\\sin x}{x} = 1 - \\frac{x^2}{3!} + \\cdots</board> Dividing by x leaves one minus a small term. <board problem difficulty="medium">Find $\\lim_{x\\to 0} \\frac{\\sin 2x}{x}$.</board> Now try this one.';
+    const st = streaming(reply);
+    const order: string[] = [];
+    const ri = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'series?', callModel: st.call, onText: (d) => order.push(`t:${d}`), onToolCall: (c) => order.push(`b:${c.name}`) });
+    const heardText = order.filter((x) => x.startsWith('t:')).map((x) => x.slice(2)).join('');
+    check('inline board blocks never reach the student as words', !/board|frac|lim_/.test(heardText) && /Yes, that works\.\s+Dividing by x/.test(heardText) && ri.spoken === 'Yes, that works. Dividing by x leaves one minus a small term. Now try this one.', [heardText, ri.spoken]);
+    const before = (name: string) => order.slice(0, order.indexOf(`b:${name}`)).filter((x) => x.startsWith('t:')).map((x) => x.slice(2)).join('');
+    check('each block becomes a board call where it stands in the reply', ri.toolCalls.map((c) => c.name).join(',') === 'show_equation,show_problem' && ri.toolCalls.every((c) => c.inline && /^painted/.test(c.outcome)) && /works\.\s*$/.test(before('show_equation')) && /small term\.\s*$/.test(before('show_problem')), [before('show_equation'), before('show_problem'), ri.toolCalls]);
+    check('the stored reply keeps its blocks; the board record has both items', JSON.stringify(ri.state.history).includes('<board equation') && ri.state.board.pages[0].items.length === 2 && ri.modelCalls === 1);
+    const bad = streaming('Here. <board equation>\\text{This whole thing is a long sentence of words that belongs in a note instead}</board> Look at it.');
+    const rb = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'x', callModel: bad.call });
+    check('a block that cannot be painted is reported in the next turn\'s facts', /annotate|note/.test((rb.state.boardProblems ?? []).join(' ')) && /not painted in your last reply/.test(renderFacts(session, rb.state, { nowMs: 1_000_000 })));
+    const parts = new BoardInlineStream();
+    const got = [...parts.push('a <boa'), ...parts.push('rd note>x</bo'), ...parts.push('ard> b <b'), ...parts.flush()];
+    check('a block split across stream pieces is still lifted out; a lone "<b" is text', got.map((x) => ('text' in x ? x.text : `[${x.block.kind}]`)).join('') === 'a [note] b <b', got);
+    check('stripping removes an unfinished block too', stripBoardBlocks('Good. <board equation>x</board> Next <board note>cut off') === 'Good. Next');
   }
   check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just begun/.test(first[0].text));
   check('the last history message carries a cache mark', !!beforeTail[beforeTail.length - 1].cache_control);

@@ -23,6 +23,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
+  if (state.boardProblems?.length) lines.push(`not painted in your last reply:\n${state.boardProblems.map((x) => `  - ${x}`).join('\n')}`);
   if (session.plan) lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   if (state.gaps?.length) {

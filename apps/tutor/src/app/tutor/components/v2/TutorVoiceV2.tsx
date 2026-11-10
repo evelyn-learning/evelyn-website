@@ -148,6 +148,18 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onSentence: (sentence) => { turnSentencesRef.current.push(sentence); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; realtimeRef.current?.speakText(sentence); },
     onCut: () => { void realtimeRef.current?.clearSpeechQueue(); releaseBoard(); },
     holdBoard: (call, paint) => {
+      // Written inline in the reply, right after the sentence that introduces it ("Here's the rule." [block]):
+      // it appears as that sentence begins. The model places blocks after their sentence far more often than
+      // before, whatever it is told (browser run, 2026-11-10), so the convention follows the habit.
+      if (call.inline && realtimeRef.current) {
+        const idx = Math.max(0, turnSentencesRef.current.length - 1);
+        const hold = idx > 0 && startedCountRef.current <= idx;
+        p.current.onDebugEvent?.('v2_board_timing', `${call.name}: inline, with sentence ${idx + 1}, ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
+        if (!hold) { paint(); return; }
+        const entry = { idx, paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); paint(); }, BOARD_HOLD_MAX_MS) };
+        heldBoardRef.current.push(entry);
+        return;
+      }
       if (!call.sayWith || !realtimeRef.current) { paint(); return; }
       // Its sentence may not have been written yet (the model can call the tool first and speak after):
       // wait for it, and place the item as soon as the sentence is known.

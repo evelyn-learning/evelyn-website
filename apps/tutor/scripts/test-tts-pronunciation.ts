@@ -1523,3 +1523,12 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.ok(!/prime/.test(say("the student's answer, and that's fine")), 'apostrophes in prose are not primes');
   console.log('OK — typed maths is spoken in words');
 }
+
+{
+  const say = (x: string) => rewriteForTTS(x);
+  assert.match(say('the derivative of eˣ is eˣ'), /e to the x is e to the x/);
+  assert.match(say('So lim x·ln x = 0'), /the limit of x times /);
+  assert.match(say('leaves 1 − x²/3! + x⁴/5! − …'), /3 factorial/);
+  assert.ok(!/factorial/.test(say('Yes! That is it.')) && !/the limit of/.test(say('the limit is 2')), 'prose is left alone');
+  console.log('OK — raised letters, factorials, a typed lim and a middle dot are spoken');
+}

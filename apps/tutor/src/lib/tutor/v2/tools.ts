@@ -24,7 +24,8 @@ const BOARD_DESCRIPTIONS: Record<string, string> = {
 };
 
 /** Board tools every session gets, then extras by subject. */
-const CORE = ['show_equation', 'annotate', 'show_problem', 'show_worked_example', 'highlight', 'new_page', 'go_to_page'];
+/** Equations, notes and problems are written inline in the reply (board-inline.ts), not called as tools. */
+const CORE = ['highlight', 'new_page', 'go_to_page'];
 const BY_SUBJECT: Record<string, string[]> = {
   math: ['show_function_graph', 'show_table', 'show_number_line', 'show_geometry'],
   science: ['show_function_graph', 'show_table'],

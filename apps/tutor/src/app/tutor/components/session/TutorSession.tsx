@@ -922,7 +922,10 @@ export default function TutorSession(props: TutorSessionProps) {
     <div className="relative h-full">
       <WhiteboardCanvas
         commands={whiteboardCommands}
-        tutorBusy={isProcessing && whiteboardActiveThisTurn}
+        // v2: no "preparing" skeleton. A v2 reply is ready in a second or two and its board items arrive with their
+        // sentences; the placeholder (a different height from what follows, or followed by nothing) only made the
+        // board jump up and down (Praveen, embed-1794342128162).
+        tutorBusy={brainVersion !== 'v2' && isProcessing && whiteboardActiveThisTurn}
         tutorTurnActive={isProcessing}
         onClear={() => setWhiteboardCommands([])}
         onAttentionShift={() => {}}

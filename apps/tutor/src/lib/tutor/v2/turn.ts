@@ -19,6 +19,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { applyToModelBoard, boardMisfit, summariseBoardCall } from './board';
+import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths } from './spoken-maths';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, type V2TurnFacts } from './facts';
@@ -183,7 +184,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   let modelCalls = 0;
 
   /** Run one tool call: validate it, apply it, tell the client, and return its result for the model. */
-  const settle = (block: Anthropic.ToolUseBlock, boardOnly = false): Anthropic.ToolResultBlockParam => {
+  const settle = (block: Anthropic.ToolUseBlock, boardOnly = false, inline = false): Anthropic.ToolResultBlockParam => {
     const { [SAY_WITH]: sayWithRaw, ...args } = (block.input ?? {}) as Record<string, unknown>;
     const sayWith = typeof sayWithRaw === 'string' && sayWithRaw.trim() ? sayWithRaw.trim() : undefined;
     let outcome: string;
@@ -199,11 +200,23 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     const result: Anthropic.ToolResultBlockParam = { type: 'tool_result', tool_use_id: block.id, content: outcome };
     // The board pass often offers again what the reply already put up; a call of its that did nothing leaves no trace.
     if (boardOnly && /^not /.test(outcome)) return result;
-    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}) };
+    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}) };
     toolCalls.push(call);
     input.onToolCall?.(call);
     return result;
   };
+  // Board blocks written inline in the reply (board-inline.ts): each becomes a board call where it stands.
+  let inlineN = 0;
+  const boardProblems: string[] = [];
+  const settleInline = (b: InlineBlock, boardOnly = false): boolean => {
+    const { name, args } = inlineToolCall(b);
+    inlineN += 1;
+    const r = settle({ type: 'tool_use', id: `inl_${nowMs.toString(36)}_${inlineN}`, name, input: b.attrs.with ? { ...args, [SAY_WITH]: b.attrs.with } : args } as Anthropic.ToolUseBlock, boardOnly, true);
+    const failed = /^not /.test(String(r.content));
+    if (failed && !boardOnly) boardProblems.push(`${b.kind} "${b.body.replace(/\s+/g, ' ').slice(0, 60)}": ${String(r.content).replace(/^not painted: /, '')}`);
+    return !failed;
+  };
+  const rawSpoken: string[] = [];
 
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
@@ -215,10 +228,16 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
       tools,
       messages,
     } as unknown as Anthropic.MessageCreateParamsNonStreaming;
-    const response = await callModel(params, (delta) => {
-      if (firstTextMs === null && delta.trim()) firstTextMs = Date.now() - t0;
-      input.onText?.(delta);
-    }, input.signal);
+    const inline = new BoardInlineStream();
+    const take = (parts: InlinePart[]) => {
+      for (const part of parts) {
+        if ('block' in part) { settleInline(part.block); continue; }
+        if (firstTextMs === null && part.text.trim()) firstTextMs = Date.now() - t0;
+        input.onText?.(part.text);
+      }
+    };
+    const response = await callModel(params, (delta) => take(inline.push(delta)), input.signal);
+    take(inline.flush());
     modelCalls += 1;
     if (response.model) usage.model = response.model;
     usage.inputTokens += response.usage.input_tokens;
@@ -228,7 +247,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
 
     const results: Anthropic.ToolResultBlockParam[] = [];
     for (const block of response.content) {
-      if (block.type === 'text') { if (block.text.trim()) spoken.push(block.text.trim()); continue; }
+      if (block.type === 'text') { const words = stripBoardBlocks(block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } continue; }
       if (block.type !== 'tool_use') continue;
       results.push(settle(block));
     }
@@ -260,25 +279,24 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   const said = spoken.join('\n\n');
   if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && speaksMaths(said) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
     const put = toolCalls.filter((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome)).map((c) => `${c.name}: ${summariseBoardCall(c.name, c.args)}`);
-    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. Mathematics that is only heard is lost: the student needs to see each expression, step or hint you spoke. In this reply you put on the board: ${put.length ? `\n${put.map((x) => `  - ${x}`).join('\n')}` : 'nothing.'}\nIf something you said aloud is not on the board (the working behind a result, a step the student gave, a correction, a hint), put it up now, with say_with set to the opening words of the sentence in which you say it. Add nothing you did not say, repeat nothing that is already there, pose nothing new, and never write an answer you left for the student to find. Reply with board calls only. If nothing is missing, reply with the one word: nothing.`;
+    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. Mathematics that is only heard is lost: the student needs to see each expression, step or hint you spoke. In this reply you put on the board: ${put.length ? `\n${put.map((x) => `  - ${x}`).join('\n')}` : 'nothing.'}\nIf something you said aloud is not on the board (the working behind a result, a step the student gave, a correction, a hint), write it now as board blocks, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing that is already there, no new problem, and never an answer you left for the student to find. Reply with board blocks only. If nothing is missing, reply with the one word: nothing.`;
     try {
       const response = await callModel({
         model: '', max_tokens: 1500, thinking: { type: 'adaptive' }, output_config: { effort: 'low' }, system, tools,
-        messages: [...withCacheMark(state.history), userNow, { role: 'assistant', content: [{ type: 'text', text: said }] }, { role: 'user', content: [{ type: 'text', text: check }] }],
+        messages: [...withCacheMark(state.history), userNow, { role: 'assistant', content: [{ type: 'text', text: rawSpoken.join('\n\n') || said }] }, { role: 'user', content: [{ type: 'text', text: check }] }],
       } as unknown as Anthropic.MessageCreateParamsNonStreaming, undefined, input.signal);
       modelCalls += 1;
       usage.inputTokens += response.usage.input_tokens;
       usage.outputTokens += response.usage.output_tokens;
       usage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0;
       usage.cacheCreationTokens += response.usage.cache_creation_input_tokens ?? 0;
-      const done = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use').map((b) => ({ b, r: settle(b, true) })).filter((x) => !/^not /.test(String(x.r.content)));
-      if (done.length) {
-        const results = done.map((x) => x.r);
-        const uses: Anthropic.ContentBlockParam[] = done.map(({ b }) => ({ type: 'tool_use', id: b.id, name: b.name, input: b.input }));
-        const last = stored[stored.length - 1];
-        if (last.role === 'assistant' && Array.isArray(last.content)) last.content = [...last.content, ...uses];
-        else stored.push({ role: 'assistant', content: uses });
-        stored.push({ role: 'user', content: results });
+      const passText = response.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join('\n');
+      // A block that paints is stored inside the reply, before its sentence: the history then shows the reply as it should have been written.
+      const lastWords = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+      for (const b of boardBlocksIn(passText)) {
+        if (b.kind === 'problem' || !settleInline(b, true)) continue;
+        const textBlock = (lastWords?.content as Anthropic.ContentBlockParam[] | undefined)?.find((c): c is Anthropic.TextBlockParam => c.type === 'text');
+        if (textBlock) textBlock.text = insertBlock(textBlock.text, b.raw.replace(/\s+with="[^"]*"/, ''), b.attrs.with);
       }
     } catch { /* the reply stands without it */ }
   }
@@ -287,5 +305,6 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   // Fed back as a fact next turn: how long the tutor has been talking without writing.
   const painted = toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   state.repliesSinceBoard = painted ? 0 : (state.repliesSinceBoard ?? 0) + 1;
+  if (boardProblems.length) state.boardProblems = boardProblems; else delete state.boardProblems;
   return { spoken: stripToolTalk(spoken.join('\n\n')), toolCalls, state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
 }
