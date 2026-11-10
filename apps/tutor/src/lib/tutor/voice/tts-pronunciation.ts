@@ -2293,6 +2293,8 @@ export function speakPhonemeSlashes(text: string): string {
 export function speakTypedMaths(text: string): string {
   const SUP: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
   let t = text;
+  // −∞ is "negative infinity" (the voice made "-∞/∞" into "mice infinity", embed-1794353029385).
+  t = t.replace(/(^|[\s(=,:])[-−]\s*(∞|infinity\b)/gi, '$1negative infinity');
   // f'(a) → f prime of a; f''(x) → f double prime of x; a bare f' → f prime.
   t = t.replace(/(?<![A-Za-z])([A-Za-z])(''?|′′?)\(([A-Za-z0-9]{1,3})\)/g, (_m, f: string, p: string, a: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'} of ${a}`);
   t = t.replace(/(?<![A-Za-z])([f-hF-Hy])(''?|′′?)(?![A-Za-z'’(])/g, (_m, f: string, p: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'}`);

@@ -1532,3 +1532,9 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.ok(!/factorial/.test(say('Yes! That is it.')) && !/the limit of/.test(say('the limit is 2')), 'prose is left alone');
   console.log('OK — raised letters, factorials, a typed lim and a middle dot are spoken');
 }
+
+{
+  assert.match(rewriteForTTS('ln x over 1/x is -∞/∞ as x approaches 0'), /is negative infinity over infinity as/);
+  assert.match(rewriteForTTS('the top goes to −∞.'), /goes to negative infinity/);
+  console.log('OK — a signed infinity is spoken "negative infinity"');
+}
