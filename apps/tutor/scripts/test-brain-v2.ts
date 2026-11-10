@@ -13,6 +13,7 @@ import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { V2_CONTROL_TOOL_NAMES } from '../src/lib/tutor/v2/tool-names';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
+import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
 import { foldInterruptedTurn, V2_CUT_MARK } from '../src/lib/tutor/v2/interrupted';
 import { resolvePartnerSessionOptions } from '../src/lib/tutor/portal/partner-session-options';
@@ -203,6 +204,14 @@ async function main() {
   check('the student\'s own words are not', !isOwnVoice('wait can you explain why that works', justSaid));
   check('a short reply over the tutor is always the student', !isOwnVoice('yes that is', justSaid) && !isOwnVoice('the top', justSaid));
   check('nothing said yet means nothing to echo', !isOwnVoice('now take the derivative of the top', []));
+
+  console.log('tool names in the tutor\'s words');
+  check('a sentence naming a tool is dropped, the rest kept', stripToolTalk('Good work today. Then end_lesson. See you next time.') === 'Good work today. See you next time.', stripToolTalk('Good work today. Then end_lesson. See you next time.'));
+  check('paragraphs survive and clean text is untouched', stripToolTalk('One.\n\nI will call show_problem now.\n\nTwo.') === 'One.\n\nTwo.' && stripToolTalk('Show me the problem. End the lesson?') === 'Show me the problem. End the lesson?');
+  check('ordinary words are not tool names', !mentionsTool('Let me show you a new page of gaps to track.') && mentionsTool('call track_gap'));
+  const leak = stub([msg([{ type: 'text', text: 'Well done. Then end_lesson.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { summary: 's' } }], 'tool_use')]);
+  const rl = await runV2Turn({ session, state: r1.state, studentSaid: 'bye', callModel: leak.call });
+  check('the turn\'s words come back without the leak', rl.spoken === 'Well done.', rl.spoken);
 
   console.log('selection');
   check('every partner is on v1 until cut over', ['crimsora', 'greenapple', 'gdi-demo', 'gameclass', 'unknown-partner', ''].every((id) => resolvePartnerSessionOptions({ partnerId: id }).brainVersion === 'v1'));

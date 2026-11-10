@@ -1722,6 +1722,7 @@ export default function TutorSession(props: TutorSessionProps) {
           cartesiaVoiceSpeed={cartesiaVoiceSpeed}
           speechRate={speechRate}
           tutorLanguages={tutorLanguages}
+          thinkingCue={thinkingCue}
           onTranscriptUpdate={handleVoiceTranscriptUpdate}
           onWhiteboardCommand={handleVoiceWhiteboardCommand}
           onEndSession={handleEndSession}

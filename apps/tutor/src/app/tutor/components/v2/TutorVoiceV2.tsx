@@ -23,6 +23,8 @@ import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import { V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
+import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
+import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
 export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs'> {
   voice?: OpenAIVoice;
@@ -32,6 +34,8 @@ export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSente
   speechRate?: number;
   tutorLanguages?: string[];
   standby?: boolean;
+  /** The audible "got that, thinking" cue (a chime when a turn is accepted, soft pulses if the reply takes long). */
+  thinkingCue?: boolean;
   composerSlot?: ReactNode;
   handleRef?: MutableRefObject<RealtimeHandle | null>;
   onVoiceStateChange?: (state: 'idle' | 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'muted' | 'manual-held' | 'error') => void;
@@ -53,6 +57,20 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const realtimeRef = useRef<ReturnType<typeof useOpenAIRealtime> | null>(null);
   const turnsRef = useRef<ReturnType<typeof useV2Turns> | null>(null);
 
+  // Thinking cue: the same chime and pulse as v1 (lib/tutor/voice/thinking-cue.ts). v2 thinks before it
+  // speaks, so the student hears at once that they were heard.
+  const cueRef = useRef(initialThinkingCue());
+  const waitingRef = useRef(false);
+  const play = (sound: 'chime' | 'pulse' | null) => { if (sound === 'chime') playTurnChime(); else if (sound === 'pulse') playThinkingPulse(); };
+  useEffect(() => {
+    if (!props.thinkingCue) return;
+    const id = setInterval(() => {
+      const r = cueTick(cueRef.current, waitingRef.current ? 'thinking' : 'speaking', Date.now());
+      cueRef.current = r.state; play(r.play);
+    }, 300);
+    return () => clearInterval(id);
+  }, [props.thinkingCue]);
+
   const clearSilence = () => { if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; } };
   const armSilence = useCallback(() => {
     clearSilence();
@@ -71,12 +89,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const turns = useV2Turns({
     ...props,
     mode: 'voice',
-    onSentence: (sentence) => { spokenRef.current = [...spokenRef.current.slice(-7), sentence]; realtimeRef.current?.speakText(sentence); },
+    onSentence: (sentence) => { waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; realtimeRef.current?.speakText(sentence); },
     onCut: () => { void realtimeRef.current?.clearSpeechQueue(); p.current.onDebugEvent?.('bargein_v2', 'student spoke over the tutor'); },
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
-      if (busy) { clearSilence(); p.current.onVoiceStateChange?.('thinking'); }
-      else armSilence();
+      if (busy) { clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
+      else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); armSilence(); }
     },
     // The session ends once the closing words have been spoken.
     closeDelayMs: async () => {
@@ -96,6 +114,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       return;
     }
     silenceStepRef.current = 0;
+    if (p.current.thinkingCue) { const r = cueTurnAccepted(cueRef.current, Date.now()); cueRef.current = r.state; play(r.play); }
     turnsRef.current?.send(text);
   }, []);
 
@@ -130,6 +149,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     startedRef.current = true;
     const rt = realtimeRef.current!;
     rt.unlockAudio();
+    if (p.current.thinkingCue) primeThinkingCueAudio();
     void rt.connect().then(() => { rt.startListening(); }).catch((err) => p.current.onError?.(err instanceof Error ? err : new Error(String(err))));
     // The tutor's first words do not wait for the microphone.
     turnsRef.current?.open();

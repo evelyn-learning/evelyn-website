@@ -15,6 +15,7 @@ import { paintsOnBoard, streamV2Turn, type V2ClientSession } from '@/lib/tutor/v
 import { foldInterruptedTurn } from '@/lib/tutor/v2/interrupted';
 import { SentenceStream } from '@/lib/tutor/v2/sentences';
 import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
+import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
 
 export interface V2TurnsConfig {
@@ -108,7 +109,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     };
     const abort = new AbortController(); abortRef.current = abort;
     const sentences = new SentenceStream();
-    const speak = (list: string[]) => { if (!abort.signal.aborted) for (const s of list) p.current.onSentence?.(s); };
+    // A sentence that names a tool is never spoken (tool-talk.ts).
+    const speak = (list: string[]) => { if (!abort.signal.aborted) for (const s of list) if (!mentionsTool(s)) p.current.onSentence?.(s); };
     let text = '';
     const settled: V2ToolCall[] = [];
     try {

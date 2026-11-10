@@ -22,6 +22,7 @@ import { applyToModelBoard } from './board';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, type V2TurnFacts } from './facts';
 import { planGoalIds, renderPlanMap } from './plan-map';
+import { stripToolTalk } from './tool-talk';
 import { V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -229,5 +230,5 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   }
 
   state.history = [...state.history, ...stored];
-  return { spoken: spoken.join('\n\n'), toolCalls, state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
+  return { spoken: stripToolTalk(spoken.join('\n\n')), toolCalls, state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
 }
