@@ -39,6 +39,8 @@ export interface V2State {
   /** Gaps the tutor has found in what the student knows, with how far each has been worked on. Optional: older states have none. */
   gaps?: V2Gap[];
   board: V2Board;
+  /** How many of the tutor's replies in a row have painted nothing on the board. Optional: older states have none. */
+  repliesSinceBoard?: number;
   startedAtMs: number;
   closed: boolean;
   closeSummary?: string;

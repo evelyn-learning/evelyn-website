@@ -1,3 +1,4 @@
+import { renderFacts } from '../src/lib/tutor/v2/facts';
 /// <reference types="node" />
 /**
  * Tutor brain v2 — unit suite for the turn engine (src/lib/tutor/v2). No network.
@@ -92,6 +93,7 @@ async function main() {
   const first = req2.messages[0].content as Array<{ text: string }>;
   const tail2 = req2.messages[req2.messages.length - 1].content as Array<{ text: string; cache_control?: unknown }>;
   const beforeTail = req2.messages[req2.messages.length - 2].content as Array<{ cache_control?: unknown }>;
+  check('a reply that paints leaves no board-gap fact; a reply that paints nothing is counted', !/board last written on/.test(tail2[tail2.length - 1].text) && r2.state.repliesSinceBoard === 1 && /board last written on: 1 reply ago/.test(renderFacts(session, r2.state, { nowMs: 1_000_000 })));
   check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just begun/.test(first[0].text));
   check('the last history message carries a cache mark', !!beforeTail[beforeTail.length - 1].cache_control);
   check('the student\'s words are sent as they are', tail2[0].text === 'It is 3.');

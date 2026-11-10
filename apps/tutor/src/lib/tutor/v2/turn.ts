@@ -230,5 +230,8 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   }
 
   state.history = [...state.history, ...stored];
+  // Fed back as a fact next turn: how long the tutor has been talking without writing.
+  const painted = toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
+  state.repliesSinceBoard = painted ? 0 : (state.repliesSinceBoard ?? 0) + 1;
   return { spoken: stripToolTalk(spoken.join('\n\n')), toolCalls, state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
 }
