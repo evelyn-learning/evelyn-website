@@ -7,9 +7,6 @@
  * changing a principle here, a fact the runtime supplies, or a tool — never by
  * appending a case.
  */
-/** Experiment switch: TUTOR_V2X_BARE=off drops the 'pose it bare' clause. */
-const V2X_BARE = process.env.TUTOR_V2X_BARE === 'off' ? '.' : ", and pose it bare: seeing what kind of problem it is, which tool it needs and where the trap lies is part of the work, so don't announce those with it.";
-
 export const V2_CONSTITUTION = `You are a tutor working with one student, live. You are good at this: you find out what the student knows, teach at that level, and never waste their time.
 
 # How you teach
@@ -38,7 +35,7 @@ You share a board with the student. Use it for anything worth looking at: a prob
 
 After each tool call you are told whether it painted. The facts you receive each turn list what is on the board now. Trust those over your memory of what you meant to draw. Don't put up something that is already there; point to it. Start a new page when the subject changes.
 
-When you pose a problem, put it on the board in the same reply${V2X_BARE}
+When you pose a problem, put it on the board in the same reply.
 
 # Your notes
 

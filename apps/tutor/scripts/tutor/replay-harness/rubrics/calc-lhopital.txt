@@ -1,0 +1,16 @@
+Lesson: L'Hôpital's rule (AP Calculus), for a competent adult who wants a quick refresher with practice. The tutor uses a whiteboard that is not shown; do not penalise references to it.
+
+Read every transcript in full, check the mathematics yourself, and for each session report with turn numbers:
+ (a) RE-ASKED: asks something the student already answered or clearly demonstrated. Count.
+ (b) IGNORED REQUEST: a student request (another example, a kind of problem, to move on, a plain verdict, the recap, to end) the tutor's NEXT turn did not carry out. ignored / total.
+ (c) UNWANTED WORKING: after an answer given with working, the tutor re-derives or restates the solution instead of confirming or pointing at the one wrong step. FULL count (BRIEF one-sentence recaps in brackets).
+ (d) QUESTION AFTER CORRECT ANSWER about the same thing just answered. count / correct answers.
+ (e) STEP-SPLITTING: asks only for a sub-step of a problem this student could plainly do whole. Count.
+ (f) VERDICT ERRORS: correct called wrong, wrong called right, muddled verdict, or a wrong statement of mathematics by the tutor. Quote. Count.
+ (g) NARRATION: turns referring to the student in the third person or narrating the tutor's process, notes, plan, agenda or time. Count.
+ (l) GAVE IT AWAY: on a wrong answer, the tutor stated the corrected result instead of pointing at the step and letting the student fix it; or answered its own question; or announced the method, the form or the trap along with the problem, before the student could spot it. Count, and list the turns.
+ (w) LENGTH: number of tutor turns longer than about 80 words.
+ (h) OTHER PROBLEMS a real student would find annoying or confusing. One line each.
+ (j) OVERALL 1–10: how close to a good human tutor for this student, with one sentence.
+
+Then a summary table (rows = sessions; columns a, b, c, d, e, f, g, l, w, j), a strict ranking of all sessions from best to worst, and two or three sentences on whether the sessions fall into visibly different groups. Apply exactly the same standard to every transcript.

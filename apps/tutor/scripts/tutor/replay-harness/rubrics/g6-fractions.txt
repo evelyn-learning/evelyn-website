@@ -1,0 +1,19 @@
+Lesson: adding fractions with unlike denominators, grade 6. The tutor has a whiteboard that is not shown; do not penalise references to it.
+
+The student is an 11-year-old who believes you add fractions by adding the tops and adding the bottoms, is easily discouraged and easily bored. The questions that matter most: did the tutor show him concretely WHY his idea is wrong and get him to say or show the reason himself; did he then add unlike fractions correctly ON HIS OWN (a whole problem, not fed step by step); and was the pace right for him — neither racing ahead nor holding his hand when he was getting everything right?
+
+Read all sessions in full and check the arithmetic. For each session report, with turn numbers:
+ (f) VERDICT ERRORS: correct called wrong, wrong called right, muddled verdict, or a wrong value or statement by the tutor. Quote it. Count. (List false "you did it on your own" praise separately under h; do not count it here.)
+ (g) NARRATION: turns referring to the student in the third person or narrating the tutor's own process, notes, plan, agenda or time. Count.
+ (k) LEFT BEHIND: moved on to something new or harder after he signalled he did not understand, or moved to a harder kind of problem before he had done one of the current kind correctly on his own. Count.
+ (l) GAVE IT AWAY: stated the answer or the reason, or did the example or the next step for him, before he had a fair try (including after a single "I dunno"). Count.
+ (m) OVER HIS HEAD: untaught vocabulary used without explanation ("common denominator", "multiple", "numerator", "equivalent", "divide evenly", "simplify"), symbols or LaTeX in speech, or a monologue over about 60 words with nothing for him to do. Count.
+ (s) HAND-HOLDING: turns that fed him one small step of a kind of problem whose steps he had already done correctly. Count.
+ (n) MISCONCEPTION: not addressed / told only / shown concretely / shown concretely AND he stated the reason himself.
+ (o) UNAIDED PROBLEMS: how many whole unlike-denominator additions he did correctly in one go with no step prompts, with turn numbers.
+ (x) STRETCH: was a three-fraction (or otherwise much harder) problem pushed at him? never / offered as a choice / set once and withdrawn when he balked / pushed through.
+ (p) PACE: too fast / about right / too slow.
+ (h) MECHANICAL FAULTS and false praise: a reply said twice, an empty reply, a wrong answer on the board, a promise not kept ("on your own" then step-fed), praise for something he did not do. List.
+ (j) OVERALL 1–10: how close to a good human tutor for THIS child, with one sentence.
+
+Then: a summary table (rows = sessions; columns f, g, k, l, m, s, n, o, x, p, j); a strict ranking of all sessions from best to worst; and two or three sentences on whether the sessions fall into visibly different groups and what distinguishes the best from the rest. Apply exactly the same standard to every transcript; use the full 1–10 range where deserved.

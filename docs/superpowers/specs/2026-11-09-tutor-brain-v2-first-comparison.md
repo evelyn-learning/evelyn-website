@@ -241,3 +241,56 @@ Scored offline, three runs per arm, two reviewers per fixture: better for the st
 the competent adult (7.5 against 7.0). But the two grade 6 browser sessions above ran with all
 three changes on and scored 8 and 7. Three runs per arm is not enough to separate these; a
 one-change-at-a-time test is running.
+
+---
+
+# Seventh to tenth reviews — the three 11-10 changes do not help; reverted (2026-11-10)
+
+The changes: (1) plan labels ("each practice problem is one example…", extension marked optional),
+(2) reporting the gaps not yet done alone when a goal is marked, (3) "pose it bare". Base = medium
+effort + gap tracker with none of them.
+
+| Review | Sessions per arm | Struggling: base / all three | Grade 6: base / all three | Notes |
+|---|---|---|---|---|
+| 7 (first look) | 3 | 3.9 / 6.2 | 7.0 / 4.9 | looked like "helps one, hurts the other" |
+| 8 (one change at a time) | 3 | 5.9 / 7.5; each alone 5.3 | 8.0 / 5.3; each alone 5.0–6.3 | no single change stood out |
+| 9 (larger sample) | 9 | 5.5 / 6.3 | 6.6 / 5.9 | the 3-session gaps shrank to under a point |
+| 10 (refined version) | 6 | 6.0 / 5.6; refined 4.8 | 6.0 / 5.9; refined 5.2 | refined = change 2 with "a harder problem is not a gap" |
+
+(Each cell is the mean of two reviewers. Reviews are not comparable with each other.)
+
+- With enough sessions the base is as good as or better than any variant for both students. The
+  striking early numbers were three-session luck: the original three base sessions for grade 6
+  were good ones (8.3) and six fresh ones averaged 5.8; the original three "all" sessions for the
+  struggling student were good ones (7.3) and six fresh ones averaged 5.6.
+- Two effects did survive the larger samples: with the changes on, the tutor returned to a gap
+  more often for the struggling student (2.0 against 1.1 per session in review 9), and pushed the
+  three-fraction stretch problem on the child more often (5 of 9 and 4–5 of 6, against 1 of 9 and
+  1 of 6). Neither moved the overall ratings reliably, and the refined version kept the pushing.
+- Decision: all three changes and the refinement are removed. v2 is back to the base. The
+  experiment switches are gone from the code.
+- What this cost and taught: about 80 sessions and 20 reviewer passes to learn that three sessions
+  per arm cannot distinguish changes of this size. `scripts/tutor/replay-harness/REVIEW.md` now
+  says how to run a comparison (six or more per arm, all arms in one review, two reviewers).
+
+# Where v2 stands after the night
+
+| Student | v1 (browser) | v2 base (browser, 2 sessions) | v2 base (offline, 6–9 sessions, later stricter reviews) |
+|---|---|---|---|
+| Competent adult | 2–3 | 7–8 | 7–8 |
+| Struggling 17-year-old | 3–4 | 6–7 | 5.5–6 |
+| Grade 6 | 2–3 | 7–8 | 6–6.6 |
+
+(The browser v2 sessions ran with the three changes on; the later reviews show they make no
+reliable difference, so they stand as a fair picture of v2.)
+
+Known v2 faults, none yet fixed by anything tried:
+- Announces the method, the form or the trap along with the problem (every session, 2–12 turns).
+- Tells the fix or the fact after a single miss more often than a good tutor would.
+- For a student who is behind: returns to one gap, not all; never has her say back what
+  "indeterminate" means or why it is not the quotient rule; drifts to harder forms.
+- For a child: uses "common denominator" / "divide evenly" unexplained; states the reason at turn 3
+  before asking; sometimes pushes the stretch problem; praises as "on your own" what was step-fed.
+- Occasional wrong statements (the pizzas "are different sizes"; a wrong derivative confirmed; a
+  correct rewrite rejected): about one session in three has one.
+- First words at 1.2–2.0 s in the browser at medium effort (v1: 0.8–1.4 s).

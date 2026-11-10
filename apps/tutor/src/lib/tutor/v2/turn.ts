@@ -119,9 +119,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     if (!known.includes(goal)) return `not recorded: no goal "${goal}" in the plan (goals: ${known.join(', ') || 'none'})`;
     if (!['shown', 'demonstrated', 'skipped'].includes(status)) return 'not recorded: status must be shown, demonstrated or skipped';
     state.goals[goal] = { status, ...(typeof args.why === 'string' && args.why.trim() ? { why: args.why.trim().slice(0, 120) } : {}) };
-    // The moment a goal is marked is the moment the next thing gets chosen: say what is still open.
-    const open = (state.gaps ?? []).filter((g) => g.status !== 'done_alone');
-    return open.length && process.env.TUTOR_V2X_GAP_FEEDBACK !== 'off' ? `recorded. Gaps not yet done alone: ${open.map((g) => `${g.what} (${g.status.replace(/_/g, ' ')})`).join('; ')}` : 'recorded';
+    return 'recorded';
   }
   if (name === 'track_gap') {
     const what = typeof args.what === 'string' ? args.what.trim().slice(0, 80) : '';

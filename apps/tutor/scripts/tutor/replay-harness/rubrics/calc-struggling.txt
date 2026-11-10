@@ -1,0 +1,17 @@
+Lesson: L'Hôpital's rule (AP Calculus). The tutor has a whiteboard that is not shown; do not penalise references to it.
+
+The student is behind: shaky on the chain rule, does not remember the derivative of ln x, has never understood "indeterminate form", and wants to understand rather than be given answers. The question that matters most: did the tutor find her actual gaps and make them the lesson — staying on a gap, giving her practice on it, until she could do one alone — at a pace she could follow?
+
+Read all sessions in full and check the mathematics. For each session report, with turn numbers:
+ (f) VERDICT ERRORS: correct called wrong, wrong called right, muddled or reversed verdict, or a wrong statement of mathematics by the tutor. Quote it. Count. (List false "you did it on your own" praise separately; do not count it.)
+ (g) NARRATION: turns referring to the student in the third person or narrating the tutor's own process, notes, plan, agenda or time. Count.
+ (k) LEFT BEHIND: moved on to something new or harder after she signalled she did not understand, or moved on from one of her gaps before she had done one of that kind correctly on her own. Count.
+ (l) GAVE IT AWAY: stated the answer, the corrected result or the next step before she had a fair try (including after a single "I don't know"); or announced the method or the trap along with the problem. Count.
+ (m) OVER HER HEAD: unexplained vocabulary, a jump in difficulty she was not ready for (e.g. 1^infinity forms), or a monologue over about 90 words with nothing for her to do. Count.
+ (n) GAPS: for each of her four gaps (chain rule; derivative of ln x; meaning of "indeterminate"; why not the quotient rule) say: not touched / told only / practised with help / done alone by the end.
+ (r) RETURNED TO A GAP: how many times did the tutor deliberately come back to a gap it had found earlier with a further problem or question on that same gap (not just because the next planned problem happened to need it)? Turn numbers.
+ (o) LEARNING: what could she do alone and unprompted by the end that she could not at the start?
+ (p) PACE: too fast / about right / too slow.
+ (j) OVERALL 1–10: how close to a good human tutor for THIS student, with one sentence.
+
+Then: a summary table (rows = sessions; columns f, g, k, l, m, r, p, j, and for n the number of gaps "done alone by the end"); a strict ranking of all sessions from best to worst; and two or three sentences on whether the sessions fall into visibly different groups and what distinguishes the best from the rest. Apply exactly the same standard to every transcript; use the full 1–10 range where deserved.

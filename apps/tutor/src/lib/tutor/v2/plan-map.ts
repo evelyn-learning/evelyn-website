@@ -7,12 +7,9 @@
 import type { LessonPlan, Segment } from '../lesson-plan/types';
 import type { GoalStatus, V2State } from './types';
 
-/** Experiment switch: TUTOR_V2X_PLAN_LABELS=off renders the plan without the stretch / more-of-the-same notes. */
-const PLAN_LABELS = process.env.TUTOR_V2X_PLAN_LABELS !== 'off';
-
 const KIND_LABEL: Record<string, string> = {
   hook: 'opening idea', concept: 'concept', worked_example: 'worked example', try_yourself: 'practice problem',
-  misconception_check: 'common-mistake check', recap: 'recap', extension: PLAN_LABELS ? 'stretch (optional)' : 'extension',
+  misconception_check: 'common-mistake check', recap: 'recap', extension: 'extension',
 };
 
 function materials(seg: Segment): string[] {
@@ -38,7 +35,7 @@ export function renderPlanMap(plan: LessonPlan): string {
     const m = materials(seg).map((l) => `  ${l}`).join('\n');
     return `[${seg.id}] ${KIND_LABEL[seg.kind] ?? seg.kind}\n${m}`;
   }).join('\n\n');
-  return `LESSON PLAN (a map, not a script): ${plan.title}, about ${plan.estimatedMinutes} minutes as authored.\n\nWhat the student should be able to do afterwards:\n${los}\n\nGoals and their materials, in the authored order. Answers are for your checking; the student has not seen them.${PLAN_LABELS ? ' Each practice problem is one example of its kind: a student usually needs several before it is theirs, so write more of the same kind as needed. Stretch material is optional, for a student who has already done the core alone.' : ''}\n\n${goals}`;
+  return `LESSON PLAN (a map, not a script): ${plan.title}, about ${plan.estimatedMinutes} minutes as authored.\n\nWhat the student should be able to do afterwards:\n${los}\n\nGoals and their materials, in the authored order. Answers are for your checking; the student has not seen them.\n\n${goals}`;
 }
 
 /** One line per goal, for the facts block. */

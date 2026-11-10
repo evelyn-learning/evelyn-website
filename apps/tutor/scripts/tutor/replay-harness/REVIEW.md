@@ -29,3 +29,17 @@ reported but not held against the tutor unless the student had already shown the
 - (m) Over their head: vocabulary or reasoning above the student's level without explanation; or a monologue (more than about 60 words for a child, 90 for a teenager) with nothing for the student to do.
 - (n) Diagnosis: did the tutor identify the student's actual misconception or gap and change approach because of it? yes / partly / no, with the turn.
 - (o) Learning: by the end, did the student get one right on their own that they could not do at the start? yes / no, with the turn.
+
+## How to run a comparison (learned the hard way, 2026-11-09/10)
+
+- Rubrics are in `rubrics/<fixture>.txt`; `prepare-review.mjs` builds the blinded folder and keeps the key outside it.
+- Score all arms of a fixture together, in one review, by two independent reviewers. Scores from
+  different reviews are not comparable: the same transcripts were rated two points apart by
+  different reviewers. Within a review, two reviewers agree to within a point per session.
+- Three sessions per arm is not enough. Session-to-session spread is about 1.5 points, and with
+  three per arm a lucky or unlucky trio moved an arm's mean by two points — enough to "show" that a
+  change helped one student and hurt another when it did neither. Use at least six per arm; nine is
+  better. The engine-against-engine gap (2–3 against 6–8) is the only kind visible at three.
+- Ask reviewers to end with fixed lines (`SCORES: A=7 B=5 …`) so results decode mechanically.
+- The offline runner uses the engine's default effort unless `--effort` is given. Check the first
+  line of a run's log if a result looks odd (first words near 0.5 s means low effort).
