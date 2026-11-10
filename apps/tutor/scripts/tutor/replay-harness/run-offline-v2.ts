@@ -8,7 +8,7 @@
  * LIVE: real model calls for the tutor and the student. Nothing is written to
  * any database.
  *
- *   npx tsx scripts/tutor/replay-harness/run-offline-v2.ts --fixture calc-lhopital [--arm v2] [--mode voice|text] [--effort low] [--max-min N]
+ *   npx tsx scripts/tutor/replay-harness/run-offline-v2.ts --fixture calc-lhopital [--arm v2] [--mode voice|text] [--effort low|medium|high] [--max-min N]
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -35,7 +35,9 @@ async function main() {
   const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', `${arg('--fixture', 'calc-lhopital')}.json`), 'utf8')) as Fixture;
   const arm = arg('--arm', 'v2');
   const mode = arg('--mode', String(fixture.claims.input_mode ?? 'voice')) as 'voice' | 'text';
-  const effort = arg('--effort', 'low') as 'low' | 'medium' | 'high';
+  // No --effort means the engine's own default (medium).
+  const effortArg = arg('--effort', '');
+  const effort = (effortArg || undefined) as 'low' | 'medium' | 'high' | undefined;
   const maxMin = Number(arg('--max-min', String(fixture.maxMinutes)));
   const outDir = arg('--out', path.join(process.cwd(), 'artifacts', 'replay-harness'));
   fs.mkdirSync(outDir, { recursive: true });
@@ -62,7 +64,7 @@ async function main() {
   let endedBy: RunBundle['endedBy'] = 'cap';
   let studentSaid: string | null = null;
   let studentTurns = 0;
-  say(`offline v2 fixture=${fixture.name} arm=${arm} mode=${mode} effort=${effort}`);
+  say(`offline v2 fixture=${fixture.name} arm=${arm} mode=${mode} effort=${effort ?? 'engine default'}`);
 
   while (clockMs - t0 < maxMin * 60000 && studentTurns < fixture.maxStudentTurns) {
     let r;

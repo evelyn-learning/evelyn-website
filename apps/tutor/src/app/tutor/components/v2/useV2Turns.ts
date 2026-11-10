@@ -115,7 +115,11 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       const done = await streamV2Turn({
         session, state: stateRef.current, studentSaid, embedToken: p.current.embedToken, signal: abort.signal,
         ...(silenceSeconds ? { silenceSeconds } : {}),
-        onText: (delta) => { text += delta; setTutor(text, true); speak(sentences.push(delta)); },
+        onText: (delta) => {
+          // Typed sessions: once the reply is appearing, the shell's "Thinking…" state is over.
+          if (!text && p.current.mode === 'text') p.current.onTutorBusy?.(false);
+          text += delta; setTutor(text, true); speak(sentences.push(delta));
+        },
         onToolCall: (call) => {
           settled.push(call);
           p.current.onDebugEvent?.('tool_call', `${call.name} → ${call.outcome}`);

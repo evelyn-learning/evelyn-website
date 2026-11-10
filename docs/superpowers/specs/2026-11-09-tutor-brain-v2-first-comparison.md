@@ -191,3 +191,53 @@ together by two independent reviewers.
   used it in 2–4.
 
 Decision: the gap tracker stays.
+
+---
+
+# Sixth review — like for like: both engines through the real browser client (2026-11-10)
+
+The comparison the earlier reviews lacked. Both engines ran as a voice session in the real embed
+(silent microphone, typed student turns), same driver, same scripted students, same model
+(Haiku 5.5). v2 = medium effort, gap tracker, and the three 11-10 changes on. Two sessions per
+engine per fixture, four scored blind together by one reviewer per fixture.
+
+| Fixture | v2 (browser) | v1 (browser) |
+|---|---|---|
+| Competent adult | 8, 7 | 3, 2 |
+| Struggling 17-year-old | 7, 6 | 3, 4 |
+| Grade 6 | 8, 7 | 3, 2 |
+
+| Measure (per session) | v2 | v1 |
+|---|---|---|
+| Tutor turns | 10–22 | 13–40 |
+| Re-asked something already answered | 0–1 | 1–9 |
+| Full re-derivations of a correct answer | 0–2 | 5–18 |
+| Verdict errors | 0–2 | 1–9 |
+| Narration / third-person turns | 0–3 | 5–14 |
+| Grade 6: whole problems done unaided | 6, 4 | 0, 0 |
+| Struggling: deliberate returns to a gap | 4, 2 | 1, 1 |
+| First words, median (driver's measure) | 1.2–2.0 s | 0.8–1.4 s |
+
+- All six v2 sessions ran to completion with no errors: start tap, turns, sentences to the speech
+  queue, board painted, lesson closed, session saved.
+- v2 faults the reviewers found: it announces the method or the trap with almost every problem
+  (3–10 turns a session); "common denominator" is used and never explained to the child; one
+  session confirmed an answer without noticing the student had worked a different function and
+  misdescribed which factors cancel; one false statement ("your common denominator was 10 both
+  times"); one closing line leaked a to-do ("next time, look at why adding tops and bottoms fails").
+- v1 faults were the familiar ones, plus two sessions each ending with the student protesting
+  ("I already said 3 sixths") and broken turns in which a correct answer is called wrong and then
+  right in the same reply.
+- Not covered by this: a real microphone, echo, interruption by voice, speech timing.
+
+Cost note: v2 sessions were being priced at a fallback rate because v2 did not report which model
+answered; fixed (usage now carries the model). The per-minute figures recorded for the v2 sessions
+above ($0.032–0.040) are therefore overstated and are not comparable with v1's.
+
+# The three 11-10 changes (plan labels, open gaps on goal marking, "pose it bare") — unresolved
+
+Scored offline, three runs per arm, two reviewers per fixture: better for the struggling student
+(6.0 and 6.3 against 3.7 and 4.0), worse for grade 6 (4.7 and 5.0 against 7.0 and 7.0), level for
+the competent adult (7.5 against 7.0). But the two grade 6 browser sessions above ran with all
+three changes on and scored 8 and 7. Three runs per arm is not enough to separate these; a
+one-change-at-a-time test is running.

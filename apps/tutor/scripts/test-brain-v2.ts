@@ -45,6 +45,7 @@ async function main() {
   const map = renderPlanMap(SEED_AP_CALCBC_U4_LHOPITAL);
   check('the plan map lists every segment as a goal', SEED_AP_CALCBC_U4_LHOPITAL.segments.every((s) => map.includes(`[${s.id}]`)));
   check('the plan map gives no staying or ordering order', !/stay within|must complete|before advancing|turn budget/i.test(map));
+  check('the plan map says practice problems are examples and marks stretch material', /one example of its kind/.test(map) && /Stretch material is optional/.test(map));
 
   console.log('first turn (tutor opens)');
   const s0 = newV2State(1_000_000);
@@ -73,7 +74,7 @@ async function main() {
   check('history keeps words, tool calls and outcomes', h1.includes('Hi Sam') && h1.includes('"tool_use"') && h1.includes('painted on page 1'));
   check('history keeps no thinking and no facts', !h1.includes('plan the opener') && !h1.includes('<facts>'));
   check('the caller\'s state is untouched', s0.history.length === 0 && s0.note === '' && s0.board.pages.length === 0);
-  check('usage is reported', r1.usage.inputTokens === 100 && r1.usage.cacheReadTokens === 50);
+  check('usage is reported with the model that answered', r1.usage.inputTokens === 100 && r1.usage.cacheReadTokens === 50 && r1.usage.model === 'x');
 
   console.log('second turn (student answers)');
   const b = stub([
@@ -130,6 +131,9 @@ async function main() {
   const rg = await runV2Turn({ session, state: r2.state, studentSaid: 'I forgot', callModel: g.call });
   check('a gap is recorded and updated in place under the same name', JSON.stringify(rg.state.gaps) === JSON.stringify([{ what: 'Chain rule', status: 'done_with_help' }, { what: 'derivative of ln x', status: 'explained' }]), rg.state.gaps);
   check('an unknown status is refused', /^not recorded: status must be/.test(rg.toolCalls[3].outcome));
+  const gs = stub([msg([{ type: 'text', text: 'Good.' }, { type: 'tool_use', id: 'g5', name: 'set_goal_status', input: { goal: 'try-basic', status: 'demonstrated' } }], 'tool_use')]);
+  const rgs = await runV2Turn({ session, state: rg.state, studentSaid: 'done', callModel: gs.call });
+  check('marking a goal reports the gaps not yet done alone', rgs.toolCalls[0].outcome === 'recorded. Gaps not yet done alone: Chain rule (done with help); derivative of ln x (explained)', rgs.toolCalls[0].outcome);
   await runV2Turn({ session, state: rg.state, studentSaid: 'ok', callModel: g.call });
   const gapFacts = (g.seen[2].messages[g.seen[2].messages.length - 1].content as Array<{ text: string }>)[1].text;
   check('the next turn\'s facts list the gaps and how far each has got', /gaps you have recorded:\n  - Chain rule: they did one with help, not yet alone\n  - derivative of ln x: explained to them, not yet done by them/.test(gapFacts), gapFacts);

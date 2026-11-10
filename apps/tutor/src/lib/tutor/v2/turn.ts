@@ -116,7 +116,9 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     if (!known.includes(goal)) return `not recorded: no goal "${goal}" in the plan (goals: ${known.join(', ') || 'none'})`;
     if (!['shown', 'demonstrated', 'skipped'].includes(status)) return 'not recorded: status must be shown, demonstrated or skipped';
     state.goals[goal] = { status, ...(typeof args.why === 'string' && args.why.trim() ? { why: args.why.trim().slice(0, 120) } : {}) };
-    return 'recorded';
+    // The moment a goal is marked is the moment the next thing gets chosen: say what is still open.
+    const open = (state.gaps ?? []).filter((g) => g.status !== 'done_alone');
+    return open.length && process.env.TUTOR_V2X_GAP_FEEDBACK !== 'off' ? `recorded. Gaps not yet done alone: ${open.map((g) => `${g.what} (${g.status.replace(/_/g, ' ')})`).join('; ')}` : 'recorded';
   }
   if (name === 'track_gap') {
     const what = typeof args.what === 'string' ? args.what.trim().slice(0, 80) : '';
@@ -164,7 +166,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];
   const spoken: string[] = [];
   const toolCalls: V2ToolCall[] = [];
-  const usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
+  const usage: V2TurnResult['usage'] = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
   const t0 = Date.now();
   let firstTextMs: number | null = null;
   let modelCalls = 0;
@@ -184,6 +186,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
       input.onText?.(delta);
     });
     modelCalls += 1;
+    if (response.model) usage.model = response.model;
     usage.inputTokens += response.usage.input_tokens;
     usage.outputTokens += response.usage.output_tokens;
     usage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0;

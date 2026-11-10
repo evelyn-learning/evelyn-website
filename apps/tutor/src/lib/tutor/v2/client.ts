@@ -17,7 +17,7 @@ export interface V2ClientSession {
 export interface V2TurnDone {
   spoken: string;
   state: V2State;
-  usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number };
+  usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string };
   firstTextMs: number | null;
   totalMs: number;
 }

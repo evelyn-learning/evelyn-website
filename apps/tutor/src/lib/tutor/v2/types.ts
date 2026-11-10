@@ -51,7 +51,8 @@ export interface V2TurnResult {
   spoken: string;
   toolCalls: V2ToolCall[];
   state: V2State;
-  usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number };
+  /** `model` is the model that answered: the session's cost is priced from it. */
+  usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string };
   /** Milliseconds to the first text of the reply, and for the whole turn. */
   firstTextMs: number | null;
   totalMs: number;
