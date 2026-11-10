@@ -1570,3 +1570,12 @@ export const TUTOR_RENDER_STALL_WAITS_WHILE_SPEAKING = process.env.NEXT_PUBLIC_T
 
 /** Learner home: kill switch for the learner-summary generation on a completed save (server-only; default ON). */
 export const TUTOR_LEARNER_SUMMARY = process.env.TUTOR_LEARNER_SUMMARY !== 'off';
+
+// Tutor brain v2 (2026-11-09): which sessions run on the v2 turn engine is a
+// partner row (`brainVersion` in portal/partner-session-options.ts), 'v1'
+// everywhere until cutover. This switch additionally lets a signed embed token
+// ask for v2 with the claim `brain_version: "v2"` — for local and preview
+// testing. It is OFF unless set to 'on': v2 is an unproven rewrite, so this is
+// the one deliberate exception to "new flags default ON" (agreed 2026-11-09).
+export const TUTOR_BRAIN_V2_CLAIM =
+  process.env.NEXT_PUBLIC_TUTOR_BRAIN_V2_CLAIM === 'on';

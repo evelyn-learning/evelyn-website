@@ -1,0 +1,122 @@
+# Tutor brain v2 — first comparison against v1 (2026-11-09)
+
+Fixture `calc-lhopital` (scripted student built from portal-6ed49162 / portal-4a176ab7).
+Scored blind by a reviewer who read 8 transcripts without knowing which engine produced which.
+
+| Engine | Session | Tutor turns | Re-asked | Requests ignored | Full re-derivations | Follow-up question after a correct answer | Step-splitting | Verdict errors | Narration / third person | Rating /10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| v2 | B | 9 | 0 | 0 of 2 | 0 | 0 of 5 | 1 | 0 | 0 | 9 |
+| v2 | C | 10 | 0 | 0 of 3 | 0 | 0 of 4 | 0 | 0 | 0 | 9 |
+| v2 | F | 8 | 0 | 0 of 2 | 0 | 0 of 4 | 1 | 0 | 0 | 9 |
+| v1 | D | 15 | 2 | 2 of 5 | 6 | 5 of 8 | 7 | 0 | ~15 | 3 |
+| v1 | E | 37 | 6 | 1 of 9 | 16 | 10 of 23 | 20 | 1 | ~43 | 3 |
+| v1 | G | 16 | 2 | 0 of 4 | 7 | 5 of 12 | 8 | 1 | ~22 | 4 |
+| v1 | H | 22 | 4 | 1 of 7 | 8 | 7 of 17 | 12 | 1 | ~32 | 3 |
+| v1 | I | 22 | 5 | 0 of 7 | 8 | 9 of 13 | 8 | 2 | ~36 | 3 |
+
+Counted by the harness: first text of a reply at 1.1–1.5 s median for v2 (thinking on) against 0.81–0.86 s
+for v1; input tokens per session 0.19M–0.24M for v2 against 3.2M–6.3M for v1.
+
+## Not like for like — read before quoting
+
+- v1 ran through the real browser client (voice session, typed turns). v2 ran offline: the turn
+  engine only, its own board record, no audio, no whiteboard renderer, no client.
+- In the v1 runs the scripted student could not see the board (fixed in the driver afterwards, not
+  yet re-run). The "what's the problem?" moments and the wrong-problem verdicts in G and I come at
+  least partly from that, so the v1 verdict-error column overstates v1's faults. Re-asking,
+  re-derivation, follow-up questions, step-splitting and narration do not depend on it.
+- v2 sessions were shorter (8–10 tutor turns, about 10 simulated minutes).
+- One fixture, one student type (a competent adult). Nothing here says how v2 does with a
+  struggling or young student, in another subject, or in a language lesson.
+
+## v2 faults seen
+
+- Says the time aloud ("your session is about 9 minutes in").
+- On the one wrong answer it gave the correct value at once instead of pointing at the step and
+  letting the student fix it.
+- The opener gives the first example's answer away before asking anything.
+- Everything stayed on board page 1.
+- Replies run long for speech (median 69–96 words).
+
+Reviewer rubric: `apps/tutor/scripts/tutor/replay-harness/REVIEW.md`. Bundles: `apps/tutor/artifacts/replay-harness/` (not in git).
+
+---
+
+# Second comparison — three kinds of student (2026-11-09, later)
+
+Both engines' students could see the board this time. v1 = real browser client, voice session with
+typed turns. v2 = turn engine offline. One blind reviewer per fixture.
+
+| Fixture | Engine | Ratings /10 | Tutor turns | Re-asked | Full re-derivations | Verdict errors | Narration turns | Student got one right alone by the end |
+|---|---|---|---|---|---|---|---|---|
+| Competent adult (`calc-lhopital`) | v2 | 8, 9 | 7, 11 | 0, 0 | 0, 0 | 0, 0 | 0, 0 | n/a |
+| | v1 | 2, 3 | 19, 13 | 4, 1 | 6, 3 | 0, 1 | 10, 6 | n/a |
+| Struggling 17-year-old (`calc-struggling`) | v2 | 6, 7, 7 | 15, 11, 22 | 0, 0, 0 | 0, 0, 0 | 0, 0, 0 | 2, 1, 2 | yes, yes, yes |
+| | v1 | 2, 3 | 39, 37 | 8, 10 | 15, 15 | 2, 2 | 22, 19 | yes, yes |
+| Grade 6 (`g6-fractions`) | v2 | 5, 7, 8 | 12, 23, 17 | 0, 0, 0 | 0, 0, 0 | 0, 0, 0 | 0, 5, 1 | no, yes, yes |
+| | v1 | 3, 2 | 40, 40 | 7, 9 | 18, 17 | 2, 9 | 19, 21 | no, no |
+
+What the reviewers said about v2 where it was weakest:
+
+- Struggling student: paced for a stronger student; sometimes handed over an answer after one "I
+  don't know"; worked only partly on her known gaps (the chain-rule practice was her idea); one
+  third-person slip ("since she's moving quickly").
+- Grade 6: used "common denominator", "multiple", "numerators" before explaining them; did the first
+  example for him; pushed a three-fraction problem straight after his first guided success; one run
+  never gave him a problem to do alone; one run said its whole reply twice; one run left a wrong
+  answer on the board (51/24) and corrected it; one run answered "can we stop?" with an empty reply.
+- Competent adult: one time remark; announced "the trap" before posing it; "plan" talk.
+
+v1's faults were the same in all three: a re-derivation after nearly every correct answer,
+re-asked questions, narration and third person, two replies glued into one, and — with the weaker
+students — correct answers called wrong (grade 6 run E: nine muddled or wrong verdicts).
+
+Changes made to v2 afterwards (not yet re-scored at the time of writing):
+
+- Engine: a turn ends after one model call when the tutor has spoken and every tool call worked
+  (removes the repeated reply and a wait); a reply with no words is always followed up (removes the
+  empty goodbye); a stored tool call always has its result (a cut-off reply had broken a session).
+- Constitution: level sets vocabulary, step size and how fast difficulty rises; a gap that shows
+  becomes the lesson until the student can do one alone; "I don't know" earns a smaller step, not the
+  answer; a new word is explained when first used; the plan is never mentioned to the student.
+
+---
+
+# Third review — did the revised constitution help the weaker students? No.
+
+Old v2 against revised v2 ("v2b": gap-becomes-the-lesson wording, single model call per turn),
+three runs each, scored blind and mixed, with a stricter rubric (pace, "left behind", "gave it
+away" now counted more tightly).
+
+| Fixture | Old v2 | Revised v2 |
+|---|---|---|
+| Struggling 17-year-old | 5, 4, 6 | 4, 3, 5 |
+| Grade 6 | 3.5, 5.5, 7 | 6, 4, 4.5 |
+
+- No improvement; if anything slightly worse, within noise.
+- The same three old-v2 struggling transcripts were rated 6, 7, 7 by the previous reviewer and
+  5, 4, 6 by this one. Reviewer-to-reviewer spread is 1–2 points, so differences of that size
+  between arms mean nothing at three runs each. The v1-to-v2 gap (2–3 against 5–9) is well outside it.
+- Struggling student: "none made her gaps the lesson." All six told her the derivative of ln x and
+  moved on; the chain rule was practised only when she asked or when a problem happened to need it.
+  One revised run reversed its own verdict mid-turn and narrated ("let me update my notes", "let me
+  log the goals as covered", "her derivative calculation gave 2").
+- Grade 6: the revised wording produced a new fault in two of three runs — one tiny step per turn
+  for 30 turns with a child who was getting everything right, never letting him do a whole problem
+  alone ("too slow"), while still jumping to three fractions. The old runs erred the other way
+  (first example done for him, too fast).
+- The simulated student is not equally weak from run to run (she did the chain rule unaided in one
+  session and failed it twice in another), which adds noise of its own.
+
+Conclusion: wording changes to the constitution are not moving the weaker-student results. Next
+is to test levers that are not wording — thinking effort and the model — and to cut the noise
+(more runs per arm, one reviewer for all arms of a fixture).
+
+# Browser smoke of the v2 voice client (first cut)
+
+A 4.5-minute voice session with typed turns ran end to end: start tap, 12 turns, sentences sent to
+the speech queue, board painted, session saved. Faults seen: the silence check-in fired after 25 s
+while the student was working and talked over the answer (now 75 s, then 120 s); one third-person
+sentence ("He handled the repeat application cleanly"); an empty transcript entry was refused by
+the session save (fixed: the tutor's entry appears with its first words). Not tested: a real
+microphone, echo, interruption by voice.

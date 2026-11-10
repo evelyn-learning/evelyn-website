@@ -46,6 +46,9 @@ export interface PartnerSessionOptions {
    *  (decision 2026-10-29); an explicit `thinking_cue` token claim still wins
    *  either way. With the cue off, the spoken ack fillers come back. */
   thinkingCue: boolean;
+  /** Which turn engine the partner's sessions use. 'v1' everywhere until v2 is cut over
+   *  partner by partner (docs/superpowers/specs/2026-11-09-tutor-brain-v2-design.md §4.1). */
+  brainVersion: 'v1' | 'v2';
 }
 
 /** Partner rows — applied when present. A partner absent from this table
@@ -85,6 +88,7 @@ export function defaultPartnerSessionOptions(tutorLanguages: string[] | undefine
     levelCheck: false,
     pronunciation: false,
     thinkingCue: true,
+    brainVersion: 'v1',
   };
 }
 
@@ -98,5 +102,6 @@ export function resolvePartnerSessionOptions(session: PartnerSessionLike | null 
     levelCheck: row?.levelCheck ?? base.levelCheck,
     pronunciation: row?.pronunciation ?? base.pronunciation,
     thinkingCue: row?.thinkingCue ?? base.thinkingCue,
+    brainVersion: row?.brainVersion ?? base.brainVersion,
   };
 }

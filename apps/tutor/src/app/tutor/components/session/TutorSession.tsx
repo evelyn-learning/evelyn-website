@@ -32,6 +32,8 @@ import { SessionControls } from '../SessionControls';
 import { WhiteboardCanvas } from '../whiteboard';
 import { buildTryYourselfMarker, type TryYourselfRelationDetail } from '../whiteboard/tryYourselfAnswer';
 import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
+import TutorClientV2 from '../v2/TutorClientV2';
+import TutorVoiceV2 from '../v2/TutorVoiceV2';
 import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
 import SessionStage, { CaptionTicker, MicMeter, type VoiceState } from './SessionStage';
@@ -142,6 +144,8 @@ export interface TutorSessionProps {
   /** Per-partner session behaviour (partner-session-options.ts). Forwarded. */
   openerPrefetch?: VTRProps['openerPrefetch'];
   lessonCloseAutoEnd?: VTRProps['lessonCloseAutoEnd'];
+  /** 'v2' mounts the v2 session client (text sessions only for now); anything else is VoiceTutorRealtime. */
+  brainVersion?: 'v1' | 'v2';
   levelCheck?: VTRProps['levelCheck'];
   pronunciation?: VTRProps['pronunciation'];
   /** Tutor speaking rate (tenant claim). Forwarded to the runtime. */
@@ -313,7 +317,7 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, embedToken, sessionId, sessionStartedAtMs,
-    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', cartesiaVoiceId, cartesiaVoiceSpeed, tutorLanguages, openerPrefetch, lessonCloseAutoEnd, levelCheck, pronunciation, speechRate, thinkingCue = false, sessionMaxMinutes,
+    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', brainVersion, cartesiaVoiceId, cartesiaVoiceSpeed, tutorLanguages, openerPrefetch, lessonCloseAutoEnd, levelCheck, pronunciation, speechRate, thinkingCue = false, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onBrainBusyChange, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
@@ -1700,6 +1704,59 @@ export default function TutorSession(props: TutorSessionProps) {
           <span>{mediaNotice.text}</span>
         </div>
       )}
+      {brainVersion === 'v2' && sessionMode !== 'text' && voiceEngine === 'claude-brain' ? (
+        <TutorVoiceV2
+          key={sessionId}
+          subject={subject}
+          level={level}
+          studentName={studentName || undefined}
+          lessonPlanId={selectedLessonPlanId || undefined}
+          embedToken={embedToken}
+          standby={standby}
+          sessionMaxMinutes={sessionMaxMinutes}
+          composerSlot={videoBtn}
+          handleRef={realtimeHandleRef}
+          voice={voice}
+          ttsProvider={ttsProvider}
+          cartesiaVoiceId={cartesiaVoiceId}
+          cartesiaVoiceSpeed={cartesiaVoiceSpeed}
+          speechRate={speechRate}
+          tutorLanguages={tutorLanguages}
+          onTranscriptUpdate={handleVoiceTranscriptUpdate}
+          onWhiteboardCommand={handleVoiceWhiteboardCommand}
+          onEndSession={handleEndSession}
+          onLessonClosed={() => setQuestionPin(null)}
+          onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
+          onTutorBusy={handleTutorBusy}
+          onVoiceStateChange={setLiveVoiceState}
+          onBrainUsage={onBrainUsage}
+          onDebugEvent={onDebugEvent}
+          onError={(err) => setError(err.message)}
+        />
+      ) : brainVersion === 'v2' && sessionMode === 'text' ? (
+        <TutorClientV2
+          key={sessionId}
+          subject={subject}
+          level={level}
+          studentName={studentName || undefined}
+          lessonPlanId={selectedLessonPlanId || undefined}
+          embedToken={embedToken}
+          standby={standby}
+          prewarm={prewarm}
+          sessionMaxMinutes={sessionMaxMinutes}
+          composerSlot={videoBtn}
+          handleRef={realtimeHandleRef}
+          onTranscriptUpdate={handleVoiceTranscriptUpdate}
+          onWhiteboardCommand={handleVoiceWhiteboardCommand}
+          onEndSession={handleEndSession}
+          onLessonClosed={() => setQuestionPin(null)}
+          onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
+          onTutorBusy={handleTutorBusy}
+          onBrainUsage={onBrainUsage}
+          onDebugEvent={onDebugEvent}
+          onError={(err) => setError(err.message)}
+        />
+      ) : (
       <VoiceTutorRealtime
         key={sessionId}
         subject={subject}
@@ -1837,6 +1894,7 @@ export default function TutorSession(props: TutorSessionProps) {
         maxDurationExplicit={maxDurationExplicit}
         dockVariant="island"
       />
+      )}
     </>
   );
 

@@ -1,0 +1,188 @@
+'use client';
+/**
+ * Tutor brain v2 — the turn loop, shared by the text and the voice client.
+ *
+ * One job: the student's words in; the tutor's words streamed into the
+ * transcript (and, sentence by sentence, to whoever speaks them); painted tool
+ * calls to the whiteboard; the next state kept for the following turn. It
+ * holds no audio and no lesson policy.
+ */
+import { useCallback, useRef, useState, type MutableRefObject } from 'react';
+import type { WhiteboardCommand } from '@core/knowledge/types';
+import { mapFunctionCallToCommand } from '@/app/tutor/hooks/toolDefinitions';
+import type { TranscriptEntry } from '@/lib/tutor/types';
+import { paintsOnBoard, streamV2Turn, type V2ClientSession } from '@/lib/tutor/v2/client';
+import { foldInterruptedTurn } from '@/lib/tutor/v2/interrupted';
+import { SentenceStream } from '@/lib/tutor/v2/sentences';
+import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
+import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
+
+export interface V2TurnsConfig {
+  mode: 'text' | 'voice';
+  subject: string;
+  level: string;
+  studentName?: string;
+  lessonPlanId?: string;
+  embedToken?: string;
+  sessionMaxMinutes?: number;
+  onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
+  onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
+  onEndSession?: (reason?: 'time_limit') => void;
+  onLessonClosed?: (source: string) => void;
+  onSessionStarted?: () => void;
+  onTutorBusy?: (busy: boolean) => void;
+  onBrainUsage?: (usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string }) => void;
+  onDebugEvent?: (type: string, message: string, data?: Record<string, unknown>) => void;
+  onError?: (error: Error) => void;
+  /** Voice: each finished sentence of the reply, in order, as soon as it is complete. */
+  onSentence?: (sentence: string) => void;
+  /** Voice: a turn was cut short (the student spoke over it); stop speaking. */
+  onCut?: () => void;
+  /** How long after the closing words the session ends. Voice passes a function that waits for the speech to finish. */
+  closeDelayMs?: number | (() => Promise<void>);
+}
+
+const CLOSE_READ_MS = 4000;
+const UNREACHABLE = "I couldn't reach the tutor just now. Please send that again.";
+
+export interface V2Turns {
+  /** A student message. While a turn is running: text mode queues it; voice mode cuts the running turn and answers this instead. */
+  send: (text: string) => void;
+  /** The tutor's opening turn (once). */
+  open: () => void;
+  /** A turn with no student words: the student has been silent. */
+  nudge: (silenceSeconds: number) => void;
+  end: () => void;
+  abort: () => void;
+  isEnding: () => boolean;
+  busy: boolean;
+  closed: boolean;
+  openedRef: MutableRefObject<boolean>;
+  stateRef: MutableRefObject<V2State>;
+}
+
+export function useV2Turns(config: V2TurnsConfig): V2Turns {
+  const p = useRef(config); p.current = config;
+  const stateRef = useRef<V2State>(newV2State());
+  const transcriptRef = useRef<TranscriptEntry[]>([]);
+  const busyRef = useRef(false);
+  const pendingRef = useRef<string | null>(null);
+  // An opening turn asked for while an earlier one is still being torn down
+  // (React runs effects twice in development: start, clean up, start again).
+  const pendingOpenRef = useRef(false);
+  const openedRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const endingRef = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const [closed, setClosed] = useState(false);
+
+  const publish = () => p.current.onTranscriptUpdate([...transcriptRef.current]);
+
+  const runTurn = useCallback(async (studentSaid: string | null, silenceSeconds?: number) => {
+    if (stateRef.current.closed || endingRef.current) return;
+    if (busyRef.current) {
+      if (studentSaid) {
+        pendingRef.current = pendingRef.current ? `${pendingRef.current}\n${studentSaid}` : studentSaid;
+        // Spoken words over a running reply are an interruption: stop it and answer them.
+        if (p.current.mode === 'voice') { p.current.onCut?.(); abortRef.current?.abort(); }
+      } else if (!silenceSeconds) pendingOpenRef.current = true;
+      return;
+    }
+    busyRef.current = true; setBusy(true); p.current.onTutorBusy?.(true);
+    const stamp = Date.now();
+    if (studentSaid) transcriptRef.current = [...transcriptRef.current, { id: `student-${stamp}`, timestamp: new Date(), role: 'student', text: studentSaid }];
+    const tutorId = `tutor-${stamp}`;
+    publish();
+    // The tutor's entry appears with its first words: the session save refuses an entry with no text.
+    const setTutor = (text: string, streaming: boolean) => {
+      if (!text) return;
+      transcriptRef.current = transcriptRef.current.some((e) => e.id === tutorId)
+        ? transcriptRef.current.map((e) => (e.id === tutorId ? { ...e, text, streaming } : e))
+        : [...transcriptRef.current, { id: tutorId, timestamp: new Date(), role: 'tutor', text, streaming }];
+      publish();
+    };
+    const session: V2ClientSession = {
+      studentName: p.current.studentName, subject: p.current.subject, level: p.current.level, mode: p.current.mode,
+      ...(p.current.sessionMaxMinutes ? { timeBoxMinutes: p.current.sessionMaxMinutes } : {}),
+      ...(p.current.lessonPlanId ? { lessonPlanId: p.current.lessonPlanId } : {}),
+    };
+    const abort = new AbortController(); abortRef.current = abort;
+    const sentences = new SentenceStream();
+    const speak = (list: string[]) => { if (!abort.signal.aborted) for (const s of list) p.current.onSentence?.(s); };
+    let text = '';
+    const settled: V2ToolCall[] = [];
+    try {
+      const done = await streamV2Turn({
+        session, state: stateRef.current, studentSaid, embedToken: p.current.embedToken, signal: abort.signal,
+        ...(silenceSeconds ? { silenceSeconds } : {}),
+        onText: (delta) => { text += delta; setTutor(text, true); speak(sentences.push(delta)); },
+        onToolCall: (call) => {
+          settled.push(call);
+          p.current.onDebugEvent?.('tool_call', `${call.name} → ${call.outcome}`);
+          if (!paintsOnBoard(call, V2_CONTROL_TOOL_NAMES)) return;
+          const cmd = mapFunctionCallToCommand(call.name, call.args as Record<string, unknown>);
+          if (cmd) p.current.onWhiteboardCommand([cmd]);
+          // The words written before and after a tool call are separate paragraphs.
+          speak(sentences.flush());
+          if (text && !/\n\n$/.test(text)) text += '\n\n';
+        },
+      });
+      speak(sentences.flush());
+      stateRef.current = done.state;
+      setTutor(done.spoken || text.trim(), false);
+      p.current.onBrainUsage?.(done.usage);
+      p.current.onDebugEvent?.('brain_turn', `Brain ${done.totalMs}ms · first_sentence=${done.firstTextMs ?? done.totalMs}ms · in=${done.usage.inputTokens} out=${done.usage.outputTokens} cr=${done.usage.cacheReadTokens} cc=${done.usage.cacheCreationTokens} · v2`);
+      if (done.state.closed) {
+        setClosed(true);
+        p.current.onDebugEvent?.('lesson_closed', 'end_lesson');
+        p.current.onLessonClosed?.('end_lesson');
+        endingRef.current = true;
+        const wait = p.current.closeDelayMs;
+        if (typeof wait === 'function') void wait().then(() => p.current.onEndSession?.());
+        else setTimeout(() => p.current.onEndSession?.(), wait ?? CLOSE_READ_MS);
+      }
+    } catch (err) {
+      if (abort.signal.aborted) {
+        // Cut short (interrupted, unmounted or ended). The server's state for this turn is
+        // lost, so the tutor is left remembering exactly what reached the student.
+        stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just begun. The student has not said anything yet.]' : '[The student has not replied.]'), text, settled);
+        p.current.onDebugEvent?.('turn_cut_v2', `${text.trim().split(/\s+/).filter(Boolean).length} words kept, ${settled.length} tool call(s)`);
+        if (text.trim()) setTutor(text.trim(), false);
+      } else {
+        // The state is unchanged, so the same message can simply be sent again.
+        setTutor(text.trim() ? `${text.trim()}\n\n${UNREACHABLE}` : UNREACHABLE, false);
+        p.current.onDebugEvent?.('brain_v2_error', String((err as Error)?.message ?? err).slice(0, 200));
+        p.current.onError?.(err instanceof Error ? err : new Error(String(err)));
+      }
+    } finally {
+      busyRef.current = false; setBusy(false); p.current.onTutorBusy?.(false);
+      const next = pendingRef.current; pendingRef.current = null;
+      const reopen = pendingOpenRef.current; pendingOpenRef.current = false;
+      if (next && !endingRef.current) void runTurn(next);
+      else if (reopen && !endingRef.current && stateRef.current.history.length === 0) void runTurn(null);
+    }
+  }, []);
+
+  const open = useCallback(() => {
+    if (openedRef.current) return;
+    openedRef.current = true;
+    p.current.onSessionStarted?.();
+    p.current.onDebugEvent?.('start_v2', `tutor opens (${p.current.mode})`);
+    void runTurn(null);
+  }, [runTurn]);
+
+  const send = useCallback((raw: string) => {
+    const text = raw.trim();
+    // Bracketed strings are v1 runtime markers ("[start lesson]"); v2 has no use for them.
+    if (!text || /^\[/.test(text)) return;
+    if (!openedRef.current) { openedRef.current = true; p.current.onSessionStarted?.(); }
+    void runTurn(text);
+  }, [runTurn]);
+
+  const nudge = useCallback((silenceSeconds: number) => { if (openedRef.current && !busyRef.current) void runTurn(null, silenceSeconds); }, [runTurn]);
+  const abort = useCallback(() => { abortRef.current?.abort(); }, []);
+  const end = useCallback(() => { endingRef.current = true; abortRef.current?.abort(); p.current.onEndSession?.(); }, []);
+  const isEnding = useCallback(() => endingRef.current, []);
+
+  return { send, open, nudge, end, abort, isEnding, busy, closed, openedRef, stateRef };
+}

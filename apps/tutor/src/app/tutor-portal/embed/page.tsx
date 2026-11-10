@@ -36,7 +36,7 @@ import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { unloadSaveStatus } from '@/lib/tutor/voice/lesson-close';
-import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_BRAIN_V2_CLAIM, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE } from '@/lib/tutor/orchestrator/flags';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -601,6 +601,8 @@ interface EmbedConfig {
    *  token; absent/false = not a trial. Only consumed when
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
   is_trial?: boolean;
+  /** Asks for the v2 turn engine; honoured only where TUTOR_BRAIN_V2_CLAIM is on. */
+  brain_version?: string;
   /** Open-scope session (2026-09-10). When true the student may change the
    *  subject/topic at any point: the brain's propose_plan_swap is honored
    *  (it was silently dropped in the embed before — no handler was wired),
@@ -2442,6 +2444,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         tutorLanguages={tutorLanguages}
         openerPrefetch={sessionOptions.openerPrefetch}
+        brainVersion={sessionOptions.brainVersion === 'v2' || (TUTOR_BRAIN_V2_CLAIM && config.brain_version === 'v2') ? 'v2' : 'v1'}
         lessonCloseAutoEnd={sessionOptions.lessonCloseAutoEnd}
         levelCheck={sessionOptions.levelCheck}
         pronunciation={sessionOptions.pronunciation}
