@@ -2288,6 +2288,10 @@ export function speakPhonemeSlashes(text: string): string {
 
 export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string {
   let t = raw;
+  // A fraction over zero has no everyday reading, so the voice invents one: "0/0" was spoken as
+  // "zero zeroths" (Praveen, embed-1794328944377, L'Hôpital). It is always "N over zero"; the same
+  // goes for the infinity form, whose slash was otherwise left for the voice to guess at.
+  t = t.replace(/(?<![\d./])(\d+)\s*\/\s*0(?![\d/]|\.\d)/g, '$1 over 0').replace(/(∞|\binfinity)\s*\/\s*(∞|infinity\b)/gi, 'infinity over infinity');
   // Known-name vocative comma (2026-07-19, closes the residual from the
   // 2026-07-11/07-16 shape-matched rules): with the actual student name in
   // hand there is no article/clause ambiguity left — a comma immediately

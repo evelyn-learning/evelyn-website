@@ -43,7 +43,7 @@ async function main() {
   for (let i = 0; i < 6 && await orb.isVisible().catch(() => false); i++) { await page.waitForTimeout(2500); await orb.click({ timeout: 5000 }).catch(() => {}); await page.waitForTimeout(3000); }
   const t0 = Date.now();
   console.log('started');
-  await page.waitForTimeout(22000);
+  await page.waitForTimeout(Number(process.env.PROBE_WAIT_MS ?? 22000));
   const input = page.locator('input[name="studentText"]');
   for (const line of lines) { await input.click(); await input.fill(line); await input.press('Enter'); console.log(`typed @${((Date.now() - t0) / 1000).toFixed(1)}s: ${line}`); await page.waitForTimeout(28000); }
   const sched = await page.evaluate(() => window.__sched ?? []);
@@ -60,6 +60,10 @@ async function main() {
     console.log(`context ${id}: ${list.length} buffers, ${durs.reduce((a, b) => a + b, 0).toFixed(1)}s of audio, sampleRate ${[...new Set(list.map((s) => s.sr))].join('/')}, rate ${[...new Set(list.map((s) => s.rate))].join('/')}, overlaps ${overlaps}, short gaps ${gaps}`);
     for (const s of list.slice(0, 14)) console.log(`    +${((s.t - t0) / 1000).toFixed(2)}s now=${s.now.toFixed(3)} when=${s.when.toFixed(3)} dur=${s.dur.toFixed(3)}${process.env.PROBE_STACKS ? `  ${s.st ?? ''}` : ''}`);
   }
+  // Seconds (since start) in which audio was started, in 2 s bins: silences and resumptions show here.
+  const bins = new Map<number, number>();
+  for (const s of sched) { const b = Math.floor((s.t - t0) / 2000) * 2; bins.set(b, (bins.get(b) ?? 0) + s.dur); }
+  console.log('audio started per 2 s: ' + [...bins.entries()].sort((a, b) => a[0] - b[0]).map(([b, d]) => `${b}s:${d.toFixed(1)}`).join(' '));
   fs.writeFileSync(path.join(process.cwd(), 'artifacts', 'replay-harness', 'probe-audio.json'), JSON.stringify(sched));
   await browser.close();
 }

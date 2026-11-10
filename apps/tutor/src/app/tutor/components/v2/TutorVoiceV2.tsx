@@ -106,7 +106,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     ...props,
     mode: 'voice',
     onSentence: (sentence) => { waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; realtimeRef.current?.speakText(sentence); },
-    onCut: () => { void realtimeRef.current?.clearSpeechQueue(); p.current.onDebugEvent?.('bargein_v2', 'student spoke over the tutor'); },
+    onCut: () => { void realtimeRef.current?.clearSpeechQueue(); },
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
       if (busy) { clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
@@ -130,8 +130,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const hearingPartial = useCallback((text: string) => {
     const rt = realtimeRef.current;
     if (!rt?.isSpeechPending() || pauseTimerRef.current) return;
-    const n = text.trim().split(/\s+/).filter(Boolean).length;
-    if (n < 3 || isOwnVoice(text, spokenRef.current, 3)) return;
+    // Pause on the first words that are not the tutor's own (every word of an echo is in what it just said).
+    if (!text.trim() || isOwnVoice(text, spokenRef.current, 1, 1)) return;
     if (rt.pauseSpeech()) {
       p.current.onDebugEvent?.('bargein_pause_v2', text.slice(0, 80));
       pauseTimerRef.current = setTimeout(() => { pauseTimerRef.current = null; realtimeRef.current?.resumeSpeech(); }, PAUSE_GIVE_UP_MS);
@@ -148,6 +148,14 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       return;
     }
     if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; }
+    // The student has taken the floor: whatever the tutor still had queued or paused is dropped, whether or
+    // not a reply is still streaming. Clearing also restarts a paused playback clock; without it the next
+    // reply queued behind a paused sentence and was never heard (embed-1794328944377, "you seem to have got stuck").
+    if (realtimeRef.current?.isSpeechPending()) {
+      p.current.onDebugEvent?.('bargein_v2', opts?.typed ? 'typed over the tutor' : 'spoke over the tutor');
+      void realtimeRef.current.clearSpeechQueue();
+    }
+    realtimeRef.current?.resumeSpeech();
     silenceStepRef.current = 0;
     if (p.current.thinkingCue) { const r = cueTurnAccepted(cueRef.current, Date.now()); cueRef.current = r.state; play(r.play); }
     turnsRef.current?.send(text);

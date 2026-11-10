@@ -1500,3 +1500,12 @@ console.log('OK — tts-pronunciation rewrites validated');
   }
   console.log('OK — phoneme slashes spoken as sounds');
 }
+
+{
+  // A fraction over zero is "N over 0" (it was spoken "zero zeroths"); ordinary fractions are left alone.
+  assert.equal(rewriteForTTS('That gives 0/0.'), 'That gives 0 over 0.');
+  assert.match(rewriteForTTS('the form has to be 0/0 or ∞/∞ first'), /0 over 0 or infinity over infinity first/);
+  assert.match(rewriteForTTS('so 1/0 is undefined'), /1 over 0 is undefined/);
+  for (const keep of ['1/2', '3/4 of it', '7/10', '0/5', '1/0.5', '10/05/2026']) assert.ok(rewriteForTTS(keep).includes(keep.split(' ')[0]), keep);
+  console.log('OK — fractions over zero are spoken "over zero"');
+}
