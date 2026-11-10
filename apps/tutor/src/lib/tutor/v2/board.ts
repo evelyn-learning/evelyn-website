@@ -20,6 +20,19 @@ export function summariseBoardCall(name: string, args: Record<string, unknown>):
   return body.length > 300 ? `${body.slice(0, 297)}…` : body;
 }
 
+/** Why a board call would not sit well on the board, or null. An equation card is one centred line of
+ *  KaTeX: sentences inside \text{} and long unbroken lines run off its edge and are clipped (the
+ *  "Hypotheses: f, g differentiable near a…" card, embed-1794336536781). */
+export function boardMisfit(name: string, args: Record<string, unknown>): string | null {
+  if (name !== 'show_equation') return null;
+  const latex = text(args.latex);
+  const words = [...latex.matchAll(/\\text(?:rm|bf|it)?\{([^}]*)\}/g)].flatMap((m) => m[1].split(/\s+/).filter((w) => /\p{L}{2,}/u.test(w)));
+  if (words.length > 6) return 'that is a sentence, not an equation: put the words in a note (annotate, with the mathematics between dollar signs) and keep show_equation for the mathematics alone';
+  const longest = Math.max(...latex.split(/\\\\/).map((line) => line.replace(/\\[a-zA-Z]+|[{}\s&]/g, '').length));
+  if (longest > 70) return 'too wide for one line of the board: break it into steps, one per line, in an aligned environment';
+  return null;
+}
+
 const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
 
 /** Apply a board tool call to the record. Mutates `board`. */

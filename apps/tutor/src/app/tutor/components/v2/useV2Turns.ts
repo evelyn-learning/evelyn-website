@@ -37,6 +37,9 @@ export interface V2TurnsConfig {
   onError?: (error: Error) => void;
   /** Voice: each finished sentence of the reply, in order, as soon as it is complete. */
   onSentence?: (sentence: string) => void;
+  /** Voice: decide when a board item is painted. Called once per item, after every sentence of the reply up to
+   *  that point has gone to onSentence; `paint` may be called at once or later. Absent: painted at once. */
+  holdBoard?: (call: V2ToolCall, paint: () => void) => void;
   /** Voice: a turn was cut short (the student spoke over it); stop speaking. */
   onCut?: () => void;
   /** How long after the closing words the session ends. Voice passes a function that waits for the speech to finish. */
@@ -124,12 +127,12 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         },
         onToolCall: (call) => {
           settled.push(call);
-          p.current.onDebugEvent?.('tool_call', `${call.name} → ${call.outcome}`);
+          p.current.onDebugEvent?.('tool_call', `${call.name} → ${call.outcome}${call.sayWith ? ` · with "${call.sayWith}"` : ''}`);
           if (!paintsOnBoard(call, V2_CONTROL_TOOL_NAMES)) return;
           const cmd = mapFunctionCallToCommand(call.name, call.args as Record<string, unknown>);
-          if (cmd) p.current.onWhiteboardCommand([cmd]);
           // The words written before and after a tool call are separate paragraphs.
           speak(sentences.flush());
+          if (cmd) { const paint = () => p.current.onWhiteboardCommand([cmd]); if (p.current.holdBoard) p.current.holdBoard(call, paint); else paint(); }
           if (text && !/\n\n$/.test(text)) text += '\n\n';
         },
       });

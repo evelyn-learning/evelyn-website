@@ -35,6 +35,7 @@ import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import { V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
+import { anchorSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
@@ -61,6 +62,13 @@ const TRANSPORT_ONLY = 'You are a voice transport layer, not a tutor or assistan
 const SILENCE_STEPS_S = [75, 120];
 /** A pause taken when the student seems to be speaking is lifted after this long if no words arrive. */
 const PAUSE_GIVE_UP_MS = 8000;
+/** The microphone must have been quiet this long before a silence counts as silence. */
+const QUIET_MIC_MS = 20000;
+/** After a reply of silence, how long before the tutor is told the student has said nothing more. */
+const WAITED_RECHECK_S = 12;
+const MIC_SOUND_LEVEL = 0.12;
+/** A held board item is painted after this long whatever the voice is doing. */
+const BOARD_HOLD_MAX_MS = 45000;
 
 export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const p = useRef(props); p.current = props;
@@ -68,6 +76,35 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const startedRef = useRef(false);
   const [started, setStarted] = useState(false);
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Board timing (board-timing.ts): the sentences of the running reply as sent to the voice, how many have
+  // started playing, and the board items waiting for theirs.
+  const lastSoundAtRef = useRef(0);
+  const turnSentencesRef = useRef<string[]>([]);
+  const startedCountRef = useRef(0);
+  const heldBoardRef = useRef<Array<{ idx: number; paint: () => void; timer: ReturnType<typeof setTimeout> }>>([]);
+  const unplacedBoardRef = useRef<Array<{ call: { name: string; sayWith?: string }; paint: () => void }>>([]);
+  /** Match waiting board items to the sentences known so far. `final`: no more sentences are coming. */
+  const placeBoard = useCallback((final?: boolean) => {
+    const still: typeof unplacedBoardRef.current = [];
+    for (const u of unplacedBoardRef.current) {
+      const idx = anchorSentenceIndex(u.call.sayWith, turnSentencesRef.current);
+      if (idx < 0 && !final) { still.push(u); continue; }
+      const hold = idx > 0 && startedCountRef.current <= idx;
+      p.current.onDebugEvent?.('v2_board_timing', `${u.call.name}: ${idx < 0 ? 'its sentence was not found' : `sentence ${idx + 1} of ${turnSentencesRef.current.length}`}, ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
+      if (!hold) { u.paint(); continue; }
+      const entry = { idx, paint: u.paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); u.paint(); }, BOARD_HOLD_MAX_MS) };
+      heldBoardRef.current.push(entry);
+    }
+    unplacedBoardRef.current = still;
+  }, []);
+  const releaseBoard = useCallback((upTo?: number) => {
+    if (upTo === undefined) placeBoard(true);
+    const keep: typeof heldBoardRef.current = [];
+    for (const h of heldBoardRef.current) {
+      if (upTo === undefined || h.idx < upTo) { clearTimeout(h.timer); h.paint(); } else keep.push(h);
+    }
+    heldBoardRef.current = keep;
+  }, []);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const silenceStepRef = useRef(0);
   const realtimeRef = useRef<ReturnType<typeof useOpenAIRealtime> | null>(null);
@@ -88,15 +125,17 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [props.thinkingCue]);
 
   const clearSilence = () => { if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; } };
-  const armSilence = useCallback(() => {
+  const armSilence = useCallback((soonS?: number) => {
     clearSilence();
-    const wait = SILENCE_STEPS_S[silenceStepRef.current];
+    const wait = soonS ?? SILENCE_STEPS_S[silenceStepRef.current];
     if (wait === undefined) return;
     silenceTimerRef.current = setTimeout(() => {
       const rt = realtimeRef.current; const turns = turnsRef.current;
       if (!rt || !turns || turns.isEnding()) return;
-      if (rt.isSpeechPending()) { armSilence(); return; }
-      silenceStepRef.current += 1;
+      if (rt.isSpeechPending()) { armSilence(soonS); return; }
+      // A student murmuring through a problem is not silent, even when no words were recognised.
+      if (Date.now() - lastSoundAtRef.current < Math.min(QUIET_MIC_MS, wait * 500)) { armSilence(soonS); return; }
+      if (!soonS) silenceStepRef.current += 1;
       p.current.onDebugEvent?.('idle_nudge_v2', `${wait}s of silence`);
       turns.nudge(wait);
     }, wait * 1000);
@@ -105,12 +144,21 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const turns = useV2Turns({
     ...props,
     mode: 'voice',
-    onSentence: (sentence) => { waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; realtimeRef.current?.speakText(sentence); },
-    onCut: () => { void realtimeRef.current?.clearSpeechQueue(); },
+    onSentence: (sentence) => { turnSentencesRef.current.push(sentence); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; realtimeRef.current?.speakText(sentence); },
+    onCut: () => { void realtimeRef.current?.clearSpeechQueue(); releaseBoard(); },
+    holdBoard: (call, paint) => {
+      if (!call.sayWith || !realtimeRef.current) { paint(); return; }
+      // Its sentence may not have been written yet (the model can call the tool first and speak after):
+      // wait for it, and place the item as soon as the sentence is known.
+      unplacedBoardRef.current.push({ call, paint });
+      placeBoard();
+    },
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
-      if (busy) { clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
-      else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); armSilence(); }
+      if (busy) { releaseBoard(); turnSentencesRef.current = []; startedCountRef.current = 0; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
+      else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard();
+        // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
+        armSilence(turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding() ? WAITED_RECHECK_S : undefined); }
     },
     // The session ends once the closing words have been spoken.
     closeDelayMs: async () => {
@@ -133,7 +181,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // Pause on the first words that are not the tutor's own (every word of an echo is in what it just said).
     if (!text.trim() || isOwnVoice(text, spokenRef.current, 1, 1)) return;
     if (rt.pauseSpeech()) {
-      p.current.onDebugEvent?.('bargein_pause_v2', text.slice(0, 80));
+      p.current.onDebugEvent?.('v2_bargein_pause', text.slice(0, 80));
       pauseTimerRef.current = setTimeout(() => { pauseTimerRef.current = null; realtimeRef.current?.resumeSpeech(); }, PAUSE_GIVE_UP_MS);
     }
   }, []);
@@ -143,7 +191,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     if (!text) return;
     // The microphone hears the tutor too. Words that are the tutor's own, arriving while it speaks, are not the student.
     if (!opts?.typed && realtimeRef.current?.isSpeechPending() && isOwnVoice(text, spokenRef.current)) {
-      p.current.onDebugEvent?.('own_voice_dropped_v2', text.slice(0, 80));
+      p.current.onDebugEvent?.('v2_own_voice_dropped', text.slice(0, 80));
       liftPause();
       return;
     }
@@ -152,14 +200,15 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // not a reply is still streaming. Clearing also restarts a paused playback clock; without it the next
     // reply queued behind a paused sentence and was never heard (embed-1794328944377, "you seem to have got stuck").
     if (realtimeRef.current?.isSpeechPending()) {
-      p.current.onDebugEvent?.('bargein_v2', opts?.typed ? 'typed over the tutor' : 'spoke over the tutor');
+      p.current.onDebugEvent?.('v2_bargein', opts?.typed ? 'typed over the tutor' : 'spoke over the tutor');
       void realtimeRef.current.clearSpeechQueue();
     }
+    releaseBoard();
     realtimeRef.current?.resumeSpeech();
     silenceStepRef.current = 0;
     if (p.current.thinkingCue) { const r = cueTurnAccepted(cueRef.current, Date.now()); cueRef.current = r.state; play(r.play); }
     turnsRef.current?.send(text);
-  }, [liftPause]);
+  }, [liftPause, releaseBoard]);
 
   // Stable identities, all of them: see the note at the top of this file.
   const onRealtimeError = useCallback((err: Error) => p.current.onError?.(err), []);
@@ -168,7 +217,11 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     else if (state === 'listening' || state === 'connected') p.current.onVoiceStateChange?.(turnsRef.current?.busy ? 'thinking' : 'listening');
     else if (state === 'error') p.current.onVoiceStateChange?.('error');
   }, []);
-  const onPlayback = useCallback((event: string) => { if (event === 'drain' && !turnsRef.current?.busy) armSilence(); }, [armSilence]);
+  const onPlayback = useCallback((event: string) => {
+    // A sentence has begun playing: board items anchored to it (or to an earlier one) appear now.
+    if (event === 'sentence-start') { startedCountRef.current += 1; releaseBoard(startedCountRef.current); }
+    if (event === 'drain') { if (!turnsRef.current?.busy) { releaseBoard(); armSilence(); } }
+  }, [armSilence, releaseBoard]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');
   const relayMode = useMemo(() => ({
@@ -200,20 +253,21 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const onSpeechStart = useCallback(() => { clearSilence(); if (!realtimeRef.current?.isSpeechPending()) p.current.onVoiceStateChange?.('hearing'); }, []);
   const onSpeechStop = useCallback(() => { if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) p.current.onVoiceStateChange?.('processing'); }, []);
   const onNoTranscript = useCallback((kind: string | undefined) => {
-    p.current.onDebugEvent?.('transcription_failed_v2', String(kind ?? 'unknown'));
+    p.current.onDebugEvent?.('v2_transcription_failed', String(kind ?? 'unknown'));
     liftPause();
     if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { p.current.onVoiceStateChange?.('listening'); armSilence(); }
   }, [liftPause, armSilence]);
-  const onRecogniserError = useCallback((err: Error) => p.current.onDebugEvent?.('recogniser_error_v2', err.message.slice(0, 160)), []);
+  const onRecogniserError = useCallback((err: Error) => p.current.onDebugEvent?.('v2_recogniser_error', err.message.slice(0, 160)), []);
+  const onMicLevel = useCallback((level: number) => { if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); }, []);
   const onInkDiagnostic = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
   usePerceptionWS({
     enabled: listening && !TUTOR_STT_ENGINE_INK2,
-    onTranscript, onSpeechStart, onSpeechStop, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
+    onTranscript, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
   });
   useCartesiaInkWS({
     enabled: listening && TUTOR_STT_ENGINE_INK2,
     turnEndTimeoutMs: inkTurnEndTimeoutMs(props.tutorLanguages),
-    onTranscript, onPartialTranscript: onPartial, onSpeechStart, onSpeechStop, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
+    onTranscript, onPartialTranscript: onPartial, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
     onDiagnostic: onInkDiagnostic,
   });
 
@@ -230,7 +284,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     turnsRef.current?.open();
   }, []);
 
-  useEffect(() => () => { clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
+  useEffect(() => () => { releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
 
   useEffect(() => {
     const ref = props.handleRef;

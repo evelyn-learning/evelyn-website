@@ -1509,3 +1509,17 @@ console.log('OK — tts-pronunciation rewrites validated');
   for (const keep of ['1/2', '3/4 of it', '7/10', '0/5', '1/0.5', '10/05/2026']) assert.ok(rewriteForTTS(keep).includes(keep.split(' ')[0]), keep);
   console.log('OK — fractions over zero are spoken "over zero"');
 }
+
+{
+  // Mathematics typed in a sentence gets its words (embed-1794336536781: "one x", "fef aye", "infinity over zeroth").
+  const say = (x: string) => rewriteForTTS(x);
+  assert.match(say("what's left is f'(a) over g'(a)"), /f prime of a over g prime of a/i);
+  assert.match(say('the derivative of 1/x is -1/x².'), /1 over x is -1 over x squared/);
+  assert.match(say('simplify (1/x) divided by (-1/x²)'), /\(1 over x\) divided by \(-1 over x squared/);
+  assert.match(say("Here's an ∞⁰ form"), /infinity to the power 0 form/);
+  assert.match(say('a 1^∞ form'), /1 to the power infinity form/);
+  assert.match(say('x/2 and 3x/4 and x/y'), /x over 2 and 3x over 4 and x over (y|why)/);
+  for (const keep of ['1/2', '2/3 is right', '24/7', 'and/or', 'n/a', 'either/or']) assert.ok(!/ over /.test(say(keep)), keep);
+  assert.ok(!/prime/.test(say("the student's answer, and that's fine")), 'apostrophes in prose are not primes');
+  console.log('OK — typed maths is spoken in words');
+}

@@ -10,27 +10,32 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { WHITEBOARD_TOOLS } from '@/app/tutor/hooks/toolDefinitions';
 
 const BOARD_DESCRIPTIONS: Record<string, string> = {
-  show_equation: 'Put one equation or expression on the board, in LaTeX. Optional short label.',
+  show_equation: 'Put mathematics on the board, in LaTeX: one equation, or several lines of working in an aligned environment, one step per line. Mathematics only: words and sentences go in a note (annotate), never inside \\text{}. Optional short label.',
+  annotate: 'Put a note in words on the board: a rule or its conditions stated in words, the steps of a method, a name or spelling, a recap. One point per line, lines separated by a newline. Mathematics inside it goes between single dollar signs. Style: highlight for a key idea, warning for a trap.',
   show_problem: 'Put a problem for the student on the board. Use this whenever you pose a problem.',
   show_worked_example: 'Put a worked example on the board: the problem and its steps.',
   show_function_graph: 'Draw the graph of one or more functions.',
   show_table: 'Put a small table on the board.',
   show_number_line: 'Draw a number line with marked points or intervals.',
   show_geometry: 'Draw a geometric figure.',
-  tutor_handwrite: 'Write a short line of plain text on the board.',
   highlight: 'Draw attention to something already on the board.',
   new_page: 'Start a new board page with a title. Use when the subject changes.',
   go_to_page: 'Go back to an earlier board page.',
 };
 
 /** Board tools every session gets, then extras by subject. */
-const CORE = ['show_equation', 'show_problem', 'show_worked_example', 'tutor_handwrite', 'highlight', 'new_page', 'go_to_page'];
+const CORE = ['show_equation', 'annotate', 'show_problem', 'show_worked_example', 'highlight', 'new_page', 'go_to_page'];
 const BY_SUBJECT: Record<string, string[]> = {
   math: ['show_function_graph', 'show_table', 'show_number_line', 'show_geometry'],
   science: ['show_function_graph', 'show_table'],
 };
 
 export const V2_CONTROL_TOOLS: Anthropic.Tool[] = [
+  {
+    name: 'keep_listening',
+    description: 'Say nothing this turn and keep listening. For when the student is thinking aloud, working, or has not finished what they were saying. Call it alone, with no words.',
+    input_schema: { type: 'object', properties: {} },
+  },
   {
     name: 'update_session_note',
     description: 'Replace your private session note. Call it whenever what you know about the student, what has been covered, what is open or what you plan next has changed.',
@@ -74,6 +79,14 @@ export function v2BoardToolNames(subject: string): string[] {
   return [...CORE, ...(BY_SUBJECT[subject] ?? [])];
 }
 
+/** When, within the spoken reply, a board item appears. The reply is generated in a second or two and
+ *  spoken over twenty: without this everything is painted at once, and the student is looking at the next
+ *  problem while still hearing about the last one (Praveen, embed-1794336536781). The runtime takes the
+ *  argument off before the tool runs (turn.ts) and the voice client holds the item until that sentence
+ *  starts playing (TutorVoiceV2). */
+export const SAY_WITH = 'say_with';
+const SAY_WITH_SCHEMA = { type: 'string', description: 'Spoken lessons: the first few words, copied exactly, of the sentence in this reply that this belongs with. It appears on the board as you begin saying that sentence. Leave it out and it appears as you start speaking.' };
+
 /** The tools for a session, in a stable order (the list is part of the cached prefix). */
 export function v2Tools(subject: string): Anthropic.Tool[] {
   const byName = new Map((WHITEBOARD_TOOLS as Array<{ name: string; parameters: unknown }>).map((t) => [t.name, t]));
@@ -81,7 +94,8 @@ export function v2Tools(subject: string): Anthropic.Tool[] {
   for (const name of v2BoardToolNames(subject)) {
     const def = byName.get(name);
     if (!def) continue;
-    board.push({ name, description: BOARD_DESCRIPTIONS[name] ?? name, input_schema: def.parameters as Anthropic.Tool.InputSchema });
+    const schema = def.parameters as { properties?: Record<string, unknown> };
+    board.push({ name, description: BOARD_DESCRIPTIONS[name] ?? name, input_schema: { ...schema, properties: { ...(schema.properties ?? {}), [SAY_WITH]: SAY_WITH_SCHEMA } } as Anthropic.Tool.InputSchema });
   }
   return [...board, ...V2_CONTROL_TOOLS];
 }

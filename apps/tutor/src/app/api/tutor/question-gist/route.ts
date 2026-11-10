@@ -38,16 +38,20 @@ These are NOT plumbing — always pin them (input → your reply):
 - Questions after a transitional lead-in ("quick one before we move on:", "one more before we wrap:"): the lead-in is scaffolding to DROP; the question after it is real. "Quick one before we move: what's the sign of the second term?" → "What's the sign of the second term?"
 - Readiness checks that gate real work: "Ready to try one yourself?" → "Ready to try one yourself?"`;
 
+/** Tutor brain v2 sends every reply, not only those with a "?": a tutor often asks through an instruction
+ *  ("Simplify that ratio and find what it approaches"), and a reply that asks nothing must clear the pin. */
+const ANY_ASK = `This turn may ask through an instruction instead of a question ("Simplify that ratio and find what it approaches."). Treat the instruction as the ask and rephrase it as the question the student must answer ("What does the ratio simplify to, and what does it approach?"). Here NONE is NOT rare: reply NONE whenever the turn leaves the student nothing to answer or do — it only explains, confirms, shows something, or says goodbye.`;
+
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as { turnText?: unknown };
+    const body = (await req.json()) as { turnText?: unknown; anyAsk?: unknown };
     const turnText = typeof body.turnText === 'string' ? body.turnText.trim() : '';
     if (!turnText) return Response.json({ gist: null });
 
     const msg = await anthropic.messages.create({
       model: GIST_MODEL_ID,
       max_tokens: MAX_TOKENS,
-      system: SYSTEM,
+      system: body.anyAsk === true ? `${SYSTEM}\n\n${ANY_ASK}` : SYSTEM,
       // Long explanations bury the ask at the end — the tail is what matters.
       messages: [{ role: 'user', content: turnText.slice(-4000) }],
     });

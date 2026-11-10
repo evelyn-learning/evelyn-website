@@ -82,6 +82,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // Typed turn (2026-11-04, Task 7): typed_turn / typed_turn_field / typed_turn_effect /
   // typed_turn_fallback / typed_turn_bridge_missing / typed_turn_nudge — the bot harness reads them.
   'typed_turn',
+  // Tutor brain v2 voice client (2026-11-10): v2_bargein, v2_board_timing, v2_own_voice_dropped… — the first
+  // board-timing check ran blind because this list ate them.
+  'v2_',
   'perception_', 'ink_', 'error', 'MicSilentWarning', 'mic_',
   'brain_watchdog', 'dispatch_', 'production_ws_', 'session_mint',
   'try_alone',

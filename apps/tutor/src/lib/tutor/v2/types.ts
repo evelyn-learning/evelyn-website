@@ -46,7 +46,11 @@ export interface V2State {
   closeSummary?: string;
 }
 
-export interface V2ToolCall { id: string; name: string; args: Record<string, unknown>; outcome: string }
+export interface V2ToolCall {
+  id: string; name: string; args: Record<string, unknown>; outcome: string;
+  /** Board calls: the opening words of the sentence this item appears with (tools.ts SAY_WITH). */
+  sayWith?: string;
+}
 
 export interface V2TurnResult {
   /** What the tutor says this turn, in order. */

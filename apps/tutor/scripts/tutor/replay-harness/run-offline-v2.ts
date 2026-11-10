@@ -72,10 +72,10 @@ async function main() {
     catch (e) { say(`TUTOR ERROR ${(e as Error).message.slice(0, 200)}`); endedBy = 'error'; break; }
     state = r.state;
     events.push({ type: 'brain_turn', message: `Brain ${r.totalMs}ms · ${r.toolCalls.length} tool call(s) · first_sentence=${r.firstTextMs ?? r.totalMs}ms · in=${r.usage.inputTokens} out=${r.usage.outputTokens} cr=${r.usage.cacheReadTokens} cc=${r.usage.cacheCreationTokens}` });
-    for (const t of r.toolCalls) events.push({ type: 'tool_call', message: `${t.name} → ${t.outcome}` });
+    for (const t of r.toolCalls) events.push({ type: 'tool_call', message: `${t.name} → ${t.outcome}${t.sayWith ? ` · with "${t.sayWith}"` : ''}` });
     say(`TUTOR  ${r.spoken.replace(/\s+/g, ' ').slice(0, 400)}${r.toolCalls.length ? `   [tools: ${r.toolCalls.map((t) => `${t.name}(${t.outcome})`).join(', ')}]` : ''}`);
     const history = [...turns];
-    turns.push({ role: 'tutor', text: r.spoken });
+    turns.push({ role: 'tutor', text: r.spoken || '(the tutor says nothing and waits)' });
     speak(r.spoken, r.totalMs);
     if (state.closed) { endedBy = 'tutor_close'; break; }
     const board = r.toolCalls.filter((t) => /^painted|^new page/.test(t.outcome) && !['update_session_note', 'set_goal_status', 'end_lesson', 'highlight'].includes(t.name)).map((t) => `${t.name}: ${summariseBoardCall(t.name, t.args)}`);

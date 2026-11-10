@@ -1,3 +1,5 @@
+import { boardMisfit } from '../src/lib/tutor/v2/board';
+import { anchorSentenceIndex } from '../src/lib/tutor/v2/board-timing';
 import { renderFacts } from '../src/lib/tutor/v2/facts';
 /// <reference types="node" />
 /**
@@ -54,13 +56,14 @@ async function main() {
     msg([
       { type: 'thinking', thinking: 'plan the opener', signature: 's' },
       { type: 'text', text: 'Hi Sam. Try this one.' },
-      { type: 'tool_use', id: 't1', name: 'show_problem', input: { problem: { statement: 'Evaluate $\\lim_{x\\to 0} \\sin(3x)/x$.', format: 'free-response' } } },
+      { type: 'tool_use', id: 't1', name: 'show_problem', input: { problem: { statement: 'Evaluate $\\lim_{x\\to 0} \\sin(3x)/x$.', format: 'free-response' }, say_with: 'Try this one' } },
       { type: 'tool_use', id: 't2', name: 'update_session_note', input: { note: 'Sam: AP level. Opened with sin(3x)/x.' } },
     ], 'tool_use'),
   ]);
   const r1 = await runV2Turn({ session, state: s0, studentSaid: null, nowMs: 1_000_000 + 2 * 60000, callModel: a.call });
   const req1 = a.seen[0] as unknown as { system: Array<{ text: string; cache_control?: unknown }>; messages: Anthropic.MessageParam[]; thinking: { type: string }; tools: unknown[] };
   const last1 = req1.messages[req1.messages.length - 1].content as Array<{ type: string; text: string; cache_control?: unknown }>;
+  check('say_with is taken off the board call and reported beside it', r1.toolCalls[0].sayWith === 'Try this one' && !('say_with' in r1.toolCalls[0].args) && /^painted/.test(r1.toolCalls[0].outcome), r1.toolCalls[0]);
   check('system is the constitution then the session part, both cached', req1.system.length === 2 && req1.system[0].text === V2_CONSTITUTION && req1.system.every((b) => b.cache_control));
   check('thinking is adaptive, at medium effort', req1.thinking.type === 'adaptive' && (a.seen[0] as unknown as { output_config: { effort: string } }).output_config.effort === 'medium');
   check('the user turn is the student block then one facts block', last1.length === 2 && /session has just begun/.test(last1[0].text) && /^<facts>[\s\S]*<\/facts>$/.test(last1[1].text));
@@ -94,6 +97,22 @@ async function main() {
   const tail2 = req2.messages[req2.messages.length - 1].content as Array<{ text: string; cache_control?: unknown }>;
   const beforeTail = req2.messages[req2.messages.length - 2].content as Array<{ cache_control?: unknown }>;
   check('a reply that paints leaves no board-gap fact; a reply that paints nothing is counted', !/board last written on/.test(tail2[tail2.length - 1].text) && r2.state.repliesSinceBoard === 1 && /board last written on: 1 reply ago/.test(renderFacts(session, r2.state, { nowMs: 1_000_000 })));
+  {
+    const said = ['Yes, two thirds is right.', 'Substituting gave a finite number, so the rule does not apply.', 'Now a different kind of form.', 'Try the limit of x times the natural log of x.'];
+    check('a board item is matched to the sentence it is said with', anchorSentenceIndex('Now a different kind', said) === 2 && anchorSentenceIndex('Try the limit of x times', said) === 3);
+    check('a loosely copied anchor still matches; none or an unknown one does not', anchorSentenceIndex('try the limit, of X', said) === 3 && anchorSentenceIndex(undefined, said) === -1 && anchorSentenceIndex('Completely different words here', said) === -1);
+    check('an anchor that runs across a sentence break goes with the later sentence', anchorSentenceIndex('Now a different kind of form. Try the limit', said) === 2 && anchorSentenceIndex('does not apply. Now a different', said) === 2);
+    const tools = v2Tools('math') as unknown as Array<{ name: string; input_schema: { properties: Record<string, unknown> } }>;
+    check('every board tool takes say_with; control tools do not', tools.filter((t) => t.name.startsWith('show_')).every((t) => 'say_with' in t.input_schema.properties) && !('say_with' in tools.find((t) => t.name === 'track_gap')!.input_schema.properties));
+  }
+  {
+    check('a sentence inside an equation is turned back, with where it belongs', /annotate/.test(boardMisfit('show_equation', { latex: '\\text{Hypotheses: } f, g \\text{ differentiable near } a \\text{ (except possibly at } a\\text{)}, \\lim_{x\\to a}\\frac{f(x)}{g(x)} \\text{ is of the form zero over zero}' }) ?? ''));
+    check('ordinary equations and aligned working fit', boardMisfit('show_equation', { latex: '\\lim_{x\\to 0}\\frac{\\sin x}{x} = 1' }) === null && boardMisfit('show_equation', { latex: '\\begin{aligned} f(x) &\\approx f\'(a)(x-a) \\\\ g(x) &\\approx g\'(a)(x-a) \\\\ \\frac{f(x)}{g(x)} &\\approx \\frac{f\'(a)}{g\'(a)} \\end{aligned}', label: 'Why (if 0/0)' }) === null);
+    check('a very long single line is turned back', /too wide/.test(boardMisfit('show_equation', { latex: 'a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z+a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z' }) ?? ''));
+    const quiet = stub([msg([{ type: 'tool_use', id: 'k1', name: 'keep_listening', input: {} }], 'tool_use')]);
+    const rk = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'so if I put x equal to zero, um', callModel: quiet.call });
+    check('keep_listening is a whole reply: no words, one model call', rk.spoken === '' && rk.modelCalls === 1 && quiet.seen.length === 1);
+  }
   check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just begun/.test(first[0].text));
   check('the last history message carries a cache mark', !!beforeTail[beforeTail.length - 1].cache_control);
   check('the student\'s words are sent as they are', tail2[0].text === 'It is 3.');

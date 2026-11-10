@@ -2286,8 +2286,34 @@ export function speakPhonemeSlashes(text: string): string {
   });
 }
 
+/** Mathematics typed the way people type it in a sentence ("1/x", "-1/x²", "f'(a)", "∞⁰", "1^∞") has no
+ *  spoken reading the voice can be trusted with: it said "one x", "fef aye", "infinity over zeroth"
+ *  (Praveen, embed-1794336536781). Give each its words. A slash is read "over" only when it is clearly
+ *  a quotient: one side carries a variable or a bracket ("1/2", "24/7", "km/h", "and/or", "n/a" are left). */
+export function speakTypedMaths(text: string): string {
+  const SUP: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
+  let t = text;
+  // f'(a) → f prime of a; f''(x) → f double prime of x; a bare f' → f prime.
+  t = t.replace(/(?<![A-Za-z])([A-Za-z])(''?|′′?)\(([A-Za-z0-9]{1,3})\)/g, (_m, f: string, p: string, a: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'} of ${a}`);
+  t = t.replace(/(?<![A-Za-z])([f-hF-Hy])(''?|′′?)(?![A-Za-z'’(])/g, (_m, f: string, p: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'}`);
+  // ∞⁰, ∞^0, 1^∞: a power the voice has no word for.
+  t = t.replace(/(∞|\binfinity)\s*([⁰¹²³⁴-⁹])/gi, (_m, _i: string, d: string) => `infinity to the power ${SUP[d]}`);
+  t = t.replace(/(∞|\binfinity)\s*\^\s*(\d+)/gi, 'infinity to the power $2').replace(/\^\s*\(?(∞|infinity\b)\)?/gi, ' to the power infinity');
+  // A quotient: digit/variable/bracket on each side of the slash, and not digits on both.
+  const L = String.raw`(?:\d+(?:\.\d+)?|(?<![A-Za-z])[a-z][²³]?|\))`;
+  const R = String.raw`(?:\d+(?:\.\d+)?(?![\d/])|[a-z](?![A-Za-z'’])|\()`;
+  t = t.replace(new RegExp(`(${L})\\s?/\\s?(?=(${R}))`, 'g'), (m, l: string, r: string) => {
+    const lv = /[a-z)]/.test(l); const rv = /[a-z(]/.test(r);
+    if (!lv && !rv) return m;
+    if (/^[a-z]/.test(l) && /^[a-z]/.test(r) && !(/^[xyztu]/.test(l) && /^[xyztu]/.test(r))) return m;
+    return `${l} over `;
+  });
+  return t;
+}
+
 export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string {
   let t = raw;
+  t = speakTypedMaths(t);
   // A fraction over zero has no everyday reading, so the voice invents one: "0/0" was spoken as
   // "zero zeroths" (Praveen, embed-1794328944377, L'Hôpital). It is always "N over zero"; the same
   // goes for the infinity form, whose slash was otherwise left for the voice to guess at.

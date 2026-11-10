@@ -2980,7 +2980,10 @@ function CommandRendererInner({ command }: CommandRendererProps) {
               overflow-x-auto (round-7 item 7): inline-math runs are
               unbreakable atoms — an oversized one gets a scrollbar here
               instead of being clipped by the pane's overflow-x-hidden. */}
-          <HScrollFade as="p" className="text-lg overflow-x-auto"><InlineMathText text={command.text} /></HScrollFade>
+          {/* One paragraph per line of the note: a list of conditions or steps written with newlines ran together as one line. */}
+          {String(command.text ?? '').split(/\n+/).filter((line) => line.trim()).map((line, i) => (
+            <HScrollFade key={i} as="p" className={`text-lg overflow-x-auto${i ? ' mt-1.5' : ''}`}><InlineMathText text={line} /></HScrollFade>
+          ))}
         </div>
       );
 

@@ -1390,7 +1390,12 @@ export default function TutorSession(props: TutorSessionProps) {
       onDebugEvent?.('qpin_set_ask', `${why}: "${ask.slice(0, 60)}"`);
       return true;
     };
-    if (!entry.text.includes('?')) {
+    // Tutor brain v2: the pin belongs to the tutor's latest reply. A new reply retires the old pin at once
+    // (it stayed up after "let's move on", embed-1794336536781), and every reply is sent for a gist, since
+    // v2 often asks through an instruction with no "?".
+    const v2Pin = brainVersion === 'v2';
+    if (v2Pin && pinFetchedTurnRef.current !== entry.id) setQuestionPin((prev) => (prev && prev.turnId !== entry.id ? null : prev));
+    if (!entry.text.includes('?') && !v2Pin) {
       if (!languageSession || pinFetchedTurnRef.current === entry.id) return;
       if (askFallback('no question')) pinFetchedTurnRef.current = entry.id;
       return;
@@ -1425,7 +1430,7 @@ export default function TutorSession(props: TutorSessionProps) {
     void fetch('/api/tutor/question-gist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ turnText: entry.text }),
+      body: JSON.stringify({ turnText: entry.text, ...(v2Pin ? { anyAsk: true } : {}) }),
     })
       // Task Y2: the route now returns non-200 for an internal failure
       // (Anthropic 5xx/timeout/parse) and 200 for every model verdict,

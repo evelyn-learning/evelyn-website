@@ -18,12 +18,12 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { applyToModelBoard } from './board';
+import { applyToModelBoard, boardMisfit } from './board';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, type V2TurnFacts } from './facts';
 import { planGoalIds, renderPlanMap } from './plan-map';
 import { stripToolTalk } from './tool-talk';
-import { V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
+import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
 export const V2_MAX_MODEL_CALLS = 5;
@@ -106,6 +106,7 @@ function storable(content: Anthropic.ContentBlock[]): Anthropic.ContentBlockPara
 }
 
 function applyControlTool(state: V2State, session: V2Session, name: string, args: Record<string, unknown>): string {
+  if (name === 'keep_listening') return 'listening';
   if (name === 'update_session_note') {
     const note = typeof args.note === 'string' ? args.note.trim() : '';
     if (!note) return 'not saved: the note was empty';
@@ -197,16 +198,19 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     for (const block of response.content) {
       if (block.type === 'text') { if (block.text.trim()) spoken.push(block.text.trim()); continue; }
       if (block.type !== 'tool_use') continue;
-      const args = (block.input ?? {}) as Record<string, unknown>;
+      const { [SAY_WITH]: sayWithRaw, ...args } = (block.input ?? {}) as Record<string, unknown>;
+      const sayWith = typeof sayWithRaw === 'string' && sayWithRaw.trim() ? sayWithRaw.trim() : undefined;
       let outcome: string;
       if (V2_CONTROL_TOOL_NAMES.has(block.name)) {
         outcome = applyControlTool(state, session, block.name, args);
       } else {
         const valid = validateToolCall(block.name, args);
+        const misfit = boardMisfit(block.name, args);
         if (!valid.ok) outcome = `not painted: ${valid.reason}`;
+        else if (misfit) outcome = `not painted: ${misfit}`;
         else { const o = applyBoard(state.board, block.id, block.name, args); outcome = o.painted ? o.detail : `not painted: ${o.detail}`; }
       }
-      const call: V2ToolCall = { id: block.id, name: block.name, args, outcome };
+      const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}) };
       toolCalls.push(call);
       input.onToolCall?.(call);
       results.push({ type: 'tool_result', tool_use_id: block.id, content: outcome });
@@ -225,6 +229,8 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     // costs the student a wait.
     const somethingFailed = results.some((r) => /^not /.test(String(r.content)));
     if (spoken.length > 0 && !somethingFailed) break;
+    // Silence was the reply.
+    if (toolCalls.some((c) => c.name === 'keep_listening')) break;
     // Within the turn the model's own content goes back whole (thinking included).
     messages = [...messages, { role: 'assistant', content: response.content as unknown as Anthropic.ContentBlockParam[] }, { role: 'user', content: results }];
   }
