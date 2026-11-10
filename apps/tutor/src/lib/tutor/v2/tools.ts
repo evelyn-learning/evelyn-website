@@ -50,6 +50,18 @@ export const V2_CONTROL_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: 'track_gap',
+    description: 'Record a gap in what the student knows (a forgotten rule, an unknown word, a wrong idea), or update how far it has been worked on. The list is shown back to you every turn.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        what: { type: 'string', description: 'The gap, in a few words. Use the same words when you update it.' },
+        status: { type: 'string', enum: ['found', 'explained', 'done_with_help', 'done_alone'], description: 'found: you have seen it. explained: you told or showed them. done_with_help: they did one with a hint or a prompt. done_alone: they did one unprompted.' },
+      },
+      required: ['what', 'status'],
+    },
+  },
+  {
     name: 'end_lesson',
     description: 'End the session. Call it in the same reply as your closing words.',
     input_schema: { type: 'object', properties: { summary: { type: 'string', description: 'One or two sentences on what the student did and what to look at next.' } }, required: ['summary'] },

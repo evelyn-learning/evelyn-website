@@ -40,7 +40,7 @@ async function main() {
   const toolChars = JSON.stringify(tools).length;
   check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 16000, sys.length);
   check(`a math session gets a handful of tools (${tools.length}, ${toolChars} chars)`, tools.length <= 16 && toolChars < 24000, [tools.length, toolChars]);
-  check('the three control tools are present', ['update_session_note', 'set_goal_status', 'end_lesson'].every((n) => tools.some((t) => t.name === n)));
+  check('the control tools are present', ['update_session_note', 'set_goal_status', 'track_gap', 'end_lesson'].every((n) => tools.some((t) => t.name === n)));
   check('the constitution names no partner, topic or symptom', !/crimsora|greenapple|gdi|l'h[oô]pital|cos\(|streak/i.test(V2_CONSTITUTION));
   const map = renderPlanMap(SEED_AP_CALCBC_U4_LHOPITAL);
   check('the plan map lists every segment as a goal', SEED_AP_CALCBC_U4_LHOPITAL.segments.every((s) => map.includes(`[${s.id}]`)));
@@ -60,7 +60,7 @@ async function main() {
   const req1 = a.seen[0] as unknown as { system: Array<{ text: string; cache_control?: unknown }>; messages: Anthropic.MessageParam[]; thinking: { type: string }; tools: unknown[] };
   const last1 = req1.messages[req1.messages.length - 1].content as Array<{ type: string; text: string; cache_control?: unknown }>;
   check('system is the constitution then the session part, both cached', req1.system.length === 2 && req1.system[0].text === V2_CONSTITUTION && req1.system.every((b) => b.cache_control));
-  check('thinking is adaptive', req1.thinking.type === 'adaptive');
+  check('thinking is adaptive, at medium effort', req1.thinking.type === 'adaptive' && (a.seen[0] as unknown as { output_config: { effort: string } }).output_config.effort === 'medium');
   check('the user turn is the student block then one facts block', last1.length === 2 && /session has just begun/.test(last1[0].text) && /^<facts>[\s\S]*<\/facts>$/.test(last1[1].text));
   check('the cache mark is on the student block, not the facts', !!last1[0].cache_control && !last1[1].cache_control);
   check('facts carry time, board, plan and note', /time: 2 min used of about 25/.test(last1[1].text) && /board:\n\s+empty/.test(last1[1].text) && /plan: hook=not started/.test(last1[1].text) && /your note: \(empty/.test(last1[1].text), last1[1].text);
@@ -116,6 +116,24 @@ async function main() {
   check('end_lesson closes the session without another model call', r3.state.closed && r3.state.closeSummary === 'Did 0/0 limits.' && r3.modelCalls === 1);
   const roles = r3.state.history.map((m) => m.role).join(',');
   check('stored history never has two assistant messages in a row', !/assistant,assistant/.test(roles), roles);
+
+  console.log('gaps');
+  const g = stub([
+    msg([{ type: 'text', text: 'Let us look at that.' },
+      { type: 'tool_use', id: 'g1', name: 'track_gap', input: { what: 'Chain rule', status: 'found' } },
+      { type: 'tool_use', id: 'g2', name: 'track_gap', input: { what: 'derivative of ln x', status: 'explained' } },
+      { type: 'tool_use', id: 'g3', name: 'track_gap', input: { what: 'chain rule!', status: 'done_with_help' } },
+      { type: 'tool_use', id: 'g4', name: 'track_gap', input: { what: 'x', status: 'fixed' } }], 'tool_use'),
+    msg([{ type: 'text', text: 'ok' }], 'end_turn'),
+    msg([{ type: 'text', text: 'next' }], 'end_turn'),
+  ]);
+  const rg = await runV2Turn({ session, state: r2.state, studentSaid: 'I forgot', callModel: g.call });
+  check('a gap is recorded and updated in place under the same name', JSON.stringify(rg.state.gaps) === JSON.stringify([{ what: 'Chain rule', status: 'done_with_help' }, { what: 'derivative of ln x', status: 'explained' }]), rg.state.gaps);
+  check('an unknown status is refused', /^not recorded: status must be/.test(rg.toolCalls[3].outcome));
+  await runV2Turn({ session, state: rg.state, studentSaid: 'ok', callModel: g.call });
+  const gapFacts = (g.seen[2].messages[g.seen[2].messages.length - 1].content as Array<{ text: string }>)[1].text;
+  check('the next turn\'s facts list the gaps and how far each has got', /gaps you have recorded:\n  - Chain rule: they did one with help, not yet alone\n  - derivative of ln x: explained to them, not yet done by them/.test(gapFacts), gapFacts);
+  check('a state with no gaps says nothing about them', !/gaps you have recorded/.test(last1[1].text));
 
   console.log('a reply cut short');
   const cut = stub([msg([{ type: 'text', text: 'Here.' }, { type: 'tool_use', id: 't8', name: 'show_equation', input: { latex: 'y=e' } }], 'max_tokens')]);

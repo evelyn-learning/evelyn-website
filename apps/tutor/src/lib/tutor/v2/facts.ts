@@ -24,6 +24,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   ];
   if (session.plan) lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
+  if (state.gaps?.length) {
+    const label: Record<string, string> = { found: 'found, not yet worked on', explained: 'explained to them, not yet done by them', done_with_help: 'they did one with help, not yet alone', done_alone: 'they did one alone' };
+    lines.push(`gaps you have recorded:\n${state.gaps.map((g) => `  - ${g.what}: ${label[g.status] ?? g.status}`).join('\n')}`);
+  }
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
   if (f.silenceSeconds) lines.push(`the student has said nothing for ${Math.round(f.silenceSeconds)} seconds`);
   return `<facts>\n${lines.join('\n')}\n</facts>`;

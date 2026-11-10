@@ -35,7 +35,8 @@ function readState(raw: unknown): V2State | null {
   if (!Array.isArray(s.history) || typeof s.note !== 'string' || typeof s.goals !== 'object' || s.goals === null) return null;
   if (!s.board || !Array.isArray(s.board.pages) || typeof s.board.current !== 'number') return null;
   if (typeof s.startedAtMs !== 'number' || !Number.isFinite(s.startedAtMs)) return null;
-  return { history: s.history, note: s.note, goals: s.goals, board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}) };
+  const gaps = Array.isArray(s.gaps) ? s.gaps.filter((g) => g && typeof g.what === 'string' && typeof g.status === 'string').slice(-12) : undefined;
+  return { history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}) };
 }
 
 export async function POST(req: NextRequest) {

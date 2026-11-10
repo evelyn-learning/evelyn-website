@@ -120,3 +120,37 @@ while the student was working and talked over the answer (now 75 s, then 120 s);
 sentence ("He handled the repeat application cleanly"); an empty transcript entry was refused by
 the session save (fixed: the tutor's entry appears with its first words). Not tested: a real
 microphone, echo, interruption by voice.
+
+---
+
+# Fourth review — thinking effort and model (the weaker students)
+
+Same revised v2, three arms, three runs each per fixture, all nine sessions of a fixture scored
+blind and together by two independent reviewers.
+
+| Fixture | Arm | Reviewer 1 | Reviewer 2 | Mean |
+|---|---|---|---|---|
+| Struggling 17-year-old | Haiku 5.5, effort low (current) | 3, 3, 2 | 3, 4, 3 | 3.0 |
+| | Haiku 5.5, effort **medium** | 4, 5, 5 | 4, 7, 6 | **5.2** |
+| | Sonnet 5, effort low | 4, 3, 2 | 4, 2, 3 | 3.0 |
+| Grade 6 | Haiku 5.5, effort low (current) | 4, 6, 4 | 4, 7, 3 | 4.7 |
+| | Haiku 5.5, effort **medium** | 9, 7, 7 | 9, 7, 6 | **7.5** |
+| | Sonnet 5, effort low | 2, 3, 6 | 2, 4, 5 | 3.7 |
+
+- The two reviewers agreed to within a point on almost every session and ranked the arms the same
+  way on both fixtures. Scoring all arms of a fixture together removes most of the reviewer noise
+  seen in the third review.
+- Medium effort is the best arm on both fixtures. What the reviewers saw in it: hints that name the
+  place and not the fix, the child building the sixths himself and then being released to do whole
+  problems, backing off a problem that was too much, no verdict errors in the best runs.
+- Sonnet 5 at low effort was not better than Haiku 5.5 at low effort: "tell, then race ahead",
+  heaviest vocabulary, false "you did it on your own" praise.
+- Low effort produced the verdict errors (a wrong derivative confirmed twice; a verdict reversed
+  mid-turn) and the narration ("let me update my notes").
+- Still true of every arm with the struggling student: "no session made her gaps the lesson" — none
+  stopped to give two or three chain-rule or ln x problems until she did one cold. Best score 7.
+- Cost of medium effort, from the runs: first words at about 1.2–1.4 s median (0.5–0.7 s at low;
+  2–3.7 s at the 95th percentile), and about 6–8.5K output tokens per session against 2.6–4.7K.
+
+Decision: v2 runs at medium effort by default. A gap tracker (a `track_gap` tool whose list is
+shown back in the facts every turn) is being tested at medium effort against this arm.

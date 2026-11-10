@@ -9,6 +9,10 @@ import type { LessonPlan } from '../lesson-plan/types';
 
 export type GoalStatus = 'not_started' | 'shown' | 'demonstrated' | 'skipped';
 
+/** How far a gap in the student's knowledge has been worked on. */
+export type GapStatus = 'found' | 'explained' | 'done_with_help' | 'done_alone';
+export interface V2Gap { what: string; status: GapStatus }
+
 /** What does not change during a session. */
 export interface V2Session {
   studentName?: string;
@@ -32,6 +36,8 @@ export interface V2State {
   history: Anthropic.MessageParam[];
   note: string;
   goals: Record<string, { status: GoalStatus; why?: string }>;
+  /** Gaps the tutor has found in what the student knows, with how far each has been worked on. Optional: older states have none. */
+  gaps?: V2Gap[];
   board: V2Board;
   startedAtMs: number;
   closed: boolean;

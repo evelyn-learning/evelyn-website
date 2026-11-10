@@ -23,11 +23,19 @@ import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, type V2TurnFacts } from './facts';
 import { planGoalIds, renderPlanMap } from './plan-map';
 import { V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
-import type { GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
+import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
 export const V2_MAX_MODEL_CALLS = 5;
 export const V2_MAX_TOKENS = 8000;
 export const V2_NOTE_MAX_CHARS = 1500;
+export const V2_MAX_GAPS = 12;
+/** Thinking effort. Medium, not low: in blind reviews (2026-11-09, two reviewers, two weaker-student
+ *  fixtures) medium scored 5.2 and 7.5 against 3.0 and 4.7 for low — low is where the wrong verdicts,
+ *  the narration and the answers handed over came from. It costs about half a second more before the
+ *  first words. TUTOR_V2_EFFORT overrides it on the server. */
+export const V2_DEFAULT_EFFORT: 'low' | 'medium' | 'high' =
+  process.env.TUTOR_V2_EFFORT === 'low' || process.env.TUTOR_V2_EFFORT === 'high' ? process.env.TUTOR_V2_EFFORT : 'medium';
+const GAP_STATUSES: GapStatus[] = ['found', 'explained', 'done_with_help', 'done_alone'];
 const CACHE = { type: 'ephemeral' as const, ttl: '1h' as const };
 
 export type V2ModelCall = (params: Anthropic.MessageCreateParamsNonStreaming, onText?: (delta: string) => void) => Promise<Anthropic.Message>;
@@ -110,6 +118,18 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     state.goals[goal] = { status, ...(typeof args.why === 'string' && args.why.trim() ? { why: args.why.trim().slice(0, 120) } : {}) };
     return 'recorded';
   }
+  if (name === 'track_gap') {
+    const what = typeof args.what === 'string' ? args.what.trim().slice(0, 80) : '';
+    const status = args.status as GapStatus;
+    if (!what) return 'not recorded: say what the gap is';
+    if (!GAP_STATUSES.includes(status)) return `not recorded: status must be one of ${GAP_STATUSES.join(', ')}`;
+    const gaps = state.gaps ?? [];
+    const key = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const at = gaps.findIndex((g) => key(g.what) === key(what));
+    if (at >= 0) gaps[at] = { what: gaps[at].what, status }; else gaps.push({ what, status });
+    state.gaps = gaps.slice(-V2_MAX_GAPS);
+    return 'recorded';
+  }
   if (name === 'end_lesson') {
     state.closed = true;
     state.closeSummary = typeof args.summary === 'string' ? args.summary.trim().slice(0, 600) : '';
@@ -154,7 +174,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
       model: '',
       max_tokens: V2_MAX_TOKENS,
       thinking: { type: 'adaptive' },
-      output_config: { effort: input.effort ?? 'low' },
+      output_config: { effort: input.effort ?? V2_DEFAULT_EFFORT },
       system,
       tools,
       messages,
