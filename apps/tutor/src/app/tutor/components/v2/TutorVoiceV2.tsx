@@ -35,7 +35,7 @@ import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import { V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
-import { anchorSentenceIndex } from '@/lib/tutor/v2/board-timing';
+import { anchorSentenceFinal, anchorSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
@@ -79,6 +79,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // Board timing (board-timing.ts): the sentences of the running reply as sent to the voice, how many have
   // started playing, and the board items waiting for theirs.
   const lastSoundAtRef = useRef(0);
+  const lastTurnWasStudentRef = useRef(false);
   const turnSentencesRef = useRef<string[]>([]);
   const startedCountRef = useRef(0);
   const heldBoardRef = useRef<Array<{ idx: number; paint: () => void; timer: ReturnType<typeof setTimeout> }>>([]);
@@ -87,7 +88,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const placeBoard = useCallback((final?: boolean) => {
     const still: typeof unplacedBoardRef.current = [];
     for (const u of unplacedBoardRef.current) {
-      const idx = anchorSentenceIndex(u.call.sayWith, turnSentencesRef.current);
+      const idx = final ? anchorSentenceFinal(u.call.sayWith, turnSentencesRef.current) : anchorSentenceIndex(u.call.sayWith, turnSentencesRef.current);
       if (idx < 0 && !final) { still.push(u); continue; }
       const hold = idx > 0 && startedCountRef.current <= idx;
       p.current.onDebugEvent?.('v2_board_timing', `${u.call.name}: ${idx < 0 ? 'its sentence was not found' : `sentence ${idx + 1} of ${turnSentencesRef.current.length}`}, ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
@@ -158,7 +159,14 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       if (busy) { releaseBoard(); turnSentencesRef.current = []; startedCountRef.current = 0; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
       else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard();
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
-        armSilence(turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding() ? WAITED_RECHECK_S : undefined); }
+        const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
+        // Nothing will be spoken, so no playback event will move the indicator off "Thinking…".
+        if (silentReply && !realtimeRef.current?.isSpeechPending()) p.current.onVoiceStateChange?.('listening');
+        // One early recheck, and only when the silence answered the student's own words: a silent answer
+        // to a silence check-in goes back to the ordinary schedule (it looped every 12 s, embed-1794339843244).
+        const recheck = silentReply && lastTurnWasStudentRef.current;
+        lastTurnWasStudentRef.current = false;
+        armSilence(recheck ? WAITED_RECHECK_S : undefined); }
     },
     // The session ends once the closing words have been spoken.
     closeDelayMs: async () => {
@@ -207,6 +215,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     realtimeRef.current?.resumeSpeech();
     silenceStepRef.current = 0;
     if (p.current.thinkingCue) { const r = cueTurnAccepted(cueRef.current, Date.now()); cueRef.current = r.state; play(r.play); }
+    lastTurnWasStudentRef.current = true;
     turnsRef.current?.send(text);
   }, [liftPause, releaseBoard]);
 

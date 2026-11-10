@@ -6,7 +6,7 @@
  * sentence ends at . ! ? (or their full-width forms) followed by a space or a
  * line break; a paragraph break always ends one. A full stop inside a number
  * ("3.5") or straight after a single capital ("f. g") or a common abbreviation
- * does not.
+ * does not, and neither does anything inside a $…$ span.
  */
 const ABBREVIATIONS = /(?:\b(?:e\.g|i\.e|vs|etc|approx|Mr|Mrs|Ms|Dr|St|No|Fig|Eq)\.)$/i;
 
@@ -42,6 +42,9 @@ export class SentenceStream {
       const end = m.index + m[0].length;
       if (para >= 0 && para < m.index) break;
       const before = this.buf.slice(0, m.index + 1);
+      // Inside a $…$ span (an odd number of dollar signs so far): cutting here leaves each half with a lone
+      // "$", which the voice reads as "dollar" (embed-1794339843244).
+      if ((before.match(/\$/g) ?? []).length % 2 === 1) continue;
       if (m[0][0] === '.') {
         if (ABBREVIATIONS.test(before)) continue;
         if (/(?:^|\s)[A-Za-z]\.$/.test(before)) continue; // a lone letter: "f." in "f. g"

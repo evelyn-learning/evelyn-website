@@ -26,3 +26,19 @@ export function anchorSentenceIndex(sayWith: string | undefined, sentences: stri
   }
   return -1;
 }
+
+const STOP = new Set(['the', 'a', 'an', 'is', 'it', 'its', 'this', 'that', 'here', 'heres', 'now', 'so', 'and', 'of', 'to', 'in', 'on', 'for', 'one', 'you', 'your', 'lets', 'let', 'me', 'we', 'yes', 'right', 'good', 'ok', 'okay', 's', 'with', 'at', 'be', 'are']);
+
+/** Where an anchored item goes once the whole reply is known. The model sometimes describes its sentence
+ *  instead of quoting it ("Here is the rule." for "Now let's see whether L'Hôpital's rule gets there"):
+ *  then the sentence sharing most of the anchor's content words, and failing that the last sentence —
+ *  an item the tutor meant for later should not appear first. */
+export function anchorSentenceFinal(sayWith: string | undefined, sentences: string[]): number {
+  const exact = anchorSentenceIndex(sayWith, sentences);
+  if (exact >= 0 || !sentences.length) return exact;
+  const want = norm(sayWith ?? '').filter((w) => !STOP.has(w));
+  if (!want.length) return -1;
+  let best = -1; let bestHits = 0;
+  sentences.forEach((s, i) => { const words = new Set(norm(s)); const hits = want.filter((w) => words.has(w)).length; if (hits > bestHits) { best = i; bestHits = hits; } });
+  return best >= 0 ? best : sentences.length - 1;
+}

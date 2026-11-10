@@ -1,5 +1,7 @@
 import { boardMisfit } from '../src/lib/tutor/v2/board';
-import { anchorSentenceIndex } from '../src/lib/tutor/v2/board-timing';
+import { anchorSentenceFinal, anchorSentenceIndex } from '../src/lib/tutor/v2/board-timing';
+import { SentenceStream } from '../src/lib/tutor/v2/sentences';
+import { speaksMaths } from '../src/lib/tutor/v2/spoken-maths';
 import { renderFacts } from '../src/lib/tutor/v2/facts';
 /// <reference types="node" />
 /**
@@ -113,6 +115,41 @@ async function main() {
     const rk = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'so if I put x equal to zero, um', callModel: quiet.call });
     check('keep_listening is a whole reply: no words, one model call', rk.spoken === '' && rk.modelCalls === 1 && quiet.seen.length === 1);
   }
+  {
+    check('a described anchor goes to the sentence it shares words with, else the last', anchorSentenceFinal('Here is the rule.', ["That's a valid method.", 'Every term after the 1 vanishes.', "Now let's see whether L'Hôpital's rule gets there just as fast."]) === 2 && anchorSentenceFinal('Three conditions matter.', ['Yes.', 'Good work.', 'On we go.']) === 2);
+    const ss = new SentenceStream();
+    const cut = [...ss.push('It goes to $\\ln 1 = 0. 5$ here. What form is that? '), ...ss.flush()];
+    check('a sentence is never cut inside a dollar span', cut.length === 2 && cut.every((x) => (x.match(/\$/g) ?? []).length % 2 === 0), cut);
+    check('spoken mathematics is recognised; a bare verdict is not', speaksMaths('The derivative of sine x is cos x, and the derivative of x is 1, so you get cos x over 1.') && speaksMaths('so $\\frac{\\sin x}{2x}$ it is') && !speaksMaths('Yes, the limit is 0. Nicely done.') && !speaksMaths('Take your time, and tell me when you are ready.'));
+    const voice: V2Session = { ...session, mode: 'voice' };
+    const pass = stub([
+      msg([{ type: 'text', text: 'Not quite. The derivative of x sin x is sin x plus x cos x, by the product rule. Fix the bottom.' }], 'end_turn'),
+      msg([{ type: 'text', text: 'I should write that.' }, { type: 'tool_use', id: 'b1', name: 'show_equation', input: { latex: '(x\\sin x)\' = \\sin x + x\\cos x', say_with: 'The derivative of x sin x' } }, { type: 'tool_use', id: 'b2', name: 'end_lesson', input: { summary: 'x' } }], 'tool_use'),
+    ]);
+    const rp = await runV2Turn({ session: voice, state: newV2State(1_000_000), studentSaid: 'cos x minus 1 over x cos x minus sin x', callModel: pass.call });
+    const hist = rp.state.history as Array<{ role: string; content: Array<{ type: string; name?: string }> }>;
+    check('the board pass adds the board call to a reply that only spoke the mathematics', rp.modelCalls === 2 && rp.toolCalls[0]?.name === 'show_equation' && rp.toolCalls[0].sayWith === 'The derivative of x sin x' && /^painted/.test(rp.toolCalls[0].outcome));
+    check('its words are not spoken, and it cannot end the lesson', !/I should write/.test(rp.spoken) && !rp.state.closed && rp.toolCalls.length === 1);
+    check('the stored reply reads as words then board call, with results after', hist[1].role === 'assistant' && hist[1].content.map((b) => b.type).join(',') === 'text,tool_use' && hist[2].role === 'user' && hist[2].content.every((b) => b.type === 'tool_result'));
+    check('the board check itself is never stored', !JSON.stringify(rp.state.history).includes('board check'));
+    const none = stub([msg([{ type: 'text', text: 'Not quite. The derivative of x sin x is sin x plus x cos x, by the product rule.' }], 'end_turn'), msg([{ type: 'text', text: 'nothing' }], 'end_turn')]);
+    const rn = await runV2Turn({ session: voice, state: newV2State(1_000_000), studentSaid: 'x', callModel: none.call });
+    check('a board pass that finds nothing missing changes nothing', rn.toolCalls.length === 0 && !/nothing/.test(rn.spoken) && (rn.state.history as unknown[]).length === 2);
+    const typed = stub([msg([{ type: 'text', text: 'The derivative of $x\\sin x$ is $\\sin x + x\\cos x$, by the product rule.' }], 'end_turn')]);
+    const rt = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'x', callModel: typed.call });
+    check('typed sessions have no board pass: the student reads the reply', rt.modelCalls === 1);
+  }
+  {
+    const early = stub([
+      msg([{ type: 'text', text: 'That is everything. Well done.' }, { type: 'tool_use', id: 'z1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 's' } }], 'tool_use'),
+      msg([{ type: 'text', text: 'We have time left: harder ones, more practice, or stop?' }], 'end_turn'),
+    ]);
+    const re = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 10 * 60000, callModel: early.call });
+    check('the tutor cannot end the lesson by itself with time left: it is sent back to offer the choice', !re.state.closed && re.modelCalls === 2 && /not ended/.test(re.toolCalls[0].outcome));
+    const late = stub([msg([{ type: 'text', text: 'Time is nearly up. Well done.' }, { type: 'tool_use', id: 'z2', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 's' } }], 'tool_use')]);
+    const rl = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 22 * 60000, callModel: late.call });
+    check('near the end of the time it can', rl.state.closed);
+  }
   check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just begun/.test(first[0].text));
   check('the last history message carries a cache mark', !!beforeTail[beforeTail.length - 1].cache_control);
   check('the student\'s words are sent as they are', tail2[0].text === 'It is 3.');
@@ -127,13 +164,13 @@ async function main() {
   console.log('a reply with no words');
   const q = stub([
     msg([{ type: 'thinking', thinking: 'note first', signature: 's' }, { type: 'tool_use', id: 't9', name: 'update_session_note', input: { note: 'n' } }], 'tool_use'),
-    msg([{ type: 'text', text: 'Bye for now.' }, { type: 'tool_use', id: 't10', name: 'end_lesson', input: { summary: 's' } }], 'tool_use'),
+    msg([{ type: 'text', text: 'Bye for now.' }, { type: 'tool_use', id: 't10', name: 'end_lesson', input: { because: 'student_asked', summary: 's' } }], 'tool_use'),
   ]);
   const rq = await runV2Turn({ session, state: r1.state, studentSaid: 'I have to go', callModel: q.call });
   check('a silent reply is followed up so the student is never left without words', rq.modelCalls === 2 && rq.spoken === 'Bye for now.' && rq.state.closed && JSON.stringify(q.seen[1].messages).includes('note first'), [rq.modelCalls, rq.spoken]);
 
   console.log('closing');
-  const c = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 't7', name: 'end_lesson', input: { summary: 'Did 0/0 limits.' } }], 'tool_use')]);
+  const c = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 't7', name: 'end_lesson', input: { because: 'student_asked', summary: 'Did 0/0 limits.' } }], 'tool_use')]);
   const r3 = await runV2Turn({ session, state: r2.state, studentSaid: 'Can we stop?', callModel: c.call });
   check('end_lesson closes the session without another model call', r3.state.closed && r3.state.closeSummary === 'Did 0/0 limits.' && r3.modelCalls === 1);
   const roles = r3.state.history.map((m) => m.role).join(',');
@@ -231,7 +268,7 @@ async function main() {
   check('a sentence naming a tool is dropped, the rest kept', stripToolTalk('Good work today. Then end_lesson. See you next time.') === 'Good work today. See you next time.', stripToolTalk('Good work today. Then end_lesson. See you next time.'));
   check('paragraphs survive and clean text is untouched', stripToolTalk('One.\n\nI will call show_problem now.\n\nTwo.') === 'One.\n\nTwo.' && stripToolTalk('Show me the problem. End the lesson?') === 'Show me the problem. End the lesson?');
   check('ordinary words are not tool names', !mentionsTool('Let me show you a new page of gaps to track.') && mentionsTool('call track_gap'));
-  const leak = stub([msg([{ type: 'text', text: 'Well done. Then end_lesson.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { summary: 's' } }], 'tool_use')]);
+  const leak = stub([msg([{ type: 'text', text: 'Well done. Then end_lesson.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'student_asked', summary: 's' } }], 'tool_use')]);
   const rl = await runV2Turn({ session, state: r1.state, studentSaid: 'bye', callModel: leak.call });
   check('the turn\'s words come back without the leak', rl.spoken === 'Well done.', rl.spoken);
 
