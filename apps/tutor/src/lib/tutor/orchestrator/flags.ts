@@ -114,6 +114,19 @@ export const TUTOR_IDLE_NUDGE =
 // lib/tutor/portal/partner-session-options.ts (on by default, 2026-10-27).
 export const TUTOR_LESSON_CLOSE_AUTO_END =
   process.env.NEXT_PUBLIC_TUTOR_LESSON_CLOSE_AUTO_END !== 'off';
+// 2026-11-09 (Crimsora portal-6ed49162): the answer streaks were saved per
+// lesson plan in the browser and restored into every NEW session on that plan,
+// so the first right answer read "streak 13" and "segment mastered" fired on
+// arrival. A fresh session now starts both streaks at zero; a genuine resume
+// still restores them (pace-preference.ts resolveStreaksOnLoad).
+export const TUTOR_STREAK_FRESH_START =
+  process.env.NEXT_PUBLIC_TUTOR_STREAK_FRESH_START !== 'off';
+// 2026-11-09 (same session): the tutor closed the lesson, the student closed
+// the tab inside the 45 s auto-end window, and the row was saved "abandoned".
+// A page that goes away after the lesson has closed now saves "completed"
+// (lesson-close.ts unloadSaveStatus). A discarded session stays abandoned.
+export const TUTOR_CLOSED_LESSON_COMPLETES =
+  process.env.NEXT_PUBLIC_TUTOR_CLOSED_LESSON_COMPLETES !== 'off';
 // 2026-10-19 (GAC AP Statistics, portal-7b0e93dc; global since the 2026-10-28
 // merge): a typed message while a typed student turn is in flight supersedes
 // it (nothing shown yet) or queues behind it (a sentence already shown),

@@ -431,3 +431,15 @@ export const PREMATURE_CLOSE_NOTE =
   '[runtime note — not from the student] The lesson is not over, and a sentence in your last turn that announced the end of today\'s lesson was removed before the student heard it. ' +
   'A segment transition is 「次は…」 (one sentence, then the next item); 「今日はここまで」 and a closing summary belong only in the turn that calls close_session_notes. ' +
   'Apply this silently; never mention this note.';
+
+/**
+ * 2026-11-09 (Crimsora portal-6ed49162): the status a session row gets when the
+ * page goes away without the End button. The tutor had closed the lesson and
+ * said goodbye; the student closed the tab before the quiet
+ * LESSON_CLOSE_AUTO_END_MS ran out, and the row read "abandoned" for a lesson
+ * that finished. A lesson the tutor closed is a completed one. Not for a
+ * session the student chose to discard: that save does not come through here.
+ */
+export function unloadSaveStatus(lessonClosed: boolean, enabled = true): 'completed' | 'abandoned' {
+  return enabled && lessonClosed ? 'completed' : 'abandoned';
+}

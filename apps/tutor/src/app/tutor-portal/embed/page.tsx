@@ -35,7 +35,8 @@ import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/r
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
-import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE } from '@/lib/tutor/orchestrator/flags';
+import { unloadSaveStatus } from '@/lib/tutor/voice/lesson-close';
+import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE } from '@/lib/tutor/orchestrator/flags';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -1040,7 +1041,12 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // 2026-08-07: signature matches VTR's onDebugEvent — the third `data` arg
   // used to be silently dropped here (every embed event persisted without its
   // structured payload). Message truncation mirrors /tutor's collector.
+  // 2026-11-09: has the tutor closed the lesson? Read by the unload save, so a
+  // tab closed after the goodbye is stored as completed (unloadSaveStatus).
+  const lessonClosedRef = useRef(false);
   const addDebugEvent = useCallback((type: string, message: string, data?: Record<string, unknown>) => {
+    if (type === 'lesson_closed') lessonClosedRef.current = true;
+    else if (type === 'lesson_reopened') lessonClosedRef.current = false;
     if (type === 'start_tap' && sessionEngagedAtRef.current === null) {
       sessionEngagedAtRef.current = Date.now();
       syncInactiveRef.current(); // a prewarmed frame's wait ends here
@@ -1188,7 +1194,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // switching tabs, or staff opening the admin view beside it, is not an end.
   // Returns a promise only for the `completed` save (settles when its fetches
   // settle — the end-of-lesson summary panel waits on it); otherwise undefined.
-  const saveSession = useCallback((status: 'active' | 'completed' | 'abandoned' | 'backgrounded'): Promise<unknown> | undefined => {
+  // `endedAs`: the status WRITTEN for an unload save. The save still travels
+  // as 'abandoned' does (by beacon); only the stored status differs.
+  const saveSession = useCallback((status: 'active' | 'completed' | 'abandoned' | 'backgrounded', endedAs?: 'completed' | 'abandoned'): Promise<unknown> | undefined => {
     const now = new Date();
     // Active time only (spec v1.2 §5): standing by and a prewarmed frame's
     // wait are not session time.
@@ -1234,7 +1242,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       // Task 4: sendBeacon can't set headers, so the raw embed token rides in
       // the JSON body instead — the session-usage route accepts either.
       ...(embedToken ? { embedToken } : {}),
-      ...(status === 'active' || status === 'backgrounded' ? { status: 'active' as const } : { endedAt: now.toISOString(), status }),
+      ...(status === 'active' || status === 'backgrounded' ? { status: 'active' as const } : { endedAt: now.toISOString(), status: status === 'abandoned' && endedAs ? endedAs : status }),
       // A1: token/cost telemetry + covered topics (were always 0/empty for
       // embed sessions — this is what makes Sonnet-5 cost tracking visible).
       ...brainUsageTotals(),
@@ -2168,7 +2176,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // a duplicate.
   useEffect(() => {
     if (sessionEnded) return;
-    const handleUnload = () => saveSession('abandoned');
+    const handleUnload = () => saveSession('abandoned', unloadSaveStatus(lessonClosedRef.current, TUTOR_CLOSED_LESSON_COMPLETES));
     const handleVisibility = () => {
       if (document.visibilityState === 'hidden') saveSession('backgrounded');
     };

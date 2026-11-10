@@ -83,3 +83,21 @@ export function resolvePaceBiasOnLoad(
   }
   return DEFAULT_PACE_BIAS;
 }
+
+/**
+ * 2026-11-09 (Crimsora portal-6ed49162): which answer streaks a session starts
+ * with. The streaks ride the plan-keyed pacing blob so a RESUMED session keeps
+ * them; they were also restored into every fresh session on the same plan, and
+ * since each session saved its final count the number only grew (13 on the
+ * first answer of the day). A streak is evidence from THIS sitting: a fresh
+ * start has none. `freshStartsAtZero` is the kill switch
+ * (TUTOR_STREAK_FRESH_START); off restores as before.
+ */
+export function resolveStreaksOnLoad(
+  prior: { correctStreakCount?: unknown; incorrectStreakCount?: unknown } | null | undefined,
+  opts: { isResume: boolean; freshStartsAtZero?: boolean },
+): { correct: number; incorrect: number } {
+  if (!opts.isResume && opts.freshStartsAtZero !== false) return { correct: 0, incorrect: 0 };
+  const count = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? Math.floor(v) : 0);
+  return { correct: count(prior?.correctStreakCount), incorrect: count(prior?.incorrectStreakCount) };
+}

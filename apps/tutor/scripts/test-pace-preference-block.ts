@@ -28,7 +28,8 @@
  *   npx tsx scripts/test-pace-preference-block.ts
  */
 import { formatPacePreferenceBlock, formatDifficultyPreferenceBlock } from '../src/lib/tutor/voice/claude-brain';
-import { DEFAULT_PACE_BIAS, resolvePaceBiasOnLoad } from '../src/lib/tutor/voice/pace-preference';
+import { DEFAULT_PACE_BIAS, resolvePaceBiasOnLoad, resolveStreaksOnLoad } from '../src/lib/tutor/voice/pace-preference';
+import { unloadSaveStatus } from '../src/lib/tutor/voice/lesson-close';
 
 const cases: Array<{ label: string; paceBias?: number; paceBiasAppliedSinceTurns?: number }> = [
   { label: 'bias=0 (neutral, block should be empty)', paceBias: 0 },
@@ -154,6 +155,33 @@ for (const c of diffCases) {
     && /explicit/i.test(block); // in-the-moment ask must win for that problem
   console.log(`${ok ? 'OK' : 'FAIL'}: ${c.label}`);
   if (!ok) { console.error('  block was:', JSON.stringify(block.slice(0, 200))); failed = true; }
+}
+
+// 2026-11-09 (portal-6ed49162): a fresh session starts with no answer streak;
+// a resume keeps it. The streak had been restored into every new session on
+// the same plan and read 13 on the first answer.
+console.log('\n--- 2026-11-09: streaks on load (fresh vs resume) ---');
+const streakCases: Array<{ label: string; prior: { correctStreakCount?: unknown; incorrectStreakCount?: unknown } | null; opts: { isResume: boolean; freshStartsAtZero?: boolean }; expected: [number, number] }> = [
+  { label: 'FRESH + saved streak 12/1 → 0/0 (the live bug)', prior: { correctStreakCount: 12, incorrectStreakCount: 1 }, opts: { isResume: false }, expected: [0, 0] },
+  { label: 'RESUME + saved streak 2/1 → 2/1', prior: { correctStreakCount: 2, incorrectStreakCount: 1 }, opts: { isResume: true }, expected: [2, 1] },
+  { label: 'RESUME + no blob → 0/0', prior: null, opts: { isResume: true }, expected: [0, 0] },
+  { label: 'RESUME + bad values → 0/0', prior: { correctStreakCount: 'x', incorrectStreakCount: -3 }, opts: { isResume: true }, expected: [0, 0] },
+  { label: 'FRESH + kill switch off → restores as before', prior: { correctStreakCount: 12 }, opts: { isResume: false, freshStartsAtZero: false }, expected: [12, 0] },
+];
+for (const c of streakCases) {
+  const got = resolveStreaksOnLoad(c.prior, c.opts);
+  const ok = got.correct === c.expected[0] && got.incorrect === c.expected[1];
+  console.log(`${ok ? 'OK' : 'FAIL'}: ${c.label} -> ${got.correct}/${got.incorrect}`);
+  if (!ok) failed = true;
+}
+// Same session: a tab closed after the tutor closed the lesson is a completed
+// session, not an abandoned one.
+const unloadCases: Array<[boolean, boolean | undefined, string]> = [[true, undefined, 'completed'], [false, undefined, 'abandoned'], [true, false, 'abandoned']];
+for (const [closed, enabled, expected] of unloadCases) {
+  const got = unloadSaveStatus(closed, enabled);
+  const ok = got === expected;
+  console.log(`${ok ? 'OK' : 'FAIL'}: unload save, lessonClosed=${closed} enabled=${enabled ?? 'default'} -> ${got}`);
+  if (!ok) failed = true;
 }
 
 if (failed) {

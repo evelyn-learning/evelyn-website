@@ -277,7 +277,7 @@ import { CancelStormGovernor, STOP_IMPERATIVE_RE } from '@/lib/tutor/voice/cance
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
 import { derivePracticeMode } from '@/lib/tutor/voice/practice-mode';
-import { DEFAULT_PACE_BIAS, resolvePaceBiasOnLoad } from '@/lib/tutor/voice/pace-preference';
+import { DEFAULT_PACE_BIAS, resolvePaceBiasOnLoad, resolveStreaksOnLoad } from '@/lib/tutor/voice/pace-preference';
 import {
   extractDeclarations,
   extractIntegrand,
@@ -380,6 +380,7 @@ import {
   TUTOR_NOISE_NAG,
   TUTOR_IDLE_NUDGE,
   TUTOR_LESSON_CLOSE_AUTO_END,
+  TUTOR_STREAK_FRESH_START,
   TUTOR_TYPED_SUPERSEDE,
   TUTOR_BARGEIN_PAUSE_FIRST,
   TUTOR_HOST_LESSON,
@@ -12559,11 +12560,13 @@ export function VoiceTutorRealtime({
                   // on session start.
                   onPaceBiasChangeRef.current?.(paceBiasRef.current);
                 }
-                if (typeof prior.correctStreakCount === 'number' && prior.correctStreakCount > 0) {
-                  studentStreakRef.current = { segId: plan.segments[0].id, count: prior.correctStreakCount };
+                // 2026-11-09: a fresh session starts with no streak (see resolveStreaksOnLoad).
+                const priorStreaks = resolveStreaksOnLoad(prior, { isResume: !!resumeState, freshStartsAtZero: TUTOR_STREAK_FRESH_START });
+                if (priorStreaks.correct > 0) {
+                  studentStreakRef.current = { segId: plan.segments[0].id, count: priorStreaks.correct };
                 }
-                if (typeof prior.incorrectStreakCount === 'number' && prior.incorrectStreakCount > 0) {
-                  studentIncorrectStreakRef.current = { segId: plan.segments[0].id, count: prior.incorrectStreakCount };
+                if (priorStreaks.incorrect > 0) {
+                  studentIncorrectStreakRef.current = { segId: plan.segments[0].id, count: priorStreaks.incorrect };
                 }
                 // Task W4: restore the "Speak slower" toggle the same way.
                 if (prior.speakingRate === 'slow' || prior.speakingRate === 'normal') {
