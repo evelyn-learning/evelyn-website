@@ -71,5 +71,5 @@ Blind reviewers, same model (Haiku 5.5) in both engines.
 - Local dev server: stopped. A local server starts the app's scheduled jobs against the prod
   database, so stop it after use.
 - Replay sessions wrote rows to prod `tutorsessions` under partner `crimsora` with student ids
-  starting `replay-` (about 35 rows). Offline runs wrote nothing.
+  starting `replay-` (22 rows, counted). Offline runs wrote nothing.
 - Run artefacts are in `apps/tutor/artifacts/replay-harness/` (not in git).
