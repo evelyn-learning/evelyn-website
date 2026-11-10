@@ -174,9 +174,9 @@ together by two independent reviewers.
   every session.
 - Struggling student: all three tracker sessions deliberately came back to a gap with a fresh
   problem of the same kind and waited for a solo success ("try a similar one with no help"); none
-  of the no-tracker sessions did. In the tracker sessions she ended doing the chain rule or the
-  ln x derivative alone in 4 of 6 gap-instances the reviewers counted, against incidental recall
-  only without it.
+  of the no-tracker sessions did. Each tracker session ended with her doing one of
+  those gaps alone on a new problem (the chain rule in two, the ln x derivative in one); without
+  the tracker the only solo successes were incidental recall of ln x inside a later problem.
 - Grade 6: the tracker sessions withdrew the three-fraction problem when he balked and went back
   to whole two-fraction sums (3–4 unaided additions each); two of the three no-tracker sessions
   pushed him through it by step-feeding (0–1 unaided).
