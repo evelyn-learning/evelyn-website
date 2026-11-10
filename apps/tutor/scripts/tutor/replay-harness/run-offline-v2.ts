@@ -72,6 +72,7 @@ async function main() {
     catch (e) { say(`TUTOR ERROR ${(e as Error).message.slice(0, 200)}`); endedBy = 'error'; break; }
     state = r.state;
     events.push({ type: 'brain_turn', message: `Brain ${r.totalMs}ms · ${r.toolCalls.length} tool call(s) · first_sentence=${r.firstTextMs ?? r.totalMs}ms · in=${r.usage.inputTokens} out=${r.usage.outputTokens} cr=${r.usage.cacheReadTokens} cc=${r.usage.cacheCreationTokens}` });
+    for (const w of r.withdrawn ?? []) events.push({ type: 'board_withdrawn', message: w });
     for (const t of r.toolCalls) events.push({ type: 'tool_call', message: `${t.name} → ${t.outcome}${t.sayWith ? ` · with "${t.sayWith}"` : ''}${t.inline ? ' · inline' : ''}` });
     say(`TUTOR  ${r.spoken.replace(/\s+/g, ' ').slice(0, 400)}${r.toolCalls.length ? `   [tools: ${r.toolCalls.map((t) => `${t.name}(${t.outcome})`).join(', ')}]` : ''}`);
     const history = [...turns];

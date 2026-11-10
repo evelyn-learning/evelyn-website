@@ -40,6 +40,8 @@ export interface V2TurnsConfig {
   /** Voice: decide when a board item is painted. Called once per item, after every sentence of the reply up to
    *  that point has gone to onSentence; `paint` may be called at once or later. Absent: painted at once. */
   holdBoard?: (call: V2ToolCall, paint: () => void) => void;
+  /** Voice: the board check withdrew this item; if it is still waiting for its sentence it must not be painted. */
+  onBoardWithdraw?: (id: string) => void;
   /** Voice: a turn was cut short (the student spoke over it); stop speaking. */
   onCut?: () => void;
   /** How long after the closing words the session ends. Voice passes a function that waits for the speech to finish. */
@@ -146,6 +148,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         },
         // A board block is arriving: keep the sentence until it is here (bounded: a block that never completes must not mute the tutor).
         onBoardOpen: () => { if (kept !== null) { const s = kept; kept = null; keep(s, KEEP_FOR_BLOCK_MS); } },
+        onBoardWithdraw: (id) => { p.current.onBoardWithdraw?.(id); },
         onToolCall: (call) => {
           settled.push(call);
           p.current.onDebugEvent?.('tool_call', `${call.name} → ${call.outcome}${call.sayWith ? ` · with "${call.sayWith}"` : ''}${call.inline ? ' · inline' : ''}`);

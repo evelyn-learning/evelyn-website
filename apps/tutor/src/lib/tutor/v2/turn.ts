@@ -54,6 +54,8 @@ export interface V2TurnInput {
   effort?: 'low' | 'medium' | 'high';
   /** An inline board block has begun; its board call follows when it is complete. */
   onBoardOpen?: () => void;
+  /** The board check withdrew an item of this reply (it did the student's step for them). */
+  onBoardWithdraw?: (id: string) => void;
   /** The board pass after a spoken reply that says mathematics (default on). */
   boardPass?: boolean;
   callModel?: V2ModelCall;
@@ -217,10 +219,13 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     inlineN += 1;
     const r = settle({ type: 'tool_use', id: `inl_${nowMs.toString(36)}_${inlineN}`, name, input: b.attrs.with ? { ...args, [SAY_WITH]: b.attrs.with } : args } as Anthropic.ToolUseBlock, boardOnly, true);
     const failed = /^not /.test(String(r.content));
+    if (!failed && !boardOnly) inlinePainted.push({ id: `inl_${nowMs.toString(36)}_${inlineN}`, raw: b.raw, label: `${b.kind}: ${b.body.replace(/\s+/g, ' ').slice(0, 160)}` });
     if (failed && !boardOnly) boardProblems.push(`${b.kind} "${b.body.replace(/\s+/g, ' ').slice(0, 60)}": ${String(r.content).replace(/^not painted: /, '')}`);
     return !failed;
   };
   const rawSpoken: string[] = [];
+  const withdrawn: string[] = []; const withdrawnLabels: string[] = [];
+  const inlinePainted: Array<{ id: string; raw: string; label: string }> = [];
 
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
@@ -282,9 +287,14 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   // board. Its words are already on their way to the student; only board calls are taken from this call.
   // They are stored as part of the reply, so the history reads as a tutor who wrote while talking.
   const said = spoken.join('\n\n');
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && speaksMaths(said) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
-    const put = toolCalls.filter((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome)).map((c) => `${c.name}: ${summariseBoardCall(c.name, c.args)}`);
-    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. Mathematics that is only heard is lost: the student needs to see each expression, step or hint you spoke. In this reply you put on the board: ${put.length ? `\n${put.map((x) => `  - ${x}`).join('\n')}` : 'nothing.'}\nIf something you said aloud is not on the board (the working behind a result, a step the student gave, a correction, a hint), write it now as board blocks, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing that is already there, no new problem, and never an answer you left for the student to find. Reply with board blocks only. If nothing is missing, reply with the one word: nothing.`;
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem'))) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
+    // The check has two halves. What was said and not written is added. What was written and should not have
+    // been is withdrawn: a block that shows the step the reply asks the student to take (the board did the
+    // differentiation the tutor had just asked for, embed-1794349966573). Board items wait for their sentence
+    // in the voice client, so a withdrawal usually arrives before the item is shown.
+    const others = toolCalls.filter((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome) && !inlinePainted.some((x) => x.id === c.id)).map((c) => `${c.name}: ${summariseBoardCall(c.name, c.args)}`);
+    const listed = [...inlinePainted.map((x, i) => `  ${i + 1}. ${x.label}`), ...others.map((x) => `  - ${x}`)];
+    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. In it you put on the board: ${listed.length ? `\n${listed.join('\n')}` : 'nothing.'}\n\nFirst, and rarely: does a numbered item state outright the answer to the very thing this reply asks the student to work out, so that reading the board answers your question for them? Only then, withdraw it by writing "withdraw N" on a line by itself. Everything else stays: an item that sets the question out, leaves a blank or a question mark for them to fill, lists things for them to compare, shows working the student has already given, or shows what you yourself explained. When unsure, it stays.\\n\\nSecond: mathematics that is only heard is lost. If something you said aloud is not on the board (the working behind a result, a step the student gave, a correction, a hint), write it now as board blocks, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing already there, no new problem, and never an answer you left for the student to find.\n\nReply with withdraw lines and board blocks only. If there is nothing to withdraw and nothing missing, reply with the one word: nothing.`;
     try {
       const response = await callModel({
         model: '', max_tokens: 1500, thinking: { type: 'adaptive' }, output_config: { effort: 'low' }, system, tools,
@@ -298,6 +308,19 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
       const passText = response.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join('\n');
       // A block that paints is stored inside the reply, before its sentence: the history then shows the reply as it should have been written.
       const lastWords = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+      for (const m of passText.replace(/<board\b[\s\S]*?<\/board>/g, ' ').matchAll(/\bwithdraw\s*:?\s*#?(\d+)/gi)) {
+        const gone = inlinePainted[Number(m[1]) - 1];
+        // An item with a blank in it is a question set out for the student, never the answer (the check withdrew
+        // "1/2 = ?/6" from a grade 6 lesson in replay).
+        if (!gone || withdrawn.includes(gone.id) || /\?|\\square|\\boxed\{\s*\}|_{3,}/.test(gone.label)) continue;
+        withdrawn.push(gone.id); withdrawnLabels.push(gone.label);
+        for (const page of state.board.pages) page.items = page.items.filter((it) => it.id !== gone.id);
+        const at = toolCalls.findIndex((c) => c.id === gone.id);
+        if (at >= 0) toolCalls.splice(at, 1);
+        const holder = (lastWords?.content as Anthropic.ContentBlockParam[] | undefined)?.find((c): c is Anthropic.TextBlockParam => c.type === 'text' && c.text.includes(gone.raw));
+        if (holder) holder.text = holder.text.replace(gone.raw, '').replace(/[ \t]{2,}/g, ' ');
+        input.onBoardWithdraw?.(gone.id);
+      }
       for (const b of boardBlocksIn(passText)) {
         if (b.kind === 'problem' || !settleInline(b, true)) continue;
         const textBlock = (lastWords?.content as Anthropic.ContentBlockParam[] | undefined)?.find((c): c is Anthropic.TextBlockParam => c.type === 'text');
@@ -311,5 +334,5 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   const painted = toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   state.repliesSinceBoard = painted ? 0 : (state.repliesSinceBoard ?? 0) + 1;
   if (boardProblems.length) state.boardProblems = boardProblems; else delete state.boardProblems;
-  return { spoken: stripToolTalk(spoken.join('\n\n')), toolCalls, state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
+  return { spoken: stripToolTalk(spoken.join('\n\n')), toolCalls, ...(withdrawnLabels.length ? { withdrawn: withdrawnLabels } : {}), state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
 }

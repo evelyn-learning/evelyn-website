@@ -60,6 +60,8 @@ export interface V2TurnResult {
   /** What the tutor says this turn, in order. */
   spoken: string;
   toolCalls: V2ToolCall[];
+  /** Board items the board check withdrew after they were sent (what each showed). */
+  withdrawn?: string[];
   state: V2State;
   /** `model` is the model that answered: the session's cost is priced from it. */
   usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string };

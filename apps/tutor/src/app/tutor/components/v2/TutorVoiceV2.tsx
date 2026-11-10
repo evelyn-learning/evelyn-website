@@ -165,6 +165,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     mode: 'voice',
     onSentence: (sentence) => { turnSentencesRef.current.push(sentence); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; realtimeRef.current?.speakText(sentence); },
     onCut: () => { void realtimeRef.current?.clearSpeechQueue(); dropBoard(); },
+    onBoardWithdraw: (id) => {
+      const held = heldBoardRef.current.find((h) => h.id === id);
+      if (held) { clearTimeout(held.timer); heldBoardRef.current = heldBoardRef.current.filter((h) => h !== held); }
+      unplacedBoardRef.current = unplacedBoardRef.current.filter((u) => u.call.id !== id);
+      p.current.onDebugEvent?.('v2_board_withdrawn', held ? `${held.what ?? id}: withdrawn before it was shown` : `${id}: withdrawn, but it had already been shown`);
+    },
     holdBoard: (call, paint) => {
       // Written inline in the reply, right after the sentence that introduces it ("Here's the rule." [block]):
       // it appears as that sentence begins. The model places blocks after their sentence far more often than

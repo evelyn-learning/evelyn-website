@@ -200,6 +200,16 @@ async function main() {
     check('a note waits for the sentence that is about it; nothing earlier than its own stretch', inlineSentenceIndex('annotate', 'The rule: if the form is 0/0, take the derivatives of top and bottom.', c, 0) === 2 && inlineSentenceIndex('annotate', 'The rule: derivatives of top and bottom.', c, 3) === 3);
     check('an item no sentence is about goes with the last one', inlineSentenceIndex('show_equation', 'a^2 + b^2 = c^2', c, 0) === 3);
   }
+  {
+    const voice2: V2Session = { ...session, mode: 'voice' };
+    const text = 'Yes, that is 0 over 0. <board equation label="form">\\frac{e^0-1}{0} = \\frac{0}{0}</board> Now take the derivative of the top and of the bottom. What is the new limit? <board equation label="apply rule">\\lim \\frac{e^x-1}{x} = \\lim \\frac{e^x}{1}</board>';
+    let n = 0; const gone: string[] = [];
+    const call: V2ModelCall = async (_p, onText) => { n += 1; if (n === 1) { for (let i = 0; i < text.length; i += 9) onText?.(text.slice(i, i + 9)); return msg([{ type: 'text', text }], 'end_turn'); } return msg([{ type: 'text', text: 'withdraw 2' }], 'end_turn'); };
+    const rw = await runV2Turn({ session: voice2, state: newV2State(1_000_000), studentSaid: 'the form is 0 by 0', callModel: call, onBoardWithdraw: (id) => gone.push(id) });
+    const kept = JSON.stringify(rw.state.history);
+    check('the board check can withdraw an item that does the student\'s step', rw.toolCalls.length === 1 && gone.length === 1 && rw.state.board.pages[0].items.length === 1 && (rw.withdrawn ?? []).length === 1, [rw.toolCalls, gone]);
+    check('the withdrawn block is gone from the stored reply; the other stays', !kept.includes('apply rule') && kept.includes('label=\\"form\\"'));
+  }
   check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just begun/.test(first[0].text));
   check('the last history message carries a cache mark', !!beforeTail[beforeTail.length - 1].cache_control);
   check('the student\'s words are sent as they are', tail2[0].text === 'It is 3.');
