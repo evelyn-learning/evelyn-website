@@ -2293,9 +2293,10 @@ export function speakPhonemeSlashes(text: string): string {
 /** In a mathematics lesson a number written against a single letter is a coefficient and its variable, not a
  *  quantity with a unit: "4g" is "four g", and the voice says "four grams" (embed-1794361050464). The letter is
  *  spelt as its name. Only the letters the voice mistakes for units; only where the caller knows the subject. */
-const UNIT_LETTER: Record<string, string> = { g: 'gee', m: 'em', s: 'ess', l: 'el', h: 'aitch', k: 'kay' };
+// Not "s": "the 1s cancel" is a plural far more often than a variable ("the one ess", embed-1794374818774).
+const UNIT_LETTER: Record<string, string> = { g: 'gee', m: 'em', l: 'el', h: 'aitch', k: 'kay' };
 export function speakCoefficientLetters(text: string): string {
-  return text.replace(/(\d)([gmslhk])(?![A-Za-z0-9²³])/g, (_m, d: string, l: string) => `${d} ${UNIT_LETTER[l]}`);
+  return text.replace(/(\d)([gmlhk])(?![A-Za-z0-9²³])/g, (_m, d: string, l: string) => `${d} ${UNIT_LETTER[l]}`);
 }
 
 /** In a science lesson "O=O" is a double bond between two atoms, and the voice reads it "O equals O"

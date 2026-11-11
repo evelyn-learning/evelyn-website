@@ -152,6 +152,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     return () => clearInterval(id);
   }, [props.thinkingCue]);
 
+  const soonAfterSpeechRef = useRef<number | undefined>(undefined);
   const clearSilence = () => { if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; } };
   const armSilence = useCallback((soonS?: number) => {
     clearSilence();
@@ -229,7 +230,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
           for (const it of shownThenWithdrawnRef.current) if (!state.board.pages.some((pg) => pg.items.some((x) => x.id === it.id))) state.board.pages[state.board.current].items.push(it);
         }
         shownThenWithdrawnRef.current = [];
-        armSilence(recheck ? WAITED_RECHECK_S : noAsk ? NO_ASK_RECHECK_S : undefined); }
+        soonAfterSpeechRef.current = recheck ? WAITED_RECHECK_S : noAsk ? NO_ASK_RECHECK_S : undefined;
+        armSilence(soonAfterSpeechRef.current); }
     },
     // The session ends once the closing words have been spoken.
     closeDelayMs: async () => {
@@ -292,7 +294,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const onPlayback = useCallback((event: string) => {
     // A sentence has begun playing: board items anchored to it (or to an earlier one) appear now.
     if (event === 'sentence-start') { startedCountRef.current += 1; releaseBoard(startedCountRef.current); }
-    if (event === 'drain') { if (!turnsRef.current?.busy) { releaseBoard(); armSilence(); } }
+    // The wait chosen when the reply ended (a short one after a reply with no question) still stands once its
+    // speech has finished: arming the plain 75 s here threw the short wait away, and a tutor who had stopped
+    // without a question sat silent (embed-1794374818774, embed-1794376295543).
+    if (event === 'drain') { if (!turnsRef.current?.busy) { releaseBoard(); armSilence(soonAfterSpeechRef.current); } }
   }, [armSilence, releaseBoard]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');

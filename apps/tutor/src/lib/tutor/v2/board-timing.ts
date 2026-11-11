@@ -87,3 +87,31 @@ export function inlineSentenceIndex(toolName: string, content: string, sentences
   }
   return last;
 }
+
+/** In a spoken lesson, what a problem card asks must also be heard: a tutor who tells the scenario and stops,
+ *  or says nothing about the card at all, leaves the student waiting in silence with the question sitting
+ *  unread on the board (embed-1794371869806, embed-1794376295543). Given the card and the sentences spoken,
+ *  this returns the words still to be said, or null when the reply already asks. A reply that ends on a
+ *  question has asked. Otherwise: the card's task sentence when the speech told the problem, and the whole
+ *  card (when short) when the speech never mentioned it. */
+const SAY_WHOLE_CARD_WORDS = 45;
+export function unsaidAsk(statement: string, sentences: string[]): string | null {
+  const card = statement.replace(/\s+/g, ' ').trim();
+  if (!card || !sentences.length || sentences.slice(-2).some((x) => /[?？]/.test(x))) return null;
+  const parts: string[] = []; let cur = ''; let inMath = false;
+  for (let i = 0; i < card.length; i++) {
+    const ch = card[i]; cur += ch;
+    if (ch === '$') inMath = !inMath;
+    if (!inMath && /[.!?]/.test(ch) && (i + 1 >= card.length || card[i + 1] === ' ')) { parts.push(cur.trim()); cur = ''; }
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  // A card in parts "(a) … (b) …" asks in the line above them.
+  const firstPart = parts.findIndex((x) => /^\(?[a-e]\)\s/i.test(x));
+  const ask = firstPart > 0 ? parts.slice(0, firstPart).join(' ') : firstPart === 0 ? card : parts[parts.length - 1];
+  const askWords = [...about(ask)];
+  const shared = (sentence: string, words: string[]) => { const w = about(sentence); return words.filter((x) => w.has(x)).length; };
+  if (askWords.length && sentences.slice(-3).some((x) => shared(x, askWords) / askWords.length >= 0.6)) return null;
+  const cardWords = [...about(card)];
+  const told = sentences.some((x) => shared(x, cardWords) >= 2);
+  return !told && norm(card).length <= SAY_WHOLE_CARD_WORDS ? card : ask;
+}

@@ -16,14 +16,14 @@
  * begins (TutorVoiceV2). The stored reply keeps the blocks, so the history shows a tutor who writes
  * while talking. `with="opening words"` is for the board pass only, whose blocks arrive after the words.
  */
-export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph';
+export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'page';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
 /** `opening`: a block has begun and its content is still arriving (the client holds the sentence before it). */
 export type InlinePart = { text: string } | { block: InlineBlock } | { opening: true };
 
 const OPEN = '<board';
 const CLOSE = '</board>';
-const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
+const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|page)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
 
 function parseBlock(raw: string): InlineBlock | null {
   BLOCK_RE.lastIndex = 0;
@@ -47,7 +47,8 @@ export function boardBlocksIn(text: string): InlineBlock[] {
 /** The board tool call a block stands for. */
 export function inlineToolCall(b: InlineBlock): { name: string; args: Record<string, unknown> } {
   if (b.kind === 'equation') return { name: 'show_equation', args: { latex: b.body, ...(b.attrs.label ? { label: b.attrs.label } : {}) } };
-  if (b.kind === 'note') return { name: 'annotate', args: { text: b.body, ...(b.attrs.style ? { style: b.attrs.style } : {}) } };
+  // One point per line; a tutor who has just written a table sometimes separates the points with "|" instead.
+  if (b.kind === 'note') return { name: 'annotate', args: { text: b.body.includes('\n') || b.body.includes('$') ? b.body : b.body.split(/(?<=[^|\s])\s*\|\s*(?=[^|\s])/).filter(Boolean).join('\n'), ...(b.attrs.style ? { style: b.attrs.style } : {}) } };
   // The structured kinds are written as plain lines, cells separated by "|", so that a table or a timeline
   // costs the tutor no more than a note: a lesson in words was otherwise a stack of text cards
   // (Praveen, AP US Government, embed-1794355900794).
@@ -55,8 +56,30 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
   const cells = (l: string) => l.split('|').map((c) => c.trim());
   if (b.kind === 'table') return { name: 'show_table', args: { headers: cells(lines[0] ?? ''), rows: lines.slice(1).map(cells) } };
   if (b.kind === 'timeline') return { name: 'show_timeline', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), events: lines.map(cells).filter((c) => c[0] && c[1]).map((c) => ({ date: c[0], title: c[1], ...(c[2] ? { description: c[2] } : {}) })) } };
-  if (b.kind === 'compare') { const rows = lines.map(cells); return { name: 'show_graphic_organizer', args: { kind: 't_chart', ...(b.attrs.title ? { title: b.attrs.title } : {}), leftHeader: b.attrs.left ?? '', rightHeader: b.attrs.right ?? '', leftItems: rows.map((r) => r[0] ?? '').filter(Boolean), rightItems: rows.map((r) => r[1] ?? '').filter(Boolean) } }; }
-  if (b.kind === 'steps') return { name: 'show_graphic_organizer', args: { kind: 'sequence', ...(b.attrs.title ? { title: b.attrs.title } : {}), steps: lines } };
+  // Two sides, row by row. A table sizes itself to its words; the fixed-size chart clipped a two-line
+  // heading and left half the card empty (embed-1794376295543).
+  if (b.kind === 'compare') return { name: 'show_table', args: { headers: [b.attrs.left ?? '', b.attrs.right ?? ''], rows: lines.map(cells).map((r) => [r[0] ?? '', r[1] ?? '']) } };
+  // A page of the board, with its heading.
+  if (b.kind === 'page') return { name: 'new_page', args: { title: b.body.replace(/\s+/g, ' ').slice(0, 80) } };
+  // Things that go round, things that connect, places (a nitrogen-cycle lesson had only lists to draw with,
+  // embed-1794376956230).
+  if (b.kind === 'cycle') return { name: 'show_cycle_diagram', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), // Captions sit beside small circles: a long one runs over its neighbours, so only a short one is drawn.
+    stages: lines.map(cells).filter((c) => c[0]).map((c) => ({ label: c[0], ...(c[1] && c[1].length <= 28 ? { description: c[1] } : {}) })) } };
+  if (b.kind === 'web') {
+    const rows = lines.map(cells).filter((c) => c[0] && c[c.length - 1] && c.length >= 2);
+    const ids = new Map<string, string>();
+    const id = (label: string) => { const k = label.toLowerCase(); if (!ids.has(k)) ids.set(k, `n${ids.size + 1}`); return ids.get(k)!; };
+    const labels: string[] = [];
+    const edges = rows.map((c) => { const from = c[0]; const to = c[c.length - 1]; for (const l of [from, to]) if (!ids.has(l.toLowerCase())) labels.push(l); return { from: id(from), to: id(to), ...(c.length >= 3 && c[1] ? { label: c[1] } : {}), directed: true }; });
+    return { name: 'show_concept_map', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), nodes: labels.map((label, i) => ({ id: id(label), label, ...(i === 0 ? { level: 0 } : {}) })), edges } };
+  }
+  if (b.kind === 'map') {
+    const deg = (v: string | undefined, neg: RegExp) => { const m = String(v ?? '').replace(/−/g, '-').match(/-?\d+(?:\.\d+)?/); if (!m) return NaN; const n = Number(m[0]); return neg.test(String(v)) ? -Math.abs(n) : n; };
+    const pins = lines.map(cells).map((c) => ({ label: c[0], lat: deg(c[1], /s\b/i), lon: deg(c[2], /w\b/i) })).filter((pin) => pin.label && Number.isFinite(pin.lat) && Number.isFinite(pin.lon));
+    const regions = ['world', 'north-america', 'south-america', 'europe', 'asia', 'africa', 'australia', 'usa', 'india', 'china', 'middle-east', 'mediterranean'];
+    return { name: 'show_map', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), background: regions.includes(b.attrs.region ?? '') ? b.attrs.region : 'world', pins } };
+  }
+  if (b.kind === 'steps') return { name: 'show_graphic_organizer', args: { kind: 'sequence', ...(b.attrs.title ? { title: b.attrs.title } : {}), steps: lines.map((l) => cells(l).filter(Boolean).join(': ')) } };
   // Figures, written as plain lines too. A tutor who has to fill in a structured tool call draws far less often
   // than one who can write three lines (a grade 8 forces lesson was all text cards, embed-1794363148240).
   if (b.kind === 'forces') {

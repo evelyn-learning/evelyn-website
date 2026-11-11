@@ -9,7 +9,9 @@ import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
 
 /** The early silence check after a spoken reply that asked nothing (TutorVoiceV2). */
-export const V2_NO_ASK_RECHECK_S = 10;
+export const V2_NO_ASK_RECHECK_S = 6;
+/** A board page this long has almost certainly run past one part of the lesson. */
+export const V2_FULL_PAGE_ITEMS = 8;
 
 export interface V2TurnFacts {
   nowMs: number;
@@ -25,6 +27,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
+  const page = state.board.pages[state.board.current];
+  if (page && page.items.length >= V2_FULL_PAGE_ITEMS) lines.push(`this page ("${page.title}") holds ${page.items.length} items: the next part of the lesson opens a new page`);
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
   if (state.boardProblems?.length) lines.push(`not painted in your last reply:\n${state.boardProblems.map((x) => `  - ${x}`).join('\n')}`);
   if (session.plan) lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);

@@ -31,7 +31,9 @@ const BOARD_DESCRIPTIONS: Record<string, string> = {
 
 /** Board tools every session gets, then extras by subject. */
 /** Equations, notes and problems are written inline in the reply (board-inline.ts), not called as tools. */
-const CORE = ['new_page', 'go_to_page'];
+/** A new page is an inline block too (<board page>): as a tool it cost a second model call, and a reply that
+ *  called it stopped there, with a promise and a blank page, or with no words at all (browser runs, 2026-11-11). */
+const CORE: string[] = [];
 /** Which structured figures a lesson can draw, by what it is about. Graphs, number lines, force diagrams,
  *  tables and the rest are inline forms open to every lesson (board-inline.ts); a tool is kept only for a
  *  figure that needs structured arguments, and only in a lesson where it can belong (a function-graph tool
@@ -39,7 +41,9 @@ const CORE = ['new_page', 'go_to_page'];
 function figureTools(subject: string, topic: string): string[] {
   const t = `${subject} ${topic}`.toLowerCase();
   const out: string[] = [];
-  if (/geometr|trig|precalc|\bmath\b/.test(t) && !/statistic|probab|algebra-1|algebra1/.test(t)) out.push('show_geometry');
+  // Shapes, angles and constructions only. In a lesson about curves it was used for a parabola and drew points
+  // and a line with no curve (embed-1794374818774); curves and points on axes are the inline graph.
+  if (/geometr|trig/.test(t)) out.push('show_geometry');
   if (/statistic|probab|\bstats\b|data/.test(t)) out.push('show_venn_diagram', 'show_tree', 'show_stats');
   if (/chem/.test(t)) out.push('show_lewis_constructed');
   return out;

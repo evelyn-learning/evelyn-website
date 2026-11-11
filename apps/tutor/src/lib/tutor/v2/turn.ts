@@ -18,9 +18,10 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { applyToModelBoard, boardMisfit, summariseBoardCall, taskOnly, wordsAsText } from './board';
+import { applyToModelBoard, boardMisfit, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths } from './spoken-maths';
+import { unsaidAsk } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, type V2TurnFacts } from './facts';
 import { planGoalIds, renderPlanMap } from './plan-map';
@@ -168,6 +169,8 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   // The turn works on a copy: a failed model call leaves the caller's state as it was.
   const state: V2State = structuredClone(input.state);
 
+  /** The first reply of the session: nothing has been said by either side. */
+  const opening = !state.history.length && input.studentSaid === null;
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds);
   const facts = renderFacts(session, state, { ...input.facts, nowMs });
   // The student's words come first and carry the cache mark; the facts follow and are
@@ -196,7 +199,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     const { [SAY_WITH]: sayWithRaw, ...args } = (block.input ?? {}) as Record<string, unknown>;
     // A problem card states the task; how-to-begin sentences are cut from it (board.ts taskOnly).
     if (block.name === 'show_problem' && typeof args.statement === 'string') args.statement = taskOnly(args.statement).statement;
-    if (block.name === 'show_equation' && typeof args.latex === 'string') args.latex = wordsAsText(args.latex);
+    if (block.name === 'show_equation' && typeof args.latex === 'string') args.latex = spacedRoman(wordsAsText(args.latex));
     const sayWith = typeof sayWithRaw === 'string' && sayWithRaw.trim() ? sayWithRaw.trim() : undefined;
     let outcome: string;
     if (V2_CONTROL_TOOL_NAMES.has(block.name)) {
@@ -220,7 +223,9 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   let inlineN = 0;
   const boardProblems: string[] = [];
   const settleInline = (b: InlineBlock, boardOnly = false): boolean => {
-    const { name, args } = inlineToolCall(b);
+    let { name, args } = inlineToolCall(b);
+    // A page block naming a page that exists turns back to it.
+    if (name === 'new_page') { const at = state.board.pages.findIndex((pg, i) => i !== state.board.current && pg.title.replace(/\s+/g, '').toLowerCase() === String(args.title ?? '').replace(/\s+/g, '').toLowerCase()); if (at >= 0) { name = 'go_to_page'; args = { pageIndex: at }; } }
     inlineN += 1;
     const r = settle({ type: 'tool_use', id: `inl_${nowMs.toString(36)}_${inlineN}`, name, input: b.attrs.with ? { ...args, [SAY_WITH]: b.attrs.with } : args } as Anthropic.ToolUseBlock, boardOnly, true);
     const failed = /^not /.test(String(r.content));
@@ -286,6 +291,19 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     messages = [...messages, { role: 'assistant', content: response.content as unknown as Anthropic.ContentBlockParam[] }, { role: 'user', content: results }];
   }
 
+  // A problem card put up in a spoken reply is also asked aloud (board-timing.ts unsaidAsk).
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length) {
+    const card = [...toolCalls].reverse().find((c) => c.name === 'show_problem' && !/^not /.test(c.outcome));
+    const more = card ? unsaidAsk(String(card.args.statement ?? ''), spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean)) : null;
+    if (more) {
+      input.onText?.(`\n\n${more}`);
+      spoken.push(more);
+      const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+      const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
+      if (textBlock) textBlock.text = `${textBlock.text}\n\n${more}`;
+    }
+  }
+
   // The board pass. Speech and the board are the two halves of a spoken reply, and the model often
   // writes only the first: it says the working and puts up nothing, or only the next problem. When the
   // reply spoke mathematics, the model is shown its own words and asked what of them is missing from the
@@ -299,7 +317,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   // a sequence was being told in words and problem cards alone (a Grade 8 forces lesson, embed-1794371869806).
   const drewFigure = () => toolCalls.some((c) => V2_FIGURE_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   const paintedSoFar = () => toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && c.name !== 'new_page' && c.name !== 'go_to_page' && !/^not /.test(c.outcome));
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && said.split(/\s+/).length >= V2_UNWRITTEN_WORDS)) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && said.split(/\s+/).length >= V2_UNWRITTEN_WORDS) || (opening && !paintedSoFar())) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
     // The check has two halves. What was said and not written is added. What was written and should not have
     // been is withdrawn: a block that shows the step the reply asks the student to take (the board did the
     // differentiation the tutor had just asked for, embed-1794349966573). Board items wait for their sentence
@@ -326,7 +344,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
         // "1/2 = ?/6" from a grade 6 lesson in replay).
         // The opening reply is painted at once (a session never starts on a bare board), so a withdrawal there
         // would empty the board in front of the student (browser run, conic sections, 2026-11-11). It stays.
-        if (!state.history.length) continue;
+        if (opening) continue;
         if (!gone || withdrawn.includes(gone.id) || /\?|\\square|\\boxed\{\s*\}|_{3,}/.test(gone.label)) continue;
         withdrawn.push(gone.id); withdrawnLabels.push(gone.label);
         for (const page of state.board.pages) page.items = page.items.filter((it) => it.id !== gone.id);
@@ -342,6 +360,18 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
         if (textBlock) textBlock.text = insertBlock(textBlock.text, b.raw.replace(/\s+with="[^"]*"/, ''), b.attrs.with);
       }
     } catch { /* the reply stands without it */ }
+  }
+
+  // A session never begins on a bare board (embed-1794362141944, embed-1794376295543). When the opening reply
+  // and the check after it both wrote nothing, the lesson's heading and what it is for go up.
+  if (session.mode === 'voice' && opening && !state.closed && spoken.length && !paintedSoFar()) {
+    const body = [session.plan?.title ?? session.topic ?? '', ...(session.plan?.los ?? []).slice(0, 3).map((lo) => lo.description)].map((x) => String(x).trim()).filter(Boolean).join('\n');
+    const b = body ? boardBlocksIn(`<board note style="highlight">${body}</board>`)[0] : undefined;
+    if (b && settleInline(b, true)) {
+      const holder = stored.find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+      const textBlock = (holder?.content as Anthropic.ContentBlockParam[] | undefined)?.find((c): c is Anthropic.TextBlockParam => c.type === 'text');
+      if (textBlock) textBlock.text = `${b.raw}\n${textBlock.text}`;
+    }
   }
 
   state.history = [...state.history, ...stored];

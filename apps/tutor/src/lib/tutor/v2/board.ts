@@ -28,6 +28,7 @@ export function summariseBoardCall(name: string, args: Record<string, unknown>):
  *  is asked not to (embed-1794345628228). They are cut from the card: a sentence after the first that opens
  *  with a method verb, outside any maths span. Parts "(a) … (b) …" are tasks and stay. */
 const METHOD_LEAD = /^(?:(?:first|start|begin|then|next|now|remember|hint|note|tip)\b[\s,:]*)*(?:rewrite|convert|combine|check|verify|confirm|identify|name|let|take|use|apply|try|recall|think|consider|notice|substitute|plug|factor|rationali[sz]e|simplify|set|write|express|multiply|divide|differentiate|start|begin|remember|hint|note|this (?:is|starts|gives|has)|direct substitution|it (?:is|starts|gives)|you(?:'ll| will| may| can| need| should))\b/i;
+const TASK_LEAD = /^(?:find|solve|evaluate|compute|calculate|classify|determine|give|state|explain|show|prove|sketch|graph|draw|work out|decide|say|tell|describe|compare|list|complete|fill|estimate|predict|build|construct|match)\b/i;
 export function taskOnly(statement: string): { statement: string; cut: string[] } {
   // Split into sentences without breaking $…$ spans.
   const parts: string[] = []; let cur = ''; let inMath = false;
@@ -38,13 +39,26 @@ export function taskOnly(statement: string): { statement: string; cut: string[] 
   }
   if (cur.trim()) parts.push(cur);
   const keep: string[] = []; const cut: string[] = [];
-  parts.forEach((s, i) => { const t = s.trim(); if (i > 0 && !/^\(?[a-e]\)/i.test(t) && !/\?$/.test(t) && !/\byour (?:answer|work|working|reasoning)\b/i.test(t) && METHOD_LEAD.test(t)) cut.push(t); else keep.push(s); });
+  // A method sentence is cut only once the card has stated its task. "A parabola has focus (0, 1) and directrix
+  // y = −1. Write its equation." lost its second sentence, and the card asked nothing (embed-1794374818774).
+  let asked = false;
+  parts.forEach((s, i) => {
+    const t = s.trim();
+    const method = i > 0 && !/^\(?[a-e]\)/i.test(t) && !/\?$/.test(t) && !/\byour (?:answer|work|working|reasoning)\b/i.test(t) && METHOD_LEAD.test(t);
+    if (method && asked) cut.push(t); else keep.push(s);
+    if (/\?$/.test(t) || METHOD_LEAD.test(t) || TASK_LEAD.test(t)) asked = true;
+  });
   return keep.join('').trim() ? { statement: keep.join('').trim(), cut } : { statement, cut: [] };
 }
 
 /** Ordinary words typed straight into LaTeX are set as a run of italic variables with no spaces: "and at x = 3"
  *  appeared on the board as "andatx = 3" (embed-1794361050464). They are wrapped in \text{}. */
 const PLAIN_WORDS = 'and|at|so|then|gives|give|when|if|for|the|is|are|or|to|of|with|which|because|since|that|we|get|you|becomes|means|where|from|into|but|not|both|each|by|on|in|as|now|after|before|times|plus|minus|equals|over|per|total|answer|check|left|right|east|west|north|south|toward|away|net|force';
+/** \\mathrm{…} is roman type for symbols and drops the spaces between words: "(usable by plants)" came out
+ *  "(usablebyplants)" (embed-1794376956230). Words inside it get their spaces back. */
+export function spacedRoman(latex: string): string {
+  return latex.replace(/\\mathrm\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g, (_m, body: string) => `\\mathrm{${body.replace(/(?<=[A-Za-z,)])[ ]+(?=[A-Za-z(])/g, '\\ ')}}`);
+}
 export function wordsAsText(latex: string): string {
   const re = new RegExp(String.raw`(?<![\\A-Za-z])(?:${PLAIN_WORDS})(?![A-Za-z])(?:\s+(?:${PLAIN_WORDS})(?![A-Za-z]))*`, 'gi');
   // Leave what is already inside \text{…} (and its relatives) alone.
@@ -62,6 +76,14 @@ export function boardMisfit(name: string, args: Record<string, unknown>): string
   if (name === 'show_free_body_diagram' && count(args.forces) === 0) return 'a forces diagram needs at least one force: name | direction | size';
   if (name === 'show_number_line' && count(args.points) + count(args.intervals) + count(args.segments) === 0) return 'a number line needs at least one point or interval';
   if ((name === 'show_table' && count(args.rows) === 0) || (name === 'show_timeline' && count(args.events) === 0)) return 'it has no rows: write one per line, cells separated by |';
+  // A sequence, timeline or cycle of one thing is a sentence in a box (a one-step "sequence" appeared in an
+  // AP US History lesson, embed-1794376295543).
+  const spec = (args.spec ?? args) as Record<string, unknown>;
+  if (name === 'show_graphic_organizer' && spec.kind === 'sequence' && count(spec.steps) < 2) return 'steps need at least two, one per line; a single point is a note';
+  if (name === 'show_timeline' && count(args.events) < 2) return 'a timeline needs at least two dated events; a single date is a note';
+  if (name === 'show_cycle_diagram' && count(args.stages) < 3) return 'a cycle needs at least three stages, one per line';
+  if (name === 'show_concept_map' && count(args.edges) < 2) return 'a web needs at least two links, one per line: from | how | to';
+  if (name === 'show_map' && count(args.pins) === 0) return 'a map needs at least one place: name | latitude | longitude';
   if (name !== 'show_equation') return null;
   const latex = text(args.latex);
   const words = [...latex.matchAll(/\\text(?:rm|bf|it)?\{([^}]*)\}/g)].flatMap((m) => m[1].split(/\s+/).filter((w) => /\p{L}{2,}/u.test(w)));
@@ -80,9 +102,13 @@ function boardCore(args: Record<string, unknown>): string {
   return norm(body.replace(/\\[,;!: ]|\\(?:left|right|displaystyle|,)|[$]/g, ''));
 }
 
+const FIGURE_FORMS = new Set(['show_cycle_diagram', 'show_concept_map', 'show_map', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_function_graph', 'show_free_body_diagram', 'show_number_line']);
 /** Apply a board tool call to the record. Mutates `board`. */
 export function applyToModelBoard(board: V2Board, id: string, name: string, args: Record<string, unknown>): V2BoardOutcome {
   if (name === 'new_page') {
+    // The page just opened, asked for again (a follow-up reply repeated its heading): stay on it.
+    const here = board.pages[board.current];
+    if (here && norm(here.title) === norm(text(args.title)) && here.items.length < 3) return { painted: false, detail: `already on the page "${here.title}"` };
     board.pages.push({ title: text(args.title) || `Page ${board.pages.length + 1}`, items: [] });
     board.current = board.pages.length - 1;
     return { painted: true, detail: `new page ${board.current + 1} "${board.pages[board.current].title}"` };
@@ -100,7 +126,9 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
   // showed one line twice, once bare and once titled "final" (embed-1794345628228).
   const core = boardCore(args) || norm(summary);
   for (let p = 0; p < board.pages.length; p++) {
-    if (board.pages[p].items.some((it) => { const have = it.core ?? norm(it.summary); return have === core || (core.length >= 12 && have.includes(core)) || (have.length >= 24 && core.includes(have) && core.length < have.length * 1.15); })) {
+    // The same thing in another form is not a repeat: a cycle drawn from stages already listed as steps was
+    // refused, and the tutor said "here is the loop" over nothing (browser run, 2026-11-11).
+    if (board.pages[p].items.some((it) => { if (FIGURE_FORMS.has(name) && it.tool !== name) return false; const have = it.core ?? norm(it.summary); return have === core || (core.length >= 12 && have.includes(core)) || (have.length >= 24 && core.includes(have) && core.length < have.length * 1.15); })) {
       return { painted: false, detail: `already on the board (page ${p + 1})` };
     }
   }
