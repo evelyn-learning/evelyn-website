@@ -117,3 +117,6 @@ docs/whitelabel/kanzoo/*.zip
 # checkout, never in git — docs/ops/WORKFLOW.md §6. deploy-marketing.sh rsyncs it
 # without --delete and never prunes it.
 apps/marketing/public/images/blog
+
+# tutor v2 tester flags (local only)
+apps/tutor/.v2-flags/

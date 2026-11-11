@@ -33,6 +33,7 @@ import { TUTOR_STT_ENGINE_INK2 } from '@/lib/tutor/orchestrator/flags';
 import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import { V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
+import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
 import { anchorSentenceIndex, asksAloud, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
@@ -81,6 +82,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const startedRef = useRef(false);
   const [started, setStarted] = useState(false);
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // A tester's flag is open (V2FlagBar, local development only): the tutor is paused and what is heard is a note.
+  const flagRef = useRef<V2FlagState>({ active: false, words: [] });
   // Board timing (board-timing.ts): the sentences of the running reply as sent to the voice, how many have
   // started playing, and the board items waiting for theirs.
   const lastSoundAtRef = useRef(0);
@@ -175,7 +178,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     silenceTimerRef.current = setTimeout(() => {
       const rt = realtimeRef.current; const turns = turnsRef.current;
       if (!rt || !turns || turns.isEnding()) return;
-      if (rt.isSpeechPending()) { armSilence(soonS); return; }
+      if (rt.isSpeechPending() || flagRef.current.active) { armSilence(soonS); return; }
       // A student murmuring through a problem is not silent, even when no words were recognised.
       if (Date.now() - lastSoundAtRef.current < Math.min(QUIET_MIC_MS, wait * 500)) { armSilence(soonS); return; }
       if (!soonS) silenceStepRef.current += 1;
@@ -278,7 +281,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, []);
   const hearingPartial = useCallback((text: string) => {
     const rt = realtimeRef.current;
-    if (!rt?.isSpeechPending() || pauseTimerRef.current) return;
+    if (!rt?.isSpeechPending() || pauseTimerRef.current || flagRef.current.active) return;
     // Pause on the first words that are not the tutor's own (every word of an echo is in what it just said).
     if (!text.trim() || isOwnVoice(text, spokenRef.current, 1, 1)) return;
     if (rt.pauseSpeech()) {
@@ -290,6 +293,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const heard = useCallback((transcript: string, opts?: { typed?: boolean }) => {
     const text = transcript.trim();
     if (!text) return;
+    if (flagRef.current.active) { flagRef.current.words.push(text); return; }
     // The microphone hears the tutor too. Words that are the tutor's own, arriving while it speaks, are not the student.
     if (!opts?.typed && realtimeRef.current?.isSpeechPending() && isOwnVoice(text, spokenRef.current)) {
       p.current.onDebugEvent?.('v2_own_voice_dropped', text.slice(0, 80));
@@ -321,7 +325,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, []);
   const onPlayback = useCallback((event: string) => {
     // A sentence has begun playing: board items anchored to it (or to an earlier one) appear now.
-    if (event === 'sentence-start') { startedCountRef.current += 1; releaseBoard(startedCountRef.current); }
+    if (event === 'sentence-start') { startedCountRef.current += 1; releaseBoard(startedCountRef.current); if (flagRef.current.active) realtimeRef.current?.pauseSpeech(); }
     // The wait chosen when the reply ended (a short one after a reply with no question) still stands once its
     // speech has finished: arming the plain 75 s here threw the short wait away, and a tutor who had stopped
     // without a question sat silent (embed-1794374818774, embed-1794376295543).
@@ -363,6 +367,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const onSpeechStop = useCallback(() => { if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) p.current.onVoiceStateChange?.('processing'); }, []);
   const onNoTranscript = useCallback((kind: string | undefined) => {
     p.current.onDebugEvent?.('v2_transcription_failed', String(kind ?? 'unknown'));
+    if (flagRef.current.active) return;
     liftPause();
     if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { p.current.onVoiceStateChange?.('listening'); armSilence(); }
   }, [liftPause, armSilence]);
@@ -411,7 +416,33 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     return () => { ref.current = null; };
   }, [props.handleRef, start, heard]);
 
-  return (
+  const flagSession = useMemo(() => {
+    try { return String(JSON.parse(atob((props.embedToken ?? '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).student_id || 'session'); } catch { return 'session'; }
+  }, [props.embedToken]);
+  const flagSnapshot = useCallback(() => {
+    const state = turnsRef.current?.stateRef.current;
+    const text = (m: { content: unknown } | undefined) => !m ? '' : typeof m.content === 'string' ? m.content : (m.content as Array<{ type: string; text?: string }>).filter((b) => b.type === 'text').map((b) => b.text).join(' ');
+    const last = (role: string) => text([...(state?.history ?? [])].reverse().find((m) => m.role === role));
+    return {
+      turns: state?.history.length ?? 0,
+      minutesIn: state ? Math.round((Date.now() - state.startedAtMs) / 6000) / 10 : 0,
+      tutorBusy: !!turnsRef.current?.busy,
+      // The reply being spoken when the flag was raised: every sentence sent to the voice, and how many had begun.
+      speaking: { sentences: turnSentencesRef.current, begun: startedCountRef.current },
+      lastStudent: last('user').slice(-600), lastTutor: last('assistant').slice(-1500),
+      boardWaiting: heldBoardRef.current.map((h) => h.what),
+      board: state?.board,
+    };
+  }, []);
+  const flagStart = useCallback(() => { clearSilence(); realtimeRef.current?.pauseSpeech(); p.current.onDebugEvent?.('v2_flag', 'opened'); }, []);
+  const flagStop = useCallback(() => {
+    p.current.onDebugEvent?.('v2_flag', 'closed');
+    realtimeRef.current?.resumeSpeech();
+    if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) armSilence(soonAfterSpeechRef.current);
+  }, [armSilence]);
+
+  return (<>
+    {V2_FLAGS_ON && started && <V2FlagBar session={flagSession} flagRef={flagRef} snapshot={flagSnapshot} onStart={flagStart} onStop={flagStop} />}
     <V2Composer
       composerSlot={props.composerSlot}
       closed={turns.closed}
@@ -419,5 +450,5 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       onSend={(text) => { if (!startedRef.current) start(); heard(text, { typed: true }); }}
       placeholder="Type here if you can't speak…"
     />
-  );
+  </>);
 }
