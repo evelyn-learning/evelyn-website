@@ -15,7 +15,8 @@ const BOARD_DESCRIPTIONS: Record<string, string> = {
   show_problem: 'Put a problem for the student on the board. Use this whenever you pose a problem.',
   show_worked_example: 'Put a worked example on the board: the problem and its steps.',
   show_function_graph: 'Draw the graph of one or more functions.',
-  show_table: 'Put a small table on the board.',
+  show_table: 'Put a small table on the board: a comparison, or values side by side.',
+  show_timeline: 'Put a timeline of dated events on the board.',
   show_number_line: 'Draw a number line with marked points or intervals.',
   show_geometry: 'Draw a geometric figure.',
   highlight: 'Draw attention to something already on the board.',
@@ -29,6 +30,8 @@ const CORE = ['highlight', 'new_page', 'go_to_page'];
 const BY_SUBJECT: Record<string, string[]> = {
   math: ['show_function_graph', 'show_table', 'show_number_line', 'show_geometry'],
   science: ['show_function_graph', 'show_table'],
+  // Social studies and history: events in order, and side-by-side comparisons.
+  ss: ['show_timeline', 'show_table'],
 };
 
 export const V2_CONTROL_TOOLS: Anthropic.Tool[] = [
