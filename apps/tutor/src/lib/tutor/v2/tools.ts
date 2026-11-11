@@ -26,12 +26,12 @@ const BOARD_DESCRIPTIONS: Record<string, string> = {
 
 /** Board tools every session gets, then extras by subject. */
 /** Equations, notes and problems are written inline in the reply (board-inline.ts), not called as tools. */
-const CORE = ['highlight', 'new_page', 'go_to_page'];
+const CORE = ['new_page', 'go_to_page'];
 const BY_SUBJECT: Record<string, string[]> = {
-  math: ['show_function_graph', 'show_table', 'show_number_line', 'show_geometry'],
-  science: ['show_function_graph', 'show_table'],
-  // Social studies and history: events in order, and side-by-side comparisons.
-  ss: ['show_timeline', 'show_table'],
+  // Tables, timelines, comparisons, step chains and quotes are inline forms for every subject (board-inline.ts);
+  // only what needs structured arguments stays a tool.
+  math: ['show_function_graph', 'show_number_line', 'show_geometry'],
+  science: ['show_function_graph'],
 };
 
 export const V2_CONTROL_TOOLS: Anthropic.Tool[] = [

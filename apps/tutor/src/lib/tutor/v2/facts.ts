@@ -8,6 +8,9 @@ import { renderBoard } from './board';
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
 
+/** The early silence check after a spoken reply that asked nothing (TutorVoiceV2). */
+export const V2_NO_ASK_RECHECK_S = 10;
+
 export interface V2TurnFacts {
   nowMs: number;
   /** The result of an answer check, when the runtime ran one. */
@@ -31,6 +34,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     lines.push(`gaps you have recorded:\n${state.gaps.map((g) => `  - ${g.what}: ${label[g.status] ?? g.status}`).join('\n')}`);
   }
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
-  if (f.silenceSeconds) lines.push(`the student has said nothing for ${Math.round(f.silenceSeconds)} seconds`);
+  if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
+    ? `the student has said nothing for ${V2_NO_ASK_RECHECK_S} seconds since your last reply, which ended without a question. If it set them a task, they are working; if it did not, they are waiting for you`
+    : `the student has said nothing for ${Math.round(f.silenceSeconds)} seconds`);
   return `<facts>\n${lines.join('\n')}\n</facts>`;
 }

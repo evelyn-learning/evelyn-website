@@ -28,6 +28,8 @@ import { stripToolTalk } from './tool-talk';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
+/** A spoken reply of at least this many words that wrote nothing is put to the board check. */
+export const V2_UNWRITTEN_WORDS = 30;
 export const V2_MAX_MODEL_CALLS = 5;
 export const V2_MAX_TOKENS = 8000;
 export const V2_NOTE_MAX_CHARS = 1500;
@@ -287,14 +289,18 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   // board. Its words are already on their way to the student; only board calls are taken from this call.
   // They are stored as part of the reply, so the history reads as a tutor who wrote while talking.
   const said = spoken.join('\n\n');
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem'))) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
+  // A long spoken reply with nothing written is checked too, whatever the subject: names, dates and terms
+  // that are only heard are lost as surely as mathematics (two replies of an AP Government lesson went by
+  // with an empty board, embed-1794355900794).
+  const paintedSoFar = () => toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && c.name !== 'new_page' && c.name !== 'go_to_page' && !/^not /.test(c.outcome));
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || (!paintedSoFar() && said.split(/\s+/).length >= V2_UNWRITTEN_WORDS)) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
     // The check has two halves. What was said and not written is added. What was written and should not have
     // been is withdrawn: a block that shows the step the reply asks the student to take (the board did the
     // differentiation the tutor had just asked for, embed-1794349966573). Board items wait for their sentence
     // in the voice client, so a withdrawal usually arrives before the item is shown.
     const others = toolCalls.filter((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome) && !inlinePainted.some((x) => x.id === c.id)).map((c) => `${c.name}: ${summariseBoardCall(c.name, c.args)}`);
     const listed = [...inlinePainted.map((x, i) => `  ${i + 1}. ${x.label}`), ...others.map((x) => `  - ${x}`)];
-    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. In it you put on the board: ${listed.length ? `\n${listed.join('\n')}` : 'nothing.'}\n\nFirst, and rarely: does a numbered item state outright the answer to the very thing this reply asks the student to work out, so that reading the board answers your question for them? Only then, withdraw it by writing "withdraw N" on a line by itself. Everything else stays: an item that sets the question out, leaves a blank or a question mark for them to fill, lists things for them to compare, shows working the student has already given, or shows what you yourself explained. When unsure, it stays.\\n\\nSecond: mathematics that is only heard is lost. If something you said aloud is not on the board (the working behind a result, a step the student gave, a correction, a hint), write it now as board blocks, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing already there, no new problem, and never an answer you left for the student to find.\n\nReply with withdraw lines and board blocks only. If there is nothing to withdraw and nothing missing, reply with the one word: nothing.`;
+    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. In it you put on the board: ${listed.length ? `\n${listed.join('\n')}` : 'nothing. A reply of this length that leaves the board untouched is a tutor talking at an empty board: unless it was only small talk or a question about what is already up, the heart of what you said belongs there, in the form that fits it.'}\n\nFirst, and rarely: does a numbered item state outright the answer to the very thing this reply asks the student to work out, so that reading the board answers your question for them? Only then, withdraw it by writing "withdraw N" on a line by itself. Everything else stays: an item that sets the question out, leaves a blank or a question mark for them to fill, lists things for them to compare, shows working the student has already given, or shows what you yourself explained. When unsure, it stays.\\n\\nSecond: what is only heard is lost. If something you said aloud that the student needs to hold on to is not on the board (the working behind a result, a step the student gave, a correction, a hint; a name, a date, a term, the two sides of a question), write it now as board blocks, in whichever kind fits, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing already there, no new problem, and never an answer you left for the student to find.\n\nReply with withdraw lines and board blocks only. If there is nothing to withdraw and nothing missing, reply with the one word: nothing.`;
     try {
       const response = await callModel({
         model: '', max_tokens: 1500, thinking: { type: 'adaptive' }, output_config: { effort: 'low' }, system, tools,

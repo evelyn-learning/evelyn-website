@@ -35,8 +35,9 @@ import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import { V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
-import { anchorSentenceFinal, anchorSentenceIndex, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
+import { anchorSentenceIndex, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
+import { V2_NO_ASK_RECHECK_S } from '@/lib/tutor/v2/facts';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
@@ -67,6 +68,8 @@ const PAUSE_GIVE_UP_MS = 8000;
 const QUIET_MIC_MS = 20000;
 /** After a reply of silence, how long before the tutor is told the student has said nothing more. */
 const WAITED_RECHECK_S = 12;
+/** After a reply that asked nothing: how long after it finishes speaking before the tutor is told of the silence. */
+const NO_ASK_RECHECK_S = V2_NO_ASK_RECHECK_S;
 const MIC_SOUND_LEVEL = 0.12;
 /** A held board item is painted after this long whatever the voice is doing. */
 const BOARD_HOLD_MAX_MS = 45000;
@@ -81,6 +84,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // started playing, and the board items waiting for theirs.
   const lastSoundAtRef = useRef(0);
   const lastTurnWasStudentRef = useRef(false);
+  const paintedThisTurnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
+  const shownThenWithdrawnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const turnSentencesRef = useRef<string[]>([]);
   const startedCountRef = useRef(0);
   const heldBoardRef = useRef<Array<{ idx: number; id?: string; what?: string; paint: () => void; timer: ReturnType<typeof setTimeout> }>>([]);
@@ -91,7 +96,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const placeBoard = useCallback((final?: boolean) => {
     const still: typeof unplacedBoardRef.current = [];
     for (const u of unplacedBoardRef.current) {
-      const idx = final ? anchorSentenceFinal(u.call.sayWith, turnSentencesRef.current) : anchorSentenceIndex(u.call.sayWith, turnSentencesRef.current);
+      let idx = anchorSentenceIndex(u.call.sayWith, turnSentencesRef.current);
+      // The quoted words are not in the reply: go by what the item is about, as for an inline item.
+      if (idx < 0 && final) idx = turnSentencesRef.current.length ? inlineSentenceIndex(u.call.name === 'show_problem' ? 'show_problem' : 'other', summariseBoardCall(u.call.name, u.call.args ?? {}), turnSentencesRef.current, 0) : -1;
       if (idx < 0 && !final) { still.push(u); continue; }
       const hold = idx > 0 && startedCountRef.current <= idx;
       p.current.onDebugEvent?.('v2_board_timing', `${u.call.name}: ${idx < 0 ? 'its sentence was not found' : `sentence ${idx + 1} of ${turnSentencesRef.current.length}`}, ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
@@ -169,9 +176,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       const held = heldBoardRef.current.find((h) => h.id === id);
       if (held) { clearTimeout(held.timer); heldBoardRef.current = heldBoardRef.current.filter((h) => h !== held); }
       unplacedBoardRef.current = unplacedBoardRef.current.filter((u) => u.call.id !== id);
-      p.current.onDebugEvent?.('v2_board_withdrawn', held ? `${held.what ?? id}: withdrawn before it was shown` : `${id}: withdrawn, but it had already been shown`);
+      const shown = held ? undefined : paintedThisTurnRef.current.find((x) => x.id === id);
+      if (shown) shownThenWithdrawnRef.current.push(shown);
+      p.current.onDebugEvent?.('v2_board_withdrawn', held ? `${held.what ?? id}: withdrawn before it was shown` : `${shown?.summary.slice(0, 80) ?? id}: withdrawn, but it had already been shown`);
     },
-    holdBoard: (call, paint) => {
+    holdBoard: (call, paintNow) => {
+      const paint = () => { paintedThisTurnRef.current.push({ id: call.id, tool: call.name, summary: summariseBoardCall(call.name, call.args) }); paintNow(); };
       // Written inline in the reply, right after the sentence that introduces it ("Here's the rule." [block]):
       // it appears as that sentence begins. The model places blocks after their sentence far more often than
       // before, whatever it is told (browser run, 2026-11-10), so the convention follows the habit.
@@ -195,7 +205,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     },
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
-      if (busy) { releaseBoard(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
+      if (busy) { releaseBoard(); paintedThisTurnRef.current = []; turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
       else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard();
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
@@ -204,8 +214,19 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // One early recheck, and only when the silence answered the student's own words: a silent answer
         // to a silence check-in goes back to the ordinary schedule (it looped every 12 s, embed-1794339843244).
         const recheck = silentReply && lastTurnWasStudentRef.current;
+        // A reply that asked the student nothing leaves them not knowing whose move it is (the tutor made a
+        // statement and waited 44 s, embed-1794355900794). It learns of the silence early, once, and can go on.
+        const said = turnSentencesRef.current;
+        const noAsk = !silentReply && lastTurnWasStudentRef.current && said.length > 0 && !said.slice(-2).some((x) => /[?？]/.test(x)) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed;
         lastTurnWasStudentRef.current = false;
-        armSilence(recheck ? WAITED_RECHECK_S : undefined); }
+        // Board items the check withdrew after they were already on the board are still there: put them back in the tutor's record.
+        const state = turnsRef.current?.stateRef.current;
+        if (state && shownThenWithdrawnRef.current.length) {
+          if (state.board.current < 0) { state.board.pages.push({ title: 'Page 1', items: [] }); state.board.current = 0; }
+          for (const it of shownThenWithdrawnRef.current) if (!state.board.pages.some((pg) => pg.items.some((x) => x.id === it.id))) state.board.pages[state.board.current].items.push(it);
+        }
+        shownThenWithdrawnRef.current = [];
+        armSilence(recheck ? WAITED_RECHECK_S : noAsk ? NO_ASK_RECHECK_S : undefined); }
     },
     // The session ends once the closing words have been spoken.
     closeDelayMs: async () => {

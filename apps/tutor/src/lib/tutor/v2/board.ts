@@ -16,7 +16,10 @@ export function summariseBoardCall(name: string, args: Record<string, unknown>):
   const parts = [text(args.title), text(problem.title), text(args.label), text(problem.statement), text(args.statement), text(args.problem), text(args.latex), text(args.text), text(args.expression)]
     .filter(Boolean);
   const fns = Array.isArray(args.functions) ? (args.functions as Array<Record<string, unknown>>).map((f) => text(f.expression) || text(f.latex)).filter(Boolean).join(', ') : '';
-  const body = [...new Set(parts)].join(' — ') || fns || '(no text)';
+  // Tables, timelines and organisers: their cells, in reading order.
+  const flat = (v: unknown): string[] => (Array.isArray(v) ? v.flatMap(flat) : v && typeof v === 'object' ? Object.values(v as Record<string, unknown>).flatMap(flat) : typeof v === 'string' && v.trim() ? [v.trim()] : []);
+  const structured = [args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source].flatMap(flat).join(' · ');
+  const body = [[...new Set(parts)].join(' — '), fns, structured].filter(Boolean).join(' — ') || '(no text)';
   return body.length > 300 ? `${body.slice(0, 297)}…` : body;
 }
 

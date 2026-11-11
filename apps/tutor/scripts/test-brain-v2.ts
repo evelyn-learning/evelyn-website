@@ -1,4 +1,4 @@
-import { BoardInlineStream, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
+import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { applyToModelBoard, boardMisfit, taskOnly } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, inlineSentenceIndex } from '../src/lib/tutor/v2/board-timing';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
@@ -209,6 +209,16 @@ async function main() {
     const kept = JSON.stringify(rw.state.history);
     check('the board check can withdraw an item that does the student\'s step', rw.toolCalls.length === 1 && gone.length === 1 && rw.state.board.pages[0].items.length === 1 && (rw.withdrawn ?? []).length === 1, [rw.toolCalls, gone]);
     check('the withdrawn block is gone from the stored reply; the other stays', !kept.includes('apply rule') && kept.includes('label=\\"form\\"'));
+  }
+  {
+    const kinds = boardBlocksIn('<board timeline title="T">1781 | Articles ratified\n1787 | Convention</board> <board compare left="A" right="B">a1 | b1\na2 | b2</board> <board table>X | Y\n1 | 2</board> <board steps>one\ntwo</board> <board quote source="S">words</board>').map(inlineToolCall);
+    check('the plain-line board forms become the structured board calls', kinds.map((k) => k.name).join(',') === 'show_timeline,show_graphic_organizer,show_table,show_graphic_organizer,show_passage' && (kinds[0].args.events as unknown[]).length === 2 && (kinds[1].args.leftItems as string[]).join() === 'a1,a2' && (kinds[2].args.rows as string[][])[0].join() === '1,2', kinds);
+    const voice3: V2Session = { ...session, mode: 'voice' };
+    const long = 'The first American government failed. It could not collect taxes or raise an army, and when armed farmers shut down courts it had no way to respond. So delegates met to patch it and wrote a new government instead.';
+    const un = stub([msg([{ type: 'text', text: long }], 'end_turn'), msg([{ type: 'text', text: '<board steps with="It could not collect">Cannot tax\nCannot raise an army</board>' }], 'end_turn')]);
+    const ru = await runV2Turn({ session: voice3, state: newV2State(1_000_000), studentSaid: null, callModel: un.call });
+    check('a long spoken reply that wrote nothing is put to the board check, whatever the subject', ru.modelCalls === 2 && ru.toolCalls[0]?.name === 'show_graphic_organizer');
+    check('an early silence check says why it came', /ended without a question/.test(renderFacts(session, newV2State(1), { nowMs: 2, silenceSeconds: 10 })) && !/ended without/.test(renderFacts(session, newV2State(1), { nowMs: 2, silenceSeconds: 75 })));
   }
   check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just begun/.test(first[0].text));
   check('the last history message carries a cache mark', !!beforeTail[beforeTail.length - 1].cache_control);

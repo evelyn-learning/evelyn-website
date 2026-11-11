@@ -9,20 +9,21 @@
  *   <board equation label="…">LaTeX</board>
  *   <board note style="highlight">one point per line, $maths$ inline</board>
  *   <board problem difficulty="medium">the problem, $maths$ inline</board>
+ *   <board table|timeline|compare|steps|quote …>plain lines, cells separated by "|"</board>
  *
  * The runtime lifts the blocks out of the stream: the words go to the student, each block becomes a
  * board call at that position (turn.ts), and the voice client paints it as the sentence before it
  * begins (TutorVoiceV2). The stored reply keeps the blocks, so the history shows a tutor who writes
  * while talking. `with="opening words"` is for the board pass only, whose blocks arrive after the words.
  */
-export type InlineKind = 'equation' | 'note' | 'problem';
+export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
 /** `opening`: a block has begun and its content is still arriving (the client holds the sentence before it). */
 export type InlinePart = { text: string } | { block: InlineBlock } | { opening: true };
 
 const OPEN = '<board';
 const CLOSE = '</board>';
-const BLOCK_RE = /<board\s+(equation|note|problem)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
+const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
 
 function parseBlock(raw: string): InlineBlock | null {
   BLOCK_RE.lastIndex = 0;
@@ -47,6 +48,16 @@ export function boardBlocksIn(text: string): InlineBlock[] {
 export function inlineToolCall(b: InlineBlock): { name: string; args: Record<string, unknown> } {
   if (b.kind === 'equation') return { name: 'show_equation', args: { latex: b.body, ...(b.attrs.label ? { label: b.attrs.label } : {}) } };
   if (b.kind === 'note') return { name: 'annotate', args: { text: b.body, ...(b.attrs.style ? { style: b.attrs.style } : {}) } };
+  // The structured kinds are written as plain lines, cells separated by "|", so that a table or a timeline
+  // costs the tutor no more than a note: a lesson in words was otherwise a stack of text cards
+  // (Praveen, AP US Government, embed-1794355900794).
+  const lines = b.body.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const cells = (l: string) => l.split('|').map((c) => c.trim());
+  if (b.kind === 'table') return { name: 'show_table', args: { headers: cells(lines[0] ?? ''), rows: lines.slice(1).map(cells) } };
+  if (b.kind === 'timeline') return { name: 'show_timeline', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), events: lines.map(cells).filter((c) => c[0] && c[1]).map((c) => ({ date: c[0], title: c[1], ...(c[2] ? { description: c[2] } : {}) })) } };
+  if (b.kind === 'compare') { const rows = lines.map(cells); return { name: 'show_graphic_organizer', args: { kind: 't_chart', ...(b.attrs.title ? { title: b.attrs.title } : {}), leftHeader: b.attrs.left ?? '', rightHeader: b.attrs.right ?? '', leftItems: rows.map((r) => r[0] ?? '').filter(Boolean), rightItems: rows.map((r) => r[1] ?? '').filter(Boolean) } }; }
+  if (b.kind === 'steps') return { name: 'show_graphic_organizer', args: { kind: 'sequence', ...(b.attrs.title ? { title: b.attrs.title } : {}), steps: lines } };
+  if (b.kind === 'quote') return { name: 'show_passage', args: { text: b.body, ...(b.attrs.source ? { source: b.attrs.source } : {}), ...(b.attrs.title ? { title: b.attrs.title } : {}) } };
   return { name: 'show_problem', args: { statement: b.body, format: 'free-response', ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(b.attrs.difficulty ? { difficulty: b.attrs.difficulty } : {}) } };
 }
 
