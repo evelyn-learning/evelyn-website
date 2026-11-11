@@ -2,7 +2,7 @@
 // Unit tests for rewriteForTTS() additions: slash-pair whitelist,
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
-import { rewriteForTTS, speakPhonemeSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
+import { rewriteForTTS, speakCoefficientLetters, speakPhonemeSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1537,4 +1537,11 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.match(rewriteForTTS('ln x over 1/x is -∞/∞ as x approaches 0'), /is negative infinity over infinity as/);
   assert.match(rewriteForTTS('the top goes to −∞.'), /goes to negative infinity/);
   console.log('OK — a signed infinity is spoken "negative infinity"');
+}
+
+{
+  assert.match(rewriteForTTS('The product is 1/52, and 4/52 is 1/13.'), /1 over 52, and 4 over 52 is 1 over 13\./);
+  for (const keep of ['1/2', '3/4', '24/7', '50/50', '10/12']) assert.ok(!/ over /.test(rewriteForTTS(keep)), keep);
+  assert.equal(speakCoefficientLetters('the 4g three times: 105 + 12g, and 3x'), 'the 4 gee three times: 105 + 12 gee, and 3x');
+  console.log('OK — large-denominator fractions are "over"; a coefficient letter is spelt');
 }

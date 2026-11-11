@@ -38,6 +38,7 @@ import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
 import { anchorSentenceIndex, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S } from '@/lib/tutor/v2/facts';
+import { speakCoefficientLetters } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
@@ -84,6 +85,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // started playing, and the board items waiting for theirs.
   const lastSoundAtRef = useRef(0);
   const lastTurnWasStudentRef = useRef(false);
+  const openingTurnRef = useRef(true);
   const paintedThisTurnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const shownThenWithdrawnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const turnSentencesRef = useRef<string[]>([]);
@@ -100,7 +102,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       // The quoted words are not in the reply: go by what the item is about, as for an inline item.
       if (idx < 0 && final) idx = turnSentencesRef.current.length ? inlineSentenceIndex(u.call.name === 'show_problem' ? 'show_problem' : 'other', summariseBoardCall(u.call.name, u.call.args ?? {}), turnSentencesRef.current, 0) : -1;
       if (idx < 0 && !final) { still.push(u); continue; }
-      const hold = idx > 0 && startedCountRef.current <= idx;
+      const hold = idx > 0 && startedCountRef.current <= idx && !openingTurnRef.current;
       p.current.onDebugEvent?.('v2_board_timing', `${u.call.name}: ${idx < 0 ? 'its sentence was not found' : `sentence ${idx + 1} of ${turnSentencesRef.current.length}`}, ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
       if (!hold) { u.paint(); continue; }
       const entry = { idx, id: u.call.id, what: `${u.call.name}: ${summariseBoardCall(u.call.name, u.call.args ?? {}).slice(0, 80)}`, paint: u.paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); u.paint(); }, BOARD_HOLD_MAX_MS) };
@@ -190,7 +192,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // Blocks with no words between them share one stretch of speech.
         if (n !== lastBlockAtRef.current) { segStartRef.current = Math.max(0, lastBlockAtRef.current); lastBlockAtRef.current = n; }
         const idx = inlineSentenceIndex(call.name, summariseBoardCall(call.name, call.args), turnSentencesRef.current, segStartRef.current);
-        const hold = startedCountRef.current <= idx && n > 0;
+        // The opening reply: nothing waits. A session must not begin on a bare board (embed-1794362141944).
+        const hold = startedCountRef.current <= idx && n > 0 && !openingTurnRef.current;
         p.current.onDebugEvent?.('v2_board_timing', `${call.name}: inline, with sentence ${idx + 1} of ${n} (stretch from ${segStartRef.current + 1}), ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
         if (!hold) { paint(); return; }
         const entry = { idx, id: call.id, what: `${call.name}: ${summariseBoardCall(call.name, call.args).slice(0, 80)}`, paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); paint(); }, BOARD_HOLD_MAX_MS) };
@@ -217,7 +220,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // A reply that asked the student nothing leaves them not knowing whose move it is (the tutor made a
         // statement and waited 44 s, embed-1794355900794). It learns of the silence early, once, and can go on.
         const said = turnSentencesRef.current;
-        const noAsk = !silentReply && lastTurnWasStudentRef.current && said.length > 0 && !said.slice(-2).some((x) => /[?？]/.test(x)) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed;
+        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !said.slice(-2).some((x) => /[?？]/.test(x)) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed;
         lastTurnWasStudentRef.current = false;
         // Board items the check withdrew after they were already on the board are still there: put them back in the tutor's record.
         const state = turnsRef.current?.stateRef.current;
@@ -275,7 +278,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     realtimeRef.current?.resumeSpeech();
     silenceStepRef.current = 0;
     if (p.current.thinkingCue) { const r = cueTurnAccepted(cueRef.current, Date.now()); cueRef.current = r.state; play(r.play); }
-    lastTurnWasStudentRef.current = true;
+    lastTurnWasStudentRef.current = true; openingTurnRef.current = false;
     turnsRef.current?.send(text);
   }, [liftPause, dropBoard]);
 
@@ -293,6 +296,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [armSilence, releaseBoard]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');
+  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(sentence)), []);
   const relayMode = useMemo(() => ({
     instructions: TRANSPORT_ONLY,
     onUserTranscript: onRelayTranscript,
@@ -302,7 +306,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     ...(languagesKey ? { tutorLanguages: languagesKey.split(',') } : {}),
     ...(props.speechRate !== undefined ? { speechRate: props.speechRate } : {}),
     studentName: props.studentName,
-  }), [onRelayTranscript, props.ttsProvider, props.cartesiaVoiceId, props.cartesiaVoiceSpeed, languagesKey, props.speechRate, props.studentName]);
+    ...(props.subject === 'math' ? { ttsTextTransform: mathsSpeech } : {}),
+  }), [onRelayTranscript, props.subject, props.ttsProvider, props.cartesiaVoiceId, props.cartesiaVoiceSpeed, languagesKey, props.speechRate, props.studentName]);
   const realtime = useOpenAIRealtime({
     instructions: TRANSPORT_ONLY,
     voice: props.voice,

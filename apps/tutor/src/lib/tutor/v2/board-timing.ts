@@ -58,16 +58,13 @@ function about(s: string): Set<string> {
 
 /** Which sentence an inline board item appears with. The model writes the words about something and then
  *  its block, so the item belongs to the stretch of speech since the previous block (`segStart` up to the
- *  last sentence so far). A problem appears with the sentence that poses it, the last one before it. An
- *  equation or note appears with the first sentence of the stretch that is about it, so the student sees
- *  the working while it is being said, not after (Praveen, embed-1794347950566); when no sentence shares
- *  a word with it, the last one. */
-export function inlineSentenceIndex(toolName: string, content: string, sentences: string[], segStart: number): number {
+ *  last sentence so far). A problem appears with the sentence that poses it, the last one before it.
+ *  Anything else appears as that stretch begins: the student must see the working, the figure or the note
+ *  while it is being talked about. Matching by shared words put equations late whenever the sentence used
+ *  no word from the item ("So the expression becomes…"), and late is the failure students notice
+ *  (Praveen, embed-1794361050464); a sentence early is not. */
+export function inlineSentenceIndex(toolName: string, _content: string, sentences: string[], segStart: number): number {
   const last = sentences.length - 1;
   if (last < 0) return 0;
-  const from = Math.min(Math.max(0, segStart), last);
-  if (toolName === 'show_problem') return last;
-  const item = about(content);
-  if (item.size) for (let i = from; i <= last; i++) { for (const w of about(sentences[i])) if (item.has(w)) return i; }
-  return last;
+  return toolName === 'show_problem' ? last : Math.min(Math.max(0, segStart), last);
 }

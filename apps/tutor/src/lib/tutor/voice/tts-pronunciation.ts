@@ -2290,11 +2290,22 @@ export function speakPhonemeSlashes(text: string): string {
  *  spoken reading the voice can be trusted with: it said "one x", "fef aye", "infinity over zeroth"
  *  (Praveen, embed-1794336536781). Give each its words. A slash is read "over" only when it is clearly
  *  a quotient: one side carries a variable or a bracket ("1/2", "24/7", "km/h", "and/or", "n/a" are left). */
+/** In a mathematics lesson a number written against a single letter is a coefficient and its variable, not a
+ *  quantity with a unit: "4g" is "four g", and the voice says "four grams" (embed-1794361050464). The letter is
+ *  spelt as its name. Only the letters the voice mistakes for units; only where the caller knows the subject. */
+const UNIT_LETTER: Record<string, string> = { g: 'gee', m: 'em', s: 'ess', l: 'el', h: 'aitch', k: 'kay' };
+export function speakCoefficientLetters(text: string): string {
+  return text.replace(/(\d)([gmslhk])(?![A-Za-z0-9²³])/g, (_m, d: string, l: string) => `${d} ${UNIT_LETTER[l]}`);
+}
+
 export function speakTypedMaths(text: string): string {
   const SUP: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
   let t = text;
   // −∞ is "negative infinity" (the voice made "-∞/∞" into "mice infinity", embed-1794353029385).
   t = t.replace(/(^|[\s(=,:])[-−]\s*(∞|infinity\b)/gi, '$1negative infinity');
+  // A fraction with a large denominator is read as an ordinal ("1/52" → "one fifty-second"); in a probability
+  // or a ratio it is "1 over 52" (embed-1794364217274). Halves to twelfths keep their everyday reading.
+  t = t.replace(/(?<![\d./:])(\d{1,3})\/(\d{2,4})(?![\d/]|\.\d|\s*\/)/g, (m, a: string, b: string) => (Number(b) >= 13 && a !== b ? `${a} over ${b}` : m));
   // f'(a) → f prime of a; f''(x) → f double prime of x; a bare f' → f prime.
   t = t.replace(/(?<![A-Za-z])([A-Za-z])(''?|′′?)\(([A-Za-z0-9]{1,3})\)/g, (_m, f: string, p: string, a: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'} of ${a}`);
   t = t.replace(/(?<![A-Za-z])([f-hF-Hy])(''?|′′?)(?![A-Za-z'’(])/g, (_m, f: string, p: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'}`);

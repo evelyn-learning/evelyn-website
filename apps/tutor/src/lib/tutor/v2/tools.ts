@@ -32,12 +32,18 @@ const BOARD_DESCRIPTIONS: Record<string, string> = {
 /** Board tools every session gets, then extras by subject. */
 /** Equations, notes and problems are written inline in the reply (board-inline.ts), not called as tools. */
 const CORE = ['new_page', 'go_to_page'];
-const BY_SUBJECT: Record<string, string[]> = {
-  // Tables, timelines, comparisons, step chains and quotes are inline forms for every subject (board-inline.ts);
-  // only what needs structured arguments stays a tool.
-  math: ['show_function_graph', 'show_number_line', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats'],
-  science: ['show_function_graph', 'show_free_body_diagram', 'show_lewis_constructed'],
-};
+/** Which structured figures a lesson can draw, by what it is about. Graphs, number lines, force diagrams,
+ *  tables and the rest are inline forms open to every lesson (board-inline.ts); a tool is kept only for a
+ *  figure that needs structured arguments, and only in a lesson where it can belong (a function-graph tool
+ *  in a grade 8 forces lesson produced an empty grid). */
+function figureTools(subject: string, topic: string): string[] {
+  const t = `${subject} ${topic}`.toLowerCase();
+  const out: string[] = [];
+  if (/geometr|trig|precalc|\bmath\b/.test(t) && !/statistic|probab|algebra-1|algebra1/.test(t)) out.push('show_geometry');
+  if (/statistic|probab|\bstats\b|data/.test(t)) out.push('show_venn_diagram', 'show_tree', 'show_stats');
+  if (/chem/.test(t)) out.push('show_lewis_constructed');
+  return out;
+}
 
 export const V2_CONTROL_TOOLS: Anthropic.Tool[] = [
   {
@@ -84,8 +90,8 @@ export const V2_CONTROL_TOOLS: Anthropic.Tool[] = [
 
 export { V2_CONTROL_TOOL_NAMES } from './tool-names';
 
-export function v2BoardToolNames(subject: string): string[] {
-  return [...CORE, ...(BY_SUBJECT[subject] ?? [])];
+export function v2BoardToolNames(subject: string, topic = ''): string[] {
+  return [...CORE, ...figureTools(subject, topic)];
 }
 
 /** When, within the spoken reply, a board item appears. The reply is generated in a second or two and
@@ -97,10 +103,10 @@ export const SAY_WITH = 'say_with';
 const SAY_WITH_SCHEMA = { type: 'string', description: 'Spoken lessons: the first few words, copied exactly, of the sentence in this reply that this belongs with. It appears on the board as you begin saying that sentence. Leave it out and it appears as you start speaking.' };
 
 /** The tools for a session, in a stable order (the list is part of the cached prefix). */
-export function v2Tools(subject: string): Anthropic.Tool[] {
+export function v2Tools(subject: string, topic = ''): Anthropic.Tool[] {
   const byName = new Map((WHITEBOARD_TOOLS as Array<{ name: string; parameters: unknown }>).map((t) => [t.name, t]));
   const board: Anthropic.Tool[] = [];
-  for (const name of v2BoardToolNames(subject)) {
+  for (const name of v2BoardToolNames(subject, topic)) {
     const def = byName.get(name);
     if (!def) continue;
     const schema = def.parameters as { properties?: Record<string, unknown> };

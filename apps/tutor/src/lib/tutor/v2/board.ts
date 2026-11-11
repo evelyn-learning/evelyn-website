@@ -18,7 +18,7 @@ export function summariseBoardCall(name: string, args: Record<string, unknown>):
   const fns = Array.isArray(args.functions) ? (args.functions as Array<Record<string, unknown>>).map((f) => text(f.expression) || text(f.latex)).filter(Boolean).join(', ') : '';
   // Tables, timelines and organisers: their cells, in reading order.
   const flat = (v: unknown): string[] => (Array.isArray(v) ? v.flatMap(flat) : v && typeof v === 'object' ? Object.values(v as Record<string, unknown>).flatMap(flat) : typeof v === 'string' && v.trim() ? [v.trim()] : []);
-  const structured = [args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source].flatMap(flat).join(' · ');
+  const structured = [args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source, args.object, args.forces, args.functions, Array.isArray(args.points) ? (args.points as Array<Record<string, unknown>>).map((p) => String(p.label ?? p.value ?? '')) : []].flatMap(flat).join(' · ');
   const body = [[...new Set(parts)].join(' — '), fns, structured].filter(Boolean).join(' — ') || '(no text)';
   return body.length > 300 ? `${body.slice(0, 297)}…` : body;
 }
@@ -42,10 +42,26 @@ export function taskOnly(statement: string): { statement: string; cut: string[] 
   return keep.join('').trim() ? { statement: keep.join('').trim(), cut } : { statement, cut: [] };
 }
 
+/** Ordinary words typed straight into LaTeX are set as a run of italic variables with no spaces: "and at x = 3"
+ *  appeared on the board as "andatx = 3" (embed-1794361050464). They are wrapped in \text{}. */
+const PLAIN_WORDS = 'and|at|so|then|gives|give|when|if|for|the|is|are|or|to|of|with|which|because|since|that|we|get|you|becomes|means|where|from|into|but|not|both|each|by|on|in|as|now|after|before|times|plus|minus|equals|over|per|total|answer|check|left|right|east|west|north|south|toward|away|net|force';
+export function wordsAsText(latex: string): string {
+  const re = new RegExp(String.raw`(?<![\\A-Za-z])(?:${PLAIN_WORDS})(?![A-Za-z])(?:\s+(?:${PLAIN_WORDS})(?![A-Za-z]))*`, 'gi');
+  // Leave what is already inside \text{…} (and its relatives) alone.
+  return latex.split(/(\\(?:text|textrm|textbf|textit|mathrm|operatorname)\s*\{[^{}]*\})/).map((part, i) => (i % 2 ? part : part.replace(re, (w) => `\\text{ ${w} }`))).join('');
+}
+
 /** Why a board call would not sit well on the board, or null. An equation card is one centred line of
  *  KaTeX: sentences inside \text{} and long unbroken lines run off its edge and are clipped (the
  *  "Hypotheses: f, g differentiable near a…" card, embed-1794336536781). */
 export function boardMisfit(name: string, args: Record<string, unknown>): string | null {
+  // A figure with nothing in it is worse than no figure (an empty graph grid titled "Tug-of-war" opened a
+  // forces lesson, embed-1794363148240).
+  const count = (v: unknown) => (Array.isArray(v) ? v.length : 0);
+  if (name === 'show_function_graph' && count(args.functions) + count(args.functionsOfY) + count(args.points) === 0) return 'a graph needs at least one function or point to plot; for anything else use the form that fits it';
+  if (name === 'show_free_body_diagram' && count(args.forces) === 0) return 'a forces diagram needs at least one force: name | direction | size';
+  if (name === 'show_number_line' && count(args.points) + count(args.intervals) + count(args.segments) === 0) return 'a number line needs at least one point or interval';
+  if ((name === 'show_table' && count(args.rows) === 0) || (name === 'show_timeline' && count(args.events) === 0)) return 'it has no rows: write one per line, cells separated by |';
   if (name !== 'show_equation') return null;
   const latex = text(args.latex);
   const words = [...latex.matchAll(/\\text(?:rm|bf|it)?\{([^}]*)\}/g)].flatMap((m) => m[1].split(/\s+/).filter((w) => /\p{L}{2,}/u.test(w)));

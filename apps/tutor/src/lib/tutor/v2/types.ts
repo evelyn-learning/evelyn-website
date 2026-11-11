@@ -17,6 +17,8 @@ export interface V2Gap { what: string; status: GapStatus }
 export interface V2Session {
   studentName?: string;
   subject: string;
+  /** What the lesson is about, in a few words (the plan's topic and title). Chooses the figure tools (tools.ts). */
+  topic?: string;
   level: string;
   mode: 'text' | 'voice';
   /** Minutes the session is meant to last, when there is a box. */

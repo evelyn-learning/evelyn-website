@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     level: cfg.level.slice(0, 60),
     mode: cfg.mode === 'voice' ? 'voice' : 'text',
     ...(typeof cfg.timeBoxMinutes === 'number' && cfg.timeBoxMinutes > 0 ? { timeBoxMinutes: Math.min(180, Math.round(cfg.timeBoxMinutes)) } : {}),
-    ...(plan ? { plan } : {}),
+    ...(plan ? { plan, topic: `${(plan as { topic?: string }).topic ?? ''} ${(plan as { title?: string }).title ?? ''}`.trim().slice(0, 160) } : {}),
   };
   const silenceSeconds = typeof body.silenceSeconds === 'number' && body.silenceSeconds > 0 ? body.silenceSeconds : undefined;
 

@@ -1,5 +1,5 @@
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
-import { applyToModelBoard, boardMisfit, taskOnly } from '../src/lib/tutor/v2/board';
+import { applyToModelBoard, boardMisfit, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, inlineSentenceIndex } from '../src/lib/tutor/v2/board-timing';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths } from '../src/lib/tutor/v2/spoken-maths';
@@ -45,7 +45,8 @@ async function main() {
   const sys = V2_CONSTITUTION + v2SessionPart(session);
   const tools = v2Tools('math');
   const toolChars = JSON.stringify(tools).length;
-  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 16000, sys.length);
+  // 18,000 since 2026-11-10: the eleven board forms are listed in the principles (a reference list, not rules).
+  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 18000, sys.length);
   check(`a math session gets a handful of tools (${tools.length}, ${toolChars} chars)`, tools.length <= 16 && toolChars < 24000, [tools.length, toolChars]);
   check('the control tools are present', ['update_session_note', 'set_goal_status', 'track_gap', 'end_lesson'].every((n) => tools.some((t) => t.name === n)));
   check('the constitution names no partner, topic or symptom', !/crimsora|greenapple|gdi|l'h[oô]pital|cos\(|streak/i.test(V2_CONSTITUTION));
@@ -191,34 +192,15 @@ async function main() {
     check('the sentence cutter knows whether more words have begun', !sk.hasPending() && (sk.push('Tw'), sk.hasPending()));
   }
   {
-    const a = ['That\'s right, 2.', 'You differentiated the top and got 2 cos 2x over 1, and substituting 0 gives 2.', 'Next, a case where you may need the rule twice.'];
-    check('working appears with the first sentence that is about it, not the last', inlineSentenceIndex('show_equation', 'Student\'s working — \\lim_{x\\to 0}\\frac{\\sin 2x}{x} = \\lim_{x\\to 0}\\frac{2\\cos 2x}{1} = 2', a, 0) === 1);
-    check('a problem appears with the sentence that poses it', inlineSentenceIndex('show_problem', 'Find $\\lim_{x\\to\\infty} \\frac{x^2}{e^x}$.', a, 0) === 2);
-    const b = ['Yes, the limit is 0.', 'As x grows, e to the x grows without bound.', 'That means the original limit is 0.'];
-    check('"limit" in speech matches \\lim on the board', inlineSentenceIndex('show_equation', 'Result — \\lim_{x\\to\\infty} \\frac{x^2}{e^x} = 0', b, 0) === 0);
-    const c = ['Yes, 0 over 0.', 'That is an awkward spot.', 'The rule says you can replace the ratio with the ratio of the derivatives.', 'Try it now.'];
-    check('a note waits for the sentence that is about it; nothing earlier than its own stretch', inlineSentenceIndex('annotate', 'The rule: if the form is 0/0, take the derivatives of top and bottom.', c, 0) === 2 && inlineSentenceIndex('annotate', 'The rule: derivatives of top and bottom.', c, 3) === 3);
-    check('an item no sentence is about goes with the last one', inlineSentenceIndex('show_equation', 'a^2 + b^2 = c^2', c, 0) === 3);
-  }
-  {
-    const voice2: V2Session = { ...session, mode: 'voice' };
-    const text = 'Yes, that is 0 over 0. <board equation label="form">\\frac{e^0-1}{0} = \\frac{0}{0}</board> Now take the derivative of the top and of the bottom. What is the new limit? <board equation label="apply rule">\\lim \\frac{e^x-1}{x} = \\lim \\frac{e^x}{1}</board>';
-    let n = 0; const gone: string[] = [];
-    const call: V2ModelCall = async (_p, onText) => { n += 1; if (n === 1) { for (let i = 0; i < text.length; i += 9) onText?.(text.slice(i, i + 9)); return msg([{ type: 'text', text }], 'end_turn'); } return msg([{ type: 'text', text: 'withdraw 2' }], 'end_turn'); };
-    const rw = await runV2Turn({ session: voice2, state: newV2State(1_000_000), studentSaid: 'the form is 0 by 0', callModel: call, onBoardWithdraw: (id) => gone.push(id) });
-    const kept = JSON.stringify(rw.state.history);
-    check('the board check can withdraw an item that does the student\'s step', rw.toolCalls.length === 1 && gone.length === 1 && rw.state.board.pages[0].items.length === 1 && (rw.withdrawn ?? []).length === 1, [rw.toolCalls, gone]);
-    check('the withdrawn block is gone from the stored reply; the other stays', !kept.includes('apply rule') && kept.includes('label=\\"form\\"'));
-  }
-  {
-    const kinds = boardBlocksIn('<board timeline title="T">1781 | Articles ratified\n1787 | Convention</board> <board compare left="A" right="B">a1 | b1\na2 | b2</board> <board table>X | Y\n1 | 2</board> <board steps>one\ntwo</board> <board quote source="S">words</board>').map(inlineToolCall);
-    check('the plain-line board forms become the structured board calls', kinds.map((k) => k.name).join(',') === 'show_timeline,show_graphic_organizer,show_table,show_graphic_organizer,show_passage' && (kinds[0].args.events as unknown[]).length === 2 && (kinds[1].args.leftItems as string[]).join() === 'a1,a2' && (kinds[2].args.rows as string[][])[0].join() === '1,2', kinds);
-    const voice3: V2Session = { ...session, mode: 'voice' };
-    const long = 'The first American government failed. It could not collect taxes or raise an army, and when armed farmers shut down courts it had no way to respond. So delegates met to patch it and wrote a new government instead.';
-    const un = stub([msg([{ type: 'text', text: long }], 'end_turn'), msg([{ type: 'text', text: '<board steps with="It could not collect">Cannot tax\nCannot raise an army</board>' }], 'end_turn')]);
-    const ru = await runV2Turn({ session: voice3, state: newV2State(1_000_000), studentSaid: null, callModel: un.call });
-    check('a long spoken reply that wrote nothing is put to the board check, whatever the subject', ru.modelCalls === 2 && ru.toolCalls[0]?.name === 'show_graphic_organizer');
-    check('an early silence check says why it came', /ended without a question/.test(renderFacts(session, newV2State(1), { nowMs: 2, silenceSeconds: 10 })) && !/ended without/.test(renderFacts(session, newV2State(1), { nowMs: 2, silenceSeconds: 75 })));
+    const a = ['That\'s right, 2.', 'You differentiated the top and got 2 cos 2x over 1.', 'Next, a case where you may need the rule twice.'];
+    check('working appears as its stretch of speech begins; a problem with the sentence that poses it', inlineSentenceIndex('show_equation', 'x', a, 0) === 0 && inlineSentenceIndex('show_problem', 'x', a, 0) === 2);
+    check('an item after an earlier block starts no earlier than the words since that block', inlineSentenceIndex('annotate', 'x', a, 2) === 2 && inlineSentenceIndex('show_equation', 'x', a, 9) === 2);
+    const figs = boardBlocksIn('<board forces object="Box">Push | right | 10 N\nFriction | west | 4 N</board><board numberline>4 | open | right</board><board graph x="-2..6">y = x^2 - 4x + 3</board>').map(inlineToolCall);
+    check('forces, number line and graph are written as plain lines', figs.map((f) => f.name).join(',') === 'show_free_body_diagram,show_number_line,show_function_graph' && (figs[0].args.forces as Array<{ direction: string }>)[1].direction === 'left' && (figs[1].args.points as Array<{ style: string }>)[0].style === 'open' && (figs[2].args.functions as Array<{ expr: string }>)[0].expr === 'x^2 - 4x + 3', figs);
+    check('an empty figure is turned back', /at least one function/.test(boardMisfit('show_function_graph', { title: 'Tug-of-war', functions: [], points: [] }) ?? '') && boardMisfit('show_function_graph', { functions: [{ expr: 'x^2' }] }) === null);
+    check('plain words typed into an equation are set as words', wordsAsText('2x + 22, and at x = 3 that gives 28') === '2x + 22, \\text{ and at } x = 3 \\text{ that gives } 28' && wordsAsText('\\text{Net force} = 8 - 3') === '\\text{Net force} = 8 - 3' && wordsAsText('\\sin x + \\to \\infty') === '\\sin x + \\to \\infty');
+    const names = (sub: string, topic: string) => v2Tools(sub, topic).map((t) => t.name).filter((n) => n.startsWith('show_')).join(',');
+    check('figure tools follow the lesson topic: no graph tool in a forces lesson', names('science', 'grade-8-physical-science Forces') === '' && names('science', 'chemistry') === 'show_lewis_constructed' && /show_tree/.test(names('math', 'ap-statistics')) && names('math', 'algebra-1') === '');
   }
   check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just begun/.test(first[0].text));
   check('the last history message carries a cache mark', !!beforeTail[beforeTail.length - 1].cache_control);

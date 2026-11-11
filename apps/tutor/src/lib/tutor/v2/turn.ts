@@ -18,7 +18,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { applyToModelBoard, boardMisfit, summariseBoardCall, taskOnly } from './board';
+import { applyToModelBoard, boardMisfit, summariseBoardCall, taskOnly, wordsAsText } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths } from './spoken-maths';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
@@ -72,7 +72,7 @@ export interface V2TurnInput {
 export function v2SessionPart(session: V2Session): string {
   const lines = [
     'THIS SESSION',
-    `Student: ${session.studentName?.trim() || 'name not given'}. Subject: ${session.subject}. Level: ${session.level}.`,
+    `Student: ${session.studentName?.trim() || 'name not given'}. Subject: ${session.subject}${session.topic ? ` (${session.topic})` : ''}. Level: ${session.level}.`,
     v2ModeLines(session.mode),
     session.timeBoxMinutes ? `The session is meant to last about ${session.timeBoxMinutes} minutes.` : '',
     session.plan ? `\n${renderPlanMap(session.plan)}` : '\nThere is no lesson plan: teach what the student asks for.',
@@ -178,7 +178,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     { type: 'text', text: V2_CONSTITUTION, cache_control: CACHE },
     { type: 'text', text: v2SessionPart(session), cache_control: CACHE },
   ];
-  const tools = v2Tools(session.subject);
+  const tools = v2Tools(session.subject, session.topic ?? '');
   let messages: Anthropic.MessageParam[] = [...withCacheMark(state.history), userNow];
 
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];
@@ -194,6 +194,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     const { [SAY_WITH]: sayWithRaw, ...args } = (block.input ?? {}) as Record<string, unknown>;
     // A problem card states the task; how-to-begin sentences are cut from it (board.ts taskOnly).
     if (block.name === 'show_problem' && typeof args.statement === 'string') args.statement = taskOnly(args.statement).statement;
+    if (block.name === 'show_equation' && typeof args.latex === 'string') args.latex = wordsAsText(args.latex);
     const sayWith = typeof sayWithRaw === 'string' && sayWithRaw.trim() ? sayWithRaw.trim() : undefined;
     let outcome: string;
     if (V2_CONTROL_TOOL_NAMES.has(block.name)) {

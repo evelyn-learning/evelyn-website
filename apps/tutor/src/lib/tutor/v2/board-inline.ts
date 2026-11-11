@@ -16,14 +16,14 @@
  * begins (TutorVoiceV2). The stored reply keeps the blocks, so the history shows a tutor who writes
  * while talking. `with="opening words"` is for the board pass only, whose blocks arrive after the words.
  */
-export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote';
+export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
 /** `opening`: a block has begun and its content is still arriving (the client holds the sentence before it). */
 export type InlinePart = { text: string } | { block: InlineBlock } | { opening: true };
 
 const OPEN = '<board';
 const CLOSE = '</board>';
-const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
+const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
 
 function parseBlock(raw: string): InlineBlock | null {
   BLOCK_RE.lastIndex = 0;
@@ -57,6 +57,45 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
   if (b.kind === 'timeline') return { name: 'show_timeline', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), events: lines.map(cells).filter((c) => c[0] && c[1]).map((c) => ({ date: c[0], title: c[1], ...(c[2] ? { description: c[2] } : {}) })) } };
   if (b.kind === 'compare') { const rows = lines.map(cells); return { name: 'show_graphic_organizer', args: { kind: 't_chart', ...(b.attrs.title ? { title: b.attrs.title } : {}), leftHeader: b.attrs.left ?? '', rightHeader: b.attrs.right ?? '', leftItems: rows.map((r) => r[0] ?? '').filter(Boolean), rightItems: rows.map((r) => r[1] ?? '').filter(Boolean) } }; }
   if (b.kind === 'steps') return { name: 'show_graphic_organizer', args: { kind: 'sequence', ...(b.attrs.title ? { title: b.attrs.title } : {}), steps: lines } };
+  // Figures, written as plain lines too. A tutor who has to fill in a structured tool call draws far less often
+  // than one who can write three lines (a grade 8 forces lesson was all text cards, embed-1794363148240).
+  if (b.kind === 'forces') {
+    const DIR: Record<string, string> = { east: 'right', west: 'left', north: 'up', south: 'down', rightward: 'right', leftward: 'left', upward: 'up', downward: 'down', forward: 'right', backward: 'left', forwards: 'right', backwards: 'left' };
+    const rows = lines.map(cells).filter((c) => c[0] && c[1]);
+    const size = (c: string[]) => Number((c[2] ?? '').replace(/[^0-9.]/g, '')) || 0;
+    const biggest = Math.max(0, ...rows.map(size));
+    const dir = (d: string) => { const k = d.toLowerCase().trim(); return DIR[k] ?? k; };
+    const vertical = rows.some((c) => /^(up|down)/.test(dir(c[1])));
+    return { name: 'show_free_body_diagram', args: {
+      // A long name does not fit inside the box: it becomes the title, and the box stays plain.
+      ...(b.attrs.title || (b.attrs.object ?? '').length > 9 ? { title: b.attrs.title ?? `Forces on ${b.attrs.object}` } : {}),
+      object: { shape: 'box', label: (b.attrs.object ?? '').length > 9 ? '' : b.attrs.object ?? '' },
+      surface: { type: b.attrs.surface === 'none' || (vertical && !b.attrs.surface) ? 'none' : 'horizontal' },
+      forces: rows.map((c) => ({ name: c[0], direction: dir(c[1]), ...(c[2] ? { magnitude: c[2] } : {}), ...(biggest && size(c) ? { scale: Math.max(0.5, Math.min(1.6, 0.5 + 1.1 * size(c) / biggest)) } : {}) })),
+      ...(b.attrs.note ? { notes: b.attrs.note } : {}),
+    } };
+  }
+  if (b.kind === 'numberline') {
+    const num = (v: string | undefined) => Number(String(v ?? '').replace(/−/g, '-').replace(/[^0-9.\-]/g, ''));
+    const rows = lines.map(cells).filter((c) => c[0] !== '' && Number.isFinite(num(c[0])));
+    const values = rows.map((c) => num(c[0]));
+    const lo = b.attrs.min !== undefined ? num(b.attrs.min) : Math.floor(Math.min(0, ...values) - 4);
+    const hi = b.attrs.max !== undefined ? num(b.attrs.max) : Math.ceil(Math.max(0, ...values) + 4);
+    const open = (c: string[]) => /open|hollow|not included|[<>](?!=)/i.test(c[1] ?? '') && !/closed|filled|included\b(?<!not included)/i.test(c[1] ?? '');
+    return { name: 'show_number_line', args: {
+      ...(b.attrs.title ? { title: b.attrs.title } : {}), min: lo, max: hi, step: 1,
+      points: rows.map((c) => ({ value: num(c[0]), label: c[0], style: open(c) ? 'open' : 'filled' })),
+      intervals: rows.filter((c) => /right|left|greater|less|above|below/i.test(c[2] ?? '')).map((c) => (/right|greater|above/i.test(c[2]) ? { from: num(c[0]), to: hi, fromInclusive: !open(c), toInclusive: true, color: 'blue' } : { from: lo, to: num(c[0]), fromInclusive: true, toInclusive: !open(c), color: 'blue' })),
+    } };
+  }
+  if (b.kind === 'graph') {
+    const range = (v: string | undefined) => { const m = String(v ?? '').replace(/−/g, '-').match(/(-?\d+(?:\.\d+)?)\s*(?:\.\.|to|,)\s*(-?\d+(?:\.\d+)?)/); return m ? [Number(m[1]), Number(m[2])] : undefined; };
+    const x = range(b.attrs.x); const y = range(b.attrs.y);
+    return { name: 'show_function_graph', args: {
+      ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(x ? { xRange: x } : {}), ...(y ? { yRange: y } : {}),
+      functions: lines.map((l) => { const [expr, label] = cells(l); return { expr: expr.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*/i, ''), ...(label ? { label } : {}) }; }).filter((f) => f.expr),
+    } };
+  }
   if (b.kind === 'quote') return { name: 'show_passage', args: { text: b.body, ...(b.attrs.source ? { source: b.attrs.source } : {}), ...(b.attrs.title ? { title: b.attrs.title } : {}) } };
   return { name: 'show_problem', args: { statement: b.body, format: 'free-response', ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(b.attrs.difficulty ? { difficulty: b.attrs.difficulty } : {}) } };
 }
