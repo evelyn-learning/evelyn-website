@@ -64,7 +64,8 @@ async function main() {
     has(wb, /const showLead = leadItem != null && currentIndex === 0;/);
     has(wb, /data-wb-lead-item="1"/);
     has(wb, /<BoardItemErrorBoundary action="leadItem" resetKey=\{leadItem\}>\s*\{leadItem\}/);
-    has(wb, /renderableCommands\.length === 1 && !showLead \?/);
+    // Soft board motion (2026-11-11): one item uses the list layout too, so the lead-item rule still holds.
+    has(wb, /renderableCommands\.length === 1 && !showLead && !WB_SOFT_MOTION \?/);
     const ts = readSrc('app/tutor/components/session/TutorSession.tsx');
     has(ts, /leadItem=\{homeworkProblem\?\.figure \? <ProblemFigure figure=\{homeworkProblem\.figure\} \/> : undefined\}/);
     has(ts, /boardEmpty=\{whiteboardCommands\.length === 0 && !homeworkProblem\?\.figure\}/);

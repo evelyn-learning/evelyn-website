@@ -2,7 +2,7 @@
 // Unit tests for rewriteForTTS() additions: slash-pair whitelist,
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
-import { rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakPhonemeSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
+import { rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1560,5 +1560,7 @@ console.log('OK — tts-pronunciation rewrites validated');
   // A squared bracket over a number is "over" (embed-1794414820031); a long run of data is not recited (embed-1794416884500).
   assert.match(rewriteForTTS('Now try (y−1)²/4 − (x+2)²/25 = 1.'), /squared over 4 minus .*squared over 25/);
   assert.equal(speakDataRuns('for these heights, 165, 170, 168, 172, 175, 180, 178, 169, 173, 171, 177, 182, 179, 174, 176, suggest a bin width'), 'for these heights, the 15 values on the board, suggest a bin width');
+  assert.equal(speakNumberPlurals('the two 4s and the 5, three 10s, the 1s cancel, two 25s'), "the two fours and the 5, three tens, the ones cancel, two 25's");
+  assert.equal(speakNumberPlurals('it took 4s to fall'), 'it took 4s to fall');
   for (const keep of ['The scores are 62, 66, 70, 73, 75.', 'In 1492, 1519, and 1550 to 1551.', 'It cost 1,250,000 dollars.']) assert.equal(speakDataRuns(keep), keep);
 }

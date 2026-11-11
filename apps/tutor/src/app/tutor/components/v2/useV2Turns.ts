@@ -158,7 +158,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
           const cmd = mapFunctionCallToCommand(call.name, call.args as Record<string, unknown>);
           // The words written before and after a tool call are separate paragraphs.
           letGo(); speak(sentences.flush());
-          if (cmd) { const paint = () => p.current.onWhiteboardCommand([cmd]); if (p.current.holdBoard) p.current.holdBoard(call, paint); else paint(); }
+          // Every item carries its own id: the board animates an item once and keys its row by it (without one a
+          // card drew itself again whenever the next card arrived), and a redrawn graph removes the one it replaces.
+          if (cmd && !(cmd as { id?: string }).id) (cmd as { id?: string }).id = call.id;
+          if (cmd) { const paint = () => p.current.onWhiteboardCommand(call.replaces ? [{ action: 'removeItems', ids: [call.replaces] } as unknown as WhiteboardCommand, cmd] : [cmd]); if (p.current.holdBoard) p.current.holdBoard(call, paint); else paint(); }
           if (text && !/\n\n$/.test(text)) text += '\n\n';
         },
       });
@@ -180,7 +183,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       if (abort.signal.aborted) {
         // Cut short (interrupted, unmounted or ended). The server's state for this turn is
         // lost, so the tutor is left remembering exactly what reached the student.
-        stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just begun. The student has not said anything yet.]' : '[The student has not replied.]'), text, settled);
+        stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), text, settled);
         p.current.onDebugEvent?.('turn_cut_v2', `${text.trim().split(/\s+/).filter(Boolean).length} words kept, ${settled.length} tool call(s)`);
         if (text.trim()) setTutor(text.trim(), false);
       } else {

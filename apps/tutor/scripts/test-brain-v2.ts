@@ -70,7 +70,7 @@ async function main() {
   check('say_with is taken off the board call and reported beside it', r1.toolCalls[0].sayWith === 'Try this one' && !('say_with' in r1.toolCalls[0].args) && /^painted/.test(r1.toolCalls[0].outcome), r1.toolCalls[0]);
   check('system is the constitution then the session part, both cached', req1.system.length === 2 && req1.system[0].text === V2_CONSTITUTION && req1.system.every((b) => b.cache_control));
   check('thinking is adaptive, at medium effort', req1.thinking.type === 'adaptive' && (a.seen[0] as unknown as { output_config: { effort: string } }).output_config.effort === 'medium');
-  check('the user turn is the student block then one facts block', last1.length === 2 && /session has just begun/.test(last1[0].text) && /^<facts>[\s\S]*<\/facts>$/.test(last1[1].text));
+  check('the user turn is the student block then one facts block', last1.length === 2 && /session has just started/.test(last1[0].text) && /^<facts>[\s\S]*<\/facts>$/.test(last1[1].text));
   check('the cache mark is on the student block, not the facts', !!last1[0].cache_control && !last1[1].cache_control);
   check('facts carry time, board, plan and note', /time: 2 min used of about 25/.test(last1[1].text) && /board:\n\s+empty/.test(last1[1].text) && /plan: hook=not started/.test(last1[1].text) && /your note: \(empty/.test(last1[1].text), last1[1].text);
   check('no instruction blocks from v1 are sent', !/<active_question>|<verdict_guard>|<segment_truth>|<student_state>|runtime note/.test(JSON.stringify(req1.messages)));
@@ -164,11 +164,23 @@ async function main() {
     check('a slip of calculation is put right at the end of the same reply, and kept in the history', /One correction: Multiplying both sides by 4/.test(rs.spoken) && JSON.stringify(rs.state.history).includes('One correction') && !/correction/i.test(rk.spoken), rs.spoken);
     const cmp3 = inlineToolCall(boardBlocksIn('<board compare left="Encomienda" right="Repartimiento">Who holds the labor | one colonist | colonial officials\nHow long | a lasting grant | rotating drafts</board>')[0]);
     check('a compare row may name what it compares', JSON.stringify(cmp3.args.headers) === JSON.stringify(['', 'Encomienda', 'Repartimiento']) && (cmp3.args.rows as string[][])[1][2] === 'rotating drafts');
+    const forms = boardBlocksIn('<board ranks title="Casta">Peninsulares | born in Spain\nCriollos | American-born\nMestizos</board><board web>Spanish Crown | grants the right to | an encomendero\nencomendero | demands labor from | a group of Native people\nencomendero | owes protection to | a group of Native people</board><board note>Your rows so far: 6 | 2, and 7 | 0 3 5. Check the 6 stem.</board><board note>Fewer grants to abuse | Still forced labor all the same | No free choice for workers</board>').map(inlineToolCall);
+    check('ranks are a pyramid; a web merges repeated links and one thing named twice; a bar in a note is kept unless it separates points',
+      forms[0].name === 'show_diagram' && ((forms[0].args.params as { tiers: unknown[] }).tiers.length === 3) && (forms[1].args.nodes as unknown[]).length === 3 && (forms[1].args.edges as Array<{ label: string }>).length === 2 && /; owes protection/.test((forms[1].args.edges as Array<{ label: string }>)[1].label)
+      && String(forms[2].args.text).includes('6 | 2, and 7 | 0 3 5') && String(forms[3].args.text).split('\n').length === 3, forms);
+    const two = 'Here is the circle. <board graph>x^2 + y^2 = 25</board> Now a point on it. <board graph>(3, 4) | point on the circle</board> And this. <board equation>$r^2 = 25$, \\text{ so } $r = 5$</board>';
+    const twoCall: V2ModelCall = async (_p, onText) => { onText?.(two); return msg([{ type: 'text', text: two }], 'end_turn'); };
+    const rg = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Hello.' }] }, studentSaid: 'draw it', callModel: twoCall, boardPass: false });
+    const graphs = rg.toolCalls.filter((c) => c.name === 'show_function_graph');
+    check('a second graph on the page is drawn with the first and takes its place; an equation with dollar signs is a note', graphs.length === 2 && graphs[1].replaces === graphs[0].id && (graphs[1].args.functions as unknown[]).length === 1 && (graphs[1].args.points as unknown[]).length === 1 && rg.state.board.pages[0].items.filter((it) => it.tool === 'show_function_graph').length === 1 && rg.toolCalls.some((c) => c.name === 'annotate' && /so \$r = 5\$/.test(String(c.args.text))), rg.toolCalls);
+    const open1 = stub([msg([], 'end_turn'), msg([{ type: 'text', text: 'Hi. What do you know?' }], 'end_turn')]);
+    const ro = await runV2Turn({ session: voice, state: newV2State(1_000_000), studentSaid: null, callModel: open1.call, boardPass: false });
+    check('the opening reply cannot be silence', /What do you know/.test(ro.spoken) && /waiting for you to begin/.test(JSON.stringify(open1.seen[0].messages)), [ro.spoken, JSON.stringify(open1.seen[0].messages).slice(0, 300)]);
     const paras = new SentenceStream(); const paraCut = [...paras.push('Yes, both right. They ranked above mestizos.\n\nNext is the debate. Las Casas argued one side.\n'), ...paras.push('\nWhich side won? '), ...paras.flush()];
     check('the sentence stream marks where paragraphs begin', paraCut.length === 5 && [...paras.paragraphStarts].join() === '0,2,4', [...paras.paragraphStarts]);
-    const waited = stub([msg([{ type: 'text', text: 'The Crown later shifted to the repartimiento.' }], 'end_turn')]);
-    await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'ok' }, { role: 'assistant', content: 'The encomienda was a grant.' }] }, studentSaid: null, facts: { nowMs: 1_010_000, silenceSeconds: 6 }, callModel: waited.call, boardPass: false });
-    check('after a reply that ended on a statement, saying nothing is not open to the tutor', (waited.seen[0] as unknown as { tool_choice?: { type: string } }).tool_choice?.type === 'none');
+    const waited = stub([msg([{ type: 'tool_use', id: 'k1', name: 'keep_listening', input: {} }], 'tool_use'), msg([{ type: 'text', text: 'The Crown later shifted to the repartimiento.' }], 'end_turn')]);
+    const rw = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'ok' }, { role: 'assistant', content: 'The encomienda was a grant.' }] }, studentSaid: null, facts: { nowMs: 1_010_000, silenceSeconds: 6 }, callModel: waited.call, boardPass: false });
+    check('after a reply that ended on a statement, saying nothing is not open to the tutor', /repartimiento/.test(rw.spoken) && rw.modelCalls === 2, rw.spoken);
     check('a card keeps its task when the task opens with a method verb', taskOnly('A parabola has focus (0, 1) and directrix y = -1. Write its equation.').statement.endsWith('Write its equation.') && taskOnly('Find the limit. Rewrite it as one fraction first.').cut.length === 1);
     check('roman text keeps its spaces', spacedRoman('\\mathrm{N_2 \\ (atmosphere)} \\to \\mathrm{NH_3 (usable by plants)}').includes('(usable\\ by\\ plants)'));
     const kinds = boardBlocksIn('<board cycle title="N">Fixation | N2 to NH3\nNitrification | to nitrate\nDenitrification | back to N2</board><board web>Fertilizer | runs off into | Lakes\nLakes | grow | Algae</board><board map region="world">Spain | 40 | -4\nHispaniola | 19 N | 71 W</board><board page>Parabolas</board><board compare left="A" right="B">x | y</board>').map(inlineToolCall);
@@ -245,7 +257,7 @@ async function main() {
     const names = (sub: string, topic: string) => v2Tools(sub, topic).map((t) => t.name).filter((n) => n.startsWith('show_')).join(',');
     check('figure tools follow the lesson topic: no graph tool in a forces lesson', names('science', 'grade-8-physical-science Forces') === '' && names('science', 'chemistry') === 'show_lewis_constructed' && /show_tree/.test(names('math', 'ap-statistics')) && names('math', 'algebra-1') === '');
   }
-  check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just begun/.test(first[0].text));
+  check('the earlier turn is replayed from history, without its facts', first.length === 1 && /session has just started/.test(first[0].text));
   check('the last history message carries a cache mark', !!beforeTail[beforeTail.length - 1].cache_control);
   check('the student\'s words are sent as they are', tail2[0].text === 'It is 3.');
   check('facts now show the board, the note and the answer check', /problem "Evaluate/.test(tail2[1].text) && /your note: Sam: AP level/.test(tail2[1].text) && /answer check: the student's 3 matches/.test(tail2[1].text), tail2[1].text);

@@ -26,7 +26,7 @@ export interface V2Session {
   plan?: LessonPlan;
 }
 
-export interface V2BoardItem { id: string; tool: string; summary: string; /** The content alone, normalised, for spotting repeats (board.ts). */ core?: string }
+export interface V2BoardItem { id: string; tool: string; summary: string; /** The content alone, normalised, for spotting repeats (board.ts). */ core?: string; /** A graph keeps what it plots, so a later graph on the same page can be drawn as one picture with it (turn.ts). */ args?: Record<string, unknown> }
 export interface V2BoardPage { title: string; items: V2BoardItem[] }
 export interface V2Board { pages: V2BoardPage[]; current: number }
 
@@ -56,6 +56,8 @@ export interface V2ToolCall {
   sayWith?: string;
   /** Written inline in the reply (board-inline.ts): it belongs with the words that follow it. */
   inline?: boolean;
+  /** The id of an earlier board item this one takes the place of (a graph redrawn with more on it). */
+  replaces?: string;
 }
 
 export interface V2TurnResult {

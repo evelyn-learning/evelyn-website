@@ -2336,6 +2336,14 @@ export function speakDataRuns(text: string): string {
   });
 }
 
+/** "The two 4s" is a plural, and the voice reads it "four ess" (embed-1794425631023). After a word that
+ *  counts or points ("the", "two", "both", "those"), a number with an s is said as its plural. "It took 4s"
+ *  (seconds) has no such word before it and is left alone. */
+const NUMBER_PLURAL = ['zeros', 'ones', 'twos', 'threes', 'fours', 'fives', 'sixes', 'sevens', 'eights', 'nines', 'tens'];
+export function speakNumberPlurals(text: string): string {
+  return text.replace(/\b(the|these|those|both|all|of|and|or|no|many|few|several|two|three|four|five|six|seven|eight|nine|ten|\d+)(\s+)(\d{1,3})s\b(?!')/gi, (_m, cue: string, gap: string, n: string) => `${cue}${gap}${NUMBER_PLURAL[Number(n)] ?? `${n}'s`}`);
+}
+
 export function speakTypedMaths(text: string): string {
   const SUP: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
   let t = text;

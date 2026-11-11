@@ -16,14 +16,14 @@
  * begins (TutorVoiceV2). The stored reply keeps the blocks, so the history shows a tutor who writes
  * while talking. `with="opening words"` is for the board pass only, whose blocks arrive after the words.
  */
-export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'page';
+export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'page';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
 /** `opening`: a block has begun and its content is still arriving (the client holds the sentence before it). */
 export type InlinePart = { text: string } | { block: InlineBlock } | { opening: true };
 
 const OPEN = '<board';
 const CLOSE = '</board>';
-const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|chart|page)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
+const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|chart|ranks|page)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
 
 function parseBlock(raw: string): InlineBlock | null {
   BLOCK_RE.lastIndex = 0;
@@ -44,11 +44,19 @@ export function boardBlocksIn(text: string): InlineBlock[] {
   return [...text.matchAll(/<board\b[\s\S]*?<\/board>/g)].map((m) => parseBlock(m[0])).filter((b): b is InlineBlock => !!b);
 }
 
+/** Whether the bars in a one-line note separate points (each a phrase of its own). A bar is also notation:
+ *  "6 | 2 6" is a row of a stemplot and "4 | 7 means 47" its key, and splitting those wrote "Your rows so far: 6"
+ *  on one line and "2, and 7" on the next (embed-1794425631023). Points are phrases of three words or more. */
+function pipedPoints(body: string): boolean {
+  const parts = body.split('|').map((x) => x.trim()).filter(Boolean);
+  return parts.length >= 2 && parts.every((x) => x.split(/\s+/).length >= 3 && !/^\d/.test(x));
+}
+
 /** The board tool call a block stands for. */
 export function inlineToolCall(b: InlineBlock): { name: string; args: Record<string, unknown> } {
   if (b.kind === 'equation') return { name: 'show_equation', args: { latex: b.body, ...(b.attrs.label ? { label: b.attrs.label } : {}) } };
   // One point per line; a tutor who has just written a table sometimes separates the points with "|" instead.
-  if (b.kind === 'note') return { name: 'annotate', args: { text: b.body.includes('\n') || b.body.includes('$') ? b.body : b.body.split(/(?<=[^|\s])\s*\|\s*(?=[^|\s])/).filter(Boolean).join('\n'), ...(b.attrs.style ? { style: b.attrs.style } : {}) } };
+  if (b.kind === 'note') return { name: 'annotate', args: { text: b.body.includes('\n') || b.body.includes('$') || !pipedPoints(b.body) ? b.body : b.body.split(/(?<=[^|\s])\s*\|\s*(?=[^|\s])/).filter(Boolean).join('\n'), ...(b.attrs.style ? { style: b.attrs.style } : {}) } };
   // The structured kinds are written as plain lines, cells separated by "|", so that a table or a timeline
   // costs the tutor no more than a note: a lesson in words was otherwise a stack of text cards
   // (Praveen, AP US Government, embed-1794355900794).
@@ -75,10 +83,17 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
   if (b.kind === 'web') {
     const rows = lines.map(cells).filter((c) => c[0] && c[c.length - 1] && c.length >= 2);
     const ids = new Map<string, string>();
-    const id = (label: string) => { const k = label.toLowerCase(); if (!ids.has(k)) ids.set(k, `n${ids.size + 1}`); return ids.get(k)!; };
+    // "an encomendero" and "encomendero" are one thing: without this the map drew it twice, in two halves
+    // (embed-1794426544316).
+    const same = (label: string) => label.toLowerCase().replace(/^(?:an?|the)\s+/, '').replace(/\s+/g, ' ').trim();
+    const id = (label: string) => { const k = same(label); if (!ids.has(k)) ids.set(k, `n${ids.size + 1}`); return ids.get(k)!; };
     const labels: string[] = [];
-    const edges = rows.map((c) => { const from = c[0]; const to = c[c.length - 1]; for (const l of [from, to]) if (!ids.has(l.toLowerCase())) labels.push(l); return { from: id(from), to: id(to), ...(c.length >= 3 && c[1] ? { label: c[1] } : {}), directed: true }; });
-    return { name: 'show_concept_map', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), nodes: labels.map((label, i) => ({ id: id(label), label, ...(i === 0 ? { level: 0 } : {}) })), edges } };
+    const edges = rows.map((c) => { const from = c[0]; const to = c[c.length - 1]; for (const l of [from, to]) if (!ids.has(same(l))) labels.push(l.replace(/^(?:an?|the)\s+/i, '')); return { from: id(from), to: id(to), ...(c.length >= 3 && c[1] ? { label: c[1] } : {}), directed: true }; });
+    // Two links between the same pair are one arrow carrying both: drawn apart, their labels sat on top of
+    // each other and of the arrows.
+    const merged: typeof edges = [];
+    for (const e of edges) { const twin = merged.find((m) => m.from === e.from && m.to === e.to); if (twin) { if (e.label) twin.label = twin.label ? `${twin.label}; ${e.label}` : e.label; } else merged.push({ ...e }); }
+    return { name: 'show_concept_map', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), nodes: labels.map((label, i) => ({ id: id(label), label, ...(i === 0 ? { level: 0 } : {}) })), edges: merged } };
   }
   if (b.kind === 'map') {
     const deg = (v: string | undefined, neg: RegExp) => { const m = String(v ?? '').replace(/−/g, '-').match(/-?\d+(?:\.\d+)?/); if (!m) return NaN; const n = Number(m[0]); return neg.test(String(v)) ? -Math.abs(n) : n; };
@@ -101,6 +116,9 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     const width = num(b.attrs.width ?? '');
     return { name: 'show_stats', args: { type, ...labels, data, ...(type === 'histogram' && width > 0 ? { binWidth: width, showCounts: true } : {}) } };
   }
+  // Things ranked one above another: a social order, levels of a food chain, a chain of command (the casta
+  // ranking went up as a list in a text card, embed-1794426544316).
+  if (b.kind === 'ranks') return { name: 'show_diagram', args: { type: 'hierarchy_pyramid', params: { ...(b.attrs.title ? { title: b.attrs.title } : {}), baseFirst: false, tiers: lines.map(cells).filter((c) => c[0]).map((c) => ({ label: c[0], ...(c[1] ? { description: c[1] } : {}) })) } } };
   if (b.kind === 'steps') return { name: 'show_graphic_organizer', args: { kind: 'sequence', ...(b.attrs.title ? { title: b.attrs.title } : {}), steps: lines.map((l) => cells(l).filter(Boolean).join(': ')) } };
   // Figures, written as plain lines too. A tutor who has to fill in a structured tool call draws far less often
   // than one who can write three lines (a grade 8 forces lesson was all text cards, embed-1794363148240).

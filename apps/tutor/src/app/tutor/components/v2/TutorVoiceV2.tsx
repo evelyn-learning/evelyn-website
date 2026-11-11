@@ -38,7 +38,7 @@ import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
 import { anchorSentenceIndex, asksAloud, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S } from '@/lib/tutor/v2/facts';
-import { speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas } from '@/lib/tutor/voice/tts-pronunciation';
+import { speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
@@ -90,7 +90,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const shownThenWithdrawnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const turnSentencesRef = useRef<string[]>([]);
   const startedCountRef = useRef(0);
-  const heldBoardRef = useRef<Array<{ idx: number; id?: string; what?: string; paint: () => void; timer: ReturnType<typeof setTimeout> }>>([]);
+  const heldBoardRef = useRef<Array<{ idx: number; id?: string; what?: string; untilDone?: boolean; paint: () => void; timer: ReturnType<typeof setTimeout> }>>([]);
+  const turnBusyRef = useRef(false);
   const unplacedBoardRef = useRef<Array<{ call: { id?: string; name: string; sayWith?: string; args?: Record<string, unknown> }; paint: () => void }>>([]);
   // Inline items: where the current stretch of speech began (the sentence count at the previous block).
   const segStartRef = useRef(0); const lastBlockAtRef = useRef(-1);
@@ -116,7 +117,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     if (upTo === undefined) placeBoard(true);
     const keep: typeof heldBoardRef.current = [];
     for (const h of heldBoardRef.current) {
-      if (upTo === undefined || h.idx < upTo) { clearTimeout(h.timer); h.paint(); } else keep.push(h);
+      // A problem card waits for the reply to be complete (see holdBoard): what the check adds for the answer
+      // before it must go up first.
+      if (upTo === undefined || (h.idx < upTo && !(h.untilDone && turnBusyRef.current))) { clearTimeout(h.timer); h.paint(); } else keep.push(h);
     }
     heldBoardRef.current = keep;
   }, []);
@@ -133,7 +136,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     if (!state) return;
     const ids = new Set(lost.map((x) => x.id).filter(Boolean));
     for (const page of state.board.pages) page.items = page.items.filter((it) => !ids.has(it.id));
-    state.boardProblems = [...(state.boardProblems ?? []), ...lost.map((x) => `${x.what ?? 'an item'}: the student interrupted before you reached it, so it was not shown`)];
+    state.boardProblems = [...(state.boardProblems ?? []), ...lost.map((x) => `${x.what ?? 'an item'}: the student spoke before you reached it, so it was NEVER shown and they have not seen it. It is not on the board and is not an open task`)];
   }, []);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const silenceStepRef = useRef(0);
@@ -202,10 +205,14 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         const idx = Math.max(call.name === 'new_page' ? 0 : pageTurnAtRef.current, inlineSentenceIndex(call.name, summariseBoardCall(call.name, call.args), turnSentencesRef.current, from));
         if (call.name === 'new_page') pageTurnAtRef.current = idx;
         // The opening reply: nothing waits. A session must not begin on a bare board (embed-1794362141944).
-        const hold = startedCountRef.current <= idx && n > 0 && !openingTurnRef.current;
+        // The next problem is not shown until the whole reply is in, the check's additions included: the note
+        // "Center (3, −2), radius 5: correct" came up underneath the problem that followed it (conic sections,
+        // 2026-11-11). The card's sentence is near the end of the reply, so this rarely costs any time.
+        const untilDone = call.name === 'show_problem' && turnBusyRef.current && !openingTurnRef.current;
+        const hold = (startedCountRef.current <= idx && n > 0 && !openingTurnRef.current) || untilDone;
         p.current.onDebugEvent?.('v2_board_timing', `${call.name}: inline, with sentence ${idx + 1} of ${n} (stretch from ${from + 1}), ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
         if (!hold) { paint(); return; }
-        const entry = { idx, id: call.id, what: `${call.name}: ${summariseBoardCall(call.name, call.args).slice(0, 80)}`, paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); paint(); }, BOARD_HOLD_MAX_MS) };
+        const entry = { idx, id: call.id, what: `${call.name}: ${summariseBoardCall(call.name, call.args).slice(0, 80)}`, untilDone, paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); paint(); }, BOARD_HOLD_MAX_MS) };
         heldBoardRef.current.push(entry);
         return;
       }
@@ -217,8 +224,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     },
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
+      turnBusyRef.current = busy;
       if (busy) { releaseBoard(); paintedThisTurnRef.current = []; turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
-      else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard();
+      else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard(); else releaseBoard(startedCountRef.current);
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
         // Nothing will be spoken, so no playback event will move the indicator off "Thinking…".
@@ -309,9 +317,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [armSilence, releaseBoard]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');
-  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakFormulas(speakBonds(speakDataRuns(sentence)))), []);
-  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(speakDataRuns(sentence))), []);
-  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakDataRuns(sentence)), []);
+  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakFormulas(speakBonds(speakNumberPlurals(speakDataRuns(sentence))))), []);
+  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(speakNumberPlurals(speakDataRuns(sentence)))), []);
+  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakNumberPlurals(speakDataRuns(sentence))), []);
   const relayMode = useMemo(() => ({
     instructions: TRANSPORT_ONLY,
     onUserTranscript: onRelayTranscript,

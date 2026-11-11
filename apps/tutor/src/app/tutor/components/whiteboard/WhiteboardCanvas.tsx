@@ -1137,8 +1137,35 @@ export function WhiteboardCanvas({
   const itemEnterClass = (cmd: WhiteboardCommand): string => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const id = (cmd as any).id as string | undefined;
+    if (WB_SOFT_MOTION && id && !drawOnActive) return enterPlan(id) ? 'wb-item-enter-soft' : '';
     if (id && seenAnimIdsRef.current.has(id)) return '';
     return drawOnActive ? '' : WB_SOFT_MOTION ? 'wb-item-enter-soft' : 'wb-item-enter';
+  };
+  // Soft motion: items that arrive together come in one after another, top to bottom, not all at once (a new
+  // page appeared with its three cards already on it, Praveen 2026-11-11). Each new id is given its start in
+  // a queue; the class stays on for the length of the animation (taking it off at the next render cut the
+  // animation short) and never comes back, so a page flipped back to does not replay.
+  const enterPlansRef = useRef<Map<string, { at: number; delay: number }>>(new Map());
+  const enterQueueRef = useRef(0);
+  const enterPlan = (id: string): { delay: number } | null => {
+    const now = typeof performance !== 'undefined' ? performance.now() : 0;
+    let plan = enterPlansRef.current.get(id);
+    if (!plan) {
+      if (seenAnimIdsRef.current.has(id)) return null;
+      const start = Math.max(now, enterQueueRef.current);
+      // A board restored with many items is simply there: only a short queue is played.
+      plan = start - now > 1600 ? { at: now - 10000, delay: 0 } : { at: now, delay: start - now };
+      if (plan.at === now) enterQueueRef.current = start + 280;
+      enterPlansRef.current.set(id, plan);
+    }
+    return now < plan.at + plan.delay + 800 ? plan : null;
+  };
+  const itemEnterStyle = (cmd: WhiteboardCommand): React.CSSProperties | undefined => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const id = (cmd as any).id as string | undefined;
+    if (!WB_SOFT_MOTION || !id || drawOnActive) return undefined;
+    const plan = enterPlan(id);
+    return plan && plan.delay > 0 ? { animationDelay: `${Math.round(plan.delay)}ms` } : undefined;
   };
   // Draw-on trigger: runs in the item wrapper's ref callback on first
   // mount. Must check seenAnimIdsRef BEFORE the post-commit effect below
@@ -1844,7 +1871,7 @@ export function WhiteboardCanvas({
           key={currentIndex}
           ref={pageWrapperRef}
           style={{ position: 'relative' }}
-          className={pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}
+          className={`${pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}${WB_SOFT_MOTION ? ' wb-page-enter-soft' : ''}`}
           onPointerDown={onStudentMark ? handleMarkPointerDown : undefined}
           onPointerUp={onStudentMark ? handleMarkPointerUp : undefined}
         >
@@ -1866,7 +1893,9 @@ export function WhiteboardCanvas({
             within its parent's box, and as the lead block's last child it
             would scroll away with the figure. */}
         {showLead && leadPinSlot}
-        {renderableCommands.length === 1 && !showLead ? (
+        {/* Soft motion: a page with one item uses the list layout too. Switching layouts when the second item
+            arrived remounted the first, which drew itself again (Praveen, 2026-11-11). */}
+        {renderableCommands.length === 1 && !showLead && !WB_SOFT_MOTION ? (
           <div
             className={`relative ${itemEnterClass(renderableCommands[0])} scroll-mt-6 select-text`}
             style={reviseStyle(renderableCommands[0])}
@@ -1901,7 +1930,7 @@ export function WhiteboardCanvas({
               const key = ((cmd as any).id as string | undefined) ?? i;
               const appendPad = appendPadFor(typeof key === 'string' ? key : undefined, i === renderableCommands.length - 1);
               return (
-                <div key={key} className={itemEnterClass(cmd)} style={appendPad > 0 ? { marginTop: appendPad } : undefined}>
+                <div key={key} className={itemEnterClass(cmd)} style={{ ...(appendPad > 0 ? { marginTop: appendPad } : {}), ...(itemEnterStyle(cmd) ?? {}) }}>
                   {i > 0 && (
                     // Round 28 design pass: the separator is now a bare
                     // hairline — the old all-caps type label ("EQUATION")

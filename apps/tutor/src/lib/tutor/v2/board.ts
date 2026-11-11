@@ -18,7 +18,7 @@ export function summariseBoardCall(name: string, args: Record<string, unknown>):
   const fns = Array.isArray(args.functions) ? (args.functions as Array<Record<string, unknown>>).map((f) => text(f.expression) || text(f.latex)).filter(Boolean).join(', ') : '';
   // Tables, timelines and organisers: their cells, in reading order.
   const flat = (v: unknown): string[] => (Array.isArray(v) ? v.flatMap(flat) : v && typeof v === 'object' ? Object.values(v as Record<string, unknown>).flatMap(flat) : typeof v === 'string' && v.trim() ? [v.trim()] : []);
-  const structured = [args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source, args.object, args.forces, args.functions, Array.isArray(args.points) ? (args.points as Array<Record<string, unknown>>).map((p) => String(p.label ?? p.value ?? '')) : []].flatMap(flat).join(' · ');
+  const structured = [args.params, args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source, args.object, args.forces, args.functions, Array.isArray(args.points) ? (args.points as Array<Record<string, unknown>>).map((p) => String(p.label ?? p.value ?? '')) : []].flatMap(flat).join(' · ');
   const body = [[...new Set(parts)].join(' — '), fns, structured].filter(Boolean).join(' — ') || '(no text)';
   return body.length > 300 ? `${body.slice(0, 297)}…` : body;
 }
@@ -77,6 +77,7 @@ export function boardMisfit(name: string, args: Record<string, unknown>): string
   // A figure tool called with nothing in it paints an empty frame (an empty Venn diagram opened a statistics
   // lesson, browser run 2026-11-11).
   if (/^show_/.test(name) && Object.keys(args).filter((k) => k !== 'title').length === 0) return 'it was given nothing to draw';
+  if (name === 'show_diagram' && args.type === 'hierarchy_pyramid' && count((args.params as Record<string, unknown> | undefined)?.tiers) < 2) return 'ranks need at least two levels, one per line from the top down';
   if (name === 'show_venn_diagram' && count(args.sets) < 2) return 'a Venn diagram needs its two or three sets';
   if (name === 'show_stats' && (args.type === 'bar' ? count((args.bar as Record<string, unknown> | undefined)?.categories) === 0 : (args.type === 'dotplot' || args.type === 'histogram') && count(args.data) < 2 && count(args.bins) < 1)) return 'a chart needs its data: the values separated by commas, or for a bar chart one bar per line, name | value';
   if (name === 'show_number_line' && count(args.points) + count(args.intervals) + count(args.segments) === 0) return 'a number line needs at least one point or interval';
@@ -137,7 +138,7 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
       return { painted: false, detail: `already on the board (page ${p + 1})` };
     }
   }
-  board.pages[board.current].items.push({ id, tool: name, summary, core });
+  board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, points: args.points, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
   return { painted: true, detail: `painted on page ${board.current + 1}` };
 }
 

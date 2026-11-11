@@ -152,6 +152,21 @@
   animation-fill-mode: backwards;
 }
 
+/* Soft board motion: a page turn takes its time (the 280ms slide read as an abrupt swap). */
+@keyframes wb-page-enter-soft-forward {
+  0%   { opacity: 0; transform: translateX(36px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes wb-page-enter-soft-backward {
+  0%   { opacity: 0; transform: translateX(-36px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.wb-page-enter-forward.wb-page-enter-soft { animation: wb-page-enter-soft-forward 620ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+.wb-page-enter-backward.wb-page-enter-soft { animation: wb-page-enter-soft-backward 620ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .wb-page-enter-soft { animation: none !important; }
+}
+
 /* Soft board motion (WB_SOFT_MOTION in WhiteboardCanvas): a new item is written in, left to right, as it
    fades up. No scale, a small rise. The clip ends with the animation (fill-mode backwards), so shadows and
    pop-overs are never cut once the item has settled. */

@@ -159,6 +159,8 @@ export async function POST(req: NextRequest) {
         route: "session-usage:POST",
       });
       if (!auth.allow) {
+        // A whole session went unsaved behind these 401s with nothing in the log to say why (2026-11-11).
+        console.warn("[session-usage] save refused", `reason=${auth.reason ?? "?"}`, `token=${token ? "present" : "missing"}`, sessionId);
         return NextResponse.json({ error: "unauthorized", reason: auth.reason }, { status: 401 });
       }
       tokenPartnerId = auth.payload?.partner_id ?? null;

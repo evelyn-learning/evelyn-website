@@ -1334,6 +1334,17 @@ export function StatsRenderer(props: StatsRendererProps) {
       );
   }
 
+  // A dotplot's dots stand on the axis at the bottom of a chart area sized for tall bars: five scores left
+  // two thirds of the card empty above them (embed-1794425631023). The empty top is cut off.
+  let cropTop = 0;
+  if (type === 'dotplot' && props.data && props.data.length) {
+    const counts = new Map<number, number>();
+    for (const v of props.data) counts.set(v, (counts.get(v) ?? 0) + 1);
+    const maxStack = Math.max(...counts.values());
+    const dotR = Math.min(10, CHART_H / (maxStack * 2.5));
+    cropTop = Math.max(0, Math.floor(MARGIN.top + CHART_H - maxStack * dotR * 2.2 - 28));
+  }
+
   return (
     <div style={{ width: '100%', maxWidth: 600 }}>
       {/* Title — HTML above the SVG (R38 pattern, 2026-08-07 clip audit: a
@@ -1345,7 +1356,7 @@ export function StatsRenderer(props: StatsRendererProps) {
         </div>
       )}
       <svg
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        viewBox={`0 ${cropTop} ${WIDTH} ${HEIGHT - cropTop}`}
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: '100%', height: 'auto' }}
         role="img"
