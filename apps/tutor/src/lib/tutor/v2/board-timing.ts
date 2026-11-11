@@ -58,13 +58,32 @@ function about(s: string): Set<string> {
 
 /** Which sentence an inline board item appears with. The model writes the words about something and then
  *  its block, so the item belongs to the stretch of speech since the previous block (`segStart` up to the
- *  last sentence so far). A problem appears with the sentence that poses it, the last one before it.
- *  Anything else appears as that stretch begins: the student must see the working, the figure or the note
- *  while it is being talked about. Matching by shared words put equations late whenever the sentence used
- *  no word from the item ("So the expression becomes…"), and late is the failure students notice
- *  (Praveen, embed-1794361050464); a sentence early is not. */
-export function inlineSentenceIndex(toolName: string, _content: string, sentences: string[], segStart: number): number {
+ *  last sentence so far). Working, a figure or a note appears as that stretch begins: the student must see
+ *  it while it is being talked about. Matching those by shared words put equations late whenever the
+ *  sentence used no word from the item ("So the expression becomes…"), and late is the failure students
+ *  notice (Praveen, embed-1794361050464); a sentence early is not.
+ *
+ *  A problem is different: its stretch usually opens with the verdict on the last answer, and a new problem
+ *  under "Yes, the box keeps sitting" is early. It appears where the tutor starts telling it — the first
+ *  sentence of the stretch that shares its words with the card ("A sled sits still on snow…"), or the short
+ *  lead-in just before ("Now a bigger case."). Holding it to the last sentence left the student hearing a
+ *  whole scenario with nothing to look at (embed-1794371869806). Nothing shared: the last sentence. */
+const LEAD_IN_WORDS = 10;
+export function inlineSentenceIndex(toolName: string, content: string, sentences: string[], segStart: number): number {
   const last = sentences.length - 1;
   if (last < 0) return 0;
-  return toolName === 'show_problem' ? last : Math.min(Math.max(0, segStart), last);
+  const from = Math.min(Math.max(0, segStart), last);
+  if (toolName !== 'show_problem') return from;
+  const card = about(content); const cardNums = new Set(content.match(/\d+(?:\.\d+)?/g) ?? []);
+  // The first sentence of a reply answers the student, often in the words of the problem just done.
+  for (let i = Math.max(from, last > 0 ? 1 : 0); i <= last; i++) {
+    const words = [...about(sentences[i])].filter((w) => card.has(w)).length;
+    const nums = (sentences[i].match(/\d+(?:\.\d+)?/g) ?? []).filter((n) => cardNums.has(n)).length;
+    if (words >= 2 || (words >= 1 && nums >= 1) || nums >= 2) {
+      // The first sentence of a reply answers the student; it is never a lead-in to the next problem.
+      const leadIn = i - 1 >= from && i - 1 > 0 && norm(sentences[i - 1]).length <= LEAD_IN_WORDS;
+      return leadIn ? i - 1 : i;
+    }
+  }
+  return last;
 }

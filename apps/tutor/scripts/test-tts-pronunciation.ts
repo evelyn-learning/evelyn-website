@@ -2,7 +2,7 @@
 // Unit tests for rewriteForTTS() additions: slash-pair whitelist,
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
-import { rewriteForTTS, speakCoefficientLetters, speakPhonemeSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
+import { rewriteForTTS, speakBonds, speakCoefficientLetters, speakFormulas, speakPhonemeSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1544,4 +1544,17 @@ console.log('OK — tts-pronunciation rewrites validated');
   for (const keep of ['1/2', '3/4', '24/7', '50/50', '10/12']) assert.ok(!/ over /.test(rewriteForTTS(keep)), keep);
   assert.equal(speakCoefficientLetters('the 4g three times: 105 + 12g, and 3x'), 'the 4 gee three times: 105 + 12 gee, and 3x');
   console.log('OK — large-denominator fractions are "over"; a coefficient letter is spelt');
+}
+
+{
+  const say = (x: string) => rewriteForTTS(speakBonds(x));
+  assert.match(say('the actual molecule is P₄O₁₀, with four phosphorus atoms'), /P 4 O 10,/);
+  assert.match(say('which is the O=O on the board.'), /O double bond O on the board/);
+  assert.match(say('In O=C=O and N≡N'), /O double bond C double bond O and N triple bond N/);
+  for (const keep of ['F=ma', 'P=IV', 'x=3', 'C=2N', 'S = P']) assert.ok(!/bond/.test(speakBonds(keep)), keep);
+  console.log('OK — a subscript run is one number; a bond between atoms is spoken as a bond');
+  const sci = (x: string) => rewriteForTTS(speakFormulas(speakBonds(x)));
+  assert.match(sci('Plants take up NO₃⁻ and NH₄⁺.'), /N O 3 minus and N H 4 plus\./);
+  assert.match(sci('Phosphate, PO₄³⁻, and N₂ gas, H₂O, P₄O₁₀.'), /P O 4, 3 minus, and N 2 gas, H 2 O, P 4 O 10\./);
+  assert.equal(speakFormulas('NaCl and CO in the DNA of A and B'), 'NaCl and CO in the DNA of A and B');
 }

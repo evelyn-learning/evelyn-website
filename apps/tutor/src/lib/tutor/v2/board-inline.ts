@@ -93,12 +93,17 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     const x = range(b.attrs.x); const y = range(b.attrs.y);
     return { name: 'show_function_graph', args: {
       ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(x ? { xRange: x } : {}), ...(y ? { yRange: y } : {}),
-      functions: lines.map((l) => { const [expr, label] = cells(l); return { expr: expr.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*/i, ''), ...(label ? { label } : {}) }; }).filter((f) => f.expr),
+      // A line that is a pair of numbers is a marked point (a centre, a vertex, a focus); any other line is a
+      // curve: an expression in x, or an equation in x and y (a circle, an ellipse, a hyperbola).
+      functions: lines.filter((l) => !POINT_RE.test(l)).map((l) => { const [expr, label] = cells(l); return { expr: expr.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*(?![^=]*=)/i, ''), ...(label ? { label } : {}) }; }).filter((f) => f.expr),
+      ...(lines.some((l) => POINT_RE.test(l)) ? { points: lines.filter((l) => POINT_RE.test(l)).map((l) => { const m = l.replace(/−/g, '-').match(POINT_RE)!; const label = cells(l)[1]; return { x: Number(m[1]), y: Number(m[2]), ...(label ? { label } : {}) }; }) } : {}),
     } };
   }
   if (b.kind === 'quote') return { name: 'show_passage', args: { text: b.body, ...(b.attrs.source ? { source: b.attrs.source } : {}), ...(b.attrs.title ? { title: b.attrs.title } : {}) } };
   return { name: 'show_problem', args: { statement: b.body, format: 'free-response', ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(b.attrs.difficulty ? { difficulty: b.attrs.difficulty } : {}) } };
 }
+
+const POINT_RE = /^\s*\$?\(\s*([-−]?\d+(?:\.\d+)?)\s*,\s*([-−]?\d+(?:\.\d+)?)\s*\)\$?\s*(?:\||$)/;
 
 /** Splits streamed text into words and blocks, holding back anything that may be the start of a block. */
 export class BoardInlineStream {

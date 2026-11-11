@@ -38,7 +38,7 @@ import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
 import { anchorSentenceIndex, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S } from '@/lib/tutor/v2/facts';
-import { speakCoefficientLetters } from '@/lib/tutor/voice/tts-pronunciation';
+import { speakBonds, speakCoefficientLetters, speakFormulas } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
@@ -296,6 +296,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [armSilence, releaseBoard]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');
+  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakFormulas(speakBonds(sentence))), []);
   const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(sentence)), []);
   const relayMode = useMemo(() => ({
     instructions: TRANSPORT_ONLY,
@@ -306,7 +307,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     ...(languagesKey ? { tutorLanguages: languagesKey.split(',') } : {}),
     ...(props.speechRate !== undefined ? { speechRate: props.speechRate } : {}),
     studentName: props.studentName,
-    ...(props.subject === 'math' ? { ttsTextTransform: mathsSpeech } : {}),
+    ...(props.subject === 'math' ? { ttsTextTransform: mathsSpeech } : props.subject === 'science' ? { ttsTextTransform: scienceSpeech } : {}),
   }), [onRelayTranscript, props.subject, props.ttsProvider, props.cartesiaVoiceId, props.cartesiaVoiceSpeed, languagesKey, props.speechRate, props.studentName]);
   const realtime = useOpenAIRealtime({
     instructions: TRANSPORT_ONLY,

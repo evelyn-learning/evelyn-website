@@ -2298,6 +2298,32 @@ export function speakCoefficientLetters(text: string): string {
   return text.replace(/(\d)([gmslhk])(?![A-Za-z0-9²³])/g, (_m, d: string, l: string) => `${d} ${UNIT_LETTER[l]}`);
 }
 
+/** In a science lesson "O=O" is a double bond between two atoms, and the voice reads it "O equals O"
+ *  (embed-1794372328590). Only between the atoms that form multiple bonds, written with no spaces, and only
+ *  where the caller knows the subject: "C=N" in an algebra lesson is an equation. */
+export function speakBonds(text: string): string {
+  const ATOM = '(?:C|N|O|S|P)';
+  let t = text;
+  for (let i = 0; i < 3; i++) {
+    t = t.replace(new RegExp(`(?<![A-Za-z0-9])(${ATOM})(=|≡)(?=${ATOM}(?![A-Za-z0-9+*/^]))`, 'g'), (_m, a: string, b: string) => `${a} ${b === '=' ? 'double' : 'triple'} bond `);
+  }
+  return t;
+}
+
+/** In a science lesson a formula typed with subscripts or a charge is spelt atom by atom: "NO₃⁻" is
+ *  "N O 3 minus" (left whole, the voice reads "no three"), "PO₄³⁻" is "P O 4, 3 minus". A formula with
+ *  neither ("NaCl", "CO") is left to the voice. */
+export function speakFormulas(text: string): string {
+  const SUB = '₀₁₂₃₄₅₆₇₈₉'; const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+  return text.replace(/(?<![A-Za-z₀-₉])((?:[A-Z][a-z]?[₀-₉]*){1,8})([⁰¹²³⁴-⁹]?[⁺⁻])?(?![A-Za-z₀-₉])/g, (m, body: string, charge: string | undefined) => {
+    if (!charge && !/[₀-₉]/.test(body)) return m;
+    const atoms = body.replace(/[A-Z][a-z]?|[₀-₉]+/g, (part) => (/[A-Z]/.test(part) ? ` ${part.split('').join(' ')}` : ` ${[...part].map((d) => SUB.indexOf(d)).join('')}`)).trim();
+    if (!charge) return atoms;
+    const n = charge.length > 1 ? `${SUP.indexOf(charge[0])} ` : '';
+    return `${atoms}${n ? ',' : ''} ${n}${charge.endsWith('⁺') ? 'plus' : 'minus'}`;
+  });
+}
+
 export function speakTypedMaths(text: string): string {
   const SUP: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
   let t = text;
@@ -2504,7 +2530,8 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   };
   // Trailing space too (chemistry round): "H₂O" must break into "H 2 O",
   // not "H 2O" — the collapse pass folds any doubling back to one space.
-  t = t.replace(/[₀-₉]/g, (ch) => ` ${SUBSCRIPT_DIGITS[ch] ?? ch} `);
+  // A run of subscript digits is one number: "P₄O₁₀" is "P 4 O 10", not "one zero" (embed-1794372328590).
+  t = t.replace(/[₀-₉]+/g, (run) => ` ${[...run].map((ch) => SUBSCRIPT_DIGITS[ch] ?? ch).join('')} `);
   // Electron configurations in prose ("1s² 2s² 2p⁶" → "1 s 2 2 s 2 2 p 6")
   // — must claim the superscript run before the exponent pass below reads
   // "1s²" as "1 second squared". Digit + s/p/d/f + superscript digits is
