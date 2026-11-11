@@ -90,9 +90,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const shownThenWithdrawnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const turnSentencesRef = useRef<string[]>([]);
   const startedCountRef = useRef(0);
-  const heldBoardRef = useRef<Array<{ idx: number; id?: string; what?: string; untilDone?: boolean; paint: () => void; timer: ReturnType<typeof setTimeout> }>>([]);
+  const heldBoardRef = useRef<Array<{ idx: number; id?: string; what?: string; untilDone?: boolean; isPage?: boolean; paint: () => void; timer: ReturnType<typeof setTimeout> }>>([]);
   const turnBusyRef = useRef(false);
-  const unplacedBoardRef = useRef<Array<{ call: { id?: string; name: string; sayWith?: string; args?: Record<string, unknown> }; paint: () => void }>>([]);
+  const unplacedBoardRef = useRef<Array<{ call: { id?: string; name: string; sayWith?: string; beforeTurn?: boolean; args?: Record<string, unknown> }; paint: () => void }>>([]);
   // Inline items: where the current stretch of speech began (the sentence count at the previous block).
   const segStartRef = useRef(0); const lastBlockAtRef = useRef(-1);
   // Where the paragraph being spoken began: working, a figure or a table goes with the paragraph it is written after.
@@ -104,8 +104,14 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       let idx = anchorSentenceIndex(u.call.sayWith, turnSentencesRef.current);
       // The quoted words are not in the reply: go by what the item is about, as for an inline item.
       if (idx < 0 && final) idx = turnSentencesRef.current.length ? inlineSentenceIndex(u.call.name === 'show_problem' ? 'show_problem' : 'other', summariseBoardCall(u.call.name, u.call.args ?? {}), turnSentencesRef.current, 0) : -1;
+      // For words said before the reply turned the page: it goes up at once, on the page still in view.
+      if (u.call.beforeTurn) { p.current.onDebugEvent?.('v2_board_timing', `${u.call.name}: belongs before the page turn — now`); u.paint(); continue; }
       if (idx < 0 && !final) { still.push(u); continue; }
-      const hold = idx > 0 && startedCountRef.current <= idx && !openingTurnRef.current;
+      // Nothing is written on a new page before the page is turned (a parabola's graph went up on the circle's
+      // page, and its note on the next, conic sections 2026-11-11).
+      const pageHeld = heldBoardRef.current.some((h) => h.isPage);
+      if (idx >= 0) idx = Math.max(idx, pageTurnAtRef.current);
+      const hold = ((idx > 0 && startedCountRef.current <= idx) || pageHeld) && !openingTurnRef.current;
       p.current.onDebugEvent?.('v2_board_timing', `${u.call.name}: ${idx < 0 ? 'its sentence was not found' : `sentence ${idx + 1} of ${turnSentencesRef.current.length}`}, ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
       if (!hold) { u.paint(); continue; }
       const entry = { idx, id: u.call.id, what: `${u.call.name}: ${summariseBoardCall(u.call.name, u.call.args ?? {}).slice(0, 80)}`, paint: u.paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); u.paint(); }, BOARD_HOLD_MAX_MS) };
@@ -116,10 +122,13 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const releaseBoard = useCallback((upTo?: number) => {
     if (upTo === undefined) placeBoard(true);
     const keep: typeof heldBoardRef.current = [];
+    let behindPage = false;
     for (const h of heldBoardRef.current) {
+      // What comes after a page that is still waiting waits with it.
+      if (behindPage && upTo !== undefined) { keep.push(h); continue; }
       // A problem card waits for the reply to be complete (see holdBoard): what the check adds for the answer
       // before it must go up first.
-      if (upTo === undefined || (h.idx < upTo && !(h.untilDone && turnBusyRef.current))) { clearTimeout(h.timer); h.paint(); } else keep.push(h);
+      if (upTo === undefined || (h.idx < upTo && !(h.untilDone && turnBusyRef.current))) { clearTimeout(h.timer); h.paint(); } else { keep.push(h); if (h.isPage) behindPage = true; }
     }
     heldBoardRef.current = keep;
   }, []);
@@ -208,11 +217,14 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // The next problem is not shown until the whole reply is in, the check's additions included: the note
         // "Center (3, −2), radius 5: correct" came up underneath the problem that followed it (conic sections,
         // 2026-11-11). The card's sentence is near the end of the reply, so this rarely costs any time.
-        const untilDone = call.name === 'show_problem' && turnBusyRef.current && !openingTurnRef.current;
-        const hold = (startedCountRef.current <= idx && n > 0 && !openingTurnRef.current) || untilDone;
+        // A page turn waits for the complete reply too: what the check adds for the answer before it goes on
+        // the old page first. Whatever follows a waiting page waits behind it.
+        const untilDone = (call.name === 'show_problem' || call.name === 'new_page') && turnBusyRef.current && !openingTurnRef.current;
+        const pageHeld = heldBoardRef.current.some((h) => h.isPage);
+        const hold = (startedCountRef.current <= idx && n > 0 && !openingTurnRef.current) || untilDone || (pageHeld && !openingTurnRef.current);
         p.current.onDebugEvent?.('v2_board_timing', `${call.name}: inline, with sentence ${idx + 1} of ${n} (stretch from ${from + 1}), ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
         if (!hold) { paint(); return; }
-        const entry = { idx, id: call.id, what: `${call.name}: ${summariseBoardCall(call.name, call.args).slice(0, 80)}`, untilDone, paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); paint(); }, BOARD_HOLD_MAX_MS) };
+        const entry = { idx, id: call.id, what: `${call.name}: ${summariseBoardCall(call.name, call.args).slice(0, 80)}`, untilDone, isPage: call.name === 'new_page', paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); paint(); }, BOARD_HOLD_MAX_MS) };
         heldBoardRef.current.push(entry);
         return;
       }

@@ -58,6 +58,8 @@ export interface V2ToolCall {
   inline?: boolean;
   /** The id of an earlier board item this one takes the place of (a graph redrawn with more on it). */
   replaces?: string;
+  /** Added after the reply for words said before it turned the page: it belongs on the page before (turn.ts). */
+  beforeTurn?: boolean;
 }
 
 export interface V2TurnResult {

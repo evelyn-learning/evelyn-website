@@ -393,6 +393,20 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
         });
       }
 
+      // Straight segments (tutor v2, 2026-11-11): the legs of a right triangle, a radius, a distance. Each is a
+      // two-point polygon, with its label at the midpoint.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const seg of (((data as any).segments ?? []) as Array<{ from: { x: number; y: number }; to: { x: number; y: number }; label?: string; color?: string }>)) {
+        if (![seg?.from?.x, seg?.from?.y, seg?.to?.x, seg?.to?.y].every((v) => typeof v === 'number' && Number.isFinite(v))) continue;
+        calculator.setExpression({
+          id: `seg-${exprId++}`,
+          latex: `\\operatorname{polygon}\\left(\\left(${seg.from.x},${seg.from.y}\\right),\\left(${seg.to.x},${seg.to.y}\\right)\\right)`,
+          color: seg.color || '#dc2626', fill: false, lineWidth: 2.5,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+        if (seg.label) calculator.setExpression({ id: `seg-${exprId++}`, latex: `(${(seg.from.x + seg.to.x) / 2}, ${(seg.from.y + seg.to.y) / 2})`, color: seg.color || '#dc2626', label: seg.label, showLabel: true, pointSize: 1, pointOpacity: 0 } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      }
+
       // Add labeled points
       for (const pt of (data.points || [])) {
         const id = `pt-${exprId++}`;

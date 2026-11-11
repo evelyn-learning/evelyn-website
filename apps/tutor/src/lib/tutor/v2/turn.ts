@@ -48,7 +48,7 @@ const CACHE = { type: 'ephemeral' as const, ttl: '1h' as const };
 
 /** The maths check's question (see runV2Turn). Narrow on purpose: asked to judge the whole reply it "corrected"
  *  sound verdicts and informal wording; asked only for a slip of calculation it does not. */
-export const V2_MATHS_CHECK = `[check — from the system running the session, not from the student]\nYou have just said the reply above aloud. Look only for a slip of calculation in it: an operation you named ("dividing by", "multiplying by", "adding") or a value you gave that, carried out on what is on the board, does not give what you said. A statement that is true on any ordinary reading stands: counting both ends of a range, rounding, or a different but equal form is not a slip. Be certain before you correct. Nothing else is in question: not your verdict on the student's answer, not which shape or case something is, not loose or informal wording, not anything you left unsaid. If there is such a slip, write "correction:" and one short sentence of at most twenty words, as you would say it aloud straight after, naming only the right operation or value. Otherwise write "maths: ok". Write only that one line.`;
+export const V2_MATHS_CHECK = `[check — from the system running the session, not from the student]\nYou have just said the reply above aloud. Look only for a slip of calculation in it: an operation you named ("dividing by", "multiplying by", "adding") or a value you gave that, carried out on what is on the board, does not give what you said. A point, value or label on a figure you drew with this reply counts too, when it is false for the thing it is drawn on (a point marked as on a curve that it is not on). A statement that is true on any ordinary reading stands: counting both ends of a range, rounding, or a different but equal form is not a slip. Be certain before you correct. Nothing else is in question: not your verdict on the student's answer, not which shape or case something is, not loose or informal wording, not anything you left unsaid. If there is such a slip, write "correction:" and one short sentence of at most twenty words, as you would say it aloud straight after, naming only the right operation or value. Otherwise write "maths: ok". Write only that one line.`;
 
 export type V2ModelCall = (params: Anthropic.MessageCreateParamsNonStreaming, onText?: (delta: string) => void, signal?: AbortSignal) => Promise<Anthropic.Message>;
 export type V2BoardPort = (board: V2Board, id: string, name: string, args: Record<string, unknown>) => V2BoardOutcome;
@@ -233,6 +233,8 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
           args.functions = [...theirs, ...mine.filter((f) => !theirs.some((g) => key(g) === key(f)))];
           const points = [...pts(old.args.points), ...pts(args.points).filter((q) => !pts(old.args!.points).some((o) => o.x === q.x && o.y === q.y))];
           if (points.length) args.points = points;
+          const segs = [...pts(old.args.segments), ...pts(args.segments)];
+          if (segs.length) args.segments = segs;
           for (const k of ['xRange', 'yRange', 'title'] as const) if (args[k] === undefined && old.args[k] !== undefined) args[k] = old.args[k];
           replaces = old.id;
         }
@@ -265,7 +267,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     const result: Anthropic.ToolResultBlockParam = { type: 'tool_result', tool_use_id: block.id, content: outcome };
     // The board pass often offers again what the reply already put up; a call of its that did nothing leaves no trace.
     if (boardOnly && /^not /.test(outcome)) return result;
-    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}) };
+    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}) };
     toolCalls.push(call);
     input.onToolCall?.(call);
     return result;
@@ -285,7 +287,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     return !failed;
   };
   // How much had been said when the reply turned to a new page (-1: it did not).
-  let saidChars = 0; let pageTurnAt = -1;
+  let saidChars = 0; let pageTurnAt = -1; let pageBefore = -1; let markBeforeTurn = false;
   const rawSpoken: string[] = [];
   const withdrawn: string[] = []; const withdrawnLabels: string[] = [];
   const inlinePainted: Array<{ id: string; raw: string; label: string }> = [];
@@ -304,7 +306,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     const take = (parts: InlinePart[]) => {
       for (const part of parts) {
         if ('opening' in part) { input.onBoardOpen?.(); continue; }
-        if ('block' in part) { if (part.block.kind === 'page') pageTurnAt = saidChars; settleInline(part.block); continue; }
+        if ('block' in part) { if (part.block.kind === 'page' && pageTurnAt < 0) { pageTurnAt = saidChars; pageBefore = state.board.current; } settleInline(part.block); continue; }
         if (firstTextMs === null && part.text.trim()) firstTextMs = Date.now() - t0;
         saidChars += part.text.length;
         input.onText?.(part.text);
@@ -367,12 +369,14 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   // pedantic alarm in 24 sound replies; at low effort it waved the slip through). So a reply that spoke mathematics is checked while it is being said, and a slip is put right in
   // the tutor's own voice at the end of the same reply. Runs beside the board pass; TUTOR_V2_MATHS_CHECK=off.
   const saidSoFar = spoken.join('\n\n');
+  // What the reply drew is checked with what it said: a "point on the parabola" went up that was not on it.
+  const drawnNow = toolCalls.filter((c) => V2_FIGURE_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome)).map((c) => `${c.name.replace(/^show_/, '')}: ${JSON.stringify(c.args).slice(0, 400)}`);
   const mathsCheck: Promise<string | null> = (input.mathsCheck ?? (!input.callModel && process.env.TUTOR_V2_MATHS_CHECK !== 'off')) && !state.closed && !input.signal?.aborted && speaksMaths(saidSoFar) && modelCalls < V2_MAX_MODEL_CALLS
     ? Promise.all([0, 1].map(() => callModel({
       // On a clean page: the board, the student's words, the reply. With the whole lesson in front of it the
       // model waved its own slip through six times out of six; shown only these three it catches it.
       model: '', max_tokens: 2500, thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
-      messages: [{ role: 'user', content: `The board shows:\n${renderBoard(state.board)}\n\n${input.studentSaid ? `The student said: "${input.studentSaid}"` : 'The student has not spoken.'}` }, { role: 'assistant', content: saidSoFar }, { role: 'user', content: V2_MATHS_CHECK }],
+      messages: [{ role: 'user', content: `The board shows:\n${renderBoard(state.board)}\n\n${input.studentSaid ? `The student said: "${input.studentSaid}"` : 'The student has not spoken.'}` }, { role: 'assistant', content: `${saidSoFar}${drawnNow.length ? `\n\n[drawn on the board with this reply: ${drawnNow.join(' | ')}]` : ''}` }, { role: 'user', content: V2_MATHS_CHECK }],
     } as unknown as Anthropic.MessageCreateParamsNonStreaming, undefined, input.signal).then((response) => {
       usage.inputTokens += response.usage.input_tokens; usage.outputTokens += response.usage.output_tokens;
       usage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0; usage.cacheCreationTokens += response.usage.cache_creation_input_tokens ?? 0;
@@ -449,17 +453,28 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
         const merged = boardBlocksIn(graphs[0].raw.replace(graphs[0].body, () => body))[0];
         if (merged) { passBlocks[passBlocks.indexOf(graphs[0])] = merged; for (const g of graphs.slice(1)) passBlocks.splice(passBlocks.indexOf(g), 1); }
       }
-      // What the check adds lands on the page now in view. When the reply itself turned the page, an item for
-      // something said before the turn would land on the new page, under a heading it has nothing to do with
-      // (the working for y² = 8x and its graph on the "Recap" page, conic sections, 2026-11-11): it is left out.
-      const saidLower = said.toLowerCase().replace(/\s+/g, ' ');
+      // When the reply itself turned the page, what the check adds for words said BEFORE the turn belongs on
+      // the page before: put on the new one, the working for x² = −12y and its graph sat under a heading about
+      // something else, around the next problem (conic sections, twice, 2026-11-11). The voice client holds a
+      // page turn until the reply is complete, so these still go up on the old page, ahead of the turn.
+      const letters = (x: string) => x.toLowerCase().replace(/\$[^$]*\$/g, ' ').split(/[^a-z]+/).filter((w) => w.length >= 2);
+      const saidLetters = letters(said); const turnAtWord = pageTurnAt < 0 ? -1 : letters(said.slice(0, pageTurnAt)).length;
+      const overlap = (body: string, text: string) => { const nums = new Set(text.match(/\d+(?:\.\d+)?/g) ?? []); const words = new Set(letters(text).filter((w) => w.length >= 4)); return (body.match(/\d+(?:\.\d+)?/g) ?? []).filter((n) => nums.has(n)).length + letters(body).filter((w) => w.length >= 4 && words.has(w)).length; };
       const beforeTurn = (b: InlineBlock) => {
-        if (pageTurnAt < 0 || !b.attrs.with) return false;
-        const at = saidLower.indexOf(b.attrs.with.toLowerCase().replace(/\s+/g, ' ').split(' ').slice(0, 4).join(' '));
-        return at >= 0 && at < pageTurnAt - 2;
+        if (pageTurnAt < 0 || pageBefore < 0 || b.kind === 'page') return false;
+        const want = letters(b.attrs.with ?? '').slice(0, 3);
+        if (want.length >= 2) for (let at = 0; at + want.length <= saidLetters.length; at++) if (want.every((w, k) => saidLetters[at + k] === w)) return at < turnAtWord;
+        // No sentence to go by: which side of the turn is it about?
+        return overlap(b.body, said.slice(0, pageTurnAt)) > overlap(b.body, said.slice(pageTurnAt));
       };
       for (const b of passBlocks) {
-        if (beforeTurn(b)) continue;
+        if (beforeTurn(b)) {
+          if (b.kind === 'problem') continue;
+          const now = state.board.current; state.board.current = pageBefore; markBeforeTurn = true;
+          let ok = false; try { ok = settleInline(b, true); } finally { state.board.current = now; markBeforeTurn = false; }
+          if (ok) { const textBlock = (lastWords?.content as Anthropic.ContentBlockParam[] | undefined)?.find((c): c is Anthropic.TextBlockParam => c.type === 'text'); if (textBlock) textBlock.text = insertBlock(textBlock.text, b.raw.replace(/\s+with="[^"]*"/, ''), b.attrs.with); }
+          continue;
+        }
         // One card a reply: the check adds a problem only when the reply set a question and put up no card.
         if (b.kind === 'problem' && (toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome)) || !saidCovers(b.body, said))) continue;
         if (!settleInline(b, true)) continue;

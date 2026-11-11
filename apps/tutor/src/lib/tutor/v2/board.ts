@@ -72,7 +72,7 @@ export function boardMisfit(name: string, args: Record<string, unknown>): string
   // A figure with nothing in it is worse than no figure (an empty graph grid titled "Tug-of-war" opened a
   // forces lesson, embed-1794363148240).
   const count = (v: unknown) => (Array.isArray(v) ? v.length : 0);
-  if (name === 'show_function_graph' && count(args.functions) + count(args.functionsOfY) + count(args.points) === 0) return 'a graph needs at least one function or point to plot; for anything else use the form that fits it';
+  if (name === 'show_function_graph' && count(args.functions) + count(args.functionsOfY) + count(args.points) + count(args.segments) === 0) return 'a graph needs at least one function or point to plot; for anything else use the form that fits it';
   if (name === 'show_free_body_diagram' && count(args.forces) === 0) return 'a forces diagram needs at least one force: name | direction | size';
   // A figure tool called with nothing in it paints an empty frame (an empty Venn diagram opened a statistics
   // lesson, browser run 2026-11-11).
@@ -138,7 +138,7 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
       return { painted: false, detail: `already on the board (page ${p + 1})` };
     }
   }
-  board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, points: args.points, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
+  board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, points: args.points, segments: args.segments, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
   return { painted: true, detail: `painted on page ${board.current + 1}` };
 }
 

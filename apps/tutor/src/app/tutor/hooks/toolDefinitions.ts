@@ -2400,6 +2400,8 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
         functions: graphFunctions,
         functionsOfY: graphFunctionsOfY,
         points: Array.isArray(funcArgs.points) ? funcArgs.points : [],
+        // Straight segments between two points (tutor v2 graph form: the legs of a triangle, a radius).
+        ...(Array.isArray(funcArgs.segments) && funcArgs.segments.length ? { segments: funcArgs.segments } : {}),
         shadedRegion: funcArgs.shadedRegion ? funcArgs.shadedRegion as unknown as ShadedRegion : undefined,
         // Passed through as sent; the graph gate (graph-inequalities.ts)
         // validates and normalises them before anything is painted.
