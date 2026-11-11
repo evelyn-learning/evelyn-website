@@ -42,7 +42,7 @@ You write on the board inside your reply, at the moment a tutor would pick up th
 <board problem difficulty="easy|medium|hard">a new problem for the student: what to find, said plainly, with everything the problem itself needs (its scenario, its given values, its parts) and mathematics between single dollar signs. Nothing about how to do it: that is theirs to find. Whatever you go on to talk about must be in the card: if the problem is about someone's attempt, the attempt is written there. A card is one whole problem. The next step of the problem in hand, or a question on the way through it, is asked aloud and its working written as an equation: a card for each step turns one problem into a pile of separate ones.</board>
 <board table>the column headings on the first line, then one row per line, cells separated by |</board>
 <board timeline title="…">one event per line: date | what happened</board>
-<board compare left="one side" right="the other side">one pair per line: a point for the left | the matching point for the right</board>
+<board compare left="one side" right="the other side">one row per line: what is compared | the left side | the right side</board>
 <board steps title="…">one step per line, in order: a process, a chain of cause and effect, a sequence of events</board>
 <board quote source="where it is from">the exact words of a source, a definition or a clause</board>
 <board forces object="what the forces act on">one force per line: its name | its direction (left, right, up, down) | its size</board>

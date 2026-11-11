@@ -18,7 +18,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { applyToModelBoard, boardMisfit, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
+import { applyToModelBoard, boardMisfit, renderBoard, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { saidCovers, unsaidAsk } from './board-timing';
@@ -46,6 +46,10 @@ export const V2_DEFAULT_EFFORT: 'low' | 'medium' | 'high' =
 const GAP_STATUSES: GapStatus[] = ['found', 'explained', 'done_with_help', 'done_alone'];
 const CACHE = { type: 'ephemeral' as const, ttl: '1h' as const };
 
+/** The maths check's question (see runV2Turn). Narrow on purpose: asked to judge the whole reply it "corrected"
+ *  sound verdicts and informal wording; asked only for a slip of calculation it does not. */
+export const V2_MATHS_CHECK = `[check — from the system running the session, not from the student]\nYou have just said the reply above aloud. Look only for a slip of calculation in it: an operation you named ("dividing by", "multiplying by", "adding") or a value you gave that, carried out on what is on the board, does not give what you said. Nothing else is in question: not your verdict on the student's answer, not which shape or case something is, not loose or informal wording, not anything you left unsaid. If there is such a slip, write "correction:" and one short sentence of at most twenty words, as you would say it aloud straight after, naming only the right operation or value. Otherwise write "maths: ok". Write only that one line.`;
+
 export type V2ModelCall = (params: Anthropic.MessageCreateParamsNonStreaming, onText?: (delta: string) => void, signal?: AbortSignal) => Promise<Anthropic.Message>;
 export type V2BoardPort = (board: V2Board, id: string, name: string, args: Record<string, unknown>) => V2BoardOutcome;
 
@@ -63,6 +67,8 @@ export interface V2TurnInput {
   onBoardWithdraw?: (id: string) => void;
   /** The board pass after a spoken reply that says mathematics (default on). */
   boardPass?: boolean;
+  /** Run the maths check after a reply that spoke mathematics. Default: on for real model calls, off for a stubbed one. */
+  mathsCheck?: boolean;
   callModel?: V2ModelCall;
   applyBoard?: V2BoardPort;
   onText?: (delta: string) => void;
@@ -308,6 +314,29 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     }
   }
 
+  // The maths check. The model slips on a named operation or a value about one reply in four on some turns
+  // ("Dividing by 4 gives x² + y² = 4" for x²/4 + y²/4 = 1, embed-1794414820031), and more thinking does not
+  // cure it: the same turn replayed eight times each gave 2 slips at medium effort and 2 at high, 1.3 s slower.
+  // Asked afterwards, at medium effort, to look for exactly that kind of slip, it finds it (12 of 12, one
+  // pedantic alarm in 24 sound replies; at low effort it waved the slip through). So a reply that spoke mathematics is checked while it is being said, and a slip is put right in
+  // the tutor's own voice at the end of the same reply. Runs beside the board pass; TUTOR_V2_MATHS_CHECK=off.
+  const saidSoFar = spoken.join('\n\n');
+  const mathsCheck: Promise<string | null> = (input.mathsCheck ?? (!input.callModel && process.env.TUTOR_V2_MATHS_CHECK !== 'off')) && !state.closed && !input.signal?.aborted && speaksMaths(saidSoFar) && modelCalls < V2_MAX_MODEL_CALLS
+    ? callModel({
+      // On a clean page: the board, the student's words, the reply. With the whole lesson in front of it the
+      // model waved its own slip through six times out of six; shown only these three it catches it.
+      model: '', max_tokens: 2500, thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
+      messages: [{ role: 'user', content: `The board shows:\n${renderBoard(state.board)}\n\n${input.studentSaid ? `The student said: "${input.studentSaid}"` : 'The student has not spoken.'}` }, { role: 'assistant', content: saidSoFar }, { role: 'user', content: V2_MATHS_CHECK }],
+    } as unknown as Anthropic.MessageCreateParamsNonStreaming, undefined, input.signal).then((response) => {
+      usage.inputTokens += response.usage.input_tokens; usage.outputTokens += response.usage.output_tokens;
+      usage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0; usage.cacheCreationTokens += response.usage.cache_creation_input_tokens ?? 0;
+      const text = response.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join(' ');
+      const fix = text.match(/\bcorrection:\s*([^\n]+)/i)?.[1]?.replace(/<board\b[\s\S]*$/, '').trim() ?? '';
+      // One short sentence or two; anything longer is the check thinking aloud, not a correction.
+      return fix && fix.split(/\s+/).length <= 40 ? fix : null;
+    }).catch(() => null)
+    : Promise.resolve(null);
+
   // The board pass. Speech and the board are the two halves of a spoken reply, and the model often
   // writes only the first: it says the working and puts up nothing, or only the next problem. When the
   // reply spoke mathematics, the model is shown its own words and asked what of them is missing from the
@@ -362,7 +391,16 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
         if (holder) holder.text = holder.text.replace(gone.raw, '').replace(/[ \t]{2,}/g, ' ');
         input.onBoardWithdraw?.(gone.id);
       }
-      for (const b of boardBlocksIn(passText)) {
+      // Several graph blocks from one check are one picture: a circle went up as two graphs, the curve on one
+      // and its centre alone on the other (browser run, conic sections, 2026-11-11).
+      const passBlocks = boardBlocksIn(passText);
+      const graphs = passBlocks.filter((b) => b.kind === 'graph');
+      if (graphs.length > 1) {
+        const body = graphs.map((g) => g.body).join('\n');
+        const merged = boardBlocksIn(graphs[0].raw.replace(graphs[0].body, () => body))[0];
+        if (merged) { passBlocks[passBlocks.indexOf(graphs[0])] = merged; for (const g of graphs.slice(1)) passBlocks.splice(passBlocks.indexOf(g), 1); }
+      }
+      for (const b of passBlocks) {
         // One card a reply: the check adds a problem only when the reply set a question and put up no card.
         if (b.kind === 'problem' && (toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome)) || !saidCovers(b.body, said))) continue;
         if (!settleInline(b, true)) continue;
@@ -370,6 +408,16 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
         if (textBlock) textBlock.text = insertBlock(textBlock.text, b.raw.replace(/\s+with="[^"]*"/, ''), b.attrs.with);
       }
     } catch { /* the reply stands without it */ }
+  }
+
+  const fix = await mathsCheck;
+  if (fix && !state.closed && !input.signal?.aborted) {
+    const words = `One correction: ${fix}`;
+    input.onText?.(`\n\n${words}`);
+    spoken.push(words);
+    const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+    const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
+    if (textBlock) textBlock.text = `${textBlock.text}\n\n${words}`;
   }
 
   // A session never begins on a bare board (embed-1794362141944, embed-1794376295543). When the opening reply

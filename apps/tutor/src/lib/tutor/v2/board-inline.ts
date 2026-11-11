@@ -58,7 +58,14 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
   if (b.kind === 'timeline') return { name: 'show_timeline', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), events: lines.map(cells).filter((c) => c[0] && c[1]).map((c) => ({ date: c[0], title: c[1], ...(c[2] ? { description: c[2] } : {}) })) } };
   // Two sides, row by row. A table sizes itself to its words; the fixed-size chart clipped a two-line
   // heading and left half the card empty (embed-1794376295543).
-  if (b.kind === 'compare') return { name: 'show_table', args: { headers: [b.attrs.left ?? '', b.attrs.right ?? ''], rows: lines.map(cells).map((r) => [r[0] ?? '', r[1] ?? '']) } };
+  // A row may open with what it compares ("Who holds the labor | one colonist | colonial officials"): then the
+  // table has a first column for it. With two cells only, a tutor who meant that wrote the row's name in the
+  // left side's column and left the right side empty (browser run, AP US History, 2026-11-11).
+  if (b.kind === 'compare') {
+    const rows = lines.map(cells);
+    const named = rows.length > 0 && rows.every((r) => r.length >= 3);
+    return { name: 'show_table', args: named ? { headers: ['', b.attrs.left ?? '', b.attrs.right ?? ''], rows: rows.map((r) => [r[0], r[1], r[2]]) } : { headers: [b.attrs.left ?? '', b.attrs.right ?? ''], rows: rows.map((r) => [r[0] ?? '', r[1] ?? '']) } };
+  }
   // A page of the board, with its heading.
   if (b.kind === 'page') return { name: 'new_page', args: { title: b.body.replace(/\s+/g, ' ').slice(0, 80) } };
   // Things that go round, things that connect, places (a nitrogen-cycle lesson had only lists to draw with,
