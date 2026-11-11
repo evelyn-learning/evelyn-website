@@ -19,6 +19,11 @@ const BOARD_DESCRIPTIONS: Record<string, string> = {
   show_timeline: 'Put a timeline of dated events on the board.',
   show_number_line: 'Draw a number line with marked points or intervals.',
   show_geometry: 'Draw a geometric figure.',
+  show_venn_diagram: 'Draw a two- or three-set Venn diagram, with a value or items in each region.',
+  show_tree: 'Draw a tree diagram: a probability tree with a probability on each branch, or a factor or decision tree.',
+  show_stats: 'Draw a statistical plot: a boxplot, dot plot, histogram or bar chart of data.',
+  show_free_body_diagram: 'Draw a free-body diagram: one object and the forces on it as labelled arrows, each with a direction and, when known, a size.',
+  show_lewis_constructed: 'Draw a Lewis structure from its atoms and bonds; lone pairs are worked out for you.',
   highlight: 'Draw attention to something already on the board.',
   new_page: 'Start a new board page with a title. Use when the subject changes.',
   go_to_page: 'Go back to an earlier board page.',
@@ -30,8 +35,8 @@ const CORE = ['new_page', 'go_to_page'];
 const BY_SUBJECT: Record<string, string[]> = {
   // Tables, timelines, comparisons, step chains and quotes are inline forms for every subject (board-inline.ts);
   // only what needs structured arguments stays a tool.
-  math: ['show_function_graph', 'show_number_line', 'show_geometry'],
-  science: ['show_function_graph'],
+  math: ['show_function_graph', 'show_number_line', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats'],
+  science: ['show_function_graph', 'show_free_body_diagram', 'show_lewis_constructed'],
 };
 
 export const V2_CONTROL_TOOLS: Anthropic.Tool[] = [
