@@ -367,11 +367,11 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   // cure it: the same turn replayed eight times each gave 2 slips at medium effort and 2 at high, 1.3 s slower.
   // Asked afterwards, at medium effort, to look for exactly that kind of slip, it finds it (12 of 12, one
   // pedantic alarm in 24 sound replies; at low effort it waved the slip through). So a reply that spoke mathematics is checked while it is being said, and a slip is put right in
-  // the tutor's own voice at the end of the same reply. Runs beside the board pass; TUTOR_V2_MATHS_CHECK=off.
+  // the tutor's own voice at the end of the same reply. Runs beside the board pass. OFF unless TUTOR_V2_MATHS_CHECK=on (Praveen 11-11: slips seen only in conics; one live false correction).
   const saidSoFar = spoken.join('\n\n');
   // What the reply drew is checked with what it said: a "point on the parabola" went up that was not on it.
   const drawnNow = toolCalls.filter((c) => V2_FIGURE_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome)).map((c) => `${c.name.replace(/^show_/, '')}: ${JSON.stringify(c.args).slice(0, 400)}`);
-  const mathsCheck: Promise<string | null> = (input.mathsCheck ?? (!input.callModel && process.env.TUTOR_V2_MATHS_CHECK !== 'off')) && !state.closed && !input.signal?.aborted && speaksMaths(saidSoFar) && modelCalls < V2_MAX_MODEL_CALLS
+  const mathsCheck: Promise<string | null> = (input.mathsCheck ?? (!input.callModel && process.env.TUTOR_V2_MATHS_CHECK === 'on')) && !state.closed && !input.signal?.aborted && speaksMaths(saidSoFar) && modelCalls < V2_MAX_MODEL_CALLS
     ? Promise.all([0, 1].map(() => callModel({
       // On a clean page: the board, the student's words, the reply. With the whole lesson in front of it the
       // model waved its own slip through six times out of six; shown only these three it catches it.
