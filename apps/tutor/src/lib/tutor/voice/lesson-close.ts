@@ -206,6 +206,12 @@ const SESSION_STOP_RE = new RegExp(String.raw`^${FIRM_PAD}(?:(?:can|could) (?:we
 const PLEASE_END_RE = new RegExp(String.raw`^${FIRM_PAD}(?:please\s+end(?: (?:it|this))?|end (?:it|this),?\s+please)(?:\s+(?:here|now|for now|for today))*\s*[.!?]?$`, 'i');
 const PLEASE_STOP_RE = new RegExp(String.raw`^${FIRM_PAD}(?:please\s+stop|stop,?\s+please)(?:\s+(?:here|now|for now|for today))*\s*[.!?]?$`, 'i');
 const LEAVING_RE = new RegExp(String.raw`^${FIRM_PAD}(?:i|we)\s+(?:have to|need to|must|'ve got to|have got to|gotta|got to)\s+(?:go|leave|run)(?:\s+(?:now|soon|somewhere|already|right now|sorry))*\s*[.!]?$`, 'i');
+// James, GDI demo embed-1794314921551 724 s: "Sorry, I have to finish now." matched nothing — "finish" with no
+// object was neither a stop request nor a firm stop, so the tutor took it as "go to the summary" and asked a
+// readiness question, then a recap question; he had to say "I have to go" twice more (36 s). Having to finish,
+// stop or end, with nothing after it but now / here / today, is leaving. An object keeps it lesson talk
+// ("I have to finish the report on Friday.").
+const MUST_FINISH_RE = new RegExp(String.raw`^${FIRM_PAD}(?:i|we)\s+(?:have to|need to|must|'ve got to|have got to|gotta|got to)\s+(?:finish|stop|end|quit)(?:[\s,]+(?:now|here|there|soon|already|right now|for now|for today|today|sorry))*\s*[.!]?$`, 'i');
 function utteranceSentences(t: string): string[] {
   return t.split(/(?<=[.!?？。])\s*/).map((s) => s.trim()).filter(Boolean);
 }
@@ -217,7 +223,7 @@ export function isFirmStop(studentText: string | null | undefined): boolean {
   // an explicit stop sentence of 2+ words ("Let's stop here.", "Stop for today.") — never a bare "Stop." / "Bye."
   const explicitLong = (s: string) => isExplicitStop(s) && s.replace(/[^\p{L}\s'’]/gu, ' ').replace(/\b(?:please|ok(?:ay)?|yes|yeah|no|well|so|um+|uh+|thanks?|thank you)\b/gi, ' ').trim().split(/\s+/).length >= 2
     && !/^(?:(?:good)?bye|see you)/i.test(s.replace(STOP_PAD_RE, '').trim());
-  if (sentences.some((s) => SESSION_STOP_RE.test(s) || PLEASE_END_RE.test(s) || LEAVING_RE.test(s) || explicitLong(s))) return true;
+  if (sentences.some((s) => SESSION_STOP_RE.test(s) || PLEASE_END_RE.test(s) || LEAVING_RE.test(s) || MUST_FINISH_RE.test(s) || explicitLong(s))) return true;
   // "Okay, please stop. I would like to …": a please-stop beside another stop-shaped sentence
   return sentences.length > 1 && sentences.some((s) => PLEASE_STOP_RE.test(s)) && sentences.some((s) => !PLEASE_STOP_RE.test(s) && isStopRequestCore(s));
 }
