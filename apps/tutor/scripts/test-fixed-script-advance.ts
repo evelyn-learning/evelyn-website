@@ -1874,6 +1874,9 @@ test('W18: the live stop utterances are firm stops and close mid-lesson at once'
     "Let's end the lesson here.", 'Could we stop the session now?', "Let's stop here.", 'Can we stop here?', 'Stop for today.', "That's enough for today."];
   const fresh = (t: string) => stopRequestDecision({ stopRequest: isStopRequest(t), midLesson: true, choicePending: false, explicitStop: isExplicitStop(t), choosesFinish: choosesFinish(t), firmStop: isFirmStop(t) });
   for (const t of live) { assert.equal(isFirmStop(t), true, t); assert.equal(isStopRequest(t), true, t); assert.equal(fresh(t), 'close', t); }
+  // James embed-1794314921551: having to finish, with no object, is leaving
+  for (const t of ['Sorry, I have to finish now.', 'I have to stop here.', 'I need to finish.', 'We have to end now, sorry.']) { assert.equal(isFirmStop(t), true, t); assert.equal(fresh(t), 'close', t); }
+  for (const t of ['I have to finish the report on Friday.', 'I need to stop the machine first.', 'We have to end the meeting by five.', 'I have to finish it today.']) assert.equal(isFirmStop(t), false, t);
   // soft requests keep the finish-or-stop choice; a bare stop / please-stop may be a barge-in on the tutor's speech
   for (const t of ['We can finish it.', "Let's finish.", 'Stop.', 'Please stop.', 'Stop, please.']) {
     assert.equal(isFirmStop(t), false, t); assert.equal(fresh(t), 'ask-choice', t);
