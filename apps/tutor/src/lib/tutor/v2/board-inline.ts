@@ -9,21 +9,21 @@
  *   <board equation label="…">LaTeX</board>
  *   <board note style="highlight">one point per line, $maths$ inline</board>
  *   <board problem difficulty="medium">the problem, $maths$ inline</board>
- *   <board table|timeline|compare|steps|quote …>plain lines, cells separated by "|"</board>
+ *   <board table|timeline|compare|steps|quote|chart …>plain lines, cells separated by "|"</board>
  *
  * The runtime lifts the blocks out of the stream: the words go to the student, each block becomes a
  * board call at that position (turn.ts), and the voice client paints it as the sentence before it
  * begins (TutorVoiceV2). The stored reply keeps the blocks, so the history shows a tutor who writes
  * while talking. `with="opening words"` is for the board pass only, whose blocks arrive after the words.
  */
-export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'page';
+export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'page';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
 /** `opening`: a block has begun and its content is still arriving (the client holds the sentence before it). */
 export type InlinePart = { text: string } | { block: InlineBlock } | { opening: true };
 
 const OPEN = '<board';
 const CLOSE = '</board>';
-const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|page)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
+const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|chart|page)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
 
 function parseBlock(raw: string): InlineBlock | null {
   BLOCK_RE.lastIndex = 0;
@@ -78,6 +78,21 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     const pins = lines.map(cells).map((c) => ({ label: c[0], lat: deg(c[1], /s\b/i), lon: deg(c[2], /w\b/i) })).filter((pin) => pin.label && Number.isFinite(pin.lat) && Number.isFinite(pin.lon));
     const regions = ['world', 'north-america', 'south-america', 'europe', 'asia', 'africa', 'australia', 'usa', 'india', 'china', 'middle-east', 'mediterranean'];
     return { name: 'show_map', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), background: regions.includes(b.attrs.region ?? '') ? b.attrs.region : 'world', pins } };
+  }
+  // A plot of data: the values as they stand, or named bars (a lesson on histograms had bins listed in notes
+  // and no histogram, embed-1794416884500).
+  if (b.kind === 'chart') {
+    const type = ['dotplot', 'histogram', 'bar'].includes(b.attrs.type ?? '') ? b.attrs.type : 'dotplot';
+    const num = (v: string) => Number(v.replace(/−/g, '-').replace(/[^0-9.\-]/g, ''));
+    const labels = { ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(b.attrs.x ? { xLabel: b.attrs.x } : {}), ...(b.attrs.y ? { yLabel: b.attrs.y } : {}) };
+    if (type === 'bar') { const rows = lines.map(cells).filter((c) => c[0] && Number.isFinite(num(c[1] ?? ''))); return { name: 'show_stats', args: { type, ...labels, bar: { categories: rows.map((c) => c[0]), values: rows.map((c) => num(c[1])) } } }; }
+    // Bins already counted, one per line: "60 | 70 | 2" or "60 to 70 | 2" (flattened into values, a pre-binned
+    // histogram drew nine bars of nonsense, browser run 2026-11-11).
+    const binRows = lines.map((l) => (l.replace(/−/g, '-').match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number));
+    if (type === 'histogram' && lines.length >= 2 && lines.every((l) => l.includes('|')) && binRows.every((r) => r.length === 3 && r[1] > r[0])) return { name: 'show_stats', args: { type, ...labels, bins: binRows, showCounts: true } };
+    const data = b.body.split(/[\s,;|]+/).filter((v) => /\d/.test(v)).map(num).filter(Number.isFinite);
+    const width = num(b.attrs.width ?? '');
+    return { name: 'show_stats', args: { type, ...labels, data, ...(type === 'histogram' && width > 0 ? { binWidth: width, showCounts: true } : {}) } };
   }
   if (b.kind === 'steps') return { name: 'show_graphic_organizer', args: { kind: 'sequence', ...(b.attrs.title ? { title: b.attrs.title } : {}), steps: lines.map((l) => cells(l).filter(Boolean).join(': ')) } };
   // Figures, written as plain lines too. A tutor who has to fill in a structured tool call draws far less often

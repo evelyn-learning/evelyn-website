@@ -16,6 +16,19 @@ export class SentenceStream {
   /** Words of the next sentence have begun to arrive. */
   hasPending(): boolean { return /\S/.test(this.buf); }
 
+  /** How many sentences have been given out, and which of them began a paragraph (the first always does).
+   *  A board item belongs to the paragraph it is written after (TutorVoiceV2). */
+  private count = 0;
+  private first = true;
+  readonly paragraphStarts = new Set<number>();
+  private emit(raw: string, out: string[]): void {
+    const sentence = raw.replace(/\s+/g, ' ').trim();
+    if (!sentence) return;
+    if (this.first || /^\s*\n\s*\n/.test(raw)) this.paragraphStarts.add(this.count);
+    this.first = false; this.count += 1;
+    out.push(sentence);
+  }
+
   /** Add streamed text; returns the sentences it completed, in order. */
   push(delta: string): string[] {
     this.buf += delta;
@@ -23,22 +36,28 @@ export class SentenceStream {
     for (;;) {
       const cut = this.nextCut();
       if (cut < 0) break;
-      const sentence = this.buf.slice(0, cut).replace(/\s+/g, ' ').trim();
-      this.buf = this.buf.slice(cut).replace(/^\s+/, '');
-      if (sentence) out.push(sentence);
+      this.emit(this.buf.slice(0, cut), out);
+      // The white space after a sentence stays: a paragraph break in it marks the next sentence.
+      this.buf = this.buf.slice(cut);
     }
     return out;
   }
 
   /** The stream has ended (or a tool call interrupts the words): whatever is left is a sentence. */
   flush(): string[] {
-    const rest = this.buf.replace(/\s+/g, ' ').trim();
+    const out: string[] = [];
+    this.emit(this.buf, out);
+    // A tool call or a board block between two paragraphs does not hide the break.
+    if (!out.length && /\n\s*\n/.test(this.buf)) this.first = true;
     this.buf = '';
-    return rest ? [rest] : [];
+    return out;
   }
 
   private nextCut(): number {
-    const para = this.buf.search(/\n\s*\n/);
+    // White space left in front by the last cut is not a break to cut at.
+    const lead = this.buf.length - this.buf.replace(/^\s+/, '').length;
+    const at = this.buf.slice(lead).search(/\n\s*\n/);
+    const para = at < 0 ? -1 : at + lead;
     const re = /[.!?。！？]+["')\]]*(?=\s)/g;
     let m: RegExpExecArray | null;
     while ((m = re.exec(this.buf))) {

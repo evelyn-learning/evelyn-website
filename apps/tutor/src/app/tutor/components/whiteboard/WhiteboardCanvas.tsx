@@ -368,10 +368,40 @@ function SolutionStepField({ latex, className }: { latex: string; className?: st
 // scroll; (b) it bakes the CURRENT animated scrollTop into the delta, so
 // a second scroll issued mid-flight restarted from a moving baseline.
 // offsetTop/offsetHeight ignore transforms and never read scroll state.
+// Soft board motion (2026-11-11, Praveen: "the WB shifts up in a jerk when something new gets rendered").
+// A new item used to be scrolled to the TOP of the pane: nearly a screenful of travel, done by the
+// browser's own smooth scroll in a fraction of a second. Now the board moves only as far as it takes to
+// bring the new item fully into view (like a page being written down), on a slower ease-in-out glide, and
+// the item fades in left to right (.wb-item-enter-soft). Kill switch: NEXT_PUBLIC_TUTOR_WB_SOFT_MOTION=off.
+export const WB_SOFT_MOTION = process.env.NEXT_PUBLIC_TUTOR_WB_SOFT_MOTION !== 'off';
+const glides = new WeakMap<HTMLElement, number>();
+function glideTo(container: HTMLElement, top: number): void {
+  const from = container.scrollTop;
+  const dist = top - from;
+  const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (!WB_SOFT_MOTION || still || typeof requestAnimationFrame !== 'function') { container.scrollTo({ top, behavior: 'smooth' }); return; }
+  const running = glides.get(container);
+  if (running) cancelAnimationFrame(running);
+  if (Math.abs(dist) < 2) { glides.delete(container); return; }
+  const duration = Math.min(1000, Math.max(500, Math.abs(dist) * 1.6));
+  const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  const t0 = performance.now();
+  let expected = from;
+  const step = (now: number) => {
+    // The student scrolled by hand: the board is theirs.
+    if (Math.abs(container.scrollTop - expected) > 4) { glides.delete(container); return; }
+    const x = Math.min(1, (now - t0) / duration);
+    container.scrollTop = from + dist * ease(x);
+    expected = container.scrollTop;
+    if (x < 1) glides.set(container, requestAnimationFrame(step)); else glides.delete(container);
+  };
+  glides.set(container, requestAnimationFrame(step));
+}
+
 export function scrollElementIntoContainer(
   container: HTMLElement,
   el: HTMLElement,
-  block: 'start' | 'center' = 'start',
+  block: 'start' | 'center' | 'reveal' = 'start',
 ): void {
   let top = 0;
   let node: HTMLElement | null = el;
@@ -400,6 +430,18 @@ export function scrollElementIntoContainer(
     ? top - (container.clientHeight - el.offsetHeight) / 2 - pinCover / 2
     : top - scrollMt - pinCover;
   const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+  if (block === 'reveal' && WB_SOFT_MOTION) {
+    // Move only as far as needed. An item that fits is brought wholly into view with a little room under
+    // it; one taller than the pane is shown from its top (its heading must not be cut off).
+    const room = 28;
+    const fits = el.offsetHeight + scrollMt + pinCover + room <= container.clientHeight;
+    const topAligned = top - scrollMt - pinCover;
+    const bottomAligned = top + el.offsetHeight + room - container.clientHeight;
+    const now = container.scrollTop;
+    const target = !fits ? topAligned : now > topAligned ? topAligned : now < bottomAligned ? bottomAligned : now;
+    glideTo(container, Math.max(0, Math.min(target, maxScrollTop)));
+    return;
+  }
   container.scrollTo({ top: Math.max(0, Math.min(rawTarget, maxScrollTop)), behavior: 'smooth' });
 }
 
@@ -1011,12 +1053,12 @@ export function WhiteboardCanvas({
       if (newestId) {
         const safe = newestId.replace(/"/g, '\\"');
         const el = container.querySelector(`[data-wb-item-id="${safe}"]`) as HTMLElement | null;
-        if (el) { scrollElementIntoContainer(container, el, 'start'); return; }
+        if (el) { scrollElementIntoContainer(container, el, 'reveal'); return; }
       }
       // Fallback (render carried no id): newest item by position, else bottom.
       const refs = itemRefsRef.current.filter(Boolean) as HTMLElement[];
       const last = refs[refs.length - 1];
-      if (last) scrollElementIntoContainer(container, last, 'start');
+      if (last) scrollElementIntoContainer(container, last, 'reveal');
       else container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     };
 
@@ -1096,7 +1138,7 @@ export function WhiteboardCanvas({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const id = (cmd as any).id as string | undefined;
     if (id && seenAnimIdsRef.current.has(id)) return '';
-    return drawOnActive ? '' : 'wb-item-enter';
+    return drawOnActive ? '' : WB_SOFT_MOTION ? 'wb-item-enter-soft' : 'wb-item-enter';
   };
   // Draw-on trigger: runs in the item wrapper's ref callback on first
   // mount. Must check seenAnimIdsRef BEFORE the post-commit effect below

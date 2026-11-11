@@ -36,7 +36,7 @@ export interface V2TurnsConfig {
   onDebugEvent?: (type: string, message: string, data?: Record<string, unknown>) => void;
   onError?: (error: Error) => void;
   /** Voice: each finished sentence of the reply, in order, as soon as it is complete. */
-  onSentence?: (sentence: string) => void;
+  onSentence?: (sentence: string, startsParagraph?: boolean) => void;
   /** Voice: decide when a board item is painted. Called once per item, after every sentence of the reply up to
    *  that point has gone to onSentence; `paint` may be called at once or later. Absent: painted at once. */
   holdBoard?: (call: V2ToolCall, paint: () => void) => void;
@@ -118,7 +118,9 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const abort = new AbortController(); abortRef.current = abort;
     const sentences = new SentenceStream();
     // A sentence that names a tool is never spoken (tool-talk.ts).
-    const speak = (list: string[]) => { if (!abort.signal.aborted) for (const s of list) if (!mentionsTool(s)) p.current.onSentence?.(s); };
+    // Each sentence goes out with whether it begins a paragraph (sentences.ts), counted in the order the stream cut them.
+    let cutSoFar = 0; let paraOwed = false;
+    const speak = (list: string[]) => { if (abort.signal.aborted) return; for (const s of list) { if (sentences.paragraphStarts.has(cutSoFar++)) paraOwed = true; if (mentionsTool(s)) continue; p.current.onSentence?.(s, paraOwed); paraOwed = false; } };
     // Voice: the newest finished sentence is kept back for a moment, until what follows it is known. If a board
     // block follows, the sentence goes to the voice only once the block has arrived, so the item is ready to
     // appear as the sentence starts and not a second into it ("the problem showed up at the end of the

@@ -35,10 +35,10 @@ import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import { V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
-import { anchorSentenceIndex, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
+import { anchorSentenceIndex, asksAloud, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S } from '@/lib/tutor/v2/facts';
-import { speakBonds, speakCoefficientLetters, speakFormulas } from '@/lib/tutor/voice/tts-pronunciation';
+import { speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
@@ -94,6 +94,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const unplacedBoardRef = useRef<Array<{ call: { id?: string; name: string; sayWith?: string; args?: Record<string, unknown> }; paint: () => void }>>([]);
   // Inline items: where the current stretch of speech began (the sentence count at the previous block).
   const segStartRef = useRef(0); const lastBlockAtRef = useRef(-1);
+  // Where the paragraph being spoken began: working, a figure or a table goes with the paragraph it is written after.
+  const paraStartRef = useRef(0); const pageTurnAtRef = useRef(0);
   /** Match waiting board items to the sentences known so far. `final`: no more sentences are coming. */
   const placeBoard = useCallback((final?: boolean) => {
     const still: typeof unplacedBoardRef.current = [];
@@ -173,7 +175,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const turns = useV2Turns({
     ...props,
     mode: 'voice',
-    onSentence: (sentence) => { turnSentencesRef.current.push(sentence); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; realtimeRef.current?.speakText(sentence); },
+    onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; turnSentencesRef.current.push(sentence); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; realtimeRef.current?.speakText(sentence); },
     onCut: () => { void realtimeRef.current?.clearSpeechQueue(); dropBoard(); },
     onBoardWithdraw: (id) => {
       const held = heldBoardRef.current.find((h) => h.id === id);
@@ -192,10 +194,16 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         const n = turnSentencesRef.current.length;
         // Blocks with no words between them share one stretch of speech.
         if (n !== lastBlockAtRef.current) { segStartRef.current = Math.max(0, lastBlockAtRef.current); lastBlockAtRef.current = n; }
-        const idx = inlineSentenceIndex(call.name, summariseBoardCall(call.name, call.args), turnSentencesRef.current, segStartRef.current);
+        // A reply often opens with a paragraph on the last answer and then a paragraph on the next thing, with the
+        // blocks for it at the end: the table for "Next is the Valladolid debate…" appeared under "Yes, both right"
+        // (embed-1794416183291). An item that is not a problem starts with the paragraph it follows.
+        const from = call.name === 'show_problem' ? segStartRef.current : Math.max(segStartRef.current, Math.min(paraStartRef.current, Math.max(0, n - 1)));
+        // Nothing written on a page appears before the page is turned.
+        const idx = Math.max(call.name === 'new_page' ? 0 : pageTurnAtRef.current, inlineSentenceIndex(call.name, summariseBoardCall(call.name, call.args), turnSentencesRef.current, from));
+        if (call.name === 'new_page') pageTurnAtRef.current = idx;
         // The opening reply: nothing waits. A session must not begin on a bare board (embed-1794362141944).
         const hold = startedCountRef.current <= idx && n > 0 && !openingTurnRef.current;
-        p.current.onDebugEvent?.('v2_board_timing', `${call.name}: inline, with sentence ${idx + 1} of ${n} (stretch from ${segStartRef.current + 1}), ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
+        p.current.onDebugEvent?.('v2_board_timing', `${call.name}: inline, with sentence ${idx + 1} of ${n} (stretch from ${from + 1}), ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
         if (!hold) { paint(); return; }
         const entry = { idx, id: call.id, what: `${call.name}: ${summariseBoardCall(call.name, call.args).slice(0, 80)}`, paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); paint(); }, BOARD_HOLD_MAX_MS) };
         heldBoardRef.current.push(entry);
@@ -209,7 +217,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     },
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
-      if (busy) { releaseBoard(); paintedThisTurnRef.current = []; turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
+      if (busy) { releaseBoard(); paintedThisTurnRef.current = []; turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
       else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard();
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
@@ -221,7 +229,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // A reply that asked the student nothing leaves them not knowing whose move it is (the tutor made a
         // statement and waited 44 s, embed-1794355900794). It learns of the silence early, once, and can go on.
         const said = turnSentencesRef.current;
-        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !said.slice(-2).some((x) => /[?？]/.test(x)) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed;
+        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !asksAloud(said) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed;
         lastTurnWasStudentRef.current = false;
         // Board items the check withdrew after they were already on the board are still there: put them back in the tutor's record.
         const state = turnsRef.current?.stateRef.current;
@@ -301,8 +309,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [armSilence, releaseBoard]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');
-  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakFormulas(speakBonds(sentence))), []);
-  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(sentence)), []);
+  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakFormulas(speakBonds(speakDataRuns(sentence)))), []);
+  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(speakDataRuns(sentence))), []);
+  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakDataRuns(sentence)), []);
   const relayMode = useMemo(() => ({
     instructions: TRANSPORT_ONLY,
     onUserTranscript: onRelayTranscript,
@@ -312,7 +321,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     ...(languagesKey ? { tutorLanguages: languagesKey.split(',') } : {}),
     ...(props.speechRate !== undefined ? { speechRate: props.speechRate } : {}),
     studentName: props.studentName,
-    ...(props.subject === 'math' ? { ttsTextTransform: mathsSpeech } : props.subject === 'science' ? { ttsTextTransform: scienceSpeech } : {}),
+    ...(props.subject === 'math' ? { ttsTextTransform: mathsSpeech } : props.subject === 'science' ? { ttsTextTransform: scienceSpeech } : { ttsTextTransform: plainSpeech }),
   }), [onRelayTranscript, props.subject, props.ttsProvider, props.cartesiaVoiceId, props.cartesiaVoiceSpeed, languagesKey, props.speechRate, props.studentName]);
   const realtime = useOpenAIRealtime({
     instructions: TRANSPORT_ONLY,

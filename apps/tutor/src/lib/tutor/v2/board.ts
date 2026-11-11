@@ -74,6 +74,11 @@ export function boardMisfit(name: string, args: Record<string, unknown>): string
   const count = (v: unknown) => (Array.isArray(v) ? v.length : 0);
   if (name === 'show_function_graph' && count(args.functions) + count(args.functionsOfY) + count(args.points) === 0) return 'a graph needs at least one function or point to plot; for anything else use the form that fits it';
   if (name === 'show_free_body_diagram' && count(args.forces) === 0) return 'a forces diagram needs at least one force: name | direction | size';
+  // A figure tool called with nothing in it paints an empty frame (an empty Venn diagram opened a statistics
+  // lesson, browser run 2026-11-11).
+  if (/^show_/.test(name) && Object.keys(args).filter((k) => k !== 'title').length === 0) return 'it was given nothing to draw';
+  if (name === 'show_venn_diagram' && count(args.sets) < 2) return 'a Venn diagram needs its two or three sets';
+  if (name === 'show_stats' && (args.type === 'bar' ? count((args.bar as Record<string, unknown> | undefined)?.categories) === 0 : (args.type === 'dotplot' || args.type === 'histogram') && count(args.data) < 2 && count(args.bins) < 1)) return 'a chart needs its data: the values separated by commas, or for a bar chart one bar per line, name | value';
   if (name === 'show_number_line' && count(args.points) + count(args.intervals) + count(args.segments) === 0) return 'a number line needs at least one point or interval';
   if ((name === 'show_table' && count(args.rows) === 0) || (name === 'show_timeline' && count(args.events) === 0)) return 'it has no rows: write one per line, cells separated by |';
   // A sequence, timeline or cycle of one thing is a sentence in a box (a one-step "sequence" appeared in an

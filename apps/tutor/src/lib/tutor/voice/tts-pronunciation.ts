@@ -2325,6 +2325,17 @@ export function speakFormulas(text: string): string {
   });
 }
 
+/** A long run of numbers is for reading, not for hearing: fifteen heights recited one after another sounded
+ *  like a machine (Praveen, embed-1794416884500). The voice says how many there are and where they are; the
+ *  written reply and the board keep every value. Years and short lists (up to seven numbers) are spoken. */
+const DATA_RUN_MIN = 8;
+export function speakDataRuns(text: string): string {
+  return text.replace(/(?<![\d.,])-?\d+(?:\.\d+)?(?:\s*,\s*(?:and\s+)?-?\d+(?:\.\d+)?){7,}(?![\d])/g, (m) => {
+    const n = m.split(',').length;
+    return n >= DATA_RUN_MIN ? `the ${n} values on the board` : m;
+  });
+}
+
 export function speakTypedMaths(text: string): string {
   const SUP: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
   let t = text;
@@ -2347,7 +2358,8 @@ export function speakTypedMaths(text: string): string {
   t = t.replace(/(∞|\binfinity)\s*([⁰¹²³⁴-⁹])/gi, (_m, _i: string, d: string) => `infinity to the power ${SUP[d]}`);
   t = t.replace(/(∞|\binfinity)\s*\^\s*(\d+)/gi, 'infinity to the power $2').replace(/\^\s*\(?(∞|infinity\b)\)?/gi, ' to the power infinity');
   // A quotient: digit/variable/bracket on each side of the slash, and not digits on both.
-  const L = String.raw`(?:\d+(?:\.\d+)?|(?<![A-Za-z])[a-z][²³]?|\))`;
+  // A squared bracket is a left side too: "(y−1)²/4" was spoken "squared slash 4" (embed-1794414820031).
+  const L = String.raw`(?:\d+(?:\.\d+)?|(?<![A-Za-z])[a-z][²³]?|\)[²³]?)`;
   const R = String.raw`(?:\d+(?:\.\d+)?(?![\d/])|[a-z](?![A-Za-z'’])|\()`;
   t = t.replace(new RegExp(`(${L})\\s?/\\s?(?=(${R}))`, 'g'), (m, l: string, r: string) => {
     const lv = /[a-z)]/.test(l); const rv = /[a-z(]/.test(r);

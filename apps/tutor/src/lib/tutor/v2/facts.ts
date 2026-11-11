@@ -39,7 +39,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   }
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
   if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
-    ? `the student has said nothing for ${V2_NO_ASK_RECHECK_S} seconds since your last reply, which ended without a question. If it set them a task, they are working; if it did not, they are waiting for you`
+    ? `the student has said nothing for ${V2_NO_ASK_RECHECK_S} seconds since your last reply, which ended on a statement: no question, and nothing for them to do. They are waiting for you to go on`
     : `the student has said nothing for ${Math.round(f.silenceSeconds)} seconds`);
   return `<facts>\n${lines.join('\n')}\n</facts>`;
 }

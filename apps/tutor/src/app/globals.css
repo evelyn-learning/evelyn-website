@@ -152,6 +152,22 @@
   animation-fill-mode: backwards;
 }
 
+/* Soft board motion (WB_SOFT_MOTION in WhiteboardCanvas): a new item is written in, left to right, as it
+   fades up. No scale, a small rise. The clip ends with the animation (fill-mode backwards), so shadows and
+   pop-overs are never cut once the item has settled. */
+@keyframes wb-item-enter-soft {
+  0%   { opacity: 0;   transform: translateY(8px); clip-path: inset(0 55% 0 0); }
+  55%  { opacity: 0.9; transform: translateY(1px); clip-path: inset(0 12% 0 0); }
+  100% { opacity: 1;   transform: translateY(0);   clip-path: inset(0 0 0 0); }
+}
+.wb-item-enter-soft {
+  animation: wb-item-enter-soft 720ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation-fill-mode: backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wb-item-enter-soft { animation: none; }
+}
+
 @keyframes wb-skeleton-pulse {
   0%, 100% { opacity: 0.45; }
   50%      { opacity: 0.9; }

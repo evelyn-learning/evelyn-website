@@ -73,6 +73,13 @@ export function inlineSentenceIndex(toolName: string, content: string, sentences
   const last = sentences.length - 1;
   if (last < 0) return 0;
   const from = Math.min(Math.max(0, segStart), last);
+  // A page is turned where the tutor first names what it is headed: turned at the start of the stretch, the
+  // "Stemplot" page came up under "Yes, three students scored 6" (browser run 2026-11-11).
+  if (toolName === 'new_page') {
+    const heading = about(content);
+    for (let i = from; i <= last; i++) if ([...about(sentences[i])].some((w) => heading.has(w))) return i;
+    return from;
+  }
   if (toolName !== 'show_problem') return from;
   const card = about(content); const cardNums = new Set(content.match(/\d+(?:\.\d+)?/g) ?? []);
   // The first sentence of a reply answers the student, often in the words of the problem just done.
@@ -88,16 +95,27 @@ export function inlineSentenceIndex(toolName: string, content: string, sentences
   return last;
 }
 
+/** Whether the end of a spoken reply hands the student something to do: a question, or an instruction to them
+ *  ("Tell me the full stemplot when you have it.", "List all the bins you would need."). A reply that ends
+ *  this way has asked, with or without a question mark; one that ends on a statement has not, and the student
+ *  does not know whose move it is. */
+const TO_THE_STUDENT = /\b(?:tell me|let me know|show me|give me|send me|walk me through|your turn|have a go|give it a (?:go|try)|try (?:it|this|that|one|the|your|another|building|writing|working)|take your time|go ahead|over to you|what do you (?:think|get|notice|see))\b/i;
+const DO_THIS = /^(?:(?:now|next|then|so|first|okay|ok|please|go on and|go ahead and|this time|again)[,:]?\s+)*(?:write|list|find|read|say|name|work|solve|classify|choose|pick|explain|describe|compare|calculate|compute|draw|sketch|check|look|try|use|apply|think|decide|suggest|simplify|expand|factor|factorise|factorize|rearrange|substitute|count|build|make|start|finish|complete|fill|give|state|identify|estimate|predict|answer|square|multiply|divide|add|subtract|take|keep going|carry on)\b/i;
+export function asksAloud(sentences: string[]): boolean {
+  return sentences.slice(-2).some((x) => /[?？]/.test(x) || TO_THE_STUDENT.test(x) || x.split(/[,;:]\s+|\s+and\s+/).some((clause) => DO_THIS.test(clause.trim())));
+}
+
 /** In a spoken lesson, what a problem card asks must also be heard: a tutor who tells the scenario and stops,
  *  or says nothing about the card at all, leaves the student waiting in silence with the question sitting
  *  unread on the board (embed-1794371869806, embed-1794376295543). Given the card and the sentences spoken,
- *  this returns the words still to be said, or null when the reply already asks. A reply that ends on a
- *  question has asked. Otherwise: the card's task sentence when the speech told the problem, and the whole
- *  card (when short) when the speech never mentioned it. */
+ *  this returns the words still to be said, or null when the reply already asks (asksAloud). Otherwise: the
+ *  card's task sentence. Only a short one is said: a long card is for reading, and a card read out in full
+ *  (a 90-word source excerpt, fifteen data values) is a voice reciting the board (embed-1794416183291). */
+const SAY_ASK_WORDS = 30;
 const SAY_WHOLE_CARD_WORDS = 45;
 export function unsaidAsk(statement: string, sentences: string[]): string | null {
   const card = statement.replace(/\s+/g, ' ').trim();
-  if (!card || !sentences.length || sentences.slice(-2).some((x) => /[?？]/.test(x))) return null;
+  if (!card || !sentences.length || asksAloud(sentences)) return null;
   const parts: string[] = []; let cur = ''; let inMath = false;
   for (let i = 0; i < card.length; i++) {
     const ch = card[i]; cur += ch;
@@ -111,7 +129,19 @@ export function unsaidAsk(statement: string, sentences: string[]): string | null
   const askWords = [...about(ask)];
   const shared = (sentence: string, words: string[]) => { const w = about(sentence); return words.filter((x) => w.has(x)).length; };
   if (askWords.length && sentences.slice(-3).some((x) => shared(x, askWords) / askWords.length >= 0.6)) return null;
+  const short = (x: string) => norm(x).length <= SAY_ASK_WORDS && (x.match(/\d+(?:\.\d+)?/g) ?? []).length <= 5;
   const cardWords = [...about(card)];
   const told = sentences.some((x) => shared(x, cardWords) >= 2);
-  return !told && norm(card).length <= SAY_WHOLE_CARD_WORDS ? card : ask;
+  if (!told && norm(card).length <= SAY_WHOLE_CARD_WORDS && (card.match(/\d+(?:\.\d+)?/g) ?? []).length <= 5) return card;
+  return short(ask) ? ask : 'Have a look at it on the board, and tell me what you think.';
+}
+
+/** Whether a spoken reply already set the question a card states: most of what the card is about (its words
+ *  and its numbers) was said. The check after a reply may put up a card only for a question the tutor asked
+ *  aloud, never one of its own making. */
+export function saidCovers(statement: string, said: string): boolean {
+  const words = [...about(statement)]; const nums = [...new Set(statement.match(/\d+(?:\.\d+)?/g) ?? [])];
+  const heard = about(said); const heardNums = new Set(said.match(/\d+(?:\.\d+)?/g) ?? []);
+  const hits = words.filter((w) => heard.has(w)).length + nums.filter((n) => heardNums.has(n)).length;
+  return hits >= 2 && hits >= (words.length + nums.length) * 0.5;
 }

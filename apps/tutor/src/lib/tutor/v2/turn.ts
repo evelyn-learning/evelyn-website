@@ -20,10 +20,10 @@ import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { applyToModelBoard, boardMisfit, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
-import { speaksMaths } from './spoken-maths';
-import { unsaidAsk } from './board-timing';
+import { speaksMaths, unwrittenEquations } from './spoken-maths';
+import { saidCovers, unsaidAsk } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
-import { renderFacts, type V2TurnFacts } from './facts';
+import { renderFacts, V2_NO_ASK_RECHECK_S, type V2TurnFacts } from './facts';
 import { planGoalIds, renderPlanMap } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
@@ -237,6 +237,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   const withdrawn: string[] = []; const withdrawnLabels: string[] = [];
   const inlinePainted: Array<{ id: string; raw: string; label: string }> = [];
 
+  const waitingOnTutor = session.mode === 'voice' && input.studentSaid === null && Math.round(input.facts?.silenceSeconds ?? 0) === V2_NO_ASK_RECHECK_S;
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
       model: '',
@@ -245,6 +246,9 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
       output_config: { effort: input.effort ?? V2_DEFAULT_EFFORT },
       system,
       tools,
+      // The reply before this one ended on a statement and the student has waited: saying nothing again is not
+      // open to the tutor (it stayed silent for 100 s after explaining the encomienda, embed-1794416183291).
+      ...(waitingOnTutor ? { tool_choice: { type: 'none' } } : {}),
       messages,
     } as unknown as Anthropic.MessageCreateParamsNonStreaming;
     const inline = new BoardInlineStream();
@@ -324,7 +328,11 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     // in the voice client, so a withdrawal usually arrives before the item is shown.
     const others = toolCalls.filter((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome) && !inlinePainted.some((x) => x.id === c.id)).map((c) => `${c.name}: ${summariseBoardCall(c.name, c.args)}`);
     const listed = [...inlinePainted.map((x, i) => `  ${i + 1}. ${x.label}`), ...others.map((x) => `  - ${x}`)];
-    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. In it you put on the board: ${listed.length ? `\n${listed.join('\n')}` : 'nothing. A reply of this length that leaves the board untouched is a tutor talking at an empty board: unless it was only small talk or a question about what is already up, the heart of what you said belongs there, in the form that fits it.'}\n\nFirst, and rarely: does a numbered item state outright the answer to the very thing this reply asks the student to work out, so that reading the board answers your question for them? Only then, withdraw it by writing "withdraw N" on a line by itself. Everything else stays: an item that sets the question out, leaves a blank or a question mark for them to fill, lists things for them to compare, shows working the student has already given, or shows what you yourself explained. When unsure, it stays.\n\nSecond: what is only heard is lost. If something you said aloud that the student needs to hold on to is not on the board (the working behind a result, a step the student gave, a correction, a hint; a name, a date, a term, the two sides of a question), write it now as board blocks, in whichever kind fits, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing already there, no new problem, and never an answer you left for the student to find.\n\nThird, a picture. Name to yourself the one thing in this reply a student could look at rather than read: an equation that is a curve, a function, points on axes, pushes and pulls on a thing, values on a number line, events in order, the stages of a process, two things set side by side. If there is one and no figure of it is on the board, from this reply or still up from an earlier one, draw it now in the figure form that fits (graph, forces, numberline, timeline, steps, compare, table), with with="…" as above. A formula written out is not a figure of its curve. Draw the situation as you described it, with the numbers you gave, never the answer the student is to find. What has no shape gets no figure.\n\nAnswer in three lines or groups, in this order. First: "withdraw N" or "1: none". Second: the missing blocks, or "2: none". Third: the figure block itself (saying it is drawn does not draw it), or "3: none" followed by a few words on why nothing here can be drawn.`;
+    // What the reply said and the board does not hold is found here, not left to the model's eye: twice in one
+    // lesson it spoke a standard form and wrote only the line before it (embed-1794414820031).
+    const unwritten = unwrittenEquations(said, state.board.pages.flatMap((pg) => pg.items.map((it) => it.summary))).slice(0, 4);
+    const askedOnCard = toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome));
+    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. In it you put on the board: ${listed.length ? `\n${listed.join('\n')}` : 'nothing. A reply of this length that leaves the board untouched is a tutor talking at an empty board: unless it was only small talk or a question about what is already up, the heart of what you said belongs there, in the form that fits it.'}\n\nFirst, and rarely: does a numbered item state outright the answer to the very thing this reply asks the student to work out, so that reading the board answers your question for them? Only then, withdraw it by writing "withdraw N" on a line by itself. Everything else stays: an item that sets the question out, leaves a blank or a question mark for them to fill, lists things for them to compare, shows working the student has already given, or shows what you yourself explained. When unsure, it stays.\n\nSecond: what is only heard is lost. If something you said aloud that the student needs to hold on to is not on the board (the working behind a result, a step the student gave, a correction, a hint; a name, a date, a term, the two sides of a question), write it now as board blocks, in whichever kind fits, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing already there, and never an answer you left for the student to find.${unwritten.length ? ` These equations were said aloud and no board item holds them: ${unwritten.map((e) => `"${e}"`).join('; ')}. Each goes up now as an equation, unless it is there in another form or is the answer the student is to find.` : ''}${askedOnCard ? '' : ' A question you set that comes with its own numbers, data or expression, none of them on the board, is written as a problem block holding the question as you asked it; a question about what is already on the board needs none.'}\n\nThird, a picture. Name to yourself the one thing in this reply a student could look at rather than read: an equation that is a curve, a function, points on axes, a set of data values or counts, pushes and pulls on a thing, values on a number line, events in order, the stages of a process, two things set side by side. If there is one and no figure of it is on the board, from this reply or still up from an earlier one, draw it now in the figure form that fits (graph, chart, forces, numberline, timeline, steps, cycle, web, map, compare, table), with with="…" as above. A formula written out is not a figure of its curve. Draw the situation as you described it, with the numbers you gave, never the answer the student is to find. What has no shape gets no figure.\n\nAnswer in three lines or groups, in this order. First: "withdraw N" or "1: none". Second: the missing blocks, or "2: none". Third: the figure block itself (saying it is drawn does not draw it), or "3: none" followed by a few words on why nothing here can be drawn.`;
     try {
       const response = await callModel({
         model: '', max_tokens: 1500, thinking: { type: 'adaptive' }, output_config: { effort: 'low' }, system, tools,
@@ -355,7 +363,9 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
         input.onBoardWithdraw?.(gone.id);
       }
       for (const b of boardBlocksIn(passText)) {
-        if (b.kind === 'problem' || !settleInline(b, true)) continue;
+        // One card a reply: the check adds a problem only when the reply set a question and put up no card.
+        if (b.kind === 'problem' && (toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome)) || !saidCovers(b.body, said))) continue;
+        if (!settleInline(b, true)) continue;
         const textBlock = (lastWords?.content as Anthropic.ContentBlockParam[] | undefined)?.find((c): c is Anthropic.TextBlockParam => c.type === 'text');
         if (textBlock) textBlock.text = insertBlock(textBlock.text, b.raw.replace(/\s+with="[^"]*"/, ''), b.attrs.with);
       }
