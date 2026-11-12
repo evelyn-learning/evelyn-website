@@ -920,10 +920,13 @@ export default function TutorSession(props: TutorSessionProps) {
   const [homeworkProblem, setHomeworkProblem] = useState<HomeworkProblemMeta | null>(null);
 
   // v2: planner tabs down the left edge of the board (BoardPlannerTabs.tsx); the board gives them a narrow margin.
-  const plannerTabs = brainVersion === 'v2' && !!boardNav && boardNav.count > 1;
+  // The first page has its tab from the start: a "1" that appeared only when page 2 did looked like two pages
+  // arriving at once. The centre pill is gone in v2: the tabs move between pages and each page carries its own
+  // heading (Praveen, biology, embed-1794520770137).
+  const plannerTabs = brainVersion === 'v2' && whiteboardCommands.length > 0;
   const boardEl = (
     <div className={`relative h-full${plannerTabs ? ' pl-8' : ''}`}>
-      {plannerTabs && boardNav && <BoardPlannerTabs index={boardNav.index} count={boardNav.count} titles={boardNav.titles} goTo={boardNav.goTo} pendingIndex={boardNav.pendingIndex} />}
+      {plannerTabs && <BoardPlannerTabs index={boardNav?.index ?? 0} count={Math.max(1, boardNav?.count ?? 1)} titles={boardNav?.titles ?? []} goTo={boardNav?.goTo ?? (() => {})} pendingIndex={boardNav?.pendingIndex} />}
       <WhiteboardCanvas
         commands={whiteboardCommands}
         // v2: no "preparing" skeleton. A v2 reply is ready in a second or two and its board items arrive with their
@@ -943,6 +946,7 @@ export default function TutorSession(props: TutorSessionProps) {
         pageTitleHeader={TUTOR_PAGE_TITLE_HEADER && !!embedded && isFixedScriptPlan(lessonProgress.plan)}
         allowHorizontalScroll={sessionMode === 'text'}
         onNavChange={setBoardNav}
+        bookHeader={brainVersion === 'v2' ? (lessonContext?.title ?? topicLabel) : undefined}
         openOnLastPage={!!resumeState}
         onStudentMark={studentMarksOn ? handleStudentMark : undefined}
         penMode={studentMarksOn && boardPenActive}
@@ -2317,7 +2321,7 @@ export default function TutorSession(props: TutorSessionProps) {
         getSpokenCaption={TUTOR_CAPTION_SYNC ? getSpokenCaption : undefined}
         boardEmpty={whiteboardCommands.length === 0 && !homeworkProblem?.figure}
         board={boardEl}
-        boardPages={boardNav ?? undefined}
+        boardPages={brainVersion === 'v2' ? undefined : boardNav ?? undefined}
         voiceInput={voiceInputEl}
         // Center-orb start (2026-07-26). Synchronous call into the handle —
         // handleMicClick's unlockAudio() must run inside this click's gesture

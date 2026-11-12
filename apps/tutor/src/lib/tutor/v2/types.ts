@@ -62,6 +62,8 @@ export interface V2ToolCall {
   beforeTurn?: boolean;
   /** Added after the reply for a sentence said earlier in it: the item of this reply it goes above (turn.ts). */
   before?: string;
+  /** On a page turn: the student was asked whether to go on and said yes; the page turns as the reply begins. */
+  agreed?: boolean;
   /** On a page turn: items written just before it, with no words between, that belong on the new page. */
   carries?: string[];
   /** Not painted: it repeats this item on the page in view, and the board scrolls back to it. */

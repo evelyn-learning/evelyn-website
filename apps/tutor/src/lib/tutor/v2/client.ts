@@ -80,5 +80,5 @@ export async function streamV2Turn(req: V2TurnRequest): Promise<V2TurnDone> {
 
 /** Board tool calls that painted are the ones the whiteboard should draw. */
 export function paintsOnBoard(call: V2ToolCall, controlToolNames: ReadonlySet<string>): boolean {
-  return !controlToolNames.has(call.name) && !/^not painted/.test(call.outcome);
+  return !controlToolNames.has(call.name) && !/^not (?:painted|opened)/.test(call.outcome);
 }

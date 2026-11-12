@@ -41,7 +41,7 @@ export default function BoardPlannerTabs({ index, count, titles, goTo, pendingIn
     return undefined;
   }, [count]);
   useEffect(() => { currentRef.current?.scrollIntoView({ block: 'nearest' }); }, [index, count]);
-  if (count < 2) return null;
+  if (count < 1) return null;
   return (
     <nav aria-label="Board pages" className="absolute left-0 top-3 bottom-36 z-20 w-9 flex flex-col gap-1 overflow-y-auto overflow-x-visible pr-0 [scrollbar-width:none]">
       {Array.from({ length: count }, (_, i) => {

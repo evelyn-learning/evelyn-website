@@ -266,7 +266,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // (embed-1794416183291). An item that is not a problem starts with the paragraph it follows.
         const from = call.name === 'show_problem' ? segStartRef.current : Math.max(segStartRef.current, Math.min(paraStartRef.current, Math.max(0, n - 1)));
         // Nothing written on a page appears before the page is turned.
-        const idx = Math.max(call.name === 'new_page' ? 0 : pageTurnAtRef.current, inlineSentenceIndex(call.name, summariseBoardCall(call.name, call.args), turnSentencesRef.current, from));
+        const found = inlineSentenceIndex(call.name, summariseBoardCall(call.name, call.args), turnSentencesRef.current, from);
+        // A page the student has just agreed to turns as the reply begins, unless the tutor names it further in.
+        const agreedPage = call.name === 'new_page' && !!(call as { agreed?: boolean }).agreed;
+        const idx = Math.max(call.name === 'new_page' ? 0 : pageTurnAtRef.current, agreedPage && found >= n ? 0 : found);
         if (call.name === 'new_page') pageTurnAtRef.current = idx;
         // The opening reply: nothing waits. A session must not begin on a bare board (embed-1794362141944).
         // The next problem is not shown until the whole reply is in, the check's additions included: the note
@@ -274,7 +277,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // 2026-11-11). The card's sentence is near the end of the reply, so this rarely costs any time.
         // A page turn waits for the complete reply too: what the check adds for the answer before it goes on
         // the old page first. Whatever follows a waiting page waits behind it.
-        const untilDone = (call.name === 'show_problem' || call.name === 'new_page') && turnBusyRef.current && !openingTurnRef.current;
+        const untilDone = (call.name === 'show_problem' || call.name === 'new_page') && !agreedPage && turnBusyRef.current && !openingTurnRef.current;
         const pageHeld = heldBoardRef.current.some((h) => h.isPage);
         // What the reply writes after a problem card belongs under it: the graph for the next problem came up
         // straight after the last answer, with its problem still to come (grade 7, embed-1794453532197).

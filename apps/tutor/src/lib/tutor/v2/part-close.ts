@@ -25,6 +25,12 @@ const STEERS = /\b(?:move on|go on|go ahead|carry on|keep going|continue|skip (?
 /** The tutor's last reply left the way open: it offered what comes next, or checked in. */
 const OFFERS = /\b(?:next is|next up|ready|shall we|any questions?|a question first|make sense|with me|is that clear|all clear|so far|sound good)\b/i;
 
+/** The tutor's last reply ended by asking whether to go on (or checking in), and the student has answered. */
+export function leftOpen(lastTutor: string, studentSaid: string | null): boolean {
+  const sentences = lastTutor.replace(/<board\b[\s\S]*?<\/board>/g, ' ').split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
+  return !!studentSaid && /\?["')\]]*$/.test(sentences[sentences.length - 1] ?? '') && OFFERS.test(sentences.slice(-2).join(' '));
+}
+
 export interface PartTurn { title: string; studentSaid: string | null; lastTutor: string; pagesOpen: number }
 /** May this reply turn to a new page headed `title` now? */
 export function mayOpenPart(t: PartTurn): boolean {

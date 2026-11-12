@@ -27,7 +27,7 @@ import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { planGoalIds, renderPlanMap } from './plan-map';
 import { stripToolTalk } from './tool-talk';
-import { mayOpenPart, namesPart, partOffer } from './part-close';
+import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -308,7 +308,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const result: Anthropic.ToolResultBlockParam = { type: 'tool_result', tool_use_id: block.id, content: outcome };
     // The board pass often offers again what the reply already put up; a call of its that did nothing leaves no trace.
     if (boardOnly && /^not /.test(outcome)) return result;
-    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(placeAbove && !/^not /.test(outcome) ? { before: placeAbove } : {}), ...(pointsAt ? { pointsAt } : {}), ...(carryNow.length && block.name === 'new_page' && !/^not /.test(outcome) ? { carries: carryNow } : {}) };
+    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(placeAbove && !/^not /.test(outcome) ? { before: placeAbove } : {}), ...(pointsAt ? { pointsAt } : {}), ...(block.name === 'new_page' && inline && !/^not /.test(outcome) && pageAgreed ? { agreed: true } : {}), ...(carryNow.length && block.name === 'new_page' && !/^not /.test(outcome) ? { carries: carryNow } : {}) };
     toolCalls.push(call);
     input.onToolCall?.(call);
     return result;
@@ -322,7 +322,15 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (name === 'new_page') { const at = state.board.pages.findIndex((pg, i) => i !== state.board.current && pg.title.replace(/\s+/g, '').toLowerCase() === String(args.title ?? '').replace(/\s+/g, '').toLowerCase()); if (at >= 0) { name = 'go_to_page'; args = { pageIndex: at, page: at + 1, title: state.board.pages[at].title }; } }
     inlineN += 1;
     const r = settle({ type: 'tool_use', id: `inl_${nowMs.toString(36)}_${inlineN}`, name, input: b.attrs.with ? { ...args, [SAY_WITH]: b.attrs.with } : args } as Anthropic.ToolUseBlock, boardOnly, true);
-    const failed = /^not /.test(String(r.content));
+    let failed = /^not /.test(String(r.content));
+    // Working refused as an equation (a list of outcomes with words, too wide for one line) is still working the
+    // tutor is talking through: it goes up as a note, one outcome a line. Refused, the four children of a cross
+    // were said aloud over an unchanged board (biology, embed-1794520770137).
+    if (failed && b.kind === 'equation' && /too wide for one line|a sentence, not an equation/.test(String(r.content)) && !/\\[a-zA-Z]/.test(b.body)) {
+      const lines = b.body.split(/\n+|,\s+(?=[^)]*(?:\(|$))|;\s+/).map((x) => x.trim()).filter(Boolean);
+      const again = settle({ type: 'tool_use', id: `inl_${nowMs.toString(36)}_${inlineN}`, name: 'annotate', input: { text: [b.attrs.label ? `${b.attrs.label}:` : '', ...lines].filter(Boolean).join('\n'), rich: true, ...(b.attrs.with ? { [SAY_WITH]: b.attrs.with } : {}) } } as Anthropic.ToolUseBlock, boardOnly, true);
+      if (!/^not /.test(String(again.content))) failed = false;
+    }
     if (!failed && !boardOnly) inlinePainted.push({ id: `inl_${nowMs.toString(36)}_${inlineN}`, raw: b.raw, label: `${b.kind}: ${b.body.replace(/\s+/g, ' ').slice(0, 160)}` });
     if (failed && !boardOnly && !/scrolled back/.test(String(r.content))) boardProblems.push(`${b.kind} "${b.body.replace(/\s+/g, ' ').slice(0, 60)}": ${String(r.content).replace(/^not painted: /, '')}`);
     return !failed;
@@ -331,6 +339,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let saidChars = 0; let pageTurnAt = -1; let pageBefore = -1; let markBeforeTurn = false;
   // The item of this reply that a check addition belongs above (see the check's additions, below).
   let placeAbove: string | undefined;
+  // The student was asked whether to go on and has answered: the page for the next part turns as the reply
+  // begins. Turned where the tutor reached the block, the pedigree page came up after the whole description of
+  // squares and circles had been spoken over the old page (biology, embed-1794520770137).
+  const pageAgreed = leftOpen((() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })(), input.studentSaid ?? null);
   // Inline items settled since the last spoken words. A tutor who writes a figure and THEN turns the page, with
   // nothing said between, meant the figure for the new page: the washer solid went up at the foot of the disc
   // page and the page turned at once (AP Calc BC, embed-1794446765164). The page turn carries them over.
@@ -489,7 +501,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // a sequence was being told in words and problem cards alone (a Grade 8 forces lesson, embed-1794371869806).
   const drewFigure = () => toolCalls.some((c) => V2_FIGURE_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   const paintedSoFar = () => toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && c.name !== 'new_page' && c.name !== 'go_to_page' && !/^not /.test(c.outcome));
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && said.split(/\s+/).length >= V2_UNWRITTEN_WORDS) || (opening && !paintedSoFar())
+  // A reply that ended on the offer of the next part is checked only for mathematics it said: asked to look at
+  // "Let's start with the chromosomes", the check wrote the next part's first note before the student had said yes
+  // (biology, embed-1794520770137).
+  const endedOnOffer = !!(heldAt as { raw: string } | null);
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && (!endedOnOffer || speaksMaths(said)) && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && said.split(/\s+/).length >= V2_UNWRITTEN_WORDS) || (opening && !paintedSoFar())
     // Values said and nothing written: a student's set-up was confirmed aloud ("A⁻ is 0.05, HA is 0.1, pKa is 4.74")
     // and never put on the board (chemistry, embed-1794447993778).
     || (!paintedSoFar() && new Set(said.match(/\d+(?:\.\d+)?/g) ?? []).size >= 3)) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
@@ -626,7 +642,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         const withIt = textBlock ? insertBlock(textBlock.text, bare, b.attrs.with) : '';
         const after = withIt ? withIt.slice(withIt.indexOf(bare) + bare.length) : '';
         const onPage = new Set(state.board.pages[state.board.current]?.items.map((it) => it.id));
-        const next = b.kind === 'problem' || b.kind === 'page' ? undefined : inlinePainted.map((x) => ({ id: x.id, at: after.indexOf(x.raw) })).filter((x) => x.at >= 0 && onPage.has(x.id)).sort((x, y) => x.at - y.at)[0];
+        const nextAny = b.kind === 'problem' || b.kind === 'page' ? undefined : inlinePainted.map((x) => ({ id: x.id, at: after.indexOf(x.raw), card: x.label.startsWith('problem') })).filter((x) => x.at >= 0 && onPage.has(x.id)).sort((x, y) => x.at - y.at)[0];
+        // A figure drawn for a problem stands under its card, as in a book: put above, it pushed the card down two
+        // seconds after the student had begun to read it (biology, embed-1794520770137).
+        const next = nextAny && b.kind === 'figure' && nextAny.card ? undefined : nextAny;
         placeAbove = next?.id;
         let ok = false; try { ok = settleInline(b, true); } finally { placeAbove = undefined; }
         if (!ok) continue;

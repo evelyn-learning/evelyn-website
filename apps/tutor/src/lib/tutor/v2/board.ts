@@ -121,7 +121,11 @@ const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
 function boardCore(args: Record<string, unknown>): string {
   const problem = (args.problem ?? {}) as Record<string, unknown>;
   const body = text(args.latex) || text(args.text) || text(problem.statement) || text(args.statement);
-  return norm(body.replace(/\\[,;!: ]|\\(?:left|right|displaystyle|,)|[$]/g, ''));
+  const bare = body.replace(/\\[,;!: ]|\\(?:left|right|displaystyle|,)|[$]/g, '');
+  // In mathematics a capital and a small letter are different things: X^A X^a, written after X^a X^a, was taken
+  // for a repeat and the board flashed the colour-blind genotype while the tutor confirmed the carrier's
+  // (biology, embed-1794520770137).
+  return text(args.latex) ? bare.replace(/\s+/g, '') : norm(bare);
 }
 
 const FIGURE_FORMS = new Set(['show_cycle_diagram', 'show_concept_map', 'show_map', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_function_graph', 'show_free_body_diagram', 'show_number_line']);
@@ -151,7 +155,7 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
     // The same thing in another form is not a repeat: a cycle drawn from stages already listed as steps was
     // refused, and the tutor said "here is the loop" over nothing (browser run, 2026-11-11).
     const items = board.pages[p].items;
-    const at = items.findIndex((it) => { if (FIGURE_FORMS.has(name) && it.tool !== name) return false; const have = it.core ?? norm(it.summary); return have === core || (core.length >= 12 && have.includes(core)) || (have.length >= 24 && core.includes(have) && core.length < have.length * 1.15); });
+    const at = items.findIndex((it) => { if (FIGURE_FORMS.has(name) && it.tool !== name) return false; const exact = name === 'show_equation' && it.tool === 'show_equation'; const have = exact ? it.core ?? norm(it.summary) : (it.core ?? norm(it.summary)).toLowerCase(); const mine = exact ? core : core.toLowerCase(); return have === mine || (mine.length >= 12 && have.includes(mine)) || (have.length >= 24 && mine.includes(have) && mine.length < have.length * 1.15); });
     if (at < 0) continue;
     // A problem the student is sent back to must be where they can see it. One set many items ago, or on
     // another page, is put up again: "try the problem already on your board" pointed at a card twenty items

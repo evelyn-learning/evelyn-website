@@ -236,6 +236,9 @@ interface WhiteboardCanvasProps {
   /** 'minimal' chrome (GDI run 4, embed): show the current page's title as a
    *  slim one-line header above the board content when the page has one. */
   pageTitleHeader?: boolean;
+  /** Tutor v2: every page is headed like a page of a book, with its title and "Page n of m". The value is the
+   *  lesson's title, used for a page that has none of its own (the first). */
+  bookHeader?: string;
   /** 'minimal' chrome normally clips horizontal overflow (`overflow-x-hidden`)
    *  — the board column has always been wide enough that a KaTeX/table
    *  blowout was rare and the renderers' own inner `overflow-x-auto`
@@ -457,6 +460,7 @@ export function WhiteboardCanvas({
   suppressEmptyState = false,
   chrome = 'full',
   pageTitleHeader = false,
+  bookHeader,
   allowHorizontalScroll = false,
   onNavChange,
   openOnLastPage = false,
@@ -1826,8 +1830,18 @@ export function WhiteboardCanvas({
       : currentPage.commands.map((c) => getCommandTypeLabel(c.action)).join(' + '));
 
   const headerTitle = chrome === 'minimal' && pageTitleHeader ? stripLatexForTitle(currentPage.title).trim() : '';
+  const ownTitle = stripLatexForTitle(currentPage.title).trim();
+  const bookTitle = bookHeader === undefined || headerTitle ? '' : (ownTitle && !/^(?:page|board)\s*\d+$/i.test(ownTitle) ? ownTitle : bookHeader.trim() || `Page ${currentIndex + 1}`);
   const bodyContent = (
     <>
+      {bookTitle && (
+        // The head of the page, as in a book: its title, and where it stands among the pages. It stays put while
+        // the page scrolls under it (Praveen, biology, embed-1794520770137).
+        <div className="shrink-0 flex items-baseline justify-between gap-4 px-5 sm:px-7 pt-4 pb-2.5 border-b border-slate-200" data-wb-page-title="1">
+          <h2 key={currentIndex} className="min-w-0 truncate text-base sm:text-lg font-semibold tracking-tight text-slate-800 animate-in fade-in duration-300" title={bookTitle}>{bookTitle}</h2>
+          <span className="shrink-0 text-xs font-medium tabular-nums text-slate-400">Page {currentIndex + 1} of {pages.length}</span>
+        </div>
+      )}
       {headerTitle && (
         // One line, phone-safe: truncates, never wraps, never scrolls away.
         <div className="shrink-0 px-4 pt-2 pb-1 border-b border-slate-100 text-[11px] sm:text-xs font-semibold text-slate-500 truncate" data-wb-page-title="1" title={headerTitle}>
