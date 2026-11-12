@@ -7,6 +7,7 @@
  */
 
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { latexToJs } from '@/lib/tutor/whiteboard/intersection-validator';
 
 export type RevolutionMethod = 'disk' | 'washer' | 'shell';
 export type RevolutionAxis = 'x' | 'y';
@@ -47,11 +48,35 @@ function toPairs(v: unknown): Array<[number, number]> | null {
   return out;
 }
 
+/** A curve given as a formula ("sqrt(x)", "x^2", "2") sampled into a radius profile. A handful of points typed
+ *  by hand drew y = √x as a cone with straight sides (AP Calc BC, 2026-11-11); the formula draws the curve. */
+const PROFILE_SAMPLES = 40;
+function sampleProfile(expr: unknown, from: number, to: number, variable: 'x' | 'y', what: string): Array<[number, number]> | null {
+  if (typeof expr !== 'string' && typeof expr !== 'number') return null;
+  const written = String(expr).replace(/−/g, '-').replace(/√\s*\(/g, '\\sqrt(').replace(/√\s*([A-Za-z0-9.]+)/g, '\\sqrt{$1}')
+    .replace(/(?<![\\A-Za-z])(sqrt|sin|cos|tan|ln|log|abs)\s*\(/g, '\\$1(').replace(/π/g, '\\pi');
+  const js = latexToJs(written, variable);
+  if (!js) throw new Error(`solid_of_revolution: ${what} "${String(expr).slice(0, 40)}" is not an expression in ${variable} that can be drawn`);
+  let f: (v: number) => number;
+  try { f = new Function(variable, `"use strict"; return (${js});`) as (v: number) => number; } catch { throw new Error(`solid_of_revolution: ${what} "${String(expr).slice(0, 40)}" could not be read`); }
+  const pts: Array<[number, number]> = [];
+  for (let i = 0; i <= PROFILE_SAMPLES; i++) {
+    const u = from + ((to - from) * i) / PROFILE_SAMPLES; const r = f(u);
+    if (!Number.isFinite(r)) throw new Error(`solid_of_revolution: ${what} has no value at ${variable} = ${Math.round(u * 1000) / 1000}`);
+    pts.push([u, Math.abs(r)]);
+  }
+  return pts;
+}
+
 export function solveSolidOfRevolution(params: Record<string, unknown>): SolidOfRevolutionFigure {
-  const outer = toPairs(params.outer ?? params.curve);
-  if (!outer) throw new Error('solid_of_revolution: outer must be ≥2 points of [u, r]');
+  const variable: 'x' | 'y' = params.axis === 'y' ? 'y' : 'x';
+  const from = Number(params.from); const to = Number(params.to);
+  const byFormula = typeof params.outer === 'string' || typeof params.outer === 'number';
+  if (byFormula && !(Number.isFinite(from) && Number.isFinite(to) && to > from)) throw new Error('solid_of_revolution: from and to are the bounds along the axis, with to greater than from');
+  const outer = byFormula ? sampleProfile(params.outer, from, to, variable, 'outer') : toPairs(params.outer ?? params.curve);
+  if (!outer) throw new Error('solid_of_revolution: outer is the outer curve as an expression in x (e.g. "sqrt(x)") with from and to, or ≥2 points of [u, r]');
   outer.sort((p, q) => p[0] - q[0]);
-  const inner = toPairs(params.inner);
+  const inner = typeof params.inner === 'string' || typeof params.inner === 'number' ? sampleProfile(params.inner, byFormula ? from : outer[0][0], byFormula ? to : outer[outer.length - 1][0], variable, 'inner') : toPairs(params.inner);
   if (inner) inner.sort((p, q) => p[0] - q[0]);
 
   const axis: RevolutionAxis = params.axis === 'y' ? 'y' : 'x';

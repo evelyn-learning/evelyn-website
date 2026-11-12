@@ -1,0 +1,203 @@
+[
+ {
+  "tool": "show_matrix",
+  "args": {
+   "rows": [
+    [
+     "1",
+     "2",
+     "5"
+    ],
+    [
+     "3",
+     "4",
+     "6"
+    ]
+   ],
+   "augmented": 2,
+   "title": "Augmented matrix"
+  },
+  "label": "matrix"
+ },
+ {
+  "tool": "show_fraction_bar",
+  "args": {
+   "items": [
+    {
+     "numerator": 2,
+     "denominator": 3,
+     "label": "2/3"
+    },
+    {
+     "numerator": 3,
+     "denominator": 4,
+     "label": "3/4"
+    }
+   ],
+   "showComparison": true
+  },
+  "label": "fraction-bars"
+ },
+ {
+  "tool": "show_motion_diagram",
+  "args": {
+   "title": "Ball thrown up",
+   "series": [
+    {
+     "kind": "position",
+     "points": [
+      {
+       "t": 0,
+       "value": 0
+      },
+      {
+       "t": 1,
+       "value": 15
+      },
+      {
+       "t": 2,
+       "value": 20
+      },
+      {
+       "t": 3,
+       "value": 15
+      },
+      {
+       "t": 4,
+       "value": 0
+      }
+     ]
+    },
+    {
+     "kind": "velocity",
+     "points": [
+      {
+       "t": 0,
+       "value": 20
+      },
+      {
+       "t": 2,
+       "value": 0
+      },
+      {
+       "t": 4,
+       "value": -20
+      }
+     ]
+    }
+   ]
+  },
+  "label": "motion-graphs"
+ },
+ {
+  "tool": "show_balanced_equation",
+  "args": {
+   "equation": "Fe + O2 -> Fe2O3",
+   "reactionType": "synthesis"
+  },
+  "label": "balanced-equation"
+ },
+ {
+  "tool": "show_pedigree",
+  "args": {
+   "title": "Recessive trait",
+   "individuals": [
+    {
+     "id": "I1",
+     "sex": "male",
+     "status": "carrier",
+     "generation": 1,
+     "position": 0
+    },
+    {
+     "id": "I2",
+     "sex": "female",
+     "status": "carrier",
+     "generation": 1,
+     "position": 1
+    },
+    {
+     "id": "II1",
+     "sex": "female",
+     "status": "affected",
+     "generation": 2,
+     "position": 0
+    },
+    {
+     "id": "II2",
+     "sex": "male",
+     "status": "unaffected",
+     "generation": 2,
+     "position": 1
+    }
+   ],
+   "marriages": [
+    {
+     "pair": [
+      "I1",
+      "I2"
+     ]
+    }
+   ],
+   "children": [
+    {
+     "parents": [
+      "I1",
+      "I2"
+     ],
+     "childId": "II1"
+    },
+    {
+     "parents": [
+      "I1",
+      "I2"
+     ],
+     "childId": "II2"
+    }
+   ]
+  },
+  "label": "pedigree"
+ },
+ {
+  "tool": "show_dna",
+  "args": {
+   "mode": "base-pairs",
+   "sequence": "ATGCATGC",
+   "mrna": ""
+  },
+  "label": "dna"
+ },
+ {
+  "tool": "show_food_web",
+  "args": {
+   "species": [
+    {
+     "id": "g",
+     "label": "Grass",
+     "level": 1
+    },
+    {
+     "id": "r",
+     "label": "Rabbit",
+     "level": 2
+    },
+    {
+     "id": "f",
+     "label": "Fox",
+     "level": 3
+    }
+   ],
+   "edges": [
+    {
+     "from": "g",
+     "to": "r"
+    },
+    {
+     "from": "r",
+     "to": "f"
+    }
+   ]
+  },
+  "label": "food-web"
+ }
+]

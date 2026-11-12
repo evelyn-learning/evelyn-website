@@ -345,5 +345,33 @@
    ]
   },
   "label": "shaded-area"
+ },
+ {
+  "tool": "show_diagram",
+  "label": "solid-disc-sqrt",
+  "args": {
+   "type": "solid_of_revolution",
+   "params": {
+    "outer": "sqrt(x)",
+    "from": 0,
+    "to": 4,
+    "funcLabel": "y = √x"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "solid-washer",
+  "args": {
+   "type": "solid_of_revolution",
+   "params": {
+    "outer": "x",
+    "inner": "x^2",
+    "from": 0,
+    "to": 1,
+    "funcLabel": "y = x",
+    "innerLabel": "y = x²"
+   }
+  }
  }
 ]
