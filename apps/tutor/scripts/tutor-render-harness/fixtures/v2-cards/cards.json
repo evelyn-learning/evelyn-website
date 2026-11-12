@@ -1,0 +1,37 @@
+[
+ {
+  "tool": "annotate",
+  "label": "note-disc",
+  "args": {
+   "rich": true,
+   "style": "highlight",
+   "text": "Disc method (region touches the axis):\n- Each slice is a circle with radius r(x), the distance from the curve to the axis\n- Area of one slice is π r²\n- Volume: V = π ∫ from a to b of r(x)² dx"
+  }
+ },
+ {
+  "tool": "annotate",
+  "label": "note-washer",
+  "args": {
+   "rich": true,
+   "style": "warning",
+   "text": "Inner radius r = x², so r² = (x²)², not x².\nOuter radius R = x (the higher curve, y = x)."
+  }
+ },
+ {
+  "tool": "annotate",
+  "label": "note-stats",
+  "args": {
+   "rich": true,
+   "style": "highlight",
+   "text": "Two-sample t-test (independent groups)\nH₀: μ₁ = μ₂ (no difference)\nConclusion: Because p = 0.004 is less than α = 0.05, we reject H₀.\nTorque: τ = r·F·sin θ, and I = 0.4·m·r² for a sphere."
+  }
+ },
+ {
+  "tool": "annotate",
+  "label": "note-chem",
+  "args": {
+   "rich": true,
+   "text": "Henderson-Hasselbalch: pH = pKa + log([A⁻]/[HA])\nWhen [A⁻] = [HA], the log term is zero, so pH = pKa."
+  }
+ }
+]

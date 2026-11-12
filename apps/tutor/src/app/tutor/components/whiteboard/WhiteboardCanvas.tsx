@@ -3040,7 +3040,11 @@ function CommandRendererInner({ command }: CommandRendererProps) {
       return (
         <div
           className={`p-4 rounded-lg ${
-            command.style === 'highlight'
+            // rich (tutor brain v2): a key note is a white card with an amber edge. The yellow fill was the colour of
+            // the question pin that floats over the board, and the two ran together (chemistry, 2026-11-11).
+            command.style === 'highlight' && (command as { rich?: boolean }).rich
+              ? 'bg-white border border-amber-200 border-l-4 border-l-amber-400 shadow-sm'
+              : command.style === 'highlight'
               ? 'bg-yellow-50 border-2 border-yellow-300'
               : command.style === 'warning'
               ? 'bg-red-50 border-2 border-red-300'

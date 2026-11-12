@@ -177,6 +177,9 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
           // Every item carries its own id: the board animates an item once and keys its row by it (without one a
           // card drew itself again whenever the next card arrived), and a redrawn graph removes the one it replaces.
           if (cmd && !(cmd as { id?: string }).id) (cmd as { id?: string }).id = call.id;
+          // Lines of working get room between them: fractions and roots on consecutive lines ran into each other
+          // (AP Statistics, embed-1794447717307). Done here, so the tutor's record keeps the equation as written.
+          if (cmd && (cmd as { action?: string }).action === 'showEquation' && typeof (cmd as { latex?: unknown }).latex === 'string') (cmd as unknown as { latex: string }).latex = (cmd as unknown as { latex: string }).latex.replace(/\\\\(?!\s*\[)/g, '\\\\[0.5em]');
           // A sketch is drawn by its own service from the one-line description; the request starts now and the
           // item goes up when both its sentence and its drawing have arrived. No drawing: a labelled card instead.
           const drawn: Promise<void> = cmd && (cmd as { action?: string }).action === 'showSketch' ? resolveSketch(cmd as unknown as SketchCommand, p.current.embedToken, (m) => p.current.onDebugEvent?.('v2_sketch', m)) : Promise.resolve();

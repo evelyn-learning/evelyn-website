@@ -12,6 +12,9 @@ import type { V2Board, V2BoardOutcome } from './types';
 const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 /** A one-line description of what a board tool call shows. */
+/** A problem card this many items up the page is out of sight: asked for again, it is put up again. */
+export const V2_FAR_UP_ITEMS = 5;
+
 export function summariseBoardCall(name: string, args: Record<string, unknown>): string {
   const problem = (args.problem ?? {}) as Record<string, unknown>;
   const parts = [text(args.title), text(problem.title), text(args.label), text(problem.statement), text(args.statement), text(args.problem), text(args.latex), text(args.text), text(args.expression), text(args.concept), text(args.code)]
@@ -20,7 +23,10 @@ export function summariseBoardCall(name: string, args: Record<string, unknown>):
   // Tables, timelines and organisers: their cells, in reading order.
   const flat = (v: unknown): string[] => (Array.isArray(v) ? v.flatMap(flat) : v && typeof v === 'object' ? Object.values(v as Record<string, unknown>).flatMap(flat) : typeof v === 'string' && v.trim() ? [v.trim()] : []);
   const structured = [args.params, args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source, args.object, args.forces, args.functions, Array.isArray(args.points) ? (args.points as Array<Record<string, unknown>>).map((p) => String(p.label ?? p.value ?? '')) : []].flatMap(flat).join(' · ');
-  const body = [[...new Set(parts)].join(' — '), fns, structured].filter(Boolean).join(' — ') || '(no text)';
+  // A catalogue figure is its numbers as much as its words: two solids of revolution with different profiles
+  // summarised alike, and the second was refused as already on the board (embed-1794446765164).
+  const figure = name === 'show_diagram' ? JSON.stringify(args.params ?? {}).replace(/["{}]/g, '').slice(0, 160) : '';
+  const body = [[...new Set(parts)].join(' — '), fns, structured, figure].filter(Boolean).join(' — ') || '(no text)';
   return body.length > 300 ? `${body.slice(0, 297)}…` : body;
 }
 
@@ -141,9 +147,14 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
   for (let p = 0; p < board.pages.length; p++) {
     // The same thing in another form is not a repeat: a cycle drawn from stages already listed as steps was
     // refused, and the tutor said "here is the loop" over nothing (browser run, 2026-11-11).
-    if (board.pages[p].items.some((it) => { if (FIGURE_FORMS.has(name) && it.tool !== name) return false; const have = it.core ?? norm(it.summary); return have === core || (core.length >= 12 && have.includes(core)) || (have.length >= 24 && core.includes(have) && core.length < have.length * 1.15); })) {
-      return { painted: false, detail: `already on the board (page ${p + 1})` };
-    }
+    const items = board.pages[p].items;
+    const at = items.findIndex((it) => { if (FIGURE_FORMS.has(name) && it.tool !== name) return false; const have = it.core ?? norm(it.summary); return have === core || (core.length >= 12 && have.includes(core)) || (have.length >= 24 && core.includes(have) && core.length < have.length * 1.15); });
+    if (at < 0) continue;
+    // A problem the student is sent back to must be where they can see it. One set many items ago, or on
+    // another page, is put up again: "try the problem already on your board" pointed at a card twenty items
+    // up the page (AP Calc BC, embed-1794446765164). The old copy leaves the record; the new one is the card.
+    if (name === 'show_problem' && items[at].tool === 'show_problem' && (p !== board.current || items.length - 1 - at >= V2_FAR_UP_ITEMS)) { items.splice(at, 1); break; }
+    return { painted: false, detail: `already on the board (page ${p + 1})` };
   }
   board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, points: args.points, segments: args.segments, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
   return { painted: true, detail: `painted on page ${board.current + 1}` };

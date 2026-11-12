@@ -32,11 +32,12 @@ import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { TUTOR_STT_ENGINE_INK2 } from '@/lib/tutor/orchestrator/flags';
 import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import { V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
 import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
-import { anchorSentenceIndex, asksAloud, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
+import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S } from '@/lib/tutor/v2/facts';
 import { speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
@@ -95,6 +96,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const startedCountRef = useRef(0);
   const heldBoardRef = useRef<Array<{ idx: number; id?: string; what?: string; untilDone?: boolean; isPage?: boolean; paint: () => void; timer: ReturnType<typeof setTimeout> }>>([]);
   const turnBusyRef = useRef(false);
+  const paintFnsRef = useRef(new Map<string, () => void>());
   const unplacedBoardRef = useRef<Array<{ call: { id?: string; name: string; sayWith?: string; beforeTurn?: boolean; args?: Record<string, unknown> }; paint: () => void }>>([]);
   // Inline items: where the current stretch of speech began (the sentence count at the previous block).
   const segStartRef = useRef(0); const lastBlockAtRef = useRef(-1);
@@ -139,8 +141,13 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
    *  student had already given the step it hinted at, embed-1794347950566). The tutor's record of the board
    *  is corrected, and it is told next turn what did not appear. */
   const dropBoard = useCallback(() => {
-    const lost = [...heldBoardRef.current.map((h) => ({ id: h.id, what: h.what })), ...unplacedBoardRef.current.map((u) => ({ id: u.call.id, what: `${u.call.name}: ${summariseBoardCall(u.call.name, u.call.args ?? {}).slice(0, 80)}` }))];
+    // A problem card is the task the reply set, and the tutor's record of the lesson says it was set. Dropped
+    // because the student spoke first, it left the tutor saying "try the pH problem on the board" over a board
+    // with no problem on it (chemistry, embed-1794447993778). It goes up; everything else unreached is dropped.
+    const kept = heldBoardRef.current.filter((h) => /^show_problem:/.test(h.what ?? ''));
+    const lost = [...heldBoardRef.current.filter((h) => !kept.includes(h)).map((h) => ({ id: h.id, what: h.what })), ...unplacedBoardRef.current.map((u) => ({ id: u.call.id, what: `${u.call.name}: ${summariseBoardCall(u.call.name, u.call.args ?? {}).slice(0, 80)}` }))];
     for (const h of heldBoardRef.current) clearTimeout(h.timer);
+    for (const h of kept) h.paint();
     heldBoardRef.current = []; unplacedBoardRef.current = [];
     if (!lost.length) return;
     p.current.onDebugEvent?.('v2_board_dropped', `${lost.length} item(s) the tutor had not reached: ${lost.map((x) => x.what).join(' | ').slice(0, 200)}`);
@@ -202,6 +209,18 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     },
     holdBoard: (call, paintNow) => {
       const paint = () => { paintedThisTurnRef.current.push({ id: call.id, tool: call.name, summary: summariseBoardCall(call.name, call.args) }); paintNow(); };
+      paintFnsRef.current.set(call.id, paint);
+      // Items written just before this page turn, with no words between, belong on the new page (turn.ts): those
+      // still waiting go behind the page; one already up is taken down and put up again after the turn.
+      const carried: Array<() => void> = [];
+      for (const id of call.name === 'new_page' ? call.carries ?? [] : []) {
+        const waiting = heldBoardRef.current.find((h) => h.id === id);
+        if (waiting) { clearTimeout(waiting.timer); heldBoardRef.current = heldBoardRef.current.filter((h) => h !== waiting); carried.push(waiting.paint); continue; }
+        const again = paintFnsRef.current.get(id);
+        if (again && paintedThisTurnRef.current.some((x) => x.id === id)) { paintedThisTurnRef.current = paintedThisTurnRef.current.filter((x) => x.id !== id); p.current.onWhiteboardCommand([{ action: 'removeItems', ids: [id] } as unknown as WhiteboardCommand]); carried.push(again); }
+      }
+      if (carried.length) p.current.onDebugEvent?.('v2_board_timing', `new_page: carries ${carried.length} item(s) written just before it`);
+      const carryBehind = (idx: number, painted: boolean) => { for (const fn of carried) { if (painted) fn(); else { const e = { idx, id: undefined as string | undefined, what: 'carried to the new page', paint: fn, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== e); fn(); }, BOARD_HOLD_MAX_MS) }; heldBoardRef.current.push(e); } } };
       // Written inline in the reply, right after the sentence that introduces it ("Here's the rule." [block]):
       // it appears as that sentence begins. The model places blocks after their sentence far more often than
       // before, whatever it is told (browser run, 2026-11-10), so the convention follows the habit.
@@ -226,12 +245,13 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         const pageHeld = heldBoardRef.current.some((h) => h.isPage);
         const hold = (startedCountRef.current <= idx && n > 0 && !openingTurnRef.current) || untilDone || (pageHeld && !openingTurnRef.current);
         p.current.onDebugEvent?.('v2_board_timing', `${call.name}: inline, with sentence ${idx + 1} of ${n} (stretch from ${from + 1}), ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
-        if (!hold) { paint(); return; }
+        if (!hold) { paint(); carryBehind(idx, true); return; }
         const entry = { idx, id: call.id, what: `${call.name}: ${summariseBoardCall(call.name, call.args).slice(0, 80)}`, untilDone, isPage: call.name === 'new_page', paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); paint(); }, BOARD_HOLD_MAX_MS) };
         heldBoardRef.current.push(entry);
+        carryBehind(idx, false);
         return;
       }
-      if (!call.sayWith || !realtimeRef.current) { paint(); return; }
+      if (!call.sayWith || !realtimeRef.current) { paint(); carryBehind(0, true); return; }
       // Its sentence may not have been written yet (the model can call the tool first and speak after):
       // wait for it, and place the item as soon as the sentence is known.
       unplacedBoardRef.current.push({ call, paint });
@@ -240,7 +260,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
       turnBusyRef.current = busy;
-      if (busy) { releaseBoard(); paintedThisTurnRef.current = []; turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
+      if (busy) { releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
       else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard(); else releaseBoard(startedCountRef.current);
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
@@ -252,8 +272,11 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // A reply that asked the student nothing leaves them not knowing whose move it is (the tutor made a
         // statement and waited 44 s, embed-1794355900794). It learns of the silence early, once, and can go on.
         const said = turnSentencesRef.current;
-        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !asksAloud(said) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed;
+        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !asksAnywhere(said) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed;
         lastTurnWasStudentRef.current = false;
+        // The opening is the first reply only. Left on until the student spoke, a second reply before that put its
+        // whole page up at once, a note, a formula and a problem together (AP Calc BC, embed-1794446765164).
+        if (said.length > 0) openingTurnRef.current = false;
         // Board items the check withdrew after they were already on the board are still there: put them back in the tutor's record.
         const state = turnsRef.current?.stateRef.current;
         if (state && shownThenWithdrawnRef.current.length) {
@@ -363,8 +386,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const listening = started && realtime.isConnected && !props.standby && !turns.closed;
   const onTranscript = useCallback((t: PerceptionTranscript) => heard(t.text), [heard]);
   const onPartial = useCallback((x: { text: string }) => hearingPartial(x.text), [hearingPartial]);
-  const onSpeechStart = useCallback(() => { clearSilence(); if (!realtimeRef.current?.isSpeechPending()) p.current.onVoiceStateChange?.('hearing'); }, []);
-  const onSpeechStop = useCallback(() => { if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) p.current.onVoiceStateChange?.('processing'); }, []);
+  const onSpeechStart = useCallback(() => { if (flagRef.current.active) return; clearSilence(); if (!realtimeRef.current?.isSpeechPending()) p.current.onVoiceStateChange?.('hearing'); }, []);
+  const onSpeechStop = useCallback(() => { if (flagRef.current.active) return; if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) p.current.onVoiceStateChange?.('processing'); }, []);
   const onNoTranscript = useCallback((kind: string | undefined) => {
     p.current.onDebugEvent?.('v2_transcription_failed', String(kind ?? 'unknown'));
     if (flagRef.current.active) return;
@@ -438,7 +461,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const flagStop = useCallback(() => {
     p.current.onDebugEvent?.('v2_flag', 'closed');
     realtimeRef.current?.resumeSpeech();
-    if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) armSilence(soonAfterSpeechRef.current);
+    // Closing a flag starts nothing: the lesson is where it was. The indicator goes back to what is true now
+    // (it showed "Thinking…" after a flag, as if the note had been taken for an answer).
+    if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { p.current.onVoiceStateChange?.('listening'); armSilence(soonAfterSpeechRef.current); }
   }, [armSilence]);
 
   return (<>
