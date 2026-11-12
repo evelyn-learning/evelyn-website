@@ -34,6 +34,7 @@ import { buildTryYourselfMarker, type TryYourselfRelationDetail } from '../white
 import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
 import TutorClientV2 from '../v2/TutorClientV2';
 import TutorVoiceV2 from '../v2/TutorVoiceV2';
+import BoardPlannerTabs from './BoardPlannerTabs';
 import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
 import SessionStage, { CaptionTicker, MicMeter, type VoiceState } from './SessionStage';
@@ -918,8 +919,11 @@ export default function TutorSession(props: TutorSessionProps) {
   // figure), so it is declared before boardEl.
   const [homeworkProblem, setHomeworkProblem] = useState<HomeworkProblemMeta | null>(null);
 
+  // v2: planner tabs down the left edge of the board (BoardPlannerTabs.tsx); the board gives them a narrow margin.
+  const plannerTabs = brainVersion === 'v2' && !!boardNav && boardNav.count > 1;
   const boardEl = (
-    <div className="relative h-full">
+    <div className={`relative h-full${plannerTabs ? ' pl-8' : ''}`}>
+      {plannerTabs && boardNav && <BoardPlannerTabs index={boardNav.index} count={boardNav.count} titles={boardNav.titles} goTo={boardNav.goTo} pendingIndex={boardNav.pendingIndex} />}
       <WhiteboardCanvas
         commands={whiteboardCommands}
         // v2: no "preparing" skeleton. A v2 reply is ready in a second or two and its board items arrive with their
