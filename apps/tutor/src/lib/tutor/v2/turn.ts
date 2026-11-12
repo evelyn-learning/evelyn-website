@@ -27,6 +27,8 @@ import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { planGoalIds, renderPlanMap } from './plan-map';
 import { stripToolTalk } from './tool-talk';
+import { mayOpenPart, namesPart, partOffer } from './part-close';
+import { heardAsWords } from './heard';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -182,7 +184,9 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
   return `unknown tool ${name}`;
 }
 
-export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
+export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
+  // Spoken words come through a recogniser that writes "this one" as "this 1" (heard.ts).
+  const input: V2TurnInput = given.session.mode === 'voice' && given.studentSaid ? { ...given, studentSaid: heardAsWords(given.studentSaid) } : given;
   const { session } = input;
   const nowMs = input.nowMs ?? Date.now();
   const callModel = input.callModel ?? defaultModelCall;
@@ -333,6 +337,9 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   const withdrawn: string[] = []; const withdrawnLabels: string[] = [];
   const inlinePainted: Array<{ id: string; raw: string; label: string }> = [];
 
+  let heldAt: { raw: string; offer: string } | null = null; let saidNow = '';
+  const lastTutorText = (() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })();
+  const boardHasPage = (title: string) => state.board.pages.some((pg) => pg.title.replace(/\s+/g, '').toLowerCase() === title.replace(/\s+/g, '').toLowerCase());
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
       model: '',
@@ -346,8 +353,18 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     const inline = new BoardInlineStream();
     const take = (parts: InlinePart[]) => {
       for (const part of parts) {
+        if (heldAt) continue;
         if ('opening' in part) { input.onBoardOpen?.(); continue; }
         if ('block' in part) {
+          // A new part the student has not been asked about is not opened in this reply (part-close.ts): the
+          // reply ends here, with the offer in place of the page and all that followed it.
+          if (part.block.kind === 'page' && !boardHasPage(part.block.body) && !state.closed && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
+            const offer = /\?\s*$/.test(saidNow) ? '' : partOffer(part.block.body.trim(), namesPart(part.block.body, saidNow));
+            heldAt = { raw: part.block.raw, offer };
+            if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
+            input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: part.block.body.trim() }, outcome: 'not opened yet: the student is asked first' });
+            continue;
+          }
           if (part.block.kind === 'page' && pageTurnAt < 0) { pageTurnAt = saidChars; pageBefore = state.board.current; }
           if (part.block.kind === 'page') {
             const from = state.board.current; // A line of working is not carried: written just before the turn, it closes what came
@@ -363,12 +380,23 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
         }
         if (part.text.trim()) sinceWords = [];
         if (firstTextMs === null && part.text.trim()) firstTextMs = Date.now() - t0;
-        saidChars += part.text.length;
+        saidChars += part.text.length; saidNow += part.text;
         input.onText?.(part.text);
       }
     };
     const response = await callModel(params, (delta) => take(inline.push(delta)), input.signal);
     take(inline.flush());
+    const held = heldAt as { raw: string; offer: string } | null;
+    if (held) {
+      // The history keeps what was said: the reply up to the held page, then the offer.
+      let cut = false;
+      for (const b of response.content) {
+        if (b.type !== 'text') continue;
+        if (cut) { b.text = ''; continue; }
+        const at = b.text.indexOf(held.raw);
+        if (at >= 0) { b.text = `${b.text.slice(0, at).trimEnd()}${held.offer ? `\n\n${held.offer}` : ''}`.trim(); cut = true; }
+      }
+    }
     modelCalls += 1;
     if (response.model) usage.model = response.model;
     usage.inputTokens += response.usage.input_tokens;
@@ -389,6 +417,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     // (a reply cut at the token limit can carry finished tool calls): the API refuses
     // a history in which one is missing.
     if (results.length) stored.push({ role: 'user', content: results });
+    if (heldAt) break;
     // No words and no call where words are owed: ask once more.
     if (mustSpeak && !spoken.length && results.length === 0 && modelCalls < 3 && !input.signal?.aborted) continue;
     if (response.stop_reason !== 'tool_use' || results.length === 0) break;
@@ -565,9 +594,16 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
         if (pageTurnAt < 0 || pageBefore < 0 || b.kind === 'page') return false;
         const want = letters(b.attrs.with ?? '').slice(0, 3);
         if (want.length >= 2) for (let at = 0; at + want.length <= saidLetters.length; at++) if (want.every((w, k) => saidLetters[at + k] === w)) return at < leadAtWord && !namesNewPage(at);
+        // The check sometimes quotes the problem card rather than a sentence ("Two 6 Ω resistors are connected in
+        // series"): what this reply put on the new page counts as that side of the turn. The circuit for a card
+        // went up on the page before it, and the tutor said "look at the circuit" over a page without one
+        // (AP Physics, embed-1794500923861).
+        const onNewPage = state.board.pages.slice(pageBefore + 1).flatMap((pg) => pg.items.filter((it) => toolCalls.some((c) => c.id === it.id)).map((it) => it.summary)).join(' ');
+        const newLetters = letters(onNewPage);
+        if (want.length >= 2) for (let at = 0; at + want.length <= newLetters.length; at++) if (want.every((w, k) => newLetters[at + k] === w)) return false;
         // No sentence to go by: which side of the turn is it about?
         const lead = leadBreak > 0 ? leadBreak : pageTurnAt;
-        return overlap(b.body, said.slice(0, lead)) > overlap(b.body, said.slice(lead));
+        return overlap(b.body, said.slice(0, lead)) > overlap(b.body, `${said.slice(lead)} ${onNewPage}`);
       };
       for (const b of passBlocks) {
         if (beforeTurn(b)) {

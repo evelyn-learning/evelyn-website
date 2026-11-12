@@ -408,7 +408,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     ...(languagesKey ? { tutorLanguages: languagesKey.split(',') } : {}),
     ...(props.speechRate !== undefined ? { speechRate: props.speechRate } : {}),
     studentName: props.studentName,
-    ...(props.subject === 'math' ? { ttsTextTransform: mathsSpeech } : props.subject === 'science' ? { ttsTextTransform: scienceSpeech } : { ttsTextTransform: plainSpeech }),
+    // The subject arrives as 'math' or 'maths', 'science' or 'sci': matched whole, a physics lesson given as 'sci'
+    // fell through to plain speech and "3 A" was read as the letter (AP Physics, embed-1794500923861).
+    ...(/^math/i.test(props.subject ?? '') ? { ttsTextTransform: mathsSpeech } : /^sci/i.test(props.subject ?? '') ? { ttsTextTransform: scienceSpeech } : { ttsTextTransform: plainSpeech }),
   }), [onRelayTranscript, props.subject, props.ttsProvider, props.cartesiaVoiceId, props.cartesiaVoiceSpeed, languagesKey, props.speechRate, props.studentName]);
   const realtime = useOpenAIRealtime({
     instructions: TRANSPORT_ONLY,

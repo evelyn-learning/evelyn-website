@@ -20,7 +20,9 @@ export function summariseBoardCall(name: string, args: Record<string, unknown>):
   const fns = Array.isArray(args.functions) ? (args.functions as Array<Record<string, unknown>>).map((f) => text(f.expression) || text(f.latex)).filter(Boolean).join(', ') : '';
   // Tables, timelines and organisers: their cells, in reading order.
   const flat = (v: unknown): string[] => (Array.isArray(v) ? v.flatMap(flat) : v && typeof v === 'object' ? Object.values(v as Record<string, unknown>).flatMap(flat) : typeof v === 'string' && v.trim() ? [v.trim()] : []);
-  const structured = [args.params, args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source, args.object, args.forces, args.functions, Array.isArray(args.points) ? (args.points as Array<Record<string, unknown>>).map((p) => String(p.label ?? p.value ?? '')) : []].flatMap(flat).join(' · ');
+  const structured = [args.params, args.components, args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source, args.object, args.forces, args.functions, Array.isArray(args.points) ? (args.points as Array<Record<string, unknown>>).map((p) => String(p.label ?? p.value ?? '')) : []].flatMap(flat).join(' · ');
+  // (A circuit is its components and how they are wired: with none of that in its summary, every untitled
+  // circuit read "(no text)" and a parallel pair was refused as the series loop already up, embed-1794500923861.)
   // A catalogue figure is its numbers as much as its words: two solids of revolution with different profiles
   // summarised alike, and the second was refused as already on the board (embed-1794446765164).
   const figure = name === 'show_diagram' ? JSON.stringify(args.params ?? {}).replace(/["{}]/g, '').slice(0, 160) : '';
