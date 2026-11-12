@@ -81,6 +81,57 @@ export function solveTorque(params: Record<string, unknown>): TorqueFigure {
   };
 }
 
+// ── rigid body ────────────────────────────────────────────────────────────
+/** A beam, plank or ladder with forces at different points along it. `at` runs 0 (left or lower end) to 1. */
+export interface RigidBodyFigure {
+  angleDegrees: number;
+  lengthLabel: string;
+  bodyName: string;
+  supports: Array<{ at: number; type: 'pivot' | 'support'; label?: string; atLabel?: string }>;
+  forces: Array<{ at: number; directionDegrees: number; label: string; atLabel?: string }>;
+  title?: string;
+}
+const DIRECTIONS: Record<string, number> = { right: 0, up: 90, left: 180, down: 270 };
+export function solveRigidBody(params: Record<string, unknown>): RigidBodyFigure {
+  const str = (v: unknown) => (typeof v === 'string' ? v.trim().slice(0, 40) : typeof v === 'number' ? String(v) : '');
+  const where = (v: unknown, what: string) => { const n = Number(v); if (!Number.isFinite(n) || n < 0 || n > 1) throw new Error(`rigid_body: ${what}.at is the place along the body as a fraction from 0 (left or lower end) to 1`); return n; };
+  const angle = params.angleDegrees === undefined ? 0 : Number(params.angleDegrees);
+  if (!Number.isFinite(angle) || angle < 0 || angle > 85) throw new Error('rigid_body: angleDegrees is the tilt above the horizontal, 0 to 85');
+  const rawForces = Array.isArray(params.forces) ? params.forces as Array<Record<string, unknown>> : [];
+  if (!rawForces.length) throw new Error('rigid_body: forces is missing (each {at, direction, label})');
+  const forces = rawForces.slice(0, 6).map((f, i) => {
+    const d = typeof f.direction === 'number' ? f.direction : DIRECTIONS[String(f.direction ?? '').toLowerCase()];
+    if (d === undefined || !Number.isFinite(d)) throw new Error(`rigid_body: forces[${i}].direction is up, down, left, right, or degrees anticlockwise from right`);
+    const label = str(f.label); if (!label) throw new Error(`rigid_body: forces[${i}].label is missing`);
+    return { at: where(f.at, `forces[${i}]`), directionDegrees: d, label, ...(str(f.atLabel) ? { atLabel: str(f.atLabel) } : {}) };
+  });
+  const supports = (Array.isArray(params.supports) ? params.supports as Array<Record<string, unknown>> : []).slice(0, 3).map((s, i) => ({
+    at: where(s.at, `supports[${i}]`), type: s.type === 'support' ? 'support' as const : 'pivot' as const, ...(str(s.label) ? { label: str(s.label) } : {}), ...(str(s.atLabel) ? { atLabel: str(s.atLabel) } : {}),
+  }));
+  return { angleDegrees: angle, lengthLabel: str(params.length), bodyName: str(params.body) || 'beam', supports, forces, title: typeof params.title === 'string' ? params.title : undefined };
+}
+
+// ── rotation ──────────────────────────────────────────────────────────────
+/** Something turning about an axis, seen from above. `radiusFraction` sizes the picture against a partner
+ *  figure (before and after), so a smaller radius is drawn smaller. */
+export interface RotationFigure {
+  radiusFraction: number;
+  radiusLabel: string;
+  omegaLabel: string;
+  massLabel: string;
+  clockwise: boolean;
+  bodyName: string;
+  title?: string;
+}
+export function solveRotation(params: Record<string, unknown>): RotationFigure {
+  const str = (v: unknown) => (typeof v === 'string' ? v.trim().slice(0, 40) : typeof v === 'number' ? String(v) : '');
+  const radiusLabel = str(params.radius);
+  if (!radiusLabel) throw new Error('rotation: radius is missing (e.g. "2 m")');
+  const r = Number.parseFloat(radiusLabel); const largest = Number(params.largestRadius);
+  const fraction = Number.isFinite(r) && Number.isFinite(largest) && largest > 0 ? Math.min(1, Math.max(0.15, r / largest)) : 1;
+  return { radiusFraction: fraction, radiusLabel, omegaLabel: str(params.omega), massLabel: str(params.mass), clockwise: params.direction === 'clockwise', bodyName: str(params.body) || 'top view', title: typeof params.title === 'string' ? params.title : undefined };
+}
+
 // ── lever ─────────────────────────────────────────────────────────────────
 export interface LeverFigure {
   effort: number;

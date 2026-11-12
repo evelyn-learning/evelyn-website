@@ -18,6 +18,7 @@
  * while talking. `with="opening words"` is for the board pass only, whose blocks arrive after the words.
  */
 import { isCodeBody, unfoldCode } from './rich-text';
+import { toolFigureCall } from './figure-catalogue';
 
 export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'code' | 'sketch' | 'figure' | 'page';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
@@ -70,7 +71,8 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     let params: Record<string, unknown> = {};
     try { const parsed: unknown = JSON.parse(b.body.replace(/^```(?:json)?\s*|\s*```$/g, '')); if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) params = parsed as Record<string, unknown>; } catch { /* boardMisfit reports the figure as unreadable */ params = { unreadable: b.body.slice(0, 80) }; }
     if (b.attrs.title && params.title === undefined) params.title = b.attrs.title;
-    return { name: 'show_diagram', args: { type: (b.attrs.kind ?? '').trim(), params } };
+    const kind = (b.attrs.kind ?? '').trim();
+    return toolFigureCall(kind, params) ?? { name: 'show_diagram', args: { type: kind, params } };
   }
   // A rough picture of a real thing or scene (a wrench on a bolt, a skater's arms). NOT OFFERED to the tutor yet
   // (it is in neither the constitution nor the board check): the drawing service drew a push "down" as an arrow
@@ -181,7 +183,9 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
       // A line that is a pair of numbers is a marked point (a centre, a vertex, a focus); any other line is a
       // curve: an expression in x, or an equation in x and y (a circle, an ellipse, a hyperbola).
       ...(lines.some((l) => SEGMENT_RE.test(l)) ? { segments: lines.filter((l) => SEGMENT_RE.test(l)).map((l) => { const m = l.replace(/−/g, '-').match(SEGMENT_RE)!; const label = cells(l)[1]; return { from: { x: Number(m[1]), y: Number(m[2]) }, to: { x: Number(m[3]), y: Number(m[4]) }, ...(label ? { label } : {}) }; }) } : {}),
-      functions: lines.filter((l) => !POINT_RE.test(l) && !SEGMENT_RE.test(l)).map((l) => { const [expr, label] = cells(l); return { expr: expr.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*(?![^=]*=)/i, ''), ...(label ? { label } : {}) }; }).filter((f) => f.expr),
+      // The area between two curves over an interval: "shade between x^2 and 2x from 0 to 2" (under one curve: "… and 0 …").
+      ...(lines.some((l) => SHADE_RE.test(l)) ? (() => { const m = lines.find((l) => SHADE_RE.test(l))!.replace(/−/g, '-').match(SHADE_RE)!; const clean = (e: string) => e.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*/i, '').replace(/^the x-?axis$/i, '0').trim(); return { shadedRegion: { axis: 'x', between: [clean(m[1]), clean(m[2])], from: Number(m[3]), to: Number(m[4]) } }; })() : {}),
+      functions: lines.filter((l) => !POINT_RE.test(l) && !SEGMENT_RE.test(l) && !SHADE_RE.test(l)).map((l) => { const [expr, label] = cells(l); return { expr: expr.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*(?![^=]*=)/i, ''), ...(label ? { label } : {}) }; }).filter((f) => f.expr),
       ...(lines.some((l) => POINT_RE.test(l)) ? { points: lines.filter((l) => POINT_RE.test(l)).map((l) => { const m = l.replace(/−/g, '-').match(POINT_RE)!; const label = cells(l)[1]; return { x: Number(m[1]), y: Number(m[2]), ...(label ? { label } : {}) }; }) } : {}),
     } };
   }
@@ -190,6 +194,8 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
 }
 
 /** A straight segment between two points: "(0, 0) to (3, 0) | horizontal leg". */
+/** "shade between <one bound> and <the other> from a to b". */
+const SHADE_RE = /^\s*shaded?\b\s*(?:the\s+(?:area|region)\s+)?(?:between\s+)?(.+?)\s+and\s+(.+?)\s+from\s+(?:x\s*=\s*)?([-−]?\d+(?:\.\d+)?)\s+to\s+(?:x\s*=\s*)?([-−]?\d+(?:\.\d+)?)\s*$/i;
 const SEGMENT_RE = /^\s*\$?\(\s*([-−]?\d+(?:\.\d+)?)\s*,\s*([-−]?\d+(?:\.\d+)?)\s*\)\s*(?:to|--+|—|–|->|→)\s*\(\s*([-−]?\d+(?:\.\d+)?)\s*,\s*([-−]?\d+(?:\.\d+)?)\s*\)\$?\s*(?:\||$)/i;
 const POINT_RE = /^\s*\$?\(\s*([-−]?\d+(?:\.\d+)?)\s*,\s*([-−]?\d+(?:\.\d+)?)\s*\)\$?\s*(?:\||$)/;
 

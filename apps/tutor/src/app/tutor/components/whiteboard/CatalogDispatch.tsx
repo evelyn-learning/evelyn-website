@@ -16,6 +16,7 @@ import { LinePlotRenderer } from './LinePlotRenderer';
 import { BalanceScaleRenderer } from './BalanceScaleRenderer';
 import { LeverRenderer } from './LeverRenderer';
 import { TorqueRenderer } from './TorqueRenderer';
+import { RigidBodyRenderer, RotationRenderer } from './RigidBodyRenderers';
 import { PulleySystemRenderer } from './PulleySystemRenderer';
 import { InclinedPlaneRenderer } from './InclinedPlaneRenderer';
 import { CatalogSpringMassRenderer } from './CatalogSpringMassRenderer';
@@ -177,6 +178,22 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'balance_scale':            return <BalanceScaleRenderer figure={figure} />;
     case 'lever':                    return <LeverRenderer figure={figure} />;
     case 'torque':                   return <TorqueRenderer figure={figure} />;
+    case 'rigid_body':               return <RigidBodyRenderer figure={figure} />;
+    case 'rotation':                 return <RotationRenderer figure={figure} />;
+    // Two figures of the catalogue side by side, each under its own heading.
+    case 'before_after':             return (
+      <div className="before-after-renderer w-full flex flex-col items-center">
+        {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
+        <div className="w-full grid grid-cols-2 gap-3 items-start">
+          {[figure.before, figure.after].map((side: { kind: string; figure: unknown; label: string }, i: number) => (
+            <div key={i} className="flex flex-col items-center rounded-lg border border-gray-200 bg-white/60 p-2">
+              <div className="text-sm font-semibold text-gray-700 mb-1">{side.label}</div>
+              <CatalogDispatch kind={side.kind} figure={side.figure} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
     case 'pulley_system':            return <PulleySystemRenderer figure={figure} />;
     case 'inclined_plane':           return <InclinedPlaneRenderer figure={figure} />;
     case 'spring_mass':              return <CatalogSpringMassRenderer figure={figure} />;

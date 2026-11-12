@@ -1,0 +1,349 @@
+[
+ {
+  "tool": "show_diagram",
+  "args": {
+   "type": "torque",
+   "params": {
+    "armLength": "0.3 m",
+    "force": "20 N",
+    "pivot": "bolt",
+    "arm": "wrench"
+   }
+  },
+  "label": "torque"
+ },
+ {
+  "tool": "show_diagram",
+  "args": {
+   "type": "torque",
+   "params": {
+    "armLength": "0.8 m",
+    "force": "50 N",
+    "angleDegrees": 60,
+    "direction": "counterclockwise",
+    "pivot": "hinge",
+    "arm": "door"
+   }
+  },
+  "label": "torque-angled"
+ },
+ {
+  "tool": "show_diagram",
+  "args": {
+   "type": "rigid_body",
+   "params": {
+    "body": "see-saw",
+    "length": "4 m",
+    "supports": [
+     {
+      "at": 0.5,
+      "type": "pivot",
+      "label": "pivot"
+     }
+    ],
+    "forces": [
+     {
+      "at": 0.05,
+      "direction": "down",
+      "label": "300 N",
+      "atLabel": "2 m from pivot"
+     },
+     {
+      "at": 0.8,
+      "direction": "down",
+      "label": "500 N",
+      "atLabel": "1.2 m from pivot"
+     },
+     {
+      "at": 0.5,
+      "direction": "up",
+      "label": "support force"
+     }
+    ]
+   }
+  },
+  "label": "seesaw"
+ },
+ {
+  "tool": "show_diagram",
+  "args": {
+   "type": "rigid_body",
+   "params": {
+    "body": "ladder",
+    "length": "5 m",
+    "angleDegrees": 60,
+    "forces": [
+     {
+      "at": 0.5,
+      "direction": "down",
+      "label": "weight 200 N"
+     },
+     {
+      "at": 0,
+      "direction": "up",
+      "label": "floor pushes up"
+     },
+     {
+      "at": 0,
+      "direction": "right",
+      "label": "friction"
+     },
+     {
+      "at": 1,
+      "direction": "left",
+      "label": "wall pushes"
+     }
+    ]
+   }
+  },
+  "label": "ladder"
+ },
+ {
+  "tool": "show_diagram",
+  "args": {
+   "type": "before_after",
+   "params": {
+    "title": "Skater pulls her arms in",
+    "before": {
+     "kind": "rotation",
+     "label": "arms out",
+     "params": {
+      "radius": "2 m",
+      "omega": "2 rad/s",
+      "largestRadius": 2,
+      "mass": "1 kg"
+     }
+    },
+    "after": {
+     "kind": "rotation",
+     "label": "arms in",
+     "params": {
+      "radius": "1 m",
+      "largestRadius": 2,
+      "mass": "1 kg"
+     }
+    }
+   }
+  },
+  "label": "skater"
+ },
+ {
+  "tool": "show_stats",
+  "args": {
+   "title": "Test scores by class",
+   "boxplot": {
+    "datasets": [
+     {
+      "label": "Class A",
+      "min": 52,
+      "q1": 64,
+      "median": 71,
+      "q3": 80,
+      "max": 94
+     },
+     {
+      "label": "Class B",
+      "min": 45,
+      "q1": 58,
+      "median": 66,
+      "q3": 77,
+      "max": 90,
+      "outliers": [
+       31
+      ]
+     }
+    ],
+    "showValues": true
+   },
+   "type": "boxplot"
+  },
+  "label": "boxplots"
+ },
+ {
+  "tool": "show_stats",
+  "args": {
+   "title": "t distribution, df = 18",
+   "distribution": {
+    "family": "t",
+    "params": {
+     "df": 18
+    },
+    "shade": {
+     "type": "greater",
+     "a": 2.1
+    },
+    "probabilityLabel": "p-value"
+   },
+   "type": "distribution"
+  },
+  "label": "t-tail"
+ },
+ {
+  "tool": "show_annotated_passage",
+  "args": {
+   "title": "The opening stanza",
+   "source": "Robert Frost, The Road Not Taken",
+   "passage": "Two roads diverged in a yellow wood,\nAnd sorry I could not travel both\nAnd be one traveler, long I stood\nAnd looked down one as far as I could",
+   "highlights": [
+    {
+     "line": 1,
+     "text": "yellow wood",
+     "note": "autumn: a season of endings"
+    },
+    {
+     "line": 2,
+     "text": "sorry",
+     "note": "regret is there from the start"
+    }
+   ],
+   "marginNotes": [
+    {
+     "line": 3,
+     "text": "the long pause before choosing"
+    }
+   ]
+  },
+  "label": "poem"
+ },
+ {
+  "tool": "show_collision",
+  "args": {
+   "title": "Cart collision",
+   "type": "perfectly-inelastic",
+   "before": [
+    {
+     "label": "A",
+     "mass": 2,
+     "velocity": 3
+    },
+    {
+     "label": "B",
+     "mass": 1,
+     "velocity": 0
+    }
+   ],
+   "after": [
+    {
+     "label": "A+B",
+     "mass": 3,
+     "velocity": 2
+    }
+   ]
+  },
+  "label": "collision"
+ },
+ {
+  "tool": "show_energy_bars",
+  "args": {
+   "title": "Ball dropped from 5 m",
+   "positions": [
+    {
+     "label": "top",
+     "pe": 50,
+     "ke": 0
+    },
+    {
+     "label": "halfway",
+     "pe": 25,
+     "ke": 25
+    },
+    {
+     "label": "bottom",
+     "pe": 0,
+     "ke": 50
+    }
+   ]
+  },
+  "label": "energy-bars"
+ },
+ {
+  "tool": "show_reaction_coordinate",
+  "args": {
+   "title": "With and without a catalyst",
+   "products_energy": -40,
+   "activation_energies": [
+    80,
+    45
+   ],
+   "curve_labels": [
+    "no catalyst",
+    "with catalyst"
+   ]
+  },
+  "label": "reaction-energy"
+ },
+ {
+  "tool": "show_molecule",
+  "args": {
+   "smiles": "CC(=O)O",
+   "title": "Acetic acid"
+  },
+  "label": "molecule"
+ },
+ {
+  "tool": "show_call_stack",
+  "args": {
+   "title": "factorial(3) at its deepest",
+   "frames": [
+    {
+     "function": "main()"
+    },
+    {
+     "function": "factorial(3)",
+     "args": {
+      "n": 3
+     }
+    },
+    {
+     "function": "factorial(2)",
+     "args": {
+      "n": 2
+     }
+    },
+    {
+     "function": "factorial(1)",
+     "args": {
+      "n": 1
+     },
+     "returnValue": "1",
+     "highlight": true
+    }
+   ]
+  },
+  "label": "call-stack"
+ },
+ {
+  "tool": "show_function_graph",
+  "args": {
+   "title": "Area between the curves",
+   "xRange": [
+    -1,
+    3
+   ],
+   "yRange": [
+    -1,
+    5
+   ],
+   "shadedRegion": {
+    "axis": "x",
+    "between": [
+     "2x",
+     "x^2"
+    ],
+    "from": 0,
+    "to": 2
+   },
+   "functions": [
+    {
+     "expr": "x^2",
+     "label": "y = x²"
+    },
+    {
+     "expr": "2x",
+     "label": "y = 2x"
+    }
+   ]
+  },
+  "label": "shaded-area"
+ }
+]

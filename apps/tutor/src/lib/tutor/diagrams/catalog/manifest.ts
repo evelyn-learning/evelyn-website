@@ -18,7 +18,7 @@ import { solveBarChart } from './kinds/bar-chart';
 import { solveLinePlot } from './kinds/line-plot';
 
 import {
-  solveBalanceScale, solveLever, solveTorque, solvePulleySystem, solveInclinedPlane,
+  solveBalanceScale, solveLever, solveTorque, solveRigidBody, solveRotation, solvePulleySystem, solveInclinedPlane,
   solveSpringMass, solvePendulum, solveSimpleCircuit, solveWaveDiagram,
   solveRayDiagram, solveVectorAddition,
 } from './kinds/physics';
@@ -119,6 +119,9 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   // ── Phase 2 — physics ──────────────────────────────────────────────────
   { kind: 'balance_scale', displayName: 'Balance Scale (physics)', whenToUse: 'Show physical balance with items of differing weights; solver computes tilt direction.', subjects: ['physics'], grades: { from: 3, to: 9 }, paramSchema: 'left:[{label,weight?,color?}], right:[{label,weight?,color?}], title?, caption?' },
   { kind: 'torque', displayName: 'Torque', whenToUse: 'Show a force turning an arm about a pivot: a wrench on a bolt, a door on its hinge, a spanner, a see-saw arm. Draws the pivot, the arm length r, the force F and the angle between them; never the torque itself.', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'armLength:string (e.g. "0.3 m"), force:string (e.g. "20 N"), angleDegrees?:number (between arm and force, default 90), direction?:clockwise|counterclockwise, pivot?:string (e.g. "bolt"), arm?:string (e.g. "wrench"), title?' },
+  { kind: 'rigid_body', displayName: 'Rigid Body with Forces', whenToUse: 'Show a beam, plank, see-saw or ladder with forces acting at DIFFERENT points along it, and what holds it up. Use when where a force acts matters (balance, torque, statics); a force diagram draws every force from one point.', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'forces:[{at:number 0..1 (fraction along the body from its left or lower end), direction:up|down|left|right|degrees, label:string (e.g. "300 N"), atLabel?:string (e.g. "1 m from pivot")}], supports?:[{at:0..1, type:pivot|support, label?}], length?:string, angleDegrees?:number (0 = level beam; 50-75 = ladder leaning on a wall), body?:string (e.g. "ladder"), title?' },
+  { kind: 'rotation', displayName: 'Rotation about an Axis', whenToUse: 'Show something turning about an axis, seen from above: masses at a radius, with the radius and angular speed labelled. Pair two inside before_after for a change in radius (a skater pulling her arms in).', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'radius:string (e.g. "2 m"), omega?:string (e.g. "2 rad/s"; leave out if the student is to find it), mass?:string, largestRadius?:number (the bigger radius of a before/after pair, so sizes compare), direction?:clockwise|counterclockwise, body?:string, title?' },
+  { kind: 'before_after', displayName: 'Before and After', whenToUse: 'Show the same thing in two states side by side: before and after a change. Each side is any other figure of this catalogue with its own parameters.', subjects: ['physics', 'chemistry', 'math'], grades: { from: 6, to: 12 }, paramSchema: 'before:{kind:string, params:object, label?:string}, after:{kind:string, params:object, label?:string}, title?' },
   { kind: 'lever', displayName: 'Lever', whenToUse: 'Show a class-1 lever with effort and load on either side of a fulcrum.', subjects: ['physics'], grades: { from: 6, to: 12 }, paramSchema: 'effort:number, load:number, effortDistance:number, loadDistance:number, title?' },
   { kind: 'pulley_system', displayName: 'Pulley System', whenToUse: 'Mode "block-tackle" (default): block-and-tackle with fixed/movable pulleys; solver computes mechanical advantage. Mode "atwood": two masses hanging on opposite ends of a rope over a single fixed pulley. Mode "table-pulley": one block on a horizontal table, second block hanging off the edge over a pulley. Mode "incline-pulley": one block on a ramp + rope over a pulley at the top + second block hanging on the far side.', subjects: ['physics'], grades: { from: 7, to: 12 }, paramSchema: 'mode?:block-tackle|atwood|table-pulley|incline-pulley. block-tackle: fixedCount?:int, movableCount?:int, weightLabel?:string, weight?:number. atwood / table-pulley / incline-pulley: leftSide?:{label,weight?}, rightSide?:{label,weight?} (or loads:[{label|mass,weight?},…]). incline-pulley adds inclineAngle?:number (degrees, default 30). title?' },
   { kind: 'inclined_plane', displayName: 'Inclined Plane', whenToUse: 'Show a block on a ramp; solver places block on the slope at the specified angle.', subjects: ['physics'], grades: { from: 7, to: 12 }, paramSchema: 'angle:number, mass?:number, showForces?:boolean, showFriction?:boolean, title?' },
@@ -319,6 +322,9 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   balance_scale: solveBalanceScale,
   lever: solveLever,
   torque: solveTorque,
+  rigid_body: solveRigidBody,
+  rotation: solveRotation,
+  before_after: (p) => solveBeforeAfter(p),
   pulley_system: solvePulleySystem,
   inclined_plane: solveInclinedPlane,
   spring_mass: solveSpringMass,
@@ -489,6 +495,18 @@ export class DiagramSolverError extends Error {
 }
 
 /** Dispatch a brain-issued spec to the right solver. */
+/** Two figures of this catalogue side by side. Each side is solved by its own solver; a side that cannot be
+ *  solved fails the whole figure, so half a comparison is never drawn. */
+function solveBeforeAfter(params: Record<string, unknown>): NormalizedFigure {
+  const side = (v: unknown, name: string) => {
+    const s = (v ?? {}) as Record<string, unknown>;
+    const kind = typeof s.kind === 'string' ? s.kind : '';
+    if (!kind || kind === 'before_after') throw new Error(`before_after: ${name}.kind must be another figure of the catalogue`);
+    return { kind, figure: solveDiagram(kind, (s.params ?? {}) as Record<string, unknown>), label: typeof s.label === 'string' && s.label.trim() ? s.label.trim().slice(0, 40) : name };
+  };
+  return { before: side(params.before, 'before'), after: side(params.after, 'after'), title: typeof params.title === 'string' ? params.title : undefined };
+}
+
 export function solveDiagram(kind: string, params: Record<string, unknown>): NormalizedFigure {
   if (!isImplementedKind(kind)) {
     const meta = getDiagramKind(kind);

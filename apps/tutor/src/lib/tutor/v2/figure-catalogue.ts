@@ -16,6 +16,26 @@ import type { V2Session } from './types';
 
 type Subject = (typeof DIAGRAM_CATALOG)[number]['subjects'][number];
 
+/** Figures the board draws with a tool of its own, outside the diagram catalogue. They are offered through the
+ *  same list and the same block; `fixed` is what makes the tool draw this figure and not another of its kinds. */
+export interface ToolFigure { kind: string; tool: string; fixed?: Record<string, unknown>; subjects: Subject[]; when: string; params: string }
+export const TOOL_FIGURES: ToolFigure[] = [
+  { kind: 'boxplot', tool: 'show_stats', fixed: { type: 'boxplot' }, subjects: ['math'], when: 'One boxplot, or several on one scale to compare groups.', params: 'boxplot:{datasets:[{label, min, q1, median, q3, max, outliers?:[number]}], showValues:true}, title?, xLabel?' },
+  { kind: 'distribution_curve', tool: 'show_stats', fixed: { type: 'distribution' }, subjects: ['math'], when: 'A normal, t or chi-square curve with a shaded tail or middle: a p-value, a critical region, a confidence level.', params: 'distribution:{family:normal|t|chi-square, params:{mean, sd} for normal or {df} for t and chi-square, shade?:{type:less|greater|between|outside, a:number, b?:number}, probabilityLabel?:string}, title?' },
+  { kind: 'annotated_passage', tool: 'show_annotated_passage', subjects: ['ela', 'social'], when: 'A poem, passage or source with words highlighted and notes on them: a close reading.', params: 'passage:string (the exact text, lines separated by \\n), highlights:[{line:number (1 = first line), text:string (the exact words in that line), note?:string}], marginNotes?:[{line, text}], title?, source?' },
+  { kind: 'collision', tool: 'show_collision', subjects: ['physics'], when: 'Two bodies before and after a collision, with their masses and velocities.', params: 'before:[{label, mass:number, velocity:number (positive = right)}], after:[{label, mass, velocity}], type?:elastic|inelastic|perfectly-inelastic, title?' },
+  { kind: 'energy_bars', tool: 'show_energy_bars', subjects: ['physics'], when: 'Mechanical energy at two or more moments as stacked bars: how kinetic and potential energy trade.', params: 'positions:[{label, ke?:number, pe?:number, spring?:number, thermal?:number}], title?' },
+  { kind: 'reaction_energy', tool: 'show_reaction_coordinate', subjects: ['chemistry', 'biology'], when: 'The energy profile of a reaction: reactants, the activation-energy hump, products; two curves compare a catalyst.', params: 'products_energy:number (negative = exothermic), activation_energies:[number] (one per curve), curve_labels?:[string], reactant_label?, product_label?, units?, title?' },
+  { kind: 'molecule', tool: 'show_molecule', subjects: ['chemistry', 'biology'], when: 'The structure of a molecule or ion, drawn from its SMILES.', params: 'smiles:string (e.g. "CC(=O)O" for acetic acid, "CC(=O)[O-]" for acetate), title?' },
+  { kind: 'call_stack', tool: 'show_call_stack', subjects: ['cs'], when: 'The stack of calls at one moment of a program: each frame with its arguments, the newest on top.', params: 'frames:[{function:string (e.g. "factorial(3)"), args?:object, returnValue?:string, highlight?:boolean}] (oldest first), finalReturn?:string, title?' },
+];
+const TOOL_FIGURE_BY_KIND = new Map(TOOL_FIGURES.map((t) => [t.kind, t]));
+/** The tool call a figure block stands for, when its kind is one of the tools above. */
+export function toolFigureCall(kind: string, params: Record<string, unknown>): { name: string; args: Record<string, unknown> } | null {
+  const t = TOOL_FIGURE_BY_KIND.get(kind);
+  return t ? { name: t.tool, args: { ...params, ...(t.fixed ?? {}) } } : null;
+}
+
 /** Kinds a plain form already draws (chart, numberline, timeline, ranks, compare, table): one way to draw each thing. */
 const HAS_A_PLAIN_FORM = new Set(['number_line', 'bar_chart', 'histogram', 'line_plot', 'hierarchy_pyramid', 'comparison_table', 't_chart', 'historical_timeline', 'kwl_chart', 'frayer_model', 'coordinate_grid']);
 
@@ -43,6 +63,7 @@ export function figureCatalogueFor(session: Pick<V2Session, 'subject' | 'topic' 
   const lines = DIAGRAM_CATALOG
     .filter((k) => isImplementedKind(k.kind) && !HAS_A_PLAIN_FORM.has(k.kind) && k.subjects.some((s) => subjects.includes(s)))
     .filter((k) => grade >= (k.grades.from === 'k' ? 0 : k.grades.from) - 1)
-    .map((k) => `  ${k.kind}: ${k.whenToUse.split(/(?<=[.;])\s/)[0].slice(0, 150)} Params: ${k.paramSchema.slice(0, 260)}`);
-  return lines.join('\n');
+    .map((k) => `  ${k.kind}: ${k.whenToUse.split(/(?<=[.;])\s/)[0].slice(0, 150)} Params: ${k.paramSchema.slice(0, 300)}`);
+  const tools = TOOL_FIGURES.filter((t) => t.subjects.some((s) => subjects.includes(s))).map((t) => `  ${t.kind}: ${t.when} Params: ${t.params}`);
+  return [...tools, ...lines].join('\n');
 }
