@@ -396,7 +396,11 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
       // Straight segments (tutor v2, 2026-11-11): the legs of a right triangle, a radius, a distance. Each is a
       // two-point polygon, with its label at the midpoint.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // Each segment has its own colour and its name beside it: four drawn alike and unnamed could not be told
+      // apart (two vectors, a perpendicular and a projection, AP Precalculus, embed-1794456849622).
+      const SEG_COLORS = ['#dc2626', '#2563eb', '#059669', '#d97706', '#7c3aed', '#0891b2']; let segN = 0;
       for (const seg of (((data as any).segments ?? []) as Array<{ from: { x: number; y: number }; to: { x: number; y: number }; label?: string; color?: string }>)) {
+        if (!seg.color) seg.color = SEG_COLORS[segN++ % SEG_COLORS.length];
         if (![seg?.from?.x, seg?.from?.y, seg?.to?.x, seg?.to?.y].every((v) => typeof v === 'number' && Number.isFinite(v))) continue;
         calculator.setExpression({
           id: `seg-${exprId++}`,
@@ -404,7 +408,7 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
           color: seg.color || '#dc2626', fill: false, lineWidth: 2.5,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
-        if (seg.label) calculator.setExpression({ id: `seg-${exprId++}`, latex: `(${(seg.from.x + seg.to.x) / 2}, ${(seg.from.y + seg.to.y) / 2})`, color: seg.color || '#dc2626', label: seg.label, showLabel: true, pointSize: 1, pointOpacity: 0 } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (seg.label) calculator.setExpression({ id: `seg-${exprId++}`, latex: `(${(seg.from.x + seg.to.x) / 2}, ${(seg.from.y + seg.to.y) / 2})`, color: seg.color || '#dc2626', label: seg.label, showLabel: true, pointSize: 2, pointOpacity: 1 } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
       }
 
       // Add labeled points

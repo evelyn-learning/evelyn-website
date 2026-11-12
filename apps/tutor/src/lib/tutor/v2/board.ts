@@ -12,8 +12,6 @@ import type { V2Board, V2BoardOutcome } from './types';
 const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 /** A one-line description of what a board tool call shows. */
-/** A problem card this many items up the page is out of sight: asked for again, it is put up again. */
-export const V2_FAR_UP_ITEMS = 5;
 
 export function summariseBoardCall(name: string, args: Record<string, unknown>): string {
   const problem = (args.problem ?? {}) as Record<string, unknown>;
@@ -153,8 +151,9 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
     // A problem the student is sent back to must be where they can see it. One set many items ago, or on
     // another page, is put up again: "try the problem already on your board" pointed at a card twenty items
     // up the page (AP Calc BC, embed-1794446765164). The old copy leaves the record; the new one is the card.
-    if (name === 'show_problem' && items[at].tool === 'show_problem' && (p !== board.current || items.length - 1 - at >= V2_FAR_UP_ITEMS)) { items.splice(at, 1); break; }
-    return { painted: false, detail: `already on the board (page ${p + 1})` };
+    if (name === 'show_problem' && items[at].tool === 'show_problem' && p !== board.current) { items.splice(at, 1); break; }
+    // On the page in view, writing a thing again points at it: the board scrolls back to it.
+    return { painted: false, detail: `already on the board (page ${p + 1})`, ...(p === board.current ? { pointAt: items[at].id } : {}) };
   }
   board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, points: args.points, segments: args.segments, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
   return { painted: true, detail: `painted on page ${board.current + 1}` };

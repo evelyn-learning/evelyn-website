@@ -67,7 +67,7 @@ export function typesetPowers(line: string): string {
 const RELATION = /^(?:=|≠|≈|<|>|≤|≥|\+|−|-|×|·|\/|→|∝|±)$/;
 const FUNCTION_NAMES = /^(?:sin|cos|tan|sec|csc|cot|ln|log|exp|lim|sqrt|min|max|dx|dy|dt|dr|du)$/;
 const SHORT_WORDS = new Set('is to of in on an as at be by do go he if it me my no or so up us we am oh ok ah ad ax ex hi ha id ie eg lo ma pa re um uh vs ye yo cm km mm kg ml mg ms hz'.split(' '));
-const MATHS_CHARS = /[\^_²³¹⁰⁴-⁹⁻⁺₀-₉√∫∑πθωαβγδλμσφτΔ∞]/;
+const MATHS_CHARS = /[\^_²³¹⁰⁴-⁹⁻⁺₀-₉√∫∑πθωαβγδλμσφτΔ∞\u0302\u0304]/;
 function strippedToken(tok: string): { lead: string; core: string; trail: string } {
   const lead = /^["“']*/.exec(tok)![0];
   const trail = /[.,;:!?"”']*$/.exec(tok.slice(lead.length))![0];
@@ -81,12 +81,13 @@ function mathsToken(core: string): boolean {
   const words = core.match(/[A-Za-z]{2,}/g) ?? [];
   // Two small letters can be a product of variables ("kx", "mx"); a two-letter word is not.
   if (words.some((w) => !FUNCTION_NAMES.test(w) && !(/^[a-z]{2}$/.test(w) && !SHORT_WORDS.has(w)))) return false;
-  return /^[A-Za-z0-9()[\]{}.,+\-−×·/^_=<>≤≥≈²³¹⁰⁴-⁹⁻⁺₀-₉√∫∑πθωαβγδλμσφτΔ∞|']+$/.test(core);
+  return /^[A-Za-z0-9()[\]{}.,+\-−×·/^_=<>≤≥≈²³¹⁰⁴-⁹⁻⁺₀-₉√∫∑πθωαβγδλμσφτΔ∞|'\u0302\u0304]+$/.test(core);
 }
 const SUPERS: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-', '⁺': '+' };
 const SUBS: Record<string, string> = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9' };
 function toLatex(run: string): string {
   return run
+    .replace(/([A-Za-z])\u0302/g, '\\hat{$1}').replace(/([A-Za-z])\u0304/g, '\\bar{$1}')
     .replace(/[⁰¹²³⁴-⁹⁻⁺]+/g, (m) => `^{${[...m].map((c) => SUPERS[c]).join('')}}`).replace(/[₀-₉]+/g, (m) => `_{${[...m].map((c) => SUBS[c]).join('')}}`)
     .replace(/√\(([^()]*)\)/g, '\\sqrt{$1}').replace(/√([A-Za-z0-9]+)/g, '\\sqrt{$1}')
     .replace(/\bsqrt\(([^()]*)\)/g, '\\sqrt{$1}')
@@ -97,7 +98,23 @@ function toLatex(run: string): string {
     .replace(/%/g, '\\%').replace(/\bd([xytru])\b/g, '\\,d$1');
 }
 /** Put each run of mathematics in a line between dollar signs. Text already between dollar signs is left as it is. */
-export function typesetMaths(line: string): string {
+/** A matrix, a column and a vector typed on one line are set as what they are: "[[1, 2], [0, 1]]", "[3; 1]" and
+ *  "⟨3, 6⟩" stood on the board as brackets and commas beside typeset matrices (AP Precalculus, embed-1794456849622). */
+function typesetBrackets(line: string): string {
+  const cell = (c: string) => toLatex(c.trim());
+  return line.split(/(\$[^$]*\$)/).map((seg) => {
+    if (seg.startsWith('$')) return seg;
+    return seg
+      .replace(/\[\s*(\[[^[\]]*\](?:\s*,\s*\[[^[\]]*\])+)\s*\]/g, (_m, rows: string) => `$\\begin{bmatrix} ${rows.split(/\]\s*,\s*\[/).map((r) => r.replace(/^\s*\[|\]\s*$/g, '').split(',').map(cell).join(' & ')).join(' \\\\ ')} \\end{bmatrix}$`)
+      .replace(/\[\s*([^[\];,]+(?:\s*;\s*[^[\];,]+)+)\s*\]/g, (_m, col: string) => `$\\begin{bmatrix} ${col.split(';').map(cell).join(' \\\\ ')} \\end{bmatrix}$`)
+      .replace(/⟨([^⟨⟩$]+)⟩/g, (_m, parts: string) => `$\\langle ${parts.split(',').map(cell).join(',\\ ')} \\rangle$`)
+      // The name it is given, and a product or an equals sign between two of them, join the same piece of mathematics.
+      .replace(/\$\s*(·|=)\s*\$/g, (_m, op: string) => (op === '·' ? ' \\cdot ' : ' = '))
+      .replace(/(?<![A-Za-z$\\])((?:\d+)?[A-Za-z]{1,2}(?:\s*[·+−-]\s*[A-Za-z])?)\s*=\s*\$(?=\\(?:begin|langle))/g, (_m, name: string) => `$${toLatex(name)} = `);
+  }).join('');
+}
+export function typesetMaths(text: string): string {
+  const line = typesetBrackets(text.replace(/ŷ/g, 'y\u0302').replace(/ȳ/g, 'y\u0304'));
   return line.split(/(\$[^$]*\$)/).map((seg) => {
     if (seg.startsWith('$')) return seg;
     // "∫ from a to b of" is the integral's limits, said in words.
@@ -176,7 +193,9 @@ export function richBlocks(text: string, opts: { titled?: boolean } = {}): RichB
   endCode();
   const first = blocks[0];
   // A heading: a short first line that is not a sentence. "Disc method, the idea:" heads the points under it.
-  const heading = first?.kind === 'line' && !first.label ? first.text.replace(/:\s*$/, '') : '';
+  // A first line that names a thing and says what it is ("s_x: standard deviation of the x values") is the first
+  // of the points, not a heading over them: it stood in bold above its two fellows (AP Statistics, embed-1794460149936).
+  const heading = first?.kind === 'line' && !first.label && !/:\s+\S/.test(first.text) ? first.text.replace(/:\s*$/, '') : '';
   if (opts.titled && blocks.length >= 2 && heading && !END_PUNCT.test(heading) && heading.split(/\s+/).length <= 9) blocks[0] = { kind: 'title', text: heading };
   return blocks;
 }

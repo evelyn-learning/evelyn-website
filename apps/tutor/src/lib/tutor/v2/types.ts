@@ -31,7 +31,7 @@ export interface V2BoardPage { title: string; items: V2BoardItem[] }
 export interface V2Board { pages: V2BoardPage[]; current: number }
 
 /** What a board tool call did. Goes back to the model as the tool result and stays in the history. */
-export interface V2BoardOutcome { painted: boolean; detail: string }
+export interface V2BoardOutcome { painted: boolean; detail: string; /** The item already on the page in view that this call repeats. */ pointAt?: string }
 
 /** Everything that changes during a session. The model's own note is the only lesson memory beside the history. */
 export interface V2State {
@@ -62,6 +62,8 @@ export interface V2ToolCall {
   beforeTurn?: boolean;
   /** On a page turn: items written just before it, with no words between, that belong on the new page. */
   carries?: string[];
+  /** Not painted: it repeats this item on the page in view, and the board scrolls back to it. */
+  pointsAt?: string;
 }
 
 export interface V2TurnResult {

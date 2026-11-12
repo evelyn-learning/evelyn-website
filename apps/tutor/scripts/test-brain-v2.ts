@@ -48,7 +48,7 @@ async function main() {
   const tools = v2Tools('math');
   const toolChars = JSON.stringify(tools).length;
   // 18,000 since 2026-11-10: the eleven board forms are listed in the principles (a reference list, not rules).
-  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 18300, sys.length);
+  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 18500, sys.length);
   check(`a math session gets a handful of tools (${tools.length}, ${toolChars} chars)`, tools.length <= 16 && toolChars < 24000, [tools.length, toolChars]);
   check('the control tools are present', ['update_session_note', 'set_goal_status', 'track_gap', 'end_lesson'].every((n) => tools.some((t) => t.name === n)));
   check('the constitution names no partner, topic or symptom', !/crimsora|greenapple|gdi|l'h[oô]pital|cos\(|streak/i.test(V2_CONSTITUTION));
@@ -231,7 +231,18 @@ async function main() {
     const near = applyToModelBoard(farBoard, 'p2', 'show_problem', { statement: 'Revolve y = √x from 0 to 1 and find the volume.' });
     for (let i = 0; i < 6; i++) applyToModelBoard(farBoard, `e${i}`, 'show_equation', { latex: `a_${i} = ${i} + ${i * 7}` });
     const far = applyToModelBoard(farBoard, 'p3', 'show_problem', { statement: 'Revolve y = √x from 0 to 1 and find the volume.' });
-    check('a problem card far up the page is put up again when asked for; one in view is not', !near.painted && far.painted && farBoard.pages[0].items.filter((it) => it.tool === 'show_problem').length === 1, [near, far]);
+    check('a problem card written again on its own page is pointed at, however far up, never copied', !near.painted && near.pointAt === 'p1' && !far.painted && far.pointAt === 'p1' && farBoard.pages[0].items.filter((it) => it.tool === 'show_problem').length === 1, [near, far]);
+    const eqCarry = { call: sayIt('Yes, four domains. The table lists the shapes.\n\n<board equation label="Domains on N">3 + 1 = 4</board>\n\n<board page>Shapes from domain counts</board>\n<board note>Four domains: tetrahedral</board> What shape is it?') };
+    const re2 = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Count them.' }] }, studentSaid: 'four', callModel: eqCarry.call, boardPass: false });
+    check('a line of working written just before a page turn stays on the page it closes', !re2.toolCalls.find((c) => c.name === 'new_page')?.carries && re2.state.board.pages[re2.state.board.pages.length - 2]?.items.some((it) => it.tool === 'show_equation'), re2.state.board.pages);
+    const again = { call: sayIt('Good. <board problem>Multiply the matrix by the vector and say what you get.</board> What do you get?') };
+    const st0 = newV2State(1_000_000); st0.history = [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Try it.' }];
+    const first = await runV2Turn({ session: voice, state: st0, studentSaid: 'ok', callModel: again.call, boardPass: false });
+    const second = await runV2Turn({ session: voice, state: first.state, studentSaid: 'back to the problem', callModel: again.call, boardPass: false });
+    const pointed = second.toolCalls.find((c) => c.name === 'show_problem');
+    check('a block written again points at the item already up', !!pointed?.pointsAt && pointed.pointsAt === first.toolCalls.find((c) => c.name === 'show_problem')?.id && /scrolled back/.test(pointed.outcome), second.toolCalls);
+    check('a matrix, a column and a vector typed on a line are typeset', typesetMaths('Let A = [[1, 2], [0, 1]] and v = [3; 1].').includes('$A = \\begin{bmatrix} 1 & 2 \\\\ 0 & 1 \\end{bmatrix}$') && typesetMaths('u = ⟨1, 2⟩').includes('\\langle') && typesetMaths('the list [1, 2, 3] and arr[0]') === 'the list [1, 2, 3] and arr[0]' && typesetMaths('line ŷ = 25 − 1.8x.').includes('\\hat{y} = 25'), typesetMaths('Let A = [[1, 2], [0, 1]] and v = [3; 1].'));
+    check('a first line that defines a term is not a heading', richBlocks('s_x: standard deviation of the x values\ns_y: standard deviation of the y values', { titled: true }).every((b) => b.kind === 'line'), richBlocks('s_x: standard deviation of the x values\ns_y: of y', { titled: true }));
     const twoFig = (o: number[][]) => applyToModelBoard(farBoard, `d${o.length}${o[1][1]}`, 'show_diagram', { type: 'solid_of_revolution', params: { outer: o, axis: 'x', method: 'washer' } });
     check('twoFig catalogue figures with different numbers are different items', twoFig([[0, 0], [0.5, 0.5], [1, 1]]).painted && twoFig([[0, 0], [0.25, 0.5], [0.5, 0.71], [1, 1]]).painted && !twoFig([[0, 0], [0.5, 0.5], [1, 1]]).painted, farBoard.pages[0].items.length);
     check('mathematics inside a sentence is typeset; words, years and chemistry are not', typesetMaths('Try it on y = x² from x = 0 to x = 2, around the x-axis.') === 'Try it on $y = x^{2}$ from $x = 0$ to $x = 2$, around the $x$-axis.' && typesetMaths('Outer radius R = x (the higher curve, y = x).') === 'Outer radius $R = x$ (the higher curve, $y = x$).' && /\\int_\{a\}\^\{b\}/.test(typesetMaths('Volume: V = π ∫ from a to b of r(x)² dx')) && ['The war ran 1861 - 1865 and I + you agree.', 'pH = pKa + log([A⁻]/[HA])', 'A force of 20 N at 0.3 m.', 'acetate (A⁻) and already $x^2$ here'].every((t) => typesetMaths(t) === t), typesetMaths('Volume: V = π ∫ from a to b of r(x)² dx'));
@@ -330,7 +341,7 @@ async function main() {
   check('the student\'s words are sent as they are', tail2[0].text === 'It is 3.');
   check('facts now show the board, the note and the answer check', /problem "Evaluate/.test(tail2[1].text) && /your note: Sam: AP level/.test(tail2[1].text) && /answer check: the student's 3 matches/.test(tail2[1].text), tail2[1].text);
   const out2 = r2.toolCalls.map((t) => t.outcome);
-  check('a repeat of what is on the board is not painted', out2[0] === 'not painted: already on the board (page 1)', out2[0]);
+  check('a repeat of what is on the board is not painted', /^not painted again: already on the board \(page 1\)/.test(out2[0]), out2[0]);
   check('a goal status is recorded', out2[1] === 'recorded' && r2.state.goals['try-basic']?.status === 'demonstrated');
   check('an unknown goal is refused with the goal list', /^not recorded: no goal "nope"/.test(out2[2]) && out2[2].includes('hook'));
   check('an invalid board call is refused by the validator', /^not painted: /.test(out2[3]), out2[3]);

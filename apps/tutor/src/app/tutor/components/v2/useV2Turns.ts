@@ -170,6 +170,9 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         onToolCall: (call) => {
           settled.push(call);
           p.current.onDebugEvent?.('tool_call', `${call.name} → ${call.outcome}${call.sayWith ? ` · with "${call.sayWith}"` : ''}${call.inline ? ' · inline' : ''}`);
+          // Written again, a thing already on the page is pointed at: the board glides back to it and marks it
+          // ("it would have been awesome had it slowly scrolled up and showed me that problem", AP Precalculus).
+          if (call.pointsAt) { p.current.onWhiteboardCommand([{ action: 'scrollTo', target: 'item', targetId: call.pointsAt, pulse: true } as unknown as WhiteboardCommand]); return; }
           if (!paintsOnBoard(call, V2_CONTROL_TOOL_NAMES)) return;
           const cmd = mapFunctionCallToCommand(call.name, call.args as Record<string, unknown>);
           // The words written before and after a tool call are separate paragraphs.
@@ -180,6 +183,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
           // Lines of working get room between them: fractions and roots on consecutive lines ran into each other
           // (AP Statistics, embed-1794447717307). Done here, so the tutor's record keeps the equation as written.
           if (cmd && (cmd as { action?: string }).action === 'showEquation' && typeof (cmd as { latex?: unknown }).latex === 'string') (cmd as unknown as { latex: string }).latex = (cmd as unknown as { latex: string }).latex.replace(/\\\\(?!\s*\[)/g, '\\\\[0.5em]');
+          // Two statements set side by side on one line are two lines: left as one, the board broke the long line
+          // where it liked and the second statement's left side hung at the end of the first (AP Statistics,
+          // embed-1794460149936).
+          if (cmd && (cmd as { action?: string }).action === 'showEquation' && typeof (cmd as { latex?: unknown }).latex === 'string') { const eq = cmd as unknown as { latex: string }; if (!/\\\\|\\begin\{/.test(eq.latex) && /\\qquad/.test(eq.latex) && eq.latex.length > 60) eq.latex = `\\begin{gathered} ${eq.latex.split(/\s*\\qquad\s*/).filter(Boolean).join(' \\\\[0.5em] ')} \\end{gathered}`; }
           // A sketch is drawn by its own service from the one-line description; the request starts now and the
           // item goes up when both its sentence and its drawing have arrived. No drawing: a labelled card instead.
           const drawn: Promise<void> = cmd && (cmd as { action?: string }).action === 'showSketch' ? resolveSketch(cmd as unknown as SketchCommand, p.current.embedToken, (m) => p.current.onDebugEvent?.('v2_sketch', m)) : Promise.resolve();

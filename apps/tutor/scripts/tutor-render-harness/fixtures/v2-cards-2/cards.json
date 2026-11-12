@@ -1,0 +1,205 @@
+[
+ {
+  "tool": "show_function_graph",
+  "label": "graph-1",
+  "args": {
+   "xRange": [
+    -1,
+    4
+   ],
+   "yRange": [
+    -2,
+    3
+   ],
+   "segments": [
+    {
+     "from": {
+      "x": 0,
+      "y": 0
+     },
+     "to": {
+      "x": 1,
+      "y": 2
+     },
+     "label": "u"
+    },
+    {
+     "from": {
+      "x": 0,
+      "y": 0
+     },
+     "to": {
+      "x": 3,
+      "y": -1
+     },
+     "label": "v"
+    },
+    {
+     "from": {
+      "x": 3,
+      "y": -1
+     },
+     "to": {
+      "x": 0.2,
+      "y": 0.4
+     },
+     "label": "drop onto u"
+    },
+    {
+     "from": {
+      "x": 0,
+      "y": 0
+     },
+     "to": {
+      "x": 0.2,
+      "y": 0.4
+     },
+     "label": "shadow of v on u"
+    }
+   ],
+   "functions": []
+  }
+ },
+ {
+  "tool": "show_stats",
+  "label": "chart-2",
+  "args": {
+   "type": "bar",
+   "title": "Checks needed to find each position in a list of 10",
+   "xLabel": "Position in list",
+   "bar": {
+    "categories": [
+     "Position 1",
+     "Position 2",
+     "Position 3",
+     "Position 4",
+     "Position 5",
+     "Position 6",
+     "Position 7",
+     "Position 8",
+     "Position 9",
+     "Position 10"
+    ],
+    "values": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ]
+   }
+  }
+ },
+ {
+  "tool": "annotate",
+  "label": "note-3",
+  "args": {
+   "text": "Matrix times vector:\n[[a, b], [c, d]] · [x; y] = [ax + by; cx + dy]",
+   "style": "highlight",
+   "rich": true
+  }
+ },
+ {
+  "tool": "annotate",
+  "label": "problem-4",
+  "args": {
+   "text": "Let A = [[1, 2], [0, 1]] and v = [3; 1]. Find the product A·v.",
+   "rich": true,
+   "style": "default"
+  }
+ },
+ {
+  "tool": "annotate",
+  "label": "problem-5",
+  "args": {
+   "text": "Let u = ⟨1, 2⟩ and v = ⟨3, −1⟩. Find u + v.",
+   "rich": true,
+   "style": "default"
+  }
+ },
+ {
+  "tool": "annotate",
+  "label": "note-6",
+  "args": {
+   "text": "s_x: standard deviation of the x values\ns_y: standard deviation of the y values\nr: correlation, between −1 and 1, showing how tightly the points follow a straight line",
+   "style": "highlight",
+   "rich": true
+  }
+ },
+ {
+  "tool": "annotate",
+  "label": "problem-7",
+  "args": {
+   "text": "A regression of weight y in kg on height x in cm gives the predicted line ŷ = −85 + 0.95x. Data have x̄ = 3.0, s_x = 0.4, ȳ = 50.",
+   "rich": true,
+   "style": "default"
+  }
+ },
+ {
+  "tool": "show_equation",
+  "label": "equation-8",
+  "args": {
+   "latex": "\\begin{gathered} \\hat{y} = 25 + 0.25(100) = 25 + 25 = 50°F \\\\[0.5em] \\hat{y} = 25 + 0.25(400) = 25 + 100 = 125°F \\end{gathered}",
+   "label": "student's predictions"
+  }
+ },
+ {
+  "tool": "show_tree",
+  "label": "tree-bst",
+  "args": {
+   "title": "Binary search tree",
+   "type": "generic",
+   "direction": "top-down",
+   "root": {
+    "label": "12",
+    "children": [
+     {
+      "label": "smaller",
+      "node": {
+       "label": "5",
+       "children": [
+        {
+         "label": "smaller",
+         "node": {
+          "label": "2"
+         }
+        },
+        {
+         "label": "larger",
+         "node": {
+          "label": "8"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "label": "larger",
+      "node": {
+       "label": "38",
+       "children": [
+        {
+         "label": "smaller",
+         "node": {
+          "label": "16"
+         }
+        },
+        {
+         "label": "larger",
+         "node": {
+          "label": "56"
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ }
+]

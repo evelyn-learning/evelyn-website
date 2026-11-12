@@ -435,6 +435,19 @@ function BarChart({ bar, xLabel, yLabel }: StatsRendererProps) {
 
   const yScale = (v: number) => MARGIN.top + CHART_H - ((v - yRange.min) / (yRange.max - yRange.min)) * CHART_H;
 
+  // Names that do not fit under their bars ran into one another ("Position 1" to "Position 10", data
+  // structures, embed-1794458110435). The words they all begin with are said once by the axis title, so they
+  // are dropped; a name still too long is cut short.
+  const slot = barW + gap - 2; const wide = (s: string) => s.length * 5.4;
+  let names = categories.map((c) => String(c ?? ''));
+  if (names.some((n) => wide(n) > slot) && names.length > 1) {
+    const words = names.map((n) => n.split(/\s+/)); let shared = 0;
+    while (words.every((w) => w.length > shared + 1 && w[shared] === words[0][shared])) shared += 1;
+    if (shared > 0) names = words.map((w) => w.slice(shared).join(' '));
+    const fit = Math.max(3, Math.floor(slot / 5.4));
+    names = names.map((n) => (wide(n) > slot ? `${n.slice(0, fit - 1)}…` : n));
+  }
+
   return (
     <g>
       {/* Bars */}
@@ -449,7 +462,7 @@ function BarChart({ bar, xLabel, yLabel }: StatsRendererProps) {
             {/* Value above bar */}
             <text x={x + barW / 2} y={yScale(values[i]) - 5} textAnchor="middle" fontSize={11} fill="#374151" fontWeight={500}>{fmt(values[i])}</text>
             {/* Category label below axis */}
-            <text x={x + barW / 2} y={yScale(0) + 16} textAnchor="middle" fontSize={10} fill="#374151">{cat}</text>
+            <text x={x + barW / 2} y={yScale(0) + 16} textAnchor="middle" fontSize={10} fill="#374151">{names[i]}</text>
           </g>
         );
       })}

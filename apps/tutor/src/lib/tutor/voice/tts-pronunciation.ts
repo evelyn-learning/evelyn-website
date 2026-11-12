@@ -2354,8 +2354,32 @@ export function speakSlashes(text: string): string {
  *   - a pedigree's generation I, II, III was the letter "I": it is "generation one";
  *   - "Now a new page: family trees" told the student about the board's pages: the announcement is dropped. */
 const ROMAN: Record<string, string> = { I: 'one', II: 'two', III: 'three', IV: 'four', V: 'five', VI: 'six' };
-export function speakLessonNotation(text: string): string {
+/** Notation the voice has no reading for, said the way a teacher says it (four lessons, 2026-11-11):
+ *  "$16,000 for a 5-year-old car … drops $1,800" was taken for mathematics between two dollar signs and spelt
+ *  out letter by letter; "|u||v|" was "vertical bar u vertical bar"; "multiply [[2, 0], [0, 3]] by [1; 4]" was
+ *  "multiply by"; a lone "u" was "oo"; "C–H bonds" had a pause in the middle. */
+function speakWrittenMaths(text: string): string {
+  const list = (s: string) => s.split(/[,;]/).map((x) => x.trim()).filter(Boolean).join(', ');
   return text
+    // Money: the amount, then the word.
+    .replace(/\$(\d[\d,]*(?:\.\d+)?)(\s+(?:thousand|million|billion))?(?![\d$])/g, (_m, n: string, scale: string | undefined) => `${n}${scale ?? ''} dollars`)
+    // A matrix, a column, a vector in angle brackets.
+    .replace(/\[\s*(\[[^[\]]*\](?:\s*,\s*\[[^[\]]*\])+)\s*\]/g, (_m, rows: string) => `the matrix with rows ${rows.split(/\]\s*,\s*\[/).map((r) => list(r.replace(/^\s*\[|\]\s*$/g, ''))).join(', and ')},`)
+    .replace(/\[\s*([^[\];,]+(?:\s*;\s*[^[\];,]+)+)\s*\]/g, (_m, col: string) => `the column ${list(col)}`)
+    .replace(/⟨([^⟨⟩]+)⟩/g, (_m, parts: string) => `the vector ${list(parts)}`)
+    // |u| is a length, |x − 3| an absolute value; two side by side are a product.
+    .replace(/(\|[^|]{1,14}\|)(?=\|)/g, "$1 times ")
+    .replace(/\|([^|]{1,14})\|/g, (_m, inner: string) => `${/[\dxyzn+\-−]/.test(inner) ? 'the absolute value of' : 'the magnitude of'} ${inner.trim()} `)
+    // ŷ, x̄: the letter and its mark.
+    .replace(/ŷ|ŷ/g, 'y hat').replace(/ȳ|ȳ/g, 'y bar').replace(/x̄/g, 'x bar')
+    // A bond between two atoms named by their symbols.
+    .replace(/\b([A-Z][a-z]?)[–—-]([A-Z][a-z]?)(?=\s+(?:single\s+|double\s+|triple\s+)?bonds?\b)/g, '$1 $2')
+    // A lone u or w is the letter: a capital is read as its name.
+    .replace(/(?<![A-Za-z'’̂̄])(\d*)([uw])(?![A-Za-z'’/])/g, (_m, n: string, l: string) => `${n ? `${n} ` : ''}${l.toUpperCase()}`);
+}
+
+export function speakLessonNotation(text: string): string {
+  return speakWrittenMaths(text)
     .replace(/\b([XYI])\^\{?([A-Za-z])\}?(?![A-Za-z])/g, (_m, base: string, allele: string) => `${base} ${allele === allele.toUpperCase() ? 'big' : 'little'} ${allele.toUpperCase()}`)
     .replace(/\b([Gg]enerations?)\s+((?:I{1,3}|IV|VI?)(?:\s*(?:,|and|to|or|through)\s*(?:I{1,3}|IV|VI?))*)(?![A-Za-z])/g, (_m, word: string, list: string) => `${word} ${list.replace(/\b(?:I{1,3}|IV|VI?)\b/g, (r) => ROMAN[r] ?? r)}`)
     .replace(/\b(III|II|IV|I|V)-(\d+)\b/g, (_m, r: string, n: string) => `${ROMAN[r] ?? r} ${n}`)

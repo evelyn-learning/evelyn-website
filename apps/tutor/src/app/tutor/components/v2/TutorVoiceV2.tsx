@@ -144,7 +144,11 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // A problem card is the task the reply set, and the tutor's record of the lesson says it was set. Dropped
     // because the student spoke first, it left the tutor saying "try the pH problem on the board" over a board
     // with no problem on it (chemistry, embed-1794447993778). It goes up; everything else unreached is dropped.
-    const kept = heldBoardRef.current.filter((h) => /^show_problem:/.test(h.what ?? ''));
+    // The page the card was written for goes up with it: with the turn dropped and the card kept, the first
+    // vectors problem sat at the foot of the parametric page, and the tutor's record had it on a page the
+    // student never saw (AP Precalculus, embed-1794456849622).
+    const firstCard = heldBoardRef.current.findIndex((h) => /^show_problem:/.test(h.what ?? ''));
+    const kept = heldBoardRef.current.filter((h, i) => /^show_problem:/.test(h.what ?? '') || (h.isPage && firstCard >= 0 && i < firstCard));
     const lost = [...heldBoardRef.current.filter((h) => !kept.includes(h)).map((h) => ({ id: h.id, what: h.what })), ...unplacedBoardRef.current.map((u) => ({ id: u.call.id, what: `${u.call.name}: ${summariseBoardCall(u.call.name, u.call.args ?? {}).slice(0, 80)}` }))];
     for (const h of heldBoardRef.current) clearTimeout(h.timer);
     for (const h of kept) h.paint();
@@ -155,6 +159,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     if (!state) return;
     const ids = new Set(lost.map((x) => x.id).filter(Boolean));
     for (const page of state.board.pages) page.items = page.items.filter((it) => !ids.has(it.id));
+    // A page that was never turned to is not a page: left in the record, the tutor believed it was on it.
+    for (const x of lost) { const m = /^new_page:\s*(.*)$/.exec(x.what ?? ''); const last = state.board.pages[state.board.pages.length - 1]; if (m && last && state.board.pages.length > 1 && !last.items.length && last.title.slice(0, 80) === m[1]) { state.board.pages.pop(); state.board.current = state.board.pages.length - 1; } }
     state.boardProblems = [...(state.boardProblems ?? []), ...lost.map((x) => `${x.what ?? 'an item'}: the student spoke before you reached it, so it was NEVER shown and they have not seen it. It is not on the board and is not an open task`)];
   }, []);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -204,8 +210,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       if (held) { clearTimeout(held.timer); heldBoardRef.current = heldBoardRef.current.filter((h) => h !== held); }
       unplacedBoardRef.current = unplacedBoardRef.current.filter((u) => u.call.id !== id);
       const shown = held ? undefined : paintedThisTurnRef.current.find((x) => x.id === id);
-      if (shown) shownThenWithdrawnRef.current.push(shown);
-      p.current.onDebugEvent?.('v2_board_withdrawn', held ? `${held.what ?? id}: withdrawn before it was shown` : `${shown?.summary.slice(0, 80) ?? id}: withdrawn, but it had already been shown`);
+      // Shown already, it comes off: left up, the check's own replacement went under it and the board held the
+      // same figure twice, then the same table twice (chemistry, embed-1794459147431).
+      if (shown) { paintedThisTurnRef.current = paintedThisTurnRef.current.filter((x) => x !== shown); p.current.onWhiteboardCommand([{ action: 'removeItems', ids: [id] } as unknown as WhiteboardCommand]); }
+      p.current.onDebugEvent?.('v2_board_withdrawn', held ? `${held.what ?? id}: withdrawn before it was shown` : `${shown?.summary.slice(0, 80) ?? id}: withdrawn after it was shown, taken off the board`);
     },
     holdBoard: (call, paintNow) => {
       const paint = () => { paintedThisTurnRef.current.push({ id: call.id, tool: call.name, summary: summariseBoardCall(call.name, call.args) }); paintNow(); };
@@ -307,12 +315,17 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, []);
   const hearingPartial = useCallback((text: string) => {
     const rt = realtimeRef.current;
-    if (!rt?.isSpeechPending() || pauseTimerRef.current || flagRef.current.active) return;
+    if (!rt?.isSpeechPending() || flagRef.current.active) return;
     // Pause on the first words that are not the tutor's own (every word of an echo is in what it just said).
     if (!text.trim() || isOwnVoice(text, spokenRef.current, 1, 1)) return;
+    const giveUp = () => setTimeout(() => { pauseTimerRef.current = null; realtimeRef.current?.resumeSpeech(); }, PAUSE_GIVE_UP_MS);
+    // Already paused and the student is still talking: the wait runs from their latest words. Counted from the
+    // first, a student who spoke for longer than the wait heard the tutor start up again under them every few
+    // seconds (AP Precalculus, embed-1794456849622: four restarts inside one 35-second question).
+    if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = giveUp(); return; }
     if (rt.pauseSpeech()) {
       p.current.onDebugEvent?.('v2_bargein_pause', text.slice(0, 80));
-      pauseTimerRef.current = setTimeout(() => { pauseTimerRef.current = null; realtimeRef.current?.resumeSpeech(); }, PAUSE_GIVE_UP_MS);
+      pauseTimerRef.current = giveUp();
     }
   }, []);
 
