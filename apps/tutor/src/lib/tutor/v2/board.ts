@@ -6,6 +6,7 @@
  * offline harness `applyToModelBoard` stands in for it. Either way the model
  * is told what painted, and the record is what the facts block reports.
  */
+import { solveDiagram } from '../diagrams/catalog/manifest';
 import type { V2Board, V2BoardOutcome } from './types';
 
 const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
@@ -77,6 +78,12 @@ export function boardMisfit(name: string, args: Record<string, unknown>): string
   // A figure tool called with nothing in it paints an empty frame (an empty Venn diagram opened a statistics
   // lesson, browser run 2026-11-11).
   if (/^show_/.test(name) && Object.keys(args).filter((k) => k !== 'title').length === 0) return 'it was given nothing to draw';
+  // A catalogue figure is drawn from its parameters by a solver; one it cannot solve would paint an error card.
+  if (name === 'show_diagram' && args.type !== 'hierarchy_pyramid') {
+    const params = (args.params ?? {}) as Record<string, unknown>;
+    if (typeof params.unreadable === 'string') return 'the figure\'s parameters must be one JSON object';
+    try { solveDiagram(String(args.type ?? ''), params); } catch (err) { return `the figure could not be drawn: ${err instanceof Error ? err.message : String(err)}`.slice(0, 220); }
+  }
   if (name === 'show_diagram' && args.type === 'hierarchy_pyramid' && count((args.params as Record<string, unknown> | undefined)?.tiers) < 2) return 'ranks need at least two levels, one per line from the top down';
   if (name === 'show_venn_diagram' && count(args.sets) < 2) return 'a Venn diagram needs its two or three sets';
   if (name === 'show_stats' && (args.type === 'bar' ? count((args.bar as Record<string, unknown> | undefined)?.categories) === 0 : (args.type === 'dotplot' || args.type === 'histogram') && count(args.data) < 2 && count(args.bins) < 1)) return 'a chart needs its data: the values separated by commas, or for a bar chart one bar per line, name | value';

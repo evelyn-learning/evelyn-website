@@ -1,5 +1,6 @@
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { richBlocks } from '../src/lib/tutor/v2/rich-text';
+import { figureCatalogueFor } from '../src/lib/tutor/v2/figure-catalogue';
 import { applyToModelBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk } from '../src/lib/tutor/v2/board-timing';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
@@ -198,6 +199,10 @@ async function main() {
     check('code on one line inside a problem is set out as typed', rbk.length === 3 && rbk[1].kind === 'code' && rbk[1].text.split('\n').length === 4 && rbk[2].kind === 'line', rbk);
     const rt2 = richBlocks('Rotational Motion and Angular Momentum\nApply rotational analogs of force.\nBase case: where it stops.\nThe time complexity is O(2^n).', { titled: true });
     check('a note gets a heading, a labelled point and typeset powers', rt2[0].kind === 'title' && rt2[2].kind === 'line' && rt2[2].label === 'Base case' && rt2[3].text.includes('$O(2^n)$') && richBlocks('Solve x = 3; then check.\nIt ends here.', { titled: true }).every((b) => b.kind === 'line'), rt2);
+    const fig = inlineToolCall(boardBlocksIn('<board figure kind="torque">{"armLength":"0.3 m","force":"20 N","pivot":"bolt"}</board>')[0]);
+    check('a catalogue figure is drawn from its kind and parameters, and refused when it cannot be solved', fig.name === 'show_diagram' && fig.args.type === 'torque' && boardMisfit(fig.name, fig.args) === null && /armLength is missing/.test(String(boardMisfit('show_diagram', { type: 'torque', params: { force: '20 N' } }))) && /unknown kind/.test(String(boardMisfit('show_diagram', { type: 'nonsense', params: {} }))), fig);
+    const physCat = figureCatalogueFor({ subject: 'science', topic: 'ap-physics-1', level: 'ap' }); const csCat = figureCatalogueFor({ subject: 'cs', topic: 'ap-cs-a', level: '11' });
+    check('the board check is shown the figures of the lesson\'s own subject', /\n  torque: /.test(`\n${physCat}`) && !/titration_curve|recursion_tree/.test(physCat) && /recursion_tree/.test(csCat) && !/torque/.test(csCat) && /titration_curve/.test(figureCatalogueFor({ subject: 'sci', topic: 'chemistry', level: '11' })) && /solid_of_revolution/.test(figureCatalogueFor({ subject: 'math', topic: 'ap-calculus-bc', level: '12' })), [physCat.length, csCat.length]);
     const sk = inlineToolCall(boardBlocksIn('<board sketch labels="bolt | 20 N push">a wrench on a bolt, pushed down at the far end</board>')[0]);
     check('a sketch block asks for a drawing with its labels', sk.name === 'show_sketch' && (sk.args.labels as string[]).length === 2 && /wrench/.test(String(sk.args.concept)), sk);
     check('a card keeps its task when the task opens with a method verb', taskOnly('A parabola has focus (0, 1) and directrix y = -1. Write its equation.').statement.endsWith('Write its equation.') && taskOnly('Find the limit. Rewrite it as one fraction first.').cut.length === 1);

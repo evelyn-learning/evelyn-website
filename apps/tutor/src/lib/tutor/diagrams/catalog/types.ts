@@ -25,6 +25,7 @@ export type DiagramKindId =
   // Phase 2 — physics
   | 'balance_scale'
   | 'lever'
+  | 'torque'
   | 'pulley_system'
   | 'inclined_plane'
   | 'spring_mass'

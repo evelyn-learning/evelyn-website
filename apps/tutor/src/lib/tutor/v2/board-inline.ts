@@ -19,14 +19,14 @@
  */
 import { isCodeBody, unfoldCode } from './rich-text';
 
-export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'code' | 'sketch' | 'page';
+export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'code' | 'sketch' | 'figure' | 'page';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
 /** `opening`: a block has begun and its content is still arriving (the client holds the sentence before it). */
 export type InlinePart = { text: string } | { block: InlineBlock } | { opening: true };
 
 const OPEN = '<board';
 const CLOSE = '</board>';
-const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|chart|ranks|code|sketch|page)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
+const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|chart|ranks|code|sketch|figure|page)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
 
 function parseBlock(raw: string): InlineBlock | null {
   BLOCK_RE.lastIndex = 0;
@@ -65,6 +65,13 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
   // Program code keeps its shape: one fixed-width listing, whether it was written as code or as a note
   // (a method written as a note came out in the board's prose font, AP CS A recursion, 2026-11-11).
   if (b.kind === 'code' || (b.kind === 'note' && isCodeBody(b.body))) return { name: 'show_code', args: { code: unfoldCode(b.body), language: b.attrs.lang || codeLanguage(b.body), ...(b.attrs.title ? { label: b.attrs.title } : {}) } };
+  // An exact figure from the board's catalogue (figure-catalogue.ts): its kind, and its parameters as JSON.
+  if (b.kind === 'figure') {
+    let params: Record<string, unknown> = {};
+    try { const parsed: unknown = JSON.parse(b.body.replace(/^```(?:json)?\s*|\s*```$/g, '')); if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) params = parsed as Record<string, unknown>; } catch { /* boardMisfit reports the figure as unreadable */ params = { unreadable: b.body.slice(0, 80) }; }
+    if (b.attrs.title && params.title === undefined) params.title = b.attrs.title;
+    return { name: 'show_diagram', args: { type: (b.attrs.kind ?? '').trim(), params } };
+  }
   // A rough picture of a real thing or scene (a wrench on a bolt, a skater's arms). NOT OFFERED to the tutor yet
   // (it is in neither the constitution nor the board check): the drawing service drew a push "down" as an arrow
   // pointing up in its first trial (AP Physics 1 probe, 2026-11-11). The form stays so a better one can be tried.

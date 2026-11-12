@@ -48,6 +48,39 @@ export function solveBalanceScale(params: Record<string, unknown>): BalanceScale
   };
 }
 
+// ── torque ────────────────────────────────────────────────────────────────
+/** A force on an arm that turns about a pivot. Lengths and forces are kept as written ("0.3 m", "20 N"): the
+ *  picture shows the set-up, never the torque itself, which is usually what the student is to find. */
+export interface TorqueFigure {
+  armLabel: string;
+  forceLabel: string;
+  /** Between the arm's line (pointing away from the pivot) and the force, 1 to 179. */
+  angleDegrees: number;
+  clockwise: boolean;
+  pivotLabel: string;
+  armName: string;
+  title?: string;
+}
+export function solveTorque(params: Record<string, unknown>): TorqueFigure {
+  const label = (v: unknown, unit: unknown, what: string) => {
+    const s = typeof v === 'number' ? `${v}${typeof unit === 'string' && unit ? ` ${unit}` : ''}` : typeof v === 'string' ? v.trim() : '';
+    if (!s) throw new Error(`torque: ${what} is missing`);
+    return s;
+  };
+  const angle = params.angleDegrees === undefined || params.angleDegrees === null || params.angleDegrees === '' ? 90 : Number(params.angleDegrees);
+  if (!Number.isFinite(angle) || angle < 1 || angle > 179) throw new Error('torque: angleDegrees is the angle between the arm and the force, from 1 to 179');
+  const text = (v: unknown, fallback: string) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 40) : fallback);
+  return {
+    armLabel: label(params.armLength, params.lengthUnit, 'armLength'),
+    forceLabel: label(params.force, params.forceUnit, 'force'),
+    angleDegrees: Math.round(angle * 10) / 10,
+    clockwise: params.direction !== 'counterclockwise' && params.direction !== 'anticlockwise',
+    pivotLabel: text(params.pivot, 'pivot'),
+    armName: text(params.arm, 'arm'),
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
 // ── lever ─────────────────────────────────────────────────────────────────
 export interface LeverFigure {
   effort: number;

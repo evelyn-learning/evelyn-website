@@ -18,7 +18,7 @@ import { solveBarChart } from './kinds/bar-chart';
 import { solveLinePlot } from './kinds/line-plot';
 
 import {
-  solveBalanceScale, solveLever, solvePulleySystem, solveInclinedPlane,
+  solveBalanceScale, solveLever, solveTorque, solvePulleySystem, solveInclinedPlane,
   solveSpringMass, solvePendulum, solveSimpleCircuit, solveWaveDiagram,
   solveRayDiagram, solveVectorAddition,
 } from './kinds/physics';
@@ -118,6 +118,7 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
 
   // ── Phase 2 — physics ──────────────────────────────────────────────────
   { kind: 'balance_scale', displayName: 'Balance Scale (physics)', whenToUse: 'Show physical balance with items of differing weights; solver computes tilt direction.', subjects: ['physics'], grades: { from: 3, to: 9 }, paramSchema: 'left:[{label,weight?,color?}], right:[{label,weight?,color?}], title?, caption?' },
+  { kind: 'torque', displayName: 'Torque', whenToUse: 'Show a force turning an arm about a pivot: a wrench on a bolt, a door on its hinge, a spanner, a see-saw arm. Draws the pivot, the arm length r, the force F and the angle between them; never the torque itself.', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'armLength:string (e.g. "0.3 m"), force:string (e.g. "20 N"), angleDegrees?:number (between arm and force, default 90), direction?:clockwise|counterclockwise, pivot?:string (e.g. "bolt"), arm?:string (e.g. "wrench"), title?' },
   { kind: 'lever', displayName: 'Lever', whenToUse: 'Show a class-1 lever with effort and load on either side of a fulcrum.', subjects: ['physics'], grades: { from: 6, to: 12 }, paramSchema: 'effort:number, load:number, effortDistance:number, loadDistance:number, title?' },
   { kind: 'pulley_system', displayName: 'Pulley System', whenToUse: 'Mode "block-tackle" (default): block-and-tackle with fixed/movable pulleys; solver computes mechanical advantage. Mode "atwood": two masses hanging on opposite ends of a rope over a single fixed pulley. Mode "table-pulley": one block on a horizontal table, second block hanging off the edge over a pulley. Mode "incline-pulley": one block on a ramp + rope over a pulley at the top + second block hanging on the far side.', subjects: ['physics'], grades: { from: 7, to: 12 }, paramSchema: 'mode?:block-tackle|atwood|table-pulley|incline-pulley. block-tackle: fixedCount?:int, movableCount?:int, weightLabel?:string, weight?:number. atwood / table-pulley / incline-pulley: leftSide?:{label,weight?}, rightSide?:{label,weight?} (or loads:[{label|mass,weight?},…]). incline-pulley adds inclineAngle?:number (degrees, default 30). title?' },
   { kind: 'inclined_plane', displayName: 'Inclined Plane', whenToUse: 'Show a block on a ramp; solver places block on the slope at the specified angle.', subjects: ['physics'], grades: { from: 7, to: 12 }, paramSchema: 'angle:number, mass?:number, showForces?:boolean, showFriction?:boolean, title?' },
@@ -317,6 +318,7 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   // Phase 2
   balance_scale: solveBalanceScale,
   lever: solveLever,
+  torque: solveTorque,
   pulley_system: solvePulleySystem,
   inclined_plane: solveInclinedPlane,
   spring_mass: solveSpringMass,

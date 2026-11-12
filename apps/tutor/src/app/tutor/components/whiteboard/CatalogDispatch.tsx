@@ -15,6 +15,7 @@ import { BarChartRenderer } from './BarChartRenderer';
 import { LinePlotRenderer } from './LinePlotRenderer';
 import { BalanceScaleRenderer } from './BalanceScaleRenderer';
 import { LeverRenderer } from './LeverRenderer';
+import { TorqueRenderer } from './TorqueRenderer';
 import { PulleySystemRenderer } from './PulleySystemRenderer';
 import { InclinedPlaneRenderer } from './InclinedPlaneRenderer';
 import { CatalogSpringMassRenderer } from './CatalogSpringMassRenderer';
@@ -175,6 +176,7 @@ export function CatalogDispatch({ kind, figure }: Props) {
     // Phase 2 — physics
     case 'balance_scale':            return <BalanceScaleRenderer figure={figure} />;
     case 'lever':                    return <LeverRenderer figure={figure} />;
+    case 'torque':                   return <TorqueRenderer figure={figure} />;
     case 'pulley_system':            return <PulleySystemRenderer figure={figure} />;
     case 'inclined_plane':           return <InclinedPlaneRenderer figure={figure} />;
     case 'spring_mass':              return <CatalogSpringMassRenderer figure={figure} />;
