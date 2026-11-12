@@ -32,7 +32,7 @@ import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State
 /** A spoken reply of at least this many words that wrote nothing is put to the board check. */
 export const V2_UNWRITTEN_WORDS = 30;
 /** Board calls that draw a figure, as opposed to writing words or mathematics. */
-const V2_FIGURE_TOOL_NAMES = new Set(['show_free_body_diagram', 'show_number_line', 'show_function_graph', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats', 'show_lewis_constructed', 'show_cycle_diagram', 'show_concept_map', 'show_map', 'show_diagram']);
+const V2_FIGURE_TOOL_NAMES = new Set(['show_free_body_diagram', 'show_number_line', 'show_function_graph', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats', 'show_lewis_constructed', 'show_cycle_diagram', 'show_concept_map', 'show_map', 'show_diagram', 'show_sketch']);
 export const V2_MAX_MODEL_CALLS = 5;
 export const V2_MAX_TOKENS = 8000;
 export const V2_NOTE_MAX_CHARS = 1500;
@@ -248,7 +248,9 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
       // for 100 s after an explanation (embed-1794426544316, embed-1794416183291). Taking the tools away
       // instead (tool_choice none) made half the openings come back with no words at all.
       outcome = boardOnly ? 'not done: only the board was asked for'
-        : block.name === 'keep_listening' && mustSpeak ? 'not done: the student is waiting for you to speak. Say the next thing now.'
+        // Once this reply has words, the call is only the tutor handing the floor over: refusing it then made the
+        // opening say itself twice (AP Physics 1, embed-1794441323503).
+        : block.name === 'keep_listening' && mustSpeak && !spoken.length ? 'not done: the student is waiting for you to speak. Say the next thing now.'
         : applyControlTool(state, session, block.name, args, nowMs);
     } else {
       const valid = validateToolCall(block.name, args);

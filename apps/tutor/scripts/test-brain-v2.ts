@@ -1,9 +1,10 @@
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
+import { richBlocks } from '../src/lib/tutor/v2/rich-text';
 import { applyToModelBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk } from '../src/lib/tutor/v2/board-timing';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths, unwrittenEquations } from '../src/lib/tutor/v2/spoken-maths';
-import { renderFacts } from '../src/lib/tutor/v2/facts';
+import { renderFacts, V2_NO_ASK_RECHECK_S } from '../src/lib/tutor/v2/facts';
 /// <reference types="node" />
 /**
  * Tutor brain v2 — unit suite for the turn engine (src/lib/tutor/v2). No network.
@@ -46,7 +47,7 @@ async function main() {
   const tools = v2Tools('math');
   const toolChars = JSON.stringify(tools).length;
   // 18,000 since 2026-11-10: the eleven board forms are listed in the principles (a reference list, not rules).
-  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 18000, sys.length);
+  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 18300, sys.length);
   check(`a math session gets a handful of tools (${tools.length}, ${toolChars} chars)`, tools.length <= 16 && toolChars < 24000, [tools.length, toolChars]);
   check('the control tools are present', ['update_session_note', 'set_goal_status', 'track_gap', 'end_lesson'].every((n) => tools.some((t) => t.name === n)));
   check('the constitution names no partner, topic or symptom', !/crimsora|greenapple|gdi|l'h[oô]pital|cos\(|streak/i.test(V2_CONSTITUTION));
@@ -186,8 +187,19 @@ async function main() {
     const paras = new SentenceStream(); const paraCut = [...paras.push('Yes, both right. They ranked above mestizos.\n\nNext is the debate. Las Casas argued one side.\n'), ...paras.push('\nWhich side won? '), ...paras.flush()];
     check('the sentence stream marks where paragraphs begin', paraCut.length === 5 && [...paras.paragraphStarts].join() === '0,2,4', [...paras.paragraphStarts]);
     const waited = stub([msg([{ type: 'tool_use', id: 'k1', name: 'keep_listening', input: {} }], 'tool_use'), msg([{ type: 'text', text: 'The Crown later shifted to the repartimiento.' }], 'end_turn')]);
-    const rw = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'ok' }, { role: 'assistant', content: 'The encomienda was a grant.' }] }, studentSaid: null, facts: { nowMs: 1_010_000, silenceSeconds: 6 }, callModel: waited.call, boardPass: false });
+    const rw = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'ok' }, { role: 'assistant', content: 'The encomienda was a grant.' }] }, studentSaid: null, facts: { nowMs: 1_010_000, silenceSeconds: V2_NO_ASK_RECHECK_S }, callModel: waited.call, boardPass: false });
     check('after a reply that ended on a statement, saying nothing is not open to the tutor', /repartimiento/.test(rw.spoken) && rw.modelCalls === 2, rw.spoken);
+    const twice = stub([msg([{ type: 'text', text: 'Hi. What do you know about spin?' }, { type: 'tool_use', id: 'k2', name: 'keep_listening', input: {} }], 'tool_use'), msg([{ type: 'text', text: 'Hi. What do you know about spin?' }], 'end_turn')]);
+    const rtw = await runV2Turn({ session: voice, state: newV2State(1_000_000), studentSaid: null, callModel: twice.call, boardPass: false });
+    check('an opening that has spoken and then hands over is not asked to speak again', rtw.modelCalls === 1 && (rtw.spoken.match(/What do you know/g) ?? []).length === 1, [rtw.modelCalls, rtw.spoken]);
+    const codeNote = inlineToolCall(boardBlocksIn('<board note style="highlight">public static int count(int n) {\n  if (n == 1) return 1;     // base case\n  return 1 + count(n - 1);  // recursive case\n}</board>')[0]);
+    check('a note that is program code becomes a code listing', codeNote.name === 'show_code' && codeNote.args.language === 'java' && /\n  if \(n == 1\)/.test(String(codeNote.args.code)), codeNote);
+    const rbk = richBlocks('Here is a new method:\n\nint g(int n) { if (n <= 0) return 0; return n % 2 + g(n - 1); }\n\nWhat does g(5) return?');
+    check('code on one line inside a problem is set out as typed', rbk.length === 3 && rbk[1].kind === 'code' && rbk[1].text.split('\n').length === 4 && rbk[2].kind === 'line', rbk);
+    const rt2 = richBlocks('Rotational Motion and Angular Momentum\nApply rotational analogs of force.\nBase case: where it stops.\nThe time complexity is O(2^n).', { titled: true });
+    check('a note gets a heading, a labelled point and typeset powers', rt2[0].kind === 'title' && rt2[2].kind === 'line' && rt2[2].label === 'Base case' && rt2[3].text.includes('$O(2^n)$') && richBlocks('Solve x = 3; then check.\nIt ends here.', { titled: true }).every((b) => b.kind === 'line'), rt2);
+    const sk = inlineToolCall(boardBlocksIn('<board sketch labels="bolt | 20 N push">a wrench on a bolt, pushed down at the far end</board>')[0]);
+    check('a sketch block asks for a drawing with its labels', sk.name === 'show_sketch' && (sk.args.labels as string[]).length === 2 && /wrench/.test(String(sk.args.concept)), sk);
     check('a card keeps its task when the task opens with a method verb', taskOnly('A parabola has focus (0, 1) and directrix y = -1. Write its equation.').statement.endsWith('Write its equation.') && taskOnly('Find the limit. Rewrite it as one fraction first.').cut.length === 1);
     check('roman text keeps its spaces', spacedRoman('\\mathrm{N_2 \\ (atmosphere)} \\to \\mathrm{NH_3 (usable by plants)}').includes('(usable\\ by\\ plants)'));
     const kinds = boardBlocksIn('<board cycle title="N">Fixation | N2 to NH3\nNitrification | to nitrate\nDenitrification | back to N2</board><board web>Fertilizer | runs off into | Lakes\nLakes | grow | Algae</board><board map region="world">Spain | 40 | -4\nHispaniola | 19 N | 71 W</board><board page>Parabolas</board><board compare left="A" right="B">x | y</board>').map(inlineToolCall);

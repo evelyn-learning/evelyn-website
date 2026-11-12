@@ -2,7 +2,7 @@
 // Unit tests for rewriteForTTS() additions: slash-pair whitelist,
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
-import { rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
+import { rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1562,5 +1562,9 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(speakDataRuns('for these heights, 165, 170, 168, 172, 175, 180, 178, 169, 173, 171, 177, 182, 179, 174, 176, suggest a bin width'), 'for these heights, the 15 values on the board, suggest a bin width');
   assert.equal(speakNumberPlurals('the two 4s and the 5, three 10s, the 1s cancel, two 25s'), "the two fours and the 5, three tens, the ones cancel, two 25's");
   assert.equal(speakNumberPlurals('it took 4s to fall'), 'it took 4s to fall');
+  // A unit over seconds is "per second" and one letter over another is "over" (AP Physics 1, embed-1794441323503).
+  assert.match(rewriteForTTS(speakSlashes('Yes, ω is 8 rad/s, and L is 8 kg·m²/s.')), /8 radians per second, .*squared per second/);
+  assert.equal(speakSlashes('the same rate ω = v/r, so use F/m'), 'the same rate ω = v over r, so use F over m');
+  for (const keep of ['It moves at 4 m/s.', 'It is n/a, and/or either.', 'The slope is dy/dx.', 'about 3/4 of them']) assert.equal(speakSlashes(keep), keep);
   for (const keep of ['The scores are 62, 66, 70, 73, 75.', 'In 1492, 1519, and 1550 to 1551.', 'It cost 1,250,000 dollars.']) assert.equal(speakDataRuns(keep), keep);
 }

@@ -51,6 +51,7 @@ You write on the board inside your reply, at the moment a tutor would pick up th
 <board ranks title="…">one level per line, from the top down: the level | a few words on it</board>
 <board web title="…">one link per line: a thing | how it leads to or acts on | another thing</board>
 <board map region="world" title="…">one place per line: its name | latitude | longitude (region: world, north-america, south-america, europe, asia, africa, usa, mediterranean, middle-east)</board>
+<board code lang="java">program code, set out as it is typed, one statement per line</board>
 <board page>the heading of a new page, or the heading of an earlier page to turn back to it</board>
 <board numberline>one marked value per line: the value | open or closed | which way it is shaded (left, right) or nothing</board>
 <board graph x="-5..5" y="-5..5">one curve per line, in LaTeX: an expression in x, or an equation in x and y. A point is a line of its own: (2, 3) | its name. So is a segment: (0, 0) to (3, 0) | its name</board>

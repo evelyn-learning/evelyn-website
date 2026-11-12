@@ -47,6 +47,8 @@ async function main() {
   const input = page.locator('input[name="studentText"]');
   for (const line of lines) { await input.click(); await input.fill(line); await input.press('Enter'); console.log(`typed @${((Date.now() - t0) / 1000).toFixed(1)}s: ${line}`); await page.waitForTimeout(Number(process.env.PROBE_TURN_MS ?? 28000)); if (process.env.PROBE_SHOT) await page.screenshot({ path: process.env.PROBE_SHOT.replace(/\.png$/, `-${lines.indexOf(line) + 1}.png`) }).catch(() => {}); }
   // PROBE_SHOT=<file.png>: a picture of the page at the end, to look at the board.
+  // PROBE_SHOT_AT=<css selector>: bring that element into view first (a figure further up the board).
+  if (process.env.PROBE_SHOT_AT) await page.locator(process.env.PROBE_SHOT_AT).last().scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
   if (process.env.PROBE_SHOT) await page.screenshot({ path: process.env.PROBE_SHOT, fullPage: false }).catch(() => {});
   const sched = await page.evaluate(() => window.__sched ?? []);
   const byCtx = new Map<number, Sched[]>();

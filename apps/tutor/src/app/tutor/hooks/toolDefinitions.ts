@@ -2668,6 +2668,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       action: 'annotate',
       text: funcArgs.text,
       style: funcArgs.style || 'default',
+      ...(funcArgs.rich === true ? { rich: true } : {}),
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_sentence') {
@@ -2735,6 +2736,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
         sourceTag: funcArgs.source,
         difficultyLabel: funcArgs.difficulty,
         givenValues,
+        ...(funcArgs.rich === true ? { rich: true } : {}),
       },
     } as unknown as WhiteboardCommand;
   }

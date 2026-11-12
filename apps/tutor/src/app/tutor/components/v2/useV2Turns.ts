@@ -70,6 +70,22 @@ export interface V2Turns {
   stateRef: MutableRefObject<V2State>;
 }
 
+interface SketchCommand { concept?: string; labels?: string[]; title?: string; primitives?: unknown[]; fallbackCard?: { title?: string; concept: string; labels: string[] } }
+const SKETCH_TIMEOUT_MS = 12000;
+/** Fetch the drawing for a sketch request and attach it to the command (the board renders nothing without it). */
+async function resolveSketch(c: SketchCommand, embedToken: string | undefined, log: (m: string) => void): Promise<void> {
+  const concept = c.concept ?? ''; const labels = c.labels ?? [];
+  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), SKETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch('/api/tutor/sketch', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) }, body: JSON.stringify({ concept, labels, sessionId: 'v2' }), signal: ctl.signal });
+    const data = res.ok ? await res.json() as { primitives?: unknown[] | null } : { primitives: null };
+    if (Array.isArray(data.primitives) && data.primitives.length) { c.primitives = data.primitives; log(`drawn: ${data.primitives.length} strokes — ${concept.slice(0, 80)}`); return; }
+    log(`no drawing (${res.status}) — card instead: ${concept.slice(0, 80)}`);
+  } catch (err) { log(`failed (${err instanceof Error ? err.message : String(err)}) — card instead`); }
+  finally { clearTimeout(timer); }
+  c.fallbackCard = { title: c.title, concept, labels };
+}
+
 export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const p = useRef(config); p.current = config;
   const stateRef = useRef<V2State>(newV2State());
@@ -161,7 +177,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
           // Every item carries its own id: the board animates an item once and keys its row by it (without one a
           // card drew itself again whenever the next card arrived), and a redrawn graph removes the one it replaces.
           if (cmd && !(cmd as { id?: string }).id) (cmd as { id?: string }).id = call.id;
-          if (cmd) { const paint = () => p.current.onWhiteboardCommand(call.replaces ? [{ action: 'removeItems', ids: [call.replaces] } as unknown as WhiteboardCommand, cmd] : [cmd]); if (p.current.holdBoard) p.current.holdBoard(call, paint); else paint(); }
+          // A sketch is drawn by its own service from the one-line description; the request starts now and the
+          // item goes up when both its sentence and its drawing have arrived. No drawing: a labelled card instead.
+          const drawn: Promise<void> = cmd && (cmd as { action?: string }).action === 'showSketch' ? resolveSketch(cmd as unknown as SketchCommand, p.current.embedToken, (m) => p.current.onDebugEvent?.('v2_sketch', m)) : Promise.resolve();
+          if (cmd) { const paint = () => { void drawn.then(() => p.current.onWhiteboardCommand(call.replaces ? [{ action: 'removeItems', ids: [call.replaces] } as unknown as WhiteboardCommand, cmd] : [cmd])); }; if (p.current.holdBoard) p.current.holdBoard(call, paint); else paint(); }
           if (text && !/\n\n$/.test(text)) text += '\n\n';
         },
       });

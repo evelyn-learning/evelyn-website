@@ -95,6 +95,7 @@ import CellDiagramRenderer from './CellDiagramRenderer';
 import DnaRenderer from './DnaRenderer';
 import FoodWebRenderer from './FoodWebRenderer';
 import { InlineMathText } from './InlineMathText';
+import { RichBoardText } from './RichBoardText';
 import { isProseNotLatex } from '@/lib/tutor/whiteboard/inline-math';
 import { CellContent } from './CellContent';
 import { stripRedundantChoiceLabel, stripEmbeddedChoiceBlock } from './choiceLabel';
@@ -3052,7 +3053,8 @@ function CommandRendererInner({ command }: CommandRendererProps) {
               unbreakable atoms — an oversized one gets a scrollbar here
               instead of being clipped by the pane's overflow-x-hidden. */}
           {/* One paragraph per line of the note: a list of conditions or steps written with newlines ran together as one line. */}
-          {String(command.text ?? '').split(/\n+/).filter((line) => line.trim()).map((line, i) => (
+          {/* rich (tutor brain v2): a heading, labelled points and program code are set out as such (RichBoardText). */}
+          {(command as { rich?: boolean }).rich ? <RichBoardText text={String(command.text ?? '')} titled /> : String(command.text ?? '').split(/\n+/).filter((line) => line.trim()).map((line, i) => (
             <HScrollFade key={i} as="p" className={`text-lg overflow-x-auto${i ? ' mt-1.5' : ''}`}><InlineMathText text={line} /></HScrollFade>
           ))}
         </div>
@@ -3121,11 +3123,15 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           <h4 className="font-semibold text-blue-900 mb-2" data-feature="title">
             <InlineMathText text={problem.title || 'Problem'} />
           </h4>
+          {(problem as { rich?: boolean }).rich ? (
+            <div className="text-gray-800" data-feature="statement"><RichBoardText text={stripEmbeddedChoiceBlock(problem.statement || '', answerChoices)} size="text-base" /></div>
+          ) : (
           <HScrollFade as="p" className="text-gray-800 whitespace-pre-wrap overflow-x-auto" data-feature="statement">
             {/* stripEmbeddedChoiceBlock: statement sometimes embeds the full
                 A)–D) list the choices <ul> below also renders (round 29). */}
             <InlineMathText text={stripEmbeddedChoiceBlock(problem.statement || '', answerChoices)} />
           </HScrollFade>
+          )}
           {validGivenValues.length > 0 && (
             <div className="mt-3" data-feature="given">
               <p className="text-sm font-medium text-gray-600">Given:</p>

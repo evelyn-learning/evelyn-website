@@ -642,6 +642,9 @@ export default function FreeBodyDiagramRenderer({
     }
     // Keep the whole estimated label inside the viewbox.
     labelX = Math.min(Math.max(labelX, estHalfW(label) + 4), VIEWBOX_W - estHalfW(label) - 4);
+    // And top to bottom: a long downward arrow put its label's baseline past the bottom edge, and half of each
+    // letter was cut off (AP Physics 1, embed-1794441323503).
+    labelY = Math.min(Math.max(labelY, 16), VIEWBOX_H - 8);
     // Expose the force as a targetable feature. Slug uses the original
     // force name (not the truncated/sanitized display) so the tutor can
     // predict it: "force-weight", "force-normal", "force-friction", etc.

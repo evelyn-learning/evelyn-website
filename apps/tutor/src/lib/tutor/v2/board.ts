@@ -13,7 +13,7 @@ const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 /** A one-line description of what a board tool call shows. */
 export function summariseBoardCall(name: string, args: Record<string, unknown>): string {
   const problem = (args.problem ?? {}) as Record<string, unknown>;
-  const parts = [text(args.title), text(problem.title), text(args.label), text(problem.statement), text(args.statement), text(args.problem), text(args.latex), text(args.text), text(args.expression)]
+  const parts = [text(args.title), text(problem.title), text(args.label), text(problem.statement), text(args.statement), text(args.problem), text(args.latex), text(args.text), text(args.expression), text(args.concept), text(args.code)]
     .filter(Boolean);
   const fns = Array.isArray(args.functions) ? (args.functions as Array<Record<string, unknown>>).map((f) => text(f.expression) || text(f.latex)).filter(Boolean).join(', ') : '';
   // Tables, timelines and organisers: their cells, in reading order.

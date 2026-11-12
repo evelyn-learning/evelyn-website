@@ -10,20 +10,23 @@
  *   <board note style="highlight">one point per line, $maths$ inline</board>
  *   <board problem difficulty="medium">the problem, $maths$ inline</board>
  *   <board table|timeline|compare|steps|quote|chart …>plain lines, cells separated by "|"</board>
+ *   <board code lang="java">program code as typed</board>   <board sketch labels="a | b">what to draw</board>
  *
  * The runtime lifts the blocks out of the stream: the words go to the student, each block becomes a
  * board call at that position (turn.ts), and the voice client paints it as the sentence before it
  * begins (TutorVoiceV2). The stored reply keeps the blocks, so the history shows a tutor who writes
  * while talking. `with="opening words"` is for the board pass only, whose blocks arrive after the words.
  */
-export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'page';
+import { isCodeBody, unfoldCode } from './rich-text';
+
+export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'code' | 'sketch' | 'page';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
 /** `opening`: a block has begun and its content is still arriving (the client holds the sentence before it). */
 export type InlinePart = { text: string } | { block: InlineBlock } | { opening: true };
 
 const OPEN = '<board';
 const CLOSE = '</board>';
-const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|chart|ranks|page)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
+const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|chart|ranks|code|sketch|page)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
 
 function parseBlock(raw: string): InlineBlock | null {
   BLOCK_RE.lastIndex = 0;
@@ -53,10 +56,22 @@ function pipedPoints(body: string): boolean {
 }
 
 /** The board tool call a block stands for. */
+/** The language of a listing nobody named: enough to head the card, never shown as fact about syntax. */
+function codeLanguage(code: string): string {
+  return /\b(?:public|private|static|void|String|System\.)\b|\bint\s+\w+\s*[(=;]/.test(code) ? 'java' : /^\s*def\s|:\s*$|\bprint\(/m.test(code) ? 'python' : /\b(?:const|let|function)\b|=>/.test(code) ? 'javascript' : 'code';
+}
+
 export function inlineToolCall(b: InlineBlock): { name: string; args: Record<string, unknown> } {
+  // Program code keeps its shape: one fixed-width listing, whether it was written as code or as a note
+  // (a method written as a note came out in the board's prose font, AP CS A recursion, 2026-11-11).
+  if (b.kind === 'code' || (b.kind === 'note' && isCodeBody(b.body))) return { name: 'show_code', args: { code: unfoldCode(b.body), language: b.attrs.lang || codeLanguage(b.body), ...(b.attrs.title ? { label: b.attrs.title } : {}) } };
+  // A rough picture of a real thing or scene (a wrench on a bolt, a skater's arms). NOT OFFERED to the tutor yet
+  // (it is in neither the constitution nor the board check): the drawing service drew a push "down" as an arrow
+  // pointing up in its first trial (AP Physics 1 probe, 2026-11-11). The form stays so a better one can be tried.
+  if (b.kind === 'sketch') return { name: 'show_sketch', args: { concept: b.body.replace(/\s+/g, ' '), ...(b.attrs.labels ? { labels: b.attrs.labels.split('|').map((x) => x.trim()).filter(Boolean) } : {}), ...(b.attrs.title ? { title: b.attrs.title } : {}) } };
   if (b.kind === 'equation') return { name: 'show_equation', args: { latex: b.body, ...(b.attrs.label ? { label: b.attrs.label } : {}) } };
   // One point per line; a tutor who has just written a table sometimes separates the points with "|" instead.
-  if (b.kind === 'note') return { name: 'annotate', args: { text: b.body.includes('\n') || b.body.includes('$') || !pipedPoints(b.body) ? b.body : b.body.split(/(?<=[^|\s])\s*\|\s*(?=[^|\s])/).filter(Boolean).join('\n'), ...(b.attrs.style ? { style: b.attrs.style } : {}) } };
+  if (b.kind === 'note') return { name: 'annotate', args: { text: b.body.includes('\n') || b.body.includes('$') || !pipedPoints(b.body) ? b.body : b.body.split(/(?<=[^|\s])\s*\|\s*(?=[^|\s])/).filter(Boolean).join('\n'), ...(b.attrs.style ? { style: b.attrs.style } : {}), rich: true } };
   // The structured kinds are written as plain lines, cells separated by "|", so that a table or a timeline
   // costs the tutor no more than a note: a lesson in words was otherwise a stack of text cards
   // (Praveen, AP US Government, embed-1794355900794).
@@ -164,7 +179,7 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     } };
   }
   if (b.kind === 'quote') return { name: 'show_passage', args: { text: b.body, ...(b.attrs.source ? { source: b.attrs.source } : {}), ...(b.attrs.title ? { title: b.attrs.title } : {}) } };
-  return { name: 'show_problem', args: { statement: b.body, format: 'free-response', ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(b.attrs.difficulty ? { difficulty: b.attrs.difficulty } : {}) } };
+  return { name: 'show_problem', args: { statement: b.body, format: 'free-response', rich: true, ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(b.attrs.difficulty ? { difficulty: b.attrs.difficulty } : {}) } };
 }
 
 /** A straight segment between two points: "(0, 0) to (3, 0) | horizontal leg". */

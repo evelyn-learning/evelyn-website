@@ -2340,6 +2340,15 @@ export function speakDataRuns(text: string): string {
  *  counts or points ("the", "two", "both", "those"), a number with an s is said as its plural. "It took 4s"
  *  (seconds) has no such word before it and is left alone. */
 const NUMBER_PLURAL = ['zeros', 'ones', 'twos', 'threes', 'fours', 'fives', 'sixes', 'sevens', 'eights', 'nines', 'tens'];
+/** A slash the voice would read as "slash": a unit over seconds after another unit ("8 rad/s", "kg·m²/s") is
+ *  "per second", and one letter over another ("v/r", "F/m") is "over" ("V slash R", "8 … per S": AP Physics 1,
+ *  embed-1794441323503). A value's own unit ("4 m/s") is left to the unit pass, which already reads it. */
+export function speakSlashes(text: string): string {
+  let t = text.replace(/(?<=[A-Za-z²³]|\^[23])\s*\/\s*s(?:\^?2|²)(?![A-Za-z\d])/g, ' per second squared').replace(/(?<=(?:[a-z]{2,}|[²³]|\^[23]))\s*\/\s*s(?![A-Za-z\d²^])/g, ' per second');
+  t = t.replace(/(?<![A-Za-z\d/]|\d\s)([A-Za-zα-ω])\s*\/\s*([A-Za-zα-ω])(?![A-Za-z\d/])/g, (m, a: string, b: string) => (/^(?:n\/a|w\/o|I\/O|a\/c)$/i.test(m.replace(/\s/g, '')) ? m : `${a} over ${b}`));
+  return t;
+}
+
 export function speakNumberPlurals(text: string): string {
   return text.replace(/\b(the|these|those|both|all|of|and|or|no|many|few|several|two|three|four|five|six|seven|eight|nine|ten|\d+)(\s+)(\d{1,3})s\b(?!')/gi, (_m, cue: string, gap: string, n: string) => `${cue}${gap}${NUMBER_PLURAL[Number(n)] ?? `${n}'s`}`);
 }

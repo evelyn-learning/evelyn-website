@@ -39,7 +39,7 @@ import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
 import { anchorSentenceIndex, asksAloud, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S } from '@/lib/tutor/v2/facts';
-import { speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals } from '@/lib/tutor/voice/tts-pronunciation';
+import { speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
@@ -69,7 +69,7 @@ const PAUSE_GIVE_UP_MS = 8000;
 /** The microphone must have been quiet this long before a silence counts as silence. */
 const QUIET_MIC_MS = 20000;
 /** After a reply of silence, how long before the tutor is told the student has said nothing more. */
-const WAITED_RECHECK_S = 12;
+const WAITED_RECHECK_S = 7;
 /** After a reply that asked nothing: how long after it finishes speaking before the tutor is told of the silence. */
 const NO_ASK_RECHECK_S = V2_NO_ASK_RECHECK_S;
 const MIC_SOUND_LEVEL = 0.12;
@@ -333,9 +333,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [armSilence, releaseBoard]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');
-  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakFormulas(speakBonds(speakNumberPlurals(speakDataRuns(sentence))))), []);
-  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(speakNumberPlurals(speakDataRuns(sentence)))), []);
-  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakNumberPlurals(speakDataRuns(sentence))), []);
+  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakFormulas(speakBonds(speakSlashes(speakNumberPlurals(speakDataRuns(sentence)))))), []);
+  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(speakSlashes(speakNumberPlurals(speakDataRuns(sentence))))), []);
+  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakSlashes(speakNumberPlurals(speakDataRuns(sentence)))), []);
   const relayMode = useMemo(() => ({
     instructions: TRANSPORT_ONLY,
     onUserTranscript: onRelayTranscript,
