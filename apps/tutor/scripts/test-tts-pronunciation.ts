@@ -163,7 +163,7 @@ console.log('OK — tts-pronunciation rewrites validated');
   };
   eq('So what is dy/dx here?', 'So what is dee why over dee ex here?', 'dy/dx-fraction');
   eq('First find dx/dt and dy/dt.', 'First find dee ex over dee tee and dee why over dee tee.', 'dx/dt-dy/dt');
-  eq('Now take dy and divide by dx.', 'Now take dee why and divide by dee ex.', 'bare-dy-dx-tokens');
+  eq('Now take dy and divide by dx.', 'Now take D Y and divide by D X.', 'bare-dy-dx-tokens');
   eq('d²y/dx² is the second derivative', 'dee squared why over dee ex squared is the second derivative', 'second-derivative');
   eq('The answer is "6" here.', 'The answer is 6 here.', 'quoted-number-no-inches');
   eq('She said "great work" today.', 'She said great work today.', 'quoted-phrase-stripped');
@@ -1094,16 +1094,16 @@ console.log('OK — tts-pronunciation rewrites validated');
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
   };
   eq('the integral of $u^5 \\, du$ now.',
-     'the integral of u to the 5 dee you now.',
+     'the integral of u to the 5 D you now.',
      'du-dee-you');
   eq('so $\\int u^5 \\, du$ becomes that.',
-     'so the integral of u to the 5 dee you becomes that.',
+     'so the integral of u to the 5 D you becomes that.',
      'integral-du');
   eq('What is $x - \\mu$ here?',
      'What is x minus mu here?',
      'mu-not-split');
   eq('then $dv = e^x \\, dx$ works.',
-     'then dee vee equals e to the x dee ex works.',
+     'then D V equals e to the x D X works.',
      'dv-dee-vee');
   eq('so $\\phi$ appears in the golden ratio.',
      'so phi appears in the golden ratio.',
@@ -1571,7 +1571,7 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(speakLessonNotation('Yes, exactly. Now a new page: family trees.'), 'Yes, exactly. Now, family trees.');
   assert.equal(speakLessonNotation('$16,000 for a 5-year-old car, and it drops $1,800 per year.'), '16,000 dollars for a 5-year-old car, and it drops 1,800 dollars per year.');
   assert.equal(speakLessonNotation('multiply [[2, 0], [0, 3]] by [1; 4].'), 'multiply the matrix with rows 2, 0, and 0, 3, by the column 1, 4.');
-  assert.equal(speakLessonNotation('Picture u as an arrow; 3u = ⟨3, 6⟩ and B·w too.'), 'Picture U as an arrow; 3 U = the vector 3, 6 and B·W too.');
+  assert.equal(speakLessonNotation('Picture u as an arrow; 3u = ⟨3, 6⟩ and B·w too.'), 'Picture you as an arrow; 3 you = the vector 3, 6 and B·W too.');
   assert.equal(speakLessonNotation('each of the four C–H bonds'), 'each of the four C H bonds');
   assert.equal(speakLessonNotation('you would use it with a queue'), 'you would use it with a queue');
   // Units as a physics teacher says them (AP Physics, embed-1794493438983).

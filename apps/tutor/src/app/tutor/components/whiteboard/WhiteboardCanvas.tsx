@@ -599,7 +599,13 @@ export function WhiteboardCanvas({
         }
         current = { title: cmd.title, commands: [] };
       } else {
-        current.commands.push(cmd);
+        // An item written for an earlier sentence, after later items were already up, names the item it goes
+        // above (tutor v2, turn.ts): it takes its place in the working instead of the foot of the page.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const above = (cmd as any).placeBefore as string | undefined;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const at = above ? current.commands.findIndex((c) => (c as any).id === above) : -1;
+        if (at >= 0) current.commands.splice(at, 0, cmd); else current.commands.push(cmd);
       }
     }
     if (current.commands.length > 0) {

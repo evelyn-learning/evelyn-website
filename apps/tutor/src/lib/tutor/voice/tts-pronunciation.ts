@@ -1707,7 +1707,9 @@ function rewriteDerivatives(t: string): string {
   // Bare differential tokens ("take dy and divide by dx"). Lowercase
   // common calculus variables only — case-sensitive and \b-guarded so
   // "dying", "Dr", and ordinary words never match.
-  t = t.replace(/\bd([xytuv])\b/g, (_, v: string) => `dee ${spokenVar(v)}`);
+  // The two letters said apart: "dee vee, which is dee ex" came out of the voice as "day V, day X" (AP Calc BC,
+  // embed-1794511321049; spoken and transcribed back, 2026-11-12).
+  t = t.replace(/\bd([xytuvwz])\b/g, (_, v: string) => `D ${v === 'u' ? 'you' : v.toUpperCase()}`);
   return t;
 }
 
@@ -2405,11 +2407,28 @@ function speakWrittenMaths(text: string): string {
     .replace(/ŷ|ŷ/g, 'y hat').replace(/ȳ|ȳ/g, 'y bar').replace(/x̄/g, 'x bar')
     // A bond between two atoms named by their symbols.
     .replace(/\b([A-Z][a-z]?)[–—-]([A-Z][a-z]?)(?=\s+(?:single\s+|double\s+|triple\s+)?bonds?\b)/g, '$1 $2')
-    // A lone u or w is the letter: a capital is read as its name.
-    .replace(/(?<![A-Za-z'’̂̄])(\d*)([uw])(?![A-Za-z'’/])/g, (_m, n: string, l: string) => `${n ? `${n} ` : ''}${l.toUpperCase()}`);
+    // A lone u is the letter, said as the word that sounds like it: written "U" the voice said "oo" (AP Calc BC,
+    // embed-1794511321049). A lone w is read as its name when a capital.
+    .replace(/(?<![A-Za-z'’̂̄])(\d*)([uw])(?![A-Za-z'’′/])/g, (_m, n: string, l: string) => `${n ? `${n} ` : ''}${l === 'u' ? 'you' : 'W'}`);
 }
 
-export function speakLessonNotation(text: string): string {
+/** Mathematics the voice was handed as written and read wrongly (AP Calc BC, embed-1794511321049; chemistry,
+ *  embed-1794512595935): "u′v + uv′" (said "oov"), "e^(2x)" (said "e circumflex 2 x"), "½e^(2x)", and the
+ *  arrow of a reaction (said "approaches"). Each is given the words a teacher says. */
+const VULGAR: Record<string, string> = { '½': 'one half', '⅓': 'one third', '¼': 'one quarter', '¾': 'three quarters', '⅔': 'two thirds' };
+function speakMarks(text: string): string {
+  return text
+    // The product of u and v, with or without a prime on either.
+    .replace(/(?<![A-Za-z])u([′']?)v([′']?)(?![A-Za-z])/g, (_m, pu: string, pv: string) => `you${pu ? ' prime' : ''} vee${pv ? ' prime' : ''}`)
+    .replace(/(?<![A-Za-z])([a-z])′/g, (_m, l: string) => `${l === 'u' ? 'you' : l} prime`)
+    .replace(/[½⅓¼¾⅔]/g, (m) => `${VULGAR[m]} `)
+    // A power written with a caret.
+    .replace(/\^\(([^()]+)\)/g, (_m, p: string) => ` to the ${p.replace(/(\d)([a-z])/g, '$1 $2')}`).replace(/(?<![XYI])\^\{([^{}]+)\}/g, (_m, p: string) => ` to the ${p.replace(/(\d)([a-z])/g, '$1 $2')}`)
+    // A reaction: what goes in gives what comes out.
+    .replace(/(?<=[A-Z₀-₉\d)][a-z]?)\s*(?:→|⟶)\s*(?=\d*\s*[A-Z(])/g, ' gives ');
+}
+export function speakLessonNotation(given: string): string {
+  const text = speakMarks(given);
   return speakWrittenMaths(text)
     .replace(/\b([XYI])\^\{?([A-Za-z])\}?(?![A-Za-z])/g, (_m, base: string, allele: string) => `${base} ${allele === allele.toUpperCase() ? 'big' : 'little'} ${allele.toUpperCase()}`)
     .replace(/\b([Gg]enerations?)\s+((?:I{1,3}|IV|VI?)(?:\s*(?:,|and|to|or|through)\s*(?:I{1,3}|IV|VI?))*)(?![A-Za-z])/g, (_m, word: string, list: string) => `${word} ${list.replace(/\b(?:I{1,3}|IV|VI?)\b/g, (r) => ROMAN[r] ?? r)}`)

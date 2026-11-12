@@ -19,7 +19,9 @@ export function namesPart(title: string, text: string): boolean {
   return want.filter((w) => have.some((x) => x === w || (w.length >= 5 && x.startsWith(w.slice(0, 5))))).length >= Math.ceil(want.length / 2);
 }
 /** The student is steering: asking for something, or asking to go on. */
-const STEERS = /\b(?:move on|go on|go ahead|carry on|keep going|continue|next|skip|another|different|something else|instead|let'?s|(?:can|could|would|will|shall) (?:you|we|i)\b|(?:give|show|tell|teach|ask) me|i(?:'d| would) like|i want|ready|what|why|how|where|when)\b/i;
+// Narrow on purpose: "let's take a look at this" and "how many grams comes from its molar mass" were read as steering,
+// and two new pages opened straight after an answer (chemistry, embed-1794512595935).
+const STEERS = /\b(?:move on|go on|go ahead|carry on|keep going|continue|skip (?:this|that|it)|next (?:one|question|problem|topic|part|section|thing)|another (?:one|problem|question|example|reaction)|some other|something else|a different|(?:can|could|will|would) (?:you|we) (?:give|do|try|move|go|show|have|start)|give me (?:a|an|another|one|some)|let'?s (?:move|go on|do another|try another|start))\b/i;
 /** The tutor's last reply left the way open: it offered what comes next, or checked in. */
 const OFFERS = /\b(?:next is|next up|ready|shall we|any questions?|a question first|make sense|with me|is that clear|all clear|so far|sound good)\b/i;
 

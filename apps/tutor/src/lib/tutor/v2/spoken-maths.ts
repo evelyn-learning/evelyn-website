@@ -29,6 +29,9 @@ export function canonMaths(s: string): string {
 export function spokenEquations(said: string): string[] {
   const out: string[] = [];
   for (const m of said.matchAll(/\$([^$]+)\$/g)) if (m[1].includes('=')) out.push(m[1].trim());
+  // An integral named aloud is something to look at: "Now try ∫ x sin x dx" was asked over a board without it
+  // (AP Calc BC, embed-1794511321049).
+  for (const m of said.matchAll(/∫\s*[^.?!:;]{1,40}?\bd[a-z]\b/g)) out.push(m[0].trim());
   const tokens = said.replace(/\$[^$]+\$/g, ' . ').split(/\s+/).filter(Boolean);
   const bare = (t: string) => t.replace(/^["'“(]+(?=["'“(]*[^(])|[.,;:?!"'”]+$/g, '');
   const mathy = (t: string) => { const b = t.replace(/[.,;:?!"'”]+$/g, ''); return !!b && /^[0-9a-zA-Z()+\-−×·*/^²³√|=±<>≤≥.,]+$/.test(b) && (/[0-9()+\-−×·*/^²³√|=±<>≤≥]/.test(b) || /^[a-zA-Z]$/.test(b)); };

@@ -308,7 +308,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const result: Anthropic.ToolResultBlockParam = { type: 'tool_result', tool_use_id: block.id, content: outcome };
     // The board pass often offers again what the reply already put up; a call of its that did nothing leaves no trace.
     if (boardOnly && /^not /.test(outcome)) return result;
-    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(pointsAt ? { pointsAt } : {}), ...(carryNow.length && block.name === 'new_page' && !/^not /.test(outcome) ? { carries: carryNow } : {}) };
+    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(placeAbove && !/^not /.test(outcome) ? { before: placeAbove } : {}), ...(pointsAt ? { pointsAt } : {}), ...(carryNow.length && block.name === 'new_page' && !/^not /.test(outcome) ? { carries: carryNow } : {}) };
     toolCalls.push(call);
     input.onToolCall?.(call);
     return result;
@@ -319,7 +319,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const settleInline = (b: InlineBlock, boardOnly = false): boolean => {
     let { name, args } = inlineToolCall(b);
     // A page block naming a page that exists turns back to it.
-    if (name === 'new_page') { const at = state.board.pages.findIndex((pg, i) => i !== state.board.current && pg.title.replace(/\s+/g, '').toLowerCase() === String(args.title ?? '').replace(/\s+/g, '').toLowerCase()); if (at >= 0) { name = 'go_to_page'; args = { pageIndex: at }; } }
+    if (name === 'new_page') { const at = state.board.pages.findIndex((pg, i) => i !== state.board.current && pg.title.replace(/\s+/g, '').toLowerCase() === String(args.title ?? '').replace(/\s+/g, '').toLowerCase()); if (at >= 0) { name = 'go_to_page'; args = { pageIndex: at, page: at + 1, title: state.board.pages[at].title }; } }
     inlineN += 1;
     const r = settle({ type: 'tool_use', id: `inl_${nowMs.toString(36)}_${inlineN}`, name, input: b.attrs.with ? { ...args, [SAY_WITH]: b.attrs.with } : args } as Anthropic.ToolUseBlock, boardOnly, true);
     const failed = /^not /.test(String(r.content));
@@ -329,6 +329,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   };
   // How much had been said when the reply turned to a new page (-1: it did not).
   let saidChars = 0; let pageTurnAt = -1; let pageBefore = -1; let markBeforeTurn = false;
+  // The item of this reply that a check addition belongs above (see the check's additions, below).
+  let placeAbove: string | undefined;
   // Inline items settled since the last spoken words. A tutor who writes a figure and THEN turns the page, with
   // nothing said between, meant the figure for the new page: the washer solid went up at the foot of the disc
   // page and the page turned at once (AP Calc BC, embed-1794446765164). The page turn carries them over.
@@ -615,9 +617,21 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         }
         // One card a reply: the check adds a problem only when the reply set a question and put up no card.
         if (b.kind === 'problem' && (toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome)) || !saidCovers(b.body, said))) continue;
-        if (!settleInline(b, true)) continue;
+        // The check writes for a sentence said earlier in the reply, after items for later sentences are already
+        // up. It goes where its sentence is: "du = dx, v = −cos x" came up underneath the formula those two had
+        // just been put into (AP Calc BC, embed-1794511321049). The reply's own text, with the block put in at
+        // its sentence, says which item follows it.
         const textBlock = (lastWords?.content as Anthropic.ContentBlockParam[] | undefined)?.find((c): c is Anthropic.TextBlockParam => c.type === 'text');
-        if (textBlock) textBlock.text = insertBlock(textBlock.text, b.raw.replace(/\s+with="[^"]*"/, ''), b.attrs.with);
+        const bare = b.raw.replace(/\s+with="[^"]*"/, '');
+        const withIt = textBlock ? insertBlock(textBlock.text, bare, b.attrs.with) : '';
+        const after = withIt ? withIt.slice(withIt.indexOf(bare) + bare.length) : '';
+        const onPage = new Set(state.board.pages[state.board.current]?.items.map((it) => it.id));
+        const next = b.kind === 'problem' || b.kind === 'page' ? undefined : inlinePainted.map((x) => ({ id: x.id, at: after.indexOf(x.raw) })).filter((x) => x.at >= 0 && onPage.has(x.id)).sort((x, y) => x.at - y.at)[0];
+        placeAbove = next?.id;
+        let ok = false; try { ok = settleInline(b, true); } finally { placeAbove = undefined; }
+        if (!ok) continue;
+        if (next) { const items = state.board.pages[state.board.current].items; const mine = items.pop(); const at = items.findIndex((it) => it.id === next.id); if (mine) items.splice(at < 0 ? items.length : at, 0, mine); }
+        if (textBlock) textBlock.text = withIt;
       }
     } catch { /* the reply stands without it */ }
   }

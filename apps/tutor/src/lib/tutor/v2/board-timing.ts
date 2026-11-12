@@ -78,7 +78,10 @@ export function inlineSentenceIndex(toolName: string, content: string, sentences
   if (toolName === 'new_page') {
     const heading = about(content);
     for (let i = from; i <= last; i++) if ([...about(sentences[i])].some((w) => heading.has(w))) return i;
-    return from;
+    // Not named in what has been said: it turns with what is said next. Turned at the start of the stretch, the
+    // page for the next problem came up while the tutor was still confirming the last answer (chemistry,
+    // embed-1794512595935).
+    return last + 1;
   }
   if (toolName !== 'show_problem') return from;
   const card = about(content); const cardNums = new Set(content.match(/\d+(?:\.\d+)?/g) ?? []);

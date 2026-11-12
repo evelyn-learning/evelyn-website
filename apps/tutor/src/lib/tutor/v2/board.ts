@@ -106,7 +106,10 @@ export function boardMisfit(name: string, args: Record<string, unknown>): string
   if (name !== 'show_equation') return null;
   const latex = text(args.latex);
   const words = [...latex.matchAll(/\\text(?:rm|bf|it)?\{([^}]*)\}/g)].flatMap((m) => m[1].split(/\s+/).filter((w) => /\p{L}{2,}/u.test(w)));
-  if (words.length > 6) return 'that is a sentence, not an equation: put the words in a note (annotate, with the mathematics between dollar signs) and keep show_equation for the mathematics alone';
+  // Working with its units is not a sentence: three lines of "8.0 g H₂ ÷ 2.0 g/mol = 4.0 mol H₂" were refused,
+  // and the tutor's "your working" never went up (chemistry, embed-1794512595935).
+  const relations = (latex.match(/=|\\(?:to|rightarrow|approx|times|div|cdot)\b|[+÷×]/g) ?? []).length;
+  if (words.length > 6 + relations * 3) return 'that is a sentence, not an equation: put the words in a note (annotate, with the mathematics between dollar signs) and keep show_equation for the mathematics alone';
   const longest = Math.max(...latex.split(/\\\\/).map((line) => line.replace(/\\[a-zA-Z]+|[{}\s&]/g, '').length));
   if (longest > 70) return 'too wide for one line of the board: break it into steps, one per line, in an aligned environment';
   return null;
@@ -154,6 +157,10 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
     // another page, is put up again: "try the problem already on your board" pointed at a card twenty items
     // up the page (AP Calc BC, embed-1794446765164). The old copy leaves the record; the new one is the card.
     if (name === 'show_problem' && items[at].tool === 'show_problem' && p !== board.current) { items.splice(at, 1); break; }
+    // Anything else that stands on another page is written again on this one: asked "can you write the formula
+    // again?", the tutor said "here it is again" and the board refused it as already up, two pages back
+    // (AP Calc BC, embed-1794511321049).
+    if (p !== board.current) continue;
     // On the page in view, writing a thing again points at it: the board scrolls back to it.
     return { painted: false, detail: `already on the board (page ${p + 1})`, ...(p === board.current ? { pointAt: items[at].id } : {}) };
   }

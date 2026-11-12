@@ -330,9 +330,9 @@ function runCurated(): void {
   tts('So dy/dx measures slope.', 'So dee why over dee ex measures slope.', 'leibniz-prose');
 
   // ── 11. Integrals ────────────────────────────────────────────────
-  tts('Compute $\\int_0^4 x^2 \\, dx$ today.', 'Compute the integral from 0 to 4 of x squared dee ex today.', 'definite-integral');
-  tts('Find $\\int x^2 \\, dx$ now.', 'Find the integral of x squared dee ex now.', 'indefinite-integral');
-  tts('So ∫_0^4 x dx is the area.', 'So the integral from 0 to 4 of x dee ex is the area.', 'integral-glyph-prose');
+  tts('Compute $\\int_0^4 x^2 \\, dx$ today.', 'Compute the integral from 0 to 4 of x squared D X today.', 'definite-integral');
+  tts('Find $\\int x^2 \\, dx$ now.', 'Find the integral of x squared D X now.', 'indefinite-integral');
+  tts('So ∫_0^4 x dx is the area.', 'So the integral from 0 to 4 of x D X is the area.', 'integral-glyph-prose');
   disp('\\int_0^4 x^2 \\, dx', 'integral-display');
 
   // ── 12. Sums, products, factorials, combinatorics ────────────────
@@ -596,6 +596,6 @@ function runCurated(): void {
   // Negative control: `\,` as GENUINE spacing (not a thousands separator)
   // must keep its current reading — no 3-digit group follows it here.
   tts('Evaluate $\\int f(x)\\,dx$ over the interval.',
-    'Evaluate the integral of f of x dee ex over the interval.', 'span-thinspace-integral-unchanged');
+    'Evaluate the integral of f of x D X over the interval.', 'span-thinspace-integral-unchanged');
   tts('so $2\\,x$ here.', 'so 2 x here.', 'span-thinspace-coefficient-unchanged');
 }

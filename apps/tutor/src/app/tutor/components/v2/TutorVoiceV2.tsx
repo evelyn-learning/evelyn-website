@@ -73,6 +73,8 @@ const SILENCE_STEPS_S = [75, 120];
 const PAUSE_GIVE_UP_MS = 8000;
 /** A pause taken on a sound alone (the recogniser heard speech begin, no words yet) is lifted after this long if
  *  no words of the student's follow. */
+/** The longest the greeting's sound waits for the microphone, and the pause after the microphone comes live. */
+const OPENING_SPEECH_WAIT_MS = 3500; const MIC_SETTLE_MS = 350;
 const SOUND_PAUSE_MS = 2500;
 /** After this many pauses on a sound that turned out to be nothing, the tutor waits for words again. */
 const SOUND_PAUSE_MISSES = 2;
@@ -99,6 +101,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const lastSoundAtRef = useRef(0);
   const lastTurnWasStudentRef = useRef(false);
   const openingTurnRef = useRef(true);
+  const openingSpeechRef = useRef<string[] | null>([]); const micLiveRef = useRef(false);
   const paintedThisTurnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const shownThenWithdrawnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const turnSentencesRef = useRef<string[]>([]);
@@ -215,7 +218,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const turns = useV2Turns({
     ...props,
     mode: 'voice',
-    onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; turnSentencesRef.current.push(sentence); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; realtimeRef.current?.speakText(sentence); },
+    onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; turnSentencesRef.current.push(sentence); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; if (openingSpeechRef.current) openingSpeechRef.current.push(sentence); else realtimeRef.current?.speakText(sentence); },
     onCut: () => { void realtimeRef.current?.clearSpeechQueue(); dropBoard(); },
     onBoardWithdraw: (id) => {
       const held = heldBoardRef.current.find((h) => h.id === id);
@@ -458,7 +461,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { p.current.onVoiceStateChange?.('listening'); armSilence(); }
   }, [liftPause, armSilence]);
   const onRecogniserError = useCallback((err: Error) => p.current.onDebugEvent?.('v2_recogniser_error', err.message.slice(0, 160)), []);
-  const onMicLevel = useCallback((level: number) => { if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); }, []);
+  // The first words wait for the microphone to be live. The microphone opens about two seconds after the tap,
+  // just as the greeting starts to play, and the browser's switch of audio route as it opens swallowed the
+  // first word or two ("Hi" or "Hi Praveen" went missing, chemistry, embed-1794512595935). The reply itself is
+  // asked for at once; only its sound is held, and never for longer than OPENING_SPEECH_WAIT_MS.
+  const releaseOpeningSpeech = useCallback(() => { const held = openingSpeechRef.current; if (!held) return; openingSpeechRef.current = null; for (const s of held) realtimeRef.current?.speakText(s); }, []);
+  const onMicLevel = useCallback((level: number) => { if (openingSpeechRef.current && !micLiveRef.current) { micLiveRef.current = true; setTimeout(releaseOpeningSpeech, MIC_SETTLE_MS); } if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); }, [releaseOpeningSpeech]);
   const onInkDiagnostic = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
   usePerceptionWS({
     enabled: listening && !TUTOR_STT_ENGINE_INK2,
@@ -480,6 +488,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     setStarted(true);
     const rt = realtimeRef.current!;
     rt.unlockAudio();
+    setTimeout(releaseOpeningSpeech, OPENING_SPEECH_WAIT_MS);
     if (p.current.thinkingCue) primeThinkingCueAudio();
     void rt.connect().then(() => { rt.startListening(); }).catch((err) => p.current.onError?.(err instanceof Error ? err : new Error(String(err))));
     // The tutor's first words do not wait for the microphone.

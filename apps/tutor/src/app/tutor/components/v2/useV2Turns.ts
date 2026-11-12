@@ -190,6 +190,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
           // A sketch is drawn by its own service from the one-line description; the request starts now and the
           // item goes up when both its sentence and its drawing have arrived. No drawing: a labelled card instead.
           const drawn: Promise<void> = cmd && (cmd as { action?: string }).action === 'showSketch' ? resolveSketch(cmd as unknown as SketchCommand, p.current.embedToken, (m) => p.current.onDebugEvent?.('v2_sketch', m)) : Promise.resolve();
+          if (cmd && call.before) (cmd as unknown as { placeBefore?: string }).placeBefore = call.before;
           if (cmd) { const paint = () => { void drawn.then(() => p.current.onWhiteboardCommand(call.replaces ? [{ action: 'removeItems', ids: [call.replaces] } as unknown as WhiteboardCommand, cmd] : [cmd])); }; if (p.current.holdBoard) p.current.holdBoard(call, paint); else paint(); }
           if (text && !/\n\n$/.test(text)) text += '\n\n';
         },

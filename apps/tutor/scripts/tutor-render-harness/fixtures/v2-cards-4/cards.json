@@ -1,0 +1,8 @@
+[
+ { "tool": "annotate", "label": "calc-note", "args": { "text": "Product rule: d/dx(uv) = u′v + uv′\nE: exponential (eˣ)\nPick u from the highest type you see. The rest is dv.\nThen: uv minus the integral of v du.\nLeave + C off v: it would only be absorbed into the final + C.", "style": "highlight", "rich": true } },
+ { "tool": "show_problem", "label": "calc-problem", "args": { "problem": { "statement": "Compute ∫ x e^(2x) dx. Choose u and dv with LIATE, then apply the formula.", "format": "free-response", "difficultyLabel": "medium", "rich": true } } },
+ { "tool": "show_problem", "label": "calc-problem-2", "args": { "problem": { "statement": "Compute ∫ x sin x dx. Using LIATE, decide which part is u and which is dv.", "format": "free-response", "difficultyLabel": "easy", "rich": true } } },
+ { "tool": "annotate", "label": "chem-note", "args": { "text": "Sodium azide, NaN₃, has one reactant. A spark heats it, and it breaks down into sodium (Na) and nitrogen gas (N₂).\nMolar mass of H₂ = 2.0 g/mol, so 8.0 g H₂ ÷ 2.0 g/mol = ? mol H₂", "rich": true } },
+ { "tool": "show_problem", "label": "chem-problem", "args": { "problem": { "statement": "The reaction is C₃H₈ + 5 O₂ → 3 CO₂ + 4 H₂O. If 2.0 mol of propane, C₃H₈, burns completely, how many moles of carbon dioxide, CO₂, are produced?", "format": "free-response", "difficultyLabel": "easy", "rich": true } } },
+ { "tool": "show_problem", "label": "code-problem", "args": { "problem": { "statement": "Trace this method and say what mystery(5) returns. public static int mystery(int n) { if (n == 0) return 0; return n + mystery(n - 1); }", "format": "free-response", "difficultyLabel": "easy", "rich": true } } }
+]

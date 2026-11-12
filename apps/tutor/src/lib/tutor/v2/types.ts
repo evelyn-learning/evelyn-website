@@ -60,6 +60,8 @@ export interface V2ToolCall {
   replaces?: string;
   /** Added after the reply for words said before it turned the page: it belongs on the page before (turn.ts). */
   beforeTurn?: boolean;
+  /** Added after the reply for a sentence said earlier in it: the item of this reply it goes above (turn.ts). */
+  before?: string;
   /** On a page turn: items written just before it, with no words between, that belong on the new page. */
   carries?: string[];
   /** Not painted: it repeats this item on the page in view, and the board scrolls back to it. */
