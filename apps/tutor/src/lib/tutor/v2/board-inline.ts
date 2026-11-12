@@ -181,6 +181,9 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     const x = range(b.attrs.x); const y = range(b.attrs.y);
     return { name: 'show_function_graph', args: {
       ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(x ? { xRange: x } : {}), ...(y ? { yRange: y } : {}),
+      // What each axis measures, when it measures something: a charging curve went up on bare axes and the
+      // student had to ask what they were (AP Physics, embed-1794493438983).
+      ...(b.attrs.xname ? { xLabel: b.attrs.xname } : {}), ...(b.attrs.yname ? { yLabel: b.attrs.yname } : {}),
       // A line that is a pair of numbers is a marked point (a centre, a vertex, a focus); any other line is a
       // curve: an expression in x, or an equation in x and y (a circle, an ellipse, a hyperbola).
       ...(lines.some((l) => SEGMENT_RE.test(l)) ? { segments: lines.filter((l) => SEGMENT_RE.test(l)).map((l) => { const m = l.replace(/−/g, '-').match(SEGMENT_RE)!; const label = cells(l)[1]; return { from: { x: Number(m[1]), y: Number(m[2]) }, to: { x: Number(m[3]), y: Number(m[4]) }, ...(label ? { label } : {}) }; }) } : {}),

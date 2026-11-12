@@ -2,7 +2,7 @@
 // Unit tests for rewriteForTTS() additions: slash-pair whitelist,
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
-import { rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakSlashes, speakLessonNotation } from '../src/lib/tutor/voice/tts-pronunciation';
+import { rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakSlashes, speakLessonNotation, speakLetterUnits } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1574,6 +1574,12 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(speakLessonNotation('Picture u as an arrow; 3u = ⟨3, 6⟩ and B·w too.'), 'Picture U as an arrow; 3 U = the vector 3, 6 and B·W too.');
   assert.equal(speakLessonNotation('each of the four C–H bonds'), 'each of the four C H bonds');
   assert.equal(speakLessonNotation('you would use it with a queue'), 'you would use it with a queue');
+  // Units as a physics teacher says them (AP Physics, embed-1794493438983).
+  assert.equal(speakLessonNotation(speakLetterUnits('Take a 12 V battery and two 6 ohm resistors, with 1 A flowing.')), 'Take a 12 volt battery and two 6 ohm resistors, with 1 amp flowing.');
+  assert.equal(speakLessonNotation('A 100 μF capacitor charges through a 10 kΩ resistor; 10 kΩ is 10,000 ohms and 100 μF is small.'), 'A 100 micro-farad capacitor charges through a 10 kilo-ohm resistor; 10 kilo-ohms is 10,000 ohms and 100 micro-farads is small.');
+  assert.equal(speakLetterUnits('The 4 Ω branch carries 3 A, and C = 0.0001 F after 5 s.'), 'The 4 Ω branch carries 3 amps, and C = 0.0001 farads after 5 seconds.');
+  assert.equal(speakLessonNotation('What does that make R_total?'), 'What does that make R total?');
+  for (const keep of ['Is A the answer?', 'Point A is here.', 'Each resistor drops 6 V.']) assert.equal(speakLetterUnits(keep), keep);
   for (const keep of ['I think x^2 is right.', 'World War II ended in 1945.', 'Turn to a new page in your notebook.']) assert.equal(speakLessonNotation(keep), keep);
   for (const keep of ['It moves at 4 m/s.', 'It is n/a, and/or either.', 'The slope is dy/dx.', 'about 3/4 of them']) assert.equal(speakSlashes(keep), keep);
   for (const keep of ['The scores are 62, 66, 70, 73, 75.', 'In 1492, 1519, and 1550 to 1551.', 'It cost 1,250,000 dollars.']) assert.equal(speakDataRuns(keep), keep);

@@ -18,8 +18,46 @@ type Subject = (typeof DIAGRAM_CATALOG)[number]['subjects'][number];
 
 /** Figures the board draws with a tool of its own, outside the diagram catalogue. They are offered through the
  *  same list and the same block; `fixed` is what makes the tool draw this figure and not another of its kinds. */
-export interface ToolFigure { kind: string; tool: string; fixed?: Record<string, unknown>; subjects: Subject[]; when: string; params: string }
+export interface ToolFigure { kind: string; tool: string; fixed?: Record<string, unknown>; adapt?: (params: Record<string, unknown>) => Record<string, unknown>; subjects: Subject[]; when: string; params: string }
+
+/** A circuit said as what is in series with what and what is in parallel with what, turned into the list of
+ *  connected components the board's circuit drawing takes. The only circuit v2 could reach drew every component
+ *  round one loop, so "4 Ω and 6 Ω side by side" and "2 Ω in series with a parallel pair" both went up as series
+ *  circuits (AP Physics, embed-1794493438983). Nesting cannot describe a wrong wiring: a part is one component,
+ *  or a series or parallel group of parts. */
+type CircuitPart = Record<string, unknown>;
+const CIRCUIT_TYPES: Record<string, string> = { resistor: 'resistor', bulb: 'bulb', lamp: 'bulb', capacitor: 'capacitor', inductor: 'inductor', ammeter: 'ammeter', voltmeter: 'voltmeter', battery: 'battery', cell: 'battery', wire: 'wire' };
+export function circuitNetlist(params: Record<string, unknown>): Record<string, unknown> {
+  const out: Array<Record<string, unknown>> = []; let n = 0;
+  const node = () => `n${++n}`;
+  const lay = (part: unknown, from: string, to: string): void => {
+    if (Array.isArray(part)) { lay({ series: part }, from, to); return; }
+    if (!part || typeof part !== 'object') return;
+    const p = part as CircuitPart;
+    const group = (v: unknown) => (Array.isArray(v) ? v.filter((x) => x && typeof x === 'object') : []);
+    if (Array.isArray(p.series)) {
+      const parts = group(p.series); if (!parts.length) return;
+      let at = from;
+      parts.forEach((x, i) => { const next = i === parts.length - 1 ? to : node(); lay(x, at, next); at = next; });
+      return;
+    }
+    if (Array.isArray(p.parallel)) { for (const x of group(p.parallel)) lay(x, from, to); return; }
+    if ('switch' in p) { out.push({ type: /open|off|break|false/i.test(String(p.switch)) ? 'switch-open' : 'switch-closed', from, to, ...(typeof p.label === 'string' ? { label: p.label } : {}) }); return; }
+    // The older single-loop form: {type, label}.
+    if (typeof p.type === 'string') { const t = p.type === 'switch' ? (p.closed === false ? 'switch-open' : 'switch-closed') : CIRCUIT_TYPES[p.type]; if (t) out.push({ type: t, from, to, ...(p.label ?? p.value ? { label: String(p.label ?? p.value) } : {}) }); return; }
+    const key = Object.keys(p).find((k) => CIRCUIT_TYPES[k]);
+    if (key) out.push({ type: CIRCUIT_TYPES[key], from, to, ...(p[key] !== true && p[key] != null && String(p[key]) ? { label: String(p[key]) } : {}) });
+  };
+  // The older form listed everything, battery included, round one loop.
+  const listed = Array.isArray(params.components) ? (params.components as CircuitPart[]) : null;
+  const battery = params.battery ?? listed?.find((c) => c?.type === 'battery' || c?.type === 'cell')?.label ?? '';
+  const load = params.load ?? (listed ? listed.filter((c) => c?.type !== 'battery' && c?.type !== 'cell') : []);
+  out.push({ type: 'battery', from: 'minus', to: 'plus', ...(String(battery) ? { label: String(battery) } : {}) });
+  lay(load, 'plus', 'minus');
+  return { ...(typeof params.title === 'string' ? { title: params.title } : {}), components: out };
+}
 export const TOOL_FIGURES: ToolFigure[] = [
+  { kind: 'circuit', tool: 'show_circuit', adapt: circuitNetlist, subjects: ['physics'], when: 'Any circuit a problem or an explanation describes: one loop, branches in parallel, or a mix of the two. Draw it whenever a circuit is being talked about.', params: 'battery:string (e.g. "12 V"), load:PART, title?. A PART is one component, {resistor:"4 Ω"} | {bulb:"lamp 1"} | {capacitor:"100 μF"} | {switch:"open"|"closed"} | {ammeter:"A"} | {voltmeter:"V"}, or a group of parts, {series:[PART, …]} | {parallel:[PART, …]}. A 2 Ω resistor in series with a 4 Ω and a 6 Ω side by side is {"battery":"12 V","load":{"series":[{"resistor":"2 Ω"},{"parallel":[{"resistor":"4 Ω"},{"resistor":"6 Ω"}]}]}}' },
   { kind: 'boxplot', tool: 'show_stats', fixed: { type: 'boxplot' }, subjects: ['math'], when: 'One boxplot, or several on one scale to compare groups.', params: 'boxplot:{datasets:[{label, min, q1, median, q3, max, outliers?:[number]}], showValues:true}, title?, xLabel?' },
   { kind: 'distribution_curve', tool: 'show_stats', fixed: { type: 'distribution' }, subjects: ['math'], when: 'A normal, t or chi-square curve with a shaded tail or middle: a p-value, a critical region, a confidence level.', params: 'distribution:{family:normal|t|chi-square, params:{mean, sd} for normal or {df} for t and chi-square, shade?:{type:less|greater|between|outside, a:number, b?:number}, probabilityLabel?:string}, title?' },
   { kind: 'annotated_passage', tool: 'show_annotated_passage', subjects: ['ela', 'social'], when: 'A poem, passage or source with words highlighted and notes on them: a close reading.', params: 'passage:string (the exact text, lines separated by \\n), highlights:[{line:number (1 = first line), text:string (the exact words in that line), note?:string}], marginNotes?:[{line, text}], title?, source?' },
@@ -41,14 +79,16 @@ export const TOOL_FIGURES: ToolFigure[] = [
   { kind: 'call_stack', tool: 'show_call_stack', subjects: ['cs'], when: 'The stack of calls at one moment of a program: each frame with its arguments, the newest on top.', params: 'frames:[{function:string (e.g. "factorial(3)"), args?:object, returnValue?:string, highlight?:boolean}] (oldest first), finalReturn?:string, title?' },
 ];
 const TOOL_FIGURE_BY_KIND = new Map(TOOL_FIGURES.map((t) => [t.kind, t]));
+// A reply that still writes the single-loop kind is drawn by the same tool.
+TOOL_FIGURE_BY_KIND.set('simple_circuit', TOOL_FIGURE_BY_KIND.get('circuit')!);
 /** The tool call a figure block stands for, when its kind is one of the tools above. */
 export function toolFigureCall(kind: string, params: Record<string, unknown>): { name: string; args: Record<string, unknown> } | null {
   const t = TOOL_FIGURE_BY_KIND.get(kind);
-  return t ? { name: t.tool, args: { ...params, ...(t.fixed ?? {}) } } : null;
+  return t ? { name: t.tool, args: { ...(t.adapt ? t.adapt(params) : params), ...(t.fixed ?? {}) } } : null;
 }
 
 /** Kinds a plain form already draws (chart, numberline, timeline, ranks, compare, table): one way to draw each thing. */
-const HAS_A_PLAIN_FORM = new Set(['number_line', 'bar_chart', 'histogram', 'line_plot', 'hierarchy_pyramid', 'comparison_table', 't_chart', 'historical_timeline', 'kwl_chart', 'frayer_model', 'coordinate_grid']);
+const HAS_A_PLAIN_FORM = new Set(['simple_circuit', 'number_line', 'bar_chart', 'histogram', 'line_plot', 'hierarchy_pyramid', 'comparison_table', 't_chart', 'historical_timeline', 'kwl_chart', 'frayer_model', 'coordinate_grid']);
 
 /** The catalogue subjects a session's lesson falls under. A science lesson is narrowed by its topic. */
 export function catalogueSubjects(session: Pick<V2Session, 'subject' | 'topic'>): Subject[] {

@@ -518,7 +518,18 @@ function autoLayoutCircuit(rawComponents: CircuitComponent[]): LayoutResult {
   let A = '';
   let B = '';
 
-  if (batteries.length > 0) {
+  // One closed loop with nothing branching (every node joins exactly two components): the battery is the
+  // source row and everything else is the single path back. Walked as a trunk, the whole loop landed on the
+  // source row and was drawn as an open line with "no return path" (two resistors in series, v2 fixtures 2026-11-12).
+  const degreeOf = new Map<string, number>();
+  for (const c of components) { degreeOf.set(c.from, (degreeOf.get(c.from) ?? 0) + 1); degreeOf.set(c.to, (degreeOf.get(c.to) ?? 0) + 1); }
+  const singleLoop = batteries.length > 0 && components.length > 1 && [...degreeOf.values()].every((d) => d === 2);
+
+  if (singleLoop) {
+    sourceRung = [batteries[0]];
+    A = batteries[0].from;
+    B = batteries[0].to;
+  } else if (batteries.length > 0) {
     // extendSourceRung: collapseRailWires + chainBatteries + walk through
     // single-path "trunk" non-batteries (e.g. a switch in series with a
     // parallel block). The result is the FULL source-rung topology so

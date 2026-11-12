@@ -11,7 +11,7 @@ import type { V2Session, V2State } from './types';
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
  *  indicator for a minute (biology, embed-1794452229126). */
-export const V2_WAITED_RECHECK_S = 7;
+export const V2_WAITED_RECHECK_S = 5;
 /** The early silence check after a spoken reply that asked nothing (TutorVoiceV2). Short: a tutor who has
  *  explained something and stopped leaves the student to say "got it" before the lesson moves (AP CS A,
  *  embed-1794440489707; it was 6 s, and the student spoke first). */

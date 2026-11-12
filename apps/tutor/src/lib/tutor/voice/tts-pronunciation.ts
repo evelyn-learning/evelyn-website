@@ -2358,9 +2358,40 @@ const ROMAN: Record<string, string> = { I: 'one', II: 'two', III: 'three', IV: '
  *  "$16,000 for a 5-year-old car … drops $1,800" was taken for mathematics between two dollar signs and spelt
  *  out letter by letter; "|u||v|" was "vertical bar u vertical bar"; "multiply [[2, 0], [0, 3]] by [1; 4]" was
  *  "multiply by"; a lone "u" was "oo"; "C–H bonds" had a pause in the middle. */
+/** Units as a physics teacher says them (AP Physics, embed-1794493438983): "with 1 A flowing" was "one A";
+ *  "a 12 V battery" was "a 12 volts battery"; "10 kΩ" and "100 μF" were run together into words the student
+ *  could not make out. The prefix is said apart from the unit, and a quantity that describes the thing after it
+ *  ("a 12 volt battery", "the 4 ohm resistor") is singular. */
+const SPOKEN_UNITS: Array<[string, string]> = [
+  ['kΩ', 'kilo-ohm'], ['MΩ', 'mega-ohm'], ['mΩ', 'milli-ohm'], ['Ω', 'ohm'],
+  ['[μµ]F', 'micro-farad'], ['mF', 'milli-farad'], ['nF', 'nano-farad'], ['pF', 'pico-farad'],
+  ['mA', 'milliamp'], ['[μµ]A', 'micro-amp'], ['kV', 'kilovolt'], ['mV', 'millivolt'], ['kW', 'kilowatt'],
+  ['V', 'volt'], ['W', 'watt'], ['N', 'newton'], ['J', 'joule'], ['kg', 'kilogram'], ['Hz', 'hertz'],
+];
+/** Units written as one capital or small letter, which in other lessons are a label or a variable: said as units
+ *  only where the lesson is a science one. */
+const LETTER_UNITS: Array<[string, string]> = [['A', 'amp'], ['F', 'farad'], ['s', 'second']];
+const DETERMINER = String.raw`\b(${['a', 'an', 'the', 'this', 'that', 'each', 'every', 'one', 'two', 'three', 'four', 'five', 'six', 'both', 'same', 'your', 'its', 'our', 'another'].map((w) => `[${w[0].toUpperCase()}${w[0]}]${w.slice(1)}`).join('|')})\s+`;
+const QUANTITY = String.raw`(\d[\d,]*(?:\.\d+)?)`;
+function speakUnitsAloud(text: string, units: Array<[string, string]>, pluralToo: boolean): string {
+  let out = text;
+  for (const [sym, word] of units) {
+    // "a 12 V battery": the quantity describes what follows, so the unit is singular.
+    out = out.replace(new RegExp(`${DETERMINER}${QUANTITY}[ \\u00a0-]?(?:${sym})(?=\\s+[a-z]{3,})(?!\\s+(?:is|are|was|were|and|or|but|across|through|flows?|flowing|from|into|for|per|with|each|then|than|that|which|will|would|can|does|has|have)\\b)`, 'g'), (_m, det: string, n: string) => `${det} ${n} ${word}`);
+    if (pluralToo) out = out.replace(new RegExp(`(?<![A-Za-z\\d.,^_])${QUANTITY}[ \\u00a0]?(?:${sym})(?![A-Za-z0-9])`, 'g'), (_m, n: string) => `${n} ${word}${Number(n.replace(/,/g, '')) === 1 || word === 'hertz' ? '' : 's'}`);
+  }
+  return out;
+}
+export function speakLetterUnits(text: string): string {
+  return speakUnitsAloud(text, LETTER_UNITS, true);
+}
 function speakWrittenMaths(text: string): string {
   const list = (s: string) => s.split(/[,;]/).map((x) => x.trim()).filter(Boolean).join(', ');
-  return text
+  return speakUnitsAloud(text, SPOKEN_UNITS, false)
+    // The units whose prefix the voice ran into the unit.
+    .replace(/(\d)[ \u00a0]?kΩ(?![A-Za-z])/g, (_m, d: string) => `${d} kilo-ohms`).replace(/(\d)[ \u00a0]?MΩ(?![A-Za-z])/g, (_m, d: string) => `${d} mega-ohms`).replace(/(\d)[ \u00a0]?[μµ]F(?![A-Za-z])/g, (_m, d: string) => `${d} micro-farads`)
+    // A subscript that is a word: R_total is "R total".
+    .replace(/\b([A-Za-z])_\{?([A-Za-z]{2,})\}?/g, '$1 $2')
     // Money: the amount, then the word.
     .replace(/\$(\d[\d,]*(?:\.\d+)?)(\s+(?:thousand|million|billion))?(?![\d$])/g, (_m, n: string, scale: string | undefined) => `${n}${scale ?? ''} dollars`)
     // A matrix, a column, a vector in angle brackets.

@@ -1,0 +1,240 @@
+[
+ {
+  "tool": "show_circuit",
+  "label": "circuit-parallel-pair",
+  "args": {
+   "title": "Parallel: 4 Ω and 6 Ω side by side across a 12 V battery",
+   "components": [
+    {
+     "type": "battery",
+     "from": "minus",
+     "to": "plus",
+     "label": "12 V"
+    },
+    {
+     "type": "resistor",
+     "from": "plus",
+     "to": "minus",
+     "label": "4 Ω"
+    },
+    {
+     "type": "resistor",
+     "from": "plus",
+     "to": "minus",
+     "label": "6 Ω"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "circuit-series-parallel",
+  "args": {
+   "title": "2 Ω in series with 4 Ω and 6 Ω in parallel",
+   "components": [
+    {
+     "type": "battery",
+     "from": "minus",
+     "to": "plus",
+     "label": "12 V"
+    },
+    {
+     "type": "resistor",
+     "from": "plus",
+     "to": "n1",
+     "label": "2 Ω"
+    },
+    {
+     "type": "resistor",
+     "from": "n1",
+     "to": "minus",
+     "label": "4 Ω"
+    },
+    {
+     "type": "resistor",
+     "from": "n1",
+     "to": "minus",
+     "label": "6 Ω"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "circuit-series-old-form",
+  "args": {
+   "title": "Two resistors in series with a battery",
+   "components": [
+    {
+     "type": "battery",
+     "from": "minus",
+     "to": "plus",
+     "label": "12 V"
+    },
+    {
+     "type": "resistor",
+     "from": "plus",
+     "to": "n1",
+     "label": "6 Ω"
+    },
+    {
+     "type": "resistor",
+     "from": "n1",
+     "to": "minus",
+     "label": "6 Ω"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "circuit-bulbs-switch",
+  "args": {
+   "title": "Parallel: one break, the others stay lit",
+   "components": [
+    {
+     "type": "battery",
+     "from": "minus",
+     "to": "plus",
+     "label": "230 V"
+    },
+    {
+     "type": "switch-open",
+     "from": "plus",
+     "to": "n1"
+    },
+    {
+     "type": "bulb",
+     "from": "n1",
+     "to": "minus",
+     "label": "bulb 1"
+    },
+    {
+     "type": "bulb",
+     "from": "plus",
+     "to": "minus",
+     "label": "bulb 2"
+    },
+    {
+     "type": "bulb",
+     "from": "plus",
+     "to": "minus",
+     "label": "bulb 3"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "circuit-rc",
+  "args": {
+   "title": "Capacitor charging through a resistor",
+   "components": [
+    {
+     "type": "battery",
+     "from": "minus",
+     "to": "plus",
+     "label": "5 V"
+    },
+    {
+     "type": "switch-closed",
+     "from": "plus",
+     "to": "n1"
+    },
+    {
+     "type": "resistor",
+     "from": "n1",
+     "to": "n2",
+     "label": "10 kΩ"
+    },
+    {
+     "type": "capacitor",
+     "from": "n2",
+     "to": "minus",
+     "label": "100 μF"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "circuit-nested",
+  "args": {
+   "components": [
+    {
+     "type": "battery",
+     "from": "minus",
+     "to": "plus",
+     "label": "9 V"
+    },
+    {
+     "type": "resistor",
+     "from": "plus",
+     "to": "n1",
+     "label": "1 Ω"
+    },
+    {
+     "type": "resistor",
+     "from": "n1",
+     "to": "n3",
+     "label": "2 Ω"
+    },
+    {
+     "type": "resistor",
+     "from": "n3",
+     "to": "n2",
+     "label": "3 Ω"
+    },
+    {
+     "type": "resistor",
+     "from": "n1",
+     "to": "n2",
+     "label": "5 Ω"
+    },
+    {
+     "type": "resistor",
+     "from": "n2",
+     "to": "minus",
+     "label": "4 Ω"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_function_graph",
+  "label": "graph-axes",
+  "args": {
+   "xRange": [
+    0,
+    5
+   ],
+   "yRange": [
+    0,
+    1.2
+   ],
+   "xLabel": "time, in time constants",
+   "yLabel": "fraction of full charge",
+   "functions": [
+    {
+     "expr": "1 - e^{-x}"
+    }
+   ],
+   "points": [
+    {
+     "x": 1,
+     "y": 0.63,
+     "label": "one time constant: about 63% charged"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "annotate",
+  "label": "units-note",
+  "args": {
+   "text": "A 100 μF capacitor charges through a 10 kΩ resistor connected to a 5 V battery. Find the time constant τ.",
+   "style": "highlight",
+   "rich": true
+  }
+ }
+]

@@ -75,6 +75,9 @@ function strippedToken(tok: string): { lead: string; core: string; trail: string
 }
 function mathsToken(core: string): boolean {
   if (!core) return false;
+  // A unit with a prefix is a word, not mathematics: "A 100 μF capacitor" went up as "$A 100 μF$ capacitor"
+  // (AP Physics, embed-1794493438983).
+  if (/^[μµ][A-Za-zΩ]{1,3}$/.test(core)) return false;
   if (RELATION.test(core)) return true;
   if (/^\d+(?:[.,]\d+)*%?$/.test(core)) return true;
   // Words: two or more letters in a row that are not a function name ("pKa", "radius", "HA").

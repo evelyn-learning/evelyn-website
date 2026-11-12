@@ -292,7 +292,9 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
         // labels a π-multiple step in terms of π on its own; 0 = automatic.
         const xAxisStep = parseAxisStep(data.xAxisStep) ?? 0;
         const yAxisStep = parseAxisStep(data.yAxisStep) ?? 0;
-        calculator.updateSettings({ xAxisStep, yAxisStep });
+        // An axis that measures something says what: named axes are written along the axes (a plain x or y is not a name).
+        const axisName = (v: unknown, plain: string) => (typeof v === 'string' && v.trim() && v.trim().toLowerCase() !== plain ? v.trim() : '');
+        calculator.updateSettings({ xAxisStep, yAxisStep, xAxisLabel: axisName((data as { xLabel?: unknown }).xLabel, 'x'), yAxisLabel: axisName((data as { yLabel?: unknown }).yLabel, 'y') } as Parameters<typeof calculator.updateSettings>[0]);
         calculator.setMathBounds({
           left,
           right: cx + xSpan / 2,
