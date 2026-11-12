@@ -120,3 +120,4 @@ apps/marketing/public/images/blog
 
 # tutor v2 tester flags (local only)
 apps/tutor/.v2-flags/
+apps/tutor/.v2-audio/

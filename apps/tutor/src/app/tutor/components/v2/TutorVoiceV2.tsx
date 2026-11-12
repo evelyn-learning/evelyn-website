@@ -29,6 +29,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObjec
 import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAIRealtime';
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
+import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
 import { TUTOR_STT_ENGINE_INK2 } from '@/lib/tutor/orchestrator/flags';
 import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
@@ -51,6 +52,9 @@ export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSente
   cartesiaVoiceSpeed?: number;
   speechRate?: number;
   tutorLanguages?: string[];
+  /** The session whose student microphone track is kept (the same store as v1's recordings). Without it nothing
+   *  is recorded: three flagged sessions could not be replayed through other recognisers (2026-11-12). */
+  recordSessionId?: string;
   standby?: boolean;
   /** The audible "got that, thinking" cue (a chime when a turn is accepted, soft pulses if the reply takes long). */
   thinkingCue?: boolean;
@@ -460,8 +464,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     enabled: listening && !TUTOR_STT_ENGINE_INK2,
     onTranscript, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
   });
+  const recorder = useAudioRecorder({ sessionId: props.recordSessionId ?? '', enabled: !!props.recordSessionId && process.env.NEXT_PUBLIC_TUTOR_RECORD_AUDIO !== 'false' });
   useCartesiaInkWS({
     enabled: listening && TUTOR_STT_ENGINE_INK2,
+    onStudentAudioFrame: recorder.pushStudentChunk,
     turnEndTimeoutMs: inkTurnEndTimeoutMs(props.tutorLanguages),
     onTranscript, onPartialTranscript: onPartial, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
     onDiagnostic: onInkDiagnostic,

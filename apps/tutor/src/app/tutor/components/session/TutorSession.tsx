@@ -1716,6 +1716,7 @@ export default function TutorSession(props: TutorSessionProps) {
       {brainVersion === 'v2' && sessionMode !== 'text' && voiceEngine === 'claude-brain' ? (
         <TutorVoiceV2
           key={sessionId}
+          recordSessionId={sessionId || undefined}
           subject={subject}
           level={level}
           studentName={studentName || undefined}
