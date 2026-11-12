@@ -106,6 +106,17 @@ export function catalogueSubjects(session: Pick<V2Session, 'subject' | 'topic'>)
   return picked.length ? picked : ['physics', 'chemistry', 'biology'];
 }
 
+/** The few figures the tutor itself is told of, in the session part: those drawn by a tool of their own. Asked
+ *  "show me that as a diagram", a tutor who did not know the board draws circuits drew the loop as a cycle of
+ *  three boxes, and said "let's look at the picture" over no picture (AP Physics, embed-1794496967839). The long
+ *  catalogue stays with the check. */
+export function tutorFigureLines(session: Pick<V2Session, 'subject' | 'topic'>): string {
+  const subjects = catalogueSubjects(session);
+  const mine = TOOL_FIGURES.filter((t) => t.subjects.some((s) => subjects.includes(s)));
+  if (!mine.length) return '';
+  return `Exact figures the board also draws in this lesson. One is written <board figure kind="its kind">its parameters as one JSON object</board>, and is the right form whenever the thing it draws is what you are talking about:\n${mine.map((t) => `  ${t.kind}: ${t.when} Params: ${t.params}`).join('\n')}`;
+}
+
 /** The figures for this lesson, one per line: its kind, when it fits, and the parameters it takes. Empty when none fit. */
 export function figureCatalogueFor(session: Pick<V2Session, 'subject' | 'topic' | 'level'>): string {
   const subjects = catalogueSubjects(session);

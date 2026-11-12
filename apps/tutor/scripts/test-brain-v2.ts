@@ -48,7 +48,7 @@ async function main() {
   const tools = v2Tools('math');
   const toolChars = JSON.stringify(tools).length;
   // 18,000 since 2026-11-10: the eleven board forms are listed in the principles (a reference list, not rules).
-  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 18800, sys.length);
+  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 20500, sys.length);
   check(`a math session gets a handful of tools (${tools.length}, ${toolChars} chars)`, tools.length <= 16 && toolChars < 24000, [tools.length, toolChars]);
   check('the control tools are present', ['update_session_note', 'set_goal_status', 'track_gap', 'end_lesson'].every((n) => tools.some((t) => t.name === n)));
   check('the constitution names no partner, topic or symptom', !/crimsora|greenapple|gdi|l'h[oô]pital|cos\(|streak/i.test(V2_CONSTITUTION));
@@ -195,6 +195,15 @@ async function main() {
     const mixedCall: V2ModelCall = async (params, onText) => { if (/board check/.test(lastOf(params))) return msg([{ type: 'text', text: '1: none\n2: none\n<board figure kind="circuit" with="Here is one with a 12 volt battery">{"battery":"12 V","load":{"series":[{"resistor":"6 Ω"},{"parallel":[{"resistor":"3 Ω"},{"resistor":"6 Ω"}]}]}}</board>' }], 'end_turn'); onText?.(mixed); return msg([{ type: 'text', text: mixed }], 'end_turn'); };
     const mx = await runV2Turn({ session: { ...voice, subject: 'sci', topic: 'physics circuits' }, state: { ...newV2State(1_000_000), board: { pages: [{ title: 'Lesson', items: [] }], current: 0 }, history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Sound good?' }] }, studentSaid: 'give me a harder one', callModel: mixedCall });
     check('a figure for a problem introduced just before its page turn goes on the new page', mx.state.board.pages[1]?.items.some((it) => it.tool === 'show_circuit') && !mx.state.board.pages[0].items.some((it) => it.tool === 'show_circuit'), mx.state.board.pages);
+    // Round 6 (AP Physics, embed-1794496967839).
+    const physics = { ...voice, subject: 'sci', topic: 'physics circuits' };
+    check('the tutor itself is told of the circuit figure in a physics lesson, and not in a history one', /\n  circuit: /.test(v2SessionPart(physics)) && !/circuit:/.test(v2SessionPart({ ...voice, subject: 'ss', topic: 'history' })), v2SessionPart(physics).slice(0, 300));
+    const seenChecks: string[] = [];
+    const spyCheck = (text: string): V2ModelCall => async (params, onText) => { const last = lastOf(params); if (/board check/.test(last)) { seenChecks.push(last); return msg([{ type: 'text', text: '1: none\n2: none\n3: none' }], 'end_turn'); } onText?.(text); return msg([{ type: 'text', text }], 'end_turn'); };
+    const st6 = () => ({ ...newV2State(1_000_000), board: { pages: [{ title: 'Parallel', items: [] }], current: 0 }, history: [{ role: 'user' as const, content: 'hi' }, { role: 'assistant' as const, content: 'What is the total?' }] });
+    await runV2Turn({ session: physics, state: st6(), studentSaid: 'what do you mean parallel', callModel: spyCheck('No problem, let us look at the picture. In parallel, the two resistors sit on separate branches, so the current from the battery can take either path.\n\n<board problem>Two resistors, 4 Ω and 6 Ω, are connected in parallel. Find 1 over R total.</board>\n\nWhat do you get for 1 over R total when R1 is 4 ohms and R2 is 6 ohms?') });
+    await runV2Turn({ session: physics, state: st6(), studentSaid: 'must be 8 volts', callModel: spyCheck('Yes, 8 volts. The 4 volt and 8 volt drops add to the 12 volt rise, so the loop sums to zero. Shall we go on to the next part, or do you have a question first?') });
+    check('the check is told of a promised picture, a card with no figure, and a confirmed answer with nothing written', /You spoke of a picture/.test(seenChecks[0] ?? '') && /put up a problem and no figure/.test(seenChecks[0] ?? '') && !/You confirmed/.test(seenChecks[0] ?? '') && /You confirmed the student's answer/.test(seenChecks[1] ?? '') && !/You spoke of a picture/.test(seenChecks[1] ?? ''), seenChecks.map((c) => c.slice(-600)));
     const mistake = 'Yes, it is always smaller than the smallest resistor. <board note style="warning">Common mistake: parallel resistance is not bigger. The total is always smaller than the smallest resistor.</board> Each extra branch gives the current another path.\n\nDoes that make sense so far?';
     const gone: string[] = [];
     const wd = (line: string): V2ModelCall => async (params, onText) => { if (/board check/.test(lastOf(params))) return msg([{ type: 'text', text: `${line}\n2: none\n3: none` }], 'end_turn'); onText?.(mistake); return msg([{ type: 'text', text: mistake }], 'end_turn'); };

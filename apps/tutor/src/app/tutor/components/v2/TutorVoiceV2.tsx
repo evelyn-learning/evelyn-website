@@ -152,8 +152,11 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // The page the card was written for goes up with it: with the turn dropped and the card kept, the first
     // vectors problem sat at the foot of the parametric page, and the tutor's record had it on a page the
     // student never saw (AP Precalculus, embed-1794456849622).
-    const firstCard = heldBoardRef.current.findIndex((h) => /^show_problem:/.test(h.what ?? ''));
-    const kept = heldBoardRef.current.filter((h, i) => /^show_problem:/.test(h.what ?? '') || (h.isPage && firstCard >= 0 && i < firstCard));
+    // Only a card whose task the tutor had begun to say: one it had not reached was never set, and it went
+    // up after the student had asked for a different problem (AP Physics, embed-1794496967839).
+    const reached = (h: { idx: number; what?: string }) => /^show_problem:/.test(h.what ?? '') && startedCountRef.current > h.idx;
+    const firstCard = heldBoardRef.current.findIndex(reached);
+    const kept = heldBoardRef.current.filter((h, i) => reached(h) || (h.isPage && firstCard >= 0 && i < firstCard));
     const lost = [...heldBoardRef.current.filter((h) => !kept.includes(h)).map((h) => ({ id: h.id, what: h.what })), ...unplacedBoardRef.current.map((u) => ({ id: u.call.id, what: `${u.call.name}: ${summariseBoardCall(u.call.name, u.call.args ?? {}).slice(0, 80)}` }))];
     for (const h of heldBoardRef.current) clearTimeout(h.timer);
     for (const h of kept) h.paint();
@@ -342,7 +345,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // first, a student who spoke for longer than the wait heard the tutor start up again under them every few
     // seconds (AP Precalculus, embed-1794456849622: four restarts inside one 35-second question).
     if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = giveUp(); return; }
-    if (rt.pauseSpeech()) {
+    if (!rt.pauseSpeech()) { p.current.onDebugEvent?.('v2_heard_over_tutor', `words, not paused (nothing playing yet): ${text.slice(0, 60)}`); return; }
+    {
       p.current.onDebugEvent?.('v2_bargein_pause', text.slice(0, 80));
       pauseTimerRef.current = giveUp();
     }
@@ -431,7 +435,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // the tutor run on for six or seven more of its own (AP Physics, embed-1794493438983), so it pauses on the
     // sound and goes on if no words of the student's follow. A room where sounds keep turning out to be
     // nothing (a cough, the tutor's own voice from the speakers) goes back to waiting for words.
-    if (pauseTimerRef.current || soundMissesRef.current >= SOUND_PAUSE_MISSES || !rt.pauseSpeech()) return;
+    if (pauseTimerRef.current || soundMissesRef.current >= SOUND_PAUSE_MISSES || !rt.pauseSpeech()) { p.current.onDebugEvent?.('v2_heard_over_tutor', `a sound, not paused: ${pauseTimerRef.current ? 'already paused' : soundMissesRef.current >= SOUND_PAUSE_MISSES ? 'sounds have been false alarms' : 'nothing playing yet'}`); return; }
     soundPauseRef.current = true;
     p.current.onDebugEvent?.('v2_bargein_pause', '(a sound, no words yet)');
     pauseTimerRef.current = setTimeout(() => {
