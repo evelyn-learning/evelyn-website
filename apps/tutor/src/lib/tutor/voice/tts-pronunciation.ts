@@ -2349,6 +2349,19 @@ export function speakSlashes(text: string): string {
   return t;
 }
 
+/** Notation the voice reads wrongly in a biology or general lesson (biology, embed-1794452229126):
+ *   - an allele on a chromosome, X^A and X^a, was "X to the A" both times: it is "X big A" and "X little a";
+ *   - a pedigree's generation I, II, III was the letter "I": it is "generation one";
+ *   - "Now a new page: family trees" told the student about the board's pages: the announcement is dropped. */
+const ROMAN: Record<string, string> = { I: 'one', II: 'two', III: 'three', IV: 'four', V: 'five', VI: 'six' };
+export function speakLessonNotation(text: string): string {
+  return text
+    .replace(/\b([XYI])\^\{?([A-Za-z])\}?(?![A-Za-z])/g, (_m, base: string, allele: string) => `${base} ${allele === allele.toUpperCase() ? 'big' : 'little'} ${allele.toUpperCase()}`)
+    .replace(/\b([Gg]enerations?)\s+((?:I{1,3}|IV|VI?)(?:\s*(?:,|and|to|or|through)\s*(?:I{1,3}|IV|VI?))*)(?![A-Za-z])/g, (_m, word: string, list: string) => `${word} ${list.replace(/\b(?:I{1,3}|IV|VI?)\b/g, (r) => ROMAN[r] ?? r)}`)
+    .replace(/\b(III|II|IV|I|V)-(\d+)\b/g, (_m, r: string, n: string) => `${ROMAN[r] ?? r} ${n}`)
+    .replace(/(^|[.!?]\s+)(Now|Next|Okay|So|And)?,?\s*(?:on(?:to)?\s+)?[Aa] (?:new|fresh) page\s*[:,—–-]\s*([a-z])/g, (_m, lead: string, opener: string | undefined, first: string) => `${lead}${opener ? `${opener}, ${first}` : first.toUpperCase()}`);
+}
+
 export function speakNumberPlurals(text: string): string {
   return text.replace(/\b(the|these|those|both|all|of|and|or|no|many|few|several|two|three|four|five|six|seven|eight|nine|ten|\d+)(\s+)(\d{1,3})s\b(?!')/gi, (_m, cue: string, gap: string, n: string) => `${cue}${gap}${NUMBER_PLURAL[Number(n)] ?? `${n}'s`}`);
 }

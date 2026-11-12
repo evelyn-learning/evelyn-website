@@ -24,7 +24,7 @@ import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoa
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { saidCovers, unsaidAsk, asksAnywhere } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
-import { renderFacts, V2_NO_ASK_RECHECK_S, type V2TurnFacts } from './facts';
+import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { planGoalIds, renderPlanMap } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
@@ -81,10 +81,21 @@ export interface V2TurnInput {
   signal?: AbortSignal;
 }
 
+/** What the student's grade asks of the tutor's pace. The constitution says to teach at their level; a grade 7
+ *  lesson still moved at a senior's pace, a new kind of problem every reply (Praveen, embed-1794453532197). */
+export function v2LevelLine(level: string): string {
+  const grade = /^\s*k/i.test(level) ? 0 : Number.parseInt(level, 10);
+  if (!Number.isFinite(grade) || grade > 8) return '';
+  return grade <= 5
+    ? `A child in grade ${grade || 'K'}: one small idea at a time, in short sentences and everyday words. Show a thing with objects or a picture before any symbol, do an example together before asking for one alone, and stay with one kind of problem until it is easy.`
+    : `A student in grade ${grade}: go slower than you would with an older student. One new idea per reply, in short sentences and everyday words. Work an example together before they try one alone, and give a second problem of the same kind before moving to a new kind.`;
+}
+
 export function v2SessionPart(session: V2Session): string {
   const lines = [
     'THIS SESSION',
     `Student: ${session.studentName?.trim() || 'name not given'}. Subject: ${session.subject}${session.topic ? ` (${session.topic})` : ''}. Level: ${session.level}.`,
+    v2LevelLine(session.level),
     v2ModeLines(session.mode),
     session.timeBoxMinutes ? `The session is meant to last about ${session.timeBoxMinutes} minutes.` : '',
     session.plan ? `\n${renderPlanMap(session.plan)}` : '\nThere is no lesson plan: teach what the student asks for.',
@@ -203,7 +214,7 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
   let firstTextMs: number | null = null;
   let modelCalls = 0;
 
-  const waitingOnTutor = session.mode === 'voice' && input.studentSaid === null && Math.round(input.facts?.silenceSeconds ?? 0) === V2_NO_ASK_RECHECK_S;
+  const waitingOnTutor = session.mode === 'voice' && input.studentSaid === null && [V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(input.facts?.silenceSeconds ?? 0));
   const mustSpeak = waitingOnTutor || opening;
   /** Run one tool call: validate it, apply it, tell the client, and return its result for the model. */
   const settle = (blockIn: Anthropic.ToolUseBlock, boardOnly = false, inline = false): Anthropic.ToolResultBlockParam => {
@@ -226,7 +237,11 @@ export async function runV2Turn(input: V2TurnInput): Promise<V2TurnResult> {
     let replaces: string | undefined;
     if (block.name === 'show_function_graph' && state.board.current >= 0) {
       const page = state.board.pages[state.board.current];
-      const old = [...page.items].reverse().find((it) => it.tool === 'show_function_graph' && it.args);
+      // Only within one piece of work: a graph for a new problem is its own picture. Merged with the last
+      // problem's graph, a snowfall line came up with the dog-walking line y = 8x still on it, and by the third
+      // problem the graph had three lines (grade 7, embed-1794453532197).
+      const lastGraphAt = page.items.map((it) => it.tool === 'show_function_graph' && !!it.args).lastIndexOf(true);
+      const old = lastGraphAt >= 0 && !page.items.slice(lastGraphAt + 1).some((it) => it.tool === 'show_problem') ? page.items[lastGraphAt] : undefined;
       const fns = (v: unknown) => (Array.isArray(v) ? (v as Array<Record<string, unknown>>) : []);
       const key = (f: Record<string, unknown>) => String(f.expr ?? f.expression ?? f.latex ?? '').replace(/\s+/g, '');
       if (old?.args) {

@@ -66,6 +66,7 @@ export function typesetPowers(line: string): string {
 // letters is not mathematics unless it is a function name, so "pH", "HA" and units are left alone.
 const RELATION = /^(?:=|≠|≈|<|>|≤|≥|\+|−|-|×|·|\/|→|∝|±)$/;
 const FUNCTION_NAMES = /^(?:sin|cos|tan|sec|csc|cot|ln|log|exp|lim|sqrt|min|max|dx|dy|dt|dr|du)$/;
+const SHORT_WORDS = new Set('is to of in on an as at be by do go he if it me my no or so up us we am oh ok ah ad ax ex hi ha id ie eg lo ma pa re um uh vs ye yo cm km mm kg ml mg ms hz'.split(' '));
 const MATHS_CHARS = /[\^_²³¹⁰⁴-⁹⁻⁺₀-₉√∫∑πθωαβγδλμσφτΔ∞]/;
 function strippedToken(tok: string): { lead: string; core: string; trail: string } {
   const lead = /^["“']*/.exec(tok)![0];
@@ -78,7 +79,8 @@ function mathsToken(core: string): boolean {
   if (/^\d+(?:[.,]\d+)*%?$/.test(core)) return true;
   // Words: two or more letters in a row that are not a function name ("pKa", "radius", "HA").
   const words = core.match(/[A-Za-z]{2,}/g) ?? [];
-  if (words.some((w) => !FUNCTION_NAMES.test(w))) return false;
+  // Two small letters can be a product of variables ("kx", "mx"); a two-letter word is not.
+  if (words.some((w) => !FUNCTION_NAMES.test(w) && !(/^[a-z]{2}$/.test(w) && !SHORT_WORDS.has(w)))) return false;
   return /^[A-Za-z0-9()[\]{}.,+\-−×·/^_=<>≤≥≈²³¹⁰⁴-⁹⁻⁺₀-₉√∫∑πθωαβγδλμσφτΔ∞|']+$/.test(core);
 }
 const SUPERS: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-', '⁺': '+' };
@@ -99,7 +101,8 @@ export function typesetMaths(line: string): string {
   return line.split(/(\$[^$]*\$)/).map((seg) => {
     if (seg.startsWith('$')) return seg;
     // "∫ from a to b of" is the integral's limits, said in words.
-    const pre = seg.replace(/∫\s*from\s+(\S+)\s+to\s+(\S+)\s+of\s+/g, '∫_{$1}^{$2} ');
+    // "the x-axis", "the y-values": the letter is the variable.
+    const pre = seg.replace(/∫\s*from\s+(\S+)\s+to\s+(\S+)\s+of\s+/g, '∫_{$1}^{$2} ').replace(/(?<![A-Za-z$])([xy])-(axis|axes|values?|coordinates?|intercepts?)\b/g, '$$$1$$-$2');
     const toks = pre.split(/(\s+)/);
     const out: string[] = [];
     let i = 0;
@@ -130,13 +133,19 @@ export function typesetMaths(line: string): string {
       const hasVariable = /[A-Za-zπθωαβγδλμσφτΔ]/.test(joined);
       const hasRelation = run.some((c) => RELATION.test(c)) || /[=<>≤≥≈+−×·/]/.test(joined.replace(/^[-−]/, ''));
       // A species with its charge (A⁻, H⁺, OH⁻) is chemistry, set upright by the board already.
-      const single = run.length === 1 && (MATHS_CHARS.test(joined.replace(/[⁺⁻]/g, '')) || /^[A-Za-z]\([A-Za-z0-9, ]+\)$/.test(joined)) && !/^[\d.,]+$/.test(joined);
+      // A lone small letter is a variable ("the constant k", "dogs walked (x)"): set like the x in an equation.
+      // Not "a" or "i", not a unit after a number ("5 m", "2 s"), and not the marker of a list ("b. …").
+      const before = out.slice().reverse().find((t) => t.trim()) ?? '';
+      const loneVariable = run.length === 1 && /^\(?[b-hj-z]\)?$/.test(joined) && !/\d\)?$/.test(before) && !(out.every((t) => !t.trim()) && /^[.)]/.test(trail));
+      const single = loneVariable || (run.length === 1 && (MATHS_CHARS.test(joined.replace(/[⁺⁻]/g, '')) || /^[A-Za-z]\([A-Za-z0-9, ]+\)$/.test(joined)) && !/^[\d.,]+$/.test(joined));
       // Symbols side by side are a product: "π r²".
       const product = run.length >= 2 && run.every((c) => !RELATION.test(c)) && run.some((c) => MATHS_CHARS.test(c.replace(/[⁺⁻]/g, '')));
       // Two years with a dash, a score, a ratio of plain numbers: not a formula. A run needs a letter to be one,
       // and the pronoun "I" or the article "a" alone beside an operator is not that letter.
       const onlyWordLetters = !/[b-zB-HJ-Zπθωαβγδλμσφτ]/.test(joined.replace(/\\[a-z]+/g, '')) && !/[=]/.test(joined);
-      const ok = start === 0 && end === cores.length && (single || (product && hasVariable) || (run.length >= 3 && hasVariable && hasRelation && !onlyWordLetters));
+      // A product of letters counts only inside an equation: "y = kx", never two stray letters in a sentence.
+      const letterPairs = run.some((c) => /^[a-z]{2}$/.test(c)) && !joined.includes('=');
+      const ok = !letterPairs && start === 0 && end === cores.length && (single || (product && hasVariable) || (run.length >= 3 && hasVariable && hasRelation && !onlyWordLetters));
       if (!ok || cores.length === 0) { out.push(toks[i]); i += 1; continue; }
       out.push(`${lead}$${toLatex(joined)}$${trail}`);
       // Keep the white space that followed the run.

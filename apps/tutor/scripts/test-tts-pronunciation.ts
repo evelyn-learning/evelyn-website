@@ -2,7 +2,7 @@
 // Unit tests for rewriteForTTS() additions: slash-pair whitelist,
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
-import { rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
+import { rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakSlashes, speakLessonNotation } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1565,6 +1565,11 @@ console.log('OK — tts-pronunciation rewrites validated');
   // A unit over seconds is "per second" and one letter over another is "over" (AP Physics 1, embed-1794441323503).
   assert.match(rewriteForTTS(speakSlashes('Yes, ω is 8 rad/s, and L is 8 kg·m²/s.')), /8 radians per second, .*squared per second/);
   assert.equal(speakSlashes('the same rate ω = v/r, so use F/m'), 'the same rate ω = v over r, so use F over m');
+  // Alleles, pedigree generations and page talk (biology, embed-1794452229126).
+  assert.equal(speakLessonNotation('Which is right: X^a X^a, X^A Y, or X^a Y?'), 'Which is right: X little A X little A, X big A Y, or X little A Y?');
+  assert.equal(speakLessonNotation('In generation I, compare generations II and III.'), 'In generation one, compare generations two and three.');
+  assert.equal(speakLessonNotation('Yes, exactly. Now a new page: family trees.'), 'Yes, exactly. Now, family trees.');
+  for (const keep of ['I think x^2 is right.', 'World War II ended in 1945.', 'Turn to a new page in your notebook.']) assert.equal(speakLessonNotation(keep), keep);
   for (const keep of ['It moves at 4 m/s.', 'It is n/a, and/or either.', 'The slope is dy/dx.', 'about 3/4 of them']) assert.equal(speakSlashes(keep), keep);
   for (const keep of ['The scores are 62, 66, 70, 73, 75.', 'In 1492, 1519, and 1550 to 1551.', 'It cost 1,250,000 dollars.']) assert.equal(speakDataRuns(keep), keep);
 }

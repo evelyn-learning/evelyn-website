@@ -8,6 +8,10 @@ import { renderBoard } from './board';
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
 
+/** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
+ *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
+ *  indicator for a minute (biology, embed-1794452229126). */
+export const V2_WAITED_RECHECK_S = 7;
 /** The early silence check after a spoken reply that asked nothing (TutorVoiceV2). Short: a tutor who has
  *  explained something and stopped leaves the student to say "got it" before the lesson moves (AP CS A,
  *  embed-1794440489707; it was 6 s, and the student spoke first). */
@@ -38,6 +42,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
   if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
     ? `your last reply has finished and it ended on a statement: no question, and nothing for them to do. They are waiting for you to go on`
+    : Math.round(f.silenceSeconds) === V2_WAITED_RECHECK_S
+    ? `you kept listening after the student's last words, and they have said nothing more for ${V2_WAITED_RECHECK_S} seconds: they had finished. Take what they said as their answer and reply to it now`
     : `the student has said nothing for ${Math.round(f.silenceSeconds)} seconds`);
   return `<facts>\n${lines.join('\n')}\n</facts>`;
 }

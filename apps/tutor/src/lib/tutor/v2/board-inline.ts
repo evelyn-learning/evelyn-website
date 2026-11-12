@@ -17,7 +17,7 @@
  * begins (TutorVoiceV2). The stored reply keeps the blocks, so the history shows a tutor who writes
  * while talking. `with="opening words"` is for the board pass only, whose blocks arrive after the words.
  */
-import { isCodeBody, unfoldCode } from './rich-text';
+import { isCodeBody, typesetMaths, unfoldCode } from './rich-text';
 import { toolFigureCall } from './figure-catalogue';
 
 export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'code' | 'sketch' | 'figure' | 'page';
@@ -86,7 +86,8 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
   // (Praveen, AP US Government, embed-1794355900794).
   const lines = b.body.split(/\n+/).map((l) => l.trim()).filter(Boolean);
   const cells = (l: string) => l.split('|').map((c) => c.trim());
-  if (b.kind === 'table') return { name: 'show_table', args: { headers: cells(lines[0] ?? ''), rows: lines.slice(1).map(cells) } };
+  // A heading such as "dogs walked (x)" carries a variable: it is set as one, like the cards (grade 7, 2026-11-11).
+  if (b.kind === 'table') return { name: 'show_table', args: { headers: cells(lines[0] ?? '').map(typesetMaths), rows: lines.slice(1).map((l) => cells(l).map(typesetMaths)) } };
   if (b.kind === 'timeline') return { name: 'show_timeline', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), events: lines.map(cells).filter((c) => c[0] && c[1]).map((c) => ({ date: c[0], title: c[1], ...(c[2] ? { description: c[2] } : {}) })) } };
   // Two sides, row by row. A table sizes itself to its words; the fixed-size chart clipped a two-line
   // heading and left half the card empty (embed-1794376295543).

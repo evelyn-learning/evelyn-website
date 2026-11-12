@@ -39,8 +39,8 @@ import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
 import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
-import { V2_NO_ASK_RECHECK_S } from '@/lib/tutor/v2/facts';
-import { speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
+import { V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '@/lib/tutor/v2/facts';
+import { speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakLessonNotation, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
@@ -70,7 +70,7 @@ const PAUSE_GIVE_UP_MS = 8000;
 /** The microphone must have been quiet this long before a silence counts as silence. */
 const QUIET_MIC_MS = 20000;
 /** After a reply of silence, how long before the tutor is told the student has said nothing more. */
-const WAITED_RECHECK_S = 7;
+const WAITED_RECHECK_S = V2_WAITED_RECHECK_S;
 /** After a reply that asked nothing: how long after it finishes speaking before the tutor is told of the silence. */
 const NO_ASK_RECHECK_S = V2_NO_ASK_RECHECK_S;
 const MIC_SOUND_LEVEL = 0.12;
@@ -243,10 +243,13 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // the old page first. Whatever follows a waiting page waits behind it.
         const untilDone = (call.name === 'show_problem' || call.name === 'new_page') && turnBusyRef.current && !openingTurnRef.current;
         const pageHeld = heldBoardRef.current.some((h) => h.isPage);
-        const hold = (startedCountRef.current <= idx && n > 0 && !openingTurnRef.current) || untilDone || (pageHeld && !openingTurnRef.current);
+        // What the reply writes after a problem card belongs under it: the graph for the next problem came up
+        // straight after the last answer, with its problem still to come (grade 7, embed-1794453532197).
+        const cardHeld = heldBoardRef.current.some((h) => h.untilDone && !h.isPage);
+        const hold = (startedCountRef.current <= idx && n > 0 && !openingTurnRef.current) || untilDone || ((pageHeld || cardHeld) && !openingTurnRef.current);
         p.current.onDebugEvent?.('v2_board_timing', `${call.name}: inline, with sentence ${idx + 1} of ${n} (stretch from ${from + 1}), ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
         if (!hold) { paint(); carryBehind(idx, true); return; }
-        const entry = { idx, id: call.id, what: `${call.name}: ${summariseBoardCall(call.name, call.args).slice(0, 80)}`, untilDone, isPage: call.name === 'new_page', paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); paint(); }, BOARD_HOLD_MAX_MS) };
+        const entry = { idx, id: call.id, what: `${call.name}: ${summariseBoardCall(call.name, call.args).slice(0, 80)}`, untilDone: untilDone || (cardHeld && !untilDone ? true : false), isPage: call.name === 'new_page', paint, timer: setTimeout(() => { heldBoardRef.current = heldBoardRef.current.filter((h) => h !== entry); paint(); }, BOARD_HOLD_MAX_MS) };
         heldBoardRef.current.push(entry);
         carryBehind(idx, false);
         return;
@@ -356,9 +359,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [armSilence, releaseBoard]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');
-  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakFormulas(speakBonds(speakSlashes(speakNumberPlurals(speakDataRuns(sentence)))))), []);
-  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(speakSlashes(speakNumberPlurals(speakDataRuns(sentence))))), []);
-  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakSlashes(speakNumberPlurals(speakDataRuns(sentence)))), []);
+  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakFormulas(speakBonds(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(sentence))))))), []);
+  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(sentence)))))), []);
+  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(sentence))))), []);
   const relayMode = useMemo(() => ({
     instructions: TRANSPORT_ONLY,
     onUserTranscript: onRelayTranscript,
