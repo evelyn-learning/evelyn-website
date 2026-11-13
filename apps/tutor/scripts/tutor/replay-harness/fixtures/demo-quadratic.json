@@ -1,0 +1,70 @@
+{
+  "name": "demo-quadratic",
+  "sourceSessions": [
+    "synthetic: marketing-page demo lesson check 2026-11-13"
+  ],
+  "partner": "evelyn-marketing",
+  "claims": {
+    "student_name": "Ethan",
+    "subject": "algebra",
+    "level": "High school",
+    "curriculum_module": "evelyn.hs.alg1.quadratic-graphs-vertex.v1",
+    "max_duration_minutes": 20,
+    "wrap_at_minutes": 18,
+    "input_mode": "voice",
+    "target_kind": "lessonNode",
+    "open_scope": true,
+    "features": {
+      "voice_mode": true,
+      "text_mode": true,
+      "homework_upload": false
+    },
+    "metadata": {
+      "source": "demo-check"
+    }
+  },
+  "maxMinutes": 20,
+  "maxStudentTurns": 40,
+  "student": {
+    "who": "A 15-year-old in Algebra 1. Can graph straight lines. Trying the tutor for the first time from a website demo; curious and willing.",
+    "voice": "Short, natural spoken answers, one or two sentences.",
+    "manner": "You answer what was asked. You get things right once they are explained clearly, and wrong in the way described below until then.",
+    "beats": [
+      {
+        "id": "misconception",
+        "when": "The first time the tutor asks a question that touches this idea.",
+        "do": "Reads the vertex of y = (x - 3)^2 + 2 as (-3, 2) \u2014 wrong sign on h.",
+        "once": true
+      },
+      {
+        "id": "learn",
+        "when": "The tutor has explained or drawn why your first idea was wrong and asks a similar question.",
+        "do": "Get it right, briefly."
+      },
+      {
+        "id": "look",
+        "when": "The tutor draws or shows something on the board.",
+        "do": "Once in the session, say what you notice in the picture, in a few words.",
+        "once": true
+      }
+    ],
+    "reactions": [
+      {
+        "tag": "complaint_lost",
+        "when": "The tutor uses a word you have not been taught without explaining it, or talks for more than about four sentences with nothing for you to do.",
+        "do": "Say you don't get it, in a few words."
+      },
+      {
+        "tag": "complaint_reask",
+        "when": "The tutor asks again something you already answered correctly.",
+        "do": "Say you already said, and repeat the answer."
+      },
+      {
+        "tag": "end_request",
+        "when": "About 18 or more of the tutor's turns have passed, or the tutor offers to stop.",
+        "do": "Say thanks, you have to go now.",
+        "once": true
+      }
+    ]
+  }
+}

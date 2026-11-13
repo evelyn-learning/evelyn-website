@@ -63,6 +63,7 @@ if (!fs.existsSync(silentWav)) {
 }
 
 const log: string[] = [];
+const page_note: string[] = [];
 const say = (s: string) => { const line = `${new Date().toISOString().slice(11, 19)} ${s}`; console.log(line); log.push(line); };
 const CLOSE_RE = /\bsee you next time\b|\bthat'?s (?:all|it) for today\b|\bwe can wrap up here\b|\bthanks for working through it today\b|\bgoodbye\b|\bbye for now\b/i;
 
@@ -124,6 +125,13 @@ async function main() {
   });
   // No /var/data on a laptop: answer audio uploads with a stub so the recorder clears.
   await ctx.route('**/api/tutor/session-audio*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true,"stub":true}' }));
+  // --no-speech: no paid speech for a run nobody hears. Cartesia (speech out and the mic's transcription) needs a
+  // token minted here, and every other voice goes through a tts-* route; refuse them all.
+  if (process.argv.includes('--no-speech')) {
+    await ctx.route(/\/api\/tutor\/(cartesia-token|tts[a-z-]*)(\?|$)/, (route) => { say(`speech refused: ${route.request().url().replace(/\?.*/, '')}`); return route.fulfill({ status: 403, contentType: 'application/json', body: '{"error":"speech off for this run"}' }); });
+    await ctx.route(/cartesia\.ai/, (route) => { say('speech refused: cartesia.ai'); return route.abort(); });
+    page_note.push('speech off');
+  }
   // A replay student is not a real learner: no practice is assigned for them.
   await ctx.route('**/api/tutor/practice-assign**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true,"stub":true,"assigned":[]}' }));
 
@@ -152,7 +160,7 @@ async function main() {
   };
 
   await page.goto(embedUrl, { waitUntil: 'domcontentloaded' });
-  say(`open fixture=${fixture.name} arm=${arm} student=${studentId}`);
+  say(`open fixture=${fixture.name} arm=${arm} student=${studentId}${page_note.length ? ` (${page_note.join(', ')})` : ''}`);
   const orb = page.locator('[data-testid="tutor-orb-start"]');
   const input = page.locator('input[name="studentText"]');
   // The start tap is dead until the page's audio relay is ready (seen as "Tap to start" still
@@ -187,6 +195,11 @@ async function main() {
     turns.push({ role: 'tutor', text });
     // The student sees the board; the stored turn keeps only what was spoken.
     const boardNow = brainTurns.filter((x) => x.t > sinceStudent).flatMap((x) => x.board);
+    // A figure went up this turn: keep a picture of the board for review (settle so it has drawn).
+    if (boardNow.length || brainTurns.some((x) => x.t > sinceStudent && x.tools.length)) {
+      await wait(2500);
+      await page.screenshot({ path: path.join(outDir, `${fixture.name}-${arm}-${runId}-t${String(studentTurns).padStart(2, '0')}.png`), fullPage: false }).catch(() => {});
+    }
     const reply = await scriptedStudentTurn(fixture.student, boardNow.length ? `${text}\n[board now shows] ${boardNow.join(' | ')}` : text, history);
     if (reply.tag === 'end' || !reply.say) {
       say(`STUDENT(end)`); endedBy = CLOSE_RE.test(text) ? 'tutor_close' : 'student_end'; break;

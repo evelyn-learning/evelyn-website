@@ -96,8 +96,10 @@ const haikuComplete: CompleteFn = async (system, messages) => {
 
 /** Plain facts about the tutor's turn, given to the student with it (never sent to the tutor). */
 export function observerLine(tutorSaid: string, history: ReplayTurn[]): string {
-  const n = tutorSaid.split(/\s+/).filter(Boolean).length;
-  const q = /[?？]["')\]]*\s*$/.test(tutorSaid.trim());
+  // The driver appends "[board now shows] …" after the spoken words; judge only what was said.
+  const said = tutorSaid.split('\n[board now shows]')[0];
+  const n = said.split(/\s+/).filter(Boolean).length;
+  const q = /[?？]["')\]]*\s*$/.test(said.trim());
   const prev = [...history].reverse().find((t) => t.role === 'student');
   const made = (tags: StudentTag[]) => history.filter((t) => t.role === 'student' && t.tag && tags.includes(t.tag)).length;
   return `[observer] this tutor turn: ${n} words, ${q ? 'ends with a question' : 'does not end with a question'}. Your previous turn was: ${prev ? prev.tag ?? 'answer' : 'none yet'}. So far you have asked to move on ${made(['move_on'])} time(s), asked for a verdict only ${made(['verdict_only'])} time(s), and repeated an ignored request ${made(['complaint_ignored', 'complaint_reask'])} time(s).`;
