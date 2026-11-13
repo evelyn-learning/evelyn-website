@@ -175,7 +175,7 @@
  */
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import FreeBodyDiagramRenderer, { type FreeBodyDiagramProps } from '@/app/tutor/components/whiteboard/FreeBodyDiagramRenderer';
+import FreeBodyDiagramRenderer, { type FreeBodyDiagramProps } from './FreeBodyDiagramFrozen';
 import { smoothPath } from '@/app/tutor/components/whiteboard/_smoothPath';
 import { solveBarChart } from '../diagrams/catalog/kinds/bar-chart';
 import { solveLinePlot } from '../diagrams/catalog/kinds/line-plot';

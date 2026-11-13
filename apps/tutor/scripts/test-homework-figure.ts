@@ -1045,8 +1045,9 @@ test('coordinate grid: bad points, quadrants, bounds or an unused param fail str
   statsFails(f, GRID, /params\.points\[0\]: x and y must be finite numbers/);
   statsFails({ ...gridFig(), params: { ...paramsOf(gridFig()), quadrants: 2 } } as unknown as Fig, GRID, /coordinate_grid quadrants must be 1 or 4/);
   statsFails({ ...gridFig(), params: { ...paramsOf(gridFig()), xMax: 'ten' } } as unknown as Fig, GRID, /coordinate_grid xMax must be a finite number/);
-  // An explicit bound that leaves a stated point off the grid.
-  statsFails({ ...gridFig(), params: { ...paramsOf(gridFig()), xMax: 1 } } as unknown as Fig, GRID, /point \(2, 3\) in params\.points\[0\] is off the grid/);
+  // An explicit bound that would leave a stated point off the grid: since 2026-11-13 the grid widens to hold every
+  // point it is given (a window over 30 units used to drop points), so the figure passes and the point is drawn.
+  assert.equal((statsOk({ ...gridFig(), params: { ...paramsOf(gridFig()), xMax: 1 } } as unknown as Fig, GRID) as { ok: boolean }).ok, true);
   statsFails({ ...gridFig(), params: { ...paramsOf(gridFig()), shadeBelow: true } } as unknown as Fig, GRID, /coordinate_grid param "shadeBelow" is not used/);
 });
 test('coordinate grid: the kill switch (geometry) rejects it', () => {

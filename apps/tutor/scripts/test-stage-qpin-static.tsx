@@ -269,12 +269,14 @@ async function part3() {
 
   await section('no context value: no slot, markup byte-identical to before round 11', () => {
     const html = renderToStaticMarkup(<WhiteboardCanvas commands={PAGE_1} chrome="minimal" leadItem={FIG} />);
-    assert.equal(html, WB_BASELINE_LEAD);
+    // (The soft page-turn and item-entry classes came later and are not what this pin is about.)
+    assert.equal(html.replace(' wb-page-enter-soft', '').replace(/wb-item-enter-soft/g, 'wb-item-enter').replace(/ style="animation-delay:\d+ms"/g, ''), WB_BASELINE_LEAD);
     assert.ok(!html.includes('data-wb-lead-pin'));
   });
   await section('null context value: no slot either', () => {
     const html = renderToStaticMarkup(withPin(null, <WhiteboardCanvas commands={PAGE_1} chrome="minimal" leadItem={FIG} />));
-    assert.equal(html, WB_BASELINE_LEAD);
+    // (The soft page-turn and item-entry classes came later and are not what this pin is about.)
+    assert.equal(html.replace(' wb-page-enter-soft', '').replace(/wb-item-enter-soft/g, 'wb-item-enter').replace(/ style="animation-delay:\d+ms"/g, ''), WB_BASELINE_LEAD);
   });
   await section('page 1 with a lead item: figure + separator, then the sticky slot, then the first board item', () => {
     const html = renderToStaticMarkup(withPin(PIN, <WhiteboardCanvas commands={PAGE_1} chrome="minimal" leadItem={FIG} />));
