@@ -64,12 +64,14 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   // a later `tutor_languages` claim on one of these cannot switch it on by
   // the language default. Post-close auto-end stays on for all (his call).
   academy: { openerPrefetch: false },
-  crimsora: { openerPrefetch: false },
+  // Praveen 2026-11-12: v2 once lesson progress, memory, resume, practice and mastery were ported. The kinds
+  // of session v2 has not taken over still run on v1 (v2CanRunSession).
+  crimsora: { openerPrefetch: false, brainVersion: 'v2' },
   evelyn: { openerPrefetch: false },
   // Praveen 2026-11-12: the marketing demo is the first tenant on tutor v2 (the other tenants need lesson
   // progress reporting, session memory, resume and homework ported first).
   'evelyn-marketing': { openerPrefetch: false, brainVersion: 'v2' },
-  evelyntutor: { openerPrefetch: false },
+  evelyntutor: { openerPrefetch: false, brainVersion: 'v2' },
   kanzoo: { openerPrefetch: false },
   greenapple: { openerPrefetch: false },
   // Skyler 2026-11-02: the chime distracts in their video lessons and the

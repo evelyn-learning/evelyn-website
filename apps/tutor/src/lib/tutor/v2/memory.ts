@@ -7,6 +7,8 @@
  * (background.ts) one per line, and the close commits the transcript (the server writes the session summary
  * from it), the gaps the tutor recorded, and how each part of the plan went.
  */
+import { resolveSegmentEvidence } from '../orchestrator/segment-evidence';
+import { loGroupOf } from '../lesson-plan/context';
 import type { LessonPlan } from '../lesson-plan/types';
 import type { StudentProfile } from '../student-profile/types';
 import type { V2State } from './types';
@@ -33,7 +35,38 @@ export function v2MemoryLines(profile: Partial<StudentProfile> | null | undefine
 const GAP_NOTE: Record<string, string> = { found: 'Seen in the session, not yet worked on.', explained: 'Explained to them; they have not yet done one themselves.', done_with_help: 'They did one with help, not yet alone.' };
 
 /** The commit made when a v2 session ends. */
-export function v2ProfileCommit(input: { sessionId: string; subject: string; level: string; topic?: string; lessonPlanId?: string; plan: LessonPlan | null; state: V2State; transcript: Array<{ role: string; text?: string }> }): Record<string, unknown> {
+/** Mastery, per plan objective, read off what v2 records (Praveen 2026-11-12: ported before any tenant with
+ *  enrolled students moves to v2). v1 takes a number from the tutor with each completed segment; v2 has no such
+ *  number, and has two firmer signals instead: a practice segment the tutor marked as demonstrated, and the
+ *  objectives it names at the close as not yet done alone.
+ *   - evidence rows (the learner model): one per demonstrated practice segment, through the resolver v1 uses,
+ *     at full weight unless its objective is among those still needing practice;
+ *   - a mastery step per objective: down for one that still needs practice, up for one with a demonstrated
+ *     practice segment, none for one that was only taught (it is still listed as touched).
+ *  A segment belongs to the objective its id is grouped under, else to the plan's only objective. */
+export const V2_MASTERY_UP = 0.5;
+export const V2_MASTERY_DOWN = -0.3;
+export function v2Mastery(plan: LessonPlan | null, goals: V2State['goals'], needsPracticeLoIds: string[] = []): { masteryDeltas: Array<{ loId: string; delta: number }>; segmentOutcomes: Array<{ segmentId: string; loId: string; kind: string; completed: boolean; outcome: number; streakAtComplete?: number }> } {
+  if (!plan) return { masteryDeltas: [], segmentOutcomes: [] };
+  const planLoIds = plan.los.map((lo) => lo.id);
+  const weak = new Set(needsPracticeLoIds.filter((id) => planLoIds.includes(id)));
+  const segmentOutcomes: ReturnType<typeof v2Mastery>['segmentOutcomes'] = [];
+  const shownAlone = new Set<string>();
+  for (const seg of plan.segments) {
+    if (goals[seg.id]?.status !== 'demonstrated') continue;
+    const group = loGroupOf(seg.id);
+    const pre = resolveSegmentEvidence({ segmentId: seg.id, segmentKind: seg.kind, planLoIds, loGroupId: group, source: 'complete', streakAtComplete: undefined, demonstrated: true });
+    if (!pre) continue;
+    const solid = !weak.has(pre.loId);
+    const evidence = solid ? resolveSegmentEvidence({ segmentId: seg.id, segmentKind: seg.kind, planLoIds, loGroupId: group, source: 'complete', streakAtComplete: 1, demonstrated: true }) ?? pre : pre;
+    segmentOutcomes.push({ segmentId: seg.id, loId: evidence.loId, kind: seg.kind, completed: true, outcome: evidence.outcome, ...(evidence.streakAtComplete ? { streakAtComplete: evidence.streakAtComplete } : {}) });
+    if (solid) shownAlone.add(evidence.loId);
+  }
+  const masteryDeltas = [...[...weak].map((loId) => ({ loId, delta: V2_MASTERY_DOWN })), ...[...shownAlone].map((loId) => ({ loId, delta: V2_MASTERY_UP }))];
+  return { masteryDeltas, segmentOutcomes };
+}
+
+export function v2ProfileCommit(input: { needsPracticeLoIds?: string[]; sessionId: string; subject: string; level: string; topic?: string; lessonPlanId?: string; plan: LessonPlan | null; state: V2State; transcript: Array<{ role: string; text?: string }> }): Record<string, unknown> {
   const { plan, state } = input;
   const touched = plan ? plan.segments.filter((seg) => state.goals[seg.id]) : [];
   return {
@@ -46,6 +79,7 @@ export function v2ProfileCommit(input: { sessionId: string; subject: string; lev
     ...(input.lessonPlanId ? { lessonPlanId: input.lessonPlanId } : {}),
     // The plan's objectives count as touched once the lesson has moved past its opening.
     losTouched: plan && touched.length > 1 ? plan.los.map((lo) => lo.id) : [],
+    ...v2Mastery(plan, state.goals, input.needsPracticeLoIds),
     // A gap the student closed alone in the session is not carried forward.
     gaps: (state.gaps ?? []).filter((g) => g.status !== 'done_alone').map((g) => ({ kind: 'prerequisite' as const, conceptLabel: g.what.slice(0, 120), observation: GAP_NOTE[g.status] ?? g.status })),
     transcript: input.transcript.filter((t) => (t.text ?? '').trim()).map((t) => ({ role: t.role === 'user' || t.role === 'student' ? 'student' as const : 'tutor' as const, text: String(t.text).slice(0, 4000) })),

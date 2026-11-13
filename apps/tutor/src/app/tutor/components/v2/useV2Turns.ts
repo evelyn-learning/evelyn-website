@@ -259,6 +259,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       p.current.onBrainUsage?.(done.usage);
       p.current.onDebugEvent?.('brain_turn', `Brain ${done.totalMs}ms · first_sentence=${done.firstTextMs ?? done.totalMs}ms · in=${done.usage.inputTokens} out=${done.usage.outputTokens} cr=${done.usage.cacheReadTokens} cc=${done.usage.cacheCreationTokens} · v2`);
       if (done.state.closed) {
+        const closing = settled.find((c) => c.name === 'end_lesson' && !/^not /.test(c.outcome));
+        needsPracticeRef.current = (Array.isArray(closing?.args.needs_practice) ? (closing?.args.needs_practice as unknown[]) : []).map((n) => planRef.current?.los[Number(n) - 1]?.id).filter((x): x is string => !!x);
         commitProfile();
         assignPractice(settled.find((c) => c.name === 'end_lesson' && !/^not /.test(c.outcome)));
         setClosed(true);
@@ -296,7 +298,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   // before this in the normal case; this is the backstop.
   // What the engine remembers of this student (memory.ts): read as the page loads, committed when the session
   // ends, however it ends. A session of a few exchanges or fewer leaves nothing worth remembering.
-  const memoryRef = useRef<string[]>([]); const committedAtRef = useRef(0); const memoryReadyRef = useRef<Promise<unknown>>(Promise.resolve());
+  const memoryRef = useRef<string[]>([]); const committedAtRef = useRef(0); const needsPracticeRef = useRef<string[]>([]); const sentMasteryRef = useRef<Set<string>>(new Set()); const memoryReadyRef = useRef<Promise<unknown>>(Promise.resolve());
   useEffect(() => {
     const id = config.studentId; if (!id || config.trial) return;
     let gone = false;
@@ -309,9 +311,14 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const c = p.current; const said = transcriptRef.current.length;
     if (!c.studentId || !c.sessionId || c.trial || said < 4 || said === committedAtRef.current) return;
     committedAtRef.current = said;
-    const body = v2ProfileCommit({ sessionId: c.sessionId, subject: c.subject, level: c.level, topic: c.topic, lessonPlanId: c.lessonPlanId, plan: planRef.current, state: stateRef.current, transcript: transcriptRef.current });
+    const body = v2ProfileCommit({ sessionId: c.sessionId, subject: c.subject, level: c.level, topic: c.topic, lessonPlanId: c.lessonPlanId, plan: planRef.current, state: stateRef.current, transcript: transcriptRef.current, needsPracticeLoIds: needsPracticeRef.current });
+    // A session can commit more than once (the close, then the page going away): each mastery step and each
+    // evidence row is sent once.
+    const fresh = <T,>(rows: T[], key: (r: T) => string) => rows.filter((r) => { const k = key(r); if (sentMasteryRef.current.has(k)) return false; sentMasteryRef.current.add(k); return true; });
+    body.masteryDeltas = fresh(body.masteryDeltas as Array<{ loId: string; delta: number }>, (r) => `lo:${r.loId}:${r.delta > 0 ? 'up' : 'down'}`);
+    body.segmentOutcomes = fresh(body.segmentOutcomes as Array<{ segmentId: string }>, (r) => `seg:${r.segmentId}`);
     void fetch(`/api/tutor/student-profile/${encodeURIComponent(c.studentId)}`, { method: 'POST', keepalive, headers: { 'Content-Type': 'application/json', ...(c.embedToken ? { 'x-embed-token': c.embedToken } : {}) }, body: JSON.stringify(body) })
-      .then((r) => c.onDebugEvent?.('v2_profile_commit', `status=${r.status} gaps=${(body.gaps as unknown[]).length} turns=${said}`))
+      .then((r) => c.onDebugEvent?.('v2_profile_commit', `status=${r.status} gaps=${(body.gaps as unknown[]).length} mastery=${JSON.stringify(body.masteryDeltas)} evidence=${(body.segmentOutcomes as unknown[]).length} turns=${said}`))
       .catch((e) => c.onDebugEvent?.('v2_profile_commit', `failed ${String((e as Error).message).slice(0, 80)}`));
   }, []);
   useEffect(() => { const onHide = () => commitProfile(true); window.addEventListener('pagehide', onHide); return () => window.removeEventListener('pagehide', onHide); }, [commitProfile]);
