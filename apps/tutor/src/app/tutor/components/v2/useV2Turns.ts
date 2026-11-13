@@ -274,7 +274,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         // Cut short (interrupted, unmounted or ended). The server's state for this turn is
         // lost, so the tutor is left remembering exactly what reached the student.
         stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), text, settled);
-        p.current.onDebugEvent?.('turn_cut_v2', `${text.trim().split(/\s+/).filter(Boolean).length} words kept, ${settled.length} tool call(s)`);
+        p.current.onDebugEvent?.('v2_turn_cut', `${text.trim().split(/\s+/).filter(Boolean).length} words kept, ${settled.length} tool call(s)`);
         if (text.trim()) setTutor(text.trim(), false);
       } else {
         // The state is unchanged, so the same message can simply be sent again.
@@ -311,8 +311,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     committedAtRef.current = said;
     const body = v2ProfileCommit({ sessionId: c.sessionId, subject: c.subject, level: c.level, topic: c.topic, lessonPlanId: c.lessonPlanId, plan: planRef.current, state: stateRef.current, transcript: transcriptRef.current });
     void fetch(`/api/tutor/student-profile/${encodeURIComponent(c.studentId)}`, { method: 'POST', keepalive, headers: { 'Content-Type': 'application/json', ...(c.embedToken ? { 'x-embed-token': c.embedToken } : {}) }, body: JSON.stringify(body) })
-      .then((r) => c.onDebugEvent?.('profile_commit_v2', `status=${r.status} gaps=${(body.gaps as unknown[]).length} turns=${said}`))
-      .catch((e) => c.onDebugEvent?.('profile_commit_v2', `failed ${String((e as Error).message).slice(0, 80)}`));
+      .then((r) => c.onDebugEvent?.('v2_profile_commit', `status=${r.status} gaps=${(body.gaps as unknown[]).length} turns=${said}`))
+      .catch((e) => c.onDebugEvent?.('v2_profile_commit', `failed ${String((e as Error).message).slice(0, 80)}`));
   }, []);
   useEffect(() => { const onHide = () => commitProfile(true); window.addEventListener('pagehide', onHide); return () => window.removeEventListener('pagehide', onHide); }, [commitProfile]);
 
@@ -332,7 +332,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         const d = await fetch('/api/tutor/practice-assign/draft', { method: 'POST', headers, keepalive: true, body: JSON.stringify({ ...base, lessonPlanId: c.lessonPlanId, subject: c.subject, loIds, trigger: 'close_tool', locator: c.practiceLocator }) });
         c.onDebugEvent?.(d.status === 200 ? 'practice_draft_upserted' : d.status === 204 ? 'practice_draft_empty' : 'practice_draft_failed', `lo=[${loIds.join(',')}] trigger=close_tool status=${d.status} (v2)`);
         const f = await fetch('/api/tutor/practice-assign/finalize', { method: 'POST', headers, keepalive: true, body: JSON.stringify({ ...base, source: 'close_tool', reason: String(call?.args.summary ?? '').slice(0, 400) || 'Your tutor picked these to follow up on today\'s lesson.', locator: c.practiceLocator }) });
-        c.onDebugEvent?.('practice_assign_v2', `finalize status=${f.status}`);
+        c.onDebugEvent?.('v2_practice_assign', `finalize status=${f.status}`);
       } catch (e) { c.onDebugEvent?.('practice_draft_failed', `v2 ${String((e as Error).message).slice(0, 80)}`); }
     })();
   }, []);
@@ -346,7 +346,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       endingRef.current = true;
       abortRef.current?.abort();
       p.current.onCut?.();
-      p.current.onDebugEvent?.('time_limit_v2', `${minutes} min`);
+      p.current.onDebugEvent?.('v2_time_limit', `${minutes} min`);
       commitProfile(true);
       p.current.onEndSession?.('time_limit');
     // A resumed session's box runs from when the lesson first began.
@@ -366,7 +366,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     resumedRef.current = true;
     transcriptRef.current = [...cp.transcript]; publish();
     if (cp.whiteboardCommands.length) p.current.onWhiteboardCommand(cp.whiteboardCommands);
-    p.current.onDebugEvent?.('resume_v2', kept ? 'state kept in this browser' : 'state rebuilt from the checkpoint');
+    p.current.onDebugEvent?.('v2_resume', kept ? 'state kept in this browser' : 'state rebuilt from the checkpoint');
     reportProgress();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
