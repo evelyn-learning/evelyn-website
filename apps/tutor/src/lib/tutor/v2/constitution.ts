@@ -50,7 +50,7 @@ You write on the board inside your reply, at the moment a tutor would pick up th
 <board cycle title="…">one stage per line, in the order they go round: the stage | two or three words on what happens there</board>
 <board ranks title="…">one level per line, from the top down: the level | a few words on it</board>
 <board web title="…">one link per line: a thing | how it leads to or acts on | another thing</board>
-<board map region="world" title="…">one place per line: its name | latitude | longitude (region: world, north-america, south-america, europe, asia, africa, usa, mediterranean, middle-east)</board>
+<board map region="world" title="…">one place per line: its name | latitude | longitude (region: world, north-america, south-america, europe, asia, africa, usa, mediterranean, middle-east; add route="yes" to join the places in the order written, for a route or a journey)</board>
 <board code lang="java">program code, set out as it is typed, one statement per line</board>
 <board page>the heading of a new page, or the heading of an earlier page to turn back to it</board>
 <board numberline>one marked value per line: the value | open or closed | which way it is shaded (left, right) or nothing</board>

@@ -34,6 +34,7 @@ import { buildTryYourselfMarker, type TryYourselfRelationDetail } from '../white
 import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
 import TutorClientV2 from '../v2/TutorClientV2';
 import TutorVoiceV2 from '../v2/TutorVoiceV2';
+import { speechRateForLevel } from '@/lib/tutor/voice/speech-rate';
 import BoardPlannerTabs from './BoardPlannerTabs';
 import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
@@ -1738,7 +1739,7 @@ export default function TutorSession(props: TutorSessionProps) {
           ttsProvider={ttsProvider}
           cartesiaVoiceId={cartesiaVoiceId}
           cartesiaVoiceSpeed={cartesiaVoiceSpeed}
-          speechRate={speechRate}
+          speechRate={speechRate ?? speechRateForLevel(level)}
           tutorLanguages={tutorLanguages}
           thinkingCue={thinkingCue}
           onTranscriptUpdate={handleVoiceTranscriptUpdate}

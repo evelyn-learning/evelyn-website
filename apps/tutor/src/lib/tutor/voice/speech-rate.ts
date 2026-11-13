@@ -18,3 +18,19 @@ export function parseSpeechRate(raw: unknown): number | undefined {
   const clamped = Math.min(SPEECH_RATE_MAX, Math.max(SPEECH_RATE_MIN, n));
   return clamped === 1 ? undefined : Math.round(clamped * 100) / 100;
 }
+
+/** The speaking rate for a grade level when the tenant has set none (tutor v2). A lesson for a twelve-year-old
+ *  was spoken at the pace of an AP lesson (Praveen, algebra 1, embed-1794537652738). The values are sonic-3
+ *  `generation_config.speed`; measured, 0.85 is about 5% slower and 0.7 about 15 to 23% slower, so the steps
+ *  are larger than they look. Levels come as "7", "9-10", "grade 4", "k", "ap", "college": the first number
+ *  decides; a level with no number (AP, college, test prep) is spoken at the normal rate. */
+export function speechRateForLevel(level: string | undefined): number | undefined {
+  const text = (level ?? '').toLowerCase();
+  if (/^(?:k|kg|kindergarten|pre-?k)\b/.test(text)) return 0.7;
+  const grade = Number(text.match(/\d{1,2}/)?.[0] ?? NaN);
+  if (!Number.isFinite(grade) || grade > 12) return undefined;
+  if (grade <= 5) return 0.7;
+  if (grade <= 8) return 0.78;
+  if (grade <= 10) return 0.88;
+  return undefined;
+}

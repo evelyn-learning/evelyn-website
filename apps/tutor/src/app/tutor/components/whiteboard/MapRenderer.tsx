@@ -75,6 +75,29 @@ export interface MapRendererProps {
   regions?: MapRegion[];
   /** Optional caption under the map. */
   caption?: string;
+  /** Tutor v2: the view closes in on the places shown, each place is numbered with a legend under the map, and
+   *  labels that would have to be pushed away from their place are left to the legend. On a whole-world map seven
+   *  Silk Road cities were seven dots in a row an inch long, with their names stacked far below them
+   *  (AP World History, embed-1794536181149). */
+  fit?: boolean;
+  /** Tutor v2: the places are joined in the order given (a trade route, a voyage, a march). */
+  route?: boolean;
+}
+
+/** The part of the canvas a fitted map shows: the box around the places, with room about it, in the canvas's
+ *  own 3:2 shape, never closer than FIT_MAX_ZOOM (the outlines are coarse) and never outside the canvas. */
+const FIT_MAX_ZOOM = 3;
+export function fitView(pts: Array<{ px: number; py: number }>): { x: number; y: number; k: number } | null {
+  if (pts.length < 2) return null;
+  const xs = pts.map((p) => p.px); const ys = pts.map((p) => p.py);
+  const minX = Math.min(...xs); const maxX = Math.max(...xs); const minY = Math.min(...ys); const maxY = Math.max(...ys);
+  let w = (maxX - minX) * 1.3 + 50; let h = (maxY - minY) * 1.3 + 50;
+  if (w / h < SVG_WIDTH / SVG_HEIGHT) w = h * (SVG_WIDTH / SVG_HEIGHT); else h = w / (SVG_WIDTH / SVG_HEIGHT);
+  w = Math.max(w, SVG_WIDTH / FIT_MAX_ZOOM); h = w / (SVG_WIDTH / SVG_HEIGHT);
+  if (w >= SVG_WIDTH * 0.85) return null;
+  const x = Math.min(Math.max(0, (minX + maxX) / 2 - w / 2), SVG_WIDTH - w);
+  const y = Math.min(Math.max(0, (minY + maxY) / 2 - h / 2), SVG_HEIGHT - h);
+  return { x, y, k: SVG_WIDTH / w };
 }
 
 const SVG_WIDTH = 600;
@@ -347,6 +370,8 @@ export default function MapRenderer({
   pins = [],
   regions = [],
   caption,
+  fit = false,
+  route = false,
 }: MapRendererProps) {
   // Prefer the real Natural-Earth-generated outline; fall back to the legacy
   // hand-drawn one if a preset isn't in the generated file.
@@ -356,7 +381,7 @@ export default function MapRenderer({
   // group. Pins for nearby cities (LLM-supplied coords, no collision
   // awareness) otherwise draw their labels on top of each other. Only the
   // TEXT is nudged (vertically) — the pin dot stays at its true location.
-  const pinPts = pins.map((pin) => {
+  const pinPtsRaw = pins.map((pin) => {
     const bbox = MAP_BACKGROUND_BBOXES[background];
     let normX: number;
     let normY: number;
@@ -369,6 +394,12 @@ export default function MapRenderer({
     const [px, py] = normToSvg(normX, normY);
     return { px, py };
   });
+  // A fitted map (tutor v2) is drawn zoomed: the outline through a transform, the places at their zoomed positions
+  // with dots and lettering at their ordinary size.
+  const view = fit && regions.length === 0 ? fitView(pinPtsRaw) : null;
+  const pinPts = view ? pinPtsRaw.map(({ px, py }) => ({ px: (px - view.x) * view.k, py: (py - view.y) * view.k })) : pinPtsRaw;
+  const numbered = fit && pins.length >= 3;
+  const dotR = numbered ? 9 : PIN_DOT_RADIUS;
   // R50 T7 (live, portal-b0a1b396 image 3): the de-overlap pass moves label
   // boxes against OTHER LABEL boxes only, so a label nudged clear of its
   // neighbour could still land squarely on a pin's marker — the live capture
@@ -381,14 +412,14 @@ export default function MapRenderer({
   // axis band and FBD arrow shafts) — MapRenderer simply never passed the
   // dots. The markers stay at their true positions; only text moves.
   const pinDotObstacles = pinPts.map(({ px, py }) => ({
-    left: px - PIN_DOT_RADIUS,
-    right: px + PIN_DOT_RADIUS,
-    top: py - PIN_DOT_RADIUS,
-    bottom: py + PIN_DOT_RADIUS,
+    left: px - dotR,
+    right: px + dotR,
+    top: py - dotR,
+    bottom: py + dotR,
   }));
   const pinLabelPos = deoverlapLabels(
     pinPts.map(({ px, py }, i) => ({
-      x: px + 10,
+      x: px + (numbered ? 13 : 10),
       y: py + 4,
       text: pins[i].label || '',
       fontSize: 12,
@@ -461,21 +492,29 @@ export default function MapRenderer({
         </div>
       )}
       <svg
-        viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
+        // The whole world, fitted: the bands of empty sea above and below the land are left off.
+        viewBox={fit && !view && background === 'world' ? `0 125 ${SVG_WIDTH} 235` : `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
         className="w-full h-auto"
         style={{ maxWidth: SVG_WIDTH, maxHeight: SVG_HEIGHT }}
       >
-        <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="#eff6ff" rx={4} />
+        <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="#eff6ff" rx={fit ? 0 : 4} />
 
         {/* Background region outline */}
         {bgPath && (
-          <path
-            d={bgPath}
-            fill="#cbd5e1"
-            fillOpacity={0.5}
-            stroke="#64748b"
-            strokeWidth={1.5}
-          />
+          <g transform={view ? `scale(${view.k}) translate(${-view.x} ${-view.y})` : undefined}>
+            <path
+              d={bgPath}
+              fill={fit ? '#e2e8f0' : '#cbd5e1'}
+              fillOpacity={fit ? 0.9 : 0.5}
+              stroke={fit ? '#94a3b8' : '#64748b'}
+              strokeWidth={fit ? 1 : 1.5}
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </g>
+        )}
+        {route && pinPts.length >= 2 && (
+          <polyline points={pinPts.map(({ px, py }) => `${px},${py}`).join(' ')} fill="none" stroke="#dc2626" strokeOpacity={0.65} strokeWidth={2} strokeDasharray="6 4" strokeLinecap="round" strokeLinejoin="round" />
         )}
 
         {/* Regions: labeled highlighted areas */}
@@ -547,20 +586,38 @@ export default function MapRenderer({
           return (
             <g key={`pin-${i}`} {...feat(pinName, { cx: px, cy: py, w: 40, h: 40 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
               {/* Pin shape: circle with small triangle tail */}
-              <circle cx={px} cy={py} r={6} fill={color} stroke="#fff" strokeWidth={2} />
-              <text
-                x={pinLabelPos[i].x}
-                y={pinLabelPos[i].y}
-                fontSize={12}
-                fontWeight={600}
-                fill="#1f2937"
-              >
-                {pin.label}
-              </text>
+              <circle cx={px} cy={py} r={numbered ? 9 : 6} fill={color} stroke="#fff" strokeWidth={2} />
+              {numbered && <text x={px} y={py + 3.5} textAnchor="middle" fontSize={10} fontWeight={700} fill="#fff">{i + 1}</text>}
+              {/* Numbered: a name that had to be pushed away from its place is left to the legend. */}
+              {(!numbered || (Math.abs(pinLabelPos[i].y - (py + 4)) <= 10 && Math.abs(pinLabelPos[i].x - (px + 13)) <= 10)) && (
+                <text
+                  x={pinLabelPos[i].x}
+                  y={pinLabelPos[i].y}
+                  fontSize={12}
+                  fontWeight={600}
+                  fill="#1f2937"
+                  stroke="#fff"
+                  strokeWidth={fit ? 3 : 0}
+                  paintOrder="stroke"
+                >
+                  {pin.label}
+                </text>
+              )}
             </g>
           );
         })}
       </svg>
+
+      {numbered && (
+        <ol className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-700" style={{ maxWidth: SVG_WIDTH }}>
+          {pins.map((pin, i) => (
+            <li key={i} className="flex items-center gap-1.5">
+              <span className="grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold text-white" style={{ background: pin.color || '#dc2626' }}>{i + 1}</span>
+              <span>{pin.label}</span>
+            </li>
+          ))}
+        </ol>
+      )}
 
       {caption && (
         <div className="text-center text-xs text-gray-500 mt-1 italic">

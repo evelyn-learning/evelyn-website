@@ -499,6 +499,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // with an empty board, embed-1794355900794).
   // A reply of that length that drew no figure is checked as well: a scenario of pushes and pulls, a curve,
   // a sequence was being told in words and problem cards alone (a Grade 8 forces lesson, embed-1794371869806).
+  const NEXT_PART = /\bpart \(?[b-h]\)?(?=[\s:,.])|\b(?:next|second|third|fourth|last|final) (?:part|question)\b/i;
   const drewFigure = () => toolCalls.some((c) => V2_FIGURE_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   const paintedSoFar = () => toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && c.name !== 'new_page' && c.name !== 'go_to_page' && !/^not /.test(c.outcome));
   // A reply that ended on the offer of the next part is checked only for mathematics it said: asked to look at
@@ -508,7 +509,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && (!endedOnOffer || speaksMaths(said)) && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && said.split(/\s+/).length >= V2_UNWRITTEN_WORDS) || (opening && !paintedSoFar())
     // Values said and nothing written: a student's set-up was confirmed aloud ("A⁻ is 0.05, HA is 0.1, pKa is 4.74")
     // and never put on the board (chemistry, embed-1794447993778).
-    || (!paintedSoFar() && new Set(said.match(/\d+(?:\.\d+)?/g) ?? []).size >= 3)) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
+    || (!paintedSoFar() && new Set(said.match(/\d+(?:\.\d+)?/g) ?? []).size >= 3)
+    // The next part of a question set aloud with nothing written: "Now part (b): how did…" was asked under a card
+    // that still showed part (a) (AP World History, embed-1794536181149).
+    || (!paintedSoFar() && NEXT_PART.test(said) && /\?/.test(said))) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
     // The check has two halves. What was said and not written is added. What was written and should not have
     // been is withdrawn: a block that shows the step the reply asks the student to take (the board did the
     // differentiation the tutor had just asked for, embed-1794349966573). Board items wait for their sentence

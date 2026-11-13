@@ -2436,6 +2436,19 @@ export function speakLessonNotation(given: string): string {
     .replace(/(^|[.!?]\s+)(Now|Next|Okay|So|And)?,?\s*(?:on(?:to)?\s+)?[Aa] (?:new|fresh) page\s*[:,—–-]\s*([a-z])/g, (_m, lead: string, opener: string | undefined, first: string) => `${lead}${opener ? `${opener}, ${first}` : first.toUpperCase()}`);
 }
 
+/** Applies `f` to the words of a sentence and leaves mathematics written between dollar signs alone, for
+ *  rewriteForTTS to read as mathematics. The lesson-notation rules read "$2x^2 = 5x - 3$" as money and the tutor
+ *  said "2 dollars x squared" (algebra 1, embed-1794537652738). A dollar sign before a number with no closing
+ *  partner ("$5 and $3") is still money. */
+export function outsideMathSpans(text: string, f: (words: string) => string): string {
+  const out: string[] = []; let last = 0;
+  for (const m of text.matchAll(/\$(?=\S)[^$\n]*?\S\$(?!\d)|\$\S\$(?!\d)/g)) {
+    out.push(f(text.slice(last, m.index)), m[0]); last = m.index + m[0].length;
+  }
+  out.push(f(text.slice(last)));
+  return out.join('');
+}
+
 export function speakNumberPlurals(text: string): string {
   return text.replace(/\b(the|these|those|both|all|of|and|or|no|many|few|several|two|three|four|five|six|seven|eight|nine|ten|\d+)(\s+)(\d{1,3})s\b(?!')/gi, (_m, cue: string, gap: string, n: string) => `${cue}${gap}${NUMBER_PLURAL[Number(n)] ?? `${n}'s`}`);
 }

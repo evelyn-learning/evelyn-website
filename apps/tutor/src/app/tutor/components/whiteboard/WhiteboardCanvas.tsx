@@ -592,8 +592,20 @@ export function WhiteboardCanvas({
       }
     }
 
-    for (const cmd of commands) {
+    // A rewritten item (tutor v2: a note said again with a line more, a graph drawn again with a point on it) names
+    // the item whose place it takes, and stands where that one stood. Taken down and put up again at the foot of
+    // the page, the student saw two cards and then one vanish (geography, embed-1794537115004).
+    const takenBy = new Map<string, WhiteboardCommand>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const cmd of commands) { const of = (cmd as any).takesPlaceOf as string | undefined; if (of) takenBy.set(of, cmd); }
+    const stoodIn = new Set<WhiteboardCommand>();
+
+    for (const given of commands) {
+      let cmd = given;
       if (cmd.action === 'clear' || cmd.action === 'goToPage' || cmd.action === 'removeItems' || cmd.action === 'reviseItems') continue;
+      if (stoodIn.has(cmd)) continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (let hops = 0, next = takenBy.get((cmd as any).id); next && hops < 8; hops++, next = takenBy.get((cmd as any).id)) { cmd = next; stoodIn.add(cmd); }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cmdId = (cmd as any).id as string | undefined;
       if (cmdId && removedIds.has(cmdId)) continue;
@@ -3492,7 +3504,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
       return <TimelineRenderer title={command.title} events={command.events} orientation={command.orientation} />;
 
     case 'showMap':
-      return <MapRenderer title={command.title} background={command.background} pins={command.pins} regions={command.regions} caption={command.caption} />;
+      return <MapRenderer title={command.title} background={command.background} pins={command.pins} regions={command.regions} caption={command.caption} fit={(command as { fit?: boolean }).fit} route={(command as { route?: boolean }).route} />;
 
     case 'showCircuit':
       return <CircuitRenderer title={command.title} nodes={command.nodes} components={command.components} showNodes={command.showNodes} />;

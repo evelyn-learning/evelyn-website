@@ -1,0 +1,5 @@
+[
+ { "tool": "show_map", "label": "silk-roads", "args": { "title": "Silk Roads: main cities on the network", "background": "world", "fit": true, "route": true, "pins": [ {"label":"Chang'an (Xi'an)","lat":34.27,"lon":108.94}, {"label":"Dunhuang","lat":40.14,"lon":94.66}, {"label":"Kashgar","lat":39.47,"lon":75.99}, {"label":"Samarkand","lat":39.65,"lon":66.96}, {"label":"Baghdad","lat":33.31,"lon":44.36}, {"label":"Constantinople (Istanbul)","lat":41.01,"lon":28.98} ] } },
+ { "tool": "show_map", "label": "quake-belts", "args": { "title": "Earthquake and volcano belts", "background": "world", "fit": true, "pins": [ {"label":"Japan","lat":36,"lon":138}, {"label":"Chile coast","lat":-33,"lon":-71}, {"label":"California, San Andreas Fault","lat":36,"lon":-120}, {"label":"Mid-Atlantic Ridge","lat":0,"lon":-25}, {"label":"Himalayas","lat":28,"lon":84} ] } },
+ { "tool": "show_map", "label": "two-cities", "args": { "title": "Athens and Sparta", "background": "mediterranean", "fit": true, "pins": [ {"label":"Athens","lat":37.98,"lon":23.73}, {"label":"Sparta","lat":37.07,"lon":22.43} ] } }
+]

@@ -2462,6 +2462,9 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       pins: Array.isArray(funcArgs.pins) ? funcArgs.pins : [],
       regions: Array.isArray(funcArgs.regions) ? funcArgs.regions : [],
       caption: funcArgs.caption,
+      // Tutor v2 (board-inline.ts): a fitted, numbered map, and a route through its places.
+      ...(funcArgs.fit === true ? { fit: true } : {}),
+      ...(funcArgs.route === true ? { route: true } : {}),
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_circuit') {

@@ -124,7 +124,7 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     const deg = (v: string | undefined, neg: RegExp) => { const m = String(v ?? '').replace(/−/g, '-').match(/-?\d+(?:\.\d+)?/); if (!m) return NaN; const n = Number(m[0]); return neg.test(String(v)) ? -Math.abs(n) : n; };
     const pins = lines.map(cells).map((c) => ({ label: c[0], lat: deg(c[1], /s\b/i), lon: deg(c[2], /w\b/i) })).filter((pin) => pin.label && Number.isFinite(pin.lat) && Number.isFinite(pin.lon));
     const regions = ['world', 'north-america', 'south-america', 'europe', 'asia', 'africa', 'australia', 'usa', 'india', 'china', 'middle-east', 'mediterranean'];
-    return { name: 'show_map', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), background: regions.includes(b.attrs.region ?? '') ? b.attrs.region : 'world', pins } };
+    return { name: 'show_map', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), background: regions.includes(b.attrs.region ?? '') ? b.attrs.region : 'world', pins, fit: true, ...(/^(?:yes|true|on|1)$/i.test(b.attrs.route ?? '') ? { route: true } : {}) } };
   }
   // A plot of data: the values as they stand, or named bars (a lesson on histograms had bins listed in notes
   // and no histogram, embed-1794416884500).

@@ -276,6 +276,11 @@ async function main() {
     const offerCall: V2ModelCall = async (params, onText) => { if (/board check/.test(lastOf(params))) { offerSpy.push('check'); return msg([{ type: 'text', text: '1: none\n<board note>Females: XX. Males: XY.</board>\n3: none' }], 'end_turn'); } const t = 'Good, so you already know the name of it and you have met it before in a family you know well enough. Let us start with the chromosomes that decide why boys are affected more often than girls across the whole population of a country.\n\n<board page>Sex chromosomes</board>\n<board note>Females: XX</board>\n\nFemales have two.'; onText?.(t); return msg([{ type: 'text', text: t }], 'end_turn'); };
     const off9 = await runV2Turn({ session: voice, state: pages7(), studentSaid: 'yeah I have heard of it', callModel: offerCall });
     check('a reply that ended on the offer of the next part is not written ahead by the check', offerSpy.length === 0 && off9.state.board.pages.length === 3 && !off9.toolCalls.some((c) => c.name === 'annotate'), { offerSpy, calls: off9.toolCalls });
+    // Round 10 (AP World History, embed-1794536181149).
+    const partSpy: string[] = [];
+    const partCall: V2ModelCall = async (params, onText) => { if (/board check/.test(lastOf(params))) { partSpy.push('check'); return msg([{ type: 'text', text: '1: none\n2: none\n3: none' }], 'end_turn'); } const t = 'Yes, paper money is a valid answer. Now part (b): how did it make trade bigger?'; onText?.(t); return msg([{ type: 'text', text: t }], 'end_turn'); };
+    await runV2Turn({ session: voice, state: st6(), studentSaid: 'paper money', callModel: partCall });
+    check('the next part of a question asked aloud with nothing written is put to the board check', partSpy.length === 1, partSpy);
     const mistake = 'Yes, it is always smaller than the smallest resistor. <board note style="warning">Common mistake: parallel resistance is not bigger. The total is always smaller than the smallest resistor.</board> Each extra branch gives the current another path.\n\nDoes that make sense so far?';
     const gone: string[] = [];
     const wd = (line: string): V2ModelCall => async (params, onText) => { if (/board check/.test(lastOf(params))) return msg([{ type: 'text', text: `${line}\n2: none\n3: none` }], 'end_turn'); onText?.(mistake); return msg([{ type: 'text', text: mistake }], 'end_turn'); };

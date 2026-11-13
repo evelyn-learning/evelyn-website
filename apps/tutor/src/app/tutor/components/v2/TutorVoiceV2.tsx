@@ -41,7 +41,7 @@ import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
 import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '@/lib/tutor/v2/facts';
-import { speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakLessonNotation, speakLetterUnits, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
+import { outsideMathSpans, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakLessonNotation, speakLetterUnits, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
@@ -408,8 +408,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [armSilence, releaseBoard]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');
-  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakFormulas(speakBonds(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(speakLetterUnits(sentence)))))))), []);
-  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakCoefficientLetters(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(sentence)))))), []);
+  const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(outsideMathSpans(sentence, (w) => speakFormulas(speakBonds(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(speakLetterUnits(w))))))))), []);
+  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(outsideMathSpans(sentence, (w) => speakCoefficientLetters(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(w))))))), []);
   const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(sentence))))), []);
   const relayMode = useMemo(() => ({
     instructions: TRANSPORT_ONLY,

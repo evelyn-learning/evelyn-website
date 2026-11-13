@@ -2,7 +2,8 @@
 // Unit tests for rewriteForTTS() additions: slash-pair whitelist,
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
-import { rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakSlashes, speakLessonNotation, speakLetterUnits } from '../src/lib/tutor/voice/tts-pronunciation';
+import { speechRateForLevel } from '../src/lib/tutor/voice/speech-rate';
+import { outsideMathSpans, rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakSlashes, speakLessonNotation, speakLetterUnits } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1582,5 +1583,13 @@ console.log('OK — tts-pronunciation rewrites validated');
   for (const keep of ['Is A the answer?', 'Point A is here.', 'Each resistor drops 6 V.']) assert.equal(speakLetterUnits(keep), keep);
   for (const keep of ['I think x^2 is right.', 'World War II ended in 1945.', 'Turn to a new page in your notebook.']) assert.equal(speakLessonNotation(keep), keep);
   for (const keep of ['It moves at 4 m/s.', 'It is n/a, and/or either.', 'The slope is dy/dx.', 'about 3/4 of them']) assert.equal(speakSlashes(keep), keep);
+  // Mathematics between dollar signs is read as mathematics, not money (algebra 1, embed-1794537652738).
+  const maths9 = (x: string) => rewriteForTTS(outsideMathSpans(x, (w) => speakCoefficientLetters(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(w)))))));
+  assert.equal(maths9('Take $2x^2 = 5x - 3$.'), 'Take 2x squared equals 5x minus 3.');
+  assert.equal(maths9('Take $3x^2 + 2x + 4 = 0$.'), 'Take 3x squared plus 2x plus 4 equals 0.');
+  assert.equal(maths9('The minus sign stays attached to the $5$.'), 'The minus sign stays attached to the 5.');
+  assert.equal(maths9('It costs $5 and $3.'), 'It costs 5 dollars and 3 dollars.');
+  assert.equal(speechRateForLevel('7'), 0.78); assert.equal(speechRateForLevel('9-10'), 0.88); assert.equal(speechRateForLevel('grade 4'), 0.7);
+  for (const full of ['12', 'ap', 'college', undefined]) assert.equal(speechRateForLevel(full), undefined);
   for (const keep of ['The scores are 62, 66, 70, 73, 75.', 'In 1492, 1519, and 1550 to 1551.', 'It cost 1,250,000 dollars.']) assert.equal(speakDataRuns(keep), keep);
 }
