@@ -12,6 +12,8 @@ export interface V2ClientSession {
   mode: 'text' | 'voice';
   timeBoxMinutes?: number;
   lessonPlanId?: string;
+  /** What the student asked to learn, when there is no lesson plan (a topic typed on the demo page, a partner's free practice). */
+  topic?: string;
   teacher?: { name: string; nameIsRole?: boolean; style?: string };
   trial?: boolean;
 }

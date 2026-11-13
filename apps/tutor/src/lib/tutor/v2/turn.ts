@@ -107,7 +107,7 @@ export function v2SessionPart(session: V2Session): string {
     session.trial ? 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.' : '',
     session.timeBoxMinutes ? `The session is meant to last about ${session.timeBoxMinutes} minutes.` : '',
     tutorFigureLines(session),
-    session.plan ? `\n${renderPlanMap(session.plan)}` : '\nThere is no lesson plan: teach what the student asks for.',
+    session.plan ? `\n${renderPlanMap(session.plan)}` : session.topic ? `\nThere is no lesson plan. The student asked to learn: ${session.topic}. Teach that, and whatever else they ask for.` : '\nThere is no lesson plan: teach what the student asks for.',
   ];
   return lines.filter(Boolean).join('\n');
 }

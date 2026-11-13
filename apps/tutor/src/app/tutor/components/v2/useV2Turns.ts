@@ -29,6 +29,8 @@ export interface V2TurnsConfig {
   /** The teacher persona's name and manner, and whether this is a free trial (types.ts V2Session). */
   teacher?: { name: string; nameIsRole?: boolean; style?: string };
   trial?: boolean;
+  /** The topic asked for when there is no lesson plan. */
+  topic?: string;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
   onEndSession?: (reason?: 'time_limit') => void;
@@ -133,6 +135,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       studentName: p.current.studentName, subject: p.current.subject, level: p.current.level, mode: p.current.mode,
       ...(p.current.sessionMaxMinutes ? { timeBoxMinutes: p.current.sessionMaxMinutes } : {}),
       ...(p.current.lessonPlanId ? { lessonPlanId: p.current.lessonPlanId } : {}),
+      ...(p.current.topic && !p.current.lessonPlanId ? { topic: p.current.topic } : {}),
       ...(p.current.teacher ? { teacher: p.current.teacher } : {}),
       ...(p.current.trial ? { trial: true } : {}),
     };

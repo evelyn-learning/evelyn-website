@@ -1735,6 +1735,7 @@ export default function TutorSession(props: TutorSessionProps) {
           embedToken={embedToken}
           standby={standby}
           teacher={v2Teacher}
+          topic={topic || undefined}
           trial={isTrial || openScope || undefined}
           sessionMaxMinutes={sessionMaxMinutes}
           composerSlot={videoBtn}
@@ -1767,6 +1768,7 @@ export default function TutorSession(props: TutorSessionProps) {
           embedToken={embedToken}
           standby={standby}
           teacher={v2Teacher}
+          topic={topic || undefined}
           trial={isTrial || openScope || undefined}
           prewarm={prewarm}
           sessionMaxMinutes={sessionMaxMinutes}
