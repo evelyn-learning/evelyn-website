@@ -294,11 +294,12 @@ export default function VoiceTutorLiveDemo({
   // Teacher restore + geo pre-select — same semantics as /tutor (stored
   // choice wins; first visit picks from the local accent pair and persists).
   useEffect(() => {
+    // The name and email are typed each time (Praveen 2026-11-12): they used to be kept in the browser and
+    // filled in again, so the form looked already completed with whatever was typed last. What an earlier
+    // version kept is cleared.
     try {
-      const storedName = window.localStorage.getItem('evelyn:demo:studentName');
-      if (storedName) setStudentName(storedName);
-      const storedEmail = window.localStorage.getItem('evelyn:demo:studentEmail');
-      if (storedEmail) setStudentEmail(storedEmail);
+      window.localStorage.removeItem('evelyn:demo:studentName');
+      window.localStorage.removeItem('evelyn:demo:studentEmail');
     } catch {}
     try {
       const raw = window.localStorage.getItem(TEACHER_STORE_KEY);
@@ -377,10 +378,6 @@ export default function VoiceTutorLiveDemo({
   const start = async () => {
     if (starting || !identityOk || !hasTopic) return;
     trackEvent('demo_start_click', { plan_id: lesson.planId || 'typed_topic', teacher_id: teacher.id });
-    try {
-      window.localStorage.setItem('evelyn:demo:studentName', name);
-      window.localStorage.setItem('evelyn:demo:studentEmail', email);
-    } catch {}
     setStarting(true);
     setStartError(false);
     try {
