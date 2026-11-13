@@ -315,7 +315,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     // A session can commit more than once (the close, then the page going away): each mastery step and each
     // evidence row is sent once.
     const fresh = <T,>(rows: T[], key: (r: T) => string) => rows.filter((r) => { const k = key(r); if (sentMasteryRef.current.has(k)) return false; sentMasteryRef.current.add(k); return true; });
-    body.masteryDeltas = fresh(body.masteryDeltas as Array<{ loId: string; delta: number }>, (r) => `lo:${r.loId}:${r.delta > 0 ? 'up' : 'down'}`);
+    body.masteryDeltas = fresh(body.masteryDeltas as Array<{ loId: string; delta: number }>, (r) => `lo:${r.loId}`);
     body.segmentOutcomes = fresh(body.segmentOutcomes as Array<{ segmentId: string }>, (r) => `seg:${r.segmentId}`);
     void fetch(`/api/tutor/student-profile/${encodeURIComponent(c.studentId)}`, { method: 'POST', keepalive, headers: { 'Content-Type': 'application/json', ...(c.embedToken ? { 'x-embed-token': c.embedToken } : {}) }, body: JSON.stringify(body) })
       .then((r) => c.onDebugEvent?.('v2_profile_commit', `status=${r.status} gaps=${(body.gaps as unknown[]).length} mastery=${JSON.stringify(body.masteryDeltas)} evidence=${(body.segmentOutcomes as unknown[]).length} turns=${said}`))

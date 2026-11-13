@@ -36,33 +36,43 @@ const GAP_NOTE: Record<string, string> = { found: 'Seen in the session, not yet 
 
 /** The commit made when a v2 session ends. */
 /** Mastery, per plan objective, read off what v2 records (Praveen 2026-11-12: ported before any tenant with
- *  enrolled students moves to v2). v1 takes a number from the tutor with each completed segment; v2 has no such
- *  number, and has two firmer signals instead: a practice segment the tutor marked as demonstrated, and the
- *  objectives it names at the close as not yet done alone.
- *   - evidence rows (the learner model): one per demonstrated practice segment, through the resolver v1 uses,
- *     at full weight unless its objective is among those still needing practice;
- *   - a mastery step per objective: down for one that still needs practice, up for one with a demonstrated
- *     practice segment, none for one that was only taught (it is still listed as touched).
+ *  enrolled students moved to v2). v1 takes a number from the tutor with each completed segment; v2 has two
+ *  firmer signals: a practice segment the tutor marked as demonstrated, and the objectives it names at the
+ *  close as not yet done alone. A score moves only on what the student did with a practice problem:
+ *   - did one, and the objective is not named at the close: up, and full-weight evidence;
+ *   - did one, but the objective is still named: up by half, half-weight evidence (right once, not yet secure);
+ *   - was set one, did not get it, and the objective is named: down, a small step;
+ *   - named at the close with no practice attempted (the lesson ended early, or never reached it): no change.
+ *     Practice is still set for it; a score should not fall for work the student was never given. A student
+ *     who solved a problem and left had the objective marked down under the first version of this rule
+ *     (local run, 2026-11-12).
  *  A segment belongs to the objective its id is grouped under, else to the plan's only objective. */
 export const V2_MASTERY_UP = 0.5;
-export const V2_MASTERY_DOWN = -0.3;
+export const V2_MASTERY_UP_MIXED = 0.25;
+export const V2_MASTERY_DOWN = -0.2;
 export function v2Mastery(plan: LessonPlan | null, goals: V2State['goals'], needsPracticeLoIds: string[] = []): { masteryDeltas: Array<{ loId: string; delta: number }>; segmentOutcomes: Array<{ segmentId: string; loId: string; kind: string; completed: boolean; outcome: number; streakAtComplete?: number }> } {
   if (!plan) return { masteryDeltas: [], segmentOutcomes: [] };
   const planLoIds = plan.los.map((lo) => lo.id);
   const weak = new Set(needsPracticeLoIds.filter((id) => planLoIds.includes(id)));
   const segmentOutcomes: ReturnType<typeof v2Mastery>['segmentOutcomes'] = [];
-  const shownAlone = new Set<string>();
+  const did = new Set<string>(); const triedOnly = new Set<string>();
   for (const seg of plan.segments) {
-    if (goals[seg.id]?.status !== 'demonstrated') continue;
+    const status = goals[seg.id]?.status;
+    if (status !== 'demonstrated' && status !== 'shown') continue;
     const group = loGroupOf(seg.id);
-    const pre = resolveSegmentEvidence({ segmentId: seg.id, segmentKind: seg.kind, planLoIds, loGroupId: group, source: 'complete', streakAtComplete: undefined, demonstrated: true });
-    if (!pre) continue;
-    const solid = !weak.has(pre.loId);
-    const evidence = solid ? resolveSegmentEvidence({ segmentId: seg.id, segmentKind: seg.kind, planLoIds, loGroupId: group, source: 'complete', streakAtComplete: 1, demonstrated: true }) ?? pre : pre;
+    const signal = { segmentId: seg.id, segmentKind: seg.kind, planLoIds, loGroupId: group, source: 'complete' as const, demonstrated: true };
+    const pre = resolveSegmentEvidence({ ...signal, streakAtComplete: undefined });
+    if (!pre) continue; // not a practice segment, or no objective to credit
+    if (status === 'shown') { triedOnly.add(pre.loId); continue; }
+    const evidence = weak.has(pre.loId) ? pre : resolveSegmentEvidence({ ...signal, streakAtComplete: 1 }) ?? pre;
     segmentOutcomes.push({ segmentId: seg.id, loId: evidence.loId, kind: seg.kind, completed: true, outcome: evidence.outcome, ...(evidence.streakAtComplete ? { streakAtComplete: evidence.streakAtComplete } : {}) });
-    if (solid) shownAlone.add(evidence.loId);
+    did.add(evidence.loId);
   }
-  const masteryDeltas = [...[...weak].map((loId) => ({ loId, delta: V2_MASTERY_DOWN })), ...[...shownAlone].map((loId) => ({ loId, delta: V2_MASTERY_UP }))];
+  const masteryDeltas: Array<{ loId: string; delta: number }> = [];
+  for (const loId of planLoIds) {
+    if (did.has(loId)) masteryDeltas.push({ loId, delta: weak.has(loId) ? V2_MASTERY_UP_MIXED : V2_MASTERY_UP });
+    else if (weak.has(loId) && triedOnly.has(loId)) masteryDeltas.push({ loId, delta: V2_MASTERY_DOWN });
+  }
   return { masteryDeltas, segmentOutcomes };
 }
 
