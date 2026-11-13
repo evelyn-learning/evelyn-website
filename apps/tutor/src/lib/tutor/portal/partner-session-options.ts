@@ -49,6 +49,11 @@ export interface PartnerSessionOptions {
   /** Which turn engine the partner's sessions use. 'v1' everywhere until v2 is cut over
    *  partner by partner (docs/superpowers/specs/2026-11-09-tutor-brain-v2-design.md §4.1). */
   brainVersion: 'v1' | 'v2';
+  /** Host video lessons (spec v1.6): the frame reads a host question aloud
+   *  when it appears and speaks one short line after a correct answer, with
+   *  no model call and no session time. Speech is paid per character, for
+   *  every viewer of the lesson, so it is off unless the partner asked. */
+  questionRead: boolean;
 }
 
 /** Partner rows — applied when present. A partner absent from this table
@@ -76,7 +81,9 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   greenapple: { openerPrefetch: false },
   // Skyler 2026-11-02: the chime distracts in their video lessons and the
   // label sits half under their chat box. Cue off; their ack fillers return.
-  gameclass: { openerPrefetch: false, thinkingCue: false },
+  // Naresh 2026-11-13: the tutor reads each quiz question as it appears and
+  // cheers a correct answer; only a wrong answer starts tutoring.
+  gameclass: { openerPrefetch: false, thinkingCue: false, questionRead: true },
   globalead: { openerPrefetch: false },
 };
 
@@ -119,6 +126,7 @@ export function defaultPartnerSessionOptions(tutorLanguages: string[] | undefine
     pronunciation: false,
     thinkingCue: true,
     brainVersion: 'v1',
+    questionRead: false,
   };
 }
 
@@ -133,5 +141,6 @@ export function resolvePartnerSessionOptions(session: PartnerSessionLike | null 
     pronunciation: row?.pronunciation ?? base.pronunciation,
     thinkingCue: row?.thinkingCue ?? base.thinkingCue,
     brainVersion: (Object.hasOwn(BRAIN_VERSION_BY_PARTNER, partnerId) ? BRAIN_VERSION_BY_PARTNER[partnerId] : undefined) ?? row?.brainVersion ?? base.brainVersion,
+    questionRead: row?.questionRead ?? base.questionRead,
   };
 }

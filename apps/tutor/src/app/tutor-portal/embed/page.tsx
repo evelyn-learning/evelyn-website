@@ -36,7 +36,7 @@ import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { unloadSaveStatus } from '@/lib/tutor/voice/lesson-close';
-import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_BRAIN_V2_CLAIM, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_BRAIN_V2_CLAIM, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_HOST_QUESTION_READ, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE } from '@/lib/tutor/orchestrator/flags';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -51,7 +51,7 @@ import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shou
 import {
   CLOCK_POST_MS, INITIAL_INACTIVE_CLOCK, INITIAL_LESSON_HOST_STATE, RESUME_CONFIRM_MS, STANDBY_IDLE_END_MS,
   activeSeconds, clockMessage, currentPositionSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment, inferExitTicket,
-  parseVideoState, reconcileMomentPosition, reduceLessonHost, renderMomentDirective, videoForPrompt, momentBanner, lessonStartHook, type InactiveClock, type LessonHostEvent, type LessonHostState,
+  parseVideoState, parseHostQuestion, parseHostAnswer, questionReadLine, questionTakesOver, momentFollowsRead, pickEncouragement, questionDoneMessage, HOST_LINE_DONE_MAX_MS, reconcileMomentPosition, reduceLessonHost, renderMomentDirective, videoForPrompt, momentBanner, lessonStartHook, type InactiveClock, type LessonHostEvent, type LessonHostState,
 } from '@/lib/tutor/portal/host-lesson';
 import { LESSON_CACHE_MAX_CHARS, lessonCacheKey, parseLessonTimeline, renderLessonNow, timelineStats, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
 import { HOST_START_VIDEO_WAIT_MS, PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, shouldAwaitVideoState, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
@@ -110,6 +110,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // persona_resolved: catalogue persona id / voice code / fallbacks.
   'persona_',
   'standby', 'video_', 'moment_', 'lesson_timeline', 'lesson_start', 'host_pause', 'host_resume', 'student_wake', 'resume_lesson',
+  // Spec v1.6 (question read-aloud): host_question / host_question_skipped,
+  // host_answer, host_line_spoken / host_line_cut / host_line_skipped, question_done.
+  'host_question', 'host_answer', 'host_line_', 'question_done',
   // GDI trial: working_level_set / _refused / _known (lib/tutor/level/working-level.ts).
   'working_level',
   // GDI trial: pronunciation_armed / _clip_sent / _note_planted / _unavailable
@@ -1707,6 +1710,21 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     }, 60_000);
     return () => { cancelled = true; clearInterval(t); };
   }, [embedToken, fetchPoolSnapshot, blockStart]);
+  // Autoplay probe: a throwaway AudioContext shares the frame's autoplay
+  // permission with the real one; only 'running' means audio is heard.
+  const probeAutoplay = useCallback(async (): Promise<AudioContextState | 'unavailable'> => {
+    let state: AudioContextState | 'unavailable' = 'unavailable';
+    try {
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (Ctx) {
+        const probe = new Ctx();
+        await Promise.race([probe.resume().catch(() => {}), new Promise((r) => setTimeout(r, 300))]);
+        state = probe.state;
+        void probe.close().catch(() => {});
+      }
+    } catch { state = 'unavailable'; }
+    return state;
+  }, []);
   const runHostStart = useCallback(() => {
     const startedAt = Date.now();
     const deadline = startedAt + 60_000;
@@ -1763,26 +1781,14 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       }
       hostStartAcceptedRef.current = true;
       addDebugEvent('host_start', `prewarm=${prewarm}`);
-      // Autoplay probe: a throwaway AudioContext shares the frame's autoplay
-      // permission with the real one; only 'running' means audio is heard.
       void (async () => {
-        let state: AudioContextState | 'unavailable' = 'unavailable';
-        try {
-          const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-          if (Ctx) {
-            const probe = new Ctx();
-            await Promise.race([probe.resume().catch(() => {}), new Promise((r) => setTimeout(r, 300))]);
-            state = probe.state;
-            void probe.close().catch(() => {});
-          }
-        } catch { state = 'unavailable'; }
-        if (isAutoplayBlocked(state)) blockStart('autoplay');
+        if (isAutoplayBlocked(await probeAutoplay())) blockStart('autoplay');
         else runHostStart();
       })();
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [addDebugEvent, blockStart, runHostStart, prewarm, tokenExp]);
+  }, [addDebugEvent, blockStart, runHostStart, probeAutoplay, prewarm, tokenExp]);
 
   // evelyn:ready — posted once when the relay first connects (warm). Additive;
   // hosts that never prewarm ignore it.
@@ -1821,7 +1827,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     const prev = lessonHostRef.current;
     lessonHostRef.current = next;
     // The position is read from the ref; re-render only for what is drawn.
-    if (next.video !== prev.video || next.hostPaused !== prev.hostPaused || next.wokeAtMs !== prev.wokeAtMs) setLessonHost(next);
+    if (next.video !== prev.video || next.hostPaused !== prev.hostPaused || next.wokeAtMs !== prev.wokeAtMs || next.questionOpen !== prev.questionOpen) setLessonHost(next);
     syncInactiveRef.current();
     // Posted on a CHANGE only: a host may report its video state very often.
     const standingBy = isStandingBy(next);
@@ -1834,6 +1840,43 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const postVideoCommand = useCallback((command: 'play' | 'pause', source: 'student' | 'tutor') => {
     addDebugEvent('video_command', `command=${command} source=${source}`);
     window.parent.postMessage({ type: 'evelyn:video_command', command, source }, '*');
+  }, [addDebugEvent]);
+
+  // ── Question read-aloud (partner spec v1.6) ─────────────────────────────
+  // The frame speaks a host question when it appears and one short line
+  // after a correct answer. No model call; the tutor stands by throughout,
+  // so none of it is session time. A wrong answer arrives as the host's
+  // moment and wakes the tutor as before.
+  const questionRead = TUTOR_HOST_LESSON && TUTOR_HOST_QUESTION_READ && sessionOptions.questionRead;
+  /** Bumped by every question, answer, moment and wake: an older line that
+   *  was still waiting (autoplay probe) is not spoken after it. */
+  const hostLineSeqRef = useRef(0);
+  const hostAudioOkRef = useRef(false);
+  const lastEncouragementRef = useRef<string | null>(null);
+  /** The question the frame last read aloud (for the wrong-answer moment). */
+  const readQuestionRef = useRef<{ questionId?: string; text: string; atMs: number } | null>(null);
+  const speakHostLine = useCallback(async (kind: 'question' | 'encouragement', text: string, questionId?: string): Promise<boolean> => {
+    const seq = ++hostLineSeqRef.current;
+    const id = questionId ? ` id=${questionId}` : '';
+    const skip = (why: string) => { addDebugEvent('host_line_skipped', `kind=${kind}${id} why=${why}`); return false; };
+    // Before the session has started nothing in the frame has played yet:
+    // audio the browser will not play would sit queued and come out later.
+    if (!hostAudioOkRef.current && sessionEngagedAtRef.current === null) {
+      if (isAutoplayBlocked(await probeAutoplay())) return skip('autoplay');
+      if (seq !== hostLineSeqRef.current) return skip('superseded');
+    }
+    hostAudioOkRef.current = true;
+    const h = sessionHandleRef.current;
+    if (!h?.speakHostLine) return skip('no_session_handle');
+    const result = h.speakHostLine(text);
+    if (result !== 'spoken') return skip(result);
+    addDebugEvent('host_line_spoken', `kind=${kind}${id} started=${sessionEngagedAtRef.current !== null} chars=${text.length} "${text.slice(0, 80)}"`);
+    return true;
+  }, [addDebugEvent, probeAutoplay]);
+  const stopHostLine = useCallback(async (why: string) => {
+    hostLineSeqRef.current += 1;
+    const r = await sessionHandleRef.current?.stopHostLine?.();
+    if (r?.cut) addDebugEvent('host_line_cut', `why=${why}`);
   }, [addDebugEvent]);
 
   useEffect(() => {
@@ -1880,12 +1923,66 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         // An untagged visual at the very end of the lesson is its exit ticket.
         const inferred = inferExitTicket(moment, { timeline: timelineRef.current, durationSeconds: lessonHostRef.current.durationSeconds });
         if (inferred) moment.kind = 'exit_ticket';
-        addDebugEvent('moment_received', `kind=${moment.kind}${inferred ? ` (inferred: ${inferred})` : ''} pos=${moment.positionSeconds ?? ''}${moment.positionSeconds !== sentPos ? ` (sent ${sentPos}, read as ms)` : ''}${moment.options ? ` options=${moment.options.length}` : ''}`);
+        // Spec v1.6: this moment follows a question the frame read aloud (the
+        // wrong answer). Stop the read if it is still going; tell the tutor.
+        const readAloud = questionRead && momentFollowsRead(readQuestionRef.current, moment, Date.now());
+        if (questionRead) void stopHostLine('moment');
+        addDebugEvent('moment_received', `kind=${moment.kind}${inferred ? ` (inferred: ${inferred})` : ''} pos=${moment.positionSeconds ?? ''}${moment.positionSeconds !== sentPos ? ` (sent ${sentPos}, read as ms)` : ''}${moment.options ? ` options=${moment.options.length}` : ''}${readAloud ? ' read_aloud=1' : ''}`);
         dispatchLessonHost({ type: 'moment', positionSeconds: moment.positionSeconds });
         // An exit ticket: the lesson window carries the whole lesson until the
         // tutor hands back to the video (standby), so the recap can draw on it.
         if (moment.kind === 'exit_ticket') recapRef.current = true;
-        sessionHandleRef.current?.deliverMoment?.(renderMomentDirective(moment), momentBanner(moment));
+        sessionHandleRef.current?.deliverMoment?.(renderMomentDirective(moment, { readAloud }), momentBanner(moment));
+        return;
+      }
+      const hostQuestion = parseHostQuestion(event.data);
+      if (hostQuestion) {
+        const id = hostQuestion.questionId ? ` id=${hostQuestion.questionId}` : '';
+        if (!questionRead) { addDebugEvent('host_question_skipped', `why=off${id}`); return; }
+        // A tutor in conversation with the student is not interrupted to read
+        // a question out, and it does not go back to standing by.
+        if (!questionTakesOver(lessonHostRef.current, { started: sessionEngagedAtRef.current !== null, nowMs: Date.now() })) {
+          addDebugEvent('host_question_skipped', `why=tutor_awake${id}`);
+          return;
+        }
+        const pos = reconcileMomentPosition(hostQuestion.positionSeconds, currentPositionSeconds(lessonHostRef.current, Date.now()));
+        dispatchLessonHost({ type: 'question', positionSeconds: pos });
+        addDebugEvent('host_question', `pos=${pos ?? ''}${id} type=${hostQuestion.questionType ?? '-'} chars=${hostQuestion.text.length}`);
+        void speakHostLine('question', questionReadLine(hostQuestion), hostQuestion.questionId).then((spoken) => {
+          readQuestionRef.current = spoken ? { questionId: hostQuestion.questionId, text: hostQuestion.text, atMs: Date.now() } : null;
+        });
+        return;
+      }
+      const hostAnswer = parseHostAnswer(event.data);
+      if (hostAnswer) {
+        const id = hostAnswer.questionId ? ` id=${hostAnswer.questionId}` : '';
+        if (!questionRead) { addDebugEvent('host_answer', `correct=${hostAnswer.correct}${id} ignored=off`); return; }
+        addDebugEvent('host_answer', `correct=${hostAnswer.correct}${id} standing_by=${isStandingBy(lessonHostRef.current)}`);
+        void (async () => {
+          // The student answered: the read stops at once, mid-sentence if need be.
+          await stopHostLine('answer');
+          // A wrong answer is the host's moment to send; nothing is said here.
+          if (!hostAnswer.correct) return;
+          const done = (spoken: boolean) => {
+            addDebugEvent('question_done', `spoken=${spoken}${id}`);
+            window.parent.postMessage(questionDoneMessage({ questionId: hostAnswer.questionId, spoken }), '*');
+          };
+          // Awake = the student is talking with the tutor: no canned line over that.
+          if (!isStandingBy(lessonHostRef.current)) { done(false); return; }
+          const line = pickEncouragement(lastEncouragementRef.current);
+          const seqBefore = hostLineSeqRef.current;
+          if (!(await speakHostLine('encouragement', line, hostAnswer.questionId))) { done(false); return; }
+          lastEncouragementRef.current = line;
+          // The host resumes its video on question_done: wait for the line to
+          // be heard (bounded), unless something newer took its place.
+          const until = Date.now() + HOST_LINE_DONE_MAX_MS;
+          const wait = setInterval(() => {
+            const superseded = hostLineSeqRef.current !== seqBefore + 1;
+            if (!superseded && Date.now() < until && sessionHandleRef.current?.isHostLineSpeaking?.()) return;
+            clearInterval(wait);
+            if (!superseded) done(true);
+          }, 100);
+        })();
         return;
       }
       const lesson = parseLessonTimeline(event.data);
@@ -1912,7 +2009,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [addDebugEvent, dispatchLessonHost, embedToken]);
+  }, [addDebugEvent, dispatchLessonHost, embedToken, questionRead, speakHostLine, stopHostLine]);
 
   const standby = TUTOR_HOST_LESSON && isStandingBy(lessonHost);
 
@@ -1920,11 +2017,20 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // host to pause, and wake now — the answer must not wait on the host.
   const handleStudentWake = useCallback((via: 'typing' | 'mic') => {
     const s = lessonHostRef.current;
-    if (s.hostPaused || s.video !== 'playing' || s.wokeAtMs !== null) return;
+    if (s.hostPaused) return;
+    // Spec v1.6: asking the tutor while a host question is on screen wakes
+    // it. The video is already paused; a read still going stops.
+    if (s.questionOpen) {
+      addDebugEvent('student_wake', `via=${via} question_open=1`);
+      void stopHostLine('student_wake');
+      dispatchLessonHost({ type: 'student_wake' });
+      return;
+    }
+    if (s.video !== 'playing' || s.wokeAtMs !== null) return;
     addDebugEvent('student_wake', `via=${via}`);
     postVideoCommand('pause', 'student');
     dispatchLessonHost({ type: 'student_wake' });
-  }, [addDebugEvent, postVideoCommand, dispatchLessonHost]);
+  }, [addDebugEvent, postVideoCommand, dispatchLessonHost, stopHostLine]);
 
   // The tutor asked to resume (resume_lesson, after its hand-back line was
   // spoken). No `playing` report within RESUME_CONFIRM_MS ⇒ stay available.

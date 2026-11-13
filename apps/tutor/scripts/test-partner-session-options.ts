@@ -67,22 +67,22 @@ test('NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS overrides both; junk is ignored'
 });
 
 test('engine defaults: no prefetch and auto-end on for an English-only session', () => {
-  assert.deepEqual(defaultPartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1' });
-  assert.deepEqual(defaultPartnerSessionOptions(['en']), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1' });
-  assert.deepEqual(defaultPartnerSessionOptions(['en', 'ja']), { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1' });
+  assert.deepEqual(defaultPartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
+  assert.deepEqual(defaultPartnerSessionOptions(['en']), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
+  assert.deepEqual(defaultPartnerSessionOptions(['en', 'ja']), { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
 });
 
 test('no partner id (retail, showcase without a token) resolves to the engine defaults', () => {
-  assert.deepEqual(resolvePartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1' });
-  assert.deepEqual(resolvePartnerSessionOptions(null), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1' });
-  assert.deepEqual(resolvePartnerSessionOptions({}), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1' });
+  assert.deepEqual(resolvePartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
+  assert.deepEqual(resolvePartnerSessionOptions(null), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
+  assert.deepEqual(resolvePartnerSessionOptions({}), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
   assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '', tutorLanguages: ['en', 'ja'] }),
-    { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1' }, 'a bilingual session with no partner row prefetches');
+    { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false }, 'a bilingual session with no partner row prefetches');
 });
 
 test('an unlisted English-only partner (test tenants, a future partner) gets no prefetch and auto-end on', () => {
   for (const partnerId of ['trial', 'portalA', 'lmtest', 'revtest', 'some-future-partner']) {
-    assert.deepEqual(resolvePartnerSessionOptions({ partnerId }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1' }, partnerId);
+    assert.deepEqual(resolvePartnerSessionOptions({ partnerId }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false }, partnerId);
   }
 });
 
@@ -138,13 +138,21 @@ test('thinking cue: on for every partner by default; the GameClass row turns it 
   assert.equal(resolvePartnerSessionOptions(undefined).thinkingCue, true, 'retail / no partner');
 });
 
+test('question read-aloud: on for GameClass only (Naresh 2026-11-13); speech is paid per viewer', () => {
+  assert.equal(resolvePartnerSessionOptions({ partnerId: 'gameclass' }).questionRead, true);
+  for (const partnerId of Object.keys(PARTNER_SESSION_DEFAULTS).filter((p) => p !== 'gameclass')) {
+    assert.equal(resolvePartnerSessionOptions({ partnerId }).questionRead, false, partnerId);
+  }
+  assert.equal(resolvePartnerSessionOptions(undefined).questionRead, false, 'retail / no partner');
+});
+
 test('the embed page hands the partner default to the claim resolver', () => {
   assert.ok(/resolveThinkingCueClaim\(config\.thinking_cue, sessionOptions\.thinkingCue\)/.test(src('src/app/tutor-portal/embed/page.tsx')));
 });
 
 test('prototype keys are not partner rows', () => {
-  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: 'constructor' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1' });
-  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '__proto__' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1' });
+  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: 'constructor' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
+  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '__proto__' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
 });
 
 console.log('\nWiring pins (source)');

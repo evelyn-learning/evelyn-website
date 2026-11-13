@@ -2489,6 +2489,12 @@ export function VoiceTutorRealtime({
   standbyRef.current = hostStandby;
   const standbySinceMsRef = useRef<number | null>(null);
   const pendingMomentRef = useRef<{ text: string; atMs: number; banner: { label: string; title: string } | null } | null>(null);
+  /** Spec v1.6: true from the moment the frame speaks a host line (a question
+   *  read aloud, the line after a correct answer) until it has been heard or
+   *  cut. Standby must not drop or cut it — it is spoken BECAUSE the tutor is
+   *  standing by. */
+  const hostLineActiveRef = useRef(false);
+  const hostLineWatchRef = useRef<ReturnType<typeof setInterval> | null>(null);
   /** The opening note, read once at the first full opening attempt ('' = none). */
   const openingNoteRef = useRef<string | null>(null);
   const resumeLessonPendingRef = useRef(false);
@@ -27292,13 +27298,15 @@ export function VoiceTutorRealtime({
       try { inFlightBrainAbortRef.current?.abort(); } catch {}
       speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
       let dropped = 0;
-      try { dropped = realtime.dropQueuedSpeech(); } catch {}
+      // A host line (question read-aloud) may already be queued behind the
+      // sentence in flight: it belongs to this standby, keep it.
+      if (!hostLineActiveRef.current) { try { dropped = realtime.dropQueuedSpeech(); } catch {} }
       const cutTimer = setTimeout(() => {
         // isSpeechPending, not the relay state: releasing the mic below moves
         // the state off 'speaking' while the sentence is still playing.
         let stillSpeaking = false;
         try { stillSpeaking = realtime.isSpeechPending(); } catch {}
-        if (standbyRef.current && stillSpeaking) {
+        if (standbyRef.current && stillSpeaking && !hostLineActiveRef.current) {
           try { void realtime.clearSpeechQueue(); } catch {}
         }
       }, 8000);
@@ -27407,6 +27415,7 @@ export function VoiceTutorRealtime({
   };
   useEffect(() => () => {
     if (hostLessonPumpRef.current) clearInterval(hostLessonPumpRef.current);
+    if (hostLineWatchRef.current) clearInterval(hostLineWatchRef.current);
   }, []);
 
   // Stage 3 fix #4 (2026-05-28): retroactive cancel for the state-race.
@@ -29877,6 +29886,44 @@ export function VoiceTutorRealtime({
           realtime.setVoiceMuted(muted);
           onDebugEvent?.('voice_mute', `tutor_voice muted=${muted}`);
         },
+        speakHostLine: (text: string) => {
+          if (!TUTOR_HOST_LESSON) return 'off';
+          if (sessionMode === 'text') return 'text_mode';
+          if (endingRef.current) return 'ending';
+          if (!realtime.isConnected) return 'not_connected';
+          // The tutor's own turn is being prepared or spoken and it is not
+          // standing by: its words come first, the line is not queued behind them.
+          if (hasStartedRef.current && !standbyRef.current && (brainBusyRef.current || productionStateRef.current === 'speaking')) return 'busy';
+          // No gesture inside the frame is needed where the host's page gave
+          // it autoplay (the embed page probes that first). audioUnlockedRef is
+          // left alone: the real start still runs its own unlock in a gesture.
+          try { realtime.unlockAudio(); } catch {}
+          hostLineActiveRef.current = true;
+          try { realtime.speakText(text); } catch { hostLineActiveRef.current = false; return 'not_connected'; }
+          if (hostLineWatchRef.current) clearInterval(hostLineWatchRef.current);
+          const startedAt = Date.now();
+          hostLineWatchRef.current = setInterval(() => {
+            let pending = false;
+            try { pending = realtime.isSpeechPending(); } catch {}
+            // 60 s: audio that never played (a context the browser kept
+            // suspended) must not leave the flag set for the session.
+            if (pending && Date.now() - startedAt < 60_000) return;
+            hostLineActiveRef.current = false;
+            if (hostLineWatchRef.current) { clearInterval(hostLineWatchRef.current); hostLineWatchRef.current = null; }
+          }, 150);
+          return 'spoken';
+        },
+        stopHostLine: async () => {
+          if (!hostLineActiveRef.current) return { cut: false };
+          hostLineActiveRef.current = false;
+          if (hostLineWatchRef.current) { clearInterval(hostLineWatchRef.current); hostLineWatchRef.current = null; }
+          let pending = false;
+          try { pending = realtime.isSpeechPending(); } catch {}
+          if (!pending) return { cut: false };
+          try { await realtime.clearSpeechQueue(); } catch {}
+          return { cut: true };
+        },
+        isHostLineSpeaking: () => hostLineActiveRef.current,
         deliverMoment: (directive: string, banner?: { label: string; title: string } | null) => {
           if (!TUTOR_HOST_LESSON) return;
           // Latest wins: a newer moment replaces one still waiting.

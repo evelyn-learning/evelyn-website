@@ -47,6 +47,14 @@ export const MOMENT_OPTIONS_MAX = 8;
 export const MOMENT_OPTION_CHARS = 200;
 /** A moment's own transcript (what is said in that part of the video). */
 export const MOMENT_TRANSCRIPT_CHARS = 1500;
+export const HOST_ID_CHARS = 80;
+/** The most of a question that is read aloud (spec v1.6). A longer stem is
+ *  cut at a sentence or word end: the student has it on screen, and a long
+ *  read holds up the ones who read faster than the voice. */
+export const QUESTION_READ_MAX_CHARS = 400;
+/** After a correct answer, how long the frame waits for its own short line
+ *  to finish before telling the host it is done anyway. */
+export const HOST_LINE_DONE_MAX_MS = 8000;
 
 function obj(data: unknown): Record<string, unknown> | null {
   return data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : null;
@@ -62,6 +70,12 @@ function str(v: unknown, max: number): string | undefined {
   if (!t) return undefined;
   // Count code points so a clamp never splits a surrogate pair.
   return t.length > max ? Array.from(t).slice(0, max).join('') : t;
+}
+
+/** A host id: a string or a number, kept as a short string. */
+function hostId(v: unknown): string | undefined {
+  if (typeof v === 'number' && Number.isFinite(v)) return String(v);
+  return str(v, HOST_ID_CHARS);
 }
 
 /** `{ type: 'evelyn:video_state', state, position_seconds? }`. An unknown
@@ -101,6 +115,8 @@ export interface LessonMoment {
   options?: string[];
   /** What is said in this part of the video, as the host sends it. */
   transcript?: string;
+  /** The host's own id for the question (ties a moment to `evelyn:question`). */
+  questionId?: string;
 }
 
 /** Options as plain strings: a string, or an object's `text` / `label` /
@@ -144,6 +160,7 @@ export function parseMoment(data: unknown): LessonMoment | null {
     correctAnswer: questionType === 'freeresponse' ? undefined : str(d.correct_answer, L.correctAnswer),
     options: parseOptions(d.options),
     transcript: str(d.transcript, MOMENT_TRANSCRIPT_CHARS),
+    questionId: hostId(d.question_id),
   };
   return Object.fromEntries(Object.entries(m).filter(([, v]) => v !== undefined)) as unknown as LessonMoment;
 }
@@ -163,10 +180,15 @@ export interface LessonHostState {
    *  Non-null = awake although the last report says `playing`; cleared by a
    *  paused/ended report or a play command. */
   wokeAtMs: number | null;
+  /** A host question is on screen and is the student's to answer (spec
+   *  v1.6): from `evelyn:question` until a moment or the student wakes the
+   *  tutor, or the video plays on. The video is paused meanwhile, yet the
+   *  tutor stands by — reading the question out is not tutoring time. */
+  questionOpen: boolean;
 }
 
 export const INITIAL_LESSON_HOST_STATE: LessonHostState = {
-  video: null, positionSeconds: null, positionAtMs: null, durationSeconds: null, hostPaused: false, wokeAtMs: null,
+  video: null, positionSeconds: null, positionAtMs: null, durationSeconds: null, hostPaused: false, wokeAtMs: null, questionOpen: false,
 };
 
 export type LessonHostEvent =
@@ -176,6 +198,8 @@ export type LessonHostEvent =
   /** The student started typing, tapped the mic, or pressed pause in the panel. */
   | { type: 'student_wake' }
   | { type: 'moment'; positionSeconds: number | null }
+  /** `evelyn:question`: a question appeared on the host's screen. */
+  | { type: 'question'; positionSeconds: number | null }
   /** A play command was sent to the host (panel button or the tutor). */
   | { type: 'play_command' };
 
@@ -195,24 +219,40 @@ export function reduceLessonHost(s: LessonHostState, e: LessonHostEvent, nowMs: 
         // to sleep in the middle of the student's question). It ends when the
         // host reports paused/ended, or when a play command is sent.
         wokeAtMs: e.state === 'playing' ? s.wokeAtMs : null,
+        // The video plays on: the question is behind it, answered or not.
+        questionOpen: e.state === 'playing' ? false : s.questionOpen,
       };
     }
     case 'host_pause':
       return s.hostPaused ? s : { ...s, hostPaused: true };
     case 'host_resume':
       return s.hostPaused ? { ...s, hostPaused: false } : s;
-    case 'student_wake':
-      return s.video === 'playing' && s.wokeAtMs === null ? { ...s, wokeAtMs: nowMs } : s;
+    case 'student_wake': {
+      const wake = s.video === 'playing' && s.wokeAtMs === null;
+      if (!wake && !s.questionOpen) return s;
+      return { ...s, wokeAtMs: wake ? nowMs : s.wokeAtMs, questionOpen: false };
+    }
     case 'moment': {
+      const wake = s.video === 'playing' && s.wokeAtMs === null;
       if (e.positionSeconds === null) {
-        return s.video === 'playing' && s.wokeAtMs === null ? { ...s, wokeAtMs: nowMs } : s;
+        return wake || s.questionOpen ? { ...s, wokeAtMs: wake ? nowMs : s.wokeAtMs, questionOpen: false } : s;
       }
       return {
         ...s,
         positionSeconds: e.positionSeconds,
         positionAtMs: nowMs,
-        wokeAtMs: s.video === 'playing' && s.wokeAtMs === null ? nowMs : s.wokeAtMs,
+        wokeAtMs: wake ? nowMs : s.wokeAtMs,
+        questionOpen: false,
       };
+    }
+    case 'question': {
+      // A tutor the student woke over a playing video is mid-conversation:
+      // the question does not put it back to sleep.
+      if (s.wokeAtMs !== null) return s;
+      if (s.questionOpen && e.positionSeconds === null) return s;
+      return e.positionSeconds === null
+        ? { ...s, questionOpen: true }
+        : { ...s, questionOpen: true, positionSeconds: e.positionSeconds, positionAtMs: nowMs };
     }
     case 'play_command':
       return s.wokeAtMs === null ? s : { ...s, wokeAtMs: null };
@@ -247,9 +287,10 @@ export function reconcileMomentPosition(positionSeconds: number | null, knownSec
   return Math.abs(positionSeconds - knownSeconds) > 60 && Math.abs(asSeconds - knownSeconds) <= 5 ? asSeconds : positionSeconds;
 }
 
-/** Standing by = the host hid the panel, or its video is playing and nothing woke the tutor. */
+/** Standing by = the host hid the panel, or its video is playing and nothing
+ *  woke the tutor, or a host question is on screen for the student to answer. */
 export function isStandingBy(s: LessonHostState): boolean {
-  return s.hostPaused || (s.video === 'playing' && s.wokeAtMs === null);
+  return s.hostPaused || s.questionOpen || (s.video === 'playing' && s.wokeAtMs === null);
 }
 
 /** What the panel's play/pause button sends; null = no button yet (no `video_state` seen). */
@@ -290,7 +331,7 @@ export function inferExitTicket(
 
 /** The synthetic (bracketed, silent) turn that makes the tutor step in on a
  *  host moment. Generic by design: every fact comes from the host's fields. */
-export function renderMomentDirective(m: LessonMoment): string {
+export function renderMomentDirective(m: LessonMoment, opts?: { readAloud?: boolean }): string {
   const at = m.positionSeconds !== null ? ` at ${mmss(Math.floor(m.positionSeconds))}` : '';
   const open = m.questionType === 'freeresponse';
   const typeWord =
@@ -308,6 +349,9 @@ export function renderMomentDirective(m: LessonMoment): string {
   if (m.summary) parts.push(`On screen: ${m.summary}`);
   if (m.transcript) parts.push(`Said in this part of the video: ${m.transcript}`);
   if (m.question) parts.push(`Question: ${m.question}`);
+  // Spec v1.6: the frame read the question out when it appeared. Hearing it
+  // a second time from the tutor is the delay the read was meant to remove.
+  if (m.question && opts?.readAloud) parts.push('The student has just heard this question read aloud; do not read it out again.');
   if (m.options) parts.push(`Answer options shown to the student: ${m.options.map((o) => `"${o}"`).join(' | ')}.`);
   else if (m.questionType === 'truefalse') parts.push('The student chooses True or False.');
   if (m.studentAnswer) parts.push(`The student answered: ${m.studentAnswer}`);
@@ -425,4 +469,126 @@ export function clockMessage(input: { activeSeconds: number; running: boolean; m
       ? { pool_remaining_seconds: Math.floor(input.poolRemainingSeconds) }
       : {}),
   };
+}
+
+// ── Question read-aloud and the short line after a correct answer (spec v1.6) ──
+// The tutor is present at every question without a model call: the frame
+// speaks the question when it appears and one short line when the student
+// gets it right. Only a wrong answer (the host's moment) starts tutoring.
+
+export interface HostQuestion {
+  questionId?: string;
+  /** The stem, as the host shows it. */
+  text: string;
+  questionType?: QuestionType;
+  positionSeconds: number | null;
+}
+
+/** `{ type: 'evelyn:question', question_id?, text, question_type?, position_seconds? }`.
+ *  The stem may come as `text` or `question`; a message without one is
+ *  ignored (there is nothing to read). */
+export function parseHostQuestion(data: unknown): HostQuestion | null {
+  const d = obj(data);
+  if (!d || d.type !== 'evelyn:question') return null;
+  const text = str(d.text, LESSON_CONTEXT_LIMITS.question) ?? str(d.question, LESSON_CONTEXT_LIMITS.question);
+  if (!text) return null;
+  const q: HostQuestion = {
+    questionId: hostId(d.question_id),
+    text,
+    questionType: normalizeQuestionType(d.question_type) ?? normalizeQuestionType(d.questionType) ?? normalizeQuestionType(d.format) ?? normalizeQuestionType(d.answer_type),
+    positionSeconds: secs(d.position_seconds),
+  };
+  return Object.fromEntries(Object.entries(q).filter(([, v]) => v !== undefined)) as unknown as HostQuestion;
+}
+
+/** A host pauses its video for a question and sends `evelyn:question`; the
+ *  two can arrive in either order, this far apart at most. */
+export const QUESTION_AFTER_PAUSE_MS = 3000;
+
+/** Does a question that just appeared put the tutor on standby and get read
+ *  out? Not when the student is in conversation with a started tutor (a
+ *  question re-sent for a second try must not cut the tutor off). A started
+ *  tutor that is awake only because the host's pause report arrived a moment
+ *  before the question is not in conversation. */
+export function questionTakesOver(s: LessonHostState, input: { started: boolean; nowMs: number }): boolean {
+  if (!input.started || isStandingBy(s)) return true;
+  if (s.wokeAtMs !== null) return false;
+  return s.video === 'paused' && s.positionAtMs !== null && input.nowMs - s.positionAtMs <= QUESTION_AFTER_PAUSE_MS;
+}
+
+/** A moment with no id to match counts as the question just read for this long. */
+export const READ_QUESTION_MATCH_MS = 120 * 1000;
+
+/** Is this moment about the question the frame read aloud? By the host's id
+ *  where both carry one, else by the same question text, else (a moment that
+ *  names neither) by having been read a short while ago. The moment may
+ *  arrive after a start that already lifted the question's standby, so the
+ *  standby state cannot answer this. */
+export function momentFollowsRead(
+  read: { questionId?: string; text: string; atMs: number } | null,
+  m: LessonMoment,
+  nowMs: number,
+): boolean {
+  if (!read) return false;
+  if (read.questionId && m.questionId) return read.questionId === m.questionId;
+  const norm = (t: string) => t.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (m.question) return norm(m.question) === norm(read.text);
+  return nowMs - read.atMs <= READ_QUESTION_MATCH_MS;
+}
+
+/** `{ type: 'evelyn:answer', question_id?, correct }`. `correct` must be a
+ *  boolean: a host that leaves it out has not said how the answer went. */
+export function parseHostAnswer(data: unknown): { questionId?: string; correct: boolean } | null {
+  const d = obj(data);
+  if (!d || d.type !== 'evelyn:answer' || typeof d.correct !== 'boolean') return null;
+  const questionId = hostId(d.question_id);
+  return questionId ? { questionId, correct: d.correct } : { correct: d.correct };
+}
+
+/** What is spoken for a question: the stem only (the options are on screen;
+ *  reading them all holds up a student who already knows), as plain text,
+ *  cut at QUESTION_READ_MAX_CHARS on a sentence end where there is one. */
+export function questionReadLine(q: HostQuestion): string {
+  let t = q.text
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[*_`#]+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (Array.from(t).length > QUESTION_READ_MAX_CHARS) {
+    const head = Array.from(t).slice(0, QUESTION_READ_MAX_CHARS).join('');
+    const sentenceEnd = Math.max(head.lastIndexOf('. '), head.lastIndexOf('? '), head.lastIndexOf('! '));
+    const wordEnd = head.lastIndexOf(' ');
+    t = sentenceEnd >= QUESTION_READ_MAX_CHARS / 2 ? head.slice(0, sentenceEnd + 1) : wordEnd > 0 ? head.slice(0, wordEnd) : head;
+  }
+  if (q.questionType === 'truefalse' && !/^true or false\b/i.test(t)) t = `True or false: ${t}`;
+  return t;
+}
+
+/** One of these is spoken after a correct answer. Short on purpose: the
+ *  video is waiting. Plain praise of the answer, nothing about the content
+ *  (no model wrote it, so it cannot know what was asked). */
+export const ENCOURAGEMENT_LINES: readonly string[] = [
+  'That’s right.',
+  'Exactly right.',
+  'Yes, well done.',
+  'Correct. Nice work.',
+  'You’ve got it.',
+  'Spot on.',
+  'That’s it, nicely done.',
+  'Right. Good thinking.',
+];
+
+/** A line for this correct answer, never the one spoken last time. */
+export function pickEncouragement(last: string | null, rand: () => number = Math.random): string {
+  const pool = ENCOURAGEMENT_LINES.filter((l) => l !== last);
+  return pool[Math.min(pool.length - 1, Math.floor(rand() * pool.length))];
+}
+
+/** `evelyn:question_done` (tutor → host): the frame has finished with a
+ *  correctly answered question — its short line has been spoken, or was not
+ *  spoken at all (`spoken: false`). The host resumes its video on this. */
+export function questionDoneMessage(input: { questionId?: string; spoken: boolean }): {
+  type: 'evelyn:question_done'; outcome: 'correct'; spoken: boolean; question_id?: string;
+} {
+  return { type: 'evelyn:question_done', outcome: 'correct', spoken: input.spoken, ...(input.questionId ? { question_id: input.questionId } : {}) };
 }
