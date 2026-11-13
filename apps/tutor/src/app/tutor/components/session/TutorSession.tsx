@@ -1735,6 +1735,9 @@ export default function TutorSession(props: TutorSessionProps) {
           embedToken={embedToken}
           standby={standby}
           teacher={v2Teacher}
+          onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
+          onCompletedSegmentsChange={(ids) => { setCompletedSegmentIds([...ids]); onCompletedSegmentsChange?.([...ids]); }}
+          onMilestone={onMilestone}
           topic={topic || undefined}
           trial={isTrial || openScope || undefined}
           sessionMaxMinutes={sessionMaxMinutes}
@@ -1768,6 +1771,9 @@ export default function TutorSession(props: TutorSessionProps) {
           embedToken={embedToken}
           standby={standby}
           teacher={v2Teacher}
+          onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
+          onCompletedSegmentsChange={(ids) => { setCompletedSegmentIds([...ids]); onCompletedSegmentsChange?.([...ids]); }}
+          onMilestone={onMilestone}
           topic={topic || undefined}
           trial={isTrial || openScope || undefined}
           prewarm={prewarm}

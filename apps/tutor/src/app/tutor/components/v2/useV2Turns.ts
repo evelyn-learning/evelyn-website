@@ -7,6 +7,9 @@
  * calls to the whiteboard; the next state kept for the following turn. It
  * holds no audio and no lesson policy.
  */
+import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import type { TutorMilestone } from '@/lib/tutor/orchestrator/types';
+import { v2Progress } from '@/lib/tutor/v2/progress';
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import { mapFunctionCallToCommand } from '@/app/tutor/hooks/toolDefinitions';
@@ -31,6 +34,10 @@ export interface V2TurnsConfig {
   trial?: boolean;
   /** The topic asked for when there is no lesson plan. */
   topic?: string;
+  /** Where the lesson stands, for the host page and a partner's portal (progress.ts): the same three reports v1 makes. */
+  onLessonPlanProgress?: (p: { plan: LessonPlan | null; currentSegmentId: string }) => void;
+  onCompletedSegmentsChange?: (ids: string[]) => void;
+  onMilestone?: (m: TutorMilestone) => void;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
   onEndSession?: (reason?: 'time_limit') => void;
@@ -94,6 +101,24 @@ async function resolveSketch(c: SketchCommand, embedToken: string | undefined, l
 export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const p = useRef(config); p.current = config;
   const stateRef = useRef<V2State>(newV2State());
+  // The plan is read once, for the progress report only: the turn route loads its own copy for the tutor.
+  const planRef = useRef<LessonPlan | null>(null); const reportedRef = useRef(''); const milestoneRef = useRef<TutorMilestone | null>(null);
+  const reportProgress = useCallback(() => {
+    const plan = planRef.current; if (!plan) return;
+    const now = v2Progress(plan, stateRef.current.goals);
+    const sig = `${now.currentSegmentId}|${now.completedSegmentIds.join(',')}`;
+    if (sig !== reportedRef.current) { reportedRef.current = sig; p.current.onLessonPlanProgress?.({ plan, currentSegmentId: now.currentSegmentId }); p.current.onCompletedSegmentsChange?.(now.completedSegmentIds); }
+    if (now.milestone && now.milestone !== milestoneRef.current) { milestoneRef.current = now.milestone; p.current.onMilestone?.(now.milestone); }
+  }, []);
+  useEffect(() => {
+    const id = config.lessonPlanId; if (!id) return;
+    let gone = false;
+    void fetch(`/api/tutor/lesson-plans/${encodeURIComponent(id)}`).then((r) => (r.ok ? r.json() : null)).then((data: { plan?: LessonPlan } | null) => {
+      if (gone || !data?.plan?.segments?.length) return;
+      planRef.current = data.plan; reportProgress();
+    }).catch(() => { /* no plan, no report: the lesson itself does not depend on it */ });
+    return () => { gone = true; };
+  }, [config.lessonPlanId, reportProgress]);
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const busyRef = useRef(false);
   const pendingRef = useRef<string | null>(null);
@@ -207,6 +232,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       });
       letGo(); speak(sentences.flush());
       stateRef.current = done.state;
+      reportProgress();
       setTutor(done.spoken || text.trim(), false, settled.some((c) => c.name === 'show_problem' && /^painted/.test(c.outcome)));
       p.current.onBrainUsage?.(done.usage);
       p.current.onDebugEvent?.('brain_turn', `Brain ${done.totalMs}ms · first_sentence=${done.firstTextMs ?? done.totalMs}ms · in=${done.usage.inputTokens} out=${done.usage.outputTokens} cr=${done.usage.cacheReadTokens} cc=${done.usage.cacheCreationTokens} · v2`);

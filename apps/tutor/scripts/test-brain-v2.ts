@@ -23,6 +23,7 @@ import { runV2Turn, v2SessionPart, type V2ModelCall, V2_CHECK_INS } from '../src
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
+import { v2Progress } from '../src/lib/tutor/v2/progress';
 import { V2_CONTROL_TOOL_NAMES } from '../src/lib/tutor/v2/tool-names';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
@@ -582,6 +583,12 @@ async function main() {
   check('the turn\'s words come back without the leak', rl.spoken === 'Well done.', rl.spoken);
 
   console.log('selection');
+  const plan9 = { segments: [{ id: 'hook', kind: 'hook' }, { id: 'c1', kind: 'concept' }, { id: 't1', kind: 'try_yourself' }, { id: 'recap', kind: 'recap' }] } as never;
+  const pr = (goals: Record<string, { status: 'shown' | 'demonstrated' | 'skipped' }>) => v2Progress(plan9, goals as never);
+  check('progress for a partner\'s portal is read off the goals: a practice problem only put up is still in hand', JSON.stringify(pr({})) === JSON.stringify({ currentSegmentId: 'hook', completedSegmentIds: [], milestone: null })
+    && JSON.stringify(pr({ hook: { status: 'shown' }, c1: { status: 'shown' }, t1: { status: 'shown' } })) === JSON.stringify({ currentSegmentId: 't1', completedSegmentIds: ['hook', 'c1'], milestone: 'first_concept_complete' })
+    && pr({ hook: { status: 'shown' }, c1: { status: 'shown' }, t1: { status: 'demonstrated' } }).milestone === 'first_try_yourself_success' && pr({ hook: { status: 'shown' }, c1: { status: 'shown' }, t1: { status: 'demonstrated' } }).currentSegmentId === 'recap'
+    && pr({ c1: { status: 'skipped' }, recap: { status: 'shown' } }).milestone === 'recap_reached', pr({ hook: { status: 'shown' }, c1: { status: 'shown' }, t1: { status: 'shown' } }));
   check('the marketing demo runs on v2', resolvePartnerSessionOptions({ partnerId: 'evelyn-marketing' }).brainVersion === 'v2');
   check('every partner is on v1 until cut over', ['crimsora', 'greenapple', 'gdi-demo', 'gameclass', 'unknown-partner', ''].every((id) => resolvePartnerSessionOptions({ partnerId: id }).brainVersion === 'v1'));
   check('a deploy can name each partner\'s engine, and ignores what it cannot read', JSON.stringify(brainVersionOverrides(' evelyn-marketing=v2, crimsora=v1 ,gdi-demo=v9,=v2,junk')) === JSON.stringify({ 'evelyn-marketing': 'v2', crimsora: 'v1' }) && Object.keys(brainVersionOverrides(undefined)).length === 0);
