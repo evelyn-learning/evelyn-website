@@ -66,7 +66,9 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   academy: { openerPrefetch: false },
   crimsora: { openerPrefetch: false },
   evelyn: { openerPrefetch: false },
-  'evelyn-marketing': { openerPrefetch: false },
+  // Praveen 2026-11-12: the marketing demo is the first tenant on tutor v2 (the other tenants need lesson
+  // progress reporting, session memory, resume and homework ported first).
+  'evelyn-marketing': { openerPrefetch: false, brainVersion: 'v2' },
   evelyntutor: { openerPrefetch: false },
   kanzoo: { openerPrefetch: false },
   greenapple: { openerPrefetch: false },

@@ -582,6 +582,7 @@ async function main() {
   check('the turn\'s words come back without the leak', rl.spoken === 'Well done.', rl.spoken);
 
   console.log('selection');
+  check('the marketing demo runs on v2', resolvePartnerSessionOptions({ partnerId: 'evelyn-marketing' }).brainVersion === 'v2');
   check('every partner is on v1 until cut over', ['crimsora', 'greenapple', 'gdi-demo', 'gameclass', 'unknown-partner', ''].every((id) => resolvePartnerSessionOptions({ partnerId: id }).brainVersion === 'v1'));
   check('a deploy can name each partner\'s engine, and ignores what it cannot read', JSON.stringify(brainVersionOverrides(' evelyn-marketing=v2, crimsora=v1 ,gdi-demo=v9,=v2,junk')) === JSON.stringify({ 'evelyn-marketing': 'v2', crimsora: 'v1' }) && Object.keys(brainVersionOverrides(undefined)).length === 0);
   const demoSys = v2SessionPart({ subject: 'physics', level: 'High school', mode: 'voice', trial: true, teacher: { name: 'Ms. Elena Vasquez', style: 'Gentle and patient.' } });
