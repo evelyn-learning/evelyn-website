@@ -126,7 +126,7 @@ async function main() {
     check('ordinary equations and aligned working fit', boardMisfit('show_equation', { latex: '\\lim_{x\\to 0}\\frac{\\sin x}{x} = 1' }) === null && boardMisfit('show_equation', { latex: '\\begin{aligned} f(x) &\\approx f\'(a)(x-a) \\\\ g(x) &\\approx g\'(a)(x-a) \\\\ \\frac{f(x)}{g(x)} &\\approx \\frac{f\'(a)}{g\'(a)} \\end{aligned}', label: 'Why (if 0/0)' }) === null);
     check('a very long single line is turned back', /too wide/.test(boardMisfit('show_equation', { latex: 'a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z+a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z' }) ?? ''));
     const quiet = stub([msg([{ type: 'tool_use', id: 'k1', name: 'keep_listening', input: {} }], 'tool_use')]);
-    const rk = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'so if I put x equal to zero, um', callModel: quiet.call });
+    const rk = await runV2Turn({ session: { ...session, mode: 'voice' }, state: newV2State(1_000_000), studentSaid: 'so if I put x equal to zero, um', callModel: quiet.call });
     check('keep_listening is a whole reply: no words, one model call', rk.spoken === '' && rk.modelCalls === 1 && quiet.seen.length === 1);
   }
   {
@@ -322,6 +322,9 @@ async function main() {
     const twice = stub([msg([{ type: 'text', text: 'Hi. What do you know about spin?' }, { type: 'tool_use', id: 'k2', name: 'keep_listening', input: {} }], 'tool_use'), msg([{ type: 'text', text: 'Hi. What do you know about spin?' }], 'end_turn')]);
     const rtw = await runV2Turn({ session: voice, state: newV2State(1_000_000), studentSaid: null, callModel: twice.call, boardPass: false });
     check('an opening that has spoken and then hands over is not asked to speak again', rtw.modelCalls === 1 && (rtw.spoken.match(/What do you know/g) ?? []).length === 1, [rtw.modelCalls, rtw.spoken]);
+    const typedQuiet = stub([msg([{ type: 'tool_use', id: 'k3', name: 'keep_listening', input: {} }], 'tool_use'), msg([{ type: 'text', text: 'Close. What happens to the smell across the room?' }], 'end_turn')]);
+    const rtq = await runV2Turn({ session: { ...voice, mode: 'text' }, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'ok' }, { role: 'assistant', content: 'What happens to the smell?' }] }, studentSaid: 'The particles fly around fast and far apart.', callModel: typedQuiet.call, boardPass: false });
+    check('a typed message is finished: keeping silent is not open to the tutor (demo check 11-13)', /smell/.test(rtq.spoken) && rtq.modelCalls === 2, [rtq.modelCalls, rtq.spoken]);
     const codeNote = inlineToolCall(boardBlocksIn('<board note style="highlight">public static int count(int n) {\n  if (n == 1) return 1;     // base case\n  return 1 + count(n - 1);  // recursive case\n}</board>')[0]);
     check('a note that is program code becomes a code listing', codeNote.name === 'show_code' && codeNote.args.language === 'java' && /\n  if \(n == 1\)/.test(String(codeNote.args.code)), codeNote);
     const rbk = richBlocks('Here is a new method:\n\nint g(int n) { if (n <= 0) return 0; return n % 2 + g(n - 1); }\n\nWhat does g(5) return?');
@@ -684,6 +687,12 @@ async function main() {
   const g13 = inlineToolCall(boardBlocksIn('<board graph x="-6..10" y="-5..5">1/(x-5) | f\nx = 5 | vertical asymptote | dashed\nx^2 | first piece | from -3 to 0\n2x+1 | second piece | x > 0</board>')[0]).args.functions as Array<{ lineStyle?: string; domain?: number[] }>;
   check('a graph draws an asymptote dashed and a piece over its own stretch of x', g13.length === 4 && !g13[0].lineStyle && g13[1].lineStyle === 'dashed' && JSON.stringify(g13[2].domain) === '[-3,0]' && JSON.stringify(g13[3].domain) === '[0,10]', JSON.stringify(g13));
 
+  const nlHalf = inlineToolCall(boardBlocksIn('<board numberline title="Probability scale">\n0 | impossible\n1/2 | even chance\n1 | certain\n</board>')[0]).args as { min: number; max: number; step: number; points: Array<{ value: number }> };
+  check('a number line reads fractions and keeps a 0-to-1 scale to 0 to 1 (demo check 11-13)', nlHalf.min === 0 && nlHalf.max === 1 && nlHalf.step === 0.5 && nlHalf.points.map((p) => p.value).join() === '0,0.5,1', JSON.stringify(nlHalf));
+  const nlInt = inlineToolCall(boardBlocksIn('<board numberline>\n-3 | open\n2\n</board>')[0]).args as { min: number; max: number; step: number };
+  check('a number line of whole numbers keeps its room either side', nlInt.min === -7 && nlInt.max === 6 && nlInt.step === 1, JSON.stringify(nlInt));
+  const triBlank = drawFigure('geometry_figure', { shape: 'triangle', sides: [3, 4, 5], sideLabels: ['a', 'b', 'c'], angleLabels: ['', '', '90°'] });
+  check('an empty label on a triangle is no label, not a refusal (demo check 11-13)', 'svg' in triBlank, JSON.stringify(triBlank).slice(0, 200));
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }

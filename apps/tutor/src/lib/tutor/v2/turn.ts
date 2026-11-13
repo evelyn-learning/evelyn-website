@@ -232,7 +232,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let modelCalls = 0;
 
   const waitingOnTutor = session.mode === 'voice' && input.studentSaid === null && [V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(input.facts?.silenceSeconds ?? 0));
-  const mustSpeak = waitingOnTutor || opening;
+  // A typed message is sent whole: there is nothing more to listen for. A tutor that kept listening to one sat
+  // silent for four minutes (demo check, 2026-11-13; the voice client rechecks a silence, the typed one does not).
+  const typedAndSent = session.mode === 'text' && input.studentSaid !== null;
+  const mustSpeak = waitingOnTutor || opening || typedAndSent;
   /** Run one tool call: validate it, apply it, tell the client, and return its result for the model. */
   const settle = (blockIn: Anthropic.ToolUseBlock, boardOnly = false, inline = false): Anthropic.ToolResultBlockParam => {
     let block = blockIn;

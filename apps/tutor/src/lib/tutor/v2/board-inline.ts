@@ -164,14 +164,31 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     } };
   }
   if (b.kind === 'numberline') {
-    const num = (v: string | undefined) => Number(String(v ?? '').replace(/−/g, '-').replace(/[^0-9.\-]/g, ''));
+    // A value may be a fraction ("1/2", "-3/4") or a mixed number ("1 1/2"). Read digit by digit, "1/2" was 12, and a
+    // probability scale from 0 to 1 went up from -4 to 16 with its half near 12 (demo check, 2026-11-13).
+    const num = (v: string | undefined) => {
+      const t = String(v ?? '').replace(/−/g, '-').replace(/\$|\\[a-z]+\{|[{}]/g, ' ').trim();
+      const mixed = t.match(/^(-?)(\d+)\s+(\d+)\s*\/\s*(\d+)/);
+      if (mixed) return (mixed[1] ? -1 : 1) * (Number(mixed[2]) + Number(mixed[3]) / Number(mixed[4]));
+      const frac = t.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
+      if (frac) return Number(frac[1]) / Number(frac[2]);
+      return Number(t.replace(/[^0-9.\-]/g, ''));
+    };
+    const denominator = (v: string) => { const m = v.match(/\/\s*(\d+)/); return m ? Number(m[1]) : 1; };
     const rows = lines.map(cells).filter((c) => c[0] !== '' && Number.isFinite(num(c[0])));
     const values = rows.map((c) => num(c[0]));
-    const lo = b.attrs.min !== undefined ? num(b.attrs.min) : Math.floor(Math.min(0, ...values) - 4);
-    const hi = b.attrs.max !== undefined ? num(b.attrs.max) : Math.ceil(Math.max(0, ...values) + 4);
+    // A short line (a 0-to-1 scale) is drawn as it is; a longer one gets room either side, as before.
+    const span = Math.max(0, ...values) - Math.min(0, ...values);
+    const pad = span <= 2 ? 0 : 4;
+    const lo = b.attrs.min !== undefined ? num(b.attrs.min) : Math.floor(Math.min(0, ...values) - pad);
+    const hiRaw = b.attrs.max !== undefined ? num(b.attrs.max) : Math.ceil(Math.max(0, ...values) + pad);
+    const hi = hiRaw > lo ? hiRaw : lo + 1;
+    // Ticks fall on the fractions used (halves, quarters, ...) when they fit; whole numbers otherwise.
+    const den = Math.max(1, ...rows.map((c) => denominator(c[0])));
+    const step = den > 1 && (hi - lo) * den <= 16 ? 1 / den : (hi - lo) <= 2 ? 0.25 : 1;
     const open = (c: string[]) => /open|hollow|not included|[<>](?!=)/i.test(c[1] ?? '') && !/closed|filled|included\b(?<!not included)/i.test(c[1] ?? '');
     return { name: 'show_number_line', args: {
-      ...(b.attrs.title ? { title: b.attrs.title } : {}), min: lo, max: hi, step: 1,
+      ...(b.attrs.title ? { title: b.attrs.title } : {}), min: lo, max: hi, step,
       points: rows.map((c) => ({ value: num(c[0]), label: c[0], style: open(c) ? 'open' : 'filled' })),
       intervals: rows.filter((c) => /right|left|greater|less|above|below/i.test(c[2] ?? '')).map((c) => (/right|greater|above/i.test(c[2]) ? { from: num(c[0]), to: hi, fromInclusive: !open(c), toInclusive: true, color: 'blue' } : { from: lo, to: num(c[0]), fromInclusive: true, toInclusive: !open(c), color: 'blue' })),
     } };

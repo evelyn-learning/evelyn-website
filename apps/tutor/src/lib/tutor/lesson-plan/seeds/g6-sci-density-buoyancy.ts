@@ -10,7 +10,7 @@ export const SEED_G6_SCI_DENSITY_BUOYANCY: LessonPlan = {
   id: 'evelyn.g6.science.physics.density-buoyancy.v1',
   title: 'Density and Buoyancy: Why Things Float',
   curriculum: 'NGSS', grade: '6', subject: 'science', topic: 'matter', locale: 'en',
-  los: [{ id: 'ngss.ms-ps1-2', description: 'Analyze and interpret data on the properties of substances before and after the substances interact to determine if a chemical reaction has occurred.', standard: 'NGSS.MS-PS1-2' }],
+  los: [{ id: 'ngss.ms-ps1-2', description: 'Find density as mass ÷ volume and use it, with the buoyant force of the water pushed aside, to explain why things float or sink.', standard: 'NGSS.MS-PS1-2' }],
   prerequisites: ['ngss.5-ps1-3'], followUps: ['ngss.hs-ps2-1'], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Anchor in a paradox.', script: 'A steel bar SINKS in water. But a steel SHIP — made of much MORE steel — FLOATS. Why?', estimatedMinutes: 1 },

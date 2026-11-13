@@ -134,7 +134,8 @@ export function geometryModel(r: Reader): GeoModel {
   const base = { shape, unit, notToScale: r.bool(p.notToScale, 'notToScale', false), title: r.optStr(p.title, 'title', 160) };
   const len = (v: number): string => `${numStr(v, 2)}${unit ? ` ${unit}` : ''}`;
   const ang = (v: number): string => `${numStr(v, 1)}°`;
-  const one = (v: unknown, name: string, auto: string): GeoLabel => (v === undefined || v === null ? null : v === 'auto' ? auto : r.str(v, name, 18));
+  // An empty label is no label: the tutor wrote "" for an unlabelled angle and the whole triangle was refused (demo check, 2026-11-13).
+  const one = (v: unknown, name: string, auto: string): GeoLabel => (v === undefined || v === null || (typeof v === 'string' && !v.trim()) ? null : v === 'auto' ? auto : r.str(v, name, 18));
   const labels = (v: unknown, name: string, autos: string[]): GeoLabel[] => {
     if (v === undefined || v === null) return autos.map(() => null);
     const list = r.list(v, name, autos.length, autos.length);
