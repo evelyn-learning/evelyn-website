@@ -88,7 +88,7 @@ export const V2_CONTROL_TOOLS: Anthropic.Tool[] = [
   {
     name: 'end_lesson',
     description: 'End the session. Call it in the same reply as your closing words.',
-    input_schema: { type: 'object', properties: { because: { type: 'string', enum: ['student_asked', 'time_nearly_used'], description: 'Why the session is ending.' }, summary: { type: 'string', description: 'One or two sentences on what the student did and what to look at next.' } }, required: ['because', 'summary'] },
+    input_schema: { type: 'object', properties: { because: { type: 'string', enum: ['student_asked', 'time_nearly_used'], description: 'Why the session is ending.' }, summary: { type: 'string', description: 'One or two sentences on what the student did and what to look at next.' }, needs_practice: { type: 'array', items: { type: 'integer' }, description: 'In a lesson with a plan: the numbers of the plan\'s objectives ("What the student should be able to do afterwards") the student has not yet shown they can do alone. Practice on those is set for them after the session, where their course keeps it. Leave it out when there are none.' } }, required: ['because', 'summary'] },
   },
 ];
 

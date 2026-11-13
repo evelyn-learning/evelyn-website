@@ -92,6 +92,18 @@ export function brainVersionOverrides(raw: string | undefined): Readonly<Record<
 }
 const BRAIN_VERSION_BY_PARTNER = brainVersionOverrides(process.env.NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS);
 
+/** Whether tutor v2 can run this session. A partner on v2 still gets v1 for the kinds of session v2 has not
+ *  taken over: homework help and mock review (their own flows, uploads and ledgers), a diagnostic, a lesson
+ *  taught in or alongside another language, and a session that stands by for a host's video. Those fall back
+ *  instead of being taught as an ordinary lesson. */
+export function v2CanRunSession(s: { sessionGoal?: string | null; targetKind?: string | null; tutorLanguages?: string[]; standby?: boolean }): boolean {
+  if (s.sessionGoal === 'homework-help' || s.sessionGoal === 'mock-review') return false;
+  if (s.targetKind === 'diagnostic') return false;
+  if ((s.tutorLanguages ?? []).some((l) => !/^en\b/i.test(l))) return false;
+  if (s.standby) return false;
+  return true;
+}
+
 export interface PartnerSessionLike {
   partnerId?: string | null;
   tutorLanguages?: string[] | undefined;

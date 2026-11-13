@@ -25,13 +25,14 @@ import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
 import { v2Progress } from '../src/lib/tutor/v2/progress';
 import { v2Background } from '../src/lib/tutor/v2/background';
+import { v2MemoryLines, v2ProfileCommit } from '../src/lib/tutor/v2/memory';
 import { v2StateFromCheckpoint } from '../src/lib/tutor/v2/resume';
 import { V2_CONTROL_TOOL_NAMES } from '../src/lib/tutor/v2/tool-names';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
 import { foldInterruptedTurn, V2_CUT_MARK } from '../src/lib/tutor/v2/interrupted';
-import { brainVersionOverrides, resolvePartnerSessionOptions } from '../src/lib/tutor/portal/partner-session-options';
+import { brainVersionOverrides, resolvePartnerSessionOptions, v2CanRunSession } from '../src/lib/tutor/portal/partner-session-options';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -598,6 +599,11 @@ async function main() {
   const rs = stub([msg([{ type: 'text', text: 'Welcome back.' }], 'end_turn')]);
   await runV2Turn({ session, state: back, studentSaid: null, facts: { nowMs: 10, resumed: true }, callModel: rs.call, boardPass: false });
   check('the first turn after a reload tells the tutor the student has come back', /page was reloaded/.test(JSON.stringify(rs.seen[0].messages.slice(-1))), '');
+  check('v2 leaves to v1 the sessions it has not taken over', v2CanRunSession({ sessionGoal: 'concept-review', tutorLanguages: ['en'] }) && v2CanRunSession({}) && !v2CanRunSession({ sessionGoal: 'homework-help' }) && !v2CanRunSession({ sessionGoal: 'mock-review' }) && !v2CanRunSession({ targetKind: 'diagnostic' }) && !v2CanRunSession({ tutorLanguages: ['en', 'ja'] }) && !v2CanRunSession({ standby: true }));
+  const mem = v2MemoryLines({ recentSessions: [{ sessionId: 's1', endedAt: '2026-11-10T10:00:00Z', topic: 'biology', summary: 'Learned XX and XY.', losTouched: [] }, { sessionId: 'now', endedAt: '2026-11-12T10:00:00Z', summary: 'this one', losTouched: [] }], gaps: [{ id: 'g', status: 'candidate', conceptLabel: 'carrier meaning', evidence: { observation: 'Explained, not yet done.' }, firstSeenAt: '2026-11-10', lastSeenAt: '2026-11-10' }, { id: 'h', status: 'resolved', conceptLabel: 'old', firstSeenAt: '2026-11-01', lastSeenAt: '2026-11-01' }], nextSessionIntent: { text: 'Start with carriers.', sessionId: 's1', at: '2026-11-10' }, preferences: {} } as never, 'now');
+  check('the engine\'s memory of a student reaches v2 as plain lines, without the session in progress', mem.length === 3 && /2026-11-10[\s\S]*XX and XY/.test(mem[0]) && /Start with carriers/.test(mem[1]) && /carrier meaning/.test(mem[2]) && v2MemoryLines(null).length === 0, mem);
+  const commit = v2ProfileCommit({ sessionId: 'now', subject: 'science', level: '10', plan: { title: 'Pedigrees', los: [{ id: 'lo.a', description: 'x' }], segments: [{ id: 'hook', kind: 'hook' }, { id: 'c1', kind: 'concept' }] } as never, state: { ...newV2State(1), goals: { hook: { status: 'shown' }, c1: { status: 'shown' } }, gaps: [{ what: 'carrier meaning', status: 'explained' }, { what: 'squares', status: 'done_alone' }], closeSummary: 'Did XX and XY.' } as never, transcript: [{ role: 'tutor', text: 'Hi' }, { role: 'user', text: 'hello' }, { role: 'tutor', text: '' }] });
+  check('a v2 session commits its transcript, its open gaps and the plan for next time', (commit.transcript as unknown[]).length === 2 && JSON.stringify(commit.gaps) === JSON.stringify([{ kind: 'prerequisite', conceptLabel: 'carrier meaning', observation: 'Explained to them; they have not yet done one themselves.' }]) && commit.nextSessionIntent === 'Did XX and XY.' && JSON.stringify(commit.losTouched) === '["lo.a"]' && commit.topic === 'Pedigrees', commit);
   check('the marketing demo runs on v2', resolvePartnerSessionOptions({ partnerId: 'evelyn-marketing' }).brainVersion === 'v2');
   check('every partner is on v1 until cut over', ['crimsora', 'greenapple', 'gdi-demo', 'gameclass', 'unknown-partner', ''].every((id) => resolvePartnerSessionOptions({ partnerId: id }).brainVersion === 'v1'));
   check('a deploy can name each partner\'s engine, and ignores what it cannot read', JSON.stringify(brainVersionOverrides(' evelyn-marketing=v2, crimsora=v1 ,gdi-demo=v9,=v2,junk')) === JSON.stringify({ 'evelyn-marketing': 'v2', crimsora: 'v1' }) && Object.keys(brainVersionOverrides(undefined)).length === 0);

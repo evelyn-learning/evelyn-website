@@ -29,6 +29,6 @@ export function v2Background(input: V2BackgroundInput): string[] {
     if (!t.note?.trim()) continue;
     lines.push(`They have mentioned: ${t.note.trim().replace(/^goal:\s*/i, 'a goal, ')}${t.lastReferencedAt ? ` (you last brought this up on ${t.lastReferencedAt.slice(0, 10)})` : ''}`);
   }
-  if (input.practiceLocator?.trim()) lines.push(`Practice you assign appears for them under: ${input.practiceLocator.trim()}`);
+  if (input.practiceLocator?.trim()) lines.push(`Practice set for them after a session appears in their course under: ${input.practiceLocator.trim()}`);
   return lines.slice(0, V2_BACKGROUND_MAX_LINES).map((l) => l.replace(/\s+/g, ' ').slice(0, V2_BACKGROUND_LINE_CHARS));
 }

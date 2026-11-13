@@ -30,7 +30,7 @@ export function planGoalIds(plan: LessonPlan): string[] {
 
 /** The plan, for the session part of the system prompt. Stable for the whole session. */
 export function renderPlanMap(plan: LessonPlan): string {
-  const los = plan.los.map((lo) => `- ${lo.description}`).join('\n');
+  const los = plan.los.map((lo, i) => `${i + 1}. ${lo.description}`).join('\n');
   const goals = plan.segments.map((seg) => {
     const m = materials(seg).map((l) => `  ${l}`).join('\n');
     return `[${seg.id}] ${KIND_LABEL[seg.kind] ?? seg.kind}\n${m}`;

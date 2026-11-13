@@ -533,7 +533,7 @@ const MILESTONE_RANK: Record<SessionMilestone, number> = {
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import { EMBED_DOCUMENT_TITLE, partnerFrameTitle } from '@/lib/tutor/portal/partner-frame-metadata';
 import { resolveEmbedUiOptions } from '@/lib/tutor/portal/embed-ui-options';
-import { resolvePartnerSessionOptions } from '@/lib/tutor/portal/partner-session-options';
+import { v2CanRunSession, resolvePartnerSessionOptions } from '@/lib/tutor/portal/partner-session-options';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { OpenAIVoice } from '@/app/tutor/hooks/useOpenAIRealtime';
@@ -2447,7 +2447,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         tutorLanguages={tutorLanguages}
         openerPrefetch={sessionOptions.openerPrefetch}
-        brainVersion={sessionOptions.brainVersion === 'v2' || (TUTOR_BRAIN_V2_CLAIM && config.brain_version === 'v2') ? 'v2' : 'v1'}
+        brainVersion={(sessionOptions.brainVersion === 'v2' || (TUTOR_BRAIN_V2_CLAIM && config.brain_version === 'v2')) && v2CanRunSession({ sessionGoal, targetKind: config.target_kind, tutorLanguages, standby: !!uiOptions.videoControl }) ? 'v2' : 'v1'}
         lessonCloseAutoEnd={sessionOptions.lessonCloseAutoEnd}
         levelCheck={sessionOptions.levelCheck}
         pronunciation={sessionOptions.pronunciation}

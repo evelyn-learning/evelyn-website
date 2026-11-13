@@ -10,6 +10,8 @@
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { TutorMilestone } from '@/lib/tutor/orchestrator/types';
 import { V2_OPENING_BLOCK_START, clearV2State, loadV2State, saveV2State, v2StateFromCheckpoint } from '@/lib/tutor/v2/resume';
+import { v2MemoryLines, v2ProfileCommit } from '@/lib/tutor/v2/memory';
+import { V2_BACKGROUND_MAX_LINES } from '@/lib/tutor/v2/background';
 import { v2Progress } from '@/lib/tutor/v2/progress';
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { WhiteboardCommand } from '@core/knowledge/types';
@@ -39,6 +41,11 @@ export interface V2TurnsConfig {
   background?: string[];
   /** The session's id, under which its state is kept for a reload (resume.ts). */
   sessionId?: string;
+  /** For practice set at the close (assignPractice, below): whose it is, and where the portal shows it. */
+  studentId?: string;
+  practiceLocator?: string;
+  /** The student arrived mid-activity in a host's own flow: the host owns any follow-up. */
+  inFlow?: boolean;
   /** The host's checkpoint, when this page load is a resume: the transcript, the board and what was finished. */
   resumeState?: { transcript: TranscriptEntry[]; whiteboardCommands: WhiteboardCommand[]; completedSegmentIds?: string[] } | null;
   /** Where the lesson stands, for the host page and a partner's portal (progress.ts): the same three reports v1 makes. */
@@ -165,12 +172,15 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         : [...transcriptRef.current, { id: tutorId, timestamp: new Date(), role: 'tutor', text, streaming, ...(askOnBoard ? { askOnBoard } : {}) }];
       publish();
     };
+    // The greeting waits a moment for the student's profile if it is still on its way: it is what lets the
+    // tutor say where the last session left off.
+    if (!stateRef.current.history.length) await Promise.race([memoryReadyRef.current, new Promise((r) => setTimeout(r, 1500))]);
     const session: V2ClientSession = {
       studentName: p.current.studentName, subject: p.current.subject, level: p.current.level, mode: p.current.mode,
       ...(p.current.sessionMaxMinutes ? { timeBoxMinutes: p.current.sessionMaxMinutes } : {}),
       ...(p.current.lessonPlanId ? { lessonPlanId: p.current.lessonPlanId } : {}),
       ...(p.current.topic && !p.current.lessonPlanId ? { topic: p.current.topic } : {}),
-      ...(p.current.background?.length ? { background: p.current.background } : {}),
+      ...(p.current.background?.length || memoryRef.current.length ? { background: [...(p.current.background ?? []), ...memoryRef.current].slice(0, V2_BACKGROUND_MAX_LINES) } : {}),
       ...(p.current.teacher ? { teacher: p.current.teacher } : {}),
       ...(p.current.trial ? { trial: true } : {}),
     };
@@ -249,6 +259,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       p.current.onBrainUsage?.(done.usage);
       p.current.onDebugEvent?.('brain_turn', `Brain ${done.totalMs}ms · first_sentence=${done.firstTextMs ?? done.totalMs}ms · in=${done.usage.inputTokens} out=${done.usage.outputTokens} cr=${done.usage.cacheReadTokens} cc=${done.usage.cacheCreationTokens} · v2`);
       if (done.state.closed) {
+        commitProfile();
+        assignPractice(settled.find((c) => c.name === 'end_lesson' && !/^not /.test(c.outcome)));
         setClosed(true);
         p.current.onDebugEvent?.('lesson_closed', 'end_lesson');
         p.current.onLessonClosed?.('end_lesson');
@@ -282,6 +294,49 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   // The time box is a hard stop, as it is in v1: partner minute pools and demo limits depend on a
   // session not running past it. The tutor is told the time every turn and closes by itself well
   // before this in the normal case; this is the backstop.
+  // What the engine remembers of this student (memory.ts): read as the page loads, committed when the session
+  // ends, however it ends. A session of a few exchanges or fewer leaves nothing worth remembering.
+  const memoryRef = useRef<string[]>([]); const committedAtRef = useRef(0); const memoryReadyRef = useRef<Promise<unknown>>(Promise.resolve());
+  useEffect(() => {
+    const id = config.studentId; if (!id || config.trial) return;
+    let gone = false;
+    memoryReadyRef.current = fetch(`/api/tutor/student-profile/${encodeURIComponent(id)}`, p.current.embedToken ? { headers: { 'x-embed-token': p.current.embedToken } } : undefined)
+      .then((r) => (r.ok ? r.json() : null)).then((data: { profile?: unknown } | null) => { if (!gone && data?.profile) memoryRef.current = v2MemoryLines(data.profile as never, p.current.sessionId); })
+      .catch(() => { /* no profile: the lesson starts without it */ });
+    return () => { gone = true; };
+  }, [config.studentId, config.trial]);
+  const commitProfile = useCallback((keepalive = false) => {
+    const c = p.current; const said = transcriptRef.current.length;
+    if (!c.studentId || !c.sessionId || c.trial || said < 4 || said === committedAtRef.current) return;
+    committedAtRef.current = said;
+    const body = v2ProfileCommit({ sessionId: c.sessionId, subject: c.subject, level: c.level, topic: c.topic, lessonPlanId: c.lessonPlanId, plan: planRef.current, state: stateRef.current, transcript: transcriptRef.current });
+    void fetch(`/api/tutor/student-profile/${encodeURIComponent(c.studentId)}`, { method: 'POST', keepalive, headers: { 'Content-Type': 'application/json', ...(c.embedToken ? { 'x-embed-token': c.embedToken } : {}) }, body: JSON.stringify(body) })
+      .then((r) => c.onDebugEvent?.('profile_commit_v2', `status=${r.status} gaps=${(body.gaps as unknown[]).length} turns=${said}`))
+      .catch((e) => c.onDebugEvent?.('profile_commit_v2', `failed ${String((e as Error).message).slice(0, 80)}`));
+  }, []);
+  useEffect(() => { const onHide = () => commitProfile(true); window.addEventListener('pagehide', onHide); return () => window.removeEventListener('pagehide', onHide); }, [commitProfile]);
+
+  // Practice after the lesson. The tutor names, as it closes, the objectives the student has not yet done
+  // alone; the same two calls v1 makes then draft items for them from the bank and assign them, and the
+  // portal shows them. The tutor does not announce it: the calls finish after its goodbye, and may find
+  // nothing in the bank.
+  const assignPractice = useCallback((call: V2ToolCall | undefined) => {
+    const plan = planRef.current; const c = p.current;
+    const picked = Array.isArray(call?.args.needs_practice) ? (call?.args.needs_practice as unknown[]) : [];
+    const loIds = [...new Set(picked.map((n) => plan?.los[Number(n) - 1]?.id).filter((x): x is string => !!x))];
+    if (!plan || !loIds.length || !c.studentId || !c.lessonPlanId || !c.sessionId || c.inFlow || c.trial) return;
+    const headers = { 'Content-Type': 'application/json', ...(c.embedToken ? { 'x-embed-token': c.embedToken } : {}) };
+    const base = { studentId: c.studentId, sessionId: c.sessionId };
+    void (async () => {
+      try {
+        const d = await fetch('/api/tutor/practice-assign/draft', { method: 'POST', headers, keepalive: true, body: JSON.stringify({ ...base, lessonPlanId: c.lessonPlanId, subject: c.subject, loIds, trigger: 'close_tool', locator: c.practiceLocator }) });
+        c.onDebugEvent?.(d.status === 200 ? 'practice_draft_upserted' : d.status === 204 ? 'practice_draft_empty' : 'practice_draft_failed', `lo=[${loIds.join(',')}] trigger=close_tool status=${d.status} (v2)`);
+        const f = await fetch('/api/tutor/practice-assign/finalize', { method: 'POST', headers, keepalive: true, body: JSON.stringify({ ...base, source: 'close_tool', reason: String(call?.args.summary ?? '').slice(0, 400) || 'Your tutor picked these to follow up on today\'s lesson.', locator: c.practiceLocator }) });
+        c.onDebugEvent?.('practice_assign_v2', `finalize status=${f.status}`);
+      } catch (e) { c.onDebugEvent?.('practice_draft_failed', `v2 ${String((e as Error).message).slice(0, 80)}`); }
+    })();
+  }, []);
+
   const hardStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const armHardStop = useCallback(() => {
     const minutes = p.current.sessionMaxMinutes;
@@ -292,6 +347,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       abortRef.current?.abort();
       p.current.onCut?.();
       p.current.onDebugEvent?.('time_limit_v2', `${minutes} min`);
+      commitProfile(true);
       p.current.onEndSession?.('time_limit');
     // A resumed session's box runs from when the lesson first began.
     }, Math.max(5000, minutes * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
@@ -335,7 +391,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
 
   const nudge = useCallback((silenceSeconds: number) => { if (openedRef.current && !busyRef.current) void runTurn(null, silenceSeconds); }, [runTurn]);
   const abort = useCallback(() => { abortRef.current?.abort(); }, []);
-  const end = useCallback(() => { endingRef.current = true; abortRef.current?.abort(); p.current.onEndSession?.(); }, []);
+  const end = useCallback(() => { endingRef.current = true; abortRef.current?.abort(); commitProfile(true); p.current.onEndSession?.(); }, [commitProfile]);
   const isEnding = useCallback(() => endingRef.current, []);
 
   return { send, open, nudge, end, abort, isEnding, busy, closed, openedRef, stateRef, resumedRef };

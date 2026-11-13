@@ -1738,6 +1738,9 @@ export default function TutorSession(props: TutorSessionProps) {
           embedToken={embedToken}
           standby={standby}
           teacher={v2Teacher}
+          studentId={studentId || undefined}
+          practiceLocator={practiceLocator}
+          inFlow={inFlow}
           sessionId={sessionId || undefined}
           resumeState={resumeState ?? undefined}
           background={v2StudentBackground}
@@ -1777,6 +1780,9 @@ export default function TutorSession(props: TutorSessionProps) {
           embedToken={embedToken}
           standby={standby}
           teacher={v2Teacher}
+          studentId={studentId || undefined}
+          practiceLocator={practiceLocator}
+          inFlow={inFlow}
           sessionId={sessionId || undefined}
           resumeState={resumeState ?? undefined}
           background={v2StudentBackground}
