@@ -106,6 +106,17 @@ export interface RealtimeHandle {
    *  synthetic turn. Delivered once the session is started, awake and idle;
    *  dropped if that takes too long (the video has moved on). */
   deliverMoment?: (directive: string, banner?: { label: string; title: string } | null) => void;
+  /** Host video (partner spec v1.6): speak a fixed line in the tutor's voice
+   *  with no model call — a host question read aloud, or the short line after
+   *  a correct answer. Works while standing by and before the session has
+   *  started (a warm frame). Returns 'spoken', or why nothing was said. */
+  speakHostLine?: (text: string) => 'spoken' | 'off' | 'text_mode' | 'ending' | 'not_connected' | 'busy';
+  /** Cut a host line that is being spoken (the student answered before the
+   *  read finished). Never touches the tutor's own turn. Resolves once the
+   *  audio has stopped; `cut` says whether there was a line to stop. */
+  stopHostLine?: () => Promise<{ cut: boolean }>;
+  /** Is a host line still being spoken? */
+  isHostLineSpeaking?: () => boolean;
   /** Start the session from a control OUTSIDE the dock — currently the
    *  SessionStage center orb (2026-07-26 pre-start redesign). Runs the exact
    *  same path as the dock mic's own tap (handleMicClick), so the session

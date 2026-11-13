@@ -38,6 +38,17 @@ import {
   momentBanner,
   LESSON_START_WINDOW_S,
   MOMENT_OPTIONS_MAX,
+  ENCOURAGEMENT_LINES,
+  QUESTION_AFTER_PAUSE_MS,
+  QUESTION_READ_MAX_CHARS,
+  parseHostAnswer,
+  parseHostQuestion,
+  pickEncouragement,
+  questionDoneMessage,
+  questionReadLine,
+  questionTakesOver,
+  momentFollowsRead,
+  READ_QUESTION_MATCH_MS,
   inferExitTicket,
 } from '../src/lib/tutor/portal/host-lesson';
 import type { TimelineEntry } from '../src/lib/tutor/portal/host-lesson-timeline';
@@ -645,7 +656,7 @@ test('lesson-start hook: only with the video near its beginning; hands back only
 });
 
 test('wiring: banner, opening note, recap and duration reach the session', () => {
-  assert.match(embed, /deliverMoment\?\.\(renderMomentDirective\(moment\), momentBanner\(moment\)\)/);
+  assert.match(embed, /deliverMoment\?\.\(renderMomentDirective\(moment, \{ readAloud \}\), momentBanner\(moment\)\)/);
   assert.match(embed, /if \(moment\.kind === 'exit_ticket'\) recapRef\.current = true;/);
   assert.match(embed, /if \(standingBy\) recapRef\.current = false;/);
   assert.match(embed, /durationSeconds: lessonHostRef\.current\.durationSeconds,\s*recap: recapRef\.current,/);
@@ -705,6 +716,165 @@ test('embed: an inferred exit ticket is logged and becomes the recap', () => {
   assert.ok(i > embed.indexOf('reconcileMomentPosition(sentPos'), 'after the position is corrected');
   assert.match(embed, /\(inferred: \$\{inferred\}\)/);
   assert.match(embed, /kinds=\$\{Object\.entries\(lesson\.rawKinds\)/);
+});
+
+// ── Spec v1.6: question read-aloud + the line after a correct answer ──
+
+test('v1.6 parseHostQuestion: stem from text or question, id as string, no stem = ignored', () => {
+  assert.deepEqual(
+    parseHostQuestion({ type: 'evelyn:question', question_id: 42, text: '  What is 2 + 2?  ', question_type: 'mcq', position_seconds: 31.5, options: ['3', '4'] }),
+    { questionId: '42', text: 'What is 2 + 2?', questionType: 'mcq', positionSeconds: 31.5 },
+  );
+  assert.equal(parseHostQuestion({ type: 'evelyn:question', question: 'Why?' })!.text, 'Why?');
+  assert.equal(parseHostQuestion({ type: 'evelyn:question', question_id: 'q1' }), null, 'nothing to read');
+  assert.equal(parseHostQuestion({ type: 'evelyn:moment', text: 'x' }), null);
+  assert.equal(parseHostQuestion(null), null);
+});
+
+test('v1.6 parseHostAnswer: correct must be a boolean', () => {
+  assert.deepEqual(parseHostAnswer({ type: 'evelyn:answer', question_id: 'q1', correct: true }), { questionId: 'q1', correct: true });
+  assert.deepEqual(parseHostAnswer({ type: 'evelyn:answer', correct: false }), { correct: false });
+  assert.equal(parseHostAnswer({ type: 'evelyn:answer', correct: 'true' }), null);
+  assert.equal(parseHostAnswer({ type: 'evelyn:answer' }), null);
+});
+
+test('v1.6 parseMoment keeps question_id', () => {
+  assert.equal(parseMoment({ type: 'evelyn:moment', kind: 'quiz', question_id: 'q7', question: 'Q' })!.questionId, 'q7');
+});
+
+test('v1.6 questionReadLine: stem only, plain text, cut at a sentence end, true/false lead-in', () => {
+  assert.equal(questionReadLine({ text: '**Which** law <b>applies</b>\n here?', positionSeconds: null }), 'Which law applies here?');
+  assert.equal(questionReadLine({ text: 'The ball stops.', questionType: 'truefalse', positionSeconds: null }), 'True or false: The ball stops.');
+  assert.equal(questionReadLine({ text: 'True or false: it stops.', questionType: 'truefalse', positionSeconds: null }), 'True or false: it stops.');
+  const long = `${'A sentence here. '.repeat(20)}And one that runs past the limit ${'x'.repeat(200)}`;
+  const read = questionReadLine({ text: long, positionSeconds: null });
+  assert.ok(read.length <= QUESTION_READ_MAX_CHARS);
+  assert.ok(read.endsWith('.'), 'ends on a sentence');
+  const oneRun = questionReadLine({ text: `${'word '.repeat(200)}`, positionSeconds: null });
+  assert.ok(oneRun.length <= QUESTION_READ_MAX_CHARS && !oneRun.endsWith(' '));
+});
+
+test('v1.6 pickEncouragement: short lines, never the same twice in a row', () => {
+  assert.ok(ENCOURAGEMENT_LINES.length >= 6);
+  for (const l of ENCOURAGEMENT_LINES) assert.ok(l.split(' ').length <= 5, l);
+  for (const last of ENCOURAGEMENT_LINES) {
+    for (const r of [0, 0.3, 0.999, 1]) assert.notEqual(pickEncouragement(last, () => r), last);
+  }
+  assert.ok(ENCOURAGEMENT_LINES.includes(pickEncouragement(null, () => 0)));
+});
+
+test('v1.6 questionDoneMessage', () => {
+  assert.deepEqual(questionDoneMessage({ questionId: 'q1', spoken: true }), { type: 'evelyn:question_done', outcome: 'correct', spoken: true, question_id: 'q1' });
+  assert.deepEqual(questionDoneMessage({ spoken: false }), { type: 'evelyn:question_done', outcome: 'correct', spoken: false });
+});
+
+test('v1.6 reducer: a question on screen is standby although the video is paused', () => {
+  const t0 = 1_000_000;
+  let s: LessonHostState = reduceLessonHost(INITIAL_LESSON_HOST_STATE, { type: 'video_state', state: 'playing', positionSeconds: 10 }, t0);
+  assert.equal(isStandingBy(s), true);
+  s = reduceLessonHost(s, { type: 'question', positionSeconds: 31 }, t0 + 100);
+  s = reduceLessonHost(s, { type: 'video_state', state: 'paused', positionSeconds: 31 }, t0 + 150);
+  assert.equal(s.questionOpen, true);
+  assert.equal(isStandingBy(s), true, 'paused on the question: still standing by, clock stopped');
+  assert.equal(s.positionSeconds, 31);
+  // Correct answer: nothing changes until the host plays on.
+  const playing = reduceLessonHost(s, { type: 'video_state', state: 'playing', positionSeconds: 31 }, t0 + 5000);
+  assert.equal(playing.questionOpen, false);
+  assert.equal(isStandingBy(playing), true, 'standing by because the video plays');
+  // Wrong answer: the host's moment wakes the tutor.
+  const woken = reduceLessonHost(s, { type: 'moment', positionSeconds: 31 }, t0 + 5000);
+  assert.equal(woken.questionOpen, false);
+  assert.equal(isStandingBy(woken), false);
+  const wokenNoPos = reduceLessonHost(s, { type: 'moment', positionSeconds: null }, t0 + 5000);
+  assert.equal(isStandingBy(wokenNoPos), false);
+  // The student asks the tutor instead of answering.
+  const asked = reduceLessonHost(s, { type: 'student_wake' }, t0 + 5000);
+  assert.equal(asked.questionOpen, false);
+  assert.equal(isStandingBy(asked), false);
+  assert.equal(asked.wokeAtMs, null, 'the video is paused already: no wake-over-playing');
+});
+
+test('v1.6 reducer: pause report before the question; a woken tutor is not put back to sleep', () => {
+  const t0 = 1_000_000;
+  let s: LessonHostState = reduceLessonHost(INITIAL_LESSON_HOST_STATE, { type: 'video_state', state: 'paused', positionSeconds: 31 }, t0);
+  assert.equal(isStandingBy(s), false);
+  s = reduceLessonHost(s, { type: 'question', positionSeconds: null }, t0 + 50);
+  assert.equal(isStandingBy(s), true);
+  assert.equal(reduceLessonHost(s, { type: 'question', positionSeconds: null }, t0 + 60), s, 'a repeat changes nothing');
+  let w: LessonHostState = reduceLessonHost(INITIAL_LESSON_HOST_STATE, { type: 'video_state', state: 'playing', positionSeconds: 5 }, t0);
+  w = reduceLessonHost(w, { type: 'student_wake' }, t0 + 10);
+  assert.equal(reduceLessonHost(w, { type: 'question', positionSeconds: 6 }, t0 + 20), w);
+});
+
+test('v1.6 questionTakesOver: never cuts a tutor in conversation', () => {
+  const t0 = 1_000_000;
+  const playing = reduceLessonHost(INITIAL_LESSON_HOST_STATE, { type: 'video_state', state: 'playing', positionSeconds: 5 }, t0);
+  const paused = reduceLessonHost(playing, { type: 'video_state', state: 'paused', positionSeconds: 31 }, t0);
+  assert.equal(questionTakesOver(playing, { started: true, nowMs: t0 + 10 }), true, 'standing by');
+  assert.equal(questionTakesOver(paused, { started: false, nowMs: t0 + 60_000 }), true, 'never started: nothing to cut');
+  assert.equal(questionTakesOver(paused, { started: true, nowMs: t0 + 200 }), true, 'the pause report came first');
+  assert.equal(questionTakesOver(paused, { started: true, nowMs: t0 + QUESTION_AFTER_PAUSE_MS + 1 }), false, 'paused a while: in conversation');
+  const woke = reduceLessonHost(playing, { type: 'student_wake' }, t0 + 10);
+  assert.equal(questionTakesOver(woke, { started: true, nowMs: t0 + 20 }), false);
+  assert.equal(questionTakesOver(INITIAL_LESSON_HOST_STATE, { started: true, nowMs: t0 }), false, 'no video reports, started: awake');
+});
+
+test('v1.6 moment directive: a question already read aloud is not read again', () => {
+  const m = parseMoment({ type: 'evelyn:moment', kind: 'quiz', question: 'What is 2 + 2?', student_answer: '5', correct_answer: '4' })!;
+  assert.match(renderMomentDirective(m, { readAloud: true }), /heard this question read aloud; do not read it out again/);
+  assert.doesNotMatch(renderMomentDirective(m), /read aloud/);
+  const noQ = parseMoment({ type: 'evelyn:moment', kind: 'teaching_moment', title: 'T' })!;
+  assert.doesNotMatch(renderMomentDirective(noQ, { readAloud: true }), /read aloud/);
+});
+
+test('v1.6 momentFollowsRead: by id, else by text, else by recency', () => {
+  const read = { questionId: 'q1', text: 'What is  2 + 2?', atMs: 1000 };
+  const mk = (extra: Record<string, unknown>) => parseMoment({ type: 'evelyn:moment', kind: 'quiz', ...extra })!;
+  assert.equal(momentFollowsRead(null, mk({ question_id: 'q1' }), 2000), false);
+  assert.equal(momentFollowsRead(read, mk({ question_id: 'q1', question: 'other' }), 9e9), true);
+  assert.equal(momentFollowsRead(read, mk({ question_id: 'q2', question: 'What is 2 + 2?' }), 2000), false, 'ids disagree');
+  assert.equal(momentFollowsRead(read, mk({ question: 'what is 2 + 2?' }), 9e9), true, 'same text, no id on the moment');
+  assert.equal(momentFollowsRead(read, mk({ question: 'Another one' }), 2000), false);
+  assert.equal(momentFollowsRead(read, mk({ title: 'T' }), 1000 + READ_QUESTION_MATCH_MS), true);
+  assert.equal(momentFollowsRead(read, mk({ title: 'T' }), 1001 + READ_QUESTION_MATCH_MS), false);
+});
+
+test('v1.6 wiring: partner row, flag, embed page, session handle', () => {
+  const opts = readFileSync(join(__dirname, '../src/lib/tutor/portal/partner-session-options.ts'), 'utf8');
+  assert.match(opts, /gameclass: \{[^}]*questionRead: true/);
+  assert.match(opts, /questionRead: false,\n  \};/, 'off for a partner that has not asked');
+  const flags = readFileSync(join(__dirname, '../src/lib/tutor/orchestrator/flags.ts'), 'utf8');
+  assert.match(flags, /TUTOR_HOST_QUESTION_READ = process\.env\.NEXT_PUBLIC_TUTOR_HOST_QUESTION_READ !== 'off'/);
+  const embed = readFileSync(join(__dirname, '../src/app/tutor-portal/embed/page.tsx'), 'utf8');
+  assert.match(embed, /const questionRead = TUTOR_HOST_LESSON && TUTOR_HOST_QUESTION_READ && sessionOptions\.questionRead;/);
+  // Messages are read only inside the parent-origin-checked listener.
+  const listener = embed.slice(embed.indexOf('const video = parseVideoState(event.data);'));
+  assert.ok(listener.indexOf('parseHostQuestion(event.data)') > 0 && listener.indexOf('parseHostAnswer(event.data)') > 0);
+  assert.ok(embed.lastIndexOf('isAllowedHostOrigin(event.origin, expectedOrigin)', embed.indexOf('parseHostQuestion(event.data)')) > embed.indexOf('const applyLesson'));
+  // Off for the partner ⇒ the question changes nothing.
+  assert.ok(embed.indexOf("if (!questionRead) { addDebugEvent('host_question_skipped'") < embed.indexOf("dispatchLessonHost({ type: 'question'"));
+  assert.ok(embed.indexOf('questionTakesOver(lessonHostRef.current') < embed.indexOf("dispatchLessonHost({ type: 'question'"));
+  // The answer stops the read before anything else is said; a wrong one says nothing.
+  const answer = embed.slice(embed.indexOf('const hostAnswer = parseHostAnswer(event.data);'), embed.indexOf('const lesson = parseLessonTimeline(event.data);'));
+  assert.ok(answer.indexOf("await stopHostLine('answer')") < answer.indexOf('if (!hostAnswer.correct) return;'));
+  assert.ok(answer.indexOf('if (!hostAnswer.correct) return;') < answer.indexOf('pickEncouragement('));
+  assert.match(answer, /questionDoneMessage\(\{ questionId: hostAnswer\.questionId, spoken \}\)/);
+  // Before the start, audio the browser will not play is never queued.
+  assert.match(embed, /sessionEngagedAtRef\.current === null\) \{\s*if \(isAutoplayBlocked\(await probeAutoplay\(\)\)\) return skip\('autoplay'\);/);
+  // The wrong-answer moment tells the tutor the question was read.
+  assert.match(embed, /renderMomentDirective\(moment, \{ readAloud \}\)/);
+  assert.match(embed, /next\.questionOpen !== prev\.questionOpen\) setLessonHost\(next\)/, 'standby re-renders on the question');
+  for (const ev of ['host_question', 'host_answer', 'host_line_', 'question_done']) assert.ok(embed.includes(`'${ev}'`), `${ev} persisted`);
+  const vtrSrc = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  const speak = vtrSrc.slice(vtrSrc.indexOf('speakHostLine: (text: string) => {'), vtrSrc.indexOf('deliverMoment: (directive: string'));
+  assert.ok(speak.length > 0);
+  assert.doesNotMatch(speak, /handleStudentTranscriptForBrain|sendTextMessage/, 'no model call');
+  assert.doesNotMatch(speak, /audioUnlockedRef\.current = true/, 'the real start keeps its own gesture unlock');
+  assert.match(speak, /if \(sessionMode === 'text'\) return 'text_mode';/);
+  assert.match(speak, /if \(!hostLineActiveRef\.current\) return \{ cut: false \};/, 'stop never touches the tutor’s own speech');
+  // Standby neither drops nor cuts the line it is the reason for.
+  assert.match(vtrSrc, /if \(!hostLineActiveRef\.current\) \{ try \{ dropped = realtime\.dropQueuedSpeech\(\); \} catch \{\} \}/);
+  assert.match(vtrSrc, /standbyRef\.current && stillSpeaking && !hostLineActiveRef\.current/);
 });
 
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)

@@ -251,6 +251,12 @@ export const TUTOR_HOST_START = process.env.NEXT_PUBLIC_TUTOR_HOST_START !== 'of
 // per-turn <lesson_video> context, tutor-resumed playback.
 // NEXT_PUBLIC_TUTOR_HOST_LESSON=off ignores the v1.2 host messages entirely.
 export const TUTOR_HOST_LESSON = process.env.NEXT_PUBLIC_TUTOR_HOST_LESSON !== 'off';
+// Question read-aloud (partner spec v1.6): the frame speaks a host question
+// when it appears and one short line after a correct answer — no model call,
+// standing by throughout. Applies only where the partner row asks for it
+// (partner-session-options.ts `questionRead`).
+// NEXT_PUBLIC_TUTOR_HOST_QUESTION_READ=off ignores `evelyn:question` / `evelyn:answer`.
+export const TUTOR_HOST_QUESTION_READ = process.env.NEXT_PUBLIC_TUTOR_HOST_QUESTION_READ !== 'off';
 // Evolve-in-place swap: a superseded figure leaves the board in the same
 // paint as its replacement instead of seconds earlier (empty board while the
 // replacement waited for its sentence). =off restores the immediate removal.
