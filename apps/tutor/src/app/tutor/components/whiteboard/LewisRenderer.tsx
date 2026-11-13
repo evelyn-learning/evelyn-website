@@ -44,44 +44,96 @@ export interface LewisRendererProps {
 }
 
 const SVG_WIDTH = 500;
-const SVG_HEIGHT = 350;
-const ATOM_RADIUS = 18; // White circle behind atom label
+const MAX_SVG_HEIGHT = 350;
+const MIN_SVG_HEIGHT = 130;
+const ATOM_RADIUS = 14; // Clear disc behind the atom symbol; bonds stop at its edge
 const BOND_OFFSET = 3; // Separation between parallel lines for double/triple bonds
-// Reserve enough pixel margin inside the SVG for lone pair dots (~ATOM_RADIUS+12)
-// and the formal-charge superscript. Prevents content from clipping against the
-// viewBox border regardless of what coords the model picks for atoms.
-const CONTENT_PADDING = 36;
+// Room inside the frame for lone-pair dots and the formal-charge badge around
+// the outermost atoms, so nothing clips whatever coordinates the atoms carry.
+const CONTENT_PADDING = 40;
+/** A bond is never drawn longer than this: a three-atom molecule must not be
+ *  stretched to fill the whole frame. */
+const TARGET_BOND_PX = 78;
+
+interface Fit {
+  toSvg: (x: number, y: number) => [number, number];
+  height: number;
+}
 
 /**
- * Build a content-to-SVG coordinate mapper that auto-fits all atoms inside
- * the viewBox with safety padding. Preserves aspect ratio (so hexagons stay
- * hexagonal). Handles degenerate cases: no atoms, one atom, or all atoms
- * collinear in a single axis.
+ * Fit the atoms into the frame: aspect ratio kept (hexagons stay hexagonal),
+ * bond length capped at TARGET_BOND_PX, content centred, and the frame height
+ * shrunk to the content so a small molecule is not lost in an empty panel.
  */
-function buildAtomMapper(atoms: LewisAtom[]): (x: number, y: number) => [number, number] {
+function buildAtomMapper(atoms: LewisAtom[], bonds: LewisBond[]): Fit {
   if (atoms.length === 0) {
-    return (x, y) => [
-      CONTENT_PADDING + (x / 100) * (SVG_WIDTH - 2 * CONTENT_PADDING),
-      CONTENT_PADDING + (y / 100) * (SVG_HEIGHT - 2 * CONTENT_PADDING),
-    ];
+    return {
+      toSvg: (x, y) => [
+        CONTENT_PADDING + (x / 100) * (SVG_WIDTH - 2 * CONTENT_PADDING),
+        CONTENT_PADDING + (y / 100) * (MAX_SVG_HEIGHT - 2 * CONTENT_PADDING),
+      ],
+      height: MAX_SVG_HEIGHT,
+    };
   }
   const xs = atoms.map((a) => a.x);
   const ys = atoms.map((a) => a.y);
-  let minX = Math.min(...xs);
-  let maxX = Math.max(...xs);
-  let minY = Math.min(...ys);
-  let maxY = Math.max(...ys);
-  // Degenerate: single atom or collinear → give it a unit box so we center it.
-  if (maxX - minX < 1) { minX -= 10; maxX += 10; }
-  if (maxY - minY < 1) { minY -= 10; maxY += 10; }
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
   const rangeX = maxX - minX;
   const rangeY = maxY - minY;
   const innerW = SVG_WIDTH - 2 * CONTENT_PADDING;
-  const innerH = SVG_HEIGHT - 2 * CONTENT_PADDING;
-  const scale = Math.min(innerW / rangeX, innerH / rangeY);
+  const innerH = MAX_SVG_HEIGHT - 2 * CONTENT_PADDING;
+  // Typical bond length in content units (median), to cap the scale.
+  const byId = new Map(atoms.map((a) => [a.id, a]));
+  const lens = bonds
+    .map((b) => {
+      const f = byId.get(b.from), t = byId.get(b.to);
+      return f && t ? Math.hypot(t.x - f.x, t.y - f.y) : 0;
+    })
+    .filter((l) => l > 1e-6)
+    .sort((p, q) => p - q);
+  const typical = lens.length ? lens[Math.floor(lens.length / 2)] : 0;
+  let scale = Math.min(
+    rangeX > 1e-6 ? innerW / rangeX : Infinity,
+    rangeY > 1e-6 ? innerH / rangeY : Infinity,
+    typical > 0 ? TARGET_BOND_PX / typical : Infinity,
+  );
+  if (!Number.isFinite(scale)) scale = 1; // a single atom
+  const height = Math.max(MIN_SVG_HEIGHT, Math.min(MAX_SVG_HEIGHT, rangeY * scale + 2 * CONTENT_PADDING + 8));
   const offsetX = (SVG_WIDTH - scale * rangeX) / 2;
-  const offsetY = (SVG_HEIGHT - scale * rangeY) / 2;
-  return (x, y) => [offsetX + (x - minX) * scale, offsetY + (y - minY) * scale];
+  const offsetY = (height - scale * rangeY) / 2;
+  return { toSvg: (x, y) => [offsetX + (x - minX) * scale, offsetY + (y - minY) * scale], height };
+}
+
+/**
+ * Where the lone pairs of one atom go (angles in degrees, 0 = right,
+ * anticlockwise). Each pair is handed to the widest remaining gap between the
+ * atom's bonds, and the pairs in a gap are spread evenly across it — so water
+ * gets its two pairs side by side on top, a halogen gets one on each free
+ * side, and no pair ever sits on a bond.
+ */
+function lonePairAngles(count: number, bondAngles: number[]): number[] {
+  if (count <= 0) return [];
+  if (bondAngles.length === 0) {
+    return Array.from({ length: count }, (_, i) => (90 + (i * 360) / count) % 360);
+  }
+  const sorted = [...bondAngles].map((a) => ((a % 360) + 360) % 360).sort((a, b) => a - b);
+  const gaps = sorted.map((start, i) => {
+    const end = i + 1 < sorted.length ? sorted[i + 1] : sorted[0] + 360;
+    return { start, size: end - start, n: 0 };
+  });
+  for (let k = 0; k < count; k++) {
+    let best = gaps[0];
+    for (const g of gaps) if (g.size / (g.n + 1) > best.size / (best.n + 1) + 1e-6) best = g;
+    best.n += 1;
+  }
+  const out: number[] = [];
+  for (const g of gaps) {
+    for (let j = 0; j < g.n; j++) out.push((g.start + (g.size * (j + 1)) / (g.n + 1)) % 360);
+  }
+  return out;
 }
 
 /** Draw the dots for N lone pairs around an atom, avoiding bond directions. */
@@ -91,30 +143,15 @@ function renderLonePairs(
   count: number,
   bondAngles: number[],
   lpOffset: number = 0,
+  svgHeight: number = MAX_SVG_HEIGHT,
 ): React.ReactElement[] {
   if (count <= 0) return [];
   const dots: React.ReactElement[] = [];
-  // Candidate angle positions at 45° spacing, prefer ones far from bond angles.
-  const candidates: number[] = [];
-  for (let a = 0; a < 360; a += 45) candidates.push(a);
-  const scored = candidates
-    .map((angle) => {
-      const minDistToBond = Math.min(
-        ...bondAngles.map((b) => {
-          const d = Math.abs(((angle - b + 540) % 360) - 180);
-          return d;
-        })
-      );
-      return { angle, score: minDistToBond };
-    })
-    .sort((a, b) => b.score - a.score);
+  const dotGap = 4.2;
+  const lpDist = ATOM_RADIUS + 5;
 
-  const selected = scored.slice(0, Math.min(count, scored.length));
-  const dotGap = 5;
-  const lpDist = ATOM_RADIUS + 6;
-
-  selected.forEach((lp, i) => {
-    const rad = (lp.angle * Math.PI) / 180;
+  lonePairAngles(count, bondAngles).forEach((angle, i) => {
+    const rad = (angle * Math.PI) / 180;
     const cxLp = cx + Math.cos(rad) * lpDist;
     const cyLp = cy - Math.sin(rad) * lpDist; // SVG y inverted
     // Dots spaced perpendicular to the radial direction
@@ -122,14 +159,49 @@ function renderLonePairs(
     const perpY = -Math.cos(rad) * dotGap;
     dots.push(
       <g key={`lp-${i}`}
-        {...feat(`lonepair-${lpOffset + i + 1}`, { cx: cxLp, cy: cyLp, w: 16, h: 16 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
-        <circle key={`lp-${i}-a`} cx={cxLp - perpX} cy={cyLp - perpY} r={1.8} fill="#1f2937" />
-        <circle key={`lp-${i}-b`} cx={cxLp + perpX} cy={cyLp + perpY} r={1.8} fill="#1f2937" />
+        {...feat(`lonepair-${lpOffset + i + 1}`, { cx: cxLp, cy: cyLp, w: 16, h: 16 }, { width: SVG_WIDTH, height: svgHeight })}>
+        <circle key={`lp-${i}-a`} cx={cxLp - perpX} cy={cyLp - perpY} r={2.3} fill="#1f2937" />
+        <circle key={`lp-${i}-b`} cx={cxLp + perpX} cy={cyLp + perpY} r={2.3} fill="#1f2937" />
       </g>
     );
   });
 
   return dots;
+}
+
+/** "H2O" → H₂O, "NH4+" → NH₄⁺ (digits after a symbol drop, a trailing charge rises). */
+function formulaNodes(formula: string): React.ReactNode[] {
+  const out: React.ReactNode[] = [];
+  let body = formula.trim();
+  let charge = '';
+  // A trailing sign is the ion's charge. The digit before it is the charge
+  // size only for a single-element ion ("Mg2+") or when it follows another
+  // digit ("SO42-" = SO₄²⁻); otherwise it is a subscript ("NH4+" = NH₄⁺).
+  const cm = /^(.*?)(?:\^|\s)?(\d*)([+\-−])$/.exec(body);
+  if (cm && cm[1]) {
+    let head = cm[1];
+    let mag = cm[2];
+    const explicit = /[\^\s]\d*[+\-−]$/.test(body);
+    if (!explicit && mag) {
+      if (/^[A-Z][a-z]?$/.test(head) && mag.length === 1) { /* monatomic: digit is the charge */ }
+      else if (mag.length >= 2) { head += mag.slice(0, -1); mag = mag.slice(-1); }
+      else { head += mag; mag = ''; }
+    }
+    charge = `${mag}${cm[3] === '+' ? '+' : '−'}`;
+    body = head;
+  }
+  const re = /([A-Za-z\)\]])(\d+)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let k = 0;
+  while ((m = re.exec(body)) !== null) {
+    out.push(body.slice(last, m.index) + m[1]);
+    out.push(<sub key={`s${k++}`}>{m[2]}</sub>);
+    last = m.index + m[0].length;
+  }
+  out.push(body.slice(last));
+  if (charge) out.push(<sup key="chg">{charge}</sup>);
+  return out;
 }
 
 /**
@@ -251,7 +323,7 @@ export default function LewisRenderer({
   geometry,
 }: LewisRendererProps) {
   const atomMap = new Map(atoms.map((a) => [a.id, a]));
-  const toSvg = buildAtomMapper(atoms);
+  const { toSvg, height: SVG_HEIGHT } = buildAtomMapper(atoms, bonds);
 
   // Pre-compute each atom's bond angles for lone pair placement
   const bondAnglesByAtom = new Map<string, number[]>();
@@ -268,21 +340,21 @@ export default function LewisRenderer({
   }
 
   return (
-    <div className="lewis-renderer">
+    <div className="lewis-renderer w-full flex flex-col items-center">
       {title && (
         <div className="text-center text-sm font-semibold text-gray-700 mb-1">
           <InlineMathText text={title} />
         </div>
       )}
       {formula && (
-        <div className="text-center text-xs text-gray-500 mb-1 font-mono">
-          {formula}
+        <div className="text-center text-base text-gray-700 mb-1 font-semibold">
+          {formulaNodes(formula)}
         </div>
       )}
       <svg
         viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
         className="w-full h-auto"
-        style={{ maxWidth: SVG_WIDTH, maxHeight: SVG_HEIGHT }}
+        style={{ maxWidth: 560 }}
       >
         <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="#fafbfc" rx={4} />
 
@@ -360,38 +432,51 @@ export default function LewisRenderer({
             return (
               <g key={`a-${a.id}`}
                 {...feat(`atom-${aIdx + 1}`, { cx: ax, cy: ay, w: ATOM_RADIUS * 2 + 8, h: ATOM_RADIUS * 2 + 8 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
-                {renderLonePairs(ax, ay, a.lonePairs ?? 0, bondAngles, lpStart)}
+                {renderLonePairs(ax, ay, a.lonePairs ?? 0, bondAngles, lpStart, SVG_HEIGHT)}
               <circle cx={ax} cy={ay} r={ATOM_RADIUS} fill="#fafbfc" />
               <text
                 x={ax}
-                y={ay + 5}
+                y={ay + 6}
                 textAnchor="middle"
-                fontSize={16}
+                fontSize={17}
                 fontWeight={700}
                 fill="#1f2937"
               >
                 {a.element}
               </text>
-              {a.formalCharge !== undefined && a.formalCharge !== 0 && (
-                <text
-                  x={ax + ATOM_RADIUS * 0.9}
-                  y={ay - ATOM_RADIUS * 0.6}
-                  textAnchor="start"
-                  fontSize={11}
-                  fontWeight={700}
-                  fill="#dc2626"
-                >
-                  {a.formalCharge > 0 ? `+${a.formalCharge}` : a.formalCharge}
-                </text>
-              )}
+              {a.formalCharge !== undefined && a.formalCharge !== 0 && (() => {
+                // Formal charge as a circled sign (⊕ / ⊖, "2+" …), in the
+                // diagonal corner furthest from this atom's bonds and lone pairs.
+                const taken = [...bondAngles, ...lonePairAngles(a.lonePairs ?? 0, bondAngles)];
+                // Candidate directions every 15°; the clearest wins, ties going
+                // to the one nearest the usual upper-right corner.
+                const corner = Array.from({ length: 24 }, (_, k) => k * 15)
+                  .map((ang) => ({
+                    ang,
+                    clear: taken.length ? Math.min(...taken.map((t) => Math.abs(((ang - t + 540) % 360) - 180))) : 180,
+                    off: Math.abs(((ang - 45 + 540) % 360) - 180),
+                  }))
+                  .sort((p, q) => (Math.min(q.clear, 60) - Math.min(p.clear, 60)) || (p.off - q.off))[0].ang;
+                const rad = (corner * Math.PI) / 180;
+                const bx = ax + Math.cos(rad) * (ATOM_RADIUS + 12);
+                const by = ay - Math.sin(rad) * (ATOM_RADIUS + 12);
+                const mag = Math.abs(a.formalCharge);
+                const label = `${mag > 1 ? mag : ''}${a.formalCharge > 0 ? '+' : '−'}`;
+                return (
+                  <g>
+                    <circle cx={bx} cy={by} r={mag > 1 ? 9 : 7.5} fill="#fafbfc" stroke="#dc2626" strokeWidth={1.3} />
+                    <text x={bx} y={by + 4} textAnchor="middle" fontSize={mag > 1 ? 10.5 : 12.5} fontWeight={700} fill="#dc2626">{label}</text>
+                  </g>
+                );
+              })()}
               </g>
             );
           });
         })()}
       </svg>
       {geometry && (
-        <div className="text-center text-xs text-gray-500 mt-1 italic">
-          Geometry: {geometry}
+        <div className="text-center text-sm text-gray-600 mt-1">
+          Shape: <span className="font-semibold text-gray-800">{geometry}</span>
         </div>
       )}
     </div>

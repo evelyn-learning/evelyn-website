@@ -23,7 +23,6 @@ import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
-import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 import { wrapLabel } from './fraction-bar-layout';
 
 export interface CollisionBody {
@@ -47,13 +46,12 @@ export interface CollisionProps {
   momentumAnnotation?: string;
 }
 
+// 560 wide: the label-collision fixtures assume this viewBox.
 const VIEWBOX_W = 560;
-const VIEWBOX_H = 360;
-const PANEL_W = VIEWBOX_W / 2 - 20;
-const PANEL_H = 230;
-const PANEL_Y = 70;
+const PANEL_W = 256;
+const PANEL_Y = 54;
 const LEFT_PANEL_X = 10;
-const RIGHT_PANEL_X = VIEWBOX_W / 2 + 10;
+const RIGHT_PANEL_X = VIEWBOX_W - PANEL_W - 10;
 
 const COLORS = {
   text: '#0f172a',
@@ -67,9 +65,10 @@ const COLORS = {
 };
 
 const MIN_RADIUS = 14;
-const MAX_RADIUS = 36;
-const MIN_ARROW = 18;
-const MAX_ARROW = 100;
+const MAX_RADIUS = 30;
+// Shortest arrow still shows a shaft behind its head.
+const MIN_ARROW = 21;
+const MAX_ARROW = 72;
 
 function pickColor(body: CollisionBody, idx: number): string {
   return body.color || COLORS.defaultBody[idx % COLORS.defaultBody.length];
@@ -234,6 +233,89 @@ function ordinal(n: number): string {
   return n + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
 }
 
+/** Estimated width of a label (sans, about 0.56 em a glyph; bold a little wider). */
+function estWidth(text: string, fontSize: number, bold = false): number {
+  return text.length * fontSize * (bold ? 0.6 : 0.56);
+}
+
+/** Break a long body name into lines no wider than `maxW`. */
+function wrapName(name: string, maxW: number, fontSize: number, balance = true): string[] {
+  const words = name.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let line = '';
+  for (const w of words) {
+    const next = line ? `${line} ${w}` : w;
+    if (line && estWidth(next, fontSize, true) > maxW) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = next;
+    }
+  }
+  if (line) lines.push(line);
+  if (lines.length === 0) return [name];
+  // Even out the lines so the last one is not a stranded fragment.
+  if (lines.length > 1 && balance) {
+    const target = estWidth(name, fontSize, true) / lines.length + fontSize;
+    const even = wrapName(name, Math.min(maxW, target), fontSize, false);
+    if (even.length === lines.length) return even;
+  }
+  return lines;
+}
+
+/** "p_before" → p with a subscript; plain runs stay as they are. */
+function subscripted(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  const re = /([A-Za-zͰ-Ͽ′’'])_\{?([A-Za-z0-9]+)\}?/g;
+  let last = 0;
+  let lowered = false;
+  let m: RegExpExecArray | null;
+  let key = 0;
+  const push = (t: string, sub: boolean) => {
+    if (!t) return;
+    // dy is relative to the previous run: drop for a subscript, rise back after it.
+    const dy = sub ? (lowered ? 0 : 3.5) : lowered ? -3.5 : 0;
+    lowered = sub;
+    parts.push(<tspan key={key++} dy={dy} fontSize={sub ? '0.76em' : undefined}>{t}</tspan>);
+  };
+  while ((m = re.exec(text)) !== null) {
+    push(text.slice(last, m.index) + m[1], false);
+    push(m[2], true);
+    last = m.index + m[0].length;
+  }
+  push(text.slice(last), false);
+  return parts;
+}
+
+interface BodyText {
+  x: number;
+  y: number;
+  text: string;
+  anchor: 'start' | 'middle' | 'end';
+  kind: 'name' | 'v' | 'rest' | 'mass';
+  /** Rides just above a level arrow: keeps its clearance when the row is scaled down. */
+  level?: boolean;
+}
+
+/** One body with its arrow and labels, in coordinates relative to its centre. */
+interface BodyBox {
+  key: string;
+  featName: string;
+  r: number;
+  color: string;
+  inside: string | null;
+  arrow: { x1: number; y1: number; x2: number; y2: number } | null;
+  texts: BodyText[];
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+const FONT = { name: 12, v: 12, mass: 11, rest: 11 } as const;
+const LINE_H = 14;
+const ARROW_HEAD = 10;
+
 export default function CollisionRenderer({
   title,
   dimension = '1D',
@@ -247,27 +329,11 @@ export default function CollisionRenderer({
   // mistypes `before`/`after`. Coerce to arrays so the renderer never
   // crashes on `[...before]` when the field is undefined or an object.
   const beforeBodies: CollisionBody[] = Array.isArray(before) ? before : [];
-  const afterBodies: CollisionBody[] = Array.isArray(after) ? after : [];
-  // Compute universal scales for mass→radius and speed→arrow-length so the
-  // "before" and "after" panels render at compatible scales.
-  const allBodies = [...beforeBodies, ...afterBodies];
-  const maxMass = Math.max(...allBodies.map((b) => Math.abs(b.mass ?? 1)), 1);
+  const rawAfter: CollisionBody[] = Array.isArray(after) ? after : [];
   const speedOf = (b: CollisionBody): number => {
     if (dimension === '2D') return Math.hypot(b.vx ?? 0, b.vy ?? 0);
     return Math.abs(b.velocity ?? b.vx ?? 0);
   };
-  const maxSpeed = Math.max(...allBodies.map(speedOf), 0.001);
-
-  const radiusFor = (m: number): number => {
-    const t = Math.sqrt(Math.abs(m) / maxMass);
-    return MIN_RADIUS + t * (MAX_RADIUS - MIN_RADIUS);
-  };
-  const arrowLenFor = (speed: number): number => {
-    if (speed === 0) return 0;
-    return MIN_ARROW + (speed / maxSpeed) * (MAX_ARROW - MIN_ARROW);
-  };
-
-  const arrowMarkerId = 'collision-arrowhead';
 
   // Conservation-law sanity check. Catches the common failure mode where the
   // model computes after-velocities incorrectly (e.g. wrong elastic-collision
@@ -300,10 +366,9 @@ export default function CollisionRenderer({
     return ke;
   };
   const pBefore = momentumOf(beforeBodies);
-  const pAfter = momentumOf(afterBodies);
+  const pAfter = momentumOf(rawAfter);
   const keBefore = kineticEnergyOf(beforeBodies);
-  const keAfter = kineticEnergyOf(afterBodies);
-  const pMag = (p: { px: number; py: number }) => Math.hypot(p.px, p.py);
+  const keAfter = kineticEnergyOf(rawAfter);
   // Relative error threshold: 1% of the larger total (with a small absolute
   // floor so comparisons near zero don't explode).
   const nearlyEqual = (a: number, b: number): boolean => {
@@ -318,350 +383,253 @@ export default function CollisionRenderer({
   const warnings: string[] = [];
   if (!momentumConserved) {
     const pBStr = dimension === '2D'
-      ? `(${pBefore.px.toFixed(2)}, ${pBefore.py.toFixed(2)})`
-      : pBefore.px.toFixed(2);
+      ? `(${formatNum(pBefore.px)}, ${formatNum(pBefore.py)})`
+      : formatNum(pBefore.px);
     const pAStr = dimension === '2D'
-      ? `(${pAfter.px.toFixed(2)}, ${pAfter.py.toFixed(2)})`
-      : pAfter.px.toFixed(2);
+      ? `(${formatNum(pAfter.px)}, ${formatNum(pAfter.py)})`
+      : formatNum(pAfter.px);
     warnings.push(`⚠ Momentum not conserved: before ${pBStr} → after ${pAStr} kg·m/s`);
   }
   if (type === 'elastic' && !keConserved) {
     warnings.push(
-      `⚠ Elastic collision: KE not conserved (before ${keBefore.toFixed(2)} J → after ${keAfter.toFixed(2)} J)`,
+      `⚠ Elastic collision: KE not conserved (before ${formatNum(keBefore)} J → after ${formatNum(keAfter)} J)`,
     );
   }
+
+  // Perfectly inelastic, 1D: the "after" panel shows one merged body.
+  const combine = type === 'perfectly-inelastic' && dimension === '1D' && rawAfter.length >= 1;
+  const afterBodies: CollisionBody[] = combine
+    ? [{
+        ...rawAfter[0],
+        label: rawAfter.map((b) => b.label ?? '').filter(Boolean).join('+') || 'A+B',
+        mass: rawAfter.reduce((sum, b) => sum + (b.mass ?? 0), 0) || undefined,
+      }]
+    : rawAfter;
+
+  // One scale for mass → radius and speed → arrow length across both panels,
+  // clamped so a 15 kg bicycle beside a 12 500 kg lorry is still a readable disc
+  // and a slow body still shows a shaft.
+  const allBodies = [...beforeBodies, ...afterBodies];
+  const maxMass = Math.max(...allBodies.map((b) => Math.abs(b.mass ?? 1)), 1e-9);
+  const maxSpeed = Math.max(...allBodies.map(speedOf), 1e-9);
+  const radiusFor = (m: number): number =>
+    MIN_RADIUS + Math.sqrt(Math.abs(m) / maxMass) * (MAX_RADIUS - MIN_RADIUS);
+
+  function buildBody(b: CollisionBody, i: number, isAfter: boolean, maxArrow: number, nameMaxW: number): BodyBox {
+    const r = radiusFor(b.mass ?? 1);
+    const speed = speedOf(b);
+    const name = b.label || String.fromCharCode(65 + i);
+    const nameInside = estWidth(name, FONT.name, true) <= 2 * r - 8;
+    const texts: BodyText[] = [];
+
+    // Direction of travel (screen y points down, vy is positive up).
+    let ux = 0;
+    let uy = 0;
+    if (speed > 0) {
+      if (dimension === '2D') {
+        ux = (b.vx ?? 0) / speed;
+        uy = -(b.vy ?? 0) / speed;
+      } else {
+        ux = (b.velocity ?? b.vx ?? 0) >= 0 ? 1 : -1;
+      }
+    }
+    const len = speed > 0 ? MIN_ARROW + (speed / maxSpeed) * (maxArrow - MIN_ARROW) : 0;
+    const arrow = speed > 0
+      ? { x1: ux * (r + 3), y1: uy * (r + 3), x2: ux * (r + 3 + len), y2: uy * (r + 3 + len) }
+      : null;
+
+    const vText = `${isAfter ? 'v′' : 'v'} = ${vString(b, dimension)}`;
+    if (arrow) {
+      if (Math.abs(uy) < 0.35) {
+        // Level arrow: the label rides above the shaft, starting at the body's edge,
+        // so two bodies closing on each other keep their labels on their own sides.
+        texts.push({ x: ux > 0 ? r + 5 : -(r + 5), y: Math.min(arrow.y1, arrow.y2) - 8, text: vText, anchor: ux > 0 ? 'start' : 'end', kind: 'v', level: true });
+      } else {
+        // Steep arrow: the label sits just past the tip.
+        texts.push({
+          x: arrow.x2 + ux * 6,
+          y: arrow.y2 + (uy < 0 ? -7 : 16),
+          text: vText,
+          anchor: ux > 0.35 ? 'start' : ux < -0.35 ? 'end' : 'middle',
+          kind: 'v',
+        });
+      }
+    }
+
+    // Stacks of centred lines above and below the body, kept off the arrow's side.
+    const arrowUp = !!arrow && uy < -0.6;
+    const arrowDown = !!arrow && uy > 0.6;
+    const above: Array<{ text: string; kind: BodyText['kind'] }> = [];
+    const below: Array<{ text: string; kind: BodyText['kind'] }> = [];
+    if (!nameInside) {
+      const lines = wrapName(name, nameMaxW, FONT.name).map((text) => ({ text, kind: 'name' as const }));
+      if (arrowUp) below.push(...lines);
+      else above.push(...lines);
+    }
+    const underBody = arrowDown ? above : below;
+    if (speed === 0) underBody.push({ text: 'at rest', kind: 'rest' });
+    if (b.mass != null) underBody.push({ text: `m = ${formatNum(b.mass)}`, kind: 'mass' });
+    above.forEach((line, k) => {
+      texts.push({ x: 0, y: -r - 8 - (above.length - 1 - k) * LINE_H, text: line.text, anchor: 'middle', kind: line.kind });
+    });
+    below.forEach((line, k) => {
+      texts.push({ x: 0, y: r + 16 + k * LINE_H, text: line.text, anchor: 'middle', kind: line.kind });
+    });
+
+    let left = -r;
+    let right = r;
+    let top = -r;
+    let bottom = r;
+    if (arrow) {
+      left = Math.min(left, arrow.x2 - 6);
+      right = Math.max(right, arrow.x2 + 6);
+      top = Math.min(top, arrow.y2 - 6);
+      bottom = Math.max(bottom, arrow.y2 + 6);
+    }
+    for (const t of texts) {
+      const fs = FONT[t.kind];
+      const w = estWidth(t.text, fs, t.kind === 'name' || t.kind === 'v');
+      const x0 = t.anchor === 'start' ? t.x : t.anchor === 'end' ? t.x - w : t.x - w / 2;
+      left = Math.min(left, x0);
+      right = Math.max(right, x0 + w);
+      top = Math.min(top, t.y - fs);
+      bottom = Math.max(bottom, t.y + 4);
+    }
+    return {
+      key: `${isAfter ? 'after' : 'before'}-${i}`,
+      featName: `object-${i + 1}-${isAfter ? 'after' : 'before'}`,
+      r,
+      color: pickColor(b, i),
+      inside: nameInside ? name : null,
+      arrow,
+      texts,
+      left,
+      right,
+      top,
+      bottom,
+    };
+  }
+
+  const BODY_GAP = 14;
+  const USABLE_W = PANEL_W - 2 * 10;
+  const rowWidth = (boxes: BodyBox[]): number =>
+    boxes.reduce((sum, bx) => sum + (bx.right - bx.left), 0) + BODY_GAP * Math.max(0, boxes.length - 1);
+
+  // Longest arrows that let both panels fit; the same scale in both so speeds compare.
+  let beforeBoxes: BodyBox[] = [];
+  let afterBoxes: BodyBox[] = [];
+  const buildAll = (maxArrow: number): boolean => {
+    const build = (bodies: CollisionBody[], isAfter: boolean) =>
+      bodies.map((b, i) => buildBody(b, i, isAfter, maxArrow, bodies.length <= 2 ? 96 : 64));
+    beforeBoxes = build(beforeBodies, false);
+    afterBoxes = build(afterBodies, true);
+    return rowWidth(beforeBoxes) <= USABLE_W && rowWidth(afterBoxes) <= USABLE_W;
+  };
+  // If even short arrows do not fit, the labels are what take the room: keep readable
+  // arrows and let the whole row scale down instead.
+  if (![MAX_ARROW, 60, 50, 40, 32, 26].some(buildAll)) buildAll(50);
+  // One scale for both panels, so a body is the same size before and after.
+  const rowScale = Math.min(1, USABLE_W / Math.max(rowWidth(beforeBoxes), rowWidth(afterBoxes), 1));
+
+  const allBoxes = [...beforeBoxes, ...afterBoxes];
+  const topExtent = Math.max(40, ...allBoxes.map((bx) => -bx.top));
+  const bottomExtent = Math.max(40, ...allBoxes.map((bx) => bx.bottom));
+  const PANEL_H = Math.max(170, topExtent + bottomExtent + 40);
+  const rowY = PANEL_Y + (PANEL_H - topExtent - bottomExtent) / 2 + topExtent;
+  const bodyH = PANEL_Y + PANEL_H;
 
   // Momentum annotation, wrapped to the viewBox width (2026-08-07 clip
   // audit: a long brain-authored annotation used to render as one unwrapped
-  // centered line and clip on BOTH sides). wrapLabel's estimate runs at
-  // fontSize 13 — the same size this text draws at. Lines past the first
-  // two extend the svg height (the space the in-SVG notes line used to
-  // occupy — notes now render as HTML below, see <DiagramNotes>).
-  const momentumLines = momentumAnnotation ? wrapLabel(momentumAnnotation, VIEWBOX_W - 16) : [];
-  const MOMENTUM_LINE_H = 16;
-  const momentumY = PANEL_Y + PANEL_H + 30;
-  const momentumExtraH = momentumLines.length > 0
-    ? Math.max(0, momentumY + (momentumLines.length - 1) * MOMENTUM_LINE_H + 6 - VIEWBOX_H)
-    : 0;
+  // centered line and clip on BOTH sides).
+  const momentumLines = momentumAnnotation ? wrapLabel(momentumAnnotation, VIEWBOX_W - 40) : [];
+  const MOMENTUM_LINE_H = 17;
+  const momentumY = bodyH + 28;
+  const momentumH = momentumLines.length > 0 ? 28 + (momentumLines.length - 1) * MOMENTUM_LINE_H + 8 : 12;
+  const warningsY = bodyH + momentumH + 14;
+  const viewH = bodyH + momentumH + (warnings.length > 0 ? warnings.length * 18 + 8 : 0);
 
-  // ── Panel/body geometry + shared label layout (2026-07-19 renderer
-  // label-collision audit) ── velocity / mass / "at rest" labels were placed
-  // per body with no knowledge of neighbors: head-on 1D collisions cap both
-  // arrows into the same inter-body gap so both speed labels composite there,
-  // and a vertical 2D arrow gets its wide label centered across its own
-  // shaft. Geometry (unchanged) is computed first, then one deoverlapLabels
-  // pass over every data-positioned label with the bodies, arrow shafts,
-  // panel titles and fixed captions as obstacles.
-  interface BodyGeom {
-    key: string;
-    featName: string;
-    featBox: { cx: number; cy: number; w: number; h: number };
-    cx: number;
-    cy: number;
-    r: number;
-    color: string;
-    glyph: string;
-    arrow: { x1: number; y1: number; x2: number; y2: number } | null;
-    vLabel: { x: number; y: number; text: string; preferDir: 'up' | 'down' } | null;
-    atRestY: number | null;
-    massY: number;
-    massText: string;
-  }
-
-  // For 1D, bodies are laid out horizontally along the panel midline, spaced
-  // evenly. For 2D, arrows point at vx/vy-derived angles from each body.
-  function layoutPanel(bodies: CollisionBody[], panelX: number, isAfter: boolean): BodyGeom[] {
-    const panelCenterY = PANEL_Y + PANEL_H / 2;
-    // Perfectly inelastic "after" panel = single merged blob
-    const combine =
-      isAfter && type === 'perfectly-inelastic' && dimension === '1D' && bodies.length >= 1;
-    if (combine) {
-      // Combine all bodies into one
-      const totalMass = bodies.reduce((sum, b) => sum + (b.mass ?? 0), 0);
-      const combined = bodies[0];
-      const r = radiusFor(totalMass || 1);
-      const speed = speedOf(combined);
-      const dir = (combined.velocity ?? combined.vx ?? 0) >= 0 ? 1 : -1;
-      const arrowLen = arrowLenFor(speed) * dir;
-      const centerX = panelX + PANEL_W / 2;
-      const mergedLabel = bodies.map((b) => b.label ?? '').filter(Boolean).join('+') || 'A+B';
-      return [{
-        key: 'after-0',
-        featName: 'object-1-after',
-        featBox: { cx: centerX, cy: panelCenterY, w: r * 2 + 40, h: r * 2 + 40 },
-        cx: centerX,
-        cy: panelCenterY,
-        r,
-        color: pickColor(combined, 0),
-        glyph: mergedLabel,
-        arrow: arrowLen !== 0
-          ? { x1: centerX + r * dir, y1: panelCenterY, x2: centerX + r * dir + arrowLen, y2: panelCenterY }
-          : null,
-        vLabel: speed > 0
-          ? {
-              x: centerX + r * dir + arrowLen / 2,
-              y: panelCenterY - 10,
-              text: `v′ = ${formatNum(combined.velocity ?? combined.vx ?? 0)}`,
-              preferDir: 'up',
-            }
-          : null,
-        atRestY: null,
-        massY: panelCenterY + r + 16,
-        massText: `m = ${formatNum(totalMass)}`,
-      }];
-    }
-
-    // Standard layout: spread bodies horizontally in 1D, or place at vx/vy-derived positions in 2D.
-    const n = bodies.length;
-    // Panel-edge padding. Bodies are laid out evenly inside this usable band,
-    // leaving room for velocity arrows and their labels on both ends.
-    const EDGE_PAD = 22;
-    const LABEL_GAP = 10;        // text clearance past the arrow tip
-    const BETWEEN_BODIES_GAP = 12; // min gap between a body's edge and a neighbor's arrow tip
-
-    // Pre-compute body radii and centers so we can clamp arrow lengths by
-    // the space actually available to each arrow.
-    const radii = bodies.map((b) => radiusFor(b.mass ?? 1));
-    const usable = PANEL_W - 2 * EDGE_PAD;
-    const slotW = usable / Math.max(n, 1);
-    const centers = bodies.map((_, i) => panelX + EDGE_PAD + slotW * (i + 0.5));
-
-    // Compute the max arrow length available to each body given neighbors
-    // and panel edges. Returns a non-negative length the arrow may consume
-    // beyond the body's edge, in the direction of travel.
-    function maxArrowLen1D(idx: number, dir: 1 | -1): number {
-      const cx = centers[idx];
-      const r = radii[idx];
-      if (dir > 0) {
-        // Rightward: bounded by the next body's left edge or the panel's right edge.
-        const bound = idx < n - 1
-          ? centers[idx + 1] - radii[idx + 1] - BETWEEN_BODIES_GAP
-          : panelX + PANEL_W - EDGE_PAD;
-        return Math.max(0, bound - (cx + r) - LABEL_GAP);
-      }
-      // Leftward: bounded by previous body's right edge or panel's left edge.
-      const bound = idx > 0
-        ? centers[idx - 1] + radii[idx - 1] + BETWEEN_BODIES_GAP
-        : panelX + EDGE_PAD;
-      return Math.max(0, (cx - r) - bound - LABEL_GAP);
-    }
-
-    function maxArrowLen2D(idx: number): number {
-      const cx = centers[idx];
-      const cy = panelCenterY;
-      const r = radii[idx];
-      // 2D: bound by the tightest of the four panel sides.
-      const boundX = Math.min(panelX + PANEL_W - EDGE_PAD - cx, cx - (panelX + EDGE_PAD));
-      const boundY = Math.min(panelCenterY + PANEL_H / 2 - EDGE_PAD - cy, cy - (PANEL_Y + EDGE_PAD));
-      return Math.max(0, Math.min(boundX, boundY) - r - LABEL_GAP);
-    }
-
-    return bodies.map((b, i): BodyGeom => {
-      const featName = isAfter ? `object-${i + 1}-after` : `object-${i + 1}-before`;
-      const r = radii[i];
-      const cx = centers[i];
-      const cy = panelCenterY;
-      const color = pickColor(b, i);
-      const speed = speedOf(b);
-
-      let arrowStartX = cx;
-      let arrowStartY = cy;
-      let arrowEndX = cx;
-      let arrowEndY = cy;
-      let arrowDrawn = false;
-      let labelX = cx;
-      let labelY = cy - r - 10;
-      let labelPreferDir: 'up' | 'down' = 'up';
-
-      if (speed > 0) {
-        if (dimension === '2D') {
-          const vx = b.vx ?? 0;
-          const vy = b.vy ?? 0;
-          const theta = Math.atan2(vy, vx);
-          const requested = arrowLenFor(Math.hypot(vx, vy));
-          const cap = maxArrowLen2D(i);
-          const len = Math.min(requested, cap);
-          if (len > 4) {
-            arrowStartX = cx + Math.cos(theta) * r;
-            arrowStartY = cy - Math.sin(theta) * r;
-            arrowEndX = arrowStartX + Math.cos(theta) * len;
-            arrowEndY = arrowStartY - Math.sin(theta) * len;
-            // Label perpendicular to the arrow (offset "above" travel direction)
-            const nx = -Math.sin(theta);
-            const ny = -Math.cos(theta);
-            const midX = (arrowStartX + arrowEndX) / 2;
-            const midY = (arrowStartY + arrowEndY) / 2;
-            labelX = midX + nx * 14;
-            labelY = midY + ny * 14;
-            labelPreferDir = ny > 0 ? 'down' : 'up';
-            arrowDrawn = true;
-          }
-        } else {
-          const v = b.velocity ?? b.vx ?? 0;
-          const dir: 1 | -1 = v >= 0 ? 1 : -1;
-          const requested = arrowLenFor(Math.abs(v));
-          const cap = maxArrowLen1D(i, dir);
-          const len = Math.min(requested, cap);
-          if (len > 4) {
-            arrowStartX = cx + r * dir;
-            arrowEndX = arrowStartX + len * dir;
-            arrowStartY = cy;
-            arrowEndY = cy;
-            // Label above arrow midpoint.
-            labelX = (arrowStartX + arrowEndX) / 2;
-            labelY = cy - 10;
-            arrowDrawn = true;
-          }
-        }
-      }
-
-      const labelText = isAfter ? `v′ = ${vString(b, dimension)}` : `v = ${vString(b, dimension)}`;
-
-      return {
-        key: isAfter ? `after-${i}` : `before-${i}`,
-        featName,
-        featBox: { cx, cy, w: r * 2 + 40, h: r * 2 + 40 },
-        cx,
-        cy,
-        r,
-        color,
-        glyph: b.label || String.fromCharCode(65 + i),
-        arrow: arrowDrawn ? { x1: arrowStartX, y1: arrowStartY, x2: arrowEndX, y2: arrowEndY } : null,
-        vLabel: speed > 0
-          ? (arrowDrawn
-            // Not enough room to draw an arrow — the velocity is still
-            // reported as text above the body so the student sees the value.
-            ? { x: labelX, y: labelY, text: labelText, preferDir: labelPreferDir }
-            : { x: cx, y: cy - r - 8, text: labelText, preferDir: 'up' })
-          : null,
-        atRestY: speed === 0 ? cy + r + 14 : null,
-        massY: cy + r + (speed === 0 ? 28 : 20),
-        massText: b.mass != null ? `m = ${formatNum(b.mass)}` : '',
-      };
+  /** Centres of a panel's bodies: packed by their boxes, spare room shared out (but not flung apart). */
+  function placeRow(boxes: BodyBox[], panelX: number): { centres: number[]; scale: number } {
+    const total = rowWidth(boxes);
+    const scale = rowScale;
+    const spare = Math.max(0, USABLE_W / scale - total);
+    const between = boxes.length > 1 ? Math.min(34, spare / (boxes.length + 1)) : 0;
+    const used = total + between * Math.max(0, boxes.length - 1);
+    let cursor = -used / 2;
+    const centres = boxes.map((bx) => {
+      const cx = cursor - bx.left;
+      cursor = cx + bx.right + BODY_GAP + between;
+      return cx;
     });
+    // Relative to the panel's centre, scaled about it when the row is too wide.
+    return { centres: centres.map((c) => panelX + PANEL_W / 2 + c * scale), scale };
   }
 
-  const beforeGeoms = layoutPanel(beforeBodies, LEFT_PANEL_X, false);
-  const afterGeoms = layoutPanel(afterBodies, RIGHT_PANEL_X, true);
-  const allGeoms = [...beforeGeoms, ...afterGeoms];
-
-  const estTextBox = (x: number, y: number, text: string, fontSize: number): DeoverlapObstacle => {
-    const w = text.length * fontSize * 0.55;
-    const h = fontSize * 1.2;
-    return { left: x - w / 2, right: x + w / 2, top: y - h * 0.8, bottom: y + h * 0.2 };
-  };
-
-  const bodyLabels: (DeoverlapLabel & { key: string })[] = [];
-  for (const g of allGeoms) {
-    if (g.vLabel) {
-      bodyLabels.push({ key: `${g.key}-v`, x: g.vLabel.x, y: g.vLabel.y, text: g.vLabel.text, fontSize: 11, preferDir: g.vLabel.preferDir });
-    }
-    if (g.atRestY != null) {
-      bodyLabels.push({ key: `${g.key}-rest`, x: g.cx, y: g.atRestY, text: 'at rest', fontSize: 10, preferDir: 'down' });
-    }
-    if (g.massText) {
-      bodyLabels.push({ key: `${g.key}-m`, x: g.cx, y: g.massY, text: g.massText, fontSize: 11, preferDir: 'down' });
-    }
-  }
-  const labelObstacles: DeoverlapObstacle[] = [
-    ...allGeoms.map((g): DeoverlapObstacle => ({ left: g.cx - g.r, right: g.cx + g.r, top: g.cy - g.r, bottom: g.cy + g.r })),
-    ...allGeoms.flatMap((g): DeoverlapObstacle[] => g.arrow
-      ? [{
-          left: Math.min(g.arrow.x1, g.arrow.x2) - 4,
-          right: Math.max(g.arrow.x1, g.arrow.x2) + 4,
-          top: Math.min(g.arrow.y1, g.arrow.y2) - 4,
-          bottom: Math.max(g.arrow.y1, g.arrow.y2) + 4,
-        }]
-      : []),
-    // Divider arrow between the panels.
-    { left: VIEWBOX_W / 2 - 10, right: VIEWBOX_W / 2 + 10, top: PANEL_Y + PANEL_H / 2 - 4, bottom: PANEL_Y + PANEL_H / 2 + 4 },
-    // Panel titles + collision-type badge.
-    estTextBox(LEFT_PANEL_X + PANEL_W / 2, PANEL_Y - 8, 'Before', 13),
-    estTextBox(RIGHT_PANEL_X + PANEL_W / 2, PANEL_Y - 8, 'After', 13),
-    estTextBox(VIEWBOX_W / 2, 30, `${labelForType(type)} · ${dimension}`, 13),
-  ];
-  if (momentumLines.length > 0) {
-    const momentumW = Math.max(...momentumLines.map((l) => l.length)) * 13 * 0.55;
-    labelObstacles.push({
-      left: VIEWBOX_W / 2 - momentumW / 2,
-      right: VIEWBOX_W / 2 + momentumW / 2,
-      top: momentumY - 13,
-      bottom: momentumY + (momentumLines.length - 1) * MOMENTUM_LINE_H + 4,
-    });
-  }
-  const resolvedBodyLabels = new Map(
-    deoverlapLabels(bodyLabels, { width: VIEWBOX_W, height: VIEWBOX_H }, { obstacles: labelObstacles, baseline: 'alphabetic' })
-      .map((l) => [l.key, { x: l.x, y: l.y }]),
-  );
-  const labelPos = (key: string, fallbackX: number, fallbackY: number) =>
-    resolvedBodyLabels.get(key) ?? { x: fallbackX, y: fallbackY };
-
-  function renderPanel(geoms: BodyGeom[]): React.ReactElement {
+  function renderPanel(boxes: BodyBox[], panelX: number): React.ReactElement {
+    const { centres, scale } = placeRow(boxes, panelX);
     return (
       <g>
-        {geoms.map((g) => (
-          <g key={g.key} {...feat(g.featName, g.featBox, { width: VIEWBOX_W, height: VIEWBOX_H })}>
-            <circle cx={g.cx} cy={g.cy} r={g.r} fill={g.color} stroke={darken(g.color)} strokeWidth={2} />
-            <text
-              x={g.cx}
-              y={g.cy + 4}
-              fontSize={12}
-              fill="white"
-              fontWeight={700}
-              textAnchor="middle"
-            >
-              {g.glyph}
-            </text>
-            {g.arrow && (
-              <line
-                x1={g.arrow.x1}
-                y1={g.arrow.y1}
-                x2={g.arrow.x2}
-                y2={g.arrow.y2}
-                stroke={COLORS.arrow}
-                strokeWidth={3}
-                markerEnd={`url(#${arrowMarkerId})`}
-              />
-            )}
-            {g.vLabel && (
-              <text
-                x={labelPos(`${g.key}-v`, g.vLabel.x, g.vLabel.y).x}
-                y={labelPos(`${g.key}-v`, g.vLabel.x, g.vLabel.y).y}
-                fontSize={11}
-                fill={COLORS.arrow}
-                textAnchor="middle"
-                fontWeight={600}
-              >
-                {g.vLabel.text}
-              </text>
-            )}
-            {g.atRestY != null && (
-              <text
-                x={labelPos(`${g.key}-rest`, g.cx, g.atRestY).x}
-                y={labelPos(`${g.key}-rest`, g.cx, g.atRestY).y}
-                fontSize={10}
-                fill={COLORS.muted}
-                textAnchor="middle"
-                fontStyle="italic"
-              >
-                at rest
-              </text>
-            )}
-            {/* Mass label below each body */}
-            <text
-              x={labelPos(`${g.key}-m`, g.cx, g.massY).x}
-              y={labelPos(`${g.key}-m`, g.cx, g.massY).y}
-              fontSize={11}
-              fill={COLORS.muted}
-              textAnchor="middle"
-            >
-              {g.massText}
-            </text>
-          </g>
-        ))}
+        {boxes.map((bx, i) => {
+          const cx = centres[i];
+          const featBox = { cx, cy: rowY, w: (bx.r * 2 + 40) * scale, h: (bx.r * 2 + 40) * scale };
+          // Absolute coordinates on every element (no group transform), so label audits read true positions.
+          const X = (v: number) => cx + v * scale;
+          const Y = (v: number) => rowY + v * scale;
+          const a = bx.arrow;
+          let arrowEl: React.ReactElement | null = null;
+          if (a) {
+            const alen = Math.hypot(a.x2 - a.x1, a.y2 - a.y1) || 1;
+            const ux = (a.x2 - a.x1) / alen;
+            const uy = (a.y2 - a.y1) / alen;
+            // Shaft stops inside the head so the tip stays sharp.
+            const tipX = X(a.x2);
+            const tipY = Y(a.y2);
+            const hx = tipX - ux * ARROW_HEAD;
+            const hy = tipY - uy * ARROW_HEAD;
+            arrowEl = (
+              <g>
+                <line x1={X(a.x1)} y1={Y(a.y1)} x2={hx + ux} y2={hy + uy} stroke={COLORS.arrow} strokeWidth={3} strokeLinecap="round" />
+                <polygon
+                  points={`${tipX},${tipY} ${hx - uy * 5.5},${hy + ux * 5.5} ${hx + uy * 5.5},${hy - ux * 5.5}`}
+                  fill={COLORS.arrow}
+                />
+              </g>
+            );
+          }
+          // A row squeezed to fit keeps its text legible down to 85 %.
+          const fontScale = Math.max(scale, 0.85);
+          return (
+            <g key={bx.key} {...feat(bx.featName, featBox, { width: VIEWBOX_W, height: viewH })}>
+              <circle cx={cx} cy={rowY} r={bx.r * scale} fill={bx.color} stroke={darken(bx.color)} strokeWidth={2} />
+              {bx.inside && (
+                <text x={cx} y={rowY + 4.5} fontSize={FONT.name * fontScale} fill="white" fontWeight={700} textAnchor="middle">
+                  {bx.inside}
+                </text>
+              )}
+              {arrowEl}
+              {bx.texts.map((t, k) => (
+                <text
+                  key={k}
+                  x={X(t.x)}
+                  y={t.level ? rowY + t.y : Y(t.y)}
+                  fontSize={FONT[t.kind] * fontScale}
+                  textAnchor={t.anchor}
+                  fill={t.kind === 'v' ? COLORS.arrow : t.kind === 'name' ? COLORS.text : COLORS.muted}
+                  fontWeight={t.kind === 'v' || t.kind === 'name' ? 600 : 400}
+                  fontStyle={t.kind === 'rest' ? 'italic' : undefined}
+                >
+                  {t.text}
+                </text>
+              ))}
+            </g>
+          );
+        })}
       </g>
     );
   }
+
+  const midX = VIEWBOX_W / 2;
+  const midY = PANEL_Y + PANEL_H / 2;
 
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
@@ -679,67 +647,39 @@ export default function CollisionRenderer({
         </div>
       )}
       <svg
-        viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H + momentumExtraH + warnings.length * 18}`}
+        viewBox={`0 0 ${VIEWBOX_W} ${viewH}`}
         xmlns="http://www.w3.org/2000/svg"
-        style={{ width: '100%', height: 'auto', maxHeight: 400 + momentumExtraH + warnings.length * 18 }}
+        style={{ display: 'block', width: '100%', height: 'auto', maxWidth: 800, margin: '0 auto' }}
       >
-        <defs>
-          <marker
-            id={arrowMarkerId}
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="6"
-            markerHeight="6"
-            orient="auto-start-reverse"
-          >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill={COLORS.arrow} />
-          </marker>
-        </defs>
-
         {/* Collision-type badge */}
-        <text
-          x={VIEWBOX_W / 2}
-          y={30}
-          fontSize={13}
-          fill={COLORS.muted}
-          textAnchor="middle"
-          fontStyle="italic"
-        >
+        <text x={midX} y={20} fontSize={13} fill={COLORS.muted} textAnchor="middle" fontStyle="italic">
           {labelForType(type)} · {dimension}
         </text>
 
         <Panel x={LEFT_PANEL_X} y={PANEL_Y} width={PANEL_W} height={PANEL_H} title="Before" />
         <Panel x={RIGHT_PANEL_X} y={PANEL_Y} width={PANEL_W} height={PANEL_H} title="After" />
 
-        {/* Divider arrow between panels */}
-        <g>
-          <line
-            x1={VIEWBOX_W / 2 - 6}
-            y1={PANEL_Y + PANEL_H / 2}
-            x2={VIEWBOX_W / 2 + 6}
-            y2={PANEL_Y + PANEL_H / 2}
-            stroke={COLORS.muted}
-            strokeWidth={2}
-            markerEnd={`url(#${arrowMarkerId})`}
-          />
+        {/* "Becomes" arrow between the panels: neutral, so it is not read as a velocity. */}
+        <g stroke={COLORS.arrowMuted} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" fill="none">
+          <line x1={midX - 9} y1={midY} x2={midX + 8} y2={midY} />
+          <polyline points={`${midX + 3},${midY - 6} ${midX + 9},${midY} ${midX + 3},${midY + 6}`} />
         </g>
 
-        {renderPanel(beforeGeoms)}
-        {renderPanel(afterGeoms)}
+        {renderPanel(beforeBoxes, LEFT_PANEL_X)}
+        {renderPanel(afterBoxes, RIGHT_PANEL_X)}
 
         {momentumAnnotation && momentumLines.length > 0 && (
           <text
-            x={VIEWBOX_W / 2}
+            x={midX}
             y={momentumY}
             fontSize={13}
             fill={COLORS.text}
             textAnchor="middle"
             fontWeight={600}
-            {...feat('momentum', { cx: VIEWBOX_W / 2, cy: momentumY + ((momentumLines.length - 1) * MOMENTUM_LINE_H) / 2, w: Math.min(VIEWBOX_W, Math.max(240, momentumAnnotation.length * 8 + 20)), h: 8 + momentumLines.length * MOMENTUM_LINE_H }, { width: VIEWBOX_W, height: VIEWBOX_H })}
+            {...feat('momentum', { cx: midX, cy: momentumY + ((momentumLines.length - 1) * MOMENTUM_LINE_H) / 2, w: Math.min(VIEWBOX_W, Math.max(240, momentumAnnotation.length * 8 + 20)), h: 8 + momentumLines.length * MOMENTUM_LINE_H }, { width: VIEWBOX_W, height: viewH })}
           >
             {momentumLines.map((line, i) => (
-              <tspan key={i} x={VIEWBOX_W / 2} dy={i === 0 ? 0 : MOMENTUM_LINE_H}>{line}</tspan>
+              <tspan key={i} x={midX} y={momentumY + i * MOMENTUM_LINE_H}>{subscripted(line)}</tspan>
             ))}
           </text>
         )}
@@ -748,8 +688,8 @@ export default function CollisionRenderer({
         {warnings.map((w, i) => (
           <text
             key={`warn-${i}`}
-            x={VIEWBOX_W / 2}
-            y={VIEWBOX_H + momentumExtraH + 8 + i * 18}
+            x={midX}
+            y={warningsY + i * 18}
             fontSize={12}
             fill="#b91c1c"
             fontWeight={600}
@@ -778,12 +718,25 @@ function labelForType(t: 'elastic' | 'inelastic' | 'perfectly-inelastic'): strin
   }
 }
 
+/** Up to four significant figures, no trailing zeros, a true minus, thousands grouped from 10 000. */
 function formatNum(v: number): string {
+  if (!Number.isFinite(v)) return '';
   if (v === 0) return '0';
   const abs = Math.abs(v);
-  if (abs >= 100) return v.toFixed(0);
-  if (abs >= 10) return v.toFixed(1);
-  return v.toFixed(2).replace(/\.?0+$/, '');
+  let text: string;
+  if (abs >= 1e9 || abs < 1e-3) {
+    const [mant, exp] = abs.toExponential(2).split('e');
+    text = `${Number(mant)} × 10^${Number(exp)}`;
+  } else if (abs >= 1000) {
+    const rounded = String(Number(abs.toFixed(1)));
+    const [int, frac] = rounded.split('.');
+    // Narrow no-break space between groups of three.
+    const grouped = int.length > 4 ? int.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : int;
+    text = frac ? `${grouped}.${frac}` : grouped;
+  } else {
+    text = String(Number(abs.toPrecision(4)));
+  }
+  return (v < 0 ? '−' : '') + text;
 }
 
 function vString(b: CollisionBody, dimension: '1D' | '2D'): string {

@@ -39,8 +39,8 @@ export interface EnergyBarsProps {
   notes?: string;
 }
 
+// Minimum chart width; it grows with the number of positions.
 const VIEWBOX_W = 520;
-const VIEWBOX_H = 360;
 
 // Semantic colors matching the FBD renderer palette.
 const COLORS = {
@@ -228,7 +228,6 @@ export default function EnergyBarsRenderer({
   );
   const yPositiveMax = Math.max(...positiveStackPerPos, 1);
   const yNegativeMin = Math.min(...negativeStackPerPos, 0);
-  const yRange = yPositiveMax - yNegativeMin;
   const maxTotal = yPositiveMax;  // kept for total-line auto-detect logic
 
   // Auto-detect total-invariance if the caller didn't set showTotalLine explicitly.
@@ -236,29 +235,95 @@ export default function EnergyBarsRenderer({
   const allSame = totals.every((t) => Math.abs(t - firstTotal) < 0.01 * Math.max(maxTotal, 1));
   const drawTotalLine = showTotalLine ?? allSame;
 
-  // Layout.
-  const plotLeft = 70;
-  const plotRight = VIEWBOX_W - 20;
-  const plotTop = 50;
-  const plotBottom = VIEWBOX_H - 70;
-  const plotHeight = plotBottom - plotTop;
-  const plotWidth = plotRight - plotLeft;
+  // Y axis on round numbers: the top tick clears the tallest stack, the bottom one any negative PE.
+  const step = niceStep(yPositiveMax - yNegativeMin, 5);
+  const axisMax = Math.ceil((yPositiveMax * 1.04) / step - 1e-9) * step;
+  const axisMin = yNegativeMin < 0 ? Math.floor(yNegativeMin / step + 1e-9) * step : 0;
+  const yRange = axisMax - axisMin;
+  const tickValues: number[] = [];
+  for (let k = Math.round(axisMin / step); k * step <= axisMax + step * 1e-6; k++) tickValues.push(Number((k * step).toPrecision(12)));
+  // Very large or very small energies: factor a power of ten out into the axis title
+  // (ticks 0, 5, 10 under "Energy (J) ×10⁹") instead of printing long numbers everywhere.
+  const magnitude = Math.max(Math.abs(axisMax), Math.abs(axisMin));
+  const unitPow = magnitude >= 1e6 || magnitude < 1e-2 ? 3 * Math.floor(Math.log10(magnitude) / 3 + 1e-9) : 0;
+  const shown = (v: number): string => formatValue(unitPow ? Number((v / 10 ** unitPow).toPrecision(10)) : v);
+  const axisTitle = unitPow ? `${yAxisLabel}  ×10${superscript(unitPow)}` : yAxisLabel;
+  const tickLabels = tickValues.map(shown);
+  const tickLabelW = Math.max(...tickLabels.map((l) => estimateLabelWidth(l, 12)));
 
-  const columnWidth = plotWidth / positions.length;
-  const barWidth = Math.min(60, columnWidth * 0.55);
-
-  // y=0 may not be at plotBottom anymore; place it according to where
-  // zero falls between yNegativeMin and yPositiveMax.
-  const zeroY = plotBottom - ((0 - yNegativeMin) / yRange) * plotHeight;
-  const yForValue = (v: number): number => plotBottom - ((v - yNegativeMin) / yRange) * plotHeight;
-
-  // Y-axis ticks. Span from yNegativeMin to yPositiveMax in 5 steps.
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((frac) => {
-    const value = yNegativeMin + frac * yRange;
-    return { y: plotBottom - frac * plotHeight, label: formatValue(value) };
+  // Legend: its own rows above the plot, wrapped by measured entry widths.
+  const shownLegend = LEGEND_ENTRIES.filter((e) => {
+    if (e.key === 'ke') return hasKE;
+    if (e.key === 'pe') return hasPE;
+    if (e.key === 'spring') return hasSpring;
+    if (e.key === 'thermal') return hasThermal;
+    return false;
   });
 
+  // Layout. The chart widens with the number of positions so columns keep a readable width.
+  const plotLeft = Math.max(64, 30 + tickLabelW + 12);
+  const viewW = Math.max(VIEWBOX_W, plotLeft + 20 + positions.length * 76);
+  const plotRight = viewW - 20;
+  const plotWidth = plotRight - plotLeft;
+  const columnWidth = plotWidth / positions.length;
+  const barWidth = Math.max(18, Math.min(64, columnWidth * 0.6));
+
+  const legendRows: Array<Array<{ entry: (typeof LEGEND_ENTRIES)[number]; x: number }>> = [[]];
+  {
+    let lx = 0;
+    for (const entry of shownLegend) {
+      const w = 18 + estimateLabelWidth(entry.label, 12) + 22;
+      if (lx > 0 && lx + w - 22 > plotWidth) { legendRows.push([]); lx = 0; }
+      legendRows[legendRows.length - 1].push({ entry, x: lx });
+      lx += w;
+    }
+  }
+  const LEGEND_ROW_H = 18;
+  const legendH = shownLegend.length > 0 ? legendRows.length * LEGEND_ROW_H : 0;
+  // Room between legend and plot for the total-line caption and the per-bar totals.
+  const plotTop = 10 + legendH + 30;
+  const plotHeight = 240;
+  const plotBottom = plotTop + plotHeight;
+
+  // Column labels: wrapped to the column; if a single word is still too wide, all labels are angled instead.
+  const LABEL_FS = 12;
+  const labelCap = columnWidth - 8;
+  const wrapped = positions.map((p) => wrapLabel(p.label ?? '', (labelCap * 13) / LABEL_FS));
+  const angled = wrapped.some((lines) => lines.some((l) => estimateLabelWidth(l, LABEL_FS) > labelCap + 2));
+  const longestLabel = Math.max(...positions.map((p) => estimateLabelWidth(p.label ?? '', LABEL_FS)));
+  const labelsH = angled
+    ? Math.sin((35 * Math.PI) / 180) * longestLabel + 22
+    : Math.max(...wrapped.map((lines) => lines.length)) * 14 + 14;
+  const viewH = plotBottom + labelsH + 4;
+
+  const yForValue = (v: number): number => plotBottom - ((v - axisMin) / yRange) * plotHeight;
+  const zeroY = yForValue(0);
+  const yTicks = tickValues.map((value, i) => ({ y: yForValue(value), label: tickLabels[i], value }));
   const totalLineY = yForValue(firstTotal);
+  const totalCaption = `${allSame ? 'Total energy (conserved)' : 'Total energy at the start'}: ${shown(firstTotal)}${unitPow ? ` ×10${superscript(unitPow)}` : ''}`;
+  const totalCaptionW = estimateLabelWidth(totalCaption, 12) * 0.94;
+
+  // Over the bars when they all stop at it; under them when some bar crosses it (negative PE),
+  // so the line never strikes through a value printed in a bar.
+  const totalUnderBars = firstTotal < 0 || positiveStackPerPos.some((v) => v > firstTotal * 1.001 + 1e-9);
+  const totalLine = drawTotalLine ? (
+          <g {...feat('total-line', { cx: (plotLeft + plotRight) / 2, cy: totalLineY, w: plotRight - plotLeft + 20, h: 20 }, { width: viewW, height: viewH })}>
+            <line
+              x1={plotLeft}
+              y1={totalLineY}
+              x2={plotRight}
+              y2={totalLineY}
+              stroke={COLORS.axis}
+              strokeWidth={1.5}
+              strokeDasharray="6 4"
+            />
+            {/* Its key sits in the clear row above the plot, where no bar can run into it. */}
+            <line x1={plotRight - totalCaptionW - 34} y1={plotTop - 14} x2={plotRight - totalCaptionW - 8} y2={plotTop - 14} stroke={COLORS.axis} strokeWidth={1.5} strokeDasharray="6 4" />
+            <text x={plotRight} y={plotTop - 10} fontSize={12} fill={COLORS.axis} textAnchor="end" fontStyle="italic">
+              {totalCaption}
+            </text>
+          </g>
+        ) : null;
 
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
@@ -276,90 +341,53 @@ export default function EnergyBarsRenderer({
         </div>
       )}
       <svg
-        viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+        viewBox={`0 0 ${viewW} ${viewH}`}
         xmlns="http://www.w3.org/2000/svg"
-        style={{ width: '100%', height: 'auto', maxHeight: 380 }}
+        style={{ display: 'block', width: '100%', height: 'auto', maxWidth: Math.max(680, viewW * 1.15), margin: '0 auto' }}
       >
+        {/* Legend */}
+        {legendRows.map((row, ri) =>
+          row.map(({ entry, x }) => {
+            const ly = 16 + ri * LEGEND_ROW_H;
+            return (
+              <g key={entry.key}>
+                <rect x={plotLeft + x} y={ly - 6} width={12} height={12} rx={2} fill={entry.color} />
+                <text x={plotLeft + x + 18} y={ly + 4} fontSize={12} fill={COLORS.text}>
+                  {entry.label}
+                </text>
+              </g>
+            );
+          }),
+        )}
+
         {/* Gridlines */}
         {yTicks.map((t, i) => (
-          <line
-            key={i}
-            x1={plotLeft}
-            y1={t.y}
-            x2={plotRight}
-            y2={t.y}
-            stroke={COLORS.grid}
-            strokeWidth={1}
-          />
+          <line key={i} x1={plotLeft} y1={t.y} x2={plotRight} y2={t.y} stroke={COLORS.grid} strokeWidth={1} />
         ))}
 
         {/* Y-axis */}
-        <line
-          x1={plotLeft}
-          y1={plotTop}
-          x2={plotLeft}
-          y2={plotBottom}
-          stroke={COLORS.axis}
-          strokeWidth={1.5}
-        />
-        {/* X-axis (baseline at 0) */}
-        <line
-          x1={plotLeft}
-          y1={plotBottom}
-          x2={plotRight}
-          y2={plotBottom}
-          stroke={COLORS.axis}
-          strokeWidth={1.5}
-        />
+        <line x1={plotLeft} y1={plotTop} x2={plotLeft} y2={plotBottom} stroke={COLORS.axis} strokeWidth={1.5} />
+        {/* Baseline at 0 */}
+        <line x1={plotLeft} y1={zeroY} x2={plotRight} y2={zeroY} stroke={COLORS.axis} strokeWidth={1.5} />
 
         {/* Y-axis tick labels + axis title */}
         {yTicks.map((t, i) => (
-          <text
-            key={i}
-            x={plotLeft - 8}
-            y={t.y + 4}
-            fontSize={11}
-            fill={COLORS.muted}
-            textAnchor="end"
-          >
+          <text key={i} x={plotLeft - 8} y={t.y + 4} fontSize={12} fill={COLORS.muted} textAnchor="end">
             {t.label}
           </text>
         ))}
         <text
-          x={16}
+          x={15}
           y={plotTop + plotHeight / 2}
-          fontSize={12}
+          fontSize={12.5}
           fill={COLORS.muted}
           textAnchor="middle"
-          transform={`rotate(-90 16 ${plotTop + plotHeight / 2})`}
+          transform={`rotate(-90 15 ${plotTop + plotHeight / 2})`}
         >
-          {yAxisLabel}
+          {axisTitle}
         </text>
 
-        {/* Total-energy line */}
-        {drawTotalLine && (
-          <g {...feat('total-line', { cx: (plotLeft + plotRight) / 2, cy: totalLineY, w: plotRight - plotLeft + 20, h: 20 }, { width: VIEWBOX_W, height: VIEWBOX_H })}>
-            <line
-              x1={plotLeft}
-              y1={totalLineY}
-              x2={plotRight}
-              y2={totalLineY}
-              stroke={COLORS.axis}
-              strokeWidth={1.5}
-              strokeDasharray="6 4"
-            />
-            <text
-              x={plotRight}
-              y={totalLineY - 6}
-              fontSize={11}
-              fill={COLORS.axis}
-              textAnchor="end"
-              fontStyle="italic"
-            >
-              Total energy (conserved)
-            </text>
-          </g>
-        )}
+        {totalUnderBars && totalLine}
 
         {/* Bars */}
         {positions.map((p, i) => {
@@ -397,18 +425,23 @@ export default function EnergyBarsRenderer({
                 strokeWidth={1}
               />,
             );
-            if (h > 16) {
+            // A value is printed only where it fits: full form, else compact, else left to the axis.
+            const full = shown(value);
+            const compact = unitPow ? full : formatCompact(value);
+            const fits = (s: string) => estimateLabelWidth(s, 11.5) <= barWidth - 6;
+            const text = fits(full) ? full : fits(compact) ? compact : '';
+            if (h >= 17 && text) {
               segments.push(
                 <text
                   key={`v-${j}`}
                   x={centerX}
                   y={y + h / 2 + 4}
-                  fontSize={11}
+                  fontSize={11.5}
                   fill="white"
                   fontWeight={600}
                   textAnchor="middle"
                 >
-                  {formatValue(value)}
+                  {text}
                 </text>,
               );
             }
@@ -418,75 +451,40 @@ export default function EnergyBarsRenderer({
 
           const total = (p.ke ?? 0) + (p.pe ?? 0) + (p.spring ?? 0) + (p.thermal ?? 0);
           const barName = p.label ? `bar-${featSlug(p.label)}` : `bar-${i + 1}`;
-          // Column label: wrap to the column width and clamp each line's
-          // center into the viewBox (2026-08-07 clip audit — the manifest
-          // even anticipates parenthetical qualifiers like "Release (10 m)",
-          // which used to clip at the outer columns). wrapLabel estimates
-          // at fontSize 13; scale its cap so the char budget matches the
-          // 12px this text draws at.
-          const labelLines = wrapLabel(p.label ?? '', (Math.max(columnWidth - 8, 90) * 13) / 12);
-          const clampLineX = (w: number): number => {
-            const half = w / 2;
-            const lo = 4 + half;
-            const hi = VIEWBOX_W - 4 - half;
-            return hi < lo ? VIEWBOX_W / 2 : Math.max(lo, Math.min(centerX, hi));
-          };
           return (
-            <g key={p.label} {...feat(barName, { cx: centerX, cy: plotBottom - plotHeight / 2, w: barWidth + 16, h: plotHeight }, { width: VIEWBOX_W, height: VIEWBOX_H })}>
+            <g key={`${p.label}-${i}`} {...feat(barName, { cx: centerX, cy: plotBottom - plotHeight / 2, w: barWidth + 16, h: plotHeight }, { width: viewW, height: viewH })}>
               {segments}
               {/* Column label below */}
-              <text
-                x={centerX}
-                y={plotBottom + 18}
-                fontSize={12}
-                fill={COLORS.text}
-                fontWeight={600}
-                textAnchor="middle"
-              >
-                {labelLines.map((line, li) => (
-                  <tspan key={li} x={clampLineX(estimateLabelWidth(line, 12))} dy={li === 0 ? 0 : 14}>{line}</tspan>
-                ))}
-              </text>
+              {angled ? (
+                <text
+                  x={centerX + 4}
+                  y={plotBottom + 14}
+                  fontSize={LABEL_FS}
+                  fill={COLORS.text}
+                  fontWeight={600}
+                  textAnchor="end"
+                  transform={`rotate(-35 ${centerX + 4} ${plotBottom + 14})`}
+                >
+                  {p.label}
+                </text>
+              ) : (
+                <text x={centerX} y={plotBottom + 17} fontSize={LABEL_FS} fill={COLORS.text} fontWeight={600} textAnchor="middle">
+                  {wrapped[i].map((line, li) => (
+                    <tspan key={li} x={centerX} y={plotBottom + 17 + li * 14}>{line}</tspan>
+                  ))}
+                </text>
+              )}
               {/* Total above the stack, if shown */}
               {!drawTotalLine && total > 0 && (
-                <text
-                  x={centerX}
-                  y={yForValue(total) - 6}
-                  fontSize={11}
-                  fill={COLORS.muted}
-                  textAnchor="middle"
-                >
-                  {formatValue(total)}
+                <text x={centerX} y={yForValue(positiveStackPerPos[i]) - 6} fontSize={11.5} fill={COLORS.muted} textAnchor="middle">
+                  {shown(total)}
                 </text>
               )}
             </g>
           );
         })}
 
-        {/* Legend */}
-        {(() => {
-          const shown = LEGEND_ENTRIES.filter((e) => {
-            if (e.key === 'ke') return hasKE;
-            if (e.key === 'pe') return hasPE;
-            if (e.key === 'spring') return hasSpring;
-            if (e.key === 'thermal') return hasThermal;
-            return false;
-          });
-          const legendY = plotTop - 20;
-          const slotWidth = Math.min(160, plotWidth / Math.max(shown.length, 1));
-          return shown.map((e, i) => {
-            const lx = plotLeft + i * slotWidth;
-            return (
-              <g key={e.key}>
-                <rect x={lx} y={legendY - 9} width={12} height={12} fill={e.color} />
-                <text x={lx + 18} y={legendY} fontSize={12} fill={COLORS.text} dominantBaseline="middle">
-                  {e.label}
-                </text>
-              </g>
-            );
-          });
-        })()}
-
+        {!totalUnderBars && totalLine}
       </svg>
       {/* Notes as wrapping HTML below the SVG (shared DiagramNotes idiom,
           matching the HTML title above — the in-SVG single-line version
@@ -496,12 +494,47 @@ export default function EnergyBarsRenderer({
   );
 }
 
+/** A round step (1, 2, 2.5 or 5 × a power of ten) giving about `target` intervals. */
+function niceStep(span: number, target: number): number {
+  if (!(span > 0) || !Number.isFinite(span)) return 1;
+  const raw = span / target;
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const frac = raw / pow;
+  return (frac <= 1 ? 1 : frac <= 2 ? 2 : frac <= 2.5 ? 2.5 : frac <= 5 ? 5 : 10) * pow;
+}
+
+/** No pointless trailing zeros ("50", not "50.0"), a true minus, thousands grouped from 10 000. */
 function formatValue(v: number): string {
+  if (!Number.isFinite(v)) return '';
   if (v === 0) return '0';
   const abs = Math.abs(v);
-  if (abs >= 100) return v.toFixed(0);
-  if (abs >= 10) return v.toFixed(1);
-  return v.toFixed(2).replace(/\.?0+$/, '');
+  const sign = v < 0 ? '−' : '';
+  if (abs >= 1e9 || abs < 1e-3) return sign + formatCompact(abs);
+  const rounded = abs >= 1000 ? String(Number(abs.toFixed(1))) : String(Number(abs.toPrecision(4)));
+  const [int, frac] = rounded.split('.');
+  // Narrow no-break space between groups of three.
+  const grouped = int.length > 4 ? int.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : int;
+  return sign + (frac ? `${grouped}.${frac}` : grouped);
+}
+
+function superscript(n: number): string {
+  const map: Record<string, string> = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+  return String(n).split('').map((ch) => map[ch] ?? ch).join('');
+}
+
+/** Short form for a tight spot: 12 500 → "12.5k", 3 400 000 → "3.4M". */
+function formatCompact(v: number): string {
+  const abs = Math.abs(v);
+  const sign = v < 0 ? '−' : '';
+  const units: Array<[number, string]> = [[1e9, 'G'], [1e6, 'M'], [1e3, 'k']];
+  for (const [size, suffix] of units) {
+    if (abs >= size) return `${sign}${Number((abs / size).toPrecision(3))}${suffix}`;
+  }
+  if (abs < 1e-3) {
+    const [mant, exp] = abs.toExponential(1).split('e');
+    return `${sign}${Number(mant)}×10^${Number(exp)}`;
+  }
+  return sign + String(Number(abs.toPrecision(3)));
 }
 
 // Slightly darkened stroke for each bar fill.

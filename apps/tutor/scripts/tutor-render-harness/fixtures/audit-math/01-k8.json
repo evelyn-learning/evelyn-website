@@ -1,0 +1,906 @@
+[
+ {
+  "tool": "show_diagram",
+  "label": "number-line-typ",
+  "args": {
+   "type": "number_line",
+   "params": {
+    "min": -5,
+    "max": 5,
+    "step": 1,
+    "points": [
+     {
+      "value": -3,
+      "label": "A"
+     },
+     {
+      "value": 2,
+      "label": "B",
+      "style": "open"
+     }
+    ],
+    "intervals": [
+     {
+      "from": -3,
+      "to": 2,
+      "fromInclusive": true,
+      "toInclusive": false,
+      "label": "-3 ≤ x < 2"
+     }
+    ],
+    "title": "Solutions of -3 ≤ x < 2"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "number-line-stress",
+  "args": {
+   "type": "number_line",
+   "params": {
+    "min": -100,
+    "max": 250,
+    "step": 10,
+    "points": [
+     {
+      "value": -75,
+      "label": "lowest temperature"
+     },
+     {
+      "value": -70,
+      "label": "second lowest"
+     },
+     {
+      "value": 212,
+      "label": "boiling point of water"
+     },
+     {
+      "value": 247.5,
+      "label": "P"
+     }
+    ],
+    "segments": [
+     {
+      "from": -75,
+      "to": 212,
+      "label": "a jump of 287 degrees",
+      "arc": true
+     },
+     {
+      "from": 212,
+      "to": 247.5,
+      "label": "+35.5",
+      "arc": true
+     }
+    ],
+    "title": "Temperatures from the coldest night to the boiling point of water in Fahrenheit"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "number-line-fractions",
+  "args": {
+   "type": "number_line",
+   "params": {
+    "min": 0,
+    "max": 2,
+    "step": 1,
+    "fractionTicks": {
+     "denominator": 8,
+     "showLabels": true
+    },
+    "points": [
+     {
+      "value": 0.375,
+      "label": "3/8"
+     },
+     {
+      "value": 1.25,
+      "label": "1 1/4"
+     }
+    ],
+    "title": "Eighths between 0 and 2"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "equation-balance-typ",
+  "args": {
+   "type": "equation_balance",
+   "params": {
+    "left": [
+     {
+      "label": "x",
+      "weight": 3
+     },
+     {
+      "label": "x",
+      "weight": 3
+     },
+     {
+      "label": "1",
+      "weight": 1
+     }
+    ],
+    "right": [
+     {
+      "label": "7",
+      "weight": 7
+     }
+    ],
+    "title": "2x + 1 = 7"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "equation-balance-stress",
+  "args": {
+   "type": "equation_balance",
+   "params": {
+    "left": [
+     {
+      "label": "3x",
+      "weight": 12
+     },
+     {
+      "label": "x",
+      "weight": 4
+     },
+     {
+      "label": "1",
+      "weight": 1
+     },
+     {
+      "label": "1",
+      "weight": 1
+     },
+     {
+      "label": "1",
+      "weight": 1
+     },
+     {
+      "label": "1",
+      "weight": 1
+     },
+     {
+      "label": "1",
+      "weight": 1
+     },
+     {
+      "label": "1",
+      "weight": 1
+     }
+    ],
+    "right": [
+     {
+      "label": "2x",
+      "weight": 8
+     },
+     {
+      "label": "10",
+      "weight": 10
+     },
+     {
+      "label": "1",
+      "weight": 1
+     },
+     {
+      "label": "1",
+      "weight": 1
+     },
+     {
+      "label": "1",
+      "weight": 1
+     },
+     {
+      "label": "unknown mass",
+      "weight": 1
+     }
+    ],
+    "title": "Solve 3x + x + 6 = 2x + 14 by keeping the scale level",
+    "caption": "Take two x-blocks and six unit weights off both pans; the scale stays level."
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "equation-balance-unbalanced",
+  "args": {
+   "type": "equation_balance",
+   "params": {
+    "left": [
+     {
+      "label": "5",
+      "weight": 5
+     }
+    ],
+    "right": [
+     {
+      "label": "3",
+      "weight": 3
+     }
+    ],
+    "title": "5 > 3"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "tape-typ",
+  "args": {
+   "type": "tape_diagram",
+   "params": {
+    "bars": [
+     {
+      "name": "Maya",
+      "segments": [
+       {
+        "length": 12,
+        "label": "12"
+       }
+      ],
+      "totalLabel": "12 stickers"
+     },
+     {
+      "name": "Leo",
+      "segments": [
+       {
+        "length": 12,
+        "label": "12"
+       },
+       {
+        "length": 8,
+        "label": "?",
+        "unknown": true
+       }
+      ],
+      "totalLabel": "20 stickers"
+     }
+    ],
+    "title": "Leo has 8 more stickers than Maya"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "tape-stress",
+  "args": {
+   "type": "tape_diagram",
+   "params": {
+    "bars": [
+     {
+      "name": "Savings account",
+      "segments": [
+       {
+        "length": 1,
+        "label": "1"
+       },
+       {
+        "length": 2,
+        "label": "rent"
+       },
+       {
+        "length": 45,
+        "label": "groceries and transport"
+       },
+       {
+        "length": 0.5,
+        "label": "tip"
+       },
+       {
+        "length": 20,
+        "label": "?",
+        "unknown": true
+       }
+      ],
+      "totalLabel": "total monthly spending = $68.50"
+     },
+     {
+      "name": "Brother",
+      "segments": [
+       {
+        "length": 3,
+        "label": "3 equal parts"
+       },
+       {
+        "length": 3,
+        "label": ""
+       },
+       {
+        "length": 3
+       }
+      ],
+      "totalLabel": "9"
+     },
+     {
+      "name": "Grandmother Josephine",
+      "segments": [
+       {
+        "length": 120,
+        "label": "120"
+       }
+      ]
+     }
+    ],
+    "title": "Comparing three very different budgets on one shared scale",
+    "sharedScale": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "fraction-comparison-typ",
+  "args": {
+   "type": "fraction_comparison",
+   "params": {
+    "fractions": [
+     {
+      "numerator": 1,
+      "denominator": 2
+     },
+     {
+      "numerator": 2,
+      "denominator": 3
+     },
+     {
+      "numerator": 3,
+      "denominator": 4
+     }
+    ],
+    "title": "Which is largest?"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "fraction-comparison-stress",
+  "args": {
+   "type": "fraction_comparison",
+   "params": {
+    "fractions": [
+     {
+      "numerator": 7,
+      "denominator": 12,
+      "label": "seven twelfths of the pizza"
+     },
+     {
+      "numerator": 11,
+      "denominator": 24
+     },
+     {
+      "numerator": 5,
+      "denominator": 3,
+      "label": "improper"
+     },
+     {
+      "numerator": 0,
+      "denominator": 5
+     },
+     {
+      "numerator": 49,
+      "denominator": 50
+     },
+     {
+      "numerator": 1,
+      "denominator": 100
+     }
+    ],
+    "title": "Six fractions with awkward denominators compared"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "fraction-comparison-circle",
+  "args": {
+   "type": "fraction_comparison",
+   "params": {
+    "fractions": [
+     {
+      "numerator": 3,
+      "denominator": 8
+     },
+     {
+      "numerator": 5,
+      "denominator": 6
+     },
+     {
+      "numerator": 7,
+      "denominator": 16,
+      "label": "sixteenths"
+     }
+    ],
+    "style": "circle",
+    "title": "As circles"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "area-model-typ",
+  "args": {
+   "type": "area_model",
+   "params": {
+    "rows": [
+     20,
+     3
+    ],
+    "cols": [
+     10,
+     4
+    ],
+    "showProducts": true,
+    "title": "23 × 14"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "area-model-stress",
+  "args": {
+   "type": "area_model",
+   "params": {
+    "rows": [
+     300,
+     40,
+     7
+    ],
+    "cols": [
+     2000,
+     500,
+     60,
+     8
+    ],
+    "showProducts": true,
+    "title": "347 × 2568 with partial products"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "area-model-algebra",
+  "args": {
+   "type": "area_model",
+   "params": {
+    "rows": [
+     1,
+     1
+    ],
+    "cols": [
+     1,
+     1
+    ],
+    "cellLabels": [
+     [
+      "x²",
+      "3x"
+     ],
+     [
+      "2x",
+      "6"
+     ]
+    ],
+    "title": "(x + 2)(x + 3)"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "pie-typ",
+  "args": {
+   "type": "pie_chart",
+   "params": {
+    "slices": [
+     {
+      "label": "Walk",
+      "value": 12
+     },
+     {
+      "label": "Bus",
+      "value": 9
+     },
+     {
+      "label": "Car",
+      "value": 6
+     },
+     {
+      "label": "Bike",
+      "value": 3
+     }
+    ],
+    "title": "How students get to school"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "pie-stress",
+  "args": {
+   "type": "pie_chart",
+   "params": {
+    "slices": [
+     {
+      "label": "Housing and utilities",
+      "value": 41
+     },
+     {
+      "label": "Food",
+      "value": 22
+     },
+     {
+      "label": "Transportation",
+      "value": 18
+     },
+     {
+      "label": "Entertainment and subscriptions",
+      "value": 9
+     },
+     {
+      "label": "Savings",
+      "value": 5
+     },
+     {
+      "label": "Clothes",
+      "value": 2
+     },
+     {
+      "label": "Charity",
+      "value": 1.5
+     },
+     {
+      "label": "Gifts",
+      "value": 1
+     },
+     {
+      "label": "Other",
+      "value": 0.5
+     }
+    ],
+    "title": "Monthly household budget broken down by category"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "bar-typ",
+  "args": {
+   "type": "bar_chart",
+   "params": {
+    "categories": [
+     "Mon",
+     "Tue",
+     "Wed",
+     "Thu",
+     "Fri"
+    ],
+    "values": [
+     4,
+     7,
+     5,
+     9,
+     6
+    ],
+    "yLabel": "Books read",
+    "title": "Books read this week"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "bar-stress",
+  "args": {
+   "type": "bar_chart",
+   "params": {
+    "categories": [
+     "Mathematics",
+     "English Language Arts",
+     "Physical Education",
+     "Science",
+     "Social Studies",
+     "Art",
+     "Music",
+     "Computer Science",
+     "Spanish",
+     "Lunch",
+     "Recess",
+     "Drama"
+    ],
+    "values": [
+     1250,
+     980,
+     15,
+     1433,
+     0,
+     720,
+     365,
+     1999,
+     12,
+     640,
+     88,
+     1042
+    ],
+    "yLabel": "Minutes per school year spent",
+    "title": "Minutes spent on each subject across the whole school year"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "bar-negative",
+  "args": {
+   "type": "bar_chart",
+   "params": {
+    "categories": [
+     "Jan",
+     "Feb",
+     "Mar",
+     "Apr"
+    ],
+    "values": [
+     -8,
+     -2.5,
+     3,
+     11
+    ],
+    "yLabel": "Temperature (°C)",
+    "title": "Average temperature"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "line-plot-typ",
+  "args": {
+   "type": "line_plot",
+   "params": {
+    "values": [
+     1,
+     2,
+     2,
+     3,
+     3,
+     3,
+     4,
+     4,
+     5
+    ],
+    "xLabel": "Pets per family",
+    "title": "Number of pets"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "line-plot-stress",
+  "args": {
+   "type": "line_plot",
+   "params": {
+    "values": [
+     0.25,
+     0.25,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.75,
+     1,
+     1,
+     1,
+     1.25,
+     1.5,
+     1.5,
+     3.75,
+     3.75,
+     4
+    ],
+    "xLabel": "Length of ribbon measured to the nearest quarter inch",
+    "title": "Ribbon lengths recorded by the whole class on Tuesday"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "before-after-typ",
+  "args": {
+   "type": "before_after",
+   "params": {
+    "before": {
+     "kind": "tape_diagram",
+     "params": {
+      "bars": [
+       {
+        "name": "Price",
+        "segments": [
+         {
+          "length": 80,
+          "label": "$80"
+         }
+        ]
+       }
+      ]
+     },
+     "label": "Before the sale"
+    },
+    "after": {
+     "kind": "tape_diagram",
+     "params": {
+      "bars": [
+       {
+        "name": "Price",
+        "segments": [
+         {
+          "length": 60,
+          "label": "$60"
+         },
+         {
+          "length": 20,
+          "label": "25% off",
+          "unknown": true
+         }
+        ]
+       }
+      ]
+     },
+     "label": "After the sale"
+    },
+    "title": "A 25% discount"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "before-after-stress",
+  "args": {
+   "type": "before_after",
+   "params": {
+    "before": {
+     "kind": "transformation",
+     "params": {
+      "shape": {
+       "type": "triangle",
+       "vertices": [
+        {
+         "x": 1,
+         "y": 1
+        },
+        {
+         "x": 4,
+         "y": 1
+        },
+        {
+         "x": 1,
+         "y": 3
+        }
+       ]
+      },
+      "transform": {
+       "type": "reflect",
+       "axis": "y"
+      }
+     },
+     "label": "Step 1: reflect across the y-axis"
+    },
+    "after": {
+     "kind": "transformation",
+     "params": {
+      "shape": {
+       "type": "triangle",
+       "vertices": [
+        {
+         "x": -1,
+         "y": 1
+        },
+        {
+         "x": -4,
+         "y": 1
+        },
+        {
+         "x": -1,
+         "y": 3
+        }
+       ]
+      },
+      "transform": {
+       "type": "translate",
+       "tx": 2,
+       "ty": -5
+      }
+     },
+     "label": "Step 2: translate by ⟨2, −5⟩"
+    },
+    "title": "A composition of two rigid transformations, one after the other"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "vector-add-typ",
+  "args": {
+   "type": "vector_addition",
+   "params": {
+    "vectors": [
+     {
+      "x": 3,
+      "y": 1,
+      "label": "u"
+     },
+     {
+      "x": 1,
+      "y": 3,
+      "label": "v"
+     }
+    ],
+    "title": "u + v"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "vector-add-stress",
+  "args": {
+   "type": "vector_addition",
+   "params": {
+    "vectors": [
+     {
+      "x": 120,
+      "y": 5,
+      "label": "displacement east"
+     },
+     {
+      "x": -30,
+      "y": 85,
+      "label": "wind"
+     },
+     {
+      "x": -85,
+      "y": -90,
+      "label": "current"
+     },
+     {
+      "x": 2,
+      "y": -3,
+      "label": "d"
+     }
+    ],
+    "method": "tip_to_tail",
+    "title": "Four displacements of very different sizes added tip to tail"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "vector-add-parallelogram",
+  "args": {
+   "type": "vector_addition",
+   "params": {
+    "vectors": [
+     {
+      "x": 4,
+      "y": 0,
+      "label": "a"
+     },
+     {
+      "x": -2,
+      "y": 3,
+      "label": "b"
+     }
+    ],
+    "method": "parallelogram",
+    "title": "Parallelogram rule"
+   }
+  }
+ }
+]

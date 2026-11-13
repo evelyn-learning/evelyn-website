@@ -71,11 +71,24 @@ const BOHR_ELEMENTS: Record<string, { symbol: string; name: string; Z: number; n
   Zn: { symbol: 'Zn', name: 'Zinc', Z: 30, neutrons: 35 },
 };
 
-/** Distribute Z electrons into Bohr shells using the teaching rule
- *  (capacities 2, 8, 8, 18, 18, 32 — correct for main-group elements up to Ca,
- *  which is the range Bohr diagrams are drawn for). */
+/** Electrons per shell (K, L, M, N, O) for the ground state of element Z.
+ *  Main-group atoms follow 2, 8, 8, …; from scandium on the THIRD shell keeps
+ *  filling (up to 18) underneath the two 4s electrons, so zinc is 2, 8, 18, 2 —
+ *  not 2, 8, 8, 12. Chromium and copper keep a single 4s electron. */
 function distributeShells(Z: number): number[] {
-  const caps = [2, 8, 8, 18, 18, 32];
+  if (Z <= 2) return [Z];
+  if (Z <= 10) return [2, Z - 2];
+  if (Z <= 18) return [2, 8, Z - 10];
+  if (Z <= 20) return [2, 8, 8, Z - 18];
+  if (Z === 24) return [2, 8, 13, 1];
+  if (Z === 29) return [2, 8, 18, 1];
+  if (Z <= 30) return [2, 8, 8 + (Z - 20), 2];
+  if (Z <= 36) return [2, 8, 18, Z - 28];
+  if (Z <= 38) return [2, 8, 18, 8, Z - 36];
+  if (Z <= 48) return [2, 8, 18, 8 + (Z - 38), 2];
+  if (Z <= 54) return [2, 8, 18, 18, Z - 46];
+  // Beyond xenon: fill by simple capacities (not drawn in practice).
+  const caps = [2, 8, 18, 32, 18, 8];
   const shells: number[] = [];
   let remaining = Z;
   for (const cap of caps) {
@@ -84,7 +97,7 @@ function distributeShells(Z: number): number[] {
     shells.push(n);
     remaining -= n;
   }
-  if (remaining > 0) shells.push(remaining); // safety for very large Z
+  if (remaining > 0) shells.push(remaining);
   return shells;
 }
 

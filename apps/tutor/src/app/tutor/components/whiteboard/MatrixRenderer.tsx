@@ -46,102 +46,70 @@ interface MatrixRendererProps {
   operatorSymbol?: string;
 }
 
-// ─── Bracket helpers ─────────────────────────────────────────────────────────
+// ─── Maths text ──────────────────────────────────────────────────────────────
 
-/**
- * Square brackets are rendered with CSS borders that form the [ ] caps.
- * Round brackets use scaled parenthesis characters.
- * Pipes / double-pipes use literal | characters.
- */
-
-/** Left bracket element */
-function LeftBracket({ style }: { style: BracketStyle }) {
-  if (style === 'round') {
-    return (
-      <div className="flex items-center justify-center select-none" aria-hidden="true">
-        <span className="text-[2.5em] font-light leading-none" style={{ fontFamily: 'Times New Roman, serif' }}>
-          (
-        </span>
-      </div>
-    );
-  }
-
-  if (style === 'pipes') {
-    return (
-      <div className="flex items-center justify-center select-none" aria-hidden="true">
-        <span className="text-[2.5em] font-light leading-none" style={{ fontFamily: 'Times New Roman, serif' }}>
-          |
-        </span>
-      </div>
-    );
-  }
-
-  if (style === 'double-pipes') {
-    return (
-      <div className="flex items-center justify-center select-none" aria-hidden="true">
-        <span className="text-[2.5em] font-light leading-none tracking-tight" style={{ fontFamily: 'Times New Roman, serif' }}>
-          ‖
-        </span>
-      </div>
-    );
-  }
-
-  // Default: square brackets via CSS borders
-  return (
-    <div
-      className="w-[6px] self-stretch border-l-2 border-t-2 border-b-2 border-current"
-      aria-hidden="true"
-    />
-  );
+/** A matrix entry is maths: typeset it (fractions, signs, variables) instead
+ *  of printing the raw LaTeX. An entry that already carries its own $…$ is
+ *  left as written. */
+function Cell({ text }: { text: string }) {
+  const t = String(text ?? '');
+  if (t.trim() === '') return null;
+  return <InlineMathText text={t.includes('$') ? t : `$${t}$`} forceMath nowrap />;
 }
 
-/** Right bracket element */
-function RightBracket({ style }: { style: BracketStyle }) {
+/** A row operation ("R_1 + \frac{3}{2}R_2 \to R_1", "R2 ← R2 − 3R1") is maths;
+ *  a sentence ("swap rows 1 and 2") stays prose. */
+function Operation({ text }: { text: string }) {
+  const t = String(text ?? '');
+  if (t.includes('$')) return <InlineMathText text={t} nowrap />;
+  const bare = t.replace(/\\[A-Za-z]+/g, ' ');
+  const isProse = /[A-Za-z]{3,}/.test(bare);
+  if (isProse) return <InlineMathText text={t} nowrap />;
+  const tex = t
+    .replace(/([A-Za-z])(\d+)/g, (_m, letter: string, digits: string) => `${letter}_{${digits}}`) // R1 → R_1
+    .replace(/<->|↔/g, '\\leftrightarrow ')
+    .replace(/->|→/g, '\\to ')
+    .replace(/<-|←/g, '\\leftarrow ');
+  return <InlineMathText text={`$${tex}$`} forceMath nowrap />;
+}
+
+// ─── Brackets ────────────────────────────────────────────────────────────────
+
+/** A bracket that spans the full height of the rows it encloses (a grid item
+ *  stretched over them), so it is always as tall as its content. */
+function Bracket({ style, side, gridRow, gridColumn }: { style: BracketStyle; side: 'left' | 'right'; gridRow: string; gridColumn: number }) {
+  const base: React.CSSProperties = { gridRow, gridColumn, alignSelf: 'stretch', color: '#1f2937' };
+  const edge = side === 'left' ? 'borderLeft' : 'borderRight';
   if (style === 'round') {
     return (
-      <div className="flex items-center justify-center select-none" aria-hidden="true">
-        <span className="text-[2.5em] font-light leading-none" style={{ fontFamily: 'Times New Roman, serif' }}>
-          )
-        </span>
-      </div>
+      <div aria-hidden="true" style={{
+        ...base, width: 10, [edge]: '2px solid currentColor',
+        borderRadius: side === 'left' ? '50% 0 0 50% / 14px 0 0 14px' : '0 50% 50% 0 / 0 14px 14px 0',
+        margin: '1px 0',
+      }} />
     );
   }
-
   if (style === 'pipes') {
-    return (
-      <div className="flex items-center justify-center select-none" aria-hidden="true">
-        <span className="text-[2.5em] font-light leading-none" style={{ fontFamily: 'Times New Roman, serif' }}>
-          |
-        </span>
-      </div>
-    );
+    return <div aria-hidden="true" style={{ ...base, width: 6, [edge]: '2px solid currentColor' }} />;
   }
-
   if (style === 'double-pipes') {
-    return (
-      <div className="flex items-center justify-center select-none" aria-hidden="true">
-        <span className="text-[2.5em] font-light leading-none tracking-tight" style={{ fontFamily: 'Times New Roman, serif' }}>
-          ‖
-        </span>
-      </div>
-    );
+    return <div aria-hidden="true" style={{ ...base, width: 8, [edge]: '6px double currentColor' }} />;
   }
-
-  // Default: square brackets via CSS borders
   return (
-    <div
-      className="w-[6px] self-stretch border-r-2 border-t-2 border-b-2 border-current"
-      aria-hidden="true"
-    />
+    <div aria-hidden="true" style={{
+      ...base, width: 7, [edge]: '2px solid currentColor',
+      borderTop: '2px solid currentColor', borderBottom: '2px solid currentColor',
+    }} />
   );
 }
 
 // ─── Single matrix block ─────────────────────────────────────────────────────
 
 /**
- * Renders one matrix with brackets, optional augmented line, row labels,
- * and column labels. This is the core visual unit — the outer MatrixRenderer
- * composes one or two of these together with an operator symbol.
+ * One matrix laid out on a single CSS grid: row labels, left bracket, the
+ * entries, right bracket, row operations. Every row of the grid is one row of
+ * the matrix, so labels, entries, the augmented bar and the operations stay
+ * aligned whatever the height of an entry (a fraction is taller than a 1).
  */
 function MatrixBlock({
   rows,
@@ -149,121 +117,82 @@ function MatrixBlock({
   augmented,
   rowLabels,
   colLabels,
+  rowOperations,
 }: {
   rows: string[][];
   brackets?: BracketStyle;
   augmented?: number;
   rowLabels?: string[];
   colLabels?: string[];
+  rowOperations?: RowOperation[];
 }) {
   const numCols = rows.length > 0 ? Math.max(...rows.map((r) => r.length)) : 0;
+  const hasRowLabels = !!rowLabels && rowLabels.length > 0;
+  const hasColLabels = !!colLabels && colLabels.length > 0;
+  const hasOps = !!rowOperations && rowOperations.length > 0;
+  const bar = typeof augmented === 'number' && augmented > 0 && augmented < numCols ? augmented : undefined;
+  // grid columns: [row label] [left bracket] [entries…] [right bracket] [operation]
+  const c0 = hasRowLabels ? 2 : 1; // left bracket column
+  const firstCol = c0 + 1;
+  const rightCol = firstCol + numCols;
+  const r0 = hasColLabels ? 2 : 1; // first data row
+  const dataRows = `${r0} / ${r0 + rows.length}`;
+  const template = [
+    hasRowLabels ? 'auto' : null, 'auto', `repeat(${numCols}, auto)`, 'auto', hasOps ? 'auto' : null,
+  ].filter(Boolean).join(' ');
+  const barStyle = (colIdx: number): React.CSSProperties =>
+    (bar !== undefined && colIdx === bar ? { borderLeft: '2px dashed #9ca3af' } : {});
 
   return (
-    <div className="inline-flex items-center gap-0">
-      {/* Row labels (to the left of the bracket) */}
-      {rowLabels && rowLabels.length > 0 && (
-        <div className="flex flex-col justify-center mr-2">
-          {/* Spacer for colLabels row */}
-          {colLabels && colLabels.length > 0 && <div className="h-6" />}
-          {rows.map((_, rowIdx) => (
-            <div
-              key={rowIdx}
-              className="flex items-center justify-end h-9 text-xs text-gray-500 font-mono pr-1"
-            >
-              {rowLabels[rowIdx] ?? ''}
-            </div>
-          ))}
+    <div className="inline-grid items-center" style={{ gridTemplateColumns: template }}>
+      {hasColLabels && Array.from({ length: numCols }).map((_, colIdx) => (
+        <div
+          key={`cl${colIdx}`}
+          className="flex items-center justify-center text-sm text-gray-500"
+          style={{ gridRow: 1, gridColumn: firstCol + colIdx, padding: '0 14px 4px' }}
+        >
+          <Cell text={colLabels![colIdx] ?? ''} />
         </div>
-      )}
+      ))}
 
-      {/* Left bracket */}
-      <LeftBracket style={brackets} />
+      {hasRowLabels && rows.map((_, rowIdx) => (
+        <div
+          key={`rl${rowIdx}`}
+          className="flex items-center justify-end text-sm text-gray-500 pr-3"
+          style={{ gridRow: r0 + rowIdx, gridColumn: 1 }}
+        >
+          <Cell text={rowLabels![rowIdx] ?? ''} />
+        </div>
+      ))}
 
-      {/* Matrix body */}
-      <div className="flex flex-col">
-        {/* Column labels row */}
-        {colLabels && colLabels.length > 0 && (
-          <div className="flex">
-            {Array.from({ length: numCols }).map((_, colIdx) => {
-              // Determine if this column is right before the augmented line
-              const isBeforeAugmented = augmented !== undefined && colIdx === augmented - 1;
-              return (
-                <div
-                  key={colIdx}
-                  className={`
-                    min-w-[3rem] h-6 flex items-center justify-center
-                    text-xs text-gray-500 font-mono
-                    ${isBeforeAugmented ? 'border-r-2 border-dashed border-gray-400' : ''}
-                  `}
-                >
-                  {colLabels[colIdx] ?? ''}
-                </div>
-              );
-            })}
-          </div>
-        )}
+      <Bracket style={brackets} side="left" gridRow={dataRows} gridColumn={c0} />
 
-        {/* Data rows */}
-        {rows.map((row, rowIdx) => (
-          <div key={rowIdx} className="flex">
-            {Array.from({ length: numCols }).map((_, colIdx) => {
-              const isBeforeAugmented = augmented !== undefined && colIdx === augmented - 1;
-              return (
-                <div
-                  key={colIdx}
-                  className={`
-                    min-w-[3rem] h-9 flex items-center justify-center
-                    px-2 font-mono text-sm
-                    ${isBeforeAugmented ? 'border-r-2 border-dashed border-gray-400' : ''}
-                  `}
-                >
-                  {row[colIdx] ?? ''}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+      {rows.map((row, rowIdx) => Array.from({ length: numCols }).map((_, colIdx) => (
+        <div
+          key={`${rowIdx}-${colIdx}`}
+          className="flex items-center justify-center text-base text-gray-900"
+          style={{
+            gridRow: r0 + rowIdx, gridColumn: firstCol + colIdx,
+            alignSelf: 'stretch', minHeight: '2.4rem', minWidth: '2.6rem', padding: '5px 14px',
+            ...barStyle(colIdx),
+          }}
+        >
+          <Cell text={row[colIdx] ?? ''} />
+        </div>
+      )))}
 
-      {/* Right bracket */}
-      <RightBracket style={brackets} />
-    </div>
-  );
-}
+      <Bracket style={brackets} side="right" gridRow={dataRows} gridColumn={rightCol} />
 
-// ─── Row operations display ──────────────────────────────────────────────────
-
-/**
- * Shows row operations to the right of the matrix. Each operation gets
- * a small arrow indicator pointing at the corresponding row.
- */
-function RowOperations({
-  operations,
-  numRows,
-  hasColLabels,
-}: {
-  operations: RowOperation[];
-  numRows: number;
-  hasColLabels: boolean;
-}) {
-  return (
-    <div className="flex flex-col ml-3">
-      {/* Spacer if column labels are present */}
-      {hasColLabels && <div className="h-6" />}
-
-      {Array.from({ length: numRows }).map((_, rowIdx) => {
-        const op = operations.find((o) => o.targetRow === rowIdx);
+      {hasOps && rows.map((_, rowIdx) => {
+        const op = rowOperations!.find((o) => o.targetRow === rowIdx);
+        if (!op) return null;
         return (
           <div
-            key={rowIdx}
-            className="h-9 flex items-center text-xs font-mono text-blue-600 whitespace-nowrap"
+            key={`op${rowIdx}`}
+            className="flex items-center text-sm text-blue-700 whitespace-nowrap pl-4"
+            style={{ gridRow: r0 + rowIdx, gridColumn: rightCol + 1 }}
           >
-            {op ? (
-              <>
-                <span className="mr-1">&#8592;</span>
-                <span>{op.description}</span>
-              </>
-            ) : null}
+            <Operation text={op.description} />
           </div>
         );
       })}
@@ -284,43 +213,38 @@ export function MatrixRenderer({
   resultMatrix,
   operatorSymbol = '→',
 }: MatrixRendererProps) {
+  const safeRows = Array.isArray(rows) ? rows.filter(Array.isArray) : [];
+  const numCols = safeRows.length > 0 ? Math.max(...safeRows.map((r) => r.length)) : 0;
+  const resultRows = resultMatrix && Array.isArray(resultMatrix.rows) ? resultMatrix.rows.filter(Array.isArray) : null;
+  const resultCols = resultRows && resultRows.length > 0 ? Math.max(...resultRows.map((r) => r.length)) : 0;
   return (
-    <div className="flex flex-col items-center gap-2 py-4">
-      {/* Title */}
+    <div className="flex flex-col items-center gap-3 py-4">
       {title && (
-        <div className="text-sm font-semibold text-gray-700 mb-1"><InlineMathText text={title} /></div>
+        <div className="text-base font-semibold text-gray-800 text-center"><InlineMathText text={title} /></div>
       )}
 
-      <div className="flex items-center gap-4 flex-wrap justify-center">
-        {/* Primary matrix */}
+      <div className="flex items-center gap-x-5 gap-y-5 flex-wrap justify-center">
         <MatrixBlock
-          rows={rows}
+          rows={safeRows}
           brackets={brackets}
           augmented={augmented}
           rowLabels={rowLabels}
           colLabels={colLabels}
+          rowOperations={rowOperations}
         />
 
-        {/* Row operations (shown to the right of the primary matrix) */}
-        {rowOperations && rowOperations.length > 0 && (
-          <RowOperations
-            operations={rowOperations}
-            numRows={rows.length}
-            hasColLabels={!!colLabels && colLabels.length > 0}
-          />
-        )}
-
-        {/* Operator symbol + result matrix */}
-        {resultMatrix && (
-          <>
-            <div className="flex items-center text-lg font-mono text-gray-600 px-2">
-              {operatorSymbol}
+        {/* The operator stays with its result when the pair wraps to a new line. */}
+        {resultRows && (
+          <div className="inline-flex items-center gap-5">
+            <div className="flex items-center text-xl text-gray-600">
+              <Operation text={operatorSymbol} />
             </div>
             <MatrixBlock
-              rows={resultMatrix.rows}
-              brackets={resultMatrix.brackets ?? brackets}
+              rows={resultRows}
+              brackets={resultMatrix!.brackets ?? brackets}
+              augmented={resultCols === numCols ? augmented : undefined}
             />
-          </>
+          </div>
         )}
       </div>
     </div>

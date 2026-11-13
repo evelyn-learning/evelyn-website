@@ -7,6 +7,7 @@ import {
   type PolarGraphFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
 import { smoothPath } from './_smoothPath';
+import { niceStep, formatTick, textWidth } from './_niceTicks';
 import { texToSvgText } from '@/lib/tutor/whiteboard/svg-label';
 
 const COLOR_AXIS = '#1f2937';
@@ -16,18 +17,28 @@ const COLOR_SHADE = '#5eead4';
 const COLOR_HL = '#dc2626';
 
 export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
-  const { curve, shadeRegion, highlightPoint, rMax, showAxes, title } = figure;
+  const { curve, shadeRegion, highlightPoint, rMax: rMaxIn, showAxes, title } = figure;
   // SVG <text> can't host KaTeX — plainify LaTeX-ish labels to Unicode
   // (\cos\theta → cosθ) instead of showing raw backslash commands.
   const exprLabel = figure.exprLabel ? texToSvgText(figure.exprLabel) : figure.exprLabel;
   const hlLabel = highlightPoint?.label ? texToSvgText(highlightPoint.label) : highlightPoint?.label;
   const N = polarGraphFeatureNames;
 
-  const W = 480;
-  const H = 480;
+  const W = 500;
+  const H = 500;
   const cx = W / 2;
-  const cy = H / 2;
-  const plotR = Math.min(W, H) / 2 - 30;
+  const cy = H / 2 + 8;
+  const plotR = Math.min(W, H) / 2 - 46;
+
+  // The rings sit at round radii (0.5, 1, 1.5 …) and the outermost ring is the first round radius
+  // that holds the whole curve. An rMax well beyond the curve is a window the caller asked for.
+  let dataMax = 0;
+  for (const p of curve) dataMax = Math.max(dataMax, Math.hypot(p.x, p.y));
+  if (highlightPoint) dataMax = Math.max(dataMax, Math.hypot(highlightPoint.x, highlightPoint.y));
+  const base = dataMax > 0 && rMaxIn <= dataMax * 1.3 ? dataMax : rMaxIn;
+  const ringStep = niceStep(base, 4);
+  const ringCount = Math.max(1, Math.ceil(base / ringStep - 1e-6));
+  const rMax = ringCount * ringStep;
 
   const xAt = (x: number) => cx + (x / rMax) * plotR;
   const yAt = (y: number) => cy - (y / rMax) * plotR;
@@ -47,8 +58,11 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
     shadePath = `M${cx.toFixed(2)},${cy.toFixed(2)} L${xAt(first.x).toFixed(2)},${yAt(first.y).toFixed(2)} ${curvePart.replace(/^M[^ ]+ /, '')} Z`;
   }
 
-  // Concentric grid circles at r = rMax/4, rMax/2, 3*rMax/4, rMax.
-  const gridRs = [0.25, 0.5, 0.75, 1.0].map((f) => f * rMax);
+  const gridRs = Array.from({ length: ringCount }, (_, i) => (i + 1) * ringStep);
+  const ANGLE_LABELS: Record<number, string> = {
+    0: '0', 30: 'π/6', 60: 'π/3', 90: 'π/2', 120: '2π/3', 150: '5π/6',
+    180: 'π', 210: '7π/6', 240: '4π/3', 270: '3π/2', 300: '5π/3', 330: '11π/6',
+  };
 
   // Radial lines every 30°.
   const radialAngles = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
@@ -113,8 +127,8 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
           // :197-208 idiom): a start-anchored label on a point near the
           // curve's right edge runs past the viewBox — flip it to the left
           // side of the point, then clamp the extent into [3, W-3].
-          const hlW = hlText.length * 11 * 0.55;
-          const hlFlip = hpx + 8 + hlW > W - 3;
+          const hlW = textWidth(hlText, 11);
+          const hlFlip = hpx + 8 + hlW > W - 3 || hpx > cx;
           let hlX = hlFlip ? hpx - 8 : hpx + 8;
           const hlLeft = hlFlip ? hlX - hlW : hlX;
           hlX += Math.max(3 - hlLeft, 0) - Math.max(hlLeft + hlW - (W - 3), 0);
@@ -128,7 +142,7 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
               data-feature-h={32 / H}
             >
               <circle cx={hpx} cy={hpy} r={5} fill={COLOR_HL} stroke="#fff" strokeWidth={2} />
-              <text x={hlX} y={hpy - 8} fontSize={11} fill={COLOR_HL} fontWeight={600} textAnchor={hlFlip ? 'end' : 'start'}>
+              <text x={hlX} y={hpy - 10} fontSize={11} fill={COLOR_HL} fontWeight={600} textAnchor={hlFlip ? 'end' : 'start'} stroke="#fff" strokeWidth={3} paintOrder="stroke">
                 {hlText}
               </text>
             </g>
@@ -137,25 +151,29 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
 
         {/* polar tick labels along positive x-axis */}
         {showAxes && gridRs.map((r, i) => (
-          <text key={`tlr-${i}`} x={cx + (r / rMax) * plotR} y={cy + 12} fontSize={10} textAnchor="middle" fill="#6b7280">
-            {Number(r.toFixed(2))}
+          <text key={`tlr-${i}`} x={cx + (r / rMax) * plotR - 3} y={cy + 13} fontSize={10.5} textAnchor="end" fill="#4b5563" stroke="#fff" strokeWidth={3} paintOrder="stroke">
+            {formatTick(r, ringStep)}
           </text>
         ))}
 
         {/* angle labels */}
         {showAxes && (
           <>
-            <text x={cx + plotR + 14} y={cy + 4} fontSize={11} fill="#6b7280">0</text>
-            <text x={cx + 4} y={cy - plotR - 6} fontSize={11} fill="#6b7280">π/2</text>
-            <text x={cx - plotR - 14} y={cy + 4} fontSize={11} fill="#6b7280" textAnchor="end">π</text>
-            <text x={cx + 4} y={cy + plotR + 14} fontSize={11} fill="#6b7280">3π/2</text>
+            {radialAngles.map((deg) => {
+              const rad = (deg * Math.PI) / 180;
+              const lx = cx + Math.cos(rad) * (plotR + 16);
+              const ly = cy - Math.sin(rad) * (plotR + 14) + 4;
+              return (
+                <text key={`al-${deg}`} x={lx} y={ly} fontSize={11} fill="#6b7280" textAnchor="middle">{ANGLE_LABELS[deg]}</text>
+              );
+            })}
           </>
         )}
 
         {/* expression label */}
         {exprLabel && (
           <text
-            x={20} y={26}
+            x={10} y={18}
             fontSize={13} fontWeight={600} fill={COLOR_CURVE}
             data-feature={N.exprLabel}
             data-feature-label={exprLabel}

@@ -52,6 +52,12 @@ interface TreeRendererProps {
 const NODE_W = 80;          // minimum node width — grows to the wrapped label
 const NODE_H = 36;          // minimum node height — grows with wrapped label lines
 const LEVEL_GAP = 90;       // vertical (or horizontal) gap between levels
+/** Gap in force for the tree being laid out: a tree whose branches carry no text (a factor tree) needs far less
+ *  room between levels, and a shorter tree is drawn larger, so its numbers stay readable. Set per layout pass. */
+let levelGap = LEVEL_GAP;
+function hasBranchText(node: TreeNode | undefined): boolean {
+  return !!node?.children?.some((c) => !!c && (!!(c.label && c.label.trim()) || !!(c.probability && String(c.probability).trim()) || hasBranchText(c.node)));
+}
 const SIBLING_GAP = 24;     // minimum horizontal gap between siblings
 const PADDING = 40;         // SVG padding around the tree
 const FONT_SIZE = 13;
@@ -193,7 +199,7 @@ function positionNode(
   const safeNode: TreeNode = node ?? { label: '' };
   const isLeaf = !safeNode.children || safeNode.children.length === 0;
   const x = xStart + subtreeWidth / 2;
-  const y = PADDING + depth * (NODE_H + LEVEL_GAP);
+  const y = PADDING + depth * (NODE_H + levelGap);
   const { w: boxW, h: boxH, labelLines } = nodeBoxSize(safeNode);
 
   // Compute cumulative leaf probability
@@ -353,8 +359,42 @@ function gcd(a: number, b: number): number {
   return a;
 }
 
-/** Multiply an array of fraction strings and return a simplified fraction string */
+/** How a branch probability was written: as a fraction/whole number, a decimal or a percentage. */
+function probabilityForm(s: string): 'fraction' | 'decimal' | 'percent' {
+  const t = s.trim();
+  if (/%\s*$/.test(t)) return 'percent';
+  const last = t.match(/(\d+(?:\.\d+)?)(?:\s*\/\s*(\d+(?:\.\d+)?))?\s*$/);
+  if (last && (last[1].includes('.') || (last[2] ?? '').includes('.'))) return 'decimal';
+  return 'fraction';
+}
+
+/** A decimal for a label: 4 significant figures at most, no float noise, no trailing zeros. */
+function cleanDecimal(v: number): string {
+  if (!Number.isFinite(v)) return '';
+  if (v === 0) return '0';
+  return String(Number(v.toPrecision(4)));
+}
+
+/**
+ * Multiply the probabilities along a path and write the product the way the
+ * branches were written. Whole-number fractions stay an exact simplified
+ * fraction. Decimals (0.6 × 0.5) give a clean decimal: run through the
+ * integer-fraction path they printed the float's binary expansion
+ * ("P = 5404319552844595/18014398509481984"). Percentages give a percentage.
+ * Returns '' when a branch has no readable probability, so no label is drawn.
+ */
 function multiplyFractions(fractions: string[]): string {
+  const forms = fractions.map(probabilityForm);
+  if (forms.some((f) => f !== 'fraction')) {
+    let p = 1;
+    fractions.forEach((f, i) => {
+      const t = forms[i] === 'percent' ? f.replace(/%\s*$/, '') : f;
+      const [n, d] = parseFraction(t);
+      p *= (n / d) / (forms[i] === 'percent' ? 100 : 1);
+    });
+    if (!Number.isFinite(p)) return '';
+    return forms.every((f) => f === 'percent') ? `${cleanDecimal(p * 100)}%` : cleanDecimal(p);
+  }
   let num = 1;
   let den = 1;
   for (const f of fractions) {
@@ -362,7 +402,8 @@ function multiplyFractions(fractions: string[]): string {
     num *= n;
     den *= d;
   }
-  const g = gcd(num, den);
+  if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) return '';
+  const g = gcd(num, den) || 1;
   num /= g;
   den /= g;
   if (den === 1) return `${num}`;
@@ -700,6 +741,7 @@ export function TreeRenderer({
     // common path `root` is always a real tree.
     const safeRoot: TreeNode = normalizeTreeNode(root);
 
+    levelGap = hasBranchText(safeRoot) ? LEVEL_GAP : 46;
     // 1. Measure the full subtree width
     const totalWidth = measureSubtree(safeRoot);
 

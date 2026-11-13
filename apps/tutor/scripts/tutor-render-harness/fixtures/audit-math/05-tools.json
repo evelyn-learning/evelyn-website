@@ -1,0 +1,1219 @@
+[
+ {
+  "tool": "show_stats",
+  "label": "stats-boxplot-typ",
+  "args": {
+   "title": "Quiz scores",
+   "type": "boxplot",
+   "boxplot": {
+    "datasets": [
+     {
+      "label": "Class A",
+      "min": 52,
+      "q1": 64,
+      "median": 71,
+      "q3": 80,
+      "max": 95
+     }
+    ],
+    "showValues": true
+   },
+   "xLabel": "Score"
+  }
+ },
+ {
+  "tool": "show_stats",
+  "label": "stats-boxplot-stress",
+  "args": {
+   "title": "Commute times across four neighbourhoods, with outliers",
+   "type": "boxplot",
+   "boxplot": {
+    "datasets": [
+     {
+      "label": "Downtown residents",
+      "min": 5,
+      "q1": 9,
+      "median": 10,
+      "q3": 11,
+      "max": 14,
+      "outliers": [
+       38,
+       41,
+       95
+      ]
+     },
+     {
+      "label": "Suburbs",
+      "min": 20,
+      "q1": 30,
+      "median": 31,
+      "q3": 32,
+      "max": 60,
+      "outliers": [
+       2
+      ]
+     },
+     {
+      "label": "Rural and exurban commuters",
+      "min": 10,
+      "q1": 45,
+      "median": 70,
+      "q3": 88,
+      "max": 99.5
+     },
+     {
+      "label": "B",
+      "min": 40,
+      "q1": 40,
+      "median": 40.5,
+      "q3": 41,
+      "max": 41
+     }
+    ],
+    "showValues": true
+   },
+   "xLabel": "Minutes spent commuting each way"
+  }
+ },
+ {
+  "tool": "show_stats",
+  "label": "stats-dist-typ",
+  "args": {
+   "title": "P(Z < 1.25)",
+   "type": "distribution",
+   "distribution": {
+    "family": "normal",
+    "params": {
+     "mean": 0,
+     "sd": 1
+    },
+    "shade": {
+     "type": "less",
+     "a": 1.25
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_stats",
+  "label": "stats-dist-t-outside",
+  "args": {
+   "title": "Two-sided t test with 4 degrees of freedom: the rejection region",
+   "type": "distribution",
+   "distribution": {
+    "family": "t",
+    "params": {
+     "df": 4
+    },
+    "shade": {
+     "type": "outside",
+     "a": -2.776,
+     "b": 2.776
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_stats",
+  "label": "stats-dist-chi",
+  "args": {
+   "title": "χ² with 3 df",
+   "type": "distribution",
+   "distribution": {
+    "family": "chi-square",
+    "params": {
+     "df": 3
+    },
+    "shade": {
+     "type": "greater",
+     "a": 7.81
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_stats",
+  "label": "stats-dist-normal-between",
+  "args": {
+   "title": "Heights",
+   "type": "distribution",
+   "distribution": {
+    "family": "normal",
+    "params": {
+     "mean": 172.5,
+     "sd": 7.25
+    },
+    "shade": {
+     "type": "between",
+     "a": 171,
+     "b": 173
+    }
+   },
+   "xLabel": "Height (cm)"
+  }
+ },
+ {
+  "tool": "show_matrix",
+  "label": "matrix-typ",
+  "args": {
+   "title": "Augmented matrix",
+   "rows": [
+    [
+     "2",
+     "1",
+     "5"
+    ],
+    [
+     "1",
+     "-3",
+     "-1"
+    ]
+   ],
+   "augmented": 2
+  }
+ },
+ {
+  "tool": "show_matrix",
+  "label": "matrix-stress",
+  "args": {
+   "title": "Row reduction of a 4 × 5 augmented system with fractions",
+   "rows": [
+    [
+     "1",
+     "-\\frac{3}{2}",
+     "0",
+     "12.125",
+     "100"
+    ],
+    [
+     "0",
+     "1",
+     "-1000",
+     "\\frac{17}{4}",
+     "-7"
+    ],
+    [
+     "0",
+     "0",
+     "1",
+     "x+y",
+     "0"
+    ],
+    [
+     "-25",
+     "0",
+     "0",
+     "1",
+     "\\frac{1}{3}"
+    ]
+   ],
+   "augmented": 4,
+   "rowLabels": [
+    "R_1",
+    "R_2",
+    "R_3",
+    "R_4"
+   ],
+   "colLabels": [
+    "x",
+    "y",
+    "z",
+    "w",
+    "b"
+   ],
+   "rowOperations": [
+    {
+     "description": "R_4 + 25R_1 \\to R_4",
+     "targetRow": 3
+    },
+    {
+     "description": "R_1 + \\frac{3}{2}R_2 \\to R_1",
+     "targetRow": 0
+    }
+   ],
+   "resultMatrix": {
+    "rows": [
+     [
+      "1",
+      "0",
+      "-1500",
+      "18.5",
+      "89.5"
+     ],
+     [
+      "0",
+      "1",
+      "-1000",
+      "\\frac{17}{4}",
+      "-7"
+     ],
+     [
+      "0",
+      "0",
+      "1",
+      "x+y",
+      "0"
+     ],
+     [
+      "0",
+      "-37.5",
+      "0",
+      "304.125",
+      "2500\\frac{1}{3}"
+     ]
+    ]
+   },
+   "operatorSymbol": "\\to"
+  }
+ },
+ {
+  "tool": "show_matrix",
+  "label": "matrix-det",
+  "args": {
+   "rows": [
+    [
+     "a",
+     "b"
+    ],
+    [
+     "c",
+     "d"
+    ]
+   ],
+   "brackets": "pipes",
+   "title": "Determinant"
+  }
+ },
+ {
+  "tool": "show_fraction_bar",
+  "label": "fraction-bar-typ",
+  "args": {
+   "title": "Compare 2/3 and 3/4",
+   "items": [
+    {
+     "numerator": 2,
+     "denominator": 3
+    },
+    {
+     "numerator": 3,
+     "denominator": 4
+    }
+   ],
+   "showComparison": true
+  }
+ },
+ {
+  "tool": "show_fraction_bar",
+  "label": "fraction-bar-stress",
+  "args": {
+   "title": "Five fractions in three different styles side by side",
+   "items": [
+    {
+     "numerator": 17,
+     "denominator": 24,
+     "label": "seventeen twenty-fourths"
+    },
+    {
+     "numerator": 5,
+     "denominator": 4,
+     "label": "improper",
+     "style": "bar"
+    },
+    {
+     "numerator": 7,
+     "denominator": 12,
+     "style": "circle",
+     "label": "circle"
+    },
+    {
+     "numerator": 33,
+     "denominator": 100,
+     "style": "grid",
+     "label": "hundred grid"
+    },
+    {
+     "numerator": 0,
+     "denominator": 9
+    }
+   ],
+   "layout": "horizontal",
+   "showComparison": true
+  }
+ },
+ {
+  "tool": "show_fraction_bar",
+  "label": "fraction-bar-vertical-mix",
+  "args": {
+   "items": [
+    {
+     "numerator": 3,
+     "denominator": 8,
+     "style": "circle"
+    },
+    {
+     "numerator": 5,
+     "denominator": 8,
+     "style": "grid"
+    },
+    {
+     "numerator": 40,
+     "denominator": 50,
+     "style": "bar"
+    }
+   ],
+   "layout": "vertical"
+  }
+ },
+ {
+  "tool": "show_geometry",
+  "label": "geometry-typ",
+  "args": {
+   "title": "Right triangle ABC",
+   "points": [
+    {
+     "id": "A",
+     "x": 0,
+     "y": 0,
+     "label": "A"
+    },
+    {
+     "id": "B",
+     "x": 4,
+     "y": 0,
+     "label": "B"
+    },
+    {
+     "id": "C",
+     "x": 0,
+     "y": 3,
+     "label": "C"
+    }
+   ],
+   "polygons": [
+    {
+     "vertices": [
+      "A",
+      "B",
+      "C"
+     ]
+    }
+   ],
+   "segments": [
+    {
+     "from": "A",
+     "to": "B",
+     "showLength": true
+    },
+    {
+     "from": "A",
+     "to": "C",
+     "showLength": true
+    },
+    {
+     "from": "B",
+     "to": "C",
+     "showLength": true,
+     "label": "hypotenuse"
+    }
+   ],
+   "angles": [
+    {
+     "vertex": "A",
+     "from": "B",
+     "to": "C",
+     "style": "square"
+    },
+    {
+     "vertex": "B",
+     "from": "C",
+     "to": "A"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_geometry",
+  "label": "geometry-stress",
+  "args": {
+   "title": "Circle with an inscribed quadrilateral, a tangent and several close labels",
+   "points": [
+    {
+     "id": "O",
+     "x": 0,
+     "y": 0,
+     "label": "O",
+     "showCoords": true
+    },
+    {
+     "id": "A",
+     "x": 5,
+     "y": 0,
+     "label": "A",
+     "showCoords": true
+    },
+    {
+     "id": "B",
+     "x": 3,
+     "y": 4,
+     "label": "B",
+     "showCoords": true
+    },
+    {
+     "id": "C",
+     "x": -4,
+     "y": 3,
+     "label": "C",
+     "showCoords": true
+    },
+    {
+     "id": "D",
+     "x": -3,
+     "y": -4,
+     "label": "D"
+    },
+    {
+     "id": "E",
+     "x": 3.2,
+     "y": 3.8,
+     "label": "E"
+    },
+    {
+     "id": "T",
+     "x": 5,
+     "y": 6,
+     "label": "T"
+    },
+    {
+     "id": "M",
+     "x": 4,
+     "y": 2,
+     "label": "midpoint M"
+    }
+   ],
+   "circles": [
+    {
+     "center": "O",
+     "radius": 5
+    }
+   ],
+   "polygons": [
+    {
+     "vertices": [
+      "A",
+      "B",
+      "C",
+      "D"
+     ],
+     "label": "cyclic quadrilateral ABCD"
+    }
+   ],
+   "segments": [
+    {
+     "from": "O",
+     "to": "A",
+     "label": "radius",
+     "showLength": true,
+     "style": "dashed"
+    },
+    {
+     "from": "O",
+     "to": "B",
+     "showLength": true,
+     "style": "dashed"
+    },
+    {
+     "from": "A",
+     "to": "T",
+     "label": "tangent at A",
+     "showLength": true
+    },
+    {
+     "from": "A",
+     "to": "B",
+     "showLength": true,
+     "tickMarks": 2
+    },
+    {
+     "from": "B",
+     "to": "C",
+     "showLength": true
+    },
+    {
+     "from": "A",
+     "to": "C",
+     "label": "diagonal AC",
+     "style": "dotted"
+    }
+   ],
+   "angles": [
+    {
+     "vertex": "O",
+     "from": "A",
+     "to": "B"
+    },
+    {
+     "vertex": "A",
+     "from": "T",
+     "to": "O",
+     "style": "square"
+    },
+    {
+     "vertex": "B",
+     "from": "A",
+     "to": "C"
+    },
+    {
+     "vertex": "C",
+     "from": "B",
+     "to": "D"
+    },
+    {
+     "vertex": "A",
+     "from": "B",
+     "to": "C"
+    }
+   ],
+   "showGrid": true,
+   "showAxes": true
+  }
+ },
+ {
+  "tool": "show_geometry",
+  "label": "geometry-thin",
+  "args": {
+   "title": "A very thin triangle",
+   "points": [
+    {
+     "id": "P",
+     "x": 0,
+     "y": 0,
+     "label": "P"
+    },
+    {
+     "id": "Q",
+     "x": 40,
+     "y": 1,
+     "label": "Q"
+    },
+    {
+     "id": "R",
+     "x": 20,
+     "y": 2.5,
+     "label": "R"
+    }
+   ],
+   "polygons": [
+    {
+     "vertices": [
+      "P",
+      "Q",
+      "R"
+     ]
+    }
+   ],
+   "segments": [
+    {
+     "from": "P",
+     "to": "Q",
+     "showLength": true
+    },
+    {
+     "from": "Q",
+     "to": "R",
+     "showLength": true
+    },
+    {
+     "from": "P",
+     "to": "R",
+     "showLength": true
+    }
+   ],
+   "angles": [
+    {
+     "vertex": "P",
+     "from": "Q",
+     "to": "R"
+    },
+    {
+     "vertex": "Q",
+     "from": "R",
+     "to": "P"
+    },
+    {
+     "vertex": "R",
+     "from": "P",
+     "to": "Q"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_venn_diagram",
+  "label": "venn-typ",
+  "args": {
+   "title": "Sports",
+   "sets": [
+    {
+     "label": "Soccer"
+    },
+    {
+     "label": "Tennis"
+    }
+   ],
+   "regions": {
+    "onlyA": {
+     "value": "12"
+    },
+    "onlyB": {
+     "value": "7"
+    },
+    "intersection": {
+     "value": "5",
+     "highlight": true
+    },
+    "neither": {
+     "value": "6"
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_venn_diagram",
+  "label": "venn-stress",
+  "args": {
+   "title": "Factors of 60, multiples of 3 and even numbers among 1 to 30",
+   "sets": [
+    {
+     "label": "Factors of sixty"
+    },
+    {
+     "label": "Multiples of three"
+    },
+    {
+     "label": "Even numbers up to thirty"
+    }
+   ],
+   "regions": {
+    "onlyA": {
+     "items": [
+      "1",
+      "5"
+     ]
+    },
+    "onlyB": {
+     "items": [
+      "9",
+      "21",
+      "27"
+     ]
+    },
+    "onlyC": {
+     "items": [
+      "8",
+      "14",
+      "16",
+      "22",
+      "26",
+      "28"
+     ]
+    },
+    "AB": {
+     "items": [
+      "3",
+      "15"
+     ]
+    },
+    "AC": {
+     "items": [
+      "2",
+      "4",
+      "10",
+      "20"
+     ],
+     "highlight": true
+    },
+    "BC": {
+     "items": [
+      "18",
+      "24"
+     ]
+    },
+    "ABC": {
+     "items": [
+      "6",
+      "12",
+      "30"
+     ],
+     "highlight": true
+    },
+    "neither": {
+     "items": [
+      "7",
+      "11",
+      "13",
+      "17",
+      "19",
+      "23",
+      "25",
+      "29"
+     ]
+    }
+   },
+   "universalLabel": "Whole numbers from 1 to 30"
+  }
+ },
+ {
+  "tool": "show_venn_diagram",
+  "label": "venn-3-values",
+  "args": {
+   "sets": [
+    {
+     "label": "A"
+    },
+    {
+     "label": "B"
+    },
+    {
+     "label": "C"
+    }
+   ],
+   "regions": {
+    "onlyA": {
+     "value": "0.125"
+    },
+    "onlyB": {
+     "value": "0.2"
+    },
+    "onlyC": {
+     "value": "0.05"
+    },
+    "AB": {
+     "value": "0.1"
+    },
+    "AC": {
+     "value": "0.075"
+    },
+    "BC": {
+     "value": "0.15"
+    },
+    "ABC": {
+     "value": "0.25"
+    },
+    "neither": {
+     "value": "0.05"
+    }
+   },
+   "universalLabel": "S"
+  }
+ },
+ {
+  "tool": "show_tree",
+  "label": "tree-typ",
+  "args": {
+   "title": "Two coin flips",
+   "type": "probability",
+   "root": {
+    "label": "Start",
+    "children": [
+     {
+      "label": "H",
+      "probability": 0.5,
+      "node": {
+       "label": "H",
+       "children": [
+        {
+         "label": "H",
+         "probability": 0.5,
+         "node": {
+          "label": "HH"
+         }
+        },
+        {
+         "label": "T",
+         "probability": 0.5,
+         "node": {
+          "label": "HT"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "label": "T",
+      "probability": 0.5,
+      "node": {
+       "label": "T",
+       "children": [
+        {
+         "label": "H",
+         "probability": 0.5,
+         "node": {
+          "label": "TH"
+         }
+        },
+        {
+         "label": "T",
+         "probability": 0.5,
+         "node": {
+          "label": "TT"
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "showLeafProbabilities": true,
+   "direction": "left-right"
+  }
+ },
+ {
+  "tool": "show_tree",
+  "label": "tree-stress",
+  "args": {
+   "title": "Medical test: disease status, then test result, then a retest",
+   "type": "probability",
+   "root": {
+    "label": "Patient",
+    "children": [
+     {
+      "label": "has the disease",
+      "probability": 0.012,
+      "node": {
+       "label": "Disease",
+       "children": [
+        {
+         "label": "tests positive",
+         "probability": 0.985,
+         "node": {
+          "label": "True positive",
+          "children": [
+           {
+            "label": "retest +",
+            "probability": 0.985,
+            "node": {
+             "label": "++"
+            }
+           },
+           {
+            "label": "retest −",
+            "probability": 0.015,
+            "node": {
+             "label": "+−"
+            }
+           }
+          ]
+         }
+        },
+        {
+         "label": "tests negative",
+         "probability": 0.015,
+         "node": {
+          "label": "False negative"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "label": "does not have the disease",
+      "probability": 0.988,
+      "node": {
+       "label": "No disease",
+       "children": [
+        {
+         "label": "tests positive",
+         "probability": 0.04,
+         "node": {
+          "label": "False positive",
+          "children": [
+           {
+            "label": "retest +",
+            "probability": 0.04,
+            "node": {
+             "label": "++"
+            }
+           },
+           {
+            "label": "retest −",
+            "probability": 0.96,
+            "node": {
+             "label": "+−"
+            }
+           }
+          ]
+         }
+        },
+        {
+         "label": "tests negative",
+         "probability": 0.96,
+         "node": {
+          "label": "True negative"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "label": "unknown",
+      "probability": 0,
+      "node": {
+       "label": "Not tested"
+      }
+     }
+    ]
+   },
+   "showLeafProbabilities": true,
+   "direction": "left-right"
+  }
+ },
+ {
+  "tool": "show_tree",
+  "label": "tree-topdown",
+  "args": {
+   "title": "Drawing two marbles without replacement",
+   "type": "probability",
+   "root": {
+    "label": "Bag",
+    "children": [
+     {
+      "label": "Red",
+      "probability": 0.6,
+      "node": {
+       "label": "R",
+       "children": [
+        {
+         "label": "Red",
+         "probability": 0.5,
+         "node": {
+          "label": "RR"
+         }
+        },
+        {
+         "label": "Blue",
+         "probability": 0.5,
+         "node": {
+          "label": "RB"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "label": "Blue",
+      "probability": 0.4,
+      "node": {
+       "label": "B",
+       "children": [
+        {
+         "label": "Red",
+         "probability": 0.75,
+         "node": {
+          "label": "BR"
+         }
+        },
+        {
+         "label": "Blue",
+         "probability": 0.25,
+         "node": {
+          "label": "BB"
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "showLeafProbabilities": true,
+   "direction": "top-down"
+  }
+ },
+ {
+  "tool": "show_tree",
+  "label": "tree-factor",
+  "args": {
+   "title": "Prime factors of 360",
+   "type": "factor",
+   "root": {
+    "label": "360",
+    "children": [
+     {
+      "label": "",
+      "node": {
+       "label": "2"
+      }
+     },
+     {
+      "label": "",
+      "node": {
+       "label": "180",
+       "children": [
+        {
+         "label": "",
+         "node": {
+          "label": "2"
+         }
+        },
+        {
+         "label": "",
+         "node": {
+          "label": "90",
+          "children": [
+           {
+            "label": "",
+            "node": {
+             "label": "2"
+            }
+           },
+           {
+            "label": "",
+            "node": {
+             "label": "45",
+             "children": [
+              {
+               "label": "",
+               "node": {
+                "label": "3"
+               }
+              },
+              {
+               "label": "",
+               "node": {
+                "label": "15",
+                "children": [
+                 {
+                  "label": "",
+                  "node": {
+                   "label": "3"
+                  }
+                 },
+                 {
+                  "label": "",
+                  "node": {
+                   "label": "5"
+                  }
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_number_line",
+  "label": "numline-typ",
+  "args": {
+   "title": "x > −2",
+   "min": -6,
+   "max": 6,
+   "step": 1,
+   "points": [
+    {
+     "value": -2,
+     "style": "open"
+    }
+   ],
+   "intervals": [
+    {
+     "from": -2,
+     "to": 6,
+     "fromInclusive": false,
+     "toInclusive": true
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_number_line",
+  "label": "numline-stress",
+  "args": {
+   "title": "Adding and subtracting integers with hops, and two compound intervals",
+   "min": -20,
+   "max": 20,
+   "step": 1,
+   "points": [
+    {
+     "value": -7,
+     "label": "start"
+    },
+    {
+     "value": -6.5,
+     "label": "P"
+    },
+    {
+     "value": 12,
+     "label": "finish at twelve"
+    },
+    {
+     "value": 20,
+     "label": "max"
+    }
+   ],
+   "intervals": [
+    {
+     "from": -20,
+     "to": -12,
+     "fromInclusive": true,
+     "toInclusive": false,
+     "label": "x < −12"
+    },
+    {
+     "from": 15,
+     "to": 20,
+     "fromInclusive": true,
+     "toInclusive": true,
+     "label": "x ≥ 15"
+    }
+   ],
+   "segments": [
+    {
+     "from": -7,
+     "to": 5,
+     "label": "+12",
+     "arc": true
+    },
+    {
+     "from": 5,
+     "to": 12,
+     "label": "+7",
+     "arc": true
+    },
+    {
+     "from": 12,
+     "to": 11,
+     "label": "−1",
+     "arc": true
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_number_line",
+  "label": "numline-decimals",
+  "args": {
+   "min": 0.2,
+   "max": 0.3,
+   "step": 0.01,
+   "points": [
+    {
+     "value": 0.25,
+     "label": "0.25"
+    },
+    {
+     "value": 0.275,
+     "label": "0.275"
+    }
+   ]
+  }
+ }
+]

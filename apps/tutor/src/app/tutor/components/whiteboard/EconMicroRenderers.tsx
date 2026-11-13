@@ -20,20 +20,40 @@ const HL_STROKE = '#d97706';
 
 // ── game_theory_matrix ──────────────────────────────────────────────────────
 
+/** Up to two lines of about `max` characters each. */
+function twoLines(s: string, max: number): string[] {
+  if (s.length <= max) return [s];
+  const words = s.split(/\s+/); const lines: string[] = []; let cur = '';
+  for (const w of words) { if (cur && (cur + ' ' + w).length > max) { lines.push(cur); cur = w; } else cur = cur ? `${cur} ${w}` : w; }
+  if (cur) lines.push(cur);
+  if (lines.length > 2) { const rest = lines.slice(1).join(' '); lines.length = 1; lines.push(rest.length > max + 4 ? `${rest.slice(0, max + 2).trimEnd()}…` : rest); }
+  return lines;
+}
+
 export function GameTheoryMatrixRenderer({ figure }: { figure: GameTheoryFigure }) {
   const N = gameTheoryFeatureNames;
-  const W = 580, H = 500;
-  const gx = 190, gy = 150;           // grid origin (top-left of cell area)
-  const cw = 170, ch = 150;           // cell size
+  const cw = 176, ch = 132;           // cell size
+  const rowLines = figure.rowStrategies.map((s) => twoLines(s, 17));
+  const colLines = figure.colStrategies.map((s) => twoLines(s, 22));
+  const rowDepth = Math.max(...rowLines.map((l) => l.length));
+  const colDepth = Math.max(...colLines.map((l) => l.length));
+  // The players' names sit directly outside their strategies, so the eye reads name → strategy → payoff.
+  const gx = 34 + rowDepth * 16 + 10;   // grid origin (top-left of cell area)
+  const gy = 30 + colDepth * 16 + 10;
+  const W = gx + 2 * cw + 16, H = gy + 2 * ch + 12;
 
   const heading = figure.title || `${figure.rowPlayer} vs ${figure.colPlayer}`;
+  const fmtPay = (n: number) => (Math.abs(n) >= 10000 ? n.toLocaleString('en-US') : String(n)).replace('-', '−');
+  const payFs = (t: string) => (t.length <= 4 ? 21 : t.length <= 7 ? 17 : t.length <= 10 ? 14.5 : 12);
+  const nameFs = (s: string, room: number) => Math.max(11, Math.min(14, room / (s.length * 0.6)));
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">{heading}</div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full max-w-[580px]"
+        className="w-full"
+        style={{ maxWidth: W * 1.12 }}
         data-feature={N.matrix}
         data-feature-label={heading}
         data-feature-cx={0.5}
@@ -41,44 +61,51 @@ export function GameTheoryMatrixRenderer({ figure }: { figure: GameTheoryFigure 
         data-feature-w={1}
         data-feature-h={1}
       >
-        {/* column player header */}
-        <text x={gx + cw} y={44} textAnchor="middle" fontSize={14} fontWeight={700} fill={COL_COLOR}>{figure.colPlayer}</text>
-        {figure.colStrategies.map((s, c) => (
-          <text key={c} x={gx + c * cw + cw / 2} y={gy - 14} textAnchor="middle" fontSize={13} fontWeight={600} fill={INK}>{s}</text>
-        ))}
-        {/* row player header (rotated) */}
-        <text x={44} y={gy + ch} textAnchor="middle" fontSize={14} fontWeight={700} fill={ROW_COLOR} transform={`rotate(-90 44 ${gy + ch})`}>{figure.rowPlayer}</text>
-        {figure.rowStrategies.map((s, r) => (
-          <text key={r} x={gx - 14} y={gy + r * ch + ch / 2} textAnchor="middle" fontSize={13} fontWeight={600} fill={INK} transform={`rotate(-90 ${gx - 14} ${gy + r * ch + ch / 2})`}>{s}</text>
-        ))}
+        {/* column player and strategies */}
+        <text x={gx + cw} y={18} textAnchor="middle" fontSize={nameFs(figure.colPlayer, 2 * cw)} fontWeight={700} fill={COL_COLOR}>{figure.colPlayer}</text>
+        {colLines.map((lines, c) => lines.map((ln, i) => (
+          <text key={`${c}-${i}`} x={gx + c * cw + cw / 2} y={gy - 9 - (lines.length - 1 - i) * 16} textAnchor="middle" fontSize={13} fontWeight={600} fill={INK}>{ln}</text>
+        )))}
+        {/* row player and strategies (rotated) */}
+        <text x={18} y={gy + ch} textAnchor="middle" fontSize={nameFs(figure.rowPlayer, 2 * ch)} fontWeight={700} fill={ROW_COLOR} transform={`rotate(-90 18 ${gy + ch})`}>{figure.rowPlayer}</text>
+        {rowLines.map((lines, r) => lines.map((ln, i) => {
+          const x = gx - 9 - (lines.length - 1 - i) * 16; const y = gy + r * ch + ch / 2;
+          return <text key={`${r}-${i}`} x={x} y={y} textAnchor="middle" fontSize={13} fontWeight={600} fill={INK} transform={`rotate(-90 ${x} ${y})`}>{ln}</text>;
+        }))}
 
         {/* cells */}
         {[0, 1].map((r) => [0, 1].map((c) => {
           const x = gx + c * cw, y = gy + r * ch;
           const [rp, cp] = figure.payoffs[r][c];
+          const rt = fmtPay(rp); const ct = fmtPay(cp);
           const isHi = figure.highlightCell && figure.highlightCell[0] === r && figure.highlightCell[1] === c;
           return (
             <g key={`${r}-${c}`} data-feature={N.cell(r, c)} data-feature-label={`(${rp}, ${cp})`}>
-              <rect x={x} y={y} width={cw} height={ch} fill={isHi ? HL : '#ffffff'} stroke={isHi ? HL_STROKE : INK} strokeWidth={isHi ? 2.5 : 1.5} />
-              {/* anti-diagonal split (top-left → bottom-right) */}
-              <line x1={x} y1={y} x2={x + cw} y2={y + ch} stroke="#cbd5e1" strokeWidth={1} />
-              {/* row player payoff — lower-left triangle */}
-              <text x={x + 30} y={y + ch - 24} fontSize={20} fontWeight={700} fill={ROW_COLOR}>{rp}</text>
-              {/* col player payoff — upper-right triangle */}
-              <text x={x + cw - 30} y={y + 34} textAnchor="end" fontSize={20} fontWeight={700} fill={COL_COLOR}>{cp}</text>
-              {isHi && <text x={x + cw / 2} y={y + ch / 2 + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill={HL_STROKE}>Nash eq.</text>}
+              <rect x={x} y={y} width={cw} height={ch} fill={isHi ? '#fef3c7' : '#ffffff'} stroke={INK} strokeWidth={1.5} />
+              {/* split from top-left to bottom-right */}
+              <line x1={x} y1={y} x2={x + cw} y2={y + ch} stroke={isHi ? '#e7c873' : '#cbd5e1'} strokeWidth={1} />
+              {/* row player's payoff: lower-left triangle */}
+              <text x={x + 18} y={y + ch - 20} fontSize={payFs(rt)} fontWeight={700} fill={ROW_COLOR}>{rt}</text>
+              {/* column player's payoff: upper-right triangle */}
+              <text x={x + cw - 18} y={y + 32} textAnchor="end" fontSize={payFs(ct)} fontWeight={700} fill={COL_COLOR}>{ct}</text>
             </g>
           );
         }))}
-
-        {/* legend */}
-        <g transform={`translate(${gx - 30}, ${gy + 2 * ch + 30})`}>
-          <rect x={0} y={-10} width={11} height={11} fill={ROW_COLOR} />
-          <text x={16} y={0} fontSize={10.5} fill={INK}>{figure.rowPlayer}: bottom-left</text>
-          <rect x={210} y={-10} width={11} height={11} fill={COL_COLOR} />
-          <text x={226} y={0} fontSize={10.5} fill={INK}>{figure.colPlayer}: top-right</text>
-        </g>
+        {/* the equilibrium cell is outlined last, over its neighbours' borders */}
+        {figure.highlightCell && (() => {
+          const [r, c] = figure.highlightCell; const x = gx + c * cw, y = gy + r * ch;
+          return (
+            <g>
+              <rect x={x} y={y} width={cw} height={ch} fill="none" stroke={HL_STROKE} strokeWidth={3} />
+              <text x={x + cw / 2} y={y + ch / 2 + 4} textAnchor="middle" fontSize={11.5} fontWeight={700} fill="#92400e" style={{ paintOrder: 'stroke', stroke: '#fef3c7', strokeWidth: 5, strokeLinejoin: 'round' }}>Nash equilibrium</text>
+            </g>
+          );
+        })()}
       </svg>
+      <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-gray-700 mt-1">
+        <span className="inline-flex items-center gap-1.5"><span className="inline-block" style={{ width: 10, height: 10, background: ROW_COLOR }} />{figure.rowPlayer}: lower-left number</span>
+        <span className="inline-flex items-center gap-1.5"><span className="inline-block" style={{ width: 10, height: 10, background: COL_COLOR }} />{figure.colPlayer}: upper-right number</span>
+      </div>
     </div>
   );
 }
@@ -87,26 +114,27 @@ export function GameTheoryMatrixRenderer({ figure }: { figure: GameTheoryFigure 
 
 export function ElasticityRenderer({ figure }: { figure: ElasticityFigure }) {
   const N = elasticityFeatureNames;
-  const W = 560, H = 430;
-  const PAD_L = 60, PAD_R = 70, PAD_T = 30, PAD_B = 56;
+  const W = 560, H = 400;
+  const PAD_L = 60, PAD_R = 30, PAD_T = 20, PAD_B = 52;
   const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
   const AXIS = '#1f2937';
-  // common midpoint at plot centre
+  // common point at the plot centre
   const mx = PAD_L + plotW * 0.5, my = PAD_T + plotH * 0.5;
 
-  // inelastic (steep): near-vertical through midpoint; elastic (flat): near-horizontal
-  const inel = { x1: mx - 26, y1: PAD_T + 8, x2: mx + 26, y2: PAD_T + plotH - 8 };
-  const el = { x1: PAD_L + 8, y1: my + 44, x2: PAD_L + plotW - 8, y2: my - 44 };
+  // Both are demand curves, so both fall from left to right: the inelastic one steeply, the elastic one gently.
+  const inel = { x1: mx - 30, y1: PAD_T + 14, x2: mx + 30, y2: PAD_T + plotH - 16 };
+  const el = { x1: PAD_L + 22, y1: my - 52, x2: PAD_L + plotW - 22, y2: my + 52 };
 
   const showEl = figure.mode !== 'inelastic';
   const showInel = figure.mode !== 'elastic';
+  const halo = { paintOrder: 'stroke' as const, stroke: '#fff', strokeWidth: 3.5, strokeLinejoin: 'round' as const };
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">{figure.title || 'Price elasticity of demand'}</div>
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">{figure.title || 'Price elasticity of demand'}</div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full max-w-[560px]"
+        className="w-full max-w-[600px]"
         data-feature={N.diagram}
         data-feature-label={figure.title || 'Elasticity of demand'}
         data-feature-cx={0.5}
@@ -122,25 +150,25 @@ export function ElasticityRenderer({ figure }: { figure: ElasticityFigure }) {
 
         {showInel && (
           <g data-feature={N.inelastic} data-feature-label="Inelastic (steep)">
-            <line x1={inel.x1} y1={inel.y1} x2={inel.x2} y2={inel.y2} stroke={ROW_COLOR} strokeWidth={2.5} />
-            <text x={inel.x2 + 4} y={inel.y2 + 4} fontSize={12} fontWeight={700} fill={ROW_COLOR}>D (inelastic)</text>
-            <text x={inel.x2 + 4} y={inel.y2 + 19} fontSize={10} fill={ROW_COLOR}>steep · %ΔQ &lt; %ΔP</text>
+            <line x1={inel.x1} y1={inel.y1} x2={inel.x2} y2={inel.y2} stroke={ROW_COLOR} strokeWidth={2.5} strokeLinecap="round" />
+            {/* beside the steep curve's foot, where nothing else runs */}
+            <text x={inel.x2 + 12} y={inel.y2 - 22} fontSize={13} fontWeight={700} fill={ROW_COLOR} style={halo}>D (inelastic)</text>
+            <text x={inel.x2 + 12} y={inel.y2 - 6} fontSize={11.5} fill={ROW_COLOR} style={halo}>steep: %ΔQ &lt; %ΔP</text>
           </g>
         )}
         {showEl && (
           <g data-feature={N.elastic} data-feature-label="Elastic (flat)">
-            <line x1={el.x1} y1={el.y1} x2={el.x2} y2={el.y2} stroke={COL_COLOR} strokeWidth={2.5} />
-            <text x={el.x2 + 4} y={el.y2 - 2} fontSize={12} fontWeight={700} fill={COL_COLOR}>D (elastic)</text>
-            <text x={el.x2 + 4} y={el.y2 + 13} fontSize={10} fill={COL_COLOR}>flat · %ΔQ &gt; %ΔP</text>
+            <line x1={el.x1} y1={el.y1} x2={el.x2} y2={el.y2} stroke={COL_COLOR} strokeWidth={2.5} strokeLinecap="round" />
+            {/* above the flat curve's right end: the curve falls away below it */}
+            <text x={el.x2} y={el.y2 - 58} textAnchor="end" fontSize={13} fontWeight={700} fill={COL_COLOR} style={halo}>D (elastic)</text>
+            <text x={el.x2} y={el.y2 - 42} textAnchor="end" fontSize={11.5} fill={COL_COLOR} style={halo}>flat: %ΔQ &gt; %ΔP</text>
           </g>
         )}
-        {figure.mode === 'compare' && (
-          <>
-            <circle cx={mx} cy={my} r={4} fill={INK} />
-            <text x={PAD_L + plotW / 2} y={PAD_T + 16} fontSize={11} textAnchor="middle" fill="#64748b">Flatter demand = more elastic (buyers more responsive to price)</text>
-          </>
-        )}
+        {figure.mode === 'compare' && <circle cx={mx} cy={my} r={4.5} fill={INK} stroke="#fff" strokeWidth={1.5} />}
       </svg>
+      {figure.mode === 'compare' && (
+        <div className="text-xs text-gray-600 text-center -mt-1">Flatter demand is more elastic: buyers respond more to the same change in price.</div>
+      )}
     </div>
   );
 }
@@ -149,130 +177,56 @@ export function ElasticityRenderer({ figure }: { figure: ElasticityFigure }) {
 
 export function ComparativeAdvantageRenderer({ figure }: { figure: ComparativeAdvantageFigure }) {
   const N = comparativeAdvantageFeatureNames;
-  const W = 740;
-  const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
-  const NB = ' '; // non-breaking space (SVG tspan collapses leading spaces)
-
-  // columns: Producer | out X | out Y | opp cost 1 X | opp cost 1 Y
-  const x0 = 26;
-  const colW = [150, 105, 105, 175, 175];
-  const colX = colW.reduce<number[]>((acc, _w, i) => { acc.push(i === 0 ? x0 : acc[i - 1] + colW[i - 1]); return acc; }, []);
-  const tableRight = colX[4] + colW[4];
-  const headers = ['Producer', `${figure.goodX} output`, `${figure.goodY} output`, `Opp. cost of 1 ${figure.goodX}`, `Opp. cost of 1 ${figure.goodY}`];
-  const headTop = 44, headH = 40;
-  const rowH = 62;
-  const rowAY = headTop + headH + rowH / 2;   // centre of row A (clear of header)
-  const rowBY = rowAY + rowH;
-
-  const cell = (x: number, w: number, y: number, text: string, opts?: { color?: string; bold?: boolean; hi?: boolean }) => (
-    <>
-      {opts?.hi && <rect x={x + 3} y={y - rowH / 2 + 5} width={w - 6} height={rowH - 10} fill={HL} rx={4} />}
-      <text x={x + w / 2} y={y + 4} textAnchor="middle" fontSize={13} fontWeight={opts?.bold ? 700 : 400} fill={opts?.color || INK}>{text}</text>
-    </>
-  );
+  // 0.5, 1.86, 2: no padding zeros.
+  const fmt = (n: number) => (Number.isInteger(n) ? n.toLocaleString('en-US') : String(Number(n.toFixed(2))));
+  const heading = figure.title || `Comparative advantage: ${figure.producerA} vs ${figure.producerB}`;
 
   const caXWinner = figure.caX === 'A' ? figure.producerA : figure.producerB;
   const caYWinner = figure.caY === 'A' ? figure.producerA : figure.producerB;
-
-  // ── Conclusion sentence, wrapped (2026-08-07 clip audit) ──
-  // Four concatenated content strings centered at W/2 formed one unwrapped
-  // line (~66 literal chars + producers + goods) that clipped both viewBox
-  // edges for realistic names. Greedy word-wrap by estimated glyph width
-  // (0.55 × fontSize), keeping the bold/colored winner-name styling per word,
-  // then grow the viewBox height by the extra lines.
-  const CONCL_FS = 12.5;
-  type ConclusionWord = { text: string; bold?: boolean; fill?: string };
   const caXColor = figure.caX === 'A' ? ROW_COLOR : COL_COLOR;
   const caYColor = figure.caY === 'A' ? ROW_COLOR : COL_COLOR;
-  const conclusionWords: ConclusionWord[] = [
-    { text: caXWinner, bold: true, fill: caXColor },
-    { text: `has the comparative advantage in ${figure.goodX};` },
-    { text: caYWinner, bold: true, fill: caYColor },
-    { text: `in ${figure.goodY} (lower opportunity cost).` },
-  ].flatMap((seg) => seg.text.split(/\s+/).filter(Boolean).map((w) => ({ ...seg, text: w })));
-  const maxLineChars = Math.floor((W - 48) / (CONCL_FS * 0.55));
-  const conclusionLines: ConclusionWord[][] = [];
-  {
-    let cur: ConclusionWord[] = [];
-    let curLen = 0;
-    for (const w of conclusionWords) {
-      const nextLen = curLen === 0 ? w.text.length : curLen + 1 + w.text.length;
-      if (nextLen > maxLineChars && cur.length > 0) {
-        conclusionLines.push(cur);
-        cur = [w];
-        curLen = w.text.length;
-      } else {
-        cur.push(w);
-        curLen = nextLen;
-      }
-    }
-    if (cur.length > 0) conclusionLines.push(cur);
-  }
-  // Merge consecutive same-style words into one tspan per run.
-  const conclusionLineChunks = conclusionLines.map((line) => {
-    const chunks: ConclusionWord[] = [];
-    for (const w of line) {
-      const last = chunks[chunks.length - 1];
-      if (last && last.bold === w.bold && last.fill === w.fill) last.text += ` ${w.text}`;
-      else chunks.push({ ...w });
-    }
-    return chunks;
-  });
-  const H = 320 + (conclusionLineChunks.length - 1) * 17;
+
+  // A table set by the browser: headings and cells wrap to their own width, so long names of goods
+  // cannot run into the next column (drawn at fixed widths, they printed over each other).
+  const th = 'px-3 py-2 text-xs font-bold text-slate-700 border border-slate-300 bg-slate-100 text-center align-middle';
+  const td = 'px-3 py-3 text-sm text-gray-700 border border-slate-200 text-center align-middle';
+  const win = { background: HL, fontWeight: 700 } as const;
+  const row = (name: string, color: string, outX: number, outY: number, costX: number, costY: number, winsX: boolean, winsY: boolean, feature: string) => (
+    <tr data-feature={feature} data-feature-label={name}>
+      <td className={td} style={{ color, fontWeight: 700 }}>{name}</td>
+      <td className={td}>{fmt(outX)}</td>
+      <td className={td}>{fmt(outY)}</td>
+      <td className={td} style={winsX ? win : undefined}>{fmt(costX)} {figure.goodY}</td>
+      <td className={td} style={winsY ? win : undefined}>{fmt(costY)} {figure.goodX}</td>
+    </tr>
+  );
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">{figure.title || `Comparative advantage — ${figure.producerA} vs ${figure.producerB}`}</div>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        className="w-full max-w-[740px]"
+      <div className="text-base font-semibold text-gray-800 mb-3 text-center">{heading}</div>
+      <table
+        className="border-collapse max-w-[760px]"
         data-feature={N.table}
         data-feature-label={figure.title || 'Comparative advantage'}
-        data-feature-cx={0.5}
-        data-feature-cy={0.5}
-        data-feature-w={1}
-        data-feature-h={1}
       >
-        {/* header row */}
-        <rect x={x0} y={headTop} width={tableRight - x0} height={headH} fill="#f1f5f9" stroke="#cbd5e1" strokeWidth={1} />
-        {headers.map((h, i) => (
-          <text key={i} x={colX[i] + colW[i] / 2} y={headTop + 25} textAnchor="middle" fontSize={11} fontWeight={700} fill="#334155">{h}</text>
-        ))}
-
-        {/* producer A row */}
-        <g data-feature={N.rowA} data-feature-label={figure.producerA}>
-          {cell(colX[0], colW[0], rowAY, figure.producerA, { color: ROW_COLOR, bold: true })}
-          {cell(colX[1], colW[1], rowAY, fmt(figure.outputAX))}
-          {cell(colX[2], colW[2], rowAY, fmt(figure.outputAY))}
-          {cell(colX[3], colW[3], rowAY, `${fmt(figure.oppCostAX)} ${figure.goodY}`, { hi: figure.caX === 'A', bold: figure.caX === 'A' })}
-          {cell(colX[4], colW[4], rowAY, `${fmt(figure.oppCostAY)} ${figure.goodX}`, { hi: figure.caY === 'A', bold: figure.caY === 'A' })}
-        </g>
-        {/* producer B row */}
-        <g data-feature={N.rowB} data-feature-label={figure.producerB}>
-          {cell(colX[0], colW[0], rowBY, figure.producerB, { color: COL_COLOR, bold: true })}
-          {cell(colX[1], colW[1], rowBY, fmt(figure.outputBX))}
-          {cell(colX[2], colW[2], rowBY, fmt(figure.outputBY))}
-          {cell(colX[3], colW[3], rowBY, `${fmt(figure.oppCostBX)} ${figure.goodY}`, { hi: figure.caX === 'B', bold: figure.caX === 'B' })}
-          {cell(colX[4], colW[4], rowBY, `${fmt(figure.oppCostBY)} ${figure.goodX}`, { hi: figure.caY === 'B', bold: figure.caY === 'B' })}
-        </g>
-
-        {/* grid lines */}
-        <line x1={x0} y1={rowAY - rowH / 2} x2={tableRight} y2={rowAY - rowH / 2} stroke="#cbd5e1" strokeWidth={1} />
-        <line x1={x0} y1={rowBY - rowH / 2} x2={tableRight} y2={rowBY - rowH / 2} stroke="#e2e8f0" strokeWidth={1} />
-        <line x1={x0} y1={rowBY + rowH / 2} x2={tableRight} y2={rowBY + rowH / 2} stroke="#cbd5e1" strokeWidth={1} />
-        {colX.slice(1).map((x, i) => (
-          <line key={i} x1={x} y1={headTop} x2={x} y2={rowBY + rowH / 2} stroke="#e2e8f0" strokeWidth={1} />
-        ))}
-
-        {/* conclusion (wrapped — see conclusionLineChunks above) */}
-        {conclusionLineChunks.map((chunks, li) => (
-          <text key={li} x={W / 2} y={rowBY + rowH / 2 + 34 + li * 17} textAnchor="middle" fontSize={CONCL_FS} fill={INK} xmlSpace="preserve">
-            {chunks.map((c, ci) => (
-              <tspan key={ci} fontWeight={c.bold ? 700 : undefined} fill={c.fill}>{ci === 0 ? c.text : `${NB}${c.text}`}</tspan>
-            ))}
-          </text>
-        ))}
-      </svg>
+        <thead>
+          <tr>
+            <th className={th}>Producer</th>
+            <th className={th}>{figure.goodX}: output</th>
+            <th className={th}>{figure.goodY}: output</th>
+            <th className={th}>Opportunity cost of 1 {figure.goodX}</th>
+            <th className={th}>Opportunity cost of 1 {figure.goodY}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {row(figure.producerA, ROW_COLOR, figure.outputAX, figure.outputAY, figure.oppCostAX, figure.oppCostAY, figure.caX === 'A', figure.caY === 'A', N.rowA)}
+          {row(figure.producerB, COL_COLOR, figure.outputBX, figure.outputBY, figure.oppCostBX, figure.oppCostBY, figure.caX === 'B', figure.caY === 'B', N.rowB)}
+        </tbody>
+      </table>
+      <div className="text-sm text-gray-700 mt-3 text-center max-w-[640px]">
+        <span style={{ color: caXColor, fontWeight: 700 }}>{caXWinner}</span> has the comparative advantage in {figure.goodX};{' '}
+        <span style={{ color: caYColor, fontWeight: 700 }}>{caYWinner}</span> in {figure.goodY} (the lower opportunity cost, highlighted).
+      </div>
     </div>
   );
 }
@@ -283,7 +237,7 @@ export function LorenzCurveRenderer({ figure }: { figure: LorenzCurveFigure }) {
   const heading = figure.title || 'Lorenz Curve';
   const W = 560;
   const H = 520;
-  const M = { left: 64, right: 28, top: 24, bottom: 62 };
+  const M = { left: 64, right: 28, top: 24, bottom: 66 };
   const plotW = W - M.left - M.right;
   const plotH = H - M.top - M.bottom;
 
@@ -299,7 +253,7 @@ export function LorenzCurveRenderer({ figure }: { figure: LorenzCurveFigure }) {
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">{heading}</div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
@@ -341,7 +295,7 @@ export function LorenzCurveRenderer({ figure }: { figure: LorenzCurveFigure }) {
             <text x={M.left - 10} y={py(t) + 4} textAnchor="end" fontSize={11} fill="#64748b">{t}</text>
           </g>
         ))}
-        <text x={M.left + plotW / 2} y={H - 30} textAnchor="middle" fontSize={13} fontWeight={700} fill={INK}>Cumulative % of population</text>
+        <text x={M.left + plotW / 2} y={M.top + plotH + 44} textAnchor="middle" fontSize={13} fontWeight={700} fill={INK}>Cumulative % of population</text>
         <text x={16} y={M.top + plotH / 2} textAnchor="middle" fontSize={13} fontWeight={700} fill={INK} transform={`rotate(-90 16 ${M.top + plotH / 2})`}>Cumulative % of income</text>
 
         {/* Gini badge */}

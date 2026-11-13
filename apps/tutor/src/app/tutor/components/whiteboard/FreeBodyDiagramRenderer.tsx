@@ -498,6 +498,7 @@ export default function FreeBodyDiagramRenderer({
       const arcStartY = ay;
       const arcEndX = ax + arcRadius * Math.cos(arcRad);
       const arcEndY = ay - arcRadius * Math.sin(arcRad);
+      const shallowTheta = (arcRadius + 34) * Math.tan(arcRad) < 24;
       return (
         <g {...feat('surface', { cx: (ax + cx) / 2, cy: (ay + cy) / 2, w: cx - ax, h: ay - cy }, FBD_VIEWBOX)}>
           <polygon
@@ -516,8 +517,10 @@ export default function FreeBodyDiagramRenderer({
             {...feat('angle', { cx: ax + arcRadius / 2, cy: ay - arcRadius / 3, w: arcRadius + 28, h: arcRadius + 12 }, FBD_VIEWBOX)}
           />
           <text
-            x={ax + arcRadius + 6}
-            y={ay - 6}
+            // On a shallow slope the text does not fit under the slope line: it goes just outside the vertex.
+            x={shallowTheta ? ax - 8 : ax + arcRadius + 6}
+            y={shallowTheta ? ay + 2 : ay - 6}
+            textAnchor={shallowTheta ? 'end' : 'start'}
             fontSize={13}
             fill="#475569"
             fontStyle="italic"
@@ -550,18 +553,19 @@ export default function FreeBodyDiagramRenderer({
   // Detect forces that share an angle (within 5°) so we can offset their
   // labels perpendicular to the arrow, preventing overlap.
   const angles = forces.map((f) => dirToAngle(f.direction, surfaceAngle));
-  const angleClusters = angles.map((a, i) => {
-    let cluster = 0;
-    for (let j = 0; j < i; j++) {
-      if (Math.abs(((angles[j] - a + 540) % 360) - 180) < 5) cluster++;
-    }
-    return cluster;
+  const sameDir = (a: number, b: number): boolean => Math.abs(((a - b + 540) % 360) - 180) < 5;
+  // For each force: its place among the forces that share its direction, and how many there are.
+  const clusterOf = angles.map((a, i) => {
+    const members = angles.map((b, j) => (sameDir(a, b) ? j : -1)).filter((j) => j >= 0);
+    return { index: members.indexOf(i), count: members.length };
   });
 
   const objectCaption = object.mass || object.label;
   // Estimated half-width of a 13px label (same char heuristic as
   // label-deoverlap). Used for arrow clearance + viewbox clamping.
   const estHalfW = (s: string): number => (s.length * 13 * 0.55) / 2;
+  // The base of the incline: downward arrows stop short of it so their labels fit above the line.
+  const inclineBaseY = surface.type === 'inclined' && slopeBottomLeft ? slopeBottomLeft.y : null;
 
   // ── Per-force geometry + label layout (2026-07-17 live session) ──────
   // Labels used to sit inline just past the arrow tip. For horizontal-ish
@@ -590,17 +594,28 @@ export default function FreeBodyDiagramRenderer({
     // Start the arrow at the body edge, not the center — and for
     // horizontal-ish arrows, past the object caption too (a wide caption
     // like "m = 5 kg" sticks out beyond the body glyph).
-    const startRadius = horizontalish && objectCaption
+    const startRadius = horizontalish && objectCaption && shape !== 'person'
       ? Math.max(bodyRadius, estHalfW(objectCaption) + 8)
       : bodyRadius;
     const startX = objX + dirX * startRadius;
     const startY = objY + dirY * startRadius;
-    // When two forces share a direction, separate their arrows so both are
-    // visible rather than one on top of the other.
-    const cluster = angleClusters[i];
-    const clusterLen = len - cluster * 18;
-    const tipX = startX + dirX * Math.max(clusterLen, 30);
-    const tipY = startY + dirY * Math.max(clusterLen, 30);
+    // Forces that share a direction are drawn side by side, each at its own
+    // length: on top of each other, one hid the other and the two arrowheads
+    // read as a single double-headed arrow.
+    const { index: clusterIndex, count: clusterCount } = clusterOf[i];
+    // Sideways unit vector: "up" for horizontal-ish arrows, "left" otherwise, so the first force of a group is the upper / left one.
+    let sideX = dirY; let sideY = -dirX;
+    if (horizontalish ? sideY > 0 : sideX > 0) { sideX = -sideX; sideY = -sideY; }
+    const lateral = ((clusterCount - 1) / 2 - clusterIndex) * 16;
+    let drawLen = Math.max(len, 30);
+    if (inclineBaseY != null && dirY > 0.35) {
+      const room = (inclineBaseY - 36 - (startY + sideY * lateral)) / dirY;
+      drawLen = Math.max(36, Math.min(drawLen, room));
+    }
+    const sx0 = startX + sideX * lateral;
+    const sy0 = startY + sideY * lateral;
+    const tipX = sx0 + dirX * drawLen;
+    const tipY = sy0 + dirY * drawLen;
     const color = colorForForce(f.name, f.color);
     // Defensive label hygiene. The model sometimes sends (a) LaTeX commands
     // in magnitude, which don't render in plain SVG text, (b) long descriptive
@@ -625,20 +640,36 @@ export default function FreeBodyDiagramRenderer({
     // 20 chars fits every real force phrase seen live ("Wall pushes back");
     // the cap only guards against essay-length names now.
     const nameN = truncate(stripLatex((f.name || '').trim()), 20);
-    const magN = truncate(stripLatex((f.magnitude || '').trim()), 14);
-    const label = magN && magN !== nameN ? `${nameN} = ${magN}` : nameN;
-    // Initial label spot: above the shaft midpoint for horizontal-ish
-    // arrows (never on the axis), just past the tip otherwise.
-    const perpStep = 14 * cluster; // extra separation for same-direction forces
+    // 28 chars keeps a worked magnitude whole ("mg sinθ = 100.4 N"); beyond that it is an essay.
+    const magN = truncate(stripLatex((f.magnitude || '').trim()), 28);
+    // A magnitude that already opens with the name ("T₁ = 245 N" for T_1) is the whole label.
+    const echoesName = magN !== '' && plainSymbol(magN).startsWith(`${plainSymbol(nameN)}=`);
+    const labelRaw = echoesName ? magN : magN && magN !== nameN ? `${nameN} = ${magN}` : nameN;
+    const labelParts = toSubscriptParts(labelRaw);
+    // Width stand-in for the layout maths: the text as displayed, subscripts included.
+    const label = labelParts.map((part) => part.text).join('');
+    // Initial label spot: beside the shaft midpoint for horizontal-ish
+    // arrows (never on the axis), just past the tip otherwise. In a group
+    // of same-direction forces each label goes on its own arrow's outer side.
+    const outer = lateral < 0 ? -1 : 1;
     let labelX: number;
     let labelY: number;
     if (horizontalish) {
-      labelX = (startX + tipX) / 2;
-      labelY = (startY + tipY) / 2 - 16 - perpStep;
+      labelX = (sx0 + tipX) / 2;
+      // A group's labels stack above its top arrow, in the arrows' order
+      // (below would land on the ground line).
+      const topShaftY = (startY + tipY - sideY * lateral) / 2 + sideY * ((clusterCount - 1) / 2) * 16;
+      labelY = topShaftY - 16 - (clusterCount - 1 - clusterIndex) * 16;
+      // Clear of the body: a wide label centred on a short shaft ran back over the block and got pushed far away.
+      const clear = 42 + estHalfW(label);
+      if (dirX > 0) labelX = Math.max(labelX, objX + clear); else labelX = Math.min(labelX, objX - clear);
+    } else if (clusterCount > 1 && lateral !== 0) {
+      labelX = tipX + sideX * outer * (estHalfW(label) + 12);
+      labelY = tipY + sideY * outer * 14 - dirY * 4;
     } else {
       const labelOffset = 16;
-      labelX = tipX + dirX * labelOffset + -dirY * perpStep;
-      labelY = tipY + dirY * labelOffset + dirX * perpStep;
+      labelX = tipX + dirX * labelOffset;
+      labelY = tipY + dirY * labelOffset;
     }
     // Keep the whole estimated label inside the viewbox.
     labelX = Math.min(Math.max(labelX, estHalfW(label) + 4), VIEWBOX_W - estHalfW(label) - 4);
@@ -652,13 +683,16 @@ export default function FreeBodyDiagramRenderer({
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || `force-${i + 1}`;
-    return { f, i, startX, startY, tipX, tipY, color, label, labelX, labelY, dirY, slug };
+    return { f, i, startX: sx0, startY: sy0, tipX, tipY, color, label, labelParts, labelX, labelY, dirY, slug };
   });
 
   // Fixed geometry the labels must stay clear of.
   const labelObstacles: DeoverlapObstacle[] = [
     // Object glyph + caption block.
     { left: objX - 38, right: objX + 38, top: objY - 38, bottom: objY + 40 },
+    ...(shape === 'person' && objectCaption
+      ? [{ left: objX - 18 - estHalfW(objectCaption) * 2, right: objX - 14, top: objY + 25, bottom: objY + 43 }]
+      : []),
     // Every arrow shaft (padded).
     ...forceGeoms.map((g): DeoverlapObstacle => ({
       left: Math.min(g.startX, g.tipX) - 5,
@@ -670,9 +704,14 @@ export default function FreeBodyDiagramRenderer({
   if (surface.type === 'inclined' && slopeBottomLeft) {
     // θ annotation zone at the base-left vertex.
     labelObstacles.push({
-      left: slopeBottomLeft.x, right: slopeBottomLeft.x + 90,
-      top: slopeBottomLeft.y - 30, bottom: slopeBottomLeft.y + 4,
+      left: slopeBottomLeft.x - 62, right: slopeBottomLeft.x + 90,
+      top: slopeBottomLeft.y - 30, bottom: slopeBottomLeft.y + 8,
     });
+    // The base line itself, and the friction note under its right end.
+    if (slopeTopRight) {
+      labelObstacles.push({ left: slopeBottomLeft.x, right: slopeTopRight.x, top: slopeBottomLeft.y - 3, bottom: slopeBottomLeft.y + 3 });
+      if (surface.friction) labelObstacles.push({ left: slopeTopRight.x - 104, right: slopeTopRight.x, top: slopeBottomLeft.y + 18, bottom: slopeBottomLeft.y + 36 });
+    }
   }
   const resolvedForceLabels = deoverlapLabels(
     forceGeoms.map((g): DeoverlapLabel & { slug: string } => ({
@@ -685,7 +724,7 @@ export default function FreeBodyDiagramRenderer({
 
   const renderForces = (): React.ReactElement[] =>
     forceGeoms.map((g, idx) => {
-      const { f, i, startX, startY, tipX, tipY, color, label, slug } = g;
+      const { f, i, startX, startY, tipX, tipY, color, labelParts, slug } = g;
       const placed = resolvedForceLabels[idx];
       const forceBBox = {
         cx: (startX + tipX) / 2,
@@ -712,8 +751,15 @@ export default function FreeBodyDiagramRenderer({
             fontWeight={600}
             textAnchor="middle"
             dominantBaseline="middle"
+            paintOrder="stroke"
+            stroke="#ffffff"
+            strokeWidth={3}
+            strokeLinejoin="round"
           >
-            {label}
+            {labelParts.map((part, pi) => (
+              // dy is cumulative in SVG: drop for a subscript, climb back for what follows it.
+              <tspan key={pi} fontSize={part.sub ? 10 : undefined} dy={part.sub ? 3.5 : pi > 0 && labelParts[pi - 1].sub ? -3.5 : undefined}>{part.text}</tspan>
+            ))}
           </text>
         </g>
       );
@@ -760,12 +806,13 @@ export default function FreeBodyDiagramRenderer({
         {/* Object label inside the object */}
         {objectCaption && (
           <text
-            x={objX}
-            y={objY + 4}
+            // A stick figure has no room inside: its caption goes at its lower left, clear of the limbs.
+            x={shape === 'person' ? objX - 18 : objX}
+            y={shape === 'person' ? objY + 34 : objY + 4}
             fontSize={13}
             fill="#0f172a"
             fontWeight={700}
-            textAnchor="middle"
+            textAnchor={shape === 'person' ? 'end' : 'middle'}
             dominantBaseline="middle"
           >
             {objectCaption}
@@ -787,6 +834,32 @@ export default function FreeBodyDiagramRenderer({
       </svg>
     </div>
   );
+}
+
+/** "F_app" → F with a subscript "app"; "W_parallel" → W∥. Plain SVG text would show the underscore. */
+function toSubscriptParts(label: string): { text: string; sub: boolean }[] {
+  const parts: { text: string; sub: boolean }[] = [];
+  const re = /_(?:\{([^}]+)\}|([A-Za-z0-9]+))/g;
+  let last = 0;
+  let mt: RegExpExecArray | null;
+  while ((mt = re.exec(label)) !== null) {
+    if (mt.index === 0) continue; // nothing to hang a subscript on
+    if (mt.index > last) parts.push({ text: label.slice(last, mt.index), sub: false });
+    const raw = mt[1] ?? mt[2];
+    const lower = raw.toLowerCase();
+    // Two plain bars: the ∥ glyph is missing from the board font and came out as a dotless i.
+    const sym = lower === 'parallel' || lower === 'par' ? '||' : lower === 'perp' || lower === 'perpendicular' ? '⊥' : null;
+    parts.push({ text: sym ?? raw, sub: true });
+    last = mt.index + mt[0].length;
+  }
+  if (last < label.length) parts.push({ text: label.slice(last), sub: false });
+  return parts.length > 0 ? parts : [{ text: label, sub: false }];
+}
+
+/** A symbol reduced to what makes it the same symbol: "T_1", "T₁" and "T 1" all give "t1". */
+function plainSymbol(s: string): string {
+  const SUBS = '₀₁₂₃₄₅₆₇₈₉';
+  return s.toLowerCase().replace(/[₀-₉]/g, (ch) => String(SUBS.indexOf(ch))).replace(/[_{}\s]/g, '');
 }
 
 // Best-effort word-wrap for SVG text (no native wrapping in SVG <text>).

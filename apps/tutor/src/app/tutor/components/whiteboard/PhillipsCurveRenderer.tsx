@@ -1,217 +1,49 @@
 'use client';
 
-import { InlineMathText } from './InlineMathText';
 import React from 'react';
-import {
-  phillipsCurveFeatureNames,
-  type PhillipsCurveFigure,
-} from '@/lib/tutor/diagrams/catalog/kinds/economics';
+import { phillipsCurveFeatureNames, type PhillipsCurveFigure } from '@/lib/tutor/diagrams/catalog/kinds/economics';
+import { ECON, MarketGraph, gap, type MarketLineSpec, type MarketPointSpec } from './econ-graph-layout';
 
-const COLOR_SRPC = '#2563eb';
-const COLOR_SRPC_NEW = '#60a5fa';
-const COLOR_LRPC = '#1f2937';
-const COLOR_LRPC_NEW = '#6b7280';
-const COLOR_AXIS = '#1f2937';
-const COLOR_EQ = '#16a34a';
-const COLOR_EQ_NEW = '#facc15';
-
+/** Phillips curve: downward short-run curve, vertical long-run curve at the natural rate. Positions are
+ *  schematic (econ-graph-layout), so real percentages (NAIRU 5, inflation 3) and 0..100 units draw alike. */
 export function PhillipsCurveRenderer({ figure }: { figure: PhillipsCurveFigure }) {
-  const {
-    nairu,
-    initialUnemployment: u0,
-    initialInflation: pi0,
-    showLrpc,
-    shift,
-    finalUnemployment: u1,
-    finalInflation: pi1,
-    title,
-  } = figure;
+  const { nairu, initialUnemployment, showLrpc, shift, title } = figure;
   const N = phillipsCurveFeatureNames;
+  const Un = 50;
+  const u0 = Un + (showLrpc ? gap(initialUnemployment - nairu, 9, 22) : 0);
+  const pi0 = 50;
 
-  const W = 540;
-  const H = 400;
-  const PAD_L = 70;
-  const PAD_R = 60;
-  const PAD_T = 36;
-  const PAD_B = 60;
-  const plotW = W - PAD_L - PAD_R;
-  const plotH = H - PAD_T - PAD_B;
-
-  // SRPC slope = -1, intercept = pi0 + u0. inflation = intercept - UR.
-  const srpcIntercept0 = pi0 + u0;
-
-  // Resolve the shift first so its extent can feed the axis range.
-  let srpcShiftedIntercept: number | null = null;
-  let lrpcShiftedNairu: number | null = null;
+  const lines: MarketLineSpec[] = [];
+  if (showLrpc) lines.push({ key: 'lrpc', kind: 'vertical', x: Un, color: ECON.vertical, label: 'LRPC', feature: N.lrpc });
+  lines.push({ key: 'srpc', kind: 'down', x: u0, y: pi0, color: ECON.demand, label: 'SRPC', feature: N.srpc });
+  const points: MarketPointSpec[] = [];
+  let final: { x: number; y: number } | null = null;
   if (shift) {
-    const delta = (shift.direction === 'up' || shift.direction === 'right') ? shift.magnitude : -shift.magnitude;
-    if (shift.curve === 'SRPC') srpcShiftedIntercept = srpcIntercept0 + delta;
-    else lrpcShiftedNairu = nairu + delta;
-  }
-
-  // Adaptive axis. The renderer historically hardcoded a 0-100 axis, but the
-  // brain emits REAL percentages (NAIRU ~5, inflation ~3), which collapsed the
-  // whole figure into the bottom-left corner. Scale the axis to the data extent
-  // so the curve fills the chart whether values are single-digit % or 0-100.
-  const niceMax = (v: number): number => {
-    const steps = [10, 12, 15, 20, 25, 30, 40, 50, 60, 80, 100, 120, 150, 200];
-    for (const s of steps) if (v <= s) return s;
-    return Math.ceil(v / 50) * 50;
-  };
-  const dataMax = Math.max(
-    nairu, u0, pi0,
-    u1 ?? 0, pi1 ?? 0,
-    srpcIntercept0,
-    srpcShiftedIntercept ?? 0,
-    lrpcShiftedNairu ?? 0,
-    1,
-  );
-  const AXIS_MAX = niceMax(dataMax * 1.15);
-  const xAt = (v: number) => PAD_L + (v / AXIS_MAX) * plotW;
-  const yAt = (v: number) => PAD_T + plotH - (v / AXIS_MAX) * plotH;
-
-  function clipLine(slope: number, intercept: number): { x1: number; y1: number; x2: number; y2: number } {
-    const candidates: { U: number; pi: number }[] = [];
-    candidates.push({ U: 0, pi: intercept });
-    candidates.push({ U: AXIS_MAX, pi: intercept + slope * AXIS_MAX });
-    if (slope !== 0) candidates.push({ U: -intercept / slope, pi: 0 });
-    if (slope !== 0) candidates.push({ U: (AXIS_MAX - intercept) / slope, pi: AXIS_MAX });
-    const inside = candidates.filter((c) => c.U >= 0 && c.U <= AXIS_MAX && c.pi >= 0 && c.pi <= AXIS_MAX);
-    if (inside.length < 2) {
-      return { x1: xAt(0), y1: yAt(intercept), x2: xAt(AXIS_MAX), y2: yAt(intercept + slope * AXIS_MAX) };
+    const sign = shift.direction === 'up' || shift.direction === 'right' ? 1 : -1;
+    if (shift.curve === 'SRPC') {
+      final = { x: u0, y: pi0 + sign * gap(shift.magnitude, 11, 24) };
+      lines.push({ key: 'srpc2', kind: 'down', ...final, color: ECON.demand, dashed: true, label: 'SRPC′', feature: N.srpcShifted, featureLabel: "SRPC'" });
+    } else {
+      const x = Un + sign * gap(shift.magnitude, 10, 20);
+      // The long-run point moves with the natural rate, at the same inflation (as the solver states it).
+      final = { x, y: pi0 };
+      if (showLrpc) lines.push({ key: 'lrpc2', kind: 'vertical', x, color: ECON.vertical, dashed: true, label: 'LRPC′', feature: N.lrpcShifted, featureLabel: "LRPC'" });
     }
-    inside.sort((a, b) => a.U - b.U);
-    return {
-      x1: xAt(inside[0].U),
-      y1: yAt(inside[0].pi),
-      x2: xAt(inside[inside.length - 1].U),
-      y2: yAt(inside[inside.length - 1].pi),
-    };
   }
-
-  const srpcLine = clipLine(-1, srpcIntercept0);
-  const srpcShiftedLine = srpcShiftedIntercept !== null ? clipLine(-1, srpcShiftedIntercept) : null;
+  points.push({ key: 'e0', x: u0, y: pi0, color: ECON.eq, xTick: 'U₀', yTick: 'π₀', feature: N.eqInitial, featureLabel: 'initial point' });
+  if (final) points.push({ key: 'e1', ...final, color: ECON.eqNew, xTick: 'U₁', yTick: 'π₁', feature: N.eqFinal, featureLabel: 'final point' });
 
   return (
-    <div
-      className="phillips-curve-renderer w-full flex flex-col items-center"
-      data-feature={N.diagram}
-      data-feature-label={title || 'Phillips curve'}
-    >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
-        <line x1={PAD_L} y1={PAD_T} x2={PAD_L} y2={PAD_T + plotH} stroke={COLOR_AXIS} strokeWidth={1.5} />
-        <line x1={PAD_L} y1={PAD_T + plotH} x2={PAD_L + plotW} y2={PAD_T + plotH} stroke={COLOR_AXIS} strokeWidth={1.5} />
-
-        {/* LRPC (vertical at NAIRU) */}
-        {showLrpc && (
-          <g
-            data-feature={N.lrpc}
-            data-feature-label="LRPC"
-            data-feature-cx={xAt(nairu) / W}
-            data-feature-cy={(PAD_T + plotH / 2) / H}
-            data-feature-w={28 / W}
-            data-feature-h={plotH / H}
-          >
-            <line x1={xAt(nairu)} y1={PAD_T} x2={xAt(nairu)} y2={PAD_T + plotH} stroke={COLOR_LRPC} strokeWidth={2} />
-            <text x={xAt(nairu)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_LRPC} textAnchor="middle">LRPC</text>
-          </g>
-        )}
-        {showLrpc && lrpcShiftedNairu !== null && lrpcShiftedNairu >= 0 && lrpcShiftedNairu <= AXIS_MAX && (
-          <g
-            data-feature={N.lrpcShifted}
-            data-feature-label="LRPC'"
-            data-feature-cx={xAt(lrpcShiftedNairu) / W}
-            data-feature-cy={(PAD_T + plotH / 2) / H}
-            data-feature-w={28 / W}
-            data-feature-h={plotH / H}
-          >
-            <line x1={xAt(lrpcShiftedNairu)} y1={PAD_T} x2={xAt(lrpcShiftedNairu)} y2={PAD_T + plotH} stroke={COLOR_LRPC_NEW} strokeWidth={2} strokeDasharray="6 4" />
-            <text x={xAt(lrpcShiftedNairu)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_LRPC_NEW} textAnchor="middle">LRPC&apos;</text>
-          </g>
-        )}
-
-        {/* SRPC */}
-        <g
-          data-feature={N.srpc}
-          data-feature-label="SRPC"
-          data-feature-cx={((srpcLine.x1 + srpcLine.x2) / 2) / W}
-          data-feature-cy={((srpcLine.y1 + srpcLine.y2) / 2) / H}
-          data-feature-w={40 / W}
-          data-feature-h={24 / H}
-        >
-          <line x1={srpcLine.x1} y1={srpcLine.y1} x2={srpcLine.x2} y2={srpcLine.y2} stroke={COLOR_SRPC} strokeWidth={2.5} />
-          <text x={srpcLine.x2 + 4} y={srpcLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_SRPC}>SRPC</text>
-        </g>
-        {srpcShiftedLine && (
-          <g
-            data-feature={N.srpcShifted}
-            data-feature-label="SRPC'"
-            data-feature-cx={((srpcShiftedLine.x1 + srpcShiftedLine.x2) / 2) / W}
-            data-feature-cy={((srpcShiftedLine.y1 + srpcShiftedLine.y2) / 2) / H}
-            data-feature-w={40 / W}
-            data-feature-h={24 / H}
-          >
-            <line x1={srpcShiftedLine.x1} y1={srpcShiftedLine.y1} x2={srpcShiftedLine.x2} y2={srpcShiftedLine.y2} stroke={COLOR_SRPC_NEW} strokeWidth={2.5} strokeDasharray="6 4" />
-            <text x={srpcShiftedLine.x2 + 4} y={srpcShiftedLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_SRPC_NEW}>SRPC&apos;</text>
-          </g>
-        )}
-
-        {/* Initial point */}
-        <g
-          data-feature={N.eqInitial}
-          data-feature-label="initial equilibrium"
-          data-feature-cx={xAt(u0) / W}
-          data-feature-cy={yAt(pi0) / H}
-          data-feature-w={40 / W}
-          data-feature-h={40 / H}
-        >
-          <circle cx={xAt(u0)} cy={yAt(pi0)} r={5} fill={COLOR_EQ} stroke="#fff" strokeWidth={2} />
-        </g>
-        <line x1={xAt(u0)} y1={yAt(pi0)} x2={xAt(u0)} y2={PAD_T + plotH} stroke={COLOR_EQ} strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
-        <line x1={xAt(u0)} y1={yAt(pi0)} x2={PAD_L} y2={yAt(pi0)} stroke={COLOR_EQ} strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
-        <text x={xAt(u0)} y={PAD_T + plotH + 14} fontSize={11} fill={COLOR_EQ} textAnchor="middle">U₀</text>
-        <text x={PAD_L - 6} y={yAt(pi0) + 4} fontSize={11} fill={COLOR_EQ} textAnchor="end">π₀</text>
-
-        {/* Final point */}
-        {u1 !== undefined && pi1 !== undefined && (
-          <g
-            data-feature={N.eqFinal}
-            data-feature-label="final equilibrium"
-            data-feature-cx={xAt(u1) / W}
-            data-feature-cy={yAt(pi1) / H}
-            data-feature-w={40 / W}
-            data-feature-h={40 / H}
-          >
-            <circle cx={xAt(u1)} cy={yAt(pi1)} r={5} fill={COLOR_EQ_NEW} stroke="#fff" strokeWidth={2} />
-            <line x1={xAt(u1)} y1={yAt(pi1)} x2={xAt(u1)} y2={PAD_T + plotH} stroke="#a16207" strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
-            <line x1={xAt(u1)} y1={yAt(pi1)} x2={PAD_L} y2={yAt(pi1)} stroke="#a16207" strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
-            <text x={xAt(u1)} y={PAD_T + plotH + 14} fontSize={11} fill="#a16207" textAnchor="middle">U₁</text>
-            <text x={PAD_L - 6} y={yAt(pi1) + 4} fontSize={11} fill="#a16207" textAnchor="end">π₁</text>
-          </g>
-        )}
-
-        <text x={PAD_L + plotW / 2} y={H - 18} fontSize={13} fontWeight={600} textAnchor="middle" fill="#374151">
-          Unemployment Rate (%)
-        </text>
-        <text
-          x={20}
-          y={PAD_T + plotH / 2}
-          fontSize={13}
-          fontWeight={600}
-          textAnchor="middle"
-          fill="#374151"
-          transform={`rotate(-90 20 ${PAD_T + plotH / 2})`}
-        >
-          Inflation Rate (%)
-        </text>
-
-        {shift && (
-          <text x={PAD_L + plotW - 6} y={PAD_T + 14} fontSize={11} fill="#374151" textAnchor="end" fontStyle="italic">
-            {shift.label ?? `${shift.curve} shifts ${shift.direction}`}
-          </text>
-        )}
-      </svg>
-    </div>
+    <MarketGraph
+      className="phillips-curve-renderer"
+      rootFeature={N.diagram}
+      rootLabel={title || 'Phillips curve'}
+      title={title}
+      subtitle={shift ? (shift.label ?? `${shift.curve} shifts ${shift.direction}`) : null}
+      xTitle="Unemployment Rate (%)"
+      yTitle="Inflation Rate (%)"
+      lines={lines}
+      points={points}
+    />
   );
 }

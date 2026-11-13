@@ -7,6 +7,7 @@ import {
   type SlopeFieldFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
 import { smoothPath } from './_smoothPath';
+import { niceTicks, formatTick } from './_niceTicks';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_VEC = '#475569';
@@ -14,7 +15,7 @@ const COLOR_SOL = '#dc2626';
 const COLOR_HL = '#16a34a';
 
 export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
-  const { samples, xMin, xMax, yMin, yMax, solutionCurve, highlightPoint, exprLabel, title } = figure;
+  const { samples, xMin: xMinIn, xMax: xMaxIn, yMin: yMinIn, yMax: yMaxIn, solutionCurve, highlightPoint, exprLabel, title } = figure;
   const N = slopeFieldFeatureNames;
 
   const W = 520;
@@ -26,23 +27,26 @@ export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
 
+  // Grid step of the samples. A sample on the edge of the window would poke half its segment
+  // through the frame, so the window opens by half a grid cell wherever samples sit on it.
+  const xs = Array.from(new Set(samples.map((s) => Number(s.x.toFixed(4))))).sort((a, b) => a - b);
+  const ys = Array.from(new Set(samples.map((s) => Number(s.y.toFixed(4))))).sort((a, b) => a - b);
+  const dx = xs.length > 1 ? xs[1] - xs[0] : (xMaxIn - xMinIn) / 12;
+  const dy = ys.length > 1 ? ys[1] - ys[0] : (yMaxIn - yMinIn) / 12;
+  const xMin = Math.min(xMinIn, xs[0] - dx / 2);
+  const xMax = Math.max(xMaxIn, xs[xs.length - 1] + dx / 2);
+  const yMin = Math.min(yMinIn, ys[0] - dy / 2);
+  const yMax = Math.max(yMaxIn, ys[ys.length - 1] + dy / 2);
+
   const xAt = (x: number) => PAD_L + ((x - xMin) / (xMax - xMin)) * plotW;
   const yAt = (y: number) => PAD_T + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
 
   // Determine grid step from samples for a sensible vector length.
-  const xs = Array.from(new Set(samples.map((s) => Number(s.x.toFixed(4))))).sort((a, b) => a - b);
-  const ys = Array.from(new Set(samples.map((s) => Number(s.y.toFixed(4))))).sort((a, b) => a - b);
-  const dx = xs.length > 1 ? xs[1] - xs[0] : (xMax - xMin) / 12;
-  const dy = ys.length > 1 ? ys[1] - ys[0] : (yMax - yMin) / 12;
   const gridSpacePx = Math.min(Math.abs(xAt(dx) - xAt(0)), Math.abs(yAt(0) - yAt(dy)));
-  const segLenPx = Math.max(8, gridSpacePx * 0.45);
+  const segLenPx = Math.max(8, gridSpacePx * 0.6);
 
-  const xTicks: number[] = [];
-  const xStep = (xMax - xMin) / 4;
-  for (let i = 0; i <= 4; i += 1) xTicks.push(xMin + xStep * i);
-  const yTicks: number[] = [];
-  const yStep = (yMax - yMin) / 4;
-  for (let i = 0; i <= 4; i += 1) yTicks.push(yMin + yStep * i);
+  const { ticks: xTicks, step: xStep } = niceTicks(xMin, xMax, 6);
+  const { ticks: yTicks, step: yStep } = niceTicks(yMin, yMax, 6);
 
   const solPath = solutionCurve && solutionCurve.length > 1
     ? smoothPath(solutionCurve, xAt, yAt)
@@ -57,7 +61,7 @@ export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
       {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       {/* equation as a caption above the plot — the slope field fills the plot,
           so an in-plot label always collided with segments + the border. */}
-      {exprLabel && <div className="text-xs -mt-1 mb-2" style={{ color: COLOR_SOL }}>{exprLabel}</div>}
+      {exprLabel && <div className="text-sm font-semibold -mt-1 mb-2" style={{ color: COLOR_SOL }}>{exprLabel}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
         {/* gridlines */}
         {xTicks.map((tx, i) => (
@@ -73,7 +77,7 @@ export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
         {xMin <= 0 && xMax >= 0 && (
           <line x1={xAt(0)} y1={PAD_T} x2={xAt(0)} y2={PAD_T + plotH} stroke={COLOR_AXIS} strokeWidth={1.2} />
         )}
-        <rect x={PAD_L} y={PAD_T} width={plotW} height={plotH} fill="none" stroke={COLOR_AXIS} strokeWidth={1.5} />
+        <rect x={PAD_L} y={PAD_T} width={plotW} height={plotH} fill="none" stroke="#9ca3af" strokeWidth={1} />
 
         {/* slope segments — wrapped so scribbling "slope segments" hits the field. */}
         <g
@@ -136,12 +140,12 @@ export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
         {/* tick labels */}
         {xTicks.map((tx, i) => (
           <text key={`tlx-${i}`} x={xAt(tx)} y={PAD_T + plotH + 16} fontSize={11} textAnchor="middle" fill="#374151">
-            {Number(tx.toFixed(2))}
+            {formatTick(tx, xStep)}
           </text>
         ))}
         {yTicks.map((ty, i) => (
           <text key={`tly-${i}`} x={PAD_L - 6} y={yAt(ty) + 4} fontSize={11} textAnchor="end" fill="#374151">
-            {Number(ty.toFixed(2))}
+            {formatTick(ty, yStep)}
           </text>
         ))}
 

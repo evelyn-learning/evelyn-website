@@ -61,6 +61,12 @@ export default function MoleculeRenderer({
   // structure here differs from the one the tutor put up, the student gets
   // "Check my molecule" on that molecule too.
   const [edited, setEdited] = useState(false);
+  // The editor reports the structure back in ITS OWN spelling of the SMILES
+  // (aspirin comes back re-ordered, a salt comes back re-charged), so the
+  // first report after a molecule is loaded is the baseline, not an edit —
+  // otherwise "Check my molecule" shows on a molecule nobody touched.
+  const baselineRef = useRef<string | null>(null);
+  const loadedAtRef = useRef<number>(0);
 
   // Listen for messages from the Ketcher iframe
   useEffect(() => {
@@ -69,6 +75,8 @@ export default function MoleculeRenderer({
 
       if (type === 'ketcher-ready') {
         setReady(true);
+        baselineRef.current = null;
+        loadedAtRef.current = Date.now();
         // Send pending SMILES
         if (iframeRef.current?.contentWindow && pendingSmilesRef.current) {
           iframeRef.current.contentWindow.postMessage({
@@ -87,7 +95,12 @@ export default function MoleculeRenderer({
       // molecules on the board each renderer hears both iframes, and the
       // other one's edit would be reported against this molecule.
       if (type === 'molecule-changed' && event.source === iframeRef.current?.contentWindow) {
-        if (event.data.smiles && event.data.smiles !== pendingSmilesRef.current) setEdited(true);
+        const reported: string | undefined = event.data.smiles;
+        if (reported && reported !== pendingSmilesRef.current) {
+          const settling = Date.now() - loadedAtRef.current < 4000;
+          if (baselineRef.current === null && settling) baselineRef.current = reported;
+          else if (reported !== baselineRef.current) setEdited(true);
+        }
         onMoleculeChanged?.(event.data.smiles);
       }
     };
@@ -102,6 +115,9 @@ export default function MoleculeRenderer({
   // molecules inline.
   useEffect(() => {
     pendingSmilesRef.current = ketcherSmiles;
+    baselineRef.current = null;
+    loadedAtRef.current = Date.now();
+    setEdited(false);
     if (ready && iframeRef.current?.contentWindow) {
       iframeRef.current.contentWindow.postMessage({
         type: 'set-molecule',

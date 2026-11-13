@@ -157,107 +157,248 @@ export function buildRayDiagramManifest(props: RayDiagramProps): FeatureManifest
   return entries;
 }
 
-export default function RayDiagramRenderer({
-  title, type, focalLength, objectDistance, objectHeight = 2, showLabels = true, notes, hideImage = false,
-}: RayDiagramProps) {
+/** Up to 3 significant figures, no trailing zeros, a real minus sign. */
+function fmt(v: number): string {
+  if (!Number.isFinite(v)) return '∞';
+  if (v === 0) return '0';
+  const abs = Math.abs(v);
+  const digits = abs >= 100 ? 0 : abs >= 10 ? 1 : abs >= 1 ? 2 : 3;
+  const s = abs.toFixed(digits).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+  return (v < 0 ? '−' : '') + s;
+}
+
+/**
+ * The geometry of one diagram, in SVG units. The x and y scales are chosen
+ * independently: a paraxial ray construction is affine, so every ray still
+ * passes through the focal points and the image tip, and a 2 cm object 60 cm
+ * from the lens stays a readable arrow instead of a speck.
+ */
+interface RayLayout {
+  isMirror: boolean;
+  f: number; doObj: number; ho: number;
+  di: number; m: number; hi: number;
+  hasImage: boolean; imageReal: boolean;
+  /** The image exists but is too far or too large to draw truthfully. */
+  offPage: boolean;
+  cx: number; axisY: number; sx: number; sy: number;
+  elemHalf: number;
+  showFar: boolean; // 2F marks (lens) / C (mirror) fit on the axis
+  X: (cm: number) => number; Y: (cm: number) => number;
+  xMinCm: number; xMaxCm: number;
+}
+
+const PLOT = { left: 8, right: W - 8, top: 26, bottom: 306 };
+const AXIS_Y = 166;
+
+function layoutRayDiagram(props: RayDiagramProps): RayLayout {
+  const { type, focalLength, objectDistance, objectHeight = 2 } = props;
   const isMirror = type === 'concave-mirror' || type === 'convex-mirror';
   const isConverging = type === 'converging' || type === 'concave-mirror';
   // Enforce sign by type so the caller can pass a positive magnitude either way.
-  const f = isConverging ? Math.abs(focalLength) : -Math.abs(focalLength);
-  const doObj = Math.abs(objectDistance);
+  const fMag = Math.max(Math.abs(focalLength) || 1, 1e-6);
+  const f = isConverging ? fMag : -fMag;
+  const doObj = Math.max(Math.abs(objectDistance) || fMag, 1e-6);
+  const ho = Math.abs(objectHeight) || 2;
 
-  // Thin lens/mirror equation.
   const diInv = 1 / f - 1 / doObj;
-  const di = Math.abs(diInv) < 1e-9 ? Infinity : 1 / diInv;
-  const magnification = Number.isFinite(di) ? -di / doObj : 0;
-  const hi = magnification * objectHeight;
-  const imageReal = Number.isFinite(di) && di > 0;
+  const hasImage = Math.abs(diInv) > 1e-9 * Math.max(1, 1 / fMag);
+  const di = hasImage ? 1 / diInv : Infinity;
+  const m = hasImage ? -di / doObj : 0;
+  const hi = m * ho;
+  const imageReal = hasImage && di > 0;
 
-  // Lay out the optical axis horizontally, with the element at center.
-  const cx = W / 2;
-  const axisY = H / 2 + 10;
-  const maxExtent = Math.max(
-    doObj,
-    Math.abs(Number.isFinite(di) ? di : doObj * 1.5),
-    Math.abs(f) * 2.2,
-    1,
-  );
-  const pxPerCm = 175 / maxExtent;
+  // An image many focal lengths away (object just outside F) would squeeze
+  // everything else into a corner: the rays are drawn heading for it instead.
+  const offPage = hasImage && (Math.abs(di) > 4.5 * Math.max(doObj, 2 * fMag) || Math.abs(m) > 5.5);
+  const drawImage = hasImage && !offPage;
 
-  // Key reference points on the axis.
-  const objX = cx - doObj * pxPerCm;
-  const objTopY = axisY - objectHeight * pxPerCm;
-
-  // For a MIRROR, positive di sits on the OBJECT side (left of vertex).
-  // For a LENS, positive di sits on the opposite side (right of lens).
-  const signedDi = Number.isFinite(di) ? di : 0;
-  const imageX = isMirror ? cx - signedDi * pxPerCm : cx + signedDi * pxPerCm;
-  const imageTopY = axisY - hi * pxPerCm;
-
-  // Focal points. LENSES have F (object side) and F' (image side). MIRRORS
-  // have a single physical F on the object side; the "behind-mirror" focus
-  // is a virtual construction (only drawn for convex mirrors).
-  const fLeftX = cx - Math.abs(f) * pxPerCm;
-  const fRightX = cx + Math.abs(f) * pxPerCm;
-
-  // Readout lines (rendered bottom-left; also an obstacle for the pass below).
-  const readoutLines = [
-    `f = ${formatValue(f)} cm`,
-    `d_o = ${formatValue(doObj)} cm`,
-    // An object at the focal point has no image: "d_i = ∞ cm, m = 0" read as a point-sized image far away.
-    ...(hideImage ? ['d_i = ?'] : Number.isFinite(di) ? [`d_i = ${formatValue(di)} cm`, `m = ${formatValue(magnification)}`] : ['the rays leave parallel: no image forms']),
-  ];
-
-  // ── Label layout pass (2026-07-19 renderer label-collision audit):
-  // Object / Image / focal-point captions were each placed independently
-  // around the axis band ("Image" composited into "C" for an object just
-  // beyond the center of curvature; the F' caption sat on the image arrow
-  // shaft when d_i ≈ f). One deoverlapLabels pass, seeded at the
-  // historical spots, with the object/image arrow shafts and the readout
-  // block as obstacles. ──
-  const tipBelow = imageTopY > axisY; // inverted image dips below axis
-  const imageLabelAnchor: 'start' | 'end' = imageX >= cx ? 'start' : 'end';
-  const imageLabelSeed = {
-    x: imageX + (imageX >= cx ? 8 : -8),
-    y: tipBelow ? imageTopY + 12 : imageTopY - 6,
-  };
-  type RayLabel = DeoverlapLabel & { key: string };
-  const labelSeeds: RayLabel[] = [];
+  // What must be on the page: the object and a drawable image. A focal
+  // point far beyond them is allowed to fall off the page (its mark is
+  // dropped; rays still head for it) rather than squeeze them into a corner.
+  const core = Math.max(doObj, drawImage ? Math.abs(di) : 0);
+  const fShown = Math.min(fMag, 4.5 * core);
+  let left: number; let right: number; let showFar = false;
   if (!isMirror) {
-    labelSeeds.push({ key: 'focal', x: fLeftX, y: axisY + 16, text: 'F', fontSize: 10, preferDir: 'down' });
-    labelSeeds.push({ key: 'focalPrime', x: fRightX, y: axisY + 16, text: "F'", fontSize: 10, preferDir: 'down' });
-  } else if (type === 'concave-mirror') {
-    labelSeeds.push({ key: 'focal', x: fLeftX, y: axisY + 16, text: 'F', fontSize: 10, preferDir: 'down' });
-    labelSeeds.push({ key: 'centerOfCurvature', x: cx - 2 * Math.abs(f) * pxPerCm, y: axisY + 16, text: 'C', fontSize: 10, preferDir: 'down' });
+    left = Math.max(doObj, fShown, drawImage && !imageReal ? Math.abs(di) : 0);
+    right = Math.max(fShown, drawImage && imageReal ? di : 0);
+    if (2 * fMag <= Math.max(left, right) * 1.15) { showFar = true; left = Math.max(left, 2 * fMag); right = Math.max(right, 2 * fMag); }
+    right = Math.max(right, 0.45 * left);
+    left = Math.max(left, 0.3 * right);
   } else {
-    labelSeeds.push({ key: 'focal', x: fRightX, y: axisY + 16, text: 'F', fontSize: 10, preferDir: 'down' });
+    left = Math.max(doObj, isConverging ? fShown : 0, drawImage && imageReal ? di : 0);
+    right = Math.max(drawImage && !imageReal ? Math.abs(di) : 0, isConverging ? 0 : Math.min(fMag, 1.6 * left));
+    if (isConverging ? 2 * fMag <= left * 1.6 : 2 * fMag <= left * 1.2) {
+      showFar = true;
+      if (isConverging) left = Math.max(left, 2 * fMag); else right = Math.max(right, 2 * fMag);
+    }
+    right = Math.max(right, 0.14 * left);
   }
-  if (showLabels) {
-    labelSeeds.push({ key: 'object', x: objX - 4, y: objTopY - 6, text: 'Object', fontSize: 11, anchor: 'end', preferDir: 'up' });
-    if (Number.isFinite(di)) {
-      labelSeeds.push({
-        key: 'image', x: imageLabelSeed.x, y: imageLabelSeed.y,
-        text: imageReal ? 'Image' : 'Image (virtual)', fontSize: 11,
-        anchor: imageLabelAnchor, preferDir: tipBelow ? 'down' : 'up',
-      });
+  const marginL = 54; const marginR = 44;
+  const sx = (W - marginL - marginR) / ((left + right) * 1.04);
+  const cx = marginL + left * 1.02 * sx;
+
+  const tallest = Math.max(ho, drawImage ? Math.abs(hi) : ho);
+  let sy = 92 / tallest;
+  if (ho * sy < 20) sy = 20 / ho;
+  const hiPx = drawImage ? Math.abs(hi) * sy : 0;
+  const elemHalf = Math.min(138, Math.max(100, Math.max(ho * sy, hiPx) + 22));
+
+  return {
+    isMirror, f, doObj, ho, di, m, hi, hasImage, imageReal, offPage,
+    cx, axisY: AXIS_Y, sx, sy, elemHalf, showFar,
+    X: (cm) => cx + cm * sx, Y: (cm) => AXIS_Y - cm * sy,
+    xMinCm: (PLOT.left - cx) / sx, xMaxCm: (PLOT.right - cx) / sx,
+  };
+}
+
+interface Seg { x1: number; y1: number; x2: number; y2: number; dashed?: boolean; arrow?: boolean }
+
+/** The principal rays from the object tip, in centimetres about the element. */
+function principalRays(L: RayLayout): { color: string; segs: Seg[] }[] {
+  const { f, doObj, ho, di, hi, hasImage, imageReal, offPage, isMirror, xMinCm, xMaxCm } = L;
+  const drawImage = hasImage && !offPage;
+  const span = xMaxCm - xMinCm;
+  const fMag = Math.abs(f);
+  const r1: Seg[] = []; const r2: Seg[] = []; const r3: Seg[] = [];
+  // Ray 3 meets the element at the image height: only when that is on the element.
+  const ray3 = drawImage && Math.abs(doObj - f) > 1e-6 && Math.abs(hi) * L.sy <= L.elemHalf - 8;
+
+  if (!isMirror) {
+    const xi = di; // image x: right of the lens when real
+    const end = drawImage && imageReal ? Math.min(xMaxCm, xi + 0.16 * span) : xMaxCm;
+    // 1: parallel to the axis, then through F' (or away from the near F).
+    r1.push({ x1: -doObj, y1: ho, x2: 0, y2: ho, arrow: true });
+    r1.push({ x1: 0, y1: ho, x2: end, y2: ho - (ho / f) * end, arrow: true });
+    if (f < 0) r1.push({ x1: 0, y1: ho, x2: f, y2: 0, dashed: true });
+    else if (drawImage && !imageReal) r1.push({ x1: 0, y1: ho, x2: xi, y2: hi, dashed: true });
+    // 2: straight through the centre.
+    r2.push({ x1: -doObj, y1: ho, x2: 0, y2: 0, arrow: true });
+    r2.push({ x1: 0, y1: 0, x2: end, y2: -(ho / doObj) * end, arrow: true });
+    if (drawImage && !imageReal && Math.abs(xi) > doObj) r2.push({ x1: -doObj, y1: ho, x2: xi, y2: hi, dashed: true });
+    // 3: through (or towards) the other focal point, then parallel.
+    if (ray3) {
+      r3.push({ x1: -doObj, y1: ho, x2: 0, y2: hi, arrow: true });
+      r3.push({ x1: 0, y1: hi, x2: end, y2: hi, arrow: true });
+      if (f > 0 && doObj < f) r3.push({ x1: -f, y1: 0, x2: -doObj, y2: ho, dashed: true });
+      if (f < 0) r3.push({ x1: 0, y1: hi, x2: fMag, y2: 0, dashed: true });
+      if (!imageReal) r3.push({ x1: 0, y1: hi, x2: xi, y2: hi, dashed: true });
+    }
+  } else {
+    const xi = -di; // image x: in front of the mirror (left) when real
+    const end = drawImage && imageReal ? Math.max(xMinCm, Math.min(xi, -doObj) - 0.16 * span) : xMinCm;
+    // 1: parallel to the axis, reflects through F (or as if from F behind).
+    r1.push({ x1: -doObj, y1: ho, x2: 0, y2: ho, arrow: true });
+    r1.push({ x1: 0, y1: ho, x2: end, y2: ho + (ho / f) * end, arrow: true });
+    if (f < 0) r1.push({ x1: 0, y1: ho, x2: fMag, y2: 0, dashed: true });
+    else if (drawImage && !imageReal) r1.push({ x1: 0, y1: ho, x2: xi, y2: hi, dashed: true });
+    // 2: to the vertex, reflects at an equal angle.
+    r2.push({ x1: -doObj, y1: ho, x2: 0, y2: 0, arrow: true });
+    r2.push({ x1: 0, y1: 0, x2: end, y2: (ho / doObj) * end, arrow: true });
+    if (drawImage && !imageReal) r2.push({ x1: 0, y1: 0, x2: xi, y2: hi, dashed: true });
+    // 3: through (or towards) F, reflects parallel to the axis.
+    if (ray3) {
+      r3.push({ x1: -doObj, y1: ho, x2: 0, y2: hi, arrow: true });
+      r3.push({ x1: 0, y1: hi, x2: end, y2: hi, arrow: true });
+      if (f > 0 && doObj < f) r3.push({ x1: -f, y1: 0, x2: -doObj, y2: ho, dashed: true });
+      if (f < 0) r3.push({ x1: 0, y1: hi, x2: fMag, y2: 0, dashed: true });
+      if (!imageReal) r3.push({ x1: 0, y1: hi, x2: xi, y2: hi, dashed: true });
     }
   }
-  const readoutW = Math.max(...readoutLines.map((s) => s.length)) * 10 * 0.55;
-  const labelObstacles: DeoverlapObstacle[] = [
-    { left: objX - 3, right: objX + 3, top: Math.min(objTopY, axisY) - 3, bottom: Math.max(objTopY, axisY) + 3 },
-    { left: 14, right: 18 + readoutW + 4, top: H - 74 - 12, bottom: H - 74 + 46 },
+  return [
+    { color: DIAGRAM_COLORS.primary, segs: r1 },
+    { color: DIAGRAM_COLORS.success, segs: r2 },
+    { color: '#ea580c', segs: r3 },
   ];
-  if (Number.isFinite(di)) {
-    labelObstacles.push({ left: imageX - 3, right: imageX + 3, top: Math.min(imageTopY, axisY) - 3, bottom: Math.max(imageTopY, axisY) + 3 });
+}
+
+const MIRROR_SAG = 11;
+
+export default function RayDiagramRenderer(props: RayDiagramProps) {
+  const { title, type, showLabels = true, notes, hideImage = false } = props;
+  const L = layoutRayDiagram(props);
+  const { isMirror, f, doObj, ho, di, m, hi, hasImage, imageReal, offPage, cx, axisY, elemHalf, showFar, X, Y } = L;
+  const fMag = Math.abs(f);
+  const drawImage = hasImage && !offPage && !hideImage;
+  const uid = React.useId().replace(/[^a-zA-Z0-9]/g, '');
+
+  const objX = X(-doObj);
+  const objTopY = Y(ho);
+  const imageX = isMirror ? X(-di) : X(di);
+  const imageTopY = Y(hi);
+
+  // Axis marks. Lens: F and F' (and 2F, 2F' when they fit). Concave mirror:
+  // F and C in front. Convex mirror: F and C behind, both virtual.
+  type Mark = { key: string; x: number; label: string; muted?: boolean };
+  const marks: Mark[] = [];
+  if (!isMirror) {
+    marks.push({ key: 'focal', x: X(-fMag), label: 'F' }, { key: 'focalPrime', x: X(fMag), label: 'F′' });
+    // 2F only where it has room beside F.
+    if (showFar && fMag * L.sx >= 42) marks.push({ key: 'twoF', x: X(-2 * fMag), label: '2F', muted: true }, { key: 'twoFPrime', x: X(2 * fMag), label: '2F′', muted: true });
+  } else if (type === 'concave-mirror') {
+    marks.push({ key: 'focal', x: X(-fMag), label: 'F' });
+    if (showFar) marks.push({ key: 'centerOfCurvature', x: X(-2 * fMag), label: 'C', muted: true });
+  } else {
+    marks.push({ key: 'focal', x: X(fMag), label: 'F' });
+    if (showFar) marks.push({ key: 'centerOfCurvature', x: X(2 * fMag), label: 'C', muted: true });
   }
-  const resolvedLabels = deoverlapLabels(
-    labelSeeds,
-    { width: W, height: H },
-    { obstacles: labelObstacles, baseline: 'alphabetic' },
-  );
-  const labelMap = new Map(resolvedLabels.map((l) => [l.key, { x: l.x, y: l.y }]));
-  const lpos = (key: string, fallbackX: number, fallbackY: number) =>
-    labelMap.get(key) ?? { x: fallbackX, y: fallbackY };
+
+  // A focal point beyond the edge of the page gets no mark.
+  const shownMarks = marks.filter((mk) => mk.x >= PLOT.left + 8 && mk.x <= PLOT.right - 8);
+
+  // ── Label layout: one de-overlap pass over the axis marks and the
+  // Object / Image captions, with the two arrows as obstacles. ──
+  const LABEL = 12.5;
+  const imageText = imageReal ? 'Image' : 'Virtual image';
+  const imageW = imageText.length * LABEL * 0.6;
+  const imageOnRight = imageX >= cx;
+  // Outside the arrow, away from the element; flipped when it would leave the board.
+  let imageAnchor: 'start' | 'middle' | 'end' = imageOnRight ? 'start' : 'end';
+  if (imageAnchor === 'start' && imageX + 8 + imageW > W - 4) imageAnchor = 'end';
+  if (imageAnchor === 'end' && imageX - 8 - imageW < 4) imageAnchor = 'start';
+  // Beside the shaft at mid-height: the rays meet at the tip, so the wedge
+  // between the axis and the tip is the clear spot. A stub of an arrow has
+  // no such wedge: its caption goes beyond the tip instead.
+  const imageLen = Math.abs(imageTopY - axisY);
+  let imageSeed = { x: imageX + (imageAnchor === 'start' ? 9 : -9), y: (axisY + imageTopY) / 2 + 4 };
+  if (imageLen < 30) {
+    imageAnchor = 'middle';
+    imageSeed = { x: Math.min(W - 6 - imageW / 2, Math.max(6 + imageW / 2, imageX)), y: hi < 0 ? imageTopY + 17 : imageTopY - 9 };
+  }
+  type RayLabel = DeoverlapLabel & { key: string };
+  const seeds: RayLabel[] = shownMarks.map((mk) => ({ key: mk.key, x: mk.x, y: axisY + 18, text: mk.label, fontSize: 12, preferDir: 'down' as const }));
+  if (showLabels) {
+    seeds.push({ key: 'object', x: objX - 8, y: objTopY + 10, text: 'Object', fontSize: LABEL, anchor: 'end', preferDir: 'up' });
+    if (drawImage) seeds.push({ key: 'image', x: imageSeed.x, y: imageSeed.y, text: imageText, fontSize: LABEL, anchor: imageAnchor, preferDir: hi < 0 ? 'down' : 'up' });
+  }
+  const obstacles: DeoverlapObstacle[] = [
+    { left: objX - 5, right: objX + 5, top: Math.min(objTopY, axisY) - 3, bottom: Math.max(objTopY, axisY) + 3 },
+  ];
+  if (drawImage) obstacles.push({ left: imageX - 5, right: imageX + 5, top: Math.min(imageTopY, axisY) - 3, bottom: Math.max(imageTopY, axisY) + 3 });
+  const resolved = deoverlapLabels(seeds, { width: W, height: PLOT.bottom }, { obstacles, baseline: 'alphabetic', charWidth: 0.6 });
+  const labelMap = new Map(resolved.map((l) => [l.key, { x: l.x, y: l.y }]));
+  const lpos = (key: string, x: number, y: number) => labelMap.get(key) ?? { x, y };
+
+  // Readout under the figure: the given values, then what the image is like.
+  const readout = [
+    `f = ${fmt(f)} cm`,
+    `dₒ = ${fmt(doObj)} cm`,
+    hideImage ? 'dᵢ = ?' : hasImage ? `dᵢ = ${fmt(di)} cm` : null,
+    !hideImage && hasImage ? `m = ${fmt(m)}` : null,
+  ].filter(Boolean).join('      ');
+  const size = Math.abs(Math.abs(m) - 1) < 0.02 ? 'same size' : Math.abs(m) > 1 ? 'enlarged' : 'reduced';
+  const nature = hideImage ? ''
+    : !hasImage ? 'The rays leave parallel: no image forms.'
+    : `${imageReal ? 'Real' : 'Virtual'}, ${m < 0 ? 'inverted' : 'upright'}, ${size}${offPage ? ` (the image is off the page, ${imageOnRight ? 'to the right' : 'to the left'})` : ''}`;
+
+  const rays = hideImage ? [] : principalRays(L);
+  // Real rays stop at the reflecting surface, which bulges off the vertex plane.
+  const sagSign = type === 'concave-mirror' ? -1 : 1;
+  const mirrorEdgeX = cx + sagSign * MIRROR_SAG;
+  const clipD = isMirror
+    ? `M ${PLOT.left} ${PLOT.top} L ${mirrorEdgeX} ${PLOT.top} L ${mirrorEdgeX} ${axisY - elemHalf} Q ${cx - sagSign * MIRROR_SAG} ${axisY} ${mirrorEdgeX} ${axisY + elemHalf} L ${mirrorEdgeX} ${PLOT.bottom} L ${PLOT.left} ${PLOT.bottom} Z`
+    : `M ${PLOT.left} ${PLOT.top} H ${PLOT.right} V ${PLOT.bottom} H ${PLOT.left} Z`;
+
+  const halo = { paintOrder: 'stroke' as const, stroke: '#ffffff', strokeWidth: 3.5, strokeLinejoin: 'round' as const };
 
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
@@ -266,147 +407,86 @@ export default function RayDiagramRenderer({
           <InlineMathText text={title} />
         </div>
       )}
-      <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: 400 }}>
-        {/* Arrowhead for the image / object arrows. */}
+      <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: 460, display: 'block', margin: '0 auto' }}>
         <defs>
-          <marker id="rd-arrow-obj" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill={DIAGRAM_COLORS.secondary} />
-          </marker>
-          <marker id="rd-arrow-img" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill={DIAGRAM_COLORS.accent} />
-          </marker>
+          <clipPath id={`rd-real-${uid}`}><path d={clipD} /></clipPath>
+          <clipPath id={`rd-plot-${uid}`}><rect x={PLOT.left} y={PLOT.top} width={PLOT.right - PLOT.left} height={PLOT.bottom - PLOT.top} /></clipPath>
         </defs>
 
         {/* Optical axis */}
-        <g {...feat('principalAxis', { cx: W / 2, cy: axisY, w: W - 60, h: 10 })}>
-          <line x1={30} y1={axisY} x2={W - 30} y2={axisY} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} strokeDasharray="4 3" />
+        <g {...feat('principalAxis', { cx: W / 2, cy: axisY, w: W - 24, h: 10 })}>
+          <line x1={12} y1={axisY} x2={W - 12} y2={axisY} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} strokeDasharray="5 4" />
         </g>
 
-        {/* The element itself (lens / mirror visual) */}
-        <g {...feat(isMirror ? 'mirror' : 'lens', { cx, cy: axisY, w: 34, h: 120 })}>
-          {renderElement(type, cx, axisY)}
+        {/* The lens or mirror */}
+        <g {...feat(isMirror ? 'mirror' : 'lens', { cx, cy: axisY, w: 34, h: elemHalf * 2 })}>
+          {renderElement(type, cx, axisY, elemHalf)}
         </g>
 
-        {/* Focal point markers + labels.
-            Lens: F on object side (left), F' on image side (right).
-            Concave mirror: F on object side (left) only.
-            Convex mirror: F behind mirror (right), shown for reference (virtual). */}
-        {!isMirror && (
-          <>
-            <g {...feat('focal', { cx: fLeftX, cy: axisY, w: 22, h: 22 })}>
-              <FocalMark x={fLeftX} y={axisY} label="F" labelPos={lpos('focal', fLeftX, axisY + 16)} />
-            </g>
-            <g {...feat('focalPrime', { cx: fRightX, cy: axisY, w: 22, h: 22 })}>
-              <FocalMark x={fRightX} y={axisY} label="F'" labelPos={lpos('focalPrime', fRightX, axisY + 16)} />
-            </g>
-          </>
-        )}
-        {type === 'concave-mirror' && (
-          <>
-            <g {...feat('focal', { cx: fLeftX, cy: axisY, w: 22, h: 22 })}>
-              <FocalMark x={fLeftX} y={axisY} label="F" labelPos={lpos('focal', fLeftX, axisY + 16)} />
-            </g>
-            {/* C = center of curvature at 2f */}
-            <g {...feat('centerOfCurvature', { cx: cx - 2 * Math.abs(f) * pxPerCm, cy: axisY, w: 22, h: 22 })}>
-              <FocalMark
-                x={cx - 2 * Math.abs(f) * pxPerCm}
-                y={axisY}
-                label="C"
-                muted
-                labelPos={lpos('centerOfCurvature', cx - 2 * Math.abs(f) * pxPerCm, axisY + 16)}
-              />
-            </g>
-          </>
-        )}
-        {type === 'convex-mirror' && (
-          <g {...feat('focal', { cx: fRightX, cy: axisY, w: 22, h: 22 })}>
-            <FocalMark x={fRightX} y={axisY} label="F" muted labelPos={lpos('focal', fRightX, axisY + 16)} />
+        {/* Principal rays: solid where light travels, dashed where it is traced back. */}
+        {rays.map((ray, ri) => (
+          <g key={ri}>
+            {ray.segs.map((s, si) => {
+              let x1 = X(s.x1); let y1 = Y(s.y1); let x2 = X(s.x2); let y2 = Y(s.y2);
+              const len = Math.hypot(x2 - x1, y2 - y1);
+              if (len < 0.5) return null;
+              if (isMirror && !s.dashed) {
+                // Rays are computed to the vertex plane; run them on to the
+                // curved surface (the clip trims them there).
+                const ux = (x2 - x1) / len; const uy = (y2 - y1) / len; const over = MIRROR_SAG + 2;
+                if (s.x2 === 0) { x2 += ux * over; y2 += uy * over; }
+                if (s.x1 === 0) { x1 -= ux * over; y1 -= uy * over; }
+              }
+              const ang = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+              // Direction mark part-way along, kept on the visible stretch.
+              const t = Math.min(0.5, 70 / len);
+              const ax = x1 + (x2 - x1) * t; const ay = y1 + (y2 - y1) * t;
+              return (
+                <g key={si} clipPath={`url(#${s.dashed ? `rd-plot-${uid}` : `rd-real-${uid}`})`}>
+                  <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={ray.color} strokeWidth={s.dashed ? 1.25 : 1.9} strokeDasharray={s.dashed ? '5 4' : undefined} strokeLinecap="round" opacity={s.dashed ? 0.85 : 1} />
+                  {s.arrow && !s.dashed && len > 44 && (
+                    <path d="M -5 -3.6 L 3 0 L -5 3.6 Z" fill={ray.color} transform={`translate(${ax} ${ay}) rotate(${ang})`} />
+                  )}
+                </g>
+              );
+            })}
           </g>
-        )}
+        ))}
 
-        {/* Object arrow. */}
-        <g {...feat('object', {
-          cx: objX,
-          cy: (axisY + objTopY) / 2,
-          w: 44,
-          h: (axisY - objTopY) + 24,
-        })}>
-          <line
-            x1={objX} y1={axisY}
-            x2={objX} y2={objTopY}
-            stroke={DIAGRAM_COLORS.secondary}
-            strokeWidth={2.5}
-            markerEnd="url(#rd-arrow-obj)"
-          />
+        {/* Axis marks */}
+        {shownMarks.map((mk) => (
+          <g key={mk.key} {...(mk.key === 'twoF' || mk.key === 'twoFPrime' ? {} : feat(mk.key, { cx: mk.x, cy: axisY, w: 22, h: 22 }))}>
+            <circle cx={mk.x} cy={axisY} r={3.2} fill={mk.muted ? DIAGRAM_COLORS.muted : DIAGRAM_COLORS.text} />
+            <text x={lpos(mk.key, mk.x, axisY + 18).x} y={lpos(mk.key, mk.x, axisY + 18).y} fontSize={12} fontWeight={600} textAnchor="middle" fill={mk.muted ? DIAGRAM_COLORS.muted : DIAGRAM_COLORS.text} {...halo}>{mk.label}</text>
+          </g>
+        ))}
+
+        {/* Object arrow */}
+        <g {...feat('object', { cx: objX, cy: (axisY + objTopY) / 2, w: 44, h: (axisY - objTopY) + 24 })}>
+          <UprightArrow x={objX} baseY={axisY} tipY={objTopY} color={DIAGRAM_COLORS.secondary} />
           {showLabels && (
-            <text
-              x={lpos('object', objX - 4, objTopY - 6).x}
-              y={lpos('object', objX - 4, objTopY - 6).y}
-              fontSize={11}
-              fill={DIAGRAM_COLORS.secondary}
-              textAnchor="end"
-              fontWeight={700}
-            >
-              Object
-            </text>
+            <text x={lpos('object', objX - 8, objTopY + 10).x} y={lpos('object', objX - 8, objTopY + 10).y} fontSize={LABEL} fill={DIAGRAM_COLORS.secondary} textAnchor="end" fontWeight={700} {...halo}>Object</text>
           )}
         </g>
 
-        {/* Principal rays. */}
-        {!hideImage && renderRays({
-          type, cx, axisY, objX, objTopY, fLeftX, fRightX,
-          imageX, imageTopY, imageReal, isMirror,
-        })}
-
-        {/* Image arrow. Dashed for virtual, solid for real. */}
-        {Number.isFinite(di) && !hideImage && (() => {
-          const imageCy = (axisY + imageTopY) / 2;
-          const imageH = Math.abs(imageTopY - axisY) + 24;
-          return (
-          <g {...feat('image', { cx: imageX, cy: imageCy, w: 80, h: imageH })}>
-            <line
-              x1={imageX} y1={axisY}
-              x2={imageX} y2={imageTopY}
-              stroke={DIAGRAM_COLORS.accent}
-              strokeWidth={2.5}
-              strokeDasharray={imageReal ? undefined : '6 4'}
-              markerEnd="url(#rd-arrow-img)"
-            />
+        {/* Image arrow: dashed when virtual */}
+        {drawImage && (
+          <g {...feat('image', { cx: imageX, cy: (axisY + imageTopY) / 2, w: 80, h: Math.abs(imageTopY - axisY) + 24 })}>
+            <UprightArrow x={imageX} baseY={axisY} tipY={imageTopY} color={DIAGRAM_COLORS.accent} dashed={!imageReal} />
             {showLabels && (
-              <text
-                x={lpos('image', imageLabelSeed.x, imageLabelSeed.y).x}
-                y={lpos('image', imageLabelSeed.x, imageLabelSeed.y).y}
-                fontSize={11}
-                fill={DIAGRAM_COLORS.accent}
-                textAnchor={imageLabelAnchor}
-                fontWeight={700}
-              >
-                Image{imageReal ? '' : ' (virtual)'}
-              </text>
+              <text x={lpos('image', imageSeed.x, imageSeed.y).x} y={lpos('image', imageSeed.x, imageSeed.y).y} fontSize={LABEL} fill={DIAGRAM_COLORS.accent} textAnchor={imageAnchor} fontWeight={700} {...halo}>{imageText}</text>
             )}
           </g>
-          );
-        })()}
+        )}
 
-        {/* Readout — bottom-left corner. Absolute coordinates (no transform)
-            so the label harness / layout pass can measure the lines. */}
-        <g>
-          {readoutLines.map((line, i) => (
-            <text key={i} x={18} y={H - 74 + i * 14} fontSize={10} fill={DIAGRAM_COLORS.muted}>{line}</text>
-          ))}
-        </g>
+        {/* Readout */}
+        <text x={W / 2} y={H - 26} fontSize={13} fontWeight={600} textAnchor="middle" fill={DIAGRAM_COLORS.text} style={{ whiteSpace: 'pre' }}>{readout}</text>
+        {nature && <text x={W / 2} y={H - 8} fontSize={12} textAnchor="middle" fill={DIAGRAM_COLORS.muted}>{nature}</text>}
       </svg>
       {/* Notes rendered as HTML so long captions wrap rather than getting
           clipped by the SVG viewBox. */}
       {notes && (
-        <div style={{
-          textAlign: 'center',
-          fontSize: 11,
-          color: DIAGRAM_COLORS.muted,
-          fontStyle: 'italic',
-          marginTop: 4,
-          lineHeight: 1.35,
-        }}>
+        <div style={{ textAlign: 'center', fontSize: 12, color: DIAGRAM_COLORS.muted, fontStyle: 'italic', marginTop: 4, lineHeight: 1.35 }}>
           {notes}
         </div>
       )}
@@ -414,191 +494,59 @@ export default function RayDiagramRenderer({
   );
 }
 
+/** A vertical arrow from the axis to its tip; the head shrinks with a short arrow so a small image still reads as one. */
+function UprightArrow({ x, baseY, tipY, color, dashed = false }: { x: number; baseY: number; tipY: number; color: string; dashed?: boolean }): React.ReactElement {
+  const len = Math.abs(tipY - baseY);
+  const dir = tipY < baseY ? -1 : 1;
+  const head = Math.max(4, Math.min(11, len * 0.45));
+  const half = head * 0.48;
+  const neckY = tipY - dir * head;
+  return (
+    <g>
+      {len > head && <line x1={x} y1={baseY} x2={x} y2={neckY} stroke={color} strokeWidth={2.75} strokeDasharray={dashed ? '6 4' : undefined} />}
+      <path d={`M ${x} ${tipY} L ${x - half} ${neckY} L ${x + half} ${neckY} Z`} fill={color} />
+    </g>
+  );
+}
+
 // ─── Element visuals ──────────────────────────────────────────────────────
 
-function renderElement(type: RayDiagramProps['type'], cx: number, axisY: number): React.ReactElement {
-  const height = 110;
+function renderElement(type: RayDiagramProps['type'], cx: number, axisY: number, half: number): React.ReactElement {
+  const top = axisY - half; const bottom = axisY + half;
   if (type === 'converging') {
+    // Biconvex outline, thickest on the axis.
     return (
       <g>
-        <ellipse cx={cx} cy={axisY} rx={10} ry={height / 2} fill="#dbeafe" stroke={DIAGRAM_COLORS.primary} strokeWidth={2} />
-        {/* Outward-facing arrows to indicate "converging" */}
-        <polygon points={`${cx - 10},${axisY - height / 2} ${cx - 18},${axisY - height / 2 + 10} ${cx - 10},${axisY - height / 2 + 16}`} fill={DIAGRAM_COLORS.primary} />
-        <polygon points={`${cx + 10},${axisY - height / 2} ${cx + 18},${axisY - height / 2 + 10} ${cx + 10},${axisY - height / 2 + 16}`} fill={DIAGRAM_COLORS.primary} />
+        <path d={`M ${cx} ${top} Q ${cx + 24} ${axisY} ${cx} ${bottom} Q ${cx - 24} ${axisY} ${cx} ${top} Z`} fill="#dbeafe" fillOpacity={0.7} stroke={DIAGRAM_COLORS.primary} strokeWidth={1.75} strokeLinejoin="round" />
+        <line x1={cx} y1={top} x2={cx} y2={bottom} stroke={DIAGRAM_COLORS.primary} strokeWidth={0.75} strokeDasharray="3 3" opacity={0.6} />
       </g>
     );
   }
   if (type === 'diverging') {
+    // Biconcave outline, thinnest on the axis.
+    const w = 11; const waist = 3.5;
     return (
       <g>
-        <ellipse cx={cx} cy={axisY} rx={6} ry={height / 2} fill="#fef3c7" stroke={DIAGRAM_COLORS.warning} strokeWidth={2} />
-        {/* Inward-facing arrow tips to indicate "diverging" */}
-        <polygon points={`${cx - 6},${axisY - height / 2} ${cx - 16},${axisY - height / 2 - 6} ${cx + 4},${axisY - height / 2 - 2}`} fill={DIAGRAM_COLORS.warning} />
-        <polygon points={`${cx + 6},${axisY + height / 2} ${cx + 16},${axisY + height / 2 + 6} ${cx - 4},${axisY + height / 2 + 2}`} fill={DIAGRAM_COLORS.warning} />
+        <path d={`M ${cx - w} ${top} L ${cx + w} ${top} Q ${cx + 2 * waist - w} ${axisY} ${cx + w} ${bottom} L ${cx - w} ${bottom} Q ${cx - 2 * waist + w} ${axisY} ${cx - w} ${top} Z`} fill="#dbeafe" fillOpacity={0.7} stroke={DIAGRAM_COLORS.primary} strokeWidth={1.75} strokeLinejoin="round" />
+        <line x1={cx} y1={top} x2={cx} y2={bottom} stroke={DIAGRAM_COLORS.primary} strokeWidth={0.75} strokeDasharray="3 3" opacity={0.6} />
       </g>
     );
   }
-  if (type === 'concave-mirror') {
-    // Concave surface faces the object (LEFT). Reflective (shaded) side on the right.
-    return (
-      <g>
-        <path d={`M ${cx} ${axisY - height / 2} A 60 ${height / 2} 0 0 0 ${cx} ${axisY + height / 2}`} stroke={DIAGRAM_COLORS.slate} strokeWidth={3} fill="none" />
-        {/* Hatching on the back (right) side */}
-        {Array.from({ length: 9 }).map((_, i) => {
-          const ty = axisY - height / 2 + (i + 0.5) * (height / 9);
-          return <line key={i} x1={cx + 1} y1={ty} x2={cx + 10} y2={ty - 6} stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />;
-        })}
-      </g>
-    );
-  }
-  // convex-mirror: convex surface faces object (LEFT). Reflective (shaded) side on left? Actually for convex, the mirror bulges TOWARD the object.
+  // Mirrors: the object is on the left. A concave mirror's rim leans towards
+  // the object (centre of curvature in front); a convex mirror's rim leans
+  // away. The silvered back, hatched, is on the right either way.
+  const s = type === 'concave-mirror' ? -1 : 1;
+  const edgeX = cx + s * MIRROR_SAG;
+  const n = 11;
   return (
     <g>
-      <path d={`M ${cx} ${axisY - height / 2} A 60 ${height / 2} 0 0 1 ${cx} ${axisY + height / 2}`} stroke={DIAGRAM_COLORS.slate} strokeWidth={3} fill="none" />
-      {Array.from({ length: 9 }).map((_, i) => {
-        const ty = axisY - height / 2 + (i + 0.5) * (height / 9);
-        return <line key={i} x1={cx - 1} y1={ty} x2={cx - 10} y2={ty - 6} stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />;
+      {Array.from({ length: n }).map((_, i) => {
+        const u = -1 + (2 * (i + 0.5)) / n;
+        const px = cx + s * MIRROR_SAG * u * u;
+        const py = axisY + u * half;
+        return <line key={i} x1={px} y1={py} x2={px + 8} y2={py - 6} stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />;
       })}
+      <path d={`M ${edgeX} ${top} Q ${cx - s * MIRROR_SAG} ${axisY} ${edgeX} ${bottom}`} stroke={DIAGRAM_COLORS.slate} strokeWidth={3} fill="none" strokeLinecap="round" />
     </g>
   );
-}
-
-function FocalMark({ x, y, label, muted = false, labelPos }: {
-  x: number; y: number; label: string; muted?: boolean;
-  /** Resolved caption spot from the layout pass; defaults to just below the dot. */
-  labelPos?: { x: number; y: number };
-}): React.ReactElement {
-  const color = muted ? DIAGRAM_COLORS.muted : DIAGRAM_COLORS.warning;
-  return (
-    <g>
-      <circle cx={x} cy={y} r={3} fill={color} />
-      <text x={labelPos?.x ?? x} y={labelPos?.y ?? y + 16} fontSize={10} fill={color} textAnchor="middle" fontWeight={600}>{label}</text>
-    </g>
-  );
-}
-
-// ─── Ray rendering ────────────────────────────────────────────────────────
-
-interface RayCtx {
-  type: RayDiagramProps['type'];
-  cx: number;
-  axisY: number;
-  objX: number;
-  objTopY: number;
-  fLeftX: number;
-  fRightX: number;
-  imageX: number;
-  imageTopY: number;
-  imageReal: boolean;
-  isMirror: boolean;
-}
-
-function renderRays(ctx: RayCtx): React.ReactElement {
-  const { type, cx, axisY, objX, objTopY, fLeftX, fRightX, imageX, imageTopY, imageReal, isMirror } = ctx;
-
-  // Ray 1 (parallel to axis from object tip, then refracts/reflects through F).
-  //   Lens converging: after lens, passes through F' on right.
-  //   Lens diverging: refracts outward, extended backward (dashed) through F' on right.
-  //   Concave mirror: reflects back through F on left.
-  //   Convex mirror: reflects as if from virtual F behind mirror (right).
-  //
-  // Ray 2 — goes through the centre of the lens / the mirror vertex.
-  //   Lens: straight line through (cx, axisY).
-  //   Mirror: reflects at (cx, axisY) with equal angle about the axis. The
-  //     reflected ray direction = (-incomingDx, +incomingDy) in SVG because
-  //     reflection about the horizontal normal at the vertex flips the
-  //     axis-parallel component.
-
-  const rayColor1 = DIAGRAM_COLORS.primary;
-  const rayColor2 = DIAGRAM_COLORS.success;
-
-  const parts: React.ReactElement[] = [];
-
-  // --- Ray 1, incoming parallel segment (always solid, object → element at tip height).
-  parts.push(
-    <line key="r1-in"
-      x1={objX} y1={objTopY}
-      x2={cx} y2={objTopY}
-      stroke={rayColor1} strokeWidth={1.75}
-    />,
-  );
-
-  // --- Ray 1, outgoing segment after the element.
-  if (type === 'converging') {
-    // Through F' on right then extended to or past image.
-    const end = extendLine(cx, objTopY, fRightX, axisY, imageReal ? imageX : cx + 160);
-    parts.push(<line key="r1-out" x1={cx} y1={objTopY} x2={end.x} y2={end.y} stroke={rayColor1} strokeWidth={1.75} />);
-  } else if (type === 'diverging') {
-    // Refracted ray appears to come from F' on right (the "near" focal point
-    // for a diverging lens). The real refracted ray goes UPWARD-AND-RIGHT from
-    // the lens. Draw the real ray solid + a dashed backward extension to F'.
-    const dirX = cx - fRightX;   // from F' to lens exit, pointing left (negative)
-    const dirY = objTopY - axisY; // negative (objTopY is above axis)
-    // Real ray: from (cx, objTopY), direction = opposite of (dirX, dirY)
-    const tEnd = 2; // extend past the image region
-    const endX = cx - dirX * tEnd;
-    const endY = objTopY - dirY * tEnd;
-    parts.push(<line key="r1-out" x1={cx} y1={objTopY} x2={endX} y2={endY} stroke={rayColor1} strokeWidth={1.75} />);
-    // Dashed backward extension through F'
-    parts.push(<line key="r1-ext" x1={cx} y1={objTopY} x2={fRightX} y2={axisY} stroke={rayColor1} strokeWidth={1} strokeDasharray="4 3" />);
-  } else if (type === 'concave-mirror') {
-    // Reflects back through F on LEFT. Line from (cx, objTopY) through (fLeftX, axisY), extended.
-    const end = extendLine(cx, objTopY, fLeftX, axisY, Math.min(imageX, objX) - 20);
-    parts.push(<line key="r1-out" x1={cx} y1={objTopY} x2={end.x} y2={end.y} stroke={rayColor1} strokeWidth={1.75} />);
-  } else {
-    // Convex mirror: reflected ray appears to come from virtual F behind mirror (right).
-    // Real reflected ray goes UPWARD-LEFT from (cx, objTopY).
-    // Direction from virtual F (fRightX, axisY) through (cx, objTopY), continue in that direction.
-    const dx = cx - fRightX;
-    const dy = objTopY - axisY;
-    const endX = cx + dx * 1.6;
-    const endY = objTopY + dy * 1.6;
-    parts.push(<line key="r1-out" x1={cx} y1={objTopY} x2={endX} y2={endY} stroke={rayColor1} strokeWidth={1.75} />);
-    // Dashed virtual extension INTO the mirror to F.
-    parts.push(<line key="r1-ext" x1={cx} y1={objTopY} x2={fRightX} y2={axisY} stroke={rayColor1} strokeWidth={1} strokeDasharray="4 3" />);
-  }
-
-  // --- Ray 2: through element center / mirror vertex.
-  if (!isMirror) {
-    // Straight line through (cx, axisY), extended to image or past it.
-    const end = extendLine(objX, objTopY, cx, axisY, imageReal ? imageX + 20 : cx + 160);
-    parts.push(<line key="r2" x1={objX} y1={objTopY} x2={end.x} y2={end.y} stroke={rayColor2} strokeWidth={1.75} />);
-    // Virtual images: dashed extension backward from lens on object side.
-    if (!imageReal && Number.isFinite(imageX)) {
-      parts.push(<line key="r2-ext" x1={cx} y1={axisY} x2={imageX} y2={imageTopY} stroke={rayColor2} strokeWidth={1} strokeDasharray="4 3" />);
-    }
-  } else {
-    // Mirror vertex reflection.
-    // Incoming direction (from object to vertex) in SVG: (cx - objX, axisY - objTopY).
-    // Reflection about the axis (horizontal normal at vertex) flips the y-component relative to the axis reflection:
-    //   wait, the NORMAL at a spherical-mirror vertex points along the axis (horizontal, to the right). Reflection
-    //   reverses the component parallel to the normal. Incoming (+dx, +dy) becomes (-dx, +dy) after reflection.
-    const inDx = cx - objX;
-    const inDy = axisY - objTopY;
-    // Incoming segment: object to vertex (solid)
-    parts.push(<line key="r2-in" x1={objX} y1={objTopY} x2={cx} y2={axisY} stroke={rayColor2} strokeWidth={1.75} />);
-    // Reflected segment: from vertex going (-dx, +dy) for as long as we want.
-    // End at the image x (or ~160 px back if virtual).
-    const target = imageReal ? imageX : (cx - 160);
-    const t = (target - cx) / (-inDx); // parameter so cx + t*(-inDx) = target
-    const outX = cx + t * -inDx;
-    const outY = axisY + t * inDy;
-    parts.push(<line key="r2-out" x1={cx} y1={axisY} x2={outX} y2={outY} stroke={rayColor2} strokeWidth={1.75} />);
-    // Virtual image: dashed extension behind the mirror
-    if (!imageReal && Number.isFinite(imageX)) {
-      parts.push(<line key="r2-ext-a" x1={cx} y1={axisY} x2={imageX} y2={imageTopY} stroke={rayColor2} strokeWidth={1} strokeDasharray="4 3" />);
-      parts.push(<line key="r1-ext-a" x1={cx} y1={objTopY} x2={imageX} y2={imageTopY} stroke={rayColor1} strokeWidth={1} strokeDasharray="4 3" />);
-    }
-  }
-
-  return <g>{parts}</g>;
-}
-
-/** Extend a line defined by two points (p1, p2) out to a target x-coordinate.
- *  Returns the new endpoint. */
-function extendLine(x1: number, y1: number, x2: number, y2: number, targetX: number): { x: number; y: number } {
-  const dx = x2 - x1;
-  if (Math.abs(dx) < 1e-9) return { x: x2, y: y2 };
-  const slope = (y2 - y1) / dx;
-  return { x: targetX, y: y1 + slope * (targetX - x1) };
 }

@@ -19,6 +19,8 @@ import { resolveInequalityEntry, normalizeLineStyle } from '@/lib/tutor/whiteboa
 import { GRAPH_COLORS } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_GRAPH_CURVE_FEATURES } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { graphCurveFeatures, graphPointFeatures, isOpenGraphPoint } from '@/lib/tutor/whiteboard/graph-features';
+import { parseFunctionString } from '@/lib/tutor/whiteboard/math-expr';
+import { layoutGraphLabels, segmentColours } from './graph-label-layout';
 
 // Color palette matching our existing design. Defined beside the computed
 // inequality facts so the colour NAMED to the tutor is the colour drawn here.
@@ -58,6 +60,10 @@ interface DesmosGraphRendererProps {
  */
 function normalizeBareLatex(s: string): string {
   s = bracketExponents(s);
+  // exp(…) and abs(…) written as plain functions: Desmos reads "exp(" as e·x·p and plots nothing (a capacitor's
+  // charging curve 10*(1-exp(-x/2)) left empty axes, figure audit 2026-11-13).
+  s = s.replace(/(?<![\\A-Za-z])exp(?=\s*\()/g, '\\exp');
+  s = s.replace(/(?<![\\A-Za-z{])abs(?=\s*\()/g, '\\operatorname{abs}');
   s = s.replace(/(?<!\\)\b(sin|cos|tan|sec|csc|cot|sinh|cosh|tanh|log|ln|arcsin|arccos|arctan)\b/g, '\\$1');
   s = s.replace(/(?<!\\)\bsqrt\(([^()]*)\)/g, '\\sqrt{$1}');
   s = s.replace(/(?<!\\)\bpi\b/g, '\\pi');
@@ -179,6 +185,19 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
         yRange: okRange(rawData?.yRange) ? rawData.yRange : [-10, 10] as [number, number],
       };
     }, [rawData]);
+    // Named axes measure two different things (volts against seconds): the units of one are not the units of the
+    // other, so the window asked for is kept as it is. Otherwise equal units on both axes, when the spans are
+    // comparable (see ASPECT_LOCK_MAX_SPAN_RATIO).
+    const axisName = (v: unknown, plain: string) => (typeof v === 'string' && v.trim() && v.trim().toLowerCase() !== plain ? v.trim() : '');
+    const xAxisName = axisName((data as { xLabel?: unknown }).xLabel, 'x');
+    const yAxisName = axisName((data as { yLabel?: unknown }).yLabel, 'y');
+    const xSpan0 = Math.abs(data.xRange[1] - data.xRange[0]);
+    const ySpan0 = Math.abs(data.yRange[1] - data.yRange[0]);
+    const aspectLocked = !xAxisName && !yAxisName && xSpan0 > 0 && ySpan0 > 0 && Math.max(xSpan0 / ySpan0, ySpan0 / xSpan0) <= ASPECT_LOCK_MAX_SPAN_RATIO;
+    // The box takes the shape of the window asked for (within limits), so that an aspect-locked graph shows that
+    // window and not three times its width: on a wide card a parabola asked for on −5..5 was drawn on −13..13.
+    const PLOT_H = 380;
+    const plotMaxWidth = aspectLocked ? Math.round(Math.max(460, Math.min(900, PLOT_H * (xSpan0 / ySpan0)))) : 680;
     const containerRef = useRef<HTMLDivElement>(null);
     const calculatorRef = useRef<Desmos.Calculator | null>(null);
     const [desmosLoaded, setDesmosLoaded] = useState(!!window.Desmos);
@@ -273,16 +292,23 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
       const container = containerRef.current;
       const applyUniformBounds = () => {
         const w = container.clientWidth, h = container.clientHeight;
-        const cx = (data.xRange[0] + data.xRange[1]) / 2;
-        const cy = (data.yRange[0] + data.yRange[1]) / 2;
+        let cx = (data.xRange[0] + data.xRange[1]) / 2;
+        let cy = (data.yRange[0] + data.yRange[1]) / 2;
         let xSpan = Math.abs(data.xRange[1] - data.xRange[0]);
         let ySpan = Math.abs(data.yRange[1] - data.yRange[0]);
         if (w > 0 && h > 0 && xSpan > 0 && ySpan > 0) {
-          const spanRatio = Math.max(xSpan / ySpan, ySpan / xSpan);
-          if (spanRatio <= ASPECT_LOCK_MAX_SPAN_RATIO) {
+          if (aspectLocked) {
             const pxRatio = w / h;
             if (xSpan / ySpan < pxRatio) xSpan = ySpan * pxRatio;
             else ySpan = xSpan / pxRatio;
+          } else {
+            // A window that starts exactly at zero puts the axis on the edge of the box, where its numbers have
+            // no room: a little margin on that side keeps them readable.
+            if (data.xRange[0] === 0) { const pad = xSpan * 0.07; cx -= pad / 2; xSpan += pad; }
+            if (data.yRange[0] === 0) { const pad = ySpan * 0.09; cy -= pad / 2; ySpan += pad; }
+            // And a point marked at the very end of the window is not cut in half by the edge.
+            { const pad = xSpan * 0.03; cx += pad / 2; xSpan += pad; }
+            { const pad = ySpan * 0.03; cy += pad / 2; ySpan += pad; }
           }
         }
         const left = cx - xSpan / 2;
@@ -292,9 +318,9 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
         // labels a π-multiple step in terms of π on its own; 0 = automatic.
         const xAxisStep = parseAxisStep(data.xAxisStep) ?? 0;
         const yAxisStep = parseAxisStep(data.yAxisStep) ?? 0;
-        // An axis that measures something says what: named axes are written along the axes (a plain x or y is not a name).
-        const axisName = (v: unknown, plain: string) => (typeof v === 'string' && v.trim() && v.trim().toLowerCase() !== plain ? v.trim() : '');
-        calculator.updateSettings({ xAxisStep, yAxisStep, xAxisLabel: axisName((data as { xLabel?: unknown }).xLabel, 'x'), yAxisLabel: axisName((data as { yLabel?: unknown }).yLabel, 'y') } as Parameters<typeof calculator.updateSettings>[0]);
+        // An axis that measures something says what. The names are written outside the plot, below and to the
+        // left (see the markup): written by Desmos along the axes they ran over the axis numbers and its mark.
+        calculator.updateSettings({ xAxisStep, yAxisStep, xAxisLabel: '', yAxisLabel: '' } as Parameters<typeof calculator.updateSettings>[0]);
         calculator.setMathBounds({
           left,
           right: cx + xSpan / 2,
@@ -330,7 +356,28 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
         } else {
           setCurveMarks((prev) => (prev.length === 0 ? prev : []));
         }
+        // The names of points and segments, each in a place of its own (graph-label-layout.ts). Placed again
+        // whenever the box changes size, since the places are worked out in pixels.
+        if (w > 0 && h > 0 && xSpan > 0 && ySpan > 0 && (labelPoints.length > 0 || labelSegments.length > 0)) {
+          const placed = layoutGraphLabels({ width: w, height: h, window: { left, right: cx + xSpan / 2, bottom: cy - ySpan / 2, top }, points: labelPoints, segments: labelSegments, curves: labelCurves });
+          const put = (id: string, at: { x: number; y: number } | null, label: string | undefined, color: string) => {
+            if (!at || !label) return;
+            // A hidden point shows its label centred on itself: the label goes exactly where it was placed.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            calculator.setExpression({ id, latex: `\\left(${at.x},${at.y}\\right)`, color, label, showLabel: true, hidden: true } as any);
+          };
+          placed.points.forEach((at, i) => put(`ptl-${i}`, at, labelPoints[i].label, labelPoints[i].color));
+          placed.segments.forEach((at, i) => put(`segl-${i}`, at, labelSegments[i].label, labelSegments[i].color));
+        }
       };
+      // What gets a name on the plot: the marked points and the straight segments.
+      type RawSeg = { from: { x: number; y: number }; to: { x: number; y: number }; label?: string; color?: string };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rawSegments = ((((data as any).segments ?? []) as RawSeg[])).filter((seg) => [seg?.from?.x, seg?.from?.y, seg?.to?.x, seg?.to?.y].every((v) => typeof v === 'number' && Number.isFinite(v)));
+      const segColours = segmentColours(rawSegments);
+      const labelSegments = rawSegments.map((seg, i) => ({ from: seg.from, to: seg.to, label: seg.label, color: segColours[i] }));
+      const labelPoints = (data.points || []).filter((pt) => Number.isFinite(pt?.x) && Number.isFinite(pt?.y)).map((pt) => ({ x: pt.x, y: pt.y, label: pt.label || undefined, color: pt.color || '#2563eb' }));
+      const labelCurves = (data.functions || []).map((fn) => { const src = fn.expr || fn.latex || fn.fn || (fn as GraphFunctionSourceFields).expression; return src && !/[=<>]/.test(src) ? parseFunctionString(src) : null; }).filter((f): f is (x: number) => number => f !== null);
       applyUniformBounds();
       const resizeObserver = new ResizeObserver(() => applyUniformBounds());
       resizeObserver.observe(container);
@@ -400,18 +447,14 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // Each segment has its own colour and its name beside it: four drawn alike and unnamed could not be told
       // apart (two vectors, a perpendicular and a projection, AP Precalculus, embed-1794456849622).
-      const SEG_COLORS = ['#dc2626', '#2563eb', '#059669', '#d97706', '#7c3aed', '#0891b2']; let segN = 0;
-      for (const seg of (((data as any).segments ?? []) as Array<{ from: { x: number; y: number }; to: { x: number; y: number }; label?: string; color?: string }>)) {
-        if (!seg.color) seg.color = SEG_COLORS[segN++ % SEG_COLORS.length];
-        if (![seg?.from?.x, seg?.from?.y, seg?.to?.x, seg?.to?.y].every((v) => typeof v === 'number' && Number.isFinite(v))) continue;
+      labelSegments.forEach((seg) => {
         calculator.setExpression({
           id: `seg-${exprId++}`,
           latex: `\\operatorname{polygon}\\left(\\left(${seg.from.x},${seg.from.y}\\right),\\left(${seg.to.x},${seg.to.y}\\right)\\right)`,
-          color: seg.color || '#dc2626', fill: false, lineWidth: 2.5,
+          color: seg.color, fill: false, lineWidth: 2.5,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
-        if (seg.label) calculator.setExpression({ id: `seg-${exprId++}`, latex: `(${(seg.from.x + seg.to.x) / 2}, ${(seg.from.y + seg.to.y) / 2})`, color: seg.color || '#dc2626', label: seg.label, showLabel: true, pointSize: 2, pointOpacity: 1 } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-      }
+      });
 
       // Add labeled points
       for (const pt of (data.points || [])) {
@@ -420,8 +463,8 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
           id,
           latex: `(${pt.x}, ${pt.y})`,
           color: pt.color || '#2563eb',
-          label: pt.label || '',
-          showLabel: !!pt.label,
+          // Its name is placed apart (applyUniformBounds), clear of the other names.
+          showLabel: false,
           pointSize: 9,
           // 2026-10-06c: a hole / excluded endpoint is drawn open.
           ...(isOpenGraphPoint(pt) ? { pointStyle: window.Desmos!.Styles.OPEN } : {}),
@@ -523,13 +566,19 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
             the PRIMARY showGraph renderer (Desmos loaded) — the Mafs
             GraphRenderer fallback has the same fix. */}
         {data.title && <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={data.title} /></h4>}
-        <div className="relative w-full">
+        <div className="flex items-stretch justify-center w-full">
+        {yAxisName && (
+          <div className="flex items-center justify-center shrink-0 text-[13px] text-gray-700 whitespace-nowrap" style={{ width: 22, writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+            <InlineMathText text={yAxisName} />
+          </div>
+        )}
+        <div className="relative w-full" style={{ maxWidth: plotMaxWidth }}>
           <div
             ref={containerRef}
             className="w-full"
             // Fixed pixel box; applyUniformBounds() pads the math bounds to this
             // box's aspect ratio so the scale is uniform (circles stay circular).
-            style={{ height: 380, maxHeight: 450 }}
+            style={{ height: PLOT_H, maxHeight: 450 }}
           />
           {/* Feature marks over the labelled points — invisible, never
               intercept input; the scribble overlay resolves them by rect. */}
@@ -544,6 +593,8 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
             />
           ))}
         </div>
+        </div>
+        {xAxisName && <div className="text-center text-[13px] text-gray-700 mt-1"><InlineMathText text={xAxisName} /></div>}
         {/* Legend */}
         {(data.functions?.length || 0) + (data.functionsOfY?.length || 0) + inequalities.length > 0 && (
           <div className="flex gap-4 justify-center mt-2 flex-wrap">

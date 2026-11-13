@@ -1,0 +1,515 @@
+[
+ {
+  "tool": "show_circuit",
+  "label": "xd-circuit-single-bulb",
+  "args": {
+   "components": [
+    {
+     "type": "battery",
+     "from": "a",
+     "to": "b",
+     "value": "1.5",
+     "unit": "V"
+    },
+    {
+     "type": "bulb",
+     "from": "a",
+     "to": "b"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "xd-circuit-ammeter-series",
+  "args": {
+   "components": [
+    {
+     "type": "battery",
+     "from": "a",
+     "to": "d",
+     "value": "9",
+     "unit": "V"
+    },
+    {
+     "type": "ammeter",
+     "from": "a",
+     "to": "b"
+    },
+    {
+     "type": "resistor",
+     "from": "b",
+     "to": "c",
+     "value": "100",
+     "unit": "Ω",
+     "label": "R"
+    },
+    {
+     "type": "switch-closed",
+     "from": "c",
+     "to": "d",
+     "label": "S"
+    }
+   ],
+   "title": "Ammeter in series",
+   "showNodes": false
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "xd-circuit-wheatstone",
+  "args": {
+   "components": [
+    {
+     "type": "battery",
+     "from": "a",
+     "to": "d",
+     "value": "10",
+     "unit": "V"
+    },
+    {
+     "type": "resistor",
+     "from": "a",
+     "to": "b",
+     "label": "R1"
+    },
+    {
+     "type": "resistor",
+     "from": "a",
+     "to": "c",
+     "label": "R2"
+    },
+    {
+     "type": "resistor",
+     "from": "b",
+     "to": "d",
+     "label": "R3"
+    },
+    {
+     "type": "resistor",
+     "from": "c",
+     "to": "d",
+     "label": "R_x"
+    },
+    {
+     "type": "galvanometer",
+     "from": "b",
+     "to": "c",
+     "label": "G"
+    }
+   ],
+   "title": "Wheatstone bridge"
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "xd-circuit-rails-voltmeter",
+  "args": {
+   "components": [
+    {
+     "type": "battery",
+     "from": "p",
+     "to": "n",
+     "value": "5",
+     "unit": "V"
+    },
+    {
+     "type": "wire",
+     "from": "p",
+     "to": "top"
+    },
+    {
+     "type": "wire",
+     "from": "n",
+     "to": "bot"
+    },
+    {
+     "type": "resistor",
+     "from": "top",
+     "to": "bot",
+     "value": "220",
+     "unit": "Ω",
+     "label": "R1"
+    },
+    {
+     "type": "capacitor",
+     "from": "top",
+     "to": "bot",
+     "value": "10",
+     "unit": "μF",
+     "label": "C_bypass"
+    },
+    {
+     "type": "voltmeter",
+     "from": "top",
+     "to": "bot"
+    }
+   ],
+   "title": "Rail wires and a voltmeter across the source"
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "xd-circuit-two-batteries-long",
+  "args": {
+   "components": [
+    {
+     "type": "battery",
+     "from": "a",
+     "to": "b",
+     "value": "6",
+     "unit": "V",
+     "label": "ε_1"
+    },
+    {
+     "type": "resistor",
+     "from": "b",
+     "to": "c",
+     "value": "2",
+     "unit": "Ω",
+     "label": "r_internal"
+    },
+    {
+     "type": "battery",
+     "from": "c",
+     "to": "d",
+     "value": "3",
+     "unit": "V",
+     "label": "ε_2"
+    },
+    {
+     "type": "resistor",
+     "from": "d",
+     "to": "e",
+     "value": "10",
+     "unit": "Ω",
+     "label": "R1"
+    },
+    {
+     "type": "inductor",
+     "from": "e",
+     "to": "f",
+     "value": "40",
+     "unit": "mH",
+     "label": "L"
+    },
+    {
+     "type": "switch-open",
+     "from": "f",
+     "to": "g",
+     "label": "S"
+    },
+    {
+     "type": "bulb",
+     "from": "g",
+     "to": "h",
+     "label": "lamp"
+    },
+    {
+     "type": "resistor",
+     "from": "h",
+     "to": "a",
+     "value": "15",
+     "unit": "Ω",
+     "label": "R2"
+    }
+   ],
+   "title": "Eight elements in one loop"
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "xd-circuit-minimal",
+  "args": {
+   "components": [
+    {
+     "type": "battery",
+     "from": "a",
+     "to": "b"
+    },
+    {
+     "type": "resistor",
+     "from": "a",
+     "to": "b"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_collision",
+  "label": "xd-collision-minimal",
+  "args": {
+   "before": [
+    {
+     "mass": 1,
+     "velocity": 2
+    },
+    {
+     "mass": 1,
+     "velocity": 0
+    }
+   ],
+   "after": [
+    {
+     "mass": 1,
+     "velocity": 0
+    },
+    {
+     "mass": 1,
+     "velocity": 2
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_collision",
+  "label": "xd-collision-three-long",
+  "args": {
+   "title": "Three trolleys",
+   "type": "inelastic",
+   "before": [
+    {
+     "label": "red trolley with bricks",
+     "mass": 4,
+     "velocity": 6
+    },
+    {
+     "label": "blue trolley",
+     "mass": 2,
+     "velocity": -3
+    },
+    {
+     "label": "empty green trolley",
+     "mass": 0.25,
+     "velocity": 0
+    }
+   ],
+   "after": [
+    {
+     "label": "red trolley with bricks",
+     "mass": 4,
+     "velocity": 1.5
+    },
+    {
+     "label": "blue trolley",
+     "mass": 2,
+     "velocity": 3
+    },
+    {
+     "label": "empty green trolley",
+     "mass": 0.25,
+     "velocity": 24
+    }
+   ],
+   "momentumAnnotation": "p_total = 18 kg·m/s"
+  }
+ },
+ {
+  "tool": "show_collision",
+  "label": "xd-collision-2d-steep",
+  "args": {
+   "title": "Puck deflected straight down",
+   "dimension": "2D",
+   "type": "inelastic",
+   "before": [
+    {
+     "label": "puck",
+     "mass": 0.17,
+     "vx": 0,
+     "vy": -30
+    },
+    {
+     "label": "stick blade",
+     "mass": 0.5,
+     "vx": 10.2,
+     "vy": 0
+    }
+   ],
+   "after": [
+    {
+     "label": "puck",
+     "mass": 0.17,
+     "vx": 30,
+     "vy": 0
+    },
+    {
+     "label": "stick blade",
+     "mass": 0.5,
+     "vx": 0,
+     "vy": -10.2
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_energy_bars",
+  "label": "xd-energy-minimal",
+  "args": {
+   "positions": [
+    {
+     "label": "A",
+     "pe": 20
+    },
+    {
+     "label": "B",
+     "ke": 20
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_energy_bars",
+  "label": "xd-energy-negative-pe",
+  "args": {
+   "title": "Satellite: bound orbit",
+   "positions": [
+    {
+     "label": "Perigee (closest)",
+     "ke": 7500000000.0,
+     "pe": -9500000000.0
+    },
+    {
+     "label": "Apogee",
+     "ke": 2250000000.0,
+     "pe": -4250000000.0
+    },
+    {
+     "label": "Supercalifragilistic",
+     "ke": 1000000000.0,
+     "pe": -3000000000.0
+    }
+   ],
+   "yAxisLabel": "Energy (J)"
+  }
+ },
+ {
+  "tool": "show_motion_diagram",
+  "label": "xd-motion-minimal",
+  "args": {
+   "series": [
+    {
+     "kind": "position",
+     "points": [
+      {
+       "t": 0,
+       "value": 0
+      },
+      {
+       "t": 1,
+       "value": 5
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_motion_diagram",
+  "label": "xd-motion-small-decimals",
+  "args": {
+   "title": "Pendulum bob",
+   "series": [
+    {
+     "kind": "position",
+     "label": "x",
+     "points": [
+      {
+       "t": 0,
+       "value": 0.012
+      },
+      {
+       "t": 0.11,
+       "value": 0.0085
+      },
+      {
+       "t": 0.22,
+       "value": 0
+      },
+      {
+       "t": 0.33,
+       "value": -0.0085
+      },
+      {
+       "t": 0.44,
+       "value": -0.012
+      },
+      {
+       "t": 0.55,
+       "value": -0.0085
+      },
+      {
+       "t": 0.66,
+       "value": 0
+      },
+      {
+       "t": 0.77,
+       "value": 0.0085
+      },
+      {
+       "t": 0.88,
+       "value": 0.012
+      }
+     ]
+    },
+    {
+     "kind": "velocity",
+     "label": "speed of the bob along its arc measured by the light gate",
+     "points": [
+      {
+       "t": 0,
+       "value": 0
+      },
+      {
+       "t": 0.22,
+       "value": -0.0857
+      },
+      {
+       "t": 0.44,
+       "value": 0
+      },
+      {
+       "t": 0.66,
+       "value": 0.0857
+      },
+      {
+       "t": 0.88,
+       "value": 0
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_wave",
+  "label": "xd-wave-minimal",
+  "args": {
+   "wave": {
+    "amplitude": 1,
+    "wavelength": 2
+   }
+  }
+ },
+ {
+  "tool": "show_wave",
+  "label": "xd-wave-unequal-phase",
+  "args": {
+   "title": "A small fast wave on a big slow one",
+   "wave": {
+    "amplitude": 0.5,
+    "wavelength": 0.02,
+    "phase": 90,
+    "label": "ripple"
+   },
+   "secondary": {
+    "amplitude": 3,
+    "wavelength": 0.06,
+    "phase": -45,
+    "label": "swell with a very long descriptive label to test the legend row"
+   },
+   "showSuperposition": true,
+   "frequency": 0.25,
+   "xLabel": "x (m)"
+  }
+ }
+]

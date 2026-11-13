@@ -1,0 +1,750 @@
+[
+ {
+  "tool": "show_diagram",
+  "label": "unit-circle-typ",
+  "args": {
+   "type": "unit_circle",
+   "params": {
+    "angleDegrees": 60,
+    "showSinCos": true,
+    "showRadians": true,
+    "title": "θ = 60°"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "unit-circle-stress",
+  "args": {
+   "type": "unit_circle",
+   "params": {
+    "angleDegrees": 355,
+    "showSinCos": true,
+    "showRadians": true,
+    "title": "An angle just short of a full turn: 355 degrees"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "unit-circle-q3",
+  "args": {
+   "type": "unit_circle",
+   "params": {
+    "angleDegrees": 225,
+    "showSinCos": true,
+    "showRadians": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "unit-circle-90",
+  "args": {
+   "type": "unit_circle",
+   "params": {
+    "angleDegrees": 90,
+    "showSinCos": true,
+    "showRadians": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "transformation-typ",
+  "args": {
+   "type": "transformation",
+   "params": {
+    "shape": {
+     "type": "triangle",
+     "vertices": [
+      {
+       "x": 1,
+       "y": 1
+      },
+      {
+       "x": 4,
+       "y": 1
+      },
+      {
+       "x": 1,
+       "y": 3
+      }
+     ]
+    },
+    "transform": {
+     "type": "reflect",
+     "axis": "y"
+    },
+    "title": "Reflect across the y-axis"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "transformation-stress",
+  "args": {
+   "type": "transformation",
+   "params": {
+    "shape": {
+     "type": "polygon",
+     "vertices": [
+      {
+       "x": 0.5,
+       "y": 0.5
+      },
+      {
+       "x": 1.5,
+       "y": 0.5
+      },
+      {
+       "x": 2,
+       "y": 1.2
+      },
+      {
+       "x": 1,
+       "y": 2
+      },
+      {
+       "x": 0,
+       "y": 1.2
+      }
+     ]
+    },
+    "transform": {
+     "type": "scale",
+     "sx": 12,
+     "sy": 12
+    },
+    "title": "Dilate the pentagon by a scale factor of 12 about the origin"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "transformation-rotate",
+  "args": {
+   "type": "transformation",
+   "params": {
+    "shape": {
+     "type": "rectangle",
+     "vertices": [
+      {
+       "x": 1,
+       "y": 1
+      },
+      {
+       "x": 5,
+       "y": 1
+      },
+      {
+       "x": 5,
+       "y": 3
+      },
+      {
+       "x": 1,
+       "y": 3
+      }
+     ]
+    },
+    "transform": {
+     "type": "rotate",
+     "angleDeg": 90
+    },
+    "title": "Rotate 90° about the origin"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "transformation-translate-small",
+  "args": {
+   "type": "transformation",
+   "params": {
+    "shape": {
+     "type": "triangle",
+     "vertices": [
+      {
+       "x": 0,
+       "y": 0
+      },
+      {
+       "x": 3,
+       "y": 0
+      },
+      {
+       "x": 0,
+       "y": 2
+      }
+     ]
+    },
+    "transform": {
+     "type": "translate",
+     "tx": 1,
+     "ty": 0.5
+    },
+    "title": "Translate by (1, 0.5)"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "inequality-typ",
+  "args": {
+   "type": "inequality_graph",
+   "params": {
+    "variable": "x",
+    "operator": ">=",
+    "value": 3,
+    "title": "x ≥ 3"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "inequality-stress",
+  "args": {
+   "type": "inequality_graph",
+   "params": {
+    "variable": "temperature",
+    "operator": "<",
+    "value": -1234.5,
+    "title": "A strict inequality with a large negative decimal bound"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "complex-typ",
+  "args": {
+   "type": "complex_plane",
+   "params": {
+    "points": [
+     {
+      "re": 3,
+      "im": 4,
+      "label": "z",
+      "showModulus": true,
+      "showAngle": true
+     }
+    ],
+    "title": "z = 3 + 4i"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "complex-stress",
+  "args": {
+   "type": "complex_plane",
+   "params": {
+    "points": [
+     {
+      "re": 3,
+      "im": 4,
+      "label": "z₁ = 3 + 4i",
+      "showModulus": true,
+      "showAngle": true
+     },
+     {
+      "re": 3.2,
+      "im": 3.7,
+      "label": "z₂"
+     },
+     {
+      "re": -12,
+      "im": 0.5,
+      "label": "far left",
+      "showModulus": true
+     },
+     {
+      "re": 0,
+      "im": -9,
+      "label": "pure imaginary",
+      "showAngle": true
+     },
+     {
+      "re": -0.4,
+      "im": -0.3,
+      "label": "tiny"
+     },
+     {
+      "re": 3,
+      "im": -4,
+      "label": "conjugate of z₁",
+      "showModulus": true,
+      "showAngle": true
+     }
+    ],
+    "title": "Six complex numbers including a conjugate pair"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "coord-typ",
+  "args": {
+   "type": "coordinate_grid",
+   "params": {
+    "points": [
+     {
+      "x": 2,
+      "y": 3,
+      "label": "A"
+     },
+     {
+      "x": 5,
+      "y": 1,
+      "label": "B"
+     },
+     {
+      "x": 4,
+      "y": 6,
+      "label": "C"
+     }
+    ],
+    "connect": true,
+    "title": "Triangle ABC"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "coord-stress",
+  "args": {
+   "type": "coordinate_grid",
+   "params": {
+    "points": [
+     {
+      "x": -47,
+      "y": 32,
+      "label": "school"
+     },
+     {
+      "x": -46,
+      "y": 31,
+      "label": "library"
+     },
+     {
+      "x": 60,
+      "y": -85,
+      "label": "the far corner of the park"
+     },
+     {
+      "x": 0,
+      "y": 0,
+      "label": "origin"
+     },
+     {
+      "x": 60,
+      "y": 32,
+      "label": "P"
+     },
+     {
+      "x": 2.5,
+      "y": -0.5,
+      "label": "Q"
+     },
+     {
+      "x": -47,
+      "y": -85,
+      "label": "R"
+     }
+    ],
+    "title": "Seven landmarks plotted on a four-quadrant map of the town"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "coord-blank",
+  "args": {
+   "type": "coordinate_grid",
+   "params": {
+    "quadrants": 4,
+    "xMin": -6,
+    "xMax": 6,
+    "yMin": -6,
+    "yMax": 6,
+    "title": "Plot these points"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "conic-typ",
+  "args": {
+   "type": "conic_sections",
+   "params": {
+    "title": "One cone, four curves"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "conic-stress",
+  "args": {
+   "type": "conic_sections",
+   "params": {
+    "slices": [
+     "parabola",
+     "hyperbola"
+    ],
+    "highlight": "hyperbola",
+    "title": "Only the two open curves, with the hyperbola emphasised for today"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "solid3d-cyl",
+  "args": {
+   "type": "solid_3d",
+   "params": {
+    "shape": "cylinder",
+    "dims": {
+     "radius": 3,
+     "height": 8
+    },
+    "title": "Cylinder"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "solid3d-prism-net",
+  "args": {
+   "type": "solid_3d",
+   "params": {
+    "shape": "rectangular_prism",
+    "dims": {
+     "length": 12,
+     "width": 2,
+     "height": 0.5
+    },
+    "showNet": true,
+    "title": "A very flat rectangular prism with its net, for surface area"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "solid3d-cone",
+  "args": {
+   "type": "solid_3d",
+   "params": {
+    "shape": "cone",
+    "dims": {
+     "radius": 5,
+     "height": 12
+    },
+    "title": "Cone"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "solid3d-sphere",
+  "args": {
+   "type": "solid_3d",
+   "params": {
+    "shape": "sphere",
+    "dims": {
+     "radius": 6.5
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "solid3d-pyramid-net",
+  "args": {
+   "type": "solid_3d",
+   "params": {
+    "shape": "square_pyramid",
+    "dims": {
+     "base": 6,
+     "height": 4
+    },
+    "showNet": true,
+    "title": "Square pyramid"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "solid3d-triprism-net",
+  "args": {
+   "type": "solid_3d",
+   "params": {
+    "shape": "triangular_prism",
+    "dims": {
+     "base": 6,
+     "triHeight": 4,
+     "length": 10
+    },
+    "showNet": true,
+    "title": "Triangular prism"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "solid3d-cube",
+  "args": {
+   "type": "solid_3d",
+   "params": {
+    "shape": "cube",
+    "dims": {
+     "side": 4
+    },
+    "showNet": true,
+    "title": "Cube"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "solid3d-cyl-net-tall",
+  "args": {
+   "type": "solid_3d",
+   "params": {
+    "shape": "cylinder",
+    "dims": {
+     "radius": 1.25,
+     "height": 30
+    },
+    "showNet": true,
+    "title": "A tall thin cylinder"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "vectors3d-typ",
+  "args": {
+   "type": "vectors_3d",
+   "params": {
+    "vectors": [
+     {
+      "to": [
+       2,
+       3,
+       1
+      ],
+      "label": "a"
+     },
+     {
+      "to": [
+       1,
+       -1,
+       2
+      ],
+      "label": "b"
+     }
+    ],
+    "title": "Two vectors in space"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "vectors3d-stress",
+  "args": {
+   "type": "vectors_3d",
+   "params": {
+    "vectors": [
+     {
+      "to": [
+       4,
+       0,
+       0
+      ],
+      "label": "u = ⟨4, 0, 0⟩"
+     },
+     {
+      "to": [
+       4,
+       0.3,
+       0.2
+      ],
+      "label": "v nearly parallel"
+     },
+     {
+      "from": [
+       1,
+       1,
+       1
+      ],
+      "to": [
+       -3,
+       5,
+       6
+      ],
+      "label": "w"
+     },
+     {
+      "to": [
+       0,
+       0,
+       -5
+      ],
+      "label": "down"
+     }
+    ],
+    "points": [
+     {
+      "at": [
+       2,
+       2,
+       2
+      ],
+      "label": "P(2, 2, 2)"
+     },
+     {
+      "at": [
+       2,
+       2,
+       2.3
+      ],
+      "label": "Q"
+     }
+    ],
+    "line": {
+     "point": [
+      0,
+      0,
+      1
+     ],
+     "dir": [
+      1,
+      2,
+      1
+     ],
+     "label": "r = p + t·d"
+    },
+    "plane": {
+     "point": [
+      0,
+      0,
+      2
+     ],
+     "normal": [
+      0,
+      0,
+      1
+     ],
+     "label": "plane z = 2"
+    },
+    "title": "Vectors, two points, a line and a plane all in one picture"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "clock-typ",
+  "args": {
+   "type": "clock_face",
+   "params": {
+    "hour": 3,
+    "minute": 30,
+    "title": "Half past three"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "clock-stress",
+  "args": {
+   "type": "clock_face",
+   "params": {
+    "hour": 12,
+    "minute": 59,
+    "showMinuteTicks": true,
+    "title": "One minute before one o'clock in the afternoon"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "clock-overlap",
+  "args": {
+   "type": "clock_face",
+   "params": {
+    "hour": 6,
+    "minute": 33
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "ten-frame-typ",
+  "args": {
+   "type": "ten_frame",
+   "params": {
+    "count": 7,
+    "title": "Seven"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "ten-frame-stress",
+  "args": {
+   "type": "ten_frame",
+   "params": {
+    "frames": [
+     10,
+     3
+    ],
+    "colors": [
+     "#dc2626",
+     "#2563eb"
+    ],
+    "title": "Making ten first, then three more: ten plus three is thirteen"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "ten-frame-zero",
+  "args": {
+   "type": "ten_frame",
+   "params": {
+    "count": 0
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "base-ten-typ",
+  "args": {
+   "type": "base_ten_blocks",
+   "params": {
+    "value": 243,
+    "title": "243"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "base-ten-stress",
+  "args": {
+   "type": "base_ten_blocks",
+   "params": {
+    "value": 9999,
+    "title": "Nine thousand nine hundred ninety-nine in blocks"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "base-ten-sparse",
+  "args": {
+   "type": "base_ten_blocks",
+   "params": {
+    "value": 1005
+   }
+  }
+ }
+]

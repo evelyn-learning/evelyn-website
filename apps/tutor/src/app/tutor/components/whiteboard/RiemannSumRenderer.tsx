@@ -7,6 +7,7 @@ import {
   type RiemannSumFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
 import { smoothPath } from './_smoothPath';
+import { niceTicks, formatTick, formatValue } from './_niceTicks';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_CURVE = '#2563eb';
@@ -23,7 +24,7 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
   const H = 380;
   const PAD_L = 60;
   const PAD_R = 24;
-  const PAD_T = 32;
+  const PAD_T = 36;
   const PAD_B = 50;
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
@@ -36,12 +37,15 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
 
   const curvePath = smoothPath(curve, xAt, yAt);
 
-  const xTicks: number[] = [];
-  const xStep = (xMax - xMin) / 4;
-  for (let i = 0; i <= 4; i += 1) xTicks.push(xMin + xStep * i);
-  const yTicks: number[] = [];
-  const yStep = (yMax - yMin) / 4;
-  for (let i = 0; i <= 4; i += 1) yTicks.push(yMin + yStep * i);
+  // Ticks at round numbers. The partition points are what a Riemann sum is about, so when the
+  // subintervals are few and equal the x-axis is ticked at their edges instead.
+  const edges = Array.from(new Set(rectangles.flatMap((r) => [r.x, r.x + r.width]).map((v) => Number(v.toFixed(6))))).sort((a, b) => a - b);
+  const xNice = niceTicks(xMin, xMax, 6);
+  const edgeStep = edges.length > 1 ? edges[1] - edges[0] : 0;
+  const edgesEven = edges.length > 1 && edges.length <= 9 && edges.every((e, i) => i === 0 || Math.abs(e - edges[i - 1] - edgeStep) < 1e-6 * Math.max(1, Math.abs(edgeStep)));
+  const xTicks = edgesEven ? edges.filter((e) => e >= xMin - 1e-9 && e <= xMax + 1e-9) : xNice.ticks;
+  const xStep = edgesEven ? edgeStep : xNice.step;
+  const { ticks: yTicks, step: yStep } = niceTicks(yMin, yMax, 5);
 
   // Bbox helper for the collective "rectangles" region.
   const rectMinX = rectangles.length ? Math.min(...rectangles.map((r) => xAt(r.x))) : PAD_L;
@@ -59,8 +63,8 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
       {method && (
         <div className="text-xs text-gray-600 -mt-1 mb-2">
           <span className="italic">{method} sum, n = {n}</span>
-          {approxArea !== undefined && <> · ≈ {Number(approxArea.toFixed(4))}</>}
-          {exactArea !== undefined && <> · <span style={{ color: '#16a34a' }}>exact = {Number(exactArea.toFixed(4))}</span></>}
+          {approxArea !== undefined && <> · area ≈ {formatValue(approxArea, 5)}</>}
+          {exactArea !== undefined && <> · <span style={{ color: '#15803d' }}>exact = {formatValue(exactArea, 5)}</span></>}
         </div>
       )}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
@@ -86,9 +90,10 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
             if (useTrapezoid) {
               const xL = xAt(r.x);
               const xR = xAt(r.x + r.width);
-              const heightLeft = (r as RiemannSumFigure['rectangles'][number] & { heightLeft?: number }).heightLeft;
-              const yL = isFinite(heightLeft as number) ? yAt(heightLeft as number) : yAt(r.height);
-              const yR = yAt(r.height);
+              // A trapezoid's two parallel sides are the curve's heights at the two ends of its
+              // subinterval (the solver reads them off the curve); with neither it is a rectangle.
+              const yL = Number.isFinite(r.heightLeft) ? yAt(r.heightLeft as number) : yAt(r.height);
+              const yR = Number.isFinite(r.heightRight) ? yAt(r.heightRight as number) : yAt(r.height);
               const yB = yZero;
               const points = `${xL},${yB} ${xL},${yL} ${xR},${yR} ${xR},${yB}`;
               return (
@@ -153,7 +158,7 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
           <g key={`tx-${i}`}>
             <line x1={xAt(tx)} y1={PAD_T + plotH} x2={xAt(tx)} y2={PAD_T + plotH + 4} stroke={COLOR_AXIS} strokeWidth={1} />
             <text x={xAt(tx)} y={PAD_T + plotH + 16} fontSize={11} textAnchor="middle" fill="#374151">
-              {Number(tx.toFixed(2))}
+              {formatTick(tx, xStep)}
             </text>
           </g>
         ))}
@@ -161,7 +166,7 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
           <g key={`ty-${i}`}>
             <line x1={PAD_L - 4} y1={yAt(ty)} x2={PAD_L} y2={yAt(ty)} stroke={COLOR_AXIS} strokeWidth={1} />
             <text x={PAD_L - 6} y={yAt(ty) + 4} fontSize={11} textAnchor="end" fill="#374151">
-              {Number(ty.toFixed(2))}
+              {formatTick(ty, yStep)}
             </text>
           </g>
         ))}
@@ -169,12 +174,12 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
         {/* labels */}
         {exprLabel && (
           <text
-            x={PAD_L + 8} y={PAD_T + 14}
+            x={PAD_L + 2} y={PAD_T - 12}
             fontSize={13} fontWeight={600} fill={COLOR_CURVE}
             data-feature={N.exprLabel}
             data-feature-label={exprLabel}
             data-feature-cx={(PAD_L + 60) / W}
-            data-feature-cy={(PAD_T + 12) / H}
+            data-feature-cy={(PAD_T - 16) / H}
             data-feature-w={120 / W}
             data-feature-h={18 / H}
           >

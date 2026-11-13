@@ -17,7 +17,13 @@ function niceStep(span: number): number {
     const ticks = span / s;
     if (ticks >= 4 && ticks <= 10) return s;
   }
-  return span / 6;
+  // Outside the table: a 1 / 2 / 5 × 10^k step giving 4–10 ticks.
+  const raw = span / 6;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  for (const m of [1, 2, 5, 10]) {
+    if (span / (m * mag) <= 10) return m * mag;
+  }
+  return 10 * mag;
 }
 
 export function solveBarChart(params: Record<string, unknown>): BarChartFigure {

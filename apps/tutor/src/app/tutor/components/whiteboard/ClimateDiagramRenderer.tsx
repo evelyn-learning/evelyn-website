@@ -20,7 +20,7 @@ export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigur
   const H = 380;
   const PAD_L = 56;
   const PAD_R = 56;
-  const PAD_T = 56;
+  const PAD_T = title && location ? 56 : 44;
   const PAD_B = 56;
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
@@ -28,14 +28,26 @@ export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigur
   // Temp range
   const tempMin = Math.min(0, ...months.map((m) => m.temp));
   const tempMax = Math.max(...months.map((m) => m.temp));
-  const tMin = Math.floor((tempMin - 5) / 10) * 10;
-  const tMax = Math.ceil((tempMax + 5) / 10) * 10;
+  // Round axis numbers: the temperature axis runs between multiples of the
+  // tick step (5, 10 or 20 degrees — whichever gives 3 to 6 intervals), and
+  // the rainfall axis uses the SAME number of intervals so both sets of tick
+  // labels sit on the shared gridlines.
+  const rawSpan = Math.max(10, tempMax - Math.min(0, tempMin));
+  const tempStep = rawSpan <= 25 ? 5 : rawSpan <= 55 ? 10 : rawSpan <= 110 ? 20 : 50;
+  const tMin = tempMin < 0 ? Math.floor(tempMin / tempStep) * tempStep : 0;
+  const tMax = Math.max(tMin + 3 * tempStep, Math.ceil((tempMax + tempStep * 0.15) / tempStep) * tempStep);
+  const intervals = Math.round((tMax - tMin) / tempStep);
 
   // Precip range — Walter-Lieth: precip y-axis 2× temp axis numerically.
   // i.e., 10°C aligns with 20mm precipitation.
-  const pMax = Math.max(...months.map((m) => m.precip), 50);
-  // Pick a clean precip max
-  const pAxisMax = Math.ceil(pMax / 50) * 50;
+  const pMax = Math.max(...months.map((m) => m.precip), precipUnit === 'in' ? 2 : 50);
+  const niceUp = (raw: number): number => {
+    const base = Math.pow(10, Math.floor(Math.log10(raw)));
+    for (const m of [1, 2, 2.5, 5, 10]) if (m * base >= raw - 1e-9) return m * base;
+    return 10 * base;
+  };
+  const precipStep = niceUp(pMax / intervals);
+  const pAxisMax = precipStep * intervals;
 
   const tempY = (t: number) => PAD_T + plotH - ((t - tMin) / (tMax - tMin)) * plotH;
   const precipY = (p: number) => PAD_T + plotH - (p / pAxisMax) * plotH;
@@ -53,12 +65,10 @@ export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigur
 
   // Y-axis ticks
   const tempTicks: number[] = [];
-  const tempStep = (tMax - tMin) / 4;
-  for (let i = 0; i <= 4; i += 1) tempTicks.push(tMin + tempStep * i);
+  for (let i = 0; i <= intervals; i += 1) tempTicks.push(tMin + tempStep * i);
 
   const precipTicks: number[] = [];
-  const precipStep = pAxisMax / 4;
-  for (let i = 0; i <= 4; i += 1) precipTicks.push(precipStep * i);
+  for (let i = 0; i <= intervals; i += 1) precipTicks.push(precipStep * i);
 
   return (
     <div
@@ -165,7 +175,7 @@ export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigur
           <g key={`pt-${i}`}>
             <line x1={PAD_L + plotW} y1={precipY(p)} x2={PAD_L + plotW + 4} y2={precipY(p)} stroke={COLOR_AXIS} strokeWidth={1} />
             <text x={PAD_L + plotW + 6} y={precipY(p) + 4} fontSize={11} textAnchor="start" fill={COLOR_PRECIP}>
-              {Number(p.toFixed(0))}
+              {Number(p.toFixed(2))}
             </text>
           </g>
         ))}
@@ -179,10 +189,10 @@ export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigur
 
         {/* axis titles */}
         <text x={PAD_L - 32} y={PAD_T + plotH / 2} fontSize={12} fontWeight={600} textAnchor="middle" fill={COLOR_TEMP} transform={`rotate(-90 ${PAD_L - 32} ${PAD_T + plotH / 2})`}>
-          Temp ({tempUnit})
+          Temperature ({tempUnit})
         </text>
         <text x={PAD_L + plotW + 38} y={PAD_T + plotH / 2} fontSize={12} fontWeight={600} textAnchor="middle" fill={COLOR_PRECIP} transform={`rotate(90 ${PAD_L + plotW + 38} ${PAD_T + plotH / 2})`}>
-          Precip ({precipUnit})
+          Precipitation ({precipUnit})
         </text>
 
         {/* annual summary */}
@@ -190,7 +200,7 @@ export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigur
           <text x={W / 2} y={H - 14} fontSize={11} textAnchor="middle" fill="#374151">
             {meanAnnualTemp !== undefined && <tspan fill={COLOR_TEMP}>Annual mean {Number(meanAnnualTemp.toFixed(1))}{tempUnit}</tspan>}
             {meanAnnualTemp !== undefined && totalAnnualPrecip !== undefined && <tspan>   ·   </tspan>}
-            {totalAnnualPrecip !== undefined && <tspan fill={COLOR_PRECIP}>Total {Number(totalAnnualPrecip.toFixed(0))} {precipUnit}/yr</tspan>}
+            {totalAnnualPrecip !== undefined && <tspan fill={COLOR_PRECIP}>Total {Number(totalAnnualPrecip.toFixed(precipUnit === 'in' ? 1 : 0))} {precipUnit}/yr</tspan>}
           </text>
         )}
       </svg>

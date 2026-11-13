@@ -382,7 +382,7 @@ export function buildProjectileManifest(figure: ProjectileFigure): FeatureManife
       kind: 'point',
       description: `the launch velocity v decomposed into vₓ = v·cos(${figure.angle}°) and v_y = v·sin(${figure.angle}°)`,
       labels: ['the velocity', 'the launch velocity', 'the velocity vector', 'the components', 'vx and vy', 'the horizontal and vertical velocity'],
-      displayName: 'Launch velocity (vₓ, v_y)',
+      displayName: 'Launch velocity components',
       scribbleable: true,
     });
   }

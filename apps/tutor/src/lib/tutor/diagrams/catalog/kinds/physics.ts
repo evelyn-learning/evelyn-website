@@ -211,15 +211,42 @@ export function solvePulleySystem(params: Record<string, unknown>): PulleyFigure
   if (fixedCount + movableCount === 0) throw new Error('pulley_system: at least one pulley required');
   const weightLabel = typeof params.weightLabel === 'string' && params.weightLabel ? params.weightLabel : 'W';
   const weight = typeof params.weight === 'number' && Number.isFinite(params.weight) ? params.weight : undefined;
-  // Simple block-and-tackle: MA = number of rope segments supporting load.
-  // Approximation: 1 + 2*movableCount.
-  const mechanicalAdvantage = 1 + 2 * movableCount;
+  // MA = number of rope strands on the lower block, for the reeving that
+  // can really be rigged with these pulleys (same rule the renderer draws).
+  const mechanicalAdvantage = pulleyReeving(fixedCount, movableCount).strands;
   const effort = weight !== undefined ? weight / mechanicalAdvantage : undefined;
   return {
     mode: 'block-tackle',
     fixedCount, movableCount, weightLabel, weight, mechanicalAdvantage, effort,
     title: typeof params.title === 'string' ? params.title : undefined,
   };
+}
+
+/** How a block and tackle with these pulley counts is reeved: one rope
+ *  alternating between the upper (fixed) and lower (movable) block. Pulleys
+ *  the rope cannot reach are left out (at most 4 per block are drawn).
+ *  `strands` = rope parts holding the lower block = mechanical advantage. */
+export function pulleyReeving(fixedCount: number, movableCount: number): {
+  fixedUsed: number;
+  movableUsed: number;
+  /** Block the standing end is tied to. */
+  startAt: 'fixed' | 'movable';
+  strands: number;
+  /** True when the free end leaves a movable pulley (effort pulls up). */
+  pullUp: boolean;
+} {
+  const f = Math.max(0, Math.min(4, Math.floor(fixedCount)));
+  const m = Math.max(0, Math.min(4, Math.floor(movableCount)));
+  if (f > m) {
+    // Tied to the lower block (or the load itself), first sheave is a fixed one.
+    const movableUsed = m;
+    const fixedUsed = Math.min(f, m + 1);
+    return { fixedUsed, movableUsed, startAt: 'movable', strands: 1 + 2 * movableUsed, pullUp: false };
+  }
+  // Tied to the upper block (or the ceiling), first sheave is a movable one.
+  const fixedUsed = f;
+  const movableUsed = Math.min(m, f + 1);
+  return { fixedUsed, movableUsed, startAt: 'fixed', strands: 2 * movableUsed, pullUp: movableUsed > fixedUsed };
 }
 
 function parseAtwoodSides(
@@ -297,7 +324,7 @@ export function solveInclinedPlane(params: Record<string, unknown>): InclinedPla
 export interface SpringMassFigure {
   k?: number;
   mass?: number;
-  displacement: number; // px below equilibrium (negative = above)
+  displacement: number; // metres from equilibrium: + = stretched (vertical: lower), − = compressed. Drawn schematically.
   showEquilibrium: boolean;
   orientation: 'vertical' | 'horizontal';
   title?: string;
@@ -317,7 +344,7 @@ export function solveSpringMass(params: Record<string, unknown>): SpringMassFigu
 
 // ── pendulum ──────────────────────────────────────────────────────────────
 export interface PendulumFigure {
-  length: number;       // visualization-relative; not physical units
+  length: number;       // label only (metres when <= 50); never the drawing scale
   angleDegrees: number; // angle from vertical
   showVelocity: boolean;
   title?: string;

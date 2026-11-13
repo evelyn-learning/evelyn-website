@@ -17,6 +17,13 @@ import { InlineMathText } from './InlineMathText';
 
 import React, { useMemo } from 'react';
 import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import {
+  TIMELINE_CARD,
+  layoutTimelineCards,
+  parseTimelineYear,
+  formatTimelineYear,
+  timelineTicks,
+} from '@/lib/tutor/diagrams/catalog/kinds/historical-timeline-layout';
 
 export interface TimelineEvent {
   date: string; // e.g. "1776", "1492 CE", "500 BCE", "Jan 1, 1776"
@@ -55,14 +62,7 @@ const LABEL_GAP = 8;      // Minimum pixel gap between adjacent labels
  * confidently extract one — callers fall back to evenly spacing.
  */
 function parseYear(date: string): number | null {
-  const trimmed = date.trim();
-  const bceMatch = trimmed.match(/(-?\d+)\s*(BCE|BC)\b/i);
-  if (bceMatch) return -Math.abs(parseInt(bceMatch[1], 10));
-  const negMatch = trimmed.match(/^-(\d+)/);
-  if (negMatch) return -parseInt(negMatch[1], 10);
-  const yearMatch = trimmed.match(/\b(\d{3,4})\b/);
-  if (yearMatch) return parseInt(yearMatch[1], 10);
-  return null;
+  return parseTimelineYear(date);
 }
 
 const CATEGORY_PALETTE = [
@@ -84,11 +84,6 @@ function categoryColor(category?: string, override?: string): string {
     hash = (hash * 31 + category.charCodeAt(i)) >>> 0;
   }
   return CATEGORY_PALETTE[hash % CATEGORY_PALETTE.length];
-}
-
-function formatAxisYear(year: number): string {
-  if (year < 0) return `${-year} BCE`;
-  return String(year);
 }
 
 /** Wrap a title string at roughly `maxChars` on word boundaries, max 2 lines. */
@@ -252,12 +247,12 @@ export default function TimelineRenderer({
       const minY = Math.min(...numericYears);
       const maxY = Math.max(...numericYears);
       const span = maxY - minY;
-      const tickCount = Math.min(6, Math.max(3, Math.round(span / 100)));
-      for (let i = 0; i <= tickCount; i++) {
-        const year = Math.round(minY + (i * span) / tickCount);
-        const x = plotLeft + (i / tickCount) * (plotRight - plotLeft);
-        ticks.push({ x, label: formatAxisYear(year) });
-      }
+      // Round years (the old ticks split the span into equal parts: "2421 BCE", "1262 BCE").
+      const crossesEra = minY < 0 && maxY > 0;
+      ticks = timelineTicks(minY, maxY, 6).map((year) => ({
+        x: plotLeft + ((year - minY) / (span || 1)) * (plotRight - plotLeft),
+        label: formatTimelineYear(year, crossesEra),
+      }));
     }
     return { xs, plotLeft, plotRight, ticks };
   }, [events, swimlaneMode]);
@@ -516,38 +511,7 @@ interface AxisArgs {
   ticks: Array<{ x: number; label: string }>;
 }
 
-function renderAxis({ title, events, xs, ticks }: AxisArgs) {
-  // Partition events into above/below based on original even/odd index, then
-  // resolve horizontal collisions within each side by stacking into rows.
-  const aboveIdxs: number[] = [];
-  const belowIdxs: number[] = [];
-  events.forEach((_, i) => (i % 2 === 0 ? aboveIdxs : belowIdxs).push(i));
-
-  const titleMaxChars = 20;
-  const aboveItems = aboveIdxs.map((i) => ({
-    x: xs[i],
-    width: estimateLabelWidth(events[i].title, events[i].date, titleMaxChars),
-  }));
-  const belowItems = belowIdxs.map((i) => ({
-    x: xs[i],
-    width: estimateLabelWidth(events[i].title, events[i].date, titleMaxChars),
-  }));
-  const aboveRows = assignCollisionRows(aboveItems);
-  const belowRows = assignCollisionRows(belowItems);
-
-  const aboveMaxRow = aboveRows.length ? Math.max(...aboveRows) : 0;
-  const belowMaxRow = belowRows.length ? Math.max(...belowRows) : 0;
-
-  const ROW_HEIGHT = 44; // vertical space per collision row (title + date + dash line)
-  const topReserve = 40 + (aboveMaxRow + 1) * ROW_HEIGHT;
-  const bottomReserve = 20 + (belowMaxRow + 1) * ROW_HEIGHT;
-  const height = topReserve + bottomReserve + AXIS_FOOT;
-  const axisY = topReserve;
-
-  const rowByEvent = new Array(events.length).fill(0);
-  aboveIdxs.forEach((evIdx, li) => (rowByEvent[evIdx] = aboveRows[li]));
-  belowIdxs.forEach((evIdx, li) => (rowByEvent[evIdx] = belowRows[li]));
-
+function renderAxis({ title, events }: AxisArgs) {
   return (
     <div className="timeline-renderer">
       {title && (
@@ -555,116 +519,11 @@ function renderAxis({ title, events, xs, ticks }: AxisArgs) {
           <InlineMathText text={title} />
         </div>
       )}
-      <svg
-        viewBox={`0 0 ${SVG_WIDTH} ${height}`}
-        className="w-full h-auto"
-        style={{ maxWidth: SVG_WIDTH }}
-      >
-        <rect width={SVG_WIDTH} height={height} fill="#fafbfc" rx={4} />
-
-        {/* Axis */}
-        <line
-          x1={AXIS_MODE_PADDING_X}
-          y1={axisY}
-          x2={SVG_WIDTH - AXIS_MODE_PADDING_X}
-          y2={axisY}
-          stroke="#94a3b8"
-          strokeWidth={2}
-          {...feat('axis', { cx: SVG_WIDTH / 2, cy: axisY, w: SVG_WIDTH - AXIS_MODE_PADDING_X * 2 + 20, h: 20 }, { width: SVG_WIDTH, height })}
-        />
-
-        {ticks.map((tick, i) => (
-          <g key={`tick-${i}`}>
-            <line
-              x1={tick.x}
-              y1={axisY - 4}
-              x2={tick.x}
-              y2={axisY + 4}
-              stroke="#94a3b8"
-              strokeWidth={1.5}
-            />
-            <text
-              x={tick.x}
-              y={axisY + 22}
-              textAnchor="middle"
-              fontSize={11}
-              fill="#64748b"
-            >
-              {tick.label}
-            </text>
-          </g>
-        ))}
-
-        {events.map((event, i) => {
-          const above = i % 2 === 0;
-          const row = rowByEvent[i];
-          const x = xs[i];
-          const color = categoryColor(event.category, event.color);
-          // Leader line: from axis pin out to the label block for this row
-          const leaderEndY = above
-            ? axisY - 24 - row * ROW_HEIGHT
-            : axisY + 24 + row * ROW_HEIGHT;
-          const wrapped = wrapTitle(event.title, 20);
-          // Place date label closest to axis, then title above/below it
-          const dateY = above ? leaderEndY - 4 : leaderEndY + 14;
-          // Cluster-dedup: same logic as swimlane mode — when an earlier
-          // event on the same side shares this x and date string, hide
-          // the duplicate date.
-          const dateAlreadyShown = events.slice(0, i).some((prev, j) =>
-            xs[j] === x && (j % 2 === 0) === above && prev.date === event.date,
-          );
-          const titleStartY = above
-            ? dateY - 14 - (wrapped.length - 1) * 14
-            : dateY + 16;
-          const evName = event.title ? `event-${featSlug(event.title)}` : `event-${i + 1}`;
-          return (
-            <g key={`event-${i}`} {...feat(evName, { cx: x, cy: (axisY + leaderEndY) / 2, w: 100, h: Math.abs(leaderEndY - axisY) + 30 }, { width: SVG_WIDTH, height })}>
-              <line
-                x1={x}
-                y1={axisY}
-                x2={x}
-                y2={leaderEndY}
-                stroke={color}
-                strokeWidth={1.5}
-                strokeDasharray="3,3"
-              />
-              <circle
-                cx={x}
-                cy={axisY}
-                r={PIN_RADIUS}
-                fill={color}
-                stroke="#fff"
-                strokeWidth={1.5}
-              />
-              {!dateAlreadyShown && (
-                <text
-                  x={x}
-                  y={dateY}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fontWeight={600}
-                  fill="#1f2937"
-                >
-                  {event.date}
-                </text>
-              )}
-              {wrapped.map((line, li) => (
-                <text
-                  key={`t-${i}-${li}`}
-                  x={x}
-                  y={titleStartY + li * 14}
-                  textAnchor="middle"
-                  fontSize={12}
-                  fill={color}
-                  fontWeight={500}
-                >
-                  {line}
-                </text>
-              ))}
-            </g>
-          );
-        })}
-      </svg>
+      <TimelineCardsFigure
+        events={events.map((e) => ({ date: e.date, title: e.title, description: e.description, year: parseYear(e.date), color: categoryColor(e.category, e.color) }))}
+        axisAttrs={(box, dims) => feat('axis', box, dims)}
+        eventAttrs={(i, box, dims) => feat(events[i].title ? `event-${featSlug(events[i].title)}` : `event-${i + 1}`, box, dims)}
+      />
 
       {/* Legend — only meaningful when 1 category is present (multi-category → swimlanes) */}
       {events.some((e) => e.category) && (
@@ -683,5 +542,100 @@ function renderAxis({ title, events, xs, ticks }: AxisArgs) {
         </div>
       )}
     </div>
+  );
+}
+
+
+/* ----------------------------------------------------------------- */
+/* Card figure — shared by show_timeline and the catalogue's          */
+/* historical_timeline (one drawing, one layout).                     */
+/* ----------------------------------------------------------------- */
+
+type FeatBox = { cx: number; cy: number; w: number; h: number };
+type FeatDims = { width: number; height: number };
+
+export interface TimelineCardsFigureProps {
+  events: Array<{ date: string; title: string; description?: string; year: number | null; color?: string }>;
+  /** Draw in the given order, evenly spaced (a date without a readable year). */
+  forceEven?: boolean;
+  axisAttrs?: (box: FeatBox, dims: FeatDims) => Record<string, unknown>;
+  eventAttrs?: (index: number, box: FeatBox, dims: FeatDims) => Record<string, unknown>;
+  rootAttrs?: Record<string, unknown>;
+  /** Alternatives to the two `…Attrs` props for a caller that writes its own group element. */
+  wrapAxis?: (box: FeatBox, dims: FeatDims, children: React.ReactNode) => React.ReactNode;
+  wrapEvent?: (index: number, box: FeatBox, dims: FeatDims, children: React.ReactNode) => React.ReactNode;
+  maxWidth?: number;
+}
+
+/**
+ * Events as cards in lanes above and below one axis. Each card is sized to its wrapped text (date, title,
+ * description); a card that would touch a neighbour or cross a leader moves one lane out, so the figure grows
+ * taller instead of overprinting. Dots sit by year when that leaves them apart, otherwise evenly in order.
+ */
+export function TimelineCardsFigure({ events, forceEven, axisAttrs, eventAttrs, rootAttrs, wrapAxis, wrapEvent, maxWidth = SVG_WIDTH }: TimelineCardsFigureProps) {
+  const C = TIMELINE_CARD;
+  const left = 12;
+  const right = SVG_WIDTH - 12;
+  const layout = useMemo(
+    () => layoutTimelineCards(events.map((e) => ({ date: e.date, title: e.title, description: e.description, year: e.year })), { left, right, forceEven }),
+    [events, forceEven, right],
+  );
+  const TOP_PAD = 8;
+  const axisY = TOP_PAD + Math.max(layout.topHeight, 14);
+  const belowLeaders = layout.cards.filter((c) => c.side === 'below').map((c) => c.x);
+  // A tick label sits just under the axis: one that a leader would run through is left out.
+  const ticks = layout.ticks.filter((t) => belowLeaders.every((x) => Math.abs(x - t.x) > 24));
+  const height = axisY + Math.max(layout.bottomHeight, ticks.length ? 28 : 14) + 8;
+  const dims = { width: SVG_WIDTH, height };
+  return (
+    <svg viewBox={`0 0 ${SVG_WIDTH} ${height}`} className="w-full h-auto mx-auto block" style={{ maxWidth }} {...(rootAttrs ?? {})}>
+      {(() => {
+        const axisBox = { cx: SVG_WIDTH / 2, cy: axisY, w: right - left, h: 20 };
+        const line = (
+          <line
+            key="axis" x1={left} y1={axisY} x2={right} y2={axisY} stroke="#64748b" strokeWidth={2} strokeLinecap="round"
+            {...(axisAttrs ? axisAttrs(axisBox, dims) : {})}
+          />
+        );
+        return wrapAxis ? wrapAxis(axisBox, dims, line) : line;
+      })()}
+      {ticks.map((t) => (
+        <g key={`tick-${t.year}`}>
+          <line x1={t.x} y1={axisY - 4} x2={t.x} y2={axisY + 4} stroke="#64748b" strokeWidth={1.5} />
+          <text x={t.x} y={axisY + 18} textAnchor="middle" fontSize={10.5} fill="#64748b" style={{ paintOrder: 'stroke', stroke: '#fff', strokeWidth: 3, strokeLinejoin: 'round' }}>
+            {formatTimelineYear(t.year, layout.crossesEra)}
+          </text>
+        </g>
+      ))}
+      {layout.cards.map((card) => {
+        const e = events[card.index];
+        const color = e.color || '#2563eb';
+        const boxY = card.side === 'above' ? axisY - card.near - card.boxH : axisY + card.near;
+        const nearY = card.side === 'above' ? boxY + card.boxH : boxY;
+        const tx = card.boxX + C.PAD_X;
+        let y = boxY + C.PAD_Y;
+        const rows: React.ReactNode[] = [];
+        card.dateLines.forEach((line, k) => { y += C.DATE_LH; rows.push(<text key={`d${k}`} x={tx} y={y - 4} fontSize={C.DATE_FS} fontWeight={700} fill={color}>{line}</text>); });
+        card.titleLines.forEach((line, k) => { y += C.TITLE_LH; rows.push(<text key={`t${k}`} x={tx} y={y - 4} fontSize={C.TITLE_FS} fontWeight={500} fill="#1f2937">{line}</text>); });
+        if (card.descLines.length) y += 3;
+        card.descLines.forEach((line, k) => { y += C.DESC_LH; rows.push(<text key={`s${k}`} x={tx} y={y - 4} fontSize={C.DESC_FS} fill="#64748b">{line}</text>); });
+        const box = { cx: card.boxX + card.boxW / 2, cy: boxY + card.boxH / 2, w: card.boxW, h: card.boxH };
+        const body = (
+          <>
+            <line x1={card.x} y1={axisY} x2={card.x} y2={nearY} stroke={color} strokeWidth={1.25} />
+            <circle cx={card.x} cy={axisY} r={5} fill={color} stroke="#fff" strokeWidth={1.5} />
+            <rect x={card.boxX} y={boxY} width={card.boxW} height={card.boxH} rx={6} fill="#fff" />
+            <rect x={card.boxX} y={boxY} width={card.boxW} height={card.boxH} rx={6} fill={color} fillOpacity={0.07} stroke={color} strokeOpacity={0.55} strokeWidth={1.25} />
+            {rows}
+          </>
+        );
+        if (wrapEvent) return <React.Fragment key={`event-${card.index}`}>{wrapEvent(card.index, box, dims, body)}</React.Fragment>;
+        return (
+          <g key={`event-${card.index}`} {...(eventAttrs ? eventAttrs(card.index, box, dims) : {})}>
+            {body}
+          </g>
+        );
+      })}
+    </svg>
   );
 }

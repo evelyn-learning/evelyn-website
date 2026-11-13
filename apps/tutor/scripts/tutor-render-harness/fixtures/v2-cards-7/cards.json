@@ -1,0 +1,645 @@
+[
+ {
+  "tool": "show_drawn_figure",
+  "label": "tri-345",
+  "args": {
+   "kind": "geometry_figure",
+   "title": "A 3-4-5 triangle",
+   "params": {
+    "shape": "triangle",
+    "sides": [
+     3,
+     4,
+     5
+    ],
+    "sideLabels": [
+     "3 cm",
+     "4 cm",
+     "?"
+    ],
+    "angleLabels": [
+     null,
+     null,
+     "auto"
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "tri-sas",
+  "args": {
+   "kind": "geometry_figure",
+   "params": {
+    "shape": "triangle",
+    "sas": [
+     7,
+     52,
+     9
+    ],
+    "vertices": [
+     "P",
+     "Q",
+     "R"
+    ],
+    "sideLabels": [
+     "x",
+     "7",
+     "9"
+    ],
+    "angleLabels": [
+     "52°",
+     null,
+     null
+    ],
+    "unit": "cm"
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "circle",
+  "args": {
+   "kind": "geometry_figure",
+   "title": "Inscribed and central angles",
+   "params": {
+    "shape": "circle",
+    "radius": 5,
+    "points": [
+     {
+      "name": "A",
+      "at": 200
+     },
+     {
+      "name": "B",
+      "at": 340
+     },
+     {
+      "name": "C",
+      "at": 90
+     }
+    ],
+    "chords": [
+     {
+      "from": "C",
+      "to": "A"
+     },
+     {
+      "from": "C",
+      "to": "B"
+     }
+    ],
+    "radii": [
+     {
+      "to": "A"
+     },
+     {
+      "to": "B"
+     }
+    ],
+    "angles": [
+     {
+      "vertex": "center",
+      "from": "A",
+      "to": "B",
+      "label": "140°"
+     },
+     {
+      "vertex": "C",
+      "from": "A",
+      "to": "B",
+      "label": "?"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "parallel",
+  "args": {
+   "kind": "geometry_figure",
+   "params": {
+    "shape": "parallel_lines",
+    "angle": 65,
+    "labels": {
+     "1": "115°",
+     "6": "x"
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "similar",
+  "args": {
+   "kind": "geometry_figure",
+   "params": {
+    "shape": "similar_triangles",
+    "sides": [
+     6,
+     8,
+     10
+    ],
+    "scale": 0.5,
+    "sideLabels": [
+     [
+      "6",
+      "8",
+      "10"
+     ],
+     [
+      "3",
+      "?",
+      "5"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "prob-tree",
+  "args": {
+   "kind": "probability_tree",
+   "title": "Two draws without replacement",
+   "params": {
+    "branches": [
+     {
+      "label": "Red",
+      "p": "3/5",
+      "children": [
+       {
+        "label": "Red",
+        "p": "2/4",
+        "outcome": "RR"
+       },
+       {
+        "label": "Blue",
+        "p": "2/4",
+        "outcome": "RB"
+       }
+      ]
+     },
+     {
+      "label": "Blue",
+      "p": "2/5",
+      "children": [
+       {
+        "label": "Red",
+        "p": "3/4",
+        "outcome": "BR"
+       },
+       {
+        "label": "Blue",
+        "p": "1/4",
+        "outcome": "BB"
+       }
+      ]
+     }
+    ],
+    "products": "value",
+    "stageTitles": [
+     "1st draw",
+     "2nd draw"
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "cladogram",
+  "args": {
+   "kind": "cladogram",
+   "title": "Vertebrate relationships",
+   "params": {
+    "tree": {
+     "children": [
+      "Lamprey",
+      {
+       "traits": [
+        "jaws"
+       ],
+       "children": [
+        "Shark",
+        {
+         "traits": [
+          "lungs"
+         ],
+         "children": [
+          "Frog",
+          {
+           "traits": [
+            "amniotic egg"
+           ],
+           "children": [
+            "Lizard",
+            {
+             "name": "Mouse",
+             "traits": [
+              "hair"
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "outgroup": "Lamprey"
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "cell-animal",
+  "args": {
+   "kind": "cell",
+   "title": "An animal cell",
+   "params": {
+    "variant": "cell",
+    "cellType": "animal",
+    "organelles": [
+     {
+      "type": "nucleus",
+      "label": "nucleus"
+     },
+     {
+      "type": "mitochondrion",
+      "label": "mitochondrion"
+     },
+     {
+      "type": "rough_er",
+      "label": "rough ER"
+     },
+     {
+      "type": "golgi",
+      "label": "Golgi"
+     },
+     {
+      "type": "lysosome",
+      "label": "lysosome"
+     },
+     {
+      "type": "ribosomes",
+      "label": "ribosomes"
+     },
+     {
+      "type": "cell_membrane",
+      "label": "cell membrane"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "cell-plant",
+  "args": {
+   "kind": "cell",
+   "params": {
+    "variant": "cell",
+    "cellType": "plant",
+    "organelles": [
+     {
+      "type": "nucleus",
+      "label": "nucleus"
+     },
+     {
+      "type": "chloroplast",
+      "label": "chloroplast"
+     },
+     {
+      "type": "central_vacuole",
+      "label": "central vacuole"
+     },
+     {
+      "type": "cell_wall",
+      "label": "cell wall"
+     },
+     {
+      "type": "mitochondrion",
+      "label": "?"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "membrane",
+  "args": {
+   "kind": "cell",
+   "params": {
+    "variant": "membrane",
+    "proteins": [
+     {
+      "type": "channel"
+     },
+     {
+      "type": "pump"
+     }
+    ],
+    "cholesterol": true,
+    "solutes": [
+     {
+      "outside": 10,
+      "inside": 3,
+      "through": 0,
+      "arrow": "in",
+      "name": "glucose"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "h-levels",
+  "args": {
+   "kind": "energy_levels",
+   "title": "Hydrogen: the Balmer lines",
+   "params": {
+    "variant": "levels",
+    "hydrogen": {
+     "nMax": 5
+    },
+    "transitions": [
+     {
+      "from": 3,
+      "to": 2,
+      "label": "A"
+     },
+     {
+      "from": 4,
+      "to": 2,
+      "label": "B"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "orbital",
+  "args": {
+   "kind": "energy_levels",
+   "params": {
+    "variant": "orbital_boxes",
+    "diagrams": [
+     {
+      "config": "1s2 2s2 2p3",
+      "label": "N"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "lines",
+  "args": {
+   "kind": "spectrum",
+   "params": {
+    "variant": "lines",
+    "rows": [
+     {
+      "label": "Hydrogen",
+      "lines": [
+       410,
+       434,
+       486,
+       656
+      ]
+     },
+     {
+      "label": "Star",
+      "lines": [
+       434,
+       486,
+       656
+      ],
+      "kind": "absorption"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "mass",
+  "args": {
+   "kind": "spectrum",
+   "params": {
+    "variant": "mass",
+    "peaks": [
+     {
+      "mz": 35,
+      "abundance": 75.8,
+      "label": "³⁵Cl"
+     },
+     {
+      "mz": 37,
+      "abundance": 24.2,
+      "label": "³⁷Cl"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "photo-tube",
+  "args": {
+   "kind": "photoelectric",
+   "params": {
+    "variant": "tube",
+    "wavelength": 400,
+    "workFunction": 2.28,
+    "metal": "sodium",
+    "showElectrons": true
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "photo-graph",
+  "args": {
+   "kind": "photoelectric",
+   "params": {
+    "variant": "graph",
+    "metals": [
+     {
+      "workFunction": 2.28,
+      "label": "sodium"
+     },
+     {
+      "workFunction": 4.7,
+      "label": "copper"
+     }
+    ],
+    "extend": true
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "heating",
+  "args": {
+   "kind": "heating_curve",
+   "title": "Heating ice to steam",
+   "params": {
+    "corners": [
+     [
+      0,
+      -20
+     ],
+     [
+      4,
+      0
+     ],
+     [
+      37,
+      0
+     ],
+     [
+      79,
+      100
+     ],
+     [
+      305,
+      100
+     ],
+     [
+      309,
+      120
+     ]
+    ],
+    "segmentLabels": "letters",
+    "plateauLabels": "value"
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "projectile",
+  "args": {
+   "kind": "mechanics_setup",
+   "params": {
+    "variant": "projectile",
+    "speed": 20,
+    "angle": 40,
+    "points": [
+     {
+      "at": "apex",
+      "label": "A"
+     }
+    ],
+    "show": {
+     "range": "blank",
+     "maxHeight": "blank"
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "pulley",
+  "args": {
+   "kind": "mechanics_setup",
+   "params": {
+    "variant": "pulley",
+    "arrangement": "incline",
+    "m1": 4,
+    "m2": 3,
+    "angle": 30,
+    "mu": 0.2
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "particles",
+  "args": {
+   "kind": "particles",
+   "title": "Solid, liquid and gas",
+   "params": {
+    "states": [
+     "solid",
+     "liquid",
+     "gas"
+    ],
+    "labels": [
+     "ice",
+     "water",
+     "steam"
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "float",
+  "args": {
+   "kind": "buoyancy",
+   "params": {
+    "objectDensity": 600,
+    "object": "wood"
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "sink",
+  "args": {
+   "kind": "buoyancy",
+   "params": {
+    "objectDensity": 2700,
+    "object": "aluminium"
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "pipe",
+  "args": {
+   "kind": "pipe_flow",
+   "params": {
+    "area1": 12,
+    "area2": 3,
+    "speed1": 2,
+    "find": "?"
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "float-find",
+  "args": {
+   "kind": "buoyancy",
+   "params": {
+    "objectDensity": 920,
+    "object": "ice",
+    "find": "?"
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "refraction",
+  "args": {
+   "kind": "refraction",
+   "params": {
+    "n1": 1,
+    "n2": 1.33,
+    "angle": 30,
+    "media": [
+     "air",
+     "water"
+    ]
+   }
+  }
+ }
+]

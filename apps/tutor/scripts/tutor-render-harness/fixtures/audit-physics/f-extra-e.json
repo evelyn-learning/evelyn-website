@@ -1,0 +1,332 @@
+[
+ {
+  "tool": "show_projectile_motion",
+  "label": "xe-proj-min",
+  "args": {
+   "v0": 12,
+   "angle": 60
+  }
+ },
+ {
+  "tool": "show_projectile_motion",
+  "label": "xe-proj-nocomp",
+  "args": {
+   "title": "No components",
+   "v0": 25,
+   "angle": 35,
+   "showComponents": false
+  }
+ },
+ {
+  "tool": "show_projectile_motion",
+  "label": "xe-proj-low-platform",
+  "args": {
+   "title": "Shot put released at 2 m",
+   "v0": 13.5,
+   "angle": 40,
+   "y0": 2
+  }
+ },
+ {
+  "tool": "show_projectile_motion",
+  "label": "xe-proj-down-steep",
+  "args": {
+   "title": "Thrown steeply downward from a tower",
+   "v0": 8,
+   "angle": -70,
+   "y0": 60,
+   "notes": "The stone only speeds up on the way down."
+  }
+ },
+ {
+  "tool": "show_projectile_motion",
+  "label": "xe-proj-vertical",
+  "args": {
+   "title": "Straight up",
+   "v0": 20,
+   "angle": 90
+  }
+ },
+ {
+  "tool": "show_projectile_motion",
+  "label": "xe-proj-units",
+  "args": {
+   "title": "Kick",
+   "v0": 88.5,
+   "angle": 25,
+   "speedUnit": "ft/s",
+   "distanceUnit": "ft",
+   "g": 32.2
+  }
+ },
+ {
+  "tool": "show_spring_mass",
+  "label": "xe-spring-min",
+  "args": {
+   "k": 40,
+   "mass": 2
+  }
+ },
+ {
+  "tool": "show_spring_mass",
+  "label": "xe-spring-vertical-compressed",
+  "args": {
+   "title": "Pushed up",
+   "k": 1250.5,
+   "mass": 12.75,
+   "displacement": -0.25,
+   "orientation": "vertical",
+   "notes": "The block was lifted above equilibrium and released."
+  }
+ },
+ {
+  "tool": "show_spring_mass",
+  "label": "xe-spring-big-stretch",
+  "args": {
+   "title": "Large amplitude",
+   "k": 20,
+   "mass": 0.05,
+   "displacement": 1.5
+  }
+ },
+ {
+  "tool": "show_spring_mass",
+  "label": "xe-spring-zero",
+  "args": {
+   "title": "At rest",
+   "k": 400,
+   "mass": 2,
+   "displacement": 0
+  }
+ },
+ {
+  "tool": "show_spring_mass",
+  "label": "xe-spring-chain-open",
+  "args": {
+   "title": "Open chain",
+   "elements": [
+    {
+     "type": "wall"
+    },
+    {
+     "type": "spring",
+     "k": 100
+    },
+    {
+     "type": "mass",
+     "mass": 2
+    },
+    {
+     "type": "spring",
+     "k": 200
+    },
+    {
+     "type": "mass",
+     "mass": 3
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_spring_mass",
+  "label": "xe-spring-chain-one",
+  "args": {
+   "title": "One spring, one mass",
+   "elements": [
+    {
+     "type": "wall"
+    },
+    {
+     "type": "spring",
+     "k": 100,
+     "label": "k_1 = 100 N/m"
+    },
+    {
+     "type": "mass",
+     "mass": 2,
+     "label": "m_1"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_spring_mass",
+  "label": "xe-spring-chain-between",
+  "args": {
+   "title": "Mass between two walls",
+   "elements": [
+    {
+     "type": "wall"
+    },
+    {
+     "type": "spring",
+     "k": 300
+    },
+    {
+     "type": "mass",
+     "mass": 1.5,
+     "displacement": 0.2
+    },
+    {
+     "type": "spring",
+     "k": 150
+    },
+    {
+     "type": "wall"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_spring_mass",
+  "label": "xe-spring-chain-right-wall",
+  "args": {
+   "elements": [
+    {
+     "type": "mass",
+     "mass": 0.5
+    },
+    {
+     "type": "spring",
+     "k": 200
+    },
+    {
+     "type": "mass",
+     "mass": 0.5,
+     "displacement": -0.15
+    },
+    {
+     "type": "spring",
+     "k": 50,
+     "naturalLength": 2
+    },
+    {
+     "type": "wall",
+     "label": "fixed post"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-lever-min",
+  "args": {
+   "type": "lever"
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-lever1-extreme",
+  "args": {
+   "title": "Crowbar",
+   "type": "lever",
+   "variant": "class-1",
+   "effort": 40,
+   "load": 2000,
+   "effortArm": 1.5,
+   "loadArm": 0.03,
+   "notes": "A long effort arm and a very short load arm."
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-lever3",
+  "args": {
+   "title": "Tweezers",
+   "type": "lever",
+   "variant": "class-3",
+   "effort": 6,
+   "load": 2,
+   "effortArm": 2,
+   "loadArm": 6,
+   "unit": "lbf"
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-pulley-min",
+  "args": {
+   "type": "pulley"
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-pulley-compound3",
+  "args": {
+   "title": "Block and tackle",
+   "type": "pulley",
+   "variant": "compound",
+   "effort": 100,
+   "load": 300,
+   "ropes": 3
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-pulley-compound4",
+  "args": {
+   "type": "pulley",
+   "variant": "compound"
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-pulley-compound2",
+  "args": {
+   "type": "pulley",
+   "variant": "compound",
+   "ropes": 2,
+   "effort": 50,
+   "load": 100
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-incline-min",
+  "args": {
+   "type": "inclined-plane"
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-incline-steep",
+  "args": {
+   "title": "Steep chute",
+   "type": "inclined-plane",
+   "effort": 940,
+   "load": 1000,
+   "length": 5,
+   "angle": 70
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-wedge-min",
+  "args": {
+   "type": "wedge"
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-wedge-thin",
+  "args": {
+   "title": "Knife edge",
+   "type": "wedge",
+   "effort": 20,
+   "load": 229,
+   "angle": 5,
+   "unit": "N"
+  }
+ },
+ {
+  "tool": "show_simple_machine",
+  "label": "xe-machine-wedge-80",
+  "args": {
+   "type": "wedge",
+   "effort": 1250.5,
+   "load": 973.25,
+   "angle": 80,
+   "notes": "A blunt wedge gives less than the effort back."
+  }
+ }
+]

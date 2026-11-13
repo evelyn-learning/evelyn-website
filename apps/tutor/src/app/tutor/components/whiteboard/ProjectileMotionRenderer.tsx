@@ -9,11 +9,11 @@ import { InlineMathText } from './InlineMathText';
  * Draws the parabolic path, decomposed initial-velocity vector (vx, vy), and
  * annotated time-of-flight / max height / range.
  *
- * Important: v0/vx/vy arrows are drawn in REAL-WORLD coords and transformed
- * through sx/sy, so the v0 arrow always lies along the parabola's initial
- * tangent (even when the x- and y-axes have different px-per-meter scales,
- * e.g. a horizontal launch from a cliff). A previous version scaled in
- * pixels and the arrow visibly diverged from the trajectory.
+ * The v0 arrow has a fixed on-screen length and points along the SCREEN
+ * tangent of the drawn curve, so it stays on the parabola's initial tangent
+ * even when the two axes need different scales (very flat or very steep
+ * shots). Labels are placed by a small candidate picker against the curve,
+ * the arrows and the axes, so nothing is ever printed on a line.
  */
 
 import React from 'react';
@@ -21,7 +21,6 @@ import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
-import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 
 export interface ProjectileMotionProps {
   title?: string;
@@ -111,156 +110,249 @@ export function buildProjectileMotionManifest(props: ProjectileMotionProps): Fea
   return entries;
 }
 
+/** Given values keep their precision (up to 6 s.f.); derived ones show 3 s.f. */
+function num(v: number, sig = 6): string {
+  if (!Number.isFinite(v)) return '';
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  const s = a >= Math.pow(10, sig) ? String(Math.round(a)) : String(parseFloat(a.toPrecision(sig)));
+  return (v < 0 ? '−' : '') + s;
+}
+const calc = (v: number) => (Math.abs(v) >= 1000 ? num(Math.round(v), 9) : num(v, 3));
+
+function niceStep(raw: number): number {
+  if (!(raw > 0)) return 1;
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const f = raw / pow;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * pow;
+}
+
+/** A label with an optional subscript: v + x + " = 14.1 m/s". */
+interface Rich { pre: string; sub?: string; rest?: string }
+const richWidth = (r: Rich, fs: number, bold = false) =>
+  (r.pre.length + (r.sub?.length ?? 0) * 0.7 + (r.rest?.length ?? 0)) * fs * (bold ? 0.6 : 0.56);
+
+function RichText({ r, x, y, fs, fill, bold }: { r: Rich; x: number; y: number; fs: number; fill: string; bold?: boolean }) {
+  return (
+    <text x={x} y={y} fontSize={fs} fill={fill} textAnchor="middle" fontWeight={bold ? 700 : 500}
+      stroke="white" strokeWidth={3} paintOrder="stroke" strokeLinejoin="round">
+      <tspan fontStyle="italic">{r.pre}</tspan>
+      {r.sub && <tspan dy={fs * 0.28} fontSize={fs * 0.72}>{r.sub}</tspan>}
+      {r.rest && <tspan dy={r.sub ? -fs * 0.28 : 0}>{r.rest}</tspan>}
+    </text>
+  );
+}
+
+interface Box { l: number; r: number; t: number; b: number }
+const hits = (a: Box, b: Box) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+
 export default function ProjectileMotionRenderer({
   title, v0, angle, y0 = 0, g = 9.8,
   showComponents = true, sampleCount = 5,
   speedUnit = 'm/s', distanceUnit = 'm',
   notes,
 }: ProjectileMotionProps) {
+  const gg = g > 0 ? g : 9.8;
+  const h0 = Math.max(0, Number.isFinite(y0) ? y0 : 0);
   const theta = (angle * Math.PI) / 180;
-  const vx = v0 * Math.cos(theta);
-  const vy = v0 * Math.sin(theta);
+  // A launch "backwards" (cos < 0) is drawn mirrored: the figure always runs left to right.
+  // cos(90°) is 6e-17 in floating point: a straight-up throw has no horizontal speed.
+  const snap = (v: number) => (Math.abs(v) < 1e-9 * Math.max(1, Math.abs(v0)) ? 0 : v);
+  const vx = snap(Math.abs(v0 * Math.cos(theta)));
+  const vy = snap(v0 * Math.sin(theta));
 
-  // Total time of flight: y(t) = y0 + vy t - ½ g t² = 0 → quadratic.
-  const tFlight = (vy + Math.sqrt(vy * vy + 2 * g * y0)) / g;
+  const tFlight = Math.max(0, (vy + Math.sqrt(vy * vy + 2 * gg * h0)) / gg);
   const range = vx * tFlight;
-  const tMaxH = vy / g;
-  const maxH = y0 + vy * tMaxH - 0.5 * g * tMaxH * tMaxH;
+  // A ball thrown level or downward never rises: its highest point is the launch.
+  const hasApex = vy > 1e-9;
+  const tPeak = hasApex ? vy / gg : 0;
+  const maxH = hasApex ? h0 + (vy * vy) / (2 * gg) : h0;
+  const hasCliff = h0 > 0;
+  const hasComponents = showComponents && Math.abs(vy) > 1e-9 && vx > 1e-9;
 
-  // Extra bottom padding keeps the range-annotation arrow and the italic
-  // notes caption from stacking on top of each other.
-  const pad = { top: title ? 36 : 18, bottom: notes ? 56 : 42, left: 44, right: 24 };
-  const plotW = VIEWBOX_W - pad.left - pad.right;
-  const plotH = VIEWBOX_H - pad.top - pad.bottom;
+  const FS = 11;
+  const padL = 46; const padR = 50; const padT = 40; const padB = 56;
+  const cliffW = hasCliff ? 84 : 0;
+  const availW = VIEWBOX_W - padL - padR - cliffW;
+  const availH = VIEWBOX_H - padT - padB;
+  const ARROW = 96;
 
-  const xMin = 0;
-  const xMax = Math.max(range * 1.1, 5);
-  const yMin = 0;
-  // Include launch height in the viewport for cliff launches.
-  const yMax = Math.max(maxH * 1.15, y0 * 1.1, 1);
+  const xData = range > 1e-9 ? range * 1.05 : Math.max(maxH * 0.5, 1);
+  let yData = Math.max(maxH, h0) * 1.06 || 1;
 
-  // Equal-aspect (uniform px-per-meter) so the launch angle visually matches
-  // its stated value — e.g. a 45° shot looks like 45° on the page. Without
-  // this, a wide/shallow viewport (range=40m, height=10m) rendered 45° as
-  // ~63° on screen. Trade-off: the parabola looks shorter than the plot box,
-  // with dead space centered around the trajectory.
-  const rawXScale = plotW / (xMax - xMin);
-  const rawYScale = plotH / (yMax - yMin);
-  const scale = Math.min(rawXScale, rawYScale);
-  const usedW = scale * (xMax - xMin);
-  const usedH = scale * (yMax - yMin);
-  const xOffset = pad.left + (plotW - usedW) / 2;
-  const yOffset = pad.top + (plotH - usedH) / 2;
-  const sx = (x: number) => xOffset + (x - xMin) * scale;
-  const sy = (y: number) => yOffset + (yMax - y) * scale;
+  // True proportions when they stay readable; otherwise the cramped axis is
+  // stretched to about half the plot (the ticks and a note keep that honest).
+  let kx = 1; let ky = 1; let ux = 1; let uy = 0; let arrowLen = ARROW;
+  for (let pass = 0; pass < 4; pass++) {
+    const e = Math.min(availW / xData, availH / yData);
+    kx = e; ky = e;
+    if (e * yData < 0.36 * availH) ky = (0.48 * availH) / yData;
+    if (e * xData < 0.45 * availW) kx = (0.62 * availW) / xData;
+    const n = Math.hypot(vx * kx, vy * ky) || 1;
+    ux = (vx * kx) / n; uy = (vy * ky) / n;
+    arrowLen = ARROW;
+    if (uy < 0) {
+      // Thrown downward: the arrow must stop above the ground.
+      arrowLen = Math.min(ARROW, Math.max(26, (h0 * ky - 6) / -uy));
+      break;
+    }
+    // The arrow tip needs headroom inside the plot.
+    const need = h0 + (ARROW * uy + 6) / ky;
+    if (need <= yData * 1.0001) break;
+    yData = need;
+  }
+  const distorted = range > 1e-9 && Math.max(kx, ky) / Math.min(kx, ky) > 1.15;
 
-  // Trajectory path
-  const steps = 80;
+  const usedW = kx * xData; const usedH = ky * yData;
+  const axisX = padL + (availW - usedW) / 2;
+  const x0 = axisX + cliffW;
+  const top = padT + (availH - usedH) / 2;
+  const groundY = top + usedH;
+  const sx = (x: number) => x0 + x * kx;
+  const sy = (y: number) => groundY - y * ky;
+
+  // Trajectory
+  const steps = 120;
   const trajPts = Array.from({ length: steps + 1 }, (_, i) => {
     const t = (i / steps) * tFlight;
-    const x = vx * t;
-    const y = y0 + vy * t - 0.5 * g * t * t;
-    return { x: sx(x), y: sy(Math.max(0, y)) };
+    return { x: sx(vx * t), y: sy(Math.max(0, h0 + vy * t - 0.5 * gg * t * t)) };
   });
-  const path = trajPts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const path = trajPts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ');
 
-  // Equal-time sample markers
-  const samples: Array<{ x: number; y: number; t: number }> = [];
-  for (let i = 1; i < sampleCount; i++) {
+  const samples: Array<{ x: number; y: number }> = [];
+  for (let i = 1; i < sampleCount && tFlight > 0; i++) {
     const t = (i / sampleCount) * tFlight;
-    samples.push({ t, x: vx * t, y: y0 + vy * t - 0.5 * g * t * t });
+    samples.push({ x: sx(vx * t), y: sy(Math.max(0, h0 + vy * t - 0.5 * gg * t * t)) });
   }
 
-  // v0 arrow length, in REAL-WORLD units. Picking 20% of the range (or of xMax)
-  // gives a well-proportioned arrow. All arrow endpoints pass through sx/sy so
-  // they stay on the parabola's tangent regardless of px-per-m asymmetry.
-  const arrowRealLen = Math.max(xMax, yMax) * 0.25;
-  const realScale = arrowRealLen / Math.max(v0, 1e-6);
-  const vxReal = vx * realScale;
-  const vyReal = vy * realScale;
+  // Ticks
+  const xStep = niceStep(xData / Math.min(6, Math.max(2, Math.floor(usedW / 70))));
+  const yStep = niceStep(yData / Math.min(6, Math.max(2, Math.floor(usedH / 45))));
+  const xTicks: number[] = []; const yTicks: number[] = [];
+  for (let v = 0; v <= xData * 1.0001 && xTicks.length < 12; v += xStep) xTicks.push(v);
+  for (let v = yStep; v <= yData * 1.0001 && yTicks.length < 12; v += yStep) yTicks.push(v);
 
-  const originXpx = sx(0);
-  const originYpx = sy(y0);
-
-  const tipXpx = sx(vxReal);
-  const tipYpx = sy(y0 + vyReal);
-  const arcR = arrowRealLen * 0.3;
-
-  // ── Shared annotation-label layout (2026-07-19 renderer label-collision
-  // audit) ── h₀/v₀/vₓ/vᵧ/θ/h/Range and the axis captions were each placed
-  // independently at data-derived coordinates: low-angle launches ran the vₓ
-  // label through the range arrow and the θ label through both component
-  // shafts; steep short-range launches parked the x-caption on the range
-  // arrow and v₀ on the apex label. One deoverlapLabels pass over every
-  // annotation, seeded at the historical spots (X clamped into the viewbox),
-  // with the trajectory band, axes, ground and every arrow as obstacles.
-  const estW = (s: string, fontSize: number) => s.length * fontSize * 0.55;
-  const clampX = (x: number, w: number, anchor: 'start' | 'middle' | 'end') => {
-    const left = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2;
-    const shift = Math.max(3 - left, 0) - Math.max(left + w - (VIEWBOX_W - 3), 0);
-    return x + shift;
+  // ── Label placement: first free candidate against everything drawn ──
+  const obstacles: Box[] = [];
+  const addPt = (x: number, y: number, r = 5) => obstacles.push({ l: x - r, r: x + r, t: y - r, b: y + r });
+  const addSeg = (x1: number, y1: number, x2: number, y2: number, r = 5) => {
+    const n = Math.max(1, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 5));
+    for (let i = 0; i <= n; i++) addPt(x1 + ((x2 - x1) * i) / n, y1 + ((y2 - y1) * i) / n, r);
   };
-  type AnnLabel = DeoverlapLabel & { key: string };
-  const annLabels: AnnLabel[] = [];
-  const addAnn = (
-    key: string, x: number, y: number, text: string, fontSize: number,
-    anchor: 'start' | 'middle' | 'end', preferDir: 'up' | 'down',
-  ) => annLabels.push({ key, x: clampX(x, estW(text, fontSize), anchor), y, text, fontSize, anchor, preferDir });
-
-  if (y0 > 0) {
-    addAnn('h0', sx(0) - 6, (sy(0) + sy(y0)) / 2, `h₀ = ${formatValue(y0)} ${distanceUnit}`, 10, 'end', 'up');
-  }
-  addAnn(
-    'v0', tipXpx + (vxReal >= 0 ? 6 : -6), tipYpx + (vyReal >= 0 ? -6 : 14),
-    `v₀ = ${formatValue(v0)} ${speedUnit}`, 11, vxReal >= 0 ? 'start' : 'end', vyReal >= 0 ? 'up' : 'down',
-  );
-  if (showComponents) {
-    addAnn('vx', (originXpx + sx(vxReal)) / 2, originYpx + 14, `vₓ = ${formatValue(vx)}`, 10, 'middle', 'down');
-    if (Math.abs(vy) > 1e-6) {
-      addAnn('vy', originXpx - 4, (originYpx + sy(y0 + vyReal)) / 2, `vᵧ = ${formatValue(vy)}`, 10, 'end', 'up');
+  const place = (w: number, cands: Array<[number, number]>): { x: number; y: number } => {
+    const h = FS + 2;
+    let best: { x: number; y: number; n: number } | null = null;
+    for (const [cx0, cy] of cands) {
+      const cx = Math.min(VIEWBOX_W - 4 - w / 2, Math.max(4 + w / 2, cx0));
+      const box = { l: cx - w / 2 - 2, r: cx + w / 2 + 2, t: cy - h / 2 - 1, b: cy + h / 2 + 1 };
+      let n = obstacles.reduce((acc, o) => acc + (hits(box, o) ? 1 : 0), 0);
+      if (box.t < 2 || box.b > VIEWBOX_H - 2) n += 100;
+      if (!best || n < best.n) best = { x: cx, y: cy, n };
+      if (n === 0) break;
     }
-  }
-  if (Math.abs(angle) > 0.5) {
-    addAnn('angle', sx(arcR * 0.6 * Math.cos(theta / 2)), sy(y0 + arcR * 0.6 * Math.sin(theta / 2)), `${formatValue(angle)}°`, 10, 'start', 'down');
-  }
-  if (maxH > y0 + 0.01) {
-    addAnn('h', sx(vx * tMaxH) + 4, sy(maxH) - 4, `h = ${formatValue(maxH)} ${distanceUnit}`, 10, 'start', 'up');
-  }
-  if (range > 0) {
-    addAnn('range', sx(range / 2), sy(0) + 24, `Range = ${formatValue(range)} ${distanceUnit}`, 10, 'middle', 'down');
-  }
-  addAnn('ycap', xOffset - 6, yOffset + 8, `y (${distanceUnit})`, 10, 'end', 'down');
-  addAnn('xcap', xOffset + usedW, sy(0) + 12, `x (${distanceUnit})`, 10, 'end', 'down');
+    const p = best ?? { x: cands[0][0], y: cands[0][1] };
+    obstacles.push({ l: p.x - w / 2 - 2, r: p.x + w / 2 + 2, t: p.y - h / 2 - 1, b: p.y + h / 2 + 1 });
+    return { x: p.x, y: p.y };
+  };
 
-  const arrowBox = (x1: number, y1: number, x2: number, y2: number, pad: number): DeoverlapObstacle => ({
-    left: Math.min(x1, x2) - pad, right: Math.max(x1, x2) + pad,
-    top: Math.min(y1, y2) - pad, bottom: Math.max(y1, y2) + pad,
-  });
-  const annObstacles: DeoverlapObstacle[] = [
-    { left: xOffset, right: xOffset + usedW, top: sy(0) - 2, bottom: sy(0) + 2 },   // ground
-    { left: xOffset - 2, right: xOffset + 2, top: yOffset, bottom: sy(0) },         // y-axis
-    arrowBox(originXpx, originYpx, tipXpx, tipYpx, 4),                              // v0 arrow
+  trajPts.forEach((p) => addPt(p.x, p.y, 4));
+  obstacles.push({ l: 0, r: VIEWBOX_W, t: groundY + 1, b: groundY + 22 });   // x-axis + its tick labels
+  obstacles.push({ l: 0, r: axisX + 3, t: 0, b: groundY });                  // y-axis + its tick labels
+  obstacles.push({ l: axisX - 20, r: axisX + 20, t: top - 26, b: top - 8 }); // y caption
+
+  // Launch height: a dimension inside the cliff when it fits, else a caption on top of it.
+  const lx = sx(0); const ly = sy(h0);
+  const h0Label: Rich = { pre: 'h', sub: '0', rest: ` = ${num(h0)} ${distanceUnit}` };
+  const h0W = richWidth(h0Label, FS, true);
+  const cliffH = groundY - ly;
+  const h0Inside = hasCliff && cliffH >= 44 && h0W <= cliffW - 26;
+  const h0Pos = h0Inside
+    ? { x: axisX + (cliffW - 20) / 2 + 2, y: (ly + groundY) / 2 }
+    : { x: Math.max(axisX + 6 + h0W / 2, axisX + cliffW / 2), y: ly - 12 };
+  if (hasCliff) {
+    obstacles.push({ l: axisX, r: x0, t: ly, b: groundY });
+    obstacles.push({ l: h0Pos.x - h0W / 2 - 2, r: h0Pos.x + h0W / 2 + 2, t: h0Pos.y - 9, b: h0Pos.y + 9 });
+  }
+
+  // Launch velocity arrow and its component triangle (screen space).
+  const tipX = lx + arrowLen * ux; const tipY = ly - arrowLen * uy;
+  const legX = tipX; // foot of the vertical leg
+  addSeg(lx, ly, tipX, tipY, 6);
+  if (hasComponents) { addSeg(lx, ly, legX, ly, 3); addSeg(legX, ly, tipX, tipY, 3); }
+  const up = uy >= 0 ? 1 : -1;
+
+  // Apex
+  const apexX = sx(vx * tPeak); const apexY = sy(maxH);
+  const apexLabel: Rich = { pre: 'h', sub: 'max', rest: ` = ${calc(maxH)} ${distanceUnit}` };
+  const apexW = richWidth(apexLabel, FS, true);
+  let apexPos = { x: 0, y: 0 };
+  if (hasApex) {
+    addSeg(apexX, apexY, apexX, groundY, 3);
+    apexPos = place(apexW, [
+      [apexX, apexY - 13], [apexX + apexW / 2 + 8, apexY - 13], [apexX - apexW / 2 - 8, apexY - 13],
+      [apexX + apexW / 2 + 8, (apexY + groundY) / 2],
+    ]);
+  }
+
+  // Angle arc + value (the stated angle; the drawn one follows the axis scales).
+  const screenAng = Math.atan2(Math.abs(uy), ux);
+  const showAngle = Math.abs(vy) > 1e-9 && vx > 1e-9 && Math.abs(angle) > 0.05;
+  const arcR = Math.min(26, arrowLen * 0.4);
+  const angText = `${num(Math.abs(angle) > 90 ? 180 - Math.abs(angle) : Math.abs(angle))}°`;
+  const angW = angText.length * FS * 0.6;
+  let angPos = { x: 0, y: 0 };
+  if (showAngle) {
+    const bis = screenAng / 2;
+    // Inside the wedge, far enough out that it is tall enough for the text;
+    // a wedge too narrow for that puts the value just outside the triangle.
+    const d = Math.max(arcR + 12, 10 / Math.max(Math.sin(bis), 0.05));
+    const inX = lx + d * Math.cos(bis);
+    const fitsInside = d <= arrowLen * 0.85 && (!hasComponents || inX + angW / 2 + 5 <= legX);
+    angPos = fitsInside
+      ? { x: inX, y: ly - up * d * Math.sin(bis) }
+      : { x: tipX + 9 + angW / 2, y: ly - up * 12 };
+    obstacles.push({ l: angPos.x - angW / 2 - 1, r: angPos.x + angW / 2 + 1, t: angPos.y - 8, b: angPos.y + 8 });
+  }
+
+  const vxLabel: Rich = { pre: 'v', sub: 'x', rest: ` = ${calc(vx)} ${speedUnit}` };
+  const vyLabel: Rich = { pre: 'v', sub: 'y', rest: ` = ${calc(vy)} ${speedUnit}` };
+  const v0Label: Rich = { pre: 'v', sub: '0', rest: ` = ${num(v0)} ${speedUnit}` };
+  const vxW = richWidth(vxLabel, FS); const vyW = richWidth(vyLabel, FS); const v0W = richWidth(v0Label, FS + 1, true);
+  let vxPos = { x: 0, y: 0 }; let vyPos = { x: 0, y: 0 };
+  const legH = Math.abs(tipY - ly); const legW = legX - lx;
+  if (hasComponents) {
+    const side = legX + 9 + vxW / 2;
+    vxPos = place(vxW, up > 0
+      ? [[lx + Math.max(legW / 2, vxW / 2 + 2), ly + 13], [side, ly - 12], [side + angW + 8, ly - 12], [side, ly + 13]]
+      : [[lx + Math.max(legW / 2, vxW / 2 + 2), ly - 12], [side, ly - 12], [side + angW + 8, ly + 12], [side, ly + 2]]);
+    const sideY = legX + 9 + vyW / 2;
+    // Low on the leg (one line above the vx label) so v0 has room under the tip.
+    const mid = Math.max(legH * 0.42, Math.min(28, legH));
+    vyPos = place(vyW, [0, 6, -6, 12, 18, -12, 24].map((dy): [number, number] => [sideY, ly - up * (mid + dy)]));
+  }
+  // v0: beside the tip on the side the curve leaves free, else above the shaft.
+  const aboveShaft: [number, number] = [
+    (lx + tipX) / 2, (ly + tipY) / 2 - up * (10 + (v0W / 2) * Math.abs(uy)),
   ];
-  // Trajectory as a chain of segment bands (a single bbox would swallow the plot).
-  for (let i = 0; i < steps; i += 5) {
-    const seg = trajPts.slice(i, Math.min(i + 6, steps + 1));
-    annObstacles.push({
-      left: Math.min(...seg.map((p) => p.x)) - 1.5, right: Math.max(...seg.map((p) => p.x)) + 1.5,
-      top: Math.min(...seg.map((p) => p.y)) - 1.5, bottom: Math.max(...seg.map((p) => p.y)) + 1.5,
-    });
-  }
-  if (showComponents) {
-    annObstacles.push(arrowBox(originXpx, originYpx, sx(vxReal), originYpx, 4));
-    if (Math.abs(vy) > 1e-6) annObstacles.push(arrowBox(originXpx, originYpx, originXpx, sy(y0 + vyReal), 4));
-  }
-  if (range > 0) annObstacles.push(arrowBox(sx(0), sy(0) + 12, sx(range), sy(0) + 12, 4));
+  const beside = tipX + 10 + v0W / 2;
+  // Above the launch corner, high enough to clear the curve's tangent at the label's far end.
+  const highAbove: [number, number] = [
+    lx + 6 + v0W / 2,
+    Math.min(tipY - 13, ly - (v0W + 8) * Math.min(Math.tan(screenAng), 3) - 10),
+  ];
+  const v0Cands: Array<[number, number]> = Math.abs(vy) <= 1e-9
+    ? [[lx + Math.max(arrowLen / 2, v0W / 2 + 2), ly - 12], [lx + Math.max(arrowLen / 2, v0W / 2 + 2), ly + 13]]
+    : up > 0
+      ? [...[0, 8, 14, 20, 26, -8].map((dy): [number, number] => [beside, tipY + dy]), highAbove,
+        [tipX - 9 - v0W / 2, tipY - 2], aboveShaft, [beside, tipY + 34], [tipX - 9 - v0W / 2, tipY - 18]]
+      : [...[2, 10, 16, 24, -8].map((dy): [number, number] => [beside, tipY + dy]), [tipX, tipY + 16], aboveShaft];
+  const v0Pos = place(v0W, v0Cands);
 
-  const resolvedAnn = new Map(
-    deoverlapLabels(annLabels, { width: VIEWBOX_W, height: VIEWBOX_H }, { obstacles: annObstacles, baseline: 'alphabetic' })
-      .map((l) => [l.key, { x: l.x, y: l.y }]),
-  );
-  const labelPos = (key: string, fallbackX: number, fallbackY: number) =>
-    resolvedAnn.get(key) ?? { x: fallbackX, y: fallbackY };
+  const rangeText = `Range = ${calc(range)} ${distanceUnit}`;
+  const rangeW = rangeText.length * FS * 0.6;
+  const rangeCx = Math.min(VIEWBOX_W - 4 - rangeW / 2, Math.max(4 + rangeW / 2, (sx(0) + sx(range)) / 2));
+  const dimY = groundY + 30;
+  const arcEndX = lx + arcR * Math.cos(screenAng); const arcEndY = ly - up * arcR * Math.sin(screenAng);
 
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
@@ -270,151 +362,110 @@ export default function ProjectileMotionRenderer({
       <svg viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: 400 }}>
         <ArrowMarkers idPrefix="pm-arrow" />
 
-        {/* Ground (only along the actual plot width, not the whole pad) */}
-        <g {...feat('ground', { cx: xOffset + usedW / 2, cy: sy(0), w: usedW, h: 4 })}>
-          <line x1={xOffset} y1={sy(0)} x2={xOffset + usedW} y2={sy(0)} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.25} />
-        </g>
-        {/* Y-axis */}
-        <g {...feat('y-axis', { cx: xOffset, cy: (yOffset + sy(0)) / 2, w: 4, h: Math.abs(sy(0) - yOffset) })}>
-          <line x1={xOffset} y1={yOffset} x2={xOffset} y2={sy(0)} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
-        </g>
-
-        {/* Trajectory + key points on it. Peak is at t = vy/g (if positive). */}
-        <g {...feat('trajectory', { cx: xOffset + usedW / 2, cy: (yOffset + sy(0)) / 2, w: usedW, h: Math.abs(sy(0) - yOffset) })}>
-          <path d={path} stroke={DIAGRAM_COLORS.primary} strokeWidth={2.5} fill="none" />
-        </g>
-        {/* Launch point feature — at (0, y0) in real-world coords. */}
-        <g {...feat('launch', { cx: sx(0), cy: sy(y0), w: 28, h: 28 })} />
-        {/* Peak feature — at time-of-peak, if it exists above y=0. */}
-        {(() => {
-          const tPeak = vy / g;
-          if (!Number.isFinite(tPeak) || tPeak <= 0) return null;
-          const peakX = vx * tPeak;
-          const peakY = y0 + vy * tPeak - 0.5 * g * tPeak * tPeak;
-          return <g {...feat('peak', { cx: sx(peakX), cy: sy(peakY), w: 28, h: 28 })} />;
-        })()}
-        {/* Landing point — at (range, 0). */}
-        <g {...feat('landing', { cx: sx(range), cy: sy(0), w: 28, h: 28 })} />
-        {/* Samples */}
-        {samples.map((s, i) => (
-          <circle key={i} cx={sx(s.x)} cy={sy(Math.max(0, s.y))} r={3} fill={DIAGRAM_COLORS.primary} stroke="white" strokeWidth={1} />
-        ))}
-
-        {/* Launch height indicator (for cliff / non-zero y0 launches). */}
-        {y0 > 0 && (
+        {/* Cliff / platform the projectile leaves from */}
+        {hasCliff && (
           <g>
-            <line x1={sx(0)} y1={sy(0)} x2={sx(0)} y2={sy(y0)} stroke={DIAGRAM_COLORS.success} strokeWidth={1} strokeDasharray="4 3" />
-            <text x={labelPos('h0', sx(0) - 6, (sy(0) + sy(y0)) / 2).x} y={labelPos('h0', sx(0) - 6, (sy(0) + sy(y0)) / 2).y} fontSize={10} fill={DIAGRAM_COLORS.success} textAnchor="end" fontWeight={600}>
-              h₀ = {formatValue(y0)} {distanceUnit}
+            <rect x={axisX} y={ly} width={cliffW} height={cliffH} fill="#e2e8f0" stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />
+            {h0Inside && (
+              <path d={`M ${x0 - 13} ${groundY - 1.5} L ${x0 - 13} ${ly + 1.5}`} stroke={DIAGRAM_COLORS.success} strokeWidth={1.25} fill="none"
+                markerStart="url(#pm-arrow-success)" markerEnd="url(#pm-arrow-success)" />
+            )}
+            <text x={h0Pos.x} y={h0Pos.y + FS * 0.35} fontSize={FS} fill="#15803d" textAnchor="middle" fontWeight={700}>
+              <tspan fontStyle="italic">h</tspan><tspan dy={FS * 0.28} fontSize={FS * 0.72}>0</tspan><tspan dy={-FS * 0.28}>{h0Label.rest}</tspan>
             </text>
           </g>
         )}
 
-        {/* Initial velocity vector + components (all in real-world coords). */}
-        <g>
-          <line x1={originXpx} y1={originYpx} x2={tipXpx} y2={tipYpx}
-            stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5}
-            markerEnd="url(#pm-arrow-secondary)" />
-          {/* v0 label: offset outward from the arrow so it doesn't sit on the trajectory. */}
-          <text
-            x={labelPos('v0', tipXpx + (vxReal >= 0 ? 6 : -6), tipYpx + (vyReal >= 0 ? -6 : 14)).x}
-            y={labelPos('v0', tipXpx + (vxReal >= 0 ? 6 : -6), tipYpx + (vyReal >= 0 ? -6 : 14)).y}
-            fontSize={11}
-            fill={DIAGRAM_COLORS.secondary}
-            fontWeight={700}
-            textAnchor={vxReal >= 0 ? 'start' : 'end'}
-          >
-            v₀ = {formatValue(v0)} {speedUnit}
-          </text>
-
-          {showComponents && (
-            <g>
-              {/* Horizontal component: from origin to (vxReal, y0) */}
-              <line
-                x1={originXpx} y1={originYpx}
-                x2={sx(vxReal)} y2={originYpx}
-                stroke={DIAGRAM_COLORS.secondary} strokeWidth={1.25} strokeDasharray="4 3"
-                markerEnd="url(#pm-arrow-secondary)"
-              />
-              <text
-                x={labelPos('vx', (originXpx + sx(vxReal)) / 2, originYpx + 14).x}
-                y={labelPos('vx', (originXpx + sx(vxReal)) / 2, originYpx + 14).y}
-                fontSize={10}
-                fill={DIAGRAM_COLORS.secondary}
-                textAnchor="middle"
-              >
-                vₓ = {formatValue(vx)}
-              </text>
-              {/* Vertical component: from origin to (0, y0 + vyReal). Only show when vy meaningfully nonzero. */}
-              {Math.abs(vy) > 1e-6 && (
-                <g>
-                  <line
-                    x1={originXpx} y1={originYpx}
-                    x2={originXpx} y2={sy(y0 + vyReal)}
-                    stroke={DIAGRAM_COLORS.secondary} strokeWidth={1.25} strokeDasharray="4 3"
-                    markerEnd="url(#pm-arrow-secondary)"
-                  />
-                  <text
-                    x={labelPos('vy', originXpx - 4, (originYpx + sy(y0 + vyReal)) / 2).x}
-                    y={labelPos('vy', originXpx - 4, (originYpx + sy(y0 + vyReal)) / 2).y}
-                    fontSize={10}
-                    fill={DIAGRAM_COLORS.secondary}
-                    textAnchor="end"
-                  >
-                    vᵧ = {formatValue(vy)}
-                  </text>
-                </g>
-              )}
-            </g>
-          )}
-
-          {/* Angle arc — drawn in real-world coords so it matches the tangent. */}
-          {Math.abs(angle) > 0.5 && (() => {
-            const ax = sx(arcR);
-            const bx = sx(arcR * Math.cos(theta));
-            const by = sy(y0 + arcR * Math.sin(theta));
-            return (
-              <g>
-                <path d={`M ${ax} ${originYpx} A ${(ax - originXpx)} ${(originYpx - sy(y0 + arcR))} 0 0 0 ${bx} ${by}`}
-                  stroke={DIAGRAM_COLORS.muted} strokeWidth={1} fill="none" />
-                <text
-                  x={labelPos('angle', sx(arcR * 0.6 * Math.cos(theta / 2)), sy(y0 + arcR * 0.6 * Math.sin(theta / 2))).x}
-                  y={labelPos('angle', sx(arcR * 0.6 * Math.cos(theta / 2)), sy(y0 + arcR * 0.6 * Math.sin(theta / 2))).y}
-                  fontSize={10}
-                  fill={DIAGRAM_COLORS.muted}
-                >
-                  {formatValue(angle)}°
-                </text>
-              </g>
-            );
-          })()}
+        {/* Ground = x-axis, with ticks */}
+        <g {...feat('ground', { cx: (axisX + x0 + usedW) / 2, cy: groundY, w: usedW + cliffW, h: 4 })}>
+          <line x1={axisX} y1={groundY} x2={x0 + usedW + 10} y2={groundY} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.5} />
         </g>
+        {xTicks.map((v) => (
+          <g key={`xt-${v}`}>
+            <line x1={sx(v)} y1={groundY} x2={sx(v)} y2={groundY + 4} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
+            <text x={sx(v)} y={groundY + 16} fontSize={FS} fill={DIAGRAM_COLORS.muted} textAnchor="middle">{num(v)}</text>
+          </g>
+        ))}
+        <text x={x0 + usedW + 15} y={groundY + 4} fontSize={FS} fill={DIAGRAM_COLORS.muted} fontStyle="italic">x ({distanceUnit})</text>
 
-        {/* Max height marker — only when there's actual ascent. */}
-        {maxH > y0 + 0.01 && (
+        {/* Y-axis with ticks */}
+        <g {...feat('y-axis', { cx: axisX, cy: (top + groundY) / 2, w: 4, h: usedH })}>
+          <line x1={axisX} y1={top - 6} x2={axisX} y2={groundY} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
+        </g>
+        {yTicks.map((v) => (
+          <g key={`yt-${v}`}>
+            <line x1={axisX - 4} y1={sy(v)} x2={axisX} y2={sy(v)} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
+            <text x={axisX - 7} y={sy(v) + 4} fontSize={FS} fill={DIAGRAM_COLORS.muted} textAnchor="end">{num(v)}</text>
+          </g>
+        ))}
+        <text x={axisX} y={top - 13} fontSize={FS} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">y ({distanceUnit})</text>
+        {distorted && (
+          <text x={VIEWBOX_W - 8} y={14} fontSize={FS} fill={DIAGRAM_COLORS.muted} textAnchor="end" fontStyle="italic">the two axes use different scales</text>
+        )}
+
+        {/* Max height marker: only when the projectile actually rises. */}
+        {hasApex && (
           <g>
-            <line x1={sx(vx * tMaxH)} y1={sy(maxH)} x2={sx(vx * tMaxH)} y2={sy(0)} stroke={DIAGRAM_COLORS.success} strokeWidth={1} strokeDasharray="3 3" />
-            <text x={labelPos('h', sx(vx * tMaxH) + 4, sy(maxH) - 4).x} y={labelPos('h', sx(vx * tMaxH) + 4, sy(maxH) - 4).y} fontSize={10} fill={DIAGRAM_COLORS.success} fontWeight={600}>h = {formatValue(maxH)} {distanceUnit}</text>
+            <line x1={apexX} y1={apexY} x2={apexX} y2={groundY} stroke={DIAGRAM_COLORS.success} strokeWidth={1} strokeDasharray="3 3" />
+            <RichText r={apexLabel} x={apexPos.x} y={apexPos.y + FS * 0.35} fs={FS} fill="#15803d" bold />
           </g>
         )}
 
-        {/* Range annotation (just under the ground line, label further below). */}
+        {/* Trajectory + key points */}
+        <g {...feat('trajectory', { cx: x0 + usedW / 2, cy: (top + groundY) / 2, w: usedW, h: usedH })}>
+          <path d={path} stroke={DIAGRAM_COLORS.primary} strokeWidth={2.5} fill="none" strokeLinejoin="round" />
+        </g>
+        {samples.map((s, i) => (
+          <circle key={i} cx={s.x} cy={s.y} r={3} fill={DIAGRAM_COLORS.primary} stroke="white" strokeWidth={1} />
+        ))}
+        <g {...feat('launch', { cx: lx, cy: ly, w: 28, h: 28 })}>
+          <circle cx={lx} cy={ly} r={3.5} fill={DIAGRAM_COLORS.text} />
+        </g>
+        {hasApex && (
+          <g {...feat('peak', { cx: apexX, cy: apexY, w: 28, h: 28 })}>
+            <circle cx={apexX} cy={apexY} r={3.5} fill={DIAGRAM_COLORS.success} stroke="white" strokeWidth={1} />
+          </g>
+        )}
+        <g {...feat('landing', { cx: sx(range), cy: groundY, w: 28, h: 28 })}>
+          {range > 0 && <circle cx={sx(range)} cy={groundY} r={3.5} fill={DIAGRAM_COLORS.primary} stroke="white" strokeWidth={1} />}
+        </g>
+
+        {/* Launch velocity, components and angle */}
+        {hasComponents && (
+          <g>
+            <line x1={lx} y1={ly} x2={legX} y2={ly} stroke={DIAGRAM_COLORS.secondary} strokeWidth={1.25} strokeDasharray="4 3"
+              markerEnd={legW >= 14 ? 'url(#pm-arrow-secondary)' : undefined} />
+            <line x1={legX} y1={ly} x2={tipX} y2={tipY} stroke={DIAGRAM_COLORS.secondary} strokeWidth={1.25} strokeDasharray="4 3"
+              markerEnd={legH >= 14 ? 'url(#pm-arrow-secondary)' : undefined} />
+            <RichText r={vxLabel} x={vxPos.x} y={vxPos.y + FS * 0.35} fs={FS} fill={DIAGRAM_COLORS.secondary} />
+            <RichText r={vyLabel} x={vyPos.x} y={vyPos.y + FS * 0.35} fs={FS} fill={DIAGRAM_COLORS.secondary} />
+          </g>
+        )}
+        {showAngle && (
+          <g>
+            <path d={`M ${lx + arcR} ${ly} A ${arcR} ${arcR} 0 0 ${up > 0 ? 0 : 1} ${arcEndX} ${arcEndY}`}
+              stroke={DIAGRAM_COLORS.slate} strokeWidth={1.25} fill="none" />
+            <text x={angPos.x} y={angPos.y + FS * 0.35} fontSize={FS} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}
+              stroke="white" strokeWidth={3} paintOrder="stroke">{angText}</text>
+          </g>
+        )}
+        {/* A path, not a line: the shaft is diagonal. */}
+        <path d={`M ${lx} ${ly} L ${tipX} ${tipY}`} stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5} fill="none" markerEnd="url(#pm-arrow-secondary)" />
+        <RichText r={v0Label} x={v0Pos.x} y={v0Pos.y + (FS + 1) * 0.35} fs={FS + 1} fill={DIAGRAM_COLORS.secondary} bold />
+
+        {/* Range dimension under the axis */}
         {range > 0 && (
           <g>
-            <line x1={sx(0)} y1={sy(0) + 12} x2={sx(range)} y2={sy(0) + 12}
-              stroke={DIAGRAM_COLORS.warning} strokeWidth={1}
+            <line x1={sx(0)} y1={dimY - 6} x2={sx(0)} y2={dimY + 6} stroke={DIAGRAM_COLORS.warning} strokeWidth={1} />
+            <line x1={sx(range)} y1={dimY - 6} x2={sx(range)} y2={dimY + 6} stroke={DIAGRAM_COLORS.warning} strokeWidth={1} />
+            <line x1={sx(0) + 1} y1={dimY} x2={sx(range) - 1} y2={dimY}
+              stroke={DIAGRAM_COLORS.warning} strokeWidth={1.25}
               markerEnd="url(#pm-arrow-warning)" markerStart="url(#pm-arrow-warning)" />
-            <text x={labelPos('range', sx(range / 2), sy(0) + 24).x} y={labelPos('range', sx(range / 2), sy(0) + 24).y} fontSize={10} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={600}>
-              Range = {formatValue(range)} {distanceUnit}
-            </text>
+            <text x={rangeCx} y={dimY + 18} fontSize={FS} fill="#b45309" textAnchor="middle" fontWeight={700}>{rangeText}</text>
           </g>
         )}
-
-        {/* Axis captions */}
-        <text x={labelPos('ycap', xOffset - 6, yOffset + 8).x} y={labelPos('ycap', xOffset - 6, yOffset + 8).y} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">y ({distanceUnit})</text>
-        <text x={labelPos('xcap', xOffset + usedW, sy(0) + 12).x} y={labelPos('xcap', xOffset + usedW, sy(0) + 12).y} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">x ({distanceUnit})</text>
       </svg>
-    <DiagramNotes notes={notes} />
+      <DiagramNotes notes={notes} />
     </div>
   );
 }

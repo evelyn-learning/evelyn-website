@@ -222,10 +222,10 @@ function mitosisCellContent(phase: MitosisPhase, cx: number, cy: number, R: numb
 export function CatalogMitosisRenderer({ figure }: { figure: MitosisFigure }) {
   const N = mitosisFeatureNames;
   const W = 680;
-  const H = 548;
+  const H = 532;
   const R = 88;
   const cols = [120, 340, 560];
-  const rows = [175, 410];
+  const rows = [118, 366];
   const cells = MITOSIS_PHASES.map((phase, i) => ({
     phase,
     cx: cols[i % 3],
@@ -263,13 +263,13 @@ export function CatalogMitosisRenderer({ figure }: { figure: MitosisFigure }) {
               {phase !== 'cytokinesis' && <circle cx={cx} cy={cy} r={R} fill="#f8fafc" stroke={INK} strokeWidth={2} />}
               {mitosisCellContent(phase, cx, cy, R)}
               {/* sub-caption */}
-              <text x={cx} y={cy + R + 18} fontSize={11.5} textAnchor="middle" fill={GRAY}>
+              <text x={cx} y={cy + R + 18} fontSize={11.5} textAnchor="middle" fill="#64748b">
                 {MITOSIS_SUB[phase]}
               </text>
             </g>
           );
         })}
-        <text x={W / 2} y={H - 6} fontSize={11.5} textAnchor="middle" fill={INK}>
+        <text x={W / 2} y={H - 8} fontSize={12} textAnchor="middle" fill={INK} fontWeight={600}>
           Mitosis → 2 genetically identical diploid daughter cells
         </text>
       </svg>
@@ -365,12 +365,13 @@ export function CatalogMeiosisRenderer({ figure }: { figure: MeiosisFigure }) {
         <g opacity={dimParent ? 0.4 : 1} data-feature={N.crossover} data-feature-label="Crossing over">
           <line x1={parent.cx - 28} y1={parent.cy - 18} x2={parent.cx - 20} y2={parent.cy - 10} stroke={PINK} strokeWidth={4} strokeLinecap="round" />
           <line x1={parent.cx - 20} y1={parent.cy - 18} x2={parent.cx - 28} y2={parent.cy - 10} stroke={RED} strokeWidth={4} strokeLinecap="round" />
-          <line x1={parent.cx + 84} y1={parent.cy - 22} x2={parent.cx - 20} y2={parent.cy - 14} stroke={INK} strokeWidth={1} />
-          <text x={parent.cx + 86} y={parent.cy - 24} fontSize={11.5} textAnchor="start" fill={hiParent ? HL : INK} fontWeight={700}>
+          {/* named from the left, the side the crossed-over pair is on, so the leader crosses nothing */}
+          <line x1={parent.cx - 76} y1={parent.cy - 14} x2={parent.cx - 33} y2={parent.cy - 14} stroke={INK} strokeWidth={1} />
+          <text x={parent.cx - 80} y={parent.cy - 10} fontSize={11.5} textAnchor="end" fill={hiParent ? HL : INK} fontWeight={700}>
             crossing over
           </text>
         </g>
-        <text x={parent.cx} y={parent.cy - parent.r - 8} fontSize={11.5} textAnchor="middle" fill={INK} fontWeight={700}>
+        <text x={parent.cx} y={parent.cy - parent.r - (hiParent ? 15 : 8)} fontSize={11.5} textAnchor="middle" fill={INK} fontWeight={700}>
           Diploid parent (2n = 4)
         </text>
 
@@ -386,9 +387,9 @@ export function CatalogMeiosisRenderer({ figure }: { figure: MeiosisFigure }) {
           {repChrom('mi1-long', mi[1].cx - 15, mi[1].cy, PINK, 44)}
           {repChrom('mi1-short', mi[1].cx + 17, mi[1].cy + 2, BLUE, 28)}
         </g>
-        <text x={340} y={mi[0].cy - mi[0].r - 8} fontSize={11} textAnchor="middle" fill={INK}>
-          2 haploid cells (n) — chromosomes still doubled
-        </text>
+        {/* caption sits in the clear gap between the two cells, away from the arrows */}
+        <text x={340} y={mi[0].cy - 3} fontSize={11.5} textAnchor="middle" fill={INK} fontWeight={700}>2 haploid cells (n)</text>
+        <text x={340} y={mi[0].cy + 12} fontSize={10.5} textAnchor="middle" fill={INK}>chromosomes still doubled</text>
 
         {/* ── Meiosis II products (4 haploid cells) ── */}
         <g opacity={dimM2 ? 0.4 : 1} data-feature={N.daughters} data-feature-label="Four haploid cells">
@@ -466,8 +467,11 @@ export function CatalogDnaReplicationRenderer({ figure }: { figure: DnaReplicati
         <line x1={52} y1={198} x2={Jx} y2={198} stroke={INK} strokeWidth={3.5} strokeLinecap="round" />
         <line x1={52} y1={222} x2={Jx} y2={222} stroke={INK} strokeWidth={3.5} strokeLinecap="round" />
         {rungs}
-        <text x={48} y={193} fontSize={11} textAnchor="end" fill={INK} fontWeight={700}>3′</text>
-        <text x={48} y={230} fontSize={11} textAnchor="end" fill={INK} fontWeight={700}>5′</text>
+        {/* each strand keeps ONE polarity along its whole length: the upper
+            strand ends 3′ on the right, so its left end is 5′ (and the lower
+            strand is the reverse) */}
+        <text x={48} y={193} fontSize={11} textAnchor="end" fill={INK} fontWeight={700}>5′</text>
+        <text x={48} y={230} fontSize={11} textAnchor="end" fill={INK} fontWeight={700}>3′</text>
         <text x={150} y={176} fontSize={11.5} textAnchor="middle" fill={INK}>parental DNA</text>
 
         {/* ── separated parental template strands (the opened fork) ── */}
@@ -476,13 +480,14 @@ export function CatalogDnaReplicationRenderer({ figure }: { figure: DnaReplicati
         <text x={636} y={120} fontSize={11} textAnchor="start" fill={INK} fontWeight={700}>3′</text>
         <text x={636} y={306} fontSize={11} textAnchor="start" fill={INK} fontWeight={700}>5′</text>
         <text x={598} y={104} fontSize={10.5} textAnchor="middle" fill={GRAY}>template</text>
-        <text x={598} y={322} fontSize={10.5} textAnchor="middle" fill={GRAY}>template</text>
+        <text x={610} y={322} fontSize={10.5} textAnchor="middle" fill={GRAY}>template</text>
 
         {/* ── leading strand (continuous, toward fork) ── */}
         <g data-feature={N.leading} data-feature-label="Leading strand">
           <path d="M 600 150 Q 470 176 352 206" fill="none" stroke={BLUE} strokeWidth={3.5} strokeLinecap="round" markerEnd="url(#dna-arr-blue)" />
-          <text x={512} y={148} fontSize={11.5} textAnchor="middle" fill={BLUE} fontWeight={700}>leading strand</text>
-          <text x={512} y={162} fontSize={10} textAnchor="middle" fill={BLUE}>continuous (5′→3′)</text>
+          {/* captions go in the open mouth of the fork, clear of both strands */}
+          <text x={572} y={192} fontSize={11.5} textAnchor="middle" fill={BLUE} fontWeight={700}>leading strand</text>
+          <text x={572} y={206} fontSize={10} textAnchor="middle" fill={BLUE}>continuous (5′→3′)</text>
         </g>
 
         {/* ── lagging strand: Okazaki fragments (away from fork) ── */}
@@ -497,17 +502,18 @@ export function CatalogDnaReplicationRenderer({ figure }: { figure: DnaReplicati
               </g>
             ))}
           </g>
-          <text x={470} y={330} fontSize={11.5} textAnchor="middle" fill={GREEN} fontWeight={700}>lagging strand</text>
-          <text x={470} y={344} fontSize={10} textAnchor="middle" fill={GREEN}>Okazaki fragments (discontinuous)</text>
-          <line x1={392} y1={232} x2={410} y2={214} stroke={RED} strokeWidth={0.8} />
-          <text x={412} y={212} fontSize={10} textAnchor="start" fill={RED} fontWeight={700}>RNA primer</text>
+          <text x={580} y={236} fontSize={11.5} textAnchor="middle" fill={GREEN} fontWeight={700}>lagging strand</text>
+          <text x={580} y={250} fontSize={10} textAnchor="middle" fill={GREEN}>Okazaki fragments (discontinuous)</text>
+          <line x1={376} y1={231} x2={376} y2={282} stroke={RED} strokeWidth={0.8} />
+          <text x={376} y={294} fontSize={10} textAnchor="middle" fill={RED} fontWeight={700}>RNA primer</text>
         </g>
 
         {/* ── helicase at the fork junction ── */}
         <g data-feature={N.helicase} data-feature-label="Helicase">
           <circle cx={Jx} cy={210} r={15} fill={ORANGE} stroke="#fff" strokeWidth={1.5} />
           <path d={`M ${Jx} 210 L ${Jx + 15} 202 L ${Jx + 15} 218 Z`} fill="#fff" opacity={0.85} />
-          <text x={Jx - 2} y={252} fontSize={11.5} textAnchor="middle" fill={ORANGE} fontWeight={700}>helicase</text>
+          <text x={Jx - 6} y={252} fontSize={11.5} textAnchor="middle" fill={ORANGE} fontWeight={700}>helicase</text>
+          <text x={Jx - 6} y={265} fontSize={9.5} textAnchor="middle" fill={ORANGE}>unzips the helix</text>
         </g>
 
         {figure.showEnzymes && (
@@ -517,15 +523,17 @@ export function CatalogDnaReplicationRenderer({ figure }: { figure: DnaReplicati
               <ellipse cx={412} cy={192} rx={17} ry={12} fill={BLUE} opacity={0.85} stroke="#fff" strokeWidth={1.5} />
               <text x={412} y={196} fontSize={9} textAnchor="middle" fill="#fff" fontWeight={700}>pol</text>
             </g>
-            <ellipse cx={456} cy={252} rx={16} ry={11} fill={GREEN} opacity={0.85} stroke="#fff" strokeWidth={1.5} />
-            <text x={456} y={256} fontSize={9} textAnchor="middle" fill="#fff" fontWeight={700}>pol</text>
+            <ellipse cx={408} cy={236} rx={16} ry={11} fill={GREEN} opacity={0.9} stroke="#fff" strokeWidth={1.5} />
+            <text x={408} y={240} fontSize={9} textAnchor="middle" fill="#fff" fontWeight={700}>pol</text>
             {/* DNA ligase sealing a gap between fragments */}
             <g data-feature={N.ligase} data-feature-label="DNA ligase">
-              <ellipse cx={441} cy={247} rx={9} ry={9} fill={PURPLE} opacity={0.9} stroke="#fff" strokeWidth={1.2} />
-              <line x1={441} y1={247} x2={441} y2={300} stroke={PURPLE} strokeWidth={0.8} />
-              <text x={441} y={314} fontSize={11} textAnchor="middle" fill={PURPLE} fontWeight={700}>ligase</text>
+              {/* ligase sits at a join between two finished fragments */}
+              <ellipse cx={523} cy={273} rx={9} ry={9} fill={PURPLE} opacity={0.95} stroke="#fff" strokeWidth={1.2} />
+              <line x1={523} y1={282} x2={523} y2={326} stroke={PURPLE} strokeWidth={0.8} />
+              <text x={523} y={339} fontSize={11} textAnchor="middle" fill={PURPLE} fontWeight={700}>ligase</text>
+              <text x={523} y={352} fontSize={9.5} textAnchor="middle" fill={PURPLE}>joins the fragments</text>
             </g>
-            <text x={150} y={300} fontSize={11} textAnchor="middle" fill={INK}>pol = DNA polymerase</text>
+            <text x={150} y={268} fontSize={11} textAnchor="middle" fill={INK}>pol = DNA polymerase</text>
           </>
         )}
       </svg>
@@ -563,8 +571,11 @@ function molecule(key: string, x: number, y: number, color: string) {
 
 export function CatalogCellMembraneRenderer({ figure }: { figure: CellMembraneFigure }) {
   const N = cellMembraneFeatureNames;
-  const W = 680;
-  const H = 430;
+  const mode = figure.mode;
+  // Right margin holds the head / tail captions; the plain model needs no
+  // space below the bilayer for the concentration dots.
+  const W = 770;
+  const H = mode ? 430 : 346;
 
   // protein x-positions and half-widths (columns overlapping are skipped)
   const channelX = 150;
@@ -572,7 +583,7 @@ export function CatalogCellMembraneRenderer({ figure }: { figure: CellMembraneFi
   const glycoX = 522;
   const skip: Array<[number, number]> = [
     [channelX - 24, channelX + 24],
-    [carrierX - 26, carrierX + 26],
+    [carrierX - 38, carrierX + 38],
     [glycoX - 20, glycoX + 20],
   ];
   const isSkipped = (x: number) => skip.some(([lo, hi]) => x >= lo && x <= hi);
@@ -580,11 +591,10 @@ export function CatalogCellMembraneRenderer({ figure }: { figure: CellMembraneFi
   const columns: number[] = [];
   for (let x = 34; x <= 648; x += 25) if (!isSkipped(x)) columns.push(x);
 
-  const mode = figure.mode;
-
   // transport overlay geometry
   const passUp = mode === 'active'; // active transport moves against the gradient (upward here)
-  const routeX = mode === 'facilitated' ? channelX : mode === 'active' ? carrierX : 430;
+  // (simple diffusion slips BETWEEN two phospholipids, not through one)
+  const routeX = mode === 'facilitated' ? channelX : mode === 'active' ? carrierX : 446.5;
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -616,7 +626,7 @@ export function CatalogCellMembraneRenderer({ figure }: { figure: CellMembraneFi
 
         {/* fluid labels */}
         <text x={20} y={34} fontSize={12.5} textAnchor="start" fill={INK} fontWeight={700}>Extracellular fluid (outside)</text>
-        <text x={20} y={H - 12} fontSize={12.5} textAnchor="start" fill={INK} fontWeight={700}>Cytoplasm (inside the cell)</text>
+        <text x={20} y={mode ? 326 : H - 14} fontSize={12.5} textAnchor="start" fill={INK} fontWeight={700}>Cytoplasm (inside the cell)</text>
 
         {/* phospholipid bilayer */}
         <g data-feature={N.bilayer} data-feature-label="Phospholipid bilayer">
@@ -629,15 +639,17 @@ export function CatalogCellMembraneRenderer({ figure }: { figure: CellMembraneFi
 
         {/* cholesterol tucked among the tails */}
         <g>
-          <rect x={252} y={186} width={9} height={30} rx={4} fill="#fbbf24" stroke={AMBER} strokeWidth={1} />
+          {/* between two phospholipids, not on top of one */}
+          <rect x={242} y={184} width={9} height={32} rx={4} fill="#fb923c" stroke="#c2410c" strokeWidth={1} />
+          <rect x={592} y={218} width={9} height={32} rx={4} fill="#fb923c" stroke="#c2410c" strokeWidth={1} />
         </g>
 
         {/* ── channel protein ── */}
         <g data-feature={N.channel} data-feature-label="Channel protein">
           <path d={`M ${channelX - 20} 132 Q ${channelX - 26} 210 ${channelX - 20} 288 L ${channelX - 7} 288 Q ${channelX - 12} 210 ${channelX - 7} 132 Z`} fill={TEAL} stroke="#0f766e" strokeWidth={1.5} />
           <path d={`M ${channelX + 20} 132 Q ${channelX + 26} 210 ${channelX + 20} 288 L ${channelX + 7} 288 Q ${channelX + 12} 210 ${channelX + 7} 132 Z`} fill={TEAL} stroke="#0f766e" strokeWidth={1.5} />
-          <text x={channelX} y={116} fontSize={11} textAnchor="middle" fill={TEAL} fontWeight={700}>channel</text>
-          <text x={channelX} y={106} fontSize={11} textAnchor="middle" fill={TEAL} fontWeight={700}>protein</text>
+          <text x={channelX} y={mode === 'facilitated' ? 90 : 104} fontSize={11} textAnchor="middle" fill={TEAL} fontWeight={700}>channel</text>
+          <text x={channelX} y={mode === 'facilitated' ? 103 : 117} fontSize={11} textAnchor="middle" fill={TEAL} fontWeight={700}>protein</text>
         </g>
 
         {/* ── carrier / transport protein ── */}
@@ -645,7 +657,7 @@ export function CatalogCellMembraneRenderer({ figure }: { figure: CellMembraneFi
           <path d={`M ${carrierX - 24} 130 L ${carrierX + 24} 130 Q ${carrierX + 30} 210 ${carrierX + 24} 290 L ${carrierX - 24} 290 Q ${carrierX - 30} 210 ${carrierX - 24} 130 Z`} fill={PURPLE} opacity={0.9} stroke="#5b21b6" strokeWidth={1.5} />
           {/* binding cleft */}
           <path d={`M ${carrierX - 8} ${passUp ? 290 : 130} L ${carrierX} 210 L ${carrierX + 8} ${passUp ? 290 : 130}`} fill="#f8fafc" stroke="#5b21b6" strokeWidth={1} />
-          <text x={carrierX} y={116} fontSize={11} textAnchor="middle" fill={PURPLE} fontWeight={700}>{mode === 'active' ? 'pump protein' : 'carrier protein'}</text>
+          <text x={carrierX} y={mode === 'active' ? 102 : 116} fontSize={11} textAnchor="middle" fill={PURPLE} fontWeight={700}>{mode === 'active' ? 'pump protein' : 'carrier protein'}</text>
         </g>
 
         {/* ── glycoprotein ── */}
@@ -659,15 +671,23 @@ export function CatalogCellMembraneRenderer({ figure }: { figure: CellMembraneFi
           <text x={glycoX + 24} y={126} fontSize={10.5} textAnchor="start" fill={INK}>glycoprotein</text>
         </g>
 
-        {/* structural leader labels (only when not showing transport) */}
+        {/* head / tail captions in the right margin (a bracket for the tail zone) */}
+        <g>
+          <line x1={662} y1={HEAD_TOP} x2={682} y2={HEAD_TOP} stroke={INK} strokeWidth={0.8} />
+          <text x={686} y={HEAD_TOP - 1} fontSize={10.5} textAnchor="start" fill={INK} fontWeight={600}>hydrophilic</text>
+          <text x={686} y={HEAD_TOP + 11} fontSize={10.5} textAnchor="start" fill={INK} fontWeight={600}>heads</text>
+          <path d={`M 664 ${HEAD_TOP + 16} h 8 V ${HEAD_BOT - 16} h -8 M 672 210 H 682`} fill="none" stroke={INK} strokeWidth={0.8} />
+          <text x={686} y={208} fontSize={10.5} textAnchor="start" fill={INK} fontWeight={600}>hydrophobic</text>
+          <text x={686} y={220} fontSize={10.5} textAnchor="start" fill={INK} fontWeight={600}>tails</text>
+          <line x1={662} y1={HEAD_BOT} x2={682} y2={HEAD_BOT} stroke={INK} strokeWidth={0.8} />
+          <text x={686} y={HEAD_BOT - 1} fontSize={10.5} textAnchor="start" fill={INK} fontWeight={600}>hydrophilic</text>
+          <text x={686} y={HEAD_BOT + 11} fontSize={10.5} textAnchor="start" fill={INK} fontWeight={600}>heads</text>
+        </g>
+        {/* cholesterol caption: its leader drops through the gap between two heads */}
         {!mode && (
           <>
-            <line x1={columns[3] ?? 90} y1={HEAD_TOP} x2={90} y2={70} stroke={INK} strokeWidth={0.8} />
-            <text x={90} y={64} fontSize={10.5} textAnchor="middle" fill={INK}>hydrophilic head</text>
-            <line x1={430} y1={205} x2={430} y2={70} stroke={INK} strokeWidth={0.8} />
-            <text x={430} y={64} fontSize={10.5} textAnchor="middle" fill={INK}>hydrophobic tails</text>
-            <text x={276} y={200} fontSize={9.5} textAnchor="start" fill={AMBER} fontWeight={700}>cholesterol</text>
-            <line x1={272} y1={200} x2={262} y2={200} stroke={AMBER} strokeWidth={0.8} />
+            <line x1={246.5} y1={217} x2={246.5} y2={296} stroke="#c2410c" strokeWidth={0.8} />
+            <text x={246.5} y={308} fontSize={10.5} textAnchor="middle" fill="#c2410c" fontWeight={700}>cholesterol</text>
           </>
         )}
 
@@ -691,9 +711,9 @@ export function CatalogCellMembraneRenderer({ figure }: { figure: CellMembraneFi
             {/* transport arrow through the route */}
             <line
               x1={routeX}
-              y1={passUp ? 300 : 120}
+              y1={passUp ? 300 : 122}
               x2={routeX}
-              y2={passUp ? 120 : 300}
+              y2={passUp ? 122 : 300}
               stroke={PURPLE}
               strokeWidth={3}
               markerEnd="url(#mem-arr)"
@@ -705,12 +725,14 @@ export function CatalogCellMembraneRenderer({ figure }: { figure: CellMembraneFi
             {/* ATP for active transport */}
             {mode === 'active' && (
               <>
-                <text x={carrierX + 40} y={214} fontSize={11} textAnchor="start" fill={RED} fontWeight={700}>ATP → ADP + P</text>
-                <path d={`M ${carrierX + 30} 224 q 6 6 12 0`} fill="none" stroke={RED} strokeWidth={1.5} />
+                {/* energy enters from the cytoplasm side, below the bilayer */}
+                <path d={`M ${carrierX + 58} 316 Q ${carrierX + 40} 316 ${carrierX + 30} 296`} fill="none" stroke={RED} strokeWidth={1.5} />
+                <path d={`M ${carrierX + 30} 296 l 1.5 8 M ${carrierX + 30} 296 l 7 4`} fill="none" stroke={RED} strokeWidth={1.5} strokeLinecap="round" />
+                <text x={carrierX + 62} y={320} fontSize={11} textAnchor="start" fill={RED} fontWeight={700}>ATP → ADP + Pᵢ (energy)</text>
               </>
             )}
 
-            <text x={W / 2} y={H - 30} fontSize={11.5} textAnchor="middle" fill={INK} fontWeight={700}>
+            <text x={340} y={H - 12} fontSize={11.5} textAnchor="middle" fill={INK} fontWeight={700}>
               {mode === 'diffusion'
                 ? 'Simple diffusion: molecules cross the bilayer directly, high → low (no protein, no ATP)'
                 : mode === 'facilitated'

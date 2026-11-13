@@ -20,10 +20,30 @@ export interface ElectronConfigurationFigure {
   config: Array<{ subshell: string; electrons: number }>;
   title?: string;
 }
+/** Ground-state configurations that break the simple filling order (a half-full
+ *  or full d subshell is lower in energy), keyed by Z: [ns electrons, (n-1)d electrons]. */
+const AUFBAU_EXCEPTIONS: Record<number, { s: string; sCount: number; d: string; dCount: number }> = {
+  24: { s: '4s', sCount: 1, d: '3d', dCount: 5 },
+  29: { s: '4s', sCount: 1, d: '3d', dCount: 10 },
+  41: { s: '5s', sCount: 1, d: '4d', dCount: 4 },
+  42: { s: '5s', sCount: 1, d: '4d', dCount: 5 },
+  44: { s: '5s', sCount: 1, d: '4d', dCount: 7 },
+  45: { s: '5s', sCount: 1, d: '4d', dCount: 8 },
+  46: { s: '5s', sCount: 0, d: '4d', dCount: 10 },
+  47: { s: '5s', sCount: 1, d: '4d', dCount: 10 },
+};
+const SYMBOL_BY_Z: Record<number, string> = Object.fromEntries(Object.entries(ELEMENT_Z).map(([sym, z]) => [z, sym]));
+function normalizeSymbol(raw: string): string {
+  const t = raw.trim();
+  if (!t) return '';
+  return t[0].toUpperCase() + t.slice(1).toLowerCase();
+}
+
 export function solveElectronConfiguration(params: Record<string, unknown>): ElectronConfigurationFigure {
-  const element = typeof params.element === 'string' ? params.element : '';
+  const rawElement = typeof params.element === 'string' ? params.element : '';
+  const element = ELEMENT_Z[rawElement] ? rawElement : (ELEMENT_Z[normalizeSymbol(rawElement)] ? normalizeSymbol(rawElement) : rawElement);
   let Z = ELEMENT_Z[element];
-  if (typeof params.Z === 'number' && Number.isFinite(params.Z) && params.Z > 0) Z = params.Z;
+  if (typeof params.Z === 'number' && Number.isFinite(params.Z) && params.Z > 0) Z = Math.round(params.Z);
   if (!Z) throw new Error('electron_configuration: provide element (symbol) or Z (atomic number)');
   if (Z > 54) throw new Error('electron_configuration: only Z 1-54 supported in this solver');
   let remaining = Z;
@@ -35,7 +55,17 @@ export function solveElectronConfiguration(params: Record<string, unknown>): Ele
     config.push({ subshell: ss, electrons: fill });
     remaining -= fill;
   }
-  return { element: element || `Z=${Z}`, Z, config, title: typeof params.title === 'string' ? params.title : undefined };
+  const ex = AUFBAU_EXCEPTIONS[Z];
+  if (ex) {
+    for (const c of config) {
+      if (c.subshell === ex.s) c.electrons = ex.sCount;
+      if (c.subshell === ex.d) c.electrons = ex.dCount;
+    }
+  }
+  // The symbol shown is the one that matches Z (a Z given without a symbol, or
+  // with a symbol that disagrees, would otherwise label the figure wrongly).
+  const symbol = SYMBOL_BY_Z[Z] || element || `Z=${Z}`;
+  return { element: symbol, Z, config: config.filter((c) => c.electrons > 0), title: typeof params.title === 'string' ? params.title : undefined };
 }
 
 // ── orbital_diagram ───────────────────────────────────────────────────────
@@ -102,7 +132,11 @@ export function solvePunnettSquare(params: Record<string, unknown>): PunnettSqua
   }
   const aGametes = [a[0], a[1]];
   const bGametes = [b[0], b[1]];
-  const cells = aGametes.map((ag) => bGametes.map((bg) => sortAlleles(ag + bg)));
+  // cells[row][col]: parent A's gametes head the COLUMNS and parent B's the
+  // ROWS (that is how the renderer lays the square out), so row r / column c
+  // is B's gamete r with A's gamete c. Built the other way round, an
+  // asymmetric cross (Bb × bb) showed each offspring under the wrong gamete.
+  const cells = bGametes.map((bg) => aGametes.map((ag) => sortAlleles(ag + bg)));
   return {
     parentA: a, parentB: b,
     alleles: { aGametes, bGametes },

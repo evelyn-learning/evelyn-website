@@ -62,10 +62,11 @@ export function solveHistogram(params: Record<string, unknown>): HistogramFigure
   const xMax = isFiniteNumber(params.xMax) ? params.xMax : bins[bins.length - 1].upper;
   if (xMax <= xMin) throw new Error('xMax must be > xMin');
 
-  const maxCount = bins.reduce((m, b) => Math.max(m, b.count), 0);
-  const yMax = isFiniteNumber(params.yMax) ? params.yMax : Math.max(maxCount * 1.15, 1);
-
   const mode: 'count' | 'relative' = params.mode === 'relative' ? 'relative' : 'count';
+  const maxCount = bins.reduce((m, b) => Math.max(m, b.count), 0);
+  // Relative frequencies are all below 1: a floor of 1 would squash every bar into the bottom third.
+  const yMax = isFiniteNumber(params.yMax) ? params.yMax : (mode === 'relative' ? Math.max(maxCount * 1.15, 0.01) : Math.max(maxCount * 1.15, 1));
+
 
   return {
     bins, xMin, xMax, yMax,

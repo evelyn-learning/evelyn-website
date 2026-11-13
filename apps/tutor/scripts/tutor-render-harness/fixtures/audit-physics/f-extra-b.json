@@ -1,0 +1,441 @@
+[
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-block-default",
+  "args": {
+   "type": "pulley_system",
+   "params": {}
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-block-2f1m",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "fixedCount": 2,
+    "movableCount": 1,
+    "weightLabel": "W",
+    "weight": 600
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-block-2f2m",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "fixedCount": 2,
+    "movableCount": 2,
+    "weightLabel": "Load",
+    "weight": 1000
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-block-movable-only",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "fixedCount": 0,
+    "movableCount": 1,
+    "weightLabel": "F_load",
+    "weight": 80
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-block-3f2m",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "fixedCount": 3,
+    "movableCount": 2,
+    "weightLabel": "crate"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-atwood-default",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "mode": "atwood"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-atwood-weights",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "mode": "atwood",
+    "leftSide": {
+     "label": "m_1",
+     "weight": "m₁g = 24.5 N"
+    },
+    "rightSide": {
+     "label": "m_2",
+     "weight": "m₂g = 36.8 N"
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-table-default",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "mode": "table-pulley"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-table-weights",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "mode": "table-pulley",
+    "leftSide": {
+     "label": "m₁ = 4 kg",
+     "weight": "39.2 N"
+    },
+    "rightSide": {
+     "label": "m₂ = 2.5 kg hanging mass on a hook",
+     "weight": "24.5 N"
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-incline-default",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "mode": "incline-pulley"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-incline-5",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "mode": "incline-pulley",
+    "inclineAngle": 5,
+    "leftSide": {
+     "label": "m₁ = 8.0 kg cart",
+     "weight": "78.4 N"
+    },
+    "rightSide": {
+     "label": "m₂",
+     "weight": "m₂g = 29.4 N"
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-incline-75",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "mode": "incline-pulley",
+    "inclineAngle": 75,
+    "leftSide": {
+     "label": "A"
+    },
+    "rightSide": {
+     "label": "B"
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-pulley-incline-45",
+  "args": {
+   "type": "pulley_system",
+   "params": {
+    "mode": "incline-pulley",
+    "inclineAngle": 45,
+    "leftSide": {
+     "label": "10 kg"
+    },
+    "rightSide": {
+     "label": "6 kg"
+    }
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cspring-default",
+  "args": {
+   "type": "spring_mass",
+   "params": {
+    "displacement": 0
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cspring-h-nolabels",
+  "args": {
+   "type": "spring_mass",
+   "params": {
+    "displacement": 0.05,
+    "orientation": "horizontal"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cspring-vert-stress",
+  "args": {
+   "type": "spring_mass",
+   "params": {
+    "displacement": 0.0125,
+    "orientation": "vertical",
+    "mass": 0.125,
+    "k": 1250.5,
+    "title": "A small mass on a stiff spring"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cspring-noeq",
+  "args": {
+   "type": "spring_mass",
+   "params": {
+    "displacement": -0.2,
+    "orientation": "horizontal",
+    "mass": 1,
+    "k": 50,
+    "showEquilibrium": false
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cpendulum-default",
+  "args": {
+   "type": "pendulum",
+   "params": {}
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cpendulum-neg",
+  "args": {
+   "type": "pendulum",
+   "params": {
+    "length": 2,
+    "angleDegrees": -35,
+    "showVelocity": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cpendulum-45-nov",
+  "args": {
+   "type": "pendulum",
+   "params": {
+    "length": 0.8,
+    "angleDegrees": 45
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cpendulum-zero",
+  "args": {
+   "type": "pendulum",
+   "params": {
+    "length": 1,
+    "angleDegrees": 0
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cpendulum-90",
+  "args": {
+   "type": "pendulum",
+   "params": {
+    "length": 1,
+    "angleDegrees": 90,
+    "showVelocity": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-ccircuit-3",
+  "args": {
+   "type": "simple_circuit",
+   "params": {
+    "components": [
+     {
+      "type": "battery",
+      "value": "6 V"
+     },
+     {
+      "type": "switch",
+      "label": "S",
+      "closed": false
+     },
+     {
+      "type": "bulb",
+      "label": "L"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-ccircuit-5",
+  "args": {
+   "type": "simple_circuit",
+   "params": {
+    "components": [
+     {
+      "type": "resistor",
+      "label": "R_1",
+      "value": "10 Ω"
+     },
+     {
+      "type": "battery",
+      "label": "ε",
+      "value": "12 V"
+     },
+     {
+      "type": "ammeter",
+      "value": "0.4 A"
+     },
+     {
+      "type": "resistor",
+      "label": "R_2",
+      "value": "20 Ω"
+     },
+     {
+      "type": "voltmeter",
+      "label": "V",
+      "value": "8 V"
+     }
+    ],
+    "title": "Two resistors in series"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-ccircuit-7-wire",
+  "args": {
+   "type": "simple_circuit",
+   "params": {
+    "components": [
+     {
+      "type": "battery",
+      "label": "cell",
+      "value": "1.5 V"
+     },
+     {
+      "type": "wire"
+     },
+     {
+      "type": "switch",
+      "closed": true
+     },
+     {
+      "type": "bulb",
+      "label": "bulb 1"
+     },
+     {
+      "type": "bulb",
+      "label": "bulb 2"
+     },
+     {
+      "type": "resistor"
+     },
+     {
+      "type": "battery",
+      "label": "second cell",
+      "value": "1.5 V"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cwave-default",
+  "args": {
+   "type": "wave_diagram",
+   "params": {}
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cwave-3p5",
+  "args": {
+   "type": "wave_diagram",
+   "params": {
+    "amplitude": 0.5,
+    "wavelength": 2.5,
+    "cycles": 3.5
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cwave-halfcycle",
+  "args": {
+   "type": "wave_diagram",
+   "params": {
+    "amplitude": 1,
+    "wavelength": 8,
+    "cycles": 0.5
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cwave-nolabels",
+  "args": {
+   "type": "wave_diagram",
+   "params": {
+    "amplitude": 3,
+    "wavelength": 6,
+    "cycles": 4,
+    "showAmplitude": false,
+    "showWavelength": false
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xb-cwave-1p5",
+  "args": {
+   "type": "wave_diagram",
+   "params": {
+    "amplitude": 12.5,
+    "wavelength": 0.68,
+    "cycles": 1.5,
+    "title": "Sound wave"
+   }
+  }
+ }
+]

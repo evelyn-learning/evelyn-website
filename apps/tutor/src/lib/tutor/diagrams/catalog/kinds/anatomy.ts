@@ -48,7 +48,7 @@ export function solveNeuronDiagram(params: Record<string, unknown>): NeuronFigur
         .filter((h): h is NeuronPart => Boolean(h)),
     ),
   );
-  return { highlight, title: typeof params.title === 'string' ? params.title : undefined };
+  return { highlight, title: typeof params.title === 'string' && params.title.trim() ? params.title : 'A neuron (nerve cell)' };
 }
 
 export const neuronFeatureNames = {
@@ -132,7 +132,7 @@ export function solveBrainRegions(params: Record<string, unknown>): BrainRegions
         .filter((h): h is BrainPart => Boolean(h) && valid.has(h)),
     ),
   );
-  return { view, highlight, title: typeof params.title === 'string' ? params.title : undefined };
+  return { view, highlight, title: typeof params.title === 'string' && params.title.trim() ? params.title : (view === 'limbic' ? 'The limbic system' : 'Lobes of the brain (side view)') };
 }
 
 export const brainFeatureNames = {

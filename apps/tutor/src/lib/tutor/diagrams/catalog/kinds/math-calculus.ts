@@ -18,7 +18,11 @@ interface XY { x: number; y: number }
 interface XYT extends XY { t?: number }
 interface PolarPoint { theta: number; r: number; x: number; y: number }
 interface SlopeSample { x: number; y: number; slope: number }
-interface RiemannRect { x: number; width: number; height: number }
+interface RiemannRect {
+  x: number; width: number; height: number;
+  /** Trapezoidal rule only: the curve's height at the left and right end of the subinterval. */
+  heightLeft?: number; heightRight?: number;
+}
 
 function isFiniteNumber(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v);
@@ -95,9 +99,35 @@ export function solveRiemannSum(params: Record<string, unknown>): RiemannSumFigu
     : 'left';
   const n = isFiniteNumber(params.n) && params.n > 0 ? Math.round(params.n) : rectangles.length;
 
+  // The trapezoidal rule joins the curve's two end heights on each subinterval. The parameter
+  // shape carries one height a piece, which drew every trapezoid as a rectangle (wrong picture
+  // for the rule named above it), so both heights are read off the sampled curve.
+  if (method === 'trapezoidal') {
+    const sorted = [...curve].sort((a, b) => a.x - b.x);
+    const yOnCurve = (x: number): number | undefined => {
+      if (sorted.length < 2) return undefined;
+      const span = sorted[sorted.length - 1].x - sorted[0].x;
+      const tol = Math.abs(span) * 1e-6;
+      if (x < sorted[0].x - tol || x > sorted[sorted.length - 1].x + tol) return undefined;
+      for (let i = 1; i < sorted.length; i += 1) {
+        if (x <= sorted[i].x + tol) {
+          const a = sorted[i - 1], b = sorted[i];
+          const w = b.x - a.x;
+          return w === 0 ? b.y : a.y + ((x - a.x) / w) * (b.y - a.y);
+        }
+      }
+      return sorted[sorted.length - 1].y;
+    };
+    for (const r of rectangles) {
+      const l = yOnCurve(r.x);
+      const rt = yOnCurve(r.x + r.width);
+      if (l !== undefined && rt !== undefined) { r.heightLeft = l; r.heightRight = rt; }
+    }
+  }
+
   const auto = autoBounds([
     ...curve,
-    ...rectangles.flatMap((r) => [{ x: r.x, y: 0 }, { x: r.x + r.width, y: r.height }]),
+    ...rectangles.flatMap((r) => [{ x: r.x, y: 0 }, { x: r.x + r.width, y: r.height }, { x: r.x, y: r.heightLeft ?? r.height }, { x: r.x, y: r.heightRight ?? r.height }]),
   ]);
   const xMin = isFiniteNumber(params.xMin) ? params.xMin : auto.xMin;
   const xMax = isFiniteNumber(params.xMax) ? params.xMax : auto.xMax;

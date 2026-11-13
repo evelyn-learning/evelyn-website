@@ -567,7 +567,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const promised = !drewNow && /\b(?:pictur(?:e|ing)|diagram|figure|drawing|sketch|drawn out|draw (?:it|this|that)|here(?:'s| is| are) (?:a|an|the|two|three)\b|look at (?:the|this)\b|shown (?:here|below))/i.test(said);
     const cardNoFigure = !drewNow && askedOnCard0();
     const confirmedBare = /^\s*(?:yes|right|correct|exactly|that'?s (?:right|correct|it))\b/i.test(said) && /\d/.test(said.split(/(?<=[.?!])\s+/).slice(0, 2).join(' ')) && !toolCalls.some((c) => (c.name === 'show_equation' || c.name === 'annotate') && !/^not /.test(c.outcome));
+    // An answer just confirmed is shown where it can be seen: after "about 22°" the board carried the number and no
+    // ray at 22° ("it would have been so much cooler if it had drawn that figure", Praveen, embed-1794593747478).
+    const confirmedNoFigure = !drewNow && /^\s*(?:yes|right|correct|exactly|that'?s (?:right|correct|it))\b/i.test(said) && !!catalogue;
     const missing = [
+      confirmedNoFigure ? 'You confirmed the student\'s answer and drew nothing: if what they found can be seen in a picture (an angle, an image, a point or a crossing on a graph, a length, a position), draw that figure now with the answer marked on it, as the third step.' : '',
       promised ? 'You spoke of a picture or pointed at something as shown ("here is…"), and this reply drew no figure: draw it now, as the third step.' : '',
       cardNoFigure ? 'This reply put up a problem and no figure with it: if the problem describes something that can be drawn (a circuit, a shape, a set-up, a graph), draw it now as the third step, with what the student is to find left out.' : '',
       confirmedBare ? 'You confirmed the student\'s answer and wrote nothing for it: in the second step, write the one line of working that gives it, with with="the opening words of the sentence that confirms it".' : '',

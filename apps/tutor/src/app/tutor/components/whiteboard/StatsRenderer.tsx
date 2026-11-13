@@ -268,6 +268,48 @@ function wrapByWidth(text: string, maxW: number, fontSize: number): string[] {
   return lines.length > 0 ? lines : [text];
 }
 
+/** Height of one boxplot band and where the stack of bands starts. Bands are only as tall as a
+ *  box with its labels needs and stand on the axis, so one box does not float in an empty card
+ *  (the main component crops the unused top). */
+function boxplotBands(n: number): { bandH: number; top0: number } {
+  const bandH = Math.min(CHART_H / Math.max(1, n), 104);
+  return { bandH, top0: MARGIN.top + CHART_H - bandH * n };
+}
+
+/** Spread a row of centred labels so none overlaps its neighbour or leaves the chart: each keeps
+ *  its own x when there is room, and is nudged sideways just enough when there is not. */
+function spreadLabels(items: { x: number; text: string }[], fontSize: number, lo: number, hi: number): number[] {
+  const order = items.map((it, i) => ({ i, x: it.x, w: it.text.length * fontSize * 0.58 + 4 })).sort((p, q) => p.x - q.x);
+  const pos = order.map((o) => Math.min(Math.max(o.x, lo + o.w / 2), hi - o.w / 2));
+  for (let pass = 0; pass < 4; pass += 1) {
+    for (let k = 1; k < order.length; k += 1) {
+      const need = (order[k - 1].w + order[k].w) / 2;
+      if (pos[k] - pos[k - 1] < need) {
+        const push = (need - (pos[k] - pos[k - 1])) / 2;
+        pos[k - 1] -= push; pos[k] += push;
+      }
+    }
+    for (let k = 0; k < order.length; k += 1) pos[k] = Math.min(Math.max(pos[k], lo + order[k].w / 2), hi - order[k].w / 2);
+    for (let k = 1; k < order.length; k += 1) {
+      const need = (order[k - 1].w + order[k].w) / 2;
+      if (pos[k] - pos[k - 1] < need) pos[k] = pos[k - 1] + need;
+    }
+    for (let k = order.length - 2; k >= 0; k -= 1) {
+      const need = (order[k + 1].w + order[k].w) / 2;
+      if (pos[k + 1] > hi - order[k + 1].w / 2) pos[k + 1] = hi - order[k + 1].w / 2;
+      if (pos[k + 1] - pos[k] < need) pos[k] = pos[k + 1] - need;
+    }
+  }
+  const out: number[] = new Array(items.length).fill(0);
+  order.forEach((o, k) => { out[o.i] = pos[k]; });
+  return out;
+}
+
+/** A five-number-summary value: up to two decimals, never rounded to a different number. */
+function fmtValue(n: number): string {
+  return String(Number(n.toFixed(2)));
+}
+
 function BoxPlot({ boxplot, xLabel }: StatsRendererProps) {
   if (!boxplot || boxplot.datasets.length === 0) return null;
 
@@ -280,16 +322,33 @@ function BoxPlot({ boxplot, xLabel }: StatsRendererProps) {
 
   const xScale = (v: number) => MARGIN.left + ((v - xRange.min) / (xRange.max - xRange.min)) * CHART_W;
 
-  // Each dataset gets a horizontal band
-  const bandH = CHART_H / datasets.length;
-  const boxH = Math.min(bandH * 0.5, 40);
+  // Each dataset gets a horizontal band: its name, a row of values (min, median, max), the box,
+  // and a row of values (Q1, Q3). The box takes what is left of the band.
+  const { bandH, top0 } = boxplotBands(datasets.length);
+  const nameH = datasets.some((d) => d.label) ? 15 : 0;
+  const rowH = showValues ? 13 : 0;
+  const boxH = Math.max(10, Math.min(bandH - nameH - 2 * rowH - 10, 40));
+  const VAL_FONT = 10.5;
 
   return (
     <g>
       {datasets.map((ds, i) => {
-        const cy = MARGIN.top + bandH * i + bandH / 2;
+        const bandTop = top0 + bandH * i;
+        const cy = bandTop + nameH + rowH + 4 + boxH / 2;
         const c = color(i, ds.color);
         const boxName = ds.label ? `box-${featSlug(ds.label)}` : `box-${i + 1}`;
+        const lo = MARGIN.left - 20, hi = WIDTH - 4;
+        const above = [
+          { x: xScale(ds.min), text: fmtValue(ds.min) },
+          { x: xScale(ds.median), text: fmtValue(ds.median) },
+          { x: xScale(ds.max), text: fmtValue(ds.max) },
+        ];
+        const below = [
+          { x: xScale(ds.q1), text: fmtValue(ds.q1) },
+          { x: xScale(ds.q3), text: fmtValue(ds.q3) },
+        ];
+        const aboveX = spreadLabels(above, VAL_FONT, lo, hi);
+        const belowX = spreadLabels(below, VAL_FONT, lo, hi);
         return (
           <g key={i} {...feat(boxName, { cx: (xScale(ds.min) + xScale(ds.max)) / 2, cy, w: xScale(ds.max) - xScale(ds.min) + 20, h: boxH + 20 }, { width: WIDTH, height: HEIGHT })}>
             {/* Whisker line: min to max */}
@@ -299,14 +358,15 @@ function BoxPlot({ boxplot, xLabel }: StatsRendererProps) {
             {/* Min / max caps */}
             <line x1={xScale(ds.min)} y1={cy - boxH / 4} x2={xScale(ds.min)} y2={cy + boxH / 4} stroke={c} strokeWidth={1.5} />
             <line x1={xScale(ds.max)} y1={cy - boxH / 4} x2={xScale(ds.max)} y2={cy + boxH / 4} stroke={c} strokeWidth={1.5} />
-            {/* Box: Q1 to Q3 */}
+            {/* Box: Q1 to Q3 (white under the tint so the whisker does not show through) */}
+            <rect x={xScale(ds.q1)} y={cy - boxH / 2} width={Math.max(1, xScale(ds.q3) - xScale(ds.q1))} height={boxH} fill="#fff" rx={2} />
             <rect
               x={xScale(ds.q1)}
               y={cy - boxH / 2}
-              width={xScale(ds.q3) - xScale(ds.q1)}
+              width={Math.max(1, xScale(ds.q3) - xScale(ds.q1))}
               height={boxH}
               fill={c}
-              opacity={0.25}
+              fillOpacity={0.22}
               stroke={c}
               strokeWidth={1.5}
               rx={2}
@@ -316,26 +376,24 @@ function BoxPlot({ boxplot, xLabel }: StatsRendererProps) {
 
             {/* Outliers */}
             {(ds.outliers ?? []).map((o, oi) => (
-              <circle key={oi} cx={xScale(o)} cy={cy} r={3.5} fill="none" stroke={c} strokeWidth={1.5} />
+              <circle key={oi} cx={xScale(o)} cy={cy} r={3.5} fill="#fff" stroke={c} strokeWidth={1.5} />
             ))}
 
-            {/* Dataset label — caption above the band, inside the plot
-                area. Round 28 (live, portal-d2062bd9): the old right-
-                anchored gutter placement (x=MARGIN.left-8, 47px of room,
-                no truncation) ran any label past ~7 chars off x=0 and the
-                viewBox clipped it ("1, 5, 5, 6, 20" lost its head). */}
+            {/* Dataset label — a caption on the first line of the band, inside the plot area
+                (round 28, portal-d2062bd9: a gutter label ran off the left edge). */}
             {ds.label && (
-              <text x={MARGIN.left} y={cy - boxH / 2 - (showValues ? 18 : 6)} textAnchor="start" fontSize={11} fill="#374151">{ds.label}</text>
+              <text x={MARGIN.left - 20} y={bandTop + 11} textAnchor="start" fontSize={12} fontWeight={600} fill={c}>{ds.label}</text>
             )}
 
-            {/* Five-number summary labels (edge-clamped, see anchorAt) */}
+            {/* Five-number summary: min, median, max above the box; Q1, Q3 below it. Close values
+                are spread apart (see spreadLabels) instead of printing over each other. */}
             {showValues && (
               <>
-                <text x={xScale(ds.min)} y={cy - boxH / 2 - 4} textAnchor={anchorAt(xScale(ds.min), fmt(ds.min), 9)} fontSize={9} fill="#6b7280">{fmt(ds.min)}</text>
-                <text x={xScale(ds.q1)} y={cy + boxH / 2 + 12} textAnchor={anchorAt(xScale(ds.q1), fmt(ds.q1), 9)} fontSize={9} fill="#6b7280">{fmt(ds.q1)}</text>
-                <text x={xScale(ds.median)} y={cy - boxH / 2 - 4} textAnchor={anchorAt(xScale(ds.median), fmt(ds.median), 9)} fontSize={9} fill={c} fontWeight={600}>{fmt(ds.median)}</text>
-                <text x={xScale(ds.q3)} y={cy + boxH / 2 + 12} textAnchor={anchorAt(xScale(ds.q3), fmt(ds.q3), 9)} fontSize={9} fill="#6b7280">{fmt(ds.q3)}</text>
-                <text x={xScale(ds.max)} y={cy - boxH / 2 - 4} textAnchor={anchorAt(xScale(ds.max), fmt(ds.max), 9)} fontSize={9} fill="#6b7280">{fmt(ds.max)}</text>
+                <text x={aboveX[0]} y={cy - boxH / 2 - 4} textAnchor="middle" fontSize={VAL_FONT} fill="#4b5563">{above[0].text}</text>
+                <text x={aboveX[1]} y={cy - boxH / 2 - 4} textAnchor="middle" fontSize={VAL_FONT} fill={c} fontWeight={700}>{above[1].text}</text>
+                <text x={aboveX[2]} y={cy - boxH / 2 - 4} textAnchor="middle" fontSize={VAL_FONT} fill="#4b5563">{above[2].text}</text>
+                <text x={belowX[0]} y={cy + boxH / 2 + 12} textAnchor="middle" fontSize={VAL_FONT} fill="#4b5563">{below[0].text}</text>
+                <text x={belowX[1]} y={cy + boxH / 2 + 12} textAnchor="middle" fontSize={VAL_FONT} fill="#4b5563">{below[1].text}</text>
               </>
             )}
           </g>
@@ -376,6 +434,9 @@ function DotPlot({ data, xLabel }: StatsRendererProps) {
   const maxStack = Math.max(...stacks.values());
   const xRange = niceRange(values[0], values[values.length - 1]);
 
+  // Whole-number data is marked at whole numbers: scores of 6 to 10 had marks at 6.5, 7.5… that no score can take.
+  const xTicks = values.every((v) => Number.isInteger(v)) ? xRange.ticks.filter((t) => Number.isInteger(t)) : xRange.ticks;
+
   const xScale = (v: number) => MARGIN.left + ((v - xRange.min) / (xRange.max - xRange.min)) * CHART_W;
   const dotR = Math.min(10, CHART_H / (maxStack * 2.5));
   const baseline = MARGIN.top + CHART_H;
@@ -404,7 +465,7 @@ function DotPlot({ data, xLabel }: StatsRendererProps) {
 
       {/* X-axis */}
       <line x1={MARGIN.left} y1={baseline} x2={MARGIN.left + CHART_W} y2={baseline} stroke="#374151" strokeWidth={1.5} />
-      {xRange.ticks.map(t => (
+      {xTicks.map(t => (
         <g key={`xt-${t}`}>
           <line x1={xScale(t)} y1={baseline} x2={xScale(t)} y2={baseline + 5} stroke="#374151" />
           <text x={xScale(t)} y={baseline + 18} textAnchor="middle" fontSize={11} fill="#374151">{fmt(t)}</text>
@@ -420,66 +481,104 @@ function DotPlot({ data, xLabel }: StatsRendererProps) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // Bar Chart
 // ═══════════════════════════════════════════════════════════════════════════════
-function BarChart({ bar, xLabel, yLabel }: StatsRendererProps) {
-  if (!bar || bar.categories.length === 0) return null;
-
-  const { categories, values, colors: customColors } = bar;
-  const maxVal = Math.max(...values);
-  const yRange = niceRange(0, maxVal);
-
+/** How the names under the bars are set, and how much deeper the chart must be for them.
+ *  Names that do not fit under their bars ran into one another ("Position 1" to "Position 10", data structures,
+ *  embed-1794458110435). The words they all begin with are said once by the axis title, so they are dropped; a
+ *  longer name goes on two lines; when even that does not hold every name whole, all of them are written
+ *  slanted, in full, and the chart is made deeper to hold them (twelve cities had been cut to "Toky…", "Shan…"). */
+function barNameLayout(categories: string[]): { nameLines: string[][]; rotated: boolean; extra: number } {
   const barCount = categories.length;
-  const gap = 8;
+  const gap = barCount > 8 ? 6 : 10;
   const barW = Math.min((CHART_W - gap * (barCount + 1)) / barCount, 60);
-  const totalBarsW = barCount * barW + (barCount - 1) * gap;
-  const startX = MARGIN.left + (CHART_W - totalBarsW) / 2;
-
-  const yScale = (v: number) => MARGIN.top + CHART_H - ((v - yRange.min) / (yRange.max - yRange.min)) * CHART_H;
-
-  // Names that do not fit under their bars ran into one another ("Position 1" to "Position 10", data
-  // structures, embed-1794458110435). The words they all begin with are said once by the axis title, so they
-  // are dropped; a name still too long is cut short.
-  const slot = barW + gap - 2; const wide = (s: string) => s.length * 5.4;
+  const CHAR = 5.4;
+  const slot = barW + gap - 2; const wide = (s: string) => s.length * CHAR;
   let names = categories.map((c) => String(c ?? ''));
   if (names.some((n) => wide(n) > slot) && names.length > 1) {
     const words = names.map((n) => n.split(/\s+/)); let shared = 0;
     while (words.every((w) => w.length > shared + 1 && w[shared] === words[0][shared])) shared += 1;
     if (shared > 0) names = words.map((w) => w.slice(shared).join(' '));
-    const fit = Math.max(3, Math.floor(slot / 5.4));
-    names = names.map((n) => (wide(n) > slot ? `${n.slice(0, fit - 1)}…` : n));
   }
+  const nameLines = names.map((n): string[] => {
+    if (wide(n) <= slot) return [n];
+    // The break nearest the middle, at a space or after a hyphen or dash.
+    const breaks: number[] = [];
+    for (let k = 1; k < n.length - 1; k++) if (n[k] === ' ' || /[-–—/]/.test(n[k - 1])) breaks.push(k);
+    if (breaks.length === 0) return [n];
+    const at = breaks.reduce((best, k) => (Math.abs(k - n.length / 2) < Math.abs(best - n.length / 2) ? k : best), breaks[0]);
+    return [n.slice(0, at).trim(), n.slice(at).trim()];
+  });
+  if (nameLines.every((ls) => ls.every((l) => wide(l) <= slot))) return { nameLines, rotated: false, extra: 0 };
+  const full = names.map((n) => (n.length > 26 ? `${n.slice(0, 25)}…` : n));
+  const longest = Math.max(...full.map((n) => n.length)) * 5.8;
+  return { nameLines: full.map((n) => [n]), rotated: true, extra: Math.max(0, Math.ceil(longest * 0.64 + 12 - 24)) };
+}
+
+function BarChart({ bar, xLabel, yLabel }: StatsRendererProps) {
+  if (!bar || bar.categories.length === 0) return null;
+
+  const { categories, colors: customColors } = bar;
+  const values = categories.map((_, i) => { const v = Number(bar.values?.[i]); return Number.isFinite(v) ? v : 0; });
+  // The axis runs from zero, and below zero when a value is negative: a fall of 2.6% was drawn as no bar at all
+  // on an axis that began at 0 (figure audit, 2026-11-13).
+  const yRange = niceRange(Math.min(0, ...values), Math.max(0, ...values));
+  const hasNegative = values.some((v) => v < 0);
+
+  const barCount = categories.length;
+  const gap = barCount > 8 ? 6 : 10;
+  const barW = Math.min((CHART_W - gap * (barCount + 1)) / barCount, 60);
+  const totalBarsW = barCount * barW + (barCount - 1) * gap;
+  const startX = MARGIN.left + (CHART_W - totalBarsW) / 2;
+
+  const yScale = (v: number) => MARGIN.top + CHART_H - ((v - yRange.min) / (yRange.max - yRange.min)) * CHART_H;
+  const baseY = MARGIN.top + CHART_H;
+
+  const { nameLines, rotated, extra } = barNameLayout(categories);
 
   return (
     <g>
-      {/* Bars */}
+      {/* Light gridlines, behind the bars */}
+      {yRange.ticks.map(t => (
+        <line key={`yg-${t}`} x1={MARGIN.left} y1={yScale(t)} x2={MARGIN.left + CHART_W} y2={yScale(t)} stroke="#e5e7eb" strokeWidth={0.5} />
+      ))}
+
+      {/* Bars: one series, one colour (a colour per bar meant nothing and repeated after eight); a caller's own
+          colours are kept. */}
       {categories.map((cat, i) => {
         const x = startX + i * (barW + gap);
-        const h = yScale(0) - yScale(values[i]);
-        const c = color(i, customColors?.[i]);
+        const v = values[i];
+        const top = Math.min(yScale(v), yScale(0));
+        const h = Math.abs(yScale(0) - yScale(v));
+        const c = color(0, customColors?.[i]);
         const barName = cat ? `bar-${featSlug(cat)}` : `bar-${i + 1}`;
         return (
-          <g key={i} {...feat(barName, { cx: x + barW / 2, cy: yScale(values[i]) + h / 2, w: barW + 8, h: h + 8 }, { width: WIDTH, height: HEIGHT })}>
-            <rect x={x} y={yScale(values[i])} width={barW} height={h} fill={c} opacity={0.85} rx={2} />
-            {/* Value above bar */}
-            <text x={x + barW / 2} y={yScale(values[i]) - 5} textAnchor="middle" fontSize={11} fill="#374151" fontWeight={500}>{fmt(values[i])}</text>
-            {/* Category label below axis */}
-            <text x={x + barW / 2} y={yScale(0) + 16} textAnchor="middle" fontSize={10} fill="#374151">{names[i]}</text>
+          <g key={i} {...feat(barName, { cx: x + barW / 2, cy: top + h / 2, w: barW + 8, h: h + 8 }, { width: WIDTH, height: HEIGHT })}>
+            <rect x={x} y={top} width={barW} height={Math.max(h, v === 0 ? 0 : 1)} fill={c} opacity={0.85} rx={2} />
+            {/* Value beyond the end of the bar */}
+            <text x={x + barW / 2} y={v < 0 ? top + h + 13 : top - 5} textAnchor="middle" fontSize={barCount > 10 ? 10 : 11} fill="#374151" fontWeight={500}>{fmtValue(v)}</text>
+            {/* Category label under the plot */}
+            {rotated ? (
+              <text x={x + barW / 2 + 3} y={baseY + 12} textAnchor="end" fontSize={10.5} fill="#374151" transform={`rotate(-40, ${x + barW / 2 + 3}, ${baseY + 12})`}>{nameLines[i][0]}</text>
+            ) : (
+              <text textAnchor="middle" fontSize={10} fill="#374151">
+                {nameLines[i].map((ln, k) => <tspan key={k} x={x + barW / 2} y={baseY + 15 + k * 11}>{ln}</tspan>)}
+              </text>
+            )}
           </g>
         );
       })}
 
-      {/* X-axis */}
+      {/* X-axis: the zero line; with negative values the foot of the plot is ruled lightly as well */}
       <line x1={MARGIN.left} y1={yScale(0)} x2={MARGIN.left + CHART_W} y2={yScale(0)} stroke="#374151" strokeWidth={1.5} />
+      {hasNegative && <line x1={MARGIN.left} y1={baseY} x2={MARGIN.left + CHART_W} y2={baseY} stroke="#d1d5db" strokeWidth={1} />}
       {xLabel && (
-        <text x={MARGIN.left + CHART_W / 2} y={HEIGHT - 6} textAnchor="middle" fontSize={12} fill="#374151" fontWeight={500}>{xLabel}</text>
+        <text x={MARGIN.left + CHART_W / 2} y={HEIGHT + extra - 6} textAnchor="middle" fontSize={12} fill="#374151" fontWeight={500}>{xLabel}</text>
       )}
 
       {/* Y-axis */}
-      <line x1={MARGIN.left} y1={MARGIN.top} x2={MARGIN.left} y2={yScale(0)} stroke="#374151" strokeWidth={1.5} />
+      <line x1={MARGIN.left} y1={MARGIN.top} x2={MARGIN.left} y2={baseY} stroke="#374151" strokeWidth={1.5} />
       {yRange.ticks.map(t => (
         <g key={`yt-${t}`}>
           <line x1={MARGIN.left - 5} y1={yScale(t)} x2={MARGIN.left} y2={yScale(t)} stroke="#374151" />
-          {/* Light gridline */}
-          <line x1={MARGIN.left} y1={yScale(t)} x2={MARGIN.left + CHART_W} y2={yScale(t)} stroke="#e5e7eb" strokeWidth={0.5} />
           <text x={MARGIN.left - 8} y={yScale(t) + 4} textAnchor="end" fontSize={11} fill="#374151">{fmt(t)}</text>
         </g>
       ))}
@@ -734,7 +833,14 @@ function DistributionChart({
   }
 
   // x-axis ticks
-  const xTicks = niceRange(xLo, xHi, 8).ticks;
+  const xTicks = niceRange(xLo, xHi, 8).ticks.filter((t) => t >= xLo - 1e-9 && t <= xHi + 1e-9);
+  // Boundary values are written at the top of their lines, to three decimals (a critical value
+  // such as 2.776 must not be rounded to 2.8).
+  const boundText = (v: number) => String(Number(v.toFixed(3))).replace(/^-/, '−');
+  const bounds: { x: number; text: string }[] = [];
+  if (shade?.a !== undefined && shade.a >= xLo && shade.a <= xHi) bounds.push({ x: toX(shade.a), text: boundText(shade.a) });
+  if (shade?.b !== undefined && shade.b >= xLo && shade.b <= xHi) bounds.push({ x: toX(shade.b), text: boundText(shade.b) });
+  const boundX = spreadLabels(bounds, 11, MARGIN.left - 20, WIDTH - 4);
 
   const mean = family === 'normal' ? params.mean ?? 0 : family === 't' ? 0 : null;
 
@@ -812,6 +918,10 @@ function DistributionChart({
           strokeWidth={1.2}
         />
       )}
+
+      {bounds.map((bd, i) => (
+        <text key={`bd-${i}`} x={boundX[i]} y={MARGIN.top - 5} textAnchor="middle" fontSize={11} fontWeight={700} fill="#1d4ed8">{bd.text}</text>
+      ))}
 
       {/* Curve */}
       <path
@@ -1358,8 +1468,15 @@ export function StatsRenderer(props: StatsRendererProps) {
     cropTop = Math.max(0, Math.floor(MARGIN.top + CHART_H - maxStack * dotR * 2.2 - 28));
   }
 
+  // Slanted names under the bars of a bar chart need a deeper chart.
+  const extraBottom = type === 'bar' && props.bar?.categories?.length ? barNameLayout(props.bar.categories).extra : 0;
+
+  if (type === 'boxplot' && props.boxplot?.datasets?.length) {
+    cropTop = Math.max(0, Math.floor(boxplotBands(props.boxplot.datasets.length).top0 - 8));
+  }
+
   return (
-    <div style={{ width: '100%', maxWidth: 600 }}>
+    <div style={{ width: '100%', maxWidth: 600, margin: '0 auto' }}>
       {/* Title — HTML above the SVG (R38 pattern, 2026-08-07 clip audit: a
           long in-SVG title centered over the fixed 500u viewBox clipped on
           both sides; HTML wraps instead) */}
@@ -1369,7 +1486,7 @@ export function StatsRenderer(props: StatsRendererProps) {
         </div>
       )}
       <svg
-        viewBox={`0 ${cropTop} ${WIDTH} ${HEIGHT - cropTop}`}
+        viewBox={`0 ${cropTop} ${WIDTH} ${HEIGHT - cropTop + extraBottom}`}
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: '100%', height: 'auto' }}
         role="img"

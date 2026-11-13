@@ -47,11 +47,11 @@ export interface DopplerFigure {
 }
 
 export function solveDopplerEffect(params: Record<string, unknown>): DopplerFigure {
-  const rawFrac = params.sourceSpeedFrac ?? params.speedFrac ?? params.beta ?? 0.6;
-  const beta = clamp(numOr(rawFrac, 0.6), 0.1, 0.85);
+  const rawFrac = params.sourceSpeedFrac ?? params.speedFrac ?? params.beta ?? 0.5;
+  const beta = clamp(numOr(rawFrac, 0.5), 0.1, 0.85);
   const movingRight = params.movingRight !== false && params.movingLeft !== true;
   const showObservers = params.showObservers !== false;
-  const nRings = clamp(Math.round(numOr(params.nRings ?? params.rings, 5)), 3, 6);
+  const nRings = clamp(Math.round(numOr(params.nRings ?? params.rings, 4)), 3, 6);
   return { beta, movingRight, showObservers, nRings, title: titleOf(params) };
 }
 

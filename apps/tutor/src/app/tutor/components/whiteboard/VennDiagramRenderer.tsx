@@ -8,7 +8,7 @@ import { mathifyDollarSpans } from '@/lib/utils/export/latex-readable';
  * Supports region highlighting, value/item display, and a universal set rectangle.
  */
 
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 // Width-aware label helpers (FractionBar fix, commit 009dc645) — set labels
 // and region items sit at hand-tuned anchors in a fixed 500×400 viewBox, so
@@ -78,31 +78,53 @@ const TWO_SET = {
  * Top circle centered above, two lower circles left and right.
  */
 const THREE_SET = {
-  A: { cx: 200, cy: 170, r: 110 },
-  B: { cx: 300, cy: 170, r: 110 },
-  C: { cx: 250, cy: 260, r: 110 },
+  A: { cx: 195, cy: 178, r: 100 },
+  B: { cx: 305, cy: 178, r: 100 },
+  C: { cx: 250, cy: 272, r: 100 },
+};
+
+type Circle = { cx: number; cy: number; r: number };
+/** Which circles a region lies inside (the rest it lies outside). */
+const TWO_SET_MEMBERS: Record<TwoSetRegionKey, boolean[]> = {
+  onlyA: [true, false], onlyB: [false, true], intersection: [true, true], neither: [false, false],
+};
+const THREE_SET_MEMBERS: Record<ThreeSetRegionKey, boolean[]> = {
+  onlyA: [true, false, false], onlyB: [false, true, false], onlyC: [false, false, true],
+  AB: [true, true, false], AC: [true, false, true], BC: [false, true, true], ABC: [true, true, true],
+  neither: [false, false, false],
 };
 
 /**
- * Approximate geometric centers of each non-overlapping or overlapping region.
- * These are hand-tuned to sit visually inside the correct area.
+ * Where a region's text goes: the true centre of mass of the region, found by
+ * sampling the board. (Hand-tuned anchors put the A∩B text of a 3-set diagram
+ * on circle C's edge.) "Outside every circle" has no useful centre, so its
+ * text sits in the lower-left corner of the universal set.
  */
-const TWO_SET_REGION_CENTERS: Record<TwoSetRegionKey, { x: number; y: number }> = {
-  onlyA: { x: 140, y: 200 },
-  onlyB: { x: 360, y: 200 },
-  intersection: { x: 250, y: 200 },
-  neither: { x: 60, y: 50 },
-};
+function regionCentres<K extends string>(circles: Circle[], members: Record<K, boolean[]>): Record<K, { x: number; y: number }> {
+  const acc = {} as Record<K, { sx: number; sy: number; n: number }>;
+  const keys = Object.keys(members) as K[];
+  for (const k of keys) acc[k] = { sx: 0, sy: 0, n: 0 };
+  for (let x = 2; x < VB_W; x += 4) {
+    for (let y = 2; y < VB_H; y += 4) {
+      const inside = circles.map((c) => (x - c.cx) ** 2 + (y - c.cy) ** 2 <= c.r * c.r);
+      const k = keys.find((key) => members[key].every((m, i) => m === inside[i]));
+      if (k) { acc[k].sx += x; acc[k].sy += y; acc[k].n += 1; }
+    }
+  }
+  const out = {} as Record<K, { x: number; y: number }>;
+  for (const k of keys) {
+    out[k] = k === 'neither' || acc[k].n === 0
+      ? { x: 78, y: VB_H - 46 }
+      : { x: acc[k].sx / acc[k].n, y: acc[k].sy / acc[k].n };
+  }
+  return out;
+}
 
-const THREE_SET_REGION_CENTERS: Record<ThreeSetRegionKey, { x: number; y: number }> = {
-  onlyA: { x: 160, y: 140 },
-  onlyB: { x: 340, y: 140 },
-  onlyC: { x: 250, y: 310 },
-  AB: { x: 250, y: 145 },
-  AC: { x: 200, y: 250 },
-  BC: { x: 300, y: 250 },
-  ABC: { x: 250, y: 210 },
-  neither: { x: 60, y: 50 },
+const TWO_SET_REGION_CENTERS = regionCentres([TWO_SET.A, TWO_SET.B], TWO_SET_MEMBERS);
+const THREE_SET_REGION_CENTERS = regionCentres([THREE_SET.A, THREE_SET.B, THREE_SET.C], THREE_SET_MEMBERS);
+/** Widest line of item text that fits each kind of region (viewBox units). */
+const REGION_TEXT_WIDTH: Record<string, number> = {
+  onlyA: 96, onlyB: 96, onlyC: 120, AB: 64, AC: 58, BC: 58, ABC: 62, intersection: 84, neither: 128,
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -112,10 +134,12 @@ function RegionText({
   x,
   y,
   region,
+  maxWidth = 130,
 }: {
   x: number;
   y: number;
   region: VennRegion;
+  maxWidth?: number;
 }) {
   const hasValue = region.value !== undefined && region.value !== '';
   const hasItems = region.items && region.items.length > 0;
@@ -125,7 +149,9 @@ function RegionText({
   // anchors are hand-tuned (`neither` sits at x=60), so long item lists
   // clipped at the left/right edge. wrapLabel estimates at 13px; scale the
   // ~130u cap into estimator units for the 11px items font.
-  const itemLines = hasItems ? wrapLabel(region.items!.join(', '), (130 * 13) / 11) : [];
+  const itemLines = hasItems ? wrapLabel(region.items!.join(', '), (maxWidth * 13) / 11.5) : [];
+  // The block (value + item lines) is centred on the region's centre.
+  const blockShift = hasItems ? ((itemLines.length - 1) * 13) / 2 : 0;
   const valueX = hasValue ? clampCenterX(x, estimateLabelWidth(region.value!, 14)) : x;
 
   return (
@@ -134,7 +160,7 @@ function RegionText({
       {hasValue && (
         <text
           x={valueX}
-          y={hasItems ? y - 8 : y}
+          y={hasItems ? y - 9 - blockShift : y}
           textAnchor="middle"
           dominantBaseline="central"
           fontSize={14}
@@ -149,16 +175,16 @@ function RegionText({
       {hasItems && (
         <text
           x={x}
-          y={hasValue ? y + 10 : y}
+          y={(hasValue ? y + 9 : y) - blockShift}
           textAnchor="middle"
           dominantBaseline="central"
-          fontSize={11}
-          fill="#475569"
+          fontSize={11.5}
+          fill="#334155"
         >
           {itemLines.map((line, li) => {
-            const lineX = clampCenterX(x, estimateLabelWidth(line, 11));
+            const lineX = clampCenterX(x, estimateLabelWidth(line, 11.5));
             return (
-              <tspan key={li} x={lineX} dy={li === 0 ? 0 : 12}>
+              <tspan key={li} x={lineX} dy={li === 0 ? 0 : 13}>
                 {line}
               </tspan>
             );
@@ -363,15 +389,18 @@ export function VennDiagramRenderer({
   }, [isThreeSet, colors, sets]);
 
   /** Region center positions */
-  const regionCenters = isThreeSet ? THREE_SET_REGION_CENTERS : TWO_SET_REGION_CENTERS;
+  const regionCenters: Record<string, { x: number; y: number }> = isThreeSet ? THREE_SET_REGION_CENTERS : TWO_SET_REGION_CENTERS;
+  const regionMembers: Record<string, boolean[]> = isThreeSet ? THREE_SET_MEMBERS : TWO_SET_MEMBERS;
+  const uid = `venn${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   /** Label positions — placed just above or beside each circle */
   const labelPositions = useMemo(() => {
     if (isThreeSet) {
       return [
-        { x: THREE_SET.A.cx - 60, y: THREE_SET.A.cy - THREE_SET.A.r - 10 }, // A: top-left
-        { x: THREE_SET.B.cx + 60, y: THREE_SET.B.cy - THREE_SET.B.r - 10 }, // B: top-right
-        { x: THREE_SET.C.cx, y: THREE_SET.C.cy + THREE_SET.C.r + 20 },      // C: below
+        { x: THREE_SET.A.cx - 50, y: THREE_SET.A.cy - THREE_SET.A.r - 9 }, // A: top-left
+        { x: THREE_SET.B.cx + 50, y: THREE_SET.B.cy - THREE_SET.B.r - 9 }, // B: top-right
+        // C: beside its lower-right shoulder (below it there is no room left in the frame)
+        { x: THREE_SET.C.cx + THREE_SET.C.r + 62, y: THREE_SET.C.cy + 64 },
       ];
     }
     return [
@@ -389,7 +418,7 @@ export function VennDiagramRenderer({
     <svg
       viewBox="0 0 500 400"
       xmlns="http://www.w3.org/2000/svg"
-      className="w-full h-auto"
+      className="w-full h-auto max-w-[620px]"
       role="img"
       aria-label={title || 'Venn Diagram'}
     >
@@ -413,24 +442,32 @@ export function VennDiagramRenderer({
         </text>
       )}
 
-      {/* Highlight fills — drawn before circle strokes so they sit underneath */}
+      {/* Highlight fills: the REGION itself (inside some circles, outside the
+          others), not a blob at its centre. Drawn under the circle strokes. */}
+      <defs>
+        {circles.map((c, i) => (
+          <clipPath key={i} id={`${uid}-in-${i}`}><circle cx={c.cx} cy={c.cy} r={c.r} /></clipPath>
+        ))}
+      </defs>
       {Object.entries(safeRegions).map(([key, region]) => {
-        if (!region.highlight) return null;
-        const center = regionCenters[key as keyof typeof regionCenters];
-        if (!center) return null;
-
-        // Draw a small semi-transparent circle at the region center to indicate highlight.
-        // For a precise approach, clip paths would be needed, but this provides a clear
-        // visual cue that the region is emphasized.
+        if (!region?.highlight) return null;
+        const members = (regionMembers as Record<string, boolean[]>)[key];
+        if (!members) return null;
+        const outside = circles.map((_, i) => i).filter((i) => !members[i]);
+        const inside = circles.map((_, i) => i).filter((i) => members[i]);
+        const maskId = `${uid}-out-${key}`;
+        let node = <rect x={10} y={10} width={480} height={380} rx={8} fill="#fbbf24" fillOpacity={0.5} mask={outside.length ? `url(#${maskId})` : undefined} />;
+        for (const i of inside) node = <g clipPath={`url(#${uid}-in-${i})`}>{node}</g>;
         return (
-          <circle
-            key={`highlight-${key}`}
-            cx={center.x}
-            cy={center.y}
-            r={40}
-            fill="#fbbf24"
-            opacity={0.25}
-          />
+          <g key={`highlight-${key}`}>
+            {outside.length > 0 && (
+              <mask id={maskId} maskUnits="userSpaceOnUse" x={0} y={0} width={VB_W} height={VB_H}>
+                <rect x={0} y={0} width={VB_W} height={VB_H} fill="#fff" />
+                {outside.map((i) => <circle key={i} cx={circles[i].cx} cy={circles[i].cy} r={circles[i].r} fill="#000" />)}
+              </mask>
+            )}
+            {node}
+          </g>
         );
       })}
 
@@ -457,8 +494,8 @@ export function VennDiagramRenderer({
           edge. Lines stack UP from the anchor so the label stays above
           (A/B) or just below (C) its circle. */}
       {circles.map((c, i) => {
-        const lines = wrapLabel(c.label ?? '', (170 * 13) / 14);
-        const firstY = labelPositions[i].y - (lines.length - 1) * 15;
+        const lines = wrapLabel(c.label ?? '', ((isThreeSet ? (i === 2 ? 118 : 150) : 190) * 13) / 14);
+        const firstY = isThreeSet && i === 2 ? labelPositions[i].y : labelPositions[i].y - (lines.length - 1) * 15;
         return (
           <text
             key={`label-${i}`}
@@ -492,6 +529,7 @@ export function VennDiagramRenderer({
             x={center.x}
             y={center.y}
             region={region}
+            maxWidth={REGION_TEXT_WIDTH[key]}
           />
         );
       })}

@@ -57,7 +57,7 @@ const H = DIAGRAM_VIEWBOX.height;
 
 function symbolForStatus(status: PedigreeIndividual['status']): { fill: string; half?: boolean; strike?: boolean } {
   if (status === 'affected') return { fill: DIAGRAM_COLORS.slate };
-  if (status === 'carrier') return { fill: DIAGRAM_COLORS.slate, half: true };
+  if (status === 'carrier') return { fill: 'white', half: true };
   if (status === 'deceased') return { fill: 'white', strike: true };
   return { fill: 'white' };
 }
@@ -127,7 +127,7 @@ export default function PedigreeRenderer({
     return <div style={{ padding: 24, color: DIAGRAM_COLORS.muted, fontStyle: 'italic' }}>No pedigree data.</div>;
   }
 
-  const pad = { top: title ? 42 : 28, bottom: 40, left: 40, right: 40 };
+  const pad = { top: 16, bottom: 44, left: 40, right: 24 };
   const maxGen = Math.max(...individuals.map((i) => i.generation));
   const maxPosByGen = new Map<number, number>();
   individuals.forEach((ind) => {
@@ -137,12 +137,38 @@ export default function PedigreeRenderer({
   const rowSpacing = (H - pad.top - pad.bottom) / Math.max(maxGen, 1);
   const nodeR = 14;
 
+  const maxCols = Math.max(...Array.from(maxPosByGen.values())) + 1;
+  const colW = Math.min(96, (W - pad.left - pad.right) / maxCols);
+  // Name under each symbol: sized (and, when needed, wrapped / shortened) to
+  // its column so neighbours never run into each other.
+  const labelFor = (raw: string): { lines: string[]; fontSize: number } => {
+    const fits = (t: string, fs: number) => t.length * fs * 0.56 <= colW - 6;
+    for (const fs of [11, 10, 9]) if (fits(raw, fs)) return { lines: [raw], fontSize: fs };
+    const words = raw.split(/\s+/);
+    if (words.length > 1) {
+      let best: [string, string] | null = null;
+      for (let k = 1; k < words.length; k++) {
+        const a = words.slice(0, k).join(' '); const b = words.slice(k).join(' ');
+        if (!best || Math.max(a.length, b.length) < Math.max(best[0].length, best[1].length)) best = [a, b];
+      }
+      if (best) {
+        for (const fs of [9, 8]) if (fits(best[0], fs) && fits(best[1], fs)) return { lines: best, fontSize: fs };
+        const cap = Math.max(3, Math.floor((colW - 6) / (8 * 0.56)));
+        return { lines: best.map((l) => (l.length > cap ? `${l.slice(0, cap - 1)}…` : l)), fontSize: 8 };
+      }
+    }
+    const maxChars = Math.max(3, Math.floor((colW - 6) / (9 * 0.56)) - 1);
+    return { lines: [`${raw.slice(0, maxChars)}…`], fontSize: 9 };
+  };
+
   const byId = new Map(individuals.map((i) => [i.id, i]));
   const place = (ind: PedigreeIndividual) => {
     const row = pad.top + (ind.generation - 0.5) * rowSpacing;
+    // One column width for every generation (set by the widest row, capped so
+    // a couple is never drawn far apart), each row centred — spacing reads the
+    // same down the whole chart.
     const cols = (maxPosByGen.get(ind.generation) ?? 0) + 1;
-    const colW = (W - pad.left - pad.right) / cols;
-    const x = pad.left + (ind.position + 0.5) * colW;
+    const x = (pad.left + W - pad.right) / 2 + (ind.position - (cols - 1) / 2) * colW;
     return { x, y: row };
   };
 
@@ -162,8 +188,8 @@ export default function PedigreeRenderer({
 
   interface LegendEntry { kind: 'shape' | 'status'; shape?: 'square' | 'circle'; status?: 'unaffected' | 'affected' | 'carrier' | 'deceased'; text: string }
   const entries: LegendEntry[] = [];
-  if (hasMale) entries.push({ kind: 'shape', shape: 'square', text: '□ Male' });
-  if (hasFemale) entries.push({ kind: 'shape', shape: 'circle', text: '○ Female' });
+  if (hasMale) entries.push({ kind: 'shape', shape: 'square', text: 'Male' });
+  if (hasFemale) entries.push({ kind: 'shape', shape: 'circle', text: 'Female' });
   if (statusSet.has('affected')) entries.push({ kind: 'status', status: 'affected', text: 'Affected' });
   if (statusSet.has('carrier')) entries.push({ kind: 'status', status: 'carrier', text: 'Carrier' });
   if (statusSet.has('unaffected')) entries.push({ kind: 'status', status: 'unaffected', text: 'Unaffected' });
@@ -189,7 +215,8 @@ export default function PedigreeRenderer({
         {marriages.map((m, i) => {
           const a = byId.get(m.pair[0]); const b = byId.get(m.pair[1]);
           if (!a || !b) return null;
-          const pa = place(a); const pb = place(b);
+          const p1 = place(a); const p2 = place(b);
+          const [pa, pb] = p1.x <= p2.x ? [p1, p2] : [p2, p1];
           return (
             <g key={`m${i}`} {...feat(`mating-${i + 1}`, { cx: (pa.x + pb.x) / 2, cy: (pa.y + pb.y) / 2, w: Math.abs(pb.x - pa.x) + 20, h: 20 })}>
               <line x1={pa.x + nodeR} y1={pa.y} x2={pb.x - nodeR} y2={pb.y} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.5} />
@@ -244,7 +271,12 @@ export default function PedigreeRenderer({
               {ind.sex === 'unknown' && (
                 <text x={x} y={y + 4} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle">?</text>
               )}
-              <text x={x} y={y + nodeR + 12} fontSize={10} fill={DIAGRAM_COLORS.text} textAnchor="middle">{ind.label || ind.id}</text>
+              {(() => {
+                const lab = labelFor(String(ind.label || ind.id));
+                return lab.lines.map((line, li) => (
+                  <text key={li} x={x} y={y + nodeR + 13 + li * (lab.fontSize + 1)} fontSize={lab.fontSize} fill={DIAGRAM_COLORS.text} textAnchor="middle">{line}</text>
+                ));
+              })()}
             </g>
           );
         })}
@@ -255,8 +287,8 @@ export default function PedigreeRenderer({
         {(() => {
           const iconW = 14;
           const iconGap = 6;
-          const entryGap = 14;
-          const charW = 5.6; // approx px for 10-px sans-serif digit/letter
+          const entryGap = 18;
+          const charW = 6.2; // approx px for 11-px sans-serif digit/letter
           const widths = entries.map((e) => iconW + iconGap + e.text.length * charW);
           const total = widths.reduce((a, b) => a + b, 0) + Math.max(0, entries.length - 1) * entryGap;
           const available = W - pad.left - pad.right;
@@ -265,7 +297,7 @@ export default function PedigreeRenderer({
           const scaledCharW = charW * scale;
           const scaledIconW = iconW * scale;
           const iconH = 14 * scale;
-          const fontSize = Math.max(9, 10 * scale);
+          const fontSize = Math.max(9, 11 * scale);
           let cursor = 0;
           return (
             <g transform={`translate(${pad.left + (available - total * scale) / 2}, ${H - 20})`}>

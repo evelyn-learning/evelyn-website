@@ -86,7 +86,9 @@ const fixtures: LabelFixture[] = [
       min: 0, max: 1, step: 0.25,
       fractionTicks: { denominator: 3, showLabels: true },
     }),
-    expectLabelSubstrings: ['0.3333', '0.6667'],
+    // Since 2026-11-13 a fraction tick prints as a stacked fraction (1 over 3), not "0.3333": its numerator and
+    // denominator are separate labels, and no other tick on this line carries a 2 or a 3.
+    expectLabelSubstrings: ['3', '2'],
   },
 ];
 

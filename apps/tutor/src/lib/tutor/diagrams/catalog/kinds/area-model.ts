@@ -6,6 +6,10 @@ export interface AreaModelFigure {
   rows: number[];
   cols: number[];
   cellLabels?: string[][];
+  /** Optional header text per row / column (e.g. "x", "+2"). When absent the
+   *  numeric side-lengths are shown. */
+  rowLabels?: string[];
+  colLabels?: string[];
   showProducts: boolean;
   title?: string;
 }
@@ -39,10 +43,21 @@ export function solveAreaModel(params: Record<string, unknown>): AreaModelFigure
     }
     cellLabels = cl.map((row) => row.map((v) => String(v ?? '')));
   }
+  const headerList = (v: unknown, n: number, name: string): string[] | undefined => {
+    if (!Array.isArray(v)) return undefined;
+    if (v.length !== n) {
+      throw new Error(`area_model: ${name} must have ${n} entries (one per ${name === 'rowLabels' ? 'row' : 'column'})`);
+    }
+    return v.map((x) => String(x ?? ''));
+  };
+  const rowLabels = headerList(params.rowLabels, r.length, 'rowLabels');
+  const colLabels = headerList(params.colLabels, c.length, 'colLabels');
   return {
     rows: r,
     cols: c,
     cellLabels,
+    rowLabels,
+    colLabels,
     showProducts: params.showProducts !== false,
     title: typeof params.title === 'string' ? params.title : undefined,
   };

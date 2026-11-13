@@ -39,10 +39,12 @@ export interface ReactionCoordinateProps {
 }
 
 const SVG_WIDTH = 640;
-const SVG_HEIGHT = 340;
+const BASE_HEIGHT = 340;
 const MARGIN = { left: 70, right: 140, top: 34, bottom: 46 };
 const PLOT_W = SVG_WIDTH - MARGIN.left - MARGIN.right;
-const PLOT_H = SVG_HEIGHT - MARGIN.top - MARGIN.bottom;
+const PLOT_H = BASE_HEIGHT - MARGIN.top - MARGIN.bottom;
+/** Height of one legend row (multi-curve figures list their curves under the plot). */
+const LEGEND_ROW = 19;
 
 // Horizontal extents (0..1) for the reactants / hump / products regions
 const REACT_END_X = 0.2;
@@ -50,6 +52,33 @@ const PEAK_X = 0.5;
 const PROD_START_X = 0.8;
 
 const CURVE_PALETTE = ['#dc2626', '#2563eb', '#16a34a', '#9333ea', '#ea580c'];
+
+/** Numbers in labels use a real minus sign. */
+function fmtNum(n: number): string {
+  return String(n).replace('-', '−');
+}
+
+/**
+ * A species label with chemical subscripts: the digits that follow an element
+ * symbol or a closing bracket drop below the line ("H2O2(aq)" → H₂O₂(aq)).
+ * Leading coefficients ("2 H2O") and plain words are left as they are.
+ */
+function chemTspans(text: string): React.ReactNode[] {
+  const out: React.ReactNode[] = [];
+  const re = /([A-Z][a-z]?|\))(\d+)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let k = 0;
+  while ((m = re.exec(text)) !== null) {
+    out.push(text.slice(last, m.index) + m[1]);
+    out.push(<tspan key={k++} baselineShift="sub" fontSize="0.72em">{m[2]}</tspan>);
+    last = m.index + m[0].length;
+  }
+  out.push(text.slice(last));
+  return out;
+}
+
+const HALO = { stroke: '#fafbfc', strokeWidth: 3.5, paintOrder: 'stroke' as const, strokeLinejoin: 'round' as const };
 
 function niceTickStep(range: number): number {
   // Pick a "nice" axis tick step based on the total y-range.
@@ -161,6 +190,10 @@ export default function ReactionCoordinateRenderer({
 }: ReactionCoordinateProps) {
   const eas = activation_energies.length > 0 ? activation_energies : [50];
   const maxEa = Math.max(...eas);
+  const multi = eas.length > 1;
+  // The plot keeps its size; a multi-curve legend adds rows underneath it.
+  const PLOT_BOTTOM = BASE_HEIGHT - MARGIN.bottom;
+  const SVG_HEIGHT = multi ? BASE_HEIGHT + eas.length * LEGEND_ROW + 6 : BASE_HEIGHT;
 
   // Y-axis range: include reactants, products, and the highest peak, with
   // generous padding so labels don't crash into the axis top.
@@ -247,13 +280,14 @@ export default function ReactionCoordinateRenderer({
   const prodBudget = Math.max(8, Math.floor((SVG_WIDTH - 4 - (xProdEnd + 8)) / (12 * 0.55)));
   const prodLines = wrapWords(product_label, prodBudget);
   const prodLineX = (ln: string) => Math.min(xProdEnd + 8, SVG_WIDTH - 4 - estTextW(ln, 12));
-  const prodEnergyLines = wrapWords(`(${products_energy} ${units})`, Math.max(8, Math.floor((SVG_WIDTH - 4 - (xProdEnd + 8)) / (11 * 0.55))));
+  const prodEnergyLines = wrapWords(`(${fmtNum(products_energy)} ${units})`, Math.max(8, Math.floor((SVG_WIDTH - 4 - (xProdEnd + 8)) / (11 * 0.55))));
   const prodEnergyLineX = (ln: string) => Math.min(xProdEnd + 8, SVG_WIDTH - 4 - estTextW(ln, 11));
-  const reactText = `${reactant_label}${reactants_energy !== 0 ? ` (${reactants_energy} ${units})` : ''}`;
-  const reactLines = wrapWords(reactText, 24);
+  const reactText = `${reactant_label}${reactants_energy !== 0 ? ` (${fmtNum(reactants_energy)} ${units})` : ''}`;
+  // The label must end before the hump starts rising (the flat reactants run is short).
+  const reactLines = wrapWords(reactText, 14);
 
   return (
-    <div className="reaction-coordinate-renderer">
+    <div className="reaction-coordinate-renderer w-full flex flex-col items-center">
       {title && (
         <div className="text-center text-sm font-semibold text-gray-700 mb-2">
           <InlineMathText text={title} />
@@ -262,7 +296,7 @@ export default function ReactionCoordinateRenderer({
       <svg
         viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
         className="w-full h-auto"
-        style={{ maxWidth: SVG_WIDTH, maxHeight: SVG_HEIGHT }}
+        style={{ maxWidth: 720 }}
       >
         <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="#fafbfc" rx={4} />
 
@@ -277,6 +311,17 @@ export default function ReactionCoordinateRenderer({
             orient="auto-start-reverse"
           >
             <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569" />
+          </marker>
+          <marker
+            id="rxn-arrowhead-ea"
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#b91c1c" />
           </marker>
         </defs>
 
@@ -298,10 +343,10 @@ export default function ReactionCoordinateRenderer({
                 x={MARGIN.left - 8}
                 y={y + 4}
                 textAnchor="end"
-                fontSize={11}
+                fontSize={11.5}
                 fill="#64748b"
               >
-                {t}
+                {fmtNum(t)}
               </text>
             </g>
           );
@@ -312,7 +357,7 @@ export default function ReactionCoordinateRenderer({
           x1={MARGIN.left}
           y1={MARGIN.top}
           x2={MARGIN.left}
-          y2={SVG_HEIGHT - MARGIN.bottom}
+          y2={PLOT_BOTTOM}
           stroke="#475569"
           strokeWidth={1.5}
         />
@@ -320,21 +365,21 @@ export default function ReactionCoordinateRenderer({
         {/* X-axis line at the minY boundary (not necessarily at y=0) */}
         <line
           x1={MARGIN.left}
-          y1={SVG_HEIGHT - MARGIN.bottom}
+          y1={PLOT_BOTTOM}
           x2={SVG_WIDTH - MARGIN.right}
-          y2={SVG_HEIGHT - MARGIN.bottom}
+          y2={PLOT_BOTTOM}
           stroke="#475569"
           strokeWidth={1.5}
         />
         <text
           x={MARGIN.left + PLOT_W / 2}
-          y={SVG_HEIGHT - MARGIN.bottom + 28}
+          y={PLOT_BOTTOM + 28}
           textAnchor="middle"
           fontSize={12}
           fill="#334155"
           fontWeight={500}
         >
-          Reaction Progress →
+          Reaction progress →
         </text>
 
         {/* Y-axis label (vertical) */}
@@ -350,16 +395,18 @@ export default function ReactionCoordinateRenderer({
           Energy ({units})
         </text>
 
-        {/* Reactants baseline + label (wrapped lines stack upward) */}
+        {/* Reactants baseline + label (wrapped lines stack upward), inside the
+            plot so it never sits on the energy axis */}
         <text
           textAnchor="start"
-          fontSize={12}
+          fontSize={12.5}
           fontWeight={600}
           fill="#1f2937"
+          {...HALO}
           {...feat('reactants', { cx: (xReactStart + xReactEnd) / 2, cy: yReact, w: xReactEnd - xReactStart + 40, h: 40 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}
         >
           {reactLines.map((ln, i) => (
-            <tspan key={i} x={xReactStart - 6} y={yReact - 8 - (reactLines.length - 1 - i) * 13}>{ln}</tspan>
+            <tspan key={i} x={xReactStart + 8} y={yReact - 9 - (reactLines.length - 1 - i) * 14}>{chemTspans(ln)}</tspan>
           ))}
         </text>
 
@@ -372,7 +419,7 @@ export default function ReactionCoordinateRenderer({
           {...feat('products', { cx: (xProdStart + xProdEnd) / 2, cy: yProd, w: xProdEnd - xProdStart + 40, h: 40 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}
         >
           {prodLines.map((ln, i) => (
-            <tspan key={i} x={prodLineX(ln)} y={yProd - 8 - (prodLines.length - 1 - i) * 13}>{ln}</tspan>
+            <tspan key={i} x={prodLineX(ln)} y={yProd - 8 - (prodLines.length - 1 - i) * 16}>{chemTspans(ln)}</tspan>
           ))}
         </text>
         <text
@@ -399,17 +446,26 @@ export default function ReactionCoordinateRenderer({
               />
               {/* Transition state / activation-energy markers */}
               <g {...feat(`ts-${i + 1}`, { cx: xPeak, cy: yTop, w: 30, h: 30 }, { width: SVG_WIDTH, height: SVG_HEIGHT })} />
-              {/* Ea label near the peak */}
+              {/* Activation energy. One curve: a dashed arrow from the reactants
+                  level up to the peak, with the value above the peak. Several
+                  curves: the values go in the legend under the plot (their
+                  peaks share one x, so labels there would pile up). */}
+              {!multi && (
+                <>
+                  <line x1={xReactEnd} y1={yReact} x2={xPeak + 14} y2={yReact} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 3" />
+                  <line x1={xPeak} y1={yReact - 2} x2={xPeak} y2={yTop + 3} stroke={color} strokeWidth={1.2} strokeDasharray="4 3" markerStart="url(#rxn-arrowhead-ea)" markerEnd="url(#rxn-arrowhead-ea)" />
+                </>
+              )}
               <text
                 x={xPeak}
-                y={yTop - 8}
+                y={yTop - 9}
                 textAnchor="middle"
-                fontSize={11}
-                fontWeight={600}
+                fontSize={12.5}
+                fontWeight={700}
                 fill={color}
                 {...feat(`ea-${i + 1}`, { cx: xPeak, cy: (yReact + yTop) / 2, w: 60, h: Math.max(20, yReact - yTop) }, { width: SVG_WIDTH, height: SVG_HEIGHT })}
               >
-                E_a = {ea} {units}
+                {!multi && (<>E<tspan baselineShift="sub" fontSize="0.72em">a</tspan>{` = ${fmtNum(ea)} ${units}`}</>)}
               </text>
             </g>
           );
@@ -418,64 +474,62 @@ export default function ReactionCoordinateRenderer({
         {/* ΔH arrow: vertical arrow between reactants and products levels,
             placed in the "products" region to the right of the hump. */}
         {deltaH !== 0 && (() => {
-          const xH = xProdEnd - 18;
+          const xH = xProdEnd - 12;
           const yTop = Math.min(yReact, yProd);
           const yBot = Math.max(yReact, yProd);
+          // The value sits in the right margin beside the arrow. When the two
+          // levels are close, the middle of the arrow is where the products
+          // label is, so the value moves beyond the reactants end instead.
+          const roomy = (yBot - yTop) / 2 > 16 * prodLines.length + 26;
+          // Not roomy: clear of the whole products block — above it when the
+          // products sit lower (exothermic), below it when they sit higher.
+          const blockTop = yProd - 8 - prodLines.length * 16;
+          const blockBottom = yProd + 8 + prodEnergyLines.length * 12;
+          const ty = roomy ? (yTop + yBot) / 2 + 4 : (yProd > yReact ? Math.min(blockTop - 4, yReact - 8) : Math.max(blockBottom + 6, yReact + 16));
+          const tall = yBot - yTop >= 18; // room for two arrowheads
+          const text = `ΔH = ${deltaH > 0 ? '+' : ''}${fmtNum(deltaH)} ${units}`;
           return (
             <g>
+              {/* reactants level carried across to the arrow */}
+              <line x1={xProdStart - 30} y1={yReact} x2={xProdEnd + 4} y2={yReact} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4 3" />
               <line
                 x1={xH}
-                y1={yTop}
+                y1={yTop + (tall ? 2 : 0)}
                 x2={xH}
-                y2={yBot}
+                y2={yBot - (tall ? 2 : 0)}
                 stroke="#475569"
-                strokeWidth={1.2}
-                markerStart="url(#rxn-arrowhead)"
-                markerEnd="url(#rxn-arrowhead)"
+                strokeWidth={tall ? 1.3 : 2}
+                markerStart={tall ? 'url(#rxn-arrowhead)' : undefined}
+                markerEnd={tall ? 'url(#rxn-arrowhead)' : undefined}
               />
               <text
-                x={xH - 6}
-                y={(yTop + yBot) / 2 + 4}
-                textAnchor="end"
-                fontSize={11}
-                fontWeight={600}
+                x={Math.min(xProdEnd + 8, SVG_WIDTH - 4 - estTextW(text, 12))}
+                y={ty}
+                textAnchor="start"
+                fontSize={12}
+                fontWeight={700}
                 fill="#334155"
+                {...HALO}
               >
-                ΔH = {deltaH > 0 ? '+' : ''}
-                {deltaH} {units}
+                {text}
               </text>
             </g>
           );
         })()}
 
-        {/* Legend for multi-curve */}
-        {eas.length > 1 && (
-          <g transform={`translate(${MARGIN.left + 12}, ${MARGIN.top + 10})`}>
-            <rect
-              x={-6}
-              y={-12}
-              width={140}
-              height={eas.length * 16 + 8}
-              fill="#ffffff"
-              stroke="#cbd5e1"
-              strokeWidth={0.8}
-              rx={3}
-            />
-            {eas.map((_, i) => {
+        {/* Legend for multi-curve figures: under the plot, one row per curve,
+            each with its activation energy. */}
+        {multi && (
+          <g transform={`translate(${MARGIN.left + 6}, ${BASE_HEIGHT + 4})`}>
+            {eas.map((ea, i) => {
               const color = CURVE_PALETTE[i % CURVE_PALETTE.length];
               const label = curve_labels?.[i] ?? `Curve ${i + 1}`;
               return (
-                <g key={`legend-${i}`} transform={`translate(0, ${i * 16})`}>
-                  <line
-                    x1={0}
-                    y1={0}
-                    x2={18}
-                    y2={0}
-                    stroke={color}
-                    strokeWidth={2.2}
-                  />
-                  <text x={24} y={4} fontSize={11} fill="#1f2937">
-                    {label}
+                <g key={`legend-${i}`} transform={`translate(0, ${i * LEGEND_ROW})`}>
+                  <line x1={0} y1={0} x2={22} y2={0} stroke={color} strokeWidth={2.6} />
+                  <text x={30} y={4} fontSize={12.5} fill="#1f2937">
+                    <tspan fontWeight={600}>{label}</tspan>
+                    <tspan fill={color} fontWeight={700}>{'  ·  E'}<tspan baselineShift="sub" fontSize="0.72em">a</tspan>{` = ${fmtNum(ea)} ${units}`}</tspan>
                   </text>
                 </g>
               );

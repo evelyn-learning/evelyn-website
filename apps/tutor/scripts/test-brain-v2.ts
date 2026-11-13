@@ -57,8 +57,8 @@ async function main() {
   const sys = V2_CONSTITUTION + v2SessionPart(session);
   const tools = v2Tools('math');
   const toolChars = JSON.stringify(tools).length;
-  // 22,500 since 2026-11-13 (three teaching principles and drawing what is pictured). 18,000 since 2026-11-10: the eleven board forms are listed in the principles (a reference list, not rules).
-  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 22500, sys.length);
+  // 26,000 since 2026-11-13 (three teaching principles, drawing what is pictured, and the session's own figures with their parameters). 18,000 since 2026-11-10: the eleven board forms are listed in the principles (a reference list, not rules).
+  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 26000, sys.length);
   check(`a math session gets a handful of tools (${tools.length}, ${toolChars} chars)`, tools.length <= 16 && toolChars < 24000, [tools.length, toolChars]);
   check('the control tools are present', ['update_session_note', 'set_goal_status', 'track_gap', 'end_lesson'].every((n) => tools.some((t) => t.name === n)));
   check('the constitution names no partner, topic or symptom', !/crimsora|greenapple|gdi|l'h[oô]pital|cos\(|streak/i.test(V2_CONSTITUTION));
@@ -656,6 +656,33 @@ async function main() {
   check('an optics lesson is offered the full ray diagram, refraction and apparent depth, and not the lens figure without rays', /lens_rays:/.test(optics) && /refraction:/.test(optics) && /apparent_depth:/.test(optics) && !/ray_diagram_lens:/.test(optics) && fig('lens_rays', { type: 'converging', focalLength: 5, objectDistance: 5 }).name === 'show_ray_diagram' && fig('lens_rays', { type: 'converging', focalLength: 20, objectDistance: 60, objectHeight: 2, find: 'image' }).args.hideImage === true && (fig('lens_rays', { type: 'converging', focalLength: 20, objectDistance: 60, objectHeight: 2 }).args.objectHeight as number) > 8 && fig('lens_rays', { type: 'converging', focalLength: 20, objectDistance: 60 }).args.hideImage === undefined, JSON.stringify(fig('lens_rays', { type: 'converging', focalLength: 20, objectDistance: 60, find: 'image' }).args));
   check('a test-prep mathematics lesson reads the mathematics figures, and a grade band is read at its top', /unit_circle:/.test(figureCatalogueFor({ subject: 'test-prep', topic: 'SAT Math: trigonometry', level: 'SAT' })) && /punnett_square:/.test(figureCatalogueFor({ subject: 'science', topic: 'grade-7-life-science Punnett Squares', level: '6-8' })), '');
   check('the standing prompt covers a student who says they have it, calculator arithmetic and a question of their own', /says they have it/.test(V2_CONSTITUTION) && /Arithmetic that needs a calculator/.test(V2_CONSTITUTION) && /answered for its own sake first/.test(V2_CONSTITUTION), '');
+
+  // 2026-11-13: figures connected from the practice-question engine, and the graph's asymptotes and pieces.
+  const kinds13: Array<[string, object]> = [
+    ['geometry_figure', { shape: 'triangle', sides: [3, 4, 5], sideLabels: ['3', '4', '?'] }],
+    ['geometry_figure', { shape: 'circle', radius: 5, points: [{ name: 'A', at: 200 }, { name: 'B', at: 340 }], radii: [{ to: 'A' }, { to: 'B' }], angles: [{ vertex: 'center', from: 'A', to: 'B', label: '140°' }] }],
+    ['geometry_figure', { shape: 'parallel_lines', angle: 65, labels: { 1: '115°', 6: 'x' } }],
+    ['probability_tree', { branches: [{ label: 'H', p: '1/2' }, { label: 'T', p: '1/2' }] }],
+    ['cladogram', { tree: { children: ['Lamprey', { traits: ['jaws'], children: ['Shark', 'Frog'] }] } }],
+    ['cell', { variant: 'cell', cellType: 'plant', organelles: [{ type: 'nucleus', label: 'nucleus' }, { type: 'chloroplast', label: '?' }] }],
+    ['energy_levels', { variant: 'levels', hydrogen: { nMax: 4 }, transitions: [{ from: 3, to: 2, label: 'A' }] }],
+    ['spectrum', { variant: 'lines', rows: [{ label: 'Hydrogen', lines: [410, 434, 486, 656] }] }],
+    ['photoelectric', { variant: 'tube', wavelength: 400, workFunction: 2.28 }],
+    ['heating_curve', { corners: [[0, -20], [4, 0], [37, 0], [79, 100]] }],
+    ['mechanics_setup', { variant: 'pulley', arrangement: 'atwood', m1: 2, m2: 3 }],
+    ['particles', { states: ['solid', 'gas'] }], ['buoyancy', { objectDensity: 600 }], ['pipe_flow', { area1: 12, area2: 3, speed1: 2 }],
+  ];
+  const drew13 = kinds13.map(([k, p]) => [k, drawFigure(k, p)] as const);
+  check('every connected figure draws from its parameters', drew13.every(([, d]) => 'svg' in d && d.svg.startsWith('<svg')), drew13.filter(([, d]) => 'refused' in d).map(([k, d]) => `${k}: ${(d as { refused: string }).refused}`).join(' | '));
+  const bad13 = drawFigure('energy_levels', { variant: 'levels', hydrogen: { nMax: 4 }, transitions: [{ from: 3, to: 2, label: 'blue-green' }] });
+  check('a figure that cannot be drawn as written is refused in words that name the parameter', 'refused' in bad13 && /transitions\[0\]\.label/.test(bad13.refused) && 'refused' in drawFigure('buoyancy', {}) && 'refused' in drawFigure('nothing', {}), JSON.stringify(bad13).slice(0, 160));
+  const rBad = strm('Here it is. <board figure kind="energy_levels">{"variant":"levels","hydrogen":{"nMax":4},"transitions":[{"from":3,"to":2,"label":"blue-green"}]}</board> See the drop?');
+  const tBad = await runV2Turn({ session: s13, state: newV2State(0), studentSaid: 'show me', facts: { nowMs: 60000 }, callModel: rBad.call, boardPass: false });
+  check('a refused figure is not painted and the tutor is told why next turn', !tBad.toolCalls.some((c) => c.name === 'show_drawn_figure' && !/^not /.test(c.outcome)) && /label is longer/.test((tBad.state.boardProblems ?? []).join(' ')), JSON.stringify(tBad.state.boardProblems));
+  const cat = (subject: string, topic: string, level = '10') => figureCatalogueFor({ subject, topic, level });
+  check('each subject is offered its new figures', /geometry_figure:/.test(cat('math', 'Triangles')) && /probability_tree:/.test(cat('math', 'Probability')) && /cladogram:/.test(cat('science', 'biology: evolution')) && /\n  cell:/.test(cat('science', 'biology: cells')) && /energy_levels:/.test(cat('science', 'physics: atomic models')) && /particles:/.test(cat('science', 'chemistry: states of matter')) && /buoyancy:/.test(cat('science', 'physics: fluids')) && !/cladogram:/.test(cat('math', 'Triangles')), '');
+  const g13 = inlineToolCall(boardBlocksIn('<board graph x="-6..10" y="-5..5">1/(x-5) | f\nx = 5 | vertical asymptote | dashed\nx^2 | first piece | from -3 to 0\n2x+1 | second piece | x > 0</board>')[0]).args.functions as Array<{ lineStyle?: string; domain?: number[] }>;
+  check('a graph draws an asymptote dashed and a piece over its own stretch of x', g13.length === 4 && !g13[0].lineStyle && g13[1].lineStyle === 'dashed' && JSON.stringify(g13[2].domain) === '[-3,0]' && JSON.stringify(g13[3].domain) === '[0,10]', JSON.stringify(g13));
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

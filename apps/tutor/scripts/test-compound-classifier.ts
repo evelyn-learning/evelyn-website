@@ -34,7 +34,8 @@ console.log('\n=== Hydrate detection ===');
   check('"CuSO4·5H2O" → hydrate', c.kind === 'hydrate', `kind=${c.kind}`);
   check('hydrate count = 5', c.hydrateCount === 5, `count=${c.hydrateCount}`);
   check('anhydrous = "CuSO4"', c.anhydrousFormula === 'CuSO4', `anhydrous=${c.anhydrousFormula}`);
-  check('ketcherSmiles = "CuSO4.O.O.O.O.O"', c.ketcherSmiles === 'CuSO4.O.O.O.O.O', `smiles=${c.ketcherSmiles}`);
+  // The editor reads SMILES, not formulas: the salt is rebuilt as its ions.
+  check('ketcherSmiles = ions + 5 waters', c.ketcherSmiles === '[Cu+2].[O-]S(=O)(=O)[O-].O.O.O.O.O', `smiles=${c.ketcherSmiles}`);
 }
 {
   const c = classifyCompound('MgSO4·7H2O');

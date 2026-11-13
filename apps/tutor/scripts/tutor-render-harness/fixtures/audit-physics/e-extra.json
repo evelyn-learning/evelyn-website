@@ -1,0 +1,183 @@
+[
+ {
+  "tool": "show_free_body_diagram",
+  "label": "fbd-three-same",
+  "args": {
+   "title": "Three people push a car",
+   "object": {
+    "shape": "box",
+    "label": "car"
+   },
+   "surface": {
+    "type": "horizontal",
+    "friction": true
+   },
+   "forces": [
+    {
+     "name": "F_1",
+     "magnitude": "200 N",
+     "direction": "right"
+    },
+    {
+     "name": "F_2",
+     "magnitude": "250 N",
+     "direction": "right"
+    },
+    {
+     "name": "F_3",
+     "magnitude": "150 N",
+     "direction": "right"
+    },
+    {
+     "name": "f_roll",
+     "magnitude": "120 N",
+     "direction": "left"
+    },
+    {
+     "name": "N",
+     "direction": "up"
+    },
+    {
+     "name": "W",
+     "magnitude": "mg",
+     "direction": "down"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_free_body_diagram",
+  "label": "fbd-two-up",
+  "args": {
+   "title": "Lift with two cables",
+   "object": {
+    "shape": "box",
+    "mass": "800 kg"
+   },
+   "surface": {
+    "type": "none"
+   },
+   "forces": [
+    {
+     "name": "T_1",
+     "magnitude": "4500 N",
+     "direction": "up"
+    },
+    {
+     "name": "T_2",
+     "magnitude": "4500 N",
+     "direction": "up"
+    },
+    {
+     "name": "W",
+     "magnitude": "7840 N",
+     "direction": "down"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_free_body_diagram",
+  "label": "fbd-minimal",
+  "args": {
+   "object": {},
+   "forces": [
+    {
+     "name": "W",
+     "direction": "down"
+    },
+    {
+     "name": "N",
+     "direction": "up"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_free_body_diagram",
+  "label": "fbd-incline-shallow",
+  "args": {
+   "object": {
+    "label": "m"
+   },
+   "surface": {
+    "type": "inclined",
+    "angle": 10,
+    "friction": true
+   },
+   "forces": [
+    {
+     "name": "W",
+     "magnitude": "mg",
+     "direction": "down"
+    },
+    {
+     "name": "N",
+     "direction": "normal"
+    },
+    {
+     "name": "f_k",
+     "direction": "up-slope"
+    },
+    {
+     "name": "F_app",
+     "magnitude": "12 N",
+     "direction": "down-slope"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_ray_diagram",
+  "label": "ray-conv-at-focus",
+  "args": {
+   "type": "converging",
+   "focalLength": 5,
+   "objectDistance": 5,
+   "objectHeight": 2,
+   "title": "Object at the focal point, f = 5 cm"
+  }
+ },
+ {
+  "tool": "show_ray_diagram",
+  "label": "ray-conv-find",
+  "args": {
+   "type": "converging",
+   "focalLength": 20,
+   "objectDistance": 60,
+   "objectHeight": 9.6,
+   "hideImage": true,
+   "title": "Where does the image form?"
+  }
+ },
+ {
+  "tool": "show_ray_diagram",
+  "label": "ray-conv-just-outside-f",
+  "args": {
+   "type": "converging",
+   "focalLength": 10,
+   "objectDistance": 10.6,
+   "objectHeight": 2
+  }
+ },
+ {
+  "tool": "show_ray_diagram",
+  "label": "ray-concave-between",
+  "args": {
+   "type": "concave-mirror",
+   "focalLength": 10,
+   "objectDistance": 14,
+   "objectHeight": 2
+  }
+ },
+ {
+  "tool": "show_ray_diagram",
+  "label": "ray-convex-close",
+  "args": {
+   "type": "convex-mirror",
+   "focalLength": 30,
+   "objectDistance": 6,
+   "objectHeight": 4
+  }
+ }
+]

@@ -1,7 +1,7 @@
 /** Phases 6+7+8 — advanced math, ELA, social studies, organizers. */
 
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
-import { shouldEvenSpaceTimeline } from './historical-timeline-layout';
+import { shouldEvenSpaceTimeline, parseTimelineYear } from './historical-timeline-layout';
 
 // ── unit_circle (Phase 6) ─────────────────────────────────────────────────
 export interface UnitCircleFigure {
@@ -388,6 +388,9 @@ export interface HistoricalTimelineFigure {
   /** Space events evenly in author order instead of proportionally by year —
    *  set when any date lacks a parseable year (e.g. "Today", "present"). */
   evenSpace?: boolean;
+  /** True when a date has no readable year: the events can only be drawn in the given order, evenly spaced.
+   *  (`evenSpace` is also set for dense spans; the card layout decides those itself.) */
+  ordinal?: boolean;
 }
 export function solveHistoricalTimeline(params: Record<string, unknown>): HistoricalTimelineFigure {
   if (!Array.isArray(params.events) || params.events.length === 0) throw new Error('timeline: events required');
@@ -407,8 +410,10 @@ export function solveHistoricalTimeline(params: Record<string, unknown>): Histor
     if (typeof e.year === 'number' && Number.isFinite(e.year)) {
       year = e.year;
     } else {
-      const m = date.match(/-?\d{3,4}/);
-      if (m) { year = parseInt(m[0], 10); }
+      // "500 BCE" is −500 and "44 BC" is −44 (read as 500 and as no year at all, a Roman timeline came out
+      // in the wrong order). `year` stays a whole year; a named month orders events inside it (sort below).
+      const parsed = parseTimelineYear(date);
+      if (parsed !== null) { year = Math.trunc(parsed); }
       else { year = i; anyImprecise = true; }
     }
     return {
@@ -420,7 +425,8 @@ export function solveHistoricalTimeline(params: Record<string, unknown>): Histor
   });
   // Sort by year ONLY when every date had a real year; otherwise preserve the
   // author's order (already chronological) and space evenly.
-  if (!anyImprecise) events.sort((a, b) => a.year - b.year);
+  const when = (e: { date: string; year: number }) => { const p = parseTimelineYear(e.date); return p !== null && Math.trunc(p) === e.year ? p : e.year; };
+  if (!anyImprecise) events.sort((a, b) => when(a) - when(b));
   // 2026-08-17 (portal-35b9a5d8): even with fully-parseable years, a dense
   // span (e.g. 1781-1788 with two same-year events) makes the proportional
   // layout's 156px boxes overlap — deterministically, so a brain re-render
@@ -432,6 +438,7 @@ export function solveHistoricalTimeline(params: Record<string, unknown>): Histor
     events,
     title: typeof params.title === 'string' ? params.title : undefined,
     evenSpace: evenSpace || undefined,
+    ...(anyImprecise ? { ordinal: true } : {}),
   };
 }
 

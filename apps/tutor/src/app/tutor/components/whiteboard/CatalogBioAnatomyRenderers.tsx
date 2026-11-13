@@ -149,7 +149,8 @@ export function CatalogLeafCrossSectionRenderer({ figure }: { figure: LeafCrossS
         </g>
         {/* air space callout */}
         <g data-feature={N.part('air_space')} data-feature-label="Air space">
-          <circle cx={240} cy={274} r={5} fill="none" stroke={hi('air_space') ? HL_STROKE : GRAY} strokeWidth={hi('air_space') ? 2.5 : 1} strokeDasharray="2 2" />
+          {/* ring drawn only when the air space is the point of the figure (an unexplained dashed ring is clutter) */}
+          {hi('air_space') && <circle cx={240} cy={274} r={9} fill="none" stroke={HL_STROKE} strokeWidth={2.5} strokeDasharray="3 2" />}
         </g>
 
         {/* ── vascular bundle (vein: xylem + phloem) ── */}
@@ -209,16 +210,17 @@ export function CatalogLeafCrossSectionRenderer({ figure }: { figure: LeafCrossS
         <text x={labelX} y={76} fontSize={11.5} textAnchor="start" fill={hi('cuticle') ? HL : INK} fontWeight={hi('cuticle') ? 700 : 400}>Waxy cuticle</text>
         <text x={labelX} y={100} fontSize={11.5} textAnchor="start" fill={hi('upper_epidermis') ? HL : INK} fontWeight={hi('upper_epidermis') ? 700 : 400}>Upper epidermis</text>
         <text x={labelX} y={138} fontSize={11.5} textAnchor="start" fill={hi('palisade_mesophyll') ? HL : INK} fontWeight={hi('palisade_mesophyll') ? 700 : 400}>Palisade mesophyll</text>
-        <text x={labelX} y={152} fontSize={9.5} textAnchor="start" fill={GRAY}>(chloroplasts)</text>
+        <text x={labelX} y={152} fontSize={10} textAnchor="start" fill="#64748b">(packed with chloroplasts)</text>
         <text x={labelX} y={254} fontSize={11.5} textAnchor="start" fill={hi('spongy_mesophyll') ? HL : INK} fontWeight={hi('spongy_mesophyll') ? 700 : 400}>Spongy mesophyll</text>
-        <text x={labelX} y={268} fontSize={9.5} textAnchor="start" fill={GRAY}>(air spaces)</text>
+        <text x={labelX} y={268} fontSize={10} textAnchor="start" fill="#64748b">(air spaces between cells)</text>
         <text x={labelX} y={326} fontSize={11.5} textAnchor="start" fill={hi('lower_epidermis') ? HL : INK} fontWeight={hi('lower_epidermis') ? 700 : 400}>Lower epidermis</text>
 
         {/* vascular bundle label */}
         <line x1={vbx + vbr} y1={vby} x2={labelX - 4} y2={200} stroke={INK} strokeWidth={0.8} />
         <text x={labelX} y={196} fontSize={11.5} textAnchor="start" fill={hi('vascular_bundle') ? HL : INK} fontWeight={hi('vascular_bundle') ? 700 : 400}>Vein (vascular bundle)</text>
-        <text x={labelX} y={210} fontSize={9.5} textAnchor="start" fill={RED}>xylem</text>
-        <text x={labelX + 40} y={210} fontSize={9.5} textAnchor="start" fill={GREEN}>· phloem</text>
+        <text x={labelX} y={210} fontSize={10} textAnchor="start" fill="#64748b">
+          <tspan fill={RED} fontWeight={700}>xylem</tspan> above, <tspan fill={GREEN} fontWeight={700}>phloem</tspan> below
+        </text>
 
         {/* stoma / guard cell label */}
         <line x1={stomataX[1] + 15} y1={loEpiBot} x2={labelX - 4} y2={362} stroke={INK} strokeWidth={0.8} />
@@ -310,41 +312,56 @@ export function CatalogNephronRenderer({ figure }: { figure: NephronFigure }) {
 
         {/* renal pelvis / exit */}
         <path d="M 440 452 L 464 452 L 452 476 Z" fill={TUBE_ST} />
-        <text x={452} y={492} fontSize={10.5} textAnchor="middle" fill={GRAY}>to renal pelvis / ureter</text>
+        <text x={452} y={492} fontSize={10.5} textAnchor="middle" fill="#64748b">urine → renal pelvis → ureter</text>
 
         {/* ── flow arrows ── */}
         {figure.showFlow && (
           <>
             <g data-feature={N.filtration} data-feature-label="Filtration">
               <line x1={128} y1={120} x2={158} y2={120} stroke={RED} strokeWidth={2.4} markerEnd="url(#neph-arr)" />
-              <text x={128} y={92} fontSize={10.5} textAnchor="middle" fill={RED} fontWeight={700}>filtration</text>
+              <text x={152} y={66} fontSize={10.5} textAnchor="middle" fill={RED} fontWeight={700}>filtration</text>
+              <line x1={150} y1={70} x2={144} y2={112} stroke={RED} strokeWidth={0.8} />
             </g>
             <g data-feature={N.reabsorption} data-feature-label="Reabsorption">
               {[[222, 150], [280, 300], [388, 176]].map(([x, y], i) => (
                 <line key={i} x1={x} y1={y} x2={x + 26} y2={y - 16} stroke={GREEN} strokeWidth={2} markerEnd="url(#neph-arr-g)" />
               ))}
-              <text x={520} y={300} fontSize={10.5} textAnchor="start" fill={GREEN} fontWeight={700}>reabsorption →</text>
-              <text x={520} y={314} fontSize={9.5} textAnchor="start" fill={GREEN}>water, glucose, ions</text>
+              {/* key for the green arrows */}
+              <line x1={506} y1={150} x2={530} y2={136} stroke={GREEN} strokeWidth={2} markerEnd="url(#neph-arr-g)" />
+              <text x={538} y={142} fontSize={11.5} textAnchor="start" fill={GREEN} fontWeight={700}>reabsorption</text>
+              <text x={538} y={156} fontSize={10} textAnchor="start" fill={GREEN}>water, glucose and ions</text>
+              <text x={538} y={169} fontSize={10} textAnchor="start" fill={GREEN}>return to the blood</text>
             </g>
           </>
         )}
 
         {/* ── labels with leaders ── */}
         {(() => {
-          const lbl = (part: NephronPart, x: number, y: number, tx: number, ty: number, text: string, anchor: 'start' | 'end' = 'start') => (
-            <g>
-              <line x1={x} y1={y} x2={tx + (anchor === 'end' ? 4 : -4)} y2={ty - 4} stroke={INK} strokeWidth={0.7} />
-              <text x={tx} y={ty} fontSize={11.5} textAnchor={anchor} fill={hi(part) ? HL : INK} fontWeight={hi(part) ? 700 : 400}>{text}</text>
-            </g>
-          );
+          // The leader meets the label at whichever END of the text faces the
+          // part (or under its middle when the part sits below/above the text) —
+          // never at the far end, where it would underline or strike the words.
+          const lbl = (part: NephronPart, x: number, y: number, tx: number, ty: number, text: string, anchor: 'start' | 'end' = 'start') => {
+            const w = text.length * 6.9;
+            const left = anchor === 'end' ? tx - w : tx;
+            const right = left + w;
+            const ex = x < left ? left - 4 : x > right ? right + 4 : (left + right) / 2;
+            const ey = x < left || x > right ? ty - 4 : (y < ty ? ty - 13 : ty + 4);
+            return (
+              <g>
+                <line x1={x} y1={y} x2={ex} y2={ey} stroke={INK} strokeWidth={0.8} />
+                <circle cx={x} cy={y} r={1.8} fill={INK} />
+                <text x={tx} y={ty} fontSize={12} textAnchor={anchor} fill={hi(part) ? HL : INK} fontWeight={hi(part) ? 700 : 500}>{text}</text>
+              </g>
+            );
+          };
           return (
             <>
-              {lbl('glomerulus', 104, 94, 60, 72, 'Glomerulus', 'start')}
-              {lbl('bowmans_capsule', 150, 150, 40, 190, "Bowman's capsule", 'start')}
+              {lbl('glomerulus', 92, 98, 16, 58, 'Glomerulus', 'start')}
+              {lbl('bowmans_capsule', 132, 163, 34, 204, "Bowman's capsule", 'start')}
               {lbl('proximal_tubule', 210, 108, 190, 60, 'Proximal tubule (PCT)', 'start')}
               {lbl('descending_limb', 254, 300, 150, 320, 'Descending limb', 'end')}
-              {lbl('loop_of_henle', 284, 420, 220, 452, 'Loop of Henle', 'start')}
-              {lbl('ascending_limb', 314, 300, 340, 300, 'Ascending limb', 'start')}
+              {lbl('loop_of_henle', 284, 420, 196, 468, 'Loop of Henle', 'start')}
+              {lbl('ascending_limb', 311, 372, 332, 446, 'Ascending limb', 'start')}
               {lbl('distal_tubule', 380, 158, 388, 108, 'Distal tubule (DCT)', 'start')}
               {lbl('collecting_duct', 440, 330, 476, 356, 'Collecting duct', 'start')}
             </>
@@ -511,10 +528,10 @@ export function CatalogCirculatorySystemRenderer({ figure }: { figure: Circulato
         data-feature-h={1}
       >
         <defs>
-          <marker id="circ-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+          <marker id="circ-b" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="17" markerHeight="17" markerUnits="userSpaceOnUse" orient="auto">
             <path d="M 0 0 L 10 5 L 0 10 z" fill={BLUE} />
           </marker>
-          <marker id="circ-r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+          <marker id="circ-r" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="17" markerHeight="17" markerUnits="userSpaceOnUse" orient="auto">
             <path d="M 0 0 L 10 5 L 0 10 z" fill={RED} />
           </marker>
         </defs>
@@ -551,28 +568,32 @@ export function CatalogCirculatorySystemRenderer({ figure }: { figure: Circulato
         {/* body → vena cava → RA */}
         <g data-feature={N.part('vena_cava')} data-feature-label="Vena cava">
           <path d={`M ${midX - 84} ${bodyY - 8} L ${leftX} ${bodyY - 8} L ${leftX} ${hy + 40}`} fill="none" stroke={BLUE} strokeWidth={7} strokeLinecap="round" />
-          <path d={`M ${leftX} ${hy + 40} L ${hx + 6} ${hy + 40}`} fill="none" stroke={BLUE} strokeWidth={7} strokeLinecap="round" markerEnd="url(#circ-b)" />
-          <text x={leftX - 8} y={bodyY - 40} fontSize={11} textAnchor="end" fill={BLUE} fontWeight={700}>vena cava</text>
+          <path d={`M ${leftX} ${hy + 40} L ${hx - 14} ${hy + 40}`} fill="none" stroke={BLUE} strokeWidth={7} />
+          <path d={`M ${hx - 16} ${hy + 40} L ${hx - 1} ${hy + 40}`} fill="none" stroke={BLUE} strokeWidth={1} markerEnd="url(#circ-b)" />
+          <text x={leftX - 10} y={bodyY - 60} fontSize={11.5} textAnchor="end" fill={BLUE} fontWeight={700}>vena cava</text>
         </g>
         {/* RV → pulmonary artery → lungs */}
         <g data-feature={N.part('pulmonary_artery')} data-feature-label="Pulmonary artery">
           <path d={`M ${hx + 6} ${hy + hh - 34} L ${leftX + 44} ${hy + hh - 34} L ${leftX + 44} ${lungY + 44}`} fill="none" stroke={BLUE} strokeWidth={7} strokeLinecap="round" />
-          <path d={`M ${leftX + 44} ${lungY + 44} L ${midX - 66} ${lungY + 34}`} fill="none" stroke={BLUE} strokeWidth={7} strokeLinecap="round" markerEnd="url(#circ-b)" />
-          <text x={leftX + 36} y={lungY + 70} fontSize={11} textAnchor="start" fill={BLUE} fontWeight={700}>pulmonary artery</text>
+          <path d={`M ${leftX + 44} ${lungY + 44} L ${midX - 82} ${lungY + 35.5}`} fill="none" stroke={BLUE} strokeWidth={7} strokeLinecap="round" />
+          <path d={`M ${midX - 84} ${lungY + 35.7} L ${midX - 66} ${lungY + 34}`} fill="none" stroke={BLUE} strokeWidth={1} markerEnd="url(#circ-b)" />
+          <text x={leftX + 34} y={lungY + 92} fontSize={11.5} textAnchor="end" fill={BLUE} fontWeight={700}>pulmonary artery</text>
         </g>
 
         {/* ══ red (oxygenated) column on the RIGHT, flowing DOWN ══ */}
         {/* lungs → pulmonary vein → LA */}
         <g data-feature={N.part('pulmonary_vein')} data-feature-label="Pulmonary vein">
           <path d={`M ${midX + 66} ${lungY + 34} L ${rightX - 44} ${lungY + 44} L ${rightX - 44} ${hy + 40}`} fill="none" stroke={RED} strokeWidth={7} strokeLinecap="round" />
-          <path d={`M ${rightX - 44} ${hy + 40} L ${hx + hw - 6} ${hy + 40}`} fill="none" stroke={RED} strokeWidth={7} strokeLinecap="round" markerEnd="url(#circ-r)" />
-          <text x={rightX - 36} y={lungY + 70} fontSize={11} textAnchor="end" fill={RED} fontWeight={700}>pulmonary vein</text>
+          <path d={`M ${rightX - 44} ${hy + 40} L ${hx + hw + 14} ${hy + 40}`} fill="none" stroke={RED} strokeWidth={7} />
+          <path d={`M ${hx + hw + 16} ${hy + 40} L ${hx + hw + 1} ${hy + 40}`} fill="none" stroke={RED} strokeWidth={1} markerEnd="url(#circ-r)" />
+          <text x={rightX - 34} y={lungY + 92} fontSize={11.5} textAnchor="start" fill={RED} fontWeight={700}>pulmonary vein</text>
         </g>
         {/* LV → aorta → body */}
         <g data-feature={N.part('aorta')} data-feature-label="Aorta">
           <path d={`M ${hx + hw - 6} ${hy + hh - 34} L ${rightX} ${hy + hh - 34} L ${rightX} ${bodyY - 8}`} fill="none" stroke={RED} strokeWidth={7} strokeLinecap="round" />
-          <path d={`M ${rightX} ${bodyY - 8} L ${midX + 84} ${bodyY - 8}`} fill="none" stroke={RED} strokeWidth={7} strokeLinecap="round" markerEnd="url(#circ-r)" />
-          <text x={rightX + 8} y={bodyY - 40} fontSize={11} textAnchor="start" fill={RED} fontWeight={700}>aorta</text>
+          <path d={`M ${rightX} ${bodyY - 8} L ${midX + 106} ${bodyY - 8}`} fill="none" stroke={RED} strokeWidth={7} strokeLinecap="round" />
+          <path d={`M ${midX + 108} ${bodyY - 8} L ${midX + 91} ${bodyY - 8}`} fill="none" stroke={RED} strokeWidth={1} markerEnd="url(#circ-r)" />
+          <text x={rightX + 10} y={bodyY - 60} fontSize={11.5} textAnchor="start" fill={RED} fontWeight={700}>aorta</text>
         </g>
 
         {/* ── heart (4 chambers) ── */}
@@ -672,14 +693,46 @@ export function CatalogEnergyPyramidRenderer({ figure }: { figure: EnergyPyramid
               <polygon
                 points={`${cx - topW / 2},${yTop} ${cx + topW / 2},${yTop} ${cx + botW / 2},${yBot} ${cx - botW / 2},${yBot}`}
                 fill={color}
-                fillOpacity={0.82}
+                fillOpacity={0.9}
                 stroke="#ffffff"
                 strokeWidth={2}
               />
-              <text x={cx} y={midY - (lvl.organisms ? 6 : 2)} textAnchor="middle" fontSize={14} fontWeight={700} fill="#ffffff">{lvl.label}</text>
-              {lvl.organisms && (
-                <text x={cx} y={midY + 11} textAnchor="middle" fontSize={10.5} fill="#f8fafc">({lvl.organisms})</text>
-              )}
+              {(() => {
+                // Fit the words to THIS tier: the narrow tiers near the apex get
+                // a smaller size, then a second line, and only then an ellipsis —
+                // a name is never drawn wider than the band it sits in.
+                const avail = widthAt(yTop + th * 0.25) - 22;
+                const fits = (t: string, fs: number, w: number) => t.length * fs * 0.58 <= w;
+                let fs = 14; let lines: string[] = [lvl.label];
+                for (const size of [14, 13, 12, 11]) { fs = size; if (fits(lvl.label, size, avail)) break; }
+                if (!fits(lvl.label, fs, avail)) {
+                  const words = lvl.label.split(/\s+/);
+                  let best: string[] = [lvl.label];
+                  for (let i = 1; i < words.length; i++) {
+                    const cand = [words.slice(0, i).join(' '), words.slice(i).join(' ')];
+                    if (best.length === 1 || Math.max(cand[0].length, cand[1].length) < Math.max(best[0].length, best[1].length)) best = cand;
+                  }
+                  const cap = Math.max(4, Math.floor(avail / (fs * 0.58)));
+                  lines = best.map((l) => (l.length > cap ? `${l.slice(0, cap - 1)}…` : l));
+                }
+                const orgAvail = widthAt(midY + 8) - 22;
+                const orgRaw = lvl.organisms ? `(${lvl.organisms})` : '';
+                const orgFs = fits(orgRaw, 10.5, orgAvail) ? 10.5 : 9.5;
+                const orgCap = Math.max(6, Math.floor(orgAvail / (orgFs * 0.55)));
+                const org = orgRaw.length > orgCap ? `${orgRaw.slice(0, orgCap - 2)}…)` : orgRaw;
+                const blockH = lines.length * (fs + 1) + (org ? 13 : 0);
+                const top = midY - blockH / 2;
+                return (
+                  <>
+                    {lines.map((ln, li) => (
+                      <text key={li} x={cx} y={top + (li + 1) * (fs + 1) - 3} textAnchor="middle" fontSize={fs} fontWeight={700} fill="#ffffff">{ln}</text>
+                    ))}
+                    {org && (
+                      <text x={cx} y={top + lines.length * (fs + 1) + 10} textAnchor="middle" fontSize={orgFs} fill="#f8fafc">{org}</text>
+                    )}
+                  </>
+                );
+              })()}
               {figure.showEnergy && (
                 <text x={cx + botW / 2 + 8} y={midY + 4} fontSize={11.5} fontWeight={600} fill={color} textAnchor="start">
                   {lvl.energy.toLocaleString()} {figure.units}
@@ -729,7 +782,7 @@ export function CatalogRespiratorySystemRenderer({ figure }: { figure: Respirato
   const strokeFor = (p: RespiratoryPart, base: string) => (hi(p) ? HLC : base);
   const widthFor = (p: RespiratoryPart, base: number) => (hi(p) ? base + 1.5 : base);
 
-  const labelL = 40;   // left label column x (text flows right)
+  const labelLEnd = 126; // left label column: text is right-aligned to this x, leaders start just past it
   const labelR = 556;  // right label column x (text flows right; leaders end at labelR-6)
 
   return (
@@ -748,8 +801,8 @@ export function CatalogRespiratorySystemRenderer({ figure }: { figure: Respirato
         {/* nasal cavity + pharynx + larynx (upper tract, top center) */}
         <g data-feature={N.part('nasal_cavity')} data-feature-label="Nasal cavity">
           <path d="M250 40 Q300 20 340 44 L336 70 L262 70 Z" fill="#fde68a" fillOpacity={0.6} stroke={strokeFor('nasal_cavity', '#a16207')} strokeWidth={widthFor('nasal_cavity', 1.5)} />
-          <line x1={262} y1={52} x2={labelL + 60} y2={40} stroke={INK} strokeWidth={0.7} />
-          <text x={labelL} y={44} fontSize={12} fill={strokeFor('nasal_cavity', INK)} fontWeight={hi('nasal_cavity') ? 700 : 400}>Nasal cavity</text>
+          <line x1={258} y1={50} x2={labelLEnd + 6} y2={40} stroke={INK} strokeWidth={0.7} />
+          <text x={labelLEnd} textAnchor="end" y={44} fontSize={12} fill={strokeFor('nasal_cavity', INK)} fontWeight={hi('nasal_cavity') ? 700 : 400}>Nasal cavity</text>
         </g>
         <g data-feature={N.part('pharynx')} data-feature-label="Pharynx">
           <rect x={288} y={70} width={24} height={26} fill={AIR} fillOpacity={0.5} stroke={strokeFor('pharynx', AIRSTROKE)} strokeWidth={widthFor('pharynx', 1.2)} />
@@ -758,8 +811,8 @@ export function CatalogRespiratorySystemRenderer({ figure }: { figure: Respirato
         </g>
         <g data-feature={N.part('larynx')} data-feature-label="Larynx">
           <rect x={286} y={96} width={28} height={22} rx={4} fill="#c7d2fe" stroke={strokeFor('larynx', '#4338ca')} strokeWidth={widthFor('larynx', 1.4)} />
-          <line x1={286} y1={107} x2={labelL + 54} y2={100} stroke={INK} strokeWidth={0.7} />
-          <text x={labelL} y={104} fontSize={12} fill={strokeFor('larynx', INK)} fontWeight={hi('larynx') ? 700 : 400}>Larynx</text>
+          <line x1={286} y1={107} x2={labelLEnd + 6} y2={100} stroke={INK} strokeWidth={0.7} />
+          <text x={labelLEnd} textAnchor="end" y={104} fontSize={12} fill={strokeFor('larynx', INK)} fontWeight={hi('larynx') ? 700 : 400}>Larynx</text>
         </g>
 
         {/* trachea (vertical tube with cartilage rings) */}
@@ -776,32 +829,34 @@ export function CatalogRespiratorySystemRenderer({ figure }: { figure: Respirato
         <g data-feature={N.part('bronchi')} data-feature-label="Bronchi">
           <path d="M298 228 Q250 250 214 286" fill="none" stroke={strokeFor('bronchi', AIRSTROKE)} strokeWidth={widthFor('bronchi', 10)} strokeLinecap="round" />
           <path d="M302 228 Q350 250 386 286" fill="none" stroke={strokeFor('bronchi', AIRSTROKE)} strokeWidth={widthFor('bronchi', 10)} strokeLinecap="round" />
-          <line x1={214} y1={286} x2={labelL + 46} y2={276} stroke={INK} strokeWidth={0.7} />
-          <text x={labelL} y={280} fontSize={12} fill={strokeFor('bronchi', INK)} fontWeight={hi('bronchi') ? 700 : 400}>Bronchi</text>
+          <line x1={214} y1={286} x2={labelLEnd + 6} y2={276} stroke={INK} strokeWidth={0.7} />
+          <text x={labelLEnd} textAnchor="end" y={280} fontSize={12} fill={strokeFor('bronchi', INK)} fontWeight={hi('bronchi') ? 700 : 400}>Bronchi</text>
         </g>
 
         {/* lungs */}
         <g data-feature={N.part('right_lung')} data-feature-label="Right lung">
           <path d="M214 286 Q150 300 150 380 Q150 440 210 452 Q244 452 244 400 L232 300 Q226 288 214 286 Z" fill={LUNGL} fillOpacity={0.75} stroke={strokeFor('right_lung', LUNGSTROKE)} strokeWidth={widthFor('right_lung', 1.8)} />
-          <text x={182} y={340} fontSize={11.5} fill={strokeFor('right_lung', '#9d174d')} fontWeight={hi('right_lung') ? 700 : 500} textAnchor="middle">Right lung</text>
-          <text x={182} y={356} fontSize={9.5} fill="#9d174d" textAnchor="middle">(3 lobes)</text>
+          <text x={198} y={412} fontSize={11.5} fill={strokeFor('right_lung', '#9d174d')} fontWeight={hi('right_lung') ? 700 : 600} textAnchor="middle">Right lung</text>
+          <text x={198} y={426} fontSize={10} fill="#9d174d" textAnchor="middle">(3 lobes)</text>
         </g>
         <g data-feature={N.part('left_lung')} data-feature-label="Left lung">
           <path d="M386 286 Q450 300 450 380 Q450 440 390 452 Q356 452 356 400 L368 300 Q374 288 386 286 Z" fill={LUNGL} fillOpacity={0.75} stroke={strokeFor('left_lung', LUNGSTROKE)} strokeWidth={widthFor('left_lung', 1.8)} />
-          <text x={418} y={340} fontSize={11.5} fill={strokeFor('left_lung', '#9d174d')} fontWeight={hi('left_lung') ? 700 : 500} textAnchor="middle">Left lung</text>
-          <text x={418} y={356} fontSize={9.5} fill="#9d174d" textAnchor="middle">(2 lobes)</text>
+          <text x={402} y={412} fontSize={11.5} fill={strokeFor('left_lung', '#9d174d')} fontWeight={hi('left_lung') ? 700 : 600} textAnchor="middle">Left lung</text>
+          <text x={402} y={426} fontSize={10} fill="#9d174d" textAnchor="middle">(2 lobes)</text>
         </g>
 
         {/* bronchioles (fine branching inside the right lung) */}
         <g data-feature={N.part('bronchioles')} data-feature-label="Bronchioles">
           <path d="M214 286 Q205 320 196 344 M196 344 Q188 360 180 372 M196 344 Q206 362 214 374" fill="none" stroke={strokeFor('bronchioles', AIRSTROKE)} strokeWidth={widthFor('bronchioles', 2)} strokeLinecap="round" opacity={0.8} />
-          <line x1={180} y1={372} x2={labelL + 56} y2={396} stroke={INK} strokeWidth={0.7} />
-          <text x={labelL} y={400} fontSize={12} fill={strokeFor('bronchioles', INK)} fontWeight={hi('bronchioles') ? 700 : 400}>Bronchioles</text>
+          <path d="M386 286 Q395 320 404 344 M404 344 Q412 360 420 372 M404 344 Q394 362 386 374" fill="none" stroke={strokeFor('bronchioles', AIRSTROKE)} strokeWidth={widthFor('bronchioles', 2)} strokeLinecap="round" opacity={0.8} />
+          <line x1={180} y1={372} x2={labelLEnd + 6} y2={396} stroke={INK} strokeWidth={0.7} />
+          <text x={labelLEnd} textAnchor="end" y={400} fontSize={12} fill={strokeFor('bronchioles', INK)} fontWeight={hi('bronchioles') ? 700 : 400}>Bronchioles</text>
         </g>
 
         {/* alveoli inset (zoomed grape-cluster from the left lung) */}
         <g data-feature={N.part('alveoli')} data-feature-label="Alveoli">
-          <line x1={396} y1={360} x2={470} y2={330} stroke="#94a3b8" strokeWidth={0.8} strokeDasharray="3 3" />
+          <line x1={420} y1={372} x2={466} y2={340} stroke="#64748b" strokeWidth={0.9} strokeDasharray="3 3" />
+          <circle cx={420} cy={372} r={2.5} fill="#64748b" />
           {[[470, 320], [492, 316], [486, 338], [508, 330], [478, 340], [500, 348]].map(([ax, ay], i) => (
             <circle key={i} cx={ax} cy={ay} r={11} fill="#fecdd3" stroke={strokeFor('alveoli', LUNGSTROKE)} strokeWidth={widthFor('alveoli', 1.3)} />
           ))}
@@ -833,7 +888,7 @@ export function CatalogFlowerStructureRenderer({ figure }: { figure: FlowerStruc
   const HLC = '#059669';
   const strokeFor = (p: FlowerPart, base: string) => (hi(p) ? HLC : base);
   const widthFor = (p: FlowerPart, base: number) => (hi(p) ? base + 1.5 : base);
-  const labelL = 40, labelR = 556; // both columns left-anchored; right leaders end at labelR-6
+  const labelLEnd = 104, labelR = 556; // left column right-aligned to labelLEnd; right column starts at labelR
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -853,16 +908,16 @@ export function CatalogFlowerStructureRenderer({ figure }: { figure: FlowerStruc
           <path d="M300 250 Q150 210 120 120 Q210 150 300 250 Z" fill="#f9a8d4" fillOpacity={0.8} stroke={strokeFor('petal', '#be185d')} strokeWidth={widthFor('petal', 1.5)} />
           <path d="M300 250 Q450 210 480 120 Q390 150 300 250 Z" fill="#f9a8d4" fillOpacity={0.8} stroke={strokeFor('petal', '#be185d')} strokeWidth={widthFor('petal', 1.5)} />
           <path d="M300 250 Q210 150 300 96 Q390 150 300 250 Z" fill="#f9a8d4" fillOpacity={0.65} stroke={strokeFor('petal', '#be185d')} strokeWidth={widthFor('petal', 1.5)} />
-          <line x1={140} y1={140} x2={labelL + 40} y2={130} stroke={INK} strokeWidth={0.7} />
-          <text x={labelL} y={134} fontSize={12} fill={strokeFor('petal', INK)} fontWeight={hi('petal') ? 700 : 400}>Petal</text>
+          <line x1={150} y1={150} x2={labelLEnd + 6} y2={130} stroke={INK} strokeWidth={0.7} />
+          <text x={labelLEnd} textAnchor="end" y={134} fontSize={12} fill={strokeFor('petal', INK)} fontWeight={hi('petal') ? 700 : 400}>Petal</text>
         </g>
 
         {/* stamens (filament + anther) flanking the center */}
         <g data-feature={N.part('filament')} data-feature-label="Filament">
           <path d="M262 250 Q248 190 236 150" fill="none" stroke={strokeFor('filament', '#ca8a04')} strokeWidth={widthFor('filament', 2.5)} />
           <path d="M338 250 Q352 190 364 150" fill="none" stroke={strokeFor('filament', '#ca8a04')} strokeWidth={widthFor('filament', 2.5)} />
-          <line x1={236} y1={190} x2={labelL + 40} y2={186} stroke={INK} strokeWidth={0.7} />
-          <text x={labelL} y={190} fontSize={12} fill={strokeFor('filament', INK)} fontWeight={hi('filament') ? 700 : 400}>Filament</text>
+          <line x1={236} y1={190} x2={labelLEnd + 6} y2={186} stroke={INK} strokeWidth={0.7} />
+          <text x={labelLEnd} textAnchor="end" y={190} fontSize={12} fill={strokeFor('filament', INK)} fontWeight={hi('filament') ? 700 : 400}>Filament</text>
         </g>
         <g data-feature={N.part('anther')} data-feature-label="Anther">
           <ellipse cx={236} cy={144} rx={12} ry={8} fill="#fbbf24" stroke={strokeFor('anther', '#b45309')} strokeWidth={widthFor('anther', 1.4)} />
@@ -891,16 +946,16 @@ export function CatalogFlowerStructureRenderer({ figure }: { figure: FlowerStruc
           {[[286, 312], [314, 312], [300, 338]].map(([ox, oy], i) => (
             <circle key={i} cx={ox} cy={oy} r={8} fill="#fef9c3" stroke={strokeFor('ovule', '#15803d')} strokeWidth={widthFor('ovule', 1.2)} />
           ))}
-          <line x1={286} y1={312} x2={labelL + 40} y2={330} stroke={INK} strokeWidth={0.7} />
-          <text x={labelL} y={334} fontSize={12} fill={strokeFor('ovule', INK)} fontWeight={hi('ovule') ? 700 : 400}>Ovule → seed</text>
+          <line x1={286} y1={312} x2={labelLEnd + 6} y2={330} stroke={INK} strokeWidth={0.7} />
+          <text x={labelLEnd} textAnchor="end" y={334} fontSize={12} fill={strokeFor('ovule', INK)} fontWeight={hi('ovule') ? 700 : 400}>Ovule → seed</text>
         </g>
 
         {/* sepals (green, below petals) */}
         <g data-feature={N.part('sepal')} data-feature-label="Sepal">
           <path d="M300 250 Q240 260 214 300 Q270 286 300 250 Z" fill="#4ade80" fillOpacity={0.7} stroke={strokeFor('sepal', '#15803d')} strokeWidth={widthFor('sepal', 1.4)} />
           <path d="M300 250 Q360 260 386 300 Q330 286 300 250 Z" fill="#4ade80" fillOpacity={0.7} stroke={strokeFor('sepal', '#15803d')} strokeWidth={widthFor('sepal', 1.4)} />
-          <line x1={214} y1={300} x2={labelL + 40} y2={282} stroke={INK} strokeWidth={0.7} />
-          <text x={labelL} y={286} fontSize={12} fill={strokeFor('sepal', INK)} fontWeight={hi('sepal') ? 700 : 400}>Sepal</text>
+          <line x1={214} y1={300} x2={labelLEnd + 6} y2={282} stroke={INK} strokeWidth={0.7} />
+          <text x={labelLEnd} textAnchor="end" y={286} fontSize={12} fill={strokeFor('sepal', INK)} fontWeight={hi('sepal') ? 700 : 400}>Sepal</text>
         </g>
 
         {/* receptacle + stalk */}
@@ -980,25 +1035,27 @@ export function CatalogEyeCrossSectionRenderer({ figure }: { figure: EyeCrossSec
   const foveaPt: [number, number] = P(R - 18, 2);
 
   const LX = 232;   // left labels: end-anchored, text ends here
-  const RX = 632;   // right labels: start-anchored, text starts here
+  const RX = 684;   // right labels: start-anchored, text starts here (clear of the optic nerve)
   type Row = { part: EyePart; ly: number; ax: number; ay: number };
+  // Rows run top-to-bottom in the SAME order as the points they name, so no
+  // two leaders cross; row heights also keep the text off the two light rays.
   const leftRows: Row[] = [
-    { part: 'cornea',                ly: 150, ax: corneaApex[0] + 2, ay: 288 },
-    { part: 'aqueous_humor',         ly: 196, ax: 300, ay: 236 },
-    { part: 'iris',                  ly: 242, ax: 300, ay: 222 },
-    { part: 'pupil',                 ly: 300, ax: 300, ay: 280 },
-    { part: 'lens',                  ly: 350, ax: lensCx, ay: Oy },
-    { part: 'ciliary_body',          ly: 404, ax: 300, ay: 210 },
-    { part: 'suspensory_ligaments',  ly: 452, ax: 322, ay: 236 },
+    { part: 'ciliary_body',          ly: 150, ax: sxTop + 6, ay: syTop + 8 },
+    { part: 'suspensory_ligaments',  ly: 196, ax: (sxTop + 8 + lensCx) / 2, ay: (syTop + 8 + lensCy - lensRy + 6) / 2 },
+    { part: 'iris',                  ly: 238, ax: 297, ay: 226 },
+    { part: 'cornea',                ly: 284, ax: 256, ay: 276 },
+    { part: 'pupil',                 ly: 334, ax: 316, ay: 298 },
+    { part: 'aqueous_humor',         ly: 382, ax: 286, ay: 320 },
+    { part: 'lens',                  ly: 430, ax: lensCx - 2, ay: lensCy + 34 },
   ];
   const rightRows: Row[] = [
     { part: 'sclera',          ly: 132, ax: P(R, 60)[0],  ay: P(R, 60)[1] },
-    { part: 'choroid',         ly: 180, ax: P(R - 6, 46)[0], ay: P(R - 6, 46)[1] },
-    { part: 'retina',          ly: 228, ax: P(R - 16, 30)[0], ay: P(R - 16, 30)[1] },
-    { part: 'vitreous_humor',  ly: 300, ax: 486, ay: 316 },
-    { part: 'fovea',           ly: 352, ax: foveaPt[0], ay: foveaPt[1] },
-    { part: 'blind_spot',      ly: 404, ax: P(R - 14, 344)[0], ay: P(R - 14, 344)[1] },
-    { part: 'optic_nerve',     ly: 456, ax: onx + 40, ay: ony + 26 },
+    { part: 'choroid',         ly: 180, ax: P(R - 8, 46)[0], ay: P(R - 8, 46)[1] },
+    { part: 'retina',          ly: 228, ax: P(R - 17, 30)[0], ay: P(R - 17, 30)[1] },
+    { part: 'vitreous_humor',  ly: 264, ax: 520, ay: 246 },
+    { part: 'fovea',           ly: 300, ax: foveaPt[0], ay: foveaPt[1] },
+    { part: 'blind_spot',      ly: 340, ax: P(R - 14, 344)[0], ay: P(R - 14, 344)[1] },
+    { part: 'optic_nerve',     ly: 404, ax: onx + 40, ay: ony + 26 },
   ];
 
   return (
@@ -1042,11 +1099,11 @@ export function CatalogEyeCrossSectionRenderer({ figure }: { figure: EyeCrossSec
             {[250, 310].map((y0, i) => (
               <polyline
                 key={i}
-                points={`92,${y0} ${corneaApex[0] + 6},${y0} 315,${Oy} ${foveaPt[0]},${foveaPt[1]}`}
+                points={`92,${y0} ${corneaApex[0] + 10},${y0} ${lensCx},${Oy + (y0 - Oy) * 0.4} ${foveaPt[0]},${foveaPt[1]}`}
                 fill="none" stroke="#f59e0b" strokeWidth={1.4} strokeDasharray="5 4"
               />
             ))}
-            <text x={96} y={232} fontSize={11} fill="#b45309" fontStyle="italic">light</text>
+            <text x={96} y={222} fontSize={12} fill="#b45309" fontStyle="italic">light</text>
           </g>
         )}
 
@@ -1072,7 +1129,9 @@ export function CatalogEyeCrossSectionRenderer({ figure }: { figure: EyeCrossSec
         <g data-feature={N.part('suspensory_ligaments')} data-feature-label="Suspensory ligaments">
           {[-1, 1].map((s) => (
             <g key={s}>
-              <line x1={sxTop + 8} y1={s > 0 ? syTop + 8 : syBot - 8} x2={lensCx} y2={lensCy + s * (lensRy - 6)} stroke={sFor('suspensory_ligaments', '#94a3b8')} strokeWidth={wFor('suspensory_ligaments', 1)} />
+              {/* each ligament runs from the ciliary body on ITS side to the near edge of the lens */}
+              <line x1={sxTop + 8} y1={s < 0 ? syTop + 8 : syBot - 8} x2={lensCx} y2={lensCy + s * (lensRy - 6)} stroke={sFor('suspensory_ligaments', '#64748b')} strokeWidth={wFor('suspensory_ligaments', 1.3)} />
+              <line x1={sxTop + 12} y1={s < 0 ? syTop + 14 : syBot - 14} x2={lensCx - 4} y2={lensCy + s * (lensRy - 16)} stroke={sFor('suspensory_ligaments', '#64748b')} strokeWidth={wFor('suspensory_ligaments', 1.3)} />
             </g>
           ))}
         </g>
@@ -1098,15 +1157,17 @@ export function CatalogEyeCrossSectionRenderer({ figure }: { figure: EyeCrossSec
         {/* labels — left column (end-anchored), leaders end just right of text */}
         {leftRows.map((r) => (
           <g key={r.part} data-feature={N.part(r.part)} data-feature-label={String(r.part)}>
-            <line x1={LX + 6} y1={r.ly - 4} x2={r.ax} y2={r.ay} stroke={INK} strokeWidth={0.7} />
-            <text x={LX} y={r.ly} fontSize={12.5} textAnchor="end" fill={sFor(r.part, INK)} fontWeight={hi(r.part) ? 700 : 400}>{EYE_LABELS_R[r.part]}</text>
+            <line x1={LX + 6} y1={r.ly - 4} x2={r.ax} y2={r.ay} stroke={INK} strokeWidth={0.8} />
+            <circle cx={r.ax} cy={r.ay} r={2} fill={INK} />
+            <text x={LX} y={r.ly} fontSize={13.5} textAnchor="end" fill={sFor(r.part, INK)} fontWeight={hi(r.part) ? 700 : 500}>{EYE_LABELS_R[r.part]}</text>
           </g>
         ))}
         {/* right column (start-anchored), leaders end just left of text */}
         {rightRows.map((r) => (
           <g key={r.part} data-feature={N.part(r.part)} data-feature-label={String(r.part)}>
-            <line x1={RX - 6} y1={r.ly - 4} x2={r.ax} y2={r.ay} stroke={INK} strokeWidth={0.7} />
-            <text x={RX} y={r.ly} fontSize={12.5} fill={sFor(r.part, INK)} fontWeight={hi(r.part) ? 700 : 400}>{EYE_LABELS_R[r.part]}</text>
+            <line x1={RX - 6} y1={r.ly - 4} x2={r.ax} y2={r.ay} stroke={INK} strokeWidth={0.8} />
+            <circle cx={r.ax} cy={r.ay} r={2} fill={INK} />
+            <text x={RX} y={r.ly} fontSize={13.5} fill={sFor(r.part, INK)} fontWeight={hi(r.part) ? 700 : 500}>{EYE_LABELS_R[r.part]}</text>
           </g>
         ))}
       </svg>
@@ -1168,20 +1229,22 @@ export function CatalogEarCrossSectionRenderer({ figure }: { figure: EarCrossSec
   const vestibule: [number, number] = [548, 292];
 
   // label rows
-  const LX = 208, RX = 660;
+  const LX = 208, RX = 704;
   type Row = { part: EarPart; ly: number; ax: number; ay: number; side: 'l' | 'r' | 't'; lx?: number };
+  // 't' rows are centred on lx with a leader from the text's near edge
+  // (below the text when the part is lower, above it when the part is higher).
   const rows: Row[] = [
-    { part: 'pinna',               side: 'l', ly: 150, ax: 96,  ay: 220 },
-    { part: 'ear_canal',           side: 'l', ly: 224, ax: 250, ay: 268 },
-    { part: 'eardrum',             side: 'l', ly: 320, ax: 372, ay: 292 },
-    { part: 'eustachian_tube',     side: 'l', ly: 430, ax: 452, ay: 430 },
-    { part: 'malleus',             side: 't', lx: 372, ly: 72, ax: 392, ay: 250 },
-    { part: 'incus',               side: 't', lx: 440, ly: 72, ax: 424, ay: 258 },
-    { part: 'stapes',              side: 't', lx: 508, ly: 72, ax: 462, ay: 272 },
-    { part: 'semicircular_canals', side: 'r', ly: 150, ax: 566, ay: 196 },
-    { part: 'oval_window',         side: 'r', ly: 224, ax: 520, ay: 288 },
-    { part: 'cochlea',             side: 'r', ly: 344, ax: cochCx + 44, ay: cochCy + 8 },
-    { part: 'auditory_nerve',      side: 'r', ly: 430, ax: 726, ay: 392 },
+    { part: 'pinna',               side: 't', lx: 104, ly: 144, ax: 100, ay: 172 },
+    { part: 'ear_canal',           side: 't', lx: 262, ly: 226, ax: 262, ay: 266 },
+    { part: 'eardrum',             side: 'l', ly: 344, ax: 375, ay: 303 },
+    { part: 'eustachian_tube',     side: 'l', ly: 420, ax: 481, ay: 415 },
+    { part: 'malleus',             side: 't', lx: 372, ly: 72, ax: 396, ay: 236 },
+    { part: 'incus',               side: 't', lx: 440, ly: 72, ax: 428, ay: 244 },
+    { part: 'stapes',              side: 't', lx: 508, ly: 72, ax: 474, ay: 274 },
+    { part: 'oval_window',         side: 't', lx: 568, ly: 468, ax: 513, ay: 298 },
+    { part: 'semicircular_canals', side: 'r', ly: 150, ax: 588, ay: 204 },
+    { part: 'cochlea',             side: 'r', ly: 352, ax: cochCx + 52, ay: cochCy - 8 },
+    { part: 'auditory_nerve',      side: 'r', ly: 444, ax: 730, ay: 398 },
   ];
 
   return (
@@ -1199,13 +1262,14 @@ export function CatalogEarCrossSectionRenderer({ figure }: { figure: EarCrossSec
       >
         {/* region bands */}
         {figure.showRegions && (
-          <g opacity={0.5}>
+          <g opacity={0.75}>
             <rect x={0} y={100} width={345} height={430} fill="#fff7ed" />
             <rect x={345} y={100} width={155} height={430} fill="#eff6ff" />
             <rect x={500} y={100} width={380} height={430} fill="#fdf2f8" />
-            <text x={172} y={122} fontSize={12.5} fontWeight={700} fill="#9a3412" textAnchor="middle">OUTER EAR</text>
-            <text x={422} y={122} fontSize={12.5} fontWeight={700} fill="#1e40af" textAnchor="middle">MIDDLE EAR</text>
-            <text x={690} y={122} fontSize={12.5} fontWeight={700} fill="#9d174d" textAnchor="middle">INNER EAR</text>
+            {/* band names along the bottom, clear of every leader */}
+            <text x={172} y={516} fontSize={13} fontWeight={700} fill="#9a3412" textAnchor="middle">OUTER EAR</text>
+            <text x={422} y={516} fontSize={13} fontWeight={700} fill="#1e40af" textAnchor="middle">MIDDLE EAR</text>
+            <text x={690} y={516} fontSize={13} fontWeight={700} fill="#9d174d" textAnchor="middle">INNER EAR</text>
           </g>
         )}
 
@@ -1273,11 +1337,12 @@ export function CatalogEarCrossSectionRenderer({ figure }: { figure: EarCrossSec
           const anchor = r.side === 'l' ? 'end' : r.side === 'r' ? 'start' : 'middle';
           const tx = r.side === 'l' ? LX : r.side === 'r' ? RX : (r.lx ?? 0);
           const x1 = r.side === 'l' ? LX + 6 : r.side === 'r' ? RX - 6 : (r.lx ?? 0);
-          const y1 = r.side === 't' ? r.ly + 6 : r.ly - 4;
+          const y1 = r.side === 't' ? (r.ay > r.ly ? r.ly + 6 : r.ly - 15) : r.ly - 4;
           return (
             <g key={r.part} data-feature={N.part(r.part)} data-feature-label={String(r.part)}>
-              <line x1={x1} y1={y1} x2={r.ax} y2={r.ay} stroke={INK} strokeWidth={0.7} />
-              <text x={tx} y={r.ly} fontSize={12.5} textAnchor={anchor} fill={sFor(r.part, INK)} fontWeight={hi(r.part) ? 700 : 400}>{EAR_LABELS_R[r.part]}</text>
+              <line x1={x1} y1={y1} x2={r.ax} y2={r.ay} stroke={INK} strokeWidth={0.8} />
+              <circle cx={r.ax} cy={r.ay} r={2} fill={INK} />
+              <text x={tx} y={r.ly} fontSize={13.5} textAnchor={anchor} fill={sFor(r.part, INK)} fontWeight={hi(r.part) ? 700 : 500}>{EAR_LABELS_R[r.part]}</text>
             </g>
           );
         })}

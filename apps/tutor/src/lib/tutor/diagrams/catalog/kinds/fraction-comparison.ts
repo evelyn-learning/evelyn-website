@@ -20,8 +20,10 @@ export function solveFractionComparison(params: Record<string, unknown>): Fracti
     if (typeof d !== 'number' || !Number.isFinite(d) || d <= 0 || !Number.isInteger(d)) {
       throw new Error(`fraction_comparison: fractions[${i}].denominator must be a positive integer`);
     }
-    if (n > d) {
-      throw new Error(`fraction_comparison: fractions[${i}] is improper (${n}/${d}); split into whole + proper`);
+    // An improper fraction is drawn as whole shapes plus a part. Past a
+    // handful of wholes the picture stops being readable, so that is refused.
+    if (n / d > 6) {
+      throw new Error(`fraction_comparison: fractions[${i}] (${n}/${d}) is more than 6 wholes; too large to draw`);
     }
     return {
       numerator: n,

@@ -38,7 +38,7 @@ export function solveHeartDiagram(params: Record<string, unknown>): HeartFigure 
   const raw = Array.isArray(params.highlight) ? params.highlight
     : typeof params.highlight === 'string' ? [params.highlight] : [];
   const highlight = Array.from(new Set(raw.map((h) => ALIASES[slug(String(h))]).filter((h): h is HeartPart => Boolean(h))));
-  return { highlight, title: typeof params.title === 'string' ? params.title : undefined };
+  return { highlight, title: typeof params.title === 'string' && params.title.trim() ? params.title : 'The human heart' };
 }
 
 export const heartFeatureNames = {

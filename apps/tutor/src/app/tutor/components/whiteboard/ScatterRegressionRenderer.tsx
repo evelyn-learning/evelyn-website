@@ -6,6 +6,7 @@ import {
   scatterRegressionFeatureNames,
   type ScatterRegressionFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/math-statistics';
+import { niceTicks, formatTick, textWidth } from './_niceTicks';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_POINT = '#2563eb';
@@ -22,10 +23,10 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
   const N = scatterRegressionFeatureNames;
 
   const W = 560;
-  const H = 420;
+  const H = 436;
   const PAD_L = 60;
   const PAD_R = 24;
-  const PAD_T = 32;
+  const PAD_T = 50;
   const PAD_B = 56;
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
@@ -33,12 +34,18 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
   const xAt = (x: number) => PAD_L + ((x - xMin) / (xMax - xMin)) * plotW;
   const yAt = (y: number) => PAD_T + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
 
-  const xTicks: number[] = [];
-  const xStep = (xMax - xMin) / 5;
-  for (let i = 0; i <= 5; i += 1) xTicks.push(xMin + xStep * i);
-  const yTicks: number[] = [];
-  const yStep = (yMax - yMin) / 5;
-  for (let i = 0; i <= 5; i += 1) yTicks.push(yMin + yStep * i);
+  const { ticks: xTicks, step: xStep } = niceTicks(xMin, xMax, 6);
+  const { ticks: yTicks, step: yStep } = niceTicks(yMin, yMax, 6);
+
+  // The equation and r sit above the plot, never on the points. Side by side when both fit on
+  // one line; otherwise r takes the line above.
+  const rText = [
+    rValue !== undefined ? `r = ${Number(rValue.toFixed(3))}` : '',
+    rSquared !== undefined ? `r² = ${Number(rSquared.toFixed(3))}` : '',
+  ].filter(Boolean).join(' · ');
+  const oneLine = !equationLabel || !rText || textWidth(equationLabel, 13) + textWidth(rText, 12) + 24 <= plotW;
+  const eqY = PAD_T - 10;
+  const rY = oneLine ? PAD_T - 10 : PAD_T - 28;
 
   // Regression line endpoints clipped to viewport.
   let lineX1 = 0, lineY1 = 0, lineX2 = 0, lineY2 = 0;
@@ -134,7 +141,7 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
               <circle
                 key={`pt-${i}`}
                 cx={xAt(p.x)} cy={yAt(p.y)}
-                r={isHighlight ? 5.5 : 3.5}
+                r={isHighlight ? 5.5 : 4}
                 fill={isHighlight ? COLOR_HL : COLOR_POINT} stroke="#fff" strokeWidth={1.2}
               />
             );
@@ -147,7 +154,8 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
         {highlightPoint && (() => {
           const hlText = highlightPoint.label ?? `(${Number(highlightPoint.x.toFixed(2))}, ${Number(highlightPoint.y.toFixed(2))})`;
           const hx = xAt(highlightPoint.x);
-          const hlFlip = hx + 8 + hlText.length * 11 * 0.55 > W - 2;
+          const hlFlip = hx + 8 + textWidth(hlText, 11) > PAD_L + plotW - 2;
+          const hlBelow = yAt(highlightPoint.y) - 18 < PAD_T;
           return (
             <g
               data-feature={N.highlightPoint}
@@ -158,8 +166,8 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
               data-feature-h={32 / H}
             >
               <text
-                x={hx + (hlFlip ? -8 : 8)} y={yAt(highlightPoint.y) - 6}
-                fontSize={11} fill={COLOR_HL} fontWeight={600}
+                x={hx + (hlFlip ? -9 : 9)} y={yAt(highlightPoint.y) + (hlBelow ? 18 : -8)}
+                fontSize={11} fill="#15803d" fontWeight={600} stroke="#fff" strokeWidth={3} paintOrder="stroke"
                 textAnchor={hlFlip ? 'end' : undefined}
               >
                 {hlText}
@@ -177,7 +185,7 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
           <g key={`tx-${i}`}>
             <line x1={xAt(tx)} y1={PAD_T + plotH} x2={xAt(tx)} y2={PAD_T + plotH + 4} stroke={COLOR_AXIS} strokeWidth={1} />
             <text x={xAt(tx)} y={PAD_T + plotH + 16} fontSize={11} textAnchor="middle" fill="#374151">
-              {Number(tx.toFixed(2))}
+              {formatTick(tx, xStep)}
             </text>
           </g>
         ))}
@@ -185,7 +193,7 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
           <g key={`ty-${i}`}>
             <line x1={PAD_L - 4} y1={yAt(ty)} x2={PAD_L} y2={yAt(ty)} stroke={COLOR_AXIS} strokeWidth={1} />
             <text x={PAD_L - 6} y={yAt(ty) + 4} fontSize={11} textAnchor="end" fill="#374151">
-              {Number(ty.toFixed(2))}
+              {formatTick(ty, yStep)}
             </text>
           </g>
         ))}
@@ -193,12 +201,12 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
         {/* equation + r */}
         {equationLabel && (
           <text
-            x={PAD_L + 8} y={PAD_T + 14}
+            x={PAD_L + 2} y={eqY}
             fontSize={13} fontWeight={600} fill={COLOR_LINE}
             data-feature={N.equation}
             data-feature-label={equationLabel}
             data-feature-cx={(PAD_L + 80) / W}
-            data-feature-cy={(PAD_T + 12) / H}
+            data-feature-cy={(eqY - 4) / H}
             data-feature-w={180 / W}
             data-feature-h={18 / H}
           >
@@ -207,18 +215,16 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
         )}
         {(rValue !== undefined || rSquared !== undefined) && (
           <text
-            x={W - PAD_R - 4} y={PAD_T + 14}
-            fontSize={11} textAnchor="end" fill="#374151"
+            x={W - PAD_R - 2} y={rY}
+            fontSize={12} fontWeight={600} textAnchor="end" fill="#374151"
             data-feature={rValue !== undefined ? N.rValue : N.rSquared}
             data-feature-label={rValue !== undefined ? `r = ${rValue}` : `r² = ${rSquared}`}
             data-feature-cx={(W - PAD_R - 50) / W}
-            data-feature-cy={(PAD_T + 12) / H}
+            data-feature-cy={(rY - 4) / H}
             data-feature-w={120 / W}
             data-feature-h={18 / H}
           >
-            {rValue !== undefined && <tspan>r = {Number(rValue.toFixed(3))}</tspan>}
-            {rValue !== undefined && rSquared !== undefined && <tspan>  </tspan>}
-            {rSquared !== undefined && <tspan>r² = {Number(rSquared.toFixed(3))}</tspan>}
+            {rText}
           </text>
         )}
 

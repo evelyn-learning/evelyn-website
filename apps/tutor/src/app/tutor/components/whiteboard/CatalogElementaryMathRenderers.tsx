@@ -20,6 +20,7 @@ import {
   type TenFrameFigure,
   type BaseTenFigure,
   type CoordinateGridFigure,
+  coordinateGridStep as coordStep,
 } from '@/lib/tutor/diagrams/catalog/kinds/elementary-math';
 
 const INK = '#374151';
@@ -71,12 +72,14 @@ export function CatalogClockFaceRenderer({ figure }: { figure: ClockFaceFigure }
     );
   }
 
-  const [hx, hy] = polar(cx, cy, R * 0.55, figure.hourAngle);
-  const [mx, my] = polar(cx, cy, R * 0.82, figure.minuteAngle);
+  // Both hands stop short of the numerals (inner edge ≈ R − 50), so a hand
+  // never hides the number it points at.
+  const [hx, hy] = polar(cx, cy, R * 0.42, figure.hourAngle);
+  const [mx, my] = polar(cx, cy, R * 0.63, figure.minuteAngle);
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">{heading}</div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full max-w-[380px]"
@@ -108,7 +111,7 @@ export function CatalogClockFaceRenderer({ figure }: { figure: ClockFaceFigure }
         {/* digital time label */}
         <g data-feature={N.timeLabel} data-feature-label={`Time ${figure.timeLabel}`}>
           <rect x={cx - 52} y={cy + R + 18} width={104} height={40} rx={8} fill="#ffffff" stroke={SLATE} strokeWidth={1.5} />
-          <text x={cx} y={cy + R + 38} textAnchor="middle" dominantBaseline="central" fontSize={24} fontWeight={700} fill={INK} fontFamily="ui-monospace, monospace">{figure.timeLabel}</text>
+          <text x={cx} y={cy + R + 38} textAnchor="middle" dominantBaseline="central" fontSize={24} fontWeight={700} fill={INK} style={{ fontVariantNumeric: 'tabular-nums' }}>{figure.timeLabel}</text>
         </g>
       </svg>
     </div>
@@ -155,7 +158,7 @@ export function CatalogTenFrameRenderer({ figure }: { figure: TenFrameFigure }) 
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">{heading}</div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
@@ -180,102 +183,122 @@ export function CatalogTenFrameRenderer({ figure }: { figure: TenFrameFigure }) 
 //  base_ten_blocks
 // ══════════════════════════════════════════════════════════════════════════
 
-const U = 15; // unit-square edge in px
-
-/** A hundreds "flat": a 10×10 grid of unit squares. */
-function Flat({ x, y, color }: { x: number; y: number; color: string }) {
-  const cells: React.ReactNode[] = [];
-  for (let r = 0; r < 10; r++) {
-    for (let c = 0; c < 10; c++) {
-      cells.push(<rect key={`${r}-${c}`} x={x + c * (U * 0.6)} y={y + r * (U * 0.6)} width={U * 0.6} height={U * 0.6} fill={color} stroke="#ffffff" strokeWidth={0.6} />);
-    }
+/** A hundreds "flat": a 10×10 grid of unit squares, edge 10·c. */
+function Flat({ x, y, c, color }: { x: number; y: number; c: number; color: string }) {
+  const lines: React.ReactNode[] = [];
+  for (let k = 1; k < 10; k++) {
+    lines.push(<line key={`v${k}`} x1={x + k * c} y1={y} x2={x + k * c} y2={y + 10 * c} stroke="#ffffff" strokeWidth={0.7} />);
+    lines.push(<line key={`h${k}`} x1={x} y1={y + k * c} x2={x + 10 * c} y2={y + k * c} stroke="#ffffff" strokeWidth={0.7} />);
   }
-  return <g>{cells}<rect x={x} y={y} width={U * 6} height={U * 6} fill="none" stroke={INK} strokeWidth={1.5} /></g>;
+  return <g><rect x={x} y={y} width={10 * c} height={10 * c} fill={color} />{lines}<rect x={x} y={y} width={10 * c} height={10 * c} fill="none" stroke={INK} strokeWidth={1.5} /></g>;
 }
 
 /** A tens "rod": a 1×10 column of unit squares. */
-function Rod({ x, y, color }: { x: number; y: number; color: string }) {
-  const cells: React.ReactNode[] = [];
-  for (let r = 0; r < 10; r++) {
-    cells.push(<rect key={r} x={x} y={y + r * (U * 0.6)} width={U * 0.6} height={U * 0.6} fill={color} stroke="#ffffff" strokeWidth={0.6} />);
+function Rod({ x, y, c, color }: { x: number; y: number; c: number; color: string }) {
+  const lines: React.ReactNode[] = [];
+  for (let k = 1; k < 10; k++) {
+    lines.push(<line key={k} x1={x} y1={y + k * c} x2={x + c} y2={y + k * c} stroke="#ffffff" strokeWidth={0.7} />);
   }
-  return <g>{cells}<rect x={x} y={y} width={U * 0.6} height={U * 6} fill="none" stroke={INK} strokeWidth={1.5} /></g>;
+  return <g><rect x={x} y={y} width={c} height={10 * c} fill={color} />{lines}<rect x={x} y={y} width={c} height={10 * c} fill="none" stroke={INK} strokeWidth={1.5} /></g>;
 }
 
-/** A thousands "cube": a flat with a small isometric offset to read as 3D. */
-function Cube({ x, y, color }: { x: number; y: number; color: string }) {
-  const s = U * 6;
-  const d = U * 1.4;
+/** A thousands "cube": a flat with an oblique top and side so it reads as 3D. */
+function Cube({ x, y, c, color }: { x: number; y: number; c: number; color: string }) {
+  const s = 10 * c;
+  const d = 2.4 * c;
   return (
     <g>
       <polygon points={`${x},${y} ${x + d},${y - d} ${x + s + d},${y - d} ${x + s},${y}`} fill={color} stroke={INK} strokeWidth={1.2} opacity={0.85} />
       <polygon points={`${x + s},${y} ${x + s + d},${y - d} ${x + s + d},${y + s - d} ${x + s},${y + s}`} fill={color} stroke={INK} strokeWidth={1.2} opacity={0.65} />
-      <rect x={x} y={y} width={s} height={s} fill={color} stroke={INK} strokeWidth={1.5} />
+      <Flat x={x} y={y} c={c} color={color} />
     </g>
   );
 }
 
 export function CatalogBaseTenRenderer({ figure }: { figure: BaseTenFigure }) {
   const N = baseTenFeatureNames;
-  const W = 820;
   const heading = figure.title || `Show ${figure.value} with blocks`;
 
   // Four place columns left→right: thousands, hundreds, tens, ones.
-  const colX = [30, 290, 500, 660];
   const colLabels = ['Thousands', 'Hundreds', 'Tens', 'Ones'];
   const counts = [figure.thousands, figure.hundreds, figure.tens, figure.ones];
   const featNames = [N.thousands, N.hundreds, N.tens, N.ones];
   const colColors = [PURPLE, BLUE, GREEN, AMBER];
-  const topY = 74; // headroom for the cube's isometric top edge
-  const flatSize = U * 6;
 
-  // Row pitches per place (cubes + flats stack 2-wide; ones 2-wide; rods 1 row).
-  const cubePitch = flatSize + 34;
-  const flatPitch = flatSize + 14;
-  const onePitch = U * 0.6 + 4;
+  // Unit edge: roomy when there are few big blocks, smaller when a place
+  // holds many, so 9,999 still fits on one board.
+  const bigMax = Math.max(figure.thousands, figure.hundreds);
+  const c = bigMax <= 2 ? 9 : bigMax <= 4 ? 7.5 : 6;
+  const flat = 10 * c;
+  const depth = 2.4 * c;
+  // Big blocks sit in rows of 2 (up to 4) or 3 (5–9).
+  const perRow = (count: number) => (count <= 4 ? 2 : 3);
+  const cubeGapX = depth + 8;
+  const cubeGapY = depth + 10;
+  const flatGap = 10;
+  const rodGap = Math.max(5, c * 0.8);
+  const oneGap = 4;
 
-  // Content height needed by the tallest column, so nothing clips.
-  const colHeight = (ci: number, count: number): number => {
-    if (count === 0) return 30;
-    if (ci === 0) return Math.ceil(count / 2) * cubePitch + 20; // + iso top overhang
-    if (ci === 1) return Math.ceil(count / 2) * flatPitch;
-    if (ci === 2) return flatSize; // rods are one row, full-height
-    return Math.ceil(count / 2) * onePitch;
+  const contentW = (ci: number, count: number): number => {
+    if (count === 0) return 0;
+    if (ci === 0) { const n = Math.min(count, perRow(count)); return n * flat + (n - 1) * cubeGapX + depth; }
+    if (ci === 1) { const n = Math.min(count, perRow(count)); return n * flat + (n - 1) * flatGap; }
+    if (ci === 2) return count * c + (count - 1) * rodGap;
+    const n = Math.min(count, 3);
+    return n * c + (n - 1) * oneGap;
   };
-  const contentH = Math.max(...counts.map((c, ci) => colHeight(ci, c)));
+  const contentH = (ci: number, count: number): number => {
+    if (count === 0) return 30;
+    if (ci === 0) { const r = Math.ceil(count / perRow(count)); return r * flat + (r - 1) * cubeGapY + depth; }
+    if (ci === 1) { const r = Math.ceil(count / perRow(count)); return r * flat + (r - 1) * flatGap; }
+    if (ci === 2) return flat;
+    const r = Math.ceil(count / 3);
+    return r * c + (r - 1) * oneGap;
+  };
+
+  const COL_PAD = 22;
+  const colW = counts.map((count, ci) => Math.max(colLabels[ci].length * 15 * 0.6, contentW(ci, count)) + 2 * COL_PAD);
+  const colX: number[] = [];
+  let acc = 10;
+  for (const w of colW) { colX.push(acc + COL_PAD); acc += w; }
+  const W = acc + 10;
+  const headY = 30;
+  const topY = headY + 22 + depth; // headroom for a cube's top face
+  const bodyH = Math.max(...counts.map((count, ci) => contentH(ci, count)));
+  const H = topY + bodyH + 54;
 
   const columns: React.ReactNode[] = colX.map((cx, ci) => {
     const count = counts[ci];
     const blocks: React.ReactNode[] = [];
     for (let i = 0; i < count; i++) {
       if (ci === 0) {
-        blocks.push(<g key={i} transform={`translate(${cx + (i % 2) * (flatSize + 30)}, ${topY + Math.floor(i / 2) * cubePitch})`}><Cube x={0} y={0} color={colColors[ci]} /></g>);
+        const pr = perRow(count);
+        blocks.push(<Cube key={i} x={cx + (i % pr) * (flat + cubeGapX)} y={topY + Math.floor(i / pr) * (flat + cubeGapY)} c={c} color={colColors[ci]} />);
       } else if (ci === 1) {
-        blocks.push(<g key={i} transform={`translate(${cx + (i % 2) * (flatSize + 12)}, ${topY + Math.floor(i / 2) * flatPitch})`}><Flat x={0} y={0} color={colColors[ci]} /></g>);
+        const pr = perRow(count);
+        blocks.push(<Flat key={i} x={cx + (i % pr) * (flat + flatGap)} y={topY + Math.floor(i / pr) * (flat + flatGap)} c={c} color={colColors[ci]} />);
       } else if (ci === 2) {
-        blocks.push(<g key={i} transform={`translate(${cx + i * (U * 0.6 + 8)}, ${topY})`}><Rod x={0} y={0} color={colColors[ci]} /></g>);
+        blocks.push(<Rod key={i} x={cx + i * (c + rodGap)} y={topY} c={c} color={colColors[ci]} />);
       } else {
-        const row = Math.floor(i / 2), col = i % 2;
-        blocks.push(<rect key={i} x={cx + col * onePitch} y={topY + row * onePitch} width={U * 0.6} height={U * 0.6} fill={colColors[ci]} stroke={INK} strokeWidth={1} />);
+        const row = Math.floor(i / 3), col = i % 3;
+        blocks.push(<rect key={i} x={cx + col * (c + oneGap)} y={topY + row * (c + oneGap)} width={c} height={c} fill={colColors[ci]} stroke={INK} strokeWidth={1} />);
       }
     }
     return (
       <g key={ci} data-feature={featNames[ci]} data-feature-label={`${colLabels[ci]}: ${count}`}>
-        <text x={cx} y={34} fontSize={15} fontWeight={700} fill={colColors[ci]}>{colLabels[ci]}</text>
-        {count === 0 ? <text x={cx} y={topY + 30} fontSize={16} fill={FAINT}>0</text> : blocks}
+        <text x={cx} y={headY} fontSize={15} fontWeight={700} fill={colColors[ci]}>{colLabels[ci]}</text>
+        {count === 0 ? <text x={cx} y={topY + 14} fontSize={16} fill="#94a3b8">0</text> : blocks}
       </g>
     );
   });
 
-  const H = topY + contentH + 44;
-
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">{heading}</div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
-        style={{ maxWidth: W }}
+        style={{ maxWidth: Math.min(820, W * 1.1) }}
         data-feature={N.figure}
         data-feature-label={heading}
         data-feature-cx={0.5}
@@ -284,10 +307,10 @@ export function CatalogBaseTenRenderer({ figure }: { figure: BaseTenFigure }) {
         data-feature-h={1}
       >
         {colX.slice(1).map((cx, i) => (
-          <line key={`sep${i}`} x1={cx - 20} y1={20} x2={cx - 20} y2={H - 40} stroke={FAINT} strokeWidth={1} strokeDasharray="4 4" />
+          <line key={`sep${i}`} x1={cx - COL_PAD} y1={14} x2={cx - COL_PAD} y2={H - 44} stroke={FAINT} strokeWidth={1} strokeDasharray="4 4" />
         ))}
         {columns}
-        <text x={W / 2} y={H - 12} textAnchor="middle" fontSize={22} fontWeight={700} fill={INK}>{figure.value}</text>
+        <text x={W / 2} y={H - 14} textAnchor="middle" fontSize={22} fontWeight={700} fill={INK}>{figure.value.toLocaleString('en-US')}</text>
       </svg>
     </div>
   );
@@ -304,15 +327,33 @@ export function CatalogCoordinateGridRenderer({ figure }: { figure: CoordinateGr
   const { xMin, xMax, yMin, yMax, points, quadrants, connect } = figure;
   const heading = figure.title || 'Coordinate grid';
 
-  // Layout: fixed plot box with margins for axis labels.
-  const M = { left: 44, right: 24, top: 20, bottom: 40 };
-  const plotW = 460;
-  const plotH = 460;
+  const spanX = xMax - xMin;
+  const spanY = yMax - yMin;
+
+  // Plot box: one unit is the same length on both axes whenever the two
+  // spans are of similar size (so shapes are not stretched); a very lopsided
+  // window fills the square box on each axis independently.
+  const BOX = 460;
+  const ratio = Math.max(spanX, spanY) / Math.min(spanX, spanY);
+  const equalUnits = ratio <= 2.5;
+  const unit = BOX / Math.max(spanX, spanY);
+  const plotW = equalUnits ? spanX * unit : BOX;
+  const plotH = equalUnits ? spanY * unit : BOX;
+
+  const fmt = (v: number): string => String(Math.round(v * 1e6) / 1e6).replace(/^-/, '−');
+  const stepX = equalUnits ? (figure.step ?? coordStep(Math.max(spanX, spanY))) : coordStep(spanX);
+  const stepY = equalUnits ? stepX : coordStep(spanY);
+  const xTicks: number[] = [];
+  for (let x = Math.ceil(xMin / stepX - 1e-9) * stepX; x <= xMax + 1e-9; x += stepX) xTicks.push(Math.round(x * 1e6) / 1e6);
+  const yTicks: number[] = [];
+  for (let y = Math.ceil(yMin / stepY - 1e-9) * stepY; y <= yMax + 1e-9; y += stepY) yTicks.push(Math.round(y * 1e6) / 1e6);
+
+  // Margins: room for the y numerals when the y-axis sits on the left edge.
+  const yNumW = Math.max(...yTicks.map((t) => fmt(t).length), 1) * 12 * 0.6 + 12;
+  const M = { left: Math.max(34, xMin >= 0 ? yNumW + 6 : 30), right: 30, top: 26, bottom: 34 };
   const W = M.left + plotW + M.right;
   const H = M.top + plotH + M.bottom;
 
-  const spanX = xMax - xMin;
-  const spanY = yMax - yMin;
   // data → pixel
   const px = (x: number): number => M.left + ((x - xMin) / spanX) * plotW;
   const py = (y: number): number => M.top + (1 - (y - yMin) / spanY) * plotH;
@@ -321,20 +362,77 @@ export function CatalogCoordinateGridRenderer({ figure }: { figure: CoordinateGr
   const axisY = py(Math.min(Math.max(0, yMin), yMax));
   const axisX = px(Math.min(Math.max(0, xMin), xMax));
 
-  // Integer tick values across each span (cap density).
-  const step = Math.max(1, Math.ceil(Math.max(spanX, spanY) / 20));
-  const xTicks: number[] = [];
-  for (let x = Math.ceil(xMin / step) * step; x <= xMax; x += step) xTicks.push(x);
-  const yTicks: number[] = [];
-  for (let y = Math.ceil(yMin / step) * step; y <= yMax; y += step) yTicks.push(y);
+  // x numerals: every k-th when neighbours would touch.
+  const xNumW = Math.max(...xTicks.map((t) => fmt(t).length), 1) * 12 * 0.6;
+  const xGap = (stepX / spanX) * plotW;
+  let xEvery = 1;
+  while (xEvery * xGap < xNumW + 6 && xEvery < 10) xEvery++;
+  const yGap = (stepY / spanY) * plotH;
+  let yEvery = 1;
+  while (yEvery * yGap < 15 && yEvery < 10) yEvery++;
+  const showX = (x: number) => Math.round(x / stepX) % xEvery === 0;
+  const showY = (y: number) => Math.round(y / stepY) % yEvery === 0;
 
+  const closed = connect && figure.closed === true && points.length >= 3;
   const polyPts = connect && points.length >= 2
     ? points.map((p) => `${px(p.x)},${py(p.y)}`).join(' ')
     : null;
 
+  // ── Point labels ──────────────────────────────────────────────────────
+  // Each label tries the four diagonal spots around its point, then right
+  // above / below it, and takes the first that stays inside the canvas and
+  // clear of every other point and every label already placed.
+  type Box = { l: number; r: number; t: number; b: number };
+  const hit = (a: Box, b: Box) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+  const FS = 14;
+  const pointBoxes: Box[] = points.map((p) => ({ l: px(p.x) - 7, r: px(p.x) + 7, t: py(p.y) - 7, b: py(p.y) + 7 }));
+  const placedBoxes: Box[] = [];
+  const labelSpots = points.map((p, i) => {
+    const nm = p.label || `(${fmt(p.x)}, ${fmt(p.y)})`;
+    const w = nm.length * FS * 0.6;
+    const cx = px(p.x);
+    const cy = py(p.y);
+    const cands: Array<{ x: number; y: number; anchor: 'start' | 'end' | 'middle' }> = [
+      { x: cx + 9, y: cy - 9, anchor: 'start' },
+      { x: cx - 9, y: cy - 9, anchor: 'end' },
+      { x: cx + 9, y: cy + 19, anchor: 'start' },
+      { x: cx - 9, y: cy + 19, anchor: 'end' },
+      { x: cx, y: cy - 12, anchor: 'middle' },
+      { x: cx, y: cy + 23, anchor: 'middle' },
+      { x: cx + 9, y: cy - 25, anchor: 'start' },
+      { x: cx - 9, y: cy - 25, anchor: 'end' },
+      { x: cx + 9, y: cy + 35, anchor: 'start' },
+      { x: cx - 9, y: cy + 35, anchor: 'end' },
+    ];
+    const boxOf = (c: (typeof cands)[number]): Box => {
+      const l = c.anchor === 'start' ? c.x : c.anchor === 'end' ? c.x - w : c.x - w / 2;
+      return { l, r: l + w, t: c.y - FS, b: c.y + 3 };
+    };
+    const inside = (b: Box) => b.l >= 2 && b.r <= W - 2 && b.t >= 2 && b.b <= H - 2;
+    let best = cands[0];
+    let bestScore = Infinity;
+    for (const c of cands) {
+      const b = boxOf(c);
+      let score = 0;
+      if (!inside(b)) score += 100;
+      placedBoxes.forEach((o) => { if (hit(b, o)) score += 10; });
+      pointBoxes.forEach((o, j) => { if (j !== i && hit(b, o)) score += 6; });
+      if (score < bestScore) { bestScore = score; best = c; }
+      if (score === 0) break;
+    }
+    // last resort: pull a too-wide label back inside the canvas
+    let b = boxOf(best);
+    let x = best.x;
+    if (b.l < 2) x += 2 - b.l;
+    if (b.r > W - 2) x -= b.r - (W - 2);
+    b = { ...b, l: b.l + (x - best.x), r: b.r + (x - best.x) };
+    placedBoxes.push(b);
+    return { nm, x, y: best.y, anchor: best.anchor };
+  });
+
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">{heading}</div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
@@ -359,53 +457,58 @@ export function CatalogCoordinateGridRenderer({ figure }: { figure: CoordinateGr
 
         {/* axes */}
         <g data-feature={N.xAxis} data-feature-label="x-axis">
-          <line x1={M.left} y1={axisY} x2={M.left + plotW} y2={axisY} stroke={SLATE} strokeWidth={2.5} />
-          <polygon points={`${M.left + plotW + 8},${axisY} ${M.left + plotW},${axisY - 5} ${M.left + plotW},${axisY + 5}`} fill={SLATE} />
-          <text x={M.left + plotW + 4} y={axisY - 9} textAnchor="middle" fontSize={15} fontStyle="italic" fill={SLATE}>x</text>
+          <line x1={M.left} y1={axisY} x2={M.left + plotW + 6} y2={axisY} stroke={SLATE} strokeWidth={2.5} />
+          <polygon points={`${M.left + plotW + 14},${axisY} ${M.left + plotW + 5},${axisY - 5} ${M.left + plotW + 5},${axisY + 5}`} fill={SLATE} />
+          <text x={M.left + plotW + 20} y={axisY + 5} textAnchor="middle" fontSize={15} fontStyle="italic" fill={SLATE}>x</text>
         </g>
         <g data-feature={N.yAxis} data-feature-label="y-axis">
-          <line x1={axisX} y1={M.top + plotH} x2={axisX} y2={M.top} stroke={SLATE} strokeWidth={2.5} />
-          <polygon points={`${axisX},${M.top - 8} ${axisX - 5},${M.top} ${axisX + 5},${M.top}`} fill={SLATE} />
-          <text x={axisX + 8} y={M.top + 4} textAnchor="start" fontSize={15} fontStyle="italic" fill={SLATE}>y</text>
+          <line x1={axisX} y1={M.top + plotH} x2={axisX} y2={M.top - 6} stroke={SLATE} strokeWidth={2.5} />
+          <polygon points={`${axisX},${M.top - 14} ${axisX - 5},${M.top - 5} ${axisX + 5},${M.top - 5}`} fill={SLATE} />
+          <text x={axisX + 10} y={M.top - 8} textAnchor="start" fontSize={15} fontStyle="italic" fill={SLATE}>y</text>
         </g>
 
-        {/* tick labels */}
-        {xTicks.filter((x) => x !== 0).map((x) => (
-          <text key={`tx${x}`} x={px(x)} y={axisY + 16} textAnchor="middle" fontSize={12} fill={SLATE}>{x}</text>
-        ))}
-        {yTicks.filter((y) => y !== 0).map((y) => (
-          <text key={`ty${y}`} x={axisX - 8} y={py(y) + 4} textAnchor="end" fontSize={12} fill={SLATE}>{y}</text>
-        ))}
-        {/* origin label */}
-        {xMin <= 0 && yMin <= 0 && (
-          <text x={axisX - 6} y={axisY + 16} textAnchor="end" fontSize={12} fill={SLATE}>{quadrants === 1 ? '0' : 'O'}</text>
-        )}
+        {/* tick numerals (white halo so a gridline never strikes through one) */}
+        <g fontSize={12} fill={SLATE} stroke="#ffffff" strokeWidth={3} paintOrder="stroke" strokeLinejoin="round">
+          {xTicks.filter((x) => x !== 0 && showX(x)).map((x) => (
+            <text key={`tx${x}`} x={px(x)} y={axisY + 16} textAnchor="middle">{fmt(x)}</text>
+          ))}
+          {yTicks.filter((y) => y !== 0 && showY(y)).map((y) => (
+            <text key={`ty${y}`} x={axisX - 8} y={py(y) + 4} textAnchor="end">{fmt(y)}</text>
+          ))}
+          {/* origin label */}
+          {xMin <= 0 && yMin <= 0 && xMax >= 0 && yMax >= 0 && (
+            <text x={axisX - 7} y={axisY + 16} textAnchor="end">{quadrants === 1 ? '0' : 'O'}</text>
+          )}
+        </g>
 
-        {/* connecting polyline */}
-        {polyPts && <polyline points={polyPts} fill="none" stroke={SLATE} strokeWidth={2} strokeDasharray="6 4" />}
+        {/* connecting path */}
+        {polyPts && (closed
+          ? <polygon points={polyPts} fill="rgba(71,85,105,0.08)" stroke={SLATE} strokeWidth={2} strokeLinejoin="round" />
+          : <polyline points={polyPts} fill="none" stroke={SLATE} strokeWidth={2} strokeLinejoin="round" />)}
 
         {/* plotted points */}
         {points.map((p, i) => {
           const cx = px(p.x);
           const cy = py(p.y);
           const color = p.color || POINT_COLORS[i % POINT_COLORS.length];
-          const nm = p.label || `(${p.x}, ${p.y})`;
-          // Offset the label to the upper-right, flipping near the right/top
-          // edges. The flip threshold is width-aware (2026-08-07 clip audit:
-          // the old fixed 60u guard was sized for "(x, y)" — longer labels
-          // overflowed before the flip kicked in), and the final x is clamped
-          // into the viewBox either way.
-          const labelW = nm.length * 14 * 0.55;
-          const flipX = cx + 8 + labelW > W - 3;
-          const flipY = cy < M.top + 24;
-          const lx = flipX
-            ? Math.min(W - 3, Math.max(cx - 8, 3 + labelW))
-            : Math.max(3, Math.min(cx + 8, W - 3 - labelW));
-          const ly = flipY ? cy + 18 : cy - 10;
+          const spot = labelSpots[i];
           return (
-            <g key={`p${i}`} data-feature={N.point(i)} data-feature-label={`${nm} at (${p.x}, ${p.y})`}>
+            <g key={`p${i}`} data-feature={N.point(i)} data-feature-label={`${spot.nm} at (${p.x}, ${p.y})`}>
               <circle cx={cx} cy={cy} r={5.5} fill={color} stroke="#fff" strokeWidth={1.5} />
-              <text x={lx} y={ly} textAnchor={flipX ? 'end' : 'start'} fontSize={14} fontWeight={700} fill={color}>{nm}</text>
+              <text
+                x={spot.x}
+                y={spot.y}
+                textAnchor={spot.anchor}
+                fontSize={FS}
+                fontWeight={700}
+                fill={color}
+                stroke="#ffffff"
+                strokeWidth={3.5}
+                paintOrder="stroke"
+                strokeLinejoin="round"
+              >
+                {spot.nm}
+              </text>
             </g>
           );
         })}

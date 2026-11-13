@@ -162,9 +162,9 @@ const fxSource = READ('src/app/tutor/components/whiteboard/ForeignExchangeRender
   expect(names.has(adAsFeatureNames.eqInitial), 'ad_as has initial equilibrium');
   expect(names.has(adAsFeatureNames.eqFinal), 'ad_as has final equilibrium');
   expect(adasSource.includes('adAsFeatureNames'), 'AD/AS renderer imports helper');
-  expect(adasSource.includes('data-feature={N.ad}'), 'AD/AS renderer sets data-feature on AD');
-  expect(adasSource.includes('data-feature={N.sras}'), 'AD/AS renderer sets data-feature on SRAS');
-  expect(adasSource.includes('data-feature={N.lras}'), 'AD/AS renderer sets data-feature on LRAS');
+  expect((adasSource.includes('data-feature={N.ad}') || adasSource.includes('feature: N.ad')), 'AD/AS renderer sets data-feature on AD');
+  expect((adasSource.includes('data-feature={N.sras}') || adasSource.includes('feature: N.sras')), 'AD/AS renderer sets data-feature on SRAS');
+  expect((adasSource.includes('data-feature={N.lras}') || adasSource.includes('feature: N.lras')), 'AD/AS renderer sets data-feature on LRAS');
 }
 
 // ── 4. money_market ─────────────────────────────────────────────────────────
@@ -181,8 +181,8 @@ const fxSource = READ('src/app/tutor/components/whiteboard/ForeignExchangeRender
   expect(names.has(moneyMarketFeatureNames.md), 'money_market has Md');
   expect(names.has(moneyMarketFeatureNames.msShifted), 'money_market has shifted Ms');
   expect(mmSource.includes('moneyMarketFeatureNames'), 'MM renderer imports helper');
-  expect(mmSource.includes('data-feature={N.ms}'), 'MM renderer sets data-feature on Ms');
-  expect(mmSource.includes('data-feature={N.md}'), 'MM renderer sets data-feature on Md');
+  expect((mmSource.includes('data-feature={N.ms}') || mmSource.includes('feature: N.ms')), 'MM renderer sets data-feature on Ms');
+  expect((mmSource.includes('data-feature={N.md}') || mmSource.includes('feature: N.md')), 'MM renderer sets data-feature on Md');
 }
 
 // ── 5. loanable_funds ───────────────────────────────────────────────────────
@@ -199,8 +199,8 @@ const fxSource = READ('src/app/tutor/components/whiteboard/ForeignExchangeRender
   expect(names.has(loanableFundsFeatureNames.demand), 'loanable_funds has demand');
   expect(names.has(loanableFundsFeatureNames.demandShifted), 'loanable_funds has shifted D');
   expect(lfSource.includes('loanableFundsFeatureNames'), 'LF renderer imports helper');
-  expect(lfSource.includes('data-feature={N.supply}'), 'LF renderer sets data-feature on supply');
-  expect(lfSource.includes('data-feature={N.demand}'), 'LF renderer sets data-feature on demand');
+  expect((lfSource.includes('data-feature={N.supply}') || lfSource.includes('feature: N.supply')), 'LF renderer sets data-feature on supply');
+  expect((lfSource.includes('data-feature={N.demand}') || lfSource.includes('feature: N.demand')), 'LF renderer sets data-feature on demand');
 }
 
 // ── 6. phillips_curve ───────────────────────────────────────────────────────
@@ -219,7 +219,7 @@ const fxSource = READ('src/app/tutor/components/whiteboard/ForeignExchangeRender
   expect(names.has(phillipsCurveFeatureNames.lrpc), 'phillips_curve has LRPC');
   expect(names.has(phillipsCurveFeatureNames.srpcShifted), 'phillips_curve has shifted SRPC');
   expect(pcSource.includes('phillipsCurveFeatureNames'), 'PC renderer imports helper');
-  expect(pcSource.includes('data-feature={N.srpc}'), 'PC renderer sets data-feature on SRPC');
+  expect((pcSource.includes('data-feature={N.srpc}') || pcSource.includes('feature: N.srpc')), 'PC renderer sets data-feature on SRPC');
 }
 
 // ── 7. foreign_exchange_market ──────────────────────────────────────────────
@@ -240,7 +240,7 @@ const fxSource = READ('src/app/tutor/components/whiteboard/ForeignExchangeRender
   const supply = manifest.find((f) => f.name === fxMarketFeatureNames.supply);
   expect(supply?.displayName === 'SUSD', 'fx supply displayName includes currency');
   expect(fxSource.includes('fxMarketFeatureNames'), 'FX renderer imports helper');
-  expect(fxSource.includes('data-feature={N.supply}'), 'FX renderer sets data-feature on supply');
+  expect((fxSource.includes('data-feature={N.supply}') || fxSource.includes('feature: N.supply')), 'FX renderer sets data-feature on supply');
 }
 
 // ── 8. dispatcher cases ─────────────────────────────────────────────────────

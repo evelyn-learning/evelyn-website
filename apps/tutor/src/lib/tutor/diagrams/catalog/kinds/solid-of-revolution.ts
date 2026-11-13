@@ -25,6 +25,10 @@ export interface SolidOfRevolutionFigure {
   b: number;
   /** Where the representative slice is drawn (axis coordinate). */
   representativeAt: number;
+  /** Shell method drawn from curves in the variable ACROSS the axis (y = f(x) about the y-axis: the usual way a
+   *  shell problem is written). `top` and `bottom` are the region's two edges as [radius, height along the axis];
+   *  `at` is the radius of the highlighted shell. Present ⇒ the renderer draws the solid from these. */
+  shell?: { top: Array<[number, number]>; bottom: Array<[number, number]>; at: number };
   funcLabel?: string;
   innerLabel?: string;
   axisLabel?: string;
@@ -50,8 +54,22 @@ function toPairs(v: unknown): Array<[number, number]> | null {
 
 /** A curve given as a formula ("sqrt(x)", "x^2", "2") sampled into a radius profile. A handful of points typed
  *  by hand drew y = √x as a cone with straight sides (AP Calc BC, 2026-11-11); the formula draws the curve. */
-const PROFILE_SAMPLES = 40;
-function sampleProfile(expr: unknown, from: number, to: number, variable: 'x' | 'y', what: string): Array<[number, number]> | null {
+const PROFILE_SAMPLES = 60;
+/** Where a profile is sampled: evenly, plus extra points crowded into each end, where a curve like √x turns
+ *  fastest (evenly spaced points drew the nose of y = √x as a pointed polygon). */
+function sampleFractions(): number[] {
+  const out: number[] = [];
+  for (let i = 0; i <= PROFILE_SAMPLES; i++) out.push(i / PROFILE_SAMPLES);
+  for (let j = 1; j < 12; j++) { const t = ((j / 12) ** 2) / PROFILE_SAMPLES; out.push(t, 1 - t); }
+  return out.sort((p, q) => p - q);
+}
+/** The variable a formula is written in: 'x', 'y', or null when it names neither (a constant) or both. */
+function variableOf(expr: unknown): 'x' | 'y' | null {
+  const bare = String(expr).replace(/^\s*[xy]\s*=/i, '').replace(/\\[A-Za-z]+/g, ' ').replace(/sqrt|sin|cos|tan|ln|log|abs|exp|pi/gi, ' ');
+  const hasX = /x/i.test(bare); const hasY = /y/i.test(bare);
+  return hasX && !hasY ? 'x' : hasY && !hasX ? 'y' : null;
+}
+function sampleProfile(expr: unknown, from: number, to: number, variable: 'x' | 'y', what: string, signed = false): Array<[number, number]> | null {
   if (typeof expr !== 'string' && typeof expr !== 'number') return null;
   const written = String(expr).replace(/−/g, '-').replace(/√\s*\(/g, '\\sqrt(').replace(/√\s*([A-Za-z0-9.]+)/g, '\\sqrt{$1}')
     .replace(/(?<![\\A-Za-z])(sqrt|sin|cos|tan|ln|log|abs)\s*\(/g, '\\$1(').replace(/π/g, '\\pi');
@@ -60,23 +78,49 @@ function sampleProfile(expr: unknown, from: number, to: number, variable: 'x' | 
   let f: (v: number) => number;
   try { f = new Function(variable, `"use strict"; return (${js});`) as (v: number) => number; } catch { throw new Error(`solid_of_revolution: ${what} "${String(expr).slice(0, 40)}" could not be read`); }
   const pts: Array<[number, number]> = [];
-  for (let i = 0; i <= PROFILE_SAMPLES; i++) {
-    const u = from + ((to - from) * i) / PROFILE_SAMPLES; const r = f(u);
+  for (const t of sampleFractions()) {
+    const u = from + (to - from) * t; let r: number;
+    try { r = f(u); } catch { throw new Error(`solid_of_revolution: ${what} "${String(expr).slice(0, 40)}" must be written in ${variable} alone`); }
     if (!Number.isFinite(r)) throw new Error(`solid_of_revolution: ${what} has no value at ${variable} = ${Math.round(u * 1000) / 1000}`);
-    pts.push([u, Math.abs(r)]);
+    pts.push([u, signed ? r : Math.abs(r)]);
   }
   return pts;
 }
 
 export function solveSolidOfRevolution(params: Record<string, unknown>): SolidOfRevolutionFigure {
-  const variable: 'x' | 'y' = params.axis === 'y' ? 'y' : 'x';
+  const axisVariable: 'x' | 'y' = params.axis === 'y' ? 'y' : 'x';
+  // A formula is read in the variable it is written in. The schema asks for "an expression in x" whatever the
+  // axis, so `x^2 + 1` about the y-axis used to be evaluated with no x defined and the figure never drew.
+  const written = variableOf(params.outer);
+  const variable: 'x' | 'y' = written ?? axisVariable;
   const from = Number(params.from); const to = Number(params.to);
+  // Shells: the curve is given ACROSS the axis (y = f(x) about the y-axis), so from/to are radii and the curve
+  // gives the height. Drawn from the two edges of the region instead of a radius profile.
+  if (params.method === 'shell' && typeof params.outer === 'string' && written !== null && written !== axisVariable) {
+    if (!(Number.isFinite(from) && Number.isFinite(to) && to > from && from >= 0)) throw new Error('solid_of_revolution: for shells, from and to are the nearest and farthest distance from the axis (0 ≤ from < to)');
+    const top = sampleProfile(params.outer, from, to, variable, 'outer', true)!;
+    const bottomGiven = typeof params.inner === 'string' || typeof params.inner === 'number' ? sampleProfile(params.inner, from, to, variable, 'inner', true) : null;
+    const bottom: Array<[number, number]> = bottomGiven ?? top.map(([u]) => [u, 0]);
+    const heights = [...top, ...bottom].map((p) => p[1]);
+    const lo = Math.min(...heights); const hi = Math.max(...heights);
+    if (!(hi > lo)) throw new Error('solid_of_revolution: the region between the two curves has no height');
+    const at = typeof params.representativeAt === 'number' && Number.isFinite(params.representativeAt) ? Math.max(from, Math.min(to, params.representativeAt)) : (from + to) / 2;
+    return {
+      outer: [[lo, to], [hi, to]],
+      axis: axisVariable, method: 'shell', a: lo, b: hi, representativeAt: (lo + hi) / 2,
+      shell: { top, bottom, at },
+      funcLabel: typeof params.funcLabel === 'string' ? params.funcLabel : undefined,
+      innerLabel: typeof params.innerLabel === 'string' ? params.innerLabel : undefined,
+      axisLabel: typeof params.axisLabel === 'string' ? params.axisLabel : undefined,
+      title: typeof params.title === 'string' ? params.title : undefined,
+    };
+  }
   const byFormula = typeof params.outer === 'string' || typeof params.outer === 'number';
   if (byFormula && !(Number.isFinite(from) && Number.isFinite(to) && to > from)) throw new Error('solid_of_revolution: from and to are the bounds along the axis, with to greater than from');
   const outer = byFormula ? sampleProfile(params.outer, from, to, variable, 'outer') : toPairs(params.outer ?? params.curve);
   if (!outer) throw new Error('solid_of_revolution: outer is the outer curve as an expression in x (e.g. "sqrt(x)") with from and to, or ≥2 points of [u, r]');
   outer.sort((p, q) => p[0] - q[0]);
-  const inner = typeof params.inner === 'string' || typeof params.inner === 'number' ? sampleProfile(params.inner, byFormula ? from : outer[0][0], byFormula ? to : outer[outer.length - 1][0], variable, 'inner') : toPairs(params.inner);
+  const inner = typeof params.inner === 'string' || typeof params.inner === 'number' ? sampleProfile(params.inner, byFormula ? from : outer[0][0], byFormula ? to : outer[outer.length - 1][0], variableOf(params.inner) ?? variable, 'inner') : toPairs(params.inner);
   if (inner) inner.sort((p, q) => p[0] - q[0]);
 
   const axis: RevolutionAxis = params.axis === 'y' ? 'y' : 'x';

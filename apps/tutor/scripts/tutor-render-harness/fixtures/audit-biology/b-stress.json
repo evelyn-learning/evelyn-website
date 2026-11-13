@@ -1,0 +1,1447 @@
+[
+ {
+  "tool": "show_cell_diagram",
+  "label": "cell-plant-highlight",
+  "args": {
+   "type": "plant",
+   "title": "Where photosynthesis happens",
+   "highlight": [
+    {
+     "organelle": "chloroplast",
+     "note": "Contains chlorophyll; captures light energy to make glucose during photosynthesis",
+     "color": "#4ade80"
+    },
+    {
+     "organelle": "vacuole",
+     "note": "Stores water and keeps the cell firm (turgor pressure)"
+    },
+    {
+     "organelle": "cell-wall",
+     "note": "Rigid cellulose layer that supports and protects the cell"
+    },
+    {
+     "organelle": "mitochondria",
+     "note": "Releases energy from glucose by aerobic respiration"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_cell_diagram",
+  "label": "cell-animal-highlight",
+  "args": {
+   "type": "animal",
+   "highlight": [
+    {
+     "organelle": "nucleus",
+     "note": "Holds the DNA and controls the activities of the whole cell"
+    },
+    {
+     "organelle": "ribosomes",
+     "note": "Sites of protein synthesis, free in the cytoplasm or attached to the rough endoplasmic reticulum"
+    },
+    {
+     "organelle": "er",
+     "note": "Transports proteins"
+    },
+    {
+     "organelle": "golgi",
+     "note": "Modifies, sorts and packages proteins into vesicles for export"
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_pedigree",
+  "label": "pedigree-stress",
+  "args": {
+   "title": "Haemophilia in Queen Victoria's descendants (X-linked recessive)",
+   "individuals": [
+    {
+     "id": "gf",
+     "sex": "male",
+     "status": "deceased",
+     "generation": 1,
+     "position": 0,
+     "label": "Grandfather Albert"
+    },
+    {
+     "id": "gm",
+     "sex": "female",
+     "status": "carrier",
+     "generation": 1,
+     "position": 1,
+     "label": "Grandmother Victoria"
+    },
+    {
+     "id": "u1",
+     "sex": "male",
+     "status": "affected",
+     "generation": 2,
+     "position": 0,
+     "label": "Leopold"
+    },
+    {
+     "id": "a1",
+     "sex": "female",
+     "status": "carrier",
+     "generation": 2,
+     "position": 1,
+     "label": "Alice"
+    },
+    {
+     "id": "a1h",
+     "sex": "male",
+     "status": "unaffected",
+     "generation": 2,
+     "position": 2,
+     "label": "Louis IV"
+    },
+    {
+     "id": "a2",
+     "sex": "female",
+     "status": "unaffected",
+     "generation": 2,
+     "position": 3,
+     "label": "Helena"
+    },
+    {
+     "id": "a3",
+     "sex": "female",
+     "status": "carrier",
+     "generation": 2,
+     "position": 4,
+     "label": "Beatrice"
+    },
+    {
+     "id": "a3h",
+     "sex": "male",
+     "status": "unaffected",
+     "generation": 2,
+     "position": 5,
+     "label": "Henry of Battenberg"
+    },
+    {
+     "id": "u2",
+     "sex": "male",
+     "status": "unaffected",
+     "generation": 2,
+     "position": 6,
+     "label": "Arthur"
+    },
+    {
+     "id": "x",
+     "sex": "unknown",
+     "status": "unaffected",
+     "generation": 2,
+     "position": 7,
+     "label": "Unknown"
+    },
+    {
+     "id": "c1",
+     "sex": "female",
+     "status": "carrier",
+     "generation": 3,
+     "position": 0,
+     "label": "Irene"
+    },
+    {
+     "id": "c2",
+     "sex": "male",
+     "status": "affected",
+     "generation": 3,
+     "position": 1,
+     "label": "Friedrich"
+    },
+    {
+     "id": "c3",
+     "sex": "female",
+     "status": "carrier",
+     "generation": 3,
+     "position": 2,
+     "label": "Alexandra"
+    },
+    {
+     "id": "c3h",
+     "sex": "male",
+     "status": "unaffected",
+     "generation": 3,
+     "position": 3,
+     "label": "Nicholas II"
+    },
+    {
+     "id": "c4",
+     "sex": "female",
+     "status": "carrier",
+     "generation": 3,
+     "position": 4,
+     "label": "Victoria Eugenie"
+    },
+    {
+     "id": "c5",
+     "sex": "male",
+     "status": "affected",
+     "generation": 3,
+     "position": 5,
+     "label": "Leopold"
+    },
+    {
+     "id": "c6",
+     "sex": "male",
+     "status": "affected",
+     "generation": 3,
+     "position": 6,
+     "label": "Maurice"
+    },
+    {
+     "id": "d1",
+     "sex": "female",
+     "status": "unaffected",
+     "generation": 4,
+     "position": 0,
+     "label": "Olga"
+    },
+    {
+     "id": "d2",
+     "sex": "female",
+     "status": "unaffected",
+     "generation": 4,
+     "position": 1,
+     "label": "Tatiana"
+    },
+    {
+     "id": "d3",
+     "sex": "female",
+     "status": "unaffected",
+     "generation": 4,
+     "position": 2,
+     "label": "Maria"
+    },
+    {
+     "id": "d4",
+     "sex": "female",
+     "status": "unaffected",
+     "generation": 4,
+     "position": 3,
+     "label": "Anastasia"
+    },
+    {
+     "id": "d5",
+     "sex": "male",
+     "status": "affected",
+     "generation": 4,
+     "position": 4,
+     "label": "Alexei"
+    }
+   ],
+   "marriages": [
+    {
+     "pair": [
+      "gf",
+      "gm"
+     ]
+    },
+    {
+     "pair": [
+      "a1",
+      "a1h"
+     ]
+    },
+    {
+     "pair": [
+      "a3h",
+      "a3"
+     ]
+    },
+    {
+     "pair": [
+      "c3",
+      "c3h"
+     ],
+     "consanguineous": true
+    }
+   ],
+   "children": [
+    {
+     "parents": [
+      "gf",
+      "gm"
+     ],
+     "childId": "u1"
+    },
+    {
+     "parents": [
+      "gf",
+      "gm"
+     ],
+     "childId": "a1"
+    },
+    {
+     "parents": [
+      "gf",
+      "gm"
+     ],
+     "childId": "a2"
+    },
+    {
+     "parents": [
+      "gf",
+      "gm"
+     ],
+     "childId": "a3"
+    },
+    {
+     "parents": [
+      "gf",
+      "gm"
+     ],
+     "childId": "u2"
+    },
+    {
+     "parents": [
+      "a1",
+      "a1h"
+     ],
+     "childId": "c1"
+    },
+    {
+     "parents": [
+      "a1",
+      "a1h"
+     ],
+     "childId": "c2"
+    },
+    {
+     "parents": [
+      "a1",
+      "a1h"
+     ],
+     "childId": "c3"
+    },
+    {
+     "parents": [
+      "a3",
+      "a3h"
+     ],
+     "childId": "c4"
+    },
+    {
+     "parents": [
+      "a3",
+      "a3h"
+     ],
+     "childId": "c5"
+    },
+    {
+     "parents": [
+      "a3",
+      "a3h"
+     ],
+     "childId": "c6"
+    },
+    {
+     "parents": [
+      "c3",
+      "c3h"
+     ],
+     "childId": "d1"
+    },
+    {
+     "parents": [
+      "c3",
+      "c3h"
+     ],
+     "childId": "d2"
+    },
+    {
+     "parents": [
+      "c3",
+      "c3h"
+     ],
+     "childId": "d3"
+    },
+    {
+     "parents": [
+      "c3",
+      "c3h"
+     ],
+     "childId": "d4"
+    },
+    {
+     "parents": [
+      "c3",
+      "c3h"
+     ],
+     "childId": "d5"
+    }
+   ],
+   "notes": "Carrier mothers pass the allele to about half of their sons."
+  }
+ },
+ {
+  "tool": "show_dna",
+  "label": "dna-helix-stress",
+  "args": {
+   "rungs": 30,
+   "notes": "Each full turn of the helix is about 10 base pairs."
+  }
+ },
+ {
+  "tool": "show_dna",
+  "label": "dna-basepairs-stress",
+  "args": {
+   "title": "Transcription of a 36-base gene fragment",
+   "mode": "base-pairs",
+   "sequence": "ATGGCCTTAGCGATCGGATACCGTTAGCATGCATAA",
+   "mrna": "",
+   "notes": "The mRNA is built from the template (bottom) strand."
+  }
+ },
+ {
+  "tool": "show_food_web",
+  "label": "foodweb-stress",
+  "args": {
+   "title": "Kelp-forest food web",
+   "species": [
+    {
+     "id": "phyto",
+     "label": "Phytoplankton",
+     "level": 1
+    },
+    {
+     "id": "kelp",
+     "label": "Giant kelp",
+     "level": 1
+    },
+    {
+     "id": "seagrass",
+     "label": "Seagrass meadow",
+     "level": 1
+    },
+    {
+     "id": "algae",
+     "label": "Algae",
+     "level": 1
+    },
+    {
+     "id": "zoo",
+     "label": "Zooplankton",
+     "level": 2
+    },
+    {
+     "id": "urchin",
+     "label": "Purple sea urchin",
+     "level": 2
+    },
+    {
+     "id": "snail",
+     "label": "Sea snail",
+     "level": 2
+    },
+    {
+     "id": "krill",
+     "label": "Antarctic krill",
+     "level": 2
+    },
+    {
+     "id": "mussel",
+     "label": "Mussels",
+     "level": 2
+    },
+    {
+     "id": "limpet",
+     "label": "Limpets",
+     "level": 2
+    },
+    {
+     "id": "anchovy",
+     "label": "Anchovy",
+     "level": 2
+    },
+    {
+     "id": "crab",
+     "label": "Dungeness crab",
+     "level": 3
+    },
+    {
+     "id": "star",
+     "label": "Sunflower sea star",
+     "level": 3
+    },
+    {
+     "id": "herring",
+     "label": "Herring",
+     "level": 3
+    },
+    {
+     "id": "squid",
+     "label": "Squid",
+     "level": 3
+    },
+    {
+     "id": "otter",
+     "label": "Sea otter",
+     "level": 3
+    },
+    {
+     "id": "seal",
+     "label": "Harbour seal",
+     "level": 4
+    },
+    {
+     "id": "salmon",
+     "label": "Chinook salmon",
+     "level": 4
+    },
+    {
+     "id": "gull",
+     "label": "Western gull",
+     "level": 4
+    },
+    {
+     "id": "orca",
+     "label": "Orca",
+     "level": 5
+    },
+    {
+     "id": "shark",
+     "label": "Great white shark",
+     "level": 5
+    }
+   ],
+   "edges": [
+    {
+     "from": "phyto",
+     "to": "zoo"
+    },
+    {
+     "from": "phyto",
+     "to": "krill"
+    },
+    {
+     "from": "phyto",
+     "to": "mussel"
+    },
+    {
+     "from": "phyto",
+     "to": "anchovy"
+    },
+    {
+     "from": "kelp",
+     "to": "urchin"
+    },
+    {
+     "from": "kelp",
+     "to": "snail"
+    },
+    {
+     "from": "seagrass",
+     "to": "snail"
+    },
+    {
+     "from": "algae",
+     "to": "limpet"
+    },
+    {
+     "from": "algae",
+     "to": "urchin"
+    },
+    {
+     "from": "zoo",
+     "to": "herring"
+    },
+    {
+     "from": "zoo",
+     "to": "anchovy"
+    },
+    {
+     "from": "krill",
+     "to": "squid"
+    },
+    {
+     "from": "krill",
+     "to": "herring"
+    },
+    {
+     "from": "urchin",
+     "to": "otter"
+    },
+    {
+     "from": "urchin",
+     "to": "star"
+    },
+    {
+     "from": "snail",
+     "to": "crab"
+    },
+    {
+     "from": "mussel",
+     "to": "star"
+    },
+    {
+     "from": "mussel",
+     "to": "crab"
+    },
+    {
+     "from": "limpet",
+     "to": "gull"
+    },
+    {
+     "from": "anchovy",
+     "to": "salmon"
+    },
+    {
+     "from": "anchovy",
+     "to": "gull"
+    },
+    {
+     "from": "crab",
+     "to": "otter"
+    },
+    {
+     "from": "crab",
+     "to": "seal"
+    },
+    {
+     "from": "herring",
+     "to": "salmon"
+    },
+    {
+     "from": "herring",
+     "to": "seal"
+    },
+    {
+     "from": "squid",
+     "to": "seal"
+    },
+    {
+     "from": "squid",
+     "to": "salmon"
+    },
+    {
+     "from": "star",
+     "to": "gull"
+    },
+    {
+     "from": "otter",
+     "to": "orca"
+    },
+    {
+     "from": "otter",
+     "to": "shark"
+    },
+    {
+     "from": "seal",
+     "to": "orca"
+    },
+    {
+     "from": "seal",
+     "to": "shark"
+    },
+    {
+     "from": "salmon",
+     "to": "orca"
+    },
+    {
+     "from": "salmon",
+     "to": "seal"
+    },
+    {
+     "from": "herring",
+     "to": "squid"
+    }
+   ],
+   "notes": "Arrows point from the organism eaten to the organism that eats it."
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "punnett-asym",
+  "args": {
+   "type": "punnett_square",
+   "params": {
+    "parentA": "Tt",
+    "parentB": "tt",
+    "title": "Test cross: heterozygous tall \u00d7 homozygous short pea plants"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "nutrient-nitrogen-stress",
+  "args": {
+   "type": "nutrient_cycle",
+   "params": {
+    "title": "The nitrogen cycle",
+    "reservoirs": [
+     {
+      "label": "Atmospheric nitrogen (N\u2082)",
+      "description": "78% of the air"
+     },
+     {
+      "label": "Nitrogen-fixing bacteria in root nodules"
+     },
+     {
+      "label": "Ammonium (NH\u2084\u207a) in soil"
+     },
+     {
+      "label": "Nitrites (NO\u2082\u207b)"
+     },
+     {
+      "label": "Nitrates (NO\u2083\u207b)",
+      "description": "taken up by plant roots"
+     },
+     {
+      "label": "Plants"
+     },
+     {
+      "label": "Animals"
+     },
+     {
+      "label": "Decomposers (bacteria and fungi)"
+     }
+    ],
+    "fluxes": [
+     {
+      "from": "Atmospheric nitrogen (N\u2082)",
+      "to": "Nitrogen-fixing bacteria in root nodules",
+      "label": "nitrogen fixation"
+     },
+     {
+      "from": "Nitrogen-fixing bacteria in root nodules",
+      "to": "Ammonium (NH\u2084\u207a) in soil",
+      "label": "ammonia released"
+     },
+     {
+      "from": "Ammonium (NH\u2084\u207a) in soil",
+      "to": "Nitrites (NO\u2082\u207b)",
+      "label": "nitrification (Nitrosomonas)"
+     },
+     {
+      "from": "Nitrites (NO\u2082\u207b)",
+      "to": "Nitrates (NO\u2083\u207b)",
+      "label": "nitrification (Nitrobacter)"
+     },
+     {
+      "from": "Nitrates (NO\u2083\u207b)",
+      "to": "Plants",
+      "label": "assimilation"
+     },
+     {
+      "from": "Plants",
+      "to": "Animals",
+      "label": "feeding"
+     },
+     {
+      "from": "Animals",
+      "to": "Decomposers (bacteria and fungi)",
+      "label": "death and excretion"
+     },
+     {
+      "from": "Plants",
+      "to": "Decomposers (bacteria and fungi)",
+      "label": "leaf litter"
+     },
+     {
+      "from": "Decomposers (bacteria and fungi)",
+      "to": "Ammonium (NH\u2084\u207a) in soil",
+      "label": "ammonification"
+     },
+     {
+      "from": "Nitrates (NO\u2083\u207b)",
+      "to": "Atmospheric nitrogen (N\u2082)",
+      "label": "denitrification"
+     },
+     {
+      "from": "Atmospheric nitrogen (N\u2082)",
+      "to": "Nitrates (NO\u2083\u207b)",
+      "label": "lightning"
+     },
+     {
+      "from": "Ammonium (NH\u2084\u207a) in soil",
+      "to": "Plants",
+      "label": "uptake"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "nutrient-two",
+  "args": {
+   "type": "nutrient_cycle",
+   "params": {
+    "reservoirs": [
+     {
+      "label": "Atmosphere"
+     },
+     {
+      "label": "Ocean"
+     }
+    ],
+    "fluxes": [
+     {
+      "from": "Atmosphere",
+      "to": "Ocean",
+      "label": "CO\u2082 dissolves"
+     },
+     {
+      "from": "Ocean",
+      "to": "Atmosphere",
+      "label": "CO\u2082 released"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "pop-pyramid-stress",
+  "args": {
+   "type": "population_pyramid",
+   "params": {
+    "title": "Japan 2023: an ageing, shrinking population",
+    "mode": "count",
+    "ageGroupLabel": "Age group (years)",
+    "xLabel": "Number of people",
+    "ageGroups": [
+     [
+      "0-4",
+      2400000,
+      2300000
+     ],
+     [
+      "5-9",
+      2550000,
+      2450000
+     ],
+     [
+      "10-14",
+      2700000,
+      2600000
+     ],
+     [
+      "15-19",
+      2800000,
+      2700000
+     ],
+     [
+      "20-24",
+      3000000,
+      2900000
+     ],
+     [
+      "25-29",
+      3300000,
+      3200000
+     ],
+     [
+      "30-34",
+      3700000,
+      3600000
+     ],
+     [
+      "35-39",
+      3900000,
+      3850000
+     ],
+     [
+      "40-44",
+      4300000,
+      4250000
+     ],
+     [
+      "45-49",
+      4800000,
+      4750000
+     ],
+     [
+      "50-54",
+      4300000,
+      4300000
+     ],
+     [
+      "55-59",
+      3900000,
+      3950000
+     ],
+     [
+      "60-64",
+      3700000,
+      3850000
+     ],
+     [
+      "65-69",
+      4100000,
+      4400000
+     ],
+     [
+      "70-74",
+      4600000,
+      5100000
+     ],
+     [
+      "75-79",
+      3400000,
+      4100000
+     ],
+     [
+      "80-84",
+      2500000,
+      3400000
+     ],
+     [
+      "85-89",
+      1500000,
+      2500000
+     ],
+     [
+      "90-94",
+      600000,
+      1400000
+     ],
+     [
+      "95-99",
+      150000,
+      480000
+     ],
+     [
+      "100+",
+      12000,
+      78000
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "climate-stress",
+  "args": {
+   "type": "climate_diagram",
+   "params": {
+    "title": "Subarctic (boreal forest / taiga) climate",
+    "location": "Fairbanks, Alaska",
+    "tempUnit": "\u00b0F",
+    "precipUnit": "in",
+    "months": [
+     [
+      "Jan",
+      -8,
+      0.6
+     ],
+     [
+      "Feb",
+      -1,
+      0.4
+     ],
+     [
+      "Mar",
+      12,
+      0.3
+     ],
+     [
+      "Apr",
+      33,
+      0.3
+     ],
+     [
+      "May",
+      50,
+      0.6
+     ],
+     [
+      "Jun",
+      61,
+      1.4
+     ],
+     [
+      "Jul",
+      63,
+      2.2
+     ],
+     [
+      "Aug",
+      57,
+      1.9
+     ],
+     [
+      "Sep",
+      45,
+      1.1
+     ],
+     [
+      "Oct",
+      25,
+      0.8
+     ],
+     [
+      "Nov",
+      4,
+      0.7
+     ],
+     [
+      "Dec",
+      -4,
+      0.6
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "heart-highlight",
+  "args": {
+   "type": "heart_diagram",
+   "params": {
+    "title": "Path of blood through the right side of the heart, then to the lungs",
+    "highlight": [
+     "right_atrium",
+     "right_ventricle",
+     "pulmonary_artery",
+     "vena_cava"
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "heart-highlight-left",
+  "args": {
+   "type": "heart_diagram",
+   "params": {
+    "highlight": [
+     "left_ventricle",
+     "aorta",
+     "pulmonary_veins",
+     "la"
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "neuron-highlight",
+  "args": {
+   "type": "neuron_diagram",
+   "params": {
+    "title": "How myelin speeds up the nerve impulse (saltatory conduction)",
+    "highlight": [
+     "myelin_sheath",
+     "node_of_ranvier",
+     "synapse",
+     "dendrites"
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "brain-lobes-highlight",
+  "args": {
+   "type": "brain_regions",
+   "params": {
+    "title": "Which part of the brain processes what we see?",
+    "highlight": [
+     "occipital_lobe",
+     "cerebellum",
+     "brain_stem"
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "membrane-active",
+  "args": {
+   "type": "cell_membrane",
+   "params": {
+    "mode": "active",
+    "title": "The sodium\u2013potassium pump moves ions against their concentration gradient"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "membrane-facilitated",
+  "args": {
+   "type": "cell_membrane",
+   "params": {
+    "mode": "facilitated"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "membrane-diffusion",
+  "args": {
+   "type": "cell_membrane",
+   "params": {
+    "mode": "diffusion"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "mitosis-phase",
+  "args": {
+   "type": "mitosis",
+   "params": {
+    "phase": "anaphase",
+    "title": "Anaphase: sister chromatids are pulled to opposite poles of the cell"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "meiosis-crossing",
+  "args": {
+   "type": "meiosis",
+   "params": {
+    "stage": "crossing_over"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "dna-replication-noenz",
+  "args": {
+   "type": "dna_replication",
+   "params": {
+    "showEnzymes": false,
+    "title": "Why one new strand is made in pieces"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "protein-translation-only",
+  "args": {
+   "type": "protein_synthesis",
+   "params": {
+    "stage": "translation",
+    "title": "Translation: the ribosome reads mRNA codons and tRNA brings the matching amino acids"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "protein-transcription-only",
+  "args": {
+   "type": "protein_synthesis",
+   "params": {
+    "stage": "transcription"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "enzyme-induced",
+  "args": {
+   "type": "enzyme_action",
+   "params": {
+    "model": "induced_fit",
+    "title": "Induced fit: the active site changes shape as the substrate binds"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "cell-cycle-highlight-m",
+  "args": {
+   "type": "cell_cycle",
+   "params": {
+    "highlight": "M",
+    "title": "Where in the cycle does the cell actually divide?"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "gene-expression-on",
+  "args": {
+   "type": "gene_expression",
+   "params": {
+    "state": "on",
+    "title": "lac operon switched ON: lactose (allolactose) is present, so the repressor lets go"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "leaf-highlight",
+  "args": {
+   "type": "leaf_cross_section",
+   "params": {
+    "highlight": [
+     "stoma",
+     "guard_cell",
+     "air_space",
+     "xylem"
+    ],
+    "showGasExchange": true,
+    "title": "How carbon dioxide reaches the palisade cells: stomata, guard cells and air spaces"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "nephron-highlight",
+  "args": {
+   "type": "nephron",
+   "params": {
+    "highlight": [
+     "loop_of_henle",
+     "descending_limb",
+     "ascending_limb",
+     "collecting_duct"
+    ],
+    "title": "The loop of Henle builds the salt gradient that lets the collecting duct save water"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "digestive-highlight",
+  "args": {
+   "type": "digestive_system",
+   "params": {
+    "highlight": [
+     "liver",
+     "gallbladder",
+     "pancreas",
+     "small_intestine"
+    ],
+    "title": "Accessory organs release bile and enzymes into the small intestine"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "circulatory-highlight",
+  "args": {
+   "type": "circulatory_system",
+   "params": {
+    "highlight": [
+     "pulmonary_loop",
+     "pulmonary_artery",
+     "right_ventricle",
+     "lungs"
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "respiratory-highlight",
+  "args": {
+   "type": "respiratory_system",
+   "params": {
+    "highlight": [
+     "alveoli",
+     "bronchioles",
+     "diaphragm",
+     "trachea"
+    ],
+    "title": "Air travels down the trachea to the alveoli, where gases are exchanged"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "flower-highlight",
+  "args": {
+   "type": "flower_structure",
+   "params": {
+    "highlight": [
+     "stamen",
+     "carpel",
+     "ovule"
+    ],
+    "title": "Male and female parts of the flower"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "energy-pyramid-stress",
+  "args": {
+   "type": "energy_pyramid",
+   "params": {
+    "title": "Energy flow through a Silver Springs freshwater ecosystem",
+    "startEnergy": 20810,
+    "efficiency": 0.16,
+    "units": "kcal/m\u00b2/yr",
+    "levels": [
+     {
+      "label": "Producers",
+      "organisms": "eelgrass, algae, phytoplankton"
+     },
+     {
+      "label": "Primary consumers",
+      "organisms": "snails, insect larvae, herbivorous fish and turtles"
+     },
+     {
+      "label": "Secondary consumers",
+      "organisms": "sunfish, small bass"
+     },
+     {
+      "label": "Tertiary consumers",
+      "organisms": "largemouth bass, gar"
+     },
+     {
+      "label": "Quaternary consumers",
+      "organisms": "alligators"
+     },
+     {
+      "label": "Decomposers and detritivores",
+      "organisms": "bacteria, crayfish"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "energy-pyramid-two",
+  "args": {
+   "type": "energy_pyramid",
+   "params": {
+    "levels": [
+     {
+      "label": "Grass"
+     },
+     {
+      "label": "Cows"
+     }
+    ],
+    "startEnergy": 1000,
+    "units": "J",
+    "showEnergy": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "eye-highlight",
+  "args": {
+   "type": "eye_cross_section",
+   "params": {
+    "highlight": [
+     "lens",
+     "ciliary_body",
+     "suspensory_ligaments",
+     "fovea",
+     "blind_spot"
+    ],
+    "showLightPath": true,
+    "title": "Accommodation: how the lens changes shape to focus light on the fovea"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "ear-highlight",
+  "args": {
+   "type": "ear_cross_section",
+   "params": {
+    "highlight": [
+     "malleus",
+     "incus",
+     "stapes",
+     "cochlea",
+     "oval_window"
+    ],
+    "showRegions": false,
+    "title": "The ossicles pass vibrations from the eardrum to the cochlea"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "life-cycle-stress",
+  "args": {
+   "type": "life_cycle",
+   "params": {
+    "title": "Life cycle of the malaria parasite (Plasmodium)",
+    "stages": [
+     {
+      "label": "Sporozoites injected",
+      "description": "an infected mosquito bites a person"
+     },
+     {
+      "label": "Liver stage",
+      "description": "parasites multiply inside liver cells"
+     },
+     {
+      "label": "Merozoites released",
+      "description": "they burst out and invade red blood cells"
+     },
+     {
+      "label": "Red blood cell cycle",
+      "description": "repeated rounds cause the fevers"
+     },
+     {
+      "label": "Gametocytes",
+      "description": "sexual forms appear in the blood"
+     },
+     {
+      "label": "Mosquito takes blood",
+      "description": "gametocytes enter the mosquito gut"
+     },
+     {
+      "label": "Fertilisation",
+      "description": "zygote forms in the mosquito"
+     },
+     {
+      "label": "Oocyst",
+      "description": "produces thousands of sporozoites"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "body-system-stress",
+  "args": {
+   "type": "body_system",
+   "params": {
+    "system": "Endocrine",
+    "title": "The endocrine system: glands and the hormones they release",
+    "parts": [
+     {
+      "label": "Hypothalamus",
+      "description": "links the nervous and endocrine systems; controls the pituitary gland with releasing hormones"
+     },
+     {
+      "label": "Pituitary gland",
+      "description": "the master gland: growth hormone, ADH, FSH, LH, TSH"
+     },
+     {
+      "label": "Thyroid",
+      "description": "thyroxine sets the metabolic rate"
+     },
+     {
+      "label": "Adrenal glands",
+      "description": "adrenaline (fight or flight) and cortisol"
+     },
+     {
+      "label": "Pancreas (islets of Langerhans)",
+      "description": "insulin lowers and glucagon raises blood glucose"
+     },
+     {
+      "label": "Ovaries",
+      "description": "oestrogen and progesterone"
+     },
+     {
+      "label": "Testes",
+      "description": "testosterone"
+     }
+    ]
+   }
+  }
+ }
+]

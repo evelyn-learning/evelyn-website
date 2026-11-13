@@ -49,7 +49,10 @@ export interface SolarSystemFigure {
 export function solveSolarSystem(params: Record<string, unknown>): SolarSystemFigure {
   let highlight: string[] = [];
   if (Array.isArray(params.highlight)) {
-    highlight = (params.highlight as unknown[]).filter((p): p is string => typeof p === 'string' && PLANETS.includes(p));
+    // Case-insensitive ("earth" highlights Earth), returned in canonical spelling.
+    highlight = (params.highlight as unknown[])
+      .map((p) => (typeof p === 'string' ? PLANETS.find((name) => name.toLowerCase() === p.trim().toLowerCase()) : undefined))
+      .filter((p): p is string => typeof p === 'string');
   }
   return { highlight, title: typeof params.title === 'string' ? params.title : undefined };
 }

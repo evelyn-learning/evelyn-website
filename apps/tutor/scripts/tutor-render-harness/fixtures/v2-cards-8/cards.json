@@ -1,0 +1,4 @@
+[
+ {"tool":"show_function_graph","label":"asymptotes","args":{"xRange":[-6,12],"yRange":[-5,5],"functions":[{"expr":"1/(x-5)","label":"f(x) = 1/(x − 5)"},{"expr":"x = 5","label":"vertical asymptote","lineStyle":"dashed"},{"expr":"0","label":"horizontal asymptote","lineStyle":"dashed"}]}},
+ {"tool":"show_function_graph","label":"piecewise","args":{"xRange":[-4,4],"yRange":[-2,10],"functions":[{"expr":"x^2","label":"x² for x ≤ 0","domain":[-4,0]},{"expr":"2x+1","label":"2x + 1 for x > 0","domain":[0,4]}],"points":[{"x":0,"y":0,"label":"included"},{"x":0,"y":1,"label":"left out","open":true}]}}
+]

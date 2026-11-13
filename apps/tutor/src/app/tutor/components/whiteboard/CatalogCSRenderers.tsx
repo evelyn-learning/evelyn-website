@@ -19,51 +19,231 @@ import {
 } from '@/lib/tutor/diagrams/catalog/kinds/cs';
 import { layoutFlowchart } from './flowchart-layout';
 
+// ── shared text helpers ───────────────────────────────────────────────────
+/** Word wrap by character count (labels are short; no hyphenation). The lines are then
+ *  evened out, so a label never ends in a one-word orphan line. */
+function wrapWords(text: string, maxChars: number): string[] {
+  const first = wrapGreedy(text, maxChars);
+  if (first.length < 2) return first;
+  let best = first;
+  for (let m = maxChars - 1; m >= Math.ceil(text.length / first.length); m--) {
+    const next = wrapGreedy(text, m);
+    if (next.length !== first.length || Math.max(...next.map((l) => l.length)) > maxChars) break;
+    best = next;
+  }
+  return best;
+}
+function wrapGreedy(text: string, maxChars: number): string[] {
+  const words = (text || '').trim().split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let cur = '';
+  for (const w of words) {
+    if (!cur) cur = w;
+    else if ((cur + ' ' + w).length <= maxChars) cur += ' ' + w;
+    else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  return lines.length ? lines : [''];
+}
+/** White halo behind a label so a line passing under it never strikes it through. */
+const HALO = { paintOrder: 'stroke' as const, stroke: '#ffffff', strokeWidth: 4, strokeLinejoin: 'round' as const };
+/** An orthogonal polyline with rounded corners. */
+function roundedPath(pts: Array<[number, number]>, r = 7): string {
+  const p = pts.filter((q, i) => i === 0 || Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]) > 0.01);
+  if (p.length < 2) return '';
+  let d = `M ${p[0][0]} ${p[0][1]}`;
+  for (let i = 1; i < p.length - 1; i++) {
+    const [x0, y0] = p[i - 1]; const [x1, y1] = p[i]; const [x2, y2] = p[i + 1];
+    const l1 = Math.hypot(x1 - x0, y1 - y0); const l2 = Math.hypot(x2 - x1, y2 - y1);
+    const rr = Math.min(r, l1 / 2, l2 / 2);
+    const ax = x1 - ((x1 - x0) / l1) * rr; const ay = y1 - ((y1 - y0) / l1) * rr;
+    const bx = x1 + ((x2 - x1) / l2) * rr; const by = y1 + ((y2 - y1) / l2) * rr;
+    d += ` L ${ax} ${ay} Q ${x1} ${y1} ${bx} ${by}`;
+  }
+  const last = p[p.length - 1];
+  return d + ` L ${last[0]} ${last[1]}`;
+}
+
 // ── Flowchart ─────────────────────────────────────────────────────────────
+const FC_FONT = 13;
+const FC_LINE_H = 17;
+const FC_CHAR_W = 7.3;
+const FC_LABEL_CHAR_W = 6.5;
+interface FcGeom { lines: string[]; w: number; h: number }
+/** A node is sized to its (wrapped) text: long text wraps instead of shrinking. */
+function fcGeom(n: FlowchartNode): FcGeom {
+  const decision = n.type === 'decision';
+  const lines = wrapWords(n.text, decision ? 22 : 30);
+  const textW = Math.max(...lines.map((l) => l.length)) * FC_CHAR_W;
+  const textH = lines.length * FC_LINE_H;
+  if (decision) {
+    // The text block must fit inside the diamond: at half the text height the diamond is
+    // (1 − textH/h) of its full width.
+    const h = textH + 36;
+    return { lines, h, w: Math.max(120, Math.round((textW * h) / (h - textH)) + 20) };
+  }
+  return { lines, w: Math.max(110, Math.round(textW) + 34), h: Math.max(44, textH + 24) };
+}
+
 export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFigure }) {
   const { nodes, edges, title } = figure;
   const N = flowchartSimpleFeatureNames;
-  const NODE_H = 44;
-  const ROW_H = 90;
-  const GAP = 28; // horizontal gap between packed siblings in a row
-  // Per-rank packing layout (see layoutFlowchart): each node is sized to its
-  // label and every row is packed so siblings never overlap — regardless of
-  // node type or fan-out. Replaces the old stagger layout, which stacked all
-  // of a non-decision parent's children at a single x (total occlusion) and
-  // spaced decision branches by a fixed gap narrower than the labels.
-  const widths = new Map(nodes.map((n) => [n.id, estNodeWidth(n.text)]));
-  const { positions, maxDepth, minX, maxX } = layoutFlowchart(nodes, edges, widths, ROW_H, GAP);
-  // Reserve a right-side gutter when the graph has back-edges OR
-  // skip-edges (forward edges that jump more than one row — e.g. a
-  // decision branch going straight to End past a process row). Both
-  // route through the gutter to avoid crossing intermediate nodes.
-  const isGutterEdge = (e: FlowchartEdge) => {
-    const a = positions.get(e.from);
-    const b = positions.get(e.to);
-    if (!a || !b) return false;
-    if (b.y < a.y) return true; // back edge
-    if ((b.y - a.y) > ROW_H * 1.5) return true; // skip edge
-    return false;
+  const ROW_GAP = 46;
+  const GAP = 30;
+  const NOMINAL_ROW = 100;
+  const geom = new Map(nodes.map((n) => [n.id, fcGeom(n)]));
+  const typeOf = new Map(nodes.map((n) => [n.id, n.type]));
+  const widths = new Map(nodes.map((n) => [n.id, geom.get(n.id)!.w]));
+  // Ranks and x positions come from the layered layout; y is recomputed here so a row
+  // is as tall as its tallest node.
+  const base = layoutFlowchart(nodes, edges, widths, NOMINAL_ROW, GAP);
+  const depthOf = new Map<string, number>();
+  for (const n of nodes) depthOf.set(n.id, Math.round((base.positions.get(n.id)!.y - 60) / NOMINAL_ROW));
+  const maxDepth = base.maxDepth;
+  const rowH: number[] = Array.from({ length: maxDepth + 1 }, () => 44);
+  for (const n of nodes) { const d = depthOf.get(n.id)!; rowH[d] = Math.max(rowH[d], geom.get(n.id)!.h); }
+  const rowCy: number[] = [];
+  let run = 16;
+  for (let d = 0; d <= maxDepth; d++) { rowCy[d] = run + rowH[d] / 2; run += rowH[d] + ROW_GAP; }
+  const contentBottom = run - ROW_GAP;
+  const pos = new Map<string, { x: number; y: number }>();
+  for (const n of nodes) pos.set(n.id, { x: base.positions.get(n.id)!.x, y: rowCy[depthOf.get(n.id)!] });
+  const rowTop = (d: number) => rowCy[d] - rowH[d] / 2;
+  const rowBottom = (d: number) => rowCy[d] + rowH[d] / 2;
+
+  /** y of a node's outline directly above/below a point dx away from its centre. */
+  const edgeY = (id: string, dx: number, dir: 1 | -1) => {
+    const g = geom.get(id)!; const p = pos.get(id)!;
+    if (typeOf.get(id) === 'decision') return p.y + dir * (g.h / 2) * Math.max(0, 1 - Math.abs(dx) / (g.w / 2));
+    return p.y + dir * (g.h / 2);
   };
-  const needsGutter = edges.some(isGutterEdge);
-  // Gutter-routed edge labels render anchor=start just right of the gutter
-  // line, so the gutter must fit the longest such label (~6.6px/char at
-  // fontSize 11, cf. estNodeWidth) — a fixed 100 clipped anything past ~6
-  // characters at the right viewBox edge.
-  const longestGutterLabel = needsGutter
-    ? Math.max(0, ...edges.filter(isGutterEdge).map((e) => (e.label ?? '').length))
-    : 0;
-  const rightGutter = needsGutter ? Math.max(100, 56 + Math.round(longestGutterLabel * 6.6) + 8) : 20;
-  const layoutSpan = maxX - minX; // outer-edge to outer-edge (minX/maxX already include half-widths)
-  const W = Math.max(600, layoutSpan + 40 + rightGutter);
-  const H = 60 + (maxDepth + 1) * ROW_H;
-  // Center the layout within (0, W - rightGutter), so the back-edge
-  // gutter on the right doesn't shove the layout left of center.
-  const usableCenter = (W - rightGutter) / 2;
-  const layoutCenter = (minX + maxX) / 2;
-  const shiftX = usableCenter - layoutCenter;
-  for (const p of positions.values()) p.x += shiftX;
-  const BACK_EDGE_X = W - rightGutter + 50; // 50 into the gutter (≡ old W-50 at the default 100 gutter)
+
+  type Routed = {
+    e: FlowchartEdge; d: string; lx: number; ly: number; anchor: 'start' | 'end' | 'middle';
+  };
+  const routed: Routed[] = [];
+
+  // Edges that cannot be drawn as one straight segment between neighbouring rows (loops
+  // back, jumps over a row) travel in a lane of their own outside the chart, so they
+  // never cut through a box and never merge with an edge going somewhere else.
+  type LaneEdge = { e: FlowchartEdge; side: 1 | -1; exitBlocked: boolean; entryBlocked: boolean; span: number };
+  const laneEdges: LaneEdge[] = [];
+  const blocked = (id: string, side: 1 | -1) => {
+    const p = pos.get(id)!; const d = depthOf.get(id)!;
+    return nodes.some((o) => o.id !== id && depthOf.get(o.id) === d && (pos.get(o.id)!.x - p.x) * side > 0);
+  };
+  for (const e of edges) {
+    const da = depthOf.get(e.from)!; const db = depthOf.get(e.to)!;
+    const a = pos.get(e.from)!; const b = pos.get(e.to)!;
+    if (e.from === e.to) continue;
+    if (db === da + 1) continue;
+    const cost = (side: 1 | -1) => (blocked(e.from, side) ? 1 : 0) + (blocked(e.to, side) ? 1 : 0);
+    const cr = cost(1); const cl = cost(-1);
+    let side: 1 | -1;
+    if (cr !== cl) side = cr < cl ? 1 : -1;
+    else if (db <= da) side = 1;
+    else side = b.x < a.x ? -1 : 1;
+    laneEdges.push({ e, side, exitBlocked: blocked(e.from, side), entryBlocked: blocked(e.to, side), span: Math.abs(db - da) });
+  }
+  // One lane per (side, target): edges into the same box on the same side join; others stay apart.
+  const laneKeys: Array<{ key: string; side: 1 | -1; span: number }> = [];
+  for (const le of laneEdges) {
+    const key = `${le.side}:${le.e.to}`;
+    const found = laneKeys.find((k) => k.key === key);
+    if (found) found.span = Math.max(found.span, le.span);
+    else laneKeys.push({ key, side: le.side, span: le.span });
+  }
+  laneKeys.sort((p, q) => p.span - q.span);
+  const laneIndex = new Map<string, number>();
+  const count: Record<string, number> = { '1': 0, '-1': 0 };
+  for (const k of laneKeys) { laneIndex.set(k.key, count[String(k.side)]); count[String(k.side)] += 1; }
+  // A label on an edge that leaves straight for its lane is written along that first stretch:
+  // the lanes start far enough out for it to fit before the first lane line.
+  const LANE_STEP = 18;
+  const laneFirst = (side: 1 | -1) => {
+    let first = 26;
+    for (const le of laneEdges) {
+      if (le.side !== side || le.exitBlocked || !le.e.label) continue;
+      const a = pos.get(le.e.from)!; const ga = geom.get(le.e.from)!;
+      const edgeX = a.x + side * (ga.w / 2);
+      const gapToBound = side === 1 ? base.maxX - edgeX : edgeX - base.minX;
+      first = Math.max(first, Math.min(130, le.e.label.length * FC_LABEL_CHAR_W + 18 - gapToBound));
+    }
+    return first;
+  };
+  const LANE_FIRST = { '1': laneFirst(1), '-1': laneFirst(-1) };
+  const laneX = (side: 1 | -1, idx: number) =>
+    side === 1 ? base.maxX + LANE_FIRST['1'] + idx * LANE_STEP : base.minX - LANE_FIRST['-1'] - idx * LANE_STEP;
+
+  for (const e of edges) {
+    const a = pos.get(e.from)!; const b = pos.get(e.to)!;
+    const ga = geom.get(e.from)!; const gb = geom.get(e.to)!;
+    const da = depthOf.get(e.from)!; const db = depthOf.get(e.to)!;
+    if (e.from === e.to) {
+      const x = a.x + ga.w / 2 - (typeOf.get(e.from) === 'decision' ? ga.w / 4 : 0);
+      const off = typeOf.get(e.from) === 'decision' ? ga.h / 4 : 9;
+      routed.push({ e, d: `M ${x} ${a.y - off} C ${x + 40} ${a.y - 34} ${x + 40} ${a.y + 34} ${x + 1} ${a.y + off}`, lx: x + 36, ly: a.y + 4, anchor: 'start' });
+      continue;
+    }
+    if (db === da + 1) {
+      const x1 = a.x; const y1 = edgeY(e.from, 0, 1);
+      const x2 = b.x; const y2 = edgeY(e.to, 0, -1) - 1;
+      const t = 0.4;
+      const leftward = x2 < x1 - 1;
+      const slanted = Math.abs(x2 - x1) > 1;
+      routed.push({
+        e, d: `M ${x1} ${y1} L ${x2} ${y2}`,
+        lx: x1 + (x2 - x1) * t + (leftward ? -9 : 9) + (slanted ? (leftward ? -2 : 2) : 0),
+        ly: y1 + (y2 - y1) * t + 4 - (slanted ? 5 : 0),
+        anchor: leftward ? 'end' : 'start',
+      });
+      continue;
+    }
+    const le = laneEdges.find((l) => l.e === e)!;
+    const s = le.side;
+    const idx = laneIndex.get(`${s}:${e.to}`)!;
+    const lx = laneX(s, idx);
+    const pts: Array<[number, number]> = [];
+    let labelX: number; let labelY: number; let anchor: 'start' | 'end';
+    if (!le.exitBlocked) {
+      const sx = typeOf.get(e.from) === 'decision' ? a.x + s * (ga.w / 2) : a.x + s * (ga.w / 2);
+      pts.push([sx, a.y], [lx, a.y]);
+      labelX = sx + s * 8; labelY = a.y - 7; anchor = s === 1 ? 'start' : 'end';
+    } else {
+      const dx = s * Math.min(ga.w / 4, 40);
+      const y0 = edgeY(e.from, dx, 1);
+      const yGap = rowBottom(da) + 12 + (idx % 3) * 6;
+      pts.push([a.x + dx, y0], [a.x + dx, yGap], [lx, yGap]);
+      labelX = a.x + dx - s * 7; labelY = Math.min(y0 + 14, yGap - 1); anchor = s === 1 ? 'end' : 'start';
+    }
+    if (!le.entryBlocked) {
+      pts.push([lx, b.y], [b.x + s * (gb.w / 2) + s * 1, b.y]);
+    } else {
+      const dx = s * Math.min(gb.w / 4, 40);
+      const yGap = rowTop(db) - 12 - (idx % 3) * 6;
+      pts.push([lx, yGap], [b.x + dx, yGap], [b.x + dx, edgeY(e.to, dx, -1) - 1]);
+    }
+    routed.push({ e, d: roundedPath(pts), lx: labelX, ly: labelY, anchor });
+  }
+
+  // The drawing's extent: boxes, lanes and labels.
+  let minX = base.minX; let maxX = base.maxX;
+  if (count['1'] > 0) maxX = Math.max(maxX, laneX(1, count['1'] - 1));
+  if (count['-1'] > 0) minX = Math.min(minX, laneX(-1, count['-1'] - 1));
+  for (const r of routed) {
+    if (!r.e.label) continue;
+    const w = r.e.label.length * FC_LABEL_CHAR_W;
+    const l = r.anchor === 'start' ? r.lx : r.anchor === 'end' ? r.lx - w : r.lx - w / 2;
+    minX = Math.min(minX, l); maxX = Math.max(maxX, l + w);
+    if (r.e.from === r.e.to) maxX = Math.max(maxX, r.lx + w);
+  }
+  const PAD = 14;
+  const vbX = minX - PAD;
+  const W = maxX - minX + PAD * 2;
+  const hasBottomExit = laneEdges.some((l) => l.exitBlocked && depthOf.get(l.e.from) === maxDepth);
+  const H = contentBottom + (hasBottomExit ? 40 : 14);
+  const fx = (x: number) => (x - vbX) / W;
+
   return (
     <div
       className="flowchart-renderer w-full flex flex-col items-center"
@@ -71,105 +251,59 @@ export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFi
       data-feature-label={title || 'flowchart'}
     >
       {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
-        {edges.map((e, i) => {
-          const a = positions.get(e.from)!;
-          const b = positions.get(e.to)!;
-          const isBackEdge = b.y < a.y;
-          // Skip edge: forward but jumps more than one row (e.g. decision's
-          // "no" branch going straight to end while the "yes" branch
-          // passes through a process row). Route through the right gutter
-          // so the label doesn't land inside the skipped node's box.
-          const isSkipEdge = !isBackEdge && (b.y - a.y) > ROW_H * 1.5;
-          const edgeLabel = e.label || `${e.from} → ${e.to}`;
-          if (isBackEdge || isSkipEdge) {
-            // Route around the right side: leave from source-right,
-            // travel down/up the gutter, enter target from the right.
-            const sourceRightX = a.x + (widths.get(e.from) ?? 200) / 2;
-            const targetRightX = b.x + (widths.get(e.to) ?? 200) / 2;
-            const d = `
-              M ${sourceRightX} ${a.y}
-              L ${BACK_EDGE_X} ${a.y}
-              L ${BACK_EDGE_X} ${b.y}
-              L ${targetRightX} ${b.y}
-            `;
-            return (
-              <g
-                key={i}
-                data-feature={N.edge(e.from, e.to)}
-                data-feature-label={edgeLabel}
-                data-feature-cx={(BACK_EDGE_X + 6) / W}
-                data-feature-cy={((a.y + b.y) / 2) / H}
-                data-feature-w={80 / W}
-                data-feature-h={Math.abs(a.y - b.y) / H}
-              >
-                <path d={d} fill="none" stroke="#374151" strokeWidth={1.5} markerEnd="url(#fc-arr)" />
-                {e.label && (
-                  <text x={BACK_EDGE_X + 6} y={(a.y + b.y) / 2 + 4} fontSize={11} fill="#dc2626" fontWeight={600}>{e.label}</text>
-                )}
-              </g>
-            );
-          }
-          // Forward edge (target below source) — straight vertical line.
+      <svg viewBox={`${vbX} 0 ${W} ${H}`} className="w-full" style={{ maxWidth: Math.min(720, Math.round(W)) }}>
+        <defs>
+          <marker id="fc-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#374151" />
+          </marker>
+        </defs>
+        {routed.map((r, i) => {
+          const e = r.e;
+          const a = pos.get(e.from)!; const b = pos.get(e.to)!;
           return (
             <g
               key={i}
               data-feature={N.edge(e.from, e.to)}
-              data-feature-label={edgeLabel}
-              data-feature-cx={((a.x + b.x) / 2) / W}
-              data-feature-cy={((a.y + b.y) / 2) / H}
+              data-feature-label={r.e.label || `${r.e.from} → ${r.e.to}`}
+              data-feature-cx={fx(r.e.label ? r.lx : (a.x + b.x) / 2)}
+              data-feature-cy={(r.e.label ? r.ly : (a.y + b.y) / 2) / H}
               data-feature-w={80 / W}
-              data-feature-h={Math.abs(b.y - a.y) / H}
+              data-feature-h={Math.max(24, Math.abs(b.y - a.y) * 0.4) / H}
             >
-              <line x1={a.x} y1={a.y + NODE_H / 2} x2={b.x} y2={b.y - NODE_H / 2} stroke="#374151" strokeWidth={1.5} markerEnd="url(#fc-arr)" />
-              {e.label && (
-                <text x={(a.x + b.x) / 2 + 10} y={(a.y + b.y) / 2 + 4} fontSize={11} fill="#dc2626" fontWeight={600}>{e.label}</text>
-              )}
+              <path d={r.d} fill="none" stroke="#374151" strokeWidth={1.5} markerEnd="url(#fc-arr)" />
             </g>
           );
         })}
-        <defs>
-          <marker id="fc-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#374151" />
-          </marker>
-        </defs>
         {nodes.map((n) => {
-          const p = positions.get(n.id)!;
+          const p = pos.get(n.id)!; const g = geom.get(n.id)!;
           return (
             <NodeBox
               key={n.id}
               node={n}
               pos={p}
-              width={widths.get(n.id)!}
+              geom={g}
               dataFeature={N.node(n.id)}
-              cxFrac={p.x / W}
+              cxFrac={fx(p.x)}
               cyFrac={p.y / H}
-              wFrac={(widths.get(n.id)! + 8) / W}
-              hFrac={(NODE_H + 8) / H}
+              wFrac={(g.w + 8) / W}
+              hFrac={(g.h + 8) / H}
             />
           );
         })}
+        {routed.map((r, i) => r.e.label ? (
+          <text key={`l-${i}`} x={r.lx} y={r.ly} fontSize={11.5} textAnchor={r.anchor} fill="#b91c1c" fontWeight={600} style={HALO}>{r.e.label}</text>
+        ) : null)}
       </svg>
     </div>
   );
 }
 
-const FC_MIN_W = 140;
-const FC_MAX_W = 360;
-/** Estimate a node box width from its label so packed siblings never collide
- *  and long labels (e.g. "CS (Bell) + UCS (Food) → UCR (Salivation)") get a
- *  wider box instead of overflowing a fixed 200px one. Clamped so very long
- *  labels don't blow out the row width. */
-function estNodeWidth(text: string): number {
-  return Math.max(FC_MIN_W, Math.min(FC_MAX_W, Math.round((text || '').length * 7) + 28));
-}
-
 function NodeBox({
-  node, pos, width, dataFeature, cxFrac, cyFrac, wFrac, hFrac,
+  node, pos, geom, dataFeature, cxFrac, cyFrac, wFrac, hFrac,
 }: {
   node: FlowchartNode;
   pos: { x: number; y: number };
-  width: number;
+  geom: FcGeom;
   dataFeature: string;
   cxFrac: number;
   cyFrac: number;
@@ -177,10 +311,7 @@ function NodeBox({
   hFrac: number;
 }) {
   const { x, y } = pos;
-  const w = width;
-  const h = 44;
-  // Shrink the font a touch for long labels so the text stays inside its box.
-  const fontSize = node.text.length > 30 ? 11 : 13;
+  const { w, h, lines } = geom;
   const dataAttrs = {
     'data-feature': dataFeature,
     'data-feature-label': node.text,
@@ -189,44 +320,194 @@ function NodeBox({
     'data-feature-w': wFrac,
     'data-feature-h': hFrac,
   };
+  const text = (fill: string) => (
+    <text x={x} fontSize={FC_FONT} textAnchor="middle" fill={fill} fontWeight={600}>
+      {lines.map((l, i) => (
+        <tspan key={i} x={x} y={y + 4.5 + (i - (lines.length - 1) / 2) * FC_LINE_H}>{l}</tspan>
+      ))}
+    </text>
+  );
   if (node.type === 'start' || node.type === 'end') {
     return (
       <g {...dataAttrs}>
-        <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={22} ry={22} fill="#dcfce7" stroke="#16a34a" strokeWidth={2} />
-        <text x={x} y={y + 5} fontSize={fontSize} textAnchor="middle" fill="#14532d" fontWeight={600}>{node.text}</text>
+        <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={Math.min(22, h / 2)} fill="#dcfce7" stroke="#16a34a" strokeWidth={2} />
+        {text('#14532d')}
       </g>
     );
   }
   if (node.type === 'decision') {
     return (
       <g {...dataAttrs}>
-        <polygon points={`${x},${y - h / 2} ${x + w / 2},${y} ${x},${y + h / 2} ${x - w / 2},${y}`} fill="#fef3c7" stroke="#f59e0b" strokeWidth={2} />
-        <text x={x} y={y + 5} fontSize={fontSize} textAnchor="middle" fill="#92400e" fontWeight={600}>{node.text}</text>
+        <polygon points={`${x},${y - h / 2} ${x + w / 2},${y} ${x},${y + h / 2} ${x - w / 2},${y}`} fill="#fef3c7" stroke="#f59e0b" strokeWidth={2} strokeLinejoin="round" />
+        {text('#92400e')}
+      </g>
+    );
+  }
+  if (node.type === 'io') {
+    const sk = 12;
+    return (
+      <g {...dataAttrs}>
+        <polygon points={`${x - w / 2 + sk},${y - h / 2} ${x + w / 2 + sk / 2},${y - h / 2} ${x + w / 2 - sk},${y + h / 2} ${x - w / 2 - sk / 2},${y + h / 2}`} fill="#ede9fe" stroke="#7c3aed" strokeWidth={2} strokeLinejoin="round" />
+        {text('#4c1d95')}
       </g>
     );
   }
   return (
     <g {...dataAttrs}>
-      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} fill="#dbeafe" stroke="#3b82f6" strokeWidth={2} />
-      <text x={x} y={y + 5} fontSize={fontSize} textAnchor="middle" fill="#1e3a8a" fontWeight={600}>{node.text}</text>
+      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={3} fill="#dbeafe" stroke="#3b82f6" strokeWidth={2} />
+      {text('#1e3a8a')}
     </g>
   );
 }
 
 // ── State machine ─────────────────────────────────────────────────────────
+type Box = { x: number; y: number; w: number; h: number };
+const boxesOverlap = (a: Box, b: Box, pad = 2) =>
+  Math.abs(a.x - b.x) < (a.w + b.w) / 2 + pad && Math.abs(a.y - b.y) < (a.h + b.h) / 2 + pad;
+const boxHitsCircle = (b: Box, cx: number, cy: number, r: number) => {
+  const dx = Math.max(Math.abs(cx - b.x) - b.w / 2, 0);
+  const dy = Math.max(Math.abs(cy - b.y) - b.h / 2, 0);
+  return dx * dx + dy * dy < r * r;
+};
+
 export function CatalogStateMachineRenderer({ figure }: { figure: StateMachineFigure }) {
   const { states, transitions, title } = figure;
   const N = stateMachineFeatureNames;
-  const W = 560;
-  const H = 380;
-  const cx = W / 2;
-  const cy = H / 2;
-  const r = 130;
-  const positions = new Map<string, { x: number; y: number }>();
+  const n = states.length;
+  const LABEL_CW = 6.6; const LABEL_H = 15;
+
+  // States are sized to their (wrapped) labels, all the same size.
+  const stateLines = new Map(states.map((s) => [s.id, wrapWords(s.label || s.id, 9)]));
+  let RS = 26;
+  for (const lines of stateLines.values()) {
+    const halfW = (Math.max(...lines.map((l) => l.length)) * 7.4) / 2;
+    const halfH = (lines.length * 15) / 2;
+    RS = Math.max(RS, Math.ceil(Math.hypot(halfW, halfH)) + 7);
+  }
+  RS = Math.min(RS, 52);
+  const longestEdgeLabel = Math.max(0, ...transitions.map((t) => t.label.length));
+  const ringR = n <= 1 ? 0 : Math.max(n === 2 ? 110 : 120, (n * (2 * RS + 46 + Math.min(60, longestEdgeLabel * 3))) / (2 * Math.PI));
+  const angleOf = (i: number) => (n === 2 ? (i === 0 ? Math.PI : 0) : -Math.PI / 2 + (i * 2 * Math.PI) / Math.max(1, n));
+  const P = new Map<string, { x: number; y: number; out: number }>();
   states.forEach((s, i) => {
-    const a = -Math.PI / 2 + (i * 2 * Math.PI) / states.length;
-    positions.set(s.id, { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+    const a = angleOf(i);
+    P.set(s.id, { x: ringR * Math.cos(a), y: ringR * Math.sin(a), out: n <= 1 ? -Math.PI / 2 : a });
   });
+
+  // Several transitions between the same pair are one arrow carrying all their labels.
+  type Merged = { from: string; to: string; labels: string[] };
+  const merged: Merged[] = [];
+  for (const t of transitions) {
+    const m = merged.find((x) => x.from === t.from && x.to === t.to);
+    if (m) m.labels.push(t.label); else merged.push({ from: t.from, to: t.to, labels: [t.label] });
+  }
+  const hasLoop = new Set(merged.filter((m) => m.from === m.to).map((m) => m.from));
+
+  const placed: Box[] = [];
+  const bounds = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+  const grow = (x: number, y: number, pad = 0) => {
+    bounds.x0 = Math.min(bounds.x0, x - pad); bounds.x1 = Math.max(bounds.x1, x + pad);
+    bounds.y0 = Math.min(bounds.y0, y - pad); bounds.y1 = Math.max(bounds.y1, y + pad);
+  };
+  const growBox = (b: Box) => { grow(b.x - b.w / 2, b.y - b.h / 2); grow(b.x + b.w / 2, b.y + b.h / 2); };
+  for (const p of P.values()) grow(p.x, p.y, RS + 3);
+
+  // Start arrows and self-loops sit on the outside of the ring, apart from each other.
+  const startArrows: Array<{ id: string; x1: number; y1: number; x2: number; y2: number }> = [];
+  for (const s of states) {
+    if (!s.isStart) continue;
+    const p = P.get(s.id)!;
+    const a = n <= 1 ? Math.PI : p.out - (hasLoop.has(s.id) ? 0.7 : 0);
+    const x1 = p.x + (RS + 34) * Math.cos(a); const y1 = p.y + (RS + 34) * Math.sin(a);
+    startArrows.push({ id: s.id, x1, y1, x2: p.x + (RS + 2) * Math.cos(a), y2: p.y + (RS + 2) * Math.sin(a) });
+    grow(x1, y1, 4);
+    placed.push({ x: (x1 + p.x + RS * Math.cos(a)) / 2, y: (y1 + p.y + RS * Math.sin(a)) / 2, w: Math.abs(Math.cos(a)) * 34 + 8, h: Math.abs(Math.sin(a)) * 34 + 8 });
+  }
+
+  type Drawn = { m: Merged; d: string; label: string; lx: number; ly: number };
+  const drawn: Drawn[] = [];
+  const labelBox = (text: string, x: number, y: number): Box => ({ x, y, w: text.length * LABEL_CW + 6, h: LABEL_H });
+  const clear = (b: Box) =>
+    !placed.some((o) => boxesOverlap(b, o)) && ![...P.values()].some((p) => boxHitsCircle(b, p.x, p.y, RS + 3));
+
+  for (const m of merged.filter((x) => x.from === x.to)) {
+    const p = P.get(m.from)!;
+    const isStart = states.find((s) => s.id === m.from)?.isStart;
+    const a = p.out + (isStart && n > 1 ? 0.7 : 0);
+    const pt = (r: number, da: number): [number, number] => [p.x + r * Math.cos(a + da), p.y + r * Math.sin(a + da)];
+    const [sx, sy] = pt(RS, -0.38); const [ex, ey] = pt(RS + 2, 0.38);
+    const [c1x, c1y] = pt(RS + 50, -0.6); const [c2x, c2y] = pt(RS + 50, 0.6);
+    const label = m.labels.join(', ');
+    const w = label.length * LABEL_CW + 6;
+    const dist = RS + 30 + Math.max(Math.abs(Math.cos(a)) * (w / 2), Math.abs(Math.sin(a)) * (LABEL_H / 2)) + 5;
+    const lx = p.x + dist * Math.cos(a); const ly = p.y + dist * Math.sin(a);
+    const b = labelBox(label, lx, ly);
+    placed.push(b); growBox(b);
+    const [apx, apy] = pt(RS + 30, 0); grow(apx, apy, 8);
+    drawn.push({ m, d: `M ${sx} ${sy} C ${c1x} ${c1y} ${c2x} ${c2y} ${ex} ${ey}`, label, lx, ly });
+  }
+
+  // Arrows between two different states: geometry first, then every label is put where it
+  // is clear of the states, of the other labels and, as far as possible, of the other arrows.
+  type Geo = { m: Merged; sx: number; sy: number; cx: number; cy: number; ex: number; ey: number; bowed: boolean; len: number };
+  const geos: Geo[] = merged.filter((x) => x.from !== x.to).map((m) => {
+    const a = P.get(m.from)!; const b = P.get(m.to)!;
+    const dx = b.x - a.x; const dy = b.y - a.y; const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len; const uy = dy / len;
+    const bowed = merged.some((o) => o.from === m.to && o.to === m.from);
+    // A pair of opposite arrows bows apart; each bows to its own right.
+    const bend = bowed ? Math.max(22, len * 0.16) : 0;
+    const cxm = (a.x + b.x) / 2 + uy * bend * 2; const cym = (a.y + b.y) / 2 - ux * bend * 2;
+    const toC = (p: { x: number; y: number }, r: number): [number, number] => {
+      const l = Math.hypot(cxm - p.x, cym - p.y) || 1;
+      return [p.x + ((cxm - p.x) / l) * r, p.y + ((cym - p.y) / l) * r];
+    };
+    const [sx, sy] = toC(a, RS); const [ex, ey] = toC(b, RS + 2);
+    return { m, sx, sy, cx: cxm, cy: cym, ex, ey, bowed, len };
+  });
+  const at = (g: Geo, t: number): [number, number, number, number] => {
+    const x = (1 - t) * (1 - t) * g.sx + 2 * (1 - t) * t * g.cx + t * t * g.ex;
+    const y = (1 - t) * (1 - t) * g.sy + 2 * (1 - t) * t * g.cy + t * t * g.ey;
+    const tx = 2 * (1 - t) * (g.cx - g.sx) + 2 * t * (g.ex - g.cx);
+    const ty = 2 * (1 - t) * (g.cy - g.sy) + 2 * t * (g.ey - g.cy);
+    const tl = Math.hypot(tx, ty) || 1;
+    return [x, y, tx / tl, ty / tl];
+  };
+  const samples = geos.map((g) => Array.from({ length: 25 }, (_, i) => at(g, i / 24)));
+  const neighbourLen = n > 2 ? 2 * ringR * Math.sin(Math.PI / n) + 1 : Infinity;
+  geos.forEach((g, gi) => {
+    const label = g.m.labels.join(', ');
+    const w = label.length * LABEL_CW + 6;
+    // A short arrow between neighbours is labelled at its middle; a long one that crosses
+    // the ring is labelled near where it starts, away from the crossings in the middle.
+    const ts = g.len <= neighbourLen ? [0.5, 0.4, 0.6, 0.3, 0.7] : [0.26, 0.2, 0.34, 0.42, 0.74, 0.8, 0.66, 0.5];
+    const sides = g.bowed ? [1] : [1, -1];
+    let best: Box | null = null; let bestBad = Infinity;
+    for (const t of ts) {
+      for (const side of sides) {
+        const [x, y, tx, ty] = at(g, t);
+        const nx = ty * side; const ny = -tx * side; // side 1 = right of travel (the outer side of a bowed pair)
+        const off = Math.abs(nx) * (w / 2) + Math.abs(ny) * (LABEL_H / 2) + 4;
+        const cand = labelBox(label, x + nx * off, y + ny * off);
+        let bad = clear(cand) ? 0 : 10;
+        samples.forEach((pts, oi) => {
+          if (oi !== gi && pts.some(([px, py]) => Math.abs(px - cand.x) < cand.w / 2 + 2 && Math.abs(py - cand.y) < cand.h / 2 + 2)) bad += 1;
+        });
+        if (bad < bestBad) { bestBad = bad; best = cand; }
+      }
+      if (bestBad === 0) break;
+    }
+    const lb = best!;
+    placed.push(lb); growBox(lb);
+    grow(g.cx * 0.5 + (g.sx + g.ex) * 0.25, g.cy * 0.5 + (g.sy + g.ey) * 0.25, 3);
+    drawn.push({ m: g.m, d: `M ${g.sx} ${g.sy} Q ${g.cx} ${g.cy} ${g.ex} ${g.ey}`, label, lx: lb.x, ly: lb.y });
+  });
+
+  const PAD = 12;
+  const vx = bounds.x0 - PAD; const vy = bounds.y0 - PAD;
+  const W = bounds.x1 - bounds.x0 + PAD * 2; const H = bounds.y1 - bounds.y0 + PAD * 2;
+  const fx = (x: number) => (x - vx) / W; const fy = (y: number) => (y - vy) / H;
+
   return (
     <div
       className="state-machine-renderer w-full flex flex-col items-center"
@@ -234,147 +515,124 @@ export function CatalogStateMachineRenderer({ figure }: { figure: StateMachineFi
       data-feature-label={title || 'state machine'}
     >
       {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
-        {transitions.map((t, i) => {
-          const a = positions.get(t.from)!;
-          const b = positions.get(t.to)!;
-          if (t.from === t.to) {
-            // Self-loop
-            return (
-              <g
-                key={i}
-                data-feature={N.transition(t.from, t.to, t.label)}
-                data-feature-label={t.label}
-                data-feature-cx={a.x / W}
-                data-feature-cy={(a.y - 70) / H}
-                data-feature-w={70 / W}
-                data-feature-h={40 / H}
-              >
-                <path d={`M ${a.x} ${a.y - 28} C ${a.x - 30} ${a.y - 70} ${a.x + 30} ${a.y - 70} ${a.x + 1} ${a.y - 28}`} fill="none" stroke="#374151" strokeWidth={1.5} markerEnd="url(#sm-arr)" />
-                <text x={a.x} y={a.y - 78} fontSize={11} textAnchor="middle" fill="#dc2626" fontWeight={600}>{t.label}</text>
-              </g>
-            );
-          }
-          const dx = b.x - a.x, dy = b.y - a.y;
-          const len = Math.hypot(dx, dy);
-          const ux = dx / len, uy = dy / len;
-          const sx = a.x + ux * 30, sy = a.y + uy * 30;
-          const ex = b.x - ux * 30, ey = b.y - uy * 30;
-          // If a reverse transition exists for the same (from, to) pair,
-          // curve both arrows to opposite sides so the labels don't stack
-          // on top of each other. Curve apex sits SEP px off the
-          // straight line in the "right-of-forward" perpendicular
-          // direction.
-          const hasReverse = transitions.some(
-            (other) => other !== t && other.from === t.to && other.to === t.from,
-          );
-          const midX = (sx + ex) / 2;
-          const midY = (sy + ey) / 2;
-          if (hasReverse) {
-            const SEP = 30;
-            // Right-of-forward perpendicular: rotate forward (ux, uy)
-            // by -90° → (uy, -ux). Each direction of the pair picks its
-            // own "right", which lands the two curves on opposite sides.
-            const perpX = uy;
-            const perpY = -ux;
-            const ctrlX = midX + perpX * SEP * 2;
-            const ctrlY = midY + perpY * SEP * 2;
-            const labelX = midX + perpX * SEP;
-            const labelY = midY + perpY * SEP;
-            return (
-              <g
-                key={i}
-                data-feature={N.transition(t.from, t.to, t.label)}
-                data-feature-label={t.label}
-                data-feature-cx={labelX / W}
-                data-feature-cy={labelY / H}
-                data-feature-w={60 / W}
-                data-feature-h={28 / H}
-              >
-                <path
-                  d={`M ${sx} ${sy} Q ${ctrlX} ${ctrlY} ${ex} ${ey}`}
-                  fill="none"
-                  stroke="#374151"
-                  strokeWidth={1.5}
-                  markerEnd="url(#sm-arr)"
-                />
-                <text x={labelX} y={labelY + 4} fontSize={11} textAnchor="middle" fill="#dc2626" fontWeight={600}>{t.label}</text>
-              </g>
-            );
-          }
-          return (
-            <g
-              key={i}
-              data-feature={N.transition(t.from, t.to, t.label)}
-              data-feature-label={t.label}
-              data-feature-cx={midX / W}
-              data-feature-cy={(midY - 6) / H}
-              data-feature-w={Math.max(40, Math.abs(ex - sx)) / W}
-              data-feature-h={28 / H}
-            >
-              <line x1={sx} y1={sy} x2={ex} y2={ey} stroke="#374151" strokeWidth={1.5} markerEnd="url(#sm-arr)" />
-              <text x={midX} y={midY - 6} fontSize={11} textAnchor="middle" fill="#dc2626" fontWeight={600}>{t.label}</text>
-            </g>
-          );
-        })}
+      <svg viewBox={`${vx} ${vy} ${W} ${H}`} className="w-full" style={{ maxWidth: Math.min(720, Math.round(W)) }}>
         <defs>
-          <marker id="sm-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <marker id="sm-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="#374151" />
           </marker>
         </defs>
+        {drawn.map((dr, i) => (
+          <path key={`p-${i}`} d={dr.d} fill="none" stroke="#374151" strokeWidth={1.5} markerEnd="url(#sm-arr)" />
+        ))}
+        {startArrows.map((s) => (
+          <line key={`s-${s.id}`} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} stroke="#374151" strokeWidth={1.5} markerEnd="url(#sm-arr)" />
+        ))}
         {states.map((s) => {
-          const p = positions.get(s.id)!;
+          const p = P.get(s.id)!;
           const label = s.label || s.id;
+          const lines = stateLines.get(s.id)!;
           return (
             <g
               key={s.id}
               data-feature={N.state(s.id)}
               data-feature-label={label}
-              data-feature-cx={p.x / W}
-              data-feature-cy={p.y / H}
-              // Bbox padded ~10px past the visible r=28 circle so the
-              // scribble tick (anchored at the inside-right edge of the
-              // bbox) lands OUTSIDE the circle stroke instead of
-              // overlapping the state label.
-              data-feature-w={80 / W}
-              data-feature-h={80 / H}
+              data-feature-cx={fx(p.x)}
+              data-feature-cy={fy(p.y)}
+              data-feature-w={(2 * RS + 24) / W}
+              data-feature-h={(2 * RS + 24) / H}
             >
-              <circle cx={p.x} cy={p.y} r={28} fill="#dbeafe" stroke="#1e3a8a" strokeWidth={s.isAccept ? 3 : 2} />
-              {s.isAccept && <circle cx={p.x} cy={p.y} r={22} fill="none" stroke="#1e3a8a" strokeWidth={1.5} />}
-              <text x={p.x} y={p.y + 5} fontSize={13} textAnchor="middle" fill="#1e3a8a" fontWeight={700}>{label}</text>
-              {s.isStart && (
-                <line x1={p.x - 60} y1={p.y} x2={p.x - 30} y2={p.y} stroke="#374151" strokeWidth={1.5} markerEnd="url(#sm-arr)" />
-              )}
+              <circle cx={p.x} cy={p.y} r={RS} fill="#dbeafe" stroke="#1e3a8a" strokeWidth={2} />
+              {s.isAccept && <circle cx={p.x} cy={p.y} r={RS - 5} fill="none" stroke="#1e3a8a" strokeWidth={1.5} />}
+              <text fontSize={13} textAnchor="middle" fill="#1e3a8a" fontWeight={700}>
+                {lines.map((l, i) => (
+                  <tspan key={i} x={p.x} y={p.y + 4.5 + (i - (lines.length - 1) / 2) * 15}>{l}</tspan>
+                ))}
+              </text>
             </g>
           );
         })}
+        {drawn.map((dr, i) => (
+          <g key={`l-${i}`}>
+            {dr.m.labels.map((lab, j) => (
+              <g
+                key={j}
+                data-feature={N.transition(dr.m.from, dr.m.to, lab)}
+                data-feature-label={lab}
+                data-feature-cx={fx(dr.lx)}
+                data-feature-cy={fy(dr.ly)}
+                data-feature-w={(dr.label.length * LABEL_CW + 12) / W}
+                data-feature-h={26 / H}
+              />
+            ))}
+            <text x={dr.lx} y={dr.ly + 4} fontSize={12} textAnchor="middle" fill="#b91c1c" fontWeight={600} style={HALO}>{dr.label}</text>
+          </g>
+        ))}
       </svg>
     </div>
   );
 }
 
 // ── Binary tree ───────────────────────────────────────────────────────────
+/** Long values drop a font notch before the node widens. */
+function nodeFontSize(v: string): number {
+  return v.length > 5 ? 12 : 14;
+}
+/** Node half-width from the value's estimated text width (min = a circle of r 20). */
+function nodeRx(v: string): number {
+  return Math.max(20, Math.round(v.length * nodeFontSize(v) * 0.31) + 8);
+}
+interface TreePlaced { x: number; depth: number; value: string; path: string; parent?: number }
+/** Tidy-tree layout: each subtree is laid out on its own, then the two halves are pushed
+ *  together until their outlines are a fixed gap apart. Width grows with the number of
+ *  nodes on a level, not with 2^depth, so a deep lopsided tree keeps readable nodes. */
+function layoutBinaryTree(root: BinaryTreeNode): TreePlaced[] {
+  const GAP = 16; const SINGLE = 24; const MIN_SEP = 56;
+  type Sub = { nodes: TreePlaced[]; left: number[]; right: number[] };
+  function go(n: BinaryTreeNode, depth: number, path: string): Sub {
+    const hw = nodeRx(n.value);
+    const me: TreePlaced = { x: 0, depth, value: n.value, path };
+    const L = n.left ? go(n.left, depth + 1, path + 'L') : null;
+    const R = n.right ? go(n.right, depth + 1, path + 'R') : null;
+    const left = [-hw]; const right = [hw];
+    const nodes = [me];
+    const attach = (s: Sub, dx: number) => {
+      for (const c of s.nodes) c.x += dx;
+      s.nodes[0].parent = -1; // marker: direct child of `me`, resolved below
+      s.left.forEach((v, i) => { left[i + 1] = Math.min(left[i + 1] ?? Infinity, v + dx); });
+      s.right.forEach((v, i) => { right[i + 1] = Math.max(right[i + 1] ?? -Infinity, v + dx); });
+    };
+    if (L && R) {
+      let sep = MIN_SEP;
+      for (let i = 0; i < Math.min(L.right.length, R.left.length); i++) sep = Math.max(sep, L.right[i] - R.left[i] + GAP);
+      attach(L, -sep / 2); attach(R, sep / 2);
+    } else if (L) attach(L, -SINGLE);
+    else if (R) attach(R, SINGLE);
+    for (const s of [L, R]) {
+      if (!s) continue;
+      const offset = nodes.length;
+      for (const c of s.nodes) {
+        if (c.parent === -1) c.parent = 0;
+        else if (c.parent !== undefined) c.parent += offset;
+        nodes.push(c);
+      }
+    }
+    return { nodes, left, right };
+  }
+  return go(root, 0, '').nodes;
+}
+
 export function CatalogBinaryTreeRenderer({ figure }: { figure: BinaryTreeFigure }) {
   const { root, title } = figure;
   const N = binaryTreeFeatureNames;
-  // Compute depth + assign x positions via recursive layout.
-  const depth = treeDepth(root);
-  // Slot width is value-aware (cf. estNodeWidth): the old 2^(depth-1)*80 was
-  // depth-only, so long values overflowed both their r=20 circles and the
-  // viewBox at the outer columns. Long values shrink a font notch and widen
-  // their node into an ellipse; every level's slot fits the widest node.
-  const slotW = Math.max(80, 2 * maxNodeRx(root) + 16);
-  const W = Math.max(120, (1 << (depth - 1)) * slotW);
-  const H = depth * 80 + 40;
-  const positions: Array<{ x: number; y: number; value: string; path: string; parent?: { x: number; y: number } }> = [];
-  function layout(n: BinaryTreeNode, x0: number, x1: number, depthLevel: number, path: string, parent?: { x: number; y: number }) {
-    const cx = (x0 + x1) / 2;
-    const cy = 30 + depthLevel * 80;
-    positions.push({ x: cx, y: cy, value: n.value, path, parent });
-    if (n.left) layout(n.left, x0, cx, depthLevel + 1, path + 'L', { x: cx, y: cy });
-    if (n.right) layout(n.right, cx, x1, depthLevel + 1, path + 'R', { x: cx, y: cy });
-  }
-  layout(root, 0, W, 0, '');
+  const LEVEL = 66; const RY = 20; const PAD = 10;
+  const placed = layoutBinaryTree(root);
+  const minX = Math.min(...placed.map((p) => p.x - nodeRx(p.value)));
+  const maxX = Math.max(...placed.map((p) => p.x + nodeRx(p.value)));
+  const maxDepth = Math.max(...placed.map((p) => p.depth));
+  const W = maxX - minX + PAD * 2;
+  const H = maxDepth * LEVEL + RY * 2 + PAD * 2;
+  const X = (p: TreePlaced) => p.x - minX + PAD;
+  const Y = (p: TreePlaced) => PAD + RY + p.depth * LEVEL;
   return (
     <div
       className="binary-tree-renderer w-full flex flex-col items-center"
@@ -382,43 +640,27 @@ export function CatalogBinaryTreeRenderer({ figure }: { figure: BinaryTreeFigure
       data-feature-label={title || 'binary tree'}
     >
       {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
-        {positions.map((p, i) => p.parent ? (
-          <line key={`l-${i}`} x1={p.parent.x} y1={p.parent.y + 18} x2={p.x} y2={p.y - 18} stroke="#6b7280" strokeWidth={1.5} />
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxWidth: Math.min(720, Math.round(W * 1.1)) }}>
+        {placed.map((p, i) => p.parent !== undefined ? (
+          <line key={`l-${i}`} x1={X(placed[p.parent])} y1={Y(placed[p.parent])} x2={X(p)} y2={Y(p)} stroke="#6b7280" strokeWidth={1.5} />
         ) : null)}
-        {positions.map((p, i) => (
+        {placed.map((p, i) => (
           <g
             key={i}
             data-feature={N.node(p.path)}
             data-feature-label={p.value}
-            data-feature-cx={p.x / W}
-            data-feature-cy={p.y / H}
+            data-feature-cx={X(p) / W}
+            data-feature-cy={Y(p) / H}
             data-feature-w={(2 * nodeRx(p.value) + 8) / W}
             data-feature-h={48 / H}
           >
-            <ellipse cx={p.x} cy={p.y} rx={nodeRx(p.value)} ry={20} fill="#dbeafe" stroke="#3b82f6" strokeWidth={2} />
-            <text x={p.x} y={p.y + 5} fontSize={nodeFontSize(p.value)} textAnchor="middle" fill="#1e3a8a" fontWeight={700}>{p.value}</text>
+            <ellipse cx={X(p)} cy={Y(p)} rx={nodeRx(p.value)} ry={RY} fill="#dbeafe" stroke="#3b82f6" strokeWidth={2} />
+            <text x={X(p)} y={Y(p) + 5} fontSize={nodeFontSize(p.value)} textAnchor="middle" fill="#1e3a8a" fontWeight={700}>{p.value}</text>
           </g>
         ))}
       </svg>
     </div>
   );
-}
-function treeDepth(n: BinaryTreeNode | undefined): number {
-  if (!n) return 0;
-  return 1 + Math.max(treeDepth(n.left), treeDepth(n.right));
-}
-/** Long values drop a font notch (cf. NodeBox) before the node widens. */
-function nodeFontSize(v: string): number {
-  return v.length > 5 ? 11 : 13;
-}
-/** Node half-width from the value's estimated text width (min = old r=20). */
-function nodeRx(v: string): number {
-  return Math.max(20, Math.round(v.length * nodeFontSize(v) * 0.3) + 6);
-}
-function maxNodeRx(n: BinaryTreeNode | undefined): number {
-  if (!n) return 0;
-  return Math.max(nodeRx(n.value), maxNodeRx(n.left), maxNodeRx(n.right));
 }
 
 // ── Truth table ───────────────────────────────────────────────────────────
@@ -474,18 +716,40 @@ export function CatalogTruthTableRenderer({ figure }: { figure: TruthTableFigure
 export function CatalogLogicGateRenderer({ figure }: { figure: LogicGateFigure }) {
   const { gate, inputs, output, title } = figure;
   const N = logicGateFeatureNames;
-  // Side gutters are label-aware (cf. estNodeWidth): input labels sit
-  // anchor=end left of their wires and the output label anchor=start after
-  // its wire, so the old fixed 14px gutters in a fixed W=320 clipped
-  // anything ~1 glyph past the default A/B/Y. ~7.8px/char at fontSize 13.
-  const inGutter = Math.max(14, ...inputs.map((s) => Math.round(s.length * 7.8) + 6));
-  const outGutter = Math.max(14, Math.round(output.length * 7.8) + 6);
-  const W = inGutter + 292 + outGutter; // 292 = wires + gate (≡ old 320 at 14px gutters)
-  const H = 200;
-  const cx = inGutter + 146; // gate center (≡ old W/2 at 14px gutters)
+  const FONT = 14; const CW = 8.4;
+  const nIn = Math.max(1, inputs.length);
+  const isNot = gate === 'NOT';
+  const orFamily = gate === 'OR' || gate === 'NOR' || gate === 'XOR' || gate === 'XNOR';
+  const xorFamily = gate === 'XOR' || gate === 'XNOR';
+  const inverted = gate === 'NOT' || gate === 'NAND' || gate === 'NOR' || gate === 'XNOR';
+  // The body is tall enough to give every input its own place on the gate's back.
+  const gh = isNot ? 56 : Math.max(64, nIn * 24 + 16);
+  const gw = isNot ? 52 : orFamily ? Math.round(gh * 1.2) : Math.round(gh * 1.05);
+  const WIRE = 44; const BUBBLE = 5; const XOR_GAP = 9;
+  const inGutter = Math.max(...inputs.map((s) => s.length), 1) * CW + 10;
+  const outGutter = Math.max(output.length, 1) * CW + 10;
+  const x0 = inGutter + WIRE + (xorFamily ? XOR_GAP : 0); // the gate's back
+  const PAD_Y = 16;
+  const H = gh + PAD_Y * 2;
   const cy = H / 2;
-  const inWireX = inGutter + 6;
-  const outWireEndX = W - outGutter - 6;
+  const y0 = cy - gh / 2; const y1 = cy + gh / 2;
+  const outX = x0 + gw + (inverted ? BUBBLE * 2 : 0);
+  const W = outX + WIRE + outGutter;
+  // Where the curved back of an OR-family gate is at height y.
+  const backX = (y: number) => {
+    if (!orFamily) return x0;
+    const t = (y1 - y) / (y1 - y0);
+    return x0 + 2 * t * (1 - t) * gw * 0.26;
+  };
+  const spacing = nIn > 1 ? Math.min(34, (gh - 22) / (nIn - 1)) : 0;
+  const inY = (i: number) => cy + (i - (nIn - 1) / 2) * spacing;
+  const back = `Q ${x0 + gw * 0.26} ${cy} ${x0} ${y0}`;
+  const body = isNot
+    ? `M ${x0} ${y0} L ${x0 + gw} ${cy} L ${x0} ${y1} Z`
+    : orFamily
+      ? `M ${x0} ${y0} Q ${x0 + gw * 0.55} ${y0} ${x0 + gw} ${cy} Q ${x0 + gw * 0.55} ${y1} ${x0} ${y1} ${back} Z`
+      : `M ${x0} ${y0} L ${x0 + gw - gh / 2} ${y0} A ${gh / 2} ${gh / 2} 0 0 1 ${x0 + gw - gh / 2} ${y1} L ${x0} ${y1} Z`;
+  const nameX = isNot ? x0 + gw * 0.36 : orFamily ? x0 + gw * 0.52 : x0 + gw * 0.46;
   return (
     <div
       className="logic-gate-renderer w-full flex flex-col items-center"
@@ -493,65 +757,52 @@ export function CatalogLogicGateRenderer({ figure }: { figure: LogicGateFigure }
       data-feature-label={title || `${gate} gate`}
     >
       {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[360px]">
-        <GateShape gate={gate} cx={cx} cy={cy} W={W} H={H} bodyFeature={N.body} />
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxWidth: Math.min(600, Math.round(W * 1.5)) }}>
         {inputs.map((label, i) => {
-          const y = cy - 30 + i * 60;
+          const y = inY(i);
+          const xEnd = backX(y) - (xorFamily ? XOR_GAP : 0);
           return (
             <g
               key={`in-${i}`}
               data-feature={N.input(label)}
               data-feature-label={label}
-              data-feature-cx={((inWireX + (cx - 50)) / 2) / W}
+              data-feature-cx={((inGutter + xEnd) / 2) / W}
               data-feature-cy={y / H}
-              data-feature-w={(cx - 50 - inWireX) / W}
+              data-feature-w={(xEnd - inGutter) / W}
               data-feature-h={20 / H}
             >
-              <line x1={inWireX} y1={y} x2={cx - 50} y2={y} stroke="#1f2937" strokeWidth={1.5} />
-              <text x={inGutter} y={y + 4} fontSize={13} textAnchor="end" fill="#1f2937" fontWeight={700}>{label}</text>
+              <line x1={inGutter} y1={y} x2={xEnd + (xorFamily ? 0 : 1)} y2={y} stroke="#1f2937" strokeWidth={1.8} />
+              <text x={inGutter - 6} y={y + 5} fontSize={FONT} textAnchor="end" fill="#1f2937" fontWeight={700}>{label}</text>
             </g>
           );
         })}
         <g
+          data-feature={N.body}
+          data-feature-label={gate}
+          data-feature-cx={(x0 + gw / 2) / W}
+          data-feature-cy={cy / H}
+          data-feature-w={gw / W}
+          data-feature-h={gh / H}
+        >
+          <path d={body} fill="#fef3c7" stroke="#92400e" strokeWidth={2} strokeLinejoin="round" />
+          {xorFamily && (
+            <path d={`M ${x0 - XOR_GAP} ${y1} Q ${x0 - XOR_GAP + gw * 0.26} ${cy} ${x0 - XOR_GAP} ${y0}`} fill="none" stroke="#92400e" strokeWidth={2} strokeLinecap="round" />
+          )}
+          {inverted && <circle cx={x0 + gw + BUBBLE} cy={cy} r={BUBBLE} fill="#ffffff" stroke="#92400e" strokeWidth={2} />}
+          <text x={nameX} y={cy + 4.5} fontSize={isNot ? 11 : 13} textAnchor="middle" fill="#7c2d12" fontWeight={700}>{gate}</text>
+        </g>
+        <g
           data-feature={N.output}
           data-feature-label={output}
-          data-feature-cx={((cx + 60 + outWireEndX) / 2) / W}
+          data-feature-cx={((outX + outX + WIRE) / 2) / W}
           data-feature-cy={cy / H}
-          data-feature-w={(outWireEndX - cx - 60) / W}
+          data-feature-w={WIRE / W}
           data-feature-h={20 / H}
         >
-          <line x1={cx + 60} y1={cy} x2={outWireEndX} y2={cy} stroke="#1f2937" strokeWidth={1.5} />
-          <text x={W - outGutter} y={cy + 4} fontSize={13} fill="#1f2937" fontWeight={700}>{output}</text>
+          <line x1={outX} y1={cy} x2={outX + WIRE} y2={cy} stroke="#1f2937" strokeWidth={1.8} />
+          <text x={outX + WIRE + 6} y={cy + 5} fontSize={FONT} fill="#1f2937" fontWeight={700}>{output}</text>
         </g>
       </svg>
     </div>
-  );
-}
-function GateShape({
-  gate, cx, cy, W, H, bodyFeature,
-}: {
-  gate: LogicGateFigure['gate'];
-  cx: number;
-  cy: number;
-  W: number;
-  H: number;
-  bodyFeature: string;
-}) {
-  // Use simplified rectangular labeled gates for clarity over canonical IEEE shapes.
-  const w = 100, h = 70;
-  const x = cx - w / 2;
-  const y = cy - h / 2;
-  return (
-    <g
-      data-feature={bodyFeature}
-      data-feature-label={gate}
-      data-feature-cx={cx / W}
-      data-feature-cy={cy / H}
-      data-feature-w={w / W}
-      data-feature-h={h / H}
-    >
-      <rect x={x} y={y} width={w} height={h} fill="#fef3c7" stroke="#92400e" strokeWidth={2} rx={6} />
-      <text x={cx} y={cy + 6} fontSize={18} textAnchor="middle" fill="#7c2d12" fontWeight={700}>{gate}</text>
-    </g>
   );
 }

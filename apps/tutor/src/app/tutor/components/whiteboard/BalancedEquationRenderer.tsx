@@ -42,7 +42,7 @@ function renderFormula(f: string): React.ReactNode {
 
 function renderSide(side: Array<{ coefficient: number; formula: string }>): React.ReactNode {
   return side.map((c, i) => (
-    <span key={i} className="inline-flex items-baseline">
+    <span key={i} className="inline-flex items-baseline whitespace-nowrap">
       {i > 0 && <span className="mx-2 text-gray-500">+</span>}
       {c.coefficient > 1 && <span className="font-semibold text-blue-700 mr-0.5">{c.coefficient}</span>}
       <span>{renderFormula(c.formula)}</span>
@@ -52,7 +52,7 @@ function renderSide(side: Array<{ coefficient: number; formula: string }>): Reac
 
 export default function BalancedEquationRenderer(props: BalancedEquationProps) {
   return (
-    <div className="balanced-equation-renderer my-2 p-4 bg-emerald-50 border-2 border-emerald-300 rounded-lg max-w-2xl">
+    <div className="balanced-equation-renderer my-2 mx-auto w-full p-4 bg-emerald-50 border-2 border-emerald-300 rounded-lg max-w-2xl">
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs font-bold uppercase tracking-wider text-emerald-700">
           {props.title || 'Balanced equation'}
@@ -65,12 +65,12 @@ export default function BalancedEquationRenderer(props: BalancedEquationProps) {
         {renderSide(props.products)}
       </div>
       {props.reactionType && (
-        <div className="text-xs text-emerald-700 italic mt-1">
+        <div className="text-sm text-emerald-700 italic mt-1">
           Reaction type: {props.reactionType}
         </div>
       )}
       {props.note && (
-        <div className="text-xs text-gray-700 mt-1">{props.note}</div>
+        <div className="text-sm text-gray-700 mt-1">{props.note}</div>
       )}
     </div>
   );

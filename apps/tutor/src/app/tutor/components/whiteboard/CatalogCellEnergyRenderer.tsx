@@ -37,7 +37,7 @@ export function CatalogCellEnergyRenderer({ figure }: { figure: CellEnergyFigure
   const N = cellEnergyFeatureNames;
   const W = 600;
   const photo = figure.process === 'photosynthesis';
-  const H = photo ? 430 : 470;
+  const H = photo ? 430 : 496;
 
   return (
     <div className="cell-energy-renderer w-full flex flex-col items-center">
@@ -59,8 +59,8 @@ export function CatalogCellEnergyRenderer({ figure }: { figure: CellEnergyFigure
                   ))}
                 </g>
               ))}
-              {tlabel(178, 268, 'Light reactions', GREEN, 12, 700)}
-              {tlabel(178, 283, '(thylakoid)', MUT, 10.5, 600)}
+              {tlabel(184, 268, 'Light reactions', GREEN, 12, 700)}
+              {tlabel(184, 283, '(thylakoid)', MUT, 10.5, 600)}
             </g>
 
             {/* Calvin cycle (right, stroma) */}
@@ -78,16 +78,18 @@ export function CatalogCellEnergyRenderer({ figure }: { figure: CellEnergyFigure
             {/* inputs */}
             <circle cx={48} cy={44} r={15} fill="#fde047" stroke="#ca8a04" strokeWidth={1.5} />
             {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => { const a = (i / 8) * 2 * Math.PI; return <line key={i} x1={48 + 17 * Math.cos(a)} y1={44 + 17 * Math.sin(a)} x2={48 + 23 * Math.cos(a)} y2={44 + 23 * Math.sin(a)} stroke="#ca8a04" strokeWidth={1.5} />; })}
-            {arrow(70, 60, 140, 150, '#ca8a04')}
-            {tlabel(86, 96, 'Light', '#ca8a04', 12, 700, 'start')}
-            {arrow(150, 400, 150, 250, '#2563eb')}
-            {tlabel(150, 414, 'H₂O', '#2563eb', 12.5, 700)}
+            {/* every arrow keeps clear of every caption: light comes in from the sun,
+                water from the left, and oxygen leaves straight up */}
+            {arrow(66, 60, 132, 166, '#ca8a04')}
+            {tlabel(100, 92, 'Light', '#ca8a04', 12, 700, 'start')}
+            {arrow(12, 209, 128, 209, '#2563eb')}
+            {tlabel(34, 199, 'H₂O', '#2563eb', 12.5, 700)}
             {arrow(560, 215, 444, 215, '#6b7280')}
             {tlabel(575, 219, 'CO₂', INK, 12.5, 700)}
 
             {/* outputs */}
-            {arrow(150, 165, 150, 60, '#0ea5e9')}
-            {tlabel(150, 50, 'O₂', '#0ea5e9', 12.5, 700)}
+            {arrow(201, 172, 201, 60, '#0ea5e9')}
+            {tlabel(201, 50, 'O₂', '#0ea5e9', 12.5, 700)}
             {arrow(400, 300, 400, 400, '#b45309')}
             {tlabel(400, 414, 'Glucose (G3P)', '#b45309', 12.5, 700)}
           </>
@@ -106,36 +108,41 @@ export function CatalogCellEnergyRenderer({ figure }: { figure: CellEnergyFigure
 
             {/* mitochondrion (double membrane + cristae) */}
             <rect x={70} y={158} width={460} height={278} rx={130} fill={PURPLE_F} stroke={PURPLE} strokeWidth={2.5} />
-            <path d="M 90 230 Q 150 250 100 290 Q 150 330 100 370 Q 160 390 110 410" fill="none" stroke={PURPLE} strokeWidth={1.5} opacity={0.7} />
-            {tlabel(W / 2, 424, 'Mitochondrion', PURPLE, 12, 700)}
+            <rect x={79} y={167} width={442} height={260} rx={121} fill="none" stroke={PURPLE} strokeWidth={1.2} opacity={0.6} />
+            {/* cristae: folds of the inner membrane */}
+            {[250, 288, 326].map((y) => (
+              <path key={y} d={`M 81 ${y} h 44 a 9 9 0 0 1 0 18 h -44`} fill={PURPLE_F} stroke={PURPLE} strokeWidth={1.2} opacity={0.75} />
+            ))}
+            {tlabel(338, 418, 'Mitochondrion', PURPLE, 12, 700)}
 
             {/* Krebs cycle (matrix) */}
             <g data-feature={N.stage('krebs')} data-feature-label="Krebs cycle">
               {cycle(250, 250, 36, '#16a34a')}
               {tlabel(250, 254, 'Krebs', '#16a34a', 12, 700)}
-              {tlabel(250, 308, 'Krebs cycle', '#16a34a', 12, 700)}
-              {tlabel(250, 323, '(matrix)', MUT, 10.5, 600)}
+              {tlabel(250, 190, 'Krebs cycle', '#16a34a', 12, 700)}
+              {tlabel(250, 204, '(matrix)', MUT, 10.5, 600)}
             </g>
 
             {/* electron transport chain (inner membrane) */}
             <g data-feature={N.stage('etc')} data-feature-label="electron transport chain">
-              <rect x={350} y={220} width={150} height={60} rx={10} fill="#dbeafe" stroke="#2563eb" strokeWidth={2} />
-              {tlabel(425, 244, 'Electron transport', '#1e3a8a', 11.5, 700)}
-              {tlabel(425, 260, 'chain → ~34 ATP', '#1e3a8a', 11.5, 700)}
-              {tlabel(425, 300, '(inner membrane)', MUT, 10.5, 600)}
+              <rect x={350} y={214} width={150} height={72} rx={10} fill="#dbeafe" stroke="#2563eb" strokeWidth={2} />
+              {tlabel(425, 236, 'Electron transport', '#1e3a8a', 11.5, 700)}
+              {tlabel(425, 252, 'chain → ~34 ATP', '#1e3a8a', 11.5, 700)}
+              {tlabel(425, 271, '(inner membrane)', MUT, 10.5, 600)}
             </g>
 
             {/* internal arrows + I/O */}
             {arrow(290, 250, 346, 250, '#16a34a')}
             {tlabel(318, 242, 'NADH', '#16a34a', 10.5, 700)}
-            {arrow(560, 250, 506, 250, '#6b7280')}
-            {tlabel(575, 254, 'O₂', INK, 12.5, 700)}
-            {arrow(250, 300, 250, 388, '#6b7280')}
-            {tlabel(250, 404, 'CO₂', INK, 12.5, 700)}
-            {arrow(425, 286, 425, 388, '#0ea5e9')}
-            {tlabel(425, 404, 'H₂O', '#0ea5e9', 12.5, 700)}
-            {arrow(500, 250, 560, 210, '#b45309')}
-            {tlabel(560, 200, 'ATP', '#b45309', 13, 800)}
+            {/* inputs / outputs cross the membrane and are named OUTSIDE it */}
+            {arrow(566, 266, 506, 266, '#6b7280')}
+            {tlabel(581, 270, 'O₂', INK, 12.5, 700)}
+            {arrow(250, 292, 250, 462, '#6b7280')}
+            {tlabel(250, 480, 'CO₂', INK, 12.5, 700)}
+            {arrow(425, 292, 425, 462, '#0ea5e9')}
+            {tlabel(425, 480, 'H₂O', '#0ea5e9', 12.5, 700)}
+            {arrow(502, 232, 556, 200, '#b45309')}
+            {tlabel(566, 192, 'ATP', '#b45309', 13, 800)}
           </>
         )}
       </svg>

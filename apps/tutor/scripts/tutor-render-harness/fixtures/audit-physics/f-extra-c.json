@@ -1,0 +1,174 @@
+[
+ {
+  "tool": "show_diagram",
+  "label": "xc-field-default",
+  "args": {
+   "type": "field_lines",
+   "params": {}
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-field-magnet-notitle",
+  "args": {
+   "type": "field_lines",
+   "params": {
+    "config": "bar_magnet"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-field-plates-mag",
+  "args": {
+   "type": "field_lines",
+   "params": {
+    "config": "parallel_plates"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-phase-default",
+  "args": {
+   "type": "phase_diagram",
+   "params": {}
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-phase-marker-liquid",
+  "args": {
+   "type": "phase_diagram",
+   "params": {
+    "substance": "water",
+    "marker": {
+     "t": 0.6,
+     "p": 0.7,
+     "label": "water in a pressure cooker at 120 °C"
+    },
+    "title": "Water"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-doppler-fast-right",
+  "args": {
+   "type": "doppler_effect",
+   "params": {
+    "sourceSpeedFrac": 0.9,
+    "nRings": 6,
+    "movingRight": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-standing-6",
+  "args": {
+   "type": "standing_wave",
+   "params": {
+    "harmonic": 6
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-interference-tiny",
+  "args": {
+   "type": "interference_pattern",
+   "params": {
+    "sourceSep": 30,
+    "wavelength": 20,
+    "title": "Close sources"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-decay-default",
+  "args": {
+   "type": "nuclear_decay",
+   "params": {}
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-decay-alpha-long",
+  "args": {
+   "type": "nuclear_decay",
+   "params": {
+    "mode": "alpha",
+    "title": "Alpha decay of uranium-238 into thorium-234 with the emission of a helium nucleus"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-induction-default",
+  "args": {
+   "type": "em_induction",
+   "params": {}
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-bfield-default",
+  "args": {
+   "type": "magnetic_field_current",
+   "params": {}
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-bfield-wire-title",
+  "args": {
+   "type": "magnetic_field_current",
+   "params": {
+    "conductor": "wire",
+    "title": "Right-hand grip rule for a long straight wire carrying current out of the page"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-cproj-default",
+  "args": {
+   "type": "projectile_motion",
+   "params": {}
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-cproj-30-long",
+  "args": {
+   "type": "projectile_motion",
+   "params": {
+    "angle": 30,
+    "showComponents": true,
+    "title": "A football kicked at 30° above the horizontal: the horizontal velocity stays constant"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-cproj-85",
+  "args": {
+   "type": "projectile_motion",
+   "params": {
+    "angle": 85
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xc-cproj-5",
+  "args": {
+   "type": "projectile_motion",
+   "params": {
+    "angle": 5
+   }
+  }
+ }
+]

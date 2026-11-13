@@ -1,0 +1,7 @@
+[
+ {"tool":"show_circuit","label":"v2-circuit-mixed","args":{"components":[{"type":"battery","from":"minus","to":"plus","label":"12 V"},{"type":"resistor","from":"plus","to":"n1","label":"2 Ω"},{"type":"resistor","from":"n1","to":"minus","label":"4 Ω"},{"type":"resistor","from":"n1","to":"minus","label":"6 Ω"}]}},
+ {"tool":"show_ray_diagram","label":"lens-find","args":{"type":"converging","focalLength":20,"objectDistance":60,"objectHeight":14,"hideImage":true,"title":"Where does the image form?"}},
+ {"tool":"show_ray_diagram","label":"lens-full","args":{"type":"converging","focalLength":20,"objectDistance":60,"objectHeight":14}},
+ {"tool":"show_ray_diagram","label":"lens-focus","args":{"type":"converging","focalLength":5,"objectDistance":5,"objectHeight":2.6}},
+ {"tool":"show_ray_diagram","label":"mirror","args":{"type":"concave-mirror","focalLength":10,"objectDistance":25,"objectHeight":6}}
+]

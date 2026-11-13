@@ -189,7 +189,17 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
       ...(lines.some((l) => SEGMENT_RE.test(l)) ? { segments: lines.filter((l) => SEGMENT_RE.test(l)).map((l) => { const m = l.replace(/−/g, '-').match(SEGMENT_RE)!; const label = cells(l)[1]; return { from: { x: Number(m[1]), y: Number(m[2]) }, to: { x: Number(m[3]), y: Number(m[4]) }, ...(label ? { label } : {}) }; }) } : {}),
       // The area between two curves over an interval: "shade between x^2 and 2x from 0 to 2" (under one curve: "… and 0 …").
       ...(lines.some((l) => SHADE_RE.test(l)) ? (() => { const m = lines.find((l) => SHADE_RE.test(l))!.replace(/−/g, '-').match(SHADE_RE)!; const clean = (e: string) => e.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*/i, '').replace(/^the x-?axis$/i, '0').trim(); return { shadedRegion: { axis: 'x', between: [clean(m[1]), clean(m[2])], from: Number(m[3]), to: Number(m[4]) } }; })() : {}),
-      functions: lines.filter((l) => !POINT_RE.test(l) && !SEGMENT_RE.test(l) && !SHADE_RE.test(l)).map((l) => { const [expr, label] = cells(l); return { expr: expr.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*(?![^=]*=)/i, ''), ...(label ? { label } : {}) }; }).filter((f) => f.expr),
+      functions: lines.filter((l) => !POINT_RE.test(l) && !SEGMENT_RE.test(l) && !SHADE_RE.test(l)).map((l) => {
+        const [expr, label, ...more] = cells(l);
+        // Further cells say how the curve is drawn: dashed (an asymptote, a boundary), and over which stretch of x (a
+        // piece of a piecewise function). Without them a rational function went up with no asymptote to be seen and a
+        // piecewise one could not be drawn at all (audit, 2026-11-13).
+        const how = more.join(' ').replace(/−/g, '-'); const num = String.raw`(-?\d+(?:\.\d+)?)`;
+        const span = how.match(new RegExp(`${num}\\s*(?:to|\\.\\.|<=?\\s*x\\s*<=?)\\s*${num}`)); const side = span ? null : how.match(new RegExp(`x\\s*(<=?|>=?)\\s*${num}`));
+        const lo = x?.[0] ?? -50; const hi = x?.[1] ?? 50;
+        const domain = span ? [Number(span[1]), Number(span[2])] : side ? (side[1].startsWith('<') ? [lo, Number(side[2])] : [Number(side[2]), hi]) : undefined;
+        return { expr: expr.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*(?![^=]*=)/i, ''), ...(label ? { label } : {}), ...(/dash|dotted/i.test(how) || /asymptote/i.test(`${label ?? ''} ${how}`) ? { lineStyle: 'dashed', color: '#64748b' } : {}), ...(domain && domain[0] < domain[1] ? { domain } : {}) };
+      }).filter((f) => f.expr),
       ...(lines.some((l) => POINT_RE.test(l)) ? { points: lines.filter((l) => POINT_RE.test(l)).map((l) => { const m = l.replace(/−/g, '-').match(POINT_RE)!; const label = cells(l)[1]; return { x: Number(m[1]), y: Number(m[2]), ...(label ? { label } : {}), ...(/open|hollow/i.test(m[3] ?? '') || (!m[3] && OPEN_POINT.test(label ?? '')) ? { open: true } : {}) }; }) } : {}),
     } };
   }

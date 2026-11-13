@@ -41,7 +41,7 @@ export function CatalogBohrRenderer({ figure }: { figure: BohrFigure }) {
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">{heading}</div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full max-w-[560px]"
@@ -93,10 +93,33 @@ export function CatalogBohrRenderer({ figure }: { figure: BohrFigure }) {
                   />
                 );
               })}
-              {/* shell occupancy label on the right of each orbit */}
-              <text x={cx + r + 8} y={cy + 4} fontSize={12} fill={GRAY} fontWeight={600}>
-                {count}
-              </text>
+              {/* Shell occupancy, written on the orbit in the gap between two
+                  electrons (lower right), so it never sits on an electron. */}
+              {(() => {
+                const target = Math.PI / 6;
+                let best = target;
+                if (count > 1) {
+                  let bestDiff = Infinity;
+                  for (let k = 0; k < count; k++) {
+                    const mid = -Math.PI / 2 + (2 * Math.PI * (k + 0.5)) / count;
+                    let d = Math.abs(mid - target) % (2 * Math.PI);
+                    if (d > Math.PI) d = 2 * Math.PI - d;
+                    if (d < bestDiff) { bestDiff = d; best = mid; }
+                  }
+                }
+                const lx = cx + r * Math.cos(best);
+                const ly = cy + r * Math.sin(best);
+                const label = `${count} e⁻`;
+                const w = label.length * 6.2 + 8;
+                return (
+                  <g>
+                    <rect x={lx - w / 2} y={ly - 9} width={w} height={18} rx={9} fill="#ffffff" stroke={isValence ? BLUE : FAINT} strokeWidth={1} />
+                    <text x={lx} y={ly + 4} fontSize={11.5} textAnchor="middle" fill={isValence ? BLUE : '#64748b'} fontWeight={700}>
+                      {label}
+                    </text>
+                  </g>
+                );
+              })()}
             </g>
           );
         })}
@@ -119,8 +142,8 @@ export function CatalogBohrRenderer({ figure }: { figure: BohrFigure }) {
         <text x={W - 22} y={34} fontSize={12.5} textAnchor="end" fill={GRAY}>
           {`Z = ${figure.protons}   ·   A = ${figure.protons + figure.neutrons}`}
         </text>
-        <text x={W / 2} y={H - 10} fontSize={11.5} textAnchor="middle" fill={INK}>
-          {`electron configuration: ${figure.shells.join(', ')}`}
+        <text x={W / 2} y={H - 8} fontSize={13} textAnchor="middle" fill={INK} fontWeight={600}>
+          {`Electrons per shell: ${figure.shells.join(', ')}`}
         </text>
       </svg>
     </div>
@@ -176,7 +199,7 @@ export function CatalogGalvanicRenderer({ figure }: { figure: GalvanicFigure }) 
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">
         {figure.title || `Galvanic cell — ${anode.symbol} ‖ ${cathode.symbol}`}
       </div>
       <svg
@@ -236,7 +259,11 @@ export function CatalogGalvanicRenderer({ figure }: { figure: GalvanicFigure }) 
           strokeWidth={2.5}
           markerEnd="url(#gv-arr)"
         />
-        <text x={vmX} y={wireY - 22} fontSize={13} textAnchor="middle" fill={ORANGE} fontWeight={700}>
+        {/* One label per arrow, centred on it — clear of the voltmeter. */}
+        <text x={(leftCenter + 34 + vmX - 40) / 2} y={wireY - 23} fontSize={13} textAnchor="middle" fill={ORANGE} fontWeight={700}>
+          e⁻ flow
+        </text>
+        <text x={(vmX + 40 + rightCenter - 34) / 2} y={wireY - 23} fontSize={13} textAnchor="middle" fill={ORANGE} fontWeight={700}>
           e⁻ flow
         </text>
 
@@ -273,16 +300,17 @@ export function CatalogGalvanicRenderer({ figure }: { figure: GalvanicFigure }) 
         {/* anode electrode (left, −) */}
         <g data-feature={N.anode} data-feature-label={`Anode (${anode.symbol})`}>
           <rect x={leftElecX} y={elecTop} width={elecW} height={elecBottom - elecTop} fill={anode.color} stroke={INK} strokeWidth={2} />
-          <text x={leftCenter} y={elecTop - 8} fontSize={16} textAnchor="middle" fill={INK} fontWeight={800}>
+          {/* Symbol beside the electrode (outer side), not on the wire above it. */}
+          <text x={leftElecX - 9} y={elecTop + 22} fontSize={17} textAnchor="end" fill={INK} fontWeight={800}>
             {anode.symbol}
           </text>
           <text x={leftCenter} y={beakerTop + beakerH + 24} fontSize={13.5} textAnchor="middle" fill={RED} fontWeight={800}>
             ANODE (−)
           </text>
-          <text x={leftCenter} y={beakerTop + beakerH + 42} fontSize={11.5} textAnchor="middle" fill={INK}>
+          <text x={leftCenter} y={beakerTop + beakerH + 42} fontSize={12.5} textAnchor="middle" fill={INK}>
             oxidation
           </text>
-          <text x={leftCenter} y={beakerTop + beakerH + 59} fontSize={11.5} textAnchor="middle" fill={INK}>
+          <text x={leftCenter} y={beakerTop + beakerH + 60} fontSize={13} textAnchor="middle" fill={INK} fontWeight={600}>
             {`${anode.symbol} → ${anode.ion} + ${eTerm(anode.n)}`}
           </text>
         </g>
@@ -290,16 +318,16 @@ export function CatalogGalvanicRenderer({ figure }: { figure: GalvanicFigure }) 
         {/* cathode electrode (right, +) */}
         <g data-feature={N.cathode} data-feature-label={`Cathode (${cathode.symbol})`}>
           <rect x={rightElecX} y={elecTop} width={elecW} height={elecBottom - elecTop} fill={cathode.color} stroke={INK} strokeWidth={2} />
-          <text x={rightCenter} y={elecTop - 8} fontSize={16} textAnchor="middle" fill={INK} fontWeight={800}>
+          <text x={rightElecX + elecW + 9} y={elecTop + 22} fontSize={17} textAnchor="start" fill={INK} fontWeight={800}>
             {cathode.symbol}
           </text>
           <text x={rightCenter} y={beakerTop + beakerH + 24} fontSize={13.5} textAnchor="middle" fill={BLUE} fontWeight={800}>
             CATHODE (+)
           </text>
-          <text x={rightCenter} y={beakerTop + beakerH + 42} fontSize={11.5} textAnchor="middle" fill={INK}>
+          <text x={rightCenter} y={beakerTop + beakerH + 42} fontSize={12.5} textAnchor="middle" fill={INK}>
             reduction
           </text>
-          <text x={rightCenter} y={beakerTop + beakerH + 59} fontSize={11.5} textAnchor="middle" fill={INK}>
+          <text x={rightCenter} y={beakerTop + beakerH + 60} fontSize={13} textAnchor="middle" fill={INK} fontWeight={600}>
             {`${cathode.ion} + ${eTerm(cathode.n)} → ${cathode.symbol}`}
           </text>
         </g>
@@ -330,7 +358,7 @@ export function CatalogTitrationRenderer({ figure }: { figure: TitrationFigure }
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">
         {figure.title || `Titration curve — ${typeWord}`}
       </div>
       <svg
@@ -372,8 +400,8 @@ export function CatalogTitrationRenderer({ figure }: { figure: TitrationFigure }
             />
             <text
               x={(X(figure.bufferRegion[0]) + X(figure.bufferRegion[1])) / 2}
-              y={Y(figure.halfEquiv ? figure.halfEquiv.pH : 5) - 14}
-              fontSize={11.5}
+              y={PAD_T + 18}
+              fontSize={12.5}
               textAnchor="middle"
               fill={GREEN}
               fontWeight={700}
@@ -403,8 +431,12 @@ export function CatalogTitrationRenderer({ figure }: { figure: TitrationFigure }
               strokeDasharray="4 4"
             />
             <circle cx={X(figure.halfEquiv.volume)} cy={Y(figure.halfEquiv.pH)} r={5} fill={GREEN} stroke="#fff" strokeWidth={1.5} />
-            <text x={X(figure.halfEquiv.volume) + 8} y={Y(figure.halfEquiv.pH) - 8} fontSize={11.5} fill={GREEN} fontWeight={700}>
-              {`½ equiv. · pH = pKa ≈ ${figure.halfEquiv.pH.toFixed(2)}`}
+            {/* Below-right of the point: the curve only rises to the right, so this corner is always clear. */}
+            <text x={X(figure.halfEquiv.volume) + 10} y={Y(figure.halfEquiv.pH) + 22} fontSize={12} fill={GREEN} fontWeight={700} stroke="#ffffff" strokeWidth={3.5} paintOrder="stroke" strokeLinejoin="round">
+              half-equivalence
+            </text>
+            <text x={X(figure.halfEquiv.volume) + 10} y={Y(figure.halfEquiv.pH) + 38} fontSize={12} fill={GREEN} fontWeight={700} stroke="#ffffff" strokeWidth={3.5} paintOrder="stroke" strokeLinejoin="round">
+              {`pH = pKa ≈ ${figure.halfEquiv.pH.toFixed(2)}`}
             </text>
           </g>
         )}
@@ -417,9 +449,9 @@ export function CatalogTitrationRenderer({ figure }: { figure: TitrationFigure }
           <text
             x={X(figure.equivVolume) + 10}
             y={Y(figure.equivPH) + (figure.type === 'weak_strong' ? -10 : 22)}
-            fontSize={12}
+            fontSize={12.5}
             fill={RED}
-            fontWeight={700}
+            fontWeight={700} stroke="#ffffff" strokeWidth={3.5} paintOrder="stroke" strokeLinejoin="round"
           >
             {`equivalence point (pH ${figure.equivPH.toFixed(1)})`}
           </text>
@@ -449,7 +481,7 @@ export function CatalogTitrationRenderer({ figure }: { figure: TitrationFigure }
 export function CatalogLatticeRenderer({ figure }: { figure: LatticeFigure }) {
   const N = latticeFeatureNames;
   const W = 520;
-  const H = 470;
+  const H = 452;
   const S = 210; // cube edge in px
   const DX = 118; // depth x-shift for y-axis
   const DY = 74; // depth y-shift for y-axis
@@ -493,7 +525,7 @@ export function CatalogLatticeRenderer({ figure }: { figure: LatticeFigure }) {
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">
         {figure.title || `${name} unit cell`}
       </div>
       <svg
@@ -537,25 +569,32 @@ export function CatalogLatticeRenderer({ figure }: { figure: LatticeFigure }) {
           a
         </text>
 
-        {/* legend */}
-        <g>
-          <circle cx={W - 168} cy={H - 66} r={7} fill={BLUE} />
-          <text x={W - 156} y={H - 62} fontSize={11.5} fill={INK}>corner (⅛ each)</text>
-          {figure.type === 'bcc' && (
-            <>
-              <circle cx={W - 168} cy={H - 46} r={7} fill={RED} />
-              <text x={W - 156} y={H - 42} fontSize={11.5} fill={INK}>body-centre (1)</text>
-            </>
-          )}
-          {figure.type === 'fcc' && (
-            <>
-              <circle cx={W - 168} cy={H - 46} r={7} fill={ORANGE} />
-              <text x={W - 156} y={H - 42} fontSize={11.5} fill={INK}>face-centre (½ each)</text>
-            </>
-          )}
-        </g>
+        {/* legend + count, centred under the cell */}
+        {(() => {
+          const items: Array<{ c: string; t: string }> = [{ c: BLUE, t: 'corner atom (⅛ in the cell)' }];
+          if (figure.type === 'bcc') items.push({ c: RED, t: 'body-centre atom (1 whole)' });
+          if (figure.type === 'fcc') items.push({ c: ORANGE, t: 'face-centre atom (½ in the cell)' });
+          const widths = items.map((it) => 22 + it.t.length * 6.4);
+          const gap = 26;
+          const total = widths.reduce((s2, w) => s2 + w, 0) + gap * (items.length - 1);
+          let x = W / 2 - total / 2;
+          return (
+            <g>
+              {items.map((it, i) => {
+                const gx = x;
+                x += widths[i] + gap;
+                return (
+                  <g key={i}>
+                    <circle cx={gx + 7} cy={H - 50} r={7} fill={it.c} />
+                    <text x={gx + 20} y={H - 45.5} fontSize={12.5} fill={INK}>{it.t}</text>
+                  </g>
+                );
+              })}
+            </g>
+          );
+        })()}
 
-        <text x={20} y={H - 20} fontSize={12.5} fill={INK} fontWeight={600}>
+        <text x={W / 2} y={H - 16} fontSize={14} textAnchor="middle" fill={INK} fontWeight={700}>
           {`${figure.atomsPerCell} atom${figure.atomsPerCell === 1 ? '' : 's'} per unit cell`}
         </text>
       </svg>
@@ -577,20 +616,40 @@ const PH_COLORS: Record<number, string> = {
 export function CatalogPhScaleRenderer({ figure }: { figure: PhScaleFigure }) {
   const N = phScaleFeatureNames;
   const W = 780;
-  const H = figure.markers.length > 0 ? 400 : 240;
   const INK = '#374151';
   const x0 = 56, x1 = 724;         // bar horizontal extent
-  const barY = 150, barH = 42;
+  const barY = figure.showRegions ? 62 : 26;
+  const barH = 42;
   const phX = (ph: number) => x0 + (ph / 14) * (x1 - x0);
 
   const heading = figure.title || 'The pH scale';
 
-  // Stagger markers into rows below the bar to avoid label collisions.
-  const rowCount = 3;
+  // Markers go into as many rows as it takes for no two labels to touch:
+  // sorted by pH, each label takes the first row whose last label ends before
+  // it starts. Tick line + dot stay at the true pH x.
+  const MARK_FS = 12;
+  const rowH = 25;
+  const fmtPh = (ph: number) => String(Math.round(ph * 10) / 10);
+  const rowsRight: number[] = [];
+  const placed = figure.markers
+    .map((m, i) => ({ m, i }))
+    .sort((a, b) => a.m.ph - b.m.ph)
+    .map(({ m, i }) => {
+      const textW = (m.label.length + ` (${fmtPh(m.ph)})`.length) * MARK_FS * 0.56;
+      const mx = phX(m.ph);
+      const lx = Math.max(4 + textW / 2, Math.min(mx, W - 4 - textW / 2));
+      const left = lx - textW / 2;
+      let row = rowsRight.findIndex((right) => right + 12 <= left);
+      if (row === -1) { row = rowsRight.length; rowsRight.push(0); }
+      rowsRight[row] = lx + textW / 2;
+      return { m, i, mx, lx, row };
+    });
+  const markTop = barY + barH + 48;
+  const H = placed.length > 0 ? markTop + (rowsRight.length - 1) * rowH + 14 : barY + barH + 34;
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <div className="text-base font-semibold text-gray-800 mb-2 text-center">{heading}</div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full max-w-[780px]"
@@ -615,7 +674,7 @@ export function CatalogPhScaleRenderer({ figure }: { figure: PhScaleFigure }) {
             <g data-feature={N.acidic} data-feature-label="Acidic region">
               <line x1={phX(0)} y1={barY - 16} x2={phX(6.5)} y2={barY - 16} stroke="#dc2626" strokeWidth={2} />
               <text x={phX(3.25)} y={barY - 40} textAnchor="middle" fontSize={13} fontWeight={700} fill="#dc2626">ACIDIC</text>
-              <text x={phX(3.25)} y={barY - 24} textAnchor="middle" fontSize={10} fill="#dc2626" opacity={0.9}>more H⁺</text>
+              <text x={phX(3.25)} y={barY - 24} textAnchor="middle" fontSize={11.5} fill="#dc2626">more H⁺</text>
             </g>
             <g data-feature={N.neutral} data-feature-label="Neutral">
               <text x={phX(7)} y={barY - 40} textAnchor="middle" fontSize={12} fontWeight={700} fill="#15803d">NEUTRAL</text>
@@ -623,7 +682,7 @@ export function CatalogPhScaleRenderer({ figure }: { figure: PhScaleFigure }) {
             <g data-feature={N.basic} data-feature-label="Basic region">
               <line x1={phX(7.5)} y1={barY - 16} x2={phX(14)} y2={barY - 16} stroke="#6d28d9" strokeWidth={2} />
               <text x={phX(10.75)} y={barY - 40} textAnchor="middle" fontSize={13} fontWeight={700} fill="#6d28d9">BASIC (ALKALINE)</text>
-              <text x={phX(10.75)} y={barY - 24} textAnchor="middle" fontSize={10} fill="#6d28d9" opacity={0.9}>more OH⁻</text>
+              <text x={phX(10.75)} y={barY - 24} textAnchor="middle" fontSize={11.5} fill="#6d28d9">more OH⁻</text>
             </g>
           </>
         )}
@@ -645,27 +704,25 @@ export function CatalogPhScaleRenderer({ figure }: { figure: PhScaleFigure }) {
         {figure.highlightPh !== undefined && (
           <g>
             <line x1={phX(figure.highlightPh)} y1={barY - 6} x2={phX(figure.highlightPh)} y2={barY + barH + 6} stroke="#111827" strokeWidth={2.5} />
-            <polygon points={`${phX(figure.highlightPh)},${barY - 8} ${phX(figure.highlightPh) - 6},${barY - 18} ${phX(figure.highlightPh) + 6},${barY - 18}`} fill="#111827" />
+            {/* The value itself, on a white tag over the bar. */}
+            <rect x={phX(figure.highlightPh) - 27} y={barY + barH / 2 - 11} width={54} height={22} rx={11} fill="#ffffff" stroke="#111827" strokeWidth={1.5} />
+            <text x={phX(figure.highlightPh)} y={barY + barH / 2 + 4.5} textAnchor="middle" fontSize={12.5} fontWeight={700} fill="#111827">{`pH ${Math.round(figure.highlightPh * 10) / 10}`}</text>
           </g>
         )}
 
-        {/* substance markers (staggered below the numbers) */}
-        {figure.markers.map((m, i) => {
-          const row = i % rowCount;
-          const ly = barY + barH + 42 + row * 34;
-          const mx = phX(m.ph);
-          // Clamp the centered label near both ends (2026-08-07 clip audit:
-          // pH 0/14 markers center at x=56/724 of W=780, so anything longer
-          // than ~17 chars escaped). Tick line + dot stay at the true pH x.
-          const textW = (m.label.length + ` (${m.ph})`.length) * 11 * 0.55;
-          const lx = Math.max(4 + textW / 2, Math.min(mx, W - 4 - textW / 2));
+        {/* substance markers: all leader lines first, then the labels on top
+            (with a white halo) so a leader never strikes through a name */}
+        {placed.map(({ i, mx, row }) => (
+          <line key={`ld-${i}`} x1={mx} y1={barY + barH + 28} x2={mx} y2={markTop + row * rowH - 11} stroke="#cbd5e1" strokeWidth={1} />
+        ))}
+        {placed.map(({ m, i, mx, lx, row }) => {
+          const ly = markTop + row * rowH;
           return (
             <g key={i} data-feature={N.marker(i)} data-feature-label={m.label}>
-              <line x1={mx} y1={barY + barH + 26} x2={mx} y2={ly - 9} stroke="#94a3b8" strokeWidth={0.8} />
-              <circle cx={mx} cy={barY + barH + 26} r={3} fill={PH_COLORS[Math.round(m.ph)]} stroke="#fff" strokeWidth={1} />
-              <text x={lx} y={ly} textAnchor="middle" fontSize={11} fill={INK}>
+              <circle cx={mx} cy={barY + barH + 28} r={3.5} fill={PH_COLORS[Math.max(0, Math.min(14, Math.round(m.ph)))]} stroke="#fff" strokeWidth={1} />
+              <text x={lx} y={ly} textAnchor="middle" fontSize={MARK_FS} fill={INK} stroke="#ffffff" strokeWidth={4} paintOrder="stroke" strokeLinejoin="round">
                 <tspan fontWeight={600}>{m.label}</tspan>
-                <tspan fill="#64748b"> ({m.ph})</tspan>
+                <tspan fill="#64748b"> ({fmtPh(m.ph)})</tspan>
               </text>
             </g>
           );

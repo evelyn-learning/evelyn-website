@@ -397,9 +397,53 @@ export default function MapRenderer({
   // A fitted map (tutor v2) is drawn zoomed: the outline through a transform, the places at their zoomed positions
   // with dots and lettering at their ordinary size.
   const view = fit && regions.length === 0 ? fitView(pinPtsRaw) : null;
-  const pinPts = view ? pinPtsRaw.map(({ px, py }) => ({ px: (px - view.x) * view.k, py: (py - view.y) * view.k })) : pinPtsRaw;
+  const toView = ({ px, py }: { px: number; py: number }) => (view ? { px: (px - view.x) * view.k, py: (py - view.y) * view.k } : { px, py });
+  const truePts = pinPtsRaw.map(toView);
   const numbered = fit && pins.length >= 3;
   const dotR = numbered ? 9 : PIN_DOT_RADIUS;
+  // Places closer together than their own markers (Boston, Lexington and Concord on a map of the United States)
+  // were drawn as one pile of dots with one number showing. On a fitted map the markers are moved just far
+  // enough apart to be read, each joined to its true place by a short line (figure audit, 2026-11-13).
+  const pinPts = (() => {
+    const pts = truePts.map((p) => ({ ...p }));
+    if (!fit || pts.length < 2) return pts;
+    const need = dotR * 2 + 3;
+    for (let pass = 0; pass < 40; pass++) {
+      let moved = false;
+      for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+        let dx = pts[j].px - pts[i].px; let dy = pts[j].py - pts[i].py;
+        let d = Math.hypot(dx, dy);
+        if (d >= need) continue;
+        if (d < 0.01) { const a = (i * 2.4 + j) % (2 * Math.PI); dx = Math.cos(a); dy = Math.sin(a); d = 1; }
+        const push = (need - d) / 2 + 0.2;
+        pts[i].px -= (dx / d) * push; pts[i].py -= (dy / d) * push;
+        pts[j].px += (dx / d) * push; pts[j].py += (dy / d) * push;
+        moved = true;
+      }
+      if (!moved) break;
+    }
+    return pts.map((p) => ({ px: Math.min(SVG_WIDTH - dotR - 1, Math.max(dotR + 1, p.px)), py: Math.min(SVG_HEIGHT - dotR - 1, Math.max(dotR + 1, p.py)) }));
+  })();
+  // The legs of a route. On a map of the whole world a leg of more than half the way round goes the short way,
+  // off one edge and in at the other: Magellan's Pacific crossing was otherwise drawn eastward across Africa.
+  const routeLegs: Array<[{ px: number; py: number }, { px: number; py: number }]> = [];
+  if (route) {
+    const bbox = MAP_BACKGROUND_BBOXES[background];
+    const wraps = !!bbox && bbox[0] <= -179 && bbox[2] >= 179;
+    for (let i = 0; i + 1 < pins.length; i++) {
+      const a = pins[i]; const b = pins[i + 1];
+      if (wraps && bbox && a.lat != null && a.lon != null && b.lat != null && b.lon != null && Math.abs(b.lon - a.lon) > 180) {
+        const edgeA = a.lon < 0 ? -180 : 180;
+        const span = 360 - Math.abs(b.lon - a.lon);
+        const latCross = a.lat + (b.lat - a.lat) * (Math.abs(edgeA - a.lon) / (span || 1));
+        const at = (lat: number, lon: number) => { const [nx, ny] = projectLatLon(lat, lon, bbox); const [px, py] = normToSvg(nx, ny); return toView({ px, py }); };
+        routeLegs.push([truePts[i], at(latCross, edgeA)]);
+        routeLegs.push([at(latCross, -edgeA), truePts[i + 1]]);
+      } else {
+        routeLegs.push([truePts[i], truePts[i + 1]]);
+      }
+    }
+  }
   // R50 T7 (live, portal-b0a1b396 image 3): the de-overlap pass moves label
   // boxes against OTHER LABEL boxes only, so a label nudged clear of its
   // neighbour could still land squarely on a pin's marker — the live capture
@@ -494,7 +538,7 @@ export default function MapRenderer({
       <svg
         // The whole world, fitted: the bands of empty sea above and below the land are left off.
         viewBox={fit && !view && background === 'world' ? `0 125 ${SVG_WIDTH} 235` : `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-        className="w-full h-auto"
+        className="w-full h-auto block mx-auto"
         style={{ maxWidth: SVG_WIDTH, maxHeight: SVG_HEIGHT }}
       >
         <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="#eff6ff" rx={fit ? 0 : 4} />
@@ -513,9 +557,16 @@ export default function MapRenderer({
             />
           </g>
         )}
-        {route && pinPts.length >= 2 && (
-          <polyline points={pinPts.map(({ px, py }) => `${px},${py}`).join(' ')} fill="none" stroke="#dc2626" strokeOpacity={0.65} strokeWidth={2} strokeDasharray="6 4" strokeLinecap="round" strokeLinejoin="round" />
-        )}
+        {routeLegs.map(([a, b], i) => (
+          <line key={`leg-${i}`} x1={a.px} y1={a.py} x2={b.px} y2={b.py} stroke="#dc2626" strokeOpacity={0.65} strokeWidth={2} strokeDasharray="6 4" strokeLinecap="round" />
+        ))}
+        {/* A marker moved off its place points back to it. */}
+        {pinPts.map((p, i) => (Math.hypot(p.px - truePts[i].px, p.py - truePts[i].py) > 3 ? (
+          <g key={`lead-${i}`}>
+            <line x1={p.px} y1={p.py} x2={truePts[i].px} y2={truePts[i].py} stroke="#7f1d1d" strokeWidth={1} />
+            <circle cx={truePts[i].px} cy={truePts[i].py} r={2} fill="#7f1d1d" />
+          </g>
+        ) : null))}
 
         {/* Regions: labeled highlighted areas */}
         {regions.map((region, i) => {
@@ -609,7 +660,7 @@ export default function MapRenderer({
       </svg>
 
       {numbered && (
-        <ol className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-700" style={{ maxWidth: SVG_WIDTH }}>
+        <ol className="mt-2 mx-auto flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-700" style={{ maxWidth: SVG_WIDTH }}>
           {pins.map((pin, i) => (
             <li key={i} className="flex items-center gap-1.5">
               <span className="grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold text-white" style={{ background: pin.color || '#dc2626' }}>{i + 1}</span>

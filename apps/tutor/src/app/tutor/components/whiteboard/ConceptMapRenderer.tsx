@@ -16,7 +16,7 @@ import { InlineMathText } from './InlineMathText';
  */
 
 import React from 'react';
-import { DIAGRAM_COLORS, cycleColor, withAlpha } from '@/lib/tutor/diagrams/theme';
+import { DIAGRAM_COLORS, withAlpha } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
@@ -101,7 +101,6 @@ export interface ConceptMapProps {
   notes?: string;
 }
 
-const VIEWBOX_W = DIAGRAM_VIEWBOX.width;
 const VIEWBOX_H = DIAGRAM_VIEWBOX.height;
 
 interface AutoLayoutResult {
@@ -189,6 +188,27 @@ function autoLayout(
     const gMap = groups.get(g)!;
     if (!gMap.has(lv)) gMap.set(lv, []);
     gMap.get(lv)!.push(n.id);
+  }
+
+  // Within a row, a node stands under the nodes it is linked to in the rows above (the mean of their places),
+  // not in the order it was first mentioned: with a dozen nodes the links otherwise criss-cross the whole map
+  // (figure audit, 2026-11-13). Rows are done top to bottom, so each row is ordered against rows already settled.
+  for (const gMap of groups.values()) {
+    const place = new Map<string, number>();
+    const lvls = [...gMap.keys()].sort((a, b) => a - b);
+    lvls.forEach((lv, li) => {
+      const ids = gMap.get(lv)!;
+      if (li > 0) {
+        const key = (id: string, fallback: number) => {
+          const above = (adj.get(id) || []).map((nb) => place.get(nb)).filter((v): v is number => v !== undefined);
+          return above.length ? above.reduce((a, b) => a + b, 0) / above.length : fallback;
+        };
+        const keyed = ids.map((id, i) => ({ id, k: key(id, (i + 0.5) / ids.length), i }));
+        keyed.sort((a, b) => a.k - b.k || a.i - b.i);
+        gMap.set(lv, keyed.map((x) => x.id));
+      }
+      gMap.get(lv)!.forEach((id, i, arr) => place.set(id, (i + 0.5) / arr.length));
+    });
   }
 
   // Vertical: rows shared across all groups so level-0 nodes from any group
@@ -416,6 +436,10 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
   // Issue 6 + R5 follow-up: minimal top padding so the first row sits
   // immediately under the HTML title instead of leaving a wide empty band.
   const pad = { top: 12, bottom: notes ? 28 : 16, left: 14, right: 14 };
+  // A crowded map gets a wider sheet: a dozen nodes on the 520-unit sheet of a five-node map stood on each
+  // other's links. The text keeps its size; the sheet grows.
+  const VIEWBOX_W = Math.min(820, DIAGRAM_VIEWBOX.width + Math.max(0, nodes.length - 6) * 50);
+  const vb = (viewBoxHeight: number) => ({ width: VIEWBOX_W, height: viewBoxHeight });
   const w = VIEWBOX_W - pad.left - pad.right;
   const defaultH = VIEWBOX_H - pad.top - pad.bottom;
 
@@ -587,278 +611,198 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
   // center (so long edges arc outward, away from densely-populated rows).
   const VIEWBOX_CENTER_X = VIEWBOX_W / 2;
   const VIEWBOX_CENTER_Y = viewBoxH / 2;
-  const ROW_HEIGHT_PX = h / Math.max(1, new Set(nodes.map((n) => n.level)).size || 1);
 
-  // Issue 3 + R2 follow-up: label-vs-node AND label-vs-label collision
-  // avoidance. After computing initial (mx, my), check every unrelated
-  // node's bbox AND every previously-placed label's rect; slide along
-  // the edge until clear. Earlier edges (lower index) get priority; later
-  // edges accommodate.
-  const placedLabelRects: Array<{ x: number; y: number; w: number; h: number }> = [];
-  const rectsOverlap = (
-    ax: number, ay: number, aw: number, ah: number,
-    bx: number, by: number, bw: number, bh: number,
-  ): boolean => {
-    return (
-      ax + aw / 2 > bx - bw / 2 &&
-      ax - aw / 2 < bx + bw / 2 &&
-      ay + ah / 2 > by - bh / 2 &&
-      ay - ah / 2 < by + bh / 2
+  // How many boxes (other than its own two) a link runs through, straight or bowed through `ctrl`; a link that
+  // leaves the sheet counts as well. Used to pick a route that goes round the boxes instead of under them.
+  const routeHits = (edge: ConceptEdge, x1: number, y1: number, x2: number, y2: number, ctrl: { x: number; y: number } | null): number => {
+    let hits = 0;
+    const blocked = new Set<string>();
+    for (let k = 1; k < 24; k++) {
+      const t = k / 24; const u = 1 - t;
+      const x = ctrl ? u * u * x1 + 2 * u * t * ctrl.x + t * t * x2 : x1 + (x2 - x1) * t;
+      const y = ctrl ? u * u * y1 + 2 * u * t * ctrl.y + t * t * y2 : y1 + (y2 - y1) * t;
+      if (x < 4 || x > VIEWBOX_W - 4 || y < 4 || y > viewBoxH - 4) hits += 0.5;
+      for (const n of nodes) {
+        if (n.id === edge.from || n.id === edge.to || blocked.has(n.id)) continue;
+        const np = place(n); const d = dimsById.get(n.id)!;
+        if (Math.abs(x - np.x) < d.rectW / 2 + 5 && Math.abs(y - np.y) < d.rectH / 2 + 5) { blocked.add(n.id); hits += 1; }
+      }
+    }
+    return hits;
+  };
+  // Every link's route first, then every label: a label is placed knowing where all the links run.
+  type EdgeGeom = { color: string; pathD: string; startPt: { x: number; y: number }; endPt: { x: number; y: number }; pt: (t: number) => { x: number; y: number }; normal: (t: number) => { x: number; y: number } };
+  const geoms: Array<EdgeGeom | null> = edges.map((e, i) => {
+    const a = nodeMap.get(e.from); const b = nodeMap.get(e.to);
+    if (!a || !b) return null;
+    const pa = place(a); const pb = place(b);
+    const color = e.color || DIAGRAM_COLORS.muted;
+    // Issue 4: shift edge endpoint by perpendicular offset.
+    const off = entryOffset.get(i) ?? { dx: 0, dy: 0 };
+    const x2 = pb.x + off.dx;
+    const y2 = pb.y + off.dy;
+
+    // Issue 5 + R3: curve long edges away from viewBox center.
+    // Triggers: y-span > 1.5 row heights OR detected segment crossing.
+    let ctrl: { x: number; y: number } | null = null;
+    {
+      const midX = (pa.x + x2) / 2;
+      const midY = (pa.y + y2) / 2;
+      const dx = x2 - pa.x;
+      const dy = y2 - pa.y;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const px = -dy / len;
+      const py = dx / len;
+      const at = (sgn: number, bow: number) => ({ x: midX + px * sgn * bow, y: midY + py * sgn * bow });
+      // Which side to bow to first: for a crossing pair, the explicit opposite sides (so the two do not
+      // tangle); otherwise the side farther from the centre of the sheet, through emptier space.
+      let prefSign: number = crossingBowSign.get(i) ?? 0;
+      if (!prefSign) {
+        const c1 = at(1, 28); const c2 = at(-1, 28);
+        const d1 = (c1.x - VIEWBOX_CENTER_X) ** 2 + (c1.y - VIEWBOX_CENTER_Y) ** 2;
+        const d2 = (c2.x - VIEWBOX_CENTER_X) ** 2 + (c2.y - VIEWBOX_CENTER_Y) ** 2;
+        prefSign = d1 > d2 ? 1 : -1;
+      }
+      // The routes, gentlest first: straight (unless the link is long or crosses another), then bows of
+      // growing depth on either side. The first that runs through no other box is taken; when every
+      // route runs through one, the one that runs through fewest.
+      const routes: Array<{ x: number; y: number } | null> = [];
+      if (!forceCurve.has(i)) routes.push(null);
+      for (const bow of [28, 52, 80, 112, 150]) { routes.push(at(prefSign, bow)); routes.push(at(-prefSign, bow)); }
+      if (forceCurve.has(i)) routes.push(null);
+      let bestHits = Infinity;
+      for (const r of routes) {
+        const hits = routeHits(e, pa.x, pa.y, x2, y2, r);
+        if (hits < bestHits) { bestHits = hits; ctrl = r; }
+        if (hits === 0) break;
+      }
+    }
+
+    // Clip endpoints to source / target box perimeters so arrows
+    // just touch the box edges instead of running into the box
+    // centers (which would put the shaft and arrowhead inside the
+    // node visually). Direction reference: for straight lines, use
+    // the opposite endpoint; for curves, use the control point so
+    // the clip respects the curve's tangent at each endpoint.
+    const sd = dimsById.get(e.from)!;
+    const td = dimsById.get(e.to)!;
+    const PERIM_PAD = 2;
+    const startRefX = ctrl ? ctrl.x : x2;
+    const startRefY = ctrl ? ctrl.y : y2;
+    const endRefX = ctrl ? ctrl.x : pa.x;
+    const endRefY = ctrl ? ctrl.y : pa.y;
+    const startPt = clipLineToRect(
+      pa.x, pa.y, sd.rectW + PERIM_PAD * 2, sd.rectH + PERIM_PAD * 2,
+      startRefX, startRefY,
     );
-  };
-  const labelCollides = (
-    edge: ConceptEdge,
-    lx: number, ly: number, lw: number, lh: number,
-  ): boolean => {
-    // Node bboxes. R10 follow-up: include the edge's own source AND target
-    // (Map 5: "approximated by" sat on "Riemann Sum Approximation" before
-    // this), but use 0 padding for source/target — letting the label
-    // touch their edges without overlapping. R11 follow-up: a +4px source
-    // /target buffer was making short horizontal hub→child edges (Map 1
-    // FTC→Antiderivatives) push their label perpendicular by an extra
-    // ±labelH step, landing well below the target box. With 0 padding,
-    // a -16px perpendicular puts the label edge flush with the target's
-    // bottom edge, which reads as "the label belongs to this edge"
-    // instead of as a stray label between rows.
-    for (const n of nodes) {
-      const np = place(n);
-      const dims = dimsById.get(n.id)!;
-      const isEdgeEnd = (n.id === edge.from || n.id === edge.to);
-      const padW = isEdgeEnd ? 0 : 4;
-      const padH = isEdgeEnd ? 0 : 4;
-      if (rectsOverlap(lx, ly, lw, lh, np.x, np.y, dims.rectW + padW, dims.rectH + padH)) return true;
+    const endPt = clipLineToRect(
+      x2, y2, td.rectW + PERIM_PAD * 2, td.rectH + PERIM_PAD * 2,
+      endRefX, endRefY,
+    );
+
+    let pathD: string;
+    if (ctrl) {
+      pathD = `M ${startPt.x} ${startPt.y} Q ${ctrl.x} ${ctrl.y} ${endPt.x} ${endPt.y}`;
+    } else {
+      pathD = `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`;
     }
-    // Other labels already placed this render.
-    for (const r of placedLabelRects) {
-      if (rectsOverlap(lx, ly, lw, lh, r.x, r.y, r.w + 4, r.h + 4)) return true;
-    }
-    return false;
+
+    const pt = (t: number) => {
+      const u = 1 - t;
+      return ctrl
+        ? { x: u * u * startPt.x + 2 * u * t * ctrl.x + t * t * endPt.x, y: u * u * startPt.y + 2 * u * t * ctrl.y + t * t * endPt.y }
+        : { x: startPt.x + (endPt.x - startPt.x) * t, y: startPt.y + (endPt.y - startPt.y) * t };
+    };
+    const normal = (t: number) => {
+      const u = 1 - t;
+      const tx = ctrl ? 2 * u * (ctrl.x - startPt.x) + 2 * t * (endPt.x - ctrl.x) : endPt.x - startPt.x;
+      const ty = ctrl ? 2 * u * (ctrl.y - startPt.y) + 2 * t * (endPt.y - ctrl.y) : endPt.y - startPt.y;
+      const len = Math.hypot(tx, ty) || 1;
+      return { x: -ty / len, y: tx / len };
+    };
+    return { color, pathD, startPt, endPt, pt, normal };
+  });
+
+  // Labels (rebuilt 2026-11-13, figure audit). Each label sits ON its own link, or just beside it, at the place
+  // along the link where it covers least: no box, no other label, no other link. The earlier rule walked a
+  // label sideways until it was clear of everything, which on a crowded map left it floating a long way from
+  // the link it names ("limits inheritance" above the whole map).
+  const LABEL_H = 16;
+  const samples = geoms.map((g) => (g ? Array.from({ length: 21 }, (_, k) => g.pt(k / 20)) : []));
+  const area = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) => {
+    const ox = Math.min(ax + aw / 2, bx + bw / 2) - Math.max(ax - aw / 2, bx - bw / 2);
+    const oy = Math.min(ay + ah / 2, by + bh / 2) - Math.max(ay - ah / 2, by - bh / 2);
+    return ox > 0 && oy > 0 ? ox * oy : 0;
   };
+  const labelAt: Array<{ x: number; y: number; w: number } | null> = edges.map(() => null);
+  edges.forEach((e, i) => {
+    const g = geoms[i];
+    if (!g || !e.label) return;
+    const labelW = e.label.length * 5.6 + 12;
+    const localIdx = localSourceIdx.get(i) ?? 0;
+    const sourceEdgeCount = (edgesBySource.get(e.from) ?? []).length;
+    // Labels of links that leave the same box start at different distances along their links.
+    const baseT = sourceEdgeCount <= 1 ? 0.5 : 0.38 + (localIdx / (sourceEdgeCount - 1)) * 0.3;
+    let best = g.pt(baseT); let bestCost = Infinity;
+    for (let t = 0.14; t <= 0.861; t += 0.04) {
+      for (const off of [0, 11, -11, 19, -19]) {
+        const base = g.pt(t); const nrm = g.normal(t);
+        const c = { x: base.x + nrm.x * off, y: base.y + nrm.y * off };
+        let cost = Math.abs(t - baseT) * 60 + Math.abs(off) * 2;
+        for (const n of nodes) {
+          const np = place(n); const d = dimsById.get(n.id)!;
+          cost += area(c.x, c.y, labelW, LABEL_H, np.x, np.y, d.rectW + 6, d.rectH + 6) * 8;
+        }
+        for (const r of labelAt) if (r) cost += area(c.x, c.y, labelW, LABEL_H, r.x, r.y, r.w + 6, LABEL_H + 4) * 8;
+        samples.forEach((pts, j) => {
+          if (j === i) return;
+          for (const q of pts) if (Math.abs(q.x - c.x) < labelW / 2 + 2 && Math.abs(q.y - c.y) < LABEL_H / 2 + 2) cost += 70;
+        });
+        const overX = Math.max(0, 4 - (c.x - labelW / 2)) + Math.max(0, c.x + labelW / 2 - (VIEWBOX_W - 4));
+        const overY = Math.max(0, 4 - (c.y - LABEL_H / 2)) + Math.max(0, c.y + LABEL_H / 2 - (viewBoxH - 4));
+        cost += (overX + overY) * 200;
+        if (cost < bestCost) { bestCost = cost; best = c; }
+      }
+    }
+    labelAt[i] = { x: best.x, y: best.y, w: labelW };
+  });
+
+  // A map with one root shows it: the root in the strong colour, the rest in a quiet one. A colour per node
+  // (the old rainbow) said nothing about the map. A caller's own colours are kept.
+  const rootIds = new Set(nodes.filter((n) => n.level === 0).map((n) => n.id));
+  if (rootIds.size === 0 && nodes.length > 0) rootIds.add(nodes[0].id);
+  const nodeColor = (n: ConceptNode) => n.color || (rootIds.has(n.id) ? '#1d4ed8' : '#64748b');
 
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
       {title && (
         <div style={{ textAlign: 'center', fontWeight: 600, fontSize: 16, marginBottom: 6, color: DIAGRAM_COLORS.text }}><InlineMathText text={title} /></div>
       )}
-      <svg viewBox={`0 0 ${VIEWBOX_W} ${viewBoxH}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: viewBoxH > VIEWBOX_H ? 600 : 400 }}>
+      <svg viewBox={`0 0 ${VIEWBOX_W} ${viewBoxH}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', margin: '0 auto', width: '100%', maxWidth: Math.round(VIEWBOX_W * 1.3), height: 'auto', maxHeight: viewBoxH > VIEWBOX_H ? 640 : 400 }}>
         <ArrowMarkers idPrefix="cm-arrow" />
 
         {edges.map((e, i) => {
-          const a = nodeMap.get(e.from); const b = nodeMap.get(e.to);
-          if (!a || !b) return null;
-          const pa = place(a); const pb = place(b);
-          const color = e.color || DIAGRAM_COLORS.muted;
-          // Issue 4: shift edge endpoint by perpendicular offset.
-          const off = entryOffset.get(i) ?? { dx: 0, dy: 0 };
-          const x2 = pb.x + off.dx;
-          const y2 = pb.y + off.dy;
-
-          // Issue 5 + R3: curve long edges away from viewBox center.
-          // Triggers: y-span > 1.5 row heights OR detected segment crossing.
-          const longEdge = Math.abs(pb.y - pa.y) > ROW_HEIGHT_PX * 1.5 || forceCurve.has(i);
-          let ctrl: { x: number; y: number } | null = null;
-          if (longEdge) {
-            const midX = (pa.x + x2) / 2;
-            const midY = (pa.y + y2) / 2;
-            const dx = x2 - pa.x;
-            const dy = y2 - pa.y;
-            const len = Math.sqrt(dx * dx + dy * dy) || 1;
-            const px = -dy / len;
-            const py = dx / len;
-            const bow = 28;
-            const sign = crossingBowSign.get(i);
-            if (sign !== undefined) {
-              // Crossing pair: explicit opposite-side bow guarantees the
-              // two crossing edges route around opposite sides of the
-              // intersection point and don't tangle.
-              ctrl = { x: midX + px * sign * bow, y: midY + py * sign * bow };
-            } else {
-              // Non-crossing curved edge: pick the perpendicular farther
-              // from viewBox center so the curve arcs outward through
-              // empty space rather than through dense rows.
-              const cand1 = { x: midX + px * bow, y: midY + py * bow };
-              const cand2 = { x: midX - px * bow, y: midY - py * bow };
-              const d1 = (cand1.x - VIEWBOX_CENTER_X) ** 2 + (cand1.y - VIEWBOX_CENTER_Y) ** 2;
-              const d2 = (cand2.x - VIEWBOX_CENTER_X) ** 2 + (cand2.y - VIEWBOX_CENTER_Y) ** 2;
-              ctrl = d1 > d2 ? cand1 : cand2;
-            }
-          }
-
-          // Clip endpoints to source / target box perimeters so arrows
-          // just touch the box edges instead of running into the box
-          // centers (which would put the shaft and arrowhead inside the
-          // node visually). Direction reference: for straight lines, use
-          // the opposite endpoint; for curves, use the control point so
-          // the clip respects the curve's tangent at each endpoint.
-          const sd = dimsById.get(e.from)!;
-          const td = dimsById.get(e.to)!;
-          const PERIM_PAD = 2;
-          const startRefX = ctrl ? ctrl.x : x2;
-          const startRefY = ctrl ? ctrl.y : y2;
-          const endRefX = ctrl ? ctrl.x : pa.x;
-          const endRefY = ctrl ? ctrl.y : pa.y;
-          const startPt = clipLineToRect(
-            pa.x, pa.y, sd.rectW + PERIM_PAD * 2, sd.rectH + PERIM_PAD * 2,
-            startRefX, startRefY,
-          );
-          const endPt = clipLineToRect(
-            x2, y2, td.rectW + PERIM_PAD * 2, td.rectH + PERIM_PAD * 2,
-            endRefX, endRefY,
-          );
-
-          let pathD: string;
-          let labelMidX: number;
-          let labelMidY: number;
-          if (ctrl) {
-            pathD = `M ${startPt.x} ${startPt.y} Q ${ctrl.x} ${ctrl.y} ${endPt.x} ${endPt.y}`;
-            // Approximate the quadratic Bézier midpoint at t=0.5:
-            // P(0.5) = 0.25*P0 + 0.5*P1 + 0.25*P2 with the clipped endpoints.
-            labelMidX = 0.25 * startPt.x + 0.5 * ctrl.x + 0.25 * endPt.x;
-            labelMidY = 0.25 * startPt.y + 0.5 * ctrl.y + 0.25 * endPt.y;
-          } else {
-            pathD = `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`;
-            labelMidX = (startPt.x + endPt.x) / 2;
-            labelMidY = (startPt.y + endPt.y) / 2;
-          }
-
-          // Issue 8: roomier label rect so KaTeX/sans labels don't clip.
-          const labelW = e.label ? e.label.length * 7.0 + 18 : 0;
-          const labelH = 16;
-
-          // Issue 2 + R10 follow-up: per-source-relative position evenly
-          // distributed across all of the source's outgoing edges. The prior
-          // `localIdx % 4` formula wrapped after the 4th sibling, so a hub
-          // with 5+ children (Map 2 — Definite Integral with 5 outgoing
-          // edges) had two labels claiming baseT=0.32 and the second one
-          // had to fall back to t-slide / perpendicular offset, often
-          // landing on or behind an unrelated node. Now baseT spreads
-          // proportionally so each of N siblings gets a unique slot in
-          // [0.32, 0.86].
-          const localIdx = localSourceIdx.get(i) ?? 0;
-          const sourceEdgeCount = (edgesBySource.get(e.from) ?? []).length;
-          const baseT = sourceEdgeCount <= 1
-            ? 0.55
-            : 0.32 + (localIdx / (sourceEdgeCount - 1)) * 0.54;
-
-          // Issue 3: try the per-source position first; if it would collide
-          // with another node, walk t outward until clear (or fall back to
-          // baseT if no clear slot found).
-          let lx = labelMidX;
-          let ly = labelMidY;
-          if (e.label) {
-            const tryT = (tVal: number): { x: number; y: number } => {
-              if (ctrl) {
-                // Re-evaluate quadratic Bézier at tVal using the clipped
-                // endpoints (so labels position along the visible portion
-                // of the curve, not its theoretical full length).
-                const u = 1 - tVal;
-                return {
-                  x: u * u * startPt.x + 2 * u * tVal * ctrl.x + tVal * tVal * endPt.x,
-                  y: u * u * startPt.y + 2 * u * tVal * ctrl.y + tVal * tVal * endPt.y,
-                };
-              }
-              return {
-                x: startPt.x + (endPt.x - startPt.x) * tVal,
-                y: startPt.y + (endPt.y - startPt.y) * tVal,
-              };
-            };
-            // R10 follow-up: symmetric slide range out to ±0.42 in 0.06
-            // increments. The prior asymmetric list ([baseT+0.10, -0.06,
-            // +0.20, -0.12, +0.30, -0.18]) bottomed at -0.18 from baseT,
-            // which wasn't enough for high-baseT labels (e.g. baseT=0.86
-            // on a short hub→child edge — needed at least -0.30 to clear
-            // the target box once the target was added to the collision
-            // check).
-            const candidates: number[] = [baseT];
-            for (let step = 0.06; step <= 0.42; step += 0.06) {
-              candidates.push(baseT - step);
-              candidates.push(baseT + step);
-            }
-            let resolved = tryT(baseT);
-            let resolvedClear = !labelCollides(e, resolved.x, resolved.y, labelW, labelH);
-            let chosenT = baseT;
-            for (const tv of candidates) {
-              if (tv < 0.18 || tv > 0.82) continue;
-              const p = tryT(tv);
-              if (!labelCollides(e, p.x, p.y, labelW, labelH)) {
-                resolved = p;
-                resolvedClear = true;
-                chosenT = tv;
-                break;
-              }
-            }
-            // R10 follow-up: when no t along the edge is clear (e.g. a long
-            // crossing edge whose entire visible portion runs through a
-            // cluster of other edge labels — concept-diamond's "ultimately
-            // gives" label vs. the "produces" / "uses" labels at the
-            // antiderivative hub), step the label off the edge along its
-            // perpendicular. The connector rect+text becomes a tag floating
-            // beside the edge instead of stacking on top of neighbors.
-            if (!resolvedClear) {
-              let tx: number, ty: number;
-              if (ctrl) {
-                const u = 1 - chosenT;
-                tx = 2 * u * (ctrl.x - startPt.x) + 2 * chosenT * (endPt.x - ctrl.x);
-                ty = 2 * u * (ctrl.y - startPt.y) + 2 * chosenT * (endPt.y - ctrl.y);
-              } else {
-                tx = endPt.x - startPt.x;
-                ty = endPt.y - startPt.y;
-              }
-              const tlen = Math.sqrt(tx * tx + ty * ty) || 1;
-              const perpX = -ty / tlen;
-              const perpY = tx / tlen;
-              const baseAt = tryT(chosenT);
-              // R11 follow-up: start perpendicular sweep at labelH*0.5 = 8
-              // so a label can sit flush against the edge (top/bottom edge
-              // touching the line) when that's the closest clear spot —
-              // for the FTC→Antiderivatives case in Map 1, an 8px offset
-              // places the label rect right next to the edge with the
-              // arrow line just visible above it, far better than the
-              // 24+ px offsets the prior `mag = labelH` start required.
-              // maxMag continues to scale with labelW so wide labels
-              // ("geometrically means" — 151px) can still escape wide
-              // unrelated boxes ("Fundamental Theorem" — 119px).
-              const maxMag = Math.max(3 * labelH, labelW * 0.7);
-              const offsetMags: number[] = [];
-              for (let mag = labelH * 0.5; mag <= maxMag; mag += labelH * 0.5) {
-                offsetMags.push(mag);
-                offsetMags.push(-mag);
-              }
-              for (const mag of offsetMags) {
-                const cand = { x: baseAt.x + perpX * mag, y: baseAt.y + perpY * mag };
-                if (!labelCollides(e, cand.x, cand.y, labelW, labelH)) {
-                  resolved = cand;
-                  resolvedClear = true;
-                  break;
-                }
-              }
-            }
-            lx = resolved.x;
-            ly = resolved.y;
-            // Track this label's rect so subsequent edges avoid it. Always
-            // record (even if no clear position found) so collisions remain
-            // bounded and we don't pile labels at the fallback baseT spot.
-            placedLabelRects.push({ x: lx, y: ly, w: labelW, h: labelH });
-          }
-
+          const g = geoms[i];
+          if (!g) return null;
+          const { startPt, endPt, color } = g;
           const eminX = Math.min(startPt.x, endPt.x); const emaxX = Math.max(startPt.x, endPt.x);
           const eminY = Math.min(startPt.y, endPt.y); const emaxY = Math.max(startPt.y, endPt.y);
           return (
-            <g key={`edge${i}`} {...feat(`edge-${featSlug(e.from)}-to-${featSlug(e.to)}`, { cx: (startPt.x + endPt.x) / 2, cy: (startPt.y + endPt.y) / 2, w: Math.max(30, emaxX - eminX + 20), h: Math.max(30, emaxY - eminY + 20) })}>
-              <path d={pathD} fill="none" stroke={color} strokeWidth={1.25}
+            <g key={`edge${i}`} {...feat(`edge-${featSlug(e.from)}-to-${featSlug(e.to)}`, { cx: (startPt.x + endPt.x) / 2, cy: (startPt.y + endPt.y) / 2, w: Math.max(30, emaxX - eminX + 20), h: Math.max(30, emaxY - eminY + 20) }, vb(viewBoxH))}>
+              <path d={g.pathD} fill="none" stroke={color} strokeWidth={1.25}
                 markerEnd={e.directed ? `url(#${arrowMarkerId(color, 'cm-arrow')})` : undefined} />
-              {e.label && (
-                <g>
-                  {/* R10 follow-up: semi-transparent rect with no border —
-                      the underlying arrow line shows through subtly so
-                      tight-gap deep chains don't appear armless, and any
-                      unavoidable overlap with an unrelated node looks like
-                      a label tag rather than a competing box. */}
-                  <rect x={lx - labelW / 2} y={ly - labelH / 2} width={labelW} height={labelH} rx={3}
-                    fill="rgba(255,255,255,0.78)" />
-                  <text x={lx} y={ly + 3} fontSize={10} fill={DIAGRAM_COLORS.text} textAnchor="middle">{e.label}</text>
-                </g>
-              )}
+            </g>
+          );
+        })}
+        {/* The labels over all the links: a label's white ground hides the piece of line under it, whichever
+            link that line belongs to. */}
+        {edges.map((e, i) => {
+          const lab = labelAt[i];
+          if (!lab || !e.label) return null;
+          return (
+            <g key={`edgelabel${i}`}>
+              <rect x={lab.x - lab.w / 2} y={lab.y - LABEL_H / 2} width={lab.w} height={LABEL_H} rx={3} fill="rgba(255,255,255,0.92)" />
+              <text x={lab.x} y={lab.y + 3.5} fontSize={10} fill={DIAGRAM_COLORS.text} textAnchor="middle">{e.label}</text>
             </g>
           );
         })}
@@ -868,14 +812,14 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
             splitting at the closest-to-middle space (Issue 1). */}
         {nodes.map((n, i) => {
           const p = place(n);
-          const color = n.color || cycleColor(i);
+          const color = nodeColor(n);
           const dims = dimsById.get(n.id)!;
           const { lines, rectW, rectH } = dims;
           const firstBaseline = p.y - ((lines.length - 1) * NODE_LINE_H) / 2 + 4;
           return (
-            <g key={n.id} {...feat(`node-${featSlug(n.id)}`, { cx: p.x, cy: p.y, w: rectW + 10, h: rectH + 10 })}>
+            <g key={n.id} {...feat(`node-${featSlug(n.id)}`, { cx: p.x, cy: p.y, w: rectW + 10, h: rectH + 10 }, vb(viewBoxH))}>
               <rect x={p.x - rectW / 2} y={p.y - rectH / 2} width={rectW} height={rectH} rx={6}
-                fill={withAlpha(color, 0.15)} stroke={color} strokeWidth={1.75} />
+                fill={n.color ? withAlpha(color, 0.15) : rootIds.has(n.id) ? '#dbeafe' : '#f8fafc'} stroke={color} strokeWidth={rootIds.has(n.id) && !n.color ? 2.25 : 1.75} />
               <text
                 x={p.x}
                 y={firstBaseline}

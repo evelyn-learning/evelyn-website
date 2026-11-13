@@ -22,8 +22,10 @@ import {
   BAR_WIDTH,
   BAR_HEIGHT,
   CIRCLE_RADIUS,
-  GRID_CELL,
   ITEM_GAP,
+  WHOLE_GAP,
+  wholesFor,
+  gridCell,
   LABEL_FONT_SIZE,
   LABEL_LINE_HEIGHT,
 } from './fraction-bar-layout';
@@ -54,6 +56,7 @@ interface FractionBarRendererProps {
 const DEFAULT_COLOR = '#2563eb';
 const UNSHADED_COLOR = '#f1f5f9';
 const BORDER_COLOR = '#cbd5e1';
+const OUTLINE_COLOR = '#64748b';
 const LABEL_COLOR = '#334155';
 
 // ---------------------------------------------------------------------------
@@ -101,7 +104,14 @@ function sectorPath(
 // Sub-renderers
 // ---------------------------------------------------------------------------
 
-/** Render a bar-style fraction at a given origin. */
+const FILLED_LINE = '#ffffff';
+
+/** Cells shaded in whole number `w` (0-based) of a fraction. */
+function filledIn(numerator: number, denominator: number, w: number): number {
+  return Math.max(0, Math.min(denominator, numerator - w * denominator));
+}
+
+/** Render a bar-style fraction at a given origin (one bar per whole). */
 function renderBar(
   x: number,
   y: number,
@@ -113,46 +123,62 @@ function renderBar(
 ): React.ReactElement[] {
   const partWidth = BAR_WIDTH / denominator;
   const elements: React.ReactElement[] = [];
+  const wholes = wholesFor(numerator, denominator);
 
-  for (let i = 0; i < denominator; i++) {
-    const shaded = i < numerator;
+  for (let w = 0; w < wholes; w++) {
+    const x0 = x + w * (BAR_WIDTH + WHOLE_GAP);
+    const filled = filledIn(numerator, denominator, w);
+    for (let i = 0; i < denominator; i++) {
+      const shaded = i < filled;
+      const part = w * denominator + i + 1;
+      elements.push(
+        <rect
+          key={`bar-${w}-${i}`}
+          x={x0 + i * partWidth}
+          y={y}
+          width={partWidth}
+          height={BAR_HEIGHT}
+          fill={shaded ? color : UNSHADED_COLOR}
+          {...feat(`part-${barIdx + 1}-${part}`, { cx: x0 + (i + 0.5) * partWidth, cy: y + BAR_HEIGHT / 2, w: partWidth, h: BAR_HEIGHT }, viewbox)}
+        />,
+      );
+    }
+    // Partition lines: white across the shaded part, grey across the rest.
+    if (partWidth >= 2.5) {
+      for (let i = 1; i < denominator; i++) {
+        elements.push(
+          <line
+            key={`div-${w}-${i}`}
+            x1={x0 + i * partWidth}
+            y1={y}
+            x2={x0 + i * partWidth}
+            y2={y + BAR_HEIGHT}
+            stroke={i <= filled ? FILLED_LINE : BORDER_COLOR}
+            strokeWidth={partWidth < 6 ? 0.6 : 1.25}
+          />,
+        );
+      }
+    }
     elements.push(
       <rect
-        key={`bar-${i}`}
-        x={x + i * partWidth}
+        key={`bar-outline-${w}`}
+        x={x0}
         y={y}
-        width={partWidth}
+        width={BAR_WIDTH}
         height={BAR_HEIGHT}
-        fill={shaded ? color : UNSHADED_COLOR}
-        stroke={BORDER_COLOR}
-        strokeWidth={1}
-        rx={i === 0 ? 3 : i === denominator - 1 ? 3 : 0}
-        {...feat(`part-${barIdx + 1}-${i + 1}`, { cx: x + (i + 0.5) * partWidth, cy: y + BAR_HEIGHT / 2, w: partWidth, h: BAR_HEIGHT }, viewbox)}
+        fill="none"
+        stroke={OUTLINE_COLOR}
+        strokeWidth={1.5}
       />,
     );
   }
 
-  // Outer border with rounded corners
-  elements.push(
-    <rect
-      key="bar-outline"
-      x={x}
-      y={y}
-      width={BAR_WIDTH}
-      height={BAR_HEIGHT}
-      fill="none"
-      stroke={BORDER_COLOR}
-      strokeWidth={1.5}
-      rx={3}
-    />,
-  );
-
   return elements;
 }
 
-/** Render a circle (pie) style fraction at a given center. */
+/** Render a circle (pie) style fraction; `cx` is the first whole's centre. */
 function renderCircle(
-  cx: number,
+  cx0: number,
   cy: number,
   numerator: number,
   denominator: number,
@@ -162,45 +188,63 @@ function renderCircle(
 ): React.ReactElement[] {
   const elements: React.ReactElement[] = [];
   const sectorAngle = 360 / denominator;
+  const wholes = wholesFor(numerator, denominator);
 
-  for (let i = 0; i < denominator; i++) {
-    const shaded = i < numerator;
-    const startAngle = i * sectorAngle;
-    const endAngle = startAngle + sectorAngle;
-    // Approximate sector center — midpoint between the center and the rim at mid-angle
-    const midRad = ((startAngle + endAngle) / 2 - 90) * (Math.PI / 180);
-    const pcx = cx + (CIRCLE_RADIUS / 2) * Math.cos(midRad);
-    const pcy = cy + (CIRCLE_RADIUS / 2) * Math.sin(midRad);
-
+  for (let w = 0; w < wholes; w++) {
+    const cx = cx0 + w * (2 * CIRCLE_RADIUS + WHOLE_GAP);
+    const filled = filledIn(numerator, denominator, w);
+    for (let i = 0; i < denominator; i++) {
+      const shaded = i < filled;
+      const startAngle = i * sectorAngle;
+      const endAngle = startAngle + sectorAngle;
+      // Approximate sector center — midpoint between the center and the rim at mid-angle
+      const midRad = ((startAngle + endAngle) / 2 - 90) * (Math.PI / 180);
+      const pcx = cx + (CIRCLE_RADIUS / 2) * Math.cos(midRad);
+      const pcy = cy + (CIRCLE_RADIUS / 2) * Math.sin(midRad);
+      elements.push(
+        <path
+          key={`sector-${w}-${i}`}
+          d={sectorPath(cx, cy, CIRCLE_RADIUS, startAngle, endAngle)}
+          fill={shaded ? color : UNSHADED_COLOR}
+          {...feat(`part-${barIdx + 1}-${w * denominator + i + 1}`, { cx: pcx, cy: pcy, w: CIRCLE_RADIUS, h: CIRCLE_RADIUS }, viewbox)}
+        />,
+      );
+    }
+    // Spokes: white between two shaded sectors, grey elsewhere.
+    if (denominator > 1 && denominator <= 72) {
+      for (let i = 0; i < denominator; i++) {
+        const end = polarToCartesian(cx, cy, CIRCLE_RADIUS, i * sectorAngle);
+        const betweenShaded = filled >= denominator ? true : i > 0 && i < filled;
+        elements.push(
+          <line
+            key={`spoke-${w}-${i}`}
+            x1={cx}
+            y1={cy}
+            x2={end.x}
+            y2={end.y}
+            stroke={betweenShaded ? FILLED_LINE : BORDER_COLOR}
+            strokeWidth={1.25}
+          />,
+        );
+      }
+    }
     elements.push(
-      <path
-        key={`sector-${i}`}
-        d={sectorPath(cx, cy, CIRCLE_RADIUS, startAngle, endAngle)}
-        fill={shaded ? color : UNSHADED_COLOR}
-        stroke={BORDER_COLOR}
-        strokeWidth={1}
-        {...feat(`part-${barIdx + 1}-${i + 1}`, { cx: pcx, cy: pcy, w: CIRCLE_RADIUS, h: CIRCLE_RADIUS }, viewbox)}
+      <circle
+        key={`circle-outline-${w}`}
+        cx={cx}
+        cy={cy}
+        r={CIRCLE_RADIUS}
+        fill="none"
+        stroke={OUTLINE_COLOR}
+        strokeWidth={1.5}
       />,
     );
   }
 
-  // Outer ring
-  elements.push(
-    <circle
-      key="circle-outline"
-      cx={cx}
-      cy={cy}
-      r={CIRCLE_RADIUS}
-      fill="none"
-      stroke={BORDER_COLOR}
-      strokeWidth={1.5}
-    />,
-  );
-
   return elements;
 }
 
-/** Render a grid-style fraction at a given origin. */
+/** Render a grid-style fraction at a given origin (one grid per whole). */
 function renderGrid(
   x: number,
   y: number,
@@ -211,28 +255,39 @@ function renderGrid(
   viewbox: { width: number; height: number },
 ): React.ReactElement[] {
   const { rows, cols } = gridDimensions(denominator);
+  const cell = gridCell(denominator);
   const elements: React.ReactElement[] = [];
-  let cellIndex = 0;
+  const wholes = wholesFor(numerator, denominator);
 
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (cellIndex >= denominator) break;
-      const shaded = cellIndex < numerator;
+  for (let w = 0; w < wholes; w++) {
+    const x0 = x + w * (cols * cell + WHOLE_GAP);
+    const filled = filledIn(numerator, denominator, w);
+    let cellIndex = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (cellIndex >= denominator) break;
+        const shaded = cellIndex < filled;
+        elements.push(
+          <rect
+            key={`grid-${w}-${cellIndex}`}
+            x={x0 + c * cell}
+            y={y + r * cell}
+            width={cell}
+            height={cell}
+            fill={shaded ? color : UNSHADED_COLOR}
+            stroke={shaded ? FILLED_LINE : BORDER_COLOR}
+            strokeWidth={1}
+            {...feat(`part-${barIdx + 1}-${w * denominator + cellIndex + 1}`, { cx: x0 + (c + 0.5) * cell, cy: y + (r + 0.5) * cell, w: cell, h: cell }, viewbox)}
+          />,
+        );
+        cellIndex++;
+      }
+    }
+    // Outline only when the grid is a full rectangle.
+    if (rows * cols === denominator) {
       elements.push(
-        <rect
-          key={`grid-${cellIndex}`}
-          x={x + c * GRID_CELL}
-          y={y + r * GRID_CELL}
-          width={GRID_CELL}
-          height={GRID_CELL}
-          fill={shaded ? color : UNSHADED_COLOR}
-          stroke={BORDER_COLOR}
-          strokeWidth={1}
-          rx={2}
-          {...feat(`part-${barIdx + 1}-${cellIndex + 1}`, { cx: x + (c + 0.5) * GRID_CELL, cy: y + (r + 0.5) * GRID_CELL, w: GRID_CELL, h: GRID_CELL }, viewbox)}
-        />,
+        <rect key={`grid-outline-${w}`} x={x0} y={y} width={cols * cell} height={rows * cell} fill="none" stroke={OUTLINE_COLOR} strokeWidth={1.5} />,
       );
-      cellIndex++;
     }
   }
 
@@ -304,13 +359,8 @@ export function buildFractionBarManifest(props: FractionBarRendererProps): Featu
       description: `${style} fraction ${idx + 1} (${labelText})`,
       labels: Array.from(barLabels),
     });
-    const partCount = style === 'grid'
-      ? (() => {
-          const cols = Math.ceil(Math.sqrt(item.denominator));
-          const rows = Math.ceil(item.denominator / cols);
-          return Math.min(rows * cols, item.denominator);
-        })()
-      : item.denominator;
+    // One set of parts per whole (5/4 → two wholes → 8 parts).
+    const partCount = item.denominator * wholesFor(item.numerator, item.denominator);
     for (let i = 0; i < partCount; i++) {
       const shaded = i < item.numerator;
       const unitFrac = `1/${item.denominator}`;
@@ -350,15 +400,33 @@ export function FractionBarRenderer({
   layout = 'horizontal',
   showComparison = false,
 }: FractionBarRendererProps) {
+  // Comparing bars only works when they share a left edge, so a comparison
+  // of bars is always stacked; a guide then drops from the end of each
+  // shaded length across all the bars.
+  const allBars = items.length > 1 && items.every((it) => (it.style ?? 'bar') === 'bar');
+  const compareBars = showComparison && allBars;
+  const effLayout: 'vertical' | 'horizontal' = compareBars ? 'vertical' : layout;
+
   /**
    * Pre-compute positions and total SVG dimensions so the viewBox scales
    * automatically to fit all items — INCLUDING their (possibly wrapped)
    * labels, so a long label under a small shape can't clip.
    */
-  const { positions, viewWidth, viewHeight } = useMemo(
-    () => computeFractionLayout(items, layout),
-    [items, layout],
-  );
+  const { positions, viewWidth, viewHeight } = useMemo(() => {
+    const base = computeFractionLayout(items, effLayout);
+    if (!compareBars) return base;
+    // Left-align every bar on one edge (the layout centres each bar over its
+    // own label, which would stagger bars with labels of different widths).
+    const left = Math.min(...base.positions.map((p) => p.shapeX));
+    return {
+      ...base,
+      positions: base.positions.map((p) => ({ ...p, shapeX: left, labelX: left + p.shapeW / 2 })),
+    };
+  }, [items, effLayout, compareBars]);
+
+  // Shown larger than its own units so the labels read comfortably; small
+  // figures are capped so two short bars do not balloon.
+  const displayW = Math.min(780, Math.max(viewWidth * 1.3, Math.min(viewWidth * 1.6, 300)));
 
   return (
     <div className="w-full flex flex-col items-center gap-2">
@@ -369,10 +437,40 @@ export function FractionBarRenderer({
       <svg
         viewBox={`0 0 ${viewWidth} ${viewHeight}`}
         width="100%"
-        style={{ maxWidth: viewWidth, display: 'block', margin: '0 auto' }}
+        style={{ maxWidth: displayW, display: 'block', margin: '0 auto' }}
         role="img"
         aria-label={title ?? 'Fraction visualization'}
       >
+        {/* Comparison guides for stacked bars: one dashed line at the end of each shaded length */}
+        {compareBars && (() => {
+          const top = Math.min(...positions.map((p) => p.shapeY)) - 6;
+          const bottom = Math.max(...positions.map((p) => p.shapeY + p.shapeH)) + 6;
+          const seen = new Set<string>();
+          return items.map((item, idx) => {
+            const pos = positions[idx];
+            if (!pos || !(item.denominator > 0) || !(item.numerator > 0)) return null;
+            const wholes = wholesFor(item.numerator, item.denominator);
+            const lastFilled = item.numerator - (wholes - 1) * item.denominator;
+            const gx = pos.shapeX + (wholes - 1) * (BAR_WIDTH + WHOLE_GAP) + (lastFilled / item.denominator) * BAR_WIDTH;
+            const key = gx.toFixed(1);
+            if (seen.has(key)) return null;
+            seen.add(key);
+            return (
+              <line
+                key={`guide-${idx}`}
+                x1={gx}
+                y1={top}
+                x2={gx}
+                y2={bottom}
+                stroke={item.highlightColor ?? DEFAULT_COLOR}
+                strokeOpacity={0.55}
+                strokeWidth={1.25}
+                strokeDasharray="4 3"
+              />
+            );
+          });
+        })()}
+
         {/* Render each fraction item */}
         {items.map((item, idx) => {
           const pos = positions[idx];
@@ -403,9 +501,12 @@ export function FractionBarRenderer({
                 y={pos.labelY}
                 textAnchor="middle"
                 fontSize={LABEL_FONT_SIZE}
-                fontWeight={500}
+                fontWeight={600}
                 fill={LABEL_COLOR}
                 fontFamily="system-ui, sans-serif"
+                stroke="#ffffff"
+                strokeWidth={compareBars ? 3 : 0}
+                paintOrder="stroke"
               >
                 {pos.labelLines.map((line, li) => (
                   <tspan key={li} x={pos.labelX} dy={li === 0 ? 0 : LABEL_LINE_HEIGHT}>
@@ -417,13 +518,14 @@ export function FractionBarRenderer({
           );
         })}
 
-      {/* Comparison alignment lines (horizontal layout only) */}
+      {/* Separators between unlike shapes (horizontal layout only) */}
       {showComparison &&
-        layout === 'horizontal' &&
+        !compareBars &&
+        effLayout === 'horizontal' &&
         positions.length > 1 &&
         positions.slice(0, -1).map((pos, idx) => {
           const next = positions[idx + 1];
-          if (!next) return null;
+          if (!next || next.y !== pos.y) return null; // row wrapped: nothing to separate
 
           // Vertical dotted line halfway between current item's right edge and next item's left edge.
           // Span the SHAPES (not the item boxes — those now include label lines).

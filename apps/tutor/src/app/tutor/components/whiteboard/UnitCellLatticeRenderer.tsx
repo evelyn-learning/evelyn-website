@@ -31,100 +31,128 @@ interface UnitCellLatticeRendererProps {
   className?: string;
 }
 
-const VB_W = 280;
-const VB_H = 200;
-const NODE_R = 14;     // ion sphere radius
-const STROKE = 1.4;
-const FONT = 11;
+const VB_W = 300;
+const VB_H = 196;
+const NODE_R = 17;     // ion sphere radius
+const STROKE = 1.6;
+const CATION = '#dc2626';
+const ANION = '#2563eb';
+
+function chargeText(charge: number): string {
+  const mag = Math.abs(charge);
+  return `${mag === 1 ? '' : mag}${charge > 0 ? '+' : '−'}`;
+}
+
+/** One ion: coloured disc, symbol centred, charge as a true superscript. The
+ *  type steps down for two-letter symbols with a 2+/3+ charge so the label
+ *  always stays inside the disc. */
+function Ion({ x, y, symbol, charge, r = NODE_R, opacity = 1 }: { x: number; y: number; symbol: string; charge: number; r?: number; opacity?: number }) {
+  const chg = chargeText(charge);
+  const chars = symbol.length + chg.length * 0.7;
+  const fs = Math.min(13, (r * 2 - 6) / (chars * 0.62));
+  return (
+    <g opacity={opacity}>
+      <circle cx={x} cy={y} r={r} fill={charge > 0 ? CATION : ANION} stroke="#fff" strokeWidth={STROKE} />
+      <text x={x} y={y + fs * 0.36} textAnchor="middle" fontSize={fs} fill="#fff" fontWeight={700}>
+        {symbol}<tspan fontSize={fs * 0.72} baselineShift="super">{chg}</tspan>
+      </text>
+    </g>
+  );
+}
 
 export default function UnitCellLatticeRenderer({ ions, className = '' }: UnitCellLatticeRendererProps) {
-  // Pick first cation + first anion for a binary lattice. Ions with
-  // >2 distinct elements (e.g., Na2SO4) — skip the lattice; the bond
-  // structure is too complex for a quick 2D projection.
+  // Pick first cation + first anion for a binary compound. More than two
+  // distinct elements (e.g. Na2SO4): no picture.
   const distinctSymbols = Array.from(new Set(ions.map((i) => i.symbol)));
   if (distinctSymbols.length !== 2) return null;
   const cation = ions.find((i) => i.charge > 0);
   const anion = ions.find((i) => i.charge < 0);
   if (!cation || !anion) return null;
+  // Ions per formula unit. Bracketed SMILES lists each ion once per
+  // occurrence, so add those up; a formula carries the count directly.
+  const nCat = ions.filter((i) => i.symbol === cation.symbol).reduce((s, i) => s + (i.count || 1), 0);
+  const nAn = ions.filter((i) => i.symbol === anion.symbol).reduce((s, i) => s + (i.count || 1), 0);
+  const catSup = chargeText(cation.charge);
+  const anSup = chargeText(anion.charge);
 
-  // Layout: 3×3 alternating grid of ions + a "back layer" offset by
-  // (12, -12) to cue depth. Front-layer first so back doesn't occlude.
-  const cols = 3;
-  const rows = 3;
-  const cellW = 60;
-  const cellH = 50;
-  const padX = 30;
-  const padY = 30;
-  const backOffX = 14;
-  const backOffY = -14;
-
-  const dotAt = (col: number, row: number, layer: 'front' | 'back') => {
-    const isCation = (col + row + (layer === 'back' ? 1 : 0)) % 2 === 0;
-    const ion = isCation ? cation : anion;
-    const baseX = padX + col * cellW;
-    const baseY = padY + row * cellH;
-    const x = baseX + (layer === 'back' ? backOffX : 0);
-    const y = baseY + (layer === 'back' ? backOffY : 0);
-    const fill = isCation ? '#ef4444' : '#3b82f6';   // cation red, anion blue
-    const opacity = layer === 'back' ? 0.5 : 1;
-    return { x, y, fill, ion, opacity, isCation };
-  };
-
-  // Edges between adjacent front-layer ions (just to suggest the lattice).
-  const edges: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (c < cols - 1) edges.push({
-        x1: padX + c * cellW, y1: padY + r * cellH,
-        x2: padX + (c + 1) * cellW, y2: padY + r * cellH,
-      });
-      if (r < rows - 1) edges.push({
-        x1: padX + c * cellW, y1: padY + r * cellH,
-        x2: padX + c * cellW, y2: padY + (r + 1) * cellH,
-      });
-    }
+  if (nCat !== nAn) {
+    // Not 1:1 (MgCl₂, K₂O…): an alternating grid would show the wrong ratio.
+    // Show one formula unit instead — the ions that balance each other.
+    const unit = [
+      ...Array.from({ length: nCat }, () => cation),
+      ...Array.from({ length: nAn }, () => anion),
+    ];
+    // anions on either side of the cations reads best for AB₂ / A₂B
+    const ordered = nCat < nAn
+      ? [...unit.slice(nCat, nCat + Math.floor(nAn / 2)), ...unit.slice(0, nCat), ...unit.slice(nCat + Math.floor(nAn / 2))]
+      : [...unit.slice(0, Math.floor(nCat / 2)), ...unit.slice(nCat), ...unit.slice(Math.floor(nCat / 2), nCat)];
+    const R = 20;
+    const gap = 54;
+    const W = Math.max(220, ordered.length * gap + 40);
+    const x0 = W / 2 - ((ordered.length - 1) * gap) / 2;
+    return (
+      <div className={`unit-cell-lattice ${className}`}>
+        <p className="text-center text-sm font-medium text-gray-700 mb-1">One formula unit</p>
+        <svg viewBox={`0 0 ${W} 60`} className="w-full mx-auto block" style={{ maxWidth: W * 1.25 }} preserveAspectRatio="xMidYMid meet">
+          {ordered.map((ion, i) => (
+            <Ion key={i} x={x0 + i * gap} y={30} symbol={ion.symbol} charge={ion.charge} r={R} />
+          ))}
+        </svg>
+        <p className="text-center text-xs text-gray-600 mt-1">
+          {nCat} {cation.symbol}<sup>{catSup}</sup> for every {nAn} {anion.symbol}<sup>{anSup}</sup>: the charges add up to zero.
+        </p>
+      </div>
+    );
   }
+
+  // 1:1 salts: a small slice of the alternating (rock-salt style) lattice,
+  // with a fainter layer behind to hint at depth.
+  const cols = 4;
+  const rows = 3;
+  const cellW = 58;
+  const cellH = 50;
+  const backOffX = 20;
+  const backOffY = -18;
+  const padX = (VB_W - (cols - 1) * cellW - backOffX) / 2;
+  const padY = 44;
+  const at = (col: number, row: number, back: boolean) => ({
+    x: padX + col * cellW + (back ? backOffX : 0),
+    y: padY + row * cellH + (back ? backOffY : 0),
+    ion: (col + row + (back ? 1 : 0)) % 2 === 0 ? cation : anion,
+  });
+  const cells = Array.from({ length: rows }).flatMap((_, r) => Array.from({ length: cols }).map((__, c) => ({ r, c })));
 
   return (
     <div className={`unit-cell-lattice ${className}`}>
-      <p className="text-center text-xs text-gray-500 mb-1">Crystal lattice (2×3 slice)</p>
+      <p className="text-center text-sm font-medium text-gray-700 mb-1">Part of the crystal lattice</p>
       <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className="w-full max-w-md mx-auto block" preserveAspectRatio="xMidYMid meet">
-        {/* Back layer first (occluded) */}
-        {Array.from({ length: rows }).flatMap((_, r) =>
-          Array.from({ length: cols }).map((__, c) => {
-            const d = dotAt(c, r, 'back');
-            return (
-              <g key={`b-${r}-${c}`} opacity={d.opacity}>
-                <circle cx={d.x} cy={d.y} r={NODE_R} fill={d.fill} stroke="#fff" strokeWidth={STROKE} />
-              </g>
-            );
-          })
-        )}
-        {/* Front-layer edges */}
-        {edges.map((e, i) => (
-          <line key={`e-${i}`} x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke="#94a3b8" strokeWidth={1} strokeDasharray="2 3" />
-        ))}
-        {/* Front-layer ions with labels */}
-        {Array.from({ length: rows }).flatMap((_, r) =>
-          Array.from({ length: cols }).map((__, c) => {
-            const d = dotAt(c, r, 'front');
-            const sign = d.ion.charge > 0 ? '+' : '−';
-            const mag = Math.abs(d.ion.charge);
-            const chargeLabel = mag === 1 ? sign : `${mag}${sign}`;
-            return (
-              <g key={`f-${r}-${c}`}>
-                <circle cx={d.x} cy={d.y} r={NODE_R} fill={d.fill} stroke="#fff" strokeWidth={STROKE} />
-                <text x={d.x} y={d.y + 1} textAnchor="middle" dominantBaseline="middle" fontSize={FONT} fill="#fff" fontWeight={700}>
-                  {d.ion.symbol}
-                  <tspan fontSize={FONT - 3} dy={-4}>{chargeLabel}</tspan>
-                </text>
-              </g>
-            );
-          })
-        )}
+        {/* depth links, then the back layer */}
+        {cells.map(({ r, c }) => {
+          const f = at(c, r, false), b = at(c, r, true);
+          return <line key={`d-${r}-${c}`} x1={f.x} y1={f.y} x2={b.x} y2={b.y} stroke="#cbd5e1" strokeWidth={1} />;
+        })}
+        {cells.map(({ r, c }) => {
+          const d = at(c, r, true);
+          return <circle key={`b-${r}-${c}`} cx={d.x} cy={d.y} r={NODE_R - 5} fill={d.ion.charge > 0 ? '#fca5a5' : '#93c5fd'} stroke="#fff" strokeWidth={1.2} />;
+        })}
+        {/* front-layer links */}
+        {cells.map(({ r, c }) => {
+          const p = at(c, r, false);
+          return (
+            <g key={`e-${r}-${c}`} stroke="#94a3b8" strokeWidth={1.2}>
+              {c < cols - 1 && <line x1={p.x} y1={p.y} x2={p.x + cellW} y2={p.y} />}
+              {r < rows - 1 && <line x1={p.x} y1={p.y} x2={p.x} y2={p.y + cellH} />}
+            </g>
+          );
+        })}
+        {/* front-layer ions with labels */}
+        {cells.map(({ r, c }) => {
+          const d = at(c, r, false);
+          return <Ion key={`f-${r}-${c}`} x={d.x} y={d.y} symbol={d.ion.symbol} charge={d.ion.charge} />;
+        })}
       </svg>
-      <p className="text-center text-[10px] text-gray-400 mt-1">
-        Each {cation.symbol}<sup>{cation.charge === 1 ? '+' : `${cation.charge}+`}</sup> is surrounded by {anion.symbol}<sup>{anion.charge === -1 ? '−' : `${Math.abs(anion.charge)}−`}</sup> ions and vice versa.
+      <p className="text-center text-xs text-gray-600 mt-1">
+        Every {cation.symbol}<sup>{catSup}</sup> is surrounded by {anion.symbol}<sup>{anSup}</sup> ions, and every {anion.symbol}<sup>{anSup}</sup> by {cation.symbol}<sup>{catSup}</sup> — no separate molecules.
       </p>
     </div>
   );

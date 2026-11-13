@@ -190,87 +190,228 @@ export function solveLewis(spec: ConstructedLewisSpec): LewisSolverOutput {
 }
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
+//
+// Coordinates are abstract (the renderer fits and centres them); one bond is
+// BOND units long. The auto layout walks the bond graph outward from the most
+// connected atom and gives every atom the textbook Lewis arrangement for its
+// number of neighbours: straight for two (bent when the centre carries lone
+// pairs), a cross for four, branches at right angles along a chain — so a
+// chain molecule such as ethanol comes out as H–C–C–O–H with the other
+// hydrogens above and below, and bonds never cross.
 
-function computeLayout(
-  spec: ConstructedLewisSpec,
-  atoms: Array<{ id: string; x?: number; y?: number; bonds: number }>,
-): Map<string, { x: number; y: number }> {
-  const out = new Map<string, { x: number; y: number }>();
+const BOND = 20;
+type LayoutAtom = { id: string; x?: number; y?: number; bonds: number; lonePairs?: number; element?: string };
+type Pt = { x: number; y: number };
 
-  // 1. Atoms with explicit (x, y) keep them.
-  for (const a of atoms) {
-    if (typeof a.x === 'number' && typeof a.y === 'number') {
-      out.set(a.id, { x: a.x, y: a.y });
-    }
-  }
-  if (out.size === atoms.length) return out;
+function computeLayout(spec: ConstructedLewisSpec, atoms: LayoutAtom[]): Map<string, Pt> {
+  const out = new Map<string, Pt>();
 
-  // 2. Layout chosen by hint.
-  const layout = spec.layout ?? 'auto';
-
-  if (layout === 'linear') {
-    const ids = atoms.map((a) => a.id);
-    const dx = 100 / Math.max(1, ids.length - 1);
-    ids.forEach((id, i) => out.set(id, { x: i * dx, y: 50 }));
+  // 1. Every atom with an explicit (x, y): keep them as given.
+  if (atoms.every((a) => typeof a.x === 'number' && typeof a.y === 'number')) {
+    for (const a of atoms) out.set(a.id, { x: a.x as number, y: a.y as number });
     return out;
   }
 
-  if (layout === 'trigonal') {
-    // 3 outer atoms around a center if 4 atoms; else circular.
-    return circularLayout(atoms.map((a) => a.id), 50, 50, 38);
+  const layout = spec.layout ?? 'auto';
+  const ids = atoms.map((a) => a.id);
+
+  // 2. Explicit shape hints.
+  if (layout === 'linear') {
+    // Follow the bond chain end to end when there is one, so the atoms come
+    // out in bonded order whatever order they were declared in.
+    const order = chainOrder(ids, spec.bonds) ?? ids;
+    order.forEach((id, i) => out.set(id, { x: i * BOND, y: 50 }));
+    return out;
+  }
+  if (layout === 'trigonal' && !findCentralAtom(atoms, spec.bonds)) {
+    return circularLayout(ids, 50, 50, BOND);
   }
 
-  if (layout === 'tetrahedral' || layout === 'tetrahedral-around') {
-    const centerId = spec.centerAtomId ?? findCentralAtom(atoms, spec.bonds);
-    if (!centerId) return circularLayout(atoms.map((a) => a.id), 50, 50, 38);
-    return centeredLayout(atoms.map((a) => a.id), centerId);
-  }
+  // 3. Graph walk (auto, trigonal, tetrahedral, tetrahedral-around).
+  const forcedCenter = layout === 'tetrahedral-around' || layout === 'tetrahedral' ? spec.centerAtomId : undefined;
+  const placed = graphLayout(atoms, spec.bonds, forcedCenter, layout === 'trigonal');
 
-  // Auto: pick the most-connected atom as the center; arrange the rest
-  // in a circle around it. Falls back to circular for chains.
-  const autoCenter = findCentralAtom(atoms, spec.bonds);
-  if (!autoCenter) return circularLayout(atoms.map((a) => a.id), 50, 50, 38);
-  return centeredLayout(atoms.map((a) => a.id), autoCenter);
+  // Atoms that came with their own (x, y) keep them only when ALL did (case 1);
+  // mixing hand-placed and computed positions puts atoms on top of each other.
+  return placed;
+}
+
+/** Atom ids in bonded order when the molecule is a simple unbranched chain. */
+function chainOrder(ids: string[], bonds: ConstructedLewisSpec['bonds']): string[] | undefined {
+  const adj = adjacency(ids, bonds);
+  const ends = ids.filter((id) => (adj.get(id) ?? []).length === 1);
+  if (ends.length !== 2 || ids.some((id) => (adj.get(id) ?? []).length > 2)) return undefined;
+  const order: string[] = [];
+  let prev: string | undefined;
+  let cur: string | undefined = ends[0];
+  while (cur) {
+    order.push(cur);
+    const next: string | undefined = (adj.get(cur) ?? []).find((n) => n !== prev);
+    prev = cur;
+    cur = next;
+  }
+  return order.length === ids.length ? order : undefined;
+}
+
+function adjacency(ids: string[], bonds: ConstructedLewisSpec['bonds']): Map<string, string[]> {
+  const adj = new Map<string, string[]>();
+  for (const id of ids) adj.set(id, []);
+  for (const b of bonds) {
+    if (b.from === b.to) continue;
+    if (!adj.get(b.from)!.includes(b.to)) adj.get(b.from)!.push(b.to);
+    if (!adj.get(b.to)!.includes(b.from)) adj.get(b.to)!.push(b.from);
+  }
+  return adj;
 }
 
 function findCentralAtom(
   atoms: Array<{ id: string; bonds: number }>,
-  _bonds: ConstructedLewisSpec['bonds'],
+  bonds: ConstructedLewisSpec['bonds'],
 ): string | undefined {
-  // The atom with the most bonds is the center. Tie → first.
-  const sorted = [...atoms].sort((a, b) => b.bonds - a.bonds);
-  if (sorted.length && sorted[0].bonds > 1) return sorted[0].id;
+  // The atom bonded to the most OTHER ATOMS is the centre (a double bond is
+  // still one neighbour). Tie → the one with more bonding electrons → first.
+  const adj = adjacency(atoms.map((a) => a.id), bonds);
+  const deg = (id: string) => (adj.get(id) ?? []).length;
+  const sorted = [...atoms].sort((a, b) => deg(b.id) - deg(a.id) || b.bonds - a.bonds);
+  if (sorted.length && deg(sorted[0].id) > 1) return sorted[0].id;
   return undefined;
 }
 
-function centeredLayout(ids: string[], centerId: string): Map<string, { x: number; y: number }> {
-  const out = new Map<string, { x: number; y: number }>();
-  out.set(centerId, { x: 50, y: 50 });
-  const others = ids.filter((id) => id !== centerId);
-  const N = others.length;
-  if (N === 0) return out;
-  const radius = N <= 2 ? 30 : N <= 4 ? 36 : 40;
-  // For 2 outer atoms, use linear (left/right of center) — common for H2O,
-  // CO2 if you wanted bent vs linear, etc. We bias to bent (≈ 105°) as the
-  // default since it's more visually informative; truly linear molecules
-  // can pass layout: 'linear'.
-  if (N === 2) {
-    const angle = (105 * Math.PI) / 180;
-    out.set(others[0], { x: 50 - radius * Math.sin(angle / 2), y: 50 + radius * Math.cos(angle / 2) });
-    out.set(others[1], { x: 50 + radius * Math.sin(angle / 2), y: 50 + radius * Math.cos(angle / 2) });
-    return out;
+const DEG = Math.PI / 180;
+
+/** Directions (radians, screen coords: +y is down) for the neighbours of the
+ *  root atom, in the order they are handed out. */
+function rootAngles(n: number, lonePairs: number, trigonalHint: boolean): number[] {
+  if (n === 1) return [0];
+  if (n === 2) {
+    // Lone pairs on the centre bend the molecule (water, SO₂); none → linear (CO₂, HCN).
+    return lonePairs >= 1 ? [(90 + 52.25) * DEG, (90 - 52.25) * DEG] : [180 * DEG, 0];
   }
-  // N ≥ 3: evenly distributed around the center, rotated so the first
-  // atom is at the top.
-  for (let i = 0; i < N; i++) {
-    const a = -Math.PI / 2 + (i * 2 * Math.PI) / N;
-    out.set(others[i], { x: 50 + radius * Math.cos(a), y: 50 + radius * Math.sin(a) });
+  if (n === 3) {
+    // A lone pair takes the top position (ammonia); none → trigonal planar.
+    return lonePairs >= 1 && !trigonalHint ? [180 * DEG, 0, 90 * DEG] : [-90 * DEG, 150 * DEG, 30 * DEG];
+  }
+  if (n === 4) return [0, 180 * DEG, -90 * DEG, 90 * DEG];
+  return Array.from({ length: n }, (_, i) => -90 * DEG + (i * 2 * Math.PI) / n);
+}
+
+/** Directions for the k onward neighbours of an atom reached along `dir`. */
+function branchAngles(k: number, dir: number, totalNeighbours: number): number[] {
+  if (k === 1) return [dir];
+  if (k === 2) {
+    // Three neighbours in all → a Y (120° apart); otherwise at right angles.
+    const spread = totalNeighbours === 3 ? 60 * DEG : 90 * DEG;
+    return [dir - spread, dir + spread];
+  }
+  if (k === 3) return [dir, dir - 90 * DEG, dir + 90 * DEG];
+  // Many branches: fan them over the 240° facing away from the parent.
+  return Array.from({ length: k }, (_, i) => dir - 120 * DEG + (i * 240 * DEG) / (k - 1));
+}
+
+function graphLayout(
+  atoms: LayoutAtom[],
+  bonds: ConstructedLewisSpec['bonds'],
+  forcedCenter: string | undefined,
+  trigonalHint: boolean,
+): Map<string, Pt> {
+  const ids = atoms.map((a) => a.id);
+  const byId = new Map(atoms.map((a) => [a.id, a]));
+  const adj = adjacency(ids, bonds);
+  const deg = (id: string) => (adj.get(id) ?? []).length;
+  const out = new Map<string, Pt>();
+  let offsetX = 0;
+
+  const remaining = new Set(ids);
+  while (remaining.size > 0) {
+    // Component root: forced centre (first component), else most-connected atom.
+    const pool = ids.filter((id) => remaining.has(id));
+    let root = forcedCenter && remaining.has(forcedCenter) ? forcedCenter : pool[0];
+    if (root === pool[0]) {
+      for (const id of pool) {
+        if (deg(id) > deg(root) || (deg(id) === deg(root) && (byId.get(id)!.bonds > byId.get(root)!.bonds))) root = id;
+      }
+    }
+    // Collect the component.
+    const comp: string[] = [];
+    const seen = new Set<string>([root]);
+    const queue = [root];
+    while (queue.length) {
+      const cur = queue.shift()!;
+      comp.push(cur);
+      for (const n of adj.get(cur) ?? []) if (!seen.has(n)) { seen.add(n); queue.push(n); }
+    }
+    const compBonds = bonds.filter((b) => seen.has(b.from) && seen.has(b.to) && b.from !== b.to);
+    const uniquePairs = new Set(compBonds.map((b) => [b.from, b.to].sort().join('|')));
+    const cyclic = uniquePairs.size >= comp.length && comp.length >= 3;
+
+    const local = new Map<string, Pt>();
+    if (cyclic) {
+      // Ring (benzene, cyclohexane…): ring atoms on a regular polygon, their
+      // substituents pointing straight out from the ring centre.
+      const ring = comp.filter((id) => deg(id) >= 2);
+      const ordered = ringOrder(ring, adj) ?? ring;
+      const R = BOND / (2 * Math.sin(Math.PI / Math.max(3, ordered.length)));
+      ordered.forEach((id, i) => {
+        const a = -Math.PI / 2 + (i * 2 * Math.PI) / ordered.length;
+        local.set(id, { x: R * Math.cos(a), y: R * Math.sin(a) });
+      });
+      for (const id of comp) {
+        if (local.has(id)) continue;
+        const parent = (adj.get(id) ?? []).find((n) => local.has(n));
+        const p = parent ? local.get(parent)! : { x: 0, y: 0 };
+        const len = Math.hypot(p.x, p.y) || 1;
+        local.set(id, { x: p.x + (p.x / len) * BOND, y: p.y + (p.y / len) * BOND });
+      }
+    } else {
+      // Tree walk. Chain-continuing (non-terminal) neighbours are served
+      // first, so the backbone takes the straight-on / horizontal slots.
+      const order = (list: string[]) => [...list].sort((a, b) => Number(deg(b) > 1) - Number(deg(a) > 1));
+      local.set(root, { x: 0, y: 0 });
+      const walk: Array<{ id: string; dir: number | null }> = [{ id: root, dir: null }];
+      while (walk.length) {
+        const { id, dir } = walk.shift()!;
+        const here = local.get(id)!;
+        const kids = order((adj.get(id) ?? []).filter((n) => !local.has(n)));
+        if (kids.length === 0) continue;
+        const angles = dir === null
+          ? rootAngles(kids.length, byId.get(id)!.lonePairs ?? 0, trigonalHint)
+          : branchAngles(kids.length, dir, deg(id));
+        kids.forEach((kid, i) => {
+          const a = angles[i];
+          local.set(kid, { x: here.x + BOND * Math.cos(a), y: here.y + BOND * Math.sin(a) });
+          walk.push({ id: kid, dir: a });
+        });
+      }
+    }
+    // Place the component to the right of what is already laid out.
+    const xs = [...local.values()].map((p) => p.x);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    for (const [id, p] of local) out.set(id, { x: p.x - minX + offsetX, y: p.y + 50 });
+    offsetX += maxX - minX + BOND * 1.5;
+    for (const id of comp) remaining.delete(id);
   }
   return out;
 }
 
-function circularLayout(ids: string[], cx: number, cy: number, r: number): Map<string, { x: number; y: number }> {
-  const out = new Map<string, { x: number; y: number }>();
+/** Ring atoms in bonded order (walk round the ring), when they form one ring. */
+function ringOrder(ring: string[], adj: Map<string, string[]>): string[] | undefined {
+  if (ring.length < 3) return undefined;
+  const inRing = new Set(ring);
+  const order: string[] = [ring[0]];
+  let prev: string | undefined;
+  let cur = ring[0];
+  for (let i = 1; i < ring.length; i++) {
+    const next = (adj.get(cur) ?? []).find((n) => inRing.has(n) && n !== prev && !order.includes(n));
+    if (!next) return undefined;
+    order.push(next);
+    prev = cur;
+    cur = next;
+  }
+  return order;
+}
+
+function circularLayout(ids: string[], cx: number, cy: number, r: number): Map<string, Pt> {
+  const out = new Map<string, Pt>();
   ids.forEach((id, i) => {
     const a = -Math.PI / 2 + (i * 2 * Math.PI) / ids.length;
     out.set(id, { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });

@@ -19,8 +19,8 @@ export function PopulationPyramidRenderer({ figure }: { figure: PopulationPyrami
   const W = 580;
   const PAD_L = 24;
   const PAD_R = 24;
-  const PAD_T = title ? 40 : 24;
-  const PAD_B = 60;
+  const PAD_T = title ? 54 : 30;
+  const PAD_B = 48;
   // Center column reserved for age labels.
   const CENTER_W = 64;
   const ROW_H = 22;
@@ -35,7 +35,9 @@ export function PopulationPyramidRenderer({ figure }: { figure: PopulationPyrami
   const rowY = (idx: number) => PAD_T + ROW_H * idx;
 
   // Bar widths
-  const valueToWidth = (v: number) => (v / maxValue) * sideW;
+  // (the outer 40px of each side is kept free for the value printed at the bar's end)
+  const VALUE_GUTTER = 40;
+  const valueToWidth = (v: number) => (Math.max(0, v) / (maxValue || 1)) * (sideW - VALUE_GUTTER);
 
   // X-axis ticks (0% to maxValue, both sides)
   const tickValues: number[] = [];
@@ -46,8 +48,8 @@ export function PopulationPyramidRenderer({ figure }: { figure: PopulationPyrami
     if (mode === 'percent') {
       return `${Number(v.toFixed(1))}%`;
     }
-    if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
-    if (v >= 1000) return `${(v / 1000).toFixed(1)}k`;
+    if (v >= 1000000) return `${Number((v / 1000000).toFixed(1))}M`;
+    if (v >= 1000) return `${Number((v / 1000).toFixed(1))}k`;
     return String(Number(v.toFixed(0)));
   };
 
@@ -70,22 +72,24 @@ export function PopulationPyramidRenderer({ figure }: { figure: PopulationPyrami
         )}
 
         {/* Side legends */}
-        <text x={PAD_L + sideW / 2} y={PAD_T - 10} fontSize={12} fontWeight={600} textAnchor="middle" fill={COLOR_MALE}>
+        <text x={centerX - CENTER_W / 2 - (sideW - VALUE_GUTTER) / 2} y={PAD_T - 10} fontSize={12} fontWeight={600} textAnchor="middle" fill={COLOR_MALE}>
           Male
         </text>
-        <text x={W - PAD_R - sideW / 2} y={PAD_T - 10} fontSize={12} fontWeight={600} textAnchor="middle" fill={COLOR_FEMALE}>
+        <text x={centerX + CENTER_W / 2 + (sideW - VALUE_GUTTER) / 2} y={PAD_T - 10} fontSize={12} fontWeight={600} textAnchor="middle" fill={COLOR_FEMALE}>
           Female
         </text>
 
-        {/* Vertical center axis */}
-        <line
-          x1={centerX}
-          y1={PAD_T}
-          x2={centerX}
-          y2={PAD_T + ROW_H * ageGroups.length}
-          stroke={COLOR_AXIS}
-          strokeWidth={1.5}
-        />
+        {/* Age column header + the two zero lines either side of it (never through the labels) */}
+        <text x={centerX} y={PAD_T - 10} fontSize={11} textAnchor="middle" fill="#6b7280" fontStyle="italic">
+          {ageGroupLabel}
+        </text>
+        {/* Gridlines first, so the bars sit on top of them */}
+        {tickValues.filter((v) => v > 0).map((v, i) => (
+          <g key={`grid-${i}`}>
+            <line x1={centerX - CENTER_W / 2 - valueToWidth(v)} y1={PAD_T} x2={centerX - CENTER_W / 2 - valueToWidth(v)} y2={PAD_T + ROW_H * ageGroups.length} stroke={COLOR_GRID} strokeWidth={1} />
+            <line x1={centerX + CENTER_W / 2 + valueToWidth(v)} y1={PAD_T} x2={centerX + CENTER_W / 2 + valueToWidth(v)} y2={PAD_T + ROW_H * ageGroups.length} stroke={COLOR_GRID} strokeWidth={1} />
+          </g>
+        ))}
 
         {/* Males side collective bbox — covers the left half of the rows. */}
         <g
@@ -147,7 +151,7 @@ export function PopulationPyramidRenderer({ figure }: { figure: PopulationPyrami
               <rect
                 x={centerX - CENTER_W / 2 - maleW} y={yTop + 2}
                 width={maleW} height={ROW_H - 4}
-                fill={COLOR_MALE} fillOpacity={0.75} stroke={COLOR_MALE} strokeWidth={1}
+                fill={COLOR_MALE} fillOpacity={0.8} stroke={COLOR_MALE} strokeWidth={1}
                 data-feature={N.maleBar(g.ageLabel)}
                 data-feature-label={`male ${g.ageLabel}`}
                 data-feature-cx={(centerX - CENTER_W / 2 - maleW / 2) / W}
@@ -205,43 +209,35 @@ export function PopulationPyramidRenderer({ figure }: { figure: PopulationPyrami
           const yAxis = PAD_T + ROW_H * ageGroups.length;
           return (
             <g key={`tick-${i}`}>
-              {/* gridlines */}
-              {v > 0 && (
-                <>
-                  <line x1={xLeftLeft} y1={PAD_T} x2={xLeftLeft} y2={yAxis} stroke={COLOR_GRID} strokeWidth={1} />
-                  <line x1={xRightRight} y1={PAD_T} x2={xRightRight} y2={yAxis} stroke={COLOR_GRID} strokeWidth={1} />
-                </>
-              )}
+              <line x1={xLeftLeft} y1={yAxis} x2={xLeftLeft} y2={yAxis + 4} stroke={COLOR_AXIS} strokeWidth={1} />
+              <line x1={xRightRight} y1={yAxis} x2={xRightRight} y2={yAxis + 4} stroke={COLOR_AXIS} strokeWidth={1} />
               {/* tick labels (left side) */}
               <text x={xLeftLeft} y={yAxis + 16} fontSize={10} textAnchor="middle" fill="#374151">
                 {fmt(v)}
               </text>
               {/* tick labels (right side) */}
-              {v > 0 && (
-                <text x={xRightRight} y={yAxis + 16} fontSize={10} textAnchor="middle" fill="#374151">
-                  {fmt(v)}
-                </text>
-              )}
+              <text x={xRightRight} y={yAxis + 16} fontSize={10} textAnchor="middle" fill="#374151">
+                {fmt(v)}
+              </text>
             </g>
           );
         })}
 
-        {/* Bottom axis line */}
-        <line
-          x1={PAD_L}
-          y1={PAD_T + ROW_H * ageGroups.length}
-          x2={W - PAD_R}
-          y2={PAD_T + ROW_H * ageGroups.length}
-          stroke={COLOR_AXIS}
-          strokeWidth={1.5}
-        />
+        {/* Axes: a baseline and a zero line for each side */}
+        {[-1, 1].map((sgn) => {
+          const x0 = centerX + sgn * (CENTER_W / 2);
+          const yAxis = PAD_T + ROW_H * ageGroups.length;
+          return (
+            <g key={sgn}>
+              <line x1={x0} y1={PAD_T} x2={x0} y2={yAxis} stroke={COLOR_AXIS} strokeWidth={1.25} />
+              <line x1={x0} y1={yAxis} x2={x0 + sgn * (sideW - VALUE_GUTTER + 8)} y2={yAxis} stroke={COLOR_AXIS} strokeWidth={1.25} />
+            </g>
+          );
+        })}
 
         {/* Axis labels */}
         <text x={W / 2} y={H - 8} fontSize={12} fontWeight={600} textAnchor="middle" fill="#374151">
           {xLabel ?? `Population (${mode === 'percent' ? '%' : 'count'})`}
-        </text>
-        <text x={centerX} y={H - 28} fontSize={11} textAnchor="middle" fill="#6b7280" fontStyle="italic">
-          {ageGroupLabel}
         </text>
       </svg>
     </div>

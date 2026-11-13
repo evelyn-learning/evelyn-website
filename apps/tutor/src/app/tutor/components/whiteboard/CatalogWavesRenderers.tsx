@@ -21,18 +21,20 @@ const INK = '#374151';
 export function CatalogDopplerRenderer({ figure }: { figure: DopplerFigure }) {
   const N = dopplerFeatureNames;
   const W = 640;
-  const H = 380;
-  const cy = 208;
+  const H = 372;
+  const cy = 176;
   const dir = figure.movingRight ? 1 : -1;
-  const lambda0 = 30;
   const nRings = figure.nRings;
   const beta = figure.beta;
+  // The largest ring must stay inside the middle band (the side columns hold
+  // the observers and their notes), so the wavelength shrinks with more rings.
+  const R_MAX = 132;
+  const lambda0 = Math.min(34, R_MAX / nRings);
   const rMax = nRings * lambda0;
   // Wavefront k (emitted k periods ago) is centered where the source WAS then:
   // center = source − dir·k·β·λ₀, radius = k·λ₀. Ahead-front spacing λ₀(1−β)
-  // (compressed), behind spacing λ₀(1+β) (stretched). The rings' bounding box
-  // has width 2·rMax and midpoint (source − dir·rMax·β), so anchor the source
-  // to center that box in the frame.
+  // (compressed), behind spacing λ₀(1+β) (stretched). The outermost ring is
+  // centred on the frame, so the source sits ahead of the centre by n·β·λ₀.
   const sourceX = W / 2 + dir * nRings * beta * lambda0;
 
   const rings = [];
@@ -41,15 +43,38 @@ export function CatalogDopplerRenderer({ figure }: { figure: DopplerFigure }) {
     rings.push({ cx, r: k * lambda0, k });
   }
 
-  const arrowX2 = sourceX + dir * 56;
-  const aheadX = figure.movingRight ? W - 24 : 24;
-  const behindX = figure.movingRight ? 24 : W - 24;
-  const aheadAnchor: 'start' | 'end' = figure.movingRight ? 'end' : 'start';
-  const behindAnchor: 'start' | 'end' = figure.movingRight ? 'start' : 'end';
+  // Motion arrow: starts at the source, drawn over the rings with a white halo.
+  const arrowLen = 50;
+  const arrowX2 = sourceX + dir * arrowLen;
+  const colW = W / 2 - rMax; // width of each side column
+  const aheadX = figure.movingRight ? W - colW / 2 : colW / 2;
+  const behindX = figure.movingRight ? colW / 2 : W - colW / 2;
+  const speed = `${Number(beta.toFixed(2))} × wave speed`;
+  const caption = `source moving ${figure.movingRight ? 'right' : 'left'} at v = ${speed}`;
+  const capW = caption.length * 6.3 + 18;
+
+  const side = (x: number, color: string, head: string, l1: string, l2: string) => (
+    <>
+      <text x={x} y={cy - 74} fontSize={13} textAnchor="middle" fill={color} fontWeight={700}>
+        <tspan x={x}>{head}</tspan>
+        <tspan x={x} dy={16}>wavefronts</tspan>
+      </text>
+      <text x={x} y={cy - 36} fontSize={11.5} textAnchor="middle" fill={color}>{l1}</text>
+      <text x={x} y={cy - 21} fontSize={11.5} textAnchor="middle" fill={color}>{l2}</text>
+      {figure.showObservers && (
+        <>
+          {/* observer: a small listener figure standing clear of the text */}
+          <circle cx={x} cy={cy} r={7} fill="#fff" stroke={color} strokeWidth={2} />
+          <path d={`M ${x - 9} ${cy + 24} Q ${x - 9} ${cy + 10} ${x} ${cy + 10} Q ${x + 9} ${cy + 10} ${x + 9} ${cy + 24}`} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" />
+          <text x={x} y={cy + 42} fontSize={11.5} textAnchor="middle" fill={color} fontWeight={600}>observer</text>
+        </>
+      )}
+    </>
+  );
 
   return (
     <div className="w-full flex flex-col items-center">
-      {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
+      <div className="text-base font-semibold text-gray-800 mb-2">{figure.title || 'Doppler effect: a moving source'}</div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full max-w-[680px]"
@@ -75,58 +100,33 @@ export function CatalogDopplerRenderer({ figure }: { figure: DopplerFigure }) {
             r={ring.r}
             fill="none"
             stroke={BLUE}
-            strokeWidth={2}
+            strokeWidth={nRings > 4 ? 1.6 : 2}
             opacity={0.85}
           />
         ))}
 
-        {/* motion arrow */}
+        {/* motion arrow (white underlay so it reads across the rings) */}
+        <line x1={sourceX} y1={cy} x2={arrowX2 - dir * 2} y2={cy} stroke="#fff" strokeWidth={7} strokeLinecap="round" />
         <line x1={sourceX} y1={cy} x2={arrowX2} y2={cy} stroke={INK} strokeWidth={2.5} markerEnd="url(#dop-arr)" />
-        <text x={sourceX + dir * 30} y={cy - 10} fontSize={14} textAnchor="middle" fill={INK} fontWeight={700} fontStyle="italic">
+        <text x={sourceX + dir * (arrowLen / 2 + 4)} y={cy - 9} fontSize={15} textAnchor="middle" fill={INK} fontWeight={700} fontStyle="italic" stroke="#fff" strokeWidth={4} paintOrder="stroke" strokeLinejoin="round">
           v
         </text>
 
-        {/* source */}
+        {/* source (named in the caption key, so no label sits among the rings) */}
         <g data-feature={N.source} data-feature-label="Source">
           <circle cx={sourceX} cy={cy} r={6.5} fill={RED} stroke="#fff" strokeWidth={1.5} />
-          <text x={sourceX} y={cy + 24} fontSize={12.5} textAnchor="middle" fill={RED} fontWeight={700}>
-            source
-          </text>
         </g>
 
-        {/* ahead (compressed) label + observer */}
         <g data-feature={N.ahead} data-feature-label="Ahead (compressed)">
-          <circle cx={aheadX + (figure.movingRight ? -14 : 14)} cy={62} r={7} fill="none" stroke={RED} strokeWidth={2} />
-          <text x={aheadX} y={44} fontSize={13} textAnchor={aheadAnchor} fill={RED} fontWeight={700}>
-            compressed wavefronts
-          </text>
-          <text x={aheadX} y={62} fontSize={11.5} textAnchor={aheadAnchor} fill={RED}>
-            higher frequency
-          </text>
-          <text x={aheadX} y={78} fontSize={11.5} textAnchor={aheadAnchor} fill={RED}>
-            (higher pitch)
-          </text>
+          {side(aheadX, RED, 'compressed', 'higher frequency', '(higher pitch)')}
         </g>
-
-        {/* behind (stretched) label + observer */}
         <g data-feature={N.behind} data-feature-label="Behind (stretched)">
-          <circle cx={behindX + (figure.movingRight ? 14 : -14)} cy={62} r={7} fill="none" stroke={BLUE} strokeWidth={2} />
-          <text x={behindX} y={44} fontSize={13} textAnchor={behindAnchor} fill={BLUE} fontWeight={700}>
-            stretched wavefronts
-          </text>
-          <text x={behindX} y={62} fontSize={11.5} textAnchor={behindAnchor} fill={BLUE}>
-            lower frequency
-          </text>
-          <text x={behindX} y={78} fontSize={11.5} textAnchor={behindAnchor} fill={BLUE}>
-            (lower pitch)
-          </text>
+          {side(behindX, BLUE, 'stretched', 'lower frequency', '(lower pitch)')}
         </g>
 
-        {figure.showObservers && (
-          <text x={W / 2} y={H - 14} fontSize={11.5} textAnchor="middle" fill={INK}>
-            {`source moving at v = ${beta.toFixed(2)}c toward the ${figure.movingRight ? 'right' : 'left'}`}
-          </text>
-        )}
+        {/* caption with the source key */}
+        <circle cx={W / 2 - capW / 2 + 6} cy={H - 20} r={5} fill={RED} />
+        <text x={W / 2 - capW / 2 + 18} y={H - 16} fontSize={12} textAnchor="start" fill={INK}>{caption}</text>
       </svg>
     </div>
   );
@@ -137,9 +137,9 @@ export function CatalogStandingWaveRenderer({ figure }: { figure: StandingWaveFi
   const N = standingWaveFeatureNames;
   const n = figure.harmonic;
   const W = 640;
-  const H = 300;
+  const H = 318;
   const PAD = 56;
-  const cy = 150;
+  const cy = 146;
   const L = W - PAD * 2;
   const A = 92;
   const x0 = PAD;
@@ -213,7 +213,7 @@ export function CatalogStandingWaveRenderer({ figure }: { figure: StandingWaveFi
               {nodes.map((nx, i) => (
                 <g key={`nd-${i}`}>
                   <circle cx={nx} cy={cy} r={4.5} fill={RED} stroke="#fff" strokeWidth={1} />
-                  <text x={nx} y={cy + A + 40} fontSize={12} textAnchor="middle" fill={RED} fontWeight={700}>N</text>
+                  <text x={nx} y={cy + A + 38} fontSize={12} textAnchor="middle" fill={RED} fontWeight={700}>N</text>
                 </g>
               ))}
             </g>
@@ -230,7 +230,7 @@ export function CatalogStandingWaveRenderer({ figure }: { figure: StandingWaveFi
         )}
 
         {figure.showNodes && (
-          <text x={W / 2} y={H - 8} fontSize={11.5} textAnchor="middle" fill={INK}>
+          <text x={W / 2} y={H - 10} fontSize={12} textAnchor="middle" fill={INK}>
             N = node (no motion)   ·   A = antinode (maximum displacement)
           </text>
         )}
@@ -268,16 +268,20 @@ function hyperbolaPoints(
 export function CatalogInterferenceRenderer({ figure }: { figure: InterferenceFigure }) {
   const N = interferenceFeatureNames;
   const W = 640;
-  const H = 440;
-  const cx = 320;
-  const cy = 214;
+  const H = 452;
+  // The pattern lives in its own frame; the legend has a band above it.
+  const FX = 24, FY = 40, FW = W - 48, FH = H - FY - 12;
+  const cx = W / 2;
+  const cy = FY + FH / 2;
   const lambda = figure.wavelength;
   const d = figure.sourceSep;
   const c = d / 2;
   const s1x = cx - c;
   const s2x = cx + c;
-  const yMax = 188;
-  const ringCount = 4;
+  const yMax = FH / 2 + 4;
+  // enough rings to fill the frame from either source, so the clip is even
+  const ringCount = Math.ceil(Math.hypot(FW / 2 + c, FH / 2) / lambda);
+  const halo = { stroke: '#fff', strokeWidth: 4, paintOrder: 'stroke' as const, strokeLinejoin: 'round' as const };
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -294,64 +298,72 @@ export function CatalogInterferenceRenderer({ figure }: { figure: InterferenceFi
         data-feature-w={1}
         data-feature-h={1}
       >
-        {/* concentric wavefronts from each source */}
-        {[s1x, s2x].map((sx, si) =>
-          Array.from({ length: ringCount }, (_, i) => i + 1).map((k) => (
-            <circle
-              key={`c-${si}-${k}`}
-              cx={sx}
-              cy={cy}
-              r={k * lambda}
-              fill="none"
-              stroke={FAINT}
-              strokeWidth={1}
-            />
-          )),
-        )}
+        <defs>
+          <clipPath id="ifr-clip"><rect x={FX} y={FY} width={FW} height={FH} rx={8} /></clipPath>
+        </defs>
 
-        {/* nodal (destructive) hyperbolas — dashed */}
-        <g data-feature={N.destructive} data-feature-label="Destructive (nodal)">
-          {figure.nodalOrders.map((order) => (
-            <polyline
-              key={`nod-${order}`}
-              points={hyperbolaPoints(Math.abs(order) * lambda / 2, c, Math.sign(order), cx, cy, yMax)}
-              fill="none"
-              stroke={ORANGE}
-              strokeWidth={2}
-              strokeDasharray="6 5"
-            />
-          ))}
+        {/* legend band */}
+        <g>
+          <line x1={W / 2 - 196} y1={18} x2={W / 2 - 166} y2={18} stroke={BLUE} strokeWidth={2.6} />
+          <text x={W / 2 - 160} y={22} fontSize={12} fill={BLUE} fontWeight={700}>constructive (antinodal)</text>
+          <line x1={W / 2 + 28} y1={18} x2={W / 2 + 58} y2={18} stroke={ORANGE} strokeWidth={2} strokeDasharray="6 5" />
+          <text x={W / 2 + 64} y={22} fontSize={12} fill={ORANGE} fontWeight={700}>destructive (nodal)</text>
         </g>
 
-        {/* antinodal (constructive) hyperbolas — solid */}
-        <g data-feature={N.constructive} data-feature-label="Constructive (antinodal)">
-          {figure.antinodalOrders.map((m) => (
-            <polyline
-              key={`ant-${m}`}
-              points={hyperbolaPoints(Math.abs(m) * lambda / 2, c, m === 0 ? 1 : Math.sign(m), cx, cy, yMax)}
-              fill="none"
-              stroke={BLUE}
-              strokeWidth={2.6}
-            />
-          ))}
-        </g>
+        <rect x={FX} y={FY} width={FW} height={FH} rx={8} fill="#f8fafc" />
+        <g clipPath="url(#ifr-clip)">
+          {/* concentric wavefronts from each source */}
+          {[s1x, s2x].map((sx, si) =>
+            Array.from({ length: ringCount }, (_, i) => i + 1).map((k) => (
+              <circle
+                key={`c-${si}-${k}`}
+                cx={sx}
+                cy={cy}
+                r={k * lambda}
+                fill="none"
+                stroke={FAINT}
+                strokeWidth={1}
+              />
+            )),
+          )}
 
-        {/* sources */}
+          {/* nodal (destructive) hyperbolas — dashed */}
+          <g data-feature={N.destructive} data-feature-label="Destructive (nodal)">
+            {figure.nodalOrders.map((order) => (
+              <polyline
+                key={`nod-${order}`}
+                points={hyperbolaPoints(Math.abs(order) * lambda / 2, c, Math.sign(order), cx, cy, yMax)}
+                fill="none"
+                stroke={ORANGE}
+                strokeWidth={2}
+                strokeDasharray="6 5"
+              />
+            ))}
+          </g>
+
+          {/* antinodal (constructive) hyperbolas — solid */}
+          <g data-feature={N.constructive} data-feature-label="Constructive (antinodal)">
+            {figure.antinodalOrders.map((m) => (
+              <polyline
+                key={`ant-${m}`}
+                points={hyperbolaPoints(Math.abs(m) * lambda / 2, c, m === 0 ? 1 : Math.sign(m), cx, cy, yMax)}
+                fill="none"
+                stroke={BLUE}
+                strokeWidth={2.6}
+              />
+            ))}
+          </g>
+        </g>
+        <rect x={FX} y={FY} width={FW} height={FH} rx={8} fill="none" stroke={FAINT} strokeWidth={1.2} />
+
+        {/* sources: named on the outer side, on the axis, where no line crosses */}
         <g data-feature={N.sources} data-feature-label="Sources">
-          {[[s1x, 'S₁'], [s2x, 'S₂']].map(([sx, lbl], i) => (
+          {([[s1x, 'S₁', -1], [s2x, 'S₂', 1]] as [number, string, number][]).map(([sx, lbl, sideSign], i) => (
             <g key={i}>
-              <circle cx={sx as number} cy={cy} r={6.5} fill={RED} stroke="#fff" strokeWidth={1.5} />
-              <text x={sx as number} y={cy + 22} fontSize={13} textAnchor="middle" fill={RED} fontWeight={700}>{lbl as string}</text>
+              <circle cx={sx} cy={cy} r={6.5} fill={RED} stroke="#fff" strokeWidth={1.5} />
+              <text x={sx + sideSign * 12} y={cy + 4.5} fontSize={13} textAnchor={sideSign < 0 ? 'end' : 'start'} fill={RED} fontWeight={700} {...halo}>{lbl}</text>
             </g>
           ))}
-        </g>
-
-        {/* legend */}
-        <g>
-          <line x1={W / 2 - 150} y1={20} x2={W / 2 - 120} y2={20} stroke={BLUE} strokeWidth={2.6} />
-          <text x={W / 2 - 114} y={24} fontSize={12} fill={BLUE} fontWeight={700}>constructive (antinodal)</text>
-          <line x1={W / 2 + 44} y1={20} x2={W / 2 + 74} y2={20} stroke={ORANGE} strokeWidth={2} strokeDasharray="6 5" />
-          <text x={W / 2 + 80} y={24} fontSize={12} fill={ORANGE} fontWeight={700}>destructive (nodal)</text>
         </g>
       </svg>
     </div>

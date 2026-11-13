@@ -35,7 +35,7 @@ function Leader({
 export function CatalogNeuronDiagramRenderer({ figure }: { figure: NeuronFigure }) {
   const N = neuronFeatureNames;
   const hi = (p: NeuronPart) => figure.highlight.includes(p);
-  const W = 760;
+  const W = 770;
   const H = 360;
   const cy = 175;
 
@@ -124,42 +124,97 @@ export function CatalogNeuronDiagramRenderer({ figure }: { figure: NeuronFigure 
 
         {/* Synapse — gap to a receiving dendrite of the next neuron */}
         <g data-feature={N.part('synapse')} data-feature-label="synapse" data-feature-cx={0.91} data-feature-cy={0.34} data-feature-w={0.1} data-feature-h={0.16}>
-          <path d="M 672 112 C 700 100, 716 116, 706 140" fill="none" stroke={hi('synapse') ? HI : '#94a3b8'} strokeWidth={hi('synapse') ? 3 : 2.5} strokeLinecap="round" />
-          <line x1={651} y1={123} x2={668} y2={114} stroke={hi('synapse') ? HI : '#cbd5e1'} strokeWidth={1.5} strokeDasharray="3 3" />
+          {/* membrane of the NEXT cell, a small gap away from the terminals */}
+          <path d="M 700 92 C 672 130, 672 220, 700 258" fill="none" stroke={hi('synapse') ? HI : '#7c3aed'} strokeWidth={hi('synapse') ? 4 : 3} strokeLinecap="round" opacity={hi('synapse') ? 1 : 0.55} />
+          {/* neurotransmitter crossing the gap */}
+          {[[660, 224], [664, 231], [661, 238]].map(([dx, dy], i) => (
+            <circle key={i} cx={dx} cy={dy} r={1.6} fill={hi('synapse') ? HI : '#64748b'} />
+          ))}
+          <text x={712} y={179} fontSize={10.5} fill="#6b7280" fontStyle="italic">next cell</text>
         </g>
 
         {/* Labels */}
-        <Leader lx={62} ly={266} tx={92} ty={214} text="Dendrites" hi={hi('dendrites')} />
-        <Leader lx={168} ly={272} tx={158} ty={216} text="Cell body (soma)" hi={hi('cell_body')} />
-        <Leader lx={150} ly={104} tx={152} ty={161} text="Nucleus" hi={hi('nucleus')} />
+        {/* Labels: one row above the cell and one below, none over a dendrite */}
+        <Leader lx={58} ly={338} tx={104} ty={292} text="Dendrites" hi={hi('dendrites')} />
+        <Leader lx={206} ly={300} tx={166} ty={215} text="Cell body (soma)" hi={hi('cell_body')} />
+        <Leader lx={186} ly={66} tx={154} ty={162} text="Nucleus" hi={hi('nucleus')} />
         <Leader lx={300} ly={266} tx={300} ty={182} text="Axon" hi={hi('axon')} />
         <Leader lx={345} ly={104} tx={345} ty={160} text="Myelin sheath" hi={hi('myelin_sheath')} />
         <Leader lx={505} ly={104} tx={480} ty={168} text="Node of Ranvier" hi={hi('node_of_ranvier')} />
-        <Leader lx={668} ly={104} tx={648} ty={150} text="Axon terminals" hi={hi('axon_terminals')} />
-        <Leader lx={706} ly={262} tx={700} ty={140} text="Synapse" hi={hi('synapse')} />
+        <Leader lx={610} ly={84} tx={646} ty={113} text="Axon terminals" hi={hi('axon_terminals')} />
+        <Leader lx={664} ly={306} tx={665} ty={242} text="Synapse" hi={hi('synapse')} />
+        {/* direction the signal travels */}
+        <line x1={300} y1={322} x2={470} y2={322} stroke="#374151" strokeWidth={1.5} markerEnd="url(#nrn-arr)" />
+        <text x={385} y={340} fontSize={11} textAnchor="middle" fill="#6b7280">direction of the nerve impulse</text>
       </svg>
     </div>
   );
 }
 
 // ── brain_regions ──────────────────────────────────────────────────────────
+// Side view of the left hemisphere, facing left (frontal lobe at the front).
 const CEREBRUM_PATH =
-  'M 110 205 C 86 130, 170 74, 270 80 C 360 84, 470 78, 522 120 ' +
-  'C 562 152, 556 206, 500 226 C 462 240, 430 240, 398 242 ' +
-  'C 348 250, 296 252, 246 246 C 186 240, 128 244, 110 205 Z';
+  'M 96 232 C 70 200, 76 140, 120 104 C 170 62, 270 48, 350 56 ' +
+  'C 440 62, 520 100, 540 170 C 552 214, 530 250, 490 262 ' +
+  'C 460 268, 430 262, 400 262 C 370 290, 300 300, 250 290 ' +
+  'C 210 282, 190 262, 176 250 C 150 252, 120 250, 96 232 Z';
+// Sulci that separate the lobes.
+const SYLVIAN = 'M 176 250 Q 220 222 270 215 L 365 198';          // lateral fissure
+const CENTRAL = 'M 300 54 Q 280 130 270 215';                      // central sulcus
+const PARIETO_OCCIPITAL = 'M 458 70 Q 440 130 446 185 Q 440 225 425 264';
+const LOBE_ZONES: Record<'frontal_lobe' | 'parietal_lobe' | 'occipital_lobe' | 'temporal_lobe', string> = {
+  frontal_lobe: 'M 0 0 L 300 0 L 300 54 Q 280 130 270 215 Q 220 222 176 250 L 0 420 Z',
+  parietal_lobe: 'M 300 0 L 458 0 L 458 70 Q 440 130 446 185 L 365 198 L 270 215 Q 280 130 300 54 Z',
+  occipital_lobe: 'M 458 0 L 620 0 L 620 440 L 425 440 L 425 264 Q 440 225 446 185 Q 440 130 458 70 Z',
+  temporal_lobe: 'M 176 250 Q 220 222 270 215 L 365 198 L 446 185 Q 440 225 425 264 L 425 440 L 0 440 L 0 420 Z',
+};
+const LOBE_FILL: Record<keyof typeof LOBE_ZONES, string> = {
+  frontal_lobe: '#bfdbfe', parietal_lobe: '#bbf7d0', occipital_lobe: '#fde68a', temporal_lobe: '#ddd6fe',
+};
+const LOBE_INK: Record<keyof typeof LOBE_ZONES, string> = {
+  frontal_lobe: '#1e40af', parietal_lobe: '#166534', occipital_lobe: '#92400e', temporal_lobe: '#5b21b6',
+};
+// Faint folds (gyri) so the surface reads as cortex, not a flat blob.
+const GYRI = [
+  'M 130 130 q 22 -14 40 4 q 14 14 34 2', 'M 120 190 q 26 -12 44 6 q 12 10 30 0', 'M 190 96 q 24 -10 40 8 q 10 10 26 2',
+  'M 320 90 q 22 -12 40 6 q 12 12 32 2', 'M 340 150 q 22 -12 40 4 q 12 10 30 0', 'M 400 104 q 16 -8 30 6',
+  'M 470 120 q 18 -8 30 8 q 8 10 22 4', 'M 468 216 q 18 -10 32 4 q 8 8 20 2', 'M 230 262 q 26 -10 46 4 q 14 10 34 0', 'M 320 244 q 22 -8 40 4',
+];
+const CEREBELLUM = { cx: 468, cy: 298, rx: 62, ry: 42 };
+const BRAIN_STEM_PATH = 'M 370 262 C 372 312, 384 360, 394 404 L 430 404 C 426 362, 420 314, 420 272 Z';
+
+/** A label in a side margin with a straight leader to the part it names. */
+function SideLeader({ side, x, y, tx, ty, text, hi }: { side: 'left' | 'right'; x: number; y: number; tx: number; ty: number; text: string; hi?: boolean }) {
+  return (
+    <g>
+      <line x1={side === 'left' ? x + 6 : x - 6} y1={y - 4} x2={tx} y2={ty} stroke={hi ? HI : '#64748b'} strokeWidth={hi ? 1.5 : 1} />
+      <circle cx={tx} cy={ty} r={2.2} fill={hi ? HI : '#64748b'} />
+      <text x={x} y={y} fontSize={12.5} textAnchor={side === 'left' ? 'end' : 'start'} fill={hi ? HI : '#374151'} fontWeight={hi ? 700 : 600}>{text}</text>
+    </g>
+  );
+}
 
 export function CatalogBrainRegionsRenderer({ figure }: { figure: BrainRegionsFigure }) {
   const N = brainFeatureNames;
   const hi = (p: BrainPart) => figure.highlight.includes(p);
-  const W = 620;
-  const H = 440;
+  const OX = 80;       // room for a left label column
+  const W = 760;
+  const H = 430;
+  const fx = (x: number) => (x + OX) / W;
+  const lobes = Object.keys(LOBE_ZONES) as Array<keyof typeof LOBE_ZONES>;
+  const lobeLabel: Record<keyof typeof LOBE_ZONES, { x: number; y: number; lines: string[] }> = {
+    frontal_lobe: { x: 185, y: 162, lines: ['Frontal', 'lobe'] },
+    parietal_lobe: { x: 372, y: 124, lines: ['Parietal', 'lobe'] },
+    occipital_lobe: { x: 494, y: 170, lines: ['Occipital', 'lobe'] },
+    temporal_lobe: { x: 318, y: 250, lines: ['Temporal lobe'] },
+  };
 
   return (
     <div className="brain-renderer w-full flex flex-col items-center">
       {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full max-w-[600px]"
+        className="w-full max-w-[680px]"
         data-feature={N.brain}
         data-feature-label={figure.title || 'brain'}
         data-feature-cx={0.5}
@@ -170,71 +225,79 @@ export function CatalogBrainRegionsRenderer({ figure }: { figure: BrainRegionsFi
         <defs>
           <clipPath id="cerebrum-clip"><path d={CEREBRUM_PATH} /></clipPath>
         </defs>
+        <g transform={`translate(${OX} 0)`}>
+          {figure.view === 'lobes' ? (
+            <>
+              {/* Cerebellum (tucked under the back of the cerebrum) */}
+              <g data-feature={N.part('cerebellum')} data-feature-label="cerebellum" data-feature-cx={fx(CEREBELLUM.cx)} data-feature-cy={0.72} data-feature-w={0.17} data-feature-h={0.2}>
+                <ellipse cx={CEREBELLUM.cx} cy={CEREBELLUM.cy} rx={CEREBELLUM.rx} ry={CEREBELLUM.ry} fill={hi('cerebellum') ? '#fca5a5' : '#fecdd3'} stroke="#475569" strokeWidth={2.5} />
+                {[278, 292, 306, 320].map((yy, i) => {
+                  const half = CEREBELLUM.rx * Math.sqrt(Math.max(0, 1 - ((yy - CEREBELLUM.cy) / CEREBELLUM.ry) ** 2)) - 5;
+                  return <path key={i} d={`M ${CEREBELLUM.cx - half} ${yy} Q ${CEREBELLUM.cx} ${yy + 7} ${CEREBELLUM.cx + half} ${yy}`} fill="none" stroke="#9f1239" strokeWidth={0.9} opacity={0.5} />;
+                })}
+              </g>
+              {/* Brain stem */}
+              <g data-feature={N.part('brain_stem')} data-feature-label="brain stem" data-feature-cx={fx(400)} data-feature-cy={0.78} data-feature-w={0.08} data-feature-h={0.32}>
+                <path d={BRAIN_STEM_PATH} fill={hi('brain_stem') ? '#fca5a5' : '#e2e8f0'} stroke="#475569" strokeWidth={2.5} strokeLinejoin="round" />
+              </g>
 
-        {figure.view === 'lobes' ? (
-          <>
-            {/* Lobe zones, clipped to the cerebrum silhouette */}
-            <g clipPath="url(#cerebrum-clip)">
-              <rect x={70} y={60} width={162} height={200} fill={hi('frontal_lobe') ? '#fca5a5' : '#bfdbfe'} />
-              <rect x={232} y={60} width={170} height={100} fill={hi('parietal_lobe') ? '#fca5a5' : '#bbf7d0'} />
-              <rect x={402} y={60} width={170} height={200} fill={hi('occipital_lobe') ? '#fca5a5' : '#fde68a'} />
-              <rect x={232} y={160} width={170} height={100} fill={hi('temporal_lobe') ? '#fca5a5' : '#ddd6fe'} />
-            </g>
-            {/* Sulci hints + outline */}
-            <path d={CEREBRUM_PATH} fill="none" stroke="#475569" strokeWidth={2.5} />
-            <line x1={232} y1={84} x2={232} y2={248} stroke="#64748b" strokeWidth={1.5} />
-            <line x1={232} y1={160} x2={402} y2={160} stroke="#64748b" strokeWidth={1.5} />
-            <line x1={402} y1={84} x2={402} y2={232} stroke="#64748b" strokeWidth={1.5} />
+              {/* Lobe zones, clipped to the cerebrum silhouette */}
+              <g clipPath="url(#cerebrum-clip)">
+                {lobes.map((l) => <path key={l} d={LOBE_ZONES[l]} fill={hi(l) ? '#fca5a5' : LOBE_FILL[l]} />)}
+                {GYRI.map((d, i) => <path key={i} d={d} fill="none" stroke="#475569" strokeWidth={1.1} opacity={0.22} strokeLinecap="round" />)}
+                {[SYLVIAN, CENTRAL, PARIETO_OCCIPITAL].map((d, i) => <path key={i} d={d} fill="none" stroke="#475569" strokeWidth={2} strokeLinecap="round" />)}
+              </g>
+              <path d={CEREBRUM_PATH} fill="none" stroke="#475569" strokeWidth={2.5} strokeLinejoin="round" />
 
-            {/* Cerebellum */}
-            <g data-feature={N.part('cerebellum')} data-feature-label="cerebellum" data-feature-cx={0.78} data-feature-cy={0.66} data-feature-w={0.2} data-feature-h={0.22}>
-              <ellipse cx={482} cy={288} rx={52} ry={40} fill={hi('cerebellum') ? '#fca5a5' : '#cbd5e1'} stroke="#475569" strokeWidth={2.5} />
-              {[268, 288, 308].map((yy, i) => (
-                <path key={i} d={`M 438 ${yy} Q 482 ${yy + 8} 526 ${yy}`} fill="none" stroke="#64748b" strokeWidth={1} />
-              ))}
-            </g>
-            {/* Brain stem */}
-            <g data-feature={N.part('brain_stem')} data-feature-label="brain stem" data-feature-cx={0.6} data-feature-cy={0.74} data-feature-w={0.07} data-feature-h={0.22}>
-              <path d="M 352 244 C 348 290, 360 330, 372 350 L 392 350 C 398 320, 396 280, 388 246 Z"
-                fill={hi('brain_stem') ? '#fca5a5' : '#e2e8f0'} stroke="#475569" strokeWidth={2.5} />
-            </g>
+              {/* Lobe names sit inside their lobes */}
+              {lobes.map((l) => {
+                const lab = lobeLabel[l];
+                return (
+                  <g key={l} data-feature={N.part(l)} data-feature-label={lab.lines.join(' ')} data-feature-cx={fx(lab.x)} data-feature-cy={lab.y / H} data-feature-w={0.16} data-feature-h={0.16}>
+                    <text x={lab.x} y={lab.y} fontSize={13} textAnchor="middle" fill={hi(l) ? '#991b1b' : LOBE_INK[l]} fontWeight={700}>
+                      {lab.lines.map((ln, i) => <tspan key={i} x={lab.x} dy={i === 0 ? 0 : 15}>{ln}</tspan>)}
+                    </text>
+                  </g>
+                );
+              })}
+              <text x={CEREBELLUM.cx + 6} y={318} fontSize={12.5} textAnchor="middle" fill={hi('cerebellum') ? '#991b1b' : '#9f1239'} fontWeight={700}>Cerebellum</text>
+              <SideLeader side="left" x={300} y={372} tx={392} ty={366} text="Brain stem" hi={hi('brain_stem')} />
+              <text x={60} y={300} fontSize={10.5} fill="#6b7280" fontStyle="italic" textAnchor="middle">front</text>
+              <text x={566} y={300} fontSize={10.5} fill="#6b7280" fontStyle="italic" textAnchor="middle">back</text>
+            </>
+          ) : (
+            <>
+              {/* Whole brain as pale context */}
+              <ellipse cx={CEREBELLUM.cx} cy={CEREBELLUM.cy} rx={CEREBELLUM.rx} ry={CEREBELLUM.ry} fill="#f8fafc" stroke="#cbd5e1" strokeWidth={1.5} />
+              <path d={BRAIN_STEM_PATH} fill="#f8fafc" stroke="#cbd5e1" strokeWidth={1.5} />
+              <path d={CEREBRUM_PATH} fill="#f1f5f9" stroke="#94a3b8" strokeWidth={2} />
+              {/* Thalamus */}
+              <g data-feature={N.part('thalamus')} data-feature-label="thalamus" data-feature-cx={fx(338)} data-feature-cy={0.42} data-feature-w={0.14} data-feature-h={0.14}>
+                <ellipse cx={338} cy={182} rx={42} ry={26} fill={hi('thalamus') ? '#fca5a5' : '#fbcfe8'} stroke={hi('thalamus') ? HI : '#9d174d'} strokeWidth={hi('thalamus') ? 3 : 2} />
+              </g>
+              {/* Hypothalamus (below and in front of the thalamus) */}
+              <g data-feature={N.part('hypothalamus')} data-feature-label="hypothalamus" data-feature-cx={fx(296)} data-feature-cy={0.51} data-feature-w={0.08} data-feature-h={0.08}>
+                <ellipse cx={296} cy={218} rx={21} ry={13} fill={hi('hypothalamus') ? '#fca5a5' : '#fed7aa'} stroke={hi('hypothalamus') ? HI : '#9a3412'} strokeWidth={hi('hypothalamus') ? 3 : 2} />
+              </g>
+              {/* Hippocampus (curved, running back from the amygdala) */}
+              <g data-feature={N.part('hippocampus')} data-feature-label="hippocampus" data-feature-cx={fx(360)} data-feature-cy={0.57} data-feature-w={0.2} data-feature-h={0.12}>
+                <path d="M 296 252 C 332 268, 384 262, 408 236 C 418 224, 414 212, 402 210"
+                  fill="none" stroke={hi('hippocampus') ? HI : '#15803d'} strokeWidth={hi('hippocampus') ? 10 : 8} strokeLinecap="round" />
+              </g>
+              {/* Amygdala (almond at the front tip of the hippocampus) */}
+              <g data-feature={N.part('amygdala')} data-feature-label="amygdala" data-feature-cx={fx(284)} data-feature-cy={0.58} data-feature-w={0.07} data-feature-h={0.08}>
+                <ellipse cx={284} cy={248} rx={14} ry={11} fill={hi('amygdala') ? '#fca5a5' : '#c4b5fd'} stroke={hi('amygdala') ? HI : '#5b21b6'} strokeWidth={hi('amygdala') ? 3 : 2} />
+              </g>
 
-            <Leader lx={120} ly={350} tx={150} ty={170} text="Frontal lobe" hi={hi('frontal_lobe')} />
-            <Leader lx={300} ly={48} tx={310} ty={110} text="Parietal lobe" hi={hi('parietal_lobe')} />
-            <Leader lx={552} ly={120} tx={470} ty={150} text="Occipital lobe" hi={hi('occipital_lobe')} anchor="middle" />
-            <Leader lx={250} ly={350} tx={300} ty={210} text="Temporal lobe" hi={hi('temporal_lobe')} />
-            <Leader lx={548} ly={300} tx={510} ty={288} text="Cerebellum" hi={hi('cerebellum')} anchor="start" />
-            <Leader lx={372} ly={392} tx={372} ty={330} text="Brain stem" hi={hi('brain_stem')} />
-          </>
-        ) : (
-          <>
-            {/* Cerebrum silhouette (context) */}
-            <path d={CEREBRUM_PATH} fill="#f1f5f9" stroke="#94a3b8" strokeWidth={2} />
-            {/* Thalamus (two-lobed) */}
-            <g data-feature={N.part('thalamus')} data-feature-label="thalamus" data-feature-cx={0.48} data-feature-cy={0.4} data-feature-w={0.18} data-feature-h={0.16}>
-              <ellipse cx={284} cy={172} rx={34} ry={26} fill={hi('thalamus') ? '#fca5a5' : '#fbcfe8'} stroke="#9d174d" strokeWidth={2} />
-              <ellipse cx={316} cy={176} rx={30} ry={23} fill={hi('thalamus') ? '#fca5a5' : '#fbcfe8'} stroke="#9d174d" strokeWidth={2} />
-            </g>
-            {/* Hypothalamus */}
-            <g data-feature={N.part('hypothalamus')} data-feature-label="hypothalamus" data-feature-cx={0.47} data-feature-cy={0.49} data-feature-w={0.1} data-feature-h={0.08}>
-              <ellipse cx={288} cy={210} rx={20} ry={12} fill={hi('hypothalamus') ? '#fca5a5' : '#fed7aa'} stroke="#9a3412" strokeWidth={2} />
-            </g>
-            {/* Hippocampus (curl) */}
-            <g data-feature={N.part('hippocampus')} data-feature-label="hippocampus" data-feature-cx={0.57} data-feature-cy={0.52} data-feature-w={0.16} data-feature-h={0.16}>
-              <path d="M 332 196 C 372 198, 388 226, 366 250 C 352 264, 330 260, 330 240 C 330 228, 344 226, 348 236"
-                fill="none" stroke={hi('hippocampus') ? HI : '#15803d'} strokeWidth={hi('hippocampus') ? 7 : 6} strokeLinecap="round" />
-            </g>
-            {/* Amygdala */}
-            <g data-feature={N.part('amygdala')} data-feature-label="amygdala" data-feature-cx={0.55} data-feature-cy={0.46} data-feature-w={0.08} data-feature-h={0.09}>
-              <ellipse cx={338} cy={200} rx={13} ry={11} fill={hi('amygdala') ? HI : '#7c3aed'} stroke="#5b21b6" strokeWidth={2} />
-            </g>
-
-            <Leader lx={180} ly={120} tx={280} ty={168} text="Thalamus" hi={hi('thalamus')} />
-            <Leader lx={170} ly={250} tx={278} ty={212} text="Hypothalamus" hi={hi('hypothalamus')} />
-            <Leader lx={470} ly={300} tx={362} ty={244} text="Hippocampus" hi={hi('hippocampus')} anchor="start" />
-            <Leader lx={430} ly={150} tx={344} ty={198} text="Amygdala" hi={hi('amygdala')} anchor="start" />
-          </>
-        )}
+              <SideLeader side="left" x={40} y={196} tx={280} ty={216} text="Hypothalamus" hi={hi('hypothalamus')} />
+              <SideLeader side="left" x={40} y={266} tx={274} ty={250} text="Amygdala" hi={hi('amygdala')} />
+              <SideLeader side="right" x={580} y={150} tx={368} ty={172} text="Thalamus" hi={hi('thalamus')} />
+              <SideLeader side="right" x={580} y={236} tx={404} ty={240} text="Hippocampus" hi={hi('hippocampus')} />
+              <text x={60} y={320} fontSize={10.5} fill="#6b7280" fontStyle="italic" textAnchor="middle">front</text>
+              <text x={566} y={320} fontSize={10.5} fill="#6b7280" fontStyle="italic" textAnchor="middle">back</text>
+            </>
+          )}
+        </g>
       </svg>
     </div>
   );

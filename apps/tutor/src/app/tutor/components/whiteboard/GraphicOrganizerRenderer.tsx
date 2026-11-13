@@ -19,13 +19,19 @@ import {
   type NormalizedGraphicOrganizerSpec,
 } from '@/lib/tutor/validation/graphic-organizer-guard';
 
-const SVG_W = 520;
-const SVG_H = 320;
-
 /** The drawable shape. What the brain sends is NOT trusted to match it — the
  *  tool schema only requires `kind` — so the component normalizes its input
  *  (validation/graphic-organizer-guard.ts) before any layout code runs. */
 export type GraphicOrganizerSpec = NormalizedGraphicOrganizerSpec;
+
+/* Every layout is HTML that sizes itself to its words. The fixed 520×320 SVG frames clipped whatever did not
+ * fit them (a two-line T-chart heading lost its second line, a cause of four words lost its last two) and left
+ * a blank band when there was little to show (figure audit, 2026-11-13). One quiet palette: an organizer sorts
+ * ideas, and a colour per box said nothing. */
+const INK = '#0f172a';
+const RULE = '#cbd5e1';
+const ACCENT = '#1d4ed8';
+const TINT = '#eff6ff';
 
 /**
  * Never throws on a malformed spec (2026-10-05: `spec.<list>.map` on a
@@ -37,19 +43,16 @@ export default function GraphicOrganizerRenderer({ spec: rawSpec }: { spec: unkn
   const decision = normalizeGraphicOrganizerSpec(rawSpec);
   if (!decision.ok) return null;
   const spec = decision.spec;
-  if (spec.kind === 'sequence') return <SequenceOrganizer spec={spec} />;
   return (
-    <div className="graphic-organizer-renderer">
+    <div className="graphic-organizer-renderer mx-auto" style={{ maxWidth: spec.kind === 'sequence' ? 760 : 680 }}>
       {spec.title && (
-        <div className="text-center text-sm font-semibold text-gray-700 mb-1">{spec.title}</div>
+        <div className="text-center text-sm font-semibold text-gray-800 mb-2">{spec.title}</div>
       )}
-      <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full h-auto" style={{ maxWidth: SVG_W }}>
-        <rect width={SVG_W} height={SVG_H} fill="#fafbfc" rx={4} />
-        {spec.kind === 'story_map' && renderStoryMap(spec)}
-        {spec.kind === 'kwl' && renderKWL(spec)}
-        {spec.kind === 't_chart' && renderTChart(spec)}
-        {spec.kind === 'cause_effect' && renderCauseEffect(spec)}
-      </svg>
+      {spec.kind === 'story_map' && <StoryMap spec={spec} />}
+      {spec.kind === 'kwl' && <Kwl spec={spec} />}
+      {spec.kind === 't_chart' && <TChart spec={spec} />}
+      {spec.kind === 'sequence' && <SequenceOrganizer spec={spec} />}
+      {spec.kind === 'cause_effect' && <CauseEffect spec={spec} />}
     </div>
   );
 }
@@ -61,157 +64,129 @@ function list(items: unknown): string[] {
   return Array.isArray(items) ? items.filter((x): x is string => typeof x === 'string') : [];
 }
 
-function renderStoryMap(spec: Extract<GraphicOrganizerSpec, { kind: 'story_map' }>) {
+const wrap: React.CSSProperties = { overflowWrap: 'anywhere' };
+
+/** A bulleted list whose wrapped lines line up with the text, not with the bullet (a hanging indent). */
+function Bullets({ items }: { items: string[] }) {
+  return (
+    <div>
+      {items.map((it, i) => (
+        <div key={i} className="text-[13px] leading-snug" style={{ color: INK, marginBottom: 4, paddingLeft: 13, textIndent: -13, ...wrap }}>{`• ${it}`}</div>
+      ))}
+    </div>
+  );
+}
+
+function Heading({ children }: { children: React.ReactNode }) {
+  return <div className="text-[11px] font-bold uppercase tracking-wide" style={{ color: ACCENT, marginBottom: 4 }}>{children}</div>;
+}
+
+function StoryMap({ spec }: { spec: Extract<GraphicOrganizerSpec, { kind: 'story_map' }> }) {
   const boxes = [
-    { label: 'Character', text: spec.character, color: '#3b82f6', x: 30, y: 40 },
-    { label: 'Setting', text: spec.setting, color: '#10b981', x: 270, y: 40 },
-    { label: 'Problem', text: spec.problem, color: '#f59e0b', x: 30, y: 170 },
-    { label: 'Solution', text: spec.solution, color: '#7c3aed', x: 270, y: 170 },
+    { label: 'Character', text: spec.character },
+    { label: 'Setting', text: spec.setting },
+    { label: 'Problem', text: spec.problem },
+    { label: 'Solution', text: spec.solution },
   ];
   return (
-    <g>
-      {boxes.map((b, i) => (
-        <g key={i}>
-          <rect x={b.x} y={b.y} width={220} height={120} fill="#fff" stroke={b.color} strokeWidth={3} rx={8} />
-          <text x={b.x + 110} y={b.y + 22} fontSize={14} textAnchor="middle" fontWeight={700} fill={b.color}>{b.label}</text>
-          {b.text && <foreignObject x={b.x + 8} y={b.y + 30} width={204} height={86}>
-            <div style={{ fontSize: 13, color: '#0f172a', lineHeight: 1.3 }}>{b.text}</div>
-          </foreignObject>}
-        </g>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+      {boxes.map((b) => (
+        <div key={b.label} className="rounded-lg bg-white" style={{ border: `1.5px solid ${RULE}`, borderTop: `3px solid ${ACCENT}`, padding: '8px 12px', minHeight: 76 }}>
+          <Heading>{b.label}</Heading>
+          {b.text && <div className="text-[13px] leading-snug" style={{ color: INK, ...wrap }}>{b.text}</div>}
+        </div>
       ))}
-    </g>
+    </div>
   );
 }
 
-function renderKWL(spec: Extract<GraphicOrganizerSpec, { kind: 'kwl' }>) {
+function Kwl({ spec }: { spec: Extract<GraphicOrganizerSpec, { kind: 'kwl' }> }) {
   const cols = [
-    { label: 'K — what I Know', items: spec.know, color: '#3b82f6', x: 16 },
-    { label: 'W — what I Want to know', items: spec.want, color: '#7c3aed', x: 184 },
-    { label: 'L — what I Learned', items: spec.learned, color: '#10b981', x: 352 },
+    { letter: 'K', label: 'What I know', items: spec.know },
+    { letter: 'W', label: 'What I want to know', items: spec.want },
+    { letter: 'L', label: 'What I learned', items: spec.learned },
   ];
-  const colW = 152;
-  // Items (and headers) render as wrapping HTML in foreignObject, matching
-  // the sibling variants (story_map/sequence/cause_effect) — bare <text> in
-  // a 152u column clipped anything longer than ~20 chars.
   return (
-    <g>
-      {cols.map((c) => (
-        <g key={c.label}>
-          <rect x={c.x} y={30} width={colW} height={SVG_H - 50} fill="#fff" stroke={c.color} strokeWidth={3} rx={6} />
-          <foreignObject x={c.x} y={4} width={colW} height={26}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: c.color, textAlign: 'center', lineHeight: 1.1 }}>{c.label}</div>
-          </foreignObject>
-          <foreignObject x={c.x + 8} y={40} width={colW - 16} height={SVG_H - 66}>
-            <div style={{ fontSize: 12, color: '#0f172a', lineHeight: 1.35 }}>
-              {list(c.items).map((item, i) => (
-                <div key={i} style={{ marginBottom: 4 }}>• {item}</div>
-              ))}
-            </div>
-          </foreignObject>
-        </g>
+    <div className="rounded-lg overflow-hidden bg-white" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', border: `1.5px solid ${RULE}` }}>
+      {cols.map((c, i) => (
+        <div key={c.letter} style={{ borderLeft: i ? `1.5px solid ${RULE}` : undefined, minHeight: 120 }}>
+          <div className="text-center" style={{ background: TINT, borderBottom: `1.5px solid ${RULE}`, padding: '6px 8px' }}>
+            <div className="text-base font-bold" style={{ color: ACCENT, lineHeight: 1.1 }}>{c.letter}</div>
+            <div className="text-[11px] font-semibold" style={{ color: '#334155' }}>{c.label}</div>
+          </div>
+          <div style={{ padding: '8px 10px' }}><Bullets items={list(c.items)} /></div>
+        </div>
       ))}
-    </g>
+    </div>
   );
 }
 
-function renderTChart(spec: Extract<GraphicOrganizerSpec, { kind: 't_chart' }>) {
-  const colW = (SVG_W - 30) / 2;
-  // Headers and items render as wrapping HTML in foreignObject, matching the
-  // sibling variants (story_map/sequence/cause_effect) — bare <text> clipped
-  // long brain-authored headers/items at the column/viewBox edge.
+function TChart({ spec }: { spec: Extract<GraphicOrganizerSpec, { kind: 't_chart' }> }) {
+  const sides = [
+    { header: spec.leftHeader, items: list(spec.leftItems) },
+    { header: spec.rightHeader, items: list(spec.rightItems) },
+  ];
+  // The two strokes of the T: under the headings, and down the middle.
   return (
-    <g>
-      <line x1={SVG_W / 2} y1={30} x2={SVG_W / 2} y2={SVG_H - 20} stroke="#0f172a" strokeWidth={3} />
-      <line x1={20} y1={56} x2={SVG_W - 20} y2={56} stroke="#0f172a" strokeWidth={3} />
-      <foreignObject x={24} y={30} width={colW - 12} height={24}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', textAlign: 'center', lineHeight: 1.1 }}>{spec.leftHeader}</div>
-      </foreignObject>
-      <foreignObject x={SVG_W / 2 + 8} y={30} width={colW - 12} height={24}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', textAlign: 'center', lineHeight: 1.1 }}>{spec.rightHeader}</div>
-      </foreignObject>
-      <foreignObject x={28} y={68} width={SVG_W / 2 - 40} height={SVG_H - 90}>
-        <div style={{ fontSize: 13, color: '#0f172a', lineHeight: 1.4 }}>
-          {list(spec.leftItems).map((it, i) => (
-            <div key={i} style={{ marginBottom: 4 }}>• {it}</div>
-          ))}
-        </div>
-      </foreignObject>
-      <foreignObject x={SVG_W / 2 + 8} y={68} width={SVG_W / 2 - 40} height={SVG_H - 90}>
-        <div style={{ fontSize: 13, color: '#0f172a', lineHeight: 1.4 }}>
-          {list(spec.rightItems).map((it, i) => (
-            <div key={i} style={{ marginBottom: 4 }}>• {it}</div>
-          ))}
-        </div>
-      </foreignObject>
-    </g>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+      {sides.map((sd, i) => (
+        <div key={`h${i}`} className="text-center text-[15px] font-bold" style={{ color: INK, padding: '4px 12px 8px', borderBottom: `2.5px solid ${INK}`, borderLeft: i ? `2.5px solid ${INK}` : undefined, lineHeight: 1.25, ...wrap }}>{sd.header}</div>
+      ))}
+      {sides.map((sd, i) => (
+        <div key={`b${i}`} style={{ padding: '10px 14px 12px', borderLeft: i ? `2.5px solid ${INK}` : undefined, minHeight: 72 }}><Bullets items={sd.items} /></div>
+      ))}
+    </div>
   );
 }
 
 /** Sequence as wrapping HTML boxes, not a fixed SVG row: six steps in a
  *  520-unit row left ~60px per box, so step text was cut off mid-word and the
  *  fixed 320-unit canvas left a blank band above the row (GDI meeting session
- *  2026-10-15). Boxes now wrap onto new rows and grow to fit their text. */
-const SEQ_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#7c3aed', '#ef4444', '#06b6d4'];
+ *  2026-10-15). Rows are balanced (five steps are three and two, not four and
+ *  one), every box of a row has the row's height, and an arrow leads out of
+ *  each box except the last. */
 function SequenceOrganizer({ spec }: { spec: Extract<GraphicOrganizerSpec, { kind: 'sequence' }> }) {
   const steps = list(spec.steps);
+  const rows = Math.max(1, Math.ceil(steps.length / 4));
+  const cols = Math.max(1, Math.ceil(steps.length / rows));
   return (
-    <div className="graphic-organizer-renderer">
-      {spec.title && (
-        <div className="text-center text-sm font-semibold text-gray-700 mb-2">{spec.title}</div>
-      )}
-      <ol className="flex flex-wrap items-stretch gap-y-3 rounded bg-[#fafbfc] p-3" style={{ listStyle: 'none', margin: 0 }}>
-        {steps.map((s, i) => {
-          const color = SEQ_PALETTE[i % SEQ_PALETTE.length];
-          return (
-            <li key={i} className="flex items-center" data-feature={`step-${i + 1}`}>
-              <div
-                className="rounded-lg bg-white px-3 py-2"
-                style={{ border: `3px solid ${color}`, width: 150, minHeight: 72, overflowWrap: 'anywhere' }}
-              >
-                <div className="text-[11px] font-bold" style={{ color }}>step {i + 1}</div>
-                <div className="text-[13px] leading-snug text-slate-900">{s}</div>
-              </div>
-              {i < steps.length - 1 && <span aria-hidden="true" className="px-1.5 text-lg font-bold text-slate-900">→</span>}
-            </li>
-          );
-        })}
-      </ol>
-    </div>
+    <ol style={{ listStyle: 'none', margin: '0 auto', padding: 0, display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, rowGap: 12, maxWidth: cols * 190 }}>
+      {steps.map((s, i) => (
+        <li key={i} className="flex items-stretch" data-feature={`step-${i + 1}`}>
+          <div className="rounded-lg bg-white flex-1" style={{ border: `1.5px solid ${RULE}`, borderTop: `3px solid ${ACCENT}`, padding: '7px 10px 9px', minHeight: 64, minWidth: 0 }}>
+            <div aria-label={`step ${i + 1}`} className="flex items-center justify-center text-[11px] font-bold text-white" style={{ background: ACCENT, width: 20, height: 20, borderRadius: 10, marginBottom: 5 }}>{i + 1}</div>
+            <div className="text-[13px] leading-snug" style={{ color: INK, ...wrap }}>{s}</div>
+          </div>
+          <span aria-hidden="true" className="flex items-center justify-center text-lg font-bold shrink-0" style={{ width: 26, color: '#475569', visibility: i < steps.length - 1 ? 'visible' : 'hidden' }}>{(i + 1) % cols === 0 ? '↩' : '→'}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 
-function renderCauseEffect(spec: Extract<GraphicOrganizerSpec, { kind: 'cause_effect' }>) {
-  const cw = 200;
-  const ew = 200;
-  const padY = 30;
+function CauseEffect({ spec }: { spec: Extract<GraphicOrganizerSpec, { kind: 'cause_effect' }> }) {
   const causes = list(spec.causes);
   const effects = list(spec.effects);
-  const itemH = (SVG_H - 2 * padY) / Math.max(1, Math.max(causes.length, effects.length));
+  const head = (label: string, ink: string) => <div className="text-center text-sm font-bold" style={{ color: ink, marginBottom: 6 }}>{label}</div>;
+  const column = (items: string[], stroke: string) => (
+    <div className="flex flex-col justify-center" style={{ gap: 8, minWidth: 0 }}>
+      {items.map((it, i) => (
+        <div key={i} className="rounded-md bg-white text-[13px] leading-snug" style={{ border: `2px solid ${stroke}`, padding: '7px 10px', color: INK, ...wrap }}>{it}</div>
+      ))}
+    </div>
+  );
+  // One broad arrow between the columns: the causes together lead to the effects together. A thin arrow from
+  // the middle cause to the middle effect read as a link between those two alone.
   return (
-    <g>
-      {/* Causes column */}
-      {causes.map((c, i) => (
-        <g key={i}>
-          <rect x={20} y={padY + i * itemH + 8} width={cw} height={itemH - 16} fill="#fff" stroke="#f59e0b" strokeWidth={2.5} rx={6} />
-          <foreignObject x={28} y={padY + i * itemH + 16} width={cw - 16} height={itemH - 32}>
-            <div style={{ fontSize: 13, color: '#0f172a' }}>{c}</div>
-          </foreignObject>
-        </g>
-      ))}
-      <text x={20 + cw / 2} y={padY - 8} fontSize={14} textAnchor="middle" fontWeight={700} fill="#92400e">Causes</text>
-      {/* Arrow band */}
-      <line x1={20 + cw + 5} y1={SVG_H / 2} x2={SVG_W - 20 - ew - 5} y2={SVG_H / 2} stroke="#0f172a" strokeWidth={2} />
-      <polygon points={`${SVG_W - 20 - ew - 5},${SVG_H / 2 - 6} ${SVG_W - 20 - ew + 4},${SVG_H / 2} ${SVG_W - 20 - ew - 5},${SVG_H / 2 + 6}`} fill="#0f172a" />
-      {/* Effects column */}
-      {effects.map((e, i) => (
-        <g key={i}>
-          <rect x={SVG_W - 20 - ew} y={padY + i * itemH + 8} width={ew} height={itemH - 16} fill="#fff" stroke="#10b981" strokeWidth={2.5} rx={6} />
-          <foreignObject x={SVG_W - 12 - ew} y={padY + i * itemH + 16} width={ew - 16} height={itemH - 32}>
-            <div style={{ fontSize: 13, color: '#0f172a' }}>{e}</div>
-          </foreignObject>
-        </g>
-      ))}
-      <text x={SVG_W - 20 - ew / 2} y={padY - 8} fontSize={14} textAnchor="middle" fontWeight={700} fill="#065f46">Effects</text>
-    </g>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 56px minmax(0, 1fr)', alignItems: 'center', columnGap: 6 }}>
+      {head('Causes', '#92400e')}
+      <span />
+      {head('Effects', '#065f46')}
+      {column(causes, '#f59e0b')}
+      <svg viewBox="0 0 56 40" width={56} height={40} aria-hidden="true">
+        <path d="M4 14 H34 V5 L52 20 L34 35 V26 H4 Z" fill="#e2e8f0" stroke="#475569" strokeWidth={1.5} strokeLinejoin="round" />
+      </svg>
+      {column(effects, '#10b981')}
+    </div>
   );
 }

@@ -45,6 +45,8 @@ export type DataStructureKind = 'stack' | 'queue' | 'linked_list';
 export interface DataStructureFigure {
   structure: DataStructureKind;
   items: string[];
+  /** Index in `items` of a stand-in cell ("… 3 more …") for items left out of a very long input. */
+  omittedIndex?: number;
   title?: string;
 }
 
@@ -61,8 +63,20 @@ export function solveDataStructure(params: Record<string, unknown>): DataStructu
   };
   let items = toStrings(params.items ?? params.values ?? params.elements) ?? defaults[structure];
   // keep the figure legible
-  items = items.slice(0, 7);
-  return { structure, items, title: titleOf(params) };
+  // Every item is drawn up to MAX_ITEMS. A longer input keeps both ends, which carry the
+  // meaning (a stack's top, a queue's front and rear, a list's head and tail), and says how
+  // many it left out: cutting the end off silently put "top" and "REAR" on the wrong item.
+  const MAX_ITEMS = 12;
+  let omittedIndex: number | undefined;
+  if (items.length > MAX_ITEMS) {
+    const left = items.length - (MAX_ITEMS - 1);
+    // A stack is listed bottom first: keep the bottom item and everything near the top.
+    const head = structure === 'stack' ? 1 : MAX_ITEMS - 2;
+    const tail = MAX_ITEMS - 1 - head;
+    omittedIndex = head;
+    items = [...items.slice(0, head), `… ${left} more …`, ...items.slice(items.length - tail)];
+  }
+  return { structure, items, ...(omittedIndex !== undefined ? { omittedIndex } : {}), title: titleOf(params) };
 }
 
 export const dataStructureFeatureNames = {

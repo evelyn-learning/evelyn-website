@@ -1,0 +1,464 @@
+[
+ {
+  "tool": "show_diagram",
+  "label": "xa-balance-stress",
+  "args": {
+   "type": "balance_scale",
+   "params": {
+    "left": [
+     {
+      "label": "bag of sand 2.5 kg",
+      "weight": 2.5
+     },
+     {
+      "label": "brick",
+      "weight": 3
+     },
+     {
+      "label": "iron block",
+      "weight": 7.25
+     },
+     {
+      "label": "book",
+      "weight": 1
+     }
+    ],
+    "right": [
+     {
+      "label": "watermelon 13.75 kg",
+      "weight": 13.75
+     },
+     {
+      "label": "feather",
+      "weight": 0.01
+     },
+     {
+      "label": "marble",
+      "weight": 0.1
+     }
+    ],
+    "title": "A long title: comparing the total mass on each pan of the balance",
+    "caption": "The left pan and the right pan hold the same total, so the beam stays level and neither side goes down."
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-balance-equal",
+  "args": {
+   "type": "balance_scale",
+   "params": {
+    "left": [
+     {
+      "label": "2 kg",
+      "weight": 2
+     },
+     {
+      "label": "3 kg",
+      "weight": 3
+     }
+    ],
+    "right": [
+     {
+      "label": "5 kg",
+      "weight": 5
+     }
+    ],
+    "caption": "Both sides hold 5 kg, so the beam is level."
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-balance-unknown",
+  "args": {
+   "type": "balance_scale",
+   "params": {
+    "left": [
+     {
+      "label": "x"
+     },
+     {
+      "label": "x"
+     },
+     {
+      "label": "4",
+      "weight": 4
+     }
+    ],
+    "right": [
+     {
+      "label": "10",
+      "weight": 10
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-balance-many",
+  "args": {
+   "type": "balance_scale",
+   "params": {
+    "left": [
+     {
+      "label": "a very large sack of potatoes from the farm",
+      "weight": 20,
+      "color": "#b45309"
+     },
+     {
+      "label": "crate of apples",
+      "weight": 8,
+      "color": "red"
+     },
+     {
+      "label": "jar",
+      "weight": 1
+     },
+     {
+      "label": "tin",
+      "weight": 1
+     },
+     {
+      "label": "box of nails",
+      "weight": 4
+     },
+     {
+      "label": "hammer",
+      "weight": 2
+     }
+    ],
+    "right": [
+     {
+      "label": "1 kg",
+      "weight": 1
+     }
+    ],
+    "title": "Left side down"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-lever-unbalanced",
+  "args": {
+   "type": "lever",
+   "params": {
+    "effort": 20,
+    "load": 100,
+    "effortDistance": 2,
+    "loadDistance": 1.5
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-lever-decimals",
+  "args": {
+   "type": "lever",
+   "params": {
+    "effort": 33.3333,
+    "load": 66.6666,
+    "effortDistance": 1234.5,
+    "loadDistance": 617.25,
+    "title": "Awkward numbers"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-torque-defaults",
+  "args": {
+   "type": "torque",
+   "params": {
+    "armLength": "0.5 m",
+    "force": "10 N"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-torque-ccw-shallow",
+  "args": {
+   "type": "torque",
+   "params": {
+    "armLength": "r_1 = 2.25 m",
+    "force": "F_app = 1250 N applied by the mechanic",
+    "angleDegrees": 8,
+    "direction": "counterclockwise",
+    "pivot": "the rusted wheel nut on the left",
+    "arm": "long breaker bar with an extension pipe"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-torque-60",
+  "args": {
+   "type": "torque",
+   "params": {
+    "armLength": "0.4 m",
+    "force": "35 N",
+    "angleDegrees": 60,
+    "pivot": "hinge",
+    "arm": "door"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-torque-120-ccw",
+  "args": {
+   "type": "torque",
+   "params": {
+    "armLength": "0.4 m",
+    "force": "35 N",
+    "angleDegrees": 120,
+    "direction": "counterclockwise"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-rigid-defaults",
+  "args": {
+   "type": "rigid_body",
+   "params": {
+    "forces": [
+     {
+      "at": 0.5,
+      "direction": "down",
+      "label": "W"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-rigid-crowded",
+  "args": {
+   "type": "rigid_body",
+   "params": {
+    "forces": [
+     {
+      "at": 0.45,
+      "direction": "down",
+      "label": "first child 320 N",
+      "atLabel": "0.2 m left of centre"
+     },
+     {
+      "at": 0.5,
+      "direction": "down",
+      "label": "beam weight 150 N",
+      "atLabel": "at the centre"
+     },
+     {
+      "at": 0.55,
+      "direction": "down",
+      "label": "second child 280 N",
+      "atLabel": "0.2 m right of centre"
+     },
+     {
+      "at": 0.5,
+      "direction": "up",
+      "label": "F_pivot = ?"
+     },
+     {
+      "at": 1,
+      "direction": "down",
+      "label": "F_app = 90 N",
+      "atLabel": "right end"
+     },
+     {
+      "at": 0,
+      "direction": 45,
+      "label": "rope T_1"
+     }
+    ],
+    "supports": [
+     {
+      "at": 0.5,
+      "type": "pivot",
+      "label": "pivot at the centre"
+     }
+    ],
+    "length": "4 m",
+    "body": "see-saw"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-rigid-ladder-steep",
+  "args": {
+   "type": "rigid_body",
+   "params": {
+    "forces": [
+     {
+      "at": 0.5,
+      "direction": "down",
+      "label": "ladder weight 180 N",
+      "atLabel": "centre of the ladder"
+     },
+     {
+      "at": 0.9,
+      "direction": "down",
+      "label": "window cleaner 820 N",
+      "atLabel": "4.5 m up"
+     },
+     {
+      "at": 1,
+      "direction": "left",
+      "label": "N_wall"
+     },
+     {
+      "at": 0,
+      "direction": "up",
+      "label": "N_floor"
+     },
+     {
+      "at": 0,
+      "direction": "right",
+      "label": "f_s"
+     }
+    ],
+    "length": "5 m",
+    "angleDegrees": 75,
+    "body": "ladder"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-rigid-ladder-shallow",
+  "args": {
+   "type": "rigid_body",
+   "params": {
+    "forces": [
+     {
+      "at": 0.5,
+      "direction": "down",
+      "label": "W"
+     },
+     {
+      "at": 1,
+      "direction": "left",
+      "label": "N"
+     }
+    ],
+    "angleDegrees": 35,
+    "body": "plank"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-rotation-defaults",
+  "args": {
+   "type": "rotation",
+   "params": {
+    "radius": "1 m"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-rotation-long",
+  "args": {
+   "type": "rotation",
+   "params": {
+    "radius": "1.75 m from the centre of the platform",
+    "omega": "0.333 revolutions per second (find it)",
+    "mass": "two children of 32.5 kg each",
+    "body": "playground roundabout seen from above",
+    "direction": "clockwise"
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-rotation-tiny",
+  "args": {
+   "type": "rotation",
+   "params": {
+    "radius": "0.1 m",
+    "omega": "30 rad/s",
+    "mass": "2 kg",
+    "largestRadius": 2
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-incline-defaults",
+  "args": {
+   "type": "inclined_plane",
+   "params": {}
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-incline-5",
+  "args": {
+   "type": "inclined_plane",
+   "params": {
+    "angle": 5,
+    "mass": 1250.75,
+    "showForces": true,
+    "showFriction": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-incline-80",
+  "args": {
+   "type": "inclined_plane",
+   "params": {
+    "angle": 80,
+    "mass": 3,
+    "showForces": true,
+    "showFriction": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-incline-45-forces",
+  "args": {
+   "type": "inclined_plane",
+   "params": {
+    "angle": 45,
+    "mass": 10,
+    "showForces": true,
+    "showFriction": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-incline-18-nofriction",
+  "args": {
+   "type": "inclined_plane",
+   "params": {
+    "angle": 18,
+    "mass": 2.5,
+    "showForces": true
+   }
+  }
+ },
+ {
+  "tool": "show_diagram",
+  "label": "xa-incline-60-nomass",
+  "args": {
+   "type": "inclined_plane",
+   "params": {
+    "angle": 60,
+    "showForces": true,
+    "showFriction": true
+   }
+  }
+ }
+]

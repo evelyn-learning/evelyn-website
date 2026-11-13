@@ -253,6 +253,21 @@ export interface CoordinateGridFigure {
   yMax: number;
   quadrants: 1 | 4;   // 1 = first-quadrant only; 4 = full plane
   connect: boolean;   // join the points in order with a polyline (segment/polygon)
+  /** With connect: also join the last point back to the first (a polygon). */
+  closed?: boolean;
+  /** Spacing of gridlines / tick numerals (1, 2, 5, 10, …), same on both axes. */
+  step?: number;
+}
+
+/** 1 / 2 / 5 × 10^k step that keeps a span to about a dozen gridlines. */
+export function coordinateGridStep(span: number): number {
+  if (!(span > 12)) return 1;
+  const raw = span / 12;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  for (const m of [1, 2, 5, 10]) {
+    if (m * mag >= raw) return m * mag;
+  }
+  return 10 * mag;
 }
 
 /** Cartesian coordinate grid with plotted, labelled ordered pairs. Quadrant
@@ -288,27 +303,38 @@ export function solveCoordinateGrid(params: Record<string, unknown>): Coordinate
   const dataXMin = xs.length ? Math.min(...xs) : 0;
   const dataYMin = ys.length ? Math.min(...ys) : 0;
 
-  const pad = 1;
-  let xMax = isFiniteNumber(params.xMax) ? Math.round(params.xMax) : Math.max(1, Math.ceil(dataXMax + pad));
-  let yMax = isFiniteNumber(params.yMax) ? Math.round(params.yMax) : Math.max(1, Math.ceil(dataYMax + pad));
+  // Bounds: one gridline beyond the outermost point on every side. The
+  // gridline step grows with the data (1, 2, 5, 10, …) so a far-flung point
+  // widens the window instead of falling off it.
+  const loX = quadrants === 1 ? 0 : Math.min(0, dataXMin);
+  const loY = quadrants === 1 ? 0 : Math.min(0, dataYMin);
+  const step = coordinateGridStep(Math.max(Math.max(0, dataXMax) - loX, Math.max(0, dataYMax) - loY));
+  const above = (v: number) => (Math.floor(v / step + 1e-9) + 1) * step;
+  const below = (v: number) => (Math.ceil(v / step - 1e-9) - 1) * step;
+  let xMax = isFiniteNumber(params.xMax) ? Math.round(params.xMax) : Math.max(step, above(dataXMax));
+  let yMax = isFiniteNumber(params.yMax) ? Math.round(params.yMax) : Math.max(step, above(dataYMax));
   let xMin: number;
   let yMin: number;
   if (quadrants === 1) {
     xMin = 0;
     yMin = 0;
   } else {
-    xMin = isFiniteNumber(params.xMin) ? Math.round(params.xMin) : Math.min(-1, Math.floor(dataXMin - pad));
-    yMin = isFiniteNumber(params.yMin) ? Math.round(params.yMin) : Math.min(-1, Math.floor(dataYMin - pad));
+    xMin = isFiniteNumber(params.xMin) ? Math.round(params.xMin) : Math.min(-step, below(dataXMin));
+    yMin = isFiniteNumber(params.yMin) ? Math.round(params.yMin) : Math.min(-step, below(dataYMin));
     xMax = Math.max(xMax, 1);
     yMax = Math.max(yMax, 1);
   }
+  // Explicit bounds never hide a plotted point: widen to include the data.
+  if (xs.length) {
+    if (dataXMax > xMax) xMax = above(dataXMax);
+    if (dataYMax > yMax) yMax = above(dataYMax);
+    if (quadrants === 4 && dataXMin < xMin) xMin = below(dataXMin);
+    if (quadrants === 4 && dataYMin < yMin) yMin = below(dataYMin);
+  }
 
-  // Guard against degenerate ranges & runaway sizes.
+  // Guard against degenerate ranges.
   if (xMax <= xMin) xMax = xMin + 1;
   if (yMax <= yMin) yMax = yMin + 1;
-  const MAX_SPAN = 30;
-  if (xMax - xMin > MAX_SPAN) xMax = xMin + MAX_SPAN;
-  if (yMax - yMin > MAX_SPAN) yMax = yMin + MAX_SPAN;
 
   return {
     title: typeof params.title === 'string' ? params.title : undefined,
@@ -316,6 +342,8 @@ export function solveCoordinateGrid(params: Record<string, unknown>): Coordinate
     xMin, xMax, yMin, yMax,
     quadrants,
     connect: params.connect === true,
+    closed: params.closed === true,
+    step: coordinateGridStep(Math.max(xMax - xMin, yMax - yMin)),
   };
 }
 
