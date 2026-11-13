@@ -4,7 +4,7 @@ import { circuitNetlist, figureCatalogueFor } from '../src/lib/tutor/v2/figure-c
 import { heardAsWords } from '../src/lib/tutor/v2/heard';
 import { mayOpenPart } from '../src/lib/tutor/v2/part-close';
 import { mentionsTool } from '../src/lib/tutor/v2/tool-talk';
-import { applyToModelBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
+import { applyToModelBoard, renderBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk, asksAnywhere } from '../src/lib/tutor/v2/board-timing';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths, unwrittenEquations } from '../src/lib/tutor/v2/spoken-maths';
@@ -610,6 +610,9 @@ async function main() {
   check('mastery moves on what the student did with a practice problem: up alone, up by half when still named, down when set one and not got, nothing when never set one', JSON.stringify(mm.masteryDeltas) === JSON.stringify([{ loId: 'lo.a', delta: V2_MASTERY_UP }, { loId: 'lo.b', delta: V2_MASTERY_UP_MIXED }, { loId: 'lo.c', delta: V2_MASTERY_DOWN }]) && mm.segmentOutcomes.length === 2 && mm.segmentOutcomes[0].outcome === 1 && mm.segmentOutcomes[1].loId === 'lo.b' && mm.segmentOutcomes[1].outcome === 0.5, mm);
   const single = v2Mastery({ los: [{ id: 'only', description: 'x' }], segments: [{ id: 'try-1', kind: 'try_yourself' }, { id: 'c', kind: 'concept' }] } as never, { 'try-1': { status: 'demonstrated' }, c: { status: 'demonstrated' } } as never);
   check('a plan with one objective credits it; a lesson only taught, or ended before any practice, moves no mastery', JSON.stringify(single.masteryDeltas) === JSON.stringify([{ loId: 'only', delta: V2_MASTERY_UP }]) && single.segmentOutcomes.length === 1 && v2Mastery(planM, { 'lo.a-concept': { status: 'shown' } } as never, ['lo.a']).masteryDeltas.length === 0 && v2Mastery(null, {}).masteryDeltas.length === 0, single);
+  const back3 = { pages: [{ title: 'Rule', items: [] }, { title: 'Cosine limit', items: [{ id: 'a', tool: 'show_equation', summary: 'cos pi = -1' }] }, { title: 'x ln x', items: [{ id: 'b', tool: 'show_problem', summary: 'lim x ln x' }] }], current: 2 };
+  const went = applyToModelBoard(back3 as never, 'g1', 'go_to_page', { pageIndex: 1 });
+  check('turned back to an earlier page, the tutor is told where the work in progress is', went.painted && /^now on page 2 "Cosine limit"\. The work in progress stays on page 3 "x ln x"/.test(went.detail) && /page 2 "Cosine limit" \(in view: turned back to for a look\)/.test(renderBoard(back3 as never)) && /page 3 "x ln x" \(the work in progress[^)]*\): problem "lim x ln x"/.test(renderBoard(back3 as never)) && !/work in progress/.test(applyToModelBoard(back3 as never, 'g2', 'go_to_page', { pageIndex: 2 }).detail) && !/work in progress|turned back/.test(renderBoard(back3 as never)), [went.detail, renderBoard(back3 as never)]);
   check('the marketing demo, Crimsora and evelyntutor run on v2', ['evelyn-marketing', 'crimsora', 'evelyntutor'].every((id) => resolvePartnerSessionOptions({ partnerId: id }).brainVersion === 'v2'));
   check('every partner is on v1 until cut over', ['greenapple', 'gdi-demo', 'gameclass', 'kanzoo', 'academy', 'unknown-partner', ''].every((id) => resolvePartnerSessionOptions({ partnerId: id }).brainVersion === 'v1'));
   check('a deploy can name each partner\'s engine, and ignores what it cannot read', JSON.stringify(brainVersionOverrides(' evelyn-marketing=v2, crimsora=v1 ,gdi-demo=v9,=v2,junk')) === JSON.stringify({ 'evelyn-marketing': 'v2', crimsora: 'v1' }) && Object.keys(brainVersionOverrides(undefined)).length === 0);
