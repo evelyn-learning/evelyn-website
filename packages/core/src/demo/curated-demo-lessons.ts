@@ -22,21 +22,40 @@ export interface CuratedDemoLesson {
   tone: 'indigo' | 'emerald' | 'amber' | 'rose';
 }
 
-// Refreshed 2026-08-29: the previous spread had run unchanged for months and
-// leaned on equation/text-heavy topics. This one is picked to light up the
-// PARAMETRIC RENDERERS in the first minutes — geometry, cell diagrams,
-// projectile trajectories + vectors, the unit circle, Punnett squares, Lewis
-// structures, maps/timelines — so a first-time visitor SEES the whiteboard
-// working, not just hears the voice.
-// 2026-09-10 (Praveen): rotated — Projectile Motion now leads (index 0 is the
-// widget's default-selected chip); Area & Perimeter moved to its old slot.
+// 2026-11-13 (Praveen): replaced with the twelve agreed for the v2 tutor (figures
+// reworked 11-11..11-13). He dislikes projectile motion and Punnett squares as
+// demos, so both are out. Index 0 is the widget's default-selected chip.
 export const CURATED_DEMO_LESSONS: CuratedDemoLesson[] = [
   {
-    planId: 'evelyn.hs.science.physics.kinematics-2d-projectile.v1',
-    title: 'Projectile Motion',
+    planId: 'evelyn.ap.physics2.optics.v1',
+    title: 'Why a Pencil Looks Bent',
     subjectLabel: 'Physics',
-    levelLabel: 'High school',
-    hook: 'Trajectories, vectors & motion graphs',
+    levelLabel: 'AP',
+    hook: 'Refraction drawn ray by ray',
+    tone: 'rose',
+  },
+  {
+    planId: 'evelyn.ms.m8math.the-pythagorean-theorem-and-its-converse.v1',
+    title: 'The Pythagorean Theorem',
+    subjectLabel: 'Math',
+    levelLabel: 'Grade 8',
+    hook: 'Right triangles, squares on every side',
+    tone: 'indigo',
+  },
+  {
+    planId: 'evelyn.g4.sci.physical.circuits-intro.v1',
+    title: 'Electric Circuits',
+    subjectLabel: 'Science',
+    levelLabel: 'Grade 4',
+    hook: 'Close the loop, light the bulb',
+    tone: 'amber',
+  },
+  {
+    planId: 'evelyn.g6.science.physics.density-buoyancy.v1',
+    title: 'Why Things Float',
+    subjectLabel: 'Science',
+    levelLabel: 'Grade 6',
+    hook: 'Density & buoyancy, pictured',
     tone: 'rose',
   },
   {
@@ -48,43 +67,59 @@ export const CURATED_DEMO_LESSONS: CuratedDemoLesson[] = [
     tone: 'emerald',
   },
   {
-    planId: 'evelyn.g3.math.area-perimeter.v1',
-    title: 'Area & Perimeter',
-    subjectLabel: 'Math',
-    levelLabel: 'Grade 3',
-    hook: 'Shapes drawn & measured live',
-    tone: 'indigo',
-  },
-  {
-    planId: 'evelyn.ap.precalc.trigonometric-polar.v1',
-    title: 'The Unit Circle',
-    subjectLabel: 'Precalculus',
-    levelLabel: 'AP',
-    hook: 'Angles come alive on the circle',
-    tone: 'indigo',
-  },
-  {
-    planId: 'evelyn.hs.science.biology.mendelian-genetics.v1',
-    title: 'Punnett Squares',
-    subjectLabel: 'Biology',
+    planId: 'evelyn.g11.ss.econ.supply-demand.v1',
+    title: 'Supply & Demand',
+    subjectLabel: 'Economics',
     levelLabel: 'High school',
-    hook: 'Cross traits, predict offspring',
-    tone: 'emerald',
-  },
-  {
-    planId: 'evelyn.hs.science.chemistry.covalent-bonding-lewis.v1',
-    title: 'Molecules & Bonds',
-    subjectLabel: 'Chemistry',
-    levelLabel: 'High school',
-    hook: 'Lewis structures, bond by bond',
+    hook: 'Curves shift, prices move',
     tone: 'amber',
   },
   {
-    planId: 'evelyn.g6.ss.ancient-egypt.v1',
-    title: 'Ancient Egypt',
-    subjectLabel: 'Social Studies',
+    planId: 'evelyn.g4.math.equivalent-fractions.v1',
+    title: 'Equivalent Fractions',
+    subjectLabel: 'Math',
+    levelLabel: 'Grade 4',
+    hook: 'Same amount, different pieces',
+    tone: 'indigo',
+  },
+  {
+    planId: 'evelyn.hs.alg1.quadratic-graphs-vertex.v1',
+    title: 'Quadratic Graphs',
+    subjectLabel: 'Algebra',
+    levelLabel: 'High school',
+    hook: 'Parabolas & the vertex, live',
+    tone: 'indigo',
+  },
+  {
+    planId: 'evelyn.ms.m6sci.phases-of-the-moon.v1',
+    title: 'Phases of the Moon',
+    subjectLabel: 'Science',
     levelLabel: 'Grade 6',
-    hook: 'Maps, timelines & monuments',
+    hook: 'Sun, Earth & Moon on the board',
+    tone: 'emerald',
+  },
+  {
+    planId: 'evelyn.g3.sci.physical.states-of-matter.v1',
+    title: 'States of Matter',
+    subjectLabel: 'Science',
+    levelLabel: 'Grade 3',
+    hook: 'Solids, liquids, gases, particle by particle',
+    tone: 'emerald',
+  },
+  {
+    planId: 'evelyn.ap.world.unit2-networks.v1',
+    title: 'The Silk Roads',
+    subjectLabel: 'World History',
+    levelLabel: 'AP',
+    hook: 'Routes, goods & ideas on the map',
     tone: 'rose',
+  },
+  {
+    planId: 'evelyn.g7.math.probability.intro.v1',
+    title: 'Probability',
+    subjectLabel: 'Math',
+    levelLabel: 'Grade 7',
+    hook: 'Chances, trees & outcomes',
+    tone: 'indigo',
   },
 ];
