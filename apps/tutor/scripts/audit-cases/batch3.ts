@@ -177,7 +177,7 @@ export const CASES: AuditCase[] = [
       'Water evaporates from the ocean when the sun heats it',
       'Where does the water go when it soaks into the ground',
       'The water cycle moves water between the ocean, the air, and the land over and over',
-      'what I Know',
+      'What I know',
     ],
   ),
   withContentCheck(
