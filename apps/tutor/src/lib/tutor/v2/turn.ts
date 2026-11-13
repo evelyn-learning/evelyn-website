@@ -106,6 +106,7 @@ export function v2SessionPart(session: V2Session): string {
     // topic and was kept on the plan).
     session.trial ? 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.' : '',
     session.timeBoxMinutes ? `The session is meant to last about ${session.timeBoxMinutes} minutes.` : '',
+    session.background?.length ? `What is known about this student from their course and earlier sessions:\n${session.background.map((l) => `  - ${l}`).join('\n')}` : '',
     tutorFigureLines(session),
     session.plan ? `\n${renderPlanMap(session.plan)}` : session.topic ? `\nThere is no lesson plan. The student asked to learn: ${session.topic}. Teach that, and whatever else they ask for.` : '\nThere is no lesson plan: teach what the student asks for.',
   ];
@@ -113,8 +114,9 @@ export function v2SessionPart(session: V2Session): string {
 }
 
 /** What goes in the user turn in place of the student's words when they have not spoken. */
-export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number): string {
+export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean): string {
   if (studentSaid !== null) return studentSaid;
+  if (resumed) return '[The student\'s page was reloaded in the middle of the lesson and they have just come back. Welcome them back in one short sentence, say where the lesson stood, and carry on from there. What was on the board before is still on it.]';
   if (state.history.length === 0) return '[The session has just started. The student has joined and is waiting for you to begin the lesson. Greet them, then tell them what this lesson is about and what it will cover, and ask whether that sounds good. Keep all of it short: three sentences at most, the plan as two or three plain things and not a list of every step. Wait for their answer before teaching.]';
   return silenceSeconds ? '[The student has not replied.]' : '[The student sent nothing.]';
 }
@@ -202,7 +204,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   /** The first reply of the session: nothing has been said by either side. */
   const opening = !state.history.length && input.studentSaid === null;
-  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds);
+  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed);
   const facts = renderFacts(session, state, { ...input.facts, nowMs });
   // The student's words come first and carry the cache mark; the facts follow and are
   // never stored, so next turn's request shares this one's prefix up to the words.

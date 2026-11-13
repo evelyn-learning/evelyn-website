@@ -16,6 +16,7 @@ export interface V2ClientSession {
   topic?: string;
   teacher?: { name: string; nameIsRole?: boolean; style?: string };
   trial?: boolean;
+  background?: string[];
 }
 
 export interface V2TurnDone {
@@ -31,6 +32,7 @@ export interface V2TurnRequest {
   state: V2State;
   studentSaid: string | null;
   silenceSeconds?: number;
+  resumed?: boolean;
   embedToken?: string;
   signal?: AbortSignal;
   onText?: (delta: string) => void;
@@ -46,7 +48,7 @@ export async function streamV2Turn(req: V2TurnRequest): Promise<V2TurnDone> {
   const res = await doFetch('/api/tutor/brain-v2/turn', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(req.embedToken ? { 'x-embed-token': req.embedToken } : {}) },
-    body: JSON.stringify({ session: req.session, state: req.state, studentSaid: req.studentSaid, ...(req.silenceSeconds ? { silenceSeconds: req.silenceSeconds } : {}) }),
+    body: JSON.stringify({ session: req.session, state: req.state, studentSaid: req.studentSaid, ...(req.silenceSeconds ? { silenceSeconds: req.silenceSeconds } : {}), ...(req.resumed ? { resumed: true } : {}) }),
     signal: req.signal,
   });
   if (!res.ok || !res.body) {

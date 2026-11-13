@@ -53,6 +53,8 @@ export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSente
   cartesiaVoiceSpeed?: number;
   speechRate?: number;
   tutorLanguages?: string[];
+  /** A resumed session is waiting for the student's tap (the host shows "Continue lesson"). */
+  onResumeAwaitingTapChange?: (awaiting: boolean) => void;
   /** The session whose student microphone track is kept (the same store as v1's recordings). Without it nothing
    *  is recorded: three flagged sessions could not be replayed through other recognisers (2026-11-12). */
   recordSessionId?: string;
@@ -504,12 +506,17 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
 
   useEffect(() => () => { releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
 
+  // A resumed session waits for a tap, as any session does (audio needs one): the page shows "Continue lesson".
+  useEffect(() => { if (turns.resumedRef.current && !startedRef.current) p.current.onResumeAwaitingTapChange?.(true); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const ref = props.handleRef;
     if (!ref) return;
     ref.current = {
       ...V2_HANDLE_STUBS,
       startSession: start,
+      resumeContinue: () => { p.current.onResumeAwaitingTapChange?.(false); start(); },
       sendTextMessage: (text) => { if (!startedRef.current) start(); heard(text, { typed: true }); },
       speakText: (text) => realtimeRef.current?.speakText(text),
       stopSpeaking: () => { void realtimeRef.current?.clearSpeechQueue(); },

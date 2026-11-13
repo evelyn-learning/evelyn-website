@@ -35,6 +35,7 @@ import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
 import TutorClientV2 from '../v2/TutorClientV2';
 import TutorVoiceV2 from '../v2/TutorVoiceV2';
 import { speechRateForLevel } from '@/lib/tutor/voice/speech-rate';
+import { v2Background } from '@/lib/tutor/v2/background';
 import BoardPlannerTabs from './BoardPlannerTabs';
 import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
@@ -926,6 +927,7 @@ export default function TutorSession(props: TutorSessionProps) {
   // heading (Praveen, biology, embed-1794520770137).
   // v2: the teacher the student picked, as the turn engine takes it (name, and the manner in the persona's own words).
   const v2Teacher = useMemo(() => (teacherPersona?.name ? { name: teacherPersona.name, ...(teacherPersona.nameIsRole ? { nameIsRole: true } : {}), ...(teacherPersona.style?.teaching ? { style: teacherPersona.style.teaching } : {}) } : undefined), [teacherPersona]);
+  const v2StudentBackground = useMemo(() => v2Background({ socialMemory, progressDigest, readinessNote, practiceLocator, goalNote }), [socialMemory, progressDigest, readinessNote, practiceLocator, goalNote]);
   const plannerTabs = brainVersion === 'v2' && whiteboardCommands.length > 0;
   const boardEl = (
     <div className={`relative h-full${plannerTabs ? ' pl-8' : ''}`}>
@@ -1728,6 +1730,7 @@ export default function TutorSession(props: TutorSessionProps) {
         <TutorVoiceV2
           key={sessionId}
           recordSessionId={sessionId || undefined}
+          onResumeAwaitingTapChange={setAwaitingResume}
           subject={subject}
           level={level}
           studentName={studentName || undefined}
@@ -1735,6 +1738,9 @@ export default function TutorSession(props: TutorSessionProps) {
           embedToken={embedToken}
           standby={standby}
           teacher={v2Teacher}
+          sessionId={sessionId || undefined}
+          resumeState={resumeState ?? undefined}
+          background={v2StudentBackground}
           onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
           onCompletedSegmentsChange={(ids) => { setCompletedSegmentIds([...ids]); onCompletedSegmentsChange?.([...ids]); }}
           onMilestone={onMilestone}
@@ -1771,6 +1777,9 @@ export default function TutorSession(props: TutorSessionProps) {
           embedToken={embedToken}
           standby={standby}
           teacher={v2Teacher}
+          sessionId={sessionId || undefined}
+          resumeState={resumeState ?? undefined}
+          background={v2StudentBackground}
           onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
           onCompletedSegmentsChange={(ids) => { setCompletedSegmentIds([...ids]); onCompletedSegmentsChange?.([...ids]); }}
           onMilestone={onMilestone}

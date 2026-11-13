@@ -9,6 +9,7 @@
  */
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { TutorMilestone } from '@/lib/tutor/orchestrator/types';
+import { V2_OPENING_BLOCK_START, clearV2State, loadV2State, saveV2State, v2StateFromCheckpoint } from '@/lib/tutor/v2/resume';
 import { v2Progress } from '@/lib/tutor/v2/progress';
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { WhiteboardCommand } from '@core/knowledge/types';
@@ -34,6 +35,12 @@ export interface V2TurnsConfig {
   trial?: boolean;
   /** The topic asked for when there is no lesson plan. */
   topic?: string;
+  /** What the partner's portal knows about the student (background.ts). */
+  background?: string[];
+  /** The session's id, under which its state is kept for a reload (resume.ts). */
+  sessionId?: string;
+  /** The host's checkpoint, when this page load is a resume: the transcript, the board and what was finished. */
+  resumeState?: { transcript: TranscriptEntry[]; whiteboardCommands: WhiteboardCommand[]; completedSegmentIds?: string[] } | null;
   /** Where the lesson stands, for the host page and a partner's portal (progress.ts): the same three reports v1 makes. */
   onLessonPlanProgress?: (p: { plan: LessonPlan | null; currentSegmentId: string }) => void;
   onCompletedSegmentsChange?: (ids: string[]) => void;
@@ -79,6 +86,8 @@ export interface V2Turns {
   busy: boolean;
   closed: boolean;
   openedRef: MutableRefObject<boolean>;
+  /** This page load picked up an earlier session (resume.ts). */
+  resumedRef: MutableRefObject<boolean>;
   stateRef: MutableRefObject<V2State>;
 }
 
@@ -161,6 +170,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       ...(p.current.sessionMaxMinutes ? { timeBoxMinutes: p.current.sessionMaxMinutes } : {}),
       ...(p.current.lessonPlanId ? { lessonPlanId: p.current.lessonPlanId } : {}),
       ...(p.current.topic && !p.current.lessonPlanId ? { topic: p.current.topic } : {}),
+      ...(p.current.background?.length ? { background: p.current.background } : {}),
       ...(p.current.teacher ? { teacher: p.current.teacher } : {}),
       ...(p.current.trial ? { trial: true } : {}),
     };
@@ -187,6 +197,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       const done = await streamV2Turn({
         session, state: stateRef.current, studentSaid, embedToken: p.current.embedToken, signal: abort.signal,
         ...(silenceSeconds ? { silenceSeconds } : {}),
+        ...(resumeTurnRef.current ? { resumed: true } : {}),
         onText: (delta) => {
           // Typed sessions: once the reply is appearing, the shell's "Thinking…" state is over.
           if (!text && p.current.mode === 'text') p.current.onTutorBusy?.(false);
@@ -232,6 +243,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       });
       letGo(); speak(sentences.flush());
       stateRef.current = done.state;
+      if (done.state.closed) clearV2State(p.current.sessionId); else saveV2State(p.current.sessionId, done.state);
       reportProgress();
       setTutor(done.spoken || text.trim(), false, settled.some((c) => c.name === 'show_problem' && /^painted/.test(c.outcome)));
       p.current.onBrainUsage?.(done.usage);
@@ -281,16 +293,35 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       p.current.onCut?.();
       p.current.onDebugEvent?.('time_limit_v2', `${minutes} min`);
       p.current.onEndSession?.('time_limit');
-    }, minutes * 60000);
+    // A resumed session's box runs from when the lesson first began.
+    }, Math.max(5000, minutes * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
   }, []);
   useEffect(() => () => { if (hardStopRef.current) clearTimeout(hardStopRef.current); }, []);
+
+  // A resume (resume.ts): the transcript and the board go back up as the page loads, and the state is the one
+  // kept in this browser or, failing that, one rebuilt from the host's checkpoint.
+  const resumedRef = useRef(false); const resumeTurnRef = useRef(false);
+  useEffect(() => {
+    const cp = p.current.resumeState;
+    if (!cp || resumedRef.current || openedRef.current || !cp.transcript.length) return;
+    const kept = loadV2State(p.current.sessionId);
+    stateRef.current = kept ?? v2StateFromCheckpoint(cp, Date.now(), `${V2_OPENING_BLOCK_START} The student has joined.]`);
+    if (!stateRef.current.history.length) return;
+    resumedRef.current = true;
+    transcriptRef.current = [...cp.transcript]; publish();
+    if (cp.whiteboardCommands.length) p.current.onWhiteboardCommand(cp.whiteboardCommands);
+    p.current.onDebugEvent?.('resume_v2', kept ? 'state kept in this browser' : 'state rebuilt from the checkpoint');
+    reportProgress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const open = useCallback(() => {
     if (openedRef.current) return;
     openedRef.current = true;
     armHardStop();
     p.current.onSessionStarted?.();
-    p.current.onDebugEvent?.('start_v2', `tutor opens (${p.current.mode})`);
+    p.current.onDebugEvent?.('start_v2', `tutor ${resumedRef.current ? 'welcomes the student back' : 'opens'} (${p.current.mode})`);
+    if (resumedRef.current) { resumeTurnRef.current = true; void runTurn(null).finally(() => { resumeTurnRef.current = false; }); return; }
     void runTurn(null);
   }, [runTurn, armHardStop]);
 
@@ -307,5 +338,5 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const end = useCallback(() => { endingRef.current = true; abortRef.current?.abort(); p.current.onEndSession?.(); }, []);
   const isEnding = useCallback(() => endingRef.current, []);
 
-  return { send, open, nudge, end, abort, isEnding, busy, closed, openedRef, stateRef };
+  return { send, open, nudge, end, abort, isEnding, busy, closed, openedRef, stateRef, resumedRef };
 }

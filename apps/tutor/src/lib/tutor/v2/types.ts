@@ -26,6 +26,8 @@ export interface V2Session {
   plan?: LessonPlan;
   /** The teacher the tutor speaks as, when the session names one. */
   teacher?: { name: string; nameIsRole?: boolean; style?: string };
+  /** What the partner's portal knows about the student, one plain fact per line (background.ts). */
+  background?: string[];
   /** A free trial or demo lesson: the student may change the topic or the subject. */
   trial?: boolean;
 }

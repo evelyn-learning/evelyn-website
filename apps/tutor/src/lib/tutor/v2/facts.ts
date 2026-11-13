@@ -23,6 +23,8 @@ export interface V2TurnFacts {
   answerCheck?: string;
   /** Seconds the student was silent before this turn, when that is why the turn exists. */
   silenceSeconds?: number;
+  /** The page was reloaded and the session has just been picked up again (resume.ts). */
+  resumed?: boolean;
 }
 
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {

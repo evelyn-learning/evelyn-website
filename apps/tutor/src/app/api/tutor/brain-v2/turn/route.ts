@@ -10,6 +10,7 @@
  *   { type: 'error', message }
  */
 import { NextRequest } from 'next/server';
+import { V2_BACKGROUND_LINE_CHARS, V2_BACKGROUND_MAX_LINES } from '@/lib/tutor/v2/background';
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { runV2Turn } from '@/lib/tutor/v2/turn';
@@ -21,10 +22,11 @@ const SSE_HEADERS = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-
 const MAX_STUDENT_CHARS = 8000;
 
 interface TurnBody {
-  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; timeBoxMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; teacher?: unknown; trial?: unknown };
+  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; timeBoxMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown };
   state?: unknown;
   studentSaid?: unknown;
   silenceSeconds?: unknown;
+  resumed?: unknown;
 }
 
 const bad = (message: string) => new Response(JSON.stringify({ error: message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
@@ -56,12 +58,14 @@ export async function POST(req: NextRequest) {
   const plan = typeof cfg.lessonPlanId === 'string' && cfg.lessonPlanId ? await getLessonPlan(cfg.lessonPlanId) : null;
   const t = (cfg.teacher && typeof cfg.teacher === 'object' ? cfg.teacher : {}) as { name?: unknown; nameIsRole?: unknown; style?: unknown };
   const teacher = typeof t.name === 'string' && t.name.trim() ? { name: t.name.trim().slice(0, 80), ...(t.nameIsRole === true ? { nameIsRole: true } : {}), ...(typeof t.style === 'string' && t.style.trim() ? { style: t.style.trim().slice(0, 600) } : {}) } : null;
+  const background = Array.isArray(cfg.background) ? cfg.background.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, V2_BACKGROUND_MAX_LINES).map((x) => x.trim().slice(0, V2_BACKGROUND_LINE_CHARS)) : [];
   const session: V2Session = {
     studentName: typeof cfg.studentName === 'string' ? cfg.studentName.slice(0, 80) : undefined,
     subject: cfg.subject.slice(0, 60),
     level: cfg.level.slice(0, 60),
     mode: cfg.mode === 'voice' ? 'voice' : 'text',
     ...(typeof cfg.timeBoxMinutes === 'number' && cfg.timeBoxMinutes > 0 ? { timeBoxMinutes: Math.min(180, Math.round(cfg.timeBoxMinutes)) } : {}),
+    ...(background.length ? { background } : {}),
     ...(teacher ? { teacher } : {}),
     ...(cfg.trial === true ? { trial: true } : {}),
     ...(!plan && typeof cfg.topic === 'string' && cfg.topic.trim() ? { topic: cfg.topic.trim().slice(0, 160) } : {}),
@@ -77,7 +81,7 @@ export async function POST(req: NextRequest) {
       try {
         const r = await runV2Turn({
           session, state, studentSaid, signal: req.signal,
-          ...(silenceSeconds ? { facts: { silenceSeconds } } : {}),
+          ...(silenceSeconds || body.resumed === true ? { facts: { ...(silenceSeconds ? { silenceSeconds } : {}), ...(body.resumed === true ? { resumed: true } : {}) } } : {}),
           onText: (delta) => send({ type: 'text', delta }),
           onBoardOpen: () => send({ type: 'board-open' }),
           onBoardWithdraw: (id) => send({ type: 'board-withdraw', id }),

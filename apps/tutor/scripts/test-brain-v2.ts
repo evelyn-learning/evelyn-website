@@ -24,6 +24,8 @@ import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
 import { v2Progress } from '../src/lib/tutor/v2/progress';
+import { v2Background } from '../src/lib/tutor/v2/background';
+import { v2StateFromCheckpoint } from '../src/lib/tutor/v2/resume';
 import { V2_CONTROL_TOOL_NAMES } from '../src/lib/tutor/v2/tool-names';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
@@ -589,6 +591,13 @@ async function main() {
     && JSON.stringify(pr({ hook: { status: 'shown' }, c1: { status: 'shown' }, t1: { status: 'shown' } })) === JSON.stringify({ currentSegmentId: 't1', completedSegmentIds: ['hook', 'c1'], milestone: 'first_concept_complete' })
     && pr({ hook: { status: 'shown' }, c1: { status: 'shown' }, t1: { status: 'demonstrated' } }).milestone === 'first_try_yourself_success' && pr({ hook: { status: 'shown' }, c1: { status: 'shown' }, t1: { status: 'demonstrated' } }).currentSegmentId === 'recap'
     && pr({ c1: { status: 'skipped' }, recap: { status: 'shown' } }).milestone === 'recap_reached', pr({ hook: { status: 'shown' }, c1: { status: 'shown' }, t1: { status: 'shown' } }));
+  const bg = v2Background({ progressDigest: { unitsCompleted: 3, unitsTotal: 10, percentComplete: 30, weeksElapsed: 2 } as never, goalNote: ' Pass the AP exam ', socialMemory: [{ note: 'plays cricket on Saturdays' } as never], practiceLocator: 'Unit 2 · Practice' });
+  check('what the portal knows about the student reaches the tutor as plain facts', bg.length === 4 && /3 of 10 units/.test(bg[0]) && /Pass the AP exam/.test(bg[1]) && /cricket/.test(bg[2]) && /Unit 2/.test(bg[3]) && /What is known about this student[\s\S]*cricket/.test(v2SessionPart({ subject: 'math', level: '9', mode: 'voice', background: bg })) && v2Background({}).length === 0, bg);
+  const back = v2StateFromCheckpoint({ transcript: [{ role: 'tutor', text: 'Hi, welcome.' }, { role: 'user', text: 'hello' }, { role: 'tutor', text: 'A square is a male.' }, { role: 'tutor', text: 'What is a circle?' }, { role: 'user', text: 'a fem' }], completedSegmentIds: ['hook'] }, 5, '[The session has just started.]');
+  check('a session rebuilt from a checkpoint has a history the model accepts, and knows what is done', back.history.length === 4 && back.history[0].role === 'user' && back.history[3].role === 'assistant' && /square[\s\S]*circle/.test(String(back.history[3].content)) && back.goals.hook.status === 'demonstrated' && /reloaded/.test(back.note), back.history);
+  const rs = stub([msg([{ type: 'text', text: 'Welcome back.' }], 'end_turn')]);
+  await runV2Turn({ session, state: back, studentSaid: null, facts: { nowMs: 10, resumed: true }, callModel: rs.call, boardPass: false });
+  check('the first turn after a reload tells the tutor the student has come back', /page was reloaded/.test(JSON.stringify(rs.seen[0].messages.slice(-1))), '');
   check('the marketing demo runs on v2', resolvePartnerSessionOptions({ partnerId: 'evelyn-marketing' }).brainVersion === 'v2');
   check('every partner is on v1 until cut over', ['crimsora', 'greenapple', 'gdi-demo', 'gameclass', 'unknown-partner', ''].every((id) => resolvePartnerSessionOptions({ partnerId: id }).brainVersion === 'v1'));
   check('a deploy can name each partner\'s engine, and ignores what it cannot read', JSON.stringify(brainVersionOverrides(' evelyn-marketing=v2, crimsora=v1 ,gdi-demo=v9,=v2,junk')) === JSON.stringify({ 'evelyn-marketing': 'v2', crimsora: 'v1' }) && Object.keys(brainVersionOverrides(undefined)).length === 0);
