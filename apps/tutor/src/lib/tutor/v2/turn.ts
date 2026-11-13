@@ -27,6 +27,7 @@ import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { planGoalIds, renderPlanMap } from './plan-map';
 import { stripToolTalk } from './tool-talk';
+import { gradeOfLevel } from './session-kind';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
@@ -86,7 +87,7 @@ export interface V2TurnInput {
 /** What the student's grade asks of the tutor's pace. The constitution says to teach at their level; a grade 7
  *  lesson still moved at a senior's pace, a new kind of problem every reply (Praveen, embed-1794453532197). */
 export function v2LevelLine(level: string): string {
-  const grade = /^\s*k/i.test(level) ? 0 : Number.parseInt(level, 10);
+  const grade = gradeOfLevel(level) ?? NaN;
   if (!Number.isFinite(grade) || grade > 8) return '';
   return grade <= 5
     ? `A child in grade ${grade || 'K'}: one small idea at a time, in short sentences and everyday words. Show a thing with objects or a picture before any symbol, do an example together before asking for one alone, and stay with one kind of problem until it is easy.`
@@ -97,8 +98,13 @@ export function v2SessionPart(session: V2Session): string {
   const lines = [
     'THIS SESSION',
     `Student: ${session.studentName?.trim() || 'name not given'}. Subject: ${session.subject}${session.topic ? ` (${session.topic})` : ''}. Level: ${session.level}.`,
+    // Who the student chose to be taught by (a partner's teacher persona, the marketing demo's picker).
+    session.teacher?.name ? `You are ${session.teacher.name}${session.teacher.nameIsRole ? ' (a role, not a person\'s name)' : ''}: say so when you greet the student.${session.teacher.style ? ` How you teach: ${session.teacher.style}` : ''}` : '',
     v2LevelLine(session.level),
     v2ModeLines(session.mode),
+    // A free trial is the student's to steer (Praveen 2026-10-28: a trial student asked five times for another
+    // topic and was kept on the plan).
+    session.trial ? 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.' : '',
     session.timeBoxMinutes ? `The session is meant to last about ${session.timeBoxMinutes} minutes.` : '',
     tutorFigureLines(session),
     session.plan ? `\n${renderPlanMap(session.plan)}` : '\nThere is no lesson plan: teach what the student asks for.',

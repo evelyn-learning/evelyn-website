@@ -21,7 +21,7 @@ const SSE_HEADERS = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-
 const MAX_STUDENT_CHARS = 8000;
 
 interface TurnBody {
-  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; timeBoxMinutes?: unknown; lessonPlanId?: unknown };
+  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; timeBoxMinutes?: unknown; lessonPlanId?: unknown; teacher?: unknown; trial?: unknown };
   state?: unknown;
   studentSaid?: unknown;
   silenceSeconds?: unknown;
@@ -54,12 +54,16 @@ export async function POST(req: NextRequest) {
   if (studentSaid === undefined) return bad('studentSaid must be a string or null');
 
   const plan = typeof cfg.lessonPlanId === 'string' && cfg.lessonPlanId ? await getLessonPlan(cfg.lessonPlanId) : null;
+  const t = (cfg.teacher && typeof cfg.teacher === 'object' ? cfg.teacher : {}) as { name?: unknown; nameIsRole?: unknown; style?: unknown };
+  const teacher = typeof t.name === 'string' && t.name.trim() ? { name: t.name.trim().slice(0, 80), ...(t.nameIsRole === true ? { nameIsRole: true } : {}), ...(typeof t.style === 'string' && t.style.trim() ? { style: t.style.trim().slice(0, 600) } : {}) } : null;
   const session: V2Session = {
     studentName: typeof cfg.studentName === 'string' ? cfg.studentName.slice(0, 80) : undefined,
     subject: cfg.subject.slice(0, 60),
     level: cfg.level.slice(0, 60),
     mode: cfg.mode === 'voice' ? 'voice' : 'text',
     ...(typeof cfg.timeBoxMinutes === 'number' && cfg.timeBoxMinutes > 0 ? { timeBoxMinutes: Math.min(180, Math.round(cfg.timeBoxMinutes)) } : {}),
+    ...(teacher ? { teacher } : {}),
+    ...(cfg.trial === true ? { trial: true } : {}),
     ...(plan ? { plan, topic: `${(plan as { topic?: string }).topic ?? ''} ${(plan as { title?: string }).title ?? ''}`.trim().slice(0, 160) } : {}),
   };
   const silenceSeconds = typeof body.silenceSeconds === 'number' && body.silenceSeconds > 0 ? body.silenceSeconds : undefined;

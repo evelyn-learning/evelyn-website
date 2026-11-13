@@ -26,6 +26,9 @@ export interface V2TurnsConfig {
   lessonPlanId?: string;
   embedToken?: string;
   sessionMaxMinutes?: number;
+  /** The teacher persona's name and manner, and whether this is a free trial (types.ts V2Session). */
+  teacher?: { name: string; nameIsRole?: boolean; style?: string };
+  trial?: boolean;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
   onEndSession?: (reason?: 'time_limit') => void;
@@ -130,6 +133,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       studentName: p.current.studentName, subject: p.current.subject, level: p.current.level, mode: p.current.mode,
       ...(p.current.sessionMaxMinutes ? { timeBoxMinutes: p.current.sessionMaxMinutes } : {}),
       ...(p.current.lessonPlanId ? { lessonPlanId: p.current.lessonPlanId } : {}),
+      ...(p.current.teacher ? { teacher: p.current.teacher } : {}),
+      ...(p.current.trial ? { trial: true } : {}),
     };
     const abort = new AbortController(); abortRef.current = abort;
     const sentences = new SentenceStream();

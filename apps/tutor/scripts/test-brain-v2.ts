@@ -22,12 +22,13 @@ import { v2Tools } from '../src/lib/tutor/v2/tools';
 import { runV2Turn, v2SessionPart, type V2ModelCall, V2_CHECK_INS } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
+import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
 import { V2_CONTROL_TOOL_NAMES } from '../src/lib/tutor/v2/tool-names';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
 import { foldInterruptedTurn, V2_CUT_MARK } from '../src/lib/tutor/v2/interrupted';
-import { resolvePartnerSessionOptions } from '../src/lib/tutor/portal/partner-session-options';
+import { brainVersionOverrides, resolvePartnerSessionOptions } from '../src/lib/tutor/portal/partner-session-options';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -582,6 +583,10 @@ async function main() {
 
   console.log('selection');
   check('every partner is on v1 until cut over', ['crimsora', 'greenapple', 'gdi-demo', 'gameclass', 'unknown-partner', ''].every((id) => resolvePartnerSessionOptions({ partnerId: id }).brainVersion === 'v1'));
+  check('a deploy can name each partner\'s engine, and ignores what it cannot read', JSON.stringify(brainVersionOverrides(' evelyn-marketing=v2, crimsora=v1 ,gdi-demo=v9,=v2,junk')) === JSON.stringify({ 'evelyn-marketing': 'v2', crimsora: 'v1' }) && Object.keys(brainVersionOverrides(undefined)).length === 0);
+  const demoSys = v2SessionPart({ subject: 'physics', level: 'High school', mode: 'voice', trial: true, teacher: { name: 'Ms. Elena Vasquez', style: 'Gentle and patient.' } });
+  check('a trial session names its teacher and leaves the topic to the student; an ordinary one says neither', /You are Ms\. Elena Vasquez/.test(demoSys) && /free trial lesson/.test(demoSys) && !/free trial|You are /.test(v2SessionPart({ subject: 'physics', level: '12', mode: 'voice' })));
+  check('subject and level labels in a partner\'s own words are read for what they mean', isMathsSubject('Precalculus') && isMathsSubject('math') && !isMathsSubject('Physics') && isScienceSubject('Physics') && !isScienceSubject('History') && gradeOfLevel('Grade 3') === 3 && gradeOfLevel('Middle school') === 7 && gradeOfLevel('9-10') === 9 && gradeOfLevel('ap') === undefined && gradeOfLevel('k') === 0);
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

@@ -1,3 +1,4 @@
+import { gradeOfLevel } from '@/lib/tutor/v2/session-kind';
 /**
  * Per-tenant tutor speaking rate (the `speech_rate` embed claim).
  *
@@ -25,10 +26,8 @@ export function parseSpeechRate(raw: unknown): number | undefined {
  *  are larger than they look. Levels come as "7", "9-10", "grade 4", "k", "ap", "college": the first number
  *  decides; a level with no number (AP, college, test prep) is spoken at the normal rate. */
 export function speechRateForLevel(level: string | undefined): number | undefined {
-  const text = (level ?? '').toLowerCase();
-  if (/^(?:k|kg|kindergarten|pre-?k)\b/.test(text)) return 0.7;
-  const grade = Number(text.match(/\d{1,2}/)?.[0] ?? NaN);
-  if (!Number.isFinite(grade) || grade > 12) return undefined;
+  const grade = gradeOfLevel(level);
+  if (grade === undefined) return undefined;
   if (grade <= 5) return 0.7;
   if (grade <= 8) return 0.78;
   if (grade <= 10) return 0.88;

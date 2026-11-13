@@ -924,6 +924,8 @@ export default function TutorSession(props: TutorSessionProps) {
   // The first page has its tab from the start: a "1" that appeared only when page 2 did looked like two pages
   // arriving at once. The centre pill is gone in v2: the tabs move between pages and each page carries its own
   // heading (Praveen, biology, embed-1794520770137).
+  // v2: the teacher the student picked, as the turn engine takes it (name, and the manner in the persona's own words).
+  const v2Teacher = useMemo(() => (teacherPersona?.name ? { name: teacherPersona.name, ...(teacherPersona.nameIsRole ? { nameIsRole: true } : {}), ...(teacherPersona.style?.teaching ? { style: teacherPersona.style.teaching } : {}) } : undefined), [teacherPersona]);
   const plannerTabs = brainVersion === 'v2' && whiteboardCommands.length > 0;
   const boardEl = (
     <div className={`relative h-full${plannerTabs ? ' pl-8' : ''}`}>
@@ -1732,6 +1734,8 @@ export default function TutorSession(props: TutorSessionProps) {
           lessonPlanId={selectedLessonPlanId || undefined}
           embedToken={embedToken}
           standby={standby}
+          teacher={v2Teacher}
+          trial={isTrial || openScope || undefined}
           sessionMaxMinutes={sessionMaxMinutes}
           composerSlot={videoBtn}
           handleRef={realtimeHandleRef}
@@ -1762,6 +1766,8 @@ export default function TutorSession(props: TutorSessionProps) {
           lessonPlanId={selectedLessonPlanId || undefined}
           embedToken={embedToken}
           standby={standby}
+          teacher={v2Teacher}
+          trial={isTrial || openScope || undefined}
           prewarm={prewarm}
           sessionMaxMinutes={sessionMaxMinutes}
           composerSlot={videoBtn}

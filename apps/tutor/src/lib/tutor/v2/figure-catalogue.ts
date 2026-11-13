@@ -11,6 +11,7 @@
  *
  * Only the check sees the list: it is long, and the check is where a missing figure is noticed.
  */
+import { gradeOfLevel, isMathsSubject } from './session-kind';
 import { DIAGRAM_CATALOG, isImplementedKind } from '../diagrams/catalog/manifest';
 import type { V2Session } from './types';
 
@@ -94,7 +95,7 @@ const HAS_A_PLAIN_FORM = new Set(['simple_circuit', 'number_line', 'bar_chart', 
 export function catalogueSubjects(session: Pick<V2Session, 'subject' | 'topic'>): Subject[] {
   const subject = session.subject.toLowerCase();
   const about = `${session.topic ?? ''} ${subject}`.toLowerCase();
-  if (/^math/.test(subject)) return ['math'];
+  if (isMathsSubject(subject)) return ['math'];
   if (/^(cs|computer|coding|programming)/.test(subject)) return ['cs'];
   if (/^(ela|english|reading|writing|lit)/.test(subject)) return ['ela'];
   if (/^(ss|social|history|econ|gov|geo|psych)/.test(subject)) return ['social'];
@@ -121,7 +122,7 @@ export function tutorFigureLines(session: Pick<V2Session, 'subject' | 'topic'>):
 export function figureCatalogueFor(session: Pick<V2Session, 'subject' | 'topic' | 'level'>): string {
   const subjects = catalogueSubjects(session);
   // "AP", "college" and the like are the top of the school range.
-  const grade = /^\s*k/i.test(session.level) ? 0 : Number.parseInt(session.level, 10) || 12;
+  const grade = gradeOfLevel(session.level) ?? 12;
   const lines = DIAGRAM_CATALOG
     .filter((k) => isImplementedKind(k.kind) && !HAS_A_PLAIN_FORM.has(k.kind) && k.subjects.some((s) => subjects.includes(s)))
     .filter((k) => grade >= (k.grades.from === 'k' ? 0 : k.grades.from) - 1)

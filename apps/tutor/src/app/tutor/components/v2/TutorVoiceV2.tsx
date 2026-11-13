@@ -38,6 +38,7 @@ import { V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
 import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
+import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
 import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '@/lib/tutor/v2/facts';
@@ -422,7 +423,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     studentName: props.studentName,
     // The subject arrives as 'math' or 'maths', 'science' or 'sci': matched whole, a physics lesson given as 'sci'
     // fell through to plain speech and "3 A" was read as the letter (AP Physics, embed-1794500923861).
-    ...(/^math/i.test(props.subject ?? '') ? { ttsTextTransform: mathsSpeech } : /^sci/i.test(props.subject ?? '') ? { ttsTextTransform: scienceSpeech } : { ttsTextTransform: plainSpeech }),
+    ...(isMathsSubject(props.subject) ? { ttsTextTransform: mathsSpeech } : isScienceSubject(props.subject) ? { ttsTextTransform: scienceSpeech } : { ttsTextTransform: plainSpeech }),
   }), [onRelayTranscript, props.subject, props.ttsProvider, props.cartesiaVoiceId, props.cartesiaVoiceSpeed, languagesKey, props.speechRate, props.studentName]);
   const realtime = useOpenAIRealtime({
     instructions: TRANSPORT_ONLY,

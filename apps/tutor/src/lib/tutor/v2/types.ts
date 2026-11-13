@@ -24,6 +24,10 @@ export interface V2Session {
   /** Minutes the session is meant to last, when there is a box. */
   timeBoxMinutes?: number;
   plan?: LessonPlan;
+  /** The teacher the tutor speaks as, when the session names one. */
+  teacher?: { name: string; nameIsRole?: boolean; style?: string };
+  /** A free trial or demo lesson: the student may change the topic or the subject. */
+  trial?: boolean;
 }
 
 export interface V2BoardItem { id: string; tool: string; summary: string; /** The content alone, normalised, for spotting repeats (board.ts). */ core?: string; /** A graph keeps what it plots, so a later graph on the same page can be drawn as one picture with it (turn.ts). */ args?: Record<string, unknown> }

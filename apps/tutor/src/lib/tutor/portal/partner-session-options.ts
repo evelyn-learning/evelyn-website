@@ -76,6 +76,20 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   globalead: { openerPrefetch: false },
 };
 
+/** Which turn engine each partner runs, set per deploy: NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS="evelyn-marketing=v2,crimsora=v1".
+ *  It wins over the partner's row, so a tenant is moved to another engine (or back) by changing one line of
+ *  the instance's env and redeploying; a partner it does not name keeps its row. Read in the browser, so it
+ *  is fixed at build time. Only engines present in the build can be named (today v1 and v2). */
+export function brainVersionOverrides(raw: string | undefined): Readonly<Record<string, 'v1' | 'v2'>> {
+  const out: Record<string, 'v1' | 'v2'> = {};
+  for (const pair of (raw ?? '').split(',')) {
+    const [id, version] = pair.split('=').map((x) => x.trim());
+    if (id && (version === 'v1' || version === 'v2')) out[id] = version;
+  }
+  return out;
+}
+const BRAIN_VERSION_BY_PARTNER = brainVersionOverrides(process.env.NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS);
+
 export interface PartnerSessionLike {
   partnerId?: string | null;
   tutorLanguages?: string[] | undefined;
@@ -102,6 +116,6 @@ export function resolvePartnerSessionOptions(session: PartnerSessionLike | null 
     levelCheck: row?.levelCheck ?? base.levelCheck,
     pronunciation: row?.pronunciation ?? base.pronunciation,
     thinkingCue: row?.thinkingCue ?? base.thinkingCue,
-    brainVersion: row?.brainVersion ?? base.brainVersion,
+    brainVersion: (Object.hasOwn(BRAIN_VERSION_BY_PARTNER, partnerId) ? BRAIN_VERSION_BY_PARTNER[partnerId] : undefined) ?? row?.brainVersion ?? base.brainVersion,
   };
 }

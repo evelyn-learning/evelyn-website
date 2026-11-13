@@ -12,6 +12,8 @@ export interface V2ClientSession {
   mode: 'text' | 'voice';
   timeBoxMinutes?: number;
   lessonPlanId?: string;
+  teacher?: { name: string; nameIsRole?: boolean; style?: string };
+  trial?: boolean;
 }
 
 export interface V2TurnDone {
