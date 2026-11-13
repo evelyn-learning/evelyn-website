@@ -10,7 +10,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Mic, ChevronDown, ExternalLink, RotateCcw } from 'lucide-react';
+import { Check, Mic, ChevronDown, ExternalLink, RotateCcw } from 'lucide-react';
 import {
   CURATED_DEMO_LESSONS,
   type CuratedDemoLesson,
@@ -57,6 +57,25 @@ const DEFAULT_LESSONS: DemoLessonOption[] = CURATED_DEMO_LESSONS.map(
 );
 
 const DEFAULT_SOURCE = 'products-voice-tutor-demo';
+
+/** Length of the free session (Praveen 2026-11-12: 20 → 30). */
+const DEMO_MINUTES = 30;
+
+/** Topics offered as one-tap examples under the "anything" field: one per subject, so the range is plain. */
+const EXAMPLE_TOPICS = ['Adding fractions', 'Photosynthesis', 'The French Revolution', 'Python loops', 'Writing a thesis statement'];
+const TYPED_LEVELS = ['Elementary', 'Middle school', 'High school', 'College'];
+
+/** The subject a typed topic falls under, for the tutor's subject label. Rough on purpose: the tutor is told
+ *  the topic itself, and the label only chooses its defaults. */
+export function subjectOfTopic(topic: string): string {
+  const t = topic.toLowerCase();
+  if (/fraction|algebra|geometr|calculus|equation|trig|decimal|percent|multipl|divis|math|statistic|probab|graph|integral|derivative|logarithm|number/.test(t)) return 'Math';
+  if (/python|javascript|java\b|coding|program|algorithm|loop|recursion|html|css|sql|computer/.test(t)) return 'Computer Science';
+  if (/essay|thesis|grammar|writing|poem|poetry|novel|shakespeare|reading|vocabulary|literature|paragraph|verb|noun/.test(t)) return 'English';
+  if (/history|revolution|war\b|empire|government|constitution|econom|geograph|civil|ancient|democracy|supply and demand/.test(t)) return 'Social Studies';
+  if (/photosynth|cell|atom|molecul|chemi|physic|biolog|force|energy|gravity|electric|genetic|planet|ecosystem|reaction|science|motion|dna|evolution/.test(t)) return 'Science';
+  return 'General';
+}
 
 // Chip dot color for the curated defaults, keyed by planId (DemoLessonOption
 // has no `tone` field). Non-default lessons fall back to a neutral blue dot.
@@ -151,14 +170,15 @@ async function startGatedDemo(
   studentName: string,
   studentEmail: string,
 ): Promise<DemoStartResult> {
+  // A ready lesson names its plan; a topic the visitor typed has none, and the tutor teaches it from the topic.
   const cfg = {
     subject: lesson.subjectLabel.toLowerCase(),
     level: lesson.levelLabel,
-    curriculum_module: lesson.planId,
-    max_duration_minutes: 20,
-    wrap_at_minutes: 18,
+    ...(lesson.planId ? { curriculum_module: lesson.planId } : { topic: lesson.title }),
+    max_duration_minutes: DEMO_MINUTES,
+    wrap_at_minutes: DEMO_MINUTES - 2,
     input_mode: 'voice',
-    target_kind: 'lessonNode',
+    target_kind: lesson.planId ? 'lessonNode' : 'freestyle',
     // 2026-09-10: the demo is a showcase, not an enrolled lesson — let the
     // visitor take it anywhere (engine honors propose_plan_swap across
     // subjects and drops the Rule 7(b) "this session is scoped to…" reply).
@@ -207,9 +227,19 @@ export default function VoiceTutorLiveDemo({
   // back to an inert placeholder so the hooks below never dereference
   // undefined. The real guard (render nothing) comes after all hooks run,
   // per the Rules of Hooks — see the `if (lessons.length === 0)` below.
-  const [lesson, setLesson] = useState<DemoLessonOption>(
-    lessons[0] ?? { planId: '', title: '', subjectLabel: '', levelLabel: '', hook: '' },
+  // Nothing is chosen for the visitor. The first lesson used to be selected already, and people who wanted
+  // something else started it anyway (Praveen 2026-11-12).
+  const [picked, setPicked] = useState<DemoLessonOption | null>(null);
+  const [typedTopic, setTypedTopic] = useState('');
+  const [typedLevel, setTypedLevel] = useState('High school');
+  const typed = typedTopic.trim().replace(/\s+/g, ' ');
+  const lesson: DemoLessonOption = useMemo(
+    () => (typed.length >= 3
+      ? { planId: '', title: typed.charAt(0).toUpperCase() + typed.slice(1), subjectLabel: subjectOfTopic(typed), levelLabel: typedLevel, hook: '' }
+      : picked ?? { planId: '', title: '', subjectLabel: '', levelLabel: '', hook: '' }),
+    [typed, typedLevel, picked],
   );
+  const hasTopic = lesson.title.length > 0;
   const [teacherId, setTeacherId] = useState<string>(DEMO_TEACHERS[0].id);
   const [geoPairIds, setGeoPairIds] = useState<string[]>([]);
   const [teacherOpen, setTeacherOpen] = useState(false);
@@ -322,8 +352,13 @@ export default function VoiceTutorLiveDemo({
   if (lessons.length === 0) return null;
 
   const pickLesson = (l: DemoLessonOption) => {
-    setLesson(l);
+    setPicked(l);
+    setTypedTopic('');
     trackEvent('lesson_selected', { plan_id: l.planId, surface });
+  };
+  const typeTopic = (value: string) => {
+    setTypedTopic(value.slice(0, 80));
+    if (value.trim().length >= 3) setPicked(null);
   };
 
   const pickTeacher = (id: string) => {
@@ -340,8 +375,8 @@ export default function VoiceTutorLiveDemo({
   const identityOk = name.length > 0 && DEMO_EMAIL_RE.test(email);
 
   const start = async () => {
-    if (starting || !identityOk) return;
-    trackEvent('demo_start_click', { plan_id: lesson.planId, teacher_id: teacher.id });
+    if (starting || !identityOk || !hasTopic) return;
+    trackEvent('demo_start_click', { plan_id: lesson.planId || 'typed_topic', teacher_id: teacher.id });
     try {
       window.localStorage.setItem('evelyn:demo:studentName', name);
       window.localStorage.setItem('evelyn:demo:studentEmail', email);
@@ -382,7 +417,7 @@ export default function VoiceTutorLiveDemo({
         )}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <p className="text-sm text-slate-600">
-            <span className="font-semibold text-slate-900">{lesson.title}</span> with {teacher.name} — 20-minute demo
+            <span className="font-semibold text-slate-900">{lesson.title}</span> with {teacher.name}, free {DEMO_MINUTES}-minute session
           </p>
           {sessionEnded && !demoExhausted && (
             <button
@@ -446,44 +481,144 @@ export default function VoiceTutorLiveDemo({
     );
   }
 
+  const missing = !hasTopic ? 'Choose what to learn first' : !name ? 'Add your name' : !DEMO_EMAIL_RE.test(email) ? 'Add your email' : '';
+  const inputClass = 'w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none';
+
   return (
-    <div>
-      {/* Lesson chips */}
-      <div className="flex flex-wrap justify-center gap-2 mb-5">
-        {lessons.map((l) => {
-          const selected = l.planId === lesson.planId;
-          return (
-            <button
-              key={l.planId}
-              type="button"
-              onClick={() => pickLesson(l)}
-              aria-pressed={selected}
-              className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
-                selected
-                  ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold'
-                  : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300'
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full ${DEFAULT_TONE_DOT[l.planId] ?? FALLBACK_TONE_DOT}`} aria-hidden />
-              {l.title}
-              <span className="hidden sm:inline text-xs text-slate-400 font-normal">· {l.subjectLabel}</span>
-            </button>
-          );
-        })}
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-lg overflow-hidden text-left">
+      {/* 1. What to learn: anything typed, or a ready lesson. */}
+      <div className="p-6 md:p-8">
+        <label htmlFor="demo-topic" className="block text-xl md:text-2xl font-bold text-slate-900">
+          What do you want to learn?
+        </label>
+        <p className="mt-1 text-sm text-slate-600">
+          Type any topic from any subject, or pick one of the ready lessons below. You can change topic at any point by asking the tutor.
+        </p>
+        <input
+          id="demo-topic"
+          type="text"
+          value={typedTopic}
+          onChange={(e) => typeTopic(e.target.value)}
+          placeholder="For example: long division, the water cycle, the causes of World War I"
+          maxLength={80}
+          autoComplete="off"
+          className="mt-4 w-full px-5 py-4 text-base md:text-lg border-2 border-slate-300 rounded-2xl bg-white placeholder:text-slate-400 focus:ring-4 focus:ring-blue-100 focus:border-blue-600 outline-none"
+        />
+        {typed.length >= 3 ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Your level">
+            <span className="text-sm text-slate-600 mr-1">Your level</span>
+            {TYPED_LEVELS.map((lv) => (
+              <button
+                key={lv}
+                type="button"
+                role="radio"
+                aria-checked={typedLevel === lv}
+                onClick={() => setTypedLevel(lv)}
+                className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
+                  typedLevel === lv ? 'border-blue-600 bg-blue-600 text-white font-semibold' : 'border-slate-300 bg-white text-slate-700 hover:border-blue-400'
+                }`}
+              >
+                {lv}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-sm text-slate-500 mr-1">Try</span>
+            {EXAMPLE_TOPICS.map((ex) => (
+              <button
+                key={ex}
+                type="button"
+                onClick={() => { typeTopic(ex); trackEvent('lesson_selected', { plan_id: 'example_topic', surface }); }}
+                className="rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700"
+              >
+                {ex}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <p className="mt-7 text-sm font-semibold text-slate-900">Ready lessons</p>
+        <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5" role="radiogroup" aria-label="Ready lessons">
+          {lessons.map((l) => {
+            const selected = typed.length < 3 && picked?.planId === l.planId;
+            return (
+              <button
+                key={l.planId}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => pickLesson(l)}
+                className={`relative min-w-0 rounded-xl border-2 px-3 sm:px-4 py-3 text-left transition-colors ${
+                  selected ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white hover:border-blue-300'
+                }`}
+              >
+                <span className="flex items-center gap-2 text-xs text-slate-500">
+                  <span className={`w-2 h-2 rounded-full ${DEFAULT_TONE_DOT[l.planId] ?? FALLBACK_TONE_DOT}`} aria-hidden />
+                  {l.subjectLabel}, {l.levelLabel.toLowerCase() === 'ap' ? 'AP' : l.levelLabel.toLowerCase()}
+                </span>
+                <span className={`mt-1 block font-semibold ${selected ? 'text-blue-800' : 'text-slate-900'}`}>{l.title}</span>
+                <span className="mt-0.5 hidden sm:block text-xs text-slate-500">{l.hook}</span>
+                {selected && <Check className="absolute top-3 right-3 w-4 h-4 text-blue-600" aria-hidden />}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Cover card */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-lg overflow-hidden">
-        <div className="grid md:grid-cols-[1.2fr_1fr]">
-          {/* Start side */}
-          <div className="p-8 md:p-10 flex flex-col items-center justify-center text-center gap-3 md:border-r border-b md:border-b-0 border-slate-100">
-            <div className="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center">
-              <Mic className="w-6 h-6" />
+      {/* 2. Who teaches, and 3. start. */}
+      <div className="border-t border-slate-200 bg-slate-50 p-6 md:p-8 grid grid-cols-1 gap-6 md:grid-cols-[1fr_1.15fr]">
+        <div ref={teacherPanelRef} className="min-w-0">
+          <p className="text-sm font-semibold text-slate-900">Your tutor</p>
+          <div className="mt-3 flex items-center gap-3">
+            <span className="w-10 h-10 shrink-0 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
+              {teacher.name.replace(/^(Ms\.|Mr\.|Dr\.)\s*/, '').charAt(0)}
+            </span>
+            <span className="min-w-0">
+              <span className="block font-semibold text-slate-900 truncate">{teacher.name}</span>
+              <span className="block text-xs text-slate-500">{teacherHint}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setTeacherOpen((v) => !v)}
+              aria-expanded={teacherOpen}
+              className="ml-auto inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-blue-400"
+            >
+              Change
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${teacherOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+          {teacherOpen && (
+            <div
+              role="radiogroup"
+              aria-label="Choose your tutor"
+              className="mt-3 max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white divide-y divide-slate-100"
+            >
+              {orderedTeachers.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={t.id === teacherId}
+                  onClick={() => pickTeacher(t.id)}
+                  className={`w-full text-left px-3.5 py-2.5 text-sm flex items-center justify-between gap-2 hover:bg-blue-50 ${
+                    t.id === teacherId ? 'bg-blue-50 font-semibold text-blue-700' : 'text-slate-800'
+                  }`}
+                >
+                  <span className="truncate">{t.name}</span>
+                  <span className="shrink-0 text-xs text-slate-400">{ACCENT_CARD_HINTS[t.id] ?? ''}</span>
+                </button>
+              ))}
             </div>
-            <p className="font-bold text-lg text-slate-900">Start live demo — {lesson.title}</p>
-            <p className="text-sm text-slate-500">
-              {lesson.subjectLabel} · {lesson.levelLabel} · {lesson.hook}
-            </p>
+          )}
+          <p className="mt-3 text-xs text-slate-500">
+            {DEMO_TEACHERS.length} tutors with native accents, matched to where you are.
+          </p>
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-900">Start your free {DEMO_MINUTES}-minute session</p>
+          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
             <input
               type="text"
               value={studentName}
@@ -492,7 +627,7 @@ export default function VoiceTutorLiveDemo({
               aria-label="Your name"
               required
               maxLength={40}
-              className="w-full max-w-[260px] px-4 py-2.5 text-sm text-center border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className={inputClass}
             />
             <input
               type="email"
@@ -502,91 +637,38 @@ export default function VoiceTutorLiveDemo({
               aria-label="Your email"
               required
               maxLength={254}
-              className="w-full max-w-[260px] px-4 py-2.5 text-sm text-center border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className={inputClass}
             />
-            <button
-              type="button"
-              onClick={start}
-              disabled={starting || !identityOk}
-              aria-busy={starting}
-              className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              <Mic className="w-4 h-4" />
-              {starting ? 'Starting…' : 'Start voice session'}
-            </button>
-            {startError && (
-              <p className="text-xs text-rose-600" role="alert">
-                Couldn&apos;t start the demo — please try again.
-              </p>
-            )}
-            <p className="text-xs text-slate-400">
-              Uses your microphone · voice + whiteboard · free 20-minute demo
-            </p>
           </div>
-
-          {/* Teacher side */}
-          <div className="p-6 md:p-8" ref={teacherPanelRef}>
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-3">Your tutor</p>
-            <div className="flex items-center gap-3">
-              <span className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white flex items-center justify-center font-semibold">
-                {teacher.name.replace(/^(Ms\.|Mr\.|Dr\.)\s*/, '').charAt(0)}
-              </span>
-              <span className="min-w-0">
-                <span className="block font-semibold text-slate-900 truncate">{teacher.name}</span>
-                <span className="block text-xs text-slate-500">{teacherHint}</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setTeacherOpen((v) => !v)}
-                aria-expanded={teacherOpen}
-                className="ml-auto inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:border-blue-300"
-              >
-                Change
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${teacherOpen ? 'rotate-180' : ''}`} />
-              </button>
-            </div>
-
-            {teacherOpen && (
-              <div
-                role="radiogroup"
-                aria-label="Choose your tutor"
-                className="mt-3 max-h-56 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100"
-              >
-                {orderedTeachers.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={t.id === teacherId}
-                    onClick={() => pickTeacher(t.id)}
-                    className={`w-full text-left px-3.5 py-2.5 text-sm flex items-center justify-between gap-2 hover:bg-blue-50 ${
-                      t.id === teacherId ? 'bg-blue-50 font-semibold text-blue-700' : 'text-slate-800'
-                    }`}
-                  >
-                    <span className="truncate">{t.name}</span>
-                    <span className="shrink-0 text-xs text-slate-400">
-                      {ACCENT_CARD_HINTS[t.id] ?? ''}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <p className="mt-3 text-xs text-slate-400">
-              {DEMO_TEACHERS.length} tutors · native accents — matched to where you are
+          <button
+            type="button"
+            onClick={start}
+            disabled={starting || !identityOk || !hasTopic}
+            aria-busy={starting}
+            className="mt-3 w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
+          >
+            <Mic className="w-4 h-4 shrink-0" />
+            <span className="truncate">
+              {starting ? 'Starting…' : hasTopic ? `Start: ${lesson.title} with ${teacher.name}` : 'Start voice session'}
+            </span>
+          </button>
+          {startError ? (
+            <p className="mt-2 text-xs text-rose-600" role="alert">
+              The session did not start. Check your connection and press Start again.
             </p>
-
-            <div className="mt-5 pt-4 border-t border-dashed border-slate-200">
-              <Link
-                href="/tutor"
-                onClick={() => trackEvent('demo_expand_fullscreen', { plan_id: lesson.planId })}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                Or open the full-screen tutor
-              </Link>
-            </div>
-          </div>
+          ) : (
+            <p className="mt-2 text-xs text-slate-500" aria-live="polite">
+              {missing ? `${missing}. ` : ''}You talk, the tutor talks back and writes on a whiteboard. Uses your microphone.
+            </p>
+          )}
+          <Link
+            href="/tutor"
+            onClick={() => trackEvent('demo_expand_fullscreen', { plan_id: lesson.planId || 'typed_topic' })}
+            className="mt-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Or open the full-screen tutor
+          </Link>
         </div>
       </div>
     </div>
