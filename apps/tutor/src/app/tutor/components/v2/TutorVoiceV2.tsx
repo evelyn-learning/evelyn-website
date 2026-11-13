@@ -34,7 +34,7 @@ import { TUTOR_STT_ENGINE_INK2 } from '@/lib/tutor/orchestrator/flags';
 import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import type { WhiteboardCommand } from '@core/knowledge/types';
-import { V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
+import { type V2ComposerStatus, V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
 import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
@@ -106,6 +106,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const lastSoundAtRef = useRef(0);
   const lastTurnWasStudentRef = useRef(false);
   const openingTurnRef = useRef(true);
+  // What the composer's status chip shows: the same states the host page is told, plus the student's words so far.
+  const [composerStatus, setComposerStatus] = useState<V2ComposerStatus>({ state: 'idle' });
+  const showState = useCallback((state: 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'error') => { setComposerStatus((was) => (was.state === state ? was : { state, ...(state === 'hearing' || state === 'processing' ? { heard: was.heard } : {}), level: was.level })); p.current.onVoiceStateChange?.(state); }, []);
+  const micUiAtRef = useRef(0);
   const openingSpeechRef = useRef<string[] | null>([]); const micLiveRef = useRef(false); const micLiveAtRef = useRef(0); const tapAtRef = useRef(0);
   const paintedThisTurnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const shownThenWithdrawnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
@@ -304,12 +308,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
       turnBusyRef.current = busy;
-      if (busy) { releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); p.current.onVoiceStateChange?.('thinking'); }
+      if (busy) { releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
       else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard(); else releaseBoard(startedCountRef.current);
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
         // Nothing will be spoken, so no playback event will move the indicator off "Thinking…".
-        if (silentReply && !realtimeRef.current?.isSpeechPending()) p.current.onVoiceStateChange?.('listening');
+        if (silentReply && !realtimeRef.current?.isSpeechPending()) showState('listening');
         // One early recheck, and only when the silence answered the student's own words: a silent answer
         // to a silence check-in goes back to the ordinary schedule (it looped every 12 s, embed-1794339843244).
         const recheck = silentReply && lastTurnWasStudentRef.current;
@@ -397,9 +401,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // Stable identities, all of them: see the note at the top of this file.
   const onRealtimeError = useCallback((err: Error) => p.current.onError?.(err), []);
   const onRealtimeState = useCallback((state: string) => {
-    if (state === 'speaking') p.current.onVoiceStateChange?.('speaking');
-    else if (state === 'listening' || state === 'connected') p.current.onVoiceStateChange?.(turnsRef.current?.busy ? 'thinking' : 'listening');
-    else if (state === 'error') p.current.onVoiceStateChange?.('error');
+    if (state === 'speaking') showState('speaking');
+    else if (state === 'listening' || state === 'connected') showState(turnsRef.current?.busy ? 'thinking' : 'listening');
+    else if (state === 'error') showState('error');
   }, []);
   const onPlayback = useCallback((event: string) => {
     // A sentence has begun playing: board items anchored to it (or to an earlier one) appear now.
@@ -442,12 +446,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // The student's voice. Exactly one recogniser owns the microphone, chosen as v1 chooses it.
   const listening = started && realtime.isConnected && !props.standby && !turns.closed;
   const onTranscript = useCallback((t: PerceptionTranscript) => heard(t.text), [heard]);
-  const onPartial = useCallback((x: { text: string }) => hearingPartial(x.text), [hearingPartial]);
+  const onPartial = useCallback((x: { text: string }) => { setComposerStatus((was) => ({ ...was, heard: x.text })); hearingPartial(x.text); }, [hearingPartial]);
   const onSpeechStart = useCallback(() => {
     if (flagRef.current.active) return;
     clearSilence();
     const rt = realtimeRef.current;
-    if (!rt?.isSpeechPending()) { p.current.onVoiceStateChange?.('hearing'); return; }
+    if (!rt?.isSpeechPending()) { showState('hearing'); return; }
     // The tutor is speaking and the recogniser hears speech begin. Waiting for the first recognised words let
     // the tutor run on for six or seven more of its own (AP Physics, embed-1794493438983), so it pauses on the
     // sound and goes on if no words of the student's follow. A room where sounds keep turning out to be
@@ -461,12 +465,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       if (!flagRef.current.active) realtimeRef.current?.resumeSpeech();
     }, SOUND_PAUSE_MS);
   }, []);
-  const onSpeechStop = useCallback(() => { if (flagRef.current.active) return; if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) p.current.onVoiceStateChange?.('processing'); }, []);
+  const onSpeechStop = useCallback(() => { if (flagRef.current.active) return; if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) showState('processing'); }, []);
   const onNoTranscript = useCallback((kind: string | undefined) => {
     p.current.onDebugEvent?.('v2_transcription_failed', String(kind ?? 'unknown'));
     if (flagRef.current.active) return;
     liftPause();
-    if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { p.current.onVoiceStateChange?.('listening'); armSilence(); }
+    if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { showState('listening'); armSilence(); }
   }, [liftPause, armSilence]);
   const onRecogniserError = useCallback((err: Error) => p.current.onDebugEvent?.('v2_recogniser_error', err.message.slice(0, 160)), []);
   // The first words wait for the microphone to be live. The microphone opens about two seconds after the tap,
@@ -475,7 +479,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // asked for at once; only its sound is held, and never for longer than OPENING_SPEECH_WAIT_MS.
   // Each release is recorded with its timings, so a clipped greeting can be traced to what the microphone was doing.
   const releaseOpeningSpeech = useCallback(() => { const held = openingSpeechRef.current; if (!held) return; openingSpeechRef.current = null; const since = (t: number) => (t && tapAtRef.current ? `${t - tapAtRef.current} ms` : 'never'); p.current.onDebugEvent?.('v2_opening_speech', `released ${since(Date.now())} after the tap; microphone live at ${since(micLiveAtRef.current)}${micLiveAtRef.current ? '' : ' (the wait ran out)'}; ${held.length} sentence(s) were waiting`); for (const s of held) realtimeRef.current?.speakText(s); }, []);
-  const onMicLevel = useCallback((level: number) => { if (openingSpeechRef.current && !micLiveRef.current) { micLiveRef.current = true; micLiveAtRef.current = Date.now(); setTimeout(releaseOpeningSpeech, MIC_SETTLE_MS); } if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); }, [releaseOpeningSpeech]);
+  const onMicLevel = useCallback((level: number) => { if (openingSpeechRef.current && !micLiveRef.current) { micLiveRef.current = true; micLiveAtRef.current = Date.now(); setTimeout(releaseOpeningSpeech, MIC_SETTLE_MS); } if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); const now = Date.now(); if (now - micUiAtRef.current > 110) { micUiAtRef.current = now; setComposerStatus((was) => (Math.abs((was.level ?? 0) - level) < 0.04 ? was : { ...was, level })); } }, [releaseOpeningSpeech]);
   const onInkDiagnostic = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
   usePerceptionWS({
     enabled: listening && !TUTOR_STT_ENGINE_INK2,
@@ -551,7 +555,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     realtimeRef.current?.resumeSpeech();
     // Closing a flag starts nothing: the lesson is where it was. The indicator goes back to what is true now
     // (it showed "Thinking…" after a flag, as if the note had been taken for an answer).
-    if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { p.current.onVoiceStateChange?.('listening'); armSilence(soonAfterSpeechRef.current); }
+    if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { showState('listening'); armSilence(soonAfterSpeechRef.current); }
   }, [armSilence]);
 
   return (<>
@@ -562,6 +566,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       busy={turns.busy}
       onSend={(text) => { if (!startedRef.current) start(); heard(text, { typed: true }); }}
       placeholder="Type here if you can't speak…"
+      status={started ? composerStatus : undefined}
     />
   </>);
 }

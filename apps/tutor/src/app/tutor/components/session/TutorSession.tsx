@@ -1999,6 +1999,7 @@ export default function TutorSession(props: TutorSessionProps) {
       maxDuration={sessionMaxMinutes}
       onEndSession={handleEndSession}
       onUploadHomework={onUploadHomework ?? handleUploadHomeworkFallback}
+      hideUpload={brainVersion === 'v2'}
       transcript={transcript}
       whiteboardCommands={whiteboardCommands}
       topicName={topicLabel}
@@ -2352,6 +2353,7 @@ export default function TutorSession(props: TutorSessionProps) {
         boardEmpty={whiteboardCommands.length === 0 && !homeworkProblem?.figure}
         board={boardEl}
         boardPages={brainVersion === 'v2' ? undefined : boardNav ?? undefined}
+        hideQuickStarts={brainVersion === 'v2'}
         voiceInput={voiceInputEl}
         // Center-orb start (2026-07-26). Synchronous call into the handle —
         // handleMicClick's unlockAudio() must run inside this click's gesture

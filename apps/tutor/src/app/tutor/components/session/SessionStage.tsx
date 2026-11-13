@@ -250,6 +250,8 @@ export interface SessionStageProps {
    *  in a flex row with the panel and the homework rail chip is not shown.
    *  Absent/null ⇒ the stage renders exactly as before. */
   problemPanel?: Pick<HomeworkProblemMeta, 'n' | 'text' | 'figure' | 'verified'> | null;
+  /** Tutor v2: no "Upload a problem" / "Practice problems" on the empty board; v2 has neither flow yet. */
+  hideQuickStarts?: boolean;
 }
 
 const ORB_STYLE: Record<VoiceState, string> = {
@@ -278,7 +280,7 @@ export default function SessionStage(props: SessionStageProps) {
   const {
     sessionMode = 'voice',
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, toolsLow = false, toolCluster = false, onFullscreenApi, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
-    voiceState, thinkingCueText = null, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
+    voiceState, thinkingCueText = null, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, hideQuickStarts, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
     agendaDrawerOpen, onAgendaDrawerOpenChange,
@@ -1544,7 +1546,7 @@ export default function SessionStage(props: SessionStageProps) {
                 )}
               </div>
               )
-            ) : problemPanel ? null : (
+            ) : problemPanel || hideQuickStarts ? null : (
             /* Quick ways in — Upload (de-emphasized, the cluster camera does
                 the same), plus generic starters. Shown in every session so the
                 student always has something to act on — except a one-problem

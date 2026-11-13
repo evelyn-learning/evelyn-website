@@ -514,7 +514,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // "Let's start with the chromosomes", the check wrote the next part's first note before the student had said yes
   // (biology, embed-1794520770137).
   const endedOnOffer = !!(heldAt as { raw: string } | null);
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && said && (!endedOnOffer || speaksMaths(said)) && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && said.split(/\s+/).length >= V2_UNWRITTEN_WORDS) || (opening && !paintedSoFar())
+  // Typed lessons are checked as spoken ones are: a typed session opened and ran two replies on an empty board
+  // (Praveen, 2026-11-12).
+  if (!state.closed && !input.signal?.aborted && said && (!endedOnOffer || speaksMaths(said)) && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && said.split(/\s+/).length >= V2_UNWRITTEN_WORDS) || (opening && !paintedSoFar())
     // Values said and nothing written: a student's set-up was confirmed aloud ("A⁻ is 0.05, HA is 0.1, pKa is 4.74")
     // and never put on the board (chemistry, embed-1794447993778).
     || (!paintedSoFar() && new Set(said.match(/\d+(?:\.\d+)?/g) ?? []).size >= 3)
@@ -691,7 +693,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   // A session never begins on a bare board (embed-1794362141944, embed-1794376295543). When the opening reply
   // and the check after it both wrote nothing, the lesson's heading and what it is for go up.
-  if (session.mode === 'voice' && opening && !state.closed && spoken.length && !paintedSoFar()) {
+  if (opening && !state.closed && spoken.length && !paintedSoFar()) {
     const body = [session.plan?.title ?? session.topic ?? '', ...(session.plan?.los ?? []).slice(0, 3).map((lo) => lo.description)].map((x) => String(x).trim()).filter(Boolean).join('\n');
     const b = body ? boardBlocksIn(`<board note style="highlight">${body}</board>`)[0] : undefined;
     if (b && settleInline(b, true)) {

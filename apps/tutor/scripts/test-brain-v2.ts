@@ -417,7 +417,7 @@ async function main() {
     const reply = 'Yes, that works. <board equation label="Your series">\\frac{\\sin x}{x} = 1 - \\frac{x^2}{3!} + \\cdots</board> Dividing by x leaves one minus a small term. <board problem difficulty="medium">Find $\\lim_{x\\to 0} \\frac{\\sin 2x}{x}$.</board> Now try this one.';
     const st = streaming(reply);
     const order: string[] = [];
-    const ri = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'series?', callModel: st.call, onText: (d) => order.push(`t:${d}`), onToolCall: (c) => order.push(`b:${c.name}`) });
+    const ri = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'series?', callModel: st.call, boardPass: false, onText: (d) => order.push(`t:${d}`), onToolCall: (c) => order.push(`b:${c.name}`) });
     const heardText = order.filter((x) => x.startsWith('t:')).map((x) => x.slice(2)).join('');
     check('inline board blocks never reach the student as words', !/board|frac|lim_/.test(heardText) && /Yes, that works\.\s+Dividing by x/.test(heardText) && ri.spoken === 'Yes, that works. Dividing by x leaves one minus a small term. Now try this one.', [heardText, ri.spoken]);
     const before = (name: string) => order.slice(0, order.indexOf(`b:${name}`)).filter((x) => x.startsWith('t:')).map((x) => x.slice(2)).join('');

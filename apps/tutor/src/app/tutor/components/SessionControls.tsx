@@ -47,6 +47,8 @@ interface SessionControlsProps {
   fullscreen?: FullscreenApi | null;
   onEndSession: () => void;
   onUploadHomework: (imageData: string, mimeType: string) => void;
+  /** Hide the upload button: the session's tutor cannot take a photo. */
+  hideUpload?: boolean;
   transcript?: TranscriptEntry[];
   whiteboardCommands?: WhiteboardCommandData[];
   topicName?: string;
@@ -159,6 +161,7 @@ export function SessionControls({
   fullscreen,
   onEndSession,
   onUploadHomework,
+  hideUpload = false,
   transcript = [],
   whiteboardCommands = [],
   topicName = 'AI Tutor',
@@ -353,15 +356,15 @@ export function SessionControls({
             </button>
           )}
 
-          {/* Upload homework button */}
-          <button
+          {/* Upload homework button. Not offered where the session cannot take a photo (tutor v2, for now). */}
+          {!hideUpload && <button
             onClick={() => setShowUploadModal(true)}
             className="flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             title="Upload homework photo"
           >
             <Camera className="w-4 h-4" />
             <span className="hidden xl:inline">Upload Problem</span>
-          </button>
+          </button>}
 
           {/* End session lives in the bottom control row (VoiceTutorRealtime)
               where it triggers the recap + wrap-up flow. Removed here to
