@@ -369,7 +369,7 @@ function renderPolygons(
           strokeWidth={2}
         />
         {poly.label && !labelCollidesWithPoint && (
-          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize={13} fill="#333" fontWeight={500}>
+          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize={13} fill="#333" fontWeight={500} style={{ paintOrder: 'stroke', stroke: '#fafbfc', strokeWidth: 3.5, strokeLinejoin: 'round' }}>
             {poly.label}
           </text>
         )}
@@ -1008,8 +1008,13 @@ function resolveLabelCollisions(
    *  in image #21 where the chord length "2.5" sat squarely on the
    *  x-axis and was almost unreadable. */
   axes?: { xAxisY?: number; yAxisX?: number },
+  /** Points sampled along everything DRAWN (segments, polygon edges, circles,
+   *  the dots themselves). A label whose box holds one of them is sitting on
+   *  ink, and is pushed along its own push direction until it is clear. */
+  ink: Array<[number, number]> = [],
 ): void {
-  const MAX_ITERS = 30;
+  const MAX_ITERS = 60;
+  const INK_STEP = 3;
   const REPULSION_STEP = 4;     // px moved per iter when overlapping
   const AXIS_REPULSION = 3;     // px moved per iter when crossing an axis
   const AXIS_BUFFER = 4;        // distance from axis line considered "too close"
@@ -1068,6 +1073,19 @@ function resolveLabelCollisions(
           fx += sign * AXIS_REPULSION;
         }
       }
+      if (ink.length > 0) {
+        const left = textLeft(a) - 2, top = textTop(a) - 2;
+        const right = left + a.w + 4, bottom = top + a.h + 4;
+        for (const [qx, qy] of ink) {
+          if (qx > left && qx < right && qy > top && qy < bottom) {
+            // Never toward the label's own anchor: a label pushed off one line
+            // must not be driven back onto the thing it names.
+            fx += a.pushX * INK_STEP;
+            fy += a.pushY * INK_STEP;
+            break;
+          }
+        }
+      }
       const off = idealOffset(a);
       fx -= off.dx * SPRING_K;
       fy -= off.dy * SPRING_K;
@@ -1082,6 +1100,8 @@ function resolveLabelCollisions(
   // the iterations above — clamp the final positions into the viewBox.
   for (const l of labels) {
     l.x += labelEdgeShift(l);
+    const top = textTop(l);
+    l.y += Math.max(3 - top, 0) - Math.max(top + l.h - (SVG_HEIGHT - 3), 0);
   }
 }
 
@@ -1124,8 +1144,60 @@ function computeLabels(
   /** When axes are drawn, their pixel positions so the collision
    *  resolver can keep labels off the axis lines. */
   axes?: { xAxisY?: number; yAxisX?: number },
+  /** The rest of the figure, so labels can be placed clear of it. */
+  drawn: { polygons?: Array<{ vertices: string[] }>; circles?: Array<{ center: string; radius: number }> } = {},
 ): LabelBox[] {
   const labels: LabelBox[] = [];
+  const polygons = drawn.polygons ?? [];
+  const circles = drawn.circles ?? [];
+  const svgOf = (id: string): [number, number] | null => { const p = ptMap.get(id); return p ? toSvg(p.x, p.y) : null; };
+  const pxPerUnit = Math.abs(toSvg(1, 0)[0] - toSvg(0, 0)[0]) || 1;
+
+  // Every drawn edge as a pair of svg points (segments + polygon sides).
+  const edges: Array<{ a: [number, number]; b: [number, number]; from: string; to: string }> = [];
+  for (const seg of segments) {
+    const a = svgOf(seg.from), b = svgOf(seg.to);
+    if (a && b) edges.push({ a, b, from: seg.from, to: seg.to });
+  }
+  for (const poly of polygons) {
+    const vs = poly.vertices ?? [];
+    vs.forEach((id, k) => {
+      const nid = vs[(k + 1) % vs.length];
+      const a = svgOf(id), b = svgOf(nid);
+      if (a && b && id !== nid) edges.push({ a, b, from: id, to: nid });
+    });
+  }
+  // Ink samples for the collision resolver.
+  const ink: Array<[number, number]> = [];
+  for (const e of edges) {
+    const n = Math.max(1, Math.ceil(Math.hypot(e.b[0] - e.a[0], e.b[1] - e.a[1]) / 5));
+    for (let k = 0; k <= n; k++) ink.push([e.a[0] + ((e.b[0] - e.a[0]) * k) / n, e.a[1] + ((e.b[1] - e.a[1]) * k) / n]);
+  }
+  for (const c of circles) {
+    const ctr = svgOf(c.center);
+    if (!ctr) continue;
+    const r = c.radius * pxPerUnit;
+    const n = Math.max(12, Math.ceil((2 * Math.PI * r) / 5));
+    for (let k = 0; k < n; k++) ink.push([ctr[0] + r * Math.cos((2 * Math.PI * k) / n), ctr[1] + r * Math.sin((2 * Math.PI * k) / n)]);
+  }
+  for (const pt of points) { if (!pt.hidden) ink.push(toSvg(pt.x, pt.y)); }
+  // A polygon's name is written at its centre (renderPolygons): keep the other labels off it.
+  for (const poly of polygons as Array<{ vertices: string[]; label?: string }>) {
+    const vs = (poly.vertices ?? []).map(svgOf).filter((v): v is [number, number] => !!v);
+    if (!poly.label || vs.length < 3) continue;
+    const pcx = vs.reduce((acc, v) => acc + v[0], 0) / vs.length;
+    const pcy = vs.reduce((acc, v) => acc + v[1], 0) / vs.length;
+    const half = estimateTextWidth(poly.label, 13) / 2;
+    for (let qx = pcx - half; qx <= pcx + half; qx += 6) for (const qy of [pcy - 6, pcy, pcy + 6]) ink.push([qx, qy]);
+  }
+  // The middle of the figure: labels of edges go on the side facing away from it.
+  const visible = points.filter((p) => !p.hidden);
+  const figCentre: [number, number] = visible.length > 0
+    ? [
+      visible.reduce((acc, p) => acc + toSvg(p.x, p.y)[0], 0) / visible.length,
+      visible.reduce((acc, p) => acc + toSvg(p.x, p.y)[1], 0) / visible.length,
+    ]
+    : [SVG_WIDTH / 2, SVG_HEIGHT / 2];
 
   // Point labels — offset diagonally up-right by default. The displayed text
   // is composed from `pt.label` plus a renderer-derived "(x, y)" tuple when
@@ -1140,25 +1212,48 @@ function computeLabels(
     if (!text) continue;
     const [px, py] = toSvg(pt.x, pt.y);
     const fontSize = 13;
+    const w = estimateTextWidth(text, fontSize);
+    const h = fontSize + 2;
+    // A vertex's letter goes OUTSIDE the figure: opposite the edges that
+    // meet there (and outward from a circle the point lies on). Up-right
+    // only when nothing meets at the point.
+    let ax = 0, ay = 0;
+    for (const e of edges) {
+      const other = e.from === pt.id ? e.b : e.to === pt.id ? e.a : null;
+      if (!other) continue;
+      const d = Math.hypot(other[0] - px, other[1] - py);
+      if (d > 1e-6) { ax -= (other[0] - px) / d; ay -= (other[1] - py) / d; }
+    }
+    for (const c of circles) {
+      const ctr = svgOf(c.center);
+      if (!ctr || c.center === pt.id) continue;
+      const d = Math.hypot(px - ctr[0], py - ctr[1]);
+      if (d > 1e-6 && Math.abs(d - c.radius * pxPerUnit) < 3) { ax += ((px - ctr[0]) / d) * 0.8; ay += ((py - ctr[1]) / d) * 0.8; }
+    }
+    let alen = Math.hypot(ax, ay);
+    if (alen < 0.25) { ax = 0.78; ay = -0.62; alen = 1; }
+    const ux = ax / alen, uy = ay / alen;
+    const reach = POINT_RADIUS + 5 + Math.abs(ux) * (w / 2) + Math.abs(uy) * (h / 2);
+    const ccx = px + ux * reach, ccy = py + uy * reach;
     labels.push({
       key: `pt:${pt.id}`,
       text,
-      x: px + LABEL_OFFSET,
-      y: py - LABEL_OFFSET,
-      w: estimateTextWidth(text, fontSize),
-      h: fontSize + 2,
+      x: ccx - w / 2,
+      y: ccy + h * 0.4,
+      w,
+      h,
       color: pt.color || '#2563eb',
       fontSize,
       fontWeight: 600,
       textAnchor: 'start',
       dominantBaseline: 'auto',
-      // Push further up-right if crowded.
-      pushX: 1,
-      pushY: -0.6,
+      // Push further outward if crowded.
+      pushX: ux,
+      pushY: uy,
       anchorX: px,
       anchorY: py,
-      idealX: px + LABEL_OFFSET,
-      idealY: py - LABEL_OFFSET,
+      idealX: ccx,
+      idealY: ccy,
     });
   }
 
@@ -1182,16 +1277,22 @@ function computeLabels(
     const dx = x2 - x1;
     const dy = y2 - y1;
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    const nx = -dy / len;
-    const ny = dx / len;
+    let nx = -dy / len;
+    let ny = dx / len;
+    // The side facing away from the middle of the figure (the outside of a
+    // triangle's side), and far enough out that the whole text clears the line.
+    if (nx * (mx - figCentre[0]) + ny * (my - figCentre[1]) < 0) { nx = -nx; ny = -ny; }
     const fontSize = 12;
+    const segW = estimateTextWidth(text, fontSize);
+    const segH = fontSize + 2;
+    const LABEL_OFFSET = 6 + Math.abs(nx) * (segW / 2) + Math.abs(ny) * (segH / 2);
     labels.push({
       key: `seg:${i}`,
       text,
       x: mx + nx * LABEL_OFFSET,
       y: my + ny * LABEL_OFFSET,
-      w: estimateTextWidth(text, fontSize),
-      h: fontSize + 2,
+      w: segW,
+      h: segH,
       color: seg.color || '#333',
       fontSize,
       fontStyle: 'italic',
@@ -1216,6 +1317,10 @@ function computeLabels(
     if (!vertex || !from || !to) return;
     const text = angleDisplayLabel(angle, vertex, from, to);
     if (!text) return;
+    // A right-angle box already says 90°: its computed measure is not written
+    // again (one label fewer at a crowded vertex). A label the tutor wrote,
+    // or a box on an angle that is not 90°, still shows.
+    if (angle.style === 'square' && !(angle.label ?? '').trim() && text === '90°') return;
 
     const [vx, vy] = toSvg(vertex.x, vertex.y);
     const [fx, fy] = toSvg(from.x, from.y);
@@ -1259,15 +1364,39 @@ function computeLabels(
       labelDist = size * 2.4;
     }
 
-    const lx = vx + bisectorX * labelDist;
-    const ly = vy + bisectorY * labelDist;
+    const angW = estimateTextWidth(text, fontSize);
+    const angH = fontSize + 2;
+    // Room between the two rays where the label would sit. A narrow angle
+    // has none (the measure landed on both rays): its label goes just
+    // OUTSIDE the angle, beside the ray that faces away from the figure.
+    const spread = Math.acos(Math.max(-1, Math.min(1, ufx * utx + ufy * uty)));
+    const roomAcross = 2 * labelDist * Math.tan(Math.min(spread, Math.PI * 0.98) / 2);
+    let lx = vx + bisectorX * labelDist;
+    let ly = vy + bisectorY * labelDist;
+    if (angle.style !== 'square' && spread < Math.PI / 2 && roomAcross < angH + 8) {
+      const along = Math.min(labelDist + angW / 2, Math.min(lenF, lenT) * 0.6);
+      let sx = -bisectorY, sy = bisectorX;
+      const bx0 = vx + bisectorX * along, by0 = vy + bisectorY * along;
+      if (sx * (bx0 - figCentre[0]) + sy * (by0 - figCentre[1]) < 0) { sx = -sx; sy = -sy; }
+      const out = along * Math.tan(spread / 2) + 5 + Math.abs(sx) * (angW / 2) + Math.abs(sy) * (angH / 2);
+      lx = bx0 + sx * out;
+      ly = by0 + sy * out;
+      bisectorX = sx;
+      bisectorY = sy;
+    } else if (angle.style !== 'square') {
+      // Far enough along the bisector that the text clears both rays.
+      const need = (Math.hypot(angW, angH) / 2 + 3) / Math.max(Math.sin(Math.min(spread, Math.PI / 2) / 2), 0.2);
+      const dist = Math.max(labelDist, Math.min(need, 70));
+      lx = vx + bisectorX * dist;
+      ly = vy + bisectorY * dist;
+    }
     labels.push({
       key: `ang:${i}`,
       text,
       x: lx,
       y: ly,
-      w: estimateTextWidth(text, fontSize),
-      h: fontSize + 2,
+      w: angW,
+      h: angH,
       color,
       fontSize,
       textAnchor: 'middle',
@@ -1289,7 +1418,7 @@ function computeLabels(
   // point (e.g. chord-as-diameter where the midpoint IS the origin O),
   // drop the segment label. The point label already names the location.
   const deduped = dedupCoLocatedLabels(labels);
-  resolveLabelCollisions(deduped, axes);
+  resolveLabelCollisions(deduped, axes, ink);
   return deduped;
 }
 
@@ -1340,6 +1469,7 @@ function renderLabels(labels: LabelBox[]) {
       fontWeight={l.fontWeight}
       fontStyle={l.fontStyle}
       fill={l.color}
+      style={{ paintOrder: 'stroke', stroke: '#fafbfc', strokeWidth: 3.5, strokeLinejoin: 'round' }}
     >
       {l.text}
     </text>
@@ -1627,7 +1757,7 @@ export function renderGeometryTree({
     const showYAxis = showAxes && xMin <= 0 && xMax >= 0;
     const xAxisY = showXAxis ? toSvg(0, 0)[1] : undefined;
     const yAxisX = showYAxis ? toSvg(0, 0)[0] : undefined;
-    return computeLabels(points, segments, angles, ptMap, toSvg, { xAxisY, yAxisX });
+    return computeLabels(points, segments, angles, ptMap, toSvg, { xAxisY, yAxisX }, { polygons, circles });
   })();
 
   // Suppress the faint auto-"O" origin marker when brain labels crowd the
@@ -1671,7 +1801,7 @@ export function renderGeometryTree({
       )}
       <svg
         viewBox={contentBox ? `${contentBox.x} ${contentBox.y} ${contentBox.w} ${contentBox.h}` : `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-        className="w-full h-auto"
+        className="w-full h-auto block mx-auto"
         style={{ maxWidth: contentBox ? contentBox.w : SVG_WIDTH, maxHeight: contentBox ? contentBox.h : SVG_HEIGHT }}
       >
         {/* Background */}

@@ -34,6 +34,9 @@ export const GEOMETRY_FREEZE_EXPECTED = {
   firstPointCx: (2.875 / 8.75) * 500,   // 164.28571428571428
   firstPointCy: (4.5 / 7) * 400,        // 257.14285714285717
   /** renderToStaticMarkup(renderGeometryTree(GEOMETRY_FREEZE_FIXTURE)), captured at 3d2ef167. */
-  markupLength: 3416,
-  markupSha256: '6be5dd990308e6b4c2b9e5b7de7592a543ed907c8f394fc527f8f27d2ad24f35',
+  markupLength: 3413,
+  // Re-captured 2026-11-13 after the label-placement rework of GeometryRenderer (labels clear of lines and angle
+  // marks, no computed "90°" beside a right-angle box), on Praveen's word that the GAC freeze no longer holds
+  // changes back. The viewBox and the first point are as before.
+  markupSha256: '6533b7629c629972e93737667a6974280668dba72f267d2ca77b7e94f517a91c',
 };
