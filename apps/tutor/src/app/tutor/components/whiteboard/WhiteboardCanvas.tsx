@@ -578,8 +578,11 @@ export function WhiteboardCanvas({
   // with only 1 point) from sitting next to its complete successor
   // ("Triangle with Altitude on Coordinate Plane" with the full shape).
   const pages = useMemo(() => {
-    const result: { title?: string; commands: WhiteboardCommand[] }[] = [];
+    let result: { title?: string; commands: WhiteboardCommand[] }[] = [];
     let current: { title?: string; commands: WhiteboardCommand[] } = { commands: [] };
+    // Every page in the order it was opened, the one being written on among them (tutor v2 turns back to a page
+    // and writes there).
+    const opened: { title?: string; commands: WhiteboardCommand[] }[] = [current];
 
     // Rollback pre-pass: a 'removeItems' command lists the stamped ids
     // of renders from a killed brain attempt. Collect every removed id
@@ -602,6 +605,17 @@ export function WhiteboardCanvas({
 
     for (const given of commands) {
       let cmd = given;
+      // Tutor v2 turns back to an earlier page to add to it: what it writes next goes on that page. Left on the
+      // last page, "x = 5 in the original" was written under a different problem, and the view jumped there from
+      // the page the student had asked to see (algebra, embed-1794595194384).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (cmd.action === 'goToPage' && (cmd as any).writesThere) {
+        const want = cmd.title?.toLowerCase();
+        let to = want ? opened.map((p) => p.title?.toLowerCase()).lastIndexOf(want) : -1;
+        if (to < 0 && typeof cmd.page === 'number' && cmd.page >= 1 && cmd.page <= opened.length) to = cmd.page - 1;
+        if (to >= 0) current = opened[to];
+        continue;
+      }
       if (cmd.action === 'clear' || cmd.action === 'goToPage' || cmd.action === 'removeItems' || cmd.action === 'reviseItems') continue;
       if (stoodIn.has(cmd)) continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -610,10 +624,8 @@ export function WhiteboardCanvas({
       const cmdId = (cmd as any).id as string | undefined;
       if (cmdId && removedIds.has(cmdId)) continue;
       if (cmd.action === 'newPage') {
-        if (current.commands.length > 0) {
-          result.push({ ...current, commands: dedupeSupersededCommands(current.commands) });
-        }
         current = { title: cmd.title, commands: [] };
+        opened.push(current);
       } else {
         // An item written for an earlier sentence, after later items were already up, names the item it goes
         // above (tutor v2, turn.ts): it takes its place in the working instead of the foot of the page.
@@ -624,9 +636,7 @@ export function WhiteboardCanvas({
         if (at >= 0) current.commands.splice(at, 0, cmd); else current.commands.push(cmd);
       }
     }
-    if (current.commands.length > 0) {
-      result.push({ ...current, commands: dedupeSupersededCommands(current.commands) });
-    }
+    result = opened.filter((p) => p.commands.length > 0).map((p) => ({ ...p, commands: dedupeSupersededCommands(p.commands) }));
 
     // Relocate scribbles tagged with targetPageTitle OR targetPageIndex:
     // the tutor auto-scroll injector stamps these on cross-page scribbles
@@ -1076,6 +1086,20 @@ export function WhiteboardCanvas({
       if (newestId) {
         const safe = newestId.replace(/"/g, '\\"');
         const el = container.querySelector(`[data-wb-item-id="${safe}"]`) as HTMLElement | null;
+        // A card written in above one already up (tutor v2: a step for an earlier sentence) pushes that one down.
+        // The view goes down with it, as far as the new card allows: twice the line the student was reading
+        // slid out of sight under a card that arrived above it (optics, embed-1794593747478).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const aboveId = (added.find((c) => (c as any).id === newestId) as any)?.placeBefore as string | undefined;
+        const pushed = el && aboveId ? container.querySelector(`[data-wb-item-id="${aboveId.replace(/"/g, '\\"')}"]`) as HTMLElement | null : null;
+        if (el && pushed) {
+          const box = container.getBoundingClientRect();
+          const top = el.getBoundingClientRect().top - box.top + container.scrollTop;
+          const bottom = pushed.getBoundingClientRect().bottom - box.top + container.scrollTop;
+          const want = Math.min(top - 12, Math.max(container.scrollTop, bottom + 16 - container.clientHeight));
+          container.scrollTo({ top: Math.max(0, want), behavior: 'smooth' });
+          return;
+        }
         if (el) { scrollElementIntoContainer(container, el, 'reveal'); return; }
       }
       // Fallback (render carried no id): newest item by position, else bottom.

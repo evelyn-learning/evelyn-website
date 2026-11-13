@@ -15,6 +15,8 @@
  * The model call and the board are injectable, so the unit suite runs without
  * a network and the offline harness runs without a browser.
  */
+import { drawFigure } from './drawn-figures';
+import { typesetMaths } from './rich-text';
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
@@ -38,7 +40,7 @@ export const V2_UNWRITTEN_WORDS = 30;
 /** Board calls that draw a figure, as opposed to writing words or mathematics. */
 /** How a reply that asked nothing hands the turn to the student. Rotated, so it is not one phrase every time. */
 export const V2_CHECK_INS = ['Does that make sense so far?', 'Are you with me so far?', 'Is that clear, or shall I go over it again?', 'Does that make sense?'];
-const V2_FIGURE_TOOL_NAMES = new Set(['show_free_body_diagram', 'show_number_line', 'show_function_graph', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats', 'show_lewis_constructed', 'show_cycle_diagram', 'show_concept_map', 'show_map', 'show_diagram', 'show_sketch', 'show_circuit']);
+const V2_FIGURE_TOOL_NAMES = new Set(['show_free_body_diagram', 'show_number_line', 'show_function_graph', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats', 'show_lewis_constructed', 'show_cycle_diagram', 'show_concept_map', 'show_map', 'show_diagram', 'show_sketch', 'show_circuit', 'show_ray_diagram', 'show_drawn_figure']);
 export const V2_MAX_MODEL_CALLS = 5;
 export const V2_MAX_TOKENS = 8000;
 export const V2_NOTE_MAX_CHARS = 1500;
@@ -163,7 +165,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     const known = session.plan ? planGoalIds(session.plan) : [];
     if (!known.includes(goal)) return `not recorded: no goal "${goal}" in the plan (goals: ${known.join(', ') || 'none'})`;
     if (!['shown', 'demonstrated', 'skipped'].includes(status)) return 'not recorded: status must be shown, demonstrated or skipped';
-    state.goals[goal] = { status, ...(typeof args.why === 'string' && args.why.trim() ? { why: args.why.trim().slice(0, 120) } : {}) };
+    state.goals[goal] = { status, ...(typeof args.why === 'string' && args.why.trim() ? { why: args.why.trim().slice(0, 120) } : {}), at: nowMs };
     return 'recorded';
   }
   if (name === 'track_gap') {
@@ -183,7 +185,9 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     // twice closed the lesson by itself after the last planned problem (embed-1794336536781, -1794339843244).
     const left = session.timeBoxMinutes ? session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 : 0;
     if (args.because !== 'student_asked' && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
-      return `not ended: about ${Math.round(left)} minutes remain and the student has not asked to stop. Tell them what is open to them now (something harder, more practice, a question of their own, or stopping) and let them choose.`;
+      // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
+      // there are about seven minutes left and you haven't asked to stop" (embed-1794595194384).
+      return `not ended: the session goes on. Whether to stop is the student's choice, and they have not made it. Say nothing of this message or of the clock. In one sentence of your own, ask what they would like now: something harder, more practice, a question of their own, or to stop here.`;
     }
     state.closed = true;
     state.closeSummary = typeof args.summary === 'string' ? args.summary.trim().slice(0, 600) : '';
@@ -244,6 +248,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       args.text = text;
     }
     if (block.name === 'show_equation' && typeof args.latex === 'string') args.latex = spacedRoman(wordsAsText(args.latex));
+    // The label over an equation is typeset as a note is: "at x = -2" stood in plain letters above its working (embed-1794595194384).
+    if (block.name === 'show_equation' && typeof args.label === 'string' && !args.label.includes('$')) args.label = typesetMaths(args.label);
     // A graph drawn on a page that already has one is the same picture with more on it: a circle went up, and
     // then the point on it as a second, empty-looking graph (conic sections, 2026-11-11). A graph of points
     // alone, or one that repeats a curve already drawn, is drawn together with the earlier one and takes its place.
@@ -264,7 +270,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           args.functions = [...theirs, ...mine.filter((f) => !theirs.some((g) => key(g) === key(f)))];
           const points = [...pts(old.args.points), ...pts(args.points).filter((q) => !pts(old.args!.points).some((o) => o.x === q.x && o.y === q.y))];
           if (points.length) args.points = points;
-          const segs = [...pts(old.args.segments), ...pts(args.segments)];
+          // Segments drawn again are the same picture redrawn: both sets together put every label on the figure
+          // twice (optics, embed-1794593747478).
+          const segKey = (s: Record<string, unknown>) => JSON.stringify([s.from, s.to]);
+          const redrawn = pts(args.segments).some((s) => pts(old.args!.segments).some((o) => segKey(o) === segKey(s)));
+          const segs = redrawn ? pts(args.segments) : [...pts(old.args.segments), ...pts(args.segments)];
           if (segs.length) args.segments = segs;
           for (const k of ['xRange', 'yRange', 'title'] as const) if (args[k] === undefined && old.args[k] !== undefined) args[k] = old.args[k];
           replaces = old.id;
@@ -278,8 +288,21 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const wordsOf = (t: unknown) => new Set(String(t ?? '').toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3));
       const mine = wordsOf(args.text);
       const page = state.board.pages[state.board.current];
-      const draft = mine.size >= 4 ? toolCalls.find((c) => c.name === 'annotate' && !/^not /.test(c.outcome) && page.items.some((it) => it.id === c.id) && (() => { const theirs = wordsOf(c.args.text); const both = [...mine].filter((w) => theirs.has(w)).length; return both / Math.min(mine.size, theirs.size) >= 0.7; })()) : undefined;
+      // A second draft is like the first in both directions. A short note whose words are all in a longer one of
+      // this reply is not a draft of it: taken for one, "x = 3 is extraneous" took the place of the recap the
+      // tutor had just written, and the student saw the recap wiped (algebra, embed-1794595194384).
+      const near = (c: V2ToolCall, of: 'both' | 'mine') => { const theirs = wordsOf(c.args.text); const both = [...mine].filter((w) => theirs.has(w)).length; return both / (of === 'mine' ? mine.size : Math.max(mine.size, theirs.size)) >= 0.7; };
+      const sameReply = (c: V2ToolCall) => c.name === 'annotate' && !/^not /.test(c.outcome) && page.items.some((it) => it.id === c.id);
+      const draft = mine.size >= 4 ? toolCalls.find((c) => sameReply(c) && near(c, 'both')) : undefined;
       if (draft) replaces = draft.id;
+      else if (boardOnly && mine.size >= 4 && toolCalls.some((c) => sameReply(c) && near(c, 'mine'))) return { type: 'tool_result', tool_use_id: block.id, content: 'not painted: a note of this reply already says it' };
+    }
+    // An equation under the label of one this same reply wrote is that equation written again, and takes its
+    // place: "x = 5 in the original" went up worked out and then, under it, with question marks (embed-1794595194384).
+    if (block.name === 'show_equation' && state.board.current >= 0 && typeof args.label === 'string' && args.label.trim()) {
+      const page = state.board.pages[state.board.current];
+      const same = toolCalls.find((c) => c.name === 'show_equation' && !/^not /.test(c.outcome) && page.items.some((it) => it.id === c.id) && String(c.args.label ?? '').trim().toLowerCase() === (args.label as string).trim().toLowerCase());
+      if (same) replaces = same.id;
     }
     const sayWith = typeof sayWithRaw === 'string' && sayWithRaw.trim() ? sayWithRaw.trim() : undefined;
     let outcome: string; let pointsAt: string | undefined;
@@ -297,7 +320,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // An object written as its JSON text is the object: a tree's root arrived as a string and the board drew
       // the text itself in one box (data structures, embed-1794458110435).
       for (const [k, v] of Object.entries(args)) if (typeof v === 'string' && /^\s*[[{]/.test(v) && k !== 'code' && k !== 'text' && k !== 'latex') { try { const o: unknown = JSON.parse(v); if (o && typeof o === 'object') args[k] = o; } catch { /* a string after all */ } }
-      const valid = validateToolCall(block.name, args);
+      const valid = block.name === 'show_drawn_figure' ? (() => { const d = drawFigure(args.kind, args.params); return 'refused' in d ? { ok: false as const, reason: d.refused } : { ok: true as const }; })() : validateToolCall(block.name, args);
       // A force diagram is for pushes and pulls on a physical thing. Offered a pull between two ideas, the board
       // drew "the lovely woods" and "the promises to keep" as forces on a box (AP Lit, embed-1794448513359).
       const misfit = block.name === 'show_free_body_diagram' && !catalogueSubjects(session).includes('physics') ? 'a force diagram is for physical forces on an object, and this lesson has none; use compare, steps or a note' : boardMisfit(block.name, args);
@@ -539,11 +562,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // embed-1794496967839): "let's look at the picture" over no picture; a problem about a circuit with no
     // circuit; "Yes, 8 volts" with the working that gives it left unwritten.
     const drewNow = drewFigure();
-    const promised = !drewNow && /\b(?:picture|diagram|figure|drawing|sketch|drawn out|draw (?:it|this|that))\b/i.test(said);
+    // Pointing at something ("Here is a ray of light going from air into water") promises it as surely as
+    // naming a picture does: said twice over a board that showed no ray (typed run, 2026-11-13).
+    const promised = !drewNow && /\b(?:pictur(?:e|ing)|diagram|figure|drawing|sketch|drawn out|draw (?:it|this|that)|here(?:'s| is| are) (?:a|an|the|two|three)\b|look at (?:the|this)\b|shown (?:here|below))/i.test(said);
     const cardNoFigure = !drewNow && askedOnCard0();
     const confirmedBare = /^\s*(?:yes|right|correct|exactly|that'?s (?:right|correct|it))\b/i.test(said) && /\d/.test(said.split(/(?<=[.?!])\s+/).slice(0, 2).join(' ')) && !toolCalls.some((c) => (c.name === 'show_equation' || c.name === 'annotate') && !/^not /.test(c.outcome));
     const missing = [
-      promised ? 'You spoke of a picture, and this reply drew none: draw it now, as the third step.' : '',
+      promised ? 'You spoke of a picture or pointed at something as shown ("here is…"), and this reply drew no figure: draw it now, as the third step.' : '',
       cardNoFigure ? 'This reply put up a problem and no figure with it: if the problem describes something that can be drawn (a circuit, a shape, a set-up, a graph), draw it now as the third step, with what the student is to find left out.' : '',
       confirmedBare ? 'You confirmed the student\'s answer and wrote nothing for it: in the second step, write the one line of working that gives it, with with="the opening words of the sentence that confirms it".' : '',
     ].filter(Boolean).join(' ');

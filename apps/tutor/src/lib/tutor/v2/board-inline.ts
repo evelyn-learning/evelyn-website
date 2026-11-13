@@ -190,7 +190,7 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
       // The area between two curves over an interval: "shade between x^2 and 2x from 0 to 2" (under one curve: "… and 0 …").
       ...(lines.some((l) => SHADE_RE.test(l)) ? (() => { const m = lines.find((l) => SHADE_RE.test(l))!.replace(/−/g, '-').match(SHADE_RE)!; const clean = (e: string) => e.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*/i, '').replace(/^the x-?axis$/i, '0').trim(); return { shadedRegion: { axis: 'x', between: [clean(m[1]), clean(m[2])], from: Number(m[3]), to: Number(m[4]) } }; })() : {}),
       functions: lines.filter((l) => !POINT_RE.test(l) && !SEGMENT_RE.test(l) && !SHADE_RE.test(l)).map((l) => { const [expr, label] = cells(l); return { expr: expr.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*(?![^=]*=)/i, ''), ...(label ? { label } : {}) }; }).filter((f) => f.expr),
-      ...(lines.some((l) => POINT_RE.test(l)) ? { points: lines.filter((l) => POINT_RE.test(l)).map((l) => { const m = l.replace(/−/g, '-').match(POINT_RE)!; const label = cells(l)[1]; return { x: Number(m[1]), y: Number(m[2]), ...(label ? { label } : {}) }; }) } : {}),
+      ...(lines.some((l) => POINT_RE.test(l)) ? { points: lines.filter((l) => POINT_RE.test(l)).map((l) => { const m = l.replace(/−/g, '-').match(POINT_RE)!; const label = cells(l)[1]; return { x: Number(m[1]), y: Number(m[2]), ...(label ? { label } : {}), ...(/open|hollow/i.test(m[3] ?? '') || (!m[3] && OPEN_POINT.test(label ?? '')) ? { open: true } : {}) }; }) } : {}),
     } };
   }
   if (b.kind === 'quote') return { name: 'show_passage', args: { text: b.body, ...(b.attrs.source ? { source: b.attrs.source } : {}), ...(b.attrs.title ? { title: b.attrs.title } : {}) } };
@@ -201,7 +201,10 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
 /** "shade between <one bound> and <the other> from a to b". */
 const SHADE_RE = /^\s*shaded?\b\s*(?:the\s+(?:area|region)\s+)?(?:between\s+)?(.+?)\s+and\s+(.+?)\s+from\s+(?:x\s*=\s*)?([-−]?\d+(?:\.\d+)?)\s+to\s+(?:x\s*=\s*)?([-−]?\d+(?:\.\d+)?)\s*$/i;
 const SEGMENT_RE = /^\s*\$?\(\s*([-−]?\d+(?:\.\d+)?)\s*,\s*([-−]?\d+(?:\.\d+)?)\s*\)\s*(?:to|--+|—|–|->|→)\s*\(\s*([-−]?\d+(?:\.\d+)?)\s*,\s*([-−]?\d+(?:\.\d+)?)\s*\)\$?\s*(?:\||$)/i;
-const POINT_RE = /^\s*\$?\(\s*([-−]?\d+(?:\.\d+)?)\s*,\s*([-−]?\d+(?:\.\d+)?)\s*\)\$?\s*(?:\||$)/;
+const POINT_RE = /^\s*\$?\(\s*([-−]?\d+(?:\.\d+)?)\s*,\s*([-−]?\d+(?:\.\d+)?)\s*\)\$?\s*(open|hollow|closed|filled)?\s*(?:\||$)/i;
+/** A point the curve leaves out is drawn hollow: written `open`, or named as a hole or an excluded value. A hole
+ *  at x = −2 went up as a solid dot (algebra, embed-1794595194384). */
+const OPEN_POINT = /\b(?:hole|excluded|not included|open circle|removed|undefined|not defined)\b/i;
 
 /** Splits streamed text into words and blocks, holding back anything that may be the start of a block. */
 export class BoardInlineStream {
@@ -250,7 +253,9 @@ const words = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').s
 export function insertBlock(text: string, raw: string, withWords?: string): string {
   const want = words(withWords ?? '').slice(0, 4);
   if (want.length >= 2) {
-    const re = /[^\s<][^.!?\n<]*(?:[.!?]+|\n|$)/g;
+    // A point between digits is a decimal, not the end of a sentence: "sin 30° is 0.5" was cut at "0." and the
+    // block stored in the middle of the number (optics, embed-1794593747478).
+    const re = /[^\s<](?:[^.!?\n<]|\.(?=\d))*(?:[.!?]+|\n|$)/g;
     let m: RegExpExecArray | null;
     let depth = 0; let last = 0;
     // Sentence starts outside existing blocks only.

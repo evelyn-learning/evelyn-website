@@ -43,7 +43,7 @@ function figureTools(subject: string, topic: string): string[] {
   const out: string[] = [];
   // Shapes, angles and constructions only. In a lesson about curves it was used for a parabola and drew points
   // and a line with no curve (embed-1794374818774); curves and points on axes are the inline graph.
-  if (/geometr|trig/.test(t)) out.push('show_geometry');
+  if (/geometr|trig|angle|triangle|circle|polygon|congruen|similar|pythag|parallel|perimeter|\barea\b|volume/.test(t)) out.push('show_geometry');
   if (/statistic|probab|\bstats\b|data/.test(t)) out.push('show_venn_diagram', 'show_tree', 'show_stats');
   if (/chem/.test(t)) out.push('show_lewis_constructed');
   return out;

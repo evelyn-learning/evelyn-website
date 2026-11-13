@@ -245,6 +245,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
           // item goes up when both its sentence and its drawing have arrived. No drawing: a labelled card instead.
           const drawn: Promise<void> = cmd && (cmd as { action?: string }).action === 'showSketch' ? resolveSketch(cmd as unknown as SketchCommand, p.current.embedToken, (m) => p.current.onDebugEvent?.('v2_sketch', m)) : Promise.resolve();
           if (cmd && call.before) (cmd as unknown as { placeBefore?: string }).placeBefore = call.before;
+          // Turned back to an earlier page, the tutor writes on it (WhiteboardCanvas.tsx).
+          if (cmd && (cmd as { action?: string }).action === 'goToPage') (cmd as unknown as { writesThere?: boolean }).writesThere = true;
           // A rewritten item stands where the one it replaces stood (WhiteboardCanvas.tsx).
           if (cmd && call.replaces) (cmd as unknown as { takesPlaceOf?: string }).takesPlaceOf = call.replaces;
           if (cmd) { const paint = () => { void drawn.then(() => p.current.onWhiteboardCommand([cmd])); }; if (p.current.holdBoard) p.current.holdBoard(call, paint); else paint(); }

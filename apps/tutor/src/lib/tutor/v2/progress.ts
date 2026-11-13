@@ -23,9 +23,15 @@ export function v2Progress(plan: LessonPlan, goals: V2State['goals']): V2Progres
   });
   const completedSegmentIds = plan.segments.filter((_, i) => done[i]).map((s) => s.id);
   // The part in hand: one the tutor has opened and not finished, else the one after the furthest finished.
+  // The part in hand is where the tutor last was: the goal marked most recently when it is still open, else the
+  // first open one after it, else that goal itself. Read as "the first part opened and not finished", a problem
+  // left half-done at minute 5 was still shown as the part in hand at the recap (algebra, embed-1794595194384).
+  const stamped = plan.segments.map((seg, i) => ({ i, at: goals[seg.id]?.at ?? 0 })).filter((x) => x.at > 0).sort((a, b) => b.at - a.at || b.i - a.i)[0];
   const open = plan.segments.findIndex((seg, i) => !done[i] && goals[seg.id]?.status === 'shown');
   const next = Math.min(done.lastIndexOf(true) + 1, plan.segments.length - 1);
-  const currentSegmentId = plan.segments[open >= 0 ? open : Math.max(0, next)]?.id ?? '';
+  const after = stamped ? done.findIndex((d, i) => i > stamped.i && !d) : -1;
+  const at = stamped ? (!done[stamped.i] ? stamped.i : after >= 0 ? after : stamped.i) : open >= 0 ? open : Math.max(0, next);
+  const currentSegmentId = plan.segments[at]?.id ?? '';
   const reached = (kind: string, need: (status: string | undefined) => boolean) => plan.segments.some((seg) => seg.kind === kind && need(goals[seg.id]?.status));
   const milestone: TutorMilestone | null = reached('recap', (s) => s === 'shown' || s === 'demonstrated') ? 'recap_reached'
     : reached('try_yourself', (s) => s === 'demonstrated') ? 'first_try_yourself_success'

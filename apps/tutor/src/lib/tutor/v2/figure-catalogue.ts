@@ -57,8 +57,28 @@ export function circuitNetlist(params: Record<string, unknown>): Record<string, 
   lay(load, 'plus', 'minus');
   return { ...(typeof params.title === 'string' ? { title: params.title } : {}), components: out };
 }
+/** A ray diagram's arguments. The object is drawn at a height that shows the rays: at its true 2 cm beside a
+ *  60 cm object distance the three rays lay along the axis (typed run, 2026-11-13). And a diagram put up with a
+ *  problem that asks for the image leaves the image out: in the same run it went up under "find the image
+ *  distance" with the image drawn and "d_i = 30.0 cm" printed beside it. */
+export function rayDiagramArgs(params: Record<string, unknown>): Record<string, unknown> {
+  const f = Math.abs(Number(params.focalLength)); const d = Math.abs(Number(params.objectDistance));
+  const { find, objectHeight: _given, ...rest } = params; void _given;
+  if (!(f > 0) || !(d > 0)) return rest;
+  const diverging = /diverging|convex-mirror/.test(String(params.type ?? ''));
+  const inv = 1 / (diverging ? -f : f) - 1 / d; const di = Math.abs(inv) < 1e-9 ? Infinity : 1 / inv;
+  const extent = Math.max(d, Number.isFinite(di) ? Math.abs(di) : d * 1.5, f * 2.2);
+  const m = Number.isFinite(di) ? Math.abs(di / d) : 1;
+  return { ...rest, objectHeight: Math.round((0.24 * extent) / Math.max(1, m / 1.5) * 100) / 100, ...(/image|\?|true/i.test(String(find ?? '')) ? { hideImage: true } : {}) };
+}
 export const TOOL_FIGURES: ToolFigure[] = [
   { kind: 'circuit', tool: 'show_circuit', adapt: circuitNetlist, subjects: ['physics'], when: 'Any circuit a problem or an explanation describes: one loop, branches in parallel, or a mix of the two. Draw it whenever a circuit is being talked about.', params: 'battery:string (e.g. "12 V"), load:PART, title?. A PART is one component, {resistor:"4 Ω"} | {bulb:"lamp 1"} | {capacitor:"100 μF"} | {switch:"open"|"closed"} | {ammeter:"A"} | {voltmeter:"V"}, or a group of parts, {series:[PART, …]} | {parallel:[PART, …]}. A 2 Ω resistor in series with a 4 Ω and a 6 Ω side by side is {"battery":"12 V","load":{"series":[{"resistor":"2 Ω"},{"parallel":[{"resistor":"4 Ω"},{"resistor":"6 Ω"}]}]}}' },
+  // Optics (2026-11-13, embed-1794593747478): the catalogue's lens figure drew no rays and took centimetres for
+  // pixels, so an object at the focal point came out as a lens with two marks on it; and there was no figure at
+  // all for a ray bending at a surface. The ray diagram is the board's full one; the other two are drawn-figures.ts.
+  { kind: 'lens_rays', tool: 'show_ray_diagram', adapt: rayDiagramArgs, subjects: ['physics'], when: 'A thin lens or a curved mirror with its object, the principal rays and the image they form. With a problem that asks where the image is, draw it with find:"image" (the set-up alone); draw it in full when the image has been found, or to explain how one forms.', params: 'type:converging|diverging|concave-mirror|convex-mirror, focalLength:number (cm), objectDistance:number (cm), find?:"image" (leave the rays and the image out), title?' },
+  { kind: 'refraction', tool: 'show_drawn_figure', fixed: { kind: 'refraction' }, adapt: (params) => ({ params, ...(typeof params.title === 'string' ? { title: params.title } : {}) }), subjects: ['physics'], when: 'A ray of light crossing a flat surface between two materials, with the normal and both angles marked: Snell\'s law, bending toward or away from the normal, total internal reflection. Draw it when a refraction problem is set (find:"?" leaves the second angle as a question mark) and again when its answer is found.', params: 'n1:number (the material the light comes from), n2:number (the material it enters), angle:number (degrees from the normal), media?:[string, string] (their names), find?:"?" (hide the second angle), reflected?:boolean, title?' },
+  { kind: 'apparent_depth', tool: 'show_drawn_figure', fixed: { kind: 'apparent_depth' }, adapt: (params) => ({ params, ...(typeof params.title === 'string' ? { title: params.title } : {}) }), subjects: ['physics'], when: 'Why a thing under water looks nearer the surface, or a straw or pencil looks bent: its light bends at the surface and the eye traces it straight back.', params: 'object?:string (what is under the surface, e.g. "pencil tip"), medium?:string ("water"), n?:number (1.33), title?' },
   { kind: 'boxplot', tool: 'show_stats', fixed: { type: 'boxplot' }, subjects: ['math'], when: 'One boxplot, or several on one scale to compare groups.', params: 'boxplot:{datasets:[{label, min, q1, median, q3, max, outliers?:[number]}], showValues:true}, title?, xLabel?' },
   { kind: 'distribution_curve', tool: 'show_stats', fixed: { type: 'distribution' }, subjects: ['math'], when: 'A normal, t or chi-square curve with a shaded tail or middle: a p-value, a critical region, a confidence level.', params: 'distribution:{family:normal|t|chi-square, params:{mean, sd} for normal or {df} for t and chi-square, shade?:{type:less|greater|between|outside, a:number, b?:number}, probabilityLabel?:string}, title?' },
   { kind: 'annotated_passage', tool: 'show_annotated_passage', subjects: ['ela', 'social'], when: 'A poem, passage or source with words highlighted and notes on them: a close reading.', params: 'passage:string (the exact text, lines separated by \\n), highlights:[{line:number (1 = first line), text:string (the exact words in that line), note?:string}], marginNotes?:[{line, text}], title?, source?' },
@@ -89,20 +109,22 @@ export function toolFigureCall(kind: string, params: Record<string, unknown>): {
 }
 
 /** Kinds a plain form already draws (chart, numberline, timeline, ranks, compare, table): one way to draw each thing. */
-const HAS_A_PLAIN_FORM = new Set(['simple_circuit', 'number_line', 'bar_chart', 'histogram', 'line_plot', 'hierarchy_pyramid', 'comparison_table', 't_chart', 'historical_timeline', 'kwl_chart', 'frayer_model', 'coordinate_grid']);
+const HAS_A_PLAIN_FORM = new Set(['ray_diagram_lens', 'ray_diagram_mirror', 'simple_circuit', 'number_line', 'bar_chart', 'histogram', 'line_plot', 'hierarchy_pyramid', 'comparison_table', 't_chart', 'historical_timeline', 'kwl_chart', 'frayer_model', 'coordinate_grid']);
 
 /** The catalogue subjects a session's lesson falls under. A science lesson is narrowed by its topic. */
 export function catalogueSubjects(session: Pick<V2Session, 'subject' | 'topic'>): Subject[] {
   const subject = session.subject.toLowerCase();
   const about = `${session.topic ?? ''} ${subject}`.toLowerCase();
-  if (isMathsSubject(subject)) return ['math'];
+  // A test-prep lesson is the subject its topic names: read by its own label alone, SAT and ACT mathematics were
+  // offered the science figures and none of the mathematics ones (audit, 2026-11-13).
+  if (isMathsSubject(subject) || (/test|prep|sat|act|gre|gmat|exam/.test(subject) && isMathsSubject(session.topic ?? ''))) return ['math'];
   if (/^(cs|computer|coding|programming)/.test(subject)) return ['cs'];
   if (/^(ela|english|reading|writing|lit)/.test(subject)) return ['ela'];
   if (/^(ss|social|history|econ|gov|geo|psych)/.test(subject)) return ['social'];
   const picked: Subject[] = [];
   if (/phys|mechanic|kinemat|electr|magnet|optic|wave|thermo|rotation|motion|force|energy|momentum/.test(about)) picked.push('physics');
   if (/chem|stoich|acid|titrat|bond|mole|periodic|equilibr|redox|buffer/.test(about)) picked.push('chemistry');
-  if (/bio|anatom|genetic|cell|ecolog|physiol|evolution/.test(about)) picked.push('biology');
+  if (/bio|anatom|genetic|cell|ecolog|ecosystem|food (?:web|chain)|life.?sci|organism|photosynth|heredit|physiol|evolution/.test(about)) picked.push('biology');
   if (/earth|environment|astro|geolog|climate|weather|space/.test(about)) picked.push('earth');
   return picked.length ? picked : ['physics', 'chemistry', 'biology'];
 }
@@ -122,7 +144,10 @@ export function tutorFigureLines(session: Pick<V2Session, 'subject' | 'topic'>):
 export function figureCatalogueFor(session: Pick<V2Session, 'subject' | 'topic' | 'level'>): string {
   const subjects = catalogueSubjects(session);
   // "AP", "college" and the like are the top of the school range.
-  const grade = gradeOfLevel(session.level) ?? 12;
+  // A band ("6-8") is read at its top for this: a figure for grade 8 belongs to a lesson that runs to grade 8.
+  // Read at its first number, a grades 6-8 genetics lesson was not offered the Punnett square (audit, 2026-11-13).
+  const band = (session.level ?? '').match(/(\d{1,2})\s*(?:-|–|to)\s*(\d{1,2})/);
+  const grade = band && Number(band[2]) <= 12 ? Number(band[2]) : gradeOfLevel(session.level) ?? 12;
   const lines = DIAGRAM_CATALOG
     .filter((k) => isImplementedKind(k.kind) && !HAS_A_PLAIN_FORM.has(k.kind) && k.subjects.some((s) => subjects.includes(s)))
     .filter((k) => grade >= (k.grades.from === 'k' ? 0 : k.grades.from) - 1)

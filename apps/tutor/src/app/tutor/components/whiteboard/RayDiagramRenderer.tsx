@@ -54,6 +54,8 @@ export interface RayDiagramProps {
   objectHeight?: number;
   showLabels?: boolean;
   notes?: string;
+  /** The image is what the student is asked to find: the object, the lens and its focal points only (tutor v2). */
+  hideImage?: boolean;
 }
 
 const W = DIAGRAM_VIEWBOX.width;
@@ -156,7 +158,7 @@ export function buildRayDiagramManifest(props: RayDiagramProps): FeatureManifest
 }
 
 export default function RayDiagramRenderer({
-  title, type, focalLength, objectDistance, objectHeight = 2, showLabels = true, notes,
+  title, type, focalLength, objectDistance, objectHeight = 2, showLabels = true, notes, hideImage = false,
 }: RayDiagramProps) {
   const isMirror = type === 'concave-mirror' || type === 'convex-mirror';
   const isConverging = type === 'converging' || type === 'concave-mirror';
@@ -202,8 +204,8 @@ export default function RayDiagramRenderer({
   const readoutLines = [
     `f = ${formatValue(f)} cm`,
     `d_o = ${formatValue(doObj)} cm`,
-    `d_i = ${Number.isFinite(di) ? formatValue(di) : '∞'} cm`,
-    `m = ${formatValue(magnification)}`,
+    // An object at the focal point has no image: "d_i = ∞ cm, m = 0" read as a point-sized image far away.
+    ...(hideImage ? ['d_i = ?'] : Number.isFinite(di) ? [`d_i = ${formatValue(di)} cm`, `m = ${formatValue(magnification)}`] : ['the rays leave parallel: no image forms']),
   ];
 
   // ── Label layout pass (2026-07-19 renderer label-collision audit):
@@ -351,13 +353,13 @@ export default function RayDiagramRenderer({
         </g>
 
         {/* Principal rays. */}
-        {renderRays({
+        {!hideImage && renderRays({
           type, cx, axisY, objX, objTopY, fLeftX, fRightX,
           imageX, imageTopY, imageReal, isMirror,
         })}
 
         {/* Image arrow. Dashed for virtual, solid for real. */}
-        {Number.isFinite(di) && (() => {
+        {Number.isFinite(di) && !hideImage && (() => {
           const imageCy = (axisY + imageTopY) / 2;
           const imageH = Math.abs(imageTopY - axisY) + 24;
           return (

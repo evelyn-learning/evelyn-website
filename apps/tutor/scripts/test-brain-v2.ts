@@ -28,6 +28,8 @@ import { v2Background } from '../src/lib/tutor/v2/background';
 import { V2_MASTERY_DOWN, V2_MASTERY_UP, V2_MASTERY_UP_MIXED, v2Mastery, v2MemoryLines, v2ProfileCommit } from '../src/lib/tutor/v2/memory';
 import { v2StateFromCheckpoint } from '../src/lib/tutor/v2/resume';
 import { V2_CONTROL_TOOL_NAMES } from '../src/lib/tutor/v2/tool-names';
+import { drawFigure } from '../src/lib/tutor/v2/drawn-figures';
+import { speakGroups } from '../src/lib/tutor/voice/tts-pronunciation';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
@@ -55,8 +57,8 @@ async function main() {
   const sys = V2_CONSTITUTION + v2SessionPart(session);
   const tools = v2Tools('math');
   const toolChars = JSON.stringify(tools).length;
-  // 18,000 since 2026-11-10: the eleven board forms are listed in the principles (a reference list, not rules).
-  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 21000, sys.length);
+  // 22,500 since 2026-11-13 (three teaching principles and drawing what is pictured). 18,000 since 2026-11-10: the eleven board forms are listed in the principles (a reference list, not rules).
+  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 22500, sys.length);
   check(`a math session gets a handful of tools (${tools.length}, ${toolChars} chars)`, tools.length <= 16 && toolChars < 24000, [tools.length, toolChars]);
   check('the control tools are present', ['update_session_note', 'set_goal_status', 'track_gap', 'end_lesson'].every((n) => tools.some((t) => t.name === n)));
   check('the constitution names no partner, topic or symptom', !/crimsora|greenapple|gdi|l'h[oô]pital|cos\(|streak/i.test(V2_CONSTITUTION));
@@ -619,6 +621,41 @@ async function main() {
   const demoSys = v2SessionPart({ subject: 'physics', level: 'High school', mode: 'voice', trial: true, teacher: { name: 'Ms. Elena Vasquez', style: 'Gentle and patient.' } });
   check('a trial session names its teacher and leaves the topic to the student; an ordinary one says neither', /You are Ms\. Elena Vasquez/.test(demoSys) && /free trial lesson/.test(demoSys) && !/free trial|You are /.test(v2SessionPart({ subject: 'physics', level: '12', mode: 'voice' })));
   check('subject and level labels in a partner\'s own words are read for what they mean', isMathsSubject('Precalculus') && isMathsSubject('math') && !isMathsSubject('Physics') && isScienceSubject('Physics') && !isScienceSubject('History') && gradeOfLevel('Grade 3') === 3 && gradeOfLevel('Middle school') === 7 && gradeOfLevel('9-10') === 9 && gradeOfLevel('ap') === undefined && gradeOfLevel('k') === 0);
+
+  // 2026-11-13: the optics and rational-expressions sessions.
+  const s13: V2Session = { subject: 'physics', level: '12', mode: 'voice', timeBoxMinutes: 30 };
+  const strm = (text: string) => ({ call: (async (_p, onText) => { for (let i = 0; i < text.length; i += 7) onText?.(text.slice(i, i + 7)); return msg([{ type: 'text', text }], 'end_turn'); }) as V2ModelCall });
+  const recap = '<board note style="highlight">Clear denominators, solve, then check every answer against the excluded values.\nFactors cancel, terms do not.\nExcluded values come from the original denominator.\nExtraneous answers are rejected, and the equation can have no solution.</board>';
+  const r13 = strm(`Yes, x = 3 is the excluded value. ${recap} <board note style="warning">x = 3 is an excluded value, so it is extraneous.\nThe equation has no solution.</board> What next?`);
+  const t13 = await runV2Turn({ session: s13, state: newV2State(0), studentSaid: 'x is 3', facts: { nowMs: 60000 }, callModel: r13.call, boardPass: false });
+  check('a short note whose words are all in a longer one of the same reply does not take its place', t13.toolCalls.filter((c) => c.name === 'annotate').length === 2 && !t13.toolCalls.some((c) => c.replaces) && t13.state.board.pages[0].items.length === 2, JSON.stringify(t13.toolCalls.map((c) => [c.name, c.replaces, c.outcome])));
+  const r14 = strm('Put it in. <board equation label="x = 5 in the original">\\frac{5+2}{(5-5)(5+2)} = \\frac{7}{0}</board> Does that make sense? <board equation label="x = 5 in the original">\\frac{5+2}{(5-5)(5+2)} = \\frac{?}{?}</board>');
+  const t14 = await runV2Turn({ session: s13, state: newV2State(0), studentSaid: 'what if x is 5', facts: { nowMs: 60000 }, callModel: r14.call, boardPass: false });
+  check('an equation written again under the same label in one reply takes the first one\'s place, and its label is typeset', t14.toolCalls.filter((c) => c.name === 'show_equation').length === 2 && !!t14.toolCalls[1].replaces && t14.state.board.pages[0].items.length === 1 && t14.toolCalls[0].args.label === '$x = 5$ in the original', JSON.stringify(t14.toolCalls.map((c) => [c.args.label, c.replaces, c.outcome])));
+  const pencil = (last: string) => `<board graph x="-5..5" y="-5..5">(-5, 0) to (5, 0) | water surface\n(-1, -3) to (0, 0) | light from the tip\n${last}</board>`;
+  const r15 = strm(`Here is the picture. ${pencil('(2, 3) to (-2, -3) | the line back')} Can you see it? ${pencil('(2, 3) to (-3, -4.5) | where does it appear?')}`);
+  const t15 = await runV2Turn({ session: s13, state: newV2State(0), studentSaid: 'draw it', facts: { nowMs: 60000 }, callModel: r15.call, boardPass: false });
+  const segs15 = (t15.toolCalls.filter((c) => c.name === 'show_function_graph').pop()?.args.segments ?? []) as unknown[];
+  check('a figure of segments drawn again in one reply is the new drawing, not both on top of each other', segs15.length === 3, String(segs15.length));
+  const hole = inlineToolCall(boardBlocksIn('<board graph x="-6..8" y="-5..5">1/(x-5) | simplified\n(-2, -0.14) | hole at x = −2\n(1, 2) open | left out\n(3, -0.5) | a point on it</board>')[0]).args.points as Array<{ open?: boolean }>;
+  check('a hole or an excluded point on a graph is drawn hollow', hole.length === 3 && hole[0].open === true && hole[1].open === true && hole[2].open === undefined, JSON.stringify(hole));
+  const ended = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'plan_complete', summary: 'done' } }], 'tool_use'), msg([{ type: 'text', text: 'What would you like next?' }], 'end_turn')]);
+  const tEnd = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'x is 3', facts: { nowMs: 22 * 60000 }, nowMs: 22 * 60000, callModel: ended.call, boardPass: false });
+  const refusal = tEnd.toolCalls.find((c) => c.name === 'end_lesson')?.outcome ?? '';
+  check('a close refused with time left is not worded as something to repeat to the student', /^not ended/.test(refusal) && !/minutes remain|has not asked/.test(refusal) && !tEnd.state.closed, refusal);
+  check('the facts say how much time is left and that the close is not due', /about 8 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 })) && /the close is near/.test(renderFacts(s13, newV2State(0), { nowMs: 26 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 }).split('\n')[1]);
+  const planP = { segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 't1', kind: 'try_yourself' }, { id: 't2', kind: 'try_yourself' }, { id: 'mis', kind: 'misconception_check' }, { id: 'recap', kind: 'recap' }] } as never;
+  const goalsP = { hook: { status: 'shown', at: 1 }, c: { status: 'shown', at: 2 }, t1: { status: 'shown', at: 3 }, t2: { status: 'demonstrated', at: 4 }, mis: { status: 'shown', at: 9 } } as never;
+  check('the part in hand is the one the tutor last marked, not one left open earlier', v2Progress(planP, goalsP).currentSegmentId === 'mis' && v2Progress(planP, { ...(goalsP as object), mis: { status: 'demonstrated', at: 9 } } as never).currentSegmentId === 'recap' && v2Progress(planP, { hook: { status: 'shown' } } as never).currentSegmentId === 'c', v2Progress(planP, goalsP).currentSegmentId);
+  check('brackets in spoken mathematics are heard as pauses and a product is said', speakGroups('the factors are (x minus 5)(x + 2), since') === 'the factors are x minus 5, times, x + 2, since' && speakGroups('1 + 2(x minus 4) equals 9') === '1 + 2 times, x minus 4, equals 9' && speakGroups('the point (3 comma 4) and (as we said) f of x') === 'the point (3 comma 4) and (as we said) f of x', speakGroups('1 + 2(x minus 4) equals 9'));
+  const fig = (kind: string, params: object) => inlineToolCall(boardBlocksIn(`<board figure kind="${kind}">${JSON.stringify(params)}</board>`)[0]);
+  const refr = fig('refraction', { n1: 1, n2: 1.33, angle: 30, media: ['air', 'water'] });
+  const drawn = drawFigure((refr.args as { kind: string }).kind, (refr.args as { params: object }).params);
+  check('a ray bending at a surface is a figure of its own, with the angle the physics gives', refr.name === 'show_drawn_figure' && 'svg' in drawn && /θ₂ = 22\.1°/.test(drawn.svg) && 'refused' in drawFigure('refraction', { n1: 1, n2: 1.33 }) && 'svg' in drawFigure('refraction', { n1: 1.5, n2: 1, angle: 60 }) && /all of it is reflected/.test((drawFigure('refraction', { n1: 1.5, n2: 1, angle: 60 }) as { svg: string }).svg) && 'svg' in drawFigure('apparent_depth', {}), JSON.stringify(refr).slice(0, 200));
+  const optics = figureCatalogueFor({ subject: 'physics', topic: 'Optics: refraction, lenses, mirrors', level: '12' });
+  check('an optics lesson is offered the full ray diagram, refraction and apparent depth, and not the lens figure without rays', /lens_rays:/.test(optics) && /refraction:/.test(optics) && /apparent_depth:/.test(optics) && !/ray_diagram_lens:/.test(optics) && fig('lens_rays', { type: 'converging', focalLength: 5, objectDistance: 5 }).name === 'show_ray_diagram' && fig('lens_rays', { type: 'converging', focalLength: 20, objectDistance: 60, objectHeight: 2, find: 'image' }).args.hideImage === true && (fig('lens_rays', { type: 'converging', focalLength: 20, objectDistance: 60, objectHeight: 2 }).args.objectHeight as number) > 8 && fig('lens_rays', { type: 'converging', focalLength: 20, objectDistance: 60 }).args.hideImage === undefined, JSON.stringify(fig('lens_rays', { type: 'converging', focalLength: 20, objectDistance: 60, find: 'image' }).args));
+  check('a test-prep mathematics lesson reads the mathematics figures, and a grade band is read at its top', /unit_circle:/.test(figureCatalogueFor({ subject: 'test-prep', topic: 'SAT Math: trigonometry', level: 'SAT' })) && /punnett_square:/.test(figureCatalogueFor({ subject: 'science', topic: 'grade-7-life-science Punnett Squares', level: '6-8' })), '');
+  check('the standing prompt covers a student who says they have it, calculator arithmetic and a question of their own', /says they have it/.test(V2_CONSTITUTION) && /Arithmetic that needs a calculator/.test(V2_CONSTITUTION) && /answered for its own sake first/.test(V2_CONSTITUTION), '');
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

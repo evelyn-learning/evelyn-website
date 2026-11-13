@@ -69,7 +69,7 @@ export default function TutorClientV2(props: TutorClientV2Props) {
 }
 
 /** What the tutor is doing right now, for the composer's status chip. `heard`: the student's words so far. */
-export interface V2ComposerStatus { state: 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'error' | 'idle'; heard?: string; level?: number }
+export interface V2ComposerStatus { state: 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'error' | 'idle'; heard?: string; level?: number; /** No sound has come from the microphone yet. */ quiet?: boolean }
 const STATUS_LOOK: Record<V2ComposerStatus['state'], { label: string; hint: string; dot: string; chip: string }> = {
   listening: { label: 'Listening', hint: 'Speak, or type here', dot: 'bg-emerald-500', chip: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
   hearing: { label: 'Hearing you', hint: 'Keep going…', dot: 'bg-emerald-500', chip: 'border-emerald-300 bg-emerald-100 text-emerald-900' },
@@ -124,7 +124,7 @@ export function V2Composer({ composerSlot, closed, busy, onSend, placeholder, au
         data-lpignore="true"
         autoFocus={autoFocus}
         disabled={closed}
-        placeholder={closed ? 'This session has ended' : heard ? `“${heard.slice(-90)}”` : look ? look.hint : placeholder}
+        placeholder={closed ? 'This session has ended' : heard ? `“${heard.slice(-90)}”` : look ? (status?.quiet && status.state === 'listening' ? 'No sound from your microphone yet. Speak, or type here' : look.hint) : placeholder}
         className="flex-1 min-w-0 text-base sm:text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
       />
       <button type="submit" disabled={closed} className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">

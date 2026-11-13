@@ -43,7 +43,8 @@ export interface V2BoardOutcome { painted: boolean; detail: string; /** The item
 export interface V2State {
   history: Anthropic.MessageParam[];
   note: string;
-  goals: Record<string, { status: GoalStatus; why?: string }>;
+  /** `at`: when the goal was last marked, so the part in hand can be told from one left open earlier (progress.ts). */
+  goals: Record<string, { status: GoalStatus; why?: string; at?: number }>;
   /** Gaps the tutor has found in what the student knows, with how far each has been worked on. Optional: older states have none. */
   gaps?: V2Gap[];
   board: V2Board;

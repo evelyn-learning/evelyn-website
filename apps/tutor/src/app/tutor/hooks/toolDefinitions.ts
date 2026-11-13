@@ -6,6 +6,7 @@
  * This prevents duplicating ~300 lines of tool definitions across hooks.
  */
 
+import { drawFigure } from '@/lib/tutor/v2/drawn-figures';
 import type { WhiteboardCommand, ShadedRegion } from '@core/knowledge/types';
 import { getGeometryStepKindsDescriptionTail } from '@/lib/tutor/diagrams/geometry-solver';
 import { GEOMETRY_STEP_DOCS } from '@/lib/tutor/diagrams/geometry-step-docs';
@@ -2910,6 +2911,11 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       notes: funcArgs.notes,
     } as unknown as WhiteboardCommand;
   }
+  // Tutor v2: a figure drawn from a few numbers as one SVG (v2/drawn-figures.ts).
+  if (funcName === 'show_drawn_figure') {
+    const d = drawFigure(funcArgs.kind, funcArgs.params);
+    return 'svg' in d ? ({ action: 'showSvgDiagram', title: typeof funcArgs.title === 'string' ? funcArgs.title : '', svg: d.svg } as unknown as WhiteboardCommand) : null;
+  }
   if (funcName === 'show_ray_diagram') {
     return {
       action: 'showRayDiagram',
@@ -2920,6 +2926,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       objectHeight: funcArgs.objectHeight,
       showLabels: funcArgs.showLabels,
       notes: funcArgs.notes,
+      ...(funcArgs.hideImage === true ? { hideImage: true } : {}),
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_wave') {

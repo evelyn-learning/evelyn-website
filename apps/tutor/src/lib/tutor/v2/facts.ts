@@ -29,8 +29,11 @@ export interface V2TurnFacts {
 
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
   const usedMin = Math.max(0, Math.round((f.nowMs - state.startedAtMs) / 60000));
+  const left = session.timeBoxMinutes ? session.timeBoxMinutes - (f.nowMs - state.startedAtMs) / 60000 : 0;
   const lines = [
-    `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}` : ''}`,
+    // What is left, said outright: with only "22 used of 30" the tutor said goodbye, was refused the close, and
+    // took the goodbye back in the same breath (embed-1794593747478, embed-1794595194384).
+    `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 1.5 ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);

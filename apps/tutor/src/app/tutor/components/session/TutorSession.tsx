@@ -951,7 +951,7 @@ export default function TutorSession(props: TutorSessionProps) {
         pageTitleHeader={TUTOR_PAGE_TITLE_HEADER && !!embedded && isFixedScriptPlan(lessonProgress.plan)}
         allowHorizontalScroll={sessionMode === 'text'}
         onNavChange={setBoardNav}
-        bookHeader={brainVersion === 'v2' ? (lessonContext?.title ?? topicLabel) : undefined}
+        bookHeader={brainVersion === 'v2' ? (lessonContext?.title ?? lessonProgress.plan?.title ?? topicLabel) : undefined}
         openOnLastPage={!!resumeState}
         onStudentMark={studentMarksOn ? handleStudentMark : undefined}
         penMode={studentMarksOn && boardPenActive}

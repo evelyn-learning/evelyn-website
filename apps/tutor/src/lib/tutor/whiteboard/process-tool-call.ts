@@ -21,6 +21,7 @@
  * top-level, except `show_function_graph` → `{action:'showGraph', data}`.
  */
 
+import { drawFigure } from '@/lib/tutor/v2/drawn-figures';
 import { validateToolCall } from './validate-tool-call';
 import { stripWbEmphasisText } from './wb-emphasis-strip';
 import { validateGeometryCommand, type GeometryCommand } from './geometry-validator';
@@ -71,6 +72,8 @@ export function toWhiteboardCommand(
   name: string,
   args: Record<string, unknown>,
 ): WhiteboardCommandLike {
+  // Tutor v2's drawn figures (v2/drawn-figures.ts) go up as the SVG they compute.
+  if (name === 'show_drawn_figure') { const d = drawFigure(args.kind, args.params); if ('svg' in d) return { action: 'showSvgDiagram', title: typeof args.title === 'string' ? args.title : '', svg: d.svg }; }
   const action = toAction(name);
   if (action === 'showGraph') return { action, data: args };
   return { action, ...args };

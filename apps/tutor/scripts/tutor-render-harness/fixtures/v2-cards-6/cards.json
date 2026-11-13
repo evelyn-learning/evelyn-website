@@ -1,0 +1,12 @@
+[
+ { "tool": "show_drawn_figure", "label": "refraction-air-water", "args": { "kind": "refraction", "title": "Air into water at 30°", "params": { "n1": 1, "n2": 1.33, "angle": 30, "media": ["air", "water"] } } },
+ { "tool": "show_drawn_figure", "label": "refraction-find", "args": { "kind": "refraction", "params": { "n1": 1, "n2": 1.5, "angle": 45, "media": ["air", "glass"], "find": "?" } } },
+ { "tool": "show_drawn_figure", "label": "refraction-total", "args": { "kind": "refraction", "title": "Glass to air at 60°", "params": { "n1": 1.5, "n2": 1, "angle": 60, "media": ["glass", "air"] } } },
+ { "tool": "show_drawn_figure", "label": "apparent-depth", "args": { "kind": "apparent_depth", "title": "A pencil tip under water", "params": { "object": "pencil tip" } } },
+ { "tool": "show_ray_diagram", "label": "lens-60-20", "args": { "type": "converging", "focalLength": 20, "objectDistance": 60, "objectHeight": 9.6, "title": "f = 20 cm, object at 60 cm" } },
+ { "tool": "show_ray_diagram", "label": "lens-60-20-find", "args": { "type": "converging", "focalLength": 20, "objectDistance": 60, "objectHeight": 9.6, "hideImage": true, "title": "Where does the image form?" } },
+ { "tool": "show_ray_diagram", "label": "lens-at-focus", "args": { "type": "converging", "focalLength": 5, "objectDistance": 5, "objectHeight": 2, "title": "Object at the focal point, f = 5 cm" } },
+ { "tool": "show_ray_diagram", "label": "mirror-concave", "args": { "type": "concave-mirror", "focalLength": 10, "objectDistance": 25 } },
+ { "tool": "show_function_graph", "label": "graph-hole", "args": { "xRange": [-6, 8], "yRange": [-5, 5], "functions": [{ "expr": "1/(x-5)", "label": "simplified form" }], "points": [{ "x": -2, "y": -0.142857, "label": "hole at x = −2", "open": true }] } },
+ { "tool": "show_equation", "label": "equation-label", "args": { "latex": "\\frac{1}{x-5} = -\\frac{1}{7}", "label": "at $x = -2$" } }
+]

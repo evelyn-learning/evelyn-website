@@ -2449,6 +2449,24 @@ export function outsideMathSpans(text: string, f: (words: string) => string): st
   return out.join('');
 }
 
+/** Brackets in a spoken expression are heard as pauses, and a product written by setting things side by side is
+ *  said. A voice reads "(x − 5)(x + 2)" straight through, and the student heard "x minus 5x plus 2"; "1 + 2(x − 4)"
+ *  came out as "1 plus 2x minus 4" (Praveen, embed-1794595194384). Run on the text after its symbols have become
+ *  words: "(x minus 5)(x + 2)" → "x minus 5, times, x + 2,". A bracket holding ordinary words, a point "(3, 4)"
+ *  or a function's argument is left as it is. */
+export function speakGroups(text: string): string {
+  const TOKEN = /^(?:\d+(?:\.\d+)?[a-z]?|[a-z]|[+\-−]|minus|plus|times|squared|cubed|over|negative)$/i;
+  return text.replace(/\(([^()]{3,60})\)(?![²³^]|\s*(?:squared|cubed)\b)/g, (m: string, inner: string, at: number, all: string) => {
+    const tokens = inner.trim().split(/\s+/);
+    if (tokens.length < 3 || !tokens.every((t) => TOKEN.test(t)) || !tokens.some((t) => /^(?:[+\-−]|minus|plus)$/i.test(t))) return m;
+    const before = all.slice(0, at);
+    // 2(…), x(…) and (…)(…) are products; f(…) is a function and "of (" a phrase.
+    const product = /(?:\d|(?<![A-Za-z])[a-eij-z]|\)[²³]?)$/.test(before);
+    const after = all.slice(at + m.length);
+    return `${product ? ' times, ' : ''}${inner.trim()}${/^\s*[,.;:?!]/.test(after) || !after.trim() ? '' : ','}`;
+  });
+}
+
 export function speakNumberPlurals(text: string): string {
   return text.replace(/\b(the|these|those|both|all|of|and|or|no|many|few|several|two|three|four|five|six|seven|eight|nine|ten|\d+)(\s+)(\d{1,3})s\b(?!')/gi, (_m, cue: string, gap: string, n: string) => `${cue}${gap}${NUMBER_PLURAL[Number(n)] ?? `${n}'s`}`);
 }
