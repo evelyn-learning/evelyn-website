@@ -68,6 +68,9 @@ async function main() {
   const s0 = newV2State(1_000_000);
   const facts = renderFacts(session, s0, { nowMs: 1_000_000 + 3 * 60000 });
   check('homework facts say the session ends when the problem is done', /ends when this problem is done/.test(facts) && !/not at its close/.test(facts), facts);
+  // Review: the tutor still hears the clock in homework, so it can wind down before the hard stop.
+  check('homework facts still say how much time is left', /about 27 left/.test(facts), facts);
+  check('…and when the time is up', /the time is up/.test(renderFacts(session, s0, { nowMs: 1_000_000 + 31 * 60000 })));
   check('the record of confirmed parts is a fact', /homework record: confirmed correct — part a; still open — part b/.test(renderFacts(session, { ...s0, homework: { confirmed: ['part:a'] } }, { nowMs: 1_000_000 })));
   check('a finished problem says so', /every part is confirmed correct: the problem is done/.test(renderFacts(session, { ...s0, homework: { confirmed: ['part:a', 'part:b'], done: true } }, { nowMs: 1_000_000 })));
 
@@ -284,6 +287,21 @@ async function main() {
   check('the student may stop with one open', t6.r.state.closed);
   const unverifiedTurn = await sheetTurn('a ramp makes it easier', [msg([{ type: 'text', text: 'Why?' }], 'end_turn')], { ...t3.r.state });
   check('a problem with no key is never graded', !/answer check/.test(JSON.stringify(unverifiedTurn.m.seen[0].messages)));
+  // Review (Important 1): the tutor offered problem 2 without calling set_current_problem; the student just answers.
+  const offered: V2State = { ...t2.r.state, history: [...t2.r.state.history] };
+  const t7 = await sheetTurn('y = 5', [msg([{ type: 'text', text: 'Right.' }], 'end_turn')], offered);
+  check('after a solved problem, an answer goes to the open problem the tutor offered', t7.r.state.homework?.sheet?.current === 2 && JSON.stringify(t7.r.state.homework?.sheet?.solved) === '[1,2]', t7.r.state.homework?.sheet);
+  const t8 = await sheetTurn('y = 5', [msg([{ type: 'text', text: 'Right.' }], 'end_turn')], { ...t2.r.state, history: [...t2.r.state.history.slice(0, -1), { role: 'assistant', content: [{ type: 'text', text: 'Good. What next?' }] }] });
+  check('…or, with none named, to the first open one', t8.r.state.homework?.sheet?.current === 2 && JSON.stringify(t8.r.state.homework?.sheet?.solved) === '[1,2]', t8.r.state.homework?.sheet);
+  // Review (Important 2): one problem's given data is not another problem's withheld answer.
+  {
+    const gSheet = { problems: [{ n: 1, text: 'A bag has 22 marbles. How many are red if 7 are blue?', verified: true, parts: [''] }, { n: 2, text: 'Add 10 and 12.', verified: true, parts: [''] }], noReveal: true };
+    const gKeys = { 1: k('15', 15), 2: k('22', 22) };
+    const m = stub([msg([{ type: 'text', text: 'Problem 1 says there are 22 marbles in the bag. How many are blue?' }], 'end_turn')]);
+    const r = await runV2SheetTurn({ session: { ...base, homeworkSheet: gSheet }, resolvedSheet: { sheet: gSheet, keys: gKeys }, state: said(newV2State(1_000_000), '[start]'), studentSaid: 'help with problem 1', callModel: m.call, nowMs: 1_060_000, boardPass: false });
+    check('a value the sheet gives is never withheld, whichever problem it answers', m.seen.length === 1 && /22 marbles/.test(r.spoken), r.spoken);
+  }
+
   const rev = await sheetTurn('just tell me problem 2', [msg([{ type: 'text', text: 'It is y = 5.' }], 'end_turn'), msg([{ type: 'text', text: 'What do you add to both sides first?' }], 'end_turn')], t2.r.state);
   check('no-reveal holds per problem on the sheet', rev.m.seen.length === 2 && !/y = 5/.test(rev.r.spoken));
 

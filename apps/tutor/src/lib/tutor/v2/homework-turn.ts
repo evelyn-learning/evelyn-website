@@ -27,6 +27,12 @@ export type V2HomeworkFrameOut = { type: 'homework-keyed-verdict'; part: string;
 export const V2_HOMEWORK_FALLBACK_QUESTION = 'What do you think the next step is?';
 export const V2_HOMEWORK_NOT_SENT = 'it stated the final answer of a part the student has not reached. They must reach it themselves: write the reply again without it, and give them the next smallest step.';
 
+/** The words of the tutor's last reply in a v2 history. */
+function lastTutorText(history: V2State['history']): string {
+  const m = [...history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text')));
+  return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ');
+}
+
 const sentencesOf = (text: string) => text.split(/(?<=[.!?])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
 const revealing = (sentence: string, withheld: ReadonlyArray<WithheldAnswer>) => withheld.some((a) => revealsWithheldAnswer(sentence, a).hit);
 
@@ -119,6 +125,16 @@ export async function runV2SheetTurn(input: V2TurnInput & { resolvedSheet: V2She
   // A message that names a problem is about that problem, from this message on.
   const named = sheetProblemNamed(turn.studentSaid, sheet);
   if (named !== null && named !== rec.current) rec = { ...rec, current: named, since: turn.state.history.length };
+  // The problem in play is solved and the tutor moved on in words without set_current_problem: the answer is
+  // for the open problem its last reply named (the last one named), or else the first open one. Left on the
+  // solved problem, every later answer went unchecked and the sheet could never be done (review, 2026-11-14).
+  else if (named === null && rec.solved.includes(rec.current)) {
+    const open = sheet.problems.map((p) => p.n).filter((n) => !rec.solved.includes(n));
+    const said = lastTutorText(turn.state.history);
+    const mentioned = [...said.matchAll(/\b(?:problem|question|number)\s*(\d{1,2})\b/gi)].map((m) => Number(m[1])).filter((n) => open.includes(n));
+    const next = mentioned.at(-1) ?? open[0];
+    if (next !== undefined) rec = { ...rec, current: next, since: turn.state.history.length };
+  }
   const problem = sheet.problems.find((p) => p.n === rec.current);
   const key = resolvedSheet.keys[rec.current];
   const frames: V2SheetFrameOut[] = [];
@@ -138,7 +154,9 @@ export async function runV2SheetTurn(input: V2TurnInput & { resolvedSheet: V2She
   const state: V2State = { ...turn.state, homework: { ...(turn.state.homework ?? { confirmed: [] }), sheet: rec } };
   // Every key value on the sheet the student has not written stays off the board and out of the reply.
   const studentText = [...studentMessagesOf(turn.state.history).map((m) => m.content), turn.studentSaid ?? ''].join('\n');
-  const withheld = sheet.problems.flatMap((p) => (resolvedSheet.keys[p.n] ? homeworkKeyWithheld({ text: p.text, verified: true, hasFigure: false, key: resolvedSheet.keys[p.n] }, studentText) : []));
+  // The whole sheet is given data: a number one problem states is never withheld as another's answer.
+  const sheetText = sheet.problems.map((p) => p.text).join('\n');
+  const withheld = sheet.problems.flatMap((p) => (resolvedSheet.keys[p.n] ? homeworkKeyWithheld({ text: sheetText, verified: true, hasFigure: false, key: resolvedSheet.keys[p.n] }, studentText) : []));
   const r = await guardedTurn({ ...turn, session, state }, withheld, { noReveal: !!sheet.noReveal, figureOnScreen: false });
   return { ...r, homeworkFrames: frames };
 }

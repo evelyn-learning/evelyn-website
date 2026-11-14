@@ -194,9 +194,6 @@ test('the retail /tutor surfaces pass neither prop, so they get the engine defau
   }
 });
 
-console.log(`\n${passed} passed, ${failed} failed`);
-process.exit(failed ? 1 : 0);
-
 test('GAC on tutor v2 (Praveen 2026-11-13): greenapple runs v2, homework included; homework stays on v1 for every other partner', () => {
   assert.equal(resolvePartnerSessionOptions({ partnerId: 'greenapple' }).brainVersion, 'v2');
   assert.equal(resolvePartnerSessionOptions({ partnerId: 'greenapple' }).homeworkOnV2, true);
@@ -204,3 +201,6 @@ test('GAC on tutor v2 (Praveen 2026-11-13): greenapple runs v2, homework include
     assert.equal(resolvePartnerSessionOptions({ partnerId }).homeworkOnV2, false, `${partnerId}: its homework stays where it is`);
   }
 });
+
+console.log(`\n${passed} passed, ${failed} failed`);
+process.exit(failed ? 1 : 0);
