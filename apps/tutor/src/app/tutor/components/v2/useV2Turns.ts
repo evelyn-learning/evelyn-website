@@ -297,6 +297,9 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         assignPractice(settled.find((c) => c.name === 'end_lesson' && !/^not /.test(c.outcome)));
         setClosed(true);
         p.current.onDebugEvent?.('lesson_closed', 'end_lesson');
+        // A one-problem homework session closed by the tutor reads, for the academy's outcome, as the finish
+        // button does (homework-build/outcome.ts): done when every part is, needs review otherwise.
+        if (homeworkProblemOf(planRef.current as { metadata?: Record<string, unknown> } | null)) p.current.onDebugEvent?.('homework_session_closed', 'end_lesson');
         p.current.onLessonClosed?.('end_lesson');
         endingRef.current = true;
         const wait = p.current.closeDelayMs;

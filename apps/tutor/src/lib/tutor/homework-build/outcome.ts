@@ -22,6 +22,8 @@ export { KEYED_VERDICT_DEBUG_TYPE };
 export type HomeworkProblemOutcome = 'done' | 'in_progress' | 'needs_review';
 
 export const HOMEWORK_PROBLEM_DONE_EVENT = 'homework_problem_done';
+/** Recorded by the v2 client when its tutor closes a one-problem homework session (useV2Turns). */
+export const HOMEWORK_SESSION_CLOSED_EVENT = 'homework_session_closed';
 
 /** 2026-10-26: stored notes read "# Tutor Response I appreciate you sharing this
  *  conversation flow!…" with the answers in them — the recap model replied to the
@@ -118,7 +120,9 @@ export function classifyHomeworkProblemOutcome(input: {
   // a model "correct" re-checked against the key (keyed-verdict.ts
   // modelCheckConfirms) is recorded only there.
   if (input.key?.parts?.length && allKeyPartsConfirmed(history, '', input.key, [...(input.priorConfirmed ?? []), ...marksFromKeyedEvents(events)])) return 'done';
-  if (input.finished) return 'needs_review';
+  // v2 (2026-11-14): the tutor closed the session (the student was finished with it, or the time was up), so
+  // the host's finish button was never pressed. A close is read as the finish is.
+  if (input.finished || events.some((e) => e?.type === HOMEWORK_SESSION_CLOSED_EVENT)) return 'needs_review';
   if (input.verified === false) {
     const lastStudent = [...(input.transcript ?? [])].reverse().find(isStudent);
     if (lastStudent && claimsProblemFinished(String(lastStudent.text))) return 'needs_review';

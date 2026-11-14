@@ -14,7 +14,7 @@ import type { AnswerKey, HomeworkBuildDoc } from '../homework-build/types';
 import { HOMEWORK_PROBLEM_KIND } from '../lesson-plan/homework-problem-meta';
 import { homeworkProblemsOf } from '../lesson-plan/homework';
 import { resolveHomeworkProblemTurn, type HomeworkProblemTurn, type HomeworkProblemTurnDeps } from '../voice/homework-problem-turn';
-import { allKeyPartsConfirmed, confirmedKeyMarks, inSheetScope, modelCheckConfirms, proseCreditForPart, proseMatchCandidates, sanitizeConfirmedMarks, scopedKeyedVerdicts, type KeyedVerdict } from '../voice/keyed-verdict';
+import { allKeyPartsConfirmed, confirmedKeyMarks, inSheetScope, keyFinalsLine, modelCheckConfirms, solutionPathLines, proseCreditForPart, proseMatchCandidates, sanitizeConfirmedMarks, scopedKeyedVerdicts, type KeyedVerdict } from '../voice/keyed-verdict';
 import type { ProseAnswerMatchFn } from '../voice/prose-answer-match';
 import { noRevealLedgerForPartner } from '../voice/no-reveal-ledger-gate';
 import {
@@ -35,7 +35,8 @@ export function v2HomeworkSession(turn: HomeworkProblemTurn, opts: { noReveal: b
     ...(hp.priorNote ? { priorNote: hp.priorNote } : {}),
     ...(hp.priorConfirmed?.length ? { priorConfirmed: [...hp.priorConfirmed] } : {}),
     // The parts' labels only, to name what is open: never their answers.
-    ...(hp.verified && hp.key?.parts.length ? { parts: hp.key.parts.map((p) => partLabel(p.label)) } : {}),
+    ...(hp.verified && hp.key?.parts.length ? { parts: hp.key.parts.map((p) => partLabel(p.label)), expected: keyFinalsLine(hp.key) } : {}),
+    ...(hp.verified && hp.key && solutionPathLines(hp.key).length ? { solutionPath: solutionPathLines(hp.key) } : {}),
     ...(opts.noReveal ? { noReveal: true } : {}),
   };
 }
@@ -55,6 +56,7 @@ export function v2HomeworkPart(hw: V2HomeworkProblem): string {
     prior.length ? `Already confirmed correct in an earlier session: ${prior.join('; ')}. Do not ask for these again.` : '',
     `- ${V2_HOMEWORK_NO_REVEAL}`,
     `- ${hw.hasFigure ? HOMEWORK_PROBLEM_FIGURE_SHOWN : HOMEWORK_PROBLEM_NO_FIGURE}`,
+    hw.verified && hw.expected ? `- The sheet's checked answer (for you only: never state it, or any value in it, before the student has written it themselves): ${hw.expected}${hw.solutionPath?.length ? `\n  One checked route to it: ${hw.solutionPath.join('; ')}. A student may take another valid route.` : ''}` : '',
     hw.verified
       ? '- Each answer the student gives is checked against the sheet\'s checked answer key, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. Call a part done only when the homework record in the facts lists it as confirmed. Never mention the record, the check or the key to the student: they are yours to read. When you are sure an answer to a part is right and the record does not list it, ask once for that part\'s final answer on its own, then go on with what is left.'
       : `- ${HOMEWORK_PROBLEM_UNVERIFIED}`,
@@ -123,6 +125,8 @@ export function studentMessagesOf(history: V2State['history']): Array<{ role: 'u
 
 /** Where a worked message breaks into the steps it states, last first ("…, so x = 30", "…, which gives 4/11"). */
 const STEP_BREAK = /(?<=[.!?;])\s+|,\s*|\s+(?=\b(?:so|which|that|therefore|then|giving|gives|hence)\b)/i;
+/** The words that offer a value tentatively. */
+const HEDGE = /^(?:(?:and|but|so|um+|uh+|hmm+|ok(?:ay)?)[,\s]+)*(?:maybe|perhaps|probably|i (?:think|guess)(?: it'?s| it is)?|is it|could it be|would it be|might it be)\s+/i;
 /** The value a step states after its verb ("simplifies to 4/11", "the area is 52 cm²"). */
 const STEP_VALUE = /\b(?:to|is|are|equals?|be|get|got|gives|makes|comes to)\s+(\S.*)$/i;
 
@@ -135,7 +139,11 @@ const STEP_VALUE = /\b(?:to|is|are|equals?|be|get|got|gives|makes|comes to)\s+(\
  * earlier step can never mark a right final answer wrong. A step that ends in a question is not an answer.
  */
 export function workedAnswerCredit(studentSaid: string, key: AnswerKey): KeyedVerdict[] {
-  const steps = studentSaid.split(STEP_BREAK).map((x) => x.trim()).filter((x) => x && !/\?\s*$/.test(x)).reverse();
+  // A hedged answer ("maybe 3x + 1?", "is it x = 8", "I think 4") counts as the answer it offers, as in v1
+  // (Praveen 2026-11-14). Any other step that ends in a question is a question, not an answer.
+  const steps = studentSaid.split(STEP_BREAK).map((x) => x.trim()).filter(Boolean)
+    .map((x) => (/\?\s*$/.test(x) ? (HEDGE.test(x) ? x.replace(HEDGE, '').replace(/\?+\s*$/, '').trim() : '') : x.replace(HEDGE, '').trim() || x))
+    .filter(Boolean).reverse();
   for (const step of steps) {
     const value = STEP_VALUE.exec(step)?.[1];
     // A chain of equalities ends on the result: "P = 2(x + 5) + 2(4) = 2x + 18" offers 2x + 18.
@@ -214,7 +222,7 @@ export async function v2SheetFor(
   }
   return {
     sheet: {
-      problems: problems.map((p) => ({ n: p.n, text: p.text, verified: !!keys[p.n], ...(keys[p.n] ? { parts: keys[p.n].parts.map((x) => partLabel(x.label)) } : {}) })),
+      problems: problems.map((p) => ({ n: p.n, text: p.text, verified: !!keys[p.n], ...(keys[p.n] ? { parts: keys[p.n].parts.map((x) => partLabel(x.label)), expected: keyFinalsLine(keys[p.n]) } : {}) })),
       ...(noRevealLedgerForPartner(partnerId, deps.env) ? { noReveal: true } : {}),
     },
     keys,
@@ -226,7 +234,7 @@ export function v2SheetPart(sheet: V2HomeworkSheet): string {
   return [
     'HOMEWORK',
     `The student has brought their homework sheet: ${sheet.problems.length} problem${sheet.problems.length === 1 ? '' : 's'}, verbatim:`,
-    ...sheet.problems.map((p) => `${p.n}. ${p.text.trim().slice(0, 4000)}`),
+    ...sheet.problems.map((p) => `${p.n}. ${p.text.trim().slice(0, 4000)}${p.expected ? `\n   checked answer (for you only: never state it, or any value in it, before the student has written it themselves): ${p.expected}` : ''}`),
     `- ${V2_HOMEWORK_NO_REVEAL}`,
     '- They may work the problems in any order, and may skip one. Before you work a problem, call set_current_problem with its number: the answer check and the homework record in the facts follow the problem in play.',
     '- Each answer to a problem with a checked key is checked against it, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. Never mention the record, the check or the key to the student: they are yours to read. When you are sure an answer is right and the record does not list it, ask once for that part\'s final answer on its own, then go on. A problem without a checked key is never called right or wrong: work it through with them, name any slip in their working, and ask them to check the final result with their teacher.',

@@ -59,8 +59,10 @@ async function main() {
   check('it says the figure is already on screen', /already on the student's screen/i.test(part));
   check('it carries the no-reveal principle', /never state it, even when they ask/i.test(part) && /next smallest step/i.test(part));
   check('it carries the conduct rules (safeguarding, personal details)', /trusted adult/i.test(part) && /personal details/i.test(part));
-  check('the key is not in the homework session', !JSON.stringify(hw).includes('100°') && !('key' in hw));
-  check('no key value in the session part', !part.includes('x = 30') && !part.includes('100°'));
+  // Praveen 2026-11-14 (validation re-run): v2 judged hedged and worded answers wrongly without the expected answer;
+  // the tutor sees it as v1 did, behind the reveal guards. The key object itself still stays on the server.
+  check('the homework session carries the expected answer, not the key', hw.expected === 'a) x = 30; b) m∠ACB = 100°' && !('key' in hw), hw.expected);
+  check('the session part gives the tutor the checked answer, as its own and never to be stated', part.includes('a) x = 30; b) m∠ACB = 100°') && /for you only: never state it/i.test(part));
   const unverified = v2SessionPart({ ...base, homework: v2HomeworkSession(hpTurn({ verified: false, key: undefined }), { noReveal: true }) });
   // Task 7 (gac-hw-wrong-b on v2): the tutor spent four turns telling the student about "the record".
   check('the record and the check are the tutor\'s, never mentioned to the student', /never mention the record, the check or the key to the student/i.test(part));
@@ -88,7 +90,7 @@ async function main() {
   const r0 = await runV2Turn({ session, state: s0, studentSaid: null, callModel: m.call, nowMs: 1_000_000, boardPass: false });
   const sent = JSON.stringify(m.seen[0]);
   check('the request carries the problem', sent.includes('Find m∠ACB'));
-  check('the request carries no key value', !sent.includes('x = 30') && !sent.includes('100°'), sent.slice(0, 200));
+  check('the checked answer is in the system prompt only, never in the messages', JSON.stringify(m.seen[0].system).includes('x = 30') && !JSON.stringify(m.seen[0].messages).includes('x = 30'));
   check('the bare-board fallback does not paint over the problem panel', !r0.toolCalls.some((c) => !/^not /.test(c.outcome)), r0.toolCalls);
 
   console.log('the route resolves homework on the server (design 1)');
@@ -144,8 +146,16 @@ async function main() {
   const perim: AnswerKey = { parts: [{ label: 'a', final: 'P = 2x + 18', canonical: { kind: 'text', value: 'P = 2x + 18' } }], solvers: ['t'] };
   check('an expression is credited from the last side of its working', workedAnswerCredit('is it P = 2(x + 5) + 2(4) = 2x + 18', perim).some((v) => v.verdict === 'correct'));
   check('…but not a different last side', !workedAnswerCredit('is it P = 2(x + 5) + 2(4) = 2x + 14', perim).length);
+  // Fix 2 (Praveen 2026-11-14): a hedged answer counts, as in v1. Credit only: a wrong hedge is not marked wrong.
   for (const [m, key] of [
-    ['34 - 18 = 16, so x = 16?', k1('x = 8', 8)],
+    ['I don\'t know, maybe 3x + 1?', { parts: [{ label: '', final: 'g^-1(x) = 3x + 1', canonical: { kind: 'text', value: '3x + 1' } }], solvers: ['t'] } as AnswerKey],
+    ['I don\'t know, maybe x = 17?', k1('x = 17', 17)],
+    ['is it x = 8', k1('x = 8', 8)],
+    ['maybe 4 kcal/m^2/yr, because it\'s 10% twice?', k1('4 kcal/m^2/yr', 4)],
+  ] as const) check(`a hedged right answer is credited: "${m}"`, workedAnswerCredit(m, key).some((v) => v.verdict === 'correct'), workedAnswerCredit(m, key));
+  check('a hedged wrong answer is not credited', !workedAnswerCredit('maybe x = 16?', k1('x = 17', 17)).length);
+  for (const [m, key] of [
+    ['what is x = 16 + 1?', k1('x = 17', 17)],
     ['2x + 20 = 3x - 10, so x = 25', k1('x = 30', 30)],
   ] as const) check(`not credited: "${m}"`, !workedAnswerCredit(m, key).length);
   const worked = await v2HomeworkCheck({ key: { ...KEY, parts: [KEY.parts[0]] }, problem: { ...hwSession.homework!, parts: ['a'] }, state: said(newV2State(0), '[start]'), studentSaid: 'x + x + 20 = 3x - 10 so 2x + 20 = 3x - 10, which gives x = 30' });
@@ -267,7 +277,7 @@ async function main() {
   const k = (final: string, value: number): AnswerKey => ({ parts: [{ label: '', final, canonical: { kind: 'number', value } }], solvers: ['t'] });
   const build = { problems: [{ n: 1, key: k('x = 3', 3), status: 'ready' }, { n: 2, key: k('y = 5', 5), status: 'ready' }, { n: 3, status: 'failed' }] };
   const sheetR = await v2SheetFor(sheetPlan as never, 'greenapple', { getBuild: async () => build as never, env: {} });
-  check('a homework-help plan with problems is a sheet, keys held apart', !!sheetR && sheetR.sheet.problems.length === 3 && sheetR.sheet.problems[0].verified && !sheetR.sheet.problems[2].verified && !!sheetR.keys[1] && !JSON.stringify(sheetR.sheet).includes('x = 3'));
+  check('a homework-help plan with problems is a sheet, keys held apart', !!sheetR && sheetR.sheet.problems.length === 3 && sheetR.sheet.problems[0].verified && !sheetR.sheet.problems[2].verified && !!sheetR.keys[1] && !JSON.stringify(sheetR.sheet).includes('canonical') && sheetR.sheet.problems[0].expected === 'x = 3');
   check('a one-problem plan is not a sheet', (await v2SheetFor({ metadata: { kind: 'homework-problem', problems: SHEET } } as never, 'greenapple', { getBuild: async () => build as never })) === null);
   const sheetSession: V2Session = { ...base, homeworkSheet: sheetR!.sheet, plan: sheetPlan as never };
   const sheetPart = v2SessionPart(sheetSession);
@@ -275,7 +285,7 @@ async function main() {
   check('the sheet part lists every problem by its number', SHEET.every((p) => sheetPart.includes(`${p.n}. ${p.text}`)), sheetPart.slice(0, 600));
   check('the sheet part says to use set_current_problem and that any order is fine', /set_current_problem/.test(sheetPart) && /any order/i.test(sheetPart));
   check('the sheet part carries the no-reveal principle and the conduct rules', /never state it, even when they ask/i.test(sheetPart) && /trusted adult/i.test(sheetPart));
-  check('no key value in the sheet part', !/x = 3|y = 5/.test(sheetPart));
+  check('the sheet part gives each checked problem its expected answer, and none for an unchecked one', /1\. Solve 2x \+ 1 = 7\.\n\s*checked answer \(for you only: never state it[^)]*\): x = 3/.test(sheetPart) && /y = 5/.test(sheetPart) && !/3\. Describe[^\n]*\n\s*checked answer/.test(sheetPart), sheetPart.slice(0, 700));
 
   let sst = said(newV2State(1_000_000), '[start]');
   const sheetTurn = async (studentSaid: string | null, replies: Anthropic.Message[], stIn: V2State = sst) => {
@@ -339,6 +349,15 @@ async function main() {
   check('the rail shows how many are solved', /solved/.test(src('src/app/tutor/components/session/SessionStage.tsx').slice(src('src/app/tutor/components/session/SessionStage.tsx').indexOf('const homeworkRail'), src('src/app/tutor/components/session/SessionStage.tsx').indexOf('const railEl'))));
 
   console.log('outcome parity with v1 (design 3)');
+  // Fix 3 (Praveen 2026-11-14): a problem the tutor closes unfinished reads as the finish button reads it.
+  {
+    const closedEvents = [{ type: 'homework_keyed_verdict', message: formatKeyedVerdictDebug('a', 'correct') }, { type: 'homework_session_closed', message: 'end_lesson' }];
+    const tr = [{ role: 'student', text: 'x = 30' }];
+    check('closed by the tutor with a part open → needs review', classifyHomeworkProblemOutcome({ debugEvents: closedEvents, transcript: tr, verified: true, key: KEY }) === 'needs_review');
+    check('closed with every part done → done', classifyHomeworkProblemOutcome({ debugEvents: [...closedEvents, { type: 'homework_problem_done', message: 'x' }], transcript: tr, verified: true, key: KEY }) === 'done');
+    check('not closed (v1, or a page left open) → in progress, as before', classifyHomeworkProblemOutcome({ debugEvents: closedEvents.slice(0, 1), transcript: tr, verified: true, key: KEY }) === 'in_progress');
+    check('the v2 client records the close of a homework session', /homework_session_closed/.test(turnsSrc));
+  }
   // The debug events a v2 session records (useV2Turns) for: a solved problem, and one wrong twice on (b).
   const ev = (part: string, verdict: 'correct' | 'incorrect') => ({ type: 'homework_keyed_verdict', message: formatKeyedVerdictDebug(part, verdict) });
   const solvedEvents = [ev('a', 'correct'), ev('b', 'correct'), { type: 'homework_problem_done', message: 'all key parts confirmed' }];

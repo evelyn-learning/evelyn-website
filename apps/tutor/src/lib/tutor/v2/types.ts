@@ -38,7 +38,7 @@ export interface V2Session {
 
 /** A homework sheet as the tutor may see it: each problem, whether it has a checked key, and its parts' labels. */
 export interface V2HomeworkSheet {
-  problems: Array<{ n: number; text: string; verified: boolean; parts?: string[] }>;
+  problems: Array<{ n: number; text: string; verified: boolean; parts?: string[]; expected?: string }>;
   noReveal?: boolean;
 }
 
@@ -53,8 +53,12 @@ export interface V2HomeworkProblem {
   priorNote?: string;
   /** Marks an earlier session of this problem confirmed (keyed-verdict.ts). */
   priorConfirmed?: string[];
-  /** The labels of the key's parts (never their answers), to say which are still open. */
+  /** The labels of the key's parts, to say which are still open. */
   parts?: string[];
+  /** The checked final answers, for the tutor to judge by and never to state (Praveen 2026-11-14: as v1 had them). */
+  expected?: string;
+  /** One checked route to them, step by step, when the key has one. */
+  solutionPath?: string[];
   /** The partner's no-reveal rule (no-reveal-ledger-gate.ts): a reply that states a final answer is not sent. */
   noReveal?: boolean;
 }
