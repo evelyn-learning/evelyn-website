@@ -32,6 +32,7 @@ import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, discussionOf, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -97,6 +98,21 @@ export function v2LevelLine(level: string): string {
 }
 
 export function v2SessionPart(session: V2Session): string {
+  const discussion = discussionOf(session.plan);
+  if (discussion && session.plan) {
+    return [
+      'THIS SESSION',
+      `Person: ${session.studentName?.trim() || 'name not given'}.`,
+      session.teacher?.name ? `You are ${session.teacher.name}${session.teacher.nameIsRole ? ' (a role, not a person\'s name)' : ''}: say so when you greet them.${session.teacher.style ? ` How you talk: ${session.teacher.style}` : ''}` : '',
+      // The teaching mode lines speak of mathematics and answers; a discussion has neither.
+      session.mode === 'voice'
+        ? 'This is a spoken conversation. Your words are read aloud, so write them the way you would say them: no symbols, no lists, no headings. Speech is slow to listen to: a reply of more than about fifty words is a long one. Their words reach you through a speech recogniser, which now and then mishears a word: when what you heard makes no sense where it stands, ask what they meant.'
+        : 'This is a typed conversation. They read your replies beside the board. Keep each reply short.',
+      session.timeBoxMinutes ? `The conversation is meant to last about ${session.timeBoxMinutes} minutes.` : '',
+      session.background?.length ? `What is known about this person:\n${session.background.map((l) => `  - ${l}`).join('\n')}` : '',
+      `\n${renderDiscussionMap(session.plan, discussion)}`,
+    ].filter(Boolean).join('\n');
+  }
   const lines = [
     'THIS SESSION',
     `Student: ${session.studentName?.trim() || 'name not given'}. Subject: ${session.subject}${session.topic ? ` (${session.topic})` : ''}. Level: ${session.level}.`,
@@ -116,8 +132,9 @@ export function v2SessionPart(session: V2Session): string {
 }
 
 /** What goes in the user turn in place of the student's words when they have not spoken. */
-export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean): string {
+export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean, discussion = false): string {
   if (studentSaid !== null) return studentSaid;
+  if (discussion && !resumed && state.history.length === 0) return DISCUSSION_OPENING;
   if (resumed) return '[The student\'s page was reloaded in the middle of the lesson and they have just come back. Welcome them back in one short sentence, say where the lesson stood, and carry on from there. What was on the board before is still on it.]';
   if (state.history.length === 0) return '[The session has just started. The student has joined and is waiting for you to begin the lesson. Greet them, then tell them what this lesson is about and what it will cover, and ask whether that sounds good. Keep all of it short: three sentences at most, the plan as two or three plain things and not a list of every step. If what is known about this student shows an earlier session, add one sentence on where that left off. Wait for their answer before teaching.]';
   return silenceSeconds ? '[The student has not replied.]' : '[The student sent nothing.]';
@@ -153,6 +170,21 @@ function storable(content: Anthropic.ContentBlock[]): Anthropic.ContentBlockPara
 
 function applyControlTool(state: V2State, session: V2Session, name: string, args: Record<string, unknown>, nowMs: number): string {
   if (name === 'keep_listening') return 'listening';
+  const discussion = discussionOf(session.plan);
+  if (name === 'record_thinking') return discussion ? recordThinking(state, args) : 'unknown tool record_thinking';
+  if (name === 'end_lesson' && discussion) {
+    // A discussion is done when the person has chosen where to go next, which may well be before the clock: the
+    // flow is 8–12 minutes in a box of up to 15. Until then, the clock-or-request rule below holds.
+    const left = session.timeBoxMinutes ? session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 : 0;
+    const direction = typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '';
+    if (args.because !== 'student_asked' && !direction && session.timeBoxMinutes && left > 1.5) {
+      return 'not ended: they have not chosen a direction yet. Say nothing of this message. Ask them, in a sentence of your own, what would be most valuable for them to explore further.';
+    }
+    state.closed = true;
+    state.closeSummary = typeof args.summary === 'string' ? args.summary.trim().slice(0, 600) : '';
+    if (direction) state.nextDirection = direction;
+    return 'the session is ending';
+  }
   if (name === 'update_session_note') {
     const note = typeof args.note === 'string' ? args.note.trim() : '';
     if (!note) return 'not saved: the note was empty';
@@ -208,7 +240,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   /** The first reply of the session: nothing has been said by either side. */
   const opening = !state.history.length && input.studentSaid === null;
-  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed);
+  const discussion = !!discussionOf(session.plan);
+  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, discussion);
   const facts = renderFacts(session, state, { ...input.facts, nowMs });
   // The student's words come first and carry the cache mark; the facts follow and are
   // never stored, so next turn's request shares this one's prefix up to the words.
@@ -217,10 +250,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     content: [{ type: 'text', text: studentText, cache_control: CACHE }, { type: 'text', text: facts }],
   };
   const system: Anthropic.TextBlockParam[] = [
-    { type: 'text', text: V2_CONSTITUTION, cache_control: CACHE },
+    { type: 'text', text: discussion ? V2_DISCUSSION_CONSTITUTION : V2_CONSTITUTION, cache_control: CACHE },
     { type: 'text', text: v2SessionPart(session), cache_control: CACHE },
   ];
-  const tools = v2Tools(session.subject, session.topic ?? '');
+  const tools = v2Tools(session.subject, session.topic ?? '', discussion);
   let messages: Anthropic.MessageParam[] = [...withCacheMark(state.history), userNow];
 
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];
@@ -548,7 +581,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     || (!paintedSoFar() && new Set(said.match(/\d+(?:\.\d+)?/g) ?? []).size >= 3)
     // The next part of a question set aloud with nothing written: "Now part (b): how did…" was asked under a card
     // that still showed part (a) (AP World History, embed-1794536181149).
-    || (!paintedSoFar() && NEXT_PART.test(said) && /\?/.test(said))) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
+    || (!paintedSoFar() && NEXT_PART.test(said) && /\?/.test(said))) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? !discussion)) {
     // The check has two halves. What was said and not written is added. What was written and should not have
     // been is withdrawn: a block that shows the step the reply asks the student to take (the board did the
     // differentiation the tutor had just asked for, embed-1794349966573). Board items wait for their sentence
@@ -715,7 +748,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // moment later turned a page the student was still reading and talked over their answer (AP Lit and AP Calc BC,
   // 2026-11-11: "give the student the chance to say yes, I get this"). The reply ends by handing over instead.
   if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !asksAnywhere(spoken.join(' ').split(/(?<=[.?!])\s+/))) {
-    const words = V2_CHECK_INS[state.history.length % V2_CHECK_INS.length];
+    const ins = discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS;
+    const words = ins[state.history.length % ins.length];
     input.onText?.(`\n\n${words}`);
     spoken.push(words);
     const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
@@ -728,7 +762,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (opening && !state.closed && spoken.length && !paintedSoFar()) {
     // Standards codes are for the plan's author, not the student: "(CCSS 8.G.B.6, 8.G.B.7)" was printed on the first card (demo check, 2026-11-13).
     const noCodes = (x: string) => x.replace(/\s*\((?:[^()]*\b(?:CCSS|NGSS|TEKS|HS-|MS-|[0-9]\.[A-Z]{1,3}\.[A-Z]?\.?\d)[^()]*)\)/g, '').trim();
-    const body = [session.plan?.title ?? session.topic ?? '', ...(session.plan?.los ?? []).slice(0, 3).map((lo) => noCodes(lo.description))].map((x) => String(x).trim()).filter(Boolean).join('\n');
+    // A discussion's objectives are written about the participant, for the tutor ("greater clarity about their own
+    // thinking"): its first card is the title and the one thing they need to know.
+    const body = (discussion ? [session.plan?.title ?? '', 'No right answers: your own thinking is the point.'] : [session.plan?.title ?? session.topic ?? '', ...(session.plan?.los ?? []).slice(0, 3).map((lo) => noCodes(lo.description))]).map((x) => String(x).trim()).filter(Boolean).join('\n');
     const b = body ? boardBlocksIn(`<board note style="highlight">${body}</board>`)[0] : undefined;
     if (b && settleInline(b, true)) {
       const holder = stored.find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));

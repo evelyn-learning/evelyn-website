@@ -38,7 +38,10 @@ function readState(raw: unknown): V2State | null {
   if (!s.board || !Array.isArray(s.board.pages) || typeof s.board.current !== 'number') return null;
   if (typeof s.startedAtMs !== 'number' || !Number.isFinite(s.startedAtMs)) return null;
   const gaps = Array.isArray(s.gaps) ? s.gaps.filter((g) => g && typeof g.what === 'string' && typeof g.status === 'string').slice(-12) : undefined;
-  return { history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}) };
+  const t = s.thinking as Partial<NonNullable<V2State['thinking']>> | undefined;
+  const strs = (x: unknown, n: number) => (Array.isArray(x) ? x.filter((v): v is string => typeof v === 'string').slice(-n) : []);
+  const thinking = t && typeof t === 'object' ? { position: typeof t.position === 'string' ? t.position.slice(0, 300) : '', weighed: strs(t.weighed, 12), shifts: strs(t.shifts, 6) } : undefined;
+  return { history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}) };
 }
 
 export async function POST(req: NextRequest) {

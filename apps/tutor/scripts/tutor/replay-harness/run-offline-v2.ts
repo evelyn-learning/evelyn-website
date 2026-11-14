@@ -90,7 +90,7 @@ async function main() {
 
   const bundle: RunBundle = { fixture: fixture.name, arm, startedAt: new Date(t0).toISOString(), minutes: (clockMs - t0) / 60000, turns, events, endedBy };
   const base = path.join(outDir, `${fixture.name}-${arm}-${runId}`);
-  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, note: state.note, goals: state.goals, board: state.board, closeSummary: state.closeSummary }, null, 2));
+  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, note: state.note, goals: state.goals, board: state.board, closeSummary: state.closeSummary, thinking: state.thinking, nextDirection: state.nextDirection }, null, 2));
   fs.writeFileSync(`${base}.log`, log.join('\n'));
   const card = scoreRun(bundle);
   fs.writeFileSync(`${base}.score.json`, JSON.stringify(card, null, 2));

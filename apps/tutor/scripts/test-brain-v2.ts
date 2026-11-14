@@ -17,6 +17,9 @@ import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/li
 import type Anthropic from '@anthropic-ai/sdk';
 import { SEED_AP_CALCBC_U4_LHOPITAL } from '../src/lib/tutor/lesson-plan/seeds/ap-calcbc-u4-lhopital';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, discussionOf } from '../src/lib/tutor/v2/discussion';
+import { PRIVATE_ECS_AI_LITERACY_CH2 } from '../src/lib/tutor/lesson-plan/private/ecs-ai-literacy-ch2';
+import { SEED_PLANS, getLessonPlan, isPrivatePlan } from '../src/lib/tutor/lesson-plan/store';
 import { renderPlanMap } from '../src/lib/tutor/v2/plan-map';
 import { v2Tools } from '../src/lib/tutor/v2/tools';
 import { runV2Turn, v2SessionPart, type V2ModelCall, V2_CHECK_INS } from '../src/lib/tutor/v2/turn';
@@ -707,6 +710,53 @@ async function main() {
   check('a figure written inside a problem goes up after it, and no closing tag is said (demo check 11-13)', boardBlocksIn(nested).map((b) => b.kind).join() === 'problem,figure' && nParts.filter((p) => 'block' in p).length === 2 && !nParts.some((p) => 'text' in p && /board/.test(p.text)) && !/board/.test(stripBoardBlocks(nested)), JSON.stringify(nParts).slice(0, 300));
   const crateDirs = (inlineToolCall(boardBlocksIn('<board forces object="the crate">Cable, first | toward the door | 150 N\nCable, third | away from the door | 400 N\nAir | up from the air | 2 N</board>')[0]).args as { forces: Array<{ direction: string }> }).forces.map((f) => f.direction).join();
   check('a force direction said in words is drawn that way: "away from the door" is the other way (demo check 11-13)', crateDirs === 'right,left,up', crateDirs);
+
+  console.log('discussion sessions');
+  {
+    const dPlan = PRIVATE_ECS_AI_LITERACY_CH2;
+    const dSession: V2Session = { studentName: 'Jo', subject: dPlan.subject, level: dPlan.grade, mode: 'voice', timeBoxMinutes: 12, plan: dPlan };
+    check('a discussion plan is read as one; a teaching plan is not', !!discussionOf(dPlan) && !discussionOf(SEED_AP_CALCBC_U4_LHOPITAL));
+    check('the private plan is found by id and is in no catalogue', (await getLessonPlan(dPlan.id)) === dPlan && !SEED_PLANS.some((p) => p.id === dPlan.id) && isPrivatePlan(dPlan.id) && !isPrivatePlan(SEED_AP_CALCBC_U4_LHOPITAL.id));
+    check('the discussion prompt shares the board section word for word', V2_DISCUSSION_CONSTITUTION.includes(V2_CONSTITUTION.slice(V2_CONSTITUTION.indexOf('# The board'), V2_CONSTITUTION.indexOf('# Your notes')).trim()));
+    check('the discussion prompt has no verdicts or gaps in it', !/track_gap|"not quite"|yes, that's right/.test(V2_DISCUSSION_CONSTITUTION));
+    const part = v2SessionPart(dSession);
+    check('the session part carries the cases as written and no answer key', part.includes('Kelly reads the suggestions carefully') && part.includes('Considerations to complicate') && !/Answers are for your checking/.test(part) && !/LESSON PLAN/.test(part));
+    const dTools = v2Tools(dSession.subject, dSession.topic ?? '', true).map((t) => t.name);
+    check('a discussion gets record_thinking and no gap tracker or figure tools', dTools.includes('record_thinking') && !dTools.includes('track_gap') && dTools.join() === 'keep_listening,update_session_note,set_goal_status,record_thinking,end_lesson', dTools.join());
+    check('a teaching session keeps its tools', !v2Tools('math').some((t) => t.name === 'record_thinking') && v2Tools('math').some((t) => t.name === 'track_gap'));
+
+    const open = stub([msg([{ type: 'text', text: 'Hi Jo. Today is about AI and student writing, and there are no right answers. What is your first reaction when a student uses AI on a draft?' }], 'end_turn')]);
+    const r0 = await runV2Turn({ session: dSession, state: newV2State(1_000_000), studentSaid: null, nowMs: 1_000_000, callModel: open.call });
+    const sys0 = (open.seen[0].system as Anthropic.TextBlockParam[]).map((b) => b.text).join('\n');
+    const user0 = JSON.stringify(open.seen[0].messages);
+    check('the opening uses the discussion prompt and the discussion opener', sys0.startsWith(V2_DISCUSSION_CONSTITUTION.slice(0, 60)) && user0.includes(DISCUSSION_OPENING.slice(1, 40)) && !sys0.includes(V2_CONSTITUTION.slice(0, 60)));
+    check('a discussion reply gets no board pass', r0.modelCalls === 1);
+
+    const think = stub([msg([
+      { type: 'text', text: 'So the line for you is who makes the decisions. What about a student who accepts every suggestion?' },
+      { type: 'tool_use', id: 'd1', name: 'record_thinking', input: { position: 'Fine if the student decides', weighed: ['student keeps control', 'voice'] } },
+      { type: 'tool_use', id: 'd2', name: 'record_thinking', input: { weighed: ['Student keeps control!', 'disclosure'], shift: 'from "fine" to "fine if they choose"' } },
+    ], 'tool_use'), msg([{ type: 'text', text: '' }], 'end_turn')]);
+    const r1 = await runV2Turn({ session: dSession, state: r0.state, studentSaid: 'Kelly is fine, she chose.', nowMs: 1_000_000 + 3 * 60000, callModel: think.call });
+    check('record_thinking keeps the position, adds what was weighed once, and keeps shifts', r1.state.thinking?.position === 'Fine if the student decides' && r1.state.thinking?.weighed.join('|') === 'student keeps control|voice|disclosure' && r1.state.thinking?.shifts.length === 1, JSON.stringify(r1.state.thinking));
+    const f1 = renderFacts(dSession, r1.state, { nowMs: 1_000_000 + 4 * 60000 });
+    check('the facts show their thinking and a discussion clock', /already raised or weighed.*disclosure/.test(f1) && /4 min used of about 12; about 8 left/.test(f1) && !/time for more/.test(f1), f1);
+
+    const early = stub([
+      msg([{ type: 'text', text: 'Thanks, Jo.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's' } }], 'tool_use'),
+      msg([{ type: 'text', text: 'What would be most valuable for you to explore next?' }], 'end_turn'),
+    ]);
+    const re = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'ok', nowMs: 1_000_000 + 6 * 60000, callModel: early.call });
+    check('a discussion cannot end early without a chosen direction', !re.state.closed && /not ended/.test(re.toolCalls[0].outcome));
+    const done = stub([msg([{ type: 'text', text: 'You are leaving with a question for your team. Thanks, Jo.' }, { type: 'tool_use', id: 'e2', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'a conversation with my grade team' } }], 'tool_use')]);
+    const rd = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'Talk to my grade team.', nowMs: 1_000_000 + 9 * 60000, callModel: done.call });
+    check('with a direction chosen it ends before the clock and keeps the direction', rd.state.closed && rd.state.nextDirection === 'a conversation with my grade team');
+
+    const flat = stub([msg([{ type: 'text', text: 'That is a careful way to put it.' }], 'end_turn')]);
+    const rf = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'It depends on the assignment.', nowMs: 1_000_000 + 5 * 60000, callModel: flat.call });
+    check('a spoken reply that asks nothing hands over with a discussion question', DISCUSSION_CHECK_INS.some((q) => rf.spoken.endsWith(q)) && !V2_CHECK_INS.some((q) => rf.spoken.endsWith(q)), rf.spoken);
+    check('the verdict-word scan catches praise and passes a plain acknowledgement', DISCUSSION_VERDICT_WORDS.test('Excellent point.') && DISCUSSION_VERDICT_WORDS.test("That's right, Jo.") && !DISCUSSION_VERDICT_WORDS.test('Tying it to what the student decides is a useful test.'));
+  }
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }

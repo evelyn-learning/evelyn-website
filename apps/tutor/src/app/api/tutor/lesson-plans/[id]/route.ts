@@ -4,12 +4,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteLessonPlan, getLessonPlan } from '@/lib/tutor/lesson-plan/store';
+import { deleteLessonPlan, getLessonPlan, isPrivatePlan } from '@/lib/tutor/lesson-plan/store';
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const plan = await getLessonPlan(id);
   if (!plan) return NextResponse.json({ error: 'not found' }, { status: 404 });
+  // Licensed source text (a partner's private plan) is read by the turn route on the server only. The browser
+  // needs the stages, for the progress report; it gets the plan without its material.
+  if (isPrivatePlan(id)) return NextResponse.json({ plan: { ...plan, source: undefined, metadata: { kind: (plan.metadata as { kind?: string } | undefined)?.kind } } });
   return NextResponse.json({ plan });
 }
 

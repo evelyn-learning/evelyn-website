@@ -7,6 +7,7 @@
 import { renderBoard } from './board';
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
+import { discussionOf, renderThinking } from './discussion';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
@@ -30,7 +31,11 @@ export interface V2TurnFacts {
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
   const usedMin = Math.max(0, Math.round((f.nowMs - state.startedAtMs) / 60000));
   const left = session.timeBoxMinutes ? session.timeBoxMinutes - (f.nowMs - state.startedAtMs) / 60000 : 0;
+  const discussion = !!discussionOf(session.plan);
   const lines = [
+    // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
+    // line's "time for more, not at its close" would hold it open.
+    discussion ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > 4 ? `about ${Math.round(left)} left` : left > 1.5 ? `about ${Math.round(left)} left: time to reflect and choose a direction` : 'the time is up'}` : ''}` :
     // What is left, said outright: with only "22 used of 30" the tutor said goodbye, was refused the close, and
     // took the goodbye back in the same breath (embed-1794593747478, embed-1794595194384).
     `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 1.5 ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
@@ -40,6 +45,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (state.boardProblems?.length) lines.push(`not painted in your last reply:\n${state.boardProblems.map((x) => `  - ${x}`).join('\n')}`);
   if (session.plan) lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
+  const thinking = discussion ? renderThinking(state.thinking) : '';
+  if (thinking) lines.push(thinking);
   if (state.gaps?.length) {
     const label: Record<string, string> = { found: 'found, not yet worked on', explained: 'explained to them, not yet done by them', done_with_help: 'they did one with help, not yet alone', done_alone: 'they did one alone' };
     lines.push(`gaps you have recorded:\n${state.gaps.map((g) => `  - ${g.what}: ${label[g.status] ?? g.status}`).join('\n')}`);

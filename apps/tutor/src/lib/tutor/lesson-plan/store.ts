@@ -12,6 +12,7 @@ import connectDB from '@core/db';
 import { LessonPlanModel, toLessonPlan } from '@/models/LessonPlan';
 import type { KeyCheck, LessonPlan } from './types';
 import { parseLessonPlan } from './parser';
+import { PRIVATE_PLANS } from './private/ecs-ai-literacy-ch2';
 
 import { SEED_G6_FRACTIONS_ADD_UNLIKE } from './seeds/g6-fractions-add-unlike';
 import { SEED_TEST_GAPS_FRACTIONS } from './seeds/test-gaps-fractions';
@@ -4695,9 +4696,14 @@ export const SEED_PLANS: LessonPlan[] = [
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
+/** Partner plans of licensed material, reachable by id only: never in SEED_PLANS, so never listed in a catalogue,
+ *  a picker or a practice lookup (lesson-plan/private/). */
+const privateById = new Map(PRIVATE_PLANS.map((p) => [p.id, p]));
+/** A private plan's licensed material stays on the server: the browser is served its stages only. */
+export function isPrivatePlan(id: string): boolean { return privateById.has(id); }
 
 export async function getLessonPlan(id: string): Promise<LessonPlan | null> {
-  const seed = seedById.get(id);
+  const seed = seedById.get(id) ?? privateById.get(id);
   if (seed) return seed;
   try {
     await connectDB();

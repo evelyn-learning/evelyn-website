@@ -52,6 +52,10 @@ export interface V2State {
   repliesSinceBoard?: number;
   /** Board blocks of the last reply that were not painted, and why. Shown once in the next turn's facts. */
   boardProblems?: string[];
+  /** Discussion sessions (discussion.ts): the person's position, what they have weighed, and how it has moved. */
+  thinking?: { position: string; weighed: string[]; shifts: string[] };
+  /** Discussion sessions: the direction the person chose to explore next, given with end_lesson. */
+  nextDirection?: string;
   startedAtMs: number;
   closed: boolean;
   closeSummary?: string;

@@ -92,6 +92,29 @@ export const V2_CONTROL_TOOLS: Anthropic.Tool[] = [
   },
 ];
 
+/** A discussion session (discussion.ts) has no gaps to track and no objectives to practise: it records the
+ *  person's thinking instead, and its end carries the direction they chose. */
+export const V2_DISCUSSION_CONTROL_TOOLS: Anthropic.Tool[] = [
+  ...V2_CONTROL_TOOLS.filter((t) => t.name === 'keep_listening' || t.name === 'update_session_note' || t.name === 'set_goal_status'),
+  {
+    name: 'record_thinking',
+    description: 'Record the person\'s thinking whenever it becomes clearer or moves. The record is shown back to you every turn.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        position: { type: 'string', description: 'Their position now, in one sentence close to their own words. Leave out if unchanged.' },
+        weighed: { type: 'array', items: { type: 'string' }, description: 'Considerations newly raised and dealt with, by them or by you, a few words each. Added to the list kept so far.' },
+        shift: { type: 'string', description: 'Only when they themselves changed or qualified their view (not when the conversation moved on): from what to what, in a few words.' },
+      },
+    },
+  },
+  {
+    name: 'end_lesson',
+    description: 'End the conversation. Call it in the same reply as your closing words.',
+    input_schema: { type: 'object', properties: { because: { type: 'string', enum: ['student_asked', 'time_nearly_used', 'conversation_complete'], description: 'Why it is ending: they asked, the time is nearly used, or they have chosen a direction to explore.' }, summary: { type: 'string', description: 'One or two sentences on where their thinking landed.' }, next_direction: { type: 'string', description: 'The direction they chose to explore further, in their words; "not sure yet" when they said so.' } }, required: ['because', 'summary'] },
+  },
+];
+
 export { V2_CONTROL_TOOL_NAMES } from './tool-names';
 
 export function v2BoardToolNames(subject: string, topic = ''): string[] {
@@ -107,7 +130,8 @@ export const SAY_WITH = 'say_with';
 const SAY_WITH_SCHEMA = { type: 'string', description: 'Spoken lessons: the first few words, copied exactly, of the sentence in this reply that this belongs with. It appears on the board as you begin saying that sentence. Leave it out and it appears as you start speaking.' };
 
 /** The tools for a session, in a stable order (the list is part of the cached prefix). */
-export function v2Tools(subject: string, topic = ''): Anthropic.Tool[] {
+export function v2Tools(subject: string, topic = '', discussion = false): Anthropic.Tool[] {
+  if (discussion) return V2_DISCUSSION_CONTROL_TOOLS;
   const byName = new Map((WHITEBOARD_TOOLS as Array<{ name: string; parameters: unknown }>).map((t) => [t.name, t]));
   const board: Anthropic.Tool[] = [];
   for (const name of v2BoardToolNames(subject, topic)) {
