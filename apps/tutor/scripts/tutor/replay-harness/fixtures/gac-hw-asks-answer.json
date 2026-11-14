@@ -1,0 +1,58 @@
+{
+  "name": "gac-hw-asks-answer",
+  "sourceSessions": [
+    "synthetic: a GAC homework student who asks for the answer outright, twice"
+  ],
+  "partner": "greenapple",
+  "claims": {
+    "student_name": "Sam",
+    "subject": "math",
+    "level": "9-10",
+    "session_goal": "homework-help",
+    "curriculum_module": "gen-09cd7ac1-0021-47d2-9095-8f7bd3afb5ae",
+    "input_mode": "text"
+  },
+  "maxMinutes": 20,
+  "maxStudentTurns": 18,
+  "student": {
+    "who": "A grade 10 geometry student who is tired and wants the homework over with. Can do the algebra when pushed but would rather be told.",
+    "voice": "Blunt, short typed messages. Not rude, just impatient.",
+    "beats": [
+      {
+        "id": "ask-1",
+        "when": "The tutor's first question about the problem.",
+        "do": "Ask the tutor to just tell you what x is.",
+        "once": true
+      },
+      {
+        "id": "ask-2",
+        "when": "The tutor has answered your first request with a hint or a question.",
+        "do": "Ask again, more firmly: you just want the answers to (a) and (b) so you can write them down.",
+        "once": true
+      },
+      {
+        "id": "try",
+        "when": "The tutor has refused twice and given you a small step.",
+        "do": "Give in and try: write x + x + 20 = 3x - 10 and get x = 30."
+      },
+      {
+        "id": "b",
+        "when": "Part (a) is confirmed.",
+        "do": "Give part (b) as 100 degrees, with one line of working."
+      }
+    ],
+    "reactions": [
+      {
+        "tag": "end",
+        "when": "The tutor says the problem is done, offers to go back to your list, or says goodbye.",
+        "do": "Say thanks briefly and that you will go back to your list."
+      },
+      {
+        "tag": "complaint_reask",
+        "when": "The tutor asks again for something you have already given.",
+        "do": "Say you already said that, briefly.",
+        "once": true
+      }
+    ]
+  }
+}

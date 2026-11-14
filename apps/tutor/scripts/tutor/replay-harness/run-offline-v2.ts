@@ -90,7 +90,12 @@ async function main() {
 
   const bundle: RunBundle = { fixture: fixture.name, arm, startedAt: new Date(t0).toISOString(), minutes: (clockMs - t0) / 60000, turns, events, endedBy };
   const base = path.join(outDir, `${fixture.name}-${arm}-${runId}`);
-  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, note: state.note, goals: state.goals, board: state.board, closeSummary: state.closeSummary }, null, 2));
+  // A homework-problem plan (GAC): the outcome the academy would read, and any key value the tutor stated.
+  const homework = fixture.claims.session_goal === 'homework-help' && planId
+    ? await (await import('./homework-outcome')).homeworkRunOutcome(planId, turns, events).catch((e) => { say(`homework outcome failed: ${(e as Error).message.slice(0, 120)}`); return null; })
+    : null;
+  if (homework) say(`homework outcome=${homework.outcome} reveals=${homework.reveals.length}`);
+  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, ...(homework ? { homework } : {}), note: state.note, goals: state.goals, board: state.board, closeSummary: state.closeSummary }, null, 2));
   fs.writeFileSync(`${base}.log`, log.join('\n'));
   const card = scoreRun(bundle);
   fs.writeFileSync(`${base}.score.json`, JSON.stringify(card, null, 2));

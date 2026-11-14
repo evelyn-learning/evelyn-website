@@ -41,7 +41,9 @@ const studentId = `replay-${fixture.name}-${runId}`;
 // ── env (repo-root .env.local; values are never printed) ──
 const envText = fs.readFileSync(path.resolve(process.cwd(), '../../.env.local'), 'utf8');
 const envVal = (k: string) => { const m = envText.match(new RegExp(`^${k}=(.*)$`, 'm')); return m ? m[1].trim().replace(/^(['"])(.*)\1$/, '$2') : ''; };
-const secret = (JSON.parse(envVal('PORTAL_PARTNER_SECRETS') || '{}') as Record<string, string>)[fixture.partner];
+// REPLAY_PARTNER_SECRET: a partner whose secret is not in PORTAL_PARTNER_SECRETS (greenapple: its academy env's
+// ENGINE_EMBED_JWT_SECRET), passed for the run only and never written down.
+const secret = process.env.REPLAY_PARTNER_SECRET || (JSON.parse(envVal('PORTAL_PARTNER_SECRETS') || '{}') as Record<string, string>)[fixture.partner];
 if (!secret) { console.error(`no secret for partner ${fixture.partner} in PORTAL_PARTNER_SECRETS`); process.exit(1); }
 const mongoUri = envVal('MONGODB_URI');
 
@@ -231,7 +233,13 @@ async function main() {
 
   const bundle: RunBundle = { fixture: fixture.name, arm, sessionId, startedAt: new Date(t0).toISOString(), minutes, turns, events, estimatedCost, endedBy };
   const base = path.join(outDir, `${fixture.name}-${arm}-${runId}`);
-  fs.writeFileSync(`${base}.json`, JSON.stringify(bundle, null, 2));
+  // A homework-problem plan (GAC): the outcome the academy would read, and any key value the tutor stated.
+  if (!process.env.MONGODB_URI) process.env.MONGODB_URI = mongoUri;
+  const homework = payload.session_goal === 'homework-help' && payload.curriculum_module
+    ? await (await import('./homework-outcome')).homeworkRunOutcome(String(payload.curriculum_module), turns, events).catch((e) => { say(`homework outcome failed: ${(e as Error).message.slice(0, 120)}`); return null; })
+    : null;
+  if (homework) say(`homework outcome=${homework.outcome} reveals=${homework.reveals.length}`);
+  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, ...(homework ? { homework } : {}) }, null, 2));
   fs.writeFileSync(`${base}.log`, log.join('\n'));
   const card = scoreRun(bundle);
   fs.writeFileSync(`${base}.score.json`, JSON.stringify(card, null, 2));

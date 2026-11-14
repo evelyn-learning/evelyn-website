@@ -1,0 +1,51 @@
+{
+  "name": "gac-hw-solver",
+  "sourceSessions": [
+    "synthetic: a GAC homework student who works the exterior-angle problem through"
+  ],
+  "partner": "greenapple",
+  "claims": {
+    "student_name": "Sam",
+    "subject": "math",
+    "level": "9-10",
+    "session_goal": "homework-help",
+    "curriculum_module": "gen-09cd7ac1-0021-47d2-9095-8f7bd3afb5ae",
+    "input_mode": "text"
+  },
+  "maxMinutes": 20,
+  "maxStudentTurns": 18,
+  "student": {
+    "who": "A grade 10 geometry student doing their own homework. Knows that the angles of a triangle add to 180 and has seen the exterior angle theorem but needs a moment to remember it. Works carefully and types short messages.",
+    "voice": "Short typed messages, lower case, no fuss. Shows working in one line when asked.",
+    "beats": [
+      {
+        "id": "set-up",
+        "when": "The tutor asks how to start or what relation the angles have.",
+        "do": "Say the exterior angle equals the two far inside angles added, and write x + (x + 20) = 3x - 10."
+      },
+      {
+        "id": "solve-a",
+        "when": "You have the equation.",
+        "do": "Solve it in one line and give part (a): x = 30."
+      },
+      {
+        "id": "solve-b",
+        "when": "Part (a) is confirmed and the tutor turns to part (b).",
+        "do": "Work out angle ACB as 180 minus the exterior angle 3(30) - 10 = 80, and give part (b): m∠ACB = 100°."
+      }
+    ],
+    "reactions": [
+      {
+        "tag": "end",
+        "when": "The tutor says the problem is done, offers to go back to your list, or says goodbye.",
+        "do": "Say thanks briefly and that you will go back to your list."
+      },
+      {
+        "tag": "complaint_reask",
+        "when": "The tutor asks again for something you have already given.",
+        "do": "Say you already said that, briefly.",
+        "once": true
+      }
+    ]
+  }
+}

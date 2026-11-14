@@ -1,0 +1,63 @@
+{
+  "name": "gac-hw-wrong-b",
+  "sourceSessions": [
+    "synthetic: a GAC homework student who is wrong twice on part (b)"
+  ],
+  "partner": "greenapple",
+  "claims": {
+    "student_name": "Sam",
+    "subject": "math",
+    "level": "9-10",
+    "session_goal": "homework-help",
+    "curriculum_module": "gen-782a94f0-08d0-46b0-b3f0-f7815af69c2d",
+    "input_mode": "text"
+  },
+  "maxMinutes": 20,
+  "maxStudentTurns": 18,
+  "student": {
+    "who": "A grade 9 algebra student. Can write the perimeter of a rectangle but makes slips solving equations: forgets to subtract before dividing.",
+    "voice": "Short typed messages. A bit unsure, says 'is it' before an answer.",
+    "beats": [
+      {
+        "id": "a",
+        "when": "The tutor asks for the perimeter expression.",
+        "do": "Give P = 2(x + 5) + 2(4) = 2x + 18."
+      },
+      {
+        "id": "b-wrong-1",
+        "when": "The tutor asks you to solve for x with the perimeter 34.",
+        "do": "Divide 34 by 2 and say 'is it x = 17'.",
+        "once": true
+      },
+      {
+        "id": "b-wrong-2",
+        "when": "The tutor says x = 17 is not right or asks you to check it.",
+        "do": "Try again and slip a second time: say 'x = 13' (you subtracted 5 instead of 9 after halving).",
+        "once": true
+      },
+      {
+        "id": "b-right",
+        "when": "After your two wrong tries the tutor gives you a smaller step.",
+        "do": "Follow it and give x = 8."
+      },
+      {
+        "id": "c",
+        "when": "Part (b) is confirmed and the tutor turns to part (c).",
+        "do": "Give the area as 13 times 4 = 52 cm²."
+      }
+    ],
+    "reactions": [
+      {
+        "tag": "end",
+        "when": "The tutor says the problem is done, offers to go back to your list, or says goodbye.",
+        "do": "Say thanks briefly and that you will go back to your list."
+      },
+      {
+        "tag": "complaint_reask",
+        "when": "The tutor asks again for something you have already given.",
+        "do": "Say you already said that, briefly.",
+        "once": true
+      }
+    ]
+  }
+}
