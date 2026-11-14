@@ -65,6 +65,8 @@ export interface V2HomeworkState {
   confirmed: string[];
   /** Every part of the problem is confirmed correct. */
   done?: boolean;
+  /** The history length when the problem was completed: the reply of that turn does not end the session. */
+  doneAt?: number;
   /** Whole-sheet homework: the problem in play, the history index its messages start at, the problems solved
    *  (by number) and the marks confirmed on each. */
   sheet?: { current: number; since: number; solved: number[]; confirmed: Record<string, string[]> };

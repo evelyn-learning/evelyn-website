@@ -47,7 +47,8 @@ export async function runV2HomeworkTurn(input: V2TurnInput & { resolved: V2Homew
   const hc = await v2HomeworkCheck({ key: resolved.key, problem: hw, state: turn.state, studentSaid: turn.studentSaid, ...(proseMatch ? { proseMatch } : {}) });
   const frames: V2HomeworkFrameOut[] = [...hc.verdicts.map((v) => ({ type: 'homework-keyed-verdict' as const, ...v })), ...(hc.justDone ? [{ type: 'homework-problem-done' as const }] : [])];
   for (const f of frames) onHomeworkFrame?.(f);
-  const state: V2State = { ...turn.state, homework: { confirmed: hc.confirmed, ...(hc.done ? { done: true } : {}) } };
+  const doneAt = hc.justDone ? turn.state.history.length : turn.state.homework?.doneAt;
+  const state: V2State = { ...turn.state, homework: { confirmed: hc.confirmed, ...(hc.done ? { done: true } : {}), ...(doneAt !== undefined ? { doneAt } : {}) } };
   const facts = { ...(turn.facts ?? {}), ...(hc.answerCheck ? { answerCheck: hc.answerCheck } : {}) };
 
   const studentText = [...studentMessagesOf(turn.state.history).map((m) => m.content), turn.studentSaid ?? ''].join('\n');

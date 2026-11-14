@@ -202,7 +202,8 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     // twice closed the lesson by itself after the last planned problem (embed-1794336536781, -1794339843244).
     const left = session.timeBoxMinutes ? session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 : 0;
     // Homework: the session is for one problem, and a solved one ends it (homework.ts).
-    const homeworkDone = (!!session.homework && state.homework?.done === true)
+    // Not in the reply that completes it: the student may still ask why (GAC validation on v2, Geometry).
+    const homeworkDone = (!!session.homework && state.homework?.done === true && state.history.length > (state.homework.doneAt ?? -1))
       || (!!session.homeworkSheet && session.homeworkSheet.problems.every((p) => state.homework?.sheet?.solved.includes(p.n)));
     if (args.because !== 'student_asked' && !homeworkDone && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says

@@ -160,6 +160,18 @@ async function main() {
   const rNot = await runV2Turn({ session: hwSession, state: said(newV2State(1_000_000), 'x'), studentSaid: 'hm', callModel: e2.call, nowMs: 1_000_000 + 4 * 60000, boardPass: false });
   check('…but not an unfinished one', !rNot.state.closed);
 
+  // GAC validation re-run on v2 (Geometry, 2026-11-14): the reply that confirmed the last part also ended the
+  // session, so the student could not ask why. The turn that completes the problem leaves them room to.
+  {
+    const e3 = stub([msg([{ type: 'text', text: 'Both parts are right, so the problem is done.' }, { type: 'tool_use', id: 't1', name: 'end_lesson', input: { summary: 'done', because: 'lesson_complete' } }], 'tool_use'), msg([{ type: 'text', text: 'Any question about it before you go back to your list?' }], 'end_turn')]);
+    const r3 = await runV2HomeworkTurn({ session: base, resolved: { problem: hwSession.homework!, key: KEY, turn: hpTurn() }, state: { ...said(newV2State(1_000_000), '[start]'), homework: { confirmed: ['part:a'] } }, studentSaid: '(b) m∠ACB = 100', callModel: e3.call, nowMs: 1_000_000 + 4 * 60000, boardPass: false });
+    check('the reply that completes the problem does not also end the session', !r3.state.closed && r3.state.homework?.done === true, r3.toolCalls.map((t) => t.outcome));
+    const e4 = stub([msg([{ type: 'text', text: 'Great, see you.' }, { type: 'tool_use', id: 't2', name: 'end_lesson', input: { summary: 'done', because: 'lesson_complete' } }], 'tool_use')]);
+    const r4 = await runV2HomeworkTurn({ session: base, resolved: { problem: hwSession.homework!, key: KEY, turn: hpTurn() }, state: r3.state, studentSaid: 'no, all good', callModel: e4.call, nowMs: 1_000_000 + 5 * 60000, boardPass: false });
+    check('…the next one may', r4.state.closed);
+    check('the homework part says to ask for questions before the list', /ask whether they have a question about it/i.test(v2SessionPart(hwSession)));
+  }
+
   console.log('frames and debug events (design 3)');
   const frames = [{ type: 'homework-keyed-verdict', part: 'b', verdict: 'correct' }, { type: 'homework-problem-done' }, { type: 'text', delta: 'Done.' }, { type: 'done', spoken: 'Done.', state: newV2State(0), usage: {}, firstTextMs: 1, totalMs: 2 }];
   const body = frames.map((f) => `data: ${JSON.stringify(f)}\n\n`).join('');

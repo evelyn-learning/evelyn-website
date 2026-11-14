@@ -59,7 +59,7 @@ export function v2HomeworkPart(hw: V2HomeworkProblem): string {
       ? '- Each answer the student gives is checked against the sheet\'s checked answer key, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. Call a part done only when the homework record in the facts lists it as confirmed. Never mention the record, the check or the key to the student: they are yours to read. When you are sure an answer to a part is right and the record does not list it, ask once for that part\'s final answer on its own, then go on with what is left.'
       : `- ${HOMEWORK_PROBLEM_UNVERIFIED}`,
     '- Labels and values are the ones on the student\'s sheet, as written in the problem above.',
-    '- The session is for this one problem. When the homework record says every part is confirmed correct, say in a sentence that the problem is done, tell them they can go back to their list, and call end_lesson.',
+    '- The session is for this one problem. When the homework record says every part is confirmed correct, say in a sentence that the problem is done, and ask whether they have a question about it before they go back to their list. When they have none, or say they are finished, call end_lesson.',
     HOMEWORK_PROBLEM_CONDUCT_RULES.trimEnd(),
   ].filter(Boolean).join('\n');
 }
@@ -91,7 +91,7 @@ export function readHomeworkState(raw: unknown): V2HomeworkState | undefined {
   const h = raw as Partial<V2HomeworkState> | null | undefined;
   if (!h || typeof h !== 'object') return undefined;
   const sheet = readSheetRecord(h.sheet);
-  return { confirmed: sanitizeConfirmedMarks(h.confirmed), ...(h.done === true ? { done: true } : {}), ...(sheet ? { sheet } : {}) };
+  return { confirmed: sanitizeConfirmedMarks(h.confirmed), ...(h.done === true ? { done: true } : {}), ...(Number.isInteger(h.doneAt) && (h.doneAt as number) >= 0 ? { doneAt: h.doneAt } : {}), ...(sheet ? { sheet } : {}) };
 }
 
 /** A homework verdict as the browser records it (useV2Turns → `homework_keyed_verdict`, the outcome route's input). */
@@ -230,7 +230,7 @@ export function v2SheetPart(sheet: V2HomeworkSheet): string {
     `- ${V2_HOMEWORK_NO_REVEAL}`,
     '- They may work the problems in any order, and may skip one. Before you work a problem, call set_current_problem with its number: the answer check and the homework record in the facts follow the problem in play.',
     '- Each answer to a problem with a checked key is checked against it, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. Never mention the record, the check or the key to the student: they are yours to read. When you are sure an answer is right and the record does not list it, ask once for that part\'s final answer on its own, then go on. A problem without a checked key is never called right or wrong: work it through with them, name any slip in their working, and ask them to check the final result with their teacher.',
-    '- When the record says a problem is done, say so and offer the next open one. When every problem is done, say the sheet is done and call end_lesson.',
+    '- When the record says a problem is done, say so and offer the next open one. When every problem is done, say the sheet is done and ask whether they have a question about it; when they have none, or say they are finished, call end_lesson.',
     '- Labels and values are the ones on the student\'s sheet, as written above.',
     HOMEWORK_PROBLEM_CONDUCT_RULES.trimEnd(),
   ].join('\n');
