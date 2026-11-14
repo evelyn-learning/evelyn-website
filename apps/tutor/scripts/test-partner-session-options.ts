@@ -67,22 +67,22 @@ test('NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS overrides both; junk is ignored'
 });
 
 test('engine defaults: no prefetch and auto-end on for an English-only session', () => {
-  assert.deepEqual(defaultPartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
-  assert.deepEqual(defaultPartnerSessionOptions(['en']), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
-  assert.deepEqual(defaultPartnerSessionOptions(['en', 'ja']), { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
+  assert.deepEqual(defaultPartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false });
+  assert.deepEqual(defaultPartnerSessionOptions(['en']), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false });
+  assert.deepEqual(defaultPartnerSessionOptions(['en', 'ja']), { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false });
 });
 
 test('no partner id (retail, showcase without a token) resolves to the engine defaults', () => {
-  assert.deepEqual(resolvePartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
-  assert.deepEqual(resolvePartnerSessionOptions(null), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
-  assert.deepEqual(resolvePartnerSessionOptions({}), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
+  assert.deepEqual(resolvePartnerSessionOptions(undefined), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false });
+  assert.deepEqual(resolvePartnerSessionOptions(null), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false });
+  assert.deepEqual(resolvePartnerSessionOptions({}), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false });
   assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '', tutorLanguages: ['en', 'ja'] }),
-    { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false }, 'a bilingual session with no partner row prefetches');
+    { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false }, 'a bilingual session with no partner row prefetches');
 });
 
 test('an unlisted English-only partner (test tenants, a future partner) gets no prefetch and auto-end on', () => {
   for (const partnerId of ['trial', 'portalA', 'lmtest', 'revtest', 'some-future-partner']) {
-    assert.deepEqual(resolvePartnerSessionOptions({ partnerId }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false }, partnerId);
+    assert.deepEqual(resolvePartnerSessionOptions({ partnerId }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false }, partnerId);
   }
 });
 
@@ -151,8 +151,8 @@ test('the embed page hands the partner default to the claim resolver', () => {
 });
 
 test('prototype keys are not partner rows', () => {
-  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: 'constructor' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
-  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '__proto__' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false });
+  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: 'constructor' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false });
+  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '__proto__' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false });
 });
 
 console.log('\nWiring pins (source)');
@@ -196,3 +196,11 @@ test('the retail /tutor surfaces pass neither prop, so they get the engine defau
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
+
+test('GAC on tutor v2 (Praveen 2026-11-13): greenapple runs v2, homework included; homework stays on v1 for every other partner', () => {
+  assert.equal(resolvePartnerSessionOptions({ partnerId: 'greenapple' }).brainVersion, 'v2');
+  assert.equal(resolvePartnerSessionOptions({ partnerId: 'greenapple' }).homeworkOnV2, true);
+  for (const partnerId of [...Object.keys(PARTNER_SESSION_DEFAULTS).filter((p) => p !== 'greenapple'), 'some-future-partner']) {
+    assert.equal(resolvePartnerSessionOptions({ partnerId }).homeworkOnV2, false, `${partnerId}: its homework stays where it is`);
+  }
+});

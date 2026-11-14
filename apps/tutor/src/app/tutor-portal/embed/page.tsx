@@ -2553,7 +2553,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         tutorLanguages={tutorLanguages}
         openerPrefetch={sessionOptions.openerPrefetch}
-        brainVersion={(sessionOptions.brainVersion === 'v2' || (TUTOR_BRAIN_V2_CLAIM && config.brain_version === 'v2')) && v2CanRunSession({ sessionGoal, targetKind: config.target_kind, tutorLanguages, standby: !!uiOptions.videoControl }) ? 'v2' : 'v1'}
+        brainVersion={(sessionOptions.brainVersion === 'v2' || (TUTOR_BRAIN_V2_CLAIM && config.brain_version === 'v2')) && v2CanRunSession({ sessionGoal, targetKind: config.target_kind, tutorLanguages, standby: !!uiOptions.videoControl, homeworkOnV2: sessionOptions.homeworkOnV2 }) ? 'v2' : 'v1'}
         lessonCloseAutoEnd={sessionOptions.lessonCloseAutoEnd}
         levelCheck={sessionOptions.levelCheck}
         pronunciation={sessionOptions.pronunciation}

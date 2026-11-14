@@ -54,6 +54,10 @@ export interface PartnerSessionOptions {
    *  no model call and no session time. Speech is paid per character, for
    *  every viewer of the lesson, so it is off unless the partner asked. */
   questionRead: boolean;
+  /** Homework sessions (one problem, or the whole sheet) run on tutor v2's homework mode (v2/homework.ts) when
+   *  the partner is on v2. Off: they stay on v1 whatever the partner's brainVersion, so a partner's homework
+   *  moves only when it is asked to (GAC 2026-11-13; Crimsora, evelyntutor and the demo keep theirs on v1). */
+  homeworkOnV2: boolean;
 }
 
 /** Partner rows — applied when present. A partner absent from this table
@@ -78,7 +82,9 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   'evelyn-marketing': { openerPrefetch: false, brainVersion: 'v2' },
   evelyntutor: { openerPrefetch: false, brainVersion: 'v2' },
   kanzoo: { openerPrefetch: false },
-  greenapple: { openerPrefetch: false },
+  // Praveen 2026-11-13: GAC moves to tutor v2 at once, homework included (docs/superpowers/plans/2026-11-13-gac-on-v2-plan.md).
+  // Rollback: drop brainVersion here, or NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS=greenapple=v1 in the GAC build env.
+  greenapple: { openerPrefetch: false, brainVersion: 'v2', homeworkOnV2: true },
   // Skyler 2026-11-02: the chime distracts in their video lessons and the
   // label sits half under their chat box. Cue off; their ack fillers return.
   // Naresh 2026-11-13: the tutor reads each quiz question as it appears and
@@ -105,8 +111,11 @@ const BRAIN_VERSION_BY_PARTNER = brainVersionOverrides(process.env.NEXT_PUBLIC_T
  *  taken over: homework help and mock review (their own flows, uploads and ledgers), a diagnostic, a lesson
  *  taught in or alongside another language, and a session that stands by for a host's video. Those fall back
  *  instead of being taught as an ordinary lesson. */
-export function v2CanRunSession(s: { sessionGoal?: string | null; targetKind?: string | null; tutorLanguages?: string[]; standby?: boolean }): boolean {
-  if (s.sessionGoal === 'homework-help' || s.sessionGoal === 'mock-review') return false;
+export function v2CanRunSession(s: { sessionGoal?: string | null; targetKind?: string | null; tutorLanguages?: string[]; standby?: boolean; homeworkOnV2?: boolean }): boolean {
+  // Homework: v2's homework mode is switched on by the plan on the server (v2/homework.ts), so a homework plan
+  // that reaches v2 always runs in it; which partners' homework goes there is the partner row's call.
+  if (s.sessionGoal === 'homework-help' && !s.homeworkOnV2) return false;
+  if (s.sessionGoal === 'mock-review') return false;
   if (s.targetKind === 'diagnostic') return false;
   if ((s.tutorLanguages ?? []).some((l) => !/^en\b/i.test(l))) return false;
   if (s.standby) return false;
@@ -127,6 +136,7 @@ export function defaultPartnerSessionOptions(tutorLanguages: string[] | undefine
     thinkingCue: true,
     brainVersion: 'v1',
     questionRead: false,
+    homeworkOnV2: false,
   };
 }
 
@@ -142,5 +152,6 @@ export function resolvePartnerSessionOptions(session: PartnerSessionLike | null 
     thinkingCue: row?.thinkingCue ?? base.thinkingCue,
     brainVersion: (Object.hasOwn(BRAIN_VERSION_BY_PARTNER, partnerId) ? BRAIN_VERSION_BY_PARTNER[partnerId] : undefined) ?? row?.brainVersion ?? base.brainVersion,
     questionRead: row?.questionRead ?? base.questionRead,
+    homeworkOnV2: row?.homeworkOnV2 ?? base.homeworkOnV2,
   };
 }
