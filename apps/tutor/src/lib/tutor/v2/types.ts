@@ -61,6 +61,8 @@ export interface V2State {
     complications?: number;
     /** The time they said they have, in minutes, when they said so. The clock runs to it. */
     theirMinutes?: number;
+    /** The tutor's last reply brought in a complication (cleared each turn): never two in a row. */
+    justComplicated?: boolean;
     /** The direction they named, once they have. */
     direction?: string;
   };

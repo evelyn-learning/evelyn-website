@@ -32,7 +32,7 @@ import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -178,6 +178,11 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     const box = effectiveMinutes(session.timeBoxMinutes, state.thinking);
     const left = box ? box - (nowMs - state.startedAtMs) / 60000 : 0;
     const direction = (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
+    // The direction is theirs to name: a direction the tutor wrote itself closed the live test without the
+    // question ever being asked (embed-1794694217385). Until it has been asked, only their request or the clock ends it.
+    if (args.because !== 'student_asked' && box && left > 1.5 && !directionAsked(state.history)) {
+      return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now, in a sentence of your own, and close after they answer.';
+    }
     if (args.because !== 'student_asked' && !direction && box && left > 1.5) {
       return 'not ended: they have not chosen a direction yet. Say nothing of this message. Ask them, in a sentence of your own, what would be most valuable for them to explore further.';
     }
@@ -244,6 +249,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const discussion = !!discussionOf(session.plan);
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, discussion);
   const facts = renderFacts(session, state, { ...input.facts, nowMs });
+  // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
+  if (state.thinking?.justComplicated) state.thinking = { ...state.thinking, justComplicated: false };
   // The student's words come first and carry the cache mark; the facts follow and are
   // never stored, so next turn's request shares this one's prefix up to the words.
   const userNow: Anthropic.MessageParam = {

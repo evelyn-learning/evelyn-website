@@ -50,7 +50,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);
-  const lastNotes = discussion ? lastReplyNotes(state.history) : [];
+  const lastNotes = discussion ? lastReplyNotes(state.history, session.mode === 'voice') : [];
   if (lastNotes.length) lines.push(`your last reply: ${lastNotes.join('; ')}`);
   if (state.gaps?.length) {
     const label: Record<string, string> = { found: 'found, not yet worked on', explained: 'explained to them, not yet done by them', done_with_help: 'they did one with help, not yet alone', done_alone: 'they did one alone' };

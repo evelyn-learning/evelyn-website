@@ -748,8 +748,15 @@ async function main() {
     ]);
     const re = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'ok', nowMs: 1_000_000 + 6 * 60000, callModel: early.call });
     check('a discussion cannot end early without a chosen direction', !re.state.closed && /not ended/.test(re.toolCalls[0].outcome));
+    const unasked = stub([
+      msg([{ type: 'text', text: 'Thanks, Jo.' }, { type: 'tool_use', id: 'e5', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'showing steps' } }], 'tool_use'),
+      msg([{ type: 'text', text: 'What would you most like to explore next?' }], 'end_turn'),
+    ]);
+    const ru = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'Worth trying, I guess.', nowMs: 1_000_000 + 7 * 60000, callModel: unasked.call });
+    check('a discussion cannot close on a direction it wrote itself, before asking them', !ru.state.closed && /not asked them yet/.test(ru.toolCalls[0].outcome), ru.toolCalls[0]?.outcome);
+    const asked = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'What would be most valuable for you to explore next?' }] }] };
     const done = stub([msg([{ type: 'text', text: 'You are leaving with a question for your team. Thanks, Jo.' }, { type: 'tool_use', id: 'e2', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'a conversation with my grade team' } }], 'tool_use')]);
-    const rd = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'Talk to my grade team.', nowMs: 1_000_000 + 9 * 60000, callModel: done.call });
+    const rd = await runV2Turn({ session: dSession, state: asked, studentSaid: 'Talk to my grade team.', nowMs: 1_000_000 + 9 * 60000, callModel: done.call });
     check('with a direction chosen it ends before the clock and keeps the direction', rd.state.closed && rd.state.nextDirection === 'a conversation with my grade team');
 
     const mute = stub([
@@ -769,18 +776,22 @@ async function main() {
     const rb = await runV2Turn({ session: dSession, state: { ...r1.state, thinking: { ...r1.state.thinking!, direction: undefined } }, studentSaid: 'I have about eight minutes.', nowMs: 1_000_000 + 60000, callModel: box.call });
     const fb = renderFacts(dSession, rb.state, { nowMs: 1_000_000 + 5 * 60000 });
     check('a stated time becomes the clock, and their example and the complication count reach the facts', /of about 8 \(the time they said they have\); about 3 left: time to reflect/.test(fb) && /their own student or experience: a grade 7 boy/.test(fb) && /complications you have brought in: 1/.test(fb), fb);
-    const named = { ...rb.state, thinking: { ...rb.state.thinking!, direction: 'parents', complications: 3 } };
+    const named = { ...rb.state, history: [...rb.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Where would you like to take this next?' }] }], thinking: { ...rb.state.thinking!, direction: 'parents', complications: 3 } };
     const fn = renderFacts(dSession, named, { nowMs: 1_000_000 + 5 * 60000 });
     check('a named direction is shown as not to be asked again; three complications are enough', /direction they chose: parents \(named; don't ask for it again\)/.test(fn) && /that is enough/.test(fn), fn);
     const endNamed = stub([msg([{ type: 'text', text: 'Bye, Jo.' }, { type: 'tool_use', id: 'e3', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's' } }], 'tool_use')]);
     const ren = await runV2Turn({ session: dSession, state: named, studentSaid: 'Parents, then.', nowMs: 1_000_000 + 5 * 60000, callModel: endNamed.call });
+    const twice = { ...rb.state, thinking: { ...rb.state.thinking!, justComplicated: true } };
+    const ft = renderFacts(dSession, twice, { nowMs: 1_000_000 + 5 * 60000 });
+    const rt = await runV2Turn({ session: dSession, state: twice, studentSaid: 'Hmm.', nowMs: 1_000_000 + 5 * 60000, callModel: stub([msg([{ type: 'text', text: 'Tell me more about him.' }], 'end_turn')]).call });
+    check('after a complication the next turn is told so, once', /brought in a complication: this one builds/.test(ft) && !rt.state.thinking?.justComplicated, ft);
     check('a direction recorded earlier lets the conversation close', ren.state.closed && ren.state.nextDirection === 'parents');
-    const judged = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: "That's a clear line. With about three minutes left, does it hold for Diego? And for older students?" }] }] };
+    const judged = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: "That's a clear line. Not quite, though. With about three minutes left, does it hold for Diego? And for older students? Here is a long stretch of words to push this reply past the limit a spoken reply should keep to, so that the engine notices it ran long and says so in the next turn's facts block for the tutor." }] }] };
     const fj = renderFacts(dSession, judged, { nowMs: 1_000_000 + 5 * 60000 });
-    check('the facts point out a judging opener and a double question in the last reply', /your last reply: it opened by judging their point \("That's a clear line"\); it asked 2 questions; it read the clock out/.test(fj), fj);
+    check('the facts point out a judging opener and a double question in the last reply', /your last reply: it opened by judging their point \("That's a clear line"\); it asked 2 questions; it corrected them \("Not quite"\); it ran to \d+ words.*; it read the clock out/.test(fj), fj);
     check('the map gives the spoken version of a case and the author\'s reflection questions', /to tell aloud: Kelly finishes a story/.test(renderDiscussionMap(dPlan, discussionOf(dPlan)!)) && /Does this still sound like me\?/.test(renderDiscussionMap(dPlan, discussionOf(dPlan)!)));
     const selfOrder = stub([msg([{ type: 'text', text: 'Record the direction, then close.' }, { type: 'tool_use', id: 'e4', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'a talk with my department.' } }], 'tool_use')]);
-    const rso = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'My department, I think.', nowMs: 1_000_000 + 9 * 60000, callModel: selfOrder.call });
+    const rso = await runV2Turn({ session: dSession, state: asked, studentSaid: 'My department, I think.', nowMs: 1_000_000 + 9 * 60000, callModel: selfOrder.call });
     check('an order to itself is never said, and a close with nothing left to say still closes in words', rso.state.closed && !/Record the direction/.test(rso.spoken) && rso.spoken === 'Thank you for thinking this through with me. The direction you chose: a talk with my department.', rso.spoken);
     check('the verdict-word scan catches praise and passes a plain acknowledgement', DISCUSSION_VERDICT_WORDS.test('Excellent point.') && DISCUSSION_VERDICT_WORDS.test("That's right, Jo.") && !DISCUSSION_VERDICT_WORDS.test('Tying it to what the student decides is a useful test.'));
   }

@@ -44,6 +44,7 @@ function readState(raw: unknown): V2State | null {
     position: typeof t.position === 'string' ? t.position.slice(0, 300) : '', weighed: strs(t.weighed, 12), shifts: strs(t.shifts, 6),
     ...(typeof t.example === 'string' ? { example: t.example.slice(0, 240) } : {}),
     ...(typeof t.direction === 'string' ? { direction: t.direction.slice(0, 240) } : {}),
+    ...(t.justComplicated === true ? { justComplicated: true } : {}),
     ...(typeof t.theirMinutes === 'number' && Number.isFinite(t.theirMinutes) ? { theirMinutes: Math.min(60, Math.max(2, Math.round(t.theirMinutes))) } : {}),
     ...(typeof t.complications === 'number' && Number.isFinite(t.complications) ? { complications: Math.min(20, Math.max(0, Math.round(t.complications))) } : {}),
   } : undefined;
