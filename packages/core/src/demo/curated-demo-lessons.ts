@@ -22,7 +22,9 @@ export interface CuratedDemoLesson {
   tone: 'indigo' | 'emerald' | 'amber' | 'rose';
 }
 
-// 2026-11-13 (Praveen): replaced with the twelve agreed for the v2 tutor (figures
+// 2026-11-13 (Praveen): replaced with the twelve agreed for the v2 tutor; after each was run once, three thin
+// plans were swapped for richer ones (circuits → forces, cell structure → plant & animal cells, states of matter →
+// changes of state) (figures
 // reworked 11-11..11-13). He dislikes projectile motion and Punnett squares as
 // demos, so both are out. Index 0 is the widget's default-selected chip.
 export const CURATED_DEMO_LESSONS: CuratedDemoLesson[] = [
@@ -43,11 +45,11 @@ export const CURATED_DEMO_LESSONS: CuratedDemoLesson[] = [
     tone: 'indigo',
   },
   {
-    planId: 'evelyn.g4.sci.physical.circuits-intro.v1',
-    title: 'Electric Circuits',
-    subjectLabel: 'Science',
-    levelLabel: 'Grade 4',
-    hook: 'Close the loop, light the bulb',
+    planId: 'evelyn.ms.m8sci.forces-and-net-force.v1',
+    title: 'Forces & Net Force',
+    subjectLabel: 'Physics',
+    levelLabel: 'Grade 8',
+    hook: 'Tug-of-war, drawn as force arrows',
     tone: 'amber',
   },
   {
@@ -59,10 +61,10 @@ export const CURATED_DEMO_LESSONS: CuratedDemoLesson[] = [
     tone: 'rose',
   },
   {
-    planId: 'evelyn.g68.science.cell-structure.v1',
-    title: 'Inside a Cell',
-    subjectLabel: 'Science',
-    levelLabel: 'Middle school',
+    planId: 'evelyn.ms.m7sci.plant-and-animal-cells.v1',
+    title: 'Plant & Animal Cells',
+    subjectLabel: 'Biology',
+    levelLabel: 'Grade 7',
     hook: 'Organelles, drawn & labeled',
     tone: 'emerald',
   },
@@ -99,11 +101,11 @@ export const CURATED_DEMO_LESSONS: CuratedDemoLesson[] = [
     tone: 'emerald',
   },
   {
-    planId: 'evelyn.g3.sci.physical.states-of-matter.v1',
-    title: 'States of Matter',
+    planId: 'evelyn.ms.m8sci.changes-of-state-and-thermal-energy.v1',
+    title: 'Changes of State',
     subjectLabel: 'Science',
-    levelLabel: 'Grade 3',
-    hook: 'Solids, liquids, gases, particle by particle',
+    levelLabel: 'Grade 8',
+    hook: 'Heating curves & moving particles',
     tone: 'emerald',
   },
   {

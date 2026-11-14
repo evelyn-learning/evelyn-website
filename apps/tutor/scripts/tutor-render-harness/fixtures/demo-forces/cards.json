@@ -1,0 +1,123 @@
+[
+ {
+  "tool": "show_free_body_diagram",
+  "label": "parachutist",
+  "args": {
+   "title": "Forces on the parachutist",
+   "object": {
+    "shape": "box",
+    "label": ""
+   },
+   "surface": {
+    "type": "none"
+   },
+   "forces": [
+    {
+     "name": "Push up from the air",
+     "direction": "up",
+     "magnitude": "700 newtons",
+     "scale": 1.6
+    },
+    {
+     "name": "Pull down from Earth (weight)",
+     "direction": "down",
+     "magnitude": "700 newtons",
+     "scale": 1.6
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_free_body_diagram",
+  "label": "sled",
+  "args": {
+   "object": {
+    "shape": "box",
+    "label": "the sled"
+   },
+   "surface": {
+    "type": "none"
+   },
+   "forces": [
+    {
+     "name": "Rope pull, first friend",
+     "direction": "up",
+     "magnitude": "60 newtons",
+     "scale": 1.1285714285714286
+    },
+    {
+     "name": "Rope pull, second friend",
+     "direction": "up",
+     "magnitude": "45 newtons",
+     "scale": 0.9714285714285715
+    },
+    {
+     "name": "Rope pull, third friend",
+     "direction": "down",
+     "magnitude": "105 newtons",
+     "scale": 1.6
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_free_body_diagram",
+  "label": "crate",
+  "args": {
+   "object": {
+    "shape": "box",
+    "label": "the crate"
+   },
+   "surface": {
+    "type": "horizontal"
+   },
+   "forces": [
+    {
+     "name": "Cable pull, first",
+     "direction": "toward the door",
+     "magnitude": "150 newtons",
+     "scale": 0.9125
+    },
+    {
+     "name": "Cable pull, second",
+     "direction": "toward the door",
+     "magnitude": "250 newtons",
+     "scale": 1.1875
+    },
+    {
+     "name": "Cable pull, third",
+     "direction": "left",
+     "magnitude": "400 newtons",
+     "scale": 1.6
+    }
+   ]
+  }
+ },
+ {
+  "tool": "show_free_body_diagram",
+  "label": "box53",
+  "args": {
+   "object": {
+    "shape": "box",
+    "label": "the box"
+   },
+   "surface": {
+    "type": "horizontal"
+   },
+   "forces": [
+    {
+     "name": "Pull to the left",
+     "direction": "left",
+     "magnitude": "5 newtons",
+     "scale": 1.6
+    },
+    {
+     "name": "Pull to the right",
+     "direction": "right",
+     "magnitude": "3 newtons",
+     "scale": 1.1600000000000001
+    }
+   ]
+  }
+ }
+]

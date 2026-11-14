@@ -198,7 +198,17 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     const rows = lines.map(cells).filter((c) => c[0] && c[1]);
     const size = (c: string[]) => Number((c[2] ?? '').replace(/[^0-9.]/g, '')) || 0;
     const biggest = Math.max(0, ...rows.map(size));
-    const dir = (d: string) => { const k = d.toLowerCase().trim(); return DIR[k] ?? k; };
+    // A direction said in words the diagram does not know ("away from the door", "up from the air") fell to the
+    // diagram's default, to the right: three cables were drawn pulling the same way (demo check, 2026-11-13).
+    const KNOWN = /^(?:up|down|left|right|up-left|up-right|down-left|down-right|normal|up-slope|down-slope|into-surface|-?\d+(?:\.\d+)?|-?\d+(?:\.\d+)?\s*°?\s*(?:above|below).*)$/;
+    const dir = (d: string) => {
+      const k = d.toLowerCase().trim(); const known = DIR[k] ?? k;
+      if (KNOWN.test(known)) return known;
+      if (/\b(?:up|upwards?|above|north|lift(?:s|ing)?|rais)/.test(k)) return 'up';
+      if (/\b(?:down|downwards?|below|south|gravity|weight)\b/.test(k)) return 'down';
+      if (/\b(?:left|west|away|against|opposite|backwards?|back)\b/.test(k)) return 'left';
+      return 'right';
+    };
     const vertical = rows.some((c) => /^(up|down)/.test(dir(c[1])));
     return { name: 'show_free_body_diagram', args: {
       // A long name does not fit inside the box: it becomes the title, and the box stays plain.

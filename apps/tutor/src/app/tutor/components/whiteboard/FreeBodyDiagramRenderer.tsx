@@ -561,6 +561,17 @@ export default function FreeBodyDiagramRenderer({
   });
 
   const objectCaption = object.mass || object.label;
+  // Every arrow shrinks by one shared factor when the longest up or down arrow and its label would not fit in the
+  // figure: a 1.6× arrow ran past the top edge, its label was pushed down onto the other one, and two forces read as
+  // "Push/up/fromtheair" (demo check, 2026-11-13). One factor for all keeps their lengths in proportion.
+  const fit = Math.min(1, ...forces.map((f, i) => {
+    const dy = -Math.sin((angles[i] * Math.PI) / 180);
+    if (Math.abs(dy) < 0.35) return 1;
+    const want = DEFAULT_ARROW_LEN * (f.scale ?? 1);
+    const start = objY + dy * bodyRadius;
+    const room = dy < 0 ? (start - 44) / -dy : (VIEWBOX_H - 34 - start) / dy;
+    return room > 0 && want > 0 ? room / want : 1;
+  }));
   // Estimated half-width of a 13px label (same char heuristic as
   // label-deoverlap). Used for arrow clearance + viewbox clamping.
   const estHalfW = (s: string): number => (s.length * 13 * 0.55) / 2;
@@ -587,7 +598,7 @@ export default function FreeBodyDiagramRenderer({
     const dirToken = typeof f.direction === 'string' ? f.direction.toLowerCase() : '';
     const isIntoIncline = surface.type === 'inclined' && dirToken === 'into-surface';
     const baseLen = isIntoIncline ? 50 : DEFAULT_ARROW_LEN;
-    const len = baseLen * (f.scale ?? 1);
+    const len = baseLen * (f.scale ?? 1) * fit;
     const dirX = Math.cos(rad);
     const dirY = -Math.sin(rad); // SVG y is flipped
     const horizontalish = Math.abs(dirY) < 0.35;
@@ -639,7 +650,8 @@ export default function FreeBodyDiagramRenderer({
       s.length > max ? `${s.slice(0, max - 1)}…` : s;
     // 20 chars fits every real force phrase seen live ("Wall pushes back");
     // the cap only guards against essay-length names now.
-    const nameN = truncate(stripLatex((f.name || '').trim()), 20);
+    // 26: "Rope pull, first friend" and "Pull down from Earth" were cut at 20 (demo check, 2026-11-13).
+    const nameN = truncate(stripLatex((f.name || '').trim()), 26);
     // 28 chars keeps a worked magnitude whole ("mg sinθ = 100.4 N"); beyond that it is an essay.
     const magN = truncate(stripLatex((f.magnitude || '').trim()), 28);
     // A magnitude that already opens with the name ("T₁ = 245 N" for T_1) is the whole label.

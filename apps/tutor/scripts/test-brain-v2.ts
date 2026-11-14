@@ -705,6 +705,8 @@ async function main() {
   const nested = 'Now a plastic spoon.\n\n<board problem>Will the bulb light?\n<board figure kind="circuit">{"battery":"1.5 V","load":[{"bulb":"lamp"},{"object":"plastic spoon"}]}</board>\n</board> What do you think?';
   const nStream = new BoardInlineStream(); const nParts = [...nStream.push(nested.slice(0, 40)), ...nStream.push(nested.slice(40)), ...nStream.flush()];
   check('a figure written inside a problem goes up after it, and no closing tag is said (demo check 11-13)', boardBlocksIn(nested).map((b) => b.kind).join() === 'problem,figure' && nParts.filter((p) => 'block' in p).length === 2 && !nParts.some((p) => 'text' in p && /board/.test(p.text)) && !/board/.test(stripBoardBlocks(nested)), JSON.stringify(nParts).slice(0, 300));
+  const crateDirs = (inlineToolCall(boardBlocksIn('<board forces object="the crate">Cable, first | toward the door | 150 N\nCable, third | away from the door | 400 N\nAir | up from the air | 2 N</board>')[0]).args as { forces: Array<{ direction: string }> }).forces.map((f) => f.direction).join();
+  check('a force direction said in words is drawn that way: "away from the door" is the other way (demo check 11-13)', crateDirs === 'right,left,up', crateDirs);
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }
