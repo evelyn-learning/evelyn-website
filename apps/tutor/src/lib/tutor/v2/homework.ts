@@ -14,7 +14,7 @@ import type { AnswerKey, HomeworkBuildDoc } from '../homework-build/types';
 import { HOMEWORK_PROBLEM_KIND } from '../lesson-plan/homework-problem-meta';
 import { homeworkProblemsOf } from '../lesson-plan/homework';
 import { resolveHomeworkProblemTurn, type HomeworkProblemTurn, type HomeworkProblemTurnDeps } from '../voice/homework-problem-turn';
-import { allKeyPartsConfirmed, confirmedKeyMarks, proseCreditForPart, proseMatchCandidates, sanitizeConfirmedMarks, scopedKeyedVerdicts, type KeyedVerdict } from '../voice/keyed-verdict';
+import { allKeyPartsConfirmed, confirmedKeyMarks, inSheetScope, modelCheckConfirms, proseCreditForPart, proseMatchCandidates, sanitizeConfirmedMarks, scopedKeyedVerdicts, type KeyedVerdict } from '../voice/keyed-verdict';
 import type { ProseAnswerMatchFn } from '../voice/prose-answer-match';
 import { noRevealLedgerForPartner } from '../voice/no-reveal-ledger-gate';
 import {
@@ -121,6 +121,31 @@ export function studentMessagesOf(history: V2State['history']): Array<{ role: 'u
   return out;
 }
 
+/** Where a worked message breaks into the steps it states, last first ("…, so x = 30", "…, which gives 4/11"). */
+const STEP_BREAK = /(?<=[.!?;])\s+|,\s*|\s+(?=\b(?:so|which|that|therefore|then|giving|gives|hence)\b)/i;
+/** The value a step states after its verb ("simplifies to 4/11", "the area is 52 cm²"). */
+const STEP_VALUE = /\b(?:to|is|are|equals?|be|get|got|gives|makes|comes to)\s+(\S.*)$/i;
+
+/**
+ * A message that shows its working states several values, and the keyed check (rightly) will not pick one
+ * ("8 + 5 + 6 + 3 is 22, so 8 out of 22, which simplifies to 4/11"). v1 asked its model pre-check for the
+ * student's final value and re-checked that against the key (keyed-verdict.ts modelCheckConfirms). Here the
+ * message's own steps are read, last first, with that same re-check: a value counts only when it is in the
+ * student's words and confirms by the deterministic rules. Credit only — never a denial — so a slip in an
+ * earlier step can never mark a right final answer wrong. A step that ends in a question is not an answer.
+ */
+export function workedAnswerCredit(studentSaid: string, key: AnswerKey): KeyedVerdict[] {
+  const steps = studentSaid.split(STEP_BREAK).map((x) => x.trim()).filter((x) => x && !/\?\s*$/.test(x)).reverse();
+  for (const step of steps) {
+    const value = STEP_VALUE.exec(step)?.[1];
+    for (const candidate of value && value !== step ? [step, value] : [step]) {
+      const v = modelCheckConfirms(candidate, studentSaid, key);
+      if (v.length) return v;
+    }
+  }
+  return [];
+}
+
 /**
  * Design 2–3: the student's message checked against the key before the model is called. The deterministic
  * keyed check first (voice/keyed-verdict.ts, sheet-scoped exactly as v1); a worded answer to a prose part,
@@ -140,7 +165,12 @@ export async function v2HomeworkCheck(input: {
   const decided = scopedKeyedVerdicts(history, said, key, prior).filter((v): v is KeyedVerdict & { verdict: 'correct' | 'incorrect' } => v.verdict !== 'undecided');
   const verdicts: V2HomeworkVerdict[] = decided.map((v) => ({ part: partLabel(v.part ?? ''), verdict: v.verdict, ...(v.value ? { value: v.value } : {}) }));
   const credit: string[] = [];
-  if (!decided.length && key.parts.some((p) => p.prose)) {
+  // Undecided because the message shows its working: its own last stated value, re-checked against the key.
+  if (!decided.length) {
+    const worked = inSheetScope([...history.map((m) => m.content), said], key, prior, workedAnswerCredit(said, key));
+    for (const v of worked) { credit.push(v.value ? `value:${v.part ?? ''}=${v.value}` : `part:${v.part ?? ''}`); verdicts.push({ part: partLabel(v.part ?? ''), verdict: 'correct', ...(v.value ? { value: v.value } : {}) }); }
+  }
+  if (!verdicts.length && key.parts.some((p) => p.prose)) {
     const msgs = [...history.map((m) => m.content), said];
     const candidates = proseMatchCandidates(msgs, key, confirmedKeyMarks(history, said, key, prior)).filter((p) => proseCreditForPart(msgs, key, prior, p).length);
     if (candidates.length) {

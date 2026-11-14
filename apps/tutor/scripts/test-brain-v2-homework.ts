@@ -10,7 +10,7 @@ import type { HomeworkProblemTurn } from '../src/lib/tutor/voice/homework-proble
 import { renderFacts } from '../src/lib/tutor/v2/facts';
 import { runV2Turn, v2SessionPart, v2StudentBlock, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
-import { readHomeworkState, v2HomeworkCheck, v2HomeworkFor, v2HomeworkSession } from '../src/lib/tutor/v2/homework';
+import { readHomeworkState, v2HomeworkCheck, v2HomeworkFor, v2HomeworkSession, workedAnswerCredit } from '../src/lib/tutor/v2/homework';
 import { streamV2Turn } from '../src/lib/tutor/v2/client';
 import { runV2HomeworkTurn, runV2SheetTurn } from '../src/lib/tutor/v2/homework-turn';
 import { v2SheetFor } from '../src/lib/tutor/v2/homework';
@@ -122,6 +122,24 @@ async function main() {
     proseMatch: async () => true,
   });
   check('a worded answer to a prose part is credited by the prose match', prose.done && prose.verdicts.some((v) => v.verdict === 'correct'), prose);
+
+  console.log('an answer given with its working (design 2)');
+  // The keyed check leaves a message with several values undecided; v1 then asked the model pre-check for the
+  // student's final value and re-checked it against the key (modelCheckConfirms). v2 reads the message's own
+  // last stated value instead: credit only, never a denial.
+  const k1 = (final: string, value: number | string): AnswerKey => ({ parts: [{ label: '', final, canonical: typeof value === 'number' ? { kind: 'number', value } : { kind: 'text', value } }], solvers: ['t'] });
+  for (const [m, key] of [
+    ['8 plus 5 plus 6 plus 3 is 22 students total. so apple is 8 out of 22, which simplifies to 4/11', k1('4/11', '4/11')],
+    ['2x + 20 = 3x - 10, so x = 30', k1('x = 30', 30)],
+    ['I got 80 for the exterior angle so 180 - 80 = 100', k1('m∠ACB = 100°', 100)],
+    ['first I did 34 - 18 = 16 then 16/2 = 8 so x = 8', k1('x = 8', 8)],
+  ] as const) check(`credited with its working: "${m}"`, workedAnswerCredit(m, key).some((v) => v.verdict === 'correct'));
+  for (const [m, key] of [
+    ['34 - 18 = 16, so x = 16?', k1('x = 8', 8)],
+    ['2x + 20 = 3x - 10, so x = 25', k1('x = 30', 30)],
+  ] as const) check(`not credited: "${m}"`, !workedAnswerCredit(m, key).length);
+  const worked = await v2HomeworkCheck({ key: { ...KEY, parts: [KEY.parts[0]] }, problem: { ...hwSession.homework!, parts: ['a'] }, state: said(newV2State(0), '[start]'), studentSaid: 'x + x + 20 = 3x - 10 so 2x + 20 = 3x - 10, which gives x = 30' });
+  check('a worked answer completes the problem', worked.done && worked.verdicts.some((v) => v.verdict === 'correct'), worked);
 
   console.log('done ends the session (design 3)');
   const doneState: V2State = { ...newV2State(1_000_000), homework: { confirmed: ['part:a', 'part:b'], done: true } };
