@@ -593,7 +593,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const passText = response.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join('\n');
       // A block that paints is stored inside the reply, before its sentence: the history then shows the reply as it should have been written.
       const lastWords = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
-      for (const m of passText.replace(/<board\b[\s\S]*?<\/board>/g, ' ').matchAll(/\bwithdraw\s*:?\s*#?(\d+)([^\n]*)/gi)) {
+      for (const m of stripBoardBlocks(passText).matchAll(/\bwithdraw\s*:?\s*#?(\d+)([^\n]*)/gi)) {
         const gone = inlinePainted[Number(m[1]) - 1];
         // A withdrawal names the question the item answers, and that question must be one this reply asked, about
         // the subject and not a check-in: a "common mistake" note was withdrawn under "Does that make sense so
@@ -726,7 +726,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // A session never begins on a bare board (embed-1794362141944, embed-1794376295543). When the opening reply
   // and the check after it both wrote nothing, the lesson's heading and what it is for go up.
   if (opening && !state.closed && spoken.length && !paintedSoFar()) {
-    const body = [session.plan?.title ?? session.topic ?? '', ...(session.plan?.los ?? []).slice(0, 3).map((lo) => lo.description)].map((x) => String(x).trim()).filter(Boolean).join('\n');
+    // Standards codes are for the plan's author, not the student: "(CCSS 8.G.B.6, 8.G.B.7)" was printed on the first card (demo check, 2026-11-13).
+    const noCodes = (x: string) => x.replace(/\s*\((?:[^()]*\b(?:CCSS|NGSS|TEKS|HS-|MS-|[0-9]\.[A-Z]{1,3}\.[A-Z]?\.?\d)[^()]*)\)/g, '').trim();
+    const body = [session.plan?.title ?? session.topic ?? '', ...(session.plan?.los ?? []).slice(0, 3).map((lo) => noCodes(lo.description))].map((x) => String(x).trim()).filter(Boolean).join('\n');
     const b = body ? boardBlocksIn(`<board note style="highlight">${body}</board>`)[0] : undefined;
     if (b && settleInline(b, true)) {
       const holder = stored.find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));

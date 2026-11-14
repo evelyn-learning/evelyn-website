@@ -2,7 +2,7 @@ import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } fr
 import { richBlocks, typesetMaths, typesetPowers } from '../src/lib/tutor/v2/rich-text';
 import { circuitNetlist, figureCatalogueFor } from '../src/lib/tutor/v2/figure-catalogue';
 import { heardAsWords } from '../src/lib/tutor/v2/heard';
-import { mayOpenPart } from '../src/lib/tutor/v2/part-close';
+import { mayOpenPart, partOffer } from '../src/lib/tutor/v2/part-close';
 import { mentionsTool } from '../src/lib/tutor/v2/tool-talk';
 import { applyToModelBoard, renderBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk, asksAnywhere } from '../src/lib/tutor/v2/board-timing';
@@ -693,6 +693,18 @@ async function main() {
   check('a number line of whole numbers keeps its room either side', nlInt.min === -7 && nlInt.max === 6 && nlInt.step === 1, JSON.stringify(nlInt));
   const triBlank = drawFigure('geometry_figure', { shape: 'triangle', sides: [3, 4, 5], sideLabels: ['a', 'b', 'c'], angleLabels: ['', '', '90°'] });
   check('an empty label on a triangle is no label, not a refusal (demo check 11-13)', 'svg' in triBlank, JSON.stringify(triBlank).slice(0, 200));
+  const cellNamed = drawFigure('cell', { cellType: 'plant', organelles: ['nucleus', 'chloroplasts', 'vacuole', 'cell wall', 'mitochondria', 'lysosome'] });
+  check('a cell drawn from everyday organelle names, each labelled, a lysosome left out of a plant (demo check 11-13)', 'svg' in cellNamed && /Chloroplast/.test(cellNamed.svg) && /Central vacuole/.test(cellNamed.svg) && !/Lysosome/.test(cellNamed.svg) && /#bbf7d0/.test(cellNamed.svg), JSON.stringify(cellNamed).slice(0, 200));
+  const gapNet = circuitNetlist({ battery: '1.5 V', load: [{ bulb: 'bulb' }, { gap: 'not joined' }, { object: 'plastic spoon' }] }).components as Array<{ type: string; label?: string }>;
+  check('a circuit can show a break in the wire and a thing put across a gap', gapNet.some((c) => c.type === 'gap') && gapNet.some((c) => c.type === 'object' && c.label === 'plastic spoon'), JSON.stringify(gapNet));
+  const moon = drawFigure('moon_orbit', { highlight: 'first quarter', find: 'waning_gibbous' });
+  check('the Moon round Earth draws its eight places, rings one and leaves one as a question', 'svg' in moon && /First quarter/.test(moon.svg) && /which phase\?/.test(moon.svg) && !/Waning gibbous/.test(moon.svg) && 'refused' in drawFigure('moon_orbit', { find: 'blue' }), '');
+  const bareCard = "Ava's flashlight has a battery, a bulb and two wires. One wire is joined to the battery and the bulb, but the other wire is not joined to the bulb. Does the bulb light up? Say yes or no, and say why.";
+  check('a bare "say yes or no" is not the question: the card\'s question is said (demo check 11-13)', unsaidAsk(bareCard, ['Now one for you.', 'A battery, wires and a bulb are in a circuit.', 'Say yes or no, and say why.']) === 'Does the bulb light up?' && unsaidAsk(bareCard, ['Here it is.', 'Does the bulb light up when the wire is not joined?']) === null, unsaidAsk(bareCard, ['Now one for you.', 'A battery, wires and a bulb are in a circuit.', 'Say yes or no, and say why.']));
+  check('a part headed by a question is offered as one, and a page title loses its page number', partOffer('Which one matches?', false) === 'Next: which one matches? Shall we go on, or do you have a question first?' && (inlineToolCall(boardBlocksIn('<board page>Page 2: What makes a light turn on?</board>')[0]).args as { title: string }).title === 'What makes a light turn on?', partOffer('Which one matches?', false));
+  const nested = 'Now a plastic spoon.\n\n<board problem>Will the bulb light?\n<board figure kind="circuit">{"battery":"1.5 V","load":[{"bulb":"lamp"},{"object":"plastic spoon"}]}</board>\n</board> What do you think?';
+  const nStream = new BoardInlineStream(); const nParts = [...nStream.push(nested.slice(0, 40)), ...nStream.push(nested.slice(40)), ...nStream.flush()];
+  check('a figure written inside a problem goes up after it, and no closing tag is said (demo check 11-13)', boardBlocksIn(nested).map((b) => b.kind).join() === 'problem,figure' && nParts.filter((p) => 'block' in p).length === 2 && !nParts.some((p) => 'text' in p && /board/.test(p.text)) && !/board/.test(stripBoardBlocks(nested)), JSON.stringify(nParts).slice(0, 300));
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }

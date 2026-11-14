@@ -1,3 +1,4 @@
+import { stripBoardBlocks } from './board-inline';
 /**
  * Tutor brain v2 — a part is closed before the next is opened.
  *
@@ -27,7 +28,7 @@ const OFFERS = /\b(?:next is|next up|ready|shall we|any questions?|a question fi
 
 /** The tutor's last reply ended by asking whether to go on (or checking in), and the student has answered. */
 export function leftOpen(lastTutor: string, studentSaid: string | null): boolean {
-  const sentences = lastTutor.replace(/<board\b[\s\S]*?<\/board>/g, ' ').split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
+  const sentences = stripBoardBlocks(lastTutor).split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
   return !!studentSaid && /\?["')\]]*$/.test(sentences[sentences.length - 1] ?? '') && OFFERS.test(sentences.slice(-2).join(' '));
 }
 
@@ -37,12 +38,16 @@ export function mayOpenPart(t: PartTurn): boolean {
   if (t.pagesOpen <= 1) return true; // the lesson is only beginning
   const student = t.studentSaid ?? '';
   if (student && (STEERS.test(student) || namesPart(t.title, student))) return true;
-  const sentences = t.lastTutor.replace(/<board\b[\s\S]*?<\/board>/g, ' ').split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
+  const sentences = stripBoardBlocks(t.lastTutor).split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
   const last = sentences[sentences.length - 1] ?? '';
   return /\?["')\]]*$/.test(last) && student !== '' && (OFFERS.test(sentences.slice(-2).join(' ')) || namesPart(t.title, t.lastTutor));
 }
 /** What the tutor says in place of the held page. `named`: the reply had already said what the next part is. */
 export function partOffer(title: string, named: boolean): string {
   const ask = 'Shall we go on, or do you have a question first?';
-  return named ? ask : `Next is ${/^[A-Z][a-z]/.test(title) && !/^[A-Z][a-z]+'s\b/.test(title) ? title[0].toLowerCase() + title.slice(1) : title}. ${ask}`;
+  if (named) return ask;
+  const t = title.trim().replace(/[.:;,]+$/, '');
+  const lower = /^[A-Z][a-z]/.test(t) && !/^[A-Z][a-z]+'s\b/.test(t) ? t[0].toLowerCase() + t.slice(1) : t;
+  // A part headed by a question is named as one: "Next is which one matches?." was said (demo check, 2026-11-13).
+  return /[?？]$/.test(t) ? `Next: ${lower} ${ask}` : `Next is ${lower}. ${ask}`;
 }

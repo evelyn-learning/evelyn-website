@@ -89,7 +89,7 @@ export interface MembraneProtein { type: 'channel' | 'carrier' | 'pump' | 'perip
 export interface MembraneSolute { outside: number; inside: number; through?: number | 'bilayer'; arrow: 'in' | 'out' | null; name?: string; shape: SeriesShape }
 export interface CompartmentSpace { id: SpaceId; label: string | null; ions?: number; pH?: number }
 export type BioModel =
-  | { variant: 'cell'; cellType: 'animal' | 'plant'; organelles: Array<{ type: OrganelleType; label: string | null }>; title?: string }
+  | { variant: 'cell'; cellType: 'animal' | 'plant'; organelles: Array<{ type: OrganelleType; label: string | null }>; title?: string; /** The tutor's board only: chloroplasts green. Practice figures stay ink-only. */ colour?: boolean }
   | { variant: 'membrane'; proteins: MembraneProtein[]; cholesterol: boolean; solutes: MembraneSolute[]; labels: Array<{ target: MembraneTarget; label: string }>; sideLabels: [string, string] | null; title?: string }
   | { variant: 'division'; n: number; process: 'mitosis' | 'meiosis'; cells: Array<{ stage: DivisionStage; label: string | null }>; title?: string }
   | { variant: 'compartments'; organelle: 'mitochondrion' | 'chloroplast'; spaces: CompartmentSpace[]; synthase: boolean; showFlow: boolean; /** Space with more H⁺, and with less; null when no gradient is shown. */ gradient: { high: SpaceId; low: SpaceId } | null; title?: string };
@@ -133,7 +133,7 @@ export function bioModel(r: Reader): BioModel {
       return { type, label: labelOf(o.label, `organelles[${i}].label`, 22) };
     });
     organelles.forEach((o, i) => { if (organelles.findIndex((x) => x.type === o.type) !== i) r.fail(`organelles[${i}].type: ${o.type} is listed twice`); });
-    return { variant: 'cell', cellType, organelles, title };
+    return { variant: 'cell', cellType, organelles, title, ...(p.colour === true ? { colour: true } : {}) };
   }
   if (p.variant === 'membrane') {
     const proteins = (p.proteins === undefined || p.proteins === null ? [] : r.list(p.proteins, 'proteins', 0, 4)).map((raw, i): MembraneProtein => {
@@ -324,10 +324,12 @@ function renderCell(m: Extract<BioModel, { variant: 'cell' }>, W: number, t: { s
     const [cx, cy] = at(slots.chloroplast as Slot);
     const w = 50 * sc;
     const stacks = (px: number, py: number): string => [-1, 0, 1].map((k) => `<rect x="${n2(px - 4.5)}" y="${n2(py + k * 4.4 - 1.3)}" width="9" height="2.6" fill="${INK}"/>`).join('');
-    parts.push(capsule(cx, cy, w, 25 * sc), stacks(cx - w * 0.27, cy), stacks(cx, cy), stacks(cx + w * 0.27, cy));
+    // On the tutor's board a chloroplast is green: "the green part" was said over a grey one (demo check, 2026-11-13).
+    const green = (svg: string): string => (m.colour ? svg.replace(`fill="${FILL}"`, 'fill="#bbf7d0"').replace(`stroke="${INK}"`, 'stroke="#166534"') : svg);
+    parts.push(green(capsule(cx, cy, w, 25 * sc)), stacks(cx - w * 0.27, cy), stacks(cx, cy), stacks(cx + w * 0.27, cy));
     // A second one, so "chloroplasts" reads as a kind of organelle, not one object.
     const [bx, by] = [x0 + 0.62 * cw, y0 + 0.87 * ch];
-    parts.push(capsule(bx, by, w * 0.9, 21 * sc), stacks(bx - w * 0.24, by), stacks(bx, by), stacks(bx + w * 0.24, by));
+    parts.push(green(capsule(bx, by, w * 0.9, 21 * sc)), stacks(bx - w * 0.24, by), stacks(bx, by), stacks(bx + w * 0.24, by));
     anchors.chloroplast = [cx - w / 2, cy];
   }
   if (has('central_vacuole')) {

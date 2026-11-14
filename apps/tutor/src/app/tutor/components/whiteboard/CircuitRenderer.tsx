@@ -29,7 +29,11 @@ export type CircuitComponentType =
   | 'voltmeter'
   | 'ammeter'
   | 'galvanometer'
-  | 'ground';
+  | 'ground'
+  /** A break in the wire: two bare ends with nothing between them (a cut or loose wire). */
+  | 'gap'
+  /** A thing put across a gap, drawn as a labelled block: a plastic spoon, a paper clip, a coin. */
+  | 'object';
 
 export interface CircuitNode {
   id: string;
@@ -79,6 +83,8 @@ const SYMBOL_HALF_LEN: Record<CircuitComponentType, number> = {
   ammeter: 13,
   galvanometer: 13,
   ground: 0,
+  gap: 16,
+  object: 24,
 };
 
 /** Half-height of each symbol across its wire. */
@@ -95,6 +101,8 @@ const SYMBOL_HALF_PERP: Record<CircuitComponentType, number> = {
   ammeter: 13,
   galvanometer: 13,
   ground: 10,
+  gap: 5,
+  object: 10,
 };
 
 /* ------------------------------------------------------------------ */
@@ -277,6 +285,17 @@ function ComponentShape({
             <line x1={-9} y1={9} x2={9} y2={-9} stroke={STROKE} strokeWidth={1.5} />
           </>
         );
+      case 'gap':
+        // Two bare wire ends and empty space between: the loop is broken here.
+        return (
+          <>
+            <circle cx={-half} cy={0} r={2.5} fill={STROKE} />
+            <circle cx={half} cy={0} r={2.5} fill={STROKE} />
+          </>
+        );
+      case 'object':
+        // The thing across the gap; its name is the label beside it.
+        return <rect x={-half} y={-9} width={half * 2} height={18} rx={7} fill="#e5e7eb" stroke={STROKE} strokeWidth={1.8} />;
       case 'voltmeter':
         return meter('V');
       case 'ammeter':
@@ -929,6 +948,8 @@ export function buildCircuitManifest(props: CircuitRendererProps): FeatureManife
     ammeter: ['ammeter', 'A meter', 'current meter'],
     galvanometer: ['galvanometer', 'ammeter', 'current meter'],
     ground: ['ground', 'earth', 'GND'],
+    gap: ['gap', 'break', 'cut'],
+    object: [],
   };
 
   for (const c of components) {

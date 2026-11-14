@@ -185,23 +185,116 @@ function pipeFlow(p: Record<string, unknown>): DrawnFigure {
   return { svg: svg(W, H, out.join('')) };
 }
 
+/** The Moon at its eight places round Earth, lit from the Sun's side, with what Earth sees at each. A phases lesson
+ *  drew its Sun, Moon and Earth as three boxes in a column and named the places in words: there was no picture of
+ *  the orbit, which is what the lesson is about (demo check, 2026-11-13). */
+const MOON_PHASES = ['new', 'waxing_crescent', 'first_quarter', 'waxing_gibbous', 'full', 'waning_gibbous', 'last_quarter', 'waning_crescent'] as const;
+const MOON_NAMES: Record<string, string> = { new: 'New moon', waxing_crescent: 'Waxing crescent', first_quarter: 'First quarter', waxing_gibbous: 'Waxing gibbous', full: 'Full moon', waning_gibbous: 'Waning gibbous', last_quarter: 'Last quarter', waning_crescent: 'Waning crescent' };
+function moonOrbit(p: Record<string, unknown>): DrawnFigure {
+  const key = (v: unknown) => String(v ?? '').toLowerCase().trim().replace(/[\s-]+/g, '_').replace(/_moon$/, '').replace(/^third_quarter$/, 'last_quarter');
+  const pick = (v: unknown): string[] | null => { if (v === undefined || v === null) return null; const list = (Array.isArray(v) ? v : [v]).map(key); const bad = list.find((k) => !MOON_PHASES.includes(k as typeof MOON_PHASES[number])); if (bad !== undefined) throw new Error(`"${bad}" is not a phase: use ${MOON_PHASES.join(', ')}`); return list; };
+  let shown: string[]; let marked: string[]; let asked: string[];
+  try { shown = pick(p.phases) ?? [...MOON_PHASES]; marked = pick(p.highlight) ?? []; asked = pick(p.find) ?? []; } catch (e) { return { refused: (e as Error).message }; }
+  const views = p.views !== false;
+  const W = 660; const H = 620; const cx = 345; const cy = 310; const R = 150; const R2 = 238; const rm = 17; const rv = 15;
+  const out: string[] = [];
+  // Sunlight from the left.
+  out.push(`<rect x="0" y="70" width="34" height="480" fill="#fde68a"/>`, label(17, 60, 'Sun', { anchor: 'middle', size: 14, weight: 700 }));
+  for (let i = 0; i < 6; i++) { const y = 110 + i * 80; out.push(`<line x1="40" y1="${y}" x2="78" y2="${y}" stroke="#f59e0b" stroke-width="2.5"/><path d="M 86 ${y} L 76 ${y - 5} L 76 ${y + 5} Z" fill="#f59e0b"/>`); }
+  out.push(label(46, 600, 'sunlight', { size: 12, fill: MUTED }));
+  // The orbit, its direction, and Earth with its night side away from the Sun.
+  out.push(`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${MUTED}" stroke-width="1.5" stroke-dasharray="5 5"/>`);
+  const arrowAt = (deg: number) => { const a = (deg * Math.PI) / 180; const x = cx + R * Math.cos(a); const y = cy - R * Math.sin(a); const tx = -Math.sin(a); const ty = -Math.cos(a); return `<path d="M ${r1(x + tx * 9)} ${r1(y + ty * 9)} L ${r1(x - tx * 4 + Math.cos(a) * 6)} ${r1(y - ty * 4 - Math.sin(a) * 6)} L ${r1(x - tx * 4 - Math.cos(a) * 6)} ${r1(y - ty * 4 + Math.sin(a) * 6)} Z" fill="${MUTED}"/>`; };
+  out.push(arrowAt(202), arrowAt(22));
+  out.push(`<circle cx="${cx}" cy="${cy}" r="28" fill="#1e3a8a"/><path d="M ${cx} ${cy - 28} A 28 28 0 0 0 ${cx} ${cy + 28} Z" fill="#60a5fa"/><circle cx="${cx}" cy="${cy}" r="28" fill="none" stroke="${INK}" stroke-width="1.8"/>`, label(cx, cy + 48, 'Earth', { anchor: 'middle', size: 14, weight: 700 }));
+  // Each place: the Moon in orbit (its Sun side lit), and outside it the Moon as seen from Earth.
+  const ANGLE: Record<string, number> = { new: 180, waxing_crescent: 225, first_quarter: 270, waxing_gibbous: 315, full: 0, waning_gibbous: 45, last_quarter: 90, waning_crescent: 135 };
+  const ELONG: Record<string, number> = { new: 0, waxing_crescent: 45, first_quarter: 90, waxing_gibbous: 135, full: 180, waning_gibbous: 225, last_quarter: 270, waning_crescent: 315 };
+  const seen = (x: number, y: number, r: number, phase: string): string => {
+    const e = ELONG[phase]; const dark = `<circle cx="${r1(x)}" cy="${r1(y)}" r="${r}" fill="#334155"/>`; const rim = `<circle cx="${r1(x)}" cy="${r1(y)}" r="${r}" fill="none" stroke="${INK}" stroke-width="1.5"/>`;
+    if (e === 0) return dark + rim;
+    if (e === 180) return `<circle cx="${r1(x)}" cy="${r1(y)}" r="${r}" fill="#fef9c3"/>` + rim;
+    const s = e < 180 ? 1 : -1; const sweep1 = s > 0 ? 1 : 0; const rx = r1(r * Math.abs(Math.cos((e * Math.PI) / 180)));
+    const gibbous = (e > 90 && e < 270); const sweep2 = gibbous ? sweep1 : 1 - sweep1;
+    const lit = `<path d="M ${r1(x)} ${r1(y - r)} A ${r} ${r} 0 0 ${sweep1} ${r1(x)} ${r1(y + r)} A ${rx} ${r} 0 0 ${sweep2} ${r1(x)} ${r1(y - r)} Z" fill="#fef9c3"/>`;
+    return dark + lit + rim;
+  };
+  for (const ph of shown) {
+    const a = (ANGLE[ph] * Math.PI) / 180; const mx = cx + R * Math.cos(a); const my = cy - R * Math.sin(a);
+    const hot = marked.includes(ph);
+    if (hot) out.push(`<circle cx="${r1(mx)}" cy="${r1(my)}" r="${rm + 7}" fill="none" stroke="${RAY}" stroke-width="2.5"/>`);
+    // In orbit the half facing the Sun (left) is lit, whatever the phase.
+    out.push(`<circle cx="${r1(mx)}" cy="${r1(my)}" r="${rm}" fill="#334155"/><path d="M ${r1(mx)} ${r1(my - rm)} A ${rm} ${rm} 0 0 0 ${r1(mx)} ${r1(my + rm)} Z" fill="#fef9c3"/><circle cx="${r1(mx)}" cy="${r1(my)}" r="${rm}" fill="none" stroke="${INK}" stroke-width="1.5"/>`);
+    if (!views) continue;
+    const vx = cx + R2 * Math.cos(a); const vy = cy - R2 * Math.sin(a);
+    out.push(`<line x1="${r1(cx + (R + rm + 6) * Math.cos(a))}" y1="${r1(cy - (R + rm + 6) * Math.sin(a))}" x2="${r1(cx + (R2 - rv - 6) * Math.cos(a))}" y2="${r1(cy - (R2 - rv - 6) * Math.sin(a))}" stroke="${MUTED}" stroke-width="1" stroke-dasharray="2 3"/>`);
+    if (hot) out.push(`<circle cx="${r1(vx)}" cy="${r1(vy)}" r="${rv + 6}" fill="none" stroke="${RAY}" stroke-width="2.5"/>`);
+    const q = asked.includes(ph);
+    out.push(q ? `<circle cx="${r1(vx)}" cy="${r1(vy)}" r="${rv}" fill="#fff" stroke="${INK}" stroke-width="1.5" stroke-dasharray="3 2"/>` + label(vx, vy + 5, '?', { anchor: 'middle', size: 15, weight: 700 }) : seen(vx, vy, rv, ph));
+    const below = vy > cy + 100; const ly = below ? vy + rv + 17 : vy - rv - 9;
+    out.push(label(vx, ly, q ? 'which phase?' : MOON_NAMES[ph], { anchor: 'middle', size: 13, weight: hot ? 700 : 600, fill: hot ? RAY : INK }));
+  }
+  out.push(label(W - 8, 22, 'inner ring: the Moon in its orbit', { anchor: 'end', size: 12, fill: MUTED }));
+  if (views) out.push(label(W - 8, 38, 'outer ring: what we see from Earth', { anchor: 'end', size: 12, fill: MUTED }));
+  return { svg: svg(W, H, out.join('')) };
+}
+
 /** Figures from the practice-question engine (practice-figure/kinds): exact, legible and already able to leave
  *  out what a question asks for ("?" as a label draws a blank). Each is drawn from the parameters documented at
  *  the top of its module; one that cannot be drawn as written is refused in the engine's own words, which name
  *  the parameter at fault. */
-const ENGINE: Record<string, { type: string; draw: (r: Reader, uid: string) => Drawn }> = {
+/** A cell drawn from the names a tutor actually writes. The engine takes one spelling per organelle, so "mitochondria",
+ *  "chloroplasts", "vacuole", "golgi_apparatus", "cell wall" or a bare list of names were refused, and a lesson said
+ *  "here is a plant cell" over an empty board for three turns (demo check, 2026-11-13). A part the cell type does not
+ *  have (a lysosome in a plant cell) is left out rather than refusing the cell. */
+const ORGANELLE_NAMES: Record<string, string> = {
+  nucleus: 'nucleus', nuclei: 'nucleus',
+  mitochondrion: 'mitochondrion', mitochondria: 'mitochondrion',
+  ribosome: 'ribosomes', ribosomes: 'ribosomes',
+  chloroplast: 'chloroplast', chloroplasts: 'chloroplast',
+  vacuole: 'central_vacuole', vacuoles: 'central_vacuole', central_vacuole: 'central_vacuole', large_vacuole: 'central_vacuole', large_central_vacuole: 'central_vacuole',
+  cell_wall: 'cell_wall', wall: 'cell_wall',
+  cell_membrane: 'cell_membrane', membrane: 'cell_membrane', plasma_membrane: 'cell_membrane',
+  golgi: 'golgi', golgi_apparatus: 'golgi', golgi_body: 'golgi', golgi_bodies: 'golgi', golgi_complex: 'golgi',
+  rough_er: 'rough_er', er: 'rough_er', endoplasmic_reticulum: 'rough_er', rough_endoplasmic_reticulum: 'rough_er',
+  smooth_er: 'smooth_er', smooth_endoplasmic_reticulum: 'smooth_er',
+  lysosome: 'lysosome', lysosomes: 'lysosome',
+  centriole: 'centrioles', centrioles: 'centrioles',
+};
+const ORGANELLE_LABEL: Record<string, string> = { nucleus: 'Nucleus', mitochondrion: 'Mitochondrion', ribosomes: 'Ribosomes', chloroplast: 'Chloroplast', central_vacuole: 'Central vacuole', cell_wall: 'Cell wall', cell_membrane: 'Cell membrane', golgi: 'Golgi apparatus', rough_er: 'Endoplasmic reticulum', smooth_er: 'Smooth ER', lysosome: 'Lysosome', centrioles: 'Centrioles' };
+const PLANT_ONLY = new Set(['chloroplast', 'central_vacuole', 'cell_wall']);
+const ANIMAL_ONLY = new Set(['smooth_er', 'lysosome', 'centrioles']);
+export function cellParams(p: Record<string, unknown>): Record<string, unknown> {
+  if (!Array.isArray(p.organelles) || (p.variant !== undefined && p.variant !== 'cell')) return p;
+  const key = (v: unknown) => String(v ?? '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+  const listed = (p.organelles as unknown[]).map((o): Record<string, unknown> & { type: string } => {
+    const given = o && typeof o === 'object' ? (o as Record<string, unknown>) : { type: o };
+    const type = ORGANELLE_NAMES[key(given.type ?? given.name ?? given.organelle)] ?? String(given.type ?? '');
+    return { ...given, type };
+  });
+  const plant = /plant/i.test(String(p.cellType ?? '')) || (p.cellType === undefined && listed.some((o) => PLANT_ONLY.has(o.type)));
+  const seen = new Set<string>();
+  // A part listed without a label is named: on the tutor's board a cell is shown to be talked about, and unnamed
+  // shapes left the student to guess which was which. A label written "?" or null stays as written.
+  const organelles = listed.filter((o) => !(plant ? ANIMAL_ONLY : PLANT_ONLY).has(o.type) && !seen.has(o.type) && (seen.add(o.type), true))
+    .slice(0, 10)
+    .map((given) => { const { name: _n, organelle: _o, ...o } = given; void _n; void _o; return 'label' in o ? o : { ...o, label: ORGANELLE_LABEL[o.type] ?? o.type }; });
+  return { ...p, variant: 'cell', cellType: plant ? 'plant' : 'animal', organelles, colour: true };
+}
+
+const ENGINE: Record<string, { type: string; draw: (r: Reader, uid: string) => Drawn; prep?: (p: Record<string, unknown>) => Record<string, unknown> }> = {
   geometry_figure: { type: 'geometric_figure', draw: (r, uid) => renderGeometry(r, uid) },
   cladogram: { type: 'phylogenetic_tree', draw: (r) => renderPhyloTree(r) },
   energy_levels: { type: 'energy_levels', draw: (r, uid) => renderEnergyLevels(r, uid) },
   spectrum: { type: 'spectrum', draw: (r) => renderSpectrum(r) },
   photoelectric: { type: 'photoelectric_setup', draw: (r, uid) => renderPhotoelectricSetup(r, uid) },
   heating_curve: { type: 'heating_curve', draw: (r, uid) => renderHeatingCurve(r, uid) },
-  cell: { type: 'bio_schematic', draw: (r) => renderBioSchematic(r) },
+  cell: { type: 'bio_schematic', draw: (r) => renderBioSchematic(r), prep: cellParams },
   mechanics_setup: { type: 'mechanics_setup', draw: (r, uid) => renderMechanicsSetup(r, uid) },
   probability_tree: { type: 'probability_tree', draw: (r, uid) => renderProbabilityTree(r, uid) },
 };
 
-const FIGURES: Record<string, (p: Record<string, unknown>) => DrawnFigure> = { refraction, apparent_depth: apparentDepth, particles, buoyancy, pipe_flow: pipeFlow };
+const FIGURES: Record<string, (p: Record<string, unknown>) => DrawnFigure> = { refraction, apparent_depth: apparentDepth, particles, buoyancy, pipe_flow: pipeFlow, moon_orbit: moonOrbit };
 export const DRAWN_FIGURE_KINDS = [...Object.keys(FIGURES), ...Object.keys(ENGINE)];
 
 export function drawFigure(kind: unknown, params: unknown): DrawnFigure {
@@ -211,7 +304,8 @@ export function drawFigure(kind: unknown, params: unknown): DrawnFigure {
   if (!e) return { refused: `no drawn figure of kind "${k}"` };
   try {
     // The title stands over the card on the board, not inside the figure as well.
-    const { title: _title, ...rest } = p; void _title;
+    const { title: _title, ...given } = p; void _title;
+    const rest = e.prep ? e.prep(given) : given;
     const uid = `v2${[...JSON.stringify(rest)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7).toString(36)}`;
     const d = e.draw(new Reader(e.type, rest), uid);
     return { svg: svgDocument(d.W ?? FIGURE_WIDTH, d.H, d.body) };

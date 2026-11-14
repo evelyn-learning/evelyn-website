@@ -1,0 +1,144 @@
+[
+ {
+  "tool": "show_circuit",
+  "label": "circuit-wire-not-joined",
+  "args": {
+   "components": [
+    {
+     "type": "battery",
+     "from": "minus",
+     "to": "plus",
+     "label": "1.5 V"
+    },
+    {
+     "type": "bulb",
+     "from": "plus",
+     "to": "n1",
+     "label": "flashlight bulb"
+    },
+    {
+     "type": "gap",
+     "from": "n1",
+     "to": "minus",
+     "label": "not joined"
+    }
+   ],
+   "title": "One wire is not joined to the bulb"
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "circuit-spoon",
+  "args": {
+   "components": [
+    {
+     "type": "battery",
+     "from": "minus",
+     "to": "plus",
+     "label": "1.5 V"
+    },
+    {
+     "type": "bulb",
+     "from": "plus",
+     "to": "n1",
+     "label": "bulb"
+    },
+    {
+     "type": "object",
+     "from": "n1",
+     "to": "minus",
+     "label": "plastic spoon"
+    }
+   ],
+   "title": "A plastic spoon in the gap"
+  }
+ },
+ {
+  "tool": "show_circuit",
+  "label": "circuit-paperclip-switch",
+  "args": {
+   "components": [
+    {
+     "type": "battery",
+     "from": "minus",
+     "to": "plus",
+     "label": "1.5 V"
+    },
+    {
+     "type": "switch-closed",
+     "from": "plus",
+     "to": "n1"
+    },
+    {
+     "type": "bulb",
+     "from": "n1",
+     "to": "n2",
+     "label": "bulb"
+    },
+    {
+     "type": "object",
+     "from": "n2",
+     "to": "minus",
+     "label": "paper clip"
+    }
+   ],
+   "title": "A paper clip in the gap, switch closed"
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "cell-plant-aliases",
+  "args": {
+   "kind": "cell",
+   "title": "A plant cell",
+   "params": {
+    "cellType": "plant",
+    "organelles": [
+     "nucleus",
+     "chloroplasts",
+     "vacuole",
+     "cell wall",
+     "cell membrane",
+     "mitochondria",
+     "ribosome",
+     "golgi apparatus"
+    ]
+   }
+  }
+ },
+ {
+  "tool": "show_drawn_figure",
+  "label": "cell-animal-aliases",
+  "args": {
+   "kind": "cell",
+   "title": "An animal cell",
+   "params": {
+    "variant": "cell",
+    "cellType": "animal",
+    "organelles": [
+     {
+      "type": "nucleus"
+     },
+     {
+      "type": "mitochondria"
+     },
+     {
+      "type": "ribosomes"
+     },
+     {
+      "type": "endoplasmic reticulum"
+     },
+     {
+      "type": "golgi_apparatus"
+     },
+     {
+      "type": "lysosomes"
+     },
+     {
+      "type": "membrane"
+     }
+    ]
+   }
+  }
+ }
+]

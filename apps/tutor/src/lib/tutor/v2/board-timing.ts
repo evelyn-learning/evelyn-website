@@ -125,7 +125,13 @@ const SAY_ASK_WORDS = 30;
 const SAY_WHOLE_CARD_WORDS = 45;
 export function unsaidAsk(statement: string, sentences: string[]): string | null {
   const card = statement.replace(/\s+/g, ' ').trim();
-  if (!card || !sentences.length || asksAloud(sentences)) return null;
+  if (!card || !sentences.length) return null;
+  // A bare instruction is not the question: "Here is a new one. Say yes or no, and say why." was taken as asked, and
+  // a nine-year-old heard no question while "Does the bulb light up?" sat on the card (demo check, 2026-11-13).
+  const cardAbout = about(card);
+  const bare = (x: string) => !/[?？]/.test(x) && [...about(x)].filter((w) => cardAbout.has(w)).length < 2;
+  const asking = sentences.slice(-2).filter((x) => asksAloud([x]));
+  if (asking.length && !asking.every(bare)) return null;
   const parts: string[] = []; let cur = ''; let inMath = false;
   for (let i = 0; i < card.length; i++) {
     const ch = card[i]; cur += ch;
@@ -135,7 +141,11 @@ export function unsaidAsk(statement: string, sentences: string[]): string | null
   if (cur.trim()) parts.push(cur.trim());
   // A card in parts "(a) … (b) …" asks in the line above them.
   const firstPart = parts.findIndex((x) => /^\(?[a-e]\)\s/i.test(x));
-  const ask = firstPart > 0 ? parts.slice(0, firstPart).join(' ') : firstPart === 0 ? card : parts[parts.length - 1];
+  // The ask is the card's last question, with any instruction after it that was not already said ("Does the bulb
+  // light up? Say yes or no, and say why."); without a question, its last sentence.
+  const lastQ = parts.map((x) => /[?？]/.test(x)).lastIndexOf(true);
+  const saidAlready = (x: string) => sentences.some((y) => norm(y).join(' ') === norm(x).join(' '));
+  const ask = firstPart > 0 ? parts.slice(0, firstPart).join(' ') : firstPart === 0 ? card : lastQ >= 0 ? parts.slice(lastQ).filter((x, i) => i === 0 || !saidAlready(x)).join(' ') : parts[parts.length - 1];
   const askWords = [...about(ask)];
   const shared = (sentence: string, words: string[]) => { const w = about(sentence); return words.filter((x) => w.has(x)).length; };
   if (askWords.length && sentences.slice(-3).some((x) => shared(x, askWords) / askWords.length >= 0.6)) return null;

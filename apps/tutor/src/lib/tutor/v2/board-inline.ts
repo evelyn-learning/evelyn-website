@@ -38,14 +38,59 @@ function parseBlock(raw: string): InlineBlock | null {
   return { kind: m[1] as InlineKind, attrs, body: m[3].trim(), raw: m[0] };
 }
 
-/** The reply as the student gets it: the blocks removed, the gaps closed. */
-export function stripBoardBlocks(text: string): string {
-  return text.replace(/<board\b[\s\S]*?<\/board>/g, ' ').replace(/<board\b[\s\S]*$/, ' ').replace(/[ \t]+\n/g, '\n').replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+/** Where the block opened at `start` ends: just after its own closing tag, counting blocks opened inside it;
+ *  -1 while that tag has not arrived. A figure written inside a problem block closed the problem at the figure's
+ *  tag: the figure was lost into the card as code and the problem's own "</board>" was said aloud (demo check,
+ *  2026-11-13). */
+function blockEnd(text: string, start: number): number {
+  let depth = 0; let i = start;
+  for (;;) {
+    const o = text.indexOf(OPEN, i); const c = text.indexOf(CLOSE, i);
+    if (c < 0) return -1;
+    if (o >= 0 && o < c) { depth += 1; i = o + OPEN.length; continue; }
+    depth -= 1; i = c + CLOSE.length;
+    if (depth <= 0) return i;
+  }
+}
+/** A block, and the blocks written inside it lifted out to follow it. */
+function flatten(raw: string): InlineBlock[] {
+  const head = raw.match(/^<board\s+[a-z]+(?:\s+[a-z_]+="[^"]*")*\s*>/);
+  if (!head || !raw.endsWith(CLOSE)) return [parseBlock(raw)].filter((b): b is InlineBlock => !!b);
+  let inner = raw.slice(head[0].length, raw.length - CLOSE.length);
+  const lifted: InlineBlock[] = [];
+  for (let at = inner.indexOf(OPEN); at >= 0; at = inner.indexOf(OPEN)) {
+    const end = blockEnd(inner, at);
+    if (end < 0) { inner = inner.slice(0, at); break; }
+    lifted.push(...flatten(inner.slice(at, end)));
+    inner = `${inner.slice(0, at)}${inner.slice(end)}`;
+  }
+  const outer = inner.trim() ? parseBlock(`${head[0]}${inner}${CLOSE}`) : null;
+  return [...(outer ? [outer] : []), ...lifted];
 }
 
-/** Every well-formed block in a finished text, in order. */
+/** The reply as the student gets it: the blocks removed, the gaps closed. */
+export function stripBoardBlocks(text: string): string {
+  let out = ''; let i = 0;
+  for (let at = text.indexOf(OPEN); at >= 0; at = text.indexOf(OPEN, i)) {
+    out += `${text.slice(i, at)} `;
+    const end = blockEnd(text, at);
+    if (end < 0) { i = text.length; break; }
+    i = end;
+  }
+  out += text.slice(i);
+  // A closing tag with no block before it is markup, never words.
+  return out.replace(/<\/board>/g, ' ').replace(/[ \t]+\n/g, '\n').replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+/** Every well-formed block in a finished text, in order (a block written inside another follows it). */
 export function boardBlocksIn(text: string): InlineBlock[] {
-  return [...text.matchAll(/<board\b[\s\S]*?<\/board>/g)].map((m) => parseBlock(m[0])).filter((b): b is InlineBlock => !!b);
+  const out: InlineBlock[] = [];
+  for (let at = text.indexOf(OPEN), end = 0; at >= 0; at = text.indexOf(OPEN, end)) {
+    end = blockEnd(text, at);
+    if (end < 0) break;
+    out.push(...flatten(text.slice(at, end)));
+  }
+  return out;
 }
 
 /** Whether the bars in a one-line note separate points (each a phrase of its own). A bar is also notation:
@@ -100,7 +145,8 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     return { name: 'show_table', args: named ? { headers: ['', b.attrs.left ?? '', b.attrs.right ?? ''], rows: rows.map((r) => [r[0], r[1], r[2]]) } : { headers: [b.attrs.left ?? '', b.attrs.right ?? ''], rows: rows.map((r) => [r[0] ?? '', r[1] ?? '']) } };
   }
   // A page of the board, with its heading.
-  if (b.kind === 'page') return { name: 'new_page', args: { title: b.body.replace(/\s+/g, ' ').slice(0, 80) } };
+  // The board numbers its pages itself: "Page 2: What makes a light turn on?" printed the number twice (demo check, 2026-11-13).
+  if (b.kind === 'page') return { name: 'new_page', args: { title: b.body.replace(/\s+/g, ' ').trim().replace(/^page\s*\d+\s*[:.\-–—]\s*/i, '').slice(0, 80) } };
   // Things that go round, things that connect, places (a nitrogen-cycle lesson had only lists to draw with,
   // embed-1794376956230).
   if (b.kind === 'cycle') return { name: 'show_cycle_diagram', args: { ...(b.attrs.title ? { title: b.attrs.title } : {}), // Captions sit beside small circles: a long one runs over its neighbours, so only a short one is drawn.
@@ -262,13 +308,12 @@ export class BoardInlineStream {
         return out;
       }
       if (open > 0) { out.push({ text: this.buf.slice(0, open) }); this.buf = this.buf.slice(open); }
-      const close = this.buf.indexOf(CLOSE);
-      if (close < 0) { if (final) this.buf = ''; else if (!this.announced) { this.announced = true; out.push({ opening: true }); } return out; }
+      const end = blockEnd(this.buf, 0);
+      if (end < 0) { if (final) this.buf = ''; else if (!this.announced) { this.announced = true; out.push({ opening: true }); } return out; }
       this.announced = false;
-      const raw = this.buf.slice(0, close + CLOSE.length);
-      this.buf = this.buf.slice(close + CLOSE.length);
-      const block = parseBlock(raw);
-      if (block) out.push({ block });
+      const raw = this.buf.slice(0, end);
+      this.buf = this.buf.slice(end);
+      for (const block of flatten(raw)) out.push({ block });
     }
   }
 }
