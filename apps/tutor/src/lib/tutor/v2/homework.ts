@@ -12,13 +12,14 @@
  */
 import type { AnswerKey } from '../homework-build/types';
 import { resolveHomeworkProblemTurn, type HomeworkProblemTurn, type HomeworkProblemTurnDeps } from '../voice/homework-problem-turn';
-import { sanitizeConfirmedMarks } from '../voice/keyed-verdict';
+import { allKeyPartsConfirmed, confirmedKeyMarks, proseCreditForPart, proseMatchCandidates, sanitizeConfirmedMarks, scopedKeyedVerdicts, type KeyedVerdict } from '../voice/keyed-verdict';
+import type { ProseAnswerMatchFn } from '../voice/prose-answer-match';
 import { noRevealLedgerForPartner } from '../voice/no-reveal-ledger-gate';
 import {
   HOMEWORK_PROBLEM_CONDUCT_RULES, HOMEWORK_PROBLEM_FIGURE_SHOWN, HOMEWORK_PROBLEM_NO_FIGURE, HOMEWORK_PROBLEM_UNVERIFIED,
 } from '../voice/homework-problem-block';
 import { marksInWords, oneLine, partLabel } from './homework-facts';
-import type { V2HomeworkProblem, V2HomeworkState, V2Session } from './types';
+import type { V2HomeworkProblem, V2HomeworkState, V2Session, V2State } from './types';
 
 export { marksInWords, partLabel, v2HomeworkFacts } from './homework-facts';
 
@@ -88,4 +89,67 @@ export function readHomeworkState(raw: unknown): V2HomeworkState | undefined {
   const h = raw as Partial<V2HomeworkState> | null | undefined;
   if (!h || typeof h !== 'object') return undefined;
   return { confirmed: sanitizeConfirmedMarks(h.confirmed), ...(h.done === true ? { done: true } : {}) };
+}
+
+/** A homework verdict as the browser records it (useV2Turns → `homework_keyed_verdict`, the outcome route's input). */
+export interface V2HomeworkVerdict { part: string; verdict: 'correct' | 'incorrect'; value?: string }
+
+export interface V2HomeworkCheckResult {
+  /** The facts' "answer check" line; absent when the message answered nothing the key can judge. */
+  answerCheck?: string;
+  /** This message's decided verdicts, for the `homework-keyed-verdict` frames. */
+  verdicts: V2HomeworkVerdict[];
+  /** Every mark confirmed so far, earlier sessions' included. */
+  confirmed: string[];
+  done: boolean;
+  /** This message completed the problem (the `homework-problem-done` frame). */
+  justDone: boolean;
+}
+
+/** The student's own messages in a v2 history, in the plain form the keyed checks read. Tool results carry
+ *  no text; the runtime's own placeholders ("[The session has just started…]") are runtime notes to them. */
+export function studentMessagesOf(history: V2State['history']): Array<{ role: 'user'; content: string }> {
+  const out: Array<{ role: 'user'; content: string }> = [];
+  for (const m of history) {
+    if (m.role !== 'user') continue;
+    const text = typeof m.content === 'string' ? m.content : (m.content.find((b) => b.type === 'text') as { text?: string } | undefined)?.text;
+    if (typeof text === 'string') out.push({ role: 'user', content: text });
+  }
+  return out;
+}
+
+/**
+ * Design 2–3: the student's message checked against the key before the model is called. The deterministic
+ * keyed check first (voice/keyed-verdict.ts, sheet-scoped exactly as v1); a worded answer to a prose part,
+ * which nothing deterministic can match, is put to the prose match (one small model call) as v1 does. The
+ * result is what the facts say; the key's values are never in it.
+ */
+export async function v2HomeworkCheck(input: {
+  key: AnswerKey | undefined; problem: V2HomeworkProblem; state: V2State; studentSaid: string | null;
+  proseMatch?: ProseAnswerMatchFn;
+}): Promise<V2HomeworkCheckResult> {
+  const prior = input.state.homework?.confirmed ?? input.problem.priorConfirmed ?? [];
+  const wasDone = input.state.homework?.done === true;
+  const key = input.problem.verified ? input.key : undefined;
+  if (!key?.parts.length || input.studentSaid === null || wasDone) return { verdicts: [], confirmed: [...prior], done: wasDone, justDone: false };
+  const history = studentMessagesOf(input.state.history);
+  const said = input.studentSaid;
+  const decided = scopedKeyedVerdicts(history, said, key, prior).filter((v): v is KeyedVerdict & { verdict: 'correct' | 'incorrect' } => v.verdict !== 'undecided');
+  const verdicts: V2HomeworkVerdict[] = decided.map((v) => ({ part: partLabel(v.part ?? ''), verdict: v.verdict, ...(v.value ? { value: v.value } : {}) }));
+  const credit: string[] = [];
+  if (!decided.length && key.parts.some((p) => p.prose)) {
+    const msgs = [...history.map((m) => m.content), said];
+    const candidates = proseMatchCandidates(msgs, key, confirmedKeyMarks(history, said, key, prior)).filter((p) => proseCreditForPart(msgs, key, prior, p).length);
+    if (candidates.length) {
+      const match = input.proseMatch ?? (await import('../voice/prose-answer-match')).proseAnswerMatches;
+      const found = await Promise.all(candidates.map((p) => match({ problem: input.problem.text, label: p.label, keyStatement: p.final, studentMessage: said }).catch(() => null)));
+      const hits = candidates.filter((_, i) => found[i] === true);
+      if (hits.length === 1) for (const v of proseCreditForPart(msgs, key, prior, hits[0])) { credit.push(`part:${v.part ?? ''}`); verdicts.push({ part: partLabel(v.part ?? ''), verdict: 'correct' }); }
+    }
+  }
+  const all = [...prior, ...credit];
+  const confirmed = confirmedKeyMarks(history, said, key, all);
+  const done = allKeyPartsConfirmed(history, said, key, all);
+  const lines = verdicts.map((v) => `part ${v.part || '(the answer)'}${v.value ? `, ${v.value}` : ''}: ${v.verdict === 'correct' ? 'the student\'s answer matches the checked answer' : 'the student\'s answer does not match the checked answer'}`);
+  return { ...(lines.length ? { answerCheck: lines.join('; ') } : {}), verdicts, confirmed, done, justDone: done };
 }

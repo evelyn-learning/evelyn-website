@@ -10,7 +10,12 @@ import type { HomeworkProblemTurn } from '../src/lib/tutor/voice/homework-proble
 import { renderFacts } from '../src/lib/tutor/v2/facts';
 import { runV2Turn, v2SessionPart, v2StudentBlock, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
-import { readHomeworkState, v2HomeworkFor, v2HomeworkSession } from '../src/lib/tutor/v2/homework';
+import { readHomeworkState, v2HomeworkCheck, v2HomeworkFor, v2HomeworkSession } from '../src/lib/tutor/v2/homework';
+import { streamV2Turn } from '../src/lib/tutor/v2/client';
+import { runV2HomeworkTurn } from '../src/lib/tutor/v2/homework-turn';
+import { classifyHomeworkProblemOutcome } from '../src/lib/tutor/homework-build/outcome';
+import { formatKeyedVerdictDebug } from '../src/lib/tutor/voice/keyed-verdict';
+import type { V2State } from '../src/lib/tutor/v2/types';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -86,6 +91,73 @@ async function main() {
   check('another partner does not', (await v2HomeworkFor('plan-1', 'crimsora', { ...deps, env: {} }))?.problem.noReveal !== true);
   check('an ordinary plan is not homework', (await v2HomeworkFor('plan-2', 'greenapple', { noCache: true, getPlan: async () => ({ metadata: {} }) } as never)) === null);
   check('a client-held record keeps only well-formed marks', JSON.stringify(readHomeworkState({ confirmed: ['part:a', 'bogus', 'value:b=x'], done: 'yes' })) === '{"confirmed":["part:a","value:b=x"]}');
+
+  console.log('answer checking (design 2)');
+  const hwSession: V2Session = { ...base, homework: v2HomeworkSession(hpTurn(), { noReveal: true }) };
+  const said = (st: V2State, text: string): V2State => ({ ...st, history: [...st.history, { role: 'user', content: [{ type: 'text', text }] }, { role: 'assistant', content: [{ type: 'text', text: 'ok' }] }] });
+  let st = said(newV2State(0), '[The session has just started.]');
+  const c1 = await v2HomeworkCheck({ key: KEY, problem: hwSession.homework!, state: st, studentSaid: 'x = 25' });
+  check('a wrong value is found wrong, without the right one', /part a/.test(c1.answerCheck ?? '') && /does not match/.test(c1.answerCheck ?? '') && !/30/.test(c1.answerCheck ?? ''), c1.answerCheck);
+  check('a wrong value is a verdict frame', c1.verdicts.length === 1 && c1.verdicts[0].verdict === 'incorrect' && c1.verdicts[0].part === 'a');
+  st = said(st, 'x = 25');
+  const c2 = await v2HomeworkCheck({ key: KEY, problem: hwSession.homework!, state: st, studentSaid: 'so x = 30' });
+  check('a right value matches', /part a/.test(c2.answerCheck ?? '') && /matches the checked answer/.test(c2.answerCheck ?? ''), c2.answerCheck);
+  check('it is recorded', c2.confirmed.includes('part:a') && !c2.done && !c2.justDone);
+  st = { ...said(st, 'so x = 30'), homework: { confirmed: c2.confirmed } };
+  const cq = await v2HomeworkCheck({ key: KEY, problem: hwSession.homework!, state: st, studentSaid: 'what do I do next?' });
+  check('a question gets no answer check', !cq.answerCheck && !cq.verdicts.length && cq.confirmed.includes('part:a'));
+  const c3 = await v2HomeworkCheck({ key: KEY, problem: hwSession.homework!, state: st, studentSaid: '(b) angle ACB = 100' });
+  check('the last part done is the problem done', c3.done && c3.justDone && c3.confirmed.includes('part:b'));
+  const c4 = await v2HomeworkCheck({ key: KEY, problem: hwSession.homework!, state: { ...said(st, '(b) 100'), homework: { confirmed: c3.confirmed, done: true } }, studentSaid: 'x = 31' });
+  check('a done problem is not judged again', !c4.answerCheck && !c4.verdicts.length && c4.done && !c4.justDone);
+  const cu = await v2HomeworkCheck({ key: undefined, problem: { ...hwSession.homework!, verified: false }, state: st, studentSaid: 'x = 30' });
+  check('an unverified problem is never checked', !cu.answerCheck && !cu.verdicts.length && !cu.done);
+  const prose = await v2HomeworkCheck({
+    key: { parts: [{ label: 'a', final: 'The enzyme is not used up.', canonical: { kind: 'text', value: 'not used up' }, prose: true }], solvers: ['t'] },
+    problem: { ...hwSession.homework!, parts: ['a'] }, state: said(newV2State(0), '[start]'), studentSaid: 'it can be used again and again',
+    proseMatch: async () => true,
+  });
+  check('a worded answer to a prose part is credited by the prose match', prose.done && prose.verdicts.some((v) => v.verdict === 'correct'), prose);
+
+  console.log('done ends the session (design 3)');
+  const doneState: V2State = { ...newV2State(1_000_000), homework: { confirmed: ['part:a', 'part:b'], done: true } };
+  const e1 = stub([msg([{ type: 'text', text: 'That is the whole problem done. You can go back to your list.' }, { type: 'tool_use', id: 't1', name: 'end_lesson', input: { summary: 'done', because: 'lesson_complete' } }], 'tool_use')]);
+  const rEnd = await runV2Turn({ session: hwSession, state: said(doneState, 'x'), studentSaid: '(b) 100', callModel: e1.call, nowMs: 1_000_000 + 4 * 60000, boardPass: false });
+  check('end_lesson closes a done problem with time left', rEnd.state.closed, rEnd.toolCalls.map((t) => t.outcome));
+  const e2 = stub([msg([{ type: 'text', text: 'Bye.' }, { type: 'tool_use', id: 't1', name: 'end_lesson', input: { summary: 'x', because: 'lesson_complete' } }], 'tool_use'), msg([{ type: 'text', text: 'What next?' }], 'end_turn')]);
+  const rNot = await runV2Turn({ session: hwSession, state: said(newV2State(1_000_000), 'x'), studentSaid: 'hm', callModel: e2.call, nowMs: 1_000_000 + 4 * 60000, boardPass: false });
+  check('…but not an unfinished one', !rNot.state.closed);
+
+  console.log('frames and debug events (design 3)');
+  const frames = [{ type: 'homework-keyed-verdict', part: 'b', verdict: 'correct' }, { type: 'homework-problem-done' }, { type: 'text', delta: 'Done.' }, { type: 'done', spoken: 'Done.', state: newV2State(0), usage: {}, firstTextMs: 1, totalMs: 2 }];
+  const body = frames.map((f) => `data: ${JSON.stringify(f)}\n\n`).join('');
+  const got: unknown[] = [];
+  await streamV2Turn({ session: { subject: 'math', level: '9', mode: 'text' }, state: newV2State(0), studentSaid: 'x', onHomework: (ev) => got.push(ev), fetchImpl: (async () => new Response(body, { status: 200 })) as typeof fetch });
+  check('the client hands on the homework frames', JSON.stringify(got) === JSON.stringify([{ type: 'homework-keyed-verdict', part: 'b', verdict: 'correct' }, { type: 'homework-problem-done' }]), got);
+
+  console.log('one homework turn: check, then the turn (designs 2–3)');
+  const resolved = { problem: hwSession.homework!, key: KEY, turn: hpTurn() };
+  const ht = stub([msg([{ type: 'text', text: 'Yes, that is it. Now part (b): what is the exterior angle when x is 30?' }], 'end_turn')]);
+  const outFrames: unknown[] = [];
+  const hr = await runV2HomeworkTurn({ session: base, resolved, state: said(newV2State(1_000_000), '[start]'), studentSaid: 'x = 30', callModel: ht.call, nowMs: 1_000_060_000, boardPass: false, onHomeworkFrame: (f) => outFrames.push(f) });
+  const htSent = JSON.stringify(ht.seen[0].messages);
+  check('the check found is a fact of the turn', /answer check: part a: the student's answer matches the checked answer/.test(htSent), htSent.slice(-400));
+  check('the record is a fact of the turn', /homework record: confirmed correct — part a; still open — part b/.test(htSent));
+  check('the verdict frame went out', JSON.stringify(outFrames) === '[{"type":"homework-keyed-verdict","part":"a","verdict":"correct"}]', outFrames);
+  check('the record is carried in the state', JSON.stringify(hr.state.homework) === '{"confirmed":["part:a"]}', hr.state.homework);
+
+  console.log('outcome parity with v1 (design 3)');
+  // The debug events a v2 session records (useV2Turns) for: a solved problem, and one wrong twice on (b).
+  const ev = (part: string, verdict: 'correct' | 'incorrect') => ({ type: 'homework_keyed_verdict', message: formatKeyedVerdictDebug(part, verdict) });
+  const solvedEvents = [ev('a', 'correct'), ev('b', 'correct'), { type: 'homework_problem_done', message: 'all key parts confirmed' }];
+  const transcript = [{ role: 'tutor', text: 'Which angles?' }, { role: 'student', text: 'x = 30' }, { role: 'tutor', text: 'Right. (b)?' }, { role: 'student', text: '(b) 100' }];
+  check('a solved v2 session is done', classifyHomeworkProblemOutcome({ debugEvents: solvedEvents, transcript, verified: true, key: KEY }) === 'done');
+  // As stored: each event and each transcript entry carries its time, so two wrong answers on two turns count twice.
+  const at = (e: { type: string; message: string }, t: number) => ({ ...e, timestamp: new Date(t) });
+  const wrongTwice = [at(ev('a', 'correct'), 1500), at(ev('b', 'incorrect'), 2500), at(ev('b', 'incorrect'), 3500)];
+  const wtTranscript = [{ role: 'student', text: 'x = 30', timestamp: new Date(1000) }, { role: 'student', text: '(b) 80', timestamp: new Date(2000) }, { role: 'student', text: '(b) 90', timestamp: new Date(3000) }];
+  check('a v2 session wrong twice on (b) needs review', classifyHomeworkProblemOutcome({ debugEvents: wrongTwice, transcript: wtTranscript, verified: true, key: KEY }) === 'needs_review');
+  check('the events the checker yields are the ones v1 records', (await v2HomeworkCheck({ key: KEY, problem: hwSession.homework!, state: said(newV2State(0), '[start]'), studentSaid: 'x = 30' })).verdicts.map((v) => formatKeyedVerdictDebug(v.part, v.verdict as 'correct')).join() === 'keyed part=a verdict=correct');
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

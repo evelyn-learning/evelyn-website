@@ -27,6 +27,10 @@ export interface V2TurnDone {
   totalMs: number;
 }
 
+export type V2HomeworkFrame =
+  | { type: 'homework-keyed-verdict'; part: string; verdict: 'correct' | 'incorrect'; value?: string }
+  | { type: 'homework-problem-done' };
+
 export interface V2TurnRequest {
   session: V2ClientSession;
   state: V2State;
@@ -39,6 +43,8 @@ export interface V2TurnRequest {
   onToolCall?: (call: V2ToolCall) => void;
   onBoardOpen?: () => void;
   onBoardWithdraw?: (id: string) => void;
+  /** Homework mode's frames (v2/homework.ts): a verdict of the answer check, and the problem done. */
+  onHomework?: (ev: V2HomeworkFrame) => void;
   fetchImpl?: typeof fetch;
 }
 
@@ -68,6 +74,8 @@ export async function streamV2Turn(req: V2TurnRequest): Promise<V2TurnDone> {
       else if (ev.type === 'board-open') req.onBoardOpen?.();
       else if (ev.type === 'board-withdraw' && typeof ev.id === 'string') req.onBoardWithdraw?.(ev.id);
       else if (ev.type === 'tool-call') req.onToolCall?.(ev as unknown as V2ToolCall);
+      else if (ev.type === 'homework-keyed-verdict' && typeof ev.part === 'string' && (ev.verdict === 'correct' || ev.verdict === 'incorrect')) req.onHomework?.({ type: 'homework-keyed-verdict', part: ev.part, verdict: ev.verdict, ...(typeof ev.value === 'string' ? { value: ev.value } : {}) });
+      else if (ev.type === 'homework-problem-done') req.onHomework?.({ type: 'homework-problem-done' });
       else if (ev.type === 'done') done = ev as unknown as V2TurnDone;
       else if (ev.type === 'error') throw new Error(typeof ev.message === 'string' ? ev.message : 'tutor turn failed');
     }

@@ -19,6 +19,7 @@ import { mapFunctionCallToCommand } from '@/app/tutor/hooks/toolDefinitions';
 import type { TranscriptEntry } from '@/lib/tutor/types';
 import { paintsOnBoard, streamV2Turn, type V2ClientSession } from '@/lib/tutor/v2/client';
 import { foldInterruptedTurn } from '@/lib/tutor/v2/interrupted';
+import { KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug } from '@/lib/tutor/voice/keyed-verdict';
 import { SentenceStream } from '@/lib/tutor/v2/sentences';
 import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
@@ -144,6 +145,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const openedRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const endingRef = useRef(false);
+  const homeworkDoneRecordedRef = useRef(false);
   const [busy, setBusy] = useState(false);
   const [closed, setClosed] = useState(false);
 
@@ -221,6 +223,12 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         // A board block is arriving: keep the sentence until it is here (bounded: a block that never completes must not mute the tutor).
         onBoardOpen: () => { if (kept !== null) { const s = kept; kept = null; keep(s, KEEP_FOR_BLOCK_MS); } },
         onBoardWithdraw: (id) => { p.current.onBoardWithdraw?.(id); },
+        // Homework mode: the same debug events v1 records, which the academy's outcome route reads
+        // (homework-build/outcome.ts). Done is recorded once.
+        onHomework: (ev) => {
+          if (ev.type === 'homework-keyed-verdict') p.current.onDebugEvent?.(KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug(ev.part, ev.verdict, ev.value));
+          else if (!homeworkDoneRecordedRef.current) { homeworkDoneRecordedRef.current = true; p.current.onDebugEvent?.('homework_problem_done', 'all key parts confirmed'); }
+        },
         onToolCall: (call) => {
           settled.push(call);
           p.current.onDebugEvent?.('tool_call', `${call.name} → ${call.outcome}${call.sayWith ? ` · with "${call.sayWith}"` : ''}${call.inline ? ' · inline' : ''}`);

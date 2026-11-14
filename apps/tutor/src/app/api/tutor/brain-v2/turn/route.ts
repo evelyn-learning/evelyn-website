@@ -15,8 +15,9 @@ import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
 import { readHomeworkState, v2HomeworkFor } from '@/lib/tutor/v2/homework';
+import { runV2HomeworkTurn } from '@/lib/tutor/v2/homework-turn';
 import { runV2Turn } from '@/lib/tutor/v2/turn';
-import type { V2Session, V2State } from '@/lib/tutor/v2/types';
+import type { V2Session, V2State, V2ToolCall } from '@/lib/tutor/v2/types';
 
 export const runtime = 'nodejs';
 
@@ -86,14 +87,24 @@ export async function POST(req: NextRequest) {
       // A client that has gone (interrupted turn, closed tab) is not an error: stop writing, stop the model.
       const send = (event: Record<string, unknown>) => { if (req.signal.aborted) return; try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`)); } catch { /* stream already closed */ } };
       try {
-        const r = await runV2Turn({
+        const facts = { ...(silenceSeconds ? { silenceSeconds } : {}), ...(body.resumed === true ? { resumed: true } : {}) };
+        const turnInput = {
           session, state, studentSaid, signal: req.signal,
-          ...(silenceSeconds || body.resumed === true ? { facts: { ...(silenceSeconds ? { silenceSeconds } : {}), ...(body.resumed === true ? { resumed: true } : {}) } } : {}),
-          onText: (delta) => send({ type: 'text', delta }),
+          ...(Object.keys(facts).length ? { facts } : {}),
+          onText: (delta: string) => send({ type: 'text', delta }),
           onBoardOpen: () => send({ type: 'board-open' }),
-          onBoardWithdraw: (id) => send({ type: 'board-withdraw', id }),
-          onToolCall: (call) => send({ type: 'tool-call', ...call }),
-        });
+          onBoardWithdraw: (id: string) => send({ type: 'board-withdraw', id }),
+          onToolCall: (call: V2ToolCall) => send({ type: 'tool-call', ...call }),
+        };
+        // Homework mode (v2/homework.ts): the answer is checked against the key before the model is called, and
+        // the browser records each verdict as the debug event the academy's outcome route reads.
+        const r = homework
+          ? await runV2HomeworkTurn({ ...turnInput, resolved: homework, onHomeworkFrame: (f) => {
+            send(f);
+            if (f.type === 'homework-problem-done') console.log('[brain-v2] homework: every part confirmed — homework-problem-done');
+            else console.log(`[brain-v2] homework check: part ${f.part} ${f.verdict}`);
+          } })
+          : await runV2Turn(turnInput);
         console.log(`[brain-v2] student="${(studentSaid ?? '(none)').slice(0, 80)}" → tools=[${r.toolCalls.map((t) => t.name).join(', ') || '(none)'}] · calls=${r.modelCalls} · first=${r.firstTextMs}ms total=${r.totalMs}ms · in=${r.usage.inputTokens} out=${r.usage.outputTokens} cr=${r.usage.cacheReadTokens} cc=${r.usage.cacheCreationTokens}`);
         send({ type: 'done', spoken: r.spoken, state: r.state, usage: r.usage, firstTextMs: r.firstTextMs, totalMs: r.totalMs });
       } catch (err) {

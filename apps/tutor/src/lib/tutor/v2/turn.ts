@@ -187,7 +187,9 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     // Ending is the student's decision or the clock's. With time left and no request to stop, the tutor
     // twice closed the lesson by itself after the last planned problem (embed-1794336536781, -1794339843244).
     const left = session.timeBoxMinutes ? session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 : 0;
-    if (args.because !== 'student_asked' && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
+    // Homework: the session is for one problem, and a solved one ends it (homework.ts).
+    const homeworkDone = !!session.homework && state.homework?.done === true;
+    if (args.because !== 'student_asked' && !homeworkDone && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
       // there are about seven minutes left and you haven't asked to stop" (embed-1794595194384).
       return `not ended: the session goes on. Whether to stop is the student's choice, and they have not made it. Say nothing of this message or of the clock. In one sentence of your own, ask what they would like now: something harder, more practice, a question of their own, or to stop here.`;

@@ -46,9 +46,14 @@ async function main() {
   const planId = String(fixture.claims.curriculum_module ?? '');
   const plan = planId ? await getLessonPlan(planId) : null;
   if (planId && !plan) { console.error(`plan ${planId} not found`); process.exit(1); }
+  // Homework mode (v2/homework.ts), resolved as the route resolves it, for the fixture's partner.
+  const { v2HomeworkFor } = await import('../../../src/lib/tutor/v2/homework');
+  const { runV2HomeworkTurn } = await import('../../../src/lib/tutor/v2/homework-turn');
+  const { formatKeyedVerdictDebug } = await import('../../../src/lib/tutor/voice/keyed-verdict');
+  const homework = plan ? await v2HomeworkFor(planId, fixture.partner) : null;
   const session = {
     studentName: String(fixture.claims.student_name ?? ''), subject: String(fixture.claims.subject), level: String(fixture.claims.level),
-    mode, timeBoxMinutes: fixture.maxMinutes, ...(plan ? { plan } : {}),
+    mode, timeBoxMinutes: fixture.maxMinutes, ...(plan ? { plan } : {}), ...(homework ? { homework: homework.problem } : {}),
   };
 
   const log: string[] = [];
@@ -68,7 +73,14 @@ async function main() {
 
   while (clockMs - t0 < maxMin * 60000 && studentTurns < fixture.maxStudentTurns) {
     let r;
-    try { r = await runV2Turn({ session, state, studentSaid, effort, nowMs: clockMs }); }
+    try {
+      r = homework
+        ? await runV2HomeworkTurn({ session, state, studentSaid, effort, nowMs: clockMs, resolved: homework, onHomeworkFrame: (f) => {
+          // The debug events the browser records (useV2Turns), which the outcome reads.
+          events.push(f.type === 'homework-problem-done' ? { type: 'homework_problem_done', message: 'all key parts confirmed' } : { type: 'homework_keyed_verdict', message: formatKeyedVerdictDebug(f.part, f.verdict, f.value) });
+        } })
+        : await runV2Turn({ session, state, studentSaid, effort, nowMs: clockMs });
+    }
     catch (e) { say(`TUTOR ERROR ${(e as Error).message.slice(0, 200)}`); endedBy = 'error'; break; }
     state = r.state;
     events.push({ type: 'brain_turn', message: `Brain ${r.totalMs}ms · ${r.toolCalls.length} tool call(s) · first_sentence=${r.firstTextMs ?? r.totalMs}ms · in=${r.usage.inputTokens} out=${r.usage.outputTokens} cr=${r.usage.cacheReadTokens} cc=${r.usage.cacheCreationTokens}` });
@@ -91,11 +103,11 @@ async function main() {
   const bundle: RunBundle = { fixture: fixture.name, arm, startedAt: new Date(t0).toISOString(), minutes: (clockMs - t0) / 60000, turns, events, endedBy };
   const base = path.join(outDir, `${fixture.name}-${arm}-${runId}`);
   // A homework-problem plan (GAC): the outcome the academy would read, and any key value the tutor stated.
-  const homework = fixture.claims.session_goal === 'homework-help' && planId
+  const homeworkOutcome = fixture.claims.session_goal === 'homework-help' && planId
     ? await (await import('./homework-outcome')).homeworkRunOutcome(planId, turns, events).catch((e) => { say(`homework outcome failed: ${(e as Error).message.slice(0, 120)}`); return null; })
     : null;
-  if (homework) say(`homework outcome=${homework.outcome} reveals=${homework.reveals.length}`);
-  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, ...(homework ? { homework } : {}), note: state.note, goals: state.goals, board: state.board, closeSummary: state.closeSummary }, null, 2));
+  if (homeworkOutcome) say(`homework outcome=${homeworkOutcome.outcome} reveals=${homeworkOutcome.reveals.length}`);
+  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, ...(homeworkOutcome ? { homework: homeworkOutcome } : {}), note: state.note, goals: state.goals, board: state.board, closeSummary: state.closeSummary }, null, 2));
   fs.writeFileSync(`${base}.log`, log.join('\n'));
   const card = scoreRun(bundle);
   fs.writeFileSync(`${base}.score.json`, JSON.stringify(card, null, 2));
