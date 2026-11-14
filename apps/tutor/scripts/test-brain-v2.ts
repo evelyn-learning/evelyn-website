@@ -740,7 +740,7 @@ async function main() {
     const r1 = await runV2Turn({ session: dSession, state: r0.state, studentSaid: 'Kelly is fine, she chose.', nowMs: 1_000_000 + 3 * 60000, callModel: think.call });
     check('record_thinking keeps the position, adds what was weighed once, and keeps shifts', r1.state.thinking?.position === 'Fine if the student decides' && r1.state.thinking?.weighed.join('|') === 'student keeps control|voice|disclosure' && r1.state.thinking?.shifts.length === 1, JSON.stringify(r1.state.thinking));
     const f1 = renderFacts(dSession, r1.state, { nowMs: 1_000_000 + 4 * 60000 });
-    check('the facts show their thinking and a discussion clock', /already raised or weighed.*disclosure/.test(f1) && /4 min used of about 12; about 8 left/.test(f1) && !/time for more/.test(f1), f1);
+    check('the facts show their thinking and a discussion clock', /already raised or weighed.*disclosure/.test(f1) && /4 min used of about 12; about 8 left: plenty of time/.test(f1) && !/time for more/.test(f1), f1);
 
     const early = stub([
       msg([{ type: 'text', text: 'Thanks, Jo.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's' } }], 'tool_use'),

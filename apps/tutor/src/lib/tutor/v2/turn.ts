@@ -439,7 +439,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if ('block' in part) {
           // A new part the student has not been asked about is not opened in this reply (part-close.ts): the
           // reply ends here, with the offer in place of the page and all that followed it.
-          if (part.block.kind === 'page' && !boardHasPage(part.block.body) && !state.closed && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
+          if (part.block.kind === 'page' && !discussion && !boardHasPage(part.block.body) && !state.closed && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
             const offer = /\?\s*$/.test(saidNow) ? '' : partOffer(part.block.body.trim(), namesPart(part.block.body, saidNow));
             heldAt = { raw: part.block.raw, offer };
             if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
