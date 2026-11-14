@@ -6,20 +6,18 @@ ports: read the whole plan before starting.
 
 ## Decisions already made (Praveen, 2026-11-13)
 
-- **Why: better teaching.** Port the hard parts (script order, turn budgets, level check, pronunciation, the
-  bilingual rules, close/stop behaviour); let v2's teaching replace the tuned v1 quirks rather than copying all ~40
-  switches. When a v1 behaviour is dropped, say so in the PR with the reason.
-- **All GDI lessons move together**: the work-projects trial and the showcase lessons (`gdi.demo.english.*`:
-  starter, advanced, meeting) — every `gdi-demo` session.
-- **Keep the fixed trial-lesson script.** Same lesson, same ordered parts (overview → level check → topic → present
-  perfect → past simple → open conversation → pronunciation → summary), same level check and pronunciation work.
-  v2 delivers it.
-- **Switch at once** when done: the `gdi-demo` row goes to v2 and :3009 is redeployed. v1 stays in the code as the
-  rollback.
-- **No date.** Quality over speed. **Praveen will do the real-microphone test** (v2 voice has never had a real mic,
-  nor a Japanese speaker). Ask him when the build is ready for it.
-- Automated runs must not spend Cartesia: replays run text mode with `--no-speech` (see
-  `scripts/tutor/replay-harness/run-replay.ts`). Only Praveen's mic test uses real voice.
+- **No separate engine and no script mode.** GDI's own brief (`docs/whitelabel/gdi/samples/test-lesson-layout-and-requirements-2026-10-28.md`)
+  asks for a lesson that is "adaptive, conversational, and student-centered", where "the conversation feels natural
+  rather than scripted" and the AI "should prioritize learning outcomes over completing every planned activity within
+  a rigid schedule". That is v2's plan-as-a-map, exactly as it teaches our own demo lessons. The v1 fixed-script /
+  typed-turn engine was our October choice to hold a weaker voice brain in line; it is **not** carried over.
+- What v2 needs is **general capability any language partner would use**, not GDI code: two teaching languages, a
+  one-time level check remembered on the learner, measured pronunciation, and Japanese-aware voice handling.
+- **Why: better teaching.** Where a tuned v1 behaviour is dropped, say so in the PR with the reason.
+- **All GDI lessons move together**: the work-projects trial and the showcase lessons (`gdi.demo.english.*`).
+- **Switch at once** when done: the `gdi-demo` row goes to v2 and :3009 is redeployed. v1 stays as the rollback.
+- **No date.** Quality over speed. **Praveen will do the real-microphone test.**
+- Automated runs never spend Cartesia: replays run text mode with `--no-speech`.
 
 ## Where things stand
 
@@ -44,67 +42,57 @@ ports: read the whole plan before starting.
   `metadata.pronunciation.words/sentences`; 1 and 8 have `requiredPhrases`. Showcase lessons `gdi.demo.english.*`
   live in the DB only. Trial links: `docs/whitelabel/gdi/demo/mint-demo-links.js` (gitignored, local).
 
-## Target design: a script mode in v2
+## Target design: the GDI lesson as an ordinary v2 lesson plan
 
-The principle that keeps v2 v2: **the script is session data, not new constitution rules.** The constitution stays
-generic (its test forbids partner names, `test-brain-v2.ts:64`); everything GDI-specific arrives as the plan, the
-session part, facts and tools.
+Nothing in this design names GDI. The constitution stays generic (`test-brain-v2.ts:64`).
 
-1. **Languages through the stack.** Add `languages` to `V2Session` (`v2/types.ts:16-32`), carry it through the
-   brain-v2 route body and `client.ts`. In the session part (not the constitution), a bilingual section built from
-   `buildBilingualClause` (`ai/system-prompt-builder.ts:2226-2265`): reuse its content, but cut it down to the
-   principles (Japanese explains, English is the target; polite です/ます; no romaji; the learner produces, not
-   repeats; stop hinting after two tries; say a closing in one turn). Each line kept must name the failure it
-   prevents (the repo rule: rules carry their reason).
-2. **Script mode, server-held.** When `plan.metadata.fixedScript`:
-   - The plan map shows the **current part in full** (including `teacherNote`, `requiredPhrases`, the singular
-     `hint`, pronunciation targets) and the remaining parts as a short outline. Fix `plan-map.ts` to keep those fields.
-   - v2 state gains `script: { part, turnsInPart, skipped[] }`. A new control tool `next_part` (with a reason)
-     moves on; the server also moves on by itself when `turnsInPart` reaches the part's `maxTurns`, and says so in the
-     facts ("this part's turns are used: close it in this reply and move on").
-   - Transitions: the part's `transition` (offer / bridge) becomes a fact for the reply that closes the part.
-   - Required phrases: a check after the reply (like v2's existing board check) that a closing part's required phrase
-     was said; if not, one regeneration with the reason. Same for the summary.
-   - `is_trial` must not unlock "leave the plan" in script mode.
-   - Rail labels: `labelLocalized.ja` drive the progress chips (`progress.ts`, `rail-labels.ts:107`).
-   - From the transition and close behaviours the 17 waves tuned (`fixed-script.ts`, 1,421 lines, and the typed-turn
-     rules), carry over the ones that protect the lesson's shape (part order, budgets, offers/bridges, required
-     phrases, the time guard, the stop choice), as facts or server moves, not prose rules. Do not copy the
-     typed-turn JSON engine: v2's own reply is the point. List what you deliberately drop in the PR.
-3. **Spoken opener.** Segment 1's `script` is spoken verbatim by the client (as `lesson-plan/spoken-opener.ts` does for
-   v1), then the brain's first turn starts at segment 2. Opener prefetch: wire `openerPrefetch` into `TutorVoiceV2`
-   (today only the text client's `prewarm` exists) or drop it if the verbatim opener makes it moot (likely: the opener
-   needs no model call).
-4. **Level check.** A `set_working_level` control tool for v2 (reuse `level/working-level.ts`), stored on
-   `StudentProfile.workingLevel`; the level-check part is skipped when a level is known (`skipWhenLevelKnown`); the
-   Haiku estimate fallback (`/api/tutor/level/estimate`) when the tool was never called. Gate by the partner option
-   `levelCheck`, passed to `TutorVoiceV2` (`TutorSession.tsx:1882-1886` passes it only to v1 today).
-5. **Pronunciation.** Tap mic frames into `ClipCapture` (v2 taps them only for the recorder,
-   `TutorVoiceV2.tsx:497`), call `/api/tutor/pronunciation/assess` (needs the live session row; check the route's
-   gates), auto-arm from the part's `metadata.pronunciation` targets, and put the measured result in the next turn's
-   facts ("'schedule': 54/100, the /ʃ/ was /s/"). Low score (<60) → the facts ask for one repeat. Gate by the
-   partner option `pronunciation`. No praise of pronunciation without a measurement (v1 rule, keep it).
-6. **Sentence cards.** A board kind for an English sentence with optional stress marks and a Japanese gloss (v1:
-   `voice/sentence-board.ts`), and boarding the learner's good sentences at the summary.
-7. **Japanese text handling in the voice client.**
-   - `v2/sentences.ts:61` cuts only at `[.!?。！？]` followed by whitespace: Japanese has no space after 。, so a
-     Japanese paragraph is spoken as one sentence. Cut after 。！？ without needing a space.
-   - `v2/own-voice.ts:10` splits words on whitespace: Japanese echo is never caught (one "word" < `minWords=4`).
-     Make it CJK-aware (characters or a tokenizer) — this is the echo risk on a real call.
-   - Mixed-language TTS: reuse `tts-language.ts:83 splitSentenceForTts` so an English phrase quoted in a Japanese
-     sentence is voiced in English.
-   - Japanese end/stop signals (`lesson-close.ts:15-60, 279-282, 346`: `isSessionEndSignalJa`,
-     `isPleasantryOnly`), firm stop (`isFirmStop` :209-238: "I have to finish now" closes at once), post-close
-     silence.
-8. **Close and time.** The time-limit hard stop (`useV2Turns.ts:349-362`) ends with no goodbye: add the wrap line
-   (pass `sessionWrapMinutes`) and a goodbye. Decide the 45 s auto-end (`lessonCloseAutoEnd`) vs v2's 4 s close
-   (`useV2Turns.ts:77, 263-274`): pass the option through and honour it.
-9. **Voice-client maturity** (needed for any real call, GDI or not): `TutorVoiceV2.tsx:23-26` lists what is missing —
-   a sustained-energy barge-in gate, mic re-acquire on `devicechange` (that bug came from GDI run 14), caption sync
-   (`getSpokenCaption` is a stub, `TutorClientV2.tsx:29`). Fillers are optional.
-10. **Gate.** `v2CanRunSession` admits `ja` only when the session's script mode and bilingual section are present
-    (i.e. after 1–8); keep every other non-English language on v1. Then `gdi-demo: { brainVersion: 'v2', ... }`.
-    Update the pins.
+1. **The plan as written.** The GDI plans are already lesson plans (ordered parts with goals, teacher notes, turn
+   budgets, required phrases, pronunciation targets). Fix `v2/plan-map.ts:17-27` so the map keeps what it drops today:
+   `teacherNote`, `requiredPhrases`, the singular `hint`, `responseFormat`, and the part's estimated minutes. The
+   plan's `metadata.fixedScript` is ignored by v2 (v1 still reads it). `is_trial` (showcase links) must not make v2
+   "leave the plan behind" for these lessons: decide whether `trial` should apply to any plan-led session at all.
+2. **Two teaching languages.** `V2Session.languages` (`v2/types.ts:16-32`), carried through the brain-v2 route and
+   `client.ts`. When a second language is present, the session part gets a short bilingual section built from the
+   principles in `buildBilingualClause` (`ai/system-prompt-builder.ts:2226-2265`), cut to what matters, each line with
+   the failure it prevents: English is the target and Japanese explains; how much Japanese follows the learner's
+   level (GDI: beginner / lower intermediate get Japanese help, others little); polite です/ます; no romaji; the learner
+   produces the English, not repeats it; after two tries give the answer and move on; one closing turn.
+3. **One-time level check, remembered.** A general `set_working_level` control tool (reuse `level/working-level.ts`),
+   stored on `StudentProfile.workingLevel`; the facts carry the known level on later sessions and the plan part
+   marked `skipWhenLevelKnown` is skipped; the Haiku estimate fallback when the tool was never called. The working
+   level goes into every turn's facts so the language, questions and corrections stay at that level (GDI's
+   "adaptive learning" checkpoint). Gate by the partner option `levelCheck` (pass it to `TutorVoiceV2`;
+   `TutorSession.tsx:1882-1886` passes it only to v1 today).
+4. **Measured pronunciation.** Tap mic frames into `ClipCapture` (v2 taps them only for the recorder,
+   `TutorVoiceV2.tsx:497`); a general control tool `practise_pronunciation({ items })` arms the next student turn for
+   scoring through `/api/tutor/pronunciation/assess`; the score comes back in the next turn's facts ("'schedule'
+   54/100, /ʃ/ heard as /s/"). Below 60 the facts ask for one more try. No comment on pronunciation without a
+   measurement. Offered at the plan's pronunciation part and on request at any time (GDI's "optional pronunciation
+   mode"). Gate by the partner option `pronunciation`.
+5. **Sentence cards** for language lessons: an English sentence with optional stress marks and a gloss (v1:
+   `voice/sentence-board.ts`), as an inline board kind; the learner's corrected sentences boarded in the summary.
+6. **Japanese in the voice client** (must-have before any real call):
+   - `v2/sentences.ts:61` cuts only at `[.!?。！？]` followed by whitespace: cut after 。！？ without a space.
+   - `v2/own-voice.ts:10` splits on whitespace, so the tutor's own Japanese is never recognised as echo: make it
+     CJK-aware.
+   - Mixed-language TTS: reuse `tts-language.ts:83 splitSentenceForTts`.
+   - Japanese end and stop signals and the firm stop (`lesson-close.ts`: `isSessionEndSignalJa`, `isPleasantryOnly`,
+     `isFirmStop`).
+7. **Time.** GDI sittings are 20 minutes (pool cap). The hard stop (`useV2Turns.ts:349-362`) ends without a goodbye:
+   pass `sessionWrapMinutes` and say the wrap line and a goodbye. Pass `lessonCloseAutoEnd` through.
+8. **Voice-client maturity** (needed for any real call): sustained-energy barge-in gate, mic re-acquire on
+   `devicechange`, caption sync (`TutorVoiceV2.tsx:23-26` lists them; `getSpokenCaption` is a stub).
+9. **Gate.** `v2CanRunSession` admits a second language once 2–8 are in. Then `gdi-demo: { brainVersion: 'v2', ... }`
+   and update the pins (`test-brain-v2.ts:607, 622`, `test-partner-session-options.ts:70-91`).
+
+## GDI's checklist is the acceptance test
+
+Their PART 9 checklist (in the brief above) is what the runs in task 6 are scored against, item by item: overview
+before the level check; three conversational level questions and a sensible level; visibly different beginner vs
+advanced lessons; correct present perfect / past simple teaching; natural follow-ups; a corrected mistake with a
+retry (Acknowledge → Correct → Explain → Practice → Continue); the student invited to ask questions; pronunciation
+offered and measured; a summary that reflects this learner; pacing that adapts. Run the fixture twice: once as a
+beginner who needs Japanese, once as an upper-intermediate speaker.
 
 ## Tasks (in order)
 
@@ -115,17 +103,17 @@ session part, facts and tools.
    later says 「ちょっと待ってください」 and finally "Sorry, I have to finish now". Run it on v1 (text mode,
    `--no-speech`; the typed-turn engine runs in text too — check) and keep the bundle. Also run
    `scripts/trial-text-session.mjs` on v1 and keep its check output: it is the existing GDI quality bar.
-2. Languages + bilingual session section (1) + Japanese text handling (7). Unit tests.
-3. Script mode (2) + spoken opener (3). Unit tests: part advance by tool and by budget; skipped level check; required
-   phrase regenerated; `is_trial` does not unlock leaving the plan.
-4. Level check (4), pronunciation (5), sentence cards (6). Tests reuse `test-working-level`, `test-pronunciation-*`
+2. Languages + bilingual section (2) + Japanese voice handling (6). Unit tests.
+3. Plan map fields (1) and the `trial` decision. Unit tests: teacher notes and required phrases reach the map.
+4. Level check (3), pronunciation (4), sentence cards (5). Tests reuse `test-working-level`, `test-pronunciation-*`
    inputs on the v2 path.
-5. Close and time (8). Voice maturity (9).
-6. **Run the fixture and `trial-text-session.mjs` on v2** locally with `NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS=gdi-demo=v2`
-   in the local env only. Every check that passed on v1 must pass on v2; list any that do not and why.
+5. Time (7). Voice maturity (8).
+6. **Run the fixture (beginner and upper-intermediate) and `trial-text-session.mjs` on v2** locally with `NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS=gdi-demo=v2`
+   in the local env only. Score both against GDI's checklist. `trial-text-session.mjs` checks written for the fixed-script engine that no
+   longer apply are listed and retired, not chased.
 7. **Praveen's mic test** on the local build (he speaks; ask him for a time). Watch: echo of Japanese TTS, barge-in,
    long Japanese sentences, pronunciation scores arriving, the firm stop.
-8. Gate (10) + pins. `npm run test:changed`, `npm run test:all` (baseline failures: `embed-debug-coverage`,
+8. Gate (9) + pins. `npm run test:changed`, `npm run test:all` (baseline failures: `embed-debug-coverage`,
    `portal-student-scoping`). `wt.sh finish`.
 9. Deploy `./deploy-tutor.sh` (:3007, shared code; GDI traffic is on :3009) then `./deploy-tutor-demo.sh` (:3009).
    One live check with a fresh `gdi-trial-N` link (mint with `mint-demo-links.js`), read its session row.
@@ -137,16 +125,14 @@ session part, facts and tools.
 
 ## Risks
 
-- **Size.** ~9k lines of GDI modules and ~40 tuned switches on v1. Expect this to take several sessions; ship it in
-  the order above with each step green, and do not flip the row until step 7 passes.
+- **Losing tuned behaviour.** v1's GDI engine was tuned over 17 live waves; some of what it fixed (menu picks,
+  re-arming a word after a filler) will reappear in a different form. Praveen's mic test is where they show.
 - **Echo on a real call** until own-voice is CJK-aware and the energy barge-in gate exists.
-- **Prompt drift.** v1 GDI is held to a JSON schema with server refusals; v2 relies on the model. The required-phrase
-  check and the facts are the substitutes; measure them in step 6.
+- **Time.** A plan-led lesson can overrun 20 minutes; the time facts and the wrap line hold it. Measure in step 6.
 - **Shared code and gitignored files.** The plan JSON and mint scripts are local only; the demo plans are DB-only.
 - **Memory notes are partly stale** (e.g. wave 17 is on main). Trust the code.
 
 ## Showcase lessons
 
 The showcase lessons are DB-only plans (`apps/marketing/src/app/showcase/gdi-communications/_lib/lessons.ts:77-108`)
-minted with `is_trial: true`. Check each is `fixedScript` (if not, script mode does not apply and it runs as an
-ordinary bilingual v2 lesson — decide with Praveen), and add one showcase lesson to the step-6 runs.
+minted with `is_trial: true`. They run as ordinary v2 lesson plans like the trial; add one of them to the step-6 runs.
