@@ -153,6 +153,11 @@ async function main() {
     ['is it x = 8', k1('x = 8', 8)],
     ['maybe 4 kcal/m^2/yr, because it\'s 10% twice?', k1('4 kcal/m^2/yr', 4)],
   ] as const) check(`a hedged right answer is credited: "${m}"`, workedAnswerCredit(m, key).some((v) => v.verdict === 'correct'), workedAnswerCredit(m, key));
+  // Round 2 (precalculus): the key states the part as "g^-1(x) = 3x + 1"; the student offers the expression alone.
+  const inv: AnswerKey = { parts: [{ label: 'a', final: 'f^-1(x) = (x - 6)/2', canonical: { kind: 'text', value: 'f^-1(x) = (x - 6)/2' } }, { label: 'b', final: 'g^-1(x) = 3x + 1; g(g^-1(x)) = x', canonical: { kind: 'text', value: 'g^-1(x) = 3x + 1' } }], solvers: ['t'] };
+  check('an expression offered alone is credited against a part stated as "name = expression"', JSON.stringify(workedAnswerCredit("I don't know, maybe 3x + 1?", inv)) === JSON.stringify([{ verdict: 'correct', part: 'b', matched: '3x + 1' }]), workedAnswerCredit("I don't know, maybe 3x + 1?", inv));
+  check('…not a different expression', !workedAnswerCredit('maybe 3x - 1?', inv).length);
+  check('…not a bare number against a formula', !workedAnswerCredit('maybe 3?', inv).length);
   check('a hedged wrong answer is not credited', !workedAnswerCredit('maybe x = 16?', k1('x = 17', 17)).length);
   for (const [m, key] of [
     ['what is x = 16 + 1?', k1('x = 17', 17)],
@@ -357,6 +362,8 @@ async function main() {
     check('closed with every part done → done', classifyHomeworkProblemOutcome({ debugEvents: [...closedEvents, { type: 'homework_problem_done', message: 'x' }], transcript: tr, verified: true, key: KEY }) === 'done');
     check('not closed (v1, or a page left open) → in progress, as before', classifyHomeworkProblemOutcome({ debugEvents: closedEvents.slice(0, 1), transcript: tr, verified: true, key: KEY }) === 'in_progress');
     check('the v2 client records the close of a homework session', /homework_session_closed/.test(turnsSrc));
+    // Round 2 of the validation: the event was recorded and then dropped, because the embed saves only listed types.
+    check('the embed saves that event with the session', /'homework_session_closed'/.test(src('src/app/tutor-portal/embed/page.tsx')));
   }
   // The debug events a v2 session records (useV2Turns) for: a solved problem, and one wrong twice on (b).
   const ev = (part: string, verdict: 'correct' | 'incorrect') => ({ type: 'homework_keyed_verdict', message: formatKeyedVerdictDebug(part, verdict) });

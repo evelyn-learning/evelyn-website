@@ -125,6 +125,26 @@ export function studentMessagesOf(history: V2State['history']): Array<{ role: 'u
 
 /** Where a worked message breaks into the steps it states, last first ("…, so x = 30", "…, which gives 4/11"). */
 const STEP_BREAK = /(?<=[.!?;])\s+|,\s*|\s+(?=\b(?:so|which|that|therefore|then|giving|gives|hence)\b)/i;
+const exprKey = (s: string) => s.toLowerCase().replace(/[−–]/g, '-').replace(/\s+/g, '').replace(/\.$/, '');
+/**
+ * A key part stated as "name = expression" (`g^-1(x) = 3x + 1`) and an answer that offers the expression alone
+ * ("maybe 3x + 1?"): the keyed check needs the name and leaves it undecided (validation round 2, precalculus). The
+ * expression counts when it is the same text as the key's right-hand side, and holds a variable (a bare number is
+ * not taken for a formula). Credit only.
+ */
+function nameEqualsCredit(candidate: string, key: AnswerKey): KeyedVerdict[] {
+  const said = exprKey(candidate);
+  if (!said || said.includes('=') || !/[a-z]/.test(said)) return [];
+  for (const p of key.parts) {
+    const text = p.canonical.kind === 'text' ? p.canonical.value : p.final;
+    const eq = text.split(';')[0];
+    const at = eq.indexOf('=');
+    if (at < 0) continue;
+    if (exprKey(eq.slice(at + 1)) === said) return [{ verdict: 'correct', part: partLabel(p.label), matched: candidate.trim() }];
+  }
+  return [];
+}
+
 /** The words that offer a value tentatively. */
 const HEDGE = /^(?:(?:and|but|so|um+|uh+|hmm+|ok(?:ay)?)[,\s]+)*(?:maybe|perhaps|probably|i (?:think|guess)(?: it'?s| it is)?|is it|could it be|would it be|might it be)\s+/i;
 /** The value a step states after its verb ("simplifies to 4/11", "the area is 52 cm²"). */
@@ -151,6 +171,8 @@ export function workedAnswerCredit(studentSaid: string, key: AnswerKey): KeyedVe
     for (const candidate of [...new Set([step, ...(value && value !== step ? [value] : []), ...(lastSide ? [lastSide] : [])])]) {
       const v = modelCheckConfirms(candidate, studentSaid, key);
       if (v.length) return v;
+      const named = nameEqualsCredit(candidate, key);
+      if (named.length) return named;
     }
   }
   return [];

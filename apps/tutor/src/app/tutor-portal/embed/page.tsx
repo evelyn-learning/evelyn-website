@@ -515,6 +515,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // 2026-10-20 one-problem homework: each keyed verdict and the once-only
   // "every key part confirmed" — the homework-problem outcome route reads both.
   KEYED_VERDICT_DEBUG_TYPE, 'homework_problem_done',
+  // 2026-11-14 tutor v2: its tutor closed a one-problem session — the outcome reads it as the finish button.
+  'homework_session_closed',
   // ('opener_' above covers opener_stall_retry; 'judge' covers
   // judge_precheck_disagreement — a judge issue set aside because a
   // high-confidence answer pre-check and the tutor agreed.)
