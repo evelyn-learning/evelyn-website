@@ -6,6 +6,11 @@ ports: read the whole plan before starting.
 
 ## Decisions already made (Praveen, 2026-11-13)
 
+- **Why: better teaching.** Port the hard parts (script order, turn budgets, level check, pronunciation, the
+  bilingual rules, close/stop behaviour); let v2's teaching replace the tuned v1 quirks rather than copying all ~40
+  switches. When a v1 behaviour is dropped, say so in the PR with the reason.
+- **All GDI lessons move together**: the work-projects trial and the showcase lessons (`gdi.demo.english.*`:
+  starter, advanced, meeting) — every `gdi-demo` session.
 - **Keep the fixed trial-lesson script.** Same lesson, same ordered parts (overview → level check → topic → present
   perfect → past simple → open conversation → pronunciation → summary), same level check and pronunciation work.
   v2 delivers it.
@@ -62,9 +67,10 @@ session part, facts and tools.
      was said; if not, one regeneration with the reason. Same for the summary.
    - `is_trial` must not unlock "leave the plan" in script mode.
    - Rail labels: `labelLocalized.ja` drive the progress chips (`progress.ts`, `rail-labels.ts:107`).
-   - Port the transition and close behaviours that the 17 waves tuned (`fixed-script.ts`, 1,421 lines): read it and
-     the typed-turn rules; carry over every behaviour that has a named incident behind it, as facts or as server
-     moves, not as prose rules. List what you deliberately drop in the PR.
+   - From the transition and close behaviours the 17 waves tuned (`fixed-script.ts`, 1,421 lines, and the typed-turn
+     rules), carry over the ones that protect the lesson's shape (part order, budgets, offers/bridges, required
+     phrases, the time guard, the stop choice), as facts or server moves, not prose rules. Do not copy the
+     typed-turn JSON engine: v2's own reply is the point. List what you deliberately drop in the PR.
 3. **Spoken opener.** Segment 1's `script` is spoken verbatim by the client (as `lesson-plan/spoken-opener.ts` does for
    v1), then the brain's first turn starts at segment 2. Opener prefetch: wire `openerPrefetch` into `TutorVoiceV2`
    (today only the text client's `prewarm` exists) or drop it if the verbatim opener makes it moot (likely: the opener
@@ -139,10 +145,8 @@ session part, facts and tools.
 - **Shared code and gitignored files.** The plan JSON and mint scripts are local only; the demo plans are DB-only.
 - **Memory notes are partly stale** (e.g. wave 17 is on main). Trust the code.
 
-## Open questions for Praveen
+## Showcase lessons
 
-1. GDI already runs on a heavily tuned engine (typed turns, 17 waves, "READY" at run 15). What should v2 give GDI
-   that it lacks today — better teaching quality, one brain to maintain, or something they asked for? The answer
-   decides whether steps 2–3 port every v1 behaviour or only the ones that matter.
-2. The showcase lessons (`gdi.demo.english.*`, starter / advanced / meeting): same script mode, or do they stay as
-   they are?
+The showcase lessons are DB-only plans (`apps/marketing/src/app/showcase/gdi-communications/_lib/lessons.ts:77-108`)
+minted with `is_trial: true`. Check each is `fixedScript` (if not, script mode does not apply and it runs as an
+ordinary bilingual v2 lesson — decide with Praveen), and add one showcase lesson to the step-6 runs.

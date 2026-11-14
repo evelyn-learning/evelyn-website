@@ -12,6 +12,8 @@ code at main `04e67789` (file:line references below are from that commit; re-che
   billing/minutes behaviour. Teaching style, pacing and board habits are v2's own.
 - GAC is **text only**. No Cartesia anywhere in this work.
 - :3008 is deployed **only via `deploy-tutor-gac.sh` and only when Praveen says GAC has been told**.
+- **v2's end-of-session writes stay ON for GAC** (student profile, mastery, practice assignment), like our own students.
+- **Both homework paths move**: the one-problem sessions and the older whole-sheet session (`HOMEWORK_PER_PROBLEM=off`).
 
 ## Where things stand
 
@@ -78,11 +80,21 @@ name. Partner-specific strictness (no-reveal) stays gated by `noRevealLedgerForP
 8. **Host pause.** `useV2Turns.ts:403` `end()` ignores the farewell argument, so the host's `paused` end loses
    "Saved — pick this up from your list…" (`host-end.ts:41`). Pass it through and show/say it.
 9. **Writes.** v2 posts a profile commit and mastery at every non-trial session end (`useV2Turns.ts:301-326`) and can
-   assign practice (`:332-347`). GAC runs with learner snapshots off (`ENABLE_LEARNER_MODEL_SNAPSHOT=false`). Gate
-   both behind the same switch for GAC (see open question 1).
-10. **Gate.** `v2CanRunSession` lets `homework-help` through **only** when the plan is a `homework-problem` plan
-    (the embed knows the plan id; resolve the kind there or pass a flag). Keep `homework-help` with a whole-sheet
-    plan on v1 (see open question 2). Then set `greenapple: { brainVersion: 'v2', ... }` in the partner rows.
+   assign practice (`:332-347`). Decided: these stay ON for GAC. GAC's build sets `ENABLE_LEARNER_MODEL_SNAPSHOT=false`
+   (a v1 snapshot feature, `src/instrumentation.ts:28`); check it does not also switch off the v2 commit, and that
+   practice assignment for a homework problem assigns practice on the problem's topic (not on "Problem 3").
+10. **Whole-sheet homework** (decided: port it too). A `homework-help` plan with `problems[]`
+    (`lesson-plan/homework.ts`, `homework-advance.ts`, `homework-ledger.ts`; `voice/homework-pointer.ts`,
+    `homework-announce.ts`; route `:828-866` adds the `set_current_problem` tool and the `<homework_session>` block;
+    the homework rail in `SessionStage.tsx:299-316`; the browser solved-ledger `VoiceTutorRealtime.tsx:20534-20540`).
+    In v2: the sheet as session data (each problem with its verified status and key held server-side), a
+    `set_current_problem` control tool, the solved ledger in v2 state, and per-problem checking/no-reveal exactly as in
+    one-problem mode (designs 1–4 applied to the current problem). The rail must show which problem is current and
+    which are solved. Port the cases of `test-homework-advance`, `test-homework-pointer`, `test-homework-announce`,
+    `test-homework-session-block` to the v2 path.
+11. **Gate.** `v2CanRunSession` lets `homework-help` through once both homework modes are in (resolve the plan's kind
+    in the embed or pass a flag, so a homework plan can never reach v2 without its mode). Then set
+    `greenapple: { brainVersion: 'v2', ... }` in the partner rows.
     Note the risk from the research: today the fallback is keyed on goal only; after this change it must also
     refuse any `homework-problem` plan under a partner whose homework mode is not complete.
 
@@ -101,8 +113,9 @@ name. Partner-specific strictness (no-reveal) stays gated by `noRevealLedgerForP
 3. Answer checking (design 2) + done (design 3) + SSE frames + client debug events; the outcome-route parity test.
 4. No-reveal (design 4) + conduct (design 5); port the relevant cases of `test-no-reveal-ledger.ts`,
    `test-whole-answer-reveal.ts` to v2 (same inputs, v2 path, same verdicts).
-5. Opener/pacing (6), UI panel (7), host pause (8), writes gate (9).
-6. Gate + partner row (10). Update the pins: `test-brain-v2.ts:607`, `test-partner-session-options.ts`.
+5. Opener/pacing (6), UI panel (7), host pause (8), writes check (9).
+5b. Whole-sheet mode (10), with a 4th fixture: a three-problem sheet, solved out of order, one problem skipped.
+6. Gate + partner row (11). Update the pins: `test-brain-v2.ts:607`, `test-partner-session-options.ts`.
 7. **Run the 3 fixtures on v2** locally (row flipped via `NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS=greenapple=v2` in the local
    env only). Compare with the v1 baseline: outcome classification identical, no final answer stated in any turn
    (grep the transcripts for the key values), problem panel and figure visible in the screenshots, session ends
@@ -118,11 +131,7 @@ name. Partner-specific strictness (no-reveal) stays gated by `noRevealLedgerForP
 Remove `brainVersion: 'v2'` from the `greenapple` row (or set `NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS=greenapple=v1` in
 the GAC build env) and redeploy :3008. Nothing in the data model changes, so no migration either way.
 
-## Open questions for Praveen
+## Open question for Praveen
 
-1. Should v2's end-of-session writes (student profile, mastery, practice assignment) run for GAC students, given
-   learner snapshots are off for GAC today?
-2. Does the old whole-sheet homework path (academy `HOMEWORK_PER_PROBLEM=off`, `<homework_session>` with
-   `set_current_problem`) still need to work? If not, it stays on v1 and is not ported.
-3. Typed problem sets and uploads are built academy-side and need no brain change — confirm GAC has no in-session
+1. Typed problem sets and uploads are built academy-side and need no brain change — confirm GAC has no in-session
    "upload a photo" flow (v2 hides the in-session upload).
