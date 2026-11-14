@@ -45,6 +45,10 @@ export function v2HomeworkSession(turn: HomeworkProblemTurn, opts: { noReveal: b
  *  on after two tries" gives way: here the student must still reach the answer themselves. */
 export const V2_HOMEWORK_NO_REVEAL = 'This is the student\'s own homework: they must reach the final answer themselves. Never state it, even when they ask for it outright or ask again; when they are stuck, give the next smallest step. This holds after any number of tries, in place of showing the step and moving on.';
 
+/** v1 judged every answer as it came; v2 held verdicts back to ask for working first, and left right answers
+ *  unjudged (GAC validation, round 2: Geometry, Physics). */
+export const V2_HOMEWORK_JUDGE_EVERY_ANSWER = 'Whenever the student gives an answer (with or without working, sure or hedged, to the sheet or to a question of their own), say plainly whether it is right before anything else: against the checked answer for the sheet, against your own working for their own question. Never hold back that verdict to ask for working first; ask how they got it afterwards, if it helps.';
+
 /** The homework part of the session part (turn.ts v2SessionPart), in place of the plan map. */
 export function v2HomeworkPart(hw: V2HomeworkProblem): string {
   const prior = marksInWords(hw.priorConfirmed ?? []);
@@ -61,7 +65,8 @@ export function v2HomeworkPart(hw: V2HomeworkProblem): string {
       ? '- Each answer the student gives is checked against the sheet\'s checked answer key, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. Call a part done only when the homework record in the facts lists it as confirmed. Never mention the record, the check or the key to the student: they are yours to read. When you are sure an answer to a part is right and the record does not list it, ask once for that part\'s final answer on its own, then go on with what is left.'
       : `- ${HOMEWORK_PROBLEM_UNVERIFIED}`,
     '- Labels and values are the ones on the student\'s sheet, as written in the problem above.',
-    '- The session is for this one problem. When the homework record says every part is confirmed correct, say in a sentence that the problem is done, and ask whether they have a question about it before they go back to their list. When they have none, or say they are finished, call end_lesson.',
+    `- ${V2_HOMEWORK_JUDGE_EVERY_ANSWER}`,
+    '- The session is for this one problem. When the homework record says every part is confirmed correct, say in a sentence that the problem is done, and ask whether they have any question about it. When they say they have none, or that they are finished, call end_lesson.',
     HOMEWORK_PROBLEM_CONDUCT_RULES.trimEnd(),
   ].filter(Boolean).join('\n');
 }
@@ -260,7 +265,8 @@ export function v2SheetPart(sheet: V2HomeworkSheet): string {
     `- ${V2_HOMEWORK_NO_REVEAL}`,
     '- They may work the problems in any order, and may skip one. Before you work a problem, call set_current_problem with its number: the answer check and the homework record in the facts follow the problem in play.',
     '- Each answer to a problem with a checked key is checked against it, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. Never mention the record, the check or the key to the student: they are yours to read. When you are sure an answer is right and the record does not list it, ask once for that part\'s final answer on its own, then go on. A problem without a checked key is never called right or wrong: work it through with them, name any slip in their working, and ask them to check the final result with their teacher.',
-    '- When the record says a problem is done, say so and offer the next open one. When every problem is done, say the sheet is done and ask whether they have a question about it; when they have none, or say they are finished, call end_lesson.',
+    `- ${V2_HOMEWORK_JUDGE_EVERY_ANSWER}`,
+    '- When the record says a problem is done, say so and offer the next open one. When every problem is done, say the sheet is done and ask whether they have any question about it; when they say they have none, or that they are finished, call end_lesson.',
     '- Labels and values are the ones on the student\'s sheet, as written above.',
     HOMEWORK_PROBLEM_CONDUCT_RULES.trimEnd(),
   ].join('\n');

@@ -14,7 +14,7 @@
  */
 import type { ProseAnswerMatchFn } from '../voice/prose-answer-match';
 import { boardRevealsHomeworkKey, homeworkKeyWithheld, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON } from '../voice/homework-problem-block';
-import { revealsWithheldAnswer, type WithheldAnswer } from '../voice/whole-answer-reveal';
+import { boardStrings, revealsWithheldAnswer, type WithheldAnswer } from '../voice/whole-answer-reveal';
 import { newSheetRecord, sheetProblemNamed, studentMessagesOf, v2HomeworkCheck, type V2HomeworkResolved, type V2SheetResolved } from './homework';
 import { V2_CONTROL_TOOL_NAMES } from './tool-names';
 import { runV2Turn, type V2TurnInput } from './turn';
@@ -67,6 +67,9 @@ async function guardedTurn(given: V2TurnInput, withheld: WithheldAnswer[], opts:
   const boardGuard = (name: string, args: Record<string, unknown>): string | null => {
     if (V2_CONTROL_TOOL_NAMES.has(name) || name === 'new_page' || name === 'go_to_page') return null;
     if (opening && opts.figureOnScreen) return HOMEWORK_OPENER_BOARD_WITHHELD_REASON.replace(/^not shown — /, '');
+    // A note about "the student" is written to the tutor, not to them ("The student's answer, 17, arrived with no
+    // working. Before it is checked, ask…", GAC validation round 2): the board is the student's page.
+    if (boardStrings(args).some((t) => /\bthe student(?:'s|s')?\b/i.test(t))) return 'the board is the student\'s page: write to them as "you", or not at all';
     return withheld.length && boardRevealsHomeworkKey(args, withheld) ? HOMEWORK_BOARD_KEY_WITHHELD_REASON.replace(/^not shown — /, '') : null;
   };
   const guarded: V2TurnInput = { ...turn, boardGuard };

@@ -158,7 +158,10 @@ function storable(content: Anthropic.ContentBlock[]): Anthropic.ContentBlockPara
   return out;
 }
 
-function applyControlTool(state: V2State, session: V2Session, name: string, args: Record<string, unknown>, nowMs: number): string {
+/** A reply that says only yes (or ok): to "any question, or are you finished?" it says neither (GAC validation, round 2). */
+export const V2_BARE_ASSENT = /^\s*(?:yes|yeah|yep|yup|ya|y|ok|okay|k|sure|alright|all right|mhm|uh[- ]?huh)\s*[.!]*\s*$/i;
+
+function applyControlTool(state: V2State, session: V2Session, name: string, args: Record<string, unknown>, nowMs: number, studentSaid: string | null = null): string {
   if (name === 'keep_listening') return 'listening';
   if (name === 'update_session_note') {
     const note = typeof args.note === 'string' ? args.note.trim() : '';
@@ -205,6 +208,11 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     // Not in the reply that completes it: the student may still ask why (GAC validation on v2, Geometry).
     const homeworkDone = (!!session.homework && state.homework?.done === true && state.history.length > (state.homework.doneAt ?? -1))
       || (!!session.homeworkSheet && session.homeworkSheet.problems.every((p) => state.homework?.sheet?.solved.includes(p.n)));
+    // Homework: a bare yes does not say the student is finished, whatever the tutor asked. Five validation sessions
+    // closed on "yes" to "…or are you ready to go back?", cutting off a student who might have had a question.
+    if ((session.homework || session.homeworkSheet) && studentSaid !== null && V2_BARE_ASSENT.test(studentSaid) && left > 1.5) {
+      return 'not ended: "yes" does not say whether they are finished. Ask, in one short question with one meaning, whether they have any question about it.';
+    }
     if (args.because !== 'student_asked' && !homeworkDone && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
       // there are about seven minutes left and you haven't asked to stop" (embed-1794595194384).
@@ -339,7 +347,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // Once this reply has words, the call is only the tutor handing the floor over: refusing it then made the
         // opening say itself twice (AP Physics 1, embed-1794441323503).
         : block.name === 'keep_listening' && mustSpeak && !spoken.length ? 'not done: the student is waiting for you to speak. Say the next thing now.'
-        : applyControlTool(state, session, block.name, args, nowMs);
+        : applyControlTool(state, session, block.name, args, nowMs, input.studentSaid);
     } else {
       // An object written as its JSON text is the object: a tree's root arrived as a string and the board drew
       // the text itself in one box (data structures, embed-1794458110435).

@@ -49,6 +49,8 @@ export function hpTurn(over: Partial<HomeworkProblemTurn['homeworkProblem']> = {
 }
 const base: V2Session = { studentName: 'Sam', subject: 'math', level: '9-10', mode: 'text', timeBoxMinutes: 30 };
 
+const sheetPartForTest = () => v2SessionPart({ studentName: 'Sam', subject: 'math', level: '9-10', mode: 'text', homeworkSheet: { problems: [{ n: 1, text: 'Solve 2x + 1 = 7.', verified: true, parts: [''], expected: 'x = 3' }] } });
+
 async function main() {
   console.log('homework session (design 1)');
   const hw = v2HomeworkSession(hpTurn({ priorNote: 'Set up the equation last time.', priorConfirmed: ['part:a'] }), { noReveal: true });
@@ -184,7 +186,27 @@ async function main() {
     const e4 = stub([msg([{ type: 'text', text: 'Great, see you.' }, { type: 'tool_use', id: 't2', name: 'end_lesson', input: { summary: 'done', because: 'lesson_complete' } }], 'tool_use')]);
     const r4 = await runV2HomeworkTurn({ session: base, resolved: { problem: hwSession.homework!, key: KEY, turn: hpTurn() }, state: r3.state, studentSaid: 'no, all good', callModel: e4.call, nowMs: 1_000_000 + 5 * 60000, boardPass: false });
     check('…the next one may', r4.state.closed);
-    check('the homework part says to ask for questions before the list', /ask whether they have a question about it/i.test(v2SessionPart(hwSession)));
+    check('the homework part says to ask whether they have any question', /ask whether they have any question about it/i.test(v2SessionPart(hwSession)));
+  }
+
+  // Round 3 (Praveen 2026-11-14): judge every answer when it arrives; a bare "yes" is not "I'm finished".
+  {
+    const done: V2State = { ...said(newV2State(1_000_000), '[start]'), homework: { confirmed: ['part:a', 'part:b'], done: true, doneAt: 0 } };
+    const endWith = async (studentSaid: string) => {
+      const e = stub([msg([{ type: 'text', text: 'Great work.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { summary: 'done', because: 'student_asked' } }], 'tool_use'), msg([{ type: 'text', text: 'Do you have any question about it?' }], 'end_turn')]);
+      const r = await runV2HomeworkTurn({ session: base, resolved: { problem: hwSession.homework!, key: KEY, turn: hpTurn() }, state: done, studentSaid, callModel: e.call, nowMs: 1_000_000 + 5 * 60000, boardPass: false });
+      return r;
+    };
+    for (const yes of ['yes', 'Yes.', 'ok', 'yeah', 'sure']) check(`a bare "${yes}" does not close a done problem`, !(await endWith(yes)).state.closed);
+    for (const fin of ['no, all good', 'no questions, thanks', "I'm done", 'back to my list', 'thanks, bye']) check(`"${fin}" does`, (await endWith(fin)).state.closed);
+    check('the done question has one meaning: any question about it, not an either/or', /ask whether they have any question about it/i.test(v2SessionPart(hwSession)) && !/before they go back to their list/i.test(v2SessionPart(hwSession)));
+    check('every answer is judged when it arrives, working or not', /whenever the student gives an answer[^.]*say plainly whether it is right/i.test(v2SessionPart(hwSession)) && /never hold back that verdict to ask for working first/i.test(v2SessionPart(hwSession)));
+    check('the sheet part says the same', /whenever the student gives an answer[^.]*say plainly whether it is right/i.test(sheetPartForTest()));
+  }
+  {
+    const m = stub([msg([{ type: 'text', text: 'Let me note that.' }, { type: 'tool_use', id: 'n1', name: 'annotate', input: { text: "The student's answer, 17, arrived with no working. Before it is checked, ask for the equation." } }], 'tool_use'), msg([{ type: 'text', text: 'Which total do complementary angles have?' }], 'end_turn')]);
+    const r = await runV2HomeworkTurn({ session: base, resolved: { problem: hwSession.homework!, key: KEY, turn: hpTurn() }, state: said(newV2State(1_000_000), '[start]'), studentSaid: 'hm', callModel: m.call, nowMs: 1_060_000, boardPass: false });
+    check('a board note about "the student" (meant for the tutor) is not painted', /^not painted/.test(r.toolCalls.find((c) => c.id === 'n1')?.outcome ?? ''), r.toolCalls.map((c) => c.outcome));
   }
 
   console.log('frames and debug events (design 3)');
