@@ -32,7 +32,7 @@ import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, discussionOf, recordThinking, renderDiscussionMap } from './discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -175,9 +175,10 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
   if (name === 'end_lesson' && discussion) {
     // A discussion is done when the person has chosen where to go next, which may well be before the clock: the
     // flow is 8–12 minutes in a box of up to 15. Until then, the clock-or-request rule below holds.
-    const left = session.timeBoxMinutes ? session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 : 0;
-    const direction = typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '';
-    if (args.because !== 'student_asked' && !direction && session.timeBoxMinutes && left > 1.5) {
+    const box = effectiveMinutes(session.timeBoxMinutes, state.thinking);
+    const left = box ? box - (nowMs - state.startedAtMs) / 60000 : 0;
+    const direction = (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
+    if (args.because !== 'student_asked' && !direction && box && left > 1.5) {
       return 'not ended: they have not chosen a direction yet. Say nothing of this message. Ask them, in a sentence of your own, what would be most valuable for them to explore further.';
     }
     state.closed = true;

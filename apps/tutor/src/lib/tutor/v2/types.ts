@@ -53,7 +53,17 @@ export interface V2State {
   /** Board blocks of the last reply that were not painted, and why. Shown once in the next turn's facts. */
   boardProblems?: string[];
   /** Discussion sessions (discussion.ts): the person's position, what they have weighed, and how it has moved. */
-  thinking?: { position: string; weighed: string[]; shifts: string[] };
+  thinking?: {
+    position: string; weighed: string[]; shifts: string[];
+    /** A student or experience of their own they brought in; the conversation works from it. */
+    example?: string;
+    /** How many complications the tutor has brought in (a rare move: two or three a conversation). */
+    complications?: number;
+    /** The time they said they have, in minutes, when they said so. The clock runs to it. */
+    theirMinutes?: number;
+    /** The direction they named, once they have. */
+    direction?: string;
+  };
   /** Discussion sessions: the direction the person chose to explore next, given with end_lesson. */
   nextDirection?: string;
   startedAtMs: number;

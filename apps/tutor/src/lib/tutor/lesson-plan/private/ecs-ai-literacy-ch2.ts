@@ -3,7 +3,8 @@
  * Guidebook for Teaching AI Literacy and Ethics" (2025), "AI as a Helper – But You're Still the Author".
  *
  * Licensed material: the author's release is held by ECS (James Salvo, 2026-11-14). Scenario text, discussion
- * questions and talking points are the book's own words (printed pp. 39–48), kept as written. The flow, the
+ * questions, talking points and the three reflection questions are the book's own words (printed pp. 38–48), kept as
+ * written; the short spoken versions are ours, to be replaced by ECS's own condensed wording when it arrives. The flow, the
  * participant's role and the takeaway follow ECS's "Human in the Loop" handoff (2026-11-14).
  *
  * A private plan: reachable by id only (store.ts PRIVATE_PLANS), never listed in any catalogue or picker.
@@ -20,6 +21,7 @@ const discussion: DiscussionMeta = {
       id: 'revision-assistant',
       title: 'The Revision Assistant',
       focus: 'AI feedback and editing support',
+      spoken: 'Kelly finishes a story and asks an AI chatbot how to make it better. It suggests stronger verbs and smoother links between ideas, and she picks the suggestions that fit, drops the ones that don\'t, and keeps her own voice.',
       scenario: 'Kelly finishes writing her story for class but wants to make it even better. She copies her story and asks an AI chatbot to give her advice on how to improve it. The AI suggests using stronger action words like "ran" instead of "went" and adding words that help the story flow more smoothly between ideas. Kelly reads the suggestions carefully and decides which ones make her story clearer and which ones don\'t fit her style. She changes some parts but keeps her own voice in the story.',
       questions: ['Did Kelly still write her story?', 'How is this different from letting AI write for her?', 'Why is it important to review and choose what changes to make?', 'What kinds of AI suggestions are most helpful for improving writing?'],
       talkingPoints: ['AI can serve as a valuable revision tool when students maintain control over decisions', 'The key is selective implementation of suggestions rather than automatic acceptance', 'Students learn more when they evaluate AI feedback critically', 'This approach helps students develop their own editing and revision skills'],
@@ -28,6 +30,7 @@ const discussion: DiscussionMeta = {
       id: 'misleading-rewrite',
       title: 'The Misleading Rewrite',
       focus: 'When AI overwrites student voice',
+      spoken: 'Diego isn\'t happy with his rough draft, so he asks an AI to "make it better" and it rewrites the whole story. It no longer sounds like him, and his teacher wonders whether he really wrote it.',
       scenario: 'Diego writes a rough draft for his story, but he\'s not very happy with it. He decides to ask an AI chatbot to "make it better" by rewriting the whole story. The AI changes a lot of words and sentences, making the story sound very different from Diego\'s usual way of writing. When Diego reads it, he feels like it doesn\'t sound like his own story anymore. His teacher reads the new draft and wonders if Diego really wrote it himself or if someone else did the work.',
       questions: ['What do we lose when we let AI take over our voice?', 'How do you know if a piece of writing is still "yours"?', 'What could Diego have done instead?', 'Why is maintaining your writing voice important?'],
       talkingPoints: ['Student voice is a crucial component of authentic writing', 'Extensive AI rewriting can mask a student\'s actual writing ability', 'Teachers can often detect when writing doesn\'t match a student\'s typical voice and style', 'Learning to improve one\'s own voice is more valuable than adopting AI\'s voice'],
@@ -36,6 +39,7 @@ const discussion: DiscussionMeta = {
       id: 'revision-assistant-deeper',
       title: 'The Revision Assistant (older students)',
       focus: 'When AI assistance becomes AI dependency',
+      spoken: 'An older Kelly writes a history research paper with AI at every step: topics, outline, transitions, sources and feedback on her draft. The words are hers, but nearly every decision along the way was shaped by the AI.',
       scenario: 'Kelly is working on a research paper for her history class. She uses an AI tool at every step — first to brainstorm possible topics, then to create a detailed outline. As she writes, the AI suggests smoother transitions between paragraphs and recommends credible sources to include. After completing a draft, Kelly asks the AI for in-depth feedback and revises her paper accordingly. Although the final paper is written in her own words, nearly every part of her process has been shaped and guided by AI suggestions.',
       questions: ['When you submit a college essay, should you mention if you used AI feedback?', 'At what point does AI assistance become AI dependency?', 'How can students maintain ownership during extensive AI-guided revision?'],
       talkingPoints: ['Extensive AI guidance can prevent students from developing independent research and writing skills', 'College-level writing requires students to demonstrate their own analytical and organizational abilities', 'Heavy AI assistance may require disclosure in academic settings', 'Students should be able to replicate their writing process without AI support'],
@@ -44,6 +48,7 @@ const discussion: DiscussionMeta = {
       id: 'misleading-rewrite-deeper',
       title: 'The Misleading Rewrite (older students)',
       focus: 'Writing that no longer matches the student',
+      spoken: 'Over a semester, an older Diego hands in essays far stronger than anything he shows in class discussion or other work. His teacher notices the gap and wonders how much of the work is really his.',
       scenario: 'Over the course of the semester, Diego submits several essays for his English class. Each essay shows big improvements in writing style, vocabulary, and ideas… much more advanced than what Diego usually demonstrates in class discussions and on other assignments. His teacher notices that the essays don\'t seem to match Diego\'s known writing skills. The sudden leap in quality raises questions about whether Diego wrote the essays himself or relied heavily on AI tools without fully understanding or contributing to the work.',
       questions: ['What might explain the big improvements in Diego\'s essays compared to his class participation?', 'How can relying too much on AI tools affect a student\'s learning and growth?', 'What should a teacher do if they suspect a student is not doing their own work?'],
       talkingPoints: ['Sudden, dramatic improvements in student work may indicate overreliance on AI or other outside help', 'Writing is a skill developed through practice; shortcuts can limit real learning and confidence', 'Honest work helps teachers provide the right support and helps students build authentic abilities', 'Teachers should create a supportive environment where students feel comfortable discussing their struggles'],
@@ -74,6 +79,8 @@ const discussion: DiscussionMeta = {
     'the instructional benefits and limits of AI feedback',
     'more time to think it over; "not sure yet" is a fine answer',
   ],
+  reflectionQuestions: ['Does this still sound like me?', 'Am I growing as a writer here?', 'Am I being honest about how I got to this final draft?'],
+  reflectionQuestionsFrom: 'from the chapter introduction: the questions the author wants students to learn to ask themselves',
 };
 
 export const PRIVATE_ECS_AI_LITERACY_CH2: LessonPlan = {

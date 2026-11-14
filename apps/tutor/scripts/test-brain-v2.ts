@@ -17,7 +17,7 @@ import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/li
 import type Anthropic from '@anthropic-ai/sdk';
 import { SEED_AP_CALCBC_U4_LHOPITAL } from '../src/lib/tutor/lesson-plan/seeds/ap-calcbc-u4-lhopital';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, discussionOf } from '../src/lib/tutor/v2/discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, discussionOf, renderDiscussionMap } from '../src/lib/tutor/v2/discussion';
 import { PRIVATE_ECS_AI_LITERACY_CH2 } from '../src/lib/tutor/lesson-plan/private/ecs-ai-literacy-ch2';
 import { SEED_PLANS, getLessonPlan, isPrivatePlan } from '../src/lib/tutor/lesson-plan/store';
 import { renderPlanMap } from '../src/lib/tutor/v2/plan-map';
@@ -762,6 +762,23 @@ async function main() {
     const flat = stub([msg([{ type: 'text', text: 'That is a careful way to put it.' }], 'end_turn')]);
     const rf = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'It depends on the assignment.', nowMs: 1_000_000 + 5 * 60000, callModel: flat.call });
     check('a spoken reply that asks nothing hands over with a discussion question', DISCUSSION_CHECK_INS.some((q) => rf.spoken.endsWith(q)) && !V2_CHECK_INS.some((q) => rf.spoken.endsWith(q)), rf.spoken);
+    const box = stub([msg([
+      { type: 'text', text: 'Kelly asks an AI for advice on her story and keeps only what fits her voice. What do you make of her?' },
+      { type: 'tool_use', id: 'b1', name: 'record_thinking', input: { their_time_minutes: 8, their_example: 'a grade 7 boy who pasted every suggestion', complicated: true } },
+    ], 'tool_use'), msg([{ type: 'text', text: '' }], 'end_turn')]);
+    const rb = await runV2Turn({ session: dSession, state: { ...r1.state, thinking: { ...r1.state.thinking!, direction: undefined } }, studentSaid: 'I have about eight minutes.', nowMs: 1_000_000 + 60000, callModel: box.call });
+    const fb = renderFacts(dSession, rb.state, { nowMs: 1_000_000 + 5 * 60000 });
+    check('a stated time becomes the clock, and their example and the complication count reach the facts', /of about 8 \(the time they said they have\); about 3 left: time to reflect/.test(fb) && /their own student or experience: a grade 7 boy/.test(fb) && /complications you have brought in: 1/.test(fb), fb);
+    const named = { ...rb.state, thinking: { ...rb.state.thinking!, direction: 'parents', complications: 3 } };
+    const fn = renderFacts(dSession, named, { nowMs: 1_000_000 + 5 * 60000 });
+    check('a named direction is shown as not to be asked again; three complications are enough', /direction they chose: parents \(named; don't ask for it again\)/.test(fn) && /that is enough/.test(fn), fn);
+    const endNamed = stub([msg([{ type: 'text', text: 'Bye, Jo.' }, { type: 'tool_use', id: 'e3', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's' } }], 'tool_use')]);
+    const ren = await runV2Turn({ session: dSession, state: named, studentSaid: 'Parents, then.', nowMs: 1_000_000 + 5 * 60000, callModel: endNamed.call });
+    check('a direction recorded earlier lets the conversation close', ren.state.closed && ren.state.nextDirection === 'parents');
+    const judged = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: "That's a clear line. Does it hold for Diego? And for older students?" }] }] };
+    const fj = renderFacts(dSession, judged, { nowMs: 1_000_000 + 5 * 60000 });
+    check('the facts point out a judging opener and a double question in the last reply', /your last reply: it opened by judging their point \("That's a clear line"\); it asked 2 questions/.test(fj), fj);
+    check('the map gives the spoken version of a case and the author\'s reflection questions', /to tell aloud: Kelly finishes a story/.test(renderDiscussionMap(dPlan, discussionOf(dPlan)!)) && /Does this still sound like me\?/.test(renderDiscussionMap(dPlan, discussionOf(dPlan)!)));
     check('the verdict-word scan catches praise and passes a plain acknowledgement', DISCUSSION_VERDICT_WORDS.test('Excellent point.') && DISCUSSION_VERDICT_WORDS.test("That's right, Jo.") && !DISCUSSION_VERDICT_WORDS.test('Tying it to what the student decides is a useful test.'));
   }
   console.log(`\n${passed} passed, ${failed} failed`);

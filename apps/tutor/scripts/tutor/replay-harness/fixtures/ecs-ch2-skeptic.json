@@ -20,7 +20,7 @@
   "student": {
     "who": "A 58-year-old high-school history teacher, 30 years in, who wants AI banned for student writing. Worried about cheating and about students losing the ability to write.",
     "voice": "Spoken, natural, one to three sentences; you're a working teacher talking to a colleague, not writing an essay.",
-    "manner": "You are an adult professional, not a student: you answer from your own experience, you don't perform, and you notice when you are being flattered or steered. You never ask the tutor to grade you. When the tutor asks what you'd like to explore next, answer in your own terms.",
+    "manner": "You are an adult professional, not a student: you answer from your own experience, you don't perform, and you notice when you are being flattered or steered. You never ask the tutor to grade you. When the tutor asks what you'd like to explore next, answer in your own terms. Like most teachers, you don't analyse a written case for long: it reminds you of a student you've taught or something that happened recently, and you talk from that.",
     "beats": [
       {
         "id": "first",
@@ -34,6 +34,12 @@
         "do": "Say even Kelly worries you: where does it stop?"
       },
       {
+        "id": "own",
+        "when": "The tutor has put a case to you, or asks whether it reminds you of anyone.",
+        "do": "Talk from a real student of yours rather than the case: A junior handed in an essay on Reconstruction in a voice you had never heard from her in three months, and you still haven't raised it with her. Describe them without a name.",
+        "once": true
+      },
+      {
         "id": "hold",
         "when": "The tutor raises a consequence of a ban.",
         "do": "Push back the first time: rules give clarity. Only if the tutor stays respectful and makes it concrete, admit the point about students who struggle with writing is fair, but keep your overall position."
@@ -45,6 +51,11 @@
       }
     ],
     "reactions": [
+      {
+        "tag": "complaint_unheard",
+        "when": "The tutor asks what you think about a case (Kelly, Diego or another student in a scenario) without having told you, in its words, what happens in it.",
+        "do": "Ask briefly what happens in that one."
+      },
       {
         "tag": "complaint_ignored",
         "when": "You asked for something (another case, the tutor's own view, to skip ahead, to stop) and the tutor's reply did not do it.",
