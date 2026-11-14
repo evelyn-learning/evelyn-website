@@ -752,6 +752,13 @@ async function main() {
     const rd = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'Talk to my grade team.', nowMs: 1_000_000 + 9 * 60000, callModel: done.call });
     check('with a direction chosen it ends before the clock and keeps the direction', rd.state.closed && rd.state.nextDirection === 'a conversation with my grade team');
 
+    const mute = stub([
+      msg([{ type: 'tool_use', id: 'm1', name: 'record_thinking', input: { position: 'Worried about a slippery slope' } }], 'tool_use'),
+      msg([], 'end_turn'),
+      msg([{ type: 'text', text: 'Where does it stop is the question. What would tell you a student had crossed the line?' }], 'end_turn'),
+    ]);
+    const rm = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'Where does it stop?', nowMs: 1_000_000 + 5 * 60000, callModel: mute.call });
+    check('a discussion reply with no words is asked once more, and speaks', /Where does it stop/.test(rm.spoken) && rm.modelCalls === 3 && /no words/.test(JSON.stringify(mute.seen[2].messages)), rm.spoken);
     const flat = stub([msg([{ type: 'text', text: 'That is a careful way to put it.' }], 'end_turn')]);
     const rf = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'It depends on the assignment.', nowMs: 1_000_000 + 5 * 60000, callModel: flat.call });
     check('a spoken reply that asks nothing hands over with a discussion question', DISCUSSION_CHECK_INS.some((q) => rf.spoken.endsWith(q)) && !V2_CHECK_INS.some((q) => rf.spoken.endsWith(q)), rf.spoken);

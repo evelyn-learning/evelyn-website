@@ -421,6 +421,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let heldAt: { raw: string; offer: string } | null = null; let saidNow = '';
   const lastTutorText = (() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })();
   const boardHasPage = (title: string) => state.board.pages.some((pg) => pg.title.replace(/\s+/g, '').toLowerCase() === title.replace(/\s+/g, '').toLowerCase());
+  let owedAsked = false;
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
       model: '',
@@ -501,6 +502,18 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (heldAt) break;
     // No words and no call where words are owed: ask once more.
     if (mustSpeak && !spoken.length && results.length === 0 && modelCalls < 3 && !input.signal?.aborted) continue;
+    // A discussion reply that is only notes and marks leaves the person in silence: in voice no words means
+    // "keep listening", and they heard nothing after saying what worried them (replay review 2026-11-14). The
+    // model is told so, once, and answers.
+    if (discussion && input.studentSaid !== null && !spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && response.stop_reason !== 'tool_use' && modelCalls < V2_MAX_MODEL_CALLS && !input.signal?.aborted && !owedAsked) {
+      owedAsked = true;
+      const nudge: Anthropic.TextBlockParam = { type: 'text', text: '[check — from the system running the session, not from the person] Your reply had no words, and they are waiting for you. Reply now to what they just said.' };
+      const assistant = storable(response.content);
+      messages = assistant.length
+        ? [...messages, { role: 'assistant', content: response.content as unknown as Anthropic.ContentBlockParam[] }, { role: 'user', content: [...results, nudge] }]
+        : [...messages.slice(0, -1), { role: 'user', content: [...(messages[messages.length - 1].content as Anthropic.ContentBlockParam[]), nudge] }];
+      continue;
+    }
     if (response.stop_reason !== 'tool_use' || results.length === 0) break;
     // The model is called again only when it has something to react to: a tool call that
     // did not do what was asked, or a reply with no words yet. When it has spoken and every
