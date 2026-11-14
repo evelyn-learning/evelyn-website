@@ -29,7 +29,8 @@ export interface V2TurnDone {
 
 export type V2HomeworkFrame =
   | { type: 'homework-keyed-verdict'; part: string; verdict: 'correct' | 'incorrect'; value?: string }
-  | { type: 'homework-problem-done' };
+  | { type: 'homework-problem-done' }
+  | { type: 'homework-sheet-solved'; n: number; position: number; solved: number[]; total: number };
 
 export interface V2TurnRequest {
   session: V2ClientSession;
@@ -76,6 +77,7 @@ export async function streamV2Turn(req: V2TurnRequest): Promise<V2TurnDone> {
       else if (ev.type === 'tool-call') req.onToolCall?.(ev as unknown as V2ToolCall);
       else if (ev.type === 'homework-keyed-verdict' && typeof ev.part === 'string' && (ev.verdict === 'correct' || ev.verdict === 'incorrect')) req.onHomework?.({ type: 'homework-keyed-verdict', part: ev.part, verdict: ev.verdict, ...(typeof ev.value === 'string' ? { value: ev.value } : {}) });
       else if (ev.type === 'homework-problem-done') req.onHomework?.({ type: 'homework-problem-done' });
+      else if (ev.type === 'homework-sheet-solved' && typeof ev.n === 'number' && typeof ev.position === 'number' && Array.isArray(ev.solved) && typeof ev.total === 'number') req.onHomework?.({ type: 'homework-sheet-solved', n: ev.n, position: ev.position, solved: (ev.solved as unknown[]).filter((x): x is number => typeof x === 'number'), total: ev.total });
       else if (ev.type === 'done') done = ev as unknown as V2TurnDone;
       else if (ev.type === 'error') throw new Error(typeof ev.message === 'string' ? ev.message : 'tutor turn failed');
     }

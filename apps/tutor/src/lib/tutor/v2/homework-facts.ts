@@ -30,3 +30,15 @@ export function v2HomeworkFacts(hw: V2HomeworkProblem, state: V2HomeworkState | 
   const named = (ls: string[]) => ls.map((l) => (l ? `part ${l}` : 'the answer')).join(', ');
   return [`homework record: confirmed correct — ${done.length ? named(done) : 'nothing yet'}${open.length ? `; still open — ${named(open)}` : ''}`];
 }
+
+/** The whole-sheet lines of the facts block: the problem in play, what is solved and open, and its record. */
+export function v2SheetFacts(sheet: import('./types').V2HomeworkSheet, record: V2HomeworkState['sheet'] | undefined): string[] {
+  const r = record ?? { current: sheet.problems[0]?.n ?? 1, since: 0, solved: [], confirmed: {} };
+  const at = sheet.problems.findIndex((p) => p.n === r.current);
+  const open = sheet.problems.filter((p) => !r.solved.includes(p.n)).map((p) => p.n);
+  if (!open.length) return ['homework sheet: every problem is solved: the sheet is done'];
+  const lines = [`homework sheet: problem ${r.current} of ${sheet.problems.length} is current; solved — ${r.solved.length ? r.solved.join(', ') : 'none'}; open — ${open.join(', ')}`];
+  const current = sheet.problems[at];
+  if (current) lines.push(...v2HomeworkFacts({ text: current.text, verified: current.verified, hasFigure: false, ...(current.parts ? { parts: current.parts } : {}) }, { confirmed: r.confirmed[String(r.current)] ?? [], ...(r.solved.includes(r.current) ? { done: true } : {}) }).map((l) => l.replace(/^homework record:/, `record of problem ${r.current}:`).replace('the problem is done', 'this problem is done')));
+  return lines;
+}

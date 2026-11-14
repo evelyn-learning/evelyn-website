@@ -239,7 +239,7 @@ export interface SessionStageProps {
   /** Homework mode: current problem / total (+ that problem's verbatim
    *  text) from VoiceTutorRealtime's onHomeworkProgress; null until a
    *  homework-help plan arrives. */
-  homeworkProgress?: { current: number; total: number; text?: string } | null;
+  homeworkProgress?: { current: number; total: number; text?: string; solved?: number } | null;
   /** Homework mode: true while the session's lesson plan is still being
    *  fetched. With neither this nor homeworkProgress, no homework kickoff
    *  will ever fire, so the pre-start copy falls back to "Type your
@@ -306,7 +306,7 @@ export default function SessionStage(props: SessionStageProps) {
               title={raw || undefined}
               className="shrink min-w-0 truncate whitespace-nowrap rounded-full px-2.5 py-1 text-xs bg-slate-900 text-white font-medium"
             >
-              Problem {homeworkProgress.current} of {homeworkProgress.total}{snippet ? ` · ${snippet}` : ''}
+              Problem {homeworkProgress.current} of {homeworkProgress.total}{homeworkProgress.solved ? ` · ${homeworkProgress.solved} solved` : ''}{snippet ? ` · ${snippet}` : ''}
             </div>
           </div>
         );

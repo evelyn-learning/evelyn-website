@@ -32,6 +32,14 @@ export interface V2Session {
   trial?: boolean;
   /** Homework mode (homework.ts): the session works the student's own homework. Never holds the answer key. */
   homework?: V2HomeworkProblem;
+  /** Whole-sheet homework (homework.ts): every problem of the sheet, worked in any order. Never holds a key. */
+  homeworkSheet?: V2HomeworkSheet;
+}
+
+/** A homework sheet as the tutor may see it: each problem, whether it has a checked key, and its parts' labels. */
+export interface V2HomeworkSheet {
+  problems: Array<{ n: number; text: string; verified: boolean; parts?: string[] }>;
+  noReveal?: boolean;
 }
 
 /** One problem of the student's homework sheet, as the tutor may see it: the key stays on the server (homework.ts). */
@@ -57,6 +65,9 @@ export interface V2HomeworkState {
   confirmed: string[];
   /** Every part of the problem is confirmed correct. */
   done?: boolean;
+  /** Whole-sheet homework: the problem in play, the history index its messages start at, the problems solved
+   *  (by number) and the marks confirmed on each. */
+  sheet?: { current: number; since: number; solved: number[]; confirmed: Record<string, string[]> };
 }
 
 export interface V2BoardItem { id: string; tool: string; summary: string; /** The content alone, normalised, for spotting repeats (board.ts). */ core?: string; /** A graph keeps what it plots, so a later graph on the same page can be drawn as one picture with it (turn.ts). */ args?: Record<string, unknown> }

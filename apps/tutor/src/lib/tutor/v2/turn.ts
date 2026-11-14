@@ -30,10 +30,10 @@ import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S, type V2TurnFacts
 import { planGoalIds, renderPlanMap } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
-import { v2HomeworkOpener, v2HomeworkPart } from './homework';
+import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
-import { SAY_WITH, V2_CONTROL_TOOL_NAMES, v2Tools } from './tools';
+import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
 /** A spoken reply of at least this many words that wrote nothing is put to the board check. */
@@ -115,7 +115,7 @@ export function v2SessionPart(session: V2Session): string {
     session.background?.length ? `What is known about this student from their course and earlier sessions:\n${session.background.map((l) => `  - ${l}`).join('\n')}` : '',
     tutorFigureLines(session),
     // Homework: the problem and its rules stand in for the plan, which only wraps the problem.
-    session.homework ? `\n${v2HomeworkPart(session.homework)}` : session.plan ? `\n${renderPlanMap(session.plan)}` : session.topic ? `\nThere is no lesson plan. The student asked to learn: ${session.topic}. Teach that, and whatever else they ask for.` : '\nThere is no lesson plan: teach what the student asks for.',
+    session.homework ? `\n${v2HomeworkPart(session.homework)}` : session.homeworkSheet ? `\n${v2SheetPart(session.homeworkSheet)}` : session.plan ? `\n${renderPlanMap(session.plan)}` : session.topic ? `\nThere is no lesson plan. The student asked to learn: ${session.topic}. Teach that, and whatever else they ask for.` : '\nThere is no lesson plan: teach what the student asks for.',
   ];
   return lines.filter(Boolean).join('\n');
 }
@@ -124,6 +124,7 @@ export function v2SessionPart(session: V2Session): string {
 export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean, session?: V2Session): string {
   if (studentSaid !== null) return studentSaid;
   if (state.history.length === 0 && !resumed && session?.homework) return v2HomeworkOpener(session.homework);
+  if (state.history.length === 0 && !resumed && session?.homeworkSheet) return v2SheetOpener(session.homeworkSheet);
   if (resumed) return '[The student\'s page was reloaded in the middle of the lesson and they have just come back. Welcome them back in one short sentence, say where the lesson stood, and carry on from there. What was on the board before is still on it.]';
   if (state.history.length === 0) return '[The session has just started. The student has joined and is waiting for you to begin the lesson. Greet them, then tell them what this lesson is about and what it will cover, and ask whether that sounds good. Keep all of it short: three sentences at most, the plan as two or three plain things and not a list of every step. If what is known about this student shows an earlier session, add one sentence on where that left off. Wait for their answer before teaching.]';
   return silenceSeconds ? '[The student has not replied.]' : '[The student sent nothing.]';
@@ -186,12 +187,23 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     state.gaps = gaps.slice(-V2_MAX_GAPS);
     return 'recorded';
   }
+  if (name === 'set_current_problem') {
+    const sheet = session.homeworkSheet;
+    const n = Number(args.n);
+    if (!sheet) return 'not done: this session has no homework sheet';
+    if (!sheet.problems.some((p) => p.n === n)) return `not done: the sheet has no problem ${args.n} (problems: ${sheet.problems.map((p) => p.n).join(', ')})`;
+    const rec = state.homework?.sheet ?? { current: sheet.problems[0].n, since: 0, solved: [], confirmed: {} };
+    // The student's messages from the next one on belong to this problem (homework-turn.ts reads from `since`).
+    state.homework = { ...(state.homework ?? { confirmed: [] }), sheet: { ...rec, current: n, since: state.history.length + 1 } };
+    return `now on problem ${n}${rec.solved.includes(n) ? ' (already solved)' : ''}`;
+  }
   if (name === 'end_lesson') {
     // Ending is the student's decision or the clock's. With time left and no request to stop, the tutor
     // twice closed the lesson by itself after the last planned problem (embed-1794336536781, -1794339843244).
     const left = session.timeBoxMinutes ? session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 : 0;
     // Homework: the session is for one problem, and a solved one ends it (homework.ts).
-    const homeworkDone = !!session.homework && state.homework?.done === true;
+    const homeworkDone = (!!session.homework && state.homework?.done === true)
+      || (!!session.homeworkSheet && session.homeworkSheet.problems.every((p) => state.homework?.sheet?.solved.includes(p.n)));
     if (args.because !== 'student_asked' && !homeworkDone && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
       // there are about seven minutes left and you haven't asked to stop" (embed-1794595194384).
@@ -228,7 +240,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     { type: 'text', text: V2_CONSTITUTION, cache_control: CACHE },
     { type: 'text', text: v2SessionPart(session), cache_control: CACHE },
   ];
-  const tools = v2Tools(session.subject, session.topic ?? '');
+  const tools = session.homeworkSheet ? [...v2Tools(session.subject, session.topic ?? ''), V2_SET_CURRENT_PROBLEM_TOOL] : v2Tools(session.subject, session.topic ?? '');
   let messages: Anthropic.MessageParam[] = [...withCacheMark(state.history), userNow];
 
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];
@@ -736,7 +748,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // A session never begins on a bare board (embed-1794362141944, embed-1794376295543). When the opening reply
   // and the check after it both wrote nothing, the lesson's heading and what it is for go up.
   // Not in homework: the problem is in its panel beside the chat, and the plan's title is only "Problem 3".
-  if (opening && !session.homework && !state.closed && spoken.length && !paintedSoFar()) {
+  if (opening && !session.homework && !session.homeworkSheet && !state.closed && spoken.length && !paintedSoFar()) {
     // Standards codes are for the plan's author, not the student: "(CCSS 8.G.B.6, 8.G.B.7)" was printed on the first card (demo check, 2026-11-13).
     const noCodes = (x: string) => x.replace(/\s*\((?:[^()]*\b(?:CCSS|NGSS|TEKS|HS-|MS-|[0-9]\.[A-Z]{1,3}\.[A-Z]?\.?\d)[^()]*)\)/g, '').trim();
     const body = [session.plan?.title ?? session.topic ?? '', ...(session.plan?.los ?? []).slice(0, 3).map((lo) => noCodes(lo.description))].map((x) => String(x).trim()).filter(Boolean).join('\n');

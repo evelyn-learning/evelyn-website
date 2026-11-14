@@ -9,6 +9,7 @@
  */
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { homeworkProblemOf, type HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
+import { homeworkProblemsOf } from '@/lib/tutor/lesson-plan/homework';
 import type { TutorMilestone } from '@/lib/tutor/orchestrator/types';
 import { V2_OPENING_BLOCK_START, clearV2State, loadV2State, saveV2State, v2StateFromCheckpoint } from '@/lib/tutor/v2/resume';
 import { v2MemoryLines, v2ProfileCommit } from '@/lib/tutor/v2/memory';
@@ -55,6 +56,8 @@ export interface V2TurnsConfig {
   onCompletedSegmentsChange?: (ids: string[]) => void;
   onMilestone?: (m: TutorMilestone) => void;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
+  /** Whole-sheet homework: the problem in play (by position), the sheet's size and how many are solved. */
+  onHomeworkProgress?: (p: { current: number; total: number; text?: string; solved?: number } | null) => void;
   /** The session's plan is one problem of a homework sheet (null for any other plan): the stage shows it. */
   onHomeworkProblem?: (meta: HomeworkProblemMeta | null) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
@@ -135,8 +138,11 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     let gone = false;
     void fetch(`/api/tutor/lesson-plans/${encodeURIComponent(id)}`).then((r) => (r.ok ? r.json() : null)).then((data: { plan?: LessonPlan } | null) => {
       if (gone || !data?.plan) return;
-      // A one-problem homework plan: its problem (and figure) go in the stage's panel, as in v1.
+      // A one-problem homework plan: its problem (and figure) go in the stage's panel, as in v1. A sheet: its
+      // problems go on the rail.
       p.current.onHomeworkProblem?.(homeworkProblemOf(data.plan as { metadata?: Record<string, unknown> }));
+      sheetRef.current = homeworkProblemOf(data.plan as { metadata?: Record<string, unknown> }) ? null : homeworkProblemsOf(data.plan as { metadata?: Record<string, unknown> });
+      reportSheet();
       if (!data.plan.segments?.length) return;
       planRef.current = data.plan; reportProgress();
     }).catch(() => { /* no plan, no report: the lesson itself does not depend on it */ });
@@ -144,6 +150,14 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   }, [config.lessonPlanId, reportProgress]);
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const busyRef = useRef(false);
+  // Whole-sheet homework: the rail shows the problem in play and how many are solved (SessionStage).
+  const sheetRef = useRef<Array<{ n: number; text: string }> | null>(null);
+  const reportSheet = useCallback(() => {
+    const problems = sheetRef.current; if (!problems?.length) return;
+    const rec = stateRef.current?.homework?.sheet;
+    const at = Math.max(0, problems.findIndex((x) => x.n === (rec?.current ?? problems[0].n)));
+    p.current.onHomeworkProgress?.({ current: at + 1, total: problems.length, text: problems[at]?.text, solved: rec?.solved.length ?? 0 });
+  }, []);
   const pendingRef = useRef<string | null>(null);
   // An opening turn asked for while an earlier one is still being torn down
   // (React runs effects twice in development: start, clean up, start again).
@@ -233,6 +247,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         // (homework-build/outcome.ts). Done is recorded once.
         onHomework: (ev) => {
           if (ev.type === 'homework-keyed-verdict') p.current.onDebugEvent?.(KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug(ev.part, ev.verdict, ev.value));
+          else if (ev.type === 'homework-sheet-solved') p.current.onDebugEvent?.('homework_problem_solved', `pos=${ev.position} solved=[${ev.solved.join(',')}] total=${ev.total}`);
           else if (!homeworkDoneRecordedRef.current) { homeworkDoneRecordedRef.current = true; p.current.onDebugEvent?.('homework_problem_done', 'all key parts confirmed'); }
         },
         onToolCall: (call) => {
@@ -269,6 +284,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       });
       letGo(); speak(sentences.flush());
       stateRef.current = done.state;
+      reportSheet();
       if (done.state.closed) clearV2State(p.current.sessionId); else saveV2State(p.current.sessionId, done.state);
       reportProgress();
       setTutor(done.spoken || text.trim(), false, settled.some((c) => c.name === 'show_problem' && /^painted/.test(c.outcome)));

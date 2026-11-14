@@ -5,7 +5,7 @@
  * the model what to do.
  */
 import { renderBoard } from './board';
-import { v2HomeworkFacts } from './homework-facts';
+import { v2HomeworkFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
 
@@ -37,14 +37,15 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // What is left, said outright: with only "22 used of 30" the tutor said goodbye, was refused the close, and
     // took the goodbye back in the same breath (embed-1794593747478, embed-1794595194384).
     // Homework: a solved problem does not go on spending the student's minutes.
-    session.homework
-      ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}` : ''}; the session ends when this problem is done`
+    session.homework || session.homeworkSheet
+      ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}` : ''}; the session ends when ${session.homeworkSheet ? 'the sheet' : 'this problem'} is done`
       : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 1.5 ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
   if (state.boardProblems?.length) lines.push(`not painted in your last reply:\n${state.boardProblems.map((x) => `  - ${x}`).join('\n')}`);
   if (session.homework) lines.push(...v2HomeworkFacts(session.homework, state.homework));
+  else if (session.homeworkSheet) lines.push(...v2SheetFacts(session.homeworkSheet, state.homework?.sheet));
   else if (session.plan) lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   if (state.gaps?.length) {

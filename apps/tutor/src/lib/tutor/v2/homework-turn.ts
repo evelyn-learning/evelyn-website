@@ -15,10 +15,10 @@
 import type { ProseAnswerMatchFn } from '../voice/prose-answer-match';
 import { boardRevealsHomeworkKey, homeworkKeyWithheld, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON } from '../voice/homework-problem-block';
 import { revealsWithheldAnswer, type WithheldAnswer } from '../voice/whole-answer-reveal';
-import { studentMessagesOf, v2HomeworkCheck, type V2HomeworkResolved } from './homework';
+import { newSheetRecord, sheetProblemNamed, studentMessagesOf, v2HomeworkCheck, type V2HomeworkResolved, type V2SheetResolved } from './homework';
 import { V2_CONTROL_TOOL_NAMES } from './tool-names';
 import { runV2Turn, type V2TurnInput } from './turn';
-import type { V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
+import type { V2HomeworkProblem, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
 /** A homework frame for the client (client.ts V2HomeworkFrame). */
 export type V2HomeworkFrameOut = { type: 'homework-keyed-verdict'; part: string; verdict: 'correct' | 'incorrect'; value?: string } | { type: 'homework-problem-done' };
@@ -44,19 +44,27 @@ export async function runV2HomeworkTurn(input: V2TurnInput & { resolved: V2Homew
   const state: V2State = { ...turn.state, homework: { confirmed: hc.confirmed, ...(hc.done ? { done: true } : {}) } };
   const facts = { ...(turn.facts ?? {}), ...(hc.answerCheck ? { answerCheck: hc.answerCheck } : {}) };
 
-  // What the student has written, this message included: a value of theirs is never withheld from them.
   const studentText = [...studentMessagesOf(turn.state.history).map((m) => m.content), turn.studentSaid ?? ''].join('\n');
   const withheld = hw.verified && resolved.key ? homeworkKeyWithheld({ text: hw.text, verified: true, hasFigure: hw.hasFigure, key: resolved.key }, studentText) : [];
+  const r = await guardedTurn({ ...turn, session, state, facts }, withheld, { noReveal: !!hw.noReveal, figureOnScreen: hw.hasFigure });
+  return { ...r, homeworkFrames: frames };
+}
+
+/**
+ * The turn under the no-reveal guard (this file's header). `withheld`: the key values the student has not
+ * written. `figureOnScreen`: the opening reply draws nothing.
+ */
+async function guardedTurn(given: V2TurnInput, withheld: WithheldAnswer[], opts: { noReveal: boolean; figureOnScreen: boolean }): Promise<V2TurnResult> {
+  const turn = given;
   const opening = !turn.state.history.length && turn.studentSaid === null;
   const boardGuard = (name: string, args: Record<string, unknown>): string | null => {
     if (V2_CONTROL_TOOL_NAMES.has(name) || name === 'new_page' || name === 'go_to_page') return null;
-    if (opening && hw.hasFigure) return HOMEWORK_OPENER_BOARD_WITHHELD_REASON.replace(/^not shown — /, '');
+    if (opening && opts.figureOnScreen) return HOMEWORK_OPENER_BOARD_WITHHELD_REASON.replace(/^not shown — /, '');
     return withheld.length && boardRevealsHomeworkKey(args, withheld) ? HOMEWORK_BOARD_KEY_WITHHELD_REASON.replace(/^not shown — /, '') : null;
   };
-  const guarded: V2TurnInput = { ...turn, session, state, facts, boardGuard };
-
-  if (!hw.noReveal || !withheld.length) return { ...(await runV2Turn(guarded)), homeworkFrames: frames };
-
+  const guarded: V2TurnInput = { ...turn, boardGuard };
+  if (!opts.noReveal || !withheld.length) return runV2Turn(guarded);
+  const facts = turn.facts ?? {};
   // Held: the student sees a draft only once it is known not to state an answer.
   const held = async (extra: Partial<V2TurnInput>) => {
     const events: Array<() => void> = [];
@@ -70,10 +78,10 @@ export async function runV2HomeworkTurn(input: V2TurnInput & { resolved: V2Homew
     return { r, flush: () => { for (const e of events) e(); }, reveals: sentencesOf(r.spoken).some((x) => revealing(x, withheld)) };
   };
   const first = await held({});
-  if (!first.reveals) { first.flush(); return { ...first.r, homeworkFrames: frames }; }
+  if (!first.reveals) { first.flush(); return first.r; }
   console.log('[brain-v2] homework: a draft stated a final answer — written again');
   const second = await held({ facts: { ...facts, notSent: V2_HOMEWORK_NOT_SENT } });
-  if (!second.reveals) { second.flush(); return { ...second.r, homeworkFrames: frames }; }
+  if (!second.reveals) { second.flush(); return second.r; }
   console.log('[brain-v2] homework: the second draft stated it too — those sentences are cut');
   // Last resort: the sentences that state it are cut from what is said and from what is stored.
   const cut = (text: string) => sentencesOf(text).filter((x) => !revealing(x, withheld)).join(' ');
@@ -92,5 +100,45 @@ export async function runV2HomeworkTurn(input: V2TurnInput & { resolved: V2Homew
   if (tail && !/\?\s*$/.test(tail.text)) tail.text = `${tail.text} ${V2_HOMEWORK_FALLBACK_QUESTION}`.trim();
   turn.onText?.(spoken);
   for (const c of second.r.toolCalls) turn.onToolCall?.(c);
-  return { ...second.r, spoken, state: { ...second.r.state, history }, homeworkFrames: frames };
+  return { ...second.r, spoken, state: { ...second.r.state, history } };
+}
+
+/** A whole-sheet frame: a problem solved, by number and by its position on the sheet (v1 records positions). */
+export type V2SheetFrameOut = V2HomeworkFrameOut | { type: 'homework-sheet-solved'; n: number; position: number; solved: number[]; total: number };
+
+/**
+ * One turn of a whole-sheet session (design 10): the problem in play is the one the student names, or the one
+ * set_current_problem last turned to; its answer is checked against its own key exactly as in a one-problem
+ * session (designs 1–4 on the current problem), and the sheet's record follows.
+ */
+export async function runV2SheetTurn(input: V2TurnInput & { resolvedSheet: V2SheetResolved; onHomeworkFrame?: (f: V2SheetFrameOut) => void; proseMatch?: ProseAnswerMatchFn }): Promise<V2TurnResult & { homeworkFrames: V2SheetFrameOut[] }> {
+  const { resolvedSheet, onHomeworkFrame, proseMatch, ...turn } = input;
+  const sheet = turn.session.homeworkSheet ?? resolvedSheet.sheet;
+  const session: V2Session = { ...turn.session, homeworkSheet: sheet };
+  let rec = turn.state.homework?.sheet ?? newSheetRecord(sheet);
+  // A message that names a problem is about that problem, from this message on.
+  const named = sheetProblemNamed(turn.studentSaid, sheet);
+  if (named !== null && named !== rec.current) rec = { ...rec, current: named, since: turn.state.history.length };
+  const problem = sheet.problems.find((p) => p.n === rec.current);
+  const key = resolvedSheet.keys[rec.current];
+  const frames: V2SheetFrameOut[] = [];
+  if (problem) {
+    const one: V2HomeworkProblem = { text: problem.text, verified: problem.verified, hasFigure: false, ...(problem.parts ? { parts: problem.parts } : {}) };
+    const scoped: V2State = { ...turn.state, history: turn.state.history.slice(rec.since), homework: { confirmed: rec.confirmed[String(rec.current)] ?? [], ...(rec.solved.includes(rec.current) ? { done: true } : {}) } };
+    const hc = await v2HomeworkCheck({ key, problem: one, state: scoped, studentSaid: turn.studentSaid, ...(proseMatch ? { proseMatch } : {}) });
+    frames.push(...hc.verdicts.map((v) => ({ type: 'homework-keyed-verdict' as const, ...v })));
+    rec = { ...rec, confirmed: { ...rec.confirmed, [String(rec.current)]: hc.confirmed } };
+    if (hc.justDone && !rec.solved.includes(rec.current)) {
+      rec = { ...rec, solved: [...rec.solved, rec.current] };
+      frames.push({ type: 'homework-sheet-solved', n: rec.current, position: sheet.problems.findIndex((p) => p.n === rec.current) + 1, solved: sheet.problems.map((p, i) => (rec.solved.includes(p.n) ? i + 1 : 0)).filter(Boolean), total: sheet.problems.length });
+    }
+    if (hc.answerCheck) turn.facts = { ...(turn.facts ?? {}), answerCheck: `problem ${rec.current}, ${hc.answerCheck}` };
+  }
+  for (const f of frames) onHomeworkFrame?.(f);
+  const state: V2State = { ...turn.state, homework: { ...(turn.state.homework ?? { confirmed: [] }), sheet: rec } };
+  // Every key value on the sheet the student has not written stays off the board and out of the reply.
+  const studentText = [...studentMessagesOf(turn.state.history).map((m) => m.content), turn.studentSaid ?? ''].join('\n');
+  const withheld = sheet.problems.flatMap((p) => (resolvedSheet.keys[p.n] ? homeworkKeyWithheld({ text: p.text, verified: true, hasFigure: false, key: resolvedSheet.keys[p.n] }, studentText) : []));
+  const r = await guardedTurn({ ...turn, session, state }, withheld, { noReveal: !!sheet.noReveal, figureOnScreen: false });
+  return { ...r, homeworkFrames: frames };
 }

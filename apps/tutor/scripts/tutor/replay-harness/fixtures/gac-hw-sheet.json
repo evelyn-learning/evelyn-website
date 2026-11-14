@@ -1,0 +1,68 @@
+{
+  "name": "gac-hw-sheet",
+  "sourceSessions": [
+    "synthetic: a GAC whole-sheet homework session (HOMEWORK_PER_PROBLEM=off): problems solved out of order, one skipped"
+  ],
+  "partner": "greenapple",
+  "claims": {
+    "student_name": "Sam",
+    "subject": "math",
+    "level": "9-10",
+    "session_goal": "homework-help",
+    "curriculum_module": "gen-19b0ea8e-6000-4a59-b9af-26fbdb19bcda",
+    "input_mode": "text"
+  },
+  "maxMinutes": 25,
+  "maxStudentTurns": 22,
+  "student": {
+    "who": "A grade 10 student with a five-problem statistics worksheet (box plot, histogram, dot plot, bar graph, pie chart). Can read the charts from the descriptions on the sheet. Wants to do the pie chart and the dot plot first because they look easy, and does not want to do the histogram question today.",
+    "voice": "Short typed messages, lower case.",
+    "beats": [
+      {
+        "id": "start-3",
+        "when": "The tutor asks which problem to start with, or starts on problem 1.",
+        "do": "Say you want to do problem 3 (the dot plot) first.",
+        "once": true
+      },
+      {
+        "id": "p3",
+        "when": "Working problem 3.",
+        "do": "Count the 12 values in order (0,1,1,1,2,2,2,2,3,3,4,5): the 6th and 7th are both 2, so the median is 2 pets. Give that answer."
+      },
+      {
+        "id": "p5",
+        "when": "Problem 3 is confirmed.",
+        "do": "Ask to do problem 5 next, then work it: 25% of $2,000 is $500."
+      },
+      {
+        "id": "skip-2",
+        "when": "Problem 5 is confirmed and the tutor suggests another problem.",
+        "do": "Say you want to skip problem 2 (the histogram), you will ask your teacher about it, and do problem 4 instead.",
+        "once": true
+      },
+      {
+        "id": "p4",
+        "when": "Working problem 4.",
+        "do": "Add the bars: 8 + 5 + 6 + 3 = 22 students, so 8/22, which simplifies to 4/11. Give 4/11."
+      },
+      {
+        "id": "stop",
+        "when": "Problem 4 is confirmed.",
+        "do": "Say that is enough for today and you want to stop."
+      }
+    ],
+    "reactions": [
+      {
+        "tag": "end",
+        "when": "The tutor says goodbye or that the session is over.",
+        "do": "Say thanks, bye."
+      },
+      {
+        "tag": "complaint_reask",
+        "when": "The tutor asks again for something you have already given.",
+        "do": "Say you already said that, briefly.",
+        "once": true
+      }
+    ]
+  }
+}

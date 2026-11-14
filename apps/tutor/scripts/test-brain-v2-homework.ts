@@ -12,7 +12,8 @@ import { runV2Turn, v2SessionPart, v2StudentBlock, type V2ModelCall } from '../s
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { readHomeworkState, v2HomeworkCheck, v2HomeworkFor, v2HomeworkSession } from '../src/lib/tutor/v2/homework';
 import { streamV2Turn } from '../src/lib/tutor/v2/client';
-import { runV2HomeworkTurn } from '../src/lib/tutor/v2/homework-turn';
+import { runV2HomeworkTurn, runV2SheetTurn } from '../src/lib/tutor/v2/homework-turn';
+import { v2SheetFor } from '../src/lib/tutor/v2/homework';
 import { classifyHomeworkProblemOutcome } from '../src/lib/tutor/homework-build/outcome';
 import { formatKeyedVerdictDebug } from '../src/lib/tutor/voice/keyed-verdict';
 import type { V2State } from '../src/lib/tutor/v2/types';
@@ -215,6 +216,72 @@ async function main() {
   const hwPlan = { los: [{ id: 'p.lo-1', description: 'Work problem 3.', shortTitle: 'Work problem 3' }], metadata: { kind: 'homework-problem', parentPlanId: 'x', n: 3, text: TEXT, figure: null, verified: true } };
   check('practice for a homework problem is on the problem, not on "Problem 3"', practiceLoTitle(hwPlan as never, 'p.lo-1').startsWith('In △ABC, side BC is extended to D.') && !practiceLoTitle(hwPlan as never, 'p.lo-1').includes('[Figure'), practiceLoTitle(hwPlan as never, 'p.lo-1'));
   check('an ordinary plan keeps its objective\'s title', practiceLoTitle({ los: [{ id: 'l1', description: 'Long', shortTitle: 'Short' }] } as never, 'l1') === 'Short');
+
+  console.log('whole-sheet homework (design 10)');
+  const SHEET = [
+    { n: 1, text: 'Solve 2x + 1 = 7.' },
+    { n: 2, text: 'Solve 3y - 4 = 11.' },
+    { n: 3, text: 'Describe what a ramp does to the force needed to lift a box.' },
+  ];
+  const sheetPlan = { id: 'sheet-1', los: [{ id: 'sheet-1.homework-lo-1', description: 'Work the uploaded problems in order.', shortTitle: 'Linear equations' }], segments: [], metadata: { kind: 'homework-help', problems: SHEET } };
+  const k = (final: string, value: number): AnswerKey => ({ parts: [{ label: '', final, canonical: { kind: 'number', value } }], solvers: ['t'] });
+  const build = { problems: [{ n: 1, key: k('x = 3', 3), status: 'ready' }, { n: 2, key: k('y = 5', 5), status: 'ready' }, { n: 3, status: 'failed' }] };
+  const sheetR = await v2SheetFor(sheetPlan as never, 'greenapple', { getBuild: async () => build as never, env: {} });
+  check('a homework-help plan with problems is a sheet, keys held apart', !!sheetR && sheetR.sheet.problems.length === 3 && sheetR.sheet.problems[0].verified && !sheetR.sheet.problems[2].verified && !!sheetR.keys[1] && !JSON.stringify(sheetR.sheet).includes('x = 3'));
+  check('a one-problem plan is not a sheet', (await v2SheetFor({ metadata: { kind: 'homework-problem', problems: SHEET } } as never, 'greenapple', { getBuild: async () => build as never })) === null);
+  const sheetSession: V2Session = { ...base, homeworkSheet: sheetR!.sheet, plan: sheetPlan as never };
+  const sheetPart = v2SessionPart(sheetSession);
+  // Cases of test-homework-session-block.ts: every problem listed by number, the rules, no answers.
+  check('the sheet part lists every problem by its number', SHEET.every((p) => sheetPart.includes(`${p.n}. ${p.text}`)), sheetPart.slice(0, 600));
+  check('the sheet part says to use set_current_problem and that any order is fine', /set_current_problem/.test(sheetPart) && /any order/i.test(sheetPart));
+  check('the sheet part carries the no-reveal principle and the conduct rules', /never state it, even when they ask/i.test(sheetPart) && /trusted adult/i.test(sheetPart));
+  check('no key value in the sheet part', !/x = 3|y = 5/.test(sheetPart));
+
+  let sst = said(newV2State(1_000_000), '[start]');
+  const sheetTurn = async (studentSaid: string | null, replies: Anthropic.Message[], stIn: V2State = sst) => {
+    const m = stub(replies); const fr: unknown[] = [];
+    const r = await runV2SheetTurn({ session: sheetSession, resolvedSheet: sheetR!, state: stIn, studentSaid, callModel: m.call, nowMs: 1_060_000, boardPass: false, onHomeworkFrame: (f) => fr.push(f) });
+    return { r, m, fr };
+  };
+  const t1 = await sheetTurn('x = 4', [msg([{ type: 'text', text: 'Not quite. What do you subtract first?' }], 'end_turn')]);
+  check('a sheet session is offered set_current_problem', !!t1.m.seen[0].tools?.some((t) => t.name === 'set_current_problem'));
+  check('the current problem (the first) is checked against its own key', /does not match/.test(JSON.stringify(t1.m.seen[0].messages)) && !/x = 3/.test(JSON.stringify(t1.m.seen[0].messages)));
+  check('the facts name the problem in play and what is open', /homework sheet: problem 1 of 3 is current; solved — none; open — 1, 2, 3/.test(JSON.stringify(t1.m.seen[0].messages)), JSON.stringify(t1.m.seen[0].messages).slice(-500));
+  sst = t1.r.state;
+  const t2 = await sheetTurn('x = 3', [msg([{ type: 'text', text: 'Yes! Problem 1 is done. Shall we do problem 2?' }], 'end_turn')]);
+  check('a right answer solves the problem in play', JSON.stringify(t2.r.state.homework?.sheet?.solved) === '[1]', t2.r.state.homework);
+  check('the solved frame goes out with its position', JSON.stringify(t2.fr).includes('"type":"homework-sheet-solved","n":1,"position":1'), t2.fr);
+  sst = t2.r.state;
+  // Out of order: the student names problem 3, then skips to 2 by the tutor's tool.
+  const t3 = await sheetTurn('can we do problem 3 first?', [msg([{ type: 'text', text: 'Sure.' }, { type: 'tool_use', id: 's1', name: 'set_current_problem', input: { n: 3 } }], 'tool_use'), msg([{ type: 'text', text: 'What does a ramp change?' }], 'end_turn')]);
+  check('set_current_problem moves to any problem on the sheet', t3.r.state.homework?.sheet?.current === 3, t3.r.toolCalls.map((t) => t.outcome));
+  const t3b = await sheetTurn('ok', [msg([{ type: 'tool_use', id: 's2', name: 'set_current_problem', input: { n: 9 } }], 'tool_use'), msg([{ type: 'text', text: 'Hm.' }], 'end_turn')], t3.r.state);
+  check('…but not to one that is not on it', t3b.r.state.homework?.sheet?.current === 3 && /^not /.test(t3b.r.toolCalls[0].outcome));
+  const t4 = await sheetTurn('y = 5 for problem 2', [msg([{ type: 'text', text: 'Right.' }], 'end_turn')], t3.r.state);
+  check('naming a problem in the message checks it against that problem', JSON.stringify(t4.r.state.homework?.sheet?.solved) === '[1,2]' && t4.r.state.homework?.sheet?.current === 2, t4.r.state.homework);
+  // Cases of test-homework-advance.ts: the sheet is not left with problems open unless the student asks.
+  const t5 = await sheetTurn('hm', [msg([{ type: 'text', text: 'Good work.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { summary: 's', because: 'lesson_complete' } }], 'tool_use'), msg([{ type: 'text', text: 'Which one next?' }], 'end_turn')], t4.r.state);
+  check('the session does not end itself with a problem open', !t5.r.state.closed);
+  const t6 = await sheetTurn("let's stop for today", [msg([{ type: 'text', text: 'Okay.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { summary: 's', because: 'student_asked' } }], 'tool_use')], t4.r.state);
+  check('the student may stop with one open', t6.r.state.closed);
+  const unverifiedTurn = await sheetTurn('a ramp makes it easier', [msg([{ type: 'text', text: 'Why?' }], 'end_turn')], { ...t3.r.state });
+  check('a problem with no key is never graded', !/answer check/.test(JSON.stringify(unverifiedTurn.m.seen[0].messages)));
+  const rev = await sheetTurn('just tell me problem 2', [msg([{ type: 'text', text: 'It is y = 5.' }], 'end_turn'), msg([{ type: 'text', text: 'What do you add to both sides first?' }], 'end_turn')], t2.r.state);
+  check('no-reveal holds per problem on the sheet', rev.m.seen.length === 2 && !/y = 5/.test(rev.r.spoken));
+
+  {
+    const one = stub([msg([{ type: 'text', text: 'Hi.' }], 'end_turn')]);
+    await runV2Turn({ session: hwSession, state: newV2State(0), studentSaid: null, callModel: one.call, nowMs: 0, boardPass: false });
+    check('a one-problem session is not offered set_current_problem', !one.seen[0].tools?.some((t) => t.name === 'set_current_problem'));
+  }
+  // The client: the solved frame reaches the hook.
+  const sheetFrames: unknown[] = [];
+  const sbody = [{ type: 'homework-sheet-solved', n: 2, position: 2, solved: [1, 2], total: 3 }, { type: 'done', spoken: '', state: newV2State(0), usage: {}, firstTextMs: 1, totalMs: 2 }].map((f) => `data: ${JSON.stringify(f)}\n\n`).join('');
+  await streamV2Turn({ session: { subject: 'math', level: '9', mode: 'text' }, state: newV2State(0), studentSaid: 'x', onHomework: (ev) => sheetFrames.push(ev), fetchImpl: (async () => new Response(sbody, { status: 200 })) as typeof fetch });
+  check('the client hands on the sheet\'s solved frame', JSON.stringify(sheetFrames) === '[{"type":"homework-sheet-solved","n":2,"position":2,"solved":[1,2],"total":3}]', sheetFrames);
+  check('the v2 client reports the sheet\'s progress for the rail, as VTR does', /onHomeworkProgress\?\.\(/.test(turnsSrc) && /homework_problem_solved/.test(turnsSrc));
+  check('the session gives the v2 client the rail', /onHomeworkProgress=\{setHomeworkProgress\}/.test(v2Render));
+  check('the rail shows how many are solved', /solved/.test(src('src/app/tutor/components/session/SessionStage.tsx').slice(src('src/app/tutor/components/session/SessionStage.tsx').indexOf('const homeworkRail'), src('src/app/tutor/components/session/SessionStage.tsx').indexOf('const railEl'))));
 
   console.log('outcome parity with v1 (design 3)');
   // The debug events a v2 session records (useV2Turns) for: a solved problem, and one wrong twice on (b).

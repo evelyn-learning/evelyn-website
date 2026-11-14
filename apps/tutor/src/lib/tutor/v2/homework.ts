@@ -10,7 +10,9 @@
  * The answer key never enters the model's context. It is read on the server (voice/homework-problem-turn.ts)
  * and only the checker sees it; the model is told what the check found.
  */
-import type { AnswerKey } from '../homework-build/types';
+import type { AnswerKey, HomeworkBuildDoc } from '../homework-build/types';
+import { HOMEWORK_PROBLEM_KIND } from '../lesson-plan/homework-problem-meta';
+import { homeworkProblemsOf } from '../lesson-plan/homework';
 import { resolveHomeworkProblemTurn, type HomeworkProblemTurn, type HomeworkProblemTurnDeps } from '../voice/homework-problem-turn';
 import { allKeyPartsConfirmed, confirmedKeyMarks, proseCreditForPart, proseMatchCandidates, sanitizeConfirmedMarks, scopedKeyedVerdicts, type KeyedVerdict } from '../voice/keyed-verdict';
 import type { ProseAnswerMatchFn } from '../voice/prose-answer-match';
@@ -19,7 +21,7 @@ import {
   HOMEWORK_PROBLEM_CONDUCT_RULES, HOMEWORK_PROBLEM_FIGURE_SHOWN, HOMEWORK_PROBLEM_NO_FIGURE, HOMEWORK_PROBLEM_UNVERIFIED,
 } from '../voice/homework-problem-block';
 import { marksInWords, oneLine, partLabel } from './homework-facts';
-import type { V2HomeworkProblem, V2HomeworkState, V2Session, V2State } from './types';
+import type { V2HomeworkProblem, V2HomeworkSheet, V2HomeworkState, V2Session, V2State } from './types';
 
 export { marksInWords, partLabel, v2HomeworkFacts } from './homework-facts';
 
@@ -88,7 +90,8 @@ export async function v2HomeworkFor(
 export function readHomeworkState(raw: unknown): V2HomeworkState | undefined {
   const h = raw as Partial<V2HomeworkState> | null | undefined;
   if (!h || typeof h !== 'object') return undefined;
-  return { confirmed: sanitizeConfirmedMarks(h.confirmed), ...(h.done === true ? { done: true } : {}) };
+  const sheet = readSheetRecord(h.sheet);
+  return { confirmed: sanitizeConfirmedMarks(h.confirmed), ...(h.done === true ? { done: true } : {}), ...(sheet ? { sheet } : {}) };
 }
 
 /** A homework verdict as the browser records it (useV2Turns → `homework_keyed_verdict`, the outcome route's input). */
@@ -152,4 +155,78 @@ export async function v2HomeworkCheck(input: {
   const done = allKeyPartsConfirmed(history, said, key, all);
   const lines = verdicts.map((v) => `part ${v.part || '(the answer)'}${v.value ? `, ${v.value}` : ''}: ${v.verdict === 'correct' ? 'the student\'s answer matches the checked answer' : 'the student\'s answer does not match the checked answer'}`);
   return { ...(lines.length ? { answerCheck: lines.join('; ') } : {}), verdicts, confirmed, done, justDone: done };
+}
+
+// ── Whole-sheet homework (design 10) ─────────────────────────────────────────────────────────────────────────
+// A homework-help plan carrying the sheet's problems (lesson-plan/homework.ts) and not a one-problem plan. The
+// sheet's build (homework-build) holds a key per problem; a problem whose key is not ready is never graded.
+
+export interface V2SheetResolved { sheet: V2HomeworkSheet; keys: Record<number, AnswerKey> }
+
+export async function v2SheetFor(
+  plan: { id?: string; metadata?: Record<string, unknown> } | null, partnerId: string | undefined,
+  deps: { getBuild?: (planId: string) => Promise<Pick<HomeworkBuildDoc, 'problems'> | null>; env?: Record<string, string | undefined> } = {},
+): Promise<V2SheetResolved | null> {
+  // A one-problem plan copies its sheet's metadata; it is never a sheet itself.
+  if (!plan || plan.metadata?.kind === HOMEWORK_PROBLEM_KIND) return null;
+  const problems = homeworkProblemsOf(plan);
+  if (!problems?.length) return null;
+  const getBuild = deps.getBuild ?? (async (id: string) => (await import('../homework-build/store')).getHomeworkBuild(id));
+  let build: Pick<HomeworkBuildDoc, 'problems'> | null = null;
+  try { build = plan.id ? await getBuild(plan.id) : null; } catch { build = null; }
+  const keys: Record<number, AnswerKey> = {};
+  for (const p of problems) {
+    const pb = build?.problems.find((b) => b.n === p.n) as { key?: AnswerKey | null; status?: string } | undefined;
+    const key = pb && (pb.status === undefined || pb.status === 'ready') ? pb.key ?? undefined : undefined;
+    if (key?.parts?.length) keys[p.n] = key;
+  }
+  return {
+    sheet: {
+      problems: problems.map((p) => ({ n: p.n, text: p.text, verified: !!keys[p.n], ...(keys[p.n] ? { parts: keys[p.n].parts.map((x) => partLabel(x.label)) } : {}) })),
+      ...(noRevealLedgerForPartner(partnerId, deps.env) ? { noReveal: true } : {}),
+    },
+    keys,
+  };
+}
+
+/** The sheet part of the session part (turn.ts v2SessionPart), in place of the plan map. */
+export function v2SheetPart(sheet: V2HomeworkSheet): string {
+  return [
+    'HOMEWORK',
+    `The student has brought their homework sheet: ${sheet.problems.length} problem${sheet.problems.length === 1 ? '' : 's'}, verbatim:`,
+    ...sheet.problems.map((p) => `${p.n}. ${p.text.trim().slice(0, 4000)}`),
+    `- ${V2_HOMEWORK_NO_REVEAL}`,
+    '- They may work the problems in any order, and may skip one. Before you work a problem, call set_current_problem with its number: the answer check and the homework record in the facts follow the problem in play.',
+    '- Each answer to a problem with a checked key is checked against it, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. A problem without a checked key is never called right or wrong: work it through with them, name any slip in their working, and ask them to check the final result with their teacher.',
+    '- When the record says a problem is done, say so and offer the next open one. When every problem is done, say the sheet is done and call end_lesson.',
+    '- Labels and values are the ones on the student\'s sheet, as written above.',
+    HOMEWORK_PROBLEM_CONDUCT_RULES.trimEnd(),
+  ].join('\n');
+}
+
+/** In place of the student's words at the start of a whole-sheet session. */
+export function v2SheetOpener(sheet: V2HomeworkSheet): string {
+  return `[The session has just started. The student has brought a homework sheet of ${sheet.problems.length} problem${sheet.problems.length === 1 ? '' : 's'}, which they can see. Greet them in a few words and ask which problem they want to start with, or start with problem ${sheet.problems[0]?.n ?? 1} if they have no preference. Keep it short.]`;
+}
+
+/** A problem of the sheet the student's message names ("problem 2", "question 3", "number 4", "#5"). */
+export function sheetProblemNamed(studentSaid: string | null, sheet: V2HomeworkSheet): number | null {
+  const m = /\b(?:problem|question|number|no\.|#)\s*(\d{1,2})\b/i.exec(studentSaid ?? '');
+  const n = m ? Number(m[1]) : NaN;
+  return sheet.problems.some((p) => p.n === n) ? n : null;
+}
+
+/** The sheet's record before any turn: the first problem in play, nothing solved. */
+export function newSheetRecord(sheet: V2HomeworkSheet): NonNullable<V2HomeworkState['sheet']> {
+  return { current: sheet.problems[0]?.n ?? 1, since: 0, solved: [], confirmed: {} };
+}
+
+/** The sheet's record from a client-held state, kept to problems on the sheet and well-formed marks. */
+export function readSheetRecord(raw: unknown): V2HomeworkState['sheet'] | undefined {
+  const r = raw as Partial<NonNullable<V2HomeworkState['sheet']>> | null | undefined;
+  if (!r || typeof r !== 'object' || !Number.isInteger(r.current)) return undefined;
+  const solved = Array.isArray(r.solved) ? [...new Set(r.solved.filter((n): n is number => Number.isInteger(n)))].slice(0, 25) : [];
+  const confirmed: Record<string, string[]> = {};
+  for (const [k, v] of Object.entries(r.confirmed ?? {}).slice(0, 25)) if (/^\d{1,2}$/.test(k)) confirmed[k] = sanitizeConfirmedMarks(v);
+  return { current: r.current as number, since: Number.isInteger(r.since) && (r.since as number) >= 0 ? (r.since as number) : 0, solved, confirmed };
 }

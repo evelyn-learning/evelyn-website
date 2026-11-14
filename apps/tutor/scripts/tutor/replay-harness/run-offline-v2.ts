@@ -51,9 +51,12 @@ async function main() {
   const { runV2HomeworkTurn } = await import('../../../src/lib/tutor/v2/homework-turn');
   const { formatKeyedVerdictDebug } = await import('../../../src/lib/tutor/voice/keyed-verdict');
   const homework = plan ? await v2HomeworkFor(planId, fixture.partner) : null;
+  const { v2SheetFor } = await import('../../../src/lib/tutor/v2/homework');
+  const { runV2SheetTurn } = await import('../../../src/lib/tutor/v2/homework-turn');
+  const sheet = plan && !homework ? await v2SheetFor(plan as never, fixture.partner) : null;
   const session = {
     studentName: String(fixture.claims.student_name ?? ''), subject: String(fixture.claims.subject), level: String(fixture.claims.level),
-    mode, timeBoxMinutes: fixture.maxMinutes, ...(plan ? { plan } : {}), ...(homework ? { homework: homework.problem } : {}),
+    mode, timeBoxMinutes: fixture.maxMinutes, ...(plan ? { plan } : {}), ...(homework ? { homework: homework.problem } : {}), ...(sheet ? { homeworkSheet: sheet.sheet } : {}),
   };
 
   const log: string[] = [];
@@ -79,6 +82,11 @@ async function main() {
           // The debug events the browser records (useV2Turns), which the outcome reads.
           events.push(f.type === 'homework-problem-done' ? { type: 'homework_problem_done', message: 'all key parts confirmed' } : { type: 'homework_keyed_verdict', message: formatKeyedVerdictDebug(f.part, f.verdict, f.value) });
         } })
+        : sheet
+        ? await runV2SheetTurn({ session, state, studentSaid, effort, nowMs: clockMs, resolvedSheet: sheet, onHomeworkFrame: (f) => {
+          if (f.type === 'homework-sheet-solved') events.push({ type: 'homework_problem_solved', message: `pos=${f.position} solved=[${f.solved.join(',')}] total=${f.total}` });
+          else if (f.type === 'homework-keyed-verdict') events.push({ type: 'homework_keyed_verdict', message: formatKeyedVerdictDebug(f.part, f.verdict, f.value) });
+        } })
         : await runV2Turn({ session, state, studentSaid, effort, nowMs: clockMs });
     }
     catch (e) { say(`TUTOR ERROR ${(e as Error).message.slice(0, 200)}`); endedBy = 'error'; break; }
@@ -103,7 +111,7 @@ async function main() {
   const bundle: RunBundle = { fixture: fixture.name, arm, startedAt: new Date(t0).toISOString(), minutes: (clockMs - t0) / 60000, turns, events, endedBy };
   const base = path.join(outDir, `${fixture.name}-${arm}-${runId}`);
   // A homework-problem plan (GAC): the outcome the academy would read, and any key value the tutor stated.
-  const homeworkOutcome = fixture.claims.session_goal === 'homework-help' && planId
+  const homeworkOutcome = fixture.claims.session_goal === 'homework-help' && planId && homework
     ? await (await import('./homework-outcome')).homeworkRunOutcome(planId, turns, events).catch((e) => { say(`homework outcome failed: ${(e as Error).message.slice(0, 120)}`); return null; })
     : null;
   if (homeworkOutcome) say(`homework outcome=${homeworkOutcome.outcome} reveals=${homeworkOutcome.reveals.length}`);

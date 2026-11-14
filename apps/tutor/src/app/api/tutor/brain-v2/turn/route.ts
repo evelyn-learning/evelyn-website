@@ -14,8 +14,8 @@ import { V2_BACKGROUND_LINE_CHARS, V2_BACKGROUND_MAX_LINES } from '@/lib/tutor/v
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
-import { readHomeworkState, v2HomeworkFor } from '@/lib/tutor/v2/homework';
-import { runV2HomeworkTurn } from '@/lib/tutor/v2/homework-turn';
+import { readHomeworkState, v2HomeworkFor, v2SheetFor } from '@/lib/tutor/v2/homework';
+import { runV2HomeworkTurn, runV2SheetTurn } from '@/lib/tutor/v2/homework-turn';
 import { runV2Turn } from '@/lib/tutor/v2/turn';
 import type { V2Session, V2State, V2ToolCall } from '@/lib/tutor/v2/types';
 
@@ -62,7 +62,10 @@ export async function POST(req: NextRequest) {
   const plan = typeof cfg.lessonPlanId === 'string' && cfg.lessonPlanId ? await getLessonPlan(cfg.lessonPlanId) : null;
   // Homework mode (v2/homework.ts): a one-problem homework plan. The key is read here and goes only to the checker.
   // The partner claim is unverified, as v1 reads it: a forged claim only makes the forger's own tutor stricter.
-  const homework = plan ? await v2HomeworkFor(cfg.lessonPlanId as string, embedTokenPartnerClaim(req.headers.get('x-embed-token')), { getPlan: async () => plan }) : null;
+  const partnerClaim = embedTokenPartnerClaim(req.headers.get('x-embed-token'));
+  const homework = plan ? await v2HomeworkFor(cfg.lessonPlanId as string, partnerClaim, { getPlan: async () => plan }) : null;
+  // Whole-sheet homework: a homework-help plan with the sheet's problems; each problem's key from its build.
+  const homeworkSheet = plan && !homework ? await v2SheetFor(plan as { id?: string; metadata?: Record<string, unknown> }, partnerClaim) : null;
   const t = (cfg.teacher && typeof cfg.teacher === 'object' ? cfg.teacher : {}) as { name?: unknown; nameIsRole?: unknown; style?: unknown };
   const teacher = typeof t.name === 'string' && t.name.trim() ? { name: t.name.trim().slice(0, 80), ...(t.nameIsRole === true ? { nameIsRole: true } : {}), ...(typeof t.style === 'string' && t.style.trim() ? { style: t.style.trim().slice(0, 600) } : {}) } : null;
   const background = Array.isArray(cfg.background) ? cfg.background.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, V2_BACKGROUND_MAX_LINES).map((x) => x.trim().slice(0, V2_BACKGROUND_LINE_CHARS)) : [];
@@ -78,6 +81,7 @@ export async function POST(req: NextRequest) {
     ...(!plan && typeof cfg.topic === 'string' && cfg.topic.trim() ? { topic: cfg.topic.trim().slice(0, 160) } : {}),
     ...(plan ? { plan, topic: `${(plan as { topic?: string }).topic ?? ''} ${(plan as { title?: string }).title ?? ''}`.trim().slice(0, 160) } : {}),
     ...(homework ? { homework: homework.problem } : {}),
+    ...(homeworkSheet ? { homeworkSheet: homeworkSheet.sheet } : {}),
   };
   const silenceSeconds = typeof body.silenceSeconds === 'number' && body.silenceSeconds > 0 ? body.silenceSeconds : undefined;
 
@@ -98,12 +102,11 @@ export async function POST(req: NextRequest) {
         };
         // Homework mode (v2/homework.ts): the answer is checked against the key before the model is called, and
         // the browser records each verdict as the debug event the academy's outcome route reads.
+        const logFrame = (f: { type: string; part?: string; verdict?: string; n?: number }) => console.log(`[brain-v2] homework: ${f.type}${f.part !== undefined ? ` part ${f.part} ${f.verdict}` : ''}${f.n !== undefined ? ` problem ${f.n}` : ''}`);
         const r = homework
-          ? await runV2HomeworkTurn({ ...turnInput, resolved: homework, onHomeworkFrame: (f) => {
-            send(f);
-            if (f.type === 'homework-problem-done') console.log('[brain-v2] homework: every part confirmed — homework-problem-done');
-            else console.log(`[brain-v2] homework check: part ${f.part} ${f.verdict}`);
-          } })
+          ? await runV2HomeworkTurn({ ...turnInput, resolved: homework, onHomeworkFrame: (f) => { send(f); logFrame(f); } })
+          : homeworkSheet
+          ? await runV2SheetTurn({ ...turnInput, resolvedSheet: homeworkSheet, onHomeworkFrame: (f) => { send(f); logFrame(f); } })
           : await runV2Turn(turnInput);
         console.log(`[brain-v2] student="${(studentSaid ?? '(none)').slice(0, 80)}" → tools=[${r.toolCalls.map((t) => t.name).join(', ') || '(none)'}] · calls=${r.modelCalls} · first=${r.firstTextMs}ms total=${r.totalMs}ms · in=${r.usage.inputTokens} out=${r.usage.outputTokens} cr=${r.usage.cacheReadTokens} cc=${r.usage.cacheCreationTokens}`);
         send({ type: 'done', spoken: r.spoken, state: r.state, usage: r.usage, firstTextMs: r.firstTextMs, totalMs: r.totalMs });

@@ -1374,7 +1374,7 @@ export default function TutorSession(props: TutorSessionProps) {
   // Homework mode (GreenApple round 2): current problem / total, reported by
   // VoiceTutorRealtime's onHomeworkProgress. Stays null for non-homework
   // plans (the callback never fires for them).
-  const [homeworkProgress, setHomeworkProgress] = useState<{ current: number; total: number; text?: string } | null>(null);
+  const [homeworkProgress, setHomeworkProgress] = useState<{ current: number; total: number; text?: string; solved?: number } | null>(null);
   // Which lesson-plan id's fetch has settled (loaded or failed). While the
   // selected plan is still loading, a homework session shows "Getting your
   // first problem ready…"; once it settles with no homework plan (fetch
@@ -1804,6 +1804,7 @@ export default function TutorSession(props: TutorSessionProps) {
           onBrainUsage={onBrainUsage}
           onDebugEvent={onDebugEvent}
           onHomeworkProblem={setHomeworkProblem}
+          onHomeworkProgress={setHomeworkProgress}
           onError={(err) => setError(err.message)}
         />
       ) : (

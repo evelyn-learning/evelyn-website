@@ -107,6 +107,13 @@ export const SAY_WITH = 'say_with';
 const SAY_WITH_SCHEMA = { type: 'string', description: 'Spoken lessons: the first few words, copied exactly, of the sentence in this reply that this belongs with. It appears on the board as you begin saying that sentence. Leave it out and it appears as you start speaking.' };
 
 /** The tools for a session, in a stable order (the list is part of the cached prefix). */
+/** Whole-sheet homework only (homework.ts): the problem the work turns to. */
+export const V2_SET_CURRENT_PROBLEM_TOOL: Anthropic.Tool = {
+  name: 'set_current_problem',
+  description: 'Turn to another problem of the student\'s homework sheet, by its number, before working it: the answer check and the record follow the problem in play.',
+  input_schema: { type: 'object', properties: { n: { type: 'integer', description: 'The problem\'s number on the sheet.' } }, required: ['n'] },
+};
+
 export function v2Tools(subject: string, topic = ''): Anthropic.Tool[] {
   const byName = new Map((WHITEBOARD_TOOLS as Array<{ name: string; parameters: unknown }>).map((t) => [t.name, t]));
   const board: Anthropic.Tool[] = [];
