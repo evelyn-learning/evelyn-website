@@ -775,10 +775,13 @@ async function main() {
     const endNamed = stub([msg([{ type: 'text', text: 'Bye, Jo.' }, { type: 'tool_use', id: 'e3', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's' } }], 'tool_use')]);
     const ren = await runV2Turn({ session: dSession, state: named, studentSaid: 'Parents, then.', nowMs: 1_000_000 + 5 * 60000, callModel: endNamed.call });
     check('a direction recorded earlier lets the conversation close', ren.state.closed && ren.state.nextDirection === 'parents');
-    const judged = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: "That's a clear line. Does it hold for Diego? And for older students?" }] }] };
+    const judged = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: "That's a clear line. With about three minutes left, does it hold for Diego? And for older students?" }] }] };
     const fj = renderFacts(dSession, judged, { nowMs: 1_000_000 + 5 * 60000 });
-    check('the facts point out a judging opener and a double question in the last reply', /your last reply: it opened by judging their point \("That's a clear line"\); it asked 2 questions/.test(fj), fj);
+    check('the facts point out a judging opener and a double question in the last reply', /your last reply: it opened by judging their point \("That's a clear line"\); it asked 2 questions; it read the clock out/.test(fj), fj);
     check('the map gives the spoken version of a case and the author\'s reflection questions', /to tell aloud: Kelly finishes a story/.test(renderDiscussionMap(dPlan, discussionOf(dPlan)!)) && /Does this still sound like me\?/.test(renderDiscussionMap(dPlan, discussionOf(dPlan)!)));
+    const selfOrder = stub([msg([{ type: 'text', text: 'Record the direction, then close.' }, { type: 'tool_use', id: 'e4', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'a talk with my department.' } }], 'tool_use')]);
+    const rso = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'My department, I think.', nowMs: 1_000_000 + 9 * 60000, callModel: selfOrder.call });
+    check('an order to itself is never said, and a close with nothing left to say still closes in words', rso.state.closed && !/Record the direction/.test(rso.spoken) && rso.spoken === 'Thank you for thinking this through with me. The direction you chose: a talk with my department.', rso.spoken);
     check('the verdict-word scan catches praise and passes a plain acknowledgement', DISCUSSION_VERDICT_WORDS.test('Excellent point.') && DISCUSSION_VERDICT_WORDS.test("That's right, Jo.") && !DISCUSSION_VERDICT_WORDS.test('Tying it to what the student decides is a useful test.'));
   }
   console.log(`\n${passed} passed, ${failed} failed`);

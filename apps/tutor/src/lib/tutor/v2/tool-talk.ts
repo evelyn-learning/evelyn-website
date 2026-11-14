@@ -6,13 +6,16 @@
  * contains a tool name is dropped whole; everything else passes untouched.
  * This is a safety net for a rare slip, not a way of steering the tutor.
  */
-const TOOL_NAME = /\b(?:end_lesson|update_session_note|set_goal_status|track_gap|new_page|go_to_page|tutor_handwrite|show_[a-z]+(?:_[a-z]+)*)\b/;
+const TOOL_NAME = /\b(?:end_lesson|update_session_note|set_goal_status|track_gap|record_thinking|keep_listening|new_page|go_to_page|tutor_handwrite|show_[a-z]+(?:_[a-z]+)*)\b/;
 
 /** The same slip in plain words: an order to the board said aloud ("Open a new page for it.", embed-1794500923861). */
 const BOARD_ORDER = /(?:^|[.!?]\s+)(?:open|start|turn to|create|add|begin) (?:a|the) new page\b/i;
 
+/** An order to itself said aloud ("Record the direction, then close.", discussion replay round 8). */
+const SELF_ORDER = /(?:^|[.!?]\s+)(?:record|log) (?:the|their|this|that|it)\b|\bthen close\b/i;
+
 export function mentionsTool(text: string): boolean {
-  return TOOL_NAME.test(text) || BOARD_ORDER.test(text);
+  return TOOL_NAME.test(text) || BOARD_ORDER.test(text) || SELF_ORDER.test(text);
 }
 
 /** Removes the sentences of `text` that name a tool. Paragraph breaks are kept. */

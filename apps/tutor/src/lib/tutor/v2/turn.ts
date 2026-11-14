@@ -792,5 +792,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const painted = toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   state.repliesSinceBoard = painted ? 0 : (state.repliesSinceBoard ?? 0) + 1;
   if (boardProblems.length) state.boardProblems = boardProblems; else delete state.boardProblems;
-  return { spoken: stripToolTalk(spoken.join('\n\n')), toolCalls, ...(withdrawnLabels.length ? { withdrawn: withdrawnLabels } : {}), state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
+  let finalWords = stripToolTalk(spoken.join('\n\n'));
+  // A discussion that closes with nothing left to say would end in silence: its closing words were an order to
+  // itself, which the net above removed (replay round 8). It closes on the direction they chose instead.
+  if (discussion && state.closed && !finalWords.trim()) {
+    finalWords = state.nextDirection && !/^not (?:asked|sure)/i.test(state.nextDirection) ? `Thank you for thinking this through with me. The direction you chose: ${state.nextDirection.replace(/[.\s]+$/, '')}.` : 'Thank you for thinking this through with me.';
+    input.onText?.(finalWords);
+  }
+  return { spoken: finalWords, toolCalls, ...(withdrawnLabels.length ? { withdrawn: withdrawnLabels } : {}), state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
 }
