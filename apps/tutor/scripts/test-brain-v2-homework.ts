@@ -62,6 +62,9 @@ async function main() {
   check('the key is not in the homework session', !JSON.stringify(hw).includes('100°') && !('key' in hw));
   check('no key value in the session part', !part.includes('x = 30') && !part.includes('100°'));
   const unverified = v2SessionPart({ ...base, homework: v2HomeworkSession(hpTurn({ verified: false, key: undefined }), { noReveal: true }) });
+  // Task 7 (gac-hw-wrong-b on v2): the tutor spent four turns telling the student about "the record".
+  check('the record and the check are the tutor\'s, never mentioned to the student', /never mention the record, the check or the key to the student/i.test(part));
+  check('an answer you judge right that the record lacks is asked for once, on its own', /ask once for that part's final answer on its own/i.test(part));
   check('an unverified problem is never graded right or wrong', /never say whether the student's final answer is right or wrong/i.test(unverified));
 
   console.log('facts (design 6)');
@@ -137,6 +140,10 @@ async function main() {
     ['I got 80 for the exterior angle so 180 - 80 = 100', k1('m∠ACB = 100°', 100)],
     ['first I did 34 - 18 = 16 then 16/2 = 8 so x = 8', k1('x = 8', 8)],
   ] as const) check(`credited with its working: "${m}"`, workedAnswerCredit(m, key).some((v) => v.verdict === 'correct'));
+  // Task 7 (gac-hw-wrong-b on v2): an expression answer written out from the start of its working.
+  const perim: AnswerKey = { parts: [{ label: 'a', final: 'P = 2x + 18', canonical: { kind: 'text', value: 'P = 2x + 18' } }], solvers: ['t'] };
+  check('an expression is credited from the last side of its working', workedAnswerCredit('is it P = 2(x + 5) + 2(4) = 2x + 18', perim).some((v) => v.verdict === 'correct'));
+  check('…but not a different last side', !workedAnswerCredit('is it P = 2(x + 5) + 2(4) = 2x + 14', perim).length);
   for (const [m, key] of [
     ['34 - 18 = 16, so x = 16?', k1('x = 8', 8)],
     ['2x + 20 = 3x - 10, so x = 25', k1('x = 30', 30)],

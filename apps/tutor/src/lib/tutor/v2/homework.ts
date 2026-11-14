@@ -56,7 +56,7 @@ export function v2HomeworkPart(hw: V2HomeworkProblem): string {
     `- ${V2_HOMEWORK_NO_REVEAL}`,
     `- ${hw.hasFigure ? HOMEWORK_PROBLEM_FIGURE_SHOWN : HOMEWORK_PROBLEM_NO_FIGURE}`,
     hw.verified
-      ? '- Each answer the student gives is checked against the sheet\'s checked answer key, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. Call a part done only when the homework record in the facts lists it as confirmed.'
+      ? '- Each answer the student gives is checked against the sheet\'s checked answer key, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. Call a part done only when the homework record in the facts lists it as confirmed. Never mention the record, the check or the key to the student: they are yours to read. When you are sure an answer to a part is right and the record does not list it, ask once for that part\'s final answer on its own, then go on with what is left.'
       : `- ${HOMEWORK_PROBLEM_UNVERIFIED}`,
     '- Labels and values are the ones on the student\'s sheet, as written in the problem above.',
     '- The session is for this one problem. When the homework record says every part is confirmed correct, say in a sentence that the problem is done, tell them they can go back to their list, and call end_lesson.',
@@ -138,7 +138,9 @@ export function workedAnswerCredit(studentSaid: string, key: AnswerKey): KeyedVe
   const steps = studentSaid.split(STEP_BREAK).map((x) => x.trim()).filter((x) => x && !/\?\s*$/.test(x)).reverse();
   for (const step of steps) {
     const value = STEP_VALUE.exec(step)?.[1];
-    for (const candidate of value && value !== step ? [step, value] : [step]) {
+    // A chain of equalities ends on the result: "P = 2(x + 5) + 2(4) = 2x + 18" offers 2x + 18.
+    const lastSide = step.includes('=') ? step.slice(step.lastIndexOf('=') + 1).trim() : '';
+    for (const candidate of [...new Set([step, ...(value && value !== step ? [value] : []), ...(lastSide ? [lastSide] : [])])]) {
       const v = modelCheckConfirms(candidate, studentSaid, key);
       if (v.length) return v;
     }
@@ -227,7 +229,7 @@ export function v2SheetPart(sheet: V2HomeworkSheet): string {
     ...sheet.problems.map((p) => `${p.n}. ${p.text.trim().slice(0, 4000)}`),
     `- ${V2_HOMEWORK_NO_REVEAL}`,
     '- They may work the problems in any order, and may skip one. Before you work a problem, call set_current_problem with its number: the answer check and the homework record in the facts follow the problem in play.',
-    '- Each answer to a problem with a checked key is checked against it, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. A problem without a checked key is never called right or wrong: work it through with them, name any slip in their working, and ask them to check the final result with their teacher.',
+    '- Each answer to a problem with a checked key is checked against it, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. Never mention the record, the check or the key to the student: they are yours to read. When you are sure an answer is right and the record does not list it, ask once for that part\'s final answer on its own, then go on. A problem without a checked key is never called right or wrong: work it through with them, name any slip in their working, and ask them to check the final result with their teacher.',
     '- When the record says a problem is done, say so and offer the next open one. When every problem is done, say the sheet is done and call end_lesson.',
     '- Labels and values are the ones on the student\'s sheet, as written above.',
     HOMEWORK_PROBLEM_CONDUCT_RULES.trimEnd(),
