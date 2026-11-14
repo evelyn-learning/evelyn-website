@@ -85,6 +85,9 @@ export interface V2TurnInput {
   onToolCall?: (call: V2ToolCall) => void;
   /** Cancels the model call: the student talked over the tutor, or the page went away. */
   signal?: AbortSignal;
+  /** A board call this session must not paint, and why (homework-turn.ts: a key value, a figure already on
+   *  screen). Asked before the board is touched; the reason goes back to the model as the call's result. */
+  boardGuard?: (name: string, args: Record<string, unknown>) => string | null;
 }
 
 /** What the student's grade asks of the tutor's pace. The constitution says to teach at their level; a grade 7
@@ -332,7 +335,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // A force diagram is for pushes and pulls on a physical thing. Offered a pull between two ideas, the board
       // drew "the lovely woods" and "the promises to keep" as forces on a box (AP Lit, embed-1794448513359).
       const misfit = block.name === 'show_free_body_diagram' && !catalogueSubjects(session).includes('physics') ? 'a force diagram is for physical forces on an object, and this lesson has none; use compare, steps or a note' : boardMisfit(block.name, args);
-      if (!valid.ok) outcome = `not painted: ${valid.reason}`;
+      const guarded = input.boardGuard?.(block.name, args) ?? null;
+      if (guarded) outcome = `not painted: ${guarded}`;
+      else if (!valid.ok) outcome = `not painted: ${valid.reason}`;
       else if (misfit) outcome = `not painted: ${misfit}`;
       else {
         // The earlier graph leaves the tutor's record first, so the fuller one is not refused as a repeat.

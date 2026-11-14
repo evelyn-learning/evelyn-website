@@ -26,6 +26,8 @@ export interface V2TurnFacts {
   silenceSeconds?: number;
   /** The page was reloaded and the session has just been picked up again (resume.ts). */
   resumed?: boolean;
+  /** A draft of this reply was held back, and why (homework-turn.ts). */
+  notSent?: string;
 }
 
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
@@ -50,6 +52,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     lines.push(`gaps you have recorded:\n${state.gaps.map((g) => `  - ${g.what}: ${label[g.status] ?? g.status}`).join('\n')}`);
   }
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
+  if (f.notSent) lines.push(`your first draft of this reply was not sent: ${f.notSent}`);
   if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
     ? `your last reply has finished and it ended on a statement: no question, and nothing for them to do. They are waiting for you to go on`
     : Math.round(f.silenceSeconds) === V2_WAITED_RECHECK_S

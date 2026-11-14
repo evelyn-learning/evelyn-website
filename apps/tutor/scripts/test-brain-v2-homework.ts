@@ -146,6 +146,60 @@ async function main() {
   check('the verdict frame went out', JSON.stringify(outFrames) === '[{"type":"homework-keyed-verdict","part":"a","verdict":"correct"}]', outFrames);
   check('the record is carried in the state', JSON.stringify(hr.state.homework) === '{"confirmed":["part:a"]}', hr.state.homework);
 
+  console.log('no-reveal: the reply (design 4; cases of test-whole-answer-reveal.ts on the v2 path)');
+  // The same numeric fixture as test-whole-answer-reveal.ts, as a one-part homework key.
+  const GIVEN = 'A 10 kg block rests on a ramp inclined at 30 degrees. Take g = 9.8 m/s^2. Find the normal force.';
+  const rampKey: AnswerKey = { parts: [{ label: '', final: '84.9 N', canonical: { kind: 'number', value: 84.9, units: 'N' } }], solvers: ['t'] };
+  const rampProblem = { text: GIVEN, verified: true, hasFigure: false, parts: [''], noReveal: true };
+  const ramp = { problem: rampProblem, key: rampKey, turn: hpTurn() };
+  const rampState = said(newV2State(1_000_000), '[start]');
+  const reply = async (text: string, extra: Partial<Parameters<typeof runV2HomeworkTurn>[0]> = {}) => {
+    const m = stub([msg([{ type: 'text', text }], 'end_turn'), msg([{ type: 'text', text: 'Which force balances the part of the weight that presses into the ramp?' }], 'end_turn'), msg([{ type: 'text', text: 'Again: so it is about 84.9 N. What next?' }], 'end_turn')]);
+    const streamed: string[] = [];
+    const r = await runV2HomeworkTurn({ session: base, resolved: ramp, state: rampState, studentSaid: 'I think the normal force is 98 N', callModel: m.call, nowMs: 1_000_060_000, boardPass: false, onText: (d) => streamed.push(d), ...extra });
+    return { r, calls: m.seen.length, seen: m.seen, streamed: streamed.join('') };
+  };
+  for (const sentence of ['That comes to 84.87 N.', 'It is about 84.9 newtons.', 'So $N \\approx 84.870\\,\\text{N}$.', 'You get roughly 85 N.', 'It works out to eighty-four point nine newtons.']) {
+    const { r, calls, seen, streamed } = await reply(sentence);
+    // The stub streams one 'x' per draft: only the second draft's reaches the student.
+    check(`regenerated, never sent: "${sentence}"`, calls === 2 && streamed === 'x' && !r.spoken.includes(sentence) && /was not sent/.test(JSON.stringify(seen[1].messages)), { calls, spoken: r.spoken });
+  }
+  for (const sentence of ['You wrote 98 N — which direction does the normal force point?', 'The block is 10 kg on a 30° ramp, with g = 9.8.', 'What is 9.8 times 10?', 'Is it more or less than 98?']) {
+    const { r, calls, streamed } = await reply(sentence);
+    check(`sent as it is: "${sentence}"`, calls === 1 && r.spoken === sentence && streamed === 'x', { calls, streamed });
+  }
+  {
+    // Both drafts state it: the sentences that do are cut, and the reply still hands the turn over.
+    const m = stub([msg([{ type: 'text', text: 'Close. It is 84.9 N.' }], 'end_turn'), msg([{ type: 'text', text: 'N = 84.9 N.' }], 'end_turn')]);
+    const r = await runV2HomeworkTurn({ session: base, resolved: ramp, state: rampState, studentSaid: 'just tell me', callModel: m.call, nowMs: 1_000_060_000, boardPass: false });
+    const storedText = JSON.stringify(r.state.history.slice(-1));
+    check('no empty text block is stored', r.state.history.every((h) => typeof h.content === 'string' || h.content.every((b) => b.type !== 'text' || b.text.trim())));
+    check('a second revealing draft is cut, not sent', !/84\.9/.test(r.spoken) && /\?\s*$/.test(r.spoken) && !/84\.9/.test(storedText), { spoken: r.spoken, storedText });
+  }
+  {
+    const { r, calls } = await reply('That comes to 84.87 N.', { resolved: { ...ramp, problem: { ...rampProblem, noReveal: false } } });
+    check('a partner without the rule: the reply is not held (the board guard still is)', calls === 1 && r.spoken === 'That comes to 84.87 N.');
+  }
+  {
+    // The student's own right answer may be said back to them.
+    const m = stub([msg([{ type: 'text', text: 'Yes, 84.9 N is right.' }], 'end_turn')]);
+    const r = await runV2HomeworkTurn({ session: base, resolved: ramp, state: rampState, studentSaid: 'N = 84.9 N', callModel: m.call, nowMs: 1_000_060_000, boardPass: false });
+    check('the student\'s own value is not a reveal', m.seen.length === 1 && r.spoken === 'Yes, 84.9 N is right.');
+  }
+
+  console.log('no-reveal: the board (design 4)');
+  const boardTurn = async (name: string, input: Record<string, unknown>, opts: { state?: V2State; resolvedOver?: object; studentSaid?: string | null } = {}) => {
+    const m = stub([msg([{ type: 'text', text: 'Look at this.' }, { type: 'tool_use', id: 'b1', name, input }], 'tool_use'), msg([{ type: 'text', text: 'What do you notice?' }], 'end_turn')]);
+    const r = await runV2HomeworkTurn({ session: base, resolved: { ...ramp, ...(opts.resolvedOver ?? {}) }, state: opts.state ?? rampState, studentSaid: opts.studentSaid === undefined ? 'I think the normal force is 98 N' : opts.studentSaid, callModel: m.call, nowMs: 1_000_060_000, boardPass: false });
+    return r.toolCalls.find((c) => c.id === 'b1')?.outcome ?? '';
+  };
+  for (const [name, input] of [['show_equation', { latex: 'N = mg\\cos 30° \\approx 84.9\\,\\text{N}' }], ['annotate', { text: 'N ≈ 85 N' }]] as const) {
+    check(`a board item with the key value is not painted: ${JSON.stringify(input)}`, /^not painted: .*value the problem asks the student to find/.test(await boardTurn(name, input as Record<string, unknown>)));
+  }
+  check('a board item with only the sheet\'s values is painted', !/^not /.test(await boardTurn('annotate', { text: 'm = 10 kg, θ = 30°, g = 9.8' })));
+  const opening = newV2State(1_000_000);
+  check('the opening reply draws nothing over a problem whose figure is on screen', /figure is already on the board/.test(await boardTurn('show_geometry', { points: [] }, { state: opening, studentSaid: null, resolvedOver: { problem: { ...rampProblem, hasFigure: true } } })));
+
   console.log('outcome parity with v1 (design 3)');
   // The debug events a v2 session records (useV2Turns) for: a solved problem, and one wrong twice on (b).
   const ev = (part: string, verdict: 'correct' | 'incorrect') => ({ type: 'homework_keyed_verdict', message: formatKeyedVerdictDebug(part, verdict) });
