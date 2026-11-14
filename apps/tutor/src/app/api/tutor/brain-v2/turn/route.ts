@@ -13,6 +13,8 @@ import { NextRequest } from 'next/server';
 import { V2_BACKGROUND_LINE_CHARS, V2_BACKGROUND_MAX_LINES } from '@/lib/tutor/v2/background';
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
+import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
+import { readHomeworkState, v2HomeworkFor } from '@/lib/tutor/v2/homework';
 import { runV2Turn } from '@/lib/tutor/v2/turn';
 import type { V2Session, V2State } from '@/lib/tutor/v2/types';
 
@@ -38,7 +40,8 @@ function readState(raw: unknown): V2State | null {
   if (!s.board || !Array.isArray(s.board.pages) || typeof s.board.current !== 'number') return null;
   if (typeof s.startedAtMs !== 'number' || !Number.isFinite(s.startedAtMs)) return null;
   const gaps = Array.isArray(s.gaps) ? s.gaps.filter((g) => g && typeof g.what === 'string' && typeof g.status === 'string').slice(-12) : undefined;
-  return { history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}) };
+  const homework = readHomeworkState(s.homework);
+  return { history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
 }
 
 export async function POST(req: NextRequest) {
@@ -56,6 +59,9 @@ export async function POST(req: NextRequest) {
   if (studentSaid === undefined) return bad('studentSaid must be a string or null');
 
   const plan = typeof cfg.lessonPlanId === 'string' && cfg.lessonPlanId ? await getLessonPlan(cfg.lessonPlanId) : null;
+  // Homework mode (v2/homework.ts): a one-problem homework plan. The key is read here and goes only to the checker.
+  // The partner claim is unverified, as v1 reads it: a forged claim only makes the forger's own tutor stricter.
+  const homework = plan ? await v2HomeworkFor(cfg.lessonPlanId as string, embedTokenPartnerClaim(req.headers.get('x-embed-token')), { getPlan: async () => plan }) : null;
   const t = (cfg.teacher && typeof cfg.teacher === 'object' ? cfg.teacher : {}) as { name?: unknown; nameIsRole?: unknown; style?: unknown };
   const teacher = typeof t.name === 'string' && t.name.trim() ? { name: t.name.trim().slice(0, 80), ...(t.nameIsRole === true ? { nameIsRole: true } : {}), ...(typeof t.style === 'string' && t.style.trim() ? { style: t.style.trim().slice(0, 600) } : {}) } : null;
   const background = Array.isArray(cfg.background) ? cfg.background.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, V2_BACKGROUND_MAX_LINES).map((x) => x.trim().slice(0, V2_BACKGROUND_LINE_CHARS)) : [];
@@ -70,6 +76,7 @@ export async function POST(req: NextRequest) {
     ...(cfg.trial === true ? { trial: true } : {}),
     ...(!plan && typeof cfg.topic === 'string' && cfg.topic.trim() ? { topic: cfg.topic.trim().slice(0, 160) } : {}),
     ...(plan ? { plan, topic: `${(plan as { topic?: string }).topic ?? ''} ${(plan as { title?: string }).title ?? ''}`.trim().slice(0, 160) } : {}),
+    ...(homework ? { homework: homework.problem } : {}),
   };
   const silenceSeconds = typeof body.silenceSeconds === 'number' && body.silenceSeconds > 0 ? body.silenceSeconds : undefined;
 

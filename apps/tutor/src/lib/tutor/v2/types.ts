@@ -30,6 +30,33 @@ export interface V2Session {
   background?: string[];
   /** A free trial or demo lesson: the student may change the topic or the subject. */
   trial?: boolean;
+  /** Homework mode (homework.ts): the session works the student's own homework. Never holds the answer key. */
+  homework?: V2HomeworkProblem;
+}
+
+/** One problem of the student's homework sheet, as the tutor may see it: the key stays on the server (homework.ts). */
+export interface V2HomeworkProblem {
+  text: string;
+  /** The problem has a checked answer key; each answer is checked against it and the result is a fact. */
+  verified: boolean;
+  /** The problem's figure is already on the student's screen beside the chat. */
+  hasFigure: boolean;
+  /** What happened last time on this problem. */
+  priorNote?: string;
+  /** Marks an earlier session of this problem confirmed (keyed-verdict.ts). */
+  priorConfirmed?: string[];
+  /** The labels of the key's parts (never their answers), to say which are still open. */
+  parts?: string[];
+  /** The partner's no-reveal rule (no-reveal-ledger-gate.ts): a reply that states a final answer is not sent. */
+  noReveal?: boolean;
+}
+
+/** Homework mode's record (homework.ts). Optional: other sessions have none. */
+export interface V2HomeworkState {
+  /** Marks confirmed correct so far, earlier sessions' included (`part:<l>`, `value:<l>=<name>`). */
+  confirmed: string[];
+  /** Every part of the problem is confirmed correct. */
+  done?: boolean;
 }
 
 export interface V2BoardItem { id: string; tool: string; summary: string; /** The content alone, normalised, for spotting repeats (board.ts). */ core?: string; /** A graph keeps what it plots, so a later graph on the same page can be drawn as one picture with it (turn.ts). */ args?: Record<string, unknown> }
@@ -55,6 +82,7 @@ export interface V2State {
   startedAtMs: number;
   closed: boolean;
   closeSummary?: string;
+  homework?: V2HomeworkState;
 }
 
 export interface V2ToolCall {
