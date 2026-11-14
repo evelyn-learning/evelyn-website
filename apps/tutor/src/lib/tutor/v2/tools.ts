@@ -111,7 +111,7 @@ export const V2_DISCUSSION_CONTROL_TOOLS: Anthropic.Tool[] = [
   {
     name: 'end_lesson',
     description: 'End the conversation. Call it in the same reply as your closing words.',
-    input_schema: { type: 'object', properties: { because: { type: 'string', enum: ['student_asked', 'time_nearly_used', 'conversation_complete'], description: 'Why it is ending: they asked, the time is nearly used, or they have chosen a direction to explore.' }, summary: { type: 'string', description: 'One or two sentences on where their thinking landed.' }, next_direction: { type: 'string', description: 'The direction they chose to explore further, in their words; "not sure yet" when they said so.' } }, required: ['because', 'summary'] },
+    input_schema: { type: 'object', properties: { because: { type: 'string', enum: ['student_asked', 'time_nearly_used', 'conversation_complete'], description: 'Why it is ending: they asked, the time is nearly used, or they have chosen a direction to explore.' }, summary: { type: 'string', description: 'One or two sentences on where their thinking landed.' }, next_direction: { type: 'string', description: 'The direction they chose to explore further, in their words; "not sure yet" when they said so; "not asked" only when they stopped before you could ask.' } }, required: ['because', 'summary', 'next_direction'] },
   },
 ];
 
