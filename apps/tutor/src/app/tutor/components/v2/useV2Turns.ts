@@ -8,6 +8,7 @@
  * holds no audio and no lesson policy.
  */
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import { homeworkProblemOf, type HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
 import type { TutorMilestone } from '@/lib/tutor/orchestrator/types';
 import { V2_OPENING_BLOCK_START, clearV2State, loadV2State, saveV2State, v2StateFromCheckpoint } from '@/lib/tutor/v2/resume';
 import { v2MemoryLines, v2ProfileCommit } from '@/lib/tutor/v2/memory';
@@ -54,6 +55,8 @@ export interface V2TurnsConfig {
   onCompletedSegmentsChange?: (ids: string[]) => void;
   onMilestone?: (m: TutorMilestone) => void;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
+  /** The session's plan is one problem of a homework sheet (null for any other plan): the stage shows it. */
+  onHomeworkProblem?: (meta: HomeworkProblemMeta | null) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
   onEndSession?: (reason?: 'time_limit') => void;
   onLessonClosed?: (source: string) => void;
@@ -88,7 +91,7 @@ export interface V2Turns {
   open: () => void;
   /** A turn with no student words: the student has been silent. */
   nudge: (silenceSeconds: number) => void;
-  end: () => void;
+  end: (opts?: { farewell?: string }) => void;
   abort: () => void;
   isEnding: () => boolean;
   busy: boolean;
@@ -131,7 +134,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const id = config.lessonPlanId; if (!id) return;
     let gone = false;
     void fetch(`/api/tutor/lesson-plans/${encodeURIComponent(id)}`).then((r) => (r.ok ? r.json() : null)).then((data: { plan?: LessonPlan } | null) => {
-      if (gone || !data?.plan?.segments?.length) return;
+      if (gone || !data?.plan) return;
+      // A one-problem homework plan: its problem (and figure) go in the stage's panel, as in v1.
+      p.current.onHomeworkProblem?.(homeworkProblemOf(data.plan as { metadata?: Record<string, unknown> }));
+      if (!data.plan.segments?.length) return;
       planRef.current = data.plan; reportProgress();
     }).catch(() => { /* no plan, no report: the lesson itself does not depend on it */ });
     return () => { gone = true; };
@@ -408,7 +414,14 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
 
   const nudge = useCallback((silenceSeconds: number) => { if (openedRef.current && !busyRef.current) void runTurn(null, silenceSeconds); }, [runTurn]);
   const abort = useCallback(() => { abortRef.current?.abort(); }, []);
-  const end = useCallback(() => { endingRef.current = true; abortRef.current?.abort(); commitProfile(true); p.current.onEndSession?.(); }, [commitProfile]);
+  // The host's end carries a line for the student ("Saved — pick this up from your list…", host-end.ts): it is
+  // the tutor's last words before the session closes.
+  const end = useCallback((opts?: { farewell?: string }) => {
+    endingRef.current = true; abortRef.current?.abort();
+    const farewell = opts?.farewell?.trim();
+    if (farewell) { transcriptRef.current = [...transcriptRef.current, { id: `tutor-farewell-${Date.now()}`, timestamp: new Date(), role: 'tutor', text: farewell }]; publish(); }
+    commitProfile(true); p.current.onEndSession?.();
+  }, [commitProfile]);
   const isEnding = useCallback(() => endingRef.current, []);
 
   return { send, open, nudge, end, abort, isEnding, busy, closed, openedRef, stateRef, resumedRef };

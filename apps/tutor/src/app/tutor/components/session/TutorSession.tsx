@@ -1803,6 +1803,7 @@ export default function TutorSession(props: TutorSessionProps) {
           onTutorBusy={handleTutorBusy}
           onBrainUsage={onBrainUsage}
           onDebugEvent={onDebugEvent}
+          onHomeworkProblem={setHomeworkProblem}
           onError={(err) => setError(err.message)}
         />
       ) : (

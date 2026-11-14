@@ -45,7 +45,7 @@ export default function TutorClientV2(props: TutorClientV2Props) {
   useEffect(() => {
     const ref = props.handleRef;
     if (!ref) return;
-    ref.current = { ...V2_HANDLE_STUBS, sendTextMessage: (text) => send(text), startSession: open, endSession: end, isEnding };
+    ref.current = { ...V2_HANDLE_STUBS, sendTextMessage: (text) => send(text), startSession: open, endSession: (opts) => end(opts), isEnding };
     return () => { ref.current = null; };
   }, [props.handleRef, send, open, end, isEnding]);
 

@@ -9,6 +9,7 @@
 import connectDB from '@core/db';
 import { EvidenceEventModel } from '@/models';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
+import { practiceLoTitle } from './lo-title';
 import { mongoPracticeSources } from '@/lib/tutor/portal/adapters';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { getPartner, type PartnerRecord } from '@/lib/tutor/portal/registry';
@@ -78,10 +79,7 @@ export async function assignPractice(input: {
   topUp?: Omit<TopUpInput, 'target'>;
 }): Promise<{ assigned: Array<{ loId: string; title: string; count: number }>; assignmentId: string; status: 'draft' | 'assigned' } | null> {
   const plan = input.lessonPlanId ? await getLessonPlan(input.lessonPlanId) : null;
-  const titleFor = (loId: string): string => {
-    const lo = plan?.los.find((l) => l.id === loId);
-    return lo?.shortTitle ?? lo?.description ?? loId;
-  };
+  const titleFor = (loId: string): string => practiceLoTitle(plan, loId);
   const loIds = [...new Set(input.loIds.filter((id) => typeof id === 'string' && id.length > 0))].slice(0, MAX_LOS);
   if (loIds.length === 0) return null;
   await connectDB();

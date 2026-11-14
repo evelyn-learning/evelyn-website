@@ -16,6 +16,9 @@ import { runV2HomeworkTurn } from '../src/lib/tutor/v2/homework-turn';
 import { classifyHomeworkProblemOutcome } from '../src/lib/tutor/homework-build/outcome';
 import { formatKeyedVerdictDebug } from '../src/lib/tutor/voice/keyed-verdict';
 import type { V2State } from '../src/lib/tutor/v2/types';
+import { practiceLoTitle } from '../src/lib/tutor/practice-assign/lo-title';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -199,6 +202,19 @@ async function main() {
   check('a board item with only the sheet\'s values is painted', !/^not /.test(await boardTurn('annotate', { text: 'm = 10 kg, θ = 30°, g = 9.8' })));
   const opening = newV2State(1_000_000);
   check('the opening reply draws nothing over a problem whose figure is on screen', /figure is already on the board/.test(await boardTurn('show_geometry', { points: [] }, { state: opening, studentSaid: null, resolvedOver: { problem: { ...rampProblem, hasFigure: true } } })));
+
+  console.log('the session around the turn (designs 7–9)');
+  const src = (f: string) => readFileSync(path.join(__dirname, '..', f), 'utf8');
+  const turnsSrc = src('src/app/tutor/components/v2/useV2Turns.ts');
+  const sessionSrc = src('src/app/tutor/components/session/TutorSession.tsx');
+  const clientSrc = src('src/app/tutor/components/v2/TutorClientV2.tsx');
+  check('the v2 client reports a homework plan\'s problem, as VTR does', /onHomeworkProblem\?\.\(homeworkProblemOf\(/.test(turnsSrc));
+  const v2Render = sessionSrc.slice(sessionSrc.indexOf('<TutorClientV2'), sessionSrc.indexOf('/>', sessionSrc.indexOf('<TutorClientV2')));
+  check('the session gives it the problem panel', /onHomeworkProblem=\{setHomeworkProblem\}/.test(v2Render));
+  check('the host\'s farewell reaches the v2 end', /endSession: \(opts\) => end\(opts\)/.test(clientSrc) && /const end = useCallback\(\(opts\?: \{ farewell\?: string \}\)/.test(turnsSrc));
+  const hwPlan = { los: [{ id: 'p.lo-1', description: 'Work problem 3.', shortTitle: 'Work problem 3' }], metadata: { kind: 'homework-problem', parentPlanId: 'x', n: 3, text: TEXT, figure: null, verified: true } };
+  check('practice for a homework problem is on the problem, not on "Problem 3"', practiceLoTitle(hwPlan as never, 'p.lo-1').startsWith('In △ABC, side BC is extended to D.') && !practiceLoTitle(hwPlan as never, 'p.lo-1').includes('[Figure'), practiceLoTitle(hwPlan as never, 'p.lo-1'));
+  check('an ordinary plan keeps its objective\'s title', practiceLoTitle({ los: [{ id: 'l1', description: 'Long', shortTitle: 'Short' }] } as never, 'l1') === 'Short');
 
   console.log('outcome parity with v1 (design 3)');
   // The debug events a v2 session records (useV2Turns) for: a solved problem, and one wrong twice on (b).

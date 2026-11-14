@@ -532,7 +532,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       speakText: (text) => realtimeRef.current?.speakText(text),
       stopSpeaking: () => { void realtimeRef.current?.clearSpeechQueue(); },
       setTutorVoiceMuted: (muted) => realtimeRef.current?.setVoiceMuted(muted),
-      endSession: () => { clearSilence(); void realtimeRef.current?.clearSpeechQueue(); turnsRef.current?.end(); },
+      endSession: (opts) => { clearSilence(); void realtimeRef.current?.clearSpeechQueue(); turnsRef.current?.end(opts); },
       isEnding: () => turnsRef.current?.isEnding() ?? false,
     };
     return () => { ref.current = null; };
