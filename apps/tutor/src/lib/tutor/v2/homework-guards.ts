@@ -34,6 +34,9 @@ const ASKS_QUANTITY = new RegExp([
 
 export interface NonAnswer { said: string; question: string }
 
+/** The message is a number alone ("3", "-2.5", "400 J"). */
+export const isBareNumber = (said: string | null) => BARE_NUMBER.test(String(said ?? ''));
+
 /**
  * The student's message does not answer the tutor's last question: a bare yes/no to a what/which/where/why/how
  * question, or a bare number to such a question that does not ask for a number ("What do you notice?" → "6").
@@ -130,9 +133,23 @@ export function unearnedCredit(spoken: string, guessed: ReadonlyArray<GuessedPar
 export const V2_HOMEWORK_GUARD_REASONS = {
   verdict: (v: 'correct' | 'incorrect' | 'mixed') => `the answer check decided the student's answer (${v === 'mixed' ? 'part right, part not' : v === 'correct' ? 'it is right' : 'it is not right'}), and the reply did not say so first. Open with that verdict in plain words, then go on.`,
   nonAnswer: (n: NonAnswer) => `it gave credit to "${n.said.slice(0, 40)}", which does not answer your question "${n.question.slice(0, 160)}". Give it no credit and no "yes": ask what they mean, or ask the question again in other words.`,
-  recap: (sentences: string[]) => `it credited the student with working or a realisation they never showed ("${sentences[0].slice(0, 160)}"). They only guessed that part: say they got it, not how, and credit only what they wrote.`,
+  recap: (sentences: string[]) => `it credited the student with working or a realisation they never showed ("${sentences[0].slice(0, 160)}"). Say they got that part, not how: credit only what they wrote, and never cast doubt on it.`,
+  doubt: (sentences: string[]) => `it cast doubt on an answer or took back something already said ("${sentences[0].slice(0, 160)}"). An answer the check confirmed is right, however it was reached: never call it a guess, unverified or confirmed too early, and never mention a draft the student did not see.`,
+  unchecked: (said: string) => `it credited "${said.slice(0, 40)}" with no check behind it: nothing checked that number. Work out the answer to your own last question first, then say plainly whether "${said.slice(0, 40)}" is right.`,
   own: 'it stated the result of the student\'s own question before they had written it. They must reach it themselves: give them the next smallest step.',
 } as const;
+
+/**
+ * A sentence that casts doubt on an answer, or takes back what was said: "Your answer is a guess until you show
+ * how you got it", "I confirmed your answer too early", "a correction: in my last reply I stated…". The campaign
+ * saw these after a held draft (2026-11-15): the student was told a right answer was not yet right.
+ */
+const DOUBTS = /\bI (?:shouldn'?t|should not) have\b|\bI (?:confirmed|said|stated)\b.{0,80}\b(?:too early|too soon|before you)\b|\b(?:is|was|it'?s) (?:only |just |still )?a guess\b|\byou (?:only )?guessed\b|\bby guessing\b|\b(?:answer|it|that|this)\b.{0,30}\b(?:isn'?t|is not|not) (?:yet )?(?:verified|confirmed)\b|\bwithout (?:showing|shown|any|giving) (?:the |any |your )?working\b|\bin my last reply,? I\b/i;
+
+/** The sentences of a reply that cast doubt on an answer or take back what was said. */
+export function castsDoubt(spoken: string): string[] {
+  return sentencesOf(spoken).filter((s) => DOUBTS.test(s));
+}
 
 /** The verdict said in front of a second draft that still lacks it. */
 export const V2_VERDICT_OPENERS = { correct: 'That\'s right.', incorrect: 'Not quite.', mixed: '' } as const;
@@ -143,7 +160,38 @@ export const V2_VERDICT_OPENERS = { correct: 'That\'s right.', incorrect: 'Not q
  * form, subscripts and spacing aside. Words the question itself contains are never a hit.
  */
 export function statesOwnResult(text: string, own: { q: string; a: string }, read: (text: string, value: string, given: string) => boolean): boolean {
-  if (read(text, own.a, own.q)) return true;
-  const k = valueKey(own.a);
-  return k.length >= 2 && /[a-z]/.test(k) && /\d|[=^/]/.test(k) && valueKey(text).includes(k) && !valueKey(own.q).includes(k);
+  if (statesExpression(text, own.a, own.q)) return true;
+  if (statesWordedResult(text, own.a, own.q)) return true;
+  return read(text, own.a, own.q);
+}
+
+/** A value written as a formula or expression ("CH4", "y = 3x + 1"), subscripts and spacing aside; never one the given text has. */
+export function statesExpression(text: string, value: string, given: string): boolean {
+  const k = valueKey(value);
+  // A number with its unit ("84.9 N") is the number reader's to judge, not this one's.
+  if (/^-?[\d.,]+[a-z%°]{0,4}$/.test(k)) return false;
+  return k.length >= 2 && /[a-z]/.test(k) && /\d|[=^/]/.test(k) && valueKey(text).includes(k) && !valueKey(given).includes(k);
+}
+
+const STOP = new Set('about above after again against also because been before being below between both but cannot could does doing down during each from further have having here into itself just more most much must once only other over same should since some such than that their them then there these they this those through under until very were what when where which while with would your like enough make makes made used uses using thing things'.split(' '));
+/** The words of a worded result that the question does not already say: its key terms ("ammonium", "nitrate", "N2"). */
+function keyTerms(answer: string, question: string): string[] {
+  const words = (s: string) => valueKey(s.replace(/[^\p{L}\p{N}₀-₉\s]/gu, ' ').replace(/\s+/g, '¶')).split('¶').filter(Boolean);
+  const stem = (w: string) => w.slice(0, 6);
+  const q = new Set(words(question).map(stem));
+  const terms = words(answer).filter((w) => (w.length >= 4 && !STOP.has(w)) || (/\d/.test(w) && /[a-z]/.test(w))).map(stem).filter((w) => !q.has(w));
+  return [...new Set(terms)];
+}
+
+/**
+ * A worded result (an explanation, a difference, a reason) is stated when a sentence carries most of its key
+ * terms: at least half of them, and never fewer than three. One or two of its words are a hint, not the answer.
+ */
+export function statesWordedResult(text: string, answer: string, question: string): boolean {
+  if (String(answer ?? '').trim().split(/\s+/).length < 3) return false;
+  const terms = keyTerms(answer, question);
+  if (terms.length < 3) return false;
+  const have = new Set(keyTerms(text, question));
+  const hits = terms.filter((t) => have.has(t)).length;
+  return hits >= Math.max(3, Math.ceil(terms.length / 2));
 }

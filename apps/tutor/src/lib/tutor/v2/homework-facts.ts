@@ -19,10 +19,10 @@ export function marksInWords(marks: ReadonlyArray<string>): string[] {
   }).filter(Boolean);
 }
 
-/** The lines both homework kinds share: guessed parts and own-question results (homework-guards.ts). */
+/** The lines both homework kinds share: own-question results (homework-guards.ts). */
 export function v2HomeworkGuardFacts(state: V2HomeworkState | undefined): string[] {
   const out: string[] = [];
-  if (state?.guessed?.length) out.push(`confirmed from a bare guess, with no working shown: ${state.guessed.map((g) => (g.label ? `part ${g.label}` : 'the answer')).join(', ')}`);
+  // Guessed parts stay off the facts: shown every turn, they had the tutor call a right answer a guess (2026-11-15).
   if (state?.own?.length) out.push(`results you worked out for the student's own questions (never state one before they write it): ${state.own.map((o) => `${oneLine(o.q, 80)} → ${oneLine(o.a, 60)}`).join('; ')}`);
   return out;
 }

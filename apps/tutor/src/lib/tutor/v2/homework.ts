@@ -50,8 +50,8 @@ export const V2_HOMEWORK_NO_REVEAL = 'This is the student\'s own homework: they 
 /** The three habits the brain-model comparison found in every model (homework-guards.ts checks 2–4). */
 export const V2_HOMEWORK_ACCURACY_RULES = [
   'A message that does not answer your last question (a bare "yes", or a number when you asked for something else) gets no credit and no "yes": ask what they mean, or ask the question again in other words.',
-  'When the student asks a question of their own that has a final result, call note_own_answer with that result before you reply, then guide them to it exactly as you would a part of the sheet: never state it before they write it, on the page or on the board.',
-  'When you sum up, credit only what the student wrote. A part they only guessed, they got: never say they worked it out, saw why, or found it by a method they did not show.',
+  'When the student asks a question of their own (a value, an explanation, a difference, a reason), call note_own_answer with its answer before you reply, then guide them to it exactly as you would a part of the sheet: never state, explain or label it before they write it, on the page or on the board.',
+  'When you sum up, say which parts they got, and describe how only for the steps they wrote. Never call a confirmed answer a guess, unverified or confirmed too early, and never take back a verdict you gave.',
 ];
 
 export const V2_HOMEWORK_JUDGE_EVERY_ANSWER = 'Whenever the student gives an answer (with or without working, sure or hedged, to the sheet or to a question of their own), say plainly whether it is right before anything else: against the checked answer for the sheet, against your own working for their own question. Never hold back that verdict to ask for working first; ask how they got it afterwards, if it helps.';
