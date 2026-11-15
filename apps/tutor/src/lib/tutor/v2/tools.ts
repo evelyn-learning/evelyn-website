@@ -114,6 +114,13 @@ export const V2_SET_CURRENT_PROBLEM_TOOL: Anthropic.Tool = {
   input_schema: { type: 'object', properties: { n: { type: 'integer', description: 'The problem\'s number on the sheet.' } }, required: ['n'] },
 };
 
+/** Homework only (homework-guards.ts check 3): the result of the student's own question, kept off the page. */
+export const V2_NOTE_OWN_ANSWER_TOOL: Anthropic.Tool = {
+  name: 'note_own_answer',
+  description: 'Homework: the student has asked a question of their own that has a final result (a value, an expression, a formula, a short fact). Before you reply to it, work it out and record its final result here, in the same reply as your words. It is never shown to them: it is kept out of your replies and off the board until they have written it themselves, and their answers to it are checked against it.',
+  input_schema: { type: 'object', properties: { question: { type: 'string', description: 'Their question, in a few words.' }, answer: { type: 'string', description: 'Its final result only, as short as it can be written ("CH4", "x = -9", "4").' } }, required: ['question', 'answer'] },
+};
+
 export function v2Tools(subject: string, topic = ''): Anthropic.Tool[] {
   const byName = new Map((WHITEBOARD_TOOLS as Array<{ name: string; parameters: unknown }>).map((t) => [t.name, t]));
   const board: Anthropic.Tool[] = [];

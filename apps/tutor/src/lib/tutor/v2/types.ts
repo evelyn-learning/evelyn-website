@@ -74,6 +74,12 @@ export interface V2HomeworkState {
   /** Whole-sheet homework: the problem in play, the history index its messages start at, the problems solved
    *  (by number) and the marks confirmed on each. */
   sheet?: { current: number; since: number; solved: number[]; confirmed: Record<string, string[]> };
+  /** Parts confirmed from a bare guess, with no working (homework-guards.ts check 4): a recap never credits how.
+   *  Whole-sheet labels carry their problem ("3:b"). */
+  guessed?: Array<{ label: string; value: string }>;
+  /** Results the tutor worked out, privately, for the student's own questions (note_own_answer): withheld
+   *  like the key until the student writes them (check 3). */
+  own?: Array<{ q: string; a: string }>;
 }
 
 export interface V2BoardItem { id: string; tool: string; summary: string; /** The content alone, normalised, for spotting repeats (board.ts). */ core?: string; /** A graph keeps what it plots, so a later graph on the same page can be drawn as one picture with it (turn.ts). */ args?: Record<string, unknown> }

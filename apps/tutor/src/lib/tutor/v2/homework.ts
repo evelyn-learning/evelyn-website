@@ -47,6 +47,13 @@ export const V2_HOMEWORK_NO_REVEAL = 'This is the student\'s own homework: they 
 
 /** v1 judged every answer as it came; v2 held verdicts back to ask for working first, and left right answers
  *  unjudged (GAC validation, round 2: Geometry, Physics). */
+/** The three habits the brain-model comparison found in every model (homework-guards.ts checks 2–4). */
+export const V2_HOMEWORK_ACCURACY_RULES = [
+  'A message that does not answer your last question (a bare "yes", or a number when you asked for something else) gets no credit and no "yes": ask what they mean, or ask the question again in other words.',
+  'When the student asks a question of their own that has a final result, call note_own_answer with that result before you reply, then guide them to it exactly as you would a part of the sheet: never state it before they write it, on the page or on the board.',
+  'When you sum up, credit only what the student wrote. A part they only guessed, they got: never say they worked it out, saw why, or found it by a method they did not show.',
+];
+
 export const V2_HOMEWORK_JUDGE_EVERY_ANSWER = 'Whenever the student gives an answer (with or without working, sure or hedged, to the sheet or to a question of their own), say plainly whether it is right before anything else: against the checked answer for the sheet, against your own working for their own question. Never hold back that verdict to ask for working first; ask how they got it afterwards, if it helps.';
 
 /** The homework part of the session part (turn.ts v2SessionPart), in place of the plan map. */
@@ -66,6 +73,7 @@ export function v2HomeworkPart(hw: V2HomeworkProblem): string {
       : `- ${HOMEWORK_PROBLEM_UNVERIFIED}`,
     '- Labels and values are the ones on the student\'s sheet, as written in the problem above.',
     `- ${V2_HOMEWORK_JUDGE_EVERY_ANSWER}`,
+    ...V2_HOMEWORK_ACCURACY_RULES.map((r) => `- ${r}`),
     '- The session is for this one problem. When the homework record says every part is confirmed correct, say in a sentence that the problem is done, and ask whether they have any question about it. When they say they have none, or that they are finished, call end_lesson.',
     HOMEWORK_PROBLEM_CONDUCT_RULES.trimEnd(),
   ].filter(Boolean).join('\n');
@@ -98,7 +106,10 @@ export function readHomeworkState(raw: unknown): V2HomeworkState | undefined {
   const h = raw as Partial<V2HomeworkState> | null | undefined;
   if (!h || typeof h !== 'object') return undefined;
   const sheet = readSheetRecord(h.sheet);
-  return { confirmed: sanitizeConfirmedMarks(h.confirmed), ...(h.done === true ? { done: true } : {}), ...(Number.isInteger(h.doneAt) && (h.doneAt as number) >= 0 ? { doneAt: h.doneAt } : {}), ...(sheet ? { sheet } : {}) };
+  const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+  const guessed = Array.isArray(h.guessed) ? h.guessed.map((g) => ({ label: str(g?.label, 8), value: str(g?.value, 80) })).filter((g) => g.value).slice(-25) : [];
+  const own = Array.isArray(h.own) ? h.own.map((o) => ({ q: str(o?.q, 200), a: str(o?.a, 120) })).filter((o) => o.a).slice(-5) : [];
+  return { confirmed: sanitizeConfirmedMarks(h.confirmed), ...(h.done === true ? { done: true } : {}), ...(Number.isInteger(h.doneAt) && (h.doneAt as number) >= 0 ? { doneAt: h.doneAt } : {}), ...(sheet ? { sheet } : {}), ...(guessed.length ? { guessed } : {}), ...(own.length ? { own } : {}) };
 }
 
 /** A homework verdict as the browser records it (useV2Turns → `homework_keyed_verdict`, the outcome route's input). */
@@ -266,6 +277,7 @@ export function v2SheetPart(sheet: V2HomeworkSheet): string {
     '- They may work the problems in any order, and may skip one. Before you work a problem, call set_current_problem with its number: the answer check and the homework record in the facts follow the problem in play.',
     '- Each answer to a problem with a checked key is checked against it, and what the check found is in the facts as "answer check". It is right: when your own working disagrees with it, look again at yours. Never mention the record, the check or the key to the student: they are yours to read. When you are sure an answer is right and the record does not list it, ask once for that part\'s final answer on its own, then go on. A problem without a checked key is never called right or wrong: work it through with them, name any slip in their working, and ask them to check the final result with their teacher.',
     `- ${V2_HOMEWORK_JUDGE_EVERY_ANSWER}`,
+    ...V2_HOMEWORK_ACCURACY_RULES.map((r) => `- ${r}`),
     '- When the record says a problem is done, say so and offer the next open one. When every problem is done, say the sheet is done and ask whether they have any question about it; when they say they have none, or that they are finished, call end_lesson.',
     '- Labels and values are the ones on the student\'s sheet, as written above.',
     HOMEWORK_PROBLEM_CONDUCT_RULES.trimEnd(),

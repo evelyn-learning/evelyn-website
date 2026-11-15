@@ -17,6 +17,7 @@ import { v2SheetFor } from '../src/lib/tutor/v2/homework';
 import { classifyHomeworkProblemOutcome } from '../src/lib/tutor/homework-build/outcome';
 import { formatKeyedVerdictDebug } from '../src/lib/tutor/voice/keyed-verdict';
 import type { V2State } from '../src/lib/tutor/v2/types';
+import { creditsNonAnswer, isGuess, nonAnswer, unearnedCredit, verdictMissing } from '../src/lib/tutor/v2/homework-guards';
 import { practiceLoTitle } from '../src/lib/tutor/practice-assign/lo-title';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -374,6 +375,79 @@ async function main() {
   check('the v2 client reports the sheet\'s progress for the rail, as VTR does', /onHomeworkProgress\?\.\(/.test(turnsSrc) && /homework_problem_solved/.test(turnsSrc));
   check('the session gives the v2 client the rail', /onHomeworkProgress=\{setHomeworkProgress\}/.test(v2Render));
   check('the rail shows how many are solved', /solved/.test(src('src/app/tutor/components/session/SessionStage.tsx').slice(src('src/app/tutor/components/session/SessionStage.tsx').indexOf('const homeworkRail'), src('src/app/tutor/components/session/SessionStage.tsx').indexOf('const railEl'))));
+
+  console.log('accuracy guards (brain-model comparison, 2026-11-15)');
+  // Every case below is a reply from the 13-subject campaign (validation-2026-11-14-v2/models/RECONCILED-sonnet-haiku.md).
+  check('non-answer: a number to "what must you do"', !!nonAnswer('9', 'Good question to ask. If you take 2 kg off the left pan, what must you do to the right pan to keep it balanced?'));
+  check('non-answer: a number to "what do you notice"', !!nonAnswer('6', 'Work out it at that value, then compare it with x+3. What do you notice?'));
+  check('non-answer: a number to "where does it go"', !!nonAnswer('400', "Where do you think the rest of the rabbit's energy goes?"));
+  check('non-answer: "yes" to a what question', !!nonAnswer('yes', 'Each CH₂O unit is 30 g/mol, so what is the total mass of 6 of them?'));
+  check('an answer: a number to "how many"', nonAnswer('9', 'For 10 units in a row, how many bonds join them together?') === null);
+  check('an answer: "yes" to a yes/no question', nonAnswer('yes', 'Do you have any question about it?') === null);
+  check('an answer: a worked value to any question', nonAnswer('x = 30', 'What do you notice?') === null);
+  check('an answer: a number to a sum', nonAnswer('6', 'What is 180 ÷ 30?') === null);
+  for (const g of ["I don't know, maybe y = -2?", "I don't know, maybe C6H12O6?", "I don't know, maybe 3x + 1?", "I don't know, maybe 1/4?", "I don't know, maybe it binds in the active site?"]) check(`a bare guess: "${g}"`, isGuess(g));
+  for (const g of ['For (b): CH2O is 30 g/mol and 180/30 = 3, so the molecular formula is C3H6O3.', "maybe 400 because it's 10% twice", 'x = 30']) check(`not a guess: "${g}"`, !isGuess(g));
+  check('verdict missing on a right answer', verdictMissing('I see 7y+5=-9. What can you do to both sides?', ['correct']) === 'correct');
+  check('verdict given on a right answer', verdictMissing('Yes, y=−2 is right. That finishes it.', ['correct']) === null);
+  check('verdict given on a wrong answer that credits its first step', verdictMissing('Your distributing is right: 10y+5=3y−9. Not quite on the next step.', ['incorrect']) === null);
+  check('verdict missing on a wrong answer', verdictMissing('Which total goes with complementary?', ['incorrect']) === 'incorrect');
+  check('credit to a non-answer: "matches"', creditsNonAnswer('Your 9 matches the answer you already reached, so Problem 1(a) is complete.'));
+  check('credit to a non-answer: "Yes, …"', creditsNonAnswer('Yes, the limit is 6, and the graph shows why.'));
+  check('no credit: an explanation of the number', !creditsNonAnswer('That 400 is what the primary consumer takes in.'));
+  check('recap: "solved it to y=−2 yourself" over a guess', unearnedCredit('Good work finishing problem (b). You distributed the bracket correctly and solved it to y=−2 yourself. Next time, check each line.', [{ label: 'b', value: 'y = -2' }], false).length === 1);
+  check('recap: "you got y = −2" is what they wrote', unearnedCredit('You got y = −2 for (b).', [{ label: 'b', value: 'y = -2' }], false).length === 0);
+  check('recap: the guessed formula, in subscripts', unearnedCredit('You found CH₂O on your own, and you handled the step to the molecular formula C₆H₁₂O₆.', [{ label: 'b', value: 'C6H12O6' }], false).length === 1);
+  check('recap: credit for a worked part stands', unearnedCredit('You found the empirical formula CH₂O from the mole ratio on your own.', [{ label: 'b', value: 'C6H12O6' }], false).length === 0);
+  {
+    const resolved = { problem: hwSession.homework!, key: KEY, turn: hpTurn() };
+    const asked = (q: string, homework?: V2State['homework']): V2State => ({ ...newV2State(1_000_000), history: [{ role: 'user', content: [{ type: 'text', text: '[start]' }] }, { role: 'assistant', content: [{ type: 'text', text: q }] }], ...(homework ? { homework } : {}) });
+    const run = async (state: V2State, studentSaid: string, drafts: unknown[][]) => {
+      const m = stub(drafts.map((c) => msg(c, c.some((b) => (b as { type: string }).type === 'tool_use') ? 'tool_use' : 'end_turn')));
+      const r = await runV2HomeworkTurn({ session: base, resolved, state, studentSaid, callModel: m.call, nowMs: 1_060_000, boardPass: false });
+      return { r, m, sent: (i: number) => JSON.stringify(m.seen[i]?.messages ?? '') };
+    };
+    const t = (text: string) => ({ type: 'text', text });
+
+    // Check 1: verdict first.
+    const v1 = await run(asked('What is x?'), 'x = 30', [[t('What is m∠ACB?')], [t('Yes, x = 30 is right. What is m∠ACB?')]]);
+    check('a reply without the decided verdict is written again', v1.m.seen.length === 2 && v1.r.spoken.startsWith('Yes') && /did not say so first/.test(v1.sent(1)), v1.r.spoken);
+    const v2 = await run(asked('What is x?'), 'x = 30', [[t('What is m∠ACB?')], [t('Now, what is m∠ACB?')]]);
+    const v2Stored = JSON.stringify(v2.r.state.history.at(-1));
+    check('…and a second draft without it has the verdict said in front', v2.r.spoken === "That's right. Now, what is m∠ACB?" && v2Stored.includes("That's right. Now"), v2.r.spoken);
+    const v3 = await run(asked('What is x?'), 'x = 30', [[t('Yes, that is right. What is m∠ACB?')]]);
+    check('a reply that opens with the verdict goes out first time', v3.m.seen.length === 1);
+
+    // Check 2: no credit to a non-answer.
+    const n1 = await run(asked('If you take 2 off the left pan, what must you do to the right pan?', { confirmed: ['part:a'] }), '9', [[t('Yes, 9 is right. Now, (b)?')], [t('Yes, 9.')]]);
+    check('the facts say the message does not answer the question', /does not answer your last question/.test(n1.sent(0)));
+    check('credit to a non-answer is written again, then cut', n1.m.seen.length === 2 && !/\byes\b/i.test(n1.r.spoken) && /\?\s*$/.test(n1.r.spoken), n1.r.spoken);
+    const n2 = await run(asked('Compare it with x + 3. What do you notice?', { confirmed: ['part:a'] }), '30', [[t('What do you mean by 30?')]]);
+    check('a stray value that repeats a confirmed part is not called a match', !/matches the checked answer/.test(n2.sent(0)) && /does not answer/.test(n2.sent(0)) && n2.m.seen.length === 1);
+
+    // Check 3: the result of the student's own question.
+    const tools0 = (v3.m.seen[0].tools ?? []).map((x) => (x as { name: string }).name);
+    check('a homework session is offered note_own_answer', tools0.includes('note_own_answer'));
+    const o1 = await run(asked('Anything else?', { confirmed: ['part:a'] }), "can you help me with: a compound is 75% carbon and 25% hydrogen, what's the empirical formula", [[t('Sure.'), { type: 'tool_use', id: 'o1', name: 'note_own_answer', input: { question: '75% C, 25% H empirical formula', answer: 'CH4' } }], [t('If you had 100 g, how many grams would be carbon?')]]);
+    check('the own result is kept in the state', JSON.stringify(o1.r.state.homework?.own) === '[{"q":"75% C, 25% H empirical formula","a":"CH4"}]', o1.r.state.homework);
+    check('…and read back in the facts as the tutor\'s alone', /never state one before they write it\): 75% C, 25% H empirical formula → CH4/.test(renderFacts({ ...base, homework: hwSession.homework! }, o1.r.state, { nowMs: 1_060_000 })));
+    const o2 = await run(o1.r.state, 'can you check my answer x = 4', [[t('Yes, x = 4 is right, so the empirical formula is CH₄.')], [t('Yes, 4 fits. What formula does that give?')]]);
+    check('a reply that states the own result is written again', o2.m.seen.length === 2 && !/CH₄|CH4/.test(o2.r.spoken) && /own question/.test(o2.sent(1)), o2.r.spoken);
+    const o3 = await run(o1.r.state, 'is it CH4?', [[t('Yes, CH₄ is right.')]]);
+    check('the student\'s own writing of it is checked and may be said back', o3.m.seen.length === 1 && /matches the result you worked out/.test(o3.sent(0)));
+    const o4 = await run(o1.r.state, 'how do I start?', [[t('Look.'), { type: 'tool_use', id: 'b1', name: 'annotate', input: { text: 'The formula is CH₄' } }], [t('What is 75 ÷ 12?')]]);
+    check('the own result stays off the board', /^not painted/.test(o4.r.toolCalls.find((c) => c.id === 'b1')?.outcome ?? ''), o4.r.toolCalls);
+
+    // Check 4: recaps over a guess.
+    const g1 = await run(asked('What is x?'), "I don't know, maybe x = 30?", [[t('Yes, x = 30 is right. What is m∠ACB?')]]);
+    check('a part confirmed from a bare guess is recorded as one', JSON.stringify(g1.r.state.homework?.guessed) === '[{"label":"a","value":"x = 30"}]', g1.r.state.homework);
+    const doneState = asked('Any question?', { confirmed: ['part:a', 'part:b'], done: true, doneAt: 0, guessed: [{ label: 'b', value: '100' }] });
+    const g2 = await run(doneState, "I think I'm done", [[t('Good work. You worked out (b) yourself once you saw the exterior angle rule. Bye for now.')], [t('Good work: you got (b). Bye for now.')]]);
+    check('a recap crediting working on a guessed part is written again', g2.m.seen.length === 2 && g2.r.spoken === 'Good work: you got (b). Bye for now.' && /never showed/.test(g2.sent(1)), g2.r.spoken);
+    const g3 = await run(doneState, "I think I'm done", [[t('You worked out (b) yourself. Bye for now.')], [t('Well done on (b), once you saw the rule. Bye for now.')]]);
+    check('…and a second such draft has those sentences cut', g3.r.spoken === 'Bye for now.', g3.r.spoken);
+    check('the state keeps guessed and own parts through a reload', JSON.stringify(readHomeworkState({ confirmed: ['part:a'], guessed: [{ label: 'a', value: 'x = 30' }], own: [{ q: 'q', a: 'CH4' }] })) === '{"confirmed":["part:a"],"guessed":[{"label":"a","value":"x = 30"}],"own":[{"q":"q","a":"CH4"}]}');
+  }
 
   console.log('outcome parity with v1 (design 3)');
   // Fix 3 (Praveen 2026-11-14): a problem the tutor closes unfinished reads as the finish button reads it.

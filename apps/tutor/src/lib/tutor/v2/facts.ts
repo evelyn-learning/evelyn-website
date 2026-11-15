@@ -5,7 +5,7 @@
  * the model what to do.
  */
 import { renderBoard } from './board';
-import { v2HomeworkFacts, v2SheetFacts } from './homework-facts';
+import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
 
@@ -46,6 +46,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (state.boardProblems?.length) lines.push(`not painted in your last reply:\n${state.boardProblems.map((x) => `  - ${x}`).join('\n')}`);
   if (session.homework) lines.push(...v2HomeworkFacts(session.homework, state.homework));
   else if (session.homeworkSheet) lines.push(...v2SheetFacts(session.homeworkSheet, state.homework?.sheet));
+  if (session.homework || session.homeworkSheet) lines.push(...v2HomeworkGuardFacts(state.homework));
   else if (session.plan) lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   if (state.gaps?.length) {

@@ -33,7 +33,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
-import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
+import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
 /** A spoken reply of at least this many words that wrote nothing is put to the board check. */
@@ -161,6 +161,9 @@ function storable(content: Anthropic.ContentBlock[]): Anthropic.ContentBlockPara
 /** A reply that says only yes (or ok): to "any question, or are you finished?" it says neither (GAC validation, round 2). */
 export const V2_BARE_ASSENT = /^\s*(?:yes|yeah|yep|yup|ya|y|ok|okay|k|sure|alright|all right|mhm|uh[- ]?huh)\s*[.!]*\s*$/i;
 
+/** The own-question results a homework session keeps (note_own_answer). */
+export const V2_MAX_OWN_ANSWERS = 5;
+
 function applyControlTool(state: V2State, session: V2Session, name: string, args: Record<string, unknown>, nowMs: number, studentSaid: string | null = null): string {
   if (name === 'keep_listening') return 'listening';
   if (name === 'update_session_note') {
@@ -199,6 +202,15 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     // The student's messages from the next one on belong to this problem (homework-turn.ts reads from `since`).
     state.homework = { ...(state.homework ?? { confirmed: [] }), sheet: { ...rec, current: n, since: state.history.length + 1 } };
     return `now on problem ${n}${rec.solved.includes(n) ? ' (already solved)' : ''}`;
+  }
+  if (name === 'note_own_answer') {
+    if (!session.homework && !session.homeworkSheet) return 'not recorded: this is not a homework session';
+    const a = typeof args.answer === 'string' ? args.answer.trim().slice(0, 120) : '';
+    const q = typeof args.question === 'string' ? args.question.trim().slice(0, 200) : '';
+    if (!a) return 'not recorded: give the final result';
+    const own = [...(state.homework?.own ?? []).filter((o) => o.q !== q), { q, a }].slice(-V2_MAX_OWN_ANSWERS);
+    state.homework = { ...(state.homework ?? { confirmed: [] }), own };
+    return 'recorded: never state it before they have written it';
   }
   if (name === 'end_lesson') {
     // Ending is the student's decision or the clock's. With time left and no request to stop, the tutor
@@ -249,7 +261,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     { type: 'text', text: V2_CONSTITUTION, cache_control: CACHE },
     { type: 'text', text: v2SessionPart(session), cache_control: CACHE },
   ];
-  const tools = session.homeworkSheet ? [...v2Tools(session.subject, session.topic ?? ''), V2_SET_CURRENT_PROBLEM_TOOL] : v2Tools(session.subject, session.topic ?? '');
+  const tools = session.homeworkSheet ? [...v2Tools(session.subject, session.topic ?? ''), V2_SET_CURRENT_PROBLEM_TOOL, V2_NOTE_OWN_ANSWER_TOOL] : session.homework ? [...v2Tools(session.subject, session.topic ?? ''), V2_NOTE_OWN_ANSWER_TOOL] : v2Tools(session.subject, session.topic ?? '');
   let messages: Anthropic.MessageParam[] = [...withCacheMark(state.history), userNow];
 
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];

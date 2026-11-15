@@ -16,6 +16,7 @@ import type { ProseAnswerMatchFn } from '../voice/prose-answer-match';
 import { boardRevealsHomeworkKey, homeworkKeyWithheld, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON } from '../voice/homework-problem-block';
 import { boardStrings, revealsWithheldAnswer, type WithheldAnswer } from '../voice/whole-answer-reveal';
 import { newSheetRecord, sheetProblemNamed, studentMessagesOf, v2HomeworkCheck, type V2HomeworkResolved, type V2SheetResolved } from './homework';
+import { creditsNonAnswer, givesCredit, statesOwnResult, isGuess, nonAnswer, sentencesOf, unearnedCredit, verdictMissing, V2_HOMEWORK_GUARD_REASONS, V2_VERDICT_OPENERS, type GuessedPart, type NonAnswer } from './homework-guards';
 import { V2_CONTROL_TOOL_NAMES } from './tool-names';
 import { runV2Turn, type V2TurnInput } from './turn';
 import type { V2HomeworkProblem, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -33,8 +34,43 @@ function lastTutorText(history: V2State['history']): string {
   return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ');
 }
 
-const sentencesOf = (text: string) => text.split(/(?<=[.!?])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
 const revealing = (sentence: string, withheld: ReadonlyArray<WithheldAnswer>) => withheld.some((a) => revealsWithheldAnswer(sentence, a).hit);
+
+/** What the homework-guards checks read for one turn. */
+interface TurnChecks {
+  /** This message's decided verdicts (check 1). */
+  verdicts: Array<'correct' | 'incorrect'>;
+  /** The message answers nothing the tutor asked (check 2). */
+  nonAnswer: NonAnswer | null;
+  /** Own-question results the student has not written (check 3). */
+  own: Array<{ q: string; a: string }>;
+  /** Parts confirmed from a bare guess (check 4); `allGuessed`: every confirmed part was. */
+  guessed: GuessedPart[];
+  allGuessed: boolean;
+}
+
+const readsKeyValue = (text: string, value: string, given: string) => revealsWithheldAnswer(text, { value, studentText: '', givenText: given }).hit;
+const statesOwn = (text: string, own: ReadonlyArray<{ q: string; a: string }>) => own.some((o) => statesOwnResult(text, o, readsKeyValue));
+
+/** The own-question results the student has not yet written (check 3). */
+function ownWithheld(state: V2State, studentText: string): Array<{ q: string; a: string }> {
+  return (state.homework?.own ?? []).filter((o) => !statesOwnResult(studentText, o, readsKeyValue));
+}
+
+/** The own-question result this message writes, as the facts' answer check says it (check 3: credit only). */
+function ownAnswerCheck(state: V2State, studentSaid: string | null): string | null {
+  if (!studentSaid) return null;
+  const hit = (state.homework?.own ?? []).find((o) => statesOwnResult(studentSaid, o, readsKeyValue));
+  return hit ? `their own question (${hit.q.slice(0, 80)}): the student's answer matches the result you worked out` : null;
+}
+
+/** Parts newly confirmed by this message, when it offered them as a bare guess (check 4). */
+function newlyGuessed(prior: ReadonlyArray<string>, confirmed: ReadonlyArray<string>, studentSaid: string | null, verdicts: ReadonlyArray<{ part: string; verdict: string; value?: string }>, prefix = ''): GuessedPart[] {
+  if (!studentSaid || !isGuess(studentSaid)) return [];
+  const fresh = confirmed.filter((m) => m.startsWith('part:') && !prior.includes(m)).map((m) => m.slice(5));
+  const value = studentSaid.replace(/^.*?(?:maybe|perhaps|probably|i (?:think|guess)|is it|could it be)\s+/i, '').replace(/[?!.\s]+$/, '').trim();
+  return fresh.map((label) => ({ label: `${prefix}${label}`, value: verdicts.find((v) => v.part === label)?.value ?? value }));
+}
 
 /**
  * One homework turn: the answer check, then the turn with what it found as a fact. The route and the offline
@@ -48,34 +84,64 @@ export async function runV2HomeworkTurn(input: V2TurnInput & { resolved: V2Homew
   const frames: V2HomeworkFrameOut[] = [...hc.verdicts.map((v) => ({ type: 'homework-keyed-verdict' as const, ...v })), ...(hc.justDone ? [{ type: 'homework-problem-done' as const }] : [])];
   for (const f of frames) onHomeworkFrame?.(f);
   const doneAt = hc.justDone ? turn.state.history.length : turn.state.homework?.doneAt;
-  const state: V2State = { ...turn.state, homework: { confirmed: hc.confirmed, ...(hc.done ? { done: true } : {}), ...(doneAt !== undefined ? { doneAt } : {}) } };
-  const facts = { ...(turn.facts ?? {}), ...(hc.answerCheck ? { answerCheck: hc.answerCheck } : {}) };
+  const prior = turn.state.homework?.confirmed ?? hw.priorConfirmed ?? [];
+  const guessed = [...(turn.state.homework?.guessed ?? []), ...newlyGuessed(prior, hc.confirmed, turn.studentSaid, hc.verdicts)];
+  const own = turn.state.homework?.own;
+  const state: V2State = { ...turn.state, homework: { confirmed: hc.confirmed, ...(hc.done ? { done: true } : {}), ...(doneAt !== undefined ? { doneAt } : {}), ...(guessed.length ? { guessed } : {}), ...(own?.length ? { own } : {}) } };
+
+  const na = nonAnswer(turn.studentSaid, lastTutorText(turn.state.history));
+  // A stray value that only repeats a part already confirmed is not an answer to the sheet either.
+  const repeatOnly = !!na && hc.verdicts.length > 0 && hc.verdicts.every((v) => prior.includes(`part:${v.part}`));
+  const checks = [repeatOnly || !hc.answerCheck ? null : hc.answerCheck, na ? `the student's message ("${na.said.slice(0, 40)}") does not answer your last question` : null, ownAnswerCheck(turn.state, turn.studentSaid)].filter(Boolean);
+  const facts = { ...(turn.facts ?? {}), ...(checks.length ? { answerCheck: checks.join('; ') } : {}) };
 
   const studentText = [...studentMessagesOf(turn.state.history).map((m) => m.content), turn.studentSaid ?? ''].join('\n');
   const withheld = hw.verified && resolved.key ? homeworkKeyWithheld({ text: hw.text, verified: true, hasFigure: hw.hasFigure, key: resolved.key }, studentText) : [];
-  const r = await guardedTurn({ ...turn, session, state, facts }, withheld, { noReveal: !!hw.noReveal, figureOnScreen: hw.hasFigure });
+  const confirmedParts = hc.confirmed.filter((m) => m.startsWith('part:')).length;
+  const r = await guardedTurn({ ...turn, session, state, facts }, withheld, { noReveal: !!hw.noReveal, figureOnScreen: hw.hasFigure }, {
+    verdicts: repeatOnly ? [] : hc.verdicts.map((v) => v.verdict), nonAnswer: na, own: ownWithheld(turn.state, studentText), guessed, allGuessed: guessed.length > 0 && guessed.length >= confirmedParts,
+  });
   return { ...r, homeworkFrames: frames };
 }
 
 /**
- * The turn under the no-reveal guard (this file's header). `withheld`: the key values the student has not
- * written. `figureOnScreen`: the opening reply draws nothing.
+ * The turn under the homework guards: the no-reveal guard (this file's header) and the checks of
+ * homework-guards.ts. `withheld`: the key values the student has not written. `figureOnScreen`: the opening
+ * reply draws nothing. A draft is held while any check could fail it; a failing draft is written again once,
+ * with a fact saying why, and a second failing draft is repaired by the same rules.
  */
-async function guardedTurn(given: V2TurnInput, withheld: WithheldAnswer[], opts: { noReveal: boolean; figureOnScreen: boolean }): Promise<V2TurnResult> {
+async function guardedTurn(given: V2TurnInput, withheld: WithheldAnswer[], opts: { noReveal: boolean; figureOnScreen: boolean }, checks: TurnChecks): Promise<V2TurnResult> {
   const turn = given;
   const opening = !turn.state.history.length && turn.studentSaid === null;
+
   const boardGuard = (name: string, args: Record<string, unknown>): string | null => {
     if (V2_CONTROL_TOOL_NAMES.has(name) || name === 'new_page' || name === 'go_to_page') return null;
     if (opening && opts.figureOnScreen) return HOMEWORK_OPENER_BOARD_WITHHELD_REASON.replace(/^not shown — /, '');
     // A note about "the student" is written to the tutor, not to them ("The student's answer, 17, arrived with no
     // working. Before it is checked, ask…", GAC validation round 2): the board is the student's page.
     if (boardStrings(args).some((t) => /\bthe student(?:'s|s')?\b/i.test(t))) return 'the board is the student\'s page: write to them as "you", or not at all';
+    if (checks.own.length && boardStrings(args).some((t) => statesOwn(t, checks.own))) return 'it states the result of the student\'s own question, which they must reach themselves';
     return withheld.length && boardRevealsHomeworkKey(args, withheld) ? HOMEWORK_BOARD_KEY_WITHHELD_REASON.replace(/^not shown — /, '') : null;
   };
   const guarded: V2TurnInput = { ...turn, boardGuard };
-  if (!opts.noReveal || !withheld.length) return runV2Turn(guarded);
+  const keyGuard = opts.noReveal && withheld.length > 0;
+  if (!keyGuard && !checks.own.length && !checks.verdicts.length && !checks.nonAnswer && !checks.guessed.length) return runV2Turn(guarded);
   const facts = turn.facts ?? {};
-  // Held: the student sees a draft only once it is known not to state an answer.
+
+  // Each check, on a whole draft: why it fails, or nothing.
+  const reasonsFor = (spoken: string): string[] => {
+    const ss = sentencesOf(spoken);
+    const out: string[] = [];
+    if (keyGuard && ss.some((x) => revealing(x, withheld))) out.push(V2_HOMEWORK_NOT_SENT);
+    if (checks.own.length && ss.some((x) => statesOwn(x, checks.own))) out.push(V2_HOMEWORK_GUARD_REASONS.own);
+    const v = verdictMissing(spoken, checks.verdicts);
+    if (v) out.push(V2_HOMEWORK_GUARD_REASONS.verdict(v));
+    if (checks.nonAnswer && creditsNonAnswer(spoken)) out.push(V2_HOMEWORK_GUARD_REASONS.nonAnswer(checks.nonAnswer));
+    const unearned = unearnedCredit(spoken, checks.guessed, checks.allGuessed);
+    if (unearned.length) out.push(V2_HOMEWORK_GUARD_REASONS.recap(unearned));
+    return out;
+  };
+  // Held: the student sees a draft only once it has passed.
   const held = async (extra: Partial<V2TurnInput>) => {
     const events: Array<() => void> = [];
     const r = await runV2Turn({
@@ -85,29 +151,47 @@ async function guardedTurn(given: V2TurnInput, withheld: WithheldAnswer[], opts:
       onBoardOpen: () => events.push(() => turn.onBoardOpen?.()),
       onBoardWithdraw: (id) => events.push(() => turn.onBoardWithdraw?.(id)),
     });
-    return { r, flush: () => { for (const e of events) e(); }, reveals: sentencesOf(r.spoken).some((x) => revealing(x, withheld)) };
+    return { r, flush: () => { for (const e of events) e(); }, reasons: reasonsFor(r.spoken) };
   };
   const first = await held({});
-  if (!first.reveals) { first.flush(); return first.r; }
-  console.log('[brain-v2] homework: a draft stated a final answer — written again');
-  const second = await held({ facts: { ...facts, notSent: V2_HOMEWORK_NOT_SENT } });
-  if (!second.reveals) { second.flush(); return second.r; }
-  console.log('[brain-v2] homework: the second draft stated it too — those sentences are cut');
-  // Last resort: the sentences that state it are cut from what is said and from what is stored.
-  const cut = (text: string) => sentencesOf(text).filter((x) => !revealing(x, withheld)).join(' ');
-  let spoken = cut(second.r.spoken);
-  if (!/\?\s*$/.test(spoken)) spoken = `${spoken} ${V2_HOMEWORK_FALLBACK_QUESTION}`.trim();
+  if (!first.reasons.length) { first.flush(); return first.r; }
+  console.log(`[brain-v2] homework: a draft was written again — ${first.reasons.map((x) => x.split(/[,.(]/)[0].slice(0, 60)).join(' | ')}`);
+  const second = await held({ facts: { ...facts, notSent: first.reasons.join(' Also: ') } });
+  if (!second.reasons.length) { second.flush(); return second.r; }
+  console.log('[brain-v2] homework: the second draft failed too — repaired');
+  // Last resort: the sentences that fail are cut from what is said and from what is stored, and a missing
+  // verdict is said in front.
+  let handOver = false;
+  const cut = (text: string, firstBlock: boolean) => {
+    const ss = sentencesOf(text);
+    const unearned = new Set(unearnedCredit(text, checks.guessed, checks.allGuessed));
+    return ss.filter((x, i) => {
+      const drop = (keyGuard && revealing(x, withheld)) || (checks.own.length > 0 && statesOwn(x, checks.own)) || (!!checks.nonAnswer && firstBlock && i === 0 && givesCredit(x));
+      if (drop) handOver = true;
+      return !drop && !unearned.has(x);
+    }).join(' ');
+  };
+  const missing = verdictMissing(second.r.spoken, checks.verdicts);
+  const opener = missing ? V2_VERDICT_OPENERS[missing] : '';
+  let spoken = [opener, cut(second.r.spoken, true)].filter(Boolean).join(' ');
+  if (handOver && !/\?\s*$/.test(spoken)) spoken = `${spoken} ${V2_HOMEWORK_FALLBACK_QUESTION}`.trim();
   const before = turn.state.history.length;
+  let firstText = true;
   const history = second.r.state.history.map((m, i) => {
     if (i < before + 1 || m.role !== 'assistant' || typeof m.content === 'string') return m;
     // An empty text block is refused by the API: a block left with nothing is dropped.
-    const content = m.content.map((b) => (b.type === 'text' ? { ...b, text: cut(b.text) } : b)).filter((b) => b.type !== 'text' || b.text.trim());
+    const content = m.content.map((b) => {
+      if (b.type !== 'text') return b;
+      const text = [firstText ? opener : '', cut(b.text, firstText)].filter(Boolean).join(' ');
+      firstText = false;
+      return { ...b, text };
+    }).filter((b) => b.type !== 'text' || b.text.trim());
     return { ...m, content: content.length ? content : [{ type: 'text' as const, text: V2_HOMEWORK_FALLBACK_QUESTION }] };
   });
   // What is stored hands the turn over as what is said does.
   const lastText = [...history].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((b) => b.type === 'text'));
   const tail = lastText && Array.isArray(lastText.content) ? ([...lastText.content].reverse().find((b) => b.type === 'text') as { text: string } | undefined) : undefined;
-  if (tail && !/\?\s*$/.test(tail.text)) tail.text = `${tail.text} ${V2_HOMEWORK_FALLBACK_QUESTION}`.trim();
+  if (handOver && tail && !/\?\s*$/.test(tail.text)) tail.text = `${tail.text} ${V2_HOMEWORK_FALLBACK_QUESTION}`.trim();
   turn.onText?.(spoken);
   for (const c of second.r.toolCalls) turn.onToolCall?.(c);
   return { ...second.r, spoken, state: { ...second.r.state, history } };
@@ -142,6 +226,10 @@ export async function runV2SheetTurn(input: V2TurnInput & { resolvedSheet: V2She
   const problem = sheet.problems.find((p) => p.n === rec.current);
   const key = resolvedSheet.keys[rec.current];
   const frames: V2SheetFrameOut[] = [];
+  const na = nonAnswer(turn.studentSaid, lastTutorText(turn.state.history));
+  const checkLines: string[] = [];
+  let verdicts: Array<'correct' | 'incorrect'> = [];
+  let guessed = [...(turn.state.homework?.guessed ?? [])];
   if (problem) {
     const one: V2HomeworkProblem = { text: problem.text, verified: problem.verified, hasFigure: false, ...(problem.parts ? { parts: problem.parts } : {}) };
     const scoped: V2State = { ...turn.state, history: turn.state.history.slice(rec.since), homework: { confirmed: rec.confirmed[String(rec.current)] ?? [], ...(rec.solved.includes(rec.current) ? { done: true } : {}) } };
@@ -152,15 +240,25 @@ export async function runV2SheetTurn(input: V2TurnInput & { resolvedSheet: V2She
       rec = { ...rec, solved: [...rec.solved, rec.current] };
       frames.push({ type: 'homework-sheet-solved', n: rec.current, position: sheet.problems.findIndex((p) => p.n === rec.current) + 1, solved: sheet.problems.map((p, i) => (rec.solved.includes(p.n) ? i + 1 : 0)).filter(Boolean), total: sheet.problems.length });
     }
-    if (hc.answerCheck) turn.facts = { ...(turn.facts ?? {}), answerCheck: `problem ${rec.current}, ${hc.answerCheck}` };
+    const prior = scoped.homework!.confirmed;
+    const repeatOnly = !!na && hc.verdicts.length > 0 && hc.verdicts.every((v) => prior.includes(`part:${v.part}`));
+    if (hc.answerCheck && !repeatOnly) { checkLines.push(`problem ${rec.current}, ${hc.answerCheck}`); verdicts = hc.verdicts.map((v) => v.verdict); }
+    guessed = [...guessed, ...newlyGuessed(prior, hc.confirmed, turn.studentSaid, hc.verdicts, `${rec.current}:`)];
   }
+  if (na) checkLines.push(`the student's message ("${na.said.slice(0, 40)}") does not answer your last question`);
+  const ownCheck = ownAnswerCheck(turn.state, turn.studentSaid);
+  if (ownCheck) checkLines.push(ownCheck);
+  if (checkLines.length) turn.facts = { ...(turn.facts ?? {}), answerCheck: checkLines.join('; ') };
   for (const f of frames) onHomeworkFrame?.(f);
-  const state: V2State = { ...turn.state, homework: { ...(turn.state.homework ?? { confirmed: [] }), sheet: rec } };
+  const state: V2State = { ...turn.state, homework: { ...(turn.state.homework ?? { confirmed: [] }), sheet: rec, ...(guessed.length ? { guessed } : {}) } };
   // Every key value on the sheet the student has not written stays off the board and out of the reply.
   const studentText = [...studentMessagesOf(turn.state.history).map((m) => m.content), turn.studentSaid ?? ''].join('\n');
   // The whole sheet is given data: a number one problem states is never withheld as another's answer.
   const sheetText = sheet.problems.map((p) => p.text).join('\n');
   const withheld = sheet.problems.flatMap((p) => (resolvedSheet.keys[p.n] ? homeworkKeyWithheld({ text: sheetText, verified: true, hasFigure: false, key: resolvedSheet.keys[p.n] }, studentText) : []));
-  const r = await guardedTurn({ ...turn, session, state }, withheld, { noReveal: !!sheet.noReveal, figureOnScreen: false });
+  const confirmedParts = Object.values(rec.confirmed).flat().filter((m) => m.startsWith('part:')).length;
+  const r = await guardedTurn({ ...turn, session, state }, withheld, { noReveal: !!sheet.noReveal, figureOnScreen: false }, {
+    verdicts, nonAnswer: na, own: ownWithheld(turn.state, studentText), guessed, allGuessed: guessed.length > 0 && guessed.length >= confirmedParts,
+  });
   return { ...r, homeworkFrames: frames };
 }

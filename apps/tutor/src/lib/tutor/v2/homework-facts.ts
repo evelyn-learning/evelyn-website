@@ -19,6 +19,14 @@ export function marksInWords(marks: ReadonlyArray<string>): string[] {
   }).filter(Boolean);
 }
 
+/** The lines both homework kinds share: guessed parts and own-question results (homework-guards.ts). */
+export function v2HomeworkGuardFacts(state: V2HomeworkState | undefined): string[] {
+  const out: string[] = [];
+  if (state?.guessed?.length) out.push(`confirmed from a bare guess, with no working shown: ${state.guessed.map((g) => (g.label ? `part ${g.label}` : 'the answer')).join(', ')}`);
+  if (state?.own?.length) out.push(`results you worked out for the student's own questions (never state one before they write it): ${state.own.map((o) => `${oneLine(o.q, 80)} → ${oneLine(o.a, 60)}`).join('; ')}`);
+  return out;
+}
+
 /** The homework lines of the facts block (facts.ts). */
 export function v2HomeworkFacts(hw: V2HomeworkProblem, state: V2HomeworkState | undefined): string[] {
   if (!hw.verified) return [];

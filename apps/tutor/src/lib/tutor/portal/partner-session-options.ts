@@ -135,8 +135,8 @@ export function defaultPartnerSessionOptions(tutorLanguages: string[] | undefine
     pronunciation: false,
     thinkingCue: true,
     brainVersion: 'v1',
-    questionRead: false,
     homeworkOnV2: false,
+    questionRead: false,
   };
 }
 
