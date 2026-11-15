@@ -161,7 +161,6 @@ export const V2_VERDICT_OPENERS = { correct: 'That\'s right.', incorrect: 'Not q
  */
 export function statesOwnResult(text: string, own: { q: string; a: string }, read: (text: string, value: string, given: string) => boolean): boolean {
   if (statesExpression(text, own.a, own.q)) return true;
-  if (statesWordedResult(text, own.a, own.q)) return true;
   return read(text, own.a, own.q);
 }
 
@@ -173,25 +172,3 @@ export function statesExpression(text: string, value: string, given: string): bo
   return k.length >= 2 && /[a-z]/.test(k) && /\d|[=^/]/.test(k) && valueKey(text).includes(k) && !valueKey(given).includes(k);
 }
 
-const STOP = new Set('about above after again against also because been before being below between both but cannot could does doing down during each from further have having here into itself just more most much must once only other over same should since some such than that their them then there these they this those through under until very were what when where which while with would your like enough make makes made used uses using thing things'.split(' '));
-/** The words of a worded result that the question does not already say: its key terms ("ammonium", "nitrate", "N2"). */
-function keyTerms(answer: string, question: string): string[] {
-  const words = (s: string) => valueKey(s.replace(/[^\p{L}\p{N}₀-₉\s]/gu, ' ').replace(/\s+/g, '¶')).split('¶').filter(Boolean);
-  const stem = (w: string) => w.slice(0, 6);
-  const q = new Set(words(question).map(stem));
-  const terms = words(answer).filter((w) => (w.length >= 4 && !STOP.has(w)) || (/\d/.test(w) && /[a-z]/.test(w))).map(stem).filter((w) => !q.has(w));
-  return [...new Set(terms)];
-}
-
-/**
- * A worded result (an explanation, a difference, a reason) is stated when a sentence carries most of its key
- * terms: at least half of them, and never fewer than three. One or two of its words are a hint, not the answer.
- */
-export function statesWordedResult(text: string, answer: string, question: string): boolean {
-  if (String(answer ?? '').trim().split(/\s+/).length < 3) return false;
-  const terms = keyTerms(answer, question);
-  if (terms.length < 3) return false;
-  const have = new Set(keyTerms(text, question));
-  const hits = terms.filter((t) => have.has(t)).length;
-  return hits >= Math.max(3, Math.ceil(terms.length / 2));
-}

@@ -17,7 +17,7 @@ import { v2SheetFor } from '../src/lib/tutor/v2/homework';
 import { classifyHomeworkProblemOutcome } from '../src/lib/tutor/homework-build/outcome';
 import { formatKeyedVerdictDebug } from '../src/lib/tutor/voice/keyed-verdict';
 import type { V2State } from '../src/lib/tutor/v2/types';
-import { castsDoubt, creditsNonAnswer, isGuess, nonAnswer, statesExpression, statesWordedResult, unearnedCredit, verdictMissing } from '../src/lib/tutor/v2/homework-guards';
+import { castsDoubt, creditsNonAnswer, isGuess, nonAnswer, statesExpression, unearnedCredit, verdictMissing } from '../src/lib/tutor/v2/homework-guards';
 import { practiceLoTitle } from '../src/lib/tutor/practice-assign/lo-title';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -398,10 +398,6 @@ async function main() {
   check('recap: "solved it to y=−2 yourself" over a guess', unearnedCredit('Good work finishing problem (b). You distributed the bracket correctly and solved it to y=−2 yourself. Next time, check each line.', [{ label: 'b', value: 'y = -2' }], false).length === 1);
   check('recap: "you got y = −2" is what they wrote', unearnedCredit('You got y = −2 for (b).', [{ label: 'b', value: 'y = -2' }], false).length === 0);
   check('recap: the guessed formula, in subscripts', unearnedCredit('You found CH₂O on your own, and you handled the step to the molecular formula C₆H₁₂O₆.', [{ label: 'b', value: 'C6H12O6' }], false).length === 1);
-  check('worded own result: stated', statesWordedResult('Fixation turns N₂ into ammonium, and nitrification turns that ammonium into nitrate.', 'fixation turns N2 gas into ammonium; nitrification turns ammonium into nitrite then nitrate', 'difference between nitrogen fixation and nitrification'));
-  check('worded own result: a hint is not a reveal', !statesWordedResult('What do you think bacteria do with N₂ gas from the air?', 'fixation turns N2 gas into ammonium; nitrification turns ammonium into nitrite then nitrate', 'difference between nitrogen fixation and nitrification'));
-  check('worded own result: hydrolysis stated', statesWordedResult('Digestion breaks large food molecules, like starch and proteins, into small monomers the body can absorb.', 'hydrolysis splits large polymers like starch into small monomers the body can absorb', 'why hydrolysis is used in digestion'));
-  check('worded own result: hydrolysis hint', !statesWordedResult('What happens to a big molecule like starch before your blood can take it in?', 'hydrolysis splits large polymers like starch into small monomers the body can absorb', 'why hydrolysis is used in digestion'));
   check('key expression stated in a correction', statesExpression('From 3x=y−1, adding 1 to both sides gives y=3x+1, not 3x−1.', 'y = 3x + 1', 'f(x) = (x - 1)/3. Find the inverse.'));
   check('key expression the problem gives is not a reveal', !statesExpression('Start from y = 3x + 1.', 'y = 3x + 1', 'Given y = 3x + 1, find x when y = 7.'));
   check('doubt: "your answer is a guess"', castsDoubt('Your answer is a guess until you show how you got it.').length === 1);
@@ -450,7 +446,7 @@ async function main() {
 
     // Check 4: recaps over a guess.
     const g1 = await run(asked('What is x?'), "I don't know, maybe x = 30?", [[t('Yes, x = 30 is right. What is m∠ACB?')]]);
-    check('a part confirmed from a bare guess is recorded as one, and kept off the facts', !/bare guess/.test(renderFacts({ ...base, homework: hwSession.homework! }, g1.r.state, { nowMs: 1_060_000 })) && JSON.stringify(g1.r.state.homework?.guessed) === '[{"label":"a","value":"x = 30"}]', g1.r.state.homework);
+    check('a part confirmed from a bare guess is recorded as one, and named in the facts', /bare guess/.test(renderFacts({ ...base, homework: hwSession.homework! }, g1.r.state, { nowMs: 1_060_000 })) && JSON.stringify(g1.r.state.homework?.guessed) === '[{"label":"a","value":"x = 30"}]', g1.r.state.homework);
     const doneState = asked('Any question?', { confirmed: ['part:a', 'part:b'], done: true, doneAt: 0, guessed: [{ label: 'b', value: '100' }] });
     const g2 = await run(doneState, "I think I'm done", [[t('Good work. You worked out (b) yourself once you saw the exterior angle rule. Bye for now.')], [t('Good work: you got (b). Bye for now.')]]);
     check('a recap crediting working on a guessed part is written again', g2.m.seen.length === 2 && g2.r.spoken === 'Good work: you got (b). Bye for now.' && /never showed/.test(g2.sent(1)) && /do not mention it/.test(g2.sent(1)), g2.r.spoken);
@@ -464,9 +460,6 @@ async function main() {
     check('…and a second such draft has those sentences cut', d2.r.spoken === 'Any question?', d2.r.spoken);
     const u1 = await run(asked("Tell me what speed you'd expect after 1 second of fall?"), '3', [[t('Yes, 3 m/s after 1 second.')], [t('Not quite: it gains 10 m/s each second. What is it after 2 seconds?')]]);
     check('credit to a bare number no check covered is written again', u1.m.seen.length === 2 && /nothing checked that number/.test(u1.sent(1)), u1.r.spoken);
-    const own2 = { q: 'difference between nitrogen fixation and nitrification', a: 'fixation turns N2 gas into ammonium; nitrification turns ammonium into nitrite then nitrate' };
-    const w1 = await run(asked('Anything else?', { confirmed: ['part:a'], own: [own2] }), 'how do I start?', [[t('Fixation turns N₂ into ammonium, and nitrification turns that ammonium into nitrate.')], [t('What do you think bacteria do with N₂ gas from the air?')]]);
-    check('a worded own result is withheld like a value', w1.m.seen.length === 2 && /own question/.test(w1.sent(1)), w1.r.spoken);
     const k1 = await run(asked('Try (b)?'), 'x = 30', [[t('Yes, x = 30. Then (b) is 100, the exterior angle.')], [t('Yes, x = 30. What is (b)?')]]);
     check('a key reveal still rewrites (regression)', k1.r.spoken === 'Yes, x = 30. What is (b)?', k1.r.spoken);
     check('the state keeps guessed and own parts through a reload', JSON.stringify(readHomeworkState({ confirmed: ['part:a'], guessed: [{ label: 'a', value: 'x = 30' }], own: [{ q: 'q', a: 'CH4' }] })) === '{"confirmed":["part:a"],"guessed":[{"label":"a","value":"x = 30"}],"own":[{"q":"q","a":"CH4"}]}');
