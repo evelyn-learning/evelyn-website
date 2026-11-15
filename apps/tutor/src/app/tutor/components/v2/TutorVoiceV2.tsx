@@ -97,6 +97,8 @@ const BOARD_HOLD_MAX_MS = 45000;
 export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const p = useRef(props); p.current = props;
   const spokenRef = useRef<string[]>([]);
+  /** What had been fully played of a reply still streaming when the student came in (null: no cut this turn). */
+  const cutHeardRef = useRef<string | null>(null);
   const startedRef = useRef(false);
   const [started, setStarted] = useState(false);
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -230,6 +232,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     mode: 'voice',
     onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; turnSentencesRef.current.push(sentence); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; if (openingSpeechRef.current) openingSpeechRef.current.push(sentence); else realtimeRef.current?.speakText(sentence); },
     onCut: () => { void realtimeRef.current?.clearSpeechQueue(); dropBoard(); },
+    heardSoFar: () => cutHeardRef.current,
     onBoardWithdraw: (id) => {
       const held = heldBoardRef.current.find((h) => h.id === id);
       if (held) { clearTimeout(held.timer); heldBoardRef.current = heldBoardRef.current.filter((h) => h !== held); }
@@ -309,7 +312,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
       turnBusyRef.current = busy;
-      if (busy) { releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
+      if (busy) { cutHeardRef.current = null; releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
       else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard(); else releaseBoard(startedCountRef.current);
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
@@ -392,11 +395,14 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       void realtimeRef.current.clearSpeechQueue();
       // A finished reply cut short: the record keeps only what was heard (a reply still streaming is folded
       // by useV2Turns instead).
+      // The sentence playing when they came in is counted as unheard: cut at "What's your first…", the
+      // question did not get through, and the tutor says it again.
+      const heardCount = Math.max(0, startedCountRef.current - 1);
       const st = turnsRef.current?.stateRef.current;
-      if (st && !turnsRef.current?.busy) {
-        const unheard = turnSentencesRef.current.length - startedCountRef.current;
-        const trimmed = trimToSpoken(st, turnSentencesRef.current, startedCountRef.current);
-        if (trimmed !== st) { turnsRef.current!.stateRef.current = trimmed; p.current.onDebugEvent?.('v2_unheard_trimmed', `${unheard} sentence(s) never played; the record keeps ${startedCountRef.current}`); }
+      if (turnsRef.current?.busy) cutHeardRef.current = turnSentencesRef.current.slice(0, heardCount).join(' ');
+      else if (st) {
+        const trimmed = trimToSpoken(st, turnSentencesRef.current, heardCount);
+        if (trimmed !== st) { turnsRef.current!.stateRef.current = trimmed; p.current.onDebugEvent?.('v2_unheard_trimmed', `${turnSentencesRef.current.length - heardCount} sentence(s) not fully heard; the record keeps ${heardCount}`); }
       }
     }
     dropBoard();

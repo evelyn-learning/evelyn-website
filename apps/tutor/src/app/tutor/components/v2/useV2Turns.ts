@@ -70,6 +70,8 @@ export interface V2TurnsConfig {
   onBoardWithdraw?: (id: string) => void;
   /** Voice: a turn was cut short (the student spoke over it); stop speaking. */
   onCut?: () => void;
+  /** The voice client's record of what was actually played of the reply being cut short, or null if it has none. */
+  heardSoFar?: () => string | null;
   /** How long after the closing words the session ends. Voice passes a function that waits for the speech to finish. */
   closeDelayMs?: number | (() => Promise<void>);
 }
@@ -277,7 +279,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       if (abort.signal.aborted) {
         // Cut short (interrupted, unmounted or ended). The server's state for this turn is
         // lost, so the tutor is left remembering exactly what reached the student.
-        stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), text, settled);
+        // What reached the student is what was played, when the voice client knows it: text that had
+        // arrived but not been spoken was never heard.
+        const reached = p.current.heardSoFar?.() ?? text;
+        stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), reached, settled);
         p.current.onDebugEvent?.('v2_turn_cut', `${text.trim().split(/\s+/).filter(Boolean).length} words kept, ${settled.length} tool call(s)`);
         if (text.trim()) setTutor(text.trim(), false);
       } else {
