@@ -102,6 +102,8 @@ Notice movement. When they refine, qualify or change what they think, say so pla
 
 Stay with the source. The cases, their details and their terms come from the plan, which comes from an author's published material. Describe them as written; don't invent facts about a case, and never mention a case by name before you have told it to them, and don't attribute to the author a view the plan does not contain. The reactions of people a decision would affect may be imagined, as possibilities, not reported as fact.
 
+When an answer is too short or unclear to build on ("I kind of agree", "I think so"), don't rate it and don't move on to a case: ask one plain, easy question about it, or about a student it brings to mind. When their answers stay short, give more and ask less: a view of your own, a concrete classroom moment, and a question that is easy to answer. When they say it is too much, slow down and offer to make it simpler, not only to stop.
+
 A person thinking aloud, or halfway through a sentence, is not waiting for you: call keep_listening and say nothing. Read the whole conversation before you reply, and never ask for something they have already said.
 
 Be brief. Two or three short sentences is a normal reply, about forty words: a short acknowledgement or link, then the one question or consideration. One idea per reply, in everyday words: a listener cannot read back over a dense sentence, and a reply that links two ideas is the one they ask you to repeat. Don't restate their point at length before adding to it. Go longer only to set out a case. When they did not follow you ("say that again", "I don't understand"), say it again shorter and plainer than the first time, as a single sentence and a question, with nothing new added.
@@ -161,7 +163,7 @@ export function renderDiscussionMap(plan: LessonPlan, d: DiscussionMeta): string
 }
 
 /** What stands in for the person's words at the very start of a discussion. */
-export const DISCUSSION_OPENING = '[The conversation has just started. The person has joined and is waiting for you to begin. Greet them, say in a sentence or two what this conversation is about and that there are no right answers, and invite their first reaction with one open question. Three sentences at most. Don\'t list what is coming. Wait for their answer.]';
+export const DISCUSSION_OPENING = '[The conversation has just started. The person has joined and is waiting for you to begin. Greet them, say in a sentence or two what this conversation is about and that there are no right answers, and invite their first reaction with one open question that names the subject itself ("what\'s your first reaction when you hear students writing with AI?"), never one that points back with "that" or "this". Three sentences at most. Don\'t list what is coming. Wait for their answer.]';
 
 /** How a spoken reply that asked nothing hands the turn over, in a conversation with no right answers. */
 export const DISCUSSION_CHECK_INS = ['What do you make of that?', 'Where do you land on that?', 'How does that sit with you?', 'What comes to mind?'];

@@ -38,6 +38,7 @@ import { type V2ComposerStatus, V2Composer, V2_HANDLE_STUBS } from './TutorClien
 import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
+import { trimToSpoken } from '@/lib/tutor/v2/interrupted';
 import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
 import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
@@ -389,6 +390,14 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     if (realtimeRef.current?.isSpeechPending()) {
       p.current.onDebugEvent?.('v2_bargein', opts?.typed ? 'typed over the tutor' : 'spoke over the tutor');
       void realtimeRef.current.clearSpeechQueue();
+      // A finished reply cut short: the record keeps only what was heard (a reply still streaming is folded
+      // by useV2Turns instead).
+      const st = turnsRef.current?.stateRef.current;
+      if (st && !turnsRef.current?.busy) {
+        const unheard = turnSentencesRef.current.length - startedCountRef.current;
+        const trimmed = trimToSpoken(st, turnSentencesRef.current, startedCountRef.current);
+        if (trimmed !== st) { turnsRef.current!.stateRef.current = trimmed; p.current.onDebugEvent?.('v2_unheard_trimmed', `${unheard} sentence(s) never played; the record keeps ${startedCountRef.current}`); }
+      }
     }
     dropBoard();
     realtimeRef.current?.resumeSpeech();

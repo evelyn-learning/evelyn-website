@@ -36,7 +36,7 @@ import { speakGroups } from '../src/lib/tutor/voice/tts-pronunciation';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
-import { foldInterruptedTurn, V2_CUT_MARK } from '../src/lib/tutor/v2/interrupted';
+import { foldInterruptedTurn, trimToSpoken, V2_CUT_MARK } from '../src/lib/tutor/v2/interrupted';
 import { brainVersionOverrides, resolvePartnerSessionOptions, v2CanRunSession } from '../src/lib/tutor/portal/partner-session-options';
 
 let passed = 0; let failed = 0;
@@ -573,6 +573,12 @@ async function main() {
   check('keeps the student\'s words, what was heard with a cut mark, and the settled tool calls with results', cutTail.map((m) => m.role).join() === 'user,assistant,user' && JSON.stringify(cutTail[1]).includes(`Now look at ${V2_CUT_MARK}`) && JSON.stringify(cutTail[2]).includes('"tool_use_id":"c1"') && JSON.stringify(cutTail[2]).includes('"tool_use_id":"c2"'));
   check('the board record gains what was painted; the note is not replayed', cutState.board.pages[0].items.some((it) => it.summary === 'y=x^2') && cutState.note === r1.state.note);
   check('the earlier state is untouched and a turn nobody heard leaves no trace', r1.state.history.length + 3 === cutState.history.length && foldInterruptedTurn(r1.state, 'x', '  ', []) === r1.state);
+  {
+    const done = { ...r1.state, history: [...r1.state.history, { role: 'user' as const, content: 'I kind of agree.' }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Agreeing is a fine place to start. Here is a first case. Kelly finishes her story.' }, { type: 'tool_use' as const, id: 'sp1', name: 'show_passage', input: {} }] }, { role: 'user' as const, content: [{ type: 'tool_result' as const, tool_use_id: 'sp1', content: 'painted' }] }] };
+    const cut = trimToSpoken(done, ['Agreeing is a fine place to start.', 'Here is a first case.', 'Kelly finishes her story.'], 1);
+    const last = cut.history[cut.history.length - 2].content as { type: string; text?: string }[];
+    check('a finished reply talked over keeps only the sentences heard, and its tool calls', last[0].text === `Agreeing is a fine place to start. ${V2_CUT_MARK}` && last[1].type === 'tool_use' && trimToSpoken(done, ['a.', 'b.'], 2) === done && (done.history[done.history.length - 2].content as { text?: string }[])[0].text!.includes('Kelly'), JSON.stringify(last));
+  }
   const afterCut = stub([msg([{ type: 'text', text: 'Go ahead.' }], 'end_turn')]);
   const rc = await runV2Turn({ session, state: cutState, studentSaid: 'Actually, a question', callModel: afterCut.call });
   check('the next turn runs on the rebuilt history', rc.spoken === 'Go ahead.' && JSON.stringify(afterCut.seen[0].messages).includes(V2_CUT_MARK));
