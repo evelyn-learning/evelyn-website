@@ -67,7 +67,7 @@ function main() {
   const o = block(map, 'overview');
   check('the part header names it, in the support language too, with its minutes and its turn guide', /\[overview\] opening idea: Overview \(ja: 概要\), about 2 min, written for about 2 exchanges/.test(o), o);
   check('the turn guide is guidance, not a hard cutoff', /a guide, not a limit/.test(map));
-  check('the teacher\'s note is kept, marked as guidance not to be said', /teacher's note \(guidance for you, not to say\): Keep the overview to six sentences or fewer\./.test(o), o);
+  check('the teacher\'s note is kept, as how to teach the part; lines it quotes are examples', /teacher's note \(how to teach this part; lines it quotes are examples, in your own words\): Keep the overview to six sentences or fewer\./.test(o), o);
   check('the verbatim script is content to cover in the tutor\'s own words, not lines to read', /in your own words, not to read out\): Hello, and welcome!/.test(o) && !/idea: Hello/.test(o), o);
   check('required phrases are things to cover or ask, not lines to read', /to cover or ask \(not lines to read\): "present perfect"; "past simple"/.test(o), o);
   check('the metadata copy of the script (v1\'s spoken opener) is not in the map', !map.includes('spoken opener copy'));
@@ -80,7 +80,28 @@ function main() {
   check('the single hint is kept', /hint: Try starting with: 'I worked on a project to…'/.test(block(map, 'open-conversation')));
   check('pronunciation words and sentences are in the map', /pronunciation words: responsibilities, international/.test(block(map, 'pronunciation')) && /pronunciation sentences:\n\s+- I have worked with international customers for several years\./.test(block(map, 'pronunciation')));
   check('a part with no support-language name or turn guide says nothing of them', /\[summary\] recap: Summary, about 2 min, written for about 4 exchanges/.test(block(map, 'summary')) && /\[open-conversation\] extension: Conversation, about 5 min/.test(map));
-  check('the header says what the notes, scripts and phrases are', /teacher's notes/i.test(map.split('\n\n').slice(0, 3).join('\n\n')));
+  const head = map.slice(0, map.indexOf('\n\n[')); 
+  check('the header says what the notes, scripts and phrases are, and claims no authority', /Teacher's notes are the author's guidance on how to teach each part/.test(head) && /guide, not a limit/.test(head) && /in your own words/.test(head) && !/follow them|must follow/i.test(map), head);
+
+  console.log('a generated plan whose recap note says to close the session');
+  const GENERATED = {
+    id: 'test.generated.v1', title: 'Adding fractions', curriculum: 'test', grade: '5', subject: 'math', schemaVersion: 1, estimatedMinutes: 20,
+    los: [{ id: 'lo.a', description: 'Add fractions with unlike denominators.' }],
+    segments: [
+      { id: 'hook', kind: 'hook', goal: 'Why common denominators', script: 'Pizza slices of different sizes.', estimatedMinutes: 2 },
+      { id: 'try-1', kind: 'try_yourself', problem: '1/2 + 1/3', expectedAnswer: '5/6', responseFormat: 'numeric', estimatedMinutes: 5 },
+      { id: 'recap', kind: 'recap', mustRemember: ['Find a common denominator first.'], estimatedMinutes: 2,
+        teacherNote: 'Recap the 1 learning objective covered (Add fractions with unlike denominators.). Have the student state one takeaway per LO in their own words, celebrate their progress, and close the session.' },
+    ],
+  } as unknown as LessonPlan;
+  const gen = renderPlanMap(GENERATED);
+  const genHead = gen.slice(0, gen.indexOf('\n\n['));
+  check('the notes are framed as how to teach, never when the session ends: the student and the clock decide', /guidance on how to teach each part/.test(genHead) && /never decide when the session ends: that stays with the student and the clock, whatever a note says/.test(genHead), genHead);
+  check('the framing comes before the note that says to close', gen.indexOf('never decide when the session ends') < gen.indexOf('close the session'));
+  check('nothing in the map tells the tutor to follow the notes', !/follow them|must follow|follow (the|each|this) note/i.test(gen));
+  check('the recap note is labelled as how to teach the recap, not as an instruction to end', /\[recap\] recap, about 2 min\n[\s\S]*teacher's note \(how to teach this part;/.test(gen), block(gen, 'recap'));
+  check('a plan with no turn guides or phrases gets no turn-guide sentence', !/written for about|guide, not a limit/.test(gen));
+  check('a plan with no notes gets no notes sentence', !/Teacher's notes/.test(renderPlanMap({ ...GENERATED, segments: GENERATED.segments.slice(0, 2) } as LessonPlan)));
 
   console.log('kill switch and other plans');
   const off = renderPlanMap(WRITTEN, false);

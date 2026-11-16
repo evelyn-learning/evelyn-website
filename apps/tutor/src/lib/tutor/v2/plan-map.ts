@@ -1,8 +1,9 @@
 /**
  * Tutor brain v2 — the lesson plan as a map (design §4.4).
  *
- * The authored segments become goals with their materials. Nothing here tells
- * the model to stay in a segment, in what order to go, or for how many turns.
+ * The authored segments become goals with their materials. Nothing here orders the model to stay in a segment or
+ * to end the session. A written plan's part names, minutes, turn guides and teacher's notes come along as
+ * guidance on how to teach each part: a guide, never a cutoff, and never a say in when the session ends.
  */
 import type { LessonPlan, Segment } from '../lesson-plan/types';
 import { TUTOR_V2_PLAN_AS_WRITTEN } from '../orchestrator/flags';
@@ -51,7 +52,7 @@ const KIND_LABEL: Record<string, string> = {
   misconception_check: 'common-mistake check', recap: 'recap', extension: 'extension',
 };
 
-function materials(seg: Segment, asWritten: boolean): string[] {
+function materials(seg: Segment, part: V2Part, asWritten: boolean): string[] {
   const s = seg as unknown as Record<string, unknown>;
   const out: string[] = [];
   const str = (k: string, label: string) => { if (typeof s[k] === 'string' && s[k]) out.push(`${label}: ${s[k]}`); };
@@ -64,24 +65,28 @@ function materials(seg: Segment, asWritten: boolean): string[] {
   list('hints', 'hints'); str('question', 'question'); list('commonErrors', 'common errors');
   list('mustRemember', 'to remember'); str('advancedQuestion', 'question');
   if (!asWritten) return out;
-  const part = v2PartOf(seg);
+  // An open part's single hint and the form its answer takes were dropped: the tutor made up its own.
   str('hint', 'hint'); str('responseFormat', 'answer form');
   // The author's guidance for the part (how to open it, the correction pattern, what not to do) was dropped, and
-  // the brain improvised each part: on v1's map a past-simple part drifted into present-perfect questions.
-  str('teacherNote', 'teacher\'s note (guidance for you, not to say)');
+  // the brain improvised each part (in the live v1 sessions a past-simple part drifted into present-perfect
+  // questions). Lines a note quotes are examples: read as a script, they made the tutor a reader.
+  str('teacherNote', 'teacher\'s note (how to teach this part; lines it quotes are examples, in your own words)');
   // Phrases read as lines turned the tutor into a reader; they are points the part must reach.
   if (part.requiredPhrases.length) out.push(`to cover or ask (not lines to read): ${part.requiredPhrases.map((p) => `"${p}"`).join('; ')}`);
+  // Without it a learner whose level is known sat through the level check again.
   if (part.skipWhenLevelKnown) out.push('skip this part when the student\'s working level is already known');
+  // Without them a pronunciation part practised words the author had not picked.
   if (part.pronunciation?.words.length) out.push(`pronunciation words: ${part.pronunciation.words.join(', ')}`);
   if (part.pronunciation?.sentences.length) out.push(`pronunciation sentences:\n${part.pronunciation.sentences.map((x) => `    - ${x}`).join('\n')}`);
   return out;
 }
 
-/** The part's header: its kind, then, for a written plan, its name (also in other languages), minutes and turn guide. */
-function header(seg: Segment, asWritten: boolean): string {
+/** The part's header: its kind, then, for a written plan, its name (also in other languages), minutes and turn
+ *  guide. The name keeps the part's subject in view (a grammar part named only "practice problem" drifted into
+ *  the other grammar point); minutes and turns let the tutor pace a part the author timed. */
+function header(seg: Segment, p: V2Part, asWritten: boolean): string {
   const kind = KIND_LABEL[seg.kind] ?? seg.kind;
   if (!asWritten) return `[${seg.id}] ${kind}`;
-  const p = v2PartOf(seg);
   const name = p.label ? `: ${p.label}${p.labelLocalized ? ` (${Object.entries(p.labelLocalized).map(([k, v]) => `${k}: ${v}`).join(', ')})` : ''}` : '';
   const extra = [p.minutes ? `about ${p.minutes} min` : '', p.maxTurns ? `written for about ${p.maxTurns} exchanges` : ''].filter(Boolean).join(', ');
   return `[${seg.id}] ${kind}${name}${extra ? `, ${extra}` : ''}`;
@@ -94,14 +99,21 @@ export function planGoalIds(plan: LessonPlan): string[] {
 /** The plan, for the session part of the system prompt. Stable for the whole session. */
 export function renderPlanMap(plan: LessonPlan, asWritten: boolean = TUTOR_V2_PLAN_AS_WRITTEN): string {
   const los = plan.los.map((lo, i) => `${i + 1}. ${lo.description}`).join('\n');
-  const goals = plan.segments.map((seg) => {
-    const m = materials(seg, asWritten).map((l) => `  ${l}`).join('\n');
-    return `${header(seg, asWritten)}\n${m}`;
+  const parts = plan.segments.map((seg) => ({ seg, part: v2PartOf(seg) }));
+  const goals = parts.map(({ seg, part }) => {
+    const m = materials(seg, part, asWritten).map((l) => `  ${l}`).join('\n');
+    return `${header(seg, part, asWritten)}\n${m}`;
   }).join('\n\n');
-  // Without this line a part's turn count read as a cutoff and its phrases as a script (the v1 fixed-script failures).
-  const written = asWritten && plan.segments.some((seg) => seg.teacherNote || v2PartOf(seg).maxTurns || v2PartOf(seg).requiredPhrases.length)
-    ? ' Teacher\'s notes are the author\'s guidance for each part: follow them. The exchanges a part is written for are a guide, not a limit. Scripts and phrases are what to get across, in your own words.'
+  // Generated plans end their recap note with "close the session": read as an order, it sent the tutor to a close
+  // the runtime refuses while time is left (constitution: the student and the clock decide the end).
+  const notes = asWritten && parts.some(({ seg }) => seg.teacherNote)
+    ? ' Teacher\'s notes are the author\'s guidance on how to teach each part. They never decide when the session ends: that stays with the student and the clock, whatever a note says.'
     : '';
+  // Without this a part's turn count read as a cutoff and its phrases as a script (the v1 fixed-script failures).
+  const guide = asWritten && parts.some(({ part }) => part.maxTurns || part.requiredPhrases.length)
+    ? ' The exchanges a part is written for are a guide, not a limit. Scripts and phrases are what to get across, in your own words.'
+    : '';
+  const written = notes + guide;
   return `LESSON PLAN (a map, not a script): ${plan.title}, about ${plan.estimatedMinutes} minutes as authored.\n\nWhat the student should be able to do afterwards:\n${los}\n\nGoals and their materials, in the authored order. Answers are for your checking; the student has not seen them.${written}\n\n${goals}`;
 }
 
