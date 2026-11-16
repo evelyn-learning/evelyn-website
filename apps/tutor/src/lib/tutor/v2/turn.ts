@@ -33,6 +33,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -101,6 +102,21 @@ export function v2LevelLine(level: string): string {
 }
 
 export function v2SessionPart(session: V2Session): string {
+  const discussion = discussionOf(session.plan);
+  if (discussion && session.plan) {
+    return [
+      'THIS SESSION',
+      `Person: ${session.studentName?.trim() || 'name not given'}.`,
+      session.teacher?.name ? `You are ${session.teacher.name}${session.teacher.nameIsRole ? ' (a role, not a person\'s name)' : ''}: say so when you greet them.${session.teacher.style ? ` How you talk: ${session.teacher.style}` : ''}` : '',
+      // The teaching mode lines speak of mathematics and answers; a discussion has neither.
+      session.mode === 'voice'
+        ? 'This is a spoken conversation. Your words are read aloud, so write them the way you would say them: no symbols, no lists, no headings. Speech is slow to listen to: a reply of more than about fifty words is a long one. Their words reach you through a speech recogniser, which now and then mishears a word: when what you heard makes no sense where it stands, ask what they meant.'
+        : 'This is a typed conversation. They read your replies beside the board. Keep each reply short.',
+      session.timeBoxMinutes ? `The conversation is meant to last about ${session.timeBoxMinutes} minutes.` : '',
+      session.background?.length ? `What is known about this person:\n${session.background.map((l) => `  - ${l}`).join('\n')}` : '',
+      `\n${renderDiscussionMap(session.plan, discussion)}`,
+    ].filter(Boolean).join('\n');
+  }
   const lines = [
     'THIS SESSION',
     `Student: ${session.studentName?.trim() || 'name not given'}. Subject: ${session.subject}${session.topic ? ` (${session.topic})` : ''}. Level: ${session.level}.`,
@@ -123,6 +139,7 @@ export function v2SessionPart(session: V2Session): string {
 /** What goes in the user turn in place of the student's words when they have not spoken. */
 export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean, session?: V2Session): string {
   if (studentSaid !== null) return studentSaid;
+  if (!!discussionOf(session?.plan) && !resumed && state.history.length === 0) return DISCUSSION_OPENING;
   if (state.history.length === 0 && !resumed && session?.homework) return v2HomeworkOpener(session.homework);
   if (state.history.length === 0 && !resumed && session?.homeworkSheet) return v2SheetOpener(session.homeworkSheet);
   if (resumed) return '[The student\'s page was reloaded in the middle of the lesson and they have just come back. Welcome them back in one short sentence, say where the lesson stood, and carry on from there. What was on the board before is still on it.]';
@@ -166,6 +183,27 @@ export const V2_MAX_OWN_ANSWERS = 5;
 
 function applyControlTool(state: V2State, session: V2Session, name: string, args: Record<string, unknown>, nowMs: number, studentSaid: string | null = null): string {
   if (name === 'keep_listening') return 'listening';
+  const discussion = discussionOf(session.plan);
+  if (name === 'record_thinking') return discussion ? recordThinking(state, args) : 'unknown tool record_thinking';
+  if (name === 'end_lesson' && discussion) {
+    // A discussion is done when the person has chosen where to go next, which may well be before the clock: the
+    // flow is 8–12 minutes in a box of up to 15. Until then, the clock-or-request rule below holds.
+    const box = effectiveMinutes(session.timeBoxMinutes, state.thinking);
+    const left = box ? box - (nowMs - state.startedAtMs) / 60000 : 0;
+    const direction = (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
+    // The direction is theirs to name: a direction the tutor wrote itself closed the live test without the
+    // question ever being asked (embed-1794694217385). Until it has been asked, only their request or the clock ends it.
+    if (args.because !== 'student_asked' && box && left > 1.5 && !directionAsked(state.history)) {
+      return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now, in a sentence of your own, and close after they answer.';
+    }
+    if (args.because !== 'student_asked' && !direction && box && left > 1.5) {
+      return 'not ended: they have not chosen a direction yet. Say nothing of this message. Ask them, in a sentence of your own, what would be most valuable for them to explore further.';
+    }
+    state.closed = true;
+    state.closeSummary = typeof args.summary === 'string' ? args.summary.trim().slice(0, 600) : '';
+    if (direction) state.nextDirection = direction;
+    return 'the session is ending';
+  }
   if (name === 'update_session_note') {
     const note = typeof args.note === 'string' ? args.note.trim() : '';
     if (!note) return 'not saved: the note was empty';
@@ -249,8 +287,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   /** The first reply of the session: nothing has been said by either side. */
   const opening = !state.history.length && input.studentSaid === null;
+  const discussion = !!discussionOf(session.plan);
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session);
-  const facts = renderFacts(session, state, { ...input.facts, nowMs });
+  const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid });
+  // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
+  if (state.thinking?.justComplicated) state.thinking = { ...state.thinking, justComplicated: false };
   // The student's words come first and carry the cache mark; the facts follow and are
   // never stored, so next turn's request shares this one's prefix up to the words.
   const userNow: Anthropic.MessageParam = {
@@ -258,10 +299,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     content: [{ type: 'text', text: studentText, cache_control: CACHE }, { type: 'text', text: facts }],
   };
   const system: Anthropic.TextBlockParam[] = [
-    { type: 'text', text: V2_CONSTITUTION, cache_control: CACHE },
+    { type: 'text', text: discussion ? V2_DISCUSSION_CONSTITUTION : V2_CONSTITUTION, cache_control: CACHE },
     { type: 'text', text: v2SessionPart(session), cache_control: CACHE },
   ];
-  const tools = session.homeworkSheet ? [...v2Tools(session.subject, session.topic ?? ''), V2_SET_CURRENT_PROBLEM_TOOL, V2_NOTE_OWN_ANSWER_TOOL] : session.homework ? [...v2Tools(session.subject, session.topic ?? ''), V2_NOTE_OWN_ANSWER_TOOL] : v2Tools(session.subject, session.topic ?? '');
+  const base = v2Tools(session.subject, session.topic ?? '', discussion);
+  const tools = discussion ? base : session.homeworkSheet ? [...base, V2_SET_CURRENT_PROBLEM_TOOL, V2_NOTE_OWN_ANSWER_TOOL] : session.homework ? [...base, V2_NOTE_OWN_ANSWER_TOOL] : base;
   let messages: Anthropic.MessageParam[] = [...withCacheMark(state.history), userNow];
 
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];
@@ -431,6 +473,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let heldAt: { raw: string; offer: string } | null = null; let saidNow = '';
   const lastTutorText = (() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })();
   const boardHasPage = (title: string) => state.board.pages.some((pg) => pg.title.replace(/\s+/g, '').toLowerCase() === title.replace(/\s+/g, '').toLowerCase());
+  let owedAsked = false;
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
       model: '',
@@ -449,7 +492,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if ('block' in part) {
           // A new part the student has not been asked about is not opened in this reply (part-close.ts): the
           // reply ends here, with the offer in place of the page and all that followed it.
-          if (part.block.kind === 'page' && !boardHasPage(part.block.body) && !state.closed && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
+          if (part.block.kind === 'page' && !discussion && !boardHasPage(part.block.body) && !state.closed && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
             const offer = /\?\s*$/.test(saidNow) ? '' : partOffer(part.block.body.trim(), namesPart(part.block.body, saidNow));
             heldAt = { raw: part.block.raw, offer };
             if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
@@ -511,6 +554,18 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (heldAt) break;
     // No words and no call where words are owed: ask once more.
     if (mustSpeak && !spoken.length && results.length === 0 && modelCalls < 3 && !input.signal?.aborted) continue;
+    // A discussion reply that is only notes and marks leaves the person in silence: in voice no words means
+    // "keep listening", and they heard nothing after saying what worried them (replay review 2026-11-14). The
+    // model is told so, once, and answers.
+    if (discussion && input.studentSaid !== null && !spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && response.stop_reason !== 'tool_use' && modelCalls < V2_MAX_MODEL_CALLS && !input.signal?.aborted && !owedAsked) {
+      owedAsked = true;
+      const nudge: Anthropic.TextBlockParam = { type: 'text', text: '[check — from the system running the session, not from the person] Your reply had no words, and they are waiting for you. Reply now to what they just said.' };
+      const assistant = storable(response.content);
+      messages = assistant.length
+        ? [...messages, { role: 'assistant', content: response.content as unknown as Anthropic.ContentBlockParam[] }, { role: 'user', content: [...results, nudge] }]
+        : [...messages.slice(0, -1), { role: 'user', content: [...(messages[messages.length - 1].content as Anthropic.ContentBlockParam[]), nudge] }];
+      continue;
+    }
     if (results.length === 0) break;
     // Calls with no words where words are owed go round again, whatever the stop reason: a reply that was only
     // note_own_answer, stopped as end_turn, left the student with nothing (GAC validation fixed3, 2026-11-15).
@@ -594,7 +649,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     || (!paintedSoFar() && new Set(said.match(/\d+(?:\.\d+)?/g) ?? []).size >= 3)
     // The next part of a question set aloud with nothing written: "Now part (b): how did…" was asked under a card
     // that still showed part (a) (AP World History, embed-1794536181149).
-    || (!paintedSoFar() && NEXT_PART.test(said) && /\?/.test(said))) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? true)) {
+    || (!paintedSoFar() && NEXT_PART.test(said) && /\?/.test(said))) && modelCalls < V2_MAX_MODEL_CALLS && (input.boardPass ?? !discussion)) {
     // The check has two halves. What was said and not written is added. What was written and should not have
     // been is withdrawn: a block that shows the step the reply asks the student to take (the board did the
     // differentiation the tutor had just asked for, embed-1794349966573). Board items wait for their sentence
@@ -761,7 +816,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // moment later turned a page the student was still reading and talked over their answer (AP Lit and AP Calc BC,
   // 2026-11-11: "give the student the chance to say yes, I get this"). The reply ends by handing over instead.
   if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !asksAnywhere(spoken.join(' ').split(/(?<=[.?!])\s+/))) {
-    const words = V2_CHECK_INS[state.history.length % V2_CHECK_INS.length];
+    const ins = discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS;
+    const words = ins[state.history.length % ins.length];
     input.onText?.(`\n\n${words}`);
     spoken.push(words);
     const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
@@ -775,7 +831,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (opening && !session.homework && !session.homeworkSheet && !state.closed && spoken.length && !paintedSoFar()) {
     // Standards codes are for the plan's author, not the student: "(CCSS 8.G.B.6, 8.G.B.7)" was printed on the first card (demo check, 2026-11-13).
     const noCodes = (x: string) => x.replace(/\s*\((?:[^()]*\b(?:CCSS|NGSS|TEKS|HS-|MS-|[0-9]\.[A-Z]{1,3}\.[A-Z]?\.?\d)[^()]*)\)/g, '').trim();
-    const body = [session.plan?.title ?? session.topic ?? '', ...(session.plan?.los ?? []).slice(0, 3).map((lo) => noCodes(lo.description))].map((x) => String(x).trim()).filter(Boolean).join('\n');
+    // A discussion's objectives are written about the participant, for the tutor ("greater clarity about their own
+    // thinking"): its first card is the title and the one thing they need to know.
+    const body = (discussion ? [session.plan?.title ?? '', 'No right answers: your own thinking is the point.'] : [session.plan?.title ?? session.topic ?? '', ...(session.plan?.los ?? []).slice(0, 3).map((lo) => noCodes(lo.description))]).map((x) => String(x).trim()).filter(Boolean).join('\n');
     const b = body ? boardBlocksIn(`<board note style="highlight">${body}</board>`)[0] : undefined;
     if (b && settleInline(b, true)) {
       const holder = stored.find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
@@ -789,5 +847,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const painted = toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   state.repliesSinceBoard = painted ? 0 : (state.repliesSinceBoard ?? 0) + 1;
   if (boardProblems.length) state.boardProblems = boardProblems; else delete state.boardProblems;
-  return { spoken: stripToolTalk(spoken.join('\n\n')), toolCalls, ...(withdrawnLabels.length ? { withdrawn: withdrawnLabels } : {}), state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
+  let finalWords = stripToolTalk(spoken.join('\n\n'));
+  // A discussion that closes with nothing left to say would end in silence: its closing words were an order to
+  // itself, which the net above removed (replay round 8). It closes on the direction they chose instead.
+  if (discussion && state.closed && !finalWords.trim()) {
+    finalWords = state.nextDirection && !/^not (?:asked|sure)/i.test(state.nextDirection) ? `Thank you for thinking this through with me. The direction you chose: ${state.nextDirection.replace(/[.\s]+$/, '')}.` : 'Thank you for thinking this through with me.';
+    input.onText?.(finalWords);
+  }
+  return { spoken: finalWords, toolCalls, ...(withdrawnLabels.length ? { withdrawn: withdrawnLabels } : {}), state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
 }

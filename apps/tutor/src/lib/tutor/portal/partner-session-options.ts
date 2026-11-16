@@ -91,6 +91,9 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   // cheers a correct answer; only a wrong answer starts tutoring.
   gameclass: { openerPrefetch: false, thinkingCue: false, questionRead: true },
   globalead: { openerPrefetch: false },
+  // EdConsult Solutions (James Salvo), 2026-11-14: the AI-literacy discussion demo for educators is a v2 discussion
+  // plan (v2/discussion.ts); v1 has no discussion mode.
+  edconsult: { openerPrefetch: false, brainVersion: 'v2' },
 };
 
 /** Which turn engine each partner runs, set per deploy: NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS="evelyn-marketing=v2,crimsora=v1".

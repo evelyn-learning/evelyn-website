@@ -92,6 +92,33 @@ export const V2_CONTROL_TOOLS: Anthropic.Tool[] = [
   },
 ];
 
+/** A discussion session (discussion.ts) has no gaps to track and no objectives to practise: it records the
+ *  person's thinking instead, and its end carries the direction they chose. */
+export const V2_DISCUSSION_CONTROL_TOOLS: Anthropic.Tool[] = [
+  ...V2_CONTROL_TOOLS.filter((t) => t.name === 'keep_listening' || t.name === 'update_session_note' || t.name === 'set_goal_status'),
+  {
+    name: 'record_thinking',
+    description: 'Record the person\'s thinking whenever it becomes clearer or moves. The record is shown back to you every turn.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        position: { type: 'string', description: 'Their position now, in one sentence close to their own words. Leave out if unchanged.' },
+        weighed: { type: 'array', items: { type: 'string' }, description: 'Considerations newly raised and dealt with, by them or by you, a few words each. Added to the list kept so far.' },
+        shift: { type: 'string', description: 'Only when they themselves changed or qualified their view (not when the conversation moved on): from what to what, in a few words.' },
+        their_example: { type: 'string', description: 'A student or experience of their own they brought in, in a few words, without names.' },
+        complicated: { type: 'boolean', description: 'true when this reply brings in a consequence or another person\'s view to complicate their position.' },
+        their_time_minutes: { type: 'number', description: 'How many minutes they said they have, when they say so.' },
+        direction: { type: 'string', description: 'The direction they chose to explore next, in their words, once they name it.' },
+      },
+    },
+  },
+  {
+    name: 'end_lesson',
+    description: 'End the conversation. Call it in the same reply as your closing words.',
+    input_schema: { type: 'object', properties: { because: { type: 'string', enum: ['student_asked', 'time_nearly_used', 'conversation_complete'], description: 'Why it is ending: they asked, the time is nearly used, or they have chosen a direction to explore.' }, summary: { type: 'string', description: 'One or two sentences on where their thinking landed.' }, next_direction: { type: 'string', description: 'The direction they chose to explore further, in their words; "not sure yet" when they said so; "not asked" only when they stopped before you could ask.' } }, required: ['because', 'summary', 'next_direction'] },
+  },
+];
+
 export { V2_CONTROL_TOOL_NAMES } from './tool-names';
 
 export function v2BoardToolNames(subject: string, topic = ''): string[] {
@@ -121,7 +148,8 @@ export const V2_NOTE_OWN_ANSWER_TOOL: Anthropic.Tool = {
   input_schema: { type: 'object', properties: { question: { type: 'string', description: 'Their question, in a few words.' }, answer: { type: 'string', description: 'Its final result only, as short as it can be written ("CH4", "x = -9", "4").' } }, required: ['question', 'answer'] },
 };
 
-export function v2Tools(subject: string, topic = ''): Anthropic.Tool[] {
+export function v2Tools(subject: string, topic = '', discussion = false): Anthropic.Tool[] {
+  if (discussion) return V2_DISCUSSION_CONTROL_TOOLS;
   const byName = new Map((WHITEBOARD_TOOLS as Array<{ name: string; parameters: unknown }>).map((t) => [t.name, t]));
   const board: Anthropic.Tool[] = [];
   for (const name of v2BoardToolNames(subject, topic)) {

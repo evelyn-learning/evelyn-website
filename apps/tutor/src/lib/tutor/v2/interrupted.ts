@@ -35,3 +35,21 @@ export function foldInterruptedTurn(state: V2State, studentBlock: string, heard:
   ];
   return next;
 }
+
+/** The student spoke over a reply the server had already finished: the record held all of it, though only the
+ *  sentences that had begun to play were heard. Cut by a sound in the room one sentence into a case, the tutor
+ *  believed it had told the case and asked about it; the teacher had heard none of it (ECS, embed-1794708025170).
+ *  The last reply's words become the sentences that were spoken, marked as cut off; its tool calls stay, so their
+ *  results still pair. Nothing unheard ⇒ the state is returned as it was. */
+export function trimToSpoken(state: V2State, sentences: string[], started: number): V2State {
+  if (!sentences.length || started >= sentences.length) return state;
+  const i = state.history.map((m) => m.role).lastIndexOf('assistant');
+  if (i < 0) return state;
+  const msg = state.history[i];
+  const blocks: Anthropic.ContentBlockParam[] = typeof msg.content === 'string' ? [{ type: 'text', text: msg.content }] : [...(msg.content as Anthropic.ContentBlockParam[])];
+  const said = sentences.slice(0, Math.max(0, started)).join(' ').trim();
+  const others = blocks.filter((b) => b.type !== 'text');
+  const next: V2State = structuredClone(state);
+  next.history[i] = { role: 'assistant', content: [{ type: 'text', text: said ? `${said} ${V2_CUT_MARK}` : V2_CUT_MARK }, ...others] };
+  return next;
+}

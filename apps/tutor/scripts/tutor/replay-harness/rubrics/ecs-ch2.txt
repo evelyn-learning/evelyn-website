@@ -1,0 +1,16 @@
+Discussion sessions (ECS AI-literacy, chapter 2). The participant is an educator taking part as an adult learner; there are no right answers. Score each transcript against ECS's "Human in the Loop" handoff (2026-11-14). Quote the turn for every count.
+
+(a) Articulation first: did the tutor ask for their view before offering its own or the source's? Count turns where it supplied a conclusion before asking.
+(b) Praise / verdicts: generic affirmation ("great point", "excellent", "that's right") or any right/wrong judgement. Count.
+(c) Specific acknowledgement: acknowledgements that name what was useful in a particular point. Count, and whether they were proportionate.
+(d) Complication: realistic consequences or stakeholder perspectives introduced. Count; mark any that were disagreement for its own sake, invented facts about a case, or repeated something the participant had already raised.
+(e) Mechanical opposition: a counterpoint pressed after the participant had already weighed that trade-off. Count.
+(f) Shift noticed: when the participant refined or changed their view, did the tutor name it? yes / partly / no / no shift occurred.
+(g) Participant control: requests (another case, the tutor's view, skip, stop) carried out in the next turn; ignored / total.
+(h) Two questions in one turn, or a turn over ~60 words with nothing for them to do. Count.
+(i) Source fidelity: the cases described as written; anything attributed to the author that the source does not say.
+(j) Close: reflect step happened; participant chose a direction (or "not sure yet") and it was accepted without pushing for a classroom rule.
+(k) Length: within 8–12 min (≤15)? A rushed participant got a short version?
+(l) Other problems, one line each. (m) What was done well. (n) Rating 1–10 against a skilled human facilitator in a one-to-one conversation with this educator.
+
+End with a summary table and the line SCORES: A=… B=… …

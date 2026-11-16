@@ -100,7 +100,9 @@ async function main() {
     speak(r.spoken, r.totalMs);
     if (state.closed) { endedBy = 'tutor_close'; break; }
     const board = r.toolCalls.filter((t) => /^painted|^new page/.test(t.outcome) && !['update_session_note', 'set_goal_status', 'end_lesson', 'highlight'].includes(t.name)).map((t) => `${t.name}: ${summariseBoardCall(t.name, t.args)}`);
-    const reply = await scriptedStudentTurn(fixture.student, board.length ? `${r.spoken}\n[board now shows] ${board.join(' | ')}` : r.spoken, history);
+    let reply = await scriptedStudentTurn(fixture.student, board.length ? `${r.spoken}\n[board now shows] ${board.join(' | ')}` : r.spoken, history);
+    // The scripted student sometimes returns nested JSON with an empty say, which ended a run at 3 minutes (round 6).
+    if (reply.tag !== 'end' && !reply.say) reply = await scriptedStudentTurn(fixture.student, board.length ? `${r.spoken}\n[board now shows] ${board.join(' | ')}` : r.spoken, history);
     if (reply.tag === 'end' || !reply.say) { say('STUDENT(end)'); endedBy = 'student_end'; break; }
     turns.push({ role: 'student', text: reply.say, tag: reply.tag });
     studentTurns += 1; studentSaid = reply.say;
@@ -115,7 +117,7 @@ async function main() {
     ? await (await import('./homework-outcome')).homeworkRunOutcome(planId, turns, events).catch((e) => { say(`homework outcome failed: ${(e as Error).message.slice(0, 120)}`); return null; })
     : null;
   if (homeworkOutcome) say(`homework outcome=${homeworkOutcome.outcome} reveals=${homeworkOutcome.reveals.length}`);
-  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, ...(homeworkOutcome ? { homework: homeworkOutcome } : {}), note: state.note, goals: state.goals, board: state.board, closeSummary: state.closeSummary }, null, 2));
+  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, ...(homeworkOutcome ? { homework: homeworkOutcome } : {}), note: state.note, goals: state.goals, board: state.board, closeSummary: state.closeSummary, thinking: state.thinking, nextDirection: state.nextDirection }, null, 2));
   fs.writeFileSync(`${base}.log`, log.join('\n'));
   const card = scoreRun(bundle);
   fs.writeFileSync(`${base}.score.json`, JSON.stringify(card, null, 2));
