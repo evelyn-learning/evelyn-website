@@ -79,11 +79,16 @@ async function main() {
   check('an English-only session speaks a sentence whole', JSON.stringify(v2SpeechParts(mixed, undefined)) === JSON.stringify([mixed]) && JSON.stringify(v2SpeechParts('Great, let\'s begin.', ['en', 'ja'])) === JSON.stringify(['Great, let\'s begin.']));
 
   console.log('the student\'s stop');
-  const stops = ['Okay, please stop. I would like to end the session for now.', 'Sorry, I have to finish now.', 'No, I\'m finished. I have to go.', '今日はここまでにします', '今日はここまで', '今日はここまで。', 'お疲れ様でした', '終わりにしましょう', 'もう終わりにしたいです', 'すみません、今日はここまでにしてください', 'ありがとうございました。今日はもう終わりにします。'];
+  const stops = ['Okay, please stop. I would like to end the session for now.', 'Sorry, I have to finish now.', 'No, I\'m finished. I have to go.', '今日はここまでにします', '今日はここまで', '今日はここまで。', 'お疲れ様でした', '終わりにしましょう', 'もう終わりにしたいです', 'すみません、今日はここまでにしてください', 'ありがとうございました。今日はもう終わりにします。',
+    // Polite requests and reasons (re-review 1 of dfaae1ea): "Can we stop here?" is a stop in English, and these are its Japanese.
+    'すみません、今日はここまでにしてもいいですか', 'すみません、今日はここまでにしてもいいですか？', '今日はここまでにさせてください', '今日は疲れたので終わりにします',
+    'ありがとうございました、さようなら', 'お疲れ様でした、ありがとうございました', '終わりにしてもよろしいですか？', 'じゃあ、そろそろ終わりにさせていただきます', 'Sorry, I have to finish now. ありがとうございました'];
   for (const s of stops) check(`a stop: "${s}"`, v2StopAsked(s));
   const notStops = ['ちょっと待ってください', 'お疲れ様です', 'I have to finish the report on Friday.', 'Can we continue from this point next time?', 'I usually stop working at six.', 'Could you explain that in Japanese?', '[The student has not replied.]',
     // Japanese lesson talk with an end word in it (review of 6971a0b0): a question, a sentence to translate, quoted speech, a comment on the lesson.
-    'もう終わりですか？', 'もう終わりですか', '会議を終わりにします', 'さようなら、と言います', '「さようなら」と言います', '今日はここまでの内容は難しかったです', 'また次回続けられますか？', 'また次回続けられますか', '仕事が終わりました'];
+    'もう終わりですか？', 'もう終わりですか', '会議を終わりにします', 'さようなら、と言います', '「さようなら」と言います', '今日はここまでの内容は難しかったです', 'また次回続けられますか？', 'また次回続けられますか', '仕事が終わりました',
+    'もう終わりですか？ありがとうございました', '会議は五時なので終わりにしますと言いました', 'ここまでの説明でいいですか？', '仕事を終わりにしてもいいですか？', '疲れたので会議を終わりにします',
+    '「今日はここまでにしてもいいですか」と言います', 'How do you say やめて in English?'];
   for (const s of notStops) check(`not a stop: "${s}"`, !v2StopAsked(s));
 
   console.log('a stop closes in one turn');
