@@ -1681,3 +1681,25 @@ export const TUTOR_V2_OPENER_FACT = process.env.NEXT_PUBLIC_TUTOR_V2_OPENER_FACT
  *  of x squared is two x right") for echo and dropped them (final review I1). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_OWN_VOICE_SKIP=off ⇒ no word is passed over, as before. */
 export const TUTOR_V2_OWN_VOICE_SKIP = process.env.NEXT_PUBLIC_TUTOR_V2_OWN_VOICE_SKIP !== 'off';
+
+/** Tutor brain v2 (v2/languages.ts): a sentence the learner produces as practice (a retry after a correction, or an
+ *  answer to a practice question on the point being taught) is called right only when it is fully right; otherwise the
+ *  tutor says what works and gives the fix in one short clause. "Small slips pass" applied there too, and "I have worked
+ *  here for eleven year" was called right (Task 6c, ruling 1: gdi-real-josh t≈4.3, gdi-real-t2 t≈4.3). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PRACTICE_VERDICT=off ⇒ the correction line as it was. */
+export const TUTOR_V2_PRACTICE_VERDICT = process.env.NEXT_PUBLIC_TUTOR_V2_PRACTICE_VERDICT !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts v2PersonaCardLines, v2/constitution.ts): a teacher persona with a `background` gives the
+ *  tutor a persona card: asked about itself, it answers briefly from the card and stays consistent with it. Without a
+ *  card, "no job or life story of its own" stands. With only "no life story", asked about its work it invented a
+ *  customer-service job while the persona teaches Japanese professionals (Task 6c, ruling 2: gdi-real-t2 t≈9.7).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_PERSONA_CARD=off ⇒ no card, the constitution line as it was. */
+export const TUTOR_V2_PERSONA_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_PERSONA_CARD !== 'off';
+
+/** Tutor brain v2 (v2/plan-map.ts v2PassedPartFact, renderPlanMap): when the board has a page for a later plan part
+ *  while the part just before it was never reached, the facts name the passed-over part and say to offer it before the
+ *  summary (not when the time is up, the wrap is due or the student is stopping); a plan whose part calls itself
+ *  "optional" gets a line that optional is the student's choice. "Optional pronunciation practice" was read as the
+ *  tutor's to skip: Conversation page → Summary page with the part never offered (Task 6c, ruling 3: gdi-real-t2
+ *  t≈11.6). Default ON; NEXT_PUBLIC_TUTOR_V2_PASSED_PART_FACT=off ⇒ neither line. */
+export const TUTOR_V2_PASSED_PART_FACT = process.env.NEXT_PUBLIC_TUTOR_V2_PASSED_PART_FACT !== 'off';

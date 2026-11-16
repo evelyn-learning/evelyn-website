@@ -6,7 +6,8 @@
  * guidance on how to teach each part: a guide, never a cutoff, and never a say in when the session ends.
  */
 import type { LessonPlan, Segment } from '../lesson-plan/types';
-import { TUTOR_V2_PLAN_AS_WRITTEN } from '../orchestrator/flags';
+import { TUTOR_V2_PASSED_PART_FACT, TUTOR_V2_PLAN_AS_WRITTEN } from '../orchestrator/flags';
+import { V2_CLOSING_PAGE, namesPart } from './part-close';
 import type { GoalStatus, V2State } from './types';
 
 /** What a written lesson plan says about one part beyond its materials (Segment and its free-form metadata,
@@ -97,7 +98,7 @@ export function planGoalIds(plan: LessonPlan): string[] {
 }
 
 /** The plan, for the session part of the system prompt. Stable for the whole session. */
-export function renderPlanMap(plan: LessonPlan, asWritten: boolean = TUTOR_V2_PLAN_AS_WRITTEN): string {
+export function renderPlanMap(plan: LessonPlan, asWritten: boolean = TUTOR_V2_PLAN_AS_WRITTEN, optionalLine: boolean = TUTOR_V2_PASSED_PART_FACT): string {
   const los = plan.los.map((lo, i) => `${i + 1}. ${lo.description}`).join('\n');
   const parts = plan.segments.map((seg) => ({ seg, part: v2PartOf(seg) }));
   const goals = parts.map(({ seg, part }) => {
@@ -113,7 +114,12 @@ export function renderPlanMap(plan: LessonPlan, asWritten: boolean = TUTOR_V2_PL
   const guide = asWritten && parts.some(({ part }) => part.maxTurns || part.requiredPhrases.length)
     ? ' The exchanges a part is written for are a guide, not a limit. Scripts and phrases are what to get across, in your own words.'
     : '';
-  const written = notes + guide;
+  // Task 6c, ruling 3: "Optional pronunciation practice" was read as the tutor's to skip: the lesson went from the
+  // conversation to the summary and the part was never offered (gdi-real-t2 t≈11.6). Only in a plan that has the word.
+  const optional = optionalLine && plan.segments.some((seg) => (seg.metadata as { optional?: unknown } | undefined)?.optional === true || /\boptional\b/i.test(materials(seg, v2PartOf(seg), asWritten).join(' ')))
+    ? ' A part marked optional is still offered: the student decides whether to do it, not you.'
+    : '';
+  const written = notes + guide + optional;
   return `LESSON PLAN (a map, not a script): ${plan.title}, about ${plan.estimatedMinutes} minutes as authored.\n\nWhat the student should be able to do afterwards:\n${los}\n\nGoals and their materials, in the authored order. Answers are for your checking; the student has not seen them.${written}\n\n${goals}`;
 }
 
@@ -124,4 +130,41 @@ export function renderGoalStatus(plan: LessonPlan, goals: V2State['goals']): str
     const status: GoalStatus = g?.status ?? 'not_started';
     return `${seg.id}=${status.replace('_', ' ')}${g?.why ? ` (${g.why})` : ''}`;
   }).join('; ');
+}
+
+/** A part's names as a page heading might give them: its authored name, its aim, its id. */
+const partNames = (seg: Segment): string[] => [v2PartOf(seg).label, (seg as { goal?: string }).goal, seg.id].filter((x): x is string => typeof x === 'string' && !!x.trim());
+
+/** The plan parts the lesson went past without reaching (Task 6c, ruling 3). The board has a page for a later part
+ *  (named by its heading, or a summary page for the last part), and the parts between it and the last part reached
+ *  before it were never reached: no status recorded, no page of theirs, and not a level-check part with the level
+ *  known. Only that stretch: a part earlier in the lesson taught without a status or a page of its own is not named. */
+export function v2PassedParts(plan: LessonPlan, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>): Segment[] {
+  const segs = plan.segments;
+  if (segs.length < 2) return [];
+  const titles = state.board.pages.map((pg) => pg.title);
+  const paged = (i: number) => titles.some((t) => partNames(segs[i]!).some((n) => namesPart(n, t)) || (i === segs.length - 1 && V2_CLOSING_PAGE.test(t)));
+  let furthest = -1;
+  for (let i = segs.length - 1; i > 0; i--) if (paged(i)) { furthest = i; break; }
+  if (furthest < 1) return [];
+  const reached = (i: number) => {
+    const seg = segs[i]!;
+    return !!state.goals[seg.id] || paged(i) || (v2PartOf(seg).skipWhenLevelKnown && !!state.workingLevel);
+  };
+  let from = furthest - 1;
+  while (from >= 0 && !reached(from)) from -= 1;
+  return segs.slice(from + 1, furthest);
+}
+
+/** The facts line naming the parts the lesson went past (v2PassedParts): offer them before the summary. Not once the
+ *  time is up, the wrap is due or the student is stopping (`closing`): then the close comes first. `enabled` is the
+ *  kill switch. */
+export function v2PassedPartFact(plan: LessonPlan | undefined, state: V2State, closing: boolean, enabled: boolean = TUTOR_V2_PASSED_PART_FACT): string[] {
+  if (!enabled || !plan || closing || state.closed) return [];
+  const passed = v2PassedParts(plan, state);
+  if (!passed.length) return [];
+  const names = passed.map((seg) => `the ${v2PartOf(seg).label ?? (seg as { goal?: string }).goal ?? seg.id} part`);
+  const list = names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  const one = passed.length === 1;
+  return [`${list[0]!.toUpperCase()}${list.slice(1)} ${one ? 'was' : 'were'} not offered: offer ${one ? 'it' : 'them'} before the summary, unless time is up. The student decides whether to do ${one ? 'it' : 'them'}; if they would rather not, mark ${one ? 'it' : 'them'} skipped`];
 }

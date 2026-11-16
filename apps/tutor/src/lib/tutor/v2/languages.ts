@@ -11,7 +11,7 @@
  * voice language (voice/tts-language.ts splitSentenceForTts).
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_V2_RETRY_COUNT } from '../orchestrator/flags';
+import { TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_V2_PRACTICE_VERDICT, TUTOR_V2_RETRY_COUNT } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { splitSentenceForTts } from '../voice/tts-language';
 
@@ -27,8 +27,9 @@ const SUPPORT_LINES: Record<string, string[]> = {
 };
 
 /** The session part's section for a session with a second teaching language, or null when there is none. */
-export function v2LanguagesSection(languages: readonly string[] | undefined, mode: 'text' | 'voice' = 'voice', opts: { pronunciationMeasured?: boolean } = {}): string | null {
+export function v2LanguagesSection(languages: readonly string[] | undefined, mode: 'text' | 'voice' = 'voice', opts: { pronunciationMeasured?: boolean; practiceVerdict?: boolean } = {}): string | null {
   if (!languages || languages.length < 2) return null;
+  opts = { practiceVerdict: TUTOR_V2_PRACTICE_VERDICT, ...opts };
   const T = languageNameOf(languages[0]!);
   const code = languages[1]!.toLowerCase().split(/[-_]/)[0]!;
   const S = languageNameOf(code);
@@ -49,7 +50,11 @@ export function v2LanguagesSection(languages: readonly string[] | undefined, mod
     // Findings case 12: a correction and a retry on nearly every answer, one sentence tried four times, wrong corrections,
     // "you're close" after a correct sentence; the lesson ran out of time before its summary. On v2 (Task 6, D5) the chains
     // went on: upper-int t13–t21, one sentence tried four times for four different errors, nearly every answer corrected.
-    `Correct the one error that matters most in each answer, for what this part practises, and let the rest go: small slips that leave the meaning clear pass without comment, more of them the lower their working level. Check the error is really in their words before you name it. At most two tries at one sentence: after the second, say the correct sentence yourself and go on to the next thing. A correct sentence is correct: say so, and never call it close.`,
+    `Correct the one error that matters most in each answer, for what this part practises, and let the rest go: ${opts.practiceVerdict === false ? '' : 'in free conversation, '}small slips that leave the meaning clear pass without comment, more of them the lower their working level. Check the error is really in their words before you name it. At most two tries at one sentence: after the second, say the correct sentence yourself and go on to the next thing. A correct sentence is correct: say so, and never call it close.`,
+    // Task 6c, ruling 1: "small slips pass" and "right only when right" met on a practice sentence, and the slip won:
+    // "I have worked here for eleven year", the retry after a correction, was called right (gdi-real-josh t≈4.3,
+    // gdi-real-t2 t≈4.3 "the current company"). Letting slips pass is for free conversation only.
+    opts.practiceVerdict === false ? '' : `A sentence they produce as practice (a retry after your correction, or their answer to a practice question on the point this part teaches) is right only when it is fully right. When it is not, say what works and give the fix in one short clause ("Good, and we say '…'."); that fix does not count as another try.`,
     // Task 6, D3 (case 7): "that's right" on "eleven year" (b1 t21), the corrected form quoted as if they had said it
     // (b1 t33), "helped" credited to a learner who never said it (real-run-A t31).
     `Say a sentence is right only when their words are right. When you quote them, quote what they actually said; the corrected version is yours, said as yours ("you said …; we say …"), never put in their mouth.`,

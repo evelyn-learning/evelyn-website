@@ -926,7 +926,8 @@ export default function TutorSession(props: TutorSessionProps) {
   // arriving at once. The centre pill is gone in v2: the tabs move between pages and each page carries its own
   // heading (Praveen, biology, embed-1794520770137).
   // v2: the teacher the student picked, as the turn engine takes it (name, and the manner in the persona's own words).
-  const v2Teacher = useMemo(() => (teacherPersona?.name ? { name: teacherPersona.name, ...(teacherPersona.nameIsRole ? { nameIsRole: true } : {}), ...(teacherPersona.style?.teaching ? { style: teacherPersona.style.teaching } : {}) } : undefined), [teacherPersona]);
+  // A persona with a background brings its intro and background too: the tutor's persona card (v2/turn.ts, Task 6c).
+  const v2Teacher = useMemo(() => (teacherPersona?.name ? { name: teacherPersona.name, ...(teacherPersona.nameIsRole ? { nameIsRole: true } : {}), ...(teacherPersona.style?.teaching ? { style: teacherPersona.style.teaching } : {}), ...(teacherPersona.background?.trim() ? { background: teacherPersona.background, ...(teacherPersona.intro?.trim() ? { intro: teacherPersona.intro } : {}) } : {}) } : undefined), [teacherPersona]);
   const v2StudentBackground = useMemo(() => v2Background({ socialMemory, progressDigest, readinessNote, practiceLocator, goalNote }), [socialMemory, progressDigest, readinessNote, practiceLocator, goalNote]);
   const plannerTabs = brainVersion === 'v2' && whiteboardCommands.length > 0;
   const boardEl = (

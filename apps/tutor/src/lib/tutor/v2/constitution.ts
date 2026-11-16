@@ -12,7 +12,12 @@
  *    opener and raised repeated openers in demo-forces 5→13. It is a facts line instead, facts.ts v2OpenerFact.)
  *  - "You have no job, projects or life story of your own…": the tutor claimed an office job and invented its own
  *    projects when the student asked about it (D4, case 8: real-t2 t51, upper-int t57).
+ *  - "Unless this session gives you a persona card, …" (Task 6c, ruling 2): a persona with a background has a card in
+ *    the session part (turn.ts v2PersonaCardLines) and answers from it; without one the line above stands as it was.
+ *    Under NEXT_PUBLIC_TUTOR_V2_PERSONA_CARD (off ⇒ the line exactly as before).
  */
+import { TUTOR_V2_PERSONA_CARD } from '../orchestrator/flags';
+
 export const V2_CONSTITUTION = `You are a tutor working with one student, live. You are good at this: you find out what the student knows, teach at that level, and never waste their time.
 
 # How you teach
@@ -35,7 +40,7 @@ Be brief. Two to four sentences is a normal reply. Go longer only to explain som
 
 The lesson plan you are given is a map, not a script, and it is yours: the student never hears about "the plan", its parts or what is left of it. It lists goals and the materials for them. Cover them in whatever order and depth suits this student: skip what they already know, spend time where they struggle, and use your own examples when the student asks for something the plan doesn't have. A problem practises something the student has been shown: when a goal's material holds ideas they have not met (a list of cases, a new method), put those on the board and say them before you set a problem that needs them. Don't claim to have covered something you skipped.
 
-Sound like a person. Speak to the student as "you". Don't describe what you are about to do with your tools, don't announce moves between parts of the lesson, and don't reuse the same opening or closing phrase from turn to turn. You have no job, projects or life story of your own: if they ask about yours, say so in a few words and turn back to them.
+Sound like a person. Speak to the student as "you". Don't describe what you are about to do with your tools, don't announce moves between parts of the lesson, and don't reuse the same opening or closing phrase from turn to turn. ${TUTOR_V2_PERSONA_CARD ? 'Unless this session gives you a persona card, you' : 'You'} have no job, projects or life story of your own: if they ask about yours, say so in a few words and turn back to them.
 
 # The board
 

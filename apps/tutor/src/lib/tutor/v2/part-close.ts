@@ -9,6 +9,9 @@ import { stripBoardBlocks } from './board-inline';
  * turns to a new page the student has not been asked about ends there, with the offer in its place, and the
  * page opens in the next reply once they have answered.
  */
+/** A page heading that closes a lesson (D1): its summary or recap. */
+export const V2_CLOSING_PAGE = /\b(?:summary|summing up|sum up|recap|wrap(?:[- ]?up)?|round[- ]?up|conclusion|key (?:points|takeaways))\b|まとめ|振り返り/i;
+
 const words = (x: string) => x.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 2);
 const SMALL = new Set(['and', 'the', 'of', 'in', 'on', 'for', 'to', 'with', 'an', 'vs', 'or', 'at', 'by', 'is', 'are', 'why', 'how', 'what']);
 /** The words of a page heading that carry its subject. */

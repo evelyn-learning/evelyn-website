@@ -18,7 +18,7 @@ export interface V2ClientSession {
   lessonPlanId?: string;
   /** What the student asked to learn, when there is no lesson plan (a topic typed on the demo page, a partner's free practice). */
   topic?: string;
-  teacher?: { name: string; nameIsRole?: boolean; style?: string };
+  teacher?: { name: string; nameIsRole?: boolean; style?: string; intro?: string; background?: string };
   trial?: boolean;
   background?: string[];
   /** The partner checks the learner's working level once and remembers it (working-level.ts). */

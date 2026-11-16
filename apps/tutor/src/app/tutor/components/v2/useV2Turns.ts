@@ -48,7 +48,7 @@ export interface V2TurnsConfig {
    *  off, the tutor's close leaves the session open for the student or the host to end. */
   lessonCloseAutoEnd?: boolean;
   /** The teacher persona's name and manner, and whether this is a free trial (types.ts V2Session). */
-  teacher?: { name: string; nameIsRole?: boolean; style?: string };
+  teacher?: { name: string; nameIsRole?: boolean; style?: string; intro?: string; background?: string };
   trial?: boolean;
   /** The partner checks the learner's working level once and remembers it (partner-session-options.ts `levelCheck`,
    *  v2/working-level.ts). Under the TUTOR_WORKING_LEVEL kill switch. */

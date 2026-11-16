@@ -33,6 +33,10 @@ export interface TeacherPersonaWire {
   nameIsRole?: boolean;
   intro: string;                // 1-2 sentence student-facing brief, used in the warm intro
   bio?: string;                 // longer profile text (portal display, NOT prompt)
+  /** OPTIONAL, additive (2026-11-16, tutor v2 only). A few sentences of the persona's history (where it teaches, how
+   *  long, who its students are, a couple of interests): the v2 tutor answers questions about itself from it and
+   *  stays consistent with it (v2/turn.ts v2PersonaCardLines). Not rendered by v1. */
+  background?: string;
   subjects?: string[];
   levels?: string[];
   style?: {

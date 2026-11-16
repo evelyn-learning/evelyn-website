@@ -85,8 +85,8 @@ export async function POST(req: NextRequest) {
   const homework = plan ? await v2HomeworkFor(cfg.lessonPlanId as string, partnerClaim, { getPlan: async () => plan }) : null;
   // Whole-sheet homework: a homework-help plan with the sheet's problems; each problem's key from its build.
   const homeworkSheet = plan && !homework ? await v2SheetFor(plan as { id?: string; metadata?: Record<string, unknown> }, partnerClaim) : null;
-  const t = (cfg.teacher && typeof cfg.teacher === 'object' ? cfg.teacher : {}) as { name?: unknown; nameIsRole?: unknown; style?: unknown };
-  const teacher = typeof t.name === 'string' && t.name.trim() ? { name: t.name.trim().slice(0, 80), ...(t.nameIsRole === true ? { nameIsRole: true } : {}), ...(typeof t.style === 'string' && t.style.trim() ? { style: t.style.trim().slice(0, 600) } : {}) } : null;
+  const t = (cfg.teacher && typeof cfg.teacher === 'object' ? cfg.teacher : {}) as { name?: unknown; nameIsRole?: unknown; style?: unknown; intro?: unknown; background?: unknown };
+  const teacher = typeof t.name === 'string' && t.name.trim() ? { name: t.name.trim().slice(0, 80), ...(t.nameIsRole === true ? { nameIsRole: true } : {}), ...(typeof t.style === 'string' && t.style.trim() ? { style: t.style.trim().slice(0, 600) } : {}), ...(typeof t.intro === 'string' && t.intro.trim() ? { intro: t.intro.trim().slice(0, 400) } : {}), ...(typeof t.background === 'string' && t.background.trim() ? { background: t.background.trim().slice(0, 1200) } : {}) } : null;
   const background = Array.isArray(cfg.background) ? cfg.background.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, V2_BACKGROUND_MAX_LINES).map((x) => x.trim().slice(0, V2_BACKGROUND_LINE_CHARS)) : [];
   // The teaching languages, English first, only those the voice can speak and hear (tts-language.ts); none ⇒ English only.
   const languages = parseTutorLanguages(cfg.languages);

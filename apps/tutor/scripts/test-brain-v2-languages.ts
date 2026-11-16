@@ -11,12 +11,12 @@ import { join } from 'node:path';
 import type Anthropic from '@anthropic-ai/sdk';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
 import { v2LanguagesSection, v2RetryFacts, v2SpeechParts } from '../src/lib/tutor/v2/languages';
-import { renderFacts, v2LastOpener, v2OpenerFact } from '../src/lib/tutor/v2/facts';
-import { TUTOR_V2_OPENER_FACT, TUTOR_V2_RETRY_COUNT } from '../src/lib/tutor/orchestrator/flags';
+import { renderFacts, v2LastOpener, v2OpenerFact, v2OpenerOf } from '../src/lib/tutor/v2/facts';
+import { TUTOR_V2_OPENER_FACT, TUTOR_V2_PERSONA_CARD, TUTOR_V2_PRACTICE_VERDICT, TUTOR_V2_RETRY_COUNT } from '../src/lib/tutor/orchestrator/flags';
 import { v2StopAsked } from '../src/lib/tutor/v2/stop-signal';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
-import { runV2Turn, v2SessionPart, type V2ModelCall } from '../src/lib/tutor/v2/turn';
+import { runV2Turn, v2PersonaCardLines, v2SessionPart, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { streamV2Turn } from '../src/lib/tutor/v2/client';
 import { splitSentenceForTts } from '../src/lib/tutor/voice/tts-language';
@@ -58,7 +58,49 @@ async function main() {
     check('no line at the opening, in a discussion, or with the kill switch off', v2OpenerFact(bilingual, newV2State(0)).length === 0 && v2OpenerFact(bilingual, h('Correct.'), false).length === 0 && TUTOR_V2_OPENER_FACT === true);
     check('an English-only maths lesson gets it too (generic)', v2OpenerFact({ ...bilingual, languages: undefined, subject: 'math' }, h('Yes, 8 volts.')).length === 1);
   }
-  check('the constitution: the tutor has no job or life story of its own (D4)', /You have no job, projects or life story of your own: if they ask about yours, say so in a few words and turn back to them/.test(V2_CONSTITUTION));
+  check('the constitution: without a persona card the tutor has no job or life story of its own (D4, Task 6c ruling 2)', /Unless this session gives you a persona card, you have no job, projects or life story of your own: if they ask about yours, say so in a few words and turn back to them/.test(V2_CONSTITUTION) && TUTOR_V2_PERSONA_CARD === true);
+
+  console.log('a practice sentence is right only when fully right (Task 6c, ruling 1)');
+  {
+    check('slips pass in free conversation only', /let the rest go: in free conversation, small slips that leave the meaning clear pass without comment/.test(ja), ja);
+    check('a practice sentence (a retry, or an answer to a practice question) is right only when fully right', /A sentence they produce as practice \(a retry after your correction, or their answer to a practice question on the point this part teaches\) is right only when it is fully right\./.test(ja), ja);
+    check('otherwise: what works, then the fix in one short clause, which is not another try', /When it is not, say what works and give the fix in one short clause \("Good, and we say '…'\."\); that fix does not count as another try\./.test(ja), ja);
+    check('the line is generic: no lesson words in it', !/eleven|company|years/i.test(ja.split('\n').find((l) => l.startsWith('A sentence they produce as practice')) ?? 'eleven'));
+    const off = v2LanguagesSection(['en', 'ja'], 'voice', { practiceVerdict: false }) ?? '';
+    check('NEXT_PUBLIC_TUTOR_V2_PRACTICE_VERDICT=off: the correction line as it was, and no practice line', !/A sentence they produce as practice/.test(off) && /and let the rest go: small slips that leave the meaning clear pass without comment/.test(off) && TUTOR_V2_PRACTICE_VERDICT === true, off);
+    check('a session part with the flag default carries it', v2SessionPart(bilingual).includes('is right only when it is fully right'));
+  }
+
+  console.log('the persona card (Task 6c, ruling 2)');
+  {
+    const ryota = { name: 'Ryota', style: 'Calm and encouraging.', intro: 'I help Japanese professionals start speaking English with confidence.', background: 'I have taught English in Nagoya for eight years. My students are working adults at Japanese companies.' };
+    const withCard = v2SessionPart({ ...bilingual, teacher: ryota });
+    check('a persona with a background: the card is in the session part, intro then background', withCard.includes(`Your persona card (who you are): ${ryota.intro} ${ryota.background}`), withCard.slice(0, 900));
+    check('the rule: answer briefly from the card, never volunteer it, stay consistent, only fitting small details, then turn back', /When they ask about you, answer briefly from this card and turn back to them; never bring it up yourself\. Stay consistent with it for the whole session: a small everyday detail may be added only when it fits the card, never a job, place, history or student group the card does not give\./.test(withCard));
+    check('the card sits right after the teacher line', withCard.indexOf('Your persona card') > withCard.indexOf('You are Ryota') && withCard.indexOf('Your persona card') < withCard.indexOf('TWO LANGUAGES'));
+    const noBg = v2SessionPart({ ...bilingual, teacher: { name: 'Ryota', style: 'Calm.', intro: 'I help.' } });
+    check('no background, no card (an intro alone changes nothing: marketing personas stay as they are)', !/persona card/.test(noBg) && noBg === v2SessionPart({ ...bilingual, teacher: { name: 'Ryota', style: 'Calm.' } }));
+    check('kill switch off: no card', v2PersonaCardLines(ryota, false).length === 0 && v2PersonaCardLines(ryota).length === 2 && v2PersonaCardLines(undefined).length === 0);
+    const disc = v2SessionPart({ ...bilingual, teacher: ryota, plan: { id: 'd', title: 'd', los: [], segments: [], estimatedMinutes: 10, metadata: { kind: 'discussion', participant: 'a teacher', orientation: 'cars in cities', cases: [{ id: 'c1', scenario: 'A city bans cars.' }] } } as unknown as V2Session['plan'] });
+    check('a discussion session part carries it too', /^THIS SESSION\nPerson:/.test(disc) && disc.includes('Your persona card (who you are): '), disc.slice(0, 400));
+  }
+
+  console.log('a repeated frame around a quote is seen (Task 6c, ruling 4)');
+  {
+    // gdi-real-james 4.9–8.7 min: 14 of 17 replies opened 「…」は正しい文です, each with a different quote.
+    const JAMES = ['「I make cars.」は正しい文です。とても良いです。', '「I work with customers from Germany and America.」は正しい文です。ドイツとアメリカのお客さんと今も仕事をしている、と話せました。', '「I have worked here for seven years.」は正しい文です。今も同じ会社で働いている経験を話せました。', '「I have learned time management.」は正しい文です。今も続いている経験を話せました。'];
+    const hist = (replies: string[]) => ({ ...newV2State(0), history: replies.flatMap((text, i) => [{ role: 'user' as const, content: `answer ${i}` }, { role: 'assistant' as const, content: [{ type: 'text' as const, text }] }]) });
+    check('a leading 「…」 quote is set aside: the opener is the frame after it', v2OpenerOf(JAMES[0]!) === '「…」は正しい文です' && v2LastOpener(hist(JAMES).history) === '「…」は正しい文です', v2OpenerOf(JAMES[0]!));
+    check('straight and curly quotes too; an apostrophe that is not a quote is left alone', v2OpenerOf('"I went to Osaka" is right. Now tell me more.') === '"…" is right' && v2OpenerOf('“I went” is correct.') === '“…” is correct' && v2OpenerOf("'Cause it's late, go on.") === "'Cause it's late");
+    check('a reply that is only a quote: its words', v2OpenerOf('「はい」') === 'はい');
+    check('plain openers as before', v2OpenerOf('Correct. "Was eating" is it.') === 'Correct' && v2OpenerOf('その文で正しいです。 more') === 'その文で正しいです');
+    const f2 = v2OpenerFact(bilingual, hist(JAMES.slice(0, 2)));
+    check('two replies in a row with the frame: the fact names the frame and how many, and asks for a reaction, a confirmation only for the form in practice', f2.length === 1 && f2[0]!.startsWith('your last 2 replies opened with "「…」は正しい文です": open this one differently.') && /React to what they said and keep the conversation moving; a confirmation only when they were practising the form being taught, and then in other words/.test(f2[0]!), f2);
+    check('the James run of four: "your last 4 replies"', v2OpenerFact(bilingual, hist(JAMES))[0]!.startsWith('your last 4 replies opened with "「…」は正しい文です"'));
+    check('a different opener in between breaks the run: the single-reply line, as before', v2OpenerFact(bilingual, hist([JAMES[0]!, 'その文で正しいです。', JAMES[1]!]))[0] === 'your last reply opened with "「…」は正しい文です": open this one differently, or go straight to the content');
+    const fr = renderFacts(bilingual, hist(JAMES), { nowMs: 60000, heard: 'I attended six exhibitions last year.' });
+    check('the facts carry it', fr.includes('your last 4 replies opened with "「…」は正しい文です"'), fr.slice(-600));
+  }
 
   console.log('tries at one sentence are counted (D5)');
   {

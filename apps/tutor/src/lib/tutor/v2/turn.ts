@@ -32,14 +32,14 @@ import { planGoalIds, renderPlanMap, v2PartOf } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
-import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
+import { V2_CLOSING_PAGE, leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
 import { v2LanguagesSection } from './languages';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { v2StopAsked } from './stop-signal';
-import { TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_PERSONA_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -108,6 +108,19 @@ export function v2LevelLine(level: string): string {
     : `A student in grade ${grade}: go slower than you would with an older student. One new idea per reply, in short sentences and everyday words. Work an example together before they try one alone, and give a second problem of the same kind before moving to a new kind.`;
 }
 
+/** The persona card: who the tutor is, in the persona's own words, and how it answers a question about itself. Only a
+ *  persona with a `background` has one; without it the constitution's "no job, projects or life story of your own"
+ *  stands. Task 6c, ruling 2: with only that line, asked about its work, the tutor said it had a customer-service job
+ *  while the partner's persona teaches Japanese professionals (gdi-real-t2 t≈9.7). Never volunteered: v1's persona
+ *  told its backstory in every greeting (teacher-persona.ts, 2026-07-09). `enabled` is the kill switch. */
+export function v2PersonaCardLines(teacher: V2Session['teacher'], enabled: boolean = TUTOR_V2_PERSONA_CARD): string[] {
+  if (!enabled || !teacher?.name || !teacher.background?.trim()) return [];
+  return [
+    `Your persona card (who you are): ${[teacher.intro?.trim(), teacher.background.trim()].filter(Boolean).join(' ')}`,
+    'When they ask about you, answer briefly from this card and turn back to them; never bring it up yourself. Stay consistent with it for the whole session: a small everyday detail may be added only when it fits the card, never a job, place, history or student group the card does not give.',
+  ];
+}
+
 export function v2SessionPart(session: V2Session): string {
   const discussion = discussionOf(session.plan);
   if (discussion && session.plan) {
@@ -115,6 +128,7 @@ export function v2SessionPart(session: V2Session): string {
       'THIS SESSION',
       `Person: ${session.studentName?.trim() || 'name not given'}.`,
       session.teacher?.name ? `You are ${session.teacher.name}${session.teacher.nameIsRole ? ' (a role, not a person\'s name)' : ''}: say so when you greet them.${session.teacher.style ? ` How you talk: ${session.teacher.style}` : ''}` : '',
+      ...v2PersonaCardLines(session.teacher),
       // The teaching mode lines speak of mathematics and answers; a discussion has neither.
       session.mode === 'voice'
         ? 'This is a spoken conversation. Your words are read aloud, so write them the way you would say them: no symbols, no lists, no headings. Speech is slow to listen to: a reply of more than about fifty words is a long one. Their words reach you through a speech recogniser, which now and then mishears a word: when what you heard makes no sense where it stands, ask what they meant.'
@@ -129,6 +143,7 @@ export function v2SessionPart(session: V2Session): string {
     `Student: ${session.studentName?.trim() || 'name not given'}. Subject: ${session.subject}${session.topic ? ` (${session.topic})` : ''}. Level: ${session.level}.`,
     // Who the student chose to be taught by (a partner's teacher persona, the marketing demo's picker).
     session.teacher?.name ? `You are ${session.teacher.name}${session.teacher.nameIsRole ? ' (a role, not a person\'s name)' : ''}: say so when you greet the student.${session.teacher.style ? ` How you teach: ${session.teacher.style}` : ''}` : '',
+    ...v2PersonaCardLines(session.teacher),
     v2LevelLine(session.level),
     v2ModeLines(session.mode),
     v2LanguagesSection(session.languages, session.mode, { pronunciationMeasured: v2PronunciationOn(session) }) ?? '',
@@ -189,8 +204,7 @@ function storable(content: Anthropic.ContentBlock[]): Anthropic.ContentBlockPara
   return out;
 }
 
-/** A page heading that closes a lesson (D1): its summary or recap. */
-export const V2_CLOSING_PAGE = /\b(?:summary|summing up|sum up|recap|wrap(?:[- ]?up)?|round[- ]?up|conclusion|key (?:points|takeaways))\b|まとめ|振り返り/i;
+export { V2_CLOSING_PAGE } from './part-close';
 
 /** A reply that says only yes (or ok): to "any question, or are you finished?" it says neither (GAC validation, round 2). */
 export const V2_BARE_ASSENT = /^\s*(?:yes|yeah|yep|yup|ya|y|ok|okay|k|sure|alright|all right|mhm|uh[- ]?huh)\s*[.!]*\s*$/i;

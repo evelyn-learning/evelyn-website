@@ -8,7 +8,7 @@ import { renderBoard } from './board';
 import { stripBoardBlocks } from './board-inline';
 import { TUTOR_V2_OPENER_FACT } from '../orchestrator/flags';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
-import { renderGoalStatus } from './plan-map';
+import { renderGoalStatus, v2PassedPartFact } from './plan-map';
 import type { V2Session, V2State } from './types';
 import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from './discussion';
 import { v2WorkingLevelFacts } from './working-level';
@@ -47,24 +47,52 @@ export interface V2TurnFacts {
   levelReopened?: boolean;
 }
 
-/** How the tutor's last reply opened: its words up to the first mark, at most four (D10). */
-export function v2LastOpener(history: V2State['history']): string {
+/** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
+// A straight or curly single quote closes only where no letter follows: "'Cause it's late" is not a quote.
+const LEADING_QUOTE = /^(?:「[^」]*」|『[^』]*』|“[^”]*”|"[^"]*"|‘[^’]*’(?!\p{L})|'[^']*'(?!\p{L}))/u;
+/** Up to four words of `text`, up to its first mark. A run of Japanese has no spaces, so a word is cut at 16 characters. */
+const headWords = (text: string) => text.split(/[.,:;!?。、！？\n]/)[0]!.trim().split(/\s+/).filter(Boolean).slice(0, 4).map((w) => w.slice(0, 16)).join(' ');
+
+/** A reply's text, without board blocks and without the system's cut-off marker. */
+function replyText(h: V2State['history'][number]): string {
   // A reply cut short carries "[cut off here: …]" (interrupted.ts); that marker is the system's, not the tutor's words,
   // and a reply cut before any word got out has no opener at all (final review M4: the fact quoted "[cut off here").
-  const words = (h: V2State['history'][number]) => stripBoardBlocks(typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')).replace(/\[cut off[^\]]*\]/gi, ' ').trim();
-  const m = [...history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text' && c.text.trim())));
-  if (!m) return '';
-  const text = words(m);
-  const head = text.split(/[.,:;!?。、！？\n]/)[0]!.trim();
-  return head.split(/\s+/).slice(0, 4).join(' ');
+  return stripBoardBlocks(typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')).replace(/\[cut off[^\]]*\]/gi, ' ').trim();
+}
+
+/** How a reply opened: its words up to the first mark, at most four (D10). A reply that opens on a quote of the student
+ *  opens on a frame around it: the quote stands as 「…」 and the words after it are the opener (Task 6c, ruling 4:
+ *  「I make cars.」は正しい文です opened 14 of 17 replies in gdi-real-james 4.9–8.7 min, and the fact named the quote,
+ *  which differed every time, so the repeat went unseen). */
+export function v2OpenerOf(text: string): string {
+  const q = text.match(LEADING_QUOTE);
+  if (!q) return headWords(text);
+  const rest = text.slice(q[0].length).replace(/^\s+/, '');
+  const after = headWords(rest);
+  return after ? `${q[0][0]}…${q[0][q[0].length - 1]}${/^\s/.test(text.slice(q[0].length)) ? ' ' : ''}${after}` : headWords(q[0].slice(1, -1));
+}
+
+const tutorReplies = (history: V2State['history']) => history.filter((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text' && c.text.trim())));
+
+/** How the tutor's last reply opened (v2OpenerOf). */
+export function v2LastOpener(history: V2State['history']): string {
+  const m = tutorReplies(history).pop();
+  return m ? v2OpenerOf(replyText(m)) : '';
 }
 
 /** The facts line naming the last reply's opening words (D10: "Yes, that's right." opened 50–70% of replies; told in
- *  the constitution, the model moved to "Correct." instead, review I2). Not in a discussion, which has its own line. */
+ *  the constitution, the model moved to "Correct." instead, review I2). When the replies before it opened the same way,
+ *  it says how many did, and that a reply reacts to what the student said (Task 6c, ruling 4). Not in a discussion,
+ *  which has its own line. */
 export function v2OpenerFact(session: V2Session, state: V2State, enabled: boolean = TUTOR_V2_OPENER_FACT): string[] {
   if (!enabled || discussionOf(session.plan)) return [];
-  const opener = v2LastOpener(state.history);
-  return opener ? [`your last reply opened with "${opener}": open this one differently, or go straight to the content`] : [];
+  const openers = tutorReplies(state.history).map((m) => v2OpenerOf(replyText(m)));
+  const opener = openers[openers.length - 1] ?? '';
+  if (!opener) return [];
+  let run = 1;
+  for (let i = openers.length - 2; i >= 0 && openers[i] === opener; i--) run += 1;
+  if (run < 2) return [`your last reply opened with "${opener}": open this one differently, or go straight to the content`];
+  return [`your last ${run} replies opened with "${opener}": open this one differently. React to what they said and keep the conversation moving; a confirmation only when they were practising the form being taught, and then in other words`];
 }
 
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
@@ -93,7 +121,12 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (session.homework) lines.push(...v2HomeworkFacts(session.homework, state.homework));
   else if (session.homeworkSheet) lines.push(...v2SheetFacts(session.homeworkSheet, state.homework?.sheet));
   if (session.homework || session.homeworkSheet) lines.push(...v2HomeworkGuardFacts(state.homework));
-  else if (session.plan) lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
+  else if (session.plan) {
+    lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
+    // A part the lesson went past is offered before the summary; not when the close comes first (plan-map.ts, Task 6c).
+    const closing = !!f.stopAsked || (!!session.timeBoxMinutes && left <= V2_TIME_UP_MIN) || v2WrapDue(session, (f.nowMs - state.startedAtMs) / 60000);
+    if (!discussion) lines.push(...v2PassedPartFact(session.plan, state, closing));
+  }
   // Where the parts' minutes put the lesson now, so it paces itself to the box (time-box.ts).
   const partDue = v2PartDueFact(session, state, f.nowMs, !!session.timeBoxMinutes && left <= V2_TIME_UP_MIN);
   if (partDue) lines.push(partDue);

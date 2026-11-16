@@ -10,9 +10,14 @@
  */
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { SEED_AP_CALCBC_U4_LHOPITAL } from '../src/lib/tutor/lesson-plan/seeds/ap-calcbc-u4-lhopital';
-import { renderPlanMap, v2PartOf } from '../src/lib/tutor/v2/plan-map';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
+import { renderPlanMap, v2PartOf, v2PassedPartFact, v2PassedParts } from '../src/lib/tutor/v2/plan-map';
+import { renderFacts } from '../src/lib/tutor/v2/facts';
+import { TUTOR_V2_PASSED_PART_FACT } from '../src/lib/tutor/orchestrator/flags';
 import { v2SessionPart } from '../src/lib/tutor/v2/turn';
-import type { V2Session } from '../src/lib/tutor/v2/types';
+import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -119,6 +124,44 @@ function main() {
   const kept = v2SessionPart({ ...trial, trialKeepsPlan: true });
   check('the option on drops only that line', !kept.includes('leave the plan behind') && !/free trial lesson/.test(kept) && kept === today.replace(`\n${LEAVE}`, ''), kept.slice(0, 600));
   check('the option without a trial changes nothing', v2SessionPart({ ...trial, trial: undefined, trialKeepsPlan: true }) === v2SessionPart({ ...trial, trial: undefined }));
+
+  console.log('a part the lesson went past is named in the facts (Task 6c, ruling 3)');
+  {
+    // The partner's written plan (gdi-work-projects-v1.json): overview, level check, "Your job", present perfect, past
+    // simple, conversation, pronunciation ("Optional pronunciation practice…"), summary.
+    const GDI = parseLessonPlan(JSON.parse(readFileSync(join(__dirname, '..', '..', '..', 'docs', 'whitelabel', 'gdi', 'plans', 'gdi-work-projects-v1.json'), 'utf8')));
+    const at = (titles: string[], goals: Record<string, 'shown' | 'demonstrated' | 'skipped'> = {}, more: Partial<V2State> = {}): V2State => ({
+      ...newV2State(0), board: { pages: titles.map((title) => ({ title, items: [] })), current: titles.length - 1 },
+      goals: Object.fromEntries(Object.entries(goals).map(([k, status]) => [k, { status, at: 0 }])), ...more,
+    });
+    // Tester A (gdi-real-t2, v2final): the pages as the run opened them, the level set in the level check.
+    const PAGES = ['Lesson overview', 'Level check', 'Your job', 'Present perfect', 'Past simple', 'Conversation'];
+    const GOALS = { overview: 'shown', 'topic-intro': 'shown', 'present-perfect': 'demonstrated', 'past-simple': 'demonstrated', 'open-conversation': 'shown' } as const;
+    const level = { workingLevel: { level: 'beginner', from: 'this_lesson' } } as Partial<V2State>;
+    check('tester A on the conversation page: nothing passed yet', v2PassedParts(GDI, at(PAGES, GOALS, level)).length === 0);
+    const summary = at([...PAGES, 'Summary'], GOALS, level);
+    check('tester A: the Summary page opens with the pronunciation part never reached: it is the one named', JSON.stringify(v2PassedParts(GDI, summary).map((x) => x.id)) === '["pronunciation"]', v2PassedParts(GDI, summary).map((x) => x.id));
+    const line = v2PassedPartFact(GDI, summary, false);
+    check('the fact: not offered; offer it before the summary, unless time is up; theirs to decline (marked skipped)', line.length === 1 && line[0] === 'The Pronunciation part was not offered: offer it before the summary, unless time is up. The student decides whether to do it; if they would rather not, mark it skipped', line);
+    check('the page is not blocked: the fact only names it', summary.board.current === 6);
+    check('marked skipped (they declined), or a page of its own: no longer named', v2PassedPartFact(GDI, at([...PAGES, 'Summary'], { ...GOALS, pronunciation: 'skipped' }, level), false).length === 0 && v2PassedPartFact(GDI, at([...PAGES, 'Pronunciation', 'Summary'], GOALS, level), false).length === 0);
+    check('a Japanese summary heading counts as the last part (まとめ)', v2PassedParts(GDI, at([...PAGES, 'まとめ'], GOALS, level)).map((x) => x.id).join() === 'pronunciation');
+    check('time up, wrap due or the student stopping (closing), or the lesson closed: no offer', v2PassedPartFact(GDI, summary, true).length === 0 && v2PassedPartFact(GDI, { ...summary, closed: true }, false).length === 0);
+    check('kill switch off: no line', v2PassedPartFact(GDI, summary, false, false).length === 0 && TUTOR_V2_PASSED_PART_FACT === true);
+    check('the level-check part with the level known is not passed over; without a level it is', v2PassedParts(GDI, at(['Lesson overview', 'Your job'], { overview: 'shown' }, level)).length === 0 && v2PassedParts(GDI, at(['Lesson overview', 'Your job'], { overview: 'shown' })).map((x) => x.id).join() === 'level-check');
+    check('only the stretch before the later page: an earlier part taught without a status or page is not named', v2PassedParts(GDI, at(['Lesson overview', 'Conversation', 'Summary'])).map((x) => x.id).join() === 'pronunciation');
+    check('two parts passed: both named', v2PassedPartFact(GDI, at(['Lesson overview', 'Level check', 'Your job', 'Present perfect', 'Summary'], {}, level), false)[0]?.startsWith('The Past simple part, the Conversation part and the Pronunciation part were not offered: offer them before the summary') === true, v2PassedPartFact(GDI, at(['Lesson overview', 'Level check', 'Your job', 'Present perfect', 'Summary'], {}, level), false));
+    check('a lesson without pages for its parts (headings that name none): no line', v2PassedParts(GDI, at(['Hello', 'Practice'])).length === 0 && v2PassedParts(SEED_AP_CALCBC_U4_LHOPITAL, at(['Warm-up', 'Examples'])).length === 0);
+    const lesson: V2Session = { studentName: 'Ken', subject: 'English', level: 'adult', mode: 'text', timeBoxMinutes: 30, languages: ['en', 'ja'], plan: GDI };
+    const facts = renderFacts(lesson, summary, { nowMs: 12 * 60000, heard: 'ok' });
+    check('the facts carry it under the plan line', facts.includes('plan: ') && facts.indexOf('The Pronunciation part was not offered') > facts.indexOf('plan: '), facts.slice(0, 700));
+    check('not when the student asks to stop, or the time is up', !renderFacts(lesson, summary, { nowMs: 12 * 60000, heard: 'I have to go', stopAsked: true }).includes('was not offered') && !renderFacts(lesson, summary, { nowMs: 29 * 60000, heard: 'ok' }).includes('was not offered'));
+    check('not past the host\'s wrap minute', !renderFacts({ ...lesson, wrapMinutes: 10 }, summary, { nowMs: 12 * 60000, heard: 'ok' }).includes('was not offered'));
+
+    const map = renderPlanMap(GDI, true);
+    check('a plan with an optional part: optional is the student\'s choice, not the tutor\'s', map.includes(' A part marked optional is still offered: the student decides whether to do it, not you.'), map.slice(0, 900));
+    check('metadata.optional counts too; the line is off with the kill switch; a plan without one has none', renderPlanMap(WRITTEN, true).includes('A part marked optional') && !renderPlanMap(GDI, true, false).includes('A part marked optional') && !renderPlanMap(SEED_AP_CALCBC_U4_LHOPITAL).includes('A part marked optional'));
+  }
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

@@ -32,8 +32,9 @@ export interface V2Session {
    *  `wrap_at_minutes`): from it the facts say to finish the exchange and summarise (time-box.ts). */
   wrapMinutes?: number;
   plan?: LessonPlan;
-  /** The teacher the tutor speaks as, when the session names one. */
-  teacher?: { name: string; nameIsRole?: boolean; style?: string };
+  /** The teacher the tutor speaks as, when the session names one. `intro` and `background`: the persona's own words on
+   *  who it is (TeacherPersonaWire); with a background they are the tutor's persona card (turn.ts v2PersonaCardLines). */
+  teacher?: { name: string; nameIsRole?: boolean; style?: string; intro?: string; background?: string };
   /** What the partner's portal knows about the student, one plain fact per line (background.ts). */
   background?: string[];
   /** A free trial or demo lesson: the student may change the topic or the subject. */
