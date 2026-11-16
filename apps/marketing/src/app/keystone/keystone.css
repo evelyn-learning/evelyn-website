@@ -142,3 +142,16 @@
 .ks-sol-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; }
 .ks-sol-head h3 { margin: 0; }
 .ks-crumbs { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+
+/* Search + pagination */
+.ks-search { display: flex; gap: 6px; align-items: center; }
+.ks-search input { border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; font: inherit; width: 220px; background: #fff; color: var(--ink); }
+.ks-pager { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; font-size: 14px; margin: 4px 0 8px; }
+.ks-pager a, .ks-pager span { padding: 3px 9px; border-radius: 6px; border: 1px solid transparent; }
+.ks-pager a { border-color: var(--line); }
+.ks-pager .cur { background: var(--ink); color: #fff; font-weight: 600; }
+.ks-pager .off { color: var(--muted); opacity: .5; }
+.ks-pager .gap { color: var(--muted); }
+.ks-find { display: flex; }
+.ks-find input { width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; font-size: 13px; background: #fff; color: var(--ink); }
+.ks-more { display: block; text-align: right; margin-top: 8px; font-size: 14px; }

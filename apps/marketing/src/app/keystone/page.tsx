@@ -7,6 +7,9 @@ import { TopBar } from "./_components/TopBar";
 import { Feed, ItemsTable, ago } from "./_components/ui";
 
 export const dynamic = "force-dynamic";
+
+/** Rows shown in each overview table; the rest are a click away. */
+const CAP = 15;
 export const metadata = { title: "Overview" };
 
 function Stats({ counts, base, stages }: { counts: Record<Stage, number>; base: string; stages: Stage[] }) {
@@ -52,7 +55,12 @@ export default async function Overview({ searchParams }: { searchParams: Promise
           <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)" }}>
             <section className="ks-card">
               <h2>Waiting for review</h2>
-              <ItemsTable rows={waiting} base={base} showStage={false} linkQuery="?stage=in_review" />
+              <ItemsTable rows={waiting.slice(0, CAP)} base={base} showStage={false} linkQuery="?stage=in_review" />
+              {waiting.length > CAP && (
+                <Link className="ks-more" href={`${base}/items?stage=in_review`}>
+                  See all {waiting.length} waiting →
+                </Link>
+              )}
             </section>
             <section className="ks-card">
               <h2>Latest from Evelyn</h2>
@@ -119,7 +127,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
                     </tr>
                   </thead>
                   <tbody>
-                    {approved.map((r) => (
+                    {approved.slice(0, CAP).map((r) => (
                       <tr key={r.itemId}>
                         <td>
                           <Link href={`${base}/item/${r.itemId}?stage=approved&from=overview`}>
@@ -143,6 +151,11 @@ export default async function Overview({ searchParams }: { searchParams: Promise
               </div>
             ) : (
               <div className="ks-empty">Approved solutions appear here as soon as Castle Rock approves them.</div>
+            )}
+            {approved.length > CAP && (
+              <Link className="ks-more" href={`${base}/export`}>
+                See all {approved.length} ready →
+              </Link>
             )}
           </section>
           <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)" }}>
@@ -196,7 +209,14 @@ export default async function Overview({ searchParams }: { searchParams: Promise
         <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,3fr) minmax(0,2fr)" }}>
           <section className="ks-card">
             <h2>Needs Evelyn</h2>
-            <ItemsTable rows={todo} base={base} verdicts={verdicts} linkQuery="?from=overview" />
+            <ItemsTable rows={todo.slice(0, CAP)} base={base} verdicts={verdicts} linkQuery="?from=overview" />
+            {todo.length > CAP && (
+              <p className="ks-more">
+                {counts.changes_requested > 0 && <Link href={`${base}/items?stage=changes_requested`}>All {counts.changes_requested} with change requests →</Link>}{" "}
+                {counts.received > 0 && <Link href={`${base}/items?stage=received`}>All {counts.received} new →</Link>}{" "}
+                {counts.drafting > 0 && <Link href={`${base}/items?stage=drafting`}>All {counts.drafting} drafting →</Link>}
+              </p>
+            )}
           </section>
           <section className="ks-card">
             <h2>From Castle Rock</h2>

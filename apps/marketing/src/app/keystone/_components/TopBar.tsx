@@ -24,6 +24,9 @@ export async function TopBar({ user, on }: { user: KsUser; on?: "home" | "items"
             </Link>
           ))}
         </nav>
+        <form method="get" action={`${b}/items`} className="ks-find" role="search">
+          <input type="search" name="q" placeholder="Find item #" aria-label="Find an item by number" inputMode="search" />
+        </form>
         <div className="ks-who">
           <span>
             {user.name} · {ROLE_LABEL[user.role]}

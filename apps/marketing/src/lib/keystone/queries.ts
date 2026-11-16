@@ -16,12 +16,36 @@ export async function stageCounts(): Promise<Record<Stage, number>> {
   return out;
 }
 
-export async function listItems(filter: { stage?: Stage | Stage[]; subject?: string } = {}): Promise<ItemRow[]> {
-  const { Item } = await ks();
+export type ListFilter = { stage?: Stage | Stage[]; subject?: string; search?: string };
+
+function listWhere(filter: ListFilter): Record<string, unknown> {
   const q: Record<string, unknown> = {};
   if (filter.stage) q.stage = Array.isArray(filter.stage) ? { $in: filter.stage } : filter.stage;
   if (filter.subject) q.subject = filter.subject;
-  return Item.find(q).select(ROW_FIELDS).sort({ order: 1, itemId: 1 }).lean<ItemRow[]>();
+  const term = filter.search?.trim();
+  if (term) {
+    // Digits: item number (any part of it). Words: topic or course.
+    const rx = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    q.$or = /^\d+$/.test(term) ? [{ itemId: { $regex: rx } }] : [{ topic: { $regex: rx } }, { course: { $regex: rx } }, { itemId: { $regex: rx } }];
+  }
+  return q;
+}
+
+export async function listItems(filter: ListFilter = {}, page?: { skip: number; limit: number }): Promise<ItemRow[]> {
+  const { Item } = await ks();
+  let cur = Item.find(listWhere(filter)).select(ROW_FIELDS).sort({ order: 1, itemId: 1 });
+  if (page) cur = cur.skip(page.skip).limit(page.limit);
+  return cur.lean<ItemRow[]>();
+}
+
+export async function countItems(filter: ListFilter = {}): Promise<number> {
+  const { Item } = await ks();
+  return Item.countDocuments(listWhere(filter));
+}
+
+export async function itemExists(itemId: string): Promise<boolean> {
+  const { Item } = await ks();
+  return !!(await Item.exists({ itemId }));
 }
 
 /** The review queue: everything waiting for Castle Rock, in item order. */
