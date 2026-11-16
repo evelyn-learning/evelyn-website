@@ -17,6 +17,7 @@ import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
 import { readHomeworkState, v2HomeworkFor, v2SheetFor } from '@/lib/tutor/v2/homework';
 import { runV2HomeworkTurn, runV2SheetTurn } from '@/lib/tutor/v2/homework-turn';
 import { runV2Turn } from '@/lib/tutor/v2/turn';
+import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import type { V2Session, V2State, V2ToolCall } from '@/lib/tutor/v2/types';
 
 export const runtime = 'nodejs';
@@ -25,7 +26,7 @@ const SSE_HEADERS = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-
 const MAX_STUDENT_CHARS = 8000;
 
 interface TurnBody {
-  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; timeBoxMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown };
+  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; languages?: unknown; timeBoxMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown };
   state?: unknown;
   studentSaid?: unknown;
   silenceSeconds?: unknown;
@@ -79,11 +80,14 @@ export async function POST(req: NextRequest) {
   const t = (cfg.teacher && typeof cfg.teacher === 'object' ? cfg.teacher : {}) as { name?: unknown; nameIsRole?: unknown; style?: unknown };
   const teacher = typeof t.name === 'string' && t.name.trim() ? { name: t.name.trim().slice(0, 80), ...(t.nameIsRole === true ? { nameIsRole: true } : {}), ...(typeof t.style === 'string' && t.style.trim() ? { style: t.style.trim().slice(0, 600) } : {}) } : null;
   const background = Array.isArray(cfg.background) ? cfg.background.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, V2_BACKGROUND_MAX_LINES).map((x) => x.trim().slice(0, V2_BACKGROUND_LINE_CHARS)) : [];
+  // The teaching languages, English first, only those the voice can speak and hear (tts-language.ts); none ⇒ English only.
+  const languages = parseTutorLanguages(cfg.languages);
   const session: V2Session = {
     studentName: typeof cfg.studentName === 'string' ? cfg.studentName.slice(0, 80) : undefined,
     subject: cfg.subject.slice(0, 60),
     level: cfg.level.slice(0, 60),
     mode: cfg.mode === 'voice' ? 'voice' : 'text',
+    ...(languages ? { languages: [...languages] } : {}),
     ...(typeof cfg.timeBoxMinutes === 'number' && cfg.timeBoxMinutes > 0 ? { timeBoxMinutes: Math.min(180, Math.round(cfg.timeBoxMinutes)) } : {}),
     ...(background.length ? { background } : {}),
     ...(teacher ? { teacher } : {}),

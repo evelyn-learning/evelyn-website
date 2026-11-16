@@ -1792,6 +1792,7 @@ export default function TutorSession(props: TutorSessionProps) {
           topic={topic || undefined}
           trial={isTrial || openScope || undefined}
           prewarm={prewarm}
+          tutorLanguages={tutorLanguages}
           sessionMaxMinutes={sessionMaxMinutes}
           composerSlot={videoBtn}
           handleRef={realtimeHandleRef}

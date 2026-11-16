@@ -40,6 +40,8 @@ export interface V2TurnsConfig {
   trial?: boolean;
   /** The topic asked for when there is no lesson plan. */
   topic?: string;
+  /** The session's teaching languages, English first (a partner's `tutor_languages`); a second one makes the lesson bilingual (v2/languages.ts). */
+  tutorLanguages?: string[];
   /** What the partner's portal knows about the student (background.ts). */
   background?: string[];
   /** The session's id, under which its state is kept for a reload (resume.ts). */
@@ -201,6 +203,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     if (!stateRef.current.history.length) await Promise.race([memoryReadyRef.current, new Promise((r) => setTimeout(r, 1500))]);
     const session: V2ClientSession = {
       studentName: p.current.studentName, subject: p.current.subject, level: p.current.level, mode: p.current.mode,
+      ...((p.current.tutorLanguages?.length ?? 0) > 1 ? { languages: p.current.tutorLanguages } : {}),
       ...(p.current.sessionMaxMinutes ? { timeBoxMinutes: p.current.sessionMaxMinutes } : {}),
       ...(p.current.lessonPlanId ? { lessonPlanId: p.current.lessonPlanId } : {}),
       ...(p.current.topic && !p.current.lessonPlanId ? { topic: p.current.topic } : {}),

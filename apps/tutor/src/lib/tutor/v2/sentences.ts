@@ -3,8 +3,11 @@
  *
  * The model's words arrive in small pieces; speech wants whole sentences, as
  * early as possible (the first one sets how soon the tutor is heard). A
- * sentence ends at . ! ? (or their full-width forms) followed by a space or a
- * line break; a paragraph break always ends one. A full stop inside a number
+ * sentence ends at . ! ? followed by a space or a line break, and at 。！？ as
+ * soon as anything but a closing bracket follows (Japanese puts no space after
+ * them: a whole Japanese reply was one "sentence", heard only once it had all
+ * been written); a paragraph break always ends one. 。 inside a quotation
+ * (「はい。」と…) does not end the sentence around it. A full stop inside a number
  * ("3.5") or straight after a single capital ("f. g") or a common abbreviation
  * does not, and neither does anything inside a $…$ span.
  */
@@ -58,7 +61,7 @@ export class SentenceStream {
     const lead = this.buf.length - this.buf.replace(/^\s+/, '').length;
     const at = this.buf.slice(lead).search(/\n\s*\n/);
     const para = at < 0 ? -1 : at + lead;
-    const re = /[.!?。！？]+["')\]]*(?=\s)/g;
+    const re = /[.!?]+["')\]]*(?=\s)|[。！？]+(?=[^」』）)"'”\]])/g;
     let m: RegExpExecArray | null;
     while ((m = re.exec(this.buf))) {
       const end = m.index + m[0].length;

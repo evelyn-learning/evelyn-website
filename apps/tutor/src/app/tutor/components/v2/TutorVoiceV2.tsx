@@ -38,6 +38,7 @@ import { type V2ComposerStatus, V2Composer, V2_HANDLE_STUBS } from './TutorClien
 import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
+import { v2SpeechParts } from '@/lib/tutor/v2/languages';
 import { trimToSpoken } from '@/lib/tutor/v2/interrupted';
 import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
 import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
@@ -53,7 +54,6 @@ export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSente
   cartesiaVoiceId?: string;
   cartesiaVoiceSpeed?: number;
   speechRate?: number;
-  tutorLanguages?: string[];
   /** A resumed session is waiting for the student's tap (the host shows "Continue lesson"). */
   onResumeAwaitingTapChange?: (awaiting: boolean) => void;
   /** The session whose student microphone track is kept (the same store as v1's recordings). Without it nothing
@@ -230,7 +230,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const turns = useV2Turns({
     ...props,
     mode: 'voice',
-    onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; turnSentencesRef.current.push(sentence); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; if (openingSpeechRef.current) openingSpeechRef.current.push(sentence); else realtimeRef.current?.speakText(sentence); },
+    // A sentence that quotes a long span of the other teaching language goes to the voice in parts, each in its own
+    // voice language (v2/languages.ts). Each part is a sentence here too: the voice reports each part as it starts,
+    // and the board is timed by that count.
+    onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; const parts = v2SpeechParts(sentence, p.current.tutorLanguages); if (parts.length > 1) p.current.onDebugEvent?.('tts_sentence_split', `${parts.length} parts: ${parts.map((x) => `"${x.slice(0, 30)}"`).join(' | ')}`); turnSentencesRef.current.push(...parts); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; for (const part of parts) { if (openingSpeechRef.current) openingSpeechRef.current.push(part); else realtimeRef.current?.speakText(part); } },
     onCut: () => { void realtimeRef.current?.clearSpeechQueue(); dropBoard(); },
     heardSoFar: () => cutHeardRef.current,
     onBoardWithdraw: (id) => {

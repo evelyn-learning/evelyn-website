@@ -21,6 +21,9 @@ export interface V2Session {
   topic?: string;
   level: string;
   mode: 'text' | 'voice';
+  /** The session's teaching languages, the lesson's own first (`['en', 'ja']`). A second one brings in the
+   *  bilingual section of the session part (languages.ts). Absent: one language. */
+  languages?: string[];
   /** Minutes the session is meant to last, when there is a box. */
   timeBoxMinutes?: number;
   plan?: LessonPlan;

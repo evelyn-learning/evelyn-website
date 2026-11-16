@@ -10,6 +10,8 @@ export interface V2ClientSession {
   subject: string;
   level: string;
   mode: 'text' | 'voice';
+  /** The session's teaching languages, the lesson's own first (types.ts V2Session). */
+  languages?: string[];
   timeBoxMinutes?: number;
   lessonPlanId?: string;
   /** What the student asked to learn, when there is no lesson plan (a topic typed on the demo page, a partner's free practice). */

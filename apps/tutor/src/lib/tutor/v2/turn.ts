@@ -33,6 +33,9 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
+import { v2LanguagesSection } from './languages';
+import { v2StopAsked } from './stop-signal';
+import { TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -124,6 +127,7 @@ export function v2SessionPart(session: V2Session): string {
     session.teacher?.name ? `You are ${session.teacher.name}${session.teacher.nameIsRole ? ' (a role, not a person\'s name)' : ''}: say so when you greet the student.${session.teacher.style ? ` How you teach: ${session.teacher.style}` : ''}` : '',
     v2LevelLine(session.level),
     v2ModeLines(session.mode),
+    v2LanguagesSection(session.languages, session.mode) ?? '',
     // A free trial is the student's to steer (Praveen 2026-10-28: a trial student asked five times for another
     // topic and was kept on the plan).
     session.trial ? 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.' : '',
@@ -183,6 +187,9 @@ export const V2_MAX_OWN_ANSWERS = 5;
 
 function applyControlTool(state: V2State, session: V2Session, name: string, args: Record<string, unknown>, nowMs: number, studentSaid: string | null = null): string {
   if (name === 'keep_listening') return 'listening';
+  // The student's own stop counts as their request whatever reason the close gives: a refused close tells the tutor
+  // to ask what they would like next, a new question to a student who is leaving (stop-signal.ts).
+  const asked = args.because === 'student_asked' || (TUTOR_V2_STOP_SIGNAL && v2StopAsked(studentSaid));
   const discussion = discussionOf(session.plan);
   if (name === 'record_thinking') return discussion ? recordThinking(state, args) : 'unknown tool record_thinking';
   if (name === 'end_lesson' && discussion) {
@@ -193,10 +200,10 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     const direction = (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
     // The direction is theirs to name: a direction the tutor wrote itself closed the live test without the
     // question ever being asked (embed-1794694217385). Until it has been asked, only their request or the clock ends it.
-    if (args.because !== 'student_asked' && box && left > 1.5 && !directionAsked(state.history)) {
+    if (!asked && box && left > 1.5 && !directionAsked(state.history)) {
       return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now, in a sentence of your own, and close after they answer.';
     }
-    if (args.because !== 'student_asked' && !direction && box && left > 1.5) {
+    if (!asked && !direction && box && left > 1.5) {
       return 'not ended: they have not chosen a direction yet. Say nothing of this message. Ask them, in a sentence of your own, what would be most valuable for them to explore further.';
     }
     state.closed = true;
@@ -263,7 +270,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     if ((session.homework || session.homeworkSheet) && studentSaid !== null && V2_BARE_ASSENT.test(studentSaid) && left > 1.5) {
       return 'not ended: "yes" does not say whether they are finished. Ask, in one short question with one meaning, whether they have any question about it.';
     }
-    if (args.because !== 'student_asked' && !homeworkDone && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
+    if (!asked && !homeworkDone && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
       // there are about seven minutes left and you haven't asked to stop" (embed-1794595194384).
       return `not ended: the session goes on. Whether to stop is the student's choice, and they have not made it. Say nothing of this message or of the clock. In one sentence of your own, ask what they would like now: something harder, more practice, a question of their own, or to stop here.`;
@@ -289,7 +296,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const opening = !state.history.length && input.studentSaid === null;
   const discussion = !!discussionOf(session.plan);
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session);
-  const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid });
+  const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, ...(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid) ? { stopAsked: true } : {}) });
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
   if (state.thinking?.justComplicated) state.thinking = { ...state.thinking, justComplicated: false };
   // The student's words come first and carry the cache mark; the facts follow and are

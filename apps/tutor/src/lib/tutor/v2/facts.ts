@@ -31,6 +31,8 @@ export interface V2TurnFacts {
   notSent?: string;
   /** What the person has just said, for the notes on how the last reply landed. */
   heard?: string | null;
+  /** Their words just now end the session (stop-signal.ts). */
+  stopAsked?: boolean;
 }
 
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
@@ -70,6 +72,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     const label: Record<string, string> = { found: 'found, not yet worked on', explained: 'explained to them, not yet done by them', done_with_help: 'they did one with help, not yet alone', done_alone: 'they did one alone' };
     lines.push(`gaps you have recorded:\n${state.gaps.map((g) => `  - ${g.what}: ${label[g.status] ?? g.status}`).join('\n')}`);
   }
+  if (f.stopAsked) lines.push('the student\'s words just now asked to end the session');
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
   if (f.notSent) lines.push(`your first draft of this reply was not sent (the student never saw it: do not mention it): ${f.notSent}`);
   if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S

@@ -1585,3 +1585,10 @@ export const TUTOR_LEARNER_SUMMARY = process.env.TUTOR_LEARNER_SUMMARY !== 'off'
 // the one deliberate exception to "new flags default ON" (agreed 2026-11-09).
 export const TUTOR_BRAIN_V2_CLAIM =
   process.env.NEXT_PUBLIC_TUTOR_BRAIN_V2_CLAIM === 'on';
+
+/** Tutor brain v2 (v2/stop-signal.ts): a student's words that end the session ("Sorry, I have to finish now.",
+ *  「今日はここまで」) are named in the turn's facts, and the tutor's close in that reply is never refused for time
+ *  left. On v1, Josh's "please stop" got a question and the next part, and James said "I have to finish" three
+ *  times (GDI findings 2026-11-15, case 4). Default ON; NEXT_PUBLIC_TUTOR_V2_STOP_SIGNAL=off ⇒ the model alone
+ *  reads the stop, as before. */
+export const TUTOR_V2_STOP_SIGNAL = process.env.NEXT_PUBLIC_TUTOR_V2_STOP_SIGNAL !== 'off';
