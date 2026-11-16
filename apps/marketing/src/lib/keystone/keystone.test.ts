@@ -7,6 +7,7 @@ import { renderInline, renderMarkdown, sanitize } from "./render";
 import { parseItemFile } from "./item-file";
 import { parseQtiItem, readQtiZip } from "./qti";
 import { parseCsv } from "./sheet";
+import { renderForSolaro, texToLinear, toXhtml } from "./solaro";
 
 // render: math, figures, table captions, images, sanitising
 {
@@ -93,9 +94,38 @@ Because.
   assert.equal(rows[1].showcase, false);
 }
 
+/** Minimal well-formedness check: every open tag closed in order, no bare named entities. */
+function wellFormed(xml: string): boolean {
+  const stack: string[] = [];
+  for (const m of xml.matchAll(/<(\/?)([A-Za-z][\w:.-]*)[^>]*?(\/?)>/g)) {
+    if (m[3]) continue;
+    if (m[1]) {
+      if (stack.pop() !== m[2]) return false;
+    } else stack.push(m[2]);
+  }
+  return stack.length === 0 && !/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-f]+;)/i.test(xml);
+}
+
+// SOLARO export rendering: no MathML, PNG equations with alt + vertical-align, well-formed XHTML
+async function solaroTests() {
+  assert.equal(texToLinear("\\frac{6!}{3!\\,2!} = 60"), "(6!)/(3! 2!) = 60");
+  assert.equal(texToLinear("\\sqrt{x^2 + 1}"), "√(x^2 + 1)");
+  const md = 'So $x^2$ and $n$.\n\n$$\\frac{a}{b}$$\n\n| A (mL) | B |\n|---|---|\n| 1 | – |\n\n```figure alt="Box" caption="Cap"\n<svg viewBox="0 0 100 50" width="100"><rect width="50" height="20" fill="none" stroke="#000"/></svg>\n```';
+  const r = await renderForSolaro(md, "1-diploma", (s) => `resources/${s}`);
+  assert.ok(!/<math|katex/.test(r.html), "no MathML or KaTeX in the SOLARO html");
+  assert.ok(/<img class="mathml" src="resources\/1-diploma-eq\d\.png" width="\d+" height="\d+" style="vertical-align: -?[\d.]+px;" alt="[^"]+" \/>/.test(r.html), "equation img with size, vertical-align and alt");
+  assert.ok(r.html.includes("<i>n</i>"), "single-letter variable stays text");
+  assert.equal(r.files.filter((f) => f.name.includes("-eq")).length, 2);
+  assert.equal(r.files.filter((f) => f.name.includes("-fig")).length, 1);
+  assert.ok(r.files.every((f) => f.data.subarray(1, 4).toString() === "PNG"), "files are PNG");
+  const x = toXhtml(r.html);
+  assert.ok(wellFormed(`<div>${x}</div>`), "XHTML is well-formed");
+}
+
 // Real SOLARO sample, when present on this machine (Vance's 2026-10-29 export).
 const sample = path.join(homedir(), "Downloads", "Item234035.zip");
 (async () => {
+  await solaroTests();
   if (existsSync(sample)) {
     const { items, messages } = await readQtiZip(new Uint8Array(await readFile(sample)));
     assert.equal(items.length, 1, messages.join("; "));

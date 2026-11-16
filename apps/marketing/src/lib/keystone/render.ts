@@ -14,6 +14,10 @@ import { marked } from "marked";
 export type RenderOptions = {
   /** Rewrites relative image paths (e.g. "images/301823-1.png"). */
   resolveImage?: (src: string) => string;
+  /** Replaces KaTeX (the SOLARO export renders equations to PNG). */
+  math?: (tex: string, display: boolean) => string;
+  /** Replaces the inline-SVG figure markup. */
+  figure?: (svg: string, alt: string, caption: string) => string;
 };
 
 const esc = (s: string) =>
@@ -52,6 +56,7 @@ export function renderMarkdown(md: string, opts: RenderOptions = {}): string {
   s = s.replace(/```figure([^\n]*)\n([\s\S]*?)\n```/g, (_m, attrs: string, body: string) => {
     const alt = attr(attrs, "alt");
     const caption = attr(attrs, "caption");
+    if (opts.figure) return `\n\n${slot(`<figure class="ks-fig">${opts.figure(body.trim(), alt, caption)}</figure>`)}\n\n`;
     const svg = body
       .trim()
       .replace(/<svg\b/, `<svg role="img" aria-label="${esc(alt)}"`);
@@ -64,8 +69,9 @@ export function renderMarkdown(md: string, opts: RenderOptions = {}): string {
 
   // 3. Math.
   s = s.replace(/\\\$/g, () => slot("$"));
-  s = s.replace(/\$\$([\s\S]+?)\$\$/g, (_m, t: string) => `\n\n${slot(`<div class="ks-math">${tex(t, true)}</div>`)}\n\n`);
-  s = s.replace(/\$([^$\n]+?)\$/g, (_m, t: string) => slot(tex(t, false)));
+  const m = opts.math ?? tex;
+  s = s.replace(/\$\$([\s\S]+?)\$\$/g, (_m, t: string) => `\n\n${slot(`<div class="ks-math">${m(t, true)}</div>`)}\n\n`);
+  s = s.replace(/\$([^$\n]+?)\$/g, (_m, t: string) => slot(m(t, false)));
 
   // 4. Table captions.
   s = s.replace(/^Table:\s*(.+)$/gm, (_m, c: string) => `KSCAP${slot(esc(c.trim()))}`);

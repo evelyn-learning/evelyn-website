@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { can, SECTIONS, STAGES, type SectionKind, type Stage } from "@/lib/keystone/config";
-import { requireUser, signIn } from "@/lib/keystone/auth";
+import { changePassword, requireUser, signIn } from "@/lib/keystone/auth";
 import { ksHref } from "@/lib/keystone/paths";
 import { ks } from "@/lib/keystone/db";
 import { addComment, saveSolution, setStage, setVerdict } from "@/lib/keystone/store";
@@ -87,4 +87,15 @@ export async function markDeliveredAction(form: FormData) {
   const ids = form.getAll("itemId").map(String);
   for (const id of ids) await setStage(id, "delivered", user, "Delivered to SOLARO.");
   revalidatePath("/keystone", "layout");
+}
+
+export type PasswordResult = { error?: string; done?: boolean };
+
+export async function changePasswordAction(_prev: PasswordResult, form: FormData): Promise<PasswordResult> {
+  const user = await requireUser();
+  const current = String(form.get("current") || "");
+  const next = String(form.get("next") || "");
+  if (next !== String(form.get("confirm") || "")) return { error: "The two new passwords do not match." };
+  const err = await changePassword(user.username, current, next);
+  return err ? { error: err } : { done: true };
 }

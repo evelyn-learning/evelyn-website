@@ -118,6 +118,7 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
       questionHtml,
       options: q.options.map((o) => ({ label: o.label, html: o.html })),
       castleRockSolutionHtml,
+      qti: { apip: q.raw.apip, metadata: q.raw.metadata, resources: [...q.resources.keys()] },
       uploadId,
       updatedAt: new Date(),
     };

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
-import { STAGE_LABEL, type Stage } from "@/lib/keystone/config";
+import { ITEM_TYPE_LABEL, STAGE_LABEL, type Stage } from "@/lib/keystone/config";
 import { latestVerdicts, listItems, recentActivity, recentUploads, stageCounts } from "@/lib/keystone/queries";
 import { TopBar } from "./_components/TopBar";
 import { Feed, ItemsTable, ago } from "./_components/ui";
@@ -79,17 +79,72 @@ export default async function Overview({ searchParams }: { searchParams: Promise
             <div>
               <div className="ks-big">{approved.length}</div>
               <div>approved {approved.length === 1 ? "solution is" : "solutions are"} ready to import into SOLARO</div>
+              <div style={{ color: "var(--muted)", fontSize: 13, marginTop: 4 }}>
+                One zip, a folder per item: solution.html in the solution_step markup with every equation as a PNG, its images, and a QTI
+                package for items that came from a QTI export.
+              </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <Link className="ks-btn primary" href={`${base}/export`}>
-                Review and download →
-              </Link>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {approved.length > 0 ? (
+                <a className="ks-btn primary" href="/api/keystone/export">
+                  ⬇ Download all {approved.length} for SOLARO
+                </a>
+              ) : (
+                <span className="ks-btn" aria-disabled="true" style={{ opacity: 0.5 }}>Nothing to download yet</span>
+              )}
               <Link className="ks-btn" href={`${base}/upload`}>
                 Upload items
               </Link>
             </div>
           </div>
           <Stats counts={counts} base={base} stages={["received", "in_review", "approved", "delivered"]} />
+          <section className="ks-card" style={{ marginBottom: 16 }}>
+            <div className="ks-hero" style={{ marginBottom: 6 }}>
+              <h2 style={{ margin: 0 }}>Ready for SOLARO · {approved.length}</h2>
+              {approved.length > 0 && (
+                <Link href={`${base}/export`}>Choose items or mark them delivered →</Link>
+              )}
+            </div>
+            {approved.length ? (
+              <div className="ks-table">
+                <table className="ks-list">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Subject</th>
+                      <th>Type</th>
+                      <th>Answer</th>
+                      <th>Version</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {approved.map((r) => (
+                      <tr key={r.itemId}>
+                        <td>
+                          <Link href={`${base}/item/${r.itemId}`}>
+                            <b>{r.itemId}</b>
+                          </Link>
+                        </td>
+                        <td>
+                          {r.subject}
+                          <div style={{ color: "var(--muted)", fontSize: 12 }}>{r.course}</div>
+                        </td>
+                        <td>{ITEM_TYPE_LABEL[r.itemType] ?? r.itemType}</td>
+                        <td>{r.key || r.evelynAnswer || "–"}</td>
+                        <td>v{r.version}</td>
+                        <td style={{ textAlign: "right" }}>
+                          <a href={`/api/keystone/export?ids=${r.itemId}`}>⬇ Download</a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="ks-empty">Approved solutions appear here as soon as Castle Rock approves them.</div>
+            )}
+          </section>
           <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)" }}>
             <section className="ks-card">
               <h2>Recent uploads</h2>

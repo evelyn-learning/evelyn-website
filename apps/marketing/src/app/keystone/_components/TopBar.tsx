@@ -3,14 +3,14 @@ import { ROLE_LABEL, can } from "@/lib/keystone/config";
 import type { KsUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
 
-export async function TopBar({ user, on }: { user: KsUser; on?: "home" | "items" | "upload" | "export" }) {
+export async function TopBar({ user, on }: { user: KsUser; on?: "home" | "items" | "upload" | "export" | "account" }) {
   const b = await ksBase();
   const links: { key: typeof on; href: string; label: string }[] = [
     { key: "home", href: b || "/", label: "Overview" },
     { key: "items", href: `${b}/items`, label: "All items" },
     { key: "upload", href: `${b}/upload`, label: "Upload items" },
   ];
-  if (can.export(user.role)) links.push({ key: "export", href: `${b}/export`, label: "Approved for SOLARO" });
+  if (can.export(user.role)) links.push({ key: "export", href: `${b}/export`, label: "Download for SOLARO" });
   return (
     <header className="ks-top">
       <div className="ks-top-in">
@@ -28,6 +28,9 @@ export async function TopBar({ user, on }: { user: KsUser; on?: "home" | "items"
           <span>
             {user.name} · {ROLE_LABEL[user.role]}
           </span>
+          <Link href={`${b}/account`} style={{ fontSize: 13, fontWeight: on === "account" ? 700 : 400 }}>
+            Change password
+          </Link>
           <a className="ks-btn" style={{ padding: "3px 10px", fontSize: 13 }} href="/api/keystone/signout">
             Sign out
           </a>

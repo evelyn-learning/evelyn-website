@@ -21,6 +21,8 @@ export type QtiItem = {
   castleRockSolutionHtml: string;
   /** Files referenced by the item, keyed by the path used in the XML (e.g. "resources/Image_1.jpg"). */
   resources: Map<string, Uint8Array>;
+  /** The original XML, kept so the approved solution can go back as a QTI package. */
+  raw: { apip: string; metadata: string };
 };
 
 const SUBJECT: Record<string, string> = {
@@ -76,7 +78,7 @@ function toHtml(xml: string): string {
   );
 }
 
-export function parseQtiItem(apip: string, metadata: string): Omit<QtiItem, "resources"> & { imageRefs: string[] } {
+export function parseQtiItem(apip: string, metadata: string): Omit<QtiItem, "resources" | "raw"> & { imageRefs: string[] } {
   const itemId =
     tag(metadata, "SYSTEM_ItemID") || (apip.match(/identifier="item_(\d+)"/)?.[1] ?? "");
   if (!itemId) throw new Error("item id not found");
@@ -146,7 +148,7 @@ export async function readQtiZip(data: Uint8Array | ArrayBuffer, depth = 0): Pro
         else messages.push(`Item ${id}: image ${ref} is referenced but not in the zip.`);
       }
       const { imageRefs: _ignored, ...rest } = parsed;
-      items.push({ ...rest, resources });
+      items.push({ ...rest, resources, raw: { apip, metadata } });
     } catch (e) {
       messages.push(`Item ${id}: could not be read (${(e as Error).message}).`);
     }

@@ -69,7 +69,7 @@ async function main() {
   await shot(page, "item-received");
   await page.click(".ks-item-head a.ks-btn");
   await page.fill("#s_short", "E2E TEST — short answer with $x^2$ inline.");
-  await page.fill("#s_diploma", "E2E TEST — diploma answer.\n\n$$\\frac{6!}{3!\\,2!} = 60$$");
+  await page.fill("#s_diploma", "E2E TEST — diploma answer with $P(X \\ge 1) = 1 - 0.3^5$.\n\n$$\\frac{6!}{3!\\,2!} = 60$$");
   await page.fill("#s_errors", "- E2E TEST common error.");
   await page.fill("#evelynAnswer", "E2E");
   await Promise.all([page.waitForURL(new RegExp(`/item/${ITEM}$`)), page.click("button:has-text('Save and send for review')")]);
@@ -111,19 +111,32 @@ async function main() {
   await Promise.all([page.waitForURL((u) => !u.pathname.endsWith(`/item/${ITEM}`) || u.search.length > 0), page.keyboard.press("a")]);
   console.log(`  after A → ${page.url()}`);
 
-  // 6. Tech downloads and marks delivered.
+  // 6. Tech: the download is on the overview itself; then mark delivered.
   await signIn(page, "vance");
+  ok(await page.isVisible("a:has-text('Download all')"), "tech overview leads with 'Download all … for SOLARO'");
+  ok(await page.isVisible(`section:has(h2:has-text('Ready for SOLARO')) a[href*='ids=${ITEM}']`), "item listed under Ready for SOLARO on the overview");
   await shot(page, "tech-overview");
-  await page.goto(`${BASE}/export`);
-  ok(await page.isVisible(`.ks-list a:has-text('${ITEM}')`), "approved item is listed for SOLARO");
-  await shot(page, "tech-export");
-  const [download] = await Promise.all([page.waitForEvent("download"), page.click(`a[href*='ids=${ITEM}']`)]);
+  const [download] = await Promise.all([page.waitForEvent("download"), page.click(`section:has(h2:has-text('Ready for SOLARO')) a[href*='ids=${ITEM}']`)]);
   const file = path.join(SHOTS, download.suggestedFilename());
   await download.saveAs(file);
   const zip = await JSZip.loadAsync(await readFile(file));
-  ok(!!zip.file(`${ITEM}/solution.html`), "download has solution.html");
-  ok((await zip.file(`${ITEM}/solution.html`)!.async("string")).includes("solution_step"), "solution.html uses the solution_step markup");
-  ok(!!zip.file("manifest.csv"), "download has manifest.csv");
+  const html = await zip.file(`${ITEM}/solution.html`)?.async("string");
+  ok(!!html, "download has solution.html");
+  ok(html!.includes('class="solution_step"') && html!.includes('class="step_text"'), "solution.html uses solution_step > step_text");
+  ok(!/<math|katex/i.test(html!), "no MathML or KaTeX in solution.html");
+  const eqs = [...html!.matchAll(/<img class="mathml" src="(resources\/[^"]+\.png)"[^>]*style="vertical-align: -?[\d.]+px;" alt="([^"]+)"/g)];
+  ok(eqs.length >= 2, `equations are PNG img.mathml with vertical-align and alt (${eqs.length}; e.g. alt "${eqs[0]?.[2]}")`);
+  ok(eqs.every((e) => !!zip.file(`${ITEM}/${e[1]}`)), "every equation PNG is in resources/");
+  const qtiZipFile = zip.file(`${ITEM}/item_${ITEM}.zip`);
+  ok(!!qtiZipFile, "QTI package item_<id>.zip included (item came as QTI)");
+  const qti = await JSZip.loadAsync(await qtiZipFile!.async("uint8array"));
+  const apip = await qti.file(`item_${ITEM}_apip.xml`)!.async("string");
+  ok(/<modalFeedback[^>]*identifier="solution"[\s\S]*E2E TEST — shorter/.test(apip), "QTI modalFeedback carries our approved v2 solution");
+  ok(!!qti.file("imsmanifest.xml") && !!qti.file(`item_${ITEM}_metadata.xml`), "QTI package has manifest + metadata");
+  ok(Object.keys(qti.files).some((f) => /resources\/.*-eq\d+\.png$/.test(f)), "QTI package carries the equation PNGs");
+  ok(!!zip.file("manifest.csv") && !!zip.file("README.txt"), "manifest.csv and README.txt");
+  await page.goto(`${BASE}/export`);
+  ok(await page.isVisible(`.ks-list a:has-text('${ITEM}')`), "export page lists the item");
   for (const cb of await page.locator("input[name=itemId]").all()) {
     if ((await cb.getAttribute("value")) !== ITEM) await cb.uncheck();
   }
@@ -141,6 +154,31 @@ async function main() {
   await page.goto(`${BASE}/item/${ITEM}`);
   ok(await page.isVisible(".ks-chip.s-delivered"), "item stage is Delivered");
   await shot(page, "item-delivered");
+
+  // 8. Change password (tech), sign in with the new one, then put the original back.
+  const temp = `e2e-temp-${Date.now()}`;
+  const change = async (cur: string, next: string, confirm = next) => {
+    await page.goto(`${BASE}/account`);
+    await page.fill("#current", cur);
+    await page.fill("#next", next);
+    await page.fill("#confirm", confirm);
+    await page.click("button:has-text('Change password')");
+    await page.waitForSelector(".ks-err, .ks-note.info");
+    return (await page.textContent(".ks-err, .ks-note.info"))?.trim();
+  };
+  await signIn(page, "vance");
+  ok(await page.isVisible("a:has-text('Change password')"), "'Change password' shown in the top bar");
+  ok(/not right/.test((await change("wrong-password-x", temp)) ?? ""), "wrong current password is refused");
+  ok(/do not match/.test((await change(PW.vance, temp, temp + "x")) ?? ""), "mismatched new passwords are refused");
+  ok(/Password changed/.test((await change(PW.vance, temp)) ?? ""), "password changed");
+  await shot(page, "change-password");
+  const original = PW.vance;
+  PW.vance = temp;
+  await signIn(page, "vance");
+  ok(/Password changed/.test((await change(temp, original)) ?? ""), "signed in with the new password and changed it back");
+  PW.vance = original;
+  await signIn(page, "vance");
+  ok(true, "original password works again");
 
   console.log(errors.length ? `Browser errors:\n${errors.join("\n")}` : "No browser errors.");
   await browser.close();

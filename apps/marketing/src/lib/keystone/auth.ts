@@ -61,3 +61,16 @@ export async function requireUser(check?: (r: Role) => boolean): Promise<KsUser>
 export async function hashPassword(pw: string) {
   return bcrypt.hash(pw, 10);
 }
+
+/** Changes the signed-in user's password and signs out their other sessions. */
+export async function changePassword(username: string, current: string, next: string): Promise<string | null> {
+  const { User, Session } = await ks();
+  const u = await User.findOne({ username }).lean();
+  if (!u || !(await bcrypt.compare(current, u.passwordHash))) return "Your current password is not right.";
+  if (next.length < 10) return "Use at least 10 characters for the new password.";
+  if (next === current) return "The new password is the same as the current one.";
+  await User.updateOne({ username }, { $set: { passwordHash: await bcrypt.hash(next, 10), passwordChangedAt: new Date() } });
+  const keep = (await cookies()).get(SESSION_COOKIE)?.value;
+  await Session.deleteMany({ username, token: { $ne: keep } });
+  return null;
+}

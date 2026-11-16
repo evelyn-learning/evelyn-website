@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // Next must compile TS from workspace packages directly (they ship
   // source, not a prebuilt dist) — see packages/core.
   transpilePackages: ['@evelyn/core'],
+  // Keystone's SOLARO export renders TeX to PNG on the server (MathJax → sharp);
+  // load MathJax from node_modules at runtime instead of bundling it.
+  serverExternalPackages: ['mathjax-full'],
   // Deploy-time override so the prod build can land in a staging dir and be
   // atomically swapped into .next (deploy-update.sh). Unset everywhere else,
   // including `next start`, which must keep reading the default .next.

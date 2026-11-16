@@ -9,7 +9,7 @@ import { TopBar } from "../_components/TopBar";
 import { ago } from "../_components/ui";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Approved for SOLARO" };
+export const metadata = { title: "Download for SOLARO" };
 
 export default async function ExportPage() {
   const user = await requireUser(can.export);
@@ -30,17 +30,18 @@ export default async function ExportPage() {
     <>
       <TopBar user={user} on="export" />
       <main className="ks-main">
-        <h1>Approved for SOLARO</h1>
+        <h1>Download for SOLARO</h1>
         <p className="ks-sub">
-          Every solution Castle Rock has approved, ready to import. The download is one zip with a folder per item (solution.html in the
-          solution_step markup, its images, the Markdown source and item.json) and a manifest.csv.
+          Every solution Castle Rock has approved, ready to import. The download is one zip with a folder per item: solution.html in the
+          solution_step markup with every equation as a PNG (no MathML), the images in resources/, and a QTI 2.1 package (item_&lt;id&gt;.zip)
+          for items that came from a QTI export. A manifest.csv lists them all.
         </p>
         <section className="ks-card">
           <div className="ks-hero" style={{ marginBottom: 10 }}>
             <h2 style={{ margin: 0 }}>Ready to import · {approved.length}</h2>
             {approved.length > 0 && (
               <a className="ks-btn primary" href="/api/keystone/export">
-                Download all {approved.length} (zip)
+                ⬇ Download all {approved.length} for SOLARO
               </a>
             )}
           </div>

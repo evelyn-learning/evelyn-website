@@ -13,6 +13,7 @@ export type UserDoc = {
   passwordHash: string;
   createdAt: Date;
   lastLoginAt?: Date;
+  passwordChangedAt?: Date;
 };
 
 export type SessionDoc = { token: string; username: string; expiresAt: Date; createdAt: Date };
@@ -35,6 +36,8 @@ export type ItemDoc = {
   options: OptionDoc[];
   /** Castle Rock's own worked solution from the QTI export, for reference. */
   castleRockSolutionHtml?: string;
+  /** Original QTI XML (items that arrived as QTI); resource paths as used in the XML. */
+  qti?: { apip: string; metadata: string; resources: string[] };
   stage: Stage;
   version: number;
   showcase: boolean;
@@ -109,6 +112,7 @@ function defineModels(conn: Connection): Models {
     passwordHash: { type: String, required: true },
     createdAt: { type: Date, default: () => new Date() },
     lastLoginAt: Date,
+    passwordChangedAt: Date,
   });
   const Session = new Schema<SessionDoc>({
     token: { type: String, required: true, unique: true },
@@ -132,6 +136,7 @@ function defineModels(conn: Connection): Models {
     questionMd: String,
     options: [Option],
     castleRockSolutionHtml: String,
+    qti: { type: new Schema({ apip: String, metadata: String, resources: [String] }, { _id: false }), required: false },
     stage: { type: String, index: true },
     version: { type: Number, default: 0 },
     showcase: { type: Boolean, default: false },
