@@ -19,16 +19,18 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { V2_HEARD_MAX_CHARS, V2_UNHEARD_SAID, v2HeardForBrain, v2HeardIsNoise } from '../src/lib/tutor/v2/heard';
-import { sentenceCardToSay } from '../src/lib/tutor/v2/board-timing';
-import { endsAsking, mayOpenPart, partOffer, v2QuestionCheckRecent } from '../src/lib/tutor/v2/part-close';
+import { asksAloud, sentenceCardToSay, unsaidBoardItem } from '../src/lib/tutor/v2/board-timing';
+import { ReplyGate } from '../src/lib/tutor/v2/reply-gate';
+import { V2_WORDS_AFTER_START_MS, V2_WORDS_AFTER_STOP_MS, WordsWatch } from '../src/lib/tutor/v2/words-watch';
+import { V2_MAX_PART_FRAMES, endsAsking, mayOpenPart, partOffer, v2FrameDue, v2QuestionCheckRecent } from '../src/lib/tutor/v2/part-close';
 import { v2StopAsked } from '../src/lib/tutor/v2/stop-signal';
-import { v2PassedPartFact, v2UnreachedAtClose, v2UnreachedAtCloseFact, v2UnreachedOffer } from '../src/lib/tutor/v2/plan-map';
+import { v2NextTimeLine, v2PassedPartFact, v2UnreachedAtClose, v2UnreachedAtCloseFact, v2UnreachedOffer } from '../src/lib/tutor/v2/plan-map';
 import { renderFacts, v2QuestionCheckFact } from '../src/lib/tutor/v2/facts';
-import { v2LanguagesSection, v2RetryFacts } from '../src/lib/tutor/v2/languages';
+import { v2LanguagesSection, v2PracticeAskFacts, v2RetryFacts } from '../src/lib/tutor/v2/languages';
 import { runV2Turn, v2SessionPart, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 import {
-  TUTOR_V2_CHECK_MISHEARD, TUTOR_V2_HEARD_NOISE, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_SAY_SENTENCE_CARD,
+  TUTOR_V2_CHECK_MISHEARD, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_PRACTICE_ASK_CAP, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_SAY_SENTENCE_CARD,
 } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0; let failed = 0;
@@ -117,21 +119,28 @@ async function main() {
     const r24 = await runV2Turn({ session: lang, state: pagesAt(['Lesson overview', 'Level check', 'Your job'], { history: [{ role: 'user', content: 'I have worked for the current company for 10 years.' }, { role: 'assistant', content: t24 }] }), studentSaid: 'Yes.', callModel: streaming('<board page>Present perfect</board> We use the present perfect for experience. How long have you lived in your city?').call, boardPass: false, mathsCheck: false, nowMs: 6 * 60000 });
     check('…in a whole turn: the page turns, no "Next is present perfect. Shall we go on…"', r24.state.board.pages.length === 4 && !/Next is present perfect/.test(r24.spoken), r24.spoken);
 
-    const withQ: V2State['history'] = [
-      { role: 'user', content: 'I am ready.' }, { role: 'assistant', content: 'Good. Next is present perfect. Shall we go on, or do you have a question first?' },
+    // Fix round 1 (F1): the frame is the runtime's, at most twice a lesson, never at two part changes running.
+    const frameAt = (offer: string): V2State['history'] => [
+      { role: 'user', content: 'I am ready.' }, { role: 'assistant', content: offer },
       { role: 'user', content: 'Yes.' }, { role: 'assistant', content: '<board page>Present perfect</board> We use it for experience. How long have you worked there?' },
       { role: 'user', content: 'I have worked here ten years.' }, { role: 'assistant', content: 'Nearly: we say "for ten years". Say it once more?' },
     ];
-    const withoutQ: V2State['history'] = withQ.map((h, i) => (i === 1 ? { role: 'assistant' as const, content: 'Good. Next is present perfect. Shall we go on?' } : h));
-    check('the last part change asked it: seen', v2QuestionCheckRecent(withQ) && !v2QuestionCheckRecent(withoutQ) && !v2QuestionCheckRecent([]));
-    check('the offer then asks only to go on; otherwise the whole frame', partOffer('Past simple', false, false) === 'Next is past simple. Shall we go on?' && partOffer('Past simple', false) === 'Next is past simple. Shall we go on, or do you have a question first?' && partOffer('Past simple', true, false) === 'Shall we go on?');
-    const reply = 'Yes, that is right: for ten years. <board page>Past simple</board> Now the past simple.';
-    const held = await runV2Turn({ session: lang, state: pagesAt(['Lesson overview', 'Level check', 'Present perfect'], { history: withQ }), studentSaid: 'I have worked here for ten years.', callModel: streaming(reply).call, boardPass: false, mathsCheck: false, nowMs: 8 * 60000 });
-    check('in a whole turn: the held page\'s offer drops the question check after a part change that asked it', /Next is past simple\. Shall we go on\?$/.test(held.spoken) && !/question first/.test(held.spoken), held.spoken);
-    const heldAgain = await runV2Turn({ session: lang, state: pagesAt(['Lesson overview', 'Level check', 'Present perfect'], { history: withoutQ }), studentSaid: 'I have worked here for ten years.', callModel: streaming(reply).call, boardPass: false, mathsCheck: false, nowMs: 8 * 60000 });
-    check('…and asks it again at the change after one that did not', /Shall we go on, or do you have a question first\?$/.test(heldAgain.spoken), heldAgain.spoken);
+    const withQ = frameAt('Good. Next is present perfect. Shall we go on, or do you have a question first?');
+    const withShort = frameAt('Good. Next is present perfect. Shall we go on?');
+    const withNone = frameAt('Good. That part is done. Next is present perfect, for experience up to now.');
+    check('the last part change asked it (full or short frame): not due; none asked: due', !v2FrameDue(withQ) && !v2FrameDue(withShort) && v2FrameDue(withNone) && v2FrameDue([]) && v2QuestionCheckRecent(withQ));
+    const twice: V2State['history'] = [{ role: 'assistant', content: 'Shall we go on, or do you have a question first?' }, { role: 'user', content: 'Yes.' }, { role: 'assistant', content: '<board page>A</board> Next is B. Are you ready for that, or do you have a question first?' }, { role: 'user', content: 'Yes.' }, { role: 'assistant', content: '<board page>B</board> Good.' }, { role: 'user', content: 'ok' }, { role: 'assistant', content: '<board page>C</board> Good.' }];
+    check(`at most ${V2_MAX_PART_FRAMES} a lesson: after two, not due even with changes between`, !v2FrameDue(twice));
+    check('the offer, when due, is the whole frame', partOffer('Past simple', false) === 'Next is past simple. Shall we go on, or do you have a question first?');
+    const reply = 'Yes, that is right: for ten years. This part is done. Next is the past simple. Shall we go on, or do you have a question first? <board page>Past simple</board> We use it for finished events.';
+    const heardQ: string[] = [];
+    const notDue = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check', 'Present perfect'], { history: withQ }), studentSaid: 'I have worked here for ten years.', callModel: streaming(reply).call, onText: (d) => heardQ.push(d), boardPass: false, mathsCheck: false, nowMs: 8 * 60000 });
+    check('not due: the model\'s own frame is dropped (not said, not stored) and the page opens', !/Shall we go on|question first/.test(heardQ.join('')) && !/Shall we go on/.test(notDue.spoken) && !/Shall we go on/.test(JSON.stringify(notDue.state.history.slice(withQ.length))) && notDue.state.board.pages.some((pg) => pg.title === 'Past simple') && /Next is the past simple\./.test(notDue.spoken), { said: heardQ.join(''), spoken: notDue.spoken });
+    check('…and no check-in is added in its place', !/Does that make sense|with me so far|go over it again/.test(notDue.spoken), notDue.spoken);
+    const due = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check', 'Present perfect'], { history: withNone }), studentSaid: 'I have worked here for ten years.', callModel: streaming('Yes, that is right: for ten years. <board page>Past simple</board> Now the past simple.').call, boardPass: false, mathsCheck: false, nowMs: 8 * 60000 });
+    check('due: the page is held and the runtime asks the whole frame, as before', /Next is past simple\. Shall we go on, or do you have a question first\?$/.test(due.spoken) && !due.state.board.pages.some((pg) => pg.title === 'Past simple'), due.spoken);
     const f = v2QuestionCheckFact({ ...newV2State(0), history: withQ });
-    check('the facts say so, for the frame the tutor writes itself', f.length === 1 && /the last part change asked whether they had a question first: when this part closes, name what comes next and ask only whether to go on/.test(f[0]!) && renderFacts({ ...lang, plan: GDI }, { ...newV2State(0), history: withQ }, { nowMs: 60000, heard: 'ok' }).includes('the last part change asked whether they had a question first'));
+    check('the facts say so when not due, for the frame the tutor writes itself', f.length === 1 && /part changes: the ask whether to go on \(or whether they have a question first\) is not due at the next one: when this part is done, say so, name what comes next and begin it in the same reply/.test(f[0]!) && renderFacts({ ...lang, plan: GDI }, { ...newV2State(0), history: withQ }, { nowMs: 60000, heard: 'ok' }).includes('part changes: the ask whether to go on') && v2QuestionCheckFact({ ...newV2State(0), history: withNone }).length === 0);
     check('kill switch off: neither', v2QuestionCheckFact({ ...newV2State(0), history: withQ }, false).length === 0 && TUTOR_V2_PART_OFFER_ONCE === true);
   }
 
@@ -168,7 +177,7 @@ async function main() {
 
   console.log('6. a word that makes no sense is checked first (tester B: "my lover", "I met some")');
   {
-    const line = 'When a word in their sentence makes little sense where it stands, or one seems to be missing, the recogniser may have misheard: ask "Did you say …?" with the word you think they said, before you correct the sentence or call it right.';
+    const line = 'When a word in their sentence makes little sense where it stands, or one seems to be missing, the recogniser may have misheard: check before you correct the sentence or call it right. Ask "Did you say …?" only with a word that sounds like what was heard and fits; when nothing fits, ask them to say it again. Never guess at a meaning they did not say.';
     check('in the spoken two-language section', (v2LanguagesSection(['en', 'ja']) ?? '').includes(line) && v2SessionPart(lang).includes(line));
     check('not typed, not with the kill switch off', !(v2LanguagesSection(['en', 'ja'], 'text') ?? '').includes('Did you say') && !(v2LanguagesSection(['en', 'ja'], 'voice', { checkMisheard: false }) ?? '').includes('Did you say') && TUTOR_V2_CHECK_MISHEARD === true);
     check('generic: no lesson or learner words in it', !/lover|someone|role|met/i.test(line));
@@ -192,6 +201,119 @@ async function main() {
     check('the card is in the system prompt the model gets', system.includes(`Your persona card (who you are): ${t.intro} ${t.background}`) && TUTOR_V2_PERSONA_CARD === true);
     check('"what did you do before teaching?" is answerable from it: the card says what came before', /Before that I studied English in Canada for a year/.test(system) && /When they ask about you, answer briefly from this card/.test(system));
     check('the constitution\'s "no life story" is lifted only by the card', /Unless this session gives you a persona card/.test(system));
+  }
+
+
+  console.log('fix round 1 — F2: the practice ask is counted; a bare yes is no try (tester A T48–T66)');
+  {
+    check('"Now you say it: …" hands over (no check-in is added to it)', asksAloud(['ゆっくりで大丈夫です。', 'Now you say it: "I didn\'t attend."']) && asksAloud(['Please say it again.']) && !asksAloud(['I attended a trade show last year.']));
+    const S = "I didn't attend any exhibitions last year.";
+    const one: V2State['history'] = [{ role: 'user', content: 'No, I have not.' }, { role: 'assistant', content: `「No, I have not.」は違います。 Now you say it: "${S}" Does that make sense?` }];
+    const f1 = v2PracticeAskFacts(['en', 'ja'], one, 'Yes.');
+    check('one ask, then "Yes.": that answers the check, it is no try; no cap yet', f1.length === 1 && f1[0] === 'their "Yes." answers your check question; it is not a try at the sentence you asked for', f1);
+    const two: V2State['history'] = [...one, { role: 'user', content: 'Yes.' }, { role: 'assistant', content: 'Good. Please say the sentence once more. Are you with me so far?' }];
+    const f2 = v2PracticeAskFacts(['en', 'ja'], two, 'Yes.');
+    check('a second ask (quoting nothing: the same sentence): give it and move on, tries counted without the yeses', f2.length === 2 && f2[1] === `practice asks: you have asked them 2 times in a row to say ${JSON.stringify(S)}, and they have tried it 0 times. Do not ask for it again: say it yourself now and go on to the next thing`, f2);
+    const other: V2State['history'] = [...one, { role: 'user', content: S }, { role: 'assistant', content: 'Right. Now try "I went to a trade fair in Osaka in May."' }];
+    check('an ask for a different sentence starts a new count', v2PracticeAskFacts(['en', 'ja'], other, 'I went to a trade fair.').length === 0);
+    check('one language, or the switch off: none', v2PracticeAskFacts(['en'], two, 'Yes.').length === 0 && v2PracticeAskFacts(['en', 'ja'], two, 'Yes.', false).length === 0 && TUTOR_V2_PRACTICE_ASK_CAP === true);
+    check('in the facts', renderFacts(lang, { ...newV2State(0), history: two }, { nowMs: 60000, heard: 'Yes.' }).includes('practice asks: you have asked them 2 times in a row'));
+    const r = await runV2Turn({ session: lang, state: pagesAt(['Lesson overview', 'Past simple']), studentSaid: 'No, I have not.', callModel: streaming(`ゆっくりで大丈夫です。まず私が言います。 "I didn't attend." Now you say it: "${S}"`).call, boardPass: false, mathsCheck: false, nowMs: 12 * 60000 });
+    check('a whole turn: no "Are you with me so far?" after the ask', !/with me so far|make sense|go over it again/.test(r.spoken), r.spoken);
+  }
+
+  console.log('fix round 1 — F3: an optional part not reached is named in any goodbye (Josh, tester B)');
+  {
+    const joshPages = ['Lesson overview', 'Level check', 'Your job', 'Present perfect', 'Past simple'];
+    const st = pagesAt(joshPages, { goals: { overview: { status: 'shown', at: 0 }, 'present-perfect': { status: 'demonstrated', at: 0 } }, workingLevel: { level: 'beginner', from: 'this_lesson' } } as Partial<V2State>);
+    const T116 = 'Understood, Josh. Today you practised describing your work, and you used the present perfect correctly for "I have worked here for 11 years." Next time we\'ll look at the past simple and the conversation practice.';
+    check('the line: the optional part only, by name', v2NextTimeLine(GDI, st, T116) === "We didn't get to the pronunciation part today, so that's for next time.", v2NextTimeLine(GDI, st, T116));
+    check('named already (English or its Japanese name): none', v2NextTimeLine(GDI, st, `${T116} Pronunciation is for next time too.`) === null && v2NextTimeLine(GDI, st, `${T116} 発音も次回です。`) === null);
+    const stop = { call: (async (_p, onText) => { const text = `${T116} お疲れさまでした。また次回お会いしましょう。`; for (const piece of text.match(/[\s\S]{1,17}/g) ?? []) onText?.(piece); return msg([{ type: 'text', text }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'student_asked', summary: 'Present perfect.' } }], 'tool_use'); }) as V2ModelCall };
+    const heard: string[] = [];
+    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: st, studentSaid: 'Please, I would like to end the session for now.', callModel: stop.call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 7.7 * 60000 });
+    const said = heard.join('');
+    check('Josh\'s stop goodbye: the pronunciation part named as next time, before the goodbye; the close stands', /conversation practice\.\s+We didn't get to the pronunciation part today, so that's for next time\.\s+お疲れさまでした。/.test(said) && r.state.closed && /We didn't get to the pronunciation part today, so that's for next time\. お疲れさまでした/.test(JSON.stringify(r.state.history)), said);
+  }
+
+  console.log('fix round 1 — F4: one question at the close, nothing after a goodbye (James, tester B)');
+  {
+    const bye = 'Great work today, James. One thing to improve is "There were," not "There was." Thank you for today\'s lesson. See you next time!';
+    const calls: number[] = [];
+    const twoCalls: V2ModelCall = async (_p, onText) => {
+      calls.push(1);
+      const text = calls.length === 1 ? bye : 'Would you like to do something harder, get more practice, ask me a question, or stop here?';
+      for (const piece of text.match(/[\s\S]{1,17}/g) ?? []) onText?.(piece);
+      return calls.length === 1 ? msg([{ type: 'text', text }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 'x' } }], 'tool_use') : msg([{ type: 'text', text }], 'end_turn');
+    };
+    const heard: string[] = [];
+    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Summary']), studentSaid: 'Oh, yes.', callModel: twoCalls, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 10.7 * 60000 });
+    const said = heard.join('');
+    check('a refused close takes its goodbye with it: "See you next time!" never said or stored, the menu follows the summary', !/See you next time/.test(said) && /There was\."\s+Would you like to do something harder/.test(said.replace(/Thank you for today's lesson\.\s*/, '')) && !r.state.closed && !/See you next time/.test(JSON.stringify(r.state.history)), said);
+    const B = ['Lesson overview', 'Level check', 'Your job', 'Present perfect', 'Past simple', 'Conversation'];
+    const st = pagesAt(B);
+    check('the facts near and at the close: one question, not the last one again, nothing after a goodbye', renderFacts({ ...lang, plan: GDI }, st, { nowMs: 17 * 60000, heard: 'Yes.' }).includes('at the close: at most one question in a reply, never one you asked in your last reply, and nothing after a goodbye') && !renderFacts({ ...lang, plan: GDI }, st, { nowMs: 10 * 60000, heard: 'Yes.' }).includes('at the close:') && TUTOR_V2_CLOSE_ONE_QUESTION === true);
+    const g = new ReplyGate(() => {}, { dropFrame: false, holdGoodbye: true });
+    g.push('Well done. See you next time! お疲れさまでした。'); g.flush();
+    check('the gate holds a goodbye and what follows it until told', g.holdsGoodbye && /See you next time! お疲れさまでした。/.test(g.held));
+  }
+
+  console.log('fix round 1 — F5: a card is said where it stands, or not at all (tester A ×4, tester B, Josh T10)');
+  {
+    check('lead-ins without a colon announce a card', sentenceCardToSay('I have worked here for five years.', 'Here are two sentences that look similar but mean different things.', { leadIn: true }) !== null && sentenceCardToSay('I attended a networking event last year.', "I'll put your idea into one sentence with the past simple.", { leadIn: true }) !== null);
+    check('the next card under the same lead-in is said too', sentenceCardToSay('I worked here for five years.', 'Here are two sentences. I have worked here for five years.', { leadIn: true, continuing: true }) !== null);
+    check('never after words that ask them something (tester A T24)', sentenceCardToSay('I joined my company three years ago.', 'Now it\'s your turn. Please say one sentence about your job, starting with "I work in…".', { leadIn: true }) === null);
+    check('without the option, colon lead-ins only (as in 6e)', sentenceCardToSay('I have worked here.', 'Here are two sentences.') === null);
+    const t10 = 'Here are two sentences that look similar but mean different things. <board sentence>I have worked here for five years.</board><board sentence>I worked here for five years.</board> Which one means you still work here?';
+    const r10 = await runV2Turn({ session: lang, state: pagesAt(['Lesson overview', 'Present perfect']), studentSaid: 'Okay.', callModel: streaming(t10).call, boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    check('Josh T10: both cards said in order after the lead-in, before the question', /different things\.\s+I have worked here for five years\.\s+I worked here for five years\.\s+Which one means/.test(r10.spoken), r10.spoken);
+    const t24 = 'Now it\'s your turn. Please say one sentence about your job, starting with "I work in…". <board sentence>I joined my company three years ago.</board>';
+    const r24 = await runV2Turn({ session: lang, state: pagesAt(['Lesson overview', 'Your job']), studentSaid: 'Yes.', callModel: streaming(t24).call, boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    check('tester A T24: the example card after the ask is not read out, at the end or anywhere', !/I joined my company/.test(r24.spoken), r24.spoken);
+    const t154 = 'Almost. "Customer" needs an s here: <board sentence>I have worked with international customers sometimes.</board> I have worked with international customers sometimes. Can you say it?';
+    const r154 = await runV2Turn({ session: lang, state: pagesAt(['Lesson overview', 'Conversation']), studentSaid: 'I have worked with the international customer sometimes.', callModel: streaming(t154).call, boardPass: false, mathsCheck: false, nowMs: 15 * 60000 });
+    check('tester B T154: a card the model says itself straight after is said once', r154.spoken.split('I have worked with international customers').length === 2, r154.spoken);
+    check('unsaidBoardItem leaves sentence cards out when asked to; menus still read', unsaidBoardItem([{ name: 'show_sentence', args: { sentence: 'I want to expand our business.' }, outcome: 'painted' }], ['Please say it back to me.'], { sentences: false }) === null && unsaidBoardItem([{ name: 'annotate', args: { text: '1) words\n2) a sentence' }, outcome: 'painted' }], ['Which one would you like?'], { sentences: false }) === '1, words; 2, a sentence.');
+  }
+
+  console.log('fix round 1 — F6: speech with no words never strands the page (tester B stall)');
+  {
+    const timers: Array<{ fn: () => void; at: number; live: boolean }> = []; let now = 0;
+    const clock = { set: (fn: () => void, ms: number) => { const t = { fn, at: now + ms, live: true }; timers.push(t); return t as unknown as ReturnType<typeof setTimeout>; }, clear: (t: ReturnType<typeof setTimeout>) => { (t as unknown as { live: boolean }).live = false; } };
+    const advance = (ms: number) => { now += ms; for (const t of timers) if (t.live && t.at <= now) { t.live = false; t.fn(); } };
+    let lost = 0;
+    const w = new WordsWatch(() => { lost += 1; }, clock);
+    w.speech('start'); advance(2000); w.speech('stop'); advance(V2_WORDS_AFTER_STOP_MS - 1);
+    check('speech stopped, no transcript yet: still waiting', lost === 0 && w.waiting);
+    advance(1);
+    check(`no transcript and no failure ${V2_WORDS_AFTER_STOP_MS / 1000} s after the stop: lost (the page listens again, the nudge is armed)`, lost === 1 && !w.waiting);
+    w.speech('start'); advance(1000); w.speech('stop'); w.settled(); advance(60_000);
+    check('words (or a reported failure) settle it: nothing lost', lost === 1);
+    w.speech('start'); advance(V2_WORDS_AFTER_START_MS - 1000); w.speech('partial'); advance(V2_WORDS_AFTER_STOP_MS - 1);
+    check('a long turn sending words so far is not lost', lost === 1);
+    advance(1); check('…until its words stop coming', lost === 2);
+    const off = new WordsWatch(() => { lost += 100; }, clock, false); off.speech('stop'); advance(60_000);
+    check('switch off: no watch', lost === 2 && TUTOR_V2_NO_WORDS_RECOVER === true);
+    const voice = src('src/app/tutor/components/v2/TutorVoiceV2.tsx');
+    check('the voice client: start, partial words and stop arm it; a transcript or a failure settles it; lost → listening + the idle nudge', /wordsWatchRef\.current\.speech\('start'\)/.test(voice) && /wordsWatchRef\.current\.speech\('partial'\)/.test(voice) && /wordsWatchRef\.current\.speech\('stop'\)/.test(voice) && /const heard = useCallback\(\(transcript: string, opts\?: \{ typed\?: boolean \}\) => \{\n\s+wordsWatchRef\.current\.settled\(\);/.test(voice) && /wordsWatchRef\.current\.settled\(\);\n\s+p\.current\.onDebugEvent\?\.\('v2_transcription_failed'/.test(voice) && /showState\('listening'\); armSilence\(\);\n\s+\}, undefined, TUTOR_V2_NO_WORDS_RECOVER\)/.test(voice));
+    check('root cause, pinned: the recogniser drops an empty final turn with no callback, and speech start clears the idle timer', /if \(!text\) return; \/\/ genuinely empty turn/.test(src('src/app/tutor/hooks/useCartesiaInkWS.ts')) && /pronRef\.current\?\.speechStart\(!!realtimeRef\.current\?\.isSpeechPending\(\)\);\n\s+clearSilence\(\);/.test(voice));
+  }
+
+  console.log('fix round 1 — reply gate');
+  {
+    const out: string[] = [];
+    const g = new ReplyGate((t) => out.push(t), { dropFrame: true, holdGoodbye: true });
+    g.push('This part is done. Next is the past simple. Shall we go on, or do you have a question first? We use it for'); g.push(' finished events. '); g.flush();
+    check('a frame sentence is dropped, the rest goes out word for word', out.join('') === 'This part is done. Next is the past simple. We use it for finished events. ' && g.removed[0] === 'Shall we go on, or do you have a question first?', out.join(''));
+    const o2: string[] = []; const g2 = new ReplyGate((t) => o2.push(t), { dropFrame: false, holdGoodbye: true });
+    g2.push('Well done today. See you next time! '); g2.flush();
+    check('a goodbye is held; released with a line before it', o2.join('') === 'Well done today. ' && (g2.releaseHeld("We didn't get to the pronunciation part today, so that's for next time."), /next time\. See you next time!/.test(o2.join(''))), o2.join(''));
+    const o3: string[] = []; const g3 = new ReplyGate((t) => o3.push(t), { dropFrame: false, holdGoodbye: true });
+    g3.push('Well done today. Goodbye! '); g3.flush(); g3.dropHeld();
+    check('…or dropped, and recorded as removed', o3.join('') === 'Well done today. ' && g3.removed.includes('Goodbye!'));
+    const o4: string[] = []; const g4 = new ReplyGate((t) => o4.push(t), { dropFrame: false, holdGoodbye: false });
+    g4.push('Next part. 次は過去形です。いいですか？ '); g4.flush();
+    check('Japanese sentences pass through whole; a part-change frame is kept when not told to drop', o4.join('') === 'Next part. 次は過去形です。いいですか？ ' && new ReplyGate(() => {}, { dropFrame: false, holdGoodbye: false }).removed.length === 0, o4.join(''));
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

@@ -5,6 +5,8 @@
  * the opening words of the sentence it belongs with (tools.ts); this finds that sentence among the
  * ones sent to the voice, so the client can hold the item until it starts playing.
  */
+import { TUTOR_V2_PRACTICE_ASK_CAP } from '../orchestrator/flags';
+
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
 
 /** Index of the sentence the anchor points at, or -1 when there is no anchor or nothing matches.
@@ -111,8 +113,11 @@ export function asksAnywhere(sentences: string[]): boolean {
   return sentences.some((x, i) => /[?？]/.test(x) || (i >= sentences.length - 2 && asksAloud([x])));
 }
 
+/** Task 6e fix round 1 (F2): a request to say the sentence that names "you" ("Now you say it: …") hands over too; taken
+ *  for a statement, it got "Are you with me so far?" added, and the "Yes." to that set the request off again. */
+const YOU_SAY = /\b(?:now )?you (?:say|try|repeat)\b|\bsay it (?:again|back|once more|with me|after me)\b|\brepeat after me\b|\bsay the (?:whole )?sentence\b|言ってみて|言ってください/i;
 export function asksAloud(sentences: string[]): boolean {
-  return sentences.slice(-2).some((x) => /[?？]/.test(x) || TO_THE_STUDENT.test(x) || x.split(/[,;:]\s+|\s+and\s+/).some((clause) => DO_THIS.test(clause.trim())));
+  return sentences.slice(-2).some((x) => /[?？]/.test(x) || TO_THE_STUDENT.test(x) || (TUTOR_V2_PRACTICE_ASK_CAP && YOU_SAY.test(x)) || x.split(/[,;:]\s+|\s+and\s+/).some((clause) => DO_THIS.test(clause.trim())));
 }
 
 /** In a spoken lesson, what a problem card asks must also be heard: a tutor who tells the scenario and stops,
@@ -188,7 +193,7 @@ const ABOUT_OPTIONS = /\bwhich(?: one| of (?:these|them|those|the \w+))?\s*\?|\b
  *  be said: the sentence as it stands, or the options as "1, …; 2, …". Null when the reply asks nothing, when the spoken
  *  words already carry the item (most of its words were said), when the item holds mathematics, or when it is too long
  *  to say. Problem cards are not handled here (unsaidAsk). */
-export function unsaidBoardItem(calls: ReadonlyArray<{ name: string; args: Record<string, unknown>; outcome: string }>, sentences: string[]): string | null {
+export function unsaidBoardItem(calls: ReadonlyArray<{ name: string; args: Record<string, unknown>; outcome: string }>, sentences: string[], say: { sentences?: boolean } = {}): string | null {
   if (!sentences.length || !asksAnywhere(sentences)) return null;
   const shown = calls.filter((c) => !/^not /.test(c.outcome) || /^not painted again: .*scrolled back/.test(c.outcome));
   const items = shown.map((c) => {
@@ -202,6 +207,9 @@ export function unsaidBoardItem(calls: ReadonlyArray<{ name: string; args: Recor
   }).filter((x): x is NonNullable<typeof x> => !!x);
   const item = items[items.length - 1];
   if (!item || HAS_MARKUP.test(item.text)) return null;
+  // Task 6e fix round 1 (F5): a sentence card is said where it stands (sentenceCardToSay) or not at all; read after the
+  // ask, an example card came out as a non-sequitur (tester A ×4, tester B ×1). `sentences: false` leaves cards out.
+  if (item.kind === 'sentence' && say.sentences === false) return null;
   // The item is said after the reply, so only when the reply's last ask is about it: a corrected sentence's card read
   // out after "Now, what did you do last weekend?" lands after a question about something else (review M6).
   const asks = sentences.slice(-2).filter((x) => asksAloud([x]));
@@ -227,9 +235,19 @@ const LEAD_IN_COLON = /[:：]["'”’)\]]*\s*$/;
  *  the card's sentence and the words said so far in this reply, this returns the sentence to speak in its place, or
  *  null: when the words before it do not lead into it with a colon (a card after a sentence that already said it, or
  *  one put up beside the talk), when the reply has already said it, or when it holds mathematics. */
-export function sentenceCardToSay(sentence: string, saidSoFar: string): string | null {
+/** A lead-in without a colon: a statement that announces a sentence ("Here are two sentences that look similar…",
+ *  "I'll put your idea into one sentence with the past simple.") (Task 6e fix round 1, F5: both went unsaid). */
+const CARD_LEAD_IN = /\b(?:here (?:is|are)|here's|sentences?|for example|an example|examples|we say|we'd say|you can say|you could say|like this|it (?:would be|becomes)|should be|the correct (?:form|version|one)|put (?:it|that|this|your \w+) (?:into|in))\b|例えば|次の文|こう言います/i;
+const lastSentenceOf = (text: string) => text.trim().split(/(?<=[.!?。！？])["'”’」)]*\s+/).filter(Boolean).pop() ?? '';
+
+export function sentenceCardToSay(sentence: string, saidSoFar: string, opts: { leadIn?: boolean; continuing?: boolean } = {}): string | null {
   const s = sentence.replace(/\s+/g, ' ').trim();
-  if (!s || HAS_MARKUP.test(s) || !LEAD_IN_COLON.test(saidSoFar)) return null;
+  if (!s || HAS_MARKUP.test(s)) return null;
+  // `leadIn`: a statement that announces it, or the next card under a lead-in already spoken (`continuing`). Never after
+  // words that ask them something: read there, an example card sounded like an answer to its own question (finding B).
+  const last = lastSentenceOf(saidSoFar);
+  const announced = LEAD_IN_COLON.test(saidSoFar) || (!!opts.leadIn && (!!opts.continuing || (CARD_LEAD_IN.test(last) && !/[?？]/.test(last) && !asksAloud([last]))));
+  if (!announced) return null;
   const want = norm(s).join(' ');
   if (!want || norm(saidSoFar).join(' ').includes(want)) return null;
   return /[.!?。！？]["'”’)]*$/.test(s) ? s : `${s}.`;

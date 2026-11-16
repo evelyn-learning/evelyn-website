@@ -32,7 +32,7 @@ import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAI
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
-import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE } from '@/lib/tutor/orchestrator/flags';
+import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER } from '@/lib/tutor/orchestrator/flags';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { armV2SoundGate, stepV2SoundGate } from '@/lib/tutor/v2/sound-gate';
 import { V2MicWatch } from '@/lib/tutor/v2/mic-watch';
@@ -48,6 +48,7 @@ import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
 import { v2HeardIsNoise } from '@/lib/tutor/v2/heard';
+import { WordsWatch } from '@/lib/tutor/v2/words-watch';
 import { v2SpeechParts } from '@/lib/tutor/v2/languages';
 import { trimToSpoken } from '@/lib/tutor/v2/interrupted';
 import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
@@ -242,6 +243,16 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     }, (delayS ?? wait) * 1000);
   }, []);
 
+  // Speech heard and no words after it, and no failure either (v2/words-watch.ts, Task 6e fix round 1 F6): the page goes
+  // back to listening and the idle nudge is armed again. Without it a turn the recogniser ended empty left the page on
+  // "One moment…" with the silence timer cleared, and no nudge came for four minutes (v2audio-6e/stall).
+  const wordsWatchRef = useRef<WordsWatch>(null as unknown as WordsWatch);
+  if (!wordsWatchRef.current) wordsWatchRef.current = new WordsWatch(() => {
+    p.current.onDebugEvent?.('v2_words_lost', 'speech was heard and no transcript or failure followed: listening again');
+    if (turnsRef.current?.isEnding() || turnsRef.current?.busy || realtimeRef.current?.isSpeechPending()) return;
+    showState('listening'); armSilence();
+  }, undefined, TUTOR_V2_NO_WORDS_RECOVER);
+
   // Measured pronunciation (v2/pronunciation.ts): the partner's option, the kill switch, and a session id for the assess
   // route. Off: no recorder, the microphone frames go to the session recorder alone, as before.
   const pronunciationOn = TUTOR_PRONUNCIATION_ASSESS && !!props.pronunciation && !!props.sessionId;
@@ -420,6 +431,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, []);
 
   const heard = useCallback((transcript: string, opts?: { typed?: boolean }) => {
+    wordsWatchRef.current.settled();
     const text = transcript.trim();
     if (!text) return;
     if (flagRef.current.active) { flagRef.current.words.push(text); return; }
@@ -526,9 +538,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // The student's voice. Exactly one recogniser owns the microphone, chosen as v1 chooses it.
   const listening = started && realtime.isConnected && !props.standby && !turns.closed;
   const onTranscript = useCallback((t: PerceptionTranscript) => heard(t.text), [heard]);
-  const onPartial = useCallback((x: { text: string }) => { setComposerStatus((was) => ({ ...was, heard: x.text })); hearingPartial(x.text); }, [hearingPartial]);
+  const onPartial = useCallback((x: { text: string }) => { wordsWatchRef.current.speech('partial'); setComposerStatus((was) => ({ ...was, heard: x.text })); hearingPartial(x.text); }, [hearingPartial]);
   const onSpeechStart = useCallback(() => {
     if (flagRef.current.active) return;
+    wordsWatchRef.current.speech('start');
     // An armed pronunciation reply starts recording here, unless the tutor's own voice is what was heard.
     pronRef.current?.speechStart(!!realtimeRef.current?.isSpeechPending());
     clearSilence();
@@ -563,8 +576,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     }, BARGEIN_GATE_POLL_MS);
   }, []);
   // Speech stopped before the gate passed: a blip or the tutor's own voice, not an interruption.
-  const onSpeechStop = useCallback(() => { if (soundGateRef.current) { stopSoundGate(); p.current.onDebugEvent?.('v2_bargein_gate_dropped', 'speech stopped first'); } if (flagRef.current.active) return; pronRef.current?.speechStop(); if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) showState('processing'); }, []);
+  const onSpeechStop = useCallback(() => { if (soundGateRef.current) { stopSoundGate(); p.current.onDebugEvent?.('v2_bargein_gate_dropped', 'speech stopped first'); } if (flagRef.current.active) return; wordsWatchRef.current.speech('stop'); pronRef.current?.speechStop(); if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) showState('processing'); }, []);
   const onNoTranscript = useCallback((kind: string | undefined) => {
+    wordsWatchRef.current.settled();
     p.current.onDebugEvent?.('v2_transcription_failed', String(kind ?? 'unknown'));
     if (flagRef.current.active) return;
     liftPause();
@@ -635,7 +649,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     turnsRef.current?.open();
   }, []);
 
-  useEffect(() => () => { stopSoundGate(); pronRef.current?.disarm(); releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
+  useEffect(() => () => { wordsWatchRef.current.settled(); stopSoundGate(); pronRef.current?.disarm(); releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
 
   // A resumed session waits for a tap, as any session does (audio needs one): the page shows "Continue lesson".
   useEffect(() => { if (turns.resumedRef.current && !startedRef.current) p.current.onResumeAwaitingTapChange?.(true); // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,6 +1,7 @@
 import { stripBoardBlocks } from './board-inline';
 import { TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
 import type { V2State } from './types';
+import { V2_PART_FRAME } from './reply-gate';
 /**
  * Tutor brain v2 — a part is closed before the next is opened.
  *
@@ -78,4 +79,20 @@ export function partOffer(title: string, named: boolean, askQuestion: boolean = 
   const lower = /^[A-Z][a-z]/.test(t) && !/^[A-Z][a-z]+'s\b/.test(t) ? t[0].toLowerCase() + t.slice(1) : t;
   // A part headed by a question is named as one: "Next is which one matches?." was said (demo check, 2026-11-13).
   return /[?？]$/.test(t) ? `Next: ${lower} ${ask}` : `Next is ${lower}. ${ask}`;
+}
+
+/** The most part-change frames a lesson hears (Task 6e fix round 1, F1). */
+export const V2_MAX_PART_FRAMES = 2;
+const hasFrame = (text: string) => stripBoardBlocks(text).split(/(?<=[.!?。！？])\s+/).some((x) => V2_PART_FRAME.test(x.trim()) || QUESTION_CHECK.test(x));
+/** Whether this lesson may ask at a part change whether to go on (and whether they have a question first): fewer than
+ *  V2_MAX_PART_FRAMES asked so far, and none at the last part change (one of the tutor's replies from the one before the
+ *  current part's page block on). The frame came at every part change, by the model as often as by the runtime: tester
+ *  B heard it five times, Josh at two changes running (v2audio-6e finding C). */
+export function v2FrameDue(history: V2State['history']): boolean {
+  const replies = history.filter((h) => h.role === 'assistant').map(replyText).filter((x) => x.trim());
+  if (replies.filter(hasFrame).length >= V2_MAX_PART_FRAMES) return false;
+  let page = -1;
+  for (let i = replies.length - 1; i >= 0; i--) if (/<board\s+page\b/.test(replies[i]!)) { page = i; break; }
+  if (page < 0) return true;
+  return !replies.slice(Math.max(0, page - 1)).some(hasFrame);
 }

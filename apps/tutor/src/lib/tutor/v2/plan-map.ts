@@ -242,3 +242,19 @@ export function v2UnreachedOffer(plan: LessonPlan | undefined, state: Pick<V2Sta
   const one = left.length === 1;
   return `Before the summary, there is still ${list}. Would you like to do ${one ? 'it' : 'them'} now, or go straight to the summary?`;
 }
+
+/** The line naming an optional plan part that was not reached, said before a goodbye that does not name it (Task 6e fix
+ *  round 1, F3): Josh's stop goodbye named the past simple and the conversation as next time, not pronunciation, and
+ *  tester B's summary did not name it at all. Only optional parts (a part the student chooses, which a close passes over
+ *  most easily); null when none is unreached or `said` already names each. */
+export function v2NextTimeLine(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>, said: string): string | null {
+  if (!plan) return null;
+  const missing = v2UnreachedAtClose(plan, state).filter(v2PartIsOptional).filter((seg) => {
+    const p = v2PartOf(seg); const label = p.label ?? '';
+    const named = headingWords(label).every((w) => said.toLowerCase().includes(w.slice(0, 5))) || Object.values(p.labelLocalized ?? {}).some((n) => said.includes(n));
+    return !named;
+  });
+  if (!missing.length) return null;
+  const names = partNames(missing).replace(/\bthe (\S)/g, (_m, c: string) => `the ${c.toLowerCase()}`);
+  return `We didn't get to ${names} today, so that's for next time.`;
+}

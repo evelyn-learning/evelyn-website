@@ -6,8 +6,8 @@
  */
 import { renderBoard } from './board';
 import { stripBoardBlocks } from './board-inline';
-import { TUTOR_V2_OPENER_FACT, TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
-import { v2QuestionCheckRecent } from './part-close';
+import { TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_OPENER_FACT, TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
+import { v2FrameDue } from './part-close';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus, v2PassedPartFact, v2UnreachedAtCloseFact } from './plan-map';
 import type { V2Session, V2State } from './types';
@@ -15,7 +15,7 @@ import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from '
 import { v2WorkingLevelFacts } from './working-level';
 import { v2PronunciationFacts, v2TextSoundFacts } from './pronunciation';
 import { v2SentenceCardsFacts } from './sentence-cards';
-import { v2RetryFacts } from './languages';
+import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { v2PartDueFact, v2WrapDue } from './time-box';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
@@ -100,12 +100,12 @@ export function v2OpenerFact(session: V2Session, state: V2State, enabled: boolea
   return [`your last ${run} replies opened with "${opener}": open this one differently. React to what they said and keep the conversation moving; a confirmation only when they were practising the form being taught, and then in other words`];
 }
 
-/** The facts line after a part change that asked whether they had a question first (part-close.ts
- *  v2QuestionCheckRecent): the next part change asks only whether to go on. The tutor wrote the frame itself as often
- *  as the runtime did ("Are you ready for that, or do you have a question first?"), 2–3 times a run (Task 6e, v2audio
- *  finding 6). `enabled` is the kill switch. */
+/** The facts line when the part-change ask is not due (part-close.ts v2FrameDue): the next part change names what comes
+ *  next and begins it in the same reply. The tutor wrote the frame itself as often as the runtime did ("Are you ready for
+ *  that, or do you have a question first?"); told only to drop the question half, it kept asking at every change (Task
+ *  6e fix round 1, F1: five times for tester B). `enabled` is the kill switch. */
 export function v2QuestionCheckFact(state: V2State, enabled: boolean = TUTOR_V2_PART_OFFER_ONCE): string[] {
-  return enabled && v2QuestionCheckRecent(state.history) ? ['the last part change asked whether they had a question first: when this part closes, name what comes next and ask only whether to go on'] : [];
+  return enabled && !v2FrameDue(state.history) ? ['part changes: the ask whether to go on (or whether they have a question first) is not due at the next one: when this part is done, say so, name what comes next and begin it in the same reply'] : [];
 }
 
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
@@ -144,6 +144,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // not beside the passed-part line, which already says to offer it.
     const near = !!session.timeBoxMinutes && left <= session.timeBoxMinutes * 0.2;
     if (!discussion && !passed.length) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing ? 'closing' : near ? 'near' : null));
+    // Task 6e fix round 1 (F4): tester B was asked about a question or the summary in two turns running.
+    if (!discussion && TUTOR_V2_CLOSE_ONE_QUESTION && (closing || near) && !state.closed) lines.push('at the close: at most one question in a reply, never one you asked in your last reply, and nothing after a goodbye');
   }
   // Where the parts' minutes put the lesson now, so it paces itself to the box (time-box.ts).
   const partDue = v2PartDueFact(session, state, f.nowMs, !!session.timeBoxMinutes && left <= V2_TIME_UP_MIN);
@@ -156,6 +158,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(...v2TextSoundFacts(session));
   // Tries at one sentence, counted: at the second the correct sentence comes next (languages.ts).
   if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2RetryFacts(session.languages, state.history, f.heard));
+  // Asks for one practice sentence, counted; a bare yes is no try (Task 6e fix round 1, F2).
+  if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2PracticeAskFacts(session.languages, state.history, f.heard));
   // The learner's corrected sentences, for the summary's sentence cards (sentence-cards.ts).
   lines.push(...v2SentenceCardsFacts(session, state));
   // How the last reply opened, so the next does not open the same way (D10).

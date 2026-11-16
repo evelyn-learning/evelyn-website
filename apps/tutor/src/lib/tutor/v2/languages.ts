@@ -11,7 +11,8 @@
  * voice language (voice/tts-language.ts splitSentenceForTts).
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_V2_CHECK_MISHEARD, TUTOR_V2_PRACTICE_VERDICT, TUTOR_V2_RETRY_COUNT } from '../orchestrator/flags';
+import { TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_V2_CHECK_MISHEARD, TUTOR_V2_PRACTICE_ASK_CAP, TUTOR_V2_PRACTICE_VERDICT, TUTOR_V2_RETRY_COUNT } from '../orchestrator/flags';
+import { stripBoardBlocks } from './board-inline';
 import { languageNameOf } from '../voice/language-request';
 import { splitSentenceForTts } from '../voice/tts-language';
 
@@ -67,8 +68,9 @@ export function v2LanguagesSection(languages: readonly string[] | undefined, mod
     // what they are judged on; never the transcript.
     mode === 'text' ? '' : `Their words reach you through a speech recogniser that hears both languages. It often writes a spoken ${T} word as a sound-alike or in ${S} script: a sound-alike of the target is the target. ${opts.pronunciationMeasured ? 'Their pronunciation reaches you only as a measured score in the facts: comment on it only from such a score, never from the transcript.' : 'You cannot hear their pronunciation: don\'t praise or judge it.'}`,
     // Task 6e (v2audio tester B): "my role" heard as "my lover" got a correction built on it, and "I met someone" heard as
-    // "I met some" was called correct.
-    mode === 'text' || !opts.checkMisheard ? '' : 'When a word in their sentence makes little sense where it stands, or one seems to be missing, the recogniser may have misheard: ask "Did you say …?" with the word you think they said, before you correct the sentence or call it right.',
+    // "I met some" was called correct. Fix round 1: "わかりません" heard as "Okarimasu." drew "Did you mean you're ready?":
+    // a check never guesses a meaning that was not said.
+    mode === 'text' || !opts.checkMisheard ? '' : 'When a word in their sentence makes little sense where it stands, or one seems to be missing, the recogniser may have misheard: check before you correct the sentence or call it right. Ask "Did you say …?" only with a word that sounds like what was heard and fits; when nothing fits, ask them to say it again. Never guess at a meaning they did not say.',
     ...(SUPPORT_LINES[code] ?? []),
     // Findings case 4: "please stop" got a question and then the next part; "I have to finish" had to be said three times.
     'When they say they want to stop or have to go, that reply is the close: one sentence on what they practised, a goodbye, and end_lesson. No new question, no new exercise.',
@@ -104,4 +106,44 @@ export function v2RetryFacts(languages: readonly string[] | undefined, history: 
  *  target is spoken in parts, each in its own voice language. One part in a one-language session. */
 export function v2SpeechParts(sentence: string, languages: readonly string[] | undefined): string[] {
   return splitSentenceForTts(sentence, TUTOR_TTS_SPLIT_QUOTED_SPANS ? languages : undefined).map((p) => p.text);
+}
+
+/** A tutor reply that asks them to say or try a sentence. */
+const PRACTICE_ASK = /\b(?:say|try|repeat)\b[^.?!]*\b(?:it|this|that|sentence|again|once more|back|after me)\b|\bnow you say\b|\byour turn\b|もう一度|言ってみて|言ってください/i;
+const QUOTED = /「([^」]{6,})」|"([^"]{6,})"|“([^”]{6,})”/g;
+/** A bare yes or ok: an answer to a check question, never a try at a sentence. */
+export const V2_BARE_YES = /^\s*(?:yes|yeah|yep|yup|ok|okay|sure|alright|all right|mhm|uh[- ]?huh|i see|got it|はい|ええ|うん|わかりました)\s*[.!。！]*\s*$/i;
+/** What a reply asks them to say: undefined when it asks for no sentence, null when it names none (an ask "again"),
+ *  else the longest quoted sentence in it. */
+function practiceAsk(m: Anthropic.MessageParam): string | null | undefined {
+  const text = stripBoardBlocks(ownText(m));
+  if (!PRACTICE_ASK.test(text)) return undefined;
+  const quotes = [...text.matchAll(QUOTED)].map((q) => (q[1] ?? q[2] ?? q[3] ?? '').trim()).filter((q) => wordsIn(q).length >= RETRY_MIN_WORDS);
+  return quotes.sort((a, b) => b.length - a.length)[0] ?? null;
+}
+
+/** The facts lines that count the tutor's asks for one practice sentence (Task 6e fix round 1, F2): tester A was asked
+ *  about nine times for "I didn't attend any exhibitions last year", each "Yes." to the tutor's own "Does that make
+ *  sense?" setting the ask off again. Asks in a row for the same sentence are counted (an ask that quotes none is one
+ *  more for the sentence before it); a bare yes or ok is no try. From the second ask on, the facts say to give the
+ *  sentence and move on. Lessons with a second teaching language only. `enabled` is the kill switch. */
+export function v2PracticeAskFacts(languages: readonly string[] | undefined, history: Anthropic.MessageParam[], heard: string | null | undefined, enabled: boolean = TUTOR_V2_PRACTICE_ASK_CAP): string[] {
+  if (!enabled || !languages || languages.length < 2) return [];
+  let asks = 0; let target: string | null = null; let firstAt = -1;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const m = history[i]!;
+    if (m.role !== 'assistant' || !ownText(m).trim()) continue;
+    const t = practiceAsk(m);
+    if (t === undefined) break;
+    if (t && target && !sameSentence(t, target)) break;
+    if (t && !target) target = t;
+    asks += 1; firstAt = i;
+  }
+  if (!asks) return [];
+  const replies = [...history.slice(firstAt + 1).filter(isOwnWords).map(ownText), ...(heard && !heard.trim().startsWith('[') ? [heard] : [])];
+  const tries = replies.filter((r) => !V2_BARE_YES.test(r)).length;
+  const lines: string[] = [];
+  if (heard && V2_BARE_YES.test(heard)) lines.push(`their "${heard.trim()}" answers your check question; it is not a try at the sentence you asked for`);
+  if (asks >= 2) lines.push(`practice asks: you have asked them ${asks} times in a row to say ${target ? JSON.stringify(target) : 'this sentence'}, and they have tried it ${tries} ${tries === 1 ? 'time' : 'times'}. Do not ask for it again: say it yourself now and go on to the next thing`);
+  return lines;
 }

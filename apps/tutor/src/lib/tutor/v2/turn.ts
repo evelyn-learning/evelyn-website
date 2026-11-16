@@ -28,18 +28,19 @@ import { saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2WrapDue } from './time-box';
-import { planGoalIds, renderPlanMap, v2PartOf, v2UnreachedOffer } from './plan-map';
+import { planGoalIds, renderPlanMap, v2NextTimeLine, v2PartOf, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
-import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2QuestionCheckRecent } from './part-close';
+import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
+import { ReplyGate, V2_PART_FRAME } from './reply-gate';
 import { heardAsWords } from './heard';
 import { v2LanguagesSection } from './languages';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { v2StopAsked } from './stop-signal';
-import { TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -545,6 +546,15 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const lastTutorText = (() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })();
   const boardHasPage = (title: string) => state.board.pages.some((pg) => pg.title.replace(/\s+/g, '').toLowerCase() === title.replace(/\s+/g, '').toLowerCase());
   let owedAsked = false;
+  // Fix round 1 (F1): the part-change frame is the runtime's, at most twice a lesson and never at two part changes running.
+  // When it is not due, a page is not held for it and a frame the model writes is dropped (reply-gate.ts).
+  const frameDue = !TUTOR_V2_PART_OFFER_ONCE || discussion || v2FrameDue(state.history);
+  const teaching = !discussion && !session.homework && !session.homeworkSheet;
+  // F3, F4: a goodbye waits for the reply to be complete (reply-gate.ts).
+  const holdGoodbye = teaching && (TUTOR_V2_CLOSE_ONE_QUESTION || TUTOR_V2_PASSED_PART_CLOSE);
+  let framesDropped = 0;
+  // F5: cards said one after another under one lead-in ("Here are two sentences…" and two cards).
+  let cardRun = false;
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
       model: '',
@@ -556,13 +566,19 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       messages,
     } as unknown as Anthropic.MessageCreateParamsNonStreaming;
     const inline = new BoardInlineStream();
+    const gate = new ReplyGate((t) => {
+      if (firstTextMs === null && t.trim()) firstTextMs = Date.now() - t0;
+      saidChars += t.length; saidNow += t;
+      input.onText?.(t);
+    }, { dropFrame: TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, holdGoodbye });
     const hold = (block: InlineBlock) => {
+      gate.flush();
       // A held summary page with plan parts not reached: the offer names them and lets the student choose (Task 6e).
       const missed = closesLesson(block.body.trim()) ? v2UnreachedOffer(session.plan, state) : null;
       // The question check only when the last part change did not ask it; an ask ending in the second language is an ask (Task 6e).
       const once = TUTOR_V2_PART_OFFER_ONCE;
       const asked = once ? endsAsking(saidNow.trimEnd()) : /\?\s*$/.test(saidNow);
-      const offer = missed ?? (asked ? '' : partOffer(block.body.trim(), namesPart(block.body, saidNow), !(once && v2QuestionCheckRecent(state.history))));
+      const offer = missed ?? (asked ? '' : partOffer(block.body.trim(), namesPart(block.body, saidNow)));
       heldAt = { raw: block.raw, offer };
       if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
       input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: block.body.trim() }, outcome: 'not opened yet: the student is asked first' });
@@ -571,11 +587,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       for (const part of parts) {
         if (heldAt) continue;
         if (pendingHold) { pendingHold.push(part); continue; }
-        if ('opening' in part) { input.onBoardOpen?.(); continue; }
+        if ('opening' in part) { gate.flush(); input.onBoardOpen?.(); continue; }
         if ('block' in part) {
+          gate.flush();
           // A new part the student has not been asked about is not opened in this reply (part-close.ts): the
           // reply ends here, with the offer in place of the page and all that followed it.
-          if (part.block.kind === 'page' && !discussion && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
+          if (part.block.kind === 'page' && !discussion && frameDue && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
             // In the box's last fifth the tutor may close by itself, and a reply that does is a closing turn: whether it
             // does is known only when the reply is complete, so the page and what follows it wait until then (D1).
             // Only a page that closes the lesson waits: any other is held at once and the offer streams as before
@@ -596,30 +613,27 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
             carryNow = []; sinceWords = [];
           } else { const before = inlineN; if (settleInline(part.block)) sinceWords.push(`inl_${nowMs.toString(36)}_${before + 1}`); }
           // A sentence card after "we say:" is spoken there too (board-timing.ts sentenceCardToSay, Task 6e).
+          // Fix round 1 (F5): after a lead-in with or without a colon, and the next card under the same lead-in; never
+          // when the words before it ask them something. Said only if the model's next sentence does not say it (reply-gate.ts).
           if (part.block.kind === 'sentence' && session.mode === 'voice' && TUTOR_V2_SAY_SENTENCE_CARD) {
-            const say = sentenceCardToSay(part.block.body, saidNow);
-            if (say) {
-              const words = `${/\s$/.test(saidNow) ? '' : ' '}${say} `;
-              saidCards.set(part.block.raw, say); saidChars += words.length; saidNow += words; sinceWords = [];
-              input.onText?.(words);
-            }
+            const say = sentenceCardToSay(part.block.body, saidNow, { leadIn: true, continuing: cardRun });
+            if (say) { saidCards.set(part.block.raw, say); sinceWords = []; gate.speakCard(say); cardRun = true; }
           }
           continue;
         }
-        if (part.text.trim()) sinceWords = [];
-        if (firstTextMs === null && part.text.trim()) firstTextMs = Date.now() - t0;
-        saidChars += part.text.length; saidNow += part.text;
-        input.onText?.(part.text);
+        if (part.text.trim()) { sinceWords = []; cardRun = false; }
+        gate.push(part.text);
       }
     };
     const response = await callModel(params, (delta) => take(inline.push(delta)), input.signal);
     take(inline.flush());
+    gate.flush();
     if (pendingHold) {
       // The reply is complete. One that calls end_lesson (accepted: this is the last fifth) is the close, and its page opens
       // with all that followed it; any other is held at the page, as at once before (D1).
       const waiting: InlinePart[] = pendingHold; pendingHold = null;
       const block = (waiting[0] as { block: InlineBlock }).block;
-      if (response.content.some((b) => b.type === 'tool_use' && b.name === 'end_lesson')) { releasing = true; try { take(waiting); } finally { releasing = false; } }
+      if (response.content.some((b) => b.type === 'tool_use' && b.name === 'end_lesson')) { releasing = true; try { take(waiting); gate.flush(); } finally { releasing = false; } }
       else hold(block);
     }
     const held = heldAt as { raw: string; offer: string } | null;
@@ -641,11 +655,35 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     usage.cacheCreationTokens += response.usage.cache_creation_input_tokens ?? 0;
 
     const results: Anthropic.ToolResultBlockParam[] = [];
+    const spokenBefore = spoken.length; const rawBefore = rawSpoken.length; const callsBefore = toolCalls.length;
+    // A sentence card that was also spoken (sentenceCardToSay) counts among the words said; one the model said itself is in its words.
+    const saidHere = () => new Map([...saidCards].filter(([, say]) => gate.saidCards.includes(say)));
+    const wordsOf = (text: string) => { const cards = saidHere(); return stripBoardBlocks(cards.size ? [...cards].reduce((t, [raw, say]) => t.split(raw).join(` ${say} `), text) : text); };
+    const removeFrom = (gone: string) => { for (const b of response.content) if (b.type === 'text' && b.text.includes(gone)) { b.text = b.text.replace(gone, '').replace(/[ \t]{2,}/g, ' '); return; } };
     for (const block of response.content) {
-      // A sentence card that was also spoken (sentenceCardToSay) counts among the words said.
-      if (block.type === 'text') { const words = stripBoardBlocks(saidCards.size ? [...saidCards].reduce((t, [raw, say]) => t.split(raw).join(` ${say} `), block.text) : block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } continue; }
+      if (block.type === 'text') { const words = wordsOf(block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } continue; }
       if (block.type !== 'tool_use') continue;
       results.push(settle(block));
+    }
+    // F3, F4: the held goodbye. A close the runtime refused takes its goodbye with it: the lesson goes on and nothing is
+    // said after a goodbye (James: the next-steps menu followed "See you next time!"). Otherwise it goes out, after a
+    // line naming an optional part that was not reached, when the reply has not named it (Josh's stop goodbye).
+    if (gate.holdsGoodbye) {
+      const ended = toolCalls.slice(callsBefore).find((c) => c.name === 'end_lesson');
+      if (ended && /^not /.test(ended.outcome) && TUTOR_V2_CLOSE_ONE_QUESTION) gate.dropHeld();
+      else {
+        const line = TUTOR_V2_PASSED_PART_CLOSE ? v2NextTimeLine(session.plan, state, `${saidNow} ${gate.held}`) : null;
+        const firstHeld = gate.held.split(/(?<=[.!?。！？])\s+/)[0] ?? '';
+        if (line && firstHeld) for (const b of response.content) if (b.type === 'text' && b.text.includes(firstHeld)) { b.text = b.text.replace(firstHeld, `${line} ${firstHeld}`); break; }
+        gate.releaseHeld(line ?? undefined);
+      }
+    }
+    if (gate.removed.length) {
+      // What did not go out leaves the reply as stored and as spoken (a dropped frame, a dropped goodbye).
+      for (const gone of gate.removed) removeFrom(gone);
+      framesDropped += gate.removed.filter((x) => V2_PART_FRAME.test(x)).length;
+      spoken.splice(spokenBefore); rawSpoken.splice(rawBefore);
+      for (const block of response.content) if (block.type === 'text') { const words = wordsOf(block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } }
     }
 
     const keep = storable(response.content);
@@ -695,7 +733,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const card = [...toolCalls].reverse().find((c) => c.name === 'show_problem' && !/^not /.test(c.outcome));
     const sentencesSaid = spoken.join(' ').split(/(?<=[.!?])\s+|(?<=[？。])/).filter((x) => x.trim());
     const more = card ? unsaidAsk(String(card.args.statement ?? ''), spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean))
-      : TUTOR_V2_SPEAK_BOARD_ITEM ? unsaidBoardItem(toolCalls, sentencesSaid) : null;
+      : TUTOR_V2_SPEAK_BOARD_ITEM ? unsaidBoardItem(toolCalls, sentencesSaid, { sentences: !TUTOR_V2_SAY_SENTENCE_CARD }) : null;
     if (more) {
       input.onText?.(`\n\n${more}`);
       spoken.push(more);
@@ -925,7 +963,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // A spoken reply that asks the student nothing leaves them not knowing whose move it is. Going on unasked a
   // moment later turned a page the student was still reading and talked over their answer (AP Lit and AP Calc BC,
   // 2026-11-11: "give the student the chance to say yes, I get this"). The reply ends by handing over instead.
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !asksAnywhere(spoken.join(' ').split(/(?<=[.?!])\s+/))) {
+  // A reply whose part-change frame was dropped (F1) goes on into the next part by design: no check-in is added to it.
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !framesDropped && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !asksAnywhere(spoken.join(' ').split(/(?<=[.?!])\s+/))) {
     const ins = discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS;
     const words = ins[state.history.length % ins.length];
     input.onText?.(`\n\n${words}`);

@@ -1740,3 +1740,25 @@ export const TUTOR_V2_PASSED_PART_CLOSE = process.env.NEXT_PUBLIC_TUTOR_V2_PASSE
  *  "I met some" was called correct (Task 6e, v2audio tester B). Default ON; NEXT_PUBLIC_TUTOR_V2_CHECK_MISHEARD=off ⇒
  *  no such line. */
 export const TUTOR_V2_CHECK_MISHEARD = process.env.NEXT_PUBLIC_TUTOR_V2_CHECK_MISHEARD !== 'off';
+
+/** Tutor brain v2 (v2/reply-gate.ts, v2/turn.ts, v2/facts.ts): at the close, one question per reply, and nothing after
+ *  a goodbye. A goodbye is held until the reply is complete; a close the runtime refuses takes its goodbye with it, so
+ *  the menu the refusal asks for is not said after "See you next time!" (Task 6e fix round 1, F4: James; tester B asked
+ *  about a question or the summary in two turns running). Default ON; NEXT_PUBLIC_TUTOR_V2_CLOSE_ONE_QUESTION=off ⇒ the
+ *  goodbye goes out as written and no such facts line, as before. */
+export const TUTOR_V2_CLOSE_ONE_QUESTION = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_ONE_QUESTION !== 'off';
+
+/** Tutor brain v2 (v2/languages.ts v2PracticeAskFacts, v2/board-timing.ts asksAloud): asks for one practice sentence are
+ *  counted by the runtime, a bare "yes" to the tutor's own check is not a try, and after two asks the facts say to give
+ *  the sentence and move on. "Now you say it" also counts as handing over, so no "Are you with me so far?" is added to
+ *  it. Tester A was asked about nine times for "I didn't attend any exhibitions last year", each "Yes." to "Does that
+ *  make sense?" setting the ask off again (Task 6e fix round 1, F2). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PRACTICE_ASK_CAP=off ⇒ no count, and asksAloud as before. */
+export const TUTOR_V2_PRACTICE_ASK_CAP = process.env.NEXT_PUBLIC_TUTOR_V2_PRACTICE_ASK_CAP !== 'off';
+
+/** Tutor brain v2 (v2/words-watch.ts, TutorVoiceV2): speech that began, or stopped, with no transcript and no failure
+ *  after it does not leave the page waiting: the client goes back to listening and the idle nudge is armed again. The
+ *  recogniser ended a turn with no words (an empty turn.end is dropped without a callback), the page sat on "Got it /
+ *  One moment…" with the silence timer cleared at the speech's start, and no nudge came for four minutes (Task 6e fix
+ *  round 1, F6: tester B's stalled first try). Default ON; NEXT_PUBLIC_TUTOR_V2_NO_WORDS_RECOVER=off ⇒ no watch. */
+export const TUTOR_V2_NO_WORDS_RECOVER = process.env.NEXT_PUBLIC_TUTOR_V2_NO_WORDS_RECOVER !== 'off';
