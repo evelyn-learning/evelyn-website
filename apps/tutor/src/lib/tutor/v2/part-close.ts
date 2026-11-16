@@ -90,18 +90,31 @@ const PAGE_BLOCK = /<board\s+page\b/;
 /** Whether this lesson may ask at a part change whether to go on (and whether they have a question first): fewer than
  *  V2_MAX_PART_FRAMES asked so far, and none at the last part change. The frame came at every part change, by the model
  *  as often as by the runtime: tester B heard it five times, Josh at two changes running (v2audio-6e finding C).
- *  Only frames said at a part change count (fix round 2, minor a): a reply with a frame whose next reply opens a page
- *  that is not the lesson's first ("Shall we start?" before the first page is the opening), or the latest reply, whose
- *  change is happening now. */
+ *  Only frames said at a part change count (fix round 2, minor a): a frame followed by the opening of a page that is not
+ *  the lesson's first, with no other frame between ("Shall we start?" before the first page is the opening), or the
+ *  last frame with no page after it yet, whose change is happening now. Fix round 3 (P1): the page need not come in the
+ *  very next reply: a student who answers the frame with a question gets the page one reply later, and that frame
+ *  escaped both the budget and "asked at the last change". */
 export function v2FrameDue(history: V2State['history']): boolean {
   const replies = history.filter((h) => h.role === 'assistant').map(replyText).filter((x) => x.trim());
   const n = replies.length;
+  const isPage = (i: number) => PAGE_BLOCK.test(replies[i]!);
   const firstPage = replies.findIndex((r) => PAGE_BLOCK.test(r));
-  const atChange = (i: number) => i >= 0 && i < n && hasFrame(replies[i]!) && (i === n - 1 || (PAGE_BLOCK.test(replies[i + 1]!) && i + 1 !== firstPage));
-  let count = 0;
-  for (let i = 0; i < n; i++) if (atChange(i)) count += 1;
-  if (count >= V2_MAX_PART_FRAMES) return false;
+  /** The page a frame at `i` led to: the next reply that opens one (-1: none yet), or null when another frame came first. */
+  const ledTo = (i: number): number | null => {
+    for (let j = i + 1; j < n; j++) { if (isPage(j)) return j; if (hasFrame(replies[j]!)) return null; }
+    return -1;
+  };
+  const changes: number[] = [];
+  for (let i = 0; i < n; i++) {
+    if (!hasFrame(replies[i]!)) continue;
+    const j = ledTo(i);
+    if (j === null || j === firstPage) continue;
+    changes.push(j);
+  }
+  if (changes.length >= V2_MAX_PART_FRAMES) return false;
   let page = -1;
-  for (let i = n - 1; i >= 0; i--) if (PAGE_BLOCK.test(replies[i]!)) { page = i; break; }
-  return !atChange(n - 1) && !(page > 0 && page !== firstPage && atChange(page - 1));
+  for (let i = n - 1; i >= 0; i--) if (isPage(i)) { page = i; break; }
+  // A frame still waiting for its page (-1), or the frame that led to the last page opened: the last change asked it.
+  return !changes.includes(-1) && !(page >= 0 && changes.includes(page));
 }

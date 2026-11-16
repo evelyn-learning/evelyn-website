@@ -365,6 +365,43 @@ async function main() {
     check('N4 / minor b: the gate works only in spoken teaching lessons (no homework, no discussion, no typed lesson)', /const teaching = !discussion && !session\.homework && !session\.homeworkSheet;\n\s+const gated = teaching && session\.mode === 'voice';/.test(turnSrc) && /dropFrame: gated && /.test(turnSrc) && /const holdGoodbye = gated && /.test(turnSrc));
   }
 
+
+  console.log('fix round 3');
+  {
+    // P1: the reviewer's sequence: overview page → frame → student question → answer → present perfect page → "Good."
+    const asked: V2State['history'] = [
+      { role: 'user', content: '[The session has just started.]' }, { role: 'assistant', content: '<board page>Lesson overview</board> Hello, today we talk about work.' },
+      { role: 'user', content: 'I work in sales.' }, { role: 'assistant', content: 'Good. Next is present perfect. Shall we go on, or do you have a question first?' },
+      { role: 'user', content: 'What is the present perfect?' }, { role: 'assistant', content: 'It is have plus a past participle, for experience up to now.' },
+      { role: 'user', content: 'OK.' }, { role: 'assistant', content: '<board page>Present perfect</board> How long have you worked there?' },
+      { role: 'user', content: 'Ten years.' }, { role: 'assistant', content: 'Good.' },
+    ];
+    check('P1: a frame answered with a question, its page a reply later: asked at the last change, so not due', !v2FrameDue(asked));
+    const later: V2State['history'] = [...asked, { role: 'user', content: 'I have worked here ten years.' }, { role: 'assistant', content: 'Good. Next is past simple. Shall we go on?' }, { role: 'user', content: 'Can I ask something?' }, { role: 'assistant', content: 'Of course.' }, { role: 'user', content: 'ok go on' }, { role: 'assistant', content: '<board page>Past simple</board> What did you do yesterday?' }, { role: 'user', content: 'I worked.' }, { role: 'assistant', content: 'Good.' }, { role: 'user', content: 'ok' }, { role: 'assistant', content: '<board page>Conversation</board> Tell me about a project.' }];
+    check('P1: …and it counts toward the cap: two such frames, then a change without one, still not due', !v2FrameDue(later));
+    const between: V2State['history'] = [asked[0]!, asked[1]!, { role: 'user', content: 'x' }, { role: 'assistant', content: 'Shall we go on?' }, { role: 'user', content: 'wait' }, { role: 'assistant', content: 'Next is present perfect. Shall we go on, or do you have a question first?' }, { role: 'user', content: 'yes' }, { role: 'assistant', content: '<board page>Present perfect</board> Go.' }, { role: 'user', content: 'ok' }, { role: 'assistant', content: 'Good.' }];
+    check('P1: two frames before one page count once (the later one), so one of two is spent', !v2FrameDue(between) && (() => { const h: V2State['history'] = [...between, { role: 'user', content: 'ok' }, { role: 'assistant', content: '<board page>Past simple</board> Go.' }, { role: 'user', content: 'ok' }, { role: 'assistant', content: 'Good.' }]; return v2FrameDue(h); })());
+    // P2: budget spent, nothing unreached, summary page: it opens, no frame.
+    const B = ['Lesson overview', 'Level check', 'Your job', 'Present perfect', 'Past simple', 'Conversation', 'Pronunciation'];
+    const spent: V2State['history'] = [
+      { role: 'user', content: '[The session has just started.]' }, { role: 'assistant', content: '<board page>Lesson overview</board> Hello.' },
+      { role: 'user', content: 'ok' }, { role: 'assistant', content: 'Next is your job. Shall we go on, or do you have a question first?' },
+      { role: 'user', content: 'yes' }, { role: 'assistant', content: '<board page>Your job</board> What do you do?' },
+      { role: 'user', content: 'Sales.' }, { role: 'assistant', content: 'Next is present perfect. Shall we go on?' },
+      { role: 'user', content: 'yes' }, { role: 'assistant', content: '<board page>Present perfect</board> Go.' },
+      { role: 'user', content: 'ok' }, { role: 'assistant', content: 'Good, that is right.' },
+    ];
+    check('(setup: budget spent)', !v2FrameDue(spent));
+    const st = pagesAt(B, { history: spent, workingLevel: { level: 'beginner', from: 'this_lesson' } } as Partial<V2State>);
+    check('(setup: nothing unreached)', v2UnreachedOffer(GDI, st) === null);
+    const heard: string[] = [];
+    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: st, studentSaid: 'I have worked here ten years.', callModel: streaming('Good. Let\'s finish with a quick summary. <board page>Summary</board> You talked about your work.').call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 12 * 60000 });
+    check('P2: budget spent, all parts reached: the summary page opens with no frame', r.state.board.pages.some((pg) => pg.title === 'Summary') && !/Shall we go on|question first/.test(heard.join('')) && /You talked about your work\./.test(r.spoken), heard.join(''));
+    // speakCard only in spoken teaching lessons.
+    const disc = src('src/lib/tutor/v2/turn.ts');
+    check('cards are spoken in place only in spoken teaching lessons (gated)', /if \(part\.block\.kind === 'sentence' && gated && TUTOR_V2_SAY_SENTENCE_CARD\)/.test(disc));
+  }
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }

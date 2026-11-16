@@ -594,9 +594,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           gate.flush();
           // A new part the student has not been asked about is not opened in this reply (part-close.ts): the
           // reply ends here, with the offer in place of the page and all that followed it.
-          // Fix round 2 (N2): a page that closes the lesson is held whatever the frame budget: its offer names a part
-          // not reached ("Before the summary, there is still…").
-          if (part.block.kind === 'page' && !discussion && (frameDue || closesLesson(part.block.body)) && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
+          // Fix round 2 (N2): a page that closes the lesson is held whatever the frame budget when its offer names a part
+          // not reached ("Before the summary, there is still…"). Fix round 3 (P2): only then: with the budget spent and
+          // nothing missed, it opens, and no frame is asked.
+          if (part.block.kind === 'page' && !discussion && (frameDue || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
             // In the box's last fifth the tutor may close by itself, and a reply that does is a closing turn: whether it
             // does is known only when the reply is complete, so the page and what follows it wait until then (D1).
             // Only a page that closes the lesson waits: any other is held at once and the offer streams as before
@@ -619,7 +620,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // A sentence card after "we say:" is spoken there too (board-timing.ts sentenceCardToSay, Task 6e).
           // Fix round 1 (F5): after a lead-in with or without a colon, and the next card under the same lead-in; never
           // when the words before it ask them something. Said only if the model's next sentence does not say it (reply-gate.ts).
-          if (part.block.kind === 'sentence' && session.mode === 'voice' && TUTOR_V2_SAY_SENTENCE_CARD) {
+          // Fix round 3: spoken teaching lessons only (not voice homework or a discussion).
+          if (part.block.kind === 'sentence' && gated && TUTOR_V2_SAY_SENTENCE_CARD) {
             const say = sentenceCardToSay(part.block.body, saidNow, { leadIn: true, continuing: cardRun });
             if (say) { saidCards.set(part.block.raw, say); sinceWords = []; gate.speakCard(say); cardRun = true; }
           }
