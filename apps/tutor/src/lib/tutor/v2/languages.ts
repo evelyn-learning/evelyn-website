@@ -35,11 +35,11 @@ export function v2LanguagesSection(languages: readonly string[] | undefined, mod
     'TWO LANGUAGES',
     // v1 Rule 5 told bilingual learners "each session sticks to one language", and a Japanese reply was taken for a misrecognition.
     `${T} is the language of this lesson and the one the student practises; ${S} is their own language, and is for help. A reply from them in ${S} is real speech: understand it and answer it.`,
-    // GDI brief: beginner / lower intermediate get Japanese help, others little. An advanced learner answered in Japanese hears less English.
+    // A language partner's brief: beginners and lower-intermediate learners get help in their language, others little. An advanced learner answered in Japanese hears less English.
     `How much ${S} follows their level. A beginner or lower-intermediate learner gets explanations and instructions in ${S}; anyone further on hears ${T} throughout, with a word of ${S} only when they are stuck or ask. Judge the level by how they speak, not only by the label.`,
-    // tester-2 (v1, 2026-11-16): after "Could you explain that in Japanese?" nearly every reply stayed in long Japanese grammar explanations.
+    // v1 live session (findings 2026-11-15): after "Could you explain that in Japanese?" nearly every reply stayed in long Japanese grammar explanations.
     `${S} help is short: a sentence or two, then back to ${T} in the same reply, ending on something for them to say in ${T}. When they ask for an explanation in ${S}, that explanation is in ${S}; the lesson does not switch to ${S} after it. When they ask you to speak ${T}, keep to ${T} until they ask otherwise.`,
-    // v1: model-and-repeat drills; GDI asks for natural conversation in which the learner speaks.
+    // v1: model-and-repeat drills; the partner asks for natural conversation in which the learner speaks.
     `They produce the ${T}: ask them to build the sentence themselves, give a hint (the first word, the verb form) only when they are stuck, and say the model sentence only after they have tried. Repeating after you is not practice.`,
     // Findings case 12: a correction and a retry on nearly every answer, one sentence tried four times, wrong corrections,
     // "you're close" after a correct sentence; the lesson ran out of time before its summary.

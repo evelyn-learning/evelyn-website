@@ -40,7 +40,7 @@ async function main() {
   check('English and Japanese: the section is in the session part, after the mode lines', v2SessionPart(bilingual).includes(ja) && v2SessionPart(bilingual).indexOf(ja) > v2SessionPart(bilingual).indexOf('spoken conversation'));
   check('it names the target and the support language from the session\'s languages', /English/.test(ja) && /Japanese/.test(ja));
   check('the amount of help follows the level: beginners get it, others little', /beginner/i.test(ja) && /lower-intermediate/i.test(ja));
-  check('help is short and the tutor returns to the target after it (tester-2: stayed in Japanese after one request)', /short/i.test(ja) && /back to English/i.test(ja) && /does not switch/i.test(ja));
+  check('help is short and the tutor returns to the target after it (a learner who asked once got Japanese for the rest of the lesson)', /short/i.test(ja) && /back to English/i.test(ja) && /does not switch/i.test(ja));
   check('the learner produces the sentence, not repeats it', /build the sentence/i.test(ja) && /Repeating after you is not practice/i.test(ja));
   check('one error corrected, two tries, a correct sentence is never "close" (case 12)', /one error that matters most/i.test(ja) && /two tries/i.test(ja) && /never call it close/i.test(ja));
   check('one closing turn on a stop', /that reply is the close/i.test(ja) && /no new question/i.test(ja));
@@ -59,6 +59,8 @@ async function main() {
   check('a full stop inside a quotation does not end the sentence', j2.length === 0 && jf2.join() === '「はい。」と言ってください。', [j2, jf2]);
   const [j3] = feed(['Good! 「I have worked here for three years.」ですね。Next one. ']);
   check('mixed English and Japanese', j3.join('|') === 'Good!|「I have worked here for three years.」ですね。|Next one.', j3);
+  const [q1, qf1] = feed(['「Yes. I do.」と言いましょう。', 'では次。']);
+  check('an English model of two sentences inside 「」 is not cut', q1.join('|') === '「Yes. I do.」と言いましょう。' && qf1.join() === 'では次。', [q1, qf1]);
   const [e1] = feed(['It is 3.5 metres. Next. ']);
   check('English cuts are unchanged', e1.join('|') === 'It is 3.5 metres.|Next.', e1);
 
@@ -77,9 +79,11 @@ async function main() {
   check('an English-only session speaks a sentence whole', JSON.stringify(v2SpeechParts(mixed, undefined)) === JSON.stringify([mixed]) && JSON.stringify(v2SpeechParts('Great, let\'s begin.', ['en', 'ja'])) === JSON.stringify(['Great, let\'s begin.']));
 
   console.log('the student\'s stop');
-  const stops = ['Okay, please stop. I would like to end the session for now.', 'Sorry, I have to finish now.', 'No, I\'m finished. I have to go.', '今日はここまでにします', '今日はここまで', 'お疲れ様でした'];
+  const stops = ['Okay, please stop. I would like to end the session for now.', 'Sorry, I have to finish now.', 'No, I\'m finished. I have to go.', '今日はここまでにします', '今日はここまで', '今日はここまで。', 'お疲れ様でした', '終わりにしましょう', 'もう終わりにしたいです', 'すみません、今日はここまでにしてください', 'ありがとうございました。今日はもう終わりにします。'];
   for (const s of stops) check(`a stop: "${s}"`, v2StopAsked(s));
-  const notStops = ['ちょっと待ってください', 'お疲れ様です', 'I have to finish the report on Friday.', 'Can we continue from this point next time?', 'I usually stop working at six.', 'Could you explain that in Japanese?', '[The student has not replied.]'];
+  const notStops = ['ちょっと待ってください', 'お疲れ様です', 'I have to finish the report on Friday.', 'Can we continue from this point next time?', 'I usually stop working at six.', 'Could you explain that in Japanese?', '[The student has not replied.]',
+    // Japanese lesson talk with an end word in it (review of 6971a0b0): a question, a sentence to translate, quoted speech, a comment on the lesson.
+    'もう終わりですか？', 'もう終わりですか', '会議を終わりにします', 'さようなら、と言います', '「さようなら」と言います', '今日はここまでの内容は難しかったです', 'また次回続けられますか？', 'また次回続けられますか', '仕事が終わりました'];
   for (const s of notStops) check(`not a stop: "${s}"`, !v2StopAsked(s));
 
   console.log('a stop closes in one turn');

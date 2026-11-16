@@ -6,11 +6,15 @@
  * sentence ends at . ! ? followed by a space or a line break, and at 。！？ as
  * soon as anything but a closing bracket follows (Japanese puts no space after
  * them: a whole Japanese reply was one "sentence", heard only once it had all
- * been written); a paragraph break always ends one. 。 inside a quotation
- * (「はい。」と…) does not end the sentence around it. A full stop inside a number
+ * been written); a paragraph break always ends one. Nothing inside a 「…」
+ * quotation ends the sentence around it: 「Yes. I do.」と言いましょう。 is one
+ * sentence, so the English model can still be spoken in the English voice
+ * (tts-language.ts splitSentenceForTts needs the whole quotation). A full stop inside a number
  * ("3.5") or straight after a single capital ("f. g") or a common abbreviation
  * does not, and neither does anything inside a $…$ span.
  */
+/** The longest quotation (characters) held as one sentence. */
+const QUOTE_SPAN_MAX = 300;
 const ABBREVIATIONS = /(?:\b(?:e\.g|i\.e|vs|etc|approx|Mr|Mrs|Ms|Dr|St|No|Fig|Eq)\.)$/i;
 
 export class SentenceStream {
@@ -70,6 +74,9 @@ export class SentenceStream {
       // Inside a $…$ span (an odd number of dollar signs so far): cutting here leaves each half with a lone
       // "$", which the voice reads as "dollar" (embed-1794339843244).
       if ((before.match(/\$/g) ?? []).length % 2 === 1) continue;
+      // Inside a 「…」 quotation. A 「 left open far back (never closed) stops holding the cuts.
+      const open = before.lastIndexOf('「');
+      if (open > before.lastIndexOf('」') && m.index - open < QUOTE_SPAN_MAX) continue;
       if (m[0][0] === '.') {
         if (ABBREVIATIONS.test(before)) continue;
         if (/(?:^|\s)[A-Za-z]\.$/.test(before)) continue; // a lone letter: "f." in "f. g"
