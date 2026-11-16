@@ -18,7 +18,7 @@ import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { applyToModelBoard, boardMisfit, renderBoard } from '../src/lib/tutor/v2/board';
-import { renderFacts } from '../src/lib/tutor/v2/facts';
+import { renderFacts, V2_TIME_UP_MIN } from '../src/lib/tutor/v2/facts';
 import { runV2Turn, v2SessionPart, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 import {
@@ -156,10 +156,14 @@ async function main() {
     const s9 = stub([words('Good, that is right. <board page>Present perfect</board> Now, how long have you worked there?')]);
     const r9 = await runV2Turn({ session: bilingual, state: twoPages, studentSaid: 'I met a customer last week.', callModel: s9.call, boardPass: false, mathsCheck: false, nowMs: 300000 });
     check('mid-lesson, two pages open: a new part\'s page is still held, with the offer in its place', !r9.toolCalls.some((c) => c.name === 'new_page') && r9.state.board.pages.length === 2 && /Shall we go on/.test(r9.spoken), [r9.toolCalls.map((c) => c.outcome), r9.spoken]);
-    // The clock's close window (end_lesson no longer refused): the summary page opens on a plain "yes".
+    // The time is up (V2_TIME_UP_MIN, as the facts say it): the summary page opens on a plain "yes", without the offer.
     const s10 = stub([closing(summary.replace('Goodbye!', 'See you next time!')), words('')]);
-    const r10 = await runV2Turn({ session: bilingual, state: twoPages, studentSaid: 'Yes, please.', callModel: s10.call, boardPass: false, mathsCheck: false, nowMs: 17 * 60000 });
-    check('in the last fifth of the time, the summary page opens on a plain "yes, please"', r10.state.board.pages[2]?.title === 'Summary' && r10.toolCalls.filter((c) => c.name === 'show_sentence').length === 2, r10.toolCalls.map((c) => `${c.name} ${c.outcome}`));
+    const r10 = await runV2Turn({ session: bilingual, state: twoPages, studentSaid: 'Yes, please.', callModel: s10.call, boardPass: false, mathsCheck: false, nowMs: 1 + (20 - V2_TIME_UP_MIN) * 60000 });
+    check(`time up (${V2_TIME_UP_MIN} min or less left): the summary page opens on a plain "yes, please", without the offer, and the cards paint`, r10.state.board.pages[2]?.title === 'Summary' && r10.toolCalls.filter((c) => c.name === 'show_sentence').length === 2 && !/Shall we go on/.test(r10.spoken), [r10.toolCalls.map((c) => `${c.name} ${c.outcome}`), r10.spoken]);
+    // Five minutes left of twenty (in the last fifth, before the time is up): a mid-lesson page is still held (review 4c N2).
+    const s11 = stub([words('Good, that is right. <board page>Present perfect</board> Now, how long have you worked there?')]);
+    const r11 = await runV2Turn({ session: bilingual, state: twoPages, studentSaid: 'I met a customer last week.', callModel: s11.call, boardPass: false, mathsCheck: false, nowMs: 1 + 15 * 60000 });
+    check('5 min left of 20: a new part\'s page is still held, with the offer in its place', !r11.toolCalls.some((c) => c.name === 'new_page') && r11.state.board.pages.length === 2 && /Shall we go on/.test(r11.spoken), [r11.toolCalls.map((c) => c.outcome), r11.spoken]);
     const cmds6 = cards6.map((c) => mapFunctionCallToCommand(c.name, c.args) as unknown as Record<string, unknown>);
     check('the client gets them as showSentence cards', cmds6.every((c) => c?.action === 'showSentence') && cmds6[1]?.sentence === 'My role is to manage the sales team.', cmds6);
     const s7 = stub([words(`Well done today. <board sentence>Last week I met a customer from Osaka.</board> Goodbye!`)]);

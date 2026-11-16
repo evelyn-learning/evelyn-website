@@ -26,7 +26,7 @@ import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoa
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { saidCovers, unsaidAsk, asksAnywhere } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
-import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
+import { renderFacts, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { planGoalIds, renderPlanMap } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
@@ -211,10 +211,10 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     const direction = (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
     // The direction is theirs to name: a direction the tutor wrote itself closed the live test without the
     // question ever being asked (embed-1794694217385). Until it has been asked, only their request or the clock ends it.
-    if (!asked && box && left > 1.5 && !directionAsked(state.history)) {
+    if (!asked && box && left > V2_TIME_UP_MIN && !directionAsked(state.history)) {
       return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now, in a sentence of your own, and close after they answer.';
     }
-    if (!asked && !direction && box && left > 1.5) {
+    if (!asked && !direction && box && left > V2_TIME_UP_MIN) {
       return 'not ended: they have not chosen a direction yet. Say nothing of this message. Ask them, in a sentence of your own, what would be most valuable for them to explore further.';
     }
     state.closed = true;
@@ -278,7 +278,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
       || (!!session.homeworkSheet && session.homeworkSheet.problems.every((p) => state.homework?.sheet?.solved.includes(p.n)));
     // Homework: a bare yes does not say the student is finished, whatever the tutor asked. Five validation sessions
     // closed on "yes" to "…or are you ready to go back?", cutting off a student who might have had a question.
-    if ((session.homework || session.homeworkSheet) && studentSaid !== null && V2_BARE_ASSENT.test(studentSaid) && left > 1.5) {
+    if ((session.homework || session.homeworkSheet) && studentSaid !== null && V2_BARE_ASSENT.test(studentSaid) && left > V2_TIME_UP_MIN) {
       return 'not ended: "yes" does not say whether they are finished. Ask, in one short question with one meaning, whether they have any question about it.';
     }
     if (!asked && !homeworkDone && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
@@ -310,12 +310,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const discussion = !!discussionOf(session.plan);
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session);
   const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, ...(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid) ? { stopAsked: true } : {}) });
-  // A reply that may close the session: the student's words ask to stop, or the clock is in the window where end_lesson
-  // is no longer refused (applyControlTool: 20% of the box left). A page it opens is the summary's, and is never held for
-  // "shall we go on?" (part-close.ts): held, "Sorry, I have to finish now." in a two-page lesson got "Next is summary.
-  // Shall we go on?" and the summary, its sentence cards, the goodbye and end_lesson were all dropped (review 4c N1).
+  // A reply that closes the session: the student's words ask to stop, or the time is up (V2_TIME_UP_MIN, as the facts
+  // say it). A page it opens is the summary's, and is never held for "shall we go on?" (part-close.ts): held, "Sorry, I
+  // have to finish now." in a two-page lesson got "Next is summary. Shall we go on?" and the summary, its sentence cards,
+  // the goodbye and end_lesson were all dropped (review 4c N1). Not the last fifth of the box: that would bring back the
+  // abrupt page flip for every timed lesson's closing minutes (review 4c N2).
   const leftMin = session.timeBoxMinutes ? session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 : Infinity;
-  const closingTurn = (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || (!!session.timeBoxMinutes && leftMin <= session.timeBoxMinutes * 0.2);
+  const closingTurn = (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || leftMin <= V2_TIME_UP_MIN;
   // A score is said once, in this turn's facts; the reply that answered it uses the arm up (pronunciation.ts).
   v2ConsumePronunciation(session, state, input.studentSaid);
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.

@@ -21,6 +21,9 @@ export const V2_WAITED_RECHECK_S = 5;
  *  explained something and stopped leaves the student to say "got it" before the lesson moves (AP CS A,
  *  embed-1794440489707; it was 6 s, and the student spoke first). */
 export const V2_NO_ASK_RECHECK_S = 2;
+/** Minutes left at or below which the time is up: the facts say so, a close is no longer argued with, and a page the
+ *  closing reply opens is never held (turn.ts). */
+export const V2_TIME_UP_MIN = 1.5;
 
 export interface V2TurnFacts {
   nowMs: number;
@@ -48,13 +51,13 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
-    discussion ? `time: ${usedMin} min used${box ? ` of about ${box}${box !== session.timeBoxMinutes ? ' (the time they said they have)' : ''}; ${left > box * 0.4 ? `about ${Math.round(left)} left: plenty of time, not yet time to reflect or close unless they ask` : left > 4 ? `about ${Math.round(left)} left` : left > 1.5 ? `about ${Math.round(left)} left: time to reflect and choose a direction` : 'the time is up'}` : ''}` :
+    discussion ? `time: ${usedMin} min used${box ? ` of about ${box}${box !== session.timeBoxMinutes ? ' (the time they said they have)' : ''}; ${left > box * 0.4 ? `about ${Math.round(left)} left: plenty of time, not yet time to reflect or close unless they ask` : left > 4 ? `about ${Math.round(left)} left` : left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left: time to reflect and choose a direction` : 'the time is up'}` : ''}` :
     // What is left, said outright: with only "22 used of 30" the tutor said goodbye, was refused the close, and
     // took the goodbye back in the same breath (embed-1794593747478, embed-1794595194384).
     // Homework: a solved problem does not go on spending the student's minutes.
     session.homework || session.homeworkSheet
-      ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > 1.5 ? `about ${Math.round(left)} left` : 'the time is up'}` : ''}; the session ends when ${session.homeworkSheet ? 'the sheet' : 'this problem'} is done`
-      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 1.5 ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
+      ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left` : 'the time is up'}` : ''}; the session ends when ${session.homeworkSheet ? 'the sheet' : 'this problem'} is done`
+      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
