@@ -15,7 +15,7 @@ const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 export function summariseBoardCall(name: string, args: Record<string, unknown>): string {
   const problem = (args.problem ?? {}) as Record<string, unknown>;
-  const parts = [text(args.title), text(problem.title), text(args.label), text(problem.statement), text(args.statement), text(args.problem), text(args.latex), text(args.text), text(args.expression), text(args.concept), text(args.code)]
+  const parts = [text(args.title), text(problem.title), text(args.label), text(problem.statement), text(args.statement), text(args.problem), text(args.latex), text(args.text), text(args.expression), text(args.concept), text(args.code), text(args.sentence)]
     .filter(Boolean);
   const fns = Array.isArray(args.functions) ? (args.functions as Array<Record<string, unknown>>).map((f) => text(f.expression) || text(f.latex)).filter(Boolean).join(', ') : '';
   // Tables, timelines and organisers: their cells, in reading order.
@@ -103,6 +103,7 @@ export function boardMisfit(name: string, args: Record<string, unknown>): string
   if (name === 'show_cycle_diagram' && count(args.stages) < 3) return 'a cycle needs at least three stages, one per line';
   if (name === 'show_concept_map' && count(args.edges) < 2) return 'a web needs at least two links, one per line: from | how | to';
   if (name === 'show_map' && count(args.pins) === 0) return 'a map needs at least one place: name | latitude | longitude';
+  if (name === 'show_sentence' && !text(args.sentence)) return 'a sentence card needs its sentence, between the tags';
   if (name !== 'show_equation') return null;
   const latex = text(args.latex);
   const words = [...latex.matchAll(/\\text(?:rm|bf|it)?\{([^}]*)\}/g)].flatMap((m) => m[1].split(/\s+/).filter((w) => /\p{L}{2,}/u.test(w)));
@@ -120,7 +121,8 @@ const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
 /** What an item shows, without its label or title, with LaTeX spacing and delimiters ignored. */
 function boardCore(args: Record<string, unknown>): string {
   const problem = (args.problem ?? {}) as Record<string, unknown>;
-  const body = text(args.latex) || text(args.text) || text(problem.statement) || text(args.statement);
+  // A sentence card is its sentence: with no core, every card of a language lesson was the same "(no text)" item.
+  const body = text(args.latex) || text(args.text) || text(problem.statement) || text(args.statement) || text(args.sentence);
   const bare = body.replace(/\\[,;!: ]|\\(?:left|right|displaystyle|,)|[$]/g, '');
   // In mathematics a capital and a small letter are different things: X^A X^a, written after X^a X^a, was taken
   // for a repeat and the board flashed the colour-blind genotype while the tutor confirmed the carrier's

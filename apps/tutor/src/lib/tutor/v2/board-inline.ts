@@ -11,6 +11,7 @@
  *   <board problem difficulty="medium">the problem, $maths$ inline</board>
  *   <board table|timeline|compare|steps|quote|chart …>plain lines, cells separated by "|"</board>
  *   <board code lang="java">program code as typed</board>   <board sketch labels="a | b">what to draw</board>
+ *   <board sentence stress="a | b" gloss="…">one sentence of a language lesson</board>   (sentence-cards.ts)
  *
  * The runtime lifts the blocks out of the stream: the words go to the student, each block becomes a
  * board call at that position (turn.ts), and the voice client paints it as the sentence before it
@@ -20,14 +21,14 @@
 import { isCodeBody, typesetMaths, unfoldCode } from './rich-text';
 import { toolFigureCall } from './figure-catalogue';
 
-export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'code' | 'sketch' | 'figure' | 'page';
+export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'code' | 'sketch' | 'figure' | 'page' | 'sentence';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
 /** `opening`: a block has begun and its content is still arriving (the client holds the sentence before it). */
 export type InlinePart = { text: string } | { block: InlineBlock } | { opening: true };
 
 const OPEN = '<board';
 const CLOSE = '</board>';
-const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|chart|ranks|code|sketch|figure|page)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
+const BLOCK_RE = /<board\s+(equation|note|problem|table|timeline|compare|steps|quote|forces|numberline|graph|cycle|web|map|chart|ranks|code|sketch|figure|page|sentence)((?:\s+[a-z_]+="[^"]*")*)\s*>([\s\S]*?)<\/board>/g;
 
 function parseBlock(raw: string): InlineBlock | null {
   BLOCK_RE.lastIndex = 0;
@@ -123,6 +124,13 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
   // (it is in neither the constitution nor the board check): the drawing service drew a push "down" as an arrow
   // pointing up in its first trial (AP Physics 1 probe, 2026-11-11). The form stays so a better one can be tried.
   if (b.kind === 'sketch') return { name: 'show_sketch', args: { concept: b.body.replace(/\s+/g, ' '), ...(b.attrs.labels ? { labels: b.attrs.labels.split('|').map((x) => x.trim()).filter(Boolean) } : {}), ...(b.attrs.title ? { title: b.attrs.title } : {}) } };
+  // A sentence of a language lesson, as v1's sentence card: its stressed words marked, a gloss in the support
+  // language under it (sentence-cards.ts; offered only to a lesson with a second teaching language).
+  if (b.kind === 'sentence') {
+    // The card marks single words: a stressed phrase ("have worked") is its words, or nothing in it was marked (render check).
+    const stress = (b.attrs.stress ?? '').split(/[|,\s]+/).map((w) => w.trim()).filter(Boolean);
+    return { name: 'show_sentence', args: { sentence: b.body.replace(/\s+/g, ' ').trim(), ...(stress.length ? { emphasis: stress } : {}), ...(b.attrs.gloss?.trim() ? { gloss: b.attrs.gloss.trim() } : {}), ...(b.attrs.title?.trim() ? { label: b.attrs.title.trim() } : {}) } };
+  }
   if (b.kind === 'equation') return { name: 'show_equation', args: { latex: b.body, ...(b.attrs.label ? { label: b.attrs.label } : {}) } };
   // One point per line; a tutor who has just written a table sometimes separates the points with "|" instead.
   if (b.kind === 'note') return { name: 'annotate', args: { text: b.body.includes('\n') || b.body.includes('$') || !pipedPoints(b.body) ? b.body : b.body.split(/(?<=[^|\s])\s*\|\s*(?=[^|\s])/).filter(Boolean).join('\n'), ...(b.attrs.style ? { style: b.attrs.style } : {}), rich: true } };

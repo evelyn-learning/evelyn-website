@@ -20,6 +20,7 @@ import { runV2HomeworkTurn, runV2SheetTurn } from '@/lib/tutor/v2/homework-turn'
 import { runV2Turn } from '@/lib/tutor/v2/turn';
 import { v2ReadWorkingLevel } from '@/lib/tutor/v2/working-level';
 import { v2ReadPronunciation } from '@/lib/tutor/v2/pronunciation';
+import { v2ReadCorrectedSentences } from '@/lib/tutor/v2/sentence-cards';
 import { TUTOR_PRONUNCIATION_ASSESS, TUTOR_WORKING_LEVEL } from '@/lib/tutor/orchestrator/flags';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import type { V2Session, V2State, V2ToolCall } from '@/lib/tutor/v2/types';
@@ -59,7 +60,8 @@ function readState(raw: unknown): V2State | null {
   } : undefined;
   const workingLevel = v2ReadWorkingLevel(s.workingLevel);
   const pronunciation = v2ReadPronunciation(s.pronunciation);
-  return { ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
+  const correctedSentences = v2ReadCorrectedSentences(s.correctedSentences);
+  return { ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), ...(correctedSentences ? { correctedSentences } : {}),history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
 }
 
 export async function POST(req: NextRequest) {

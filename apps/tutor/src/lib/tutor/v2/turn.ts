@@ -36,6 +36,7 @@ import { heardAsWords } from './heard';
 import { v2LanguagesSection } from './languages';
 import { V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
+import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { v2StopAsked } from './stop-signal';
 import { TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
@@ -134,6 +135,8 @@ export function v2SessionPart(session: V2Session): string {
     v2LevelCheckOn(session) ? v2WorkingLevelSection() : '',
     // Only for a partner that measures pronunciation, in a spoken lesson: every other session part is unchanged.
     v2PronunciationOn(session) ? v2PronunciationSection() : '',
+    // Only for a lesson with a second teaching language: every other session part is unchanged.
+    v2SentenceCardsOn(session) ? v2SentenceCardsSection(session.languages!) : '',
     // A free trial is the student's to steer (Praveen 2026-10-28: a trial student asked five times for another
     // topic and was kept on the plan). A partner whose showcase is a written lesson keeps its plan (trialKeepsPlan).
     session.trial && !session.trialKeepsPlan ? 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.' : '',
@@ -442,6 +445,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if (page && was) page.items = page.items.filter((it) => it !== was);
         const o = applyBoard(state.board, block.id, block.name, args); outcome = o.painted ? o.detail : `not painted: ${o.detail}`;
         if (!o.painted) { if (page && was) page.items.push(was); replaces = undefined; }
+        // A card that reworks what the student just said is one of their corrected sentences (the summary's cards).
+        if (o.painted && block.name === 'show_sentence') v2NoteCorrectedSentence(session, state, args.sentence, input.studentSaid);
         if (!o.painted && o.pointAt && !boardOnly) { pointsAt = o.pointAt; outcome = `not painted again: ${o.detail}; the board has scrolled back to it`; }
       }
     }

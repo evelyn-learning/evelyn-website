@@ -11,6 +11,7 @@ import type { V2Session, V2State } from './types';
 import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from './discussion';
 import { v2WorkingLevelFacts } from './working-level';
 import { v2PronunciationFacts } from './pronunciation';
+import { v2SentenceCardsFacts } from './sentence-cards';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
@@ -66,6 +67,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(...v2WorkingLevelFacts(session, state, f.heard));
   // A measured score, or that there is none: the only ground for a word on how they sounded (pronunciation.ts).
   lines.push(...v2PronunciationFacts(session, state, f.heard));
+  // The learner's corrected sentences, for the summary's sentence cards (sentence-cards.ts).
+  lines.push(...v2SentenceCardsFacts(session, state));
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);

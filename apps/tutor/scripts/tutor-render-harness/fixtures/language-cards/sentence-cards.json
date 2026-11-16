@@ -1,0 +1,22 @@
+[
+  {
+    "tool": "show_sentence",
+    "label": "correction-stress-japanese-gloss",
+    "args": { "sentence": "Last week I met a customer from Osaka.", "emphasis": ["met"], "gloss": "「meet」の過去形は「met」です。" }
+  },
+  {
+    "tool": "show_sentence",
+    "label": "two-stresses-title-gloss",
+    "args": { "sentence": "I have worked here for three years.", "emphasis": ["have", "worked", "for"], "gloss": "現在完了：今も続いていること", "label": "Present perfect" }
+  },
+  {
+    "tool": "show_sentence",
+    "label": "sentence-alone",
+    "args": { "sentence": "My role is to manage the sales team." }
+  },
+  {
+    "tool": "show_sentence",
+    "label": "long-sentence-long-gloss",
+    "args": { "sentence": "I work in sales, and I help our customers choose the products that suit their business best.", "emphasis": ["suit"], "gloss": "「お客様のビジネスに一番合う商品を選ぶお手伝いをしています」という意味です。" }
+  }
+]

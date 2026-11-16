@@ -1599,3 +1599,10 @@ export const TUTOR_V2_STOP_SIGNAL = process.env.NEXT_PUBLIC_TUTOR_V2_STOP_SIGNAL
  *  lesson reached v2 as bare goals: the authored guidance for each part was dropped and the brain improvised the
  *  lesson (gdi-on-v2 plan, Task 3). Default ON; NEXT_PUBLIC_TUTOR_V2_PLAN_AS_WRITTEN=off ⇒ the map as before. */
 export const TUTOR_V2_PLAN_AS_WRITTEN = process.env.NEXT_PUBLIC_TUTOR_V2_PLAN_AS_WRITTEN !== 'off';
+
+/** Tutor brain v2 (v2/sentence-cards.ts): a lesson with a second teaching language is told to write the sentences it
+ *  models or corrects as inline sentence cards (`<board sentence stress=… gloss=…>`), and the learner's corrected
+ *  sentences are listed in the facts so the summary can board up to four. v1's brain, told to board them, did so on 3
+ *  turns of 29, and the learner only heard them. Default ON; NEXT_PUBLIC_TUTOR_V2_SENTENCE_CARDS=off ⇒ no section, no
+ *  facts line (the session part and facts as before). */
+export const TUTOR_V2_SENTENCE_CARDS = process.env.NEXT_PUBLIC_TUTOR_V2_SENTENCE_CARDS !== 'off';

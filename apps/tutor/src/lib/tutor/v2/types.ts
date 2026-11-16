@@ -141,6 +141,9 @@ export interface V2State {
   workingLevel?: V2WorkingLevel;
   /** Pronunciation sessions (pronunciation.ts): the armed reply, its score once in, and what it asked for. */
   pronunciation?: V2PronunciationState;
+  /** Sentence-card sessions (sentence-cards.ts): the learner's sentences as the tutor's cards corrected them, the most
+   *  recent last. Listed in the facts for the summary. */
+  correctedSentences?: string[];
 }
 
 /** A working level and where it came from: an earlier lesson (may be revised once, case 11) or this lesson (final). */
