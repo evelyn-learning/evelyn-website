@@ -30,25 +30,57 @@ export async function reviewQueue(): Promise<string[]> {
   return rows.map((r) => r.itemId);
 }
 
-/** Next item waiting for review after `itemId` (wraps round); null when the queue is empty. */
-export async function nextInQueue(itemId: string): Promise<string | null> {
+/** Items of a list in order; the current item is kept in place even if it has just left the list (e.g. after a verdict). */
+async function listOrder(filter: { stage?: Stage; subject?: string }, keep?: string) {
   const { Item } = await ks();
-  const all = await Item.find().select("itemId order stage").sort({ order: 1, itemId: 1 }).lean();
+  const q: Record<string, unknown> = {};
+  if (filter.stage) q.stage = filter.stage;
+  if (filter.subject) q.subject = filter.subject;
+  const where = keep ? { $or: [q, { itemId: keep }] } : q;
+  return Item.find(where).select("itemId order stage subject").sort({ order: 1, itemId: 1 }).lean();
+}
+
+const inFilter = (r: { stage?: string; subject?: string }, f: { stage?: Stage; subject?: string }) =>
+  (!f.stage || r.stage === f.stage) && (!f.subject || r.subject === f.subject);
+
+/**
+ * Where to go after a verdict. In a filtered list: the next item still in
+ * that list. Otherwise: the next item waiting for review (wrapping round).
+ * Null when there is nothing further.
+ */
+export async function nextInQueue(itemId: string, filter: { stage?: Stage; subject?: string } = {}): Promise<string | null> {
+  if (filter.stage || filter.subject) {
+    const all = await listOrder(filter, itemId);
+    const i = all.findIndex((r) => r.itemId === itemId);
+    return all.slice(i + 1).find((r) => inFilter(r, filter))?.itemId ?? null;
+  }
+  const all = await listOrder({});
   const i = all.findIndex((r) => r.itemId === itemId);
   const ordered = [...all.slice(i + 1), ...all.slice(0, Math.max(i, 0))];
   return ordered.find((r) => r.stage === "in_review" && r.itemId !== itemId)?.itemId ?? null;
 }
 
-/** Previous/next in the full item order, for browsing. */
-export async function neighbours(itemId: string): Promise<{ prev: string | null; next: string | null; index: number; total: number }> {
-  const { Item } = await ks();
-  const all = await Item.find().select("itemId order").sort({ order: 1, itemId: 1 }).lean();
+/**
+ * Prev/next and position within the list being browsed (all items when no
+ * filter). An item that has just left the list (approved from "In review")
+ * keeps its place so prev/next still make sense; `inList` says so.
+ */
+export async function neighbours(
+  itemId: string,
+  filter: { stage?: Stage; subject?: string } = {},
+): Promise<{ prev: string | null; next: string | null; index: number; total: number; inList: boolean }> {
+  const all = await listOrder(filter, itemId);
   const i = all.findIndex((r) => r.itemId === itemId);
+  const members = all.filter((r) => inFilter(r, filter));
+  const inList = i >= 0 && inFilter(all[i], filter);
+  const before = all.slice(0, Math.max(i, 0)).filter((r) => inFilter(r, filter));
+  const after = all.slice(i + 1).filter((r) => inFilter(r, filter));
   return {
-    prev: i > 0 ? all[i - 1].itemId : null,
-    next: i >= 0 && i < all.length - 1 ? all[i + 1].itemId : null,
-    index: i + 1,
-    total: all.length,
+    prev: before.length ? before[before.length - 1].itemId : null,
+    next: after[0]?.itemId ?? null,
+    index: inList ? before.length + 1 : 0,
+    total: members.length,
+    inList,
   };
 }
 

@@ -8,6 +8,7 @@ import { saveSolutionAction } from "../../../actions";
 import { TopBar } from "../../../_components/TopBar";
 import { Feed } from "../../../_components/ui";
 import { ActionForm } from "../../../_components/ActionForm";
+import { ctxQuery, parseCtx } from "@/lib/keystone/listctx";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +20,17 @@ const HINT: Record<string, string> = {
   errors: "0–2 bullets: the slip and how to avoid it. Never tour the wrong options.",
 };
 
-export default async function EditPage({ params }: { params: Promise<{ itemId: string }> }) {
+export default async function EditPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ itemId: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   const user = await requireUser(can.edit);
   const base = await ksBase();
   const { itemId } = await params;
+  const q = ctxQuery(parseCtx(await searchParams));
   const data = await getItem(itemId);
   if (!data) notFound();
   const { item, solution, activity } = data;
@@ -34,7 +42,7 @@ export default async function EditPage({ params }: { params: Promise<{ itemId: s
       <TopBar user={user} />
       <main className="ks-main">
         <p className="ks-sub">
-          <Link href={`${base}/item/${itemId}`}>← Item {itemId}</Link>
+          <Link href={`${base}/item/${itemId}${q}`}>← Item {itemId}</Link>
         </p>
         <h1>{item.version ? `Revise solution (now v${item.version})` : "Write solution"}</h1>
         <p className="ks-sub">
@@ -69,6 +77,7 @@ export default async function EditPage({ params }: { params: Promise<{ itemId: s
           </section>
           <ActionForm action={saveSolutionAction} className="ks-card ks-form">
             <input type="hidden" name="itemId" value={itemId} />
+            <input type="hidden" name="ctx" value={q} />
             <div className="ks-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div>
                 <label htmlFor="evelynAnswer">Our answer</label>
@@ -98,6 +107,9 @@ export default async function EditPage({ params }: { params: Promise<{ itemId: s
               <button className="ks-btn" name="intent" value="draft">
                 Save as draft
               </button>
+              <Link className="ks-btn" href={`${base}/item/${itemId}${q}`} style={{ marginLeft: "auto" }}>
+                Cancel
+              </Link>
             </div>
           </ActionForm>
         </div>

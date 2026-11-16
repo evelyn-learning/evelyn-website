@@ -30,9 +30,12 @@ export function ItemsTable({
   base,
   verdicts,
   showStage = true,
+  linkQuery = "",
 }: {
   rows: ItemRow[];
   base: string;
+  /** Appended to item links so the item page knows which list it was opened from. */
+  linkQuery?: string;
   verdicts?: Map<string, { verdict: string; body?: string }>;
   showStage?: boolean;
 }) {
@@ -59,7 +62,7 @@ export function ItemsTable({
             return (
               <tr key={r.itemId}>
                 <td>
-                  <Link href={`${base}/item/${r.itemId}`}>
+                  <Link href={`${base}/item/${r.itemId}${linkQuery}`}>
                     <b>{r.itemId}</b>
                   </Link>
                   {r.showcase && <span className="ks-chip" style={{ marginLeft: 6 }}>Showcase</span>}

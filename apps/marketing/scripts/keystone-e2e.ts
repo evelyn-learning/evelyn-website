@@ -96,8 +96,13 @@ async function main() {
   // 3b. Reviewer: back links, and the animated player on an item that has one.
   const PLAYER_ITEM = process.env.KS_PLAYER_ITEM || "234035";
   await page.goto(`${BASE}/items?stage=approved`);
+  const approvedCount = Number((await page.textContent(".ks-sub"))!.match(/(\d+) shown/)![1]);
   await page.click(`.ks-list a:has-text('${PLAYER_ITEM}')`);
-  await page.waitForURL(new RegExp(`/item/${PLAYER_ITEM}$`));
+  await page.waitForURL(new RegExp(`/item/${PLAYER_ITEM}\\?stage=approved$`));
+  const pos = (await page.textContent(".ks-item-head"))!.match(/(\d+) of (\d+) · Approved/);
+  ok(!!pos && Number(pos[2]) === approvedCount, `position counts only the Approved list (${pos?.[0]}, list has ${approvedCount})`);
+  const nextHref = await page.getAttribute(".ks-item-head a:has-text('next')", "href").catch(() => null);
+  ok(!nextHref || nextHref.includes("stage=approved"), "next stays inside the Approved list");
   await page.waitForSelector(".ks-crumbs a:has-text('Approved')");
   const back = await page.getAttribute(".ks-crumbs a", "href");
   ok(back?.endsWith("/items?stage=approved") && (await page.locator(".ks-crumbs a").count()) === 1, `single back link goes to the list we came from (← Approved → ${back})`);
@@ -122,6 +127,9 @@ async function main() {
   ok(await page.isVisible(`.ks-list a:has-text('${ITEM}')`), "Evelyn's 'Needs Evelyn' lists the item");
   ok(await page.isVisible("text=please shorten the short answer"), "Evelyn sees the reviewer's change request");
   await shot(page, "evelyn-overview-changes");
+  await page.goto(`${BASE}/item/${ITEM}/edit?stage=changes_requested`);
+  await Promise.all([page.waitForURL(new RegExp(`/item/${ITEM}\\?stage=changes_requested$`)), page.click("a:has-text('Cancel')")]);
+  ok(true, "Cancel on the edit page returns to the item, in the same list");
   await page.goto(`${BASE}/item/${ITEM}/edit`);
   await page.fill("#s_short", "E2E TEST — shorter.");
   await page.fill("#note", "E2E TEST: shortened as asked");

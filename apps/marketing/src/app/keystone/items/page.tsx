@@ -5,8 +5,7 @@ import { STAGES, STAGE_LABEL, SUBJECTS, type Stage } from "@/lib/keystone/config
 import { latestVerdicts, listItems, stageCounts } from "@/lib/keystone/queries";
 import { TopBar } from "../_components/TopBar";
 import { ItemsTable } from "../_components/ui";
-import { RememberList } from "../_components/BackNav";
-import { Suspense } from "react";
+import { ctxQuery } from "@/lib/keystone/listctx";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "All items" };
@@ -30,9 +29,6 @@ export default async function ItemsPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <TopBar user={user} on="items" />
-      <Suspense>
-        <RememberList label={[stage ? STAGE_LABEL[stage] : subject ? "" : "All items", subject].filter(Boolean).join(" · ")} />
-      </Suspense>
       <main className="ks-main">
         <h1>All items</h1>
         <p className="ks-sub">{rows.length} shown of {total}</p>
@@ -53,7 +49,7 @@ export default async function ItemsPage({ searchParams }: { searchParams: Promis
           ))}
         </div>
         <section className="ks-card">
-          <ItemsTable rows={rows} base={base} verdicts={verdicts} />
+          <ItemsTable rows={rows} base={base} verdicts={verdicts} linkQuery={ctxQuery({ stage, subject })} />
         </section>
       </main>
     </>

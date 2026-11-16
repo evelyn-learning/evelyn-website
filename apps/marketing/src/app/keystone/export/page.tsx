@@ -7,8 +7,6 @@ import { listItems } from "@/lib/keystone/queries";
 import { markDeliveredAction } from "../actions";
 import { TopBar } from "../_components/TopBar";
 import { ago } from "../_components/ui";
-import { RememberList } from "../_components/BackNav";
-import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Download for SOLARO" };
@@ -31,9 +29,6 @@ export default async function ExportPage() {
   return (
     <>
       <TopBar user={user} on="export" />
-      <Suspense>
-        <RememberList label="Download for SOLARO" />
-      </Suspense>
       <main className="ks-main">
         <h1>Download for SOLARO</h1>
         <p className="ks-sub">
@@ -75,7 +70,7 @@ export default async function ExportPage() {
                             <input type="checkbox" name="itemId" value={r.itemId} defaultChecked aria-label={`Select ${r.itemId}`} />
                           </td>
                           <td>
-                            <Link href={`${base}/item/${r.itemId}`}>
+                            <Link href={`${base}/item/${r.itemId}?stage=approved&from=export`}>
                               <b>{r.itemId}</b>
                             </Link>
                           </td>
@@ -121,7 +116,7 @@ export default async function ExportPage() {
               {done.map((d, i) => (
                 <span key={d.itemId}>
                   {i ? ", " : ""}
-                  <Link href={`${base}/item/${d.itemId}`}>{d.itemId}</Link>
+                  <Link href={`${base}/item/${d.itemId}?stage=delivered&from=export`}>{d.itemId}</Link>
                 </span>
               ))}
             </p>

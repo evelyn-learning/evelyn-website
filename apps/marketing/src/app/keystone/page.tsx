@@ -5,8 +5,6 @@ import { ITEM_TYPE_LABEL, STAGE_LABEL, type Stage } from "@/lib/keystone/config"
 import { latestVerdicts, listItems, recentActivity, recentUploads, stageCounts } from "@/lib/keystone/queries";
 import { TopBar } from "./_components/TopBar";
 import { Feed, ItemsTable, ago } from "./_components/ui";
-import { RememberList } from "./_components/BackNav";
-import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Overview" };
@@ -37,9 +35,6 @@ export default async function Overview({ searchParams }: { searchParams: Promise
     return (
       <>
         <TopBar user={user} on="home" />
-        <Suspense>
-          <RememberList label="Overview" />
-        </Suspense>
         <main className="ks-main">
           {done && <div className="ks-note info">That was the last item waiting. Thank you — nothing else is waiting for review.</div>}
           <div className="ks-card ks-hero">
@@ -48,7 +43,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
               <div>{waiting.length === 1 ? "solution is" : "solutions are"} waiting for your review</div>
             </div>
             {waiting.length > 0 && (
-              <Link className="ks-btn primary" href={`${base}/item/${waiting[0].itemId}`}>
+              <Link className="ks-btn primary" href={`${base}/item/${waiting[0].itemId}?stage=in_review`}>
                 Start reviewing →
               </Link>
             )}
@@ -57,7 +52,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
           <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)" }}>
             <section className="ks-card">
               <h2>Waiting for review</h2>
-              <ItemsTable rows={waiting} base={base} showStage={false} />
+              <ItemsTable rows={waiting} base={base} showStage={false} linkQuery="?stage=in_review" />
             </section>
             <section className="ks-card">
               <h2>Latest from Evelyn</h2>
@@ -79,9 +74,6 @@ export default async function Overview({ searchParams }: { searchParams: Promise
     return (
       <>
         <TopBar user={user} on="home" />
-        <Suspense>
-          <RememberList label="Overview" />
-        </Suspense>
         <main className="ks-main">
           <div className="ks-card ks-hero">
             <div>
@@ -130,7 +122,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
                     {approved.map((r) => (
                       <tr key={r.itemId}>
                         <td>
-                          <Link href={`${base}/item/${r.itemId}`}>
+                          <Link href={`${base}/item/${r.itemId}?stage=approved&from=overview`}>
                             <b>{r.itemId}</b>
                           </Link>
                         </td>
@@ -189,9 +181,6 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   return (
     <>
       <TopBar user={user} on="home" />
-        <Suspense>
-          <RememberList label="Overview" />
-        </Suspense>
       <main className="ks-main">
         <div className="ks-card ks-hero">
           <div>
@@ -207,7 +196,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
         <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,3fr) minmax(0,2fr)" }}>
           <section className="ks-card">
             <h2>Needs Evelyn</h2>
-            <ItemsTable rows={todo} base={base} verdicts={verdicts} />
+            <ItemsTable rows={todo} base={base} verdicts={verdicts} linkQuery="?from=overview" />
           </section>
           <section className="ks-card">
             <h2>From Castle Rock</h2>

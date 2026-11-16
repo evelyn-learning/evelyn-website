@@ -7,6 +7,7 @@ import { ksHref } from "@/lib/keystone/paths";
 import { ks } from "@/lib/keystone/db";
 import { addComment, saveSolution, setStage, setVerdict } from "@/lib/keystone/store";
 import { nextInQueue } from "@/lib/keystone/queries";
+import { ctxQuery, parseCtx } from "@/lib/keystone/listctx";
 
 // Server actions never call redirect(): on keystone.evelynlearning.com the
 // pages live behind a proxy rewrite, and an action's redirect renders the
@@ -42,8 +43,11 @@ export async function reviewAction(_prev: ReviewResult, form: FormData): Promise
     return { error: (e as Error).message };
   }
   revalidatePath("/keystone", "layout");
-  const next = await nextInQueue(itemId);
-  return { go: await ksHref(next ? `/item/${next}?from=${itemId}` : `/?done=1`) };
+  const ctx = parseCtx(new URLSearchParams(String(form.get("ctx") || "").replace(/^\?/, "")));
+  const next = await nextInQueue(itemId, { stage: ctx.stage, subject: ctx.subject });
+  if (next) return { go: await ksHref(`/item/${next}${ctxQuery(ctx)}`) };
+  // End of the list: back to it (or to the overview when reviewing the queue).
+  return { go: await ksHref(ctx.stage || ctx.subject ? `/items${ctxQuery({ stage: ctx.stage, subject: ctx.subject })}` : `/?done=1`) };
 }
 
 export async function saveSolutionAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
@@ -68,7 +72,7 @@ export async function saveSolutionAction(_prev: ReviewResult, form: FormData): P
     note: String(form.get("note") || "") || undefined,
   });
   revalidatePath("/keystone", "layout");
-  return { go: await ksHref(`/item/${itemId}`) };
+  return { go: await ksHref(`/item/${itemId}${String(form.get("ctx") || "")}`) };
 }
 
 export async function setStageAction(form: FormData) {

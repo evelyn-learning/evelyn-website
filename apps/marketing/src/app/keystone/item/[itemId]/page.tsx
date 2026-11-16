@@ -9,7 +9,7 @@ import { TopBar } from "../../_components/TopBar";
 import { Feed, StageChip } from "../../_components/ui";
 import { ReviewBar } from "./ReviewBar";
 import { PlayerButton } from "./PlayerButton";
-import { BackLink } from "../../_components/BackNav";
+import { ctxBackHref, ctxLabel, ctxQuery, isFiltered, parseCtx } from "@/lib/keystone/listctx";
 import { playerUrl } from "@/lib/keystone/assets";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export default async function ItemPage({
   searchParams,
 }: {
   params: Promise<{ itemId: string }>;
-  searchParams: Promise<{ v?: string; from?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const user = await requireUser();
   const base = await ksBase();
@@ -32,7 +32,12 @@ export default async function ItemPage({
   const data = await getItem(itemId, sp.v ? Number(sp.v) : undefined);
   if (!data) notFound();
   const { item, solution, activity, versions } = data;
-  const [nb, queue] = await Promise.all([neighbours(itemId), reviewQueue()]);
+  const ctx = parseCtx(sp);
+  const q = ctxQuery(ctx);
+  const filter = { stage: ctx.stage, subject: ctx.subject };
+  const listName = ctxLabel({ stage: ctx.stage, subject: ctx.subject });
+  const [nb, queue] = await Promise.all([neighbours(itemId, filter), reviewQueue()]);
+  const useList = isFiltered(ctx) || !!ctx.from || user.role !== "reviewer";
   const viewingOld = !!solution && solution.version !== item.version;
 
   const qi = queue.indexOf(itemId);
@@ -47,13 +52,15 @@ export default async function ItemPage({
     <>
       <TopBar user={user} />
       <main className="ks-main">
-        <BackLink
-          fallback={
-            user.role === "reviewer"
-              ? { href: `${base}/items?stage=in_review`, label: "Waiting for review" }
-              : { href: `${base}/items`, label: "All items" }
-          }
-        />
+        <div className="ks-crumbs">
+          {isFiltered(ctx) || ctx.from ? (
+            <Link href={ctxBackHref(base, ctx)}>← {ctxLabel(ctx)}</Link>
+          ) : user.role === "reviewer" ? (
+            <Link href={`${base}/items?stage=in_review`}>← Waiting for review</Link>
+          ) : (
+            <Link href={`${base}/items`}>← All items</Link>
+          )}
+        </div>
         <div className="ks-item-head">
           <div>
             <h1>
@@ -79,7 +86,7 @@ export default async function ItemPage({
                   .map((v) => (
                     <Link
                       key={v}
-                      href={`${base}/item/${itemId}${v === item.version ? "" : `?v=${v}`}`}
+                      href={`${base}/item/${itemId}${v === item.version ? q : ctxQuery(ctx, { v: String(v) })}`}
                       style={{ fontWeight: solution?.version === v ? 700 : 400, marginLeft: 4 }}
                     >
                       v{v}
@@ -88,11 +95,12 @@ export default async function ItemPage({
               </span>
             )}
             <span>
-              {nb.prev && <Link href={`${base}/item/${nb.prev}`}>‹ prev</Link>} {nb.index} of {nb.total}{" "}
-              {nb.next && <Link href={`${base}/item/${nb.next}`}>next ›</Link>}
+              {nb.prev && <Link href={`${base}/item/${nb.prev}${q}`}>‹ prev</Link>}{" "}
+              {nb.inList ? `${nb.index} of ${nb.total}${isFiltered(ctx) ? ` · ${listName}` : ""}` : `no longer in ${listName}`}{" "}
+              {nb.next && <Link href={`${base}/item/${nb.next}${q}`}>next ›</Link>}
             </span>
             {can.edit(user.role) && (
-              <Link className="ks-btn" href={`${base}/item/${itemId}/edit`}>
+              <Link className="ks-btn" href={`${base}/item/${itemId}/edit${q}`}>
                 {item.version ? "Revise solution" : "Write solution"}
               </Link>
             )}
@@ -211,9 +219,36 @@ export default async function ItemPage({
         base={base}
         canReview={can.review(user.role) && !!item.version && !viewingOld}
         stage={item.stage}
-        position={inQueue ? `${qi + 1} of ${queue.length} waiting` : queue.length ? `${queue.length} waiting` : "Nothing waiting"}
-        nextHref={nextWaiting && nextWaiting !== itemId ? `${base}/item/${nextWaiting}` : nb.next ? `${base}/item/${nb.next}` : null}
-        prevHref={prevWaiting && prevWaiting !== itemId ? `${base}/item/${prevWaiting}` : nb.prev ? `${base}/item/${nb.prev}` : null}
+        ctx={q}
+        position={
+          useList
+            ? nb.inList
+              ? `${nb.index} of ${nb.total}${isFiltered(ctx) ? ` ${listName}` : ""}`
+              : `${nb.total} ${listName}`
+            : inQueue
+              ? `${qi + 1} of ${queue.length} waiting`
+              : queue.length
+                ? `${queue.length} waiting`
+                : "Nothing waiting"
+        }
+        nextHref={
+          useList
+            ? nb.next
+              ? `${base}/item/${nb.next}${q}`
+              : null
+            : nextWaiting && nextWaiting !== itemId
+              ? `${base}/item/${nextWaiting}`
+              : null
+        }
+        prevHref={
+          useList
+            ? nb.prev
+              ? `${base}/item/${nb.prev}${q}`
+              : null
+            : prevWaiting && prevWaiting !== itemId
+              ? `${base}/item/${prevWaiting}`
+              : null
+        }
       />
     </>
   );

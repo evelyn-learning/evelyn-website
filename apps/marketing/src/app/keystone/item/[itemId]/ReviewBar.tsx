@@ -15,6 +15,8 @@ import { reviewAction, type ReviewResult } from "../../actions";
 export function ReviewBar(props: {
   itemId: string;
   base: string;
+  /** The list being browsed ("?stage=approved…"), so the next item after a verdict comes from the same list. */
+  ctx: string;
   canReview: boolean;
   stage: Stage;
   position: string;
@@ -67,6 +69,7 @@ export function ReviewBar(props: {
     <div className="ks-bar">
       <form ref={form} action={action} className="ks-bar-in">
         <input type="hidden" name="itemId" value={props.itemId} />
+        <input type="hidden" name="ctx" value={props.ctx} />
         <textarea
           ref={box}
           name="comment"
