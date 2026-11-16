@@ -30,7 +30,9 @@ import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAI
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
-import { TUTOR_STT_ENGINE_INK2 } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2 } from '@/lib/tutor/orchestrator/flags';
+import { V2PronunciationRecorder } from '@/lib/tutor/v2/pronunciation-recorder';
+import { PRONUNCIATION_NOTE_WAIT_MS } from '@/lib/tutor/pronunciation/clip-capture';
 import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import type { WhiteboardCommand } from '@core/knowledge/types';
@@ -227,9 +229,18 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     }, (delayS ?? wait) * 1000);
   }, []);
 
+  // Measured pronunciation (v2/pronunciation.ts): the partner's option, the kill switch, and a session id for the assess
+  // route. Off: no recorder, the microphone frames go to the session recorder alone, as before.
+  const pronunciationOn = TUTOR_PRONUNCIATION_ASSESS && !!props.pronunciation && !!props.sessionId;
+  const pronRef = useRef<V2PronunciationRecorder | null>(null);
+  if (pronunciationOn && !pronRef.current) pronRef.current = new V2PronunciationRecorder({ sessionId: props.sessionId!, log: (type, message) => p.current.onDebugEvent?.(type, message) });
+
   const turns = useV2Turns({
     ...props,
     mode: 'voice',
+    pronunciation: pronunciationOn,
+    pronunciationHeard: () => pronRef.current?.take(PRONUNCIATION_NOTE_WAIT_MS) ?? Promise.resolve(null),
+    onPronunciationArm: (armed) => { if (armed) pronRef.current?.arm(armed.seq, armed.reference); else pronRef.current?.disarm(); },
     // A sentence that quotes a long span of the other teaching language goes to the voice in parts, each in its own
     // voice language (v2/languages.ts). Each part is a sentence here too: the voice reports each part as it starts,
     // and the board is timed by that count.
@@ -474,6 +485,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const onPartial = useCallback((x: { text: string }) => { setComposerStatus((was) => ({ ...was, heard: x.text })); hearingPartial(x.text); }, [hearingPartial]);
   const onSpeechStart = useCallback(() => {
     if (flagRef.current.active) return;
+    // An armed pronunciation reply starts recording here, unless the tutor's own voice is what was heard.
+    pronRef.current?.speechStart(!!realtimeRef.current?.isSpeechPending());
     clearSilence();
     const rt = realtimeRef.current;
     if (!rt?.isSpeechPending()) { showState('hearing'); return; }
@@ -490,7 +503,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       if (!flagRef.current.active) realtimeRef.current?.resumeSpeech();
     }, SOUND_PAUSE_MS);
   }, []);
-  const onSpeechStop = useCallback(() => { if (flagRef.current.active) return; if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) showState('processing'); }, []);
+  const onSpeechStop = useCallback(() => { if (flagRef.current.active) return; pronRef.current?.speechStop(); if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) showState('processing'); }, []);
   const onNoTranscript = useCallback((kind: string | undefined) => {
     p.current.onDebugEvent?.('v2_transcription_failed', String(kind ?? 'unknown'));
     if (flagRef.current.active) return;
@@ -506,14 +519,21 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const releaseOpeningSpeech = useCallback(() => { const held = openingSpeechRef.current; if (!held) return; openingSpeechRef.current = null; const since = (t: number) => (t && tapAtRef.current ? `${t - tapAtRef.current} ms` : 'never'); p.current.onDebugEvent?.('v2_opening_speech', `released ${since(Date.now())} after the tap; microphone live at ${since(micLiveAtRef.current)}${micLiveAtRef.current ? '' : ' (the wait ran out)'}; ${held.length} sentence(s) were waiting`); for (const s of held) realtimeRef.current?.speakText(s); }, []);
   const onMicLevel = useCallback((level: number) => { if (openingSpeechRef.current && !micLiveRef.current) { micLiveRef.current = true; micLiveAtRef.current = Date.now(); setTimeout(releaseOpeningSpeech, MIC_SETTLE_MS); } if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); const now = Date.now(); if (now - micUiAtRef.current > 110) { micUiAtRef.current = now; setComposerStatus((was) => (Math.abs((was.level ?? 0) - level) < 0.04 && !(was.quiet && level > MIC_SOUND_LEVEL) ? was : { ...was, level, ...(level > MIC_SOUND_LEVEL ? { quiet: false } : {}) })); } }, [releaseOpeningSpeech]);
   const onInkDiagnostic = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
+  const recorder = useAudioRecorder({ sessionId: props.recordSessionId ?? '', enabled: !!props.recordSessionId && process.env.NEXT_PUBLIC_TUTOR_RECORD_AUDIO !== 'false' });
+  // The recogniser's microphone frames (24 kHz) feed the session recording and, when it is on, the pronunciation clip
+  // (v1 Task 24 §A1 taps the same frames the recogniser hears).
+  const pushStudentChunkRef = useRef(recorder.pushStudentChunk); pushStudentChunkRef.current = recorder.pushStudentChunk;
+  const onStudentFrame = useCallback((f: Float32Array) => { pushStudentChunkRef.current(f); pronRef.current?.frame(f); }, []);
+  const onPronunciationFrame = useCallback((f: Float32Array) => pronRef.current?.frame(f), []);
   usePerceptionWS({
     enabled: listening && !TUTOR_STT_ENGINE_INK2,
+    // This recogniser's frames never went to the session recording; they feed the clip alone.
+    ...(pronunciationOn ? { onStudentAudioFrame: onPronunciationFrame } : {}),
     onTranscript, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
   });
-  const recorder = useAudioRecorder({ sessionId: props.recordSessionId ?? '', enabled: !!props.recordSessionId && process.env.NEXT_PUBLIC_TUTOR_RECORD_AUDIO !== 'false' });
   useCartesiaInkWS({
     enabled: listening && TUTOR_STT_ENGINE_INK2,
-    onStudentAudioFrame: recorder.pushStudentChunk,
+    onStudentAudioFrame: pronunciationOn ? onStudentFrame : recorder.pushStudentChunk,
     turnEndTimeoutMs: inkTurnEndTimeoutMs(props.tutorLanguages),
     onTranscript, onPartialTranscript: onPartial, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
     onDiagnostic: onInkDiagnostic,
@@ -533,7 +553,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     turnsRef.current?.open();
   }, []);
 
-  useEffect(() => () => { releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
+  useEffect(() => () => { pronRef.current?.disarm(); releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
 
   // A resumed session waits for a tap, as any session does (audio needs one): the page shows "Continue lesson".
   useEffect(() => { if (turns.resumedRef.current && !startedRef.current) p.current.onResumeAwaitingTapChange?.(true); // eslint-disable-next-line react-hooks/exhaustive-deps

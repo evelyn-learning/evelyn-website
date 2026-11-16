@@ -26,7 +26,7 @@ const SUPPORT_LINES: Record<string, string[]> = {
 };
 
 /** The session part's section for a session with a second teaching language, or null when there is none. */
-export function v2LanguagesSection(languages: readonly string[] | undefined, mode: 'text' | 'voice' = 'voice'): string | null {
+export function v2LanguagesSection(languages: readonly string[] | undefined, mode: 'text' | 'voice' = 'voice', opts: { pronunciationMeasured?: boolean } = {}): string | null {
   if (!languages || languages.length < 2) return null;
   const T = languageNameOf(languages[0]!);
   const code = languages[1]!.toLowerCase().split(/[-_]/)[0]!;
@@ -50,7 +50,9 @@ export function v2LanguagesSection(languages: readonly string[] | undefined, mod
     `Correct the one error that matters most for what this part practises, and let the rest go; check the error is really in their words before you name it. At most two tries at one sentence: after the second, say it correctly and go on. A correct sentence is correct: say so, and never call it close.`,
     // v1: sound-alike words ("boat" for bought) were drilled again, and pronunciation was praised from a transcript.
     // Spoken lessons only: typed words come through no recogniser.
-    mode === 'text' ? '' : `Their words reach you through a speech recogniser that hears both languages. It often writes a spoken ${T} word as a sound-alike or in ${S} script: a sound-alike of the target is the target. You cannot hear their pronunciation: don't praise or judge it.`,
+    // With measured pronunciation (pronunciation.ts, the partner's `pronunciation` option) the scores in the facts are
+    // what they are judged on; never the transcript.
+    mode === 'text' ? '' : `Their words reach you through a speech recogniser that hears both languages. It often writes a spoken ${T} word as a sound-alike or in ${S} script: a sound-alike of the target is the target. ${opts.pronunciationMeasured ? 'Their pronunciation reaches you only as a measured score in the facts: comment on it only from such a score, never from the transcript.' : 'You cannot hear their pronunciation: don\'t praise or judge it.'}`,
     ...(SUPPORT_LINES[code] ?? []),
     // Findings case 4: "please stop" got a question and then the next part; "I have to finish" had to be said three times.
     'When they say they want to stop or have to go, that reply is the close: one sentence on what they practised, a goodbye, and end_lesson. No new question, no new exercise.',

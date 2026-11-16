@@ -19,7 +19,8 @@ import { readHomeworkState, v2HomeworkFor, v2SheetFor } from '@/lib/tutor/v2/hom
 import { runV2HomeworkTurn, runV2SheetTurn } from '@/lib/tutor/v2/homework-turn';
 import { runV2Turn } from '@/lib/tutor/v2/turn';
 import { v2ReadWorkingLevel } from '@/lib/tutor/v2/working-level';
-import { TUTOR_WORKING_LEVEL } from '@/lib/tutor/orchestrator/flags';
+import { v2ReadPronunciation } from '@/lib/tutor/v2/pronunciation';
+import { TUTOR_PRONUNCIATION_ASSESS, TUTOR_WORKING_LEVEL } from '@/lib/tutor/orchestrator/flags';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import type { V2Session, V2State, V2ToolCall } from '@/lib/tutor/v2/types';
 
@@ -29,7 +30,7 @@ const SSE_HEADERS = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-
 const MAX_STUDENT_CHARS = 8000;
 
 interface TurnBody {
-  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; languages?: unknown; timeBoxMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown; levelCheck?: unknown };
+  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; languages?: unknown; timeBoxMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown; levelCheck?: unknown; pronunciation?: unknown };
   state?: unknown;
   studentSaid?: unknown;
   silenceSeconds?: unknown;
@@ -57,7 +58,8 @@ function readState(raw: unknown): V2State | null {
     ...(typeof t.complications === 'number' && Number.isFinite(t.complications) ? { complications: Math.min(20, Math.max(0, Math.round(t.complications))) } : {}),
   } : undefined;
   const workingLevel = v2ReadWorkingLevel(s.workingLevel);
-  return { ...(workingLevel ? { workingLevel } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
+  const pronunciation = v2ReadPronunciation(s.pronunciation);
+  return { ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
 }
 
 export async function POST(req: NextRequest) {
@@ -100,6 +102,9 @@ export async function POST(req: NextRequest) {
     ...(cfg.trial === true && resolvePartnerSessionOptions({ partnerId: partnerClaim }).trialKeepsPlan ? { trialKeepsPlan: true } : {}),
     // The client's claim, as v1's brain route reads `levelCheck`: a forged one only levels the forger's own lesson.
     ...(cfg.levelCheck === true && TUTOR_WORKING_LEVEL ? { levelCheck: true } : {}),
+    // The client's claim too: a forged one only arms recordings the assess route then refuses (it checks the session's
+    // partner), and an unmeasured reply is said to be unmeasured.
+    ...(cfg.pronunciation === true && TUTOR_PRONUNCIATION_ASSESS ? { pronunciation: true } : {}),
     ...(!plan && typeof cfg.topic === 'string' && cfg.topic.trim() ? { topic: cfg.topic.trim().slice(0, 160) } : {}),
     ...(plan ? { plan, topic: `${(plan as { topic?: string }).topic ?? ''} ${(plan as { title?: string }).title ?? ''}`.trim().slice(0, 160) } : {}),
     ...(homework ? { homework: homework.problem } : {}),

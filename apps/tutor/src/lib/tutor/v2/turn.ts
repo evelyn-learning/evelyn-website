@@ -35,6 +35,7 @@ import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
 import { v2LanguagesSection } from './languages';
 import { V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2WorkingLevelSection } from './working-level';
+import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2StopAsked } from './stop-signal';
 import { TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
@@ -128,9 +129,11 @@ export function v2SessionPart(session: V2Session): string {
     session.teacher?.name ? `You are ${session.teacher.name}${session.teacher.nameIsRole ? ' (a role, not a person\'s name)' : ''}: say so when you greet the student.${session.teacher.style ? ` How you teach: ${session.teacher.style}` : ''}` : '',
     v2LevelLine(session.level),
     v2ModeLines(session.mode),
-    v2LanguagesSection(session.languages, session.mode) ?? '',
+    v2LanguagesSection(session.languages, session.mode, { pronunciationMeasured: v2PronunciationOn(session) }) ?? '',
     // Only for a partner that checks the level: every other session part is unchanged.
     v2LevelCheckOn(session) ? v2WorkingLevelSection() : '',
+    // Only for a partner that measures pronunciation, in a spoken lesson: every other session part is unchanged.
+    v2PronunciationOn(session) ? v2PronunciationSection() : '',
     // A free trial is the student's to steer (Praveen 2026-10-28: a trial student asked five times for another
     // topic and was kept on the plan). A partner whose showcase is a written lesson keeps its plan (trialKeepsPlan).
     session.trial && !session.trialKeepsPlan ? 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.' : '',
@@ -195,6 +198,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
   const asked = args.because === 'student_asked' || (TUTOR_V2_STOP_SIGNAL && v2StopAsked(studentSaid));
   const discussion = discussionOf(session.plan);
   if (name === 'set_working_level') return v2LevelCheckOn(session) ? v2ApplySetWorkingLevel(state, args) : 'unknown tool set_working_level';
+  if (name === 'practise_pronunciation') return v2PronunciationOn(session) ? v2ApplyPractisePronunciation(state, args) : 'unknown tool practise_pronunciation';
   if (name === 'record_thinking') return discussion ? recordThinking(state, args) : 'unknown tool record_thinking';
   if (name === 'end_lesson' && discussion) {
     // A discussion is done when the person has chosen where to go next, which may well be before the clock: the
@@ -303,6 +307,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const discussion = !!discussionOf(session.plan);
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session);
   const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, ...(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid) ? { stopAsked: true } : {}) });
+  // A score is said once, in this turn's facts; the reply that answered it uses the arm up (pronunciation.ts).
+  v2ConsumePronunciation(session, state, input.studentSaid);
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
   if (state.thinking?.justComplicated) state.thinking = { ...state.thinking, justComplicated: false };
   // The student's words come first and carry the cache mark; the facts follow and are
@@ -316,7 +322,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     { type: 'text', text: v2SessionPart(session), cache_control: CACHE },
   ];
   const base = v2Tools(session.subject, session.topic ?? '', discussion);
-  const tools = discussion ? base : session.homeworkSheet ? [...base, V2_SET_CURRENT_PROBLEM_TOOL, V2_NOTE_OWN_ANSWER_TOOL] : session.homework ? [...base, V2_NOTE_OWN_ANSWER_TOOL] : v2LevelCheckOn(session) ? [...base, V2_SET_WORKING_LEVEL_TOOL] : base;
+  // A taught lesson's partner tools; none: the base set itself, so other sessions send byte-identical tools.
+  const partnerTools = [...(v2LevelCheckOn(session) ? [V2_SET_WORKING_LEVEL_TOOL] : []), ...(v2PronunciationOn(session) ? [V2_PRACTISE_PRONUNCIATION_TOOL] : [])];
+  const tools = discussion ? base : session.homeworkSheet ? [...base, V2_SET_CURRENT_PROBLEM_TOOL, V2_NOTE_OWN_ANSWER_TOOL] : session.homework ? [...base, V2_NOTE_OWN_ANSWER_TOOL] : partnerTools.length ? [...base, ...partnerTools] : base;
   let messages: Anthropic.MessageParam[] = [...withCacheMark(state.history), userNow];
 
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];

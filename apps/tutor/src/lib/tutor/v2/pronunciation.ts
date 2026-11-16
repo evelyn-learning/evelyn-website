@@ -1,0 +1,241 @@
+/**
+ * Tutor brain v2 — measured pronunciation practice.
+ *
+ * A partner with `pronunciation` (partner-session-options.ts, under the TUTOR_PRONUNCIATION_ASSESS kill switch) has
+ * the tutor practise saying words and sentences with a measurement, never by ear: the recogniser writes what it
+ * guessed, not how it sounded, and v1 praised and corrected pronunciation from that transcript. The control tool
+ * `practise_pronunciation({ items })` arms the student's next spoken reply; the voice client records it (the
+ * recogniser's microphone frames into v1's ClipCapture, pronunciation-recorder.ts) and has it scored by
+ * /api/tutor/pronunciation/assess; the score is put in the state before the next turn and comes back in that
+ * turn's facts. Below PRONUNCIATION_LOW_SCORE the facts ask for one more try, once; a recording that could not be
+ * measured is asked for again, once. Without a measurement the facts and the session part say nothing is to be
+ * said about how they sounded.
+ *
+ * Spoken lessons only (the measurement needs the microphone), in a taught lesson: not homework, not a discussion.
+ * The thresholds and the "measured" rule are v1's (pronunciation/assessor.ts). Pure, client-safe.
+ */
+import type Anthropic from '@anthropic-ai/sdk';
+import { PRONUNCIATION_LOW_SCORE, pronunciationLowScore } from '../pronunciation/assessor';
+import { MAX_REFERENCE_CHARS } from '../pronunciation/assess-request';
+import { WORD_FLAG_SCORE } from '../pronunciation/normalize';
+import { discussionOf } from './discussion';
+import type { V2Session, V2State } from './types';
+
+export { PRONUNCIATION_LOW_SCORE };
+
+/** What one scored reply came to, as the voice client puts it into the state for the next turn. `seq` is the arm it
+ *  answers; a result for an older arm is dropped. `cut`: the vendor answered, but fewer than three quarters of the
+ *  words came through (v1 isMeasuredResult). `unavailable`: nothing was measured (silence, a vendor error, no reply
+ *  in time). `off`: measuring is not available to this session at all. */
+export interface V2PronunciationHeard {
+  seq: number;
+  status: 'measured' | 'cut' | 'unavailable' | 'off';
+  reason?: string;
+  overall?: number;
+  words?: Array<{ word: string; score: number; omitted?: boolean; sound?: { ipa: string; score: number }; stressWrong?: boolean }>;
+}
+
+/** The pronunciation part of the session state (types.ts V2State.pronunciation). */
+export interface V2PronunciationState {
+  /** The number of the latest arm. */
+  seq: number;
+  /** The student's next spoken reply is recorded and scored against `reference`. `attempt` 2 is the one more try. */
+  armed?: { seq: number; items: string[]; reference: string; attempt: 1 | 2 };
+  /** The score of the armed reply, put in by the browser before the turn that answers it. */
+  heard?: V2PronunciationHeard;
+  /** The words of an item whose result asked for one more try: an arm made only of them is that try. */
+  retryOf?: string[];
+  /** Measuring is not available to this session: no more practice is offered. */
+  off?: boolean;
+}
+
+/** At most this many items in one arm: one recording holds them all, and a clip is capped at 15 s. */
+export const V2_PRONUNCIATION_MAX_ITEMS = 6;
+const MAX_ITEM_CHARS = 160;
+/** Reasons that mean measuring is not available to this session (no vendor, no key, the route closed to it). */
+const OFF_REASONS = new Set(['no_vendor', 'no_key', 'http_404']);
+
+/** Measured practice runs in a spoken, taught lesson of a partner that has it. */
+export function v2PronunciationOn(session: V2Session): boolean {
+  return !!session.pronunciation && session.mode === 'voice' && !session.homework && !session.homeworkSheet && !discussionOf(session.plan);
+}
+
+export const V2_PRACTISE_PRONUNCIATION_TOOL: Anthropic.Tool = {
+  name: 'practise_pronunciation',
+  description: 'Have the student\'s next spoken reply recorded and its pronunciation scored. Call it in the reply that asks them to say the items, after you have said them once yourself; then stop and let them speak. The score comes in the next turn\'s facts. The student does not see this call.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      items: { type: 'array', items: { type: 'string' }, maxItems: V2_PRONUNCIATION_MAX_ITEMS, description: 'Exactly what they are to say, in order: one sentence, or a few single words. Written as it is said, with no notes or translations.' },
+    },
+    required: ['items'],
+  },
+};
+
+const wordsOf = (text: string) => text.toLowerCase().split(/[^\p{L}\p{N}']+/u).filter(Boolean);
+/** The reference text the recording is scored against: the items in order, each ended as a sentence. */
+export function v2PronunciationReference(items: string[]): string {
+  return items.map((i) => (/[.!?]$/.test(i) ? i : `${i}.`)).join(' ');
+}
+
+/** The tool's effect on the state: arm the next spoken reply. */
+export function v2ApplyPractisePronunciation(state: V2State, args: Record<string, unknown>): string {
+  const p = state.pronunciation ?? { seq: 0 };
+  if (p.off) return 'not armed: pronunciation cannot be measured in this session. Say nothing about how they sound, and do not offer pronunciation practice again.';
+  const items = (Array.isArray(args.items) ? args.items : typeof args.items === 'string' ? [args.items] : [])
+    .filter((x): x is string => typeof x === 'string').map((x) => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  if (!items.length) return 'not armed: give the words or sentence they are to say, in items.';
+  if (items.length > V2_PRONUNCIATION_MAX_ITEMS || items.some((x) => x.length > MAX_ITEM_CHARS)) return `not armed: at most ${V2_PRONUNCIATION_MAX_ITEMS} items, each a word or one sentence. Ask for fewer at once.`;
+  const reference = v2PronunciationReference(items);
+  if (reference.length > MAX_REFERENCE_CHARS) return 'not armed: that is too much to record at once. Ask for less.';
+  // The one more try: an arm made only of the words of the item that asked for it (the whole sentence again, or its weak word).
+  const retry = !!p.retryOf?.length && wordsOf(reference).every((w) => p.retryOf!.includes(w));
+  const seq = p.seq + 1;
+  state.pronunciation = { seq, armed: { seq, items, reference, attempt: retry ? 2 : 1 } };
+  return `armed: their next spoken reply is recorded and scored against "${reference}". Stop after asking them to say it; say nothing about how it sounds until the score is in the facts.`;
+}
+
+/** The browser puts a scored reply into the state before the turn that answers it; one for another arm is dropped. */
+export function v2WithPronunciationHeard(state: V2State, heard: V2PronunciationHeard | null | undefined): V2State {
+  if (!heard || !state.pronunciation?.armed || state.pronunciation.armed.seq !== heard.seq) return state;
+  return { ...state, pronunciation: { ...state.pronunciation, heard } };
+}
+
+const num = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? Math.max(0, Math.min(100, Math.round(x))) : undefined);
+
+/** The assess route's answer (route.ts: { status, reason?, measured, result? }) as a scored reply. */
+export function v2PronunciationHeardOf(seq: number, httpStatus: number, data: unknown): V2PronunciationHeard {
+  if (httpStatus === 404) return { seq, status: 'off', reason: 'http_404' };
+  if (httpStatus < 200 || httpStatus >= 300) return { seq, status: 'unavailable', reason: `http_${httpStatus}` };
+  const d = (data && typeof data === 'object' ? data : {}) as { status?: unknown; reason?: unknown; measured?: unknown; result?: { overall?: unknown; words?: unknown } | null };
+  const reason = typeof d.reason === 'string' ? d.reason : undefined;
+  if (d.status !== 'ok' || !d.result) return { seq, status: reason && OFF_REASONS.has(reason) ? 'off' : 'unavailable', reason: reason ?? 'bad_response' };
+  if (d.measured !== true) return { seq, status: 'cut', reason: 'not_attempted' };
+  const raw = Array.isArray(d.result.words) ? d.result.words as Array<Record<string, unknown>> : [];
+  const words = raw.filter((w) => w && w.errorType !== 'insertion' && typeof w.word === 'string').map((w) => {
+    const phonemes = Array.isArray(w.phonemes) ? (w.phonemes as Array<{ ipa?: unknown; score?: unknown }>).filter((x) => typeof x?.ipa === 'string' && num(x.score) !== undefined) : [];
+    const worst = [...phonemes].sort((a, b) => num(a.score)! - num(b.score)!)[0];
+    return {
+      word: String(w.word), score: num(w.score) ?? 0,
+      ...(w.errorType === 'omission' ? { omitted: true } : {}),
+      ...(worst ? { sound: { ipa: String(worst.ipa), score: num(worst.score)! } } : {}),
+      ...(w.stress === 'wrong' ? { stressWrong: true } : {}),
+    };
+  });
+  const overall = num(d.result.overall);
+  return { seq, status: 'measured', ...(overall !== undefined ? { overall } : {}), words };
+}
+
+/** The route's reading of the pronunciation state in the client's state: anything malformed is dropped. */
+export function v2ReadPronunciation(raw: unknown): V2PronunciationState | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>;
+  const seq = typeof r.seq === 'number' && Number.isInteger(r.seq) && r.seq >= 0 ? r.seq : null;
+  if (seq === null) return undefined;
+  const out: V2PronunciationState = { seq };
+  const a = r.armed as Record<string, unknown> | undefined;
+  if (a && typeof a === 'object' && a.seq === seq && Array.isArray(a.items)) {
+    const items = a.items.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, V2_PRONUNCIATION_MAX_ITEMS).map((x) => x.slice(0, MAX_ITEM_CHARS));
+    if (items.length) out.armed = { seq, items, reference: v2PronunciationReference(items), attempt: a.attempt === 2 ? 2 : 1 };
+  }
+  const h = r.heard as Record<string, unknown> | undefined;
+  if (out.armed && h && typeof h === 'object' && h.seq === seq && ['measured', 'cut', 'unavailable', 'off'].includes(String(h.status))) {
+    const words = Array.isArray(h.words) ? (h.words as Array<Record<string, unknown>>).filter((w) => w && typeof w.word === 'string').slice(0, 40).map((w) => {
+      const s = w.sound as { ipa?: unknown; score?: unknown } | undefined;
+      return {
+        word: String(w.word).slice(0, 60), score: num(w.score) ?? 0,
+        ...(w.omitted === true ? { omitted: true } : {}),
+        ...(s && typeof s.ipa === 'string' && num(s.score) !== undefined ? { sound: { ipa: s.ipa.slice(0, 8), score: num(s.score)! } } : {}),
+        ...(w.stressWrong === true ? { stressWrong: true } : {}),
+      };
+    }) : undefined;
+    out.heard = {
+      seq, status: h.status as V2PronunciationHeard['status'],
+      ...(typeof h.reason === 'string' ? { reason: h.reason.slice(0, 60) } : {}),
+      ...(num(h.overall) !== undefined ? { overall: num(h.overall) } : {}),
+      ...(words ? { words } : {}),
+    };
+  }
+  const retryOf = Array.isArray(r.retryOf) ? r.retryOf.filter((x): x is string => typeof x === 'string').slice(0, 80) : [];
+  if (retryOf.length) out.retryOf = retryOf;
+  if (r.off === true) out.off = true;
+  return out;
+}
+
+/** v1 W9-B2: the last word was omitted because the recording ended before it, not because they skipped it. */
+const cutWordOf = (h: V2PronunciationHeard) => { const last = h.words?.[h.words.length - 1]; return last?.omitted ? last : undefined; };
+/** Below PRONUNCIATION_LOW_SCORE overall or on any word (v1 W11-A), a cut last word not counted against them. */
+function isLow(h: V2PronunciationHeard): boolean {
+  const cut = cutWordOf(h);
+  return pronunciationLowScore({ overall: h.overall, words: (h.words ?? []).filter((w) => w !== cut).map((w) => ({ score: w.score, errorType: w.omitted ? 'omission' : 'none' })) }, PRONUNCIATION_LOW_SCORE);
+}
+const quote = (xs: string[]) => xs.map((x) => `"${x}"`).join(', ');
+
+/** The facts lines for pronunciation practice (only in a session that has it). `studentSaid` is this turn's words. */
+export function v2PronunciationFacts(session: V2Session, state: V2State, studentSaid: string | null | undefined): string[] {
+  if (!v2PronunciationOn(session)) return [];
+  const p = state.pronunciation;
+  // A session the route will not measure: offered practice would only ever come back unmeasured.
+  if (p?.off && !p.heard) return ['pronunciation: it cannot be measured in this session. Say nothing about how they sound, and do not offer pronunciation practice'];
+  if (!p?.armed) return [];
+  const { armed, heard } = p;
+  if (!heard) {
+    if (studentSaid === null || studentSaid === undefined) return [`pronunciation: their next spoken reply is recorded and scored against "${armed.reference}"`];
+    // Typed, spoken over the tutor, or the score did not come back in time: there is no measurement.
+    return ['pronunciation: this reply was not measured, so say nothing about how it sounded'];
+  }
+  if (heard.status === 'off') return ['pronunciation: it cannot be measured in this session, so this reply was not measured: say nothing about how it sounded, and do not offer pronunciation practice again'];
+  if (heard.status !== 'measured') {
+    // v1 W9-B3 (run 5): told the recording failed, the tutor told the learner "I cannot hear the sounds".
+    const never = 'never say you cannot hear them, and say nothing about how it sounded';
+    return armed.attempt === 1
+      ? [`pronunciation: the recording of "${armed.reference}" was cut short and could not be measured. In one short sentence ask them to say it once more, and call practise_pronunciation with it again (${never})`]
+      : [`pronunciation: the second recording of "${armed.reference}" could not be measured either. Leave it there and go on (${never})`];
+  }
+  const cut = cutWordOf(heard);
+  const words = (heard.words ?? []).filter((w) => w !== cut).slice(0, 8).map((w) => w.omitted
+    ? `"${w.word}" not said`
+    : `"${w.word}" ${w.score}/100${w.score < WORD_FLAG_SCORE && w.sound ? `, weakest sound /${w.sound.ipa}/ ${w.sound.score}/100` : ''}${w.stressWrong ? ', stress on the wrong syllable' : ''}`);
+  const lines = [`pronunciation, measured just now for "${armed.reference}": ${heard.overall ?? '?'}/100 overall${words.length ? `; ${words.join('; ')}` : ''}`];
+  if (cut) lines.push(`the recording ended before "${cut.word}": that is not their mistake, and it is not counted against them`);
+  // v1 Task 25 §E: "was it graded?": the number was never said. v1: sounds the measurement did not name were invented.
+  lines.push(`tell them the score as "${heard.overall ?? '?'} out of 100", and speak only of the items and sounds measured here`);
+  const weak = (heard.words ?? []).filter((w) => w !== cut && !w.omitted && w.score < PRONUNCIATION_LOW_SCORE).map((w) => w.word);
+  if (isLow(heard)) {
+    // v1 W11-A (run 7): "developed" scored 16/100, the tutor named the sound and moved on: no repeat in five items.
+    lines.push(armed.attempt === 1
+      ? `below ${PRONUNCIATION_LOW_SCORE}: one more try. Say ${weak.length ? quote(weak) : 'it'} once more yourself with one tip on the weakest sound, ask them to try again, and call practise_pronunciation with it`
+      : 'that was their one more try: say what improved, if anything, and go on; no further repeat of it');
+  }
+  return lines;
+}
+
+/** After the facts are rendered: a scored reply, or a spoken one, uses the arm up; what it asked for is remembered. */
+export function v2ConsumePronunciation(session: V2Session, state: V2State, studentSaid: string | null | undefined): void {
+  const p = state.pronunciation;
+  if (!v2PronunciationOn(session) || !p) return;
+  if (!p.heard && (studentSaid === null || studentSaid === undefined)) return;
+  const h = p.heard; const armed = p.armed;
+  const asksAgain = !!h && !!armed && armed.attempt === 1 && (h.status === 'cut' || h.status === 'unavailable' || (h.status === 'measured' && isLow(h)));
+  state.pronunciation = {
+    seq: p.seq,
+    ...(asksAgain ? { retryOf: wordsOf(armed!.reference) } : {}),
+    ...(p.off || h?.status === 'off' ? { off: true } : {}),
+  };
+}
+
+/** The session part's section (pronunciation sessions only). Stable for the whole session. */
+export function v2PronunciationSection(): string {
+  return [
+    'PRONUNCIATION PRACTICE',
+    // v1: pronunciation was praised and corrected from the transcript, which is the recogniser's guess at the words.
+    'How they pronounce can be measured. Call practise_pronunciation with exactly what you ask them to say, in the reply that asks them; their next spoken reply is recorded and scored, and the score comes in the next turn\'s facts. Comment on their pronunciation only from a score in the facts, and only on what it measured; without one, say nothing about how they sounded.',
+    // The partner's brief: an optional pronunciation mode, at the plan's pronunciation part and on request.
+    'Offer it at the plan\'s pronunciation part, and whenever they ask for it. The items are that part\'s pronunciation words and sentences, or sentences of their own that you corrected this lesson.',
+    // Live session (James): "Uh, just a little bit of individual words." was answered by reading the menu again.
+    'Ask how they want to practise (single words or a whole sentence) as a plain spoken question, never a numbered list, and take their answer however they put it.',
+    // One recording holds the whole reply: a clip is capped at 15 seconds.
+    // The bilingual section has them build sentences rather than repeat yours; a drill of sounds needs a model to say after.
+    'One sentence, or a few single words, at a time. Say it once yourself, ask them to say it after you (this practice is the one place where they repeat a model), and stop: their reply is the recording.',
+  ].join('\n');
+}

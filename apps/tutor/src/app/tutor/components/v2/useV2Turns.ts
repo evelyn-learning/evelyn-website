@@ -29,6 +29,7 @@ import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types'
 import { TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
 import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { v2LevelEstimateDue, v2SeedWorkingLevel, v2WorkingLevelCommit } from '@/lib/tutor/v2/working-level';
+import { v2WithPronunciationHeard, type V2PronunciationHeard } from '@/lib/tutor/v2/pronunciation';
 
 export interface V2TurnsConfig {
   mode: 'text' | 'voice';
@@ -44,6 +45,13 @@ export interface V2TurnsConfig {
   /** The partner checks the learner's working level once and remembers it (partner-session-options.ts `levelCheck`,
    *  v2/working-level.ts). Under the TUTOR_WORKING_LEVEL kill switch. */
   levelCheck?: boolean;
+  /** Voice: the partner measures pronunciation (partner-session-options.ts `pronunciation`, v2/pronunciation.ts). The voice
+   *  client sets it only when it can record (the kill switch on, a session id for the assess route). */
+  pronunciation?: boolean;
+  /** Voice: the score of the armed reply, awaited (bounded) before each turn and put in the state for its facts. */
+  pronunciationHeard?: () => Promise<V2PronunciationHeard | null>;
+  /** Voice: after each turn, the reply the state has armed for recording (null: none). */
+  onPronunciationArm?: (armed: { seq: number; reference: string } | null) => void;
   /** The topic asked for when there is no lesson plan. */
   topic?: string;
   /** The session's teaching languages, English first (a partner's `tutor_languages`); a second one makes the lesson bilingual (v2/languages.ts). */
@@ -237,6 +245,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     if (!stateRef.current.history.length) await Promise.race([memoryReadyRef.current, new Promise((r) => setTimeout(r, 1500))]);
     // The working level goes into the state the turn carries: an estimate made this lesson, else the one on the profile.
     if (levelCheckOn()) stateRef.current = v2SeedWorkingLevel(stateRef.current, { known: knownLevelRef.current, estimated: estimatedLevelRef.current });
+    // The score of the armed reply goes into the state the turn carries (v2/pronunciation.ts).
+    if (p.current.pronunciation && p.current.pronunciationHeard) { const heard = await p.current.pronunciationHeard(); stateRef.current = v2WithPronunciationHeard(stateRef.current, heard); }
     const session: V2ClientSession = {
       studentName: p.current.studentName, subject: p.current.subject, level: p.current.level, mode: p.current.mode,
       ...((p.current.tutorLanguages?.length ?? 0) > 1 ? { languages: p.current.tutorLanguages } : {}),
@@ -247,6 +257,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       ...(p.current.teacher ? { teacher: p.current.teacher } : {}),
       ...(p.current.trial ? { trial: true } : {}),
       ...(levelCheckOn() ? { levelCheck: true } : {}),
+      ...(p.current.pronunciation ? { pronunciation: true } : {}),
     };
     const abort = new AbortController(); abortRef.current = abort;
     const sentences = new SentenceStream();
@@ -330,6 +341,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         p.current.onDebugEvent?.('working_level_set', `${done.state.workingLevel.level}${done.state.workingLevel.level === estimatedLevelRef.current ? ' source=estimate' : ''} (v2)`);
       }
       stateRef.current = done.state;
+      if (p.current.pronunciation) { const a = done.state.pronunciation?.armed; p.current.onPronunciationArm?.(a ? { seq: a.seq, reference: a.reference } : null); }
       requestLevelEstimate();
       reportSheet();
       if (done.state.closed) clearV2State(p.current.sessionId); else saveV2State(p.current.sessionId, done.state);

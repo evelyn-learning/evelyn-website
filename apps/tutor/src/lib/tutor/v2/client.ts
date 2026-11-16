@@ -21,6 +21,8 @@ export interface V2ClientSession {
   background?: string[];
   /** The partner checks the learner's working level once and remembers it (working-level.ts). */
   levelCheck?: boolean;
+  /** The partner measures pronunciation in spoken lessons (pronunciation.ts). */
+  pronunciation?: boolean;
 }
 
 export interface V2TurnDone {

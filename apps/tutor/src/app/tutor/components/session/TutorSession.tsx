@@ -1750,6 +1750,7 @@ export default function TutorSession(props: TutorSessionProps) {
           topic={topic || undefined}
           trial={isTrial || openScope || undefined}
           levelCheck={levelCheck}
+          pronunciation={pronunciation}
           sessionMaxMinutes={sessionMaxMinutes}
           composerSlot={videoBtn}
           handleRef={realtimeHandleRef}

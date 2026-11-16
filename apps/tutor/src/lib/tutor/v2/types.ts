@@ -7,6 +7,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import type { LessonPlan } from '../lesson-plan/types';
 import type { WorkingLevel } from '../level/working-level';
+import type { V2PronunciationState } from './pronunciation';
 
 export type GoalStatus = 'not_started' | 'shown' | 'demonstrated' | 'skipped';
 
@@ -40,6 +41,9 @@ export interface V2Session {
   /** The partner's lessons find the learner's working level once and remember it (partner-session-options.ts
    *  `levelCheck`, under TUTOR_WORKING_LEVEL): the `set_working_level` tool and the level in the facts (working-level.ts). */
   levelCheck?: boolean;
+  /** The partner's spoken lessons measure pronunciation (partner-session-options.ts `pronunciation`, under
+   *  TUTOR_PRONUNCIATION_ASSESS): the `practise_pronunciation` tool and the score in the facts (pronunciation.ts). */
+  pronunciation?: boolean;
   /** Homework mode (homework.ts): the session works the student's own homework. Never holds the answer key. */
   homework?: V2HomeworkProblem;
   /** Whole-sheet homework (homework.ts): every problem of the sheet, worked in any order. Never holds a key. */
@@ -135,6 +139,8 @@ export interface V2State {
   /** Level-check sessions (working-level.ts): the learner's working level, remembered from an earlier lesson or
    *  set in this one. Optional: other sessions have none. */
   workingLevel?: V2WorkingLevel;
+  /** Pronunciation sessions (pronunciation.ts): the armed reply, its score once in, and what it asked for. */
+  pronunciation?: V2PronunciationState;
 }
 
 /** A working level and where it came from: an earlier lesson (may be revised once, case 11) or this lesson (final). */
