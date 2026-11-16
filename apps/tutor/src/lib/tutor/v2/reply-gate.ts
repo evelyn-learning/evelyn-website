@@ -7,9 +7,9 @@
  *    where the runtime had already asked it at the one before (C: five times in tester B's run): dropped (F1);
  *  - a sentence card spoken where it stands, which the model then said again in its next sentence (tester B T50): the
  *    card is said only when the next sentence does not say it (F5);
- *  - a goodbye: held until the reply is complete, so a close the runtime refuses leaves no goodbye behind it (James:
+ *  - a goodbye: held until the reply is complete, so a close the runtime refuses leaves no goodbye behind it (gdi-real-james:
  *    "See you next time!Would you like to do something harder…?", F4), and a part not reached can be named before it
- *    (Josh's stop goodbye, F3).
+ *    (gdi-real-josh's stop goodbye, F3).
  *
  * The client cuts sentences again for speech (sentences.ts); this gate only decides which go out and when. It never
  * changes a sentence's words. Pure apart from its output callback.
@@ -25,6 +25,9 @@ export const V2_GOODBYE = /\b(?:see you (?:next time|soon|again)|goodbye|good-by
 const QUOTED_SPANS = /"[^"]*"|“[^”]*”|「[^」]*」|『[^』]*』|‘[^’]*’/g;
 
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean).join(' ');
+
+/** A card's sentences (it is English: cut after . ! ?). */
+const splitSentences = (text: string) => text.split(/(?<=[.!?]["'”’)]*)\s+/).map((x) => x.trim()).filter(Boolean);
 
 /** Where the first sentence in `buf` ends (index just past it and its trailing white space), or -1. */
 function nextCut(buf: string): number {
@@ -65,12 +68,19 @@ export class ReplyGate {
   readonly removed: string[] = [];
   /** Cards said where they stood (raw text said), for the spoken record. */
   readonly saidCards: string[] = [];
+  /** Fix round 1 (minor 3): what a card of several sentences went out as, when some of its sentences were left out because
+   *  the model said them itself (card → words said). */
+  readonly cardSaidAs = new Map<string, string>();
+  /** A card of several sentences checked one sentence at a time (a note's example sentences). */
+  private perSentence = false;
+  /** The sentences of the card just said, by their words: the model's own repeat of one of them is not said again. */
+  private echoes = new Set<string>();
 
   constructor(private readonly out: (text: string) => void, private readonly opts: ReplyGateOptions) {}
 
   /** Nothing to drop or hold: words go out as they come, cut nowhere (fix round 2, N4: with the gate's work off, the
    *  stream is the stream as before it existed). A card waiting for the next sentence still holds them until then. */
-  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.holdGoodbye && this.card === null; }
+  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.holdGoodbye && this.card === null && !this.echoes.size; }
 
   push(text: string): void {
     if (this.passThrough && !this.buf) { this.emit(text); return; }
@@ -82,12 +92,12 @@ export class ReplyGate {
   flush(): void { this.drain(true); this.releaseCard(); }
 
   /** A sentence card to say where it stands. It goes out before the next sentence, unless that sentence says it. */
-  speakCard(sentence: string): void { this.drain(true); this.releaseCard(); this.card = sentence; }
+  speakCard(sentence: string, opts: { perSentence?: boolean } = {}): void { this.drain(true); this.releaseCard(); this.card = sentence; this.perSentence = !!opts.perSentence; this.echoes.clear(); }
 
   /** Words to say where a block stands only if the sentence after it points back at them (Task 6f: "ここにある文を、
    *  ひとつずつ読んでみてください。" after a note of example sentences). Said just before that sentence; dropped when the
    *  next sentence does not point back, or a block or the end comes first. */
-  speakCardIf(sentence: string, when: (next: string) => boolean): void { this.drain(true); this.releaseCard(); this.card = sentence; this.cardIf = when; }
+  speakCardIf(sentence: string, when: (next: string) => boolean, opts: { perSentence?: boolean } = {}): void { this.drain(true); this.releaseCard(); this.card = sentence; this.cardIf = when; this.perSentence = !!opts.perSentence; this.echoes.clear(); }
 
   /** Whether a goodbye is being held. */
   get holdsGoodbye(): boolean { return this.holding; }
@@ -107,11 +117,19 @@ export class ReplyGate {
     this.heldParts = []; this.holding = false;
   }
 
-  private releaseCard(): void {
+  /** `next`: the sentence about to go out after the card (a sentence of the card it already says is left out). */
+  private releaseCard(next?: string): void {
     if (this.card === null) return;
     const c = this.card; this.card = null;
     if (this.cardIf) { this.cardIf = null; return; }
-    this.saidCards.push(c); this.emit(` ${c} `);
+    if (!this.perSentence) { this.saidCards.push(c); this.emit(` ${c} `); return; }
+    const n = next ? norm(next) : '';
+    const keep = splitSentences(c).filter((x) => { const w = norm(x); return !!w && !(n && n.includes(w)); });
+    if (!keep.length) return;
+    const said = keep.join(' ');
+    this.saidCards.push(c); if (said !== c) this.cardSaidAs.set(c, said);
+    for (const x of keep) this.echoes.add(norm(x));
+    this.emit(` ${said} `);
   }
 
   private drain(final: boolean): void {
@@ -129,12 +147,16 @@ export class ReplyGate {
     if (!core) { if (this.holding) this.heldParts.push(s); else this.emit(s); return; }
     if (this.card !== null && this.cardIf) {
       const when = this.cardIf; this.cardIf = null;
-      if (when(core)) this.releaseCard(); else this.card = null;
+      if (when(core)) this.releaseCard(core); else this.card = null;
+    } else if (this.card !== null && this.perSentence) {
+      this.releaseCard(core);
     } else if (this.card !== null) {
       // The model said the card's sentence itself, straight after it: said once, in its words.
       const c = norm(this.card); const n = norm(core);
       if (c && n.includes(c)) this.card = null; else this.releaseCard();
     }
+    // Fix round 1 (minor 3): a note sentence already said where the note stands, which the model then reads itself.
+    if (this.echoes.size && this.echoes.has(norm(core))) { this.removed.push(core); return; }
     if (this.opts.dropFrame && !this.holding && V2_PART_FRAME.test(core)) { this.removed.push(core); return; }
     if (this.holding || (this.opts.holdGoodbye && V2_GOODBYE.test(core.replace(QUOTED_SPANS, ' ')))) { this.holding = true; this.heldParts.push(s); return; }
     this.emit(s);

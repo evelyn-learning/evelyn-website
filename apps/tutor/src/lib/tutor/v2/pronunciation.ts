@@ -182,7 +182,7 @@ const ANSWER_FIRST = 'If what they said was not a try at it (a question, a compl
 
 /** The facts lines for pronunciation practice (only in a session that has it). `studentSaid` is this turn's words.
  *  `fallback` (TUTOR_V2_PRONUNCIATION_FALLBACK): with no measurement to be had, the learner is told once and offered
- *  practice without a score, instead of the lines that moved James to the summary after one word (Task 6f). */
+ *  practice without a score, instead of the lines that moved the learner to the summary (gdi-real-james) after one word (Task 6f). */
 export function v2PronunciationFacts(session: V2Session, state: V2State, studentSaid: string | null | undefined, fallback: boolean = TUTOR_V2_PRONUNCIATION_FALLBACK): string[] {
   if (!v2PronunciationOn(session)) return [];
   const p = state.pronunciation;

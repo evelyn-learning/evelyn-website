@@ -1743,7 +1743,7 @@ export const TUTOR_V2_CHECK_MISHEARD = process.env.NEXT_PUBLIC_TUTOR_V2_CHECK_MI
 
 /** Tutor brain v2 (v2/reply-gate.ts, v2/turn.ts, v2/facts.ts): at the close, one question per reply, and nothing after
  *  a goodbye. A goodbye is held until the reply is complete; a close the runtime refuses takes its goodbye with it, so
- *  the menu the refusal asks for is not said after "See you next time!" (Task 6e fix round 1, F4: James; tester B asked
+ *  the menu the refusal asks for is not said after "See you next time!" (Task 6e fix round 1, F4: gdi-real-james; tester B asked
  *  about a question or the summary in two turns running). Default ON; NEXT_PUBLIC_TUTOR_V2_CLOSE_ONE_QUESTION=off ⇒ the
  *  goodbye goes out as written and no such facts line, as before. */
 export const TUTOR_V2_CLOSE_ONE_QUESTION = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_ONE_QUESTION !== 'off';
@@ -1767,7 +1767,7 @@ export const TUTOR_V2_NO_WORDS_RECOVER = process.env.NEXT_PUBLIC_TUTOR_V2_NO_WOR
  *  recording could not be measured, the learner who asked for pronunciation practice is told once, in one short
  *  sentence, that there is no score today, and is offered to go on practising without one (say it after the tutor),
  *  instead of being moved on to the summary after one word (Task 6f: the real-voice replays ran with no vendor, and
- *  "I can't check the sound of your voice today, so I'll move on to the summary." followed James's first word). A reply
+ *  "I can't check the sound of your voice today, so I'll move on to the summary." followed the learner's first word, gdi-real-james). A reply
  *  that was not a try at the item ("I said individual words.") is answered first. Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_PRONUNCIATION_FALLBACK=off ⇒ the facts lines as before. */
 export const TUTOR_V2_PRONUNCIATION_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_V2_PRONUNCIATION_FALLBACK !== 'off';
@@ -1776,13 +1776,13 @@ export const TUTOR_V2_PRONUNCIATION_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_V2_
  *  example sentences that a lead-in points at ("Here is the form", "Now let's look at the two tenses you just used.",
  *  or "ここにある文を…読んでみてください" just after it) has its example sentences spoken where it stands, as a sentence
  *  card is (SAY_SENTENCE_CARD). Only sentence cards were spoken, and three lead-ins pointed at a note or a table whose
- *  sentences were never said (Task 6f, v2audio-6e2 James T22, tester A T16, tester B T16). Default ON;
+ *  sentences were never said (Task 6f, v2audio-6e2 gdi-real-james T22, tester A T16, tester B T16). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_SAY_NOTE_SENTENCES=off ⇒ notes and tables are shown and not spoken, as before. */
 export const TUTOR_V2_SAY_NOTE_SENTENCES = process.env.NEXT_PUBLIC_TUTOR_V2_SAY_NOTE_SENTENCES !== 'off';
 
 /** Tutor brain v2 (v2/turn.ts, v2/plan-map.ts v2FramePartLabel, spoken lessons with a plan): the part-change frame names
  *  the part that will open. A held page whose part the same reply marks done (set_goal_status) is not named: the frame
- *  waits for the reply to be complete and names the plan's next part instead. James heard "Next is your job." while the
+ *  waits for the reply to be complete and names the plan's next part instead. The learner heard "Next is your job." (gdi-real-james T20) while the
  *  reply marked the job part done, and the next reply opened the present perfect (Task 6f, v2audio-6e2 T20). The frame
  *  is said at once when nothing was said before the page. Default ON; NEXT_PUBLIC_TUTOR_V2_FRAME_NAMES_OPENED=off ⇒ the
  *  frame names the held page as it streams, as before. */

@@ -28,7 +28,7 @@ import { saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2WrapDue } from './time-box';
-import { planGoalIds, renderPlanMap, v2FramePartLabel, v2NextTimeAllLine, v2NextTimeLine, v2PartOf, v2UnreachedOffer } from './plan-map';
+import { planGoalIds, renderPlanMap, v2FramePartLabel, v2FramePartPending, v2NextTimeAllLine, v2NextTimeLine, v2PartOf, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
@@ -47,6 +47,9 @@ import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State
 
 /** Task 6f: the words of a reply that has begun its summary ("Before we finish, here is a quick summary."). */
 export const V2_SUMMARY_BEGUN = /\b(?:here(?: is|'s) (?:a |the |your |our |today's )?(?:quick |short |brief |little )?(?:summary|recap|review of today)|(?:let me|let's|i'll|we'll) (?:sum up|summari[sz]e|recap|go over what we did)|to (?:sum up|summari[sz]e|recap)|in summary)\b|まとめ(?:ます|ましょう|です|ると)/i;
+
+/** The last `n` sentences of `text`. */
+const lastSentences = (text: string, n: number) => text.trim().split(/(?<=[.!?。！？])["'”’」)]*\s+/).filter(Boolean).slice(-n).join(' ');
 
 /** A spoken reply of at least this many words that wrote nothing is put to the board check. */
 export const V2_UNWRITTEN_WORDS = 30;
@@ -591,11 +594,17 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // The question check only when the last part change did not ask it; an ask ending in the second language is an ask (Task 6e).
       const once = TUTOR_V2_PART_OFFER_ONCE;
       const asked = once ? endsAsking(saidNow.trimEnd()) : /\?\s*$/.test(saidNow);
-      const offer = missed ?? (asked ? '' : partOffer(block.body.trim(), namesPart(block.body, saidNow)));
+      let offer = missed ?? (asked ? '' : partOffer(block.body.trim(), namesPart(block.body, saidNow)));
+      // Task 6f (FRAME_NAMES_OPENED): the frame names the part that will open. A held page whose part is already marked is
+      // renamed at once (the plan's next part); one whose part is not marked yet waits for the reply to be complete, as
+      // this reply may mark it (fix round 1, I1: only then; every other frame goes out as it did).
+      if (offer && !missed && gated && !!session.plan && TUTOR_V2_FRAME_NAMES_OPENED && !namesPart(block.body, saidNow)) {
+        const now = v2FramePartLabel(session.plan, state, block.body.trim(), []);
+        if (now !== undefined) offer = partOffer(now ?? '', now === null);
+        else if (saidNow.trim() && v2FramePartPending(session.plan, state, block.body.trim())) frameWaits = { title: block.body.trim() };
+      }
       heldAt = { raw: block.raw, offer };
-      // Task 6f: a frame that names the page waits for the reply to be complete while earlier words are being spoken.
-      if (offer && !missed && gated && !!session.plan && TUTOR_V2_FRAME_NAMES_OPENED && saidNow.trim() && !namesPart(block.body, saidNow)) frameWaits = { title: block.body.trim() };
-      else if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
+      if (offer && !frameWaits) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
       input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: block.body.trim() }, outcome: 'not opened yet: the student is asked first' });
     };
     const take = (parts: InlinePart[]) => {
@@ -612,11 +621,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // nothing missed, it opens, and no frame is asked.
           // Task 6f: a reply that has begun the summary ("here is a quick summary") is not held at its page for the offer of
           // a part not reached: the page opens, and the part is named as next time where it stands.
-          const summaryBegun = gated && TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME && part.block.kind === 'page' && !discussion && closesLesson(part.block.body) && V2_SUMMARY_BEGUN.test(saidNow) && !!v2UnreachedOffer(session.plan, state);
-          if (summaryBegun && !nextTimeAt && !boardHasPage(part.block.body) && !state.closed) {
-            const line = v2NextTimeAllLine(session.plan, state);
-            if (line) { nextTimeAt = { raw: part.block.raw, line }; gate.push(` ${line} `); gate.flush(); }
-          }
+          // Fix round 1 (minors 6, 7): begun in the last sentence or two before the page, not anywhere in the reply; and the
+          // page is let through only when there is a next-time line to say in place of the offer.
+          const beganNow = part.block.kind === 'page' && V2_SUMMARY_BEGUN.test(lastSentences(saidNow, 2));
+          const summaryLine = gated && TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME && beganNow && !discussion && closesLesson(part.block.body) && !nextTimeAt && !boardHasPage(part.block.body) && !state.closed && !!v2UnreachedOffer(session.plan, state) ? v2NextTimeAllLine(session.plan, state) : null;
+          const summaryBegun = !!summaryLine;
+          if (summaryLine) { nextTimeAt = { raw: part.block.raw, line: summaryLine }; gate.push(` ${summaryLine} `); gate.flush(); }
           if (part.block.kind === 'page' && !discussion && !summaryBegun && (frameDue || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
             // In the box's last fifth the tutor may close by itself, and a reply that does is a closing turn: whether it
             // does is known only when the reply is complete, so the page and what follows it wait until then (D1).
@@ -651,7 +661,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
             const note = noteSentencesToSay(part.block.kind, part.block.body, saidNow);
             if (note) {
               saidCards.set(part.block.raw, note.say); sinceWords = [];
-              if (note.announced) gate.speakCard(note.say); else gate.speakCardIf(note.say, pointsBackAtBoard);
+              if (note.announced) gate.speakCard(note.say, { perSentence: true }); else gate.speakCardIf(note.say, pointsBackAtBoard, { perSentence: true });
             }
           }
           continue;
@@ -674,7 +684,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const waits = frameWaits as { title: string } | null; const heldNow = heldAt as { raw: string; offer: string } | null;
     if (waits && heldNow) {
       // Task 6f: the reply is complete: a page whose part it marked done is not named; the plan's next part is.
-      const markedNow = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use' && b.name === 'set_goal_status').map((b) => String((b.input as { goal?: unknown }).goal ?? '')).filter(Boolean);
+      // Only a status saying the part happened counts (fix round 1, minor 5).
+      const markedNow = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use' && b.name === 'set_goal_status' && ['shown', 'demonstrated', 'skipped'].includes(String((b.input as { status?: unknown }).status))).map((b) => String((b.input as { goal?: unknown }).goal ?? '')).filter(Boolean);
       const label = v2FramePartLabel(session.plan, state, waits.title, markedNow);
       const offer: string = label === undefined ? heldNow.offer : partOffer(label ?? '', label === null);
       heldAt = { raw: heldNow.raw, offer };
@@ -707,7 +718,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const results: Anthropic.ToolResultBlockParam[] = [];
     const spokenBefore = spoken.length; const rawBefore = rawSpoken.length; const callsBefore = toolCalls.length;
     // A sentence card that was also spoken (sentenceCardToSay) counts among the words said; one the model said itself is in its words.
-    const saidHere = () => new Map([...saidCards].filter(([, say]) => gate.saidCards.includes(say)));
+    const saidHere = () => new Map([...saidCards].filter(([, say]) => gate.saidCards.includes(say)).map(([raw, say]) => [raw, gate.cardSaidAs.get(say) ?? say] as [string, string]));
     const wordsOf = (text: string) => { const cards = saidHere(); return stripBoardBlocks(cards.size ? [...cards].reduce((t, [raw, say]) => t.split(raw).join(` ${say} `), text) : text); };
     const removeFrom = (gone: string) => { for (const b of response.content) if (b.type === 'text' && b.text.includes(gone)) { b.text = b.text.replace(gone, '').replace(/[ \t]{2,}/g, ' '); return; } };
     for (const block of response.content) {
@@ -716,8 +727,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       results.push(settle(block));
     }
     // F3, F4: the held goodbye. A close the runtime refused takes its goodbye with it: the lesson goes on and nothing is
-    // said after a goodbye (James: the next-steps menu followed "See you next time!"). Otherwise it goes out, after a
-    // line naming an optional part that was not reached, when the reply has not named it (Josh's stop goodbye).
+    // said after a goodbye (gdi-real-james: the next-steps menu followed "See you next time!"). Otherwise it goes out, after a
+    // line naming an optional part that was not reached, when the reply has not named it (gdi-real-josh's stop goodbye).
     if (gate.holdsGoodbye) {
       const ended = toolCalls.slice(callsBefore).find((c) => c.name === 'end_lesson');
       if (ended && /^not /.test(ended.outcome) && TUTOR_V2_CLOSE_ONE_QUESTION) gate.dropHeld();

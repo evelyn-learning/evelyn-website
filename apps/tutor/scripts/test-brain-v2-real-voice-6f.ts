@@ -153,6 +153,11 @@ async function main() {
     const out2: string[] = []; const g2 = new ReplyGate((t) => out2.push(t), { dropFrame: false, holdGoodbye: false });
     g2.speakCardIf('I work in accounting.', pointsBackAtBoard); g2.push('Now, what do you do at work?'); g2.flush();
     check('gate: dropped when the next sentence does not point back', !/accounting/.test(out2.join('')) && g2.saidCards.length === 0, out2.join(''));
+    // Fix round 1 (minor 3): a note sentence the model then reads itself is said once.
+    const out3: string[] = []; const g3 = new ReplyGate((t) => out3.push(t), { dropFrame: false, holdGoodbye: false });
+    g3.speakCard('I work in accounting. I help customers.', { perSentence: true }); g3.push('I work in accounting. Now you. I help customers. What do you do?'); g3.flush();
+    const o3 = out3.join('');
+    check('gate: a note sentence the next sentence says is left out of the card, and one read later is dropped', (o3.match(/I work in accounting/g) ?? []).length === 1 && (o3.match(/I help customers/g) ?? []).length === 1 && g3.removed.includes('I help customers.') && g3.cardSaidAs.get('I work in accounting. I help customers.') === 'I help customers.', { o3, removed: g3.removed });
 
     // Whole turns, as the replays had them.
     const heardJ: string[] = [];
@@ -162,6 +167,9 @@ async function main() {
     const heardA: string[] = [];
     const tA = `Let's move on to talking about your work. 仕事について話すときは、短い文を使うと分かりやすいです。<board note style="highlight">${aNote}</board>ここにある文を、ひとつずつ読んでみてください。Now, what do you do at work?`;
     await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check', 'Talking about your work']), studentSaid: 'Yes.', callModel: streaming(tA).call, onText: (d) => heardA.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    const heardD: string[] = [];
+    const rD = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check'], { history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Next is the present perfect. Shall we go on?' }] }), studentSaid: 'Uh, yes.', callModel: streaming(tJ.replace('Have you worked', 'I have worked here for seven years. Have you worked')).call, onText: (d) => heardD.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    check('a whole turn whose model then reads a note sentence itself: heard once, and once in the spoken record', (heardD.join('').match(/I have worked here for seven years\./g) ?? []).length === 1 && (rD.spoken.match(/I have worked here for seven years\./g) ?? []).length === 1, { heard: heardD.join(''), spoken: rD.spoken });
     check('tester A T16 in a whole turn: the sentences are said before "ここにある文を…"', /I work in accounting\. I help customers\. I work with international clients\. I joined my company three years ago\.\s+ここにある文を/.test(heardA.join('')), heardA.join(''));
     const heardS: string[] = [];
     await runV2Turn({ session: { ...lang, subject: 'Physics', languages: undefined }, state: pagesAt(['Forces']), studentSaid: 'ok', callModel: streaming('Here are the key ideas. <board note>A force is a push or a pull.\nForces are measured in newtons.</board> Which force acts on a falling ball?').call, onText: (d) => heardS.push(d), boardPass: false, mathsCheck: false });
@@ -187,6 +195,24 @@ async function main() {
     const heard2: string[] = [];
     await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: streaming(t20).call, onText: (d) => heard2.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
     check('a reply that does not mark it: "Next is your job", as before', /Next is your job\. Shall we go on/.test(heard2.join('')), heard2.join(''));
+    // Fix round 1 (I1): the frame waits for the end of the model call only for a page whose part is not marked yet.
+    /** A model call that records whether the frame was already heard when the call ends. */
+    const watching = (text: string, after: unknown[] = []) => {
+      const heardNow: string[] = []; let atEnd = '';
+      const call: V2ModelCall = async (_p, onText) => { for (const piece of text.match(/[\s\S]{1,17}/g) ?? []) onText?.(piece); atEnd = heardNow.join(''); return msg([{ type: 'text', text }, ...after], after.length ? 'tool_use' : 'end_turn'); };
+      return { call, heardNow, atEnd: () => atEnd };
+    };
+    const w1 = watching(t20, goalsAfter);
+    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w1.call, onText: (d) => w1.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    check('T20 shape (part not marked yet): the frame waits for the end of the call, then names present perfect', !/Next is/.test(w1.atEnd()) && /Next is present perfect\./.test(w1.heardNow.join('')), w1.heardNow.join(''));
+    const marked = { overview: { status: 'shown' as const, at: 0 }, 'level-check': { status: 'shown' as const, at: 0 }, 'topic-intro': { status: 'shown' as const, at: 0 } };
+    const w2 = watching('Great. <board page>Your job</board> Now your job.');
+    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: marked, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w2.call, onText: (d) => w2.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    check('"Great. <page>" whose part is already marked: the frame goes out at once, renamed to the next part', /Next is present perfect\. Shall we go on/.test(w2.atEnd()), w2.atEnd());
+    const w3 = watching('Great. <board page>Some other heading</board> Now this.');
+    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: marked, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w3.call, onText: (d) => w3.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    check('a page of no plan part: the frame goes out at once, as before', /Next is some other heading\. Shall we go on/.test(w3.atEnd()), w3.atEnd());
+    check('a "not started" status is not a mark (minor 5)', v2FramePartLabel(GDI, pagesAt(B, { goals: { 'topic-intro': { status: 'not_started' as const, at: 0 } } }), 'Your job', []) === undefined);
     check('the kill switch is on by default', TUTOR_V2_FRAME_NAMES_OPENED === true);
   }
 
@@ -205,6 +231,9 @@ async function main() {
     check('the part named as next time, where the summary opens', /here is a quick summary\.\s+We didn't get to the pronunciation part today, so that's for next time\./.test(h) && /that's for next time/.test(r.spoken), h);
     const heard2: string[] = [];
     await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals, ...level, history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'After "will", use the base verb. Can you say the sentence again?' }] }), studentSaid: 'My responsibility in sales area is contact for our client.', callModel: streaming('Good work. Now let us move on. <board page>Summary</board> You used "have worked" well.').call, onText: (d) => heard2.push(d), boardPass: false, mathsCheck: false, nowMs: 12 * 60000 });
+    const heard3: string[] = [];
+    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals, ...level, history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'After "will", use the base verb. Can you say the sentence again?' }] }), studentSaid: 'My responsibility in sales area is contact for our client.', callModel: streaming('Here is a quick summary of your sentence: it is clear. You used the verb well. Your answer had good detail. Now we move on. <board page>Summary</board> Great.').call, onText: (d) => heard3.push(d), boardPass: false, mathsCheck: false, nowMs: 12 * 60000 });
+    check('"here is a … summary" far before the page does not count (minor 6): held with the offer', /Before the summary, there is still the pronunciation part\./.test(heard3.join('')) && !/that's for next time/.test(heard3.join('')), heard3.join(''));
     check('a summary not begun: held with the offer, as before', /Before the summary, there is still the pronunciation part\./.test(heard2.join('')), heard2.join(''));
     check('the kill switch is on by default', TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME === true);
   }
@@ -212,7 +241,7 @@ async function main() {
   console.log('5. the mishearing line (tester A: "Skip and continue." heard as "new.")');
   {
     const section = v2LanguagesSection(['en', 'ja']) ?? '';
-    check('a reply of a word or two that answers nothing is asked again, not given a meaning', /A reply of a word or two that does not answer what you asked \("new\." to a question about their work\) is the same: ask them to say it again, and do not build a sentence or a meaning from it\./.test(section));
+    check('a reply of a word or two that answers nothing is asked again, not given a meaning', /A reply of a word or two that does not answer what you asked is the same: ask them to say it again, and do not build a sentence or a meaning from it\./.test(section) && !/"new\."/.test(section));
     check('typed lessons and the kill switch off: no such line', !(v2LanguagesSection(['en', 'ja'], 'text') ?? '').includes('A reply of a word or two') && !(v2LanguagesSection(['en', 'ja'], 'voice', { checkMisheard: false }) ?? '').includes('A reply of a word or two'));
   }
 
