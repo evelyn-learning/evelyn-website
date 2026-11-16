@@ -95,6 +95,11 @@ async function main() {
 
   // 3b. Reviewer: back links, and the animated player on an item that has one.
   const PLAYER_ITEM = process.env.KS_PLAYER_ITEM || "234035";
+  await page.fill(".ks-find input", PLAYER_ITEM);
+  await Promise.all([page.waitForURL(new RegExp(`/item/${PLAYER_ITEM}$`)), page.press(".ks-find input", "Enter")]);
+  ok(true, "'Find item #' in the top bar opens the item");
+  await page.goto(`${BASE}/items?q=${PLAYER_ITEM.slice(0, 4)}`);
+  ok((await page.locator(`.ks-list a:has-text('${PLAYER_ITEM}')`).count()) === 1, "searching part of the number lists the item");
   await page.goto(`${BASE}/items?stage=approved`);
   const approvedCount = Number((await page.textContent(".ks-sub"))!.match(/(\d+) shown/)![1]);
   await page.click(`.ks-list a:has-text('${PLAYER_ITEM}')`);
