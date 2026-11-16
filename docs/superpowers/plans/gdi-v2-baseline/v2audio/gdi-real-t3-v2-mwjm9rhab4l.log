@@ -1,0 +1,486 @@
+18:48:29 open fixture=gdi-real-t3 arm=v2 student=gdi-v2-audio-tester-b (audio student tester-b (33 clips), silent tutor voice)
+18:48:32 clicked start (1)
+18:48:40 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and the projects you're involved in, using the present perfect for experience and the past simple for finished events. Does that sound good to you?   [tools: annotate]
+18:48:58 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short ack
+18:49:09 HEARD  I'm ready.
+18:49:09 TUTOR  Great. You'll talk about your job and a project you're proud of, and we'll practise two grammar points: the present perfect for experience, and the past simple for finished events. I'll give you follow-up questions, correct your mistakes, explain them, and give you a chance to try again. You can pra
+18:49:38 STUDENT(clip #2 ok, 2.0 s) I'm ready.  — Short ack to readiness question; line #1 already used
+18:49:43 HEARD  And ready.
+18:49:43 TUTOR  
+
+First, a few quick questions. Please answer in English, and don't worry about mistakes. Can you tell me a little about your job? What do you do?   [tools: new_page]
+18:49:59 STUDENT(clip #3 ok, 22.6 s) Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the the company and of course most of the part of the management and the sales area for this.  — Tutor asks about the learner's job; line 3 is the first unused line that directly answers this question with details abo
+18:50:25 HEARD  Yes, I'm sales manager in the G IMR uh the GM uh general manager, well that's and I just supporting for the all division in the the company. And of course, most of the current of the management and the sales area for this.
+18:50:25 TUTOR  Thank you, that's a clear picture of your role. Have you ever worked with an international customer? If so, can you tell me about that experience?
+18:50:40 STUDENT(clip #11 ok, 7.0 s) Yes, I have working with the international customer for sometimes.  — Answers the yes/no question about working with international customers
+18:50:51 HEARD  Yes, I have working with the international customer for sometimes.
+18:50:51 TUTOR  Good, that's helpful. Which country are your international customers from?
+18:50:58 STUDENT(clip #10 ok, 18.7 s) Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.  — Answers about international customers and English use with foreigners
+18:51:20 HEARD  Uh, what I have the learn at the my company is uh connecting to the foreigner person because of a company has a lot of the foreigner and uh I have to using for my English to communicate for the each other.
+18:51:20 TUTOR  That's useful to know, thank you. What is one skill you'd like to improve in your English, and why is it important to you?
+18:51:33 STUDENT(clip #4 misfit, 24.2 s) My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.  — No line directly addresses skill improvement. Line 4 describes job responsibilities, closest to continuing about work co
+18:52:04 HEARD  My main responsibility in sales area to the uh contact for the clients and supporting for the each division member about this and of course I have uh suggesting for the uh the new uh products about to the clients.
+18:52:04 TUTOR  Thank you, that was a clear overview of your role. Today we'll focus on making your grammar more accurate and your answers more natural. Let's look at how we talk about work.   You already described your responsibilities well. Next, we'll use the present perfect and the past simple in your own sente   [tools: set_working_level, new_page, annotate]
+18:52:34 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short ack
+18:52:41 HEARD  I'm ready.
+18:52:41 TUTOR  Let's start with the present perfect.  We use it for experience or achievements that started in the past and continue now, like "I have worked here for five years."  
+
+Have you worked for your current company for a long time? Answer in a full sentence, starting with "I have worked…".   [tools: new_page, annotate, show_problem]
+18:53:05 STUDENT(clip #8 ok, 6.0 s) I have worked here over the ten years.  — Directly answers the tutor's question about working at current company for a long time, using 'I have worked' as request
+18:53:16 HEARD  I have here over the 10 years.
+18:53:16 TUTOR  Not quite. The idea is right: you have been here for ten years. But after "have" you need the verb "work" in its past participle form. Try the whole sentence again.
+18:53:31 STUDENT(clip #9 ok, 8.8 s) I have working for our company for a long time. It takes about uh around the ten years.  — Learner's first unused attempt at answering the 'how long' question, with 'have working' (still incorrect but shows effo
+18:53:48 HEARD  I have working for our company for a long time. It takes about uh around the 10 years.
+18:53:48 TUTOR  Good effort. The correct sentence is: 
+
+We use "have worked" because you started in the past and you still work there now. Are you ready for the past simple next?   [tools: show_sentence]
+18:54:02 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short ack
+18:54:08 HEARD  I'm ready.
+18:54:08 TUTOR  Let's move on to the past simple.  We use it for something that was finished at a specific time in the past, like "last year" or "two weeks ago."  
+
+Did you attend any business events or exhibitions last year? Answer in a full sentence.   [tools: new_page, annotate, show_problem]
+18:54:31 STUDENT(clip #16 ok, 8.5 s) Yes, I attended the uh some business event in the uh Japan last year.  — Answers the tutor's question about attending business events last year in a full sentence.
+18:54:45 HEARD  Yes, I attended the uh some business event in the uh Japan. last 2 year.
+18:54:45 TUTOR  Good, you used the past simple correctly with "attended" and a specific time. Here is the sentence with the articles fixed: 
+
+What was the event about?
+
+I attended a business event in Japan last year.   [tools: show_sentence]
+18:55:05 STUDENT(clip #18 ok, 13.7 s) Uh, it's kind of the networking events, uh, that's looking for the new uh business partner or the connecting for the the related our service.  — Tutor asks what the event was about; learner describes it as networking events looking for business partners
+18:55:23 HEARD  Uh, it's kind of the networking events, uh, the looking for the new uh business partner or the connecting for the the related our service.
+18:55:23 TUTOR  Networking events are a good way to find new business partners. Did you meet any new partners at that event? Use the past simple, starting with "I met…".
+18:55:38 STUDENT(clip #19 ok, 10.8 s) Yes, I met someone. We came at the the new partner or the the related for the new business with customers.  — Answers tutor's question about meeting new partners at the event, uses past simple as requested
+18:55:57 HEARD  Yes, I met some. We came at the the new partner or the the related for the new business with the customers.
+18:55:57 TUTOR  Good, "I met some" is correct. For the second part, we say:  Can you say that sentence?
+
+We met new business partners at the event.   [tools: show_sentence]
+18:56:09 STUDENT(clip #20 ok, 3.9 s) We met a new business partner there.  — Tutor asks learner to repeat/say the corrected sentence. Line 20 matches this request.
+18:56:18 HEARD  We met a new business partner there.
+18:56:18 TUTOR  That's correct, and "a new business partner" works well. Past simple is done, so let's move to a longer conversation about your work. Are you ready for that, or do you have a question first?
+18:56:34 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; short ack appropriate
+18:56:39 HEARD  I'm ready.
+18:56:39 TUTOR  Let's talk about a project you're proud of.  
+
+What is one project you've worked on that you're particularly proud of?   [tools: new_page, show_problem]
+18:56:52 STUDENT(clip #24 ok, 15.1 s) Uh, let me see is uh one project I worked in the supporting for the the the uh the uh SNS networking contents.  — Learner describes a project they worked on, answering the tutor's question about a project they're proud of.
+18:57:10 HEARD  Uh, let me see is uh one project I worked in the supporting for the the the uh the uh SNS networking contents.
+18:57:10 TUTOR  Good, a social media project is a nice topic. One small change: after "worked", we say "on" for a project, not "in". Try that sentence again.
+18:57:24 STUDENT(clip #25 ok, 5.8 s) I worked on a project to support SNS networking content.  — Tutor asks learner to repeat the sentence with correction ('worked on' not 'worked in'). Line 25 is the corrected versio
+18:57:33 HEARD  I worked on a project to support SNS networking content.
+18:57:33 TUTOR  That's right: "I worked on a project to support SNS networking content." Now, what was your role in that project, and what was the biggest challenge?
+18:57:47 STUDENT(clip #26 ok, 17.0 s) Uh, my role is to manage for the member who is making for the content. uh, the talking about for the content and making for the content.  — Answers 'what was your role' with description of managing SNS content members
+18:57:58 HEARD  Ah, my lover is the manage for the member.
+18:57:58 TUTOR  Sorry, I'm not sure I understood. Did you mean your manager supports the team members, or that your team leader manages the members? Please tell me in your own words.   [tools: annotate]
+18:58:08 HEARD  who is making for the content. uh, the talking about for the content. and the making for the content.
+18:58:08 TUTOR  Got it, your manager creates the content, and you support that work. We say "creates the content" or "makes the content," not "making for the content." 
+
+What did you do to support her on that project?   [tools: show_sentence]
+18:58:12 HEARD  I need to manage
+18:58:12 TUTOR  Thanks. So your manager creates the content, and you support them. Is your role to support that work, or do you manage the content yourself?
+18:58:29 STUDENT(clip #27 ok, 7.8 s) My rule is to manage for the SNS networking content member.  — Learner's next recorded line about their role in managing SNS content members, fits the tutor's question about role in t
+18:58:43 HEARD  My rule is to manage for the assessment and S networking content member.
+18:58:43 TUTOR  So you manage the team members who work on the assessment and the SNS content. We can say:  What was the biggest challenge in that project?
+
+I am responsible for managing the team that works on SNS content.   [tools: show_sentence]
+18:59:02 STUDENT(clip #28 misfit cut=fast, 0.7 s) I need to manage for the uh  — Incomplete sentence; tutor asked about biggest challenge. Line 28 is fragment but next in order.
+18:59:23   (not heard within 20 s of the clip's end)
+19:00:14 HEARD  (silence 75 s)
+19:00:14 TUTOR     [tools: keep_listening]
+19:02:15 HEARD  (silence 120 s)
+19:02:15 TUTOR  Take your time. If the question was hard to follow, here is a simpler one: was there a difficult part of the SNS project?
+19:02:31 STUDENT(clip #29 ok, 2.0 s) I'm not sure about it.  — Learner hesitates on difficult question; 'I'm not sure about it' is appropriate response to a challenging question about
+19:02:54   (not heard within 20 s of the clip's end)
+19:03:03 HEARD  I'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、 、  、 、  、 、  、  、   、            、                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号 号            
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ ( 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ ( 
+
+ 
+
+ 
+
+ ( 
+
+ 
+
+ ( 
+
+ 
+
+ (  (  ( 
+
+ (  (  (  (  (  (  (  (  (  (  ( (  ( (  ( (  ( ( ( (  ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( (vis((vis((vis((vis ((vis ((vis ( (vis( (vis( (vis( (vis( (vis( (vis((vis((vis((vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis((vis (vis (vis((vis (vis((vis (vis (vis((vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis (vis 
+
+ www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www  www www  www  www  www xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx
+19:03:03 TUTOR  Sorry, I didn't catch that. Was there a difficult part of the SNS project?
+19:03:12 STUDENT(clip #33 ok, 13.3 s) Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.  — Learner addresses a challenge/difficulty in the project context
+19:03:18 HEARD  Ah.
+19:03:18 TUTOR     [tools: keep_listening]
+19:03:33 HEARD  not project, but I have to find for the the new uh person to exchanging for the the uh the project members.
+19:03:33 TUTOR  I understand. You need to find new people for the project team. We say "work with" the team members.  Why do you need new members for this project?   [tools: show_sentence]
+19:03:47 STUDENT(clip #34 ok, 12.0 s) Uh, because of the one member is will leaving to our company and the project going on, so that's why I have to find the new people.  — Directly answers why new members are needed for the project
+19:04:06 HEARD  Uh, because of number is will leaving to our company and the project won on, so that's why I have to find a new people.
+19:04:06 TUTOR  Thanks, that explains the situation. One member is leaving, so the project would stop without new people. Please use "people" without "a": 
+
+How long have you worked on this project?   [tools: show_sentence]
+19:04:23 STUDENT(clip #30 misfit, 14.3 s) Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.  — No line directly answers 'how long' question; #30 is about future plans, closest available content
+19:04:42 HEARD  Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.
+19:04:42 TUTOR  That's a good plan for your future role. After "will", use the base verb, so "supporting" should be "support". Can you say the sentence again with that change?
+19:04:57 STUDENT(clip #32 misfit, 3.6 s) one more again.  — Learner says 'one more again' instead of repeating the corrected sentence. No line matches the request to repeat with co
+19:05:04 HEARD  one more again.
+19:05:04 TUTOR  Of course. Say it with "support" this time: "In the future, I will support global networking between the foreign company and the Japanese company with our directors."
+19:05:19 STUDENT(clip #5 misfit, 17.7 s) My main responsibility in sales area is uh contact for our clients and supporting for the each division member and suggesting for the new product clients.  — picked #30 (used or unknown) → earliest unused
+19:05:43 HEARD  My responsibility in sales area is uh contact for our client and supporting for the ADF member and suggesting for the new product clients.
+19:05:43 TUTOR  Your duties came across clearly. After "responsible for", we use an -ing verb or a noun, so we say: 
+
+We're nearly out of time, so let's finish with a quick summary. 
+
+Shall we go on, or do you have a question first?   [tools: show_sentence]
+19:06:04 STUDENT(clip #14 ok, 1.2 s) Yes.  — Yes/no readiness question gets short ack
+19:06:17 HEARD  Yes.
+19:06:17 TUTOR  Great work today! You talked about your job, your responsibilities and a project you're proud of.   One thing you did well was use the past simple with a specific time: "I attended a business event in Japan last year." To improve, remember "have worked", not "have working".
+
+Before we finish, can yo   [tools: new_page, annotate]
+19:06:53 STUDENT(clip #6 misfit, 26.3 s) My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.  — Learner has no line addressing the grammar question about 'have worked' vs 'worked'. Line 6 is next unused and closest t
+19:07:25 HEARD  My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.
+19:07:25 TUTOR  Thank you, that's a clear description of your responsibilities. Your past simple sentence about the business event was correct, and "have worked" is the form to keep for experience that continues now. We ran out of time before you could answer the check question, so here it is: "I have worked here f   [tools: annotate]
+19:08:10 STUDENT(end) Tutor closed session with goodbye and lesson summary; learner has no appropriate response left to play.
+19:08:10 audio: {"sttSockets":1,"sttSocketSeconds":1132,"clipSeconds":271,"silentTtsReplies":108,"mic":{"plays":28,"gum":1,"buffers":165},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+19:08:10 waiting 35 s for the autosave

@@ -1,0 +1,1240 @@
+{
+  "fixture": "gdi-real-josh",
+  "arm": "v2",
+  "sessionId": "embed-1794852141793",
+  "startedAt": "2026-11-16T18:02:24.785Z",
+  "minutes": 10.038433333333334,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hello, Josh. I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect and the past simple. Does that sound good to you?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Yes/no readiness question, short ack appropriate"
+    },
+    {
+      "role": "tutor",
+      "text": "Great. First comes a short level check, just a few friendly questions, so I can adjust the lesson for you. Are you ready?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Readiness question; short ack appropriate"
+    },
+    {
+      "role": "tutor",
+      "text": "Let's begin. Please answer in English, and don't worry about mistakes. I just want to see what you can already do. Can you tell me a little about your job? What do you do?"
+    },
+    {
+      "role": "student",
+      "text": "I am a manager at a communications company.",
+      "tag": "answer",
+      "clip": 2,
+      "fit": "ok",
+      "heard": "I am a manager at a communications company.",
+      "why": "Directly answers 'What do you do?' with job title and company"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, that's a clear answer. Next question: have you ever worked with an international customer? If so, can you tell me about the experience?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have. I work with companies here in Japan and from all over the world.",
+      "tag": "answer",
+      "clip": 3,
+      "fit": "ok",
+      "heard": "Yes, I have. I work with companies here in Japan and from all over the world.",
+      "why": "Directly answers the question about working with international customers"
+    },
+    {
+      "role": "tutor",
+      "text": "That sounds like a very international job. Can you tell me about one recent project with a company from another country?"
+    },
+    {
+      "role": "student",
+      "text": "I'd like to improve my conversation with customers before meetings because I often don't know what to say.",
+      "tag": "answer",
+      "clip": 4,
+      "fit": "misfit",
+      "heard": "I'd like to improve my conversation with customers before meetings because I often don't know what to say.",
+      "why": "No line directly answers about a recent international project; #4 is next unused and addresses work communication challe"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, Josh. Preparing for meetings is a very useful goal. Today we'll make your English more natural and accurate, starting with your own job.\n\n\n\nLook at these two sentences. The first uses have worked for experience that continues now, and the second uses worked for a finished event with a time word. We'll practise both today. Now, please tell me: what are your main responsibilities at work? Give me at least two sentences."
+    },
+    {
+      "role": "student",
+      "text": "My main responsibilities at work are both the training division manager and to help with sales for the division.",
+      "tag": "answer",
+      "clip": 6,
+      "fit": "ok",
+      "heard": "My main responsibilities at work are both the training division manager and to help with sales for the division.",
+      "why": "Answers the tutor's question about main responsibilities with a full sentence as requested"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, you've described your role clearly. One small fix: \"both\" needs two matching parts, so we say \"I am the training division manager, and I help with sales for the division.\" Could you say that sentence once more?"
+    },
+    {
+      "role": "student",
+      "text": "My main responsibilities at work are being the training division manager and helping with sales for the division.",
+      "tag": "answer",
+      "clip": 7,
+      "fit": "ok",
+      "heard": "My main responsibilities at work are being the training division manager and helping with sales for the division.",
+      "why": "Tutor asks learner to repeat the corrected sentence; #7 is the corrected version of responsibilities"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's right. Both parts now match, with \"being\" and \"helping.\"\n\n\n\nNext is present perfect. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Yes/no readiness question; short ack appropriate"
+    },
+    {
+      "role": "tutor",
+      "text": "Let's start with the present perfect. We use have or has plus the past participle for something that started in the past and is still true now. Please answer this question in a full sentence."
+    },
+    {
+      "role": "student",
+      "text": "I work here for eleven year.",
+      "tag": "answer",
+      "clip": 8,
+      "fit": "ok",
+      "heard": "I work here for 11 year.",
+      "why": "Tutor asks learner to answer about duration at work using present perfect; #8 is first unused attempt at this, with mist"
+    },
+    {
+      "role": "tutor",
+      "text": "Not quite. Your sentence is about something that started in the past and continues now, so the verb needs \"have\" or \"has\" with the past participle. Try the sentence again, with the number of years."
+    },
+    {
+      "role": "student",
+      "text": "I have worked here for eleven year.",
+      "tag": "answer",
+      "clip": 9,
+      "fit": "ok",
+      "heard": "I have worked here for 11 year.",
+      "why": "Corrected present perfect form with 'have worked' as tutor requested"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, you used \"have worked\" correctly. We say \"for 11 years,\" with an s on years. Your present perfect is done, and next we'll practise the past simple for finished events. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Yes/no readiness question; short ack appropriate"
+    },
+    {
+      "role": "tutor",
+      "text": "We use the past simple when the time is finished and a specific time word is given, such as last year, yesterday or two years ago. Please answer this question in a full sentence."
+    },
+    {
+      "role": "student",
+      "text": "I have worked here for eleven years.",
+      "tag": "answer",
+      "clip": 10,
+      "fit": "ok",
+      "heard": "I have worked here for 11 years.",
+      "why": "Tutor moved to past simple topic; learner hasn't answered a past simple question yet. Line 10 is the corrected present p"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's right, and it's a good sentence to keep. Now the question on the board is about last year: did you attend any business events or exhibitions? Answer in a full sentence."
+    },
+    {
+      "role": "student",
+      "text": "I really like going to meet customers.",
+      "tag": "answer",
+      "clip": 11,
+      "fit": "misfit",
+      "heard": "I really like going to meet customers.",
+      "why": "Line 11 doesn't answer the specific question about last year's business events, but it's the next unused content line th"
+    },
+    {
+      "role": "tutor",
+      "text": "\"I really like meeting customers\" is a natural way to say it. Now let's use the past simple: when did you last meet a customer? Please answer with a time word, like last week or last month."
+    },
+    {
+      "role": "student",
+      "text": "わかりません。",
+      "tag": "answer",
+      "clip": 12,
+      "fit": "misfit",
+      "heard": "わかりません。",
+      "why": "Learner doesn't understand the question; no suitable past simple answer recorded yet"
+    },
+    {
+      "role": "tutor",
+      "text": "大丈夫ですよ。お客様に会った時期を、英語で短く答えるだけです。例えば「先週」なら last week、「先月」なら last month を使います。\n\nTry starting with: \"I met a customer last...\"\n\nAre you with me so far?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Readiness check; learner confirms understanding with short ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Good. Now say your own sentence, starting with \"I met a customer last...\" and finishing with the time."
+    },
+    {
+      "role": "student",
+      "text": "Do you want me to start now?",
+      "tag": "answer",
+      "clip": 5,
+      "fit": "misfit",
+      "heard": "Do you want me to start now?",
+      "why": "Learner should attempt the tutor's prompt about meeting a customer, but #5 is a readiness question. No fitting line rema"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, please start now. Say your sentence with \"I met a customer last...\" and finish it with the time."
+    },
+    {
+      "role": "student",
+      "text": "I have worked in my department for ten years.",
+      "tag": "answer",
+      "clip": 13,
+      "fit": "misfit",
+      "heard": "I have worked in my department for 10 years.",
+      "why": "Learner has no recorded line matching the tutor's request for 'I met a customer last [time]'. Line #13 is next unused bu"
+    },
+    {
+      "role": "tutor",
+      "text": "That's right, and it's correct present perfect: \"I have worked in my department for 10 years.\" Now back to the past simple. When did you last meet a customer? Use a time word, like last week or last month."
+    },
+    {
+      "role": "student",
+      "text": "I schedule class for many teachers and teach.",
+      "tag": "answer",
+      "clip": 14,
+      "fit": "misfit",
+      "heard": "I schedule class for many teachers. and teach.",
+      "why": "Learner has no recorded line about meeting a customer with a time word. Line 14 is next in order but doesn't answer the "
+    },
+    {
+      "role": "tutor",
+      "text": "Your description of your work is clear. Now let's go back to the customer question. When did you last meet a customer? You can start with \"Last week, I met...\" or \"Last month, I met...\"."
+    },
+    {
+      "role": "student",
+      "text": "Okay, please stop. I would like to end the session for now.",
+      "tag": "answer",
+      "clip": 15,
+      "fit": "misfit",
+      "heard": "Okay. / Please, I would like to end the session for now.",
+      "why": "Learner hasn't answered the customer question yet; line 15 is a session-end request, premature here"
+    },
+    {
+      "role": "tutor",
+      "text": "Please go ahead. Start with \"Last month, I met...\" and tell me who you met and why. Of course, Josh. Here is a short summary.\n\n\n\n\n\n\nOne thing you did well today was describe your work clearly, with the present perfect for your experience. One thing to improve is the past simple. When you talk about a finished time, such as last month, use \"I met\" rather than \"I have met.\" Keep practising both when you talk about your work. Thank you, and see you next time!"
+    },
+    {
+      "role": "student",
+      "text": "Can we continue from this point next time?",
+      "tag": "answer",
+      "clip": 16,
+      "fit": "ok",
+      "heard": "",
+      "why": "Learner asks about continuing next time, fitting the tutor's closing and offer to continue."
+    }
+  ],
+  "events": [
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=65484 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=65484 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (voice)"
+    },
+    {
+      "type": "v2_opening_speech",
+      "message": "released 1707 ms after the tap; microphone live at 805 ms; 0 sentence(s) were waiting"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 1 of 4 (stretch from 1), 2 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5734ms · first_sentence=2508ms · in=12262 out=1043 cr=38052 cc=0 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Does that sound good to you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2526ms · first_sentence=2318ms · in=1321 out=298 cr=38407 cc=355 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794852173115 — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Ready to start the level check?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Ready to start the level check?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Ready to start the level check?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 2 \"Level check\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2516ms · first_sentence=737ms · in=12616 out=382 cr=38407 cc=617 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794852190709 — \"Ready to start the level check?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"What do you do?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3210ms · first_sentence=1184ms · in=12706 out=431 cr=39024 cc=738 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794852217976 — \"What do you do?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1726ms · first_sentence=1556ms · in=553 out=245 cr=19881 cc=70 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794852240519 — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you tell me about one recent project with a company from\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you tell me about one recent project with a company from\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you tell me about one recent project with a company from\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson."
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 3 \"Your job\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 4 of 3 (stretch from 1), 0 started — held"
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Can you tell me about one recent project with a company from\""
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 4 of 3 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_problem: inline, with sentence 6 of 8 (stretch from 4), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "working_level_set",
+      "message": "intermediate (v2)"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 12447ms · first_sentence=6247ms · in=14492 out=2202 cr=59843 cc=190 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3511ms · first_sentence=2122ms · in=12786 out=414 cr=40022 cc=1814 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Could you say that sentence once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Could you say that sentence once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Could you say that sentence once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Could you say that sentence once more?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Could you say that sentence once more?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → not opened yet: the student is asked first"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2471ms · first_sentence=1747ms · in=681 out=386 cr=20918 cc=150 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 4 \"Present perfect\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 4 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 4 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_problem: inline, with sentence 3 of 3 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3284ms · first_sentence=1607ms · in=13025 out=430 cr=41986 cc=262 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5280ms · first_sentence=1669ms · in=13090 out=725 cr=42248 cc=538 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Try the sentence again, with the number of years.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try the sentence again, with the number of years.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try the sentence again, with the number of years.\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Try the sentence again, with the number of years.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 4 · with \"Good, you used &quot;have worked&quot; correctly. We say\""
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: sentence 1 of 4, 2 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6391ms · first_sentence=2047ms · in=13209 out=873 cr=42786 cc=142 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 5 \"Past simple\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"present-perfect\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_problem: inline, with sentence 2 of 2 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3937ms · first_sentence=1518ms · in=13306 out=726 cr=42928 cc=232 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2884ms · first_sentence=1629ms · in=13185 out=338 cr=43160 cc=1310 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Did you attend any business events or exhibitions last year?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Did you attend any business events or exhibitions last year?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Did you attend any business events or exhibitions last year?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Did you attend any business events or exhibitions last year?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_problem: inline, with sentence 2 of 3 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5963ms · first_sentence=1624ms · in=13101 out=895 cr=44470 cc=140 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1418ms · first_sentence=1048ms · in=781 out=182 cr=22305 cc=106 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Are you with me so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Are you with me so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Are you with me so far?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1574ms · first_sentence=1389ms · in=782 out=179 cr=22411 cc=89 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794852546021 — \"Are you with me so far?\""
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"I met a customer last week at three o'clock?\" → \"Now say your own sentence, starting with \"I met a customer l\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Now say your own sentence, starting with \"I met a customer l\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"Now say your own sentence, starting with \"I met a customer l\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1356ms · first_sentence=1268ms · in=775 out=178 cr=22500 cc=45 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794852560520 — \"Now say your own sentence, starting with \"I met a customer l\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Say your sentence with \"I met a customer last...\" and finish\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Say your sentence with \"I met a customer last...\" and finish\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Say your sentence with \"I met a customer last...\" and finish\""
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"past-simple\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Say your sentence with \"I met a customer last...\" and finish\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · with \"That's right, and it's correct present perfect\""
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: sentence 1 of 4, 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4468ms · first_sentence=1439ms · in=13305 out=678 cr=44850 cc=338 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"When did you last meet a customer?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"When did you last meet a customer?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"When did you last meet a customer?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"When did you last meet a customer?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 5 · with \"You can start with\""
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: sentence 4 of 5, 1 started — held"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5611ms · first_sentence=3000ms · in=13201 out=878 cr=45188 cc=230 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794852610698 — \"When did you last meet a customer?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"When did you last meet a customer?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"When did you last meet a customer?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"When did you last meet a customer?\""
+    },
+    {
+      "type": "v2_heard_over_tutor",
+      "message": "words, not paused (nothing playing yet): Please, I would like to"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2319ms · first_sentence=2173ms · in=842 out=280 cr=22709 cc=116 · v2"
+    },
+    {
+      "type": "v2_bargein_pause",
+      "message": "Please, I would like to end"
+    },
+    {
+      "type": "v2_bargein",
+      "message": "spoke over the tutor"
+    },
+    {
+      "type": "v2_unheard_trimmed",
+      "message": "3 sentence(s) not fully heard; the record keeps 0"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 6 \"Summary\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 2 of 2 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 2 of 2 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 2 of 2 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → not painted again: already on the board (page 6); the board has scrolled back to it · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "end_lesson → the session is ending"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3189ms · first_sentence=1281ms · in=827 out=622 cr=22825 cc=30 · v2"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "end_lesson"
+    },
+    {
+      "type": "practice_draft_upserted",
+      "message": "lo=[gdi.work-projects.past-simple,gdi.work-projects.conversation] trigger=close_tool status=200 (v2)"
+    },
+    {
+      "type": "v2_practice_assign",
+      "message": "finalize status=200"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "v2_profile_commit",
+      "message": "status=200 gaps=0 mastery=[] evidence=0 turns=41"
+    }
+  ],
+  "estimatedCost": 0.0329,
+  "endedBy": "cap",
+  "audio": {
+    "sttSockets": 1,
+    "sttSocketSeconds": 498,
+    "clipSeconds": 101,
+    "silentTtsReplies": 78,
+    "mic": {
+      "plays": 20,
+      "gum": 1,
+      "buffers": 118
+    },
+    "otherSockets": [
+      "ws://localhost:3021/_next/hmr",
+      "wss://api.openai.com/v1/realtime"
+    ],
+    "picks": [
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Yes/no readiness question, short ack appropriate",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 2.8
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Readiness question; short ack appropriate",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 2.8
+      },
+      {
+        "n": 2,
+        "fit": "ok",
+        "why": "Directly answers 'What do you do?' with job title and company",
+        "live": "I am a manager at a communications company.",
+        "heard": "I am a manager at a communications company.",
+        "sec": 5.6
+      },
+      {
+        "n": 3,
+        "fit": "ok",
+        "why": "Directly answers the question about working with international customers",
+        "live": "Yes, I have. I work with companies here in Japan and from all over the world.",
+        "heard": "Yes, I have. I work with companies here in Japan and from all over the world.",
+        "sec": 7.5
+      },
+      {
+        "n": 4,
+        "fit": "misfit",
+        "why": "No line directly answers about a recent international project; #4 is next unused and addresses work communication challe",
+        "live": "I'd like to improve my conversation with customers before meetings because I often don't know what to say.",
+        "heard": "I'd like to improve my conversation with customers before meetings because I often don't know what to say.",
+        "sec": 10.9
+      },
+      {
+        "n": 6,
+        "fit": "ok",
+        "why": "Answers the tutor's question about main responsibilities with a full sentence as requested",
+        "live": "My main responsibilities at work are both the training division manager and to help with sales for the division.",
+        "heard": "My main responsibilities at work are both the training division manager and to help with sales for the division.",
+        "sec": 10.7
+      },
+      {
+        "n": 7,
+        "fit": "ok",
+        "why": "Tutor asks learner to repeat the corrected sentence; #7 is the corrected version of responsibilities",
+        "live": "My main responsibilities at work are being the training division manager and helping with sales for the division.",
+        "heard": "My main responsibilities at work are being the training division manager and helping with sales for the division.",
+        "sec": 7.35
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Yes/no readiness question; short ack appropriate",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 2.8
+      },
+      {
+        "n": 8,
+        "fit": "ok",
+        "why": "Tutor asks learner to answer about duration at work using present perfect; #8 is first unused attempt at this, with mist",
+        "live": "I work here for eleven year.",
+        "heard": "I work here for 11 year.",
+        "sec": 5.5
+      },
+      {
+        "n": 9,
+        "fit": "ok",
+        "why": "Corrected present perfect form with 'have worked' as tutor requested",
+        "live": "I have worked here for eleven year.",
+        "heard": "I have worked here for 11 year.",
+        "sec": 4.2
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Yes/no readiness question; short ack appropriate",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 2.8
+      },
+      {
+        "n": 10,
+        "fit": "ok",
+        "why": "Tutor moved to past simple topic; learner hasn't answered a past simple question yet. Line 10 is the corrected present p",
+        "live": "I have worked here for eleven years.",
+        "heard": "I have worked here for 11 years.",
+        "sec": 5.05
+      },
+      {
+        "n": 11,
+        "fit": "misfit",
+        "why": "Line 11 doesn't answer the specific question about last year's business events, but it's the next unused content line th",
+        "live": "I really like going to meet customers.",
+        "heard": "I really like going to meet customers.",
+        "sec": 4.3
+      },
+      {
+        "n": 12,
+        "fit": "misfit",
+        "why": "Learner doesn't understand the question; no suitable past simple answer recorded yet",
+        "live": "わかりません。",
+        "heard": "わかりません。",
+        "sec": 1.6
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Readiness check; learner confirms understanding with short ack",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 2.8
+      },
+      {
+        "n": 5,
+        "fit": "misfit",
+        "why": "Learner should attempt the tutor's prompt about meeting a customer, but #5 is a readiness question. No fitting line rema",
+        "live": "Do you want me to start now?",
+        "heard": "Do you want me to start now?",
+        "sec": 3.5
+      },
+      {
+        "n": 13,
+        "fit": "misfit",
+        "why": "Learner has no recorded line matching the tutor's request for 'I met a customer last [time]'. Line #13 is next unused bu",
+        "live": "I have worked in my department for ten years.",
+        "heard": "I have worked in my department for 10 years.",
+        "sec": 5.1
+      },
+      {
+        "n": 14,
+        "fit": "misfit",
+        "why": "Learner has no recorded line about meeting a customer with a time word. Line 14 is next in order but doesn't answer the ",
+        "live": "I schedule class for many teachers and teach.",
+        "heard": "I schedule class for many teachers. and teach.",
+        "sec": 8.6
+      },
+      {
+        "n": 15,
+        "fit": "misfit",
+        "why": "Learner hasn't answered the customer question yet; line 15 is a session-end request, premature here",
+        "live": "Okay, please stop. I would like to end the session for now.",
+        "heard": "Okay. / Please, I would like to end the session for now.",
+        "sec": 4.15
+      },
+      {
+        "n": 16,
+        "fit": "ok",
+        "why": "Learner asks about continuing next time, fitting the tutor's closing and offer to continue.",
+        "live": "Can we continue from this point next time?",
+        "heard": "",
+        "sec": 2.8
+      }
+    ],
+    "storedTranscript": [
+      {
+        "role": "tutor",
+        "text": "Hello, Josh. I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect and the past simple. Does that sound good to you?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Great. First comes a short level check, just a few friendly questions, so I can adjust the lesson for you. Are you ready?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Let's begin. Please answer in English, and don't worry about mistakes. I just want to see what you can already do. Can you tell me a little about your job? What do you do?"
+      },
+      {
+        "role": "student",
+        "text": "I am a manager at a communications company."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you, that's a clear answer. Next question: have you ever worked with an international customer? If so, can you tell me about the experience?"
+      },
+      {
+        "role": "student",
+        "text": "Yes, I have. I work with companies here in Japan and from all over the world."
+      },
+      {
+        "role": "tutor",
+        "text": "That sounds like a very international job. Can you tell me about one recent project with a company from another country?"
+      },
+      {
+        "role": "student",
+        "text": "I'd like to improve my conversation with customers before meetings because I often don't know what to say."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you, Josh. Preparing for meetings is a very useful goal. Today we'll make your English more natural and accurate, starting with your own job.\n\nLook at these two sentences. The first uses have worked for experience that continues now, and the second uses worked for a finished event with a time word. We'll practise both today. Now, please tell me: what are your main responsibilities at work? Give me at least two sentences."
+      },
+      {
+        "role": "student",
+        "text": "My main responsibilities at work are both the training division manager and to help with sales for the division."
+      },
+      {
+        "role": "tutor",
+        "text": "Good, you've described your role clearly. One small fix: \"both\" needs two matching parts, so we say \"I am the training division manager, and I help with sales for the division.\" Could you say that sentence once more?"
+      },
+      {
+        "role": "student",
+        "text": "My main responsibilities at work are being the training division manager and helping with sales for the division."
+      },
+      {
+        "role": "tutor",
+        "text": "Yes, that's right. Both parts now match, with \"being\" and \"helping.\"\n\nNext is present perfect. Shall we go on, or do you have a question first?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Let's start with the present perfect. We use have or has plus the past participle for something that started in the past and is still true now. Please answer this question in a full sentence."
+      },
+      {
+        "role": "student",
+        "text": "I work here for 11 year."
+      },
+      {
+        "role": "tutor",
+        "text": "Not quite. Your sentence is about something that started in the past and continues now, so the verb needs \"have\" or \"has\" with the past participle. Try the sentence again, with the number of years."
+      },
+      {
+        "role": "student",
+        "text": "I have worked here for 11 year."
+      },
+      {
+        "role": "tutor",
+        "text": "Good, you used \"have worked\" correctly. We say \"for 11 years,\" with an s on years. Your present perfect is done, and next we'll practise the past simple for finished events. Shall we go on, or do you have a question first?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "We use the past simple when the time is finished and a specific time word is given, such as last year, yesterday or two years ago. Please answer this question in a full sentence."
+      },
+      {
+        "role": "student",
+        "text": "I have worked here for 11 years."
+      },
+      {
+        "role": "tutor",
+        "text": "Yes, that's right, and it's a good sentence to keep. Now the question on the board is about last year: did you attend any business events or exhibitions? Answer in a full sentence."
+      },
+      {
+        "role": "student",
+        "text": "I really like going to meet customers."
+      },
+      {
+        "role": "tutor",
+        "text": "\"I really like meeting customers\" is a natural way to say it. Now let's use the past simple: when did you last meet a customer? Please answer with a time word, like last week or last month."
+      },
+      {
+        "role": "student",
+        "text": "わかりません。"
+      },
+      {
+        "role": "tutor",
+        "text": "大丈夫ですよ。お客様に会った時期を、英語で短く答えるだけです。例えば「先週」なら last week、「先月」なら last month を使います。\n\nTry starting with: \"I met a customer last...\"\n\nAre you with me so far?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Good. Now say your own sentence, starting with \"I met a customer last...\" and finishing with the time."
+      },
+      {
+        "role": "student",
+        "text": "Do you want me to start now?"
+      },
+      {
+        "role": "tutor",
+        "text": "Yes, please start now. Say your sentence with \"I met a customer last...\" and finish it with the time."
+      },
+      {
+        "role": "student",
+        "text": "I have worked in my department for 10 years."
+      },
+      {
+        "role": "tutor",
+        "text": "That's right, and it's correct present perfect: \"I have worked in my department for 10 years.\" Now back to the past simple. When did you last meet a customer? Use a time word, like last week or last month."
+      },
+      {
+        "role": "student",
+        "text": "I schedule class for many teachers. and teach."
+      },
+      {
+        "role": "tutor",
+        "text": "Your description of your work is clear. Now let's go back to the customer question. When did you last meet a customer? You can start with \"Last week, I met...\" or \"Last month, I met...\"."
+      },
+      {
+        "role": "student",
+        "text": "Okay."
+      },
+      {
+        "role": "tutor",
+        "text": "Please go ahead. Start with \"Last month, I met...\" and tell me who you met and why."
+      },
+      {
+        "role": "student",
+        "text": "Please, I would like to end the session for now."
+      },
+      {
+        "role": "tutor",
+        "text": "Of course, Josh. Here is a short summary.\n\nOne thing you did well today was describe your work clearly, with the present perfect for your experience. One thing to improve is the past simple. When you talk about a finished time, such as last month, use \"I met\" rather than \"I have met.\" Keep practising both when you talk about your work. Thank you, and see you next time!"
+      }
+    ]
+  }
+}

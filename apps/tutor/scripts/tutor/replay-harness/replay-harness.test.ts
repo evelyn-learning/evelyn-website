@@ -9,6 +9,7 @@ import { buildStudentSystemPrompt, needsOpeningLine, observerLine, parseStudentR
 import { averageScorecards, scoreRun, type RunBundle } from './scorecard';
 import { buildPickPrompt, isShortAck, parsePick, pickClip, silentTtsBody, type AudioClip } from './audio-student';
 import { parseLiveDump, wav } from './cut-clips';
+import { heardFromStore, wordErrors } from './score-audio';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -114,6 +115,12 @@ async function main() {
   const dump = parseLiveDump('{"createdAt":"2026-11-09T06:12:49.017Z"}\n=== TRANSCRIPT\n    2s   0 tutor: Hello\n   36s   1 student: Yes.\ncontinued\n=== EVENTS\n  -57s x: y');
   check('reads a live transcript dump', dump.turns.length === 2 && dump.turns[1].t === 36 && dump.turns[1].role === 'student' && dump.turns[1].text === 'Yes. continued');
   check('wav header is 44 bytes and says 24 kHz mono', (() => { const w = wav(Buffer.alloc(480)); return w.length === 524 && w.readUInt32LE(24) === 24000 && w.readUInt16LE(22) === 1; })());
+
+  console.log('audio scoring');
+  check('numbers and words are the same word', wordErrors('I have worked here for eleven years.', 'I have worked here for 11 years').errors === 0);
+  check('a dropped word is one error', JSON.stringify(wordErrors('I met someone there', 'I met there')) === JSON.stringify({ errors: 1, words: 4 }));
+  const store = heardFromStore({ fixture: 'x', minutes: 1, endedBy: 'cap', startedAt: '', turns: [], events: [], audio: { picks: [{ n: 5, fit: 'ok', why: '', live: 'I want to improve. that use English.', heard: 'that use English.', sec: 9 }], storedTranscript: [{ role: 'tutor', text: 'Q?' }, { role: 'student', text: 'I want to improve.' }, { role: 'student', text: 'that use English.' }] } });
+  check('a superseded first half is taken back from the stored transcript', store[0].heard === 'I want to improve. / that use English.');
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

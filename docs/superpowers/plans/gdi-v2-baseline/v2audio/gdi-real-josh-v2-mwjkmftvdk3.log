@@ -1,0 +1,96 @@
+18:02:21 open fixture=gdi-real-josh arm=v2 student=gdi-v2-audio-josh (audio student josh (16 clips), silent tutor voice)
+18:02:24 clicked start (1)
+18:02:30 TUTOR  Hello, Josh. I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect and the past simple. Does that sound good to you?   [tools: annotate]
+18:02:50 STUDENT(clip #1 ok, 2.8 s) Yes.  — Yes/no readiness question, short ack appropriate
+18:02:55 HEARD  Yes.
+18:02:55 TUTOR  Great. First comes a short level check, just a few friendly questions, so I can adjust the lesson for you. Are you ready?
+18:03:08 STUDENT(clip #1 ok, 2.8 s) Yes.  — Readiness question; short ack appropriate
+18:03:13 HEARD  Yes.
+18:03:13 TUTOR  
+Let's begin. Please answer in English, and don't worry about mistakes. I just want to see what you can already do. Can you tell me a little about your job? What do you do?   [tools: new_page]
+18:03:31 STUDENT(clip #2 ok, 5.6 s) I am a manager at a communications company.  — Directly answers 'What do you do?' with job title and company
+18:03:41 HEARD  I am a manager at a communications company.
+18:03:41 TUTOR  Thank you, that's a clear answer. Next question: have you ever worked with an international customer? If so, can you tell me about the experience?
+18:03:53 STUDENT(clip #3 ok, 7.5 s) Yes, I have. I work with companies here in Japan and from all over the world.  — Directly answers the question about working with international customers
+18:04:02 HEARD  Yes, I have. I work with companies here in Japan and from all over the world.
+18:04:02 TUTOR  That sounds like a very international job. Can you tell me about one recent project with a company from another country?
+18:04:14 STUDENT(clip #4 misfit, 10.9 s) I'd like to improve my conversation with customers before meetings because I often don't know what to say.  — No line directly answers about a recent international project; #4 is next unused and addresses work communication challe
+18:04:37 HEARD  I'd like to improve my conversation with customers before meetings because I often don't know what to say.
+18:04:37 TUTOR  Thank you, Josh. Preparing for meetings is a very useful goal. Today we'll make your English more natural and accurate, starting with your own job.
+
+
+
+Look at these two sentences. The first uses have worked for experience that continues now, and the second uses worked for a finished event with a tim   [tools: set_working_level, new_page, annotate, show_problem]
+18:05:08 STUDENT(clip #6 ok, 10.7 s) My main responsibilities at work are both the training division manager and to help with sales for the division.  — Answers the tutor's question about main responsibilities with a full sentence as requested
+18:05:24 HEARD  My main responsibilities at work are both the training division manager and to help with sales for the division.
+18:05:24 TUTOR  Good, you've described your role clearly. One small fix: "both" needs two matching parts, so we say "I am the training division manager, and I help with sales for the division." Could you say that sentence once more?
+
+   [tools: show_sentence]
+18:05:45 STUDENT(clip #7 ok, 7.3 s) My main responsibilities at work are being the training division manager and helping with sales for the division.  — Tutor asks learner to repeat the corrected sentence; #7 is the corrected version of responsibilities
+18:05:54 HEARD  My main responsibilities at work are being the training division manager and helping with sales for the division.
+18:05:54 TUTOR  Yes, that's right. Both parts now match, with "being" and "helping."
+
+
+
+Next is present perfect. Shall we go on, or do you have a question first?
+18:06:08 STUDENT(clip #1 ok, 2.8 s) Yes.  — Yes/no readiness question; short ack appropriate
+18:06:14 HEARD  Yes.
+18:06:14 TUTOR  
+
+Let's start with the present perfect. We use have or has plus the past participle for something that started in the past and is still true now. Please answer this question in a full sentence.
+
+   [tools: new_page, annotate, show_problem]
+18:06:33 STUDENT(clip #8 ok, 5.5 s) I work here for eleven year.  — Tutor asks learner to answer about duration at work using present perfect; #8 is first unused attempt at this, with mist
+18:06:44 HEARD  I work here for 11 year.
+18:06:44 TUTOR  Not quite. Your sentence is about something that started in the past and continues now, so the verb needs "have" or "has" with the past participle. Try the sentence again, with the number of years.
+18:06:59 STUDENT(clip #9 ok, 4.2 s) I have worked here for eleven year.  — Corrected present perfect form with 'have worked' as tutor requested
+18:07:10 HEARD  I have worked here for 11 year.
+18:07:10 TUTOR  Good, you used "have worked" correctly. We say "for 11 years," with an s on years. Your present perfect is done, and next we'll practise the past simple for finished events. Shall we go on, or do you have a question first?   [tools: show_sentence]
+18:07:29 STUDENT(clip #1 ok, 2.8 s) Yes.  — Yes/no readiness question; short ack appropriate
+18:07:35 HEARD  Yes.
+18:07:35 TUTOR  
+
+We use the past simple when the time is finished and a specific time word is given, such as last year, yesterday or two years ago. Please answer this question in a full sentence.
+
+   [tools: new_page, annotate, show_problem]
+18:07:55 STUDENT(clip #10 ok, 5.0 s) I have worked here for eleven years.  — Tutor moved to past simple topic; learner hasn't answered a past simple question yet. Line 10 is the corrected present p
+18:08:03 HEARD  I have worked here for 11 years.
+18:08:03 TUTOR  Yes, that's right, and it's a good sentence to keep. Now the question on the board is about last year: did you attend any business events or exhibitions? Answer in a full sentence.
+18:08:20 STUDENT(clip #11 misfit, 4.3 s) I really like going to meet customers.  — Line 11 doesn't answer the specific question about last year's business events, but it's the next unused content line th
+18:08:30 HEARD  I really like going to meet customers.
+18:08:30 TUTOR  "I really like meeting customers" is a natural way to say it. Now let's use the past simple: when did you last meet a customer? Please answer with a time word, like last week or last month.   [tools: show_problem]
+18:08:48 STUDENT(clip #12 misfit, 1.6 s) わかりません。  — Learner doesn't understand the question; no suitable past simple answer recorded yet
+18:08:51 HEARD  わかりません。
+18:08:51 TUTOR  大丈夫ですよ。お客様に会った時期を、英語で短く答えるだけです。例えば「先週」なら last week、「先月」なら last month を使います。
+
+Try starting with: "I met a customer last..."
+
+Are you with me so far?
+18:09:04 STUDENT(clip #1 ok, 2.8 s) Yes.  — Readiness check; learner confirms understanding with short ack
+18:09:07 HEARD  Yes.
+18:09:07 TUTOR  Good. Now say your own sentence, starting with "I met a customer last..." and finishing with the time.
+18:09:18 STUDENT(clip #5 misfit, 3.5 s) Do you want me to start now?  — Learner should attempt the tutor's prompt about meeting a customer, but #5 is a readiness question. No fitting line rema
+18:09:22 HEARD  Do you want me to start now?
+18:09:22 TUTOR  Yes, please start now. Say your sentence with "I met a customer last..." and finish it with the time.
+18:09:33 STUDENT(clip #13 misfit, 5.1 s) I have worked in my department for ten years.  — Learner has no recorded line matching the tutor's request for 'I met a customer last [time]'. Line #13 is next unused bu
+18:09:42 HEARD  I have worked in my department for 10 years.
+18:09:42 TUTOR  That's right, and it's correct present perfect: "I have worked in my department for 10 years." Now back to the past simple. When did you last meet a customer? Use a time word, like last week or last month.   [tools: show_sentence]
+18:10:01 STUDENT(clip #14 misfit, 8.6 s) I schedule class for many teachers and teach.  — Learner has no recorded line about meeting a customer with a time word. Line 14 is next in order but doesn't answer the 
+18:10:16 HEARD  I schedule class for many teachers. and teach.
+18:10:16 TUTOR  Your description of your work is clear. Now let's go back to the customer question. When did you last meet a customer? You can start with "Last week, I met..." or "Last month, I met...".   [tools: annotate]
+18:10:35 STUDENT(clip #15 misfit, 4.2 s) Okay, please stop. I would like to end the session for now.  — Learner hasn't answered the customer question yet; line 15 is a session-end request, premature here
+18:10:39 HEARD  Okay.
+18:10:39 TUTOR  Please go ahead. Start with "Last month, I met..." and tell me who you met and why.
+18:10:43 HEARD  Please, I would like to end the session for now.
+18:10:43 TUTOR  Of course, Josh. Here is a short summary.
+
+
+
+
+
+
+One thing you did well today was describe your work clearly, with the present perfect for your experience. One thing to improve is the past simple. When you talk about a finished time, such as last month, use "I met" rather than "I have met." Keep prac   [tools: new_page, annotate, show_sentence]
+18:11:16 STUDENT(clip #16 ok, 2.8 s) Can we continue from this point next time?  — Learner asks about continuing next time, fitting the tutor's closing and offer to continue.
+18:11:38   (not heard within 20 s of the clip's end)
+18:12:27 audio: {"sttSockets":1,"sttSocketSeconds":498,"clipSeconds":101,"silentTtsReplies":78,"mic":{"plays":20,"gum":1,"buffers":118},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+18:12:27 waiting 35 s for the autosave
