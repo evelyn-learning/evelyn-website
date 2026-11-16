@@ -13,8 +13,10 @@ export async function GET(req: NextRequest) {
   const user = await userFromToken(req.cookies.get(SESSION_COOKIE)?.value);
   if (!user || !can.export(user.role)) return new NextResponse("Not allowed", { status: 403 });
   const { Item } = await ks();
-  const asked = req.nextUrl.searchParams.get("ids")?.split(",").filter(Boolean);
-  const scope = req.nextUrl.searchParams.get("include") === "delivered" ? ["approved", "delivered"] : ["approved"];
+  const sp = req.nextUrl.searchParams;
+  const asked = sp.get("ids")?.split(",").filter(Boolean);
+  // default: approved; ?stage=delivered: delivered only; ?include=delivered: both
+  const scope = sp.get("stage") === "delivered" ? ["delivered"] : sp.get("include") === "delivered" ? ["approved", "delivered"] : ["approved"];
   const q: Record<string, unknown> = { stage: { $in: scope } };
   if (asked?.length) q.itemId = { $in: asked };
   const ids = (await Item.find(q).select("itemId").lean()).map((r) => r.itemId);

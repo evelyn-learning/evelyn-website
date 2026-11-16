@@ -7,11 +7,11 @@ import { countItems, itemExists, latestVerdicts, listItems, stageCounts } from "
 import { TopBar } from "../_components/TopBar";
 import { ItemsTable } from "../_components/ui";
 import { ctxQuery } from "@/lib/keystone/listctx";
+import { PAGE_SIZE, Pager, pageOf } from "../_components/Pager";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "All items" };
 
-const PAGE_SIZE = 50;
 
 export default async function ItemsPage({
   searchParams,
@@ -30,9 +30,8 @@ export default async function ItemsPage({
 
   const filter = { stage, subject, search: search || undefined };
   const [matched, counts] = await Promise.all([countItems(filter), stageCounts()]);
-  const pages = Math.max(1, Math.ceil(matched / PAGE_SIZE));
-  const page = Math.min(pages, Math.max(1, Number(sp.page) || 1));
-  const rows = await listItems(filter, { skip: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE });
+  const { page, pages, skip, from, to } = pageOf(sp.page, matched);
+  const rows = await listItems(filter, { skip, limit: PAGE_SIZE });
   const verdicts = await latestVerdicts(rows.map((r) => r.itemId));
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -45,31 +44,7 @@ export default async function ItemsPage({
     const s = q.toString();
     return `${base}/items${s ? `?${s}` : ""}`;
   };
-  const from = matched ? (page - 1) * PAGE_SIZE + 1 : 0;
-  const to = Math.min(matched, page * PAGE_SIZE);
-
-  // Compact page list: 1 … 4 5 [6] 7 8 … 20
-  const nums: (number | "…")[] = [];
-  for (let n = 1; n <= pages; n++) {
-    if (n === 1 || n === pages || Math.abs(n - page) <= 2) nums.push(n);
-    else if (nums[nums.length - 1] !== "…") nums.push("…");
-  }
-  const pager =
-    pages > 1 ? (
-      <nav className="ks-pager" aria-label="Pages">
-        {page > 1 ? <Link href={href({ stage, subject, q: search, page: page - 1 })}>‹ Previous</Link> : <span className="off">‹ Previous</span>}
-        {nums.map((n, i) =>
-          n === "…" ? (
-            <span key={`e${i}`} className="gap">…</span>
-          ) : n === page ? (
-            <span key={n} className="cur" aria-current="page">{n}</span>
-          ) : (
-            <Link key={n} href={href({ stage, subject, q: search, page: n })}>{n}</Link>
-          ),
-        )}
-        {page < pages ? <Link href={href({ stage, subject, q: search, page: page + 1 })}>Next ›</Link> : <span className="off">Next ›</span>}
-      </nav>
-    ) : null;
+  const pager = <Pager page={page} pages={pages} href={(n) => href({ stage, subject, q: search, page: n })} />;
 
   return (
     <>
