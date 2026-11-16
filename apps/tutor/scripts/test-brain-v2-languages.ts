@@ -10,7 +10,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type Anthropic from '@anthropic-ai/sdk';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
-import { v2LanguagesSection, v2SpeechParts } from '../src/lib/tutor/v2/languages';
+import { v2LanguagesSection, v2RetryFacts, v2SpeechParts } from '../src/lib/tutor/v2/languages';
+import { renderFacts } from '../src/lib/tutor/v2/facts';
+import { TUTOR_V2_RETRY_COUNT } from '../src/lib/tutor/orchestrator/flags';
 import { v2StopAsked } from '../src/lib/tutor/v2/stop-signal';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
@@ -44,6 +46,26 @@ async function main() {
   check('the learner produces the sentence, not repeats it', /build the sentence/i.test(ja) && /Repeating after you is not practice/i.test(ja));
   check('one error corrected, two tries, a correct sentence is never "close" (case 12)', /one error that matters most/i.test(ja) && /two tries/i.test(ja) && /never call it close/i.test(ja));
   check('one closing turn on a stop', /that reply is the close/i.test(ja) && /no new question/i.test(ja));
+  check('one error per answer, small slips pass, by their level; two tries, then the tutor says it and goes on (D5)', /one error that matters most in each answer/.test(ja) && /small slips that leave the meaning clear pass without comment, more of them the lower their working level/.test(ja) && /after the second, say the correct sentence yourself and go on/.test(ja), ja);
+  check('"right" only for right words; a quote is what they said, the correction is the tutor\'s (D3)', /Say a sentence is right only when their words are right/.test(ja) && /quote what they actually said/.test(ja) && /never put in their mouth/.test(ja), ja);
+  check('the constitution: a confirmation opens a reply only after a right answer, never the same opener twice; it no longer quotes "yes, that\'s right" (D10)', /Open a reply with its content: a confirmation comes first only when they have just given a right answer to a question you asked, and never the same opener two replies running/.test(V2_CONSTITUTION) && !/Right is "yes, that's right"/.test(V2_CONSTITUTION));
+  check('the constitution: the tutor has no job or life story of its own (D4)', /You have no job, projects or life story of your own: if they ask about yours, say so in a few words and turn back to them/.test(V2_CONSTITUTION));
+
+  console.log('tries at one sentence are counted (D5)');
+  {
+    const said = (xs: string[]) => xs.flatMap((x) => [{ role: 'user' as const, content: [{ type: 'text' as const, text: x }] }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Not quite. Try that again.' }] }]);
+    // upper-int t12–t16 (Task 6): one sentence tried again and again.
+    const h = said(['[The session has just started.]', 'My main responsibility in sales area to the contact for the clients.', 'I am managing the team and I have to checking the sales performance every month and reporting for the director about the progress.']);
+    const second = v2RetryFacts(['en', 'ja'], h, 'I have to check the sales performance every month and reporting for the director about the progress.');
+    check('upper-int t16: try 2, so the correct sentence comes next', second.length === 1 && /try 2 at the sentence/.test(second[0]!) && /say the correct sentence yourself now and go on/.test(second[0]!), second);
+    const third = v2RetryFacts(['en', 'ja'], [...h, ...said(['I have to check the sales performance every month and reporting for the director about the progress.'])], 'I have to check the sales performance every month and report to the director about the progress.');
+    check('…and a third is counted as 3', /try 3/.test(third[0] ?? ''), third);
+    check('a new answer is no retry', v2RetryFacts(['en', 'ja'], h, 'Last week I visited a customer in Osaka.').length === 0);
+    check('a short reply is never a retry ("Yes." after "Yes.")', v2RetryFacts(['en', 'ja'], said(['Yes.']), 'Yes.').length === 0);
+    check('one language, or the kill switch off: no line', v2RetryFacts(['en'], h, 'I have to check the sales performance every month.').length === 0 && v2RetryFacts(['en', 'ja'], h, 'I have to check the sales performance every month.', false).length === 0 && TUTOR_V2_RETRY_COUNT === true);
+    const f = renderFacts(bilingual, { ...newV2State(0), history: h }, { nowMs: 60000, heard: 'I have to check the sales performance every month and reporting for the director about the progress.' });
+    check('the line reaches the facts', /tries: their words just now are try 2/.test(f), f.slice(-600));
+  }
   check('the recogniser line is for spoken lessons only', /speech recogniser/.test(ja) && !/speech recogniser/.test(v2LanguagesSection(['en', 'ja'], 'text') ?? ''));
   check('Japanese only: polite です/ます and no romaji', /です\/ます/.test(ja) && /romaji/i.test(ja));
   const es = v2LanguagesSection(['en', 'es']) ?? '';

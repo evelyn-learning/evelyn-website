@@ -25,12 +25,13 @@ import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/ty
 import { streamV2Turn } from '../src/lib/tutor/v2/client';
 import {
   PRONUNCIATION_LOW_SCORE, V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2PronunciationHeardOf, v2PronunciationSection,
-  v2ReadPronunciation, v2WithPronunciationHeard, type V2PronunciationHeard,
+  v2ReadPronunciation, v2TextSoundFacts, v2WithPronunciationHeard, type V2PronunciationHeard,
 } from '../src/lib/tutor/v2/pronunciation';
 import { V2PronunciationRecorder } from '../src/lib/tutor/v2/pronunciation-recorder';
 import { parseAssessBody } from '../src/lib/tutor/pronunciation/assess-request';
 import { CLIP_MAX_MS, CLIP_SAMPLE_RATE, PRONUNCIATION_ARM_MAX_MS } from '../src/lib/tutor/pronunciation/clip-capture';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
+import { TUTOR_V2_TEXT_NO_SOUND } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -95,6 +96,19 @@ async function main() {
     check('with the level check too, both partner tools are offered', names.includes('set_working_level') && names.includes('practise_pronunciation'), names);
   }
   check('the constitution and the section name no partner', !/gdi|nagoya|josh|james/i.test(V2_CONSTITUTION + v2PronunciationSection()));
+
+  console.log('a typed language lesson: nothing is heard (D4/D8)');
+  {
+    const typedOn: V2Session = { ...on, mode: 'text' };
+    const f = factsOf(typedOn, newV2State(1000), 'I want to expand our business internationally.');
+    check('typed, with the option: the facts say nothing is heard or measured, and no word on how it sounded (beginner-ja t71, t75)', /sound: this lesson is typed: nothing they say reaches you as sound and nothing is measured/.test(f) && /never "you said it clearly"/.test(f), f);
+    check('…and a pronunciation pick is the sentence to say aloud, not a grammar drill (upper-int t61–t69)', /say aloud on their own/.test(f) && /not a grammar or meaning drill/.test(f), f);
+    check('typed, two languages, no option: the same line', v2TextSoundFacts({ ...base, mode: 'text' }).length === 1);
+    check('typed, one language, no option (a maths lesson): no line', v2TextSoundFacts({ ...base, mode: 'text', languages: undefined }).length === 0 && !/sound:/.test(factsOf({ ...base, mode: 'text', languages: undefined }, newV2State(1000))));
+    check('spoken: no line (the measured path speaks for it)', v2TextSoundFacts(on).length === 0 && !/sound: this lesson is typed/.test(factsOf(on, newV2State(1000))));
+    check('typed homework: no line', v2TextSoundFacts({ ...typedOn, homework: { text: 'Solve 2x = 6.', verified: false, hasFigure: false } }).length === 0);
+    check('the kill switch: on by default, off gives no line', TUTOR_V2_TEXT_NO_SOUND === true && v2TextSoundFacts(typedOn, false).length === 0);
+  }
 
   console.log('the session part section');
   const sec = v2PronunciationSection();

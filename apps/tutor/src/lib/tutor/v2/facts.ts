@@ -10,8 +10,9 @@ import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
 import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from './discussion';
 import { v2WorkingLevelFacts } from './working-level';
-import { v2PronunciationFacts } from './pronunciation';
+import { v2PronunciationFacts, v2TextSoundFacts } from './pronunciation';
 import { v2SentenceCardsFacts } from './sentence-cards';
+import { v2RetryFacts } from './languages';
 import { v2PartDueFact, v2WrapDue } from './time-box';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
@@ -78,6 +79,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(...v2WorkingLevelFacts(session, state, f.heard, { reopened: f.levelReopened }));
   // A measured score, or that there is none: the only ground for a word on how they sounded (pronunciation.ts).
   lines.push(...v2PronunciationFacts(session, state, f.heard));
+  // A typed language lesson: nothing is heard, so nothing is said about how it sounded (pronunciation.ts).
+  lines.push(...v2TextSoundFacts(session));
+  // Tries at one sentence, counted: at the second the correct sentence comes next (languages.ts).
+  if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2RetryFacts(session.languages, state.history, f.heard));
   // The learner's corrected sentences, for the summary's sentence cards (sentence-cards.ts).
   lines.push(...v2SentenceCardsFacts(session, state));
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);

@@ -10,7 +10,8 @@
  * The voice client speaks a sentence that quotes a long span of the other language in parts, each in its own
  * voice language (voice/tts-language.ts splitSentenceForTts).
  */
-import { TUTOR_TTS_SPLIT_QUOTED_SPANS } from '../orchestrator/flags';
+import type Anthropic from '@anthropic-ai/sdk';
+import { TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_V2_RETRY_COUNT } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { splitSentenceForTts } from '../voice/tts-language';
 
@@ -46,8 +47,12 @@ export function v2LanguagesSection(languages: readonly string[] | undefined, mod
     // v1: model-and-repeat drills; the partner asks for natural conversation in which the learner speaks.
     `They produce the ${T}: ask them to build the sentence themselves, give a hint (the first word, the verb form) only when they are stuck, and say the model sentence only after they have tried. Repeating after you is not practice.`,
     // Findings case 12: a correction and a retry on nearly every answer, one sentence tried four times, wrong corrections,
-    // "you're close" after a correct sentence; the lesson ran out of time before its summary.
-    `Correct the one error that matters most for what this part practises, and let the rest go; check the error is really in their words before you name it. At most two tries at one sentence: after the second, say it correctly and go on. A correct sentence is correct: say so, and never call it close.`,
+    // "you're close" after a correct sentence; the lesson ran out of time before its summary. On v2 (Task 6, D5) the chains
+    // went on: upper-int t13–t21, one sentence tried four times for four different errors, nearly every answer corrected.
+    `Correct the one error that matters most in each answer, for what this part practises, and let the rest go: small slips that leave the meaning clear pass without comment, more of them the lower their working level. Check the error is really in their words before you name it. At most two tries at one sentence: after the second, say the correct sentence yourself and go on to the next thing. A correct sentence is correct: say so, and never call it close.`,
+    // Task 6, D3 (case 7): "that's right" on "eleven year" (b1 t21), the corrected form quoted as if they had said it
+    // (b1 t33), "helped" credited to a learner who never said it (josh t31).
+    `Say a sentence is right only when their words are right. When you quote them, quote what they actually said; the corrected version is yours, said as yours ("you said …; we say …"), never put in their mouth.`,
     // v1: sound-alike words ("boat" for bought) were drilled again, and pronunciation was praised from a transcript.
     // Spoken lessons only: typed words come through no recogniser.
     // With measured pronunciation (pronunciation.ts, the partner's `pronunciation` option) the scores in the facts are
@@ -57,6 +62,31 @@ export function v2LanguagesSection(languages: readonly string[] | undefined, mod
     // Findings case 4: "please stop" got a question and then the next part; "I have to finish" had to be said three times.
     'When they say they want to stop or have to go, that reply is the close: one sentence on what they practised, a goodbye, and end_lesson. No new question, no new exercise.',
   ].filter(Boolean).join('\n');
+}
+
+/** Two replies are tries at one sentence when most of the shorter one's words are in the other. */
+const RETRY_OVERLAP = 0.6;
+const RETRY_MIN_WORDS = 3;
+const wordsIn = (t: string) => t.toLowerCase().replace(/’/g, "'").match(/[\p{L}\p{N}]+(?:'[\p{L}]+)*/gu) ?? [];
+function sameSentence(a: string, b: string): boolean {
+  const x = new Set(wordsIn(a)); const y = new Set(wordsIn(b));
+  const [small, big] = x.size <= y.size ? [x, y] : [y, x];
+  if (small.size < RETRY_MIN_WORDS) return false;
+  return [...small].filter((w) => big.has(w)).length / small.size >= RETRY_OVERLAP;
+}
+const isOwnWords = (m: Anthropic.MessageParam) => m.role === 'user' && (typeof m.content === 'string' ? !m.content.startsWith('[') : m.content.some((b) => b.type === 'text' && !b.text.startsWith('[')));
+const ownText = (m: Anthropic.MessageParam) => (typeof m.content === 'string' ? m.content : m.content.map((b) => (b.type === 'text' ? b.text : '')).join(' '));
+
+/** The facts line that counts tries at one sentence (D5, Task 6: upper-int t13–t21, one sentence tried four times):
+ *  their words just now, and the replies of theirs straight before, that are the same sentence again. From the second
+ *  try on, the correct sentence comes next. Lessons with a second teaching language only. `enabled` is the kill switch. */
+export function v2RetryFacts(languages: readonly string[] | undefined, history: Anthropic.MessageParam[], heard: string | null | undefined, enabled: boolean = TUTOR_V2_RETRY_COUNT): string[] {
+  if (!enabled || !languages || languages.length < 2 || !heard || heard.trim().startsWith('[')) return [];
+  const before = history.filter(isOwnWords).map(ownText);
+  let tries = 1; let cur = heard;
+  for (let i = before.length - 1; i >= 0 && sameSentence(before[i]!, cur); i--) { tries += 1; cur = before[i]!; }
+  if (tries < 2) return [];
+  return [`tries: their words just now are try ${tries} at the sentence they said just before. If it still has an error, say the correct sentence yourself now and go on to the next thing; no further try at it`];
 }
 
 /** What the voice is given for one sentence: a sentence in the support language that quotes a long span of the

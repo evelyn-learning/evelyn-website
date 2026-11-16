@@ -19,6 +19,7 @@ import { PRONUNCIATION_LOW_SCORE, pronunciationLowScore } from '../pronunciation
 import { MAX_REFERENCE_CHARS } from '../pronunciation/assess-request';
 import { WORD_FLAG_SCORE } from '../pronunciation/normalize';
 import { discussionOf } from './discussion';
+import { TUTOR_V2_TEXT_NO_SOUND } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
 export { PRONUNCIATION_LOW_SCORE };
@@ -208,6 +209,17 @@ export function v2PronunciationFacts(session: V2Session, state: V2State, student
       : 'that was their one more try: say what improved, if anything, and go on; no further repeat of it');
   }
   return lines;
+}
+
+/** The facts line for a typed language lesson (D4/D8, Task 6): one with measured pronunciation or a second teaching
+ *  language, in text mode, where practise_pronunciation is not offered. Typed, the tutor said "you said it clearly …
+ *  sounds natural" two replies after saying it cannot hear (beginner-ja t69–t75), and a learner's pick of "a sentence"
+ *  became a meaning-and-grammar drill (upper-int t61–t69). Every turn, since the plan's pronunciation part can come at
+ *  any point. `enabled` is the kill switch (tests pass it). */
+export function v2TextSoundFacts(session: V2Session, enabled: boolean = TUTOR_V2_TEXT_NO_SOUND): string[] {
+  if (!enabled || session.mode !== 'text' || session.homework || session.homeworkSheet || discussionOf(session.plan)) return [];
+  if (!session.pronunciation && (session.languages?.length ?? 0) < 2) return [];
+  return ['sound: this lesson is typed: nothing they say reaches you as sound and nothing is measured, so say nothing about their pronunciation or how anything sounded when they said it (never "you said it clearly"); a word on their wording is fine. At a pronunciation part, give the sentence or words with the stressed words marked, for them to say aloud on their own and type when they are ready; it is practice in saying it, not a grammar or meaning drill'];
 }
 
 /** After the facts are rendered: a scored reply, or a spoken one, uses the arm up; what it asked for is remembered. */
