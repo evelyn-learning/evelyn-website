@@ -17,7 +17,7 @@ import { v2ProfileCommit } from '../src/lib/tutor/v2/memory';
 import { V2_CONTROL_TOOL_NAMES } from '../src/lib/tutor/v2/tool-names';
 import { runV2Turn, v2SessionPart, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
-import { V2_LEVEL_CHECK_MAX_REPLIES, v2AnswerHasContent, v2DeclinesLevel, v2LevelEstimateDue, v2LevelSetTooEarly, v2ReadWorkingLevel, v2SeedWorkingLevel, v2WorkingLevelCommit, v2WorkingLevelFacts, v2WorkingLevelSection } from '../src/lib/tutor/v2/working-level';
+import { V2_LEVEL_CHECK_MAX_REPLIES, V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, v2AnswerHasContent, v2DeclinesLevel, v2LevelEstimateDue, v2LevelSetTooEarly, v2ReadWorkingLevel, v2SeedWorkingLevel, v2WorkingLevelCommit, v2WorkingLevelFacts, v2WorkingLevelSection } from '../src/lib/tutor/v2/working-level';
 import { TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS, TUTOR_V2_LEVEL_RECONFIRM } from '../src/lib/tutor/orchestrator/flags';
 import { streamV2Turn } from '../src/lib/tutor/v2/client';
 
@@ -159,10 +159,23 @@ async function main() {
     const t2 = (said: string[]): V2State => ({ ...newV2State(0), history: said.flatMap((x) => [{ role: 'user' as const, content: [{ type: 'text' as const, text: x }] }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Thank you. Next question?' }] }]) });
     const before = t2(['[The session has just started.]', 'Yes, thank you. That sounds good.', 'Yes, I\'m ready.', 'Please, could you please rephrase that, please?', 'I work as admin at the company. Could you explain that in Japanese?', 'I\'m checking emails and sorting out some paperwork.', 'No.']);
     const early = v2LevelSetTooEarly(before, 'No.');
-    check('real-t2 after two "No."s: refused, with the count and what to do', !!early && /answered 2 of the level check's 3 questions/.test(early) && /Ask your next level-check question/.test(early), early);
+    check('real-t2 after two "No."s: refused, with the count and what to do', !!early && early.startsWith(V2_LEVEL_WAIT) && /answered 2 of the level check's 3 questions/.test(early) && /ask your next level-check question/.test(early) && /If your reply already asks them a question, that is the next one: ask nothing more now/.test(early), early);
     const s = stub([setLevel('beginner'), words('Have you ever written an email in English?')]);
     const r = await runV2Turn({ session: checked, state: before, studentSaid: 'No.', callModel: s.call, boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
-    check('…in the turn: no level held, the result says why, and the tutor asks on', !r.state.workingLevel && /^not set: they have answered 2/.test(r.toolCalls.find((c) => c.name === 'set_working_level')?.outcome ?? ''), r.toolCalls.map((c) => c.outcome));
+    const out = r.toolCalls.find((c) => c.name === 'set_working_level')?.outcome ?? '';
+    check('…in the turn (8 replies: past the budget, the facts say the check is over): no level held, and the refusal agrees with the facts: no level question (review I3)', !r.state.workingLevel && out.startsWith(V2_LEVEL_WAIT_OVER) && /ask no level question/.test(out) && /level check is over: do not check it again/.test(JSON.stringify(s.seen[0].messages.at(-1))), out);
+    check('…and no second model call adds a question to the reply', r.modelCalls === 1 && !/written an email/.test(r.spoken), [r.modelCalls, r.spoken]);
+
+    // Review I3: the second model call after a refusal, inside the budget.
+    const early2 = t2(['[The session has just started.]', 'Yes, I\'m ready.', 'I work in sales.']);
+    const askingThenSet = msg([{ type: 'text', text: 'Thank you. Have you ever worked with a customer from abroad?' }, { type: 'tool_use', id: 'w1', name: 'set_working_level', input: { level: 'beginner', evidence: 'short' } }], 'tool_use');
+    const s2 = stub([askingThenSet, words('And what do you do every day?')]);
+    const r2 = await runV2Turn({ session: checked, state: early2, studentSaid: 'I sell car parts.', callModel: s2.call, boardPass: false, mathsCheck: false, nowMs: 3 * 60000 });
+    check('a reply that already asks, with a refused set: one model call, one question (review I3)', r2.modelCalls === 1 && !r2.state.workingLevel && r2.spoken === 'Thank you. Have you ever worked with a customer from abroad?' && (r2.toolCalls.find((c) => c.name === 'set_working_level')?.outcome ?? '').startsWith(V2_LEVEL_WAIT), [r2.modelCalls, r2.spoken]);
+    const statementThenSet = msg([{ type: 'text', text: 'Thank you, that is clear.' }, { type: 'tool_use', id: 'w2', name: 'set_working_level', input: { level: 'beginner', evidence: 'short' } }], 'tool_use');
+    const s3 = stub([statementThenSet, words('What do you do every day?')]);
+    const r3 = await runV2Turn({ session: checked, state: early2, studentSaid: 'I sell car parts.', callModel: s3.call, boardPass: false, mathsCheck: false, nowMs: 3 * 60000 });
+    check('a reply that asks nothing, with a refused set: the model is called again and asks the next question', r3.modelCalls === 2 && /What do you do every day\?/.test(r3.spoken), [r3.modelCalls, r3.spoken]);
     check('a third answer lets it through', v2LevelSetTooEarly(before, 'I write emails to customers in Japan.') === null);
     check('they asked to skip the check: it goes through', v2LevelSetTooEarly(t2(['Yes.', 'Can we skip the questions and start?']), null) === null);
     check('the time is up: it goes through', v2LevelSetTooEarly(t2(['Yes.']), 'No.', { timeUp: true }) === null);

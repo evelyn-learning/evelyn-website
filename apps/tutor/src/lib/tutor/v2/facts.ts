@@ -5,6 +5,8 @@
  * the model what to do.
  */
 import { renderBoard } from './board';
+import { stripBoardBlocks } from './board-inline';
+import { TUTOR_V2_OPENER_FACT } from '../orchestrator/flags';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
@@ -43,6 +45,23 @@ export interface V2TurnFacts {
   stopAsked?: boolean;
   /** Their words just now said the level remembered from an earlier lesson does not fit (working-level.ts v2ReopenLevelCheck). */
   levelReopened?: boolean;
+}
+
+/** How the tutor's last reply opened: its words up to the first mark, at most four (D10). */
+export function v2LastOpener(history: V2State['history']): string {
+  const m = [...history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text' && c.text.trim())));
+  if (!m) return '';
+  const text = stripBoardBlocks(typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')).trim();
+  const head = text.split(/[.,:;!?。、！？\n]/)[0]!.trim();
+  return head.split(/\s+/).slice(0, 4).join(' ');
+}
+
+/** The facts line naming the last reply's opening words (D10: "Yes, that's right." opened 50–70% of replies; told in
+ *  the constitution, the model moved to "Correct." instead, review I2). Not in a discussion, which has its own line. */
+export function v2OpenerFact(session: V2Session, state: V2State, enabled: boolean = TUTOR_V2_OPENER_FACT): string[] {
+  if (!enabled || discussionOf(session.plan)) return [];
+  const opener = v2LastOpener(state.history);
+  return opener ? [`your last reply opened with "${opener}": open this one differently, or go straight to the content`] : [];
 }
 
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
@@ -85,6 +104,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2RetryFacts(session.languages, state.history, f.heard));
   // The learner's corrected sentences, for the summary's sentence cards (sentence-cards.ts).
   lines.push(...v2SentenceCardsFacts(session, state));
+  // How the last reply opened, so the next does not open the same way (D10).
+  lines.push(...v2OpenerFact(session, state));
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);

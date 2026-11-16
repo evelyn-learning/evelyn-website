@@ -173,6 +173,9 @@ const SAY_OPTION_WORDS = 12;
 const OPTION_LINE = /^\s*\(?(\d{1,2})[.)]\s+(\S.*)$/;
 /** Mathematics or markup is the board's to show; a voice reading LaTeX helps nobody (keep today's behaviour there). */
 const HAS_MARKUP = /\$|\\[a-zA-Z]/;
+/** An ask about saying a sentence ("Please say it back to me.", "Try the sentence again."), or about picking an option. */
+const ABOUT_SENTENCE = /\b(?:say|repeat|read|try|practi[sc]e|copy)\b[^.?!]*\b(?:it|this|that|these|sentence|one|again|back|aloud|after me)\b|\bsentence\b|もう一度|言って|読んで/i;
+const ABOUT_OPTIONS = /\b(?:which|number|choose|pick|option|options)\b|どれ|番号/i;
 
 /** In a spoken lesson, a sentence card or a numbered list of options the reply asks the learner to act on must also be
  *  heard (D2, gdi-on-v2 Task 6): "Which one would you like? Just say the number." went with a menu only on the board
@@ -195,6 +198,10 @@ export function unsaidBoardItem(calls: ReadonlyArray<{ name: string; args: Recor
   }).filter((x): x is NonNullable<typeof x> => !!x);
   const item = items[items.length - 1];
   if (!item || HAS_MARKUP.test(item.text)) return null;
+  // The item is said after the reply, so only when the reply's last ask is about it: a corrected sentence's card read
+  // out after "Now, what did you do last weekend?" lands after a question about something else (review M6).
+  const asks = sentences.slice(-2).filter((x) => asksAloud([x]));
+  if (!asks.some((x) => (item.kind === 'sentence' ? ABOUT_SENTENCE : ABOUT_OPTIONS).test(x))) return null;
   // Carried already: most of what the item is about was said, or (an item of small words only) all its words were.
   const said = sentences.join(' ');
   const want = [...about(item.text)];

@@ -28,14 +28,14 @@ import { saidCovers, unsaidAsk, unsaidBoardItem, asksAnywhere } from './board-ti
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2WrapDue } from './time-box';
-import { planGoalIds, renderPlanMap } from './plan-map';
+import { planGoalIds, renderPlanMap, v2PartOf } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
 import { v2LanguagesSection } from './languages';
-import { V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
+import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { v2StopAsked } from './stop-signal';
@@ -189,6 +189,9 @@ function storable(content: Anthropic.ContentBlock[]): Anthropic.ContentBlockPara
   return out;
 }
 
+/** A page heading that closes a lesson (D1): its summary or recap. */
+export const V2_CLOSING_PAGE = /\b(?:summary|summing up|sum up|recap|wrap(?:[- ]?up)?|round[- ]?up|conclusion|key (?:points|takeaways))\b|まとめ|振り返り/i;
+
 /** A reply that says only yes (or ok): to "any question, or are you finished?" it says neither (GAC validation, round 2). */
 export const V2_BARE_ASSENT = /^\s*(?:yes|yeah|yep|yup|ya|y|ok|okay|k|sure|alright|all right|mhm|uh[- ]?huh)\s*[.!]*\s*$/i;
 
@@ -201,7 +204,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
   // to ask what they would like next, a new question to a student who is leaving (stop-signal.ts).
   const asked = args.because === 'student_asked' || (TUTOR_V2_STOP_SIGNAL && v2StopAsked(studentSaid));
   const discussion = discussionOf(session.plan);
-  if (name === 'set_working_level') return v2LevelCheckOn(session) ? v2ApplySetWorkingLevel(state, args, { heard: studentSaid, timeUp: !!session.timeBoxMinutes && session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= V2_TIME_UP_MIN }) : 'unknown tool set_working_level';
+  if (name === 'set_working_level') return v2LevelCheckOn(session) ? v2ApplySetWorkingLevel(state, args, { session, heard: studentSaid, timeUp: !!session.timeBoxMinutes && session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= V2_TIME_UP_MIN }) : 'unknown tool set_working_level';
   if (name === 'practise_pronunciation') return v2PronunciationOn(session) ? v2ApplyPractisePronunciation(state, args) : 'unknown tool practise_pronunciation';
   if (name === 'record_thinking') return discussion ? recordThinking(state, args) : 'unknown tool record_thinking';
   if (name === 'end_lesson' && discussion) {
@@ -519,6 +522,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let pendingHold: InlinePart[] | null = null; let releasing = false;
   // The tutor may end the lesson by itself: the box's last fifth (the end_lesson rule in applyControlTool).
   const selfCloseOpen = !discussion && !session.homework && !session.homeworkSheet && !!session.timeBoxMinutes && leftMin <= session.timeBoxMinutes * 0.2;
+  // A page that closes the lesson: headed as a summary or recap, or naming the plan's last part.
+  const lastPart = session.plan?.segments[session.plan.segments.length - 1];
+  const lastPartNames = lastPart ? [v2PartOf(lastPart).label, (lastPart as { goal?: string }).goal, lastPart.id].filter((x): x is string => typeof x === 'string' && !!x.trim()) : [];
+  const closesLesson = (title: string) => V2_CLOSING_PAGE.test(title) || lastPartNames.some((n) => namesPart(n, title));
   const lastTutorText = (() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })();
   const boardHasPage = (title: string) => state.board.pages.some((pg) => pg.title.replace(/\s+/g, '').toLowerCase() === title.replace(/\s+/g, '').toLowerCase());
   let owedAsked = false;
@@ -550,7 +557,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           if (part.block.kind === 'page' && !discussion && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
             // In the box's last fifth the tutor may close by itself, and a reply that does is a closing turn: whether it
             // does is known only when the reply is complete, so the page and what follows it wait until then (D1).
-            if (TUTOR_V2_CLOSE_OPENS_SUMMARY && selfCloseOpen) { pendingHold = [part]; continue; }
+            // Only a page that closes the lesson waits: any other is held at once and the offer streams as before
+            // (task 6b review I1: deferring every page left a timed lesson's last fifth silent until the reply was written).
+            if (TUTOR_V2_CLOSE_OPENS_SUMMARY && selfCloseOpen && closesLesson(part.block.body)) { pendingHold = [part]; continue; }
             hold(part.block);
             continue;
           }
@@ -637,7 +646,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // did not do what was asked, or a reply with no words yet. When it has spoken and every
     // call worked, the turn is over — a second call tends to say the same thing again, and
     // costs the student a wait.
-    const somethingFailed = results.some((r) => /^not /.test(String(r.content)));
+    // A level the gate held back (D7) is no reason to call the model again when the reply has already asked them
+    // something, or when the check is over: a second call added a second question to the same reply (review I3).
+    const asked = asksAnywhere(spoken.join(' ').split(/(?<=[.!?])\s+|(?<=[？。])/).filter((x) => x.trim()));
+    const quietRefusal = (c: string) => c.startsWith(V2_LEVEL_WAIT_OVER) || (c.startsWith(V2_LEVEL_WAIT) && asked);
+    const somethingFailed = results.some((r) => /^not /.test(String(r.content)) && !quietRefusal(String(r.content)));
     if (spoken.length > 0 && !somethingFailed) break;
     // Silence was the reply.
     if (toolCalls.some((c) => c.name === 'keep_listening' && !/^not /.test(c.outcome))) break;

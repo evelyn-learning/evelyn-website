@@ -727,6 +727,12 @@ async function main() {
     check('a sentence already said is not said twice', unsaidBoardItem([card], ['Try this one: I want to expand our business internationally.', 'Say it back to me.']) === null);
     check('options already read are not read twice', unsaidBoardItem([menu], ['You can practise individual words, a complete sentence, speaking more naturally, or skip and continue.', 'Which one?']) === null);
     check('a card the reply does not ask about (a correction, the summary) is left to the board', unsaidBoardItem([card], ['Yes, that is a clear plan.']) === null);
+    // Review M6: a correction card, then a new question about something else: read after that question it would land in
+    // the wrong place, so it is not read.
+    const fix = { name: 'show_sentence', args: { sentence: 'I have worked here for eleven years.' }, outcome: 'painted on page 3' };
+    check('a correction card under a new, unrelated question is not read after it (review M6)', unsaidBoardItem([fix], ['After a number we say years.', 'Now, what did you do last weekend?']) === null);
+    check('…but under "try the sentence again" it is', unsaidBoardItem([fix], ['After a number we say years.', 'Can you try the sentence again?']) === 'I have worked here for eleven years.');
+    check('options under a question that is not about choosing are not read', unsaidBoardItem([menu], ['Good.', 'How was your weekend?']) === null);
     check('mathematics stays on the board', unsaidBoardItem([{ name: 'annotate', args: { text: '1) $x = 2$\n2) $x = 3$' }, outcome: 'painted' }], ['Which one is right?']) === null);
     check('a note that is not a numbered list is not a menu', unsaidBoardItem([{ name: 'annotate', args: { text: 'Present perfect: have + past participle.' }, outcome: 'painted' }], ['Can you make one?']) === null);
     check('an item that was not painted is not read', unsaidBoardItem([{ ...card, outcome: 'not painted: bad' }], ['Please say it back to me.']) === null);

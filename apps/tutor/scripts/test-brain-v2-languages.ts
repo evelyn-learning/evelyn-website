@@ -11,8 +11,8 @@ import { join } from 'node:path';
 import type Anthropic from '@anthropic-ai/sdk';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
 import { v2LanguagesSection, v2RetryFacts, v2SpeechParts } from '../src/lib/tutor/v2/languages';
-import { renderFacts } from '../src/lib/tutor/v2/facts';
-import { TUTOR_V2_RETRY_COUNT } from '../src/lib/tutor/orchestrator/flags';
+import { renderFacts, v2LastOpener, v2OpenerFact } from '../src/lib/tutor/v2/facts';
+import { TUTOR_V2_OPENER_FACT, TUTOR_V2_RETRY_COUNT } from '../src/lib/tutor/orchestrator/flags';
 import { v2StopAsked } from '../src/lib/tutor/v2/stop-signal';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
@@ -48,7 +48,15 @@ async function main() {
   check('one closing turn on a stop', /that reply is the close/i.test(ja) && /no new question/i.test(ja));
   check('one error per answer, small slips pass, by their level; two tries, then the tutor says it and goes on (D5)', /one error that matters most in each answer/.test(ja) && /small slips that leave the meaning clear pass without comment, more of them the lower their working level/.test(ja) && /after the second, say the correct sentence yourself and go on/.test(ja), ja);
   check('"right" only for right words; a quote is what they said, the correction is the tutor\'s (D3)', /Say a sentence is right only when their words are right/.test(ja) && /quote what they actually said/.test(ja) && /never put in their mouth/.test(ja), ja);
-  check('the constitution: a confirmation opens a reply only after a right answer, never the same opener twice; it no longer quotes "yes, that\'s right" (D10)', /Open a reply with its content: a confirmation comes first only when they have just given a right answer to a question you asked, and never the same opener two replies running/.test(V2_CONSTITUTION) && !/Right is "yes, that's right"/.test(V2_CONSTITUTION));
+  check('D10 is not a constitution line (review I2: it made "Correct." the stock opener)', !/Open a reply with its content/.test(V2_CONSTITUTION) && /Right is "yes, that's right"/.test(V2_CONSTITUTION));
+  {
+    const h = (text: string) => ({ ...newV2State(0), history: [{ role: 'user' as const, content: 'hi' }, { role: 'assistant' as const, content: [{ type: 'text' as const, text }] }] });
+    check('the last reply\'s opener: up to the first mark', v2LastOpener(h('Correct. "Was eating" is the action in progress.').history) === 'Correct' && v2LastOpener(h('Yes, that\'s right: "I have been to Singapore."').history) === 'Yes' && v2LastOpener(h('<board page>Verbs</board>Your sentences are correct: both use the past.').history) === 'Your sentences are correct');
+    const fo = renderFacts(bilingual, h('Correct. Next row: "see, saw, ?".'), { nowMs: 60000, heard: 'seen' });
+    check('the facts name it, every turn (D10, review I2)', fo.includes('your last reply opened with "Correct": open this one differently, or go straight to the content'), fo.slice(-500));
+    check('no line at the opening, in a discussion, or with the kill switch off', v2OpenerFact(bilingual, newV2State(0)).length === 0 && v2OpenerFact(bilingual, h('Correct.'), false).length === 0 && TUTOR_V2_OPENER_FACT === true);
+    check('an English-only maths lesson gets it too (generic)', v2OpenerFact({ ...bilingual, languages: undefined, subject: 'math' }, h('Yes, 8 volts.')).length === 1);
+  }
   check('the constitution: the tutor has no job or life story of its own (D4)', /You have no job, projects or life story of your own: if they ask about yours, say so in a few words and turn back to them/.test(V2_CONSTITUTION));
 
   console.log('tries at one sentence are counted (D5)');

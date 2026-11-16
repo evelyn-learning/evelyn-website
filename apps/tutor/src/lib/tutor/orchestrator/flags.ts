@@ -1651,8 +1651,8 @@ export const TUTOR_V2_LEVEL_RECONFIRM = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_R
 
 /** Tutor brain v2 (v2/working-level.ts): set_working_level is refused, with the reason, until the learner has answered
  *  at least three level-check questions (an answer with content: not "yes", "no", "I'm ready" or "could you rephrase
- *  that?"), unless they asked to skip it, the time is up, or the check's budget (V2_LEVEL_CHECK_MAX_REPLIES) has run
- *  out. Levels were set after two questions, one of them answered "No." twice (Task 6, D7: real-t2, both trial runs).
+ *  that?"), unless they asked to skip it or the time is up. Past the check's reply budget (V2_LEVEL_CHECK_MAX_REPLIES) the refusal
+ *  asks for no further level question (the facts say the check is over), and the level waits for answers with content. Levels were set after two questions, one of them answered "No." twice (Task 6, D7: real-t2, both trial runs).
  *  Default ON; NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS=off ⇒ the level is taken whenever it is set, as before. */
 export const TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS !== 'off';
 
@@ -1668,3 +1668,9 @@ export const TUTOR_V2_TEXT_NO_SOUND = process.env.NEXT_PUBLIC_TUTOR_V2_TEXT_NO_S
  *  correct sentence comes next and the lesson goes on. One sentence was tried four times across four different errors
  *  (Task 6, D5: upper-int t13–t21). Default ON; NEXT_PUBLIC_TUTOR_V2_RETRY_COUNT=off ⇒ no such line. */
 export const TUTOR_V2_RETRY_COUNT = process.env.NEXT_PUBLIC_TUTOR_V2_RETRY_COUNT !== 'off';
+
+/** Tutor brain v2 (v2/facts.ts v2OpenerFact): every turn's facts name how the tutor's last reply opened ("your last reply
+ *  opened with 'Correct'; open this one differently, or go straight to the content"). "Yes, that's right." opened 50–70%
+ *  of replies (Task 6, D10); a constitution line against it only moved the stock opener to "Correct." and raised repeated
+ *  openers in demo-forces 5→13 (Task 6b review I2). Default ON; NEXT_PUBLIC_TUTOR_V2_OPENER_FACT=off ⇒ no such line. */
+export const TUTOR_V2_OPENER_FACT = process.env.NEXT_PUBLIC_TUTOR_V2_OPENER_FACT !== 'off';

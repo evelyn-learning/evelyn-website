@@ -154,6 +154,27 @@ async function main() {
     const { r: r4 } = await run({ ...showcaseSession, timeBoxMinutes: undefined, wrapMinutes: undefined }, 16.13, closing(T77));
     check('no box (a close is never refused for time): a held page and end_lesson in one reply: the end_lesson is refused, the session goes on, on the offer', !r4.state.closed && /Shall we go on/.test(r4.spoken) && r4.toolCalls.some((c) => c.name === 'end_lesson' && /^not ended/.test(c.outcome)), [r4.toolCalls.map((c) => `${c.name} ${c.outcome}`), r4.spoken]);
     check('the kill switch defaults on', TUTOR_V2_CLOSE_OPENS_SUMMARY === true);
+
+    // Review I1: only a page that closes the lesson waits for the end of the reply; any other is held at once.
+    const order: string[] = [];
+    const tracked = (text: string): V2ModelCall => { let n = 0; return async (_params, onText) => {
+      n += 1; const t = n === 1 ? text : '';
+      for (const piece of t.match(/[\s\S]{1,17}/g) ?? []) onText?.(piece);
+      order.push('model done');
+      return { id: 'm', type: 'message', role: 'assistant', model: 'x', content: [{ type: 'text', text: t }], stop_reason: 'end_turn', stop_sequence: null, usage } as unknown as Anthropic.Message;
+    }; };
+    const MID = '<board page>Irregular verbs</board>Now pick the right tense in each sentence. First one: I ___ to Osaka last week.';
+    const rMid = await runV2Turn({ session: showcaseSession, state: showcase(), studentSaid: 'Yes, thank you. That is very clear now.', callModel: tracked(MID), onText: (t) => { if (/Shall we go on/.test(t)) order.push('offer streamed'); }, onToolCall: (c) => { if (/not opened yet/.test(c.outcome)) order.push('held'); }, boardPass: false, mathsCheck: false, nowMs: 16.13 * MIN });
+    check('the last fifth, a page that is not the summary: held at once, the offer streamed while the model still writes, as before', JSON.stringify(order) === JSON.stringify(['offer streamed', 'held', 'model done']) && /Next is irregular verbs\. Shall we go on/.test(rMid.spoken), [order, rMid.spoken]);
+    order.length = 0;
+    await runV2Turn({ session: showcaseSession, state: showcase(), studentSaid: 'Yes, thank you. That is very clear now.', callModel: tracked(T77), onText: (t) => { if (/Shall we go on/.test(t)) order.push('offer streamed'); }, onToolCall: (c) => { if (/not opened yet/.test(c.outcome)) order.push('held'); }, boardPass: false, mathsCheck: false, nowMs: 16.13 * MIN });
+    check('…a summary page without end_lesson waits for the reply to end, then is held', JSON.stringify(order) === JSON.stringify(['model done', 'offer streamed', 'held']), order);
+    // A plan whose last part is not called a summary: its page closes the lesson too.
+    const NEXT = { ...PLAN, segments: [...PLAN.segments.slice(0, -1), { id: 'next-steps', kind: 'recap', goal: 'Next steps', estimatedMinutes: 2, metadata: { label: 'Your next steps' } }] } as unknown as LessonPlan;
+    const { r: rNext } = await run({ ...showcaseSession, plan: NEXT }, 16.13, closing('<board page>Your next steps</board>You worked well today. Goodbye, Aya!'));
+    check('the plan\'s last part, by its name, is a closing page: opened with the close', rNext.state.closed && rNext.state.board.pages.at(-1)?.title === 'Your next steps' && !/Shall we go on/.test(rNext.spoken), [rNext.toolCalls.map((c) => `${c.name} ${c.outcome}`), rNext.spoken]);
+    const { r: rOther } = await run(showcaseSession, 16.13, closing('<board page>Irregular verbs</board>One more set. Goodbye!'));
+    check('a non-closing page with end_lesson in the last fifth: held at once, and the end_lesson refused (no close on an unanswered offer)', !rOther.state.closed && /Shall we go on/.test(rOther.spoken) && rOther.toolCalls.some((c) => c.name === 'end_lesson' && /^not ended/.test(c.outcome)), [rOther.toolCalls.map((c) => `${c.name} ${c.outcome}`), rOther.spoken]);
   }
 
   console.log('the stop at the box');

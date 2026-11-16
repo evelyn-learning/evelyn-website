@@ -70,7 +70,7 @@ const studentTexts = (state: V2State) => state.history.filter(isStudentReply).ma
 /** Why set_working_level must wait, or null when it may go ahead (D7: levels were set after two questions, one of them
  *  answered "No." twice). It waits until the learner has given three answers with content in this lesson, unless they
  *  asked to skip the check or the time is up. A remembered level's revision is not held. */
-export function v2LevelSetTooEarly(state: V2State, heard: string | null | undefined, opts: { timeUp?: boolean; enabled?: boolean } = {}): string | null {
+export function v2LevelSetTooEarly(state: V2State, heard: string | null | undefined, opts: { timeUp?: boolean; enabled?: boolean; over?: boolean } = {}): string | null {
   if (!(opts.enabled ?? TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS) || state.workingLevel || opts.timeUp) return null;
   const said = [...studentTexts(state), ...(heard ? [heard] : [])];
   if (said.some((x) => SKIP.test(x))) return null;
@@ -79,14 +79,24 @@ export function v2LevelSetTooEarly(state: V2State, heard: string | null | undefi
   // facts still stop asking for the check (v2LevelCheckOver); a level set later waits for answers with content.
   const n = said.filter(v2AnswerHasContent).length;
   if (n >= V2_LEVEL_CHECK_MIN_ANSWERS) return null;
-  return `not set: they have answered ${n} of the level check's ${V2_LEVEL_CHECK_MIN_ANSWERS} questions (a yes, a no or a request to repeat is not an answer). Say nothing of this message. Ask your next level-check question, one short conversational question, and set the level once they have answered ${V2_LEVEL_CHECK_MIN_ANSWERS}.`;
+  // The check is over (`over`, as the facts say it): the refusal asks for no level question, so it and the facts agree
+  // (review I3).
+  if (opts.over) return `${V2_LEVEL_WAIT_OVER} the level check is over, and their answers so far (${n} with content) do not show a level yet. Say nothing of this message and ask no level question: go on with the lesson, and set the level once their answers show it.`;
+  // A reply that already asks them something has asked the next question: the turn ends there (turn.ts), and this result
+  // says so, so the next reply does not ask a second one (review I3).
+  return `${V2_LEVEL_WAIT} they have answered ${n} of the level check's ${V2_LEVEL_CHECK_MIN_ANSWERS} questions (a yes, a no or a request to repeat is not an answer). Say nothing of this message. If your reply already asks them a question, that is the next one: ask nothing more now. Otherwise ask your next level-check question, one short conversational question. Set the level once they have answered ${V2_LEVEL_CHECK_MIN_ANSWERS}.`;
 }
+
+/** How a refusal of set_working_level for too few answers begins (turn.ts reads it). */
+export const V2_LEVEL_WAIT = 'not set: wait for the answers:';
+/** …and the same past the check's budget, when no level question is to be asked. */
+export const V2_LEVEL_WAIT_OVER = 'not set: wait, ask nothing:';
 
 /** The tool's effect on the state. A level set in this lesson is final (v1's once-only rule: "never re-test");
  *  a level remembered from an earlier lesson may be revised once, since whoever is on the link may be someone
  *  else (findings case 11: a second person inherited the first one's level and skipped the check). */
-export function v2ApplySetWorkingLevel(state: V2State, args: Record<string, unknown>, ctx: { heard?: string | null; timeUp?: boolean } = {}): string {
-  const early = v2LevelSetTooEarly(state, ctx.heard, { timeUp: ctx.timeUp });
+export function v2ApplySetWorkingLevel(state: V2State, args: Record<string, unknown>, ctx: { heard?: string | null; timeUp?: boolean; session?: V2Session } = {}): string {
+  const early = v2LevelSetTooEarly(state, ctx.heard, { timeUp: ctx.timeUp, over: !!ctx.session && v2LevelCheckOver(ctx.session, state, ctx.heard) });
   if (early) return early;
   const held = state.workingLevel?.from === 'this_lesson' ? state.workingLevel.level : null;
   const d = decideSetWorkingLevel(held, args.level);
