@@ -23,7 +23,8 @@ import { v2ApplyPractisePronunciation, v2PronunciationFacts, v2WithPronunciation
 import { CLIP_SAMPLE_RATE } from '../src/lib/tutor/pronunciation/clip-capture';
 import { exampleSentencesOf, noteSentencesToSay, pointsBackAtBoard } from '../src/lib/tutor/v2/board-timing';
 import { ReplyGate } from '../src/lib/tutor/v2/reply-gate';
-import { v2FramePartLabel, v2NextTimeAllLine } from '../src/lib/tutor/v2/plan-map';
+import { v2NextTimeAllLine, v2PagePartLabel } from '../src/lib/tutor/v2/plan-map';
+import { indexOutsideBlocks, lastSentences } from '../src/lib/tutor/v2/turn';
 import { v2LanguagesSection } from '../src/lib/tutor/v2/languages';
 import { V2_SUMMARY_BEGUN, runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
@@ -170,6 +171,16 @@ async function main() {
     const heardD: string[] = [];
     const rD = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check'], { history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Next is the present perfect. Shall we go on?' }] }), studentSaid: 'Uh, yes.', callModel: streaming(tJ.replace('Have you worked', 'I have worked here for seven years. Have you worked')).call, onText: (d) => heardD.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
     check('a whole turn whose model then reads a note sentence itself: heard once, and once in the spoken record', (heardD.join('').match(/I have worked here for seven years\./g) ?? []).length === 1 && (rD.spoken.match(/I have worked here for seven years\./g) ?? []).length === 1, { heard: heardD.join(''), spoken: rD.spoken });
+    // Fix round 2 (E1): the model repeats a note sentence with one sentence in between (the echo path, not the next-sentence
+    // check): the repeat is dropped from the speech and the stored reply, and the note's own body keeps the sentence.
+    const heardE: string[] = [];
+    const tE = `Present perfect is next. Here is the form, and then I'll ask you a question. <board page>Present perfect</board><board note style="highlight">${jamesNote}</board> Look at the board. I have worked here for seven years. Have you worked for your current company for a long time?`;
+    const rE = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check'], { history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Next is the present perfect. Shall we go on?' }] }), studentSaid: 'Uh, yes.', callModel: streaming(tE).call, onText: (d) => heardE.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    const storedE = JSON.stringify(rE.state.history.at(-1));
+    check('E1: heard once', (heardE.join('').match(/I have worked here for seven years\./g) ?? []).length === 1, heardE.join(''));
+    check('E1: the stored note keeps both its sentences; the spoken repeat is gone from the stored speech', storedE.includes('Use it for experience that started in the past and continues now.\\nwork → have worked\\nI have worked here for seven years.</board>') && !/<\/board> Look at the board\. I have worked here/.test(storedE), storedE);
+    check('E1: the spoken record has the note\'s two sentences once each, before "Look at the board."', /question\.\s+Use it for experience that started in the past and continues now\. I have worked here for seven years\.\s+Look at the board\.\s+Have you worked/.test(rE.spoken) && (rE.spoken.match(/I have worked here for seven years\./g) ?? []).length === 1, rE.spoken);
+    check('indexOutsideBlocks skips a block body', indexOutsideBlocks('<board note>A b.</board> A b.', 'A b.') === 25 && indexOutsideBlocks('<board note>A b.</board>', 'A b.') === -1);
     check('tester A T16 in a whole turn: the sentences are said before "ここにある文を…"', /I work in accounting\. I help customers\. I work with international clients\. I joined my company three years ago\.\s+ここにある文を/.test(heardA.join('')), heardA.join(''));
     const heardS: string[] = [];
     await runV2Turn({ session: { ...lang, subject: 'Physics', languages: undefined }, state: pagesAt(['Forces']), studentSaid: 'ok', callModel: streaming('Here are the key ideas. <board note>A force is a push or a pull.\nForces are measured in newtons.</board> Which force acts on a falling ball?').call, onText: (d) => heardS.push(d), boardPass: false, mathsCheck: false });
@@ -177,42 +188,31 @@ async function main() {
     check('the kill switch is on by default', TUTOR_V2_SAY_NOTE_SENTENCES === true);
   }
 
-  console.log('3. the frame names the part that will open (James T20)');
+  console.log('3. the frame names the page being held, at once (gdi-real-james T20; fix round 2)');
   {
     const B = ['Lesson overview', 'Level check'];
     const level = { workingLevel: { level: 'beginner', from: 'this_lesson' } } as Partial<V2State>;
-    const st = pagesAt(B, { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level });
-    check('a held "Your job" page whose part this reply marks done: the plan\'s next part is named', v2FramePartLabel(GDI, st, 'Your job', ['level-check', 'topic-intro']) === 'Present perfect');
-    check('not marked: the held page is named, as before', v2FramePartLabel(GDI, st, 'Your job', []) === undefined && v2FramePartLabel(GDI, st, 'Past simple', ['topic-intro']) === undefined);
-    check('no plan, or a page of no part: as before', v2FramePartLabel(undefined, st, 'Your job', ['topic-intro']) === undefined && v2FramePartLabel(GDI, st, 'Some other heading', ['topic-intro']) === undefined);
-    const t20 = 'Yes, that\'s right: "I have worked here for seven years." You started in the past and you still work here now. <board page>Your job</board> Now let\'s talk about your job.';
-    const goalsAfter = [{ type: 'tool_use', id: 'g1', name: 'set_goal_status', input: { goal: 'level-check', status: 'shown' } }, { type: 'tool_use', id: 'g2', name: 'set_goal_status', input: { goal: 'topic-intro', status: 'shown' } }];
+    check('a part\'s page is named by the part\'s authored name; another page by its heading', v2PagePartLabel(GDI, 'Present perfect') === 'Present perfect' && v2PagePartLabel(GDI, 'Your job') === 'Your job' && v2PagePartLabel(GDI, 'Some other heading') === undefined && v2PagePartLabel(undefined, 'Your job') === undefined);
     const history = [{ role: 'user' as const, content: 'hi' }, { role: 'assistant' as const, content: 'Good. Can you say that sentence once more?' }];
-    const heard: string[] = [];
-    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: streaming(t20, goalsAfter).call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
-    check('in a whole turn: the page is held and the frame says "Next is present perfect", not "your job"', /Next is present perfect\. Shall we go on, or do you have a question first\?/.test(heard.join('')) && !/Next is your job/.test(heard.join('')) && r.state.board.pages.length === B.length, heard.join(''));
-    check('…and the stored reply says what was heard', /Next is present perfect\./.test(JSON.stringify(r.state.history)) && !/Next is your job/.test(JSON.stringify(r.state.history)));
-    const heard2: string[] = [];
-    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: streaming(t20).call, onText: (d) => heard2.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
-    check('a reply that does not mark it: "Next is your job", as before', /Next is your job\. Shall we go on/.test(heard2.join('')), heard2.join(''));
-    // Fix round 1 (I1): the frame waits for the end of the model call only for a page whose part is not marked yet.
-    /** A model call that records whether the frame was already heard when the call ends. */
+    /** A model call that records what had been heard when the call ends. */
     const watching = (text: string, after: unknown[] = []) => {
       const heardNow: string[] = []; let atEnd = '';
       const call: V2ModelCall = async (_p, onText) => { for (const piece of text.match(/[\s\S]{1,17}/g) ?? []) onText?.(piece); atEnd = heardNow.join(''); return msg([{ type: 'text', text }, ...after], after.length ? 'tool_use' : 'end_turn'); };
       return { call, heardNow, atEnd: () => atEnd };
     };
+    // T20 shape: the job part is marked in the same reply that writes the present perfect page.
+    const t20 = 'Yes, that\'s right: "I have worked here for seven years." You started in the past and you still work here now. <board page>Present perfect</board> Now the present perfect.';
+    const goalsAfter = [{ type: 'tool_use', id: 'g1', name: 'set_goal_status', input: { goal: 'level-check', status: 'shown' } }, { type: 'tool_use', id: 'g2', name: 'set_goal_status', input: { goal: 'topic-intro', status: 'shown' } }];
     const w1 = watching(t20, goalsAfter);
-    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w1.call, onText: (d) => w1.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
-    check('T20 shape (part not marked yet): the frame waits for the end of the call, then names present perfect', !/Next is/.test(w1.atEnd()) && /Next is present perfect\./.test(w1.heardNow.join('')), w1.heardNow.join(''));
-    const marked = { overview: { status: 'shown' as const, at: 0 }, 'level-check': { status: 'shown' as const, at: 0 }, 'topic-intro': { status: 'shown' as const, at: 0 } };
-    const w2 = watching('Great. <board page>Your job</board> Now your job.');
-    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: marked, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w2.call, onText: (d) => w2.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
-    check('"Great. <page>" whose part is already marked: the frame goes out at once, renamed to the next part', /Next is present perfect\. Shall we go on/.test(w2.atEnd()), w2.atEnd());
+    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w1.call, onText: (d) => w1.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    check('T20 shape: the frame names present perfect, heard before the call ends (no wait)', /Next is present perfect\. Shall we go on, or do you have a question first\?/.test(w1.atEnd()) && r.state.board.pages.length === B.length, w1.atEnd());
+    check('…and the stored reply says what was heard', /Next is present perfect\./.test(JSON.stringify(r.state.history)));
+    const w2 = watching('Great. <board page>Past simple</board> Now the past simple.');
+    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt([...B, 'Present perfect'], { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w2.call, onText: (d) => w2.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    check('an ordinary "Great. <page>": the frame goes out at once', /Great\.[\s\S]*Next is past simple\. Shall we go on/.test(w2.atEnd()), w2.atEnd());
     const w3 = watching('Great. <board page>Some other heading</board> Now this.');
-    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: marked, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w3.call, onText: (d) => w3.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
-    check('a page of no plan part: the frame goes out at once, as before', /Next is some other heading\. Shall we go on/.test(w3.atEnd()), w3.atEnd());
-    check('a "not started" status is not a mark (minor 5)', v2FramePartLabel(GDI, pagesAt(B, { goals: { 'topic-intro': { status: 'not_started' as const, at: 0 } } }), 'Your job', []) === undefined);
+    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w3.call, onText: (d) => w3.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    check('a page of no plan part: named by its heading, at once', /Next is some other heading\. Shall we go on/.test(w3.atEnd()), w3.atEnd());
     check('the kill switch is on by default', TUTOR_V2_FRAME_NAMES_OPENED === true);
   }
 
@@ -222,6 +222,7 @@ async function main() {
     const goals = { overview: { status: 'shown' as const, at: 0 }, 'present-perfect': { status: 'demonstrated' as const, at: 0 }, 'past-simple': { status: 'demonstrated' as const, at: 0 }, 'open-conversation': { status: 'shown' as const, at: 0 } };
     const level = { workingLevel: { level: 'intermediate', from: 'this_lesson' } } as Partial<V2State>;
     check('"Before we finish, here is a quick summary." has begun it; "let\'s finish with a quick summary" announces it', V2_SUMMARY_BEGUN.test('Before we finish, here is a quick summary.') && !V2_SUMMARY_BEGUN.test("so let's finish with a quick summary."));
+    check('lastSentences cuts after 。！？ with no space too', lastSentences('一つ目です。二つ目です。三つ目です。', 2) === '二つ目です。 三つ目です。' && lastSentences('One. Two. Three.', 2) === 'Two. Three.', lastSentences('一つ目です。二つ目です。三つ目です。', 2));
     check('the next-time line names the part', v2NextTimeAllLine(GDI, pagesAt(B, { goals, ...level })) === "We didn't get to the pronunciation part today, so that's for next time.");
     const t60 = 'Good work today. Before we finish, here is a quick summary. <board page>Summary</board><board note>You practised the present perfect and the past simple.</board> You used "have worked" well.';
     const heard: string[] = [];

@@ -259,37 +259,12 @@ export function v2NextTimeLine(plan: LessonPlan | undefined, state: Pick<V2State
   return `We didn't get to ${names} today, so that's for next time.`;
 }
 
-/** Task 6f: the part a part-change frame names for a held page headed `title`. The learner heard "Next is your job." (gdi-real-james T20) from a
- *  reply that wrote a "Your job" page and, in the same reply, marked the job part done (set_goal_status); the next reply
- *  opened the present perfect. When the held page is the page of a plan part already marked (before this reply, or by it:
- *  `markedNow`), the frame names the plan's next part not reached instead (its authored name), or nothing (null: "Shall
- *  we go on?" alone) when there is none. Undefined: name the held page, as before (no plan, a page of no part, or a part
- *  not marked). */
-/** A goal marked as having happened (fix round 1, minor 5): shown, demonstrated or skipped; not "not started". */
-const MARKED: ReadonlySet<string> = new Set(['shown', 'demonstrated', 'skipped']);
-const markedIn = (state: Pick<V2State, 'goals'>, markedNow: readonly string[]) => (id: string) => MARKED.has(state.goals[id]?.status ?? '') || markedNow.includes(id);
-/** The index of the plan part (with an authored name) whose page `title` is, or -1. */
-const partAt = (plan: LessonPlan, title: string) => plan.segments.findIndex((seg) => !!v2PartOf(seg).label && pageOfPart(seg, title));
-
-/** Task 6f fix round 1 (I1): whether the frame for a held page headed `title` must wait for the reply to be complete: the
- *  page is a plan part's and that part is not marked yet, so this reply may still mark it (set_goal_status). Any other
- *  held page (no plan, a page of no part, a part already marked) is named at once. */
-export function v2FramePartPending(plan: LessonPlan | undefined, state: Pick<V2State, 'goals'>, title: string): boolean {
-  if (!plan) return false;
-  const at = partAt(plan, title);
-  return at >= 0 && !markedIn(state, [])(plan.segments[at]!.id);
-}
-
-export function v2FramePartLabel(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>, title: string, markedNow: readonly string[]): string | null | undefined {
+/** Task 6f (FRAME_NAMES_OPENED, fix round 2): the authored name of the plan part whose page `title` is, or undefined.
+ *  The part-change frame names the held page by it, at once. */
+export function v2PagePartLabel(plan: LessonPlan | undefined, title: string): string | undefined {
   if (!plan) return undefined;
-  const segs = plan.segments;
-  const at = partAt(plan, title);
-  if (at < 0) return undefined;
-  const marked = markedIn(state, markedNow);
-  if (!marked(segs[at]!.id)) return undefined;
-  const reached = (seg: Segment) => marked(seg.id) || state.board.pages.some((pg) => pageOfPart(seg, pg.title)) || (v2PartOf(seg).skipWhenLevelKnown && !!state.workingLevel);
-  const next = segs.slice(at + 1).find((seg) => !reached(seg));
-  return next ? (v2PartOf(next).label ?? null) : null;
+  const seg = plan.segments.find((x) => !!v2PartOf(x).label && pageOfPart(x, title));
+  return seg ? v2PartOf(seg).label : undefined;
 }
 
 /** Task 6f: the line naming every plan part not reached as next time (v2UnreachedAtClose), said where a summary the reply

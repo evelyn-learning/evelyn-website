@@ -89,7 +89,7 @@ const hasFrame = (text: string) => stripBoardBlocks(text).split(/(?<=[.!?。！�
 const PAGE_BLOCK = /<board\s+page\b/;
 /** Whether this lesson may ask at a part change whether to go on (and whether they have a question first): fewer than
  *  V2_MAX_PART_FRAMES asked so far, and none at the last part change. The frame came at every part change, by the model
- *  as often as by the runtime: tester B heard it five times, Josh at two changes running (v2audio-6e finding C).
+ *  as often as by the runtime: tester B heard it five times, gdi-real-josh at two changes running (v2audio-6e finding C).
  *  Only frames said at a part change count (fix round 2, minor a): a frame followed by the opening of a page that is not
  *  the lesson's first, with no other frame between ("Shall we start?" before the first page is the opening), or the
  *  last frame with no page after it yet, whose change is happening now. Fix round 3 (P1): the page need not come in the

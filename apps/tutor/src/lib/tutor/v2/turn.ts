@@ -28,7 +28,7 @@ import { saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2WrapDue } from './time-box';
-import { planGoalIds, renderPlanMap, v2FramePartLabel, v2FramePartPending, v2NextTimeAllLine, v2NextTimeLine, v2PartOf, v2UnreachedOffer } from './plan-map';
+import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartOf, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
@@ -48,8 +48,18 @@ import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State
 /** Task 6f: the words of a reply that has begun its summary ("Before we finish, here is a quick summary."). */
 export const V2_SUMMARY_BEGUN = /\b(?:here(?: is|'s) (?:a |the |your |our |today's )?(?:quick |short |brief |little )?(?:summary|recap|review of today)|(?:let me|let's|i'll|we'll) (?:sum up|summari[sz]e|recap|go over what we did)|to (?:sum up|summari[sz]e|recap)|in summary)\b|まとめ(?:ます|ましょう|です|ると)/i;
 
+/** Where `needle` first occurs in `text` outside every <board …>…</board> block, or -1. */
+export function indexOutsideBlocks(text: string, needle: string): number {
+  const spans: Array<[number, number]> = [];
+  for (const m of text.matchAll(/<board\b[\s\S]*?<\/board>/g)) spans.push([m.index!, m.index! + m[0].length]);
+  for (let at = text.indexOf(needle); at >= 0; at = text.indexOf(needle, at + 1)) {
+    if (!spans.some(([a, z]) => at < z && at + needle.length > a)) return at;
+  }
+  return -1;
+}
+
 /** The last `n` sentences of `text`. */
-const lastSentences = (text: string, n: number) => text.trim().split(/(?<=[.!?。！？])["'”’」)]*\s+/).filter(Boolean).slice(-n).join(' ');
+export const lastSentences = (text: string, n: number) => text.trim().split(/(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/).filter(Boolean).slice(-n).join(' ');
 
 /** A spoken reply of at least this many words that wrote nothing is put to the board check. */
 export const V2_UNWRITTEN_WORDS = 30;
@@ -539,9 +549,6 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const inlinePainted: Array<{ id: string; raw: string; label: string }> = [];
 
   let heldAt: { raw: string; offer: string } | null = null; let saidNow = '';
-  // Task 6f (FRAME_NAMES_OPENED): a frame naming a held page waits for the reply to be complete, when words before it are
-  // still being spoken: the reply may mark that page's part done, and then it names the part that will open.
-  let frameWaits: { title: string } | null = null;
   // Task 6f (SUMMARY_BEGUN_NEXT_TIME): the next-time line said where a summary the reply has begun opens (raw block → line).
   let nextTimeAt: { raw: string; line: string } | null = null;
   // Sentence cards spoken where they stand (raw block → the words said for it).
@@ -594,17 +601,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // The question check only when the last part change did not ask it; an ask ending in the second language is an ask (Task 6e).
       const once = TUTOR_V2_PART_OFFER_ONCE;
       const asked = once ? endsAsking(saidNow.trimEnd()) : /\?\s*$/.test(saidNow);
-      let offer = missed ?? (asked ? '' : partOffer(block.body.trim(), namesPart(block.body, saidNow)));
-      // Task 6f (FRAME_NAMES_OPENED): the frame names the part that will open. A held page whose part is already marked is
-      // renamed at once (the plan's next part); one whose part is not marked yet waits for the reply to be complete, as
-      // this reply may mark it (fix round 1, I1: only then; every other frame goes out as it did).
-      if (offer && !missed && gated && !!session.plan && TUTOR_V2_FRAME_NAMES_OPENED && !namesPart(block.body, saidNow)) {
-        const now = v2FramePartLabel(session.plan, state, block.body.trim(), []);
-        if (now !== undefined) offer = partOffer(now ?? '', now === null);
-        else if (saidNow.trim() && v2FramePartPending(session.plan, state, block.body.trim())) frameWaits = { title: block.body.trim() };
-      }
+      // Task 6f (FRAME_NAMES_OPENED), fix round 2: the frame names the page being held, at once: by its plan part's
+      // authored name when it is a part's page, else by its heading. Never a part chosen by plan order, never a wait.
+      const named = gated && !!session.plan && TUTOR_V2_FRAME_NAMES_OPENED ? v2PagePartLabel(session.plan, block.body.trim()) ?? block.body.trim() : block.body.trim();
+      const offer = missed ?? (asked ? '' : partOffer(named, namesPart(block.body, saidNow) || namesPart(named, saidNow)));
       heldAt = { raw: block.raw, offer };
-      if (offer && !frameWaits) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
+      if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
       input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: block.body.trim() }, outcome: 'not opened yet: the student is asked first' });
     };
     const take = (parts: InlinePart[]) => {
@@ -681,17 +683,6 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (response.content.some((b) => b.type === 'tool_use' && b.name === 'end_lesson')) { releasing = true; try { take(waiting); gate.flush(); } finally { releasing = false; } }
       else hold(block);
     }
-    const waits = frameWaits as { title: string } | null; const heldNow = heldAt as { raw: string; offer: string } | null;
-    if (waits && heldNow) {
-      // Task 6f: the reply is complete: a page whose part it marked done is not named; the plan's next part is.
-      // Only a status saying the part happened counts (fix round 1, minor 5).
-      const markedNow = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use' && b.name === 'set_goal_status' && ['shown', 'demonstrated', 'skipped'].includes(String((b.input as { status?: unknown }).status))).map((b) => String((b.input as { goal?: unknown }).goal ?? '')).filter(Boolean);
-      const label = v2FramePartLabel(session.plan, state, waits.title, markedNow);
-      const offer: string = label === undefined ? heldNow.offer : partOffer(label ?? '', label === null);
-      heldAt = { raw: heldNow.raw, offer };
-      frameWaits = null;
-      input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2;
-    }
     const nextTime = nextTimeAt as { raw: string; line: string } | null;
     if (nextTime) {
       for (const b of response.content) if (b.type === 'text' && b.text.includes(nextTime.raw)) { b.text = b.text.replace(nextTime.raw, `${nextTime.line}\n${nextTime.raw}`); break; }
@@ -720,7 +711,17 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // A sentence card that was also spoken (sentenceCardToSay) counts among the words said; one the model said itself is in its words.
     const saidHere = () => new Map([...saidCards].filter(([, say]) => gate.saidCards.includes(say)).map(([raw, say]) => [raw, gate.cardSaidAs.get(say) ?? say] as [string, string]));
     const wordsOf = (text: string) => { const cards = saidHere(); return stripBoardBlocks(cards.size ? [...cards].reduce((t, [raw, say]) => t.split(raw).join(` ${say} `), text) : text); };
-    const removeFrom = (gone: string) => { for (const b of response.content) if (b.type === 'text' && b.text.includes(gone)) { b.text = b.text.replace(gone, '').replace(/[ \t]{2,}/g, ' '); return; } };
+    // Fix round 2 (E1): never inside a board block: a note's own sentence repeated after it in speech was cut from the
+    // note's body, not from the speech. The first occurrence outside every block is removed.
+    const removeFrom = (gone: string) => {
+      for (const b of response.content) {
+        if (b.type !== 'text') continue;
+        const at = indexOutsideBlocks(b.text, gone);
+        if (at < 0) continue;
+        b.text = `${b.text.slice(0, at)}${b.text.slice(at + gone.length)}`.replace(/[ \t]{2,}/g, ' ');
+        return;
+      }
+    };
     for (const block of response.content) {
       if (block.type === 'text') { const words = wordsOf(block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } continue; }
       if (block.type !== 'tool_use') continue;

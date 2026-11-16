@@ -1780,12 +1780,12 @@ export const TUTOR_V2_PRONUNCIATION_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_V2_
  *  NEXT_PUBLIC_TUTOR_V2_SAY_NOTE_SENTENCES=off ⇒ notes and tables are shown and not spoken, as before. */
 export const TUTOR_V2_SAY_NOTE_SENTENCES = process.env.NEXT_PUBLIC_TUTOR_V2_SAY_NOTE_SENTENCES !== 'off';
 
-/** Tutor brain v2 (v2/turn.ts, v2/plan-map.ts v2FramePartLabel, spoken lessons with a plan): the part-change frame names
- *  the part that will open. A held page whose part the same reply marks done (set_goal_status) is not named: the frame
- *  waits for the reply to be complete and names the plan's next part instead. The learner heard "Next is your job." (gdi-real-james T20) while the
- *  reply marked the job part done, and the next reply opened the present perfect (Task 6f, v2audio-6e2 T20). The frame
- *  is said at once when nothing was said before the page. Default ON; NEXT_PUBLIC_TUTOR_V2_FRAME_NAMES_OPENED=off ⇒ the
- *  frame names the held page as it streams, as before. */
+/** Tutor brain v2 (v2/turn.ts, v2/plan-map.ts v2PagePartLabel, spoken lessons with a plan): the part-change frame names
+ *  the held page by its plan part's authored name when it is a part's page, else by its heading, and goes out at once.
+ *  It never names a part picked by plan order and never waits for the reply's goal marks (Task 6f fix round 2: waiting
+ *  1–3 s at every part change was ruled out; v2audio-6e2 gdi-real-james T20 heard "Next is your job." for a page the
+ *  model wrote and then left). Default ON; NEXT_PUBLIC_TUTOR_V2_FRAME_NAMES_OPENED=off ⇒ the frame names the heading as
+ *  written, as before. */
 export const TUTOR_V2_FRAME_NAMES_OPENED = process.env.NEXT_PUBLIC_TUTOR_V2_FRAME_NAMES_OPENED !== 'off';
 
 /** Tutor brain v2 (v2/turn.ts, plan-map.ts): a reply that has already begun the summary ("here is a quick summary") is not
