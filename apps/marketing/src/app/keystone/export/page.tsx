@@ -7,6 +7,8 @@ import { listItems } from "@/lib/keystone/queries";
 import { markDeliveredAction } from "../actions";
 import { TopBar } from "../_components/TopBar";
 import { ago } from "../_components/ui";
+import { RememberList } from "../_components/BackNav";
+import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Download for SOLARO" };
@@ -29,6 +31,9 @@ export default async function ExportPage() {
   return (
     <>
       <TopBar user={user} on="export" />
+      <Suspense>
+        <RememberList label="Download for SOLARO" />
+      </Suspense>
       <main className="ks-main">
         <h1>Download for SOLARO</h1>
         <p className="ks-sub">

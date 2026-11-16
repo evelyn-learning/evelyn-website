@@ -5,6 +5,8 @@ import { ITEM_TYPE_LABEL, STAGE_LABEL, type Stage } from "@/lib/keystone/config"
 import { latestVerdicts, listItems, recentActivity, recentUploads, stageCounts } from "@/lib/keystone/queries";
 import { TopBar } from "./_components/TopBar";
 import { Feed, ItemsTable, ago } from "./_components/ui";
+import { RememberList } from "./_components/BackNav";
+import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Overview" };
@@ -35,6 +37,9 @@ export default async function Overview({ searchParams }: { searchParams: Promise
     return (
       <>
         <TopBar user={user} on="home" />
+        <Suspense>
+          <RememberList label="Overview" />
+        </Suspense>
         <main className="ks-main">
           {done && <div className="ks-note info">That was the last item waiting. Thank you — nothing else is waiting for review.</div>}
           <div className="ks-card ks-hero">
@@ -74,6 +79,9 @@ export default async function Overview({ searchParams }: { searchParams: Promise
     return (
       <>
         <TopBar user={user} on="home" />
+        <Suspense>
+          <RememberList label="Overview" />
+        </Suspense>
         <main className="ks-main">
           <div className="ks-card ks-hero">
             <div>
@@ -181,6 +189,9 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   return (
     <>
       <TopBar user={user} on="home" />
+        <Suspense>
+          <RememberList label="Overview" />
+        </Suspense>
       <main className="ks-main">
         <div className="ks-card ks-hero">
           <div>

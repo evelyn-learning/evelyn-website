@@ -9,6 +9,7 @@ import { TopBar } from "../../_components/TopBar";
 import { Feed, StageChip } from "../../_components/ui";
 import { ReviewBar } from "./ReviewBar";
 import { PlayerButton } from "./PlayerButton";
+import { BackLink } from "../../_components/BackNav";
 import { playerUrl } from "@/lib/keystone/assets";
 
 export const dynamic = "force-dynamic";
@@ -46,15 +47,13 @@ export default async function ItemPage({
     <>
       <TopBar user={user} />
       <main className="ks-main">
-        <div className="ks-crumbs">
-          <Link href={base || "/"}>← Overview</Link> · <Link href={`${base}/items`}>All items</Link>
-          {user.role === "reviewer" && queue.length > 0 && (
-            <>
-              {" "}
-              · <Link href={`${base}/items?stage=in_review`}>Waiting for review ({queue.length})</Link>
-            </>
-          )}
-        </div>
+        <BackLink
+          fallback={
+            user.role === "reviewer"
+              ? { href: `${base}/items?stage=in_review`, label: "Waiting for review" }
+              : { href: `${base}/items`, label: "All items" }
+          }
+        />
         <div className="ks-item-head">
           <div>
             <h1>

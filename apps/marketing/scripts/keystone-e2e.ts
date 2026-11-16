@@ -95,8 +95,12 @@ async function main() {
 
   // 3b. Reviewer: back links, and the animated player on an item that has one.
   const PLAYER_ITEM = process.env.KS_PLAYER_ITEM || "234035";
-  await page.goto(`${BASE}/item/${PLAYER_ITEM}`);
-  ok(await page.isVisible(".ks-crumbs a:has-text('Overview')") && (await page.isVisible(".ks-crumbs a:has-text('All items')")), "item page links back to Overview and All items");
+  await page.goto(`${BASE}/items?stage=approved`);
+  await page.click(`.ks-list a:has-text('${PLAYER_ITEM}')`);
+  await page.waitForURL(new RegExp(`/item/${PLAYER_ITEM}$`));
+  await page.waitForSelector(".ks-crumbs a:has-text('Approved')");
+  const back = await page.getAttribute(".ks-crumbs a", "href");
+  ok(back?.endsWith("/items?stage=approved") && (await page.locator(".ks-crumbs a").count()) === 1, `single back link goes to the list we came from (← Approved → ${back})`);
   if (await page.isVisible("button:has-text('Play animated solution')")) {
     const audio: number[] = [];
     page.on("response", (r) => r.url().includes(`/api/keystone/player/${PLAYER_ITEM}/audio/`) && audio.push(r.status()));
