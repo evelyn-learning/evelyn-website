@@ -1,0 +1,130 @@
+/* Keystone — review site for Castle Rock. Plain, quiet, fast: system fonts, no images, one stylesheet. */
+.ks {
+  --ink: #1b1f24;
+  --muted: #5d6670;
+  --line: #e2e5e9;
+  --soft: #f6f7f9;
+  --card: #ffffff;
+  --accent: #1f4e79;
+  --accent-soft: #e8f0f8;
+  --ok: #1e6b3a;
+  --ok-soft: #e6f4ea;
+  --warn: #8a5300;
+  --warn-soft: #fdf3e2;
+  --bad: #9b1c1c;
+  --bad-soft: #fbeaea;
+  min-height: 100vh;
+  background: var(--soft);
+  color: var(--ink);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+.ks a { color: var(--accent); text-decoration: none; }
+.ks a:hover { text-decoration: underline; }
+.ks h1 { font-size: 22px; margin: 0 0 4px; font-weight: 650; }
+.ks h2 { font-size: 16px; margin: 0 0 10px; font-weight: 650; }
+.ks h3 { font-size: 14px; margin: 0 0 6px; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.ks-top { background: var(--card); border-bottom: 1px solid var(--line); }
+.ks-top-in { max-width: 1280px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 18px; }
+.ks-brand { font-weight: 700; letter-spacing: .02em; color: var(--ink) !important; }
+.ks-brand small { font-weight: 500; color: var(--muted); margin-left: 6px; }
+.ks-nav { display: flex; gap: 14px; flex: 1; }
+.ks-nav a { color: var(--muted); font-weight: 550; }
+.ks-nav a.on { color: var(--ink); }
+.ks-who { color: var(--muted); font-size: 13px; display: flex; gap: 10px; align-items: center; }
+.ks-main { max-width: 1280px; margin: 0 auto; padding: 20px 16px 120px; }
+.ks-sub { color: var(--muted); margin: 0 0 18px; }
+.ks-card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.ks-grid { display: grid; gap: 16px; }
+.ks-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.ks-stat { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; color: var(--ink) !important; display: block; }
+.ks-stat:hover { border-color: var(--accent); text-decoration: none !important; }
+.ks-stat b { display: block; font-size: 24px; line-height: 1.2; }
+.ks-stat span { color: var(--muted); font-size: 13px; }
+.ks-hero { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.ks-hero .ks-big { font-size: 34px; font-weight: 700; line-height: 1; }
+.ks-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--card); color: var(--ink) !important; border-radius: 6px; padding: 7px 14px; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none !important; }
+.ks-btn:hover { border-color: var(--accent); }
+.ks-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff !important; }
+.ks-btn.ok { background: var(--ok); border-color: var(--ok); color: #fff !important; }
+.ks-btn.warn { background: var(--card); border-color: var(--warn); color: var(--warn) !important; }
+.ks-btn:disabled { opacity: .5; cursor: default; }
+.ks-btn kbd { font: 11px/1 ui-monospace, monospace; border: 1px solid currentColor; border-radius: 3px; padding: 1px 4px; opacity: .75; }
+.ks-table { overflow-x: auto; }
+.ks table.ks-list { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ks table.ks-list th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--line); padding: 8px; }
+.ks table.ks-list td { border-bottom: 1px solid var(--line); padding: 8px; vertical-align: top; }
+.ks table.ks-list tr:hover td { background: var(--soft); }
+.ks-chip { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 1px 9px; white-space: nowrap; background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+.ks-chip.s-in_review { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.ks-chip.s-changes_requested { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.ks-chip.s-approved { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.ks-chip.s-delivered { background: #eceff3; color: var(--ink); border-color: transparent; }
+.ks-chip.flag { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.ks-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.ks-tabs a { border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; font-size: 13px; color: var(--muted); background: var(--card); }
+.ks-tabs a.on { background: var(--ink); color: #fff; border-color: var(--ink); text-decoration: none; }
+.ks-feed { list-style: none; margin: 0; padding: 0; }
+.ks-feed li { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.ks-feed li:last-child { border-bottom: 0; }
+.ks-feed .when { color: var(--muted); font-size: 12px; }
+.ks-quote { white-space: pre-wrap; background: var(--soft); border-left: 3px solid var(--line); padding: 6px 10px; margin-top: 4px; border-radius: 0 4px 4px 0; }
+.ks-note { background: var(--warn-soft); color: #5b3a00; border-radius: 6px; padding: 8px 12px; font-size: 14px; margin-bottom: 12px; }
+.ks-note.info { background: var(--accent-soft); color: #173a5a; }
+.ks-empty { color: var(--muted); padding: 18px 0; text-align: center; }
+.ks-form label { display: block; font-weight: 600; font-size: 13px; margin: 10px 0 4px; }
+.ks-form input[type=text], .ks-form input[type=password], .ks-form select, .ks-form textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: inherit; background: #fff; color: var(--ink); }
+.ks-form textarea { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; min-height: 140px; }
+.ks-err { color: var(--bad); font-size: 14px; margin: 8px 0; }
+
+/* Item review page */
+.ks-item-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 14px; }
+.ks-meta { color: var(--muted); font-size: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.ks-split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px; align-items: start; }
+@media (max-width: 960px) { .ks-split { grid-template-columns: 1fr; } }
+.ks-question { position: sticky; top: 12px; max-height: calc(100vh - 110px); overflow: auto; }
+@media (max-width: 960px) { .ks-question { position: static; max-height: none; } }
+.ks-opts { list-style: none; padding: 0; margin: 12px 0 0; }
+.ks-opts li { display: flex; gap: 10px; padding: 6px 8px; border-radius: 6px; border: 1px solid transparent; align-items: baseline; }
+.ks-opts li b { min-width: 22px; }
+.ks-opts li.key { background: var(--ok-soft); border-color: #b9dcc4; }
+.ks-opts li.key::after { content: "Key"; margin-left: auto; font-size: 11px; font-weight: 700; color: var(--ok); text-transform: uppercase; letter-spacing: .05em; }
+.ks-answer { margin-top: 14px; padding: 10px 12px; border-radius: 6px; background: var(--soft); font-size: 14px; }
+.ks-answer.unconfirmed { background: var(--warn-soft); }
+.ks-section { border-top: 1px solid var(--line); padding: 14px 0 4px; }
+.ks-section:first-child { border-top: 0; padding-top: 0; }
+.ks-section h2 { display: flex; gap: 8px; align-items: baseline; }
+.ks-section h2 .n { color: var(--muted); font-weight: 600; font-size: 13px; }
+.ks-prose p { margin: 0 0 10px; }
+.ks-prose ul, .ks-prose ol { margin: 0 0 10px; padding-left: 22px; }
+.ks-prose img { max-width: 100%; height: auto; }
+.ks-prose .ks-math { overflow-x: auto; overflow-y: hidden; margin: 8px 0 12px; }
+.ks-prose figure.ks-fig { margin: 10px 0 14px; }
+.ks-prose figure.ks-fig svg { max-width: 240px; height: auto; display: block; }
+.ks-prose figcaption { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.ks-prose .ks-table { margin: 8px 0 14px; }
+.ks-prose table { border-collapse: collapse; font-size: 14px; border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); }
+.ks-prose table caption { text-align: left; font-weight: 600; padding-bottom: 4px; caption-side: top; }
+.ks-prose th { border-bottom: 1px solid var(--ink); padding: 4px 10px; vertical-align: bottom; text-align: center; }
+.ks-prose td { padding: 4px 10px; vertical-align: top; }
+.ks-prose math { font-size: 1.05em; }
+.ks-crsol { margin-top: 14px; font-size: 14px; }
+.ks-crsol summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+.ks-crsol .cr-step-title { font-weight: 700; margin-top: 8px; }
+
+/* Bottom review bar */
+.ks-bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); box-shadow: 0 -4px 14px rgba(0,0,0,.05); z-index: 20; }
+.ks-bar-in { max-width: 1280px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ks-bar textarea { flex: 1; min-width: 220px; height: 38px; min-height: 38px; resize: vertical; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: inherit; }
+.ks-bar .pos { color: var(--muted); font-size: 13px; white-space: nowrap; }
+.ks-bar .msg { font-size: 13px; color: var(--bad); width: 100%; }
+.ks-login { max-width: 360px; margin: 12vh auto 0; }
+.ks-prose .fill-in-the-blank { display: inline-block; min-width: 64px; border-bottom: 1.5px solid var(--ink); height: 1em; vertical-align: baseline; }
+.ks-prose ul { list-style: disc; }
+.ks-prose ol { list-style: decimal; }
+.ks-prose li { margin: 2px 0; }
+.ks-prose h1, .ks-prose h2, .ks-prose h3, .ks-prose h4 { font-size: 15px; margin: 10px 0 6px; text-transform: none; letter-spacing: 0; color: var(--ink); }
+.ks-prose img { display: block; margin: 6px 0 10px; }
+.ks-opts .ks-prose img { margin: 0; max-width: 220px; }
+.ks-opts:has(img) { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ks-opts:has(img) li { align-items: flex-start; }
+.ks-opts .ks-prose img { max-width: 150px; }
