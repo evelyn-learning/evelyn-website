@@ -47,7 +47,10 @@ export function v2SentenceCardsSection(languages: readonly string[]): string {
     // The card's stressed words are drawn bold (v1 SentenceCard); a gloss in the target language helps nobody who needs one.
     `stress (optional): the words you changed, or the ones to stress when saying it. gloss (optional): a few words in ${S} on what it means or what changed, with no double quote inside it. One sentence per card; a card for what they should say, never for their mistake.`,
     // v1 boarded up to four of the learner's sentences in its summary (typedLearnerSentencesRef); v2 has no client summary.
-    `When you sum the lesson up, including a close they asked for, put up to ${V2_SUMMARY_SENTENCE_CARDS} of their corrected sentences from the facts on the board as sentence cards, the ones most worth keeping.`,
+    // Each listed sentence is already a card on the page it was corrected on, and the board does not write a thing twice
+    // on one page (board.ts): written there, the summary's cards only scrolled back to the old ones. On a new page they are
+    // written again, and the recap stands as its own page (review 4c I1).
+    `When you sum the lesson up, including a close they asked for, open a page for the summary with a page block first, then put up to ${V2_SUMMARY_SENTENCE_CARDS} of their corrected sentences from the facts on it as sentence cards, the ones most worth keeping. On the page they were corrected on they are already up and are not written again.`,
   ].join('\n');
 }
 
@@ -64,7 +67,7 @@ export function v2IsCorrectionOf(sentence: string, studentSaid: string | null | 
   return !` ${theirs.join(' ')} `.includes(` ${card.join(' ')} `);
 }
 
-/** After a sentence card has painted: a correction of what the student just said is remembered for the summary. */
+/** After a sentence card has painted, or was pointed at an item already up that holds it: a correction of what the student just said is remembered for the summary. */
 export function v2NoteCorrectedSentence(session: V2Session, state: V2State, sentence: unknown, studentSaid: string | null | undefined): void {
   if (!v2SentenceCardsOn(session) || typeof sentence !== 'string') return;
   const s = sentence.replace(/\s+/g, ' ').trim().slice(0, MAX_SENTENCE_CHARS);
@@ -78,7 +81,8 @@ export function v2NoteCorrectedSentence(session: V2Session, state: V2State, sent
 export function v2SentenceCardsFacts(session: V2Session, state: V2State): string[] {
   const list = state.correctedSentences ?? [];
   if (!v2SentenceCardsOn(session) || !list.length) return [];
-  return [`their corrected sentences so far: ${list.map((s) => `"${s}"`).join('; ')}`];
+  // Quoted as JSON strings: a sentence with a double quote in it (reported speech) would end its quote early (review 4c M5).
+  return [`their corrected sentences so far: ${list.map((s) => JSON.stringify(s)).join('; ')}`];
 }
 
 /** The route's reading of the corrected sentences in the client's state: anything malformed is dropped. */

@@ -445,8 +445,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if (page && was) page.items = page.items.filter((it) => it !== was);
         const o = applyBoard(state.board, block.id, block.name, args); outcome = o.painted ? o.detail : `not painted: ${o.detail}`;
         if (!o.painted) { if (page && was) page.items.push(was); replaces = undefined; }
-        // A card that reworks what the student just said is one of their corrected sentences (the summary's cards).
-        if (o.painted && block.name === 'show_sentence') v2NoteCorrectedSentence(session, state, args.sentence, input.studentSaid);
+        // A card that reworks what the student just said is one of their corrected sentences (the summary's cards), also
+        // when the board pointed it at a longer card or note already holding it (review 4c M3): the correction was made.
+        if ((o.painted || o.pointAt) && block.name === 'show_sentence') v2NoteCorrectedSentence(session, state, args.sentence, input.studentSaid);
         if (!o.painted && o.pointAt && !boardOnly) { pointsAt = o.pointAt; outcome = `not painted again: ${o.detail}; the board has scrolled back to it`; }
       }
     }

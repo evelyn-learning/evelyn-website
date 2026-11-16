@@ -20,6 +20,7 @@
  */
 import { isCodeBody, typesetMaths, unfoldCode } from './rich-text';
 import { toolFigureCall } from './figure-catalogue';
+import { TUTOR_V2_SENTENCE_CARDS } from '../orchestrator/flags';
 
 export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'code' | 'sketch' | 'figure' | 'page' | 'sentence';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
@@ -34,6 +35,8 @@ function parseBlock(raw: string): InlineBlock | null {
   BLOCK_RE.lastIndex = 0;
   const m = BLOCK_RE.exec(raw);
   if (!m) return null;
+  // Kill switch off: a sentence block is dropped, as before the kind existed (review 4c M1).
+  if (m[1] === 'sentence' && !TUTOR_V2_SENTENCE_CARDS) return null;
   const attrs: Record<string, string> = {};
   for (const a of m[2].matchAll(/([a-z_]+)="([^"]*)"/g)) attrs[a[1]] = a[2];
   return { kind: m[1] as InlineKind, attrs, body: m[3].trim(), raw: m[0] };

@@ -11,6 +11,7 @@
  */
 import type Anthropic from '@anthropic-ai/sdk';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, copyFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
@@ -56,7 +57,16 @@ const SAID_MEET = 'Last week I meet a customer from Osaka.';
 const SAID_ROLE = 'My rule is to manage the sales team.';
 const CARD_MET = '<board sentence stress="met" gloss="「meet」の過去形は「met」です。">Last week I met a customer from Osaka.</board>';
 
+/** Child mode: the kill switch is read once at module load, so the off case runs this script again with it set. */
+async function offChild() {
+  const text = `Nearly. ${CARD_MET} Say it once more.`;
+  const s = stub([words(text)]);
+  const r = await runV2Turn({ session: bilingual, state: newV2State(1), studentSaid: SAID_MEET, callModel: s.call, boardPass: false, mathsCheck: false, nowMs: 60000 });
+  console.log(`OFF_JSON ${JSON.stringify({ blocks: boardBlocksIn(text).length, said: stripBoardBlocks(text), part: /SENTENCE CARDS/.test(v2SessionPart(bilingual)), tools: r.toolCalls.map((c) => c.name) })}`);
+}
+
 async function main() {
+  if (process.env.SENTENCE_CARDS_OFF_CHILD === '1') { await offChild(); return; }
   console.log('the gate: a second teaching language, under the kill switch');
   check('a bilingual taught lesson has sentence cards', v2SentenceCardsOn(bilingual));
   check('one language: none', !v2SentenceCardsOn(english) && !v2SentenceCardsOn({ ...bilingual, languages: ['en'] }));
@@ -78,6 +88,7 @@ async function main() {
   check('it shows the inline form, with stress and a gloss in the support language', sec.includes('<board sentence stress="word | word" gloss="a short note in Japanese">The whole sentence.</board>'), sec);
   check('the target and support languages come from the session', /An? English sentence you model or correct/.test(sec) && /in Japanese/.test(sec) && /Spanish/.test(v2SentenceCardsSection(['en', 'es'])));
   check('the summary boards up to four of their corrected sentences from the facts', /up to 4 of their corrected sentences from the facts/.test(sec) && /close they asked for/.test(sec));
+  check('the summary opens its own page first (on the page they were corrected on, the cards are not written again)', /open a page for the summary with a page block first/.test(sec) && /not written again/.test(sec), sec);
   check('a card is for what they should say, never their mistake', /never for their mistake/.test(sec));
 
   console.log('the inline kind');
@@ -127,6 +138,21 @@ async function main() {
     await runV2Turn({ session: bilingual, state: r2.state, studentSaid: 'Yes, please.', callModel: s3.call, boardPass: false, mathsCheck: false, nowMs: 180000 });
     const facts = JSON.stringify(s3.seen[0].messages.at(-1));
     check('the next turn\'s facts list them for the summary', facts.includes('their corrected sentences so far: \\"Last week I met a customer from Osaka.\\"; \\"My role is to manage the sales team.\\"'), facts);
+    // The whole path (review 4c I1): corrected and carded, then the summary on a page of its own boards them again.
+    const summary = `Well done today. <board page>Summary</board> <board sentence stress="met">Last week I met a customer from Osaka.</board> <board sentence stress="role">My role is to manage the sales team.</board> Goodbye!`;
+    const s6 = stub([words(summary)]);
+    const r6 = await runV2Turn({ session: bilingual, state: r2.state, studentSaid: 'Sorry, I have to finish now.', callModel: s6.call, boardPass: false, mathsCheck: false, nowMs: 1140000 });
+    const cards6 = r6.toolCalls.filter((c) => c.name === 'show_sentence');
+    check('summary on a new page: both corrected sentences paint again, on that page', cards6.length === 2 && cards6.every((c) => /^painted on page 2/.test(c.outcome)) && r6.state.board.pages[1]?.title === 'Summary', r6.toolCalls.map((c) => `${c.name} ${c.outcome}`));
+    const cmds6 = cards6.map((c) => mapFunctionCallToCommand(c.name, c.args) as unknown as Record<string, unknown>);
+    check('the client gets them as showSentence cards', cmds6.every((c) => c?.action === 'showSentence') && cmds6[1]?.sentence === 'My role is to manage the sales team.', cmds6);
+    const s7 = stub([words(`Well done today. <board sentence>Last week I met a customer from Osaka.</board> Goodbye!`)]);
+    const r7 = await runV2Turn({ session: bilingual, state: r2.state, studentSaid: 'Sorry, I have to finish now.', callModel: s7.call, boardPass: false, mathsCheck: false, nowMs: 1140000 });
+    check('written on the page they were corrected on, the card is pointed back to, not written twice (why the summary opens a page)', /^not painted again: already on the board/.test(r7.toolCalls.find((c) => c.name === 'show_sentence')?.outcome ?? ''), r7.toolCalls);
+    // Review 4c M3: a correction the board points at a longer card already holding it is still a correction.
+    const s8 = stub([words('Nearly. <board sentence stress="met">I met a customer from Osaka.</board>')]);
+    const r8 = await runV2Turn({ session: bilingual, state: r.state, studentSaid: 'I meet a customer from Osaka.', callModel: s8.call, boardPass: false, mathsCheck: false, nowMs: 130000 });
+    check('a correction pointed at a longer card holding it is still recorded', /^not painted again/.test(r8.toolCalls[0]?.outcome ?? '') && r8.state.correctedSentences?.includes('I met a customer from Osaka.'), [r8.toolCalls[0]?.outcome, r8.state.correctedSentences]);
     const s4 = stub([words(`Here is one. <board sentence>I have worked here for three years.</board>`)]);
     const r4 = await runV2Turn({ session: bilingual, state: newV2State(1), studentSaid: 'Can you give me an example?', callModel: s4.call, boardPass: false, mathsCheck: false, nowMs: 60000 });
     check('a model card answering a question is not recorded', !r4.state.correctedSentences, r4.state.correctedSentences);
@@ -142,6 +168,18 @@ async function main() {
     check('the route drops a malformed value', v2ReadCorrectedSentences('x') === undefined && v2ReadCorrectedSentences([]) === undefined);
     const route = readFileSync(join(__dirname, '..', 'src', 'app', 'api', 'tutor', 'brain-v2', 'turn', 'route.ts'), 'utf8');
     check('the route reads them into the state', /v2ReadCorrectedSentences\(s\.correctedSentences\)/.test(route));
+    const quoted = renderFacts(bilingual, { ...newV2State(1), correctedSentences: ['He said "yes" to the plan.', 'I met a customer.'] }, { nowMs: 60000 });
+    check('a sentence with a double quote keeps its own quote in the facts (review 4c M5)', quoted.includes('their corrected sentences so far: "He said \\"yes\\" to the plan."; "I met a customer."'), quoted);
+  }
+
+  console.log('the kill switch off (a fresh process with NEXT_PUBLIC_TUTOR_V2_SENTENCE_CARDS=off)');
+  {
+    const r = spawnSync(process.execPath, [...process.execArgv, __filename], { env: { ...process.env, NEXT_PUBLIC_TUTOR_V2_SENTENCE_CARDS: 'off', SENTENCE_CARDS_OFF_CHILD: '1' }, encoding: 'utf8' });
+    const line = (r.stdout ?? '').split('\n').find((l) => l.startsWith('OFF_JSON '));
+    const got = line ? JSON.parse(line.slice('OFF_JSON '.length)) as { blocks: number; said: string; part: boolean; tools: string[] } : null;
+    check('the block is dropped unpainted, as before the kind existed (review 4c M1)', got?.blocks === 0 && got.tools.length === 0, got ?? r.stderr);
+    check('the student still hears only the words', got?.said === 'Nearly. Say it once more.', got);
+    check('no section in the session part', got?.part === false, got);
   }
 
   console.log('the session PDF: the card and its Japanese gloss');

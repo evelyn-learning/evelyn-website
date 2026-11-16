@@ -61,7 +61,7 @@ function readState(raw: unknown): V2State | null {
   const workingLevel = v2ReadWorkingLevel(s.workingLevel);
   const pronunciation = v2ReadPronunciation(s.pronunciation);
   const correctedSentences = v2ReadCorrectedSentences(s.correctedSentences);
-  return { ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), ...(correctedSentences ? { correctedSentences } : {}),history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
+  return { ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), ...(correctedSentences ? { correctedSentences } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
 }
 
 export async function POST(req: NextRequest) {

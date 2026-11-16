@@ -1604,5 +1604,5 @@ export const TUTOR_V2_PLAN_AS_WRITTEN = process.env.NEXT_PUBLIC_TUTOR_V2_PLAN_AS
  *  models or corrects as inline sentence cards (`<board sentence stress=… gloss=…>`), and the learner's corrected
  *  sentences are listed in the facts so the summary can board up to four. v1's brain, told to board them, did so on 3
  *  turns of 29, and the learner only heard them. Default ON; NEXT_PUBLIC_TUTOR_V2_SENTENCE_CARDS=off ⇒ no section, no
- *  facts line (the session part and facts as before). */
+ *  facts line (the session part and facts as before), and a `<board sentence>` block is dropped unpainted. */
 export const TUTOR_V2_SENTENCE_CARDS = process.env.NEXT_PUBLIC_TUTOR_V2_SENTENCE_CARDS !== 'off';
