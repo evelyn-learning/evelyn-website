@@ -310,6 +310,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const discussion = !!discussionOf(session.plan);
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session);
   const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, ...(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid) ? { stopAsked: true } : {}) });
+  // A reply that may close the session: the student's words ask to stop, or the clock is in the window where end_lesson
+  // is no longer refused (applyControlTool: 20% of the box left). A page it opens is the summary's, and is never held for
+  // "shall we go on?" (part-close.ts): held, "Sorry, I have to finish now." in a two-page lesson got "Next is summary.
+  // Shall we go on?" and the summary, its sentence cards, the goodbye and end_lesson were all dropped (review 4c N1).
+  const leftMin = session.timeBoxMinutes ? session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 : Infinity;
+  const closingTurn = (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || (!!session.timeBoxMinutes && leftMin <= session.timeBoxMinutes * 0.2);
   // A score is said once, in this turn's facts; the reply that answered it uses the arm up (pronunciation.ts).
   v2ConsumePronunciation(session, state, input.studentSaid);
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
@@ -519,7 +525,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if ('block' in part) {
           // A new part the student has not been asked about is not opened in this reply (part-close.ts): the
           // reply ends here, with the offer in place of the page and all that followed it.
-          if (part.block.kind === 'page' && !discussion && !boardHasPage(part.block.body) && !state.closed && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
+          if (part.block.kind === 'page' && !discussion && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
             const offer = /\?\s*$/.test(saidNow) ? '' : partOffer(part.block.body.trim(), namesPart(part.block.body, saidNow));
             heldAt = { raw: part.block.raw, offer };
             if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }

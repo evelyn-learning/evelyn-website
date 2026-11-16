@@ -139,11 +139,27 @@ async function main() {
     const facts = JSON.stringify(s3.seen[0].messages.at(-1));
     check('the next turn\'s facts list them for the summary', facts.includes('their corrected sentences so far: \\"Last week I met a customer from Osaka.\\"; \\"My role is to manage the sales team.\\"'), facts);
     // The whole path (review 4c I1): corrected and carded, then the summary on a page of its own boards them again.
+    // A lesson of two pages, the cards on the page in view (page 2): the part-close hold applies to any new page here
+    // (pagesOpen >= 2), so the test cannot pass because the lesson is only beginning (re-review N1).
+    const twoPages: V2State = structuredClone(r2.state);
+    twoPages.board.pages.unshift({ title: 'Warm-up', items: [] }); twoPages.board.current = 1;
     const summary = `Well done today. <board page>Summary</board> <board sentence stress="met">Last week I met a customer from Osaka.</board> <board sentence stress="role">My role is to manage the sales team.</board> Goodbye!`;
-    const s6 = stub([words(summary)]);
-    const r6 = await runV2Turn({ session: bilingual, state: r2.state, studentSaid: 'Sorry, I have to finish now.', callModel: s6.call, boardPass: false, mathsCheck: false, nowMs: 1140000 });
+    const closing = (text: string) => msg([{ type: 'text', text }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'student_asked', summary: 'Past simple at work.' } }], 'tool_use');
+    const s6 = stub([closing(summary), words('')]);
+    // Five minutes in: only the student's stop makes this a closing turn, not the clock.
+    const r6 = await runV2Turn({ session: bilingual, state: twoPages, studentSaid: 'Sorry, I have to finish now.', callModel: s6.call, boardPass: false, mathsCheck: false, nowMs: 300000 });
     const cards6 = r6.toolCalls.filter((c) => c.name === 'show_sentence');
-    check('summary on a new page: both corrected sentences paint again, on that page', cards6.length === 2 && cards6.every((c) => /^painted on page 2/.test(c.outcome)) && r6.state.board.pages[1]?.title === 'Summary', r6.toolCalls.map((c) => `${c.name} ${c.outcome}`));
+    check('"I have to finish now" with two pages open: the summary page opens (not held for "shall we go on?")', r6.toolCalls.some((c) => c.name === 'new_page' && /^new page 3/.test(c.outcome)) && !r6.toolCalls.some((c) => /not opened yet/.test(c.outcome)) && r6.state.board.pages[2]?.title === 'Summary', r6.toolCalls.map((c) => `${c.name} ${c.outcome}`));
+    check('both corrected sentences paint again, on the summary page', cards6.length === 2 && cards6.every((c) => /^painted on page 3/.test(c.outcome)), cards6.map((c) => c.outcome));
+    check('the goodbye is said and end_lesson closes the session', /Goodbye!/.test(r6.spoken) && !/Shall we go on/.test(r6.spoken) && r6.state.closed === true, [r6.spoken, r6.state.closed]);
+    // A mid-lesson page is held exactly as before.
+    const s9 = stub([words('Good, that is right. <board page>Present perfect</board> Now, how long have you worked there?')]);
+    const r9 = await runV2Turn({ session: bilingual, state: twoPages, studentSaid: 'I met a customer last week.', callModel: s9.call, boardPass: false, mathsCheck: false, nowMs: 300000 });
+    check('mid-lesson, two pages open: a new part\'s page is still held, with the offer in its place', !r9.toolCalls.some((c) => c.name === 'new_page') && r9.state.board.pages.length === 2 && /Shall we go on/.test(r9.spoken), [r9.toolCalls.map((c) => c.outcome), r9.spoken]);
+    // The clock's close window (end_lesson no longer refused): the summary page opens on a plain "yes".
+    const s10 = stub([closing(summary.replace('Goodbye!', 'See you next time!')), words('')]);
+    const r10 = await runV2Turn({ session: bilingual, state: twoPages, studentSaid: 'Yes, please.', callModel: s10.call, boardPass: false, mathsCheck: false, nowMs: 17 * 60000 });
+    check('in the last fifth of the time, the summary page opens on a plain "yes, please"', r10.state.board.pages[2]?.title === 'Summary' && r10.toolCalls.filter((c) => c.name === 'show_sentence').length === 2, r10.toolCalls.map((c) => `${c.name} ${c.outcome}`));
     const cmds6 = cards6.map((c) => mapFunctionCallToCommand(c.name, c.args) as unknown as Record<string, unknown>);
     check('the client gets them as showSentence cards', cmds6.every((c) => c?.action === 'showSentence') && cmds6[1]?.sentence === 'My role is to manage the sales team.', cmds6);
     const s7 = stub([words(`Well done today. <board sentence>Last week I met a customer from Osaka.</board> Goodbye!`)]);
