@@ -1,0 +1,103 @@
+19:45:27 open fixture=gdi-real-josh arm=v2 student=gdi-v2-audio6e-josh (audio student josh (16 clips), silent tutor voice)
+19:45:30 clicked start (1)
+19:45:38 TUTOR  Hello, Josh, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and we'll practise two grammar points: the present perfect for experience, and the past simple for finished events. Does that sound good to you?   [tools: annotate]
+19:45:59 STUDENT(clip #1 ok, 2.8 s) Yes.  — Affirmative response to tutor's readiness question
+19:46:07 HEARD  Yes.
+19:46:07 TUTOR  Great. First, a short, friendly conversation so I can see what you already can do. Please answer in English, and don't worry about mistakes.
+
+
+
+Can you tell me a little about your job? What do you do?   [tools: new_page]
+19:46:26 STUDENT(clip #2 ok, 5.6 s) I am a manager at a communications company.  — Directly answers 'What do you do?' with job title and company
+19:46:35 HEARD  I am a manager at a communications company.
+19:46:35 TUTOR  Thanks, that's clear. How many people are in your team?
+19:46:43 STUDENT(clip #6 misfit, 10.7 s) My main responsibilities at work are both the training division manager and to help with sales for the division.  — Question asks team size; learner describes responsibilities instead. Best available fit.
+19:46:56 HEARD  My main responsibilities at work are both the training division manager and to help with sales for the division.
+19:46:56 TUTOR  Got it, you lead the training division and also help with sales. Have you ever worked with an international customer? If so, can you tell me about the experience?
+19:47:12 STUDENT(clip #3 ok, 7.5 s) Yes, I have. I work with companies here in Japan and from all over the world.  — Directly answers the question about working with international customers
+19:47:23 HEARD  Yes, I have. I work with companies here in Japan and from all over the world.
+19:47:23 TUTOR  Thank you, that helps me a lot. Last question: what is one skill you'd like to improve in your English, and why is it important to you?
+19:47:36 STUDENT(clip #4 ok, 10.9 s) I'd like to improve my conversation with customers before meetings because I often don't know what to say.  — Directly answers the tutor's question about what skill Josh wants to improve and why it matters to him.
+19:47:58 HEARD  I'd like to improve my conversation with customers before meetings because I often don't know what to say.
+19:47:58 TUTOR  Thank you for those answers, Josh. I'll focus on making your sentences more accurate and your answers sound more natural.
+
+
+
+Let's start with how we talk about work. We explain our responsibilities and our experience. Here are two sentences that look similar but mean different things.
+
+
+
+Now, what a   [tools: new_page, show_table, set_working_level]
+19:48:22 STUDENT(clip #7 ok, 7.3 s) My main responsibilities at work are being the training division manager and helping with sales for the division.  — Tutor asks for main responsibilities; line 7 is the corrected version of line 6 (already used), providing the required a
+19:48:32 HEARD  My main responsibilities at work are being the training division manager and helping with sales for the division.
+19:48:32 TUTOR  Yes, that's right, and it's a clear answer about your job. Now let's look at the present perfect, the first grammar point.
+
+
+
+Shall we go on, or do you have a question first?
+19:48:49 STUDENT(clip #1 ok, 2.8 s) Yes.  — Yes/no readiness question; short ack appropriate
+19:48:56 HEARD  Yes.
+19:48:56 TUTOR  Let's begin with the present perfect: have or has, plus the past participle, for experience that started in the past and continues now.
+
+
+
+
+
+Here is a question for you to answer in English. Have you worked for your current company for a long time?
+
+   [tools: new_page, annotate, show_problem]
+19:49:19 STUDENT(clip #8 ok, 5.5 s) I work here for eleven year.  — Answers the question about how long he's worked at the company; first unused attempt in the series of three similar answ
+19:49:32 HEARD  I work here for 11 years.
+19:49:32 TUTOR  You said "I work here for 11 years." That's a good answer, but for a time that started in the past and continues now, we say "I have worked here for 11 years." We use have worked because you started in the past and you still work here.
+
+
+
+Can you say the full sentence once more?   [tools: show_sentence, annotate]
+19:49:54 STUDENT(clip #10 ok, 5.0 s) I have worked here for eleven years.  — Tutor asks learner to repeat the corrected sentence with 'have worked' and 'years' (plural)
+19:50:02 HEARD  I have worked here for 11 years.
+19:50:02 TUTOR  Yes, that's right: "I have worked here for 11 years." That part is done. Next is the past simple, for events that finished at a specific time. Shall we go on, or do you have a question first?
+19:50:20 STUDENT(clip #1 ok, 2.8 s) Yes.  — Yes/no readiness question; short ack appropriate
+19:50:26 HEARD  Yes.
+19:50:26 TUTOR  Past simple is next. We use it for something that finished at a specific time, like yesterday or last year.
+
+
+
+
+
+Now, answer this question in English. Did you attend any business events or exhibitions last year?
+
+   [tools: new_page, annotate, show_problem]
+19:50:45 STUDENT(clip #12 misfit, 1.6 s) わかりません。  — Learner doesn't understand the question; わかりません is the only remaining response that expresses this, though not in Englis
+19:50:49 HEARD  Okarimasu.
+19:50:49 TUTOR  Did you mean you're ready to answer the question about last year? Please go ahead in English when you are.
+19:51:00 STUDENT(clip #11 misfit, 4.3 s) I really like going to meet customers.  — No line directly answers the business events question; #11 is closest to a work-related response
+19:51:07 HEARD  I really like going to meet customers.
+19:51:07 TUTOR  "I really like going to meet customers" is a natural sentence, and it tells me you enjoy your work. Now, back to the question: did you attend any business events or exhibitions last year? Try starting with "Last year, I attended…".
+19:51:27 STUDENT(clip #13 misfit, 5.1 s) I have worked in my department for ten years.  — No direct answer to the past simple question about last year; closest available line about work activities
+19:51:36 HEARD  I have worked in my department for 10 years.
+19:51:36 TUTOR  Yes, that's right: "I have worked in my department for 10 years." You used have worked correctly for a time that continues now. Now, back to the past simple question: did you attend any business events or exhibitions last year? Try starting with "Last year, I attended…".   [tools: show_sentence]
+19:51:58 STUDENT(clip #14 misfit, 8.6 s) I schedule class for many teachers and teach.  — No line directly answers the past simple question about business events last year. Line 14 is next unused and relates to
+19:52:12 HEARD  I schedule class for many teachers and teach.
+19:52:12 TUTOR  That's useful to know, Josh: you schedule classes for many teachers. Now, please answer the question on the board about last year. Did you attend any business events or exhibitions?
+19:52:27 STUDENT(clip #5 misfit, 3.5 s) Do you want me to start now?  — Learner hasn't answered the repeated question about attending events last year; #5 is next unused line but doesn't fit t
+19:52:31 HEARD  Do you want me to start now?
+19:52:31 TUTOR  Yes, go ahead! Please answer the question on the board: did you attend any business events or exhibitions last year? Start with "Last year, I attended…" if you like.
+19:52:47 STUDENT(clip #9 misfit, 4.2 s) I have worked here for eleven year.  — Learner has not answered the business events question; #9 is next unused but doesn't fit. No better option available.
+19:52:55 HEARD  I have worked here for 11 year.
+19:52:55 TUTOR  Good, you used "have worked" correctly there. One small thing: we say "11 years," with an s. Now back to the past simple question on the board. Did you attend any business events or exhibitions last year?
+19:53:13 STUDENT(clip #15 misfit, 4.2 s) Okay, please stop. I would like to end the session for now.  — Learner has not answered the past simple question; line 15 is about ending session, but tutor is still asking the questi
+19:53:17 HEARD  Okay.
+19:53:17 TUTOR  Take your time, Josh. If it helps, start with a simple word: "Last year, I attended..." and finish it with one event, even a short one.
+19:53:21 HEARD  Please, I would like to end the session for now.
+19:53:21 TUTOR  Understood, Josh. Today you practised describing your work, and you used the present perfect correctly for "I have worked here for 11 years." Next time we'll look at the past simple and the conversation practice.
+
+
+
+
+
+
+
+お疲れさまでした。また次回お会いしましょう。   [tools: new_page, show_sentence, show_sentence]
+19:53:39 STUDENT(end) the tutor said goodbye
+19:53:39 audio: {"sttSockets":1,"sttSocketSeconds":469,"clipSeconds":92,"silentTtsReplies":64,"mic":{"plays":17,"gum":1,"buffers":94},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+19:53:39 waiting 35 s for the autosave

@@ -1,0 +1,2677 @@
+{
+  "fixture": "gdi-real-t2",
+  "arm": "v2",
+  "sessionId": "embed-1794859585055",
+  "startedAt": "2026-11-16T20:06:28.039Z",
+  "minutes": 17.103583333333333,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a recent project, using the present perfect for your experience and the past simple for finished events. We'll start with a short, friendly conversation so I can see your level. Does that sound good to you?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Affirmative response to tutor's readiness question"
+    },
+    {
+      "role": "tutor",
+      "text": "Great, let's begin. This is a short, friendly chat so I can see what you already can do. Please answer in English, and don't worry about mistakes.\n\nCan you tell me a little about your job? What do you do?"
+    },
+    {
+      "role": "student",
+      "text": "I, I work as admin at the company.",
+      "tag": "answer",
+      "clip": 3,
+      "fit": "ok",
+      "heard": "I, I work as admin at the company.",
+      "why": "Answers the tutor's question about what the learner does at work"
+    },
+    {
+      "role": "tutor",
+      "text": "Admin work keeps an office running well. What kind of admin tasks do you do most days?"
+    },
+    {
+      "role": "student",
+      "text": "I'm checking emails and sorting out some paperwork.",
+      "tag": "answer",
+      "clip": 9,
+      "fit": "ok",
+      "heard": "I'm checking emails. and sorting out some paperwork.",
+      "why": "Directly answers what admin tasks the learner does most days"
+    },
+    {
+      "role": "tutor",
+      "text": "That sounds like a busy and important job. Have you ever worked with an international customer? If so, can you tell me about the experience?"
+    },
+    {
+      "role": "student",
+      "text": "Please, could you please rephrase that, please?",
+      "tag": "answer",
+      "clip": 2,
+      "fit": "misfit",
+      "heard": "Please, could you please rephrase that, please?",
+      "why": "Learner hasn't answered the yes/no question yet; #2 is a request to rephrase, but tutor's question was clear. However, n"
+    },
+    {
+      "role": "tutor",
+      "text": "Of course. Simpler: have you ever worked with a customer from another country?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have.",
+      "tag": "answer",
+      "clip": 17,
+      "fit": "ok",
+      "heard": "Yes, I have.",
+      "why": "Answers yes/no question 'have you ever worked with a customer from another country?'"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you. Can you tell me about that experience? What did you do with that customer?"
+    },
+    {
+      "role": "student",
+      "text": "How to communicate with the non in not the Japanese people with not the with people with the in and not from Japan.",
+      "tag": "answer",
+      "clip": 14,
+      "fit": "misfit",
+      "heard": "How to communicate with the non in not the Japanese people with not the with people with the in and not from Japan.",
+      "why": "Learner attempts to describe communication with non-Japanese people, closest available response to the tutor's question "
+    },
+    {
+      "role": "tutor",
+      "text": "Sorry, I didn't catch that. Did you ask how to communicate with people who are not from Japan? Please tell me in a few words."
+    },
+    {
+      "role": "student",
+      "text": "Could you explain that in Japanese?",
+      "tag": "answer",
+      "clip": 4,
+      "fit": "ok",
+      "heard": "Could you explain that in Japanese?",
+      "why": "Learner is stuck and asks for explanation in Japanese as per their pattern"
+    },
+    {
+      "role": "tutor",
+      "text": "海外のお客様と仕事をしたことがあるか、という質問です。あった場合は、その経験について少し話してください。\n\nPlease try to answer in English. You can start with: \"Yes, I have worked with…\"\n\nDoes that make sense?"
+    },
+    {
+      "role": "student",
+      "text": "I won't uh improve my speaking skill because I often attend a meeting.",
+      "tag": "answer",
+      "clip": 5,
+      "fit": "misfit",
+      "heard": "that use English.",
+      "why": "Learner should answer the tutor's question about working with overseas customers, but #5 is about speaking skill and mee"
+    },
+    {
+      "role": "tutor",
+      "text": "Of course, I'll use English only. Please just tell me one thing: have you worked with a customer from another country?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have.",
+      "tag": "answer",
+      "clip": 17,
+      "fit": "ok",
+      "heard": "Yes, I have.",
+      "why": "Answering yes/no question 'have you worked with a customer from another country?' with short ack 'Yes, I have.'"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you. What was it like working with that customer? Please tell me a little about it."
+    },
+    {
+      "role": "student",
+      "text": "Uh, what do you mean?",
+      "tag": "answer",
+      "clip": 8,
+      "fit": "misfit",
+      "heard": "Uh, what do you mean?",
+      "why": "Learner doesn't understand the question; #8 'Uh, what do you mean?' is closest available response"
+    },
+    {
+      "role": "tutor",
+      "text": "Sorry, that was unclear. Please tell me one thing you did with that customer. For example, did you send emails, have meetings, or answer questions?"
+    },
+    {
+      "role": "student",
+      "text": "I do emails and sorting out some documents.",
+      "tag": "answer",
+      "clip": 10,
+      "fit": "ok",
+      "heard": "I do emails and sorting out some documents.",
+      "why": "Learner describes a specific task done with the customer (emails and documents), answering the tutor's request for one t"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, that's clear. Today we'll make your sentences more accurate and natural, starting with talking about your job.\n\n\n\nShall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Yes/no readiness question, short ack appropriate"
+    },
+    {
+      "role": "tutor",
+      "text": "では、仕事について話す練習をしましょう。まず、簡単な文から始めます。\n\n\n\n\n\nNow it's your turn. Please say one sentence about your job, starting with \"I work in…\".\n\nI joined my company three years ago."
+    },
+    {
+      "role": "student",
+      "text": "I do accounting and some admin work.",
+      "tag": "answer",
+      "clip": 7,
+      "fit": "ok",
+      "heard": "I do accounting and some admin work.",
+      "why": "Answers the tutor's request to say a sentence about the job, describing work duties"
+    },
+    {
+      "role": "tutor",
+      "text": "That's a clear sentence. Accounting and admin work are good skills to have in an office.\n\nHow long have you worked at your company? Please say a number of years."
+    },
+    {
+      "role": "student",
+      "text": "I have worked for the current company for ten years.",
+      "tag": "answer",
+      "clip": 11,
+      "fit": "ok",
+      "heard": "I have worked for the current company for 10 years.",
+      "why": "Tutor asks how long learner worked at company; #11 directly answers with 'ten years'"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's right. You used \"have worked\" because you started in the past and you still work there now.\n\n\n\nThis part is done. Next is the present perfect, which we use for experience that started in the past and continues now. Shall we go on?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Readiness question; learner gives short ack to move forward"
+    },
+    {
+      "role": "tutor",
+      "text": "現在完了は、過去に始まって今も続いている経験に使います。形は have か has に過去分詞を付けます。\n\n\n\n\n\nNow it's your turn. Please say one sentence starting with \"I have worked…\", about your company.\n\nI have worked with customers from other countries."
+    },
+    {
+      "role": "student",
+      "text": "I have worked for my current company for ten years.",
+      "tag": "answer",
+      "clip": 12,
+      "fit": "ok",
+      "heard": "I have worked for my current company for 10 years.",
+      "why": "Learner repeats the sentence about working at current company for ten years, fitting the tutor's request for a present p"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's right. You used \"have worked\" for something that started in the past and continues now.\n\nThis part is done. Next is the past simple, which we use for finished events at a specific time, like \"last year.\" Shall we go on?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Readiness question 'Shall we go on?' gets short ack"
+    },
+    {
+      "role": "tutor",
+      "text": "過去の終わった出来事には過去形を使います。「last year」や「in 2022」のような、いつかがはっきりしている時に使います。\n\n\n\n\n\nNow it's your turn. Please say one sentence about something you did last year, using a past verb.\n\nI attended an exhibition last year."
+    },
+    {
+      "role": "student",
+      "text": "I finished accounting yesterday.",
+      "tag": "answer",
+      "clip": 27,
+      "fit": "ok",
+      "heard": "I finished accounting yesterday.",
+      "why": "Learner responds with a past simple sentence about a finished action, matching the tutor's request for a sentence about "
+    },
+    {
+      "role": "tutor",
+      "text": "Good, \"I finished accounting yesterday\" is correct. \"Yesterday\" is a specific time, so we use the past simple \"finished.\"\n\n\n\nWhere did you study accounting? Please answer with one sentence that starts with \"I studied…\"."
+    },
+    {
+      "role": "student",
+      "text": "I don't really know.",
+      "tag": "answer",
+      "clip": 28,
+      "fit": "misfit",
+      "heard": "I don't really know.",
+      "why": "Learner doesn't have a direct answer about where they studied accounting. #28 'I don't really know' is the closest avail"
+    },
+    {
+      "role": "tutor",
+      "text": "That's fine, no problem. Let's make it easier: you can just say a school or university name, or \"I don't remember.\" Or try this, in English: \"I studied at…\"\n\nWhich one feels closer to your answer?"
+    },
+    {
+      "role": "student",
+      "text": "Could you repeat that, please?",
+      "tag": "answer",
+      "clip": 13,
+      "fit": "ok",
+      "heard": "Could you repeat that, please?",
+      "why": "Tutor's turn is long and unclear; learner asks for repetition"
+    },
+    {
+      "role": "tutor",
+      "text": "Sure. Please say this sentence: \"I studied at…\" and then the name of the school or university, or just say \"I studied at\" and stop."
+    },
+    {
+      "role": "student",
+      "text": "Could you repeat that, please?",
+      "tag": "answer",
+      "clip": 15,
+      "fit": "ok",
+      "heard": "Could you repeat that? please?",
+      "why": "Learner asks tutor to repeat again after tutor's long explanation"
+    },
+    {
+      "role": "tutor",
+      "text": "「I studied at」のあとに、学校の名前を言ってください。たとえば「I studied at Nagoya University.」です。\n\nPlease say: I studied at… and then the school name.\n\nDoes that make sense?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 16,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Readiness/confirmation question 'Does that make sense?' gets short ack"
+    },
+    {
+      "role": "tutor",
+      "text": "OK. Please say your own sentence now, starting with \"I studied at…\". You can use the name of any school or university."
+    },
+    {
+      "role": "student",
+      "text": "Please move on to the past simple.",
+      "tag": "answer",
+      "clip": 18,
+      "fit": "misfit",
+      "heard": "Please move on to the past. simple.",
+      "why": "Learner should answer the tutor's request to say 'I studied at...' but line 18 is about moving to past simple. No fittin"
+    },
+    {
+      "role": "tutor",
+      "text": "わかりました、学校の質問はここで終わりにします。次は、去年の出来事を使って過去形を練習しましょう。\n\n\n\nPlease answer in English.\n\nDid you attend any business events or exhibitions last year? Answer with one sentence, starting with \"I attended…\" or \"I didn't attend…\"."
+    },
+    {
+      "role": "student",
+      "text": "No.",
+      "tag": "answer",
+      "clip": 19,
+      "fit": "ok",
+      "heard": "No. / No, I didn't.",
+      "why": "Learner answers 'No' to yes/no question about attending business events"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you. Please say a full sentence, starting with \"I didn't attend…\". 「No, I didn't.」は正しい過去形の否定です。「didn't」の後ろは動詞の原形を使います。\n\nNow please say the full sentence: \"I didn't attend any exhibitions last year.\"\n\nDoes that make sense so far?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Readiness question - learner confirms understanding before proceeding"
+    },
+    {
+      "role": "tutor",
+      "text": "では、その文を英語で言ってみましょう。「I didn't attend any exhibitions last year.」です。\n\nDoes that make sense?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Short ack to 'Does that make sense?' question"
+    },
+    {
+      "role": "tutor",
+      "text": "Please say the full sentence now: \"I didn't attend any exhibitions last year.\""
+    },
+    {
+      "role": "student",
+      "text": "No. I didn't.",
+      "tag": "answer",
+      "clip": 21,
+      "fit": "ok",
+      "heard": "No. I didn't.",
+      "why": "Learner says 'No. I didn't.' as a full past simple negative sentence in response to tutor's request to say the full sent"
+    },
+    {
+      "role": "tutor",
+      "text": "「No, I didn't.」で大丈夫です。次は「didn't」のあとに「attend」を続けます。\n\n\n\nNow please say that full sentence once.\n\nI didn't attend any exhibitions last year.\n\nAre you with me so far?"
+    },
+    {
+      "role": "student",
+      "text": "No, I have not.",
+      "tag": "answer",
+      "clip": 22,
+      "fit": "misfit",
+      "heard": "No, I have not.",
+      "why": "Learner should attempt the full sentence, but #22 is a short ack. No better option available; this is closest to a readi"
+    },
+    {
+      "role": "tutor",
+      "text": "「No, I have not.」は、「last year」という過去の特定の時間には合いません。過去形の「No, I didn't.」を使いましょう。\n\n\n\nPlease say that full sentence once.\n\nDoes that make sense so far?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Short ack to 'Does that make sense so far?' - learner confirms understanding"
+    },
+    {
+      "role": "tutor",
+      "text": "Good. Now say the whole sentence once: \"I didn't attend any exhibitions last year.\""
+    },
+    {
+      "role": "student",
+      "text": "What do you mean by important project?",
+      "tag": "answer",
+      "clip": 23,
+      "fit": "misfit",
+      "heard": "What do you mean by 'important project'?",
+      "why": "Learner should repeat the sentence, but #23 is a question. No exact repeat line available; picking earliest unused line "
+    },
+    {
+      "role": "tutor",
+      "text": "An important project is a piece of work that matters a lot to your company or to you, for example a big task that took a long time. 大切な仕事、という意味です。\n\nDid that answer your question?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Short ack to 'Did that answer your question?' - learner confirms understanding"
+    },
+    {
+      "role": "tutor",
+      "text": "Good. Now let's go back to the sentence. Please say it once: \"I didn't attend any exhibitions last year.\""
+    },
+    {
+      "role": "student",
+      "text": "No, I have not.",
+      "tag": "answer",
+      "clip": 24,
+      "fit": "misfit",
+      "heard": "No, I have not.",
+      "why": "Learner should repeat the sentence, but #24 is 'No, I have not.' - closest available line that shows engagement"
+    },
+    {
+      "role": "tutor",
+      "text": "Let's make it smaller. Please say just this part: \"I didn't attend.\"\n\n「I didn't attend.」だけ言ってみてください。"
+    },
+    {
+      "role": "student",
+      "text": "No, I have not.",
+      "tag": "answer",
+      "clip": 25,
+      "fit": "misfit",
+      "heard": "No, I have not.",
+      "why": "Learner should repeat the phrase, but #25 is a negative answer. No better fit available; closest structural response."
+    },
+    {
+      "role": "tutor",
+      "text": "ゆっくりで大丈夫です。まず私が言います。 \"I didn't attend.\"\n\nNow you say it: \"I didn't attend.\"\n\nAre you with me so far? 「No, I have not.」は、去年の特定の時間には使いません。正しい文はこれです。「No, I didn't attend any exhibitions last year.」「have not」ではなく「didn't」を使います。\n\nThis part is done. Next is a short conversation about your work. Shall we go on?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Readiness question 'Shall we go on?' gets short ack"
+    },
+    {
+      "role": "tutor",
+      "text": "では、仕事の話を少ししましょう。\n\n\n\nPlease answer in English. Try: \"I worked on a project to…\""
+    },
+    {
+      "role": "student",
+      "text": "Could you give me some more example of past simple?",
+      "tag": "answer",
+      "clip": 26,
+      "fit": "misfit",
+      "heard": "Could you give me some more example of past simple?",
+      "why": "Learner asks for examples instead of answering the prompt about a work project"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, here are a few more. Listen, then try one about yourself.\n\n\n\n\n\nNow say one sentence about something you did last week, starting with \"I\".\n\nI joined my company three years ago."
+    },
+    {
+      "role": "student",
+      "text": "The year in tax system corporation.",
+      "tag": "answer",
+      "clip": 29,
+      "fit": "misfit",
+      "heard": "The year and tax. system comparison.",
+      "why": "Learner struggles to form past simple about work; #29 is about tax system but doesn't start with 'I' as requested"
+    },
+    {
+      "role": "tutor",
+      "text": "Sorry, I didn't understand that. Did you want to say something about the sentence, or about the project question? Please tell me in a few words."
+    },
+    {
+      "role": "student",
+      "text": "because we implemented a new system for tax system this year and I was a successfully finished all the new taxes on time.",
+      "tag": "answer",
+      "clip": 30,
+      "fit": "ok",
+      "heard": "Because we implemented a new system for tax system this year and I was successfully finished all the new taxes on time.",
+      "why": "Learner attempts to answer the project question with a complete sentence about what they did, starting with 'I' as reque"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, that's a real project, and \"we implemented\" is correct. One change: you said \"I was successfully finished.\" We say \"I successfully finished.\"\n\n\n\nPlease say that sentence once.\n\nDoes that make sense?"
+    },
+    {
+      "role": "student",
+      "text": "I successfully finished the new tasks because we implemented the new tax system this year.",
+      "tag": "answer",
+      "clip": 32,
+      "fit": "ok",
+      "heard": "I successfully finished the new tasks because we implemented a new tax system this year.",
+      "why": "Tutor asks learner to say the corrected sentence. Line 32 is the corrected version with 'I successfully finished' as req"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's right. \"I successfully finished the new tasks\" is clear and correct.\n\nWhat was the hardest part of that project?"
+    },
+    {
+      "role": "student",
+      "text": "that that everything was new, that we didn't know them we we didn't have a manual to follow on.",
+      "tag": "answer",
+      "clip": 33,
+      "fit": "ok",
+      "heard": "that that everything was new, that we didn't know them we we didn't have a manual to follow on.",
+      "why": "Learner answers what was hardest about the project - the newness and lack of manual"
+    },
+    {
+      "role": "tutor",
+      "text": "Everything was new, and there was no manual to guide you. That is a strong point. One small change: we say \"to follow,\" not \"to follow on.\"\n\n\n\nPlease say that sentence once.\n\nDoes that make sense?"
+    },
+    {
+      "role": "student",
+      "text": "that I think successfully finished the new tasks because we implement the new system for tax. year in tax system.",
+      "tag": "answer",
+      "clip": 31,
+      "fit": "ok",
+      "heard": "that I think successfully finished the new tasks because we implement the new system for tax. year in tax system.",
+      "why": "Tutor asks learner to repeat the sentence about the project. Line #31 is the next unused line in sequence and contains r"
+    },
+    {
+      "role": "tutor",
+      "text": "You said \"we implement,\" but this happened this year, so we need the past form: \"we implemented.\" Please say the whole sentence once more.\n\n\n\nIs that clear, or shall I go over it again?"
+    },
+    {
+      "role": "student",
+      "text": "I don't really remember, but maybe helps from our accounting office staff.",
+      "tag": "answer",
+      "clip": 34,
+      "fit": "misfit",
+      "heard": "I don't really remember, but maybe helps from or accounting office staff.",
+      "why": "picked #32 (used or unknown) → earliest unused"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you for that. You can say it this way: \"We got help from the accounting office staff.\"\n\n\nToday you talked about your work, your accounting duties and a tax project. We practised two grammar points.\n\n\n\n\n\n\n\nWell done today. Your sentences about your company were clear. We didn't reach the pronunciation practice, so that's for next time. Keep using these two grammar points when you talk about your work. See you next time!"
+    }
+  ],
+  "events": [
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=60656 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=60656 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (voice)"
+    },
+    {
+      "type": "v2_opening_speech",
+      "message": "released 1636 ms after the tap; microphone live at 735 ms; 0 sentence(s) were waiting"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 1 of 4 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5328ms · first_sentence=2328ms · in=12275 out=828 cr=25564 cc=12734 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Does that sound good to you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 2 \"Level check\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3970ms · first_sentence=2137ms · in=12618 out=669 cr=38298 cc=724 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859620180 — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"What do you do?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1885ms · first_sentence=1190ms · in=526 out=337 cr=19511 cc=356 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859653821 — \"What do you do?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What kind of admin tasks do you do most days?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What kind of admin tasks do you do most days?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What kind of admin tasks do you do most days?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"What kind of admin tasks do you do most days?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1366ms · first_sentence=1208ms · in=566 out=161 cr=19867 cc=220 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859675217 — \"What kind of admin tasks do you do most days?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 873ms · first_sentence=638ms · in=565 out=65 cr=20087 cc=56 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859696657 — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Simpler: have you ever worked with a customer from another c\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Simpler: have you ever worked with a customer from another c\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Simpler: have you ever worked with a customer from another c\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Simpler: have you ever worked with a customer from another c\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1810ms · first_sentence=1094ms · in=562 out=303 cr=20143 cc=34 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859711497 — \"Simpler: have you ever worked with a customer from another c\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What did you do with that customer?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What did you do with that customer?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"What did you do with that customer?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3369ms · first_sentence=2811ms · in=559 out=531 cr=20177 cc=226 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859739847 — \"What did you do with that customer?\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please tell me in a few words.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please tell me in a few words.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Please tell me in a few words.\""
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"level-check\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3805ms · first_sentence=2670ms · in=532 out=672 cr=20403 cc=253 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859760145 — \"Please tell me in a few words.\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that make sense?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that make sense?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Does that make sense?\""
+    },
+    {
+      "type": "v2_turn_cut",
+      "message": "0 words kept, 0 tool call(s)"
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Does that make sense?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2749ms · first_sentence=2013ms · in=556 out=485 cr=20938 cc=6 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859788145 — \"Does that make sense?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Please just tell me one thing: have you worked with a custom\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please just tell me one thing: have you worked with a custom\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Please just tell me one thing: have you worked with a custom\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Please just tell me one thing: have you worked with a custom\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2063ms · first_sentence=1467ms · in=516 out=306 cr=20944 cc=223 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859808815 — \"Please just tell me one thing: have you worked with a custom\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please tell me a little about it.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please tell me a little about it.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"Please tell me a little about it.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2731ms · first_sentence=2081ms · in=511 out=481 cr=21167 cc=212 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859822817 — \"Please tell me a little about it.\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"For example, did you send emails, have meetings, or answer q\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"For example, did you send emails, have meetings, or answer q\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"For example, did you send emails, have meetings, or answer q\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"For example, did you send emails, have meetings, or answer q\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → not opened yet: the student is asked first"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_working_level → Level set to beginner. Do not tell the learner which level you set; just continue the lesson."
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "working_level_set",
+      "message": "beginner (v2)"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 9336ms · first_sentence=6862ms · in=549 out=1801 cr=21379 cc=272 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859844677 — \"For example, did you send emails, have meetings, or answer q\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 3 \"Your job\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 0 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5878ms · first_sentence=2878ms · in=12873 out=909 cr=40595 cc=3905 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859872680 — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"What is your job or position at your company?\" → \"Please say one sentence about your job, starting with \"I wor\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say one sentence about your job, starting with \"I wor\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Please say one sentence about your job, starting with \"I wor\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Please say one sentence about your job, starting with \"I wor\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5497ms · first_sentence=3034ms · in=12692 out=716 cr=44500 cc=362 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859896302 — \"Please say one sentence about your job, starting with \"I wor\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please say a number of years.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say a number of years.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Please say a number of years.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 0 started — held"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Please say a number of years.\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5786ms · first_sentence=3044ms · in=12810 out=878 cr=44862 cc=128 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Shall we go on?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 4 \"Present perfect\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 4 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 1 of 2 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 4 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 2 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7630ms · first_sentence=1968ms · in=12853 out=1234 cr=44990 cc=246 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794859952234 — \"Shall we go on?\""
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"What other experiences have you had working with internation\" → \"Please say one sentence starting with \"I have worked…\", abou\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say one sentence starting with \"I have worked…\", abou\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Please say one sentence starting with \"I have worked…\", abou\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Please say one sentence starting with \"I have worked…\", abou\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2866ms · first_sentence=1689ms · in=12965 out=298 cr=45236 cc=1132 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Shall we go on?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 5 \"Past simple\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"topic-intro\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 1 of 2 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → not painted again: already on the board (page 5); the board has scrolled back to it · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7684ms · first_sentence=2213ms · in=12982 out=1355 cr=46368 cc=148 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860004450 — \"Shall we go on?\""
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"What did you see at the exhibition?\" → \"Please say one sentence about something you did last year, u\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say one sentence about something you did last year, u\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Please say one sentence about something you did last year, u\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Please say one sentence about something you did last year, u\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5437ms · first_sentence=3016ms · in=13026 out=886 cr=46516 cc=1398 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"I studied accounting where?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"I studied accounting where?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"I studied accounting where?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"I studied accounting where?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 4 of 4 (stretch from 4), 2 started — held"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5145ms · first_sentence=713ms · in=12979 out=652 cr=47914 cc=984 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860055312 — \"I studied accounting where?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Which one feels closer to your answer?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Which one feels closer to your answer?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Which one feels closer to your answer?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1028ms · first_sentence=761ms · in=692 out=44 cr=24449 cc=113 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860079899 — \"Which one feels closer to your answer?\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please say this sentence: \"I studied at…\" and then the name \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say this sentence: \"I studied at…\" and then the name \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Please say this sentence: \"I studied at…\" and then the name \""
+    },
+    {
+      "type": "tts_sentence_split",
+      "message": "2 parts: \"I studied at.\" | \"のあとに、学校の名前を言ってください。\""
+    },
+    {
+      "type": "tts_sentence_split",
+      "message": "3 parts: \"たとえば\" | \"I studied at Nagoya University\" | \"です。\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1916ms · first_sentence=1654ms · in=746 out=204 cr=24562 cc=56 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860097641 — \"Please say this sentence: \"I studied at…\" and then the name \""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that make sense?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that make sense?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Does that make sense?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2713ms · first_sentence=1654ms · in=695 out=429 cr=24618 cc=73 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860115400 — \"Does that make sense?\""
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"I studied at the University of Cambridge.\" → \"Please say your own sentence now, starting with \"I studied a\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say your own sentence now, starting with \"I studied a\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Please say your own sentence now, starting with \"I studied a\""
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"past-simple\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_problem: inline, with sentence 2 of 2 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2706ms · first_sentence=2254ms · in=720 out=419 cr=24691 cc=299 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1656ms · first_sentence=1645ms · in=770 out=178 cr=24990 cc=163 · v2"
+    },
+    {
+      "type": "v2_bargein_pause",
+      "message": "No"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please say a full sentence, starting with \"I didn't attend…\"\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say a full sentence, starting with \"I didn't attend…\"\""
+    },
+    {
+      "type": "v2_bargein",
+      "message": "spoke over the tutor"
+    },
+    {
+      "type": "v2_unheard_trimmed",
+      "message": "2 sentence(s) not fully heard; the record keeps 0"
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Please say a full sentence, starting with \"I didn't attend…\"\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Please say a full sentence, starting with \"I didn't attend…\"\""
+    },
+    {
+      "type": "tts_sentence_split",
+      "message": "2 parts: \"No, I didn't.\" | \"は正しい過去形の否定です。\""
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3308ms · first_sentence=1813ms · in=743 out=627 cr=25153 cc=24 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860158414 — \"Please say a full sentence, starting with \"I didn't attend…\"\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that make sense so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that make sense so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Does that make sense so far?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tts_sentence_split",
+      "message": "2 parts: \"I didn't attend any exhibition\" | \"です。\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2308ms · first_sentence=2016ms · in=812 out=338 cr=25177 cc=478 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860175661 — \"Does that make sense so far?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that make sense?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that make sense?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Does that make sense?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1414ms · first_sentence=1154ms · in=793 out=192 cr=25655 cc=148 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860188181 — \"Does that make sense?\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please say the full sentence now: \"I didn't attend any exhib\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say the full sentence now: \"I didn't attend any exhib\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Please say the full sentence now: \"I didn't attend any exhib\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Please say the full sentence now: \"I didn't attend any exhib\""
+    },
+    {
+      "type": "tts_sentence_split",
+      "message": "2 parts: \"No, I didn't.\" | \"で大丈夫です。\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 5 · with \"「didn't」のあとに\""
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: sentence 3 of 5, 4 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 8173ms · first_sentence=2596ms · in=13213 out=1447 cr=44747 cc=7115 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860203318 — \"Please say the full sentence now: \"I didn't attend any exhib\""
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Are you with me so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Are you with me so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Are you with me so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Are you with me so far?\""
+    },
+    {
+      "type": "tts_sentence_split",
+      "message": "2 parts: \"No, I have not.\" | \"は、「last year」という過去の特定の時間には合いませ\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → not painted again: already on the board (page 5); the board has scrolled back to it · inline"
+    },
+    {
+      "type": "tts_sentence_split",
+      "message": "3 parts: \"過去形の\" | \"No, I didn't.\" | \"を使いましょう。\""
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3027ms · first_sentence=2253ms · in=922 out=512 cr=25931 cc=441 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860226358 — \"Are you with me so far?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that make sense so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that make sense so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Does that make sense so far?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1520ms · first_sentence=1377ms · in=894 out=164 cr=26372 cc=224 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860243943 — \"Does that make sense so far?\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Now say the whole sentence once: \"I didn't attend any exhibi\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Now say the whole sentence once: \"I didn't attend any exhibi\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"Now say the whole sentence once: \"I didn't attend any exhibi\""
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 5 · with \"An important project is\""
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: sentence 1 of 3, 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4887ms · first_sentence=2804ms · in=13397 out=609 cr=52527 cc=757 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860258100 — \"Now say the whole sentence once: \"I didn't attend any exhibi\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Did that answer your question?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Did that answer your question?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Did that answer your question?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3003ms · first_sentence=2010ms · in=932 out=558 cr=26642 cc=108 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860283045 — \"Did that answer your question?\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please say it once: \"I didn't attend any exhibitions last ye\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say it once: \"I didn't attend any exhibitions last ye\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Please say it once: \"I didn't attend any exhibitions last ye\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Please say it once: \"I didn't attend any exhibitions last ye\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tts_sentence_split",
+      "message": "2 parts: \"I didn't attend.\" | \"だけ言ってみてください。\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3106ms · first_sentence=1941ms · in=941 out=567 cr=26750 cc=330 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860300285 — \"Please say it once: \"I didn't attend any exhibitions last ye\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please say just this part: \"I didn't attend.\"\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say just this part: \"I didn't attend.\"\""
+    },
+    {
+      "type": "idle_nudge_v2",
+      "message": "2s of silence"
+    },
+    {
+      "type": "v2_bargein_pause",
+      "message": "No"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3453ms · first_sentence=2486ms · in=995 out=623 cr=27080 cc=348 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860311168 — \"Please say just this part: \"I didn't attend.\"\""
+    },
+    {
+      "type": "v2_bargein",
+      "message": "spoke over the tutor"
+    },
+    {
+      "type": "v2_unheard_trimmed",
+      "message": "4 sentence(s) not fully heard; the record keeps 1"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Are you with me so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Are you with me so far?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Are you with me so far?\""
+    },
+    {
+      "type": "tts_sentence_split",
+      "message": "2 parts: \"No, I have not.\" | \"は、去年の特定の時間には使いません。\""
+    },
+    {
+      "type": "tts_sentence_split",
+      "message": "2 parts: \"No, I didn't attend any exhibi\" | \"「have not」ではなく「didn't」を使います。\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5235ms · first_sentence=4177ms · in=1015 out=1099 cr=27428 cc=328 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860314793 — \"Are you with me so far?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Shall we go on?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 6 \"Conversation\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_problem: inline, with sentence 1 of 1 (stretch from 1), 0 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5114ms · first_sentence=1975ms · in=13493 out=875 cr=54398 cc=1822 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3211ms · first_sentence=834ms · in=13643 out=358 cr=56220 cc=1000 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Now say one sentence about something you did last week, star\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Now say one sentence about something you did last week, star\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Now say one sentence about something you did last week, star\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Now say one sentence about something you did last week, star\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2721ms · first_sentence=1892ms · in=953 out=488 cr=28610 cc=189 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860384109 — \"Now say one sentence about something you did last week, star\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please tell me in a few words.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please tell me in a few words.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Please tell me in a few words.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Please tell me in a few words.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7403ms · first_sentence=4403ms · in=13730 out=1187 cr=57409 cc=929 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860411415 — \"Please tell me in a few words.\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that make sense?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that make sense?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Does that make sense?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2264ms · first_sentence=2246ms · in=1100 out=329 cr=29169 cc=147 · v2"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Does that make sense?\""
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What was the hardest part of that project?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What was the hardest part of that project?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What was the hardest part of that project?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"What was the hardest part of that project?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6643ms · first_sentence=2148ms · in=13696 out=1060 cr=58485 cc=291 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860483330 — \"What was the hardest part of that project?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that make sense?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that make sense?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Does that make sense?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 0 started — held"
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Does that make sense?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5328ms · first_sentence=2965ms · in=13853 out=763 cr=58776 cc=970 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860538407 — \"Does that make sense?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Is that clear, or shall I go over it again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Is that clear, or shall I go over it again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Is that clear, or shall I go over it again?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 7 \"Summary\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 2 (stretch from 1), 0 started — held"
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Is that clear, or shall I go over it again?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 7 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 3 of 4 (stretch from 3), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 3 of 4 (stretch from 3), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 3 of 4 (stretch from 3), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 3 of 4 (stretch from 3), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "end_lesson → the session is ending"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 10981ms · first_sentence=8535ms · in=1205 out=2185 cr=29873 cc=141 · v2"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "end_lesson"
+    },
+    {
+      "type": "practice_draft_upserted",
+      "message": "lo=[gdi.work-projects.conversation] trigger=close_tool status=200 (v2)"
+    },
+    {
+      "type": "v2_practice_assign",
+      "message": "finalize status=200"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "v2_profile_commit",
+      "message": "status=200 gaps=2 mastery=[] evidence=0 turns=87"
+    }
+  ],
+  "estimatedCost": 0.0614,
+  "endedBy": "tutor_close",
+  "audio": {
+    "sttSockets": 1,
+    "sttSocketSeconds": 994,
+    "clipSeconds": 217,
+    "silentTtsReplies": 175,
+    "mic": {
+      "plays": 41,
+      "gum": 1,
+      "buffers": 245
+    },
+    "otherSockets": [
+      "ws://localhost:3021/_next/hmr",
+      "wss://api.openai.com/v1/realtime"
+    ],
+    "picks": [
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Affirmative response to tutor's readiness question",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1
+      },
+      {
+        "n": 3,
+        "fit": "ok",
+        "why": "Answers the tutor's question about what the learner does at work",
+        "live": "I, I work as admin at the company.",
+        "heard": "I, I work as admin at the company.",
+        "sec": 7.75
+      },
+      {
+        "n": 9,
+        "fit": "ok",
+        "why": "Directly answers what admin tasks the learner does most days",
+        "live": "I'm checking emails and sorting out some paperwork.",
+        "heard": "I'm checking emails. and sorting out some paperwork.",
+        "sec": 7.7
+      },
+      {
+        "n": 2,
+        "fit": "misfit",
+        "why": "Learner hasn't answered the yes/no question yet; #2 is a request to rephrase, but tutor's question was clear. However, n",
+        "live": "Please, could you please rephrase that, please?",
+        "heard": "Please, could you please rephrase that, please?",
+        "sec": 4.95
+      },
+      {
+        "n": 17,
+        "fit": "ok",
+        "why": "Answers yes/no question 'have you ever worked with a customer from another country?'",
+        "live": "Yes, I have.",
+        "heard": "Yes, I have.",
+        "sec": 2.45
+      },
+      {
+        "n": 14,
+        "fit": "misfit",
+        "why": "Learner attempts to describe communication with non-Japanese people, closest available response to the tutor's question ",
+        "live": "How to communicate with the non in not the Japanese people with not the with people with the in and not from Japan.",
+        "heard": "How to communicate with the non in not the Japanese people with not the with people with the in and not from Japan.",
+        "sec": 16.55
+      },
+      {
+        "n": 4,
+        "fit": "ok",
+        "why": "Learner is stuck and asks for explanation in Japanese as per their pattern",
+        "live": "Could you explain that in Japanese?",
+        "heard": "Could you explain that in Japanese?",
+        "sec": 3.15
+      },
+      {
+        "n": 5,
+        "fit": "misfit",
+        "why": "Learner should answer the tutor's question about working with overseas customers, but #5 is about speaking skill and mee",
+        "live": "I won't uh improve my speaking skill because I often attend a meeting.",
+        "heard": "that use English.",
+        "sec": 11.35
+      },
+      {
+        "n": 17,
+        "fit": "ok",
+        "why": "Answering yes/no question 'have you worked with a customer from another country?' with short ack 'Yes, I have.'",
+        "live": "Yes, I have.",
+        "heard": "Yes, I have.",
+        "sec": 2.45
+      },
+      {
+        "n": 8,
+        "fit": "misfit",
+        "why": "Learner doesn't understand the question; #8 'Uh, what do you mean?' is closest available response",
+        "live": "Uh, what do you mean?",
+        "heard": "Uh, what do you mean?",
+        "sec": 1.95
+      },
+      {
+        "n": 10,
+        "fit": "ok",
+        "why": "Learner describes a specific task done with the customer (emails and documents), answering the tutor's request for one t",
+        "live": "I do emails and sorting out some documents.",
+        "heard": "I do emails and sorting out some documents.",
+        "sec": 5.45
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Yes/no readiness question, short ack appropriate",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1
+      },
+      {
+        "n": 7,
+        "fit": "ok",
+        "why": "Answers the tutor's request to say a sentence about the job, describing work duties",
+        "live": "I do accounting and some admin work.",
+        "heard": "I do accounting and some admin work.",
+        "sec": 4.05
+      },
+      {
+        "n": 11,
+        "fit": "ok",
+        "why": "Tutor asks how long learner worked at company; #11 directly answers with 'ten years'",
+        "live": "I have worked for the current company for ten years.",
+        "heard": "I have worked for the current company for 10 years.",
+        "sec": 5.7
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Readiness question; learner gives short ack to move forward",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1
+      },
+      {
+        "n": 12,
+        "fit": "ok",
+        "why": "Learner repeats the sentence about working at current company for ten years, fitting the tutor's request for a present p",
+        "live": "I have worked for my current company for ten years.",
+        "heard": "I have worked for my current company for 10 years.",
+        "sec": 6.05
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Readiness question 'Shall we go on?' gets short ack",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1
+      },
+      {
+        "n": 27,
+        "fit": "ok",
+        "why": "Learner responds with a past simple sentence about a finished action, matching the tutor's request for a sentence about ",
+        "live": "I finished accounting yesterday.",
+        "heard": "I finished accounting yesterday.",
+        "sec": 3.35
+      },
+      {
+        "n": 28,
+        "fit": "misfit",
+        "why": "Learner doesn't have a direct answer about where they studied accounting. #28 'I don't really know' is the closest avail",
+        "live": "I don't really know.",
+        "heard": "I don't really know.",
+        "sec": 4.8
+      },
+      {
+        "n": 13,
+        "fit": "ok",
+        "why": "Tutor's turn is long and unclear; learner asks for repetition",
+        "live": "Could you repeat that, please?",
+        "heard": "Could you repeat that, please?",
+        "sec": 2
+      },
+      {
+        "n": 15,
+        "fit": "ok",
+        "why": "Learner asks tutor to repeat again after tutor's long explanation",
+        "live": "Could you repeat that, please?",
+        "heard": "Could you repeat that? please?",
+        "sec": 2.4
+      },
+      {
+        "n": 16,
+        "fit": "ok",
+        "why": "Readiness/confirmation question 'Does that make sense?' gets short ack",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1.4
+      },
+      {
+        "n": 18,
+        "fit": "misfit",
+        "why": "Learner should answer the tutor's request to say 'I studied at...' but line 18 is about moving to past simple. No fittin",
+        "live": "Please move on to the past simple.",
+        "heard": "Please move on to the past. simple.",
+        "sec": 2.9
+      },
+      {
+        "n": 19,
+        "fit": "ok",
+        "why": "Learner answers 'No' to yes/no question about attending business events",
+        "live": "No.",
+        "heard": "No. / No, I didn't.",
+        "sec": 3.65
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Readiness question - learner confirms understanding before proceeding",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Short ack to 'Does that make sense?' question",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1
+      },
+      {
+        "n": 21,
+        "fit": "ok",
+        "why": "Learner says 'No. I didn't.' as a full past simple negative sentence in response to tutor's request to say the full sent",
+        "live": "No. I didn't.",
+        "heard": "No. I didn't.",
+        "sec": 3.65
+      },
+      {
+        "n": 22,
+        "fit": "misfit",
+        "why": "Learner should attempt the full sentence, but #22 is a short ack. No better option available; this is closest to a readi",
+        "live": "No, I have not.",
+        "heard": "No, I have not.",
+        "sec": 2.65
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Short ack to 'Does that make sense so far?' - learner confirms understanding",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1
+      },
+      {
+        "n": 23,
+        "fit": "misfit",
+        "why": "Learner should repeat the sentence, but #23 is a question. No exact repeat line available; picking earliest unused line ",
+        "live": "What do you mean by important project?",
+        "heard": "What do you mean by 'important project'?",
+        "sec": 3.45
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Short ack to 'Did that answer your question?' - learner confirms understanding",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1
+      },
+      {
+        "n": 24,
+        "fit": "misfit",
+        "why": "Learner should repeat the sentence, but #24 is 'No, I have not.' - closest available line that shows engagement",
+        "live": "No, I have not.",
+        "heard": "No, I have not.",
+        "sec": 2.1
+      },
+      {
+        "n": 25,
+        "fit": "misfit",
+        "why": "Learner should repeat the phrase, but #25 is a negative answer. No better fit available; closest structural response.",
+        "live": "No, I have not.",
+        "heard": "No, I have not.",
+        "sec": 1.8
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Readiness question 'Shall we go on?' gets short ack",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1
+      },
+      {
+        "n": 26,
+        "fit": "misfit",
+        "why": "Learner asks for examples instead of answering the prompt about a work project",
+        "live": "Could you give me some more example of past simple?",
+        "heard": "Could you give me some more example of past simple?",
+        "sec": 5.35
+      },
+      {
+        "n": 29,
+        "fit": "misfit",
+        "why": "Learner struggles to form past simple about work; #29 is about tax system but doesn't start with 'I' as requested",
+        "live": "The year in tax system corporation.",
+        "heard": "The year and tax. system comparison.",
+        "sec": 6.05
+      },
+      {
+        "n": 30,
+        "fit": "ok",
+        "why": "Learner attempts to answer the project question with a complete sentence about what they did, starting with 'I' as reque",
+        "live": "because we implemented a new system for tax system this year and I was a successfully finished all the new taxes on time.",
+        "heard": "Because we implemented a new system for tax system this year and I was successfully finished all the new taxes on time.",
+        "sec": 10.8
+      },
+      {
+        "n": 32,
+        "fit": "ok",
+        "why": "Tutor asks learner to say the corrected sentence. Line 32 is the corrected version with 'I successfully finished' as req",
+        "live": "I successfully finished the new tasks because we implemented the new tax system this year.",
+        "heard": "I successfully finished the new tasks because we implemented a new tax system this year.",
+        "sec": 20.15
+      },
+      {
+        "n": 33,
+        "fit": "ok",
+        "why": "Learner answers what was hardest about the project - the newness and lack of manual",
+        "live": "that that everything was new, that we didn't know them we we didn't have a manual to follow on.",
+        "heard": "that that everything was new, that we didn't know them we we didn't have a manual to follow on.",
+        "sec": 12.5
+      },
+      {
+        "n": 31,
+        "fit": "ok",
+        "why": "Tutor asks learner to repeat the sentence about the project. Line #31 is the next unused line in sequence and contains r",
+        "live": "that I think successfully finished the new tasks because we implement the new system for tax. year in tax system.",
+        "heard": "that I think successfully finished the new tasks because we implement the new system for tax. year in tax system.",
+        "sec": 30.4
+      },
+      {
+        "n": 34,
+        "fit": "misfit",
+        "why": "picked #32 (used or unknown) → earliest unused",
+        "live": "I don't really remember, but maybe helps from our accounting office staff.",
+        "heard": "I don't really remember, but maybe helps from or accounting office staff.",
+        "sec": 8.9
+      }
+    ],
+    "storedTranscript": [
+      {
+        "role": "tutor",
+        "text": "Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a recent project, using the present perfect for your experience and the past simple for finished events. We'll start with a short, friendly conversation so I can see your level. Does that sound good to you?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Great, let's begin. This is a short, friendly chat so I can see what you already can do. Please answer in English, and don't worry about mistakes.\n\nCan you tell me a little about your job? What do you do?"
+      },
+      {
+        "role": "student",
+        "text": "I, I work as admin at the company."
+      },
+      {
+        "role": "tutor",
+        "text": "Admin work keeps an office running well. What kind of admin tasks do you do most days?"
+      },
+      {
+        "role": "student",
+        "text": "I'm checking emails. and sorting out some paperwork."
+      },
+      {
+        "role": "tutor",
+        "text": "That sounds like a busy and important job. Have you ever worked with an international customer? If so, can you tell me about the experience?"
+      },
+      {
+        "role": "student",
+        "text": "Please, could you please rephrase that, please?"
+      },
+      {
+        "role": "tutor",
+        "text": "Of course. Simpler: have you ever worked with a customer from another country?"
+      },
+      {
+        "role": "student",
+        "text": "Yes, I have."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you. Can you tell me about that experience? What did you do with that customer?"
+      },
+      {
+        "role": "student",
+        "text": "How to communicate with the non in not the Japanese people with not the with people with the in and not from Japan."
+      },
+      {
+        "role": "tutor",
+        "text": "Sorry, I didn't catch that. Did you ask how to communicate with people who are not from Japan? Please tell me in a few words."
+      },
+      {
+        "role": "student",
+        "text": "Could you explain that in Japanese?"
+      },
+      {
+        "role": "tutor",
+        "text": "海外のお客様と仕事をしたことがあるか、という質問です。あった場合は、その経験について少し話してください。\n\nPlease try to answer in English. You can start with: \"Yes, I have worked with…\"\n\nDoes that make sense?"
+      },
+      {
+        "role": "student",
+        "text": "I want uh improve my speaking skill because I often attend a meeting."
+      },
+      {
+        "role": "student",
+        "text": "that use English."
+      },
+      {
+        "role": "tutor",
+        "text": "Of course, I'll use English only. Please just tell me one thing: have you worked with a customer from another country?"
+      },
+      {
+        "role": "student",
+        "text": "Yes, I have."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you. What was it like working with that customer? Please tell me a little about it."
+      },
+      {
+        "role": "student",
+        "text": "Uh, what do you mean?"
+      },
+      {
+        "role": "tutor",
+        "text": "Sorry, that was unclear. Please tell me one thing you did with that customer. For example, did you send emails, have meetings, or answer questions?"
+      },
+      {
+        "role": "student",
+        "text": "I do emails and sorting out some documents."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you, that's clear. Today we'll make your sentences more accurate and natural, starting with talking about your job.\n\nShall we go on, or do you have a question first?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "では、仕事について話す練習をしましょう。まず、簡単な文から始めます。\n\nNow it's your turn. Please say one sentence about your job, starting with \"I work in…\".\n\nI joined my company three years ago."
+      },
+      {
+        "role": "student",
+        "text": "I do accounting and some admin work."
+      },
+      {
+        "role": "tutor",
+        "text": "That's a clear sentence. Accounting and admin work are good skills to have in an office.\n\nHow long have you worked at your company? Please say a number of years."
+      },
+      {
+        "role": "student",
+        "text": "I have worked for the current company for 10 years."
+      },
+      {
+        "role": "tutor",
+        "text": "Yes, that's right. You used \"have worked\" because you started in the past and you still work there now.\n\nThis part is done. Next is the present perfect, which we use for experience that started in the past and continues now. Shall we go on?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "現在完了は、過去に始まって今も続いている経験に使います。形は have か has に過去分詞を付けます。\n\nNow it's your turn. Please say one sentence starting with \"I have worked…\", about your company.\n\nI have worked with customers from other countries."
+      },
+      {
+        "role": "student",
+        "text": "I have worked for my current company for 10 years."
+      },
+      {
+        "role": "tutor",
+        "text": "Yes, that's right. You used \"have worked\" for something that started in the past and continues now.\n\nThis part is done. Next is the past simple, which we use for finished events at a specific time, like \"last year.\" Shall we go on?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "過去の終わった出来事には過去形を使います。「last year」や「in 2022」のような、いつかがはっきりしている時に使います。\n\nNow it's your turn. Please say one sentence about something you did last year, using a past verb.\n\nI attended an exhibition last year."
+      },
+      {
+        "role": "student",
+        "text": "I finished accounting yesterday."
+      },
+      {
+        "role": "tutor",
+        "text": "Good, \"I finished accounting yesterday\" is correct. \"Yesterday\" is a specific time, so we use the past simple \"finished.\"\n\nWhere did you study accounting? Please answer with one sentence that starts with \"I studied…\"."
+      },
+      {
+        "role": "student",
+        "text": "I don't really know."
+      },
+      {
+        "role": "tutor",
+        "text": "That's fine, no problem. Let's make it easier: you can just say a school or university name, or \"I don't remember.\" Or try this, in English: \"I studied at…\"\n\nWhich one feels closer to your answer?"
+      },
+      {
+        "role": "student",
+        "text": "Could you repeat that, please?"
+      },
+      {
+        "role": "tutor",
+        "text": "Sure. Please say this sentence: \"I studied at…\" and then the name of the school or university, or just say \"I studied at\" and stop."
+      },
+      {
+        "role": "student",
+        "text": "Could you repeat that? please?"
+      },
+      {
+        "role": "tutor",
+        "text": "「I studied at」のあとに、学校の名前を言ってください。たとえば「I studied at Nagoya University.」です。\n\nPlease say: I studied at… and then the school name.\n\nDoes that make sense?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "OK. Please say your own sentence now, starting with \"I studied at…\". You can use the name of any school or university."
+      },
+      {
+        "role": "student",
+        "text": "Please move on to the past. simple."
+      },
+      {
+        "role": "tutor",
+        "text": "わかりました、学校の質問はここで終わりにします。次は、去年の出来事を使って過去形を練習しましょう。\n\nPlease answer in English.\n\nDid you attend any business events or exhibitions last year? Answer with one sentence, starting with \"I attended…\" or \"I didn't attend…\"."
+      },
+      {
+        "role": "student",
+        "text": "No."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you. Please say a full sentence, starting with \"I didn't attend…\"."
+      },
+      {
+        "role": "student",
+        "text": "No, I didn't."
+      },
+      {
+        "role": "tutor",
+        "text": "「No, I didn't.」は正しい過去形の否定です。「didn't」の後ろは動詞の原形を使います。\n\nNow please say the full sentence: \"I didn't attend any exhibitions last year.\"\n\nDoes that make sense so far?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "では、その文を英語で言ってみましょう。「I didn't attend any exhibitions last year.」です。\n\nDoes that make sense?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Please say the full sentence now: \"I didn't attend any exhibitions last year.\""
+      },
+      {
+        "role": "student",
+        "text": "No. I didn't."
+      },
+      {
+        "role": "tutor",
+        "text": "「No, I didn't.」で大丈夫です。次は「didn't」のあとに「attend」を続けます。\n\nNow please say that full sentence once.\n\nI didn't attend any exhibitions last year.\n\nAre you with me so far?"
+      },
+      {
+        "role": "student",
+        "text": "No, I have not."
+      },
+      {
+        "role": "tutor",
+        "text": "「No, I have not.」は、「last year」という過去の特定の時間には合いません。過去形の「No, I didn't.」を使いましょう。\n\nPlease say that full sentence once.\n\nDoes that make sense so far?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Good. Now say the whole sentence once: \"I didn't attend any exhibitions last year.\""
+      },
+      {
+        "role": "student",
+        "text": "What do you mean by 'important project'?"
+      },
+      {
+        "role": "tutor",
+        "text": "An important project is a piece of work that matters a lot to your company or to you, for example a big task that took a long time. 大切な仕事、という意味です。\n\nDid that answer your question?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Good. Now let's go back to the sentence. Please say it once: \"I didn't attend any exhibitions last year.\""
+      },
+      {
+        "role": "student",
+        "text": "No, I have not."
+      },
+      {
+        "role": "tutor",
+        "text": "Let's make it smaller. Please say just this part: \"I didn't attend.\"\n\n「I didn't attend.」だけ言ってみてください。"
+      },
+      {
+        "role": "tutor",
+        "text": "ゆっくりで大丈夫です。まず私が言います。 \"I didn't attend.\"\n\nNow you say it: \"I didn't attend.\"\n\nAre you with me so far?"
+      },
+      {
+        "role": "student",
+        "text": "No, I have not."
+      },
+      {
+        "role": "tutor",
+        "text": "「No, I have not.」は、去年の特定の時間には使いません。正しい文はこれです。「No, I didn't attend any exhibitions last year.」「have not」ではなく「didn't」を使います。\n\nThis part is done. Next is a short conversation about your work. Shall we go on?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "では、仕事の話を少ししましょう。\n\nPlease answer in English. Try: \"I worked on a project to…\""
+      },
+      {
+        "role": "student",
+        "text": "Could you give me some more example of past simple?"
+      },
+      {
+        "role": "tutor",
+        "text": "Yes, here are a few more. Listen, then try one about yourself.\n\nNow say one sentence about something you did last week, starting with \"I\".\n\nI joined my company three years ago."
+      },
+      {
+        "role": "student",
+        "text": "The year and tax. system comparison."
+      },
+      {
+        "role": "tutor",
+        "text": "Sorry, I didn't understand that. Did you want to say something about the sentence, or about the project question? Please tell me in a few words."
+      },
+      {
+        "role": "student",
+        "text": "Because we implemented a new system for tax system this year and I was successfully finished all the new taxes on time."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you, that's a real project, and \"we implemented\" is correct. One change: you said \"I was successfully finished.\" We say \"I successfully finished.\"\n\nPlease say that sentence once.\n\nDoes that make sense?"
+      },
+      {
+        "role": "student",
+        "text": "I successfully finished the new tasks because we implemented a new tax system this year."
+      },
+      {
+        "role": "tutor",
+        "text": "Yes, that's right. \"I successfully finished the new tasks\" is clear and correct.\n\nWhat was the hardest part of that project?"
+      },
+      {
+        "role": "student",
+        "text": "that that everything was new, that we didn't know them we we didn't have a manual to follow on."
+      },
+      {
+        "role": "tutor",
+        "text": "Everything was new, and there was no manual to guide you. That is a strong point. One small change: we say \"to follow,\" not \"to follow on.\"\n\nPlease say that sentence once.\n\nDoes that make sense?"
+      },
+      {
+        "role": "student",
+        "text": "that I think successfully finished the new tasks because we implement the new system for tax. year in tax system."
+      },
+      {
+        "role": "tutor",
+        "text": "You said \"we implement,\" but this happened this year, so we need the past form: \"we implemented.\" Please say the whole sentence once more.\n\nIs that clear, or shall I go over it again?"
+      },
+      {
+        "role": "student",
+        "text": "I don't really remember, but maybe helps from or accounting office staff."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you for that. You can say it this way: \"We got help from the accounting office staff.\"\n\nToday you talked about your work, your accounting duties and a tax project. We practised two grammar points.\n\nWell done today. Your sentences about your company were clear. We didn't reach the pronunciation practice, so that's for next time. Keep using these two grammar points when you talk about your work. See you next time!"
+      }
+    ]
+  }
+}

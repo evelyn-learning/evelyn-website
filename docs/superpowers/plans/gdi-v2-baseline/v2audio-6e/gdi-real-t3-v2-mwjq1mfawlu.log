@@ -1,0 +1,175 @@
+20:34:08 open fixture=gdi-real-t3 arm=v2 student=gdi-v2-audio6e-tester-b (audio student tester-b (33 clips), silent tutor voice)
+20:34:11 clicked start (1)
+20:34:18 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practice two grammar points: the present perfect and the past simple. Does that sound good?   [tools: annotate]
+20:34:35 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short ack
+20:34:42 HEARD  I'm ready.
+20:34:42 TUTOR  Great! First, I'd like to see what you can already do in English, so I know how to pitch today's lesson. This is a short, friendly chat, so don't worry about mistakes. Can you tell me a little about your job? What do you do?
+20:35:01 STUDENT(clip #3 ok, 22.6 s) Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the the company and of course most of the part of the management and the sales area for this.  — Learner describes their job as GM/general manager, directly answering the tutor's question about what they do.
+20:35:28 HEARD  Yes, I'm sales manager in the G I M R uh the GM uh general manager of that and I just supporting for the all division in the the company and of course most of the current of the management and the sales area for this.
+20:35:28 TUTOR  Thanks, that's a clear picture of your role. Have you ever worked with an international customer? If so, can you tell me about the experience?
+20:35:40 STUDENT(clip #11 ok, 7.0 s) Yes, I have working with the international customer for sometimes.  — Answers the yes/no question about working with international customers
+20:35:51 HEARD  Yes, I have working with the international customer for sometimes.
+20:35:51 TUTOR  That sounds like good experience. Which country is the customer from, and what do you usually do with them?
+20:36:02 STUDENT(clip #10 ok, 18.7 s) Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.  — Learner describes their experience with international customers and English usage, directly answering the tutor's questi
+20:36:26 HEARD  Uh, what I have the learn at the my company is uh connecting to the foreigner person because of a company has a lot of the foreigner and uh I have to using for my English to communicate for the each other.
+20:36:26 TUTOR  Your company works with many people from other countries, so English is part of your daily work. Now, what is one skill you'd like to improve in your English, and why is it important to you?
+20:36:42 STUDENT(clip #30 ok, 14.3 s) Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.  — Learner responds to question about future goals/skills by discussing supporting global networking, which relates to impr
+20:37:06 HEARD  Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and the Japanese company with my uh our directors.
+20:37:06 TUTOR  Thank you. Global networking between your foreign partners and your Japanese directors is an important role. Today we'll work on making your grammar more accurate and your answers more natural. Let's start with your work.  We use two tenses for experience. Look at the board.
+
+
+
+Now, what are your ma   [tools: set_working_level, new_page, show_table, show_problem]
+20:37:34 STUDENT(clip #4 ok, 24.2 s) My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.  — Tutor asks about main responsibilities; line #4 directly answers with two sentences about responsibilities in sales area
+20:38:05 HEARD  My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have suggesting for the the new products about to the clients.
+20:38:05 TUTOR  Good, you gave me two clear responsibilities. One small grammar point: you said "I have suggesting." With have, we use the past participle, so the verb is "suggested." Can you say that sentence again with the correct form?
+
+
+
+I have suggested new products to my clients.   [tools: show_sentence, annotate]
+20:38:26 STUDENT(clip #6 ok, 26.3 s) My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.  — Learner repeats/corrects the responsibility statement after tutor's grammar correction about 'suggested'
+20:38:59 HEARD  My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member, and of course, uh suggesting for the new service and the project products to the clients.
+20:38:59 TUTOR  Clear answer, thank you. One small thing: we say "supporting each division member", without "for". Now let's practise the present perfect.
+
+
+
+Shall we go on, or do you have a question first?
+20:39:14 STUDENT(clip #2 ok, 2.0 s) I'm ready.  — Readiness question; short ack appropriate
+20:39:21 HEARD  and ready.
+20:39:21 TUTOR  
+
+Let's go on. We use the present perfect for something that started in the past and is still true now.
+
+
+
+Have you worked for your current company for a long time?
+
+   [tools: new_page, annotate, show_problem]
+20:39:38 STUDENT(clip #8 ok, 6.0 s) I have worked here over the ten years.  — Answers the tutor's question about working at the company for a long time, using past perfect tense
+20:39:50 HEARD  I have here over the 10 years.
+20:39:50 TUTOR  Not quite. After "have," the sentence needs the past participle of the verb, and that's missing here. Try again, starting with: "I have worked here…"
+20:40:04 STUDENT(clip #9 ok, 8.8 s) I have working for our company for a long time. It takes about uh around the ten years.  — Learner's first unused attempt at the 'worked for company' question with past participle form
+20:40:20 HEARD  I have working for our company for a long time. It takes about uh around the 10 years.
+20:40:20 TUTOR  Close. The verb needs the past participle here: "have worked," not "have working." The sentence should be: I have worked for our company for about ten years.
+
+That's the present perfect part done. Next is the past simple, for events at a specific time in the past. Shall we go on, or do you have a qu   [tools: show_sentence]
+20:40:46 STUDENT(clip #14 ok, 1.2 s) Yes.  — Yes/no readiness question; short ack appropriate
+20:40:53 HEARD  Yes.
+20:40:53 TUTOR  Let's go on to the past simple. We use it for something finished at a specific time in the past, such as last year or two weeks ago.
+
+
+
+
+
+Did you attend any business events or exhibitions last year? Tell me about one, in one or two sentences.
+
+   [tools: new_page, annotate, show_problem]
+20:41:15 STUDENT(clip #16 ok, 8.5 s) Yes, I attended the uh some business event in the uh Japan last year.  — Answers the tutor's question about attending business events last year
+20:41:29 HEARD  Yes, I attended the uh some business event in the uh Japan. last year.
+20:41:29 TUTOR  Yes, "I attended" is the past simple, and "last year" tells us it's a finished time. One small thing: we say "in Japan," with no "the."
+
+
+
+What was the event about, and what did you do there?   [tools: show_sentence]
+20:41:48 STUDENT(clip #18 ok, 13.7 s) Uh, it's kind of the networking events, uh, that's looking for the new uh business partner or the connecting for the the related our service.  — Describes what the event was about (networking events, looking for business partners)
+20:42:09 HEARD  Uh, it's kind of the networking events, uh, the looking for the new uh business partner or the connecting for the the related our service.
+20:42:09 TUTOR  Networking events are a good way to find new partners for your services. I'll put your idea into one sentence with the past simple.
+
+
+
+This part is done. Next is a conversation about a project you're proud of. Shall we go on, or do you have a question first?   [tools: show_sentence]
+20:42:32 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; short ack appropriate
+20:42:39 HEARD  I'm ready.
+20:42:39 TUTOR  Great, let's have a conversation about your work. I'll ask questions, and you can ask me some too.
+
+
+
+What is one project you worked on that you're particularly proud of?
+
+   [tools: new_page, show_problem]
+20:42:55 STUDENT(clip #24 ok, 15.1 s) Uh, let me see is uh one project I worked in the supporting for the the the uh the uh SNS networking contents.  — Learner describes a project they worked on, answering the tutor's question about a project they're proud of.
+20:43:16 HEARD  Uh, let me see is uh one project I worked in the supporting for the the the uh the uh SNS networking contents.
+20:43:16 TUTOR  Thanks, you used the past simple there. One small thing: we say "I worked on a project" and "support the SNS content," without "for."
+
+
+
+What was your role in that project?   [tools: show_sentence]
+20:43:33 STUDENT(clip #26 ok, 17.0 s) Uh, my role is to manage for the member who is making for the content. uh, the talking about for the content and making for the content.  — Tutor asks about learner's role in the project; #26 directly answers with role description
+20:43:41 HEARD  Uh, my role is to manage for the member.
+20:43:41 TUTOR  One small thing: we say "manage the members," without "for." Your role sounds like leadership in that project. What was the biggest challenge, and how did you handle it?
+20:43:54 HEARD  who is making for the content. uh, the talking about for the content. and making for the content.
+20:43:54 TUTOR  Did you say you were in charge of the people who made the content? If so, we say "I managed the team that made the content." Is that what you meant?
+20:43:59 HEARD  I need to manage
+20:43:59 TUTOR  Got it. You managed the team that made the content. A good sentence for that is:
+
+My role was to manage the team that created the SNS content. 
+
+What was the biggest challenge in that project?   [tools: show_sentence]
+20:44:18 STUDENT(clip #28 misfit cut=fast, 0.7 s) I need to manage for the uh  — Incomplete sentence; learner struggles with the challenge question. Line 28 is the next unused line but doesn't answer t
+20:44:39   (not heard within 20 s of the clip's end)
+20:45:29 HEARD  (silence 75 s)
+20:45:29 TUTOR  Take your time. Was there a difficult part of that project? Just tell me one thing.
+20:45:38 STUDENT(clip #29 ok, 2.0 s) I'm not sure about it.  — Learner hesitates when asked about challenges; 'I'm not sure about it' is a natural response to a difficult question the
+20:45:44 HEARD  I'm not sure about it.
+20:45:44 TUTOR  That's fine. Let's make it easier. Was it hard to communicate with the team, or was it hard to meet the deadline?
+20:45:55 STUDENT(clip #33 ok, 13.3 s) Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.  — Learner addresses a challenge: finding new people for the project, which is a real difficulty they faced.
+20:46:17 HEARD  Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.
+20:46:17 TUTOR  Thank you, so the challenge was finding a new person to exchange information with the project members. We say "exchange information with," with no "for."
+
+
+
+That's this part done. Next, you can ask me a question about work, and then we can practise pronunciation if you like. Shall we go on, or do yo   [tools: show_sentence]
+20:46:42 STUDENT(clip #34 ok, 12.0 s) Uh, because of the one member is will leaving to our company and the project going on, so that's why I have to find the new people.  — Learner explains the challenge: finding new people because a member is leaving and the project continues
+20:47:02 HEARD  Uh, because of is will leaving to our company and the project going on, so that's why I have to find a new people.
+20:47:02 TUTOR  That makes sense: a team member is leaving, so you need a replacement. Say "a new person," not "new people," because you need one person.
+
+
+
+Now it's your turn. Ask me a question about work, in English.   [tools: show_sentence]
+20:47:21 STUDENT(clip #32 misfit, 3.6 s) one more again.  — Learner has no appropriate question recorded; #32 'one more again' is closest to a response but doesn't fit the request 
+20:47:29 HEARD  one more again.
+20:47:29 TUTOR  Let's do one more, on the verb form that still gives you trouble.
+
+
+
+Say the full sentence.   [tools: show_problem]
+20:47:42 STUDENT(clip #5 misfit, 17.7 s) My main responsibility in sales area is uh contact for our clients and supporting for the each division member and suggesting for the new product clients.  — Tutor asks to repeat a full sentence; learner has no clear sentence-repetition line left that fits. Line 5 is earliest u
+20:48:10 HEARD  My responsibility in sales area is uh contact for our clients and supporting for the individual member and suggesting for the new product clients.
+20:48:10 TUTOR  Thank you, that covers your role well. One small thing: we say "supporting the individual members," without "for."
+
+
+
+The verb question is still on the board. Try it now and say the full sentence.
+
+My responsibility in the sales area is to be the contact for our clients, to support each team member,   [tools: show_sentence]
+20:48:37 STUDENT(clip #7 misfit, 5.8 s) Yes, working for our company above over the ten years.  — Learner should repeat the corrected sentence about sales responsibility, but #7 is about tenure. No perfect fit remains;
+20:48:52 HEARD  Yes, for my our company above over the 10 years.
+20:48:52 TUTOR  Did you mean "I have worked for our company for over ten years"? For the blank, give the past participle of "work" after "have." Can you say the full sentence once more?
+20:49:04 STUDENT(clip #12 misfit, 5.1 s) I have worked with international customer  — picked #8 (used or unknown) → earliest unused
+20:49:23 HEARD  I have worked with international customer
+20:49:23 TUTOR  Yes, "I have worked" is the right form now. One small thing: we say "international customers," with an s, because you work with more than one customer.
+
+
+
+That completes the verb practice. Next, you can ask me a question about work, and then we'll finish with a short summary. Shall we go on, or do y   [tools: show_sentence]
+20:49:50 STUDENT(clip #13 ok, 8.1 s) I have worked with international customer sometimes.  — Learner repeats the corrected form with 'customers' plural as tutor just corrected
+20:50:06 HEARD  I have worked with international customer sometimes.
+20:50:06 TUTOR  Almost. "Customer" needs an s here, because you work with more than one: I have worked with international customers sometimes.  I have worked with international customers sometimes.
+
+Do you have a question about work for me, or shall we go to the summary?   [tools: show_sentence]
+20:50:27 STUDENT(clip #15 ok, 8.9 s) Yes, I have been working a project with uh uh us from another content, another uh countries.  — Learner moves forward with a new statement about working on a project, answering the tutor's question about having a que
+20:50:45 HEARD  Yes, I have been working a project with uh uh us from another country, another uh countries.
+20:50:45 TUTOR  That's a good project to be part of. One small thing: we say "working on a project," with "on."
+
+
+
+Let's finish with a short summary.
+
+
+
+
+
+You talked about your role, your team and a project you're proud of. One thing you did well was use the past simple clearly, for example "I attended a business e   [tools: show_sentence, new_page, annotate, show_sentence]
+20:51:31 STUDENT(end) the tutor said goodbye
+20:51:31 audio: {"sttSockets":1,"sttSocketSeconds":993,"clipSeconds":267,"silentTtsReplies":114,"mic":{"plays":26,"gum":1,"buffers":165},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+20:51:31 waiting 35 s for the autosave

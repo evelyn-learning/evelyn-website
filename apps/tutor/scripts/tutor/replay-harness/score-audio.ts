@@ -84,6 +84,36 @@ export function scoreAudio(b: Bundle) {
   };
 }
 
+const JUNK = /(?:[、。号(]\s*){8,}|\(vis/;
+const ASKS = (t: string) => (t.match(/[?？]|か。/g) ?? []).length;
+
+/** The Task 6e checks, counted from a run (judgement calls are still read by hand). */
+export function checks6e(b: Bundle) {
+  const tutorIdx = b.turns.map((t, i) => ({ t, i })).filter((x) => x.t.role === 'tutor');
+  const stored = (b.audio?.storedTranscript ?? []).filter((t) => t.role === 'student');
+  const said = (b.audio?.picks ?? []).map((p) => p.heard);
+  const ev = (type: string) => b.events.filter((e) => e.type === type);
+  const card = ev('v2_board_timing').filter((e) => /^show_sentence:/.test(e.message));
+  const goOn = tutorIdx.filter((x) => /or do you have (?:a |any )?questions? first\?|質問はありますか/i.test(x.t.text)).map((x) => x.i);
+  const sumAt = tutorIdx.find((x, k) => k > 2 && /\b(summary|let'?s (?:quickly )?review|great work today|to sum up)\b|まとめ/i.test(x.t.text));
+  const before = sumAt ? tutorIdx.filter((x) => x.i < sumAt.i).slice(-1)[0] : undefined;
+  return {
+    garbageStored: stored.filter((t) => JUNK.test(t.text) || t.text.length > 3000).length,
+    garbageToBrain: said.filter((h) => JUNK.test(h)).length,
+    heardNoise: ev('v2_heard_noise').map((e) => e.message.slice(0, 60)),
+    heardWhileEnding: ev('v2_heard_while_ending').length,
+    cardGaps: tutorIdx.filter((x) => /:\s{2,}\S|:\s*$/.test(x.t.text.trim())).map((x) => `T${x.i}: ${x.t.text.replace(/\s+/g, ' ').slice(0, 90)}`),
+    showSentenceTiming: { now: card.filter((e) => /— now$/.test(e.message)).length, held: card.filter((e) => /— held$/.test(e.message)).length },
+    goOnAskTurns: goOn,
+    goOnBackToBack: goOn.filter((i, k) => k > 0 && tutorIdx.findIndex((x) => x.i === i) - tutorIdx.findIndex((x) => x.i === goOn[k - 1]) === 1).length,
+    pronunciationOffered: tutorIdx.some((x, k) => k > 1 && /pronunciation|発音/i.test(x.t.text) && ASKS(x.t.text) > 0),
+    pronunciationNamedNextTime: tutorIdx.some((x) => /pronunciation|発音/i.test(x.t.text) && /next time|次回/i.test(x.t.text)),
+    didYouSay: tutorIdx.filter((x) => /did you (?:say|mean)|do you mean|と言いましたか|という意味ですか|ということですか/i.test(x.t.text)).map((x) => `T${x.i} after “${(b.turns[x.i - 1]?.heard ?? b.turns[x.i - 1]?.text ?? '').slice(0, 70)}”: ${x.t.text.replace(/\s+/g, ' ').slice(0, 120)}`),
+    asksBeforeSummary: before ? ASKS(before.t.text) : null,
+    summaryTurnIndex: sumAt?.i ?? null,
+  };
+}
+
 export function transcriptMd(b: Bundle): string {
   const lines: string[] = [];
   let k = 0; const picks = heardFromStore(b);
@@ -100,7 +130,7 @@ export function transcriptMd(b: Bundle): string {
 if (require.main === module) {
   const [file, out] = process.argv.slice(2);
   const b = JSON.parse(fs.readFileSync(file, 'utf8')) as Bundle;
-  const s = scoreAudio(b);
+  const s = { ...scoreAudio(b), checks: checks6e(b) };
   console.log(JSON.stringify(s, null, 2));
   if (out) fs.writeFileSync(out, `# ${b.fixture} · v2 · real audio · session ${b.sessionId ?? '?'}\n\n\`\`\`json\n${JSON.stringify(s, null, 2)}\n\`\`\`\n\n${transcriptMd(b)}\n`);
 }

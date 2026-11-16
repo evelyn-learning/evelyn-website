@@ -1,0 +1,37 @@
+20:24:12 open fixture=gdi-real-t3 arm=v2 student=gdi-v2-audio6e-tester-b (audio student tester-b (33 clips), silent tutor voice)
+20:24:15 clicked start (1)
+20:24:20 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a recent project, practise the present perfect and the past simple, and keep a conversation going with follow-up questions. Does that sound good to you?   [tools: annotate]
+20:24:41 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short ack
+20:24:49 HEARD  I'm ready.
+20:24:49 TUTOR  Great! First, a short level check, so I can adjust the lesson for you. Please answer in English, and don't worry about mistakes. Can you tell me a little about your job? What do you do?   [tools: new_page]
+20:25:07 STUDENT(clip #3 ok, 22.6 s) Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the the company and of course most of the part of the management and the sales area for this.  — Answers the tutor's question about the learner's job; first unused content line
+20:25:33 HEARD  Yes, I am sales manager in the G I M R uh the GM uh general manager of that and I just supporting for the all division in the the company and of course most of the current of the management and the sales area of this.
+20:25:33 TUTOR  Thank you, that gives me a good picture of your role. How many divisions do you support?
+20:25:45 STUDENT(clip #4 misfit, 24.2 s) My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.  — No direct answer to 'how many divisions'; learner describes responsibilities instead. Line 4 is next unused content line
+20:26:15 HEARD  My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.
+20:26:15 TUTOR  That sounds like a busy role, with clients and your team both depending on you. Have you ever worked with an international customer? If so, can you tell me about that experience?
+20:26:29 STUDENT(clip #11 ok, 7.0 s) Yes, I have working with the international customer for sometimes.  — Answers the yes/no question about working with international customers
+20:26:40 HEARD  Yes, I have working with the international customer for sometimes.
+20:26:40 TUTOR  Good, you have experience with international customers. Which countries are your customers from?
+20:26:49 STUDENT(clip #10 ok, 18.7 s) Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.  — Learner describes working with foreign/international people and needing English to communicate, directly answering which
+20:27:12 HEARD  Uh, what I have the learn at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.
+20:27:12 TUTOR  Thanks, that tells me how English fits into your work. Now, one last question: what is one skill you'd like to improve in your English, and why is it important to you?
+20:27:27 STUDENT(clip #30 ok, 14.3 s) Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.  — Learner responds to 'what skill to improve' with a forward-looking statement about supporting global networking, which a
+20:27:49 HEARD  Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.
+20:27:49 TUTOR  Good, that's a useful goal for your work. We'll focus on making your grammar more accurate and your answers more natural.
+
+
+Here are two sentences that look similar but mean different things.
+
+
+
+We'll practise this difference next.
+
+
+
+Next is present perfect. Shall we go on, or do you have a questio   [tools: new_page, show_table, set_working_level]
+20:28:14 STUDENT(clip #2 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short ack
+20:28:36   (not heard within 20 s of the clip's end)
+20:32:15 no tutor turn for 4 min — treating as ended
+20:32:15 audio: {"sttSockets":1,"sttSocketSeconds":479,"clipSeconds":91,"silentTtsReplies":23,"mic":{"plays":7,"gum":1,"buffers":36},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+20:32:15 waiting 35 s for the autosave

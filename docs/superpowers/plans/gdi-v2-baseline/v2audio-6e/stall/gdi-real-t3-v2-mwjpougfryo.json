@@ -1,0 +1,475 @@
+{
+  "fixture": "gdi-real-t3",
+  "arm": "v2",
+  "sessionId": "embed-1794860652224",
+  "startedAt": "2026-11-16T20:24:15.176Z",
+  "minutes": 8.006666666666666,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a recent project, practise the present perfect and the past simple, and keep a conversation going with follow-up questions. Does that sound good to you?"
+    },
+    {
+      "role": "student",
+      "text": "I'm ready.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "I'm ready.",
+      "why": "Readiness question; learner gives short ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Great! First, a short level check, so I can adjust the lesson for you. Please answer in English, and don't worry about mistakes. Can you tell me a little about your job? What do you do?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the the company and of course most of the part of the management and the sales area for this.",
+      "tag": "answer",
+      "clip": 3,
+      "fit": "ok",
+      "heard": "Yes, I am sales manager in the G I M R uh the GM uh general manager of that and I just supporting for the all division in the the company and of course most of the current of the management and the sales area of this.",
+      "why": "Answers the tutor's question about the learner's job; first unused content line"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, that gives me a good picture of your role. How many divisions do you support?"
+    },
+    {
+      "role": "student",
+      "text": "My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.",
+      "tag": "answer",
+      "clip": 4,
+      "fit": "misfit",
+      "heard": "My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.",
+      "why": "No direct answer to 'how many divisions'; learner describes responsibilities instead. Line 4 is next unused content line"
+    },
+    {
+      "role": "tutor",
+      "text": "That sounds like a busy role, with clients and your team both depending on you. Have you ever worked with an international customer? If so, can you tell me about that experience?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have working with the international customer for sometimes.",
+      "tag": "answer",
+      "clip": 11,
+      "fit": "ok",
+      "heard": "Yes, I have working with the international customer for sometimes.",
+      "why": "Answers the yes/no question about working with international customers"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, you have experience with international customers. Which countries are your customers from?"
+    },
+    {
+      "role": "student",
+      "text": "Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.",
+      "tag": "answer",
+      "clip": 10,
+      "fit": "ok",
+      "heard": "Uh, what I have the learn at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.",
+      "why": "Learner describes working with foreign/international people and needing English to communicate, directly answering which"
+    },
+    {
+      "role": "tutor",
+      "text": "Thanks, that tells me how English fits into your work. Now, one last question: what is one skill you'd like to improve in your English, and why is it important to you?"
+    },
+    {
+      "role": "student",
+      "text": "Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.",
+      "tag": "answer",
+      "clip": 30,
+      "fit": "ok",
+      "heard": "Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.",
+      "why": "Learner responds to 'what skill to improve' with a forward-looking statement about supporting global networking, which a"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, that's a useful goal for your work. We'll focus on making your grammar more accurate and your answers more natural.\n\n\nHere are two sentences that look similar but mean different things.\n\n\n\nWe'll practise this difference next.\n\n\n\nNext is present perfect. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "I'm ready.",
+      "tag": "answer",
+      "clip": 2,
+      "fit": "ok",
+      "heard": "",
+      "why": "Readiness question; learner gives short ack"
+    }
+  ],
+  "events": [
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=59635 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=59635 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (voice)"
+    },
+    {
+      "type": "v2_opening_speech",
+      "message": "released 2238 ms after the tap; microphone live at 1336 ms; 0 sentence(s) were waiting"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · with \"Today we'll talk about your work\""
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: sentence 2 of 3, 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5578ms · first_sentence=2094ms · in=12263 out=839 cr=38298 cc=0 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 2 \"Level check\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Does that sound good to you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5952ms · first_sentence=2836ms · in=12377 out=1053 cr=38447 cc=149 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"What do you do?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1815ms · first_sentence=1702ms · in=497 out=269 cr=19298 cc=409 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860731787 — \"What do you do?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"How many divisions do you support?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"How many divisions do you support?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"How many divisions do you support?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"How many divisions do you support?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5676ms · first_sentence=1638ms · in=12606 out=866 cr=39005 cc=577 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860770023 — \"How many divisions do you support?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"If so, can you tell me about that experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"If so, can you tell me about that experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"If so, can you tell me about that experience?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"If so, can you tell me about that experience?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1971ms · first_sentence=1237ms · in=502 out=336 cr=19791 cc=70 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Which countries are your customers from?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Which countries are your customers from?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Which countries are your customers from?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Which countries are your customers from?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4112ms · first_sentence=1145ms · in=12686 out=604 cr=39652 cc=622 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794860828442 — \"Which countries are your customers from?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Now, one last question: what is one skill you'd like to impr\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Now, one last question: what is one skill you'd like to impr\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Now, one last question: what is one skill you'd like to impr\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Now, one last question: what is one skill you'd like to impr\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 3 \"Your work and experience\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 2 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_table → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_table: inline, with sentence 3 of 3 (stretch from 3), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → not opened yet: the student is asked first"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson."
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "working_level_set",
+      "message": "intermediate (v2)"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7610ms · first_sentence=4738ms · in=542 out=1563 cr=20137 cc=96 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    }
+  ],
+  "estimatedCost": 0.0104,
+  "endedBy": "stall",
+  "audio": {
+    "sttSockets": 1,
+    "sttSocketSeconds": 479,
+    "clipSeconds": 91,
+    "silentTtsReplies": 23,
+    "mic": {
+      "plays": 7,
+      "gum": 1,
+      "buffers": 36
+    },
+    "otherSockets": [
+      "ws://localhost:3021/_next/hmr",
+      "wss://api.openai.com/v1/realtime"
+    ],
+    "picks": [
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Readiness question; learner gives short ack",
+        "live": "I'm ready.",
+        "heard": "I'm ready.",
+        "sec": 2.05
+      },
+      {
+        "n": 3,
+        "fit": "ok",
+        "why": "Answers the tutor's question about the learner's job; first unused content line",
+        "live": "Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the the company and of course most of the part of the management and the sales area for this.",
+        "heard": "Yes, I am sales manager in the G I M R uh the GM uh general manager of that and I just supporting for the all division in the the company and of course most of the current of the management and the sales area of this.",
+        "sec": 22.55
+      },
+      {
+        "n": 4,
+        "fit": "misfit",
+        "why": "No direct answer to 'how many divisions'; learner describes responsibilities instead. Line 4 is next unused content line",
+        "live": "My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.",
+        "heard": "My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.",
+        "sec": 24.2
+      },
+      {
+        "n": 11,
+        "fit": "ok",
+        "why": "Answers the yes/no question about working with international customers",
+        "live": "Yes, I have working with the international customer for sometimes.",
+        "heard": "Yes, I have working with the international customer for sometimes.",
+        "sec": 7.05
+      },
+      {
+        "n": 10,
+        "fit": "ok",
+        "why": "Learner describes working with foreign/international people and needing English to communicate, directly answering which",
+        "live": "Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.",
+        "heard": "Uh, what I have the learn at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.",
+        "sec": 18.7
+      },
+      {
+        "n": 30,
+        "fit": "ok",
+        "why": "Learner responds to 'what skill to improve' with a forward-looking statement about supporting global networking, which a",
+        "live": "Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.",
+        "heard": "Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.",
+        "sec": 14.25
+      },
+      {
+        "n": 2,
+        "fit": "ok",
+        "why": "Readiness question; learner gives short ack",
+        "live": "I'm ready.",
+        "heard": "",
+        "sec": 2.05
+      }
+    ],
+    "storedTranscript": [
+      {
+        "role": "tutor",
+        "text": "Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a recent project, practise the present perfect and the past simple, and keep a conversation going with follow-up questions. Does that sound good to you?"
+      },
+      {
+        "role": "student",
+        "text": "I'm ready."
+      },
+      {
+        "role": "tutor",
+        "text": "Great! First, a short level check, so I can adjust the lesson for you. Please answer in English, and don't worry about mistakes. Can you tell me a little about your job? What do you do?"
+      },
+      {
+        "role": "student",
+        "text": "Yes, I am sales manager in the G I M R uh the GM uh general manager of that and I just supporting for the all division in the the company and of course most of the current of the management and the sales area of this."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you, that gives me a good picture of your role. How many divisions do you support?"
+      },
+      {
+        "role": "student",
+        "text": "My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients."
+      },
+      {
+        "role": "tutor",
+        "text": "That sounds like a busy role, with clients and your team both depending on you. Have you ever worked with an international customer? If so, can you tell me about that experience?"
+      },
+      {
+        "role": "student",
+        "text": "Yes, I have working with the international customer for sometimes."
+      },
+      {
+        "role": "tutor",
+        "text": "Good, you have experience with international customers. Which countries are your customers from?"
+      },
+      {
+        "role": "student",
+        "text": "Uh, what I have the learn at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other."
+      },
+      {
+        "role": "tutor",
+        "text": "Thanks, that tells me how English fits into your work. Now, one last question: what is one skill you'd like to improve in your English, and why is it important to you?"
+      },
+      {
+        "role": "student",
+        "text": "Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors."
+      },
+      {
+        "role": "tutor",
+        "text": "Good, that's a useful goal for your work. We'll focus on making your grammar more accurate and your answers more natural.\n\nHere are two sentences that look similar but mean different things.\n\nWe'll practise this difference next.\n\nNext is present perfect. Shall we go on, or do you have a question first?"
+      }
+    ]
+  }
+}

@@ -1,0 +1,267 @@
+20:06:24 open fixture=gdi-real-t2 arm=v2 student=gdi-v2-audio6e-tester-2 (audio student tester-2 (41 clips), silent tutor voice)
+20:06:28 clicked start (1)
+20:06:33 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a recent project, using the present perfect for your experience and the past simple for finished events. We'll start with a short, friendly conversation so I can see your level. Does that sound good to you?   [tools: annotate]
+20:06:58 STUDENT(clip #1 ok, 1.0 s) Yes.  — Affirmative response to tutor's readiness question
+20:07:04 HEARD  Yes.
+20:07:04 TUTOR  
+Great, let's begin. This is a short, friendly chat so I can see what you already can do. Please answer in English, and don't worry about mistakes.
+
+Can you tell me a little about your job? What do you do?   [tools: new_page]
+20:07:25 STUDENT(clip #3 ok, 7.8 s) I, I work as admin at the company.  — Answers the tutor's question about what the learner does at work
+20:07:35 HEARD  I, I work as admin at the company.
+20:07:35 TUTOR  Admin work keeps an office running well. What kind of admin tasks do you do most days?
+20:07:46 STUDENT(clip #9 ok, 7.7 s) I'm checking emails and sorting out some paperwork.  — Directly answers what admin tasks the learner does most days
+20:07:57 HEARD  I'm checking emails. and sorting out some paperwork.
+20:07:57 TUTOR  That sounds like a busy and important job. Have you ever worked with an international customer? If so, can you tell me about the experience?
+20:08:12 STUDENT(clip #2 misfit, 5.0 s) Please, could you please rephrase that, please?  — Learner hasn't answered the yes/no question yet; #2 is a request to rephrase, but tutor's question was clear. However, n
+20:08:17 HEARD  Please, could you please rephrase that, please?
+20:08:17 TUTOR  Of course. Simpler: have you ever worked with a customer from another country?
+20:08:26 STUDENT(clip #17 ok, 2.5 s) Yes, I have.  — Answers yes/no question 'have you ever worked with a customer from another country?'
+20:08:33 HEARD  Yes, I have.
+20:08:33 TUTOR  Thank you. Can you tell me about that experience? What did you do with that customer?
+20:08:43 STUDENT(clip #14 misfit, 16.6 s) How to communicate with the non in not the Japanese people with not the with people with the in and not from Japan.  — Learner attempts to describe communication with non-Japanese people, closest available response to the tutor's question 
+20:09:03 HEARD  How to communicate with the non in not the Japanese people with not the with people with the in and not from Japan.
+20:09:03 TUTOR  Sorry, I didn't catch that. Did you ask how to communicate with people who are not from Japan? Please tell me in a few words.
+20:09:16 STUDENT(clip #4 ok, 3.1 s) Could you explain that in Japanese?  — Learner is stuck and asks for explanation in Japanese as per their pattern
+20:09:24 HEARD  Could you explain that in Japanese?
+20:09:24 TUTOR  海外のお客様と仕事をしたことがあるか、という質問です。あった場合は、その経験について少し話してください。
+
+Please try to answer in English. You can start with: "Yes, I have worked with…"
+
+Does that make sense?
+20:09:36 STUDENT(clip #5 misfit, 11.3 s) I won't uh improve my speaking skill because I often attend a meeting.  — Learner should answer the tutor's question about working with overseas customers, but #5 is about speaking skill and mee
+20:09:51 HEARD  that use English.
+20:09:51 TUTOR  Of course, I'll use English only. Please just tell me one thing: have you worked with a customer from another country?
+20:10:02 STUDENT(clip #17 ok, 2.5 s) Yes, I have.  — Answering yes/no question 'have you worked with a customer from another country?' with short ack 'Yes, I have.'
+20:10:11 HEARD  Yes, I have.
+20:10:11 TUTOR  Thank you. What was it like working with that customer? Please tell me a little about it.
+20:10:21 STUDENT(clip #8 misfit, 1.9 s) Uh, what do you mean?  — Learner doesn't understand the question; #8 'Uh, what do you mean?' is closest available response
+20:10:25 HEARD  Uh, what do you mean?
+20:10:25 TUTOR  Sorry, that was unclear. Please tell me one thing you did with that customer. For example, did you send emails, have meetings, or answer questions?
+20:10:38 STUDENT(clip #10 ok, 5.5 s) I do emails and sorting out some documents.  — Learner describes a specific task done with the customer (emails and documents), answering the tutor's request for one t
+20:10:54 HEARD  I do emails and sorting out some documents.
+20:10:54 TUTOR  Thank you, that's clear. Today we'll make your sentences more accurate and natural, starting with talking about your job.
+
+
+
+Shall we go on, or do you have a question first?   [tools: set_working_level]
+20:11:11 STUDENT(clip #1 ok, 1.0 s) Yes.  — Yes/no readiness question, short ack appropriate
+20:11:18 HEARD  Yes.
+20:11:18 TUTOR  
+では、仕事について話す練習をしましょう。まず、簡単な文から始めます。
+
+
+
+
+
+Now it's your turn. Please say one sentence about your job, starting with "I work in…".
+
+I joined my company three years ago.   [tools: new_page, show_sentence, show_sentence, show_sentence]
+20:11:32 STUDENT(clip #7 ok, 4.0 s) I do accounting and some admin work.  — Answers the tutor's request to say a sentence about the job, describing work duties
+20:11:42 HEARD  I do accounting and some admin work.
+20:11:42 TUTOR  That's a clear sentence. Accounting and admin work are good skills to have in an office.
+
+How long have you worked at your company? Please say a number of years.
+20:11:55 STUDENT(clip #11 ok, 5.7 s) I have worked for the current company for ten years.  — Tutor asks how long learner worked at company; #11 directly answers with 'ten years'
+20:12:08 HEARD  I have worked for the current company for 10 years.
+20:12:08 TUTOR  Yes, that's right. You used "have worked" because you started in the past and you still work there now.
+
+
+
+This part is done. Next is the present perfect, which we use for experience that started in the past and continues now. Shall we go on?   [tools: show_sentence]
+20:12:30 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question; learner gives short ack to move forward
+20:12:40 HEARD  Yes.
+20:12:40 TUTOR  
+現在完了は、過去に始まって今も続いている経験に使います。形は have か has に過去分詞を付けます。
+
+
+
+
+
+Now it's your turn. Please say one sentence starting with "I have worked…", about your company.
+
+I have worked with customers from other countries.   [tools: new_page, annotate, show_sentence]
+20:12:52 STUDENT(clip #12 ok, 6.0 s) I have worked for my current company for ten years.  — Learner repeats the sentence about working at current company for ten years, fitting the tutor's request for a present p
+20:13:02 HEARD  I have worked for my current company for 10 years.
+20:13:02 TUTOR  Yes, that's right. You used "have worked" for something that started in the past and continues now.
+
+This part is done. Next is the past simple, which we use for finished events at a specific time, like "last year." Shall we go on?
+20:13:23 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question 'Shall we go on?' gets short ack
+20:13:32 HEARD  Yes.
+20:13:32 TUTOR  
+過去の終わった出来事には過去形を使います。「last year」や「in 2022」のような、いつかがはっきりしている時に使います。
+
+
+
+
+
+Now it's your turn. Please say one sentence about something you did last year, using a past verb.
+
+I attended an exhibition last year.   [tools: new_page, annotate]
+20:13:44 STUDENT(clip #27 ok, 3.4 s) I finished accounting yesterday.  — Learner responds with a past simple sentence about a finished action, matching the tutor's request for a sentence about 
+20:13:54 HEARD  I finished accounting yesterday.
+20:13:54 TUTOR  Good, "I finished accounting yesterday" is correct. "Yesterday" is a specific time, so we use the past simple "finished."
+
+
+
+Where did you study accounting? Please answer with one sentence that starts with "I studied…".   [tools: show_sentence]
+20:14:12 STUDENT(clip #28 misfit, 4.8 s) I don't really know.  — Learner doesn't have a direct answer about where they studied accounting. #28 'I don't really know' is the closest avail
+20:14:20 HEARD  I don't really know.
+20:14:20 TUTOR  That's fine, no problem. Let's make it easier: you can just say a school or university name, or "I don't remember." Or try this, in English: "I studied at…"
+
+Which one feels closer to your answer?   [tools: show_sentence]
+20:14:37 STUDENT(clip #13 ok, 2.0 s) Could you repeat that, please?  — Tutor's turn is long and unclear; learner asks for repetition
+20:14:41 HEARD  Could you repeat that, please?
+20:14:41 TUTOR  Sure. Please say this sentence: "I studied at…" and then the name of the school or university, or just say "I studied at" and stop.
+20:14:55 STUDENT(clip #15 ok, 2.4 s) Could you repeat that, please?  — Learner asks tutor to repeat again after tutor's long explanation
+20:14:59 HEARD  Could you repeat that? please?
+20:14:59 TUTOR  「I studied at」のあとに、学校の名前を言ってください。たとえば「I studied at Nagoya University.」です。
+
+Please say: I studied at… and then the school name.
+
+Does that make sense?
+20:15:13 STUDENT(clip #16 ok, 1.4 s) Yes.  — Readiness/confirmation question 'Does that make sense?' gets short ack
+20:15:18 HEARD  Yes.
+20:15:18 TUTOR  OK. Please say your own sentence now, starting with "I studied at…". You can use the name of any school or university.
+20:15:30 STUDENT(clip #18 misfit, 2.9 s) Please move on to the past simple.  — Learner should answer the tutor's request to say 'I studied at...' but line 18 is about moving to past simple. No fittin
+20:15:36 HEARD  Please move on to the past. simple.
+20:15:36 TUTOR  わかりました、学校の質問はここで終わりにします。次は、去年の出来事を使って過去形を練習しましょう。
+
+
+
+Please answer in English.
+
+Did you attend any business events or exhibitions last year? Answer with one sentence, starting with "I attended…" or "I didn't attend…".   [tools: show_problem]
+20:15:54 STUDENT(clip #19 ok, 3.6 s) No.  — Learner answers 'No' to yes/no question about attending business events
+20:15:57 HEARD  No.
+20:15:57 TUTOR  Thank you. Please say a full sentence, starting with "I didn't attend…".
+20:16:01 HEARD  No, I didn't.
+20:16:01 TUTOR  「No, I didn't.」は正しい過去形の否定です。「didn't」の後ろは動詞の原形を使います。
+
+Now please say the full sentence: "I didn't attend any exhibitions last year."
+
+Does that make sense so far?
+20:16:14 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question - learner confirms understanding before proceeding
+20:16:18 HEARD  Yes.
+20:16:18 TUTOR  では、その文を英語で言ってみましょう。「I didn't attend any exhibitions last year.」です。
+
+Does that make sense?
+20:16:26 STUDENT(clip #1 ok, 1.0 s) Yes.  — Short ack to 'Does that make sense?' question
+20:16:30 HEARD  Yes.
+20:16:30 TUTOR  Please say the full sentence now: "I didn't attend any exhibitions last year."
+20:16:39 STUDENT(clip #21 ok, 3.6 s) No. I didn't.  — Learner says 'No. I didn't.' as a full past simple negative sentence in response to tutor's request to say the full sent
+20:16:51 HEARD  No. I didn't.
+20:16:51 TUTOR  「No, I didn't.」で大丈夫です。次は「didn't」のあとに「attend」を続けます。
+
+
+
+Now please say that full sentence once.
+
+I didn't attend any exhibitions last year.
+
+Are you with me so far?   [tools: show_sentence, annotate]
+20:17:03 STUDENT(clip #22 misfit, 2.6 s) No, I have not.  — Learner should attempt the full sentence, but #22 is a short ack. No better option available; this is closest to a readi
+20:17:09 HEARD  No, I have not.
+20:17:09 TUTOR  「No, I have not.」は、「last year」という過去の特定の時間には合いません。過去形の「No, I didn't.」を使いましょう。
+
+
+
+Please say that full sentence once.
+
+Does that make sense so far?
+20:17:22 STUDENT(clip #1 ok, 1.0 s) Yes.  — Short ack to 'Does that make sense so far?' - learner confirms understanding
+20:17:25 HEARD  Yes.
+20:17:25 TUTOR  Good. Now say the whole sentence once: "I didn't attend any exhibitions last year."
+20:17:34 STUDENT(clip #23 misfit, 3.5 s) What do you mean by important project?  — Learner should repeat the sentence, but #23 is a question. No exact repeat line available; picking earliest unused line 
+20:17:43 HEARD  What do you mean by 'important project'?
+20:17:43 TUTOR  An important project is a piece of work that matters a lot to your company or to you, for example a big task that took a long time. 大切な仕事、という意味です。
+
+Did that answer your question?   [tools: annotate]
+20:18:01 STUDENT(clip #1 ok, 1.0 s) Yes.  — Short ack to 'Did that answer your question?' - learner confirms understanding
+20:18:06 HEARD  Yes.
+20:18:06 TUTOR  Good. Now let's go back to the sentence. Please say it once: "I didn't attend any exhibitions last year."
+20:18:17 STUDENT(clip #24 misfit, 2.1 s) No, I have not.  — Learner should repeat the sentence, but #24 is 'No, I have not.' - closest available line that shows engagement
+20:18:23 HEARD  No, I have not.
+20:18:23 TUTOR  Let's make it smaller. Please say just this part: "I didn't attend."
+
+「I didn't attend.」だけ言ってみてください。
+20:18:32 STUDENT(clip #25 misfit, 1.8 s) No, I have not.  — Learner should repeat the phrase, but #25 is a negative answer. No better fit available; closest structural response.
+20:18:34 HEARD  (silence 2 s)
+20:18:34 TUTOR  ゆっくりで大丈夫です。まず私が言います。 "I didn't attend."
+
+Now you say it: "I didn't attend."
+
+Are you with me so far?
+20:18:40 HEARD  No, I have not.
+20:18:40 TUTOR  「No, I have not.」は、去年の特定の時間には使いません。正しい文はこれです。「No, I didn't attend any exhibitions last year.」「have not」ではなく「didn't」を使います。
+
+This part is done. Next is a short conversation about your work. Shall we go on?
+20:18:56 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question 'Shall we go on?' gets short ack
+20:19:02 HEARD  Yes.
+20:19:02 TUTOR  
+では、仕事の話を少ししましょう。
+
+
+
+Please answer in English. Try: "I worked on a project to…"   [tools: new_page, show_problem]
+20:19:12 STUDENT(clip #26 misfit, 5.3 s) Could you give me some more example of past simple?  — Learner asks for examples instead of answering the prompt about a work project
+20:19:21 HEARD  Could you give me some more example of past simple?
+20:19:21 TUTOR  Yes, here are a few more. Listen, then try one about yourself.
+
+
+
+
+
+Now say one sentence about something you did last week, starting with "I".
+
+I joined my company three years ago.   [tools: show_sentence, show_sentence, show_sentence]
+20:19:39 STUDENT(clip #29 misfit, 6.0 s) The year in tax system corporation.  — Learner struggles to form past simple about work; #29 is about tax system but doesn't start with 'I' as requested
+20:19:46 HEARD  The year and tax. system comparison.
+20:19:46 TUTOR  Sorry, I didn't understand that. Did you want to say something about the sentence, or about the project question? Please tell me in a few words.
+20:20:00 STUDENT(clip #30 ok, 10.8 s) because we implemented a new system for tax system this year and I was a successfully finished all the new taxes on time.  — Learner attempts to answer the project question with a complete sentence about what they did, starting with 'I' as reque
+20:20:19 HEARD  Because we implemented a new system for tax system this year and I was successfully finished all the new taxes on time.
+20:20:19 TUTOR  Thank you, that's a real project, and "we implemented" is correct. One change: you said "I was successfully finished." We say "I successfully finished."
+
+
+
+Please say that sentence once.
+
+Does that make sense?   [tools: show_sentence]
+20:20:36 STUDENT(clip #32 ok, 20.1 s) I successfully finished the new tasks because we implemented the new tax system this year.  — Tutor asks learner to say the corrected sentence. Line 32 is the corrected version with 'I successfully finished' as req
+20:20:59 HEARD  I successfully finished the new tasks because we implemented a new tax system this year.
+20:20:59 TUTOR  Yes, that's right. "I successfully finished the new tasks" is clear and correct.
+
+What was the hardest part of that project?
+20:21:11 STUDENT(clip #33 ok, 12.5 s) that that everything was new, that we didn't know them we we didn't have a manual to follow on.  — Learner answers what was hardest about the project - the newness and lack of manual
+20:21:30 HEARD  that that everything was new, that we didn't know them we we didn't have a manual to follow on.
+20:21:30 TUTOR  Everything was new, and there was no manual to guide you. That is a strong point. One small change: we say "to follow," not "to follow on."
+
+
+
+Please say that sentence once.
+
+Does that make sense?   [tools: show_sentence]
+20:21:47 STUDENT(clip #31 ok, 30.4 s) that I think successfully finished the new tasks because we implement the new system for tax. year in tax system.  — Tutor asks learner to repeat the sentence about the project. Line #31 is the next unused line in sequence and contains r
+20:22:23 HEARD  that I think successfully finished the new tasks because we implement the new system for tax. year in tax system.
+20:22:23 TUTOR  You said "we implement," but this happened this year, so we need the past form: "we implemented." Please say the whole sentence once more.
+
+
+
+Is that clear, or shall I go over it again?   [tools: show_sentence]
+20:22:42 STUDENT(clip #34 misfit, 8.9 s) I don't really remember, but maybe helps from our accounting office staff.  — picked #32 (used or unknown) → earliest unused
+20:23:02 HEARD  I don't really remember, but maybe helps from or accounting office staff.
+20:23:02 TUTOR  Thank you for that. You can say it this way: "We got help from the accounting office staff."
+
+
+Today you talked about your work, your accounting duties and a tax project. We practised two grammar points.
+
+
+
+
+
+
+
+Well done today. Your sentences about your company were clear. We didn't reach the pronun   [tools: new_page, annotate, show_sentence, show_sentence, show_sentence]
+20:23:34 STUDENT(end) the tutor said goodbye
+20:23:34 audio: {"sttSockets":1,"sttSocketSeconds":994,"clipSeconds":217,"silentTtsReplies":175,"mic":{"plays":41,"gum":1,"buffers":245},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+20:23:34 waiting 35 s for the autosave

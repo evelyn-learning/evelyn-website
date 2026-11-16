@@ -77,6 +77,8 @@ if (!fs.existsSync(silentWav)) {
 const log: string[] = [];
 const page_note: string[] = [];
 const say = (s: string) => { const line = `${new Date().toISOString().slice(11, 19)} ${s}`; console.log(line); log.push(line); };
+// A goodbye in either teaching language (お疲れさまでした / また次回 close a bilingual lesson).
+const AUDIO_CLOSE_RE = /\bsee you next time\b|\bgoodbye\b|\bbye for now\b|\bthank you for (?:practi[sc]ing|the lesson|your time) (?:with me )?today\b|お疲れさまでした|また次回/i;
 const CLOSE_RE = /\bsee you next time\b|\bthat'?s (?:all|it) for today\b|\bwe can wrap up here\b|\bthanks for working through it today\b|\bgoodbye\b|\bbye for now\b/i;
 
 type BrainTurn = { t: number; sentences: string[]; tools: string[]; board: string[]; said?: string; silence?: number };
@@ -245,6 +247,8 @@ async function main() {
       await page.screenshot({ path: path.join(outDir, `${fixture.name}-${arm}-${runId}-t${String(studentTurns).padStart(2, '0')}.png`), fullPage: false }).catch(() => {});
     }
     if (audioDir) {
+      // The tutor has said goodbye: a clip now would go unheard (the session is closed) and only burn minutes.
+      if (AUDIO_CLOSE_RE.test(text.slice(-400))) { say('STUDENT(end) the tutor said goodbye'); endedBy = 'tutor_close'; break; }
       const pick = await pickClip(fixture.student.who, audioClips, usedClips, history, text);
       if ('end' in pick) { say(`STUDENT(end) ${pick.why}`); endedBy = CLOSE_RE.test(text) ? 'tutor_close' : 'student_end'; break; }
       const clip = audioClips.find((c) => c.n === pick.n)!;
