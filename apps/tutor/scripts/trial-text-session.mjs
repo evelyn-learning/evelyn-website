@@ -5,7 +5,7 @@
 //
 // Usage (from apps/tutor):
 //   node scripts/trial-text-session.mjs --variant <name> [--student gdi-trial-bot-N] [--port 3019]
-//                                       [--max-min 32] [--out <dir>] [--smoke]
+//                                       [--max-min 32] [--out <dir>] [--smoke] [--text] [--no-speech]
 // Variants (see VARIANTS): base, errors, impatient, lost, beginner, polite, quiet, pron, straight, wild
 // --smoke: stop after the first offer is answered (~6 min).
 // Needs: a dev server on --port serving the worktree; the praveen link in
@@ -44,6 +44,8 @@ const b64 = (b) => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace
 const payload = JSON.parse(Buffer.from(srcToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
 const now = Math.floor(Date.now() / 1000);
 Object.assign(payload, { student_id: studentId, student_name: arg('--name', 'Haruto'), iat: now, exp: now + 6 * 3600 });
+// --text: a typed (input_mode text) session instead of the link's voice session (tutor v2 replays, no speech).
+if (has('--text')) payload.input_mode = 'text';
 const secret = fs.readFileSync(path.join(home, '.evelyn/partners/gdi-demo.secret'), 'utf8').trim();
 const sign = (p) => { const h = b64(JSON.stringify({ alg: 'HS256', typ: 'JWT' })); const pp = b64(JSON.stringify(p)); return `${h}.${pp}.${b64(crypto.createHmac('sha256', secret).update(`${h}.${pp}`).digest())}`; };
 const embedUrl = `http://localhost:${port}/tutor-portal/embed?token=${sign(payload)}`;
@@ -260,7 +262,7 @@ await ctx.addInitScript(() => {
   const orig = window.fetch;
   window.fetch = async function (input, init) {
     const url = typeof input === 'string' ? input : input?.url ?? '';
-    if (!url.includes('/api/tutor/brain/stream')) return orig.apply(this, arguments);
+    if (!url.includes('/api/tutor/brain/stream') && !url.includes('/api/tutor/brain-v2/turn')) return orig.apply(this, arguments);
     window.__brain.inFlight += 1;
     let res;
     try { res = await orig.apply(this, arguments); } catch (e) { window.__brain.inFlight -= 1; throw e; }
@@ -272,7 +274,7 @@ await ctx.addInitScript(() => {
           const reader = clone.body.getReader(); const dec = new TextDecoder('utf-8');
           for (;;) { const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true });
             let i; while ((i = buf.indexOf('\n\n')) >= 0) { const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
-              for (const line of chunk.split('\n')) { if (!line.startsWith('data: ')) continue; try { const ev = JSON.parse(line.slice(6)); if (ev.type === 'sentence' && ev.text) sentences.push(ev.text); if (ev.type === 'tool-call') tools.push(ev.name); } catch {} } } }
+              for (const line of chunk.split('\n')) { if (!line.startsWith('data: ')) continue; try { const ev = JSON.parse(line.slice(6)); if (ev.type === 'sentence' && ev.text) sentences.push(ev.text); /* v2 streams text deltas: keep the reply as one sentence */ if (ev.type === 'text' && ev.delta) { if (!sentences.length) sentences.push(''); sentences[sentences.length - 1] += ev.delta; } if (ev.type === 'tool-call') tools.push(ev.name); } catch {} } } }
         } catch {}
         window.__brain.inFlight = Math.max(0, window.__brain.inFlight - 1);
         window.__brain.turns.push({ t: Date.now(), sentences, tools });
@@ -285,6 +287,11 @@ await ctx.addInitScript(() => {
 // route fails (no /var/data on a laptop); the body then exceeds what Playwright's
 // pipe can carry. Answer those uploads with a stub so the recorder clears.
 await ctx.route('**/api/tutor/session-audio*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true,"stub":true}' }));
+// --no-speech: refuse every paid speech route (Cartesia token, tts-*) and cartesia.ai, as run-replay.ts does.
+if (has('--no-speech')) {
+  await ctx.route(/\/api\/tutor\/(cartesia-token|tts[a-z-]*)(\?|$)/, (route) => { say(`speech refused: ${route.request().url().replace(/\?.*/, '')}`); return route.fulfill({ status: 403, contentType: 'application/json', body: '{"error":"speech off for this run"}' }); });
+  await ctx.route(/cartesia\.ai/, (route) => { say('speech refused: cartesia.ai'); return route.abort(); });
+}
 const page = await ctx.newPage();
 const pollBrain = async () => {
   const b = await page.evaluate(() => { const t = window.__brain?.turns.splice(0) ?? []; return { inFlight: window.__brain?.inFlight ?? 0, turns: t }; }).catch(() => ({ inFlight: 0, turns: [] }));

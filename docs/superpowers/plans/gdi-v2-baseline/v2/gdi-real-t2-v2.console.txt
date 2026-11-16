@@ -1,0 +1,228 @@
+09:01:48 open fixture=gdi-real-t2 arm=v2 student=gdi-v2-replay-gdi-real-t2-v2 (speech off)
+09:02:33 no start orb (auto-start?)
+09:02:33 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect for experience and the past simple for finished events. Does that sound good to you? (よろしいですか？)   [tools: annotate]
+09:02:57 STUDENT(ack) Yes, thank you. That sounds good.
+09:03:03 TUTOR  Great. I'll correct your mistakes, explain them, and give you a chance to try again, and near the end you can practise your pronunciation if you like. First, there's a short level check, a friendly conversation of three questions, so I can make the lesson useful for you. Are you ready?
+09:03:26 STUDENT(ack) Yes, I'm ready.
+09:03:30 TUTOR  Great, let's start. This is a friendly conversation, not a test, so please answer in English and don't worry about mistakes.
+
+
+
+Can you tell me a little about your job? What do you do?   [tools: annotate]
+09:03:51 STUDENT(answer) Please, could you please rephrase that, please?
+09:03:52 TUTOR  Of course. Simply put: what is your job? What do you do at work?
+09:04:01 STUDENT(answer) I work as admin at the company. Could you explain that in Japanese?
+09:04:07 TUTOR  「admin」は administration の短い言い方で、事務の仕事のことです。「I work as admin.」は「私は事務として働いています」という意味です。
+
+
+
+Thank you. What kind of tasks do you do in admin?   [tools: annotate]
+09:04:21 STUDENT(answer) I'm checking emails and sorting out some paperwork.
+09:04:27 TUTOR  Thank you, that's clear. Checking emails and sorting paperwork are important jobs in any office.
+
+
+
+Question two: have you ever worked with an international customer? If so, can you tell me about the experience? (If not, you can tell me about a new customer or a difficult project.)   [tools: annotate]
+09:04:51 STUDENT(answer) No.
+09:04:59 TUTOR  No problem. Let me ask it more simply.
+
+Have you ever helped a customer from another country? (海外のお客様を担当したことはありますか？) If not, you can tell me about a new customer or a difficult project.   [tools: annotate]
+09:05:19 STUDENT(answer) No.
+09:05:28 TUTOR  海外のお客様がいないのですね、大丈夫です。では、仕事について簡単な文で話す練習をしましょう。
+
+
+
+
+Please say one or two sentences about your work, like the examples on the board. 例えば「I work in admin. I check emails.」のように話してみてください。   [tools: set_working_level, new_page, annotate]
+09:05:45 STUDENT(answer) I work in admin. I check emails and I sort out some documents.
+09:05:51 TUTOR  Good, those are clear, simple sentences. One small note: "I sort out some documents" is correct, and "sort paperwork" is also natural.
+
+
+
+Next, one question: what do you like about your work? Try to answer in one or two sentences.   [tools: show_sentence]
+09:06:14 STUDENT(answer) Uh, I like my work because it is stable and I have good colleagues.
+09:06:18 TUTOR  That's a clear answer, and "I have good colleagues" is a good sentence.
+
+That's the end of this part. Next we'll look at the present perfect, the tense for experience that started in the past and continues now. Shall we go on?
+09:06:38 STUDENT(ack) Yes, let's go on.
+09:06:43 TUTOR  
+
+
+Here is the pattern. We use have worked because you started in the past and you still work there now. 「have worked」は「ずっと働いていて、今も働いている」という意味です。
+
+Now, you try. Have you worked for your current company for a long time? Try starting with: "I have worked…"
+
+   [tools: new_page, annotate, show_problem]
+09:07:07 STUDENT(answer) I have worked for the current company for ten years.
+09:07:11 TUTOR  Yes, that's right. "I have worked for the current company for ten years" uses the present perfect for a job that started in the past and continues now.
+
+
+
+Good. Now a new question: have you learned any new skills in your job? Try starting with "I have learned…".
+
+   [tools: show_sentence, show_problem]
+09:07:38 STUDENT(answer) I have learned new accounting software in my job.
+09:07:43 TUTOR  Yes, that's correct. "I have learned new accounting software" describes something you learned in the past that you still use now.
+
+
+
+Now, one more: has your work become easier since you learned it? Try starting with "It has…" or "I have…".
+
+   [tools: show_sentence, show_problem]
+09:08:05 STUDENT(answer) Yes, it has become easier since I learned the new accounting software.
+09:08:12 TUTOR  Yes, that's correct. You used "has become" and "since" well.
+
+That's the end of the present perfect. Next is the past simple, for things that finished at a specific time, like "last year." Shall we go on, or do you have a question first?   [tools: show_sentence]
+09:08:36 STUDENT(ack) Yes, let's go on.
+09:08:39 TUTOR  
+
+
+過去形は、「昨年」「2年前」など、終わった時間を言うときに使います。「have」は使わず、動詞を過去の形にします。
+
+Now, you try. Did you attend any business events or exhibitions last year? Answer with a full sentence.
+
+   [tools: new_page, annotate, show_problem]
+09:08:54 STUDENT(answer) No.
+09:08:56 TUTOR  わかりました。質問が難しかったですか？ 答えが「はい」か「いいえ」でもかまいません。
+
+Here is a short starter you can use: "I attended…" (参加しました) or "I did not attend…" (参加しませんでした).
+09:09:09 STUDENT(answer) I did not attend any business events last year.
+09:09:13 TUTOR  Yes, that's correct. "I did not attend" is the past simple negative, and "last year" tells us it's a finished time.
+
+
+
+Now, when did you join your company? Try starting with "I joined…".
+
+   [tools: show_sentence, show_problem]
+09:09:32 STUDENT(answer) I joined my company ten years ago.
+09:09:36 TUTOR  That's correct. "I joined my company ten years ago" is past simple, because "ten years ago" is a finished time.
+
+   [tools: show_sentence]
+09:09:50 STUDENT(ack) Thank you.
+09:09:54 TUTOR  You're welcome. You've used the past simple correctly on your own now.
+
+
+
+Shall we go on, or do you have a question first?
+09:10:08 STUDENT(request) Please move on to the past simple.
+09:10:14 TUTOR  Past simple is already done, so we'll move on to conversation about your work.
+
+
+
+
+Now let's talk about a project. 「プロジェクト」について話してみましょう。
+
+   [tools: new_page, annotate, show_problem]
+09:10:29 STUDENT(answer) No.
+09:10:31 TUTOR  わかりました。大きなプロジェクトでなくても大丈夫です。
+
+Let's make it smaller. What is one task you did at work last week? Try starting with "I worked on…" or "I checked…".
+
+   [tools: show_problem]
+09:10:47 STUDENT(answer) I checked emails and I sorted out some documents last week.
+09:10:52 TUTOR  That's correct. "I checked" and "I sorted out" are both past simple, because "last week" is a finished time.
+
+
+
+Which task do you like more, checking emails or sorting documents? Try: "I like… more because…"   [tools: show_sentence]
+09:11:13 STUDENT(answer) I like sorting documents more because it is more interesting than checking emails.
+09:11:17 TUTOR  That's correct, and "more interesting than" is a clear comparison.
+
+
+
+Next, what do you usually do with your colleagues at work? Try starting with "I work with…".
+
+   [tools: show_sentence, show_problem]
+09:11:34 STUDENT(answer) I work with my colleagues on checking documents and sorting out paperwork together.
+09:11:38 TUTOR  That's correct, and "work with my colleagues on" is a natural way to say it.
+
+
+
+Now a question with the present perfect: how long have you worked with your colleagues? Try starting with "I have worked with…".
+
+   [tools: show_sentence, show_problem]
+09:11:59 STUDENT(answer) I have worked with my colleagues for ten years.
+09:12:04 TUTOR  That's correct, and "for ten years" shows the experience continues now.
+
+
+
+Now it's your turn to ask me a question about work. Try starting with "Do you…" or "Have you…".   [tools: show_sentence]
+09:12:22 STUDENT(answer) Do you work in an office like me?
+09:12:27 TUTOR  Yes, I do. I work in an office too, so I also check emails and sort out documents for my team. Wait, I'll be honest: I'm your tutor, so I don't have a real office job. But I can say that I help people with their English work.
+
+Let's keep going. Do you have a question for me about your own work? If n   [tools: annotate, show_problem]
+09:13:05 STUDENT(answer) I am responsible for checking all the company documents and sorting out the paperwork every day.
+09:13:09 TUTOR  That's correct, and "every day" makes it clear this is your regular duty.
+
+
+
+That's the end of the conversation part. Next is pronunciation, which is optional. Shall we go on, or do you have a question first?   [tools: show_sentence]
+09:13:32 STUDENT(request) Skip and continue.
+09:13:45 TUTOR  Pronunciation is skipped, so let's finish with a summary.
+
+
+
+
+
+
+
+
+
+One thing you did well: you used the present perfect and the past simple correctly, and "ten years" in both sentences shows the difference clearly. One thing to improve: you said "the current company", and "my current company" is mor   [tools: new_page, annotate, show_sentence, show_sentence, show_problem, annotate]
+09:14:21 STUDENT(answer) The first means I have been working here for five years until now. The second means I worked there five years ago and no longer work there.
+09:14:31 TUTOR  Exactly right. The first sentence means you still work there, and the second means you finished there five years ago.
+
+We have about seven minutes left. Would you like more practice with the present perfect and past simple, a question of your own, or to stop here?   [tools: annotate, show_table]
+09:14:56 STUDENT(answer) I want to improve my speaking skill because I often attend a meeting that use English.
+09:15:05 TUTOR  That's a clear reason, and "I often attend" is correct. One small change: after "that", the verb takes -s, so it's "a meeting that uses English". 「that」の後の動詞は、主語が三人称単数のとき -s を付けます。
+
+
+
+Can you say the whole sentence again?   [tools: show_sentence, show_sentence]
+09:15:25 STUDENT(answer) I want to improve my speaking skill because I often attend a meeting that uses English.
+09:15:29 TUTOR  That's correct: "a meeting that uses English" now has the -s on "uses".
+09:15:37 STUDENT(ack) Thank you.
+09:15:40 TUTOR  You're welcome. We have about six minutes left. Would you like one more short practice on "that" + verb, or would you rather stop here?
+
+   [tools: show_problem]
+09:15:56 STUDENT(answer) I have a task that requires careful attention to detail.
+09:15:59 TUTOR  That's correct: "a task that requires" has the -s on "requires," and it's a good sentence for describing your work.
+09:16:12 STUDENT(ack) Thank you.
+09:16:13 TUTOR  You're welcome. We still have a few minutes, so you can keep going with one more sentence about your work, or stop here. Which would you like?
+09:16:30 STUDENT(answer) I think we can stop here. Thank you very much for the lesson today.
+09:16:32 TUTOR  Thank you for practising today. You worked on present perfect and past simple for your work and experiences, and you finished with a clear sentence about your job. Keep practising these when you talk about your work. さようなら、お疲れさまでした。
+09:16:49 STUDENT(end)
+09:16:49 waiting 35 s for the autosave
+
+=== gdi-real-t2 / v2 · 14.3 min · session embed-1794819709023 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/docs/superpowers/plans/gdi-v2-baseline/v2/gdi-real-t2-v2-mwj1bahg9kp.json
+{
+  "fixture": "gdi-real-t2",
+  "arm": "v2",
+  "minutes": 14.3,
+  "tutorTurns": 35,
+  "studentTurns": 34,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.37,
+  "questionAfterAnswerShare": 0.28,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 34,
+  "tutorWordsP90": 48,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 1759,
+  "firstSentenceMsP95": 5192,
+  "inputTokens": 1785819,
+  "outputTokens": 26226,
+  "costPerMinute": 0.005,
+  "endedBy": "student_end"
+}

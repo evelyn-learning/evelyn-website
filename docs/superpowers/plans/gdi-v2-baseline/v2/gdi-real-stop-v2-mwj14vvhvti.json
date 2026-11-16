@@ -1,0 +1,259 @@
+{
+  "fixture": "gdi-real-stop",
+  "arm": "v2",
+  "sessionId": "embed-1794819411132",
+  "startedAt": "2026-11-16T08:57:36.001Z",
+  "minutes": 2.9124166666666667,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and your projects, and practise two grammar points: the present perfect for experience, and the past simple for finished events. Does that sound good to you?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, that sounds good. I am ready to start.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Great! Here's how the lesson goes. You'll talk about your job and your projects, and we'll practise the present perfect for your experience and the past simple for finished events. I'll ask questions and follow up on your answers, and I'll correct your mistakes, explain them, and give you a chance to try again. At the end you can practise your pronunciation if you like. First, there's a short level check, so I can adjust the lesson for you. Are you ready?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I am ready.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Please answer in English, and don't worry about mistakes. I just want to see what you can already do, so the lesson fits you. Can you tell me a little about your job? What do you do?"
+    },
+    {
+      "role": "student",
+      "text": "I am a manager at a communications company in Japan.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you. What does your team work on day to day?"
+    },
+    {
+      "role": "student",
+      "text": "My team works on projects for companies in Japan and also for international customers around the world.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "That sounds like interesting work. Have you ever worked with an international customer? If so, can you tell me about the experience?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have worked with international customers. I want to improve my conversation with customers before meetings.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "That's a useful goal, and it's good that you're thinking about meetings. Last question: what is one skill you'd like to improve in your English, and why is it important to you?"
+    },
+    {
+      "role": "student",
+      "text": "Okay, please stop. I would like to end the session for now.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you for talking with me today, Josh. You described your job as a manager at a communications company and your work with international customers. Next time, we can pick up with your English for meetings. Goodbye, and see you next time!"
+    }
+  ],
+  "events": [
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=82094 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=82094 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · with \"Today we'll practise two grammar points\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6425ms · first_sentence=2567ms · in=12261 out=1039 cr=17740 cc=17740 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Does that sound good to you?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5469ms · first_sentence=2008ms · in=12605 out=755 cr=35480 cc=602 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Are you ready?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Are you ready?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Are you ready?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Are you ready?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3856ms · first_sentence=855ms · in=12523 out=589 cr=36082 cc=304 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What do you do?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What do you do?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2182ms · first_sentence=2077ms · in=483 out=187 cr=18193 cc=374 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What does your team work on day to day?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What does your team work on day to day?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What does your team work on day to day?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What does your team work on day to day?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1732ms · first_sentence=1604ms · in=483 out=210 cr=18567 cc=42 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3786ms · first_sentence=964ms · in=12575 out=409 cr=36802 cc=556 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Last question: what is one skill you'd like to improve in yo\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Last question: what is one skill you'd like to improve in yo\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Last question: what is one skill you'd like to improve in yo\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Last question: what is one skill you'd like to improve in yo\""
+    },
+    {
+      "type": "tool_call",
+      "message": "end_lesson → the session is ending"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2893ms · first_sentence=1974ms · in=496 out=399 cr=18679 cc=73 · v2"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "end_lesson"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "v2_profile_commit",
+      "message": "status=200 gaps=0 mastery=[] evidence=0 turns=13"
+    }
+  ],
+  "estimatedCost": 0.0127,
+  "endedBy": "tutor_close"
+}

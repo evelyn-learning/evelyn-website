@@ -1,0 +1,1289 @@
+{
+  "fixture": "gdi-upper-int",
+  "arm": "v2",
+  "sessionId": "embed-1794819728875",
+  "startedAt": "2026-11-16T09:02:53.743Z",
+  "minutes": 16.3097,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hello Kenji, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect for experience and the past simple for finished events. Does that sound good to you?"
+    },
+    {
+      "role": "student",
+      "text": "I'm ready.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Great, let's begin. First, I'd like to hear a little about you, so I can make the lesson useful for you. Please answer in English, and don't worry about mistakes."
+    },
+    {
+      "role": "student",
+      "text": "Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the company and of course most of the part of the management and the sales area.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, that's a clear picture of your role. Now, question 2: Have you ever worked with an international customer? If so, can you tell me about the experience?"
+    },
+    {
+      "role": "student",
+      "text": "I have working with the international customer for sometimes, a lot of foreigner person in our company so I have to using my English.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, you use English with foreign colleagues every day. What kind of work do you do with them?"
+    },
+    {
+      "role": "student",
+      "text": "Uh, mainly I am contacting for the clients about the products and services, and I have to explaining for the business situation and sometimes I am supporting for the training program for the international team members in our company.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, that's helpful. Now, question 3: What is one skill you'd like to improve in your English, and why is it important to you?"
+    },
+    {
+      "role": "student",
+      "text": "Uh, I think the most important skill is for the speaking fluency, because I have to presenting for the business proposal to the international clients and sometimes in the meeting I am not having enough time for the thinking, so I need to speaking more naturally and more faster without the hesitation.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, Kenji. Your answers were clear, so today we'll focus on making your grammar more accurate and your answers more natural.\n\n\n\nWe'll start with how you describe your responsibilities and experience. For example: \"I work in sales, and I help customers find the right products.\" To talk about experience that continues now, we use the present perfect, and for a finished event at a specific time, the past simple.\n\n\n\n\nNow, your turn: what are your main responsibilities at work? Please give at least two sentences."
+    },
+    {
+      "role": "student",
+      "text": "My main responsibility in sales area to the contact for the clients and supporting for the each division member and of course I have a suggesting for the new products to the clients. Also, I am managing for the team and I have to checking the sales performance every month and reporting for the director about the progress.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, you gave four clear responsibilities in a connected answer. One thing to fix: after \"managing,\" we don't use \"for.\" Try saying that sentence again."
+    },
+    {
+      "role": "student",
+      "text": "I am managing the team and I have to checking the sales performance every month and reporting for the director about the progress.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Not quite. The error is in \"have to checking\": after \"have to,\" we use the base verb, without -ing. Try that part again."
+    },
+    {
+      "role": "student",
+      "text": "I have to check the sales performance every month and reporting for the director about the progress.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, \"I have to check\" is right now. In the second half, \"reporting for\" is not quite right: after the verb \"report,\" we use \"to,\" so it's \"report to the director.\" Try the whole sentence again."
+    },
+    {
+      "role": "student",
+      "text": "I have to check the sales performance every month and reporting to the director about the progress.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Not quite. \"and reporting\" is still the wrong form: \"have to\" is followed by the base verb, so the second verb is \"report,\" just like \"check.\" Try the sentence again."
+    },
+    {
+      "role": "student",
+      "text": "I have to check the sales performance every month and report to the director about the progress.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's right: \"I have to check the sales performance every month and report to the director about the progress.\"\n\n\n\nThat finishes the work on responsibilities. Next is the present perfect, using your own experience. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, let's go on.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Good. Now the present perfect: have/has + past participle, for experience that started in the past and continues now.\n\n\n\n\n\nHere is a question about your own experience. Answer with \"I have worked…\" if you can."
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have worked here over the ten years.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Not quite. The error is \"over the ten years\": for a period of time, we use \"for,\" with no \"the.\" Try the sentence again."
+    },
+    {
+      "role": "student",
+      "text": "I have worked here for ten years.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's right: \"I have worked here for ten years.\" You started in the past and you still work there now, so the present perfect fits.\n\n\n\nNow, try this one: What is one thing you have learned at your company in those ten years?"
+    },
+    {
+      "role": "student",
+      "text": "I have learned a lot of things in the company, especially I have learned for the how to managing the international team and how to communicating with the foreigner clients, and I have learned for the sales strategy and the product knowledge over the ten years.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Good use of the present perfect: \"I have learned\" shows experience from the past that continues now. The one thing to fix is \"how to managing\": after \"how to,\" we use the base verb. Can you say that part again?"
+    },
+    {
+      "role": "student",
+      "text": "I have learned how to manage the international team and how to communicating with the foreigner clients.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Not quite. The same rule applies to \"how to communicating\": after \"how to,\" use the base verb. Try the second half of the sentence again."
+    },
+    {
+      "role": "student",
+      "text": "I have learned how to manage the international team and how to communicate with the foreigner clients.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's right: \"how to communicate with the foreign clients.\" You're using the present perfect well for experience that continues now.\n\nThat finishes the present perfect. Next is the past simple, for finished events at a specific time. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, let's go on.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, let's go on. Now the past simple, for finished events at a specific time.\n\n\n\n\n\nHere is a question about past events. Answer with \"I attended…\" or \"I met…\" if you can."
+    },
+    {
+      "role": "student",
+      "text": "Yes, I attended the uh some business event in the Japan last year, kind of the networking events for looking the new business partner.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, \"attended\" with \"last year\" is the past simple, and that's exactly right. One small fix: we say \"in Japan\" with no \"the.\" \n\nCan you say that sentence again?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I attended some business event in Japan last year, kind of the networking events for looking the new business partner.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's right: \"in Japan\" with no \"the.\" You used the past simple for a finished event, \"last year,\" very well.\n\nWho did you meet at that event?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I met someone. We came at the new partner for the new business with customers. Then I talk about for the our business to supporting for the training for the global person.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, \"I met someone\" is right, and the past simple fits that finished event. Not quite in the next sentence: \"I talk about\" should be past simple, \"talked\", because the event was last year. Try that sentence again."
+    },
+    {
+      "role": "student",
+      "text": "I talked about our business to supporting for the training for the global person.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, \"I talked about our business\" is right. The part to fix is \"to supporting for the training.\" In the past simple, use the verb directly: \"supported,\" with no \"to\" and no \"for.\"\n\n\n\nCan you say that sentence again?"
+    },
+    {
+      "role": "student",
+      "text": "I talked about our business and supported the training for the global person.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, both verbs are in the past simple now, and that's right. \"Global person\" should be \"international team members,\" but your sentence is clear.\n\nThat finishes the past simple. Next is a conversation about a project you're proud of. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, let's go on.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Good. Here is the next question. Tell me about one project you worked on that you're proud of, and try to start with \"I worked on a project to…\"."
+    },
+    {
+      "role": "student",
+      "text": "One project I worked on was supporting for the SNS networking contents. My role is to manage for the member who is making for the content, and I am very proud of this project because we have growing the number of followers and the engagement from the customers.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "That sounds like a project you're proud of. One important fix: after \"have,\" we use the past participle, so \"growing\" becomes \"grown.\"\n\n\n\nCan you say that part again?"
+    },
+    {
+      "role": "student",
+      "text": "We have grown the number of followers and the engagement from the customers.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, \"We have grown the number of followers and the engagement from the customers\" is correct. Your team's results have continued up to now, so the present perfect fits.\n\nWhat was the biggest challenge in this project, and how did you handle it?"
+    },
+    {
+      "role": "student",
+      "text": "Uh, the biggest challenge was for the coordinating between the different team members because they are in the different location and different time zone. So I have to organizing the regular meeting and I created the shared document for the communication, and this helped for the team to working more efficiently and to sharing the information quickly.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Your answer explains the challenge and what you did about it, and the shared document is a good solution. One fix: after \"have to,\" we use the base verb, so \"organizing\" becomes \"organize.\"\n\n\n\nCan you say that sentence again?"
+    },
+    {
+      "role": "student",
+      "text": "I have to organize the regular meeting and I created the shared document for the communication.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, \"I have to organize the regular meetings\" is right now, and \"I created the shared document\" is a good past simple sentence. Now it's your turn to ask me a question about work experience."
+    },
+    {
+      "role": "student",
+      "text": "Uh, Ryota, can you tell me about your own work experience? What kind of project have you worked on?",
+      "tag": "question"
+    },
+    {
+      "role": "tutor",
+      "text": "I work on customer service improvements and team training. One project I'm proud of is a new training program for our customer support team. I have helped the team handle customer questions more quickly and more clearly.\n\nNow, back to you: what kind of project would you like to work on in the future?"
+    },
+    {
+      "role": "student",
+      "text": "I think in the future, I will supporting for the global networking between the foreigner company and Japanese company with our directors. I want to building the strong relationship and I want to expanding our business to the international market, so I need to working more with the international team and learning more about the different culture and business style.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "That's a clear plan, Kenji, and \"I want to build a strong relationship\" is a natural way to say it. That finishes our conversation part. Next is optional pronunciation practice. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "A sentence, please.",
+      "tag": "request"
+    },
+    {
+      "role": "tutor",
+      "text": "Here is one you can use for your plans:\n\n\n\nPlease say it back to me."
+    },
+    {
+      "role": "student",
+      "text": "I'm sorry, I do not understand. What sentence do you want me to say?",
+      "tag": "complaint_lost"
+    },
+    {
+      "role": "tutor",
+      "text": "Sorry for the confusion. Please look at the board: the sentence there is \"I want to expand our business internationally.\" Say it aloud, then tell me in English what this sentence means for your plans."
+    },
+    {
+      "role": "student",
+      "text": "I want to expand our business internationally. This means I want to growing the company to the new market in the different country, and I want to working with the international partner to reaching more customer and to increasing the sales revenue in the future.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Your first sentence, \"I want to expand our business internationally,\" is right. In the next part, \"I want to growing the company,\" the error is \"growing\": after \"want to,\" we use the base verb. Try that part again."
+    },
+    {
+      "role": "student",
+      "text": "I want to grow the company to the new market in the different country, and I want to work with the international partner to reach more customer and to increase the sales revenue in the future.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Your \"grow the company\" is right now. One more fix: \"reach more customer\" should be plural, \"more customers.\" Can you say the whole sentence once more?"
+    },
+    {
+      "role": "student",
+      "text": "I want to grow the company to the new market in the different country, and I want to work with the international partner to reach more customers and to increase the sales revenue in the future.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, \"I want to work with international partners to reach more customers\" is right now. Since time is nearly up, we'll skip pronunciation today and go to the summary.\n\n\n\nShall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, let's go on.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Let's do the summary. Here are four of your corrected sentences to keep.\n\n\n\n\n\n\n\n\nBefore we finish, can you explain the difference between these two sentences? Take your time, and I'll help if you need it."
+    },
+    {
+      "role": "student",
+      "text": "Uh, the first sentence 'I have worked here for five years' means I started working five years ago and I am still working here now, so it is continuing. The second sentence 'I worked here five years ago' means I worked in the past but maybe I am not working there now, so it is finished event. The present perfect is for the experience that continues, and the past simple is for the finished event.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's exactly right. \"I have worked here for five years\" continues up to now, and \"I worked here five years ago\" is a finished event.\n\nOne thing you did well was using the present perfect for your experience. \"I have learned how to communicate with the foreign clients\" describes learning that continues now. One thing to improve is the word after \"manage\" and \"support\": no \"for\" is needed. For example, \"manage for the member\" becomes \"manage the members.\"\n\nWell done today, Kenji! Thank you for the lesson. Keep practising these grammar points when you talk about your work. See you next time!"
+    }
+  ],
+  "events": [
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=81877 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=81877 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · with \"Today we'll practise two grammar points\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5851ms · first_sentence=2173ms · in=12269 out=1039 cr=23911 cc=11571 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Does that sound good to you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 2 \"Level check\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 2 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5688ms · first_sentence=3088ms · in=13567 out=844 cr=53553 cc=660 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1593ms · first_sentence=1422ms · in=557 out=223 cr=18071 cc=499 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2014ms · first_sentence=1890ms · in=558 out=266 cr=18570 cc=87 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What kind of work do you do with them?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What kind of work do you do with them?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What kind of work do you do with them?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What kind of work do you do with them?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 2 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1560ms · first_sentence=1301ms · in=558 out=206 cr=18657 cc=89 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson."
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 3 \"Your job\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 3 · inline"
+    },
+    {
+      "type": "working_level_set",
+      "message": "intermediate (v2)"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 9065ms · first_sentence=6089ms · in=14907 out=1627 cr=55738 cc=1025 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6736ms · first_sentence=1955ms · in=12850 out=1137 cr=37842 cc=1936 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Try saying that sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try saying that sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try saying that sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "correction — \"Try saying that sentence again.\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1458ms · first_sentence=1274ms · in=664 out=163 cr=19889 cc=144 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794819952096 — \"Try saying that sentence again.\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Try that part again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try that part again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try that part again.\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Try that part again.\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7678ms · first_sentence=3407ms · in=13029 out=1195 cr=39922 cc=274 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Try the whole sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try the whole sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try the whole sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "correction — \"Try the whole sentence again.\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4316ms · first_sentence=1439ms · in=12944 out=532 cr=40196 cc=178 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794819995272 — \"Try the whole sentence again.\""
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Try the sentence again with \"report\" instead of \"reporting.\"\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try the sentence again with \"report\" instead of \"reporting.\"\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try the sentence again with \"report\" instead of \"reporting.\"\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Try the sentence again with \"report\" instead of \"reporting.\"\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4515ms · first_sentence=2401ms · in=13065 out=669 cr=40374 cc=158 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"topic-intro\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 4 \"Present perfect\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 4 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 4 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3900ms · first_sentence=1162ms · in=13190 out=551 cr=40532 cc=292 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1239ms · first_sentence=1033ms · in=731 out=156 cr=20412 cc=191 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Try the sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try the sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try the sentence again.\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Try the sentence again.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 4 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3737ms · first_sentence=1167ms · in=13168 out=527 cr=41015 cc=297 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is one thing you have learned at your company in those \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is one thing you have learned at your company in those \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is one thing you have learned at your company in those \""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What is one thing you have learned at your company in those \""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 4 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6336ms · first_sentence=1625ms · in=13125 out=1073 cr=41312 cc=378 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say that part again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you say that part again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you say that part again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "correction — \"Can you say that part again?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3171ms · first_sentence=2059ms · in=779 out=553 cr=20845 cc=149 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794820144143 — \"Can you say that part again?\""
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"How should you communicate your answer in writing?\" → \"Try the second half of the sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try the second half of the sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try the second half of the sentence again.\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Try the second half of the sentence again.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 4 · with \"Yes, that's right:\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6284ms · first_sentence=2004ms · in=13242 out=1103 cr=41839 cc=813 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Shall we move on to the past simple, or do you have question\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we move on to the past simple, or do you have question\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Shall we move on to the past simple, or do you have question\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we move on to the past simple, or do you have question\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 5 \"Past simple\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 5 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 5 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3924ms · first_sentence=1425ms · in=13413 out=623 cr=42652 cc=1068 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 5 · with \"One small fix: we say\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 9307ms · first_sentence=2844ms · in=13307 out=1739 cr=43720 cc=478 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say that sentence again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you say that sentence again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you say that sentence again?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Can you say that sentence again?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2528ms · first_sentence=1573ms · in=901 out=464 cr=22099 cc=468 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Who did you meet at that event?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Who did you meet at that event?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Who did you meet at that event?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Who did you meet at that event?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 5 · with \"Not quite.\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7290ms · first_sentence=3070ms · in=13406 out=1199 cr=44666 cc=1134 · v2"
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"What should that sentence be with the correct past simple fo\" → \"Try that sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try that sentence again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try that sentence again.\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Try that sentence again.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6230ms · first_sentence=2659ms · in=13479 out=1122 cr=45800 cc=256 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say that sentence again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you say that sentence again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you say that sentence again?\""
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"past-simple\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Can you say that sentence again?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5650ms · first_sentence=2320ms · in=13618 out=1019 cr=46056 cc=850 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Shall we start the conversation about a project you're proud\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we start the conversation about a project you're proud\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Shall we start the conversation about a project you're proud\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we start the conversation about a project you're proud\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 6 \"Conversation\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 6 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4556ms · first_sentence=925ms · in=13542 out=759 cr=46906 cc=972 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6777ms · first_sentence=2013ms · in=13282 out=1195 cr=47878 cc=1074 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say that part again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you say that part again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you say that part again?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Can you say that part again?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6995ms · first_sentence=1843ms · in=13586 out=1226 cr=48952 cc=914 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What was the biggest challenge in this project, and how did \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What was the biggest challenge in this project, and how did \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What was the biggest challenge in this project, and how did \""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What was the biggest challenge in this project, and how did \""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7172ms · first_sentence=2144ms · in=13447 out=1341 cr=49866 cc=902 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say that sentence again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you say that sentence again?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you say that sentence again?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Can you say that sentence again?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5006ms · first_sentence=1452ms · in=13559 out=880 cr=50768 cc=882 · v2"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6279ms · first_sentence=1311ms · in=13500 out=994 cr=51650 cc=760 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Now, back to you: what kind of project would you like to wor\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Now, back to you: what kind of project would you like to wor\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Now, back to you: what kind of project would you like to wor\""
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"pronunciation\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Now, back to you: what kind of project would you like to wor\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 10164ms · first_sentence=2809ms · in=13549 out=1823 cr=52410 cc=470 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5650ms · first_sentence=2144ms · in=13645 out=946 cr=52880 cc=1174 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please say it back to me.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say it back to me.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (stuck) — \"Please say it back to me.\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Please say it back to me.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6905ms · first_sentence=1157ms · in=13765 out=1317 cr=54054 cc=196 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Say it aloud, then tell me in English what this sentence mea\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Say it aloud, then tell me in English what this sentence mea\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Say it aloud, then tell me in English what this sentence mea\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Say it aloud, then tell me in English what this sentence mea\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5251ms · first_sentence=1505ms · in=13631 out=854 cr=54250 cc=758 · v2"
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"Try that part again — what's the correct base verb form afte\" → \"Try that part again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try that part again.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try that part again.\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Try that part again.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7877ms · first_sentence=3109ms · in=13671 out=1343 cr=55008 cc=338 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say the whole sentence once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you say the whole sentence once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you say the whole sentence once more?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Can you say the whole sentence once more?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → not opened yet: the student is asked first"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6721ms · first_sentence=4250ms · in=1111 out=1343 cr=27673 cc=452 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 7 \"Summary\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 7 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7403ms · first_sentence=2930ms · in=14076 out=1376 cr=55798 cc=1134 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What's the difference between these two sentences?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What's the difference between these two sentences?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What's the difference between these two sentences?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What's the difference between these two sentences?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 8 \"Summary\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "end_lesson → the session is ending"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2940ms · first_sentence=1381ms · in=970 out=522 cr=28466 cc=440 · v2"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "end_lesson"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    }
+  ],
+  "estimatedCost": 0.0769,
+  "endedBy": "tutor_close"
+}

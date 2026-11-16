@@ -1,0 +1,17 @@
+08:56:50 open fixture=gdi-real-stop arm=v2 student=gdi-v2-replay-gdi-real-stop-v2 (speech off)
+08:57:35 no start orb (auto-start?)
+08:57:36 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and your projects, and practise two grammar points: the present perfect for experience, and the past simple for finished events. Does that sound good to you?   [tools: annotate]
+08:57:59 STUDENT(ack) Yes, that sounds good. I am ready to start.
+08:58:05 TUTOR  Great! Here's how the lesson goes. You'll talk about your job and your projects, and we'll practise the present perfect for your experience and the past simple for finished events. I'll ask questions and follow up on your answers, and I'll correct your mistakes, explain them, and give you a chance t
+08:58:42 STUDENT(ack) Yes, I am ready.
+08:58:46 TUTOR  Please answer in English, and don't worry about mistakes. I just want to see what you can already do, so the lesson fits you. Can you tell me a little about your job? What do you do?
+08:59:06 STUDENT(answer) I am a manager at a communications company in Japan.
+08:59:09 TUTOR  Thank you. What does your team work on day to day?
+08:59:19 STUDENT(answer) My team works on projects for companies in Japan and also for international customers around the world.
+08:59:21 TUTOR  That sounds like interesting work. Have you ever worked with an international customer? If so, can you tell me about the experience?
+08:59:34 STUDENT(answer) Yes, I have worked with international customers. I want to improve my conversation with customers before meetings.
+08:59:38 TUTOR  That's a useful goal, and it's good that you're thinking about meetings. Last question: what is one skill you'd like to improve in your English, and why is it important to you?
+08:59:56 STUDENT(answer) Okay, please stop. I would like to end the session for now.
+08:59:59 TUTOR  Thank you for talking with me today, Josh. You described your job as a manager at a communications company and your work with international customers. Next time, we can pick up with your English for meetings. Goodbye, and see you next time!
+09:00:30 input gone (locator.click: Timeout 8000ms exceeded.) — treating as closed
+09:00:30 waiting 35 s for the autosave

@@ -1,0 +1,31 @@
+{
+  "fixture": "demo-forces",
+  "arm": "v2",
+  "minutes": 14.4,
+  "tutorTurns": 26,
+  "studentTurns": 25,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.58,
+  "questionAfterAnswerShare": 0.65,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 55,
+  "tutorWordsP90": 77,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 2011,
+  "firstSentenceMsP95": 2621,
+  "inputTokens": 1230627,
+  "outputTokens": 24700,
+  "costPerMinute": 0.003,
+  "endedBy": "student_end"
+}

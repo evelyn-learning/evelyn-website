@@ -1,0 +1,136 @@
+09:17:12 open fixture=gdi-real-josh arm=v2 student=gdi-v2-replay-gdi-real-josh-v2 (speech off)
+09:17:57 no start orb (auto-start?)
+09:17:57 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and your projects, practising the present perfect for experience and the past simple for finished events. Does that sound good to you?   [tools: new_page, annotate]
+09:18:19 STUDENT(ack) Yes, that sounds good. Thank you for the lesson today.
+09:18:25 TUTOR  You're welcome, Josh! Before we begin, there's a short level check: three friendly questions so I can adjust the lesson to you. Are you ready?
+09:18:39 STUDENT(ack) Yes, I am ready.
+09:18:44 TUTOR  Great. Here is the first question. Please answer in English, and don't worry about mistakes.
+
+
+   [tools: new_page, show_problem]
+09:18:57 STUDENT(answer) I am a manager at a communications company in Japan. I work with companies in Japan and also worldwide. My main responsibility is training division, and I help with sales for the division.
+09:18:59 TUTOR  Thank you, Josh. Training and sales in a communications company sounds like a busy role.
+
+Here is the second question:
+
+   [tools: show_problem]
+09:19:15 STUDENT(answer) Yes, I have worked with international customers. I work with companies in America, Europe, and Asia. We provide communication training for their employees.
+09:19:17 TUTOR  Thank you, that's helpful. Here is the third question:
+
+   [tools: show_problem]
+09:19:29 STUDENT(answer) I want to improve my conversation with customers before meetings. Often I do not know what to say, so this is important for my business.
+09:19:36 TUTOR  Thank you, Josh. Preparing for customer conversations is a very useful goal, and we will work on that today. We'll make your answers about your work more accurate and more natural.
+
+
+
+Shall we go on, or do you have a question first?   [tools: set_working_level]
+09:20:00 STUDENT(ack) Yes, let's go on. I am ready.
+09:20:05 TUTOR  Let's move on to talking about your work. Here is the main idea, which we'll practise in the next activities.
+
+
+
+We use the present perfect for experience that continues now, and the past simple for something finished at a specific time.
+
+
+
+Your answer about training and sales was clear. Now, what a   [tools: new_page, annotate, show_problem]
+09:20:36 STUDENT(answer) Do you want me to start now?
+09:20:38 TUTOR  Yes, please go ahead. Take your time, and answer the question on the board in at least two sentences.
+09:20:50 STUDENT(answer) I am the training division manager and I help with sales for the division. I schedule class for many teachers and I teach some class too.
+09:20:59 TUTOR  Good answer, Josh. Present simple is right for your current role, and you explained both parts of your job clearly.
+
+Now, how long have you been the training division manager?   [tools: annotate]
+09:21:17 STUDENT(answer) I work here for eleven year.
+09:21:27 TUTOR  Not quite. Since you started working here eleven years ago and you still work here, we need the present perfect (have/has + past participle) rather than the present simple. Can you try the sentence again?   [tools: annotate, show_timeline]
+09:21:48 STUDENT(answer) I have worked here for eleven year.
+09:21:55 TUTOR  Yes, that's right. The present perfect is correct because you started in the past and still work here now. One small change: after a number we say "years", not "year".
+
+
+
+Now, what is one important skill you have learned in your work over these years?   [tools: show_sentence, annotate]
+09:22:19 STUDENT(answer) わかりません。
+09:22:21 TUTOR  大丈夫ですよ。もう少し簡単に聞きますね。仕事で身につけたスキルは何ですか？ 英語で答えてみてください。
+
+Try starting with: "I have learned…"
+09:22:30 STUDENT(answer) I have learned to communicate with many customers from different countries.
+09:22:36 TUTOR  That's right: "I have learned" shows a skill you gained over time and still use. Your sentence is clear and natural.
+
+That completes our practice on experience. Next we'll look at the past simple, for things that finished at a specific time. Would you like to go on, or do you have a question first?
+09:23:02 STUDENT(ack) Yes, let's continue. I am ready.
+09:23:10 TUTOR  Now the past simple. We use it for something finished at a specific time: yesterday, last year, two weeks ago, in 2022. The verb changes to a past form, such as attend → attended, meet → met.
+
+
+
+
+Here is your question. Please answer in one or two sentences.
+
+   [tools: new_page, annotate, show_problem]
+09:23:35 STUDENT(answer) Yes, I attended a business event last year. I met many customers from different companies at the exhibition.
+09:23:42 TUTOR  That's right. "I attended" and "I met" are both correct past simple forms for a finished event last year.
+
+Which exhibition was it, and what did you talk about with the customers there?   [tools: show_sentence]
+09:24:03 STUDENT(answer) It was a communication technology exhibition in Tokyo. I talked about our training programs and how we can help their employees improve their English skills.
+09:24:05 TUTOR  "Talked" and "helped" are both correct past simple forms for an event that finished at a specific time.
+
+What did the customers think about your training programs?
+09:24:22 STUDENT(answer) Many customers were very interested in our programs. They asked many questions about the cost and the schedule for training.
+09:24:27 TUTOR  "Asked" is the correct past simple form, and "many questions" sounds natural.
+
+That completes our practice on finished events. Next is a longer conversation about a project you are proud of. Shall we go on, or do you have a question first?
+09:24:47 STUDENT(ack) Yes, let's continue. I am ready.
+09:24:52 TUTOR  
+
+Let's have a more natural conversation about your work. Try to use the present perfect and the past simple, but don't worry about being perfect.
+
+   [tools: new_page, show_problem]
+09:25:09 STUDENT(answer) I am proud of a training program we developed for a large company last year. We created a new curriculum for their sales team, and they improved their English communication very much.
+09:25:16 TUTOR  "We developed" and "we created" are correct past simple forms, because the project finished at a specific time, last year. Your sentence about their English is clear too.
+
+What was your role in this project, and what was the biggest challenge?   [tools: show_sentence]
+09:25:39 STUDENT(answer) I was the project manager for this training program. The biggest challenge was to understand what the customer really needed, because we had many meetings and sometimes the requirements changed.
+09:25:45 TUTOR  "I was the project manager" is correct, and "was" is the right past simple form for your role in a finished project.
+
+How did you solve the problem when the requirements changed? Have you worked on a similar project since then?
+09:26:07 STUDENT(answer) We communicated more carefully with the customer. We had weekly meetings to confirm what they wanted. Yes, I have worked on similar projects since then, and now we understand better how to manage changing requirements.
+09:26:13 TUTOR  "I have worked on similar projects since then" is a good use of the present perfect, because the experience started in the past and continues now. "We communicated more carefully" is also correct past simple.
+
+What is one thing you would do differently in your next project?
+09:26:36 STUDENT(answer) I would plan more time at the beginning to understand the customer's needs. I would also create a detailed document with all the requirements before we start the project.
+09:26:39 TUTOR  "I would plan more time" is a good use of "would" for a future change, and your sentence is clear.
+
+Now, how many years have you worked in training?
+09:26:54 STUDENT(answer) I have worked in my department for ten years.
+09:26:55 waiting 35 s for the autosave
+
+=== gdi-real-josh / v2 · 9.0 min · session embed-1794820633195 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/docs/superpowers/plans/gdi-v2-baseline/v2/gdi-real-josh-v2-mwj1v3iqsk9.json
+{
+  "fixture": "gdi-real-josh",
+  "arm": "v2",
+  "minutes": 9,
+  "tutorTurns": 22,
+  "studentTurns": 22,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.64,
+  "questionAfterAnswerShare": 0.75,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 35,
+  "tutorWordsP90": 48,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 1946,
+  "firstSentenceMsP95": 5144,
+  "inputTokens": 1016033,
+  "outputTokens": 16396,
+  "costPerMinute": 0.004,
+  "endedBy": "cap"
+}

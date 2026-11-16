@@ -1,0 +1,158 @@
+09:27:40 open fixture=gdi-showcase-advanced arm=v2 student=gdi-v2-replay-gdi-showcase-advanced-v2 (speech off)
+09:28:25 no start orb (auto-start?)
+09:28:25 TUTOR  Hello, I'm Jameson, and I'll be your tutor today. We'll talk about experiences you've had and how to describe the past in English, like "Have you ever been abroad?" and "I went to Osaka last year." Does that sound good to you?   [tools: annotate]
+09:28:48 STUDENT(answer) Yes, I'm ready.
+09:28:52 TUTOR  
+Great, let's start with you. Have you ever been to a country outside Japan?   [tools: new_page]
+09:29:05 STUDENT(answer) Yes, I have went to Singapore for business.
+09:29:10 TUTOR  Not quite. After "have" we need the past participle, not the simple past. Go, went, ___? Can you fix the sentence?
+
+   [tools: annotate]
+09:29:25 STUDENT(answer) Yes, I have been to Singapore for business.
+09:29:28 TUTOR  Yes, that's right: "I have been to Singapore for business." Now, when did you go to Singapore?
+
+   [tools: show_sentence]
+09:29:43 STUDENT(answer) I went to Singapore last year for a client meeting.
+09:29:46 TUTOR  Yes, "I went to Singapore last year" is correct. You used the past simple because "last year" is a finished time. What was the client meeting about?
+09:30:01 STUDENT(answer) We discussed a new marketing campaign for their product.
+09:30:04 TUTOR  That sounds like a useful meeting. Was it successful? Tell me why or why not.
+09:30:15 STUDENT(answer) Yes, it was successful. The client was very happy with our ideas.
+09:30:20 TUTOR  Thank you, that's a clear answer. Your sentences are full and easy to follow, and you corrected "have went" as soon as I pointed at it.   [tools: set_working_level]
+09:30:37 STUDENT(ack) Thank you!
+09:30:42 TUTOR  You're welcome, Aya. That's the warm-up done. Next we look at the four ways to talk about the past, and the one question that tells you which to use. Shall we go on?
+09:31:00 STUDENT(answer) Yes, please. I'm ready to learn.
+09:31:06 TUTOR  
+Here are the four ways on the board. The first question to ask yourself is: is there a finished time, like "last year"?
+
+
+
+Let's start with the experience row. Tell me one thing you have done in your life. Start with "I have…".   [tools: new_page, show_table]
+09:31:31 STUDENT(answer) I have visited many restaurants in Tokyo and tried different kinds of food.
+09:31:37 TUTOR  Yes, that's right. There's no finished time, so the present perfect fits: "I have visited many restaurants in Tokyo and tried different kinds of food."
+
+
+
+Now the second row, the past progressive. It describes an action that was in progress at a moment in the past, like "They were talking when the t   [tools: show_sentence]
+09:32:12 STUDENT(answer) I was working on a presentation yesterday at 3 o'clock.
+09:32:17 TUTOR  Yes, that's right. "Was working" shows an action that was in progress at 3 o'clock.
+
+Now the last row, the past perfect. It is for the earlier of two past events. In "The train had already left when we arrived," leaving happened first, so it gets "had left." Can you make one sentence with "had alrea
+09:32:48 STUDENT(answer) I had already finished my report when my boss arrived at the office.
+09:32:52 TUTOR  Yes, that's right. "Had finished" comes first, and "arrived" comes second, so the past perfect fits.
+
+
+
+Now a quick check. Is this sentence correct? Tell me yes or no, and why.
+
+   [tools: show_sentence, show_problem]
+09:33:13 STUDENT(answer) No, it is not correct. 'Last year' is a finished time, so we need past simple: 'I saw a lion at the zoo last year.'
+09:33:19 TUTOR  Yes, that's right. "Last year" is a finished time, so it takes the past simple: "I saw a lion at the zoo last year."
+
+That finishes the four ways to talk about the past. Next is a verb chart, where you say the missing past and past participle forms. Are you ready to start it?
+09:33:45 STUDENT(answer) Yes, I'm ready.
+09:33:48 TUTOR  
+Let's build the verb chart, one verb at a time. Here is the first row on the board.
+
+
+
+For "visit", the past and the past participle are the same. What is the past participle of "visit"?   [tools: new_page, show_table]
+09:34:08 STUDENT(answer) The past participle of 'visit' is 'visited'.
+09:34:10 TUTOR  Yes, "visited" is correct, and the past and the past participle are the same here. Now the next row: "stop, ?, stopped." What is the past form of "stop"?
+09:34:26 STUDENT(answer) The past form of 'stop' is 'stopped'.
+09:34:29 TUTOR  Yes, "stopped" is the past form, and it is the same as the past participle. Next row: "ride, ?, ridden." What is the past form of "ride"?
+09:34:45 STUDENT(answer) The past form of 'ride' is 'rode'.
+09:34:51 TUTOR  Yes, "rode" is correct, and "ridden" is the past participle. Here is the next row.
+
+
+
+Look at "eat, ate, ?". What is the past participle of "eat"?   [tools: show_table]
+09:35:09 STUDENT(answer) The past participle of 'eat' is 'eaten'.
+09:35:13 TUTOR  Yes, "eaten" is correct. Next: "hear, ?, heard." What is the past form of "hear"?
+09:35:25 STUDENT(answer) The past form of 'hear' is 'heard'.
+09:35:31 TUTOR  Yes, "heard" is correct, and the past participle is also "heard." Here is the next row.
+
+
+
+Careful with this one: what is the past form of "run"?   [tools: show_table]
+09:35:49 STUDENT(answer) The past form of 'run' is 'ran'.
+09:35:53 TUTOR  Yes, "ran" is correct. Now the last part of that row: what is the past participle of "run"? Careful, it looks like the present form.
+09:36:07 STUDENT(answer) The past participle of 'run' is 'run'.
+09:36:11 TUTOR  Yes, "run" is correct. The past participle is the same as the present here, so "run, ran, run" is the row.
+
+Now add two verbs of your own to the chart. Give me their past and past participle forms, then ask me one "Have you ever…?" question using one of those participles.
+09:36:36 STUDENT(answer) I choose 'go, went, gone' and 'eat, ate, eaten'. Have you ever eaten natto?
+09:36:41 TUTOR  Yes, "gone" and "eaten" are correct, and your question "Have you ever eaten natto?" is well formed. I haven't eaten natto, so I'm curious: did you like it?
+
+
+
+   [tools: show_table, show_sentence]
+09:36:59 STUDENT(answer) Yes, I like natto very much. It is traditional Japanese food and very healthy.
+09:37:05 TUTOR  Natto is a good example of traditional Japanese food, and it's a nice answer to your question.
+
+That finishes the verb chart. Next is a short set of sentences where you choose the right form. Are you ready to start it?
+09:37:27 STUDENT(answer) Yes, I'm ready.
+09:37:35 TUTOR  
+Here is a set of four sentences. For each one, choose the right form of the verb in brackets and say the full sentence. Let's go one at a time.
+
+
+
+Number one: "We ___ live in Tochigi since high school." Look for the time word first. What is the right form?   [tools: new_page, show_problem]
+09:38:03 STUDENT(answer) The time word is 'since high school', so we need present perfect: 'We have lived in Tochigi since high school.'
+09:38:05 TUTOR  Yes, that's right. "Since high school" is a starting point in the past that continues to now, so the present perfect fits.
+
+Number two: "The train ___ already ___ leave when we arrived." Two past events happened, and the leaving came first. Which form do you use for the earlier one, and what is the 
+09:38:33 STUDENT(answer) The earlier event needs past perfect: 'The train had already left when we arrived.'
+09:38:39 TUTOR  Yes, that's right. "Had left" is the earlier event, so it takes the past perfect.
+
+
+
+Number three: "They ___ talk loudly when the conductor came in." The talking was going on at that moment, so which form fits, and what is the full sentence?   [tools: show_sentence]
+09:39:03 STUDENT(answer) The action was in progress, so we need past progressive: 'They were talking loudly when the conductor came in.'
+09:39:09 TUTOR  Yes, that's right. "Were talking" shows the action that was in progress when the conductor came in.
+
+
+
+Number four: "I ___ go to Gifu last week." There is a finished time, "last week." Which form fits, and what is the full sentence?   [tools: show_sentence]
+09:39:33 STUDENT(answer) The finished time is 'last week', so we need past simple: 'I went to Gifu last week.'
+09:39:41 TUTOR  Yes, that's right. "Last week" is a finished time, so it takes the past simple: "I went to Gifu last week."
+
+That finishes the choosing practice. Next is a short role-play: I'll ask you about experiences, and you answer with your own ideas. Shall we start it?   [tools: show_sentence]
+09:40:06 STUDENT(answer) Yes, let's start. I'm ready.
+09:40:12 TUTOR  
+I'll play your colleague, and you answer with your own real experiences. Keep it natural, and talk as much as you like.
+
+
+
+Have you ever tried kayaking?   [tools: new_page, show_problem]
+09:40:31 STUDENT(answer) No, I have never tried kayaking. But I have been to the beach many times and I like water sports. Have you ever tried kayaking?
+09:40:36 TUTOR  Yes, I tried kayaking once, two years ago, on a lake near Kyoto. It was fun, but I was tired afterward! When did you last go to the beach?
+09:40:53 STUDENT(answer) I went to the beach last summer with my friends. We ate fresh seafood and watched the sunset together.
+09:40:56 TUTOR  That sounds lovely. What were you doing when the sun started to set?
+09:41:06 STUDENT(answer) We were sitting on the sand and talking about our work. It was very relaxing.
+09:41:09 TUTOR  That sounds relaxing. You used "were sitting" and "were talking" for actions in progress, which is exactly right. Had you been to that beach before last summer?
+09:41:25 STUDENT(answer) Yes, I had been to that beach before. I went there two years ago with my family.
+09:41:27 TUTOR  Yes, "had been" is the earlier visit, and "went" is the later one, so that's right. Did you go swimming at the beach last summer?
+09:41:42 STUDENT(answer) Yes, I went swimming. The water was very warm and nice.
+09:41:46 TUTOR  Sounds like a great day. Did you take any photos at the beach?
+09:41:57 STUDENT(answer) Yes, I took many photos with my phone. I still have them on my camera.
+09:42:05 TUTOR  Nice, you still have them on your camera. Now it's your turn to ask me. Ask me three questions about an experience I've had, using "Have you ever…?" and then "When / Where / Who…?" follow-ups.   [tools: annotate]
+09:42:25 STUDENT(answer) Have you ever travelled to Japan? When did you visit? And where did you go?
+09:42:32 TUTOR  I'm a tutor, so I have not travelled to Japan, but I can tell you what I know about the country. Your three questions are all correct: "Have you ever travelled to Japan?" uses the present perfect for experience, and "When did you visit?" and "Where did you go?" use the past simple for finished event   [tools: annotate]
+09:43:03 STUDENT(answer) Yes, thank you. I understand now when to use present perfect and past simple.
+09:43:08 TUTOR  Good, that's the key point. Here is a summary of today's work.
+
+
+
+Shall we go on, or do you have a question first?
+09:43:22 STUDENT(question) When do I use 'been' and when do I use 'gone'?
+09:43:28 TUTOR  Good question. "Gone" means someone went to a place and is not there now. "Been" means someone went and came back.
+
+
+
+Does that answer your question?   [tools: show_table]
+09:43:46 STUDENT(answer) Yes, thank you. That is very clear now.
+09:43:51 TUTOR  
+
+Next is summary: talking about the past. Shall we go on, or do you have a question first?
+09:44:10 input gone (locator.click: Timeout 8000ms exceeded.) — treating as closed
+09:44:10 waiting 35 s for the autosave

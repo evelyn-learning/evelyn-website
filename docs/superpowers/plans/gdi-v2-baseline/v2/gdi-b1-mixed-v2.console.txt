@@ -1,0 +1,173 @@
+09:01:30 open fixture=gdi-b1-mixed arm=v2 student=gdi-v2-replay-gdi-b1-mixed-v2 (speech off)
+09:02:15 no start orb (auto-start?)
+09:02:15 TUTOR  こんにちは、Ryotaです。今日は、あなたの仕事やプロジェクトについて英語で話す練習をします。文法は、経験を表す *present perfect* と、特定の時期に終わった出来事を表す *past simple* の二つを使います。このレッスンで大丈夫そうですか？ *Sounds good?*   [tools: annotate]
+09:02:25 STUDENT(ack) Yes, sounds good. I understand.
+09:02:30 TUTOR  Great, let's begin. Today you'll talk about your job and responsibilities, and practise two grammar points: the present perfect for experience, and the past simple for finished events. I'll ask follow-up questions to keep the conversation going, and I'll correct your mistakes, explain them, and give
+09:03:05 STUDENT(ack) Yes, I'm ready.
+09:03:10 TUTOR  
+Thank you. This is a short, friendly conversation, not a test. Please answer in English, and don't worry about mistakes. I want to see what you can already do, so the lesson is useful for you.
+
+Question 1: Can you tell me a little about your job? What do you do?   [tools: new_page]
+09:03:37 STUDENT(answer) I work in sales. I work for manufacturer company in Nagoya. I sell industrial products to customers.
+09:03:39 TUTOR  Thank you, that's clear. What kind of industrial products do you sell?
+09:03:49 STUDENT(answer) We make metal parts and components. For automotive and machinery industry.
+09:03:50 TUTOR  Thank you. Question 2: Have you ever worked with an international customer? If so, can you tell me about the experience?
+09:04:03 STUDENT(answer) Yes, I work with customer from Germany. We export products to them. It was difficult because English communication.
+09:04:06 TUTOR  That sounds like a challenging experience. Question 3: What is one skill you'd like to improve in your English, and why is it important to you?
+09:04:20 STUDENT(answer) 仕事で、メールとミーティングで英語を使うので、business communication が大切です. I want to write email more clearly and speak in meeting.
+09:04:31 TUTOR  Thank you. Business email and meetings are a very practical goal, and we will work on that today. Now let's look at how we talk about work and experience.
+
+
+
+「have worked」は今も続いている経験、「worked」は昨日のような終わった出来事に使います。では、次の質問に英語で答えてください。
+
+   [tools: set_working_level, new_page, annotate, show_problem]
+09:04:50 STUDENT(answer) My main responsibilities is sales and customer support. I manage relationship with customer and I prepare quotation for them.
+09:04:57 TUTOR  Good, you gave two clear sentences about your work. One small point: "responsibilities" is plural, so we use **are**: "My main responsibilities are…". Can you say the first sentence again with **are**?
+
+   [tools: show_sentence]
+09:05:16 STUDENT(answer) My main responsibilities are sales and customer support.
+09:05:21 TUTOR  Yes, that's right. "Responsibilities" is plural, so it takes **are**.
+
+
+
+Now, a follow-up question: how long have you worked for your current company?
+09:05:34 STUDENT(answer) I work here for eleven year.
+09:05:43 TUTOR  Good, you told me how long you've been there. Not quite, though: the tense is the problem. You started eleven years ago and you still work here now, so we use the present perfect.
+
+
+
+Can you try the sentence again? Start with: "I have worked…"   [tools: annotate]
+09:06:07 STUDENT(answer) I have worked here for eleven year.
+09:06:11 TUTOR  Yes, that's right: "I have worked here for eleven years." Good use of the present perfect, since you started in the past and you still work here.
+
+Now the present perfect has its own page. Here is a practice question for you.
+
+
+
+Shall we go on, or do you have a question first?
+09:06:36 STUDENT(ack) Yes, let's go on.
+09:06:41 TUTOR  
+Use the present perfect for experience that started in the past and is still true now: have or has, plus the past participle. The past participle of *learn* is *learned*.
+
+   [tools: new_page, show_problem]
+09:06:59 STUDENT(answer) I have learned many skill about sales and customer communication since I started.
+09:07:05 TUTOR  Yes, that's right. You used "have learned" to talk about skills you got over time, from when you started until now. That is exactly the present perfect.
+
+This part is done. Next is the past simple, for things that happened at a specific time. Shall we go on?
+09:07:28 STUDENT(ack) Yes, okay. Let's go on.
+09:07:34 TUTOR  
+Use the past simple for something that was finished at a specific time: yesterday, last year, two years ago, in 2022. The verb takes its past form: *attend* → *attended*, *join* → *joined*.
+
+
+
+過去の決まった時期に終わったことは past simple を使います。「last year」や「in 2022」のような時間の言葉があれば、present perfect ではなく past simple です   [tools: new_page, annotate, show_problem]
+09:07:58 STUDENT(answer) Yes, I attended a trade show in Tokyo last year. I met many customer there and showed our new products.
+09:08:05 TUTOR  Yes, that's right. "I attended a trade show in Tokyo last year" is the past simple for a finished event with a specific time. "Showed" is also correct.
+
+When did you join your company?   [tools: show_sentence]
+09:08:25 STUDENT(answer) I joined the company in 2013. That is eleven year ago.
+09:08:33 TUTOR  Yes, "I joined the company in 2013" is correct: a finished event with a specific year, so the past simple. One small thing: after a number, *year* takes an **s**, so it is "eleven years ago." Can you say the second sentence again?
+
+   [tools: show_sentence, show_sentence]
+09:08:57 STUDENT(answer) That is eleven years ago.
+09:09:04 TUTOR  Yes, "That was eleven years ago" is correct. The plural after a number is now right.
+
+That finishes the past simple. Next is the open conversation, where we talk about a project you are proud of. Shall we go on, or do you have a question first?   [tools: show_sentence]
+09:09:29 STUDENT(ack) Yes, let's go on.
+09:09:33 TUTOR  
+Good. Now let's talk more naturally about your work. Please answer in English, and use the past simple and the present perfect where they fit.
+
+   [tools: new_page, show_problem]
+09:09:51 STUDENT(answer) Last year, I worked on project to export products to new customer in Southeast Asia. We prepared documentation and negotiated price. It was successful and now we have regular order from them.
+09:10:00 TUTOR  That's a clear story, and you used both tenses well: "I worked on" for the finished project, and "now we have regular orders" for the result that continues now. One small point: *project* is a countable noun, so it needs *a* before it. Can you say the first sentence again with *a project*?   [tools: show_sentence]
+09:10:27 STUDENT(answer) Last year, I worked on a project to export products to new customer in Southeast Asia.
+09:10:35 TUTOR  Yes, "a project" is right now. One more article: before *new customer* we also need *a*, so it is "to export products to a new customer."
+
+
+
+Can you say the whole sentence once more?
+09:10:53 STUDENT(answer) Last year, I worked on a project to export products to a new customer in Southeast Asia.
+09:10:56 TUTOR  Yes, that's right: "a project" and "a new customer" are both correct now.
+
+What was your role in that project?
+09:11:09 STUDENT(answer) I was responsible for communication with customer and prepare quotation and contract. My colleague handle the logistics and shipping.
+09:11:22 TUTOR  Good, "I was responsible for…" is the right structure, and "was" is correct for a finished role. In your second sentence, "handle" is not quite right: "My colleague" is one person, so the verb needs an -s. Can you say that second sentence again?   [tools: annotate]
+09:11:47 STUDENT(answer) My colleague handles the logistics and shipping.
+09:11:55 TUTOR  Yes, "My colleague handles the logistics and shipping" is correct now.
+
+That finishes the conversation part. Next is optional pronunciation practice, where you can choose words, a sentence, or skip it. Shall we go on, or do you have a question first?
+09:12:16 STUDENT(question) Can we do pronunciation practice? I want to practise some word.
+09:12:25 TUTOR  
+では、*responsibilities* を練習しましょう。強く言うのは4つ目の音節です。
+
+
+
+Listen, then repeat after me.
+responsibilities.   [tools: new_page, annotate]
+09:12:35 STUDENT(answer) respon-si-biriti
+09:12:39 TUTOR  Close. Stress the **BIL** syllable more strongly, and let the last part sound like "-tees": re-spon-si-**BIL**-i-tees. Try the whole word once more.
+09:12:51 STUDENT(answer) re-spon-si-BIL-i-tees
+09:12:56 TUTOR  Yes, that's right: the stress is on **BIL** and the ending is "-tees."
+
+Would you like one more word, such as *international*, *communicate*, *customers* or *developed*, or shall we move to the summary?
+09:13:14 STUDENT(answer) I want to practise *communicate*. Please.
+09:13:19 TUTOR  Good choice. The stress in *communicate* is on the second syllable.
+
+
+
+Listen, then repeat after me: communicate.   [tools: annotate]
+09:13:33 STUDENT(answer) com-MU-ni-cate
+09:13:39 TUTOR  Yes, that's right: **com-MU-ni-cate**, with the stress on MU. I can only check the spelling of the stress here, not the sound itself, so say it aloud a few times on your own.
+
+Would you like one more word, such as *international*, *customers* or *developed*, or shall we move to the summary?
+09:14:03 STUDENT(answer) I think two word is enough. Can we move to summary?
+09:14:15 TUTOR  
+Great work today! Let's quickly review what you practised: talking about your work, your responsibilities and your experience.
+
+
+
+One thing you did well was the present perfect for your experience, such as "I have worked here for eleven years." You also described a finished project clearly with the   [tools: new_page, annotate, show_sentence, show_sentence, show_problem]
+09:15:09 STUDENT(answer) ちょっと待ってください
+09:15:11 TUTOR  はい、どうぞ。ゆっくりで大丈夫です。
+09:15:17 STUDENT(answer) First sentence, I work here now. Still working. Second sentence, I worked before, but maybe not now. Past simple is finished time.
+09:15:26 TUTOR  That's exactly right. The first sentence means you started five years ago and you still work there now. The second means you worked there at a finished time in the past, and you don't work there now.
+
+We have about six minutes left. Would you like one more short practice, for example one sentence wi   [tools: annotate, show_timeline]
+09:15:59 STUDENT(answer) I think we finish now. Thank you for lesson. Very helpful.
+09:16:02 TUTOR  Thank you, Haruto. You did well today with the present perfect for experience and the past simple for finished events, and your corrected sentences are good models. Next, look at the **-s** after a singular subject (*my colleague handles*) and the article before countable nouns (*a project*, *a cust
+09:16:26 STUDENT(end)
+09:16:26 waiting 35 s for the autosave
+
+=== gdi-b1-mixed / v2 · 14.2 min · session embed-1794819690250 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/docs/superpowers/plans/gdi-v2-baseline/v2/gdi-b1-mixed-v2-mwj1avp7mec.json
+{
+  "fixture": "gdi-b1-mixed",
+  "arm": "v2",
+  "minutes": 14.2,
+  "tutorTurns": 32,
+  "studentTurns": 31,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.63,
+  "questionAfterAnswerShare": 0.72,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 34,
+  "tutorWordsP90": 58,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 1914,
+  "firstSentenceMsP95": 4979,
+  "inputTokens": 1765437,
+  "outputTokens": 33532,
+  "costPerMinute": 0.005,
+  "endedBy": "tutor_close"
+}

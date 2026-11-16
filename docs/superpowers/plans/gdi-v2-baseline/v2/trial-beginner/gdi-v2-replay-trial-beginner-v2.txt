@@ -1,0 +1,412 @@
+{"sessionId":"embed-1794822294129","studentId":"gdi-v2-replay-trial-beginner-v2","createdAt":"2026-11-16T09:44:58.213Z","endedAt":"2026-11-16T10:01:34.016Z","turns":85,"events":270,"wb":27,"lp":{"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"open-conversation","completedSegmentIds":["present-perfect","past-simple"],"updatedAt":"2026-11-16T09:57:11.289Z"}}
+=== TRANSCRIPT
+   -1s   0 tutor: Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a project you're involved in, and practise two grammar points: the present perfect for experience and the past simple for finished events. Does that sound good? 始めてもよろしいですか？
+   49s   1 student: OK.
+   51s   2 tutor: Great, let's begin. First, a short level check so I can pitch the lesson to you. Please answer in English, and don't worry about mistakes.
+
+Question 1: Can you tell me a little about your job? What do you do?
+   76s   3 student: I work in sales department at electronics company in Osaka.
+   78s   4 tutor: Sounds good, Osaka sales is a great place to start. What kind of electronics do you sell?
+   92s   5 student: Last month I make a presentation for new product launch.
+   95s   6 tutor: That sounds like an important presentation. Thank you.
+
+Question 2: Have you ever worked with an international customer? If so, can you tell me about the experience?
+  113s   7 student: Last month I made a presentation for a new product launch.
+  115s   8 tutor: Thank you. Now I'd like to hear about your customers. Have you ever worked with a customer from another country?
+  131s   9 student: Last month I made a presentation for a new product launch.
+  132s  10 tutor: お話ありがとうございます。質問をもう一度、簡単にします。
+
+Do you have customers in other countries? (海外のお客様はいますか？)
+  142s  11 student: OK, thank you.
+  145s  12 tutor: You're welcome. Let's try once more, with a simpler question: do you have customers in other countries? (海外のお客様はいますか？) Just answer yes or no, and tell me a little more if you can.
+  212s  13 student: I see.
+  216s  14 tutor: Thank you. I'll keep the lesson at an intermediate pace, with full sentences and one follow-up question at a time.
+
+Next is your job and experience. Shall we go on, or do you have a question first?
+  238s  15 student: Last month I made a presentation for a new product launch.
+  242s  16 tutor: Good. "Last month" is a specific finished time, so we use the past simple: "I made a presentation last month." Let's look at the two tenses for your work.
+
+Now it's your turn. Please answer in two or three sentences.
+  269s  17 student: OK, thank you.
+  272s  18 tutor: Take your time. When you're ready, tell me your main responsibilities in two sentences. Start with: "I am responsible for..."
+  288s  19 student: すみません、もう一度言ってください。
+  290s  20 tutor: もう一度説明します。仕事の主な責任を、二文以上で話してください。
+
+Please tell me your main responsibilities at work in two sentences. Start with: "I am responsible for..."
+  302s  21 student: I was responsible for test the website.
+  304s  22 tutor: Not quite. After "responsible for," the verb must take the -ing form. Look at the word "test" in your sentence and try again.
+  323s  23 student: I was responsible for testing the website.
+  325s  24 tutor: Yes, that's right: "responsible for" is followed by the -ing form.
+
+Now add a second sentence about your work. For example, what do you do in the sales department every day?
+  348s  25 student: I work in the sales department of an electronics company in Osaka.
+  350s  26 tutor: Yes, that's a clear description of your job. Now the second sentence: use "responsible for" with the -ing form to say one of your sales tasks.
+  369s  27 student: I work in the sales department of an electronics company in Osaka, as I said.
+  371s  28 tutor: Yes, I understood that. Now give me a second sentence with "responsible for" and a sales task, like "I am responsible for..." followed by the -ing form.
+  390s  29 student: I was responsible for testing the website.
+  393s  30 tutor: That sentence is already on the board, so let's do a new one. In your sales work, what are you responsible for? Choose a verb and finish the sentence: "I am responsible for ___ing..." (visiting customers, managing orders, preparing quotes).
+  421s  31 student: I was responsible for testing the website, as I said.
+  423s  32 tutor: Yes, that sentence is correct and already on the board. Now choose one of the three tasks on the board and say it in your own words: "I am responsible for..." followed by the -ing form.
+  446s  33 student: I am responsible for...
+  448s  34 tutor: Let's finish that sentence together. Here is a model:
+
+Now make your own version with one of the other two tasks on the board. Say the whole sentence.
+  470s  35 student: OK.
+  472s  36 tutor: Good. Now say your own sentence with "managing orders" or "preparing quotes."
+  483s  37 student: Last month I made a presentation for a new product launch.
+  485s  38 tutor: That's correct, and "last month" is a good time phrase for the past simple. Now finish the job description with your own sentence: "I am responsible for managing..." or "I am responsible for preparing..."
+  505s  39 student: Last month I made a presentation for a new product launch, as I said.
+  508s  40 tutor: The sentence you're repeating is already on the board, so let's make a new one. Finish this with one word: "I am responsible for ___." Use "managing," "preparing," or "visiting."
+  529s  41 student: Last month I made a presentation for a new product launch.
+  532s  42 tutor: That presentation sentence is already correct, and we'll use it in the past simple part. This part is done, so let's move on to the present perfect: "I have worked here for…" for experience that continues now. Shall we go on?
+  557s  43 student: Last month I made a presentation for a new product launch.
+  559s  44 tutor: Let's move to the present perfect now. This sentence is already on the board, so I'll set a new question.
+  575s  45 student: OK, thank you.
+  577s  46 tutor: Take your time. Answer with a full sentence that starts with "I have worked..."
+  589s  47 student: Yes, I understand.
+  591s  48 tutor: Good. Now answer the question in your own words. Start with "I have worked..." and tell me how long you have worked for your current company.
+  608s  49 student: I have worked on new website project for two months.
+  611s  50 tutor: Yes, "I have worked on a new website project for two months" uses the present perfect correctly, for work that started two months ago and continues now. What have you achieved on this project so far?
+  637s  51 student: Last month I made a presentation for a new product launch.
+  640s  52 tutor: That sentence is already on the board, so let's move on to the past simple. We use it for finished events at a specific time, such as "last month" or "last year."
+  663s  53 student: Yes, I go to a trade show in Tokyo last year.
+  664s  54 tutor: Not quite. "Last year" is a finished time, so the verb must be in the past simple. Check the verb "go" and try again.
+  680s  55 student: Yes, I went to a trade show in Tokyo last year.
+  681s  56 tutor: Yes, that's right: "went" is the past simple form of "go," and "last year" is a finished time.
+
+What did you learn at the trade show?
+  702s  57 student: Yes, I went to a trade show in Tokyo last year, as I said.
+  703s  58 tutor: The trade show sentence is already on the board. Now answer my earlier question in a full sentence, using the past simple: what did you learn at the trade show? Start with "I learned..."
+  725s  59 student: I learned that communication is most important thing.
+  729s  60 tutor: Yes, "learned" is the past simple, and it's the right tense for something you learned at a finished event. One small point: we say "the most important thing."
+
+This part is done. Next is a conversation about a project you are proud of. Shall we go on?
+  757s  61 student: Last month I made a presentation for a new product launch.
+  760s  62 tutor: That presentation sentence is already on the board, so let's not repeat it. The past simple part is done. Next is a short conversation about a project you're proud of. Shall we go on, or do you have a question first?
+  785s  63 student: Last month I made a presentation for a new product launch.
+  787s  64 tutor: Let's use your presentation as the project to talk about. It's on the page now.
+  801s  65 student: We talk about the price and the delivery.
+  805s  66 tutor: Good, the price and the delivery are important parts of a launch. Since the presentation was last month, a finished event, say that sentence in the past simple. Try it again.
+  829s  67 student: Yes, I went to a trade show in Tokyo last year.
+  831s  68 tutor: The trade show sentence is already on the board. Back to your presentation: change "We talk about the price and the delivery" into the past simple and say it again.
+  854s  69 student: We talk about price and the delivery
+  855s  70 tutor: Not quite. The launch was last month, so the verb must be in the past. Look at "talk" and try the past form.
+  869s  71 student: I see.
+  871s  72 tutor: Good. Say the whole sentence with the past form of "talk."
+  880s  73 student: OK, thank you.
+  883s  74 tutor: Let's use the model: "We talked about the price and the delivery."
+
+Now try one answer in the past simple: how did the customers react to the new product?
+  902s  75 student: We talked about price and the delivery.
+  904s  76 tutor: Yes, "talked" is correct now, so you've fixed the tense. Let's keep the past simple going: how did the customers react to the new product?
+  920s  77 student: The customer say the price is good.
+  922s  78 tutor: Not quite. The customers reacted in the past, so the verb "say" needs the past form. Try the whole sentence again.
+  936s  79 student: I see.
+  938s  80 tutor: Please say the whole sentence again, starting with "The customer..." and using the past form of "say."
+  952s  81 student: The customer for my company last year.
+  957s  82 tutor: Not quite: the sentence needs a verb after "customer," and the past form of "say" goes there. Here is the correct sentence.
+
+We have about four minutes left. Would you like one short pronunciation practice, or shall we go straight to the summary?
+  986s  83 student: Last month I made a presentation for a new product launch.
+  990s  84 tutor: Thank you, Haruto. We're almost out of time, so here is the summary.
+
+You did well with the present perfect, and your sentence about the website project was clear and correct. Next, practise "responsible for" with an -ing verb, and the past simple after "last year" and "last month."
+=== WHITEBOARD
+    4s   0 {"action":"newPage","data":{"title":"Lesson overview","id":"inl_mwj2upq5_1"},"timestamp":"2026-11-16T09:45:01.882Z","sourceMessageIndex":0}
+    4s   1 {"action":"annotate","data":{"text":"Today's lesson: talking about your work\nPresent perfect: experience that continues now (I have worked here for five years)\nPast simple: finished events at a specific time (I attended an exhibition last year)","style":"highlight","rich":true,"id":"inl_mwj2upq5_2"},"timestamp":"2026-11-16T09:45:01.882Z","sourceMessageIndex":0}
+   52s   2 {"action":"newPage","data":{"title":"Level check","id":"inl_mwj2vubb_1"},"timestamp":"2026-11-16T09:45:49.915Z","sourceMessageIndex":2}
+  242s   3 {"action":"newPage","data":{"title":"Your job and experience","id":"inl_mwj2zwq3_1"},"timestamp":"2026-11-16T09:49:00.377Z","sourceMessageIndex":16}
+  243s   4 {"action":"showTable","data":{"headers":["","Present perfect","Past simple"],"rows":[["Used for","experience that started before and continues now","a completed event at a specific time"],["Time words","for three years, since 2020","last month, yesterday, two years ago"],["Example","I have worked with international customers for three years.","I made a presentation last month."]],"id":"inl_mwj2zwq3_2"},"timestamp":"2026-11-16T09:49:00.748Z","sourceMessageIndex":16}
+  243s   5 {"action":"showProblem","data":{"problem":{"statement":"Describe your main responsibilities at work.","format":"free-response","difficultyLabel":"easy","rich":true},"id":"inl_mwj2zwq3_3"},"timestamp":"2026-11-16T09:49:00.951Z","sourceMessageIndex":16}
+  305s   6 {"action":"annotate","data":{"text":"responsible for + noun or -ing verb\nExample: responsible for sales","style":"highlight","rich":true,"id":"inl_mwj319ds_1"},"timestamp":"2026-11-16T09:50:03.095Z","sourceMessageIndex":22}
+  326s   7 {"action":"showSentence","data":{"sentence":"I was responsible for testing the website.","emphasis":["testing"],"gloss":"responsible for + -ing","id":"inl_mwj31qhg_1"},"timestamp":"2026-11-16T09:50:23.731Z","sourceMessageIndex":24}
+  350s   8 {"action":"showSentence","data":{"sentence":"I work in the sales department of an electronics company in Osaka.","gloss":"あなたの仕事の説明です","id":"inl_mwj328y5_1"},"timestamp":"2026-11-16T09:50:48.666Z","sourceMessageIndex":26}
+  398s   9 {"action":"annotate","data":{"text":"I am responsible for + -ing\nvisiting customers · managing orders · preparing quotes","style":"highlight","rich":true,"id":"inl_mwj335yu_1"},"timestamp":"2026-11-16T09:51:35.752Z","sourceMessageIndex":30}
+  448s  10 {"action":"showSentence","data":{"sentence":"I am responsible for visiting customers.","emphasis":["visiting"],"gloss":"responsible for + -ing","id":"inl_mwj34chs_1"},"timestamp":"2026-11-16T09:52:26.378Z","sourceMessageIndex":34}
+  535s  11 {"action":"annotate","data":{"text":"Present perfect: have/has + past participle\nExperience that started in the past and continues now\nI have worked here for five years.","style":"highlight","rich":true,"id":"inl_mwj364pe_1"},"timestamp":"2026-11-16T09:53:53.235Z","sourceMessageIndex":42}
+  559s  12 {"action":"newPage","data":{"title":"Present perfect practice","id":"inl_mwj36qgt_1"},"timestamp":"2026-11-16T09:54:17.575Z","sourceMessageIndex":44}
+  560s  13 {"action":"showProblem","data":{"problem":{"statement":"Have you worked for your current company for a long time? Answer with a full sentence.","format":"free-response","difficultyLabel":"easy","rich":true},"id":"inl_mwj36qgt_2"},"timestamp":"2026-11-16T09:54:17.741Z","sourceMessageIndex":44}
+  614s  14 {"action":"showSentence","data":{"sentence":"I have worked on a new website project for two months.","gloss":"現在完了：二か月前に始まり、今も続いている","id":"inl_mwj37tib_1"},"timestamp":"2026-11-16T09:55:12.625Z","sourceMessageIndex":50}
+  640s  15 {"action":"newPage","data":{"title":"Past simple practice","id":"inl_mwj38fvp_1"},"timestamp":"2026-11-16T09:55:38.129Z","sourceMessageIndex":52}
+  640s  16 {"action":"annotate","data":{"text":"Past simple: subject + past-tense verb\nSpecific finished time: last year, yesterday, two years ago\nI attended an exhibition last year.","style":"highlight","rich":true,"id":"inl_mwj38fvp_2"},"timestamp":"2026-11-16T09:55:38.314Z","sourceMessageIndex":52}
+  640s  17 {"action":"showProblem","data":{"problem":{"statement":"Did you attend any business events or exhibitions last year? Answer with a full sentence, using the past simple.","format":"free-response","difficultyLabel":"easy","rich":true},"id":"inl_mwj38fvp_3"},"timestamp":"2026-11-16T09:55:38.458Z","sourceMessageIndex":52}
+  682s  18 {"action":"showSentence","data":{"sentence":"I went to a trade show in Tokyo last year.","emphasis":["went"],"gloss":"過去形 went：去年の出来事","id":"inl_mwj39d86_1"},"timestamp":"2026-11-16T09:56:19.905Z","sourceMessageIndex":56}
+  730s  19 {"action":"showSentence","data":{"sentence":"I learned that communication is the most important thing.","emphasis":["the","most"],"gloss":"最上級の前に the を入れます","id":"inl_mwj3ac6h_1"},"timestamp":"2026-11-16T09:57:08.062Z","sourceMessageIndex":60}
+  787s  20 {"action":"newPage","data":{"title":"Your project","id":"inl_mwj3bmen_1"},"timestamp":"2026-11-16T09:58:05.468Z","sourceMessageIndex":64}
+  788s  21 {"action":"showProblem","data":{"problem":{"statement":"Tell me about the new product launch presentation you made last month. What was the product, and what are you proud of?","format":"free-response","difficultyLabel":"medium","rich":true},"id":"inl_mwj3bmen_2"},"timestamp":"2026-11-16T09:58:05.715Z","sourceMessageIndex":64}
+  812s  22 {"action":"annotate","data":{"text":"Your sentence: We talk about the price and the delivery.\n\"Last month\" is a finished time, so think about the tense.","style":"highlight","rich":true,"id":"inl_mwj3bz1q_1"},"timestamp":"2026-11-16T09:58:29.742Z","sourceMessageIndex":66}
+  883s  23 {"action":"showSentence","data":{"sentence":"We talked about the price and the delivery.","emphasis":["talked"],"gloss":"過去形 talked：先月の発表","id":"inl_mwj3dnvs_1"},"timestamp":"2026-11-16T09:59:41.048Z","sourceMessageIndex":74}
+  957s  24 {"action":"showSentence","data":{"sentence":"The customer said the price was good.","emphasis":["said"],"gloss":"過去形 said：去年の顧客の反応","id":"inl_mwj3f735_1"},"timestamp":"2026-11-16T10:00:55.648Z","sourceMessageIndex":82}
+  990s  25 {"action":"newPage","data":{"title":"Summary","id":"inl_mwj3fxlq_1"},"timestamp":"2026-11-16T10:01:28.459Z","sourceMessageIndex":84}
+  991s  26 {"action":"annotate","data":{"text":"Present perfect: have/has + past participle, for experience that started before and continues now\nPast simple: a finished event at a specific time (last month, last year)\nLook at: \"responsible for\" + -ing, and the past form of verbs after a finished time","style":"highlight","rich":true,"id":"inl_mwj3fxlq_2"},"timestamp":"2026-11-16T10:01:28.876Z","sourceMessageIndex":84}
+=== EVENTS
+   -4s start_v2: tutor opens (text)
+   -4s embed_config: practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no
+   -4s persona_resolved: teacher=ryota
+   -4s start_v2: tutor opens (text)
+   -4s embed_config: practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no
+   -4s persona_resolved: teacher=ryota
+   -4s partner_pool_snapshot: remaining=75482 cap=130920 session_max=1200 exhausted=false
+   -4s partner_pool_snapshot: remaining=75482 cap=130920 session_max=1200 exhausted=false
+    0s tool_call: update_session_note → saved
+    4s tool_call: new_page → new page 1 "Lesson overview" · inline
+    4s tool_call: annotate → painted on page 1 · with "Today we'll talk about your work and a project you're involved in"
+    4s brain_turn: Brain 7418ms · first_sentence=3004ms · in=12274 out=1258 cr=35482 cc=0 · v2
+    4s qpin_set_verbatim: "Does that sound good?"
+    4s qpin_answer_clear_refused: no-student-turn — "Does that sound good?"
+   49s qpin_answer_clear_refused: not-answer-shaped (silent) — "Does that sound good?"
+   52s tool_call: new_page → new page 2 "Level check" · inline
+   52s tool_call: update_session_note → saved
+   54s brain_turn: Brain 4707ms · first_sentence=2585ms · in=12638 out=718 cr=35482 cc=770 · v2
+   54s qpin_replaced: new ask in turn tutor-1794822346951 — "Does that sound good?"
+   54s qpin_set_verbatim: "What do you do?"
+   54s qpin_answer_clear_refused: no-student-turn — "What do you do?"
+   76s qpin_answer_clear_refused: awaiting-tutor-turn — "What do you do?"
+   78s qpin_cleared_answered: answered, and the reply asked nothing more — "What do you do?"
+   79s tool_call: update_session_note → saved
+   79s brain_turn: Brain 2238ms · first_sentence=1370ms · in=512 out=389 cr=18126 cc=272 · v2
+   79s qpin_set_verbatim: "What kind of electronics do you sell?"
+   79s qpin_answer_clear_refused: no-student-turn — "What kind of electronics do you sell?"
+   92s qpin_answer_clear_refused: awaiting-tutor-turn — "What kind of electronics do you sell?"
+   95s qpin_cleared_answered: answered, and the reply asked nothing more — "What kind of electronics do you sell?"
+   96s tool_call: update_session_note → saved
+   96s brain_turn: Brain 3313ms · first_sentence=2202ms · in=557 out=625 cr=18398 cc=266 · v2
+   96s qpin_set: "Can you tell me about an experience working with an internat"
+   96s qpin_answer_clear_refused: no-student-turn — "Can you tell me about an experience working with an internat"
+  113s qpin_answer_clear_refused: awaiting-tutor-turn — "Can you tell me about an experience working with an internat"
+  115s qpin_cleared_answered: answered, and the reply asked nothing more — "Can you tell me about an experience working with an internat"
+  116s tool_call: update_session_note → saved
+  116s brain_turn: Brain 2682ms · first_sentence=1729ms · in=595 out=512 cr=18664 cc=322 · v2
+  116s qpin_set_verbatim: "Have you ever worked with a customer from another country?"
+  116s qpin_answer_clear_refused: no-student-turn — "Have you ever worked with a customer from another country?"
+  131s qpin_answer_clear_refused: awaiting-tutor-turn — "Have you ever worked with a customer from another country?"
+  132s segment_overlong: segment "overview" has run 6 substantive tutor turns without advancing
+  132s qpin_cleared_answered: answered, and the reply asked nothing more — "Have you ever worked with a customer from another country?"
+  132s brain_turn: Brain 1146ms · first_sentence=900ms · in=604 out=164 cr=18986 cc=317 · v2
+  133s qpin_set_verbatim: "Do you have customers in other countries?"
+  133s qpin_answer_clear_refused: no-student-turn — "Do you have customers in other countries?"
+  142s qpin_answer_clear_refused: not-answer-shaped (silent) — "Do you have customers in other countries?"
+  146s tool_call: update_session_note → saved
+  149s brain_turn: Brain 6433ms · first_sentence=2045ms · in=12829 out=1094 cr=37429 cc=1297 · v2
+  149s qpin_replaced: new ask in turn tutor-1794822440598 — "Do you have customers in other countries?"
+  149s qpin_set_verbatim: "Let's try once more, with a simpler question: do you have cu"
+  149s qpin_answer_clear_refused: no-student-turn — "Let's try once more, with a simpler question: do you have cu"
+  212s qpin_answer_clear_refused: not-answer-shaped (silent) — "Let's try once more, with a simpler question: do you have cu"
+  216s tool_call: new_page → not opened yet: the student is asked first
+  219s tool_call: set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson.
+  219s tool_call: set_goal_status → recorded
+  219s tool_call: update_session_note → saved
+  219s working_level_set: intermediate (v2)
+  219s brain_turn: Brain 6260ms · first_sentence=3366ms · in=577 out=1255 cr=19363 cc=361 · v2
+  219s qpin_replaced: new ask in turn tutor-1794822510412 — "Let's try once more, with a simpler question: do you have cu"
+  219s qpin_set_verbatim: "Shall we go on, or do you have a question first?"
+  219s qpin_answer_clear_refused: no-student-turn — "Shall we go on, or do you have a question first?"
+  239s qpin_answer_clear_refused: awaiting-tutor-turn — "Shall we go on, or do you have a question first?"
+  242s qpin_cleared_answered: answered and affirmed — "Shall we go on, or do you have a question first?"
+  242s tool_call: new_page → new page 3 "Your job and experience" · inline
+  243s tool_call: show_table → painted on page 3 · inline
+  243s tool_call: show_problem → painted on page 3 · inline
+  244s tool_call: update_session_note → saved
+  246s brain_turn: Brain 7251ms · first_sentence=3322ms · in=12800 out=1310 cr=39087 cc=1649 · v2
+  273s tool_call: update_session_note → saved
+  273s brain_turn: Brain 3595ms · first_sentence=2497ms · in=609 out=694 cr=20368 cc=522 · v2
+  273s qpin_drop: gist empty (model judged the "?" conversational)
+  290s brain_turn: Brain 1724ms · first_sentence=1357ms · in=625 out=217 cr=20890 cc=364 · v2
+  290s qpin_set_ask: gist empty: "Please tell me your main responsibilities at work in two sen"
+  290s qpin_answer_clear_refused: no-student-turn — "Please tell me your main responsibilities at work in two sen"
+  302s qpin_answer_clear_refused: awaiting-tutor-turn — "Please tell me your main responsibilities at work in two sen"
+  305s qpin_answer_clear_refused: correction — "Please tell me your main responsibilities at work in two sen"
+  305s tool_call: annotate → painted on page 3 · inline
+  308s brain_turn: Brain 6193ms · first_sentence=2834ms · in=12894 out=915 cr=41622 cc=1036 · v2
+  308s qpin_set: "What form should the verb take after "responsible for"?"
+  308s qpin_answer_clear_refused: no-student-turn — "What form should the verb take after "responsible for"?"
+  323s qpin_answer_clear_refused: awaiting-tutor-turn — "What form should the verb take after "responsible for"?"
+  325s qpin_cleared_answered: answered and affirmed — "What form should the verb take after "responsible for"?"
+  326s tool_call: show_sentence → painted on page 3 · inline
+  327s tool_call: update_session_note → saved
+  327s tool_call: track_gap → recorded
+  329s brain_turn: Brain 5354ms · first_sentence=1513ms · in=12989 out=936 cr=42658 cc=182 · v2
+  330s qpin_set: "What do you do in the sales department every day?"
+  330s qpin_answer_clear_refused: no-student-turn — "What do you do in the sales department every day?"
+  348s qpin_answer_clear_refused: awaiting-tutor-turn — "What do you do in the sales department every day?"
+  350s segment_overlong: segment "level-check" has run 6 substantive tutor turns without advancing
+  350s qpin_cleared_answered: answered and affirmed — "What do you do in the sales department every day?"
+  350s tool_call: show_sentence → painted on page 3 · inline
+  352s tool_call: update_session_note → saved
+  354s brain_turn: Brain 6413ms · first_sentence=2297ms · in=13122 out=1099 cr=42840 cc=1138 · v2
+  355s qpin_set: "What sales task are you responsible for?"
+  355s qpin_answer_clear_refused: no-student-turn — "What sales task are you responsible for?"
+  370s qpin_answer_clear_refused: awaiting-tutor-turn — "What sales task are you responsible for?"
+  371s qpin_cleared_answered: answered and affirmed — "What sales task are you responsible for?"
+  372s tool_call: update_session_note → saved
+  372s brain_turn: Brain 2660ms · first_sentence=1279ms · in=769 out=505 cr=21989 cc=466 · v2
+  373s qpin_set_ask: gist empty: "Now give me a second sentence with "responsible for" and a s"
+  373s qpin_answer_clear_refused: no-student-turn — "Now give me a second sentence with "responsible for" and a s"
+  390s qpin_answer_clear_refused: awaiting-tutor-turn — "Now give me a second sentence with "responsible for" and a s"
+  393s qpin_cleared_answered: answered, and the reply asked nothing more — "Now give me a second sentence with "responsible for" and a s"
+  394s tool_call: update_session_note → saved
+  398s tool_call: annotate → painted on page 3 · inline
+  398s brain_turn: Brain 6990ms · first_sentence=2198ms · in=13140 out=1211 cr=44444 cc=1256 · v2
+  398s qpin_set: "What verb completes "I am responsible for ___ing"?"
+  398s qpin_answer_clear_refused: no-student-turn — "What verb completes "I am responsible for ___ing"?"
+  421s qpin_answer_clear_refused: awaiting-tutor-turn — "What verb completes "I am responsible for ___ing"?"
+  423s qpin_cleared_answered: answered, and the reply asked nothing more — "What verb completes "I am responsible for ___ing"?"
+  424s tool_call: update_session_note → saved
+  425s brain_turn: Brain 4494ms · first_sentence=1803ms · in=13310 out=809 cr=45700 cc=978 · v2
+  426s qpin_set: "Choose one of the three tasks and rephrase it as "I am respo"
+  426s qpin_answer_clear_refused: no-student-turn — "Choose one of the three tasks and rephrase it as "I am respo"
+  446s qpin_answer_clear_refused: awaiting-tutor-turn — "Choose one of the three tasks and rephrase it as "I am respo"
+  447s tool_call: keep_listening → not done: the student is waiting for you to speak. Say the next thing now.
+  448s qpin_cleared_answered: answered, and the reply asked nothing more — "Choose one of the three tasks and rephrase it as "I am respo"
+  448s tool_call: show_sentence → painted on page 3 · inline
+  449s tool_call: update_session_note → saved
+  453s brain_turn: Brain 7443ms · first_sentence=2303ms · in=14285 out=1256 cr=70453 cc=872 · v2
+  454s qpin_set_ask: gist empty: "Say the whole sentence."
+  454s qpin_answer_clear_refused: no-student-turn — "Say the whole sentence."
+  470s qpin_answer_clear_refused: not-answer-shaped (silent) — "Say the whole sentence."
+  473s tool_call: update_session_note → saved
+  473s brain_turn: Brain 3333ms · first_sentence=2162ms · in=851 out=627 cr=23775 cc=504 · v2
+  473s qpin_replaced: new ask in turn tutor-1794822767777 — "Say the whole sentence."
+  474s qpin_set: "Can you create your own sentence using "managing orders" or "
+  474s qpin_answer_clear_refused: no-student-turn — "Can you create your own sentence using "managing orders" or "
+  483s qpin_answer_clear_refused: awaiting-tutor-turn — "Can you create your own sentence using "managing orders" or "
+  485s qpin_cleared_answered: answered, and the reply asked nothing more — "Can you create your own sentence using "managing orders" or "
+  486s tool_call: keep_listening → listening
+  487s brain_turn: Brain 4067ms · first_sentence=2212ms · in=13362 out=614 cr=48054 cc=1266 · v2
+  488s qpin_gist_ungrounded: "What task will you add to complete your job description sent" → "Now finish the job description with your own sentence: "I am"
+  488s qpin_answer_clear_refused: no-student-turn — "Now finish the job description with your own sentence: "I am"
+  506s qpin_answer_clear_refused: awaiting-tutor-turn — "Now finish the job description with your own sentence: "I am"
+  508s qpin_cleared_answered: answered, and the reply asked nothing more — "Now finish the job description with your own sentence: "I am"
+  510s brain_turn: Brain 4659ms · first_sentence=2235ms · in=13278 out=624 cr=49320 cc=242 · v2
+  511s qpin_set: "Finish this sentence with one word: "I am responsible for __"
+  511s qpin_answer_clear_refused: no-student-turn — "Finish this sentence with one word: "I am responsible for __"
+  529s qpin_answer_clear_refused: awaiting-tutor-turn — "Finish this sentence with one word: "I am responsible for __"
+  532s qpin_cleared_answered: answered, and the reply asked nothing more — "Finish this sentence with one word: "I am responsible for __"
+  535s tool_call: annotate → painted on page 3 · with "This part is done, so let's move on to the present perfect"
+  535s brain_turn: Brain 6140ms · first_sentence=3431ms · in=13286 out=903 cr=49562 cc=156 · v2
+  536s qpin_set_verbatim: "Shall we go on?"
+  536s qpin_answer_clear_refused: no-student-turn — "Shall we go on?"
+  557s qpin_answer_clear_refused: awaiting-tutor-turn — "Shall we go on?"
+  559s qpin_cleared_answered: answered, and the reply asked nothing more — "Shall we go on?"
+  559s tool_call: new_page → new page 4 "Present perfect practice" · inline
+  560s tool_call: show_problem → painted on page 4 · inline
+  562s brain_turn: Brain 4677ms · first_sentence=2060ms · in=13396 out=697 cr=49718 cc=268 · v2
+  577s brain_turn: Brain 1837ms · first_sentence=1768ms · in=917 out=211 cr=24993 cc=107 · v2
+  577s qpin_drop: gist empty (model judged the "?" conversational)
+  591s brain_turn: Brain 1658ms · first_sentence=1480ms · in=917 out=183 cr=25100 cc=37 · v2
+  591s qpin_drop: gist empty (model judged the "?" conversational)
+  612s tool_call: set_goal_status → recorded
+  612s tool_call: update_session_note → saved
+  614s tool_call: show_sentence → painted on page 4 · inline
+  614s brain_turn: Brain 6731ms · first_sentence=2977ms · in=13527 out=1186 cr=50130 cc=254 · v2
+  615s qpin_set: "What have you achieved on this project so far?"
+  615s qpin_answer_clear_refused: no-student-turn — "What have you achieved on this project so far?"
+  637s qpin_answer_clear_refused: awaiting-tutor-turn — "What have you achieved on this project so far?"
+  640s qpin_cleared_answered: answered, and the reply asked nothing more — "What have you achieved on this project so far?"
+  640s tool_call: new_page → new page 5 "Past simple practice" · inline
+  640s tool_call: annotate → painted on page 5 · inline
+  640s tool_call: show_problem → painted on page 5 · inline
+  641s tool_call: update_session_note → saved
+  644s brain_turn: Brain 7192ms · first_sentence=2982ms · in=13601 out=1269 cr=50384 cc=1100 · v2
+  666s tool_call: update_session_note → saved
+  666s tool_call: track_gap → recorded
+  666s brain_turn: Brain 2935ms · first_sentence=1294ms · in=758 out=591 cr=25742 cc=486 · v2
+  666s qpin_drop: gist empty (model judged the "?" conversational)
+  682s tool_call: show_sentence → painted on page 5 · inline
+  683s tool_call: track_gap → recorded
+  683s tool_call: update_session_note → saved
+  685s brain_turn: Brain 4896ms · first_sentence=1396ms · in=13344 out=928 cr=51970 cc=1568 · v2
+  685s qpin_set: "What did you learn at the trade show?"
+  685s qpin_answer_clear_refused: no-student-turn — "What did you learn at the trade show?"
+  702s qpin_answer_clear_refused: awaiting-tutor-turn — "What did you learn at the trade show?"
+  703s qpin_cleared_answered: answered, and the reply asked nothing more — "What did you learn at the trade show?"
+  705s tool_call: update_session_note → saved
+  706s brain_turn: Brain 3956ms · first_sentence=1332ms · in=13287 out=724 cr=53538 cc=1168 · v2
+  706s qpin_set_verbatim: "Now answer my earlier question in a full sentence, using the"
+  707s qpin_answer_clear_refused: no-student-turn — "Now answer my earlier question in a full sentence, using the"
+  725s qpin_answer_clear_refused: awaiting-tutor-turn — "Now answer my earlier question in a full sentence, using the"
+  729s qpin_cleared_answered: answered and affirmed — "Now answer my earlier question in a full sentence, using the"
+  730s tool_call: show_sentence → painted on page 5 · inline
+  731s tool_call: set_goal_status → recorded
+  731s tool_call: update_session_note → saved
+  733s brain_turn: Brain 7821ms · first_sentence=4197ms · in=13403 out=1381 cr=54706 cc=812 · v2
+  733s qpin_set_verbatim: "Shall we go on?"
+  733s qpin_answer_clear_refused: no-student-turn — "Shall we go on?"
+  757s qpin_answer_clear_refused: awaiting-tutor-turn — "Shall we go on?"
+  760s qpin_cleared_answered: answered, and the reply asked nothing more — "Shall we go on?"
+  763s brain_turn: Brain 5312ms · first_sentence=2835ms · in=13334 out=822 cr=55518 cc=1168 · v2
+  763s qpin_set_verbatim: "Shall we go on, or do you have a question first?"
+  763s qpin_answer_clear_refused: no-student-turn — "Shall we go on, or do you have a question first?"
+  785s qpin_answer_clear_refused: awaiting-tutor-turn — "Shall we go on, or do you have a question first?"
+  787s qpin_cleared_answered: answered, and the reply asked nothing more — "Shall we go on, or do you have a question first?"
+  787s tool_call: new_page → new page 6 "Your project" · inline
+  788s tool_call: show_problem → painted on page 6 · inline
+  789s tool_call: update_session_note → saved
+  790s brain_turn: Brain 5320ms · first_sentence=1955ms · in=13378 out=888 cr=56686 cc=164 · v2
+  807s tool_call: track_gap → recorded
+  807s tool_call: update_session_note → saved
+  812s tool_call: annotate → painted on page 6 · with "We talk about the price"
+  812s brain_turn: Brain 10045ms · first_sentence=3502ms · in=13368 out=1771 cr=56850 cc=876 · v2
+  812s qpin_set: "Say that sentence in past simple."
+  812s qpin_answer_clear_refused: no-student-turn — "Say that sentence in past simple."
+  830s qpin_answer_clear_refused: awaiting-tutor-turn — "Say that sentence in past simple."
+  831s qpin_cleared_answered: answered, and the reply asked nothing more — "Say that sentence in past simple."
+  832s tool_call: update_session_note → saved
+  835s brain_turn: Brain 5398ms · first_sentence=1580ms · in=13485 out=966 cr=57726 cc=1158 · v2
+  836s qpin_set: "Change "We talk about the price and the delivery" to past si"
+  836s qpin_answer_clear_refused: no-student-turn — "Change "We talk about the price and the delivery" to past si"
+  854s qpin_answer_clear_refused: awaiting-tutor-turn — "Change "We talk about the price and the delivery" to past si"
+  855s qpin_answer_clear_refused: correction — "Change "We talk about the price and the delivery" to past si"
+  855s tool_call: keep_listening → listening
+  855s brain_turn: Brain 1330ms · first_sentence=1133ms · in=956 out=158 cr=29442 cc=392 · v2
+  856s qpin_drop: gist empty (model judged the "?" conversational)
+  871s segment_overlong: segment "open-conversation" has run 6 substantive tutor turns without advancing
+  871s brain_turn: Brain 1636ms · first_sentence=1573ms · in=956 out=239 cr=29834 cc=78 · v2
+  872s qpin_set: "What is the sentence using the past form of "talk"?"
+  872s qpin_answer_clear_refused: no-student-turn — "What is the sentence using the past form of "talk"?"
+  880s qpin_answer_clear_refused: not-answer-shaped (silent) — "What is the sentence using the past form of "talk"?"
+  883s tool_call: show_sentence → painted on page 6 · inline
+  884s tool_call: update_session_note → saved
+  884s tool_call: track_gap → recorded
+  886s brain_turn: Brain 5377ms · first_sentence=2247ms · in=13510 out=994 cr=59354 cc=532 · v2
+  886s qpin_replaced: new ask in turn tutor-1794823178398 — "What is the sentence using the past form of "talk"?"
+  886s qpin_set: "How did the customers react to the new product?"
+  886s qpin_answer_clear_refused: no-student-turn — "How did the customers react to the new product?"
+  902s qpin_answer_clear_refused: awaiting-tutor-turn — "How did the customers react to the new product?"
+  904s qpin_cleared_answered: answered and affirmed — "How did the customers react to the new product?"
+  905s tool_call: track_gap → recorded
+  905s brain_turn: Brain 2254ms · first_sentence=1752ms · in=970 out=350 cr=29943 cc=568 · v2
+  905s qpin_set: "How did the customers react to the new product?"
+  905s qpin_answer_clear_refused: no-student-turn — "How did the customers react to the new product?"
+  920s qpin_answer_clear_refused: awaiting-tutor-turn — "How did the customers react to the new product?"
+  922s qpin_answer_clear_refused: correction — "How did the customers react to the new product?"
+  923s tool_call: update_session_note → saved
+  923s brain_turn: Brain 2710ms · first_sentence=1411ms · in=964 out=513 cr=30511 cc=153 · v2
+  923s qpin_replaced: new ask in turn tutor-1794823218521 — "How did the customers react to the new product?"
+  924s qpin_set_ask: gist empty: "Try the whole sentence again."
+  924s qpin_answer_clear_refused: no-student-turn — "Try the whole sentence again."
+  936s qpin_answer_clear_refused: not-answer-shaped (silent) — "Try the whole sentence again."
+  938s brain_turn: Brain 1545ms · first_sentence=1398ms · in=965 out=170 cr=30664 cc=373 · v2
+  938s qpin_replaced: new ask in turn tutor-1794823234499 — "Try the whole sentence again."
+  938s qpin_set_ask: gist empty: "Please say the whole sentence again, starting with "The cust"
+  938s qpin_answer_clear_refused: no-student-turn — "Please say the whole sentence again, starting with "The cust"
+  952s qpin_answer_clear_refused: awaiting-tutor-turn — "Please say the whole sentence again, starting with "The cust"
+  957s qpin_answer_clear_refused: correction — "Please say the whole sentence again, starting with "The cust"
+  957s tool_call: show_sentence → painted on page 6 · inline
+  959s tool_call: track_gap → recorded
+  959s tool_call: update_session_note → saved
+  963s brain_turn: Brain 11393ms · first_sentence=5299ms · in=13607 out=1969 cr=60980 cc=1178 · v2
+  963s qpin_replaced: new ask in turn tutor-1794823249960 — "Please say the whole sentence again, starting with "The cust"
+  964s qpin_set: "Another short pronunciation practice, or straight to the sum"
+  964s qpin_answer_clear_refused: no-student-turn — "Another short pronunciation practice, or straight to the sum"
+  986s qpin_answer_clear_refused: awaiting-tutor-turn — "Another short pronunciation practice, or straight to the sum"
+  990s qpin_cleared_answered: answered, and the reply asked nothing more — "Another short pronunciation practice, or straight to the sum"
+  990s tool_call: new_page → new page 7 "Summary" · inline
+  991s tool_call: annotate → painted on page 7 · inline
+  992s tool_call: end_lesson → the session is ending
+  992s brain_turn: Brain 5559ms · first_sentence=3892ms · in=1007 out=1034 cr=31079 cc=623 · v2
+  992s lesson_closed: end_lesson
+  992s practice_draft_empty: lo=[gdi.work-projects.conversation] trigger=close_tool status=204 (v2)
+  992s qpin_drop: gist empty (model judged the "?" conversational)
+  992s v2_practice_assign: finalize status=204
+  995s v2_profile_commit: status=200 gaps=3 mastery=[] evidence=0 turns=85

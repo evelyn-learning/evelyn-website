@@ -1,0 +1,160 @@
+09:44:53 open http://localhost:3019/tutor-portal/embed?token=eyJhbGciOiJIU… student=gdi-v2-replay-trial-beginner-v2 variant=beginner seed=93805
+09:45:24 no start orb (auto-start?)
+09:45:24 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a project you're involved in, and practise two grammar points: the present perfect for experience and the past simple for finished events. Does that sound good? 始めてもよろしいですか？   [tools: update_session_note,new_page,annotate]
+09:45:46 STUDENT(fallback) OK.
+09:45:52 TUTOR  Great, let's begin. First, a short level check so I can pitch the lesson to you. Please answer in English, and don't worry about mistakes.
+
+
+
+Question 1: Can you tell me a little about your job? What do you do?   [tools: new_page,update_session_note]
+09:46:14 STUDENT(job) I work in sales department at electronics company in Osaka.
+09:46:17 TUTOR  Sounds good, Osaka sales is a great place to start. What kind of electronics do you sell?   [tools: update_session_note]
+09:46:30 STUDENT(fallback-q) Last month I make a presentation for new product launch.
+09:46:34 TUTOR  That sounds like an important presentation. Thank you.
+
+Question 2: Have you ever worked with an international customer? If so, can you tell me about the experience?   [tools: update_session_note]
+09:46:51 STUDENT(fallback-q) Last month I made a presentation for a new product launch.
+09:46:54 TUTOR  Thank you. Now I'd like to hear about your customers. Have you ever worked with a customer from another country?   [tools: update_session_note]
+09:47:09 STUDENT(fallback-q) Last month I made a presentation for a new product launch.
+09:47:10 TUTOR  お話ありがとうございます。質問をもう一度、簡単にします。
+
+Do you have customers in other countries? (海外のお客様はいますか？)
+09:47:20 STUDENT(fallback) OK, thank you.
+09:47:27 TUTOR  You're welcome. Let's try once more, with a simpler question: do you have customers in other countries? (海外のお客様はいますか？) Just answer yes or no, and tell me a little more if you can.   [tools: update_session_note]
+09:47:42 (slow turn: 48 s silence)
+09:48:30 STUDENT(fallback) I see.
+09:48:36 TUTOR  Thank you. I'll keep the lesson at an intermediate pace, with full sentences and one follow-up question at a time.
+
+
+
+Next is your job and experience. Shall we go on, or do you have a question first?   [tools: new_page,set_working_level,set_goal_status,update_session_note]
+09:48:56 STUDENT(fallback-q) Last month I made a presentation for a new product launch.
+09:49:04 TUTOR  Good. "Last month" is a specific finished time, so we use the past simple: "I made a presentation last month." Let's look at the two tenses for your work.
+
+
+
+
+
+Now it's your turn. Please answer in two or three sentences.
+
+   [tools: new_page,show_table,show_problem,update_session_note]
+09:49:27 STUDENT(fallback) OK, thank you.
+09:49:31 TUTOR  Take your time. When you're ready, tell me your main responsibilities in two sentences. Start with: "I am responsible for..."   [tools: update_session_note]
+09:49:46 STUDENT(japanese) すみません、もう一度言ってください。
+09:49:48 TUTOR  もう一度説明します。仕事の主な責任を、二文以上で話してください。
+
+Please tell me your main responsibilities at work in two sentences. Start with: "I am responsible for..."
+09:49:59 STUDENT(responsible) I was responsible for test the website.
+09:50:06 TUTOR  Not quite. After "responsible for," the verb must take the -ing form. Look at the word "test" in your sentence and try again.
+
+   [tools: annotate]
+09:50:21 STUDENT(responsible) I was responsible for testing the website.
+09:50:27 TUTOR  Yes, that's right: "responsible for" is followed by the -ing form.
+
+
+
+Now add a second sentence about your work. For example, what do you do in the sales department every day?   [tools: show_sentence,update_session_note,track_gap]
+09:50:45 STUDENT(job) I work in the sales department of an electronics company in Osaka.
+09:50:52 TUTOR  Yes, that's a clear description of your job. Now the second sentence: use "responsible for" with the -ing form to say one of your sales tasks.
+
+   [tools: show_sentence,update_session_note]
+09:51:07 STUDENT(job (alt)) I work in the sales department of an electronics company in Osaka, as I said.
+09:51:10 TUTOR  Yes, I understood that. Now give me a second sentence with "responsible for" and a sales task, like "I am responsible for..." followed by the -ing form.   [tools: update_session_note]
+09:51:28 STUDENT(responsible) I was responsible for testing the website.
+09:51:35 TUTOR  That sentence is already on the board, so let's do a new one. In your sales work, what are you responsible for? Choose a verb and finish the sentence: "I am responsible for ___ing..." (visiting customers, managing orders, preparing quotes).   [tools: update_session_note,annotate]
+09:51:58 STUDENT(responsible (alt)) I was responsible for testing the website, as I said.
+09:52:03 TUTOR  Yes, that sentence is correct and already on the board. Now choose one of the three tasks on the board and say it in your own words: "I am responsible for..." followed by the -ing form.   [tools: update_session_note]
+09:52:23 STUDENT(repeat with slip) I am responsible for...
+09:52:31 TUTOR  Let's finish that sentence together. Here is a model:
+
+
+
+Now make your own version with one of the other two tasks on the board. Say the whole sentence.   [tools: keep_listening,show_sentence,update_session_note]
+09:52:47 STUDENT(fallback) OK.
+09:52:51 TUTOR  Good. Now say your own sentence with "managing orders" or "preparing quotes."   [tools: update_session_note]
+09:53:00 STUDENT(recent) Last month I made a presentation for a new product launch.
+09:53:05 TUTOR  That's correct, and "last month" is a good time phrase for the past simple. Now finish the job description with your own sentence: "I am responsible for managing..." or "I am responsible for preparing..."   [tools: keep_listening]
+09:53:23 STUDENT(recent (alt)) Last month I made a presentation for a new product launch, as I said.
+09:53:28 TUTOR  The sentence you're repeating is already on the board, so let's make a new one. Finish this with one word: "I am responsible for ___." Use "managing," "preparing," or "visiting."
+09:53:47 STUDENT(recent) Last month I made a presentation for a new product launch.
+09:53:53 TUTOR  That presentation sentence is already correct, and we'll use it in the past simple part. This part is done, so let's move on to the present perfect: "I have worked here for…" for experience that continues now. Shall we go on?   [tools: annotate]
+09:54:15 STUDENT(fallback-q) Last month I made a presentation for a new product launch.
+09:54:20 TUTOR  Let's move to the present perfect now. This sentence is already on the board, so I'll set a new question.
+
+
+
+   [tools: new_page,show_problem]
+09:54:33 STUDENT(fallback) OK, thank you.
+09:54:35 TUTOR  Take your time. Answer with a full sentence that starts with "I have worked..."
+09:54:47 STUDENT(fallback) Yes, I understand.
+09:54:49 TUTOR  Good. Now answer the question in your own words. Start with "I have worked..." and tell me how long you have worked for your current company.
+09:55:05 STUDENT(scaffold) I have worked on new website project for two months.
+09:55:12 TUTOR  Yes, "I have worked on a new website project for two months" uses the present perfect correctly, for work that started two months ago and continues now. What have you achieved on this project so far?   [tools: set_goal_status,update_session_note,show_sentence]
+09:55:34 STUDENT(fallback-q) Last month I made a presentation for a new product launch.
+09:55:42 TUTOR  That sentence is already on the board, so let's move on to the past simple. We use it for finished events at a specific time, such as "last month" or "last year."
+
+
+
+
+
+   [tools: new_page,annotate,show_problem,update_session_note]
+09:56:01 STUDENT(events) Yes, I go to a trade show in Tokyo last year.
+09:56:04 TUTOR  Not quite. "Last year" is a finished time, so the verb must be in the past simple. Check the verb "go" and try again.   [tools: update_session_note,track_gap]
+09:56:17 STUDENT(events) Yes, I went to a trade show in Tokyo last year.
+09:56:23 TUTOR  Yes, that's right: "went" is the past simple form of "go," and "last year" is a finished time.
+
+
+
+What did you learn at the trade show?   [tools: show_sentence,track_gap,update_session_note]
+09:56:40 STUDENT(events (alt)) Yes, I went to a trade show in Tokyo last year, as I said.
+09:56:44 TUTOR  The trade show sentence is already on the board. Now answer my earlier question in a full sentence, using the past simple: what did you learn at the trade show? Start with "I learned..."   [tools: update_session_note]
+09:57:03 STUDENT(scaffold) I learned that communication is most important thing.
+09:57:11 TUTOR  Yes, "learned" is the past simple, and it's the right tense for something you learned at a finished event. One small point: we say "the most important thing."
+
+
+
+This part is done. Next is a conversation about a project you are proud of. Shall we go on?   [tools: show_sentence,set_goal_status,update_session_note]
+09:57:35 STUDENT(fallback-q) Last month I made a presentation for a new product launch.
+09:57:40 TUTOR  That presentation sentence is already on the board, so let's not repeat it. The past simple part is done. Next is a short conversation about a project you're proud of. Shall we go on, or do you have a question first?
+09:58:03 STUDENT(fallback-q) Last month I made a presentation for a new product launch.
+09:58:08 TUTOR  Let's use your presentation as the project to talk about. It's on the page now.
+
+
+
+   [tools: new_page,show_problem,update_session_note]
+09:58:19 STUDENT(talkedAbout) We talk about the price and the delivery.
+09:58:29 TUTOR  Good, the price and the delivery are important parts of a launch. Since the presentation was last month, a finished event, say that sentence in the past simple. Try it again.   [tools: track_gap,update_session_note,annotate]
+09:58:47 STUDENT(events) Yes, I went to a trade show in Tokyo last year.
+09:58:53 TUTOR  The trade show sentence is already on the board. Back to your presentation: change "We talk about the price and the delivery" into the past simple and say it again.   [tools: update_session_note]
+09:59:12 STUDENT(repeat with slip) We talk about price and the delivery
+09:59:13 TUTOR  Not quite. The launch was last month, so the verb must be in the past. Look at "talk" and try the past form.   [tools: keep_listening]
+09:59:27 STUDENT(fallback) I see.
+09:59:29 TUTOR  Good. Say the whole sentence with the past form of "talk."
+09:59:38 STUDENT(fallback) OK, thank you.
+09:59:44 TUTOR  Let's use the model: "We talked about the price and the delivery."
+
+
+
+Now try one answer in the past simple: how did the customers react to the new product?   [tools: show_sentence,update_session_note,track_gap]
+10:00:00 STUDENT(repeat with slip) We talked about price and the delivery.
+10:00:03 TUTOR  Yes, "talked" is correct now, so you've fixed the tense. Let's keep the past simple going: how did the customers react to the new product?   [tools: track_gap]
+10:00:18 STUDENT(customerSaid) The customer say the price is good.
+10:00:21 TUTOR  Not quite. The customers reacted in the past, so the verb "say" needs the past form. Try the whole sentence again.   [tools: update_session_note]
+10:00:34 STUDENT(fallback) I see.
+10:00:36 TUTOR  Please say the whole sentence again, starting with "The customer..." and using the past form of "say."
+10:00:50 STUDENT(scaffold) The customer for my company last year.
+10:01:01 TUTOR  Not quite: the sentence needs a verb after "customer," and the past form of "say" goes there. Here is the correct sentence.
+
+
+
+We have about four minutes left. Would you like one short pronunciation practice, or shall we go straight to the summary?   [tools: show_sentence,track_gap,update_session_note]
+10:01:24 STUDENT(fallback-q) Last month I made a presentation for a new product launch.
+10:01:30 TUTOR  Thank you, Haruto. We're almost out of time, so here is the summary.
+
+
+
+
+
+You did well with the present perfect, and your sentence about the website project was clear and correct. Next, practise "responsible for" with an -ing verb, and the past simple after "last year" and "last month."   [tools: new_page,annotate,end_lesson]
+10:02:03 input gone (locator.click: Timeout 8000ms exceeded.) — treating as closed
+10:02:23 waiting 35 s for the autosave

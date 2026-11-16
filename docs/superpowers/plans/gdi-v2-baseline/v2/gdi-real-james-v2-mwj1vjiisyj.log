@@ -1,0 +1,153 @@
+09:17:33 open fixture=gdi-real-james arm=v2 student=gdi-v2-replay-gdi-real-james-v2 (speech off)
+09:18:18 no start orb (auto-start?)
+09:18:18 TUTOR  Hello James, I'm Ryota, and I'll be your English teacher today. We'll practise talking about your work and the projects you are involved in, using the present perfect for experience and the past simple for finished events. Does that sound good to you?   [tools: annotate]
+09:18:42 STUDENT(ack) Oh, yes.
+09:18:48 TUTOR  
+Great, let's begin. This is a short, friendly conversation so I can see what you can already do. Please answer in English, and don't worry about mistakes.
+
+Can you tell me a little about your job? What do you do?   [tools: new_page, annotate]
+09:19:10 STUDENT(answer) I'm engineer.
+09:19:12 TUTOR  Thank you, James. What kind of engineer are you?
+09:19:21 STUDENT(answer) Uh, I make car.
+09:19:25 TUTOR  Thank you. Which part of the car do you work on, the engine or the body?
+
+   [tools: annotate]
+09:19:38 STUDENT(answer) Uh, sorry. I don't understand.
+09:19:39 TUTOR  No problem, I'll ask it more simply. 車のどの部分を作っていますか？
+
+Do you make the engine, or the body of the car?
+09:19:51 STUDENT(answer) Engine. I make engine.
+09:19:56 TUTOR  Thank you, James. You make engines for cars.
+
+Next question: Have you ever worked with an international customer? If so, can you tell me about it?
+
+   [tools: annotate]
+09:20:15 STUDENT(answer) Uh, yes. We work with customer in Germany. They buy engine for truck. Good business.
+09:20:19 TUTOR  Thank you, James. That's a good business. Now the last question: What is one skill you would like to improve in your English, and why is it important to you?
+
+   [tools: annotate]
+09:20:38 STUDENT(answer) Uh, time management. Helps me build more cars.
+09:20:49 TUTOR  Thank you, James. Time management is a good skill to work on. Today we'll make your sentences clearer and more natural.
+
+
+仕事について話すときは、短い文で大丈夫です。まず、例を見ましょう。
+
+
+
+
+
+Now it's your turn. Try starting with: "I work…" Can you say one sentence about your job?   [tools: set_working_level, new_page, annotate, show_sentence]
+09:21:11 STUDENT(answer) I work in car engine company. I make engine for truck.
+09:21:16 TUTOR  Good, James. That's a clear sentence. One small change: we say "engines for trucks", with an *s* on both words, because you make more than one.
+
+
+
+Now try this one: What is your job at the company? Start with "I am a…" or "I work as a…".   [tools: show_sentence]
+09:21:41 STUDENT(answer) I am a engineer. I work as engineer at company.
+09:21:42 TUTOR  Good effort, James. One small change: before a vowel sound like "engineer," we say "an," not "a."
+
+Can you say the sentence again with "an"?
+09:21:56 STUDENT(answer) I am an engineer. I work as an engineer at company.
+09:22:00 TUTOR  Yes, James, that's correct. "I work as an engineer at a company" is a clear sentence about your job.
+
+That covers talking about your job. Next, we'll practise the present perfect, for experience that started in the past and continues now. Shall we go on?
+09:22:21 STUDENT(ack) Yes, okay.
+09:22:28 TUTOR  
+次は現在完了です。過去に始まって、今も続いている経験や出来事に使います。形は have / has + 過去分詞です。
+
+
+
+
+
+Now let's try it. Have you worked for your current company for a long time?
+
+   [tools: new_page, annotate, show_problem]
+09:22:44 STUDENT(answer) Uh, yes, for seven year.
+09:22:52 TUTOR  Yes, you have worked there for seven years, and that is the right idea. Two small changes: say "I have worked" at the start, and use "years" with an *s* after a number.
+
+Can you say the full sentence again?   [tools: show_sentence]
+09:23:15 STUDENT(answer) I have worked here for seven years.
+09:23:21 TUTOR  Yes, "I have worked here for seven years." is correct. You used "have worked" for something that started in the past and still continues.
+
+That completes the present perfect. Next is the past simple, for finished events at a specific time, such as "last year." Shall we go on?
+09:23:45 STUDENT(ack) Yes.
+09:23:51 TUTOR  
+過去の終わった出来事に使います。「昨年」「昨日」「2年前」のような、いつのことかはっきりした時間の言葉と一緒に使います。
+
+
+
+Now try one. Did you attend any business events or exhibitions last year?
+
+   [tools: new_page, annotate, show_problem]
+09:24:04 STUDENT(answer) I attended about six exhibitions last year.
+09:24:09 TUTOR  Yes, "I attended about six exhibitions last year." is correct. You used the past simple, "attended," for a finished event with a time word, "last year."
+
+Which exhibition did you attend? Try starting with "I attended…"
+
+   [tools: show_problem]
+09:24:29 STUDENT(answer) I attended Comdex in Las Vegas. It was great because it was informative and modern.
+09:24:35 TUTOR  Good, James. "I attended Comdex in Las Vegas" is correct, and "was" is the past simple of "is", so that is correct too.
+
+Did you meet any customers at Comdex?
+09:24:51 STUDENT(answer) Yes, I met some customers from Europe. We talked about new engine technology and future projects.
+09:24:58 TUTOR  Yes, James, "I met some customers from Europe" and "We talked about…" are both correct past simple sentences. You used the past tense for events that were finished at Comdex.
+
+That completes the past simple. Next, we'll have a short conversation about a project you're proud of. Shall we go on?
+09:25:23 STUDENT(ack) Yes, okay.
+09:25:26 TUTOR  
+プロジェクトについて話しましょう。簡単な文で大丈夫です。
+
+   [tools: new_page, show_problem]
+09:25:34 STUDENT(answer) I worked on a project to develop a new flying car. It was very challenging and exciting.
+09:25:39 TUTOR  Yes, James, "I worked on a project to develop a new flying car" is a clear sentence, and "It was very challenging" is correct too.
+
+What was the most challenging part of the project? Try starting with "The most challenging part was…"   [tools: annotate]
+09:26:04 STUDENT(answer) The most challenging part was finding technology to lift the car off the ground. We needed about ten other engineers to solve this problem.
+09:26:09 TUTOR  Yes, James, that is clear. "The most challenging part was finding technology to lift the car" is a good sentence, and "We needed about ten other engineers" is correct too.
+
+Have you worked on a similar project since then? Try starting with "Yes, I have…" or "No, I have not…".
+
+   [tools: show_problem]
+09:26:35 STUDENT(answer) No, I have not worked on a similar project since then. But we are planning a new project for next year with better technology.
+09:26:40 TUTOR  Yes, James, that's correct. "No, I have not worked on a similar project since then" uses the present perfect, and "we are planning a new project for next year" describes the future clearly.
+
+What will the new project be about? Try starting with "The new project is…"
+
+   [tools: show_problem]
+09:27:05 STUDENT(answer) The new project is about developing an engine with lower emissions and better fuel efficiency. We want to make cars more environmentally friendly.
+09:27:13 TUTOR  Yes, James, "The new project is about developing an engine with lower emissions" is clear and correct. You explained your goal well.
+
+That completes our conversation about your work. Next is pronunciation practice, which is optional. Shall we go on to it, or do you have a question first?
+09:27:37 STUDENT(request) How much longer is this lesson?
+09:27:39 TUTOR  About 10 minutes are left, so there is time for the pronunciation practice and the summary. あと10分くらいです。
+
+Does that answer your question?
+09:27:53 STUDENT(ack) Yes, thank you.
+09:27:57 TUTOR  
+発音の練習です。次のどれにしますか？
+
+
+
+Which one would you like? Just say the number.   [tools: new_page, annotate]
+09:28:08 STUDENT(answer) Uh, just a little bit of individual words.
+09:28:13 TUTOR  いいですね。まず一つ目の単語です。「責任」という意味です。
+
+
+
+Listen, then repeat after me: responsibilities.   [tools: annotate]
+09:28:23 STUDENT(answer) Responsibilities.
+09:28:26 TUTOR  いいですね。Stress is on BIL: re-spon-si-BIL-i-ties. Try once more: responsibilities.
+09:28:33 STUDENT(answer) Responsibilities.
+09:28:35 TUTOR  Good, James, that's clear. Next word: "international." Listen, then repeat after me: international.
+09:28:44 STUDENT(answer) International.
+09:28:50 TUTOR  
+
+Next is summary. Shall we go on, or do you have a question first?
+09:28:59 STUDENT(answer) Sorry, I have to finish now.
+09:29:03 TUTOR  
+
+
+
+今日は仕事の話と、現在完了と過去形の練習をしました。「I have worked here for seven years.」は、今も続いている経験を話すときの大切な文です。お疲れさまでした。さようなら！   [tools: new_page, annotate]
+09:29:10 STUDENT(end)
+09:29:10 waiting 35 s for the autosave

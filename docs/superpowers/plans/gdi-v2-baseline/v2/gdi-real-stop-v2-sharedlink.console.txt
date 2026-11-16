@@ -1,0 +1,73 @@
+09:54:38 open fixture=gdi-real-stop arm=v2-sharedlink student=gdi-v2-replay-gdi-b1-mixed-v2 (speech off)
+09:55:23 no start orb (auto-start?)
+09:55:23 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect for experience, and the past simple for finished events. Does that sound good to you?   [tools: annotate]
+09:55:48 STUDENT(ack) Yes, that sounds good. I am ready to start.
+09:55:57 TUTOR  
+Let's start with your job. In English, we explain our responsibilities, our experience and our achievements. Look at these two sentences: one shows experience that continues, and one shows a finished event.
+
+Now, what are your main responsibilities at work? Please give me at least two sentences.   [tools: new_page, annotate]
+09:56:22 STUDENT(question) Should I start now with two sentences about my responsibilities?
+09:56:25 TUTOR  Yes, please start now. Give me two sentences about your main responsibilities, and you can use "I am responsible for..." to begin.
+09:56:39 STUDENT(answer) I am responsible for managing the communications team at my company. I also work with customers in Japan and worldwide to develop their projects.
+09:56:47 TUTOR  Both sentences are correct, and "responsible for managing" is exactly the right pattern. This part is done. Next, we'll practise the present perfect with questions about your experience at your company. Shall we go on, or do you have a question first?
+09:57:08 STUDENT(ack) Yes, let's go on.
+09:57:12 TUTOR  
+We use the present perfect for experience that started in the past and continues now. The form is have or has, plus the past participle.
+
+Here is your first practice question. Please answer in a full sentence.
+   [tools: new_page, annotate, show_problem]
+09:57:33 STUDENT(answer) Yes, I have worked at my company for eleven year.
+09:57:42 TUTOR  Good, you used the present perfect correctly for experience that continues now. One small fix: after a number, the noun takes an *s*, so it is "eleven years." Can you say the full sentence again?
+
+   [tools: show_sentence, annotate]
+09:58:03 STUDENT(answer) Yes, I have worked at my company for eleven years.
+09:58:06 TUTOR  That's right, and it's clear. This part is done. Next is the past simple, for finished events at a specific time, such as "last year." Shall we go on?
+09:58:21 STUDENT(ack) Yes, please continue.
+09:58:25 TUTOR  
+We use the past simple for a finished event at a specific time in the past, such as *last year*, *yesterday* or *in 2022*. The form is the verb in its past tense: attend → attended, meet → met, join → joined.
+
+Here is your next question. Please answer in a full sentence.
+   [tools: new_page, annotate, show_problem]
+09:58:53 STUDENT(answer) Yes, I attended a business conference in Tokyo last year with my team.
+09:58:56 TUTOR  Yes, that's correct. "Attended" is the past simple, and "last year" tells us it was a finished event. What did you learn at the conference?
+09:59:11 STUDENT(answer) I learned about new communication strategies and how to improve customer relationships in business meetings.
+09:59:13 TUTOR  Yes, that's correct. "Learned" is the past simple, and it fits the finished event at the conference. Did you meet any customers at the conference?
+09:59:27 STUDENT(answer) Okay, please stop. I would like to end the session for now.
+09:59:31 TUTOR  Thank you, Josh. Today you practised the present perfect for your experience at your company and the past simple for last year's conference. Good work, and see you next time!
+
+   [tools: annotate]
+09:59:57 input gone (locator.click: Timeout 8000ms exceeded.) — treating as closed
+09:59:57 waiting 35 s for the autosave
+
+=== gdi-real-stop / v2-sharedlink · 4.6 min · session embed-1794822878220 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/docs/superpowers/plans/gdi-v2-baseline/v2/gdi-real-stop-v2-sharedlink-mwj377s4bxn.json
+{
+  "fixture": "gdi-real-stop",
+  "arm": "v2-sharedlink",
+  "minutes": 4.6,
+  "tutorTurns": 11,
+  "studentTurns": 10,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.55,
+  "questionAfterAnswerShare": 0.83,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 35,
+  "tutorWordsP90": 47,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 2246,
+  "firstSentenceMsP95": 5027,
+  "inputTokens": 427767,
+  "outputTokens": 7047,
+  "costPerMinute": 0.004,
+  "endedBy": "tutor_close"
+}

@@ -1,0 +1,417 @@
+{"sessionId":"embed-1794821778369","studentId":"gdi-v2-replay-trial-straight-v2","createdAt":"2026-11-16T09:36:22.527Z","endedAt":"2026-11-16T09:52:36.069Z","turns":83,"events":267,"wb":31,"lp":{"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"past-simple","completedSegmentIds":["overview","level-check"],"updatedAt":"2026-11-16T09:47:05.638Z"}}
+=== TRANSCRIPT
+   -1s   0 tutor: Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a recent project, and practise two grammar points: the present perfect for experience and the past simple for finished events. Does that sound good to you?
+   49s   1 student: It took about three months.
+   53s   2 tutor: Sorry, I think my question didn't come through clearly. Does this lesson sound good to you? We'll talk about your work and a recent project, and practise the present perfect and the past simple.
+   76s   3 student: I learned that communication is the most important thing.
+   80s   4 tutor: That's a good point to start from, and communication will come up in today's practice too. Here is the outline: we talk about your job and a project you're proud of, practise the present perfect and the past simple, and use follow-up questions to keep the conversation going. I'll correct your mistakes, explain them, and give you a chance to try again. At the end, you can practise pronunciation if you like. First, a short level check, so I can adjust the lesson to you. Are you ready?
+  127s   5 student: OK, ready.
+  129s   6 tutor: Great. This is a short, friendly check, not a test. Please answer in English, and don't worry about mistakes. I want to see what you can already do so the lesson suits you. Can you tell me a little about your job? What do you do?
+  158s   7 student: I work in the sales department of an electronics company in Osaka.
+  159s   8 tutor: Thank you, that's a clear description of your job. What kind of electronics products do you sell?
+  172s   9 student: My boss helped me with it.
+  174s  10 tutor: Your boss helped you with that, which is good to know. Let me ask it more simply: what products do you sell? For example, TVs, phones or computers?
+  190s  11 student: It was last year, in the spring.
+  193s  12 tutor: Thank you. I'm not sure what "last year, in the spring" refers to, so let me ask more simply: what products do you sell? たとえば、テレビ、スマートフォン、パソコンなどですか？
+  210s  13 student: Yes, I understand.
+  213s  14 tutor: Good. Please answer in one full sentence: what products do you sell? Start with "I sell..."
+  225s  15 student: I sell for my company last year.
+  228s  16 tutor: Thank you, I understand. You sell electronics for your company. Now the second question: have you ever worked with an international customer? If so, can you tell me about that experience?
+  250s  17 student: It took about three months.
+  254s  18 tutor: Thank you, that's useful. Three months is a good length of time for a project. What was the project about? Please try a sentence that starts with "I worked on a project..." (プロジェクトについて、一文で教えてください。)
+  278s  19 student: I worked on a project...
+  279s  20 tutor: Take your time. Please finish your sentence: "I worked on a project to..." What was the goal of the project?
+  292s  21 student: My boss helped me with it.
+  294s  22 tutor: Your boss helped you, and that's good to know. Now I'd like to hear about the project itself. Was it about a new product, a customer, or a sales system? 新しい製品、お客さま、販売システムのどれですか？
+  316s  23 student: OK.
+  318s  24 tutor: Good. Let's make it simple. Here is an example: Now it's your turn. Use the same pattern, "I worked on a project to..."
+  336s  25 student: I see.
+  338s  26 tutor: Good. Now you try, using "I worked on a project to..." and finishing with the goal of your project.
+  350s  27 student: I worked on a project to...
+  354s  28 tutor: Take your time. Finish the sentence with the goal of your project. どんな目的でしたか？
+  364s  29 student: Yes, I understand.
+  366s  30 tutor: Good. Let's finish that sentence together. Choose one ending and say the whole sentence: 「to sell more products」「to find new customers」「to improve our system」.
+  382s  31 student: to improve our system
+  385s  32 tutor: Yes, that's right: "I worked on a project to improve our system." Your sentence is complete and clear.
+
+Now let's move on to the present perfect. ここでは「ずっと続いている経験」を表します。
+
+Shall we go on, or do you have a question first?
+  409s  33 student: It took about three months.
+  411s  34 tutor: Sorry, I'm not sure that was an answer to my last question. Shall we go on to the present perfect, or do you have a question first?
+  430s  35 student: My boss helped me with it.
+  431s  36 tutor: Sorry, I think that line was from earlier. Shall we go on to the present perfect now? はい、次に進みますか？
+  445s  37 student: I see.
+  447s  38 tutor: Let's start the present perfect. Use it for experience that began in the past and continues now.
+
+Shall we go on, or do you have a question first?
+  466s  39 student: It took about three months.
+  468s  40 tutor: Let's start the present perfect. We use it for experience that began in the past and still continues now. Look at this sentence: "I have worked at my company for five years."
+
+Now your turn. Use the starter "I have worked at my company for..." and say how long you have worked there.
+  503s  41 student: I have worked at my company for...
+  504s  42 tutor: Take your time. Finish the sentence with how long you have worked at your company. 会社で何年働いていますか？
+  517s  43 student: I see.
+  518s  44 tutor: Let's make it easy. Choose a number and say the whole sentence:「I have worked at my company for one year.」「...for three years.」「...for five years.」 Which one is true for you?
+  541s  45 student: ...for five years.
+  543s  46 tutor: Yes, that's right. You have worked at your company for five years, and you still work there now.
+
+Now try the same pattern for your sales work. Start with "I have worked in sales for..." and say how long.
+  567s  47 student: I have worked in sales for...
+  569s  48 tutor: Take your time. Finish the sentence with how long you have worked in sales. 営業の仕事を何年していますか？
+  581s  49 student: Yes, I understand.
+  583s  50 tutor: Let's make it simple. Choose one and say the whole sentence: 「I have worked in sales for two years.」「...for three years.」「...for ten years.」 Which one is true for you?
+  603s  51 student: ...for ten years.
+  605s  52 tutor: Yes, that's right: you have worked in sales for ten years, and you still do.
+
+That completes the present perfect. Next is the past simple, for finished events at a specific time. Shall we go on, or do you have a question first?
+  635s  53 student: I think it was a good experience for me.
+  638s  54 tutor: That's a nice thing to say. Now let's look at the past simple. We use it for something that finished at a specific time in the past, such as last year.
+
+Now your turn. Say when you worked on your project, starting with "I worked on the project..." (プロジェクトにいつ取り組みましたか？)
+  669s  55 student: I worked on the project in the sales department of an electronics company.
+  671s  56 tutor: Yes, that's right. "I worked on the project" is past simple, and "in the sales department" tells where you worked.
+
+Now add a time. プロジェクトはいつでしたか？ Try starting with "I worked on it..."
+  693s  57 student: OK.
+  695s  58 tutor: Let's use the time word "last year." Try saying: "I worked on it last year."
+
+Now say it in your own words, starting with "I worked on it..."
+  715s  59 student: "Last year" shows the time is finished.
+  718s  60 tutor: Yes, exactly. "Last year" tells us the time is finished, so we use the past simple. 「finished」の時間なので過去形を使います。
+
+Now say one sentence about your project with "last year" in it.
+  736s  61 student: Yes, I went to a trade show in Tokyo last year.
+  737s  62 tutor: Yes, that's right. "I went to a trade show in Tokyo last year" is past simple, because "last year" is a finished time.
+
+Did you go with your team, or alone? Try: "I went with..." or "I went alone."
+  762s  63 student: I went to a trade show in Tokyo last year
+  764s  64 tutor: You said that clearly. Now try the hint: did you go with your team, or alone? Start with "I went with..." or "I went alone."
+  782s  65 student: I went with to a trade show in Tokyo last year.
+  784s  66 tutor: Not quite. After "with" you need a person, so the words are "I went with my team to a trade show in Tokyo last year." 「with」のあとに人を入れます。Try saying the whole sentence with "my team."
+  808s  67 student: I went with my team to a trade show in Tokyo last year.
+  810s  68 tutor: Yes, that's right: "I went with my team to a trade show in Tokyo last year." Your past simple and your time word work well together.
+
+Next is conversation. Shall we go on, or do you have a question first?
+  833s  69 student: My boss helped me with it.
+  835s  70 tutor: I'm not sure that line answers my question. Shall we go on to the conversation now? はい、次に進みますか？
+  848s  71 student: OK.
+  850s  72 tutor: Let's have a conversation about your work. You told me about your project to improve your system, so I'd like to hear more. Were you happy with the result? Try starting with "I am proud of..."
+
+Shall we go on, or do you have a question first?
+  875s  73 student: I am proud of for my company last year.
+  877s  74 tutor: Almost. "Proud of" is followed directly by a noun, so the word "for" is not needed. 「proud of」の後に「for」は入れません。
+
+Now try saying that sentence yourself.
+  897s  75 student: I am proud of the new website project.
+  899s  76 tutor: Yes, that's right: "I am proud of the new website project." Now, when did you finish the website project?
+  915s  77 student: I am proud of the new website project, as I said.
+  916s  78 tutor: Yes, you told me that clearly. Now I'd like to know when the website project finished. Please answer with a time word such as "last year" or "in 2023," starting with "We finished the project..."
+  940s  79 student: We finished the project for my company last year.
+  942s  80 tutor: Yes, that's right. "We finished the project for my company last year" is past simple, because "last year" is a finished time.
+
+What was the result of the website project? Try starting with "The website..."
+  963s  81 student: The website for my company last year.
+  967s  82 tutor: Great work today! You talked about your job, your experience and your project. One thing you did well was using the present perfect: "I have worked in sales for ten years" shows experience that continues now.
+
+Next is summary. Shall we go on, or do you have a question first?
+=== WHITEBOARD
+    3s   0 {"action":"newPage","data":{"title":"Overview","id":"inl_mwj2jnr4_1"},"timestamp":"2026-11-16T09:36:25.739Z","sourceMessageIndex":0}
+    3s   1 {"action":"annotate","data":{"text":"Today's lesson\n- Talking about your work and a recent project\n- Present perfect: experience that continues now, \"I have worked here for five years\"\n- Past simple: finished events at a specific time, \"I attended an exhibition last year\"","style":"highlight","rich":true,"id":"inl_mwj2jnr4_2"},"timestamp":"2026-11-16T09:36:25.739Z","sourceMessageIndex":0}
+   85s   2 {"action":"annotate","data":{"text":"Lesson outline\n- Talking about your job and a project you are proud of\n- Present perfect and past simple\n- Follow-up questions to keep a conversation going\n- Feedback and a chance to try again\n- Pronunciation, if you would like it","style":"highlight","rich":true,"id":"inl_mwj2ldkc_1"},"timestamp":"2026-11-16T09:37:47.896Z","sourceMessageIndex":4}
+  129s   3 {"action":"newPage","data":{"title":"Level check","id":"inl_mwj2mgs9_1"},"timestamp":"2026-11-16T09:38:31.406Z","sourceMessageIndex":6}
+  133s   4 {"action":"annotate","data":{"text":"Level check question 1: Can you tell me a little about your job? What do you do?","style":"highlight","rich":true,"id":"inl_mwj2mgs9_2"},"timestamp":"2026-11-16T09:38:35.113Z","sourceMessageIndex":6}
+  231s   5 {"action":"annotate","data":{"text":"Level check question 2: Have you ever worked with an international customer? If so, can you tell me about the experience?","style":"highlight","rich":true,"id":"inl_mwj2okzb_1"},"timestamp":"2026-11-16T09:40:13.924Z","sourceMessageIndex":16}
+  259s   6 {"action":"annotate","data":{"text":"Hint: Try starting with \"I worked on a project to...\"","style":"highlight","rich":true,"id":"inl_mwj2p3u4_1"},"timestamp":"2026-11-16T09:40:41.937Z","sourceMessageIndex":18}
+  319s   7 {"action":"showSentence","data":{"sentence":"I worked on a project to sell a new TV.","emphasis":["new","TV"],"gloss":"プロジェクトの目的を言う文","id":"inl_mwj2qi9i_1"},"timestamp":"2026-11-16T09:41:41.175Z","sourceMessageIndex":24}
+  338s   8 {"action":"scrollTo","data":{"target":"item","targetId":"inl_mwj2p3u4_1","pulse":true},"timestamp":"2026-11-16T09:42:00.858Z","sourceMessageIndex":26}
+  366s   9 {"action":"annotate","data":{"text":"I worked on a project to ...\n- sell more products\n- find new customers\n- improve our system","style":"highlight","rich":true,"id":"inl_mwj2rjq0_1"},"timestamp":"2026-11-16T09:42:29.019Z","sourceMessageIndex":30}
+  386s  10 {"action":"showSentence","data":{"sentence":"I worked on a project to improve our system.","emphasis":["improve","our","system"],"gloss":"プロジェクトの目的を言う文","id":"inl_mwj2rxo5_1"},"timestamp":"2026-11-16T09:42:48.059Z","sourceMessageIndex":32}
+  468s  11 {"action":"annotate","data":{"text":"Present perfect: have/has + past participle\n- I have worked at my company for five years.\n- Started in the past, still true now.","style":"highlight","rich":true,"id":"inl_mwj2tq0z_1"},"timestamp":"2026-11-16T09:44:10.693Z","sourceMessageIndex":40}
+  468s  12 {"action":"scrollTo","data":{"target":"item","targetId":"inl_mwj2tq0z_1","pulse":true},"timestamp":"2026-11-16T09:44:10.875Z","sourceMessageIndex":40}
+  474s  13 {"action":"showSentence","data":{"sentence":"I have worked at my company for ...","emphasis":["I","have","worked","at","my","company","for"],"gloss":"働き始めてから今まで続いている期間を言う型","id":"inl_mwj2tq0z_3"},"timestamp":"2026-11-16T09:44:16.323Z","sourceMessageIndex":40}
+  522s  14 {"action":"annotate","data":{"text":"Choose one and say the whole sentence:\n- I have worked at my company for one year.\n- I have worked at my company for three years.\n- I have worked at my company for five years.","style":"highlight","rich":true,"id":"inl_mwj2utly_1"},"timestamp":"2026-11-16T09:45:04.569Z","sourceMessageIndex":44}
+  543s  15 {"action":"scrollTo","data":{"target":"item","targetId":"inl_mwj2tq0z_1","pulse":true},"timestamp":"2026-11-16T09:45:25.433Z","sourceMessageIndex":46}
+  584s  16 {"action":"annotate","data":{"text":"I have worked in sales for ...\n- two years\n- three years\n- ten years","style":"highlight","rich":true,"id":"inl_mwj2w7yv_1"},"timestamp":"2026-11-16T09:46:06.360Z","sourceMessageIndex":50}
+  605s  17 {"action":"showSentence","data":{"sentence":"I have worked in sales for ten years.","emphasis":["ten","years"],"gloss":"今も続いている経験を言う文","id":"inl_mwj2wo0t_1"},"timestamp":"2026-11-16T09:46:27.683Z","sourceMessageIndex":52}
+  610s  18 {"action":"annotate","data":{"text":"Past simple: finished events at a specific time\n- I attended an exhibition last year.","style":"highlight","rich":true,"id":"inl_mwj2wo0t_2"},"timestamp":"2026-11-16T09:46:32.992Z","sourceMessageIndex":52}
+  638s  19 {"action":"newPage","data":{"title":"Past simple","id":"inl_mwj2xcuc_1"},"timestamp":"2026-11-16T09:47:00.654Z","sourceMessageIndex":54}
+  638s  20 {"action":"annotate","data":{"text":"Past simple: subject + past verb, for a finished event at a specific time\n- I worked on the project last year.\n- Time words: last year, yesterday, in 2022, three years ago","style":"highlight","rich":true,"id":"inl_mwj2xcuc_2"},"timestamp":"2026-11-16T09:47:00.883Z","sourceMessageIndex":54}
+  639s  21 {"action":"scrollTo","data":{"target":"item","targetId":"inl_mwj2xcuc_2","pulse":true},"timestamp":"2026-11-16T09:47:01.087Z","sourceMessageIndex":54}
+  671s  22 {"action":"showSentence","data":{"sentence":"I worked on the project in the sales department of an electronics company.","emphasis":["worked"],"gloss":"過去に終わった仕事を言う文","id":"inl_mwj2y2xt_1"},"timestamp":"2026-11-16T09:47:33.634Z","sourceMessageIndex":56}
+  695s  23 {"action":"showSentence","data":{"sentence":"I worked on it last year.","emphasis":["last","year"],"gloss":"終わった出来事に特定の時期を付ける文","id":"inl_mwj2ylqw_1"},"timestamp":"2026-11-16T09:47:57.956Z","sourceMessageIndex":58}
+  738s  24 {"action":"showSentence","data":{"sentence":"I went to a trade show in Tokyo last year.","emphasis":["went"],"gloss":"去年の終わった出来事を言う文","id":"inl_mwj2zidn_1"},"timestamp":"2026-11-16T09:48:40.157Z","sourceMessageIndex":62}
+  741s  25 {"action":"annotate","data":{"text":"Hint:\n- I went with my team.\n- I went alone.","style":"highlight","rich":true,"id":"inl_mwj2zidn_2"},"timestamp":"2026-11-16T09:48:43.213Z","sourceMessageIndex":62}
+  789s  26 {"action":"showSentence","data":{"sentence":"I went with my team to a trade show in Tokyo last year.","emphasis":["my","team"],"gloss":"「with」の後に人を入れる","id":"inl_mwj30hyb_1"},"timestamp":"2026-11-16T09:49:31.409Z","sourceMessageIndex":66}
+  877s  27 {"action":"showSentence","data":{"sentence":"I am proud of the project I worked on last year.","emphasis":["proud","of"],"gloss":"「proud of」の後は名詞を置く","id":"inl_mwj32hrv_1"},"timestamp":"2026-11-16T09:50:59.759Z","sourceMessageIndex":74}
+  882s  28 {"action":"annotate","data":{"text":"- proud of + noun (no \"for\")\n- proud of the project","style":"highlight","rich":true,"id":"inl_mwj32hrv_2"},"timestamp":"2026-11-16T09:51:04.713Z","sourceMessageIndex":74}
+  899s  29 {"action":"showSentence","data":{"sentence":"I am proud of the new website project.","emphasis":["new","website","project"],"gloss":"誇りに思っているプロジェクトを言う文","id":"inl_mwj32yxv_1"},"timestamp":"2026-11-16T09:51:21.591Z","sourceMessageIndex":76}
+  942s  30 {"action":"showSentence","data":{"sentence":"We finished the project for my company last year.","emphasis":["finished"],"gloss":"去年終わったプロジェクトを言う文","id":"inl_mwj33wgg_1"},"timestamp":"2026-11-16T09:52:04.656Z","sourceMessageIndex":80}
+=== EVENTS
+   -4s start_v2: tutor opens (text)
+   -4s embed_config: practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no
+   -4s persona_resolved: teacher=ryota
+   -4s start_v2: tutor opens (text)
+   -4s embed_config: practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no
+   -4s persona_resolved: teacher=ryota
+   -4s partner_pool_snapshot: remaining=76453 cap=130920 session_max=1200 exhausted=false
+   -4s partner_pool_snapshot: remaining=76453 cap=130920 session_max=1200 exhausted=false
+    3s tool_call: new_page → new page 1 "Overview" · inline
+    3s tool_call: annotate → painted on page 1 · with "Today we'll talk about your work"
+    3s brain_turn: Brain 7046ms · first_sentence=2588ms · in=12261 out=1172 cr=35482 cc=0 · v2
+    4s qpin_set_verbatim: "Does that sound good to you?"
+    4s qpin_answer_clear_refused: no-student-turn — "Does that sound good to you?"
+   49s qpin_answer_clear_refused: awaiting-tutor-turn — "Does that sound good to you?"
+   53s qpin_cleared_answered: answered, and the reply asked nothing more — "Does that sound good to you?"
+   57s brain_turn: Brain 7209ms · first_sentence=3021ms · in=12418 out=1160 cr=35662 cc=180 · v2
+   57s qpin_set_verbatim: "Does this lesson sound good to you?"
+   57s qpin_answer_clear_refused: no-student-turn — "Does this lesson sound good to you?"
+   76s qpin_answer_clear_refused: awaiting-tutor-turn — "Does this lesson sound good to you?"
+   80s qpin_cleared_answered: answered, and the reply asked nothing more — "Does this lesson sound good to you?"
+   85s tool_call: annotate → painted on page 1 · inline
+   85s brain_turn: Brain 9096ms · first_sentence=3565ms · in=12552 out=1617 cr=35917 cc=75 · v2
+   86s qpin_set: "Are you ready?"
+   86s qpin_answer_clear_refused: no-student-turn — "Are you ready?"
+  127s qpin_answer_clear_refused: awaiting-tutor-turn — "Are you ready?"
+  129s qpin_cleared_answered: answered and affirmed — "Are you ready?"
+  129s tool_call: new_page → new page 2 "Level check" · inline
+  130s tool_call: set_goal_status → recorded
+  130s tool_call: update_session_note → saved
+  133s tool_call: annotate → painted on page 2 · with "Can you tell me a little about your job?"
+  133s brain_turn: Brain 5486ms · first_sentence=1541ms · in=12550 out=911 cr=36234 cc=242 · v2
+  133s qpin_set_verbatim: "What do you do?"
+  133s qpin_answer_clear_refused: no-student-turn — "What do you do?"
+  158s qpin_answer_clear_refused: awaiting-tutor-turn — "What do you do?"
+  159s qpin_cleared_answered: answered, and the reply asked nothing more — "What do you do?"
+  159s brain_turn: Brain 1405ms · first_sentence=1288ms · in=611 out=173 cr=18238 cc=423 · v2
+  160s qpin_set_verbatim: "What kind of electronics products do you sell?"
+  160s qpin_answer_clear_refused: no-student-turn — "What kind of electronics products do you sell?"
+  172s qpin_answer_clear_refused: awaiting-tutor-turn — "What kind of electronics products do you sell?"
+  174s qpin_cleared_answered: answered, and the reply asked nothing more — "What kind of electronics products do you sell?"
+  175s brain_turn: Brain 2060ms · first_sentence=1855ms · in=611 out=298 cr=18661 cc=41 · v2
+  175s qpin_set: "What products do you sell?"
+  175s qpin_answer_clear_refused: no-student-turn — "What products do you sell?"
+  190s qpin_answer_clear_refused: awaiting-tutor-turn — "What products do you sell?"
+  193s qpin_cleared_answered: answered, and the reply asked nothing more — "What products do you sell?"
+  193s brain_turn: Brain 2464ms · first_sentence=2179ms · in=611 out=364 cr=18702 cc=60 · v2
+  193s qpin_set_verbatim: "I'm not sure what "last year, in the spring" refers to, so l"
+  193s qpin_answer_clear_refused: no-student-turn — "I'm not sure what "last year, in the spring" refers to, so l"
+  210s qpin_answer_clear_refused: awaiting-tutor-turn — "I'm not sure what "last year, in the spring" refers to, so l"
+  213s qpin_cleared_answered: answered and affirmed — "I'm not sure what "last year, in the spring" refers to, so l"
+  214s brain_turn: Brain 3388ms · first_sentence=3228ms · in=556 out=498 cr=18762 cc=79 · v2
+  214s qpin_set_verbatim: "Please answer in one full sentence: what products do you sel"
+  214s qpin_answer_clear_refused: no-student-turn — "Please answer in one full sentence: what products do you sel"
+  225s qpin_answer_clear_refused: awaiting-tutor-turn — "Please answer in one full sentence: what products do you sel"
+  228s qpin_cleared_answered: answered, and the reply asked nothing more — "Please answer in one full sentence: what products do you sel"
+  229s tool_call: update_session_note → saved
+  231s tool_call: annotate → painted on page 2 · with "Now the second question"
+  231s brain_turn: Brain 5545ms · first_sentence=1732ms · in=12720 out=922 cr=37079 cc=689 · v2
+  232s qpin_set_verbatim: "If so, can you tell me about that experience?"
+  232s qpin_answer_clear_refused: no-student-turn — "If so, can you tell me about that experience?"
+  250s qpin_answer_clear_refused: awaiting-tutor-turn — "If so, can you tell me about that experience?"
+  254s segment_overlong: segment "level-check" has run 6 substantive tutor turns without advancing
+  254s qpin_cleared_answered: answered, and the reply asked nothing more — "If so, can you tell me about that experience?"
+  254s tool_call: set_working_level → Level set to beginner. Do not tell the learner which level you set; just continue the lesson.
+  259s tool_call: annotate → painted on page 2 · with "Try starting with: 'I worked on a project to...'"
+  259s working_level_set: beginner (v2)
+  259s brain_turn: Brain 9123ms · first_sentence=3595ms · in=12950 out=1704 cr=37768 cc=646 · v2
+  260s qpin_set_ask: gist empty: "Please try a sentence that starts with "I worked on a projec"
+  260s qpin_answer_clear_refused: no-student-turn — "Please try a sentence that starts with "I worked on a projec"
+  278s qpin_answer_clear_refused: awaiting-tutor-turn — "Please try a sentence that starts with "I worked on a projec"
+  279s tool_call: keep_listening → not done: the student is waiting for you to speak. Say the next thing now.
+  279s qpin_cleared_answered: answered, and the reply asked nothing more — "Please try a sentence that starts with "I worked on a projec"
+  280s brain_turn: Brain 1612ms · first_sentence=1419ms · in=1432 out=125 cr=38671 cc=257 · v2
+  280s qpin_set: "What was the goal of the project you worked on?"
+  280s qpin_answer_clear_refused: no-student-turn — "What was the goal of the project you worked on?"
+  292s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the goal of the project you worked on?"
+  294s qpin_cleared_answered: answered, and the reply asked nothing more — "What was the goal of the project you worked on?"
+  297s brain_turn: Brain 4967ms · first_sentence=1463ms · in=12942 out=725 cr=38671 cc=465 · v2
+  298s qpin_set_verbatim: "Was it about a new product, a customer, or a sales system?"
+  298s qpin_answer_clear_refused: no-student-turn — "Was it about a new product, a customer, or a sales system?"
+  316s qpin_answer_clear_refused: not-answer-shaped (silent) — "Was it about a new product, a customer, or a sales system?"
+  319s tool_call: show_sentence → painted on page 2 · inline
+  321s brain_turn: Brain 5766ms · first_sentence=2765ms · in=12966 out=866 cr=39136 cc=154 · v2
+  322s qpin_drop: gist empty (model judged the "?" conversational)
+  338s tool_call: show_sentence → not painted again: already on the board (page 2); the board has scrolled back to it · inline
+  338s brain_turn: Brain 2329ms · first_sentence=1978ms · in=676 out=310 cr=19645 cc=97 · v2
+  339s qpin_drop: gist empty (model judged the "?" conversational)
+  353s tool_call: keep_listening → not done: the student is waiting for you to speak. Say the next thing now.
+  354s brain_turn: Brain 3232ms · first_sentence=3039ms · in=1719 out=371 cr=39574 cc=90 · v2
+  354s qpin_set: "What is the goal of your project?"
+  354s qpin_answer_clear_refused: no-student-turn — "What is the goal of your project?"
+  364s qpin_answer_clear_refused: awaiting-tutor-turn — "What is the goal of your project?"
+  366s qpin_cleared_answered: answered and affirmed — "What is the goal of your project?"
+  366s tool_call: annotate → painted on page 2 · inline
+  368s brain_turn: Brain 3724ms · first_sentence=2016ms · in=12964 out=525 cr=39477 cc=387 · v2
+  369s qpin_set: "Which ending completes the sentence—to sell more products, t"
+  369s qpin_answer_clear_refused: no-student-turn — "Which ending completes the sentence—to sell more products, t"
+  382s qpin_answer_clear_refused: awaiting-tutor-turn — "Which ending completes the sentence—to sell more products, t"
+  385s qpin_cleared_answered: answered, and the reply asked nothing more — "Which ending completes the sentence—to sell more products, t"
+  386s tool_call: show_sentence → painted on page 2 · inline
+  386s tool_call: new_page → not opened yet: the student is asked first
+  387s tool_call: set_goal_status → recorded
+  387s tool_call: track_gap → recorded
+  387s brain_turn: Brain 4320ms · first_sentence=3007ms · in=711 out=859 cr=19932 cc=101 · v2
+  387s qpin_set_verbatim: "Shall we go on, or do you have a question first?"
+  387s qpin_answer_clear_refused: no-student-turn — "Shall we go on, or do you have a question first?"
+  409s qpin_answer_clear_refused: awaiting-tutor-turn — "Shall we go on, or do you have a question first?"
+  411s qpin_cleared_answered: answered, and the reply asked nothing more — "Shall we go on, or do you have a question first?"
+  414s brain_turn: Brain 5059ms · first_sentence=2707ms · in=13134 out=752 cr=39965 cc=823 · v2
+  414s qpin_set_verbatim: "Shall we go on to the present perfect, or do you have a ques"
+  414s qpin_answer_clear_refused: no-student-turn — "Shall we go on to the present perfect, or do you have a ques"
+  430s qpin_answer_clear_refused: awaiting-tutor-turn — "Shall we go on to the present perfect, or do you have a ques"
+  431s qpin_cleared_answered: answered, and the reply asked nothing more — "Shall we go on to the present perfect, or do you have a ques"
+  432s brain_turn: Brain 1601ms · first_sentence=1466ms · in=767 out=196 cr=20394 cc=55 · v2
+  432s qpin_set_verbatim: "Shall we go on to the present perfect now?"
+  432s qpin_answer_clear_refused: no-student-turn — "Shall we go on to the present perfect now?"
+  445s qpin_answer_clear_refused: not-answer-shaped (silent) — "Shall we go on to the present perfect now?"
+  447s tool_call: new_page → not opened yet: the student is asked first
+  448s brain_turn: Brain 2609ms · first_sentence=1705ms · in=767 out=436 cr=20449 cc=46 · v2
+  448s qpin_replaced: new ask in turn tutor-1794822227636 — "Shall we go on to the present perfect now?"
+  448s qpin_set_verbatim: "Shall we go on, or do you have a question first?"
+  448s qpin_answer_clear_refused: no-student-turn — "Shall we go on, or do you have a question first?"
+  466s qpin_answer_clear_refused: awaiting-tutor-turn — "Shall we go on, or do you have a question first?"
+  468s qpin_cleared_answered: answered, and the reply asked nothing more — "Shall we go on, or do you have a question first?"
+  468s tool_call: annotate → painted on page 2 · inline
+  468s tool_call: show_sentence → not painted again: already on the board (page 2); the board has scrolled back to it · inline
+  469s tool_call: update_session_note → saved
+  474s tool_call: show_sentence → painted on page 2 · with "Now your turn"
+  474s brain_turn: Brain 8127ms · first_sentence=2125ms · in=13291 out=1451 cr=40889 cc=205 · v2
+  474s qpin_set: "I have worked at my company for how many years?"
+  474s qpin_answer_clear_refused: no-student-turn — "I have worked at my company for how many years?"
+  503s qpin_answer_clear_refused: awaiting-tutor-turn — "I have worked at my company for how many years?"
+  504s tool_call: keep_listening → not done: the student is waiting for you to speak. Say the next thing now.
+  504s qpin_cleared_answered: answered, and the reply asked nothing more — "I have worked at my company for how many years?"
+  504s brain_turn: Brain 1691ms · first_sentence=1559ms · in=1800 out=143 cr=41560 cc=466 · v2
+  505s qpin_set_ask: gist empty: "Finish the sentence with how long you have worked at your co"
+  505s qpin_answer_clear_refused: no-student-turn — "Finish the sentence with how long you have worked at your co"
+  517s qpin_answer_clear_refused: not-answer-shaped (silent) — "Finish the sentence with how long you have worked at your co"
+  518s segment_overlong: segment "topic-intro" has run 6 substantive tutor turns without advancing
+  522s tool_call: annotate → painted on page 2 · with "Let's make it easy. Choose a number"
+  522s brain_turn: Brain 5073ms · first_sentence=1037ms · in=13282 out=715 cr=41560 cc=666 · v2
+  522s qpin_replaced: new ask in turn tutor-1794822299344 — "Finish the sentence with how long you have worked at your co"
+  522s qpin_set_verbatim: "Which one is true for you?"
+  523s qpin_answer_clear_refused: no-student-turn — "Which one is true for you?"
+  541s qpin_answer_clear_refused: awaiting-tutor-turn — "Which one is true for you?"
+  543s qpin_cleared_answered: answered and affirmed — "Which one is true for you?"
+  543s tool_call: show_sentence → not painted again: already on the board (page 2); the board has scrolled back to it · inline
+  543s tool_call: track_gap → recorded
+  546s brain_turn: Brain 4855ms · first_sentence=1789ms · in=13521 out=752 cr=42226 cc=262 · v2
+  546s qpin_set: "I have worked in sales for how long?"
+  546s qpin_answer_clear_refused: no-student-turn — "I have worked in sales for how long?"
+  567s qpin_answer_clear_refused: awaiting-tutor-turn — "I have worked in sales for how long?"
+  568s tool_call: keep_listening → not done: the student is waiting for you to speak. Say the next thing now.
+  569s qpin_cleared_answered: answered, and the reply asked nothing more — "I have worked in sales for how long?"
+  569s brain_turn: Brain 1913ms · first_sentence=1718ms · in=1919 out=154 cr=42695 cc=207 · v2
+  570s qpin_set_ask: gist empty: "Finish the sentence with how long you have worked in sales. "
+  570s qpin_answer_clear_refused: no-student-turn — "Finish the sentence with how long you have worked in sales. "
+  582s qpin_answer_clear_refused: awaiting-tutor-turn — "Finish the sentence with how long you have worked in sales. "
+  583s qpin_cleared_answered: answered, and the reply asked nothing more — "Finish the sentence with how long you have worked in sales. "
+  584s tool_call: annotate → painted on page 2 · inline
+  585s brain_turn: Brain 3070ms · first_sentence=1207ms · in=13387 out=411 cr=42695 cc=421 · v2
+  586s qpin_set: "Which one is true for you: two years, three years, or ten ye"
+  586s qpin_answer_clear_refused: no-student-turn — "Which one is true for you: two years, three years, or ten ye"
+  603s qpin_answer_clear_refused: awaiting-tutor-turn — "Which one is true for you: two years, three years, or ten ye"
+  605s qpin_cleared_answered: answered and affirmed — "Which one is true for you: two years, three years, or ten ye"
+  605s tool_call: show_sentence → painted on page 2 · inline
+  606s tool_call: track_gap → recorded
+  606s tool_call: update_session_note → saved
+  610s tool_call: annotate → painted on page 2 · with "next is the past simple, for finished events at a specific time"
+  610s brain_turn: Brain 7426ms · first_sentence=1855ms · in=13537 out=1406 cr=43116 cc=210 · v2
+  611s qpin_set_verbatim: "Shall we go on, or do you have a question first?"
+  611s qpin_answer_clear_refused: no-student-turn — "Shall we go on, or do you have a question first?"
+  635s qpin_answer_clear_refused: awaiting-tutor-turn — "Shall we go on, or do you have a question first?"
+  638s qpin_cleared_answered: answered, and the reply asked nothing more — "Shall we go on, or do you have a question first?"
+  638s tool_call: new_page → new page 3 "Past simple" · inline
+  638s tool_call: annotate → painted on page 3 · inline
+  639s tool_call: show_sentence → not painted again: already on the board (page 3); the board has scrolled back to it · inline
+  639s tool_call: set_goal_status → recorded
+  643s brain_turn: Brain 7808ms · first_sentence=2700ms · in=13721 out=1405 cr=43326 cc=1024 · v2
+  644s qpin_gist_ungrounded: "When did you work on the project?" → dropped
+  671s tool_call: show_sentence → painted on page 3 · inline
+  674s brain_turn: Brain 4551ms · first_sentence=1711ms · in=13451 out=634 cr=44350 cc=660 · v2
+  674s qpin_gist_ungrounded: "I worked on it when?" → "Try starting with "I worked on it...""
+  674s qpin_answer_clear_refused: no-student-turn — "Try starting with "I worked on it...""
+  693s qpin_answer_clear_refused: not-answer-shaped (silent) — "Try starting with "I worked on it...""
+  695s tool_call: show_sentence → painted on page 3 · inline
+  698s brain_turn: Brain 4923ms · first_sentence=1822ms · in=13375 out=792 cr=45010 cc=258 · v2
+  698s qpin_replaced: new ask in turn tutor-1794822475798 — "Try starting with "I worked on it...""
+  699s qpin_set_ask: gist empty: "Now say it in your own words, starting with "I worked on it."
+  699s qpin_answer_clear_refused: no-student-turn — "Now say it in your own words, starting with "I worked on it."
+  715s qpin_answer_clear_refused: awaiting-tutor-turn — "Now say it in your own words, starting with "I worked on it."
+  718s qpin_cleared_answered: answered, and the reply asked nothing more — "Now say it in your own words, starting with "I worked on it."
+  719s tool_call: track_gap → recorded
+  719s brain_turn: Brain 3325ms · first_sentence=2737ms · in=902 out=507 cr=22634 cc=108 · v2
+  719s qpin_set: "Can you say one sentence about your project using "last year"
+  719s qpin_answer_clear_refused: no-student-turn — "Can you say one sentence about your project using "last year"
+  736s qpin_answer_clear_refused: awaiting-tutor-turn — "Can you say one sentence about your project using "last year"
+  737s qpin_cleared_answered: answered and affirmed — "Can you say one sentence about your project using "last year"
+  738s tool_call: show_sentence → painted on page 3 · inline
+  741s tool_call: annotate → painted on page 3 · with "Did you go with your team, or alone?"
+  741s brain_turn: Brain 4991ms · first_sentence=1690ms · in=13567 out=811 cr=45376 cc=462 · v2
+  741s qpin_gist_ungrounded: "I went with my team or alone?" → "Did you go with your team, or alone?"
+  741s qpin_answer_clear_refused: no-student-turn — "Did you go with your team, or alone?"
+  762s qpin_answer_clear_refused: awaiting-tutor-turn — "Did you go with your team, or alone?"
+  764s qpin_cleared_answered: answered, and the reply asked nothing more — "Did you go with your team, or alone?"
+  764s brain_turn: Brain 2363ms · first_sentence=2206ms · in=972 out=352 cr=22919 cc=168 · v2
+  765s qpin_set_ask: gist empty: "Now try the hint: did you go with your team, or alone?"
+  765s qpin_answer_clear_refused: no-student-turn — "Now try the hint: did you go with your team, or alone?"
+  782s qpin_answer_clear_refused: awaiting-tutor-turn — "Now try the hint: did you go with your team, or alone?"
+  784s segment_overlong: segment "past-simple" has run 6 substantive tutor turns without advancing
+  784s qpin_answer_clear_refused: correction — "Now try the hint: did you go with your team, or alone?"
+  785s tool_call: track_gap → recorded
+  789s tool_call: show_sentence → painted on page 3 · with "The words are &quot;I went with my team to a trade show in Tokyo last year.&quot;"
+  789s brain_turn: Brain 7083ms · first_sentence=2387ms · in=13569 out=1114 cr=46006 cc=292 · v2
+  790s qpin_set: "Try saying the whole sentence with "my team.""
+  790s qpin_answer_clear_refused: no-student-turn — "Try saying the whole sentence with "my team.""
+  808s qpin_answer_clear_refused: awaiting-tutor-turn — "Try saying the whole sentence with "my team.""
+  810s qpin_cleared_answered: answered and affirmed — "Try saying the whole sentence with "my team.""
+  810s tool_call: new_page → not opened yet: the student is asked first
+  810s brain_turn: Brain 2274ms · first_sentence=1779ms · in=1054 out=318 cr=23149 cc=233 · v2
+  811s qpin_set_verbatim: "Shall we go on, or do you have a question first?"
+  811s qpin_answer_clear_refused: no-student-turn — "Shall we go on, or do you have a question first?"
+  833s qpin_answer_clear_refused: awaiting-tutor-turn — "Shall we go on, or do you have a question first?"
+  835s brain_turn: Brain 1909ms · first_sentence=1904ms · in=1054 out=231 cr=23382 cc=77 · v2
+  835s qpin_answer_clear_refused: no-affirm — "Shall we go on, or do you have a question first?"
+  835s qpin_replaced: new ask in turn tutor-1794822615689 — "Shall we go on, or do you have a question first?"
+  836s qpin_set_verbatim: "Shall we go on to the conversation now?"
+  836s qpin_answer_clear_refused: no-student-turn — "Shall we go on to the conversation now?"
+  848s qpin_answer_clear_refused: not-answer-shaped (silent) — "Shall we go on to the conversation now?"
+  850s tool_call: new_page → not opened yet: the student is asked first
+  850s brain_turn: Brain 2071ms · first_sentence=1634ms · in=1054 out=269 cr=23459 cc=43 · v2
+  850s qpin_replaced: new ask in turn tutor-1794822630467 — "Shall we go on to the conversation now?"
+  851s qpin_set_verbatim: "Shall we go on, or do you have a question first?"
+  851s qpin_answer_clear_refused: no-student-turn — "Shall we go on, or do you have a question first?"
+  875s qpin_answer_clear_refused: awaiting-tutor-turn — "Shall we go on, or do you have a question first?"
+  877s qpin_cleared_answered: answered, and the reply asked nothing more — "Shall we go on, or do you have a question first?"
+  877s tool_call: show_sentence → painted on page 3 · inline
+  882s tool_call: annotate → painted on page 3 · with "Almost. &quot;Proud of&quot; is followed directly by a noun"
+  882s brain_turn: Brain 7307ms · first_sentence=2010ms · in=13731 out=1259 cr=46651 cc=527 · v2
+  883s qpin_set_ask: gist empty: "Now try saying that sentence yourself."
+  883s qpin_answer_clear_refused: no-student-turn — "Now try saying that sentence yourself."
+  897s qpin_answer_clear_refused: awaiting-tutor-turn — "Now try saying that sentence yourself."
+  899s qpin_cleared_answered: answered, and the reply asked nothing more — "Now try saying that sentence yourself."
+  899s tool_call: show_sentence → painted on page 3 · inline
+  901s brain_turn: Brain 3547ms · first_sentence=1657ms · in=13896 out=472 cr=47178 cc=318 · v2
+  901s qpin_set_verbatim: "Now, when did you finish the website project?"
+  901s qpin_answer_clear_refused: no-student-turn — "Now, when did you finish the website project?"
+  915s qpin_answer_clear_refused: awaiting-tutor-turn — "Now, when did you finish the website project?"
+  916s qpin_cleared_answered: answered, and the reply asked nothing more — "Now, when did you finish the website project?"
+  917s tool_call: keep_listening → listening
+  919s brain_turn: Brain 4099ms · first_sentence=1132ms · in=13956 out=605 cr=47496 cc=194 · v2
+  920s qpin_drop: gist empty (model judged the "?" conversational)
+  942s tool_call: show_sentence → painted on page 3 · inline
+  944s brain_turn: Brain 3684ms · first_sentence=1297ms · in=13950 out=517 cr=47690 cc=220 · v2
+  945s qpin_gist_ungrounded: "The website project resulted in what outcome?" → "What was the result of the website project?"
+  945s qpin_answer_clear_refused: no-student-turn — "What was the result of the website project?"
+  964s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the result of the website project?"
+  967s qpin_cleared_answered: answered and affirmed — "What was the result of the website project?"
+  968s tool_call: new_page → not opened yet: the student is asked first
+  970s tool_call: end_lesson → the session is ending
+  970s brain_turn: Brain 5940ms · first_sentence=3697ms · in=1127 out=1235 cr=23955 cc=114 · v2
+  970s lesson_closed: end_lesson
+  970s qpin_set_verbatim: "Shall we go on, or do you have a question first?"
+  970s qpin_answer_clear_refused: no-student-turn — "Shall we go on, or do you have a question first?"
+  972s practice_draft_empty: lo=[gdi.work-projects.past-simple,gdi.work-projects.conversation] trigger=close_tool status=204 (v2)
+  972s v2_practice_assign: finalize status=204
+  973s v2_profile_commit: status=200 gaps=2 mastery=[] evidence=0 turns=83
