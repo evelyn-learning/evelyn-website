@@ -1,0 +1,85 @@
+16:11:20 open fixture=gdi-real-josh arm=v2 student=gdi-v2-replay-gdi-real-josh-final (speech off)
+16:12:05 no start orb (auto-start?)
+16:12:05 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and recent projects, and we'll use the present perfect for experience and the past simple for finished events. We'll finish with some follow-up questions and a short chance to practise pronunciation. D   [tools: new_page, annotate]
+16:12:32 STUDENT(ack) Yes, that sounds good. Thank you.
+16:12:36 TUTOR  
+Great. First, I'd like to hear how you speak in English, so please answer in English and don't worry about mistakes. Can you tell me a little about your job? What do you do?   [tools: new_page]
+16:12:57 STUDENT(answer) I am a manager at a communications company in Japan. I work with companies in Japan and also with international customers around the world.
+16:13:00 TUTOR  That's a clear picture of your role. Now, have you ever worked with an international customer? If so, could you tell me about that experience?
+16:13:15 STUDENT(answer) Yes, I have worked with international customers. I work with companies in America, Europe, and Asia. We help them with communication training and business solutions.
+16:13:21 TUTOR  That's good experience, with customers in three regions. Last question: what is one skill you'd like to improve in your English, and why is it important to you?
+16:13:36 STUDENT(answer) I want to improve my conversation with customers before meetings. I often do not know what to say, so this is important for my business.
+16:13:47 TUTOR  Thank you. Your answer about customer conversations is a useful focus, and we'll work on it today. 
+
+ご自身の仕事の内容を説明する文は、「現在完了」と「過去形」の違いを意識すると、さらに分かりやすくなります。 What are your main responsibilities at work? Please give a complete answer with at least two sentences.   [tools: new_page, annotate, set_working_level]
+16:14:09 STUDENT(answer) Do you want me to start now?
+16:14:11 TUTOR  Yes, please go ahead. Tell me your main responsibilities at work in at least two sentences.
+16:14:23 STUDENT(answer) I am both the training division manager and to help with sales for the division. I work with many teachers and customers every day.
+16:14:33 TUTOR  You've described your role clearly. One point: after "both ... and", the two parts need the same form. "Manager" is a noun, but "to help" is a verb, so the sentence doesn't match. Try the sentence again so both parts match.
+
+
+
+   [tools: show_sentence, annotate, annotate]
+16:14:57 STUDENT(answer) I am both the training division manager and help with sales for the division.
+16:15:08 TUTOR  Not quite: after "both" and "and", we need the same kind of word. "Manager" is a noun, but "help" is a verb. Here is the correct sentence to keep:
+
+
+
+This part on your job is done. Next, we'll practise the present perfect with a question about your company. Shall we go on?   [tools: new_page]
+16:15:36 STUDENT(ack) Yes, let's continue.
+16:15:42 TUTOR  Good. Here is the form for the present perfect, which we use for experience that started in the past and continues now.
+
+
+
+Have a go at this question, using a full sentence:
+
+   [tools: annotate, show_problem]
+16:16:01 STUDENT(answer) I work here for eleven year.
+16:16:05 TUTOR  Not quite. You said "I work here for eleven year." Because you started working here in the past and you still work here now, we need the present perfect: "have worked." Try the sentence again.
+16:16:23 STUDENT(answer) I have worked here for eleven year.
+16:16:38 TUTOR  Yes, that's right. "Have worked" is the present perfect here, because you started working here in the past and you still work here now.
+
+
+
+That finishes this part. Next is the past simple, for finished events at a specific time, such as "last year." Shall we go on?   [tools: annotate, show_sentence]
+16:17:03 STUDENT(answer) Yes, we can continue.
+16:17:11 TUTOR  
+We use the past simple for a finished event at a specific time, such as "last year" or "yesterday."
+
+
+
+過去の決まった時点で終わった出来事には過去形を使います。Now answer this question in a full sentence:
+
+   [tools: new_page, annotate, show_problem]
+16:17:27 STUDENT(answer) Yes, I attended a business exhibition in Tokyo last year. I met many customers there.
+16:17:30 TUTOR  That's right. "Attended" and "met" are both past simple, and "last year" tells us the event is finished. What did you talk about with those customers at the exhibition?
+16:17:46 STUDENT(answer) I talked about our training programs and communication services. We discussed how we can help their companies.
+16:17:51 TUTOR  Talking about your training programs and how you can help their companies is a clear picture of your exhibition. Now let's have a more natural conversation about your work. 
+
+Shall we go on, or do you have a question first?
+16:18:10 STUDENT(ack) Yes, let's continue.
+16:18:15 TUTOR  
+Let's talk about a project you're proud of. Try starting with "I worked on a project to..."
+
+   [tools: new_page, show_problem]
+16:18:29 STUDENT(answer) I worked on a project to develop new training programs for our customers. We created courses for business communication and English skills. I am proud because many companies use these programs now.
+16:18:32 TUTOR  That's a strong answer, and your sentences are clear. Since the programs were created, how many companies have used them?
+16:18:46 STUDENT(answer) I think about fifteen companies have used our new training programs. Some of them are in Japan and some are international customers.
+16:18:57 TUTOR  Yes, that's right. "Have used" is the present perfect here, because the companies started using the programs in the past and still use them now. Our conversation about your work is done. Next is optional pronunciation practice. Would you like to practise it? You can choose: 1) single words, 2) a com   [tools: annotate]
+16:19:29 STUDENT(answer) I would like to skip the pronunciation practice. Can we go to the summary?
+16:19:45 TUTOR  
+Let's review what you practised today. You talked about your work, your responsibilities and a project you're proud of.
+
+
+
+One thing you did well was using the present perfect for your experience: "Fifteen companies have used our new training programs."
+
+One thing to improve is "both ... and". The    [tools: new_page, annotate, show_sentence, show_sentence, show_sentence, annotate]
+16:20:32 STUDENT(answer) The first sentence uses present perfect 'have worked' because I started in the past and I still work here now. The second sentence uses past simple 'worked' because it was a finished event at a specific time in the past.
+16:20:40 TUTOR  Exactly right. "I have worked here for five years" connects the past start to now, and "I worked here five years ago" is a finished time in the past.
+
+We still have about ten minutes. Would you like more practice on the present perfect, a harder question about your work, or to stop here?
+16:21:06 STUDENT(answer) Okay, please stop. I would like to end the session for now.
+16:21:08 TUTOR  Thank you, Josh. Today you talked about your work and your project, and you used the present perfect and past simple correctly. Keep using "have worked" for experience that continues now, and "attended" or "met" for finished events. Goodbye, and see you next time!
+16:21:38 input gone (locator.click: Timeout 8000ms exceeded.) — treating as closed
+16:21:38 waiting 35 s for the autosave

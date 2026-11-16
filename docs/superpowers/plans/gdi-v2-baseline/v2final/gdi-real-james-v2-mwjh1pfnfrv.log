@@ -1,0 +1,217 @@
+16:22:15 open fixture=gdi-real-james arm=v2 student=gdi-v2-replay-gdi-real-james-final (speech off)
+16:23:00 no start orb (auto-start?)
+16:23:00 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and the projects you're involved in, using the present perfect for experience and the past simple for finished events. I'll correct your mistakes and give you a chance to try again. Does that sound goo   [tools: annotate]
+16:23:28 STUDENT(ack) Oh, yes.
+16:23:34 TUTOR  
+Great. First, a short chat so I can see what you can already do. Please answer in English, and don't worry about mistakes.
+
+Can you tell me a little about your job? What do you do?   [tools: new_page]
+16:23:55 STUDENT(answer) I'm engineer.
+16:23:57 TUTOR  Thanks, that's helpful. What kind of engineering do you do?
+16:24:06 STUDENT(answer) Make car.
+16:24:08 TUTOR  Making cars is a big job. Which part of the car do you work on: the engine, the body, or something else?
+16:24:22 STUDENT(complaint_lost) Uh, sorry. I don't understand.
+16:24:23 TUTOR  No problem. Let me ask it more simply. 車のどの部分を作っていますか？
+
+Do you make the engine, or the body of the car?
+16:24:35 STUDENT(ack) Uh, please repeat.
+16:24:36 TUTOR  Of course. Here it is again, more slowly:
+
+Do you make the **engine**, or the **body** of the car?
+
+「エンジン」か「ボディ」か、どちらを作っていますか？
+16:24:49 STUDENT(answer) Engine.
+16:24:52 TUTOR  Engines, I understand. エンジンの技術者なんですね。
+
+Now a question about customers. Have you ever worked with a customer from another country? 外国のお客さんと仕事をしたことはありますか？
+16:25:05 STUDENT(answer) Yes. Germany, America.
+16:25:07 TUTOR  外国のお客さん、ドイツとアメリカですね。すごいです。
+
+Easy follow-up: what did you work on with them?
+16:25:16 STUDENT(answer) Engine technology. New design.
+16:25:22 TUTOR  Engine technology and a new design, with customers in Germany and America. That's important work.
+
+新しいエンジンの設計を、ドイツとアメリカのお客さんと一緒にやったんですね。
+
+Let's make a full sentence about it. Try starting with: "I worked on…"   [tools: set_working_level]
+16:25:40 STUDENT(answer) I worked on engine technology with Germany and America customers.
+16:25:47 TUTOR  「I worked on engine technology」は正しい文です。過去の仕事を言えています。
+
+ただ、「ドイツとアメリカのお客さん」は英語では **customers from Germany and America** と言います。
+
+
+
+この文をもう一度言ってみてください。   [tools: show_sentence]
+16:25:59 STUDENT(answer) I worked on engine technology with customers from Germany and America.
+16:26:01 TUTOR  その文で正しいです。 **customers from Germany and America** も正しく言えました。
+
+レベルチェックはここまでです。次は、仕事についての簡単な文を練習します。準備ができたら教えてください。
+16:26:09 STUDENT(ack) OK, ready.
+16:26:12 TUTOR  
+
+Next is your job. Shall we go on, or do you have a question first?
+16:26:22 STUDENT(ack) Go on.
+16:26:26 TUTOR  
+仕事について話すときは、短い文を使います。まず例を見てください。
+
+
+
+
+
+「work in」は「〜の部署で働く」という意味です。次は、あなたの仕事について一文で言ってみてください。What do you do at work? と聞かれたら、どう答えますか？   [tools: new_page, annotate]
+16:26:37 STUDENT(answer) I make cars.
+16:26:42 TUTOR  「I make cars.」は正しい文です。とても良いです。
+
+Your job is engines, so you can also say:
+
+
+
+Now try one sentence about a customer or a team you work with. Try starting with: "I work with…"   [tools: show_sentence]
+16:27:01 STUDENT(answer) I work with customers from Germany and America.
+16:27:04 TUTOR  「I work with customers from Germany and America.」は正しい文です。ドイツとアメリカのお客さんと今も仕事をしている、と話せました。
+
+ここで仕事の話は終わりです。次は **present perfect** で、ずっと続いている経験を話す練習をします。続けてもいいですか？それとも質問がありますか？
+16:27:12 STUDENT(ack) Yes, continue.
+16:27:19 TUTOR  
+
+「現在完了」は、過去に始まって今も続いている経験や仕事に使います。形は **have / has + 過去分詞** です。
+
+
+
+
+
+この文は、5年前に始まって、今も同じ会社で働いている、という意味です。
+
+あなたの会社でどのくらい働いていますか？ 「I have worked here for…」で始めて、年数を入れて言ってみてください。   [tools: new_page, annotate, show_sentence]
+16:27:32 STUDENT(answer) Uh, yes, for seven year.
+16:27:41 TUTOR  「for seven year」は、「year」を「years」にします。「7年」は複数なので **seven years** です。
+
+
+
+では、「I have worked here for…」で始めて、全部の文を言ってみてください。   [tools: show_sentence]
+16:27:53 STUDENT(answer) I have worked here for seven years.
+16:27:56 TUTOR  「I have worked here for seven years.」は正しい文です。今も同じ会社で働いている経験を話せました。
+
+もう一つ練習します。「I have learned…」で始めて、会社で学んだことを一つ言ってみてください。
+16:28:04 STUDENT(answer) Uh, time management.
+16:28:07 TUTOR  「I have learned time management.」は正しい文です。今も続いている経験を話せました。
+
+現在完了の練習はここまでです。次は **past simple** で、特定の過去の時にあったことを話します。続けてもいいですか？それとも質問がありますか？
+16:28:16 STUDENT(ack) Continue.
+16:28:23 TUTOR  
+
+「過去形」は、特定の過去の時（last year、yesterday、2022年 など）にあった出来事に使います。形は **動詞の過去形** です。
+
+
+
+
+
+「last year」は特定の時なので、現在完了ではなく過去形を使います。
+
+去年、仕事のイベントや展示会に行きましたか？ 「I attended…」で始めて、答えてみてください。   [tools: new_page, annotate, show_sentence, annotate]
+16:28:34 STUDENT(answer) I attended six exhibitions last year.
+16:28:36 TUTOR  「I attended six exhibitions last year.」は正しい文です。特定の時（last year）に、終わった出来事を過去形で言えました。
+
+では、その中で一つ教えてください。Which exhibition did you attend? 「I attended…」で答えてみてください。
+16:28:45 STUDENT(answer) I attended Comdex in Las Vegas.
+16:28:47 TUTOR  「I attended Comdex in Las Vegas.」は正しい文です。特定の過去の展示会を、過去形で言えました。
+
+Comdexで何か新しい技術を見ましたか？ 「I saw…」で答えてみてください。
+16:28:56 STUDENT(answer) I saw new technology and AI at Comdex.
+16:28:59 TUTOR  「I saw new technology and AI at Comdex.」は正しい文です。「see」の過去形「saw」を使えました。
+
+過去形の練習はここまでです。次は、これまでの文を使って、仕事のプロジェクトについて話す会話です。続けてもいいですか？それとも質問がありますか？
+16:29:08 STUDENT(ack) Continue.
+16:29:11 TUTOR  
+
+では、プロジェクトの話をしましょう。
+
+
+
+「I worked on a project to…」の後ろに、目的を一つ入れてみてください。   [tools: new_page, show_problem]
+16:29:21 STUDENT(answer) I worked on a project to develop a new flying car.
+16:29:23 TUTOR  「I worked on a project to develop a new flying car.」は正しい文です。目的を言えました。
+
+次は、そのプロジェクトで誰と一緒に働いたか教えてください。「I worked with…」で始めてみてください。
+16:29:33 STUDENT(answer) I worked with about ten other engineers.
+16:29:35 TUTOR  「I worked with about ten other engineers.」は正しい文です。チームで働いた人数を言えました。
+
+このプロジェクトはどのくらいの期間でしたか？ 「It took…」で答えてみてください。
+16:29:43 STUDENT(answer) It took two years.
+16:29:45 TUTOR  「It took two years.」は正しい文です。二年かけたプロジェクトなんですね。
+
+次は、そのプロジェクトで一番大変だったことは何ですか？ 「The biggest challenge was…」で始めてみてください。
+16:29:55 STUDENT(answer) The biggest challenge was finding technology to lift the car off the ground.
+16:29:57 TUTOR  「The biggest challenge was finding technology to lift the car off the ground.」は正しい文です。一番大変だったことを言えました。
+
+次は、その課題をどうやって解決したか教えてください。「We solved it by…」で始めてみてください。
+16:30:09 STUDENT(answer) We solved it by testing different materials and designs.
+16:30:12 TUTOR  「We solved it by testing different materials and designs.」は正しい文です。テストで解決した方法を言えました。
+
+では、プロジェクトの結果を教えてください。「The result was…」で始めてみてください。
+16:30:22 STUDENT(answer) The result was a prototype that can fly safely.
+16:30:28 TUTOR  "The result was a prototype that can fly safely." That's correct, and it's a clear way to describe the result.
+
+Now, a question for you: have you worked on another project since then? Try starting with "I have worked on…"   [tools: show_sentence]
+16:30:51 STUDENT(answer) I have worked on improving engine efficiency for electric vehicles.
+16:30:57 TUTOR  「I have worked on improving engine efficiency for electric vehicles.」は正しい文です。今も続いている仕事を言えました。
+
+Next question: How long have you worked on this? 「for」か「since」で答えてみてください。   [tools: annotate, annotate]
+16:31:13 STUDENT(answer) I have worked on this for three years.
+16:31:15 TUTOR  「I have worked on this for three years.」は正しい文です。「for」で期間を言えました。
+
+次は、このプロジェクトで学んだことを教えてください。「I have learned…」で始めてみてください。
+16:31:25 STUDENT(answer) I have learned about sustainable technology and renewable energy.
+16:31:27 TUTOR  「I have learned about sustainable technology and renewable energy.」は正しい文です。「learn about」で学んだ分野を言えました。
+
+このプロジェクトの次の目標は何ですか？ 「My next goal is to…」で答えてみてください。
+16:31:38 STUDENT(answer) My next goal is to create a fully autonomous flying car with advanced AI technology.
+16:31:44 TUTOR  「My next goal is to create a fully autonomous flying car with advanced AI technology.」は正しい文です。未来の目標を言えました。
+
+
+
+会話の練習はここまでです。次は発音の練習か、まとめに進めます。どちらにしますか？   [tools: show_sentence, annotate]
+16:31:58 STUDENT(answer) Uh, just a little bit of individual words.
+16:32:01 TUTOR  
+
+Next is pronunciation. Shall we go on, or do you have a question first?
+16:32:11 STUDENT(ack) Go on.
+16:32:17 TUTOR  
+
+では、単語を一つ練習しましょう。発音は、声に出して言ってみてください。
+
+
+
+まず声に出して言ってみてください。言えたら、ここに文字で書いてください。   [tools: new_page, annotate]
+16:32:26 STUDENT(answer) Responsibilities.
+16:32:32 TUTOR  You've said the word, and I can see it's written correctly. I can only check the spelling and wording here, not how it sounds. Please say it once more slowly, and stress the BIL part.
+
+
+
+Now say that sentence aloud, then type one sentence of your own with the word "responsibilities."   [tools: show_sentence]
+16:32:59 STUDENT(complaint_ignored) Uh, move on.
+16:33:09 TUTOR  
+
+Pronunciation は終わりにして、まとめをしましょう。
+
+今日は仕事の話をしました。使った文法は2つです。
+
+
+
+
+
+
+
+
+
+よくできた点は、「I attended six exhibitions last year.」です。「last year」という特定の時に、過去形を正しく使えました。
+
+直すとよい点は、「for seven year」を「for seven years」にすることです。年数が2つ以上のときは years を使います。
+
+最後に確認です。次の2つの文の違いを説明できますか？ 日本語でも大丈夫です。
+
+I have worked here for five y   [tools: new_page, annotate, show_sentence, annotate]
+16:33:28 STUDENT(complaint_ignored) Sorry, I have to finish now.
+16:33:31 TUTOR  わかりました。今日は、仕事の話で **present perfect**（I have worked here for seven years.）と **past simple**（I attended six exhibitions last year.）を練習しました。お疲れさまでした。また次の授業で会いましょう！
+16:33:39 STUDENT(end)
+16:33:39 waiting 35 s for the autosave

@@ -1,0 +1,172 @@
+16:50:23 open fixture=gdi-real-t3 arm=v2 student=gdi-v2-replay-gdi-real-t3-final (speech off)
+16:51:08 no start orb (auto-start?)
+16:51:08 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect for experience, and the past simple for finished events. Does that sound good to you? よろしいでしょうか。   [tools: new_page, annotate]
+16:51:32 STUDENT(answer) I'm ready.
+16:51:38 TUTOR  Great. First, a short, friendly chat so I can see what you can already do. Please answer in English, and don't worry about mistakes.
+
+
+
+
+
+Can you tell me a little about your job? What do you do?   [tools: new_page, annotate]
+16:51:59 STUDENT(answer) Yes, I'm a sales manager, uh the GM, general manager, and I just supporting for the all division in the company and of course most of the part of the management.
+16:52:04 TUTOR  Thanks, that's a useful picture of your role. Here is the second question.
+
+
+
+Have you ever worked with an international customer? If so, can you tell me about the experience?   [tools: annotate]
+16:52:23 STUDENT(answer) Yes, I have working with the international customer for sometimes. Uh, we are supporting for the the different country, and uh the communication is very important for the business.
+16:52:26 TUTOR  Good, that helps me see where to start. Here is the last question.
+
+
+
+What is one skill you'd like to improve in your English, and why is it important to you?   [tools: annotate]
+16:52:46 STUDENT(answer) Uh, I think the most important is uh speaking skill, because I have working with the international customer and uh I need to communicate more clearly and more fluently in the the business meeting and the the presentation.
+16:52:51 TUTOR  Thank you, that gives me a clear picture. Today we'll make your grammar more accurate and your answers sound more natural.
+
+
+
+Next is your job and experience. Shall we go on, or do you have a question first?   [tools: set_working_level]
+16:53:12 STUDENT(ack) Yes, let's go on.
+16:53:18 TUTOR  
+
+Let's look at two sentences. Both are about working with international customers, but the tense changes the meaning.
+
+
+
+Now, what are your main responsibilities at work? Please give me at least two sentences.   [tools: new_page, annotate]
+16:53:39 STUDENT(answer) My main responsibility in sales area is uh contact for our clients and supporting for the each division member and suggesting for the new product clients. And uh I am managing the the team member and uh looking for the new business opportunity.
+16:53:46 TUTOR  Good, you described your role clearly. One small fix: you said "supporting for the each division member." We say "support" with no "for," and "each" takes a singular noun, so: "I support each division's members." Can you say that sentence once more?   [tools: show_sentence]
+16:54:09 STUDENT(answer) I support each division's members.
+16:54:14 TUTOR  That's right: "I support each division's members."
+
+We've finished talking about your job. Next is the present perfect, for experience that started in the past and continues now. Shall we go on, or do you have a question first?
+16:54:33 STUDENT(ack) Yes, let's go on.
+16:54:38 TUTOR  
+
+We use the present perfect for experience that started in the past and continues now. The form is have/has + past participle.
+
+
+
+Have you worked for your current company for a long time?   [tools: new_page, annotate]
+16:54:59 STUDENT(answer) Yes, working for our company above over the ten years. Uh, I have working for our company for a long time, around the ten years.
+16:55:04 TUTOR  You're on the right track with "I have", and the meaning is clear. The verb form is the key point: after "have," we use the past participle, "worked," not "working." Could you say the sentence again with that change?
+
+   [tools: show_sentence]
+16:55:26 STUDENT(answer) I have worked for our company for a long time, around the ten years.
+16:55:33 TUTOR  The verb is right now: "have worked." For the time phrase, we say "for about ten years."
+
+
+
+That completes the present perfect. Next is the past simple, for finished events at a specific time. Shall we go on, or do you have a question first?   [tools: show_sentence]
+16:55:57 STUDENT(ack) Yes, let's go on.
+16:56:06 TUTOR  
+
+We use the past simple for a finished event at a specific time in the past. The form is the past-tense verb, and the time word (last year, yesterday, two weeks ago) tells us it is finished.
+
+
+
+Did you attend any business events or exhibitions last year?
+
+   [tools: new_page, annotate, show_problem, annotate]
+16:56:32 STUDENT(answer) Yes, I attended the uh some business event in the uh Japan last year. It's kind of the networking events, looking for the new business partner.
+16:56:37 TUTOR  Yes, "I attended" is the past simple, and "last year" tells us the event is finished. Well done.
+
+Did you meet any new business partners at that event? Please answer with a full sentence in the past simple.
+16:56:57 STUDENT(answer) Yes, I met someone. We came at the the new partner or the related for the new business with customers.
+16:57:05 TUTOR  "I met someone" is correct past simple. For the second part, we say "We met a new business partner" when you meet a new contact at an event. Can you say your whole answer again in one sentence?
+
+   [tools: show_sentence]
+16:57:27 STUDENT(answer) Yes, I met someone at the event, and we met a new business partner for the new business with customers.
+16:57:35 TUTOR  Your past simple is right: "I met" and "we met" both work. The part after "and" is hard to follow, so please keep the version on the board: "I met a new business partner at the event."
+
+That finishes the past simple. Next is a conversation about your work, where you can use both tenses. Shall we go 
+16:58:05 STUDENT(ack) Yes, let's go on.
+16:58:09 TUTOR  
+
+Let's talk more freely about your work now. Use the grammar we've practised, but don't worry about being perfect.
+
+What is one project you've worked on that you're particularly proud of? Try starting with "I worked on a project to…"   [tools: new_page]
+16:58:32 STUDENT(answer) Uh, let me see is uh one project I worked in the supporting for the the SNS networking contents. My rule is to manage for the SNS networking content member. Uh, I think this project is very important for the the company because uh we can reach to the new customer through the the SNS platform.
+16:58:39 TUTOR  That's a good project to talk about, and "I worked on" is the right past simple. The gap from earlier came back, though: you said "supporting for the SNS networking contents," and we say "support" with no "for." Can you say that part again?
+
+   [tools: show_sentence]
+16:59:03 STUDENT(answer) I worked on a project to support the SNS networking contents.
+16:59:10 TUTOR  Yes, that's right: "I worked on a project to support the SNS networking contents." The "for" is gone, and the past simple fits.
+
+What was the biggest challenge in this project, and how did you handle it?   [tools: show_sentence]
+16:59:33 STUDENT(answer) Uh, the biggest challenge is uh the the team member have different opinion about the the content strategy. And uh I managed for the the meeting and uh we discussed together and uh we came to the one agreement about the the direction of the project.
+16:59:38 TUTOR  That's a clear account of the challenge and how you solved it. The word "came" is past simple and works well. One change: this happened in the past, so we say "had," not "have." You said "the team member have different opinion"; we say "The team members had different opinions."
+
+
+
+Once you've said t   [tools: show_sentence]
+17:00:10 STUDENT(answer) The team members had different opinions about the content strategy. Uh, the final direction of the project was uh to focus on the the customer engagement and uh creating the the more interactive content for the the SNS platform to reach the new customer.
+17:00:16 TUTOR  Yes, that's correct: "The final direction of the project was to focus on customer engagement." Your sentence is clear, and "to focus on" is the right pattern after "was."
+
+Have you worked on a similar project since then?   [tools: show_sentence]
+17:00:39 STUDENT(answer) Uh, not exactly the same project, but uh I have working on the the similar project to support for the the SNS content strategy. Uh, we are trying to improve the the engagement and uh reach more customer through the the different platform.
+17:00:46 TUTOR  The idea is clear, but "have working" needs a change: after "have," we use "been" + -ing, so "I have been working on a similar project." Can you say the sentence again?
+
+   [tools: show_sentence]
+17:01:05 STUDENT(answer) I have been working on a similar project to support the SNS content strategy.
+17:01:06 TUTOR  Yes, that's correct: "I have been working on a similar project to support the SNS content strategy."
+
+Have you seen any results from this project so far?
+17:01:22 STUDENT(answer) I'm not sure about it. Uh, but I think the the engagement is increasing and uh we are getting more feedback from the the customer. Uh, we need more time to see the the clear result.
+17:01:27 TUTOR  Getting more feedback from customers is a good sign, and you said it clearly: "we are getting" for something happening now.
+
+Now it's your turn to ask me a question about work or projects.
+17:01:46 STUDENT(question) Uh, thank you. Can I ask you uh what kind of project you have working on in your company? Or uh what is your main responsibility in your work?
+17:01:51 TUTOR  Thank you for asking. My main responsibility is improving customer service, and I also run training for our team. Right now I'm working on a project to make our customer support faster.
+
+Did that answer your question?   [tools: annotate]
+17:02:14 STUDENT(ack) Yes, thank you. That is very interesting. Uh, I think the customer service is very important for the the business, and uh your project sounds very useful.
+17:02:20 TUTOR  Thank you, that's kind of you to say. Customer service is a good area to talk about, and it fits well with your own work.
+
+Before we finish, one more chance to use "have been working" on your own. What have you been working on at your company this month?
+17:02:44 STUDENT(answer) Uh, I have been working on the the hiring process this month. Uh, not project, but I have to find for the the new person to exchanging for the project members, because one member is will leaving our company. So uh I am supporting for the the recruitment and uh preparing for the the training for the 
+17:02:50 TUTOR  "I have been working on the hiring process this month" is correct, and it's the tense we practised. Now look at "I am supporting for the recruitment." Which word after "supporting" is not needed? Try the sentence again without it.
+17:03:11 STUDENT(answer) I am supporting the recruitment and uh preparing for the the training for the new member.
+17:03:18 TUTOR  Yes, that's right: "I am supporting the recruitment and preparing for the training for the new member." You removed the extra "for" after "support," and the rest of the sentence is correct.
+
+   [tools: annotate]
+17:03:38 STUDENT(ack) Yes, I understand. Support the recruitment, and preparing for the training. Thank you.
+17:03:44 TUTOR  Good, you now have both points: "support" with no "for," and "preparing for" with a noun.
+
+We've finished the conversation about your work. Next is an optional pronunciation practice, where you say a sentence aloud and type it when you're ready. Shall we go on, or do you have a question first?
+17:04:08 STUDENT(ack) Yes, let's go on.
+17:04:13 TUTOR  
+
+Here are four ways we could practise, and you choose one:
+1) Individual words, such as "responsibilities" or "international"
+2) A complete sentence, such as "I have worked with international customers for several years."
+3) Speaking more naturally, using a sentence you said earlier in today's less   [tools: new_page, annotate]
+17:04:45 STUDENT(answer) Uh, I think number 2 is good. The complete sentence is helpful for me to practice the the natural speaking.
+17:04:52 TUTOR  Good choice. Listen to the sentence, then say it aloud on your own, and type it here when you're ready. The stress is on "worked," "customers," and "several."
+
+
+
+Listen, then repeat after me: I have worked with international customers for several years.
+17:05:13 STUDENT(answer) I have worked with international customers for several years.
+17:05:18 TUTOR  Your typed sentence is exactly right: "I have worked with international customers for several years." This is a typed lesson, so I can only check the words, not how you say them.
+
+Let's finish with a quick review of today's sentences.
+
+
+
+Next is summary. Shall we go on, or do you have a question fir
+17:05:44 STUDENT(ack) Yes, let's go on.
+17:05:52 TUTOR  
+
+Today you talked about your work, your responsibilities and a project you're proud of, using two grammar points.
+
+
+
+One thing you did well was using "I have been working on" for something still going on. One thing to improve was "support," which needs no "for" after it. Here are some of your own s   [tools: new_page, annotate, show_sentence, show_sentence, show_sentence, show_sentence, annotate]
+17:06:31 STUDENT(answer) Uh, yes, I understand. The first sentence, 'I have worked here for five years,' means uh I started working five years ago and I am still working here now. The second sentence, 'I worked here five years ago,' means uh I worked in the past, but uh maybe I am not working there now. It is finished event
+17:06:33 TUTOR  Yes, that's exactly right. "I have worked here for five years" means you started five years ago and still work there, and "I worked here five years ago" means that job is finished.
+
+For next time, keep practising "support" with no "for" after it, and use the past participle after "have," as in "have
+17:07:03 STUDENT(end)
+17:07:03 waiting 35 s for the autosave

@@ -1,0 +1,222 @@
+16:34:16 open fixture=gdi-real-t2 arm=v2 student=gdi-v2-replay-gdi-real-t2-final (speech off)
+16:35:01 no start orb (auto-start?)
+16:35:01 TUTOR  Hello, and welcome! I'm Ryota, and I'll be your English tutor today. We'll practise talking about your work and recent projects, using the present perfect for experience and the past simple for finished events. Does that sound good to you?   [tools: new_page, annotate]
+16:35:23 STUDENT(ack) Yes, thank you. That sounds good.
+16:35:30 TUTOR  Here is how the lesson will go. You'll talk about your job and your projects, and we'll practise two grammar points: the present perfect for experience and the past simple for finished events. I'll ask follow-up questions to keep the conversation going, and I'll correct your mistakes, explain them a
+16:36:05 STUDENT(answer) Please, could you please rephrase that, please?
+16:36:12 TUTOR  Of course. Simply put, we will talk about your work and practise two grammar points. Your work and your projects are our topic. I will ask you questions, and I will help you when you make a mistake.
+
+(簡単に言うと、仕事の話をしながら、文法を二つ練習します。)
+
+Are you ready?
+16:36:34 STUDENT(answer) I, I work as admin at the company. Could you explain that in Japanese?
+16:36:38 TUTOR  「I work as admin at the company」は「会社で事務の仕事をしています」という意味です。「as」は「〜として」という意味で、「admin」は administration（事務）の短い言い方です。
+
+Now, what kind of admin tasks do you do?
+16:36:49 STUDENT(answer) I'm checking emails and sorting out some paperwork.
+16:36:54 TUTOR  Thank you, that's clear. Let me ask you a second question.
+
+
+
+Have you ever worked with an international customer? If so, can you tell me about the experience?   [tools: new_page]
+16:37:12 STUDENT(answer) No.
+16:37:14 TUTOR  That's fine. Then tell me about a recent task at work that was difficult, or a new project you worked on.
+16:37:26 STUDENT(answer) No.
+16:37:29 TUTOR  Let's make it simpler. Tell me one task you do at work. Just a few words is fine.
+
+(仕事で行う作業を一つ、短く教えてください。)
+16:37:42 STUDENT(answer) I do emails and sorting out some documents.
+16:37:50 TUTOR  Thank you, that helps me a lot. Today we'll focus on making your sentences more accurate and natural.
+
+(今日は、文を正しく、自然に言えるようにすることに重点を置きます。)
+
+The level check is done. Next, we'll talk about your job with simple sentences, like "I check emails." Shall we go on?   [tools: set_working_level]
+16:38:15 STUDENT(ack) Yes, okay. Let's go on.
+16:38:20 TUTOR  まず、仕事の話に使う簡単な文を見ましょう。
+
+
+
+
+
+「I check emails.」は「私はメールを確認します」という意味です。英語では動詞をそのまま使い、主語の後に続けます。
+
+
+
+Now it's your turn. Say one sentence about your work, like "I ..." and a task you do.   [tools: new_page, annotate]
+16:38:35 STUDENT(answer) I check emails.
+16:38:37 TUTOR  That's right, "I check emails" is a clear sentence. Now let's look at the present perfect, which we use for things that started in the past and continue now.
+
+
+
+Shall we go on, or do you have a question first?
+16:38:57 STUDENT(ack) Yes, let's go on.
+16:39:02 TUTOR  まず、現在完了の使い方を見ましょう。過去に始まって、今も続いている経験に使います。
+
+
+
+
+
+「I have worked here for five years.」は「私はここで五年間働いています」という意味です。五年前に始まり、今も続いています。
+
+
+
+Now try it about yourself. Start with "I have worked here for ..." and tell me how long you have worked at your company.   [tools: new_page, annotate]
+16:39:22 STUDENT(answer) I have worked for the current company for ten years.
+16:39:28 TUTOR  That's right. "I have worked for the current company for ten years" is correct, because you started ten years ago and still work there.
+
+That finishes the present perfect. Next is the past simple, for things that were finished at a specific time. Shall we go on, or do you have a question first?   [tools: show_sentence]
+16:39:55 STUDENT(request) Please move on to the past simple.
+16:40:00 TUTOR  過去形を見ましょう。終わった出来事を、specific time（特定の時）と一緒に言うときに使います。
+
+
+
+
+
+「I attended an exhibition last year.」は「私は去年、展示会に参加しました」という意味です。「last year」があるので、過去形を使います。
+
+
+
+Now try one about yourself. Start with "I attended..." or "I joined..." and tell me one thing you did last year at work.   [tools: new_page, annotate, show_sentence]
+16:40:19 STUDENT(answer) I attended a meeting last year.
+16:40:20 TUTOR  Yes, that's right. "I attended a meeting last year" uses the past simple with "last year," so it's correct.
+
+Now, what was the meeting about?
+16:40:35 STUDENT(answer) Uh, I'm not sure. Maybe about company policy.
+16:40:41 TUTOR  「company policy」は「会社の方針」という意味で、正しく使えています。
+
+「about」を入れて、一文にしてみましょう。「I attended a meeting about ...」の続きを、自分の言葉で言ってください。
+
+   [tools: annotate]
+16:40:52 STUDENT(answer) I attended a meeting about company policy.
+16:40:57 TUTOR  Yes, that's correct: "I attended a meeting about company policy." You used the past simple with a finished event.
+
+Now, a short question: did you meet anyone important at that meeting?   [tools: show_sentence]
+16:41:16 STUDENT(answer) No.
+16:41:18 TUTOR  That's fine. Let's try another past simple sentence. What did you do after the meeting? Start with "I ..." and use a verb in the past.
+16:41:32 STUDENT(answer) I wrote a report about the meeting.
+16:41:36 TUTOR  Yes, "I wrote a report about the meeting" is correct. You used the past simple for something you finished.
+
+Now, when did you write the report? Try to answer with "I wrote it..." and a time word.   [tools: show_sentence]
+16:41:58 STUDENT(answer) I wrote it after the meeting.
+16:42:03 TUTOR  「I wrote it after the meeting.」は正しい文です。終わった出来事を過去形で言えています。
+
+（過去形の練習はここまでです。）
+
+Next, we'll have a short conversation about your work, and you can ask me questions too. Shall we go on, or do you have a question first?   [tools: show_sentence]
+16:42:23 STUDENT(ack) Yes, let's go on.
+16:42:26 TUTOR  では、会話の練習をしましょう。仕事の話を、私と一緒にしてみてください。
+
+
+
+
+
+Is there a project at work that you are proud of? Please answer with one or two sentences. Try starting with "I worked on a project to...".   [tools: new_page, annotate]
+16:42:45 STUDENT(answer) No.
+16:42:47 TUTOR  大丈夫です。もっと簡単に聞きますね。
+
+Did you finish any task at work last month? Try starting with "Yes, I ..." or "No, I didn't."
+16:42:59 STUDENT(answer) No, I didn't.
+16:43:01 TUTOR  Yes, "No, I didn't" is correct.
+
+Now try this one: what did you finish last week? Start with "I finished..."
+16:43:13 STUDENT(answer) I finished sorting documents last week.
+16:43:14 TUTOR  「I finished sorting documents last week.」は正しい文です。「last week」があるので、過去形を使っています。
+
+Now, what is one project you are proud of at work? Try starting with "I worked on a project to..."
+16:43:29 STUDENT(answer) No, I have not.
+16:43:31 TUTOR  大丈夫ですよ。では、先月の仕事を一つ教えてください。
+
+Try starting with "I worked on..." or "I wrote...".
+16:43:40 STUDENT(answer) I worked on sorting documents last month.
+16:43:42 TUTOR  That's correct. "I worked on sorting documents last month" uses the past simple with "last month."
+
+What kind of documents did you sort?
+16:43:56 STUDENT(answer) I sorted company documents and invoices.
+16:43:58 TUTOR  「sorted」は「sort」の過去形で、正しく使えています。
+
+Now, one more short question: when did you sort the invoices? Try starting with "I sorted them..." and add a time word.
+16:44:12 STUDENT(answer) I sorted them last month.
+16:44:17 TUTOR  That's right. "I sorted them last month" uses the past simple with a finished time, so it's correct.
+
+Now it's your turn to ask me a question about work. What would you like to ask me?   [tools: show_sentence]
+16:44:39 STUDENT(answer) Uh, what do you do? Do you work in a company?
+16:44:44 TUTOR  I work in customer service. I help our team improve how we talk with customers, and I also run training for new team members.
+
+(私は顧客サービスの仕事をしています。)
+
+Did that answer your question? If so, please tell me one project you worked on at your company.   [tools: annotate]
+16:45:07 STUDENT(answer) No, I have not.
+16:45:09 TUTOR  わかりました。では、もっと簡単に聞きますね。
+
+Have you worked on a project at your company? Just answer "Yes, I have." or "No, I haven't."
+16:45:22 STUDENT(answer) No, I haven't.
+16:45:25 TUTOR  "No, I haven't" is correct. Next, try this: have you learned any new skill at work this year? Start with "Yes, I have learned..." or "No, I haven't."
+16:45:40 STUDENT(answer) No, I haven't.
+16:45:45 TUTOR  Yes, "No, I haven't" is the correct answer to that question. Now, what is one skill you would like to learn this year? Try starting with "I would like to learn..."
+16:46:02 STUDENT(answer) I would like to learn more English speaking skill.
+16:46:07 TUTOR  Your sentence is clear. Please change one word: you said "more English speaking skill"; we say "more English speaking **skills**." After "more," we use the plural.
+
+(「more」の後ろは複数形にします。)
+
+Can you say the whole sentence again?
+
+   [tools: show_sentence]
+16:46:27 STUDENT(answer) I would like to learn more English speaking skills.
+16:46:34 TUTOR  Yes, that's right. You said the whole sentence correctly.
+
+
+
+Next is summary. Shall we go on, or do you have a question first?
+16:46:46 STUDENT(ack) Yes, let's go on.
+16:46:54 TUTOR  Let's do the summary. You talked about your work and your experiences, so here are the two grammar points with your own sentences.
+
+
+
+
+
+
+
+
+
+One thing you did well was using the past simple with a finished time, as in "I sorted them last month." One thing to improve is the plural after "more": you sa   [tools: new_page, annotate, show_sentence, show_sentence, show_problem]
+16:47:42 STUDENT(answer) The first one means I have been working here for five years until now. The second one means I worked there five years ago and no longer work.
+16:47:51 TUTOR  Yes, that's exactly right. The first sentence is still true now, and the second one is finished. Well done today!
+
+(はい、そのとおりです。今日はよくできました。)
+
+Thank you for today's lesson. Keep practising these two grammar points when you talk about your work. See you next time!Would you like something harder, more p
+16:48:15 STUDENT(end)
+16:48:15 waiting 35 s for the autosave
+
+=== gdi-real-t2 / v2 · 13.2 min · session embed-1794846856445 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/docs/superpowers/plans/gdi-v2-baseline/v2final/gdi-real-t2-v2-mwjhh5mflml.json
+{
+  "fixture": "gdi-real-t2",
+  "arm": "v2",
+  "minutes": 13.2,
+  "tutorTurns": 35,
+  "studentTurns": 34,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.46,
+  "questionAfterAnswerShare": 0.5,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 28,
+  "tutorWordsP90": 54,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 1533,
+  "firstSentenceMsP95": 3901,
+  "inputTokens": 1462749,
+  "outputTokens": 23454,
+  "costPerMinute": 0.004,
+  "endedBy": "tutor_close"
+}
