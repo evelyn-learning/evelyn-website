@@ -131,3 +131,8 @@ export async function scriptedStudentTurn(
   if (merged[0]?.role === 'assistant') merged.unshift({ role: 'user', content: '(the session begins)' });
   return parseStudentReply(await complete(buildStudentSystemPrompt(student), merged));
 }
+
+/** Text-mode sessions show no start orb and wait for the learner to type first; only then does the driver open with a line. */
+export function needsOpeningLine(claims: Record<string, unknown>): boolean {
+  return claims.input_mode === 'text';
+}

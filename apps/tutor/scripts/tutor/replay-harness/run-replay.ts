@@ -23,7 +23,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import mongoose from 'mongoose';
-import { scriptedStudentTurn, type Fixture, type ReplayTurn } from './scripted-student';
+import { needsOpeningLine, scriptedStudentTurn, type Fixture, type ReplayTurn } from './scripted-student';
 import { scoreRun, type RunBundle } from './scorecard';
 
 const arg = (k: string, d: string) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
@@ -185,11 +185,11 @@ async function main() {
   // input_mode "text" shows no start orb and the tutor waits for the learner to type first ("Type your question
   // below to start"). Open with one line (--open "...") so the run does not stall; the line is kept as a student turn.
   let openingLine = '';
-  if (!(await orb.isVisible().catch(() => false)) && (await page.evaluate(() => (window.__brain?.turns.length ?? 0) + (window.__brain?.inFlight ?? 0)).catch(() => 0)) === 0) {
+  if (needsOpeningLine(payload) && !(await orb.isVisible().catch(() => false)) && (await page.evaluate(() => (window.__brain?.turns.length ?? 0) + (window.__brain?.inFlight ?? 0)).catch(() => 0)) === 0) {
     await wait(8000);
     if ((await page.evaluate(() => (window.__brain?.turns.length ?? 0) + (window.__brain?.inFlight ?? 0)).catch(() => 0)) === 0) {
       openingLine = arg('--open', 'Hello, I am ready.');
-      try { await input.click({ timeout: 15000 }); await input.fill(openingLine); await input.press('Enter'); say(`STUDENT(open) ${openingLine}`); } catch (e) { say(`could not type the opening line (${String((e as Error).message).split('\n')[0].slice(0, 60)})`); openingLine = ''; }
+      try { await input.click({ timeout: 15000 }); await input.fill(openingLine); await input.press('Enter'); say(`STUDENT(open) ${openingLine}`); } catch (e) { throw new Error(`could not type the opening line (${String((e as Error).message).split('\n')[0].slice(0, 60)})`); }
     }
   }
   const t0 = Date.now();

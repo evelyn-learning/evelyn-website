@@ -1,0 +1,928 @@
+{
+  "fixture": "gdi-real-stop",
+  "arm": "v1",
+  "sessionId": "embed-1794809312274",
+  "startedAt": "2026-11-16T06:09:25.332Z",
+  "minutes": 3.0104166666666665,
+  "turns": [
+    {
+      "role": "student",
+      "text": "Hello, I am ready.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Great, let's get started. Could you tell me a little about your job, Josh? Okay, let's go over the plan for today. Hello, and welcome to your English lesson! We'll practice talking about your work and the projects you're involved in. We'll cover two grammar points: the present perfect for your experience, and the past simple for finished events at a specific time. You'll also practice follow-up questions, I'll correct your mistakes and give you a chance to try again, and near the end you can practice your pronunciation if you like. Before we begin, there's a short one-time level check so I can adjust the lesson for you. Could you tell me a little about your job, Josh?"
+    },
+    {
+      "role": "student",
+      "text": "I am a manager at a communications company in Japan.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Thanks, Josh. That is a clear answer. Have you ever worked with an international customer? If so, can you tell me about the experience?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I work with companies in Japan and worldwide.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Thanks, Josh. You told me you work with companies in Japan and worldwide. Can you tell me about one specific experience with an international customer? 「どんな経験があったか」を具体的に教えてください。 What is one skill you'd like to improve in your English, and why is it important to you?"
+    },
+    {
+      "role": "student",
+      "text": "I want better conversation with customers before meetings.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, that is a clear goal. Your goal is clear. Can you say the reason in a full sentence, like 'It is important because...'? Use 'want to improve' with a skill. 'Better conversation' is unnatural here. 「会話を改善したい」は、英語では want to improve my conversation と言います。 Let's move on to your job. Tell me about your main responsibilities at work, in two sentences."
+    },
+    {
+      "role": "student",
+      "text": "Okay, please stop. I would like to end the session for now.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Understood, Josh. 今日は会話の練習ができましたね。 お疲れさまでした。 Today we practised describing your job and your work with international customers. Thank you, Josh, and goodbye!"
+    },
+    {
+      "role": "student",
+      "text": "Can we continue from this point next time?",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, we can pick up from here next time. 次回も、今日の続きから始めましょう。 What is one work project you would like to talk about next time?"
+    },
+    {
+      "role": "student",
+      "text": "Sorry, I have to finish now.",
+      "tag": "end_request"
+    },
+    {
+      "role": "tutor",
+      "text": "Understood, Josh. 今日は仕事の話を練習しましたね。 お疲れさまでした。 Thanks for practising today, Josh. Goodbye, and see you next time!"
+    }
+  ],
+  "events": [
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=22281 cap=70920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=22281 cap=70920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "start_watchdog",
+      "message": "pre-start idle 30s — session not started"
+    },
+    {
+      "type": "first_session_tip_attached",
+      "message": "opening turn"
+    },
+    {
+      "type": "work_then_match",
+      "message": "on for this turn"
+    },
+    {
+      "type": "brain_thinking",
+      "message": "reasoning before the reply"
+    },
+    {
+      "type": "ack_suppressed",
+      "message": "opening-turn"
+    },
+    {
+      "type": "verdict_opener_cut",
+      "message": "clean_cut · \"Great\" ← \"Great, let's get started.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "Whiteboard tool: markSegmentComplete"
+    },
+    {
+      "type": "fixed_script_mark_refused_script_missing",
+      "message": "\"overview\" missing=[present perfect, past simple]"
+    },
+    {
+      "type": "render_sync_empty_batch",
+      "message": "no command survived processing"
+    },
+    {
+      "type": "tool_call",
+      "message": "Whiteboard tool: advanceLesson"
+    },
+    {
+      "type": "fixed_script_advance_refused_script_missing",
+      "message": "\"overview\" missing=[present perfect, past simple]"
+    },
+    {
+      "type": "render_sync_empty_batch",
+      "message": "no command survived processing"
+    },
+    {
+      "type": "render_dropped",
+      "message": "advance_lesson — This part's script has not been said yet — it must include: \"present perfect\", \"past simple\". Say it in this turn; the l"
+    },
+    {
+      "type": "kill_withheld_lesson_tool",
+      "message": "show_segment_card"
+    },
+    {
+      "type": "thin_turn_rescue",
+      "message": "thin-tool-turn"
+    },
+    {
+      "type": "tool_call",
+      "message": "Whiteboard tool: advanceLesson"
+    },
+    {
+      "type": "auto_newpage_on_advance_deferred",
+      "message": "level-check: Part 2 · Level check · レベルチェック"
+    },
+    {
+      "type": "rail_segment_held",
+      "message": "\"overview\" stays active until the \"level-check\" page paints"
+    },
+    {
+      "type": "render_sync_empty_batch",
+      "message": "no command survived processing"
+    },
+    {
+      "type": "auto_card_on_advance",
+      "message": "level-check (misconception_check) — advanced without rendering the authored card"
+    },
+    {
+      "type": "show_segment_card_resolved",
+      "message": "level-check: \"1. Can you tell me a little about your job? What d…\""
+    },
+    {
+      "type": "tool_call",
+      "message": "Whiteboard tool: showProblem"
+    },
+    {
+      "type": "auto_new_page_first",
+      "message": "no active page — opening the first page"
+    },
+    {
+      "type": "auto_newpage_continuation_dropped",
+      "message": "\"Check\" (deferred-page-is-authored) — deferred segment page \"Part 2 · Level check · レベルチェック\" kept"
+    },
+    {
+      "type": "auto_newpage_on_advance_flushed",
+      "message": "level-check: Part 2 · Level check · レベルチェック"
+    },
+    {
+      "type": "rail_segment_released",
+      "message": "\"level-check\" (its page painted)"
+    },
+    {
+      "type": "render_sync_text_paint",
+      "message": "2 command(s) painted on arrival (text mode)"
+    },
+    {
+      "type": "judge_stale_snapshot_path_b_only",
+      "message": "tools=1"
+    },
+    {
+      "type": "judge_authored_solution",
+      "message": "Problem: 1. Can you tell me a little about your job? What do you do?\n2. Have you"
+    },
+    {
+      "type": "judge_pass",
+      "message": "grounded · Okay, let's go over the plan for today. Hello, and…"
+    },
+    {
+      "type": "brain_opening_directive",
+      "message": "opener spoken on attempt=1 — full directive will not be re-attached"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 12896ms · 4 tool call(s) · 8 sentence(s) · first_sentence=5184ms · in=7528 out=1130 cr=224067 cc=29"
+    },
+    {
+      "type": "turn_length",
+      "message": "8 sentence(s) · 115 word(s) · 4 tool call(s)"
+    },
+    {
+      "type": "fixed_script_entry_note_planted",
+      "message": "\"level-check\" (brain advance)"
+    },
+    {
+      "type": "tool_call",
+      "message": "Whiteboard tool: showTable"
+    },
+    {
+      "type": "render_sync_text_paint",
+      "message": "1 command(s) painted on arrival (text mode)"
+    },
+    {
+      "type": "fixed_script_outline_card",
+      "message": "rows=8 id=showTable-1"
+    },
+    {
+      "type": "opener_record_captured",
+      "message": "[proactive] Okay, let's go over the plan for today. Hello, and welcome t"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Tell me a little about your job.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Tell me a little about your job.\""
+    },
+    {
+      "type": "turn_latency",
+      "message": "eager→end=nullms end→fetch=nullms brain_first=5198ms tts→audio=0ms TOTAL=nullms complete=false"
+    },
+    {
+      "type": "perception_opening_audio_done",
+      "message": "connected"
+    },
+    {
+      "type": "thinking_cue_chime",
+      "message": "thinking_cue_chime"
+    },
+    {
+      "type": "fixed_script_entry_note_planted",
+      "message": "\"level-check\" delivered with this turn"
+    },
+    {
+      "type": "numbered_question_note_planted",
+      "message": "2 \"level-check\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Tell me a little about your job.\""
+    },
+    {
+      "type": "brain_thinking",
+      "message": "reasoning before the reply"
+    },
+    {
+      "type": "topic_shift",
+      "message": "dist=0.776 — next whiteboard batch will get newPage"
+    },
+    {
+      "type": "thinking_cue_ack_skipped",
+      "message": "generic"
+    },
+    {
+      "type": "verdict_precheck",
+      "message": "answers=open_question verdict=correct confidence=high ms=2064 proposed=\"I am a manager at a communications compa\""
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "ack"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Tell me a little about your job.\""
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict_say"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "board"
+    },
+    {
+      "type": "tool_call",
+      "message": "Whiteboard tool: showSentence"
+    },
+    {
+      "type": "topic_shift_held_for_sentence",
+      "message": "sentence-only batch stays on the current page; the newPage mark waits for the next batch"
+    },
+    {
+      "type": "render_sync_text_paint",
+      "message": "1 command(s) painted on arrival (text mode)"
+    },
+    {
+      "type": "typed_turn_effect",
+      "message": "model_card"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "correction"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "support_ja"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "next"
+    },
+    {
+      "type": "typed_turn",
+      "message": "verdict=correct next=question ack=1 say=2 correction=no retries=0"
+    },
+    {
+      "type": "judge_authored_solution",
+      "message": "Problem: 1. Can you tell me a little about your job? What do you do?\n2. Have you"
+    },
+    {
+      "type": "judge_pass",
+      "message": "grounded · Thanks, Josh. That is a clear answer. Have you eve…"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4111ms · 0 tool call(s) · 4 sentence(s) · first_sentence=3132ms · in=4968 out=133 cr=65771 cc=16701"
+    },
+    {
+      "type": "turn_length",
+      "message": "4 sentence(s) · 24 word(s) · 0 tool call(s)"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "turn_latency",
+      "message": "eager→end=nullms end→fetch=nullms brain_first=3141ms tts→audio=0ms TOTAL=nullms complete=false"
+    },
+    {
+      "type": "thinking_cue_chime",
+      "message": "thinking_cue_chime"
+    },
+    {
+      "type": "probe_checkin_note_planted",
+      "message": "\"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "numbered_question_note_planted",
+      "message": "3 \"level-check\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "brain_thinking",
+      "message": "reasoning before the reply"
+    },
+    {
+      "type": "topic_shift",
+      "message": "dist=0.339 — next whiteboard batch will get newPage"
+    },
+    {
+      "type": "thinking_cue_ack_skipped",
+      "message": "generic"
+    },
+    {
+      "type": "verdict_precheck",
+      "message": "answers=open_question verdict=partly_correct confidence=medium ms=1972 proposed=\"Yes, I work with companies in Japan and \""
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "ack"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict_say"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "board"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "correction"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "support_ja"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "next"
+    },
+    {
+      "type": "typed_turn",
+      "message": "verdict=partly_correct next=question ack=1 say=1 correction=no retries=0"
+    },
+    {
+      "type": "judge_authored_solution",
+      "message": "Problem: 1. Can you tell me a little about your job? What do you do?\n2. Have you"
+    },
+    {
+      "type": "judge_pass",
+      "message": "grounded · Thanks, Josh. You told me you work with companies …"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4188ms · 0 tool call(s) · 5 sentence(s) · first_sentence=2903ms · in=5059 out=165 cr=82472 cc=62"
+    },
+    {
+      "type": "turn_length",
+      "message": "5 sentence(s) · 44 word(s) · 0 tool call(s)"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is one skill you'd like to improve in your English, and\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is one skill you'd like to improve in your English, and\""
+    },
+    {
+      "type": "turn_latency",
+      "message": "eager→end=nullms end→fetch=nullms brain_first=2906ms tts→audio=0ms TOTAL=nullms complete=false"
+    },
+    {
+      "type": "thinking_cue_chime",
+      "message": "thinking_cue_chime"
+    },
+    {
+      "type": "numbered_question_note_planted",
+      "message": "all answered \"level-check\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is one skill you'd like to improve in your English, and\""
+    },
+    {
+      "type": "brain_thinking",
+      "message": "reasoning before the reply"
+    },
+    {
+      "type": "topic_shift",
+      "message": "dist=0.743 — next whiteboard batch will get newPage"
+    },
+    {
+      "type": "thinking_cue_ack_skipped",
+      "message": "generic"
+    },
+    {
+      "type": "verdict_precheck",
+      "message": "answers=open_question verdict=partly_correct confidence=medium ms=2468 proposed=\"I want better conversation with customer\""
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "ack"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What is one skill you'd like to improve in your English, and\""
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict_say"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "board"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "correction"
+    },
+    {
+      "type": "tool_call",
+      "message": "Whiteboard tool: showSentence"
+    },
+    {
+      "type": "topic_shift_held_for_sentence",
+      "message": "sentence-only batch stays on the current page; the newPage mark waits for the next batch"
+    },
+    {
+      "type": "render_sync_text_paint",
+      "message": "1 command(s) painted on arrival (text mode)"
+    },
+    {
+      "type": "typed_turn_effect",
+      "message": "correction_card"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "support_ja"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "next retried"
+    },
+    {
+      "type": "working_level_estimate_requested",
+      "message": "\"level-check\" answers=3"
+    },
+    {
+      "type": "auto_newpage_on_advance_deferred",
+      "message": "topic-intro: Part 3 · Your job · 仕事について"
+    },
+    {
+      "type": "rail_segment_held",
+      "message": "\"level-check\" stays active until the \"topic-intro\" page paints"
+    },
+    {
+      "type": "typed_turn_effect",
+      "message": "advance level-check→topic-intro"
+    },
+    {
+      "type": "typed_turn_bridge_missing",
+      "message": "level-check→topic-intro"
+    },
+    {
+      "type": "typed_turn",
+      "message": "verdict=partly_correct next=move ack=1 say=2 correction=yes retries=1 reason=illegal_kind"
+    },
+    {
+      "type": "working_level_set",
+      "message": "intermediate source=estimate evidence=Answers are grammatically correct, connected, and on-topic, but short and simple with limited variet"
+    },
+    {
+      "type": "judge_advisory_flag",
+      "message": "1 issue(s): 'Better conversation' is unnatural here.… · why: The student said 'better conversation with customers before meetings.' The tutor is correct that this phrasing is awkwar"
+    },
+    {
+      "type": "judge_issue_decision",
+      "message": "advisory · kind=grounding verdict=incorrect → no-note no-withhold (not-noteworthy) · 'Better conversation' is unnatural here."
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 9982ms · 0 tool call(s) · 7 sentence(s) · first_sentence=3220ms · in=10959 out=501 cr=165182 cc=114"
+    },
+    {
+      "type": "turn_length",
+      "message": "7 sentence(s) · 60 word(s) · 0 tool call(s)"
+    },
+    {
+      "type": "turn_cap_flagged",
+      "message": "7 sentences · 60 words · 0 tool calls — cadence note planted for next turn"
+    },
+    {
+      "type": "exercise_no_board",
+      "message": "shape=quoted-material · \"Good, that is a clear goal. Your goal is clear. Can you say the reason in a full sentence, like 'It is important because\""
+    },
+    {
+      "type": "pacing_streak",
+      "message": "correct=1"
+    },
+    {
+      "type": "bare_praise_ending_advisory",
+      "message": "seg=\"level-check\" tools=[]"
+    },
+    {
+      "type": "auto_newpage_on_advance_flush_waits",
+      "message": "transition sentence 5 not yet spoken (brain idle)"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Tell me about your main responsibilities at work, in two sen\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Tell me about your main responsibilities at work, in two sen\""
+    },
+    {
+      "type": "turn_latency",
+      "message": "eager→end=nullms end→fetch=nullms brain_first=3222ms tts→audio=0ms TOTAL=nullms complete=false"
+    },
+    {
+      "type": "rail_segment_released",
+      "message": "\"topic-intro\" (its page painted)"
+    },
+    {
+      "type": "auto_newpage_on_advance_flushed",
+      "message": "topic-intro: Part 3 · Your job · 仕事について at turn end"
+    },
+    {
+      "type": "tool_call",
+      "message": "Whiteboard tool: showProblem"
+    },
+    {
+      "type": "auto_newpage_on_advance_card_added",
+      "message": "topic-intro (turn end)"
+    },
+    {
+      "type": "topic_shift_cleared_by_segment_page",
+      "message": "topic-intro: Part 3 · Your job · 仕事について"
+    },
+    {
+      "type": "thinking_cue_chime",
+      "message": "thinking_cue_chime"
+    },
+    {
+      "type": "stop_request_confirmed",
+      "message": "\"topic-intro\" \"Okay, please stop. I would like to end the session for now.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Tell me about your main responsibilities at work, in two sen\""
+    },
+    {
+      "type": "brain_thinking",
+      "message": "reasoning before the reply"
+    },
+    {
+      "type": "topic_shift",
+      "message": "dist=0.759 — next whiteboard batch will get newPage"
+    },
+    {
+      "type": "ack_suppressed",
+      "message": "damping"
+    },
+    {
+      "type": "verdict_precheck",
+      "message": "answers=neither verdict=cannot_determine confidence=high ms=1866 proposed=\"request to end session\""
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "ack"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict_say"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "board"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "correction"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Tell me about your main responsibilities at work, in two sen\""
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "support_ja"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "next"
+    },
+    {
+      "type": "tool_call",
+      "message": "Whiteboard tool: closeSessionNotes"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "closeSessionNotes"
+    },
+    {
+      "type": "qpin_cleared_closed",
+      "message": "closeSessionNotes — no pin"
+    },
+    {
+      "type": "practice_assigned",
+      "message": "silent=no-locator "
+    },
+    {
+      "type": "render_sync_empty_batch",
+      "message": "no command survived processing"
+    },
+    {
+      "type": "typed_turn_effect",
+      "message": "close"
+    },
+    {
+      "type": "typed_turn",
+      "message": "verdict=none next=close ack=1 say=2 correction=no retries=0"
+    },
+    {
+      "type": "judge_pass",
+      "message": "grounded · Understood, Josh. 今日は会話の練習ができましたね。 お疲れさまでした。 Today…"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4179ms · 0 tool call(s) · 5 sentence(s) · first_sentence=3124ms · in=4547 out=127 cr=65771 cc=17331"
+    },
+    {
+      "type": "turn_length",
+      "message": "5 sentence(s) · 21 word(s) · 0 tool call(s)"
+    },
+    {
+      "type": "turn_latency",
+      "message": "eager→end=nullms end→fetch=nullms brain_first=3126ms tts→audio=0ms TOTAL=nullms complete=false"
+    },
+    {
+      "type": "thinking_cue_chime",
+      "message": "thinking_cue_chime"
+    },
+    {
+      "type": "pacing_turn_shape",
+      "message": "question — not a verification turn: \"Can we continue from this point next time?\""
+    },
+    {
+      "type": "pacing_cue_ignored",
+      "message": "word=\"next\" reason=not-request-shape"
+    },
+    {
+      "type": "post_close_note",
+      "message": "Can we continue from this point next time?"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "ack"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict_say"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "board"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "correction"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "support_ja"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "next retried"
+    },
+    {
+      "type": "typed_turn",
+      "message": "verdict=none next=question ack=1 say=1 correction=no retries=1 reason=illegal_kind"
+    },
+    {
+      "type": "judge_pass",
+      "message": "grounded · Yes, we can pick up from here next time. 次回も、今日の続き…"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3593ms · 0 tool call(s) · 3 sentence(s) · first_sentence=1132ms · in=7970 out=218 cr=166292 cc=88"
+    },
+    {
+      "type": "turn_length",
+      "message": "3 sentence(s) · 23 word(s) · 0 tool call(s)"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is one work project you would like to discuss next time\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is one work project you would like to discuss next time\""
+    },
+    {
+      "type": "turn_latency",
+      "message": "eager→end=nullms end→fetch=nullms brain_first=1136ms tts→audio=2ms TOTAL=nullms complete=false"
+    },
+    {
+      "type": "thinking_cue_chime",
+      "message": "thinking_cue_chime"
+    },
+    {
+      "type": "stop_request_confirmed",
+      "message": "\"topic-intro\" \"Sorry, I have to finish now.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is one work project you would like to discuss next time\""
+    },
+    {
+      "type": "brain_thinking",
+      "message": "reasoning before the reply"
+    },
+    {
+      "type": "topic_shift",
+      "message": "dist=0.459 — next whiteboard batch will get newPage"
+    },
+    {
+      "type": "thinking_cue_ack_skipped",
+      "message": "generic"
+    },
+    {
+      "type": "verdict_precheck",
+      "message": "answers=neither verdict=cannot_determine confidence=high ms=1782 proposed=\"Sorry, I have to finish now.\""
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "ack"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "verdict_say"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "board"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "correction"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What is one work project you would like to discuss next time\""
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "support_ja"
+    },
+    {
+      "type": "typed_turn_field",
+      "message": "next"
+    },
+    {
+      "type": "tool_call",
+      "message": "Whiteboard tool: closeSessionNotes"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "closeSessionNotes"
+    },
+    {
+      "type": "qpin_cleared_closed",
+      "message": "closeSessionNotes — no pin"
+    },
+    {
+      "type": "practice_assign_skipped",
+      "message": "already-fired requested=[] plan=[gdi.work-projects.present-perfect,gdi.work-projects.past-simple,gdi.work-projects.conversation]"
+    },
+    {
+      "type": "render_sync_empty_batch",
+      "message": "no command survived processing"
+    },
+    {
+      "type": "typed_turn_effect",
+      "message": "close"
+    },
+    {
+      "type": "typed_turn",
+      "message": "verdict=none next=close ack=1 say=2 correction=no retries=0"
+    },
+    {
+      "type": "judge_pass",
+      "message": "grounded · Understood, Josh. 今日は仕事の話を練習しましたね。 お疲れさまでした。 Thank…"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3826ms · 0 tool call(s) · 5 sentence(s) · first_sentence=2779ms · in=4179 out=123 cr=83190 cc=62"
+    },
+    {
+      "type": "turn_length",
+      "message": "5 sentence(s) · 15 word(s) · 0 tool call(s)"
+    },
+    {
+      "type": "turn_latency",
+      "message": "eager→end=nullms end→fetch=nullms brain_first=2780ms tts→audio=0ms TOTAL=nullms complete=false"
+    }
+  ],
+  "estimatedCost": 0.1583,
+  "endedBy": "tutor_close"
+}

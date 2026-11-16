@@ -5,7 +5,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { buildStudentSystemPrompt, observerLine, parseStudentReply, scriptedStudentTurn, type Fixture, type ReplayTurn } from './scripted-student';
+import { buildStudentSystemPrompt, needsOpeningLine, observerLine, parseStudentReply, scriptedStudentTurn, type Fixture, type ReplayTurn } from './scripted-student';
 import { averageScorecards, scoreRun, type RunBundle } from './scorecard';
 
 let passed = 0; let failed = 0;
@@ -20,6 +20,10 @@ async function main() {
   check('names its source sessions', fixture.sourceSessions.length >= 1 && fixture.sourceSessions.every((s) => /^portal-|^embed-/.test(s)));
   check('carries the claims the embed needs', ['subject', 'level', 'curriculum_module', 'input_mode'].every((k) => k in fixture.claims));
   check('every reaction has a known complaint or request tag', fixture.student.reactions.every((r) => ['complaint_reask', 'complaint_ignored', 'move_on', 'verdict_only', 'recap_request', 'end_request'].includes(r.tag)));
+
+  console.log('opening line');
+  check('text mode opens with a typed line', needsOpeningLine({ input_mode: 'text' }));
+  check('voice and default runs do not', !needsOpeningLine({ input_mode: 'voice' }) && !needsOpeningLine({}) && !needsOpeningLine(fixture.claims));
 
   console.log('student prompt');
   const prompt = buildStudentSystemPrompt(fixture.student);
