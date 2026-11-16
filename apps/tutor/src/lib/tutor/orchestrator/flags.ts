@@ -1592,3 +1592,10 @@ export const TUTOR_BRAIN_V2_CLAIM =
  *  three times (v1 live-session findings 2026-11-15, case 4). Default ON; NEXT_PUBLIC_TUTOR_V2_STOP_SIGNAL=off ⇒ the model alone
  *  reads the stop, as before. */
 export const TUTOR_V2_STOP_SIGNAL = process.env.NEXT_PUBLIC_TUTOR_V2_STOP_SIGNAL !== 'off';
+
+/** Tutor brain v2 (v2/plan-map.ts): the plan map keeps what a written lesson plan relies on — each part's teacher's
+ *  note, its name (and the name in the support language), minutes, authored turn guide, required phrases, the single
+ *  hint, the answer form, "skip when the level is known" and the pronunciation words/sentences. Without them a written
+ *  lesson reached v2 as bare goals: the authored guidance for each part was dropped and the brain improvised the
+ *  lesson (gdi-on-v2 plan, Task 3). Default ON; NEXT_PUBLIC_TUTOR_V2_PLAN_AS_WRITTEN=off ⇒ the map as before. */
+export const TUTOR_V2_PLAN_AS_WRITTEN = process.env.NEXT_PUBLIC_TUTOR_V2_PLAN_AS_WRITTEN !== 'off';

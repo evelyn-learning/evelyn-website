@@ -232,6 +232,7 @@
     "test:brain-v2": "npx tsx scripts/test-brain-v2.ts",
     "test:brain-v2-homework": "npx tsx scripts/test-brain-v2-homework.ts",
     "test:brain-v2-languages": "npx tsx scripts/test-brain-v2-languages.ts",
+    "test:brain-v2-plan-map": "npx tsx scripts/test-brain-v2-plan-map.ts",
     "test:replay-harness": "npx tsx scripts/tutor/replay-harness/replay-harness.test.ts",
     "live:replay": "npx tsx scripts/tutor/replay-harness/run-replay.ts",
     "test:active-problem-block": "npx tsx scripts/test-active-problem-block.ts",
