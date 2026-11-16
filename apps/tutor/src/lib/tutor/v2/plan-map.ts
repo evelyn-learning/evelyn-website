@@ -6,7 +6,7 @@
  * guidance on how to teach each part: a guide, never a cutoff, and never a say in when the session ends.
  */
 import type { LessonPlan, Segment } from '../lesson-plan/types';
-import { TUTOR_V2_PASSED_PART_FACT, TUTOR_V2_PLAN_AS_WRITTEN } from '../orchestrator/flags';
+import { TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PASSED_PART_FACT, TUTOR_V2_PLAN_AS_WRITTEN } from '../orchestrator/flags';
 import { V2_CLOSING_PAGE, headingWords } from './part-close';
 import type { GoalStatus, V2State } from './types';
 
@@ -190,4 +190,55 @@ export function v2PassedPartFact(plan: LessonPlan | undefined, state: V2State, c
   const list = names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
   const one = passed.length === 1;
   return [`${list[0]!.toUpperCase()}${list.slice(1)} ${one ? 'was' : 'were'} not offered: offer ${one ? 'it' : 'them'} before the summary, unless time is up. The student decides whether to do ${one ? 'it' : 'them'}; if they would rather not, mark ${one ? 'it' : 'them'} skipped`];
+}
+
+/** The plan parts not reached as the lesson heads for its close (Task 6e): after the furthest part reached, up to but not
+ *  including the last part (the close is the last part's own). Reached: a status recorded, a page of its own, or a
+ *  level-check part with the level known. Same plans as v2PassedParts: every part named. v2PassedParts needs a later page
+ *  already up, and the summary's page comes with the close itself, so a lesson that ran short of time went to its
+ *  summary with the pronunciation part neither offered nor named (v2audio tester B, about 17 of 20 min). */
+export function v2UnreachedAtClose(plan: LessonPlan, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>): Segment[] {
+  const segs = plan.segments;
+  if (segs.length < 2 || !segs.every((seg) => !!v2PartOf(seg).label)) return [];
+  const pages = state.board.pages;
+  const reached = (i: number) => {
+    const seg = segs[i]!;
+    return !!state.goals[seg.id] || pages.some((pg) => pageOfPart(seg, pg.title)) || (v2PartOf(seg).skipWhenLevelKnown && !!state.workingLevel);
+  };
+  const before = segs.length - 1;
+  let furthest = -1;
+  for (let i = before - 1; i >= 0; i--) if (reached(i)) { furthest = i; break; }
+  if (furthest < 0) return [];
+  return segs.slice(furthest + 1, before);
+}
+
+const partNames = (segs: Segment[]) => {
+  const names = segs.map((seg) => `the ${v2PartOf(seg).label} part`);
+  return names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+};
+
+/** Near or at the close, the parts not reached (v2UnreachedAtClose) are not passed over in silence. `phase` 'near' (the
+ *  box's last fifth): offer them in one line before the summary if the time allows, else name them in it as next time.
+ *  'closing' (the time is up, the wrap is due or the student is stopping): name them in the summary as next time. Not
+ *  once the lesson has closed. `enabled` is the kill switch. */
+export function v2UnreachedAtCloseFact(plan: LessonPlan | undefined, state: V2State, phase: 'near' | 'closing' | null, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): string[] {
+  if (!enabled || !plan || !phase || state.closed) return [];
+  const left = v2UnreachedAtClose(plan, state);
+  if (!left.length) return [];
+  const list = partNames(left); const one = left.length === 1; const it = one ? 'it' : 'them';
+  const head = `${list[0]!.toUpperCase()}${list.slice(1)} ${one ? 'was' : 'were'} not reached`;
+  return [phase === 'closing'
+    ? `${head}, and there is no time for ${it} now: in your summary, name ${it} in one short line as something for next time`
+    : `${head}: before the summary, offer ${it} in one line if the time allows; if not, name ${it} in your summary, in one short line, as something for next time`];
+}
+
+/** With time left, the offer in place of a held summary page, when parts were not reached (v2UnreachedAtClose): it names
+ *  them and lets the student choose, in one line. Null when nothing was missed. */
+export function v2UnreachedOffer(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): string | null {
+  if (!enabled || !plan) return null;
+  const left = v2UnreachedAtClose(plan, state);
+  if (!left.length) return null;
+  const list = partNames(left).replace(/\bthe (\S)/g, (_m, c: string) => `the ${c.toLowerCase()}`);
+  const one = left.length === 1;
+  return `Before the summary, there is still ${list}. Would you like to do ${one ? 'it' : 'them'} now, or go straight to the summary?`;
 }

@@ -24,22 +24,22 @@ import { catalogueSubjects, figureCatalogueFor, tutorFigureLines } from './figur
 import { applyToModelBoard, boardMisfit, renderBoard, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
-import { saidCovers, unsaidAsk, unsaidBoardItem, asksAnywhere } from './board-timing';
+import { saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2WrapDue } from './time-box';
-import { planGoalIds, renderPlanMap, v2PartOf } from './plan-map';
+import { planGoalIds, renderPlanMap, v2PartOf, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
-import { V2_CLOSING_PAGE, leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
+import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2QuestionCheckRecent } from './part-close';
 import { heardAsWords } from './heard';
 import { v2LanguagesSection } from './languages';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { v2StopAsked } from './stop-signal';
-import { TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_PERSONA_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -532,6 +532,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const inlinePainted: Array<{ id: string; raw: string; label: string }> = [];
 
   let heldAt: { raw: string; offer: string } | null = null; let saidNow = '';
+  // Sentence cards spoken where they stand (raw block → the words said for it).
+  const saidCards = new Map<string, string>();
   // A page that would be held, and what followed it, while it is not yet known whether the reply ends the lesson (D1).
   let pendingHold: InlinePart[] | null = null; let releasing = false;
   // The tutor may end the lesson by itself: the box's last fifth (the end_lesson rule in applyControlTool).
@@ -555,7 +557,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     } as unknown as Anthropic.MessageCreateParamsNonStreaming;
     const inline = new BoardInlineStream();
     const hold = (block: InlineBlock) => {
-      const offer = /\?\s*$/.test(saidNow) ? '' : partOffer(block.body.trim(), namesPart(block.body, saidNow));
+      // A held summary page with plan parts not reached: the offer names them and lets the student choose (Task 6e).
+      const missed = closesLesson(block.body.trim()) ? v2UnreachedOffer(session.plan, state) : null;
+      // The question check only when the last part change did not ask it; an ask ending in the second language is an ask (Task 6e).
+      const once = TUTOR_V2_PART_OFFER_ONCE;
+      const asked = once ? endsAsking(saidNow.trimEnd()) : /\?\s*$/.test(saidNow);
+      const offer = missed ?? (asked ? '' : partOffer(block.body.trim(), namesPart(block.body, saidNow), !(once && v2QuestionCheckRecent(state.history))));
       heldAt = { raw: block.raw, offer };
       if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
       input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: block.body.trim() }, outcome: 'not opened yet: the student is asked first' });
@@ -588,6 +595,15 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
             if (turned && moving.length && state.board.current !== from) { state.board.pages[from].items = state.board.pages[from].items.filter((it) => !moving.includes(it)); state.board.pages[state.board.current].items.push(...moving); }
             carryNow = []; sinceWords = [];
           } else { const before = inlineN; if (settleInline(part.block)) sinceWords.push(`inl_${nowMs.toString(36)}_${before + 1}`); }
+          // A sentence card after "we say:" is spoken there too (board-timing.ts sentenceCardToSay, Task 6e).
+          if (part.block.kind === 'sentence' && session.mode === 'voice' && TUTOR_V2_SAY_SENTENCE_CARD) {
+            const say = sentenceCardToSay(part.block.body, saidNow);
+            if (say) {
+              const words = `${/\s$/.test(saidNow) ? '' : ' '}${say} `;
+              saidCards.set(part.block.raw, say); saidChars += words.length; saidNow += words; sinceWords = [];
+              input.onText?.(words);
+            }
+          }
           continue;
         }
         if (part.text.trim()) sinceWords = [];
@@ -626,7 +642,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
     const results: Anthropic.ToolResultBlockParam[] = [];
     for (const block of response.content) {
-      if (block.type === 'text') { const words = stripBoardBlocks(block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } continue; }
+      // A sentence card that was also spoken (sentenceCardToSay) counts among the words said.
+      if (block.type === 'text') { const words = stripBoardBlocks(saidCards.size ? [...saidCards].reduce((t, [raw, say]) => t.split(raw).join(` ${say} `), block.text) : block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } continue; }
       if (block.type !== 'tool_use') continue;
       results.push(settle(block));
     }

@@ -32,7 +32,7 @@ import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAI
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
-import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE } from '@/lib/tutor/orchestrator/flags';
+import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE } from '@/lib/tutor/orchestrator/flags';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { armV2SoundGate, stepV2SoundGate } from '@/lib/tutor/v2/sound-gate';
 import { V2MicWatch } from '@/lib/tutor/v2/mic-watch';
@@ -47,6 +47,7 @@ import { type V2ComposerStatus, V2Composer, V2_HANDLE_STUBS } from './TutorClien
 import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
+import { v2HeardIsNoise } from '@/lib/tutor/v2/heard';
 import { v2SpeechParts } from '@/lib/tutor/v2/languages';
 import { trimToSpoken } from '@/lib/tutor/v2/interrupted';
 import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
@@ -425,6 +426,14 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // The session is ending (the close, or the box): nothing is answered now, and clearing the speech queue for these
     // words would cut the goodbye.
     if (turnsRef.current?.isEnding()) { p.current.onDebugEvent?.('v2_heard_while_ending', text.slice(0, 80)); return; }
+    // The recogniser's noise, not words (heard.ts v2HeardIsNoise; Task 6e: "I'" and 5,000 characters of 、 and 号). It
+    // never cuts the tutor and is never stored; with the floor free, the tutor is told nothing could be made out.
+    const noise = !opts?.typed && TUTOR_V2_HEARD_NOISE && v2HeardIsNoise(text);
+    if (noise) {
+      p.current.onDebugEvent?.('v2_heard_noise', `${text.length} chars: ${text.replace(/\s+/g, ' ').slice(0, 40)}`);
+      if (realtimeRef.current?.isSpeechPending()) { liftPause(); return; }
+      if (turnsRef.current?.busy) return;
+    }
     // The microphone hears the tutor too. Words that are the tutor's own, arriving while it speaks, are not the student.
     if (!opts?.typed && realtimeRef.current?.isSpeechPending() && isOwnVoice(text, spokenRef.current)) {
       p.current.onDebugEvent?.('v2_own_voice_dropped', text.slice(0, 80));
@@ -458,7 +467,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     silenceStepRef.current = 0;
     if (p.current.thinkingCue) { const r = cueTurnAccepted(cueRef.current, Date.now()); cueRef.current = r.state; play(r.play); }
     lastTurnWasStudentRef.current = true; openingTurnRef.current = false;
-    turnsRef.current?.send(text);
+    if (noise) turnsRef.current?.send(text, { unheard: true });
+    else turnsRef.current?.send(text);
   }, [liftPause, dropBoard]);
 
   // Stable identities, all of them: see the note at the top of this file.

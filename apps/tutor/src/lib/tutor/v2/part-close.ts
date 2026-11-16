@@ -1,4 +1,6 @@
 import { stripBoardBlocks } from './board-inline';
+import { TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
+import type { V2State } from './types';
 /**
  * Tutor brain v2 — a part is closed before the next is opened.
  *
@@ -29,10 +31,18 @@ const STEERS = /\b(?:move on|go on|go ahead|carry on|keep going|continue|skip (?
 /** The tutor's last reply left the way open: it offered what comes next, or checked in. */
 const OFFERS = /\b(?:next is|next up|ready|shall we|any questions?|a question first|make sense|with me|is that clear|all clear|so far|sound good)\b/i;
 
+/** Whether a sentence ends as a question. With `secondLanguage`, a question in the support language counts too: a
+ *  bilingual ask ends on its Japanese ("…Shall we go on to the present perfect now? 次に現在完了を学びます。進んでも
+ *  いいですか。"), which ends in か。, and the page was held and the same permission asked again (Task 6e, v2audio tester A
+ *  turns 24 → 26). */
+export function endsAsking(sentence: string, secondLanguage: boolean = TUTOR_V2_PART_OFFER_ONCE): boolean {
+  return /\?["')\]]*$/.test(sentence) || (secondLanguage && /(?:[?？]|か[。．]?)["')\]」』]*\s*$/.test(sentence));
+}
+
 /** The tutor's last reply ended by asking whether to go on (or checking in), and the student has answered. */
 export function leftOpen(lastTutor: string, studentSaid: string | null): boolean {
   const sentences = stripBoardBlocks(lastTutor).split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
-  return !!studentSaid && /\?["')\]]*$/.test(sentences[sentences.length - 1] ?? '') && OFFERS.test(sentences.slice(-2).join(' '));
+  return !!studentSaid && endsAsking(sentences[sentences.length - 1] ?? '') && OFFERS.test(sentences.slice(-2).join(' '));
 }
 
 export interface PartTurn { title: string; studentSaid: string | null; lastTutor: string; pagesOpen: number }
@@ -43,11 +53,26 @@ export function mayOpenPart(t: PartTurn): boolean {
   if (student && (STEERS.test(student) || namesPart(t.title, student))) return true;
   const sentences = stripBoardBlocks(t.lastTutor).split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
   const last = sentences[sentences.length - 1] ?? '';
-  return /\?["')\]]*$/.test(last) && student !== '' && (OFFERS.test(sentences.slice(-2).join(' ')) || namesPart(t.title, t.lastTutor));
+  return endsAsking(last) && student !== '' && (OFFERS.test(sentences.slice(-2).join(' ')) || namesPart(t.title, t.lastTutor));
 }
-/** What the tutor says in place of the held page. `named`: the reply had already said what the next part is. */
-export function partOffer(title: string, named: boolean): string {
-  const ask = 'Shall we go on, or do you have a question first?';
+const QUESTION_CHECK = /\b(?:a question first|any questions?(?! about)|questions? (?:before|so far))\b/i;
+const replyText = (h: V2State['history'][number]) => (typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
+/** Whether the last part change already asked whether they have a question: one of the tutor's replies from the one
+ *  just before the current part's page block on. "Next is X. Shall we go on, or do you have a question first?" came
+ *  2–3 times a run (Task 6e, v2audio RESULTS.md finding 6); the question check is for once in a while, never two part
+ *  changes running. */
+export function v2QuestionCheckRecent(history: V2State['history']): boolean {
+  const replies = history.filter((h) => h.role === 'assistant').map(replyText).filter((x) => x.trim());
+  let page = -1;
+  for (let i = replies.length - 1; i >= 0; i--) if (/<board\s+page\b/.test(replies[i]!)) { page = i; break; }
+  if (page < 0) return false;
+  return replies.slice(Math.max(0, page - 1)).some((x) => QUESTION_CHECK.test(stripBoardBlocks(x)));
+}
+
+/** What the tutor says in place of the held page. `named`: the reply had already said what the next part is.
+ *  `askQuestion` false: the last part change asked whether they had a question, so this one only asks to go on. */
+export function partOffer(title: string, named: boolean, askQuestion: boolean = true): string {
+  const ask = askQuestion ? 'Shall we go on, or do you have a question first?' : 'Shall we go on?';
   if (named) return ask;
   const t = title.trim().replace(/[.:;,]+$/, '');
   const lower = /^[A-Z][a-z]/.test(t) && !/^[A-Z][a-z]+'s\b/.test(t) ? t[0].toLowerCase() + t.slice(1) : t;

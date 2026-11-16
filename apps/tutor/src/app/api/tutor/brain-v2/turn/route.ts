@@ -18,6 +18,7 @@ import { resolvePartnerSessionOptions } from '@/lib/tutor/portal/partner-session
 import { readHomeworkState, v2HomeworkFor, v2SheetFor } from '@/lib/tutor/v2/homework';
 import { runV2HomeworkTurn, runV2SheetTurn } from '@/lib/tutor/v2/homework-turn';
 import { runV2Turn } from '@/lib/tutor/v2/turn';
+import { v2HeardForBrain } from '@/lib/tutor/v2/heard';
 import { v2ReadWorkingLevel } from '@/lib/tutor/v2/working-level';
 import { v2ReadPronunciation } from '@/lib/tutor/v2/pronunciation';
 import { v2ReadCorrectedSentences } from '@/lib/tutor/v2/sentence-cards';
@@ -75,8 +76,11 @@ export async function POST(req: NextRequest) {
   const state = readState(body.state);
   if (!state) return bad('state is missing or malformed');
   if (state.closed) return bad('the session is closed');
-  const studentSaid = body.studentSaid === null || body.studentSaid === undefined ? null : typeof body.studentSaid === 'string' ? body.studentSaid.slice(0, MAX_STUDENT_CHARS) : undefined;
-  if (studentSaid === undefined) return bad('studentSaid must be a string or null');
+  const saidRaw = body.studentSaid === null || body.studentSaid === undefined ? null : typeof body.studentSaid === 'string' ? body.studentSaid.slice(0, MAX_STUDENT_CHARS) : undefined;
+  if (saidRaw === undefined) return bad('studentSaid must be a string or null');
+  // Recogniser noise in a spoken lesson reaches the brain as "nothing could be made out", never as the student's words
+  // (heard.ts v2HeardForBrain; Task 6e: 5,000 characters of 、 and 号 went into the history as one student line).
+  const studentSaid = v2HeardForBrain(saidRaw, cfg.mode === 'voice' ? 'voice' : 'text');
 
   const plan = typeof cfg.lessonPlanId === 'string' && cfg.lessonPlanId ? await getLessonPlan(cfg.lessonPlanId) : null;
   // Homework mode (v2/homework.ts): a one-problem homework plan. The key is read here and goes only to the checker.

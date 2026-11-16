@@ -23,6 +23,7 @@ import { paintsOnBoard, streamV2Turn, type V2ClientSession } from '@/lib/tutor/v
 import { foldInterruptedTurn } from '@/lib/tutor/v2/interrupted';
 import { KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug } from '@/lib/tutor/voice/keyed-verdict';
 import { SentenceStream } from '@/lib/tutor/v2/sentences';
+import { V2_UNHEARD_SAID } from '@/lib/tutor/v2/heard';
 import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
@@ -118,7 +119,7 @@ const UNREACHABLE = "I couldn't reach the tutor just now. Please send that again
 
 export interface V2Turns {
   /** A student message. While a turn is running: text mode queues it; voice mode cuts the running turn and answers this instead. */
-  send: (text: string) => void;
+  send: (text: string, opts?: { unheard?: boolean }) => void;
   /** The tutor's opening turn (once). */
   open: () => void;
   /** A turn with no student words: the student has been silent. */
@@ -232,8 +233,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       .catch((e) => c.onDebugEvent?.('working_level_estimate_failed', String((e as Error)?.message ?? e).slice(0, 80)));
   };
 
-  const runTurn = useCallback(async (studentSaid: string | null, silenceSeconds?: number) => {
+  const runTurn = useCallback(async (studentSaid: string | null, silenceSeconds?: number, unheard?: boolean) => {
     if (stateRef.current.closed || endingRef.current) return;
+    // Noise over a running reply is nothing to answer (heard.ts v2HeardIsNoise).
+    if (busyRef.current && unheard) return;
     if (busyRef.current) {
       if (studentSaid) {
         pendingRef.current = pendingRef.current ? `${pendingRef.current}\n${studentSaid}` : studentSaid;
@@ -244,7 +247,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     }
     busyRef.current = true; setBusy(true); p.current.onTutorBusy?.(true);
     const stamp = Date.now();
-    if (studentSaid) transcriptRef.current = [...transcriptRef.current, { id: `student-${stamp}`, timestamp: new Date(), role: 'student', text: studentSaid }];
+    // Noise is not stored as their words: 5,000 characters of 、 and 号 went into the session's transcript (Task 6e).
+    if (studentSaid && !unheard) transcriptRef.current = [...transcriptRef.current, { id: `student-${stamp}`, timestamp: new Date(), role: 'student', text: studentSaid }];
     const tutorId = `tutor-${stamp}`;
     publish();
     // The tutor's entry appears with its first words: the session save refuses an entry with no text.
@@ -543,7 +547,9 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     void runTurn(null);
   }, [runTurn, armHardStop]);
 
-  const send = useCallback((raw: string) => {
+  const send = useCallback((raw: string, opts?: { unheard?: boolean }) => {
+    // What was heard was the recogniser's noise (heard.ts): the brain is told nothing could be made out.
+    if (opts?.unheard) { if (openedRef.current) void runTurn(V2_UNHEARD_SAID, undefined, true); return; }
     const text = raw.trim();
     // Bracketed strings are v1 runtime markers ("[start lesson]"); v2 has no use for them.
     if (!text || /^\[/.test(text)) return;

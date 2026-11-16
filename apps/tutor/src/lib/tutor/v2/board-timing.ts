@@ -216,3 +216,21 @@ export function unsaidBoardItem(calls: ReadonlyArray<{ name: string; args: Recor
   if (opts.length > SAY_OPTIONS || opts.some((o) => norm(o.what).length > SAY_OPTION_WORDS)) return null;
   return `${opts.map((o) => `${o.n}, ${o.what}`).join('; ')}.`;
 }
+
+/** A lead-in that hands over to a sentence: the words before the card end in a colon ("The correct sentence is:",
+ *  "we say:", "Please use 'people' without 'a':"). */
+const LEAD_IN_COLON = /[:：]["'”’)\]]*\s*$/;
+
+/** In a spoken lesson, the words a sentence card written at this point of the reply must also be spoken as (D2 in voice,
+ *  Task 6e): the block is lifted out of the speech, so "The correct sentence is: <card> We use 'have worked'…" was heard
+ *  as "The correct sentence is: We use…" and the corrected sentence was never said (v2audio tester B, 6 turns). Given
+ *  the card's sentence and the words said so far in this reply, this returns the sentence to speak in its place, or
+ *  null: when the words before it do not lead into it with a colon (a card after a sentence that already said it, or
+ *  one put up beside the talk), when the reply has already said it, or when it holds mathematics. */
+export function sentenceCardToSay(sentence: string, saidSoFar: string): string | null {
+  const s = sentence.replace(/\s+/g, ' ').trim();
+  if (!s || HAS_MARKUP.test(s) || !LEAD_IN_COLON.test(saidSoFar)) return null;
+  const want = norm(s).join(' ');
+  if (!want || norm(saidSoFar).join(' ').includes(want)) return null;
+  return /[.!?。！？]["'”’)]*$/.test(s) ? s : `${s}.`;
+}

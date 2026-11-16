@@ -6,7 +6,7 @@ import { mayOpenPart, partOffer } from '../src/lib/tutor/v2/part-close';
 import { mentionsTool } from '../src/lib/tutor/v2/tool-talk';
 import { applyToModelBoard, renderBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk, unsaidBoardItem, asksAnywhere } from '../src/lib/tutor/v2/board-timing';
-import { TUTOR_V2_SPEAK_BOARD_ITEM } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM } from '../src/lib/tutor/orchestrator/flags';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths, unwrittenEquations } from '../src/lib/tutor/v2/spoken-maths';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/lib/tutor/v2/facts';
@@ -752,7 +752,11 @@ async function main() {
     const midLesson = () => ({ ...newV2State(0), board: { pages: [{ title: 'Warm-up', items: [] }, { title: 'Pronunciation', items: [] }], current: 1 }, history: [{ role: 'user' as const, content: 'hi' }, { role: 'assistant' as const, content: 'Shall we go on, or do you have a question first?' }] });
     const t61 = 'Here is one you can use for your plans:\n\n<board sentence stress="expand">I want to expand our business internationally.</board>\n\nPlease say it back to me.';
     const v61 = await runV2Turn({ session: lang, state: midLesson(), studentSaid: 'A sentence, please.', callModel: streaming(t61), boardPass: false, mathsCheck: false, nowMs: 15 * 60000 });
-    check('voice, upper-int t61: the reply ends with the sentence, said', /Please say it back to me\.\n\nI want to expand our business internationally\.$/.test(v61.spoken), v61.spoken);
+    // Task 6e: after a lead-in ending in a colon the card is spoken where it stands (TUTOR_V2_SAY_SENTENCE_CARD); with that
+    // switch off it is read after the ask, as before.
+    check('voice, upper-int t61: the sentence is said once — after its lead-in (Task 6e), else at the end', TUTOR_V2_SAY_SENTENCE_CARD
+      ? /^Here is one you can use for your plans:\s+I want to expand our business internationally\.\s+Please say it back to me\.$/.test(v61.spoken) && v61.spoken.split('I want to expand').length === 2
+      : /Please say it back to me\.\n\nI want to expand our business internationally\.$/.test(v61.spoken), v61.spoken);
     const t49 = '発音の練習です。次のどれにしますか？\n\n<board note>1) individual words\n2) a complete sentence\n3) speaking more naturally\n4) skip and continue</board>\n\nWhich one would you like? Just say the number.';
     const v49 = await runV2Turn({ session: lang, state: midLesson(), studentSaid: 'Yes, thank you.', callModel: streaming(t49), boardPass: false, mathsCheck: false, nowMs: 10 * 60000 });
     check('voice, real-run-B t49: the reply ends with the options, read', /Just say the number\.\n\n1, individual words; 2, a complete sentence; 3, speaking more naturally; 4, skip and continue\.$/.test(v49.spoken), v49.spoken);

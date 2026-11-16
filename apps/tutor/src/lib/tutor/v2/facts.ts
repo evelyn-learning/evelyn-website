@@ -6,9 +6,10 @@
  */
 import { renderBoard } from './board';
 import { stripBoardBlocks } from './board-inline';
-import { TUTOR_V2_OPENER_FACT } from '../orchestrator/flags';
+import { TUTOR_V2_OPENER_FACT, TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
+import { v2QuestionCheckRecent } from './part-close';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
-import { renderGoalStatus, v2PassedPartFact } from './plan-map';
+import { renderGoalStatus, v2PassedPartFact, v2UnreachedAtCloseFact } from './plan-map';
 import type { V2Session, V2State } from './types';
 import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from './discussion';
 import { v2WorkingLevelFacts } from './working-level';
@@ -99,6 +100,14 @@ export function v2OpenerFact(session: V2Session, state: V2State, enabled: boolea
   return [`your last ${run} replies opened with "${opener}": open this one differently. React to what they said and keep the conversation moving; a confirmation only when they were practising the form being taught, and then in other words`];
 }
 
+/** The facts line after a part change that asked whether they had a question first (part-close.ts
+ *  v2QuestionCheckRecent): the next part change asks only whether to go on. The tutor wrote the frame itself as often
+ *  as the runtime did ("Are you ready for that, or do you have a question first?"), 2–3 times a run (Task 6e, v2audio
+ *  finding 6). `enabled` is the kill switch. */
+export function v2QuestionCheckFact(state: V2State, enabled: boolean = TUTOR_V2_PART_OFFER_ONCE): string[] {
+  return enabled && v2QuestionCheckRecent(state.history) ? ['the last part change asked whether they had a question first: when this part closes, name what comes next and ask only whether to go on'] : [];
+}
+
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
   const usedMin = Math.max(0, Math.round((f.nowMs - state.startedAtMs) / 60000));
   const discussion = !!discussionOf(session.plan);
@@ -129,7 +138,12 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
     // A part the lesson went past is offered before the summary; not when the close comes first (plan-map.ts, Task 6c).
     const closing = !!f.stopAsked || (!!session.timeBoxMinutes && left <= V2_TIME_UP_MIN) || v2WrapDue(session, (f.nowMs - state.startedAtMs) / 60000);
-    if (!discussion) lines.push(...v2PassedPartFact(session.plan, state, closing));
+    const passed = discussion ? [] : v2PassedPartFact(session.plan, state, closing);
+    lines.push(...passed);
+    // Near or at the close, a part not reached is offered in one line or named in the summary as next time (Task 6e);
+    // not beside the passed-part line, which already says to offer it.
+    const near = !!session.timeBoxMinutes && left <= session.timeBoxMinutes * 0.2;
+    if (!discussion && !passed.length) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing ? 'closing' : near ? 'near' : null));
   }
   // Where the parts' minutes put the lesson now, so it paces itself to the box (time-box.ts).
   const partDue = v2PartDueFact(session, state, f.nowMs, !!session.timeBoxMinutes && left <= V2_TIME_UP_MIN);
@@ -146,6 +160,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(...v2SentenceCardsFacts(session, state));
   // How the last reply opened, so the next does not open the same way (D10).
   lines.push(...v2OpenerFact(session, state));
+  // The question check at a part change, once in a while (Task 6e).
+  if (session.plan && !discussion) lines.push(...v2QuestionCheckFact(state));
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);

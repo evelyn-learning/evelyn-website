@@ -1703,3 +1703,40 @@ export const TUTOR_V2_PERSONA_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_PERSONA_CA
  *  tutor's to skip: Conversation page → Summary page with the part never offered (Task 6c, ruling 3: gdi-real-t2
  *  t≈11.6). Default ON; NEXT_PUBLIC_TUTOR_V2_PASSED_PART_FACT=off ⇒ neither line. */
 export const TUTOR_V2_PASSED_PART_FACT = process.env.NEXT_PUBLIC_TUTOR_V2_PASSED_PART_FACT !== 'off';
+
+/** Tutor brain v2 (v2/heard.ts v2HeardIsNoise; TutorVoiceV2, the brain-v2 route): a spoken transcript that is noise, not
+ *  words (one character or token repeated over most of it, or longer than any turn), is taken as unheard: it is not
+ *  stored, it does not cut the tutor, and the brain is told something was said that could not be made out. The
+ *  recogniser returned "I'" and about 5,000 characters of 、 and 号 for "I'm not sure about it.", and it went to the brain
+ *  and into the stored transcript whole (Task 6e, v2audio tester B #29). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_HEARD_NOISE=off ⇒ every transcript is sent and stored as heard, as before. */
+export const TUTOR_V2_HEARD_NOISE = process.env.NEXT_PUBLIC_TUTOR_V2_HEARD_NOISE !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, spoken lessons): a sentence card written straight after a lead-in that ends in a colon
+ *  ("The correct sentence is:", "we say:") is also spoken there, unless the reply already said it. The block is lifted
+ *  out of the speech, so the learner heard "we say: …" and nothing, the sentence only on the board: 6 tutor turns of
+ *  one run, 3 of them never saying it (Task 6e, v2audio tester B). Default ON; NEXT_PUBLIC_TUTOR_V2_SAY_SENTENCE_CARD=off
+ *  ⇒ the card is shown and not spoken, as before. */
+export const TUTOR_V2_SAY_SENTENCE_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_SAY_SENTENCE_CARD !== 'off';
+
+/** Tutor brain v2 (v2/part-close.ts): the offer that stands in for a held page asks "or do you have a question first?"
+ *  only when the last part change did not ask it, and a "Shall we go on…?" that ends in a question in the second
+ *  language (…進んでもいいですか。) counts as the ask. "Next is X. Shall we go on, or do you have a question first?"
+ *  came 2–3 times a run, and twice in a row when the tutor's own ask ended in Japanese (Task 6e, v2audio tester A turns
+ *  24 → 26). Default ON; NEXT_PUBLIC_TUTOR_V2_PART_OFFER_ONCE=off ⇒ the offer and the ask as before. */
+export const TUTOR_V2_PART_OFFER_ONCE = process.env.NEXT_PUBLIC_TUTOR_V2_PART_OFFER_ONCE !== 'off';
+
+/** Tutor brain v2 (v2/plan-map.ts v2UnreachedAtClose, v2/turn.ts): a plan part not reached when the lesson heads for its
+ *  close is not passed over in silence. With time left, the held summary page's offer names it and asks whether to do
+ *  it first; at the close (time short, wrap due, the student stopping), the facts say to name it in the summary as
+ *  next time. The passed-part fact needs a summary page already up and is off at the close, so it never fired when
+ *  time ran short: pronunciation was neither offered nor named (Task 6e, v2audio tester B). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PASSED_PART_CLOSE=off ⇒ neither, as before. */
+export const TUTOR_V2_PASSED_PART_CLOSE = process.env.NEXT_PUBLIC_TUTOR_V2_PASSED_PART_CLOSE !== 'off';
+
+/** Tutor brain v2 (v2/languages.ts, spoken lessons in two languages): a word in their sentence that makes little sense
+ *  there, or a word that seems missing, may be the recogniser's: the tutor asks "Did you say …?" before it corrects or
+ *  praises the sentence. "my role" heard as "my lover" got a correction built on it, and "I met someone" heard as
+ *  "I met some" was called correct (Task 6e, v2audio tester B). Default ON; NEXT_PUBLIC_TUTOR_V2_CHECK_MISHEARD=off ⇒
+ *  no such line. */
+export const TUTOR_V2_CHECK_MISHEARD = process.env.NEXT_PUBLIC_TUTOR_V2_CHECK_MISHEARD !== 'off';
