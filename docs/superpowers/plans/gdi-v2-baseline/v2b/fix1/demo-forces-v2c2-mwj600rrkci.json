@@ -1,0 +1,529 @@
+{
+  "fixture": "demo-forces",
+  "arm": "v2c2",
+  "sessionId": "embed-1794827581263",
+  "startedAt": "2026-11-16T11:13:46.083Z",
+  "minutes": 8.928566666666667,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hi Sam, welcome. Today we're going to look at forces: pushes and pulls on an object, how to add them into one leftover force called the net force, and how that tells you whether the motion changes. Does that sound good?"
+    },
+    {
+      "role": "student",
+      "text": "Yeah, that sounds good. I'm ready to start.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Picture a tug-of-war rope with a strip of red tape tied in the middle. Both teams pull as hard as they can, and the tape does not move at all. Here are the two pulls on the rope.\n\n\n\nThe pulls are big, but the tape stays put. What do you think makes it stay still?"
+    },
+    {
+      "role": "student",
+      "text": "Because the forces are really big, so they add up to 19 Newtons pushing it forward... wait, or maybe they cancel out because they're pulling the same amount on both sides?",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, the equal pulls cancel. Pulls in opposite directions don't add to 600 newtons, and they don't add to 19 either. They work against each other, so the leftover is what matters.\n\n\n\nThat leftover of 0 newtons is what the tape is showing us: nothing is left over to move it. Are you ready to go on to how we find that leftover for any set of forces?"
+    },
+    {
+      "role": "student",
+      "text": "Oh, so you subtract the one pulling the other way to get what's left over.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's the idea. You take the smaller pull away from the larger one, and the leftover keeps the direction of the larger pull. Let's put the rule on the board.\n\n\n\n\n\nTry one on your own. Here, the object is a box on a floor."
+    },
+    {
+      "role": "student",
+      "text": "So I subtract 3 from 8, and that's 5 newtons east, because east is the bigger push.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Right, 5 newtons east. The bigger push wins, and the smaller one takes away from it.\n\n\n\nHere is another one of the same kind, with the bigger push on the other side. This time, watch which way the leftover points."
+    },
+    {
+      "role": "student",
+      "text": "So 9 minus 6 is 3 newtons south, because south is the bigger one.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "That's it: 3 newtons south. You kept the bigger push's direction and took the smaller one away.\n\n\n\nThat finishes adding forces on one line. Next, we'll work a bigger example with three ropes on a sled and see what the leftover tells us about its motion. Do you want to go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "I see the net force is what's left after you subtract the smaller from the bigger one.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, that's the rule. The net force is the leftover after you take the smaller size away from the larger one.\n\nNow a new kind of problem: several forces on one object, and what the leftover tells us about its motion.\n\n\n\n\n\n\nTake a moment with this one. Tell me the net force first, and then what the sled does."
+    },
+    {
+      "role": "student",
+      "text": "So 60 plus 45 is 105 north, and then 105 minus 105 is 0, so the net force is zero and the sled stays still.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Net force 0 newtons, so the forces are balanced and the sled stays still. Now a small change: the friend pulling south eases off to 85 newtons, and the two north pulls stay the same. What is the net force now, and what does the sled do?"
+    },
+    {
+      "role": "student",
+      "text": "So 60 plus 45 is 105 north, and 105 minus 85 is 20 newtons north, so the sled starts moving north.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "That's right: 20 newtons north, so the forces are unbalanced and the sled starts moving north, in the direction of the leftover.\n\nNext is a case that trips many people up: an object that is already moving, with balanced forces on it.\n\n\n\nShall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yeah, let's go on.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Let's go on. This next idea is about an object that is already moving.\n\n\n\nBalanced forces mean the motion does not change. An object that is moving at a steady speed in a straight line still has balanced forces on it, because nothing is making it speed up or slow down.\n\n\n\n\nTell me the net force first, then what her motion does."
+    },
+    {
+      "role": "student",
+      "text": "I don't get it—if she's falling down, shouldn't there be a force pushing her down?",
+      "tag": "complaint_lost"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, there is a force pulling her down: Earth's pull of 700 newtons. That is the downward force on the board. Falling down does not need a second downward force. Her motion is the result of the forces, and here the air's upward push matches Earth's pull exactly.\n\nUsing the two forces on the board, what is the net force on her?"
+    },
+    {
+      "role": "student",
+      "text": "So 700 minus 700 is 0 newtons, the forces cancel out.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Right, 0 newtons. Two equal forces pointing opposite ways leave nothing over, so her speed and direction stay the same.\n\n\n\nNow a similar one, where the crate is already moving. Read the leftover first, then decide what the crate does."
+    },
+    {
+      "role": "student",
+      "text": "So 250 plus 150 is 400 toward the door, and 400 minus 400 is 0 newtons, so the crate keeps moving at the same speed toward the door.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, 0 newtons. The crate keeps its speed and direction, because balanced forces only stop the motion from changing.\n\n\n\nNext: does moving mean unbalanced? Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "I'm good, let's keep going.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Here is a student's claim about two wagons. Read it, then tell me what has gone wrong."
+    },
+    {
+      "role": "student",
+      "text": "Wait, I'm confused—what do you want me to say about it?",
+      "tag": "complaint_lost"
+    },
+    {
+      "role": "tutor",
+      "text": "Sorry, that was unclear. The student made two mistakes, and I want you to find them.\n\n1. Look at the first wagon. Is the 19 newtons right? Remember that the pulls point opposite ways.\n2. Look at the second wagon. It is moving at a steady speed. Does that mean its forces are unbalanced?\n\nTell me what each mistake is, in your own words."
+    },
+    {
+      "role": "student",
+      "text": "Oh, the first one should be 12 minus 7, which is 5 newtons, not 19. And the second wagon is moving steady, so the forces are balanced, not unbalanced.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, both are right. The pulls point opposite ways, so 12 newtons minus 7 newtons leaves 5 newtons east. And a steady speed means balanced forces, because the motion is not changing.\n\n\n\nWe have time for one more. Would you like a problem where a van is moving at a steady speed and you check whether the forces balance, or would you rather stop here with a recap?"
+    },
+    {
+      "role": "student",
+      "text": "Thanks, I have to go now.",
+      "tag": "end_request"
+    },
+    {
+      "role": "tutor",
+      "text": "Thanks for working through this with me, Sam. You found the net force on several objects, including the sled and the crate, and you caught the wagon mistakes once you looked at the directions. Next, look at the idea that an object moving at a steady speed has balanced forces. That one tripped you up at the start, and it's worth practising again."
+    }
+  ],
+  "events": [
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=yes"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=yes"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · with \"Today we're going to look at forces\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4144ms · first_sentence=523ms · in=6508 out=522 cr=32854 cc=0 · v2"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 2 \"Tug-of-war: standing still with pushes on both sides\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_free_body_diagram → painted on page 2 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6038ms · first_sentence=3475ms · in=7684 out=893 cr=49653 cc=186 · v2"
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"What do you think keeps the tape from moving when both teams\" → \"What do you think makes it stay still?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What do you think makes it stay still?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"What do you think makes it stay still?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_equation → painted on page 2 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5853ms · first_sentence=2407ms · in=7332 out=981 cr=33226 cc=720 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Are you ready to learn how to find that leftover for any set\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Are you ready to learn how to find that leftover for any set\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Are you ready to learn how to find that leftover for any set\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Are you ready to learn how to find that leftover for any set\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 3 \"Net force: adding forces on one line\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 3 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 3 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_free_body_diagram → painted on page 3 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4661ms · first_sentence=2363ms · in=7754 out=729 cr=33946 cc=1320 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_equation → painted on page 3 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 3 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_free_body_diagram → painted on page 3 · with \"A cart on a flat floor has two pushes on it along one line.\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5158ms · first_sentence=1825ms · in=8061 out=881 cr=35266 cc=718 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_equation → painted on page 3 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7165ms · first_sentence=2420ms · in=8385 out=1262 cr=35984 cc=694 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Do you want to go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Do you want to go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Do you want to go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Do you want to go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 4 \"Worked example: three ropes on a sled\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 4 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_free_body_diagram → painted on page 4 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5771ms · first_sentence=2509ms · in=8637 out=992 cr=36678 cc=1330 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 4 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_equation → painted on page 4 · with \"Net force 0 newtons\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_free_body_diagram → painted on page 4 · with \"Now a small change\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6027ms · first_sentence=1496ms · in=8577 out=1051 cr=38008 cc=754 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → not opened yet: the student is asked first"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3968ms · first_sentence=1989ms · in=1486 out=804 cr=19381 cc=381 · v2"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 5 \"Moving at a steady speed: balanced forces\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 5 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_free_body_diagram → painted on page 5 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 5 · with \"Balanced forces mean the motion does not change.\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6771ms · first_sentence=2267ms · in=9212 out=1186 cr=39143 cc=1237 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4699ms · first_sentence=1880ms · in=8548 out=656 cr=40380 cc=1202 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the net force on her?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the net force on her?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the net force on her?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What is the net force on her?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_equation → painted on page 5 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 5 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_free_body_diagram → painted on page 5 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7179ms · first_sentence=2618ms · in=8840 out=1276 cr=41582 cc=262 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → not opened yet: the student is asked first"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4117ms · first_sentence=2365ms · in=1485 out=783 cr=20922 cc=499 · v2"
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"Do you have any questions before we continue?\" → \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 6 \"Does moving mean unbalanced?\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 6 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_free_body_diagram → painted on page 6 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4422ms · first_sentence=2376ms · in=9175 out=717 cr=42343 cc=1309 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4477ms · first_sentence=1478ms · in=8636 out=677 cr=43652 cc=532 · v2"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_equation → painted on page 6 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6086ms · first_sentence=1844ms · in=8803 out=963 cr=44184 cc=366 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Van problem, steady speed, or recap?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Van problem, steady speed, or recap?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Van problem, steady speed, or recap?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "end_lesson → the session is ending"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3549ms · first_sentence=1379ms · in=1376 out=638 cr=22275 cc=246 · v2"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "end_lesson"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    }
+  ],
+  "estimatedCost": 0.028,
+  "endedBy": "student_end"
+}

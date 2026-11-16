@@ -1,0 +1,148 @@
+11:13:01 open fixture=demo-forces arm=v2c2 student=gdi-v2c-replay-demo-forces-2 (speech off)
+11:13:46 no start orb (auto-start?)
+11:13:46 TUTOR  Hi Sam, welcome. Today we're going to look at forces: pushes and pulls on an object, how to add them into one leftover force called the net force, and how that tells you whether the motion changes. Does that sound good?   [tools: annotate]
+11:14:09 STUDENT(ack) Yeah, that sounds good. I'm ready to start.
+11:14:15 TUTOR  
+Picture a tug-of-war rope with a strip of red tape tied in the middle. Both teams pull as hard as they can, and the tape does not move at all. Here are the two pulls on the rope.
+
+
+
+The pulls are big, but the tape stays put. What do you think makes it stay still?   [tools: new_page, show_free_body_diagram]
+11:14:44 STUDENT(answer) Because the forces are really big, so they add up to 19 Newtons pushing it forward... wait, or maybe they cancel out because they're pulling the same amount on both sides?
+11:14:50 TUTOR  Yes, the equal pulls cancel. Pulls in opposite directions don't add to 600 newtons, and they don't add to 19 either. They work against each other, so the leftover is what matters.
+
+
+
+That leftover of 0 newtons is what the tape is showing us: nothing is left over to move it. Are you ready to go on to   [tools: show_equation]
+11:15:23 STUDENT(answer) Oh, so you subtract the one pulling the other way to get what's left over.
+11:15:27 TUTOR  Yes, that's the idea. You take the smaller pull away from the larger one, and the leftover keeps the direction of the larger pull. Let's put the rule on the board.
+
+
+
+
+
+Try one on your own. Here, the object is a box on a floor.
+
+   [tools: new_page, annotate, show_problem, show_free_body_diagram]
+11:15:52 STUDENT(answer) So I subtract 3 from 8, and that's 5 newtons east, because east is the bigger push.
+11:15:58 TUTOR  Right, 5 newtons east. The bigger push wins, and the smaller one takes away from it.
+
+
+
+Here is another one of the same kind, with the bigger push on the other side. This time, watch which way the leftover points.
+
+   [tools: show_equation, show_problem, show_free_body_diagram]
+11:16:20 STUDENT(answer) So 9 minus 6 is 3 newtons south, because south is the bigger one.
+11:16:28 TUTOR  That's it: 3 newtons south. You kept the bigger push's direction and took the smaller one away.
+
+
+
+That finishes adding forces on one line. Next, we'll work a bigger example with three ropes on a sled and see what the leftover tells us about its motion. Do you want to go on, or do you have a questio   [tools: show_equation]
+11:16:57 STUDENT(answer) I see the net force is what's left after you subtract the smaller from the bigger one.
+11:17:03 TUTOR  Yes, that's the rule. The net force is the leftover after you take the smaller size away from the larger one.
+
+Now a new kind of problem: several forces on one object, and what the leftover tells us about its motion.
+
+
+
+
+
+
+Take a moment with this one. Tell me the net force first, and then what the s   [tools: new_page, show_problem, show_free_body_diagram]
+11:17:33 STUDENT(answer) So 60 plus 45 is 105 north, and then 105 minus 105 is 0, so the net force is zero and the sled stays still.
+11:17:39 TUTOR  Net force 0 newtons, so the forces are balanced and the sled stays still. Now a small change: the friend pulling south eases off to 85 newtons, and the two north pulls stay the same. What is the net force now, and what does the sled do?
+
+   [tools: show_problem, show_equation, show_free_body_diagram]
+11:18:04 STUDENT(answer) So 60 plus 45 is 105 north, and 105 minus 85 is 20 newtons north, so the sled starts moving north.
+11:18:08 TUTOR  That's right: 20 newtons north, so the forces are unbalanced and the sled starts moving north, in the direction of the leftover.
+
+Next is a case that trips many people up: an object that is already moving, with balanced forces on it.
+
+
+
+Shall we go on, or do you have a question first?
+11:18:34 STUDENT(ack) Yeah, let's go on.
+11:18:41 TUTOR  Let's go on. This next idea is about an object that is already moving.
+
+
+
+Balanced forces mean the motion does not change. An object that is moving at a steady speed in a straight line still has balanced forces on it, because nothing is making it speed up or slow down.
+
+
+
+
+Tell me the net force firs   [tools: new_page, show_problem, show_free_body_diagram, annotate]
+11:19:13 STUDENT(complaint_lost) I don't get it—if she's falling down, shouldn't there be a force pushing her down?
+11:19:18 TUTOR  Yes, there is a force pulling her down: Earth's pull of 700 newtons. That is the downward force on the board. Falling down does not need a second downward force. Her motion is the result of the forces, and here the air's upward push matches Earth's pull exactly.
+
+Using the two forces on the board, w
+11:19:46 STUDENT(answer) So 700 minus 700 is 0 newtons, the forces cancel out.
+11:19:53 TUTOR  Right, 0 newtons. Two equal forces pointing opposite ways leave nothing over, so her speed and direction stay the same.
+
+
+
+Now a similar one, where the crate is already moving. Read the leftover first, then decide what the crate does.
+
+   [tools: show_equation, show_problem, show_free_body_diagram]
+11:20:16 STUDENT(answer) So 250 plus 150 is 400 toward the door, and 400 minus 400 is 0 newtons, so the crate keeps moving at the same speed toward the door.
+11:20:21 TUTOR  Yes, 0 newtons. The crate keeps its speed and direction, because balanced forces only stop the motion from changing.
+
+
+
+Next: does moving mean unbalanced? Shall we go on, or do you have a question first?
+11:20:39 STUDENT(ack) I'm good, let's keep going.
+11:20:44 TUTOR  
+
+Here is a student's claim about two wagons. Read it, then tell me what has gone wrong.
+
+   [tools: new_page, show_problem, show_free_body_diagram]
+11:20:57 STUDENT(complaint_lost) Wait, I'm confused—what do you want me to say about it?
+11:21:02 TUTOR  Sorry, that was unclear. The student made two mistakes, and I want you to find them.
+
+1. Look at the first wagon. Is the 19 newtons right? Remember that the pulls point opposite ways.
+2. Look at the second wagon. It is moving at a steady speed. Does that mean its forces are unbalanced?
+
+Tell me what
+11:21:32 STUDENT(answer) Oh, the first one should be 12 minus 7, which is 5 newtons, not 19. And the second wagon is moving steady, so the forces are balanced, not unbalanced.
+11:21:38 TUTOR  Yes, both are right. The pulls point opposite ways, so 12 newtons minus 7 newtons leaves 5 newtons east. And a steady speed means balanced forces, because the motion is not changing.
+
+
+
+We have time for one more. Would you like a problem where a van is moving at a steady speed and you check whether    [tools: show_equation]
+11:22:12 STUDENT(end_request) Thanks, I have to go now.
+11:22:15 TUTOR  Thanks for working through this with me, Sam. You found the net force on several objects, including the sled and the crate, and you caught the wagon mistakes once you looked at the directions. Next, look at the idea that an object moving at a steady speed has balanced forces. That one tripped you up
+11:22:41 STUDENT(end)
+11:22:41 waiting 35 s for the autosave
+
+=== demo-forces / v2c2 · 8.9 min · session embed-1794827581263 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/.superpowers/sdd/2026-11-13-gdi-on-v2-plan/v2c-runs/demo-forces-v2c2-mwj600rrkci.json
+{
+  "fixture": "demo-forces",
+  "arm": "v2c2",
+  "minutes": 8.9,
+  "tutorTurns": 17,
+  "studentTurns": 16,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 2,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 2,
+  "questionEndingShare": 0.53,
+  "questionAfterAnswerShare": 0.6,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": 1,
+  "tutorWordsMedian": 55,
+  "tutorWordsP90": 68,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 2267,
+  "firstSentenceMsP95": 3475,
+  "inputTokens": 741732,
+  "outputTokens": 15011,
+  "costPerMinute": 0.003,
+  "endedBy": "student_end"
+}

@@ -187,3 +187,19 @@ Repeated "Shall we go on?" offers (D10, second half): not changed. Nothing in th
 
 ### Pool (gdi-demo)
 Before: used 953.3, remaining 1228.8. After: used 1017.5, remaining 1164.5. Delta 64.2 min (my five gdi runs: 16.3 + 16.1 + 10.2 + 16.2 + 5.5 = 64.3). demo-forces (18.8 min) charged evelyn-marketing. Total replay 83 min of the 120 budget.
+
+### Task 6b fix round 1: the opener as a fact (review I2)
+The D10 constitution line was removed (its "Correct." became the new stock opener). In its place, every turn's facts name the last reply's opening words (NEXT_PUBLIC_TUTOR_V2_OPENER_FACT). The engine is at 896fa0fe; the runs are text mode with `--no-speech`, and the bundles are in `v2b/fix1/`.
+
+Consecutive tutor replies that open with the same first word:
+
+| Run | v2 (Task 6) | v2b (constitution line) | fix 1 (fact) |
+|---|---|---|---|
+| demo-forces | 5 / 25 | 13 / 36 | run 1: 0 / 26; run 2: 1 / 16 |
+| gdi-showcase-advanced | 16 / 38 | 10 / 38 ("Correct" 16×) | 0 / 42 ("Yes" 10×, "That's" 5×) |
+
+- **demo-forces:** both runs ended on the learner's "I have to go" (12.9 and 8.9 min), with the close accepted. complaint_lost was 0 in run 1 and 2 in run 2: the parachutist "shouldn't there be a force down?" and "what do you want me to say about it?". Both are content questions, not an unseen board.
+- **showcase (fix 1):**
+  - The summary was offered at t83 and given with the close at t85, so no summary was lost.
+  - The tutor now declines to invent its own experiences inside its exercises. "I have no experiences of my own, since I'm a tutor" covered the kayaking question; "I can't eat food, since I'm a tutor" covered natto. In v2b it had invented answers to both.
+- **Pool (gdi-demo):** used 1017.5 → 1033.7 (+16.2 min). The demo-forces runs charge evelyn-marketing.

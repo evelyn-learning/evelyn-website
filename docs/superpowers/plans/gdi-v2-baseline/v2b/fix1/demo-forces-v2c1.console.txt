@@ -1,0 +1,157 @@
+11:12:40 open fixture=demo-forces arm=v2c1 student=gdi-v2c-replay-demo-forces-1 (speech off)
+11:13:25 no start orb (auto-start?)
+11:13:25 TUTOR  Hi Sam, welcome. This lesson is about forces: what a push or pull is, how to add forces that act on one object, and what that sum tells you about whether the motion changes. We'll start with a tug-of-war and work up to a few quick problems. Does that sound good?   [tools: annotate]
+11:13:53 STUDENT(ack) Yeah, that sounds good.
+11:13:59 TUTOR  
+Picture a tug-of-war rope with a strip of red tape tied in the middle. Both teams pull as hard as they can, and the tape does not move at all. Each team is pulling with 200 newtons.
+
+
+
+The tape stays still. So what is the leftover pull on the tape, if both teams are pulling with the same size?   [tools: new_page, show_free_body_diagram]
+11:14:29 STUDENT(answer) Zero, because they're pulling the same amount on both sides so they cancel out.
+11:14:33 TUTOR  Yes, zero. Equal pulls on opposite sides cancel, so the leftover is 0 newtons and the tape stays put.
+
+That's the tug-of-war done. Next we'll look at how to add forces that act on one object, and what the leftover tells you about motion. Shall we go on, or do you have a question first?
+11:14:57 STUDENT(ack) Yeah, let's go on.
+11:15:01 TUTOR  
+Forces are pushes or pulls, and each one has a size and a direction. When two forces act on one object along one line, we add them to get the net force, which is the leftover.
+
+
+
+Here is one to try. A box has a 5-newton push to the left and a 3-newton push to the right. What is the net force on the   [tools: new_page, annotate, show_problem, show_free_body_diagram]
+11:15:34 STUDENT(answer) So that's 5 plus 3, which is 8 newtons total?
+11:15:39 TUTOR  Not quite. The 5 newtons push left and the 3 newtons push right, so they point opposite ways and work against each other. Adding the sizes skips the directions. Try again with that in mind.   [tools: show_equation, annotate]
+11:16:00 STUDENT(answer) Oh, so it's 5 minus 3, which is 2 newtons to the left?
+11:16:06 TUTOR  Yes, 2 newtons to the left. The larger push is to the left, so the leftover keeps that direction.
+
+
+
+Now one on your own. A cart has a 7-newton pull to the right and a 4-newton pull to the left, both on the cart along one line. What is the net force, with its size and direction?
+
+   [tools: show_equation, show_problem, show_free_body_diagram]
+11:16:35 STUDENT(answer) It's 7 minus 4, so 3 newtons to the right.
+11:16:38 TUTOR  Right, 3 newtons to the right. You worked that out on your own, so the gap is closed.
+11:16:49 STUDENT(ack) Cool.
+11:16:52 TUTOR  
+
+Next is balanced or unbalanced. Shall we go on, or do you have a question first?
+11:17:02 STUDENT(ack) Yeah, let's keep going.
+11:17:07 TUTOR  
+When the net force is 0 newtons, the forces are balanced, and the motion does not change. A still object stays still. A moving object keeps the same speed and direction.
+
+
+
+Here is one to check. A book sits on a table. Gravity pulls it down with 10 newtons, and the table pushes it up with 10 newton   [tools: new_page, annotate, show_problem, show_free_body_diagram]
+11:17:42 STUDENT(answer) The forces are balanced because they're both 10 newtons, so the net force is zero, and the book just stays still.
+11:17:47 TUTOR  Yes, balanced. The two 10-newton forces cancel, so the net force is 0 newtons and the book stays still.
+
+That's the balanced and unbalanced part done. Next is what balanced means for something that is already moving. Shall we go on, or do you have a question first?   [tools: show_equation]
+11:18:12 STUDENT(answer) So the two forces cancel out to zero on the equation.
+11:18:18 TUTOR  Right, the 10 newtons up and the 10 newtons down cancel to 0 newtons.
+
+This part is done. Next we look at something already moving at a steady speed. Shall we go on, or do you have a question first?
+11:18:38 STUDENT(ack) Yeah, let's go on.
+11:18:43 TUTOR  
+Something can be moving and still have balanced forces on it. If it keeps the same speed in the same direction, its motion has not changed, so the net force is 0 newtons.
+
+A van drives along a straight road at a steady speed. The road pushes it forward with 1,200 newtons, and air and friction push    [tools: new_page, show_free_body_diagram, show_equation]
+11:19:27 STUDENT(answer) It keeps going at the same speed, because the net force is zero so the motion doesn't change.
+11:19:33 TUTOR  Correct. A net force of 0 newtons means the speed and direction stay the same. Set this part aside. Next are a few practice problems. Shall we go on, or do you have a question first?   [tools: annotate]
+11:19:54 STUDENT(ack) Yeah, let's do the problems.
+11:19:58 TUTOR  
+Here is a problem to do on your own. Name the object, list the forces, combine them, then say what the cart does.
+
+
+   [tools: new_page, show_problem, show_free_body_diagram]
+11:20:15 STUDENT(answer) The object is the cart. One force is 90 newtons north, the other is 55 newtons south. So the net force is 90 minus 55, which is 35 newtons north. The cart moves north.
+11:20:21 TUTOR  Yes, 35 newtons north. The 90 newtons north and the 55 newtons south work against each other, and the larger one keeps its direction. Since the cart starts at rest, unbalanced forces set it moving north.
+
+
+
+Next is a problem about a parachutist falling at a steady speed. Shall we go on, or do you ha   [tools: show_equation]
+11:20:51 STUDENT(answer) Oh, so you write it out like that with the minus sign and the directions.
+11:20:57 TUTOR  That's the way to write it: each force gets its size and direction, and the minus sign shows that the two work against each other.
+
+Here is the next one, a parachutist falling at a steady speed. Say whether the forces are balanced and what she does.
+
+
+   [tools: show_problem, show_free_body_diagram]
+11:21:22 STUDENT(answer) I see the 700 newtons down and 700 newtons up, so they cancel.
+11:21:29 TUTOR  Yes, they cancel to 0 newtons. So the forces are balanced, and she keeps falling at the same steady speed.
+
+Here is the next one, with a crate that can only move in a straight line. Find the net force and say what the crate does.
+
+
+   [tools: show_problem, show_free_body_diagram, show_equation]
+11:21:53 STUDENT(answer) So the two cables pulling one way add up to 400, and the other cable pulls 400 the other way, so they cancel out.
+11:22:03 TUTOR  Right, 400 newtons toward the door and 400 newtons away from it.  The net force is 0 newtons, so the forces are balanced and the crate keeps moving toward the door at the same steady speed.
+
+Last, a common mistake to check. A student says a wagon pulled east with 12 newtons and west with 7 newtons h   [tools: show_equation, show_problem, show_free_body_diagram]
+11:22:43 STUDENT(answer) The first one is 12 plus 7 which is 19 newtons, and the second one needs a force to keep it moving.
+11:22:51 TUTOR  Not quite. The 12 newtons pull east and the 7 newtons pull west, so they work against each other. Adding 12 and 7 ignores the directions, so the step to check is the sign of the combination, not the sum. The second claim also needs a look: a wagon moving at a steady speed has balanced forces on it,    [tools: show_equation, annotate]
+11:23:23 STUDENT(answer) Oh, so you subtract because they're opposite directions, not add them together.
+11:23:30 TUTOR  Yes, that's the rule. Opposite directions subtract, and the leftover keeps the direction of the larger force. Try the first wagon again: what is its net force, with size and direction?   [tools: show_equation]
+11:23:48 STUDENT(answer) It's 12 minus 7, so 5 newtons east.
+11:23:54 TUTOR  Correct, 5 newtons east. The 12 newtons east is larger, so it keeps its direction.
+
+Now the second wagon, which is rolling along at a steady speed. What is the net force on it, and what does it do?   [tools: show_equation]
+11:24:15 STUDENT(answer) The net force is zero, so it keeps rolling at the same speed.
+11:24:18 TUTOR  Yes, zero newtons, so the wagon keeps rolling at the same speed. You worked out the second claim yourself, so I'll mark that gap as closed.
+11:24:33 STUDENT(ack) Thanks.
+11:24:36 TUTOR  You're welcome. Before we move on, one more of the opposite-direction kind, to do on your own.
+
+   [tools: show_problem]
+11:24:49 STUDENT(answer) So 65 minus 40 is 25 newtons to the south, because south is the bigger pull.
+11:24:55 TUTOR  Yes, 25 newtons south. The larger pull is the south one, so it keeps its direction.
+
+   [tools: show_equation, show_free_body_diagram]
+11:25:09 STUDENT(answer) So you write the forces with the minus sign between them, and the answer keeps the direction of the bigger one.
+11:25:12 TUTOR  That's the rule in your own words: write the forces with the minus sign between them, and the answer keeps the direction of the bigger one.
+
+
+
+Next is recap. Shall we go on, or do you have a question first?
+11:25:31 STUDENT(ack) Yeah, let's recap.
+11:25:36 TUTOR  
+Here is what to keep from today.
+
+
+
+Which part do you want to go over once more, or are you ready to stop here?   [tools: new_page, annotate]
+11:25:53 STUDENT(end_request) Thanks, I have to go now.
+11:25:56 TUTOR  Thanks for the lesson, Sam. You picked up the opposite-direction rule quickly: subtract the smaller force from the larger and keep the larger one's direction. You also sorted balanced from unbalanced, and you saw that a steady speed means balanced forces. Next time, check the directions before you a
+11:26:21 STUDENT(end)
+11:26:21 waiting 35 s for the autosave
+
+=== demo-forces / v2c1 · 12.9 min · session embed-1794827561110 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/.superpowers/sdd/2026-11-13-gdi-on-v2-plan/v2c-runs/demo-forces-v2c1-mwj5zl7rt5v.json
+{
+  "fixture": "demo-forces",
+  "arm": "v2c1",
+  "minutes": 12.9,
+  "tutorTurns": 27,
+  "studentTurns": 26,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.63,
+  "questionAfterAnswerShare": 0.59,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": 1,
+  "tutorWordsMedian": 46,
+  "tutorWordsP90": 70,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 1845,
+  "firstSentenceMsP95": 2735,
+  "inputTokens": 1133056,
+  "outputTokens": 21743,
+  "costPerMinute": 0.003,
+  "endedBy": "student_end"
+}
