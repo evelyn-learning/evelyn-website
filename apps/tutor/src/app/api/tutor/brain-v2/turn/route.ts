@@ -14,6 +14,7 @@ import { V2_BACKGROUND_LINE_CHARS, V2_BACKGROUND_MAX_LINES } from '@/lib/tutor/v
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
+import { resolvePartnerSessionOptions } from '@/lib/tutor/portal/partner-session-options';
 import { readHomeworkState, v2HomeworkFor, v2SheetFor } from '@/lib/tutor/v2/homework';
 import { runV2HomeworkTurn, runV2SheetTurn } from '@/lib/tutor/v2/homework-turn';
 import { runV2Turn } from '@/lib/tutor/v2/turn';
@@ -92,6 +93,8 @@ export async function POST(req: NextRequest) {
     ...(background.length ? { background } : {}),
     ...(teacher ? { teacher } : {}),
     ...(cfg.trial === true ? { trial: true } : {}),
+    // Unverified claim, as homework reads it: a forged one only keeps the forger's own trial on its plan.
+    ...(cfg.trial === true && resolvePartnerSessionOptions({ partnerId: partnerClaim }).trialKeepsPlan ? { trialKeepsPlan: true } : {}),
     ...(!plan && typeof cfg.topic === 'string' && cfg.topic.trim() ? { topic: cfg.topic.trim().slice(0, 160) } : {}),
     ...(plan ? { plan, topic: `${(plan as { topic?: string }).topic ?? ''} ${(plan as { title?: string }).title ?? ''}`.trim().slice(0, 160) } : {}),
     ...(homework ? { homework: homework.problem } : {}),

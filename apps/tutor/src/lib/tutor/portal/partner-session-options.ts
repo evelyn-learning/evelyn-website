@@ -58,6 +58,11 @@ export interface PartnerSessionOptions {
    *  the partner is on v2. Off: they stay on v1 whatever the partner's brainVersion, so a partner's homework
    *  moves only when it is asked to (GAC 2026-11-13; Crimsora, evelyntutor and the demo keep theirs on v1). */
   homeworkOnV2: boolean;
+  /** A free trial (`is_trial`) on this partner keeps its lesson plan on tutor v2: the "leave the plan behind"
+   *  line of a trial session (v2/turn.ts) is not given. For a partner whose showcase is a written lesson, the
+   *  lesson is the product being shown; other trials (the marketing demo, Crimsora's) stay the student's to
+   *  steer (Praveen 2026-10-28). Trial's other effects (no memory, no practice) stay. Default off. */
+  trialKeepsPlan: boolean;
 }
 
 /** Partner rows — applied when present. A partner absent from this table
@@ -139,6 +144,7 @@ export function defaultPartnerSessionOptions(tutorLanguages: string[] | undefine
     thinkingCue: true,
     brainVersion: 'v1',
     homeworkOnV2: false,
+    trialKeepsPlan: false,
     questionRead: false,
   };
 }
@@ -156,5 +162,6 @@ export function resolvePartnerSessionOptions(session: PartnerSessionLike | null 
     brainVersion: (Object.hasOwn(BRAIN_VERSION_BY_PARTNER, partnerId) ? BRAIN_VERSION_BY_PARTNER[partnerId] : undefined) ?? row?.brainVersion ?? base.brainVersion,
     questionRead: row?.questionRead ?? base.questionRead,
     homeworkOnV2: row?.homeworkOnV2 ?? base.homeworkOnV2,
+    trialKeepsPlan: row?.trialKeepsPlan ?? base.trialKeepsPlan,
   };
 }

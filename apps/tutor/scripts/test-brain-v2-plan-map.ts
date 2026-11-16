@@ -11,6 +11,8 @@
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { SEED_AP_CALCBC_U4_LHOPITAL } from '../src/lib/tutor/lesson-plan/seeds/ap-calcbc-u4-lhopital';
 import { renderPlanMap, v2PartOf } from '../src/lib/tutor/v2/plan-map';
+import { v2SessionPart } from '../src/lib/tutor/v2/turn';
+import type { V2Session } from '../src/lib/tutor/v2/types';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -86,6 +88,16 @@ function main() {
   const ap = renderPlanMap(SEED_AP_CALCBC_U4_LHOPITAL);
   check('a plan without the written-lesson fields still lists every goal and gives no staying order', SEED_AP_CALCBC_U4_LHOPITAL.segments.every((s) => ap.includes(`[${s.id}]`)) && !/stay within|must complete|before advancing|turn budget|written for about/i.test(ap));
   check('no part is a partner name', !/gdi|nagoya/i.test(map.replace(WRITTEN.id, '')));
+
+  console.log('a trial on a partner whose trials keep the plan');
+  const LEAVE = 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.';
+  const trial: V2Session = { studentName: 'Ken', subject: 'English', level: 'adult', mode: 'voice', timeBoxMinutes: 25, plan: WRITTEN, trial: true };
+  const today = v2SessionPart(trial);
+  check('a trial without the option keeps the leave-the-plan line, word for word', today.includes(`\n${LEAVE}\n`), today.slice(0, 600));
+  check('the option off is byte-identical to the option missing', v2SessionPart({ ...trial, trialKeepsPlan: false }) === today);
+  const kept = v2SessionPart({ ...trial, trialKeepsPlan: true });
+  check('the option on drops only that line', !kept.includes('leave the plan behind') && !/free trial lesson/.test(kept) && kept === today.replace(`\n${LEAVE}`, ''), kept.slice(0, 600));
+  check('the option without a trial changes nothing', v2SessionPart({ ...trial, trial: undefined, trialKeepsPlan: true }) === v2SessionPart({ ...trial, trial: undefined }));
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

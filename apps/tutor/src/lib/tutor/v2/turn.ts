@@ -129,8 +129,8 @@ export function v2SessionPart(session: V2Session): string {
     v2ModeLines(session.mode),
     v2LanguagesSection(session.languages, session.mode) ?? '',
     // A free trial is the student's to steer (Praveen 2026-10-28: a trial student asked five times for another
-    // topic and was kept on the plan).
-    session.trial ? 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.' : '',
+    // topic and was kept on the plan). A partner whose showcase is a written lesson keeps its plan (trialKeepsPlan).
+    session.trial && !session.trialKeepsPlan ? 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.' : '',
     session.timeBoxMinutes ? `The session is meant to last about ${session.timeBoxMinutes} minutes.` : '',
     session.background?.length ? `What is known about this student from their course and earlier sessions:\n${session.background.map((l) => `  - ${l}`).join('\n')}` : '',
     tutorFigureLines(session),

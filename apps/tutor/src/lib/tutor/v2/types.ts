@@ -33,6 +33,9 @@ export interface V2Session {
   background?: string[];
   /** A free trial or demo lesson: the student may change the topic or the subject. */
   trial?: boolean;
+  /** The partner's trials keep the lesson plan (partner-session-options.ts `trialKeepsPlan`): a trial may not
+   *  leave it. */
+  trialKeepsPlan?: boolean;
   /** Homework mode (homework.ts): the session works the student's own homework. Never holds the answer key. */
   homework?: V2HomeworkProblem;
   /** Whole-sheet homework (homework.ts): every problem of the sheet, worked in any order. Never holds a key. */
