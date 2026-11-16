@@ -35,10 +35,12 @@ export function v2LanguagesSection(languages: readonly string[] | undefined, mod
     'TWO LANGUAGES',
     // v1 Rule 5 told bilingual learners "each session sticks to one language", and a Japanese reply was taken for a misrecognition.
     `${T} is the language of this lesson and the one the student practises; ${S} is their own language, and is for help. A reply from them in ${S} is real speech: understand it and answer it.`,
-    // A language partner's brief: learners at the lower levels get help in their language, others little. An advanced
-    // learner answered in Japanese hears less English. The rungs are the working levels (level/working-level.ts), so a
-    // level set or remembered by the level check (v2/working-level.ts) decides the amount.
-    `How much ${S} follows their working level. Beginner: explanations and instructions in ${S}, the practice in ${T}. Intermediate: ${T}, with a correction explained briefly in ${S} when it helps. Advanced: ${T} throughout, with ${S} only when they ask. Until it is known, judge it by how they speak, not by any label.`,
+    // A language partner's brief: beginners and lower-intermediate learners get help in their language, others little.
+    // An advanced learner answered in Japanese hears less English. The rungs are the working levels
+    // (level/working-level.ts), so a level set or remembered by the level check (v2/working-level.ts) decides the
+    // amount; intermediate covers the brief's lower-intermediate learners, so it gets explanations in the support language
+    // too (ruling 11-15, task 4a review M2), kept short so the lesson stays in the target language.
+    `How much ${S} follows their working level. Beginner: the most help: explanations, instructions and corrections in ${S}, the practice in ${T}. Intermediate: explanations in ${S} when they help, a sentence or two, then straight back to ${T}. Advanced: little: ${T} throughout, with ${S} only when they ask. Until it is known, judge it by how they speak, not by any label.`,
     // v1 live session (findings 2026-11-15): after "Could you explain that in Japanese?" nearly every reply stayed in long Japanese grammar explanations.
     `${S} help is short: a sentence or two, then back to ${T} in the same reply, ending on something for them to say in ${T}. When they ask for an explanation in ${S}, that explanation is in ${S}; the lesson does not switch to ${S} after it. When they ask you to speak ${T}, keep to ${T} until they ask otherwise.`,
     // v1: model-and-repeat drills; the partner asks for natural conversation in which the learner speaks.

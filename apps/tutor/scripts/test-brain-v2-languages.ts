@@ -39,7 +39,7 @@ async function main() {
   check('an English-only session has none', v2LanguagesSection(undefined) === null && v2LanguagesSection(['en']) === null && !/TWO LANGUAGES/.test(v2SessionPart({ ...bilingual, languages: undefined })));
   check('English and Japanese: the section is in the session part, after the mode lines', v2SessionPart(bilingual).includes(ja) && v2SessionPart(bilingual).indexOf(ja) > v2SessionPart(bilingual).indexOf('spoken conversation'));
   check('it names the target and the support language from the session\'s languages', /English/.test(ja) && /Japanese/.test(ja));
-  check('the amount of help follows the working level: beginners get it, others little', /Beginner: explanations and instructions in Japanese/.test(ja) && /Advanced: English throughout/.test(ja));
+  check('the amount of help follows the working level: beginners the most, intermediate (incl. lower-intermediate) short explanations, advanced little', /Beginner: the most help: explanations, instructions and corrections in Japanese/.test(ja) && /Intermediate: explanations in Japanese when they help, a sentence or two, then straight back to English/.test(ja) && /Advanced: little: English throughout/.test(ja), ja);
   check('help is short and the tutor returns to the target after it (a learner who asked once got Japanese for the rest of the lesson)', /short/i.test(ja) && /back to English/i.test(ja) && /does not switch/i.test(ja));
   check('the learner produces the sentence, not repeats it', /build the sentence/i.test(ja) && /Repeating after you is not practice/i.test(ja));
   check('one error corrected, two tries, a correct sentence is never "close" (case 12)', /one error that matters most/i.test(ja) && /two tries/i.test(ja) && /never call it close/i.test(ja));

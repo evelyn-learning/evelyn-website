@@ -71,10 +71,28 @@ const isStudentReply = (m: Anthropic.MessageParam) => m.role === 'user' && (type
   ? !m.content.startsWith('[')
   : m.content.some((b) => b.type === 'text' && !b.text.startsWith('[')));
 
+const studentReplies = (state: V2State) => state.history.filter(isStudentReply).length;
+
+/** Student replies after which a level check that set no level is over, whatever the plan says: the opener's reply,
+ *  three answers and room for two "could you rephrase that?". */
+export const V2_LEVEL_CHECK_MAX_REPLIES = 6;
+
+/** The level check is over without a level (review I1: with no end, "find it with three questions" stood in every
+ *  turn's facts for the whole lesson when the estimate was off or failed, or the plan had no level-check part):
+ *  the lesson has moved past the plan's level-check part, or the student has replied more than the check's budget.
+ *  `heard` counts as a reply. */
+export function v2LevelCheckOver(session: V2Session, state: V2State, heard: string | null | undefined): boolean {
+  const plan = session.plan;
+  if (plan && plan.segments.some((seg) => v2PartOf(seg).skipWhenLevelKnown) && v2LevelEstimateDue(plan, state.goals, undefined)) return true;
+  return studentReplies(state) + (heard ? 1 : 0) > V2_LEVEL_CHECK_MAX_REPLIES;
+}
+
 /** The facts lines for the working level (levelCheck sessions only). `heard` is the student's words this turn. */
 export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: string | null | undefined): string[] {
   if (!v2LevelCheckOn(session)) return [];
   const wl = state.workingLevel;
+  // Over with no level: a middle pitch, adjusted from what they say; the tool stays open for a level that becomes clear.
+  if (!wl && v2LevelCheckOver(session, state, heard)) return ['working level: not set, and the level check is over: do not check it again. Pitch at intermediate and adjust to how they speak; if their level becomes clear, call set_working_level once'];
   if (!wl) {
     const support = session.languages && session.languages.length > 1 ? `a few words of ${languageNameOf(session.languages[1]!)}` : 'an example';
     return [
@@ -86,7 +104,7 @@ export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: s
   if (wl.from === 'this_lesson') return [`working level: ${wl.level} (set this lesson: keep to it, and do not check it again)`];
   // Remembered from an earlier lesson. Findings case 11: a second person on the same link inherited the level and
   // the check was skipped for a newcomer. The first exchange confirms it lightly instead of assuming it.
-  const replies = state.history.filter(isStudentReply).length + (heard ? 1 : 0);
+  const replies = studentReplies(state) + (heard ? 1 : 0);
   const head = `working level: ${wl.level}, remembered from an earlier lesson on this link; the parts marked to skip when the level is known are skipped`;
   if (replies === 0) return [`${head}. Whoever is here may be someone else: in your opening, ask one natural question about them whose answer shows how they speak (not a test; name no level)`];
   if (replies === 1) return [`${head}. Their reply just now is your check: if it shows another level, call set_working_level with that level; if it fits, carry on`];
@@ -114,11 +132,13 @@ export function v2LevelEstimateDue(plan: LessonPlan, goals: V2State['goals'], wo
 }
 
 /** The level the browser puts in the state before a turn, when the state holds none: an estimate from this lesson
- *  first, else the one remembered on the profile. The same object when there is nothing to do. */
+ *  first, else the one remembered on the profile. A remembered level that arrives once the student has replied is
+ *  not taken (review M1: the profile read is waited on for 1.5 s only; seeded late, it skipped a level check already
+ *  under way and the first-exchange re-confirmation never happened). The same object when there is nothing to do. */
 export function v2SeedWorkingLevel(state: V2State, from: { known?: WorkingLevel | null; estimated?: WorkingLevel | null }): V2State {
   if (state.workingLevel) return state;
   if (from.estimated) return { ...state, workingLevel: { level: from.estimated, from: 'this_lesson' } };
-  if (from.known) return { ...state, workingLevel: { level: from.known, from: 'earlier_lesson' } };
+  if (from.known && studentReplies(state) === 0) return { ...state, workingLevel: { level: from.known, from: 'earlier_lesson' } };
   return state;
 }
 

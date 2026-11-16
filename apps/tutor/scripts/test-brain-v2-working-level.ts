@@ -17,7 +17,7 @@ import { v2ProfileCommit } from '../src/lib/tutor/v2/memory';
 import { V2_CONTROL_TOOL_NAMES } from '../src/lib/tutor/v2/tool-names';
 import { runV2Turn, v2SessionPart, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
-import { v2LevelEstimateDue, v2ReadWorkingLevel, v2SeedWorkingLevel, v2WorkingLevelCommit, v2WorkingLevelSection } from '../src/lib/tutor/v2/working-level';
+import { V2_LEVEL_CHECK_MAX_REPLIES, v2LevelEstimateDue, v2ReadWorkingLevel, v2SeedWorkingLevel, v2WorkingLevelCommit, v2WorkingLevelSection } from '../src/lib/tutor/v2/working-level';
 import { streamV2Turn } from '../src/lib/tutor/v2/client';
 
 let passed = 0; let failed = 0;
@@ -122,6 +122,21 @@ async function main() {
   const rememberedLater = factsOf(checked, replied(withLevel({ level: 'advanced', from: 'earlier_lesson' }), 3), 'Yes.');
   check('remembered, later: the level alone, no more re-checking', /working level: advanced/.test(rememberedLater) && !/one natural question|their reply just now/i.test(rememberedLater), rememberedLater);
 
+  console.log('the check is one phase: over without a level, the facts stop inviting it (review I1)');
+  const OVER = /level check is over: do not check it again/;
+  const g0 = (o: Record<string, string>) => Object.fromEntries(Object.entries(o).map(([k, status], i) => [k, { status: status as never, at: 10 + i }]));
+  // Estimate off, failed or not back yet: the lesson has moved past the level-check part and no level is held.
+  const past = factsOf(checked, { ...replied(newV2State(1000), 4), goals: g0({ overview: 'shown', 'level-check': 'demonstrated', 'past-simple': 'shown' }) }, 'I went to Kyoto.');
+  check('past the level-check part with no level (estimate off, failed or still on its way): no invitation, a middle pitch', OVER.test(past) && /Pitch at intermediate/.test(past) && !/Find it with three/.test(past), past);
+  const during = factsOf(checked, { ...replied(newV2State(1000), 2), goals: g0({ overview: 'shown', 'level-check': 'shown' }) }, 'I work in a bank.');
+  check('during the check it is still asked for', /not known yet/.test(during) && !OVER.test(during), during);
+  const noPart: V2Session = { ...checked, plan: { ...PLAN, segments: PLAN.segments.filter((x) => x.id !== 'level-check') } as LessonPlan };
+  check('a plan with no level-check part: the check runs, then ends after its reply budget', /not known yet/.test(factsOf(noPart, replied(newV2State(1000), 2), 'Yes.')) && OVER.test(factsOf(noPart, replied(newV2State(1000), V2_LEVEL_CHECK_MAX_REPLIES), 'Yes.')));
+  const noPlan: V2Session = { ...checked, plan: undefined, topic: 'small talk' };
+  check('no plan at all: the same budget ends it', /not known yet/.test(factsOf(noPlan, newV2State(1000))) && OVER.test(factsOf(noPlan, replied(newV2State(1000), V2_LEVEL_CHECK_MAX_REPLIES), 'Yes.')) && !OVER.test(factsOf(noPlan, replied(newV2State(1000), V2_LEVEL_CHECK_MAX_REPLIES - 1), 'Yes.')));
+  check('a plan whose tutor never marks the part: the budget ends it too', OVER.test(factsOf(checked, replied(newV2State(1000), V2_LEVEL_CHECK_MAX_REPLIES), 'Yes.')));
+  check('a level set later still ends the over line: the level is in the facts', /working level: beginner \(set this lesson/.test(factsOf(checked, { ...replied(withLevel({ level: 'beginner', from: 'this_lesson' }), 9) }, 'ok')));
+
   console.log('the part to skip when the level is known');
   {
     const s = stub([words('Hello again!')]);
@@ -150,6 +165,8 @@ async function main() {
   check('an estimated level seeds it as from this lesson, ahead of a remembered one', JSON.stringify(v2SeedWorkingLevel(newV2State(1), { known: 'advanced', estimated: 'beginner' }).workingLevel) === JSON.stringify({ level: 'beginner', from: 'this_lesson' }));
   const held = withLevel({ level: 'intermediate', from: 'this_lesson' });
   check('a level the state already holds is kept, and the same state object comes back', v2SeedWorkingLevel(held, { known: 'advanced', estimated: 'beginner' }) === held);
+  check('a remembered level that arrives after the student has replied is not taken (review M1)', !v2SeedWorkingLevel(replied(newV2State(1), 1), { known: 'advanced' }).workingLevel);
+  check('an estimate is still taken after replies', v2SeedWorkingLevel(replied(newV2State(1), 3), { known: 'advanced', estimated: 'beginner' }).workingLevel?.level === 'beginner');
   const none = newV2State(1);
   check('nothing to seed: the same state object comes back', v2SeedWorkingLevel(none, {}) === none);
 
