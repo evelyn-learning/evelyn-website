@@ -12,6 +12,7 @@ import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from '
 import { v2WorkingLevelFacts } from './working-level';
 import { v2PronunciationFacts } from './pronunciation';
 import { v2SentenceCardsFacts } from './sentence-cards';
+import { v2PartDueFact, v2WrapDue } from './time-box';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
@@ -57,7 +58,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Homework: a solved problem does not go on spending the student's minutes.
     session.homework || session.homeworkSheet
       ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left` : 'the time is up'}` : ''}; the session ends when ${session.homeworkSheet ? 'the sheet' : 'this problem'} is done`
-      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
+      // Past the host's wrap minute the wrap is said here, a fact for the next reply: spoken into the lesson by the client
+      // on v1, it cut into the menu the tutor was reading (tester-2, time-box.ts).
+      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > V2_TIME_UP_MIN && v2WrapDue(session, (f.nowMs - state.startedAtMs) / 60000) ? `about ${Math.round(left)} minutes left: finish this exchange, then summary` : left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
@@ -66,6 +69,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   else if (session.homeworkSheet) lines.push(...v2SheetFacts(session.homeworkSheet, state.homework?.sheet));
   if (session.homework || session.homeworkSheet) lines.push(...v2HomeworkGuardFacts(state.homework));
   else if (session.plan) lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
+  // Where the parts' minutes put the lesson now, so it paces itself to the box (time-box.ts).
+  const partDue = v2PartDueFact(session, state, f.nowMs);
+  if (partDue) lines.push(partDue);
   // The working level, every turn, so the language, questions and corrections stay at it (working-level.ts).
   lines.push(...v2WorkingLevelFacts(session, state, f.heard));
   // A measured score, or that there is none: the only ground for a word on how they sounded (pronunciation.ts).

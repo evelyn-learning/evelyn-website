@@ -13,6 +13,8 @@ export interface V2ClientSession {
   /** The session's teaching languages, the lesson's own first (types.ts V2Session). */
   languages?: string[];
   timeBoxMinutes?: number;
+  /** The host's wrap minute (types.ts V2Session). */
+  wrapMinutes?: number;
   lessonPlanId?: string;
   /** What the student asked to learn, when there is no lesson plan (a topic typed on the demo page, a partner's free practice). */
   topic?: string;

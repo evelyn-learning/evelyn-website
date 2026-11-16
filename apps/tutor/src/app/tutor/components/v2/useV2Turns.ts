@@ -26,7 +26,9 @@ import { SentenceStream } from '@/lib/tutor/v2/sentences';
 import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
-import { TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
+import { v2HardStop } from '@/lib/tutor/v2/time-box';
+import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
 import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { v2LevelEstimateDue, v2SeedWorkingLevel, v2WorkingLevelCommit } from '@/lib/tutor/v2/working-level';
 import { v2WithPronunciationHeard, type V2PronunciationHeard } from '@/lib/tutor/v2/pronunciation';
@@ -39,6 +41,12 @@ export interface V2TurnsConfig {
   lessonPlanId?: string;
   embedToken?: string;
   sessionMaxMinutes?: number;
+  /** The host's wrap minute, two before the box (partner-pool.ts `poolTimeBox`, the embed page's `wrap_at_minutes`):
+   *  from it the facts tell the tutor to finish the exchange and summarise (v2/time-box.ts). */
+  sessionWrapMinutes?: number;
+  /** The partner's `lessonCloseAutoEnd` (partner-session-options.ts, on by default; TUTOR_LESSON_CLOSE_AUTO_END):
+   *  off, the tutor's close leaves the session open for the student or the host to end. */
+  lessonCloseAutoEnd?: boolean;
   /** The teacher persona's name and manner, and whether this is a free trial (types.ts V2Session). */
   teacher?: { name: string; nameIsRole?: boolean; style?: string };
   trial?: boolean;
@@ -97,6 +105,9 @@ export interface V2TurnsConfig {
   heardSoFar?: () => string | null;
   /** How long after the closing words the session ends. Voice passes a function that waits for the speech to finish. */
   closeDelayMs?: number | (() => Promise<void>);
+  /** Voice, at the box: resolves once the tutor's speech under way has finished (true), or at `maxMs` with it still
+   *  going (false). Absent (text): nothing is playing. */
+  untilQuiet?: (maxMs: number) => Promise<boolean>;
 }
 
 const CLOSE_READ_MS = 4000;
@@ -251,6 +262,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       studentName: p.current.studentName, subject: p.current.subject, level: p.current.level, mode: p.current.mode,
       ...((p.current.tutorLanguages?.length ?? 0) > 1 ? { languages: p.current.tutorLanguages } : {}),
       ...(p.current.sessionMaxMinutes ? { timeBoxMinutes: p.current.sessionMaxMinutes } : {}),
+      ...(p.current.sessionMaxMinutes && p.current.sessionWrapMinutes ? { wrapMinutes: p.current.sessionWrapMinutes } : {}),
       ...(p.current.lessonPlanId ? { lessonPlanId: p.current.lessonPlanId } : {}),
       ...(p.current.topic && !p.current.lessonPlanId ? { topic: p.current.topic } : {}),
       ...(p.current.background?.length || memoryRef.current.length ? { background: [...(p.current.background ?? []), ...memoryRef.current].slice(0, V2_BACKGROUND_MAX_LINES) } : {}),
@@ -360,10 +372,14 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         // button does (homework-build/outcome.ts): done when every part is, needs review otherwise.
         if (homeworkProblemOf(planRef.current as { metadata?: Record<string, unknown> } | null)) p.current.onDebugEvent?.('homework_session_closed', 'end_lesson');
         p.current.onLessonClosed?.('end_lesson');
-        endingRef.current = true;
-        const wait = p.current.closeDelayMs;
-        if (typeof wait === 'function') void wait().then(() => p.current.onEndSession?.());
-        else setTimeout(() => p.current.onEndSession?.(), wait ?? CLOSE_READ_MS);
+        // A partner that keeps the session open after the close (lessonCloseAutoEnd off, as v1 reads it) leaves the end
+        // to the student or the host; the box still ends it (armHardStop). No turn runs either way: the state is closed.
+        if (TUTOR_LESSON_CLOSE_AUTO_END && p.current.lessonCloseAutoEnd !== false) {
+          endingRef.current = true;
+          const wait = p.current.closeDelayMs;
+          if (typeof wait === 'function') void wait().then(() => p.current.onEndSession?.());
+          else setTimeout(() => p.current.onEndSession?.(), wait ?? CLOSE_READ_MS);
+        } else p.current.onDebugEvent?.('lesson_closed_stays_open', 'the partner ends the session itself (lessonCloseAutoEnd off)');
       }
     } catch (err) {
       if (abort.signal.aborted) {
@@ -390,9 +406,6 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     }
   }, []);
 
-  // The time box is a hard stop, as it is in v1: partner minute pools and demo limits depend on a
-  // session not running past it. The tutor is told the time every turn and closes by itself well
-  // before this in the normal case; this is the backstop.
   // What the engine remembers of this student (memory.ts): read as the page loads, committed when the session
   // ends, however it ends. A session of a few exchanges or fewer leaves nothing worth remembering.
   const memoryRef = useRef<string[]>([]); const committedAtRef = useRef(0); const committedLevelRef = useRef(''); const needsPracticeRef = useRef<string[]>([]); const sentMasteryRef = useRef<Set<string>>(new Set()); const memoryReadyRef = useRef<Promise<unknown>>(Promise.resolve());
@@ -461,6 +474,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     })();
   }, []);
 
+  // The time box is a hard stop, as it is in v1: partner minute pools and demo limits depend on a
+  // session not running past it. The tutor is told the time every turn, the wrap among it, and closes by
+  // itself before this in the normal case; this is the backstop. It ends with a goodbye, said after the
+  // tutor's speech under way (v2/time-box.ts): v2 ended mid-sentence with none.
   const hardStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const armHardStop = useCallback(() => {
     const minutes = p.current.sessionMaxMinutes;
@@ -468,11 +485,25 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     hardStopRef.current = setTimeout(() => {
       if (endingRef.current) return;
       endingRef.current = true;
-      abortRef.current?.abort();
-      p.current.onCut?.();
       p.current.onDebugEvent?.('v2_time_limit', `${minutes} min`);
-      commitProfile(true);
-      p.current.onEndSession?.('time_limit');
+      // A lesson that has already said its goodbye (kept open by its partner) is not said goodbye to twice.
+      const farewell = TUTOR_V2_TIME_BOX && !stateRef.current.closed ? goodbyeLine(p.current.studentName) : null;
+      // The microphone closes: the student's words are no longer answered, and must not cut the goodbye.
+      if (farewell) setClosed(true);
+      const wait = p.current.closeDelayMs;
+      void v2HardStop({
+        stopTurn: () => abortRef.current?.abort(),
+        ...(p.current.untilQuiet ? { untilQuiet: p.current.untilQuiet } : {}),
+        cut: () => p.current.onCut?.(),
+        say: (line) => {
+          transcriptRef.current = [...transcriptRef.current, { id: `tutor-time-up-${Date.now()}`, timestamp: new Date(), role: 'tutor', text: line }]; publish();
+          p.current.onSentence?.(line, true);
+        },
+        commit: () => commitProfile(true),
+        afterGoodbye: () => (typeof wait === 'function' ? wait() : new Promise<void>((r) => setTimeout(r, wait ?? CLOSE_READ_MS))),
+        end: () => p.current.onEndSession?.('time_limit'),
+        log: (type, message) => p.current.onDebugEvent?.(type, message),
+      }, farewell);
     // A resumed session's box runs from when the lesson first began.
     }, Math.max(5000, minutes * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
   }, []);

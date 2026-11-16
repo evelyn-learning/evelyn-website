@@ -28,6 +28,9 @@ export interface V2Session {
   languages?: string[];
   /** Minutes the session is meant to last, when there is a box. */
   timeBoxMinutes?: number;
+  /** The minute the host's wrap starts, two before the box (partner-pool.ts `poolTimeBox`, the embed page's
+   *  `wrap_at_minutes`): from it the facts say to finish the exchange and summarise (time-box.ts). */
+  wrapMinutes?: number;
   plan?: LessonPlan;
   /** The teacher the tutor speaks as, when the session names one. */
   teacher?: { name: string; nameIsRole?: boolean; style?: string };

@@ -7,14 +7,14 @@
  * handle the parent talks to. The parent keeps doing what it did for v1: it
  * renders the transcript and the board and saves the session.
  *
- * Not here yet: resume from a checkpoint, the agenda rail, the hard time stop.
+ * Not here yet: resume from a checkpoint, the agenda rail.
  */
 import { useCallback, useEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from 'react';
 import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 
-export interface TutorClientV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs'> {
+export interface TutorClientV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs' | 'untilQuiet'> {
   standby?: boolean;
   prewarm?: boolean;
   composerSlot?: ReactNode;

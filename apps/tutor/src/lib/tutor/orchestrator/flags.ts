@@ -1606,3 +1606,11 @@ export const TUTOR_V2_PLAN_AS_WRITTEN = process.env.NEXT_PUBLIC_TUTOR_V2_PLAN_AS
  *  turns of 29, and the learner only heard them. Default ON; NEXT_PUBLIC_TUTOR_V2_SENTENCE_CARDS=off ⇒ no section, no
  *  facts line (the session part and facts as before), and a `<board sentence>` block is dropped unpainted. */
 export const TUTOR_V2_SENTENCE_CARDS = process.env.NEXT_PUBLIC_TUTOR_V2_SENTENCE_CARDS !== 'off';
+
+/** Tutor brain v2 (v2/time-box.ts): the time box. Every turn's facts say which part of a written plan the parts' minutes
+ *  put the lesson on (fitted to the box when they add up to more); past the host's wrap minute (two before the box) the
+ *  time line reads "about 2 minutes left: finish this exchange, then summary"; at the box the tutor's speech under way
+ *  finishes (bounded) and a fixed goodbye is spoken before the session ends. On v1 the spoken wrap line cut into a menu
+ *  the tutor was reading (tester-2), and v2 ended at the box mid-sentence with no goodbye. Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_TIME_BOX=off ⇒ no part line, no wrap, and the box cuts and ends at once, as before. */
+export const TUTOR_V2_TIME_BOX = process.env.NEXT_PUBLIC_TUTOR_V2_TIME_BOX !== 'off';

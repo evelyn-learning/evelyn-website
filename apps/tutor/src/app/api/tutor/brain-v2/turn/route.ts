@@ -31,7 +31,7 @@ const SSE_HEADERS = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-
 const MAX_STUDENT_CHARS = 8000;
 
 interface TurnBody {
-  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; languages?: unknown; timeBoxMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown; levelCheck?: unknown; pronunciation?: unknown };
+  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; languages?: unknown; timeBoxMinutes?: unknown; wrapMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown; levelCheck?: unknown; pronunciation?: unknown };
   state?: unknown;
   studentSaid?: unknown;
   silenceSeconds?: unknown;
@@ -97,6 +97,8 @@ export async function POST(req: NextRequest) {
     mode: cfg.mode === 'voice' ? 'voice' : 'text',
     ...(languages ? { languages: [...languages] } : {}),
     ...(typeof cfg.timeBoxMinutes === 'number' && cfg.timeBoxMinutes > 0 ? { timeBoxMinutes: Math.min(180, Math.round(cfg.timeBoxMinutes)) } : {}),
+    // The wrap minute counts only inside a box (time-box.ts).
+    ...(typeof cfg.timeBoxMinutes === 'number' && typeof cfg.wrapMinutes === 'number' && cfg.wrapMinutes > 0 && cfg.wrapMinutes < cfg.timeBoxMinutes ? { wrapMinutes: Math.round(cfg.wrapMinutes) } : {}),
     ...(background.length ? { background } : {}),
     ...(teacher ? { teacher } : {}),
     ...(cfg.trial === true ? { trial: true } : {}),

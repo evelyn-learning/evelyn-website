@@ -50,7 +50,7 @@ import { outsideMathSpans, speakBonds, speakCoefficientLetters, speakDataRuns, s
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
-export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs'> {
+export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs' | 'untilQuiet'> {
   voice?: OpenAIVoice;
   ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
   cartesiaVoiceId?: string;
@@ -359,6 +359,15 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       while (Date.now() < end && realtimeRef.current?.isSpeechPending()) await new Promise((r) => setTimeout(r, 300));
       await new Promise((r) => setTimeout(r, 1200));
     },
+    // At the box (v2/time-box.ts): the goodbye waits for the sentence under way. A reply the student had come in over
+    // (paused) is theirs now: its rest is dropped, not played before the goodbye.
+    untilQuiet: async (maxMs) => {
+      clearSilence();
+      if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; soundPauseRef.current = false; void realtimeRef.current?.clearSpeechQueue(); dropBoard(); }
+      const end = Date.now() + maxMs;
+      while (Date.now() < end && realtimeRef.current?.isSpeechPending()) await new Promise((r) => setTimeout(r, 300));
+      return !realtimeRef.current?.isSpeechPending();
+    },
   });
   turnsRef.current = turns;
 
@@ -393,6 +402,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     const text = transcript.trim();
     if (!text) return;
     if (flagRef.current.active) { flagRef.current.words.push(text); return; }
+    // The session is ending (the close, or the box): nothing is answered now, and clearing the speech queue for these
+    // words would cut the goodbye.
+    if (turnsRef.current?.isEnding()) { p.current.onDebugEvent?.('v2_heard_while_ending', text.slice(0, 80)); return; }
     // The microphone hears the tutor too. Words that are the tutor's own, arriving while it speaks, are not the student.
     if (!opts?.typed && realtimeRef.current?.isSpeechPending() && isOwnVoice(text, spokenRef.current)) {
       p.current.onDebugEvent?.('v2_own_voice_dropped', text.slice(0, 80));

@@ -236,6 +236,7 @@
     "test:brain-v2-pronunciation": "npx tsx scripts/test-brain-v2-pronunciation.ts",
     "test:brain-v2-working-level": "npx tsx scripts/test-brain-v2-working-level.ts",
     "test:brain-v2-sentence-cards": "npx tsx scripts/test-brain-v2-sentence-cards.ts",
+    "test:brain-v2-time-box": "npx tsx scripts/test-brain-v2-time-box.ts",
     "test:replay-harness": "npx tsx scripts/tutor/replay-harness/replay-harness.test.ts",
     "live:replay": "npx tsx scripts/tutor/replay-harness/run-replay.ts",
     "test:active-problem-block": "npx tsx scripts/test-active-problem-block.ts",

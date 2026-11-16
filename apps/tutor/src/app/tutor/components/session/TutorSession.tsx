@@ -1752,6 +1752,8 @@ export default function TutorSession(props: TutorSessionProps) {
           levelCheck={levelCheck}
           pronunciation={pronunciation}
           sessionMaxMinutes={sessionMaxMinutes}
+          sessionWrapMinutes={sessionWrapMinutes}
+          lessonCloseAutoEnd={lessonCloseAutoEnd}
           composerSlot={videoBtn}
           handleRef={realtimeHandleRef}
           voice={voice}
@@ -1797,6 +1799,8 @@ export default function TutorSession(props: TutorSessionProps) {
           prewarm={prewarm}
           tutorLanguages={tutorLanguages}
           sessionMaxMinutes={sessionMaxMinutes}
+          sessionWrapMinutes={sessionWrapMinutes}
+          lessonCloseAutoEnd={lessonCloseAutoEnd}
           composerSlot={videoBtn}
           handleRef={realtimeHandleRef}
           onTranscriptUpdate={handleVoiceTranscriptUpdate}
