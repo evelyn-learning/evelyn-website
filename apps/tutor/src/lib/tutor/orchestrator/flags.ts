@@ -1612,5 +1612,7 @@ export const TUTOR_V2_SENTENCE_CARDS = process.env.NEXT_PUBLIC_TUTOR_V2_SENTENCE
  *  time line reads "about 2 minutes left: finish this exchange, then summary"; at the box the tutor's speech under way
  *  finishes (bounded) and a fixed goodbye is spoken before the session ends. On v1 the spoken wrap line cut into a menu
  *  the tutor was reading (tester-2), and v2 ended at the box mid-sentence with no goodbye. Default ON;
- *  NEXT_PUBLIC_TUTOR_V2_TIME_BOX=off ⇒ no part line, no wrap, and the box cuts and ends at once, as before. */
+ *  NEXT_PUBLIC_TUTOR_V2_TIME_BOX=off ⇒ no part line, no wrap, and the box cuts and ends at once, as before. Not under
+ *  it: a v2 voice session ignores words heard once it is ending (they cut the goodbye, and nothing answers them), and the
+ *  close follows the partner's lessonCloseAutoEnd (TUTOR_LESSON_CLOSE_AUTO_END is that switch). */
 export const TUTOR_V2_TIME_BOX = process.env.NEXT_PUBLIC_TUTOR_V2_TIME_BOX !== 'off';

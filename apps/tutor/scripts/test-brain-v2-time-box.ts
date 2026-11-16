@@ -40,6 +40,8 @@ const PLAN = {
     { id: 'summary', kind: 'recap', goal: 'Summary', estimatedMinutes: 2, metadata: { label: 'Summary' } },
   ],
 } as unknown as LessonPlan;
+// 1 + 2 + 3 + 4 + 3 + 2 = 15 minutes, for a 30-minute box.
+const SHORT = { ...PLAN, segments: PLAN.segments.map((s, i) => ({ ...s, estimatedMinutes: [1, 2, 3, 4, 3, 2][i] })) } as unknown as LessonPlan;
 const LONG = { ...PLAN, segments: PLAN.segments.map((s) => ({ ...s, estimatedMinutes: (s.estimatedMinutes ?? 0) + 1 })) } as unknown as LessonPlan; // 26 min
 const lesson: V2Session = { studentName: 'Ken', subject: 'English', level: 'adult', mode: 'voice', timeBoxMinutes: 20, wrapMinutes: 18, plan: PLAN, languages: ['en', 'ja'] };
 const at = (min: number) => ({ state: newV2State(0), nowMs: min * MIN });
@@ -55,16 +57,18 @@ async function main() {
     check('at 0 min: the first part, minutes 0–2', p0 !== null && p0 !== 'done' && p0.id === 'overview' && p0.n === 1 && p0.of === 6 && p0.fromMin === 0 && p0.toMin === 2 && !p0.fitted, p0);
     check('at 6 min: the third part (past simple, minutes 5–10)', p6 !== null && p6 !== 'done' && p6.id === 'past' && p6.label === 'Past simple' && p6.fromMin === 5 && p6.toMin === 10, p6);
     check('at 19 min: the summary', p19 !== null && p19 !== 'done' && p19.id === 'summary', p19);
-    check('past the plan\'s minutes: done', v2PartDueNow(PLAN, g, 20.5, 25) === 'done');
+    check('past the box: done', v2PartDueNow(PLAN, g, 20.5, 20) === 'done');
     const skipped = { level: { status: 'skipped' as const } };
     const s6 = v2PartDueNow(PLAN, skipped, 6, 20);
-    check('a skipped part takes no minutes: at 6 min with the level known, past simple (minutes 2–7, part 2 of 5)', s6 !== null && s6 !== 'done' && s6.id === 'past' && s6.n === 2 && s6.of === 5 && s6.toMin === 7, s6);
-    const s8 = v2PartDueNow(PLAN, skipped, 8, 20);
-    check('…and at 8 min, present perfect', s8 !== null && s8 !== 'done' && s8.id === 'perfect', s8);
+    check('a skipped part takes no minutes, and the other 17 fill the 20-minute box: at 6 min with the level known, past simple (part 2 of 5, to minute 8)', s6 !== null && s6 !== 'done' && s6.id === 'past' && s6.n === 2 && s6.of === 5 && s6.toMin === 8 && s6.planMin === 17, s6);
+    const s8 = v2PartDueNow(PLAN, skipped, 9, 20);
+    check('…and at 9 min, present perfect', s8 !== null && s8 !== 'done' && s8.id === 'perfect', s8);
     const f = v2PartDueNow(LONG, g, 19, 20);
     check('a plan longer than the box is fitted to it: at 19 of 20 min the 26-minute plan is on its summary', f !== null && f !== 'done' && f.id === 'summary' && f.fitted && f.toMin === 20, f);
-    const unfitted = v2PartDueNow(LONG, g, 19, undefined);
-    check('…with no box, the plan\'s own minutes', unfitted !== null && unfitted !== 'done' && unfitted.id === 'pron' && unfitted.fromMin === 19 && !unfitted.fitted, unfitted);
+    check('no box: nothing to pace to, no answer (review 5a I2)', v2PartDueNow(LONG, g, 19, undefined) === null && v2PartDueNow(PLAN, g, 3, 0) === null);
+    const sh = v2PartDueNow(SHORT, g, 15, 30);
+    check('a 15-minute plan in a 30-minute box runs at half speed: at 15 min, plan minute 7.5, present perfect (box minutes 12–20)', sh !== null && sh !== 'done' && sh.id === 'perfect' && sh.fromMin === 12 && sh.toMin === 20 && sh.fitted && sh.planMin === 15, sh);
+    check('…and is not done at 29 min', (() => { const x = v2PartDueNow(SHORT, g, 29, 30); return x !== null && x !== 'done' && x.id === 'summary'; })());
     const noMinutes = { ...PLAN, segments: PLAN.segments.map((s, i) => (i === 2 ? { ...s, estimatedMinutes: undefined } : s)) } as unknown as LessonPlan;
     check('a part with no minutes: no answer', v2PartDueNow(noMinutes, g, 6, 20) === null);
   }
@@ -83,13 +87,23 @@ async function main() {
     check('no wrap minute from the host: "the close is near", as before', /about 2 left: the close is near/.test(noWrap) && !/finish this exchange/.test(noWrap), noWrap);
     check('before the wrap minute: no wrap', !/finish this exchange/.test(renderFacts(lesson, at(17.5).state, { nowMs: at(17.5).nowMs })));
     const fitted = renderFacts({ ...lesson, plan: LONG }, at(19).state, { nowMs: at(19).nowMs });
-    check('a fitted plan says so', fitted.includes('fitted to the 20-minute box'), fitted);
-    check('the kill switch off: no part line, no wrap', v2PartDueFact(lesson, at(10).state, at(10).nowMs, false) === null && !v2WrapDue(lesson, 18.2, false));
+    check('a fitted plan says so', fitted.includes('the plan\'s 26 minutes fitted to the 20-minute box'), fitted);
+    const short = { ...lesson, timeBoxMinutes: 30, wrapMinutes: 28, plan: SHORT };
+    const s15 = renderFacts(short, at(15).state, { nowMs: at(15).nowMs });
+    check('a 15-minute plan, 15 min into a 30-minute box: its middle part, scaled, and never "every part\'s time has passed" beside "time for more"', s15.includes('[perfect] Present perfect would be running now (part 4 of 6, minutes 12–20, the plan\'s 15 minutes fitted to the 30-minute box)') && !/every part's time has passed/.test(s15) && /time for more/.test(s15), s15);
+    const untimed = renderFacts({ ...lesson, timeBoxMinutes: undefined, wrapMinutes: undefined }, at(25).state, { nowMs: at(25).nowMs });
+    check('no box: no part line at all, even past the plan\'s minutes', !/by the plan's minutes/.test(untimed), untimed);
+    const over = renderFacts({ ...lesson, wrapMinutes: undefined }, at(20.2).state, { nowMs: at(20.2).nowMs });
+    check('past the box, the time up: every part\'s time has passed', /the time is up/.test(over) && over.includes('by the plan\'s minutes: every part\'s time has passed'), over);
+    check('"every part\'s time has passed" only when the time is up or the wrap is due', v2PartDueFact({ ...lesson, wrapMinutes: undefined }, at(20.2).state, at(20.2).nowMs, false) === null && v2PartDueFact(lesson, at(20.2).state, at(20.2).nowMs, false) !== null);
+    const noMin = renderFacts({ ...lesson, plan: { ...PLAN, segments: PLAN.segments.map((s, i) => (i === 2 ? { ...s, estimatedMinutes: undefined } : s)) } as unknown as LessonPlan }, at(10).state, { nowMs: at(10).nowMs });
+    check('a part with no minutes: no part line', !/by the plan's minutes/.test(noMin), noMin);
+    check('the kill switch off: no part line, no wrap', v2PartDueFact(lesson, at(10).state, at(10).nowMs, false, false) === null && !v2WrapDue(lesson, 18.2, false));
     const hw: V2Session = { ...lesson, homework: { text: 'Solve 2x = 6.', verified: false, hasFigure: false } };
-    check('homework: no part line, and its own time line', v2PartDueFact(hw, at(10).state, at(10).nowMs) === null && !/finish this exchange/.test(renderFacts(hw, at(18.2).state, { nowMs: at(18.2).nowMs })));
+    check('homework: no part line, and its own time line', v2PartDueFact(hw, at(10).state, at(10).nowMs, false) === null && !/finish this exchange/.test(renderFacts(hw, at(18.2).state, { nowMs: at(18.2).nowMs })));
     const disc = { ...lesson, plan: { ...PLAN, metadata: { kind: DISCUSSION_PLAN_KIND, participant: 'a teacher', orientation: 'cars in cities', cases: [{ id: 'c1', scenario: 'A city bans cars.' }] } } as unknown as LessonPlan };
-    check('a discussion: no part line', v2PartDueFact(disc, at(10).state, at(10).nowMs) === null);
-    check('a topic lesson with no plan: no part line', v2PartDueFact({ ...lesson, plan: undefined }, at(10).state, at(10).nowMs) === null);
+    check('a discussion: no part line', v2PartDueFact(disc, at(10).state, at(10).nowMs, false) === null);
+    check('a topic lesson with no plan: no part line', v2PartDueFact({ ...lesson, plan: undefined }, at(10).state, at(10).nowMs, false) === null);
     check('the wrap needs a box', !v2WrapDue({ wrapMinutes: 18 }, 19));
   }
 
@@ -112,16 +126,17 @@ async function main() {
 
   console.log('the stop at the box');
   {
-    const run = async (opts: { quiet?: boolean; voice?: boolean; farewell: string | null }) => {
-      const order: string[] = [];
+    const run = async (opts: { quiet?: boolean; voice?: boolean; farewell: string | null; endedDuring?: 'tail' | 'goodbye' }) => {
+      const order: string[] = []; let ended = false;
       const steps: V2HardStopSteps = {
         stopTurn: () => order.push('stopTurn'),
-        ...(opts.voice ? { untilQuiet: async (ms: number) => { order.push(`untilQuiet(${ms})`); return opts.quiet ?? true; } } : {}),
+        ...(opts.voice ? { untilQuiet: async (ms: number) => { order.push(`untilQuiet(${ms})`); if (opts.endedDuring === 'tail') ended = true; return opts.quiet ?? true; } } : {}),
         cut: () => order.push('cut'),
         say: (l) => order.push(`say:${l}`),
         commit: () => order.push('commit'),
-        afterGoodbye: async () => { order.push('afterGoodbye'); },
+        afterGoodbye: async () => { order.push('afterGoodbye'); if (opts.endedDuring === 'goodbye') ended = true; },
         end: () => order.push('end'),
+        ended: () => ended,
       };
       await v2HardStop(steps, opts.farewell);
       return order;
@@ -137,6 +152,14 @@ async function main() {
     check('text: the goodbye is written, then the end', JSON.stringify(text) === JSON.stringify(['stopTurn', `say:${bye}`, 'commit', 'afterGoodbye', 'end']), text);
     const off = await run({ voice: true, farewell: null });
     check('no goodbye (kill switch off, or the lesson already closed): cut and end at once, as before', JSON.stringify(off) === JSON.stringify(['stopTurn', 'cut', 'commit', 'end']), off);
+    const endTail = await run({ voice: true, quiet: true, farewell: bye, endedDuring: 'tail' });
+    check('ended (End button, host) while the last words played: no goodbye, no second commit, no second end (review 5a I1)', JSON.stringify(endTail) === JSON.stringify(['stopTurn', `untilQuiet(${V2_HARD_STOP_TAIL_MAX_MS})`]), endTail);
+    const endTailLong = await run({ voice: true, quiet: false, farewell: bye, endedDuring: 'tail' });
+    check('…nor a cut when it ended with speech still going (the end already stopped it)', JSON.stringify(endTailLong) === JSON.stringify(['stopTurn', `untilQuiet(${V2_HARD_STOP_TAIL_MAX_MS})`]), endTailLong);
+    const endBye = await run({ voice: true, quiet: true, farewell: bye, endedDuring: 'goodbye' });
+    check('ended while the goodbye played: no second end', JSON.stringify(endBye) === JSON.stringify(['stopTurn', `untilQuiet(${V2_HARD_STOP_TAIL_MAX_MS})`, `say:${bye}`, 'commit', 'afterGoodbye']), endBye);
+    const endText = await run({ farewell: bye, endedDuring: 'goodbye' });
+    check('text, ended in the 4 s after the goodbye: no second end', !endText.includes('end'), endText);
   }
 
   console.log('the box: the tighter of the link\'s and the pool\'s, wrap two minutes before');
@@ -160,6 +183,12 @@ async function main() {
     const turns = src('src/app/tutor/components/v2/useV2Turns.ts');
     check('the turn loop sends the wrap minute with the box', /wrapMinutes: p\.current\.sessionWrapMinutes/.test(turns));
     check('the hard stop goes through v2HardStop with v1\'s goodbye line', /v2HardStop\(/.test(turns) && /goodbyeLine\(/.test(turns));
+    check('the session ends once: every end goes through endOnce, the hard stop is told when it has ended, end() returns before its farewell when already ended, and unmounting counts as ended',
+      /const endOnce = \(reason\?: 'time_limit'\) => \{ if \(endedRef\.current\) return; endedRef\.current = true; p\.current\.onEndSession\?\.\(reason\); \}/.test(turns)
+      && !/p\.current\.onEndSession\?\.\(/.test(turns.replace(/const endOnce = [^\n]*/, ''))
+      && /ended: \(\) => endedRef\.current/.test(turns)
+      && /if \(endedRef\.current\) return;\n\s*const farewell = opts\?\.farewell/.test(turns)
+      && /return \(\) => \{ endedRef\.current = true;/.test(turns));
     check('the lesson\'s close ends the session only when the partner keeps auto-end on', /TUTOR_LESSON_CLOSE_AUTO_END && p\.current\.lessonCloseAutoEnd !== false/.test(turns));
     const route = src('src/app/api/tutor/brain-v2/turn/route.ts');
     check('the route reads the wrap minute, below the box', /wrapMinutes/.test(route) && /cfg\.wrapMinutes < cfg\.timeBoxMinutes/.test(route));

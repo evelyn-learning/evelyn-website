@@ -30,23 +30,29 @@ export interface V2PartDue {
   /** 1-based, among the parts that count (a skipped part does not). */
   n: number; of: number;
   fromMin: number; toMin: number;
-  /** The plan's minutes add up to more than the box, and were scaled down to fit it. */
+  /** The plan's minutes add up to something other than the box, and were scaled to it. */
   fitted: boolean;
+  /** The plan's own total, in minutes. */
+  planMin: number;
 }
 
-/** Which part of the plan should be running after `usedMin` minutes, by the parts' estimated minutes; fitted to the box
- *  when they add up to more. 'done': every part's time is past. null: a part that counts has no minutes. */
+/** Which part of the plan should be running after `usedMin` minutes of a `boxMin`-minute box, by the parts' estimated
+ *  minutes scaled to the box both ways: a 26-minute plan is squeezed into 20, and a 15-minute plan in a 30-minute box
+ *  runs at half speed (unscaled, it read "every part's time has passed" at 15 minutes beside "about 15 left, which is
+ *  time for more", review 5a I2). 'done': the box's time is past. null: no box (nothing to pace to), or a part that
+ *  counts has no minutes. */
 export function v2PartDueNow(plan: LessonPlan, goals: V2State['goals'], usedMin: number, boxMin?: number): V2PartDue | 'done' | null {
+  if (!boxMin || !(boxMin > 0)) return null;
   const parts = plan.segments.filter((s) => goals[s.id]?.status !== 'skipped').map((s) => ({ seg: s, part: v2PartOf(s) }));
   if (!parts.length || parts.some(({ part }) => !part.minutes)) return null;
   const total = parts.reduce((t, { part }) => t + (part.minutes ?? 0), 0);
-  const fitted = !!boxMin && total > boxMin;
-  const scale = fitted ? boxMin! / total : 1;
+  const fitted = total !== boxMin;
+  const scale = boxMin / total;
   let at = 0;
   for (let i = 0; i < parts.length; i += 1) {
     const { seg, part } = parts[i];
     const to = at + (part.minutes ?? 0) * scale;
-    if (usedMin < to) return { id: seg.id, ...(part.label ? { label: part.label } : {}), n: i + 1, of: parts.length, fromMin: Math.round(at), toMin: Math.round(to), fitted };
+    if (usedMin < to) return { id: seg.id, ...(part.label ? { label: part.label } : {}), n: i + 1, of: parts.length, fromMin: Math.round(at), toMin: Math.round(to), fitted, planMin: total };
     at = to;
   }
   return 'done';
@@ -55,14 +61,16 @@ export function v2PartDueNow(plan: LessonPlan, goals: V2State['goals'], usedMin:
 /** The facts line for where the lesson should be by the clock (facts.ts), or null. A lesson plan's parts carry their
  *  minutes and the tutor was told only the total used: a 20-minute partner sitting began its summary at 18:54
  *  (tester-2), and a timed lesson can overrun its box. Facts only: which part the minutes put
- *  here, not an order to move on. A discussion and homework are paced by their own lines. */
-export function v2PartDueFact(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_TIME_BOX): string | null {
-  if (!on || !session.plan || session.homework || session.homeworkSheet || discussionOf(session.plan)) return null;
+ *  here, not an order to move on. A discussion and homework are paced by their own lines; a lesson with no box has
+ *  nothing to pace to. `timeUp`: the facts' time-up window (facts.ts V2_TIME_UP_MIN); "every part's time has passed" is
+ *  said only then or past the wrap minute, never while the box has time left. */
+export function v2PartDueFact(session: V2Session, state: V2State, nowMs: number, timeUp: boolean, on: boolean = TUTOR_V2_TIME_BOX): string | null {
+  if (!on || !session.plan || !session.timeBoxMinutes || session.homework || session.homeworkSheet || discussionOf(session.plan)) return null;
   const usedMin = Math.max(0, (nowMs - state.startedAtMs) / 60000);
   const due = v2PartDueNow(session.plan, state.goals, usedMin, session.timeBoxMinutes);
   if (!due) return null;
-  if (due === 'done') return 'by the plan\'s minutes: every part\'s time has passed';
-  const within = due.fitted ? `, the plan's minutes fitted to the ${session.timeBoxMinutes}-minute box` : '';
+  if (due === 'done') return timeUp || v2WrapDue(session, usedMin, on) ? 'by the plan\'s minutes: every part\'s time has passed' : null;
+  const within = due.fitted ? `, the plan's ${due.planMin} minutes fitted to the ${session.timeBoxMinutes}-minute box` : '';
   return `by the plan's minutes: [${due.id}]${due.label ? ` ${due.label}` : ''} would be running now (part ${due.n} of ${due.of}, minutes ${due.fromMin}–${due.toMin}${within})`;
 }
 
@@ -81,6 +89,9 @@ export interface V2HardStopSteps {
   /** Wait for the goodbye to be heard (or read). */
   afterGoodbye: () => Promise<void>;
   end: () => void;
+  /** The session has already ended some other way (the End button, the host's end, the page going away): checked after
+   *  each wait, so a stop no longer wanted says no goodbye, commits nothing more and does not end it twice (review 5a I1). */
+  ended?: () => boolean;
   log?: (type: string, message: string) => void;
 }
 
@@ -90,13 +101,16 @@ export interface V2HardStopSteps {
 export async function v2HardStop(s: V2HardStopSteps, farewell: string | null): Promise<void> {
   s.stopTurn();
   if (!farewell) { s.cut(); s.commit(); s.end(); return; }
+  const gone = (where: string) => { if (!s.ended?.()) return false; s.log?.('v2_time_limit_superseded', `the session ended ${where}: the stop at the box does nothing more`); return true; };
   if (s.untilQuiet) {
     const quiet = await s.untilQuiet(V2_HARD_STOP_TAIL_MAX_MS);
+    if (gone('while the last words played')) return;
     if (!quiet) { s.log?.('v2_time_limit_tail_cut', `speech still going after ${V2_HARD_STOP_TAIL_MAX_MS / 1000} s`); s.cut(); }
   }
   s.say(farewell);
   s.log?.('v2_time_limit_goodbye', farewell);
   s.commit();
   await s.afterGoodbye();
+  if (gone('while the goodbye played')) return;
   s.end();
 }

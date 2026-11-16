@@ -194,6 +194,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const openedRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const endingRef = useRef(false);
+  // onEndSession has been called (the close, the box, the End button or the host), or the page has gone: nothing ends
+  // the session a second time (review 5a I1).
+  const endedRef = useRef(false);
+  const endOnce = (reason?: 'time_limit') => { if (endedRef.current) return; endedRef.current = true; p.current.onEndSession?.(reason); };
   const homeworkDoneRecordedRef = useRef(false);
   const [busy, setBusy] = useState(false);
   const [closed, setClosed] = useState(false);
@@ -377,8 +381,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         if (TUTOR_LESSON_CLOSE_AUTO_END && p.current.lessonCloseAutoEnd !== false) {
           endingRef.current = true;
           const wait = p.current.closeDelayMs;
-          if (typeof wait === 'function') void wait().then(() => p.current.onEndSession?.());
-          else setTimeout(() => p.current.onEndSession?.(), wait ?? CLOSE_READ_MS);
+          if (typeof wait === 'function') void wait().then(() => endOnce());
+          else setTimeout(() => endOnce(), wait ?? CLOSE_READ_MS);
         } else p.current.onDebugEvent?.('lesson_closed_stays_open', 'the partner ends the session itself (lessonCloseAutoEnd off)');
       }
     } catch (err) {
@@ -501,13 +505,16 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         },
         commit: () => commitProfile(true),
         afterGoodbye: () => (typeof wait === 'function' ? wait() : new Promise<void>((r) => setTimeout(r, wait ?? CLOSE_READ_MS))),
-        end: () => p.current.onEndSession?.('time_limit'),
+        end: () => endOnce('time_limit'),
+        ended: () => endedRef.current,
         log: (type, message) => p.current.onDebugEvent?.(type, message),
       }, farewell);
     // A resumed session's box runs from when the lesson first began.
     }, Math.max(5000, minutes * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
   }, []);
-  useEffect(() => () => { if (hardStopRef.current) clearTimeout(hardStopRef.current); }, []);
+  // Unmounted: a stop under way (waiting on the last words or the goodbye) does nothing more.
+  // (Set false on mount: React's development double mount runs this clean-up once before the real mount.)
+  useEffect(() => { endedRef.current = false; return () => { endedRef.current = true; if (hardStopRef.current) clearTimeout(hardStopRef.current); }; }, []);
 
   // A resume (resume.ts): the transcript and the board go back up as the page loads, and the state is the one
   // kept in this browser or, failing that, one rebuilt from the host's checkpoint.
@@ -550,9 +557,11 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   // the tutor's last words before the session closes.
   const end = useCallback((opts?: { farewell?: string }) => {
     endingRef.current = true; abortRef.current?.abort();
+    // Already ended (the box's stop, the close): no second farewell, commit or end.
+    if (endedRef.current) return;
     const farewell = opts?.farewell?.trim();
     if (farewell) { transcriptRef.current = [...transcriptRef.current, { id: `tutor-farewell-${Date.now()}`, timestamp: new Date(), role: 'tutor', text: farewell }]; publish(); }
-    commitProfile(true); p.current.onEndSession?.();
+    commitProfile(true); endOnce();
   }, [commitProfile]);
   const isEnding = useCallback(() => endingRef.current, []);
 

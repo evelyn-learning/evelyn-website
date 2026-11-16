@@ -70,7 +70,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (session.homework || session.homeworkSheet) lines.push(...v2HomeworkGuardFacts(state.homework));
   else if (session.plan) lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
   // Where the parts' minutes put the lesson now, so it paces itself to the box (time-box.ts).
-  const partDue = v2PartDueFact(session, state, f.nowMs);
+  const partDue = v2PartDueFact(session, state, f.nowMs, !!session.timeBoxMinutes && left <= V2_TIME_UP_MIN);
   if (partDue) lines.push(partDue);
   // The working level, every turn, so the language, questions and corrections stay at it (working-level.ts).
   lines.push(...v2WorkingLevelFacts(session, state, f.heard));

@@ -319,7 +319,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // then say "finish this exchange, then summary" (time-box.ts), and a summary page held for "shall we go on?" would
   // spend one of the last two minutes on the offer.
   const leftMin = session.timeBoxMinutes ? session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 : Infinity;
-  const closingTurn = (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || leftMin <= V2_TIME_UP_MIN || v2WrapDue(session, (nowMs - state.startedAtMs) / 60000);
+  const closingTurn = (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || leftMin <= V2_TIME_UP_MIN
+    // Lessons only: the wrap fact is the lesson's time line, and homework and a discussion are paced by their own (review 5a M2).
+    || (!discussion && !session.homework && !session.homeworkSheet && v2WrapDue(session, (nowMs - state.startedAtMs) / 60000));
   // A score is said once, in this turn's facts; the reply that answered it uses the arm up (pronunciation.ts).
   v2ConsumePronunciation(session, state, input.studentSaid);
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
