@@ -7,7 +7,7 @@ import { TutorSession } from "@/models";
 import { getLessonTitles, findLessonPlanIdsByTitle } from "@/lib/tutor/lesson-plan/store";
 import { ArrowLeft, Play, Clock, MessageSquare, Layers, Search, X } from "lucide-react";
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
-import { buildSessionFilter, buildGradeUsageFilter, parseApproxDate, type SessionFilterParams } from "@/lib/tutor/recordings/filters";
+import { buildSessionFilter, buildGradeUsageFilter, parseApproxDate, isTestSession, type SessionFilterParams } from "@/lib/tutor/recordings/filters";
 import { gradeUsageReport } from "@/lib/tutor/portal/grade-usage-report";
 import { PracticeGradingView, formatUsd } from "./PracticeGradingView";
 import { sessionActiveSeconds } from "@/lib/tutor/recordings/active-seconds";
@@ -404,6 +404,11 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
                                 : 'bg-amber-50 text-amber-600'
                               }`}>
                                 {String(s.source) === 'embed' ? 'Portal' : String(s.source) === 'test' ? 'Test' : String(s.source)}
+                              </span>
+                            )}
+                            {String(s.source) !== 'test' && isTestSession(s as Parameters<typeof isTestSession>[0]) && (
+                              <span className="inline-flex rounded px-1.5 py-0.5 text-[10px] font-medium bg-purple-50 text-purple-600" title="Local machine, our IP, or a test name">
+                                Test
                               </span>
                             )}
                             {s.sourcePartnerId ? (
