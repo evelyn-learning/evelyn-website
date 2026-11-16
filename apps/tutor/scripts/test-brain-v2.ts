@@ -721,7 +721,7 @@ async function main() {
   console.log('a board item the learner must act on is heard (D2)');
   {
     const menu = { name: 'annotate', args: { text: '1) individual words\n2) a complete sentence\n3) speaking more naturally\n4) skip and continue' }, outcome: 'painted on page 7' };
-    check('james t49: the menu is read as "1, …; 2, …"', unsaidBoardItem([menu], ['発音の練習です。', '次のどれにしますか？', 'Which one would you like?', 'Just say the number.']) === '1, individual words; 2, a complete sentence; 3, speaking more naturally; 4, skip and continue.');
+    check('real-run-B t49: the menu is read as "1, …; 2, …"', unsaidBoardItem([menu], ['発音の練習です。', '次のどれにしますか？', 'Which one would you like?', 'Just say the number.']) === '1, individual words; 2, a complete sentence; 3, speaking more naturally; 4, skip and continue.');
     const card = { name: 'show_sentence', args: { sentence: 'I want to expand our business internationally.' }, outcome: 'painted on page 6' };
     check('upper-int t61: the sentence to say back is read', unsaidBoardItem([card], ['Here is one you can use for your plans:', 'Please say it back to me.']) === 'I want to expand our business internationally.');
     check('a sentence already said is not said twice', unsaidBoardItem([card], ['Try this one: I want to expand our business internationally.', 'Say it back to me.']) === null);
@@ -733,6 +733,12 @@ async function main() {
     check('a correction card under a new, unrelated question is not read after it (review M6)', unsaidBoardItem([fix], ['After a number we say years.', 'Now, what did you do last weekend?']) === null);
     check('…but under "try the sentence again" it is', unsaidBoardItem([fix], ['After a number we say years.', 'Can you try the sentence again?']) === 'I have worked here for eleven years.');
     check('options under a question that is not about choosing are not read', unsaidBoardItem([menu], ['Good.', 'How was your weekend?']) === null);
+    // Final review M5: a menu asked without "which"/"number" is read; a "which" that is not a choice is not.
+    check('a menu asked as "What would you like to practise?" is read', unsaidBoardItem([menu], ['Let\'s practise pronunciation.', 'What would you like to practise?']) === '1, individual words; 2, a complete sentence; 3, speaking more naturally; 4, skip and continue.');
+    check('a menu asked as "Would you like words or a sentence?" is read', unsaidBoardItem([menu], ['We can practise a few ways.', 'Would you like words or a sentence?']) === '1, individual words; 2, a complete sentence; 3, speaking more naturally; 4, skip and continue.');
+    const steps = { name: 'annotate', args: { text: '1) Write the forces on the block\n2) Resolve the weight along the slope\n3) Apply Newton\'s second law' }, outcome: 'painted' };
+    check('"Which step is hardest?" under a numbered steps note is not read as a menu', unsaidBoardItem([steps], ['Those are the three steps.', 'Which step is hardest?']) === null);
+    check('…while "Which one would you like to start with?" under the same list is', unsaidBoardItem([steps], ['Those are the three steps.', 'Which one would you like to start with?']) !== null);
     check('mathematics stays on the board', unsaidBoardItem([{ name: 'annotate', args: { text: '1) $x = 2$\n2) $x = 3$' }, outcome: 'painted' }], ['Which one is right?']) === null);
     check('a note that is not a numbered list is not a menu', unsaidBoardItem([{ name: 'annotate', args: { text: 'Present perfect: have + past participle.' }, outcome: 'painted' }], ['Can you make one?']) === null);
     check('an item that was not painted is not read', unsaidBoardItem([{ ...card, outcome: 'not painted: bad' }], ['Please say it back to me.']) === null);
@@ -749,10 +755,10 @@ async function main() {
     check('voice, upper-int t61: the reply ends with the sentence, said', /Please say it back to me\.\n\nI want to expand our business internationally\.$/.test(v61.spoken), v61.spoken);
     const t49 = '発音の練習です。次のどれにしますか？\n\n<board note>1) individual words\n2) a complete sentence\n3) speaking more naturally\n4) skip and continue</board>\n\nWhich one would you like? Just say the number.';
     const v49 = await runV2Turn({ session: lang, state: midLesson(), studentSaid: 'Yes, thank you.', callModel: streaming(t49), boardPass: false, mathsCheck: false, nowMs: 10 * 60000 });
-    check('voice, james t49: the reply ends with the options, read', /Just say the number\.\n\n1, individual words; 2, a complete sentence; 3, speaking more naturally; 4, skip and continue\.$/.test(v49.spoken), v49.spoken);
+    check('voice, real-run-B t49: the reply ends with the options, read', /Just say the number\.\n\n1, individual words; 2, a complete sentence; 3, speaking more naturally; 4, skip and continue\.$/.test(v49.spoken), v49.spoken);
     const t5 = 'Great. Here is the first question.\n\n<board problem difficulty="easy">Can you tell me a little about your job? What do you do?</board>\n\nPlease answer in English, and don\'t worry about mistakes.';
     const v5 = await runV2Turn({ session: lang, state: midLesson(), studentSaid: 'Yes, I am ready.', callModel: streaming(t5), boardPass: false, mathsCheck: false, nowMs: 2 * 60000 });
-    check('voice, josh t5: the question on the card is asked aloud (the problem card\'s own path)', /What do you do\?$/.test(v5.spoken), v5.spoken);
+    check('voice, real-run-A t5: the question on the card is asked aloud (the problem card\'s own path)', /What do you do\?$/.test(v5.spoken), v5.spoken);
     const x61 = await runV2Turn({ session: { ...lang, mode: 'text' }, state: midLesson(), studentSaid: 'A sentence, please.', callModel: streaming(t61), boardPass: false, mathsCheck: false, nowMs: 15 * 60000 });
     check('text: nothing is added (the board is in front of them)', /Please say it back to me\.$/.test(x61.spoken), x61.spoken);
     check('the kill switch defaults on', TUTOR_V2_SPEAK_BOARD_ITEM === true);

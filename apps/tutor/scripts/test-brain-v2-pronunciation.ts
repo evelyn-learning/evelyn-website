@@ -115,7 +115,7 @@ async function main() {
   check('a comment on pronunciation only from a score in the facts', /only from a score in the facts/.test(sec) && /say nothing about how they sounded/.test(sec));
   check('offered at the plan\'s pronunciation part and on request', /plan's pronunciation part/.test(sec) && /whenever they ask/.test(sec));
   check('items: the part\'s words and sentences, or their own corrected sentences', /pronunciation words and sentences/.test(sec) && /that you corrected this lesson/.test(sec));
-  check('the way to practise is asked in plain speech, never a numbered menu (James: "just a little bit of individual words")', /plain spoken question, never a numbered list/.test(sec) && /however they put it/.test(sec));
+  check('the way to practise is asked in plain speech, never a numbered menu (real-run-B: "just a little bit of individual words")', /plain spoken question, never a numbered list/.test(sec) && /however they put it/.test(sec));
   check('the plan map shows the part\'s pronunciation items', part.includes('pronunciation words: schedule, colleague') && part.includes('I schedule classes for my team.'));
 
   console.log('the tool');

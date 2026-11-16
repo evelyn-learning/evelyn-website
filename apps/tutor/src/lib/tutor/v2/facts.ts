@@ -49,9 +49,12 @@ export interface V2TurnFacts {
 
 /** How the tutor's last reply opened: its words up to the first mark, at most four (D10). */
 export function v2LastOpener(history: V2State['history']): string {
+  // A reply cut short carries "[cut off here: …]" (interrupted.ts); that marker is the system's, not the tutor's words,
+  // and a reply cut before any word got out has no opener at all (final review M4: the fact quoted "[cut off here").
+  const words = (h: V2State['history'][number]) => stripBoardBlocks(typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')).replace(/\[cut off[^\]]*\]/gi, ' ').trim();
   const m = [...history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text' && c.text.trim())));
   if (!m) return '';
-  const text = stripBoardBlocks(typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')).trim();
+  const text = words(m);
   const head = text.split(/[.,:;!?。、！？\n]/)[0]!.trim();
   return head.split(/\s+/).slice(0, 4).join(' ');
 }

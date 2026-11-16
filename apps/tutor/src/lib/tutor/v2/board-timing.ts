@@ -175,11 +175,15 @@ const OPTION_LINE = /^\s*\(?(\d{1,2})[.)]\s+(\S.*)$/;
 const HAS_MARKUP = /\$|\\[a-zA-Z]/;
 /** An ask about saying a sentence ("Please say it back to me.", "Try the sentence again."), or about picking an option. */
 const ABOUT_SENTENCE = /\b(?:say|repeat|read|try|practi[sc]e|copy)\b[^.?!]*\b(?:it|this|that|these|sentence|one|again|back|aloud|after me)\b|\bsentence\b|もう一度|言って|読んで/i;
-const ABOUT_OPTIONS = /\b(?:which|number|choose|pick|option|options)\b|どれ|番号/i;
+/** A choice question: asks the learner to pick among options, not any "which" ("Which step is hardest?" under a numbered
+ *  steps note is a question about the steps; reading them out as a menu answered nothing, final review M5). Covers a
+ *  menu asked as "What would you like to practise?" or "Would you like words or a sentence?", which the bare keyword
+ *  list missed. */
+const ABOUT_OPTIONS = /\bwhich(?: one| of (?:these|them|those|the \w+))?\s*\?|\bwhich\b(?: one| of (?:these|them|those))?[^.?!]*\b(?:would you|do you|shall|should we|want|like|prefer|choose|pick|start|try)\b|\b(?:choose|pick|select)\b|\b(?:the|a|its) number\b|\boptions?\b|\bwould you (?:like|prefer|rather)\b[^.?!]*\bor\b|\bwhat would you like to (?:practi[sc]e|do|try|work on|start with|focus on)\b|どれ|どちら|番号/i;
 
 /** In a spoken lesson, a sentence card or a numbered list of options the reply asks the learner to act on must also be
  *  heard (D2, gdi-on-v2 Task 6): "Which one would you like? Just say the number." went with a menu only on the board
- *  (james t49), and "Please say it back to me." with the sentence only on the board drew "What sentence do you want me
+ *  (real-run-B t49), and "Please say it back to me." with the sentence only on the board drew "What sentence do you want me
  *  to say?" (upper-int t61). Given this reply's board calls and its spoken sentences, this returns the words still to
  *  be said: the sentence as it stands, or the options as "1, …; 2, …". Null when the reply asks nothing, when the spoken
  *  words already carry the item (most of its words were said), when the item holds mathematics, or when it is too long

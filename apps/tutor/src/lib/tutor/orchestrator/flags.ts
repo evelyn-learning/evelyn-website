@@ -1636,7 +1636,7 @@ export const TUTOR_V2_CLOSE_OPENS_SUMMARY = process.env.NEXT_PUBLIC_TUTOR_V2_CLO
 /** Tutor brain v2 (v2/board-timing.ts unsaidBoardItem): in a spoken lesson, a sentence card or a numbered list of options
  *  that the reply asks the learner to act on, and that the spoken words do not carry, is read out after the reply (the
  *  options as "1, …; 2, …"). In text runs the learner saw them; in voice they would have heard "Which one would you like?
- *  Just say the number." over a menu never read (james t49) and "Please say it back to me." with the sentence unsaid
+ *  Just say the number." over a menu never read (real-run-B t49) and "Please say it back to me." with the sentence unsaid
  *  (upper-int t61, which drew "What sentence do you want me to say?"). Items with mathematics are left to the board, as
  *  before; problem cards keep their own path (unsaidAsk). Default ON; NEXT_PUBLIC_TUTOR_V2_SPEAK_BOARD_ITEM=off ⇒ only a
  *  problem card is asked aloud, as before. */
@@ -1674,3 +1674,10 @@ export const TUTOR_V2_RETRY_COUNT = process.env.NEXT_PUBLIC_TUTOR_V2_RETRY_COUNT
  *  of replies (Task 6, D10); a constitution line against it only moved the stock opener to "Correct." and raised repeated
  *  openers in demo-forces 5→13 (Task 6b review I2). Default ON; NEXT_PUBLIC_TUTOR_V2_OPENER_FACT=off ⇒ no such line. */
 export const TUTOR_V2_OPENER_FACT = process.env.NEXT_PUBLIC_TUTOR_V2_OPENER_FACT !== 'off';
+
+/** Tutor brain v2 (v2/own-voice.ts isOwnVoice): a heard CJK character or number the tutor did not say is passed over as
+ *  the recogniser's rendering (三 heard as 3), so the tutor's own Japanese with a slip is still taken for echo. Limited to
+ *  those tokens: skipping any unsaid word took a student who added words to the tutor's sentence ("wait so the derivative
+ *  of x squared is two x right") for echo and dropped them (final review I1). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_OWN_VOICE_SKIP=off ⇒ no word is passed over, as before. */
+export const TUTOR_V2_OWN_VOICE_SKIP = process.env.NEXT_PUBLIC_TUTOR_V2_OWN_VOICE_SKIP !== 'off';

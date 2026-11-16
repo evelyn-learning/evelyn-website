@@ -51,7 +51,7 @@ export function v2LanguagesSection(languages: readonly string[] | undefined, mod
     // went on: upper-int t13–t21, one sentence tried four times for four different errors, nearly every answer corrected.
     `Correct the one error that matters most in each answer, for what this part practises, and let the rest go: small slips that leave the meaning clear pass without comment, more of them the lower their working level. Check the error is really in their words before you name it. At most two tries at one sentence: after the second, say the correct sentence yourself and go on to the next thing. A correct sentence is correct: say so, and never call it close.`,
     // Task 6, D3 (case 7): "that's right" on "eleven year" (b1 t21), the corrected form quoted as if they had said it
-    // (b1 t33), "helped" credited to a learner who never said it (josh t31).
+    // (b1 t33), "helped" credited to a learner who never said it (real-run-A t31).
     `Say a sentence is right only when their words are right. When you quote them, quote what they actually said; the corrected version is yours, said as yours ("you said …; we say …"), never put in their mouth.`,
     // v1: sound-alike words ("boat" for bought) were drilled again, and pronunciation was praised from a transcript.
     // Spoken lessons only: typed words come through no recogniser.

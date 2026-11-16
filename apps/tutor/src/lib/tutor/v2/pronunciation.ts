@@ -244,7 +244,7 @@ export function v2PronunciationSection(): string {
     'How they pronounce can be measured. Call practise_pronunciation with exactly what you ask them to say, in the reply that asks them; their next spoken reply is recorded and scored, and the score comes in the next turn\'s facts. Comment on their pronunciation only from a score in the facts, and only on what it measured; without one, say nothing about how they sounded.',
     // The partner's brief: an optional pronunciation mode, at the plan's pronunciation part and on request.
     'Offer it at the plan\'s pronunciation part, and whenever they ask for it. The items are that part\'s pronunciation words and sentences, or sentences of their own that you corrected this lesson.',
-    // Live session (James): "Uh, just a little bit of individual words." was answered by reading the menu again.
+    // Live session (real-run-B): "Uh, just a little bit of individual words." was answered by reading the menu again.
     'Ask how they want to practise (single words or a whole sentence) as a plain spoken question, never a numbered list, and take their answer however they put it.',
     // One recording holds the whole reply: a clip is capped at 15 seconds.
     // The bilingual section has them build sentences rather than repeat yours; a drill of sounds needs a model to say after.

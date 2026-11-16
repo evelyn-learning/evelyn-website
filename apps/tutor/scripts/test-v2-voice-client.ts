@@ -45,7 +45,7 @@ function runGate(frames: BargeInFrame[], onsetMs: number, untilMs: number, speak
 function soundGate() {
   console.log('the energy gate on a pause for a sound');
   const quiet = Array(6).fill(0.01);
-  // A learner talking over the tutor: the level jumps far above the floor and stays (josh, 384 s: .47 1.0 1.0 .94).
+  // A learner talking over the tutor: the level jumps far above the floor and stays (real-run-A, 384 s: .47 1.0 1.0 .94).
   const talk = framesOf(0, [...quiet, 0.47, 1, 1, 0.94, 0.6, 0.5]);
   const onset = 6 * FRAME_MS;
   const t = runGate(talk, onset, onset + 2000);

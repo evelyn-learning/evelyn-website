@@ -52,6 +52,7 @@ async function main() {
   {
     const h = (text: string) => ({ ...newV2State(0), history: [{ role: 'user' as const, content: 'hi' }, { role: 'assistant' as const, content: [{ type: 'text' as const, text }] }] });
     check('the last reply\'s opener: up to the first mark', v2LastOpener(h('Correct. "Was eating" is the action in progress.').history) === 'Correct' && v2LastOpener(h('Yes, that\'s right: "I have been to Singapore."').history) === 'Yes' && v2LastOpener(h('<board page>Verbs</board>Your sentences are correct: both use the past.').history) === 'Your sentences are correct');
+    check('a cut-off marker is never the opener (final review M4)', v2LastOpener(h('[cut off here: the student began to speak]').history) === '' && v2LastOpener(h('Good, now say it [cut off here: the student began to speak]').history) === 'Good');
     const fo = renderFacts(bilingual, h('Correct. Next row: "see, saw, ?".'), { nowMs: 60000, heard: 'seen' });
     check('the facts name it, every turn (D10, review I2)', fo.includes('your last reply opened with "Correct": open this one differently, or go straight to the content'), fo.slice(-500));
     check('no line at the opening, in a discussion, or with the kill switch off', v2OpenerFact(bilingual, newV2State(0)).length === 0 && v2OpenerFact(bilingual, h('Correct.'), false).length === 0 && TUTOR_V2_OPENER_FACT === true);
@@ -79,7 +80,7 @@ async function main() {
   const es = v2LanguagesSection(['en', 'es']) ?? '';
   check('another support language is named, without the Japanese-only lines', /Spanish/.test(es) && !/です|romaji|Japanese/.test(es));
   check('the section names no partner', !/gdi|nagoya|josh|james/i.test(ja));
-  check('the constitution stays generic and says the next lesson does not open at this point', !/gdi|japanese/i.test(V2_CONSTITUTION) && /don't promise it/.test(V2_CONSTITUTION) && /short review/.test(V2_CONSTITUTION));
+  check('the constitution stays generic and says the next lesson does not open at this point', !/gdi|japanese/i.test(V2_CONSTITUTION) && /don't promise it/.test(V2_CONSTITUTION) && !/short review/.test(V2_CONSTITUTION)); // final review I2: no review promised to a tenant without lesson memory
 
   console.log('Japanese sentences for speech');
   const feed = (pieces: string[]) => { const ss = new SentenceStream(); const got: string[] = []; for (const x of pieces) got.push(...ss.push(x)); return [got, ss.flush()] as const; };
@@ -102,6 +103,13 @@ async function main() {
   check('the student\'s own Japanese is not an echo', !isOwnVoice('すみません、もう一度ゆっくり説明してください', said));
   check('English echo is unchanged', isOwnVoice('how do you say this in English', ['How do you say this in English?']) && !isOwnVoice('yes', ['yes it is']));
   check('a partial echo of a few Japanese characters pauses nothing (every one was said)', isOwnVoice('言ってみて', said, 1, 1) && !isOwnVoice('わかりません', said, 1, 1));
+  // Final review I1: only a CJK character or number the tutor did not say is passed over; a student's added English words are theirs.
+  const deriv = ['So the derivative of x squared is two x.'];
+  check('a student adding words before the tutor\'s sentence is not an echo', !isOwnVoice('wait so the derivative of x squared is two x right', deriv));
+  check('a student disagreeing in the tutor\'s words is not an echo', !isOwnVoice('No I think the derivative of x squared is two x', deriv));
+  check('a learner saying the model sentence back with words of their own is not an echo', !isOwnVoice('Um I went to Kyoto last weekend with my family', ['Please say it back to me: I went to Kyoto last weekend.']));
+  check('a number the tutor said in words is still passed over', isOwnVoice('the answer is 3 metres per second', ['The answer is three metres per second.']));
+  check('with NEXT_PUBLIC_TUTOR_V2_OWN_VOICE_SKIP=off nothing is passed over, as before', !isOwnVoice('私は3年間ここで働いていますを英語でどう言いますか', said, 4, 0.7, false) && !isOwnVoice('the answer is 3 metres per second', ['The answer is three metres per second.'], 4, 0.7, false));
 
   console.log('mixed-language speech');
   const mixed = '「My manager showed me slogans he had written earlier」ですね、具体的でいい答えです。';

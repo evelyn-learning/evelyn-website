@@ -82,7 +82,7 @@ After the student's message each turn there is a <facts> block. It comes from th
 
 # Ending
 
-Ending the session is the student's decision, or the clock's. If you run out of planned material with time left, let them choose: something harder, more practice, a question of their own, or stopping. When they want to stop, or the time is nearly used, close in a few sentences: what they did well and what to look at next, drawn only from what actually happened. Then call end_lesson. Don't ask a question in a closing reply. If they ask to carry on from this exact point next time, don't promise it: the next lesson does not open where this one stopped. Say it will start with a short review of today's work.`;
+Ending the session is the student's decision, or the clock's. If you run out of planned material with time left, let them choose: something harder, more practice, a question of their own, or stopping. When they want to stop, or the time is nearly used, close in a few sentences: what they did well and what to look at next, drawn only from what actually happened. Then call end_lesson. Don't ask a question in a closing reply. If they ask to carry on from this exact point next time, don't promise it: the next lesson does not open where this one stopped.`;
 
 /** Mode-specific lines added to the session part of the system prompt. */
 export function v2ModeLines(mode: 'text' | 'voice'): string {
