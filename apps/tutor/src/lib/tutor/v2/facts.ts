@@ -67,9 +67,13 @@ function replyText(h: V2State['history'][number]): string {
 export function v2OpenerOf(text: string): string {
   const q = text.match(LEADING_QUOTE);
   if (!q) return headWords(text);
-  const rest = text.slice(q[0].length).replace(/^\s+/, '');
-  const after = headWords(rest);
-  return after ? `${q[0][0]}…${q[0][q[0].length - 1]}${/^\s/.test(text.slice(q[0].length)) ? ' ' : ''}${after}` : headWords(q[0].slice(1, -1));
+  const frame = `${q[0][0]}…${q[0][q[0].length - 1]}`;
+  // Marks straight after the quote belong to the frame: 「…」。は… and a bare 「…」。 were missed (fix round 1).
+  const after = text.slice(q[0].length);
+  const marks = (after.match(/^[\s.,:;!?。、！？]*/)?.[0] ?? '');
+  const words = headWords(after.slice(marks.length));
+  const glue = marks.replace(/\s+/g, '');
+  return `${frame}${glue}${words ? `${/\s$/.test(marks) || (!glue && /^\s/.test(after)) ? ' ' : ''}${words}` : ''}`;
 }
 
 const tutorReplies = (history: V2State['history']) => history.filter((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text' && c.text.trim())));

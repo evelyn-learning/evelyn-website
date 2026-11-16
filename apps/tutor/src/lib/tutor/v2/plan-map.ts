@@ -7,7 +7,7 @@
  */
 import type { LessonPlan, Segment } from '../lesson-plan/types';
 import { TUTOR_V2_PASSED_PART_FACT, TUTOR_V2_PLAN_AS_WRITTEN } from '../orchestrator/flags';
-import { V2_CLOSING_PAGE, namesPart } from './part-close';
+import { V2_CLOSING_PAGE, headingWords } from './part-close';
 import type { GoalStatus, V2State } from './types';
 
 /** What a written lesson plan says about one part beyond its materials (Segment and its free-form metadata,
@@ -115,8 +115,9 @@ export function renderPlanMap(plan: LessonPlan, asWritten: boolean = TUTOR_V2_PL
     ? ' The exchanges a part is written for are a guide, not a limit. Scripts and phrases are what to get across, in your own words.'
     : '';
   // Task 6c, ruling 3: "Optional pronunciation practice" was read as the tutor's to skip: the lesson went from the
-  // conversation to the summary and the part was never offered (gdi-real-t2 t≈11.6). Only in a plan that has the word.
-  const optional = optionalLine && plan.segments.some((seg) => (seg.metadata as { optional?: unknown } | undefined)?.optional === true || /\boptional\b/i.test(materials(seg, v2PartOf(seg), asWritten).join(' ')))
+  // conversation to the summary and the part was never offered (gdi-real-t2 t≈11.6). Only in a plan with a part marked
+  // optional (fix round 1: "optional" anywhere, as in "this part is not optional", set it off).
+  const optional = optionalLine && plan.segments.some(v2PartIsOptional)
     ? ' A part marked optional is still offered: the student decides whether to do it, not you.'
     : '';
   const written = notes + guide + optional;
@@ -132,18 +133,40 @@ export function renderGoalStatus(plan: LessonPlan, goals: V2State['goals']): str
   }).join('; ');
 }
 
-/** A part's names as a page heading might give them: its authored name, its aim, its id. */
-const partNames = (seg: Segment): string[] => [v2PartOf(seg).label, (seg as { goal?: string }).goal, seg.id].filter((x): x is string => typeof x === 'string' && !!x.trim());
+/** A part marked optional: `metadata.optional`, a name that says so, or an aim or note that opens with the word
+ *  ("Optional pronunciation practice. …"). Not a part whose text only mentions it ("This is a core part, not optional"). */
+export function v2PartIsOptional(seg: Segment): boolean {
+  if ((seg.metadata as { optional?: unknown } | undefined)?.optional === true) return true;
+  if (/\boptional\b/i.test(v2PartOf(seg).label ?? '')) return true;
+  const s = seg as unknown as Record<string, unknown>;
+  return ['goal', 'teacherNote', 'script'].some((k) => typeof s[k] === 'string' && /^\s*optional\b/i.test(s[k] as string));
+}
 
-/** The plan parts the lesson went past without reaching (Task 6c, ruling 3). The board has a page for a later part
- *  (named by its heading, or a summary page for the last part), and the parts between it and the last part reached
- *  before it were never reached: no status recorded, no page of theirs, and not a level-check part with the level
- *  known. Only that stretch: a part earlier in the lesson taught without a status or a page of its own is not named. */
+const squash = (x: string) => x.replace(/\s+/g, '').toLowerCase();
+/** Whether a page heading is the part's page: every word of the part's authored name is in it (namesPart's half was
+ *  too loose here: "Talking about your work" named "Your job"), or it equals a localized name. */
+const pageOfPart = (seg: Segment, title: string): boolean => {
+  const p = v2PartOf(seg);
+  const want = p.label ? headingWords(p.label) : [];
+  const have = headingWords(title);
+  const all = want.length > 0 && want.every((w) => have.some((x) => x === w || (w.length >= 5 && x.startsWith(w.slice(0, 5)))));
+  return all || Object.values(p.labelLocalized ?? {}).some((n) => squash(n) === squash(title));
+};
+
+/** The plan parts the lesson went past without reaching (Task 6c, ruling 3). The board has a page for a later part,
+ *  and the parts between it and the last part reached before it were never reached: no status recorded, no page of
+ *  theirs, and not a level-check part with the level known. Only that stretch: a part earlier in the lesson taught
+ *  without a status or a page of its own is not named.
+ *  Fix round 1 (I1), against false alarms on plans written for other lessons: only a plan whose every part has an
+ *  authored name; a page is matched by that name only (not the id or aim: "intro" and "examples" matched loosely); a
+ *  summary heading stands for the last part only when it is the last page opened (an early "Quick recap" page made
+ *  every later part look passed over). */
 export function v2PassedParts(plan: LessonPlan, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>): Segment[] {
   const segs = plan.segments;
-  if (segs.length < 2) return [];
-  const titles = state.board.pages.map((pg) => pg.title);
-  const paged = (i: number) => titles.some((t) => partNames(segs[i]!).some((n) => namesPart(n, t)) || (i === segs.length - 1 && V2_CLOSING_PAGE.test(t)));
+  if (segs.length < 2 || !segs.every((seg) => !!v2PartOf(seg).label)) return [];
+  const pages = state.board.pages;
+  const lastTitle = pages.length ? pages[pages.length - 1]!.title : '';
+  const paged = (i: number) => pages.some((pg) => pageOfPart(segs[i]!, pg.title)) || (i === segs.length - 1 && V2_CLOSING_PAGE.test(lastTitle));
   let furthest = -1;
   for (let i = segs.length - 1; i > 0; i--) if (paged(i)) { furthest = i; break; }
   if (furthest < 1) return [];
@@ -163,7 +186,7 @@ export function v2PassedPartFact(plan: LessonPlan | undefined, state: V2State, c
   if (!enabled || !plan || closing || state.closed) return [];
   const passed = v2PassedParts(plan, state);
   if (!passed.length) return [];
-  const names = passed.map((seg) => `the ${v2PartOf(seg).label ?? (seg as { goal?: string }).goal ?? seg.id} part`);
+  const names = passed.map((seg) => `the ${v2PartOf(seg).label} part`);
   const list = names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
   const one = passed.length === 1;
   return [`${list[0]!.toUpperCase()}${list.slice(1)} ${one ? 'was' : 'were'} not offered: offer ${one ? 'it' : 'them'} before the summary, unless time is up. The student decides whether to do ${one ? 'it' : 'them'}; if they would rather not, mark ${one ? 'it' : 'them'} skipped`];

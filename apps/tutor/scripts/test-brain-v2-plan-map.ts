@@ -13,7 +13,7 @@ import { SEED_AP_CALCBC_U4_LHOPITAL } from '../src/lib/tutor/lesson-plan/seeds/a
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
-import { renderPlanMap, v2PartOf, v2PassedPartFact, v2PassedParts } from '../src/lib/tutor/v2/plan-map';
+import { renderPlanMap, v2PartIsOptional, v2PartOf, v2PassedPartFact, v2PassedParts } from '../src/lib/tutor/v2/plan-map';
 import { renderFacts } from '../src/lib/tutor/v2/facts';
 import { TUTOR_V2_PASSED_PART_FACT } from '../src/lib/tutor/orchestrator/flags';
 import { v2SessionPart } from '../src/lib/tutor/v2/turn';
@@ -158,8 +158,19 @@ function main() {
     check('not when the student asks to stop, or the time is up', !renderFacts(lesson, summary, { nowMs: 12 * 60000, heard: 'I have to go', stopAsked: true }).includes('was not offered') && !renderFacts(lesson, summary, { nowMs: 29 * 60000, heard: 'ok' }).includes('was not offered'));
     check('not past the host\'s wrap minute', !renderFacts({ ...lesson, wrapMinutes: 10 }, summary, { nowMs: 12 * 60000, heard: 'ok' }).includes('was not offered'));
 
+    // Fix round 1 (I1): false alarms on plans written for other lessons.
+    const UNLABELLED = { ...GDI, segments: GDI.segments.map((x) => ({ ...x, metadata: { ...(x.metadata ?? {}), label: undefined } })) } as LessonPlan;
+    check('a plan whose parts carry no names (seed-style): no fact, whatever the pages', v2PassedParts(UNLABELLED, at([...PAGES, 'Summary'], GOALS, level)).length === 0 && v2PassedParts(SEED_AP_CALCBC_U4_LHOPITAL, at(['Intro', 'Examples', 'Summary'])).length === 0);
+    check('an early recap page is not the summary: no fact', v2PassedParts(GDI, at(['Lesson overview', 'Quick recap', 'Your job'], { overview: 'shown' }, level)).length === 0 && v2PassedPartFact(GDI, at(['Lesson overview', 'Level check', 'Recap', 'Your job'], { overview: 'shown' }, level), false).length === 0);
+    check('a recap page is the summary only as the last page opened', v2PassedParts(GDI, at([...PAGES, 'Recap'], GOALS, level)).map((x) => x.id).join() === 'pronunciation' && v2PassedParts(GDI, at([...PAGES, 'Recap', 'Conversation 2'], GOALS, level)).length === 0);
+    check('pages match the part\'s name only, not its id or aim: "Open conversation practice"-style aim words name nothing', v2PassedParts(GDI, at(['Lesson overview', 'Talking about your work', 'Summary'], {}, level)).map((x) => x.id).includes('topic-intro') && v2PassedParts(GDI, at(['Lesson overview', 'Your job', 'Summary'], {}, level)).map((x) => x.id)[0] === 'present-perfect');
+    check('a GDI-style named plan: the fact names the part by its name, never its id', v2PassedPartFact(GDI, summary, false)[0]!.startsWith('The Pronunciation part') && !/pronunciation part/.test(v2PassedPartFact(GDI, summary, false)[0]!) && !/open-conversation|level-check/.test(v2PassedPartFact(GDI, at(['Lesson overview', 'Your job', 'Summary']), false).join()));
+
     const map = renderPlanMap(GDI, true);
     check('a plan with an optional part: optional is the student\'s choice, not the tutor\'s', map.includes(' A part marked optional is still offered: the student decides whether to do it, not you.'), map.slice(0, 900));
+    const NOT_OPTIONAL = { ...WRITTEN, segments: WRITTEN.segments.map((x) => (x.id === 'pronunciation' ? { ...x, metadata: { ...(x.metadata ?? {}), optional: undefined } } : x.id === 'open-conversation' ? { ...x, teacherNote: 'This is a core part of the lesson, not optional.' } : x)) } as LessonPlan;
+    check('the word "optional" elsewhere in a plan does not set the line off (fix round 1)', !renderPlanMap(NOT_OPTIONAL, true).includes('A part marked optional'));
+    check('a part marked optional: by metadata, by its name, or by an aim or note that opens with the word', v2PartIsOptional(seg('pronunciation')) && v2PartIsOptional({ ...seg('summary'), metadata: { label: 'Optional extension' } } as never) && v2PartIsOptional({ ...seg('summary'), teacherNote: 'Optional pronunciation practice. Offer it.' } as never) && !v2PartIsOptional({ ...seg('summary'), teacherNote: 'Not optional: always do it.' } as never) && v2PartIsOptional(GDI.segments.find((x) => x.id === 'pronunciation')!) && !v2PartIsOptional(GDI.segments.find((x) => x.id === 'open-conversation')!));
     check('metadata.optional counts too; the line is off with the kill switch; a plan without one has none', renderPlanMap(WRITTEN, true).includes('A part marked optional') && !renderPlanMap(GDI, true, false).includes('A part marked optional') && !renderPlanMap(SEED_AP_CALCBC_U4_LHOPITAL).includes('A part marked optional'));
   }
 

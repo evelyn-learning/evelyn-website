@@ -63,11 +63,15 @@ async function main() {
   console.log('a practice sentence is right only when fully right (Task 6c, ruling 1)');
   {
     check('slips pass in free conversation only', /let the rest go: in free conversation, small slips that leave the meaning clear pass without comment/.test(ja), ja);
-    check('a practice sentence (a retry, or an answer to a practice question) is right only when fully right', /A sentence they produce as practice \(a retry after your correction, or their answer to a practice question on the point this part teaches\) is right only when it is fully right\./.test(ja), ja);
-    check('otherwise: what works, then the fix in one short clause, which is not another try', /When it is not, say what works and give the fix in one short clause \("Good, and we say '…'\."\); that fix does not count as another try\./.test(ja), ja);
+    const practice = ja.split('\n').find((l) => l.startsWith('A sentence they produce as practice')) ?? '';
+    check('a practice sentence (a retry, or an answer to a practice question) is right only when fully right, one error corrected', practice.startsWith('A sentence they produce as practice (a retry after your correction, or their answer to a practice question on the point this part teaches) is right only when it is fully right; still correct only one error in it.'), practice);
+    check('an error in the form taught: one retry, and the two-try cap said plainly (fix round 1, I2)', practice.includes('When the error is in the form this part teaches: name it and ask them to say the sentence once more. At most two tries at one sentence: after the second, say the correct sentence yourself and go on to the next thing.'), practice);
+    check('only a slip outside the form: not called right, the fix in one clause, no retry asked for', practice.includes('When the only error is a slip outside that form: don\'t call the sentence right; give the fix in one short clause ("Good, and we say \'…\'.") and go on, with no retry asked for.'), practice);
+    check('nothing says a fix does not count as a try (fix round 1, I2: tester A asked for "I met…" about seven times)', !/does not count as (another|a) try|doesn't count/i.test(ja), ja);
+    check('the two-try cap is stated once, in the practice line', (ja.match(/At most two tries at one sentence/g) ?? []).length === 1);
     check('the line is generic: no lesson words in it', !/eleven|company|years/i.test(ja.split('\n').find((l) => l.startsWith('A sentence they produce as practice')) ?? 'eleven'));
     const off = v2LanguagesSection(['en', 'ja'], 'voice', { practiceVerdict: false }) ?? '';
-    check('NEXT_PUBLIC_TUTOR_V2_PRACTICE_VERDICT=off: the correction line as it was, and no practice line', !/A sentence they produce as practice/.test(off) && /and let the rest go: small slips that leave the meaning clear pass without comment/.test(off) && TUTOR_V2_PRACTICE_VERDICT === true, off);
+    check('NEXT_PUBLIC_TUTOR_V2_PRACTICE_VERDICT=off: the correction line as it was (with its two-try cap), and no practice line', !/A sentence they produce as practice/.test(off) && off.includes('Correct the one error that matters most in each answer, for what this part practises, and let the rest go: small slips that leave the meaning clear pass without comment, more of them the lower their working level. Check the error is really in their words before you name it. At most two tries at one sentence: after the second, say the correct sentence yourself and go on to the next thing. A correct sentence is correct: say so, and never call it close.') && TUTOR_V2_PRACTICE_VERDICT === true, off);
     check('a session part with the flag default carries it', v2SessionPart(bilingual).includes('is right only when it is fully right'));
   }
 
@@ -92,7 +96,12 @@ async function main() {
     const hist = (replies: string[]) => ({ ...newV2State(0), history: replies.flatMap((text, i) => [{ role: 'user' as const, content: `answer ${i}` }, { role: 'assistant' as const, content: [{ type: 'text' as const, text }] }]) });
     check('a leading 「…」 quote is set aside: the opener is the frame after it', v2OpenerOf(JAMES[0]!) === '「…」は正しい文です' && v2LastOpener(hist(JAMES).history) === '「…」は正しい文です', v2OpenerOf(JAMES[0]!));
     check('straight and curly quotes too; an apostrophe that is not a quote is left alone', v2OpenerOf('"I went to Osaka" is right. Now tell me more.') === '"…" is right' && v2OpenerOf('“I went” is correct.') === '“…” is correct' && v2OpenerOf("'Cause it's late, go on.") === "'Cause it's late");
-    check('a reply that is only a quote: its words', v2OpenerOf('「はい」') === 'はい');
+    check('a reply that is only a quote: the frame', v2OpenerOf('「はい」') === '「…」');
+    check('a 。 after the closing quote stays in the frame (fix round 1): 「…」。は… and a bare 「…」。', v2OpenerOf('「I make cars.」。は正しい文です。') === '「…」。は正しい文です' && v2OpenerOf('「I make cars.」。') === '「…」。' && v2OpenerOf('「I attended Comdex.」。') === v2OpenerOf('「I make cars.」。') && v2OpenerOf('「I make cars.」。とても良いです。') === '「…」。とても良いです');
+    {
+      const hq = (replies: string[]) => ({ ...newV2State(0), history: replies.flatMap((text, i) => [{ role: 'user' as const, content: `a ${i}` }, { role: 'assistant' as const, content: [{ type: 'text' as const, text }] }]) });
+      check('a run of bare 「…」。 replies is seen', v2OpenerFact(bilingual, hq(['「I make cars.」。', '「I attended Comdex.」。']))[0]!.startsWith('your last 2 replies opened with "「…」。"'));
+    }
     check('plain openers as before', v2OpenerOf('Correct. "Was eating" is it.') === 'Correct' && v2OpenerOf('その文で正しいです。 more') === 'その文で正しいです');
     const f2 = v2OpenerFact(bilingual, hist(JAMES.slice(0, 2)));
     check('two replies in a row with the frame: the fact names the frame and how many, and asks for a reaction, a confirmation only for the form in practice', f2.length === 1 && f2[0]!.startsWith('your last 2 replies opened with "「…」は正しい文です": open this one differently.') && /React to what they said and keep the conversation moving; a confirmation only when they were practising the form being taught, and then in other words/.test(f2[0]!), f2);
