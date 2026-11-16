@@ -1,0 +1,169 @@
+10:36:05 open fixture=gdi-showcase-advanced arm=v2b student=gdi-v2b-replay-gdi-showcase-advanced (speech off)
+10:36:50 no start orb (auto-start?)
+10:36:50 TUTOR  Hello, I'm Jameson, and welcome. Today we'll talk about past experiences in English: saying what you have done, and when. We'll look at the tenses for this, practise the past forms of common verbs, and end with a short conversation about a trip or an experience of yours. Does that sound good?   [tools: new_page, annotate]
+10:37:18 STUDENT(answer) Yes, I'm ready.
+10:37:21 TUTOR  Let's start with you. Have you ever been to a country outside Japan?
+10:37:30 STUDENT(answer) Yes, I have went to Singapore for business.
+10:37:40 TUTOR  Good, you used the present perfect for an experience. The verb needs a change, though: after "have", we use the past participle, not the past simple. "Go" becomes "been" in this form.
+
+
+
+Please say that sentence back to me. Then tell me one other place you have been to.   [tools: show_sentence, annotate]
+10:38:06 STUDENT(answer) Yes, I have been to Singapore for business. And I visited Thailand last year.
+10:38:13 TUTOR  That's right: "I have been to Singapore" for a trip with no time given, and "I visited Thailand last year" for a finished time. What did you do in Thailand?   [tools: show_sentence]
+10:38:31 STUDENT(answer) I met some clients and ate very delicious Thai food. It was a great trip.
+10:38:34 TUTOR  "I met some clients and ate very delicious Thai food" is a clear sentence, and "ate" is the right past form. What made it a great trip for you?
+10:38:49 STUDENT(answer) The food was amazing, and the people were very friendly and kind to me.
+10:39:00 TUTOR  
+Your answers were clear, so let's take the four main patterns. The key question is: is there a finished time, or is it a life experience with no time?
+
+
+
+Now you try. Tell me one thing you have done in your life, with no time given. Start with "I have…".   [tools: set_working_level, new_page, show_table, annotate]
+10:39:26 STUDENT(answer) I have eaten sushi many times in Japan.
+10:39:28 TUTOR  Correct. "Many times in Japan" gives no finished time, so the present perfect is right. Now ask me a question with the same pattern. Start with "Have you ever…?"
+10:39:43 STUDENT(answer) Did you ever eat natto?
+10:39:49 TUTOR  Good question, and "Did you ever eat natto?" is correct English. Today we're practising "Have you ever…?" for experiences, so I'll answer you first: I have never eaten natto. It's too strong for me!
+
+Now ask me the same question with "Have you ever…?"
+
+   [tools: show_sentence]
+10:40:12 STUDENT(answer) Have you ever eaten natto?
+10:40:19 TUTOR  Correct. "Have you ever eaten natto?" is a clear question about experience.
+
+Now the next pattern: an action in progress at a past moment, using "was" or "were" plus the -ing form.
+
+
+
+Tell me something you were doing when you heard some news, or when someone arrived. Start with "I was…".   [tools: show_sentence]
+10:40:46 STUDENT(answer) I was eating lunch when my manager called me about the Singapore project.
+10:40:53 TUTOR  Correct. "Was eating" is the action in progress, and "called" is the event that interrupted it.
+
+Last one in this part is the earlier of two past events, which uses "had" plus the past participle.
+
+
+
+Try one with "had" and a past participle: something that happened before another thing you did.   [tools: show_sentence, show_sentence]
+10:41:20 STUDENT(answer) I had finished my report before the meeting started.
+10:41:26 TUTOR  Correct: "had finished" is the earlier action, and "started" is the later one. That finishes the four patterns.
+
+Next is the verb chart: the past and past participle forms of common verbs. Shall we go on?   [tools: show_sentence]
+10:41:48 STUDENT(answer) Yes, let's go on. I want to learn the verb forms.
+10:41:53 TUTOR  Let's build the chart. Each row gives the present, the past, and the past participle, the form we use after "have" or "had".
+
+
+Here is the chart, with the missing forms as question marks. We'll go one verb at a time, starting at the top.
+
+
+
+The first one: "visit, visited, ?". What is the past partic   [tools: new_page, show_table]
+10:42:23 STUDENT(answer) The past participle is 'visited'.
+10:42:25 TUTOR  Correct, "visited" is the past participle, and "visit" is regular, so it adds -ed in both forms.
+
+Next: "stop, ?, stopped". What is the past form of "stop"?
+10:42:41 STUDENT(answer) The past form is 'stopped'.
+10:42:42 TUTOR  Correct, "stopped" is the past form, and it repeats the final consonant before -ed.
+
+Next row: "ride, rode, ?". What is the past participle of "ride"?
+10:42:57 STUDENT(answer) The past participle is 'ridden'.
+10:42:59 TUTOR  "Ridden" is right, and it's one of the irregular forms you just have to remember.
+
+Next row: "send, ?, sent". What is the past form of "send"?
+10:43:14 STUDENT(answer) The past form is 'sent'.
+10:43:22 TUTOR  Correct, "sent" is the past form, and it's the same as the participle.
+
+Next row: "? , ate, eaten". What is the present form of "ate"? Hint: it's the verb you already used with sushi.   [tools: show_table]
+10:43:44 STUDENT(answer) The present form is 'eat'.
+10:43:46 TUTOR  Yes, "eat" is the present form. Now the participle: "eat, ate, ?". What is the past participle of "eat"?
+10:43:59 STUDENT(answer) The past participle is 'eaten'.
+10:44:00 TUTOR  Correct, "eaten" is the participle. Next row: "hear, ?, heard". What is the past form of "hear"?
+10:44:12 STUDENT(answer) The past form is 'heard'.
+10:44:13 TUTOR  Correct, "heard" is the past form, and it's spelled the same as the participle.
+
+Next row: "run, ran, ?". What is the past participle of "run"?
+10:44:29 STUDENT(answer) The past participle is 'run'.
+10:44:30 TUTOR  Correct, "run" is the participle, the same as the present form. Next row: "see, saw, ?". What is the past participle of "see"?
+10:44:43 STUDENT(answer) The past participle is 'seen'.
+10:44:44 TUTOR  Correct, "seen" is the participle of "see". Next row: "drink, drank, ?". What is the past participle of "drink"?
+10:44:56 STUDENT(answer) The past participle is 'drunk'.
+10:45:00 TUTOR  Correct, "drunk" is the participle of "drink". You've also already shown "been" for "go" earlier, so that row is done too.
+
+Now add two verbs of your own to the chart, with their past and past participle. Then ask me one "Have you ever…?" question using one of those participles.
+10:45:23 STUDENT(answer) I add 'travel, travelled, travelled' and 'cook, cooked, cooked'. Have you ever travelled to Japan?
+10:45:31 TUTOR  You're right, "Have you ever travelled to Japan?" is a correct question. I'm a tutor, so I haven't travelled anywhere, and I can't answer that one from experience.
+
+Your two new verbs are right too: "travel, travelled, travelled" and "cook, cooked, cooked" follow the regular pattern.
+
+Now ask me a f   [tools: annotate, show_sentence]
+10:46:03 STUDENT(answer) Where did you travel last time? Or when did you cook a special meal?
+10:46:09 TUTOR  I'm a tutor, so I haven't travelled or cooked a special meal myself. The verb chart is done, and you handled the new verbs well.
+
+Next is choosing the right form in full sentences. Shall we go on, or do you have another question first?
+10:46:32 STUDENT(answer) Yes, let's go on. I understand the chart now.
+10:46:37 TUTOR  Here is the next part: choosing the right form. Read each sentence, decide which form fits, and say the full sentence.
+
+
+
+
+Let's start with the first one. We ___ live in Tochigi since high school. Which form fits, and what is the full sentence?   [tools: new_page, show_problem]
+10:47:02 STUDENT(answer) We have lived in Tochigi since high school.
+10:47:04 TUTOR  Correct. "Since high school" is a starting point that still reaches now, so we use the present perfect: "have lived."
+
+Now the second one: "The train ___ already ___ (leave) when we arrived." Which two forms fit, and what is the full sentence?
+10:47:26 STUDENT(answer) The train had already left when we arrived.
+10:47:30 TUTOR  Correct. "Had left" is the earlier event, and "arrived" is the later one.
+
+Now the third one: "They ___ (talk) loudly when the conductor came in." Which form fits, and what is the full sentence?
+10:47:48 STUDENT(answer) They were talking loudly when the conductor came in.
+10:47:54 TUTOR  Correct. "Talk" needs the past progressive here, because it was in progress when the conductor came in.
+
+Now the last one: "I ___ (go) to Gifu last week." Which form fits, and what is the full sentence?   [tools: annotate]
+10:48:15 STUDENT(answer) I went to Gifu last week.
+10:48:19 TUTOR  Correct. "Last week" is a finished time, so we use the past simple: "went."
+
+That finishes the choosing practice. Next is a short role-play, where I ask about your experiences and you keep the conversation going. Shall we go on, or do you have a question first?
+10:48:40 STUDENT(answer) Yes, let's do the role-play. I'm ready.
+10:48:45 TUTOR  Great. I'm your partner in this conversation, and I'll ask about your experiences. Answer with your own real ideas and keep going.
+
+
+
+
+Here is my first question: Have you ever tried kayaking?   [tools: new_page, show_problem, show_sentence]
+10:49:06 STUDENT(answer) No, I have never tried kayaking. But I want to try it someday. Have you ever tried kayaking?
+10:49:12 TUTOR  "I have never tried kayaking" is correct, and "someday" fits well with it. My answer: yes, I tried it once, on a lake near my home last summer. It was fun, but it was harder than I expected!
+
+Where would you like to try kayaking?   [tools: show_sentence]
+10:49:37 STUDENT(answer) I would like to try kayaking in Okinawa. The water is very blue and beautiful there.
+10:49:39 TUTOR  Okinawa sounds lovely. Have you ever been to Okinawa?
+10:49:48 STUDENT(answer) Yes, I have been to Okinawa twice. I visited there last year with my family and we ate delicious seafood.
+10:49:52 TUTOR  "I have been to Okinawa twice" and "I visited there last year" are both correct, and "ate" is the right form for a finished trip. What was your favourite seafood dish on that trip?   [tools: show_sentence, show_sentence]
+10:50:12 STUDENT(answer) My favourite was grilled fish. It was so fresh and delicious!
+10:50:14 TUTOR  Grilled fish sounds wonderful. When did you first go to Okinawa?
+10:50:24 STUDENT(answer) I first went to Okinawa when I was a student, about five years ago.
+10:50:28 TUTOR  "I first went to Okinawa when I was a student, about five years ago" is correct: "went" is the past simple for a finished time. Who did you go with on that first trip?   [tools: show_sentence]
+10:50:49 STUDENT(answer) I went with my university friends. We had a wonderful time together.
+10:50:53 TUTOR  "We had a wonderful time together" is correct, and "had" fits a finished trip. You've used "been" correctly on your own now, so the "went" and "been" mix-up is behind you.
+
+Now you ask me three questions about an experience of mine. Start with "Have you ever…?"   [tools: show_sentence]
+10:51:18 STUDENT(answer) Have you ever been to Japan? And when did you visit? What was your favourite place?
+10:51:23 TUTOR  I'm a tutor, so I haven't been to Japan or any other place. Your three questions were good practice in asking about experiences.
+
+That finishes the role-play. The last part is a short recap of the four patterns and the irregular forms to remember. Shall we go on?
+10:51:45 STUDENT(answer) Yes, let's do the recap. I want to make sure I remember everything.
+10:51:51 TUTOR  Here's the recap. Your work today was strong, and the one thing to watch is "been" after "have", not "went".
+
+
+
+
+
+
+
+Would you like to try one more role-play, or stop here?   [tools: new_page, annotate, show_sentence, show_sentence]
+10:52:11 STUDENT(answer) I think I understand now. Thank you very much for the lesson, Jameson!
+10:52:14 TUTOR  You did well today. You chose between the past simple and the present perfect correctly, and you used the past progressive and past perfect in your own sentences. The one thing to keep practising is "been" after "have", not "went". Thank you, Aya, and good luck with your trip to Okinawa.
+
+
+
+   [tools: new_page, show_sentence, show_sentence]
+10:52:38 STUDENT(end)
+10:52:38 waiting 35 s for the autosave

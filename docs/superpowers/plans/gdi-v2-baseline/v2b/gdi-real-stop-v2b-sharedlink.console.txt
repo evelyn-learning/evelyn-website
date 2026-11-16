@@ -1,0 +1,88 @@
+10:42:20 open fixture=gdi-real-stop arm=v2b-sharedlink student=gdi-v2-replay-gdi-b1-mixed-v2 (speech off)
+10:43:05 no start orb (auto-start?)
+10:43:05 TUTOR  Hello Josh, I'm Ryota. Welcome back to your English lesson!
+
+Today we'll talk about your work and recent projects, practising the present perfect for experience that continues now and the past simple for finished events. Last time we ended on follow-up questions, so we'll pick that up too. Does that   [tools: annotate]
+10:43:36 STUDENT(ack) Yes, that sounds good. Intermediate level feels right for me.
+10:43:46 TUTOR  
+
+Let's start with how we talk about work. We explain our responsibilities, our experience and our achievements. Two tenses help us with this. The present perfect is for experience that started in the past and continues now. The past simple is for something that was finished at a specific time.
+
+
+
+N   [tools: new_page, show_table, show_problem]
+10:44:19 STUDENT(answer) I am a manager at a communications company in Japan. My main responsibilities are to lead my team and to manage projects with our clients.
+10:44:26 TUTOR  Good, that's a clear answer, and "My main responsibilities are to lead my team" is a natural way to say it. Your sentences are correct.
+
+Now I'd like to know more about your work history. How long have you worked at your company?   [tools: annotate]
+10:44:50 STUDENT(answer) I have worked at this company for eight years.
+10:44:54 TUTOR  That's correct: "I have worked at this company for eight years." You started in the past and you still work there now, so the present perfect is right.
+
+
+
+Shall we go on, or do you have a question first?
+10:45:13 STUDENT(ack) No question. We can go on.
+10:45:18 TUTOR  
+
+Next is the present perfect. We use it for experience that started in the past and continues now: subject + have/has + past participle, for example "I have worked here for eleven years." 
+
+Here is a question for you: have you worked on a project with an international customer? Answer in one or two   [tools: new_page, annotate, show_problem]
+10:45:49 STUDENT(answer) I have worked on many projects with international customers. We work with companies in Japan and worldwide.
+10:45:53 TUTOR  Correct: "I have worked on many projects with international customers." That is experience that continues up to now, so the present perfect fits.
+
+Can you tell me about one of those projects? When did you work on it?
+10:46:13 STUDENT(answer) Last year, I worked on a project with a company in America. We helped them to improve their communication strategy for the Japanese market.
+10:46:17 TUTOR  
+
+Next is past simple. Shall we go on, or do you have a question first?
+10:46:28 STUDENT(ack) No question. We can go on.
+10:46:34 TUTOR  
+
+Your answer was good: "Last year, I worked on a project with a company in America." You used the past simple because "last year" is a specific time in the past.
+
+Now the past simple: subject + past-tense verb, for a finished event at a specific time, for example "I attended an exhibition last year   [tools: new_page, annotate, show_problem, annotate]
+10:47:10 STUDENT(answer) Yes, I attended a conference in Tokyo last year. I met many people from different companies and learned about new trends in communications.
+10:47:16 TUTOR  Correct: "I attended a conference in Tokyo last year." You used the past simple for a finished event with a specific time, and "I met many people" and "I learned about new trends" follow the same pattern.
+
+
+
+That finishes the past simple. Next is a longer conversation about work, where you can ask m   [tools: annotate]
+10:47:48 STUDENT(answer) Okay, please stop. I would like to end the session for now.
+10:47:51 TUTOR  
+
+Thank you, Josh. Today you practised talking about your work, using the present perfect for experience that continues now and the past simple for finished events. Your sentences were accurate, and you chose the right tense each time. Next time we'll start with a short review of today's work, and w   [tools: new_page]
+10:48:30 input gone (locator.click: Timeout 8000ms exceeded.) — treating as closed
+10:48:30 waiting 35 s for the autosave
+
+=== gdi-real-stop / v2b-sharedlink · 5.4 min · session embed-1794825740565 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/.superpowers/sdd/2026-11-13-gdi-on-v2-plan/v2b-runs/gdi-real-stop-v2b-sharedlink-mwj4wkhzee8.json
+{
+  "fixture": "gdi-real-stop",
+  "arm": "v2b-sharedlink",
+  "minutes": 5.4,
+  "tutorTurns": 10,
+  "studentTurns": 9,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.6,
+  "questionAfterAnswerShare": 0.83,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 59,
+  "tutorWordsP90": 75,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 2491,
+  "firstSentenceMsP95": 5351,
+  "inputTokens": 449564,
+  "outputTokens": 8643,
+  "costPerMinute": 0.004,
+  "endedBy": "tutor_close"
+}

@@ -1,0 +1,390 @@
+{
+  "fixture": "gdi-real-stop",
+  "arm": "v2b-sharedlink",
+  "sessionId": "embed-1794825740565",
+  "startedAt": "2026-11-16T10:43:05.430Z",
+  "minutes": 5.412116666666667,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hello Josh, I'm Ryota. Welcome back to your English lesson!\n\nToday we'll talk about your work and recent projects, practising the present perfect for experience that continues now and the past simple for finished events. Last time we ended on follow-up questions, so we'll pick that up too. Does that sound good?\n\nLast time we worked at intermediate level. Does that still feel right?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, that sounds good. Intermediate level feels right for me.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Let's start with how we talk about work. We explain our responsibilities, our experience and our achievements. Two tenses help us with this. The present perfect is for experience that started in the past and continues now. The past simple is for something that was finished at a specific time.\n\n\n\nNow, a question for you: what are your main responsibilities at work? Please give me at least two sentences."
+    },
+    {
+      "role": "student",
+      "text": "I am a manager at a communications company in Japan. My main responsibilities are to lead my team and to manage projects with our clients.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, that's a clear answer, and \"My main responsibilities are to lead my team\" is a natural way to say it. Your sentences are correct.\n\nNow I'd like to know more about your work history. How long have you worked at your company?"
+    },
+    {
+      "role": "student",
+      "text": "I have worked at this company for eight years.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "That's correct: \"I have worked at this company for eight years.\" You started in the past and you still work there now, so the present perfect is right.\n\n\n\nShall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "No question. We can go on.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Next is the present perfect. We use it for experience that started in the past and continues now: subject + have/has + past participle, for example \"I have worked here for eleven years.\" \n\nHere is a question for you: have you worked on a project with an international customer? Answer in one or two sentences, starting with \"I have...\""
+    },
+    {
+      "role": "student",
+      "text": "I have worked on many projects with international customers. We work with companies in Japan and worldwide.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct: \"I have worked on many projects with international customers.\" That is experience that continues up to now, so the present perfect fits.\n\nCan you tell me about one of those projects? When did you work on it?"
+    },
+    {
+      "role": "student",
+      "text": "Last year, I worked on a project with a company in America. We helped them to improve their communication strategy for the Japanese market.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Next is past simple. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "No question. We can go on.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Your answer was good: \"Last year, I worked on a project with a company in America.\" You used the past simple because \"last year\" is a specific time in the past.\n\nNow the past simple: subject + past-tense verb, for a finished event at a specific time, for example \"I attended an exhibition last year.\" \n\nHere is your question: did you attend any business events or exhibitions last year? Answer in one or two sentences."
+    },
+    {
+      "role": "student",
+      "text": "Yes, I attended a conference in Tokyo last year. I met many people from different companies and learned about new trends in communications.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct: \"I attended a conference in Tokyo last year.\" You used the past simple for a finished event with a specific time, and \"I met many people\" and \"I learned about new trends\" follow the same pattern.\n\n\n\nThat finishes the past simple. Next is a longer conversation about work, where you can ask me questions too. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Okay, please stop. I would like to end the session for now.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, Josh. Today you practised talking about your work, using the present perfect for experience that continues now and the past simple for finished events. Your sentences were accurate, and you chose the right tense each time. Next time we'll start with a short review of today's work, and we'll look at follow-up questions and the open conversation."
+    }
+  ],
+  "events": [
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=70814 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=70814 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "working_level_known",
+      "message": "intermediate (v2)"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · with \"Today we'll talk about your work\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6986ms · first_sentence=3169ms · in=12625 out=1249 cr=24654 cc=12138 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Does intermediate level still feel right for you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does intermediate level still feel right for you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Does intermediate level still feel right for you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 2 \"Your job and experience\" · inline"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Does intermediate level still feel right for you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_table → painted on page 2 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 2 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 8856ms · first_sentence=5351ms · in=14443 out=1515 cr=55688 cc=250 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 2 · with \"Your sentences are correct.\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5904ms · first_sentence=2491ms · in=13200 out=1002 cr=37292 cc=1592 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"How long have you worked at your company?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"How long have you worked at your company?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"How long have you worked at your company?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"How long have you worked at your company?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → not opened yet: the student is asked first"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3723ms · first_sentence=2864ms · in=833 out=625 cr=19442 cc=228 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 3 \"Present perfect\" · inline"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 3 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 3 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4534ms · first_sentence=1931ms · in=13522 out=692 cr=39112 cc=362 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3842ms · first_sentence=1507ms · in=13382 out=545 cr=39474 cc=482 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Can you tell me about one of those projects and when you wor\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you tell me about one of those projects and when you wor\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you tell me about one of those projects and when you wor\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → not opened yet: the student is asked first"
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Can you tell me about one of those projects and when you wor\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3955ms · first_sentence=3955ms · in=842 out=698 cr=19978 cc=100 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794825973283 — \"Can you tell me about one of those projects and when you wor\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 4 \"Past simple\" · inline"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 4 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 4 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 4 · with \"Your answer was good\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5686ms · first_sentence=1334ms · in=13550 out=1037 cr=40056 cc=168 · v2"
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"present-perfect\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 4 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4637ms · first_sentence=1921ms · in=13448 out=747 cr=40224 cc=714 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 5 \"Summary\" · inline"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "end_lesson → the session is ending"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2891ms · first_sentence=1766ms · in=898 out=533 cr=20469 cc=398 · v2"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "end_lesson"
+    },
+    {
+      "type": "practice_draft_upserted",
+      "message": "lo=[gdi.work-projects.conversation] trigger=close_tool status=200 (v2)"
+    },
+    {
+      "type": "v2_practice_assign",
+      "message": "finalize status=200"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "v2_profile_commit",
+      "message": "status=200 gaps=0 mastery=[] evidence=0 turns=19"
+    }
+  ],
+  "estimatedCost": 0.0206,
+  "endedBy": "tutor_close"
+}

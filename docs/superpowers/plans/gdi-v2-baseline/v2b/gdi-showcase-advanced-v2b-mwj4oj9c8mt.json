@@ -1,0 +1,1347 @@
+{
+  "fixture": "gdi-showcase-advanced",
+  "arm": "v2b",
+  "sessionId": "embed-1794825365819",
+  "startedAt": "2026-11-16T10:36:50.573Z",
+  "minutes": 15.7999,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hello, I'm Jameson, and welcome. Today we'll talk about past experiences in English: saying what you have done, and when. We'll look at the tenses for this, practise the past forms of common verbs, and end with a short conversation about a trip or an experience of yours. Does that sound good?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I'm ready.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Let's start with you. Have you ever been to a country outside Japan?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have went to Singapore for business.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, you used the present perfect for an experience. The verb needs a change, though: after \"have\", we use the past participle, not the past simple. \"Go\" becomes \"been\" in this form.\n\n\n\nPlease say that sentence back to me. Then tell me one other place you have been to."
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have been to Singapore for business. And I visited Thailand last year.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "That's right: \"I have been to Singapore\" for a trip with no time given, and \"I visited Thailand last year\" for a finished time. What did you do in Thailand?"
+    },
+    {
+      "role": "student",
+      "text": "I met some clients and ate very delicious Thai food. It was a great trip.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "\"I met some clients and ate very delicious Thai food\" is a clear sentence, and \"ate\" is the right past form. What made it a great trip for you?"
+    },
+    {
+      "role": "student",
+      "text": "The food was amazing, and the people were very friendly and kind to me.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Your answers were clear, so let's take the four main patterns. The key question is: is there a finished time, or is it a life experience with no time?\n\n\n\nNow you try. Tell me one thing you have done in your life, with no time given. Start with \"I have…\"."
+    },
+    {
+      "role": "student",
+      "text": "I have eaten sushi many times in Japan.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct. \"Many times in Japan\" gives no finished time, so the present perfect is right. Now ask me a question with the same pattern. Start with \"Have you ever…?\""
+    },
+    {
+      "role": "student",
+      "text": "Did you ever eat natto?",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Good question, and \"Did you ever eat natto?\" is correct English. Today we're practising \"Have you ever…?\" for experiences, so I'll answer you first: I have never eaten natto. It's too strong for me!\n\nNow ask me the same question with \"Have you ever…?\""
+    },
+    {
+      "role": "student",
+      "text": "Have you ever eaten natto?",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct. \"Have you ever eaten natto?\" is a clear question about experience.\n\nNow the next pattern: an action in progress at a past moment, using \"was\" or \"were\" plus the -ing form.\n\n\n\nTell me something you were doing when you heard some news, or when someone arrived. Start with \"I was…\"."
+    },
+    {
+      "role": "student",
+      "text": "I was eating lunch when my manager called me about the Singapore project.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct. \"Was eating\" is the action in progress, and \"called\" is the event that interrupted it.\n\nLast one in this part is the earlier of two past events, which uses \"had\" plus the past participle.\n\n\n\nTry one with \"had\" and a past participle: something that happened before another thing you did."
+    },
+    {
+      "role": "student",
+      "text": "I had finished my report before the meeting started.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct: \"had finished\" is the earlier action, and \"started\" is the later one. That finishes the four patterns.\n\nNext is the verb chart: the past and past participle forms of common verbs. Shall we go on?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, let's go on. I want to learn the verb forms.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Let's build the chart. Each row gives the present, the past, and the past participle, the form we use after \"have\" or \"had\".\n\n\nHere is the chart, with the missing forms as question marks. We'll go one verb at a time, starting at the top.\n\n\n\nThe first one: \"visit, visited, ?\". What is the past participle of \"visit\"?"
+    },
+    {
+      "role": "student",
+      "text": "The past participle is 'visited'.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct, \"visited\" is the past participle, and \"visit\" is regular, so it adds -ed in both forms.\n\nNext: \"stop, ?, stopped\". What is the past form of \"stop\"?"
+    },
+    {
+      "role": "student",
+      "text": "The past form is 'stopped'.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct, \"stopped\" is the past form, and it repeats the final consonant before -ed.\n\nNext row: \"ride, rode, ?\". What is the past participle of \"ride\"?"
+    },
+    {
+      "role": "student",
+      "text": "The past participle is 'ridden'.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "\"Ridden\" is right, and it's one of the irregular forms you just have to remember.\n\nNext row: \"send, ?, sent\". What is the past form of \"send\"?"
+    },
+    {
+      "role": "student",
+      "text": "The past form is 'sent'.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct, \"sent\" is the past form, and it's the same as the participle.\n\nNext row: \"? , ate, eaten\". What is the present form of \"ate\"? Hint: it's the verb you already used with sushi."
+    },
+    {
+      "role": "student",
+      "text": "The present form is 'eat'.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Yes, \"eat\" is the present form. Now the participle: \"eat, ate, ?\". What is the past participle of \"eat\"?"
+    },
+    {
+      "role": "student",
+      "text": "The past participle is 'eaten'.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct, \"eaten\" is the participle. Next row: \"hear, ?, heard\". What is the past form of \"hear\"?"
+    },
+    {
+      "role": "student",
+      "text": "The past form is 'heard'.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct, \"heard\" is the past form, and it's spelled the same as the participle.\n\nNext row: \"run, ran, ?\". What is the past participle of \"run\"?"
+    },
+    {
+      "role": "student",
+      "text": "The past participle is 'run'.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct, \"run\" is the participle, the same as the present form. Next row: \"see, saw, ?\". What is the past participle of \"see\"?"
+    },
+    {
+      "role": "student",
+      "text": "The past participle is 'seen'.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct, \"seen\" is the participle of \"see\". Next row: \"drink, drank, ?\". What is the past participle of \"drink\"?"
+    },
+    {
+      "role": "student",
+      "text": "The past participle is 'drunk'.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct, \"drunk\" is the participle of \"drink\". You've also already shown \"been\" for \"go\" earlier, so that row is done too.\n\nNow add two verbs of your own to the chart, with their past and past participle. Then ask me one \"Have you ever…?\" question using one of those participles."
+    },
+    {
+      "role": "student",
+      "text": "I add 'travel, travelled, travelled' and 'cook, cooked, cooked'. Have you ever travelled to Japan?",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "You're right, \"Have you ever travelled to Japan?\" is a correct question. I'm a tutor, so I haven't travelled anywhere, and I can't answer that one from experience.\n\nYour two new verbs are right too: \"travel, travelled, travelled\" and \"cook, cooked, cooked\" follow the regular pattern.\n\nNow ask me a follow-up about a trip or a meal you have had, with \"where\" or \"when\" in it."
+    },
+    {
+      "role": "student",
+      "text": "Where did you travel last time? Or when did you cook a special meal?",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "I'm a tutor, so I haven't travelled or cooked a special meal myself. The verb chart is done, and you handled the new verbs well.\n\nNext is choosing the right form in full sentences. Shall we go on, or do you have another question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, let's go on. I understand the chart now.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Here is the next part: choosing the right form. Read each sentence, decide which form fits, and say the full sentence.\n\n\n\n\nLet's start with the first one. We ___ live in Tochigi since high school. Which form fits, and what is the full sentence?"
+    },
+    {
+      "role": "student",
+      "text": "We have lived in Tochigi since high school.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct. \"Since high school\" is a starting point that still reaches now, so we use the present perfect: \"have lived.\"\n\nNow the second one: \"The train ___ already ___ (leave) when we arrived.\" Which two forms fit, and what is the full sentence?"
+    },
+    {
+      "role": "student",
+      "text": "The train had already left when we arrived.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct. \"Had left\" is the earlier event, and \"arrived\" is the later one.\n\nNow the third one: \"They ___ (talk) loudly when the conductor came in.\" Which form fits, and what is the full sentence?"
+    },
+    {
+      "role": "student",
+      "text": "They were talking loudly when the conductor came in.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct. \"Talk\" needs the past progressive here, because it was in progress when the conductor came in.\n\nNow the last one: \"I ___ (go) to Gifu last week.\" Which form fits, and what is the full sentence?"
+    },
+    {
+      "role": "student",
+      "text": "I went to Gifu last week.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Correct. \"Last week\" is a finished time, so we use the past simple: \"went.\"\n\nThat finishes the choosing practice. Next is a short role-play, where I ask about your experiences and you keep the conversation going. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, let's do the role-play. I'm ready.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Great. I'm your partner in this conversation, and I'll ask about your experiences. Answer with your own real ideas and keep going.\n\n\n\n\nHere is my first question: Have you ever tried kayaking?"
+    },
+    {
+      "role": "student",
+      "text": "No, I have never tried kayaking. But I want to try it someday. Have you ever tried kayaking?",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "\"I have never tried kayaking\" is correct, and \"someday\" fits well with it. My answer: yes, I tried it once, on a lake near my home last summer. It was fun, but it was harder than I expected!\n\nWhere would you like to try kayaking?"
+    },
+    {
+      "role": "student",
+      "text": "I would like to try kayaking in Okinawa. The water is very blue and beautiful there.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Okinawa sounds lovely. Have you ever been to Okinawa?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have been to Okinawa twice. I visited there last year with my family and we ate delicious seafood.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "\"I have been to Okinawa twice\" and \"I visited there last year\" are both correct, and \"ate\" is the right form for a finished trip. What was your favourite seafood dish on that trip?"
+    },
+    {
+      "role": "student",
+      "text": "My favourite was grilled fish. It was so fresh and delicious!",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Grilled fish sounds wonderful. When did you first go to Okinawa?"
+    },
+    {
+      "role": "student",
+      "text": "I first went to Okinawa when I was a student, about five years ago.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "\"I first went to Okinawa when I was a student, about five years ago\" is correct: \"went\" is the past simple for a finished time. Who did you go with on that first trip?"
+    },
+    {
+      "role": "student",
+      "text": "I went with my university friends. We had a wonderful time together.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "\"We had a wonderful time together\" is correct, and \"had\" fits a finished trip. You've used \"been\" correctly on your own now, so the \"went\" and \"been\" mix-up is behind you.\n\nNow you ask me three questions about an experience of mine. Start with \"Have you ever…?\""
+    },
+    {
+      "role": "student",
+      "text": "Have you ever been to Japan? And when did you visit? What was your favourite place?",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "I'm a tutor, so I haven't been to Japan or any other place. Your three questions were good practice in asking about experiences.\n\nThat finishes the role-play. The last part is a short recap of the four patterns and the irregular forms to remember. Shall we go on?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, let's do the recap. I want to make sure I remember everything.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Here's the recap. Your work today was strong, and the one thing to watch is \"been\" after \"have\", not \"went\".\n\n\n\n\n\n\n\nWould you like to try one more role-play, or stop here?"
+    },
+    {
+      "role": "student",
+      "text": "I think I understand now. Thank you very much for the lesson, Jameson!",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "You did well today. You chose between the past simple and the present perfect correctly, and you used the past progressive and past perfect in your own sentences. The one thing to keep practising is \"been\" after \"have\", not \"went\". Thank you, Aya, and good luck with your trip to Okinawa."
+    }
+  ],
+  "events": [
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=yes open_scope=yes"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=jameson"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=yes open_scope=yes"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=jameson"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=71772 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=71772 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 1 \"Past experiences\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6375ms · first_sentence=1728ms · in=5919 out=830 cr=20715 cc=8199 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that sound good?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that sound good?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Does that sound good?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Does that sound good?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2515ms · first_sentence=2453ms · in=1439 out=361 cr=29091 cc=177 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Have you ever been to a country outside Japan?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Have you ever been to a country outside Japan?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Have you ever been to a country outside Japan?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Have you ever been to a country outside Japan?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 1 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 9779ms · first_sentence=3249ms · in=6122 out=1632 cr=29268 cc=628 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Then tell me one other place you have been to.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Then tell me one other place you have been to.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Then tell me one other place you have been to.\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Then tell me one other place you have been to.\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 1 · with \"I visited Thailand last year\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6012ms · first_sentence=2319ms · in=6514 out=912 cr=29896 cc=560 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What did you do in Thailand?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What did you do in Thailand?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What did you do in Thailand?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What did you do in Thailand?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2654ms · first_sentence=2469ms · in=719 out=340 cr=15228 cc=117 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What made the trip great for you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What made the trip great for you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What made the trip great for you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson."
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 2 \"Four ways to talk about the past\" · inline"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What made the trip great for you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_table → painted on page 2 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 2 · with \"The key question is\""
+    },
+    {
+      "type": "working_level_set",
+      "message": "intermediate (v2)"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 10854ms · first_sentence=4646ms · in=8073 out=1841 cr=45990 cc=261 · v2"
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"I have learned to listen carefully when someone is speaking.\" → \"The key question is: is there a finished time, or is it a li\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"The key question is: is there a finished time, or is it a li\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"The key question is: is there a finished time, or is it a li\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"The key question is: is there a finished time, or is it a li\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1765ms · first_sentence=1532ms · in=835 out=253 cr=15417 cc=762 · v2"
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"Have you ever eaten sushi?\" → \"Start with \"Have you ever…?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Start with \"Have you ever…?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"Start with \"Have you ever…?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 2 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6131ms · first_sentence=2456ms · in=6628 out=958 cr=31596 cc=900 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794825583222 — \"Start with \"Have you ever…?\""
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Have you ever eaten natto?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Have you ever eaten natto?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"Have you ever eaten natto?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 2 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6549ms · first_sentence=1617ms · in=6895 out=1012 cr=32496 cc=316 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794825612899 — \"Have you ever eaten natto?\""
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"I was studying when I heard about the earthquake?\" → \"Have you ever eaten natto?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Have you ever eaten natto?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Have you ever eaten natto?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Have you ever eaten natto?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 2 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 2 · with \"Correct. &quot;Was eating&quot; is the action in progress\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7114ms · first_sentence=1835ms · in=6806 out=1182 cr=32812 cc=356 · v2"
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"Can you make a sentence with \"had\" and a past participle sho\" → \"Try one with \"had\" and a past participle: something that hap\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try one with \"had\" and a past participle: something that hap\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try one with \"had\" and a past participle: something that hap\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Try one with \"had\" and a past participle: something that hap\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 2 · with \"Correct: &quot;had finished&quot; is the earlier action\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5774ms · first_sentence=1925ms · in=6867 out=1019 cr=33168 cc=448 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Shall we go on?\""
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"misconception-specific-time\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we go on?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 3 \"Verb forms\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_table → painted on page 3 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4980ms · first_sentence=1782ms · in=7004 out=781 cr=33616 cc=718 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the past participle of \"visit\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the past participle of \"visit\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the past participle of \"visit\"?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What is the past participle of \"visit\"?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1082ms · first_sentence=871ms · in=957 out=129 cr=17167 cc=232 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the past form of \"stop\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the past form of \"stop\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the past form of \"stop\"?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What is the past form of \"stop\"?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1368ms · first_sentence=1164ms · in=1012 out=188 cr=17399 cc=76 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the past participle of \"ride\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the past participle of \"ride\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the past participle of \"ride\"?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What is the past participle of \"ride\"?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1618ms · first_sentence=1403ms · in=1013 out=203 cr=17475 cc=72 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the past form of \"send\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the past form of \"send\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the past form of \"send\"?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What is the past form of \"send\"?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_table → painted on page 3 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 8456ms · first_sentence=695ms · in=7037 out=1433 cr=34714 cc=510 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the present form of \"ate\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the present form of \"ate\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the present form of \"ate\"?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What is the present form of \"ate\"?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1918ms · first_sentence=1792ms · in=1113 out=251 cr=17612 cc=183 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the past participle of \"eat\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the past participle of \"eat\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the past participle of \"eat\"?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What is the past participle of \"eat\"?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 785ms · first_sentence=744ms · in=1058 out=92 cr=17795 cc=57 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the past form of \"hear\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the past form of \"hear\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the past form of \"hear\"?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What is the past form of \"hear\"?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1312ms · first_sentence=1163ms · in=1113 out=159 cr=17852 cc=53 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the past participle of \"run\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the past participle of \"run\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the past participle of \"run\"?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What is the past participle of \"run\"?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1228ms · first_sentence=1035ms · in=1113 out=125 cr=17905 cc=65 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the past participle of \"see\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the past participle of \"see\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the past participle of \"see\"?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What is the past participle of \"see\"?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 689ms · first_sentence=532ms · in=1112 out=44 cr=17970 cc=58 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What is the past participle of \"drink\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What is the past participle of \"drink\"?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What is the past participle of \"drink\"?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What is the past participle of \"drink\"?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4260ms · first_sentence=1836ms · in=7258 out=581 cr=35640 cc=532 · v2"
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"The second part is the real question the student answers. Th\" → \"Then ask me one \"Have you ever…?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Then ask me one \"Have you ever…?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"Then ask me one \"Have you ever…?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 3 · with \"Your two new verbs are right too\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · with \"Have you ever travelled to Japan?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7648ms · first_sentence=2867ms · in=7116 out=1224 cr=36172 cc=272 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794825923601 — \"Then ask me one \"Have you ever…?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"You're right, \"Have you ever travelled to Japan?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"You're right, \"Have you ever travelled to Japan?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"You're right, \"Have you ever travelled to Japan?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6265ms · first_sentence=3758ms · in=7169 out=978 cr=36444 cc=626 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794825963383 — \"You're right, \"Have you ever travelled to Japan?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have another question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have another question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Shall we go on, or do you have another question first?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we go on, or do you have another question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 4 \"Choosing the right form\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 4 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4996ms · first_sentence=1319ms · in=7376 out=735 cr=37070 cc=196 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2380ms · first_sentence=1340ms · in=7049 out=258 cr=37266 cc=460 · v2"
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"Which two verb forms fit the blank, and what is the complete\" → \"Which two forms fit, and what is the full sentence?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Which two forms fit, and what is the full sentence?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Which two forms fit, and what is the full sentence?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Which two forms fit, and what is the full sentence?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3618ms · first_sentence=1073ms · in=7038 out=473 cr=37726 cc=190 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Which form of \"talk\" fits, and what is the full sentence?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Which form of \"talk\" fits, and what is the full sentence?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Which form of \"talk\" fits, and what is the full sentence?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Which form of \"talk\" fits, and what is the full sentence?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 4 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5140ms · first_sentence=940ms · in=7039 out=755 cr=37916 cc=176 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Which form fits, and what is the full sentence for \"I ___ (g\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Which form fits, and what is the full sentence for \"I ___ (g\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Which form fits, and what is the full sentence for \"I ___ (g\""
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"try-choose-form\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Which form fits, and what is the full sentence for \"I ___ (g\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3594ms · first_sentence=1530ms · in=7172 out=613 cr=38092 cc=306 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 5 \"Role-play: past experiences\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 5 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5078ms · first_sentence=1337ms · in=7203 out=740 cr=38398 cc=900 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6208ms · first_sentence=1746ms · in=6800 out=954 cr=39298 cc=406 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Where would you like to try kayaking?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Where would you like to try kayaking?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Where would you like to try kayaking?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Where would you like to try kayaking?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1650ms · first_sentence=1585ms · in=944 out=235 cr=19852 cc=152 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Have you ever been to Okinawa?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Have you ever been to Okinawa?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Have you ever been to Okinawa?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Have you ever been to Okinawa?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3867ms · first_sentence=1445ms · in=6811 out=541 cr=39856 cc=282 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What was your favourite seafood dish on that trip?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What was your favourite seafood dish on that trip?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What was your favourite seafood dish on that trip?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"What was your favourite seafood dish on that trip?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1303ms · first_sentence=1200ms · in=973 out=165 cr=20069 cc=152 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"When did you first go to Okinawa?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"When did you first go to Okinawa?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"When did you first go to Okinawa?\""
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"try-roleplay-experience\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"When did you first go to Okinawa?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4186ms · first_sentence=1170ms · in=6868 out=562 cr=40290 cc=254 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Who did you go with on that first trip?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Who did you go with on that first trip?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Who did you go with on that first trip?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Who did you go with on that first trip?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4446ms · first_sentence=1471ms · in=6957 out=695 cr=40544 cc=248 · v2"
+    },
+    {
+      "type": "qpin_gist_ungrounded",
+      "message": "\"Have you ever taken a trip that surprised you in an unexpect\" → \"Start with \"Have you ever…?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Start with \"Have you ever…?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"Start with \"Have you ever…?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5040ms · first_sentence=2161ms · in=6968 out=792 cr=40792 cc=502 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794826278171 — \"Start with \"Have you ever…?\""
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Shall we continue with the recap of patterns and irregular f\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we continue with the recap of patterns and irregular f\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (request) — \"Shall we continue with the recap of patterns and irregular f\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we continue with the recap of patterns and irregular f\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 6 \"Recap: past experiences\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 6 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6305ms · first_sentence=2608ms · in=7252 out=1062 cr=41294 cc=218 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"Another role-play, or stop here?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Another role-play, or stop here?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Another role-play, or stop here?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Another role-play, or stop here?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 7 \"Summary: past experiences\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "end_lesson → the session is ending"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3384ms · first_sentence=1928ms · in=982 out=638 cr=20756 cc=305 · v2"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "end_lesson"
+    },
+    {
+      "type": "working_level_saved",
+      "message": "status=200 intermediate (v2 trial)"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    }
+  ],
+  "estimatedCost": 0.0475,
+  "endedBy": "student_end"
+}

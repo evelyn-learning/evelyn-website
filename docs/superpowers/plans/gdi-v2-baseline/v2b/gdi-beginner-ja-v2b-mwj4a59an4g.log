@@ -1,0 +1,194 @@
+10:24:54 open fixture=gdi-beginner-ja arm=v2b student=gdi-v2b-replay-gdi-beginner-ja (speech off)
+10:25:39 no start orb (auto-start?)
+10:25:39 TUTOR  Hello, Yuki! I'm Ryota, and welcome to your English lesson. Today we'll talk about your work and the projects you're involved in, and practice two grammar points: the present perfect for experience that continues now, and the past simple for finished events at a specific time. Does that sound good t   [tools: new_page, annotate]
+10:26:05 STUDENT(answer) Oh, yes.
+10:26:09 TUTOR  Great, let's begin. You'll talk about your job and a project you're involved in. I'll correct your mistakes, explain them, and give you a chance to try again. Near the end, you can practice pronunciation if you'd like. First, a short level check, so I can adjust the lesson for you. Are you ready?
+10:26:34 STUDENT(answer) Oh, yes.
+10:26:38 TUTOR  Thank you. First, tell me a little about your job. What do you do?
+
+
+   [tools: new_page, show_problem]
+10:26:50 STUDENT(answer) Uh, sorry. I don't understand.
+10:26:52 TUTOR  No problem. Let me ask it more simply: What is your job? Please tell me in one or two sentences.
+
+(むずかしかったですね。もう一度です。「あなたの仕事は何ですか。」)
+10:27:05 STUDENT(answer) I'm engineer.
+10:27:06 TUTOR  Thank you, that's helpful. What kind of engineer are you?
+10:27:16 STUDENT(answer) Make car.
+10:27:18 TUTOR  Oh, you make cars! What do you do at work every day?
+10:27:28 STUDENT(answer) Design engine.
+10:27:32 TUTOR  Designing engines sounds like important work. Now, have you ever worked with a customer from another country? Yes or no is fine to start.
+
+
+10:27:46 STUDENT(answer) No.
+10:27:51 TUTOR  No problem, that's fine. Let's talk about your work in simple sentences, and then practice them together.
+
+
+
+Shall we go on, or do you have a question first?   [tools: set_working_level]
+10:28:08 STUDENT(answer) Yes, go on.
+10:28:13 TUTOR  
+Here are some simple sentences for talking about your job. 仕事の説明に使う短い文です。
+
+
+
+Each sentence is short and clear. Please say the first one, "I work in sales," in your own words, if you like. Then tell me one sentence about your own work, starting with "I work…" or "I design…".   [tools: new_page, annotate]
+10:28:38 STUDENT(answer) I design engine.
+10:28:46 TUTOR  Good, you used the pattern "I + verb." We say "I design engines," with an *s* on engines, because you design more than one. 「エンジン」は複数形の「engines」にします。
+
+
+
+Please say it again, and then tell me one more sentence about your work.   [tools: show_sentence, annotate]
+10:29:07 STUDENT(answer) I design engines. I work for seven year.
+10:29:15 TUTOR  Good, you said "I design engines" correctly. Now, "seven year" needs an *s*: we say "seven years," because more than one year. 「seven years」と複数形にします。
+
+
+
+Please say that sentence again.   [tools: show_sentence, annotate]
+10:29:33 STUDENT(answer) I work for seven years.
+10:29:38 TUTOR  That's right: "I work for seven years" is clear and correct. Next we'll learn the present perfect, which we use for things that started in the past and continue now. Shall we go on?
+10:29:55 STUDENT(answer) Yes, go on.
+10:30:01 TUTOR  
+Now the present perfect. 現在完了は、過去に始まって今も続いていることに使います。 We form it with have or has plus the past participle.
+
+
+
+Here is a sentence about experience that continues now: "I have worked here for five years." We use it because you started in the past and you still work here.
+
+
+
+Now try a question. Pleas   [tools: new_page, annotate, show_problem, annotate]
+10:30:32 STUDENT(complaint_lost) Could you explain that in Japanese?
+10:30:36 TUTOR  現在完了は、「過去に始まって、今も続いていること」を言うときに使います。「I have worked here for five years.」は、5年前に働き始めて、今もここで働いている、という意味です。形は have か has に過去分詞を続けます。
+
+
+
+Now answer the question on the board. Start with "Yes, I have…" or "No, I haven't…".   [tools: annotate]
+10:30:54 STUDENT(answer) I have worked here for seven years.
+10:30:59 TUTOR  Correct: "I have worked here for seven years." You used have worked, and seven years is plural. 
+
+
+
+Now a short question with the same pattern: have you designed a new engine recently?   [tools: show_sentence]
+10:31:18 STUDENT(answer) Yes, I have.
+10:31:24 TUTOR  Yes, "Yes, I have" is a correct answer. That finishes the present perfect for today. Next is the past simple, for things that finished at a specific time. Shall we go on, or do you have a question first?
+10:31:44 STUDENT(answer) Yes, go on.
+10:31:49 TUTOR  
+過去形は、特定の過去の時間に終わった出来事に使います。 Use it with words like last year, yesterday, or two years ago.
+
+
+
+Here is a model: "I attended an exhibition last year." We use the past simple because "last year" is a specific time in the past.
+
+
+
+Now a question for you. Please answer in a full sentence with a past ver   [tools: new_page, annotate, show_sentence, show_problem]
+10:32:16 STUDENT(answer) Last week I go to Tokyo.
+10:32:24 TUTOR  「Last week」は特定の過去の時間なので、過去形を使います。You said "I go to Tokyo." We say "I went to Tokyo," because "go" changes to "went" in the past.
+
+
+
+
+
+Please say the sentence again.   [tools: annotate, show_sentence]
+10:32:41 STUDENT(answer) Last week I went to Tokyo.
+10:32:44 TUTOR  That's correct: "Last week I went to Tokyo." You used the past simple with a specific time.
+
+Now, the past simple question from the board: did you attend any business events or exhibitions last year?
+10:33:01 STUDENT(answer) No.
+10:33:05 TUTOR  That's a clear answer, thank you. Let's try one more with the past simple: did you visit a customer last year? Start with "Yes, I…" or "No, I didn't…".
+
+   [tools: show_problem]
+10:33:23 STUDENT(answer) No, I didn't.
+10:33:28 TUTOR  Correct: "No, I didn't." You used the past simple with a specific time, "last year."
+
+That finishes the past simple. Next is a short conversation about a project you are proud of. Shall we go on, or do you have a question first?
+10:33:50 STUDENT(answer) Yes, go on.
+10:33:53 TUTOR  
+では、仕事のプロジェクトについて話しましょう。 Let's talk about your work in a short conversation.
+
+
+
+Please answer in English, even if it is short.   [tools: new_page, show_problem]
+10:34:08 STUDENT(answer) I design new engine for car. Very good project.
+10:34:17 TUTOR  Good, you are proud of this project, and that is a good answer. Here is one correction. You said "I design new engine for car." We say "I designed a new engine for a car," because this project is finished and it happened in the past.
+
+
+
+Please say the sentence again.   [tools: show_sentence, annotate]
+10:34:44 STUDENT(answer) I designed a new engine for a car.
+10:34:47 TUTOR  Correct: "I designed a new engine for a car." That is a clear sentence about a finished project.
+
+Now I'd like to know more. Who did you design the engine with, and what was the hardest part?
+
+   [tools: show_problem]
+10:35:10 STUDENT(answer) I work with team. Very difficult.
+10:35:16 TUTOR  You said "I work with team." The project is finished, so we say "I worked with a team," in the past.
+
+
+
+Please say that sentence again.   [tools: show_sentence, annotate]
+10:35:34 STUDENT(answer) I worked with a team.
+10:35:40 TUTOR  Correct: "I worked with a team." That is a clear sentence about a finished project.
+
+Have you worked on a new project since then? Start with "Yes, I have…" or "No, I haven't…".
+10:35:57 STUDENT(answer) Yes, I have.
+10:35:58 TUTOR  Good, you have a new project now. What is the project? Try starting with "I am working on…" or "I have worked on…".
+10:36:12 STUDENT(answer) I am working on electric engine.
+10:36:17 TUTOR  You said "I am working on electric engine." We need "an" before "electric," because it starts with a vowel sound. Please say it again.
+
+   [tools: show_sentence, annotate]
+10:36:35 STUDENT(answer) I am working on an electric engine.
+10:36:37 TUTOR  Correct: "I am working on an electric engine." Now, how long have you worked on this project? Start with "I have worked on it for…".
+10:36:52 STUDENT(answer) I have worked on it for two months.
+10:36:56 TUTOR  Correct: "I have worked on it for two months." You used the present perfect for a project that started in the past and continues now.
+
+Is the project going well? Try starting with "It is…" or "It has…".
+10:37:15 STUDENT(answer) It is going very well.
+10:37:17 TUTOR  Correct: "It is going very well." That sounds natural and positive.
+
+When do you expect to finish the project? Try starting with "We expect to…".
+10:37:31 STUDENT(answer) We expect to finish next month.
+10:37:36 TUTOR  Correct: "We expect to finish next month." You used "expect to" well for a plan about the future.
+
+That finishes our conversation about your work. Next is optional pronunciation practice, where you can practise saying a word or a sentence aloud. Shall we go on, or do you have a question first?
+10:38:01 STUDENT(answer) individual words.
+10:38:07 TUTOR  
+Let's start with one word. 単語を一つずつ練習しましょう。
+
+
+
+Listen, then repeat after me. Say it aloud on your own, then type it here when you are ready.
+
+responsibilities   [tools: new_page, annotate]
+10:38:25 STUDENT(answer) responsibilities.
+10:38:30 TUTOR  Good, you typed "responsibilities" correctly. Next, a sentence. Say it aloud on your own, then type it here when you are ready.
+
+
+
+   [tools: show_sentence, annotate]
+10:38:46 STUDENT(ack) OK.
+10:38:50 TUTOR  Take your time. When you are ready, type the sentence here: "I was responsible for communicating with our customers." Stress the words "responsible" and "communicating."
+10:39:05 STUDENT(answer) I was responsible for communicating with our customers.
+10:39:10 TUTOR  Correct, "I was responsible for communicating with our customers." That completes today's pronunciation practice. Now let's review today's lesson.
+
+
+
+Next is summary. Shall we go on, or do you have a question first?
+10:39:28 STUDENT(answer) Yes, go on.
+10:39:35 TUTOR  
+今日のまとめです。 Today you talked about your work, your responsibilities and a project you are proud of. You practised two grammar points.
+
+
+
+One thing you did well was giving full sentences about your project, such as "I designed a new engine for a car." Here is one thing to keep practising: the past for   [tools: new_page, annotate, show_sentence, show_sentence, show_sentence, show_sentence, annotate]
+10:40:25 STUDENT(answer) First one, I work now. Second one, I work before.
+10:40:31 TUTOR  You understood the first sentence well: you started in the past and still work there now. For the second one, you said "I work before." We need the past form, "worked," because it finished at a specific time, "five years ago."
+
+
+
+Please say the second sentence again, using "worked."   [tools: show_sentence]
+10:40:57 STUDENT(answer) I worked there five years ago.
+10:40:59 TUTOR  "I worked there five years ago" is correct, and it completes the contrast we practised today. Thank you, Yuki, for a good lesson. Keep using the present perfect and the past simple when you talk about your work. Goodbye, and see you next time!
+10:41:29 input gone (locator.click: Timeout 8000ms exceeded.) — treating as closed
+10:41:29 waiting 35 s for the autosave

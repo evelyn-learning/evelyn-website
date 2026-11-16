@@ -148,3 +148,42 @@ v2 results:
     - Offers repeat: b1 t21 "Here is a practice question for you. Shall we go on…?"; two to four "Shall we go on?" in a row when the learner's reply is off-target (t2 t37–t39, trial straight t35–t39).
 
 Not measured here (owed to the T7 mic test): measured pronunciation scores, barge-in gate, mic re-acquire, captions, goodbye timing in voice.
+
+## Task 6b re-run (2026-11-16, after the D1–D10 fixes)
+
+Engine at 230ac367 (Task 6b commits a9fc89dd, 199fa2a6, 230ac367 on a178ca3a). Same setup as Task 6: local dev server on :3019 from the gdi-v2 worktree, `NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS=gdi-demo=v2` in the process env only, text mode and `--no-speech` on every run, PROD Mongo via the 2710 tunnel (only the harness's own session rows and `gdi-v2b-replay-*` / the reused b1 id). Bundles, logs, score cards and final screenshots in `v2b/`; `tNN` = turn index in the bundle's `turns` (tutor and student counted together, as in Task 6).
+
+| Run | Session | Min | Ended | Level |
+|---|---|---|---|---|
+| gdi-upper-int | embed-1794824675035 | 15.9 | summary, then student end | intermediate after 3 questions (t3–t9) |
+| gdi-beginner-ja | embed-1794824694511 | 15.8 | tutor close after summary | beginner after 4 questions (t5–t14) |
+| gdi-real-josh | embed-1794824714247 | 9.4 | cap (fixture's lines run out; last line a stop) | intermediate after 3 questions (t5–t10) |
+| gdi-showcase-advanced (is_trial) | embed-1794825365819 | 15.8 | recap t75, summary page + close t77 | intermediate |
+| shared link (gdi-real-stop on b1's id, case 11) | embed-1794825740565 | 5.4 | stop obeyed t18–t19 | remembered intermediate, confirmed t1–t2 |
+| demo-forces (evelyn-marketing) | embed-1794825755120 | 18.8 | tutor close after the last check | n/a |
+
+### Before → after (affected items only)
+
+| Item | Task 6 (v2) | Task 6b (v2b) | Verdict |
+|---|---|---|---|
+| **D1** summary lost to a self-close | showcase t77 and trial straight ended on "Next is summary. Shall we go on…?" with no summary | showcase: recap offered t75; t77 opens page 7 "Summary: past experiences" with its cards, says the summary and ends (end_lesson in the same reply, at 16.1 min, the box's last fifth). No held page in any close of the six runs | **fixed** |
+| **D2** item only on the board | josh t5/t7/t9 "Here is the first question." with the question on a card; upper-int t61 sentence unsaid; james t49 menu unsaid | Voice-only fix, unit-tested on the cited turns (text runs cannot show it). In these text runs the model itself now says the questions (josh t5, t7, t9; upper-int t3–t7) and beginner-ja t65 says its word; upper-int t45 and t53 still leave the practice sentence on the card ("Here is one to practise:"), which a voice session would now read out | fixed for voice (unit level); **owed to the T7 voice check** |
+| **D5** / case 12 over-correction | upper-int t13–t21: 4 tries at one sentence; nearly every answer corrected | upper-int: one error per correction, every chain ends by the 2nd try with the tutor giving the sentence (t17–t19, t23–t25, t27–t29, t49–t51); one sentence came back a 3rd time after a detour (t37–t39, t41–t42). josh t21–t23: 2 tries, then "The correct sentence is…" and on. Corrections still follow most answers. Summary 15.4 min (was 15.2) | **improved** (one 3rd try left) |
+| **D7** level check under three questions | t2 2 questions; beginner-ja job only; both trials 2 | upper-int 3 (t3, t5, t7), josh 3 (t5, t7, t9), beginner-ja 4 (t5 job, t9 kind, t11 daily, t13 abroad); no refusal was needed in any run (the gate is unit-tested on real-t2's sequence) | **fixed** in these runs |
+| **case 11 / D6** shared link | b1's level skipped the check, no re-confirm | t1: "Last time we worked at intermediate level. Does that still feel right?"; t2 "Intermediate level feels right for me." → lesson at it. The "no" path (re-open the check) is unit-tested; this fixture's learner said yes | **fixed** (yes path live, no path unit) |
+| **case 8 / D4** invented facts | t2 t51 office job; upper-int t57 own projects; beginner-ja t71/t75 "you said it clearly" in text | No pronunciation verdict in any typed run: beginner-ja t67 "you typed 'responsibilities' correctly", t69–t71 type-it practice; upper-int t45/t53 "say it aloud, then type it". showcase t45, t47, t73 "I'm a tutor, so I haven't travelled…". But showcase still invents small experiences inside its own exercises: t15 "I have never eaten natto. It's too strong for me!", t61 role-play "I tried it once, on a lake near my home" | **improved** (sound: fixed; persona: partly) |
+| **D8** text pronunciation drifts | upper-int t61–t69 sentence pick → grammar drill → skipped | upper-int t44–t47 "A sentence, please." → card, "say it aloud, then type it" → typed, confirmed, on; beginner-ja t64–t71 word then sentence, no drill | **fixed** |
+| **case 7 / D3** wrong verdicts, misquotes | b1 t21, b1 t33, josh t31, t2 t23 | josh t15 and t21 now "You said: '…' We say: '…'" (no misquote; josh t31's credited "helped" gone). Still: upper-int t37 calls "It took about three month" "correct past simple" (verb right, plural missed); beginner-ja t23 "That's right: 'I work for seven years' is clear and correct" (tense the lesson then teaches); upper-int t25 "You're close" on a still-wrong sentence | **improved, still present** |
+| **case 6 / D10** stock opener | "Yes, that's right." opens 50–70% of turns | Same first word in consecutive tutor turns: upper-int 6→0, beginner-ja 9→5, josh 4→1, showcase 16→10; demo-forces 5→13 (a run of right-answer drills). The stock word moved from "Yes" to "Correct" (showcase 16 of 38 turns open "Correct", beginner-ja t57–t63 four in a row) | **partly** (prompt line alone does not hold it) |
+| **case 1** confusion | improved in Task 6 | beginner-ja t6 "I don't understand" → t7 same question more simply plus Japanese | same (holds) |
+| **case 12** summary in the box | 5 runs 11.2–15.2, 2 lost to D1 | upper-int 15.4 (was 15.2), beginner-ja 14.7 (t73; was 14.0), showcase recap 15.8 / summary 16.1 (was none); josh not reached (cap, as before) | **improved** (no summary lost; pacing unchanged) |
+
+Repeated "Shall we go on?" offers (D10, second half): not changed. Nothing in the facts knows that an offer is pending, and the part hold already opens on any answer to one; seen once here (upper-int t43 and t51 both offer pronunciation).
+
+### Regression: demo-forces (evelyn-marketing)
+- All nine pages of the plan reached, recap and close at 18.6 min (inside the box); no Japanese.
+- Score card: complaint_lost 4 (was 0). All four are t64–t68: the simulated learner says it cannot see the classmate's two sentences on the board ("Can you read them to me?") until the tutor reads them out at t69. The board item was a problem card in a text session, a path these commits do not touch (D2 is voice-only); the v2 run ended before this part. Variance in the simulated learner, not a code change, as far as can be told.
+- First-sentence latency p50 1.6 s (was 2.0 s); p95 3.3 s (was 2.6 s).
+
+### Pool (gdi-demo)
+Before: used 953.3, remaining 1228.8. After: used 1017.5, remaining 1164.5. Delta 64.2 min (my five gdi runs: 16.3 + 16.1 + 10.2 + 16.2 + 5.5 = 64.3). demo-forces (18.8 min) charged evelyn-marketing. Total replay 83 min of the 120 budget.

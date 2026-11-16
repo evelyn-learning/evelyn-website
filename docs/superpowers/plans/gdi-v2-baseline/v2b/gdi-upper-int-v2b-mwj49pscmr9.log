@@ -1,0 +1,161 @@
+10:24:34 open fixture=gdi-upper-int arm=v2b student=gdi-v2b-replay-gdi-upper-int (speech off)
+10:25:19 no start orb (auto-start?)
+10:25:19 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and the projects you're involved in. We'll also look at two grammar points: the present perfect for experience, and the past simple for finished events. Does that sound good to you?   [tools: annotate]
+10:25:45 STUDENT(answer) I'm ready.
+10:25:51 TUTOR  Great, let's start. First, a short level check: I'll ask you three friendly questions in English. Please answer in English, and don't worry about mistakes. This helps me choose the right level for you.
+
+
+
+Question 1: Can you tell me a little about your job? What do you do?   [tools: new_page]
+10:26:17 STUDENT(answer) Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the company and of course most of the part of the management and the sales area.
+10:26:23 TUTOR  Thank you, that gives me a clear picture of your role.
+
+Question 2: Have you ever worked with an international customer? If so, can you tell me about the experience? If not, you can tell me about a new customer or a difficult project.
+10:26:46 STUDENT(answer) I have working with the international customer for sometimes, a lot of foreigner person in our company so I have to using my English.
+10:26:49 TUTOR  That sounds like a busy role, with a lot of contact with colleagues from other countries.
+
+Question 3: What is one skill you'd like to improve in your English, and why is it important to you?
+10:27:09 STUDENT(answer) Uh, I think the most important is for the business communication, you know, when I'm talking with the international client or the partner, I need to be more fluent and more natural, not so many hesitation. And also the presentation skill, because I have to presenting for the new product or the busin
+10:27:15 TUTOR  Thank you, that was very helpful. You're clearly comfortable with business topics, so today we'll focus on making your grammar more accurate and your answers more natural.
+
+
+
+Next is your work and experience. Shall we go on, or do you have a question first?   [tools: set_working_level]
+10:27:39 STUDENT(ack) Yes, let's go on.
+10:27:44 TUTOR  
+
+Let's talk about your work and experience. Here are two sentences that look similar but use different tenses. The first describes experience that continues over time. The second describes one finished activity at a specific time.
+
+
+
+We'll practise this contrast in the next activities. For now, tel   [tools: new_page, show_table, show_problem]
+10:28:15 STUDENT(answer) My main responsibility in sales area to the contact for the clients and supporting for the each division member and of course I have a suggesting for the new products to the clients. And also I'm managing for the team, you know, making sure everyone is doing the right thing and meeting for the targe
+10:28:22 TUTOR  Good answer, and you explained your responsibilities clearly. One correction: you said "I have a suggesting." We say "I make suggestions" for an idea offered to someone.
+
+
+
+That finishes this part. Next is the present perfect, for experience that continues now. Shall we go on?   [tools: show_sentence]
+10:28:47 STUDENT(ack) Yes, okay, let's continue.
+10:28:52 TUTOR  
+
+We use the present perfect (have/has + past participle) for experience or achievements that started in the past and still continue now. Notice that you wrote "I have working" earlier, so the past participle "worked" is the form to use after "have".
+
+
+
+Here is a question for you. Answer with a full   [tools: new_page, annotate, show_problem, annotate]
+10:29:24 STUDENT(answer) Yes, I have worked here over the ten years. So I have learned a lot of thing about the sales and the business in Japan, and I have working with many client and partner during this time.
+10:29:31 TUTOR  You're right that "I have worked here" uses the present perfect correctly. But in "I have working with many client," the verb after "have" is wrong. Look at the form we use after have. Please try that sentence again.
+10:29:50 STUDENT(answer) Yes, I have worked with many client and partner during this time. I have learned a lot about the sales business in Japan over the ten years.
+10:29:57 TUTOR  Yes, that's correct now: "I have worked with many clients" and "I have learned a lot about the sales business over the ten years" both use the present perfect properly.
+
+
+
+This part is done. Next is the past simple, for events that finished at a specific time, such as "last year." Shall we go on, or   [tools: annotate, show_sentence, show_sentence]
+10:30:27 STUDENT(ack) Yes, let's go on.
+10:30:33 TUTOR  
+
+We use the past simple (subject + past-tense verb) for a finished event at a specific time, such as yesterday, last year, or in 2022. For example: "I attended an exhibition last year."
+
+
+
+Here is a question for you. Answer with a full sentence in the past simple.
+
+   [tools: new_page, annotate, show_problem, show_sentence]
+10:31:00 STUDENT(answer) Yes, I attended the uh some business event in the Japan last year, kind of the networking events for looking the new business partner. It was very useful for me to meeting the new people and understanding for the market trend.
+10:31:08 TUTOR  Good, you used "attended" correctly for a finished event with "last year." One correction: after "useful for me," we use "to" plus the base verb, so "for me to meeting" becomes "for me to meet."
+
+
+
+Can you say that sentence again?   [tools: show_sentence]
+10:31:31 STUDENT(answer) It was very useful for me to meet the new people and understanding for the market trend.
+10:31:37 TUTOR  You're close. The part still not right is "understanding for the market trend." We say "to understand the market trends," so the full sentence is:
+
+
+
+Now try the past simple again with a different event. Tell me about a time you met an important customer or partner.
+
+   [tools: show_sentence, show_problem]
+10:32:04 STUDENT(answer) Yes, I met someone at the business event last month. We came at the new partner for the new business with customers. I talk about for the our business to supporting for the training for the global person, and we decided to starting the collaboration together.
+10:32:09 TUTOR  Good, "I met someone at the business event last month" is correct past simple with a specific time. One correction: "We came at the new partner" should be "We met with a new partner." Can you say that part again?
+
+   [tools: show_sentence]
+10:32:33 STUDENT(answer) We met with a new partner for the new business with customers.
+10:32:39 TUTOR  Almost. The sentence ends with "with customers," which isn't needed here. The correct version is "We met with a new partner for the new business," as on the board.
+
+Past simple is done. Next is the open conversation, where you'll tell me about a project you're proud of. Shall we go on, or do you hav
+10:33:07 STUDENT(ack) Yes, let's go on.
+10:33:11 TUTOR  
+
+Now let's have a more natural conversation about your work. Try to use the grammar we've practised, but don't worry about being perfect.
+
+   [tools: new_page, show_problem]
+10:33:28 STUDENT(answer) One project I worked in the supporting for the SNS networking contents. My role is to manage for the member who is making for the content. This project started about two years ago, and I'm still working on it now. It was very important for the company because we need to building the brand awareness 
+10:33:36 TUTOR  Good, you explained the project clearly, and "This project started about two years ago, and I'm still working on it now" is a natural way to show something that continues. One correction: you said "we need to building the brand awareness." After "need to," we use the base verb: "we need to build."
+
+   [tools: annotate]
+10:34:06 STUDENT(answer) We need to build the brand awareness in the social media, and I'm proud because the team is growing and we have more engagement from the customer now.
+10:34:11 TUTOR  That's correct now: "We need to build the brand awareness." Your sentence about the team growing and more customer engagement is clear too.
+
+What was the biggest challenge in this project, and how did you handle it?   [tools: show_sentence]
+10:34:33 STUDENT(answer) Uh, the biggest challenge was for the finding the right person who can making the content, you know, because we need someone who understand the social media trend and also have the creative skill. So I have to recruiting for the new member and training for them about our business and the brand messa
+10:34:40 TUTOR  You explained the challenge clearly, and "It took about three month" is correct past simple. One correction: you said "I have to recruiting for the new member." After "have to," we use the base verb, so it's "have to recruit."
+
+
+
+Can you say that sentence again?   [tools: show_sentence, annotate]
+10:35:05 STUDENT(answer) I have to recruit for the new member and training for them about our business and the brand message.
+10:35:11 TUTOR  Not quite yet. "Recruit" takes the new member directly, with no "for," and "training" should be "train," as on the board: "So I have to recruit a new member and train them about our business." Your point about the brand message is clear.
+
+Have you worked on a similar project since then?
+10:35:36 STUDENT(answer) I already told you about the project before. I'm working on the SNS networking content project, managing the member who is making the content. That is the main project I'm proud of right now.
+10:35:43 TUTOR  Sorry, I asked about a similar project, but you had already told me about this one. Your sentence "I'm still working on it" can also be said with the present perfect continuous:
+
+
+
+Now, please say the recruiting sentence again in your own words, starting with "So I have to…".   [tools: show_sentence]
+10:36:08 STUDENT(answer) So I have to recruit a new member and train them about our business and the brand message.
+10:36:15 TUTOR  That's correct: "So I have to recruit a new member and train them about our business and the brand message." Your examples now include a clear challenge, how you handled it, and a result.
+
+This part is done. Next is pronunciation, where you can practise saying some key phrases aloud. Shall we go on,   [tools: show_sentence]
+10:36:46 STUDENT(request) A sentence, please.
+10:36:51 TUTOR  Here is one to practise:
+
+
+
+Try saying it aloud, then type it, and change "this project" to your own project.   [tools: show_sentence]
+10:37:06 STUDENT(answer) I have worked on the SNS networking content project for two years, and I'm still working on it now.
+10:37:11 TUTOR  That's correct: "I have worked on the SNS networking content project for two years, and I'm still working on it now." The present perfect shows the project started two years ago and continues now.
+
+Now one sentence on your own, without a hint. Tell me about a task you need to do this month, starting   [tools: show_problem]
+10:37:44 STUDENT(answer) I have to find for the new person to exchanging for the project members, because one member is will leaving our company next month. So we need to recruiting and training for the new person before he is going, and I have to make sure the transition is smooth for the team.
+10:37:52 TUTOR  You explained the task clearly. One point: you wrote "we need to recruiting." After "need to," we use the base verb, so it is "need to recruit."
+
+
+
+Can you say that sentence again?   [tools: show_sentence, show_sentence]
+10:38:12 STUDENT(answer) We need to recruit and train for the new person before he is going, and I have to make sure the transition is smooth for the team.
+10:38:20 TUTOR  Two parts still need changing: "train" takes no "for," and we say "before he leaves," not "before he is going." The full sentence is already on the board: "We need to recruit and train a new person before he leaves."
+
+This part is done. Next is pronunciation, where you can practise saying key phrase
+10:38:49 STUDENT(request) A sentence, please.
+10:38:55 TUTOR  Here is one to say aloud, with the stressed words marked:
+
+
+
+Say it aloud a few times, then type it when you're ready.   [tools: show_sentence]
+10:39:12 STUDENT(answer) I have worked with international customers for many years, and I'm still learning from them every day.
+10:39:18 TUTOR  That's correct: "I have worked with international customers for many years, and I'm still learning from them every day." The present perfect shows the experience started in the past and continues now.
+
+This part is done. Next is the summary, where we review the two grammar points and you explain one   [tools: show_sentence]
+10:39:50 STUDENT(ack) Yes, let's go on.
+10:39:58 TUTOR  
+
+Great work today! You talked about your work, your responsibilities and your projects. Let's review the two grammar points.
+
+
+
+One thing you did well was the present perfect with a time word: "I have worked on the SNS networking content project for two years, and I'm still working on it now." One    [tools: new_page, annotate, show_sentence, show_sentence, show_sentence, show_sentence]
+10:40:49 STUDENT(answer) Yes, I understand. The first sentence, 'I have worked here for five years,' means I started working five years ago and I'm still working here now. The second sentence, 'I worked here five years ago,' means it was finished in the past, maybe I don't work there anymore. So the present perfect is for t
+10:40:52 TUTOR  Your explanation is exactly right: the present perfect is for experience that continues now, and the past simple is for a finished event. Keep working on "need to" and "have to" followed by the base verb, since that is what to practise next. Thank you, Kenji, and well done today!
+10:41:13 STUDENT(end)
+10:41:13 waiting 35 s for the autosave
